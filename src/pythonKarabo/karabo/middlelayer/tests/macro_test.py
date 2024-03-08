@@ -235,7 +235,6 @@ class NodeSlow(Configurable):
 
 
 class LocalMacroSlot(Macro):
-
     exc_slot = None
     exception = None
     traceback = None
@@ -292,7 +291,7 @@ async def deviceTest(event_loop):
     waitUntilRemote = Remote(dict(_deviceId_="remotewaituntil"))
     event_loop.lead = local
     async with AsyncDeviceContext(
-        remote=remote, local=local, waitUntilRemote=waitUntilRemote,
+            remote=remote, local=local, waitUntilRemote=waitUntilRemote,
             localMacro=localMacro, remotePipeline=remotePipeline) as ctx:
         yield ctx
 
@@ -381,7 +380,9 @@ def test_macro_slotter_sync(deviceTest):
         d.cancel()
         waitUntil(lambda: d.state == State.PASSIVE)
         assert d.state == State.PASSIVE
-        assert localMacro.cancelled_slot is LocalMacroSlot.startSync
+        slot = LocalMacroSlot.startSync
+        sleepUntil(lambda: localMacro.cancelled_slot is slot)
+        assert localMacro.cancelled_slot is slot
 
         localMacro.cancelled_slot = None
 
@@ -398,7 +399,9 @@ def test_macro_slotter_sync(deviceTest):
         d.cancel()
         waitUntil(lambda: d.state == State.PASSIVE)
         assert d.state == State.PASSIVE
-        assert localMacro.cancelled_slot is LocalMacroSlot.node.cls.startSync
+        slot = LocalMacroSlot.node.cls.startSync
+        sleepUntil(lambda: localMacro.cancelled_slot is slot)
+        assert localMacro.cancelled_slot is slot
 
         localMacro.cancelled_slot = None
 
@@ -518,7 +521,7 @@ def test_change(deviceTest):
 @run_test
 def test_disconnect(deviceTest):
     """check that we don't get updates when we're not connected"""
-    d = getDevice("remote")    # proxy is not connected after 5 seconds
+    d = getDevice("remote")  # proxy is not connected after 5 seconds
     sleep(5)
     executeNoWait(d, "count")
     # Total count is 30 times for 0.05 seconds each -> 1.5 seconds
@@ -714,7 +717,7 @@ def test_waituntilnew(deviceTest):
             # we cannot guarantee strict '==' if ...
             # ... the network (I think!) or something is getting slow
             assert d.counter >= i
-            i = d.counter + 1   # next (expected) remote value
+            i = d.counter + 1  # next (expected) remote value
 
         assert 29 == d.counter
         waitUntil(lambda: d.state == State.UNKNOWN)
@@ -950,7 +953,6 @@ def test_connectdevice(deviceTest):
 @pytest.mark.timeout(30)
 @run_test
 def test_proxy_dead(deviceTest):
-
     async def starter():
         a = Remote({"_deviceId_": "moriturus"})
         await a.startInstance()
@@ -1074,6 +1076,7 @@ async def test_request_macro(deviceTest):
 @pytest.mark.timeout(30)
 def test_macro_klass_inheritance():
     """Test that we always have the correct macro instance"""
+
     class B(Macro):
         """Lower level macro base class"""
 
