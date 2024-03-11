@@ -36,14 +36,6 @@ from karabogui.logger import get_logger
 from karabogui.singletons.api import get_config
 from karabogui.util import process_qt_events
 
-ACCESS_LEVEL_MAP = {
-    "observer": 0,
-    "user": 1,
-    "operator": 2,
-    "expert": 3,
-    "admin": 4,
-    "god": 5}
-
 MAX_GUI_SERVER_HISTORY = 5
 PROJECT_DB_TIMEOUT = 10
 
@@ -84,6 +76,10 @@ class Network(QObject):
 
         if get_config()["development"]:
             self.togglePerformanceMonitor()
+
+    @property
+    def is_authenticated(self):
+        return bool(self.one_time_token)
 
     def connectToServer(self, parent=None) -> bool:
         """Connection to server via LoginDialog. If an URL is specified for the
@@ -622,7 +618,8 @@ class Network(QObject):
             default = AccessLevel.OBSERVER
         else:
             default = AccessLevel(
-                ACCESS_LEVEL_MAP.get(self.access_level, AccessLevel.ADMIN))
+                krb_access.ACCESS_LEVEL_MAP.get(self.access_level,
+                                                AccessLevel.ADMIN))
 
         krb_access.GLOBAL_ACCESS_LEVEL = default
         # Inform the GUI to change correspondingly the allowed
@@ -690,6 +687,21 @@ class Network(QObject):
 
         login_info["info"] = dictToHash(get_config().info())
         self._write_hash(login_info)
+
+    def onEscalateRequest(self, **info):
+        h = Hash("type", "escalate")
+        h["clientId"] = const.KARABO_CLIENT_ID
+        h["version"] = const.GUI_VERSION
+        h["username"] = info["username"]
+        h["escalationToken"] = info["escalationToken"]
+        h["levelBeforeEscalation"] = info["levelBeforeEscalation"]
+        self.one_time_token = info["escalationToken"]
+        self._write_hash(h)
+
+    def onDeescalateRequest(self, **info):
+        h = Hash("type", "deescalate")
+        h["escalationToken"] = self.one_time_token
+        self._write_hash(h)
 
     def _empty_request_queue(self):
         """If some requests got piled up, because of no server connection,
