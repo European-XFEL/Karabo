@@ -33,6 +33,7 @@ from qtpy.QtWidgets import QDialog
 
 from karabo.native import decodeBinary
 from karabogui import access as krb_access
+from karabogui.singletons.api import get_network
 
 from .utils import get_dialog_ui
 
@@ -252,6 +253,7 @@ class ReactiveLoginDialog(QDialog):
             if not self._auth_url.endswith("/"):
                 self._auth_url += "/"
             self._auth_url += "auth_once_tk"
+            krb_access.AUTHENTICATION_SERVER = self._auth_url
         else:
             self.login_type = LoginType.ACCESS_LEVEL
 
@@ -348,3 +350,60 @@ class ReactiveLoginDialog(QDialog):
                           REQUEST_HEADER)
 
         self.access_manager.post(request, credentials)
+
+
+class EscalationDialog(QDialog):
+    def __init__(self, username="", parent=None):
+        super().__init__(parent)
+        self.setModal(False)
+        filepath = get_dialog_ui("escalation_dialog.ui")
+        uic.loadUi(filepath, self)
+        self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
+        self.edit_username.setText(username)
+
+        self.access_manager = QNetworkAccessManager()
+        self.access_manager.finished.connect(self.onAuthReply)
+
+    @Slot()
+    def accept(self):
+        # We are calling the super method only after the authentication of
+        # the escalated user.
+        self._post_auth_request()
+
+    def _post_auth_request(self):
+        credentials = json.dumps({
+            "user": self.edit_username.text(),
+            "passwd": self.edit_password.text(),
+        })
+        credentials = bytearray(credentials.encode("utf-8"))
+        auth_url = krb_access.AUTHENTICATION_SERVER
+        request = QNetworkRequest(QUrl(auth_url))
+        request.setHeader(QNetworkRequest.ContentTypeHeader,
+                          REQUEST_HEADER)
+        self.access_manager.post(request, credentials)
+
+    @Slot(QNetworkReply)
+    def onAuthReply(self, reply):
+
+        error = reply.error()
+
+        if error == QNetworkReply.NoError:
+            bytes_string = reply.readAll()
+            reply_body = str(bytes_string, "utf-8")
+            auth_result = json.loads(reply_body)
+            if auth_result.get("success"):
+                highest_access_level = krb_access.HIGHEST_ACCESS_LEVEL.name
+                krb_access_level = krb_access.ACCESS_LEVEL_MAP.get(
+                    highest_access_level.lower(), 2)
+                get_network().onEscalateRequest(
+                    username=self.username,
+                    escalationToken=auth_result["once_token"],
+                    levelBeforeEscalation=krb_access_level,
+                )
+                super().accept()
+            else:
+                self.error_label.setText(auth_result["error_msg"])
+
+    @property
+    def username(self):
+        return self.edit_username.text()
