@@ -31,6 +31,17 @@ USERNAMES = [level.lower() for level in ACCESS_LEVELS.keys()]
 # The globally defined access level variable which is verified and set by the
 # GUI server eventually
 GLOBAL_ACCESS_LEVEL = AccessLevel.OBSERVER
+HIGHEST_ACCESS_LEVEL = AccessLevel.OPERATOR
+
+AUTHENTICATION_SERVER = None
+
+ACCESS_LEVEL_MAP = {
+    "observer": 0,
+    "user": 1,
+    "operator": 2,
+    "expert": 3,
+    "admin": 4,
+    "god": 5}
 
 
 class AccessRole(Enum):
