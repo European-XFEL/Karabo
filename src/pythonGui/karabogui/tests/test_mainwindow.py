@@ -33,6 +33,22 @@ def test_mainwindow(gui_app, mocker, subtests):
         logger.info.assert_called_with("Started Karabo GUI application ...")
         assert mw is not None
 
+        with subtests.test("Escalation button visibility"):
+
+            network.is_authenticated = True
+            data = {"topic": "foo", "hostname": "exfel", "hostport": 44444}
+            mw.update_server_connection(data=data)
+            assert mw.tbEscalate.isVisible()
+
+            mw.update_server_connection(data=None)
+            assert not mw.tbEscalate.isVisible()
+            assert not mw.tbEscalate.isChecked()
+            assert mw.tbEscalate.toolTip() == "Escalate access level"
+
+            network.is_authenticated = False
+            mw.update_server_connection(data=data)
+            assert not mw.tbEscalate.isVisible()
+
     with subtests.test("Test project conflict event in main window"):
         from karabo.common.project.api import ProjectModel
         from karabogui.singletons.project_model import ProjectViewItemModel
@@ -85,3 +101,8 @@ def test_mainwindow(gui_app, mocker, subtests):
         if IS_LINUX_SYSTEM:
             expected.insert(8, concert_shortcut)
         assert expected == [action.text() for action in help_actions]
+
+    with subtests.test("Test Access levels"):
+        access_menu = mw.tbAccessLevel.menu()
+        access_levels = [act.text() for act in access_menu.actions()]
+        assert access_levels == ['Operator', 'User', 'Observer']

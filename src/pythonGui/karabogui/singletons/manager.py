@@ -408,7 +408,42 @@ class Manager(QObject):
         access = AccessLevel(info["accessLevel"])
         if krb_access.GLOBAL_ACCESS_LEVEL != access:
             krb_access.GLOBAL_ACCESS_LEVEL = access
+            krb_access.HIGHEST_ACCESS_LEVEL = access
             broadcast_event(KaraboEvent.LoginUserChanged, {})
+
+    def handle_onEscalate(self, **info):
+        """Handle the response from gui server on escalation request by user"""
+        if info["success"]:
+            access_level = AccessLevel(info["accessLevel"])
+            if krb_access.HIGHEST_ACCESS_LEVEL != access_level:
+                krb_access.HIGHEST_ACCESS_LEVEL = access_level
+
+                # Escalated user has lower access level than the logged-in user
+                if krb_access.GLOBAL_ACCESS_LEVEL > access_level:
+                    krb_access.GLOBAL_ACCESS_LEVEL = access_level
+                broadcast_event(KaraboEvent.LoginUserChanged, {})
+
+    def handle_onDeescalate(self, **info):
+        """Handle the response from gui server on deescalation request by
+        user"""
+        escalation_before = info.get("levelBeforeEscalation")
+        if escalation_before is None:
+            return
+        access_level = AccessLevel(escalation_before)
+        if krb_access.HIGHEST_ACCESS_LEVEL != access_level:
+            krb_access.HIGHEST_ACCESS_LEVEL = access_level
+            broadcast_event(KaraboEvent.LoginUserChanged, {})
+
+    def handle_onEscalationExpired(self, **info):
+        """Handle the escalation expired message from gui server """
+        escalation_before = info.get("levelBeforeEscalation")
+        if escalation_before is None:
+            return
+        access_level = AccessLevel(escalation_before)
+        if krb_access.HIGHEST_ACCESS_LEVEL != access_level:
+            krb_access.HIGHEST_ACCESS_LEVEL = access_level
+            broadcast_event(KaraboEvent.LoginUserChanged,
+                            {"escalation_expired": True})
 
     @show_wait_cursor
     def handle_systemTopology(self, systemTopology):
