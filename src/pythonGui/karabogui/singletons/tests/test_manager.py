@@ -17,11 +17,13 @@
 from inspect import signature
 from unittest.mock import ANY, Mock, call, patch
 
+import pytest
 from qtpy.QtCore import QSize
 
 from karabo.common.api import WeakMethodRef
 from karabo.native import (
     AccessLevel, AccessMode, Configurable, Hash, Int32, Schema, Timestamp)
+from karabogui import access as krb_access
 from karabogui.binding.api import (
     BindingRoot, DeviceClassProxy, DeviceProxy, ProjectDeviceProxy,
     ProxyStatus, build_binding)
@@ -618,6 +620,7 @@ class TestManager(GuiTestCase):
                 manager.handle_loginInformation(
                     accessLevel=AccessLevel.OBSERVER.value)
                 broad.assert_not_called()
+                krb_access.HIGHEST_ACCESS_LEVEL == "observer"
 
     def test_handle_property_history(self):
         topology, device_proxy = Mock(), Mock()
@@ -841,29 +844,64 @@ class TestManager(GuiTestCase):
                 'Saving a configuration for XFEL/CAM/1 failed!', details='')
 
 
-def test_handle_destinations(gui_app, mocker):
+@pytest.fixture
+def manager(mocker):
     network = mocker.Mock()
     with singletons(network=network):
         manager = Manager()
-        with singletons(manager=manager):
-            broadcast = mocker.patch(
-                "karabogui.singletons.manager.broadcast_event")
-            reply = Hash("destinations", ["one", "two", "three"])
-            manager.handle_listDestinations(success=True,
-                                            request=Hash(), reply=reply)
-            broadcast.assert_called_with(
-                KaraboEvent.ActiveDestinations, ["one", "two", "three"])
+        return manager
 
 
-def test_handle_saveLogBook(gui_app, mocker):
-    network = mocker.Mock()
+def test_handle_destinations(mocker, manager):
+
+    with singletons(manager=manager):
+        broadcast = mocker.patch(
+            "karabogui.singletons.manager.broadcast_event")
+        reply = Hash("destinations", ["one", "two", "three"])
+        manager.handle_listDestinations(success=True,
+                                        request=Hash(), reply=reply)
+        broadcast.assert_called_with(
+            KaraboEvent.ActiveDestinations, ["one", "two", "three"])
+
+
+def test_handle_saveLogBook(mocker, manager):
     logger = mocker.patch("karabogui.singletons.manager.get_logger")
-    with singletons(network=network):
-        manager = Manager()
-        with singletons(manager=manager):
-            args = Hash("dataType", "image")
-            h = Hash("args", args)
-            manager.handle_saveLogBook(success=True, request=h, reply=h)
-            message = "Posted the image to LogBook successfully"
-            logger().info.assert_called_with(message)
-            assert logger().info.call_count == 1
+    with singletons(manager=manager):
+        args = Hash("dataType", "image")
+        h = Hash("args", args)
+        manager.handle_saveLogBook(success=True, request=h, reply=h)
+        message = "Posted the image to LogBook successfully"
+        logger().info.assert_called_with(message)
+        assert logger().info.call_count == 1
+
+
+def test_handle_onEscalate(mocker, manager):
+    with singletons(manager=manager):
+        broadcast = mocker.patch(
+            "karabogui.singletons.manager.broadcast_event")
+        manager.handle_onEscalate(success=False)
+        assert broadcast.call_count == 0
+        info = {"success": True, "accessLevel": 4}
+        manager.handle_onEscalate(**info)
+        assert broadcast.call_count == 1
+        broadcast.assert_called_with(KaraboEvent.LoginUserChanged, {})
+
+
+def test_handle_onDeescalate(mocker, manager):
+    with singletons(manager=manager):
+        broadcast = mocker.patch(
+            "karabogui.singletons.manager.broadcast_event")
+
+        manager.handle_onDeescalate(levelBeforeEscalation=3)
+        assert broadcast.call_count == 1
+        broadcast.assert_called_with(KaraboEvent.LoginUserChanged, {})
+
+
+def test_handle_onEscalationExpired(mocker, manager):
+    with singletons(manager=manager):
+        broadcast = mocker.patch(
+            "karabogui.singletons.manager.broadcast_event")
+        manager.handle_onEscalationExpired(levelBeforeEscalation=2)
+        broadcast.call_count == 1
+        broadcast.assert_called_with(KaraboEvent.LoginUserChanged,
+                                     {'escalation_expired': True})
