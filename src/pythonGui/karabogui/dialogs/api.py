@@ -37,6 +37,7 @@ from .logindialog import LoginDialog
 from .messagebox import KaraboMessageBox
 from .pen_dialogs import PenDialog
 from .proxies_dialog import ProxiesDialog
+from .reactive_login_dialog import EscalationDialog
 from .scene_dialogs import ReplaceDialog, ResizeSceneDialog, SceneItemDialog
 from .scene_link_dialog import SceneLinkDialog
 from .sticker_dialog import GREY, StickerDialog

@@ -39,7 +39,7 @@ from karabogui.access import ACCESS_LEVELS, AccessRole
 from karabogui.background import background
 from karabogui.dialogs.api import (
     AboutDialog, ClientTopologyDialog, ConfigurationDialog, DataViewDialog,
-    DevelopmentTopologyDialog, UpdateDialog)
+    DevelopmentTopologyDialog, EscalationDialog, UpdateDialog)
 from karabogui.events import (
     KaraboEvent, broadcast_event, register_for_broadcasts)
 from karabogui.indicators import get_processing_color
@@ -55,7 +55,7 @@ from karabogui.singletons.api import (
     get_config, get_db_conn, get_network, get_project_model)
 from karabogui.util import (
     convert_npy_to_csv, generateObjectName, getOpenFileName, getSaveFileName,
-    process_qt_events)
+    move_to_cursor, process_qt_events)
 from karabogui.wizards import TipsTricksWizard
 
 SERVER_INFO_WIDTH = 250
@@ -207,6 +207,8 @@ class MainWindow(QMainWindow):
 
         self.readSettings()
 
+        self._is_escalated = False
+
     # -----------------------------------------------------------------------
     # Karabo Events
 
@@ -275,6 +277,8 @@ class MainWindow(QMainWindow):
 
     def _event_access_level(self, data):
         self.onUpdateAccessLevel()
+        if data.get("escalation_expired"):
+            self._end_escalation()
 
     def _event_project_updated(self, data):
         """Projects were externally updated and we check if we are affected"""
@@ -303,8 +307,10 @@ class MainWindow(QMainWindow):
         title = " - ".join([info.format(value) for info, value in
                             zip(titles, self.title_info.values())
                             if value is not None])
-        if get_network().username and get_network().one_time_token:
+        if get_network().username and get_network().is_authenticated:
             title = f"{title} - User: {get_network().username}"
+        if escalated_user := kwargs.get("escalated_user"):
+            title = f"{title}- Escalated User: {escalated_user}"
         self.setWindowTitle(title)
 
     def readSettings(self):
@@ -317,6 +323,7 @@ class MainWindow(QMainWindow):
     def update_server_connection(self, data=None):
         """Update the status bar with our broker connection information
         """
+        allow_escalation = get_network().is_authenticated
         if data is not None:
             topic = data["topic"]
             # Store this information in the config singleton!
@@ -339,6 +346,9 @@ class MainWindow(QMainWindow):
                 logger.info(text)
         else:
             self.serverInfo.setText("")
+            allow_escalation = False
+            self._update_escalate_button(escalated=False)
+        self.tbEscalate.setVisible(allow_escalation)
 
     # --------------------------------------
     # Qt virtual methods
@@ -391,6 +401,24 @@ class MainWindow(QMainWindow):
             if not panel.is_docked:
                 panel.onDock()
 
+    def onUpdateAccessLevel(self):
+        global_access_level = krb_access.GLOBAL_ACCESS_LEVEL
+        highest_access_level = krb_access.HIGHEST_ACCESS_LEVEL
+        # Build the access level menu
+        self.mAccessLevel.clear()
+        for level in ACCESS_LEVELS.values():
+            if highest_access_level >= level:
+                action = self.access_level_actions[level]
+                self.mAccessLevel.addAction(action)
+
+        # Show a check next to the current access level
+        for action in self.access_level_actions.values():
+            action.setChecked(False)
+
+        checked_action = self.access_level_actions.get(global_access_level)
+        if checked_action is not None:
+            checked_action.setChecked(True)
+
     # --------------------------------------
     # private methods
 
@@ -402,6 +430,14 @@ class MainWindow(QMainWindow):
         self.tbAccessLevel.setStatusTip(text)
         self.tbAccessLevel.setPopupMode(QToolButton.InstantPopup)
         self.tbAccessLevel.setEnabled(False)
+
+        text = "Escalate access level"
+        self.tbEscalate = QAction(icons.arrowUp, f"&{text}", self)
+        self.tbEscalate.setToolTip(text)
+        self.tbEscalate.setStatusTip(text)
+        self.tbEscalate.setCheckable(True)
+        self.tbEscalate.setVisible(False)
+        self.tbEscalate.triggered.connect(self.onEscalateRequest)
 
         self.agAccessLevel = QActionGroup(self)
         self.agAccessLevel.triggered.connect(self.onChangeAccessLevel)
@@ -566,6 +602,7 @@ class MainWindow(QMainWindow):
         toolbar.addAction(self.acServerConnect)
 
         toolbar.addWidget(self.tbAccessLevel)
+        toolbar.addAction(self.tbEscalate)
 
         self.notification_banner = MainWindowBanner()
 
@@ -695,6 +732,41 @@ class MainWindow(QMainWindow):
             webbrowser.open_new(link)
         except webbrowser.Error:
             messagebox.show_error("No web browser available!", parent=self)
+
+    def _escalate(self):
+        if not get_network().is_authenticated:
+            return
+        self._last_selected_access = self.agAccessLevel.checkedAction()
+
+        user_name = get_network().username
+        dialog = EscalationDialog(username=user_name, parent=self)
+        dialog.accepted.connect(self._accept_escalation)
+        dialog.rejected.connect(self._reject_escalation)
+        dialog.show()
+
+    def _deescalate(self):
+        get_network().onDeescalateRequest()
+        self._end_escalation()
+
+    def _end_escalation(self):
+        """Update escalate button state, window title and restore the
+        previous selected access level on ending the escalated session"""
+        self._update_escalate_button(escalated=False)
+        self._set_window_title()
+        self._last_selected_access.setChecked(True)
+        access_level = krb_access.ACCESS_LEVELS[
+            self._last_selected_access.text()]
+        if krb_access.GLOBAL_ACCESS_LEVEL != access_level:
+            krb_access.GLOBAL_ACCESS_LEVEL = access_level
+            broadcast_event(KaraboEvent.AccessLevelChanged, {})
+
+    def _update_escalate_button(self, escalated: bool):
+        icon = icons.arrowDown if escalated else icons.arrowUp
+        tooltip = ("Deescalate access level" if escalated else
+                   "Escalate access level")
+        self.tbEscalate.setToolTip(tooltip)
+        self.tbEscalate.setIcon(icon)
+        self.tbEscalate.setChecked(escalated)
 
     # --------------------------------------
     # Qt slots
@@ -859,24 +931,29 @@ class MainWindow(QMainWindow):
 
         self.tbAccessLevel.setEnabled(isConnected)
 
+    @Slot(bool)
+    def onEscalateRequest(self, escalate):
+        if escalate:
+            self._escalate()
+        else:
+            ask = "Do you really want to deescalate?"
+            dialog = QMessageBox(QMessageBox.Question, 'Deescalate', ask,
+                                 QMessageBox.Yes | QMessageBox.No, parent=self)
+            move_to_cursor(dialog)
+            if dialog.exec() == QMessageBox.Yes:
+                self._deescalate()
+            else:
+                self.tbEscalate.setChecked(True)
+
     @Slot()
-    def onUpdateAccessLevel(self):
-        global_access_level = krb_access.GLOBAL_ACCESS_LEVEL
+    def _accept_escalation(self):
+        escalation_dialog = self.sender()
+        self._update_escalate_button(escalated=True)
+        self._set_window_title(escalated_user=escalation_dialog.username)
 
-        # Build the access level menu
-        self.mAccessLevel.clear()
-        for level in ACCESS_LEVELS.values():
-            if global_access_level >= level:
-                action = self.access_level_actions[level]
-                self.mAccessLevel.addAction(action)
-
-        # Show a check next to the current access level
-        for action in self.access_level_actions.values():
-            action.setChecked(False)
-
-        checked_action = self.access_level_actions.get(global_access_level)
-        if checked_action is not None:
-            checked_action.setChecked(True)
+    @Slot()
+    def _reject_escalation(self):
+        self.tbEscalate.setChecked(False)
 
     @Slot()
     def onNumpyFileToCSV(self):
