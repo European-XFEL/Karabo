@@ -294,6 +294,7 @@ def new(args):
                 .format(args.git, args.device))
         run_cmd('git add .')
         run_cmd('git commit -m "Initial commit"')
+        run_cmd('git tag 0.0.0')
         print('New device package was added to: {}'
               .format(os.getcwd()))
         print('Use: "git push -u origin main" if you want start versioning '
