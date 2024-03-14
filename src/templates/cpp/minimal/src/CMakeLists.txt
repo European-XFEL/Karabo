@@ -94,7 +94,6 @@ if (BUILD_TESTS)
         PRIVATE
         Threads::Threads
         ${CMAKE_PROJECT_NAME}
-        ${KARABO_LIB}
         ${gtest_LIB}
     )
 
