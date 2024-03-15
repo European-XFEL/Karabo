@@ -37,8 +37,8 @@ topic (string)
 systemTopology (Hash)
 
 [2.20.0]_ *onEscalationExpired*
-expiredToken (string), 
-expirationTime (string), 
+expiredToken (string),
+expirationTime (string),
 levelBeforeEscalation (int - matching a karabo::util::Schema::AccessLevel value),
 loggedUserId (string)
 

@@ -83,6 +83,16 @@ namespace karabo {
             static void useFile(const std::string& category = "", bool inheritAppenders = true);
 
             /**
+             * Enables the rolling file appender on the specified category for auditing.
+             *
+             * By default any appenders defined on parent categories will be inherited. A boolean flag
+             * allows to disable this behavior
+             * @param category The category on which the appender should work (empty string reflects root category)
+             * @param inheritAppenders If true will inherit appenders defined in parent categories
+             */
+            static void useAuditFile(const std::string& category = "", bool inheritAppenders = true);
+
+            /**
              * Resets all appenders from all categories and clear the cache.
              * Nothing will be logged after a call to this function.
              *
