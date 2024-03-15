@@ -88,7 +88,9 @@ class ProjectView(QTreeView):
     def destroy(self):
         """ Unset project's data model before death.
         """
-        self.model().root_model = None
+        model = self.model()
+        model.root_model = None
+        model.setParent(None)
 
     # ----------------------------
     # Qt methods
