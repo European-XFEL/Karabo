@@ -190,6 +190,24 @@ namespace karabo {
             virtual void preReconfigure(karabo::util::Hash& incomingReconfiguration) override;
 
            private: // Functions
+            /**
+             * @brief Initializes the user actions log.
+             *
+             * The log contains entries describing the writing actions the GUI Server
+             * performed upon request of a user. It is separated from the remaining
+             * device server logs.
+             */
+            void initUsersActionsLog();
+
+            /**
+             * @brief Adds an entry with a given text to the user actions log.
+             *
+             * @param channel The TCP Channel connecting the GUI Server to the GUI Client that originated the action
+             * execution request.
+             * @param entryText A description of the action (and possibly its parameters)
+             */
+            void logUserAction(const WeakChannelPointer& channel, const std::string& entryText);
+
             /** Wrapping requestNoWait */
             void loggerMapConnectedHandler();
 
@@ -654,13 +672,13 @@ namespace karabo {
              * instructs the server specified by ``serverId`` in ``info`` to shutdown.
              * @param info
              */
-            void onKillServer(const karabo::util::Hash& info);
+            void onKillServer(WeakChannelPointer channel, const karabo::util::Hash& info);
 
             /**
              * instructs the device specified by ``deviceId`` in ``info`` to shutdown.
              * @param info
              */
-            void onKillDevice(const karabo::util::Hash& info);
+            void onKillDevice(WeakChannelPointer channel, const karabo::util::Hash& info);
 
             /**
              * Registers a monitor on the device specified by ``deviceId`` in ``info``
