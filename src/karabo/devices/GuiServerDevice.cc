@@ -22,7 +22,11 @@
 
 #include "GuiServerDevice.hh"
 
+#include <boost/filesystem.hpp>
+
 #include "karabo/core/InstanceChangeThrottler.hh"
+#include "karabo/log/AuditFileFilter.hh"
+#include "karabo/log/Logger.hh"
 #include "karabo/net/EventLoop.hh"
 #include "karabo/net/TcpChannel.hh"
 #include "karabo/net/UserAuthClient.hh"
@@ -411,6 +415,8 @@ namespace karabo {
                                     << "'";
                 }
 
+                initUsersActionsLog();
+
             } catch (const std::exception& e) {
                 updateState(State::ERROR);
 
@@ -453,6 +459,56 @@ namespace karabo {
             }
         }
 
+
+        void GuiServerDevice::initUsersActionsLog() {
+            if (!isUserAuthActive()) {
+                // User actions are only logged when the users are authenticated
+                return;
+            }
+
+            using namespace karabo::log;
+
+            boost::filesystem::path path(Version::getPathToKaraboInstallation() + "/var/log/" + getServerId() +
+                                         "/audit");
+            boost::filesystem::create_directories(path);
+            path += "/user-actions.log";
+
+            Hash logConfig = Hash("auditfile.filename", path.generic_string());
+            Logger::configure(logConfig);
+
+            Logger::useAuditFile();
+
+            KARABO_LOG_INFO << "User actions logs are written to: " << path;
+        }
+
+        void GuiServerDevice::logUserAction(const WeakChannelPointer& channel, const std::string& entryText) {
+            if (!isUserAuthActive()) {
+                // User actions are logged only for GUI servers with user authentication enabled
+                return;
+            }
+            const auto& chan = channel.lock();
+            if (chan) {
+                boost::mutex::scoped_lock lock(m_channelMutex);
+                auto it = m_channels.find(chan);
+                if (it != m_channels.end()) {
+                    std::string token;
+                    bool escalated = false;
+                    {
+                        const auto& channelData = it->second;
+                        token = channelData.oneTimeToken;
+                        if (!channelData.escalationToken.empty()) {
+                            token = channelData.escalationToken;
+                            escalated = true;
+                        }
+                    }
+                    lock.unlock();
+                    // NOTE: The AUDIT_ENTRY_MARK is what the audit log appender (instance of class
+                    // karabo::log::AuditFileAppender) uses to accept writting a given message to the audit log.
+                    KARABO_LOG_INFO << karabo::log::AUDIT_ENTRY_MARK << (escalated ? "[Escalated] - " : "")
+                                    << "User with  with token '" << token << "' action: " << entryText;
+                }
+            }
+        }
 
         void GuiServerDevice::loggerMapConnectedHandler() {
             requestNoWait(get<std::string>("dataLogManagerId"), "slotGetLoggerMap", "", "slotLoggerMap");
@@ -926,9 +982,9 @@ namespace karabo {
                     } else if (type == "initDevice") {
                         onInitDevice(channel, info);
                     } else if (type == "killServer") {
-                        onKillServer(info);
+                        onKillServer(channel, info);
                     } else if (type == "killDevice") {
-                        onKillDevice(info);
+                        onKillDevice(channel, info);
                     } else if (type == "startMonitoringDevice") {
                         onStartMonitoringDevice(channel, info);
                     } else if (type == "stopMonitoringDevice") {
@@ -1082,7 +1138,11 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onReconfigure";
                 const string& deviceId = hash.get<string>("deviceId");
                 const Hash& config = hash.get<Hash>("configuration");
-                // TODO Supply user specific context
+
+                std::ostringstream oss;
+                oss << "Reconfigure device '" << deviceId << "' with:\n" << config;
+                logUserAction(channel, oss.str());
+
                 if (hash.has("reply") && hash.get<bool>("reply")) {
                     auto requestor = request(deviceId, "slotReconfigure", config);
                     setTimeout(requestor, hash, "deviceId");
@@ -1154,7 +1214,7 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onExecute " << hash;
                 const string& deviceId = hash.get<string>("deviceId");
                 const string& command = hash.get<string>("command");
-                // TODO Supply user specific context
+                logUserAction(channel, "Execute command '" + command + "' on device '" + deviceId + "'");
                 if (hash.has("reply") && hash.get<bool>("reply")) {
                     auto requestor = request(deviceId, command);
                     setTimeout(requestor, hash, "deviceId");
@@ -1226,6 +1286,8 @@ namespace karabo {
                 const string& deviceId = hash.get<string>("deviceId");
                 KARABO_LOG_FRAMEWORK_DEBUG << "onInitDevice: Queuing request to start device instance \"" << deviceId
                                            << "\" on server \"" << serverId << "\"";
+
+                logUserAction(channel, "Init device '" + deviceId + "' on server '" + serverId + "'");
 
                 if (!deviceId.empty() && hash.has("schemaUpdates")) {
                     KARABO_LOG_FRAMEWORK_DEBUG << "Schema updates were provided for device " << deviceId;
@@ -1374,11 +1436,10 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::onKillServer(const karabo::util::Hash& info) {
+        void GuiServerDevice::onKillServer(WeakChannelPointer channel, const karabo::util::Hash& info) {
             try {
                 string serverId = info.get<string>("serverId");
-                KARABO_LOG_FRAMEWORK_DEBUG << "onKillServer : \"" << serverId << "\"";
-                // TODO Supply user specific context
+                logUserAction(channel, "Kill device server '" + serverId + "'");
                 call(serverId, "slotKillServer");
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onKillServer(): " << e.what();
@@ -1386,10 +1447,11 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::onKillDevice(const karabo::util::Hash& info) {
+        void GuiServerDevice::onKillDevice(WeakChannelPointer channel, const karabo::util::Hash& info) {
             try {
                 string deviceId = info.get<string>("deviceId");
                 KARABO_LOG_FRAMEWORK_DEBUG << "onKillDevice : \"" << deviceId << "\"";
+                logUserAction(channel, "Kill device '" + deviceId + "'");
                 call(deviceId, "slotKillDevice");
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onKillDevice(): " << e.what();
@@ -1820,6 +1882,8 @@ namespace karabo {
                 const std::string& priority = info.get<std::string>("priority");
                 const std::string& instanceId = info.get<std::string>("instanceId");
                 KARABO_LOG_FRAMEWORK_DEBUG << "onSetLogPriority : '" << instanceId << "' to '" << priority << "'";
+
+                logUserAction(channel, "Set log priority of '" + instanceId + "' to '" + priority + "'");
 
                 auto requestor = request(instanceId, "slotLoggerPriority", priority);
                 auto successHandler = bind_weak(&GuiServerDevice::forwardSetLogReply, this, true, channel, info);
@@ -2607,6 +2671,7 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onUpdateAttributes : info ...\n" << info;
                 const std::string& instanceId = info.get<std::string>("instanceId");
                 const std::vector<Hash>& updates = info.get<std::vector<Hash>>("updates");
+
                 // TODO: Add error handling for receiveAsync!
                 //       (But protocol does anyway not foresee to forwared failure to GUI client as of 2.14.0.)
                 request(instanceId, "slotUpdateSchemaAttributes", updates)
@@ -2677,6 +2742,33 @@ namespace karabo {
                 const std::string& instanceId = info.get<std::string>("instanceId");
                 const std::string& slot = info.get<std::string>("slot");
                 const Hash& args = info.get<Hash>("args");
+
+                if (slot == "slotSaveConfigurationFromName") {
+                    logUserAction(channel, "Saved configuration named '" + args.get<std::string>("name") + "'");
+                } else if (slot == "slotSaveLogBook") {
+                    std::ostringstream oss;
+                    oss << "Saved logbook entry with title '" << args.get<std::string>("title") << "' to ";
+                    const auto& entryDestinations = args.get<std::vector<karabo::util::Hash>>("destinations");
+                    if (entryDestinations.size() >= 1UL) {
+                        oss << (entryDestinations.size() == 1UL
+                                      ? "the stream '"
+                                      : (toString(entryDestinations.size()) + " streams, the first being '"))
+                            << entryDestinations[0].get<std::string>("stream") << "'";
+                    }
+                    logUserAction(channel, oss.str());
+                } else if (slot == "slotGenericRequest") {
+                    const std::string& type = args.get<std::string>("type");
+                    if (type == "saveItems") {
+                        const std::vector<Hash>& items = args.get<std::vector<Hash>>("items");
+                        std::ostringstream oss;
+                        oss << "Save " << items.size() << " project item(s):\n";
+                        for (const auto& item : items) {
+                            oss << item << "\n";
+                        }
+                        logUserAction(channel, oss.str());
+                    }
+                }
+
                 auto requestor = request(instanceId, slot, args);
                 setTimeout(requestor, info, "instanceId");
                 auto successHandler = bind_weak(&GuiServerDevice::forwardHashReply, this, true, channel, info, _1);
@@ -2795,6 +2887,15 @@ namespace karabo {
                 const std::string& token = info.get<std::string>("token");
                 const std::vector<Hash>& items = info.get<std::vector<Hash>>("items");
                 const std::string& client = (info.has("client") ? info.get<std::string>("client") : std::string());
+
+                // TODO: truncate the number of items output or summarize each of them.
+                std::ostringstream oss;
+                oss << "Save " << items.size() << " project item(s):\n";
+                for (const auto& item : items) {
+                    oss << item << "\n";
+                }
+                logUserAction(channel, oss.str());
+
                 // TODO: Add failure handling for receiveAsync?
                 //       (But protocol does anyway not foresee to forwared failure to GUI client as of 2.14.0.)
                 request(projectManager, "slotSaveItems", token, items, client)
@@ -2886,6 +2987,7 @@ namespace karabo {
                     return;
                 const std::string& token = info.get<std::string>("token");
                 const std::vector<Hash>& items = info.get<std::vector<Hash>>("items");
+
                 // TODO: Add failure handling for receiveAsync?
                 //       (But protocol does anyway not foresee to forwared failure to GUI client as of 2.14.0.)
                 request(projectManager, "slotUpdateAttribute", token, items)
