@@ -172,3 +172,19 @@ add_custom_command(
         "${CMAKE_CURRENT_SOURCE_DIR}/io/resources"
        "${CMAKE_CURRENT_BINARY_DIR}/io/resources"
 )
+
+#
+###  support for google test based Unit tests ###
+find_package(GTest REQUIRED)
+
+set(GTEST_SOURCES
+    ${CMAKE_CURRENT_LIST_DIR}/core/testJsonToHashParsing.cc)
+
+
+add_executable(GTestUnitTester ${GTEST_SOURCES})
+target_link_libraries(GTestUnitTester
+    PRIVATE
+    GTest::gtest_main
+    ${KARABO_LIB_TARGET_NAME})
+include(GoogleTest)
+gtest_discover_tests(GTestUnitTester)
