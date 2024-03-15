@@ -65,7 +65,6 @@ class Network(QObject):
         self.hostname = "localhost"
         self.port = "44444"
         self.password = "karabo"
-        self.one_time_token = None
         self.access_level = "observer"
 
         # Check default settings stored in QSettings!
@@ -76,10 +75,6 @@ class Network(QObject):
 
         if get_config()["development"]:
             self.togglePerformanceMonitor()
-
-    @property
-    def is_authenticated(self):
-        return bool(self.one_time_token)
 
     def connectToServer(self, parent=None) -> bool:
         """Connection to server via LoginDialog. If an URL is specified for the
@@ -114,7 +109,6 @@ class Network(QObject):
             self.hostname = dialog.hostname
             self.port = dialog.port
             self.gui_servers = dialog.gui_servers
-            self.one_time_token = dialog.one_time_token
             self.access_level = dialog.access_level
             self.startServerConnection()
             return True
@@ -171,7 +165,7 @@ class Network(QObject):
         """Disconnect from server"""
         # All panels need to be reset and all projects closed
         self.signalServerConnectionChanged.emit(False)
-        self.one_time_token = None
+        krb_access.ONE_TIME_TOKEN = None
         process_qt_events(timeout=5000)
         self.endServerConnection()
 
@@ -674,8 +668,8 @@ class Network(QObject):
         # the ClientID with its new key.
         login_info["clientId"] = const.KARABO_CLIENT_ID
         login_info["version"] = const.GUI_VERSION
-        if self.one_time_token:
-            login_info["oneTimeToken"] = self.one_time_token
+        if krb_access.is_authenticated():
+            login_info["oneTimeToken"] = krb_access.ONE_TIME_TOKEN
             # For authenticated logins, don't set the "clientUserId" - the
             # authenticated userId and the authorized AccessLevel will
             # be returned later as a result of the token validation.
@@ -695,12 +689,11 @@ class Network(QObject):
         h["username"] = info["username"]
         h["escalationToken"] = info["escalationToken"]
         h["levelBeforeEscalation"] = info["levelBeforeEscalation"]
-        self.one_time_token = info["escalationToken"]
         self._write_hash(h)
 
     def onDeescalateRequest(self, **info):
         h = Hash("type", "deescalate")
-        h["escalationToken"] = self.one_time_token
+        h["escalationToken"] = krb_access.ONE_TIME_TOKEN
         self._write_hash(h)
 
     def _empty_request_queue(self):
