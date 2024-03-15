@@ -66,7 +66,6 @@ class ReactiveLoginDialog(QDialog):
         self._auth_url = ""
         self._auth_user = ""
         self._error = None
-        self._one_time_token = ""
         self._topic = ""
 
         # Initialization of communication objects needed for authenticating
@@ -126,11 +125,6 @@ class ReactiveLoginDialog(QDialog):
 
     # --------------------------------------------------------------------
     # Dialog Public Properties
-
-    @property
-    def one_time_token(self):
-        """The network one time token used to authenticate"""
-        return self._one_time_token
 
     @property
     def access_level(self) -> str:
@@ -282,7 +276,7 @@ class ReactiveLoginDialog(QDialog):
             reply_body = str(bytes_string, "utf-8")
             auth_result = json.loads(reply_body)
             if auth_result.get("success"):
-                self._one_time_token = auth_result["once_token"]
+                krb_access.ONE_TIME_TOKEN = auth_result["once_token"]
                 self.accept()
                 return
             else:
@@ -395,6 +389,7 @@ class EscalationDialog(QDialog):
                 highest_access_level = krb_access.HIGHEST_ACCESS_LEVEL.name
                 krb_access_level = krb_access.ACCESS_LEVEL_MAP.get(
                     highest_access_level.lower(), 2)
+                krb_access.ONE_TIME_TOKEN = auth_result["once_token"]
                 get_network().onEscalateRequest(
                     username=self.username,
                     escalationToken=auth_result["once_token"],

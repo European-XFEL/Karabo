@@ -307,7 +307,7 @@ class MainWindow(QMainWindow):
         title = " - ".join([info.format(value) for info, value in
                             zip(titles, self.title_info.values())
                             if value is not None])
-        if get_network().username and get_network().is_authenticated:
+        if get_network().username and krb_access.is_authenticated():
             title = f"{title} - User: {get_network().username}"
         if escalated_user := kwargs.get("escalated_user"):
             title = f"{title}- Escalated User: {escalated_user}"
@@ -323,7 +323,7 @@ class MainWindow(QMainWindow):
     def update_server_connection(self, data=None):
         """Update the status bar with our broker connection information
         """
-        allow_escalation = get_network().is_authenticated
+        allow_escalation = krb_access.is_authenticated()
         if data is not None:
             topic = data["topic"]
             # Store this information in the config singleton!
@@ -403,7 +403,9 @@ class MainWindow(QMainWindow):
 
     def onUpdateAccessLevel(self):
         global_access_level = krb_access.GLOBAL_ACCESS_LEVEL
-        highest_access_level = krb_access.HIGHEST_ACCESS_LEVEL
+        highest_access_level = global_access_level
+        if krb_access.is_authenticated():
+            highest_access_level = krb_access.HIGHEST_ACCESS_LEVEL
         # Build the access level menu
         self.mAccessLevel.clear()
         for level in ACCESS_LEVELS.values():
@@ -734,7 +736,7 @@ class MainWindow(QMainWindow):
             messagebox.show_error("No web browser available!", parent=self)
 
     def _escalate(self):
-        if not get_network().is_authenticated:
+        if not krb_access.is_authenticated():
             return
         self._last_selected_access = self.agAccessLevel.checkedAction()
 

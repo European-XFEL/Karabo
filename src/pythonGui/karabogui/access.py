@@ -32,6 +32,7 @@ USERNAMES = [level.lower() for level in ACCESS_LEVELS.keys()]
 # GUI server eventually
 GLOBAL_ACCESS_LEVEL = AccessLevel.OBSERVER
 HIGHEST_ACCESS_LEVEL = AccessLevel.OPERATOR
+ONE_TIME_TOKEN = None
 
 AUTHENTICATION_SERVER = None
 
@@ -67,3 +68,8 @@ ACCESS_LEVEL_ROLES = {
 def access_role_allowed(role):
     """Return on runtime if action in the GUI are allowed"""
     return GLOBAL_ACCESS_LEVEL >= ACCESS_LEVEL_ROLES[role]
+
+
+def is_authenticated():
+    """one time token is set for only User-Authenticated login"""
+    return bool(ONE_TIME_TOKEN)
