@@ -53,6 +53,9 @@ variables:
     - KaraboFramework
   image: europeanxfel/karabo-ci:$ARCH_TAG
   before_script:
+    # peek inside cache
+    - hostname || true
+    - find /cache || true
     # install conan to docker image
     - python3 -m pip install --upgrade pip
     - python3 -m pip install conan==1.62.0
