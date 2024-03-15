@@ -31,6 +31,7 @@
 #include "karabo/log/Logger.hh"
 #include "karabo/util/Configurator.hh"
 #include "karabo/util/Hash.hh"
+#include "karabo/util/JsonToHashParser.hh"
 #include "karabo/util/Version.hh"
 
 using namespace karabo::util;
@@ -39,9 +40,7 @@ namespace karabo {
 
     namespace core {
 
-        static std::vector<std::string> convertInitStringToAutoStartTokens(const std::string& initString);
-        static void convertJsonToKaraboFormat(std::string& k);
-        static void replaceAll(std::string& s, const std::string& pattern, const std::string& replacement);
+        static Hash initStringToAutoStartHash(const std::string& initString);
 
 
         DeviceServer::Pointer Runner::instantiate(int argc, const char** argv) {
@@ -94,20 +93,19 @@ namespace karabo {
             };
 
             auto cmdLine = std::vector<std::string>(argv, argv + argc);
-            auto resultInit = findStringWithPattern(cmdLine, R"(^\s*init\s*=)");
-            auto resultAutoStart = findStringWithPattern(cmdLine, R"(^\s*autoStart\[)");
+            auto initToken = findStringWithPattern(cmdLine, R"(^\s*init\s*=)");
+            auto autoStartToken = findStringWithPattern(cmdLine, R"(^\s*autoStart\[)");
 
-            if (resultInit.first && resultAutoStart.first) {
+            if (initToken.first && autoStartToken.first) {
                 throw KARABO_PARAMETER_EXCEPTION(
                       "CLI Syntax Error: Cannot use autoStart and init keywords at the same time");
             }
 
-            // convert init to corresponding autostart tokens and inject into
-            // cmdLine
-            if (resultInit.first) {
-                auto autoStartTokens = convertInitStringToAutoStartTokens(std::move(*resultInit.second));
-                cmdLine.erase(resultInit.second);
-                cmdLine.insert(cmdLine.end(), autoStartTokens.begin(), autoStartTokens.end());
+            // This bit does parsing of the init string after which it is
+            // removed from the cmdLine argument stream.
+            if (initToken.first) {
+                configuration.merge(initStringToAutoStartHash(*initToken.second));
+                cmdLine.erase(initToken.second);
             }
 
             vector<string> args, resolved;
@@ -184,6 +182,15 @@ namespace karabo {
             flatConfiguration.unflatten(configuration);
 
             return true;
+        }
+
+        Hash initStringToAutoStartHash(const std::string& initString) {
+            // precondition is init string is a key=value entry. Hence no
+            // explicit error check
+            auto pos = initString.find("=");
+            auto json = initString.substr(pos + 1);
+
+            return karabo::util::generateAutoStartHash(karabo::util::jsonToHash(json));
         }
 
 
@@ -424,81 +431,5 @@ namespace karabo {
                 }
             }
         }
-
-
-        /*
-         * Replace all instances of a pattern in a string with provided
-         * replacement pattern.
-         */
-        void replaceAll(std::string& s, const std::string& pattern, const std::string& replacement) {
-            if (pattern.empty()) {
-                return;
-            }
-            // pattern.empty() will match every position in string; loop termination below will
-            // not happen as pos will not be std::npos in this case.
-
-            size_t pos = 0;
-            while ((pos = s.find(pattern, pos)) != std::string::npos) {
-                s.replace(pos, pattern.length(), replacement);
-                pos += replacement.length(); // Skip the replaced part
-            }
-        }
-
-        /*
-         * Json maps nicely to the custom format we use if we:
-         * - remove quotes for string types
-         * - replace ":" with "="
-         * - replace "," with " "
-         */
-        void convertJsonToKaraboFormat(std::string& k) {
-            replaceAll(k, "\"", "");
-            replaceAll(k, ":", "=");
-            replaceAll(k, ",", " ");
-        }
-
-
-        /*
-         * Parses init json string and transforms it into corresponding
-         * autoStart tokens digestible by existing parser code.
-         *
-         * Fuction takes a string in 'init=valid_json_string' syntax and returns
-         * a vector of autoStart tokens corresponding to devices described in the
-         * init string.
-         *
-         * Example:
-         * 'init={"deviceId1":{"classId":"TheClassName","stringProperty":"Value","floatProperty":42}}'
-         * converts to:
-         * autoStart[0]={TheClassName={deviceId=deviceId1 floatProperty=42 stringProperty=Value}}
-         */
-        std::vector<std::string> convertInitStringToAutoStartTokens(const std::string& initString) {
-            std::vector<std::string> autoStartTokens;
-
-            // precondition is init string is a key=value entry. Hence no
-            // explicit error check
-            auto pos = initString.find("=");
-            auto json = initString.substr(pos + 1);
-            auto parsed = nlohmann::json::parse(json);
-
-            size_t count = 0;
-            std::string deviceInfoJsonStr;
-            for (auto it = parsed.begin(); it != parsed.end(); ++it) {
-                nlohmann::json deviceInfo = it.value();
-                std::string classId = deviceInfo["classId"];
-                deviceInfo.erase("classId");
-                deviceInfo["deviceId"] = it.key();
-
-                deviceInfoJsonStr = deviceInfo.dump();
-
-                // converts json string to an equivilent string parsable by karabo
-                // parser.
-                convertJsonToKaraboFormat(deviceInfoJsonStr);
-
-                autoStartTokens.emplace_back("autoStart[" + std::to_string(count++) + "]={" + classId + "=" +
-                                             deviceInfoJsonStr + "}");
-            }
-            return autoStartTokens;
-        }
-
-
     } // namespace core
 } // namespace karabo
