@@ -26,13 +26,14 @@ from qtpy.QtWidgets import (
     QAbstractItemView, QAction, QComboBox, QDialog, QFrame, QHBoxLayout,
     QLabel, QLineEdit, QListView, QMenu, QPushButton, QTextEdit, QVBoxLayout,
     QWidget)
-from traits.api import Instance, Int, WeakRef, on_trait_change
+from traits.api import Instance, Int, String, WeakRef, on_trait_change
 
 from karabo.common.scenemodel.api import HistoricTextModel
 from karabo.native import Timestamp
 from karabogui import icons
 from karabogui.binding.api import (
-    StringBinding, VectorStringBinding, get_binding_value)
+    StringBinding, UnsignedIntBinding, VectorStringBinding, get_binding_value,
+    get_dtype_format)
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 from karabogui.dialogs.api import RequestTimeDialog
@@ -72,9 +73,12 @@ def get_start_end_date_time(time_span):
     return start_time, current_time
 
 
+_BINDINGS = (UnsignedIntBinding, StringBinding, VectorStringBinding)
+
+
 @register_binding_controller(ui_name="Historic Text Data", can_edit=False,
                              klassname="HistoricText",
-                             binding_type=(StringBinding, VectorStringBinding),
+                             binding_type=_BINDINGS,
                              priority=-10)
 class DisplayHistoricText(BaseBindingController):
     """
@@ -91,6 +95,7 @@ class DisplayHistoricText(BaseBindingController):
     text_widget = WeakRef(QTextEdit)
 
     maxHistory = Int(500)
+    fmt = String("{}")
 
     def create_widget(self, parent):
         widget = QWidget(parent)
@@ -174,6 +179,9 @@ class DisplayHistoricText(BaseBindingController):
 
         return widget
 
+    def binding_update(self, proxy):
+        self.fmt = get_dtype_format(proxy.binding)
+
     def value_update(self, proxy):
         value = get_binding_value(proxy)
         if value is None:
@@ -181,10 +189,18 @@ class DisplayHistoricText(BaseBindingController):
         timestamp = proxy.binding.timestamp
         dt = datetime.fromtimestamp(timestamp.toTimestamp())
         stamp = dt.strftime(TIME_FORMAT)
+        value = self._create_value(value)
         self.text_widget.setText(f"{stamp} {value}")
 
     # ----------------------------------------------------------------------
     # Internal interface
+
+    def _create_value(self, value):
+        """Transform the value"""
+        try:
+            return self.fmt.format(value)
+        except BaseException:
+            return str(value)
 
     def _convert_datetime_utc(self, start, end):
         """Convert datetime objects for `start` and `end` to UTC strings"""
@@ -203,7 +219,7 @@ class DisplayHistoricText(BaseBindingController):
             timestamp = Timestamp.fromHashAttributes(h["v", ...])
             dt = datetime.fromtimestamp(timestamp.toTimestamp())
             stamp = dt.strftime(TIME_FORMAT)
-            value = h["v"]
+            value = self._create_value(h["v"])
             return f"{stamp} {value}"
 
         data = [format_entry(h) for h in data][::-1]
