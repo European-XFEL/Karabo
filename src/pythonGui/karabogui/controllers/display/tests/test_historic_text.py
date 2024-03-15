@@ -15,7 +15,8 @@
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
 from karabo.common.scenemodel.api import HistoricTextModel
-from karabo.native import Configurable, Hash, String, Timestamp, VectorString
+from karabo.native import (
+    Configurable, Hash, String, Timestamp, UInt32, VectorString)
 from karabogui.const import IS_WINDOWS_SYSTEM
 from karabogui.controllers.display.historic_text import DisplayHistoricText
 from karabogui.testing import (
@@ -25,6 +26,10 @@ from karabogui.testing import (
 class Object(Configurable):
     prop = String()
     vector = VectorString()
+    integer = UInt32(
+        displayType="hex|",
+        defaultValue=13
+    )
 
 
 def test_historic_text(gui_app, subtests, mocker):
@@ -97,6 +102,52 @@ def test_vector_historic(gui_app, subtests, mocker):
         ts_second = Timestamp()
         ts_second.toHashAttributes(second)
         third = Hash("v", [])
+        ts_third = Timestamp()
+        ts_third.toHashAttributes(third)
+        controller._historic_data_arrival([first, second, third])
+        model = controller.list_model
+        assert model.rowCount() == 3
+
+    with subtests.test("Historic data request"):
+        network = mocker.Mock()
+        with singletons(network=network):
+            click_button(controller.request_button)
+            text = controller.status_widget.text()
+            assert "Requesting historic data!" in text
+            network.onGetPropertyHistory.assert_called_once()
+
+    controller.destroy()
+    assert controller.widget is None
+
+
+def test_integer_hex(gui_app, subtests, mocker):
+    """Test the historic text widget with vector string data"""
+    schema = Object.getClassSchema()
+    proxy = get_property_proxy(schema, "integer")
+    controller = DisplayHistoricText(proxy=proxy,
+                                     model=HistoricTextModel())
+    controller.create(None)
+    assert controller.widget is not None
+
+    if not IS_WINDOWS_SYSTEM:
+        # Note: PlainText not working on windows
+        model = controller.list_model
+        model.setStringList([])
+        assert model.rowCount() == 0
+        set_proxy_value(proxy, "integer", 10)
+        assert "0xA" in controller.text_widget.toPlainText()
+        set_proxy_value(proxy, "integer", 7)
+        text = controller.text_widget.toPlainText()
+        assert "0x7" in text
+
+    with subtests.test("Historic data arrival"):
+        first = Hash("v", 2)
+        ts_first = Timestamp()
+        ts_first.toHashAttributes(first)
+        second = Hash("v", 1)
+        ts_second = Timestamp()
+        ts_second.toHashAttributes(second)
+        third = Hash("v", 0)
         ts_third = Timestamp()
         ts_third.toHashAttributes(third)
         controller._historic_data_arrival([first, second, third])
