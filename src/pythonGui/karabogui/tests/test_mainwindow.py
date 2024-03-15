@@ -16,6 +16,8 @@
 # or FITNESS FOR A PARTICULAR PURPOSE.
 from qtpy.QtWidgets import QFrame
 
+from karabo.native import AccessLevel
+from karabogui import mainwindow
 from karabogui.const import IS_LINUX_SYSTEM
 from karabogui.testing import singletons
 
@@ -26,6 +28,9 @@ def test_mainwindow(gui_app, mocker, subtests):
     network = mocker.Mock()
     manager = mocker.Mock()
     mediator = mocker.Mock()
+    krb_access = mocker.patch.object(mainwindow, "krb_access")
+    krb_access.HIGHEST_ACCESS_LEVEL = AccessLevel.ADMIN
+    krb_access.GLOBAL_ACCESS_LEVEL = AccessLevel.EXPERT
     with singletons(network=network, manager=manager, mediator=mediator):
         logger = mocker.patch("karabogui.logger._logger")
         from karabogui.mainwindow import MainWindow
@@ -35,7 +40,7 @@ def test_mainwindow(gui_app, mocker, subtests):
 
         with subtests.test("Escalation button visibility"):
 
-            network.is_authenticated = True
+            krb_access.is_authenticated.return_value = True
             data = {"topic": "foo", "hostname": "exfel", "hostport": 44444}
             mw.update_server_connection(data=data)
             assert mw.tbEscalate.isVisible()
@@ -45,7 +50,7 @@ def test_mainwindow(gui_app, mocker, subtests):
             assert not mw.tbEscalate.isChecked()
             assert mw.tbEscalate.toolTip() == "Escalate access level"
 
-            network.is_authenticated = False
+            krb_access.is_authenticated.return_value = False
             mw.update_server_connection(data=data)
             assert not mw.tbEscalate.isVisible()
 
@@ -102,7 +107,23 @@ def test_mainwindow(gui_app, mocker, subtests):
             expected.insert(8, concert_shortcut)
         assert expected == [action.text() for action in help_actions]
 
-    with subtests.test("Test Access levels"):
+    with subtests.test("Test Access Level"):
+        krb_access = mocker.patch.object(mainwindow, "krb_access")
+        krb_access.HIGHEST_ACCESS_LEVEL = AccessLevel.ADMIN
+        krb_access.GLOBAL_ACCESS_LEVEL = AccessLevel.EXPERT
         access_menu = mw.tbAccessLevel.menu()
         access_levels = [act.text() for act in access_menu.actions()]
-        assert access_levels == ['Operator', 'User', 'Observer']
+
+        # For User-authenticated login, access level up to
+        # 'access.HIGHEST_ACCESS_LEVEL' is exposed
+        krb_access.is_authenticated.return_value = True
+        mw.onUpdateAccessLevel()
+        assert access_levels == [
+            'Admin', 'Expert', 'Operator', 'User', 'Observer']
+
+        # For Access-level login, access level up to
+        # 'access.HIGHEST_ACCESS_LEVEL' is exposed
+        krb_access.is_authenticated.return_value = False
+        mw.onUpdateAccessLevel()
+        access_levels = [act.text() for act in access_menu.actions()]
+        assert access_levels == ['Expert', 'Operator', 'User', 'Observer']
