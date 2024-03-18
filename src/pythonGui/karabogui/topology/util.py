@@ -43,6 +43,11 @@ def is_device_online(deviceId):
     return _is_online("device", deviceId)
 
 
+def is_macro_online(deviceId):
+    """Check the system topology and return online macro status"""
+    return _is_online("macro", deviceId)
+
+
 def get_macro_servers(development=False):
     """ get an ordered list of macro servers
 
