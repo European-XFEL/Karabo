@@ -19,4 +19,5 @@ from .project_device import ProjectDeviceInstance
 from .system_topology import SystemTopology
 from .system_tree import SystemTree, SystemTreeNode
 from .util import (
-    get_macro_servers, getTopology, is_device_online, is_server_online)
+    get_macro_servers, getTopology, is_device_online, is_macro_online,
+    is_server_online)
