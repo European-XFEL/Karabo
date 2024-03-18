@@ -20,7 +20,8 @@
 #############################################################################
 from qtpy.QtCore import QPoint, Qt, Slot
 from qtpy.QtGui import QTextCursor
-from qtpy.QtWidgets import QDialog, QMenu, QPlainTextEdit, QSplitter
+from qtpy.QtWidgets import (
+    QDialog, QMenu, QMessageBox, QPlainTextEdit, QSplitter)
 
 import karabogui.access as krb_access
 from karabo.common.api import ServerFlags
@@ -32,7 +33,9 @@ from karabogui.events import (
     KaraboEvent, broadcast_event, register_for_broadcasts,
     unregister_from_broadcasts)
 from karabogui.project.utils import run_macro, run_macro_debug
+from karabogui.request import onShutdown
 from karabogui.singletons.api import get_config, get_topology
+from karabogui.topology.api import is_macro_online
 from karabogui.util import getSaveFileName
 from karabogui.widgets.scintilla_editor import CodeBook
 from karabogui.widgets.toolbar import ToolBar
@@ -233,9 +236,24 @@ class MacroPanel(BasePanelWidget):
                    f"'{krb_access.GLOBAL_ACCESS_LEVEL}' "
                    f"is not sufficient to run the macro! Please contact a "
                    f"controls expert.")
-            messagebox.show_information(msg)
+            messagebox.show_information(msg, parent=self)
             return
 
+        instance_id = self.model.instance_id
+        if is_macro_online(instance_id):
+            ask = (f"The macro <b>{instance_id}</b> is already online. "
+                   "Do you want to restart the macro?")
+            options = QMessageBox.Yes | QMessageBox.No
+            reply = QMessageBox.question(
+                self, "Macro is already online", ask, options, QMessageBox.No)
+            if reply != QMessageBox.Yes:
+                return
+            proxy = get_topology().get_device(instance_id, request=False)
+            onShutdown(proxy, self._run_code)
+            return
+        self._run_code()
+
+    def _run_code(self):
         self.ui_console.clear()
         try:
             compile(self.model.code, self.model.simple_name, "exec")
@@ -244,7 +262,8 @@ class MacroPanel(BasePanelWidget):
                 self.ui_editor.moveCursorToLine(e.lineno, e.offset)
             formatted_msg = "{}\n{}{}^\nin {} line {}".format(
                 e.msg, e.text, " " * e.offset, e.filename, e.lineno)
-            messagebox.show_warning(formatted_msg, title=type(e).__name__)
+            messagebox.show_warning(formatted_msg, title=type(e).__name__,
+                                    parent=self)
             return
 
         run_macro(self.model, parent=self)
