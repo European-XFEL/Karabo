@@ -22,6 +22,7 @@ from functools import partial
 from inspect import signature
 from io import StringIO
 
+from qtpy.QtCore import QTimer, Slot
 from traits.api import Undefined
 
 from karabo.common.api import Capabilities, walk_traits_object
@@ -35,6 +36,9 @@ from karabogui.fonts import substitute_font
 from karabogui.logger import get_logger
 from karabogui.singletons.api import get_manager, get_network, get_topology
 from karabogui.util import get_reason_parts
+
+_WAIT_SECONDS = 5
+_waiting_devices = {}
 
 
 def call_device_slot(handler, instance_id, slot_name, **kwargs):
@@ -302,3 +306,62 @@ def retrieve_default_scene(device_id):
             get_scene_from_server(device_id, scene_name)
 
     get_proxy_scene(proxy)
+
+
+def onShutdown(device_proxy, handler, parent=None):
+    """Shutdown a device_proxy and perform an action handler on device_proxy
+
+    Note: The device must be online!
+    """
+
+    def _offline_handler(device_proxy, name, new):
+        """Handle a device getting a new configuration
+        """
+        global _waiting_devices
+        handler, timer = _waiting_devices.pop(device_proxy,
+                                              (lambda: None, None))
+
+        # Remove the trait handler
+        device_proxy.on_trait_change(_offline_handler, "online", remove=True)
+
+        # Clear the timer
+        timer.stop()
+        # Execute the handler
+        handler()
+
+    @Slot()
+    def _timeout_handler(device_proxy):
+        """Handle our wait timer expiring"""
+        global _waiting_devices
+        _waiting_devices.pop(device_proxy, None)
+
+        # Remove the trait handler
+        device_proxy.on_trait_change(_offline_handler, "online",
+                                     remove=True)
+
+        # Inform the user
+        msg = f"The device didn't shutdown in {_WAIT_SECONDS} ... aborting."
+        msg = msg.format(device_proxy.device_id, _WAIT_SECONDS)
+        messagebox.show_warning(msg, parent=parent)
+
+    if not device_proxy.online:
+        msg = "The device is already offline ..."
+        messagebox.show_error(msg, parent=parent)
+        return
+
+    global _waiting_devices
+    if device_proxy in _waiting_devices:
+        # Already waiting
+        return
+
+    timer = QTimer()
+    timer.setSingleShot(True)
+    timer.timeout.connect(partial(_timeout_handler, device_proxy))
+    device_proxy.on_trait_change(_offline_handler, 'online')
+
+    _waiting_devices[device_proxy] = (handler, timer)
+    timer.start(_WAIT_SECONDS * 1000)
+
+    instanceId = device_proxy.device_id
+    # Shutdown the device
+    get_network().onKillDevice(instanceId)
