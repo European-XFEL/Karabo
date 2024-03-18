@@ -38,6 +38,7 @@
 #include <iomanip>
 #include <iostream>
 #include <map>
+#include <regex>
 #include <set>
 #include <sstream>
 #include <string>
@@ -48,6 +49,13 @@
 #include "Exception.hh"
 #include "State.hh"
 #include "Types.hh"
+
+namespace {
+    // A string that does not have any of these characters
+    // is not a a floating point number. ',' is added in case
+    // German locales are used
+    const char floating_point_chars[] = "eE.,";
+} // namespace
 
 namespace karabo {
     namespace util {
@@ -390,26 +398,46 @@ namespace karabo {
          */
         template <>
         inline int fromString(const std::string& value) {
-            int val = strtol(value.c_str(), NULL, 0);
-            return val;
+            // Calling stoi directly would fail for numbers in scientific notation
+            // (it stops after the '.' for 1.6e-1)
+            if (value.find_first_of(floating_point_chars) != std::string::npos) {
+                return static_cast<int>(std::stod(value, nullptr));
+            }
+
+            return std::stoi(value, nullptr, 0);
         }
 
         template <>
         inline unsigned int fromString(const std::string& value) {
-            unsigned int val = strtoul(value.c_str(), NULL, 0);
-            return val;
+            // Calling stoul directly would fail for numbers in scientific notation
+            // (it stops after the '.' for 1.6e-1)
+            if (value.find_first_of(floating_point_chars) != std::string::npos) {
+                return static_cast<unsigned int>(std::stod(value, nullptr));
+            }
+
+            return std::stoul(value, nullptr, 0);
         }
 
         template <>
         inline long long fromString(const std::string& value) {
-            long long val = strtoll(value.c_str(), NULL, 0);
-            return val;
+            // Calling stoll directly would fail for numbers in scientific notation
+            // (it stops after the '.' for 1.6e-1)
+            if (value.find_first_of(floating_point_chars) != std::string::npos) {
+                return static_cast<long long>(std::stod(value, nullptr));
+            }
+
+            return std::stoll(value, nullptr, 0);
         }
 
         template <>
         inline unsigned long long fromString(const std::string& value) {
-            unsigned long long val = strtoull(value.c_str(), NULL, 0);
-            return val;
+            // Calling stoull directly would fail for numbers in scientific notation
+            // (it stops after the '.' for 1.6e-1)
+            if (value.find_first_of(floating_point_chars) != std::string::npos) {
+                return static_cast<unsigned long long>(std::stod(value, nullptr));
+            }
+
+            return std::stoull(value, nullptr, 0);
         }
 
         /**
