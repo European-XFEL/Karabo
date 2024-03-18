@@ -53,12 +53,20 @@ void StringTools_Test::testFromString() {
     CPPUNIT_ASSERT((unsigned short)34567 == fromString<unsigned short>("34567"));
     CPPUNIT_ASSERT((unsigned int)2345678901 == fromString<unsigned int>("2345678901"));
     CPPUNIT_ASSERT((unsigned long long)123456789012 == fromString<unsigned long long>("123456789012"));
+    CPPUNIT_ASSERT((unsigned int)1 == fromString<unsigned int>("1.23"));
+    CPPUNIT_ASSERT((unsigned int)0 == fromString<unsigned int>("1.23e-10"));
+    CPPUNIT_ASSERT((unsigned int)123 == fromString<unsigned int>("1.23e2"));
 
     // Signed integer
     CPPUNIT_ASSERT((signed char)123 == fromString<signed char>("123"));
     CPPUNIT_ASSERT((short)23456 == fromString<short>("23456"));
     CPPUNIT_ASSERT((int)1234567890 == fromString<int>("1234567890"));
+    CPPUNIT_ASSERT((int)1 == fromString<int>("1.23"));
+    CPPUNIT_ASSERT((int)0 == fromString<int>("1.23e-10"));
     CPPUNIT_ASSERT((long long)123456789012 == fromString<long long>("123456789012"));
+    CPPUNIT_ASSERT((unsigned long long)1 == fromString<unsigned long long>("1.23"));
+    CPPUNIT_ASSERT((unsigned long long)0 == fromString<unsigned long long>("1.23e-10"));
+    CPPUNIT_ASSERT((unsigned long long)123 == fromString<unsigned long long>("1.23e2"));
 
     // Boolean
     CPPUNIT_ASSERT(false == fromString<bool>("false"));
