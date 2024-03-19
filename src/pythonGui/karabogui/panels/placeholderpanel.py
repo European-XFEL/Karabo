@@ -26,6 +26,8 @@ from .base import BasePanelWidget
 class PlaceholderPanel(BasePanelWidget):
     def __init__(self):
         super().__init__("Start Page")
+        # Logbook is not needed for this panel.
+        self.application_toolbar.setVisible(False)
 
     def get_content_widget(self):
         """Returns a QWidget containing the main content of the panel.
