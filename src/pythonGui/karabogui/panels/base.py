@@ -214,12 +214,6 @@ class BasePanelWidget(QFrame):
         """This toolbar is shown by all panels which are attached to a
         container.
         """
-        text = "Save LogBook"
-        self.acSaveLogBook = QAction(icons.logbook, "&Save LogBook", self)
-        self.acSaveLogBook.setToolTip(text)
-        self.acSaveLogBook.setStatusTip(text)
-        self.acSaveLogBook.triggered.connect(self.handleLogBookPreview)
-
         text = "Print"
         self.acPrint = QAction(icons.printer, "&Print", self)
         self.acPrint.setToolTip(text)
@@ -253,8 +247,6 @@ class BasePanelWidget(QFrame):
         self.acMinimize.setVisible(False)
 
         self.standard_toolbar = ToolBar("Standard", parent=self)
-        self.standard_toolbar.add_expander()
-        self.standard_toolbar.addAction(self.acSaveLogBook)
         self.standard_toolbar.addAction(self.acPrint)
         self.standard_toolbar.addAction(self.acUndock)
         self.standard_toolbar.addAction(self.acDock)
@@ -264,22 +256,37 @@ class BasePanelWidget(QFrame):
         # Hidden by default
         self.standard_toolbar.setVisible(False)
 
+    def _build_application_toolbar(self):
+        # Creating a separate toolbar that appears in all modes, like
+        # Cinema, Concert etc.
+        text = "Save LogBook"
+        self.acSaveLogBook = QAction(icons.logbook, "&Save LogBook", self)
+        self.acSaveLogBook.setToolTip(text)
+        self.acSaveLogBook.setStatusTip(text)
+        self.acSaveLogBook.triggered.connect(self.handleLogBookPreview)
+
+        self.application_toolbar = ToolBar("Logbook", parent=self)
+        self.application_toolbar.add_expander()
+        self.application_toolbar.addAction(self.acSaveLogBook)
+
     def _fill_panel(self):
         # Create the content widget first
         main_content = self.get_content_widget()
         # Then the standard toolbar
         self._build_standard_toolbar()
+        self._build_application_toolbar()
 
         # Build the toolbar container
         toolbar = QWidget(self)
         toolbar_layout = QHBoxLayout(toolbar)
-        all_toolbars = self.toolbars() + [self.standard_toolbar]
+        all_toolbars = self.toolbars() + [self.application_toolbar,
+                                          self.standard_toolbar]
         for tb in all_toolbars:
             toolbar_layout.addWidget(tb)
         toolbar_layout.setContentsMargins(0, 0, 0, 0)
         toolbar_layout.setSpacing(0)
         # Make the first toolbars expand to fill all horizontal space
-        toolbar_layout.setStretch(toolbar_layout.count() - 1, 1)
+        toolbar_layout.setStretch(toolbar_layout.count() - 2, 1)
         # Default visibility is set to True and updated on container setting
         toolbar.setVisible(True)
 
