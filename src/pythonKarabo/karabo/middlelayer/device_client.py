@@ -308,14 +308,15 @@ async def _getLogReaderId(deviceId):
     # GuiServerDevice::onGetPropertyHistory. One day we should
     # de-hard-code both.
     instance = get_instance()
-    did = f"DataLogger-{deviceId}"
-    if did not in instance.loggerMap:
+    loggerId = f"DataLogger-{deviceId}"
+    loggerMap = getattr(instance, "loggerMap", None)
+    if loggerMap is None or loggerId not in loggerMap:
         instance.loggerMap = await instance.call(
             "Karabo_DataLoggerManager_0", "slotGetLoggerMap")
-        if did not in instance.loggerMap:
+        if loggerId not in instance.loggerMap:
             raise KaraboError('no logger for device "{}"'.
                               format(deviceId))
-    return f"DataLogReader0-{instance.loggerMap[did]}"
+    return f"DataLogReader0-{instance.loggerMap[loggerId]}"
 
 
 @synchronize
