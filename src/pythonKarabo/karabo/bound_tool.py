@@ -58,11 +58,11 @@ if use_karathon:
         SignalSlotableIntern, Slot, SlotElementBase, TextSerializerHash,
         TextSerializerSchema, TimeDuration, Timestamp, Trainstamp, Types,
         TypesClass, Unit, Validator, ValidatorValidationRules, VectorHash,
-        VectorHashPointer, _DimsIntern, fullyEqual,
-        isStdVectorDefaultConversion, loadFromFile, loadHashFromFile,
-        loadSchemaFromFile, saveHashToFile, saveSchemaToFile, saveToFile,
-        setDims, setStdVectorDefaultConversion, similar, startDeviceServer,
-        stopDeviceServer)
+        VectorHashPointer, _DimsIntern, fullyEqual, generateAutoStartHash,
+        isStdVectorDefaultConversion, jsonToHash, loadFromFile,
+        loadHashFromFile, loadSchemaFromFile, saveHashToFile, saveSchemaToFile,
+        saveToFile, setDims, setStdVectorDefaultConversion, similar,
+        startDeviceServer, stopDeviceServer)
 else:
     from karabind import (
         ADMIN, ALARM_ELEMENT, AMPERE, AMPERE_PER_SECOND, ATTO, ATTOSEC, BAR,
@@ -102,9 +102,9 @@ else:
         TextSerializerSchema, TimeDuration, Timestamp, Trainstamp, Types,
         TypesClass, Unit, Validator, ValidatorValidationRules, VectorHash,
         VectorHashPointer, _DimsIntern, cppNDArray, cppNDArrayCopy, fullyEqual,
-        loadFromFile, loadHashFromFile, loadSchemaFromFile, saveHashToFile,
-        saveSchemaToFile, saveToFile, setDims, similar, startDeviceServer,
-        stopDeviceServer)
+        generateAutoStartHash, jsonToHash, loadFromFile, loadHashFromFile,
+        loadSchemaFromFile, saveHashToFile, saveSchemaToFile, saveToFile,
+        setDims, similar, startDeviceServer, stopDeviceServer)
 
     # For comptibility with old karathon bindings, take care that e.g.
     # str(Types.INT32) is 'INT32' and not 'Types.INT32'
@@ -113,7 +113,7 @@ else:
         return repStr[7:repStr.find(':')]
 
     setattr(Types, "__str__", __typesToString)
-        
+
 
     class AbstractInput:
         pass
