@@ -3,6 +3,18 @@
 
 
 ***************************
+What's New in Karabo 2.19.4
+***************************
+
+This patch release contains **Redhat9** support and two fixes for the `karaboGUI` client.
+Now the Region Of Interest of the Graph Widgets can be moved around freely and the editor can
+be raised from the scene view again.
+
+- ci(RedHat 9): Add RedHat 9 support to the CI !8121
+- GUI: Remove setting boundary for ROI !8132
+- fix(GUI): fix raising of editor on scene view !8139
+
+***************************
 What's New in Karabo 2.19.3
 ***************************
 
