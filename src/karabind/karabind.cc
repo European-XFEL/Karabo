@@ -47,6 +47,7 @@ void exportPyUtilSchemaListElement(py::module_&);      // PyUtilSchemaListElemen
 void exportPyUtilSchemaOverwriteElement(py::module_&); // PyUtilSchemaOverwriteElement.cc
 void exportPyUtilSchemaTableElement(py::module_&);     // PyUtilSchemaTableElement.cc
 void exportPyUtilSchemaValidator(py::module_&);        // PyUtilSchemaValidator.cc
+void exportPyUtilJsonToHashParser(py::module_&);       // PyUtilJsonToHashParser.cc
 
 // io
 void exportPyIoFileToolsAll(py::module_&);
@@ -99,6 +100,7 @@ PYBIND11_MODULE(karabind, m) {
     exportPyUtilSchemaOverwriteElement(m);
     exportPyUtilSchemaTableElement(m);
     exportPyUtilSchemaValidator(m);
+    exportPyUtilJsonToHashParser(m);
 
     // io
     exportPyIoFileToolsAll(m);
