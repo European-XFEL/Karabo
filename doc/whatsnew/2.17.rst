@@ -3,6 +3,32 @@
 
 
 ***************************
+What's New in Karabo 2.17.4
+***************************
+
+Another patch release for the toml support for the karabo `depends` mechanism.
+
+Detailed Merge-Log
+++++++++++++++++++
+
+- DEPS: Pip install with --nodeps (toml support) !7991
+
+
+***************************
+What's New in Karabo 2.17.3
+***************************
+
+This patch release contains a very important backport for the AMQP integration and a pip
+dependency update. Installations using AMQP should use this version minimum.
+
+Detailed Merge-Log
+++++++++++++++++++
+
+- DEPS: 2.17.X receives a pip update !7849
+- AMQP: Do not run Karabo [un]subscribe handlers on AMQP event loop (BACKPORT to 2.17.X) !7900
+
+
+***************************
 What's New in Karabo 2.17.2
 ***************************
 
