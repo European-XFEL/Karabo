@@ -19,10 +19,10 @@ from karabo.common.display_types import (
     KARABO_SCHEMA_DISPLAY_TYPE_ALARM, KARABO_SCHEMA_DISPLAY_TYPE_HEX,
     KARABO_SCHEMA_DISPLAY_TYPE_STATE)
 from karabo.common.scenemodel.api import (
-    AlarmGraphModel, HistoricTextModel, StateGraphModel, TableElementModel,
-    TrendGraphModel, VectorGraphModel, WebCamGraphModel, get_alarm_graph_scene,
-    get_image_scene, get_state_graph_scene, get_text_history_scene,
-    get_trendline_scene, get_vector_scene)
+    AlarmGraphModel, FilterTableElementModel, HistoricTextModel,
+    StateGraphModel, TrendGraphModel, VectorGraphModel, WebCamGraphModel,
+    get_alarm_graph_scene, get_image_scene, get_state_graph_scene,
+    get_text_history_scene, get_trendline_scene, get_vector_scene)
 from karabogui.binding.api import (
     BoolBinding, FloatBinding, ImageBinding, IntBinding, NDArrayBinding,
     NodeBinding, PipelineOutputBinding, StringBinding, VectorHashBinding,
@@ -107,6 +107,16 @@ def _get_widget_attributes(key):
     }
 
 
+def _get_table_attributes(key):
+    """Retrieve the basic image model properties according to `proxy`"""
+    return {
+        "width": 800,
+        "height": 600,
+        "showFilterKeyColumn": True,
+        "keys": [key]
+    }
+
+
 def get_property_proxy_model(proxy, include_images=True):
     """Return a generic model instance for a proxy binding
 
@@ -131,7 +141,7 @@ def get_property_proxy_model(proxy, include_images=True):
         return HistoricTextModel(**_get_widget_attributes(proxy.key))
 
     elif isinstance(binding, VectorHashBinding):
-        return TableElementModel(**_get_widget_attributes(proxy.key))
+        return FilterTableElementModel(**_get_table_attributes(proxy.key))
 
     elif isinstance(binding, (BoolBinding, FloatBinding, IntBinding)):
         return TrendGraphModel(**_get_plot_attributes(proxy))
