@@ -53,6 +53,73 @@ class Schema_TestCase(unittest.TestCase):
         self.assertEqual(parsed.get("a[0].e.x"), "15")
         self.assertEqual(parsed.get("a[0].e.y"), "88")
 
+    def test_argument_parser_initString(self):
+        init_string = """
+init={
+    "deviceId1": {
+        "classId": "TheClassName",
+        "stringProperty": "",
+        "floatProperty": 42.1,
+        "node": {
+            "stringProperty": "Value1"
+        }
+    },
+    "deviceId2": {
+        "classId": "TheClassName",
+        "stringProperty": "1.2.3:14",
+        "floatProperty": 42,
+        "node": {
+            "stringProperty": "Value2"
+        }
+    }
+}
+                  """
+        cmdLine = ['foo', 'serverId=bingo', init_string]
+
+        res, parsed = self.runner.parseCommandLine(cmdLine)
+        self.assertTrue(res)
+        self.assertEqual(parsed.get("autoStart[0].TheClassName.deviceId"),
+                         "deviceId1")
+        self.assertEqual(parsed.get(
+            "autoStart[0].TheClassName.stringProperty"), "")
+        self.assertEqual(parsed.get(
+            "autoStart[0].TheClassName.floatProperty"), 42.1)
+        self.assertEqual(parsed.get(
+            "autoStart[0].TheClassName.node.stringProperty"), "Value1")
+        self.assertEqual(parsed.get(
+            "autoStart[1].TheClassName.deviceId"), "deviceId2")
+        self.assertEqual(parsed.get(
+            "autoStart[1].TheClassName.stringProperty"), "1.2.3:14")
+        self.assertEqual(parsed.get(
+            "autoStart[1].TheClassName.node.stringProperty"), "Value2")
+
+    def test_argument_parser_both_autostart_init(self):
+        init_string = """
+init={
+    "deviceId1": {
+        "classId": "TheClassName",
+        "stringProperty": "Value",
+        "floatProperty": 42,
+        "node": {
+            "stringProperty": "Value"
+        }
+    },
+    "deviceId2": {
+        "classId": "TheClassName",
+        "stringProperty": "Value",
+        "floatProperty": 42,
+        "node": {
+            "stringProperty": "Value"
+        }
+    }
+}
+                  """
+        cmdLine = ['foo', 'serverId=bingo', init_string,
+                   'autostart[0]='
+                   '{DataLoggerManager.serverList=dls1,dls2,dls3,dls4']
+        with self.assertRaises(SyntaxError):
+            res, parsed = self.runner.parseCommandLine(cmdLine)
+
     def test_argument_parser_failure1(self):
         with self.assertRaises(SyntaxError):
             res, parsed = self.runner.parseCommandLine(
