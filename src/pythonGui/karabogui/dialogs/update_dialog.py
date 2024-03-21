@@ -131,9 +131,10 @@ def uninstall_package():
 def install_package(wheel_file):
     """Installs a given wheel file"""
     try:
-        output = check_output([sys.executable, '-m', 'pip',
-                               'install', '--upgrade', wheel_file],
-                              stderr=STDOUT)
+        output = check_output(
+            [sys.executable, '-m', 'pip', 'install', '--upgrade',
+             "--disable-pip-version-check", wheel_file],
+            stderr=STDOUT)
         # Reload the entry points
         load_extensions()
         return output.decode()
@@ -251,7 +252,8 @@ class UpdateDialog(QDialog):
             self.ed_log.append(err)
             return None
 
-        cmd = f'pip install --upgrade {self._wheel_file}'
+        wheel = self._wheel_file
+        cmd = f'pip install --upgrade --disable-pip-version-check {wheel}'
         self._start_process(cmd)
 
     def _start_uninstall_process(self):
