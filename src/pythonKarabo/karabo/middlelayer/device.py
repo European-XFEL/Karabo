@@ -432,7 +432,6 @@ class DeviceClientBase(Device):
         self.systemTopology = Hash("device", Hash(), "server", Hash(),
                                    "macro", Hash(), "client", Hash(),
                                    "unknown", Hash())
-        self.loggerMap = Hash()
         super().__init__(configuration)
 
     async def _run(self, **kwargs):
