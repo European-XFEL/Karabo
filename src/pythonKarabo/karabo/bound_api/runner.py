@@ -20,11 +20,20 @@ __date__ = "$May 24, 2013 11:36:55 AM$"
 import os
 import re
 
-from karabo.bound_tool import Hash, loadFromFile
+from karabo.bound_tool import (
+    Hash, generateAutoStartHash, jsonToHash, loadFromFile)
 
 from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 
 cr_cmt = " # Copyright (C) European XFEL GmbH Schenefeld. All rights reserved."
+
+
+def removeInitString(args):
+    init_pattern = re.compile(r'^\s*init\s*=')
+    for token in args:
+        if init_pattern.match(token):
+            args.remove(token)
+            return token
 
 
 @KARABO_CONFIGURATION_BASE_CLASS
@@ -54,6 +63,26 @@ class Runner:
             return None
 
     def parseCommandLine(self, args):
+        configuration = Hash()
+
+        # Parse and remove init string from argument stream
+        init_pattern = re.compile(r'^\s*init\s*=')
+        autostart_pattern = re.compile(r'^\s*autoStart\[')
+
+        has_init_string = any(init_pattern.match(token) for token in args)
+        has_autostart_string = any(autostart_pattern.match(token)
+                                   for token in args)
+
+        if (has_init_string and has_autostart_string):
+            raise SyntaxError('Invalid usage: Both "init" and "autoStart" '
+                              'options cannot be specified together.')
+
+        if has_init_string:
+            json = removeInitString(args).split('=')[1]
+            configuration.merge(
+                generateAutoStartHash(jsonToHash(json)))
+        ######
+
         firstArg = ""
         if len(args) > 1:
             firstArg = args[1]
@@ -65,7 +94,6 @@ class Runner:
             return False, Hash()
 
         pars = self.join_args_in_braces(args)
-        configuration = Hash()
         self.readTokens('', pars[1:], configuration)
         return True, configuration
 

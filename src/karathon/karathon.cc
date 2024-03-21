@@ -48,6 +48,7 @@ void exportPyUtilNDArray();
 void exportPyUtilRollingWindowStatistics();
 void exportPyUtilStateElement();
 void exportPyUtilAlarmConditionElement();
+void exportPyUtilJsonToHashParser();
 
 // io
 void exportPyIo();
@@ -131,6 +132,7 @@ BOOST_PYTHON_MODULE(karathon) {
     exportPyUtilStateElement();
     exportPyUtilAlarmConditionElement();
     exportPyUtilNDArray();
+    exportPyUtilJsonToHashParser();
 
     // io
     exportPyIo();
