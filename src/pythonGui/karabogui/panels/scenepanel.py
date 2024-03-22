@@ -68,6 +68,10 @@ class ScenePanel(BasePanelWidget):
     # ----------------------------
     # BasePanelWidget Methods
 
+    def attach_to_container(self, container):
+        super().attach_to_container(container)
+        self.home_tool_bar.setVisible(container is None)
+
     def get_content_widget(self):
         """Returns a QWidget containing the main content of the panel.
         """
@@ -84,6 +88,7 @@ class ScenePanel(BasePanelWidget):
         """Called before this panel is docked into the main window.
         """
         self.scroll_widget.setWidgetResizable(False)
+        self.home_tool_bar.setVisible(False)
 
     def undock(self, maximized=False):
         """Called before this panel is undocked from the main window.
@@ -97,6 +102,7 @@ class ScenePanel(BasePanelWidget):
             # Enlarge the scene widget to its actual size
             with scene_view.ignore_resize_events():
                 self.scroll_widget.setWidgetResizable(True)
+        self.home_tool_bar.setVisible(True)
 
     def toolbars(self):
         """This should create and return one or more `ToolBar` instances needed
@@ -131,7 +137,15 @@ class ScenePanel(BasePanelWidget):
         self.scene_view.resetToSelectionTool.connect(
             self.ac_selection_tool.trigger)
 
-        return [always_visible_tb, self.drawing_tool_bar]
+        home_tool_bar = ToolBar(parent=self)
+        ac_show_editor = QAction(icons.homeEdit, "&Show Editor", self)
+        ac_show_editor.triggered.connect(self.show_editor)
+        home_tool_bar.addSeparator()
+        home_tool_bar.addAction(ac_show_editor)
+
+        self.home_tool_bar = home_tool_bar
+
+        return [always_visible_tb, self.drawing_tool_bar, home_tool_bar]
 
     # ----------------------------
     # Qt Methods
@@ -178,6 +192,10 @@ class ScenePanel(BasePanelWidget):
 
     # ----------------------------
     # Qt slots
+
+    @Slot()
+    def show_editor(self):
+        broadcast_event(KaraboEvent.RaiseEditor, {"proxy": None})
 
     @Slot()
     def save_scene(self):
