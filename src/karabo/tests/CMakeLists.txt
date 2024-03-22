@@ -92,6 +92,7 @@ set(logTestRunner_FILES
 )
 
 set(netTestRunner_FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/net/Amqp_Test.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/net/Broker_Test.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/net/EventLoop_Test.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/net/HttpClient_Test.cc
@@ -151,7 +152,7 @@ foreach(testTarget IN LISTS TEST_TARGETS)
     target_compile_options(
         ${testTarget}
         PRIVATE
-            -DKARABO_TESTPATH=\"${CMAKE_CURRENT_SOURCE_DIR}/\"
+        -DKARABO_TESTPATH=\"${CMAKE_CURRENT_SOURCE_DIR}/\"
     )
 
     target_link_libraries(
@@ -160,7 +161,6 @@ foreach(testTarget IN LISTS TEST_TARGETS)
         cppunit::cppunit
     )
     message(STATUS "Added unit test executable ${testTarget}")
-
 endforeach()
 
 # Some io unit tests depend on example data files to succeed
@@ -169,8 +169,8 @@ add_custom_command(
     TARGET ioTestRunner
     POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${CMAKE_CURRENT_SOURCE_DIR}/io/resources"
-       "${CMAKE_CURRENT_BINARY_DIR}/io/resources"
+    "${CMAKE_CURRENT_SOURCE_DIR}/io/resources"
+    "${CMAKE_CURRENT_BINARY_DIR}/io/resources"
 )
 
 #
