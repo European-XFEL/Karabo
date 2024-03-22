@@ -114,7 +114,10 @@ namespace karabind {
     namespace detail {
 
         /// Helper when catching Python exceptions
-        void treatError_already_set(py::error_already_set& e, const py::object& handler, const char* where);
+        // Force to make this function visible outside the libkarabind.so, since we compile
+        // karabind code with -fvisibility=hidden option, so LTO can do optimization ...
+        void treatError_already_set(py::error_already_set& e, const py::object& handler, const char* where)
+              __attribute__((visibility("default")));
 
         inline void packPy_r(karabo::util::Hash& hash, char i) {}
 
