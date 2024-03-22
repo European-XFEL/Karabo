@@ -92,12 +92,15 @@ karabo::util::Hash getBrokersFromEnv() {
     return ret;
 }
 
-
-std::vector<std::string> getJmsBrokerFromEnv() {
-    std::vector<std::string> brokers = getBrokersFromEnvName("KARABO_CI_BROKERS", "tcp");
+std::vector<std::string> getBrokerFromEnv(const std::string& protocol) {
+    std::vector<std::string> brokers = getBrokersFromEnvName("KARABO_CI_BROKERS", protocol);
     // try KARABO_BROKER
     if (brokers.empty()) {
-        brokers = getBrokersFromEnvName("KARABO_BROKER", "tcp");
+        brokers = getBrokersFromEnvName("KARABO_BROKER", protocol);
     }
     return brokers;
+}
+
+std::vector<std::string> getJmsBrokerFromEnv() {
+    return getBrokersFromEnv("tcp");
 }
