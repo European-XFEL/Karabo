@@ -265,8 +265,8 @@ namespace karabo {
             template <class T>
             Derived& setDefaultValue(const std::string& subKey, const T& defaultValue) {
                 using namespace karabo::util;
-                OVERWRITE_ELEMENT(m_schema).key(m_key + "." + subKey).setNewDefaultValue(defaultValue).commit();
 
+                OVERWRITE_ELEMENT(m_schema).key(m_key + "." + subKey).setNewDefaultValue(defaultValue).commit();
                 return *(static_cast<Derived*>(this));
             }
 

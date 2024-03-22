@@ -318,9 +318,8 @@ namespace karabo {
     }
 
 
-        void OverwriteElement::commit() {
+        void OverwriteElement::checkOptions() {
             // Checks consistency of default value and options (caveat: not only for things changed...)
-            if (!m_node) throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
             if (m_schema->hasOptions(m_path) && m_schema->hasDefaultValue(m_path)) {
                 switch (m_schema->getValueType(m_path)) {
                     CASE_CHECK_DEFAULT_IN_OPTIONS(Types::ReferenceType::BOOL, bool);
@@ -344,6 +343,54 @@ namespace karabo {
         }
 #undef CASE_CHECK_DEFAULT_IN_OPTIONS
 
+        void OverwriteElement::checkBoundaries() {
+            switch (m_schema->getValueType(m_path)) {
+                case Types::ReferenceType::CHAR:
+                    checkTypedBoundaries<char>();
+                    break;
+                case Types::ReferenceType::INT8:
+                    checkTypedBoundaries<signed char>();
+                    break;
+                case Types::ReferenceType::INT16:
+                    checkTypedBoundaries<short>();
+                    break;
+                case Types::ReferenceType::INT32:
+                    checkTypedBoundaries<int>();
+                    break;
+                case Types::ReferenceType::INT64:
+                    checkTypedBoundaries<long long>();
+                    break;
+                case Types::ReferenceType::UINT8:
+                    checkTypedBoundaries<unsigned char>();
+                    break;
+                case Types::ReferenceType::UINT16:
+                    checkTypedBoundaries<unsigned short>();
+                    break;
+                case Types::ReferenceType::UINT32:
+                    checkTypedBoundaries<unsigned int>();
+                    break;
+                case Types::ReferenceType::UINT64:
+                    checkTypedBoundaries<unsigned long long>();
+                    break;
+                case Types::ReferenceType::FLOAT:
+                    checkTypedBoundaries<float>();
+                    break;
+                case Types::ReferenceType::DOUBLE:
+                    checkTypedBoundaries<double>();
+                    break;
+                default:
+                    // Avoid compilation warnings
+                    break;
+            }
+        }
+
+        void OverwriteElement::commit() {
+            if (!m_node) throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
+            if (!m_schema->isLeaf(m_path)) return;
+
+            checkOptions();
+            checkBoundaries();
+        }
 
         void OverwriteElement::checkIfRestrictionApplies(const Restrictions::Restriction& restriction) const {
             if (!m_node) throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
