@@ -20,11 +20,10 @@ from datetime import datetime
 from unittest import main, mock
 
 from karabo.middlelayer import (
-    Device, DeviceClientBase, Hash, KaraboError, Schema,
-    getConfigurationFromPast, getInstanceInfo, getSchemaFromPast, getTopology,
-    slot)
-from karabo.middlelayer.synchronization import background, synchronize
-from karabo.middlelayer.tests.eventloop import DeviceTest, async_tst
+    Device, DeviceClientBase, Hash, KaraboError, Schema, Timestamp, background,
+    get_utc_string, getConfigurationFromPast, getInstanceInfo,
+    getSchemaFromPast, getTopology, slot, synchronize)
+from karabo.middlelayer.testing import DeviceTest, async_tst
 
 DEVICE_ID = "data_logger_device_id"
 
@@ -77,6 +76,11 @@ class TestDeviceClient(DeviceTest):
         cls.dev = DataLogReader(conf)
         with cls.deviceManager(lead=cls.dev):
             yield
+
+    def test_parse_timestamp(self):
+        points = [datetime.now().isoformat(), Timestamp(), None]
+        for timepoint in points:
+            self.assertIsInstance(get_utc_string(timepoint), str)
 
     @async_tst
     async def test_getConfigurationSchemaFromPast(self):
