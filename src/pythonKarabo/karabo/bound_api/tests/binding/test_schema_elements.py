@@ -69,7 +69,7 @@ class CircleX(ShapeX):
             .unit(Unit.METER)
             .metricPrefix(MetricPrefix.MILLI)
             .assignmentOptional()
-            .defaultValue(10)
+            .defaultValue(50)
             .init()
             .commit(),
 
@@ -163,7 +163,7 @@ class RectangleX(ShapeX):
             .unit(Unit.METER)
             .metricPrefix(MetricPrefix.MILLI)
             .assignmentOptional()
-            .defaultValue(10)
+            .defaultValue(50)
             .adminAccess()
             .init()
             .commit(),
@@ -178,7 +178,7 @@ class RectangleX(ShapeX):
             .unit(Unit.METER)
             .metricPrefix(MetricPrefix.MILLI)
             .assignmentOptional()
-            .defaultValue(10)
+            .defaultValue(50)
             .init()
             .commit(),
         )
