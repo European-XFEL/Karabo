@@ -56,7 +56,6 @@ void Schema_Test::testBuildUp() {
         }
         GraphicsRenderer::Pointer p = GraphicsRenderer::create(
               "GraphicsRenderer", Hash("shapes.Circle.radius", 0.5, "color", "red", "antiAlias", "true"));
-        // cout << Configurator<GraphicsRenderer>::getSchema("GraphicsRenderer");
 
     } catch (const karabo::util::Exception& e) {
         KARABO_LOG_FRAMEWORK_DEBUG << e;
@@ -157,7 +156,7 @@ void Schema_Test::setUp() {
         m_schema = Schema("MyTest", Schema::AssemblyRules(READ | WRITE | INIT));
         TestStruct1::expectedParameters(m_schema);
     } catch (const karabo::util::Exception& e) {
-        KARABO_LOG_FRAMEWORK_DEBUG << e;
+        std::clog << "Error (Schema_Test::setUp): " << e << std::endl;
     }
 }
 
@@ -885,6 +884,21 @@ void Schema_Test::testOverwriteElement() {
               .initialValue(State::INIT)
               .options(State::INIT, State::ON, State::CHANGING)
               .commit();
+        INT64_ELEMENT(schema) //
+              .key("int64Inc")
+              .assignmentOptional()
+              .defaultValue(0)
+              .minInc(-5)
+              .maxInc(5)
+              .commit();
+        INT64_ELEMENT(schema) //
+              .key("int64Exc")
+              .assignmentOptional()
+              .defaultValue(0)
+              .minExc(-5)
+              .maxExc(5)
+              .commit();
+
 
         Schema workSchema(schema);
         // unit16
@@ -943,6 +957,59 @@ void Schema_Test::testOverwriteElement() {
                                    .setNewOptions(std::vector<State>{State::ON, State::ACQUIRING})
                                    .commit(),
                              karabo::util::LogicException); // default is INIT
+
+        // Check inclusive minimum and maximum: -5 <= x <= 5
+        workSchema = schema;
+        CPPUNIT_ASSERT_NO_THROW(OVERWRITE_ELEMENT(workSchema) //
+                                      .key("int64Inc")
+                                      .setNewDefaultValue(-5LL)
+                                      .commit());
+
+        workSchema = schema;                                  // start clean
+        CPPUNIT_ASSERT_NO_THROW(OVERWRITE_ELEMENT(workSchema) //
+                                      .key("int64Inc")
+                                      .setNewDefaultValue(5LL)
+                                      .commit());
+
+        workSchema = schema;                               // start clean
+        CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema) //
+                                   .key("int64Inc")
+                                   .setNewDefaultValue(-6LL)
+                                   .commit(),
+                             karabo::util::ParameterException);
+
+        workSchema = schema;                               // start clean
+        CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema) //
+                                   .key("int64Inc")
+                                   .setNewDefaultValue(6LL)
+                                   .commit(),
+                             karabo::util::ParameterException);
+
+        // Check exclusive minimum and maximum: -5 < x < 5
+        workSchema = schema;                                  // start clean
+        CPPUNIT_ASSERT_NO_THROW(OVERWRITE_ELEMENT(workSchema) //
+                                      .key("int64Exc")
+                                      .setNewDefaultValue(-4LL)
+                                      .commit());
+
+        workSchema = schema;                                  // start clean
+        CPPUNIT_ASSERT_NO_THROW(OVERWRITE_ELEMENT(workSchema) //
+                                      .key("int64Exc")
+                                      .setNewDefaultValue(4LL)
+                                      .commit());
+        workSchema = schema;                               // start clean
+        CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema) //
+                                   .key("int64Exc")
+                                   .setNewDefaultValue(-5LL)
+                                   .commit(),
+                             karabo::util::ParameterException);
+
+        workSchema = schema;                               // start clean
+        CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema) //
+                                   .key("int64Exc")
+                                   .setNewDefaultValue(5LL)
+                                   .commit(),
+                             karabo::util::ParameterException);
 
         // We skip explicit testing of BOOL, CHAR, [U]INT8, INT16, UINT32, [U]INT64, FLOAT
     }
