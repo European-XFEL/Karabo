@@ -94,7 +94,7 @@ variables:
     INFLUXDB_USER_PASSWORD: "usrpwd"
 
 .image_miniconda_: &image_miniconda
-  image: europeanxfel/karabo-ci:miniconda-3-006
+  image: europeanxfel/karabo-ci:miniconda-3-007
   tags:
     - KaraboFramework
 
@@ -371,7 +371,7 @@ variables:
 # static source code analysis
 lint:
   stage: lint
-  image: europeanxfel/karabo-ci:miniconda-3lint-001
+  image: europeanxfel/karabo-ci:miniconda-3lint-003
   script:
     - source ci/lint ALL
   only:
@@ -382,7 +382,7 @@ lint:
 
 test_docs:
   stage: lint
-  image: europeanxfel/karabo-ci:miniconda-3lint-001
+  image: europeanxfel/karabo-ci:miniconda-3lint-003
   script:
     - pushd doc
     - pip install -r requirements.txt
@@ -398,7 +398,7 @@ test_docs:
 
 systemtest:
   stage: systemtest
-  image: europeanxfel/karabo-ci:miniconda-3
+  image: europeanxfel/karabo-ci:miniconda-3-002
   allow_failure: true
   only:
     - /^(\d+\.)(\d+\.)(\d+)((a|b|rc)(\d+))?$/
@@ -605,7 +605,7 @@ long tests:
 # contents of the internal mirror.
 internal_mirror_publish:
   stage: mirror
-  image: europeanxfel/karabo-ci:miniconda-3-006
+  image: europeanxfel/karabo-ci:miniconda-3-007
 
   only:
     - /^(\d+\.)(\d+\.)(\d+)((a|b|rc)(\d+))?$/
