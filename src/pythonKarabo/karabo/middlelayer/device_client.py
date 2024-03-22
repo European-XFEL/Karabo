@@ -101,9 +101,8 @@ async def waitUntilNew(*props):
     await firstCompleted(*futures)
 
 
-def _parse_date(date):
-    """
-    Parse date via dateutil.parser.parse and return UTC iso string
+def get_utc_string(date: None | str | Timestamp) -> str:
+    """Parse date via dateutil.parser.parse and return UTC iso string
 
     :param date: None means now and Timestamp objects are understood
     """
@@ -327,8 +326,8 @@ async def _getHistory(prop, begin, end, maxNumData, verbose=False):
     except AttributeError:
         deviceId, attr = str(prop).split(".", 1)
 
-    begin = _parse_date(begin)
-    end = _parse_date(end)
+    begin = get_utc_string(begin)
+    end = get_utc_string(end)
     reader = await _getLogReaderId(deviceId)
     if verbose:
         message = f"""Requesting history of property '{attr}'
@@ -437,7 +436,7 @@ async def _get_configuration_from_past(device, timepoint):
     """
     if isinstance(device, ProxyBase):
         device = device._deviceId
-    timepoint = _parse_date(timepoint)
+    timepoint = get_utc_string(timepoint)
     instance = get_instance()
     reader = await _getLogReaderId(device)
     slot = "slotGetConfigurationFromPast"
