@@ -34,4 +34,5 @@
 std::vector<std::string> getBrokersFromEnvVar(const std::string& envVar, const std::string& expectedProtocol);
 std::vector<std::string> getBrokersFromEnv(const std::string& protocol);
 karabo::util::Hash getBrokersFromEnv();
+std::vector<std::string> getBrokerFromEnv(const std::string& protocol);
 std::vector<std::string> getJmsBrokerFromEnv();
