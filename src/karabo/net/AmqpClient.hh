@@ -40,6 +40,7 @@
 
 
 #define KARABO_ERROR_CODE_SUCCESS boost::system::errc::make_error_code(boost::system::errc::success)
+#define KARABO_ERROR_CODE_WRONG_PROTOCOL boost::system::errc::make_error_code(boost::system::errc::wrong_protocol_type)
 #define KARABO_ERROR_CODE_IO_ERROR boost::system::errc::make_error_code(boost::system::errc::io_error)
 #define KARABO_ERROR_CODE_CONNECT_REFUSED boost::system::errc::make_error_code(boost::system::errc::connection_refused)
 #define KARABO_ERROR_CODE_OP_CANCELLED boost::system::errc::make_error_code(boost::system::errc::operation_canceled)
