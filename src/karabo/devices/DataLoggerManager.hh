@@ -258,6 +258,12 @@ namespace karabo {
 
             bool isBlocked(const std::string& id, const std::string& typeIds);
 
+            /**
+             * @brief create a vector of hashes that can be loaded in a table from
+             *        the Hash with the mapping device -> logger
+             */
+            std::vector<karabo::util::Hash> makeLoggersTable();
+
            private: // Data
             const std::vector<std::string> m_serverList;
             size_t m_serverIndex;
