@@ -88,6 +88,7 @@
 #include "karabo/util/PathElement.hh"
 #include "karabo/util/SimpleElement.hh"
 #include "karabo/util/StringTools.hh"
+#include "karabo/util/TableElement.hh"
 #include "karabo/util/VectorElement.hh"
 
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, karabo::devices::DataLoggerManager)
@@ -493,6 +494,30 @@ namespace karabo {
                   .expertAccess()
                   .assignmentOptional()
                   .defaultValue({})
+                  .commit();
+
+            Schema loggerMap_tableColumn;
+            STRING_ELEMENT(loggerMap_tableColumn) //
+                  .key("device")
+                  .displayedName("Device")
+                  .description("Device")
+                  .readOnly()
+                  .commit();
+
+            STRING_ELEMENT(loggerMap_tableColumn) //
+                  .key("dataLogger")
+                  .displayedName("Data Logger")
+                  .description("Logger that receives the messages")
+                  .readOnly()
+                  .commit();
+
+            TABLE_ELEMENT(expected)
+                  .key("loggerMap")
+                  .displayedName("Loggers Map")
+                  .description("Table with the destination of each devices's log")
+                  .setColumns(loggerMap_tableColumn)
+                  .assignmentMandatory()
+                  .readOnly()
                   .commit();
         }
 
@@ -1124,6 +1149,7 @@ namespace karabo {
                 m_loggerMap.set(deviceIdInMap, serverId);
 
                 // Logger map changed, so publish - online and as backup
+                set("loggerMap", makeLoggersTable());
                 emit<Hash>("signalLoggerMap", m_loggerMap);
                 karabo::io::saveToFile(m_loggerMap, m_loggerMapFile);
             }
@@ -1294,7 +1320,6 @@ namespace karabo {
             instantiateReaders(serverId);
         }
 
-
         void DataLoggerManager::instantiateLogger(const std::string& serverId) {
             // Get data for this server to access backlog and state
             Hash& data = m_loggerData.get<Hash>(serverId);
@@ -1310,10 +1335,13 @@ namespace karabo {
             Hash config(get<Hash>("logger." + m_loggerClassId));
             config.set("flushInterval", get<int>("flushInterval"));
             config.set("performanceStatistics.enable", get<bool>("enablePerformanceStats"));
+
             config.erase("urlReadPropHistory"); // logger needs read address only for schema
 
             const std::string loggerId(serverIdToLoggerId(serverId));
             const Hash hash("classId", m_loggerClassId, "deviceId", loggerId, "configuration", config);
+
+            set("loggerMap", makeLoggersTable());
 
             KARABO_LOG_FRAMEWORK_INFO << "Trying to instantiate '" << loggerId << "' of type '" << m_loggerClassId
                                       << "' on server '" << serverId << "'";
@@ -1501,5 +1529,42 @@ namespace karabo {
             const auto it = std::find(ids.begin(), ids.end(), id);
             return (it != ids.end());
         }
+
+        std::vector<karabo::util::Hash> DataLoggerManager::makeLoggersTable() {
+            std::vector<std::string> keys;
+            m_loggerMap.getKeys(keys);
+
+            // The device names are prefixed with 'DataLogger-'. The code below
+            // performs a sanity check: we assume that might not always be the case.
+            // We still need the original name to fetch the server from m_loggerMap,
+            // and the name without the prefix (if there is a prefix) to display in
+            // on the table.
+            static const char name_prefix[] = "DataLogger-";
+            static const size_t name_prefix_length = strlen(name_prefix);
+
+            using PairString = std::pair<std::string, std::string>;
+            std::vector<PairString> devices_names;
+            for (const auto& key : keys) {
+                auto from = key.find(name_prefix);
+                from = from == std::string::npos ? 0 : from + name_prefix_length;
+                devices_names.emplace_back(key, key.substr(from));
+            }
+
+            // Sort the names (case-insensitive) that will be displayed on the table
+            std::sort(devices_names.begin(), devices_names.end(), [](const PairString& x, const PairString& y) {
+                return strcasecmp(x.second.c_str(), y.second.c_str()) < 0;
+            });
+
+            std::vector<karabo::util::Hash> table;
+            table.reserve(m_loggerMap.size());
+
+            for (const auto& device : devices_names) {
+                table.emplace_back("device", device.second, "dataLogger",
+                                   serverIdToLoggerId(m_loggerMap.get<std::string>(device.first)));
+            }
+
+            return table;
+        }
+
     } // namespace devices
 } // namespace karabo
