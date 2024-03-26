@@ -19,6 +19,8 @@ import subprocess
 from functools import partial
 from os import environ
 
+from packaging.version import InvalidVersion, Version
+
 # NOTE: Only stdlib imports are allowed here! This module is used when
 # installing the karabo package.
 
@@ -70,14 +72,48 @@ def _parse_svn_part(info_str, part_name):
     raise SvnParseError(f'SVN {part_name} not found!')
 
 
-def get_karabo_framework_version():
-    """ Return the current Karabo version contained in the VERSION file.
+def get_karabo_framework_version(strict_fallback=True) -> Version:
+    """ Returns the current Karabo version contained in the Framework VERSION
+    file.
+
+    Parameter:
+    strict_fallback(bool): when True, considers only the "major.minor.patch"
+    portion as a fallback strategy in case an invalid version string is read
+    from the VERSION file.
+
+    Returns:
+    A packaging.version.Version with the value stored in the VERSION file if
+    that value (or its "major.minor.patch" portion) is a valid version string.
+
+    Raises:
+    A packaging.version.InvalidVersion if the value in the VERSION file is
+    an invalid version string even after the fallback strategy is applied.
     """
+    str_version = _read_version_file()
+    version = None
+    try:
+        version = Version(str_version)
+    except InvalidVersion:
+        if strict_fallback:
+            str_version = _filter_major_minor_patch(str_version)
+            version = Version(str_version)
+        else:
+            raise
+    return version
+
+
+def _read_version_file() -> str:
     karabo_path = _get_karabo_framework_path()
     version_path = op.join(karabo_path, 'VERSION')
-
     with open(version_path) as fp:
-        return fp.read().strip()
+        version = fp.read().strip()
+    return version
+
+
+def _filter_major_minor_patch(version_str: str) -> str:
+    pattern = r'(?P<major>\d+)\.(?P<minor>\d+)\.?(?P<patch>\d*)?'
+    matches = re.match(pattern, version_str)
+    return matches[0] if matches else ""
 
 
 def get_karabo_version():
