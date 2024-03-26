@@ -375,7 +375,11 @@ namespace karabo {
                       .setSpecialDisplayType("lockedBy")
                       .commit();
 
-                SLOT_ELEMENT(expected).key("slotClearLock").displayedName("Clear Lock").expertAccess().commit();
+                SLOT_ELEMENT(expected) //
+                      .key("slotClearLock")
+                      .displayedName("Clear Lock")
+                      .expertAccess()
+                      .commit();
 
 
                 STRING_ELEMENT(expected)
