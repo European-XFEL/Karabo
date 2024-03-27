@@ -272,7 +272,7 @@ class ProjectDatabase(DatabaseBase):
                 continue
             match = f"device_instance[@instance_id='{instance_id}']"
             inst = r.find(match)
-            if inst:
+            if inst is not None:
                 rev = inst.attrib['active_rev']
                 for conf in inst.findall(f"device_config[@revision='{rev}']"):
                     results.append({'instanceid': r.attrib['uuid'],
