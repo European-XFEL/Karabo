@@ -53,7 +53,7 @@ class ServerHandleDialog(QDialog):
             self.ui_description.setPlainText(model.description)
         self.setWindowTitle(title)
 
-        validator = InputValidator()
+        validator = InputValidator(object_type="server", parent=self)
         self.ui_server_id.setValidator(validator)
 
         self.ui_server_id.currentIndexChanged.connect(self._update_button_box)
