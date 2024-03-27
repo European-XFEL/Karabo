@@ -15,117 +15,159 @@
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
 from pathlib import Path
-from unittest import main
 
 import numpy as np
+from qtpy.QtGui import QValidator
 from qtpy.QtWidgets import QSlider, QSpinBox
 
-from karabogui.testing import GuiTestCase
 from karabogui.util import (
-    SignalBlocker, _get_invalid_chars, convert_npy_to_csv, create_list_string,
-    create_table_string, qtversion_compatible, version_compatible)
+    InputValidator, SignalBlocker, _get_invalid_chars, convert_npy_to_csv,
+    create_list_string, create_table_string, qtversion_compatible,
+    version_compatible)
 
 
-class TestUtilsGUI(GuiTestCase):
+def test_assert_filename():
+    def assert_filename(filename, *, invalid):
+        invalid_chars = _get_invalid_chars(filename)
+        assert set(list(invalid)) == set(invalid_chars)
 
-    def test_assert_filename(self):
-        def assert_filename(filename, *, invalid):
-            invalid_chars = _get_invalid_chars(filename)
-            assert set(list(invalid)) == set(invalid_chars)
-
-        assert_filename("foo", invalid='')
-        assert_filename("FoO/Bar-bAz_123", invalid='')
-        assert_filename("foo bar", invalid=' ')
-        assert_filename("foo!@#$%&*()+<>@:", invalid='!@#$%&*()+<>:')
-
-    def test_signal_blocker(self):
-        count = 0
-
-        def slotReceived(*args, **kwargs):
-            nonlocal count
-            count += 1
-
-        spinbox = QSpinBox()
-        spinbox.valueChanged.connect(slotReceived)
-        assert count == 0
-        spinbox.setValue(100)
-        assert count == 1
-
-        # Update the spinbox, but block the signals
-        with SignalBlocker(spinbox):
-            for i in range(10):
-                spinbox.setValue(i)
-            assert spinbox.value() == i
-
-        # Still only once
-        assert count == 1
-        spinbox.setValue(100)
-        assert count == 2
-
-        # Reset the counter and setup a slider
-        count = 0
-
-        slider = QSlider()
-        slider.valueChanged.connect(slotReceived)
-        slider.setRange(0, 100)
-        slider.setValue(20)
-        assert count == 1
-
-        # Works, now block both
-        with SignalBlocker(spinbox, slider):
-            for i in range(10):
-                spinbox.setValue(i)
-                slider.setValue(i)
-            assert spinbox.value() == i
-            assert slider.value() == i
-        assert count == 1
-
-        # Other initialization
-        count = 0
-        blocker = SignalBlocker(spinbox)
-        assert len(blocker.objects) == 1
-        with blocker:
-            spinbox.setValue(10000)
-        assert count == 0
-
-    def test_version_compatible(self):
-        """Test that we can verify versions"""
-        assert version_compatible("2.14.0a2", 2, 14)
-        assert version_compatible("2.14.0a2", 2, 13)
-        assert version_compatible("2.14.0rc1", 2, 14)
-        assert not version_compatible("2.14.0a2", 2, 15)
-        assert version_compatible("asdeaeddevelopmode", 2, 14)
-        assert version_compatible("asdeaeddevelopmode", 12, 33333)
-        # minor smaller
-        assert version_compatible("3.1.0a2", 2, 15)
-
-        # Test garbage
-        assert not version_compatible("2.&7as7.13", 2, 0)
-
-    def test_qversion_compatible(self):
-        assert qtversion_compatible(5, 13)
-        assert qtversion_compatible(5, 9)
-
-    def test_html_list_string(self):
-        info = ["1", "2", 4, []]
-        html = create_list_string(info)
-        assert html == "<ul><li>1</li><li>2</li><li>4</li><li>[]</li></ul>"
-
-    def test_html_table_string(self):
-        info = {"1": "a", 2: 3}
-        html = create_table_string(info)
-        assert html == "<table>" \
-                       "<tr><td><b>1</b>:   </td><td>a</td></tr>" \
-                       "<tr><td><b>2</b>:   </td><td>3</td></tr>" \
-                       "</table>"
+    assert_filename("foo", invalid='')
+    assert_filename("FoO/Bar-bAz_123", invalid='')
+    assert_filename("foo bar", invalid=' ')
+    assert_filename("foo!@#$%&*()+<>@:", invalid='!@#$%&*()+<>:')
 
 
-TEST_DATA_DIR = Path(__file__).resolve().parent / "data"
+def test_input_validator(gui_app):
+    validator = InputValidator()
+    valid, _, _ = validator.validate("1", 0)
+    assert valid == QValidator.Acceptable
+
+    valid, _, _ = validator.validate("w23-", 0)
+    assert valid == QValidator.Acceptable
+
+    valid, _, _ = validator.validate("w23-w+", 0)
+    assert valid == QValidator.Invalid
+
+    valid, _, _ = validator.validate("1+", 0)
+    assert valid == QValidator.Invalid
+
+    valid, _, _ = validator.validate("1#", 0)
+    assert valid == QValidator.Invalid
+
+    valid, _, _ = validator.validate("1|", 0)
+    assert valid == QValidator.Invalid
+
+    valid, _, _ = validator.validate("+a", 0)
+    assert valid == QValidator.Invalid
+
+    valid, _, _ = validator.validate("-a", 0)
+    assert valid == QValidator.Acceptable
+
+    # Macro case
+    validator = InputValidator("macro")
+    valid, _, _ = validator.validate("1", 0)
+    assert valid == QValidator.Invalid
+
+    valid, _, _ = validator.validate("-a", 0)
+    assert valid == QValidator.Invalid
+
+    valid, _, _ = validator.validate("+a", 0)
+    assert valid == QValidator.Invalid
+
+    valid, _, _ = validator.validate("w23", 0)
+    assert valid == QValidator.Acceptable
+
+
+def test_signal_blocker(gui_app):
+    count = 0
+
+    def slotReceived(*args, **kwargs):
+        nonlocal count
+        count += 1
+
+    spinbox = QSpinBox()
+    spinbox.valueChanged.connect(slotReceived)
+    assert count == 0
+    spinbox.setValue(100)
+    assert count == 1
+
+    # Update the spinbox, but block the signals
+    with SignalBlocker(spinbox):
+        for i in range(10):
+            spinbox.setValue(i)
+        assert spinbox.value() == i
+
+    # Still only once
+    assert count == 1
+    spinbox.setValue(100)
+    assert count == 2
+
+    # Reset the counter and setup a slider
+    count = 0
+
+    slider = QSlider()
+    slider.valueChanged.connect(slotReceived)
+    slider.setRange(0, 100)
+    slider.setValue(20)
+    assert count == 1
+
+    # Works, now block both
+    with SignalBlocker(spinbox, slider):
+        for i in range(10):
+            spinbox.setValue(i)
+            slider.setValue(i)
+        assert spinbox.value() == i
+        assert slider.value() == i
+    assert count == 1
+
+    # Other initialization
+    count = 0
+    blocker = SignalBlocker(spinbox)
+    assert len(blocker.objects) == 1
+    with blocker:
+        spinbox.setValue(10000)
+    assert count == 0
+
+
+def test_version_compatible():
+    """Test that we can verify versions"""
+    assert version_compatible("2.14.0a2", 2, 14)
+    assert version_compatible("2.14.0a2", 2, 13)
+    assert version_compatible("2.14.0rc1", 2, 14)
+    assert not version_compatible("2.14.0a2", 2, 15)
+    assert version_compatible("asdeaeddevelopmode", 2, 14)
+    assert version_compatible("asdeaeddevelopmode", 12, 33333)
+    # minor smaller
+    assert version_compatible("3.1.0a2", 2, 15)
+
+    # Test garbage
+    assert not version_compatible("2.&7as7.13", 2, 0)
+
+
+def test_qversion_compatible():
+    assert qtversion_compatible(5, 13)
+    assert qtversion_compatible(5, 9)
+
+
+def test_html_list_string():
+    info = ["1", "2", 4, []]
+    html = create_list_string(info)
+    assert html == "<ul><li>1</li><li>2</li><li>4</li><li>[]</li></ul>"
+
+
+def test_html_table_string():
+    info = {"1": "a", 2: 3}
+    html = create_table_string(info)
+    assert html == "<table>" \
+                   "<tr><td><b>1</b>:   </td><td>a</td></tr>" \
+                   "<tr><td><b>2</b>:   </td><td>3</td></tr>" \
+                   "</table>"
 
 
 def test_npy2csv():
     """Test conversion of numpy files - npy and npz- to csv file."""
     # npy file.
+    TEST_DATA_DIR = Path(__file__).resolve().parent / "data"
     input_file = TEST_DATA_DIR / "single_array.npy"
     assert input_file.exists()
     convert_npy_to_csv(input_file)
@@ -157,7 +199,3 @@ def test_npy2csv():
 
     np.testing.assert_array_equal(data_from_csv, expected)
     Path(output_file).unlink()
-
-
-if __name__ == "__main__":
-    main()
