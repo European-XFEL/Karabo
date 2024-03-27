@@ -14,49 +14,49 @@
 # The Karabo Gui is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
-from unittest import main
+import pytest
 
 from karabogui.events import (
     KaraboEvent, broadcast_event, register_for_broadcasts,
     unregister_from_broadcasts)
 from karabogui.singletons.mediator import Mediator
-from karabogui.testing import GuiTestCase, singletons
+from karabogui.testing import singletons
+from karabogui.util import process_qt_events
 
 
-class TestMediator(GuiTestCase):
-    def test_basic_mediator(self):
-        instanceId = ""
+def test_basic_mediator(gui_app):
+    instanceId = ""
 
-        def _show_device(data):
-            nonlocal instanceId
-            instanceId = data.get("instanceId", "")
+    def _show_device(data):
+        nonlocal instanceId
+        instanceId = data.get("instanceId", "")
 
-        event_map = {
-            KaraboEvent.ShowDevice: _show_device,
-        }
+    event_map = {
+        KaraboEvent.ShowDevice: _show_device,
+    }
 
-        mediator = Mediator()
+    mediator = Mediator()
+    assert len(mediator._listeners.keys()) == 0
+
+    with singletons(mediator=mediator):
+        register_for_broadcasts(event_map)
+        assert KaraboEvent.ShowDevice in mediator._listeners.keys()
+        assert len(mediator._listeners.keys()) == 1
+
+        assert instanceId == ""
+        broadcast_event(KaraboEvent.ShowDevice,
+                        data={"instanceId": "Marty"})
+        process_qt_events(timeout=10)
+        assert instanceId == "Marty"
+
+        # Unregister once
+        unregister_from_broadcasts(event_map)
         assert len(mediator._listeners.keys()) == 0
 
-        with singletons(mediator=mediator):
-            register_for_broadcasts(event_map)
-            assert KaraboEvent.ShowDevice in mediator._listeners.keys()
-            assert len(mediator._listeners.keys()) == 1
-
-            assert instanceId == ""
-            broadcast_event(KaraboEvent.ShowDevice,
-                            data={"instanceId": "Marty"})
-            self.process_qt_events()
-            assert instanceId == "Marty"
-
-            # Unregister once
-            unregister_from_broadcasts(event_map)
-            assert len(mediator._listeners.keys()) == 0
-
-            # Unregister twice, no harm
-            unregister_from_broadcasts(event_map)
-            assert len(mediator._listeners.keys()) == 0
+        # Unregister twice, no harm
+        unregister_from_broadcasts(event_map)
+        assert len(mediator._listeners.keys()) == 0
 
 
 if __name__ == "__main__":
-    main()
+    pytest.main()
