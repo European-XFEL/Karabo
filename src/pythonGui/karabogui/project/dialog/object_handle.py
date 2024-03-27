@@ -49,7 +49,7 @@ class ObjectDuplicateDialog(QDialog):
         self.sbEnd.valueChanged.connect(self._indexChanged)
         self.cbNoIndex.stateChanged.connect(self._updateIndex)
 
-        validator = InputValidator()
+        validator = InputValidator(parent=self)
         self.leTitle.setValidator(validator)
         self.leTitle.setText(simple_name)
         self._update_text()
@@ -128,7 +128,7 @@ class ObjectEditDialog(QDialog):
             title = f'Edit {object_type}'
             self.leTitle.setText(model.simple_name)
 
-        validator = InputValidator()
+        validator = InputValidator(object_type, parent=self)
         self.leTitle.setValidator(validator)
         self.leTitle.textChanged.connect(self.validate)
         self.setWindowTitle(title)
