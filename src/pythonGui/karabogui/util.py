@@ -257,26 +257,27 @@ def utc_to_local(utc_str, format='%Y-%m-%d %H:%M:%S'):
     return datetime.strftime(local_ts, format)
 
 
-VALID_PROJECT_OBJECT_NAME = re.compile(r'^[\w-]+(/[\w-]+)*$')
+VALID_PROJECT_OBJECT_NAME = re.compile(r"^[\w-]+(/[\w-]+)*$")
+VALID_PROJECT_MACRO_NAME = re.compile(r"^[a-zA-Z][a-zA-Z0-9]*$")
 
 
 class InputValidator(QValidator):
     """ This class provides validation of user inputs within projects, whether
-        it is about deviceIds, macro names, or scene names.
-
-        The naming convention is as follows:
-        part_one[/optional_part_two[/optional_part_three[/and_so_on]]]
-        '-' sign is also allowed
+        it is about deviceIds, macro names, or scene names
     """
 
-    def __init__(self, parent=None):
-        QValidator.__init__(self, parent)
+    def __init__(self, object_type=None, parent=None):
+        super().__init__(parent)
+        if object_type == "macro":
+            self.pattern = VALID_PROJECT_MACRO_NAME
+        else:
+            self.pattern = VALID_PROJECT_OBJECT_NAME
 
     def validate(self, input, pos):
         if not input or input.endswith('/'):
             return self.Intermediate, input, pos
 
-        if not VALID_PROJECT_OBJECT_NAME.match(input):
+        if not self.pattern.match(input):
             return self.Invalid, input, pos
 
         return self.Acceptable, input, pos
