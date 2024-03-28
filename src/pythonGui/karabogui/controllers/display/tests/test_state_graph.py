@@ -14,7 +14,7 @@
 # The Karabo Gui is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
-from datetime import datetime
+from datetime import UTC, datetime
 from platform import system
 
 import pytest
@@ -102,5 +102,5 @@ def test_range_update(display_state_graph_setup):
                        datetime(2070, 12, 31).timestamp(), update=False)
 
     x_min, x_max = plot_item.getAxis("bottom").range
-    assert datetime.utcfromtimestamp(x_min).year == 1970
-    assert datetime.utcfromtimestamp(x_max).year == 2038
+    assert datetime.fromtimestamp(x_min, UTC).year == 1970
+    assert datetime.fromtimestamp(x_max, UTC).year == 2038
