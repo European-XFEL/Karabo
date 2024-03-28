@@ -48,7 +48,7 @@ class DeviceHandleDialog(QDialog):
         """
         super().__init__(parent)
         uic.loadUi(get_dialog_ui('device_handle.ui'), self)
-        validator = InputValidator()
+        validator = InputValidator(parent=self)
         self.leTitle.setValidator(validator)
         self._initUI(server_id, model, add_config, class_id, is_online)
 
