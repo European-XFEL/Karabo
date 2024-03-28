@@ -41,7 +41,6 @@ def utilsTest(event_loop):
 
 
 @pytest.mark.timeout(30)
-@pytest.mark.asyncio
 def test_signifier(utilsTest):
     a1 = String(enum=State)
     a2 = String(enum=State)
@@ -122,7 +121,6 @@ def test_signifier(utilsTest):
 
 
 @pytest.mark.timeout(30)
-@pytest.mark.asyncio
 def test_get_maximum(utilsTest):
     a1 = Float(defaultValue=1.0)
     a2 = Float(defaultValue=1.0)
@@ -155,7 +153,6 @@ def test_get_maximum(utilsTest):
 
 
 @pytest.mark.timeout(30)
-@pytest.mark.asyncio
 def test_get_mimimum(utilsTest):
     a1 = Float(defaultValue=1.0)
     a2 = Float(defaultValue=1.0)
@@ -415,7 +412,6 @@ async def test_countdown(event_loop):
 
 
 @pytest.mark.timeout(30)
-@pytest.mark.asyncio
 def test_suppress(utilsTest):
     loop = asyncio.get_event_loop()
     instanceId = loop.instance().deviceId
