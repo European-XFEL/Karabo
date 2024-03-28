@@ -94,7 +94,7 @@ variables:
     INFLUXDB_USER_PASSWORD: "usrpwd"
 
 .image_miniconda_: &image_miniconda
-  image: europeanxfel/karabo-ci:miniconda-3-007
+  image: europeanxfel/karabo-ci:miniconda-3-006
   tags:
     - KaraboFramework
 
@@ -605,7 +605,7 @@ long tests:
 # contents of the internal mirror.
 internal_mirror_publish:
   stage: mirror
-  image: europeanxfel/karabo-ci:miniconda-3-007
+  image: europeanxfel/karabo-ci:miniconda-3-006
 
   only:
     - /^(\d+\.)(\d+\.)(\d+)((a|b|rc)(\d+))?$/
