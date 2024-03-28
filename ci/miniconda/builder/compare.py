@@ -19,15 +19,18 @@ import os
 
 from conda.core.prefix_data import PrefixData
 from conda_env import specs
+
 try:
     from conda_env.exceptions import SpecNotFound
 except ImportError:
-    from conda_env.specs import SpecNotFound
+    try:
+        from conda_env.specs import SpecNotFound
+    except ImportError:
+        from conda.exceptions import SpecNotFound
 
 from conda.models.match_spec import MatchSpec
 
 from .utils import get_conda_prefix
-
 
 # Add a new level such that conda will not complain
 TRACE = 5  # TRACE LOG LEVEL
@@ -43,11 +46,14 @@ def get_packages(prefix):
     return sorted(PrefixData(prefix, pip_interop_enabled=True).iter_records(),
                   key=lambda x: x.name)
 
+
 def _get_name_tuple(pkg):
     return pkg.name, pkg
 
+
 def _to_str(pkg):
     return "%s==%s=%s" % (pkg.name, pkg.version, pkg.build)
+
 
 def compare_packages(active_pkgs, specification_pkgs):
     output = []
@@ -58,8 +64,9 @@ def compare_packages(active_pkgs, specification_pkgs):
             spec = specification_pkgs[name]
             if not spec.match(pkg):
                 ok = False
-                output.append("{} found but mismatch. Specification pkg: {}, Running pkg: {}"
-                              .format(name, str(spec), _to_str(pkg)))
+                output.append(
+                    "{} found but mismatch. Specification pkg: {}, Running pkg: {}"
+                    .format(name, str(spec), _to_str(pkg)))
         else:
             ok = False
             output.append("{} not found".format(name))
@@ -70,6 +77,7 @@ with matching version and build string.")
     else:
         res = 1
     return res, output
+
 
 def execute(env_name, filename):
     # 1. Get activate packages from the specified environment name
