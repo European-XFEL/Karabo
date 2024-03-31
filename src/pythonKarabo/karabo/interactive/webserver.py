@@ -21,9 +21,11 @@ import time
 import urllib
 from argparse import ArgumentParser
 from asyncio import ensure_future, gather, get_event_loop, sleep
+from copy import deepcopy
 from datetime import datetime
 from struct import unpack
 
+from psutil import net_if_addrs, net_if_stats
 from tornado import httpserver, ioloop, web
 from tornado.concurrent import Future
 from tornado.escape import json_decode
@@ -33,10 +35,16 @@ from tornado.websocket import WebSocketHandler
 
 from .startkarabo import absolute, defaultall, entrypoint
 
-EMPTY_RESPONSE = {'version': '1.0.0',
+WEBSERVER_VERSION = "1.1.0"
+EMPTY_RESPONSE = {'version': WEBSERVER_VERSION,
                   'success': False,
                   'status_ok': False,
                   'servers': []}
+
+EMPTY_NETWORK_RESPONSE = {
+    'version': WEBSERVER_VERSION,
+    'success': False,
+    'network': {}}
 
 # A service is considered "up" if it has run for 5 seconds
 MINIMUM_UP_DURATION = 5
@@ -131,7 +139,7 @@ class DaemonHandler(web.RequestHandler):
         self.allowed = filter_services(service_id, service_list)
 
     def get(self, server_id=None):
-        response = EMPTY_RESPONSE
+        response = deepcopy(EMPTY_RESPONSE)
         success = {'error': False, '': False}
         response['servers'] = [getdata(server_id, self.allowed)]
         response['success'] = success.get(response['servers'][0]['status'],
@@ -140,7 +148,7 @@ class DaemonHandler(web.RequestHandler):
         self.write(response)
 
     def put(self, server_id=None):
-        response = EMPTY_RESPONSE
+        response = deepcopy(EMPTY_RESPONSE)
         data = json_decode(self.request.body)
         conf = data['server']
         server_id = server_id.replace('/', '_')
@@ -239,7 +247,7 @@ class StatusHandler(web.RequestHandler):
         self.allowed = filter_services(service_id, service_list)
 
     def get(self):
-        response = EMPTY_RESPONSE
+        response = deepcopy(EMPTY_RESPONSE)
         servers = []
         for server_id in defaultall():
             serv_data = getdata(server_id, self.allowed)
@@ -247,6 +255,28 @@ class StatusHandler(web.RequestHandler):
         response['servers'] = servers
         statuses = [server_up(s) for s in response['servers']]
         response['status_ok'] = all(statuses)
+        response['success'] = True
+        self.write(response)
+
+
+class NetworkHandler(web.RequestHandler):
+
+    def get(self):
+        response = deepcopy(EMPTY_NETWORK_RESPONSE)
+
+        net = net_if_addrs()
+        stats = net_if_stats()
+        ret = {}
+        for name, info in net.items():
+            for iface in info:
+                if iface.family is not socket.AF_INET:
+                    continue
+                speed = f"{stats[name].speed} MBit"
+                netmask = iface.netmask or ""  # can be None
+                ret[name] = {"address": iface.address,
+                             "speed": speed,
+                             "netmask": netmask}
+        response['network'] = ret
         response['success'] = True
         self.write(response)
 
@@ -277,7 +307,8 @@ class Subscriber():
             return
         body = urllib.parse.urlencode(
             {"port": self.port,
-             "hostname": self.hostname
+             "hostname": self.hostname,
+             "version": WEBSERVER_VERSION
              })
         futs = [to_asyncio_future(
             self.client.fetch(uri, method="POST", body=body))
@@ -347,6 +378,8 @@ def run_webserver():
                    'subscriber': subscribe}
 
     app = web.Application([('/', MainHandler, server_dict),
+                           ('/api/network.json',
+                            NetworkHandler),
                            ('/api/servers.json',
                             StatusHandler, server_dict),
                            ('/api/servers/([a-zA-Z0-9_/-]+)/log.html',
