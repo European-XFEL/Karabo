@@ -1022,8 +1022,6 @@ namespace karabo {
 
             void updateTrackedInstanceInfo(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
-            void addTrackedInstanceConnection(const std::string& instanceId, const karabo::util::Hash& connection);
-
             void slotGetAvailableFunctions(const std::string& type);
 
             void cleanSignals(const std::string& instanceId);
