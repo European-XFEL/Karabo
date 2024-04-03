@@ -164,6 +164,10 @@ class TestCrossPipelining(BoundDeviceTestCase):
             # Add API to start_info for debugging
             start_info[index] = (devid, cfg, apis[index])
 
+        # Create helper for later - best here where we wait for devices anyway
+        caller = SignalSlotable("test_chain_receivers_helper")
+        caller.start()
+
         # Up to three minutes waiting for devices to come (CI failed with one)
         max_waits = min(100 * num_of_forwarders, 1800)
         sleep_wait_interv = 0.1
@@ -191,8 +195,6 @@ class TestCrossPipelining(BoundDeviceTestCase):
         missing = ""
         logs = ""
         if len(devices_present) < len(start_info):
-            caller = SignalSlotable("debugHelper")
-            caller.start()
             failedApis = set()
             for devid, _, api in start_info:
                 failedApis.update(api)
@@ -221,38 +223,24 @@ class TestCrossPipelining(BoundDeviceTestCase):
         outputs_not_connected.discard('receiver')
         while num_of_waits > 0 and len(outputs_not_connected) > 0:
             for devid in outputs_not_connected:
+                req = caller.request(devid, "slotGetConfigurationSlice",
+                                     Hash("paths", ["output.connections"]))
                 try:
-                    conns = self.dc.get(devid, 'output.connections')
-                except RuntimeError as re:
-                    print(
-                        f"Problem retrieving 'output.connections' from '{devid}': {re}")  # noqa
-                if len(conns) > 0:
-                    outputs_connected.add(devid)
+                    (cfgSlice, ) = req.waitForReply(self._slot_timeout_ms)
+                except Exception as e:
+                    if num_of_waits < 10:  # Only print last attempts...
+                        print("Problem retrieving 'output.connections' from "
+                              f"'{devid}': {str(e)}")
+                else:
+                    if len(cfgSlice['output.connections']) > 0:
+                        outputs_connected.add(devid)
             outputs_not_connected = outputs_not_connected - outputs_connected
             num_of_waits = num_of_waits - 1
             sleep(sleep_wait_interv)
 
-        infoMsg = ""
-        if len(outputs_not_connected):
-            # Get here only in case of trouble! Collect info:
-            caller = SignalSlotable("debugHelperConn")
-            caller.start()
-            for devId in outputs_not_connected:
-                req = caller.request(devId, "slotGetConfiguration")
-                try:
-                    cfg, _ = req.waitForReply(self._slot_timeout_ms)
-                except Exception as e:
-                    infoMsg += f"\n{devId} cfg problem: {repr(e)}"
-                else:
-                    tableStr = ""
-                    for row in cfg['output.connections']:
-                        tableStr += str(row)
-                    infoMsg += (f"\n{devId} connections: {tableStr}")
-
         self.assertEqual(len(outputs_not_connected), 0,
                          f"Failed to connect {outputs_not_connected} of the "
-                         f"{len(start_info)-1} output channels in the chain: "
-                         f"{infoMsg}")
+                         f"{len(start_info)-1} output channels in the chain")
         print("========== all connected ===============")
 
         self.dc.execute("sender", "writeOutput")
