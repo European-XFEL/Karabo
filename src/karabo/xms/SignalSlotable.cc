@@ -1149,11 +1149,11 @@ namespace karabo {
                                                  const karabo::util::Hash& instanceInfo) {
             if (instanceId == m_instanceId) return;
 
-            emit("signalInstanceUpdated", instanceId, instanceInfo);
             if (m_trackAllInstances) {
                 // Merge the new instanceInfo (ignoring case of a shrunk instanceInfo...)
                 addTrackedInstance(instanceId, instanceInfo);
             }
+            emit("signalInstanceUpdated", instanceId, instanceInfo); // after addTrackedInstance(..)?
         }
 
 
@@ -1952,15 +1952,6 @@ namespace karabo {
                 Hash& h = m_trackedInstances.get<Hash>(instanceId);
                 h.set("instanceInfo", instanceInfo);
                 h.set("countdown", instanceInfo.get<int>("heartbeatInterval"));
-            }
-        }
-
-
-        void SignalSlotable::addTrackedInstanceConnection(const std::string& instanceId,
-                                                          const karabo::util::Hash& connection) {
-            boost::mutex::scoped_lock lock(m_trackedInstancesMutex);
-            if (m_trackedInstances.has(instanceId)) {
-                m_trackedInstances.get<vector<Hash>>(instanceId + ".connections").push_back(connection);
             }
         }
 
