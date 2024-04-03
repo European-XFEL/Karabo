@@ -27,15 +27,72 @@ However, you are welcome to already
 suggest modifications you'd like to contribute by opening a merge/pull
 request before you send the CLA.
 
-Internal contributors, i.e. anyone contractually associated to the
-European XFEL, can find guidelines on internal contributions in
-the Karabo Framework Redmine Wiki:
-https://in.xfel.eu/redmine/projects/karabo-library/wiki/Developing_the_framework_using_git
-
-Additionally, everyone is asked to follow these guidelines:
+Everyone is asked to follow these guidelines:
 
 Gitlab
 ======
+
+Git Workflow
+-------------
+
+All new features and fixes should be developed against the *master*/*main*
+branch. Afterwards, fixes may be backported to a release branch that usually
+follows the format `<MAJOR>.<MINOR>.X-hotfix`.
+
+- Checkout the targeted branch (usually master/main) and `git pull`.
+- Switch to a development branch, e.g. `git checkout -b <branchname>`
+- Edit code, `add`, `commit` and finally `push` that branch.
+- Create  a merge request in GitLab using the url that the output of `push`
+  provides. Do not forget to provide a meaningful description
+  and a test for the fix or the new feature.
+- The merge request title should be prefixed with type and scope following
+  [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) where
+  the scope usually is the API that the merge requests updates:
+  `feat(C++)`, `fix(Bound)`, `refactor(MDL)`, `perf(GUI)`...
+  - If it is a backport, please indicate that in the title.
+- Kindly address review comments by pushing updates or commenting why that
+  would not be a good idea.
+- Keep an eye on the tests that are run by the GitLab's Continuous Integration
+  (CI). The CI first checks for formatting compliance (linting) - you may ease
+  your life by enabling git pre-commit checks, see below.
+- Once a reviewer comments with LGTM ("Looks good to me") and no comments of
+  another reviewer are open, the author of the merge request shall merge the
+  merge request.
+  - Please edit the merge commit message prepared by GitLab my removing the
+    line "Merge branch 'XXXX' into 'YYYY'".
+    The first line should be a copy of the merge request title.
+
+
+Formatting compliance and Pre-commit
+-------------------------------------
+
+In order to have your commits accepted by the CI's linting jobs, your modified
+Python source files must be compliant with `flake8` and `isort` and your
+modified C++ source files must be compliant with the `clang-format` settings in
+the `.clang-format` file at the root of the repository.
+
+The CI linting job ($REPO_ROOT/ci/lint) currently uses `clang-format 17.0.6`.
+Instructions on how to setup a development system based
+on Visual Studio Code can be found at
+[doc/tools/vscode.rst](https://rtd.xfel.eu/docs/karabo/en/latest/tools/vscode.html) in this repository.
+
+To detect non-compliances even before pushing to GitLab, developers are
+encouraged to setup the `pre-commit` functionality. To do so, Karabo has to be
+built and its environment activated. Then install via
+
+    pip install pre-commit
+    pre-commit install
+
+The first step installs `pre-commit` in the activated Karabo environment and
+thus has to be redone whenever Karabo is built again from scratch.
+The latter step creates the necessary hook for git (`.git/hooks/pre-commit`).
+The `pre-commit` configuration can be found at `.pre-commit-config.yaml`.
+
+Whenever one commits, the staged files will now be checked. If any
+non-compliance is detected, the commit is aborted. The offending files are
+corrected, but these changes are not yet staged for commit. That has to be
+done by hand before the next try to commit.
+
 
 Large(r) merge requests:
 ------------------------
@@ -65,7 +122,8 @@ feature branches:
 What does WIP/Draft mean?
 -------------------------
 
-WIP, or Draft, means work in progress and should be used to indicate MRs that you would
+WIP, or Draft, as prefix of a merge request title
+means work in progress and should be used to indicate MRs that you would
 like to share with a selected group of people you work together with and get
 their opinion. You should explicitly let the people know that they should
 collaborate with you on the WIP MR. Everyone else can ignore WIP MRs,
@@ -83,10 +141,9 @@ refactoring.
 C++ Standard
 ============
 
-C++14 usage is supported for framework code. However, to support legacy packages,
-the C++ headers of Karabo currently do not use any C++14 features and allow
-a package (e.g. a device) to be compiled using the C++11 standard.
-It is however discouraged to build Karabo C++ Packages using the C++11 standard.
+Since Karabo 2.20, C++17 usage is supported for framework code.
+Any depending packages should follow and upgrade to C++17 since it cannot be
+guaranteed that C++17 features are avoided in framework header files.
 
 Additionally, the following guidelines are suggested:
 
@@ -101,10 +158,11 @@ Additionally, the following guidelines are suggested:
   with `auto` if it aids readability. You do not specifically have to refactor
   otherwise working code though.
 
-- Do **not** use `std::shared_ptr`, we will continue to use `boost::shared_ptr`!
+- Except if in well contained parts of the code, do **not** use
+  `std::shared_ptr`, but continue to use `boost::shared_ptr`.
 
 - In general, if a `boost` and a `std`-library feature coexist
-  (smart pointers, mutices, bind, etc.), continue to use the boost implementation
+  (smart pointers, mutexes, bind, etc.), continue to use the boost implementation
   as we have done previously, especially if there is a risk that your new code
   needs to interact with existing code.
 

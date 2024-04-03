@@ -10,7 +10,6 @@ Contents:
 .. toctree::
    python
    vscode
-   git
    redmine
    gdb
    documentation
