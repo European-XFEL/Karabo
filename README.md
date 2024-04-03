@@ -54,41 +54,6 @@ Tests have shown that the builds are performed faster when `ninja` is used as
 the CMake generator. If `ninja` is available on your Linux installation, the
 build uses it instead of the default `Unix Makefiles` generator.
 
-## Formatting compliance
-
-In order to have your commits accepted by the CI's linting jobs, your modified
-Python source files must be compliant with `flake8` and `isort` and your
-modified C++ source files must be compliant with the `clang-format` settings in
-the `.clang-format` file at the root of the repository.
-
-The CI linting job currently use `clang-format 17.0.6`. Please make sure that
-you have at least this version available on your development system.
-
-There are instructions on how to setup a development system based on Visual
-Studio Code
-at [(https://rtd.xfel.eu/docs/karabo/en/latest/tools/vscode.html)](https://rtd.xfel.eu/docs/karabo/en/latest/tools/vscode.html) (
-which corresponds to file `doc/tools/vscode.rst` in the repository).
-
-To manually run the CI linting job on your local system, please execute the
-following script:
-
-    $REPO_ROOT/ci/lint
-
-Another script, `src/devScripts/lint_modified.sh`, allows all modified source
-files in the Framework that are not yet staged to be formatted with
-`clang-format` (C++ files) or with `isort` (Python files). This script also
-checks the modified Python files for PEP8 compliance with `flake8`.
-
-There is a pre-commit Git hook at `src/devScripts/pre-commit-hook` that you
-should enable if you want to be warned early about C++ source formatting that
-will be rejected by the CI lint job. To enable that pre-commit hook, please
-create a symbolic link named `pre-commit` at directory `.git/hooks`
-referencing `src/devScripts/pre-commit-hook`:
-
-    ln -s $REPO_ROOT/src/devScripts/pre-commit-hook $REPO_ROOT/.git/hooks/pre-commit
-
-where `REPO_ROOT` is the path of the root directory of your local Framework
-repository.
 
 # Documentation
 
