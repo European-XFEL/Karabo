@@ -90,13 +90,14 @@ class ProjectView(QTreeView):
         """
         model = self.model()
         model.root_model = None
-        model.setParent(None)
 
     # ----------------------------
     # Qt methods
 
     def closeEvent(self, event):
-        self.destroy()
+        model = self.model()
+        model.root_model = None
+        model.setParent(None)
         event.accept()
 
     def keyPressEvent(self, event):
