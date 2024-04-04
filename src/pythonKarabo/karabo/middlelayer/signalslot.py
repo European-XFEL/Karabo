@@ -26,8 +26,8 @@ from asyncio import (
 from collections import defaultdict
 
 from karabo.native import (
-    AccessLevel, AccessMode, Assignment, Configurable, DaqPolicy, Descriptor,
-    Hash, Int32, KaraboError, Node, Slot, String, TypeHash, Weak)
+    AccessLevel, AccessMode, Assignment, Configurable, Descriptor, Hash, Int32,
+    KaraboError, Node, Slot, String, TypeHash, Weak)
 
 from .pipeline import NetworkOutput, OutputChannel
 from .proxy import DeviceClientProxyFactory
@@ -72,6 +72,7 @@ def slot(f, passMessage=False):
                 except BaseException as e:
                     broker.replyException(message, e)
                     _log_exception(func, device, message)
+
             if passMessage:
                 args.append(message)
             get_event_loop().create_task(inner(), instance=device)
@@ -172,7 +173,7 @@ class SignalSlotable(Configurable):
         requiredAccessLevel=AccessLevel.EXPERT,
         assignment=Assignment.INTERNAL, accessMode=AccessMode.INITONLY,
         defaultValue="__none__",
-        daqPolicy=DaqPolicy.OMIT)
+    )
     def _deviceId_(self, value):
         self._deviceId_ = value
         self.logger = logging.getLogger(value)
@@ -182,7 +183,7 @@ class SignalSlotable(Configurable):
         description="The device instance ID uniquely identifies a device "
                     "instance in the distributed system",
         accessMode=AccessMode.READONLY,
-        daqPolicy=DaqPolicy.OMIT)
+    )
 
     heartbeatInterval = Int32(
         displayedName="Heartbeat interval",
@@ -191,7 +192,7 @@ class SignalSlotable(Configurable):
         accessMode=AccessMode.INITONLY,
         minInc=10,
         requiredAccessLevel=AccessLevel.ADMIN,
-        daqPolicy=DaqPolicy.OMIT)
+    )
 
     _ss = None
 
