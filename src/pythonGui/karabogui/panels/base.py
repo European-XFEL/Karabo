@@ -154,8 +154,8 @@ class BasePanelWidget(QFrame):
                                Qt.KeepAspectRatio,
                                Qt.SmoothTransformation)
 
-        center_x = (printer.pageRect().width() - pixmap.width()) / 2
-        center_y = (printer.pageRect().height() - pixmap.height()) / 2
+        center_x = (printer.pageRect().width() - pixmap.width()) // 2
+        center_y = (printer.pageRect().height() - pixmap.height()) // 2
         painter = QPainter(printer)
         painter.drawPixmap(center_x, center_y, pixmap)
         painter.end()
