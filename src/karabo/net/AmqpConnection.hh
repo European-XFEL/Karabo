@@ -24,6 +24,7 @@
 #ifndef KARABO_NET_AMQPCONNECTION_HH
 #define KARABO_NET_AMQPCONNECTION_HH
 
+#include <boost/asio/dispatch.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/post.hpp>
 #include <boost/enable_shared_from_this.hpp>
@@ -78,19 +79,25 @@ namespace karabo::net {
 
         /**
          * Asynchronously connect to any of the broker addresses passed to the constructor.
+         *
          * Addresses will be tried in the order they have been passed.
+         * Can be called from any thread.
          *
          * @param onComplete AsyncHAndler called (not from within asyncConnect) about success or failure of connection
          *                   attempt. If all addresses failed, the error code passed is the one of the last address
          *                   passed to the constructor.
-         *                   The handler (if valid) will be called from within the internal io context.
+         *                   The handler (if valid) will be called from within the internal io context,
+         *                   but not within the scope of asyncConnect.
          */
         void asyncConnect(AsyncHandler&& onComplete);
 
         /**
          * Trigger creation of an amqp channel and return it via the handler
          *
-         * @param onComplete A valid (!) ChannelCreationHandler that will be called from within the internal io context.
+         * Can be called from any thread.
+         *
+         * @param onComplete A valid (!) ChannelCreationHandler that will be called from within the internal io context,
+         *                   but not within the scope of asyncCreateChannel.
          */
         void asyncCreateChannel(const ChannelCreationHandler& onComplete);
 
@@ -103,6 +110,16 @@ namespace karabo::net {
         template <typename CompletionToken>
         void post(CompletionToken&& task) {
             boost::asio::post(m_ioContext, std::forward<CompletionToken>(task));
+        }
+
+        /**
+         * Detach a task to the io context, i.e. run it now or later depending on which thread we are in
+         *
+         * The task must not contain blocking code since otherwise the thread running the AMQP communication is blocked.
+         */
+        template <typename CompletionToken>
+        void dispatch(CompletionToken&& task) {
+            boost::asio::dispatch(m_ioContext, std::forward<CompletionToken>(task));
         }
 
 
