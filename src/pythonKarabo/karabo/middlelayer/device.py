@@ -23,8 +23,8 @@ from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.enums import Capabilities, Interfaces
 from karabo.common.states import State
 from karabo.native import (
-    AccessLevel, AccessMode, Assignment, DaqPolicy, Hash, Int32, KaraboError,
-    Node, Slot, String, TimeMixin, TypeHash, TypeSchema, get_timestamp, isSet)
+    AccessLevel, AccessMode, Assignment, Hash, Int32, KaraboError, Node, Slot,
+    String, TimeMixin, TypeHash, TypeSchema, get_timestamp, isSet)
 
 from .injectable import InjectMixin
 from .logger import build_logger_node
@@ -50,7 +50,7 @@ class Device(InjectMixin, SignalSlotable):
         requiredAccessLevel=AccessLevel.EXPERT,
         assignment=Assignment.INTERNAL, accessMode=AccessMode.INITONLY,
         defaultValue="__none__",
-        daqPolicy=DaqPolicy.OMIT)
+    )
 
     visibility = Int32(
         enum=AccessLevel, displayedName="Visibility",
@@ -58,14 +58,14 @@ class Device(InjectMixin, SignalSlotable):
         assignment=Assignment.OPTIONAL, defaultValue=AccessLevel.OBSERVER,
         requiredAccessLevel=AccessLevel.EXPERT,
         accessMode=AccessMode.INITONLY,
-        daqPolicy=DaqPolicy.OMIT)
+    )
 
     classId = String(
         displayedName="ClassID",
         description="The (factory)-name of the class of this device",
         requiredAccessLevel=AccessLevel.EXPERT,
         accessMode=AccessMode.READONLY,
-        daqPolicy=DaqPolicy.OMIT)
+    )
 
     classVersion = String(
         displayedName="Class version",
@@ -74,7 +74,7 @@ class Device(InjectMixin, SignalSlotable):
         accessMode=AccessMode.READONLY,
         # No version dependent default value: It would make the static
         # schema version dependent, i.e. introduce fake changes.
-        daqPolicy=DaqPolicy.OMIT)
+    )
 
     karaboVersion = String(
         displayedName="Karabo version",
@@ -82,14 +82,14 @@ class Device(InjectMixin, SignalSlotable):
         requiredAccessLevel=AccessLevel.EXPERT,
         accessMode=AccessMode.READONLY,
         # No version dependent default value, see above at "classVersion".
-        daqPolicy=DaqPolicy.OMIT)
+    )
 
     serverId = String(
         displayedName="ServerID",
         description="The device-server which this device is running on",
         requiredAccessLevel=AccessLevel.EXPERT,
         accessMode=AccessMode.READONLY,
-        daqPolicy=DaqPolicy.OMIT)
+    )
 
     hostName = String(
         displayedName="Host",
@@ -97,7 +97,7 @@ class Device(InjectMixin, SignalSlotable):
                     "device-server",
         requiredAccessLevel=AccessLevel.EXPERT,
         assignment=Assignment.INTERNAL, accessMode=AccessMode.INITONLY,
-        daqPolicy=DaqPolicy.OMIT)
+    )
 
     pid = Int32(
         displayedName="Process ID",
@@ -105,21 +105,21 @@ class Device(InjectMixin, SignalSlotable):
         description="The unix process ID of the device (i.e. of the server)",
         requiredAccessLevel=AccessLevel.EXPERT,
         accessMode=AccessMode.READONLY,
-        daqPolicy=DaqPolicy.OMIT)
+    )
 
     state = String(
         displayedName="State", enum=State, displayType='State',
         description="The current state the device is in",
         accessMode=AccessMode.READONLY, assignment=Assignment.OPTIONAL,
         defaultValue=State.UNKNOWN,
-        daqPolicy=DaqPolicy.OMIT)
+    )
 
     status = String(
         displayedName="Status",
         description="A more detailed status description",
         accessMode=AccessMode.READONLY, assignment=Assignment.OPTIONAL,
         defaultValue="",
-        daqPolicy=DaqPolicy.OMIT)
+    )
 
     alarmCondition = String(
         enum=AlarmCondition,
@@ -129,7 +129,7 @@ class Device(InjectMixin, SignalSlotable):
         accessMode=AccessMode.READONLY,
         defaultValue=AlarmCondition.NONE,
         classId="AlarmCondition",
-        daqPolicy=DaqPolicy.OMIT)
+    )
 
     @property
     def globalAlarmCondition(self):
@@ -148,7 +148,7 @@ class Device(InjectMixin, SignalSlotable):
         displayType="lockedBy",
         accessMode=AccessMode.RECONFIGURABLE, assignment=Assignment.OPTIONAL,
         requiredAccessLevel=AccessLevel.EXPERT, defaultValue="",
-        daqPolicy=DaqPolicy.OMIT)
+    )
 
     @Slot(displayedName="Clear Lock", requiredAccessLevel=AccessLevel.EXPERT,
           description="Clear the lock on this device")
@@ -162,7 +162,7 @@ class Device(InjectMixin, SignalSlotable):
         description="The last slot called.",
         accessMode=AccessMode.READONLY,
         requiredAccessLevel=AccessLevel.EXPERT,
-        daqPolicy=DaqPolicy.OMIT)
+    )
 
     log = Node(
         build_logger_node(),
