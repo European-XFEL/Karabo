@@ -88,7 +88,7 @@ class Schema_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testNodeDisplayType);
     CPPUNIT_TEST(testGetLeaves);
     CPPUNIT_TEST(testAllowedActions);
-    CPPUNIT_TEST(testDefaultReadOnlyThrows);
+    CPPUNIT_TEST(testInvalidReadOnlyThrows);
     CPPUNIT_TEST(testTableColNoDefaultValue);
     CPPUNIT_TEST(testTableColInitOnly);
     CPPUNIT_TEST(testTableColUnsupportedType);
@@ -169,7 +169,7 @@ class Schema_Test : public CPPUNIT_NS::TestFixture {
      * As the invalid usage does not trigger compilation errors, a
      * throw-at-runtime approach has been used.
      */
-    void testDefaultReadOnlyThrows();
+    void testInvalidReadOnlyThrows();
 
     void testTable();
     void testTableReadOnly();
