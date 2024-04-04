@@ -114,10 +114,24 @@ void Amqp_Test::testConnection() {
         CPPUNIT_ASSERT_EQUAL(std::future_status::ready, fut3.wait_for(3 * timeout));
         const boost::system::error_code ec3 = fut3.get();
         CPPUNIT_ASSERT_EQUAL_MESSAGE(ec3.message(), static_cast<int>(boost::system::errc::success), ec3.value());
+
+        // Here add test for successful channel creation
+        std::promise<std::shared_ptr<AMQP::TcpChannel>> doneCreation;
+        auto futCreateChannel = doneCreation.get_future();
+        connection->asyncCreateChannel(
+              [&doneCreation](const std::shared_ptr<AMQP::TcpChannel>& channel, const char* errMsg) {
+                  if (errMsg) doneCreation.set_value(nullptr);
+                  else doneCreation.set_value(channel);
+              });
+        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futCreateChannel.wait_for(std::chrono::seconds(5)));
+        auto channel = futCreateChannel.get();
+        CPPUNIT_ASSERT(channel); // a channel has been created
+        CPPUNIT_ASSERT_NO_THROW(channel.reset());
+
         CPPUNIT_ASSERT_NO_THROW(connection.reset());
     }
 
-    { // test invalid tcp address - the test for post sneaked in as well
+    { // test invalid tcp address - the tests for post and too early asyncCreateChannel sneaked in as well
         const std::vector<std::string> invalidIps(1, urlBadHostPort);
         net::AmqpConnection::Pointer connection(boost::make_shared<net::AmqpConnection>(invalidIps));
 
@@ -127,6 +141,18 @@ void Amqp_Test::testConnection() {
         connection->post([&donePost]() { donePost.set_value(); });
         CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futPost.wait_for(timeout));
         futPost.get();
+
+        // then test failing channel creation without being connected
+        std::promise<std::string> doneCreation;
+        auto futCreateChannel = doneCreation.get_future();
+
+        connection->asyncCreateChannel(
+              [&doneCreation](const std::shared_ptr<AMQP::TcpChannel>& channel, const char* errMsg) {
+                  if (channel) doneCreation.set_value("Non empty channelPtr!");
+                  else doneCreation.set_value(errMsg);
+              });
+        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futCreateChannel.wait_for(std::chrono::seconds(5)));
+        CPPUNIT_ASSERT_EQUAL(std::string("Connection not ready"), futCreateChannel.get());
 
         // Now the real test for invalid tcp address
         std::promise<boost::system::error_code> done;
