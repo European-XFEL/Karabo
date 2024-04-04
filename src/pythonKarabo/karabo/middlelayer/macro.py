@@ -27,8 +27,8 @@ from functools import wraps
 
 from karabo.common.states import State
 from karabo.native import (
-    AccessLevel, AccessMode, Attribute, DaqPolicy, Descriptor, Hash, Int32,
-    Slot, String, VectorString)
+    AccessLevel, AccessMode, Attribute, Descriptor, Hash, Int32, Slot, String,
+    VectorString)
 
 from .device import Device, DeviceClientBase
 from .device_client import getDevice, waitUntilNew
@@ -46,6 +46,7 @@ def Monitor():
         prop.monitor = prop.setter
         del prop.setter
         return prop
+
     return outer
 
 
@@ -221,7 +222,6 @@ def _wrapslot(slot, name, abstract_passive, abstract_active):
 
 
 class Macro(Device):
-
     abstractPassiveState = State.PASSIVE
     abstractActiveState = State.ACTIVE
 
@@ -235,7 +235,7 @@ class Macro(Device):
         defaultValue="__none__",
         accessMode=AccessMode.INITONLY,
         requiredAccessLevel=AccessLevel.EXPERT,
-        daqPolicy=DaqPolicy.OMIT)
+    )
 
     module = String(
         displayedName="Module",
@@ -243,14 +243,14 @@ class Macro(Device):
         defaultValue="__none__",
         accessMode=AccessMode.INITONLY,
         requiredAccessLevel=AccessLevel.EXPERT,
-        daqPolicy=DaqPolicy.OMIT)
+    )
 
     currentSlot = String(
         displayedName="Current Slot",
         description="The name of the slot which is currently running",
         defaultValue="",
         accessMode=AccessMode.READONLY,
-        daqPolicy=DaqPolicy.OMIT)
+    )
 
     print = String(
         displayedName="Printed output",
@@ -258,7 +258,7 @@ class Macro(Device):
         defaultValue="",
         accessMode=AccessMode.READONLY,
         requiredAccessLevel=AccessLevel.EXPERT,
-        daqPolicy=DaqPolicy.OMIT)
+    )
 
     doNotCompressEvents = Int32(
         displayedName="Number of prints",
@@ -266,7 +266,7 @@ class Macro(Device):
         defaultValue=0,
         accessMode=AccessMode.READONLY,
         requiredAccessLevel=AccessLevel.EXPERT,
-        daqPolicy=DaqPolicy.OMIT)
+    )
 
     @Slot(displayedName="Cancel")
     async def cancel(self):
