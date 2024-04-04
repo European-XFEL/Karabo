@@ -131,16 +131,24 @@ void Amqp_Test::testConnection() {
         CPPUNIT_ASSERT_NO_THROW(connection.reset());
     }
 
-    { // test invalid tcp address - the tests for post and too early asyncCreateChannel sneaked in as well
+    { // test invalid tcp address - the tests for post, dispatch and too early asyncCreateChannel sneaked in as well
         const std::vector<std::string> invalidIps(1, urlBadHostPort);
         net::AmqpConnection::Pointer connection(boost::make_shared<net::AmqpConnection>(invalidIps));
 
-        // first test post(..)
+        // first test post(..) and dispatch(..)
         std::promise<void> donePost;
         auto futPost = donePost.get_future();
         connection->post([&donePost]() { donePost.set_value(); });
         CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futPost.wait_for(timeout));
         futPost.get();
+
+        std::promise<void> doneDispatch;
+        auto futDispatch = doneDispatch.get_future();
+        connection->dispatch([&doneDispatch]() { doneDispatch.set_value(); });
+        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futDispatch.wait_for(timeout));
+        futDispatch.get();
+        // TODO? Add a test that checks that dispatching a method means directly calling it if already in the
+        // io_context?
 
         // then test failing channel creation without being connected
         std::promise<std::string> doneCreation;

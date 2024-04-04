@@ -76,9 +76,9 @@ namespace karabo {
         }
 
         void AmqpConnection::asyncConnect(AsyncHandler&& onComplete) {
-            // save complete handler and jump to the internal thread
+            // save complete handler and jump to the internal thread (if not yet in it)
             m_onComplete = std::move(onComplete);
-            post(bind_weak(&AmqpConnection::doAsyncConnect, this)); // TODO: detach?
+            dispatch(bind_weak(&AmqpConnection::doAsyncConnect, this));
         }
 
         void AmqpConnection::doAsyncConnect() {
@@ -109,6 +109,7 @@ namespace karabo {
             } catch (const std::runtime_error& e) {
                 // AMQP::Address throws runtime_error on invalid protocol in AMQP::Address
                 KARABO_LOG_FRAMEWORK_WARN << "Invalid url: " << e.what();
+                // Have to post since it was guaranteed that handler is not called from same scope as asyncConnect
                 post(bind_weak(&AmqpConnection::callOnComplete, this, KARABO_ERROR_CODE_WRONG_PROTOCOL));
             }
         }
@@ -247,12 +248,13 @@ namespace karabo {
 
         void AmqpConnection::asyncCreateChannel(const AmqpConnection::ChannelCreationHandler& onComplete) {
             // ensure we are in our AMQP thread
-            post(bind_weak(&AmqpConnection::doCreateChannel, this, onComplete)); // TODO: detach?
+            dispatch(bind_weak(&AmqpConnection::doCreateChannel, this, onComplete));
         }
 
         void AmqpConnection::doCreateChannel(const AmqpConnection::ChannelCreationHandler& onComplete) {
             if (m_state != State::eConnectionReady) {
-                onComplete(nullptr, "Connection not ready");
+                // Have to post since it was guaranteed that handler is not called from same scope as asyncCreateChannel
+                post(boost::bind(onComplete, nullptr, "Connection not ready"));
                 // In future might downgrade to DEBUG - let's see...
                 KARABO_LOG_FRAMEWORK_INFO_C("AmqpConnection") << "Channel creation failed: connection not ready.";
                 return;
