@@ -516,7 +516,6 @@ namespace karabo {
                   .displayedName("Loggers Map")
                   .description("Table with the destination of each devices's log")
                   .setColumns(loggerMap_tableColumn)
-                  .assignmentMandatory()
                   .readOnly()
                   .commit();
         }
