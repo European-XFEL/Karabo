@@ -25,6 +25,8 @@ from karabo.bound import (
     DeviceClient, EventLoop, Hash, Logger, Schema, startDeviceServer,
     stopDeviceServer)
 
+timeoutSec = 10
+
 
 def test_device_client_sync_api():
     # Run CPP event loop in background ...
@@ -157,7 +159,8 @@ def test_device_client_sync_api():
     # Test instantiate...
     instanceNewArg = None
     #     synopsis: instantiate(serverId, classId, config, timeout)
-    c.instantiate(serverId, Hash('PropertyTest.deviceId', deviceId), 10)
+    c.instantiate(serverId, Hash('PropertyTest.deviceId', deviceId),
+                  timeoutSec)
     # Test getDevices...
     assert deviceId in c.getDevices(serverId)
     assert type(instanceNewArg) is Hash
@@ -292,7 +295,7 @@ def test_device_client_sync_api():
     assert type(onSchemaUpdatedArg2) is Schema
     assert onSchemaUpdatedArg2.getMinInc("int32Property") == 12
 
-    lck = c.lock(deviceId, recursive=False, timeout=3)
+    lck = c.lock(deviceId, recursive=False, timeout=timeoutSec)
     assert lck.valid()
     lck.unlock()
 
