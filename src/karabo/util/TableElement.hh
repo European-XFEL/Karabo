@@ -138,15 +138,21 @@ namespace karabo {
             }
 
             virtual ReadOnlySpecific<TableElement, std::vector<Hash>>& readOnly() {
-                if (this->m_node->hasAttribute(KARABO_SCHEMA_ASSIGNMENT) &&
-                    this->m_node->template getAttribute<int>(KARABO_SCHEMA_ASSIGNMENT) == Schema::OPTIONAL_PARAM &&
-                    this->m_node->hasAttribute(KARABO_SCHEMA_DEFAULT_VALUE)) {
-                    std::string msg;
-                    msg.append("Error in element '")
-                          .append(this->m_node->getKey())
-                          .append("': readOnly() is not compatible with assignmentOptional().defaultValue(v). ")
-                          .append("Use readOnly().initialValue(v) instead.");
-                    throw KARABO_LOGIC_EXCEPTION(msg);
+                if (this->m_node->hasAttribute(KARABO_SCHEMA_ASSIGNMENT)) {
+                    const int assignment = this->m_node->template getAttribute<int>(KARABO_SCHEMA_ASSIGNMENT);
+                    if (assignment == Schema::MANDATORY_PARAM) {
+                        std::string msg("Error in element '");
+                        msg.append(this->m_node->getKey())
+                              .append("': readOnly() is not compatible with assignmentMandatory()");
+                        throw KARABO_LOGIC_EXCEPTION(msg);
+                    } else if (assignment == Schema::OPTIONAL_PARAM &&
+                               this->m_node->hasAttribute(KARABO_SCHEMA_DEFAULT_VALUE)) {
+                        std::string msg("Error in element '");
+                        msg.append(this->m_node->getKey())
+                              .append("': readOnly() is not compatible with assignmentOptional().defaultValue(v). ")
+                              .append("Use readOnly().defaultValue(v) instead.");
+                        throw KARABO_LOGIC_EXCEPTION(msg);
+                    }
                 }
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ);
                 // Set the assignment and defaults here, as the API would look strange to assign something to a

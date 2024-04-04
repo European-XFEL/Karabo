@@ -1452,8 +1452,12 @@ void Schema_Test::testAllowedActions() {
 }
 
 
-void Schema_Test::testDefaultReadOnlyThrows() {
+void Schema_Test::testInvalidReadOnlyThrows() {
     karabo::util::Schema invalidSchema;
+
+    // assignmentMandatory() and readOnly() contradict each other
+    CPPUNIT_ASSERT_THROW(FLOAT_ELEMENT(invalidSchema).key("float").assignmentMandatory().readOnly().commit(),
+                         karabo::util::LogicException);
 
     // The assignmentOptional().defaultValue(1).readOnly() sequence below,
     // if accepted, would reset the element value to 0, overriding the
@@ -1492,6 +1496,15 @@ void Schema_Test::testTableReadOnly() {
     BOOL_ELEMENT(rowSchema).key("b").assignmentOptional().noDefaultValue().commit();
 
     karabo::util::Schema invalidReadOnlySchema;
+
+    // assignmentMandatory() and readOnly() contradict each other
+    CPPUNIT_ASSERT_THROW(TABLE_ELEMENT(invalidReadOnlySchema)
+                               .key("InvalidTable")
+                               .setColumns(rowSchema)
+                               .assignmentMandatory()
+                               .readOnly()
+                               .commit(),
+                         karabo::util::LogicException);
 
     // The assignmentOptional().defaultValue(...).readOnly() sequence below,
     // if accepted, would reset the element value to empty vector of hashes,
