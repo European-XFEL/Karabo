@@ -51,9 +51,15 @@ namespace karabo {
 
         AmqpConnection::~AmqpConnection() {
             m_connection.reset(); // Before thread ceases
+            // Caveat: The created channels also carry a shared_ptr to our connection!
+            //         So we have to take care by some (future) logic that all these channels are gone before this
+            //         destructor is called (or at least within the join() below?)
 
             // remove protection that keeps thread alive even without actual work
             m_work.reset();
+            // Take care no further tasks can run after this one
+            // (Looks like that is needed when a TcpChannel was created...)
+            m_ioContext.stop();
 
             // Join thread except if running in that thread.
             if (m_thread.get_id() == std::this_thread::get_id()) {
@@ -63,7 +69,6 @@ namespace karabo {
                 // onDetached kept it alive a while and, since posted to the thread, triggers destruction in the thread.
                 KARABO_LOG_FRAMEWORK_WARN
                       << "Cannot join thread since running in it: stop io context and detach thread";
-                m_ioContext.stop(); // take care no further tasks can run after this one
                 m_thread.detach();
             } else {
                 m_thread.join();
@@ -71,9 +76,9 @@ namespace karabo {
         }
 
         void AmqpConnection::asyncConnect(AsyncHandler&& onComplete) {
-            // save complete handler ...
+            // save complete handler and jump to the internal thread
             m_onComplete = std::move(onComplete);
-            doAsyncConnect();
+            post(bind_weak(&AmqpConnection::doAsyncConnect, this)); // TODO: detach?
         }
 
         void AmqpConnection::doAsyncConnect() {
@@ -101,8 +106,8 @@ namespace karabo {
                     handler.reset();
                 };
                 m_connection = decltype(m_connection)(new AMQP::TcpConnection(bareHandler, address), deleteConn);
-            } catch (const std::runtime_error&
-                           e) { // AMQP::Address throws runtime_error on invalid protocol in AMQP::Address
+            } catch (const std::runtime_error& e) {
+                // AMQP::Address throws runtime_error on invalid protocol in AMQP::Address
                 KARABO_LOG_FRAMEWORK_WARN << "Invalid url: " << e.what();
                 post(bind_weak(&AmqpConnection::callOnComplete, this, KARABO_ERROR_CODE_WRONG_PROTOCOL));
             }
@@ -240,5 +245,40 @@ namespace karabo {
             }
         }
 
+        void AmqpConnection::asyncCreateChannel(const AmqpConnection::ChannelCreationHandler& onComplete) {
+            // ensure we are in our AMQP thread
+            post(bind_weak(&AmqpConnection::doCreateChannel, this, onComplete)); // TODO: detach?
+        }
+
+        void AmqpConnection::doCreateChannel(const AmqpConnection::ChannelCreationHandler& onComplete) {
+            if (m_state != State::eConnectionReady) {
+                onComplete(nullptr, "Connection not ready");
+                // In future might downgrade to DEBUG - let's see...
+                KARABO_LOG_FRAMEWORK_INFO_C("AmqpConnection") << "Channel creation failed: connection not ready.";
+                return;
+            }
+            // Create channel: Since it takes a raw pointer to the connection, we use a deleter that takes care that the
+            //                 connection outlives the channel.
+            std::shared_ptr<AMQP::TcpChannel> channelPtr(new AMQP::TcpChannel(m_connection.get()),
+                                                         [connection{m_connection}](AMQP::TcpChannel* p) { delete p; });
+
+            // Attach success and failure handlers to channel - since we run in single threaded event loop that is OK
+            // after channel creation since any action can only run after this function
+            channelPtr->onError([onComplete](const char* errMsg) {
+                onComplete(nullptr, errMsg);
+                // At least for now WARN despite of handler that has to take care - later may use DEBUG
+                KARABO_LOG_FRAMEWORK_WARN_C("AmqpConnection") << "Channel creation failed: " << errMsg;
+            });
+            // Capturing channelPtr here keeps channel alive (via a temporary [!] circular reference...)
+            channelPtr->onReady([onComplete, channelPtr]() {
+                const char* msg = nullptr;
+                // Reset error handler: Previous one indicates creation failure. When will the new one be called?
+                channelPtr->onError([](const char* errMsg) {
+                    KARABO_LOG_FRAMEWORK_ERROR_C("AmqpConnection") << "Channel reports: " << errMsg;
+                });
+                onComplete(channelPtr, msg);
+                KARABO_LOG_FRAMEWORK_DEBUG_C("AmqpConnection") << "Channel created.";
+            });
+        }
     } // namespace net
 } // namespace karabo
