@@ -718,6 +718,7 @@ namespace karabo {
                     // For read-only servers, the access level is always OBSERVER.
                     Hash h("type", "loginInformation");
                     h.set("accessLevel", static_cast<int>(level));
+                    h.set("username", authResult.userId);
                     safeClientWrite(channel, h);
 
                     sendSystemTopology(weakChannel);
@@ -802,7 +803,7 @@ namespace karabo {
             }
             const Hash h("type", "onEscalate", "success", result.success, "reason", result.errMsg, "escalationToken",
                          result.escalationToken, "escalationDurationSecs", result.escalationDurationSecs, "accessLevel",
-                         static_cast<int>(result.accessLevel));
+                         static_cast<int>(result.accessLevel), "username", result.userId);
             if (result.success) {
                 boost::mutex::scoped_lock lock(m_channelMutex);
                 auto it = m_channels.find(chan);
