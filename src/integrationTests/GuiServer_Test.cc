@@ -1433,8 +1433,8 @@ void GuiServer_Test::testInvalidTokenOnLogin() {
 void GuiServer_Test::testValidTokenOnLogin() {
     std::clog << "testInvalidTokenOnLogin: " << std::flush;
 
-    Hash loginInfo("type", "login", "username", "bob", "oneTimeToken", TestKaraboAuthServer::VALID_TOKEN, "version",
-                   "2.16.0");
+    Hash loginInfo("type", "login", "username", TestKaraboAuthServer::VALID_USER_ID, "oneTimeToken",
+                   TestKaraboAuthServer::VALID_TOKEN, "version", "2.16.0");
 
     resetTcpConnection();
 
@@ -1445,6 +1445,8 @@ void GuiServer_Test::testValidTokenOnLogin() {
     const int accessLevel = lastMessage.get<int>("accessLevel");
     CPPUNIT_ASSERT_EQUAL_MESSAGE("AccessLevel differs from expected", TestKaraboAuthServer::VALID_ACCESS_LEVEL,
                                  accessLevel);
+    const string& userId = lastMessage.get<std::string>("username");
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("User differs from expected", TestKaraboAuthServer::VALID_USER_ID, userId);
 
     int timeout = 1500;
     // wait for the GUI server to log us out
@@ -1562,6 +1564,10 @@ void GuiServer_Test::testEscalateDeescalate() {
     CPPUNIT_ASSERT_MESSAGE("'onEscalate' message should have an 'accessLevel' field", lastMessage.has("accessLevel"));
     CPPUNIT_ASSERT_MESSAGE("'onEscalate' message should have an 'escalationDurationSecs' field",
                            lastMessage.has("escalationDurationSecs"));
+    CPPUNIT_ASSERT_MESSAGE("'onEscalate' message should have an 'username' field", lastMessage.has("username"));
+    const std::string& userId = lastMessage.get<std::string>("username");
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("User differs from expected", TestKaraboAuthServer::VALID_USER_ID, userId);
+
     // Request an escalation with a valid token - should be rejected since we are already escalated
     messageQ = m_tcpAdapter->getNextMessages("onEscalate", 1, [&] { m_tcpAdapter->sendMessage(escalateInfo); });
     messageQ->pop(lastMessage);
