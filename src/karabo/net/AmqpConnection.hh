@@ -38,7 +38,8 @@
 
 namespace AMQP {
     class TcpConnection;
-}
+    class TcpChannel;
+} // namespace AMQP
 
 namespace karabo::net {
 
@@ -54,6 +55,14 @@ namespace karabo::net {
     class AmqpConnection : public boost::enable_shared_from_this<AmqpConnection> { // FIXME: Why inheriting?
        public:
         KARABO_CLASSINFO(AmqpConnection, "AmqpConnection", "1.0")
+
+        /**
+         * Handler for asyncCreateChannel
+         *
+         * Either returns the channel or (if returned channel pointer is empty) state the failure reason.
+         */
+        using ChannelCreationHandler =
+              std::function<void(const std::shared_ptr<AMQP::TcpChannel>&, const char* errMsg)>;
 
         // static void expectedParameters(karabo::util::Schema& s);
 
@@ -74,9 +83,17 @@ namespace karabo::net {
          * @param onComplete AsyncHAndler called (not from within asyncConnect) about success or failure of connection
          *                   attempt. If all addresses failed, the error code passed is the one of the last address
          *                   passed to the constructor.
-         *                   The handler is called from within the internal io context.
+         *                   The handler (if valid) will be called from within the internal io context.
          */
         void asyncConnect(AsyncHandler&& onComplete);
+
+        /**
+         * Trigger creation of an amqp channel and return it via the handler
+         *
+         * @param onComplete A valid (!) ChannelCreationHandler that will be called from within the internal io context.
+         */
+        void asyncCreateChannel(const ChannelCreationHandler& onComplete);
+
 
         /**
          * Post a task to the io context
@@ -107,6 +124,8 @@ namespace karabo::net {
         void doAsyncConnect();
         // Helper to call and reset m_onComplete (if set)
         void callOnComplete(const boost::system::error_code& ec);
+        // Helper to run content of asyncCreateChannel in our io context
+        void doCreateChannel(const ChannelCreationHandler& onComplete);
 
         // Broker urls from input
         std::vector<std::string> m_urls;
@@ -118,8 +137,7 @@ namespace karabo::net {
         std::thread m_thread;
 
         // Connection and its state:
-        std::unique_ptr<AMQP::TcpConnection, std::function<void(AMQP::TcpConnection*)>>
-              m_connection; // with custom deleter
+        std::shared_ptr<AMQP::TcpConnection> m_connection;
         enum class State {
             eUnknown = 2000,   // At the beginning
             eNotConnected,     // No connection
