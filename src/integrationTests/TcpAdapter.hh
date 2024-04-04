@@ -70,12 +70,12 @@ namespace karabo {
          * @param nMessages: number of messages to wait for
          * @param triggeringFunction: function to call before waiting on messages. Signature is void(), can be a lambda,
          * the default is an empty function
-         * @param timeout: timeout (in ms) for waiting for messages. Set to 0 for infinite timeout, defaults to 5000
+         * @param timeout: timeout (in ms) for waiting for messages. Set to 0 for infinite timeout, defaults to 10000
          * @return
          */
         template <typename F>
         QueuePtr getNextMessages(
-              const std::string& type, size_t nMessages, F&& triggeringFunction = [] {}, size_t timeout = 5000) {
+              const std::string& type, size_t nMessages, F&& triggeringFunction = [] {}, size_t timeout = 10000) {
             {
                 boost::unique_lock<boost::shared_mutex> lock(m_queueAccessMutex);
                 m_nextMessageQueues[type] = boost::shared_ptr<boost::lockfree::spsc_queue<karabo::util::Hash> >(
