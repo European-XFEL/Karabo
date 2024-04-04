@@ -255,21 +255,6 @@ class Simple:
                              format(ret, self.key))
         super().check(ret)
 
-    def alarmCondition(self, data):
-        if not isSet(data):
-            return AlarmCondition.NONE
-        if isinstance(data, KaraboValue):
-            data = data.value
-        if self.alarmLow is not None and data < self.alarmLow:
-            return AlarmCondition.ALARM_LOW
-        if self.alarmHigh is not None and data > self.alarmHigh:
-            return AlarmCondition.ALARM_HIGH
-        if self.warnLow is not None and data < self.warnLow:
-            return AlarmCondition.WARN_LOW
-        if self.warnHigh is not None and data > self.warnHigh:
-            return AlarmCondition.WARN_HIGH
-        return AlarmCondition.NONE
-
     def toKaraboValue(self, data, strict=True):
         if self.enum is not None:
             return Enumable.toKaraboValue(self, data, strict)
@@ -803,10 +788,6 @@ class Type(Descriptor):
         else:
             attrs = {}
         return data.value, attrs
-
-    def alarmCondition(self, data):
-        """return the alarm condition for given *data*"""
-        return AlarmCondition.NONE
 
     def toSchemaAndAttrs(self, device, state):
         h, attrs = super().toSchemaAndAttrs(device, state)

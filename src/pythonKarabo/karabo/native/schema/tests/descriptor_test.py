@@ -1082,36 +1082,6 @@ class Tests(TestCase):
         self.assertEqual(attrs["displayType"], "Slot")
         self.assertEqual(attrs["nodeType"], 1)
 
-    def test_alarms(self):
-        """Values always have to exceed the provided thresholds for alarms"""
-        for desc in [UInt8, UInt16, UInt32, UInt64]:
-            d = desc(alarmLow=5, warnLow=10, warnHigh=19, alarmHigh=20)
-            self.assertEqual(d.alarmCondition(None), AlarmCondition.NONE)
-            self.assertEqual(d.alarmCondition(15), AlarmCondition.NONE)
-            self.assertEqual(d.alarmCondition(10), AlarmCondition.NONE)
-            self.assertEqual(d.alarmCondition(5), AlarmCondition.WARN_LOW)
-            self.assertEqual(d.alarmCondition(4), AlarmCondition.ALARM_LOW)
-            self.assertEqual(d.alarmCondition(19), AlarmCondition.NONE)
-            self.assertEqual(d.alarmCondition(20), AlarmCondition.WARN_HIGH)
-            self.assertEqual(d.alarmCondition(21), AlarmCondition.ALARM_HIGH)
-
-        for desc in [Int8, Int16, Int32, Int64]:
-            d = desc(alarmLow=-10, warnLow=-5, warnHigh=5, alarmHigh=10)
-            self.assertEqual(d.alarmCondition(None), AlarmCondition.NONE)
-            self.assertEqual(d.alarmCondition(-5), AlarmCondition.NONE)
-            self.assertEqual(d.alarmCondition(-6), AlarmCondition.WARN_LOW)
-            self.assertEqual(d.alarmCondition(-11), AlarmCondition.ALARM_LOW)
-            self.assertEqual(d.alarmCondition(0), AlarmCondition.NONE)
-            self.assertEqual(d.alarmCondition(6), AlarmCondition.WARN_HIGH)
-            self.assertEqual(d.alarmCondition(11), AlarmCondition.ALARM_HIGH)
-
-        # Only simple values have alarmConditions, xxx
-        for desc in [VectorBool, VectorChar, VectorFloat, VectorInt32]:
-            d = desc()
-            self.assertEqual(d.alarmCondition("anything"), AlarmCondition.NONE)
-            self.assertEqual(d.alarmCondition(123), AlarmCondition.NONE)
-            self.assertEqual(d.alarmCondition(Hash()), AlarmCondition.NONE)
-
     def assert_alarm_schema(self, descriptor, value, alarm_type):
         _, attrs = descriptor.toSchemaAndAttrs(None, None)
         self.assertEqual(attrs[alarm_type], value)
