@@ -17,7 +17,6 @@ from asyncio import gather
 from functools import partial
 from weakref import WeakKeyDictionary
 
-from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.api import KARABO_RUNTIME_ATTRIBUTES_MDL
 from karabo.native.data import (
     AccessLevel, Hash, HashList, NodeType, Schema, Timestamp, has_changes)
@@ -401,9 +400,6 @@ class Node(Descriptor):
                 value, attrs = desc.toDataAndAttrs(a)
                 r.setElement(k, value, attrs)
         return r, {}
-
-    def alarmCondition(self, value):
-        return AlarmCondition.NONE
 
     def allDescriptors(self, prefix=""):
         yield from super().allDescriptors(prefix)
