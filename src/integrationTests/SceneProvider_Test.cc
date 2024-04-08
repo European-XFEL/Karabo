@@ -33,6 +33,18 @@ using namespace std;
 
 USING_KARABO_NAMESPACES
 
+static bool waitForCondition(const boost::function<bool()>& checker, unsigned int timeoutMillis) {
+    constexpr unsigned int sleepIntervalMillis = 5;
+    unsigned int numOfWaits = 0;
+    const unsigned int maxNumOfWaits = static_cast<unsigned int>(std::ceil(timeoutMillis / sleepIntervalMillis));
+    while (numOfWaits < maxNumOfWaits && !checker()) {
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(sleepIntervalMillis));
+        numOfWaits++;
+    }
+    return (numOfWaits < maxNumOfWaits);
+}
+
+
 CPPUNIT_TEST_SUITE_REGISTRATION(SceneProvider_Test);
 
 
@@ -67,14 +79,22 @@ void SceneProvider_Test::tearDown() {
 
 void SceneProvider_Test::appTestRunner() {
     // bring up a GUI server and a tcp adapter to it
+    const std::string guiServerId("testGuiServerScenes");
     std::pair<bool, std::string> success =
           m_deviceClient->instantiate("testServerSceneProvider", "GuiServerDevice",
-                                      Hash("deviceId", "testGuiServerScenes", "port", 44447), KRB_TEST_MAX_TIMEOUT);
+                                      Hash("deviceId", guiServerId, "port", 44447), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT(success.first);
-    boost::this_thread::sleep(boost::posix_time::milliseconds(3000));
+
+    waitForCondition(
+          [this, guiServerId]() {
+              auto state = m_deviceClient->get<State>(guiServerId, "state");
+              return state == State::ON;
+          },
+          KRB_TEST_MAX_TIMEOUT * 1000);
     m_tcpAdapter =
           boost::shared_ptr<karabo::TcpAdapter>(new karabo::TcpAdapter(Hash("port", 44447u /*, "debug", true*/)));
-    boost::this_thread::sleep(boost::posix_time::milliseconds(5000));
+
+    waitForCondition([this]() { return m_tcpAdapter->connected(); }, KRB_TEST_MAX_TIMEOUT * 1000);
     CPPUNIT_ASSERT(m_tcpAdapter->connected());
     m_tcpAdapter->login();
 
