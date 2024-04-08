@@ -769,8 +769,7 @@ struct WriteAsyncCli {
     KARABO_CLASSINFO(WriteAsyncCli, "WriteAndForgetCli", "1.0");
 
     WriteAsyncCli(const std::string& host, int port,
-                  boost::function<void(const TestOutcome&, const std::string&, const std::string&)> testReportFn,
-                  boost::function<const TestOutcome&()> testOutcomeFn)
+                  boost::function<void(const TestOutcome&, const std::string&, const std::string&)> testReportFn)
         : m_port(port),
           m_testReportFn(testReportFn),
           m_connection(karabo::net::Connection::create(karabo::util::Hash("Tcp.port", m_port, "Tcp.hostname", host))) {
@@ -1181,6 +1180,8 @@ void TcpNetworking_Test::testConsumeBytesAfterReadUntil() {
     }
 
     // The order of the asserts is important: had the timeout assert come first, failureReasonCli would never be shown.
+    CPPUNIT_ASSERT(readSeqCompleted); // if this test line is skipped and we reached timeout, next line might be
+                                      // concurrent to a late setting of failureReasonCli which could lead to a crash
     CPPUNIT_ASSERT_MESSAGE("Read sequence test failed" + failureReasonCli, failureReasonCli.empty());
     CPPUNIT_ASSERT_MESSAGE("ReadAsyncStringUntil - consumeBytesAfterReadUntil sequence timed out!", timeout >= 0);
 
@@ -1213,20 +1214,15 @@ void TcpNetworking_Test::testWriteAsync() {
         finishTime = boost::chrono::high_resolution_clock::now();
     };
 
-    // Getter for the current TestOutcome value.
-    auto testOutcomeFn = [&]() -> const TestOutcome& {
-        boost::mutex::scoped_lock lock(testResultsMutex);
-        return testOutcome;
-    };
-
     startTime = boost::chrono::high_resolution_clock::now();
 
     WriteAsyncSrv server(testReportFn);
-    WriteAsyncCli client("localhost", server.port(), testReportFn, testOutcomeFn);
+    WriteAsyncCli client("localhost", server.port(), testReportFn);
 
     karabo::net::EventLoop::run();
 
-    if (testOutcomeFn() == TestOutcome::SUCCESS) {
+    boost::mutex::scoped_lock lock(testResultsMutex);
+    if (testOutcome == TestOutcome::SUCCESS) {
         auto testDuration = finishTime - startTime;
         std::clog << "Test took " << boost::chrono::duration_cast<boost::chrono::milliseconds>(testDuration).count()
                   << " milliseconds." << std::endl;
