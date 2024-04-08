@@ -58,12 +58,12 @@ namespace karabo {
                                         // The AuthServer processed the request and generated a valid response - pass
                                         // the response to the handler.
                                         Schema::AccessLevel level = Schema::OBSERVER;
-                                        if (!respObj["visib_level"].is_null()) {
-                                            level = respObj["visib_level"];
+                                        if (!respObj["visibility"].is_null()) {
+                                            level = respObj["visibility"];
                                         }
                                         authHandler(OneTimeTokenAuthorizeResult{
                                               .success = static_cast<bool>(respObj["success"]),
-                                              .userId = respObj["user"].is_null() ? "" : respObj["user"],
+                                              .userId = respObj["username"].is_null() ? "" : respObj["username"],
                                               .accessLevel = static_cast<Schema::AccessLevel>(level),
                                               .errMsg = respObj["error_msg"].is_null() ? "" : respObj["error_msg"]});
 
