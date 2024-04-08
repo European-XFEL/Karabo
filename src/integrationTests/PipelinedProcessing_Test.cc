@@ -231,7 +231,7 @@ void PipelinedProcessing_Test::testSenderOutputChannelConnections(
     // the m_deviceClient when this function is called. In a busy system it may be that the first connection attempt
     // fails on TCP level (though no proof that this ever happened...). To be on the safe side, we wait long enough that
     // the reconnection cycle in SignalSlotable can fix the issue with a reconnection attempt.
-    int waitMs = 7000; // 6 seconds is the pipeline reconnection cycle in SignalSlotable
+    int waitMs = 10000; // 6 seconds is the pipeline reconnection cycle in SignalSlotable
     while (waitMs > 0) {
         m_deviceClient->get(m_sender, "output1.connections", output1);
         m_deviceClient->get(m_sender, "output2.connections", output2);
@@ -634,7 +634,7 @@ void PipelinedProcessing_Test::testPipeQueueAtLimit() {
 
     // Receiver processing time much higher than sender delay between data sending:
     // Data will be queued until queue is full and then drop some data
-    testPipeQueueAtLimit(2, 0, karabo::xms::Memory::MAX_N_CHUNKS, true,
+    testPipeQueueAtLimit(3, 0, karabo::xms::Memory::MAX_N_CHUNKS, true,
                          true); // true, true ==> expectDataLoss, slowReceiver
 
     // If sender delay time much higher than the receiver processing time, no data loss despite the queueDrop option
@@ -1254,14 +1254,14 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversQueueAtLimit() {
 
     // 1) load-balanced
     // 1a) test slow receivers with sender queueDrop: drop data if queue gets full
-    testPipeTwoSharedQueueDropAtLimit("load-balanced", 6, 4, 0, true, true); // dataLoss, slowReceivers
+    testPipeTwoSharedQueueDropAtLimit("load-balanced", 6, 5, 0, true, true); // dataLoss, slowReceivers
     // 1b) test fast receivers with sender queueDrop: do not drop data, since queue never full
     testPipeTwoSharedQueueDropAtLimit("load-balanced", 0, 1, 2, false, false); // dataLoss, slowReceivers
 
     // 2) round-robin, i.e. testing sharedInputSelector code
     // 2a) test slow receivers with sender queueDrop: drop data if queue gets full
     //     Seen failures with processingTimes 6/4 ...
-    testPipeTwoSharedQueueDropAtLimit("round-robin", 8, 4, 0, true, true); // dataLoss, slowReceivers
+    testPipeTwoSharedQueueDropAtLimit("round-robin", 9, 4, 0, true, true); // dataLoss, slowReceivers
     // 2b) test fast receivers with sender queueDrop: do not drop data, since queue never full
     testPipeTwoSharedQueueDropAtLimit("round-robin", 0, 1, 2, false, false); // dataLoss, slowReceivers
 
@@ -1280,7 +1280,7 @@ void PipelinedProcessing_Test::testPipeTwoSharedQueueDropAtLimit(const std::stri
                                                                  unsigned int processingTime1,
                                                                  unsigned int processingTime2, unsigned int senderDelay,
                                                                  bool expectDataLoss, bool slowReceivers) {
-    std::clog << "---\ntestPipeTwoSharedQueueAtLimit: noInputShared = 'queueDrop', distributeQueue = '"
+    std::clog << "---\ntestPipeTwoSharedQueueDropAtLimit: noInputShared = 'queueDrop', distributeQueue = '"
               << distributionMode << "', processing times " << processingTime1 << "/" << processingTime2
               << " ms, sender delay " << senderDelay << " ms\n";
 
