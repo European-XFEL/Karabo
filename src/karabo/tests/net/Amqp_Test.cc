@@ -116,10 +116,10 @@ void Amqp_Test::testConnection() {
         CPPUNIT_ASSERT_EQUAL_MESSAGE(ec3.message(), static_cast<int>(boost::system::errc::success), ec3.value());
 
         // Here add test for successful channel creation
-        std::promise<std::shared_ptr<AMQP::TcpChannel>> doneCreation;
+        std::promise<std::shared_ptr<AMQP::Channel>> doneCreation;
         auto futCreateChannel = doneCreation.get_future();
         connection->asyncCreateChannel(
-              [&doneCreation](const std::shared_ptr<AMQP::TcpChannel>& channel, const char* errMsg) {
+              [&doneCreation](const std::shared_ptr<AMQP::Channel>& channel, const char* errMsg) {
                   if (errMsg) doneCreation.set_value(nullptr);
                   else doneCreation.set_value(channel);
               });
@@ -155,7 +155,7 @@ void Amqp_Test::testConnection() {
         auto futCreateChannel = doneCreation.get_future();
 
         connection->asyncCreateChannel(
-              [&doneCreation](const std::shared_ptr<AMQP::TcpChannel>& channel, const char* errMsg) {
+              [&doneCreation](const std::shared_ptr<AMQP::Channel>& channel, const char* errMsg) {
                   if (channel) doneCreation.set_value("Non empty channelPtr!");
                   else doneCreation.set_value(errMsg);
               });
