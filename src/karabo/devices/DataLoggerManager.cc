@@ -688,6 +688,7 @@ namespace karabo {
                 {
                     boost::mutex::scoped_lock lock(
                           m_loggerMapMutex); // m_loggerMap must not be changed while we process it
+                    set("loggerMap", makeLoggersTable());
                     emit<Hash>("signalLoggerMap", m_loggerMap);
                 }
 
@@ -1340,8 +1341,6 @@ namespace karabo {
             const std::string loggerId(serverIdToLoggerId(serverId));
             const Hash hash("classId", m_loggerClassId, "deviceId", loggerId, "configuration", config);
 
-            set("loggerMap", makeLoggersTable());
-
             KARABO_LOG_FRAMEWORK_INFO << "Trying to instantiate '" << loggerId << "' of type '" << m_loggerClassId
                                       << "' on server '" << serverId << "'";
             remote().instantiateNoWait(serverId, hash);
@@ -1533,33 +1532,16 @@ namespace karabo {
             std::vector<std::string> keys;
             m_loggerMap.getKeys(keys);
 
-            // The device names are prefixed with 'DataLogger-'. The code below
-            // performs a sanity check: we assume that might not always be the case.
-            // We still need the original name to fetch the server from m_loggerMap,
-            // and the name without the prefix (if there is a prefix) to display in
-            // on the table.
-            static const char name_prefix[] = "DataLogger-";
-            static const size_t name_prefix_length = strlen(name_prefix);
-
-            using PairString = std::pair<std::string, std::string>;
-            std::vector<PairString> devices_names;
-            for (const auto& key : keys) {
-                auto from = key.find(name_prefix);
-                from = from == std::string::npos ? 0 : from + name_prefix_length;
-                devices_names.emplace_back(key, key.substr(from));
-            }
-
             // Sort the names (case-insensitive) that will be displayed on the table
-            std::sort(devices_names.begin(), devices_names.end(), [](const PairString& x, const PairString& y) {
-                return strcasecmp(x.second.c_str(), y.second.c_str()) < 0;
-            });
+            std::sort(keys.begin(), keys.end(),
+                      [](const std::string& x, const std::string& y) { return strcasecmp(x.c_str(), y.c_str()) < 0; });
 
             std::vector<karabo::util::Hash> table;
             table.reserve(m_loggerMap.size());
-
-            for (const auto& device : devices_names) {
-                table.emplace_back("device", device.second, "dataLogger",
-                                   serverIdToLoggerId(m_loggerMap.get<std::string>(device.first)));
+            const auto prefix_length = std::strlen(DATALOGGER_PREFIX);
+            for (const std::string& device : keys) {
+                table.emplace_back("device", device.substr(prefix_length), "dataLogger",
+                                   serverIdToLoggerId(m_loggerMap.get<std::string>(device)));
             }
 
             return table;
