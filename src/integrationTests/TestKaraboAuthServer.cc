@@ -115,10 +115,10 @@ class TestKaraboAuthServer::Impl {
                 validToken = true;
             }
         }
-        res.body() = validToken ? R"({"success": true, "user":")" + TestKaraboAuthServer::VALID_USER_ID +
-                                        R"(", "error_msg": "", "visib_level": )" +
+        res.body() = validToken ? R"({"success": true, "username":")" + TestKaraboAuthServer::VALID_USER_ID +
+                                        R"(", "error_msg": "", "visibility": )" +
                                         toString(TestKaraboAuthServer::VALID_ACCESS_LEVEL) + "}"
-                                : R"({"success": false, "user": "", "visib_level": 0, "error_msg": ")" +
+                                : R"({"success": false, "username": "", "visibility": 0, "error_msg": ")" +
                                         TestKaraboAuthServer::INVALID_TOKEN_MSG + "\"}";
         res.prepare_payload();
         return res;
