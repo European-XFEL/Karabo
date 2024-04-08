@@ -43,6 +43,7 @@ class DataLogging_Test : public BaseLogging_Test {
 
    private:
     void fileAllTestRunner();
+    void testLoggerMapProperty();
     void influxAllTestRunnerWithDataMigration(); // Supports data migration test.
     void testMigrateFileLoggerData();
 
