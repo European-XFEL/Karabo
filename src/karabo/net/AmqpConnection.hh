@@ -39,7 +39,7 @@
 
 namespace AMQP {
     class TcpConnection;
-    class TcpChannel;
+    class Channel;
 } // namespace AMQP
 
 namespace karabo::net {
@@ -62,8 +62,7 @@ namespace karabo::net {
          *
          * Either returns the channel or (if returned channel pointer is empty) state the failure reason.
          */
-        using ChannelCreationHandler =
-              std::function<void(const std::shared_ptr<AMQP::TcpChannel>&, const char* errMsg)>;
+        using ChannelCreationHandler = std::function<void(const std::shared_ptr<AMQP::Channel>&, const char* errMsg)>;
 
         // static void expectedParameters(karabo::util::Schema& s);
 
