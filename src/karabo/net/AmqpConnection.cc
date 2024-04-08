@@ -261,8 +261,8 @@ namespace karabo {
             }
             // Create channel: Since it takes a raw pointer to the connection, we use a deleter that takes care that the
             //                 connection outlives the channel.
-            std::shared_ptr<AMQP::TcpChannel> channelPtr(new AMQP::TcpChannel(m_connection.get()),
-                                                         [connection{m_connection}](AMQP::TcpChannel* p) { delete p; });
+            std::shared_ptr<AMQP::Channel> channelPtr(new AMQP::TcpChannel(m_connection.get()),
+                                                      [connection{m_connection}](AMQP::Channel* p) { delete p; });
 
             // Attach success and failure handlers to channel - since we run in single threaded event loop that is OK
             // after channel creation since any action can only run after this function
