@@ -59,6 +59,7 @@ void DataLogging_Test::fileAllTestRunner() {
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     testAllInstantiated();
+    testLoggerMapProperty();
     waitUntilLogged(m_deviceId, "fileAllTestRunner");
 
     testInt();
@@ -100,6 +101,26 @@ void DataLogging_Test::fileAllTestRunner() {
     // At the end we shutdown the logger manager and try to bring it back in a bad state
     // Needs that the working logger was there before.
     testFailingManager();
+}
+
+void DataLogging_Test::testLoggerMapProperty() {
+    std::clog << "Testing table of data loggers... " << std::flush;
+
+    // We make sure all the devices in the system have an entry in the loggerMap table, and
+    // that they have the same data logger
+    const auto mapEntries = m_deviceClient->get<std::vector<karabo::util::Hash>>("loggerManager", "loggerMap");
+    CPPUNIT_ASSERT_GREATER(0ULL, static_cast<unsigned long long>(mapEntries.size()));
+    const auto& devices = m_deviceClient->getDevices();
+    const auto& data_logger = mapEntries[0].get<std::string>("dataLogger");
+
+    for (const Hash& entry : mapEntries) {
+        const auto& device = entry.get<std::string>("device");
+        CPPUNIT_ASSERT_MESSAGE((device + " not in loggers map"),
+                               std::find(devices.begin(), devices.end(), device) != devices.end());
+        CPPUNIT_ASSERT_EQUAL(data_logger, entry.get<std::string>("dataLogger"));
+    }
+
+    std::clog << "OK" << std::endl;
 }
 
 void DataLogging_Test::testMigrateFileLoggerData() {
@@ -213,6 +234,8 @@ void DataLogging_Test::influxAllTestRunnerWithDataMigration() {
 
     testMaxNumDataHistory();
     testDropBadData();
+
+    testLoggerMapProperty();
 
     // Following tests use device m_deviceId, so ensure it is logged
     waitUntilLogged(m_deviceId, "influxAllTestRunnerWithDataMigration");

@@ -53,7 +53,7 @@ namespace karabo {
         /**
          * @class DeviceClient
          * @brief This class can be used to (remotely) control devices of the distributed system
-         *        Synchronous calls (i.e. get()) are in fact asynchronous under the hood\
+         *        Synchronous calls (i.e. get()) are in fact asynchronous under the hood
          *
          * The Karabo DeviceClient provides a high-level interface for common calls to (remote) devices
          * in the distributed system. In principle functionality implemented in the DeviceClient can
