@@ -113,7 +113,10 @@ install_python() {
     if [[ $INSTALL_PREFIX == *"CentOS-7"* ]]; then
         safeRunCommandQuiet "conan install patchelf/0.13@ --build=patchelf --build=missing $profile_opts"
         safeRunCommandQuiet "conan install b2/4.9.6@ --build=b2 --build=missing $profile_opts"
-        safeRunCommandQuiet "conan install openssl/1.1.1l@ --build=openssl --build=missing -o shared=True $profile_opts"
+        # openssl:openssldir=/etc/pki/tls on CentOS7
+        build_opts="$build_opts -o openssl:openssldir=/etc/pki/tls"
+    else
+        build_opts="$build_opts -o openssl:openssldir=/etc/ssl"
     fi
     # copy conan recipe from extern/resources/python to local conan cache
     safeRunCommandQuiet "conan export $package_opts"
