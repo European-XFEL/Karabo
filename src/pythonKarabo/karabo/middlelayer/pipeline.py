@@ -14,6 +14,7 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 import os
+import re
 import socket
 import warnings
 from asyncio import (
@@ -44,6 +45,11 @@ IPTOS_LOWDELAY = 0x10
 RECONNECT_TIMEOUT = 2
 SERVER_WAIT_ONLINE = 5
 
+# Simple pattern to detect IP address
+IP_REGEX = (r"(?:[0-9]{1,3}\.){3}[0-9]{1,3}"  # IP
+            r"(?:\/[0-9]|[1-2][0-9]|3[0-2])?")  # CIDR
+IP_PATTERN = re.compile(IP_REGEX)
+
 
 def get_hostname_from_interface(address_range):
     """returns the ip address of the local interfaces
@@ -61,6 +67,15 @@ def get_hostname_from_interface(address_range):
                 return nic.address
     raise ValueError(
         f"{address_range} does not appear to be an IPv4 or IPv6 network")
+
+
+def get_network_adapter(name):
+    addrs = net_if_addrs()
+    for addr in addrs.get(name, []):
+        if addr.family is socket.AF_INET:
+            return addr.address
+    raise ValueError(
+        f"{name} cannot be found in network configuration")
 
 
 class CancelQueue(Queue):
@@ -938,10 +953,10 @@ class NetworkOutput(Configurable):
     async def hostname(self, value):
         if value == "default":
             hostname = socket.gethostname()
-        elif "/" in value:
+        elif IP_PATTERN.match(value):
             hostname = get_hostname_from_interface(value)
         else:
-            hostname = value
+            hostname = get_network_adapter(value)
 
         instance = get_event_loop().instance()
 
