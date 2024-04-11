@@ -38,7 +38,9 @@ using namespace std;
 #define TEST_GUI_SERVER_ID "testGuiServerDevice"
 
 // Maximum escalation time to be used in the tests (in seconds)
-#define MAX_ESCALATION_TIME 2u
+#define MAX_ESCALATION_TIME karabo::devices::CHECK_ESCALATE_EXPIRATION_INTERVAL_SECS + 4u
+// Value to be used in the test for the "endEscalationNoticeTime" property of the GUI Server
+#define END_ESCALATION_NOTICE_TIME MAX_ESCALATION_TIME - 1u
 
 USING_KARABO_NAMESPACES
 
@@ -153,12 +155,18 @@ void GuiServer_Test::appTestRunner() {
 
     // Instantiates a GUI Server in Authenticated mode with a maximum escalation time of 2 seconds for
     // the purposes of the integrated tests.
-    success_n =
-          m_deviceClient->instantiate("testGuiVersionServer", "GuiServerDevice",
-                                      Hash("deviceId", TEST_GUI_SERVER_ID, "port", 44450, "minClientVersion", "2.16",
-                                           "authServer", "http://" + authServerAddr + ":" + toString(authServerPort),
-                                           "timeout", 0, "maxEscalationTime", MAX_ESCALATION_TIME),
-                                      KRB_TEST_MAX_TIMEOUT);
+    // clang-format off
+    success_n = m_deviceClient->instantiate(
+          "testGuiVersionServer", "GuiServerDevice",
+          Hash("deviceId", TEST_GUI_SERVER_ID,
+               "port", 44450,
+               "minClientVersion", "2.16",
+               "authServer", "http://" + authServerAddr + ":" + toString(authServerPort),
+               "timeout", 0,
+               "maxEscalationTime", MAX_ESCALATION_TIME,
+               "endEscalationNoticeTime", END_ESCALATION_NOTICE_TIME),
+          KRB_TEST_MAX_TIMEOUT);
+    // clang-format on
     CPPUNIT_ASSERT_MESSAGE(success_n.second, success_n.first);
     waitForCondition(
           [this]() {
@@ -1626,10 +1634,9 @@ void GuiServer_Test::testEscalateExpiration() {
     messageQ->pop(lastMessage);
     CPPUNIT_ASSERT_MESSAGE("'accessLevel' missing in loginInformation sent by the GUI Server",
                            lastMessage.has("accessLevel"));
-    // Request an escalation with a valid token - waits for 2 messages: the "onEscalate"escalation result message
-    // (should be successful) immediately after and about 10 seconds later (2 seconds is the test GUI Server
-    // value for its "maxEscalationTime" property and 10 seconds is the interval of the internal timer used by the
-    // escalation management class to check for expired escalations) the "onEscalationExpired" message.
+    // Request an escalation with a valid token - waits for 3 messages: the "onEscalate"escalation result message
+    // (should be successful) immediately after, an "onEndEscalationNotice" after the first check cycle of the
+    // GuiServerSessionEscalator and an "onEscalationExpired" after the second check cycle.
     messageQ = m_tcpAdapter->getNextMessages("onEscalate", 1, [&] { m_tcpAdapter->sendMessage(escalateInfo); });
     messageQ->pop(lastMessage);
     bool success = lastMessage.get<bool>("success");
@@ -1641,9 +1648,23 @@ void GuiServer_Test::testEscalateExpiration() {
                            lastMessage.has("escalationDurationSecs"));
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Value of escalationDurationSecs", MAX_ESCALATION_TIME,
                                  lastMessage.get<unsigned int>("escalationDurationSecs"));
-    // No triggering needed and timeout large enough to guarantee an expiration being detected.
+
+    // No triggering needed and timeout large enough to guarantee reception of an eminent expiration notice.
     const size_t lifetimePlusCheckInterval =
           1'000ul * (MAX_ESCALATION_TIME + karabo::devices::CHECK_ESCALATE_EXPIRATION_INTERVAL_SECS);
+    messageQ = m_tcpAdapter->getNextMessages(
+          "onEndEscalationNotice", 1ul, [] {}, lifetimePlusCheckInterval);
+    messageQ->pop(lastMessage);
+    CPPUNIT_ASSERT_MESSAGE("'onEndEscalationNotice' message should have an 'aboutToExpireToken' field",
+                           lastMessage.has("aboutToExpireToken"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Unexpected about to expire token value", TestKaraboAuthServer::VALID_TOKEN,
+                                 lastMessage.get<std::string>("aboutToExpireToken"));
+    CPPUNIT_ASSERT_MESSAGE("'onEscalate' message should have a 'secondsToExpiration' field",
+                           lastMessage.has("secondsToExpiration"));
+    const karabo::util::TimeValue secsToExpiration = lastMessage.get<karabo::util::TimeValue>("secondsToExpiration");
+    CPPUNIT_ASSERT_LESSEQUAL(END_ESCALATION_NOTICE_TIME, static_cast<unsigned int>(secsToExpiration));
+
+    // No triggering needed and timeout large enough to guarantee an expiration being received.
     messageQ = m_tcpAdapter->getNextMessages(
           "onEscalationExpired", 1ul, [] {}, lifetimePlusCheckInterval);
     messageQ->pop(lastMessage);
@@ -1654,9 +1675,8 @@ void GuiServer_Test::testEscalateExpiration() {
     CPPUNIT_ASSERT_MESSAGE("'onEscalate' message should have an 'expirationTime' field",
                            lastMessage.has("expirationTime"));
     Epochstamp expiredAt = Epochstamp(lastMessage.get<std::string>("expirationTime"));
-    const double expiredElapsed = static_cast<double>(expiredAt.elapsed());
-    CPPUNIT_ASSERT_GREATER(static_cast<double>(MAX_ESCALATION_TIME), expiredElapsed);
-    CPPUNIT_ASSERT_LESS(static_cast<double>(lifetimePlusCheckInterval / 1'000ul + 1), expiredElapsed);
+    Epochstamp currentTime;
+    CPPUNIT_ASSERT_GREATER(expiredAt, currentTime);
 
     Schema::AccessLevel levelBeforeEscalation =
           static_cast<Schema::AccessLevel>(lastMessage.get<int>("levelBeforeEscalation"));
