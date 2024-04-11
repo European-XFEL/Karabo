@@ -94,18 +94,21 @@ namespace karabind {
          * @param sep separator string
          * @return Hash/VectorHash reference to subtree in parent
          */
-        py::object getRef(karabo::util::Hash& self, const std::string& path, const std::string& sep);
+        py::object getRef(karabo::util::Hash& self, const std::string& path, const std::string& sep)
+              __attribute__((visibility("default")));
 
         py::object getAs(const karabo::util::Hash& self, const std::string& path,
-                         const karabo::util::Types::ReferenceType& target, const std::string& separator);
+                         const karabo::util::Types::ReferenceType& target, const std::string& separator)
+              __attribute__((visibility("default")));
 
         py::object get(const karabo::util::Hash& self, const std::string& path, const std::string& separator = ".",
-                       const py::object& default_return = py::none());
+                       const py::object& default_return = py::none()) __attribute__((visibility("default")));
 
-        const karabo::util::Hash& setPyDictAsHash(karabo::util::Hash& self, const py::dict& dictionary, const char sep);
+        const karabo::util::Hash& setPyDictAsHash(karabo::util::Hash& self, const py::dict& dictionary, const char sep)
+              __attribute__((visibility("default")));
 
         void set(karabo::util::Hash& self, const std::string& key, const py::object& o,
-                 const std::string& separator = ".");
+                 const std::string& separator = ".") __attribute__((visibility("default")));
 
 
     } // namespace hashwrap
@@ -157,42 +160,45 @@ namespace karabind {
             }
         }
 
-        bool fromPyObjectToString(const py::object& o, std::string& s);
+        bool fromPyObjectToString(const py::object& o, std::string& s) __attribute__((visibility("default")));
 
-        std::vector<std::string> fromPySequenceToVectorString(const py::object& o);
+        std::vector<std::string> fromPySequenceToVectorString(const py::object& o)
+              __attribute__((visibility("default")));
 
-        karabo::util::Types::ReferenceType pyObjectToCppType(const py::object& otype);
+        karabo::util::Types::ReferenceType pyObjectToCppType(const py::object& otype)
+              __attribute__((visibility("default")));
 
-        py::object castAnyToPy(const boost::any& operand);
+        py::object castAnyToPy(const boost::any& operand) __attribute__((visibility("default")));
 
-        karabo::util::Types::ReferenceType castPyToAny(const py::object& operand, boost::any& a);
+        karabo::util::Types::ReferenceType castPyToAny(const py::object& operand, boost::any& a)
+              __attribute__((visibility("default")));
 
-        karabo::util::ByteArray copyPyToByteArray(const py::object& o);
+        karabo::util::ByteArray copyPyToByteArray(const py::object& o) __attribute__((visibility("default")));
 
         /**
          * Create py::array from C++ NDArray without data copying
          * No change in data ownership
          */
-        py::object castNDArrayToPy(const karabo::util::NDArray& nda);
+        py::object castNDArrayToPy(const karabo::util::NDArray& nda) __attribute__((visibility("default")));
 
         /**
          * Create NDArray from python numpy array without data copying
          * No change in data ownership
          */
-        karabo::util::NDArray castPyArrayToND(py::array arr);
+        karabo::util::NDArray castPyArrayToND(py::array arr) __attribute__((visibility("default")));
 
         /**
          * Create py::array from C++ NDArray with data copying
          * As a result, python is data owner.  This function is not needed
          * since we can use 'castNDArrayToPy' and apply `copy` method in python
          */
-        py::object copyNDArrayToPy(const karabo::util::NDArray& nda);
+        py::object copyNDArrayToPy(const karabo::util::NDArray& nda) __attribute__((visibility("default")));
 
         /**
          * Create NDArray from python numpy array with data copying
          * As a result, C++ is data owner
          */
-        karabo::util::NDArray copyPyArrayToND(py::array arr);
+        karabo::util::NDArray copyPyArrayToND(py::array arr) __attribute__((visibility("default")));
 
         namespace detail {
 
