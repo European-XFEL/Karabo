@@ -410,11 +410,23 @@ namespace karabo {
              * GuiServerSessionEscalator.
              *
              * The expiration is handled by sending a message of type "onEscalationExpired" to the client associated
-             * with the expired token. The message carries a Hash with paths "expiredToken" and "expirationTime."
+             * with the expired token. The message carries a Hash with paths "expiredToken" and "expirationTime".
              *
              * @param expiredEscalationInfo data about the expired escalation.
              */
             void onEscalationExpiration(const ExpiredEscalationInfo& info);
+
+
+            /**
+             * @brief Handles a "session escalation about to expire" event.
+             *
+             * The eminent escalation end is handled by sending a message of type "onEndEscalationNotice" to the client
+             * associated with the about to expire token. The message carries a Hash with paths "toExpireToken" and
+             * "secondsToExpiration".
+             *
+             * @param info data about the escalation about to expire.
+             */
+            void onEndEscalationNotice(const EminentExpirationInfo& info);
 
             /**
              * handles incoming data in the Hash  ``info`` from ``channel``.

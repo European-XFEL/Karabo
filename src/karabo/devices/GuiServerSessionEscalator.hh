@@ -37,6 +37,7 @@
 #include "karabo/net/UserAuthClient.hh"
 #include "karabo/util/Epochstamp.hh"
 #include "karabo/util/Schema.hh"
+#include "karabo/util/TimeDuration.hh"
 
 namespace karabo::devices {
 
@@ -71,15 +72,24 @@ namespace karabo::devices {
         karabo::util::Epochstamp expirationTime;
     };
 
+    struct EminentExpirationInfo {
+        std::string aboutToExpireToken;
+        karabo::util::TimeDuration timeForExpiration;
+    };
+
     using EscalationHandler = boost::function<void(const EscalateResult&)>;
 
+    /** Handler for expired escalations events. */
     using ExpirationHandler = boost::function<void(const ExpiredEscalationInfo&)>;
+
+    /** Handler for "escalation about to expire" events. */
+    using EminentExpirationHandler = boost::function<void(const EminentExpirationInfo&)>;
 
     /**
      * @brief Manages temporary privilege escalations for user-authenticated GUI Sessions.
      *
      * Takes care of authorizing one-time escalation tokens to start temporary escalations and of communicating
-     * expired escalations.
+     * escalations about to expire or already expired.
      */
     class GuiServerSessionEscalator : public boost::enable_shared_from_this<GuiServerSessionEscalator> {
        public:
@@ -90,10 +100,14 @@ namespace karabo::devices {
          * @param authServerUrl the URL of the authentication server to use for authorizing one-time escalation
          * tokens.
          * @param escalationDurationSeconds the duration, in seconds, to be enforced for escalations.
+         * @param escalationEndNoticeSeconds the time in advance, in seconds, to communicate about an eminent
+         * end of escalation event.
+         * @param onEminentExpiration handler for escalation sessions about to expire.
          * @param onExpiration handler for expired escalation sessions.
          */
         GuiServerSessionEscalator(const std::string& topic, const std::string& authServerUrl,
-                                  unsigned int escalationDurationSeconds, const ExpirationHandler& onExpiration);
+                                  unsigned int escalationDurationSeconds, unsigned int escalationEndNoticeSeconds,
+                                  EminentExpirationHandler onEminentExpiration, ExpirationHandler onExpiration);
 
         /**
          * @brief Assynchronously starts a new escalated session for a given one-time escalation token.
@@ -155,6 +169,8 @@ namespace karabo::devices {
         std::string m_topic;
         karabo::net::UserAuthClient m_authClient;
         unsigned int m_escalationDurationSecs;
+        karabo::util::TimeDuration m_escalationEndNoticeSecs;
+        EminentExpirationHandler m_eminentExpirationHandler;
         ExpirationHandler m_expirationHandler;
         boost::asio::deadline_timer m_checkExpirationsTimer;
         std::atomic<bool> m_expirationTimerWaiting;
