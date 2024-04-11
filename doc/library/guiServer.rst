@@ -29,9 +29,14 @@ on the type, other keys are incuded as documented below.
 **Message types OUT (send from the server to the client):**
 
 *brokerInformation*
-host (string)
-port (unsigned int)
 topic (string)
+hostname (string)
+hostport (unsigned int)
+deviceId (string - ID of the GuiServerDevice)
+readOnly (bool - the GUI Server only allow read-only operations)
+version (string - version of the GUI Server)
+authServer (string - URL of the Karabo Authentication Server)
+[2.20.0]_ allowRememberLogin (bool - absent if authServer is not defined)
 
 *systemTopology*
 systemTopology (Hash)
@@ -44,6 +49,13 @@ loggedUserId (string)
 
 * Message sent by the GUI Server to the client whose privilege escalation has expired. The GUI Server checks for expired escalations every 10 seconds; most likely there will be a delay between the expiration and the client being communicated about it.
 * The *expirationTime* string is the UTC date and time of the expiration in ISO-8601 format, e.g, "20240205T120633.139529Z".
+
+[2.20.0]_ *onEndEscalationNotice*
+aboutToExpireToken (string),
+secondsToExpiration (unsigned int 64)
+
+* Message sent by the GUI Server to the client whose privilege escalation is about to expire. The GUI Server checks for escalations lifetimes every 10 seconds.
+* An escalation is considered "about to expire" if its expiration time is less than "endEscalationNoticeTime" seconds away. "endEscalationNoticeTime" is an init-only property of the GUI Server.
 
 [2.20.0]_ *onEscalate*
 success (bool),
