@@ -17,7 +17,9 @@ import socket
 from asyncio import (
     Future, IncompleteReadError, StreamReader, StreamWriter, WriteTransport,
     sleep)
+from asyncio.events import AbstractEventLoop
 from struct import pack
+from typing import Iterator
 from zlib import adler32
 
 import pytest
@@ -27,6 +29,7 @@ from psutil import net_if_addrs
 from karabo.middlelayer import (
     Channel, Hash, Int32, NetworkInput, NetworkOutput, Proxy, RingQueue,
     background, encodeBinary)
+from karabo.middlelayer.pipeline import IP_PATTERN, get_hostname_from_interface
 from karabo.middlelayer.testing import run_test
 
 
@@ -34,8 +37,8 @@ class ChecksumTransport(WriteTransport):
     def __init__(self):
         self.closed = False
         self.checksum = adler32(b"")
-        self._extra = {'sockname': ("Local", 8080),
-                       'peername': ("Remote", 8080)}
+        self._extra = {"sockname": ("Local", 8080),
+                       "peername": ("Remote", 8080)}
 
     def write(self, data):
         self.checksum = adler32(data, self.checksum)
@@ -112,6 +115,29 @@ class ChannelContext:
             await sleep(0)
 
 
+def test_ip_pattern():
+    valid = ["192.168.1.1", "10.0.0.1", "172.16.0.1"]
+    for ip_address in valid:
+        assert IP_PATTERN.match(ip_address) is not None
+
+    cidr_valid = ["192.168.1.1/24", "10.0.0.1/16", "172.16.0.1/12"]
+    for ip_address in cidr_valid:
+        assert IP_PATTERN.match(ip_address) is not None
+
+    invalid = ["192.168.1", "192.168.1/2",
+               "abc.def.ghi.jkl"]
+    for ip_address in invalid:
+        assert IP_PATTERN.match(ip_address) is None
+
+    wrong_ips = ["192.168.1.1/33", "10.0.0.1/40", "172.16.0.1/-1",
+                 "256.256.256.256", "192.168.1.1/asdf"]
+    # These wrong ip's will raise on network resolve
+    for ip_address in wrong_ips:
+        assert IP_PATTERN.match(ip_address) is not None
+        with pytest.raises(ValueError):
+            get_hostname_from_interface(ip_address)
+
+
 @pytest_asyncio.fixture(scope="function")
 async def channelContext(event_loop):
     reader = StreamReader(loop=event_loop)
@@ -128,7 +154,7 @@ def test_writeSize(channelContext):
 
 
 @run_test
-async def test_ring_queue(event_loop):
+async def test_ring_queue(event_loop: Iterator[AbstractEventLoop]):
     size = 5
     ring = RingQueue(size)
     # Drop 0
@@ -460,15 +486,13 @@ async def test_get_information(channelContext):
             if nic.family != socket.AF_INET:
                 continue
             ip_address = nic.address
-            addrs = ip_address.split(".")
-            net_root = '.'.join(addrs[:-1])
-            net_segment = f"{net_root}.0/24"
+            return ip_address
 
     assert net_segment is not None
     assert ip_address is not None
     output = NetworkOutput({"hostname": net_segment})
     await output._run()
-    response = output.getInformation('channelName')
+    response = output.getInformation("channelName")
     assert "connectionType" in response
     assert "port" in response
     assert response["hostname"] == ip_address
