@@ -30,9 +30,10 @@ from karabo.common.scenemodel.api import (
 from karabo.middlelayer import (
     AccessLevel, AccessMode, Assignment, Bool, Configurable, DaqPolicy, Device,
     Double, Hash, KaraboError, Overwrite, State, String, UInt32, Unit,
-    VectorHash, VectorString, background, has_changes, sleep, slot)
+    VectorHash, VectorString, background, dictToHash, has_changes, sleep, slot)
 
 STATUS_PAGE = "{}/status.json"
+NETWORK_PAGE = "{}/network.json"
 
 STATUS_UP = "UP"
 STATUS_DOWN = "DOWN"
@@ -210,6 +211,31 @@ class DaemonManager(Device):
             payload.set("name", name)
             payload.set("data", get_scene(self.deviceId))
         return Hash("type", "deviceScene",
+                    "origin", self.deviceId,
+                    "payload", payload)
+
+    @slot
+    async def requestNetwork(self, params):
+        """Fulfill a scene request from another device.
+
+        :param params: A `Hash` containing the method parameters
+        """
+        host = params.get("host")
+        payload = Hash("host", host, "network", Hash())
+        try:
+            fut = self.client.fetch(
+                NETWORK_PAGE.format(self.aggregator_uri), method="GET")
+            response = await to_asyncio_future(fut)
+        except CancelledError:
+            raise
+        except Exception:
+            # Not supported, ...
+            raise KaraboError(
+                f"Network information not supported for {host}.")
+        else:
+            reply = json.loads(response.body)
+            payload["network"] = dictToHash(reply["network"])
+        return Hash("type", "requestNetwork",
                     "origin", self.deviceId,
                     "payload", payload)
 
