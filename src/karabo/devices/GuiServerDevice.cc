@@ -92,10 +92,32 @@ namespace karabo {
                   .init()
                   .commit();
 
+            BOOL_ELEMENT(expected)
+                  .key("allowRememberLogin")
+                  .displayedName("Remember User Login")
+                  .description("Should connecting GUI clients allow users to choose \"Remember Login\"?")
+                  .assignmentOptional()
+                  .defaultValue(true)
+                  .init()
+                  .commit();
+
             UINT32_ELEMENT(expected)
                   .key("maxEscalationTime")
                   .displayedName("Max. Escalation Time")
                   .description("Maximum duration of a session escalation, in seconds")
+                  .assignmentOptional()
+                  .defaultValue(45 * 60)
+                  .unit(Unit::SECOND)
+                  .init()
+                  .commit();
+
+            UINT32_ELEMENT(expected)
+                  .key("endEscalationNoticeTime")
+                  .displayedName("End of Escalation Notice Time")
+                  .description(
+                        "How much time in advance shall a GUI client be warned about an end of privilege escalation.\n"
+                        "May be delayed by up to " +
+                        toString(CHECK_ESCALATE_EXPIRATION_INTERVAL_SECS) + " seconds.")
                   .assignmentOptional()
                   .defaultValue(5 * 60)
                   .unit(Unit::SECOND)
@@ -391,6 +413,8 @@ namespace karabo {
 
                 m_sessionEscalator = boost::make_shared<GuiServerSessionEscalator>(
                       m_topic, get<std::string>("authServer"), get<unsigned int>("maxEscalationTime"),
+                      get<unsigned int>("endEscalationNoticeTime"),
+                      bind_weak(&GuiServerDevice::onEndEscalationNotice, this, _1),
                       bind_weak(&GuiServerDevice::onEscalationExpiration, this, _1));
 
                 m_dataConnection->startAsync(bind_weak(&karabo::devices::GuiServerDevice::onConnect, this, _1, _2));
@@ -605,6 +629,7 @@ namespace karabo {
                       bind_weak(&karabo::devices::GuiServerDevice::onWaitForLogin, this, _1, channel, _2));
 
                 string const version = karabo::util::Version::getVersion();
+                const std::string& authServer = get<std::string>("authServer");
                 Hash systemInfo("type", "brokerInformation");
                 systemInfo.set("topic", m_topic);
                 systemInfo.set("hostname", get<std::string>("hostName"));
@@ -612,7 +637,10 @@ namespace karabo {
                 systemInfo.set("deviceId", getInstanceId());
                 systemInfo.set("readOnly", m_isReadOnly);
                 systemInfo.set("version", version);
-                systemInfo.set("authServer", get<std::string>("authServer"));
+                systemInfo.set("authServer", authServer);
+                if (!authServer.empty()) {
+                    systemInfo.set("allowRememberLogin", get<bool>("allowRememberLogin"));
+                }
 
                 channel->writeAsync(systemInfo);
 
@@ -750,6 +778,28 @@ namespace karabo {
                 Hash h("type", "onEscalationExpired", "expiredToken", info.expiredToken, "expirationTime",
                        info.expirationTime.toIso8601Ext(), "levelBeforeEscalation",
                        static_cast<int>(levelBeforeEscalation), "loggedUserId", loggedUserId);
+
+                safeClientWrite(WeakChannelPointer(chanForExpiration), h);
+            }
+        }
+
+        void GuiServerDevice::onEndEscalationNotice(const EminentExpirationInfo& info) {
+            // Retrieve the channel associated with the token to expire by searching channel data
+            const std::string& token = info.aboutToExpireToken;
+            Channel::Pointer chanForExpiration;
+            {
+                boost::mutex::scoped_lock lock(m_channelMutex);
+                for (auto& [channel, channelData] : m_channels) {
+                    if (channelData.escalationToken == token) {
+                        chanForExpiration = channel;
+                        break;
+                    }
+                }
+            }
+            if (chanForExpiration) {
+                // Sends a message about the eminent escalation expiration to the associated client
+                Hash h("type", "onEndEscalationNotice", "aboutToExpireToken", info.aboutToExpireToken,
+                       "secondsToExpiration", info.timeForExpiration.getTotalSeconds());
 
                 safeClientWrite(WeakChannelPointer(chanForExpiration), h);
             }
