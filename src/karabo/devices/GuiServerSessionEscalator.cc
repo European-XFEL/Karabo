@@ -41,11 +41,15 @@ namespace karabo::devices {
 
     GuiServerSessionEscalator::GuiServerSessionEscalator(const std::string& topic, const std::string& authServerUrl,
                                                          unsigned int escalationDurationSeconds,
-                                                         const ExpirationHandler& onExpiration)
+                                                         unsigned int escalationEndNoticeSeconds,
+                                                         EminentExpirationHandler onEminentExpiration,
+                                                         ExpirationHandler onExpiration)
         : m_topic(topic),
           m_authClient(authServerUrl),
           m_escalationDurationSecs(escalationDurationSeconds),
-          m_expirationHandler(onExpiration),
+          m_escalationEndNoticeSecs{TimeDuration(escalationEndNoticeSeconds, 0ULL)},
+          m_eminentExpirationHandler(std::move(onEminentExpiration)),
+          m_expirationHandler(std::move(onExpiration)),
           m_checkExpirationsTimer(EventLoop::getIOService()),
           m_expirationTimerWaiting(false) {}
 
@@ -77,7 +81,7 @@ namespace karabo::devices {
         escalateResult.escalationDurationSecs = m_escalationDurationSecs;
         if (authResult.success) {
             Epochstamp currTime;
-            Epochstamp expiresAt = currTime + TimeDuration(m_escalationDurationSecs, 0ull);
+            Epochstamp expiresAt = currTime + TimeDuration(m_escalationDurationSecs, 0ULL);
             if (escalateResult.accessLevel > MAX_ESCALATED_ACCESS_LEVEL) {
                 // The access level returned by the authorize token operation is more privileged
                 // than the one set to be used for the escalation level - "truncate" it.
@@ -116,6 +120,7 @@ namespace karabo::devices {
             return;
         }
         std::vector<ExpiredEscalationInfo> expiredInfos;
+        std::vector<EminentExpirationInfo> eminentInfos;
         {
             std::lock_guard<std::mutex> lock(m_escalationsMutex);
             std::vector<std::string> tokens;
@@ -124,17 +129,23 @@ namespace karabo::devices {
                 tokens.emplace_back(token);
             }
             Epochstamp currentTime;
-            for (const auto& token : tokens) {
+            for (const std::string& token : tokens) {
                 if (currentTime >= m_escalations[token]) {
                     // Escalation has expired
                     expiredInfos.emplace_back(ExpiredEscalationInfo{token, m_escalations[token]});
                     m_escalations.erase(token);
+                } else if (currentTime >= m_escalations[token] - m_escalationEndNoticeSecs) {
+                    // Escalation expiration occurs inside the eminent expiration time window
+                    eminentInfos.emplace_back(EminentExpirationInfo{token, m_escalations[token] - currentTime});
                 }
             }
-            scheduleNextExpirationsCheck();
         }
-        for (const auto& expired : expiredInfos) {
+        scheduleNextExpirationsCheck();
+        for (const ExpiredEscalationInfo& expired : expiredInfos) {
             m_expirationHandler(expired);
+        }
+        for (const EminentExpirationInfo& eminent : eminentInfos) {
+            m_eminentExpirationHandler(eminent);
         }
     }
 
