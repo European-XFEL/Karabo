@@ -891,7 +891,20 @@ async def test_output_fail_address(event_loop):
         output = Node(Output)
 
     config = {"_deviceId_": "outputraisedevice"}
+    output_device = SimpleSender(config)
+    with pytest.raises(ValueError) as exc:
+        await output_device.startInstance()
+    assert "cannot be found in network configuration" in str(exc)
 
+    # And another case, with an invalid IP regex
+    class Output(NetworkOutput):
+        hostname = Overwrite(defaultValue="192.168.1.0/225")
+
+    class SimpleSender(Device):
+
+        output = Node(Output)
+
+    config = {"_deviceId_": "outputraisedevice"}
     output_device = SimpleSender(config)
     with pytest.raises(ValueError) as exc:
         await output_device.startInstance()
