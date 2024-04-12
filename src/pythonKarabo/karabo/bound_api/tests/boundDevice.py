@@ -23,8 +23,9 @@ from karabo.bound import (
     AMPERE, BOOL_ELEMENT, DOUBLE_ELEMENT, IMAGEDATA_ELEMENT, INPUT_CHANNEL,
     INT32_ELEMENT, KARABO_CLASSINFO, KILO, METER, MILLI, NDARRAY_ELEMENT,
     NODE_ELEMENT, OUTPUT_CHANNEL, SLOT_ELEMENT, STRING_ELEMENT, TABLE_ELEMENT,
-    VECTOR_STRING_ELEMENT, AlarmCondition, Encoding, Epochstamp, Hash,
-    ImageData, PythonDevice, Schema, State, Timestamp, Trainstamp, Types)
+    VECTOR_STRING_ELEMENT, AlarmCondition, ChannelMetaData, Encoding,
+    Epochstamp, Hash, ImageData, PythonDevice, Schema, State, Timestamp,
+    Trainstamp, Types)
 
 
 @KARABO_CLASSINFO("TestDevice", "1.5")
@@ -139,6 +140,9 @@ class TestDevice(PythonDevice):
             SLOT_ELEMENT(expected).key("send")
             .commit(),
 
+            SLOT_ELEMENT(expected).key("sendMultipleHashes")
+            .commit(),
+
             SLOT_ELEMENT(expected).key("end")
             .commit(),
 
@@ -215,6 +219,7 @@ class TestDevice(PythonDevice):
         self.registerSlot(self.backfire)
         self.registerSlot(self.injectSchema)
         self.registerSlot(self.send)
+        self.registerSlot(self.sendMultipleHashes)
         self.registerSlot(self.end)
         self.registerSlot(self.compareSchema)
         self.KARABO_ON_DATA("input", self.onData)
@@ -296,6 +301,16 @@ class TestDevice(PythonDevice):
         imArr = numpy.full((50, 50), 42, dtype=numpy.uint16)
         node.set("image", ImageData(imArr, encoding=Encoding.GRAY))
         self.writeChannel("output2", node)
+
+    def sendMultipleHashes(self):
+        channel = self._ss.getOutputChannel("output1")
+
+        for i in range(10):
+            sourceName = f"{self.getInstanceId()}:output{i}"
+            timestamp = self.getActualTimestamp()
+            meta = ChannelMetaData(sourceName, timestamp)
+            channel.write(Hash("e", i, "s", "hallo"), meta)
+        channel.update()
 
     def end(self):
         self.signalEndOfStream("output1")
