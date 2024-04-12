@@ -31,10 +31,10 @@ from karabo.common.enums import Capabilities, Interfaces
 from karabo.middlelayer import (
     AccessLevel, AlarmCondition, Assignment, Configurable, DaqDataType,
     DeviceClientBase, Hash, Image, InputChannel, Int32, KaraboError,
-    MetricPrefix, NDArray, Node, OutputChannel, Slot, State, String, UInt32,
-    Unit, VectorDouble, background, call, encodeBinary, getDevice, getHistory,
-    isSet, setWait, shutdown, sleep, unit, updateDevice, waitUntil,
-    waitUntilNew)
+    MetricPrefix, NDArray, Node, OutputChannel, PipelineContext, Slot, State,
+    String, UInt32, Unit, VectorDouble, background, call, encodeBinary,
+    getDevice, getHistory, isSet, setWait, shutdown, sleep, unit, updateDevice,
+    waitUntil, waitUntilNew)
 from karabo.middlelayer.testing import (
     AsyncDeviceContext, event_loop, sleepUntil)
 
@@ -453,7 +453,7 @@ async def test_cross(deviceTest):
 
 @pytest.mark.timeout(90)
 @pytest.mark.asyncio
-async def test_cross_image(deviceTest):
+async def test_cross_pipeline(deviceTest):
     config = Hash(
         "Logger.priority", "FATAL",
         "_deviceId_", "boundDevice2",
@@ -500,6 +500,29 @@ async def test_cross_image(deviceTest):
 
         assert bound_proxy.imagesReceived > 0
         assert bound_proxy.ndarraysReceived > 0
+
+        channel = PipelineContext("boundDevice2:output1")
+        assert channel.size() == 0
+        async with channel:
+            await wait_for(channel.wait_connected(), timeout=5)
+            await bound_proxy.sendMultipleHashes()
+            await sleepUntil(lambda: channel.size() == 10,
+                             timeout=30)
+            assert channel.size() == 10
+
+            timestamp = None
+            for i in range(9):
+                data, meta = await channel.get_data()
+                assert data["e"] == i
+                assert data["s"] == "hallo"
+                assert meta.source == f"boundDevice2:output{i}"
+                # validate different timestamps
+                assert meta.timestamp.timestamp != timestamp
+                timestamp = meta.timestamp.timestamp
+            assert channel.size() == 1
+
+        # a single item left in queue got cleaned up
+        assert channel.size() == 0
 
     await shutdown(bound_proxy)
     await process.wait()

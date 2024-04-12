@@ -720,9 +720,13 @@ async def test_pipeline_context(deviceTest):
 
         # Leave context and get data again
         data = None
+        assert channel.size() == 0
         async with channel:
             data = await wait_for(channel.get_data(), timeout=timeout)
             assert data is not None
+            await sleepUntil(lambda: channel.size() >= 4)
+            assert channel.size() >= 4
+        assert channel.size() == 0
         await proxy.stopSending()
         assert not channel.is_alive()
 
