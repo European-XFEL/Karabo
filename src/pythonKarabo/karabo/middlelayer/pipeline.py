@@ -94,6 +94,10 @@ class CancelQueue(Queue):
         for fut in self._getters:
             fut.cancel()
 
+    def clear(self):
+        self.cancel()
+        self._queue.clear()
+
 
 class RingQueue(CancelQueue):
     def _init(self, maxsize=0):
@@ -542,7 +546,7 @@ class PipelineContext(NetworkInput):
         self._initialized = False
 
         self._connected = False
-        self._futures = set()
+        self._queue = CancelQueue()
         self._connect_futures = set()
 
     # Public interface
@@ -576,6 +580,9 @@ class PipelineContext(NetworkInput):
     def __exit__(self, exc, value, tb):
         self._disconnect()
 
+    def size(self):
+        return self._queue.qsize()
+
     async def __aenter__(self):
         return self.__enter__()
 
@@ -584,9 +591,7 @@ class PipelineContext(NetworkInput):
 
     @synchronize
     async def get_data(self):
-        future = Future()
-        self._futures.add(future)
-        return await future
+        return await self._queue.get()
 
     # Private interface
     # ----------------------------------------------------------------------
@@ -609,9 +614,7 @@ class PipelineContext(NetworkInput):
 
     def handler(self, data, meta):
         """Reimplemented function of `NetworkInput`"""
-        for future in self._futures:
-            future.set_result((data, meta))
-        self._futures = set()
+        self._queue.put_nowait((data, meta))
 
     async def _connect(self):
         output = self._output
@@ -631,6 +634,7 @@ class PipelineContext(NetworkInput):
         if self._task is not None and not self._task.done():
             self._task.cancel()
         self._connected = False
+        self._queue.clear()
 
 
 class InputChannel(Node):
