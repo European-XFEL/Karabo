@@ -206,6 +206,48 @@ async def test_coro_func_cancel(loopTest):
 
 @pytest.mark.timeout(30)
 @run_test
+async def test_coro_func_cancel_finally(loopTest):
+    def func_sleep():
+        try:
+            sleep(1000)
+            assert False
+        finally:
+            sleep(0.01)
+            nonlocal called
+            called = True
+
+    called = False
+    task = background(func_sleep)
+    await sleep(0.01)
+    assert not called
+    task.cancel()
+    with pytest.raises(CancelledError):
+        await task
+    await sleep(0.01)
+    assert called
+
+
+@pytest.mark.timeout(30)
+@run_test
+async def test_coro_func_cancel_atend(loopTest):
+    def func_sleep():
+        nonlocal step
+        step = 1
+        time.sleep(0.1)
+        step = 2
+
+    step = 0
+    task = background(func_sleep)
+    await sleep(0.01)
+    assert step == 1
+    task.cancel()
+    with pytest.raises(CancelledError):
+        await task
+    assert step == 2
+
+
+@pytest.mark.timeout(30)
+@run_test
 def test_func_func_cancel(loopTest):
     task = background(func_sleep)
     sleep(0.01)
