@@ -121,6 +121,7 @@ else:
             'karabo-cli=karabo.interactive.ideviceclient:main',
             'ikarabo=karabo.interactive.ikarabo:main',
             'convert-karabo-device=karabo.interactive.convert_device_project:main',
+            'karabo-scene2cpp=karabo.interactive.scene2cpp:main',
             'karabo-scene2py=karabo.interactive.scene2python:main',
             'karabo-start=karabo.interactive.startkarabo:startkarabo',
             'karabo-stop=karabo.interactive.startkarabo:stopkarabo',
