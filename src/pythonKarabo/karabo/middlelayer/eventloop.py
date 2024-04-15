@@ -164,8 +164,9 @@ class NoEventLoop(AbstractEventLoop):
         to Karabo routines will fail with a :exc:`CancelledError`. Currently
         running Karabo routines are cancelled right away.
         """
-        self._cancelled = True
-        if self.task is not None:
+        if self.task is None:
+            self._cancelled = True
+        else:
             self.loop.call_soon_threadsafe(self.task.cancel)
 
     def __await__(self):
@@ -185,6 +186,7 @@ class NoEventLoop(AbstractEventLoop):
         if isinstance(timeout, KaraboValue):
             timeout /= unit.second
         if self._cancelled:
+            self._cancelled = False
             raise CancelledError
 
         loop = self.loop
@@ -340,7 +342,6 @@ class EventLoop(SelectorEventLoop):
                 set_event_loop(loop)
                 try:
                     ret = f(*args, **kwargs)
-                    # The lambda assures we are using the newest future
                     self.call_soon_threadsafe(lambda: future.set_result(ret))
                 except BaseException as e:
                     # Since Python 3.8 we have to use BaseException here
@@ -360,7 +361,7 @@ class EventLoop(SelectorEventLoop):
                 # instead, and continue. This "and continue" is the while loop
                 future = Future(loop=self)
                 try:
-                    return await future
+                    ret = await future
                 except CancelledError:
                     # Ignore cancelling from the outside, instead cancel the
                     # thread. Forward any resulting exception from the thread
@@ -369,6 +370,11 @@ class EventLoop(SelectorEventLoop):
                         raise
                     else:
                         loop.cancel()
+                        continue
+                if loop._cancelled:
+                    raise CancelledError
+                else:
+                    return ret
 
     def start_device(self, device):
         lock = threading.Lock()
