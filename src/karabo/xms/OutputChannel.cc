@@ -959,7 +959,7 @@ namespace karabo {
         void OutputChannel::update(bool safeNDArray) {
             auto prom = std::make_shared<std::promise<void>>();
             auto fut = prom->get_future();
-            auto handler = [prom]() { prom->set_value(); };
+            auto handler = [prom{std::move(prom)}]() { prom->set_value(); };
 
             asyncUpdateNoWait([]() {}, handler, safeNDArray);
             awaitUpdateFuture(fut, "update");
@@ -968,7 +968,7 @@ namespace karabo {
         void OutputChannel::asyncUpdate(bool safeNDArray, boost::function<void()>&& writeDoneHandler) {
             auto prom = std::make_shared<std::promise<void>>();
             auto fut = prom->get_future();
-            auto readyForNextHandler = [prom]() { prom->set_value(); };
+            auto readyForNextHandler = [prom{std::move(prom)}]() { prom->set_value(); };
 
             asyncUpdateNoWait(readyForNextHandler, std::move(writeDoneHandler), safeNDArray);
             awaitUpdateFuture(fut, "asyncUpdate");
@@ -1018,7 +1018,7 @@ namespace karabo {
                 Memory::incrementChunkUsage(m_channelId, chunkId);
                 m_sharedLoadBalancedQueuedChunks.push_back(chunkId);
             }
-            // If all connected want to drop (except those that want to queue): nothing to do
+            // If all connected want to drop or queue: nothing to do
             if (toSendImmediately.empty() && toBlock.empty() && !blockForShared) {
                 karabo::net::EventLoop::post(std::move(readyForNextHandler));
                 karabo::net::EventLoop::post(std::move(writeDoneHandler));
@@ -1029,14 +1029,15 @@ namespace karabo {
                 auto doneFlags = boost::make_shared<std::vector<bool>>(numToWrite, false);
                 auto doneFlagMutex = boost::make_shared<boost::mutex>();
                 boost::function<void(size_t)> singleWriteDone =
-                      [doneFlags, doneFlagMutex, allWriteDone{std::move(writeDoneHandler)}](size_t n) mutable {
+                      [doneFlags{std::move(doneFlags)}, doneFlagMutex{std::move(doneFlagMutex)},
+                       writeDoneHandler{std::move(writeDoneHandler)}](size_t n) mutable {
                           boost::mutex::scoped_lock lock(*doneFlagMutex);
                           (*doneFlags)[n] = true;
                           for (const bool ready : *doneFlags) {
                               if (!ready) return;
                           }
                           // lock.unlock(); irrelevant since it is anyway the last time this mutex is used
-                          allWriteDone();
+                          writeDoneHandler();
                       };
                 // Now send data to those that are ready immediately
                 size_t counter = 0;
@@ -1050,11 +1051,12 @@ namespace karabo {
                     auto doneBlockFlags = boost::make_shared<std::vector<bool>>(numBlock, false);
                     auto doneBlockFlagMutex = boost::make_shared<boost::mutex>();
                     boost::function<void(size_t, size_t)> singleBlockDone =
-                          [doneBlockFlags, doneBlockFlagMutex, readyForNext{std::move(readyForNextHandler)},
+                          [doneBlockFlags{std::move(doneBlockFlags)}, doneBlockFlagMutex{std::move(doneBlockFlagMutex)},
+                           readyForNext{std::move(readyForNextHandler)},
                            singleWriteDone](size_t blockCounter, size_t allCounter) mutable {
                               // Writing done for this overall counter
                               singleWriteDone(allCounter);
-                              // Check whether all blockings are resolved and in case call handler that waits for that
+                              // Check whether all blockings are resolved and if so call handler that waits for that
                               boost::mutex::scoped_lock lock(*doneBlockFlagMutex);
                               (*doneBlockFlags)[blockCounter] = true;
                               for (const bool ready : *doneBlockFlags) {
@@ -1074,6 +1076,8 @@ namespace karabo {
                               }
                               this->asyncSendOne(chunkId, *channelInfo,
                                                  boost::bind(singleBlockDone, blockCounter, allCounter));
+                              // FIXME readyForNextHandler should already be called now if asyncSendOne is called for
+                              //       last blocking input channel
                           };
                     size_t blockCounter = 0;
                     if (blockForShared) {
@@ -1333,7 +1337,7 @@ namespace karabo {
         void OutputChannel::signalEndOfStream() {
             auto prom = std::make_shared<std::promise<void>>();
             auto fut = prom->get_future();
-            auto handler = [prom]() { prom->set_value(); };
+            auto handler = [prom{std::move(prom)}]() { prom->set_value(); };
 
             asyncSignalEndOfStream(handler);
 
@@ -1436,10 +1440,8 @@ namespace karabo {
                                                          channelId{m_channelId}, chunkId, local,
                                                          doneHandler{std::move(doneHandler)}](
                                                               const boost::system::error_code& ec) {
-                    auto self = weakThis.lock();
-                    if (self) {
+                    if (auto self = weakThis.lock()) {
                         self->resetSendOngoing(instanceId);
-                        self.reset();
                     }
                     if (!local || ec) {
                         // local InputChannel will take over responsibility of chunk
