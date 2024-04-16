@@ -34,6 +34,7 @@
 class Amqp_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(Amqp_Test);
     CPPUNIT_TEST(testConnection);
+    CPPUNIT_TEST(testClient);
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -45,6 +46,7 @@ class Amqp_Test : public CPPUNIT_NS::TestFixture {
     std::vector<std::string> m_defaultBrokers;
 
     void testConnection();
+    void testClient();
 };
 
 #endif /* KARABO_AMQP_TEST_HH */
