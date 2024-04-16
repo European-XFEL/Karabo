@@ -204,7 +204,10 @@ Available flags:
                - Run integration tests after building (for Debug|Release)
   --runLongTests
                - Run long running tests after building (for Debug|Release)
-  --numJobs N  - Specify the number of build jobs to run simultaneously
+  --numJobs N  - Specify the number of build jobs to run simultaneously. If omitted,
+                 the value of the NUM_COMPILE_JOBS environment variable is used. If
+                 the variable is not defined, the number of active machine cores is
+                 queried and used.
   --quiet      - suppress commands' stdout on success
 
 Note: "Clean" cleans all Karabo code (src folder)
@@ -353,8 +356,14 @@ if [[ $BASH_VERSINFO -lt 4 ]]; then
 fi
 
 if [ "$NUM_JOBS" = "0" ]; then
-    # numJobs not specified in command-line; use the number of active cores.
-    NUM_JOBS=`grep "processor" /proc/cpuinfo | wc -l`
+    # numJobs not specified in command-line;
+    if [ -z "$NUM_COMPILE_JOBS" ]; then
+       # numJobs not specified in NUM_COMPILE_JOBS environment variable; use
+       # the number of active cores as the final fallback strategy.
+       NUM_JOBS=`grep "processor" /proc/cpuinfo | wc -l`
+    else
+       NUM_JOBS=$NUM_COMPILE_JOBS
+    fi
 fi
 
 # selecting configuration CodeCoverage implies --runTests, --runIntegrationTests and
