@@ -346,32 +346,41 @@ namespace karabo {
             void update(bool safeNDArray = false);
 
             /**
-             * Semi-asynchronously update the output channel, i.e. asynchronously send all data over the wire that was
-             * previously written by calling write(...), but block as long as any of the connected InputChannels
-             * requires if "wait" is configured.
+             * Semi-asynchronously update the output channel, i.e. start asynchronous sending of data over the wire
+             * that was previously written to the output channel's' buffer by calling write(...), but block as long as
+             * required to really start sending.
+             * The start of sending data is delayed
+             * - for any connected input channel that is currently not ready to receive more data, but is configured
+             *   with "dataDistribution" as "copy" and with "onSlowness" as "wait",
+             * - or if none of the connected input channels that are configured with "dataDistribution" as "shared" are
+             *   currently ready to receive data and if this output channel is configured with "noInputShared" as
+             *   "wait".
              *
              * @param safeNDArray boolean to indicate whether all NDArrays inside the Hash passed to write(..) before
-             *                    are 'safe', i.e. their memory will not be referred to elsewhere after update is
-             *                    finished. Default is 'false', 'true' can avoid safety copies of NDArray content when
+             *                    are 'safe', i.e. their memory will not be referred to elsewhere before 'readyHandler'
+             *                    is called. Default is 'false', 'true' can avoid safety copies of NDArray content when
              *                    data is queued or sent locally.
-             * @param readyHandler callback when data (that is not queued) has been sent and thus even NDArray data
-             *                     inside it can be re-used again (except if safeNDArray was set to 'true' in which
-             *                     case its memory may still be used in a queue).
+             * @param writeDoneHandler callback when data (that is not queued) has been sent and thus even NDArray data
+             *                         inside it can be re-used again (except if safeNDArray was set to 'true' in which
+             *                         case its memory may still be used in a queue).
              *
              * Thread safety:
              * All the 'write(..)' methods, '[async]Update[NoWait](..)' and '[async]SignalEndOfStream(..)' must not be
              * called concurrently.
              */
             void asyncUpdate(
-                  bool safeNDArray = false, boost::function<void()>&& readyHandler = []() {});
+                  bool safeNDArray = false, boost::function<void()>&& writeDoneHandler = []() {});
 
             /**
              * Expert method
              *
              * Asynchronously update the output channel, i.e. asynchronously send all data over the wire that was
              * previously written by calling write(...) without any blocking.
-             * This method must not be called again before 'readyForNextHandler' has been called which happens when all
-             * connected InputChannels configured to "wait" have received their data.
+             * This method must not be called again before either 'readyForNextHandler' or 'writeDoneHandler' have been
+             * called which happens when sending data to all connected InputChannels that should receive the written
+             * data (note that for other InputChannels data may be dropped or queued) has
+             * - started: 'readyForNextHandler'
+             * - finished, as confirmed by Tcp, or stopped due to disconnection: 'writeDoneHandler'
              *
              * @param readyForNextHandler callback when asyncUpdateNoWait maye be called again
              * @param writeDoneHandler callback when sending is finished, i.e. now all NDArray inside the Hash passed to
@@ -380,6 +389,9 @@ namespace karabo {
              * @param safeNDArray boolean to indicate whether all NDArrays inside the Hash passed to write(..) before
              *                    are 'safe', i.e. their memory will not be referred to elsewhere after update is
              *                    finished.
+             *
+             * TODO: Provide a handler called when sending data is completed, including any queued data, and thus
+             *       NDArray data can be re-used again even if safeNDArray=false (i.e. buffers could be re-used).
              *
              * Thread safety:
              * All the 'write(..)' methods, '[async]Update[NoWait](..)' and '[async]SignalEndOfStream(..)' must not be
