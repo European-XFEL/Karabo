@@ -405,6 +405,7 @@ class Manager(QObject):
         #       receiving an invalid (or already validated) one-time token,
         #       the GUI server immediately sends a notification error to the
         #       client and closes the connection.
+        get_network().set_username(info["username"])
         access = AccessLevel(info["accessLevel"])
         if krb_access.GLOBAL_ACCESS_LEVEL != access:
             krb_access.GLOBAL_ACCESS_LEVEL = access

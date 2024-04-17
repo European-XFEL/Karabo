@@ -636,17 +636,17 @@ def test_handle_login_information(mocker):
     with singletons(network=network, mediator=mediator):
         manager = Manager()
         manager.handle_loginInformation(
-            accessLevel=AccessLevel.ADMIN.value)
+            accessLevel=AccessLevel.ADMIN.value, username="karabo")
         broad.assert_called_with(KaraboEvent.LoginUserChanged, {})
         broad.reset_mock()
         # Try again downgrade
         manager.handle_loginInformation(
-            accessLevel=AccessLevel.OBSERVER.value)
+            accessLevel=AccessLevel.OBSERVER.value, username="karabo")
         broad.assert_called_with(KaraboEvent.LoginUserChanged, {})
         broad.reset_mock()
         # Read Only, but since we are observer, it is not changed
         manager.handle_loginInformation(
-            accessLevel=AccessLevel.OBSERVER.value)
+            accessLevel=AccessLevel.OBSERVER.value, username="karabo")
         broad.assert_not_called()
         krb_access.HIGHEST_ACCESS_LEVEL == "observer"
 

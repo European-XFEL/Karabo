@@ -279,6 +279,7 @@ class MainWindow(QMainWindow):
         self.onUpdateAccessLevel()
         if data.get("escalation_expired"):
             self._end_escalation()
+        self._set_window_title()
 
     def _event_project_updated(self, data):
         """Projects were externally updated and we check if we are affected"""
