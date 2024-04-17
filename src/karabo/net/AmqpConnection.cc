@@ -23,7 +23,7 @@
 
 #include "AmqpConnection.hh"
 
-#include "AmqpClient.hh" // for ConnectionHandler, KARABO_ERROR_CODE_XXX
+#include "AmqpUtils.hh" // for ConnectionHandler, KARABO_ERROR_CODE_XXX
 #include "karabo/log/Logger.hh"
 #include "karabo/util/Exception.hh"
 #include "karabo/util/MetaTools.hh" // for bind_weak
@@ -278,8 +278,8 @@ namespace karabo {
                 channelPtr->onError([](const char* errMsg) {
                     KARABO_LOG_FRAMEWORK_ERROR_C("AmqpConnection") << "Channel reports: " << errMsg;
                 });
-                onComplete(channelPtr, msg);
                 KARABO_LOG_FRAMEWORK_DEBUG_C("AmqpConnection") << "Channel created.";
+                onComplete(channelPtr, msg);
             });
         }
     } // namespace net
