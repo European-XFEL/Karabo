@@ -41,6 +41,9 @@ from .utils import get_dialog_ui
 TIMER_DELAY = 500  # ms
 REQUEST_HEADER = "application/json"
 
+USER_INFO = ("You are logged in as '{}'. Click 'Connect' button\nto continue "
+             "or 'Switch User' to change the user.")
+
 
 @unique
 class LoginType(IntEnum):
@@ -48,6 +51,7 @@ class LoginType(IntEnum):
     USER_AUTHENTICATED = 1
     ACCESS_LEVEL = 2
     READ_ONLY = 3
+    REFRESH_TOKEN = 4
 
 
 class ReactiveLoginDialog(QDialog):
@@ -124,6 +128,8 @@ class ReactiveLoginDialog(QDialog):
         if self.hasAcceptableInput():
             self._timer.start()
 
+        self.switch_button.clicked.connect(self._switch_to_auth_page)
+
     # --------------------------------------------------------------------
     # Dialog Public Properties
 
@@ -190,6 +196,8 @@ class ReactiveLoginDialog(QDialog):
         self._error = None
         if self.login_type is LoginType.USER_AUTHENTICATED:
             self._post_auth_request()
+        elif self.login_type is LoginType.REFRESH_TOKEN:
+            self._post_auth_request_refresh_token()
         else:
             self.accept()
 
@@ -233,6 +241,8 @@ class ReactiveLoginDialog(QDialog):
         elif (server_info.has("authServer") and
               bool(server_info["authServer"])):
             self.login_type = LoginType.USER_AUTHENTICATED
+            if krb_access.REFRESH_TOKEN is not None:
+                self.login_type = LoginType.REFRESH_TOKEN
             self._auth_url = server_info["authServer"]
             if not self._auth_url.endswith("/"):
                 self._auth_url += "/"
@@ -298,6 +308,10 @@ class ReactiveLoginDialog(QDialog):
         # Status of Connect button
         self._update_button()
 
+        if self.login_type is LoginType.REFRESH_TOKEN:
+            text = USER_INFO.format(get_network().username)
+            self.user_info_label.setText(text)
+
     def _update_button(self):
         """Update the connect button according to the status"""
         if self.login_type in (LoginType.ACCESS_LEVEL, LoginType.READ_ONLY):
@@ -307,6 +321,8 @@ class ReactiveLoginDialog(QDialog):
         elif self.login_type is LoginType.USER_AUTHENTICATED:
             enable = bool(self.edit_access_code.text().strip())
             self.connect_button.setEnabled(enable)
+        elif self.login_type is LoginType.REFRESH_TOKEN:
+            self.connect_button.setEnabled(True)
 
     def _update_status_label(self):
         """Status message and processing indicator"""
@@ -336,11 +352,32 @@ class ReactiveLoginDialog(QDialog):
             "remember_login": self.remember_login.isChecked()
         })
         info = bytearray(info.encode("utf-8"))
-        url = self._auth_url + "user_tokens"
+        url = f"{self._auth_url}user_tokens"
 
         request = QNetworkRequest(QUrl(url))
         request.setHeader(QNetworkRequest.ContentTypeHeader, REQUEST_HEADER)
         self.access_manager.post(request, info)
+
+    def _post_auth_request_refresh_token(self):
+        self._authenticating = True
+        self._update_dialog_state()
+
+        info = json.dumps({
+            "refresh_token": krb_access.REFRESH_TOKEN,
+            "username": get_network().username,
+            "client_hostname": CLIENT_HOST,
+        })
+        info = bytearray(info.encode("utf-8"))
+        url = f"{self._auth_url}refresh_tokens"
+
+        request = QNetworkRequest(QUrl(url))
+        request.setHeader(QNetworkRequest.ContentTypeHeader, REQUEST_HEADER)
+        self.access_manager.post(request, info)
+
+    @Slot()
+    def _switch_to_auth_page(self):
+        self.stackedWidget.setCurrentIndex(LoginType.USER_AUTHENTICATED)
+        self.connect_button.setEnabled(False)
 
 
 class EscalationDialog(QDialog):
