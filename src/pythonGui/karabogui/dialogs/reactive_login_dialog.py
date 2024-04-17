@@ -25,7 +25,7 @@ from struct import calcsize, unpack
 
 from qtpy import uic
 from qtpy.QtCore import Qt, QTimer, QUrl, Slot
-from qtpy.QtGui import QIntValidator
+from qtpy.QtGui import QDesktopServices, QIntValidator
 from qtpy.QtNetwork import (
     QAbstractSocket, QNetworkAccessManager, QNetworkReply, QNetworkRequest,
     QSslConfiguration, QSslSocket, QTcpSocket)
@@ -33,6 +33,7 @@ from qtpy.QtWidgets import QDialog
 
 from karabo.native import decodeBinary
 from karabogui import access as krb_access
+from karabogui.const import CLIENT_HOST
 from karabogui.singletons.api import get_network
 
 from .utils import get_dialog_ui
@@ -107,15 +108,15 @@ class ReactiveLoginDialog(QDialog):
         access = self.combo_access_level.findText(access_level)
         self.combo_access_level.setCurrentIndex(access)
 
-        # Authenticated login
-        self.edit_username.setText(username)
-        self.edit_username.textEdited.connect(self._on_username_changed)
-        self.edit_password.textEdited.connect(self._on_password_changed)
-
         # Access Level and Read-Only login
         shell_user = getpass.getuser()
         self.label_shell_user.setText(shell_user)
         self.label_readonly_user.setText(shell_user)
+
+        self.edit_access_code.setValidator(QIntValidator(parent=self))
+        self.edit_access_code.textEdited.connect(self._update_button)
+
+        self.authenticate_button.clicked.connect(self.open_login_webpage)
 
         self.connect_button.clicked.connect(self.connect_clicked)
         self._update_dialog_state()
@@ -136,9 +137,7 @@ class ReactiveLoginDialog(QDialog):
     @property
     def username(self):
         user = "."
-        if self.login_type is LoginType.USER_AUTHENTICATED:
-            user = self.edit_username.text()
-        elif self.login_type is LoginType.ACCESS_LEVEL:
+        if self.login_type is LoginType.ACCESS_LEVEL:
             user = self.label_shell_user.text()
         elif self.login_type is LoginType.READ_ONLY:
             user = self.label_readonly_user.text()
@@ -184,14 +183,7 @@ class ReactiveLoginDialog(QDialog):
     def on_port_changed(self):
         if self.hasAcceptableInput():
             self._timer.start()
-
-    @Slot()
-    def _on_username_changed(self):
-        self._update_dialog_state()
-
-    @Slot()
-    def _on_password_changed(self):
-        self._update_dialog_state()
+        self._update_button()
 
     @Slot()
     def connect_clicked(self):
@@ -241,12 +233,9 @@ class ReactiveLoginDialog(QDialog):
         elif (server_info.has("authServer") and
               bool(server_info["authServer"])):
             self.login_type = LoginType.USER_AUTHENTICATED
-            self.edit_password.setText("")
-            self.edit_username.setFocus()
             self._auth_url = server_info["authServer"]
             if not self._auth_url.endswith("/"):
                 self._auth_url += "/"
-            self._auth_url += "auth_once_tk"
             krb_access.AUTHENTICATION_SERVER = self._auth_url
         else:
             self.login_type = LoginType.ACCESS_LEVEL
@@ -271,22 +260,30 @@ class ReactiveLoginDialog(QDialog):
 
         error = reply.error()
 
+        bytes_string = reply.readAll()
+        reply_body = str(bytes_string, "utf-8")
+        auth_result = json.loads(reply_body)
         if error == QNetworkReply.NoError:
-            bytes_string = reply.readAll()
-            reply_body = str(bytes_string, "utf-8")
-            auth_result = json.loads(reply_body)
-            if auth_result.get("success"):
-                krb_access.ONE_TIME_TOKEN = auth_result["once_token"]
-                self.accept()
-                return
-            else:
-                # There was no error at the http level, but the validation
-                # failed - most probably invalid credentials.
-                self._error = auth_result["error_msg"]
+            krb_access.ONE_TIME_TOKEN = auth_result["once_token"]
+            refresh_token = auth_result.get("refresh_token")
+            if refresh_token is not None:
+                krb_access.REFRESH_TOKEN = refresh_token
+            self.accept()
         else:
-            self._error = reply.errorString()
+            self._error = auth_result.get("detail")
+            self.stackedWidget.setCurrentIndex(LoginType.USER_AUTHENTICATED)
+            self._update_status_label()
 
-        self._update_status_label()
+        reply.deleteLater()
+
+    @Slot()
+    def open_login_webpage(self):
+        """Open browser to load the login page."""
+        url = f"{self._auth_url}login_form"
+        success = QDesktopServices.openUrl(QUrl(url))
+        if not success:
+            self._error = f"Failed to open the page {url}."
+            self._update_status_label()
 
     # --------------------------------------------------------------------
     # Private interface
@@ -308,9 +305,8 @@ class ReactiveLoginDialog(QDialog):
         elif self.login_type is LoginType.UNKNOWN:
             self.connect_button.setEnabled(False)
         elif self.login_type is LoginType.USER_AUTHENTICATED:
-            username = self.edit_username.text()
-            password = self.edit_password.text()
-            self.connect_button.setEnabled(bool(username and password))
+            enable = bool(self.edit_access_code.text().strip())
+            self.connect_button.setEnabled(enable)
 
     def _update_status_label(self):
         """Status message and processing indicator"""
@@ -334,16 +330,17 @@ class ReactiveLoginDialog(QDialog):
         self._authenticating = True
         self._update_dialog_state()
 
-        credentials = json.dumps({
-            "user": self.edit_username.text(),
-            "passwd": self.edit_password.text(),
+        info = json.dumps({
+            "access_code": int(self.edit_access_code.text()),
+            "client_hostname": CLIENT_HOST,
+            "remember_login": self.remember_login.isChecked()
         })
-        credentials = bytearray(credentials.encode("utf-8"))
-        request = QNetworkRequest(QUrl(self._auth_url))
-        request.setHeader(QNetworkRequest.ContentTypeHeader,
-                          REQUEST_HEADER)
+        info = bytearray(info.encode("utf-8"))
+        url = self._auth_url + "user_tokens"
 
-        self.access_manager.post(request, credentials)
+        request = QNetworkRequest(QUrl(url))
+        request.setHeader(QNetworkRequest.ContentTypeHeader, REQUEST_HEADER)
+        self.access_manager.post(request, info)
 
 
 class EscalationDialog(QDialog):
