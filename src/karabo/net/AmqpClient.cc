@@ -34,65 +34,6 @@ using namespace boost::placeholders;
 
 KARABO_REGISTER_FOR_CONFIGURATION_ADDON(AMQP::Table, karabo::net::AmqpClient)
 
-
-//----- https://akrzemi1.wordpress.com/2017/07/12/your-own-error-code/ -----v
-
-namespace { // anonymous namespace
-
-    struct AmqpCppErrCategory : boost::system::error_category {
-        const char* name() const noexcept override;
-        std::string message(int ev) const override;
-    };
-
-
-    const char* AmqpCppErrCategory::name() const noexcept {
-        return "amqpcpp";
-    }
-
-
-    std::string AmqpCppErrCategory::message(int ev) const {
-        switch (static_cast<AmqpCppErrc>(ev)) {
-            case AmqpCppErrc::eCreateChannelError:
-                return "error creating channel";
-
-            case AmqpCppErrc::eCreateExchangeError:
-                return "error creating exchange";
-
-            case AmqpCppErrc::eCreateQueueError:
-                return "error creating queue";
-
-            case AmqpCppErrc::eBindQueueError:
-                return "error binding queue";
-
-            case AmqpCppErrc::eCreateConsumerError:
-                return "error creating consumer";
-
-            case AmqpCppErrc::eConsumerCancelError:
-                return "error cancelling consumer";
-
-            case AmqpCppErrc::eUnbindQueueError:
-                return "error unbinding queue";
-
-            case AmqpCppErrc::eDrop:
-                return "channel dropped error";
-
-            default:
-                return "(unrecognized error)";
-        }
-    }
-
-    const AmqpCppErrCategory theAmqpCppErrCategory{};
-
-} // anonymous namespace
-
-
-boost::system::error_code make_error_code(AmqpCppErrc e) {
-    return {static_cast<int>(e), theAmqpCppErrCategory};
-}
-
-//----- https://akrzemi1.wordpress.com/2017/07/12/your-own-error-code/ -----^
-
-
 namespace karabo {
     namespace net {
 
@@ -641,12 +582,6 @@ namespace karabo {
                     break;
             }
         }
-
-
-        //------------------------------------------------------------------------------------ ConnectionHandler
-
-
-        ConnectionHandler::ConnectionHandler(boost::asio::io_context& ctx) : AMQP::LibBoostAsioHandler(ctx) {}
 
 
         //-------------------------------------------------------------------------------- AmqpSingletonImpl

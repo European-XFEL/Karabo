@@ -20,6 +20,7 @@
 
 #include <amqpcpp.h>
 
+#include "AmqpUtils.hh"
 #include "karabo/log/Logger.hh"
 #include "karabo/util/Exception.hh"
 
@@ -181,8 +182,7 @@ namespace karabo::net {
                           self->m_channelStatus = ChannelStatus::REQUEST; // need start from scratch
                           AsyncHandler callback; // Better first swap, handler might reset m_channelPreparationCallback
                           callback.swap(self->m_channelPreparationCallback);
-                          // FIXME later: Use better matching error code, e.g. from AmqpCppErrc in AmqpClient.hh
-                          callback(bse::make_error_code(bse::io_error));
+                          callback(make_error_code(AmqpCppErrc::eCreateChannelError));
                       }
                   }
               });
@@ -216,8 +216,7 @@ namespace karabo::net {
                               self->m_channelStatus = ChannelStatus::REQUEST;
                               AsyncHandler callback;
                               callback.swap(self->m_channelPreparationCallback);
-                              // FIXME later: Error code from AmqpCppErrc in AmqpClient.hh?
-                              callback(bse::make_error_code(bse::operation_not_permitted));
+                              callback(make_error_code(AmqpCppErrc::eCreateQueueError));
                           }
                       }); // end of failure handler
                 break;
@@ -256,8 +255,7 @@ namespace karabo::net {
                               self->m_channelStatus = ChannelStatus::REQUEST;
                               AsyncHandler callback;
                               callback.swap(self->m_channelPreparationCallback);
-                              // FIXME later: Error code from AmqpCppErrc in AmqpClient.hh?
-                              callback(bse::make_error_code(bse::operation_not_permitted));
+                              callback(make_error_code(AmqpCppErrc::eCreateConsumerError));
                           }
                       });
                 break;
@@ -331,8 +329,7 @@ namespace karabo::net {
                                         << "Creating exchange " << exchange << " for routing key " << routingKey
                                         << " failed, but subscription gone!";
                               } else {
-                                  // Call handler with failure FIXME later: Error code from AmqpCppErrc in AmqpClient.hh
-                                  it->second.onSubscription(bse::make_error_code(bse::io_error));
+                                  it->second.onSubscription(make_error_code(AmqpCppErrc::eCreateExchangeError));
                                   self->m_subscriptions.erase(it);
                               }
                           }
@@ -366,8 +363,7 @@ namespace karabo::net {
                                         << "Binding queue " << self->m_instanceId << " to exchange " << exchange
                                         << " with routing key " << routingKey << " failed and subscription gone!";
                               } else { // Call handler with failure
-                                  it->second.onSubscription(
-                                        bse::make_error_code(bse::io_error)); // FIXME: use homebrew ErrorCode
+                                  it->second.onSubscription(make_error_code(AmqpCppErrc::eBindQueueError));
                                   self->m_subscriptions.erase(it);
                               }
                           }
