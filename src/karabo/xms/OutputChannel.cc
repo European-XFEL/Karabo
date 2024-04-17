@@ -1050,34 +1050,26 @@ namespace karabo {
                     // Finally register handlers for blocking receivers
                     auto doneBlockFlags = boost::make_shared<std::vector<bool>>(numBlock, false);
                     auto doneBlockFlagMutex = boost::make_shared<boost::mutex>();
-                    boost::function<void(size_t, size_t)> singleBlockDone =
-                          [doneBlockFlags{std::move(doneBlockFlags)}, doneBlockFlagMutex{std::move(doneBlockFlagMutex)},
-                           readyForNext{std::move(readyForNextHandler)},
-                           singleWriteDone](size_t blockCounter, size_t allCounter) mutable {
-                              // Writing done for this overall counter
-                              singleWriteDone(allCounter);
+                    // Technical comment: I failed to compile it with 'Hash&', maybe (!) related to
+                    // https://www.boost.org/doc/libs/1_82_0/libs/bind/doc/html/bind.html#bind.limitations
+                    // Works with 'const Hash&' and casting away the const downstream where needed...
+                    boost::function<void(Hash*, size_t, size_t, bool)> singleUnblockTrigger =
+                          [this, chunkId, singleWriteDone{std::move(singleWriteDone)},
+                           doneBlockFlags{std::move(doneBlockFlags)}, doneBlockFlagMutex{std::move(doneBlockFlagMutex)},
+                           readyForNext{std::move(readyForNextHandler)}](Hash* channelInfo, size_t blockCounter,
+                                                                         size_t allCounter, bool copyIfLocal) {
+                              // Capturing 'this' OK: lambda will be directly called (not posted) by a valid 'this'
+                              if (copyIfLocal && channelInfo->get<std::string>("memoryLocation") == "local") {
+                                  Memory::assureAllDataIsCopied(m_channelId, chunkId);
+                              }
+                              this->asyncSendOne(chunkId, *channelInfo, boost::bind(singleWriteDone, allCounter));
                               // Check whether all blockings are resolved and if so call handler that waits for that
                               boost::mutex::scoped_lock lock(*doneBlockFlagMutex);
                               (*doneBlockFlags)[blockCounter] = true;
                               for (const bool ready : *doneBlockFlags) {
                                   if (!ready) return;
                               }
-                              readyForNext(); // Last blocking done
-                          };
-                    // Technical comment: I failed to compile it with 'Hash&', maybe (!) related to
-                    // https://www.boost.org/doc/libs/1_82_0/libs/bind/doc/html/bind.html#bind.limitations
-                    // Works with 'const Hash&' and casting away the const downstream where needed...
-                    boost::function<void(Hash*, size_t, size_t, bool)> singleUnblockTrigger =
-                          [this, chunkId, singleBlockDone{std::move(singleBlockDone)}](
-                                Hash* channelInfo, size_t blockCounter, size_t allCounter, bool copyIfLocal) {
-                              // Capturing 'this' OK: lambda will be directly called (not posted) by a valid 'this'
-                              if (copyIfLocal && channelInfo->get<std::string>("memoryLocation") == "local") {
-                                  Memory::assureAllDataIsCopied(m_channelId, chunkId);
-                              }
-                              this->asyncSendOne(chunkId, *channelInfo,
-                                                 boost::bind(singleBlockDone, blockCounter, allCounter));
-                              // FIXME readyForNextHandler should already be called now if asyncSendOne is called for
-                              //       last blocking input channel
+                              readyForNext(); // Last sending launched
                           };
                     size_t blockCounter = 0;
                     if (blockForShared) {
