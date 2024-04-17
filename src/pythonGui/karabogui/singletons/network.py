@@ -622,6 +622,10 @@ class Network(QObject):
         self._send_login_information()
         self._empty_request_queue()
 
+    def set_username(self, username):
+        self.username = username
+        get_config()['username'] = username
+
     # --------------------------------------------------------------------------
     # private functions
 

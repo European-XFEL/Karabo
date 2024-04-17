@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>480</width>
-    <height>345</height>
+    <height>391</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -201,60 +201,56 @@
          <property name="title">
           <string>User Authenticated Login</string>
          </property>
-         <widget class="QLabel" name="label_auth_username">
+         <widget class="QPushButton" name="authenticate_button">
           <property name="geometry">
            <rect>
-            <x>20</x>
+            <x>60</x>
             <y>40</y>
-            <width>84</width>
-            <height>17</height>
+            <width>301</width>
+            <height>32</height>
            </rect>
+          </property>
+          <property name="toolTip">
+           <string> Open browser to generate the access code by authenticating the user</string>
           </property>
           <property name="text">
-           <string>&amp;Username</string>
+           <string>Open Access Form</string>
           </property>
-          <property name="buddy">
-           <cstring>edit_username</cstring>
-          </property>
-         </widget>
-         <widget class="QLineEdit" name="edit_username">
-          <property name="geometry">
-           <rect>
-            <x>108</x>
-            <y>36</y>
-            <width>201</width>
-            <height>25</height>
-           </rect>
+          <property name="autoDefault">
+           <bool>false</bool>
           </property>
          </widget>
-         <widget class="QLabel" name="label_password">
+         <widget class="QWidget" name="layoutWidget">
           <property name="geometry">
            <rect>
-            <x>20</x>
-            <y>80</y>
-            <width>84</width>
-            <height>17</height>
+            <x>32</x>
+            <y>96</y>
+            <width>337</width>
+            <height>28</height>
            </rect>
           </property>
-          <property name="text">
-           <string>Pass&amp;word</string>
-          </property>
-          <property name="buddy">
-           <cstring>edit_password</cstring>
-          </property>
-         </widget>
-         <widget class="QLineEdit" name="edit_password">
-          <property name="geometry">
-           <rect>
-            <x>108</x>
-            <y>76</y>
-            <width>201</width>
-            <height>25</height>
-           </rect>
-          </property>
-          <property name="echoMode">
-           <enum>QLineEdit::Password</enum>
-          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_5">
+           <item>
+            <widget class="QLabel" name="label_access_code">
+             <property name="text">
+              <string>&amp;Access Code</string>
+             </property>
+             <property name="buddy">
+              <cstring>edit_access_code</cstring>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="edit_access_code"/>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="remember_login">
+             <property name="text">
+              <string>Remember me</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
          </widget>
         </widget>
        </item>
