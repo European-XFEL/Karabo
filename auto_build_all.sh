@@ -211,7 +211,8 @@ Available flags:
   --quiet      - suppress commands' stdout on success
 
 Note: "Clean" cleans all Karabo code (src folder)
-      "Clean-All" additionally cleans all external dependencies (extern folder)
+      "Clean-All" additionally cleans all external dependencies (conan build cache)
+                  WARNING: this clears the conan cache of the current user
       "CodeCoverage" builds the Karabo framework with CodeCoverage configuration,
                      but also implicitly runs the unit and integration tests
                      and produces code coverage reports. The CodeCoverage configuration
@@ -273,8 +274,10 @@ elif [[ $1 = "Clean" || $1 = "Clean-All" ]]; then
             rm -rf $EXTERN_DEPS_DIR
             echo "    removed $EXTERN_DEPS_DIR"
         fi
-        git clean -fxd $scriptDir/extern/resources
-        echo "    Did git clean -fxd on $scriptDir/extern/resources"
+        # remove builds and packages, but keep source files in cache
+        echo "### Cleaning conan cache (builds and packages) ###"
+        conan remove "*" -b -p -f
+        echo "    Cleared builds and packages from conan cache"
     fi
     exit 0
 else
