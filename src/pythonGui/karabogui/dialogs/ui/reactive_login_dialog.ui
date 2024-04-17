@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>480</width>
-    <height>391</height>
+    <height>362</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -417,6 +417,37 @@
         </widget>
        </item>
       </layout>
+     </widget>
+     <widget class="QWidget" name="page_referesh_token">
+      <widget class="QLabel" name="user_info_label">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>10</y>
+         <width>401</width>
+         <height>61</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="switch_button">
+       <property name="geometry">
+        <rect>
+         <x>280</x>
+         <y>80</y>
+         <width>161</width>
+         <height>32</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Switch User</string>
+       </property>
+       <property name="autoDefault">
+        <bool>false</bool>
+       </property>
+      </widget>
      </widget>
     </widget>
    </item>
