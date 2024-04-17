@@ -226,8 +226,14 @@ namespace karabo::net {
                 m_channel->consume(m_instanceId, AMQP::noack)
                       .onReceived([wSelf](const AMQP::Message& msg, uint64_t deliveryTag, bool redelivered) {
                           if (auto self = wSelf.lock()) {
-                              // Copy of data not avoidable although in AMQP io context here: AMQP::Message better be
-                              // destructed in io context event loop and deserialisation not done there
+                              if (redelivered) {
+                                  KARABO_LOG_FRAMEWORK_WARN_C("AmqpClient")
+                                        << "Redelivered message from exchange '" << msg.exchange()
+                                        << "' on routing key '" << msg.routingkey() << "', tag " << deliveryTag
+                                        << ", size " << msg.bodySize();
+                              }
+                              // Copy of message body not avoidable although in AMQP io context here: AMQP::Message
+                              // better be destructed in io context event loop and deserialisation better not done there
                               auto vec = std::make_shared<std::vector<char>>(msg.body(), msg.body() + msg.bodySize());
                               self->m_readHandler(vec, msg.exchange(), msg.routingkey());
                           }
