@@ -1300,7 +1300,8 @@ namespace karabo {
            private:
             void onMessageReceived(const AMQP::Message& m, uint64_t deliveryTag, bool redelivered);
 
-            void deserialize(const std::string& exchange, const std::string& key, const std::shared_ptr<std::vector<char>>& vec);
+            void deserialize(const std::string& exchange, const std::string& key, const std::shared_ptr<std::vector<char>>& vec, uint64_t deliveryTag,
+                                     bool redelivered);
 
             template <typename CompletionToken>
             void post(CompletionToken&& token) {
