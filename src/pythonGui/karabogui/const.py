@@ -56,6 +56,7 @@ else:
 KARABO_PROJECT_FOLDER = path.join(HIDDEN_KARABO_FOLDER, 'projects')
 # Karabo GUI Client ID
 KARABO_CLIENT_ID = f"{socket.gethostname()}-{getpid()}"
+CLIENT_HOST = socket.gethostname()
 
 try:
     from karabogui import _version
