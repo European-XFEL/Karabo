@@ -1318,18 +1318,20 @@ namespace karabo {
         }
 
 
-        void AmqpClient::onMessageReceived(const AMQP::Message& m, uint64_t deliveryTag, bool /*redelivered*/) {
+        void AmqpClient::onMessageReceived(const AMQP::Message& m, uint64_t deliveryTag, bool redelivered) {
             // Check if we have handler registered for this message...
             if (!m_onRead) return;
             const auto& exchange = m.exchange();
             const auto& key = m.routingkey();
             auto vec = std::make_shared<std::vector<char>>(m.body(), m.body() + m.bodySize());
-            m_serializerStrand->post(bind_weak(&AmqpClient::deserialize, this, exchange, key, vec));
+            m_serializerStrand->post(
+                  bind_weak(&AmqpClient::deserialize, this, exchange, key, vec, deliveryTag, redelivered));
         }
 
 
         void AmqpClient::deserialize(const std::string& exch, const std::string& key,
-                                     const std::shared_ptr<std::vector<char>>& vec) {
+                                     const std::shared_ptr<std::vector<char>>& vec, uint64_t deliveryTag,
+                                     bool redelivered) {
             karabo::util::Hash::Pointer msg = boost::make_shared<Hash>();
             Hash::Pointer header(boost::make_shared<Hash>());
             size_t bytes = m_binarySerializer->load(*header, vec->data(), vec->size());
@@ -1339,10 +1341,21 @@ namespace karabo {
             if (m_skipFlag) {
                 std::vector<char>& raw = msg->bindReference<std::vector<char>>("raw");
                 std::copy(vec->data() + bytes, vec->data() + vec->size(), std::back_inserter(raw));
+                if (redelivered) {
+                    KARABO_LOG_FRAMEWORK_WARN << "Redelivered message from exchange '" << exch << "' on routing key '"
+                                              << key << "', tag " << deliveryTag << ".\n"
+                                              << *header;
+                }
             } else {
                 Hash::Pointer body(boost::make_shared<Hash>());
                 m_binarySerializer->load(*body, vec->data() + bytes, vec->size() - bytes);
                 msg->set("body", body);
+                if (redelivered) {
+                    KARABO_LOG_FRAMEWORK_WARN << "Redelivered message from exchange '" << exch << "' on routing key '"
+                                              << key << "', tag " << deliveryTag << ".\n"
+                                              << *header << "\nbody:\n"
+                                              << *body;
+                }
             }
             m_strand->post(boost::bind(m_onRead, KARABO_ERROR_CODE_SUCCESS, msg));
         }
