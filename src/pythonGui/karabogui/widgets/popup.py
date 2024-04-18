@@ -83,11 +83,13 @@ class PopupWidget(QWidget):
 
         if isinstance(info, Hash):
             html_string = create_html_hash(info)
+            height = len(info.paths())
         else:
+            height = len(info)
             html_string = create_table_string(info)
 
         self._ui_info.setHtml(html_string)
-        self._ui_info.fitHeightToContent(len(info))
+        self._ui_info.fitHeightToContent(height)
         # Restore scrolling position to prevent irritating scrolling up while
         # updating the popup dialog with further information on an expected
         # parameter
