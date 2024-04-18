@@ -23,6 +23,7 @@ from karabo.native import AccessLevel, Hash
 from karabogui.events import KaraboEvent
 from karabogui.navigation.system_model import SystemTreeModel
 from karabogui.navigation.system_view import SystemTreeView
+from karabogui.singletons.mediator import Mediator
 from karabogui.testing import GuiTestCase, singletons, system_hash
 
 
@@ -71,6 +72,20 @@ class TestCase(GuiTestCase):
         deviceId = ""
         navigation_type = ""
         device_proxy = None
+
+        assert host_index.data() == "BIG_IRON"
+        with singletons(mediator=Mediator()):
+            call_slot = "karabogui.navigation.system_view.call_device_slot"
+            is_online = "karabogui.navigation.system_view.is_device_online"
+            with mock.patch(is_online) as ol:
+                ol.return_value = True
+                with mock.patch(call_slot) as call:
+                    self.view.setCurrentIndex(host_index)
+                    self.view.onNetworkInfo()
+                    args = call.call_args.args
+                    kwargs = call.call_args.kwargs
+                    assert "BIG_IRON" in kwargs.values()
+                    assert "requestNetwork" in args
 
         @Slot()
         def receiveSignal(nav_type, proxy):
