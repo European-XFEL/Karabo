@@ -26,9 +26,9 @@ from qtpy.QtWidgets import (
     QAbstractItemView, QAction, QDialog, QHeaderView, QInputDialog, QMenu,
     QTreeView)
 
-from karabo.common.api import Capabilities
+from karabo.common.api import KARABO_DAEMON_MANAGER, Capabilities
 from karabo.native import Timestamp
-from karabogui import icons
+from karabogui import icons, messagebox
 from karabogui.access import AccessRole, access_role_allowed
 from karabogui.dialogs.api import (
     ConfigurationFromNameDialog, ConfigurationFromPastDialog,
@@ -39,9 +39,10 @@ from karabogui.navigation.system_filter_model import TopologyFilterModel
 from karabogui.request import call_device_slot, get_scene_from_server
 from karabogui.singletons.api import (
     get_manager, get_network, get_selection_tracker)
+from karabogui.topology.api import is_device_online
 from karabogui.util import (
-    load_configuration_from_file, move_to_cursor, open_documentation_link,
-    save_configuration_to_file)
+    get_reason_parts, load_configuration_from_file, move_to_cursor,
+    open_documentation_link, save_configuration_to_file)
 from karabogui.widgets.popup import PopupWidget
 
 from .system_model import SystemTreeModel
@@ -89,6 +90,15 @@ class SystemTreeView(QTreeView):
 
     def _setupContextMenu(self):
         self.setContextMenuPolicy(Qt.CustomContextMenu)
+
+        # Device server instance menu
+        self.mHostItem = QMenu(self)
+        text = "Network Information"
+        self.acNetworkInfo = QAction(icons.about, text, self)
+        self.acNetworkInfo.setStatusTip(text)
+        self.acNetworkInfo.setToolTip(text)
+        self.acNetworkInfo.triggered.connect(self.onNetworkInfo)
+        self.mHostItem.addAction(self.acNetworkInfo)
 
         text = "About"
         self.acAbout = QAction(icons.about, "About", self)
@@ -229,6 +239,39 @@ class SystemTreeView(QTreeView):
     # Slots
 
     @Slot()
+    def onNetworkInfo(self):
+        if not is_device_online(KARABO_DAEMON_MANAGER):
+            messagebox.show_error(
+                "The KaraboDaemonManager is not online ...", parent=self)
+            return
+
+        index = self.currentIndex()
+        node = self.model().index_ref(index)
+        if node is None:
+            return
+
+        def show_network_info(success, reply):
+            if not success:
+                reason, details = get_reason_parts(reply)
+                messagebox.show_error(reason, details=details, parent=self)
+                return
+
+            if self.popupWidget is None:
+                self.popupWidget = PopupWidget(parent=self)
+
+            payload = reply["payload"]
+            network = payload["network"]
+            self.popupWidget.setInfo(network)
+            self.popupWidget.adjustSize()
+            move_to_cursor(self.popupWidget)
+            self.popupWidget.show()
+
+        host = node.info()["hostId"]
+        call_device_slot(
+            show_network_info, KARABO_DAEMON_MANAGER, "requestNetwork",
+            host=host)
+
+    @Slot()
     def onAbout(self):
         index = self.currentIndex()
         node = self.model().index_ref(index)
@@ -359,7 +402,11 @@ class SystemTreeView(QTreeView):
         node_type = info.get('type', NavigationItemTypes.UNDEFINED)
         # Killing services is access level dependent!
         enable_shutdown = access_role_allowed(AccessRole.SERVICE_EDIT)
-        if node_type is NavigationItemTypes.SERVER:
+        if node_type is NavigationItemTypes.HOST:
+            instance_control = access_role_allowed(AccessRole.INSTANCE_CONTROL)
+            self.acNetworkInfo.setEnabled(instance_control)
+            self.mHostItem.exec(QCursor.pos())
+        elif node_type is NavigationItemTypes.SERVER:
             self.acKillServer.setEnabled(enable_shutdown)
             self.acAbout.setVisible(True)
             self.acTimeInformation.setVisible(False)
