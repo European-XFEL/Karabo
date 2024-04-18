@@ -18,14 +18,16 @@
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
 #############################################################################
-from xml.sax.saxutils import escape
 
-from qtpy.QtCore import Qt, Slot
+from qtpy.QtCore import QEvent, Qt, Slot
 from qtpy.QtWidgets import QPushButton, QTextEdit, QVBoxLayout, QWidget
+
+from karabo.native import Hash, create_html_hash
+from karabogui.util import create_table_string
 
 
 class PopupWidget(QWidget):
-    def __init__(self, can_freeze=False, parent=None):
+    def __init__(self, can_freeze: bool = False, parent: QWidget = None):
         super().__init__(parent=parent, flags=Qt.Dialog)
         flags = Qt.WindowCloseButtonHint | Qt.WindowStaysOnTopHint
         self.setWindowFlags(self.windowFlags() | flags)
@@ -72,26 +74,25 @@ class PopupWidget(QWidget):
             self.setInfo(self.info_cache)
         self.update_button_status()
 
-    def setInfo(self, info):
+    def setInfo(self, info: dict | Hash):
         if self.freeze:
             # We cache the lastet update for later display when the
             # freeze is toggled!
             self.info_cache = info
             return
 
-        scrollBar = self._ui_info.verticalScrollBar()
-        pos = scrollBar.sliderPosition()
-        htmlString = ("<table>" +
-                      "".join("<tr><td><b>{}</b>:   </td><td>{}</td></tr>".
-                              format(key, escape(str(value)))
-                              for key, value in info.items())
-                      + "</table>")
-        self._ui_info.setHtml(htmlString)
+        if isinstance(info, Hash):
+            html_string = create_html_hash(info)
+        else:
+            html_string = create_table_string(info)
 
+        self._ui_info.setHtml(html_string)
         self._ui_info.fitHeightToContent(len(info))
         # Restore scrolling position to prevent irritating scrolling up while
         # updating the popup dialog with further information on an expected
         # parameter
+        scrollBar = self._ui_info.verticalScrollBar()
+        pos = scrollBar.sliderPosition()
         scrollBar.setValue(pos)
 
     def reset(self):
@@ -99,7 +100,7 @@ class PopupWidget(QWidget):
         self.info_cache = None
         self.update_button_status()
 
-    def closeEvent(self, event):
+    def closeEvent(self, event: QEvent):
         """Reimplemented function from Qt
 
            Erase all caching information and set the freeze to false
@@ -121,6 +122,6 @@ class TextEdit(QTextEdit):
         sizeHint.setHeight(self._fittedHeight)
         return sizeHint
 
-    def fitHeightToContent(self, nbInfoKeys):
+    def fitHeightToContent(self, nbInfoKeys: int):
         self._fittedHeight = self.fontMetrics().height() * nbInfoKeys
         self.updateGeometry()

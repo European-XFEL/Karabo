@@ -67,7 +67,8 @@ class SystemTreeNode(HasStrictTraits):
     def info(self):
         level = self.level
         if level == HOST_LEVEL:
-            return {'type': NavigationItemTypes.HOST}
+            return {'type': NavigationItemTypes.HOST,
+                    "hostId": self.node_id}
         elif level == SERVER_LEVEL:
             return {'type': NavigationItemTypes.SERVER,
                     'serverId': self.node_id,

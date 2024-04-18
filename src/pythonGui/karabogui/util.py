@@ -24,6 +24,7 @@ from datetime import datetime
 from pathlib import Path
 from tempfile import mkstemp
 from uuid import uuid4
+from xml.sax.saxutils import escape
 
 import numpy as np
 from dateutil.tz import tzlocal, tzutc
@@ -368,7 +369,7 @@ def process_qt_events(app=None, timeout=100):
 def create_table_string(info):
     """This creates a html table string from an `info` dictionary"""
     rows = (
-         f"<tr><td><b>{attr}</b>:   </td><td>{str(value)}</td></tr>"
+         f"<tr><td><b>{attr}</b>:   </td><td>{escape(str(value))}</td></tr>"
          for attr, value in info.items()
     )
     return f"<table>{''.join(rows)}</table>"
