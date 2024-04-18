@@ -22,6 +22,7 @@ from karabo.common.project.api import (
 from karabo.common.scenemodel.api import SceneModel
 from karabogui.project.view import ProjectView
 from karabogui.singletons.project_model import ProjectViewItemModel
+from karabogui.singletons.selection_tracker import SelectionTracker
 from karabogui.testing import singletons
 
 
@@ -48,14 +49,15 @@ def test_basic_project(gui_app):
     project_model = ProjectModel(
         macros=macros, scenes=scenes, servers=servers,
         subprojects=subprojects)
+    tracker = SelectionTracker()
+    with singletons(selection_tracker=tracker):
+        model = ProjectViewItemModel()
+        model.root_model = project_model
+        with singletons(project_model=model):
+            view = ProjectView()
 
-    model = ProjectViewItemModel()
-    model.root_model = project_model
-    with singletons(project_model=model):
-        view = ProjectView()
+        assert view.model() is model
+        tester = ModelTester(None)
+        tester.check(model)
 
-    assert view.model() is model
-    tester = ModelTester(None)
-    tester.check(model)
-
-    assert model.selectModel(device_karabo)
+        assert model.selectModel(device_karabo)
