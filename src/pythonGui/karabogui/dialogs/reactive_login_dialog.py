@@ -141,15 +141,6 @@ class ReactiveLoginDialog(QDialog):
         return level
 
     @property
-    def username(self):
-        user = "."
-        if self.login_type is LoginType.ACCESS_LEVEL:
-            user = self.label_shell_user.text()
-        elif self.login_type is LoginType.READ_ONLY:
-            user = self.label_readonly_user.text()
-        return user
-
-    @property
     def hostname(self):
         return self.combo_hostname.currentText()
 
