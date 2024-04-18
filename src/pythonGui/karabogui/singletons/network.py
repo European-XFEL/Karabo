@@ -105,7 +105,6 @@ class Network(QObject):
             parent=parent)
 
         if dialog.exec() == QDialog.Accepted:
-            self.username = dialog.username
             self.hostname = dialog.hostname
             self.port = dialog.port
             self.gui_servers = dialog.gui_servers
@@ -133,7 +132,6 @@ class Network(QObject):
                              parent=parent)
 
         if dialog.exec() == QDialog.Accepted:
-            self.username = dialog.username
             self.access_level = dialog.username
             self.password = dialog.password
             self.hostname = dialog.hostname
