@@ -14,6 +14,7 @@
 # The Karabo Gui is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
+from karabo.native import Hash
 from karabogui.testing import GuiTestCase
 from karabogui.widgets.popup import PopupWidget
 
@@ -32,6 +33,12 @@ class TestPopUp(GuiTestCase):
         info = {"minInc": 5, "description": "This is a description"}
         widget.setInfo(info)
         plain_text = "\nminInc: \n5\ndescription: \nThis is a description\n"
+        assert widget.text == plain_text
+
+        info = Hash("minInc", 5, "description", "This is a description")
+        widget.setInfo(info)
+        # Hashes are different
+        plain_text = "\nminInc\n5\ndescription\nThis is a description\n"
         assert widget.text == plain_text
         widget.close()
 
