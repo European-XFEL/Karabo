@@ -1,7 +1,5 @@
-import os
-
-from conans import ConanFile
-from conans.tools import collect_libs, untargz
+from conan import ConanFile
+from conan.tools.files import collect_libs, rm, unzip
 from conan.tools.cmake import CMake, CMakeToolchain
 
 
@@ -17,8 +15,8 @@ class KaraboOpenMQConan(ConanFile):
 
     def source(self):
         zip_name = "openmqc-%s.tar" % self.version
-        untargz(zip_name, strip_root=True)
-        os.unlink(zip_name)
+        unzip(self, zip_name, strip_root=True)
+        rm(self, zip_name, self.source_folder)
 
     def build(self):
         cmake = CMake(self)
