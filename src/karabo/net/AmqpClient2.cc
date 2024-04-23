@@ -101,7 +101,34 @@ namespace karabo::net {
 
     void AmqpClient2::asyncUnsubscribe(const std::string& exchange, const std::string& routingKey,
                                        AsyncHandler onUnsubscriptionDone) {
-        throw KARABO_NOT_IMPLEMENTED_EXCEPTION("To be done");
+        // Ensure to run in single threaded io context - no concurrency problems!
+        m_connection->post([weakThis{weak_from_this()}, this, exchange, routingKey,
+                            onUnsubscriptionDone{std::move(onUnsubscriptionDone)}]() mutable {
+            auto self(weakThis.lock());
+            if (!self) {
+                onUnsubscriptionDone(bse::make_error_code(bse::operation_canceled));
+                return;
+            }
+
+            auto it = m_subscriptions.find({exchange, routingKey});
+            if (it == m_subscriptions.end()) {
+                // Unsubscribing something not subscribed is called success (since afterwards we are not subscribed)
+                onUnsubscriptionDone(bse::make_error_code(bse::success));
+                return;
+            }
+
+            if (it->second.status != SubscriptionStatus::READY) {
+                // Not yet connected or being unsubscribed: try again
+                m_connection->post(util::bind_weak(&AmqpClient2::asyncUnsubscribe, this, exchange, routingKey,
+                                                   std::move(onUnsubscriptionDone)));
+                return;
+            }
+
+            // Finally real work to do - we store the handler and move further with our subscription status
+            it->second.status = SubscriptionStatus::UNBIND_QUEUE;
+            it->second.onSubscription = std::move(onUnsubscriptionDone);
+            moveSubscriptionState(exchange, routingKey);
+        });
     }
 
 
@@ -194,7 +221,7 @@ namespace karabo::net {
         switch (m_channelStatus) {
             case ChannelStatus::REQUEST:
             case ChannelStatus::CREATE:
-                KARABO_LOG_FRAMEWORK_WARN << "Inconsistent channel state in moveChannelState: REQUEST or CREATE "
+                KARABO_LOG_FRAMEWORK_WARN << "Inconsistent channel state in moveChannelState: REQUEST or CREATE: "
                                           << static_cast<int>(m_channelStatus);
                 break;
             case ChannelStatus::CREATE_QUEUE:
@@ -263,6 +290,7 @@ namespace karabo::net {
                 break;
         }
     }
+
     void AmqpClient2::doSubscribePending(const boost::system::error_code& ec) {
         if (ec) {
             KARABO_LOG_FRAMEWORK_ERROR << "Subscribing failed since channel preparation failed: " << ec.message();
@@ -282,7 +310,7 @@ namespace karabo::net {
                     KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << " subscribed for exchange '" << exchange
                                                << "' and routing key '" << routingKey << "'";
                     statusAndHandler.status = SubscriptionStatus::CREATE_EXCHANGE;
-                    moveSubscriptionState(exchange, routingKey); // it as arg?
+                    moveSubscriptionState(exchange, routingKey);
                 }
             }
             ++it;
@@ -300,8 +328,11 @@ namespace karabo::net {
         auto wSelf = weak_from_this();
         SubscriptionStatus& status = it->second.status;
         switch (status) {
-            case SubscriptionStatus::PENDING:
-                break; // Nothing yet to do - how can this call happen?
+            case SubscriptionStatus::PENDING: // How can this call happen?
+                KARABO_LOG_FRAMEWORK_ERROR << "Nothing to do for pending subscription of '" << m_instanceId
+                                           << "' to exchange '" << exchange << "' and routing key '" << routingKey
+                                           << "'.";
+                break;
             case SubscriptionStatus::CREATE_EXCHANGE: {
                 const int flags = 0; // Karabo 3: switch to AMQP::autodelete (not AMQP::durable!)
                 m_channel->declareExchange(exchange, AMQP::topic, flags)
@@ -329,8 +360,9 @@ namespace karabo::net {
                                         << "Creating exchange " << exchange << " for routing key " << routingKey
                                         << " failed, but subscription gone!";
                               } else {
-                                  it->second.onSubscription(make_error_code(AmqpCppErrc::eCreateExchangeError));
+                                  const AsyncHandler callback(std::move(it->second.onSubscription));
                                   self->m_subscriptions.erase(it);
+                                  callback(make_error_code(AmqpCppErrc::eCreateExchangeError));
                               }
                           }
                       });
@@ -363,16 +395,55 @@ namespace karabo::net {
                                         << "Binding queue " << self->m_instanceId << " to exchange " << exchange
                                         << " with routing key " << routingKey << " failed and subscription gone!";
                               } else { // Call handler with failure
-                                  it->second.onSubscription(make_error_code(AmqpCppErrc::eBindQueueError));
+                                  const AsyncHandler callback(std::move(it->second.onSubscription));
                                   self->m_subscriptions.erase(it);
+                                  callback(make_error_code(AmqpCppErrc::eBindQueueError));
                               }
                           }
                       });
             } break;
-            case SubscriptionStatus::READY:
-                // Nothing anymore to do - how can this call happen?
+            case SubscriptionStatus::READY: // Nothing anymore to do - how can this call happen?
+                KARABO_LOG_FRAMEWORK_WARN << "Nothing to do for subscription of '" << m_instanceId << "' to exchange '"
+                                          << exchange << "' and routing key '" << routingKey << "' since ready.";
+                break;
+            case SubscriptionStatus::UNBIND_QUEUE:
+                m_channel->unbindQueue(exchange, m_instanceId, routingKey)
+                      .onSuccess([wSelf, exchange, routingKey]() {
+                          if (auto self = wSelf.lock()) {
+                              auto it = self->m_subscriptions.find({exchange, routingKey});
+                              if (it == self->m_subscriptions.end()) { // Should not happen!
+                                  KARABO_LOG_FRAMEWORK_ERROR_C("AmqpClient")
+                                        << "Unbinding queue " << self->m_instanceId << " from exchange " << exchange
+                                        << " with routing key " << routingKey << " succeeded, but subscription gone!";
+                              } else {
+                                  const AsyncHandler callback(std::move(it->second.onSubscription));
+                                  self->m_subscriptions.erase(it);
+                                  callback(bse::make_error_code(bse::success));
+                              }
+                          }
+                      })
+                      .onError([wSelf, exchange, routingKey](const char* message) {
+                          if (auto self = wSelf.lock()) {
+                              auto it = self->m_subscriptions.find({exchange, routingKey});
+                              if (it == self->m_subscriptions.end()) { // Should not happen!
+                                  KARABO_LOG_FRAMEWORK_ERROR_C("AmqpClient")
+                                        << "Unbinding queue " << self->m_instanceId << " from exchange " << exchange
+                                        << " with routing key " << routingKey << " failed and subscription gone!";
+                              } else { // Call handler with failure, but keep subscription (but erase handler)
+                                  KARABO_LOG_FRAMEWORK_WARN_C("AmqpClient")
+                                        << "Unbinding queue " << self->m_instanceId << " from exchange " << exchange
+                                        << " with routing key " << routingKey
+                                        << " failed, consider subscription alive!";
+                                  it->second.status = SubscriptionStatus::READY;
+                                  AsyncHandler callback;
+                                  callback.swap(it->second.onSubscription);
+                                  callback(make_error_code(AmqpCppErrc::eUnbindQueueError));
+                              }
+                          }
+                      });
                 break;
         } // end switch
-    }     // end
+
+    } // end moveSubscriptionState
 
 } // namespace karabo::net
