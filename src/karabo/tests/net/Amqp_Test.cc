@@ -310,6 +310,7 @@ void Amqp_Test::testClient() {
     boost::this_thread::sleep(boost::posix_time::milliseconds(300));
     CPPUNIT_ASSERT_EQUAL(4ul, readByBob.size());
 
+    //***************************************************************
     // Now test alice subscribing and bob publishing - it has different order between subcription and publish than bob
     std::promise<boost::system::error_code> subDoneAlice;
     auto futAlice = subDoneAlice.get_future();
@@ -328,4 +329,72 @@ void Amqp_Test::testClient() {
         boost::this_thread::sleep(boost::posix_time::milliseconds(2));
     }
     CPPUNIT_ASSERT_EQUAL(1, numReadAlice.load());
+
+    //***************************************************************
+    // Now test unsubscribing
+    std::promise<boost::system::error_code> unsubDoneAlice;
+    auto futUnsubAlice = unsubDoneAlice.get_future();
+    alice->asyncUnsubscribe(prefix + "other_exchange", "alice",
+                            [&unsubDoneAlice](const boost::system::error_code ec) { unsubDoneAlice.set_value(ec); });
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futUnsubAlice.wait_for(timeout));
+    const boost::system::error_code ecAliceUnsub = futUnsubAlice.get();
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(ecAliceUnsub.message(), static_cast<int>(boost::system::errc::success),
+                                 ecAliceUnsub.value());
+
+    //***************************************************************
+    // Test that, after alice has unsubscribed above, it does not receive further messages
+    std::promise<boost::system::error_code> writeDoneBob;
+    auto futWriteBob = writeDoneBob.get_future();
+    bob->asyncPublish(prefix + "other_exchange", "alice", std::make_shared<std::vector<char>>(4, 'c'),
+                      [&writeDoneBob](const boost::system::error_code ec) { writeDoneBob.set_value(ec); });
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futWriteBob.wait_for(timeout));
+    const boost::system::error_code ecBobWrite = futWriteBob.get();
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(ecBobWrite.message(), static_cast<int>(boost::system::errc::success),
+                                 ecBobWrite.value());
+
+    boost::this_thread::sleep(boost::posix_time::milliseconds(300)); // Grant some message travel time...
+    CPPUNIT_ASSERT_EQUAL(1, numReadAlice.load());                    // ...but nothing arrives due to unsubscription!
+
+    //***************************************************************
+    // Test unsubscription of something not subscribed - gives success (though that is debatable)
+    std::promise<boost::system::error_code> unsubDoneAlice2;
+    auto futUnsubAlice2 = unsubDoneAlice2.get_future();
+    alice->asyncUnsubscribe(prefix + "other_exchange", "not_subscribed_routing_key",
+                            [&unsubDoneAlice2](const boost::system::error_code ec) { unsubDoneAlice2.set_value(ec); });
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futUnsubAlice2.wait_for(timeout));
+    const boost::system::error_code ecAliceUnsub2 = futUnsubAlice2.get();
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(ecAliceUnsub2.message(), static_cast<int>(boost::system::errc::success),
+                                 ecAliceUnsub2.value());
+
+    //***************************************************************
+    // Little concurrency test: Subscribing and immediately unsubscribing work
+    std::promise<boost::system::error_code> subDoneAlice2;
+    auto futSubAlice2 = subDoneAlice2.get_future();
+    std::promise<boost::system::error_code> unsubDoneAlice3;
+    auto futUnsubAlice3 = unsubDoneAlice3.get_future();
+    alice->asyncSubscribe(prefix + "other_exchange", "alice",
+                          [&subDoneAlice2](const boost::system::error_code ec) { subDoneAlice2.set_value(ec); });
+    alice->asyncUnsubscribe(prefix + "other_exchange", "alice",
+                            [&unsubDoneAlice3](const boost::system::error_code ec) { unsubDoneAlice3.set_value(ec); });
+
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futSubAlice2.wait_for(timeout));
+    const boost::system::error_code ecSubAlice2 = futSubAlice2.get();
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(ecSubAlice2.message(), static_cast<int>(boost::system::errc::success),
+                                 ecSubAlice2.value());
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futUnsubAlice3.wait_for(timeout));
+    const boost::system::error_code ecAliceUnsub3 = futUnsubAlice3.get();
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(ecAliceUnsub3.message(), static_cast<int>(boost::system::errc::success),
+                                 ecAliceUnsub3.value());
+    // And still, alice does not receive Bob's message
+    std::promise<boost::system::error_code> writeDoneBob2;
+    auto futWriteBob2 = writeDoneBob2.get_future();
+    bob->asyncPublish(prefix + "other_exchange", "alice", std::make_shared<std::vector<char>>(4, 'd'),
+                      [&writeDoneBob2](const boost::system::error_code ec) { writeDoneBob2.set_value(ec); });
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futWriteBob2.wait_for(timeout));
+    const boost::system::error_code ecBobWrite2 = futWriteBob2.get();
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(ecBobWrite2.message(), static_cast<int>(boost::system::errc::success),
+                                 ecBobWrite2.value());
+
+    boost::this_thread::sleep(boost::posix_time::milliseconds(300)); // Grant some message travel time...
+    CPPUNIT_ASSERT_EQUAL(1, numReadAlice.load());                    // ...but nothing arrives due to unsubscription!
 }
