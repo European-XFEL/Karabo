@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>480</width>
-    <height>362</height>
+    <height>389</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -19,7 +19,7 @@
   <property name="windowTitle">
    <string>Login</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
+  <layout class="QVBoxLayout" name="verticalLayout" stretch="0,2,0,0,0">
    <item>
     <widget class="QGroupBox" name="group_gui_server">
      <property name="minimumSize">
@@ -43,80 +43,70 @@
      <property name="title">
       <string>GUI Server</string>
      </property>
-     <widget class="QLabel" name="label_hostname">
-      <property name="geometry">
-       <rect>
-        <x>20</x>
-        <y>40</y>
-        <width>84</width>
-        <height>17</height>
-       </rect>
+     <layout class="QGridLayout" name="gridLayout">
+      <property name="leftMargin">
+       <number>12</number>
       </property>
-      <property name="text">
-       <string>&amp;Hostname</string>
+      <property name="topMargin">
+       <number>0</number>
       </property>
-      <property name="buddy">
-       <cstring>combo_hostname</cstring>
-      </property>
-     </widget>
-     <widget class="QComboBox" name="combo_hostname">
-      <property name="geometry">
-       <rect>
-        <x>108</x>
-        <y>36</y>
-        <width>321</width>
-        <height>25</height>
-       </rect>
-      </property>
-      <property name="editable">
-       <bool>true</bool>
-      </property>
-      <property name="insertPolicy">
-       <enum>QComboBox::NoInsert</enum>
-      </property>
-     </widget>
-     <widget class="QLabel" name="label_port">
-      <property name="geometry">
-       <rect>
-        <x>20</x>
-        <y>80</y>
-        <width>84</width>
-        <height>17</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>&amp;Port</string>
-      </property>
-      <property name="buddy">
-       <cstring>edit_port</cstring>
-      </property>
-     </widget>
-     <widget class="QLineEdit" name="edit_port">
-      <property name="geometry">
-       <rect>
-        <x>108</x>
-        <y>76</y>
-        <width>113</width>
-        <height>25</height>
-       </rect>
-      </property>
-     </widget>
-     <widget class="QLabel" name="label_topic">
-      <property name="geometry">
-       <rect>
-        <x>254</x>
-        <y>80</y>
-        <width>170</width>
-        <height>20</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Topic: UNKNOWN</string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-      </property>
-     </widget>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_hostname">
+        <property name="text">
+         <string>&amp;Hostname</string>
+        </property>
+        <property name="buddy">
+         <cstring>combo_hostname</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_port">
+        <property name="text">
+         <string>&amp;Port</string>
+        </property>
+        <property name="buddy">
+         <cstring>edit_port</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="edit_port"/>
+      </item>
+      <item row="1" column="2">
+       <widget class="QLabel" name="label_topic">
+        <property name="text">
+         <string>Topic: UNKNOWN</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QComboBox" name="combo_hostname">
+        <property name="editable">
+         <bool>true</bool>
+        </property>
+        <property name="insertPolicy">
+         <enum>QComboBox::NoInsert</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <spacer name="horizontalSpacer_6">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
     </widget>
    </item>
    <item>
@@ -152,26 +142,24 @@
          <property name="title">
           <string>Note</string>
          </property>
-         <widget class="QLabel" name="label">
-          <property name="geometry">
-           <rect>
-            <x>20</x>
-            <y>30</y>
-            <width>401</width>
-            <height>61</height>
-           </rect>
+         <layout class="QHBoxLayout" name="horizontalLayout_7">
+          <property name="rightMargin">
+           <number>0</number>
           </property>
-          <property name="text">
-           <string>Please specify the &lt;b&gt;hostname&lt;/b&gt; and &lt;b&gt;port&lt;/b&gt; of the &lt;b&gt;GUI Server&lt;/b&gt; to connect to.&lt;br/&gt;
-                            &lt;br/&gt;An &lt;b&gt;IP&lt;/b&gt; address can be entered for hostname.</string>
-          </property>
-          <property name="textFormat">
-           <enum>Qt::RichText</enum>
-          </property>
-          <property name="wordWrap">
-           <bool>true</bool>
-          </property>
-         </widget>
+          <item>
+           <widget class="QLabel" name="label">
+            <property name="text">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Please specify the &lt;span style=&quot; font-weight:600;&quot;&gt;hostname&lt;/span&gt; and &lt;span style=&quot; font-weight:600;&quot;&gt;port&lt;/span&gt; of the &lt;span style=&quot; font-weight:600;&quot;&gt;GUI Server&lt;/span&gt; to connect to.&lt;br/&gt;&lt;br/&gt;An &lt;span style=&quot; font-weight:600;&quot;&gt;IP&lt;/span&gt; address can be entered for hostname.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="textFormat">
+             <enum>Qt::RichText</enum>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </widget>
        </item>
       </layout>
@@ -186,6 +174,12 @@
        </property>
        <item>
         <widget class="QGroupBox" name="group_auth">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Ignored">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="minimumSize">
           <size>
            <width>0</width>
@@ -201,62 +195,100 @@
          <property name="title">
           <string>User Authenticated Login</string>
          </property>
-         <widget class="QPushButton" name="authenticate_button">
-          <property name="geometry">
-           <rect>
-            <x>60</x>
-            <y>40</y>
-            <width>301</width>
-            <height>32</height>
-           </rect>
-          </property>
-          <property name="toolTip">
-           <string> Open browser to generate the access code by authenticating the user</string>
-          </property>
-          <property name="text">
-           <string>Open Access Form</string>
-          </property>
-          <property name="autoDefault">
-           <bool>false</bool>
-          </property>
-         </widget>
-         <widget class="QWidget" name="layoutWidget">
-          <property name="geometry">
-           <rect>
-            <x>32</x>
-            <y>96</y>
-            <width>337</width>
-            <height>28</height>
-           </rect>
-          </property>
-          <layout class="QHBoxLayout" name="horizontalLayout_5">
-           <item>
-            <widget class="QLabel" name="label_access_code">
-             <property name="text">
-              <string>&amp;Access Code</string>
-             </property>
-             <property name="buddy">
-              <cstring>edit_access_code</cstring>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLineEdit" name="edit_access_code"/>
-           </item>
-           <item>
-            <widget class="QCheckBox" name="remember_login">
-             <property name="text">
-              <string>Remember me</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
+         <layout class="QGridLayout" name="gridLayout_4">
+          <item row="0" column="0" colspan="3">
+           <widget class="QLabel" name="info_label">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>20</height>
+             </size>
+            </property>
+            <property name="styleSheet">
+             <string notr="true"/>
+            </property>
+            <property name="text">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt; font-style:italic; color:#242424;&quot;&gt;Open Access Form to generate the access code by &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt; font-style:italic; color:#242424;&quot;&gt;authenticating the user&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="textFormat">
+             <enum>Qt::AutoText</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="3" colspan="2">
+           <widget class="QPushButton" name="authenticate_button">
+            <property name="toolTip">
+             <string> Open browser to generate the access code by authenticating the user</string>
+            </property>
+            <property name="text">
+             <string>Open Access Form</string>
+            </property>
+            <property name="autoDefault">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_access_code">
+            <property name="text">
+             <string>&amp;Access Code</string>
+            </property>
+            <property name="buddy">
+             <cstring>edit_access_code</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLineEdit" name="edit_access_code"/>
+          </item>
+          <item row="1" column="2" colspan="2">
+           <widget class="QCheckBox" name="remember_login">
+            <property name="text">
+             <string>Remember me</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="4">
+           <spacer name="horizontalSpacer_2">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>104</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item row="2" column="0" colspan="4">
+           <widget class="QCheckBox" name="skip_authentication">
+            <property name="text">
+             <string>Login without Authenticating (Read-only GUI)</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </widget>
        </item>
       </layout>
      </widget>
      <widget class="QWidget" name="page_classic">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <layout class="QHBoxLayout" name="horizontalLayout_3">
        <property name="leftMargin">
         <number>0</number>
@@ -266,6 +298,12 @@
        </property>
        <item>
         <widget class="QGroupBox" name="group_login_level">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="minimumSize">
           <size>
            <width>444</width>
@@ -281,58 +319,51 @@
          <property name="title">
           <string>Access Level Login</string>
          </property>
-         <widget class="QLabel" name="label_access_level">
-          <property name="geometry">
-           <rect>
-            <x>20</x>
-            <y>40</y>
-            <width>84</width>
-            <height>17</height>
-           </rect>
-          </property>
-          <property name="text">
-           <string>Access &amp;Level</string>
-          </property>
-          <property name="buddy">
-           <cstring>combo_access_level</cstring>
-          </property>
-         </widget>
-         <widget class="QComboBox" name="combo_access_level">
-          <property name="geometry">
-           <rect>
-            <x>108</x>
-            <y>36</y>
-            <width>201</width>
-            <height>25</height>
-           </rect>
-          </property>
-         </widget>
-         <widget class="QLabel" name="label_shell_username">
-          <property name="geometry">
-           <rect>
-            <x>20</x>
-            <y>80</y>
-            <width>84</width>
-            <height>17</height>
-           </rect>
-          </property>
-          <property name="text">
-           <string>Username</string>
-          </property>
-         </widget>
-         <widget class="QLabel" name="label_shell_user">
-          <property name="geometry">
-           <rect>
-            <x>108</x>
-            <y>80</y>
-            <width>201</width>
-            <height>17</height>
-           </rect>
-          </property>
-          <property name="text">
-           <string>UNKNOWN</string>
-          </property>
-         </widget>
+         <layout class="QGridLayout" name="gridLayout_2">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_access_level">
+            <property name="text">
+             <string>Access &amp;Level</string>
+            </property>
+            <property name="buddy">
+             <cstring>combo_access_level</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="combo_access_level"/>
+          </item>
+          <item row="0" column="2">
+           <spacer name="horizontalSpacer">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeType">
+             <enum>QSizePolicy::Fixed</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>180</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_shell_username">
+            <property name="text">
+             <string>Username</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLabel" name="label_shell_user">
+            <property name="text">
+             <string>UNKNOWN</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </widget>
        </item>
       </layout>
@@ -347,6 +378,12 @@
        </property>
        <item>
         <widget class="QGroupBox" name="group_login_readonly">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="minimumSize">
           <size>
            <width>444</width>
@@ -362,92 +399,95 @@
          <property name="title">
           <string>Read-Only Login</string>
          </property>
-         <widget class="QLabel" name="label_readonly_access_level">
-          <property name="geometry">
-           <rect>
-            <x>20</x>
-            <y>40</y>
-            <width>84</width>
-            <height>17</height>
-           </rect>
-          </property>
-          <property name="text">
-           <string>Access Level</string>
-          </property>
-         </widget>
-         <widget class="QLabel" name="label_observer">
-          <property name="geometry">
-           <rect>
-            <x>108</x>
-            <y>40</y>
-            <width>201</width>
-            <height>17</height>
-           </rect>
-          </property>
-          <property name="text">
-           <string>OBSERVER</string>
-          </property>
-         </widget>
-         <widget class="QLabel" name="label_username">
-          <property name="geometry">
-           <rect>
-            <x>20</x>
-            <y>80</y>
-            <width>84</width>
-            <height>17</height>
-           </rect>
-          </property>
-          <property name="text">
-           <string>Username</string>
-          </property>
-         </widget>
-         <widget class="QLabel" name="label_readonly_user">
-          <property name="geometry">
-           <rect>
-            <x>108</x>
-            <y>80</y>
-            <width>201</width>
-            <height>17</height>
-           </rect>
-          </property>
-          <property name="text">
-           <string>UNKNOWN</string>
-          </property>
-         </widget>
+         <layout class="QGridLayout" name="gridLayout_3" columnstretch="0,1">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_readonly_access_level">
+            <property name="text">
+             <string>Access Level</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLabel" name="label_observer">
+            <property name="text">
+             <string>OBSERVER</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_username">
+            <property name="text">
+             <string>Username</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLabel" name="label_readonly_user">
+            <property name="text">
+             <string>UNKNOWN</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </widget>
        </item>
       </layout>
      </widget>
      <widget class="QWidget" name="page_referesh_token">
-      <widget class="QLabel" name="user_info_label">
-       <property name="geometry">
-        <rect>
-         <x>20</x>
-         <y>10</y>
-         <width>401</width>
-         <height>61</height>
-        </rect>
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <property name="topMargin">
+        <number>0</number>
        </property>
-       <property name="text">
-        <string/>
+       <property name="bottomMargin">
+        <number>0</number>
        </property>
-      </widget>
-      <widget class="QPushButton" name="switch_button">
-       <property name="geometry">
-        <rect>
-         <x>280</x>
-         <y>80</y>
-         <width>161</width>
-         <height>32</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Switch User</string>
-       </property>
-       <property name="autoDefault">
-        <bool>false</bool>
-       </property>
-      </widget>
+       <item>
+        <widget class="QLabel" name="user_info_label">
+         <property name="text">
+          <string/>
+         </property>
+         <property name="textFormat">
+          <enum>Qt::RichText</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_8">
+         <item>
+          <spacer name="horizontalSpacer_3">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Fixed</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>250</width>
+             <height>29</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QPushButton" name="switch_button">
+           <property name="text">
+            <string>Switch User</string>
+           </property>
+           <property name="autoDefault">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
      </widget>
     </widget>
    </item>
