@@ -41,8 +41,9 @@ from .utils import get_dialog_ui
 TIMER_DELAY = 500  # ms
 REQUEST_HEADER = "application/json"
 
-USER_INFO = ("You are logged in as '{}'. Click 'Connect' button\nto continue "
-             "or 'Switch User' to change the user.")
+USER_INFO = """<p>You are logged in as '<span style=" font-weight:600;">
+{username}</span>'. Click 'Connect' to continue or</p><p>'Switch User' to
+change the user.</p>"""
 
 
 @unique
@@ -129,6 +130,7 @@ class ReactiveLoginDialog(QDialog):
             self._timer.start()
 
         self.switch_button.clicked.connect(self._switch_to_auth_page)
+        self.skip_authentication.setVisible(False)
 
     # --------------------------------------------------------------------
     # Dialog Public Properties
@@ -300,7 +302,7 @@ class ReactiveLoginDialog(QDialog):
         self._update_button()
 
         if self.login_type is LoginType.REFRESH_TOKEN:
-            text = USER_INFO.format(get_network().username)
+            text = USER_INFO.format(username=get_network().username)
             self.user_info_label.setText(text)
 
     def _update_button(self):
