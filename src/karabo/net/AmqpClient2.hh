@@ -66,7 +66,7 @@ namespace karabo::net {
             CREATE_CONSUMER,
             READY
         };
-        enum class SubscriptionStatus { PENDING, CREATE_EXCHANGE, BIND_QUEUE, READY };
+        enum class SubscriptionStatus { PENDING, CREATE_EXCHANGE, BIND_QUEUE, READY, UNBIND_QUEUE };
 
         // Let's see whether that is a good signature here - maybe better directly provide the deserialised header/body
         // (i.e. run deserialisation of a Strand running in Karabo's normal eventloop)
