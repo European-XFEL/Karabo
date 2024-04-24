@@ -58,8 +58,8 @@ namespace karabo::net {
     // TODO: Once AmqpClient.hh with Transceiver etc. is gone, check which enum values are needed
     enum class AmqpCppErrc {
         eCreateChannelError = 1000,
-        eCreateExchangeError,
-        eCreateQueueError,
+        eCreateExchangeError, // TODO: Rename to eDeclareExchangeError
+        eCreateQueueError,    // TODO: Rename to eDeclareQueueError
         eBindQueueError,
         eCreateConsumerError,
         eConsumerCancelError,
