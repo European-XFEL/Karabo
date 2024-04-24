@@ -26,6 +26,7 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 
+#include <atomic>
 #include <string>
 #include <vector>
 
@@ -35,6 +36,7 @@ class Amqp_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(Amqp_Test);
     CPPUNIT_TEST(testConnection);
     CPPUNIT_TEST(testClient);
+    CPPUNIT_TEST(testClientSameId);
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -44,9 +46,12 @@ class Amqp_Test : public CPPUNIT_NS::TestFixture {
 
    private:
     std::vector<std::string> m_defaultBrokers;
+    const std::chrono::seconds m_timeout;
+    std::atomic<bool> m_loggingIsSetup;
 
     void testConnection();
     void testClient();
+    void testClientSameId();
 };
 
 #endif /* KARABO_AMQP_TEST_HH */
