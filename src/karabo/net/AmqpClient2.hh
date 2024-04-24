@@ -54,19 +54,8 @@ namespace karabo::net {
         // KARABO_CONFIGURATION_BASE_CLASS
 
         /** Channel status tells what should be the next step to do in channel preparation */
-        // not clear - all steps without subscriptions?
-        enum class ChannelStatus {
-            REQUEST,
-            CREATE,
-            // CHECK_QUEUE,
-            // RECREATE,
-            CREATE_QUEUE,
-            // CREATE_EXCHANGE,
-            // BIND_QUEUE,
-            CREATE_CONSUMER,
-            READY
-        };
-        enum class SubscriptionStatus { PENDING, CREATE_EXCHANGE, BIND_QUEUE, READY, UNBIND_QUEUE };
+        enum class ChannelStatus { REQUEST, CREATE, CREATE_QUEUE, CREATE_CONSUMER, READY };
+        enum class SubscriptionStatus { PENDING, DECLARE_EXCHANGE, BIND_QUEUE, READY, UNBIND_QUEUE };
 
         // Let's see whether that is a good signature here - maybe better directly provide the deserialised header/body
         // (i.e. run deserialisation of a Strand running in Karabo's normal eventloop)
@@ -125,6 +114,7 @@ namespace karabo::net {
 
         AmqpConnection::Pointer m_connection;
         const std::string m_instanceId;
+        std::string m_queue; // may differ from id since queue needs to be unique
         const AMQP::Table m_queueArgs;
         const ReadHandler m_readHandler;
 
