@@ -259,7 +259,9 @@ def utc_to_local(utc_str, format='%Y-%m-%d %H:%M:%S'):
 
 
 VALID_PROJECT_OBJECT_NAME = re.compile(r"^[\w-]+(/[\w-]+)*$")
-VALID_PROJECT_MACRO_NAME = re.compile(r"^[a-zA-Z][a-zA-Z0-9]*$")
+# The macro name should start with a letter and can contain:
+# letters, numbers, underscores and slashes
+VALID_PROJECT_MACRO_NAME = re.compile(r"^[a-zA-Z][a-zA-Z0-9_\/]*$")
 
 
 class InputValidator(QValidator):
