@@ -275,10 +275,13 @@ namespace karabo {
             channelPtr->onReady([onComplete, channelPtr]() {
                 const char* msg = nullptr;
                 // Reset error handler: Previous one indicates creation failure. When will the new one be called?
+                // E.g. "Channel reports: ACCESS_REFUSED - queue '<name>' in vhost '/xxx' in exclusive use"
+                // when a channel creates a consumer for a queue that already has an AMQP::exclusive consumer.
+                // Note that text after "...reports: " is also sent to the method registered with
+                // channel->consume(...).onError(..) and that that channel is disabled afterwards.
                 channelPtr->onError([](const char* errMsg) {
                     KARABO_LOG_FRAMEWORK_ERROR_C("AmqpConnection") << "Channel reports: " << errMsg;
                 });
-                KARABO_LOG_FRAMEWORK_DEBUG_C("AmqpConnection") << "Channel created.";
                 onComplete(channelPtr, msg);
             });
         }
