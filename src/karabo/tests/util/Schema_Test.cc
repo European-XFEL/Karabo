@@ -831,6 +831,27 @@ void Schema_Test::testHelpFunction() {
      */
 }
 
+#define TEST_ARRAY_BOUNDARIES(TYPE, NAME)                                                                              \
+    workSchema = schema;                                                                                               \
+    CPPUNIT_ASSERT_THROW(                                                                                              \
+          OVERWRITE_ELEMENT(workSchema).key(NAME).setNewDefaultValue(std::vector<TYPE>(vector_min_size - 1)).commit(), \
+          karabo::util::ParameterException);                                                                           \
+    workSchema = schema;                                                                                               \
+    CPPUNIT_ASSERT_THROW(                                                                                              \
+          OVERWRITE_ELEMENT(workSchema).key(NAME).setNewDefaultValue(std::vector<TYPE>(vector_max_size + 1)).commit(), \
+          karabo::util::ParameterException);                                                                           \
+    workSchema = schema;                                                                                               \
+    CPPUNIT_ASSERT_NO_THROW(                                                                                           \
+          OVERWRITE_ELEMENT(workSchema).key(NAME).setNewDefaultValue(std::vector<TYPE>(vector_min_size)).commit());    \
+    workSchema = schema;                                                                                               \
+    CPPUNIT_ASSERT_NO_THROW(                                                                                           \
+          OVERWRITE_ELEMENT(workSchema).key(NAME).setNewDefaultValue(std::vector<TYPE>(vector_max_size)).commit());    \
+    workSchema = schema;                                                                                               \
+    CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema).key(NAME).setNewMinSize(vector_default_size + 1).commit(),      \
+                         karabo::util::ParameterException);                                                            \
+    workSchema = schema;                                                                                               \
+    CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema).key(NAME).setNewMaxSize(vector_default_size - 1).commit(),      \
+                         karabo::util::ParameterException)
 
 void Schema_Test::testOverwriteElement() {
     {
@@ -897,6 +918,121 @@ void Schema_Test::testOverwriteElement() {
               .defaultValue(0)
               .minExc(-5)
               .maxExc(5)
+              .commit();
+
+        constexpr unsigned int vector_min_size{10};
+        constexpr unsigned int vector_max_size{15};
+        constexpr unsigned int vector_default_size{12};
+
+        VECTOR_BOOL_ELEMENT(schema)
+              .key("boolVector")
+              .assignmentOptional()
+              .defaultValue(std::vector<bool>(vector_default_size))
+              .minSize(vector_min_size)
+              .maxSize(vector_max_size)
+              .commit();
+        VECTOR_CHAR_ELEMENT(schema)
+              .key("charVector")
+              .assignmentOptional()
+              .defaultValue(std::vector<char>(vector_default_size))
+              .minSize(vector_min_size)
+              .maxSize(vector_max_size)
+              .commit();
+        VECTOR_INT8_ELEMENT(schema)
+              .key("int8Vector")
+              .assignmentOptional()
+              .defaultValue(std::vector<signed char>(vector_default_size))
+              .minSize(vector_min_size)
+              .maxSize(vector_max_size)
+              .commit();
+        VECTOR_UINT8_ELEMENT(schema)
+              .key("uint8Vector")
+              .assignmentOptional()
+              .defaultValue(std::vector<unsigned char>(vector_default_size))
+              .minSize(vector_min_size)
+              .maxSize(vector_max_size)
+              .commit();
+        VECTOR_INT16_ELEMENT(schema)
+              .key("int16Vector")
+              .assignmentOptional()
+              .defaultValue(std::vector<signed short int>(vector_default_size))
+              .minSize(vector_min_size)
+              .maxSize(vector_max_size)
+              .commit();
+        VECTOR_UINT16_ELEMENT(schema)
+              .key("uint16Vector")
+              .assignmentOptional()
+              .defaultValue(std::vector<unsigned short int>(vector_default_size))
+              .minSize(vector_min_size)
+              .maxSize(vector_max_size)
+              .commit();
+        VECTOR_INT32_ELEMENT(schema)
+              .key("int32Vector")
+              .assignmentOptional()
+              .defaultValue(std::vector<signed int>(vector_default_size))
+              .minSize(vector_min_size)
+              .maxSize(vector_max_size)
+              .commit();
+        VECTOR_UINT32_ELEMENT(schema)
+              .key("uint32Vector")
+              .assignmentOptional()
+              .defaultValue(std::vector<unsigned int>(vector_default_size))
+              .minSize(vector_min_size)
+              .maxSize(vector_max_size)
+              .commit();
+        VECTOR_INT64_ELEMENT(schema)
+              .key("int64Vector")
+              .assignmentOptional()
+              .defaultValue(std::vector<signed long long int>(vector_default_size))
+              .minSize(vector_min_size)
+              .maxSize(vector_max_size)
+              .commit();
+        VECTOR_UINT64_ELEMENT(schema)
+              .key("uint64Vector")
+              .assignmentOptional()
+              .defaultValue(std::vector<unsigned long long int>(vector_default_size))
+              .minSize(vector_min_size)
+              .maxSize(vector_max_size)
+              .commit();
+        VECTOR_FLOAT_ELEMENT(schema)
+              .key("floatVector")
+              .assignmentOptional()
+              .defaultValue(std::vector<float>(vector_default_size))
+              .minSize(vector_min_size)
+              .maxSize(vector_max_size)
+              .commit();
+        VECTOR_DOUBLE_ELEMENT(schema)
+              .key("doubleVector")
+              .assignmentOptional()
+              .defaultValue(std::vector<double>(vector_default_size))
+              .minSize(vector_min_size)
+              .maxSize(vector_max_size)
+              .commit();
+        VECTOR_STRING_ELEMENT(schema)
+              .key("stringVector")
+              .assignmentOptional()
+              .defaultValue(std::vector<std::string>(vector_default_size))
+              .minSize(vector_min_size)
+              .maxSize(vector_max_size)
+              .commit();
+
+        Schema rowSchema;
+        STRING_ELEMENT(rowSchema).key("string").assignmentOptional().noDefaultValue().commit();
+        INT64_ELEMENT(rowSchema).key("int").assignmentOptional().noDefaultValue().commit();
+
+        Hash row{"string", "Hello", "int", 1ll};
+
+        constexpr unsigned int table_min_size{3};
+        constexpr unsigned int table_max_size{10};
+        constexpr unsigned int table_default_size{5};
+
+        TABLE_ELEMENT(schema)
+              .key("tableElement")
+              .setColumns(rowSchema)
+              .assignmentOptional()
+              .defaultValue(std::vector<Hash>{table_default_size, row})
+              .minSize(table_min_size)
+              .maxSize(table_max_size)
               .commit();
 
 
@@ -1012,8 +1148,69 @@ void Schema_Test::testOverwriteElement() {
                              karabo::util::ParameterException);
 
         // We skip explicit testing of BOOL, CHAR, [U]INT8, INT16, UINT32, [U]INT64, FLOAT
+
+        // See macro definition above. We check boundary cases, one case less
+        // than minimum and one greater than maximum. Also, one test that
+        // changes the minimum value, and another that changes the maximum value.
+
+        TEST_ARRAY_BOUNDARIES(bool, "boolVector");
+        TEST_ARRAY_BOUNDARIES(char, "charVector");
+        TEST_ARRAY_BOUNDARIES(signed char, "int8Vector");
+        TEST_ARRAY_BOUNDARIES(unsigned char, "uint8Vector");
+        TEST_ARRAY_BOUNDARIES(short, "int16Vector");
+        TEST_ARRAY_BOUNDARIES(unsigned short, "uint16Vector");
+        TEST_ARRAY_BOUNDARIES(int, "int32Vector");
+        TEST_ARRAY_BOUNDARIES(unsigned int, "uint32Vector");
+        TEST_ARRAY_BOUNDARIES(long long, "int64Vector");
+        TEST_ARRAY_BOUNDARIES(unsigned long long, "uint64Vector");
+        TEST_ARRAY_BOUNDARIES(float, "floatVector");
+        TEST_ARRAY_BOUNDARIES(double, "doubleVector");
+        TEST_ARRAY_BOUNDARIES(std::string, "stringVector");
+
+        // We check boundary cases, one case less than minimum and one greater
+        // than maximum. Also, one test that changes the minimum value, and
+        // another that changes the maximum value.
+        //
+        // 'row' is defined with 'tableElement' above, to make code easier to
+        // read
+        workSchema = schema;                               // start clean
+        CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema) //
+                                   .key("tableElement")
+                                   .setNewDefaultValue(std::vector<Hash>{table_min_size - 1, row})
+                                   .commit(),
+                             karabo::util::ParameterException);
+        workSchema = schema;                               // start clean
+        CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema) //
+                                   .key("tableElement")
+                                   .setNewDefaultValue(std::vector<Hash>{table_max_size + 1, row})
+                                   .commit(),
+                             karabo::util::ParameterException);
+        workSchema = schema;                                  // start clean
+        CPPUNIT_ASSERT_NO_THROW(OVERWRITE_ELEMENT(workSchema) //
+                                      .key("tableElement")
+                                      .setNewDefaultValue(std::vector<Hash>{table_min_size, row})
+                                      .commit());
+        workSchema = schema;                                  // start clean
+        CPPUNIT_ASSERT_NO_THROW(OVERWRITE_ELEMENT(workSchema) //
+                                      .key("tableElement")
+                                      .setNewDefaultValue(std::vector<Hash>{table_max_size, row})
+                                      .commit());
+        workSchema = schema;                               // start clean
+        CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema) //
+                                   .key("tableElement")
+                                   .setNewMinSize(table_default_size + 1)
+                                   .commit(),
+                             karabo::util::ParameterException);
+        workSchema = schema;                               // start clean
+        CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema) //
+                                   .key("tableElement")
+                                   .setNewMaxSize(table_default_size - 1)
+                                   .commit(),
+                             karabo::util::ParameterException);
     }
 }
+
+#undef TEST_ARRAY_BOUNDARIES
 
 
 void Schema_Test::testMerge() {

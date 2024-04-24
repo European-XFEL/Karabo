@@ -378,6 +378,51 @@ namespace karabo {
                 case Types::ReferenceType::DOUBLE:
                     checkTypedBoundaries<double>();
                     break;
+
+                    // Vector types
+
+                case Types::ReferenceType::VECTOR_BOOL:
+                    checkVectorBoundaries<bool>();
+                    break;
+                case Types::ReferenceType::VECTOR_CHAR:
+                    checkVectorBoundaries<char>();
+                    break;
+                case Types::ReferenceType::VECTOR_INT8:
+                    checkVectorBoundaries<signed char>();
+                    break;
+                case Types::ReferenceType::VECTOR_UINT8:
+                    checkVectorBoundaries<unsigned char>();
+                    break;
+                case Types::ReferenceType::VECTOR_INT16:
+                    checkVectorBoundaries<short int>();
+                    break;
+                case Types::ReferenceType::VECTOR_UINT16:
+                    checkVectorBoundaries<unsigned short int>();
+                    break;
+                case Types::ReferenceType::VECTOR_INT32:
+                    checkVectorBoundaries<int>();
+                    break;
+                case Types::ReferenceType::VECTOR_UINT32:
+                    checkVectorBoundaries<unsigned int>();
+                    break;
+                case Types::ReferenceType::VECTOR_INT64:
+                    checkVectorBoundaries<long long int>();
+                    break;
+                case Types::ReferenceType::VECTOR_UINT64:
+                    checkVectorBoundaries<unsigned long long int>();
+                    break;
+                case Types::ReferenceType::VECTOR_FLOAT:
+                    checkVectorBoundaries<float>();
+                    break;
+                case Types::ReferenceType::VECTOR_DOUBLE:
+                    checkVectorBoundaries<double>();
+                    break;
+                case Types::ReferenceType::VECTOR_STRING:
+                    checkVectorBoundaries<std::string>();
+                    break;
+                case Types::ReferenceType::VECTOR_HASH:
+                    checkVectorBoundaries<Hash>();
+                    break;
                 default:
                     // Avoid compilation warnings
                     break;
