@@ -41,6 +41,7 @@ namespace karabo::net {
                              ReadHandler readHandler)
         : m_connection(std::move(connection)),
           m_instanceId(std::move(instanceId)),
+          m_queue(m_instanceId),
           m_queueArgs(std::move(queueArgs)),
           m_readHandler(std::move(readHandler)),
           m_channelStatus(ChannelStatus::REQUEST) {}
@@ -192,6 +193,10 @@ namespace karabo::net {
 
 
     void AmqpClient2::asyncPrepareChannel(AsyncHandler onChannelPrepared) {
+        if (m_channelStatus != ChannelStatus::CREATE) {
+            KARABO_LOG_FRAMEWORK_WARN << m_instanceId << ".asyncPrepareChannel called in status "
+                                      << static_cast<int>(m_channelStatus);
+        }
         // TODO:
         // Check whether we can safely do this or channel is in an unforeseen state
         m_channelPreparationCallback = std::move(onChannelPrepared);
@@ -224,20 +229,35 @@ namespace karabo::net {
                 KARABO_LOG_FRAMEWORK_WARN << "Inconsistent channel state in moveChannelState: REQUEST or CREATE: "
                                           << static_cast<int>(m_channelStatus);
                 break;
-            case ChannelStatus::CREATE_QUEUE:
-                m_channel->declareQueue(m_instanceId, AMQP::autodelete, m_queueArgs)
-                      .onSuccess([wSelf](const std::string& name, int /*msgcount*/, int /*consumercount*/) {
+            case ChannelStatus::CREATE_QUEUE: {
+                m_channel->declareQueue(m_queue, AMQP::autodelete, m_queueArgs)
+                      .onSuccess([wSelf](const std::string& name, int msgCount, int consumerCount) {
                           if (auto self = wSelf.lock()) {
-                              KARABO_LOG_FRAMEWORK_DEBUG_C("AmqpClient")
-                                    << "Queue created for id " << self->m_instanceId;
-                              self->m_channelStatus = ChannelStatus::CREATE_CONSUMER;
-                              self->moveChannelState();
+                              if (consumerCount > 0) {
+                                  // Queue already exists, but we need a unique one for us - attach timestamp
+                                  KARABO_LOG_FRAMEWORK_INFO_C("AmqpClient")
+                                        << "Queue " << self->m_queue
+                                        << " already has a consumer, append some bytes from clock and try again.";
+                                  std::ostringstream oss;
+                                  oss << ":" << std::hex << std::chrono::steady_clock::now().time_since_epoch().count();
+                                  self->m_queue += oss.str();
+                                  self->moveChannelState(); // simply try again with new queue name
+                              } else {
+                                  const std::string queue(self->m_instanceId == self->m_queue ? ""
+                                                                                              : self->m_queue + " ");
+                                  KARABO_LOG_FRAMEWORK_DEBUG_C("AmqpClient")
+                                        << "Queue " << queue << "declared for id " << self->m_instanceId
+                                        << " (message/consumer cout: " << msgCount << "/" << consumerCount << ")";
+                                  self->m_channelStatus = ChannelStatus::CREATE_CONSUMER;
+                                  self->moveChannelState();
+                              }
                           }
                       }) // end of success handler
                       .onError([wSelf](const char* message) {
                           if (auto self = wSelf.lock()) {
+                              const std::string queue(self->m_instanceId == self->m_queue ? "" : self->m_queue + " ");
                               KARABO_LOG_FRAMEWORK_WARN_C("AmqpClient")
-                                    << self->m_instanceId << ": Queue creation failed: " << message;
+                                    << self->m_instanceId << ": Declaring queue " << queue << "failed: " << message;
                               // reset channel
                               self->m_channel.reset();
                               self->m_channelStatus = ChannelStatus::REQUEST;
@@ -246,10 +266,11 @@ namespace karabo::net {
                               callback(make_error_code(AmqpCppErrc::eCreateQueueError));
                           }
                       }); // end of failure handler
-                break;
+            } break;
             case ChannelStatus::CREATE_CONSUMER:
-                // Automatic acknowledgement  FIXME later: + AMQP::exclusive?
-                m_channel->consume(m_instanceId, AMQP::noack)
+                // Use m_queue instead of m_instance since it is unique.
+                // And we want automatic acknowledgement and must be the only consumer on that queue
+                m_channel->consume(m_queue, AMQP::noack + AMQP::exclusive)
                       .onReceived([wSelf](const AMQP::Message& msg, uint64_t deliveryTag, bool redelivered) {
                           if (auto self = wSelf.lock()) {
                               if (redelivered) {
@@ -259,15 +280,17 @@ namespace karabo::net {
                                         << ", size " << msg.bodySize();
                               }
                               // Copy of message body not avoidable although in AMQP io context here: AMQP::Message
-                              // better be destructed in io context event loop and deserialisation better not done there
+                              // better be destructed in io context event loop and deserialisation better done elsewhere
                               auto vec = std::make_shared<std::vector<char>>(msg.body(), msg.body() + msg.bodySize());
                               self->m_readHandler(vec, msg.exchange(), msg.routingkey());
                           }
                       })
                       .onSuccess([wSelf](const std::string& consumerTag) {
                           if (auto self = wSelf.lock()) {
-                              KARABO_LOG_FRAMEWORK_DEBUG_C("AmqpClient")
-                                    << "Consumer for id " << self->m_instanceId << " ready, tag: " << consumerTag;
+                              const std::string queue(
+                                    self->m_instanceId == self->m_queue ? "" : " (queue " + self->m_queue + ")");
+                              KARABO_LOG_FRAMEWORK_DEBUG_C("AmqpClient") << "Consumer for id " << self->m_instanceId
+                                                                         << queue << " ready, tag: " << consumerTag;
                               self->m_channelStatus = ChannelStatus::READY;
                               AsyncHandler callback;
                               callback.swap(self->m_channelPreparationCallback);
@@ -276,13 +299,28 @@ namespace karabo::net {
                       })
                       .onError([this, wSelf](const char* message) {
                           if (auto self = wSelf.lock()) {
-                              KARABO_LOG_FRAMEWORK_WARN_C("AmqpClient")
-                                    << self->m_instanceId << ": Consumer creation failed: " << message;
+                              // We may have failed because in parallel to us another instance started with the same id
+                              // and we both created the queue with our id before the other one could create the
+                              // consumer. The 2nd one that creates the consumer will fail here with a message like
+                              //     "ACCESS_REFUSED - queue 'XXXX' in vhost '/yyyy' in exclusive use"
+                              // and the channel is then not valid anymore, so start again
                               self->m_channel.reset();
-                              self->m_channelStatus = ChannelStatus::REQUEST;
-                              AsyncHandler callback;
-                              callback.swap(self->m_channelPreparationCallback);
-                              callback(make_error_code(AmqpCppErrc::eCreateConsumerError));
+                              if (std::string(message).find("in exclusive use") != std::string::npos) {
+                                  KARABO_LOG_FRAMEWORK_WARN_C("AmqpClient")
+                                        << "Queue " << self->m_queue << ": Consumer creation failed: '" << message
+                                        << "'. Need to recreate the channel.";
+                                  self->m_channelStatus = ChannelStatus::CREATE;
+                                  AsyncHandler callback;
+                                  callback.swap(self->m_channelPreparationCallback);
+                                  self->asyncPrepareChannel(std::move(callback));
+                              } else {
+                                  KARABO_LOG_FRAMEWORK_WARN_C("AmqpClient")
+                                        << "Queue " << self->m_queue << ": Consumer creation failed: " << message;
+                                  self->m_channelStatus = ChannelStatus::REQUEST;
+                                  AsyncHandler callback;
+                                  callback.swap(self->m_channelPreparationCallback);
+                                  callback(make_error_code(AmqpCppErrc::eCreateConsumerError));
+                              }
                           }
                       });
                 break;
@@ -309,7 +347,7 @@ namespace karabo::net {
                 } else {
                     KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << " subscribed for exchange '" << exchange
                                                << "' and routing key '" << routingKey << "'";
-                    statusAndHandler.status = SubscriptionStatus::CREATE_EXCHANGE;
+                    statusAndHandler.status = SubscriptionStatus::DECLARE_EXCHANGE;
                     moveSubscriptionState(exchange, routingKey);
                 }
             }
@@ -333,7 +371,7 @@ namespace karabo::net {
                                            << "' to exchange '" << exchange << "' and routing key '" << routingKey
                                            << "'.";
                 break;
-            case SubscriptionStatus::CREATE_EXCHANGE: {
+            case SubscriptionStatus::DECLARE_EXCHANGE: {
                 const int flags = 0; // Karabo 3: switch to AMQP::autodelete (not AMQP::durable!)
                 m_channel->declareExchange(exchange, AMQP::topic, flags)
                       .onSuccess([wSelf, exchange, routingKey]() {
@@ -341,7 +379,7 @@ namespace karabo::net {
                               auto it = self->m_subscriptions.find({exchange, routingKey});
                               if (it == self->m_subscriptions.end()) { // Should not happen!
                                   KARABO_LOG_FRAMEWORK_ERROR_C("AmqpClient")
-                                        << "Creating exchange " << exchange << " for routing key " << routingKey
+                                        << "Declaring exchange " << exchange << " for routing key " << routingKey
                                         << " succeeded, but subscription gone!";
                               } else {
                                   it->second.status = SubscriptionStatus::BIND_QUEUE;
@@ -351,15 +389,15 @@ namespace karabo::net {
                       })
                       .onError([wSelf, exchange, routingKey](const char* message) {
                           if (auto self = wSelf.lock()) {
-                              KARABO_LOG_FRAMEWORK_WARN_C("AmqpClient")
-                                    << "Creating exchange " << exchange << " for routing key " << routingKey
-                                    << " failed: " << message;
                               auto it = self->m_subscriptions.find({exchange, routingKey});
                               if (it == self->m_subscriptions.end()) { // Should not happen!
                                   KARABO_LOG_FRAMEWORK_ERROR_C("AmqpClient")
-                                        << "Creating exchange " << exchange << " for routing key " << routingKey
+                                        << "Declaring exchange " << exchange << " for routing key " << routingKey
                                         << " failed, but subscription gone!";
                               } else {
+                                  KARABO_LOG_FRAMEWORK_WARN_C("AmqpClient")
+                                        << "Declaring exchange " << exchange << " for routing key " << routingKey
+                                        << " failed: " << message;
                                   const AsyncHandler callback(std::move(it->second.onSubscription));
                                   self->m_subscriptions.erase(it);
                                   callback(make_error_code(AmqpCppErrc::eCreateExchangeError));
@@ -368,13 +406,13 @@ namespace karabo::net {
                       });
             } break;
             case SubscriptionStatus::BIND_QUEUE: {
-                m_channel->bindQueue(exchange, m_instanceId, routingKey)
+                m_channel->bindQueue(exchange, m_queue, routingKey)
                       .onSuccess([wSelf, exchange, routingKey]() {
                           if (auto self = wSelf.lock()) {
                               auto it = self->m_subscriptions.find({exchange, routingKey});
                               if (it == self->m_subscriptions.end()) { // Should not happen!
                                   KARABO_LOG_FRAMEWORK_ERROR_C("AmqpClient")
-                                        << "Binding queue " << self->m_instanceId << " to exchange " << exchange
+                                        << "Binding queue " << self->m_queue << " to exchange " << exchange
                                         << " with routing key " << routingKey << " succeeded, but subscription gone!";
                               } else {
                                   it->second.status = SubscriptionStatus::READY;
@@ -386,15 +424,15 @@ namespace karabo::net {
                       })
                       .onError([wSelf, exchange, routingKey](const char* message) {
                           if (auto self = wSelf.lock()) {
-                              KARABO_LOG_FRAMEWORK_WARN_C("AmqpClient")
-                                    << "Binding queue " << self->m_instanceId << " to exchange " << exchange
-                                    << " with routing key " << routingKey << " failed: " << message;
                               auto it = self->m_subscriptions.find({exchange, routingKey});
                               if (it == self->m_subscriptions.end()) { // Should not happen!
                                   KARABO_LOG_FRAMEWORK_ERROR_C("AmqpClient")
-                                        << "Binding queue " << self->m_instanceId << " to exchange " << exchange
+                                        << "Binding queue " << self->m_queue << " to exchange " << exchange
                                         << " with routing key " << routingKey << " failed and subscription gone!";
                               } else { // Call handler with failure
+                                  KARABO_LOG_FRAMEWORK_WARN_C("AmqpClient")
+                                        << "Binding queue " << self->m_queue << " to exchange " << exchange
+                                        << " with routing key " << routingKey << " failed: " << message;
                                   const AsyncHandler callback(std::move(it->second.onSubscription));
                                   self->m_subscriptions.erase(it);
                                   callback(make_error_code(AmqpCppErrc::eBindQueueError));
@@ -403,17 +441,17 @@ namespace karabo::net {
                       });
             } break;
             case SubscriptionStatus::READY: // Nothing anymore to do - how can this call happen?
-                KARABO_LOG_FRAMEWORK_WARN << "Nothing to do for subscription of '" << m_instanceId << "' to exchange '"
+                KARABO_LOG_FRAMEWORK_WARN << "Nothing to do for subscription of '" << m_queue << "' to exchange '"
                                           << exchange << "' and routing key '" << routingKey << "' since ready.";
                 break;
             case SubscriptionStatus::UNBIND_QUEUE:
-                m_channel->unbindQueue(exchange, m_instanceId, routingKey)
+                m_channel->unbindQueue(exchange, m_queue, routingKey)
                       .onSuccess([wSelf, exchange, routingKey]() {
                           if (auto self = wSelf.lock()) {
                               auto it = self->m_subscriptions.find({exchange, routingKey});
                               if (it == self->m_subscriptions.end()) { // Should not happen!
                                   KARABO_LOG_FRAMEWORK_ERROR_C("AmqpClient")
-                                        << "Unbinding queue " << self->m_instanceId << " from exchange " << exchange
+                                        << "Unbinding queue " << self->m_queue << " from exchange " << exchange
                                         << " with routing key " << routingKey << " succeeded, but subscription gone!";
                               } else {
                                   const AsyncHandler callback(std::move(it->second.onSubscription));
@@ -427,11 +465,11 @@ namespace karabo::net {
                               auto it = self->m_subscriptions.find({exchange, routingKey});
                               if (it == self->m_subscriptions.end()) { // Should not happen!
                                   KARABO_LOG_FRAMEWORK_ERROR_C("AmqpClient")
-                                        << "Unbinding queue " << self->m_instanceId << " from exchange " << exchange
+                                        << "Unbinding queue " << self->m_queue << " from exchange " << exchange
                                         << " with routing key " << routingKey << " failed and subscription gone!";
                               } else { // Call handler with failure, but keep subscription (but erase handler)
                                   KARABO_LOG_FRAMEWORK_WARN_C("AmqpClient")
-                                        << "Unbinding queue " << self->m_instanceId << " from exchange " << exchange
+                                        << "Unbinding queue " << self->m_queue << " from exchange " << exchange
                                         << " with routing key " << routingKey
                                         << " failed, consider subscription alive!";
                                   it->second.status = SubscriptionStatus::READY;
