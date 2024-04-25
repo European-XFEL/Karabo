@@ -16,7 +16,6 @@
 # or FITNESS FOR A PARTICULAR PURPOSE.
 from inspect import signature
 
-import pytest
 from qtpy.QtCore import QSize
 
 from karabo.common.api import WeakMethodRef
@@ -877,17 +876,10 @@ def test_handle_saveConfigurationFromName(gui_app, mocker):
         'Saving a configuration for XFEL/CAM/1 failed!', details='')
 
 
-@pytest.fixture
-def manager(mocker):
+def test_handle_destinations(mocker):
     network = mocker.Mock()
     with singletons(network=network):
         manager = Manager()
-        return manager
-
-
-def test_handle_destinations(mocker, manager):
-
-    with singletons(manager=manager):
         broadcast = mocker.patch(
             "karabogui.singletons.manager.broadcast_event")
         reply = Hash("destinations", ["one", "two", "three"])
@@ -897,9 +889,11 @@ def test_handle_destinations(mocker, manager):
             KaraboEvent.ActiveDestinations, ["one", "two", "three"])
 
 
-def test_handle_saveLogBook(mocker, manager):
+def test_handle_saveLogBook(mocker):
     logger = mocker.patch("karabogui.singletons.manager.get_logger")
-    with singletons(manager=manager):
+    network = mocker.Mock()
+    with singletons(network=network):
+        manager = Manager()
         args = Hash("dataType", "image")
         h = Hash("args", args)
         manager.handle_saveLogBook(success=True, request=h, reply=h)
@@ -908,8 +902,10 @@ def test_handle_saveLogBook(mocker, manager):
         assert logger().info.call_count == 1
 
 
-def test_handle_onEscalate(mocker, manager):
-    with singletons(manager=manager):
+def test_handle_onEscalate(mocker):
+    network = mocker.Mock()
+    with singletons(network=network):
+        manager = Manager()
         broadcast = mocker.patch(
             "karabogui.singletons.manager.broadcast_event")
         manager.handle_onEscalate(success=False)
@@ -920,8 +916,10 @@ def test_handle_onEscalate(mocker, manager):
         broadcast.assert_called_with(KaraboEvent.LoginUserChanged, {})
 
 
-def test_handle_onDeescalate(mocker, manager):
-    with singletons(manager=manager):
+def test_handle_onDeescalate(mocker):
+    network = mocker.Mock()
+    with singletons(network=network):
+        manager = Manager()
         broadcast = mocker.patch(
             "karabogui.singletons.manager.broadcast_event")
 
@@ -930,8 +928,10 @@ def test_handle_onDeescalate(mocker, manager):
         broadcast.assert_called_with(KaraboEvent.LoginUserChanged, {})
 
 
-def test_handle_onEscalationExpired(mocker, manager):
-    with singletons(manager=manager):
+def test_handle_onEscalationExpired(mocker):
+    network = mocker.Mock()
+    with singletons(network=network):
+        manager = Manager()
         broadcast = mocker.patch(
             "karabogui.singletons.manager.broadcast_event")
         manager.handle_onEscalationExpired(levelBeforeEscalation=2)
