@@ -123,7 +123,7 @@ class Hash(OrderedDict):
 
         def _is_table(value):
             """Check if the value belong to a table value"""
-            if (isinstance(value,  list) and len(value)
+            if (isinstance(value, list) and len(value)
                     and isinstance(value[0], Hash)):
                 return HashList.hashlist_format(value) is HashListFormat.Table
             return False
@@ -390,8 +390,7 @@ class Hash(OrderedDict):
         # Take a list for protection from threaded access
         iterable = list(Hash.flat_iterall(self, empty=True))
         for key, value, attrs in iterable:
-            ret[key] = deepcopy(value, memo)
-            ret[key, ...] = deepcopy(attrs, memo)
+            ret.setElement(key, deepcopy(value, memo), deepcopy(attrs, memo))
 
         return ret
 
