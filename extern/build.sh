@@ -101,8 +101,6 @@ install_python() {
     safeRunCommandQuiet "conan config set general.revisions_enabled=1"
     safeRunCommandQuiet "conan config set general.default_package_id_mode=package_revision_mode"
 
-    # python package opts
-    local package_opts="./resources/python/conanfile.py cpython/$PYTHON_VERSION@karabo/$CONAN_RECIPE_CHANNEL"
     # configure prefix paths
     local folder_opts="--install-folder=$INSTALL_PREFIX/conan_toolchain-$TARGET_ARCH --output-folder=$INSTALL_PREFIX"
     # build python if not found in conan cache
@@ -113,14 +111,13 @@ install_python() {
     if [[ $INSTALL_PREFIX == *"CentOS-7"* ]]; then
         safeRunCommandQuiet "conan install patchelf/0.13@ --build=patchelf --build=missing $profile_opts"
         safeRunCommandQuiet "conan install b2/4.9.6@ --build=b2 --build=missing $profile_opts"
+        safeRunCommandQuiet "conan install expat/2.6.0@ --build=expat --build=missing -o shared=True $profile_opts"
         # openssl:openssldir=/etc/pki/tls on CentOS7
         build_opts="$build_opts --build=openssl -o openssl/*:openssldir=/etc/pki/tls"
-        safeRunCommand "conan install openssl/1.1.1l@ -o shared=True $build_opts $profile_opts"
+        safeRunCommandQuiet "conan install openssl/1.1.1l@ -o shared=True $build_opts $profile_opts"
     else
         build_opts="$build_opts -o openssl/*:openssldir=/etc/ssl"
     fi
-    # copy conan recipe from extern/resources/python to local conan cache
-    safeRunCommandQuiet "conan export $package_opts"
     # install packages listed in the extern/conanfile-bootstrap.txt
     safeRunCommandQuiet "conan install conanfile-bootstrap.txt $folder_opts $build_opts $profile_opts"
 
@@ -178,12 +175,12 @@ install_from_deps() {
         safeRunCommandQuiet "chmod +w $INSTALL_PREFIX/include/*"
 
         # fix rpaths
-        safeRunCommand "./relocate_deps.sh $INSTALL_PREFIX"
+        safeRunCommandQuiet "./relocate_deps.sh $INSTALL_PREFIX"
 
     # for whatever reason conan does not reliably copy *.pc files from its root directory
     # we do this here instead, and also capture any .pc files our from source builds created
     # in the process.
-    safeRunCommand "mkdir -p $INSTALL_PREFIX/lib/pkgconfig/"
+    safeRunCommandQuiet "mkdir -p $INSTALL_PREFIX/lib/pkgconfig/"
     cp $INSTALL_PREFIX/conan_toolchain-$TARGET_ARCH/*.pc $INSTALL_PREFIX/lib/pkgconfig/
     # now fix occurences of prefixes such that packages can use the "--define-prefix" option
     # of pkgconfig
