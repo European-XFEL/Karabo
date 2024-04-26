@@ -48,7 +48,7 @@ pkg_config
 # We intend to use shared libraries
 *:shared=True
 # Avoid dependency on libsodium version incompatible with CentOS 7
-zeromq:encryption=False
+zeromq/*:encryption=False
 
 # These options will become relevant, when we install boost using conan
 # I keep them here for documentation already, as this is bound to happen.
@@ -60,20 +60,20 @@ zeromq:encryption=False
 # boost:with_stacktrace_backtrace=False
 #
 # build these boost libraries
-boost:without_atomic=False
-boost:without_date_time=False
-boost:without_chrono=False
-boost:without_container=False
-boost:without_exception=False
-boost:without_filesystem=False
-boost:without_regex=False
-boost:without_thread=False
-boost:without_system=False
-boost:without_program_options=False
+boost/*:without_atomic=False
+boost/*:without_date_time=False
+boost/*:without_chrono=False
+boost/*:without_container=False
+boost/*:without_exception=False
+boost/*:without_filesystem=False
+boost/*:without_regex=False
+boost/*:without_thread=False
+boost/*:without_system=False
+boost/*:without_program_options=False
 # build libboost_python (for karabo.bound!)
-boost:without_python=False
+boost/*:without_python=False
 # do not build libboost_numpy
-boost:without_numpy=True
+boost/*:without_numpy=True
 
 [imports]
 # the ".."s are because conan install uses $INSTALL_PREFIX/conan_out in build.sh
