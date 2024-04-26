@@ -1,7 +1,5 @@
-import os
-
-from conans import ConanFile
-from conans.tools import download, unzip, patch
+from conan import ConanFile
+from conan.tools.files import download, rm, unzip, patch
 
 
 PATCH_CONTENT = \
@@ -28,9 +26,9 @@ class KaraboOpenMQConan(ConanFile):
 
     def source(self):
         zip_name = "openmq%s_linux.zip" % self.version.replace('.','_')
-        unzip(zip_name, strip_root=True)
-        patch(patch_string=PATCH_CONTENT, strip=1)
-        os.unlink(zip_name)
+        unzip(self, zip_name, strip_root=True)
+        patch(self, patch_string=PATCH_CONTENT, strip=1)
+        rm(self, zip_name, self.source_folder)
 
     def build(self):
         pass
