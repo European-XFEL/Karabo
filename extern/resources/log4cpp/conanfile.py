@@ -1,18 +1,16 @@
-import os
-
-from conans import ConanFile, AutoToolsBuildEnvironment
-from conans.tools import collect_libs, download, untargz, rmdir
-from conan.tools.files import copy
+from conan import ConanFile
+from conan.tools.env import VirtualBuildEnv
+from conan.tools.files import collect_libs, copy, download, rm, rmdir, unzip
+from conan.tools.gnu import Autotools, AutotoolsToolchain
 
 
 class Log4cppConan(ConanFile):
     name = "log4cpp"
     version = "1.1.3"
     description = "A library of C++ classes for flexible logging."
-    generators = "cmake"
     settings = "os", "arch", "compiler", "build_type"
     options = {"shared": [True, False]}
-    default_options = "shared=True"
+    default_options = {"shared": True}
     url="https://sourceforge.net/projects/log4cpp/"
     license="https://sourceforge.net/p/log4cpp/codegit/ci/master/tree/COPYING"
     exports = ["replace_namespace.sh", "include/*"]
@@ -20,24 +18,35 @@ class Log4cppConan(ConanFile):
     def source(self):
         zip_name = "log4cpp-%s.tar.gz" % self.version
         url = "https://sourceforge.net/projects/log4cpp/files/latest/download"
-        download(url, zip_name)
-        untargz(zip_name, strip_root=True)
+        download(self, url, zip_name)
+        unzip(self, zip_name, strip_root=True)
         copy(self, "*", "log4cpp", ".")
-        rmdir("log4cpp")
-        os.unlink(zip_name)
+        rmdir(self, "log4cpp")
+        rm(self, zip_name, self.source_folder)
+
+    def generate(self):
+        env = VirtualBuildEnv(self)
+        env.generate()
+
+        tc = AutotoolsToolchain(self)
+        tc.extra_defines.append("KRB_LOG4CPP_HAVE_SSTREAM")
+        tc.update_configure_args({"--disable-doxygen": None,
+                                  "--disable-html-docs": None})
+
+        env = tc.environment()
+        tc.generate()
 
     def build(self):
-        autotools = AutoToolsBuildEnvironment(self)
-        autotools.defines.append("KRB_LOG4CPP_HAVE_SSTREAM")
-        autotools.configure(args=["--disable-doxygen", "--disable-html-docs"])
+        autotools = Autotools(self)
+        autotools.configure()
         self.run("bash replace_namespace.sh")
         autotools.make()
+
+    def package(self):
+        autotools = Autotools(self)
         autotools.install()
 
     def package_info(self):
         self.cpp_info.includedirs = ["include"]
         self.cpp_info.libdirs = ["lib"]
         self.cpp_info.libs = collect_libs(self)
-        # self.cpp_info.libs = ['log4cpp']
-        # if self.settings.os == "Linux":
-        #     self.cpp_info.libs.append("pthread")
