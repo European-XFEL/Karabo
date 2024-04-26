@@ -38,6 +38,7 @@ nss/3.72
 # forced - these are pinned to allow conan to resolve dependency conflicts
 sqlite3/3.41.2
 openssl/1.1.1l
+zlib/1.2.13
 
 [generators]
 CMakeDeps

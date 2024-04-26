@@ -1,7 +1,10 @@
 [requires]
-cpython/3.11.6@karabo/py311
+cpython/3.11.9
 cmake/3.27.1
+expat/2.6.0
 patchelf/0.13
+openssl/1.1.1l
+zlib/1.2.13
 
 [options]
 # statically link by default
@@ -10,6 +13,8 @@ patchelf/0.13
 cpython/*:shared=True
 cpython/*:with_tkinter=False
 cpython/*:optimizations=True
+# make shared lib for expat (CentOS support)
+expat/*:shared=True
 
 [imports]
 lib, * -> ../lib  # the ".."s are because conan install uses $INSTALL_PREFIX/conan_out in build.sh.
