@@ -114,10 +114,10 @@ install_python() {
         safeRunCommandQuiet "conan install patchelf/0.13@ --build=patchelf --build=missing $profile_opts"
         safeRunCommandQuiet "conan install b2/4.9.6@ --build=b2 --build=missing $profile_opts"
         # openssl:openssldir=/etc/pki/tls on CentOS7
-        build_opts="$build_opts --build=openssl -o openssl:openssldir=/etc/pki/tls"
+        build_opts="$build_opts --build=openssl -o openssl/*:openssldir=/etc/pki/tls"
         safeRunCommand "conan install openssl/1.1.1l@ -o shared=True $build_opts $profile_opts"
     else
-        build_opts="$build_opts -o openssl:openssldir=/etc/ssl"
+        build_opts="$build_opts -o openssl/*:openssldir=/etc/ssl"
     fi
     # copy conan recipe from extern/resources/python to local conan cache
     safeRunCommandQuiet "conan export $package_opts"
@@ -160,16 +160,16 @@ install_from_deps() {
         local folder_opts="--install-folder=$INSTALL_PREFIX/conan_toolchain-$TARGET_ARCH --output-folder=$INSTALL_PREFIX"
         # when should conan build from sources? missing means if no pre-compiled binary package exists
         # boost:python_executable comes from a variable, so it must be defined here
-        local build_opts="--build=missing -o boost:python_executable=$INSTALL_PREFIX/bin/python"
+        local build_opts="--build=missing -o boost/*:python_executable=$INSTALL_PREFIX/bin/python"
         # apply custom profile on top of default profile
         local profile_opts="-pr:b=./conanprofile.karabo -pr:h=./conanprofile.karabo"
 
     # always compile openssl from source (needed later), ensures linkage against correct GLIBC version symbols
     if [[ $INSTALL_PREFIX == *"CentOS-7"* ]]; then
         # openssl:openssldir=/etc/pki/tls on CentOS7
-        build_opts="$build_opts -o openssl:openssldir=/etc/pki/tls"
+        build_opts="$build_opts -o openssl/*:openssldir=/etc/pki/tls"
     else
-        build_opts="$build_opts -o openssl:openssldir=/etc/ssl"
+        build_opts="$build_opts -o openssl/*:openssldir=/etc/ssl"
     fi
 
         # install packages listed in the extern/conanfile.txt

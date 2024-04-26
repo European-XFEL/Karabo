@@ -7,9 +7,9 @@ patchelf/0.13
 # statically link by default
 *:shared=False
 # make shared libs for python
-cpython:shared=True
-cpython:with_tkinter=False
-cpython:optimizations=True
+cpython/*:shared=True
+cpython/*:with_tkinter=False
+cpython/*:optimizations=True
 
 [imports]
 lib, * -> ../lib  # the ".."s are because conan install uses $INSTALL_PREFIX/conan_out in build.sh.
