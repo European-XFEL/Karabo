@@ -165,12 +165,17 @@ If you are working outside the DESY network, use the second option
 (using ``conda config --set proxy_servers.http ...`` ) mentioned
 in :ref:`framework/remote_installation`.
 
-Now run::
+From your Framework repository, you can now run the following command::
 
     conda devenv --file conda-recipes/karabogui/environment.devenv.yml
 
 This will solve your environment dependencies and create an environment
-called ``karabogui``. Call ``conda activate karabogui`` to activate it.
+called ``karabogui``. To change the name of the created Conda environment, you need to update the 'name' variable in the Framework/conda-recipes/karabogui/environment.devenv.yml file.
+
+To activate conda environment call::
+
+  conda activate karabogui
+
 Still, the Karabo code has to be installed::
 
   cd src/pythonKarabo
