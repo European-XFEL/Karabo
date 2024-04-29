@@ -33,6 +33,7 @@ from karabo.native import Hash, read_project_model
 from karabogui import messagebox
 from karabogui.access import AccessRole, access_role_allowed
 from karabogui.events import KaraboEvent, broadcast_event
+from karabogui.request import onShutdown
 from karabogui.singletons.api import (
     get_config, get_db_conn, get_network, get_project_model, get_topology)
 from karabogui.topology.util import get_macro_servers
@@ -508,6 +509,22 @@ def run_macro(macro_model, parent=None):
 
     serverId = macro_servers[0]
     _run_macro(macro_model, serverId, parent)
+
+
+def restart_macro(instance_id, handler, parent=None):
+    """Restart macro after confirmation that macro should be restarted.
+
+    Function will do nothing if user declined marco restart
+    NOTE: macro should be instantiated"""
+    ask = (f"The macro <b>{instance_id}</b> is already online. "
+           "Do you want to restart the macro?")
+    options = QMessageBox.Yes | QMessageBox.No
+    reply = QMessageBox.question(
+        parent, "Macro is already online", ask, options, QMessageBox.No)
+    if reply != QMessageBox.Yes:
+        return
+    proxy = get_topology().get_device(instance_id, request=False)
+    onShutdown(proxy, handler)
 
 
 def run_macro_debug(macro_model, serverId, parent=None):
