@@ -259,8 +259,6 @@ variables:
       - /^(master)$/ # the changes check will default to true
       - /^(\d+\.)(\d+\.)(X-hotfix)$/ # the changes check will default to true
       - schedules
-    changes:
-      - "extern/**/*"
 
 .integration_tests: &integration-tests
   stage: test
@@ -281,12 +279,10 @@ variables:
       - "src/pythonKarabo/karabo/bound_devices/**/*"
       - "src/pythonKarabo/karabo/middlelayer_devices/**/*"
       - "src/pythonKarabo/karabo/influxdb/**/*"
+      - "extern/**/*"
   except:
     refs:
       - schedules
-    changes:
-      - extern/**/*  # changes in extern are covered by deps_tests
-
 
 .cpp_unit_tests: &cpp-unit-tests
   stage: test
@@ -302,10 +298,8 @@ variables:
       - "src/brokerMessageLogger/**/*"
       - "src/tools/brokerRates/**/*"
       - "src/tools/dataLoggerIndex/**/*"
+      - "extern/**/*"
   <<: *except-main
-  except:
-    changes:
-      - extern/**/*  # changes in extern are covered by deps_tests
 
 .python_unit_tests: &python-unit-tests
   stage: test
@@ -320,10 +314,8 @@ variables:
       - "src/karabind/**/*" # bound api new binding code
       - "src/karabo/**/*" # bound api depends on the c++ build
       - "src/pythonKarabo/**/*"
+      - "extern/**/*"
   <<: *except-main
-  except:
-    changes:
-      - extern/**/*  # changes in extern are covered by deps_tests
 
 # GUI tests to be executed in a Conda environment
 .gui_unit_tests: &gui-unit-tests
@@ -345,23 +337,6 @@ variables:
       - "conda-recipes/karabo-native/**/*"
       - "conda-recipes/karabogui/**/*"
   <<: *artifacts-spec
-
-.deps_tests: &deps-tests
-  stage: test
-  <<: *services_template
-  <<: *artifacts-spec
-  <<: *setup_build_env
-  when: manual
-  only:
-    refs:
-      - merge_requests
-    changes:
-      - "extern/**/*" # "deps_tests" also runs unit and integration tests.
-                      # Those tests would use the wrong dependencies package
-                      # when changes to "extern" happen and are thus surpressed
-                      # in ".cpp_unit_tests", ".python_unit_tests", and
-                      # ".integration_tests" if there are  changes at any depth
-                      # under "extern".
 
 ### Jobs
 
@@ -481,20 +456,6 @@ nightly build miniconda:
 deps build:
   parallel: !reference [.target_os_matrix, all_targets]
   <<: *deps-build
-
-# Dependencies build tests
-
-cpp_deps tests:
-  parallel: !reference [.target_os_matrix, all_targets]
-  <<: *deps-tests
-  script:
-    - bash ./auto_build_all.sh Debug --runTests --runIntegrationTests --skipPythonTests
-
-python_deps tests:
-  parallel: !reference [.target_os_matrix, all_targets]
-  <<: *deps-tests
-  script:
-    - bash ./auto_build_all.sh Debug --runTests --runIntegrationTests --skipCppTests
 
 # MR test builds
 
