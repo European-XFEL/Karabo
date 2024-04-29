@@ -17,6 +17,7 @@
 from uuid import uuid4
 
 from qtpy.QtNetwork import QAbstractSocket
+from qtpy.QtWidgets import QDialog
 
 from karabo.native import Hash
 from karabogui.singletons.configuration import Configuration
@@ -48,8 +49,11 @@ def test_connect_directly(mocker, gui_app):
     config = Configuration()
     with singletons(network=network, configuration=config):
         host = "xfel-computer-system-control"
-        port = 67893
-        username = "admin"
+        port = 33333
+        username = "karabo"
+        mock_login_dialog = mocker.patch(
+            "karabogui.singletons.network.ReactiveLoginDialog")
+        mock_login_dialog().exec.return_value = QDialog.Accepted
         success = network.connectToServerDirectly(
             username, host, port)
         assert success
@@ -70,8 +74,11 @@ def test_socket_connect_login_protocol(mocker, subtests, gui_app):
     network.signalReceivedData.connect(receiver.slotReceiveData)
     with singletons(network=network, mediator=mediator):
         host = "exfl-client-pc-system-guikarabo"
-        port = 68580
-        username = "admin"
+        port = 32323
+        username = "karabo"
+        mock_login_dialog = mocker.patch(
+            "karabogui.singletons.network.ReactiveLoginDialog")
+        mock_login_dialog().exec.return_value = QDialog.Accepted
         success = network.connectToServerDirectly(
             username, host, port)
         assert success
