@@ -30,8 +30,8 @@ class Log4cppConan(ConanFile):
 
         tc = AutotoolsToolchain(self)
         tc.extra_defines.append("KRB_LOG4CPP_HAVE_SSTREAM")
-        tc.update_configure_args({"--disable-doxygen": None,
-                                  "--disable-html-docs": None})
+        tc.configure_args.append("--disable-doxygen")
+        tc.configure_args.append("--disable-html-docs")
 
         env = tc.environment()
         tc.generate()
