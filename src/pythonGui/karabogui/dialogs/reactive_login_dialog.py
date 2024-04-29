@@ -369,8 +369,8 @@ class ReactiveLoginDialog(QDialog):
 
     @Slot()
     def _switch_to_auth_page(self):
-        self.stackedWidget.setCurrentIndex(LoginType.USER_AUTHENTICATED)
-        self.connect_button.setEnabled(False)
+        self.login_type = LoginType.USER_AUTHENTICATED
+        self._update_dialog_state()
 
 
 class EscalationDialog(QDialog):
