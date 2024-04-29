@@ -1,8 +1,6 @@
-import os
-
-from conans import ConanFile
-from conans.tools import download, unzip
+from conan import ConanFile
 from conan.tools.cmake import CMake, CMakeToolchain
+from conan.tools.files import download, rm, unzip
 
 
 class KaraboDaemonToolsConan(ConanFile):
@@ -18,9 +16,9 @@ class KaraboDaemonToolsConan(ConanFile):
     def source(self):
         zip_name = "daemontools-encore-%s.zip" % self.version
         url = f"https://github.com/tecki/daemontools-encore/archive/refs/tags/{self.version}.zip"
-        download(url, zip_name)
-        unzip(zip_name, strip_root=True)
-        os.unlink(zip_name)
+        download(self, url, zip_name)
+        unzip(self, zip_name, strip_root=True)
+        rm(self, zip_name, self.source_folder)
 
     def build(self):
         cmake = CMake(self)
