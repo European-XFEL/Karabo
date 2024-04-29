@@ -161,6 +161,8 @@ class ReactiveLoginDialog(QDialog):
         port = len(self.edit_port.text()) > 0
         return host and port
 
+    def setRememberMeEnabled(self, enable: bool):
+        self.remember_login.setEnabled(enable)
     # --------------------------------------------------------------------
     # Qt Slots
 
