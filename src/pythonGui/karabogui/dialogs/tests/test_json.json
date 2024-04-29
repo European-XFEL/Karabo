@@ -1,0 +1,122 @@
+[
+  {
+    "_links": {
+      "web_path": "/karaboDevices/packages/-/packages/200"
+    },
+    "created_at": "2024-03-14T20:46:11.994+01:00",
+    "id": 200,
+    "name": "opencv-python",
+    "package_type": "pypi",
+    "pipeline": {
+      "created_at": "2024-03-14T20:45:08.882+01:00",
+      "id": 133723,
+      "iid": 2,
+      "project_id": 4562,
+      "ref": "main",
+      "sha": "fafaf8e5aca4fb2e48c295d16f3987d544b0ad3b",
+      "source": "push",
+      "status": "success",
+      "updated_at": "2024-03-14T20:46:18.130+01:00",
+      "web_url": "https://git.xfel.eu/karaboDevices/packages/-/pipelines/133723"
+    },
+    "status": "default",
+    "tags": [],
+    "version": "4.9.0.80"
+  },
+  {
+    "_links": {
+      "web_path": "/karaboDevices/packages/-/packages/201"
+    },
+    "created_at": "2024-03-14T20:46:12.543+01:00",
+    "id": 201,
+    "name": "setuptools",
+    "package_type": "pypi",
+    "pipeline": {
+      "created_at": "2024-03-14T20:45:08.882+01:00",
+      "id": 133723,
+      "iid": 2,
+      "project_id": 4562,
+      "ref": "main",
+      "sha": "fafaf8e5aca4fb2e48c295d16f3987d544b0ad3b",
+      "source": "push",
+      "status": "success",
+      "updated_at": "2024-03-14T20:46:18.130+01:00",
+      "web_url": "https://git.xfel.eu/karaboDevices/packages/-/pipelines/133723"
+    },
+    "status": "default",
+    "tags": [],
+    "version": "66.1.1"
+  },
+  {
+    "_links": {
+      "web_path": "/karaboDevices/packages/-/packages/202"
+    },
+    "created_at": "2024-03-14T20:46:13.164+01:00",
+    "id": 202,
+    "name": "setuptools-scm",
+    "package_type": "pypi",
+    "pipeline": {
+      "created_at": "2024-03-14T20:45:08.882+01:00",
+      "id": 133723,
+      "iid": 2,
+      "project_id": 4562,
+      "ref": "main",
+      "sha": "fafaf8e5aca4fb2e48c295d16f3987d544b0ad3b",
+      "source": "push",
+      "status": "success",
+      "updated_at": "2024-03-14T20:46:18.130+01:00",
+      "web_url": "https://git.xfel.eu/karaboDevices/packages/-/pipelines/133723"
+    },
+    "status": "default",
+    "tags": [],
+    "version": "6.4.2"
+  },
+  {
+    "_links": {
+      "web_path": "/karaboDevices/packages/-/packages/215"
+    },
+    "created_at": "2024-04-24T17:28:42.716+02:00",
+    "id": 215,
+    "name": "GUIExtensions",
+    "package_type": "pypi",
+    "pipeline": {
+      "created_at": "2024-04-24T17:23:35.353+02:00",
+      "id": 137049,
+      "iid": 2838,
+      "project_id": 859,
+      "ref": "0.0.0",
+      "sha": "fa85f0125889c5163ef1d17cf9ea5bfc8bfa0769",
+      "source": "push",
+      "status": "success",
+      "updated_at": "2024-04-24T17:29:11.848+02:00",
+      "web_url": "https://git.xfel.eu/karaboDevices/guiextensions/-/pipelines/137049"
+    },
+    "status": "default",
+    "tags": [],
+    "version": "0.0.0"
+  },
+  {
+    "_links": {
+      "web_path": "/karaboDevices/packages/-/packages/216"
+    },
+    "created_at": "2024-04-24T18:40:58.725+02:00",
+    "id": 216,
+    "name": "GUIExtensions",
+    "package_type": "pypi",
+    "pipeline": {
+      "created_at": "2024-04-24T18:35:55.259+02:00",
+      "id": 137058,
+      "iid": 2840,
+      "project_id": 859,
+      "ref": "0.0.1",
+      "sha": "fa85f0125889c5163ef1d17cf9ea5bfc8bfa0769",
+      "source": "push",
+      "status": "success",
+      "updated_at": "2024-04-24T18:41:23.239+02:00",
+      "web_url": "https://git.xfel.eu/karaboDevices/guiextensions/-/pipelines/137058"
+    },
+    "status": "default",
+    "tags": [],
+    "version": "0.0.1"
+  }
+]
