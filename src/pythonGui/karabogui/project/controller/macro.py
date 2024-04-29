@@ -39,8 +39,9 @@ from karabogui.itemtypes import ProjectItemTypes
 from karabogui.project.dialog.object_handle import (
     ObjectDuplicateDialog, ObjectEditDialog)
 from karabogui.project.topo_listener import SystemTopologyListener
-from karabogui.project.utils import run_macro
+from karabogui.project.utils import restart_macro, run_macro
 from karabogui.singletons.api import get_config, get_manager, get_topology
+from karabogui.topology.api import is_macro_online
 from karabogui.util import getSaveFileName, move_to_cursor
 
 from .bases import (
@@ -122,7 +123,7 @@ class MacroController(BaseProjectGroupController):
         save_as_action.triggered.connect(partial(self._save_macro_to_file,
                                                  parent=parent))
         run_action = QAction(icons.run, 'Run', menu)
-        run_action.triggered.connect(partial(self.run_macro, parent=parent))
+        run_action.triggered.connect(partial(self.start_macro, parent=parent))
         run_action.setEnabled(service_allowed)
 
         menu.addAction(edit_action)
@@ -288,6 +289,17 @@ class MacroController(BaseProjectGroupController):
         with open(fn, 'w') as fout:
             fout.write(write_macro(macro))
 
+    def start_macro(self, parent=None):
+        """Run not running macro and restart running macro
+
+        NOTE: Macro can be restarted only after user confirmation
+        """
+        instance_id = self.model.instance_id
+        if is_macro_online(instance_id):
+            restart_macro(instance_id, self.run_macro)
+        else:
+            self.run_macro()
+
     def run_macro(self, parent=None):
         """Action handler to instantiate the macro
 
@@ -300,15 +312,15 @@ class MacroController(BaseProjectGroupController):
             broadcast_event(KaraboEvent.ShowMacroView,
                             {'model': self.model})
             formatted_msg = "{}\n{}{}^\nin {} line {}".format(
-                    e.msg, e.text, " " * e.offset, e.filename, e.lineno)
+                e.msg, e.text, " " * e.offset, e.filename, e.lineno)
             messagebox.show_warning(formatted_msg, title=type(e).__name__,
                                     parent=parent)
             return
 
         run_macro(self.model, parent)
 
-
 # ----------------------------------------------------------------------
+
 
 def _get_macro_instances(macro_id):
     instances = set()
