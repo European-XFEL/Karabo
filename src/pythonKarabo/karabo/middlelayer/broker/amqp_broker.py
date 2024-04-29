@@ -480,7 +480,8 @@ class AmqpBroker(Broker):
     async def consume(self, device):
         device = weakref.ref(device)
         consume_ok = await self.channel.basic_consume(
-            self.queue, partial(self.on_message, device), no_ack=True)
+            self.queue, partial(self.on_message, device),
+            exclusive=True, no_ack=True)
         # no_ack means automatic acknowlegdement
         self.consumer_tag = consume_ok.consumer_tag
         # Be under exitStack scope as soon as queue is alive
