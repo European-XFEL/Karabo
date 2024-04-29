@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>659</width>
-    <height>395</height>
+    <width>808</width>
+    <height>478</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -118,7 +118,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="lb_current">
+        <widget class="QLabel" name="label_current">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
            <horstretch>0</horstretch>
@@ -142,7 +142,7 @@
       </layout>
      </item>
      <item>
-      <widget class="QPushButton" name="bt_refresh">
+      <widget class="QPushButton" name="button_refresh">
        <property name="maximumSize">
         <size>
          <width>38</width>
@@ -185,7 +185,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="lb_latest">
+        <widget class="QLabel" name="label_latest">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
            <horstretch>0</horstretch>
@@ -213,13 +213,13 @@
    <item>
     <widget class="QGroupBox" name="groupBox">
      <property name="title">
-      <string>Update Log</string>
+      <string>Update View</string>
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout_5">
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_4">
         <item>
-         <widget class="QTextEdit" name="ed_log">
+         <widget class="QTextEdit" name="text_log">
           <property name="readOnly">
            <bool>true</bool>
           </property>
@@ -228,7 +228,7 @@
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_2">
           <item>
-           <widget class="QPushButton" name="bt_clear_log">
+           <widget class="QPushButton" name="button_clear_log">
             <property name="maximumSize">
              <size>
               <width>38</width>
@@ -263,28 +263,28 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <widget class="QPushButton" name="bt_uninstall">
+      <widget class="QPushButton" name="button_uninstall">
        <property name="text">
         <string>Uninstall</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="bt_update">
+      <widget class="QPushButton" name="button_update">
        <property name="text">
         <string>Update</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="bt_stop">
+      <widget class="QPushButton" name="button_stop">
        <property name="text">
         <string>Stop</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="bt_close">
+      <widget class="QPushButton" name="button_close">
        <property name="text">
         <string>Close</string>
        </property>
@@ -295,7 +295,6 @@
   </layout>
   <zorder>label_3</zorder>
   <zorder>groupBox</zorder>
-  <zorder></zorder>
   <zorder>extension_url</zorder>
  </widget>
  <resources/>
