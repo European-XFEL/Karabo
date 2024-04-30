@@ -6,16 +6,22 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>457</width>
-    <height>199</height>
+    <width>481</width>
+    <height>221</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Escalation Dialog</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
+  <layout class="QVBoxLayout" name="verticalLayout" stretch="1,0,0">
    <item>
     <widget class="QGroupBox" name="group_auth">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Ignored">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <property name="minimumSize">
       <size>
        <width>0</width>
@@ -31,34 +37,71 @@
      <property name="title">
       <string>User Authenticated Login</string>
      </property>
-     <layout class="QGridLayout" name="gridLayout">
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_auth_username">
-        <property name="text">
-         <string>&amp;Username</string>
+     <layout class="QGridLayout" name="gridLayout_4">
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="edit_access_code"/>
+      </item>
+      <item row="1" column="4">
+       <spacer name="horizontalSpacer_2">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
         </property>
-        <property name="buddy">
-         <cstring>edit_username</cstring>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>104</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="0" column="3" colspan="2">
+       <widget class="QPushButton" name="authenticate_button">
+        <property name="toolTip">
+         <string> Open browser to generate the access code by authenticating the user</string>
+        </property>
+        <property name="text">
+         <string>Open Access Form</string>
+        </property>
+        <property name="autoDefault">
+         <bool>false</bool>
         </property>
        </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QLineEdit" name="edit_username"/>
       </item>
       <item row="1" column="0">
-       <widget class="QLabel" name="label_password">
+       <widget class="QLabel" name="label_access_code">
         <property name="text">
-         <string>Pass&amp;word</string>
+         <string>&amp;Access Code</string>
         </property>
         <property name="buddy">
-         <cstring>edit_password</cstring>
+         <cstring>edit_access_code</cstring>
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
-       <widget class="QLineEdit" name="edit_password">
-        <property name="echoMode">
-         <enum>QLineEdit::Password</enum>
+      <item row="0" column="0" colspan="3">
+       <widget class="QLabel" name="info_label">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>20</height>
+         </size>
+        </property>
+        <property name="styleSheet">
+         <string notr="true"/>
+        </property>
+        <property name="text">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt; font-style:italic; color:#242424;&quot;&gt;Open Access Form to generate the access code by &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt; font-style:italic; color:#242424;&quot;&gt;authenticating the user&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="textFormat">
+         <enum>Qt::AutoText</enum>
         </property>
        </widget>
       </item>
