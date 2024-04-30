@@ -56,6 +56,13 @@ target_link_libraries(
     cppunit::cppunit
 )
 
+add_library(WAIT_UTILS OBJECT ${CMAKE_CURRENT_SOURCE_DIR}/WaitUtils.cc)
+target_link_libraries(
+    WAIT_UTILS
+    ${KARABO_LIB_TARGET_NAME}
+    cppunit::cppunit
+)
+
 add_library(TEST_RUNNER OBJECT ${CMAKE_CURRENT_SOURCE_DIR}/testRunner.cc)
 target_link_libraries(
     TEST_RUNNER
@@ -74,6 +81,7 @@ set(coreTestRunner_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/core/DeviceClient_Test.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/core/InstanceChangeThrottler_Test.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/core/Runner_Test.cc
+    $<TARGET_OBJECTS:WAIT_UTILS>
     $<TARGET_OBJECTS:TEST_RUNNER>
 )
 
@@ -104,6 +112,7 @@ set(netTestRunner_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/net/Strand_Test.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/net/TcpNetworking_Test.cc
     $<TARGET_OBJECTS:BROKER_UTILS>
+    $<TARGET_OBJECTS:WAIT_UTILS>
     $<TARGET_OBJECTS:TEST_RUNNER_NOLOOP>
 )
 
@@ -174,12 +183,11 @@ add_custom_command(
 )
 
 #
-###  support for google test based Unit tests ###
+# support for google test based Unit tests
 find_package(GTest REQUIRED)
 
 set(GTEST_SOURCES
     ${CMAKE_CURRENT_LIST_DIR}/core/testJsonToHashParsing.cc)
-
 
 add_executable(GTestUnitTester ${GTEST_SOURCES})
 target_link_libraries(GTestUnitTester
