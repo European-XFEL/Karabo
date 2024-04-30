@@ -315,7 +315,7 @@ def test_socket_connect_login_protocol(mocker, subtests, gui_app):
             assert receiver.last_hash["priority"] == "ERROR"
 
         mbox = mocker.patch('karabogui.singletons.network.QMessageBox')
-        dia = mocker.patch('karabogui.singletons.network.LoginDialog')
+        dia = mocker.patch('karabogui.singletons.network.ReactiveLoginDialog')
         call_count = 0
         for error in [QAbstractSocket.ConnectionRefusedError,
                       QAbstractSocket.RemoteHostClosedError,
