@@ -27,12 +27,7 @@
 
 using boost::placeholders::_1;
 
-namespace bse = boost::system::errc;
-
 // Open questions/TODO:
-// - handle case that queue name is already used
-//   * request queue with some suffix?
-//   * need to recreate channel as well?
 // - need for m_channel->onError(nullptr); at several places? (See old AmqpClient code about where.)
 
 namespace karabo::net {
@@ -44,23 +39,41 @@ namespace karabo::net {
           m_queue(m_instanceId),
           m_queueArgs(std::move(queueArgs)),
           m_readHandler(std::move(readHandler)),
+          m_channel(),
           m_channelStatus(ChannelStatus::REQUEST) {}
 
     AmqpClient2::~AmqpClient2() {
-        // Call remaining handlers with operation_cancelled indicator - in io context as promised
-        const auto cancelledError = bse::make_error_code(bse::operation_canceled);
-        if (m_channelPreparationCallback) {
-            m_connection->dispatch(boost::bind(m_channelPreparationCallback, cancelledError));
-        }
+        // Call remaining handlers with operation_cancelled indicator - in io context as promised.
+        // Better use that io context also for AMQP::Channel since AMQP library is not thread safe.
+        // (AMQP::Table seems to be safe. If not, we should use shared_ptr and reset that.)
 
-        for (auto& [dummy, statusAndHandler] : m_subscriptions) {
-            if (statusAndHandler.onSubscription) {
-                m_connection->dispatch(boost::bind(statusAndHandler.onSubscription, cancelledError));
+        std::promise<void> promise;
+        auto future = promise.get_future();
+        m_connection->dispatch([this, &promise]() {
+            const auto cancelledError = KARABO_ERROR_CODE_OP_CANCELLED;
+
+            if (m_channelPreparationCallback) {
+                m_channelPreparationCallback(cancelledError);
+                m_channelPreparationCallback = AsyncHandler();
             }
-        }
-        for (PostponedMessage& m : m_postponedPubMessages) {
-            m_connection->dispatch(boost::bind(m.onPublishDone, cancelledError));
-        }
+
+            for (auto& [dummy, statusAndHandler] : m_subscriptions) {
+                if (statusAndHandler.onSubscription) {
+                    statusAndHandler.onSubscription(cancelledError);
+                }
+            }
+            m_subscriptions.clear();
+
+            for (PostponedMessage& msg : m_postponedPubMessages) {
+                msg.onPublishDone(cancelledError);
+            }
+            m_postponedPubMessages.clear();
+
+            m_channel.reset();
+
+            promise.set_value();
+        });
+        future.wait();
     }
 
     void AmqpClient2::asyncSubscribe(const std::string& exchange, const std::string& routingKey,
@@ -73,7 +86,7 @@ namespace karabo::net {
                             onSubscriptionDone{std::move(onSubscriptionDone)}]() mutable {
             auto self(weakThis.lock());
             if (!self) {
-                onSubscriptionDone(bse::make_error_code(bse::operation_canceled));
+                onSubscriptionDone(KARABO_ERROR_CODE_OP_CANCELLED);
                 return;
             }
             // Store requested subscription
@@ -94,7 +107,7 @@ namespace karabo::net {
                     break;
                 case ChannelStatus::READY:
                     // Channel ready, so directly subscribe
-                    doSubscribePending(bse::make_error_code(bse::success));
+                    doSubscribePending(KARABO_ERROR_CODE_SUCCESS);
                     break;
             }
         });
@@ -107,14 +120,14 @@ namespace karabo::net {
                             onUnsubscriptionDone{std::move(onUnsubscriptionDone)}]() mutable {
             auto self(weakThis.lock());
             if (!self) {
-                onUnsubscriptionDone(bse::make_error_code(bse::operation_canceled));
+                onUnsubscriptionDone(KARABO_ERROR_CODE_OP_CANCELLED);
                 return;
             }
 
             auto it = m_subscriptions.find({exchange, routingKey});
             if (it == m_subscriptions.end()) {
                 // Unsubscribing something not subscribed is called success (since afterwards we are not subscribed)
-                onUnsubscriptionDone(bse::make_error_code(bse::success));
+                onUnsubscriptionDone(KARABO_ERROR_CODE_SUCCESS);
                 return;
             }
 
@@ -143,7 +156,7 @@ namespace karabo::net {
                             onPublishDone{std::move(onPublishDone)}]() mutable {
             auto self(weakThis.lock());
             if (!self) {
-                onPublishDone(bse::make_error_code(bse::operation_canceled));
+                onPublishDone(KARABO_ERROR_CODE_OP_CANCELLED);
                 return;
             }
             switch (m_channelStatus) {
@@ -160,9 +173,9 @@ namespace karabo::net {
                                 } else {
                                     AMQP::Envelope dataWrap(m.data->data(), m.data->size());
                                     if (self->m_channel->publish(m.exchange, m.routingKey, dataWrap)) {
-                                        m.onPublishDone(bse::make_error_code(bse::success));
+                                        m.onPublishDone(KARABO_ERROR_CODE_SUCCESS);
                                     } else {
-                                        m.onPublishDone(bse::make_error_code(bse::io_error));
+                                        m.onPublishDone(KARABO_ERROR_CODE_IO_ERROR);
                                     }
                                 }
                             }
@@ -182,9 +195,9 @@ namespace karabo::net {
                     // Channel ready, so directly send
                     AMQP::Envelope dataWrap(data->data(), data->size());
                     if (m_channel->publish(exchange, routingKey, dataWrap)) {
-                        onPublishDone(bse::make_error_code(bse::success));
+                        onPublishDone(KARABO_ERROR_CODE_SUCCESS);
                     } else {
-                        onPublishDone(bse::make_error_code(bse::io_error));
+                        onPublishDone(KARABO_ERROR_CODE_IO_ERROR);
                     }
                 } break;
             }
@@ -294,7 +307,7 @@ namespace karabo::net {
                               self->m_channelStatus = ChannelStatus::READY;
                               AsyncHandler callback;
                               callback.swap(self->m_channelPreparationCallback);
-                              callback(bse::make_error_code(bse::success));
+                              callback(KARABO_ERROR_CODE_SUCCESS);
                           }
                       })
                       .onError([this, wSelf](const char* message) {
@@ -418,7 +431,7 @@ namespace karabo::net {
                                   it->second.status = SubscriptionStatus::READY;
                                   AsyncHandler callback;
                                   callback.swap(it->second.onSubscription);
-                                  callback(bse::make_error_code(bse::success));
+                                  callback(KARABO_ERROR_CODE_SUCCESS);
                               }
                           }
                       })
@@ -456,7 +469,7 @@ namespace karabo::net {
                               } else {
                                   const AsyncHandler callback(std::move(it->second.onSubscription));
                                   self->m_subscriptions.erase(it);
-                                  callback(bse::make_error_code(bse::success));
+                                  callback(KARABO_ERROR_CODE_SUCCESS);
                               }
                           }
                       })

@@ -32,9 +32,11 @@
 #include "karabo/net/AmqpConnection.hh"
 #include "karabo/net/Broker.hh"
 #include "karabo/tests/BrokerUtils.hh"
+#include "karabo/tests/WaitUtils.hh"
 #include "karabo/util/StringTools.hh"
 
 using namespace karabo;
+using karabo::tests::waitForCondition;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Amqp_Test);
 
@@ -42,7 +44,7 @@ Amqp_Test::Amqp_Test()
     // Use the environment variable KARABO_CI_BROKERS to define the brokers to use in tests:
     // e.g. export KARABO_CI_BROKERS=tcp://a-jms-broker:7777;amqp://an-amqp-broker:5672
     // If that variable is not defined, KARABO_BROKER with an amqp broker also works
-    : m_defaultBrokers(getBrokerFromEnv("amqp")), m_timeout(120) {
+    : m_defaultBrokers(getBrokerFromEnv("amqp")), m_timeout(10), m_timeoutMs(10'000) {
     if (false &&                            // remove 'false &&' to switch on logging
         !m_loggingIsSetup.exchange(true)) { // configure logging only once in the process
         log::Logger::configure(util::Hash("priority", "DEBUG"));
@@ -67,7 +69,7 @@ void Amqp_Test::testConnection() {
         const boost::system::error_code ec = fut.get();
         CPPUNIT_ASSERT_EQUAL_MESSAGE(ec.message(), static_cast<int>(boost::system::errc::success), ec.value());
         // We can safely destruct the connection again.
-        // But note: use_count() maybe > 1 (if handler being called), then destruction happens elsewhere)
+        CPPUNIT_ASSERT_EQUAL(1l, connection.use_count());
         CPPUNIT_ASSERT_NO_THROW(connection.reset());
 
         // test asyncConnect - but improper user/password url
@@ -82,6 +84,8 @@ void Amqp_Test::testConnection() {
         const boost::system::error_code ec2 = fut2.get();
         CPPUNIT_ASSERT_EQUAL_MESSAGE(ec2.message(), static_cast<int>(boost::system::errc::connection_refused),
                                      ec2.value());
+        waitForCondition([&connection]() { return connection.use_count() == 1l; }, m_timeoutMs);
+        CPPUNIT_ASSERT_EQUAL(1l, connection.use_count());
         CPPUNIT_ASSERT_NO_THROW(connection.reset());
 
         // test asyncConnect with > 1 urls, but all bad: will receive error code matching the last url
@@ -95,6 +99,7 @@ void Amqp_Test::testConnection() {
         const boost::system::error_code ec4 = fut4.get();
         CPPUNIT_ASSERT_EQUAL_MESSAGE(ec4.message(), // not_connected since last url is urlBadHostPort
                                      static_cast<int>(boost::system::errc::not_connected), ec4.value());
+        CPPUNIT_ASSERT_EQUAL(1l, connection.use_count());
         CPPUNIT_ASSERT_NO_THROW(connection.reset());
 
         // (first: last is bad credentials)
@@ -107,6 +112,8 @@ void Amqp_Test::testConnection() {
         const boost::system::error_code ec5 = fut5.get();
         CPPUNIT_ASSERT_EQUAL_MESSAGE(ec5.message(), // connection_refused since last url is 'urlBadUser'
                                      static_cast<int>(boost::system::errc::connection_refused), ec5.value());
+        waitForCondition([&connection]() { return connection.use_count() == 1l; }, m_timeoutMs);
+        CPPUNIT_ASSERT_EQUAL(1l, connection.use_count());
         CPPUNIT_ASSERT_NO_THROW(connection.reset());
 
         // Now test 3 addresses, last one valid
@@ -127,15 +134,72 @@ void Amqp_Test::testConnection() {
                   if (errMsg) doneCreation.set_value(nullptr);
                   else doneCreation.set_value(channel);
               });
-        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futCreateChannel.wait_for(std::chrono::seconds(5)));
+        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futCreateChannel.wait_for(m_timeout));
         auto channel = futCreateChannel.get();
-        CPPUNIT_ASSERT(channel); // a channel has been created
+        CPPUNIT_ASSERT(channel);          // A channel has been created
+        CPPUNIT_ASSERT(channel->ready()); // ... and is ready
+
+        waitForCondition([&channel]() { return channel.use_count() == 1l; }, m_timeoutMs);
+        CPPUNIT_ASSERT_EQUAL(1l, channel.use_count());
         CPPUNIT_ASSERT_NO_THROW(channel.reset());
 
+        CPPUNIT_ASSERT_EQUAL(1l, connection.use_count());
         CPPUNIT_ASSERT_NO_THROW(connection.reset());
-    }
 
-    { // test invalid tcp address - the tests for post, dispatch and too early asyncCreateChannel sneaked in as well
+        // Now channel creation with lazy connection (i.e. connect if not yet connected)
+        const int numChannels = 100;                                // Directly stress test with many channels
+        connection = boost::make_shared<net::AmqpConnection>(urls); // Still 3 urls, last one valid
+
+        std::vector<std::promise<std::string>> channelPromises;
+        // Avoid re-allocations and thus data races when used in below lambda for given 'i' and push_back more promises:
+        channelPromises.reserve(numChannels);
+        std::vector<std::future<std::string>> channelFutures;
+        for (int i = 0; i < numChannels; ++i) {
+            channelPromises.push_back(std::promise<std::string>());
+            channelFutures.push_back(channelPromises.back().get_future());
+            connection->asyncCreateChannel(
+                  [i, &channelPromises](const std::shared_ptr<AMQP::Channel>& channel, const char* errMsg) {
+                      if (channel) channelPromises[i].set_value("Channel created");
+                      else channelPromises[i].set_value(errMsg);
+                  });
+            // Little sleep to have asyncCreateChannel requests happen in different stages of creation of connection
+            boost::this_thread::sleep(boost::posix_time::microseconds(500));
+        }
+        for (int i = 0; i < numChannels; ++i) {
+            CPPUNIT_ASSERT_EQUAL(std::future_status::ready, channelFutures[i].wait_for(m_timeout));
+            CPPUNIT_ASSERT_EQUAL(std::string("Channel created"), channelFutures[i].get());
+        }
+        CPPUNIT_ASSERT_EQUAL(1l, connection.use_count());
+        CPPUNIT_ASSERT_NO_THROW(connection.reset());
+
+        // Test that pending handlers (connect and create channel) are called in destructor
+        connection = boost::make_shared<net::AmqpConnection>(urls); // Still 3 urls, last one valid
+        std::promise<boost::system::error_code> connDone;
+        auto connFut = connDone.get_future();
+        connection->asyncConnect([&connDone](const boost::system::error_code ec) { connDone.set_value(ec); });
+        std::promise<std::string> chanDone;
+        auto chanFut = chanDone.get_future();
+        connection->asyncCreateChannel([&chanDone](const std::shared_ptr<AMQP::Channel>& channel, const char* errMsg) {
+            if (channel) chanDone.set_value("Non empty channelPtr!");
+            else chanDone.set_value(errMsg);
+        });
+        // Ensure that the dispatched async actions got executed by waiting until one more dispatched function is done
+        // (otherwise asyncCreateChannel handler might not yet have stored its pending channel creation).
+        std::promise<void> movedOnProm;
+        auto movedOnFut = movedOnProm.get_future();
+        connection->dispatch([&movedOnProm]() { movedOnProm.set_value(); });
+        movedOnFut.wait();
+
+        CPPUNIT_ASSERT_EQUAL(1l, connection.use_count());
+        CPPUNIT_ASSERT_NO_THROW(connection.reset());
+        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, connFut.wait_for(m_timeout));
+        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, chanFut.wait_for(m_timeout));
+        const boost::system::error_code connEc = connFut.get();
+        CPPUNIT_ASSERT_EQUAL_MESSAGE(connEc.message(), static_cast<int>(boost::system::errc::operation_canceled),
+                                     connEc.value());
+        CPPUNIT_ASSERT_EQUAL(std::string("Connection destructed"), chanFut.get());
+    }
+    { // test invalid tcp address - the tests for post and dispatch sneaked in as well
         const std::vector<std::string> invalidIps(1, urlBadHostPort);
         net::AmqpConnection::Pointer connection(boost::make_shared<net::AmqpConnection>(invalidIps));
 
@@ -154,7 +218,15 @@ void Amqp_Test::testConnection() {
         // TODO? Add a test that checks that dispatching a method means directly calling it if already in the
         // io_context?
 
-        // then test failing channel creation without being connected
+        // Now the real test for invalid tcp address
+        std::promise<boost::system::error_code> done;
+        auto fut = done.get_future();
+        connection->asyncConnect([&done](const boost::system::error_code ec) { done.set_value(ec); });
+        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, fut.wait_for(m_timeout));
+        const boost::system::error_code ec = fut.get();
+        CPPUNIT_ASSERT_EQUAL_MESSAGE(ec.message(), static_cast<int>(boost::system::errc::not_connected), ec.value());
+
+        // Also test failing channel creation because connection cannot be established
         std::promise<std::string> doneCreation;
         auto futCreateChannel = doneCreation.get_future();
 
@@ -163,18 +235,13 @@ void Amqp_Test::testConnection() {
                   if (channel) doneCreation.set_value("Non empty channelPtr!");
                   else doneCreation.set_value(errMsg);
               });
-        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futCreateChannel.wait_for(std::chrono::seconds(5)));
-        CPPUNIT_ASSERT_EQUAL(std::string("Connection not ready"), futCreateChannel.get());
-
-        // Now the real test for invalid tcp address
-        std::promise<boost::system::error_code> done;
-        auto fut = done.get_future();
-        connection->asyncConnect([&done](const boost::system::error_code ec) { done.set_value(ec); });
-        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, fut.wait_for(std::chrono::seconds(5)));
-        const boost::system::error_code ec = fut.get();
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(ec.message(), static_cast<int>(boost::system::errc::not_connected), ec.value());
+        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futCreateChannel.wait_for(m_timeout));
+        const std::string msg(futCreateChannel.get());
+        CPPUNIT_ASSERT_MESSAGE(msg, msg.find("Connection could not be established") != std::string::npos);
 
         // We can safely destruct the connection again
+        waitForCondition([&connection]() { return connection.use_count() == 1l; }, m_timeoutMs);
+        CPPUNIT_ASSERT_EQUAL(1l, connection.use_count());
         CPPUNIT_ASSERT_NO_THROW(connection.reset());
     }
     { // test wrongly formatted address
@@ -183,7 +250,7 @@ void Amqp_Test::testConnection() {
         std::promise<boost::system::error_code> done;
         auto fut = done.get_future();
         connection->asyncConnect([&done](const boost::system::error_code ec) { done.set_value(ec); });
-        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, fut.wait_for(std::chrono::seconds(5)));
+        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, fut.wait_for(m_timeout));
         const boost::system::error_code ec = fut.get();
         CPPUNIT_ASSERT_EQUAL_MESSAGE(ec.message(), static_cast<int>(boost::system::errc::wrong_protocol_type),
                                      ec.value());
