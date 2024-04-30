@@ -1399,8 +1399,8 @@ void GuiServer_Test::testMissingTokenOnLogin() {
     messageQ->pop(lastMessage);
     const std::string& message = lastMessage.get<std::string>("message");
     CPPUNIT_ASSERT_MESSAGE(
-          "Expected notification message starting with 'Refused non-user-authenticated login'. Got '" + message + "'",
-          message.find("Refused non-user-authenticated login") == 0u);
+          "Expected notification message that GuiServer proceeds in readOnly mode'. Got '" + message + "'",
+          message.find("Continuing in readOnly mode!") != std::string::npos);
 
     int timeout = 1500;
     // wait for the GUI server to log us out
