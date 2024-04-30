@@ -46,7 +46,7 @@ def test_configuration_namespace():
     config['device_domain'] = 'CAS_INTERNAL'
     config['domain'] = 'CAS_INTERNAL'
     config['db_token'] = 'admin'
-    assert len(config) == 21
+    assert len(config) == 20
     assert config['db_token'] == 'admin'
     assert config['device_domain'] == 'CAS_INTERNAL'
     assert config['domain'] == 'CAS_INTERNAL'
@@ -70,7 +70,6 @@ def test_configuration_namespace():
         'main_geometry',
         'project_sort_column',
         'project_sort_order',
-        'reactive_login',
         'username',
         'wizard']
 
@@ -95,7 +94,7 @@ def test_default_value():
         if item.dtype is not None:
             counter += 1
             assert item.default is not None
-    assert counter == 7
+    assert counter == 6
 
 
 def test_set_bool_value(mocker):
@@ -133,11 +132,10 @@ def test_configuration_groups_info():
     assert 'project_sort_column' in user_group
     assert 'project_sort_order' in user_group
     network_group = [item.name for item in groups[NETWORK]]
-    assert len(network_group) == 5
+    assert len(network_group) == 4
     assert 'access_level' in network_group
     assert 'username' in network_group
     assert 'gui_servers' in network_group
-    assert 'reactive_login' in network_group
     project_group = [item.name for item in groups[PROJECT]]
     assert len(project_group) == 3
     assert 'db_token' in project_group
