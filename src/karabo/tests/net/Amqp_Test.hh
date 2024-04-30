@@ -47,6 +47,7 @@ class Amqp_Test : public CPPUNIT_NS::TestFixture {
    private:
     std::vector<std::string> m_defaultBrokers;
     const std::chrono::seconds m_timeout;
+    const unsigned int m_timeoutMs;
     std::atomic<bool> m_loggingIsSetup;
 
     void testConnection();
