@@ -33,7 +33,6 @@ from .format_fmt import FormatFmtDialog
 from .format_label import FormatLabelDialog
 from .listedit import ListEditDialog
 from .log_dialog import LogDialog
-from .logindialog import LoginDialog
 from .messagebox import KaraboMessageBox
 from .pen_dialogs import PenDialog
 from .proxies_dialog import ProxiesDialog
