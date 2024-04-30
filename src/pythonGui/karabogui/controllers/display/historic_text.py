@@ -45,7 +45,12 @@ LAST_WEEK = "Last Week"
 LAST_DAY = "Last Day"
 LAST_HOUR = "Last Hour"
 LAST_MIN = "Last Ten Minutes"
-TIME_FORMAT = "[%d-%m-%Y %H:%M:%S]"
+
+
+def get_formatted(ts):
+    stamp = (f"[{ts.day}-{ts.month}-{ts.year} {ts.hour}:{ts.minute}:"
+             f"{ts.second}.{ts.microsecond // 1000:03d}]")
+    return stamp
 
 
 def get_start_end_date_time(time_span):
@@ -188,7 +193,7 @@ class DisplayHistoricText(BaseBindingController):
             return
         timestamp = proxy.binding.timestamp
         dt = datetime.fromtimestamp(timestamp.toTimestamp())
-        stamp = dt.strftime(TIME_FORMAT)
+        stamp = get_formatted(dt)
         value = self._create_value(value)
         self.text_widget.setText(f"{stamp} {value}")
 
@@ -218,7 +223,7 @@ class DisplayHistoricText(BaseBindingController):
             """Format an entry of the historic data"""
             timestamp = Timestamp.fromHashAttributes(h["v", ...])
             dt = datetime.fromtimestamp(timestamp.toTimestamp())
-            stamp = dt.strftime(TIME_FORMAT)
+            stamp = get_formatted(dt)
             value = self._create_value(h["v"])
             return f"{stamp} {value}"
 
@@ -255,5 +260,5 @@ class DisplayHistoricText(BaseBindingController):
     def _write_status(self, text):
         """Write a status on the label with the time point"""
         dt = datetime.fromtimestamp(Timestamp().toTimestamp())
-        stamp = dt.strftime("[%H:%M:%S]")
+        stamp = get_formatted(dt)
         self.status_widget.setText(f"{stamp}: {text}")
