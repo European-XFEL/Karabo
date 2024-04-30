@@ -14,6 +14,8 @@
 # The Karabo Gui is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
+import re
+
 from karabo.common.scenemodel.api import HistoricTextModel
 from karabo.native import (
     Configurable, Hash, String, Timestamp, UInt32, VectorString)
@@ -21,6 +23,10 @@ from karabogui.const import IS_WINDOWS_SYSTEM
 from karabogui.controllers.display.historic_text import DisplayHistoricText
 from karabogui.testing import (
     click_button, get_property_proxy, set_proxy_value, singletons)
+
+# Allows for one or two digits for day, month, hour, minute, second
+# and exactly three digits for milliseconds
+pattern = r"\[\d{1,2}-\d{1,2}-\d{4} \d{1,2}:\d{1,2}:\d{1,2}\.\d{3}\]"
 
 
 class Object(Configurable):
@@ -49,6 +55,7 @@ def test_historic_text(gui_app, subtests, mocker):
         set_proxy_value(proxy, "prop", "Line 1")
         assert "Line 1" in controller.text_widget.toPlainText()
         set_proxy_value(proxy, "prop", "Line 2")
+        assert re.search(pattern, controller.text_widget.toPlainText())
         assert "Line 2" in controller.text_widget.toPlainText()
 
     with subtests.test("Historic data arrival"):
@@ -61,6 +68,8 @@ def test_historic_text(gui_app, subtests, mocker):
         controller._historic_data_arrival([xfel, karabo])
         model = controller.list_model
         assert model.rowCount() == 2
+        index = model.index(0, 0)
+        assert re.search(pattern, index.data())
 
     with subtests.test("Historic data request"):
         network = mocker.Mock()
@@ -92,6 +101,7 @@ def test_vector_historic(gui_app, subtests, mocker):
         assert "['one', 'two']" in controller.text_widget.toPlainText()
         set_proxy_value(proxy, "vector", ["one", "three", "five"])
         text = controller.text_widget.toPlainText()
+        assert re.search(pattern, controller.text_widget.toPlainText())
         assert "['one', 'three', 'five']" in text
 
     with subtests.test("Historic data arrival"):
@@ -107,6 +117,8 @@ def test_vector_historic(gui_app, subtests, mocker):
         controller._historic_data_arrival([first, second, third])
         model = controller.list_model
         assert model.rowCount() == 3
+        index = model.index(0, 0)
+        assert re.search(pattern, index.data())
 
     with subtests.test("Historic data request"):
         network = mocker.Mock()
