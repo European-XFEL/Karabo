@@ -37,6 +37,8 @@ REFRESH_TOKEN = None
 
 AUTHENTICATION_SERVER = None
 
+ESCALATED_USER = None
+
 ACCESS_LEVEL_MAP = {
     "observer": 0,
     "user": 1,
