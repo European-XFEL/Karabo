@@ -29,7 +29,6 @@ from karabo.native import (
     AccessLevel, Hash, Timestamp, decodeBinary, dictToHash, encodeBinary)
 from karabogui import background, const
 from karabogui.const import REQUEST_REPLY_TIMEOUT
-from karabogui.dialogs.logindialog import LoginDialog
 from karabogui.dialogs.reactive_login_dialog import ReactiveLoginDialog
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.logger import get_logger
@@ -77,20 +76,6 @@ class Network(QObject):
             self.togglePerformanceMonitor()
 
     def connectToServer(self, parent=None) -> bool:
-        """Connection to server via LoginDialog. If an URL is specified for the
-        Karabo Authentication Server, the login with user authentication is
-        used. Otherwise, the legacy login with the visibility levels as the
-        user name is used.
-
-        Returns: Boolean to indicate if the login dialog has been accepted (
-            and that the user has been successfully authenticated when the
-            Authentication Server is defined)
-        """
-        if get_config()["reactive_login"]:
-            return self._connectToServerReactive(parent)
-        return self._connectToServer(parent)
-
-    def _connectToServerReactive(self, parent=None) -> bool:
         """Connection to server via reactive LoginDialog.
 
         Returns: Boolean to indicate if the login dialog has been accepted
@@ -109,34 +94,6 @@ class Network(QObject):
             self.port = dialog.port
             self.gui_servers = dialog.gui_servers
             self.access_level = dialog.access_level
-            self.startServerConnection()
-            return True
-
-        # Note: The server connection is not changed and thus we must
-        # notify the main window to untoggle the button
-        self.signalServerConnectionChanged.emit(False)
-
-        return False
-
-    def _connectToServer(self, parent=None) -> bool:
-        """Connection to server via LoginDialog
-
-        Returns: Boolean to indicate if the login dialog has been accepted
-        """
-
-        dialog = LoginDialog(username=self.username,
-                             password=self.password,
-                             hostname=self.hostname,
-                             port=self.port,
-                             gui_servers=self.gui_servers,
-                             parent=parent)
-
-        if dialog.exec() == QDialog.Accepted:
-            self.access_level = dialog.username
-            self.password = dialog.password
-            self.hostname = dialog.hostname
-            self.port = dialog.port
-            self.gui_servers = dialog.gui_servers
             self.startServerConnection()
             return True
 
