@@ -34,6 +34,7 @@ psutil==5.9.5
 pybind11[global]==2.10.4
 pyelftools==0.30
 pyexistdb==1.0.1
+pytest==8.1.0
 pytest-asyncio==0.21.1
 pytest-cov==4.1.0
 pytest-mock==3.12.0
