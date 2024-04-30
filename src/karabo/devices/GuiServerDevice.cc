@@ -947,17 +947,21 @@ namespace karabo {
                     sendLoginErrorAndDisconnect(channel, clientId, cliVersion, errorMsg);
                     return;
                 }
-                if (userAuthActive && !hash.has("oneTimeToken")) {
-                    const string errorMsg = "Refused non-user-authenticated login.\n\nGUI server at '" +
-                                            get<string>("hostName") + ":" + toString(get<unsigned int>("port")) +
-                                            "' only accepts authenticated logins.\nPlease update your GUI client.";
-                    sendLoginErrorAndDisconnect(channel, clientId, cliVersion, errorMsg);
-                    return;
-                }
 
+                bool readOnly = m_isReadOnly;
                 auto weakChannel = WeakChannelPointer(channel);
+
+                if (userAuthActive && !hash.has("oneTimeToken")) {
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Login of client without oneTimeToken, proceeding in readOnly mode";
+                    const string message = "GUI server at '" + get<string>("hostName") + ":" +
+                                           toString(get<unsigned int>("port")) +
+                                           "' requires authenticated logins.\nContinuing in readOnly mode!";
+                    const Hash h("type", "notification", "message", message);
+                    safeClientWrite(channel, h);
+                    readOnly = true;
+                }
                 // Handles token validation, if needed.
-                if (userAuthActive) {
+                if (userAuthActive && hash.has("oneTimeToken")) {
                     KARABO_LOG_FRAMEWORK_DEBUG << "One-time token to be validated/authorized: "
                                                << hash.get<string>("oneTimeToken");
 
@@ -984,7 +988,8 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_INFO << "Login request of client_id: " << clientId << " (version " << cliVersion
                                           << ")." << extraInfo.str();
 
-                channel->readAsyncHash(bind_weak(&karabo::devices::GuiServerDevice::onRead, this, _1, weakChannel, _2));
+                channel->readAsyncHash(
+                      bind_weak(&karabo::devices::GuiServerDevice::onRead, this, _1, weakChannel, _2, readOnly));
 
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onLogin(): " << e.what();
@@ -993,7 +998,7 @@ namespace karabo {
 
 
         void GuiServerDevice::onRead(const karabo::net::ErrorCode& e, WeakChannelPointer channel,
-                                     karabo::util::Hash& info) {
+                                     karabo::util::Hash& info, const bool readOnly) {
             if (e) {
                 onError(e, channel);
                 return;
@@ -1003,7 +1008,7 @@ namespace karabo {
                 // GUI communication scenarios
                 if (info.has("type")) {
                     const string& type = info.get<string>("type");
-                    if (m_isReadOnly && violatesReadOnly(type, info)) {
+                    if (readOnly && violatesReadOnly(type, info)) {
                         // not allowed, bail out and inform client
                         const std::string message("Action '" + type +
                                                   "' is not allowed on GUI servers in readOnly mode!");
@@ -1096,7 +1101,8 @@ namespace karabo {
             // Read the next Hash from the client
             karabo::net::Channel::Pointer chan = channel.lock();
             if (chan) {
-                chan->readAsyncHash(bind_weak(&karabo::devices::GuiServerDevice::onRead, this, _1, channel, _2));
+                chan->readAsyncHash(
+                      bind_weak(&karabo::devices::GuiServerDevice::onRead, this, _1, channel, _2, readOnly));
             }
         }
 
