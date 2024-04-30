@@ -29,7 +29,7 @@ from qtpy.QtGui import QDesktopServices, QIntValidator
 from qtpy.QtNetwork import (
     QAbstractSocket, QNetworkAccessManager, QNetworkReply, QNetworkRequest,
     QSslConfiguration, QSslSocket, QTcpSocket)
-from qtpy.QtWidgets import QDialog
+from qtpy.QtWidgets import QDialog, QDialogButtonBox, QWidget
 
 from karabo.native import decodeBinary
 from karabogui import access as krb_access
@@ -376,16 +376,33 @@ class ReactiveLoginDialog(QDialog):
 
 
 class EscalationDialog(QDialog):
-    def __init__(self, username="", parent=None):
+    def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         self.setModal(False)
         filepath = get_dialog_ui("escalation_dialog.ui")
         uic.loadUi(filepath, self)
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
-        self.edit_username.setText(username)
+
+        self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
+        self.ok_button.setEnabled(False)
+
+        self.edit_access_code.setValidator(QIntValidator(parent=self))
+        self.edit_access_code.textEdited.connect(self._update_button)
+
+        self.authenticate_button.clicked.connect(self.open_login_webpage)
 
         self.access_manager = QNetworkAccessManager()
         self.access_manager.finished.connect(self.onAuthReply)
+
+        self._auth_url = krb_access.AUTHENTICATION_SERVER
+
+    @Slot()
+    def open_login_webpage(self):
+        """Open browser to load the login page."""
+        url = f"{self._auth_url}login_form"
+        success = QDesktopServices.openUrl(QUrl(url))
+        if not success:
+            self.error_label.setText(f"Failed to open the page {url}.")
 
     @Slot()
     def accept(self):
@@ -393,41 +410,45 @@ class EscalationDialog(QDialog):
         # the escalated user.
         self._post_auth_request()
 
+    @Slot()
+    def _update_button(self):
+        enable = bool(self.edit_access_code.text().strip())
+        self.ok_button.setEnabled(enable)
+
     def _post_auth_request(self):
-        credentials = json.dumps({
-            "user": self.edit_username.text(),
-            "passwd": self.edit_password.text(),
+        info = json.dumps({
+            "access_code": int(self.edit_access_code.text()),
+            "client_hostname": CLIENT_HOST,
+            "remember_login": False
         })
-        credentials = bytearray(credentials.encode("utf-8"))
-        auth_url = krb_access.AUTHENTICATION_SERVER
-        request = QNetworkRequest(QUrl(auth_url))
-        request.setHeader(QNetworkRequest.ContentTypeHeader,
-                          REQUEST_HEADER)
-        self.access_manager.post(request, credentials)
+        info = bytearray(info.encode("utf-8"))
+        url = f"{self._auth_url}user_tokens"
+
+        request = QNetworkRequest(QUrl(url))
+        request.setHeader(QNetworkRequest.ContentTypeHeader, REQUEST_HEADER)
+        self.access_manager.post(request, info)
 
     @Slot(QNetworkReply)
-    def onAuthReply(self, reply):
+    def onAuthReply(self, reply: QNetworkReply):
 
         error = reply.error()
 
+        bytes_string = reply.readAll()
+        reply_body = str(bytes_string, "utf-8")
+        auth_result = json.loads(reply_body)
         if error == QNetworkReply.NoError:
-            bytes_string = reply.readAll()
-            reply_body = str(bytes_string, "utf-8")
-            auth_result = json.loads(reply_body)
-            if auth_result.get("success"):
-                highest_access_level = krb_access.HIGHEST_ACCESS_LEVEL.name
-                krb_access_level = krb_access.ACCESS_LEVEL_MAP.get(
-                    highest_access_level.lower(), 2)
-                krb_access.ONE_TIME_TOKEN = auth_result["once_token"]
-                get_network().onEscalateRequest(
-                    username=self.username,
-                    escalationToken=auth_result["once_token"],
-                    levelBeforeEscalation=krb_access_level,
-                )
-                super().accept()
-            else:
-                self.error_label.setText(auth_result["error_msg"])
-
-    @property
-    def username(self):
-        return self.edit_username.text()
+            krb_access.ONE_TIME_TOKEN = auth_result["once_token"]
+            highest_access_level = krb_access.HIGHEST_ACCESS_LEVEL.name
+            krb_access_level = krb_access.ACCESS_LEVEL_MAP.get(
+                highest_access_level.lower(), 2)
+            username = get_network().username
+            get_network().onEscalateRequest(
+                username=username,
+                escalationToken=auth_result["once_token"],
+                levelBeforeEscalation=krb_access_level,
+            )
+            super().accept()
+        else:
+            error = auth_result.get("detail")
+            self.error_label.setText(error)
+        reply.deleteLater()
