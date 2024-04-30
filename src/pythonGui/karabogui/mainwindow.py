@@ -310,8 +310,8 @@ class MainWindow(QMainWindow):
                             if value is not None])
         if get_network().username and krb_access.is_authenticated():
             title = f"{title} - User: {get_network().username}"
-        if escalated_user := kwargs.get("escalated_user"):
-            title = f"{title}- Escalated User: {escalated_user}"
+        if krb_access.ESCALATED_USER is not None:
+            title = f"{title} - Escalated User: {krb_access.ESCALATED_USER}"
         self.setWindowTitle(title)
 
     def readSettings(self):
@@ -741,8 +741,7 @@ class MainWindow(QMainWindow):
             return
         self._last_selected_access = self.agAccessLevel.checkedAction()
 
-        user_name = get_network().username
-        dialog = EscalationDialog(username=user_name, parent=self)
+        dialog = EscalationDialog(parent=self)
         dialog.accepted.connect(self._accept_escalation)
         dialog.rejected.connect(self._reject_escalation)
         dialog.show()
@@ -950,9 +949,8 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def _accept_escalation(self):
-        escalation_dialog = self.sender()
         self._update_escalate_button(escalated=True)
-        self._set_window_title(escalated_user=escalation_dialog.username)
+        self._set_window_title()
 
     @Slot()
     def _reject_escalation(self):

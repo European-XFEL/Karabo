@@ -128,6 +128,7 @@ class Network(QObject):
         # All panels need to be reset and all projects closed
         self.signalServerConnectionChanged.emit(False)
         krb_access.ONE_TIME_TOKEN = None
+        krb_access.ESCALATED_USER = None
         process_qt_events(timeout=5000)
         self.endServerConnection()
 
@@ -652,7 +653,6 @@ class Network(QObject):
         h = Hash("type", "escalate")
         h["clientId"] = const.KARABO_CLIENT_ID
         h["version"] = const.GUI_VERSION
-        h["username"] = info["username"]
         h["escalationToken"] = info["escalationToken"]
         h["levelBeforeEscalation"] = info["levelBeforeEscalation"]
         self._write_hash(h)
