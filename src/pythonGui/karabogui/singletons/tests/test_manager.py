@@ -923,7 +923,8 @@ def test_handle_onDeescalate(mocker):
         broadcast = mocker.patch(
             "karabogui.singletons.manager.broadcast_event")
 
-        manager.handle_onDeescalate(levelBeforeEscalation=3)
+        manager.handle_onDeescalate(levelBeforeEscalation=3,
+                                    loggedUserId="karabo")
         assert broadcast.call_count == 1
         broadcast.assert_called_with(KaraboEvent.LoginUserChanged, {})
 
@@ -938,3 +939,43 @@ def test_handle_onEscalationExpired(mocker):
         broadcast.call_count == 1
         broadcast.assert_called_with(KaraboEvent.LoginUserChanged,
                                      {'escalation_expired': True})
+
+
+def test_escalation(mocker):
+    network = mocker.Mock()
+    with singletons(network=network):
+        manager = Manager()
+        login_info = {"username": "abcd", "accessLevel": 3}
+        mocker.patch("karabogui.singletons.manager.broadcast_event")
+        manager.handle_loginInformation(**login_info)
+        assert network.set_username.call_count == 1
+        network.set_username.assert_called_with("abcd")
+
+        assert krb_access.GLOBAL_ACCESS_LEVEL == AccessLevel(3)
+        assert krb_access.HIGHEST_ACCESS_LEVEL == AccessLevel(3)
+        assert krb_access.ESCALATED_USER is None
+        network.set_username.reset_mock()
+
+        escalation_info = {"username": "karabo", "accessLevel": 4,
+                           "success": True}
+        manager.handle_onEscalate(**escalation_info)
+
+        assert network.set_username.call_count == 0
+        assert krb_access.GLOBAL_ACCESS_LEVEL == AccessLevel(3)
+        assert krb_access.HIGHEST_ACCESS_LEVEL == AccessLevel(4)
+        assert krb_access.ESCALATED_USER == "karabo"
+
+        deescalate_info = {"levelBeforeEscalation": 2}
+        manager.handle_onDeescalate(** deescalate_info)
+
+        assert network.set_username.call_count == 0
+        assert krb_access.GLOBAL_ACCESS_LEVEL == AccessLevel(2)
+        assert krb_access.HIGHEST_ACCESS_LEVEL == AccessLevel(2)
+        assert krb_access.ESCALATED_USER is None
+
+        escalation_expired_info = {"levelBeforeEscalation": 1}
+        manager.handle_onEscalationExpired(**escalation_expired_info)
+        assert network.set_username.call_count == 0
+        assert krb_access.GLOBAL_ACCESS_LEVEL == AccessLevel(1)
+        assert krb_access.HIGHEST_ACCESS_LEVEL == AccessLevel(1)
+        assert krb_access.ESCALATED_USER is None
