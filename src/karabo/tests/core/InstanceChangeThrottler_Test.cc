@@ -27,7 +27,10 @@
 #include <boost/make_shared.hpp>
 #include <cmath>
 
+#include "karabo/tests/WaitUtils.hh"
+
 using boost::placeholders::_1;
+using karabo::tests::waitForCondition;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(InstanceChangeThrottler_Test);
 
@@ -535,17 +538,6 @@ void InstanceChangeThrottler_Test::handleInstChange(const karabo::util::Hash& ch
     m_instChangeObserver.addInstChanges(changeInfo);
 }
 
-
-bool InstanceChangeThrottler_Test::waitForCondition(boost::function<bool()> checker, unsigned int timeoutMillis) {
-    constexpr unsigned int sleepIntervalMillis = 5;
-    unsigned int numOfWaits = 0;
-    const unsigned int maxNumOfWaits = static_cast<unsigned int>(std::ceil(timeoutMillis / sleepIntervalMillis));
-    while (numOfWaits < maxNumOfWaits && !checker()) {
-        boost::this_thread::sleep_for(boost::chrono::milliseconds(sleepIntervalMillis));
-        numOfWaits++;
-    }
-    return (numOfWaits < maxNumOfWaits);
-}
 
 //</editor-fold>
 
