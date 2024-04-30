@@ -91,14 +91,16 @@ namespace karabo::net {
         void asyncConnect(AsyncHandler&& onComplete);
 
         /**
-         * Trigger creation of an amqp channel and return it via the handler
+         * Trigger creation of an amqp channel and return it via the handler.
+         *
+         * If not connected yet, try to connect first.
          *
          * Can be called from any thread.
          *
          * @param onComplete A valid (!) ChannelCreationHandler that will be called from within the internal io context,
          *                   but not within the scope of asyncCreateChannel.
          */
-        void asyncCreateChannel(const ChannelCreationHandler& onComplete);
+        void asyncCreateChannel(ChannelCreationHandler onComplete);
 
 
         /**
@@ -133,15 +135,15 @@ namespace karabo::net {
 
         /**
          * Helper to asyncConnect iterating over urls until success or all urls tried.
-         * Then calls m_onComplete.
+         * Then calls m_onConnectionComplete.
          *
          * Prerequisite: m_urlIndex < m_urls.size()
          */
         void doAsyncConnect();
-        // Helper to call and reset m_onComplete (if set)
+        // Helper to call and reset m_onConnectionComplete (if set)
         void callOnComplete(const boost::system::error_code& ec);
         // Helper to run content of asyncCreateChannel in our io context
-        void doCreateChannel(const ChannelCreationHandler& onComplete);
+        void doCreateChannel(ChannelCreationHandler onComplete);
 
         // Broker urls from input
         std::vector<std::string> m_urls;
@@ -166,7 +168,8 @@ namespace karabo::net {
         State m_state;
 
         // Completion handler
-        AsyncHandler m_onComplete;
+        AsyncHandler m_onConnectionComplete;
+        std::vector<ChannelCreationHandler> m_pendingOnChannelCreations;
     };
 } // namespace karabo::net
 
