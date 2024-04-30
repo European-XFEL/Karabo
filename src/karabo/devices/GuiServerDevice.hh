@@ -483,8 +483,11 @@ namespace karabo {
              * @param e holds an error code if the eventloop cancel this task or the channel is closed
              * @param channel
              * @param info
+             * @param readOnly
              */
-            void onRead(const karabo::net::ErrorCode& e, WeakChannelPointer channel, karabo::util::Hash& info);
+            void onRead(const karabo::net::ErrorCode& e, WeakChannelPointer channel, karabo::util::Hash& info,
+                        const bool readOnly);
+
 
             /**
              * Sets the appropriate timeout to a Requestor
