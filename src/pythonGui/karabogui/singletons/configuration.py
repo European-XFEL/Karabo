@@ -170,8 +170,6 @@ class Configuration(QObject):
     username = Item(default="operator", q_set=True, group=NETWORK)
     access_level = Item(default="operator", q_set=True, group=NETWORK)
     gui_servers = Item(default=[], q_set=True, group=NETWORK)
-    reactive_login = Item(
-        default=False, q_set=True, dtype=bool, editable=True, group=NETWORK)
     macro_development = Item(q_set=True, group=NETWORK)
 
     def __new__(cls, *args, **kwargs):
