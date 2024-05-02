@@ -14,6 +14,7 @@ ncurses/*:CXX=g++
 
 [tool_requires]
 cmake/3.27.1
+b2/4.10.1
 
 [conf]
 tools.system.package_manager:mode=check
