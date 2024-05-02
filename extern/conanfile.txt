@@ -25,7 +25,7 @@ patchelf/0.13
 pugixml/1.10
 
 # minor-any
-boost/1.82.0@karabo/py311
+boost/1.82.0
 cppunit/1.15.1
 libjpeg/9e
 libtiff/4.3.0
@@ -72,9 +72,7 @@ boost/*:without_thread=False
 boost/*:without_system=False
 boost/*:without_program_options=False
 # build libboost_python (for karabo.bound!)
-boost/*:without_python=False
-# do not build libboost_numpy
-boost/*:without_numpy=True
+boost:without_python=False
 
 [imports]
 # the ".."s are because conan install uses $INSTALL_PREFIX/conan_out in build.sh
