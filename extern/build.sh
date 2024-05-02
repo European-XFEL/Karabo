@@ -110,7 +110,7 @@ install_python() {
     # always compile patchelf, b2, openssl from source (needed later), ensures linkage against correct GLIBC version symbols
     if [[ $INSTALL_PREFIX == *"CentOS-7"* ]]; then
         safeRunCommandQuiet "conan install patchelf/0.13@ --build=patchelf --build=missing $profile_opts"
-        safeRunCommandQuiet "conan install b2/4.9.6@ --build=b2 --build=missing $profile_opts"
+        safeRunCommandQuiet "conan install b2/4.10.1@ --build=b2 --build=missing $profile_opts"
         safeRunCommandQuiet "conan install expat/2.6.0@ --build=expat --build=missing -o shared=True $profile_opts"
         # openssl:openssldir=/etc/pki/tls on CentOS7
         build_opts="$build_opts --build=openssl -o openssl/*:openssldir=/etc/pki/tls"
@@ -143,13 +143,10 @@ install_from_deps() {
         # create default build profile
         safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan profile new default --detect --force"
 
-        # export local daemontools recipe
+        # export local conan recipes (for packages where no public recipe exists
+        # we keep custom conan recipes in extern/resources/<pkg_name>)
         safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan export ./resources/daemontools/conanfile.py daemontools-encore/$DAEMONTOOLS_VERSION@karabo/$CONAN_RECIPE_CHANNEL"
-        # export local log4cpp recipe
         safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan export ./resources/log4cpp/conanfile.py log4cpp/$LOG4CPP_VERSION@karabo/$CONAN_RECIPE_CHANNEL"
-        # export local boost recipe
-        safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan export ./resources/boost/conanfile.py boost/$BOOST_VERSION@karabo/$CONAN_RECIPE_CHANNEL"
-        # export local openmq/openmqc recipe
         safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan export ./resources/openmq/conanfile.py openmq/$OPENMQ_VERSION@karabo/$CONAN_RECIPE_CHANNEL"
         safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan export ./resources/openmqc/conanfile.py openmqc/$OPENMQC_VERSION@karabo/$CONAN_RECIPE_CHANNEL"
 
