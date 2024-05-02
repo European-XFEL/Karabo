@@ -748,14 +748,22 @@ namespace karabo {
                 // are the keys and the columns indexes are the values. The first column,
                 // index 0, is the time and is skipped since it won't be used.
                 std::map<std::string, int> colMap;
-                const auto& respColumns = respObj["results"][0]["series"][0]["columns"];
+                const auto& series = respObj["results"][0]["series"];
+                if (series.is_null()) {
+                    // The returned json is completely empty - an empty result for an InfluxQL
+                    // query is '{"results:":[{}]}'. Any non-empty result will contain at least a
+                    // "series" key.
+                    throw KARABO_PARAMETER_EXCEPTION("No schema found for digest. Influx's response: " +
+                                                     schemaResp.payload);
+                }
+                const auto& respColumns = series[0]["columns"];
                 for (size_t i = 1; i < respColumns.size(); i++) {
                     colMap[respColumns[i].get<std::string>()] = i;
                 }
                 // Initializes a reference to the values of the single "record" retrieved from Influx.
                 // It can be assumed that there is a single "record" in the response because the query
                 // that generated the response uses "ORDER BY time DESC" followed by "LIMIT 1".
-                const auto& respValues = respObj["results"][0]["series"][0]["values"][0];
+                const auto& respValues = series[0]["values"][0];
 
                 int schemaChunks = 1;
                 const auto nChunksIt = colMap.find("n_schema_chunks");
@@ -777,8 +785,8 @@ namespace karabo {
 
             } catch (const std::exception& e) {
                 std::ostringstream oss;
-                oss << "Error retrieving schema by digest for device '" << ctxt->deviceId << "' at '"
-                    << ctxt->atTime.toIso8601Ext() << "'";
+                oss << "Error retrieving schema with digest '" << digest << "' for device '" << ctxt->deviceId
+                    << "' at '" << ctxt->atTime.toIso8601Ext() << "'";
                 const std::string errMsg = onException(oss.str());
                 ctxt->aReply.error(errMsg);
                 return;
