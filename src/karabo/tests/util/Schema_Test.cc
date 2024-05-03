@@ -831,6 +831,311 @@ void Schema_Test::testHelpFunction() {
      */
 }
 
+void Schema_Test::testOverwriteElement() {
+    {
+        Schema schema = Configurator<TestStruct1>::getSchema("TestStruct2");
+
+        CPPUNIT_ASSERT(schema.getAliasFromKey<int>("exampleKey2") == 20);
+        CPPUNIT_ASSERT(schema.getAliasFromKey<int>("exampleKey3") == 30);
+    }
+
+    // Check that overwrite element does not accept non-existing paths
+    {
+        Schema schema;
+        CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(schema).key("non_existing_path"), karabo::util::ParameterException);
+    }
+
+    // Check that overwrite element complains if key(...) is not called first (too lazy to test all cases...)
+    {
+        Schema schema;
+        CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(schema).commit(), karabo::util::LogicException);
+    }
+
+    testOverwriteElementScalarDefault();
+    testOverwriteElementVectorDefault();
+    testOverwriteElementMinMax();
+    testOverwriteElementMinMaxVector();
+}
+
+void Schema_Test::testOverwriteElementScalarDefault() {
+    Schema schema;
+    UINT16_ELEMENT(schema)
+          .key("uint16")
+          .assignmentOptional()
+          .defaultValue(5u)
+          .options(std::vector<unsigned short>{1u, 5u})
+          .commit();
+    INT32_ELEMENT(schema)
+          .key("int32") //
+          .assignmentOptional()
+          .defaultValue(-5)
+          .options(std::vector<int>{3, -5})
+          .commit();
+    DOUBLE_ELEMENT(schema)
+          .key("double")
+          .assignmentOptional()
+          .defaultValue(0.)
+          .options(std::vector<double>{2.2, -3.3, 0.})
+          .commit();
+    STRING_ELEMENT(schema)
+          .key("string")
+          .assignmentOptional()
+          .defaultValue("default")
+          .options(std::vector<std::string>{"default", "other"})
+          .commit();
+    STATE_ELEMENT(schema)
+          .key("state")
+          .initialValue(State::INIT)
+          .options(State::INIT, State::ON, State::CHANGING)
+          .commit();
+    INT64_ELEMENT(schema) //
+          .key("int64Inc")
+          .assignmentOptional()
+          .defaultValue(0)
+          .minInc(-5)
+          .maxInc(5)
+          .commit();
+    INT64_ELEMENT(schema) //
+          .key("int64Exc")
+          .assignmentOptional()
+          .defaultValue(0)
+          .minExc(-5)
+          .maxExc(5)
+          .commit();
+
+    Schema workSchema(schema);
+    // unit16
+    CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema)
+                               .key("uint16")
+                               .setNewDefaultValue(static_cast<unsigned short>(2u))
+                               .commit(), // options are 1 and 5
+                         karabo::util::LogicException);
+    workSchema = schema; // start clean
+    CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema).key("uint16").setNewOptions("1, 2").commit(),
+                         karabo::util::LogicException); // default is 5
+
+    // int32
+    workSchema = schema; // start clean
+    CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema)
+                               .key("int32")
+                               .setNewDefaultValue(2) // options are 3 and -5
+                               .commit(),
+                         karabo::util::LogicException);
+    workSchema = schema; // start clean
+    CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema).key("int32").setNewOptions("1, 2").commit(),
+                         karabo::util::LogicException); // default is -5
+
+    // double
+    workSchema = schema; // start clean
+    CPPUNIT_ASSERT_THROW(
+          OVERWRITE_ELEMENT(workSchema).key("double").setNewDefaultValue(2.1).commit(), // options are 2.2, -3.3 and 0.
+          karabo::util::LogicException);
+    workSchema = schema; // start clean
+    CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema).key("double").setNewOptions("1.1, 2.2").commit(),
+                         karabo::util::LogicException); // default is 0.
+
+    // string
+    workSchema = schema; // start clean
+    CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema)
+                               .key("string")
+                               .setNewDefaultValue("further")
+                               .commit(), // options are "default" and "other"
+                         karabo::util::LogicException);
+    workSchema = schema; // start clean
+    CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema).key("string").setNewOptions("one, another").commit(),
+                         karabo::util::LogicException); // default is "default"
+
+    // State
+    workSchema = schema; // start clean
+    CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema)
+                               .key("state")
+                               .setNewDefaultValue(State::UNKNOWN)
+                               .commit(), // options are INIT, ON, CHANGING
+                         karabo::util::LogicException);
+    workSchema = schema; // start clean
+    CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema)
+                               .key("state")
+                               .setNewOptions(std::vector<State>{State::ON, State::ACQUIRING})
+                               .commit(),
+                         karabo::util::LogicException); // default is INIT
+
+    // Check inclusive minimum and maximum: -5 <= x <= 5
+    workSchema = schema;
+    CPPUNIT_ASSERT_NO_THROW(OVERWRITE_ELEMENT(workSchema) //
+                                  .key("int64Inc")
+                                  .setNewDefaultValue(-5LL)
+                                  .commit());
+
+    workSchema = schema;                                  // start clean
+    CPPUNIT_ASSERT_NO_THROW(OVERWRITE_ELEMENT(workSchema) //
+                                  .key("int64Inc")
+                                  .setNewDefaultValue(5LL)
+                                  .commit());
+
+    workSchema = schema;                               // start clean
+    CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema) //
+                               .key("int64Inc")
+                               .setNewDefaultValue(-6LL)
+                               .commit(),
+                         karabo::util::ParameterException);
+
+    workSchema = schema;                               // start clean
+    CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema) //
+                               .key("int64Inc")
+                               .setNewDefaultValue(6LL)
+                               .commit(),
+                         karabo::util::ParameterException);
+
+    // Check exclusive minimum and maximum: -5 < x < 5
+    workSchema = schema;                                  // start clean
+    CPPUNIT_ASSERT_NO_THROW(OVERWRITE_ELEMENT(workSchema) //
+                                  .key("int64Exc")
+                                  .setNewDefaultValue(-4LL)
+                                  .commit());
+
+    workSchema = schema;                                  // start clean
+    CPPUNIT_ASSERT_NO_THROW(OVERWRITE_ELEMENT(workSchema) //
+                                  .key("int64Exc")
+                                  .setNewDefaultValue(4LL)
+                                  .commit());
+    workSchema = schema;                               // start clean
+    CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema) //
+                               .key("int64Exc")
+                               .setNewDefaultValue(-5LL)
+                               .commit(),
+                         karabo::util::ParameterException);
+
+    workSchema = schema;                               // start clean
+    CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema) //
+                               .key("int64Exc")
+                               .setNewDefaultValue(5LL)
+                               .commit(),
+                         karabo::util::ParameterException);
+
+    // We skip explicit testing of BOOL, CHAR, [U]INT8, INT16, UINT32, [U]INT64, FLOAT
+}
+
+
+void Schema_Test::testOverwriteElementVectorDefault() {
+    constexpr unsigned int vector_min_size{10};
+    constexpr unsigned int vector_max_size{15};
+    constexpr unsigned int vector_default_size{12};
+
+    Schema schema;
+
+    VECTOR_BOOL_ELEMENT(schema)
+          .key("boolVector")
+          .assignmentOptional()
+          .defaultValue(std::vector<bool>(vector_default_size))
+          .minSize(vector_min_size)
+          .maxSize(vector_max_size)
+          .commit();
+    VECTOR_CHAR_ELEMENT(schema)
+          .key("charVector")
+          .assignmentOptional()
+          .defaultValue(std::vector<char>(vector_default_size))
+          .minSize(vector_min_size)
+          .maxSize(vector_max_size)
+          .commit();
+    VECTOR_INT8_ELEMENT(schema)
+          .key("int8Vector")
+          .assignmentOptional()
+          .defaultValue(std::vector<signed char>(vector_default_size))
+          .minSize(vector_min_size)
+          .maxSize(vector_max_size)
+          .commit();
+    VECTOR_UINT8_ELEMENT(schema)
+          .key("uint8Vector")
+          .assignmentOptional()
+          .defaultValue(std::vector<unsigned char>(vector_default_size))
+          .minSize(vector_min_size)
+          .maxSize(vector_max_size)
+          .commit();
+    VECTOR_INT16_ELEMENT(schema)
+          .key("int16Vector")
+          .assignmentOptional()
+          .defaultValue(std::vector<signed short int>(vector_default_size))
+          .minSize(vector_min_size)
+          .maxSize(vector_max_size)
+          .commit();
+    VECTOR_UINT16_ELEMENT(schema)
+          .key("uint16Vector")
+          .assignmentOptional()
+          .defaultValue(std::vector<unsigned short int>(vector_default_size))
+          .minSize(vector_min_size)
+          .maxSize(vector_max_size)
+          .commit();
+    VECTOR_INT32_ELEMENT(schema)
+          .key("int32Vector")
+          .assignmentOptional()
+          .defaultValue(std::vector<signed int>(vector_default_size))
+          .minSize(vector_min_size)
+          .maxSize(vector_max_size)
+          .commit();
+    VECTOR_UINT32_ELEMENT(schema)
+          .key("uint32Vector")
+          .assignmentOptional()
+          .defaultValue(std::vector<unsigned int>(vector_default_size))
+          .minSize(vector_min_size)
+          .maxSize(vector_max_size)
+          .commit();
+    VECTOR_INT64_ELEMENT(schema)
+          .key("int64Vector")
+          .assignmentOptional()
+          .defaultValue(std::vector<signed long long int>(vector_default_size))
+          .minSize(vector_min_size)
+          .maxSize(vector_max_size)
+          .commit();
+    VECTOR_UINT64_ELEMENT(schema)
+          .key("uint64Vector")
+          .assignmentOptional()
+          .defaultValue(std::vector<unsigned long long int>(vector_default_size))
+          .minSize(vector_min_size)
+          .maxSize(vector_max_size)
+          .commit();
+    VECTOR_FLOAT_ELEMENT(schema)
+          .key("floatVector")
+          .assignmentOptional()
+          .defaultValue(std::vector<float>(vector_default_size))
+          .minSize(vector_min_size)
+          .maxSize(vector_max_size)
+          .commit();
+    VECTOR_DOUBLE_ELEMENT(schema)
+          .key("doubleVector")
+          .assignmentOptional()
+          .defaultValue(std::vector<double>(vector_default_size))
+          .minSize(vector_min_size)
+          .maxSize(vector_max_size)
+          .commit();
+    VECTOR_STRING_ELEMENT(schema)
+          .key("stringVector")
+          .assignmentOptional()
+          .defaultValue(std::vector<std::string>(vector_default_size))
+          .minSize(vector_min_size)
+          .maxSize(vector_max_size)
+          .commit();
+
+    Schema rowSchema;
+    STRING_ELEMENT(rowSchema).key("string").assignmentOptional().noDefaultValue().commit();
+    INT64_ELEMENT(rowSchema).key("int").assignmentOptional().noDefaultValue().commit();
+
+    Hash row{"string", "Hello", "int", 1ll};
+
+    constexpr unsigned int table_min_size{3};
+    constexpr unsigned int table_max_size{10};
+    constexpr unsigned int table_default_size{5};
+
+    TABLE_ELEMENT(schema)
+          .key("tableElement")
+          .setColumns(rowSchema)
+          .assignmentOptional()
+          .defaultValue(std::vector<Hash>{table_default_size, row})
+          .minSize(table_min_size)
+          .maxSize(table_max_size)
+          .commit();
+
+    Schema workSchema;
+
 #define TEST_ARRAY_BOUNDARIES(TYPE, NAME)                                                                              \
     workSchema = schema;                                                                                               \
     CPPUNIT_ASSERT_THROW(                                                                                              \
@@ -853,364 +1158,194 @@ void Schema_Test::testHelpFunction() {
     CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema).key(NAME).setNewMaxSize(vector_default_size - 1).commit(),      \
                          karabo::util::ParameterException)
 
-void Schema_Test::testOverwriteElement() {
-    {
-        Schema schema = Configurator<TestStruct1>::getSchema("TestStruct2");
 
-        CPPUNIT_ASSERT(schema.getAliasFromKey<int>("exampleKey2") == 20);
-        CPPUNIT_ASSERT(schema.getAliasFromKey<int>("exampleKey3") == 30);
-    }
+    // See macro definition above. We check boundary cases, one case less
+    // than minimum and one greater than maximum. Also, one test that
+    // changes the minimum value, and another that changes the maximum value.
 
-    // Check that overwrite element does not accept non-existing paths
-    {
-        Schema schema;
-        CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(schema).key("non_existing_path"), karabo::util::ParameterException);
-    }
-
-    // Check that overwrite element complains if key(...) is not called first (too lazy to test all cases...)
-    {
-        Schema schema;
-        CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(schema).commit(), karabo::util::LogicException);
-    }
-
-    // Check that overwrite element checks that (new) default and options do not contradict
-    {
-        Schema schema;
-        UINT16_ELEMENT(schema)
-              .key("uint16")
-              .assignmentOptional()
-              .defaultValue(5u)
-              .options(std::vector<unsigned short>{1u, 5u})
-              .commit();
-        INT32_ELEMENT(schema)
-              .key("int32")
-              .assignmentOptional()
-              .defaultValue(-5)
-              .options(std::vector<int>{3, -5})
-              .commit();
-        DOUBLE_ELEMENT(schema)
-              .key("double")
-              .assignmentOptional()
-              .defaultValue(0.)
-              .options(std::vector<double>{2.2, -3.3, 0.})
-              .commit();
-        STRING_ELEMENT(schema)
-              .key("string")
-              .assignmentOptional()
-              .defaultValue("default")
-              .options(std::vector<std::string>{"default", "other"})
-              .commit();
-        STATE_ELEMENT(schema)
-              .key("state")
-              .initialValue(State::INIT)
-              .options(State::INIT, State::ON, State::CHANGING)
-              .commit();
-        INT64_ELEMENT(schema) //
-              .key("int64Inc")
-              .assignmentOptional()
-              .defaultValue(0)
-              .minInc(-5)
-              .maxInc(5)
-              .commit();
-        INT64_ELEMENT(schema) //
-              .key("int64Exc")
-              .assignmentOptional()
-              .defaultValue(0)
-              .minExc(-5)
-              .maxExc(5)
-              .commit();
-
-        constexpr unsigned int vector_min_size{10};
-        constexpr unsigned int vector_max_size{15};
-        constexpr unsigned int vector_default_size{12};
-
-        VECTOR_BOOL_ELEMENT(schema)
-              .key("boolVector")
-              .assignmentOptional()
-              .defaultValue(std::vector<bool>(vector_default_size))
-              .minSize(vector_min_size)
-              .maxSize(vector_max_size)
-              .commit();
-        VECTOR_CHAR_ELEMENT(schema)
-              .key("charVector")
-              .assignmentOptional()
-              .defaultValue(std::vector<char>(vector_default_size))
-              .minSize(vector_min_size)
-              .maxSize(vector_max_size)
-              .commit();
-        VECTOR_INT8_ELEMENT(schema)
-              .key("int8Vector")
-              .assignmentOptional()
-              .defaultValue(std::vector<signed char>(vector_default_size))
-              .minSize(vector_min_size)
-              .maxSize(vector_max_size)
-              .commit();
-        VECTOR_UINT8_ELEMENT(schema)
-              .key("uint8Vector")
-              .assignmentOptional()
-              .defaultValue(std::vector<unsigned char>(vector_default_size))
-              .minSize(vector_min_size)
-              .maxSize(vector_max_size)
-              .commit();
-        VECTOR_INT16_ELEMENT(schema)
-              .key("int16Vector")
-              .assignmentOptional()
-              .defaultValue(std::vector<signed short int>(vector_default_size))
-              .minSize(vector_min_size)
-              .maxSize(vector_max_size)
-              .commit();
-        VECTOR_UINT16_ELEMENT(schema)
-              .key("uint16Vector")
-              .assignmentOptional()
-              .defaultValue(std::vector<unsigned short int>(vector_default_size))
-              .minSize(vector_min_size)
-              .maxSize(vector_max_size)
-              .commit();
-        VECTOR_INT32_ELEMENT(schema)
-              .key("int32Vector")
-              .assignmentOptional()
-              .defaultValue(std::vector<signed int>(vector_default_size))
-              .minSize(vector_min_size)
-              .maxSize(vector_max_size)
-              .commit();
-        VECTOR_UINT32_ELEMENT(schema)
-              .key("uint32Vector")
-              .assignmentOptional()
-              .defaultValue(std::vector<unsigned int>(vector_default_size))
-              .minSize(vector_min_size)
-              .maxSize(vector_max_size)
-              .commit();
-        VECTOR_INT64_ELEMENT(schema)
-              .key("int64Vector")
-              .assignmentOptional()
-              .defaultValue(std::vector<signed long long int>(vector_default_size))
-              .minSize(vector_min_size)
-              .maxSize(vector_max_size)
-              .commit();
-        VECTOR_UINT64_ELEMENT(schema)
-              .key("uint64Vector")
-              .assignmentOptional()
-              .defaultValue(std::vector<unsigned long long int>(vector_default_size))
-              .minSize(vector_min_size)
-              .maxSize(vector_max_size)
-              .commit();
-        VECTOR_FLOAT_ELEMENT(schema)
-              .key("floatVector")
-              .assignmentOptional()
-              .defaultValue(std::vector<float>(vector_default_size))
-              .minSize(vector_min_size)
-              .maxSize(vector_max_size)
-              .commit();
-        VECTOR_DOUBLE_ELEMENT(schema)
-              .key("doubleVector")
-              .assignmentOptional()
-              .defaultValue(std::vector<double>(vector_default_size))
-              .minSize(vector_min_size)
-              .maxSize(vector_max_size)
-              .commit();
-        VECTOR_STRING_ELEMENT(schema)
-              .key("stringVector")
-              .assignmentOptional()
-              .defaultValue(std::vector<std::string>(vector_default_size))
-              .minSize(vector_min_size)
-              .maxSize(vector_max_size)
-              .commit();
-
-        Schema rowSchema;
-        STRING_ELEMENT(rowSchema).key("string").assignmentOptional().noDefaultValue().commit();
-        INT64_ELEMENT(rowSchema).key("int").assignmentOptional().noDefaultValue().commit();
-
-        Hash row{"string", "Hello", "int", 1ll};
-
-        constexpr unsigned int table_min_size{3};
-        constexpr unsigned int table_max_size{10};
-        constexpr unsigned int table_default_size{5};
-
-        TABLE_ELEMENT(schema)
-              .key("tableElement")
-              .setColumns(rowSchema)
-              .assignmentOptional()
-              .defaultValue(std::vector<Hash>{table_default_size, row})
-              .minSize(table_min_size)
-              .maxSize(table_max_size)
-              .commit();
-
-
-        Schema workSchema(schema);
-        // unit16
-        CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema)
-                                   .key("uint16")
-                                   .setNewDefaultValue(static_cast<unsigned short>(2u))
-                                   .commit(), // options are 1 and 5
-                             karabo::util::LogicException);
-        workSchema = schema; // start clean
-        CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema).key("uint16").setNewOptions("1, 2").commit(),
-                             karabo::util::LogicException); // default is 5
-
-        // int32
-        workSchema = schema; // start clean
-        CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema)
-                                   .key("int32")
-                                   .setNewDefaultValue(2) // options are 3 and -5
-                                   .commit(),
-                             karabo::util::LogicException);
-        workSchema = schema; // start clean
-        CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema).key("int32").setNewOptions("1, 2").commit(),
-                             karabo::util::LogicException); // default is -5
-
-        // double
-        workSchema = schema; // start clean
-        CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema)
-                                   .key("double")
-                                   .setNewDefaultValue(2.1)
-                                   .commit(), // options are 2.2, -3.3 and 0.
-                             karabo::util::LogicException);
-        workSchema = schema; // start clean
-        CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema).key("double").setNewOptions("1.1, 2.2").commit(),
-                             karabo::util::LogicException); // default is 0.
-
-        // string
-        workSchema = schema; // start clean
-        CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema)
-                                   .key("string")
-                                   .setNewDefaultValue("further")
-                                   .commit(), // options are "default" and "other"
-                             karabo::util::LogicException);
-        workSchema = schema; // start clean
-        CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema).key("string").setNewOptions("one, another").commit(),
-                             karabo::util::LogicException); // default is "default"
-
-        // State
-        workSchema = schema; // start clean
-        CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema)
-                                   .key("state")
-                                   .setNewDefaultValue(State::UNKNOWN)
-                                   .commit(), // options are INIT, ON, CHANGING
-                             karabo::util::LogicException);
-        workSchema = schema; // start clean
-        CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema)
-                                   .key("state")
-                                   .setNewOptions(std::vector<State>{State::ON, State::ACQUIRING})
-                                   .commit(),
-                             karabo::util::LogicException); // default is INIT
-
-        // Check inclusive minimum and maximum: -5 <= x <= 5
-        workSchema = schema;
-        CPPUNIT_ASSERT_NO_THROW(OVERWRITE_ELEMENT(workSchema) //
-                                      .key("int64Inc")
-                                      .setNewDefaultValue(-5LL)
-                                      .commit());
-
-        workSchema = schema;                                  // start clean
-        CPPUNIT_ASSERT_NO_THROW(OVERWRITE_ELEMENT(workSchema) //
-                                      .key("int64Inc")
-                                      .setNewDefaultValue(5LL)
-                                      .commit());
-
-        workSchema = schema;                               // start clean
-        CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema) //
-                                   .key("int64Inc")
-                                   .setNewDefaultValue(-6LL)
-                                   .commit(),
-                             karabo::util::ParameterException);
-
-        workSchema = schema;                               // start clean
-        CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema) //
-                                   .key("int64Inc")
-                                   .setNewDefaultValue(6LL)
-                                   .commit(),
-                             karabo::util::ParameterException);
-
-        // Check exclusive minimum and maximum: -5 < x < 5
-        workSchema = schema;                                  // start clean
-        CPPUNIT_ASSERT_NO_THROW(OVERWRITE_ELEMENT(workSchema) //
-                                      .key("int64Exc")
-                                      .setNewDefaultValue(-4LL)
-                                      .commit());
-
-        workSchema = schema;                                  // start clean
-        CPPUNIT_ASSERT_NO_THROW(OVERWRITE_ELEMENT(workSchema) //
-                                      .key("int64Exc")
-                                      .setNewDefaultValue(4LL)
-                                      .commit());
-        workSchema = schema;                               // start clean
-        CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema) //
-                                   .key("int64Exc")
-                                   .setNewDefaultValue(-5LL)
-                                   .commit(),
-                             karabo::util::ParameterException);
-
-        workSchema = schema;                               // start clean
-        CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema) //
-                                   .key("int64Exc")
-                                   .setNewDefaultValue(5LL)
-                                   .commit(),
-                             karabo::util::ParameterException);
-
-        // We skip explicit testing of BOOL, CHAR, [U]INT8, INT16, UINT32, [U]INT64, FLOAT
-
-        // See macro definition above. We check boundary cases, one case less
-        // than minimum and one greater than maximum. Also, one test that
-        // changes the minimum value, and another that changes the maximum value.
-
-        TEST_ARRAY_BOUNDARIES(bool, "boolVector");
-        TEST_ARRAY_BOUNDARIES(char, "charVector");
-        TEST_ARRAY_BOUNDARIES(signed char, "int8Vector");
-        TEST_ARRAY_BOUNDARIES(unsigned char, "uint8Vector");
-        TEST_ARRAY_BOUNDARIES(short, "int16Vector");
-        TEST_ARRAY_BOUNDARIES(unsigned short, "uint16Vector");
-        TEST_ARRAY_BOUNDARIES(int, "int32Vector");
-        TEST_ARRAY_BOUNDARIES(unsigned int, "uint32Vector");
-        TEST_ARRAY_BOUNDARIES(long long, "int64Vector");
-        TEST_ARRAY_BOUNDARIES(unsigned long long, "uint64Vector");
-        TEST_ARRAY_BOUNDARIES(float, "floatVector");
-        TEST_ARRAY_BOUNDARIES(double, "doubleVector");
-        TEST_ARRAY_BOUNDARIES(std::string, "stringVector");
-
-        // We check boundary cases, one case less than minimum and one greater
-        // than maximum. Also, one test that changes the minimum value, and
-        // another that changes the maximum value.
-        //
-        // 'row' is defined with 'tableElement' above, to make code easier to
-        // read
-        workSchema = schema;                               // start clean
-        CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema) //
-                                   .key("tableElement")
-                                   .setNewDefaultValue(std::vector<Hash>{table_min_size - 1, row})
-                                   .commit(),
-                             karabo::util::ParameterException);
-        workSchema = schema;                               // start clean
-        CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema) //
-                                   .key("tableElement")
-                                   .setNewDefaultValue(std::vector<Hash>{table_max_size + 1, row})
-                                   .commit(),
-                             karabo::util::ParameterException);
-        workSchema = schema;                                  // start clean
-        CPPUNIT_ASSERT_NO_THROW(OVERWRITE_ELEMENT(workSchema) //
-                                      .key("tableElement")
-                                      .setNewDefaultValue(std::vector<Hash>{table_min_size, row})
-                                      .commit());
-        workSchema = schema;                                  // start clean
-        CPPUNIT_ASSERT_NO_THROW(OVERWRITE_ELEMENT(workSchema) //
-                                      .key("tableElement")
-                                      .setNewDefaultValue(std::vector<Hash>{table_max_size, row})
-                                      .commit());
-        workSchema = schema;                               // start clean
-        CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema) //
-                                   .key("tableElement")
-                                   .setNewMinSize(table_default_size + 1)
-                                   .commit(),
-                             karabo::util::ParameterException);
-        workSchema = schema;                               // start clean
-        CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema) //
-                                   .key("tableElement")
-                                   .setNewMaxSize(table_default_size - 1)
-                                   .commit(),
-                             karabo::util::ParameterException);
-    }
-}
+    TEST_ARRAY_BOUNDARIES(bool, "boolVector");
+    TEST_ARRAY_BOUNDARIES(char, "charVector");
+    TEST_ARRAY_BOUNDARIES(signed char, "int8Vector");
+    TEST_ARRAY_BOUNDARIES(unsigned char, "uint8Vector");
+    TEST_ARRAY_BOUNDARIES(short, "int16Vector");
+    TEST_ARRAY_BOUNDARIES(unsigned short, "uint16Vector");
+    TEST_ARRAY_BOUNDARIES(int, "int32Vector");
+    TEST_ARRAY_BOUNDARIES(unsigned int, "uint32Vector");
+    TEST_ARRAY_BOUNDARIES(long long, "int64Vector");
+    TEST_ARRAY_BOUNDARIES(unsigned long long, "uint64Vector");
+    TEST_ARRAY_BOUNDARIES(float, "floatVector");
+    TEST_ARRAY_BOUNDARIES(double, "doubleVector");
+    TEST_ARRAY_BOUNDARIES(std::string, "stringVector");
 
 #undef TEST_ARRAY_BOUNDARIES
+
+    // We check boundary cases, one case less than minimum and one greater
+    // than maximum. Also, one test that changes the minimum value, and
+    // another that changes the maximum value.
+    //
+    // 'row' is defined with 'tableElement' above, to make code easier to
+    // read
+    workSchema = schema;                               // start clean
+    CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema) //
+                               .key("tableElement")
+                               .setNewDefaultValue(std::vector<Hash>{table_min_size - 1, row})
+                               .commit(),
+                         karabo::util::ParameterException);
+    workSchema = schema;                               // start clean
+    CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema) //
+                               .key("tableElement")
+                               .setNewDefaultValue(std::vector<Hash>{table_max_size + 1, row})
+                               .commit(),
+                         karabo::util::ParameterException);
+    workSchema = schema;                                  // start clean
+    CPPUNIT_ASSERT_NO_THROW(OVERWRITE_ELEMENT(workSchema) //
+                                  .key("tableElement")
+                                  .setNewDefaultValue(std::vector<Hash>{table_min_size, row})
+                                  .commit());
+    workSchema = schema;                                  // start clean
+    CPPUNIT_ASSERT_NO_THROW(OVERWRITE_ELEMENT(workSchema) //
+                                  .key("tableElement")
+                                  .setNewDefaultValue(std::vector<Hash>{table_max_size, row})
+                                  .commit());
+    workSchema = schema;                               // start clean
+    CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema) //
+                               .key("tableElement")
+                               .setNewMinSize(table_default_size + 1)
+                               .commit(),
+                         karabo::util::ParameterException);
+    workSchema = schema;                               // start clean
+    CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema) //
+                               .key("tableElement")
+                               .setNewMaxSize(table_default_size - 1)
+                               .commit(),
+                         karabo::util::ParameterException);
+}
+
+void Schema_Test::testOverwriteElementMinMax() {
+    Schema schema;
+
+    constexpr int minimum{5};
+    constexpr int maximum{15};
+
+#define INSERT_ELEMENT(ELEMENT, NAME)                                                                   \
+    ELEMENT(schema).key(#NAME "Exc").assignmentMandatory().minExc(minimum).maxExc(maximum).commit();    \
+    ELEMENT(schema).key(#NAME "Inc").assignmentMandatory().minInc(minimum).maxInc(maximum).commit();    \
+    ELEMENT(schema).key(#NAME "IncExc").assignmentMandatory().minInc(minimum).maxExc(maximum).commit(); \
+    ELEMENT(schema).key(#NAME "ExcInc").assignmentMandatory().minExc(minimum).maxInc(maximum).commit()
+
+    INSERT_ELEMENT(INT8_ELEMENT, int8);
+    INSERT_ELEMENT(UINT8_ELEMENT, uint8);
+    INSERT_ELEMENT(INT16_ELEMENT, int16);
+    INSERT_ELEMENT(UINT16_ELEMENT, uint16);
+    INSERT_ELEMENT(INT32_ELEMENT, int32);
+    INSERT_ELEMENT(UINT32_ELEMENT, uint32);
+    INSERT_ELEMENT(INT64_ELEMENT, int64);
+    INSERT_ELEMENT(UINT64_ELEMENT, uint64);
+    INSERT_ELEMENT(FLOAT_ELEMENT, _float);
+    INSERT_ELEMENT(DOUBLE_ELEMENT, _double);
+
+#undef INSERT_ELEMENT
+
+    Schema workSchema;
+
+#define CHECK_BOUNDARIES(NAME)                                                                                     \
+    workSchema = schema;                                                                                           \
+    CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema).key(#NAME "Exc").setNewMaxExc(minimum).commit(),            \
+                         karabo::util::ParameterException);                                                        \
+    workSchema = schema;                                                                                           \
+    CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema).key(#NAME "Exc").setNewMinExc(maximum).commit(),            \
+                         karabo::util::ParameterException);                                                        \
+    workSchema = schema;                                                                                           \
+    CPPUNIT_ASSERT_NO_THROW(OVERWRITE_ELEMENT(workSchema).key(#NAME "Exc").setNewMaxExc(minimum + 1).commit());    \
+    workSchema = schema;                                                                                           \
+    CPPUNIT_ASSERT_NO_THROW(OVERWRITE_ELEMENT(workSchema).key(#NAME "Exc").setNewMinExc(maximum - 1).commit());    \
+                                                                                                                   \
+    workSchema = schema;                                                                                           \
+    CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema).key(#NAME "Inc").setNewMaxInc(minimum - 1).commit(),        \
+                         karabo::util::ParameterException);                                                        \
+    workSchema = schema;                                                                                           \
+    CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema).key(#NAME "Inc").setNewMinInc(maximum + 1).commit(),        \
+                         karabo::util::ParameterException);                                                        \
+    workSchema = schema;                                                                                           \
+    CPPUNIT_ASSERT_NO_THROW(OVERWRITE_ELEMENT(workSchema).key(#NAME "Inc").setNewMaxInc(minimum).commit());        \
+    workSchema = schema;                                                                                           \
+    CPPUNIT_ASSERT_NO_THROW(OVERWRITE_ELEMENT(workSchema).key(#NAME "Inc").setNewMinInc(maximum).commit());        \
+                                                                                                                   \
+    workSchema = schema;                                                                                           \
+    CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema).key(#NAME "IncExc").setNewMaxExc(minimum).commit(),         \
+                         karabo::util::ParameterException);                                                        \
+    workSchema = schema;                                                                                           \
+    CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema).key(#NAME "ExcInc").setNewMinExc(maximum).commit(),         \
+                         karabo::util::ParameterException);                                                        \
+    workSchema = schema;                                                                                           \
+    CPPUNIT_ASSERT_NO_THROW(OVERWRITE_ELEMENT(workSchema).key(#NAME "IncExc").setNewMaxExc(minimum + 1).commit()); \
+    workSchema = schema;                                                                                           \
+    CPPUNIT_ASSERT_NO_THROW(OVERWRITE_ELEMENT(workSchema).key(#NAME "ExcInc").setNewMinExc(maximum - 1).commit())
+
+    CHECK_BOUNDARIES(int8);
+    CHECK_BOUNDARIES(uint8);
+    CHECK_BOUNDARIES(int16);
+    CHECK_BOUNDARIES(uint16);
+    CHECK_BOUNDARIES(int32);
+    CHECK_BOUNDARIES(uint32);
+    CHECK_BOUNDARIES(int64);
+    CHECK_BOUNDARIES(uint64);
+    CHECK_BOUNDARIES(_float);
+    CHECK_BOUNDARIES(_double);
+
+#undef CHECK_BOUNDARIES
+}
+
+void Schema_Test::testOverwriteElementMinMaxVector() {
+    Schema schema;
+
+    constexpr unsigned int minimum{5};
+    constexpr unsigned int maximum{15};
+
+#define INSERT_ELEMENT(ELEMENT, NAME) \
+    ELEMENT(schema).key(#NAME).assignmentMandatory().minSize(minimum).maxSize(maximum).commit();
+
+    INSERT_ELEMENT(VECTOR_INT8_ELEMENT, int8);
+    INSERT_ELEMENT(VECTOR_UINT8_ELEMENT, uint8);
+    INSERT_ELEMENT(VECTOR_INT16_ELEMENT, int16);
+    INSERT_ELEMENT(VECTOR_UINT16_ELEMENT, uint16);
+    INSERT_ELEMENT(VECTOR_INT32_ELEMENT, int32);
+    INSERT_ELEMENT(VECTOR_UINT32_ELEMENT, uint32);
+    INSERT_ELEMENT(VECTOR_INT64_ELEMENT, int64);
+    INSERT_ELEMENT(VECTOR_UINT64_ELEMENT, uint64);
+    INSERT_ELEMENT(VECTOR_FLOAT_ELEMENT, _float);
+    INSERT_ELEMENT(VECTOR_DOUBLE_ELEMENT, _double);
+
+#undef INSERT_ELEMENT
+
+    Schema workSchema;
+
+#define CHECK_BOUNDARIES(NAME)                                                                         \
+    workSchema = schema;                                                                               \
+    CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema).key(#NAME).setNewMinSize(maximum + 1).commit(), \
+                         karabo::util::ParameterException);                                            \
+    workSchema = schema;                                                                               \
+    CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema).key(#NAME).setNewMaxSize(minimum - 1).commit(), \
+                         karabo::util::ParameterException);                                            \
+    workSchema = schema;                                                                               \
+    CPPUNIT_ASSERT_NO_THROW(OVERWRITE_ELEMENT(workSchema).key(#NAME).setNewMinSize(maximum).commit()); \
+    workSchema = schema;                                                                               \
+    CPPUNIT_ASSERT_NO_THROW(OVERWRITE_ELEMENT(workSchema).key(#NAME).setNewMaxSize(minimum).commit())
+
+
+    CHECK_BOUNDARIES(int8);
+    CHECK_BOUNDARIES(uint8);
+    CHECK_BOUNDARIES(int16);
+    CHECK_BOUNDARIES(uint16);
+    CHECK_BOUNDARIES(int32);
+    CHECK_BOUNDARIES(uint32);
+    CHECK_BOUNDARIES(int64);
+    CHECK_BOUNDARIES(uint64);
+    CHECK_BOUNDARIES(_float);
+    CHECK_BOUNDARIES(_double);
+
+#undef CHECK_BOUNDARIES
+}
 
 
 void Schema_Test::testMerge() {
