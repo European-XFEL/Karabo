@@ -22,7 +22,7 @@ class KaraboOpenMQConan(ConanFile):
     version = "5.1.3"
     description = "Karabo extern install of OpenMQ"
     settings = "os", "arch", "compiler", "build_type"
-    exports = ["openmq5_1_3_linux.zip", "etc/*", "bin/*"]
+    exports_sources = "openmq5_1_3_linux.zip", "etc/*", "bin/*"
 
     def source(self):
         zip_name = "openmq%s_linux.zip" % self.version.replace('.','_')
