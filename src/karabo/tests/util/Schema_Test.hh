@@ -144,6 +144,10 @@ class Schema_Test : public CPPUNIT_NS::TestFixture {
     void testImageElement();
     void testArchivePolicy();
     void testOverwriteElement();
+    void testOverwriteElementScalarDefault();
+    void testOverwriteElementVectorDefault();
+    void testOverwriteElementMinMax();
+    void testOverwriteElementMinMaxVector();
     void testMerge();
     void testList();
     void testInvalidNodes();
