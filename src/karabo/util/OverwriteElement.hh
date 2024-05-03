@@ -557,26 +557,67 @@ namespace karabo {
             // Called by commit, to check min/default/max consistency
             void checkBoundaries();
 
+            template <typename T>
+            void checkMinMax() {
+                if (m_schema->hasMinInc(m_path)) {
+                    if (m_schema->hasMaxInc(m_path) &&
+                        m_schema->getMinIncAs<T>(m_path) > m_schema->getMaxIncAs<T>(m_path)) {
+                        throw KARABO_PARAMETER_EXCEPTION(
+                              "Inclusive minimum (" + m_schema->getMinIncAs<std::string>(m_path) + ") for " + m_path +
+                              " greater than inclusive maximum (" + m_schema->getMaxIncAs<std::string>(m_path) + ")");
+                    }
+
+                    if (m_schema->hasMaxExc(m_path) &&
+                        m_schema->getMinIncAs<T>(m_path) >= m_schema->getMaxExcAs<T>(m_path)) {
+                        throw KARABO_PARAMETER_EXCEPTION("Inclusive minimum (" +
+                                                         m_schema->getMinIncAs<std::string>(m_path) + ") for " +
+                                                         m_path + " greater than or equal to exclusive maximum (" +
+                                                         m_schema->getMaxExcAs<std::string>(m_path) + ")");
+                    }
+                }
+
+
+                if (m_schema->hasMinExc(m_path)) {
+                    if (m_schema->hasMaxExc(m_path) &&
+                        m_schema->getMinExcAs<T>(m_path) >= m_schema->getMaxExcAs<T>(m_path)) {
+                        throw KARABO_PARAMETER_EXCEPTION("Exclusive minimum (" +
+                                                         m_schema->getMinExcAs<std::string>(m_path) + ") for " +
+                                                         m_path + " greater than or equal to exclusive maximum (" +
+                                                         m_schema->getMaxExcAs<std::string>(m_path) + ")");
+                    }
+
+                    if (m_schema->hasMaxInc(m_path) &&
+                        m_schema->getMinExcAs<T>(m_path) >= m_schema->getMaxIncAs<T>(m_path)) {
+                        throw KARABO_PARAMETER_EXCEPTION(
+                              "Exclusive minimum (" + m_schema->getMinExcAs<std::string>(m_path) + ") for " + m_path +
+                              " greater than inclusive maximum (" + m_schema->getMaxIncAs<std::string>(m_path) + ")");
+                    }
+                }
+            }
+
             /** Check default/max/min value consistency, after the value type is known
              * Requires that m_node is not NULL
              */
 
             template <typename T>
             void checkTypedBoundaries() {
-                if (!m_schema->hasDefaultValue(m_path)) return;
+                if (!m_schema->hasDefaultValue(m_path)) {
+                    checkMinMax<T>();
+                    return;
+                }
 
                 const T default_value = m_schema->getDefaultValueAs<T>(m_path);
 
                 if (m_schema->hasMinInc(m_path) && default_value < m_schema->getMinIncAs<T>(m_path)) {
                     throw KARABO_PARAMETER_EXCEPTION(
                           "Default value (" + m_schema->getDefaultValueAs<std::string>(m_path) + ") for " + m_path +
-                          " smaller than exclusive minimum (" + m_schema->getMinExcAs<std::string>(m_path) + ")");
+                          " smaller than inclusive minimum (" + m_schema->getMinIncAs<std::string>(m_path) + ")");
                 }
 
                 if (m_schema->hasMaxInc(m_path) && default_value > m_schema->getMaxIncAs<T>(m_path)) {
                     throw KARABO_PARAMETER_EXCEPTION(
                           "Default value (" + m_schema->getDefaultValueAs<std::string>(m_path) + ") for " + m_path +
-                          " greater than exclusive maximum (" + m_schema->getMaxExcAs<std::string>(m_path) + ")");
+                          " greater than inclusive maximum (" + m_schema->getMaxIncAs<std::string>(m_path) + ")");
                 }
 
                 if (m_schema->hasMinExc(m_path) && default_value <= m_schema->getMinExcAs<T>(m_path)) {
@@ -595,8 +636,21 @@ namespace karabo {
             }
 
             template <typename T>
+            void checkMinMaxSize() {
+                if (m_schema->hasMinSize(m_path) && m_schema->hasMaxSize(m_path) &&
+                    m_schema->getMinSize(m_path) > m_schema->getMaxSize(m_path)) {
+                    throw KARABO_PARAMETER_EXCEPTION("Minimum size (" + std::to_string(m_schema->getMinSize(m_path)) +
+                                                     ") for " + m_path + " greater than maximum size (" +
+                                                     std::to_string(m_schema->getMaxSize(m_path)) + ")");
+                }
+            }
+
+            template <typename T>
             void checkVectorBoundaries() {
-                if (!m_schema->hasDefaultValue(m_path)) return;
+                if (!m_schema->hasDefaultValue(m_path)) {
+                    checkMinMaxSize<T>();
+                    return;
+                }
 
                 const std::vector<T>& default_vector = m_schema->getDefaultValue<std::vector<T>>(m_path);
                 const size_t default_size = default_vector.size();
