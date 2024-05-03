@@ -9,7 +9,7 @@ class KaraboOpenMQConan(ConanFile):
     description = "Karabo extern install of OpenMQ client"
     settings = "os", "arch", "compiler", "build_type"
     generators = "CMakeToolchain", "CMakeDeps"
-    exports = ["openmqc-5.1.4.1.tar", "CMakeLists.txt"]
+    exports_sources = "openmqc-5.1.4.1.tar", "CMakeLists.txt"
 
     requires = [ "nss/3.72" ]
 
