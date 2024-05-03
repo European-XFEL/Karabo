@@ -9,10 +9,7 @@ source "$scriptDir/../set_lsb_release_info.sh"
 ##############################################################################
 # Important constants
 
-PYTHON_VERSION=3.11.6
-PYTHON_PATH_VERSION=3.11
 CONAN_RECIPE_CHANNEL=py311
-BOOST_VERSION=1.82.0
 LOG4CPP_VERSION=1.1.3
 DAEMONTOOLS_VERSION=1.11-karabo3
 OPENMQ_VERSION=5.1.3
