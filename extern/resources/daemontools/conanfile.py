@@ -11,7 +11,7 @@ class KaraboDaemonToolsConan(ConanFile):
     url = "https://github.com/tecki/daemontools-encore/"
     license = "https://github.com/tecki/daemontools-encore/blob/master/LICENSE"
     generators = "CMakeToolchain", "CMakeDeps"
-    exports = ["CMakeLists.txt"]
+    exports_sources = "CMakeLists.txt"
 
     def source(self):
         zip_name = "daemontools-encore-%s.zip" % self.version
