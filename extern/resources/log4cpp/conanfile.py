@@ -13,7 +13,7 @@ class Log4cppConan(ConanFile):
     default_options = {"shared": True}
     url="https://sourceforge.net/projects/log4cpp/"
     license="https://sourceforge.net/p/log4cpp/codegit/ci/master/tree/COPYING"
-    exports = ["replace_namespace.sh", "include/*"]
+    exports_sources = "replace_namespace.sh", "include/*"
 
     def source(self):
         zip_name = "log4cpp-%s.tar.gz" % self.version
