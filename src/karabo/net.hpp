@@ -28,6 +28,7 @@
 #include "net/Broker.hh"
 #include "net/Channel.hh"
 #include "net/Connection.hh"
+#include "net/NetworkInterface.hh"
 #include "net/Strand.hh"
 #include "net/utils.hh"
 

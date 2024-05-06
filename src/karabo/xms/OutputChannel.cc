@@ -29,6 +29,7 @@
 
 #include "InputChannel.hh"
 #include "karabo/net/EventLoop.hh"
+#include "karabo/net/NetworkInterface.hh"
 #include "karabo/net/TcpChannel.hh"
 #include "karabo/util/MetaTools.hh"
 #include "karabo/util/SimpleElement.hh"
@@ -87,9 +88,13 @@ namespace karabo {
                   .key("hostname")
                   .displayedName("Hostname")
                   .description(
-                        "The requested hostname to which connecting clients shall be routed to. Classless Inter-Domain "
-                        "Routing specification (where '123.456.0.0/24 represents the IP range between 123.456.0.0 and "
-                        "123.456.0.255) or 'default' are accepted as well.")
+                        "The requested hostname to which connecting clients shall be routed to. The field can be "
+                        "the string 'default' (in which case the default host name will be chosen), the name of a "
+                        "host interface -such as eth0 or enp4s0, wildcards can be used- (in which case the "
+                        "first interface that matches the provided string will be chosen), one of the IP addresses "
+                        "of the host, or an IP range, specified in CIDR-like notation, where '123.234.0.0/24' "
+                        "represents the IP range between '123.234.0.0' and '123.234.0.255' (in this case, the first IP "
+                        "found that falls within the specified range will be chosen).")
                   .assignmentOptional()
                   .defaultValue("default")
                   .commit();
@@ -238,9 +243,8 @@ namespace karabo {
             if (hostname == "default") {
                 m_hostname = boost::asio::ip::host_name();
             } else {
-                m_hostname = getIpFromCIDRNotation(hostname);
+                m_hostname = NetworkInterface{hostname}.presentationIP();
             }
-
 
             KARABO_LOG_FRAMEWORK_DEBUG << "NoInputShared: " << m_onNoSharedInputChannelAvailable;
 
