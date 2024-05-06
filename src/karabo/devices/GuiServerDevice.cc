@@ -102,9 +102,9 @@ namespace karabo {
                   .commit();
 
             UINT32_ELEMENT(expected)
-                  .key("maxEscalationTime")
-                  .displayedName("Max. Escalation Time")
-                  .description("Maximum duration of a session escalation, in seconds")
+                  .key("maxTemporarySessionTime")
+                  .displayedName("Max. Temporary Session Time")
+                  .description("Maximum duration of a temporary session, in seconds")
                   .assignmentOptional()
                   .defaultValue(45 * 60)
                   .unit(Unit::SECOND)
@@ -112,12 +112,12 @@ namespace karabo {
                   .commit();
 
             UINT32_ELEMENT(expected)
-                  .key("endEscalationNoticeTime")
-                  .displayedName("End of Escalation Notice Time")
+                  .key("endTemporarySessionNoticeTime")
+                  .displayedName("End of Temporary Session Notice Time")
                   .description(
-                        "How much time in advance shall a GUI client be warned about an end of privilege escalation.\n"
+                        "How much time in advance shall a GUI client be warned about the end of a temporary session.\n"
                         "May be delayed by up to " +
-                        toString(CHECK_ESCALATE_EXPIRATION_INTERVAL_SECS) + " seconds.")
+                        toString(CHECK_TEMPSESSION_EXPIRATION_INTERVAL_SECS) + " seconds.")
                   .assignmentOptional()
                   .defaultValue(5 * 60)
                   .unit(Unit::SECOND)
@@ -411,11 +411,11 @@ namespace karabo {
                 // Note that instanceNew(..) will be called for all instances already in the game.
                 remote().enableInstanceTracking();
 
-                m_sessionEscalator = boost::make_shared<GuiServerSessionEscalator>(
-                      m_topic, get<std::string>("authServer"), get<unsigned int>("maxEscalationTime"),
-                      get<unsigned int>("endEscalationNoticeTime"),
-                      bind_weak(&GuiServerDevice::onEndEscalationNotice, this, _1),
-                      bind_weak(&GuiServerDevice::onEscalationExpiration, this, _1));
+                m_tempSessionManager = boost::make_shared<GuiServerTemporarySessionManager>(
+                      m_topic, get<std::string>("authServer"), get<unsigned int>("maxTemporarySessionTime"),
+                      get<unsigned int>("endTemporarySessionNoticeTime"),
+                      bind_weak(&GuiServerDevice::onEndTemporarySessionNotice, this, _1),
+                      bind_weak(&GuiServerDevice::onTemporarySessionExpiration, this, _1));
 
                 m_dataConnection->startAsync(bind_weak(&karabo::devices::GuiServerDevice::onConnect, this, _1, _2));
 
@@ -516,20 +516,20 @@ namespace karabo {
                 auto it = m_channels.find(chan);
                 if (it != m_channels.end()) {
                     std::string token;
-                    bool escalated = false;
+                    bool tempSession = false;
                     {
                         const auto& channelData = it->second;
                         token = channelData.oneTimeToken;
-                        if (!channelData.escalationToken.empty()) {
-                            token = channelData.escalationToken;
-                            escalated = true;
+                        if (!channelData.temporarySessionToken.empty()) {
+                            token = channelData.temporarySessionToken;
+                            tempSession = true;
                         }
                     }
                     lock.unlock();
                     // NOTE: The AUDIT_ENTRY_MARK is what the audit log appender (instance of class
                     // karabo::log::AuditFileAppender) uses to accept writting a given message to the audit log.
-                    KARABO_LOG_INFO << karabo::log::AUDIT_ENTRY_MARK << (escalated ? "[Escalated] - " : "")
-                                    << "User with  with token '" << token << "' action: " << entryText;
+                    KARABO_LOG_INFO << karabo::log::AUDIT_ENTRY_MARK << (tempSession ? "[Temporary Session] - " : "")
+                                    << "User with token '" << token << "' action: " << entryText;
                 }
             }
         }
@@ -754,58 +754,58 @@ namespace karabo {
             }
         }
 
-        void GuiServerDevice::onEscalationExpiration(const ExpiredEscalationInfo& info) {
+        void GuiServerDevice::onTemporarySessionExpiration(const ExpiredTemporarySessionInfo& info) {
             // Retrieve the channel associated with the expired token by searching channel data
             const std::string& expiredToken = info.expiredToken;
-            Schema::AccessLevel levelBeforeEscalation{Schema::AccessLevel::OBSERVER};
+            Schema::AccessLevel levelBeforeTemporarySession{Schema::AccessLevel::OBSERVER};
             std::string loggedUserId;
             Channel::Pointer chanForExpiration;
             {
                 boost::mutex::scoped_lock lock(m_channelMutex);
                 for (auto& [channel, channelData] : m_channels) {
-                    if (channelData.escalationToken == expiredToken) {
+                    if (channelData.temporarySessionToken == expiredToken) {
                         chanForExpiration = channel;
-                        levelBeforeEscalation = channelData.levelBeforeEscalation;
+                        levelBeforeTemporarySession = channelData.levelBeforeTemporarySession;
                         loggedUserId = channelData.userId;
-                        channelData.escalationToken = "";
-                        channelData.escalationUserId = "";
+                        channelData.temporarySessionToken = "";
+                        channelData.temporarySessionUserId = "";
                         break;
                     }
                 }
             }
             if (chanForExpiration) {
-                // Sends a message about the escalation expiration to the associated client
-                Hash h("type", "onEscalationExpired", "expiredToken", info.expiredToken, "expirationTime",
-                       info.expirationTime.toIso8601Ext(), "levelBeforeEscalation",
-                       static_cast<int>(levelBeforeEscalation), "loggedUserId", loggedUserId);
+                // Sends a message about the temporary session expiration to the associated client
+                Hash h("type", "onTemporarySessionExpired", "expiredToken", info.expiredToken, "expirationTime",
+                       info.expirationTime.toIso8601Ext(), "levelBeforeTemporarySession",
+                       static_cast<int>(levelBeforeTemporarySession), "loggedUserId", loggedUserId);
 
                 safeClientWrite(WeakChannelPointer(chanForExpiration), h);
             }
         }
 
-        void GuiServerDevice::onEndEscalationNotice(const EminentExpirationInfo& info) {
+        void GuiServerDevice::onEndTemporarySessionNotice(const EminentExpirationInfo& info) {
             // Retrieve the channel associated with the token to expire by searching channel data
             const std::string& token = info.aboutToExpireToken;
             Channel::Pointer chanForExpiration;
             {
                 boost::mutex::scoped_lock lock(m_channelMutex);
                 for (auto& [channel, channelData] : m_channels) {
-                    if (channelData.escalationToken == token) {
+                    if (channelData.temporarySessionToken == token) {
                         chanForExpiration = channel;
                         break;
                     }
                 }
             }
             if (chanForExpiration) {
-                // Sends a message about the eminent escalation expiration to the associated client
-                Hash h("type", "onEndEscalationNotice", "aboutToExpireToken", info.aboutToExpireToken,
+                // Sends a message about the eminent temporary session expiration to the associated client
+                Hash h("type", "onEndTemporarySessionNotice", "aboutToExpireToken", info.aboutToExpireToken,
                        "secondsToExpiration", info.timeForExpiration.getTotalSeconds());
 
                 safeClientWrite(WeakChannelPointer(chanForExpiration), h);
             }
         }
 
-        void GuiServerDevice::onEscalate(WeakChannelPointer channel, const karabo::util::Hash& info) {
+        void GuiServerDevice::onBeginTemporarySession(WeakChannelPointer channel, const karabo::util::Hash& info) {
             const karabo::net::Channel::Pointer chan = channel.lock();
             if (!chan) {
                 // Channel not valid anymore.
@@ -813,110 +813,115 @@ namespace karabo {
             }
             std::string errorMsg;
             if (!isUserAuthActive()) {
-                errorMsg = "Session escalation is only available for user-authenticated sessions!";
-            } else if (!info.has("escalationToken")) {
+                errorMsg = "Temporary sessions are only available for user-authenticated sessions!";
+            } else if (!info.has("temporarySessionToken")) {
                 std::ostringstream oss;
-                oss << "Required \"escalationToken\" field missing in escalate request:\n" << info << std::endl;
+                oss << "Required \"temporarySessionToken\" field missing in beginTemporarySession request:\n"
+                    << info << std::endl;
                 errorMsg = oss.str();
-            } else if (!info.has("levelBeforeEscalation")) {
+            } else if (!info.has("levelBeforeTemporarySession")) {
                 std::ostringstream oss;
-                oss << "Required \"levelBeforeEscalation\" field missing in escalate request:\n" << info << std::endl;
+                oss << "Required \"levelBeforeTemporarySession\" field missing in beginTemporarySession request:\n"
+                    << info << std::endl;
                 errorMsg = oss.str();
             } else {
                 boost::mutex::scoped_lock lock(m_channelMutex);
                 auto it = m_channels.find(chan);
-                if (it != m_channels.end() && !it->second.escalationToken.empty()) {
-                    errorMsg = "There's already an active escalated session.";
+                if (it != m_channels.end() && !it->second.temporarySessionToken.empty()) {
+                    errorMsg = "There's already an active temporary session.";
                 }
             }
             if (!errorMsg.empty()) {
-                const Hash h("type", "onEscalate", "success", false, "reason", errorMsg);
+                const Hash h("type", "onBeginTemporarySession", "success", false, "reason", errorMsg);
                 safeClientWrite(channel, h);
-                KARABO_LOG_FRAMEWORK_ERROR << "Refused escalation request (from " << getChannelAddress(chan)
+                KARABO_LOG_FRAMEWORK_ERROR << "Refused beginTemporarySession request (from " << getChannelAddress(chan)
                                            << "): " + errorMsg;
                 return;
             }
 
-            const std::string escalationToken = info.get<std::string>("escalationToken");
-            const Schema::AccessLevel levelBeforeEscalation =
-                  static_cast<Schema::AccessLevel>(info.get<int>("levelBeforeEscalation"));
-            m_sessionEscalator->escalate(escalationToken, bind_weak(&GuiServerDevice::onEscalateResult, this, channel,
-                                                                    levelBeforeEscalation, _1));
+            const std::string temporarySessionToken = info.get<std::string>("temporarySessionToken");
+            const Schema::AccessLevel levelBeforeTemporarySession =
+                  static_cast<Schema::AccessLevel>(info.get<int>("levelBeforeTemporarySession"));
+            m_tempSessionManager->beginTemporarySession(
+                  temporarySessionToken, bind_weak(&GuiServerDevice::onBeginTemporarySessionResult, this, channel,
+                                                   levelBeforeTemporarySession, _1));
         }
 
-        void GuiServerDevice::onEscalateResult(WeakChannelPointer channel, Schema::AccessLevel levelBeforeEscalation,
-                                               const EscalateResult& result) {
+        void GuiServerDevice::onBeginTemporarySessionResult(WeakChannelPointer channel,
+                                                            Schema::AccessLevel levelBeforeTemporarySession,
+                                                            const BeginTemporarySessionResult& result) {
             const karabo::net::Channel::Pointer chan = channel.lock();
             if (!chan) {
                 // Channel is no longer valid
                 return;
             }
-            const Hash h("type", "onEscalate", "success", result.success, "reason", result.errMsg, "escalationToken",
-                         result.escalationToken, "escalationDurationSecs", result.escalationDurationSecs, "accessLevel",
-                         static_cast<int>(result.accessLevel), "username", result.userId);
+            const Hash h("type", "onBeginTemporarySession", "success", result.success, "reason", result.errMsg,
+                         "temporarySessionToken", result.temporarySessionToken, "temporarySessionDurationSecs",
+                         result.temporarySessionDurationSecs, "accessLevel", static_cast<int>(result.accessLevel),
+                         "username", result.userId);
             if (result.success) {
                 boost::mutex::scoped_lock lock(m_channelMutex);
                 auto it = m_channels.find(chan);
                 if (it != m_channels.end()) {
                     ChannelData& data = it->second;
-                    data.escalationToken = result.escalationToken;
-                    data.escalationUserId = result.userId;
-                    data.levelBeforeEscalation = levelBeforeEscalation;
+                    data.temporarySessionToken = result.temporarySessionToken;
+                    data.temporarySessionUserId = result.userId;
+                    data.levelBeforeTemporarySession = levelBeforeTemporarySession;
                 }
             }
             safeClientWrite(channel, h);
         }
 
-        void GuiServerDevice::onDeescalate(WeakChannelPointer channel, const karabo::util::Hash& info) {
+        void GuiServerDevice::onEndTemporarySession(WeakChannelPointer channel, const karabo::util::Hash& info) {
             const karabo::net::Channel::Pointer chan = channel.lock();
             if (!chan) {
                 // Channel not valid anymore.
                 return;
             }
             std::string errorMsg;
-            std::string escalationToken;
+            std::string temporarySessionToken;
             if (!isUserAuthActive()) {
-                errorMsg = "Session deescalation is only available for user-authenticated sessions!";
-            } else if (!info.has("escalationToken")) {
-                errorMsg = "Required \"escalationToken\" field missing in deescalate request.";
+                errorMsg = "Temporary sessions are only available for user-authenticated sessions!";
+            } else if (!info.has("temporarySessionToken")) {
+                errorMsg = "Required \"temporarySessionToken\" field missing in endTemporarySession request.";
             } else {
-                escalationToken = info.get<std::string>("escalationToken");
+                temporarySessionToken = info.get<std::string>("temporarySessionToken");
                 boost::mutex::scoped_lock lock(m_channelMutex);
                 auto it = m_channels.find(chan);
                 if (it != m_channels.end()) {
-                    const std::string& chanEscalationToken = it->second.escalationToken;
-                    if (chanEscalationToken.empty()) {
-                        errorMsg = "There's no active escalated session associated with the requesting client.";
-                    } else if (chanEscalationToken != escalationToken) {
+                    const std::string& chanTemporarySessionToken = it->second.temporarySessionToken;
+                    if (chanTemporarySessionToken.empty()) {
+                        errorMsg = "There's no active temporary session associated with the requesting client.";
+                    } else if (chanTemporarySessionToken != temporarySessionToken) {
                         errorMsg =
-                              "The escalation token associated with the session doesn't match the one provided in "
-                              "the deescalate request!";
+                              "The temporary session token associated with the session doesn't match the one provided "
+                              "in the endTemporarySession request!";
                     }
                 }
             }
             if (!errorMsg.empty()) {
-                const Hash h("type", "onDeescalate", "success", false, "reason", errorMsg);
+                const Hash h("type", "onEndTemporarySession", "success", false, "reason", errorMsg);
                 safeClientWrite(channel, h);
-                KARABO_LOG_FRAMEWORK_ERROR << "Refused deescalation request (from " << getChannelAddress(chan)
+                KARABO_LOG_FRAMEWORK_ERROR << "Refused endTemporarySession request (from " << getChannelAddress(chan)
                                            << "): " + errorMsg;
                 return;
             }
-            DeescalationResult result = m_sessionEscalator->deescalate(escalationToken);
-            Hash h("type", "onDeescalate", "success", result.success, "reason", result.errMsg, "escalationToken",
-                   result.escalationToken);
+            EndTemporarySessionResult result = m_tempSessionManager->endTemporarySession(temporarySessionToken);
+            Hash h("type", "onEndTemporarySession", "success", result.success, "reason", result.errMsg,
+                   "temporarySessionToken", result.temporarySessionToken);
             {
-                // Even if the deescalate didn't return a success - meaning it didn't find the escalationToken in its
-                // internal data (see note on GuiServerSessionEscalator::deescalate doc comments), we must clear the
-                // channel data.
+                // Even if the endTemporarySession didn't return a success - meaning it didn't find the
+                // temporarySessionToken in its internal data (see note on
+                // GuiServerTemporarySessionManager::endTemporarySession doc comments), we must clear the channel data.
                 boost::mutex::scoped_lock lock(m_channelMutex);
                 auto it = m_channels.find(chan);
                 if (it != m_channels.end()) {
                     ChannelData& data = it->second;
-                    data.escalationToken = "";
-                    data.escalationUserId = "";
-                    h.set("levelBeforeEscalation", static_cast<int>(data.levelBeforeEscalation));
+                    data.temporarySessionToken = "";
+                    data.temporarySessionUserId = "";
+                    h.set("levelBeforeTemporarySession", static_cast<int>(data.levelBeforeTemporarySession));
                     h.set("loggedUserId", data.userId);
-                    data.levelBeforeEscalation = Schema::AccessLevel::OBSERVER;
+                    data.levelBeforeTemporarySession = Schema::AccessLevel::OBSERVER;
                 }
             }
             safeClientWrite(channel, h);
@@ -1021,10 +1026,10 @@ namespace karabo {
                               "' is not allowed on this GUI client version. Please upgrade your GUI client");
                         const Hash h("type", "notification", "message", message);
                         safeClientWrite(channel, h);
-                    } else if (type == "escalate") {
-                        onEscalate(channel, info);
-                    } else if (type == "deescalate") {
-                        onDeescalate(channel, info);
+                    } else if (type == "beginTemporarySession") {
+                        onBeginTemporarySession(channel, info);
+                    } else if (type == "endTemporarySession") {
+                        onEndTemporarySession(channel, info);
                     } else if (type == "reconfigure") {
                         onReconfigure(channel, info);
                     } else if (type == "execute") {
