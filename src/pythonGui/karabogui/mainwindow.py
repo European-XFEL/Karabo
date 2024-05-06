@@ -39,7 +39,7 @@ from karabogui.access import ACCESS_LEVELS, AccessRole
 from karabogui.background import background
 from karabogui.dialogs.api import (
     AboutDialog, ClientTopologyDialog, ConfigurationDialog, DataViewDialog,
-    DevelopmentTopologyDialog, EscalationDialog, UpdateDialog)
+    DevelopmentTopologyDialog, TempSessionDialog, UpdateDialog)
 from karabogui.events import (
     KaraboEvent, broadcast_event, register_for_broadcasts)
 from karabogui.indicators import get_processing_color
@@ -207,8 +207,6 @@ class MainWindow(QMainWindow):
 
         self.readSettings()
 
-        self._is_escalated = False
-
     # -----------------------------------------------------------------------
     # Karabo Events
 
@@ -277,8 +275,8 @@ class MainWindow(QMainWindow):
 
     def _event_access_level(self, data):
         self.onUpdateAccessLevel()
-        if data.get("escalation_expired"):
-            self._end_escalation()
+        if data.get("temp_session_expired"):
+            self._restore_initial_state()
         self._set_window_title()
 
     def _event_project_updated(self, data):
@@ -310,8 +308,10 @@ class MainWindow(QMainWindow):
                             if value is not None])
         if get_network().username and krb_access.is_authenticated():
             title = f"{title} - User: {get_network().username}"
-        if krb_access.ESCALATED_USER is not None:
-            title = f"{title} - Escalated User: {krb_access.ESCALATED_USER}"
+        if krb_access.TEMPORARY_SESSION_USER is not None:
+            title = (
+                f"{title} - Temporary Session User: "
+                f"{krb_access.TEMPORARY_SESSION_USER}")
         self.setWindowTitle(title)
 
     def readSettings(self):
@@ -324,7 +324,7 @@ class MainWindow(QMainWindow):
     def update_server_connection(self, data=None):
         """Update the status bar with our broker connection information
         """
-        allow_escalation = krb_access.is_authenticated()
+        allow_temp_session = krb_access.is_authenticated()
         if data is not None:
             topic = data["topic"]
             # Store this information in the config singleton!
@@ -347,9 +347,9 @@ class MainWindow(QMainWindow):
                 logger.info(text)
         else:
             self.serverInfo.setText("")
-            allow_escalation = False
-            self._update_escalate_button(escalated=False)
-        self.tbEscalate.setVisible(allow_escalation)
+            allow_temp_session = False
+            self._update_temp_session_button(temp_session=False)
+        self.tbTempSession.setVisible(allow_temp_session)
 
     # --------------------------------------
     # Qt virtual methods
@@ -434,13 +434,13 @@ class MainWindow(QMainWindow):
         self.tbAccessLevel.setPopupMode(QToolButton.InstantPopup)
         self.tbAccessLevel.setEnabled(False)
 
-        text = "Escalate access level"
-        self.tbEscalate = QAction(icons.arrowUp, f"&{text}", self)
-        self.tbEscalate.setToolTip(text)
-        self.tbEscalate.setStatusTip(text)
-        self.tbEscalate.setCheckable(True)
-        self.tbEscalate.setVisible(False)
-        self.tbEscalate.triggered.connect(self.onEscalateRequest)
+        text = "Start A temporary Session"
+        self.tbTempSession = QAction(icons.arrowUp, f"&{text}", self)
+        self.tbTempSession.setToolTip(text)
+        self.tbTempSession.setStatusTip(text)
+        self.tbTempSession.setCheckable(True)
+        self.tbTempSession.setVisible(False)
+        self.tbTempSession.triggered.connect(self.ToggleTemporarySession)
 
         self.agAccessLevel = QActionGroup(self)
         self.agAccessLevel.triggered.connect(self.onChangeAccessLevel)
@@ -605,7 +605,7 @@ class MainWindow(QMainWindow):
         toolbar.addAction(self.acServerConnect)
 
         toolbar.addWidget(self.tbAccessLevel)
-        toolbar.addAction(self.tbEscalate)
+        toolbar.addAction(self.tbTempSession)
 
         self.notification_banner = MainWindowBanner()
 
@@ -736,24 +736,24 @@ class MainWindow(QMainWindow):
         except webbrowser.Error:
             messagebox.show_error("No web browser available!", parent=self)
 
-    def _escalate(self):
+    def _begin_temp_session(self):
         if not krb_access.is_authenticated():
             return
         self._last_selected_access = self.agAccessLevel.checkedAction()
 
-        dialog = EscalationDialog(parent=self)
-        dialog.accepted.connect(self._accept_escalation)
-        dialog.rejected.connect(self._reject_escalation)
+        dialog = TempSessionDialog(parent=self)
+        dialog.accepted.connect(self._accept_temp_session_dialog)
+        dialog.rejected.connect(self._reject_temp_session_dialog)
         dialog.show()
 
-    def _deescalate(self):
-        get_network().onDeescalateRequest()
-        self._end_escalation()
+    def _end_temp_session(self):
+        get_network().endTempSession()
+        self._restore_initial_state()
 
-    def _end_escalation(self):
-        """Update escalate button state, window title and restore the
-        previous selected access level on ending the escalated session"""
-        self._update_escalate_button(escalated=False)
+    def _restore_initial_state(self):
+        """Update temp session button state, window title and restore the
+        previous selected access level on ending the temporary session"""
+        self._update_temp_session_button(temp_session=False)
         self._set_window_title()
         self._last_selected_access.setChecked(True)
         access_level = krb_access.ACCESS_LEVELS[
@@ -762,13 +762,13 @@ class MainWindow(QMainWindow):
             krb_access.GLOBAL_ACCESS_LEVEL = access_level
             broadcast_event(KaraboEvent.AccessLevelChanged, {})
 
-    def _update_escalate_button(self, escalated: bool):
-        icon = icons.arrowDown if escalated else icons.arrowUp
-        tooltip = ("Deescalate access level" if escalated else
-                   "Escalate access level")
-        self.tbEscalate.setToolTip(tooltip)
-        self.tbEscalate.setIcon(icon)
-        self.tbEscalate.setChecked(escalated)
+    def _update_temp_session_button(self, temp_session: bool):
+        icon = icons.arrowDown if temp_session else icons.arrowUp
+        tooltip = ("End temporary Session" if temp_session else
+                   "Start a temporary Session")
+        self.tbTempSession.setToolTip(tooltip)
+        self.tbTempSession.setIcon(icon)
+        self.tbTempSession.setChecked(temp_session)
 
     # --------------------------------------
     # Qt slots
@@ -934,27 +934,28 @@ class MainWindow(QMainWindow):
         self.tbAccessLevel.setEnabled(isConnected)
 
     @Slot(bool)
-    def onEscalateRequest(self, escalate):
-        if escalate:
-            self._escalate()
+    def ToggleTemporarySession(self, toggled):
+        if toggled:
+            self._begin_temp_session()
         else:
-            ask = "Do you really want to deescalate?"
-            dialog = QMessageBox(QMessageBox.Question, 'Deescalate', ask,
-                                 QMessageBox.Yes | QMessageBox.No, parent=self)
+            ask = "Do you really want to end the Temporary session?"
+            dialog = QMessageBox(
+                QMessageBox.Question, 'Temporary Session', ask,
+                QMessageBox.Yes | QMessageBox.No, parent=self)
             move_to_cursor(dialog)
             if dialog.exec() == QMessageBox.Yes:
-                self._deescalate()
+                self._end_temp_session()
             else:
-                self.tbEscalate.setChecked(True)
+                self.tbTempSession.setChecked(True)
 
     @Slot()
-    def _accept_escalation(self):
-        self._update_escalate_button(escalated=True)
+    def _accept_temp_session_dialog(self):
+        self._update_temp_session_button(temp_session=True)
         self._set_window_title()
 
     @Slot()
-    def _reject_escalation(self):
-        self.tbEscalate.setChecked(False)
+    def _reject_temp_session_dialog(self):
+        self.tbTempSession.setChecked(False)
 
     @Slot()
     def onNumpyFileToCSV(self):

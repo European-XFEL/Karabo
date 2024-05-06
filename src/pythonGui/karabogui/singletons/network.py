@@ -128,7 +128,7 @@ class Network(QObject):
         # All panels need to be reset and all projects closed
         self.signalServerConnectionChanged.emit(False)
         krb_access.ONE_TIME_TOKEN = None
-        krb_access.ESCALATED_USER = None
+        krb_access.TEMPORARY_SESSION_USER = None
         process_qt_events(timeout=5000)
         self.endServerConnection()
 
@@ -649,17 +649,17 @@ class Network(QObject):
         login_info["info"] = dictToHash(get_config().info())
         self._write_hash(login_info)
 
-    def onEscalateRequest(self, **info):
-        h = Hash("type", "escalate")
+    def beginTempSession(self, **info):
+        h = Hash("type", "beginTemporarySession")
         h["clientId"] = const.KARABO_CLIENT_ID
         h["version"] = const.GUI_VERSION
-        h["escalationToken"] = info["escalationToken"]
-        h["levelBeforeEscalation"] = info["levelBeforeEscalation"]
+        h["temporarySessionToken"] = info["temporarySessionToken"]
+        h["levelBeforeTemporarySession"] = info["levelBeforeTemporarySession"]
         self._write_hash(h)
 
-    def onDeescalateRequest(self, **info):
-        h = Hash("type", "deescalate")
-        h["escalationToken"] = krb_access.ONE_TIME_TOKEN
+    def endTempSession(self, **info):
+        h = Hash("type", "endTemporarySession")
+        h["temporarySessionToken"] = krb_access.ONE_TIME_TOKEN
         self._write_hash(h)
 
     def _empty_request_queue(self):

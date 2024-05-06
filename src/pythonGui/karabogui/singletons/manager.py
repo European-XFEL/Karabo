@@ -412,50 +412,53 @@ class Manager(QObject):
             krb_access.HIGHEST_ACCESS_LEVEL = access
             broadcast_event(KaraboEvent.LoginUserChanged, {})
 
-    def handle_onEscalate(self, **info):
-        """Handle the response from gui server on escalation request by user"""
+    def handle_onBeginTemporarySession(self, **info):
+        """Handle the response from gui server on starting the temporary
+        session request by the user"""
         if info["success"]:
-            krb_access.ESCALATED_USER = info.get("username")
+            krb_access.TEMPORARY_SESSION_USER = info.get("username")
             access_level = AccessLevel(info["accessLevel"])
             if krb_access.HIGHEST_ACCESS_LEVEL != access_level:
                 krb_access.HIGHEST_ACCESS_LEVEL = access_level
 
-                # Escalated user has lower access level than the logged-in user
+                # User in Temporary Session has lower access level than the
+                # logged-in user
                 if krb_access.GLOBAL_ACCESS_LEVEL > access_level:
                     krb_access.GLOBAL_ACCESS_LEVEL = access_level
             broadcast_event(KaraboEvent.LoginUserChanged, {})
 
-    def handle_onDeescalate(self, **info):
-        """Handle the response from gui server on deescalation request by
-        user"""
-        escalation_before = info.get("levelBeforeEscalation")
-        if escalation_before is None:
+    def handle_onEndTemporarySession(self, **info):
+        """Handle the response from gui server on end temporary session
+        request by user"""
+        access_before_temp_session = info.get("levelBeforeTemporarySession")
+        if access_before_temp_session is None:
             return
-        access_level = AccessLevel(escalation_before)
+        access_level = AccessLevel(access_before_temp_session)
         if krb_access.HIGHEST_ACCESS_LEVEL != access_level:
             krb_access.HIGHEST_ACCESS_LEVEL = access_level
-        # Escalated user has lower access level than the logged-in user
+        # User in the Temporary Session has lower access level than the
+        # logged-in user
         if krb_access.GLOBAL_ACCESS_LEVEL > access_level:
             krb_access.GLOBAL_ACCESS_LEVEL = access_level
 
-        krb_access.ESCALATED_USER = None
+        krb_access.TEMPORARY_SESSION_USER = None
         broadcast_event(KaraboEvent.LoginUserChanged, {})
 
-    def handle_onEscalationExpired(self, **info):
-        """Handle the escalation expired message from gui server """
-        escalation_before = info.get("levelBeforeEscalation")
-        if escalation_before is None:
+    def handle_onTemporarySessionExpired(self, **info):
+        """Handle the temporary session expired message from gui server """
+        level_before = info.get("levelBeforeTemporarySession")
+        if level_before is None:
             return
-        access_level = AccessLevel(escalation_before)
+        access_level = AccessLevel(level_before)
         if krb_access.HIGHEST_ACCESS_LEVEL != access_level:
             krb_access.HIGHEST_ACCESS_LEVEL = access_level
-        # Escalated user has lower access level than the logged-in user
+        # Temporary session user has lower access level than the logged-in user
         if krb_access.GLOBAL_ACCESS_LEVEL > access_level:
             krb_access.GLOBAL_ACCESS_LEVEL = access_level
 
-        krb_access.ESCALATED_USER = None
+        krb_access.TEMPORARY_SESSION_USER = None
         broadcast_event(KaraboEvent.LoginUserChanged,
-                        {"escalation_expired": True})
+                        {"temp_session_expired": True})
 
     @show_wait_cursor
     def handle_systemTopology(self, systemTopology):
