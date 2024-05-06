@@ -24,6 +24,9 @@
 
 #include "InputOutputChannel_Test.hh"
 
+#include <ifaddrs.h>
+#include <sys/types.h>
+
 #include <boost/regex.hpp>
 #include <future>
 
@@ -48,10 +51,44 @@ using xms::InputChannel;
 using xms::OUTPUT_CHANNEL_ELEMENT;
 using xms::OutputChannel;
 
+// Return a vector with valid address names that can be used to create
+// a NetworkInterface:
+//
+//   - One of the host IPs that is not a loopback address
+//   - One host interface (for instance, eth0)
+//   - One address range
+//
+std::vector<std::string> createTestAddresses() {
+    struct ifaddrs* ifap{};
+    if (getifaddrs(&ifap) == -1) {
+        return {};
+    }
+
+    char presentation_ip[INET6_ADDRSTRLEN];
+    for (auto ifa = ifap; ifa; ifa = ifa->ifa_next) {
+        if (ifa->ifa_addr->sa_family != AF_INET) {
+            continue;
+        }
+
+        inet_ntop(AF_INET, &(reinterpret_cast<struct sockaddr_in*>(ifa->ifa_addr)->sin_addr.s_addr), presentation_ip,
+                  INET6_ADDRSTRLEN);
+
+        if (std::string{presentation_ip}.find("127.") == 0) {
+            continue;
+        } else {
+            std::string host_ip{presentation_ip};
+            size_t dot = host_ip.rfind('.');
+            freeifaddrs(ifap);
+            return {host_ip, ifa->ifa_name, host_ip.substr(0, dot) + ".0/24"};
+        }
+    }
+
+    freeifaddrs(ifap);
+    return {};
+}
+
 /// A class that adds threads following the RAII principle
 /// to safely (exceptions!) remove them when going out of scope.
-
-
 class ThreadAdder {
    public:
     ThreadAdder(int nThreads) : m_nThreads(nThreads) {
@@ -538,20 +575,39 @@ void InputOutputChannel_Test::testOutputPreparation() {
                                address != std::string("default"));
     }
     // test an OutputChannel with an unclear hostname. We keep allowing the users to be creative.
-    std::vector<std::string> addresses = {
-          "exampledomain.com", // we are not serving this address
-          " ",                 // bad input
-          "127.0.0.1",         // loopback ip
-          "127.0.0.0/24"       // loopback network will not be resolved by `karabo::net::getIpFromCIDRNotation`
-    };
+    std::vector<std::string> addresses = createTestAddresses();
+    addresses.push_back("default");
+
     for (const std::string& inputAddress : addresses) {
         OutputChannel::Pointer output =
               Configurator<OutputChannel>::create("OutputChannel", Hash("hostname", inputAddress), 0);
         output->setInstanceIdAndName("outputChannel", "oddAddress");
         output->initialize();
         const std::string address = output->getInitialConfiguration().get<std::string>("address");
-        CPPUNIT_ASSERT_EQUAL(address, inputAddress);
+
+        if (inputAddress == "default") {
+            CPPUNIT_ASSERT_EQUAL(address, boost::asio::ip::host_name());
+        } else {
+            // The first address returned is the actual address, the second one is the
+            // interface name, and the third one is a range, which OutputChannel turns into the actual address
+            CPPUNIT_ASSERT_EQUAL(address, addresses[0]);
+        }
     }
+
+    CPPUNIT_ASSERT_THROW(Configurator<OutputChannel>::create("OutputChannel", Hash("hostname", "127.0.0.1"), 0),
+                         karabo::util::LogicException);
+
+    CPPUNIT_ASSERT_THROW(Configurator<OutputChannel>::create("OutputChannel", Hash("hostname", "192.168.0.1"), 0),
+                         karabo::util::LogicException);
+
+    CPPUNIT_ASSERT_THROW(Configurator<OutputChannel>::create("OutputChannel", Hash("hostname", "256.0.0.0/8"), 0),
+                         karabo::util::LogicException);
+
+    CPPUNIT_ASSERT_THROW(Configurator<OutputChannel>::create("OutputChannel", Hash("hostname", "256.0.0.1"), 0),
+                         karabo::util::LogicException);
+
+    CPPUNIT_ASSERT_THROW(Configurator<OutputChannel>::create("OutputChannel", Hash("hostname", "pepe"), 0),
+                         karabo::util::LogicException);
 
     {
         // get the first valid address
