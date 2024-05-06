@@ -375,11 +375,11 @@ class ReactiveLoginDialog(QDialog):
         self._update_dialog_state()
 
 
-class EscalationDialog(QDialog):
+class TempSessionDialog(QDialog):
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         self.setModal(False)
-        filepath = get_dialog_ui("escalation_dialog.ui")
+        filepath = get_dialog_ui("temp_session_dialog.ui")
         uic.loadUi(filepath, self)
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
 
@@ -407,7 +407,7 @@ class EscalationDialog(QDialog):
     @Slot()
     def accept(self):
         # We are calling the super method only after the authentication of
-        # the escalated user.
+        # the temporary session user.
         self._post_auth_request()
 
     @Slot()
@@ -442,10 +442,10 @@ class EscalationDialog(QDialog):
             krb_access_level = krb_access.ACCESS_LEVEL_MAP.get(
                 highest_access_level.lower(), 2)
             username = get_network().username
-            get_network().onEscalateRequest(
+            get_network().beginTempSession(
                 username=username,
-                escalationToken=auth_result["once_token"],
-                levelBeforeEscalation=krb_access_level,
+                temporarySessionToken=auth_result["once_token"],
+                levelBeforeTemporarySession=krb_access_level,
             )
             super().accept()
         else:

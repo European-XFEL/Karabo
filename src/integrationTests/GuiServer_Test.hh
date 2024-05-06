@@ -94,29 +94,29 @@ class GuiServer_Test : public CPPUNIT_NS::TestFixture {
     void testValidTokenOnLogin();
 
     /**
-     * @brief Checks that a "escalate" message with no "oneTimeToken" is refused by a GUI Server configured to require
-     * authentication and an error notification is returned to the GUI Client.
+     * @brief Checks that a "beginTemporarySession" message with no "oneTimeToken" is refused by a GUI Server configured
+     * to require authentication and an error notification is returned to the GUI Client.
      *
      */
-    void testMissingTokenOnEscalate();
+    void testMissingTokenOnBeginTemporarySession();
 
     /**
-     * @brief Checks that when a "escalation" message with an invalid "oneTimeToken" is received by the GUI Server, it
-     * returns a corresponding error notification to the GUI Client.
+     * @brief Checks that when a "beginTemporarySession" message with an invalid "oneTimeToken" is received by the GUI
+     * Server, it returns a corresponding error notification to the GUI Client.
      *
      */
-    void testInvalidTokenOnEscalate();
+    void testInvalidTokenOnBeginTemporarySession();
 
     /**
-     * @brief Checks that the "normal" login > escalate > deescalate sequence works. Also checks that attempts of double
-     * escalations and deescalations are rejected.
+     * @brief Checks that the "normal" login > beginTemporarySession > endTemporarySession sequence works. Also checks
+     * that attempts of double temporary sessions and endTemporarySession requests are rejected.
      */
-    void testEscalateDeescalate();
+    void testBeginEndTemporarySession();
 
     /**
-     * @brief Checks that an escalate expires after the expected expiration time.
+     * @brief Checks that an beginTemporarySession expires after the expected expiration time.
      */
-    void testEscalateExpiration();
+    void testTemporarySessionExpiration();
 
     void testDisconnect();
 
