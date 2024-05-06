@@ -902,46 +902,47 @@ def test_handle_saveLogBook(mocker):
         assert logger().info.call_count == 1
 
 
-def test_handle_onEscalate(mocker):
+def test_handle_onBeginTemporarySession(mocker):
     network = mocker.Mock()
     with singletons(network=network):
         manager = Manager()
         broadcast = mocker.patch(
             "karabogui.singletons.manager.broadcast_event")
-        manager.handle_onEscalate(success=False)
+        manager.handle_onBeginTemporarySession(success=False)
         assert broadcast.call_count == 0
         info = {"success": True, "accessLevel": 4}
-        manager.handle_onEscalate(**info)
+        manager.handle_onBeginTemporarySession(**info)
         assert broadcast.call_count == 1
         broadcast.assert_called_with(KaraboEvent.LoginUserChanged, {})
 
 
-def test_handle_onDeescalate(mocker):
+def test_handle_onEndTemporarySession(mocker):
     network = mocker.Mock()
     with singletons(network=network):
         manager = Manager()
         broadcast = mocker.patch(
             "karabogui.singletons.manager.broadcast_event")
 
-        manager.handle_onDeescalate(levelBeforeEscalation=3,
-                                    loggedUserId="karabo")
+        manager.handle_onEndTemporarySession(levelBeforeTemporarySession=3,
+                                             loggedUserId="karabo")
         assert broadcast.call_count == 1
         broadcast.assert_called_with(KaraboEvent.LoginUserChanged, {})
 
 
-def test_handle_onEscalationExpired(mocker):
+def test_handle_onTemporarySessionExpired(mocker):
     network = mocker.Mock()
     with singletons(network=network):
         manager = Manager()
         broadcast = mocker.patch(
             "karabogui.singletons.manager.broadcast_event")
-        manager.handle_onEscalationExpired(levelBeforeEscalation=2)
+        manager.handle_onTemporarySessionExpired(
+            levelBeforeTemporarySession=2)
         broadcast.call_count == 1
         broadcast.assert_called_with(KaraboEvent.LoginUserChanged,
-                                     {'escalation_expired': True})
+                                     {'temp_session_expired': True})
 
 
-def test_escalation(mocker):
+def test_temp_session(mocker):
     network = mocker.Mock()
     with singletons(network=network):
         manager = Manager()
@@ -953,29 +954,29 @@ def test_escalation(mocker):
 
         assert krb_access.GLOBAL_ACCESS_LEVEL == AccessLevel(3)
         assert krb_access.HIGHEST_ACCESS_LEVEL == AccessLevel(3)
-        assert krb_access.ESCALATED_USER is None
+        assert krb_access.TEMPORARY_SESSION_USER is None
         network.set_username.reset_mock()
 
-        escalation_info = {"username": "karabo", "accessLevel": 4,
-                           "success": True}
-        manager.handle_onEscalate(**escalation_info)
+        begin_session_info = {
+            "username": "karabo", "accessLevel": 4, "success": True}
+        manager.handle_onBeginTemporarySession(**begin_session_info)
 
         assert network.set_username.call_count == 0
         assert krb_access.GLOBAL_ACCESS_LEVEL == AccessLevel(3)
         assert krb_access.HIGHEST_ACCESS_LEVEL == AccessLevel(4)
-        assert krb_access.ESCALATED_USER == "karabo"
+        assert krb_access.TEMPORARY_SESSION_USER == "karabo"
 
-        deescalate_info = {"levelBeforeEscalation": 2}
-        manager.handle_onDeescalate(** deescalate_info)
+        end_session_info = {"levelBeforeTemporarySession": 2}
+        manager.handle_onEndTemporarySession(** end_session_info)
 
         assert network.set_username.call_count == 0
         assert krb_access.GLOBAL_ACCESS_LEVEL == AccessLevel(2)
         assert krb_access.HIGHEST_ACCESS_LEVEL == AccessLevel(2)
-        assert krb_access.ESCALATED_USER is None
+        assert krb_access.TEMPORARY_SESSION_USER is None
 
-        escalation_expired_info = {"levelBeforeEscalation": 1}
-        manager.handle_onEscalationExpired(**escalation_expired_info)
+        temp_session_expired_info = {"levelBeforeTemporarySession": 1}
+        manager.handle_onTemporarySessionExpired(**temp_session_expired_info)
         assert network.set_username.call_count == 0
         assert krb_access.GLOBAL_ACCESS_LEVEL == AccessLevel(1)
         assert krb_access.HIGHEST_ACCESS_LEVEL == AccessLevel(1)
-        assert krb_access.ESCALATED_USER is None
+        assert krb_access.TEMPORARY_SESSION_USER is None
