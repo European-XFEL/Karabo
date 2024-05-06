@@ -41,41 +41,41 @@ authServer (string - URL of the Karabo Authentication Server)
 *systemTopology*
 systemTopology (Hash)
 
-[2.20.0]_ *onEscalationExpired*
+[2.20.0]_ *onTemporarySessionExpired*
 expiredToken (string),
 expirationTime (string),
-levelBeforeEscalation (int - matching a karabo::util::Schema::AccessLevel value),
+levelBeforeTemporarySession (int - matching a karabo::util::Schema::AccessLevel value),
 loggedUserId (string)
 
-* Message sent by the GUI Server to the client whose privilege escalation has expired. The GUI Server checks for expired escalations every 10 seconds; most likely there will be a delay between the expiration and the client being communicated about it.
+* Message sent by the GUI Server to the client whose temporary session has expired. The GUI Server checks for expired temporary sessions every 10 seconds; most likely there will be a delay between the expiration and the client being communicated about it.
 * The *expirationTime* string is the UTC date and time of the expiration in ISO-8601 format, e.g, "20240205T120633.139529Z".
 
-[2.20.0]_ *onEndEscalationNotice*
+[2.20.0]_ *onEndTemporarySessionNotice*
 aboutToExpireToken (string),
 secondsToExpiration (unsigned int 64)
 
-* Message sent by the GUI Server to the client whose privilege escalation is about to expire. The GUI Server checks for escalations lifetimes every 10 seconds.
-* An escalation is considered "about to expire" if its expiration time is less than "endEscalationNoticeTime" seconds away. "endEscalationNoticeTime" is an init-only property of the GUI Server.
+* Message sent by the GUI Server to the client whose temporary session is about to expire. The GUI Server checks for temporary sessions lifetimes every 10 seconds.
+* A temporary session is considered "about to expire" if its expiration time is less than "endTemporarySessionNoticeTime" seconds away. "endTemporarySessionNoticeTime" is an init-only property of the GUI Server.
 
-[2.20.0]_ *onEscalate*
+[2.20.0]_ *onBeginTemporarySession*
 success (bool),
 reason (string),
 accessLevel (int - matching a karabo::util::Schema::AccessLevel value),
-escalationDurationSecs (int)
+temporarySessionDurationSecs (int)
 
-* Message sent by the GUI Server with the results of an escalation to the requesting client.
-* For successful escalations, *success* will be *true*, *reason* will be empty, *accessLevel* will be the access level escalated to, and *escalationDurationSecs* will be the lifetime of the escalation in seconds.
-* For rejected escalations, *success* will be *false* and *reason* will be a message describing the reason for the rejection.
+* Message sent by the GUI Server with the results of beginning a temporary session to the requesting client.
+* For successful temporary session beginings, *success* will be *true*, *reason* will be empty, *accessLevel* will be the access level of the temporary session, and *temporarySessionDurationSecs* will be the lifetime of the temporary session in seconds.
+* For rejected temporary sessions beginings, *success* will be *false* and *reason* will be a message describing the reason for the rejection.
 
-[2.20.0]_ *onDeescalate*
+[2.20.0]_ *onEndTemporarySession*
 success (bool),
 reason (string),
-levelBeforeEscalation (int - matching a karabo::util::Schema::AccessLevel value),
+levelBeforeTemporarySession (int - matching a karabo::util::Schema::AccessLevel value),
 loggedUserId (string)
 
-* Message sent by the GUI Server with the results of a deescalation to the resquesting client.
-* For successful deescalations, *success* will be *true*, *reason* will be empty, *levelBeforeEscalation* will be the access level the GUI client was at when it escalated (provided by the own GUI Client), and *loggedUserId* will be the user that was logged at the time of the escalation (not necessarily the same user for whom the escalation happened).
-* For failed deescalations, *success* will be *false* and *reason* will be a message describing the reason for the failure.
+* Message sent by the GUI Server with the results of ending a temporary session to the resquesting client.
+* For successful endings, *success* will be *true*, *reason* will be empty, *levelBeforeTemporarySession* will be the access level the GUI client was at when the temporary session began (provided by the own GUI Client), and *loggedUserId* will be the user that was logged at the time before the start of the temporary session (nearly always a different user).
+* For failed endings, *success* will be *false* and *reason* will be a message describing the reason for the failure.
 
 [2.16.0]_ *loginInformation*
 userId (string)
@@ -167,23 +167,23 @@ message (string)
 
 **Message types IN (send from the client to the server):**
 
-[2.20.0]_ *escalate*
-escalationToken (string)
+[2.20.0]_ *beginTemporarySession*
+temporarySessionToken (string)
 version (string) (GUI Client version)
-levelBeforeEscalation (int - matching a karabo::util::Schema::AccessLevel value)
+levelBeforeTemporarySession (int - matching a karabo::util::Schema::AccessLevel value)
 
-* Message a GUI client sends to request an Access Level escalation to the GUI Server. The GUI Client sends this message after it has already authenticated the user requesting the escalation.
-* The *escalationToken* is a one-time token that the GUI Server will validate and authorize with the help of the Karabo Auth Server.
-* The *levelBeforeEscalation* is the access level the escalating GUI Client had at the time it requested the escalation. It will be sent back by the GUI Server when the deescalation happens (either by expiration or upon a request from the GUI client).
-* The GUI Server will send an *onEscalate* message later to the requesting GUI client with the results for the escalation request.
+* Message a GUI client sends to request a temporary session the GUI Server. The GUI Client sends this message after it has already authenticated the user requesting the temporary session.
+* The *temporarySessionToken* is a one-time token that the GUI Server will validate and authorize with the help of the Karabo Auth Server.
+* The *levelBeforeTemporarySession* is the access level the GUI Client had at the time it requested the begining of the temporary session. It will be sent back by the GUI Server when the temporary session ends (either by expiration or upon a request from the GUI client).
+* The GUI Server will send an *onBeginTemporarySession* message later to the requesting GUI client with the results for the begin temporary session request.
 
-[2.20.0]_ *deescalate*
-escalationToken (string)
+[2.20.0]_ *endTemporarySession*
+temporarySessionToken (string)
 version (string) (GUI Client version)
 
-* Message a GUI client sends to request an Access Level deescalation to the GUI Server.
-* The *escalationToken* must match the token sent with the corresponding *escalate* request.
-* The GUI Server will send an *onDeescalate* message later to the requesting GUI client with the results of the deescalation request.
+* Message a GUI client sends to request the GUI Server to end a temporary session.
+* The *temporarySessionToken* must match the token sent with the corresponding *beginTemporarySession* request.
+* The GUI Server will send an *onEndTemporarySession* message later to the requesting GUI client with the results of the end temporary session request.
 
 *login*
 [depr_2.16.0]_ username (string)
@@ -245,4 +245,4 @@ traceback (string)
 .. [2.8.0] Introduced in Karabo 2.8.0 to enable bulk updates of device configurations in the client.
 .. [2.16.0] Introduced in Karabo 2.16.0 to support User authentication.
 .. [depr_2.16.0] Deprecated in Karabo 2.16.0: "username" transporting the "clientId" of the GUI Client instance deprecated.  "clientId" and "clientUserId" used to send the id of the GUI Client (host and PID) and the Id of the user running the GUI Client (for non-authenticated logins). Access Level only transmitted from the server to the client as a result of token validation; otherwise the GUI Client adopts the access level selected by the user at login time.
-.. [2.20.0] Introduced in Karabo 2.20.0 to support temporary Access Level escalations for User Authenticated sessions.
+.. [2.20.0] Introduced in Karabo 2.20.0 to support temporary sessions on top of User Authenticated sessions.

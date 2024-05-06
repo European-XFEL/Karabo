@@ -5,7 +5,7 @@ from qtpy.QtNetwork import QNetworkRequest
 
 from karabogui import access as krb_access
 from karabogui.dialogs.reactive_login_dialog import (
-    EscalationDialog, LoginType, ReactiveLoginDialog)
+    LoginType, ReactiveLoginDialog, TempSessionDialog)
 from karabogui.testing.utils import click_button
 
 
@@ -18,7 +18,7 @@ def test_access_level(gui_app):
 
 
 def test_init(gui_app, mocker):
-    dialog = EscalationDialog()
+    dialog = TempSessionDialog()
     assert not dialog.ok_button.isEnabled()
     access_code = "12345"
     hostname = "karabo.xfel.eu"

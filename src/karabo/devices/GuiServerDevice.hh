@@ -31,7 +31,7 @@
 #include <unordered_map>
 
 #include "karabo/core/Device.hh"
-#include "karabo/devices/GuiServerSessionEscalator.hh"
+#include "karabo/devices/GuiServerTemporarySessionManager.hh"
 #include "karabo/net/Broker.hh"
 #include "karabo/net/Connection.hh"
 #include "karabo/net/UserAuthClient.hh"
@@ -76,20 +76,21 @@ namespace karabo {
                 // might be used for logs if GDPR requirements forbid using the
                 // userId directly in the logs.
                 std::string oneTimeToken;
-                // The userId for an authenticated GUI Client escalated session.
-                // Escalated sessions can only be "derived" from a user authenticated
-                // session and can only exist for a limited amount of time. An
-                // escalated session is started after a successful authentication of
-                // the user requesting the escalation.
-                std::string escalationUserId;
-                // The one time token for an authenticated GUI Client escalated
+                // The userId for an authenticated GUI Client temporary session.
+                // Temporary sessions can only be "derived" from a user authenticated
+                // session and can only exist for a limited amount of time. A
+                // temporary session is started after a successful authentication of
+                // the user requesting its begining.
+                std::string temporarySessionUserId;
+                // The one time token for an authenticated GUI Client temporary
                 // session. Only available for client sessions with user authentication
-                // while inside the escalation window.
-                std::string escalationToken;
-                // Access level when the user did the escalation. Sent by the client as
-                // part of an escalation request so the server can send it back later at
-                // deescalation time.
-                karabo::util::Schema::AccessLevel levelBeforeEscalation{karabo::util::Schema::AccessLevel::OBSERVER};
+                // while inside the temporary session duration.
+                std::string temporarySessionToken;
+                // Access level when the user began the temporary session. Sent by the
+                // client as part of a begin temporary session request so the server can
+                // send it back later at temporary session end time.
+                karabo::util::Schema::AccessLevel levelBeforeTemporarySession{
+                      karabo::util::Schema::AccessLevel::OBSERVER};
 
 
                 ChannelData() : clientVersion("0.0.0"){};
@@ -172,9 +173,9 @@ namespace karabo {
             std::atomic<int> m_timeout; // might overwrite timeout from client if client is smaller
 
             karabo::net::UserAuthClient m_authClient;
-            // The internal session escalator has to be built after the GuiServer is fully constructed - it binds to a
+            // The temporary session manager has to be built after the GuiServer is fully constructed - it binds to a
             // method of the GuiServer.
-            boost::shared_ptr<GuiServerSessionEscalator> m_sessionEscalator;
+            boost::shared_ptr<GuiServerTemporarySessionManager> m_tempSessionManager;
 
            public:
             KARABO_CLASSINFO(GuiServerDevice, "GuiServerDevice", "karabo-" + karabo::util::Version::getVersion())
@@ -406,27 +407,28 @@ namespace karabo {
                                         const karabo::net::OneTimeTokenAuthorizeResult& authResult);
 
             /**
-             * @brief Handles a session escalation expired event communicated by the internal instance of the
-             * GuiServerSessionEscalator.
+             * @brief Handles a temporary session expired event communicated by the internal instance of the
+             * GuiServerTemporarySessionManager.
              *
-             * The expiration is handled by sending a message of type "onEscalationExpired" to the client associated
-             * with the expired token. The message carries a Hash with paths "expiredToken" and "expirationTime".
+             * The expiration is handled by sending a message of type "onTemporarySessionExpired" to the client
+             * associated with the expired token. The message carries a Hash with paths "expiredToken" and
+             * "expirationTime".
              *
-             * @param expiredEscalationInfo data about the expired escalation.
+             * @param info data about the expired temporary session.
              */
-            void onEscalationExpiration(const ExpiredEscalationInfo& info);
+            void onTemporarySessionExpiration(const ExpiredTemporarySessionInfo& info);
 
 
             /**
-             * @brief Handles a "session escalation about to expire" event.
+             * @brief Handles a "temporary session about to expire" event.
              *
-             * The eminent escalation end is handled by sending a message of type "onEndEscalationNotice" to the client
-             * associated with the about to expire token. The message carries a Hash with paths "toExpireToken" and
-             * "secondsToExpiration".
+             * The eminent temporary session end is handled by sending a message of type "onEndTemporarySessionNotice"
+             * to the client associated with the about to expire token. The message carries a Hash with paths
+             * "toExpireToken" and "secondsToExpiration".
              *
-             * @param info data about the escalation about to expire.
+             * @param info data about the temporary session about to expire.
              */
-            void onEndEscalationNotice(const EminentExpirationInfo& info);
+            void onEndTemporarySessionNotice(const EminentExpirationInfo& info);
 
             /**
              * handles incoming data in the Hash  ``info`` from ``channel``.
@@ -471,8 +473,8 @@ namespace karabo {
              *      requestGeneric                 onRequestGeneric
              *      subscribeLogs                  <no action anymore>
              *      setLogPriority                 onSetLogPriority
-             *      escalate                       onEscalate
-             *      deescalate                     onDeescalate
+             *      beginTemporarySession          onBeginTemporarySession
+             *      endTemporarySession            onEndTemporarySession
              *      =============================  =========================
              *
              * \endverbatim
@@ -572,42 +574,46 @@ namespace karabo {
             void onReconfigure(WeakChannelPointer channel, const karabo::util::Hash& info);
 
             /**
-             * @brief Handles a message of type "escalate" by escalating the current unescalated user-authenticated
-             * session (if there's one). The escalation is an asynchronous operation whose completion (either
-             * successfully or not) will be handled by the onEscalateResult method.
+             * @brief Handles a message of type "beginTemporarySession" by starting a temporary session on top
+             * of the current user-authenticated session (if there's one). The session begining is an asynchronous
+             * operation whose completion (either successful or not) will be handled by the
+             * onBeginTemporarySessionResult method.
              *
-             * @param channel the TCP channel connecting to the client that requested the escalation.
-             * @param info a Hash which is supposed to contain an "escalationToken" whose value is a one-time token that
-             * must be successfuly authorized for the escalation to happen.
+             * @param channel the TCP channel connecting to the client that requested the begining of the temporary
+             * session.
+             * @param info a Hash which is supposed to contain an "temporarySessionToken" whose value is a one-time
+             * token that must be successfuly authorized for the temporary session to be started.
              */
-            void onEscalate(WeakChannelPointer channel, const karabo::util::Hash& info);
+            void onBeginTemporarySession(WeakChannelPointer channel, const karabo::util::Hash& info);
 
             /**
-             * @brief Handles the result of an "escalate" request sent by a connected client.
+             * @brief Handles the result of an "beginTemporarySession" request sent by a connected client.
              *
-             * @param channel the TCP channel connecting to the client that requested the escalation that will be used
-             * to send a message of type "onEscalate" with the escalation results back to the client.
-             * @param levelBeforeEscalation sent by the client as part of the escalate request to be sent back at
-             * deescalation time.
-             * @param result the results of the escalation operation that will be sent back to the client.
+             * @param channel the TCP channel connecting to the client that requested the temporary session that will be
+             * used to send a message of type "onBeginTemporarySession" with the begin operation results back to the
+             * client.
+             * @param levelBeforeTemporarySession sent by the client as part of the begin temporary session request to
+             * be sent back when the temporary session ends.
+             * @param result the results of the begin temporary session operation that will be sent back to the client.
              */
-            void onEscalateResult(WeakChannelPointer channel, karabo::util::Schema::AccessLevel levelBeforeEscalation,
-                                  const EscalateResult& result);
+            void onBeginTemporarySessionResult(WeakChannelPointer channel,
+                                               karabo::util::Schema::AccessLevel levelBeforeTemporarySession,
+                                               const BeginTemporarySessionResult& result);
 
             /**
-             * @brief Handles a message of type "deescalate" by deescalating the current escalated user-authenticated
-             * session (if there's one). The deescalation is performed synchronously (there's no I/O involved) and its
-             * results are transmitted back to the client through a message of type "onDeescalate".
+             * @brief Handles a message of type "endTemporarySession" by ending the current temporary session (if
+             * there's one). The end of the session is performed synchronously (there's no I/O involved) and its
+             * results are transmitted back to the client through a message of type "onEndTemporarySession".
              *
-             * @param channel the TCP channel connecting to the client that requested the escalation. Will be used to
-             * send the response back to the client.
-             * @param info a Hash which is supposed to contain an "escalationToken" whose value is a one-time token that
-             * must match the one associated to the current escalated session.
+             * @param channel the TCP channel connecting to the client that requested the end of the temporary session.
+             * Will be used to send the response back to the client.
+             * @param info a Hash which is supposed to contain an "temporarySessionToken" whose value is a one-time
+             * token that must match the one associated to the temporary session being terminated.
              *
-             * @note the hash with the results of the deescalation sent back to the requesting client has the fields
-             * "success", "reason" and "escalationToken" (an echo of the token provided in the request).
+             * @note the hash with the results of the ending operation sent back to the requesting client has the fields
+             * "success", "reason" and "temporarySessionToken" (an echo of the token provided in the request).
              */
-            void onDeescalate(WeakChannelPointer channel, const karabo::util::Hash& info);
+            void onEndTemporarySession(WeakChannelPointer channel, const karabo::util::Hash& info);
 
             /**
              * Callback helper for ``onExecute``

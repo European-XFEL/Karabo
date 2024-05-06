@@ -22,7 +22,7 @@
 #include "GuiServer_Test.hh"
 
 #include <cstdlib>
-#include <karabo/devices/GuiServerSessionEscalator.hh>
+#include <karabo/devices/GuiServerTemporarySessionManager.hh>
 #include <karabo/net/EventLoop.hh>
 #include <karabo/util/StringTools.hh>
 
@@ -37,10 +37,10 @@ using namespace std;
 
 #define TEST_GUI_SERVER_ID "testGuiServerDevice"
 
-// Maximum escalation time to be used in the tests (in seconds)
-#define MAX_ESCALATION_TIME karabo::devices::CHECK_ESCALATE_EXPIRATION_INTERVAL_SECS + 4u
-// Value to be used in the test for the "endEscalationNoticeTime" property of the GUI Server
-#define END_ESCALATION_NOTICE_TIME MAX_ESCALATION_TIME - 1u
+// Maximum temporary session duration time to be used in the tests (in seconds)
+#define MAX_TEMPORARY_SESSION_TIME karabo::devices::CHECK_TEMPSESSION_EXPIRATION_INTERVAL_SECS + 4u
+// Value to be used in the test for the "endTemporarySessionNoticeTime" property of the GUI Server
+#define END_TEMPORARY_SESSION_NOTICE_TIME MAX_TEMPORARY_SESSION_TIME - 1u
 
 USING_KARABO_NAMESPACES
 
@@ -153,7 +153,7 @@ void GuiServer_Test::appTestRunner() {
     TestKaraboAuthServer tstAuthServer(authServerAddr, authServerPort);
     boost::thread srvRunner = boost::thread([&tstAuthServer]() { tstAuthServer.run(); });
 
-    // Instantiates a GUI Server in Authenticated mode with a maximum escalation time of 2 seconds for
+    // Instantiates a GUI Server in Authenticated mode with a maximum temporary session time of 2 seconds for
     // the purposes of the integrated tests.
     // clang-format off
     success_n = m_deviceClient->instantiate(
@@ -163,8 +163,8 @@ void GuiServer_Test::appTestRunner() {
                "minClientVersion", "2.16",
                "authServer", "http://" + authServerAddr + ":" + toString(authServerPort),
                "timeout", 0,
-               "maxEscalationTime", MAX_ESCALATION_TIME,
-               "endEscalationNoticeTime", END_ESCALATION_NOTICE_TIME),
+               "maxTemporarySessionTime", MAX_TEMPORARY_SESSION_TIME,
+               "endTemporarySessionNoticeTime", END_TEMPORARY_SESSION_NOTICE_TIME),
           KRB_TEST_MAX_TIMEOUT);
     // clang-format on
     CPPUNIT_ASSERT_MESSAGE(success_n.second, success_n.first);
@@ -179,10 +179,10 @@ void GuiServer_Test::appTestRunner() {
     testInvalidTokenOnLogin();
     testValidTokenOnLogin();
 
-    testMissingTokenOnEscalate();
-    testInvalidTokenOnEscalate();
-    testEscalateDeescalate();
-    testEscalateExpiration();
+    testMissingTokenOnBeginTemporarySession();
+    testInvalidTokenOnBeginTemporarySession();
+    testBeginEndTemporarySession();
+    testTemporarySessionExpiration();
 
     if (m_tcpAdapter->connected()) {
         m_tcpAdapter->disconnect();
@@ -1466,31 +1466,32 @@ void GuiServer_Test::testValidTokenOnLogin() {
     std::clog << "OK" << std::endl;
 }
 
-void GuiServer_Test::testMissingTokenOnEscalate() {
-    std::clog << "testMissingTokenOnEscalate: " << std::flush;
+void GuiServer_Test::testMissingTokenOnBeginTemporarySession() {
+    std::clog << "testMissingTokenOnBeginTemporarySession: " << std::flush;
 
     Hash loginInfo("type", "login", "clientId", "desk010", "oneTimeToken", TestKaraboAuthServer::VALID_TOKEN, "version",
-                   "2.20.0", "levelBeforeEscalation", static_cast<int>(Schema::AccessLevel::OPERATOR));
+                   "2.20.0", "levelBeforeTemporarySession", static_cast<int>(Schema::AccessLevel::OPERATOR));
 
-    Hash escalateInfo("type", "escalate", "version", "2.20.0");
+    Hash beginTempSessionInfo("type", "beginTemporarySession", "version", "2.20.0");
 
     resetTcpConnection();
 
-    // Performs an authenticated login successfully - escalation is only available from that point on.
+    // Performs an authenticated login successfully - temporary sessions are only available from that point on.
     Hash lastMessage;
     karabo::TcpAdapter::QueuePtr messageQ =
           m_tcpAdapter->getNextMessages("loginInformation", 1, [&] { m_tcpAdapter->sendMessage(loginInfo); });
     messageQ->pop(lastMessage);
     CPPUNIT_ASSERT_MESSAGE("'accessLevel' missing in loginInformation sent by the GUI Server",
                            lastMessage.has("accessLevel"));
-    // Attempt at an escalation without the required token
-    messageQ = m_tcpAdapter->getNextMessages("onEscalate", 1, [&] { m_tcpAdapter->sendMessage(escalateInfo); });
+    // Attempt at begining a temporary session without the required token
+    messageQ = m_tcpAdapter->getNextMessages("onBeginTemporarySession", 1,
+                                             [&] { m_tcpAdapter->sendMessage(beginTempSessionInfo); });
     messageQ->pop(lastMessage);
     bool success = lastMessage.get<bool>("success");
     const std::string& reason = lastMessage.get<std::string>("reason");
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Escalate request succeeded unexpectedely", false, success);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("beginTemporarySession request succeeded unexpectedely", false, success);
     CPPUNIT_ASSERT_MESSAGE("Error reason differs from the expected. Received error reason: '" + reason + "'",
-                           reason.find("Required \"escalationToken\" field missing") != std::string::npos);
+                           reason.find("Required \"temporarySessionToken\" field missing") != std::string::npos);
 
     int timeout = 1500;
     // wait for the GUI server to log us out
@@ -1504,31 +1505,33 @@ void GuiServer_Test::testMissingTokenOnEscalate() {
 }
 
 
-void GuiServer_Test::testInvalidTokenOnEscalate() {
-    std::clog << "testInvalidTokenOnEscalate: " << std::flush;
+void GuiServer_Test::testInvalidTokenOnBeginTemporarySession() {
+    std::clog << "testInvalidTokenOnBeginTemporarySession: " << std::flush;
 
     Hash loginInfo("type", "login", "clientId", "desk010", "oneTimeToken", TestKaraboAuthServer::VALID_TOKEN, "version",
                    "2.20.0");
 
-    Hash escalateInfo("type", "escalate", "escalationToken", "abcd", "version", "2.20.0", "levelBeforeEscalation",
-                      static_cast<int>(Schema::AccessLevel::OPERATOR));
+    Hash beginTempSessionInfo("type", "beginTemporarySession", "temporarySessionToken", "abcd", "version", "2.20.0",
+                              "levelBeforeTemporarySession", static_cast<int>(Schema::AccessLevel::OPERATOR));
 
     resetTcpConnection();
 
-    // Performs an authenticated login successfully - escalation is only available from that point on.
+    // Performs an authenticated login successfully - temporary sessions are only available from that point on.
     Hash lastMessage;
     karabo::TcpAdapter::QueuePtr messageQ =
           m_tcpAdapter->getNextMessages("loginInformation", 1, [&] { m_tcpAdapter->sendMessage(loginInfo); });
     messageQ->pop(lastMessage);
     CPPUNIT_ASSERT_MESSAGE("'accessLevel' missing in loginInformation sent by the GUI Server",
                            lastMessage.has("accessLevel"));
-    // Attempts at an escalate with an invalid token
-    messageQ = m_tcpAdapter->getNextMessages("onEscalate", 1, [&] { m_tcpAdapter->sendMessage(escalateInfo); });
+    // Attempts at an beginTemporarySession with an invalid token
+    messageQ = m_tcpAdapter->getNextMessages("onBeginTemporarySession", 1,
+                                             [&] { m_tcpAdapter->sendMessage(beginTempSessionInfo); });
     messageQ->pop(lastMessage);
     bool success = lastMessage.get<bool>("success");
     const std::string& reason = lastMessage.get<std::string>("reason");
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Escalate request succeeded unexpectedely", false, success);
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Escalate failure reason", TestKaraboAuthServer::INVALID_TOKEN_MSG, reason);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("beginTemporarySession request succeeded unexpectedely", false, success);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("beginTemporarySession failure reason", TestKaraboAuthServer::INVALID_TOKEN_MSG,
+                                 reason);
 
     int timeout = 1500;
     // wait for the GUI server to log us out
@@ -1541,69 +1544,77 @@ void GuiServer_Test::testInvalidTokenOnEscalate() {
     std::clog << "OK" << std::endl;
 }
 
-void GuiServer_Test::testEscalateDeescalate() {
-    std::clog << "testEscalateDeescalate: " << std::flush;
+void GuiServer_Test::testBeginEndTemporarySession() {
+    std::clog << "testBeginEndTemporarySession: " << std::flush;
 
     Hash loginInfo("type", "login", "clientId", "desk010", "oneTimeToken", TestKaraboAuthServer::VALID_TOKEN, "version",
                    "2.20.0");
 
-    Hash escalateInfo("type", "escalate", "escalationToken", TestKaraboAuthServer::VALID_TOKEN, "version", "2.20.0",
-                      "levelBeforeEscalation", static_cast<int>(Schema::AccessLevel::OPERATOR));
+    Hash beginTempSessionInfo("type", "beginTemporarySession", "temporarySessionToken",
+                              TestKaraboAuthServer::VALID_TOKEN, "version", "2.20.0", "levelBeforeTemporarySession",
+                              static_cast<int>(Schema::AccessLevel::OPERATOR));
 
-    Hash deescalateInfo("type", "deescalate", "escalationToken", TestKaraboAuthServer::VALID_TOKEN, "version",
-                        "2.20.0");
+    Hash endTempSessionInfo("type", "endTemporarySession", "temporarySessionToken", TestKaraboAuthServer::VALID_TOKEN,
+                            "version", "2.20.0");
 
     resetTcpConnection();
 
-    // Performs an authenticated login successfully - escalation is only available from that point on.
+    // Performs an authenticated login successfully - temporary sessions are only available from that point on.
     Hash lastMessage;
     karabo::TcpAdapter::QueuePtr messageQ =
           m_tcpAdapter->getNextMessages("loginInformation", 1, [&] { m_tcpAdapter->sendMessage(loginInfo); });
     messageQ->pop(lastMessage);
     CPPUNIT_ASSERT_MESSAGE("'accessLevel' missing in loginInformation sent by the GUI Server",
                            lastMessage.has("accessLevel"));
-    // Request an escalation with a valid token.
-    messageQ = m_tcpAdapter->getNextMessages("onEscalate", 1, [&] { m_tcpAdapter->sendMessage(escalateInfo); });
+    // Request a temporary session begining with a valid token.
+    messageQ = m_tcpAdapter->getNextMessages("onBeginTemporarySession", 1,
+                                             [&] { m_tcpAdapter->sendMessage(beginTempSessionInfo); });
     messageQ->pop(lastMessage);
     bool success = lastMessage.get<bool>("success");
     std::string reason = lastMessage.get<std::string>("reason");
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Escalation request failed", true, success);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("beginTemporarySession request failed", true, success);
     CPPUNIT_ASSERT_MESSAGE("Field 'reason' should be empty. Instead it has '" + reason + "'", reason.empty());
-    CPPUNIT_ASSERT_MESSAGE("'onEscalate' message should have an 'accessLevel' field", lastMessage.has("accessLevel"));
-    CPPUNIT_ASSERT_MESSAGE("'onEscalate' message should have an 'escalationDurationSecs' field",
-                           lastMessage.has("escalationDurationSecs"));
-    CPPUNIT_ASSERT_MESSAGE("'onEscalate' message should have an 'username' field", lastMessage.has("username"));
+    CPPUNIT_ASSERT_MESSAGE("'onBeginTemporarySession' message should have an 'accessLevel' field",
+                           lastMessage.has("accessLevel"));
+    CPPUNIT_ASSERT_MESSAGE("'onBeginTemporarySession' message should have an 'temporarySessionDurationSecs' field",
+                           lastMessage.has("temporarySessionDurationSecs"));
+    CPPUNIT_ASSERT_MESSAGE("'onBeginTemporarySession' message should have an 'username' field",
+                           lastMessage.has("username"));
     const std::string& userId = lastMessage.get<std::string>("username");
     CPPUNIT_ASSERT_EQUAL_MESSAGE("User differs from expected", TestKaraboAuthServer::VALID_USER_ID, userId);
 
-    // Request an escalation with a valid token - should be rejected since we are already escalated
-    messageQ = m_tcpAdapter->getNextMessages("onEscalate", 1, [&] { m_tcpAdapter->sendMessage(escalateInfo); });
+    // Request a begin temporary session a valid token - should be rejected since we are already in a temporary session
+    messageQ = m_tcpAdapter->getNextMessages("onBeginTemporarySession", 1,
+                                             [&] { m_tcpAdapter->sendMessage(beginTempSessionInfo); });
     messageQ->pop(lastMessage);
     success = lastMessage.get<bool>("success");
     reason = lastMessage.get<std::string>("reason");
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Escalation request didn't fail as expected", false, success);
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Reason for failed escalation over escalation",
-                                 std::string{"There's already an active escalated session."}, reason);
-    // Request a deescalation
-    messageQ = m_tcpAdapter->getNextMessages("onDeescalate", 1, [&] { m_tcpAdapter->sendMessage(deescalateInfo); });
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("beginTemporarySession request didn't fail as expected", false, success);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Reason for failed temporary session over temporary session",
+                                 std::string{"There's already an active temporary session."}, reason);
+    // Request an end of temporary session
+    messageQ = m_tcpAdapter->getNextMessages("onEndTemporarySession", 1,
+                                             [&] { m_tcpAdapter->sendMessage(endTempSessionInfo); });
     messageQ->pop(lastMessage);
     success = lastMessage.get<bool>("success");
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Deescalation request failed", true, success);
-    Schema::AccessLevel levelBeforeEscalation =
-          static_cast<Schema::AccessLevel>(lastMessage.get<int>("levelBeforeEscalation"));
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("levelBeforeEscalation", Schema::AccessLevel::OPERATOR, levelBeforeEscalation);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("endTemporarySession request failed", true, success);
+    Schema::AccessLevel levelBeforeTemporarySession =
+          static_cast<Schema::AccessLevel>(lastMessage.get<int>("levelBeforeTemporarySession"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("levelBeforeTemporarySession", Schema::AccessLevel::OPERATOR,
+                                 levelBeforeTemporarySession);
     std::string loggedUserId = lastMessage.get<std::string>("loggedUserId");
     CPPUNIT_ASSERT_EQUAL_MESSAGE("loggedUserId", TestKaraboAuthServer::VALID_USER_ID, loggedUserId);
-    // Request deescalate again - should fail as there is no active escalation
-    messageQ = m_tcpAdapter->getNextMessages("onDeescalate", 1, [&] { m_tcpAdapter->sendMessage(deescalateInfo); });
+    // Request endTemporarySession again - should fail as there is no active temporary session
+    messageQ = m_tcpAdapter->getNextMessages("onEndTemporarySession", 1,
+                                             [&] { m_tcpAdapter->sendMessage(endTempSessionInfo); });
     messageQ->pop(lastMessage);
     success = lastMessage.get<bool>("success");
     reason = lastMessage.get<std::string>("reason");
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Deescalation unexpectedly succeeded - there should be no active escalation.", false,
-                                 success);
     CPPUNIT_ASSERT_EQUAL_MESSAGE(
-          "Reason for failed escalation over escalation unexpected",
-          std::string{"There's no active escalated session associated with the requesting client."}, reason);
+          "endTemporarySession unexpectedly succeeded - there should be no active temporary session.", false, success);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(
+          "Reason for failed temporary session over temporary session unexpected",
+          std::string{"There's no active temporary session associated with the requesting client."}, reason);
 
     int timeout = 1500;
     // wait for the GUI server to log us out
@@ -1616,71 +1627,75 @@ void GuiServer_Test::testEscalateDeescalate() {
     std::clog << "OK" << std::endl;
 }
 
-void GuiServer_Test::testEscalateExpiration() {
-    std::clog << "testEscalateExpiration: " << std::flush;
+void GuiServer_Test::testTemporarySessionExpiration() {
+    std::clog << "testTemporarySessionExpiration: " << std::flush;
 
     Hash loginInfo("type", "login", "clientId", "desk010", "oneTimeToken", TestKaraboAuthServer::VALID_TOKEN, "version",
                    "2.20.0");
 
-    Hash escalateInfo("type", "escalate", "escalationToken", TestKaraboAuthServer::VALID_TOKEN, "version", "2.20.0",
-                      "levelBeforeEscalation", static_cast<int>(Schema::AccessLevel::OPERATOR));
+    Hash beginTempSessionInfo("type", "beginTemporarySession", "temporarySessionToken",
+                              TestKaraboAuthServer::VALID_TOKEN, "version", "2.20.0", "levelBeforeTemporarySession",
+                              static_cast<int>(Schema::AccessLevel::OPERATOR));
 
     resetTcpConnection();
 
-    // Performs an authenticated login successfully - escalation is only available from that point on.
+    // Performs an authenticated login successfully - temporary sessions are only available from that point on.
     Hash lastMessage;
     karabo::TcpAdapter::QueuePtr messageQ =
           m_tcpAdapter->getNextMessages("loginInformation", 1, [&] { m_tcpAdapter->sendMessage(loginInfo); });
     messageQ->pop(lastMessage);
     CPPUNIT_ASSERT_MESSAGE("'accessLevel' missing in loginInformation sent by the GUI Server",
                            lastMessage.has("accessLevel"));
-    // Request an escalation with a valid token - waits for 3 messages: the "onEscalate"escalation result message
-    // (should be successful) immediately after, an "onEndEscalationNotice" after the first check cycle of the
-    // GuiServerSessionEscalator and an "onEscalationExpired" after the second check cycle.
-    messageQ = m_tcpAdapter->getNextMessages("onEscalate", 1, [&] { m_tcpAdapter->sendMessage(escalateInfo); });
+    // Request a temporary session with a valid token - waits for 3 messages: the "onBeginTemporarySession" result
+    // message (should be successful) immediately after, an "onEndTemporarySessionNotice" after the first check cycle of
+    // the GuiServerTemporarySessionManager and an "onTemporarySessionExpired" after the second check cycle.
+    messageQ = m_tcpAdapter->getNextMessages("onBeginTemporarySession", 1,
+                                             [&] { m_tcpAdapter->sendMessage(beginTempSessionInfo); });
     messageQ->pop(lastMessage);
     bool success = lastMessage.get<bool>("success");
     std::string reason = lastMessage.get<std::string>("reason");
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Escalation request failed", true, success);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("beginTemporarySession request failed", true, success);
     CPPUNIT_ASSERT_MESSAGE("Field 'reason' should be empty.", reason.empty());
-    CPPUNIT_ASSERT_MESSAGE("'onEscalate' message should have an 'accessLevel' field", lastMessage.has("accessLevel"));
-    CPPUNIT_ASSERT_MESSAGE("'onEscalate' message should have an 'escalationDurationSecs' field",
-                           lastMessage.has("escalationDurationSecs"));
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Value of escalationDurationSecs", MAX_ESCALATION_TIME,
-                                 lastMessage.get<unsigned int>("escalationDurationSecs"));
+    CPPUNIT_ASSERT_MESSAGE("'onBeginTemporarySession' message should have an 'accessLevel' field",
+                           lastMessage.has("accessLevel"));
+    CPPUNIT_ASSERT_MESSAGE("'onBeginTemporarySession' message should have an 'temporarySessionDurationSecs' field",
+                           lastMessage.has("temporarySessionDurationSecs"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Value of temporarySessionDurationSecs", MAX_TEMPORARY_SESSION_TIME,
+                                 lastMessage.get<unsigned int>("temporarySessionDurationSecs"));
 
     // No triggering needed and timeout large enough to guarantee reception of an eminent expiration notice.
     const size_t lifetimePlusCheckInterval =
-          1'000ul * (MAX_ESCALATION_TIME + karabo::devices::CHECK_ESCALATE_EXPIRATION_INTERVAL_SECS);
+          1'000ul * (MAX_TEMPORARY_SESSION_TIME + karabo::devices::CHECK_TEMPSESSION_EXPIRATION_INTERVAL_SECS);
     messageQ = m_tcpAdapter->getNextMessages(
-          "onEndEscalationNotice", 1ul, [] {}, lifetimePlusCheckInterval);
+          "onEndTemporarySessionNotice", 1ul, [] {}, lifetimePlusCheckInterval);
     messageQ->pop(lastMessage);
-    CPPUNIT_ASSERT_MESSAGE("'onEndEscalationNotice' message should have an 'aboutToExpireToken' field",
+    CPPUNIT_ASSERT_MESSAGE("'onEndTemporarySessionNotice' message should have an 'aboutToExpireToken' field",
                            lastMessage.has("aboutToExpireToken"));
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Unexpected about to expire token value", TestKaraboAuthServer::VALID_TOKEN,
                                  lastMessage.get<std::string>("aboutToExpireToken"));
-    CPPUNIT_ASSERT_MESSAGE("'onEscalate' message should have a 'secondsToExpiration' field",
+    CPPUNIT_ASSERT_MESSAGE("'onBeginTemporarySession' message should have a 'secondsToExpiration' field",
                            lastMessage.has("secondsToExpiration"));
     const karabo::util::TimeValue secsToExpiration = lastMessage.get<karabo::util::TimeValue>("secondsToExpiration");
-    CPPUNIT_ASSERT_LESSEQUAL(END_ESCALATION_NOTICE_TIME, static_cast<unsigned int>(secsToExpiration));
+    CPPUNIT_ASSERT_LESSEQUAL(END_TEMPORARY_SESSION_NOTICE_TIME, static_cast<unsigned int>(secsToExpiration));
 
     // No triggering needed and timeout large enough to guarantee an expiration being received.
     messageQ = m_tcpAdapter->getNextMessages(
-          "onEscalationExpired", 1ul, [] {}, lifetimePlusCheckInterval);
+          "onTemporarySessionExpired", 1ul, [] {}, lifetimePlusCheckInterval);
     messageQ->pop(lastMessage);
-    CPPUNIT_ASSERT_MESSAGE("'onEscalationExpired' message should have an 'expiredToken' field",
+    CPPUNIT_ASSERT_MESSAGE("'onTemporarySessionExpired' message should have an 'expiredToken' field",
                            lastMessage.has("expiredToken"));
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Unexpected expired token value", TestKaraboAuthServer::VALID_TOKEN,
                                  lastMessage.get<std::string>("expiredToken"));
-    CPPUNIT_ASSERT_MESSAGE("'onEscalate' message should have an 'expirationTime' field",
+    CPPUNIT_ASSERT_MESSAGE("'onBeginTemporarySession' message should have an 'expirationTime' field",
                            lastMessage.has("expirationTime"));
     Epochstamp expiredAt = Epochstamp(lastMessage.get<std::string>("expirationTime"));
     Epochstamp currentTime;
     CPPUNIT_ASSERT_GREATER(expiredAt, currentTime);
 
-    Schema::AccessLevel levelBeforeEscalation =
-          static_cast<Schema::AccessLevel>(lastMessage.get<int>("levelBeforeEscalation"));
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("levelBeforeEscalation", Schema::AccessLevel::OPERATOR, levelBeforeEscalation);
+    Schema::AccessLevel levelBeforeTemporarySession =
+          static_cast<Schema::AccessLevel>(lastMessage.get<int>("levelBeforeTemporarySession"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("levelBeforeTemporarySession", Schema::AccessLevel::OPERATOR,
+                                 levelBeforeTemporarySession);
     std::string loggedUserId = lastMessage.get<std::string>("loggedUserId");
     CPPUNIT_ASSERT_EQUAL_MESSAGE("loggedUserId", TestKaraboAuthServer::VALID_USER_ID, loggedUserId);
 
