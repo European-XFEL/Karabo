@@ -24,17 +24,20 @@ from enum import IntEnum, unique
 from struct import calcsize, unpack
 
 from qtpy import uic
-from qtpy.QtCore import Qt, QTimer, QUrl, Slot
+from qtpy.QtCore import Qt, QTimer, QUrl, Signal, Slot
 from qtpy.QtGui import QDesktopServices, QIntValidator
 from qtpy.QtNetwork import (
     QAbstractSocket, QNetworkAccessManager, QNetworkReply, QNetworkRequest,
     QSslConfiguration, QSslSocket, QTcpSocket)
-from qtpy.QtWidgets import QDialog, QDialogButtonBox, QWidget
+from qtpy.QtWidgets import (
+    QDialog, QDialogButtonBox, QHBoxLayout, QLineEdit, QSizePolicy, QWidget)
 
 from karabo.native import decodeBinary
 from karabogui import access as krb_access
 from karabogui.const import CLIENT_HOST
 from karabogui.singletons.api import get_network
+from karabogui.util import SignalBlocker
+from karabogui.validators import IntValidator
 
 from .utils import get_dialog_ui
 
@@ -53,6 +56,63 @@ class LoginType(IntEnum):
     ACCESS_LEVEL = 2
     READ_ONLY = 3
     REFRESH_TOKEN = 4
+
+
+class Validator(IntValidator):
+    """A custom validator that allows only 1 or 6 digits """
+    def validate(self, input, pos):
+        """Support only number with single digit or 6 digits"""
+        if not (pos and input):
+            # On deleting item from cell
+            return self.Intermediate, input, pos
+        if len(input) not in (1, 6):
+            return self.Invalid, input, pos
+        if pos not in (1, 6):
+            return self.Invalid, input, pos
+        return super().validate(input, pos)
+
+
+class AccessCodeWidget(QWidget):
+    """A widget to display each digit in the access code in a separate cell(
+    QLineEdit)"""
+
+    valueChanged = Signal()
+
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+
+        self.cells = []
+        for _ in range(6):
+            cell = QLineEdit(parent=self)
+            cell.setFixedWidth(30)
+            cell.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+            cell.setAlignment(Qt.AlignCenter)
+            cell.setValidator(Validator(parent=self))
+            self.cells.append(cell)
+            layout.addWidget(cell)
+            cell.textChanged.connect(self.on_text_changed)
+
+    @Slot(str)
+    def on_text_changed(self, text: str):
+        current_index = self.cells.index(self.sender())
+        # Distribute each digits in each cells.
+        if len(text) == 6:
+            with SignalBlocker(self):
+                for number, cell in zip(str(text), self.cells):
+                    cell.setText(number)
+        # Paste one digit to current cell and move focus to the next.
+        elif current_index < 5 and self.sender().text():
+            next_index = current_index + 1
+            self.cells[next_index].setFocus()
+        self.valueChanged.emit()
+
+    def get_access_code(self) -> str:
+        return "".join(cell.text() for cell in self.cells)
+
+    def has_access_code(self) -> bool:
+        return all([cell.text() for cell in self.cells])
 
 
 class ReactiveLoginDialog(QDialog):
@@ -118,8 +178,9 @@ class ReactiveLoginDialog(QDialog):
         self.label_shell_user.setText(shell_user)
         self.label_readonly_user.setText(shell_user)
 
-        self.edit_access_code.setValidator(QIntValidator(parent=self))
-        self.edit_access_code.textEdited.connect(self._update_button)
+        self.edit_access_code = AccessCodeWidget(parent)
+        self.access_widget_layout.addWidget(self.edit_access_code)
+        self.edit_access_code.valueChanged.connect(self._update_button)
 
         self.authenticate_button.clicked.connect(self.open_login_webpage)
 
@@ -316,7 +377,7 @@ class ReactiveLoginDialog(QDialog):
         elif self.login_type is LoginType.UNKNOWN:
             self.connect_button.setEnabled(False)
         elif self.login_type is LoginType.USER_AUTHENTICATED:
-            enable = bool(self.edit_access_code.text().strip())
+            enable = bool(self.edit_access_code.has_access_code())
             self.connect_button.setEnabled(enable)
         elif self.login_type is LoginType.REFRESH_TOKEN:
             self.connect_button.setEnabled(True)
@@ -344,7 +405,7 @@ class ReactiveLoginDialog(QDialog):
         self._update_dialog_state()
 
         info = json.dumps({
-            "access_code": int(self.edit_access_code.text()),
+            "access_code": int(self.edit_access_code.get_access_code()),
             "client_hostname": CLIENT_HOST,
             "remember_login": self.remember_login.isChecked()
         })
