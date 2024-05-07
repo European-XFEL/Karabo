@@ -5,7 +5,7 @@ from qtpy.QtNetwork import QNetworkRequest
 
 from karabogui import access as krb_access
 from karabogui.dialogs.reactive_login_dialog import (
-    LoginType, ReactiveLoginDialog, TempSessionDialog)
+    AccessCodeWidget, LoginType, ReactiveLoginDialog, TempSessionDialog)
 from karabogui.testing.utils import click_button
 
 
@@ -95,7 +95,9 @@ def test_access_code_login(gui_app, mocker):
     assert dialog.login_type == LoginType.USER_AUTHENTICATED
     assert not dialog.connect_button.isEnabled()
 
-    dialog.edit_access_code.setText("123456")
+    for i, cell in enumerate(dialog.edit_access_code.cells, start=1):
+        cell.setText(str(i))
+
     dialog._update_button()
     assert dialog.connect_button.isEnabled()
     post_access_code = mocker.patch.object(dialog, "_post_auth_request")
@@ -104,3 +106,21 @@ def test_access_code_login(gui_app, mocker):
     click_button(dialog.connect_button)
     assert post_refresh_token.call_count == 0
     assert post_access_code.call_count == 1
+
+
+def test_access_widget(gui_app):
+    widget = AccessCodeWidget()
+    assert widget.get_access_code() == ""
+
+    widget.cells[0].setText("4")
+    assert widget.get_access_code() == "4"
+    assert widget.focusWidget() == widget.cells[1]
+
+    widget.cells[3].setText("123456")
+    assert widget.get_access_code() == "123456"
+    assert widget.cells[0].text() == "1"
+    assert widget.cells[1].text() == "2"
+    assert widget.cells[2].text() == "3"
+    assert widget.cells[3].text() == "4"
+    assert widget.cells[4].text() == "5"
+    assert widget.cells[5].text() == "6"
