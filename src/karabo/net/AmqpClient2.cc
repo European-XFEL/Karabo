@@ -158,6 +158,46 @@ namespace karabo::net {
         });
     }
 
+    void AmqpClient2::asyncUnsubscribeAll(AsyncHandler onUnsubscriptionsDone) {
+        m_connection->dispatch([weakThis{weak_from_this()}, onUnsubscriptionsDone{std::move(onUnsubscriptionsDone)}]() {
+            if (auto self = weakThis.lock()) {
+                // Prepare handler for each subscription 'i': If last unsubscriptions is handled (all done flags are
+                // true), call common handler, either with success or failure code of last failing unsubscription.
+                const size_t numSubscriptions = self->m_subscriptions.size();
+                if (numSubscriptions == 0) {
+                    onUnsubscriptionsDone(KARABO_ERROR_CODE_SUCCESS);
+                } else {
+                    // Capture flags and common ec as pointers to be shared among all lambda instances
+                    auto singleUnsubDone =
+                          [doneFlags{std::make_shared<std::vector<bool>>(numSubscriptions, false)},
+                           onUnsubscriptionsDone{std::move(onUnsubscriptionsDone)},
+                           commonEc{std::make_shared<boost::system::error_code>(KARABO_ERROR_CODE_SUCCESS)}](
+                                size_t i, const boost::system::error_code ec) mutable {
+                              (*doneFlags)[i] = true;
+                              // Track last failure
+                              if (ec) *commonEc = ec;
+                              // Since in single threaded io context, no need for concurrency protection of doneFlags
+                              for (bool flag : *doneFlags) {
+                                  if (!flag) return; // Still at least one to go
+                              }
+                              onUnsubscriptionsDone(*commonEc);
+                          };
+
+                    // Now call 'asyncUnsubscribe' for each subscription
+                    size_t i = 0;
+                    for (auto& [exchangeRoutingKey, dummy] : self->m_subscriptions) {
+                        self->asyncUnsubscribe(
+                              exchangeRoutingKey.first, exchangeRoutingKey.second,
+                              // AsyncHandler is an std::function, so use bind and placeholder from std:
+                              std::bind(singleUnsubDone, i++, std::placeholders::_1)); // postfix!
+                    }
+                }
+
+            } else {
+                onUnsubscriptionsDone(KARABO_ERROR_CODE_OP_CANCELLED);
+            }
+        });
+    }
 
     void AmqpClient2::asyncPublish(const std::string& exchange, const std::string& routingKey,
                                    const std::shared_ptr<std::vector<char>>& data, AsyncHandler onPublishDone) {
