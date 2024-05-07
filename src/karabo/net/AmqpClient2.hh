@@ -34,6 +34,7 @@
 #include <vector>
 
 #include "AmqpConnection.hh"
+#include "karabo/util/Hash.hh"
 #include "utils.hh" // for AsyncHandler
 
 namespace AMQP {
@@ -45,30 +46,34 @@ namespace karabo::net {
     /**
      * @brief Class that exposes an AMQP client
      *
-     * It receives messages directed to the... queue name is instaceId
+     * It will create a unique queue and consume from it exclusively and with automatic acknowledgment. Its queue name
+     * will start with the given instanceId and will potentially be suffixed by some characters to ensure uniqueness.
+     *
+     * To actually receive messages via the handlers specified in the constructor, the client has to subscribe to
+     * exchanges, potentially with routing keys to select messages on the broker side.
      *
      */
     class AmqpClient2 : public boost::enable_shared_from_this<AmqpClient2> {
        public:
         KARABO_CLASSINFO(AmqpClient2, "AmqpClient2", "2.0")
-        // KARABO_CONFIGURATION_BASE_CLASS
 
         /** Channel status tells what should be the next step to do in channel preparation */
         enum class ChannelStatus { REQUEST, CREATE, CREATE_QUEUE, CREATE_CONSUMER, READY };
+        /** Subscription status tells in which status a registered subscription currently is */
         enum class SubscriptionStatus { PENDING, DECLARE_EXCHANGE, BIND_QUEUE, READY, UNBIND_QUEUE };
 
-        // Let's see whether that is a good signature here - maybe better directly provide the deserialised header/body
-        // (i.e. run deserialisation of a Strand running in Karabo's normal eventloop)
+        // Handler to receive raw data
         using ReadHandler = std::function<void(const std::shared_ptr<std::vector<char>>& data,
                                                const std::string& exchange, const std::string& routingKey)>;
-        // static void expectedParameters(karabo::util::Schema& expected);
+
         /**
-         * Create client from connection
+         * Create client with raw data interface from connection
          *
-         * @param connection must already be connected
+         * @param connection the connection, all internal data access will run in its io context
          * @param instanceId the client id - will usually be the name of the queue that will be subscribed
-         * @param queueArgs the arguments passed to channel creation
-         * @param readHandler a read handler for all received messages - must be a valid, callable function
+         * @param queueArgs the arguments passed to queue creation
+         * @param readHandler a read handler for all received messages
+         *                    (if an invalid function, must call setReadHandler before the first subscription)
          */
         AmqpClient2(AmqpConnection::Pointer connection, std::string instanceId, AMQP::Table queueArgs,
                     ReadHandler readHandler);
@@ -76,19 +81,45 @@ namespace karabo::net {
         virtual ~AmqpClient2();
 
         /**
+         * (Re-)set the read handler that will called for all received messages
+         *
+         * @param readHandler A valid read function (karabo::util::LogicException if not valid)
+         */
+        void setReadHandler(ReadHandler readHandler);
+
+        /**
          * Asynchronously subscribes client
          *
          * @param exchange name of AMQP exchange that will be created if not yet existing
          * @param routingKey the AMQP routing key
-         * @param callback handler called in AMQP io context (so please no mutex inside, please)
+         * @param onSubscriptionDone handler called in AMQP io context (so please no mutex inside, please)
          *                 when subscription established or failed
          */
         void asyncSubscribe(const std::string& exchange, const std::string& routingKey,
                             AsyncHandler onSubscriptionDone);
 
+        /**
+         * Asynchronously unsubscribes client
+
+         * Note:
+         * Success will be reported for an unsubscription from exchange/routing key that it was not subscribed before
+         *
+         * @param exchange name of AMQP exchange that will be unsubscribed from
+         * @param routingKey the AMQP routing key to unsubscribe from
+         * @param onUnsubscriptionDone handler called in AMQP io context (so please no mutex inside, please)
+         *                             when unsubscription succeeded or failed
+         */
         void asyncUnsubscribe(const std::string& exchange, const std::string& routingKey,
                               AsyncHandler onUnsubscriptionDone);
-
+        /**
+         * Asynchronously publish data
+         *
+         * @param exchange the exchange...
+         * @param routingKey ...and the routingkey for the data
+         * @param data a raw data container fo the message to be published (must be non-zero pointer)
+         * @param onPublishDone handler called in AMQP io context (so please no mutex inside, please)
+         *                      when data published
+         */
         void asyncPublish(const std::string& exchange, const std::string& routingKey,
                           const std::shared_ptr<std::vector<char>>& data, AsyncHandler onPublishDone);
 
@@ -116,7 +147,7 @@ namespace karabo::net {
         const std::string m_instanceId;
         std::string m_queue; // may differ from id since queue needs to be unique
         const AMQP::Table m_queueArgs;
-        const ReadHandler m_readHandler;
+        ReadHandler m_readHandler;
 
         // No need to take care of mutex protections if we ensure that all data member access is happening within
         // single threaded io context of m_connection
