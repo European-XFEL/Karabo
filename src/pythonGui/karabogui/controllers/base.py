@@ -77,8 +77,8 @@ class BaseBindingController(HasStrictTraits):
         """
         raise NotImplementedError
 
-    @staticmethod
-    def initialize_model(proxy, model):
+    @classmethod
+    def initialize_model(cls, proxy, model):
         """Implemented by subclasses to initialize a model from a proxy.
 
         This method is only invoked on controller creation
