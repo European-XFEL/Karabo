@@ -76,6 +76,19 @@ namespace karabo::net {
         future.wait();
     }
 
+    void AmqpClient2::setReadHandler(ReadHandler readHandler) {
+        if (!readHandler) throw KARABO_PARAMETER_EXCEPTION("Read handler must be valid");
+
+        // To avoid concurrency with incoming messages, setting the read handler has to detour via io context thread
+        std::promise<void> prom;
+        auto fut = prom.get_future();
+        m_connection->dispatch([this, &prom, readHandler{std::move(readHandler)}]() mutable {
+            m_readHandler = std::move(readHandler);
+            prom.set_value();
+        });
+        fut.wait();
+    }
+
     void AmqpClient2::asyncSubscribe(const std::string& exchange, const std::string& routingKey,
                                      AsyncHandler onSubscriptionDone) {
         // Ensure to run in single threaded io context - no concurrency problems!
@@ -295,6 +308,10 @@ namespace karabo::net {
                               // Copy of message body not avoidable although in AMQP io context here: AMQP::Message
                               // better be destructed in io context event loop and deserialisation better done elsewhere
                               auto vec = std::make_shared<std::vector<char>>(msg.body(), msg.body() + msg.bodySize());
+                              if (!self->m_readHandler) { // bail out (exception won't be caught, but crash the program)
+                                  throw KARABO_LOGIC_EXCEPTION(
+                                        "Coding bug: AmqpClient lacks read handler, set it before subscribing!");
+                              }
                               self->m_readHandler(vec, msg.exchange(), msg.routingkey());
                           }
                       })
