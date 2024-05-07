@@ -6,13 +6,13 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>480</width>
+    <width>489</width>
     <height>389</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>480</width>
+    <width>489</width>
     <height>345</height>
    </size>
   </property>
@@ -115,7 +115,7 @@
       <enum>QFrame::NoFrame</enum>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="page_prompt">
       <layout class="QHBoxLayout" name="horizontalLayout_4">
@@ -196,6 +196,40 @@
           <string>User Authenticated Login</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_4">
+          <item row="2" column="0" colspan="4">
+           <widget class="QCheckBox" name="skip_authentication">
+            <property name="text">
+             <string>Login without Authenticating (Read-only GUI)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_access_code">
+            <property name="text">
+             <string>Access Code</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="3" colspan="3">
+           <widget class="QPushButton" name="authenticate_button">
+            <property name="toolTip">
+             <string> Open browser to generate the access code by authenticating the user</string>
+            </property>
+            <property name="text">
+             <string>Open Access Form</string>
+            </property>
+            <property name="autoDefault">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <layout class="QHBoxLayout" name="access_widget_layout">
+            <property name="rightMargin">
+             <number>10</number>
+            </property>
+           </layout>
+          </item>
           <item row="0" column="0" colspan="3">
            <widget class="QLabel" name="info_label">
             <property name="enabled">
@@ -224,56 +258,10 @@
             </property>
            </widget>
           </item>
-          <item row="0" column="3" colspan="2">
-           <widget class="QPushButton" name="authenticate_button">
-            <property name="toolTip">
-             <string> Open browser to generate the access code by authenticating the user</string>
-            </property>
-            <property name="text">
-             <string>Open Access Form</string>
-            </property>
-            <property name="autoDefault">
-             <bool>false</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_access_code">
-            <property name="text">
-             <string>&amp;Access Code</string>
-            </property>
-            <property name="buddy">
-             <cstring>edit_access_code</cstring>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QLineEdit" name="edit_access_code"/>
-          </item>
-          <item row="1" column="2" colspan="2">
+          <item row="1" column="4">
            <widget class="QCheckBox" name="remember_login">
             <property name="text">
              <string>Remember me</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="4">
-           <spacer name="horizontalSpacer_2">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>104</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item row="2" column="0" colspan="4">
-           <widget class="QCheckBox" name="skip_authentication">
-            <property name="text">
-             <string>Login without Authenticating (Read-only GUI)</string>
             </property>
            </widget>
           </item>
