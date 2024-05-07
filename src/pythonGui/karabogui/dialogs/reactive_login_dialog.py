@@ -271,8 +271,10 @@ class ReactiveLoginDialog(QDialog):
         if error == QNetworkReply.NoError:
             krb_access.ONE_TIME_TOKEN = auth_result["once_token"]
             refresh_token = auth_result.get("refresh_token")
+            krb_access.REFRESH_TOKEN = refresh_token
+            krb_access.REFRESH_TOKEN_USER = None
             if refresh_token is not None:
-                krb_access.REFRESH_TOKEN = refresh_token
+                krb_access.REFRESH_TOKEN_USER = auth_result.get("username")
             self.accept()
         else:
             self._error = auth_result.get("detail")
@@ -304,7 +306,7 @@ class ReactiveLoginDialog(QDialog):
         self._update_button()
 
         if self.login_type is LoginType.REFRESH_TOKEN:
-            text = USER_INFO.format(username=get_network().username)
+            text = USER_INFO.format(username=krb_access.REFRESH_TOKEN_USER)
             self.user_info_label.setText(text)
 
     def _update_button(self):
@@ -359,7 +361,7 @@ class ReactiveLoginDialog(QDialog):
 
         info = json.dumps({
             "refresh_token": krb_access.REFRESH_TOKEN,
-            "username": get_network().username,
+            "username": krb_access.REFRESH_TOKEN_USER,
             "client_hostname": CLIENT_HOST,
         })
         info = bytearray(info.encode("utf-8"))
