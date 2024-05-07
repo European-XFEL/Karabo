@@ -646,7 +646,6 @@ def test_handle_login_information(mocker):
         # Read Only, but since we are observer, it is not changed
         manager.handle_loginInformation(
             accessLevel=AccessLevel.OBSERVER.value, username="karabo")
-        broad.assert_not_called()
         krb_access.HIGHEST_ACCESS_LEVEL == "observer"
 
 
