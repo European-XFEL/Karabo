@@ -410,7 +410,7 @@ class Manager(QObject):
         if krb_access.GLOBAL_ACCESS_LEVEL != access:
             krb_access.GLOBAL_ACCESS_LEVEL = access
             krb_access.HIGHEST_ACCESS_LEVEL = access
-            broadcast_event(KaraboEvent.LoginUserChanged, {})
+        broadcast_event(KaraboEvent.LoginUserChanged, {})
 
     def handle_onBeginTemporarySession(self, **info):
         """Handle the response from gui server on starting the temporary
