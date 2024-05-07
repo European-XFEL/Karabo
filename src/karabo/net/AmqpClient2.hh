@@ -111,6 +111,16 @@ namespace karabo::net {
          */
         void asyncUnsubscribe(const std::string& exchange, const std::string& routingKey,
                               AsyncHandler onUnsubscriptionDone);
+
+        /**
+         * Asynchronously unsubscribes client from all subscriptions
+         *
+         * @param onUnsubscriptionDone a valid handler called in AMQP io context (so please no mutex inside, please)
+         *                             when all unsubscription requests are done. If any of them failed, the error
+         *                             code passed is the one of the last failure
+         */
+        void asyncUnsubscribeAll(AsyncHandler onUnsubscriptionsDone);
+
         /**
          * Asynchronously publish data
          *

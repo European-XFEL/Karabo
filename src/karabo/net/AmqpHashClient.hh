@@ -83,6 +83,17 @@ namespace karabo::net {
                                      AsyncHandler onUnsubscriptionDone) {
             m_rawClient->asyncUnsubscribe(exchange, routingKey, std::move(onUnsubscriptionDone));
         }
+
+        /**
+         * Asynchronously unsubscribes client from all subscriptions by just forwarding to
+         * AmqpClient::asyncUnsubscribeAll,
+         *
+         *  ==> See docs of that.
+         */
+        inline void asyncUnsubscribeAll(AsyncHandler onUnsubscriptionDone) {
+            m_rawClient->asyncUnsubscribeAll(std::move(onUnsubscriptionDone));
+        }
+
         /**
          * Asynchronously publish data from header and body
          *
