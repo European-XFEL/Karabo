@@ -126,11 +126,9 @@ class UpdateDialog(QDialog):
         self.label_current.setText(UNDEFINED_VERSION)
         self.label_latest.setText(UNDEFINED_VERSION)
         self.button_refresh.setIcon(icons.refresh)
-        self.button_clear_log.setIcon(icons.editClear)
 
         self.button_update.setEnabled(False)
         self.button_close.clicked.connect(self.accept)
-        self.button_clear_log.clicked.connect(self.text_log.clear)
 
         self._package_index = None
         # Store the current running process
