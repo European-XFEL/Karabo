@@ -23,8 +23,10 @@ from subprocess import STDOUT, CalledProcessError, check_output
 
 import requests
 from qtpy import uic
-from qtpy.QtCore import QProcess, Qt, Slot
-from qtpy.QtWidgets import QDialog, QHeaderView, QPushButton, QTableWidgetItem
+from qtpy.QtCore import (
+    QAbstractAnimation, QEasingCurve, QProcess, QPropertyAnimation, Qt, Slot)
+from qtpy.QtWidgets import (
+    QDialog, QHeaderView, QProgressBar, QPushButton, QTableWidgetItem)
 
 from karabogui import icons
 from karabogui.controllers.util import load_extensions
@@ -36,6 +38,33 @@ _PKG_NAME = "GUIExtensions"
 _PACKAGE_URL = "https://git.xfel.eu/api/v4/projects/4562/packages"
 _PYPI_INDEX = f"{_PACKAGE_URL}/pypi/simple"
 UNDEFINED_VERSION = "Undefined"
+
+DURATION = 500  # [ms]
+
+
+class LoadingBar(QProgressBar):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setTextVisible(False)
+        self.animation = QPropertyAnimation(
+            targetObject=self, propertyName=b"value")
+        self.animation.setStartValue(self.minimum())
+        self.animation.setEndValue(self.maximum())
+        self.animation.finished.connect(self._update_bar)
+        self.animation.setDuration(DURATION)
+        self.animation.setEasingCurve(QEasingCurve.InOutQuad)
+        self.animation.start()
+
+    @Slot()
+    def _update_bar(self):
+        if self.animation.currentValue() == self.maximum():
+            self.animation.setDirection(QAbstractAnimation.Backward)
+            self.setInvertedAppearance(True)
+            self.animation.start()
+        elif self.animation.currentValue() == self.minimum():
+            self.animation.setDirection(QAbstractAnimation.Forward)
+            self.setInvertedAppearance(False)
+            self.animation.start()
 
 
 def create_item(name: str) -> QTableWidgetItem:
@@ -122,6 +151,7 @@ class UpdateDialog(QDialog):
         super().__init__(parent)
         uic.loadUi(get_dialog_ui("update_dialog.ui"), self)
         self.setModal(False)
+        self.loadingbar.setVisible(False)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.label_current.setText(UNDEFINED_VERSION)
         self.label_latest.setText(UNDEFINED_VERSION)
@@ -242,6 +272,7 @@ class UpdateDialog(QDialog):
             self._process.setProcessChannelMode(QProcess.MergedChannels)
             self._process.readyRead.connect(self._on_output)
             self._process.finished.connect(self._on_finished)
+            self.loadingbar.setVisible(True)
             self._process.start(cmd)
 
     def _start_package_install(self, package, tag):
@@ -307,6 +338,7 @@ class UpdateDialog(QDialog):
         self.refresh_versions()
         load_extensions()
         self._set_buttons_finish()
+        self.loadingbar.setVisible(False)
 
     # Buttons
     # -----------------------------------------------------------------------
