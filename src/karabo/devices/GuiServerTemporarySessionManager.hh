@@ -51,7 +51,7 @@ namespace karabo::devices {
     inline constexpr unsigned int CHECK_TEMPSESSION_EXPIRATION_INTERVAL_SECS = 10;
 
 
-    // An beginTemporarySession is basically a OneTimeTokenAuthorization operation plus
+    // A beginTemporarySession is basically a OneTimeTokenAuthorization operation plus
     // some internal housekeeping from the Manager, hence the inheritance.
     struct BeginTemporarySessionResult : public karabo::net::OneTimeTokenAuthorizeResult {
         std::string temporarySessionToken;
