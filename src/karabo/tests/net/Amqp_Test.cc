@@ -614,6 +614,76 @@ void Amqp_Test::testClientSameId() {
     CPPUNIT_ASSERT(allReceivedOne);
 }
 
+void Amqp_Test::testClientUnsubscribeAll() {
+    // Test asyncUnsubscribeAll
+    if (m_defaultBrokers.empty()) {
+        std::clog << " No AMQP broker in environment. Skipping client tests for unsubscribe all..." << std::endl;
+        return;
+    }
+
+    // Prepare connection - will get connected automatically once clients need that
+    net::AmqpConnection::Pointer connection(boost::make_shared<net::AmqpConnection>(m_defaultBrokers));
+
+    const std::string prefix = net::Broker::brokerDomainFromEnv() += ".";
+    std::atomic<size_t> readCount(0);
+    net::AmqpClient2::ReadHandler readerBob([&readCount](const std::shared_ptr<std::vector<char>>& data,
+                                                         const std::string& exch,
+                                                         const std::string& key) { ++readCount; });
+    net::AmqpClient2::Pointer bob(
+          boost::make_shared<net::AmqpClient2>(connection, prefix + "bob", AMQP::Table(), readerBob));
+    const std::string exchange(prefix + "exchange");
+
+    const size_t nSubscriptions = 20;
+    std::vector<std::promise<boost::system::error_code>> subPromises;
+    std::vector<std::future<boost::system::error_code>> subFutures;
+    for (size_t i = 0; i < nSubscriptions; ++i) {
+        subPromises.push_back(std::promise<boost::system::error_code>());
+        subFutures.push_back(subPromises.back().get_future());
+        net::AsyncHandler callback(
+              [i, &subPromises](const boost::system::error_code ec) { subPromises[i].set_value(ec); });
+        bob->asyncSubscribe(exchange, "forBob_" + util::toString(i), callback);
+    }
+
+    for (size_t i = 0; i < nSubscriptions; ++i) {
+        auto& fut = subFutures[i];
+        const std::string iStr("Subscription " + util::toString(i));
+        CPPUNIT_ASSERT_EQUAL_MESSAGE(iStr, std::future_status::ready, fut.wait_for(m_timeout));
+        boost::system::error_code ec = fut.get();
+        CPPUNIT_ASSERT_EQUAL_MESSAGE(iStr + ec.message(), 0, ec.value());
+    }
+
+    // Now send a message (sender is bob himself...) for each subscription
+    for (size_t i = 0; i < nSubscriptions; ++i) {
+        bob->asyncPublish(exchange, "forBob_" + util::toString(i), std::make_shared<std::vector<char>>(i, 'i'),
+                          [](const boost::system::error_code ec) {});
+    }
+    // Wait until they all arrived
+    for (int i = 0; i < 2000; ++i) {
+        if (readCount.load() >= nSubscriptions) break;
+        boost::this_thread::sleep(boost::posix_time::milliseconds(1));
+    }
+    CPPUNIT_ASSERT_EQUAL(nSubscriptions, readCount.load());
+
+    // Now unsubscribe all, send another message to each subscribed exchange/routing key and check that nothing arrives
+    // anymore
+    std::promise<boost::system::error_code> unsubAllDone;
+    auto futUnsubAll = unsubAllDone.get_future();
+    bob->asyncUnsubscribeAll([&unsubAllDone](const boost::system::error_code ec) { unsubAllDone.set_value(ec); });
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futUnsubAll.wait_for(m_timeout));
+    const boost::system::error_code ec = futUnsubAll.get();
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(ec.message(), 0, ec.value());
+
+    for (size_t i = 0; i < nSubscriptions; ++i) {
+        bob->asyncPublish(exchange, "forBob_" + util::toString(i), std::make_shared<std::vector<char>>(i, 'i'),
+                          [](const boost::system::error_code ec) {});
+    }
+
+    // Even after sleeping, nothing more has arrived
+    boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+    CPPUNIT_ASSERT_EQUAL(nSubscriptions, readCount.load());
+}
+
+
 void Amqp_Test::testHashClient() {
     if (m_defaultBrokers.empty()) {
         std::clog << " No AMQP broker in environment. Skipping hash client tests..." << std::endl;
