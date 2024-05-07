@@ -63,6 +63,7 @@ def test_post_auth_request_refresh_token(gui_app, mocker):
     """With REFRESH_TOKEN, the login dialog should call the correct post
     request."""
     krb_access.REFRESH_TOKEN = "dummy_token"
+    krb_access.REFRESH_TOKEN_USER = "karabo"
     dialog = ReactiveLoginDialog()
     dialog.login_type = LoginType.REFRESH_TOKEN
     mocked_access_manger = mocker.patch.object(dialog, "access_manager")
