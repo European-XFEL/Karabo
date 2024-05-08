@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>804</width>
-    <height>474</height>
+    <width>696</width>
+    <height>459</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -312,9 +312,25 @@
       <number>6</number>
      </property>
      <item>
+      <widget class="LoadingBar" name="loadingbar">
+       <property name="minimumSize">
+        <size>
+         <width>550</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="value">
+        <number>24</number>
+       </property>
+      </widget>
+     </item>
+     <item>
       <spacer name="horizontalSpacer">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeType">
+        <enum>QSizePolicy::MinimumExpanding</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>
@@ -326,6 +342,12 @@
      </item>
      <item>
       <widget class="QPushButton" name="button_close">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="text">
         <string>Close</string>
        </property>
@@ -335,6 +357,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>LoadingBar</class>
+   <extends>QProgressBar</extends>
+   <header>karabogui.dialogs.update_dialog</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
