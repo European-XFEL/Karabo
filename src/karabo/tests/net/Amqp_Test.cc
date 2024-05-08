@@ -403,7 +403,7 @@ void Amqp_Test::testClient() {
     CPPUNIT_ASSERT_EQUAL(4ul, readByBob.size());
 
     //***************************************************************
-    // Now test alice subscribing and bob publishing - it has different order between subscription and publish than bob
+    // Now test alice subscribing and bob publishing (other order between subscription and publish than before)
     std::promise<boost::system::error_code> subDoneAlice;
     auto futAlice = subDoneAlice.get_future();
     alice->asyncSubscribe(prefix + "other_exchange", "alice",
@@ -511,6 +511,67 @@ void Amqp_Test::testClient() {
 
     // TODO:
     // * Add test if message published to an exchange that does not exist
+}
+
+void Amqp_Test::testClientConcurrentSubscripts() {
+    // Test concurrent [un]subscriptions to the same exchange/routingKey
+    if (m_defaultBrokers.empty()) {
+        std::clog << " No AMQP broker in environment. Skipping client tests for concurrent subscriptions..."
+                  << std::endl;
+        return;
+    }
+
+    // Prepare connection - will get connected automatically once clients need that
+    net::AmqpConnection::Pointer connection(boost::make_shared<net::AmqpConnection>(m_defaultBrokers));
+
+    const std::string prefix = net::Broker::brokerDomainFromEnv() += ".";
+    std::atomic<int> readCount(0);
+    net::AmqpClient2::ReadHandler readerBob([&readCount](const std::shared_ptr<std::vector<char>>& data,
+                                                         const std::string& exch,
+                                                         const std::string& key) { ++readCount; });
+    net::AmqpClient2::Pointer bob(
+          boost::make_shared<net::AmqpClient2>(connection, prefix + "bob", AMQP::Table(), readerBob));
+    const std::string exchange(prefix + "exchange");
+
+    // Many subsequent subscriptions of the same, intermangled with an unsubscriptions and some sleeps in between:
+    // This triggers the different code paths in AmqpClient2::asyncSubscribe for already existing subscriptions.
+    const size_t nSubscriptions = 200;
+    std::vector<std::promise<boost::system::error_code>> subPromises;
+    std::vector<std::future<boost::system::error_code>> subFutures;
+    for (size_t i = 0; i < nSubscriptions; ++i) {
+        subPromises.push_back(std::promise<boost::system::error_code>());
+        subFutures.push_back(subPromises.back().get_future());
+        net::AsyncHandler callback(
+              [i, &subPromises](const boost::system::error_code ec) { subPromises[i].set_value(ec); });
+        // All but one subscribe, unsubscription is already after 20% to ensure that at the end we are subscribed.
+        if (i != nSubscriptions / 5) {
+            bob->asyncSubscribe(exchange, "", callback);
+        } else {
+            bob->asyncUnsubscribe(exchange, "", callback);
+        }
+        boost::this_thread::sleep(boost::posix_time::microseconds(500));
+    }
+
+    for (size_t i = 0; i < nSubscriptions; ++i) {
+        auto& fut = subFutures[i];
+        const std::string iStr("[Un]Subscription " + util::toString(i) += " ");
+        CPPUNIT_ASSERT_EQUAL_MESSAGE(iStr, std::future_status::ready, fut.wait_for(m_timeout));
+        boost::system::error_code ec = fut.get();
+        CPPUNIT_ASSERT_EQUAL_MESSAGE(iStr + ec.message(), 0, ec.value());
+    }
+
+    // Now send a message (sender is bob himself...) and check that it arrives only once,
+    // although there are about  nSubscriptions/2 subscriptions after last unsubscription
+    bob->asyncPublish(exchange, "", std::make_shared<std::vector<char>>(8, 'i'),
+                      [](const boost::system::error_code ec) {});
+    // Wait until the one expected message arrived and then 100 ms more for any further
+    for (int i = 0; i < 1000; ++i) {
+        if (readCount.load() >= 1) break;
+        boost::this_thread::sleep(boost::posix_time::milliseconds(2));
+    }
+    boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+    // If this fails, something may have gone wrong and the unsubscribe got executed last (How that?):
+    CPPUNIT_ASSERT_EQUAL(1, readCount.load());
 }
 
 void Amqp_Test::testClientSameId() {
