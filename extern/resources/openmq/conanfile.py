@@ -1,5 +1,6 @@
+from os.path import join
 from conan import ConanFile
-from conan.tools.files import download, rm, unzip, patch
+from conan.tools.files import copy, download, rm, unzip, patch
 
 
 PATCH_CONTENT = \
@@ -34,9 +35,9 @@ class KaraboOpenMQConan(ConanFile):
         pass
 
     def package(self):
-        self.copy("*", "mq", "mq")
-        self.copy("*", "etc", "etc")
-        self.copy("*", "bin", "bin")
+        copy(self, "*", join(self.source_folder, "mq"), join(self.package_folder, "mq"))
+        copy(self, "*", join(self.source_folder, "etc"), join(self.package_folder, "etc"))
+        copy(self, "*", join(self.source_folder, "bin"), join(self.package_folder, "bin"))
         self.run(f"mkdir {self.package_folder}/MessageQueue")
         self.run(f"mv {self.package_folder}/etc/* {self.package_folder}/mq/etc")
         self.run(f"mv {self.package_folder}/mq {self.package_folder}/MessageQueue")
