@@ -64,8 +64,6 @@ namespace karabo::net {
          */
         using ChannelCreationHandler = std::function<void(const std::shared_ptr<AMQP::Channel>&, const char* errMsg)>;
 
-        // static void expectedParameters(karabo::util::Schema& s);
-
         /**
          * Constructing a connection and starting the thread of the io context
          *
@@ -75,6 +73,17 @@ namespace karabo::net {
         AmqpConnection(std::vector<std::string> urls);
 
         virtual ~AmqpConnection();
+
+        /**
+         * Return currently used broker URL (either already connected to it or the currently/next tried one)
+         */
+        std::string getCurrentUrl() const;
+
+        /**
+         * Whether connected or in good progress of being connected
+         */
+        bool isConnected() const;
+
 
         /**
          * Asynchronously connect to any of the broker addresses passed to the constructor.
@@ -109,7 +118,7 @@ namespace karabo::net {
          * The task must not contain blocking code since otherwise the thread running the AMQP communication is blocked.
          */
         template <typename CompletionToken>
-        void post(CompletionToken&& task) {
+        void post(CompletionToken&& task) const {
             boost::asio::post(m_ioContext, std::forward<CompletionToken>(task));
         }
 
@@ -119,7 +128,7 @@ namespace karabo::net {
          * The task must not contain blocking code since otherwise the thread running the AMQP communication is blocked.
          */
         template <typename CompletionToken>
-        void dispatch(CompletionToken&& task) {
+        void dispatch(CompletionToken&& task) const {
             boost::asio::dispatch(m_ioContext, std::forward<CompletionToken>(task));
         }
 
@@ -146,11 +155,11 @@ namespace karabo::net {
         void doCreateChannel(ChannelCreationHandler onComplete);
 
         // Broker urls from input
-        std::vector<std::string> m_urls;
+        const std::vector<std::string> m_urls;
         size_t m_urlIndex;
 
         // For internal event loop for all AMQP communication
-        boost::asio::io_context m_ioContext;
+        mutable boost::asio::io_context m_ioContext;
         std::unique_ptr<boost::asio::io_context::work> m_work;
         std::thread m_thread;
 
