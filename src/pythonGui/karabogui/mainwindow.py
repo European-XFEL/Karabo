@@ -143,7 +143,7 @@ _PANELS = {
     PROJECT_TITLE: (ProjectPanel, PanelAreaEnum.Left),
 }
 
-SETTINGS_TITLE = '&Settings'
+SETTINGS_TITLE = '&Application Settings'
 GEOMETRY_TITLE = "&Window Geometry"
 GRAFANA_LINK = "https://ctrend.xfel.eu/"
 RTD_LINK = "https://rtd.xfel.eu/docs"
@@ -163,6 +163,9 @@ class MainWindow(QMainWindow):
         # Create projects folder, if not exists
         if not os.path.exists(const.KARABO_PROJECT_FOLDER):
             os.makedirs(const.KARABO_PROJECT_FOLDER, exist_ok=True)
+
+        # reference to view menu and its submenus {menuName: QMenu}
+        self.viewMenus = {}
 
         self._setupActions()
         self._setupMenuBar()
@@ -479,10 +482,12 @@ class MainWindow(QMainWindow):
         self.acHelpAbout = QAction("About", self)
         self.acHelpAbout.triggered.connect(self.onHelpAbout)
 
-        self.acClientTopology = QAction("Client Topology", self)
+        self.acClientTopology = QAction(
+            icons.deviceInstance, "Client Topology", self)
         self.acClientTopology.triggered.connect(self.onClientTopology)
 
-        self.acDevelopmentOverview = QAction("Development Servers", self)
+        self.acDevelopmentOverview = QAction(
+            icons.yes, "Development Servers", self)
         self.acDevelopmentOverview.triggered.connect(
             self.onDevelopmentOverview)
 
@@ -505,18 +510,22 @@ class MainWindow(QMainWindow):
         self.acGrafana.triggered.connect(self.onGrafana)
         self.acGrafana.setCheckable(False)
 
-        self.acNpy2CSV = QAction("Convert Numpy file to CSV file", self)
+        self.acNpy2CSV = QAction(
+            icons.filein, "Convert Numpy file to CSV file", self)
         self.acNpy2CSV.triggered.connect(self.onNumpyFileToCSV)
 
-        self.acConcertWriter = QAction("Create Karabo Concert File", self)
-        self.acConcertWriter.triggered.connect(self.onCreateConcertFile)
+        self.acSaveConcertFile = QAction(
+            icons.fileout, "Save As Karabo Concert File", self)
+        self.acSaveConcertFile.triggered.connect(self.onCreateConcertFile)
 
-        self.acConcertShortcut = QAction("Create Karabo Concert Desktop "
-                                         "Shortcut", self)
-        self.acConcertShortcut.triggered.connect(self.onCreateConcertShortcut)
+        self.acSaveConcertShortcut = QAction(
+            icons.saveAs, "Save As Karabo Concert Desktop Shortcut", self)
+        self.acSaveConcertShortcut.triggered.connect(
+            self.onCreateConcertShortcut)
 
-        self.acConcertReader = QAction("Run Karabo Concert File", self)
-        self.acConcertReader.triggered.connect(self.onReadConcertFile)
+        self.acOpenConcert = QAction(
+            icons.load, "Open Karabo Concert File", self)
+        self.acOpenConcert.triggered.connect(self.onReadConcertFile)
 
         self.acGuiDocumentation = QAction(
             icons.weblink, "GUI Documentation", self)
@@ -535,16 +544,22 @@ class MainWindow(QMainWindow):
             self.onMacroDocumentation)
         self.acMacroDocumentation.setCheckable(False)
 
+        self.acRegisterApplication = QAction('Register Application', self)
+        self.acRegisterApplication.triggered.connect(
+            self.onRegisterApplication)
+
     def _setupMenuBar(self):
         menuBar = self.menuBar()
 
         mFileMenu = menuBar.addMenu("&File")
-        mFileMenu.addAction(self.acExit)
+        mFileMenu.addAction(self.acOpenConcert)
+        mFileMenu.addAction(self.acSaveConcertFile)
+        if const.IS_LINUX_SYSTEM:
+            mFileMenu.addAction(self.acSaveConcertShortcut)
 
-        # reference to view menu and its submenus {menuName: QMenu}
-        self.viewMenus = {}
+        # provide settings menu inside file
 
-        mSettingsMenu = menuBar.addMenu(SETTINGS_TITLE)
+        mSettingsMenu = mFileMenu.addMenu(SETTINGS_TITLE)
         self.settingsMenus = {SETTINGS_TITLE: mSettingsMenu}
 
         self.acEnableHighDPI = QAction('Enable HighDPI', self)
@@ -565,11 +580,12 @@ class MainWindow(QMainWindow):
             self.onEraseMainWindowGeometry)
         mGeometryMenu.addAction(self.acEraseMainWindowGeometry)
 
-        self.acRegisterApplication = QAction('Register Application', self)
-        self.acRegisterApplication.triggered.connect(
-            self.onRegisterApplication)
         if not const.IS_MAC_SYSTEM:
-            mSettingsMenu.addAction(self.acRegisterApplication)
+            mFileMenu.addAction(self.acRegisterApplication)
+
+        # finalize file with exit action
+        mFileMenu.addSeparator()
+        mFileMenu.addAction(self.acExit)
 
         mHelpMenu = menuBar.addMenu("&Links")
         mHelpMenu.addAction(self.acGrafana)
@@ -582,18 +598,15 @@ class MainWindow(QMainWindow):
         mViewMenu.addAction(self.acClientTopology)
         mViewMenu.addAction(self.acDevelopmentOverview)
 
+        mToolsMenu = menuBar.addMenu("&Tools")
+        mToolsMenu.addAction(self.acCheckProject)
+        mToolsMenu.addAction(self.acNpy2CSV)
+
         mHelpMenu = menuBar.addMenu("&Help")
         mHelpMenu.addAction(self.acHelpAbout)
         mHelpMenu.addAction(self.acHelpAboutQt)
         mHelpMenu.addAction(self.acWizard)
         mHelpMenu.addAction(self.acCheckUpdates)
-        mHelpMenu.addAction(self.acCheckProject)
-        mHelpMenu.addAction(self.acNpy2CSV)
-        mHelpMenu.addSeparator()
-        mHelpMenu.addAction(self.acConcertWriter)
-        if const.IS_LINUX_SYSTEM:
-            mHelpMenu.addAction(self.acConcertShortcut)
-        mHelpMenu.addAction(self.acConcertReader)
 
     def _setupToolBar(self):
 

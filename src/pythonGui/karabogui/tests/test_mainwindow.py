@@ -18,7 +18,6 @@ from qtpy.QtWidgets import QFrame
 
 from karabo.native import AccessLevel
 from karabogui import mainwindow
-from karabogui.const import IS_LINUX_SYSTEM
 from karabogui.testing import singletons
 
 
@@ -88,23 +87,15 @@ def test_mainwindow(gui_app, mocker, subtests):
         menu_bar = mw.menuBar()
         main_menus = [act.text() for act in menu_bar.actions()]
         assert len(main_menus) == 5
-        assert main_menus == ["&File", "&Settings", "&Links",
-                              "&View", "&Help"]
+        assert main_menus == ["&File", "&Links", "&View", "&Tools", "&Help"]
 
         help_menu = [action.menu() for action in menu_bar.actions() if
                      action.text() == "&Help"][0]
         assert help_menu
         help_actions = help_menu.actions()
-        help_menu_size = 10 if IS_LINUX_SYSTEM else 9
-        assert len(help_actions) == help_menu_size
+        assert len(help_actions) == 4
         expected = [
-            "About", "About Qt", "Tips'N'Tricks", "Check for Updates",
-            "Check for Project Duplicates", "Convert Numpy file to CSV file",
-            "",
-            "Create Karabo Concert File", "Run Karabo Concert File"]
-        concert_shortcut = "Create Karabo Concert Desktop Shortcut"
-        if IS_LINUX_SYSTEM:
-            expected.insert(8, concert_shortcut)
+            "About", "About Qt", "Tips'N'Tricks", "Check for Updates"]
         assert expected == [action.text() for action in help_actions]
 
     with subtests.test("Test Access Level"):
