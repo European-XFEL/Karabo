@@ -99,13 +99,36 @@ namespace karabo {
             }
         }
 
+        std::string AmqpConnection::getCurrentUrl() const {
+            // Better go via io context to avoid concurrent access - m_urlIndex might be changing...
+            std::promise<std::string> prom;
+            auto fut = prom.get_future();
+            dispatch([this, &prom]() { prom.set_value(m_urls[m_urlIndex]); });
+            return fut.get();
+        }
+
+        bool AmqpConnection::isConnected() const {
+            std::promise<bool> connectedDone;
+            auto connectedFut = connectedDone.get_future();
+            dispatch([this, &connectedDone]() {
+                // For now, treat being in the connection process as already connected
+                const bool result = (m_state > State::eUnknown && m_state <= State::eConnectionReady);
+                connectedDone.set_value(result);
+            });
+            return connectedFut.get();
+        }
+
         void AmqpConnection::asyncConnect(AsyncHandler&& onComplete) {
             // Jump to the internal thread (if not yet in it)
             dispatch([weakThis{weak_from_this()}, onComplete{std::move(onComplete)}]() {
                 if (auto self = weakThis.lock()) {
+                    // TODO: Here we could check the connection status and attach 'onComplete' to
+                    //       'm_onConnectionComplete' in case the process has already been started.
                     self->m_onConnectionComplete = std::move(onComplete);
                     self->doAsyncConnect();
                 } else {
+                    // To guarantee that 'onComplete' is not executed in the calling thread, we would have to post.
+                    // But we can't since we are already (being) destructed, so member function 'post' not available.
                     onComplete(KARABO_ERROR_CODE_OP_CANCELLED);
                 }
             });
