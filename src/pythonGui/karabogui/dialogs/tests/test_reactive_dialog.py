@@ -20,9 +20,10 @@ def test_access_level(gui_app):
 def test_init(gui_app, mocker):
     dialog = TempSessionDialog()
     assert not dialog.ok_button.isEnabled()
-    access_code = "12345"
+    access_code = "123456"
     hostname = "karabo.xfel.eu"
-    dialog.edit_access_code.setText(access_code)
+    for i, cell in enumerate(dialog.edit_access_code.cells, start=1):
+        cell.setText(str(i))
     mocker.patch("karabogui.dialogs.reactive_login_dialog.CLIENT_HOST",
                  new=hostname)
     dialog.access_manager = mocker.Mock()
