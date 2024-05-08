@@ -46,7 +46,7 @@ def test_configuration_namespace():
     config['device_domain'] = 'CAS_INTERNAL'
     config['domain'] = 'CAS_INTERNAL'
     config['db_token'] = 'admin'
-    assert len(config) == 20
+    assert len(config) == 23
     assert config['db_token'] == 'admin'
     assert config['device_domain'] == 'CAS_INTERNAL'
     assert config['domain'] == 'CAS_INTERNAL'
@@ -70,6 +70,9 @@ def test_configuration_namespace():
         'main_geometry',
         'project_sort_column',
         'project_sort_order',
+        'refresh_token',
+        'refresh_token_user',
+        'remember_me',
         'username',
         'wizard']
 
@@ -94,7 +97,7 @@ def test_default_value():
         if item.dtype is not None:
             counter += 1
             assert item.default is not None
-    assert counter == 6
+    assert counter == 7
 
 
 def test_set_bool_value(mocker):
@@ -122,7 +125,7 @@ def test_erase_value(mocker):
 def test_configuration_groups_info():
     config = Configuration()
     groups = config.groups()
-    assert len(groups) == 6
+    assert len(groups) == 7
     user_group = [item.name for item in groups[USER]]
     assert len(user_group) == 9
     assert 'wizard' in user_group

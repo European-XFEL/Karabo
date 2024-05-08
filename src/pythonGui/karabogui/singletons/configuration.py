@@ -19,6 +19,7 @@
 # or FITNESS FOR A PARTICULAR PURPOSE.
 #############################################################################
 from collections import defaultdict
+from typing import Any, Type
 
 from qtpy.QtCore import QObject, QSettings
 
@@ -32,35 +33,40 @@ def convert_value(value, dtype):
 
 
 class Item:
-    __slots__ = ("name", "default", "q_set", "group", "path", "editable",
-                 "dtype")
+    __slots__ = (
+        "name", "default", "q_set", "group", "path", "editable", "dtype")
 
-    def __init__(self, default=None, q_set=False, group=None, editable=False,
-                 dtype=None):
+    def __init__(self, default: Any = None,
+                 q_set: bool = False,
+                 group: str | None = None,
+                 editable: bool = False,
+                 dtype: int | float | bool | None = None) -> None:
+        self.name: str = ""
+        self.default = default
         self.q_set = q_set
         self.group = group
-        self.default = default
+        self.path: str = ""
         self.editable = editable
         self.dtype = dtype
 
-    def __get__(self, instance, owner):
+    def __get__(self, instance: "Item", owner: Type["Item"]) -> Any:
         if instance is None:
             return self
         else:
             return instance.__dict__.get(self.name, self.default)
 
-    def __set__(self, instance, value):
+    def __set__(self, instance: "Item", value: Any) -> None:
         instance.__dict__[self.name] = value
         if self.q_set:
             QSettings().setValue(self.path, convert_value(value, self.dtype))
 
-    def __set_name__(self, owner, name):
+    def __set_name__(self, owner: Type["Item"], name: str) -> None:
         self.name = name
         self.path = f"{self.group}/{self.name}"
         if self.q_set:
-            self.default = self.initialize_value()
+            self.default = self.get_shared_value()
 
-    def initialize_value(self):
+    def get_shared_value(self) -> Any:
         """Initialize a value from `QSettings` file"""
         value = QSettings().value(self.path)
         if not value or self.dtype is None:
@@ -74,17 +80,33 @@ class Item:
             return float(value)
         return value
 
-    def toDict(self):
+    def toDict(self) -> dict:
         return {name: getattr(self, name) for name in
                 ["editable", "name", "dtype"]}
 
-    def erase(self):
+    def erase(self) -> None:
         QSettings().remove(self.path)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
 
+class SharedItem(Item):
+    def __init__(self, default: Any = None,
+                 group: str | None = None,
+                 editable: bool = False,
+                 dtype: int | float | bool | None = None) -> None:
+        super().__init__(default=default, q_set=True, group=group,
+                         editable=editable, dtype=dtype)
+
+    def __get__(self, instance: "SharedItem",
+                owner: Type["SharedItem"]) -> Any:
+        if instance is None:
+            return self
+        return self.get_shared_value()
+
+
+AUTHENTICATION = "authentication"
 NETWORK = "network"
 PROJECT = "project"
 BACKBONE = "backbone"
@@ -171,6 +193,14 @@ class Configuration(QObject):
     access_level = Item(default="operator", q_set=True, group=NETWORK)
     gui_servers = Item(default=[], q_set=True, group=NETWORK)
     macro_development = Item(q_set=True, group=NETWORK)
+
+    # ----------------------------------------------
+    # Shared authentication interface
+
+    refresh_token_user = SharedItem(default=None, group=AUTHENTICATION)
+    refresh_token = SharedItem(default=None, group=AUTHENTICATION)
+    remember_me = SharedItem(default=False, dtype=bool,
+                             group=AUTHENTICATION)
 
     def __new__(cls, *args, **kwargs):
         instance = super().__new__(cls, *args, **kwargs)
