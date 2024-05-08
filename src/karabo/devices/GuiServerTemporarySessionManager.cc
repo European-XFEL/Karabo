@@ -1,7 +1,7 @@
 /*
  * GuiServerTemporarySessionManager.cc
  *
- * Manages temporary access level escalations for user-authenticated GUI Server
+ * Manages temporary sessions for user-authenticated GUI Server
  * sessions.
  *
  * Created on January, 24, 2024.
@@ -41,24 +41,24 @@ namespace karabo::devices {
 
     GuiServerTemporarySessionManager::GuiServerTemporarySessionManager(const std::string& topic,
                                                                        const std::string& authServerUrl,
-                                                                       unsigned int escalationDurationSeconds,
-                                                                       unsigned int escalationEndNoticeSeconds,
+                                                                       unsigned int temporarySessionDurationSeconds,
+                                                                       unsigned int temporarySessionEndNoticeSeconds,
                                                                        EminentExpirationHandler onEminentExpiration,
                                                                        ExpirationHandler onExpiration)
         : m_topic(topic),
           m_authClient(authServerUrl),
-          m_temporarySessionDurationSecs(escalationDurationSeconds),
-          m_temporarySessionEndNoticeSecs{TimeDuration(escalationEndNoticeSeconds, 0ULL)},
+          m_temporarySessionDurationSecs(temporarySessionDurationSeconds),
+          m_temporarySessionEndNoticeSecs{TimeDuration(temporarySessionEndNoticeSeconds, 0ULL)},
           m_eminentExpirationHandler(std::move(onEminentExpiration)),
           m_expirationHandler(std::move(onExpiration)),
           m_checkExpirationsTimer(EventLoop::getIOService()),
           m_expirationTimerWaiting(false) {}
 
-    void GuiServerTemporarySessionManager::beginTemporarySession(const std::string& temporarySessionToken,
-                                                                 const BeginTemporarySessionHandler& onEscalation) {
+    void GuiServerTemporarySessionManager::beginTemporarySession(
+          const std::string& temporarySessionToken, const BeginTemporarySessionHandler& onBeginTemporarySession) {
         m_authClient.authorizeOneTimeToken(temporarySessionToken, m_topic,
                                            bind_weak(&GuiServerTemporarySessionManager::onTokenAuthorizeResult, this,
-                                                     temporarySessionToken, onEscalation, _1));
+                                                     temporarySessionToken, onBeginTemporarySession, _1));
     }
 
     void GuiServerTemporarySessionManager::scheduleNextExpirationsCheck() {
@@ -71,9 +71,9 @@ namespace karabo::devices {
         }
     }
 
-    void GuiServerTemporarySessionManager::onTokenAuthorizeResult(const std::string& temporarySessionToken,
-                                                                  const BeginTemporarySessionHandler& onEscalation,
-                                                                  const OneTimeTokenAuthorizeResult& authResult) {
+    void GuiServerTemporarySessionManager::onTokenAuthorizeResult(
+          const std::string& temporarySessionToken, const BeginTemporarySessionHandler& onBeginTemporarySession,
+          const OneTimeTokenAuthorizeResult& authResult) {
         BeginTemporarySessionResult tempSessionResult;
         tempSessionResult.success = authResult.success;
         tempSessionResult.accessLevel = authResult.accessLevel;
@@ -86,7 +86,7 @@ namespace karabo::devices {
             Epochstamp expiresAt = currTime + TimeDuration(m_temporarySessionDurationSecs, 0ULL);
             if (tempSessionResult.accessLevel > MAX_TEMPORARY_SESSION_ACCESS_LEVEL) {
                 // The access level returned by the authorize token operation is more privileged
-                // than the one set to be used for the escalation level - "truncate" it.
+                // than the one set to be used for the temporary session level - "truncate" it.
                 tempSessionResult.accessLevel = MAX_TEMPORARY_SESSION_ACCESS_LEVEL;
                 // Note: if the access level returned by the authorize token operation is less privileged, keep it as
                 // the higher level. As the authorize token operation takes into account the LDAP groups
@@ -96,7 +96,7 @@ namespace karabo::devices {
             m_tempSessions.emplace(temporarySessionToken, expiresAt);
             scheduleNextExpirationsCheck();
         }
-        onEscalation(tempSessionResult);
+        onBeginTemporarySession(tempSessionResult);
     }
 
     EndTemporarySessionResult GuiServerTemporarySessionManager::endTemporarySession(
@@ -107,7 +107,7 @@ namespace karabo::devices {
         auto it = m_tempSessions.find(temporarySessionToken);
         if (it == m_tempSessions.end()) {
             result.success = false;
-            result.errMsg = "Escalation token not found";
+            result.errMsg = "Temporary Session token not found";
         } else {
             result.success = true;
             result.errMsg = "";
@@ -134,11 +134,11 @@ namespace karabo::devices {
             Epochstamp currentTime;
             for (const std::string& token : tokens) {
                 if (currentTime >= m_tempSessions[token]) {
-                    // Escalation has expired
+                    // Temporary session has expired
                     expiredInfos.emplace_back(ExpiredTemporarySessionInfo{token, m_tempSessions[token]});
                     m_tempSessions.erase(token);
                 } else if (currentTime >= m_tempSessions[token] - m_temporarySessionEndNoticeSecs) {
-                    // Escalation expiration occurs inside the eminent expiration time window
+                    // Temporary session expiration occurs inside the eminent expiration time window
                     eminentInfos.emplace_back(EminentExpirationInfo{token, m_tempSessions[token] - currentTime});
                 }
             }
