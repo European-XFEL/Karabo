@@ -14,6 +14,7 @@ LOG4CPP_VERSION=1.1.3
 DAEMONTOOLS_VERSION=1.11-karabo3
 OPENMQ_VERSION=5.1.3
 OPENMQC_VERSION=5.1.4.1
+NSS_VERSION=3.72
 
 ##############################################################################
 # Define a bunch of functions to be called later
@@ -146,6 +147,7 @@ install_from_deps() {
         safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan export ./resources/log4cpp/conanfile.py log4cpp/$LOG4CPP_VERSION@karabo/$CONAN_RECIPE_CHANNEL"
         safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan export ./resources/openmq/conanfile.py openmq/$OPENMQ_VERSION@karabo/$CONAN_RECIPE_CHANNEL"
         safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan export ./resources/openmqc/conanfile.py openmqc/$OPENMQC_VERSION@karabo/$CONAN_RECIPE_CHANNEL"
+        safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan export ./resources/nss/conanfile.py nss/$NSS_VERSION@karabo/$CONAN_RECIPE_CHANNEL"
 
         # configure prefix paths
         local folder_opts="--install-folder=$INSTALL_PREFIX/conan_toolchain-$TARGET_ARCH --output-folder=$INSTALL_PREFIX"
