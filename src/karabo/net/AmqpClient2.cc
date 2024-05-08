@@ -102,6 +102,37 @@ namespace karabo::net {
                 onSubscriptionDone(KARABO_ERROR_CODE_OP_CANCELLED);
                 return;
             }
+
+            // Is there already a subscription? Or an ongoing unsubscription?
+            auto it = m_subscriptions.find({exchange, routingKey});
+            if (it != m_subscriptions.end()) {
+                if (it->second.status < SubscriptionStatus::READY) {
+                    // There is an ongoing subscription. Hijack that and attach onSubscriptionDone
+                    auto combinedOnSubDone = [newOnSubDone{std::move(onSubscriptionDone)},
+                                              previousOnSubDone{std::move(it->second.onSubscription)}](
+                                                   const boost::system::error_code ec) {
+                        previousOnSubDone(ec);
+                        newOnSubDone(ec);
+                    };
+                    it->second.onSubscription = combinedOnSubDone;
+                } else if (it->second.status == SubscriptionStatus::READY) {
+                    // We are already subscribed, claim that as success.
+                    onSubscriptionDone(KARABO_ERROR_CODE_SUCCESS);
+                } else if (it->second.status > SubscriptionStatus::READY) {
+                    // There is an ongoing unsubscription. Attach a repost of this to its handler
+                    auto subscribeAgain = util::bind_weak(&AmqpClient2::asyncSubscribe, this, exchange, routingKey,
+                                                          std::move(onSubscriptionDone));
+                    auto patchedOnUnsubDone =
+                          [previousOnSubDone{std::move(it->second.onSubscription)},
+                           subscribeAgain{std::move(subscribeAgain)}](const boost::system::error_code ec) {
+                              previousOnSubDone(ec);
+                              subscribeAgain();
+                          };
+                    it->second.onSubscription = std::move(patchedOnUnsubDone);
+                }
+                return;
+            }
+
             // Store requested subscription
             SubscriptionStatusHandler statusHandler(SubscriptionStatus::PENDING, std::move(onSubscriptionDone));
             m_subscriptions.insert_or_assign({exchange, routingKey}, std::move(statusHandler));
@@ -145,9 +176,16 @@ namespace karabo::net {
             }
 
             if (it->second.status != SubscriptionStatus::READY) {
-                // Not yet connected or being unsubscribed: try again
-                m_connection->post(util::bind_weak(&AmqpClient2::asyncUnsubscribe, this, exchange, routingKey,
-                                                   std::move(onUnsubscriptionDone)));
+                // Not yet connected or being unsubscribed: try again once READY or removed from subscriptions
+                auto unsubscribeAgain = util::bind_weak(&AmqpClient2::asyncUnsubscribe, this, exchange, routingKey,
+                                                        std::move(onUnsubscriptionDone));
+                auto patchedOnDone =
+                      [previousOnDone{std::move(it->second.onSubscription)},
+                       unsubscribeAgain{std::move(unsubscribeAgain)}](const boost::system::error_code ec) {
+                          previousOnDone(ec);
+                          unsubscribeAgain();
+                      };
+                it->second.onSubscription = std::move(patchedOnDone);
                 return;
             }
 

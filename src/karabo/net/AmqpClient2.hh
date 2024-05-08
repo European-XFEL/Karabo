@@ -81,9 +81,9 @@ namespace karabo::net {
         virtual ~AmqpClient2();
 
         /**
-         * (Re-)set the read handler that will called for all received messages
+         * (Re-)set the read handler that will be called for all received messages
          *
-         * @param readHandler A valid read function (karabo::util::LogicException if not valid)
+         * @param readHandler A valid read function (karabo::util::ParameterException if not valid)
          */
         void setReadHandler(ReadHandler readHandler);
 
@@ -92,8 +92,8 @@ namespace karabo::net {
          *
          * @param exchange name of AMQP exchange that will be created if not yet existing
          * @param routingKey the AMQP routing key
-         * @param onSubscriptionDone handler called in AMQP io context (so please no mutex inside, please)
-         *                 when subscription established or failed
+         * @param onSubscriptionDone a valid handler called in AMQP io context (so please no mutex inside, please)
+         *                           when subscription established or failed
          */
         void asyncSubscribe(const std::string& exchange, const std::string& routingKey,
                             AsyncHandler onSubscriptionDone);
@@ -106,7 +106,7 @@ namespace karabo::net {
          *
          * @param exchange name of AMQP exchange that will be unsubscribed from
          * @param routingKey the AMQP routing key to unsubscribe from
-         * @param onUnsubscriptionDone handler called in AMQP io context (so please no mutex inside, please)
+         * @param onUnsubscriptionDone a valid handler called in AMQP io context (so please no mutex inside, please)
          *                             when unsubscription succeeded or failed
          */
         void asyncUnsubscribe(const std::string& exchange, const std::string& routingKey,
