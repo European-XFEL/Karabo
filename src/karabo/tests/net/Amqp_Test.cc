@@ -509,8 +509,16 @@ void Amqp_Test::testClient() {
     boost::this_thread::sleep(boost::posix_time::milliseconds(100)); // Grant some message travel time...
     CPPUNIT_ASSERT_EQUAL(1, numNewReadAlice.load());                 // ...but nothing arrives due to unsubscription!
 
-    // TODO:
-    // * Add test if message published to an exchange that does not exist
+    //***************************************************************
+    // Test sending a message to an exchange that does not exist
+    std::promise<boost::system::error_code> writeNonExistDone;
+    auto futWriteNonExist = writeNonExistDone.get_future();
+    bob->asyncPublish(prefix + "not_an_exchange", std::string(), std::make_shared<std::vector<char>>(4, 'y'),
+                      [&writeNonExistDone](const boost::system::error_code ec) { writeNonExistDone.set_value(ec); });
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futWriteNonExist.wait_for(m_timeout));
+    const boost::system::error_code ecWriteNonExist = futWriteNonExist.get();
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(ecWriteNonExist.message(), static_cast<int>(boost::system::errc::success),
+                                 ecWriteNonExist.value());
 }
 
 void Amqp_Test::testClientConcurrentSubscripts() {
