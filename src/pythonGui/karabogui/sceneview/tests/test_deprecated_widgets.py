@@ -16,9 +16,9 @@
 # or FITNESS FOR A PARTICULAR PURPOSE.
 from io import StringIO
 from platform import system
-from unittest import mock, skipIf
 
 import numpy as np
+import pytest
 from numpy.testing import assert_array_equal
 
 from karabo.common.scenemodel.api import (
@@ -32,7 +32,7 @@ from karabogui.binding.api import (
     build_binding)
 from karabogui.controllers.display.tests.image import (
     dimX, dimY, get_image_hash, get_output_node)
-from karabogui.testing import GuiTestCase, set_proxy_value
+from karabogui.testing import set_proxy_value
 
 from ..api import SceneView
 
@@ -72,236 +72,249 @@ VALUES = {
 GET_PROXY_PATH = "karabogui.sceneview.widget.container.get_proxy"
 
 
-class TestDeprecatedWidgets(GuiTestCase):
+@pytest.fixture
+def setup(gui_app):
+    # Initialize device proxies
+    schema = Object.getClassSchema()
+    binding = build_binding(schema)
+    device = DeviceProxy(binding=binding,
+                         server_id='Fake',
+                         device_id=DEVICE_NAME,
+                         status=ProxyStatus.OFFLINE)
 
-    # -----------------------------------------------------------------------
-    # Test setup
+    # Initialize device proxies and create a map for the mock
+    proxy_names = VECTOR_PROXIES + NUMBER_PROXIES + IMAGE_PROXIES
+    proxy_map = {name: PropertyProxy(root_proxy=device, path=name)
+                 for name in proxy_names}
 
-    def setUp(self):
-        super().setUp()
+    # Initialize scene view
+    view = SceneView()
 
-        # Initialize device proxies
-        schema = Object.getClassSchema()
-        binding = build_binding(schema)
-        device = DeviceProxy(binding=binding,
-                             server_id='Fake',
-                             device_id=DEVICE_NAME,
-                             status=ProxyStatus.OFFLINE)
+    # Yield objects and destroy view model in teardown
+    yield proxy_map, view
+    view.destroy()
 
-        # Initialize device proxies and create a map for the mock
-        proxy_names = VECTOR_PROXIES + NUMBER_PROXIES + IMAGE_PROXIES
-        self.proxy_map = {name: PropertyProxy(root_proxy=device, path=name)
-                          for name in proxy_names}
 
-        # Initialize scene view
-        self.view = SceneView()
+def test_qwt_displayplot(setup, mocker):
+    proxy_map, view = setup
+    # Check if old model from SVG is replaced
+    svg = _generate_svg("DisplayPlot", keys=VECTOR_PROXIES)
+    model = _load_scene(svg, proxy_map, view, mocker)
+    assert isinstance(model, VectorGraphModel)
 
-    def tearDown(self):
-        super().tearDown()
-        self.view.destroy()
-        self.view = None
+    # Check if number of data items corresponds with the keys
+    widget = _get_controller(model, view).widget
+    data_items = widget.plotItem.dataItems
+    assert len(data_items) == 2
 
-    # -----------------------------------------------------------------------
-    # Actual tests
+    # Verify data item values. Set values first to trigger data plotting.
+    _set_values(proxy_map)
+    for curve in data_items:
+        name = _get_name(curve.name())
+        expected_value = _get_value(name)
+        assert name in VECTOR_PROXIES
+        assert_array_equal(curve.xData, np.arange(len(expected_value)))
+        assert_array_equal(curve.yData, expected_value)
 
-    def test_qwt_displayplot(self):
-        # Check if old model from SVG is replaced
-        svg = self._generate_svg("DisplayPlot", keys=VECTOR_PROXIES)
-        model = self._load_scene(svg)
-        assert isinstance(model, VectorGraphModel)
 
-        # Check if number of data items corresponds with the keys
-        widget = self._get_controller(model).widget
-        data_items = widget.plotItem.dataItems
-        assert len(data_items) == 2
+def test_qwt_xyvector(setup, mocker):
+    proxy_map, view = setup
+    # Check if old model from SVG is replaced
+    svg = _generate_svg("XYVector", keys=VECTOR_PROXIES)
+    model = _load_scene(svg, proxy_map, view, mocker)
+    assert isinstance(model, VectorXYGraphModel)
 
-        # Verify data item values. Set values first to trigger data plotting.
-        self._set_values()
-        for curve in data_items:
-            name = self._get_name(curve.name())
-            expected_value = self._get_value(name)
-            assert name in VECTOR_PROXIES
-            assert_array_equal(curve.xData, np.arange(len(expected_value)))
-            assert_array_equal(curve.yData, expected_value)
+    # Check if number of data items corresponds with the keys
+    widget = _get_controller(model, view).widget
+    data_items = widget.plotItem.dataItems
+    assert len(data_items) == 1
 
-    def test_qwt_xyvector(self):
-        # Check if old model from SVG is replaced
-        svg = self._generate_svg("XYVector", keys=VECTOR_PROXIES)
-        model = self._load_scene(svg)
-        assert isinstance(model, VectorXYGraphModel)
+    # Verify data item values. Set values first to trigger data plotting.
+    _set_values(proxy_map)
+    curve = data_items[0]
+    assert_array_equal(curve.xData, _get_value(VECTOR_PROXIES[0]))
+    assert_array_equal(curve.yData, _get_value(VECTOR_PROXIES[1]))
 
-        # Check if number of data items corresponds with the keys
-        widget = self._get_controller(model).widget
-        data_items = widget.plotItem.dataItems
-        assert len(data_items) == 1
 
-        # Verify data item values. Set values first to trigger data plotting.
-        self._set_values()
-        curve = data_items[0]
-        assert_array_equal(curve.xData, self._get_value(VECTOR_PROXIES[0]))
-        assert_array_equal(curve.yData, self._get_value(VECTOR_PROXIES[1]))
+def test_qwt_displaytrendline(setup, mocker):
+    proxy_map, view = setup
+    # Check if old model from SVG is replaced
+    svg = _generate_svg("DisplayTrendline", keys=NUMBER_PROXIES)
+    model = _load_scene(svg, proxy_map, view, mocker)
+    assert isinstance(model, TrendGraphModel)
 
-    def test_qwt_displaytrendline(self):
-        # Check if old model from SVG is replaced
-        svg = self._generate_svg("DisplayTrendline", keys=NUMBER_PROXIES)
-        model = self._load_scene(svg)
-        assert isinstance(model, TrendGraphModel)
+    # Check if number of data items corresponds with the keys
+    widget = _get_controller(model, view)._plot
+    data_items = widget.plotItem.dataItems
+    assert len(data_items) == len(NUMBER_PROXIES)
 
-        # Check if number of data items corresponds with the keys
-        widget = self._get_controller(model)._plot
-        data_items = widget.plotItem.dataItems
-        assert len(data_items) == len(NUMBER_PROXIES)
+    # Verify data item values. Set values first to trigger data plotting.
+    _set_values(proxy_map)
+    for curve in data_items:
+        name = _get_name(curve.name())
+        expected_value = _get_value(name)
+        assert name in NUMBER_PROXIES
+        assert_array_equal(curve.yData, [expected_value])
 
-        # Verify data item values. Set values first to trigger data plotting.
-        self._set_values()
-        for curve in data_items:
-            name = self._get_name(curve.name())
-            expected_value = self._get_value(name)
-            assert name in NUMBER_PROXIES
-            assert_array_equal(curve.yData, [expected_value])
 
-    def test_qwt_displayimage(self):
-        svg = self._generate_svg("DisplayImage", keys=[IMAGE])
-        model = self._load_scene(svg)
-        assert isinstance(model, ImageGraphModel)
-        self._assert_image_model(model)
+def test_qwt_displayimage(setup, mocker):
+    proxy_map, view = setup
+    svg = _generate_svg("DisplayImage", keys=[IMAGE])
+    model = _load_scene(svg, proxy_map, view, mocker)
+    assert isinstance(model, ImageGraphModel)
+    _assert_image_model(model, proxy_map, view)
 
-    def test_qwt_displayalignedimage(self):
-        svg = self._generate_svg("DisplayAlignedImage", keys=[IMAGE])
-        model = self._load_scene(svg)
-        assert isinstance(model, DetectorGraphModel)
-        self._assert_image_model(model)
 
-    def test_qwt_displayimageelement(self):
-        svg = self._generate_svg("DisplayImageElement", keys=[IMAGE])
-        model = self._load_scene(svg)
-        assert isinstance(model, WebCamGraphModel)
-        self._assert_image_model(model)
+def test_qwt_displayalignedimage(setup, mocker):
+    proxy_map, view = setup
+    svg = _generate_svg("DisplayAlignedImage", keys=[IMAGE])
+    model = _load_scene(svg, proxy_map, view, mocker)
+    assert isinstance(model, DetectorGraphModel)
+    _assert_image_model(model, proxy_map, view)
 
-    def test_qwt_webcamimage(self):
-        svg = self._generate_svg("WebcamImage", keys=[IMAGE], image_attrs=True)
-        model = self._load_scene(svg)
-        assert isinstance(model, WebCamGraphModel)
-        self._assert_image_model(model)
 
-    def test_qwt_scientificimage(self):
-        svg = self._generate_svg("ScientificImage",
-                                 keys=[IMAGE],
-                                 image_attrs=True)
-        model = self._load_scene(svg)
-        assert isinstance(model, WebCamGraphModel)
-        self._assert_image_model(model)
+def test_qwt_displayimageelement(setup, mocker):
+    proxy_map, view = setup
+    svg = _generate_svg("DisplayImageElement", keys=[IMAGE])
+    model = _load_scene(svg, proxy_map, view, mocker)
+    assert isinstance(model, WebCamGraphModel)
+    _assert_image_model(model, proxy_map, view)
 
-    @skipIf(system() == "Windows",
-            reason="curve.data is empty on Windows")
-    def test_mpl_xyplot(self):
-        svg = self._generate_svg("XYPlot", keys=NUMBER_PROXIES[:2])
-        model = self._load_scene(svg)
-        assert isinstance(model, ScatterGraphModel)
 
-        # Verify scatter item values.
-        # Set values first to trigger data plotting.
-        self._set_values()
-        curve = self._get_controller(model)._plot
-        x_value = self._get_value(NUMBER_PROXIES[0])
-        y_value = self._get_value(NUMBER_PROXIES[1])
-        assert_array_equal(curve.data['x'], [x_value])
-        assert_array_equal(curve.data['y'], [y_value])
+def test_qwt_webcamimage(setup, mocker):
+    proxy_map, view = setup
+    svg = _generate_svg("WebcamImage", keys=[IMAGE], image_attrs=True)
+    model = _load_scene(svg, proxy_map, view, mocker)
+    assert isinstance(model, WebCamGraphModel)
+    _assert_image_model(model, proxy_map, view)
 
-    def test_mpl_multicurveplot(self):
-        svg = self._generate_svg("MultiCurvePlot", keys=NUMBER_PROXIES)
-        model = self._load_scene(svg)
-        assert isinstance(model, MultiCurveGraphModel)
 
-        # Check if number of data items corresponds with the keys
-        widget = self._get_controller(model).widget
-        data_items = widget.plotItem.dataItems
-        assert len(data_items) == len(NUMBER_PROXIES) - 1
+def test_qwt_scientificimage(setup, mocker):
+    proxy_map, view = setup
+    svg = _generate_svg("ScientificImage", keys=[IMAGE], image_attrs=True)
+    model = _load_scene(svg, proxy_map, view, mocker)
+    assert isinstance(model, WebCamGraphModel)
+    _assert_image_model(model, proxy_map, view)
 
-        # Verify data item values. Set values first to trigger data plotting.
-        self._set_values()
-        for curve in data_items:
-            name = self._get_name(curve.name())
-            assert name in NUMBER_PROXIES
-            assert_array_equal(curve.xData, self._get_value(X_NUMBER))
-            assert_array_equal(curve.yData, self._get_value(name))
 
-    # -----------------------------------------------------------------------
-    # Helpers
+@pytest.mark.skipif(system() == "Windows",
+                    reason="curve.data is empty on Windows")
+def test_mpl_xyplot(setup, mocker):
+    proxy_map, view = setup
+    svg = _generate_svg("XYPlot", keys=NUMBER_PROXIES[:2])
+    model = _load_scene(svg, proxy_map, view, mocker)
+    assert isinstance(model, ScatterGraphModel)
 
-    def _assert_image_model(self, model):
-        # Verify data item values. Set values first to trigger data plotting.
-        self._set_image()
-        widget = self._get_controller(model).widget
-        image = widget.plotItem.imageItem.image
-        assert_array_equal(image, np.zeros((dimY, dimX)))
+    # Verify scatter item values.
+    # Set values first to trigger data plotting.
+    _set_values(proxy_map)
+    curve = _get_controller(model, view)._plot
+    x_value = _get_value(NUMBER_PROXIES[0])
+    y_value = _get_value(NUMBER_PROXIES[1])
+    assert_array_equal(curve.data['x'], [x_value])
+    assert_array_equal(curve.data['y'], [y_value])
 
-    def _load_scene(self, svg):
-        with StringIO(svg) as fp:
-            scene_model = read_scene(fp)
 
-        with mock.patch(GET_PROXY_PATH, new=self._get_proxy):
-            self.view.update_model(scene_model)
+def test_mpl_multicurveplot(setup, mocker):
+    proxy_map, view = setup
+    svg = _generate_svg("MultiCurvePlot", keys=NUMBER_PROXIES)
+    model = _load_scene(svg, proxy_map, view, mocker)
+    assert isinstance(model, MultiCurveGraphModel)
 
-        return scene_model.children[0]
+    # Check if number of data items corresponds with the keys
+    widget = _get_controller(model, view).widget
+    data_items = widget.plotItem.dataItems
+    assert len(data_items) == len(NUMBER_PROXIES) - 1
 
-    def _get_controller(self, model):
-        container = self.view._scene_obj_cache.get(model)
-        return container.widget_controller
+    # Verify data item values. Set values first to trigger data plotting.
+    _set_values(proxy_map)
+    for curve in data_items:
+        name = _get_name(curve.name())
+        assert name in NUMBER_PROXIES
+        assert_array_equal(curve.xData, _get_value(X_NUMBER))
+        assert_array_equal(curve.yData, _get_value(name))
 
-    def _get_proxy(self, _, name):
+
+# -----------------------------------------------------------------------
+# Helpers
+
+def _assert_image_model(model, proxy_map, view):
+    # Verify data item values. Set values first to trigger data plotting.
+    _set_image(proxy_map)
+    widget = _get_controller(model, view).widget
+    image = widget.plotItem.imageItem.image
+    assert_array_equal(image, np.zeros((dimY, dimX)))
+
+
+def _load_scene(svg, proxy_map, view, mocker):
+    def _get_proxy(_, name):
         """Return a `PropertyProxy` instance for a given device and property
         path. This mocks the get_proxy called by ControllerContainer."""
-        return self.proxy_map.get(name)
+        return proxy_map.get(name)
 
-    def _set_values(self):
-        """Set numerical values"""
-        for name in VECTOR_PROXIES + NUMBER_PROXIES:
-            proxy = self.proxy_map.get(name)
-            set_proxy_value(proxy, name, self._get_value(name))
+    with StringIO(svg) as fp:
+        scene_model = read_scene(fp)
 
-    def _set_image(self, dimZ=None):
-        output_proxy = self.proxy_map.get(OUTPUT)
-        apply_configuration(get_image_hash(dimZ=dimZ), output_proxy.binding)
+    mocker.patch(GET_PROXY_PATH, new=_get_proxy)
+    view.update_model(scene_model)
 
-    @staticmethod
-    def _get_path(name):
-        return ".".join([DEVICE_NAME, name])
+    return scene_model.children[0]
 
-    @staticmethod
-    def _get_paths(names):
-        return [TestDeprecatedWidgets._get_path(name) for name in names]
 
-    @staticmethod
-    def _get_name(path):
-        return path.split(".")[-1]
+def _get_controller(model, view):
+    container = view._scene_obj_cache.get(model)
+    return container.widget_controller
 
-    @staticmethod
-    def _get_value(name):
-        return VALUES[name]
 
-    @staticmethod
-    def _generate_svg(widget, keys=VECTOR_PROXIES, image_attrs=False):
-        attrs = ''
-        if image_attrs:
-            attrs = """
-                krb:show_axes="true"
-                krb:show_color_bar="true"
-                krb:show_tool_bar="true"
-            """
-        svg = """
-        <svg:svg
-            xmlns:krb="http://karabo.eu/scene"
-            xmlns:svg="http://www.w3.org/2000/svg"
-            height="436" width="484"
-            krb:version="2">
-            <svg:rect
-                height="364" width="419" x="30" y="30"
-                krb:class="DisplayComponent"
-                krb:keys="{keys}"
-                {attrs}
-                krb:widget="{widget}"/>
-        </svg:svg>
+def _set_values(proxy_map):
+    """Set numerical values"""
+    for name in VECTOR_PROXIES + NUMBER_PROXIES:
+        proxy = proxy_map.get(name)
+        set_proxy_value(proxy, name, _get_value(name))
+
+
+def _set_image(proxy_map, dimZ=None):
+    output_proxy = proxy_map.get(OUTPUT)
+    apply_configuration(get_image_hash(dimZ=dimZ), output_proxy.binding)
+
+
+def _get_path(name):
+    return ".".join([DEVICE_NAME, name])
+
+
+def _get_paths(names):
+    return [_get_path(name) for name in names]
+
+
+def _get_name(path):
+    return path.split(".")[-1]
+
+
+def _get_value(name):
+    return VALUES[name]
+
+
+def _generate_svg(widget, keys=VECTOR_PROXIES, image_attrs=False):
+    attrs = ''
+    if image_attrs:
+        attrs = """
+            krb:show_axes="true"
+            krb:show_color_bar="true"
+            krb:show_tool_bar="true"
         """
-        paths = TestDeprecatedWidgets._get_paths(keys)
-        return svg.format(widget=widget, keys=",".join(paths), attrs=attrs)
+    svg = """
+    <svg:svg
+        xmlns:krb="http://karabo.eu/scene"
+        xmlns:svg="http://www.w3.org/2000/svg"
+        height="436" width="484"
+        krb:version="2">
+        <svg:rect
+            height="364" width="419" x="30" y="30"
+            krb:class="DisplayComponent"
+            krb:keys="{keys}"
+            {attrs}
+            krb:widget="{widget}"/>
+    </svg:svg>
+    """
+    paths = _get_paths(keys)
+    return svg.format(widget=widget, keys=",".join(paths), attrs=attrs)
