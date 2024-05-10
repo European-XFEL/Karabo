@@ -80,12 +80,14 @@ loggedUserId (string)
 [2.16.0]_ *loginInformation*
 userId (string)
 accessLevel (int) [sent by non read-only GUI servers]
+readOnly [2.20.0]_ (bool) from 2.20.0 this is ``true`` for login requests with no one-time token.
 
 * Message sent upon successful validation of a one-time token sent by a GUI client as part of the authenticated login process.
 * As its name states, a one-time token can only be validated once. Any further attempt to validate an already validated one-time token will result in a validation error.
 * Upon receival of an invalid one-time token, the GUI Server immediately sends an error notification message to the client and closes the connection.
 * The value of the ``accessLevel`` key is one of the values of the ``karabo::util::Schema::AccessLevel``
 enumeration.
+* Since 2.20.0 a ``login`` message can be sent to an authenticated GUI Server with no one-time token. This is interpreted as a request to start a read-only session for the requesting client. The authorization is bypassed and the user is limited to the ``OBSERVER`` access level.
 
 [repl_2.8.0]_ *configurationChanged (deviceConfiguration)*
 deviceId (string)
@@ -188,7 +190,7 @@ version (string) (GUI Client version)
 *login*
 [depr_2.16.0]_ username (string)
 [2.16.0]_ clientId (string) (GUI Client Hostname and PID)
-[2.16.0]_ oneTimeToken (string) (Sent for authenticated logins)
+[2.16.0]_ oneTimeToken (string) (Sent for authenticated logins; can be omitted for authenticated logins since 2.20.0; more details on description of ``loginInformation`` above)
 version (string) (GUI Client version)
 [2.16.0]_ clientUserId (string) (Sent for non-authenticated logins)
 
