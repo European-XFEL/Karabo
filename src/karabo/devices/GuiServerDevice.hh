@@ -389,6 +389,13 @@ namespace karabo {
              *
              * @param channel the TCP channel between the GUI client and the GUI server
              * @param info Hash with information needed to validate the login request.
+             *
+             * @note for clients >= 2.20 a login message with no OneTimeToken is interpreted by
+             * an authenticated GUI Server as a request for a read-only session. The GUI Server
+             * will respond to such messages with Access Level OBSERVER and the read-only flag set
+             * to true. For login messages with OneTimeToken the read-only flag will be always set
+             * to false and the Access Level will be the one returned by the Karabo Authentication
+             * Server.
              */
             void onLogin(const karabo::net::Channel::Pointer& channel, const karabo::util::Hash& info);
 
