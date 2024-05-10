@@ -471,8 +471,8 @@ void GuiServer_Test::testRequestFailProtocol() {
         const Hash conf = m_deviceClient->get(TEST_GUI_SERVER_ID);
         const std::string& classVersion = conf.get<string>("classVersion");
 
-        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages(
-              "notification", 1, [&] { m_tcpAdapter->sendMessage(h); }, messageTimeout);
+        karabo::TcpAdapter::QueuePtr messageQ =
+              m_tcpAdapter->getNextMessages("notification", 1, [&] { m_tcpAdapter->sendMessage(h); }, messageTimeout);
         Hash replyMessage;
         messageQ->pop(replyMessage);
 
@@ -501,8 +501,8 @@ void GuiServer_Test::testRequestFailOldVersion() {
     {
         const std::string type = "projectSaveItems";
         Hash h("type", type); // no other arguments are needed.
-        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages(
-              "notification", 1, [&] { m_tcpAdapter->sendMessage(h); }, messageTimeout);
+        karabo::TcpAdapter::QueuePtr messageQ =
+              m_tcpAdapter->getNextMessages("notification", 1, [&] { m_tcpAdapter->sendMessage(h); }, messageTimeout);
         Hash replyMessage;
         messageQ->pop(replyMessage);
 
@@ -524,8 +524,8 @@ void GuiServer_Test::testRequestGeneric() {
         Hash h("type", "requestGeneric", "instanceId", "isnotonline", "timeout", 1, "slot", "requestScene");
         h.set("args", Hash("name", "scene"));
 
-        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages(
-              "requestGeneric", 1, [&] { m_tcpAdapter->sendMessage(h); }, messageTimeout);
+        karabo::TcpAdapter::QueuePtr messageQ =
+              m_tcpAdapter->getNextMessages("requestGeneric", 1, [&] { m_tcpAdapter->sendMessage(h); }, messageTimeout);
         Hash replyMessage;
         messageQ->pop(replyMessage);
         CPPUNIT_ASSERT_EQUAL(false, replyMessage.get<bool>("success"));
@@ -538,8 +538,8 @@ void GuiServer_Test::testRequestGeneric() {
         h.set("args", Hash("name", "scene"));
         // Note: h is ill-formed as it misses "slot" element
 
-        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages(
-              "requestGeneric", 1, [&] { m_tcpAdapter->sendMessage(h); }, messageTimeout);
+        karabo::TcpAdapter::QueuePtr messageQ =
+              m_tcpAdapter->getNextMessages("requestGeneric", 1, [&] { m_tcpAdapter->sendMessage(h); }, messageTimeout);
         Hash replyMessage;
         messageQ->pop(replyMessage);
         CPPUNIT_ASSERT_EQUAL(false, replyMessage.get<bool>("success"));
@@ -571,8 +571,8 @@ void GuiServer_Test::testRequestGeneric() {
                true, "slot", "slotDumpDebugInfo");
         h.set("args", Hash("clients", true));
 
-        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages(
-              "debug", 1, [&] { m_tcpAdapter->sendMessage(h); }, messageTimeout);
+        karabo::TcpAdapter::QueuePtr messageQ =
+              m_tcpAdapter->getNextMessages("debug", 1, [&] { m_tcpAdapter->sendMessage(h); }, messageTimeout);
         Hash replyMessage;
         messageQ->pop(replyMessage);
         CPPUNIT_ASSERT_EQUAL(true, replyMessage.get<bool>("success"));
@@ -590,8 +590,8 @@ void GuiServer_Test::testRequestGeneric() {
                true, "token", "here is a token of my appreciation", "slot", "slotDumpDebugInfo");
         h.set("args", Hash("clients", true));
 
-        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages(
-              "debug", 1, [&] { m_tcpAdapter->sendMessage(h); }, messageTimeout);
+        karabo::TcpAdapter::QueuePtr messageQ =
+              m_tcpAdapter->getNextMessages("debug", 1, [&] { m_tcpAdapter->sendMessage(h); }, messageTimeout);
         Hash replyMessage;
         messageQ->pop(replyMessage);
         CPPUNIT_ASSERT_EQUAL(true, replyMessage.get<bool>("success"));
@@ -1389,6 +1389,7 @@ void GuiServer_Test::testSlotBroadcast() {
 void GuiServer_Test::testMissingTokenOnLogin() {
     std::clog << "testMissingTokenOnLogin: " << std::flush;
 
+    // For versions before 2.20.0, a missing one time token in the login message is an error
     Hash loginInfo("type", "login", "username", "bob", "password", "12345", "version", "2.16.0");
 
     resetTcpConnection();
@@ -1400,9 +1401,31 @@ void GuiServer_Test::testMissingTokenOnLogin() {
     const std::string& message = lastMessage.get<std::string>("message");
     CPPUNIT_ASSERT_MESSAGE(
           "Expected notification message that GuiServer proceeds in readOnly mode'. Got '" + message + "'",
-          message.find("Continuing in readOnly mode!") != std::string::npos);
+          message.find("requires authenticated logins") != std::string::npos);
 
     int timeout = 1500;
+    // wait for the GUI server to log us out
+    while (m_tcpAdapter->connected() && timeout > 0) {
+        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        timeout -= 5;
+    }
+
+    resetTcpConnection();
+
+    // From version 2.20.0 or higher a missing one time token is interpreted as the login for a
+    // a read-only session with no user authentication involved.
+    Hash loginReadOnlySession("type", "login", "clientId", "bobHost(pid 10264)", "version", "2.20.0");
+
+    messageQ = m_tcpAdapter->getNextMessages("loginInformation", 1,
+                                             [&] { m_tcpAdapter->sendMessage(loginReadOnlySession); });
+    messageQ->pop(lastMessage);
+    bool readOnly = lastMessage.get<bool>("readOnly");
+    int accessLevel = lastMessage.get<int>("accessLevel");
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong readOnly mode value", true, readOnly);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong access level value for readOnly login", int(Schema::AccessLevel::OBSERVER),
+                                 accessLevel);
+
+    timeout = 1500;
     // wait for the GUI server to log us out
     while (m_tcpAdapter->connected() && timeout > 0) {
         boost::this_thread::sleep(boost::posix_time::milliseconds(5));
@@ -1583,7 +1606,8 @@ void GuiServer_Test::testBeginEndTemporarySession() {
     const std::string& userId = lastMessage.get<std::string>("username");
     CPPUNIT_ASSERT_EQUAL_MESSAGE("User differs from expected", TestKaraboAuthServer::VALID_USER_ID, userId);
 
-    // Request a begin temporary session a valid token - should be rejected since we are already in a temporary session
+    // Request a begin temporary session a valid token - should be rejected since we are already in a temporary
+    // session
     messageQ = m_tcpAdapter->getNextMessages("onBeginTemporarySession", 1,
                                              [&] { m_tcpAdapter->sendMessage(beginTempSessionInfo); });
     messageQ->pop(lastMessage);
@@ -1647,8 +1671,9 @@ void GuiServer_Test::testTemporarySessionExpiration() {
     CPPUNIT_ASSERT_MESSAGE("'accessLevel' missing in loginInformation sent by the GUI Server",
                            lastMessage.has("accessLevel"));
     // Request a temporary session with a valid token - waits for 3 messages: the "onBeginTemporarySession" result
-    // message (should be successful) immediately after, an "onEndTemporarySessionNotice" after the first check cycle of
-    // the GuiServerTemporarySessionManager and an "onTemporarySessionExpired" after the second check cycle.
+    // message (should be successful) immediately after, an "onEndTemporarySessionNotice" after the first check
+    // cycle of the GuiServerTemporarySessionManager and an "onTemporarySessionExpired" after the second check
+    // cycle.
     messageQ = m_tcpAdapter->getNextMessages("onBeginTemporarySession", 1,
                                              [&] { m_tcpAdapter->sendMessage(beginTempSessionInfo); });
     messageQ->pop(lastMessage);
@@ -1666,8 +1691,7 @@ void GuiServer_Test::testTemporarySessionExpiration() {
     // No triggering needed and timeout large enough to guarantee reception of an eminent expiration notice.
     const size_t lifetimePlusCheckInterval =
           1'000ul * (MAX_TEMPORARY_SESSION_TIME + karabo::devices::CHECK_TEMPSESSION_EXPIRATION_INTERVAL_SECS);
-    messageQ = m_tcpAdapter->getNextMessages(
-          "onEndTemporarySessionNotice", 1ul, [] {}, lifetimePlusCheckInterval);
+    messageQ = m_tcpAdapter->getNextMessages("onEndTemporarySessionNotice", 1ul, [] {}, lifetimePlusCheckInterval);
     messageQ->pop(lastMessage);
     CPPUNIT_ASSERT_MESSAGE("'onEndTemporarySessionNotice' message should have an 'aboutToExpireToken' field",
                            lastMessage.has("aboutToExpireToken"));
@@ -1679,8 +1703,7 @@ void GuiServer_Test::testTemporarySessionExpiration() {
     CPPUNIT_ASSERT_LESSEQUAL(END_TEMPORARY_SESSION_NOTICE_TIME, static_cast<unsigned int>(secsToExpiration));
 
     // No triggering needed and timeout large enough to guarantee an expiration being received.
-    messageQ = m_tcpAdapter->getNextMessages(
-          "onTemporarySessionExpired", 1ul, [] {}, lifetimePlusCheckInterval);
+    messageQ = m_tcpAdapter->getNextMessages("onTemporarySessionExpired", 1ul, [] {}, lifetimePlusCheckInterval);
     messageQ->pop(lastMessage);
     CPPUNIT_ASSERT_MESSAGE("'onTemporarySessionExpired' message should have an 'expiredToken' field",
                            lastMessage.has("expiredToken"));
