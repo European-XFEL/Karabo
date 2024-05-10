@@ -329,7 +329,7 @@ class ReactiveLoginDialog(QDialog):
         bytes_string = reply.readAll()
         reply_body = str(bytes_string, "utf-8")
         auth_result = json.loads(reply_body)
-        if error == QNetworkReply.NoError:
+        if error == QNetworkReply.NoError and auth_result["success"]:
             krb_access.ONE_TIME_TOKEN = auth_result["once_token"]
             refresh_token = auth_result.get("refresh_token")
             krb_access.REFRESH_TOKEN = refresh_token
@@ -338,7 +338,7 @@ class ReactiveLoginDialog(QDialog):
                 krb_access.REFRESH_TOKEN_USER = auth_result.get("username")
             self.accept()
         else:
-            self._error = auth_result.get("detail")
+            self._error = auth_result.get("error_msg")
             self.stackedWidget.setCurrentIndex(LoginType.USER_AUTHENTICATED)
             self._update_status_label()
 
