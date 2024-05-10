@@ -449,8 +449,9 @@ class TempSessionDialog(QDialog):
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
         self.ok_button.setEnabled(False)
 
-        self.edit_access_code.setValidator(QIntValidator(parent=self))
-        self.edit_access_code.textEdited.connect(self._update_button)
+        self.edit_access_code = AccessCodeWidget(parent)
+        self.access_widget_layout.addWidget(self.edit_access_code)
+        self.edit_access_code.valueChanged.connect(self._update_button)
 
         self.authenticate_button.clicked.connect(self.open_login_webpage)
 
@@ -475,12 +476,12 @@ class TempSessionDialog(QDialog):
 
     @Slot()
     def _update_button(self):
-        enable = bool(self.edit_access_code.text().strip())
+        enable = self.edit_access_code.has_access_code()
         self.ok_button.setEnabled(enable)
 
     def _post_auth_request(self):
         info = json.dumps({
-            "access_code": int(self.edit_access_code.text()),
+            "access_code": int(self.edit_access_code.get_access_code()),
             "client_hostname": CLIENT_HOST,
             "remember_login": False
         })
