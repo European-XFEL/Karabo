@@ -1,7 +1,7 @@
 import json
 from ast import literal_eval
 
-from qtpy.QtNetwork import QNetworkRequest
+from qtpy.QtNetwork import QNetworkReply, QNetworkRequest
 
 from karabogui import access as krb_access
 from karabogui.dialogs.reactive_login_dialog import (
@@ -107,6 +107,26 @@ def test_access_code_login(gui_app, mocker):
     click_button(dialog.connect_button)
     assert post_refresh_token.call_count == 0
     assert post_access_code.call_count == 1
+
+
+def test_authReply(gui_app, mocker):
+    dialog = ReactiveLoginDialog()
+    reply = mocker.Mock(spec=QNetworkReply)
+    reply.error.return_value = QNetworkReply.NoError
+
+    failure = (
+        b'{"success":false,"once_token":null,"refresh_token":null,'
+        b'"username":null,"error_msg":"No token for access code 444444"}')
+    reply.readAll.return_value = failure
+    dialog.onAuthReply(reply)
+    assert dialog.label_status.text() == "No token for access code 444444"
+
+    success = (b'{"success":true,"once_token":"abc","refresh_token":"xyz",'
+               b'"username":"karabo","error_msg":null}')
+    reply.readAll.return_value = success
+    dialog.onAuthReply(reply)
+    assert krb_access.ONE_TIME_TOKEN == "abc"
+    assert krb_access.REFRESH_TOKEN == "xyz"
 
 
 def test_access_widget(gui_app):
