@@ -747,6 +747,9 @@ namespace karabo {
                     Hash h("type", "loginInformation");
                     h.set("accessLevel", static_cast<int>(level));
                     h.set("username", authResult.userId);
+                    // An authorization based on a one time token doesn't originate
+                    // a read-only session.
+                    h.set("readOnly", false);
                     safeClientWrite(channel, h);
 
                     sendSystemTopology(weakChannel);
@@ -942,8 +945,9 @@ namespace karabo {
                 // Before version 2.16 of the Framework, the  GUI client sends the clientId (clientHostname-clientPID)
                 // under the "username" key. Since version 2.16, that key name is being deprecated in favor or the
                 // "clientId" key. For backward compatibility, both keys will be kept during the deprecation period.
-                const string clientId =
-                      hash.has("clientId") ? hash.get<string>("clientId") : hash.get<string>("username");
+                const string clientId = hash.has("clientId")
+                                              ? hash.get<string>("clientId")
+                                              : (hash.has("username") ? hash.get<string>("username") : "");
                 const string cliVersion = clientVersion.getString();
 
                 if (clientVersion < Version(get<std::string>("minClientVersion"))) {
@@ -955,34 +959,49 @@ namespace karabo {
 
                 bool readOnly = m_isReadOnly;
                 auto weakChannel = WeakChannelPointer(channel);
+                // Since version 2.16.0 the GUI Client sends the user that is running its process in the
+                // "clientUserId" path. If that is not set, we fallback to the clientId.
+                const string& clientUserId = hash.has("clientUserId") ? hash.get<string>("clientUserId") : clientId;
 
-                if (userAuthActive && !hash.has("oneTimeToken")) {
-                    KARABO_LOG_FRAMEWORK_DEBUG << "Login of client without oneTimeToken, proceeding in readOnly mode";
-                    const string message = "GUI server at '" + get<string>("hostName") + ":" +
-                                           toString(get<unsigned int>("port")) +
-                                           "' requires authenticated logins.\nContinuing in readOnly mode!";
-                    const Hash h("type", "notification", "message", message);
-                    safeClientWrite(channel, h);
-                    readOnly = true;
-                }
-                // Handles token validation, if needed.
-                if (userAuthActive && hash.has("oneTimeToken")) {
-                    KARABO_LOG_FRAMEWORK_DEBUG << "One-time token to be validated/authorized: "
-                                               << hash.get<string>("oneTimeToken");
+                if (userAuthActive) {
+                    // GUI Server is in authenticated mode
+                    if (hash.has("oneTimeToken")) {
+                        // A one time token was sent - has to validate and authorize it.
+                        KARABO_LOG_FRAMEWORK_DEBUG << "One-time token to be validated/authorized: "
+                                                   << hash.get<string>("oneTimeToken");
 
-                    const std::string oneTimeToken = hash.get<string>("oneTimeToken");
-                    m_authClient.authorizeOneTimeToken(
-                          oneTimeToken, m_topic,
-                          bind_weak(&karabo::devices::GuiServerDevice::onTokenAuthorizeResult, this, weakChannel,
-                                    clientId, clientVersion, oneTimeToken, _1));
-                } else {
-                    // No authentication involved
-                    // Use the value of the key "clientUserId" (introduced in 2.16) for logging and auditing purposes.
-                    if (hash.has("clientUserId")) {
-                        registerConnect(clientVersion, channel, hash.get<string>("clientUserId"));
+                        const std::string oneTimeToken = hash.get<string>("oneTimeToken");
+                        m_authClient.authorizeOneTimeToken(
+                              oneTimeToken, m_topic,
+                              bind_weak(&karabo::devices::GuiServerDevice::onTokenAuthorizeResult, this, weakChannel,
+                                        clientId, clientVersion, oneTimeToken, _1));
+
                     } else {
-                        registerConnect(clientVersion, channel);
+                        // For versions of the GUI Client prior to 2.20.0 a login message with no OneTimeToken is
+                        // considered an error by an authenticated GUI Server.
+                        if (clientVersion < Version("2.20.0")) {
+                            const string message = "GUI server at '" + get<string>("hostName") + ":" +
+                                                   toString(get<unsigned int>("port")) +
+                                                   "' requires authenticated logins.";
+                            sendLoginErrorAndDisconnect(channel, clientId, cliVersion, message);
+                            return;
+                        }
+                        // From version 2.20.0 of the GUI Client, a login message with no OneTimeToken is interpreted as
+                        // a request for a read-only session by an authenticated GUI Server.
+                        readOnly = true;
+                        registerConnect(clientVersion, channel, clientId);
+                        // Sends a message reporting a login for a read-only session
+                        Hash h("type", "loginInformation");
+                        h.set("accessLevel", static_cast<int>(Schema::AccessLevel::OBSERVER));
+                        h.set("username", clientUserId);
+                        h.set("readOnly", true);
+                        safeClientWrite(channel, h);
+                        sendSystemTopology(weakChannel);
                     }
+                } // if (userAuthActive)
+                else {
+                    // No authentication involved
+                    registerConnect(clientVersion, channel, clientUserId);
                     sendSystemTopology(weakChannel);
                 }
 
@@ -995,7 +1014,6 @@ namespace karabo {
 
                 channel->readAsyncHash(
                       bind_weak(&karabo::devices::GuiServerDevice::onRead, this, _1, weakChannel, _2, readOnly));
-
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onLogin(): " << e.what();
             }
@@ -1187,9 +1205,9 @@ namespace karabo {
                 // TODO: remove `skipExecutionTimeout` once "fast slot reply policy" is enforced
                 if (!(input.has(instanceKey) && skipExecutionTimeout(input.get<std::string>(instanceKey)))) {
                     // Take the max of what was requested by client and configured on GUI server
-                    const int timeoutSec =
-                          std::max(input.get<int>("timeout"), m_timeout.load()); // load() for template resolution
-                    requestor.timeout(timeoutSec * 1000);                        // convert to ms
+                    const int timeoutSec = std::max(input.get<int>("timeout"),
+                                                    m_timeout.load()); // load() for template resolution
+                    requestor.timeout(timeoutSec * 1000);              // convert to ms
                 }
             }
         }
@@ -1390,7 +1408,8 @@ namespace karabo {
 
                     KARABO_LOG_FRAMEWORK_DEBUG << "initSingleDevice: Requesting to start device instance \"" << deviceId
                                                << "\" on server \"" << serverId << "\"";
-                    // initReply both as success and failure handler, identified by boolean flag as last argument
+                    // initReply both as success and failure handler, identified by boolean flag as last
+                    // argument
                     request(serverId, "slotStartDevice", inst.hash)
                           .timeout(15000) // 15 seconds
                           .receiveAsync<bool, string>(bind_weak(&karabo::devices::GuiServerDevice::initReply, this,
@@ -1459,9 +1478,9 @@ namespace karabo {
                                               int prio) {
             karabo::net::Channel::Pointer chan = channel.lock();
             if (chan && chan->isOpen()) {
-                // Using false for copyAllData parameter in the call below is safe: NDArrays appear only in pipeline
-                // data forwarded from an InputChannel. That forwarding happens from a single method in InputChannel;
-                // that method makes no use of the data after forwarding it.
+                // Using false for copyAllData parameter in the call below is safe: NDArrays appear only in
+                // pipeline data forwarded from an InputChannel. That forwarding happens from a single method in
+                // InputChannel; that method makes no use of the data after forwarding it.
                 chan->writeAsync(message, prio, false);
             }
         }
@@ -1615,8 +1634,8 @@ namespace karabo {
                     safeClientWrite(channel, h);
                     KARABO_LOG_FRAMEWORK_DEBUG << "onGetClassSchema : serverId=\"" << serverId << "\", classId=\""
                                                << classId << "\": provided direct answer";
-                    // Remove registration again - but we had to register before we trigger the schema request via
-                    // getClassSchemaNoWait since otherwise registration may come too late.
+                    // Remove registration again - but we had to register before we trigger the schema request
+                    // via getClassSchemaNoWait since otherwise registration may come too late.
                     boost::mutex::scoped_lock lock(m_channelMutex);
                     ChannelIterator itChannelData = m_channels.find(chan);
                     if (itChannelData != m_channels.end()) {
@@ -1660,8 +1679,8 @@ namespace karabo {
                     safeClientWrite(channel, h);
 
                     // Clean-up again, registration not needed. But it had to be registered before calling
-                    // getDeviceSchemaNoWait since with weird threading, schemaUpdatedHandler could have been called
-                    // before we register here.
+                    // getDeviceSchemaNoWait since with weird threading, schemaUpdatedHandler could have been
+                    // called before we register here.
                     boost::mutex::scoped_lock lock(m_channelMutex);
                     if (chan) {
                         ChannelIterator itChannelData = m_channels.find(chan);
@@ -1719,8 +1738,8 @@ namespace karabo {
                 } else {
                     std::string details;
                     // TODO: Failure handler - figure out what went wrong:
-                    // In principle, 'reason' should be properly filled using m_errorDetailsDelim, RemoteException etc.
-                    // But currently (2.14.0), GUI ignores 'reason' anyway.
+                    // In principle, 'reason' should be properly filled using m_errorDetailsDelim,
+                    // RemoteException etc. But currently (2.14.0), GUI ignores 'reason' anyway.
                     try {
                         throw;
                     } catch (const RemoteException& e) {
@@ -1761,12 +1780,13 @@ namespace karabo {
                                          deviceId, time, preview, _1, _2, _3, _4);
                 auto failureHandler = bind_weak(&karabo::devices::GuiServerDevice::configurationFromPastError, this,
                                                 channel, deviceId, time);
-                // Two minutes timeout due to current implementation of slotGetConfigurationFromPast in FileLogReader:
-                // The amount of data it has to read depends on the time when the device (more precisely: its
-                // datalogger) was started the last time before the point in time that you requested and all the
-                // parameter updates in between these two time points.
+                // Two minutes timeout due to current implementation of slotGetConfigurationFromPast in
+                // FileLogReader: The amount of data it has to read depends on the time when the device (more
+                // precisely: its datalogger) was started the last time before the point in time that you
+                // requested and all the parameter updates in between these two time points.
                 request(readerId, "slotGetConfigurationFromPast", deviceId, time)
-                      .timeout(120000) // 2 minutes - if we do not specify it will be 2*KARABO_SYS_TTL, i.e. 4 minutes
+                      .timeout(120000) // 2 minutes - if we do not specify it will be 2*KARABO_SYS_TTL, i.e. 4
+                                       // minutes
                       .receiveAsync<Hash, Schema, bool, std::string>(handler, failureHandler);
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onGetConfigurationFromPast(): " << e.what();
@@ -1791,9 +1811,9 @@ namespace karabo {
 
                 Hash h("type", "configurationFromPast", "deviceId", deviceId, "time", time, "preview", preview);
                 if (config.empty()) {
-                    // Currently (Oct 2018) DataLogReader::getConfigurationFromPast does not reply errors, but empty
-                    // configuration if it could not fulfill the request, e.g. because the device was not online at the
-                    // requested time.
+                    // Currently (Oct 2018) DataLogReader::getConfigurationFromPast does not reply errors, but
+                    // empty configuration if it could not fulfill the request, e.g. because the device was not
+                    // online at the requested time.
                     h.set("success", false);
                     h.set("reason", "Received empty configuration:\nLikely '" + deviceId +
                                           "' has not been online (or not logging) until the requested time '" + time +
@@ -1875,8 +1895,9 @@ namespace karabo {
                     const bool notYetRegistered = channelSet.empty();
                     const bool inserted = channelSet.insert(channel).second;
                     if (!inserted) {
-                        // This happens when a GUI client has a scene open while the device is down and then restarts:
-                        // Client [at least until 2.14.X] will call this (but does not have to or maybe should not).
+                        // This happens when a GUI client has a scene open while the device is down and then
+                        // restarts: Client [at least until 2.14.X] will call this (but does not have to or
+                        // maybe should not).
                         KARABO_LOG_FRAMEWORK_INFO << "A GUI client wants to subscribe a second time to output channel: "
                                                   << channelName;
                     }
@@ -1886,24 +1907,24 @@ namespace karabo {
                         KARABO_LOG_FRAMEWORK_DEBUG << "Register to monitor '" << channelName << "'";
 
                         auto dataHandler = bind_weak(&GuiServerDevice::onNetworkData, this, channelName, _1, _2);
-                        // Channel configuration - we rely on defaults as: "dataDistribution" == copy, "onSlowness" ==
-                        // drop
+                        // Channel configuration - we rely on defaults as: "dataDistribution" == copy,
+                        // "onSlowness" == drop
                         const Hash cfg("delayOnInput", get<int>("delayOnInput"));
                         if (!remote().registerChannelMonitor(channelName, dataHandler, cfg)) {
                             KARABO_LOG_FRAMEWORK_WARN << "Already monitoring '" << channelName << "'!";
-                            // Should we remote().unregisterChannelMonitor' and try again? But problem never seen...
+                            // Should we remote().unregisterChannelMonitor' and try again? But problem never
+                            // seen...
                         }
                     } else {
-                        KARABO_LOG_FRAMEWORK_DEBUG << "Do not register to monitor '" << channelName << "' "
-                                                   << "since "
+                        KARABO_LOG_FRAMEWORK_DEBUG << "Do not register to monitor '" << channelName << "' " << "since "
                                                    << channelSet.size() - (1u * inserted) // -1 except if not new
                                                    << " client(s) already registered.";
                     }
                 } else { // i.e. un-subscribe
                     if (0 == channelSet.erase(channel)) {
                         // Would happen if 'instanceGoneHandler' would clear m_readyNetworkConnections (as done
-                        // before 2.15.X) when a scene is closed that shows channel data, but the device is not alive
-                        // (anymore).
+                        // before 2.15.X) when a scene is closed that shows channel data, but the device is not
+                        // alive (anymore).
                         KARABO_LOG_FRAMEWORK_WARN << "A GUI client wants to un-subscribe from an output channel that it"
                                                   << " is not subscribed: " << channelName;
                     }
@@ -2005,9 +2026,10 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onNetworkData ....";
 
                 Hash h("type", "networkData", "name", channelName);
-                // Assign timestamp and aggressively try to avoid any copies by move-assign the 'data' to the payload
-                // that we send to the clients. For that we cast const away from 'data' and in fact modify it!
-                // That is safe, see comment in InputChannel::triggerIOEvent() which calls this method.
+                // Assign timestamp and aggressively try to avoid any copies by move-assign the 'data' to the
+                // payload that we send to the clients. For that we cast const away from 'data' and in fact
+                // modify it! That is safe, see comment in InputChannel::triggerIOEvent() which calls this
+                // method.
                 Hash::Node& dataNode = h.set("data", Hash());
                 dataNode.getValue<Hash>() = std::move(const_cast<Hash&>(data));
                 Hash::Node& metaNode = h.set("meta.timestamp", true);
@@ -2043,7 +2065,8 @@ namespace karabo {
 
 
         void GuiServerDevice::instanceNewHandler(const karabo::util::Hash& topologyEntry) {
-            // topologyEntry is an empty Hash at path <type>.<instanceId> with all the instanceInfo as attributes
+            // topologyEntry is an empty Hash at path <type>.<instanceId> with all the instanceInfo as
+            // attributes
             try {
                 const std::string& type = topologyEntry.begin()->getKey();
                 if (type == "device") {
@@ -2065,8 +2088,9 @@ namespace karabo {
 
                     if (instanceId == get<std::string>("dataLogManagerId")) {
                         // The corresponding 'connect' is done by SignalSlotable's automatic reconnect feature.
-                        // Even this request might not be needed since the logger manager emits the corresponding
-                        // signal. But we cannot be 100% sure that our 'connect' has been registered in time.
+                        // Even this request might not be needed since the logger manager emits the
+                        // corresponding signal. But we cannot be 100% sure that our 'connect' has been
+                        // registered in time.
                         requestNoWait(get<std::string>("dataLogManagerId"), "slotGetLoggerMap", "", "slotLoggerMap");
                     }
 
@@ -2118,11 +2142,11 @@ namespace karabo {
                     m_pendingAttributeUpdates.erase(instanceId);
                 }
 
-                // Older versions cleaned m_networkConnections from input channels of the dead 'instanceId' here.
-                // That works since the GUI client (as of 2.14.X) gives an onSubscribeNetwork request again if it
-                // gets notified that the device is back again.
-                // But that is not needed: DeviceClient and SignalSlotable take care to reconnect for any registered
-                // channels. In fact, that will lead to a faster reconnection than waiting for the client's request.
+                // Older versions cleaned m_networkConnections from input channels of the dead 'instanceId'
+                // here. That works since the GUI client (as of 2.14.X) gives an onSubscribeNetwork request
+                // again if it gets notified that the device is back again. But that is not needed: DeviceClient
+                // and SignalSlotable take care to reconnect for any registered channels. In fact, that will
+                // lead to a faster reconnection than waiting for the client's request.
 
                 {
                     boost::upgrade_lock<boost::shared_mutex> lk(m_projectManagerMutex);
@@ -2194,8 +2218,8 @@ namespace karabo {
                     if (itReq != it->second.requestedClassSchemas.end()) {
                         if (itReq->second.find(classId) != itReq->second.end()) {
                             const Channel::Pointer& channel = it->first;
-                            // If e.g. a schema of a non-existing plugin was requested, the schema could well be empty.
-                            // Forward to client anyway since otherwise it will not ask again later.
+                            // If e.g. a schema of a non-existing plugin was requested, the schema could well be
+                            // empty. Forward to client anyway since otherwise it will not ask again later.
                             if (classSchema.empty()) {
                                 // No harm if logged for more than one client
                                 KARABO_LOG_FRAMEWORK_WARN << "Received empty schema for class '" << classId
@@ -2262,8 +2286,8 @@ namespace karabo {
                         it->first->close(); // This closes socket and unregisters channel from connection
                         devIdsToUnregister.swap(it->second.visibleInstances); // copy to the empty set
                         m_channels.erase(it);                                 // Remove channel as such
-                        // Now iterate on all remaining clients to see which devices monitored by the removed channel
-                        // are also monitored by any of them.
+                        // Now iterate on all remaining clients to see which devices monitored by the removed
+                        // channel are also monitored by any of them.
                         for (it = m_channels.begin(); it != m_channels.end(); ++it) {
                             auto& visibles = it->second.visibleInstances;
                             for (auto itId = devIdsToUnregister.begin(); itId != devIdsToUnregister.end();) {
@@ -2363,12 +2387,12 @@ namespace karabo {
                                                                         it->second.visibleInstances.end());
                         TcpChannel::Pointer tcpChannel = boost::static_pointer_cast<TcpChannel>(it->first);
 
-                        data.set(
-                              clientAddr,
-                              Hash("queueInfo", tcpChannel->queueInfo(), "monitoredDevices", monitoredDevices,
-                                   // Leave string and bool vectors for the pipeline connections to be filled in below
-                                   "pipelineConnections", std::vector<std::string>(), "pipelineConnectionsReadiness",
-                                   std::vector<bool>(), "clientVersion", it->second.clientVersion.getString()));
+                        data.set(clientAddr,
+                                 Hash("queueInfo", tcpChannel->queueInfo(), "monitoredDevices", monitoredDevices,
+                                      // Leave string and bool vectors for the pipeline connections
+                                      // to be filled in below
+                                      "pipelineConnections", std::vector<std::string>(), "pipelineConnectionsReadiness",
+                                      std::vector<bool>(), "clientVersion", it->second.clientVersion.getString()));
                     }
                 }
 
@@ -2391,9 +2415,9 @@ namespace karabo {
                                           data.get<std::vector<bool>>(clientAddr + ".pipelineConnectionsReadiness");
                                     pipelinesReady.push_back(m_readyNetworkConnections[channelName][channel]);
                                 } else {
-                                    // Veeery unlikely, but can happen in case a new client has connected AND subscribed
-                                    // to a pipeline between creation of 'clientAddr + ".pipelineConnections"' structure
-                                    // above and this call here.
+                                    // Veeery unlikely, but can happen in case a new client has connected AND
+                                    // subscribed to a pipeline between creation of 'clientAddr +
+                                    // ".pipelineConnections"' structure above and this call here.
                                     KARABO_LOG_FRAMEWORK_INFO << "Client '" << clientAddr << "' among network "
                                                               << "connections, but was not (yet) among channels.";
                                 }
@@ -2411,7 +2435,8 @@ namespace karabo {
                     const InputChannel::Pointer& inputChannel = keyAndChannel.second;
                     for (const std::pair<const std::string, net::ConnectionStatus>& oneConnection :
                          inputChannel->getConnectionStatus()) {
-                        oneChannelInfo.set("id", inputChannel->getInstanceId()); // instanceId is unique in system
+                        oneChannelInfo.set("id",
+                                           inputChannel->getInstanceId()); // instanceId is unique in system
                         std::string& status = oneChannelInfo.bindReference<std::string>("status");
                         switch (oneConnection.second) {
                             case ConnectionStatus::CONNECTED:
@@ -2494,8 +2519,8 @@ namespace karabo {
                                                    << " messages queued, were "
                                                    << lastCheckSuspects.get<unsigned long long>(clientAddr)
                                                    << " during last check. Trigger disconnection!";
-                        // Self message (fire and forget) to disconnect (note it will be a delayed disconnect anyway).
-                        // This should save us from memory problems as in redmine ticket
+                        // Self message (fire and forget) to disconnect (note it will be a delayed disconnect
+                        // anyway). This should save us from memory problems as in redmine ticket
                         // https://in.xfel.eu/redmine/issues/107136
                         call("", "slotDisconnectClient", clientAddr);
                     } else {
@@ -2664,10 +2689,10 @@ namespace karabo {
                                                      const karabo::util::Hash& updateRows) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting alarm update";
-                // Flushes all the instance changes that are waiting for the next throttler cycle to be dispatched.
-                // This is done to guarantee that the clients will receive those instance changes before the alarm
-                // updates. An alarm info, for instance, may refer to a device whose instanceNew event was being
-                // held by the Throttler.
+                // Flushes all the instance changes that are waiting for the next throttler cycle to be
+                // dispatched. This is done to guarantee that the clients will receive those instance changes
+                // before the alarm updates. An alarm info, for instance, may refer to a device whose
+                // instanceNew event was being held by the Throttler.
                 remote().flushThrottledInstanceChanges();
                 Hash h("type", type, "instanceId", alarmServiceId, "rows", updateRows);
                 // Broadcast to all GUIs
@@ -2710,10 +2735,10 @@ namespace karabo {
                                                      const bool replyToAllClients) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onRequestedAlarmsReply : info ...\n" << reply;
-                // Flushes all the instance changes that are waiting for the next throttler cycle to be dispatched.
-                // This is done to guarantee that the clients will receive those instance changes before the alarm
-                // updates. An alarm info, for instance, may refer to a device whose instanceNew event was being
-                // held by the Throttler.
+                // Flushes all the instance changes that are waiting for the next throttler cycle to be
+                // dispatched. This is done to guarantee that the clients will receive those instance changes
+                // before the alarm updates. An alarm info, for instance, may refer to a device whose
+                // instanceNew event was being held by the Throttler.
                 remote().flushThrottledInstanceChanges();
                 Hash h("type", "alarmInit", "instanceId", reply.get<std::string>("instanceId"), "rows",
                        reply.get<Hash>("alarms"));
@@ -2837,7 +2862,8 @@ namespace karabo {
                 auto failureHandler = bind_weak(&GuiServerDevice::forwardHashReply, this, false, channel, info, Hash());
                 requestor.receiveAsync<Hash>(successHandler, failureHandler);
             } catch (const std::exception&) {
-                // Make client aware of failure - we are in `catch` block as forwardHashReply(false, ...) expects:
+                // Make client aware of failure - we are in `catch` block as forwardHashReply(false, ...)
+                // expects:
                 forwardHashReply(false, channel, info, Hash());
                 // No need to LOG, is done in forwardHashReply
             }
@@ -2869,8 +2895,8 @@ namespace karabo {
                     failTxt = "Request not answered within ";
                     if (info.has("timeout")) {
                         // Not 100% precise if "timeout" got reconfigured after request was sent...
-                        const int timeout =
-                              std::max(info.get<int>("timeout"), m_timeout.load()); // load() for template resolution
+                        const int timeout = std::max(info.get<int>("timeout"),
+                                                     m_timeout.load()); // load() for template resolution
                         failTxt += toString(timeout);
                     } else {
                         failTxt += toString(karabo::xms::SignalSlotable::Requestor::m_defaultAsyncTimeout / 1000.f);

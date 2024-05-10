@@ -57,6 +57,9 @@ __lint_clang_format() {
 
     echo "Linting format with `clang-format --version` ..."
 
+    echo "Temporarily skipping clang-format based linting - to be restored when everybody is on 18.X+ ..."
+    exit 0
+
     SRC_FILES=($(find $SCAN_DIRS -type f \( -name "*.cc" -o -name "*.cpp" -o -name "*.h" -o -name "*.hh" -o -name "*.hpp" \)))
     echo "# of C++ lintable files: ${#SRC_FILES[@]}"
 
