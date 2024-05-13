@@ -39,6 +39,7 @@ REFRESH_TOKEN_USER = None
 AUTHENTICATION_SERVER = None
 
 TEMPORARY_SESSION_USER = None
+TEMPORARY_SESSION_WARNING = False
 
 ACCESS_LEVEL_MAP = {
     "observer": 0,
@@ -76,4 +77,9 @@ def access_role_allowed(role):
 
 def is_authenticated():
     """one time token is set for only User-Authenticated login"""
-    return bool(ONE_TIME_TOKEN)
+    return ONE_TIME_TOKEN is not None
+
+
+def is_temporary_session() -> bool:
+    """Check if session is temporary"""
+    return TEMPORARY_SESSION_USER is not None

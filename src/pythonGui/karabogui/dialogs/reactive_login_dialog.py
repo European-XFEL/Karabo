@@ -438,7 +438,7 @@ class ReactiveLoginDialog(QDialog):
         self._update_dialog_state()
 
 
-class TempSessionDialog(QDialog):
+class TemporarySessionDialog(QDialog):
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         self.setModal(False)
@@ -506,7 +506,7 @@ class TempSessionDialog(QDialog):
             krb_access_level = krb_access.ACCESS_LEVEL_MAP.get(
                 highest_access_level.lower(), 2)
             username = get_network().username
-            get_network().beginTempSession(
+            get_network().beginTemporarySession(
                 username=username,
                 temporarySessionToken=auth_result["once_token"],
                 levelBeforeTemporarySession=krb_access_level,
