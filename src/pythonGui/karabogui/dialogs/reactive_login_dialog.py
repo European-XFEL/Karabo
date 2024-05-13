@@ -111,8 +111,14 @@ class AccessCodeWidget(QWidget):
     def get_access_code(self) -> str:
         return "".join(cell.text() for cell in self.cells)
 
-    def has_access_code(self) -> bool:
+    def has_access_code(self):
         return all([cell.text() for cell in self.cells])
+
+
+BUTTON_STYLE = """
+QPushButton#skip_authentication_button{border: none; color: rgb(80,133,207)}
+QPushButton#skip_authentication_button:hover{border: none;
+                                             color: rgb(8,8,245)}"""
 
 
 class ReactiveLoginDialog(QDialog):
@@ -191,7 +197,8 @@ class ReactiveLoginDialog(QDialog):
             self._timer.start()
 
         self.switch_button.clicked.connect(self._switch_to_auth_page)
-        self.skip_authentication.setVisible(False)
+        self.skip_authentication_button.setStyleSheet(BUTTON_STYLE)
+        self.skip_authentication_button.clicked.connect(self.accept)
 
     # --------------------------------------------------------------------
     # Dialog Public Properties
@@ -224,6 +231,7 @@ class ReactiveLoginDialog(QDialog):
 
     def setRememberMeEnabled(self, enable: bool):
         self.remember_login.setEnabled(enable)
+
     # --------------------------------------------------------------------
     # Qt Slots
 
@@ -251,9 +259,9 @@ class ReactiveLoginDialog(QDialog):
     def connect_clicked(self):
         self._error = None
         if self.login_type is LoginType.USER_AUTHENTICATED:
-            self._post_auth_request()
+            self._login_authenticated()
         elif self.login_type is LoginType.REFRESH_TOKEN:
-            self._post_auth_request_refresh_token()
+            self._refresh_authentication()
         else:
             self.accept()
 
@@ -377,7 +385,7 @@ class ReactiveLoginDialog(QDialog):
         elif self.login_type is LoginType.UNKNOWN:
             self.connect_button.setEnabled(False)
         elif self.login_type is LoginType.USER_AUTHENTICATED:
-            enable = bool(self.edit_access_code.has_access_code())
+            enable = self.edit_access_code.has_access_code()
             self.connect_button.setEnabled(enable)
         elif self.login_type is LoginType.REFRESH_TOKEN:
             self.connect_button.setEnabled(True)
@@ -399,7 +407,7 @@ class ReactiveLoginDialog(QDialog):
         self.label_status.setStyleSheet(f"QLabel {{color: {status_color};}}")
         self.label_status.setText(status_text)
 
-    def _post_auth_request(self):
+    def _login_authenticated(self):
         """Authentication Request Posting"""
         self._authenticating = True
         self._update_dialog_state()
@@ -413,10 +421,11 @@ class ReactiveLoginDialog(QDialog):
         url = f"{self._auth_url}user_tokens"
 
         request = QNetworkRequest(QUrl(url))
-        request.setHeader(QNetworkRequest.ContentTypeHeader, REQUEST_HEADER)
+        request.setHeader(
+            QNetworkRequest.ContentTypeHeader, REQUEST_HEADER)
         self.access_manager.post(request, info)
 
-    def _post_auth_request_refresh_token(self):
+    def _refresh_authentication(self):
         self._authenticating = True
         self._update_dialog_state()
 
@@ -472,14 +481,14 @@ class TemporarySessionDialog(QDialog):
     def accept(self):
         # We are calling the super method only after the authentication of
         # the temporary session user.
-        self._post_auth_request()
+        self._login_authenticated()
 
     @Slot()
     def _update_button(self):
         enable = self.edit_access_code.has_access_code()
         self.ok_button.setEnabled(enable)
 
-    def _post_auth_request(self):
+    def _login_authenticated(self):
         info = json.dumps({
             "access_code": int(self.edit_access_code.get_access_code()),
             "client_hostname": CLIENT_HOST,

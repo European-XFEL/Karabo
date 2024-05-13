@@ -27,7 +27,7 @@ def test_temporarySessionDialog(gui_app, mocker):
     mocker.patch("karabogui.dialogs.reactive_login_dialog.CLIENT_HOST",
                  new=hostname)
     dialog.access_manager = mocker.Mock()
-    dialog._post_auth_request()
+    dialog._login_authenticated()
     assert dialog.access_manager.post.call_count == 1
     call_args, _ = dialog.access_manager.post.call_args
     network_req, args = call_args
@@ -55,12 +55,12 @@ def test_refresh_token(gui_app, mocker):
     dialog = ReactiveLoginDialog()
     dialog.login_type = LoginType.REFRESH_TOKEN
     mocked_method = mocker.patch.object(
-        dialog, "_post_auth_request_refresh_token")
+        dialog, "_refresh_authentication")
     dialog.connect_clicked()
     assert mocked_method.call_count
 
 
-def test_post_auth_request_refresh_token(gui_app, mocker):
+def test_refresh_authentication(gui_app, mocker):
     """With REFRESH_TOKEN, the login dialog should call the correct post
     request."""
     krb_access.REFRESH_TOKEN = "dummy_token"
@@ -68,7 +68,7 @@ def test_post_auth_request_refresh_token(gui_app, mocker):
     dialog = ReactiveLoginDialog()
     dialog.login_type = LoginType.REFRESH_TOKEN
     mocked_access_manger = mocker.patch.object(dialog, "access_manager")
-    dialog._post_auth_request_refresh_token()
+    dialog._refresh_authentication()
     assert mocked_access_manger.post.call_count == 1
 
     args = mocked_access_manger.post.call_args[0]
@@ -94,16 +94,26 @@ def test_access_code_login(gui_app, mocker):
 
     click_button(dialog.switch_button)
     assert dialog.login_type == LoginType.USER_AUTHENTICATED
+    # Empty access code
     assert not dialog.connect_button.isEnabled()
 
+    # Update all but not last, should not be connectable
+    for i, cell in enumerate(dialog.edit_access_code.cells, start=1):
+        if i == 6:
+            i = ""
+        cell.setText(str(i))
+    dialog._update_button()
+    assert not dialog.connect_button.isEnabled()
+
+    # Complete access code
     for i, cell in enumerate(dialog.edit_access_code.cells, start=1):
         cell.setText(str(i))
-
     dialog._update_button()
     assert dialog.connect_button.isEnabled()
-    post_access_code = mocker.patch.object(dialog, "_post_auth_request")
+
+    post_access_code = mocker.patch.object(dialog, "_login_authenticated")
     post_refresh_token = mocker.patch.object(
-        dialog, "_post_auth_request_refresh_token")
+        dialog, "_refresh_authentication")
     click_button(dialog.connect_button)
     assert post_refresh_token.call_count == 0
     assert post_access_code.call_count == 1
