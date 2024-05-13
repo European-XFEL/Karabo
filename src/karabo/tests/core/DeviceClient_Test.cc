@@ -26,9 +26,11 @@
 
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/thread.hpp>
+#include <chrono>
 #include <future>
 #include <karabo/core/DeviceClient.hh>
 #include <string>
+#include <thread>
 #include <tuple>
 
 #include "karabo/util/Hash.hh"
@@ -94,6 +96,7 @@ void DeviceClient_Test::testAll() {
     // testGet() and testSet() in that order - to avoid the need to instantiate again
     testGet();
     testSet();
+    testProperServerSignalsSent();
     testMonitorChannel();
     testGetSchema();
     testGetSchemaNoWait();
@@ -216,6 +219,37 @@ void DeviceClient_Test::testSet() {
 
     std::pair<bool, std::string> success = m_deviceClient->killDevice("TestedDevice", KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+}
+
+void DeviceClient_Test::testProperServerSignalsSent() {
+    auto client = boost::shared_ptr<DeviceClient>(new DeviceClient("device_client-plugin_tests"));
+
+    std::promise<bool> plugins_promise;
+    std::future<bool> plugins_future = plugins_promise.get_future();
+
+    client->registerInstanceNewMonitor([&plugins_promise](const Hash& hash) -> void {
+        std::vector<std::string> plugins =
+              hash.getAttribute<std::vector<std::string>>("server.device_server-plugin_tests", "deviceClasses");
+        plugins_promise.set_value(!plugins.empty());
+    });
+
+    std::atomic<bool> instance_update_called{};
+    client->registerInstanceUpdatedMonitor([&instance_update_called](const Hash&) { instance_update_called = true; });
+
+    const Hash config("serverId", "device_server-plugin_tests", "scanPlugins", false, "Logger.priority", "FATAL");
+    auto server = DeviceServer::create("DeviceServer", config);
+    server->finalizeInternalInitialization();
+
+    auto result = plugins_future.wait_for(std::chrono::seconds{1});
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, result);
+    bool plugins_loaded = plugins_future.get();
+    CPPUNIT_ASSERT(plugins_loaded);
+
+    // This wait gives enough time for the instanceUpdate signal to be called,
+    // in case it is actually called (which is what we have to make sure it does
+    // not happen)
+    std::this_thread::sleep_for(std::chrono::milliseconds{100});
+    CPPUNIT_ASSERT(!instance_update_called);
 }
 
 void DeviceClient_Test::testMonitorChannel() {
