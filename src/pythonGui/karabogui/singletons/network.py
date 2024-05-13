@@ -649,7 +649,7 @@ class Network(QObject):
         login_info["info"] = dictToHash(get_config().info())
         self._write_hash(login_info)
 
-    def beginTempSession(self, **info):
+    def beginTemporarySession(self, **info):
         h = Hash("type", "beginTemporarySession")
         h["clientId"] = const.KARABO_CLIENT_ID
         h["version"] = const.GUI_VERSION
@@ -657,7 +657,7 @@ class Network(QObject):
         h["levelBeforeTemporarySession"] = info["levelBeforeTemporarySession"]
         self._write_hash(h)
 
-    def endTempSession(self, **info):
+    def endTemporarySession(self, **info):
         h = Hash("type", "endTemporarySession")
         h["temporarySessionToken"] = krb_access.ONE_TIME_TOKEN
         self._write_hash(h)
