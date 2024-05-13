@@ -25,7 +25,7 @@ from enum import Enum
 from pathlib import Path
 
 from qtpy.QtCore import QPoint, QSize, Qt, Slot
-from qtpy.QtGui import QColor
+from qtpy.QtGui import QColor, QIcon
 from qtpy.QtWidgets import (
     QAction, QActionGroup, QFrame, QLabel, QMainWindow, QMenu, QMessageBox,
     QSizePolicy, QSplitter, QTextBrowser, QToolButton, qApp)
@@ -39,7 +39,7 @@ from karabogui.access import ACCESS_LEVELS, AccessRole
 from karabogui.background import background
 from karabogui.dialogs.api import (
     AboutDialog, ClientTopologyDialog, ConfigurationDialog, DataViewDialog,
-    DevelopmentTopologyDialog, TempSessionDialog, UpdateDialog)
+    DevelopmentTopologyDialog, TemporarySessionDialog, UpdateDialog)
 from karabogui.events import (
     KaraboEvent, broadcast_event, register_for_broadcasts)
 from karabogui.indicators import get_processing_color
@@ -275,8 +275,6 @@ class MainWindow(QMainWindow):
 
     def _event_access_level(self, data):
         self.onUpdateAccessLevel()
-        if data.get("temp_session_expired"):
-            self._restore_initial_state()
         self._set_window_title()
 
     def _event_project_updated(self, data):
@@ -324,7 +322,7 @@ class MainWindow(QMainWindow):
     def update_server_connection(self, data=None):
         """Update the status bar with our broker connection information
         """
-        allow_temp_session = krb_access.is_authenticated()
+        allow_temporary_session = krb_access.is_authenticated()
         if data is not None:
             topic = data["topic"]
             # Store this information in the config singleton!
@@ -347,9 +345,8 @@ class MainWindow(QMainWindow):
                 logger.info(text)
         else:
             self.serverInfo.setText("")
-            allow_temp_session = False
-            self._update_temp_session_button(temp_session=False)
-        self.tbTempSession.setVisible(allow_temp_session)
+            allow_temporary_session = False
+        self.tbTempSession.setVisible(allow_temporary_session)
 
     # --------------------------------------
     # Qt virtual methods
@@ -422,6 +419,11 @@ class MainWindow(QMainWindow):
         if checked_action is not None:
             checked_action.setChecked(True)
 
+    def setTemporaryButton(self, icon: QIcon, tooltip: str) -> None:
+        """Set the icon and tooltip for the Temporary Session button"""
+        self.tbTempSession.setToolTip(tooltip)
+        self.tbTempSession.setIcon(icon)
+
     # --------------------------------------
     # private methods
 
@@ -434,13 +436,11 @@ class MainWindow(QMainWindow):
         self.tbAccessLevel.setPopupMode(QToolButton.InstantPopup)
         self.tbAccessLevel.setEnabled(False)
 
-        text = "Start A temporary Session"
-        self.tbTempSession = QAction(icons.arrowUp, f"&{text}", self)
+        text = "Start a temporary Session"
+        self.tbTempSession = QAction(icons.switchNormal, f"&{text}", self)
         self.tbTempSession.setToolTip(text)
         self.tbTempSession.setStatusTip(text)
-        self.tbTempSession.setCheckable(True)
-        self.tbTempSession.setVisible(False)
-        self.tbTempSession.triggered.connect(self.ToggleTemporarySession)
+        self.tbTempSession.triggered.connect(self.onTemporarySession)
 
         self.agAccessLevel = QActionGroup(self)
         self.agAccessLevel.triggered.connect(self.onChangeAccessLevel)
@@ -736,39 +736,10 @@ class MainWindow(QMainWindow):
         except webbrowser.Error:
             messagebox.show_error("No web browser available!", parent=self)
 
-    def _begin_temp_session(self):
+    def _begin_temporary_session(self):
         if not krb_access.is_authenticated():
             return
-        self._last_selected_access = self.agAccessLevel.checkedAction()
-
-        dialog = TempSessionDialog(parent=self)
-        dialog.accepted.connect(self._accept_temp_session_dialog)
-        dialog.rejected.connect(self._reject_temp_session_dialog)
-        dialog.show()
-
-    def _end_temp_session(self):
-        get_network().endTempSession()
-        self._restore_initial_state()
-
-    def _restore_initial_state(self):
-        """Update temp session button state, window title and restore the
-        previous selected access level on ending the temporary session"""
-        self._update_temp_session_button(temp_session=False)
-        self._set_window_title()
-        self._last_selected_access.setChecked(True)
-        access_level = krb_access.ACCESS_LEVELS[
-            self._last_selected_access.text()]
-        if krb_access.GLOBAL_ACCESS_LEVEL != access_level:
-            krb_access.GLOBAL_ACCESS_LEVEL = access_level
-            broadcast_event(KaraboEvent.AccessLevelChanged, {})
-
-    def _update_temp_session_button(self, temp_session: bool):
-        icon = icons.arrowDown if temp_session else icons.arrowUp
-        tooltip = ("End temporary Session" if temp_session else
-                   "Start a temporary Session")
-        self.tbTempSession.setToolTip(tooltip)
-        self.tbTempSession.setIcon(icon)
-        self.tbTempSession.setChecked(temp_session)
+        TemporarySessionDialog(parent=self).show()
 
     # --------------------------------------
     # Qt slots
@@ -934,28 +905,17 @@ class MainWindow(QMainWindow):
         self.tbAccessLevel.setEnabled(isConnected)
 
     @Slot(bool)
-    def ToggleTemporarySession(self, toggled):
-        if toggled:
-            self._begin_temp_session()
-        else:
+    def onTemporarySession(self, _):
+        if krb_access.is_temporary_session():
             ask = "Do you really want to end the Temporary session?"
             dialog = QMessageBox(
                 QMessageBox.Question, 'Temporary Session', ask,
                 QMessageBox.Yes | QMessageBox.No, parent=self)
             move_to_cursor(dialog)
             if dialog.exec() == QMessageBox.Yes:
-                self._end_temp_session()
-            else:
-                self.tbTempSession.setChecked(True)
-
-    @Slot()
-    def _accept_temp_session_dialog(self):
-        self._update_temp_session_button(temp_session=True)
-        self._set_window_title()
-
-    @Slot()
-    def _reject_temp_session_dialog(self):
-        self.tbTempSession.setChecked(False)
+                get_network().endTemporarySession()
+        else:
+            self._begin_temporary_session()
 
     @Slot()
     def onNumpyFileToCSV(self):
