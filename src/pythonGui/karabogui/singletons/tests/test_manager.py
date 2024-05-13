@@ -646,7 +646,21 @@ def test_handle_login_information(mocker):
         # Read Only, but since we are observer, it is not changed
         manager.handle_loginInformation(
             accessLevel=AccessLevel.OBSERVER.value, username="karabo")
-        krb_access.HIGHEST_ACCESS_LEVEL == "observer"
+        assert krb_access.HIGHEST_ACCESS_LEVEL == AccessLevel.OBSERVER
+        broad.assert_called_with(KaraboEvent.LoginUserChanged, {})
+        broad.reset_mock()
+
+        manager.handle_loginInformation(
+            readOnly=True, username="karabo")
+        assert krb_access.HIGHEST_ACCESS_LEVEL == AccessLevel.OBSERVER
+        broad.assert_called_with(KaraboEvent.LoginUserChanged, {})
+        broad.reset_mock()
+
+        manager.handle_loginInformation(
+            accessLevel=AccessLevel.ADMIN.value, username="karabo")
+        broad.assert_called_with(KaraboEvent.LoginUserChanged, {})
+        broad.reset_mock()
+        assert krb_access.HIGHEST_ACCESS_LEVEL == AccessLevel.ADMIN
 
 
 def test_handle_property_history(gui_app, mocker):
