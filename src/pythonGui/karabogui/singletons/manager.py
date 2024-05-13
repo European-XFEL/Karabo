@@ -395,18 +395,17 @@ class Manager(QObject):
         self._set_server_information(info)
 
     def handle_loginInformation(self, **info):
-        # Sets the AccessLevel to the value resulting from the one-time token
-        # validation, unless the server is in read-only mode. If the server is
-        # in read_only mode, the AccessLevel has already been set to OBSERVER
-        # upon handling of a previously sent ServerInformation, and must stay
-        # as OBSERVER.
-        #
-        # Note: this handler is only activated for valid one-time tokens. Upon
-        #       receiving an invalid (or already validated) one-time token,
-        #       the GUI server immediately sends a notification error to the
-        #       client and closes the connection.
+        """Handle the login information from the gui server
+
+        If the gui server is in readOnly mode, the readOnly boolean is included
+        here as well since 2.20.X.
+        """
         get_network().set_username(info["username"])
-        access = AccessLevel(info["accessLevel"])
+        read_only = info.get("readOnly", False)
+        if read_only:
+            access = AccessLevel.OBSERVER
+        else:
+            access = AccessLevel(info["accessLevel"])
         if krb_access.GLOBAL_ACCESS_LEVEL != access:
             krb_access.GLOBAL_ACCESS_LEVEL = access
             krb_access.HIGHEST_ACCESS_LEVEL = access
