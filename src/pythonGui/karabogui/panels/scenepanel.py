@@ -23,13 +23,15 @@ import re
 from functools import partial
 
 from qtpy.QtCore import QEvent, QSize, Qt, Slot
-from qtpy.QtGui import QKeySequence, QPalette
+from qtpy.QtGui import QIcon, QKeySequence, QPalette
 from qtpy.QtWidgets import (
-    QAction, QActionGroup, QApplication, QDialog, QMenu, QScrollArea)
+    QAction, QActionGroup, QApplication, QDialog, QMenu, QMessageBox,
+    QScrollArea)
 
+import karabogui.access as krb_access
 from karabo.common.scenemodel.api import write_scene
 from karabogui import icons
-from karabogui.dialogs.api import ResizeSceneDialog
+from karabogui.dialogs.api import ResizeSceneDialog, TemporarySessionDialog
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.indicators import get_topic_color
 from karabogui.sceneview.api import SceneView
@@ -43,7 +45,7 @@ from karabogui.sceneview.tools.api import (
     ScenePasteReplaceAction, SceneSelectAllAction, SceneSelectionTool,
     SceneSendToBackAction, StickerTool, TextSceneTool, UngroupSceneAction,
     WebLinkTool)
-from karabogui.singletons.api import get_config
+from karabogui.singletons.api import get_config, get_network
 from karabogui.util import getSaveFileName, move_to_cursor
 from karabogui.widgets.toolbar import ToolBar
 
@@ -143,12 +145,39 @@ class ScenePanel(BasePanelWidget):
         home_tool_bar.addSeparator()
         home_tool_bar.addAction(ac_show_editor)
 
+        self.tbTempSession = QAction(parent=self)
+        home_tool_bar.addAction(self.tbTempSession)
+        self.tbTempSession.triggered.connect(self.onTemporarySession)
+        home_tool_bar.addAction(self.tbTempSession)
+
         self.home_tool_bar = home_tool_bar
 
         return [always_visible_tb, self.drawing_tool_bar, home_tool_bar]
 
-    # ----------------------------
-    # Qt Methods
+    @Slot()
+    def onTemporarySession(self):
+        if krb_access.is_temporary_session():
+            ask = "Do you really want to end the Temporary session?"
+            dialog = QMessageBox(
+                QMessageBox.Question, 'Temporary Session', ask,
+                QMessageBox.Yes | QMessageBox.No, parent=self)
+            move_to_cursor(dialog)
+            if dialog.exec() == QMessageBox.Yes:
+                get_network().endTemporarySession()
+        else:
+            self._begin_temporary_session()
+
+    def _begin_temporary_session(self):
+        if not krb_access.is_authenticated():
+            return
+
+        dialog = TemporarySessionDialog(parent=self)
+        dialog.show()
+
+    def setTemporaryButton(self, icon: QIcon, tooltip: str) -> None:
+        """Set the icon and tooltip for the Temporary Session button"""
+        self.tbTempSession.setToolTip(tooltip)
+        self.tbTempSession.setIcon(icon)
 
     def closeEvent(self, event):
         super().closeEvent(event)

@@ -911,8 +911,12 @@ def test_handle_onBeginTemporarySession(mocker):
         assert broadcast.call_count == 0
         info = {"success": True, "accessLevel": 4}
         manager.handle_onBeginTemporarySession(**info)
-        assert broadcast.call_count == 1
-        broadcast.assert_called_with(KaraboEvent.LoginUserChanged, {})
+        assert broadcast.call_count == 2
+        first_call_args, second_call_args = broadcast.call_args_list
+        args, _ = first_call_args
+        assert args == (KaraboEvent.LoginUserChanged, {})
+        args, _ = second_call_args
+        assert args == (KaraboEvent.TemporarySession, {})
 
 
 def test_handle_onEndTemporarySession(mocker):
@@ -924,8 +928,12 @@ def test_handle_onEndTemporarySession(mocker):
 
         manager.handle_onEndTemporarySession(levelBeforeTemporarySession=3,
                                              loggedUserId="karabo")
-        assert broadcast.call_count == 1
-        broadcast.assert_called_with(KaraboEvent.LoginUserChanged, {})
+        assert broadcast.call_count == 2
+        first_call_args, second_call_args = broadcast.call_args_list
+        args, _ = first_call_args
+        assert args == (KaraboEvent.LoginUserChanged, {})
+        args, _ = second_call_args
+        assert args == (KaraboEvent.TemporarySession, {})
 
 
 def test_handle_onTemporarySessionExpired(mocker):
@@ -936,9 +944,22 @@ def test_handle_onTemporarySessionExpired(mocker):
             "karabogui.singletons.manager.broadcast_event")
         manager.handle_onTemporarySessionExpired(
             levelBeforeTemporarySession=2)
-        broadcast.call_count == 1
-        broadcast.assert_called_with(KaraboEvent.LoginUserChanged,
-                                     {'temp_session_expired': True})
+        assert broadcast.call_count == 2
+        first_call_args, second_call_args = broadcast.call_args_list
+        args, _ = first_call_args
+        assert args == (KaraboEvent.LoginUserChanged, {})
+        args, _ = second_call_args
+        assert args == (KaraboEvent.TemporarySession, {})
+
+
+def test_handle_onEndTemporarySessionNotice(mocker):
+    network = mocker.Mock()
+    with singletons(network=network):
+        manager = Manager()
+        broadcast = mocker.patch(
+            "karabogui.singletons.manager.broadcast_event")
+        manager.handle_onEndTemporarySessionNotice()
+        assert broadcast.call_count == 1
 
 
 def test_temp_session(mocker):
