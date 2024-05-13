@@ -60,6 +60,7 @@ class DeviceClient_Test : public CPPUNIT_NS::TestFixture {
 
     void testGet();
     void testSet();
+    void testProperServerSignalsSent();
     void testGetSchema();
     void testGetSchemaNoWait();
     void testMonitorChannel();
