@@ -143,9 +143,10 @@ class FormatMixin:
 
         return widget
 
-    @staticmethod
-    def initialize_model(proxy, model):
+    @classmethod
+    def initialize_model(cls, proxy, model):
         """Initialize the formatting from the binding of the proxy"""
+        super().initialize_model(proxy, model)
         fmt, decimals = get_binding_format(proxy.binding)
         model.trait_set(fmt=fmt, decimals=decimals)
 
@@ -179,11 +180,10 @@ class AlarmMixin:
 
         return widget
 
-    @staticmethod
-    def initialize_model(proxy, model):
+    @classmethod
+    def initialize_model(cls, proxy, model):
         """Initialize the formatting from the binding of the proxy"""
-        if isinstance(proxy.binding, FloatBinding):
-            FormatMixin.initialize_model(proxy, model)
+        super().initialize_model(proxy, model)
         attributes = proxy.binding.attributes
         traits = {}
         for key in [KARABO_ALARM_LOW, KARABO_WARN_LOW,
