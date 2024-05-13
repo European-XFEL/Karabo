@@ -21,6 +21,9 @@
 from enum import Enum
 from pathlib import Path
 
+from qtpy.QtGui import QIcon
+
+import karabogui.access as krb_access
 from karabo.common.api import InstanceStatus, State
 from karabogui.binding.api import ProxyStatus
 
@@ -285,3 +288,16 @@ def get_alarm_svg(alarm_type):
     alarm_svg = ALARM_SVG.get(alarm_type)
     if alarm_svg is not None:
         return alarm_svg
+
+
+def get_temporary_button_data() -> (QIcon, str):
+    """Provide the icon and tooltip for the temporary session button
+    depending on the state of the temporary session."""
+    if krb_access.TEMPORARY_SESSION_USER is None:
+        tooltip = "Start a temporary Session"
+        return icons.switchNormal, tooltip
+    if krb_access.TEMPORARY_SESSION_WARNING:
+        tooltip = "Temporary Session is about to end"
+        return icons.switchWarning, tooltip
+    tooltip = "End the temporary Session"
+    return icons.switchActive, tooltip
