@@ -417,6 +417,7 @@ class Manager(QObject):
         session request by the user"""
         if info["success"]:
             krb_access.TEMPORARY_SESSION_USER = info.get("username")
+            krb_access.TEMPORARY_SESSION_WARNING = False
             access_level = AccessLevel(info["accessLevel"])
             if krb_access.HIGHEST_ACCESS_LEVEL != access_level:
                 krb_access.HIGHEST_ACCESS_LEVEL = access_level
@@ -426,6 +427,7 @@ class Manager(QObject):
                 if krb_access.GLOBAL_ACCESS_LEVEL > access_level:
                     krb_access.GLOBAL_ACCESS_LEVEL = access_level
             broadcast_event(KaraboEvent.LoginUserChanged, {})
+            broadcast_event(KaraboEvent.TemporarySession, {})
 
     def handle_onEndTemporarySession(self, **info):
         """Handle the response from gui server on end temporary session
@@ -443,6 +445,7 @@ class Manager(QObject):
 
         krb_access.TEMPORARY_SESSION_USER = None
         broadcast_event(KaraboEvent.LoginUserChanged, {})
+        broadcast_event(KaraboEvent.TemporarySession, {})
 
     def handle_onTemporarySessionExpired(self, **info):
         """Handle the temporary session expired message from gui server """
@@ -457,8 +460,13 @@ class Manager(QObject):
             krb_access.GLOBAL_ACCESS_LEVEL = access_level
 
         krb_access.TEMPORARY_SESSION_USER = None
-        broadcast_event(KaraboEvent.LoginUserChanged,
-                        {"temp_session_expired": True})
+        broadcast_event(KaraboEvent.LoginUserChanged, {})
+        broadcast_event(KaraboEvent.TemporarySession, {})
+
+    def handle_onEndTemporarySessionNotice(self, **info):
+        """Broadcast before the temporary session ends"""
+        krb_access.TEMPORARY_SESSION_WARNING = True
+        broadcast_event(KaraboEvent.TemporarySession, {})
 
     @show_wait_cursor
     def handle_systemTopology(self, systemTopology):
