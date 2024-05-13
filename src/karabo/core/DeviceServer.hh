@@ -67,8 +67,6 @@ namespace karabo {
 
             bool m_serverIsRunning;
             std::vector<karabo::util::Hash> m_autoStart;
-
-            karabo::util::Hash m_availableDevices;
             std::vector<std::string> m_deviceClasses;
 
             typedef std::unordered_map<std::string, std::pair<BaseDevice::Pointer, karabo::net::Strand::Pointer> >
@@ -81,7 +79,6 @@ namespace karabo {
             karabo::net::Broker::Pointer m_connection;
 
             std::string m_serverId;
-            std::string m_connectionClass;
             std::string m_timeServerId;
             unsigned long long m_timeId;
             unsigned long long m_timeSec;    // seconds
@@ -189,7 +186,7 @@ namespace karabo {
             }
 
            private: // Functions
-            void newPluginAvailable();
+            karabo::util::Hash availablePlugins();
 
             void slotStartDevice(const karabo::util::Hash& configuration);
 
@@ -208,8 +205,6 @@ namespace karabo {
             krb_log4cpp::Category& log();
 
             void registerSlots();
-
-            void updateAvailableDevices();
 
             void slotDeviceGone(const std::string& instanceId);
 

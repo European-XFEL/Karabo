@@ -271,6 +271,7 @@ namespace karabo {
                     throw KARABO_LOGIC_EXCEPTION("Provided serverFlag is not supported: " + flag);
                 }
             instanceInfo.set("serverFlags", flags);
+            instanceInfo.merge(availablePlugins());
 
             // Initialize SignalSlotable instance
             init(m_serverId, m_connection, config.get<int>("heartbeatInterval"), instanceInfo);
@@ -516,42 +517,11 @@ namespace karabo {
 
 
         void DeviceServer::okStateOnEntry() {
-            KARABO_LOG_INFO << "DeviceServer starts up with id: " << m_serverId;
-
-            // Check whether we have installed devices available
-            updateAvailableDevices();
-            if (!m_availableDevices.empty()) {
-                newPluginAvailable();
-            }
-
             for (const Hash& device : m_autoStart) {
                 slotStartDevice(device);
             }
-        }
 
-
-        void DeviceServer::updateAvailableDevices() {
-            const vector<string>& devices = Configurator<BaseDevice>::getRegisteredClasses();
-            KARABO_LOG_INFO << "Updated list of devices available: " << karabo::util::toString(devices);
-
-
-            for (const string& device : devices) {
-                if (!m_availableDevices.has(device)) {
-                    Schema schema;
-                    KARABO_LOG_FRAMEWORK_DEBUG << "Plugin contains device class \"" << device
-                                               << "\".  Try to get schema ...";
-                    try {
-                        schema = BaseDevice::getSchema(
-                              device,
-                              Schema::AssemblyRules(karabo::util::READ | karabo::util::WRITE | karabo::util::INIT));
-                    } catch (const std::exception& e) {
-                        KARABO_LOG_ERROR << "Device \"" << device
-                                         << "\" is ignored because of Schema building failure : " << e.what();
-                        continue;
-                    }
-                    m_availableDevices.set(device, Hash("mustNotify", true, "xsd", schema));
-                }
-            }
+            KARABO_LOG_INFO << "DeviceServer starts up with id: " << m_serverId;
         }
 
         void DeviceServer::stopDeviceServer() {
@@ -722,26 +692,31 @@ namespace karabo {
             EventLoop::removeThread();
         }
 
-        void DeviceServer::newPluginAvailable() {
+        Hash DeviceServer::availablePlugins() {
             vector<string> deviceClasses;
             vector<int> visibilities;
-            deviceClasses.reserve(m_availableDevices.size());
 
-            for (Hash::iterator it = m_availableDevices.begin(); it != m_availableDevices.end(); ++it) {
-                const std::string& deviceClass = it->getKey();
-                if (std::find(m_deviceClasses.begin(), m_deviceClasses.end(), deviceClass) != m_deviceClasses.end()) {
-                    deviceClasses.push_back(it->getKey());
+            const std::vector<std::string>& base_devices = Configurator<BaseDevice>::getRegisteredClasses();
+            for (const std::string& baseDevice : base_devices) {
+                if (std::find(m_deviceClasses.begin(), m_deviceClasses.end(), baseDevice) != m_deviceClasses.end()) {
+                    deviceClasses.push_back(baseDevice);
+                    try {
+                        auto schema = BaseDevice::getSchema(
+                              baseDevice,
+                              Schema::AssemblyRules(karabo::util::READ | karabo::util::WRITE | karabo::util::INIT));
 
-                    Hash& tmp = it->getValue<Hash>();
-                    if (tmp.get<bool>("mustNotify") == true) {
-                        tmp.set("mustNotify", false);
+                        // Hash conf{"mustNotify", false, "xsd", schema};
+                        visibilities.push_back(schema.getDefaultValue<int>("visibility"));
+
+                    } catch (const std::exception& e) {
+                        KARABO_LOG_ERROR << "Device \"" << baseDevice
+                                         << "\" is ignored because of Schema building failure : " << e.what();
+                        // Remove the last added element, since adding its visibility failed
+                        deviceClasses.pop_back();
                     }
-                    visibilities.push_back(tmp.get<Schema>("xsd").getDefaultValue<int>("visibility"));
                 }
             }
-            KARABO_LOG_FRAMEWORK_INFO << "Sending instance update as new device plugins are available: "
-                                      << karabo::util::toString(deviceClasses);
-            this->updateInstanceInfo(Hash("deviceClasses", deviceClasses, "visibilities", visibilities));
+            return Hash{"deviceClasses", deviceClasses, "visibilities", visibilities};
         }
 
 

@@ -94,9 +94,21 @@ def test_device_client_sync_api():
     # Configure and start device server ...
     logLevel = "FATAL"
     config = Hash("serverId", serverId, "Logger.priority", logLevel)
-    startDeviceServer(config)
+
     # Test getServers...
-    assert serverId in c.getServers()
+    startDeviceServer(config)
+
+    max_tries = 10
+    n = 0
+    server_not_present = True
+
+    while n < max_tries and server_not_present:
+        time.sleep(0.1)
+        server_not_present = serverId not in c.getServers()
+        n += 0.1
+
+    assert not server_not_present
+
     # Check that instanceNew handler was called properly
     # (If 'is Hash' fails sometimes, better check first in a loop with timeout.
     # But as the client knows the server, instanceNew should have been called.)
@@ -109,24 +121,28 @@ def test_device_client_sync_api():
     assert serverInfo.getAttribute(serverId, "serverId") == serverId
     assert serverInfo.getAttribute(serverId, "log") == logLevel
 
-    # Check that instanceUpdated handler was called properly. Note that here we
-    # rely on the fact that C++ server sends instanceUpdate soon after
-    # instanceNew, extending the known deviceClasses. (Instead of sending
-    # instanceNew after plugins are known. If that changes, find something else
-    # for testing instanceUpdateHandler...)
-    timeout = 10
-    while timeout > 0:
-        if type(instanceUpdatedArg) is Hash:
-            break
-        timeout -= 0.1
-        time.sleep(0.1)
+    # This test fails because instanceUpdate is not sent anymore by the C++
+    # server. Removed for now, eventually, it will have to be revived; see
+    # https://git.xfel.eu/Karabo/Framework/-/issues/983
+    #
+    # # Check that instanceUpdated handler was called properly. Note that
+    # # here we rely on the fact that C++ server sends instanceUpdate soon
+    # # after instanceNew, extending the known deviceClasses. (Instead of
+    # # sending  instanceNew after plugins are known. If that changes, find
+    # # something else for testing instanceUpdateHandler...)
+    # timeout = 10
+    # while timeout > 0:
+    #     if type(instanceUpdatedArg) is Hash:
+    #         break
+    #     timeout -= 0.1
+    #     time.sleep(0.1)
 
-    assert type(instanceUpdatedArg) is Hash
-    assert instanceUpdatedArg.has("server." + serverId)
-    serverUpdate = instanceUpdatedArg["server"]
-    assert serverUpdate.getAttribute(serverId, "type") == "server"
-    klasses = serverUpdate.getAttribute(serverId, "deviceClasses")
-    assert "PropertyTest" in klasses
+    # assert type(instanceUpdatedArg) is Hash
+    # assert instanceUpdatedArg.has("server." + serverId)
+    # serverUpdate = instanceUpdatedArg["server"]
+    # assert serverUpdate.getAttribute(serverId, "type") == "server"
+    # klasses = serverUpdate.getAttribute(serverId, "deviceClasses")
+    # assert "PropertyTest" in klasses
 
     # Test getSystemTopology ...
     topology = c.getSystemTopology()
