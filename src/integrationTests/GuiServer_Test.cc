@@ -1400,7 +1400,7 @@ void GuiServer_Test::testMissingTokenOnLogin() {
     messageQ->pop(lastMessage);
     const std::string& message = lastMessage.get<std::string>("message");
     CPPUNIT_ASSERT_MESSAGE(
-          "Expected notification message that GuiServer proceeds in readOnly mode'. Got '" + message + "'",
+          "Expected notification message that GuiServer requires authentication'. Got '" + message + "'",
           message.find("requires authenticated logins") != std::string::npos);
 
     int timeout = 1500;
@@ -1412,9 +1412,9 @@ void GuiServer_Test::testMissingTokenOnLogin() {
 
     resetTcpConnection();
 
-    // From version 2.20.0 or higher a missing one time token is interpreted as the login for a
-    // a read-only session with no user authentication involved.
-    Hash loginReadOnlySession("type", "login", "clientId", "bobHost(pid 10264)", "version", "2.20.0");
+    // From version 2.20.0 (or a development version of 2.20.0) a missing one time token is interpreted as the login for
+    // a a read-only session with no user authentication involved.
+    Hash loginReadOnlySession("type", "login", "clientId", "bobHost(pid 10264)", "version", "2.20.0rc2");
 
     messageQ = m_tcpAdapter->getNextMessages("loginInformation", 1,
                                              [&] { m_tcpAdapter->sendMessage(loginReadOnlySession); });
