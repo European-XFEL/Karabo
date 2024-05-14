@@ -206,13 +206,23 @@ def startkarabo():
 def stopkarabo():
     """karabo-stop - stop Karabo device servers
 
-      karabo-stop [-h|--help] device-server*
+      karabo-stop [-h|--help] [-a|--all] [deviceserver1 [deviceserver2 [...]]]
 
-    stops the given device servers. If no device server is given, all
-    device servers are stopped. Nothing happens for an already stopped
-    device server.
+    stops the given device servers.
+    If the -a or --all flag is given, all device servers are stopped.
+    Nothing happens for an already stopped device server.
     """
-    exec_defaultall("svc", "-d")
+    assert len(sys.argv) > 1
+
+    # Validate arguments that are not flags
+    has_args = any(s for s in sys.argv if s in defaultall())
+    # Check for force flag
+    has_force_flag = "-a" in sys.argv or "--all" in sys.argv
+
+    if has_force_flag or has_args:
+        exec_defaultall("svc", "-d")
+    else:
+        print("Not a valid server or argument")
 
 
 @entrypoint
