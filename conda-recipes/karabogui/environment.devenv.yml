@@ -60,6 +60,8 @@ dependencies:
   - libmamba=1.5.8
   - pyyaml=6.0.1
   - pint=0.21
+  - pysocks=1.7.1 # [win]
+  - libcurl=8.7.1=hd5e4a3a_0 # [win]
 
 environment:
   PYTHONPATH:
