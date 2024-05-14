@@ -92,15 +92,6 @@ namespace karabo {
                   .init()
                   .commit();
 
-            BOOL_ELEMENT(expected)
-                  .key("allowRememberLogin")
-                  .displayedName("Remember User Login")
-                  .description("Should connecting GUI clients allow users to choose \"Remember Login\"?")
-                  .assignmentOptional()
-                  .defaultValue(true)
-                  .init()
-                  .commit();
-
             UINT32_ELEMENT(expected)
                   .key("maxTemporarySessionTime")
                   .displayedName("Max. Temporary Session Time")
@@ -638,9 +629,6 @@ namespace karabo {
                 systemInfo.set("readOnly", m_isReadOnly);
                 systemInfo.set("version", version);
                 systemInfo.set("authServer", authServer);
-                if (!authServer.empty()) {
-                    systemInfo.set("allowRememberLogin", get<bool>("allowRememberLogin"));
-                }
 
                 channel->writeAsync(systemInfo);
 
@@ -743,16 +731,20 @@ namespace karabo {
                     }
                     registerConnect(clientVersion, channel, authResult.userId, oneTimeToken);
 
-                    // For read-only servers, the access level is always OBSERVER.
+                    // A session whose user is an OBSERVER is considered a
+                    // a read-only session.
+                    const bool readOnly = (level == Schema::AccessLevel::OBSERVER);
+
                     Hash h("type", "loginInformation");
                     h.set("accessLevel", static_cast<int>(level));
                     h.set("username", authResult.userId);
-                    // An authorization based on a one time token doesn't originate
-                    // a read-only session.
-                    h.set("readOnly", false);
+                    h.set("readOnly", readOnly);
                     safeClientWrite(channel, h);
 
                     sendSystemTopology(weakChannel);
+
+                    channel->readAsyncHash(
+                          bind_weak(&karabo::devices::GuiServerDevice::onRead, this, _1, weakChannel, _2, readOnly));
                 }
             }
         }
@@ -961,29 +953,37 @@ namespace karabo {
                 auto weakChannel = WeakChannelPointer(channel);
                 // Since version 2.16.0 the GUI Client sends the user that is running its process in the
                 // "clientUserId" path. If that is not set, we fallback to the clientId.
-                const string& clientUserId = hash.has("clientUserId") ? hash.get<string>("clientUserId") : clientId;
+                const string& clientUserId = (hash.has("clientUserId") ? hash.get<string>("clientUserId") : clientId);
 
                 if (userAuthActive) {
                     // GUI Server is in authenticated mode
                     if (hash.has("oneTimeToken")) {
                         // A one time token was sent - has to validate and authorize it.
-                        KARABO_LOG_FRAMEWORK_DEBUG << "One-time token to be validated/authorized: "
-                                                   << hash.get<string>("oneTimeToken");
-
                         const std::string oneTimeToken = hash.get<string>("oneTimeToken");
                         m_authClient.authorizeOneTimeToken(
                               oneTimeToken, m_topic,
                               bind_weak(&karabo::devices::GuiServerDevice::onTokenAuthorizeResult, this, weakChannel,
                                         clientId, clientVersion, oneTimeToken, _1));
-
+                        KARABO_LOG_FRAMEWORK_INFO << "Authenticated login request from client_id: " << clientId
+                                                  << " (version " << cliVersion
+                                                  << "). oneTimeToken to be authorized: " << oneTimeToken;
+                        // The GUI client at this point will keep waiting for the authorization result or an error.
+                        // As the client is not supposed to send any other message to the GUI Server in the meantime,
+                        // we return without triggering the next read for the channel. This triggering will be done
+                        // by onTokenAuthorizeResult.
+                        return;
                     } else {
                         // For versions of the GUI Client prior to 2.20.0 a login message with no OneTimeToken is
-                        // considered an error by an authenticated GUI Server.
-                        if (clientVersion < Version("2.20.0")) {
+                        // considered an error by an authenticated GUI Server. 2.20.0rc2 is used as a reference to
+                        // allow development versions of 2.20.0, to be also accepted.
+                        if (clientVersion < Version("2.20.0rc2")) {
                             const string message = "GUI server at '" + get<string>("hostName") + ":" +
                                                    toString(get<unsigned int>("port")) +
                                                    "' requires authenticated logins.";
                             sendLoginErrorAndDisconnect(channel, clientId, cliVersion, message);
+                            KARABO_LOG_FRAMEWORK_INFO
+                                  << "Rejected login with missing oneTimeToken from client_id: " << clientId
+                                  << "(version " << cliVersion << ").";
                             return;
                         }
                         // From version 2.20.0 of the GUI Client, a login message with no OneTimeToken is interpreted as
@@ -997,23 +997,21 @@ namespace karabo {
                         h.set("readOnly", true);
                         safeClientWrite(channel, h);
                         sendSystemTopology(weakChannel);
+                        KARABO_LOG_FRAMEWORK_INFO << "Login with missing oneTimeToken from client_id '" << clientId
+                                                  << "' version '" << cliVersion << "' accepted as a readOnly session.";
                     }
                 } // if (userAuthActive)
                 else {
                     // No authentication involved
                     registerConnect(clientVersion, channel, clientUserId);
                     sendSystemTopology(weakChannel);
+                    KARABO_LOG_FRAMEWORK_INFO << "Login request from client_id: " << clientId << " (version "
+                                              << cliVersion << ") with no authentication.";
                 }
-
-                std::stringstream extraInfo;
-                if (hash.has("info")) {
-                    extraInfo << "\nDetails: " << hash.get<Hash>("info");
-                }
-                KARABO_LOG_FRAMEWORK_INFO << "Login request of client_id: " << clientId << " (version " << cliVersion
-                                          << ")." << extraInfo.str();
 
                 channel->readAsyncHash(
                       bind_weak(&karabo::devices::GuiServerDevice::onRead, this, _1, weakChannel, _2, readOnly));
+
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onLogin(): " << e.what();
             }
