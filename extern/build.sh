@@ -119,6 +119,9 @@ install_python() {
     # install packages listed in the extern/conanfile-bootstrap.txt
     safeRunCommandQuiet "conan install conanfile-bootstrap.txt $folder_opts $build_opts $profile_opts"
 
+    # ensure that python can always find its libpython.so
+    safeRunCommand "$INSTALL_PREFIX/bin/patchelf --force-rpath --set-rpath '\$ORIGIN/../lib' $INSTALL_PREFIX/bin/python3.11"
+
     # use pip in INSTALL_PREFIX by calling python3 -m pip <args>
     local pip_install_cmd="$INSTALL_PREFIX/bin/python3 -m pip install"
 
