@@ -39,7 +39,7 @@ Now you can start the Karabo installation by typing::
 
 and stop it with::
 
-  karabo-stop
+  karabo-stop --all
 
 If you succeeded up to now you are ready to start additional servers, develop
 you own device plugins etc.
