@@ -201,8 +201,6 @@ class Configuration(QObject):
 
     refresh_token_user = SharedItem(default=None, group=AUTHENTICATION)
     refresh_token = SharedItem(default=None, group=AUTHENTICATION)
-    remember_me = SharedItem(default=False, dtype=bool,
-                             group=AUTHENTICATION)
 
     def __new__(cls, *args, **kwargs):
         instance = super().__new__(cls, *args, **kwargs)
