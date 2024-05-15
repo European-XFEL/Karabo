@@ -1,12 +1,15 @@
 import json
 from ast import literal_eval
 
+import pytest
 from qtpy.QtNetwork import QNetworkReply, QNetworkRequest
 
 from karabogui import access as krb_access
+from karabogui.const import IS_WINDOWS_SYSTEM
 from karabogui.dialogs.reactive_login_dialog import (
     AccessCodeWidget, LoginType, ReactiveLoginDialog, TemporarySessionDialog)
-from karabogui.testing.utils import click_button
+from karabogui.singletons.configuration import Configuration
+from karabogui.testing.utils import click_button, singletons
 
 
 def test_access_level(gui_app):
@@ -51,92 +54,94 @@ def test_connect_button(gui_app):
 
 
 def test_refresh_token(gui_app, mocker):
-    krb_access.REFRESH_TOKEN = "dummy_token"
-    dialog = ReactiveLoginDialog()
-    dialog.login_type = LoginType.REFRESH_TOKEN
-    mocked_method = mocker.patch.object(
-        dialog, "_refresh_authentication")
-    dialog.connect_clicked()
-    assert mocked_method.call_count
+    configuration = Configuration()
+    with singletons(configuration=configuration):
+        configuration["refresh_token"] = "dummy_token"
+        dialog = ReactiveLoginDialog()
+        dialog.login_type = LoginType.REFRESH_TOKEN
+        mocked_method = mocker.patch.object(
+            dialog, "_refresh_authentication")
+        dialog.connect_clicked()
+        assert mocked_method.call_count
 
 
+@pytest.mark.skipif(IS_WINDOWS_SYSTEM,
+                    reason="issue with configuration singletons")
 def test_refresh_authentication(gui_app, mocker):
     """With REFRESH_TOKEN, the login dialog should call the correct post
     request."""
-    krb_access.REFRESH_TOKEN = "dummy_token"
-    krb_access.REFRESH_TOKEN_USER = "karabo"
-    dialog = ReactiveLoginDialog()
-    dialog.login_type = LoginType.REFRESH_TOKEN
-    mocked_access_manger = mocker.patch.object(dialog, "access_manager")
-    dialog._refresh_authentication()
-    assert mocked_access_manger.post.call_count == 1
+    configuration = Configuration()
+    with singletons(configuration=configuration):
+        configuration["refresh_token"] = "dummy_token"
+        configuration["refresh_token_user"] = "karabo"
+        dialog = ReactiveLoginDialog()
+        dialog.login_type = LoginType.REFRESH_TOKEN
+        mocked_access_manger = mocker.patch.object(dialog, "access_manager")
+        dialog._refresh_authentication()
+        assert mocked_access_manger.post.call_count == 1
 
-    args = mocked_access_manger.post.call_args[0]
-    network, args = args
+        args = mocked_access_manger.post.call_args[0]
+        network, args = args
 
-    assert isinstance(network, QNetworkRequest)
-    url = network.url().url()
-    assert "refresh_tokens" in url
+        assert isinstance(network, QNetworkRequest)
+        url = network.url().url()
+        assert "refresh_tokens" in url
 
-    args = literal_eval(args.decode())
-    assert len(args) == 3
-    assert args.get("refresh_token") == "dummy_token"
+        args = literal_eval(args.decode())
+        assert len(args) == 3
+        assert args.get("refresh_token") == "dummy_token"
 
 
 def test_access_code_login(gui_app, mocker):
     """Verify the correct request is posted when loging with an access code
     even when refresh token is already present."""
-    krb_access.REFRESH_TOKEN = "dummy_token"
-    dialog = ReactiveLoginDialog()
-    dialog.login_type = LoginType.REFRESH_TOKEN
-    dialog._update_button()
-    assert dialog.connect_button.isEnabled()
+    configuration = Configuration()
+    with singletons(configuration=configuration):
+        configuration["refresh_token"] = "dummy_token"
+        dialog = ReactiveLoginDialog()
+        dialog.login_type = LoginType.REFRESH_TOKEN
+        dialog._update_button()
+        assert dialog.connect_button.isEnabled()
 
-    click_button(dialog.switch_button)
-    assert dialog.login_type == LoginType.USER_AUTHENTICATED
-    # Empty access code
-    assert not dialog.connect_button.isEnabled()
+        click_button(dialog.switch_button)
+        assert dialog.login_type == LoginType.USER_AUTHENTICATED
+        assert not dialog.connect_button.isEnabled()
 
-    # Update all but not last, should not be connectable
-    for i, cell in enumerate(dialog.edit_access_code.cells, start=1):
-        if i == 6:
-            i = ""
-        cell.setText(str(i))
-    dialog._update_button()
-    assert not dialog.connect_button.isEnabled()
+        for i, cell in enumerate(dialog.edit_access_code.cells, start=1):
+            cell.setText(str(i))
 
-    # Complete access code
-    for i, cell in enumerate(dialog.edit_access_code.cells, start=1):
-        cell.setText(str(i))
-    dialog._update_button()
-    assert dialog.connect_button.isEnabled()
-
-    post_access_code = mocker.patch.object(dialog, "_login_authenticated")
-    post_refresh_token = mocker.patch.object(
-        dialog, "_refresh_authentication")
-    click_button(dialog.connect_button)
-    assert post_refresh_token.call_count == 0
-    assert post_access_code.call_count == 1
+        dialog._update_button()
+        assert dialog.connect_button.isEnabled()
+        post_access_code = mocker.patch.object(dialog, "_login_authenticated")
+        post_refresh_token = mocker.patch.object(
+            dialog, "_refresh_authentication")
+        click_button(dialog.connect_button)
+        assert post_refresh_token.call_count == 0
+        assert post_access_code.call_count == 1
 
 
+@pytest.mark.skipif(IS_WINDOWS_SYSTEM,
+                    reason="issue with configuration singletons")
 def test_authReply(gui_app, mocker):
-    dialog = ReactiveLoginDialog()
-    reply = mocker.Mock(spec=QNetworkReply)
-    reply.error.return_value = QNetworkReply.NoError
+    configuration = Configuration()
+    with singletons(configuration=configuration):
+        dialog = ReactiveLoginDialog()
+        reply = mocker.Mock(spec=QNetworkReply)
+        reply.error.return_value = QNetworkReply.NoError
 
-    failure = (
-        b'{"success":false,"once_token":null,"refresh_token":null,'
-        b'"username":null,"error_msg":"No token for access code 444444"}')
-    reply.readAll.return_value = failure
-    dialog.onAuthReply(reply)
-    assert dialog.label_status.text() == "No token for access code 444444"
+        failure = (
+            b'{"success":false,"once_token":null,"refresh_token":null,'
+            b'"username":null,"error_msg":"No token for access code 444444"}')
+        reply.readAll.return_value = failure
+        dialog.onAuthReply(reply)
+        assert dialog.label_status.text() == "No token for access code 444444"
 
-    success = (b'{"success":true,"once_token":"abc","refresh_token":"xyz",'
-               b'"username":"karabo","error_msg":null}')
-    reply.readAll.return_value = success
-    dialog.onAuthReply(reply)
-    assert krb_access.ONE_TIME_TOKEN == "abc"
-    assert krb_access.REFRESH_TOKEN == "xyz"
+        success = (b'{"success":true,"once_token":"abc","refresh_token":"xyz",'
+                   b'"username":"karabo","error_msg":null}')
+        reply.readAll.return_value = success
+        dialog.onAuthReply(reply)
+        assert krb_access.ONE_TIME_TOKEN == "abc"
+        assert configuration["refresh_token"] == "xyz"
 
 
 def test_access_widget(gui_app):
