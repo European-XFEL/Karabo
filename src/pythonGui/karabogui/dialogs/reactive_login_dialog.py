@@ -35,7 +35,7 @@ from qtpy.QtWidgets import (
 from karabo.native import decodeBinary
 from karabogui import access as krb_access
 from karabogui.const import CLIENT_HOST
-from karabogui.singletons.api import get_network
+from karabogui.singletons.api import get_config, get_network
 from karabogui.util import SignalBlocker
 from karabogui.validators import IntValidator
 
@@ -305,7 +305,7 @@ class ReactiveLoginDialog(QDialog):
         elif (server_info.has("authServer") and
               bool(server_info["authServer"])):
             self.login_type = LoginType.USER_AUTHENTICATED
-            if krb_access.REFRESH_TOKEN is not None:
+            if get_config()["refresh_token"] is not None:
                 self.login_type = LoginType.REFRESH_TOKEN
             self._auth_url = server_info["authServer"]
             if not self._auth_url.endswith("/"):
@@ -340,10 +340,11 @@ class ReactiveLoginDialog(QDialog):
         if error == QNetworkReply.NoError and auth_result["success"]:
             krb_access.ONE_TIME_TOKEN = auth_result["once_token"]
             refresh_token = auth_result.get("refresh_token")
-            krb_access.REFRESH_TOKEN = refresh_token
-            krb_access.REFRESH_TOKEN_USER = None
+            refresh_token_user = None
             if refresh_token is not None:
-                krb_access.REFRESH_TOKEN_USER = auth_result.get("username")
+                refresh_token_user = auth_result.get("username")
+            get_config()["refresh_token"] = refresh_token
+            get_config()["refresh_token_user"] = refresh_token_user
             self.accept()
         else:
             self._error = auth_result.get("error_msg")
@@ -375,7 +376,8 @@ class ReactiveLoginDialog(QDialog):
         self._update_button()
 
         if self.login_type is LoginType.REFRESH_TOKEN:
-            text = USER_INFO.format(username=krb_access.REFRESH_TOKEN_USER)
+            text = USER_INFO.format(
+                username=get_config()["refresh_token_user"])
             self.user_info_label.setText(text)
 
     def _update_button(self):
@@ -430,8 +432,8 @@ class ReactiveLoginDialog(QDialog):
         self._update_dialog_state()
 
         info = json.dumps({
-            "refresh_token": krb_access.REFRESH_TOKEN,
-            "username": krb_access.REFRESH_TOKEN_USER,
+            "refresh_token": get_config()["refresh_token"],
+            "username": get_config()["refresh_token_user"],
             "client_hostname": CLIENT_HOST,
         })
         info = bytearray(info.encode("utf-8"))
