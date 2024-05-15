@@ -92,6 +92,8 @@ class Item:
 
 
 class SharedItem(Item):
+    """A SharedItem in the Configuration is by default storing into QSettings
+    """
     def __init__(self, default: Any = None,
                  group: str | None = None,
                  editable: bool = False,
