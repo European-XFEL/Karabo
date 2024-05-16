@@ -40,13 +40,14 @@ namespace karabo {
             enum class Error {
 
                 drop = 0, /// messages have been dropped
-                type,     /// message of wrong type (i.e. non binary format) received and dropped
-                unknown   /// status reported by openmqc that is not specially treated
+                type,     /// message of wrong type (i.e. non binary format, serialisation failure, ...) received and
+                          /// dropped
+                unknown   /// status reported is not specially treated or unknown
             };
+            // TODO: Why not 'const karabo::util::Hash::Pointer&'?
+            using MessageHandler = boost::function<void(karabo::util::Hash::Pointer, karabo::util::Hash::Pointer)>;
 
-            typedef boost::function<void(karabo::util::Hash::Pointer, karabo::util::Hash::Pointer)> MessageHandler;
-
-            typedef boost::function<void(Error, const std::string& description)> ErrorNotifier;
+            using ErrorNotifier = boost::function<void(Error, const std::string& description)>;
         } // namespace consumer
 
 
