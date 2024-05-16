@@ -26,9 +26,10 @@ from karabo.bound import (
 from karabo.bound_tool import use_karathon
 
 # Enable logs for debugging - does not matter which bindings are used:
-# config = karabind.Hash("priority", "DEBUG")
-# karabind.Logger.configure(config)
-# karabind.Logger.useOstream()
+# from karabo.bound import Logger
+# config = Hash("priority", "DEBUG")
+# Logger.configure(config)
+# Logger.useOstream()
 
 
 def createConnectedInput(InputClass,
@@ -468,7 +469,7 @@ def test_pipeline_one_to_shared():
                 assert 'output:out' in entry['source']
                 assert entry['timestamp'] is True
                 ts = Timestamp.fromHashAttributes(
-                        entry.getAttributes('timestamp'))
+                    entry.getAttributes('timestamp'))
                 assert isinstance(ts, Timestamp)
 
         if isinstance(m, VectorHash):
@@ -648,7 +649,7 @@ def test_pipeline_input_channel():
     while trials > 0:
         trials -= 1
         registered = out.hasRegisteredCopyInputChannel(
-                inputChannel.getInstanceId())
+            inputChannel.getInstanceId())
         if registered:
             break
         time.sleep(0.001)

@@ -29,7 +29,9 @@
 
 #include <map>
 #include <mutex>
+#include <queue>
 #include <string>
+#include <unordered_map>
 #include <utility> // for std::pair
 #include <vector>
 
@@ -52,6 +54,10 @@ namespace karabo::net {
      * To actually receive messages via the handlers specified in the constructor, the client has to subscribe to
      * exchanges, potentially with routing keys to select messages on the broker side.
      *
+     * @note:
+     * This client does not know about Karabo "domains" (a.k.a. "topics"), i.e. exchanges and queues created are
+     * "shared" among all clients connected to the same broker.
+     *
      */
     class AmqpClient2 : public boost::enable_shared_from_this<AmqpClient2> {
        public:
@@ -59,8 +65,10 @@ namespace karabo::net {
 
         /** Channel status tells what should be the next step to do in channel preparation */
         enum class ChannelStatus { REQUEST, CREATE, CREATE_QUEUE, CREATE_CONSUMER, READY };
+        /** Exchange status tells about the status of a known exchange */
+        enum class ExchangeStatus { DECLARING, READY };
         /** Subscription status tells in which status a registered subscription currently is */
-        enum class SubscriptionStatus { PENDING, DECLARE_EXCHANGE, BIND_QUEUE, READY, UNBIND_QUEUE };
+        enum class SubscriptionStatus { PENDING, CHECK_EXCHANGE, DECLARE_EXCHANGE, BIND_QUEUE, READY, UNBIND_QUEUE };
 
         // Handler to receive raw data
         using ReadHandler = std::function<void(const std::shared_ptr<std::vector<char>>& data,
@@ -153,6 +161,17 @@ namespace karabo::net {
 
         void moveSubscriptionState(const std::string& exchange, const std::string& routingKey);
 
+        /**
+         * Helper to publish, must run in io context and only when channel is READY
+         */
+        void doPublish(const std::string& exchange, const std::string& routingKey,
+                       const std::shared_ptr<std::vector<char>>& data, const AsyncHandler& onPublishDone);
+
+        /**
+         * Helper to publish postponed messages until first found with an exchange that is not yet declared
+         */
+        void publishPostponedIfExchange();
+
         AmqpConnection::Pointer m_connection;
         const std::string m_instanceId;
         std::string m_queue; // may differ from id since queue needs to be unique
@@ -185,7 +204,10 @@ namespace karabo::net {
             std::shared_ptr<std::vector<char>> data;
             AsyncHandler onPublishDone;
         };
-        std::vector<PostponedMessage> m_postponedPubMessages;
+        /// Messages postponed since channel not yet ready or exchange not yet declared
+        std::queue<PostponedMessage> m_postponedPubMessages;
+
+        std::unordered_map<std::string, ExchangeStatus> m_exchanges; // known exchanges and their status
 
     }; // AmqpClient2
 

@@ -20,19 +20,25 @@
  * Author: Sergey Esenov serguei.essenov@xfel.eu
  *
  * Created on May 18, 2021, 1:20 PM
+
+ * Refactored by gero.flucke@xfel.eu in May 2024
  */
 
 #ifndef KARABO_NET_AMQPBROKER_HH
 #define KARABO_NET_AMQPBROKER_HH
 
-#include <unordered_set>
+#include <amqpcpp/table.h>
 
-#include "karabo/net/AmqpClient.hh"
-#include "karabo/net/Broker.hh"
-#include "karabo/net/Strand.hh"
+#include "AmqpHashClient.hh"
+#include "Broker.hh"
+#include "Strand.hh"
 
 
 namespace karabo {
+    namespace util {
+        class Hash;
+        class Schema;
+    } // namespace util
     namespace net {
 
 
@@ -59,8 +65,8 @@ namespace karabo {
              *
              *  Calls, commands, requests, replies are sent to
              *  ----------------------------------
-             *  exchange    = <domain>.slots.<slotInstanceId>
-             *  routing_key = ""
+             *  exchange    = <domain>.slots
+             *  routing_key = <slotInstanceId>
              *  queue       = <m_instanceId>              <-- common queue
              *
              *  all requests/calls/replies to the device send to this exchange
@@ -92,7 +98,7 @@ namespace karabo {
              */
 
            public:
-            KARABO_CLASSINFO(AmqpBroker, "amqp", "1.0")
+            KARABO_CLASSINFO(AmqpBroker, "amqp", "2.0")
 
             static void expectedParameters(karabo::util::Schema& s);
 
@@ -135,7 +141,7 @@ namespace karabo {
             /**
              * AMQP subscription:
              * subscribe to the following exchanges...
-             *   "m_domain.slots.m_instanceId"
+             *   "m_domain.slots" with routingKey m_instanceId
              *   "m_domain.global_slots"
              *
              * @param handler       - success handler
@@ -160,30 +166,40 @@ namespace karabo {
                   const consumer::MessageHandler& handler,
                   const consumer::ErrorNotifier& errorNotifier = consumer::ErrorNotifier()) override;
 
+            /**
+             * Write message to broker, blocks until written
+             *
+             * @param topic Either the "domain" as passed to the Broker base class,
+             *              the "domain" with the suffix "_beats", or "karaboGuiDebug"
+             * @param header of the message - must contain
+             * @param body of the message
+             * @param priority unused (needed by JmsBroker)
+             * @param timeToLive unused (needed by JmsBroker)
+             */
             void write(const std::string& topic, const karabo::util::Hash::Pointer& header,
-                       const karabo::util::Hash::Pointer& body, const int priority = 4,
-                       const int timeToLive = 0) override;
-
-           protected:
-            virtual void publish(const std::string& exchange, const std::string& routingkey,
-                                 const karabo::util::Hash::Pointer& msg);
+                       const karabo::util::Hash::Pointer& body, const int /*priority*/ = 4,
+                       const int /*timeToLive*/ = 0) override;
 
            private:
             AmqpBroker(const AmqpBroker& o) = delete;
             AmqpBroker(const AmqpBroker& o, const std::string& newInstanceId);
 
-            void amqpReadHashHandler(const boost::system::error_code& ec, const karabo::util::Hash::Pointer& msg,
-                                     const consumer::MessageHandler& handler,
-                                     const consumer::ErrorNotifier& errorNotifier);
+            void amqpReadHandler(const util::Hash::Pointer& header, const util::Hash::Pointer& body);
+            void amqpReadHandlerBeats(const util::Hash::Pointer& header, const util::Hash::Pointer& body);
+            void amqpErrorNotifier(const std::string& msg);
+            void amqpErrorNotifierBeats(const std::string& msg);
 
-           protected:
-            // "main" producer/consumer client
-            karabo::net::AmqpClient::Pointer m_client;
-            // optional consumers ...
-            karabo::net::AmqpClient::Pointer m_heartbeatClient;
+            karabo::net::AmqpConnection::Pointer m_connection;
 
-           private:
+            karabo::net::AmqpHashClient::Pointer m_client;
             karabo::net::Strand::Pointer m_handlerStrand;
+            karabo::net::consumer::MessageHandler m_readHandler;
+            karabo::net::consumer::ErrorNotifier m_errorNotifier;
+
+            karabo::net::AmqpHashClient::Pointer m_heartbeatClient;
+            karabo::net::Strand::Pointer m_handlerStrandBeats;
+            karabo::net::consumer::MessageHandler m_readHandlerBeats;
+            karabo::net::consumer::ErrorNotifier m_errorNotifierBeats;
         };
 
     } // namespace net
