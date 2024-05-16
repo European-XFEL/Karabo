@@ -75,7 +75,7 @@ void DeviceClient_Test::setUp() {
     // setenv("KARABO_BROKER", "tcp://localhost:7777", true);
     // Event loop is started in coreTestRunner.cc's main()
 
-    const Hash config("serverId", "testServerDeviceClient", "scanPlugins", false, "Logger.priority", "FATAL");
+    const Hash config("serverId", "testServerDeviceClient", "Logger.priority", "FATAL");
     m_deviceServer = DeviceServer::create("DeviceServer", config);
     m_deviceServer->finalizeInternalInitialization();
 
@@ -107,6 +107,7 @@ void DeviceClient_Test::testAll() {
 
 
 void DeviceClient_Test::testConcurrentInitTopology() {
+    std::clog << "testConcurrentInitTopology:" << std::flush;
     std::pair<bool, std::string> success = m_deviceClient->instantiate(
           "testServerDeviceClient", "PropertyTest", Hash("deviceId", "TestedDevice"), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
@@ -166,10 +167,12 @@ void DeviceClient_Test::testConcurrentInitTopology() {
 
     success = m_deviceClient->killDevice("TestedDevice", KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    std::clog << " OK" << std::endl;
 }
 
 
 void DeviceClient_Test::testGet() {
+    std::clog << "testGet:" << std::flush;
     std::pair<bool, std::string> success = m_deviceClient->instantiate(
           "testServerDeviceClient", "PropertyTest", Hash("deviceId", "TestedDevice"), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
@@ -209,16 +212,19 @@ void DeviceClient_Test::testGet() {
     // No shutdown - done in following testSet
     //    success = m_deviceClient->killDevice("TestedDevice", KRB_TEST_MAX_TIMEOUT);
     //    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    std::clog << " OK" << std::endl;
 }
 
 
 void DeviceClient_Test::testSet() {
+    std::clog << "testGet:" << std::flush;
     // CPPUNIT_ASSERT_EQUAL(true, m_deviceClient->get<bool>("TestedDevice", "archive"));
     // Cannot reconfigure non-reconfigurable parameters - here caught already by client
     CPPUNIT_ASSERT_THROW(m_deviceClient->set("TestedDevice", "archive", false), karabo::util::ParameterException);
 
     std::pair<bool, std::string> success = m_deviceClient->killDevice("TestedDevice", KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    std::clog << " OK" << std::endl;
 }
 
 void DeviceClient_Test::testProperServerSignalsSent() {
@@ -253,6 +259,7 @@ void DeviceClient_Test::testProperServerSignalsSent() {
 }
 
 void DeviceClient_Test::testMonitorChannel() {
+    std::clog << "testMonitorChannel:" << std::flush;
     std::pair<bool, std::string> success = m_deviceClient->instantiate(
           "testServerDeviceClient", "PropertyTest", Hash("deviceId", "TestedDevice2"), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
@@ -416,10 +423,12 @@ void DeviceClient_Test::testMonitorChannel() {
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
     success = m_deviceClient->killDevice("TestedDevice3", KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    std::clog << " OK" << std::endl;
 }
 
 
 void DeviceClient_Test::testGetSchema() {
+    std::clog << "testGetSchema:" << std::flush;
     // NOTE:
     // The deviceId needs to be another one than in the other tests, otherwise the test might succeed
     // even if the DeviceClient does not trigger to connect to schema updates: The registration that is
@@ -446,11 +455,13 @@ void DeviceClient_Test::testGetSchema() {
     // Final clean-up
     success = m_deviceClient->killDevice("TestedDevice3", KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
+    std::clog << " OK" << std::endl;
 }
 
 
 void DeviceClient_Test::testCurrentlyExecutableCommands() {
-    // std::cout << "Im alive!" << std::endl;
+    std::clog << "testCurrentlyExecutableCommands:" << std::flush;
     std::pair<bool, std::string> success = m_deviceClient->instantiate(
           "testServerDeviceClient", "PropertyTest", Hash("deviceId", "TestedDevice3_5"), KRB_TEST_MAX_TIMEOUT);
 
@@ -465,10 +476,13 @@ void DeviceClient_Test::testCurrentlyExecutableCommands() {
     // Final clean-up
     success = m_deviceClient->killDevice("TestedDevice3_5", KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
+    std::clog << " OK" << std::endl;
 }
 
 
 void DeviceClient_Test::testSlotsWithArgs() {
+    std::clog << "testSlotsWithArgs:" << std::flush;
     const std::string deviceId{"ArgSlotPropTest"};
 
     // Register slots with args dynamically in a SignalSlotable instance used
@@ -558,10 +572,13 @@ void DeviceClient_Test::testSlotsWithArgs() {
     CPPUNIT_ASSERT_EQUAL(std::string{"Four"}, std::get<1>(locRes));
     CPPUNIT_ASSERT_EQUAL(std::string{"Vier"}, std::get<2>(locRes));
     CPPUNIT_ASSERT_EQUAL(std::string{"IV"}, std::get<3>(locRes));
+
+    std::clog << " OK" << std::endl;
 }
 
 
 void DeviceClient_Test::testGetSchemaNoWait() {
+    std::clog << "testGetSchemaNoWait: " << std::flush;
     // NOTE: Better use new id, see comment in testGetSchema.
     const std::string deviceId("TestedDevice4");
     std::pair<bool, std::string> success = m_deviceClient->instantiate(
@@ -615,10 +632,13 @@ void DeviceClient_Test::testGetSchemaNoWait() {
     // Final clean-up
     success = m_deviceClient->killDevice(deviceId, KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
+    std::clog << " OK" << std::endl;
 }
 
 
 void DeviceClient_Test::testConnectionHandling() {
+    std::clog << "testConnectionHandling:" << std::flush;
     const std::string serverId("testServerDeviceClient");
     const std::string devId("TestedDevice");
     std::pair<bool, std::string> success =
@@ -713,4 +733,6 @@ void DeviceClient_Test::testConnectionHandling() {
     config.getPaths(paths);
     assertIgnoringOrder(allPaths, paths, "killedZombie");
     CPPUNIT_ASSERT_EQUAL(-64000000, config.get<int>("int32Property"));
+
+    std::clog << " OK" << std::endl;
 }

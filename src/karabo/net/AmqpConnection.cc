@@ -118,6 +118,28 @@ namespace karabo {
             return connectedFut.get();
         }
 
+        std::string AmqpConnection::connectionInfo() const {
+            // For concurrency reasons detour via io context
+            std::promise<std::string> resultDone;
+            auto resultFut = resultDone.get_future();
+            dispatch([this, &resultDone]() {
+                std::ostringstream str;
+                str << "AMQP::Connection is ";
+                if (m_connection) {
+                    str << (m_connection->usable() ? "" : "not ") << "usable, " // can send further messages
+                        << (m_connection->ready() ? "" : "not ") << "ready, " // passed login handshake, not yet closed
+                        << (m_connection->initialized() ? "" : "not ")
+                        << "initialized, " // passed login handshake (maybe closing/closed)
+                        << (m_connection->closed() ? "" : "not ") << "closed and has " // full tcp closed
+                        << m_connection->channels() << " channels.";
+                } else {
+                    str << "not yet created!";
+                }
+                resultDone.set_value(str.str());
+            });
+            return resultFut.get();
+        }
+
         void AmqpConnection::asyncConnect(AsyncHandler&& onComplete) {
             // Jump to the internal thread (if not yet in it)
             dispatch([weakThis{weak_from_this()}, onComplete{std::move(onComplete)}]() {
@@ -341,6 +363,7 @@ namespace karabo {
             }
             // Create channel: Since it takes a raw pointer to the connection, we use a deleter that takes care that the
             //                 connection outlives the channel.
+            // TODO: Can throw if too many channels!
             std::shared_ptr<AMQP::Channel> channelPtr(new AMQP::TcpChannel(m_connection.get()),
                                                       [connection{m_connection}](AMQP::Channel* p) mutable {
                                                           delete p;
