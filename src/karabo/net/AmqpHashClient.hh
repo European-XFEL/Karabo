@@ -46,8 +46,9 @@ namespace karabo::net {
        public:
         KARABO_CLASSINFO(AmqpHashClient, "AmqpHashClient", "2.0")
 
-        using HashReadHandler = std::function<void(const util::Hash::Pointer&, const util::Hash::Pointer&)>;
-        using ErrorReadHandler = std::function<void(int, const std::string&)>;
+        // boost::function fits better than std::function to assigning bind_weak results to these handlers in AmqpBroker
+        using HashReadHandler = boost::function<void(const util::Hash::Pointer&, const util::Hash::Pointer&)>;
+        using ErrorReadHandler = boost::function<void(const std::string&)>;
 
         /**
          * Create client with message interface based on Hash for both, header and body
@@ -55,8 +56,8 @@ namespace karabo::net {
          * @param connection the connection, all internal data access will run in its io context
          * @param instanceId the client id - will usually be the name of the queue that will be subscribed
          * @param queueArgs the arguments passed to queue creation
-         * @param readHandler a read handler for all received messages - must be a valid, callable function
-         * @param errorReadHandler a handler called when a received message could not be processed, e.g. due to
+         * @param readHandler a valid read handler for all received messages
+         * @param errorReadHandler a valid handler called when a received message could not be processed, e.g. due to
          *                         serialisation problems
          */
         static Pointer create(AmqpConnection::Pointer connection, std::string instanceId, AMQP::Table queueArgs,
