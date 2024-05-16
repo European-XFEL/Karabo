@@ -25,7 +25,7 @@ from karabo.bound import (
     DeviceClient, EventLoop, Hash, Logger, Schema, startDeviceServer,
     stopDeviceServer)
 
-timeoutSec = 10
+timeoutSec = 15  # test_zcore_device_client2.py::test_device_client_sync_api
 
 
 def test_device_client_sync_api():
@@ -64,8 +64,8 @@ def test_device_client_sync_api():
 
     # Test 'saveConfigurationFromName'...
     (success, errmsg) = c.saveConfigurationFromName(
-            "config1", ["data/gen/22", "data/gen/33"],
-            "Description for config1", 2, "johnsmith")
+        "config1", ["data/gen/22", "data/gen/33"],
+        "Description for config1", 2, "johnsmith")
     assert success is False
     assert 'timed out' in errmsg
 

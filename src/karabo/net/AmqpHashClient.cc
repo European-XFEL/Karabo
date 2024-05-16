@@ -68,7 +68,7 @@ namespace karabo::net {
         // But then we have to make sure (or require?) that this function is not called again until onPublishDone
         // is called (or so)
         auto data = std::make_shared<std::vector<char>>();
-        data->reserve(1024); // TODO: Think about a reasonable on value (normal header and body with few POD keys)
+        data->reserve(1024); // Avoid too many re-allocations: Most messages are several hundred bytes
 
         // Serialize header and body into the raw data container, just one after another
         m_serializer->save2(*header, *data); // header -> data
@@ -94,16 +94,16 @@ namespace karabo::net {
 
             // TODO:
             // The old client had a m_skipFlag here to potentially avoid deserialisation of 'body'.
-            // This is used in the broker message logger.
+            // This is used in the broker rates tool.
             m_serializer->load(*body, data->data() + bytes, data->size() - bytes);
         } catch (const util::Exception& e) {
             const std::string userMsg(e.userFriendlyMsg(false));                       // Do not clear trace yet
             KARABO_LOG_FRAMEWORK_WARN << "Failed to deserialize: " << e.detailedMsg(); // Clears exception trace
-            m_errorReadHandler(1, userMsg);
+            m_errorReadHandler(userMsg);
             return;
         } catch (const std::exception& e) {
             KARABO_LOG_FRAMEWORK_WARN << "Failed to deserialize: " << e.what();
-            m_errorReadHandler(1, e.what());
+            m_errorReadHandler(e.what());
             return;
         }
         // Deserialization succeeded, so call handler
