@@ -84,6 +84,10 @@ namespace karabo::net {
          */
         bool isConnected() const;
 
+        /**
+         * Various info about internal connection (for debug logs)
+         */
+        std::string connectionInfo() const;
 
         /**
          * Asynchronously connect to any of the broker addresses passed to the constructor.
