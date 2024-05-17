@@ -24,7 +24,7 @@ from qtpy.QtWidgets import QPushButton
 from karabo.common.api import walk_traits_object
 from karabo.common.scenemodel.api import SceneModel, SceneTargetWindow
 from karabogui import icons
-from karabogui.access import AccessRole, access_role_allowed
+from karabogui.access import AccessRole, access_role_allowed, is_authenticated
 from karabogui.controllers.util import load_extensions
 from karabogui.events import (
     KaraboEvent, broadcast_event, register_for_broadcasts)
@@ -378,9 +378,12 @@ class PanelWrangler(QObject):
             # Set the tool color according to the defined indicators!
             karabo_topic = get_config()['broker_topic']
             panel.set_toolbar_style(karabo_topic)
-            # Sync the button state with current Temporary session state.
-            icon, tooltip = get_temporary_button_data()
-            panel.setTemporaryButton(icon, tooltip)
+            enabled = is_authenticated()
+            panel.setTemporaryButtonVisible(enabled)
+            if enabled:
+                # Sync the button state with current Temporary session state.
+                icon, tooltip = get_temporary_button_data()
+                panel.setTemporaryButton(icon, tooltip)
 
         # XXX: Only attached and access level dependent scene panels are
         # allowed to have design mode!
