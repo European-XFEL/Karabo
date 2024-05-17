@@ -37,9 +37,9 @@ build:
   number: 0
   entry_points:
     - karabo-gui=karabogui.programs.gui_runner:main
-    - karabo-alarms=karabogui.programs.alarm_runner:main
     - panel-runner=karabogui.programs.panel_runner:main
     - karabo-cinema=karabogui.programs.cinema:main
+    - karabo-concert=karabogui.programs.concert:main,
     - karabo-theatre=karabogui.programs.theatre:main
     - karabo-update-extensions=karabogui.dialogs.update_dialog:main
   # This is needed to avoid removing egg files during packaging with setuptools
@@ -59,10 +59,9 @@ requirements:
   # # Format build
   # cog.outl('build:')
   # required_build_pkgs = {
-  #     'python': '3.6.7',
-  #     'jupyter_client': '5.3.3',
-  #     'setuptools': '42.0.1',
-  #     'setuptools_scm': '3.3.3'}
+  #     'python': '3.12.*',
+  #     'setuptools': '69.0.*',
+  #     'setuptools_scm': '7.0.5'}
   # for dep in dependencies:
   #     name = dep.split('=')[0]
   #     if name in required_build_pkgs:
