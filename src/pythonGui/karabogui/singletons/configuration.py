@@ -133,6 +133,8 @@ class Configuration(QObject):
       this parameter set to True, store their value in a QSetting file and load
       this on the next GUI startup and overwrite an eventual default value.
 
+    - The ``editable`` parameter defines if this item is user editable
+
     - The ``group`` parameter defines an additional string for sorting and
       grabbing the Items for a model view.
 
