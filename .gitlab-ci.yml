@@ -145,7 +145,6 @@ variables:
     - >
       python ci/miniconda/main.py karabogui
       --ci --clean
-      -E karaboEnvironments
       --upload-to-mirror
       -c $KARABO_CONDA_CHANNEL
       -P $KARABO_CONDA_CHANNEL_PATH
@@ -171,7 +170,6 @@ variables:
     - >
       python ci/miniconda/main.py karabogui
       --ci --clean
-      -E karaboEnvironments
       --upload-to-mirror
       -c $KARABO_CONDA_CHANNEL
       -P $KARABO_CONDA_CHANNEL_PATH/nightly
@@ -195,7 +193,6 @@ variables:
     - >
       python ci/miniconda/main.py karabogui
       --ci --clean
-      -E karaboEnvironments
       --upload-to-mirror
       --nightly
       -c $KARABO_CONDA_CHANNEL
@@ -212,7 +209,6 @@ variables:
     - >
       python ci/miniconda/main.py karabogui
       --ci --clean --test
-      -E karaboEnvironments
       --upload-to-mirror
       -c $KARABO_CONDA_CHANNEL
       -P $KARABO_CONDA_CHANNEL_PATH/nightly
