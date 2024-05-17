@@ -1,16 +1,16 @@
 import argparse
-from contextlib import contextmanager
 import os
 import os.path as op
-from platform import system as sys_name
 import shutil
+from contextlib import contextmanager
+from platform import system as sys_name
 from tempfile import gettempdir
 
-from conda.cli.python_api import Commands
-from conda import CondaMultiError
 import yaml
-
+from conda import CondaMultiError
+from conda.cli.python_api import Commands
 from .mirrors import Mirrors
+
 from .utils import (
     chdir, command_run, conda_run, connected_to_remote, get_conda_prefix,
     mkdir)
@@ -86,7 +86,6 @@ class Builder:
         if self.args.ci:
             self.adapt_platform()
 
-
         for recipe in self.recipes:
             # Proceed only if recipe supports testing
             if recipe == KARABOGUI and self.args.test:
@@ -144,7 +143,8 @@ class Builder:
             os.environ['XAUTHORITY'] = XAUTHORITY_PATH
             command_run([
                 'start-stop-daemon', '--start', '-b', '-x', '/usr/bin/Xvfb',
-                '--', XVFB_DISPLAY, '-screen', '0', '1024x768x24', '-extension', 'GLX'])
+                '--', XVFB_DISPLAY, '-screen', '0', '1024x768x24',
+                '-extension', 'GLX'])
 
     def clean(self):
         print("Cleaning conda..")
@@ -448,77 +448,6 @@ class Builder:
             print(line)
 
 
-def append_build_args(parser):
-    parser.add_argument('recipes', type=str, nargs='?', default="")
-
-    parser.add_argument(
-        '--ci', action='store_true',
-        help='Run CI specific configurations')
-
-    parser.add_argument(
-        '-c', '--channel', type=str,
-        help='host of the conda channel mirror')
-
-    parser.add_argument(
-        '-s', '--skip-build', action='store_true',
-        help='Skip building')
-
-    parser.add_argument(
-        '-f', '--clean', action='store_true',
-        help='Clean developement environment')
-
-    parser.add_argument(
-        '-T', '--test', action='store_true',
-        help='Run tests')
-
-    parser.add_argument(
-        '-U', '--upload-to-mirror', action='store_true',
-        help='Upload package and dependencies to mirror')
-
-    parser.add_argument(
-        '-I', '--index-mirror', action='store_true',
-        help='Trigger remote index building')
-
-    parser.add_argument(
-        '-N', '--nightly', action='store_true',
-        help='Check if this is a nightly build')
-
-    parser.add_argument(
-        '-P', '--remote-channel-dir', type=str,
-        default='/data/karabo/channel',
-        help='Directory of the Packages channel on remote host. '
-        'Define this when uploading or repopulating the index')
-
-    parser.add_argument(
-        '-C', '--remote-mirror-dir', type=str,
-        default='/data/karabo/channel/mirror',
-        help='Directory of the mirror channels on remote host. '
-        'Define this when uploading or repopulating the index')
-
-    parser.add_argument(
-        '-D', '--recipes-dir', type=str, default='conda-recipes',
-        help='Base folder for recipes relative to the top level '
-        'directory of the git repository')
-
-    return parser
-
-
-def get_build_args(sub_parser=None, description=None):
-    if sub_parser is not None:
-        # append this module as a sub parser of `parser`
-        parser = sub_parser.add_parser('build',
-                                       help=description)
-        parser.set_defaults(klass=Builder)
-    else:
-        parser = argparse.ArgumentParser(description=description)
-    return append_build_args(parser)
-
-
-def main(args):
-    b = Builder(args)
-    b.run()
-
-
 DESCRIPTION = """
 Conda Recipes Builder
 
@@ -529,7 +458,58 @@ of a conda recipes environment.
 """
 
 
-if __name__ == '__main__':
-    root_ap = get_build_args(description=DESCRIPTION)
-    args = root_ap.parse_args()
-    main(args)
+def main():
+    ap = argparse.ArgumentParser(description=DESCRIPTION)
+    ap.add_argument('recipes', type=str, nargs='?', default="")
+    ap.add_argument(
+        '--ci', action='store_true',
+        help='Run CI specific configurations')
+
+    ap.add_argument(
+        '-c', '--channel', type=str,
+        help='host of the conda channel mirror')
+
+    ap.add_argument(
+        '-s', '--skip-build', action='store_true',
+        help='Skip building')
+
+    ap.add_argument(
+        '-f', '--clean', action='store_true',
+        help='Clean developement environment')
+
+    ap.add_argument(
+        '-T', '--test', action='store_true',
+        help='Run tests')
+
+    ap.add_argument(
+        '-U', '--upload-to-mirror', action='store_true',
+        help='Upload package and dependencies to mirror')
+
+    ap.add_argument(
+        '-I', '--index-mirror', action='store_true',
+        help='Trigger remote index building')
+
+    ap.add_argument(
+        '-N', '--nightly', action='store_true',
+        help='Check if this is a nightly build')
+
+    ap.add_argument(
+        '-P', '--remote-channel-dir', type=str,
+        default='/data/karabo/channel',
+        help='Directory of the Packages channel on remote host. '
+             'Define this when uploading or repopulating the index')
+
+    ap.add_argument(
+        '-C', '--remote-mirror-dir', type=str,
+        default='/data/karabo/channel/mirror',
+        help='Directory of the mirror channels on remote host. '
+             'Define this when uploading or repopulating the index')
+
+    ap.add_argument(
+        '-D', '--recipes-dir', type=str, default='conda-recipes',
+        help='Base folder for recipes relative to the top level '
+             'directory of the git repository')
+
+    args = ap.parse_args()
+    b = Builder(args)
+    b.run()
