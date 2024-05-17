@@ -31,7 +31,8 @@
 #include <iostream>
 #include <karabo/core/DeviceClient.hh>
 #include <karabo/log/Logger.hh>
-#include <karabo/net/AmqpClient.hh>
+#include <karabo/net/AmqpConnection.hh>
+#include <karabo/net/AmqpHashClient.hh>
 #include <karabo/net/Broker.hh>
 #include <karabo/net/EventLoop.hh>
 #include <karabo/net/JmsConnection.hh>
@@ -446,11 +447,11 @@ void printHelp(const char* name) {
               << "usual defaults. Optional 'interval' argument specifies the time in seconds\n"
               << "for averaging (default: 5).\n"
               << "Available options:\n"
-              << "   --receivers a[,b[,c[,...]]]  Consider only messages FOR given ids\n"
-              << "   --senders a[,b[,c[,...]]]    Consider only messages FROM given ids\n"
-              << "   --receiversServer serverId   Consider only messages FOR given serverId,\n"
+              << "   --receivers a[,b[,c[,...]]]  Consider only messages FOR* given ids\n"
+              << "   --senders a[,b[,c[,...]]]    Consider only messages FROM* given ids\n"
+              << "   --receiversServer serverId   Consider only messages FOR* given serverId,\n"
               << "                                   including its devices\n"
-              << "   --sendersServer serverId     Consider only messages FROM given serverId,\n"
+              << "   --sendersServer serverId     Consider only messages FROM* given serverId,\n"
               << "                                   including its devices\n"
               << "   --discoveryWait seconds      Extra seconds for topology discovery\n"
               << "   --debug y|n                  If yes, adds some debug output\n\n"
@@ -458,6 +459,9 @@ void printHelp(const char* name) {
               << "topology of the Karabo installation. If a server of interest is slowly\n"
               << "responding, the normal discovery time might be too short to identify all its\n"
               << "devices and some extra delay should be added using '--discoveryWait'.\n"
+              << "* NOTE for AMQP broker:\n"
+              << "   'FROM' messages consider only signals and 'FOR' messages only (global) slot\n"
+              << "   calls, but any instance may send and receive both, signals and slot calls.\n"
               << std::endl;
 }
 
@@ -476,7 +480,7 @@ std::string assembleJmsSelector(const std::vector<std::string>& receivers, std::
     }
     if (!first) {
         // Take care that broadcasts are also listed if senders/receivers are specified
-        str << " OR slotInstanceIds LIKE '%|*|%'"; // if logs are of interest: add " OR  target = 'log'"
+        str << " OR slotInstanceIds LIKE '%|*|%'";
     }
     return str.str();
 }
@@ -519,76 +523,97 @@ void startJmsMonitor(const std::vector<std::string>& brokers, const std::string&
 void startAmqpMonitor(const std::vector<std::string>& brokers, const std::string& domain,
                       const std::vector<std::string>& receivers, std::vector<std::string>& senders,
                       const util::TimeValue& interval) {
-    // Skip message body deserialization: "skipFlag"
-    const util::Hash config("brokers", brokers, "domain", domain, "skipFlag", true);
+
+    net::AmqpConnection::Pointer connection(boost::make_shared<net::AmqpConnection>(brokers));
+
+    // boost::shared_ptr<BrokerStatistics> stats(boost::make_shared<BrokerStatistics>(interval, receivers, senders));
+    // auto binSerializer = io::BinarySerializer<util::Hash>::create("Bin");
+
+    auto readHandler = [stats{boost::make_shared<BrokerStatistics>(interval, receivers, senders)},
+                        binSerializer{io::BinarySerializer<util::Hash>::create("Bin")}](const util::Hash::Pointer& header, const util::Hash::Pointer& body) {
+        // `BrokerStatistics' expects the message formatted as a Hash: with 'header' as Hash and 'body' as Hash with the
+        // single key 'raw' as vector<char> which is the serialized 'body' value.
+        // If the incoming 'body' does not contain a proper 'raw' key, serialize the body part.
+        util::Hash::Pointer finalBody;
+        if (body->has("raw") && body->is<std::vector<char>>("raw")) {
+            finalBody = body;
+        } else {
+            finalBody = boost::make_shared<util::Hash>();
+            std::vector<char>& raw = finalBody->bindReference<std::vector<char>>("raw");
+            binSerializer->save(body, raw); // body -> raw
+        }
+        stats->registerMessage(header, finalBody);
+    };
+
+    // FIXME: Add a 'skipFlag' to client to skip deserialisation of message body.
+    //        If done, can get rid of the serializer above.
     AMQP::Table queueArgs;
     queueArgs
           .set("x-max-length", 10'000)    // Queue limit
           .set("x-overflow", "drop-head") // drop oldest if limit reached
           .set("x-message-ttl", 30'000);  // message time-to-live in ms
-    net::AmqpClient::Pointer client = util::Configurator<net::AmqpClient>::create("AmqpClient", config, queueArgs);
+    std::ostringstream idStr;
+    idStr << domain << ".messageLogger/" << karabo::net::bareHostName() << "/" << getpid();
+    net::AmqpHashClient::Pointer client =
+          net::AmqpHashClient::create(connection, idStr.str(), queueArgs, readHandler, [](const std::string& msg) {
+              std::cout << "Error reading message: " << msg
+                        << "\n-----------------------------------------------------------------------\n"
+                        << std::endl;
+          });
 
-    // Connect and subscribe
-    auto ec = client->connect();
-    if (ec) {
-        throw KARABO_NETWORK_EXCEPTION("Failed to connect to AMQP (RabbitMQ) broker at " + util::toString(brokers));
-    }
-
-    boost::shared_ptr<BrokerStatistics> stats(boost::make_shared<BrokerStatistics>(interval, receivers, senders));
-    // `BrokerStatistics' expects the message formatted as a Hash: with 'header' as Hash and 'raw' as vector of char
-    // which serialized 'body' value.  If the incoming message does not contain 'raw' key, serialize the body part.
-    auto binSerializer = io::BinarySerializer<util::Hash>::create("Bin");
-
-    auto readHandler = [stats, binSerializer](const boost::system::error_code& ec, const util::Hash::Pointer& msg) {
-        if (!ec) {
-            util::Hash::Pointer body(boost::make_shared<util::Hash>());
-            std::vector<char>& raw = body->bindReference<std::vector<char>>("raw");
-            if (msg->has("raw")) {
-                raw.swap(msg->get<std::vector<char>>("raw"));
-            } else {
-                binSerializer->save(*msg->get<util::Hash::Pointer>("body"), raw); // body -> raw
-            }
-            stats->registerMessage(msg->get<util::Hash::Pointer>("header"), body);
-        }
-    };
-
-    client->registerConsumerHandler(readHandler);
-
-    std::cout << "\nStart monitoring signal and slot rates of \n   domain         '" << domain
-              << "'\n   on broker     '" << client->getBrokerUrl() << "',\n   ";
+    std::cout << "\nStart monitoring signal and slot rates of \n   domain        '" << domain
+              << "'\n   on broker     '" << connection->getCurrentUrl() << "',\n   ";
     if (!receivers.empty()) {
         std::cout << "messages to   '" << util::toString(receivers) << "',\n   ";
     }
     if (!senders.empty()) {
         std::cout << "messages from '" << util::toString(senders) << "',\n   ";
     }
-    std::cout << "interval is   " << interval << " s." << std::endl;
+    std::cout << "interval is    " << interval << " s." << std::endl;
 
-    const std::string slotsExchange = domain + ".slots";
-    const std::string signalsExchange = domain + ".signals";
-
-    if (receivers.empty() && senders.empty()) {
-        // No input on commandline
-        ec = client->subscribe(slotsExchange, "#");
-        if (ec) {
-            throw KARABO_NETWORK_EXCEPTION("Failed to subscribe to AMQP broker");
+    // Lambda to initiate subscription, returns future to wait for:
+    auto subscribe = [](net::AmqpHashClient::Pointer& client, const std::string& exchange, const std::string& bindingKey) {
+        if (debug) {
+            std::cout << "Subscribing to exchange: '" << exchange << "' and binding key: '"
+                      << bindingKey << "'" << std::endl;
         }
-        ec = client->subscribe(signalsExchange, "*.*");
-        if (ec) {
-            throw KARABO_NETWORK_EXCEPTION("Failed to subscribe to AMQP broker");
+
+        auto done = std::make_shared<std::promise<boost::system::error_code>>();
+        std::future<boost::system::error_code> fut = done->get_future();
+        client->asyncSubscribe(exchange, bindingKey,
+                               [done{std::move(done)}](const boost::system::error_code& ec) { done->set_value(ec); });
+        return fut;
+    };
+
+    std::vector<std::future<boost::system::error_code>> futures;
+    if (receivers.empty() && senders.empty()) {
+        // Bind to all possible messages ...
+        const std::vector<std::array<std::string, 2>>& defaultTable = {
+              {domain + ".karaboGuiDebug", ""}, // always empty routing key
+              {domain + ".signals", "*.*"},     // any INSTANCE, any SIGNAL
+              {domain + ".slots", "#"},         // any INSTANCE ID ('*' may work as well)
+              {domain + ".global_slots", ""}    // always empty routing key
+        };
+        for (const auto& a : defaultTable) {
+            futures.push_back(subscribe(client, a[0], a[1]));
         }
     } else {
-        for (const auto& rid : receivers) {
-            ec = client->subscribe(slotsExchange, rid);
-            if (ec) {
-                throw KARABO_NETWORK_EXCEPTION("Failed to subscribe to AMQP broker");
-            }
+        if (!receivers.empty()) {
+            futures.push_back(subscribe(client, domain + ".global_slots", std::string()));
         }
-        for (const auto& sid : senders) {
-            ec = client->subscribe(signalsExchange, sid + ".*");
-            if (ec) {
-                throw KARABO_NETWORK_EXCEPTION("Failed to subscribe to AMQP broker");
-            }
+        for (const auto& recId : receivers) {
+            // FIXME: We miss any signals that 'recId' subscribed to
+            futures.push_back(subscribe(client, domain + ".slots", recId));
+        }
+        for (const auto& sendId : senders) {
+            // FIXME: We miss any direct slot calls/replies/global_slot calls originating from sendId
+            futures.push_back(subscribe(client, domain + ".signals", sendId + ".*"));
+        }
+    }
+    for (auto& fut : futures) {
+        const boost::system::error_code ec = fut.get();
+        if (ec) {
+            throw KARABO_NETWORK_EXCEPTION(std::string("Failed to subscribe to AMQP broker: ") += ec.message());
         }
     }
 
