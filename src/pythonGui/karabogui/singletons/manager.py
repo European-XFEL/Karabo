@@ -421,42 +421,33 @@ class Manager(QObject):
             if krb_access.HIGHEST_ACCESS_LEVEL != access_level:
                 krb_access.HIGHEST_ACCESS_LEVEL = access_level
 
-                # User in Temporary Session has lower access level than the
-                # logged-in user
-                if krb_access.GLOBAL_ACCESS_LEVEL > access_level:
-                    krb_access.GLOBAL_ACCESS_LEVEL = access_level
+            if krb_access.GLOBAL_ACCESS_LEVEL != access_level:
+                krb_access.GLOBAL_ACCESS_LEVEL = access_level
+                broadcast_event(KaraboEvent.AccessLevelChanged, {})
+
             broadcast_event(KaraboEvent.LoginUserChanged, {})
             broadcast_event(KaraboEvent.TemporarySession, {})
 
     def handle_onEndTemporarySession(self, **info):
         """Handle the response from gui server on end temporary session
         request by user"""
-        access_before_temp_session = info.get("levelBeforeTemporarySession")
-        if access_before_temp_session is None:
-            return
-        access_level = AccessLevel(access_before_temp_session)
-        if krb_access.HIGHEST_ACCESS_LEVEL != access_level:
-            krb_access.HIGHEST_ACCESS_LEVEL = access_level
-        # User in the Temporary Session has lower access level than the
-        # logged-in user
-        if krb_access.GLOBAL_ACCESS_LEVEL > access_level:
-            krb_access.GLOBAL_ACCESS_LEVEL = access_level
-
-        krb_access.TEMPORARY_SESSION_USER = None
-        broadcast_event(KaraboEvent.LoginUserChanged, {})
-        broadcast_event(KaraboEvent.TemporarySession, {})
+        self._end_temporary_session(info)
 
     def handle_onTemporarySessionExpired(self, **info):
         """Handle the temporary session expired message from gui server """
+        self._end_temporary_session(info)
+
+    def _end_temporary_session(self, info):
         level_before = info.get("levelBeforeTemporarySession")
         if level_before is None:
             return
         access_level = AccessLevel(level_before)
         if krb_access.HIGHEST_ACCESS_LEVEL != access_level:
             krb_access.HIGHEST_ACCESS_LEVEL = access_level
-        # Temporary session user has lower access level than the logged-in user
-        if krb_access.GLOBAL_ACCESS_LEVEL > access_level:
+
+        if krb_access.GLOBAL_ACCESS_LEVEL != access_level:
             krb_access.GLOBAL_ACCESS_LEVEL = access_level
+            broadcast_event(KaraboEvent.AccessLevelChanged, {})
 
         krb_access.TEMPORARY_SESSION_USER = None
         broadcast_event(KaraboEvent.LoginUserChanged, {})
