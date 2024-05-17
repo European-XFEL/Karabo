@@ -28,7 +28,8 @@
 #include <fstream>
 #include <iosfwd>
 #include <karabo/log/Logger.hh>
-#include <karabo/net/AmqpClient.hh>
+#include <karabo/net/AmqpConnection.hh>
+#include <karabo/net/AmqpHashClient.hh>
 #include <karabo/net/Broker.hh>
 #include <karabo/net/EventLoop.hh>
 #include <karabo/net/JmsConnection.hh>
@@ -62,7 +63,7 @@ void printHelp(const char* execName) {
     cout << "                        e.g. signals:*.signalChanged,global_slots:,slots:INSTANCE/1\"" << endl << endl;
 }
 
-void jmsReadHandler(const Hash::Pointer& header, const Hash::Pointer& body) {
+void readHandler(const Hash::Pointer& header, const Hash::Pointer& body) {
     cout << *header << endl;
     cout << *body << endl;
     cout << "-----------------------------------------------------------------------" << endl << endl;
@@ -91,7 +92,7 @@ void logOpenMQ(const std::vector<std::string>& brokerUrls, const std::string& to
     JmsConsumer::Pointer consumer = connection->createConsumer(topic, selector);
 
     // Read and logs messages and errors.
-    consumer->startReading(boost::bind(&jmsReadHandler, _1, _2), boost::bind(&jmsErrorNotifier, _1, _2));
+    consumer->startReading(boost::bind(&readHandler, _1, _2), boost::bind(&jmsErrorNotifier, _1, _2));
     EventLoop::work(); // Block forever
 }
 
@@ -101,60 +102,49 @@ void logAmqp(const std::vector<std::string>& brokerUrls, const std::string& doma
     //   separated by comma where each pair is separated by colon:
     //     "exchange1:bindingKey1,exchange2:bindingKey2,..."
 
+    AmqpConnection::Pointer connection(boost::make_shared<AmqpConnection>(brokerUrls));
+
     const Hash config("brokers", brokerUrls, "domain", domain);
     AMQP::Table queueArgs;
     queueArgs
           .set("x-max-length", 10'000)    // Queue limit
           .set("x-overflow", "drop-head") // drop oldest if limit reached
           .set("x-message-ttl", 30'000);  // message time-to-live in ms
-    AmqpClient::Pointer client = Configurator<AmqpClient>::create("AmqpClient", config, queueArgs);
-
-    // Connect and subscribe
-    auto ec = client->connect();
-    if (ec) {
-        throw KARABO_NETWORK_EXCEPTION("Failed to connect to AMQP (RabbitMQ) broker at " + toString(brokerUrls));
-    }
-
-    // Define read handler for message visualization...
-    auto readHandler = [](const boost::system::error_code& ec, const Hash::Pointer& msg) {
-        if (ec) {
-            std::cout << "Error " << ec.value() << ": " << ec.message() << std::endl;
-            return;
-        }
-
-        if (msg) {
-            std::cout << *msg << std::endl;
-        } else {
-            std::cout << "MISSING MESSAGE!" << std::endl; // Shouldn't happen - but print an indicator
-        }
-
-        std::cout << "-----------------------------------------------------------------------\n" << std::endl;
-    };
-
-    client->registerConsumerHandler(readHandler);
+    std::ostringstream idStr;
+    idStr << domain << ".messageLogger/" << karabo::net::bareHostName() << "/" << getpid();
+    AmqpHashClient::Pointer client =
+          AmqpHashClient::create(connection, idStr.str(), queueArgs, readHandler, [](const std::string& msg) {
+              std::cout << "Error reading message: " << msg
+                        << "\n-----------------------------------------------------------------------\n"
+                        << std::endl;
+          });
 
     std::cout << "# Starting to consume messages..." << std::endl;
-    std::cout << "# Broker (AMQP): " << client->getBrokerUrl() << std::endl;
+    std::cout << "# Broker (AMQP): " << connection->getCurrentUrl()
+              << std::endl; // might not be the one we actually connect...
     std::cout << "# Domain: " << domain << std::endl;
 
+    // Lambda to initiate subscription, returns future to wait for:
+    auto subscribe = [](AmqpHashClient::Pointer& client, const std::string& exchange, const std::string& bindingKey) {
+        std::cout << "# Exchange: '" << exchange << "' and binding key: '" << bindingKey << "'" << std::endl;
+
+        auto done = std::make_shared<std::promise<boost::system::error_code>>();
+        std::future<boost::system::error_code> fut = done->get_future();
+        client->asyncSubscribe(exchange, bindingKey,
+                               [done](const boost::system::error_code& ec) { done->set_value(ec); });
+        return fut;
+    };
+    std::vector<std::future<boost::system::error_code>> futures;
     if (selector.empty()) {
         // Bind to all possible messages ...
-        const std::vector<std::array<std::string, 2> >& defaultTable = {
+        const std::vector<std::array<std::string, 2>>& defaultTable = {
               {domain + ".karaboGuiDebug", ""}, // always empty routing key
               {domain + ".signals", "*.*"},     // any INSTANCE, any SIGNAL
               {domain + ".slots", "#"},         // any INSTANCE ID ('*' may work as well)
               {domain + ".global_slots", ""}    // always empty routing key
         };
-
-        boost::system::error_code ec;
         for (const auto& a : defaultTable) {
-            std::cout << "# Exchange: \"" << a[0] << "\" and binding key: \"" << a[1] << "\"" << std::endl;
-            ec = client->subscribe(a[0], a[1]);
-            if (ec) {
-                std::cout << "ERROR: Failed to subscribe to AMQP broker: #" << ec.value() << " -- " << ec.message()
-                          << std::endl;
-                throw KARABO_NETWORK_EXCEPTION("Failed to subscribe to AMQP broker");
-            }
+            futures.push_back(subscribe(client, a[0], a[1]));
         }
     } else {
         for (const string& exchbind : fromString<string, vector>(selector)) {
@@ -163,11 +153,13 @@ void logAmqp(const std::vector<std::string>& brokerUrls, const std::string& doma
             if (v.size() != 2) {
                 throw KARABO_PARAMETER_EXCEPTION("Malformed input argument: " + exchbind);
             }
-            std::cout << "# Exchange: \"" << v[0] << "\" and binding key: \"" << v[1] << "\"\n";
-            ec = client->subscribe(v[0], v[1]);
-            if (ec) {
-                throw KARABO_NETWORK_EXCEPTION("Failed to subscribe to AMQP broker");
-            }
+            futures.push_back(subscribe(client, v[0], v[1]));
+        }
+    }
+    for (auto& fut : futures) {
+        const boost::system::error_code ec = fut.get();
+        if (ec) {
+            throw KARABO_NETWORK_EXCEPTION(std::string("Failed to subscribe to AMQP broker: ") += ec.message());
         }
     }
     std::cout << std::endl;
