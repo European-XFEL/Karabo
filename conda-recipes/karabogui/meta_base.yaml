@@ -39,7 +39,7 @@ build:
     - karabo-gui=karabogui.programs.gui_runner:main
     - panel-runner=karabogui.programs.panel_runner:main
     - karabo-cinema=karabogui.programs.cinema:main
-    - karabo-concert=karabogui.programs.concert:main,
+    - karabo-concert=karabogui.programs.concert:main
     - karabo-theatre=karabogui.programs.theatre:main
     - karabo-update-extensions=karabogui.dialogs.update_dialog:main
   # This is needed to avoid removing egg files during packaging with setuptools
