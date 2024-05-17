@@ -48,6 +48,8 @@ USER_INFO = """<p>You are logged in as '<span style=" font-weight:600;">
 {username}</span>'. Click 'Connect' to continue or</p><p>'Switch User' to
 change the user.</p>"""
 
+NO_REFRESH_TOKEN_ERROR = "Refresh Token not found"
+
 
 @unique
 class LoginType(IntEnum):
@@ -60,6 +62,7 @@ class LoginType(IntEnum):
 
 class Validator(IntValidator):
     """A custom validator that allows only 1 or 6 digits """
+
     def validate(self, input, pos):
         """Support only number with single digit or 6 digits"""
         if not (pos and input):
@@ -340,14 +343,19 @@ class ReactiveLoginDialog(QDialog):
         if error == QNetworkReply.NoError and auth_result["success"]:
             krb_access.ONE_TIME_TOKEN = auth_result["once_token"]
             refresh_token = auth_result.get("refresh_token")
-            refresh_token_user = None
             if refresh_token is not None:
                 refresh_token_user = auth_result.get("username")
-            get_config()["refresh_token"] = refresh_token
-            get_config()["refresh_token_user"] = refresh_token_user
+                get_config()["refresh_token"] = refresh_token
+                get_config()["refresh_token_user"] = refresh_token_user
+            else:
+                del get_config()["refresh_token"]
+                del get_config()["refresh_token_user"]
             self.accept()
         else:
             self._error = auth_result.get("error_msg")
+            if self._error == NO_REFRESH_TOKEN_ERROR:
+                del get_config()["refresh_token"]
+                del get_config()["refresh_token_user"]
             self.stackedWidget.setCurrentIndex(LoginType.USER_AUTHENTICATED)
             self._update_status_label()
 
@@ -414,11 +422,17 @@ class ReactiveLoginDialog(QDialog):
         self._authenticating = True
         self._update_dialog_state()
 
+        remember_login = self.remember_login.isChecked()
         info = json.dumps({
             "access_code": int(self.edit_access_code.get_access_code()),
             "client_hostname": CLIENT_HOST,
-            "remember_login": self.remember_login.isChecked()
+            "remember_login": remember_login
         })
+        if not remember_login:
+            # Erase existing information
+            del get_config()["refresh_token"]
+            del get_config()["refresh_token_user"]
+
         info = bytearray(info.encode("utf-8"))
         url = f"{self._auth_url}user_tokens"
 
