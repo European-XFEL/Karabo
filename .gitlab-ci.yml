@@ -143,8 +143,8 @@ variables:
   script:
     - conda config --add channels $KARABO_CONDA_CHANNEL_URL
     - >
-      python ci/miniconda/main.py pack karabogui
-      --ci --clean --upload-env
+      python ci/miniconda/main.py karabogui
+      --ci --clean
       -E karaboEnvironments
       --upload-to-mirror
       -c $KARABO_CONDA_CHANNEL
@@ -169,8 +169,8 @@ variables:
   script:
     - conda config --add channels $KARABO_CONDA_CHANNEL_URL
     - >
-      python ci/miniconda/main.py pack karabogui
-      --ci --clean --upload-env
+      python ci/miniconda/main.py karabogui
+      --ci --clean
       -E karaboEnvironments
       --upload-to-mirror
       -c $KARABO_CONDA_CHANNEL
@@ -193,8 +193,8 @@ variables:
   script:
     - conda config --add channels $KARABO_CONDA_CHANNEL_URL
     - >
-      python ci/miniconda/main.py pack karabogui
-      --ci --clean --upload-env
+      python ci/miniconda/main.py karabogui
+      --ci --clean
       -E karaboEnvironments
       --upload-to-mirror
       --nightly
@@ -210,8 +210,8 @@ variables:
   script:
     - conda config --add channels conda-forge
     - >
-      python ci/miniconda/main.py pack karabogui
-      --ci --clean --test --upload-env
+      python ci/miniconda/main.py karabogui
+      --ci --clean --test
       -E karaboEnvironments
       --upload-to-mirror
       -c $KARABO_CONDA_CHANNEL
@@ -323,7 +323,7 @@ variables:
   script:
     - conda config --add channels $KARABO_CONDA_CHANNEL_URL
     - >
-      python ci/miniconda/main.py pack karabogui
+      python ci/miniconda/main.py karabogui
       -c $KARABO_CONDA_CHANNEL
       --ci --clean --test
       --skip-build
