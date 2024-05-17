@@ -16,7 +16,6 @@
 # or FITNESS FOR A PARTICULAR PURPOSE.
 import os
 import sys
-from platform import system
 
 import pytest
 from qtpy.QtWidgets import QApplication
@@ -29,8 +28,6 @@ from karabogui.controllers.api import populate_controller_registry
 @pytest.fixture(scope="package")
 def gui_app():
     os.environ["KARABO_TEST_GUI"] = "1"
-    if system() == 'Darwin' and 'QT_MAC_WANTS_LAYER' not in os.environ:
-        os.environ['QT_MAC_WANTS_LAYER'] = '1'
     app = QApplication.instance()
     if app is None:
         app = QApplication(sys.argv)
