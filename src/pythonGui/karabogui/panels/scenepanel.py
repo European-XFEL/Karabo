@@ -174,6 +174,10 @@ class ScenePanel(BasePanelWidget):
         dialog = TemporarySessionDialog(parent=self)
         dialog.show()
 
+    def setTemporaryButtonVisible(self, enable: bool) -> None:
+        """Make the tempsession visible depending on the boolean `enable`"""
+        self.tbTempSession.setVisible(enable)
+
     def setTemporaryButton(self, icon: QIcon, tooltip: str) -> None:
         """Set the icon and tooltip for the Temporary Session button"""
         self.tbTempSession.setToolTip(tooltip)
