@@ -38,9 +38,9 @@ using namespace std;
 #define TEST_GUI_SERVER_ID "testGuiServerDevice"
 
 // Maximum temporary session duration time to be used in the tests (in seconds)
-#define MAX_TEMPORARY_SESSION_TIME karabo::devices::CHECK_TEMPSESSION_EXPIRATION_INTERVAL_SECS + 4u
+#define MAX_TEMPORARY_SESSION_TIME karabo::devices::CHECK_TEMPSESSION_EXPIRATION_INTERVAL_SECS * 2U
 // Value to be used in the test for the "endTemporarySessionNoticeTime" property of the GUI Server
-#define END_TEMPORARY_SESSION_NOTICE_TIME MAX_TEMPORARY_SESSION_TIME - 1u
+#define END_TEMPORARY_SESSION_NOTICE_TIME karabo::devices::CHECK_TEMPSESSION_EXPIRATION_INTERVAL_SECS - 1U
 
 USING_KARABO_NAMESPACES
 
@@ -153,7 +153,7 @@ void GuiServer_Test::appTestRunner() {
     TestKaraboAuthServer tstAuthServer(authServerAddr, authServerPort);
     boost::thread srvRunner = boost::thread([&tstAuthServer]() { tstAuthServer.run(); });
 
-    // Instantiates a GUI Server in Authenticated mode with a maximum temporary session time of 2 seconds for
+    // Instantiates a GUI Server in Authenticated mode with a maximum temporary session time of 15 seconds for
     // the purposes of the integrated tests.
     // clang-format off
     success_n = m_deviceClient->instantiate(
@@ -168,12 +168,13 @@ void GuiServer_Test::appTestRunner() {
           KRB_TEST_MAX_TIMEOUT);
     // clang-format on
     CPPUNIT_ASSERT_MESSAGE(success_n.second, success_n.first);
-    waitForCondition(
+    bool serverOn = waitForCondition(
           [this]() {
               auto state = m_deviceClient->get<State>(TEST_GUI_SERVER_ID, "state");
               return state == State::ON;
           },
           KRB_TEST_MAX_TIMEOUT * 1000);
+    CPPUNIT_ASSERT_MESSAGE("GUI Server didn't reach ON state in time", serverOn);
 
     testMissingTokenOnLogin();
     testInvalidTokenOnLogin();
