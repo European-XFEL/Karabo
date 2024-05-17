@@ -48,7 +48,7 @@ namespace karabo::devices {
     inline constexpr karabo::util::Schema::AccessLevel MAX_TEMPORARY_SESSION_ACCESS_LEVEL =
           karabo::util::Schema::AccessLevel::ADMIN;
 
-    inline constexpr unsigned int CHECK_TEMPSESSION_EXPIRATION_INTERVAL_SECS = 10;
+    inline constexpr unsigned int CHECK_TEMPSESSION_EXPIRATION_INTERVAL_SECS = 5U;
 
 
     // A beginTemporarySession is basically a OneTimeTokenAuthorization operation plus

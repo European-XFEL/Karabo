@@ -95,9 +95,11 @@ namespace karabo {
             UINT32_ELEMENT(expected)
                   .key("maxTemporarySessionTime")
                   .displayedName("Max. Temporary Session Time")
-                  .description("Maximum duration of a temporary session, in seconds")
+                  .description("Maximum duration of a temporary session.\nMay be delayed by up to " +
+                               toString(CHECK_TEMPSESSION_EXPIRATION_INTERVAL_SECS) + " seconds.")
                   .assignmentOptional()
                   .defaultValue(45 * 60)
+                  .minInc(2 * CHECK_TEMPSESSION_EXPIRATION_INTERVAL_SECS)
                   .unit(Unit::SECOND)
                   .init()
                   .commit();
@@ -402,9 +404,35 @@ namespace karabo {
                 // Note that instanceNew(..) will be called for all instances already in the game.
                 remote().enableInstanceTracking();
 
+                auto maxTemporarySessionTime = get<unsigned int>("maxTemporarySessionTime");
+                auto endTemporarySessionNoticeTime = get<unsigned int>("endTemporarySessionNoticeTime");
+                if (endTemporarySessionNoticeTime < CHECK_TEMPSESSION_EXPIRATION_INTERVAL_SECS) {
+                    // At least one checking interval should elapse between the notice of end of session
+                    // and the expiration of the session.
+                    endTemporarySessionNoticeTime = CHECK_TEMPSESSION_EXPIRATION_INTERVAL_SECS;
+                    KARABO_LOG_FRAMEWORK_INFO << "endTemporarySessionNoticeTime must be at least "
+                                              << CHECK_TEMPSESSION_EXPIRATION_INTERVAL_SECS
+                                              << " secs (the interval between temporary session expiration checks). "
+                                              << "Adjusted endTemporarySessionNoticeTime to "
+                                              << endTemporarySessionNoticeTime << " secs.";
+                    set("endTemporarySessionNoticeTime", endTemporarySessionNoticeTime);
+                } else if (endTemporarySessionNoticeTime > maxTemporarySessionTime) {
+                    // The notice of end of session should occur at a point in time after the start
+                    // of the session - at least within the interval between the start of the session and
+                    // the first check for expiration
+                    endTemporarySessionNoticeTime =
+                          maxTemporarySessionTime - CHECK_TEMPSESSION_EXPIRATION_INTERVAL_SECS;
+                    KARABO_LOG_FRAMEWORK_INFO
+                          << "endTemporarySessionNoticeTime is too big. The notice of temporary session end would be "
+                             "before the start of the session. Adjusted the endTemporarySessionNoticeTime to "
+                          << endTemporarySessionNoticeTime << " secs, resulting in a notice emission "
+                          << maxTemporarySessionTime - endTemporarySessionNoticeTime
+                          << " secs after the start of the temporary session.";
+                    set("endTemporarySessionNoticeTime", endTemporarySessionNoticeTime);
+                }
+
                 m_tempSessionManager = boost::make_shared<GuiServerTemporarySessionManager>(
-                      m_topic, get<std::string>("authServer"), get<unsigned int>("maxTemporarySessionTime"),
-                      get<unsigned int>("endTemporarySessionNoticeTime"),
+                      m_topic, get<std::string>("authServer"), maxTemporarySessionTime, endTemporarySessionNoticeTime,
                       bind_weak(&GuiServerDevice::onEndTemporarySessionNotice, this, _1),
                       bind_weak(&GuiServerDevice::onTemporarySessionExpiration, this, _1));
 
