@@ -125,10 +125,9 @@ class Network(QObject):
 
     def disconnectFromServer(self):
         """Disconnect from server"""
-        # All panels need to be reset and all projects closed
+        krb_access.reset_login()
         self.signalServerConnectionChanged.emit(False)
-        krb_access.ONE_TIME_TOKEN = None
-        krb_access.TEMPORARY_SESSION_USER = None
+        # All panels need to be reset and all projects closed
         process_qt_events(timeout=5000)
         self.endServerConnection()
 
