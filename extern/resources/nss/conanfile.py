@@ -2,7 +2,7 @@ from conan import ConanFile
 from conan.errors import ConanInvalidConfiguration
 from conan.tools.microsoft import msvc_runtime_flag
 from conan.tools.scm import Version
-from conan.tools.files import apply_conandata_patches, get, chdir, rename, rm
+from conan.tools.files import apply_conandata_patches, copy, get, chdir, rename, rm
 from conan.tools.build import cross_building
 
 import os
@@ -31,7 +31,7 @@ class NSSConan(ConanFile):
             del self.options.fPIC
 
     def build_requirements(self):
-        if self.settings.compiler == "msvc":  # and not tools.get_env("CONAN_BASH_PATH"):
+        if self.settings.compiler == "msvc":
             self.build_requires("msys2/cci.latest")
         if self.settings.os == "Windows":
             self.build_requires("mozilla-build/3.3")
@@ -85,8 +85,8 @@ class NSSConan(ConanFile):
             args.append("CPU_ARCH=aarch64")
         if self.settings.compiler == "gcc":
             args.append("XCFLAGS=-Wno-array-parameter")
-        args.append("NSPR_INCLUDE_DIR=%s" % self.deps_cpp_info["nspr"].include_paths[1])
-        args.append("NSPR_LIB_DIR=%s" % self.deps_cpp_info["nspr"].lib_paths[0])
+        args.append("NSPR_INCLUDE_DIR=%s" % (self.dependencies["nspr"].package_folder + "/include/nspr"))
+        args.append("NSPR_LIB_DIR=%s" % self.dependencies["nspr"].package_folder + "/lib")
 
         os_map = {
             "Linux": "Linux",
@@ -99,11 +99,9 @@ class NSSConan(ConanFile):
         args.append("OS_ARCH=%s" % os_map.get(str(self.settings.os), "UNSUPPORTED_OS"))
         if self.settings.build_type != "Debug":
             args.append("BUILD_OPT=1")
-        if self.settings.compiler == "Visual Studio":
-            args.append("NSPR31_LIB_PREFIX=$(NULL)")
 
         args.append("USE_SYSTEM_ZLIB=1")
-        args.append("ZLIB_INCLUDE_DIR=%s" % self.deps_cpp_info["zlib"].include_paths[0])
+        args.append("ZLIB_INCLUDE_DIR=%s" % self.dependencies["zlib"].package_folder + "/include")
 
 
         def adjust_path(path, settings):
@@ -114,10 +112,7 @@ class NSSConan(ConanFile):
             converts slashes to backslashes, or vice versa
             """
             compiler = _base_compiler(settings)
-            if str(compiler) == 'Visual Studio':
-                path = path.replace('/', '\\')
-            else:
-                path = path.replace('\\', '/')
+            path = path.replace('\\', '/')
             return '"%s"' % path if ' ' in path else path
 
         def _base_compiler(settings):
@@ -125,7 +120,7 @@ class NSSConan(ConanFile):
 
         def _format_library_paths(library_paths, settings):
             compiler = _base_compiler(settings)
-            pattern = "-LIBPATH:%s" if str(compiler) == 'Visual Studio' else "-L%s"
+            pattern = "-L%s"
             return [pattern % adjust_path(library_path, settings)
                     for library_path in library_paths if library_path]
 
@@ -135,22 +130,14 @@ class NSSConan(ConanFile):
             compiler = settings.get_safe("compiler")
             compiler_base = settings.get_safe("compiler.base")
             for library in libraries:
-                if str(compiler) == 'Visual Studio' or str(compiler_base) == 'Visual Studio':
-                    if not library.endswith(".lib"):
-                        library += ".lib"
-                    result.append(library)
-                else:
-                    result.append(f"-l{library}")
+                result.append(f"-l{library}")
             return result
 
-
-        args.append("\"ZLIB_LIBS=%s\"" % " ".join(
-            _format_libraries(self.deps_cpp_info["zlib"].libs, self.settings) +
-            _format_library_paths(self.deps_cpp_info["zlib"].lib_paths, self.settings)))
+        args.append("\"ZLIB_LIBS=-lz -L%s/lib\"" % self.dependencies["zlib"].package_folder)
         args.append("NSS_DISABLE_GTESTS=1")
         args.append("NSS_USE_SYSTEM_SQLITE=1")
-        args.append("SQLITE_INCLUDE_DIR=%s" % self.deps_cpp_info["sqlite3"].include_paths[0])
-        args.append("SQLITE_LIB_DIR=%s" % self.deps_cpp_info["sqlite3"].lib_paths[0])
+        args.append("SQLITE_INCLUDE_DIR=%s" % self.dependencies["sqlite3"].package_folder + "/include")
+        args.append("SQLITE_LIB_DIR=%s" % self.dependencies["sqlite3"].package_folder + "/lib")
         args.append("NSDISTMODE=copy")
         if cross_building(self):
             args.append("CROSS_COMPILE=1")
@@ -160,23 +147,23 @@ class NSSConan(ConanFile):
     def build(self):
         apply_conandata_patches(self)
         with chdir(self, os.path.join(self._source_subfolder, "nss")):
-            # with tools.vcvars(self) if self.settings.compiler == "Visual Studio" else tools.no_op():
-            self.run("make %s" % " ".join(self._make_args), run_environment=True)
+            self.output.info("Running make command : %s" % " ".join(self._make_args))
+            self.run("make %s" % " ".join(self._make_args), env="conanrun")
 
     def package(self):
-        self.copy("COPYING", src = os.path.join(self._source_subfolder, "nss"), dst = "licenses")
+        copy(self, "COPYING", os.path.join(self._source_subfolder, "nss"), os.path.join(self.package_folder, "licenses"))
         with chdir(self, os.path.join(self._source_subfolder, "nss")):
             self.run("make install %s" % " ".join(self._make_args))
-        self.copy("*",
-                  src=os.path.join(self._source_subfolder, "dist", "public", "nss"),
-                  dst="include")
+        copy(self, "*",
+                  os.path.join(self._source_subfolder, "dist", "public", "nss"),
+                  os.path.join(self.package_folder, "include"))
         for d in os.listdir(os.path.join(self._source_subfolder, "dist")):
             if d in ["private","public"]:
                 continue
             f = os.path.join(self._source_subfolder, "dist", d)
             if not os.path.isdir(f):
                 continue
-            self.copy("*", src = f)
+            copy(self, "*", f, self.package_folder)
 
         for dll_file in glob.glob(os.path.join(self.package_folder, "lib", "*.dll")):
             rename(self, dll_file, os.path.join(self.package_folder, "bin", os.path.basename(dll_file)))
@@ -186,7 +173,6 @@ class NSSConan(ConanFile):
         else:
             rm(self, "*.so", os.path.join(self.package_folder, "lib"))
             rm(self, "*.dll", os.path.join(self.package_folder, "bin"))
-
 
 
     def package_info(self):
