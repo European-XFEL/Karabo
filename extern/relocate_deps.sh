@@ -63,13 +63,6 @@ rewrite_python_shebangs() {
     done
 }
 
-rewrite_rpaths() {
-    # Relocate the libraries/executables
-    # skip installed python libs/exes (they are already relocated)
-    local fixer_opts="-f -g '[!python]*' -l $INSTALL_PREFIX/lib -d $INSTALL_PREFIX/bin"
-    safeRunCommand "PATH=$INSTALL_PREFIX/bin $INSTALL_PREFIX/bin/python3 -m rpathology.fixer $fixer_opts"
-}
-
 safeRunCommand() {
     typeset cmnd="$*"
     typeset ret_code
@@ -92,6 +85,3 @@ relocate_python
 
 # Rewrite instances where the local install path is needed
 rewrite_build_machine_paths
-
-# Fix library and binary RPATHS
-rewrite_rpaths
