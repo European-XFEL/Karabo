@@ -19,6 +19,7 @@ from uuid import uuid4
 from qtpy.QtNetwork import QAbstractSocket
 from qtpy.QtWidgets import QDialog
 
+import karabogui.access as krb_access
 from karabo.native import Hash
 from karabogui.singletons.configuration import Configuration
 from karabogui.singletons.mediator import Mediator
@@ -29,9 +30,13 @@ from karabogui.testing import singletons
 class TestReceiver:
     def __init__(self):
         self.last_hash = None
+        self.server_connection = False
 
     def slotReceiveData(self, data):
         self.last_hash = data
+
+    def slotServerConnection(self, status):
+        self.server_connection = status
 
 
 def test_member_variables(gui_app):
@@ -72,6 +77,8 @@ def test_socket_connect_login_protocol(mocker, subtests, gui_app):
     mediator = Mediator()
     receiver = TestReceiver()
     network.signalReceivedData.connect(receiver.slotReceiveData)
+    network.signalServerConnectionChanged.connect(
+        receiver.slotServerConnection)
     with singletons(network=network, mediator=mediator):
         host = "exfl-client-pc-system-guikarabo"
         port = 32323
@@ -362,3 +369,16 @@ def test_socket_connect_login_protocol(mocker, subtests, gui_app):
             assert receiver.last_hash["instanceId"] == "KaraboLogBook"
             assert receiver.last_hash["args.name"] == name
             assert receiver.last_hash["args.dataType"] == dataType
+
+        with subtests.test(msg="Network connection"):
+            assert receiver.server_connection is False
+            network.onConnected()
+            assert receiver.server_connection is True
+            krb_access.ONE_TIME_TOKEN = 123345
+            krb_access.TEMPORARY_SESSION_USER = "karabo"
+            krb_access.TEMPORARY_SESSION_WARNING = True
+            network.disconnectFromServer()
+            assert receiver.server_connection is False
+            assert krb_access.ONE_TIME_TOKEN is None
+            assert krb_access.TEMPORARY_SESSION_USER is None
+            assert krb_access.TEMPORARY_SESSION_WARNING is False
