@@ -439,7 +439,7 @@ class MainWindow(QMainWindow):
         self.tbAccessLevel.setPopupMode(QToolButton.InstantPopup)
         self.tbAccessLevel.setEnabled(False)
 
-        text = "Start a temporary Session"
+        text = "Start a temporary session"
         self.tbTempSession = QAction(icons.switchNormal, f"&{text}", self)
         self.tbTempSession.setToolTip(text)
         self.tbTempSession.setStatusTip(text)
