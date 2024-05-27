@@ -214,6 +214,9 @@ class PanelWrangler(QObject):
                 self._close_instance_panel(inst_id)
             # Close panels not associated with projects
             self._close_unattached_panels()
+            if self.main_window is not None:
+                icon, tooltip = get_temporary_button_data()
+                self.main_window.setTemporaryButton(icon, tooltip)
 
     def _event_mainwindow(self, data):
         self._create_main_window()
