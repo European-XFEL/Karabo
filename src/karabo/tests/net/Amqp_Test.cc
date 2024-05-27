@@ -136,16 +136,27 @@ void Amqp_Test::testConnection() {
         CPPUNIT_ASSERT_EQUAL(1l, connection.use_count());
         CPPUNIT_ASSERT_NO_THROW(connection.reset());
 
-        // Now test 4 addresses, last but one is valid
+        // Now test - 4 addresses, last but one is valid and
+        //          - use many concurrent asyncConnect
         urls.push_back(m_defaultBrokers.front());
         urls.push_back(urls.front());
         connection = boost::make_shared<net::AmqpConnection>(urls);
-        auto done3 = std::make_shared<std::promise<boost::system::error_code>>();
-        auto fut3 = done3->get_future();
-        connection->asyncConnect([done3](const boost::system::error_code ec) { done3->set_value(ec); });
-        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, fut3.wait_for(3 * m_timeout));
-        const boost::system::error_code ec3 = fut3.get();
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(ec3.message(), static_cast<int>(boost::system::errc::success), ec3.value());
+        auto dones3 = std::make_shared<std::vector<std::promise<boost::system::error_code>>>();
+        std::vector<std::future<boost::system::error_code>> futs3;
+        const int numConcurrentConnect = 50;
+        dones3->reserve(numConcurrentConnect); // avoid reallocation of promise - concurrent access possible in handler
+        for (int i = 0; i < numConcurrentConnect; ++i) {
+            dones3->push_back(std::promise<boost::system::error_code>());
+            futs3.push_back(dones3->back().get_future());
+            connection->asyncConnect([dones3, i](const boost::system::error_code ec) { dones3->at(i).set_value(ec); });
+            // Little sleep to have asyncConnect requests happen in different stages of creation of connection
+            boost::this_thread::sleep(boost::posix_time::microseconds(500));
+        }
+        for (int i = 0; i < numConcurrentConnect; ++i) {
+            CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futs3[i].wait_for(3 * m_timeout));
+            const boost::system::error_code ec3 = futs3[i].get();
+            CPPUNIT_ASSERT_EQUAL_MESSAGE(ec3.message(), static_cast<int>(boost::system::errc::success), ec3.value());
+        }
         CPPUNIT_ASSERT_GREATEREQUAL(2ul, urls.size());
         CPPUNIT_ASSERT_EQUAL(urls[urls.size() - 2], connection->getCurrentUrl());
         CPPUNIT_ASSERT(connection->isConnected());
@@ -193,6 +204,33 @@ void Amqp_Test::testConnection() {
             CPPUNIT_ASSERT_EQUAL(std::future_status::ready, channelFutures[i].wait_for(m_timeout));
             CPPUNIT_ASSERT_EQUAL(std::string("Channel created"), channelFutures[i].get());
         }
+        CPPUNIT_ASSERT_EQUAL(1l, connection.use_count());
+        CPPUNIT_ASSERT_NO_THROW(connection.reset());
+
+        // Test creation of many, many channels and check that we get failure report (and no crash)
+        const size_t maxNumChannels = 2047; // number that current lib version allows
+        connection = boost::make_shared<net::AmqpConnection>(m_defaultBrokers);
+        std::vector<std::shared_ptr<AMQP::Channel>> channels;
+        for (size_t i = 0; i < maxNumChannels + 1; ++i) { // '+1': try one more than will work
+            auto doneCreation =
+                  std::make_shared<std::promise<std::pair<std::shared_ptr<AMQP::Channel>, std::string>>>();
+            auto futCreateChannel = doneCreation->get_future();
+            connection->asyncCreateChannel(
+                  [doneCreation](const std::shared_ptr<AMQP::Channel>& channel, const char* errMsg) {
+                      doneCreation->set_value(std::pair(channel, std::string(errMsg ? errMsg : "")));
+                  });
+            CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futCreateChannel.wait_for(m_timeout));
+            const auto channel_msg = futCreateChannel.get();
+            if (i < maxNumChannels) {
+                CPPUNIT_ASSERT_MESSAGE("Channel missing: " + util::toString(i), channel_msg.first);
+                channels.push_back(channel_msg.first); // keep alive
+            } else {
+                CPPUNIT_ASSERT_EQUAL(std::string("Runtime exception creating channel (Too many? Check logs!)"),
+                                     channel_msg.second);
+            }
+        }
+        CPPUNIT_ASSERT_EQUAL(maxNumChannels, channels.size());
+        channels.clear();
         CPPUNIT_ASSERT_EQUAL(1l, connection.use_count());
         CPPUNIT_ASSERT_NO_THROW(connection.reset());
 
