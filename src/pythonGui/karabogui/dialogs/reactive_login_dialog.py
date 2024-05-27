@@ -25,7 +25,7 @@ from struct import calcsize, unpack
 
 from qtpy import uic
 from qtpy.QtCore import Qt, QTimer, QUrl, Signal, Slot
-from qtpy.QtGui import QDesktopServices, QIntValidator
+from qtpy.QtGui import QDesktopServices, QIntValidator, QKeyEvent
 from qtpy.QtNetwork import (
     QAbstractSocket, QNetworkAccessManager, QNetworkReply, QNetworkRequest,
     QSslConfiguration, QSslSocket, QTcpSocket)
@@ -75,6 +75,16 @@ class Validator(IntValidator):
         return super().validate(input, pos)
 
 
+class Cell(QLineEdit):
+
+    onBackspacePressed = Signal()
+
+    def keyPressEvent(self, event: QKeyEvent) -> None:
+        if event.key() == Qt.Key_Backspace:
+            self.onBackspacePressed.emit()
+        return super().keyPressEvent(event)
+
+
 class AccessCodeWidget(QWidget):
     """A widget to display each digit in the access code in a separate cell(
     QLineEdit)"""
@@ -88,7 +98,7 @@ class AccessCodeWidget(QWidget):
 
         self.cells = []
         for _ in range(6):
-            cell = QLineEdit(parent=self)
+            cell = Cell(parent=self)
             cell.setFixedWidth(30)
             cell.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
             cell.setAlignment(Qt.AlignCenter)
@@ -96,6 +106,7 @@ class AccessCodeWidget(QWidget):
             self.cells.append(cell)
             layout.addWidget(cell)
             cell.textChanged.connect(self.on_text_changed)
+            cell.onBackspacePressed.connect(self.on_backspace_pressed)
 
     @Slot(str)
     def on_text_changed(self, text: str):
@@ -110,6 +121,14 @@ class AccessCodeWidget(QWidget):
             next_index = current_index + 1
             self.cells[next_index].setFocus()
         self.valueChanged.emit()
+
+    @Slot()
+    def on_backspace_pressed(self) -> None:
+        """Set focus on the previous cell."""
+        index = self.cells.index(self.sender())
+        if index != 0:
+            index -= 1
+        self.cells[index].setFocus()
 
     def get_access_code(self) -> str:
         return "".join(cell.text() for cell in self.cells)
