@@ -80,7 +80,7 @@ namespace karabo::net {
         std::string getCurrentUrl() const;
 
         /**
-         * Whether connected or in good progress of being connected
+         * Whether connection established
          */
         bool isConnected() const;
 
@@ -170,7 +170,8 @@ namespace karabo::net {
         // Connection and its state:
         std::shared_ptr<AMQP::TcpConnection> m_connection;
         enum class State {
-            eUnknown = 2000,   // At the beginning
+            eUnknown = 2000,   // At the beginning and after a failed connection attempt
+            eStarted,          // Connection attempt is started
             eNotConnected,     // No connection
             eConnectionDone,   // Phys.connection done
             eConnectionReady,  // Logical connection (phys. + login)
