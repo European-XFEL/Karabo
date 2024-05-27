@@ -2,6 +2,7 @@ import json
 from ast import literal_eval
 
 import pytest
+from qtpy.QtCore import Qt
 from qtpy.QtNetwork import QNetworkReply, QNetworkRequest
 
 from karabogui import access as krb_access
@@ -9,7 +10,7 @@ from karabogui.const import IS_WINDOWS_SYSTEM
 from karabogui.dialogs.reactive_login_dialog import (
     AccessCodeWidget, LoginType, ReactiveLoginDialog, TemporarySessionDialog)
 from karabogui.singletons.configuration import Configuration
-from karabogui.testing.utils import click_button, singletons
+from karabogui.testing.utils import click_button, keySequence, singletons
 
 
 def test_access_level(gui_app):
@@ -160,3 +161,18 @@ def test_access_widget(gui_app):
     assert widget.cells[3].text() == "4"
     assert widget.cells[4].text() == "5"
     assert widget.cells[5].text() == "6"
+
+    # Backspace should move focus to previous cell
+    cell = widget.focusWidget()
+    current_index = widget.cells.index(cell)
+    assert current_index
+    keySequence(cell, Qt.Key_Backspace)
+    new_cell = widget.focusWidget()
+    new_index = widget.cells.index(new_cell)
+    assert new_index == current_index - 1
+
+    # Backspace when focus is on first cell.
+    first_cell = widget.cells[0]
+    first_cell.setFocus(True)
+    keySequence(first_cell, Qt.Key_Backspace)
+    assert first_cell == widget.focusWidget()
