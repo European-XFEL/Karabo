@@ -233,7 +233,6 @@ qt                   5.9.7             GPLv3/Commercial                         
 qtpy                 1.9               MIT                                                         no                    yes
 redisclient          1.0.2dev          MIT                                                         yes                   no
 requests             2.19.1            APLv2                                                       no                    no
-rpathology           0.0.1             MIT                                                         no                    no
 scikit-learn         0.14.1            BSD                                                         no                    no
 scipy                1.7.3             BSD                                                         no                    no
 setuptools           39.1.0            MIT                                                         yes                   yes
@@ -426,7 +425,6 @@ during development:
 	"docker" -> "websocket_client"
 	"docker" -> "docker_pycreds"
 	"coverage"
-	"rpathology"
 	"nose"
 	"py"
 	"pytest"
