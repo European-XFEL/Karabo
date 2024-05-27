@@ -104,7 +104,7 @@ install_python() {
     # build python if not found in conan cache
     local build_opts="--build=missing"
     # apply custom profile on top of default profile
-    local profile_opts="-pr:b=./conanprofile.karabo -pr:h=./conanprofile.karabo"
+    local profile_opts="-pr:h=./conanprofile.karabo"
     # always compile patchelf, b2, openssl from source (needed later), ensures linkage against correct GLIBC version symbols
     if [[ $INSTALL_PREFIX == *"CentOS-7"* ]]; then
         safeRunCommandQuiet "conan install patchelf/0.13@ --build=patchelf --build=missing $profile_opts"
@@ -158,7 +158,7 @@ install_from_deps() {
         # boost:python_executable comes from a variable, so it must be defined here
         local build_opts="--build=missing -o boost/*:python_executable=$INSTALL_PREFIX/bin/python"
         # apply custom profile on top of default profile
-        local profile_opts="-pr:b=./conanprofile.karabo -pr:h=./conanprofile.karabo"
+        local profile_opts="-pr:h=./conanprofile.karabo"
 
     # always compile openssl from source (needed later), ensures linkage against correct GLIBC version symbols
     if [[ $INSTALL_PREFIX == *"CentOS-7"* ]]; then
@@ -168,13 +168,15 @@ install_from_deps() {
         build_opts="$build_opts -o openssl/*:openssldir=/etc/ssl"
     fi
 
-        # install packages listed in the extern/conanfile.txt
-        safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan install . $folder_opts $build_opts $profile_opts"
-        # fix read-only files installed by nss (to enable conan reinstalls)
-        safeRunCommandQuiet "chmod +w $INSTALL_PREFIX/include/*"
+    # install packages listed in the extern/conanfile.txt
+    safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan install . $folder_opts $build_opts $profile_opts"
+    # fix read-only files installed by nss (to enable conan reinstalls)
+    safeRunCommandQuiet "chmod +w $INSTALL_PREFIX/include/*"
 
-        # fix rpaths
-        safeRunCommandQuiet "./relocate_deps.sh $INSTALL_PREFIX"
+    # fix rpaths
+    # Relocate the libraries/executables
+    safeRunCommand "find $INSTALL_PREFIX/lib -maxdepth 1 -name '*.so' -exec $INSTALL_PREFIX/bin/patchelf --force-rpath --set-rpath '\$ORIGIN/../lib' {} \;"
+    safeRunCommandQuiet "./relocate_deps.sh $INSTALL_PREFIX"
 
     # for whatever reason conan does not reliably copy *.pc files from its root directory
     # we do this here instead, and also capture any .pc files our from source builds created
