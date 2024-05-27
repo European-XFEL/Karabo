@@ -47,7 +47,7 @@ def test_mainwindow(gui_app, mocker, subtests):
             mw.update_server_connection(data=None)
             assert not mw.tbTempSession.isVisible()
             assert not mw.tbTempSession.isChecked()
-            assert mw.tbTempSession.toolTip() == "Start a temporary Session"
+            assert mw.tbTempSession.toolTip() == "Start a temporary session"
 
             krb_access.is_authenticated.return_value = False
             mw.update_server_connection(data=data)
