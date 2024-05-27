@@ -525,7 +525,7 @@ class TemporarySessionDialog(QDialog):
         bytes_string = reply.readAll()
         reply_body = str(bytes_string, "utf-8")
         auth_result = json.loads(reply_body)
-        if error == QNetworkReply.NoError:
+        if error == QNetworkReply.NoError and auth_result["success"]:
             krb_access.ONE_TIME_TOKEN = auth_result["once_token"]
             highest_access_level = krb_access.HIGHEST_ACCESS_LEVEL.name
             krb_access_level = krb_access.ACCESS_LEVEL_MAP.get(
@@ -538,6 +538,8 @@ class TemporarySessionDialog(QDialog):
             )
             super().accept()
         else:
-            error = auth_result.get("detail")
+            error = auth_result.get("error_msg")
+            self.error_label.setStyleSheet(
+                "QLabel#error_label {color:red;}")
             self.error_label.setText(error)
         reply.deleteLater()
