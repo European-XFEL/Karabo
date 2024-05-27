@@ -4,6 +4,7 @@ project(openmqc LANGUAGES C CXX)
 
 find_package(Threads REQUIRED)
 find_package(nss REQUIRED)
+find_package(nspr REQUIRED)
 
 add_library(${CMAKE_PROJECT_NAME} SHARED)
 
@@ -30,6 +31,13 @@ target_link_libraries(
     PUBLIC
     Threads::Threads
     nss::nss
+    nspr::nspr
+)
+
+target_link_options(
+    ${CMAKE_PROJECT_NAME}
+    PRIVATE
+    "LINKER:--disable-new-dtags,-z,origin"
 )
 
 set_target_properties(
