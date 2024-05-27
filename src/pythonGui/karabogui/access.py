@@ -81,3 +81,11 @@ def is_authenticated():
 def is_temporary_session() -> bool:
     """Check if session is temporary"""
     return TEMPORARY_SESSION_USER is not None
+
+
+def reset_login():
+    """Reset the global login information"""
+    global ONE_TIME_TOKEN, TEMPORARY_SESSION_WARNING, TEMPORARY_SESSION_USER
+    ONE_TIME_TOKEN = None
+    TEMPORARY_SESSION_USER = None
+    TEMPORARY_SESSION_WARNING = False
