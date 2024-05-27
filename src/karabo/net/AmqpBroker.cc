@@ -80,18 +80,18 @@ namespace karabo {
             // The connection would be created asynchronously in the background when the client needs it.
             // To match the Broker interface, we block here until connected.
             // That also eases diagnosis in case of problems.
-            if (!m_connection->isConnected()) {
-                std::promise<boost::system::error_code> prom;
-                auto fut = prom.get_future();
-                m_connection->asyncConnect([&prom](const boost::system::error_code ec) { prom.set_value(ec); });
-                const boost::system::error_code ec = fut.get();
-                if (ec) {
-                    std::ostringstream oss;
-                    oss << "Failed to connect to AMQP broker: code #" << ec.value() << " -- " << ec.message();
-                    // TODO: Should we try to repeat until connection is possible (i.e. broker becomes available)?
-                    //       That way it is done for JMS broker.
-                    throw KARABO_NETWORK_EXCEPTION(oss.str());
-                }
+            // Note that it does not matter for asyncConnect whether we are already connected or not or
+            // in the process of connecting - we will get success or failure reported properly.
+            std::promise<boost::system::error_code> prom;
+            auto fut = prom.get_future();
+            m_connection->asyncConnect([&prom](const boost::system::error_code ec) { prom.set_value(ec); });
+            const boost::system::error_code ec = fut.get();
+            if (ec) {
+                std::ostringstream oss;
+                oss << "Failed to connect to AMQP broker: code #" << ec.value() << " -- " << ec.message();
+                // TODO: Should we try to repeat until connection is possible (i.e. broker becomes available)?
+                //       That way it is done for JMS broker.
+                throw KARABO_NETWORK_EXCEPTION(oss.str());
             }
 
             // Create client already here - since no subscriptions yet, read handler will not yet be called

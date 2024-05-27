@@ -110,11 +110,7 @@ namespace karabo {
         bool AmqpConnection::isConnected() const {
             std::promise<bool> connectedDone;
             auto connectedFut = connectedDone.get_future();
-            dispatch([this, &connectedDone]() {
-                // For now, treat being in the connection process as already connected
-                const bool result = (m_state > State::eUnknown && m_state <= State::eConnectionReady);
-                connectedDone.set_value(result);
-            });
+            dispatch([this, &connectedDone]() { connectedDone.set_value(m_state == State::eConnectionReady); });
             return connectedFut.get();
         }
 
@@ -144,10 +140,28 @@ namespace karabo {
             // Jump to the internal thread (if not yet in it)
             dispatch([weakThis{weak_from_this()}, onComplete{std::move(onComplete)}]() {
                 if (auto self = weakThis.lock()) {
-                    // TODO: Here we could check the connection status and attach 'onComplete' to
-                    //       'm_onConnectionComplete' in case the process has already been started.
-                    self->m_onConnectionComplete = std::move(onComplete);
-                    self->doAsyncConnect();
+                    if (self->m_state == State::eConnectionReady) {
+                        // Already connected is treated as success
+                        self->post(std::bind(onComplete, KARABO_ERROR_CODE_SUCCESS));
+                    } else if (self->m_state == State::eUnknown || self->m_state > State::eConnectionReady) {
+                        // Not yet tried or after connection loss: Try again
+                        self->m_onConnectionComplete = std::move(onComplete);
+                        self->m_state = State::eStarted;
+                        self->doAsyncConnect();
+                    } else {
+                        // Connection process has been started, just hook the handler into the existing one
+                        if (self->m_onConnectionComplete) {
+                            auto combinedOnComplete = [newOnComplete{std::move(onComplete)},
+                                                       previousOnComplete{std::move(self->m_onConnectionComplete)}](
+                                                            const boost::system::error_code ec) {
+                                previousOnComplete(ec);
+                                newOnComplete(ec);
+                            };
+                            self->m_onConnectionComplete = combinedOnComplete;
+                        } else {
+                            self->m_onConnectionComplete = std::move(onComplete);
+                        }
+                    }
                 } else {
                     // To guarantee that 'onComplete' is not executed in the calling thread, we would have to post.
                     // But we can't since we are already (being) destructed, so member function 'post' not available.
@@ -157,7 +171,6 @@ namespace karabo {
         }
 
         void AmqpConnection::doAsyncConnect() {
-            m_state = State::eUnknown;
             const std::string& url = m_urls[m_urlIndex];
             try {
                 AMQP::Address address(url);
@@ -196,7 +209,7 @@ namespace karabo {
                                           << " != " << m_urls[m_urlIndex];
                 return;
             }
-            if (m_state == State::eUnknown) {
+            if (m_state == State::eStarted) {
                 KARABO_LOG_FRAMEWORK_DEBUG << "AmqpConnection attached. url=" << url;
             } else {
                 KARABO_LOG_FRAMEWORK_WARN << "AmqpConnection attached called, but in state "
@@ -256,7 +269,6 @@ namespace karabo {
                 // Connected on Tcp level, but invalid credentials in the url:
                 // onDetached will not be called (bug in AMQP lib?), so call m_onConnectionComplete
                 callOnComplete(KARABO_ERROR_CODE_CONNECT_REFUSED);
-                m_state = State::eUnknown;
                 return;
             }
 
@@ -297,7 +309,6 @@ namespace karabo {
             if (m_state == State::eNotConnected) {
                 // We come here after onError if connection failed due to invalid credentials
                 callOnComplete(KARABO_ERROR_CODE_NOT_CONNECTED);
-                m_state = State::eUnknown;
             }
         }
 
@@ -305,12 +316,14 @@ namespace karabo {
             if (ec) {
                 m_connection.reset();
                 if (++m_urlIndex < m_urls.size()) { // So far failed, but there are further urls to try
+                    m_state = State::eStarted;
                     // Posting needed when invalid host port was the last url tried, otherwise handler times out
                     // (posting puts doAsyncConnect after the expected onDetached)
                     post(bind_weak(&AmqpConnection::doAsyncConnect, this));
                     return; // no call to m_onConnectionComplete yet
                 } else {
                     m_urlIndex = 0; // if asyncConnect is called again, start from first url
+                    m_state = State::eUnknown;
                 }
             }
             // Succeeded or finally failed
@@ -351,11 +364,15 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_INFO
                           << "Channel creation requested, but not yet connected. Postpone until connected.";
                     m_pendingOnChannelCreations.push_back(std::move(onComplete));
-                    if (m_state == State::eUnknown) doAsyncConnect(); // no m_onConnectionComplete needed
-                } else {                                              // closed, lost or error are not (yet?) treated
+                    if (m_state == State::eUnknown) {
+                        // no need to set m_onConnectionComplete
+                        m_state = State::eStarted;
+                        doAsyncConnect();
+                    }
+                } else { // closed, lost or error are not (yet?) treated
                     // Have to post since it was guaranteed that handler is not called from same scope as
                     // asyncCreateChannel
-                    post(boost::bind(onComplete, nullptr, "Connection in bad state"));
+                    post(std::bind(onComplete, nullptr, "Connection in bad state"));
                     // In future might downgrade to DEBUG - let's see...
                     KARABO_LOG_FRAMEWORK_INFO << "Channel creation failed: connection in bad state.";
                 }
@@ -363,12 +380,21 @@ namespace karabo {
             }
             // Create channel: Since it takes a raw pointer to the connection, we use a deleter that takes care that the
             //                 connection outlives the channel.
-            // TODO: Can throw if too many channels!
-            std::shared_ptr<AMQP::Channel> channelPtr(new AMQP::TcpChannel(m_connection.get()),
-                                                      [connection{m_connection}](AMQP::Channel* p) mutable {
-                                                          delete p;
-                                                          connection.reset();
-                                                      });
+            std::shared_ptr<AMQP::Channel> channelPtr(nullptr, [connection{m_connection}](AMQP::Channel* p) mutable {
+                delete p;
+                connection.reset();
+            });
+            try {
+                channelPtr.reset(new AMQP::TcpChannel(m_connection.get()));
+            } catch (const std::runtime_error& e) {
+                // As documented for TcpChannel constructor if connection closed or max number of channels reached
+                KARABO_LOG_FRAMEWORK_ERROR << "Cannot create channel due to: " << e.what();
+                // Need to post to guarantee not to call handler in calling thread
+                // Note: onComplete takes const char*, so cannot bind a temporary
+                // (TODO: switch to string and here add e.what())
+                post(std::bind(onComplete, nullptr, "Runtime exception creating channel (Too many? Check logs!)"));
+                return;
+            }
 
             // Attach success and failure handlers to channel - since we run in single threaded event loop that is OK
             // after channel creation since any action can only run after this function
