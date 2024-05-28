@@ -162,10 +162,18 @@ def test_access_widget(gui_app):
     assert widget.cells[4].text() == "5"
     assert widget.cells[5].text() == "6"
 
-    # Backspace should move focus to previous cell
+    # Backspace should clear the cell
     cell = widget.focusWidget()
     current_index = widget.cells.index(cell)
     assert current_index
+    assert cell.text()
+    keySequence(cell, Qt.Key_Backspace)
+    new_cell = widget.focusWidget()
+    new_index = widget.cells.index(new_cell)
+    assert not cell.text()
+    assert new_index == current_index
+
+    # Backspace should move focus to previous cell from empty cell.
     keySequence(cell, Qt.Key_Backspace)
     new_cell = widget.focusWidget()
     new_index = widget.cells.index(new_cell)
