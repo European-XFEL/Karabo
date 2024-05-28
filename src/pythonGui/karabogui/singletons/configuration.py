@@ -113,7 +113,6 @@ NETWORK = "network"
 PROJECT = "project"
 BACKBONE = "backbone"
 DIRECTORIES = "dir"
-PANEL = "panel"
 DOCU = "https://rtd.xfel.eu/docs/deployed-controls-{topic}/en/latest/{deviceId}.html"  # noqa
 USER = "user"
 
@@ -160,11 +159,6 @@ class Configuration(QObject):
     # Last directories stored and used
 
     data_dir = Item(q_set=True, group=DIRECTORIES)
-
-    # ----------------------------------------------
-    # Panels
-
-    console_visible = Item(default=False, q_set=True, group=PANEL, dtype=bool)
 
     # ----------------------------------------------
     # MainWindow, Wizard and DPI
@@ -262,12 +256,12 @@ class Configuration(QObject):
     def info(self):
         """Return the relevant user meta data information from the config
 
-        This method only accounts `PANEL` and `USER` group information.
+        This method only accounts `USER` group information.
         """
-        ret = {PANEL: {}, USER: {}}
+        ret = {USER: {}}
         for key in self._memory:
             group = getattr(self.__class__, key).group
-            if group not in (PANEL, USER):
+            if group != USER:
                 continue
             ret[group][key] = getattr(self, key)
         return ret
