@@ -11,7 +11,7 @@ class KaraboOpenMQConan(ConanFile):
     generators = "CMakeToolchain", "CMakeDeps"
     exports_sources = "openmqc-5.1.4.1.tar", "CMakeLists.txt"
 
-    requires = [ "nss/3.72@karabo/py311", "nspr/4.35" ]
+    requires = [ "nss/3.72", "nspr/4.35" ]
 
     def source(self):
         zip_name = "openmqc-%s.tar" % self.version
