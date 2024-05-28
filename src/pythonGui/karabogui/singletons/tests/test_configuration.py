@@ -17,7 +17,7 @@
 import pytest
 
 from ..configuration import (
-    BACKBONE, DIRECTORIES, NETWORK, PANEL, PROJECT, USER, Configuration)
+    BACKBONE, DIRECTORIES, NETWORK, PROJECT, USER, Configuration)
 
 
 class MockSettings:
@@ -46,7 +46,7 @@ def test_configuration_namespace():
     config['device_domain'] = 'CAS_INTERNAL'
     config['domain'] = 'CAS_INTERNAL'
     config['db_token'] = 'admin'
-    assert len(config) == 22
+    assert len(config) == 21
     assert config['db_token'] == 'admin'
     assert config['device_domain'] == 'CAS_INTERNAL'
     assert config['domain'] == 'CAS_INTERNAL'
@@ -54,7 +54,6 @@ def test_configuration_namespace():
     keys = [
         'access_level',
         'broker_topic',
-        'console_visible',
         'data_dir',
         'db_token',
         'development',
@@ -96,7 +95,7 @@ def test_default_value():
         if item.dtype is not None:
             counter += 1
             assert item.default is not None
-    assert counter == 6
+    assert counter == 5
 
 
 def test_set_bool_value(mocker):
@@ -124,7 +123,7 @@ def test_erase_value(mocker):
 def test_configuration_groups_info():
     config = Configuration()
     groups = config.groups()
-    assert len(groups) == 7
+    assert len(groups) == 6
     user_group = [item.name for item in groups[USER]]
     assert len(user_group) == 9
     assert 'wizard' in user_group
@@ -150,10 +149,6 @@ def test_configuration_groups_info():
     assert len(bone_group) == 2
     assert 'broker_topic' in bone_group
     assert 'documentation' in bone_group
-    panel_group = [item.name for item in groups[PANEL]]
-    assert len(panel_group) == 1
-    assert 'console_visible' in panel_group
 
     info = config.info()
-    assert PANEL in info
     assert USER in info
