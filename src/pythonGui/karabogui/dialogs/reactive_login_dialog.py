@@ -125,8 +125,9 @@ class AccessCodeWidget(QWidget):
     @Slot()
     def on_backspace_pressed(self) -> None:
         """Set focus on the previous cell."""
-        index = self.cells.index(self.sender())
-        if index != 0:
+        sender = self.sender()
+        index = self.cells.index(sender)
+        if not sender.text() and index != 0:
             index -= 1
         self.cells[index].setFocus()
 
