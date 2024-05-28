@@ -351,11 +351,14 @@ class ReactiveLoginDialog(QDialog):
     @Slot(QNetworkReply)
     def onAuthReply(self, reply):
         self._authenticating = False
-        # XXX: Label sufficient?
         self._update_dialog_state()
 
-        error = reply.error()
+        url = reply.url().path()
+        if url.endswith("user_tokens") and not self.remember_login.isChecked():
+            del get_config()["refresh_token"]
+            del get_config()["refresh_token_user"]
 
+        error = reply.error()
         bytes_string = reply.readAll()
         reply_body = str(bytes_string, "utf-8")
         auth_result = json.loads(reply_body)
@@ -366,9 +369,6 @@ class ReactiveLoginDialog(QDialog):
                 refresh_token_user = auth_result.get("username")
                 get_config()["refresh_token"] = refresh_token
                 get_config()["refresh_token_user"] = refresh_token_user
-            else:
-                del get_config()["refresh_token"]
-                del get_config()["refresh_token_user"]
             self.accept()
         else:
             self._error = auth_result.get("error_msg")
