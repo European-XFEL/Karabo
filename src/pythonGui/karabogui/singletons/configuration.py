@@ -243,6 +243,8 @@ class Configuration(QObject):
         ret = defaultdict(list)
         for key in self._memory:
             group = getattr(self.__class__, key).group
+            if group == AUTHENTICATION:
+                continue
             ret[group].append(getattr(self.__class__, key))
             ret[group] = sorted(ret[group], key=lambda i: i.name)
         return dict(sorted(ret.items()))
