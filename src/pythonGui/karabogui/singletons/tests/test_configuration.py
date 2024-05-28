@@ -123,7 +123,7 @@ def test_erase_value(mocker):
 def test_configuration_groups_info():
     config = Configuration()
     groups = config.groups()
-    assert len(groups) == 6
+    assert len(groups) == 5
     user_group = [item.name for item in groups[USER]]
     assert len(user_group) == 9
     assert 'wizard' in user_group
