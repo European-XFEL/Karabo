@@ -293,11 +293,15 @@ def get_alarm_svg(alarm_type):
 def get_temporary_button_data() -> (QIcon, str):
     """Provide the icon and tooltip for the temporary session button
     depending on the state of the temporary session."""
-    if krb_access.TEMPORARY_SESSION_USER is None:
-        tooltip = "Start a temporary session"
+    user = krb_access.TEMPORARY_SESSION_USER
+    level = krb_access.GLOBAL_ACCESS_LEVEL.name
+    if user is None:
+        tooltip = "Start a temporary session ..."
         return icons.switchNormal, tooltip
     if krb_access.TEMPORARY_SESSION_WARNING:
-        tooltip = "Temporary session is about to end"
+        tooltip = (f"Logged in as '{user}' with access level '{level}'. "
+                   "Temporary session is about to end.")
         return icons.switchWarning, tooltip
-    tooltip = "End the temporary session"
+    tooltip = (f"Logged in as '{user}' with access level '{level}'. "
+               "End the temporary session.")
     return icons.switchActive, tooltip
