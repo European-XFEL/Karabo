@@ -31,7 +31,7 @@ class TestAppConfDialog(GuiTestCase):
             model = dialog.tree_view.model()
             assert model is not None
             # We have 6 childen on root (groups)
-            assert model.rowCount() == 7
+            assert model.rowCount() == 6
             group_index = model.index(1, 0)
             index = model.index(0, 0, group_index)
             assert index.data() is not None
@@ -54,7 +54,7 @@ class TestAppConfDialog(GuiTestCase):
             assert index.data() == "Karabo"
 
             # Check a boolean
-            group_index = model.index(6, 0)
+            group_index = model.index(5, 0)
             assert group_index.data() == "user"
             index = model.index(8, 0, group_index)
             assert index.data() == "wizard"
