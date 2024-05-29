@@ -70,6 +70,12 @@ _PANEL_TITLE_CONFIG = {
 
 MENU_HEIGHT = 40
 
+ACCESS_LEVEL_INFO = """<html><head/><body><p><span style=" font-size:10pt;
+font-style:italic; font-weight:normal; color:#242424;">Currently logged in as
+temporary user <b>'{user}'</b> with the access level <b>'{access_level}'</b>.
+Do you really want to end the Temporary session?</span></p>
+"""
+
 
 class MainWindowBanner(QTextBrowser):
     """The MainWindow Banner"""
@@ -925,7 +931,9 @@ class MainWindow(QMainWindow):
     @Slot(bool)
     def onTemporarySession(self, _):
         if krb_access.is_temporary_session():
-            ask = "Do you really want to end the Temporary session?"
+            ask = ACCESS_LEVEL_INFO.format(
+                user=krb_access.TEMPORARY_SESSION_USER,
+                access_level=krb_access.GLOBAL_ACCESS_LEVEL.name)
             dialog = QMessageBox(
                 QMessageBox.Question, 'Temporary Session', ask,
                 QMessageBox.Yes | QMessageBox.No, parent=self)
