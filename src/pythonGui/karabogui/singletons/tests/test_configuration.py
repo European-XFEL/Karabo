@@ -21,9 +21,7 @@ from ..configuration import (
 
 
 class MockSettings:
-
-    def __init__(self):
-        self.last_path = None
+    last_path = None
 
     @classmethod
     def value(cls, path):
@@ -33,8 +31,10 @@ class MockSettings:
     def setValue(cls, name, value):
         setattr(cls, name, value)
 
-    def remove(self, key):
-        self.last_path = key
+    @classmethod
+    def remove(cls, key):
+        cls.last_path = key
+        setattr(cls, key, None)
 
     def __call__(self, *args, **kwargs):
         return self
@@ -117,7 +117,16 @@ def test_erase_value(mocker):
     assert config["wizard"] is True
     config["wizard"] = False
     del config["wizard"]
+    # Nothing happens for cached value
+    assert config["wizard"] is False
     assert mock.last_path == "user/wizard"
+    # Shared item
+    assert config["refresh_token"] is None
+    config["refresh_token"] = "12345"
+    assert config["refresh_token"] == "12345"
+    del config["refresh_token"]
+    assert mock.last_path == "authentication/refresh_token"
+    assert config["refresh_token"] is None
 
 
 def test_configuration_groups_info():

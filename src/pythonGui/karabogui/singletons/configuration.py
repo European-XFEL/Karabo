@@ -94,11 +94,11 @@ class Item:
 class SharedItem(Item):
     """A SharedItem in the Configuration is by default storing into QSettings
     """
-    def __init__(self, default: Any = None,
-                 group: str | None = None,
+
+    def __init__(self, group: str | None = None,
                  editable: bool = False,
                  dtype: int | float | bool | None = None) -> None:
-        super().__init__(default=default, q_set=True, group=group,
+        super().__init__(default=None, q_set=True, group=group,
                          editable=editable, dtype=dtype)
 
     def __get__(self, instance: "SharedItem",
@@ -106,6 +106,11 @@ class SharedItem(Item):
         if instance is None:
             return self
         return self.get_shared_value()
+
+    def __set_name__(self, owner: Type["SharedItem"], name: str) -> None:
+        self.name = name
+        self.path = f"{self.group}/{self.name}"
+        self.default = None
 
 
 AUTHENTICATION = "authentication"
@@ -195,8 +200,8 @@ class Configuration(QObject):
     # ----------------------------------------------
     # Shared authentication interface
 
-    refresh_token_user = SharedItem(default=None, group=AUTHENTICATION)
-    refresh_token = SharedItem(default=None, group=AUTHENTICATION)
+    refresh_token_user = SharedItem(group=AUTHENTICATION)
+    refresh_token = SharedItem(group=AUTHENTICATION)
 
     def __new__(cls, *args, **kwargs):
         instance = super().__new__(cls, *args, **kwargs)
