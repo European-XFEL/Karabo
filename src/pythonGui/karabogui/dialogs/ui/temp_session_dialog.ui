@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>481</width>
-    <height>221</height>
+    <width>418</width>
+    <height>233</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -37,41 +37,47 @@
      <property name="title">
       <string>User Authenticated Login</string>
      </property>
-     <layout class="QGridLayout" name="gridLayout_4">
-      <item row="1" column="3">
-       <spacer name="horizontalSpacer_2">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>104</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item row="1" column="0">
+     <layout class="QGridLayout" name="gridLayout">
+      <property name="topMargin">
+       <number>16</number>
+      </property>
+      <property name="bottomMargin">
+       <number>6</number>
+      </property>
+      <property name="verticalSpacing">
+       <number>-1</number>
+      </property>
+      <item row="2" column="0">
        <widget class="QLabel" name="label_access_code">
         <property name="text">
          <string>Access Code</string>
         </property>
        </widget>
       </item>
-      <item row="0" column="2" colspan="2">
-       <widget class="QPushButton" name="authenticate_button">
-        <property name="toolTip">
-         <string> Open browser to generate the access code by authenticating the user</string>
+      <item row="2" column="1" colspan="2">
+       <layout class="QHBoxLayout" name="access_widget_layout">
+        <property name="rightMargin">
+         <number>10</number>
         </property>
-        <property name="text">
-         <string>Open Access Form</string>
-        </property>
-        <property name="autoDefault">
-         <bool>false</bool>
-        </property>
-       </widget>
+       </layout>
       </item>
-      <item row="0" column="0" colspan="2">
+      <item row="2" column="3">
+       <spacer name="horizontalSpacer_2">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::Fixed</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>80</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="0" column="0" colspan="4">
        <widget class="QLabel" name="info_label">
         <property name="enabled">
          <bool>true</bool>
@@ -92,19 +98,25 @@
          <string notr="true"/>
         </property>
         <property name="text">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt; font-style:italic; color:#242424;&quot;&gt;Open Access Form to generate the access code by &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt; font-style:italic; color:#242424;&quot;&gt;authenticating the user&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="textFormat">
          <enum>Qt::AutoText</enum>
         </property>
        </widget>
       </item>
-      <item row="1" column="1" colspan="2">
-       <layout class="QHBoxLayout" name="access_widget_layout">
-        <property name="rightMargin">
-         <number>10</number>
+      <item row="1" column="3">
+       <widget class="QPushButton" name="authenticate_button">
+        <property name="toolTip">
+         <string> Open browser to generate the access code by authenticating the user</string>
         </property>
-       </layout>
+        <property name="text">
+         <string>Open Access Form</string>
+        </property>
+        <property name="autoDefault">
+         <bool>false</bool>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>

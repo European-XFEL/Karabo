@@ -48,6 +48,13 @@ USER_INFO = """<p>You are logged in as '<span style=" font-weight:600;">
 {username}</span>'. Click 'Connect' to continue or</p><p>'Switch User' to
 change the user.</p>"""
 
+ACCESS_LEVEL_INFO = """<html><head/><body><p><span style=" font-size:10pt;
+font-style:italic; color:#242424;">Currently logged in as <b>'{user}'</b>
+with the access level <b>'{access_level}'.</b></span></p><p><span style="
+font-size:10pt; font-style:italic; color:#242424;">Open Access Form to
+generate the access code by authenticating the user.
+</span></p></body></html>"""
+
 NO_REFRESH_TOKEN_ERROR = "Refresh Token not found"
 
 
@@ -504,6 +511,11 @@ class TemporarySessionDialog(QDialog):
         self.access_manager.finished.connect(self.onAuthReply)
 
         self._auth_url = krb_access.AUTHENTICATION_SERVER
+
+        user = get_network().username
+        access_level = krb_access.GLOBAL_ACCESS_LEVEL.name
+        text = ACCESS_LEVEL_INFO.format(user=user, access_level=access_level)
+        self.info_label.setText(text)
 
     @Slot()
     def open_login_webpage(self):
