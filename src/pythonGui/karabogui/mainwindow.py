@@ -523,8 +523,6 @@ class MainWindow(QMainWindow):
         self.acSaveConcertShortcut.triggered.connect(
             self.onCreateConcertShortcut)
 
-        self.acRemoveToken = QAction("Clear Refresh Token", self)
-        self.acRemoveToken.triggered.connect(self.clearRefreshToken)
         self.acOpenConcert = QAction(
             icons.load, "Open Karabo Concert File", self)
         self.acOpenConcert.triggered.connect(self.onReadConcertFile)
@@ -545,6 +543,10 @@ class MainWindow(QMainWindow):
         self.acMacroDocumentation.triggered.connect(
             self.onMacroDocumentation)
         self.acMacroDocumentation.setCheckable(False)
+
+        self.acRemoveUserLogin = QAction(
+            icons.removeUser, "Clear User Login", self)
+        self.acRemoveUserLogin.triggered.connect(self.clearUserLogin)
 
         self.acRegisterApplication = QAction('Register Application', self)
         self.acRegisterApplication.triggered.connect(
@@ -582,8 +584,7 @@ class MainWindow(QMainWindow):
             self.onEraseMainWindowGeometry)
         mGeometryMenu.addAction(self.acEraseMainWindowGeometry)
 
-        mFileMenu.addAction(self.acRemoveToken)
-
+        mFileMenu.addAction(self.acRemoveUserLogin)
         if not const.IS_MAC_SYSTEM:
             mFileMenu.addAction(self.acRegisterApplication)
 
@@ -998,7 +999,7 @@ class MainWindow(QMainWindow):
             get_config()["data_dir"] = str(Path(file_name).parent)
 
     @Slot()
-    def clearRefreshToken(self) -> None:
+    def clearUserLogin(self) -> None:
         del get_config()["refresh_token"]
         del get_config()["refresh_token_user"]
-        get_logger().info("Removed the login information.")
+        get_logger().info("Removed the user login information")
