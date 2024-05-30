@@ -112,8 +112,7 @@ def supervise():
 def defaultall():
     if not check_service_dir():
         return []
-    os.chdir(absolute("var", "service"))
-    existing = {d for d in os.listdir() if not d.startswith(".")}
+    existing = available_services()
     argv = [arg.replace("/", "_") for arg in sys.argv[1:]
             if not arg.startswith("-")]
     argv = [arg if arg in existing else arg.lower()
@@ -143,6 +142,13 @@ def check_service_dir():
         print("service directory not present."
               " Please create one with `karabo-create-services`")
         return False
+
+
+def available_services():
+    """Get all available services"""
+    os.chdir(absolute("var", "service"))
+    existing = {d for d in os.listdir() if not d.startswith(".")}
+    return existing
 
 
 @entrypoint
@@ -215,10 +221,12 @@ def stopkarabo():
     assert len(sys.argv) > 1
 
     # Validate arguments that are not flags
-    has_args = any(s for s in sys.argv if s in defaultall())
+    argv = [arg.replace("/", "_").lower() for arg in sys.argv[1:]
+            if not arg.startswith("-")]
+    existing = available_services()
+    has_args = any(s for s in argv if s in existing)
     # Check for force flag
     has_force_flag = "-a" in sys.argv or "--all" in sys.argv
-
     if has_force_flag or has_args:
         exec_defaultall("svc", "-d")
     else:
