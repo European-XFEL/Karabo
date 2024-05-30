@@ -74,7 +74,7 @@ def cmake_settings(build_type: str,
     cmake_install_prefix = (
         f"{base_dir}/package/{build_type}/{distro_id}/"
         f"{distro_release_major}/{arch}/karabo")
-    cmake_toolchain_file = f"{base_dir}/extern/conan_toolchain-{arch}/conan_toolchain.cmake"
+    cmake_toolchain_file = f"{cmake_prefix_path}/conan_toolchain/conan_toolchain.cmake"
 
     if (build_type.upper() == "DEBUG" or
             build_type.upper() == "CODECOVERAGE"):
