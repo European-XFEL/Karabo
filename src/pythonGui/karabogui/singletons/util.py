@@ -81,3 +81,26 @@ def realign_topo_hash(topo_hash, attr):
         ret.setElement(k, v, a)
 
     return ret
+
+
+def _vigenere_shift(char: str, key_char: str, decrypt: bool = False) -> str:
+    if char.isalpha():
+        offset = ord("a") if char.islower() else ord("A")
+        key_offset = ord("a") if key_char.islower() else ord("A")
+        shift = ord(key_char) - key_offset
+        shift = -shift if decrypt else shift
+        return chr((ord(char) - offset + shift) % 26 + offset)
+    return char
+
+
+def encrypt(text: str, keyword: str) -> str | None:
+    kw = (keyword * (len(text) // len(keyword) + 1))[:len(text)]
+    return "".join(_vigenere_shift(char, key_char) for char, key_char in
+                   zip(text, kw))
+
+
+def decrypt(text: str, keyword: str) -> str | None:
+    kw = (keyword * (len(text) // len(keyword) + 1))[:len(text)]
+    return "".join(
+        _vigenere_shift(char, key_char, decrypt=True) for char, key_char in
+        zip(text, kw))
