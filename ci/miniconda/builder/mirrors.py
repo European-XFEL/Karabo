@@ -1,16 +1,21 @@
-from collections import defaultdict
-from functools import partial
 import json
 import os
 import os.path as op
+from collections import defaultdict
+from functools import partial
 
 from conda.cli.python_api import Commands
 from conda.exceptions import PackagesNotFoundError
 
 from .utils import conda_run
 
-CHANNEL_MAP = {'pkgs/main': 'https://repo.anaconda.com/pkgs/main/'}
-EXCLUDED_CHANNELS = ['karabo/channel', 'karabo/channel/mirror/conda-forge', 'pypi', '']
+CHANNEL_MAP = {"pkgs/main": "https://repo.anaconda.com/pkgs/main/"}
+EXCLUDED_CHANNELS = [
+    "karabo/channel",
+    "karabo/channel/mirror/conda-forge",
+    "pypi",
+    "",
+]
 
 
 class _MirrorChannel:
@@ -19,10 +24,10 @@ class _MirrorChannel:
 
     def __init__(self, name, mirror_root):
         self.name = name
-        self.norm_name = name.replace('/', '-')
+        self.norm_name = name.replace("/", "-")
         self.original_repo = CHANNEL_MAP.get(name, name)
         # not a path join. this is a URL
-        self.mirror_channel = "/".join([mirror_root, 'mirror', self.norm_name])
+        self.mirror_channel = "/".join([mirror_root, "mirror", self.norm_name])
         # Dictionary containing packages for each platform of this mirror
         self._packages = {}
 
@@ -37,18 +42,22 @@ class _MirrorChannel:
         try:
             packages_on_mirror = conda_run(
                 Commands.SEARCH,
-                '--override-channels', '-c',
-                self.mirror_channel, f'*[subdir={platform}]',
-                '--json')
+                "--override-channels",
+                "-c",
+                self.mirror_channel,
+                f"*[subdir={platform}]",
+                "--json",
+            )
 
             # All these packages are already on the target mirror,
             # so it is not necessary to upload them
             to_exclude = defaultdict(list)
-            print(f'Optimize upload for {self.norm_name}-{platform}')
+            print(f"Optimize upload for {self.norm_name}-{platform}")
             for name, packages in json.loads(packages_on_mirror).items():
                 for package in packages:
-                    to_exclude[package['name']].append((package['version'],
-                                                        package['build']))
+                    to_exclude[package["name"]].append(
+                        (package["version"], package["build"])
+                    )
             return to_exclude
         except PackagesNotFoundError as e:
             print(f"no packages from {self.mirror_channel} for {platform}")
@@ -69,36 +78,38 @@ class Mirrors:
         """Returns the packages we will need to download. This excludes packages
         already present in our mirror channels"""
         output = conda_run(
-            Commands.LIST, '-n', self.reference_environment, '--json')
+            Commands.LIST, "-n", self.reference_environment, "--json"
+        )
 
         for pkg in json.loads(output):
-            if pkg['base_url'].startswith('file://'):
+            if pkg["base_url"].startswith("file://"):
                 continue
 
             # skip local files
-            channel_name = pkg['channel']
+            channel_name = pkg["channel"]
             if channel_name in EXCLUDED_CHANNELS:
                 continue
 
             channel = self._mirrors.setdefault(
                 channel_name,
-                _MirrorChannel(
-                    channel_name, mirror_root=self.mirror_channel))
+                _MirrorChannel(channel_name, mirror_root=self.mirror_channel),
+            )
 
-            name = pkg['name']
-            version = pkg['version']
-            build = pkg['build_string']
-            platform = pkg['platform']
+            name = pkg["name"]
+            version = pkg["version"]
+            build = pkg["build_string"]
+            platform = pkg["platform"]
 
             to_exclude = channel.get_packages(platform)
 
             if name in to_exclude and (version, build) in to_exclude[name]:
                 # this package is already uploaded
-                print(f'Skipping upload of {name} to {channel_name}')
+                print(f"Skipping upload of {name} to {channel_name}")
                 continue
 
             self._needed_packages[channel_name][platform].append(
-                (name, version, build))
+                (name, version, build)
+            )
 
     def populate(self, target_dir):
         """Populate the mirror in the given target directory"""
@@ -108,26 +119,29 @@ class Mirrors:
             # Create a configuration file for each platform's packages
             print("needing", channel_name, platforms)
             for pkg_platform, needed_packages in platforms.items():
-                to_write = 'blacklist:\n' \
-                           '    - name: "*"\n' \
-                           'whitelist:\n'
+                to_write = "blacklist:\n" '    - name: "*"\n' "whitelist:\n"
 
                 # Whitelist all packages that are not yet mirrored
                 for name, version, build in needed_packages:
-                    to_write += f'    - name: {name}\n' \
-                        f'      version: \'{version}\'\n' \
-                        f'      build: \'{build}\'\n'
-                conf_filename = f'{mirror.norm_name}.yaml'
+                    to_write += (
+                        f"    - name: {name}\n"
+                        f"      version: '{version}'\n"
+                        f"      build: '{build}'\n"
+                    )
+                conf_filename = f"{mirror.norm_name}.yaml"
                 conf_file = op.join(target_dir, conf_filename)
-                with open(conf_file, 'w') as f:
+                with open(conf_file, "w") as f:
                     f.write(to_write)
 
-                print(f"""
+                print(
+                    f"""
 Creating mirror {mirror.name} - {pkg_platform} with the following configuration
 
-{to_write}""")
+{to_write}"""
+                )
                 self._populate_mirror(
-                    mirror, pkg_platform, conf_file, target_dir)
+                    mirror, pkg_platform, conf_file, target_dir
+                )
 
     def _populate_mirror(self, mirror, platform, conf_file, target_dir):
         """Calls a conda-mirror process in order to download all the packages
@@ -139,13 +153,20 @@ Creating mirror {mirror.name} - {pkg_platform} with the following configuration
         if not op.isdir(target_mirror_directory):
             os.makedirs(target_mirror_directory)
 
-        print(f'Mirroring channel {mirror.name}...')
+        print(f"Mirroring channel {mirror.name}...")
         conda_run(
             Commands.RUN,
-            '-n', 'base',
-            'conda', 'mirror',
-            '--upstream-channel', mirror.original_repo,
-            '--target-directory', target_mirror_directory,
-            '--platform', platform,
-            '--config', str(conf_file))
+            "-n",
+            "base",
+            "conda",
+            "mirror",
+            "--upstream-channel",
+            mirror.original_repo,
+            "--target-directory",
+            target_mirror_directory,
+            "--platform",
+            platform,
+            "--config",
+            str(conf_file),
+        )
         os.remove(conf_file)
