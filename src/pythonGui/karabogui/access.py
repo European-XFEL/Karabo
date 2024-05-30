@@ -31,7 +31,7 @@ USERNAMES = [level.lower() for level in ACCESS_LEVELS.keys()]
 # The globally defined access level variable which is verified and set by the
 # GUI server eventually
 GLOBAL_ACCESS_LEVEL = AccessLevel.OBSERVER
-HIGHEST_ACCESS_LEVEL = AccessLevel.OPERATOR
+HIGHEST_ACCESS_LEVEL = AccessLevel.OBSERVER
 ONE_TIME_TOKEN = None
 
 AUTHENTICATION_SERVER = None
