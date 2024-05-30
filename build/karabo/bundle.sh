@@ -99,6 +99,7 @@ mkdir -p $PACKAGEDIR/var/data
 
 # karabo external dependencies
 cp -rf $EXTERN_DEPS_DIR $PACKAGEDIR/extern
+rm -rf $PACKAGEDIR/extern/conan_toolchain
 
 # karathon and karabind
 # Use karabo embedded python interpreter
