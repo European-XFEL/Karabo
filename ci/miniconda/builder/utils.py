@@ -1,6 +1,6 @@
-from functools import wraps
 import os
 import subprocess
+from functools import wraps
 
 from conda.cli.python_api import Commands, run_command
 from conda.core.envs_manager import list_all_known_prefixes
@@ -10,10 +10,12 @@ from paramiko import AutoAddPolicy, SSHClient
 def conda_run(command, *args, **kwargs):
     stdout, stderr, ret_code = run_command(command, *args, **kwargs)
     if ret_code != 0:
-        msg = f'Command {command} [{args}] ' \
-              f'{kwargs} returned {ret_code}\n' \
-              f'STDOUT:\n {stdout}\n' \
-              f'STDERR:\n {stderr}'
+        msg = (
+            f"Command {command} [{args}] "
+            f"{kwargs} returned {ret_code}\n"
+            f"STDOUT:\n {stdout}\n"
+            f"STDERR:\n {stderr}"
+        )
         raise RuntimeError(msg)
     return stdout
 
@@ -25,6 +27,7 @@ def command_run(cmd):
         print(f"Error in running command: {e.output}")
         raise e
 
+
 def get_conda_prefix(env_name):
     prefix = None
     for path in list_all_known_prefixes():
@@ -35,11 +38,13 @@ def get_conda_prefix(env_name):
 
 def get_host_from_env():
     """Retrieve hostname, user and password from the environment"""
-    msg = "Env. Variables MIRROR_USER, MIRROR_HOSTNAME and MIRROR_PWD"\
-          " are required to upload to the upstream channel"
-    host = os.environ.get('MIRROR_HOSTNAME', None)
-    user = os.environ.get('MIRROR_USER', None)
-    pw = os.environ.get('MIRROR_PWD', None)
+    msg = (
+        "Env. Variables MIRROR_USER, MIRROR_HOSTNAME and MIRROR_PWD"
+        " are required to upload to the upstream channel"
+    )
+    host = os.environ.get("MIRROR_HOSTNAME", None)
+    user = os.environ.get("MIRROR_USER", None)
+    pw = os.environ.get("MIRROR_PWD", None)
     if any([v is None for v in (pw, user, host)]):
         raise RuntimeError(msg)
     return host, user, pw
@@ -51,8 +56,9 @@ def connected_to_remote(func):
         hostname, user, password = get_host_from_env()
         with SSHClient() as ssh_client:
             ssh_client.set_missing_host_key_policy(AutoAddPolicy())
-            ssh_client.connect(hostname=hostname, username=user,
-                               password=password)
+            ssh_client.connect(
+                hostname=hostname, username=user, password=password
+            )
             return func(*args, **kwargs, ssh=ssh_client)
 
     return wrapper
@@ -80,7 +86,7 @@ def rmdir(remote_path, keep_dir=False, sftp=None):
     files = sftp.listdir(remote_path)
 
     for file in files:
-        path = '/'.join([remote_path, file])
+        path = "/".join([remote_path, file])
         try:
             sftp.remove(path)
         except IOError:
