@@ -109,10 +109,10 @@ install_python() {
     if [[ $INSTALL_PREFIX == *"CentOS-7"* ]]; then
         safeRunCommandQuiet "conan install patchelf/0.13@ --build=patchelf --build=missing $profile_opts"
         safeRunCommandQuiet "conan install b2/4.10.1@ --build=b2 --build=missing $profile_opts"
-        safeRunCommandQuiet "conan install expat/2.6.0@ --build=expat --build=missing -o shared=True $profile_opts"
+        safeRunCommandQuiet "conan install expat/2.6.2@ --build=expat --build=missing -o shared=True $profile_opts"
         # openssl:openssldir=/etc/pki/tls on CentOS7
         build_opts="$build_opts --build=openssl -o openssl/*:openssldir=/etc/pki/tls"
-        safeRunCommandQuiet "conan install openssl/1.1.1l@ -o shared=True $build_opts $profile_opts"
+        safeRunCommandQuiet "conan install openssl/1.1.1w@ -o shared=True $build_opts $profile_opts"
     else
         build_opts="$build_opts -o openssl/*:openssldir=/etc/ssl"
     fi
