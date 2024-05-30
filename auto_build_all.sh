@@ -274,10 +274,6 @@ elif [[ $1 = "Clean" || $1 = "Clean-All" ]]; then
             rm -rf $EXTERN_DEPS_DIR
             echo "    removed $EXTERN_DEPS_DIR"
         fi
-        # remove builds and packages, but keep source files in cache
-        echo "### Cleaning conan cache (builds and packages) ###"
-        conan remove "*" -b -p -f
-        echo "    Cleared builds and packages from conan cache"
     fi
     exit 0
 else
@@ -465,7 +461,7 @@ safeRunCommand $EXTERN_DEPS_DIR/bin/cmake -DCMAKE_PREFIX_PATH=$EXTERN_DEPS_DIR \
     -DBUILD_LONG_RUN_TESTING=$BUILD_LONG_RUN_TESTING \
     -DGEN_CODE_COVERAGE=$GEN_CODE_COVERAGE \
     -DCMAKE_MAP_IMPORTED_CONFIG_DEBUG=Release \
-    -DCMAKE_TOOLCHAIN_FILE=$EXTERN_DEPS_DIR/conan_toolchain-$TARGET_ARCH/conan_toolchain.cmake \
+    -DCMAKE_TOOLCHAIN_FILE=$EXTERN_DEPS_DIR/conan_toolchain/conan_toolchain.cmake \
     -DCMAKE_INSTALL_PREFIX=$FRAMEWORK_INSTALL_DIR \
     -DCMAKE_BUILD_TYPE=$CMAKE_CONF \
     $scriptDir/src/.
@@ -500,10 +496,6 @@ if [ $? -ne 0 ]; then
     echo "#### Error on cmake project building phase. Exiting. ####"
     exit 1
 fi
-
-# Move the conan toolchain files out of the INSTALL_PREFIX
-safeRunCommand rm -rf $EXTERN_DEPS_BASE_DIR/conan_toolchain-$TARGET_ARCH
-safeRunCommand mv $EXTERN_DEPS_DIR/conan_toolchain-$TARGET_ARCH $EXTERN_DEPS_BASE_DIR
 
 # Installs the components of the Karabo Framework that are not built
 # with CMake into FRAMEWORK_INSTALL_DIR - the Python tests must be
