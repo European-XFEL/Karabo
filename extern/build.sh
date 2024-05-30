@@ -91,7 +91,7 @@ safeRunCommandQuiet() {
 install_python() {
     pushd $scriptDir
 
-    safeRunCommandQuiet "rm -rf $INSTALL_PREFIX/conan_toolchain-$TARGET_ARCH"
+    safeRunCommandQuiet "rm -rf $INSTALL_PREFIX/conan_toolchain"
 
     # create default build profile
     safeRunCommandQuiet "conan profile new default --detect --force"
@@ -100,7 +100,7 @@ install_python() {
     safeRunCommandQuiet "conan config set general.default_package_id_mode=package_revision_mode"
 
     # configure prefix paths
-    local folder_opts="--install-folder=$INSTALL_PREFIX/conan_toolchain-$TARGET_ARCH --output-folder=$INSTALL_PREFIX"
+    local folder_opts="--install-folder=$INSTALL_PREFIX/conan_toolchain --output-folder=$INSTALL_PREFIX"
     # build python if not found in conan cache
     local build_opts="--build=missing"
     # apply custom profile on top of default profile
@@ -153,7 +153,7 @@ install_from_deps() {
         safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan export ./resources/nss/conanfile.py nss/$NSS_VERSION@karabo/$CONAN_RECIPE_CHANNEL"
 
         # configure prefix paths
-        local folder_opts="--install-folder=$INSTALL_PREFIX/conan_toolchain-$TARGET_ARCH --output-folder=$INSTALL_PREFIX"
+        local folder_opts="--install-folder=$INSTALL_PREFIX/conan_toolchain --output-folder=$INSTALL_PREFIX"
         # when should conan build from sources? missing means if no pre-compiled binary package exists
         # boost:python_executable comes from a variable, so it must be defined here
         local build_opts="--build=missing -o boost/*:python_executable=$INSTALL_PREFIX/bin/python"
@@ -182,7 +182,7 @@ install_from_deps() {
     # we do this here instead, and also capture any .pc files our from source builds created
     # in the process.
     safeRunCommandQuiet "mkdir -p $INSTALL_PREFIX/lib/pkgconfig/"
-    cp $INSTALL_PREFIX/conan_toolchain-$TARGET_ARCH/*.pc $INSTALL_PREFIX/lib/pkgconfig/
+    cp $INSTALL_PREFIX/conan_toolchain/*.pc $INSTALL_PREFIX/lib/pkgconfig/
     # now fix occurences of prefixes such that packages can use the "--define-prefix" option
     # of pkgconfig
     sed -i 's|prefix=.*|prefix=\${KARABO}/extern|g' $INSTALL_PREFIX/lib/pkgconfig/*.pc
