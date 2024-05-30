@@ -19,7 +19,7 @@
 # or FITNESS FOR A PARTICULAR PURPOSE.
 #############################################################################
 from qtpy.QtCore import Qt, Slot
-from qtpy.QtGui import QPalette
+from qtpy.QtGui import QCursor, QPalette
 from qtpy.QtWidgets import (
     QAction, QDialog, QHBoxLayout, QPushButton, QScrollArea, QStackedWidget,
     QToolButton, QTreeView, QVBoxLayout, QWidget)
@@ -33,6 +33,7 @@ from karabogui.binding.api import (
     ProjectDeviceProxy, VectorHashBinding, apply_configuration,
     get_binding_value, validate_table_value, validate_value)
 from karabogui.configurator.api import ConfigurationTreeView
+from karabogui.dialogs.api import ConfigurationFromPastDialog
 from karabogui.dialogs.configuration_preview import ConfigPreviewDialog
 from karabogui.events import (
     KaraboEvent, register_for_broadcasts, unregister_from_broadcasts)
@@ -258,6 +259,14 @@ class ConfigurationPanel(BasePanelWidget):
         tb_save_config.setFlat(True)
         tb_save_config.clicked.connect(self._on_save_to_file)
 
+        text = "Configuration from past"
+        tb_history_config = QToolButton()
+        tb_history_config.setIcon(icons.clock)
+        tb_history_config.setStatusTip(text)
+        tb_history_config.setToolTip(text)
+        tb_history_config.setVisible(False)
+        tb_history_config.clicked.connect(self._on_config_from_past)
+
         text = "Search Device Properties"
         tb_search_device = QToolButton()
         tb_search_device.setIcon(icons.zoomImage)
@@ -269,6 +278,7 @@ class ConfigurationPanel(BasePanelWidget):
 
         self.ui_open_config = toolbar.addWidget(tb_open_config)
         self.ui_save_config = toolbar.addWidget(tb_save_config)
+        self.ui_history_config = toolbar.addWidget(tb_history_config)
         self.ui_search_device = toolbar.addWidget(tb_search_device)
 
         return [toolbar]
@@ -528,6 +538,10 @@ class ConfigurationPanel(BasePanelWidget):
             is_device = isinstance(proxy, DeviceProxy)
             self._show_button_visibility(not (proxy is None or is_device))
 
+        allow_fetch_config = isinstance(proxy,
+                                        (DeviceProxy, ProjectDeviceProxy))
+        self.ui_history_config.setVisible(allow_fetch_config)
+
     def _show_button_visibility(self, visible):
         """Show the configurator buttons depending of the `visible` parameter
         """
@@ -597,6 +611,7 @@ class ConfigurationPanel(BasePanelWidget):
         visible = (index != BLANK_PAGE)
         self.ui_open_config.setVisible(visible)
         self.ui_save_config.setVisible(visible)
+        self.ui_history_config.setVisible(visible)
 
     def _set_tree_widget_configuration(self, tree_widget, proxy):
         tree_widget.assign_proxy(proxy)
@@ -606,7 +621,7 @@ class ConfigurationPanel(BasePanelWidget):
     def _set_configuration(self, proxy):
         """Adapt to the Configuration which is currently showing
         """
-        # Update buttons
+        # Update buttons at the bottom
         self._update_buttons(proxy)
 
         # Toggle device updates
@@ -747,6 +762,19 @@ class ConfigurationPanel(BasePanelWidget):
         classId = proxy.binding.class_id
         deviceId = proxy.device_id
         get_manager().initDevice(serverId, classId, deviceId)
+
+    @Slot()
+    def _on_config_from_past(self) -> None:
+        if not isinstance(self._showing_proxy,
+                          (DeviceProxy, ProjectDeviceProxy)):
+            return
+        device_id = self._showing_proxy.device_id
+        dialog = ConfigurationFromPastDialog(
+            instance_id=device_id, parent=self)
+        dialog.move(QCursor.pos())
+        dialog.show()
+        dialog.raise_()
+        dialog.activateWindow()
 
     # -----------------------------------------------------------------------
     # Qt

@@ -24,12 +24,12 @@ from karabo.native import (
     AccessLevel, AccessMode, Assignment, Bool, Configurable, Float, Hash,
     HashList, String, UInt32, VectorBool, VectorHash, VectorUInt32)
 from karabogui.binding.api import (
-    DeviceProxy, ProjectDeviceProxy, ProxyStatus, VectorHashBinding,
-    apply_configuration, apply_default_configuration, build_binding,
-    validate_table_value, validate_value)
+    DeviceClassProxy, DeviceProxy, ProjectDeviceProxy, ProxyStatus,
+    VectorHashBinding, apply_configuration, apply_default_configuration,
+    build_binding, validate_table_value, validate_value)
 from karabogui.singletons.mediator import Mediator
 from karabogui.testing import (
-    GuiTestCase, access_level, get_all_props_schema, singletons)
+    GuiTestCase, access_level, click_button, get_all_props_schema, singletons)
 
 from ..configurationpanel import CONFIGURATION_PAGE, ConfigurationPanel
 from ..panel_info import create_configurator_info
@@ -598,3 +598,42 @@ def test_configuration_panel_info(gui_app):
 
         assert "c" in config
         assert config["c"] == "<undefined>"
+
+
+def test_configuration_from_past(gui_app, mocker):
+
+    panel = ConfigurationPanel()
+    assert not panel.ui_history_config.isVisible()
+
+    proxy_binding = build_binding(Object().getDeviceSchema())
+    apply_configuration(Hash(DEFAULT_VALUES), proxy_binding)
+    proxy = DeviceProxy(
+        binding=proxy_binding, server_id='Test', status=ProxyStatus.ONLINE)
+    panel._set_configuration(proxy)
+    assert panel.ui_history_config.isVisible()
+
+    # Make sure the button shows the ConfigurationFromPastDialog
+    toolbar = panel.ui_history_config.parent()
+    button = toolbar.widgetForAction(panel.ui_history_config)
+    assert button.toolTip() == "Configuration from past"
+    mock_dialog = mocker.patch(
+        "karabogui.panels.configurationpanel.ConfigurationFromPastDialog")
+    click_button(button)
+    assert mock_dialog().show.call_count == 1
+
+    # Test the visibility of toolbutton.
+    # Offline Device
+    proxy = DeviceProxy(
+        binding=proxy_binding, status=ProxyStatus.OFFLINE)
+    panel._set_configuration(proxy)
+    assert panel.ui_history_config.isVisible()
+
+    # Device class proxy
+    proxy = DeviceClassProxy(binding=proxy_binding,)
+    panel._set_configuration(proxy)
+    assert not panel.ui_history_config.isVisible()
+
+    # Project Device Proxy
+    proxy = ProjectDeviceProxy(binding=proxy_binding)
+    panel._set_configuration(proxy)
+    assert panel.ui_history_config.isVisible()
