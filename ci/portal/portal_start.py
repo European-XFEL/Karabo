@@ -1,4 +1,5 @@
 import os
+
 import requests
 
 
@@ -17,10 +18,12 @@ def main():
         print("No test portal destination provided, aborting ...")
         return
 
-    d = {"tests": ["CI_Distributed/200/01", "*/01/01", "Laptop/100/01"],
-         "user": email,
-         "test_variables": {"karabo_version": tag},
-         "project": project}
+    d = {
+        "tests": ["CI_Distributed/200/01", "*/01/01", "Laptop/100/01"],
+        "user": email,
+        "test_variables": {"karabo_version": tag},
+        "project": project,
+    }
 
     print("--- Start Portal Request ---")
     print(d)
