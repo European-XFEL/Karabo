@@ -419,6 +419,7 @@ class PropertyTestMDL(Device):
         unitSymbol=Unit.SECOND,
         metricPrefixSymbol=MetricPrefix.MILLI,
         accessMode=AccessMode.RECONFIGURABLE,
+        requiredAccessLevel=AccessLevel.ADMIN,
     )
     output = OutputChannel(
         ChannelNode,
@@ -429,6 +430,7 @@ class PropertyTestMDL(Device):
         description="The target frequency for continously writing to 'Output'",
         unitSymbol=Unit.HERTZ,
         accessMode=AccessMode.RECONFIGURABLE,
+        requiredAccessLevel=AccessLevel.ADMIN,
         maxInc=1000.,
         minExc=0.0,
         defaultValue=1.)
