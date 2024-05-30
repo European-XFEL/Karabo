@@ -35,6 +35,7 @@ from karabogui.dialogs.utils import get_dialog_ui
 _TIMEOUT = 0.5
 _TAG_REGEX = r"^\d+\.\d+\.\d+(\.\d+)?$"
 _PKG_NAME = "GUIExtensions"
+_PKG_NAME_ALL = "GUIExtensions[all]"
 _PACKAGE_URL = "https://git.xfel.eu/api/v4/projects/4562/packages"
 _PYPI_INDEX = f"{_PACKAGE_URL}/pypi/simple"
 UNDEFINED_VERSION = "Undefined"
@@ -370,6 +371,8 @@ def main():
                     help="Upgrade to the latest tag")
     ap.add_argument("-V", "--version", action="store_true", required=False,
                     help="Print the installed version")
+    ap.add_argument("-a", "--all", action="store_true", required=False,
+                    help="Chose if all dependencies should be installed")
     args = ap.parse_args()
 
     if not any([args.uninstall, args.tag, args.latest, args.version]):
@@ -390,15 +393,17 @@ def main():
 
     elif args.tag:
         tag = args.tag[0]
-        print(f"Installing {_PKG_NAME} version {tag}\n")
-        output = install_specific_tag(_PKG_NAME, tag)
+        package = _PKG_NAME if not args.all else _PKG_NAME_ALL
+        print(f"Installing {package} version {tag}\n")
+        output = install_specific_tag(package, tag)
         print(output)
 
     elif args.latest:
         package_list = get_index_list()
         tag = package_list.get(_PKG_NAME, UNDEFINED_VERSION)
-        print(f"Installing {_PKG_NAME} version {tag}\n")
-        output = install_specific_tag(_PKG_NAME, tag)
+        package = _PKG_NAME if not args.all else _PKG_NAME_ALL
+        print(f"Installing {package} version {tag}\n")
+        output = install_specific_tag(package, tag)
         print(output)
 
 
