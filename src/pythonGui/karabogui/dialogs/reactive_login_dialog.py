@@ -42,6 +42,7 @@ from karabogui.validators import IntValidator
 from .utils import get_dialog_ui
 
 TIMER_DELAY = 500  # ms
+TOKEN_CHECK_TIME = 3000  # 3s
 REQUEST_HEADER = "application/json"
 
 USER_INFO = """<p>You are logged in as '<span style=" font-weight:600;">
@@ -190,6 +191,9 @@ class ReactiveLoginDialog(QDialog):
         self._timer.setInterval(TIMER_DELAY)
         self._timer.setSingleShot(True)
         self._timer.timeout.connect(self.connectToServer)
+
+        self._token_check_timer = QTimer(parent=self)
+        self._token_check_timer.timeout.connect(self._look_for_token)
 
         hostname = hostname if hostname else "localhost"
         if gui_servers is None:
@@ -344,6 +348,12 @@ class ReactiveLoginDialog(QDialog):
         else:
             self.login_type = LoginType.ACCESS_LEVEL
 
+        if self.login_type in (LoginType.USER_AUTHENTICATED,
+                               LoginType.REFRESH_TOKEN):
+            self._token_check_timer.start(TOKEN_CHECK_TIME)
+        elif self._token_check_timer.isActive():
+            self._token_check_timer.stop()
+
         self._topic = f"Topic: {server_info['topic']}"
         self._tcp_socket.disconnectFromHost()
         self._requesting = False
@@ -487,6 +497,14 @@ class ReactiveLoginDialog(QDialog):
     @Slot()
     def _switch_to_auth_page(self):
         self.login_type = LoginType.USER_AUTHENTICATED
+        self._update_dialog_state()
+
+    @Slot()
+    def _look_for_token(self):
+        if get_config()["refresh_token"] is None:
+            self.login_type = LoginType.USER_AUTHENTICATED
+        else:
+            self.login_type = LoginType.REFRESH_TOKEN
         self._update_dialog_state()
 
 
