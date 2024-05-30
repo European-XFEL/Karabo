@@ -365,6 +365,8 @@ class ReactiveLoginDialog(QDialog):
         self._error = ("No GUI Server available at "
                        f"{self._queried_host}:{self._queried_port}")
         self._update_dialog_state()
+        if self._token_check_timer.isActive():
+            self._token_check_timer.stop()
 
     @Slot(QNetworkReply)
     def onAuthReply(self, reply):
@@ -498,6 +500,8 @@ class ReactiveLoginDialog(QDialog):
     def _switch_to_auth_page(self):
         self.login_type = LoginType.USER_AUTHENTICATED
         self._update_dialog_state()
+        if self._token_check_timer.isActive():
+            self._token_check_timer.stop()
 
     @Slot()
     def _look_for_token(self):
