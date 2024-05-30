@@ -17,7 +17,7 @@
 # flake8: noqa
 from karabo.native import Hash
 
-from ..util import get_error_message, realign_topo_hash
+from ..util import decrypt, encrypt, get_error_message, realign_topo_hash
 
 CPP_SLOT_ERROR_MESSAGE = """
 Request to execute 'execute2' on device 'Macro-test1-ec6d56fe-a5ca-445f-ad45-a295c7e16450-Test' failed, details:
@@ -149,7 +149,6 @@ karabo.native.exceptions.KaraboError: Fauly Slot cannot be executed
 }
 """
 
-
 KARABO_ERROR_MESSAGE_WITH_TAGGY_TEXT = """
 Failure on request to execute 'loadFromTime' on device 'Princess', details:
 1. Exception =====>  {
@@ -167,7 +166,6 @@ TypeError: cannot wrap "<class 'numpy.bool_'>" into Karabo type
     Timestamp.........:  2021-Dec-02 14:29:59.046236
 }
 """
-
 
 EXPECTED_MESSAGE = {
     CPP_SLOT_ERROR_MESSAGE: 'Command &quot;move&quot; is not allowed in current state &quot;ERROR&quot; of device &quot;MOV_TEST/MOTOR/SERVO_1&quot;.',
@@ -221,3 +219,12 @@ def test_realign_topo_hash():
     assert item == "server3"
     item = next(n)
     assert item == "server1"
+
+
+def test_encryption():
+    pw = "karabo"
+    cipher = "secret"
+    new = encrypt(pw, cipher)
+    assert new != pw
+    new = decrypt(new, cipher)
+    assert new == pw
