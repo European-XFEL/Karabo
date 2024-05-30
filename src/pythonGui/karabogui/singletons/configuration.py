@@ -23,6 +23,8 @@ from typing import Any, Type
 
 from qtpy.QtCore import QObject, QSettings
 
+from .util import decrypt, encrypt
+
 
 def convert_value(value, dtype):
     """Convert a value to a QSettings value. This is mainly done for booleans
@@ -105,7 +107,14 @@ class SharedItem(Item):
                 owner: Type["SharedItem"]) -> Any:
         if instance is None:
             return self
-        return self.get_shared_value()
+        value = self.get_shared_value()
+        return decrypt(value, self.group) if value is not None else value
+
+    def __set__(self, instance: "SharedItem", value: Any) -> None:
+        value = convert_value(value, self.dtype)
+        if value is not None:
+            value = encrypt(value, self.group)
+        QSettings().setValue(self.path, value)
 
     def __set_name__(self, owner: Type["SharedItem"], name: str) -> None:
         self.name = name
