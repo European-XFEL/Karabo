@@ -2,6 +2,7 @@
 cpython/3.11.9
 cmake/3.27.1
 expat/2.6.2
+libffi/3.4.4
 openssl/1.1.1w
 patchelf/0.13
 zlib/1.2.13
@@ -15,6 +16,7 @@ cpython/*:with_tkinter=False
 cpython/*:optimizations=True
 # make shared lib for expat (CentOS support)
 expat/*:shared=True
+libffi/*:shared=True
 
 [imports]
 lib, * -> ../lib  # the ".."s are because conan install uses $INSTALL_PREFIX/conan_out in build.sh.
