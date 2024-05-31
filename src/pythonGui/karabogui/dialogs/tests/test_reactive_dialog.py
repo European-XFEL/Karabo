@@ -184,3 +184,22 @@ def test_access_widget(gui_app):
     first_cell.setFocus(True)
     keySequence(first_cell, Qt.Key_Backspace)
     assert first_cell == widget.focusWidget()
+
+    cells = widget.cells
+    for _ in range(7):
+        cell = widget.focusWidget()
+        cell_index = cells.index(cell)
+        keySequence(cell, Qt.Key_Right)
+        if cell_index < len(cells)-1:
+            assert cells[cell_index+1] == widget.focusWidget()
+        else:
+            assert cells[cell_index] == widget.focusWidget()
+
+    for _ in range(7):
+        cell = widget.focusWidget()
+        cell_index = cells.index(cell)
+        keySequence(cell, Qt.Key_Left)
+        if cell_index == 0:
+            assert cells[cell_index] == widget.focusWidget()
+        else:
+            assert cells[cell_index-1] == widget.focusWidget()
