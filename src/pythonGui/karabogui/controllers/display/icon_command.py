@@ -144,3 +144,7 @@ class DisplayIconCommand(BaseBindingController):
     def state_update(self, proxy):
         enable = is_proxy_allowed(proxy)
         self._button.setEnabled(enable)
+
+    def setEnabled(self, enable):
+        """Reimplemented to account for access level changes"""
+        self.widget.setEnabled(enable)
