@@ -68,6 +68,11 @@ def test_command_controller_basics(gui_app):
     assert controller._actions[0].action.text() == "Call ME"
     assert controller._actions[0].action.toolTip() == "dev.callme"
 
+    assert controller.widget.isEnabled()
+    controller.setEnabled(False)
+    assert not controller.widget.isEnabled()
+    controller.setEnabled(True)
+    assert controller.widget.isEnabled()
     controller.destroy()
     assert controller.widget is None
 
