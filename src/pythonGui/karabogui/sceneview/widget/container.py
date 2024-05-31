@@ -25,7 +25,7 @@ from karabogui.request import send_property_changes
 from karabogui.util import generateObjectName
 from karabogui.widgets.hints import KaraboSceneWidget
 
-from .utils import get_proxy
+from .utils import get_proxy, is_controller_enabled
 
 
 class ControllerContainer(KaraboSceneWidget, QWidget):
@@ -152,7 +152,7 @@ class ControllerContainer(KaraboSceneWidget, QWidget):
         proxy = self.widget_controller.proxy
         binding = proxy.binding
         if binding is not None:
-            enabled = (binding.required_access_level <= level)
+            enabled = is_controller_enabled(level)
             self.widget_controller.setEnabled(enabled)
 
     # ---------------------------------------------------------------------
