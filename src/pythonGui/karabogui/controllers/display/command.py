@@ -147,6 +147,13 @@ class DisplayCommand(BaseBindingController):
 
         self._set_default_action()
 
+    def setEnabled(self, enable):
+        """Reimplemented to account for access level changes
+
+        Note: This is dependent on the main proxy
+        """
+        self.widget.setEnabled(enable)
+
     def _item_creation(self, item, initial=True):
         """When an item gets its binding or update, finish hooking things up.
 
