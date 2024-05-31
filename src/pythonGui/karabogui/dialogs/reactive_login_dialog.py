@@ -86,10 +86,15 @@ class Validator(IntValidator):
 class Cell(QLineEdit):
 
     onBackspacePressed = Signal()
+    moveToNextCell = Signal(bool)
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         if event.key() == Qt.Key_Backspace:
             self.onBackspacePressed.emit()
+        elif event.key() == Qt.Key_Right:
+            self.moveToNextCell.emit(True)
+        elif event.key() == Qt.Key_Left:
+            self.moveToNextCell.emit(False)
         return super().keyPressEvent(event)
 
 
@@ -115,6 +120,7 @@ class AccessCodeWidget(QWidget):
             layout.addWidget(cell)
             cell.textChanged.connect(self.on_text_changed)
             cell.onBackspacePressed.connect(self.on_backspace_pressed)
+            cell.moveToNextCell.connect(self._on_move_to_cell)
 
     @Slot(str)
     def on_text_changed(self, text: str):
@@ -136,6 +142,16 @@ class AccessCodeWidget(QWidget):
         sender = self.sender()
         index = self.cells.index(sender)
         if not sender.text() and index != 0:
+            index -= 1
+        self.cells[index].setFocus()
+
+    @Slot(bool)
+    def _on_move_to_cell(self, forward: bool) -> None:
+        """Move the cursor to the next/previous cell"""
+        index = self.cells.index(self.sender())
+        if forward and index != 5:
+            index += 1
+        if not forward and index != 0:
             index -= 1
         self.cells[index].setFocus()
 
