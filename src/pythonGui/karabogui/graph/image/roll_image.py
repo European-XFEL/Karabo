@@ -73,6 +73,7 @@ class RollImage(HasStrictTraits):
 
         finite = np.isfinite(value)
         if not np.all(finite):
+            value = np.array(value, copy=True)
             value[~finite] = 0
 
         needs_reset = (self._data is None
