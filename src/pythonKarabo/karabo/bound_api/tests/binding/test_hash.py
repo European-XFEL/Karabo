@@ -950,6 +950,7 @@ def test_ndarray():
     assert h['a'].flags.writeable
     assert isinstance(h['a'], np.ndarray)
 
+    # copy.copy will NOT copy the underlying C++ NDArray
     h2 = copy.copy(h)
 
     assert isinstance(h2['a'], np.ndarray)
@@ -962,7 +963,7 @@ def test_ndarray():
     assert arr[0][0] == 255
 
     if not use_karathon:
-        # Check 'deepcopy' ...
+        # Check 'deepcopy': it copies even underlying NDArray
         g = copy.deepcopy(h)
         assert g['a'][0][0] == 255
 
@@ -970,3 +971,22 @@ def test_ndarray():
 
         assert h['a'][0][0] == 1
         assert g['a'][0][0] == 255
+
+    # Check fortran order array:
+    # Since the C++ NDArray only knows C order, it has to be copied
+    arr = np.array([[1, 2, 3], [4, 5, 6]], order='F')
+    assert arr.flags.f_contiguous
+    assert not arr.flags.c_contiguous
+
+    h['b'] = arr  # copies!
+    h_arr = h['b']
+    assert not h_arr.flags.f_contiguous
+    assert h_arr.flags.c_contiguous
+    assert h_arr[0][0] == 1
+    assert h_arr[0][1] == 2
+    assert h_arr[0][2] == 3
+    assert h_arr[1][0] == 4
+    assert h_arr[1][1] == 5
+    assert h_arr[1][2] == 6
+    arr[0][0] == 11
+    assert h_arr[0][0] == 1  # untouched
