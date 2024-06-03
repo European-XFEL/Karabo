@@ -776,9 +776,10 @@ namespace karabind {
             if (!dataPtr) {
                 // Python is an owner of array data (base is None)
                 // Create another Python array that will be not an owner (base is not None)
-                // Use 'py::array::ensure' which calls 'PyArray_FromAny' ...
-                // namely, PyArray_FromAny(arr, NULL, 0, 0, NPY_ENSUREARRAY, NULL)
-                py::array newarr = py::array::ensure(arr); // steal reference
+                // Use 'py::array::ensure' which calls 'PyArray_FromAny' namely,
+                // PyArray_FromAny(arr, nullptr, 0, 0, NPY_ARRAY_ENSUREARRAY | py::array::c_style, nullptr)
+                // Note: c_style ensures that data is copied (if needed!) into C-order as expected by C++ NDArray
+                py::array newarr = py::array::ensure(arr, py::array::c_style); // steal reference
                 if (newarr) {
                     // Increment Python array ref counter again to compensate decrementing
                     // because of 'newarr' destruction
@@ -844,6 +845,7 @@ namespace karabind {
             NDArray::DataPointer dataCopy = NDArray::DataPointer(new char[arr.nbytes()]);
             // get mutable data as char* to copy from ...
             char* data = static_cast<char*>(arr.mutable_data());
+            // FIXME: If arr is Fortran order, this is wrong...
             // copy 'nbytes' from python array
             std::copy(data, data + arr.nbytes(), dataCopy.get());
             // Construct NDArray using data copy...
