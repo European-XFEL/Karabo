@@ -74,6 +74,11 @@ def test_imagedata_buildUp():
     img.setRotation(Rotation.ROT_180)
     assert img.getRotation() == Rotation.ROT_180
 
+    # FIXME:
+    # Add tests for setData, getDataCopy, setDataCopy (also from F-style arr!),
+    # setType, setDimensions, setDimensionsTypes, setROIOffsets, setBinning,
+    # setFlipX/Y, setDimensionScales
+
 
 def test_imagedata_hash():
     # Create numpy array
