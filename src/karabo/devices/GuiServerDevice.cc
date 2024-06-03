@@ -1900,10 +1900,15 @@ namespace karabo {
             if (m_loggerMap.has(loggerId)) {
                 return DATALOGREADER_PREFIX + ("0-" + m_loggerMap.get<string>(loggerId));
             } else {
-                KARABO_LOG_FRAMEWORK_ERROR << "Cannot determine DataLogReaderId: No '" << loggerId << "' in map for '"
-                                           << deviceId << "'";                      // Full details in log file, ...
-                throw KARABO_PARAMETER_EXCEPTION("Cannot determine DataLogReader"); // ...less for exception.
-                return std::string();                                               // please the compiler
+                std::ostringstream str;
+                str << "Cannot determine DataLogReaderId for '" << deviceId << "'. ";
+                if (deviceId.find("Macro-") != std::string::npos) {
+                    str << "Note that macros are not logged.";
+                } else {
+                    str << "No '" << loggerId << "' in map for '" << deviceId << "'";
+                }
+                throw KARABO_PARAMETER_EXCEPTION(str.str());
+                return std::string(); // please the compiler
             }
         }
 
