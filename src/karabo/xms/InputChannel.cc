@@ -715,9 +715,9 @@ namespace karabo {
             m_reverseMetaDataMap.clear();
             unsigned int i = 0;
             for (auto it = m_metaDataList.cbegin(); it != m_metaDataList.cend(); ++it) {
-                m_dataList[i] = boost::make_shared<Hash>();
-                // Memory::read will clear first argument before filling it again
-                Memory::read(*(m_dataList[i]), i, m_channelId, m_activeChunk);
+                Hash::Pointer& data = m_dataList[i];
+                if (!data) data = boost::make_shared<Hash>(); // previous items cleared in triggerIOEvent
+                Memory::read(*data, i, m_channelId, m_activeChunk);
                 m_sourceMap.emplace(it->getSource(), i);
                 m_trainIdMap.emplace(it->getTimestamp().getTrainId(), i);
                 m_reverseMetaDataMap.emplace(i, *it);
@@ -819,6 +819,8 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_ERROR << "Exception from input/data/endOfStream handler for instance '"
                                            << m_instanceId << "': " << e.what();
             }
+            // Clear cached data (but keep Hash for performance)
+            for (Hash::Pointer& data : m_dataList) data->clear();
 
             if (notifyForNextRead) {
                 // After swapping the pots, the new active one is ready...
