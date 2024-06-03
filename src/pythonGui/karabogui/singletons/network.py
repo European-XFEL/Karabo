@@ -112,9 +112,6 @@ class Network(QObject):
         self.hostname = hostname
         self.port = port
         dialog = ReactiveLoginDialog(hostname=hostname, port=port)
-        # Since the refresh token is stored only for the current gui
-        # session, 'Remember me' option is not really helpful outside main gui.
-        dialog.setRememberMeEnabled(False)
         if dialog.exec() != QDialog.Accepted:
             return False
 
