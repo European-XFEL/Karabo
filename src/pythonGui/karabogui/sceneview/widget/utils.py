@@ -14,12 +14,26 @@
 # The Karabo Gui is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
+from karabo.native import AccessLevel
 from karabogui.binding.api import PropertyProxy
 from karabogui.singletons.api import get_topology
 
 
-def get_proxy(device_id, path):
+def get_proxy(device_id: str, path: str) -> PropertyProxy:
     """Return a `PropertyProxy` instance for a given device and property path.
     """
     device_proxy = get_topology().get_device(device_id)
     return PropertyProxy(root_proxy=device_proxy, path=path)
+
+
+def is_controller_enabled(proxy: PropertyProxy, level: AccessLevel) -> bool:
+    """Check if the controller with `proxy` is enabled"""
+    root_proxy = proxy.root_proxy
+    value = root_proxy.state_binding.value
+    if not value:
+        return False
+
+    binding = proxy.binding
+    is_allowed = binding.is_allowed(value)
+    is_accessible = level >= binding.required_access_level
+    return is_accessible and is_allowed
