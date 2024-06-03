@@ -25,12 +25,13 @@ from struct import calcsize, unpack
 
 from qtpy import uic
 from qtpy.QtCore import Qt, QTimer, QUrl, Signal, Slot
-from qtpy.QtGui import QDesktopServices, QIntValidator, QKeyEvent
+from qtpy.QtGui import QDesktopServices, QIntValidator, QKeyEvent, QKeySequence
 from qtpy.QtNetwork import (
     QAbstractSocket, QNetworkAccessManager, QNetworkReply, QNetworkRequest,
     QSslConfiguration, QSslSocket, QTcpSocket)
 from qtpy.QtWidgets import (
-    QDialog, QDialogButtonBox, QHBoxLayout, QLineEdit, QSizePolicy, QWidget)
+    QApplication, QDialog, QDialogButtonBox, QHBoxLayout, QLineEdit,
+    QSizePolicy, QWidget)
 
 from karabo.native import decodeBinary
 from karabogui import access as krb_access
@@ -87,6 +88,7 @@ class Cell(QLineEdit):
 
     onBackspacePressed = Signal()
     moveToNextCell = Signal(bool)
+    onPasteNewCode = Signal()
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         if event.key() == Qt.Key_Backspace:
@@ -95,6 +97,8 @@ class Cell(QLineEdit):
             self.moveToNextCell.emit(True)
         elif event.key() == Qt.Key_Left:
             self.moveToNextCell.emit(False)
+        elif event.matches(QKeySequence.Paste):
+            self.onPasteNewCode.emit()
         return super().keyPressEvent(event)
 
 
@@ -121,15 +125,14 @@ class AccessCodeWidget(QWidget):
             cell.textChanged.connect(self.on_text_changed)
             cell.onBackspacePressed.connect(self.on_backspace_pressed)
             cell.moveToNextCell.connect(self._on_move_to_cell)
+            cell.onPasteNewCode.connect(self._paste_new_code)
 
     @Slot(str)
     def on_text_changed(self, text: str):
         current_index = self.cells.index(self.sender())
         # Distribute each digits in each cells.
         if len(text) == 6:
-            with SignalBlocker(self):
-                for number, cell in zip(str(text), self.cells):
-                    cell.setText(number)
+            self._paste_on_all_cell(text)
         # Paste one digit to current cell and move focus to the next.
         elif current_index < 5 and self.sender().text():
             next_index = current_index + 1
@@ -155,11 +158,22 @@ class AccessCodeWidget(QWidget):
             index -= 1
         self.cells[index].setFocus()
 
+    @Slot()
+    def _paste_new_code(self):
+        text = QApplication.clipboard().text()
+        if len(text) == 6 and text.isdigit():
+            self._paste_on_all_cell(text)
+
     def get_access_code(self) -> str:
         return "".join(cell.text() for cell in self.cells)
 
     def has_access_code(self):
         return all([cell.text() for cell in self.cells])
+
+    def _paste_on_all_cell(self, text):
+        with SignalBlocker(self):
+            for number, cell in zip(str(text), self.cells):
+                cell.setText(number)
 
 
 BUTTON_STYLE = """
