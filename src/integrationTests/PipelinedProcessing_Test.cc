@@ -964,8 +964,7 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversDrop() {
 
     // Now test the shared input selector code, using round-robin
     m_deviceClient->set(m_sender, "nextSharedInput", "roundRobinSelector");
-
-    testPipeTwoSharedReceivers(0, 0, 20, false, true);
+    testPipeTwoSharedReceivers(0, 0, 100, false, true);
     // If we expect data loss, we cannot be sure to have round-robin distribution
     testPipeTwoSharedReceivers(100, 40, 0, true, false);  // receivers which have different "speed"
     testPipeTwoSharedReceivers(100, 100, 0, true, false); // receivers which have the same "speed"
@@ -1086,7 +1085,7 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceivers(unsigned int processin
         CPPUNIT_ASSERT_EQUAL(nTotalData2New, m_deviceClient->get<unsigned int>(m_receiver2, "nTotalDataOnEos"));
 
         // test the total data received
-        // A receiver should receive at least m_nPots data no mater how long the processingTime is.
+        // A receiver should receive at least m_nPots data no matter how long the processingTime is.
         CPPUNIT_ASSERT(nTotalData1New >= nTotalData1 + m_nPots);
         CPPUNIT_ASSERT(nTotalData2New >= nTotalData2 + m_nPots);
         if (!dataLoss) {
