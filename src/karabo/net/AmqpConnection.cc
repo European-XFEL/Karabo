@@ -68,9 +68,8 @@ namespace karabo {
 
                 if (m_connection) {
                     m_connection->close(false); // true will be without proper AMQP hand shakes
-                    // TODO: Each created AMQP::Channel also carries a shared_ptr to our connection!
-                    //       So we have to take care by some (future) logic that all these channels are gone before this
-                    //       destructor is called (or at least within the join() below?)
+                    // Caveat: Each created AMQP::Channel also carries a shared_ptr to our connection!
+                    //         They should be gone by now, but at least log a warning if not.
                     if (m_connection.use_count() > 1) {
                         KARABO_LOG_FRAMEWORK_WARN << "Underlying AMQP::Connection will not be destroyed, use count is "
                                                   << m_connection.use_count();
@@ -337,9 +336,7 @@ namespace karabo {
             // Trigger pending channel requests if there are some
             for (ChannelCreationHandler& handler : m_pendingOnChannelCreations) {
                 if (ec) {
-                    std::string errMsg("Connection could not be established: ");
-                    errMsg += ec.message();
-                    handler(std::shared_ptr<AMQP::Channel>(), errMsg.data());
+                    handler(std::shared_ptr<AMQP::Channel>(), "Connection could not be established: " + ec.message());
                 } else {
                     doCreateChannel(std::move(handler));
                 }
@@ -391,8 +388,8 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_ERROR << "Cannot create channel due to: " << e.what();
                 // Need to post to guarantee not to call handler in calling thread
                 // Note: onComplete takes const char*, so cannot bind a temporary
-                // (TODO: switch to string and here add e.what())
-                post(std::bind(onComplete, nullptr, "Runtime exception creating channel (Too many? Check logs!)"));
+                std::string msg("Runtime exception creating channel: ");
+                post(std::bind(onComplete, nullptr, msg += e.what()));
                 return;
             }
 
@@ -405,6 +402,8 @@ namespace karabo {
                 // when a channel creates a consumer for a queue that already has an AMQP::exclusive consumer.
                 // Note that text after "...reports: " is also sent to the method registered with
                 // channel->consume(...).onError(..) and that that channel is disabled afterwards.
+                // Other case seen during development when channel tried to create a consumer for a non-existing queue
+                // "Channel reports: NOT_FOUND - no queue '<name>' in vhost '/'xxx""
                 channelPtr->onError([](const char* errMsg) {
                     KARABO_LOG_FRAMEWORK_ERROR_C("AmqpConnection") << "Channel reports: " << errMsg;
                 });
@@ -414,7 +413,7 @@ namespace karabo {
                 auto callback = std::move(onComplete);
                 auto channel = std::move(channelPtr);
                 channel->onReady(AMQP::SuccessCallback());
-                callback(channel, nullptr);
+                callback(channel, std::string());
             });
             channelPtr->onError([onComplete, channelPtr](const char* errMsg) {
                 // Reset both handlers to get rid of circular reference

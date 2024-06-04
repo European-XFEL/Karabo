@@ -39,7 +39,8 @@ namespace karabo::net {
     /**
      * @brief Class that wraps around AmqpClient2 to provide a message interface with Hash header and body
      *
-     * FIXME: Mention serialisation via Strand etc.
+     * Deserialisation of incoming messages is done via a karabo::net::Strand,
+     * i.e. a running karabo::net::EventLoop is needed.
      *
      */
     class AmqpHashClient : public boost::enable_shared_from_this<AmqpHashClient> {
@@ -51,7 +52,7 @@ namespace karabo::net {
         using ErrorReadHandler = boost::function<void(const std::string&)>;
 
         /**
-         * Create client with message interface based on Hash for both, header and body
+         * Create client with message interface based on two Hashes (header and body).
          *
          * @param connection the connection, all internal data access will run in its io context
          * @param instanceId the client id - will usually be the name of the queue that will be subscribed
@@ -66,7 +67,7 @@ namespace karabo::net {
         virtual ~AmqpHashClient();
 
         /**
-         * Asynchronously subscribes client by just forwarding to AmqpClient::asyncSubscribe,
+         * Asynchronously subscribes client by just forwarding to AmqpClient::asyncSubscribe
          *
          *  ==> See docs of that.
          */
@@ -76,7 +77,7 @@ namespace karabo::net {
         }
 
         /**
-         * Asynchronously unsubscribes client by just forwarding to AmqpClient::asyncUnsubscribe,
+         * Asynchronously unsubscribes client by just forwarding to AmqpClient::asyncUnsubscribe
          *
          *  ==> See docs of that.
          */
@@ -87,7 +88,7 @@ namespace karabo::net {
 
         /**
          * Asynchronously unsubscribes client from all subscriptions by just forwarding to
-         * AmqpClient::asyncUnsubscribeAll,
+         * AmqpClient::asyncUnsubscribeAll
          *
          *  ==> See docs of that.
          */
