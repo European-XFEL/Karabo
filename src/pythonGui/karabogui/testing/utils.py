@@ -113,17 +113,6 @@ def flushed_registry():
     registrymod._controller_models = model_registry
 
 
-@contextlib.contextmanager
-def access_level(access):
-    import karabogui.access as global_access
-    old_level = global_access.GLOBAL_ACCESS_LEVEL
-    try:
-        global_access.GLOBAL_ACCESS_LEVEL = access
-        yield
-    finally:
-        global_access.GLOBAL_ACCESS_LEVEL = old_level
-
-
 def get_property_proxy(schema, name, device_id="TestDevice"):
     """Given a device schema and a property name, return a complete
     PropertyProxy object with a `root_proxy` of type `DeviceProxy`.
@@ -183,6 +172,18 @@ def singletons(**objects):
         for key in objects:
             if key not in replaced:
                 del singletons_dict[key]
+
+
+@contextlib.contextmanager
+def access_level(level):
+    """Temporary move the access level to `level`"""
+    import karabogui.access as krb_access
+    old_level = krb_access.GLOBAL_ACCESS_LEVEL
+    try:
+        krb_access.GLOBAL_ACCESS_LEVEL = level
+        yield
+    finally:
+        krb_access.GLOBAL_ACCESS_LEVEL = old_level
 
 
 DEVICE_CAPA = Capabilities.PROVIDES_SCENES + Capabilities.PROVIDES_INTERFACES
