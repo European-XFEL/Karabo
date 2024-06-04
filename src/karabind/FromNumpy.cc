@@ -37,38 +37,21 @@ namespace karabind {
 
     FromNumpy::FromNumpy() {
         // #define _KARABO_HELPER_MACRO(fromType, refType) (fromType, karabo::util::Types::refType)
-#define _KARABO_HELPER_MACRO(fromType, refType) \
-    { fromType, karabo::util::Types::refType }
+#define _KARABO_HELPER_MACRO(fromType, refType) {fromType, karabo::util::Types::refType}
 
-        if (sizeof(unsigned long) == sizeof(unsigned int)) { // 32 bit CPU
-            _typeInfoMap = {_KARABO_HELPER_MACRO(py::detail::npy_api::NPY_BOOL_, BOOL),
-                            _KARABO_HELPER_MACRO(py::detail::npy_api::NPY_BYTE_, INT8),
-                            _KARABO_HELPER_MACRO(py::detail::npy_api::NPY_UBYTE_, UINT8),
-                            _KARABO_HELPER_MACRO(py::detail::npy_api::NPY_SHORT_, INT16),
-                            _KARABO_HELPER_MACRO(py::detail::npy_api::NPY_USHORT_, UINT16),
-                            _KARABO_HELPER_MACRO(py::detail::npy_api::NPY_INT_, INT32),
-                            _KARABO_HELPER_MACRO(py::detail::npy_api::NPY_UINT_, UINT32),
-                            _KARABO_HELPER_MACRO(py::detail::npy_api::NPY_LONG_, INT32),
-                            _KARABO_HELPER_MACRO(py::detail::npy_api::NPY_ULONG_, UINT32),
-                            _KARABO_HELPER_MACRO(py::detail::npy_api::NPY_LONGLONG_, INT64),
-                            _KARABO_HELPER_MACRO(py::detail::npy_api::NPY_ULONGLONG_, UINT64),
-                            _KARABO_HELPER_MACRO(py::detail::npy_api::NPY_FLOAT_, FLOAT),
-                            _KARABO_HELPER_MACRO(py::detail::npy_api::NPY_DOUBLE_, DOUBLE)};
-        } else { // 64 bit CPU
-            _typeInfoMap = {_KARABO_HELPER_MACRO(py::detail::npy_api::NPY_BOOL_, BOOL),
-                            _KARABO_HELPER_MACRO(py::detail::npy_api::NPY_BYTE_, INT8),
-                            _KARABO_HELPER_MACRO(py::detail::npy_api::NPY_UBYTE_, UINT8),
-                            _KARABO_HELPER_MACRO(py::detail::npy_api::NPY_SHORT_, INT16),
-                            _KARABO_HELPER_MACRO(py::detail::npy_api::NPY_USHORT_, UINT16),
-                            _KARABO_HELPER_MACRO(py::detail::npy_api::NPY_INT_, INT32),
-                            _KARABO_HELPER_MACRO(py::detail::npy_api::NPY_UINT_, UINT32),
-                            _KARABO_HELPER_MACRO(py::detail::npy_api::NPY_LONG_, INT64),
-                            _KARABO_HELPER_MACRO(py::detail::npy_api::NPY_ULONG_, UINT64),
-                            _KARABO_HELPER_MACRO(py::detail::npy_api::NPY_LONGLONG_, INT64),
-                            _KARABO_HELPER_MACRO(py::detail::npy_api::NPY_ULONGLONG_, UINT64),
-                            _KARABO_HELPER_MACRO(py::detail::npy_api::NPY_FLOAT_, FLOAT),
-                            _KARABO_HELPER_MACRO(py::detail::npy_api::NPY_DOUBLE_, DOUBLE)};
-        }
+        _typeInfoMap = {_KARABO_HELPER_MACRO(py::detail::npy_api::NPY_BOOL_, BOOL),
+                        _KARABO_HELPER_MACRO(py::detail::npy_api::NPY_BYTE_, INT8),
+                        _KARABO_HELPER_MACRO(py::detail::npy_api::NPY_UBYTE_, UINT8),
+                        _KARABO_HELPER_MACRO(py::detail::npy_api::NPY_SHORT_, INT16),
+                        _KARABO_HELPER_MACRO(py::detail::npy_api::NPY_USHORT_, UINT16),
+                        _KARABO_HELPER_MACRO(py::detail::npy_api::NPY_INT_, INT32),
+                        _KARABO_HELPER_MACRO(py::detail::npy_api::NPY_UINT_, UINT32),
+                        _KARABO_HELPER_MACRO(py::detail::npy_api::NPY_LONG_, INT64),
+                        _KARABO_HELPER_MACRO(py::detail::npy_api::NPY_ULONG_, UINT64),
+                        _KARABO_HELPER_MACRO(py::detail::npy_api::NPY_LONGLONG_, INT64),
+                        _KARABO_HELPER_MACRO(py::detail::npy_api::NPY_ULONGLONG_, UINT64),
+                        _KARABO_HELPER_MACRO(py::detail::npy_api::NPY_FLOAT_, FLOAT),
+                        _KARABO_HELPER_MACRO(py::detail::npy_api::NPY_DOUBLE_, DOUBLE)};
 #undef _KARABO_HELPER_MACRO
     }
 
