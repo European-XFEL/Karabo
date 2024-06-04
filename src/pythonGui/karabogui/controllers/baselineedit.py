@@ -73,6 +73,9 @@ class BaseLineEditController(BaseBindingController):
         enable = is_proxy_allowed(proxy)
         self.internal_widget.setEnabled(enable)
 
+    def setEnabled(self, enable):
+        self.internal_widget.setEnabled(enable)
+
     def binding_update(self, proxy):
         self.binding_validator(proxy)
         self.widget.update_unit_label(proxy)
