@@ -86,7 +86,6 @@ class Validator(QIntValidator):
 
 
 class Cell(QLineEdit):
-
     onBackspacePressed = Signal()
     moveToNextCell = Signal(bool)
     onPasteNewCode = Signal()
@@ -191,7 +190,8 @@ class ReactiveLoginDialog(QDialog):
         super().__init__(parent)
         filepath = get_dialog_ui("reactive_login_dialog.ui")
         uic.loadUi(filepath, self)
-        self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
+        if parent is None:
+            self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
 
         self.stackedWidget.setCurrentIndex(0)
         self.login_type = LoginType.UNKNOWN
@@ -548,7 +548,8 @@ class TemporarySessionDialog(QDialog):
         self.setModal(False)
         filepath = get_dialog_ui("temp_session_dialog.ui")
         uic.loadUi(filepath, self)
-        self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
+        if parent is None:
+            self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
 
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
         self.ok_button.setEnabled(False)
