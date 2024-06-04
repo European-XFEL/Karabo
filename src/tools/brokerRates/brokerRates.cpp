@@ -560,6 +560,14 @@ void startAmqpMonitor(const std::vector<std::string>& brokers, const std::string
                         << "\n-----------------------------------------------------------------------\n"
                         << std::endl;
           });
+    // Wait until connection established and thus connection->getCurrentUrl() shows proper url
+    std::promise<boost::system::error_code> isConnected;
+    auto futConnected = isConnected.get_future();
+    connection->asyncConnect([&isConnected](const boost::system::error_code& ec){isConnected.set_value(ec);});
+    const boost::system::error_code ec = futConnected.get();
+    if (ec) {
+        throw KARABO_NETWORK_EXCEPTION("Broker connection failed: " + ec.message());
+    }
 
     std::cout << "\nStart monitoring signal and slot rates of \n   domain        '" << domain
               << "'\n   on broker     '" << connection->getCurrentUrl() << "',\n   ";
