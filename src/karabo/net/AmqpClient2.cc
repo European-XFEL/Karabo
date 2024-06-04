@@ -27,7 +27,7 @@
 
 using boost::placeholders::_1;
 
-// Open questions/TODO:
+// Open questions/TODO at least when automatic reconnection is put back:
 // - need for m_channel->onError(nullptr); at several places? (See old AmqpClient code about where.)
 
 namespace karabo::net {
@@ -376,14 +376,14 @@ namespace karabo::net {
 
     void AmqpClient2::asyncPrepareChannel(AsyncHandler onChannelPrepared) {
         if (m_channelStatus != ChannelStatus::CREATE) {
-            KARABO_LOG_FRAMEWORK_WARN << m_instanceId << ".asyncPrepareChannel called in status "
-                                      << static_cast<int>(m_channelStatus);
+            KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << ".asyncPrepareChannel called in status "
+                                       << static_cast<int>(m_channelStatus) << ", so fails.";
+            m_connection->post(std::bind(onChannelPrepared, KARABO_ERROR_CODE_OP_CANCELLED));
+            return;
         }
-        // TODO:
-        // Check whether we can safely do this or channel is in an unforeseen state
         m_channelPreparationCallback = std::move(onChannelPrepared);
         m_connection->asyncCreateChannel(
-              [weakThis{weak_from_this()}](const std::shared_ptr<AMQP::Channel>& channel, const char* errMsg) {
+              [weakThis{weak_from_this()}](const std::shared_ptr<AMQP::Channel>& channel, const std::string& errMsg) {
                   if (auto self = weakThis.lock()) {
                       if (channel) {
                           KARABO_LOG_FRAMEWORK_DEBUG_C("AmqpClient") << "Channel created for id " << self->m_instanceId;

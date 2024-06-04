@@ -53,7 +53,7 @@ namespace karabo::net {
      * Wraps the AMQP::TcpConnection and the single threaded io context where all calls to the amqp library must run
      *
      */
-    class AmqpConnection : public boost::enable_shared_from_this<AmqpConnection> { // FIXME: Why inheriting?
+    class AmqpConnection : public boost::enable_shared_from_this<AmqpConnection> {
        public:
         KARABO_CLASSINFO(AmqpConnection, "AmqpConnection", "1.0")
 
@@ -62,7 +62,8 @@ namespace karabo::net {
          *
          * Either returns the channel or (if returned channel pointer is empty) state the failure reason.
          */
-        using ChannelCreationHandler = std::function<void(const std::shared_ptr<AMQP::Channel>&, const char* errMsg)>;
+        using ChannelCreationHandler =
+              std::function<void(const std::shared_ptr<AMQP::Channel>&, const std::string& errMsg)>;
 
         /**
          * Constructing a connection and starting the thread of the io context
