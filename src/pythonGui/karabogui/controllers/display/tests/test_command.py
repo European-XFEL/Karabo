@@ -10,7 +10,7 @@
 # You should have received a copy of the General Public License, version 3,
 # along with the Karabo Gui.
 # If not, see <https://www.gnu.org/licenses/gpl-3.0>.
-#
+# AccessSlottedDevice
 # The Karabo Gui is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
@@ -21,7 +21,8 @@ from karabo.native import AccessLevel, Configurable, Slot, String
 from karabogui.binding.api import (
     DeviceProxy, PropertyProxy, apply_default_configuration, build_binding)
 from karabogui.const import IS_MAC_SYSTEM
-from karabogui.testing import click_button, set_proxy_value, singletons
+from karabogui.testing import (
+    access_level, click_button, set_proxy_value, singletons)
 from karabogui.topology.system_tree import SystemTreeNode
 
 from ..command import DisplayCommand
@@ -41,6 +42,20 @@ class SlottedDevice(Configurable):
 
     @Slot(allowedStates=[State.ACTIVE],
           requiredAccessLevel=AccessLevel.OBSERVER)
+    def yep(self):
+        pass
+
+
+class AccessSlottedDevice(Configurable):
+    state = String(defaultValue=State.INIT)
+
+    @Slot(allowedStates=[State.INIT],
+          displayedName="Call ME", requiredAccessLevel=AccessLevel.ADMIN)
+    def callme(self):
+        pass
+
+    @Slot(allowedStates=[State.ACTIVE],
+          requiredAccessLevel=AccessLevel.OPERATOR)
     def yep(self):
         pass
 
@@ -68,13 +83,47 @@ def test_command_controller_basics(gui_app):
     assert controller._actions[0].action.text() == "Call ME"
     assert controller._actions[0].action.toolTip() == "dev.callme"
 
-    assert controller.widget.isEnabled()
-    controller.setEnabled(False)
-    assert not controller.widget.isEnabled()
-    controller.setEnabled(True)
-    assert controller.widget.isEnabled()
     controller.destroy()
     assert controller.widget is None
+
+
+def test_command_controller_access_level():
+    slot_proxy, add_slot_proxy = get_slot_proxy(additional=True,
+                                                klass=AccessSlottedDevice)
+    controller = DisplayCommand(proxy=slot_proxy)
+    controller.create(None)
+    assert controller.visualize_additional_property(add_slot_proxy)
+
+    assert controller.widget is not None
+    assert isinstance(controller._button, QToolButton)
+    assert controller._actions[0].action.text() == "Call ME"
+    assert controller._actions[0].action.toolTip() == "dev.callme"
+    assert controller._actions[1].action.text() == "yep"
+    assert controller._actions[1].action.toolTip() == "dev.yep"
+
+    with access_level(AccessLevel.OBSERVER):
+        controller.setEnabled(None)
+        assert not controller._actions[0].action.isEnabled()
+        assert not controller._actions[1].action.isEnabled()
+
+    with access_level(AccessLevel.ADMIN):
+        controller.setEnabled(None)
+        assert controller._actions[0].action.isEnabled()
+        # Wrong state, correct access level
+        assert not controller._actions[1].action.isEnabled()
+        # set new state
+        set_proxy_value(slot_proxy, "state", State.ACTIVE.value)
+        assert controller._actions[1].action.isEnabled()
+
+    with access_level(AccessLevel.OPERATOR):
+        controller.setEnabled(None)
+        # Actice state
+        assert not controller._actions[0].action.isEnabled()
+        assert controller._actions[1].action.isEnabled()
+
+        set_proxy_value(slot_proxy, "state", State.INIT.value)
+        assert not controller._actions[0].action.isEnabled()
+        assert not controller._actions[1].action.isEnabled()
 
 
 def test_command_controller_trigger(gui_app, mocker):

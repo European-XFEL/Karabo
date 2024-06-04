@@ -149,10 +149,27 @@ class DisplayCommand(BaseBindingController):
 
     def setEnabled(self, enable):
         """Reimplemented to account for access level changes
-
-        Note: This is dependent on the main proxy
         """
-        self.widget.setEnabled(enable)
+        for item in self._actions:
+            root_proxy = item.proxy.root_proxy
+            state_binding = root_proxy.state_binding
+            if state_binding is None:
+                item.action.setEnabled(False)
+                continue
+            state = get_binding_value(state_binding, "")
+            if state == "":
+                continue
+            binding = item.proxy.binding
+            if binding is None:
+                # XXX: Deprecated slot on device side, but still included...
+                item.action.setEnabled(False)
+                continue
+            is_allowed = binding.is_allowed(state)
+            is_accessible = (krb_access.GLOBAL_ACCESS_LEVEL >=
+                             binding.required_access_level)
+            item.action.setEnabled(is_allowed and is_accessible)
+
+        self._set_default_action()
 
     def _item_creation(self, item, initial=True):
         """When an item gets its binding or update, finish hooking things up.
