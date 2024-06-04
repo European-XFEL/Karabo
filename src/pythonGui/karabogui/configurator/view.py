@@ -36,8 +36,9 @@ from karabo.common.api import (
     KARABO_SCHEMA_DESCRIPTION, KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_INC,
     KARABO_SCHEMA_MAX_SIZE, KARABO_SCHEMA_METRIC_PREFIX_SYMBOL,
     KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MIN_INC, KARABO_SCHEMA_MIN_SIZE,
-    KARABO_SCHEMA_TAGS, KARABO_SCHEMA_UNIT_SYMBOL)
-from karabo.native import AccessMode, Assignment
+    KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, KARABO_SCHEMA_TAGS,
+    KARABO_SCHEMA_UNIT_SYMBOL)
+from karabo.native import AccessLevel, AccessMode, Assignment
 from karabogui import icons
 from karabogui.binding.api import (
     BaseBinding, DeviceProxy, PropertyProxy, VectorHashBinding)
@@ -235,6 +236,9 @@ class ConfigurationTreeView(QTreeView):
         if KARABO_SCHEMA_ACCESS_MODE in attributes:
             info['AccessMode'] = AccessMode(
                 attributes[KARABO_SCHEMA_ACCESS_MODE]).name
+        if KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL in attributes:
+            info['AccessLevel'] = AccessLevel(attributes.get(
+                KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL)).name
         if KARABO_SCHEMA_ASSIGNMENT in attributes:
             info['Assignment'] = Assignment(
                 attributes[KARABO_SCHEMA_ASSIGNMENT]).name
