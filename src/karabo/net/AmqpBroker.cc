@@ -87,10 +87,11 @@ namespace karabo {
             m_connection->asyncConnect([&prom](const boost::system::error_code ec) { prom.set_value(ec); });
             const boost::system::error_code ec = fut.get();
             if (ec) {
+                // In contrast to what is implemented for the JmsBorker, we do not repeat again until a broker
+                // behind one of the urls gets available. The exception here will terminate the process.
+                // Deployment action might be to restart it.
                 std::ostringstream oss;
                 oss << "Failed to connect to AMQP broker: code #" << ec.value() << " -- " << ec.message();
-                // TODO: Should we try to repeat until connection is possible (i.e. broker becomes available)?
-                //       That way it is done for JMS broker.
                 throw KARABO_NETWORK_EXCEPTION(oss.str());
             }
 
