@@ -17,7 +17,6 @@
 from qtpy.QtCore import QRect, QSize, Qt
 from qtpy.QtWidgets import QHBoxLayout, QLabel, QStackedLayout, QWidget
 
-import karabogui.access as krb_access
 from karabo.common.api import State
 from karabogui.binding.api import ProxyStatus
 from karabogui.indicators import STATE_COLORS, get_device_status_pixmap
@@ -118,10 +117,6 @@ class ControllerContainer(KaraboSceneWidget, QWidget):
                               remove=True)
         proxy.root_proxy.on_trait_change(self._proxy_status_changed, "status",
                                          remove=True)
-        if proxy.binding is None:
-            proxy.on_trait_change(
-                self._proxy_binding_changed, "binding.schema_update",
-                remove=True)
         if self.is_editable:
             for proxy in self.widget_controller.proxies:
                 proxy.on_trait_change(
@@ -184,25 +179,7 @@ class ControllerContainer(KaraboSceneWidget, QWidget):
         proxy = controller.proxy
         proxy.on_trait_change(self._proxy_status_changed, "existing")
         proxy.root_proxy.on_trait_change(self._proxy_status_changed, "status")
-        binding = proxy.binding
-        if binding is None:
-            proxy.on_trait_change(self._proxy_binding_changed,
-                                  "binding.schema_update")
-        else:
-            enabled = (binding.required_access_level
-                       <= krb_access.GLOBAL_ACCESS_LEVEL)
-            controller.setEnabled(enabled)
-
         return controller
-
-    def _proxy_binding_changed(self, proxy, name, new):
-        """Traits notification callback when the binding of the proxy changes.
-
-        This is set to synchronize the access level of the widget
-        """
-        proxy.on_trait_change(self._proxy_binding_changed,
-                              "binding.schema_update", remove=True)
-        self.update_global_access_level(krb_access.GLOBAL_ACCESS_LEVEL)
 
     def _proxy_status_changed(self, name, value):
         """Traits notification callback when the status of the proxy changes.
