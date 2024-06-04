@@ -119,6 +119,15 @@ void logAmqp(const std::vector<std::string>& brokerUrls, const std::string& doma
                         << std::endl;
           });
 
+    // Wait until connection established and thus connection->getCurrentUrl() shows proper url
+    std::promise<boost::system::error_code> isConnected;
+    auto futConnected = isConnected.get_future();
+    connection->asyncConnect([&isConnected](const boost::system::error_code& ec) { isConnected.set_value(ec); });
+    const boost::system::error_code ec = futConnected.get();
+    if (ec) {
+        throw KARABO_NETWORK_EXCEPTION("Broker connection failed: " + ec.message());
+    }
+
     std::cout << "# Starting to consume messages..." << std::endl;
     std::cout << "# Broker (AMQP): " << connection->getCurrentUrl()
               << std::endl; // might not be the one we actually connect...
