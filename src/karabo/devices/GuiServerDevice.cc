@@ -759,8 +759,7 @@ namespace karabo {
                     }
                     registerConnect(clientVersion, channel, authResult.userId, oneTimeToken);
 
-                    // A session whose user is an OBSERVER is considered a
-                    // a read-only session.
+                    // A session whose user is an OBSERVER is considered a read-only session.
                     const bool readOnly = (level == Schema::AccessLevel::OBSERVER);
 
                     Hash h("type", "loginInformation");
@@ -1071,7 +1070,15 @@ namespace karabo {
                         const Hash h("type", "notification", "message", message);
                         safeClientWrite(channel, h);
                     } else if (type == "beginTemporarySession") {
-                        onBeginTemporarySession(channel, info);
+                        if (!readOnly) {
+                            // A temporary session can only be started from a non-readOnly session
+                            onBeginTemporarySession(channel, info);
+                        } else {
+                            // not allowed, bail out and inform client
+                            const std::string message("A temporary session cannot be started from a readOnly session");
+                            const Hash h("type", "notification", "message", message);
+                            safeClientWrite(channel, h);
+                        }
                     } else if (type == "endTemporarySession") {
                         onEndTemporarySession(channel, info);
                     } else if (type == "reconfigure") {
