@@ -38,7 +38,6 @@ from karabogui import access as krb_access
 from karabogui.const import CLIENT_HOST
 from karabogui.singletons.api import get_config, get_network
 from karabogui.util import SignalBlocker
-from karabogui.validators import IntValidator
 
 from .utils import get_dialog_ui
 
@@ -69,11 +68,13 @@ class LoginType(IntEnum):
     REFRESH_TOKEN = 4
 
 
-class Validator(IntValidator):
+class Validator(QIntValidator):
     """A custom validator that allows only 1 or 6 digits """
 
     def validate(self, input, pos):
         """Support only number with single digit or 6 digits"""
+        if input in ("+", "-"):
+            return self.Invalid, input, pos
         if not (pos and input):
             # On deleting item from cell
             return self.Intermediate, input, pos
@@ -141,10 +142,11 @@ class AccessCodeWidget(QWidget):
 
     @Slot()
     def on_backspace_pressed(self) -> None:
-        """Set focus on the previous cell."""
+        """Set focus on the previous cell when the cell is emtpy or the
+        cursor is left to the digit."""
         sender = self.sender()
         index = self.cells.index(sender)
-        if not sender.text() and index != 0:
+        if index > 0 and not (sender.text() and sender.cursorPosition()):
             index -= 1
         self.cells[index].setFocus()
 
@@ -163,6 +165,7 @@ class AccessCodeWidget(QWidget):
         text = QApplication.clipboard().text()
         if len(text) == 6 and text.isdigit():
             self._paste_on_all_cell(text)
+            self.valueChanged.emit()
 
     def get_access_code(self) -> str:
         return "".join(cell.text() for cell in self.cells)

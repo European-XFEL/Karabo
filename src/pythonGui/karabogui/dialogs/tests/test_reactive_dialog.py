@@ -203,3 +203,19 @@ def test_access_widget(gui_app):
             assert cells[cell_index] == widget.focusWidget()
         else:
             assert cells[cell_index-1] == widget.focusWidget()
+
+    # Backspace deletes the number when cursor is on its right.
+    fourth_cell = cells[4]
+    third_cell = cells[3]
+    fourth_cell.setFocus(True)
+    fourth_cell.setCursorPosition(1)
+    keySequence(fourth_cell, Qt.Key_Backspace)
+    assert not bool(fourth_cell.text())
+    assert fourth_cell == widget.focusWidget()
+
+    # Backspace switches to previous cell if the cursor is on left.
+    third_cell.setFocus(True)
+    third_cell.setCursorPosition(0)
+    keySequence(third_cell, Qt.Key_Backspace)
+    assert bool(third_cell.text())
+    assert cells[2] == widget.focusWidget()
