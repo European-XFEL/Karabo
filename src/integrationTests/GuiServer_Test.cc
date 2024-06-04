@@ -1399,7 +1399,7 @@ void GuiServer_Test::testMissingTokenOnLogin() {
     karabo::TcpAdapter::QueuePtr messageQ =
           m_tcpAdapter->getNextMessages("notification", 1, [&] { m_tcpAdapter->sendMessage(loginInfo); });
     messageQ->pop(lastMessage);
-    const std::string& message = lastMessage.get<std::string>("message");
+    std::string& message = lastMessage.get<std::string>("message");
     CPPUNIT_ASSERT_MESSAGE(
           "Expected notification message that GuiServer requires authentication'. Got '" + message + "'",
           message.find("requires authenticated logins") != std::string::npos);
@@ -1425,6 +1425,21 @@ void GuiServer_Test::testMissingTokenOnLogin() {
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong readOnly mode value", true, readOnly);
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong access level value for readOnly login", int(Schema::AccessLevel::OBSERVER),
                                  accessLevel);
+
+    // Starting a temporary session from a readOnly session should not be allowed.
+    Hash beginTempSessionInfo("type", "beginTemporarySession", "temporarySessionToken",
+                              TestKaraboAuthServer::VALID_TOKEN, "version", "2.20.0", "levelBeforeTemporarySession",
+                              static_cast<int>(Schema::AccessLevel::OPERATOR));
+    messageQ =
+          m_tcpAdapter->getNextMessages("notification", 1, [&] { m_tcpAdapter->sendMessage(beginTempSessionInfo); });
+    messageQ->pop(lastMessage);
+    message = lastMessage.get<std::string>("message");
+    CPPUNIT_ASSERT_MESSAGE(
+          "Expected notification message that GuiServer cannot start a temporary session from a readOnly session'. Got "
+          "'" + message +
+                "'",
+          message.find("cannot be started from a readOnly") != std::string::npos);
+
 
     timeout = 1500;
     // wait for the GUI server to log us out
