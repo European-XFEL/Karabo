@@ -461,7 +461,8 @@ void BaseLogging_Test::testMaxNumDataRange() {
 
     const std::string dlReader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
     waitUntilLogged(dlReader0, "testMaxNumDataRange");
-    const std::string outOfRangeErrMsg("'maxNumData' parameter is intentionally limited to a maximum of");
+    const std::string outOfRangeErrMsg1("Requested maximum number of data points ('maxNumData') is");
+    const std::string outOfRangeErrMsg2("which surpasses the limit of");
 
     const int readerMaxHistSize = m_deviceClient->get<int>(dlReader0, "maxHistorySize");
 
@@ -483,7 +484,8 @@ void BaseLogging_Test::testMaxNumDataRange() {
         throw KARABO_LOGIC_EXCEPTION("Wrong arguments to slotGetPropertyHistory did not let it throw");
     } catch (karabo::util::RemoteException& e) {
         const std::string& errMsg = e.userFriendlyMsg(true);
-        CPPUNIT_ASSERT(errMsg.find(outOfRangeErrMsg) != std::string::npos);
+        CPPUNIT_ASSERT_MESSAGE(errMsg, errMsg.find(outOfRangeErrMsg1) != std::string::npos);
+        CPPUNIT_ASSERT_MESSAGE(errMsg, errMsg.find(outOfRangeErrMsg2) != std::string::npos);
     } catch (const std::exception& e) {
         CPPUNIT_ASSERT_MESSAGE(std::string("Unexpected exception: ") += e.what(), false);
     }
@@ -497,7 +499,8 @@ void BaseLogging_Test::testMaxNumDataRange() {
         throw KARABO_LOGIC_EXCEPTION("Wrong arguments to slotGetPropertyHistory did not let it throw");
     } catch (karabo::util::RemoteException& e) {
         const std::string& errMsg = e.userFriendlyMsg(true);
-        CPPUNIT_ASSERT(errMsg.find(outOfRangeErrMsg) != std::string::npos);
+        CPPUNIT_ASSERT(errMsg.find(outOfRangeErrMsg1) != std::string::npos);
+        CPPUNIT_ASSERT(errMsg.find(outOfRangeErrMsg2) != std::string::npos);
     } catch (const std::exception& e) {
         CPPUNIT_ASSERT_MESSAGE(std::string("Unexpected exception: ") += e.what(), false);
     }
