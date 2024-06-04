@@ -219,18 +219,7 @@ def stopkarabo():
     Nothing happens for an already stopped device server.
     """
     assert len(sys.argv) > 1
-
-    # Validate arguments that are not flags
-    argv = [arg.replace("/", "_").lower() for arg in sys.argv[1:]
-            if not arg.startswith("-")]
-    existing = available_services()
-    has_args = any(s for s in argv if s in existing)
-    # Check for force flag
-    has_force_flag = "-a" in sys.argv or "--all" in sys.argv
-    if has_force_flag or has_args:
-        exec_defaultall("svc", "-d")
-    else:
-        print("Not a valid server or argument")
+    exec_defaultall("svc", "-d")
 
 
 @entrypoint
