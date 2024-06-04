@@ -205,9 +205,9 @@ namespace karabo {
 
             if (maxNumData < 0 || maxNumData > m_maxHistorySize) {
                 throw KARABO_PARAMETER_EXCEPTION(
-                      "'maxNumData' parameter is intentionally limited to a maximum of '" +
-                      karabo::util::toString(m_maxHistorySize) + "'. " +
-                      "Property History polling is not designed for Scientific Data Analysis.");
+                      "Requested maximum number of data points ('maxNumData') is " + util::toString(maxNumData) +=
+                      " which surpasses the limit of " + util::toString(m_maxHistorySize) +=
+                      ". Property History polling is not designed for Scientific Data Analysis.");
             }
 
             // This prevents the slot from sending an automatic empty response at the end of
