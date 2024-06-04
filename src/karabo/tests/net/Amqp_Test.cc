@@ -165,8 +165,8 @@ void Amqp_Test::testConnection() {
         auto doneCreation = std::make_shared<std::promise<std::shared_ptr<AMQP::Channel>>>();
         auto futCreateChannel = doneCreation->get_future();
         connection->asyncCreateChannel(
-              [doneCreation](const std::shared_ptr<AMQP::Channel>& channel, const char* errMsg) {
-                  if (errMsg) doneCreation->set_value(nullptr);
+              [doneCreation](const std::shared_ptr<AMQP::Channel>& channel, const std::string& errMsg) {
+                  if (!errMsg.empty()) doneCreation->set_value(nullptr);
                   else doneCreation->set_value(channel);
               });
         CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futCreateChannel.wait_for(m_timeout));
@@ -193,7 +193,7 @@ void Amqp_Test::testConnection() {
             channelPromises->push_back(std::promise<std::string>());
             channelFutures.push_back(channelPromises->back().get_future());
             connection->asyncCreateChannel(
-                  [i, channelPromises](const std::shared_ptr<AMQP::Channel>& channel, const char* errMsg) {
+                  [i, channelPromises](const std::shared_ptr<AMQP::Channel>& channel, const std::string& errMsg) {
                       if (channel) channelPromises->at(i).set_value("Channel created");
                       else channelPromises->at(i).set_value(errMsg);
                   });
@@ -216,8 +216,8 @@ void Amqp_Test::testConnection() {
                   std::make_shared<std::promise<std::pair<std::shared_ptr<AMQP::Channel>, std::string>>>();
             auto futCreateChannel = doneCreation->get_future();
             connection->asyncCreateChannel(
-                  [doneCreation](const std::shared_ptr<AMQP::Channel>& channel, const char* errMsg) {
-                      doneCreation->set_value(std::pair(channel, std::string(errMsg ? errMsg : "")));
+                  [doneCreation](const std::shared_ptr<AMQP::Channel>& channel, const std::string& errMsg) {
+                      doneCreation->set_value(std::pair(channel, errMsg));
                   });
             CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futCreateChannel.wait_for(m_timeout));
             const auto channel_msg = futCreateChannel.get();
@@ -225,7 +225,8 @@ void Amqp_Test::testConnection() {
                 CPPUNIT_ASSERT_MESSAGE("Channel missing: " + util::toString(i), channel_msg.first);
                 channels.push_back(channel_msg.first); // keep alive
             } else {
-                CPPUNIT_ASSERT_EQUAL(std::string("Runtime exception creating channel (Too many? Check logs!)"),
+                CPPUNIT_ASSERT_EQUAL(std::string("Runtime exception creating channel: failed to open channel: "
+                                                 "max number of channels has been reached"),
                                      channel_msg.second);
             }
         }
@@ -241,10 +242,11 @@ void Amqp_Test::testConnection() {
         connection->asyncConnect([connDone](const boost::system::error_code ec) { connDone->set_value(ec); });
         auto chanDone = std::make_shared<std::promise<std::string>>();
         auto chanFut = chanDone->get_future();
-        connection->asyncCreateChannel([chanDone](const std::shared_ptr<AMQP::Channel>& channel, const char* errMsg) {
-            if (channel) chanDone->set_value("Non empty channelPtr!");
-            else chanDone->set_value(errMsg);
-        });
+        connection->asyncCreateChannel(
+              [chanDone](const std::shared_ptr<AMQP::Channel>& channel, const std::string& errMsg) {
+                  if (channel) chanDone->set_value("Non empty channelPtr!");
+                  else chanDone->set_value(errMsg);
+              });
         // Ensure that the dispatched async actions got executed by waiting until one more dispatched function is done
         // (otherwise asyncCreateChannel handler might not yet have stored its pending channel creation).
         auto movedOnProm = std::make_shared<std::promise<void>>();
@@ -295,7 +297,7 @@ void Amqp_Test::testConnection() {
         auto futCreateChannel = doneCreation->get_future();
 
         connection->asyncCreateChannel(
-              [doneCreation](const std::shared_ptr<AMQP::Channel>& channel, const char* errMsg) {
+              [doneCreation](const std::shared_ptr<AMQP::Channel>& channel, const std::string& errMsg) {
                   if (channel) doneCreation->set_value("Non empty channelPtr!");
                   else doneCreation->set_value(errMsg);
               });
