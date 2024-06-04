@@ -82,3 +82,9 @@ def test_custom_line_edit(gui_app):
     controller.internal_widget.setText("NoBeam")
     assert controller.counter == 1
     assert controller.internal_widget.text() == "NoBeam"
+
+    assert controller.internal_widget.isEnabled()
+    controller.setEnabled(False)
+    assert not controller.internal_widget.isEnabled()
+    controller.setEnabled(True)
+    assert controller.internal_widget.isEnabled()
