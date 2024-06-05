@@ -26,7 +26,7 @@ from karabogui.testing import (
 
 # Allows for one or two digits for day, month, hour, minute, second
 # and exactly three digits for milliseconds
-pattern = r"\[\d{1,2}-\d{1,2}-\d{4} \d{1,2}:\d{1,2}:\d{1,2}\.\d{3}\]"
+pattern = r"\[\d{2}-\d{2}-\d{4} \d{2}:\d{2}:\d{2}\.\d{3}\]"
 
 
 class Object(Configurable):
