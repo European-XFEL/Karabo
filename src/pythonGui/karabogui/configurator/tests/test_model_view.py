@@ -249,6 +249,7 @@ class TestConfiguratorDevice(GuiTestCase):
                              ('Value Type', 'String'),
                              ('Default Value', 'UNKNOWN'),
                              ('AccessMode', 'READONLY'),
+                             ('AccessLevel', 'OBSERVER'),
                              ('Assignment', 'OPTIONAL'),
                              ('Value on device', 'ON'),
                              ('metricPrefixSymbol', ''), ('unitSymbol', ''),
