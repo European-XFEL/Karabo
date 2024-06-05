@@ -156,22 +156,8 @@ void exportPyXmsInputOutputChannel(py::module_& m) {
 
               .def(
                     "write",
-                    [](const OutputChannel::Pointer& self, const py::object& data, const py::object& meta,
-                       bool copyAll) {
-                        if (!py::isinstance<ChannelMetaData>(meta)) {
-                            throw KARABO_PYTHON_EXCEPTION(
-                                  "Unsupported parameter type for parameter 'meta'. Needs to be ChannelMetaData");
-                        }
-                        if (!py::isinstance<Hash>(data)) {
-                            throw KARABO_PYTHON_EXCEPTION(
-                                  "Unsupported parameter type for parameter 'data'. Needs to be Hash");
-                        }
-                        // we need to copy here before the GIL release, otherwise data might be altered during writing.
-                        const Hash dataHash = data.cast<Hash>();
-                        const Memory::MetaData& metaData = static_cast<Memory::MetaData>(meta.cast<ChannelMetaData>());
-                        py::gil_scoped_release release;
-                        self->write(dataHash, metaData, copyAll);
-                    },
+                    [](const OutputChannel::Pointer& self, const Hash& data, const ChannelMetaData& meta,
+                       bool copyAll) { self->write(data, meta, copyAll); },
                     py::arg("data"), py::arg("meta"), py::arg("copyAllData") = false,
                     "data - a Hash with the data to write\n"
                     "meta - ChannelMetaData\n"
@@ -179,7 +165,7 @@ void exportPyXmsInputOutputChannel(py::module_& m) {
                     "Note 1: Any NDArray/ImageData inside data must stay untouched at least\n"
                     "        until update() has been called. See also the documentation of the\n"
                     "        safeNDArray flag of the update() method.\n"
-                    "Note 2: The methods 'write(..)', 'update()' and 'signalEndOfStream()'\n"
+                    "Note 2: The methods 'write(..)', '[async]Update()' and '[async]SignalEndOfStream()'\n"
                     "        must not be called concurrently")
 
               .def(
@@ -192,12 +178,12 @@ void exportPyXmsInputOutputChannel(py::module_& m) {
                     "Update the output channel, i.e. send all data over the wire that was\n"
                     "previously written by calling write(..).\n"
                     "This is synchronously blocking until all data is sent (or queued)\n"
-                    "safeNdarray - boolean to indicate whether all ndarrays inside the Hash\n"
+                    "safeNDArray - boolean to indicate whether all ndarrays inside the Hash\n"
                     "              passed to write(..) before are 'safe', i.e. their memory\n"
                     "              will not be referred to elsewhere after update is finished.\n"
                     "              Default is 'false', 'true' can avoid safety copies of NDArray\n"
                     "              content when data is queued or sent locally.\n"
-                    "Note: The methods 'write(..)', 'update()' and 'signalEndOfStream()' must\n"
+                    "Note: The methods 'write(..)', '[async]Update()' and '[async]SignalEndOfStream()' must\n"
                     "      not be called concurrently")
               .def(
                     "asyncUpdate",
