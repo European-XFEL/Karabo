@@ -39,7 +39,7 @@ from karabogui.binding.api import (
 from karabogui.const import IS_MAC_SYSTEM
 from karabogui.controllers.registry import get_model_controller
 from karabogui.testing import (
-    ALL_PROPERTIES_MAP, GuiTestCase, get_all_props_schema)
+    ALL_PROPERTIES_MAP, GuiTestCase, assert_no_throw, get_all_props_schema)
 
 from ..api import SceneView
 from ..layout.api import GroupLayout
@@ -120,6 +120,10 @@ class BaseSceneViewTest(GuiTestCase):
         self.scene_view.destroy()
         self.scene_view = None
         self.scene_model = None
+
+    def assert_access(self):
+        with assert_no_throw():
+            self.scene_view._update_widget_states()
 
     def assert_model(self, actual, expected):
         pass
@@ -242,6 +246,11 @@ class TestSceneView(BaseSceneViewTest):
 
 
 class TestLoadSceneModel(BaseSceneViewTest):
+
+    def tearDown(self):
+        """All widgets are evaluated on access level change"""
+        self.assert_access()
+        super().tearDown()
 
     def test_display_widgets(self):
         """Testing the loading of display widgets"""
