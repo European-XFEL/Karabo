@@ -183,10 +183,6 @@ class LineEditModel(BaseDisplayEditableWidget):
     klass = Enum("DisplayLineEdit", "EditableLineEdit")
 
 
-class RunConfiguratorModel(BaseEditWidget):
-    """A model for RunConfigurator ListOfNodes editor"""
-
-
 class StickerModel(BaseWidgetObjectData):
     """A model for a Sticker widget"""
 
@@ -548,7 +544,6 @@ def _build_empty_widget_readers_and_writers():
         "HistoricTextModel",
         "IntLineEditModel",
         "LampModel",
-        "RunConfiguratorModel",
         "WidgetNodeModel",
         "InstanceStatusModel",
     )
