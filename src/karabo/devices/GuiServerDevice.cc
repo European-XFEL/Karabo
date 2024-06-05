@@ -260,6 +260,11 @@ namespace karabo {
             //                                 changed for a single device in a given interval, 'deviceConfigurations'
             //                                 (plural) carries the properties that have changed for all the devices of
             //                                 interest for a specific client in a given interval.
+            // Minimal client version 2.20.0 -> 2.20.0 is the earliest version of the GUI Server supporting user
+            //                                  authentication that is being deployed and is not fully compatible with
+            //                                  the earlier version of the protocol supported since 2.16.0. For that
+            //                                  reason, a 2.20.0 Authentication Server requires a GUI Client to be at
+            //                                  least 2.20.0.
             STRING_ELEMENT(expected)
                   .key("minClientVersion")
                   .displayedName("Minimum Client Version")
@@ -267,7 +272,7 @@ namespace karabo {
                         "If this variable does not respect the N.N.N(.N) convention,"
                         " the Server will not enforce a version check")
                   .assignmentOptional()
-                  .defaultValue("2.11.3")
+                  .defaultValue("2.16.0")
                   .reconfigurable()
                   .adminAccess()
                   .commit();
@@ -984,6 +989,17 @@ namespace karabo {
 
                 if (userAuthActive) {
                     // GUI Server is in authenticated mode
+                    // TODO: bump minAuthClientVersion to 2.20.0 right after release. rc2 allows pre-release tests.
+                    // TODO: replace minAuthClientVersion with minClientVersion bumped to 2.20.0 right after 2.21 (or
+                    //       later) is released.
+                    const std::string minAuthClientVersion = "2.20.0rc2";
+                    if (clientVersion < Version(minAuthClientVersion)) {
+                        const string errorMsg =
+                              "Your GUI client has version '" + cliVersion +
+                              "', but the minimum required for an authenticated GUI Server is: " + minAuthClientVersion;
+                        sendLoginErrorAndDisconnect(channel, clientId, cliVersion, errorMsg);
+                        return;
+                    }
                     if (hash.has("oneTimeToken")) {
                         // A one time token was sent - has to validate and authorize it.
                         const std::string oneTimeToken = hash.get<string>("oneTimeToken");
