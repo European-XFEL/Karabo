@@ -20,6 +20,7 @@
 #############################################################################
 from datetime import datetime
 
+import numpy as np
 from qtpy.QtCore import QDateTime, QSortFilterProxyModel, QStringListModel, Qt
 from qtpy.QtGui import QFont
 from qtpy.QtWidgets import (
@@ -33,7 +34,7 @@ from karabo.native import Timestamp
 from karabogui import icons
 from karabogui.binding.api import (
     StringBinding, UnsignedIntBinding, VectorStringBinding, get_binding_value,
-    get_dtype_format)
+    get_numpy_binding)
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 from karabogui.dialogs.api import RequestTimeDialog
@@ -48,9 +49,28 @@ LAST_MIN = "Last Ten Minutes"
 
 
 def get_formatted(ts):
-    stamp = (f"[{ts.day}-{ts.month}-{ts.year} {ts.hour}:{ts.minute}:"
-             f"{ts.second}.{ts.microsecond // 1000:03d}]")
+    stamp = (f"[{ts.day:02}-{ts.month:02}-{ts.year} "
+             f"{ts.hour:02}:{ts.minute:02}:"
+             f"{ts.second:02}.{ts.microsecond // 1000:03d}]")
     return stamp
+
+
+def get_dtype(binding):
+    """Return a dtype corresponding to binding"""
+    fmt = "{}"
+    if isinstance(binding, UnsignedIntBinding):
+        dt = binding.display_type.split("|")[0]
+        _fmt = {
+            "bin": "0b{{:0{}b}}".format(
+                np.iinfo(get_numpy_binding(binding)).bits),
+            "oct": "o{:o}",
+            "hex": "0x{:X}"}
+        try:
+            fmt = _fmt[dt]
+        except (TypeError, KeyError):
+            pass
+
+    return fmt
 
 
 def get_start_end_date_time(time_span):
@@ -185,7 +205,7 @@ class DisplayHistoricText(BaseBindingController):
         return widget
 
     def binding_update(self, proxy):
-        self.fmt = get_dtype_format(proxy.binding)
+        self.fmt = get_dtype(proxy.binding)
 
     def value_update(self, proxy):
         value = get_binding_value(proxy)
