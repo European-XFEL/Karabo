@@ -29,7 +29,10 @@ def get_proxy(device_id: str, path: str) -> PropertyProxy:
 def is_controller_enabled(proxy: PropertyProxy, level: AccessLevel) -> bool:
     """Check if the controller with `proxy` is enabled"""
     root_proxy = proxy.root_proxy
-    value = root_proxy.state_binding.value
+    state_binding = root_proxy.state_binding
+    if state_binding is None:
+        return False
+    value = state_binding.value
     if not value:
         return False
 
