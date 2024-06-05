@@ -160,7 +160,7 @@ void GuiServer_Test::appTestRunner() {
           "testGuiVersionServer", "GuiServerDevice",
           Hash("deviceId", TEST_GUI_SERVER_ID,
                "port", 44450,
-               "minClientVersion", "2.16",
+               "minClientVersion", "2.20.0rc2",
                "authServer", "http://" + authServerAddr + ":" + toString(authServerPort),
                "timeout", 0,
                "maxTemporarySessionTime", MAX_TEMPORARY_SESSION_TIME,
@@ -1390,35 +1390,15 @@ void GuiServer_Test::testSlotBroadcast() {
 void GuiServer_Test::testMissingTokenOnLogin() {
     std::clog << "testMissingTokenOnLogin: " << std::flush;
 
-    // For versions before 2.20.0, a missing one time token in the login message is an error
-    Hash loginInfo("type", "login", "username", "bob", "password", "12345", "version", "2.16.0");
-
-    resetTcpConnection();
-
-    Hash lastMessage;
-    karabo::TcpAdapter::QueuePtr messageQ =
-          m_tcpAdapter->getNextMessages("notification", 1, [&] { m_tcpAdapter->sendMessage(loginInfo); });
-    messageQ->pop(lastMessage);
-    std::string& message = lastMessage.get<std::string>("message");
-    CPPUNIT_ASSERT_MESSAGE(
-          "Expected notification message that GuiServer requires authentication'. Got '" + message + "'",
-          message.find("requires authenticated logins") != std::string::npos);
-
-    int timeout = 1500;
-    // wait for the GUI server to log us out
-    while (m_tcpAdapter->connected() && timeout > 0) {
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
-        timeout -= 5;
-    }
-
-    resetTcpConnection();
-
     // From version 2.20.0 (or a development version of 2.20.0) a missing one time token is interpreted as the login for
     // a a read-only session with no user authentication involved.
     Hash loginReadOnlySession("type", "login", "clientId", "bobHost(pid 10264)", "version", "2.20.0rc2");
 
-    messageQ = m_tcpAdapter->getNextMessages("loginInformation", 1,
-                                             [&] { m_tcpAdapter->sendMessage(loginReadOnlySession); });
+    resetTcpConnection();
+
+    Hash lastMessage;
+    karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages(
+          "loginInformation", 1, [&] { m_tcpAdapter->sendMessage(loginReadOnlySession); });
     messageQ->pop(lastMessage);
     bool readOnly = lastMessage.get<bool>("readOnly");
     int accessLevel = lastMessage.get<int>("accessLevel");
@@ -1433,7 +1413,7 @@ void GuiServer_Test::testMissingTokenOnLogin() {
     messageQ =
           m_tcpAdapter->getNextMessages("notification", 1, [&] { m_tcpAdapter->sendMessage(beginTempSessionInfo); });
     messageQ->pop(lastMessage);
-    message = lastMessage.get<std::string>("message");
+    const std::string message = lastMessage.get<std::string>("message");
     CPPUNIT_ASSERT_MESSAGE(
           "Expected notification message that GuiServer cannot start a temporary session from a readOnly session'. Got "
           "'" + message +
@@ -1441,7 +1421,7 @@ void GuiServer_Test::testMissingTokenOnLogin() {
           message.find("cannot be started from a readOnly") != std::string::npos);
 
 
-    timeout = 1500;
+    int timeout = 1500;
     // wait for the GUI server to log us out
     while (m_tcpAdapter->connected() && timeout > 0) {
         boost::this_thread::sleep(boost::posix_time::milliseconds(5));
@@ -1454,7 +1434,7 @@ void GuiServer_Test::testMissingTokenOnLogin() {
 void GuiServer_Test::testInvalidTokenOnLogin() {
     std::clog << "testInvalidTokenOnLogin: " << std::flush;
 
-    Hash loginInfo("type", "login", "username", "bob", "oneTimeToken", "abcd", "version", "2.16.0");
+    Hash loginInfo("type", "login", "username", "bob", "oneTimeToken", "abcd", "version", "2.20.0");
 
     resetTcpConnection();
 
@@ -1481,7 +1461,7 @@ void GuiServer_Test::testValidTokenOnLogin() {
     std::clog << "testInvalidTokenOnLogin: " << std::flush;
 
     Hash loginInfo("type", "login", "username", TestKaraboAuthServer::VALID_USER_ID, "oneTimeToken",
-                   TestKaraboAuthServer::VALID_TOKEN, "version", "2.16.0");
+                   TestKaraboAuthServer::VALID_TOKEN, "version", "2.20.0");
 
     resetTcpConnection();
 
