@@ -17,10 +17,12 @@
 import contextlib
 import os
 import sys
+import traceback
 import unittest
 from platform import system
 from xml.etree.ElementTree import parse
 
+import pytest
 from qtpy.QtCore import Qt
 from qtpy.QtTest import QTest
 from qtpy.QtWidgets import QApplication
@@ -172,6 +174,17 @@ def singletons(**objects):
         for key in objects:
             if key not in replaced:
                 del singletons_dict[key]
+
+
+@contextlib.contextmanager
+def assert_no_throw():
+    """A simple context manager to assert a no-throw"""
+    try:
+        yield None
+    except Exception as exception:
+        trace = ''.join(traceback.format_exception(
+            type(exception), exception, exception.__traceback__))
+        raise pytest.fail(f"Did raise unexpected exception: {trace}")
 
 
 @contextlib.contextmanager

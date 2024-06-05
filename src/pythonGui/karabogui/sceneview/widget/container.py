@@ -152,7 +152,7 @@ class ControllerContainer(KaraboSceneWidget, QWidget):
         proxy = self.widget_controller.proxy
         binding = proxy.binding
         if binding is not None:
-            enabled = is_controller_enabled(level)
+            enabled = is_controller_enabled(proxy, level)
             self.widget_controller.setEnabled(enabled)
 
     # ---------------------------------------------------------------------
