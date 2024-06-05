@@ -111,7 +111,7 @@ namespace karabo {
              * - scanPlugins: a boolean indicating if this server should scan for additional plugins
              * - visibility: an integer indicating device server visibility in the distributed system
              * - debugMode: a boolean indicating if the server should run in debugMode
-             * - connection: a Hash containing the connection information for a karabo::net::JmsConnection
+             * - connection: a Hash containing the connection information for a karabo::net::Broker
              * - pluginDirectory: a path to the plugin directory for this device server
              * - heartbeatInterval: interval in seconds at which this server sends heartbeats to the distributed system
              * - nThreads: number of threads to use in this device server
