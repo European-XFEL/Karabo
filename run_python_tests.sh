@@ -178,6 +178,7 @@ runPythonTestsCI() {
     # On CI we run once with karathon
     export USE_KARATHON="1"
     safeRunTests $BROKER $*
+    unset USE_KARATHON
 }
 
 runPythonTests() {
