@@ -216,7 +216,7 @@ def test_display_format():
     assert get_dtype_format(binding) == "{:.8g}"
 
     binding = Int8Binding(attributes={KARABO_SCHEMA_DISPLAY_TYPE: "bin"})
-    assert get_dtype_format(binding) == "b{:b}"
+    assert get_dtype_format(binding) == "0b{:b}"
 
     binding = Int8Binding(attributes={KARABO_SCHEMA_DISPLAY_TYPE: "hex"})
     assert get_dtype_format(binding) == "0x{:X}"
