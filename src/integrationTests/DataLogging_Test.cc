@@ -756,6 +756,7 @@ void DataLogging_Test::testInfluxSafeSchemaRetentionPeriod() {
     success =
           m_deviceClient->instantiate(m_server, "PropertyTest", Hash("deviceId", propTestDevice), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    waitUntilLogged(propTestDevice, "testInfluxSafeSchemaRetentionPeriod - 1");
 
     // Restart the PropertyTest device under test - this will trigger a new attempt to save the device schema with the
     // same digest, since no change happened to the schema between the two instantiations.
@@ -767,6 +768,7 @@ void DataLogging_Test::testInfluxSafeSchemaRetentionPeriod() {
     success =
           m_deviceClient->instantiate(m_server, "PropertyTest", Hash("deviceId", propTestDevice), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    waitUntilLogged(propTestDevice, "testInfluxSafeSchemaRetentionPeriod - 2");
 
     // Makes sure all the data has been saved in Influx.
     CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(loggerId, "flush").timeout(FLUSH_REQUEST_TIMEOUT_MILLIS).receive());
