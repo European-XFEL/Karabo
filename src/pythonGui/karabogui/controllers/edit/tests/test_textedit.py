@@ -16,6 +16,7 @@
 # or FITNESS FOR A PARTICULAR PURPOSE.
 from qtpy.QtCore import Qt
 
+from karabo.common.api import State
 from karabo.common.scenemodel.api import LineEditModel
 from karabo.native import Char, Configurable, String
 from karabogui.testing import get_class_property_proxy, set_proxy_value
@@ -24,7 +25,8 @@ from ..textedit import EditableLineEdit
 
 
 class Object(Configurable):
-    prop = String()
+    state = String(defaultValue=State.ON)
+    prop = String(allowedStates={State.ON})
 
 
 class ObjectChar(Configurable):
@@ -49,6 +51,17 @@ def test_editable_line_edit(gui_app):
     # test edit value
     controller.widget.textChanged.emit("Wha??")
     assert proxy.edit_value == "Wha??"
+
+    # access level
+    assert controller.widget.isEnabled()
+    set_proxy_value(proxy, "state", "ERROR")
+    assert not controller.widget.isEnabled()
+
+    # enabled
+    controller.setEnabled(True)
+    assert controller.widget.isEnabled()
+    controller.setEnabled(False)
+    assert not controller.widget.isEnabled()
 
     # teardown
     controller.destroy()
