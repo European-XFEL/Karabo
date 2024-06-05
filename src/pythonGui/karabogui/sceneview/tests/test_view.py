@@ -261,7 +261,6 @@ class TestLoadSceneModel(BaseSceneViewTest):
         self._assert_geometry(sm.HexadecimalModel)
         self._assert_geometry(sm.LampModel)
         self._assert_geometry(sm.LineEditModel)
-        self._assert_geometry(sm.RunConfiguratorModel)
         self._assert_geometry(sm.SingleBitModel)
         self._assert_geometry(sm.TableElementModel)
         self._assert_geometry(sm.WidgetNodeModel)

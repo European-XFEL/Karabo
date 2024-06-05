@@ -94,7 +94,6 @@ def test_editable_simple_model():
         api.HexadecimalModel,
         api.IntLineEditModel,
         api.EditableRegexListModel,
-        api.RunConfiguratorModel,
         api.SliderModel,
         api.EditableRegexModel,
     )
