@@ -24,7 +24,7 @@ from traits.api import Instance
 from karabo.common.scenemodel.api import EditableListElementModel
 from karabogui.binding.api import VectorStringBinding, get_editor_value
 from karabogui.controllers.api import (
-    BaseBindingController, register_binding_controller)
+    BaseBindingController, is_proxy_allowed, register_binding_controller)
 from karabogui.dialogs.listedit import ListEditDialog
 
 
@@ -50,3 +50,7 @@ class EditableListElement(BaseBindingController):
         list_edit.set_list(get_editor_value(self.proxy, []))
         if list_edit.exec() == QDialog.Accepted:
             self.proxy.edit_value = list_edit.values
+
+    def state_update(self, proxy):
+        enable = is_proxy_allowed(proxy)
+        self.widget.setEnabled(enable)
