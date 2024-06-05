@@ -25,7 +25,7 @@ from karabo.common.scenemodel.api import LineEditModel
 from karabogui.binding.api import (
     CharBinding, StringBinding, VectorCharBinding, get_editor_value)
 from karabogui.controllers.api import (
-    BaseBindingController, register_binding_controller)
+    BaseBindingController, is_proxy_allowed, register_binding_controller)
 from karabogui.util import SignalBlocker
 from karabogui.widgets.hints import LineEdit
 
@@ -65,3 +65,7 @@ class EditableLineEdit(BaseBindingController):
             return
         self._last_cursor_pos = self.widget.cursorPosition()
         self.proxy.edit_value = value
+
+    def state_update(self, proxy):
+        enable = is_proxy_allowed(proxy)
+        self.widget.setEnabled(enable)
