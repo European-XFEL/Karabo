@@ -265,7 +265,7 @@ def get_dtype_format(binding):
         dt = binding.display_type.split("|")
         prefix = dt[0]
         _fmt = {
-            "bin": "b{:b}",
+            "bin": "0b{:b}",
             "oct": "o{:o}",
             "hex": "0x{:X}"}
         try:

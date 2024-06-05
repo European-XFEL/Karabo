@@ -16,8 +16,8 @@
 # or FITNESS FOR A PARTICULAR PURPOSE.
 from karabo.common.api import KARABO_SCHEMA_DISPLAY_TYPE
 from karabo.common.display_types import (
-    KARABO_SCHEMA_DISPLAY_TYPE_ALARM, KARABO_SCHEMA_DISPLAY_TYPE_HEX,
-    KARABO_SCHEMA_DISPLAY_TYPE_STATE)
+    KARABO_SCHEMA_DISPLAY_TYPE_ALARM, KARABO_SCHEMA_DISPLAY_TYPE_BIN,
+    KARABO_SCHEMA_DISPLAY_TYPE_HEX, KARABO_SCHEMA_DISPLAY_TYPE_STATE)
 from karabo.common.scenemodel.api import (
     AlarmGraphModel, FilterTableElementModel, HistoricTextModel,
     StateGraphModel, TrendGraphModel, VectorGraphModel, WebCamGraphModel,
@@ -134,7 +134,8 @@ def get_property_proxy_model(proxy, include_images=True):
         return StateGraphModel(**_get_plot_attributes(proxy))
     elif display_type == KARABO_SCHEMA_DISPLAY_TYPE_ALARM:
         return AlarmGraphModel(**_get_plot_attributes(proxy))
-    elif display_type == KARABO_SCHEMA_DISPLAY_TYPE_HEX:
+    elif display_type in (
+            KARABO_SCHEMA_DISPLAY_TYPE_BIN, KARABO_SCHEMA_DISPLAY_TYPE_HEX):
         return HistoricTextModel(**_get_widget_attributes(proxy.key))
 
     if isinstance(binding, (StringBinding, VectorStringBinding)):
