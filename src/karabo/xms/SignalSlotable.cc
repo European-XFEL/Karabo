@@ -1168,7 +1168,7 @@ namespace karabo {
                 boost::shared_lock<boost::shared_mutex> lock(m_instanceInfoMutex);
                 emit("signalHeartbeat", getInstanceId(), m_heartbeatInterval, getHeartbeatInfo(m_instanceInfo));
             } catch (std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "emitHeartbeat triggered an exception: " << e.what();
+                KARABO_LOG_FRAMEWORK_ERROR << getInstanceId() << ": emitHeartbeat triggered an exception: " << e.what();
             }
             delayedEmitHeartbeat(m_heartbeatInterval);
         }
@@ -1712,7 +1712,7 @@ namespace karabo {
                                              failureHandler{std::move(failureHandler)}]() {
                 auto self = weakSelf.lock();
                 if (!self) return;
-                // First check whether slot exists to avoid signal emits are send if no-one listens correctly.
+                // First check whether slot exists to avoid signal emits are sent if no-one listens correctly.
                 auto requestor = self->request(slotInstanceId, "slotHasSlot", slotSignature);
                 if (timeout > 0) requestor.timeout(timeout);
                 requestor.receiveAsync<bool>(
