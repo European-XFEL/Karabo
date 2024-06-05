@@ -230,23 +230,26 @@ void DeviceClient_Test::testSet() {
 void DeviceClient_Test::testProperServerSignalsSent() {
     auto client = boost::shared_ptr<DeviceClient>(new DeviceClient("device_client-plugin_tests"));
 
-    std::promise<bool> plugins_promise;
-    std::future<bool> plugins_future = plugins_promise.get_future();
+    auto plugins_promise = std::make_shared<std::promise<bool>>();
+    std::future<bool> plugins_future = plugins_promise->get_future();
 
-    client->registerInstanceNewMonitor([&plugins_promise](const Hash& hash) -> void {
+    client->registerInstanceNewMonitor([plugins_promise](const Hash& hash) -> void {
         std::vector<std::string> plugins =
               hash.getAttribute<std::vector<std::string>>("server.device_server-plugin_tests", "deviceClasses");
-        plugins_promise.set_value(!plugins.empty());
+        plugins_promise->set_value(!plugins.empty());
     });
 
-    std::atomic<bool> instance_update_called{};
-    client->registerInstanceUpdatedMonitor([&instance_update_called](const Hash&) { instance_update_called = true; });
+    auto instance_update_called = std::make_shared<std::atomic<bool>>(false);
+    client->registerInstanceUpdatedMonitor([instance_update_called](const Hash& entry) {
+        std::clog << "Unexpected entry received in instanceUpdateMonitor: " << entry << std::endl;
+        instance_update_called->exchange(true);
+    });
 
-    const Hash config("serverId", "device_server-plugin_tests", "scanPlugins", false, "Logger.priority", "FATAL");
+    const Hash config("serverId", "device_server-plugin_tests", "Logger.priority", "FATAL");
     auto server = DeviceServer::create("DeviceServer", config);
     server->finalizeInternalInitialization();
 
-    auto result = plugins_future.wait_for(std::chrono::seconds{1});
+    auto result = plugins_future.wait_for(std::chrono::seconds{KRB_TEST_MAX_TIMEOUT});
     CPPUNIT_ASSERT_EQUAL(std::future_status::ready, result);
     bool plugins_loaded = plugins_future.get();
     CPPUNIT_ASSERT(plugins_loaded);
@@ -255,7 +258,7 @@ void DeviceClient_Test::testProperServerSignalsSent() {
     // in case it is actually called (which is what we have to make sure it does
     // not happen)
     std::this_thread::sleep_for(std::chrono::milliseconds{100});
-    CPPUNIT_ASSERT(!instance_update_called);
+    CPPUNIT_ASSERT(!(*instance_update_called));
 }
 
 void DeviceClient_Test::testMonitorChannel() {

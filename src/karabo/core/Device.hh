@@ -1638,9 +1638,9 @@ namespace karabo {
              * @param connection The broker connection for the device.
              * @param consumeBroadcasts If false, do not listen directly to broadcast messages (addressed to '*').
              *                          Whoever sets this to false has to ensure that broadcast messages reach the
-             * Device in some other way.
+             *                          Device in some other way.
              *  @param timeServerId The id of the time server to be used by the device - usually set by the
-             * DeviceServer.
+             *                      DeviceServer.
              */
             void finalizeInternalInitialization(const karabo::net::Broker::Pointer& connection, bool consumeBroadcasts,
                                                 const std::string& timeServerId) {
