@@ -5,7 +5,7 @@
 What's New in Karabo 2.20.0
 ***************************
 
-Release date will be about spring 2024.
+Release date is **June 12 2024**.
 
 
 Summary – Release highlights
@@ -52,24 +52,6 @@ Change of behaviour
 +++++++++++++++++++
 
 
-
-Dependency Updates
-++++++++++++++++++
-
-This release contains a major Python update to **3.11** (was 3.8).
-
-
-Detailed Merge-Log
-++++++++++++++++++
-
-
-MDL/Native core
-===============
-
-
-Bound/cpp core
-==============
-
 - The **StringTools::fromString** template overload that returns a sorted container
 with the strings contained in an input string has been renamed to
 **StringTools::fromStringToSortedCont**. The change comes from a modification
@@ -77,11 +59,373 @@ in the way a C++ compiler matches template template arguments with defaults intr
 by C++ 17. More details are provided by comments in **StringTools.hh**.
 
 
-Graphical User Interface
-========================
+Dependency Updates
+++++++++++++++++++
 
-Core Devices
-============
+- This release contains a major Python update to **3.11** (was 3.8).
+- The KaraboGUI was upgraded to Python **3.12** (was 3.8)
 
-Dependencies, Documentation and Tools
-=====================================
+
+Bug Fixes
+++++++++++
+
+- *(Bound)* Fix DeviceClient.saveConfigurationFromName in karathon ([7ddbf43](https://git.xfel.eu/Karabo/Framework/-/commit/7ddbf43a4c5bea45f8fb8d50682aa81bcf1a203a))
+- *(Bound)* Fix Tcp Channel/Connection binding ([0c4bbcc](https://git.xfel.eu/Karabo/Framework/-/commit/0c4bbcc0c5ac74aa62dbaee8223ab531bf88ed9c))
+- *(Bound)* Publish output channel address as deduced from configuration ([0cc4fbd](https://git.xfel.eu/Karabo/Framework/-/commit/0cc4fbd27b7ccd78674af816e11d8feabe247269))
+- *(C++)* Make over write element ignore invalid keys again ([b6958c9](https://git.xfel.eu/Karabo/Framework/-/commit/b6958c9d74c427671a78588c2ccd3c8b04437eb8))
+- *(C++)* Fix string to integer conversion in StringTools.hh ([6fa46be](https://git.xfel.eu/Karabo/Framework/-/commit/6fa46be069763e2cb6a31ab14ba783a768072bef))
+- *(C++)* Prevent OverwriteElement from setting inconsistent boundaries ([ba2963b](https://git.xfel.eu/Karabo/Framework/-/commit/ba2963bfc5b4f4adb9541e8a61a9f4c6d96a3fd1))
+- *(C++)* Disable schema elements that are both assignmentMandatory and readOnly ([7c1d82f](https://git.xfel.eu/Karabo/Framework/-/commit/7c1d82f7df6d98d3131b2c8cc5c5f55dd87f8762))
+- *(C++)* Better document OutputChannel::asyncUpdate[NoWait] plus minor tuning ([2e6f787](https://git.xfel.eu/Karabo/Framework/-/commit/2e6f787195a0837f18970cc925f31e1d9594ada4))
+- *(C++)* OutputChannel can call readyForNexthandler earlier ([a1873d4](https://git.xfel.eu/Karabo/Framework/-/commit/a1873d4e1fd39e90219fa407d9a69d5f2173960f))
+- *(C++)* OverwriteElement checks minimum and maximum size of vectors and tables against schema. ([933614f](https://git.xfel.eu/Karabo/Framework/-/commit/933614fcff37929082997c0640594c7692653ea2))
+- *(C++)* AMQP concurrent subscriptions to same exchange/routing key ([ef236cc](https://git.xfel.eu/Karabo/Framework/-/commit/ef236cc72556e95c9f46b938c3d8c910439140ba))
+- *(C++)* Test that new AMQP client publishes to non-existing exchange ([8848eb2](https://git.xfel.eu/Karabo/Framework/-/commit/8848eb243f6dbea4e8ab55785d6e6511e0522228))
+- *(C++)* Device server instanceNew already with deviceClasses ([a658f33](https://git.xfel.eu/Karabo/Framework/-/commit/a658f3324ef7f431ce9562e98fcb113a1b238be1))
+- *(C++)* Clear pipeline data cache immediately ([0db1b7f](https://git.xfel.eu/Karabo/Framework/-/commit/0db1b7f5a759975a99b20107517cd7cd75539ec5))
+- *(C++)* Overwrite elements complains about some inconsistencies ([538abb2](https://git.xfel.eu/Karabo/Framework/-/commit/538abb249b31b377b189fa1fa4d77e9b3deacb52))
+- *(C++)* Message logger and broker rates show correct connected broker url ([2e268f0](https://git.xfel.eu/Karabo/Framework/-/commit/2e268f0bb142c3a28c5d5ef95ad1f32ff30804ee))
+- *(C++ int. test)* More robust tests for queueDrop with implicit queue length ([b307fb8](https://git.xfel.eu/Karabo/Framework/-/commit/b307fb8af76a643271c2cac75beb7c464f7b3919))
+- *(C++ int. test)* Avoid fixed sleep ([8c1dbdf](https://git.xfel.eu/Karabo/Framework/-/commit/8c1dbdf29b0e1567a3b2a9227713a026f225d4ca))
+- *(C++ integr. test)* Proper int type for maxNumData ([1200cea](https://git.xfel.eu/Karabo/Framework/-/commit/1200ceab62bf36c1c03061711a3f57ca343f658b))
+- *(C++ integr. tests)* Do not rely on DeviceClient topology cache for data logger ([a9f3cbb](https://git.xfel.eu/Karabo/Framework/-/commit/a9f3cbbcb1098c9d6bee3c2891a42cc2aeb90522))
+- *(C++ test)* Make DataLogging_Test::testInfluxSafeSchemaRetentionPeriod robust ([fae4791](https://git.xfel.eu/Karabo/Framework/-/commit/fae4791afec1fab5172f09e74619386b8c86ee32))
+- *(CI)* Try to fix CI by removing net_test.py that duplicates binding/test_event_loop.py ([499e589](https://git.xfel.eu/Karabo/Framework/-/commit/499e5893fb23f7165e08f5473e149c0bd0452f6f))
+- *(CI)* Remove last defaults remnants on CONDA build ([83360fd](https://git.xfel.eu/Karabo/Framework/-/commit/83360fdf4845022f280539328621ebd6598f7e2f))
+- *(CI)* Fix conda build for miniconda environemt on unix ([4907abe](https://git.xfel.eu/Karabo/Framework/-/commit/4907abe27e4f123cde97204013a7f9a44a94e6dd))
+- *(CI)* Fix the CI coverage report after gitlab upgrade ([998f719](https://git.xfel.eu/Karabo/Framework/-/commit/998f719e996e52976d8ef652becc09d5c2541b5d))
+- *(CI)* Update meta base for gui building ([c7bf806](https://git.xfel.eu/Karabo/Framework/-/commit/c7bf806ca2225e4e059e4024040788359803a7b9))
+- *(CI)* Also remove karaboEnvironments from CI ([ddf2533](https://git.xfel.eu/Karabo/Framework/-/commit/ddf25333ac4715b2f073d9cc8c18f607b0d69dac))
+- *(CI)* Align the entry point for karabo concert ([4809841](https://git.xfel.eu/Karabo/Framework/-/commit/480984143c7d3ea84fb143fd6d6a2a656ebb16d6))
+- *(DEPS)* Adding openssldir option does not force rebuild on centOS ([7538ece](https://git.xfel.eu/Karabo/Framework/-/commit/7538ece64df8f6f3f1268c3e378d18016ba8f5b7))
+- *(DEPS)* Fix log4cpp recipe bug ([2d96b5e](https://git.xfel.eu/Karabo/Framework/-/commit/2d96b5ed8b25ed414d2cd592351bd421dfdac467))
+- *(DEPS)* Update pytest asyncio due to dependency problem ([ede3298](https://git.xfel.eu/Karabo/Framework/-/commit/ede32986798ca5d996e3345ba949d689d11b0936))
+- *(DOC)* Remove public release todo list ([55011e8](https://git.xfel.eu/Karabo/Framework/-/commit/55011e87db823cd6ce00efb8db91c2d2482e9f28))
+- *(DOC)* Pin alabaster ([a89ea6d](https://git.xfel.eu/Karabo/Framework/-/commit/a89ea6dfea2d59f67117cfef60ce66522b77f7d4))
+- *(GUI)* Erase images on controllers when devices go offline ([624d754](https://git.xfel.eu/Karabo/Framework/-/commit/624d754b57c0dfbc3b3404b8f5ea6d6812872eee))
+- *(GUI)* Remove unused configuration singleton options and alarm coloring in configurator ([d73b87d](https://git.xfel.eu/Karabo/Framework/-/commit/d73b87d04c755b74286f7061ab2238b29cc7b30e))
+- *(GUI)* Fix message box moving to proper integer values ([82fef74](https://git.xfel.eu/Karabo/Framework/-/commit/82fef74ad17b897b87b4c5b0e8d3f5423894fee7))
+- *(GUI)* Fix the unknown widget painting. It should have integers ([1841144](https://git.xfel.eu/Karabo/Framework/-/commit/1841144243f97badc19a021847bc75f8cc29ff06))
+- *(GUI)* Fix integer casting in slot button of configurator ([3ea0b24](https://git.xfel.eu/Karabo/Framework/-/commit/3ea0b249f293f6fee9c6f76605bf7078b09fdb35))
+- *(GUI)* AlarmController should validate displaytype on added proxies ([6711a9b](https://git.xfel.eu/Karabo/Framework/-/commit/6711a9bddbaffc026399bb31a6cf6f2b95ec8408))
+- *(GUI)* Add target window to concert open scene ([d08f8e4](https://git.xfel.eu/Karabo/Framework/-/commit/d08f8e4517378e976cad8811b5fa24196de2fbf9))
+- *(GUI)* Karabo-concert  file dialog fails to show up and throws traceback. ([5a006a1](https://git.xfel.eu/Karabo/Framework/-/commit/5a006a1146504dd7ca9523e7ccfeb3888a38072a))
+- *(GUI)* Reactive Login dialog- Align items ([f54fc75](https://git.xfel.eu/Karabo/Framework/-/commit/f54fc7545c8bb3bdfb22bf2aa6c2f650c5274370))
+- *(GUI)* Fix levels dialog accounting zero values ([3a6751d](https://git.xfel.eu/Karabo/Framework/-/commit/3a6751deab3c8054e0cb072fea68c9d4d9f044e4))
+- *(GUI)* Trendlines always draw connect array dots ([247382a](https://git.xfel.eu/Karabo/Framework/-/commit/247382ac51f2d65b9ebb780d5cce6ab64a1c9dd1))
+- *(GUI)* Delete device quickly in development ([ce3646a](https://git.xfel.eu/Karabo/Framework/-/commit/ce3646a94ddd42d43ced5f21843080a7f91a1d07))
+- *(GUI)* Do not allow to set log values on X axis ([29b3cf9](https://git.xfel.eu/Karabo/Framework/-/commit/29b3cf9d6ddc56a5f63d9a1c073ba851e1d0932d))
+- *(GUI)* Cast common model constants for unknown svg widgets as integers ([0fe511b](https://git.xfel.eu/Karabo/Framework/-/commit/0fe511b26ce807d836c82223122aa600a675ac6a))
+- *(GUI)* Don't ask to quit for non existent console ([a4b20bd](https://git.xfel.eu/Karabo/Framework/-/commit/a4b20bd2ed839953059fd70b594562b91a593455))
+- *(GUI)* FilterController takes into account menu actions and mimeData ([95ca367](https://git.xfel.eu/Karabo/Framework/-/commit/95ca36719a87b298e2f29478c01928b59d157d61))
+- *(GUI)* Millisecond calculation in trendline takes integer ([973b159](https://git.xfel.eu/Karabo/Framework/-/commit/973b15918fbdbd13b3cf963d4ad8b09a0045c9ac))
+- *(GUI)* Align viewbox position casting to integers ([062672e](https://git.xfel.eu/Karabo/Framework/-/commit/062672ea178631116ab37959f4451c04f155c675))
+- *(GUI)* Align the key events for a filter table element ([7cafcfc](https://git.xfel.eu/Karabo/Framework/-/commit/7cafcfca44975a77dc019c765cd0561dbd2d8590))
+- *(GUI)* Fix raising of editor on scene view ([db95977](https://git.xfel.eu/Karabo/Framework/-/commit/db959779630248744af4f0cbe98a76645eb79223))
+- *(GUI)* Fix the colorbar right click menu on graph widget on python 3.12 ([f2d0007](https://git.xfel.eu/Karabo/Framework/-/commit/f2d000784c21dda15fd40c71eb94dc452fba42a3))
+- *(GUI)* Remove aux plot warning message for Function trait, use Callable ([d9f8af6](https://git.xfel.eu/Karabo/Framework/-/commit/d9f8af603ad47d62f40a173a1b235e9760be111c))
+- *(GUI)* Casting to Progressbar min/max to int ([55e6b52](https://git.xfel.eu/Karabo/Framework/-/commit/55e6b52e4ca9d56b45a567f966eb4df6cff2aa4d))
+- *(GUI)* Cleanup slider default value ([7595e1b](https://git.xfel.eu/Karabo/Framework/-/commit/7595e1b38935814e72614ce6aa93b866017126e7))
+- *(GUI)* Casting int for QPoint. ([e4fbe16](https://git.xfel.eu/Karabo/Framework/-/commit/e4fbe168caaa9b8e70b50e50b9d979a257cb37f7))
+- *(GUI)* Reactive Login Dialog - Set correct access_level ([4fe92ae](https://git.xfel.eu/Karabo/Framework/-/commit/4fe92aea254d0d7a39c8b0b976fe1b0adbed1f43))
+- *(GUI)* Use username for concert and not access level ([53bb4af](https://git.xfel.eu/Karabo/Framework/-/commit/53bb4af10b725dcf2222c20c7645db51f9efa238))
+- *(GUI)* Fix bug with access level in Access Level login ([09e1264](https://git.xfel.eu/Karabo/Framework/-/commit/09e12647f090d532f232ac393f391580e86b684a))
+- *(GUI)* Expose Logbook from Cinema and Concert ([de84bc9](https://git.xfel.eu/Karabo/Framework/-/commit/de84bc9398b470fb897a259c4ad12bac227445ca))
+- *(GUI)* Fix project destroy, removing parent of model ([6747822](https://git.xfel.eu/Karabo/Framework/-/commit/6747822452c583c0d413f0b86c58232c57829f59))
+- *(GUI)* Disable pip selfcheck on installing extensions ([38d9459](https://git.xfel.eu/Karabo/Framework/-/commit/38d9459a57dcbb6c845fc1e5a0e02fb4c7e0bdcc))
+- *(GUI)* Enhance InputValidator for project macros. No numbers on start ([4355ad4](https://git.xfel.eu/Karabo/Framework/-/commit/4355ad40decb766e2566e9a4668e2403c49a578a))
+- *(GUI)* Change logbook icon to a Tango Desktop Icon style icon ([9b2d783](https://git.xfel.eu/Karabo/Framework/-/commit/9b2d783e49fa1921dd70eabb588421691cc07db2))
+- *(GUI)* Destroy project model on close event ([73f528f](https://git.xfel.eu/Karabo/Framework/-/commit/73f528fc43ad5271cf0d287de06c6bf50703aa0a))
+- *(GUI)* Fix the printer dialog ([b97b4bb](https://git.xfel.eu/Karabo/Framework/-/commit/b97b4bb5beb308ccc59e0b448df886bce98b3a37))
+- *(GUI)* Allow underscores and slashes in macro name ([bb849a1](https://git.xfel.eu/Karabo/Framework/-/commit/bb849a126dae152f4d9ea18a8a767d628b5580e0))
+- *(GUI)* Store Username along with refresh token. ([ebf99a9](https://git.xfel.eu/Karabo/Framework/-/commit/ebf99a9b0cf39230d852c042f13583740553f479))
+- *(GUI)* Add libmamba to dependencies ([f3f3df2](https://git.xfel.eu/Karabo/Framework/-/commit/f3f3df2c1434a8dcaefe34180fb78e7ba080254e))
+- *(GUI)* Handle the authentication failure correctly ([723d2b1](https://git.xfel.eu/Karabo/Framework/-/commit/723d2b1122fba06c35e151992a6bca07798fcf76))
+- *(GUI)* Add more specific packages to windows conda mirror ([bcaed2a](https://git.xfel.eu/Karabo/Framework/-/commit/bcaed2ad848bdd0036eea806ef2b82c5f51c252c))
+- *(GUI)* Fix the windows GUI dependencies build process ([588c3e1](https://git.xfel.eu/Karabo/Framework/-/commit/588c3e1bc24b8d04de1af8e679f7991e84e8618b))
+- *(GUI)* Set autodefault of readonly connect button to false ([005300a](https://git.xfel.eu/Karabo/Framework/-/commit/005300a7c982a326cf0021b5a6283cb3f71659f6))
+- *(GUI)* Sync the temporary button with authentication ([05f3830](https://git.xfel.eu/Karabo/Framework/-/commit/05f38304d3e2b9550130b6d06a329a07f9ad608f))
+- *(GUI)* Erase refresh token and user if no remember me is selected. Erase... ([ca82296](https://git.xfel.eu/Karabo/Framework/-/commit/ca822965ed1dfa9fd070d81a19ac66904c34725d))
+- *(GUI)* Fix the access level in temporary session ([be2293d](https://git.xfel.eu/Karabo/Framework/-/commit/be2293dd0f11bbc80763c4d4b74f306b3f337ab7))
+- *(GUI)* Fix the temporary session icon when logging out ([f9e4d33](https://git.xfel.eu/Karabo/Framework/-/commit/f9e4d33ee22ff20a8594d363339158e7a0a64753))
+- *(GUI)* Fix issues with Token check timer ([118994f](https://git.xfel.eu/Karabo/Framework/-/commit/118994fee0b282ea7ac4c08ad3a2578adb3c5a60))
+- *(GUI)* Align hightest global access level with access level in the beginning ([e1b9c9b](https://git.xfel.eu/Karabo/Framework/-/commit/e1b9c9b10a6754691272a3ed5c96cab62ba6d02c))
+- *(GUI)* Change access level of commands on scene ([d1447c6](https://git.xfel.eu/Karabo/Framework/-/commit/d1447c676d367b5aaf706ce54b952186b4e3a257))
+- *(GUI)* Fix icon command accounting access level ([0511d58](https://git.xfel.eu/Karabo/Framework/-/commit/0511d584e0808191a05ea55da3f8a41d8ba16baa))
+- *(GUI)* Controller Container must set correct enable boolean for access level change ([e5fa40a](https://git.xfel.eu/Karabo/Framework/-/commit/e5fa40a2933b9a545082885fca348b396c2d3666))
+- *(GUI)* Account nan and inf values in waterfall, do a safe copy ([8c9aef8](https://git.xfel.eu/Karabo/Framework/-/commit/8c9aef89dc166ea1638e51f3cc18b57dcb4766cb))
+- *(GUI)* Account all proxies on command widget on access level change ([3f7219c](https://git.xfel.eu/Karabo/Framework/-/commit/3f7219c2c090dbba5f556d59d4f47e4a8eec616a))
+- *(GUI)* Improvements to Access Code Widget ([17f3475](https://git.xfel.eu/Karabo/Framework/-/commit/17f3475991ab45f23c873adab7a960eb90fd9a4d))
+- *(GUI)* Include proxy in controller enabled ([cad421d](https://git.xfel.eu/Karabo/Framework/-/commit/cad421d0a43d2111b52ebde8c770917f565f734a))
+- *(GUI)* Fix access level in editable label widgets ([18602e1](https://git.xfel.eu/Karabo/Framework/-/commit/18602e1849035a334a3ebe3e7275faaeb16f5f90))
+- *(GUI)* Fix acccess level and state update of text edit ([ec919ad](https://git.xfel.eu/Karabo/Framework/-/commit/ec919adbf22a02b926ed41620f93f39281ecc765))
+- *(GUI)* Fix initial access level on container creation with trait handler ([ccb9393](https://git.xfel.eu/Karabo/Framework/-/commit/ccb939300b5158ff6ae6f90f53fb027ec88f520a))
+- *(GUI)* Remove RunConfigurator widget ([8d4fe07](https://git.xfel.eu/Karabo/Framework/-/commit/8d4fe075a625952af0520818eb191d3926d3d826))
+- *(GUI)* Fix access level and state update on editable list ([a75a5fa](https://git.xfel.eu/Karabo/Framework/-/commit/a75a5faa7822c949f746b8d99f5ec3f2a7a5b147))
+- *(MDL)* Use more f-strings ([aae12e8](https://git.xfel.eu/Karabo/Framework/-/commit/aae12e86a8adce5bb5cc575bf981603b96f91524))
+- *(MDL)* Slot's don't take arguments, raise exception ([ba3ccd1](https://git.xfel.eu/Karabo/Framework/-/commit/ba3ccd130f454dfcca2b6cf7eee325e65f5ca255))
+- *(MDL)* Silence ikarabo exit on having an output proxy in python 3.11 ([c9ab3b9](https://git.xfel.eu/Karabo/Framework/-/commit/c9ab3b91c50bc102ba9f15977b35a85149445f07))
+- *(MDL)* Align lockedBy displayedName to other apis ([785842c](https://git.xfel.eu/Karabo/Framework/-/commit/785842cdd4362bd6636bc3cecf030e34bf4cdce1))
+- *(MDL)* Throw on faulty pipeline connection address ([b39be29](https://git.xfel.eu/Karabo/Framework/-/commit/b39be29d1aea4ce08b85c49f3bc9f4ae33bcb347))
+- *(MDL)* Make the macro slot test in sync mode less flaky ([7c54142](https://git.xfel.eu/Karabo/Framework/-/commit/7c54142a97c2c8a94c9badb852102e91aef3d94b))
+- *(MDL)* Don't make loggerMap a requirement to fetch a configuration from past ([50c1bcf](https://git.xfel.eu/Karabo/Framework/-/commit/50c1bcf87ee23089464016fa564db7ea9b6d0522))
+- *(MDL)* Remove marker warnings from pytest ([6c89633](https://git.xfel.eu/Karabo/Framework/-/commit/6c89633d19c9a42adce71e2e64c9fd8e28effb39))
+- *(MDL)* Activate device server autostart test again ([8f46a4c](https://git.xfel.eu/Karabo/Framework/-/commit/8f46a4c8f84b06a91e73dfae07171a29d4525532))
+- *(MDL)* Fix checksum transport in test ([e50aa01](https://git.xfel.eu/Karabo/Framework/-/commit/e50aa01ae5cfb2147293e06d4fe818598cf73f71))
+- *(MDL)* Fix pipeline test after migration to Python 3.11 ([2350d56](https://git.xfel.eu/Karabo/Framework/-/commit/2350d56a57c9c40fd93c8db23d503f4715c6cc56))
+- *(MDL)* Fix cancellation of background tasks ([fb573fa](https://git.xfel.eu/Karabo/Framework/-/commit/fb573fae52b26d398ef75fa41b57fdf7c2ee8ea6))
+- *(MDL)* Only consume exclusively ([65ca073](https://git.xfel.eu/Karabo/Framework/-/commit/65ca073c7c4af96cedcc8bbb11508f2a6ba2b3a9))
+- *(PY11)* Fix casting of fortran order np.array ([d80eb61](https://git.xfel.eu/Karabo/Framework/-/commit/d80eb615c9e5ecb396d3e5591b0d40320b4d973e))
+- *(Services)* Provide log level for mdl servers in in service.in ([6fa24b2](https://git.xfel.eu/Karabo/Framework/-/commit/6fa24b2d3ba6337187e6746d856b7403d9b051b8))
+- *(TOOLS)* Just stop all services if there is a -a argument. Stop service for others ([73c2af1](https://git.xfel.eu/Karabo/Framework/-/commit/73c2af1309bb054dab731d7e2924815b06068ce4))
+- *(integration tests)* Increase many Python integration test timeouts to 5 seconds ([d07a878](https://git.xfel.eu/Karabo/Framework/-/commit/d07a87848a3b4c9d5ba40bb9d52ec2ca49bdf4ce))
+- *(native)* Speed up QuantityValue generation ([ca0b497](https://git.xfel.eu/Karabo/Framework/-/commit/ca0b4973a9b0b5881de9010110bbbbf453f419a1))
+- *(ALL)* Don't skip tests in framework ([a3c6eaf](https://git.xfel.eu/Karabo/Framework/-/commit/a3c6eaf074c76a3df9d0c75457d70a2f0ebdfd16))
+- *(Devices)* Fix file db deprecation warning of finding instance items ([3662ba5](https://git.xfel.eu/Karabo/Framework/-/commit/3662ba538ac05fd26a75d8ad458a4f35d3ed4304))
+- *(TOOLS)* Typo in karabo install ([acc318e](https://git.xfel.eu/Karabo/Framework/-/commit/acc318e2b4cc76aca23d33f65f06c1ec4f492296))
+
+
+Features
+++++++++
+
+- *(Bound)* Remove incomplete construction of HashAttributes from arguments ([b75f707](https://git.xfel.eu/Karabo/Framework/-/commit/b75f707b6c0bdb7161f5da625bddd36d3c74115e))
+- *(Bound)* Run integration tests with karabind ([d57886f](https://git.xfel.eu/Karabo/Framework/-/commit/d57886f045813fd00827234398a1a68cfa5b469c))
+- *(Bound)* Change fixture on test tcp ([ad30692](https://git.xfel.eu/Karabo/Framework/-/commit/ad306929a58b58538b51a204faf9495a767079d7))
+- *(C++)* Stricter overwrite element throws on non-existing or not-yet-defined key ([66ca337](https://git.xfel.eu/Karabo/Framework/-/commit/66ca33724a588ff0a688b257634e14acc6938dd2))
+  - **BREAKING**: Stricter overwrite element throws on non-existing or not-yet-defined key
+- *(C++)* Expose loggermap.xml as readonly table on datalogger manager (#815) ([9d18d1e](https://git.xfel.eu/Karabo/Framework/-/commit/9d18d1e71aa5f0eb4a519d8b6b6ab8d56834f057))
+- *(C++)* Enable TCP keep alive via configuration options ([b2f11f4](https://git.xfel.eu/Karabo/Framework/-/commit/b2f11f40c986f318ecbcc49d41e1fb7b3577b2ae))
+- *(C++)* Input channel uses TCP keep-alive ([b895e7d](https://git.xfel.eu/Karabo/Framework/-/commit/b895e7d4e3c7e1490419aa6d3dfdb03d06bea544))
+- *(C++)* A new version of a C++ AMQP client, based on AmqpConnection ([8710377](https://git.xfel.eu/Karabo/Framework/-/commit/87103776db9db96351fd23badc120f09e07ed8b7))
+- *(C++)* Log if messages are redelivered from Amqp ([e9dd9d2](https://git.xfel.eu/Karabo/Framework/-/commit/e9dd9d23855dbca9e3c5b7e0754a274ec8afbe46))
+- *(C++)* New AMQP client with some proper handmade error codes, with help of AmqpUtils ([ed87a77](https://git.xfel.eu/Karabo/Framework/-/commit/ed87a777683c16547d1fbe135e386c6683ce36e7))
+- *(C++)* New AMQP client can now unsubscribe ([6ca40b2](https://git.xfel.eu/Karabo/Framework/-/commit/6ca40b2cffbc90912456501e0c82b94fb2c7fe04))
+- *(C++)* New AmqpClient can now deal with same id as another one ([1bfe2ca](https://git.xfel.eu/Karabo/Framework/-/commit/1bfe2ca738eee67a851cba6ac10df8b511241b1f))
+- *(C++)* New AMQP connection connects automatically if needed, plus fixes ([4ebf109](https://git.xfel.eu/Karabo/Framework/-/commit/4ebf1094ae88a7a1f4962883f31c0f5cfe12c73e))
+- *(C++)* Throw on false output channel addresses and take into account adapter names #810 ([764df01](https://git.xfel.eu/Karabo/Framework/-/commit/764df01e76475afa8934c734ffdbf638bfe6d0d2))
+- *(C++)* Add AmqpHashClient for new AMQP interface (wraps around AmqpClient2 and serializes) ([a5c4fee](https://git.xfel.eu/Karabo/Framework/-/commit/a5c4fee8d645c390b5d6cde26e663a88cf13a3c6))
+- *(C++)* New AMQP clients get an unsubscribeAll ([f0a30f4](https://git.xfel.eu/Karabo/Framework/-/commit/f0a30f44d7a34101d986883a81ab3af424ae8f2b))
+- *(C++)* AmqpConnection provides connection status and current URL ([98fd3ef](https://git.xfel.eu/Karabo/Framework/-/commit/98fd3ef42f766e5e46095efd7ef158ae9506198f))
+- *(C++)* AMQP connection allows concurrent calls to asynConnect ([ddd0529](https://git.xfel.eu/Karabo/Framework/-/commit/ddd05299ff534c5df56e9fef4203afc1c02e702d))
+- *(C++)* Better error report for history/cfgFromPast of macros ([075b7c7](https://git.xfel.eu/Karabo/Framework/-/commit/075b7c70547478e8655095952f96c4e2e5ded191))
+- *(C++)* Mention number of requested data points in log reader failure message ([91f33ca](https://git.xfel.eu/Karabo/Framework/-/commit/91f33ca9ebbd80a53954d5106d19d50f26a4a21f))
+- *(CI)* Update clang-format and flake8 in ci lint ([ff9e5be](https://git.xfel.eu/Karabo/Framework/-/commit/ff9e5be595f82ccd0cdf210da56a495b70cdb7ac))
+- *(CI)* Parallelize gui testing ([fb2e65a](https://git.xfel.eu/Karabo/Framework/-/commit/fb2e65a50c5ac642fea88d65b9e08a44a78ccae6))
+- *(DEPS)* Actively update flake8 in all components ([0930784](https://git.xfel.eu/Karabo/Framework/-/commit/0930784192d3e3103195742df4dc85b4c7e85292))
+- *(GUI)* Karabo-concert desktop shortcut ([c582ad1](https://git.xfel.eu/Karabo/Framework/-/commit/c582ad17699735ab5449e2aab5b2fdf2f5dd7177))
+- *(GUI)* InstanceStatus widget will provide view for device ([fc52235](https://git.xfel.eu/Karabo/Framework/-/commit/fc5223596134a9bbb47491874db031654eae2619))
+- *(GUI)* Remove console code from the GUI ([ccdaa86](https://git.xfel.eu/Karabo/Framework/-/commit/ccdaa866f0964c0fb4de111983f9323d797a0c71))
+- *(GUI)* Transport clipboard test to pytest ([9f4ca44](https://git.xfel.eu/Karabo/Framework/-/commit/9f4ca44c664cd83358fad4b618363a479e00762c))
+- *(GUI)* Update to Python 3.10 ([2c55d6b](https://git.xfel.eu/Karabo/Framework/-/commit/2c55d6b8ab315ecdbe3331c70975e440f922b2ac))
+- *(GUI)* Update to Python 3.11 ([8433453](https://git.xfel.eu/Karabo/Framework/-/commit/8433453f79510e6e584a8ee15389f144c2a7067d))
+- *(GUI)* Update to Python 3.12 ([26472d2](https://git.xfel.eu/Karabo/Framework/-/commit/26472d29639f87fee67971af2c5108b624cff296))
+- *(GUI)* Logbook - Crop image ([b81b4ad](https://git.xfel.eu/Karabo/Framework/-/commit/b81b4ad9dbbbb6fe11c6ee89406a50e4d3ffb201))
+- *(GUI)* Decrease the default image size in graph widgets ([ca1b797](https://git.xfel.eu/Karabo/Framework/-/commit/ca1b7978031fcc23505b0e8e89fee61b8abfcbe6))
+- *(GUI)* Show extension url in update dialog ([9415a13](https://git.xfel.eu/Karabo/Framework/-/commit/9415a136241b442983298dfde9a5ebad86356db8))
+- *(GUI)* Create fixtures for scintilla tests ([1f3919b](https://git.xfel.eu/Karabo/Framework/-/commit/1f3919b1eb83950ab15d092f254b61e34917d613))
+- *(GUI)* Allow bulk shutdown of servers for ADMINS ([a51d9ab](https://git.xfel.eu/Karabo/Framework/-/commit/a51d9abef0ca06de68611db4086e4713f7279375))
+- *(GUI)* Provide a window modal mbox and not application modal ([6565458](https://git.xfel.eu/Karabo/Framework/-/commit/65654586792e6202a9420571d100f074a26b4a2e))
+- *(GUI)* Show messagebox on error where the cursor is ([94fa0f0](https://git.xfel.eu/Karabo/Framework/-/commit/94fa0f020113138330aee59c9fa0267b6263ec73))
+- *(GUI)* Escalation dialog ([4062b79](https://git.xfel.eu/Karabo/Framework/-/commit/4062b79609c6d0648663cb75c25320179b8702c7))
+- *(GUI)* Restart a macro on run ([e8ef86f](https://git.xfel.eu/Karabo/Framework/-/commit/e8ef86f897c948bada403f9d49112f8a327d83f1))
+- *(GUI)* Offer a home toolbar: First feature, raise Editor or MainWindow ([fc9a5bb](https://git.xfel.eu/Karabo/Framework/-/commit/fc9a5bbe129161693b63c49d6472687aeb234163))
+- *(GUI)* Provide a filter table on double click ([1b5434b](https://git.xfel.eu/Karabo/Framework/-/commit/1b5434b0399a9d8a8d702ff283b4c05b926f1ac0))
+- *(GUI)* Added script to allow to convert svg to cpp scene.hh file ([b508055](https://git.xfel.eu/Karabo/Framework/-/commit/b5080550deac57366c8f50bf7a8aeec3b0e53c7a))
+- *(GUI)* Login through browser ([fbb8ca9](https://git.xfel.eu/Karabo/Framework/-/commit/fbb8ca9364381176a63fc9bd31f7ad397f1e4721))
+- *(GUI)* Provide option to view network on host ([5d26447](https://git.xfel.eu/Karabo/Framework/-/commit/5d26447f78c0ae7aab61be5d1f25910ad3fa2b94))
+- *(GUI)* Enhance height calculation on popup widget ([6ef5886](https://git.xfel.eu/Karabo/Framework/-/commit/6ef58860ae18f7b652bc70b4ae1b3dcd26470c75))
+- *(GUI)* Align the widgets in login dialog. ([f4b7e9f](https://git.xfel.eu/Karabo/Framework/-/commit/f4b7e9f00c2b2b4a79998dbb0a9bc8cf340ddb19))
+- *(GUI)* Support cinema/concert/theatre on authenticated gui. ([e4c7e20](https://git.xfel.eu/Karabo/Framework/-/commit/e4c7e20113573d321f2fba3f80936fd00819d9af))
+- *(GUI)* Extension dialog can use full package index ([19f2ab7](https://git.xfel.eu/Karabo/Framework/-/commit/19f2ab7c2447381e83c2ca1f2ecc143d098636af))
+- *(GUI)* Escalation dialog - login through browser. ([32d0ec8](https://git.xfel.eu/Karabo/Framework/-/commit/32d0ec879bb3353b53e47c75d19ea705cf14ee5a))
+- *(GUI)* Provide millisecond information in historic text ([713d39b](https://git.xfel.eu/Karabo/Framework/-/commit/713d39bd22545255f6e290ee8675c32d5c6dd22a))
+- *(GUI)* Install GUIExtensions in user space ([3dd3ef7](https://git.xfel.eu/Karabo/Framework/-/commit/3dd3ef7894b85fee934b2c4a7c019e88de05ec58))
+- *(GUI)* Add Switch icons for authentication ([6949dd0](https://git.xfel.eu/Karabo/Framework/-/commit/6949dd07f812febbc364011e7b59b3c36cacfc3d))
+- *(GUI)* Authentication dialog: Make access code ui same as in the webpage ([22ef493](https://git.xfel.eu/Karabo/Framework/-/commit/22ef4936f969fc684cca84b26a3b47013a8d9d94))
+- *(GUI)* Include loading bar in update dialog ([f1c7f02](https://git.xfel.eu/Karabo/Framework/-/commit/f1c7f02360309c654cfdb65d53b429df77cdf2ec))
+- *(GUI)* Introduce fully shared items in configuration singleton ([c898f20](https://git.xfel.eu/Karabo/Framework/-/commit/c898f200cdad1eac1e4f0c897f6619292e4d193a))
+- *(GUI)* New access code widget in Temperoray Session Dialog. ([1749fda](https://git.xfel.eu/Karabo/Framework/-/commit/1749fda5bdabaeab9e6b5d7e66cef4ec8c048938))
+- *(GUI)* Temporary session from Scene panel. ([b018069](https://git.xfel.eu/Karabo/Framework/-/commit/b018069b247c2558f1749a02685f89a7026ec387))
+- *(GUI)* Rework Mainwindows menus ([0268c1d](https://git.xfel.eu/Karabo/Framework/-/commit/0268c1d37e38e39d10082e6a4c64cd5cdc6a19ea))
+- *(GUI)* ReadOnly implementation for authentication without access token ([26aaa56](https://git.xfel.eu/Karabo/Framework/-/commit/26aaa5640d516d4551dcf9a3fc5b77827f9bde2e))
+- *(GUI)* User experience token editing. Should accept backspace in AccessCodeWidget ([41eb42b](https://git.xfel.eu/Karabo/Framework/-/commit/41eb42b328e95b2f5571be0404204fafefa31593))
+- *(GUI)* Option to erase user token information from main menu ([2470cfb](https://git.xfel.eu/Karabo/Framework/-/commit/2470cfb51f38e212cc1ec4e0c6c638627e0aece2))
+- *(GUI)* Show temporary user information in tooltip ([3dff363](https://git.xfel.eu/Karabo/Framework/-/commit/3dff363db840a95bc13bb5b7ab297ab4b79f99b4))
+- *(GUI)* Logbook - Tooltip in the ToolFactory. ([834a992](https://git.xfel.eu/Karabo/Framework/-/commit/834a992a6d42995f6a4610025e40f9dc780bc51e))
+- *(GUI)* Remove setting boundary for ROI. ([a0af1e8](https://git.xfel.eu/Karabo/Framework/-/commit/a0af1e85946f7fc9e7b2cf2656ef3fc0635a9bc8))
+- *(GUI)* Expose ToolBar in the gui api namespace ([931ed4a](https://git.xfel.eu/Karabo/Framework/-/commit/931ed4a1ecf5c23d16752c6468beb06da347e07c))
+- *(GUI)* Add a public method clear to CodeBook. ([8c1b104](https://git.xfel.eu/Karabo/Framework/-/commit/8c1b104f590e8c46f55b0d91529e0f05a1111e55))
+- *(GUI)* Update LoginDialog button state and coloring for ports ([81d27b4](https://git.xfel.eu/Karabo/Framework/-/commit/81d27b493db0a8dda2f0b192e894db0dd0e9bb9d))
+- *(GUI)* Allow to save scene from toolbar in dev mode ([ea1e5dc](https://git.xfel.eu/Karabo/Framework/-/commit/ea1e5dc8473f26cdee21a05a09f8a62941ddf256))
+- *(GUI)* Make integers with hex displaytype use the historic text widget ([e5f03a2](https://git.xfel.eu/Karabo/Framework/-/commit/e5f03a2face7340d9ba4fa59b5fe7e81713cb562))
+- *(GUI)* Restart macro on repeated run request ([76d89b3](https://git.xfel.eu/Karabo/Framework/-/commit/76d89b3f052b47c450379a84383d39d73780334f))
+- *(GUI)* Improvement to Backspace on Access Code widget. ([d4cbbd9](https://git.xfel.eu/Karabo/Framework/-/commit/d4cbbd9e79077d871bc5643a5ef2f573ec24149a))
+- *(GUI)* Always evaluate remember me on answer ([ef15702](https://git.xfel.eu/Karabo/Framework/-/commit/ef1570258442e5e56a61fd9ff04d8166c769f27c))
+- *(GUI)* Enable full delete of shared items ([cec6cbc](https://git.xfel.eu/Karabo/Framework/-/commit/cec6cbc187d4d81df85e7e8ee93ca7cb735330a3))
+- *(GUI)* Provide icon for removal of user info ([5eefb4d](https://git.xfel.eu/Karabo/Framework/-/commit/5eefb4dd837cb8273f9ad22eac9657bf0c3f788a))
+- *(GUI)* User and AccessLevel info in the  Temp Session Dialog ([6bd7630](https://git.xfel.eu/Karabo/Framework/-/commit/6bd7630b4adb3e57b1ad89d0d1e62fdbc5c229ce))
+- *(GUI)* Display the username and access level before ending Temporary session ([cb76408](https://git.xfel.eu/Karabo/Framework/-/commit/cb76408d56a2d64d0bed91154be859f25017a483))
+- *(GUI)* Provide option to install guiextensions from commandline with dependencies ([aeb17bd](https://git.xfel.eu/Karabo/Framework/-/commit/aeb17bdf8fedf425a9657b4d3b5290ce0badf1c2))
+- *(GUI)* Configurator - Option to fetch Configuration from past ([d1cbdcb](https://git.xfel.eu/Karabo/Framework/-/commit/d1cbdcb05ed8889ca1f4378e197de2929e2ce66e))
+- *(GUI)* Use encryption in shared items ([9fa576d](https://git.xfel.eu/Karabo/Framework/-/commit/9fa576d97aed9c276f4115b65d9bbe21717a6ea5))
+- *(GUI)* Login Dialog: Check if the refresh token available constantly. ([1b9abf3](https://git.xfel.eu/Karabo/Framework/-/commit/1b9abf35e946671e6dd43f4efeb155bbfc7924cc))
+- *(GUI)* Access Widget - Navigate through cells using Left and Right arrows ([3ccd276](https://git.xfel.eu/Karabo/Framework/-/commit/3ccd2762b0532d3ae12a4e3d17c50dd77b5cd83f))
+- *(GUI)* Access code Widget paste over existing code. ([9e03f54](https://git.xfel.eu/Karabo/Framework/-/commit/9e03f544086060d6068c500cf1921a1acfe0ca6e))
+- *(GUI)* Allow 'Rememeber Me' from Cinema/Concert ([cddcb8b](https://git.xfel.eu/Karabo/Framework/-/commit/cddcb8b56ee3d1d8e582773d7c06b8947e2ae2df))
+- *(GUI)* Enable historic text widget to show bit settings ([433a96a](https://git.xfel.eu/Karabo/Framework/-/commit/433a96af8fd77249e75ad370ab734a3b7addfb86))
+- *(GUI)* Add access level info to configurator popup ([3e037ab](https://git.xfel.eu/Karabo/Framework/-/commit/3e037abefa9606b0bb35f20ff576f9ddfdf59e68))
+- *(GUI)* Enhance historic text widget with zero bit padding and align timestamp ([9404dae](https://git.xfel.eu/Karabo/Framework/-/commit/9404dae52e59ef565034c56772c655c876c615be))
+- *(MDL)* Don't cycle the eventloop when setting future ([64f256c](https://git.xfel.eu/Karabo/Framework/-/commit/64f256c6c74a21fa17943a4984ad203b03554ad4))
+- *(MDL)* Get_utc_string functionality gets exposed ([63bc2e9](https://git.xfel.eu/Karabo/Framework/-/commit/63bc2e95fa0cf9ea66c927052fc4114ac5ebb2b8))
+- *(MDL)* Provide the option in output channel to specify a network adapter. Always throw on not found IP's ([803e141](https://git.xfel.eu/Karabo/Framework/-/commit/803e141046d22a1bf4af5a986b6f8be6d844082e))
+- *(MDL)* Enhance PipelineContext, don't miss multiple handler calls ([245c654](https://git.xfel.eu/Karabo/Framework/-/commit/245c6544f8009088445cf77b2975702da2edd46a))
+- *(MDL)* DaemonManager can provide network information ([9490d77](https://git.xfel.eu/Karabo/Framework/-/commit/9490d77c915cf098f9bd223b8bbf1c4b4e1f8e0e))
+- *(Py11)* Convert hash test and attribute test to pytest ([bf7b5b6](https://git.xfel.eu/Karabo/Framework/-/commit/bf7b5b6449216aeeb02495008265a0e0fa386a1b))
+- *(TOOLS)* Enable to stop a karabo service with correct name ([9061d6e](https://git.xfel.eu/Karabo/Framework/-/commit/9061d6e9ea59c291dff7fb238919961e68a00bb9))
+- *(ALL)* Align basic device variables in schema order ([1392112](https://git.xfel.eu/Karabo/Framework/-/commit/139211238a05375dd56cf508028d75821ff10c68))
+- *(ALL)* Karabo and Package versions are available to experts ([f59018c](https://git.xfel.eu/Karabo/Framework/-/commit/f59018c9f7bb55db9cd49dbbf7c020cb7adb0bc3))
+- *(Devices)* Add access level admin properties to propertytest ([0a3f738](https://git.xfel.eu/Karabo/Framework/-/commit/0a3f738b13380fdf7a61bc7b4508b293c040786c))
+
+
+Refactor
+++++++++
+
+- *(Py11)* Binding for DeviceClient ([f686a05](https://git.xfel.eu/Karabo/Framework/-/commit/f686a0519bcf8d5aa00a94ca2507339f342e15a6))
+- *(Py11)* Align schema's setAllowedStates API with karathon ([42bc9fa](https://git.xfel.eu/Karabo/Framework/-/commit/42bc9fa4d8d950a2c63c66a175290d750f8c396a))
+- *(Py11)* Fix binding for AlarmCondition and extend schema tests ([d905eed](https://git.xfel.eu/Karabo/Framework/-/commit/d905eed4dbf57a65f667da12f1c2237969897176))
+- *(Py11)* Fix SEGFAULT while interpreter exiting ([0a77e5d](https://git.xfel.eu/Karabo/Framework/-/commit/0a77e5db7f76d6c3fdce23260a6319d172d803d3))
+- *(Py11)* Adapt former karathon-only unit tests to run with karabind ([6d201b4](https://git.xfel.eu/Karabo/Framework/-/commit/6d201b47ba08cbaa75dcafbf0523e6ca34e9f20a))
+- *(Py11)* Remove 'parametrize' in unit tests for bound python. ([9e1d761](https://git.xfel.eu/Karabo/Framework/-/commit/9e1d761efca2171fc14c5efb8f5f217efd630ab4))
+- *(Py11)* Remove explicit use of karathon ([ae3b7f7](https://git.xfel.eu/Karabo/Framework/-/commit/ae3b7f7c2bfd696102f2fc7e000853412df2776d))
+- *(Py11)* Export karabind::detail::treatError_already_set function ([5c82415](https://git.xfel.eu/Karabo/Framework/-/commit/5c82415c689e80be5dd8deba5e2d047fe2720d0f))
+- *(Py11)* Expose more useful helper functions in karabind ([aff1bdb](https://git.xfel.eu/Karabo/Framework/-/commit/aff1bdb7b5d4125d72f5a81d82df1e8e7e9716bf))
+- *(Py11)* Hashfilter tests schema rewrite ([5d97156](https://git.xfel.eu/Karabo/Framework/-/commit/5d97156b64e55a2e8d61cd763c2e85e0c4b0a6c6))
+- *(Py11)* OutputChannel::write does not need a data copy ([4020429](https://git.xfel.eu/Karabo/Framework/-/commit/4020429794c7235741ca382d9e8787104956adb5))
+- *(Py11)* Proper handler wraps for TCP code ([d212d62](https://git.xfel.eu/Karabo/Framework/-/commit/d212d620011fc84c3a758bb93eff8e58116d3fb5))
+- *(Py11)* Complete tests on DeviceClient ([85d0701](https://git.xfel.eu/Karabo/Framework/-/commit/85d07012c6b1f703477770dc77d2a1bef697c8e4))
+- *(Py11)* More pipeline tests ([9e761c0](https://git.xfel.eu/Karabo/Framework/-/commit/9e761c05dc1f2931cf7bddf5d91eb8af0b3a9173))
+- *(Py11)* : Patch Types.__str__ to match karathon ([72485f5](https://git.xfel.eu/Karabo/Framework/-/commit/72485f5b4bc8062a86bbc557af7aa15abae77ad8))
+- *(Py11)* Remove 32-bit system treatment from karabind ([3e182fd](https://git.xfel.eu/Karabo/Framework/-/commit/3e182fd4a09c3b610ef5d956ee3813b7a964762b))
+- *(Bound)* Remove VectorString from karathon/bind and mark in docs ([df96066](https://git.xfel.eu/Karabo/Framework/-/commit/df96066a40c101745de14cb1c55713eec1d75a4c))
+  - **BREAKING**: Remove VectorString from karathon/bind and mark in docs
+- *(Bound)* Increase timeout of requesting device lock in unit test ([2ca0993](https://git.xfel.eu/Karabo/Framework/-/commit/2ca09930dd18f19cc68a61165baca8f6f5e323e0))
+- *(C++)* Switch to new AMQP implementation ([147ff02](https://git.xfel.eu/Karabo/Framework/-/commit/147ff027a92bb30937de26b88fb384d4278d17f8))
+- *(C++)* Migrate broker tools to new AMQP implementation ([1c207ae](https://git.xfel.eu/Karabo/Framework/-/commit/1c207aeb70fe2cf500882fceafea3a7bd867be28))
+- *(C++ Test)* AMQP test robust against crash after timeout ([ffc235b](https://git.xfel.eu/Karabo/Framework/-/commit/ffc235b08220b81d82fe1d888561a776ac7c776a))
+- *(CI)* Use less workers for GUI testing ([dee4b06](https://git.xfel.eu/Karabo/Framework/-/commit/dee4b067f4dcc66e511d563fe0b345502cc1fc8d))
+- *(CI)* Adjust miniconda scripts ([e61ca1b](https://git.xfel.eu/Karabo/Framework/-/commit/e61ca1be9a645d6dff86aba51fe24b0e88de49b3))
+- *(CI)* Remove CONDA pack ([17d7a0e](https://git.xfel.eu/Karabo/Framework/-/commit/17d7a0ed6fb2f2a270ab2770141fa3a14c482245))
+- *(CI)* Refactor MDL device template, remove flake8 tests and align device test ([2cf25b5](https://git.xfel.eu/Karabo/Framework/-/commit/2cf25b5473e0aa3409d343ae9ef818563a7464d8))
+- *(CI)* Lint ci scripts ([cf429d8](https://git.xfel.eu/Karabo/Framework/-/commit/cf429d80a3ded2f027792539d4841a20ebb37172))
+- *(GUI)* Remove not required alarm module ([6fff52c](https://git.xfel.eu/Karabo/Framework/-/commit/6fff52c7c26a109a5e06bcc0e32dfccee49b7034))
+- *(GUI)* Remove daemon manager widget ([a663f9c](https://git.xfel.eu/Karabo/Framework/-/commit/a663f9c6bbde4d6ad2e38ca3dafd929be65df71f))
+- *(GUI)* Port unittest to pytest ([7a3e677](https://git.xfel.eu/Karabo/Framework/-/commit/7a3e6779635212611e82f0303f42766acb87c3dc))
+- *(GUI)* Change all assert statements to be pytest compatible ([87f0b1f](https://git.xfel.eu/Karabo/Framework/-/commit/87f0b1fd5a6c4ba753f2be283cb130c71fdfcb96))
+- *(GUI)* Use pathlib for alarm icons ([23b769f](https://git.xfel.eu/Karabo/Framework/-/commit/23b769f3335c59db54e3c9aa7361a6f5af280317))
+- *(GUI)* Transport configuration test to pytest ([06acaa3](https://git.xfel.eu/Karabo/Framework/-/commit/06acaa37afa8d5f9a7f7798edf8188a9dbc3f71c))
+- *(GUI)* Transport DB connection test to pytest ([8d02a39](https://git.xfel.eu/Karabo/Framework/-/commit/8d02a390909cf43cd5afc174eeb7efd9b7aafec9))
+- *(GUI)* Transport manager test to pytest ([0b23735](https://git.xfel.eu/Karabo/Framework/-/commit/0b23735a2b9ac390ee316fbbc2d16d57f8abdfed))
+- *(GUI)* Transport mediator test to pytest ([cc44a1f](https://git.xfel.eu/Karabo/Framework/-/commit/cc44a1f128bfe7f0ae4b526db239a8ad60eae48e))
+- *(GUI)* Do not set network.username from login dialog ([46c3930](https://git.xfel.eu/Karabo/Framework/-/commit/46c393036d905bc4dcd1553ff2feac2b67b3039f))
+- *(GUI)* Transport network singleton test to pytest ([460435e](https://git.xfel.eu/Karabo/Framework/-/commit/460435ee8c032eb6366e41e5ec2f13e7c2f5ab50))
+- *(GUI)* Move the GUIExtension dialog to our new PyPI mirror ([9282d80](https://git.xfel.eu/Karabo/Framework/-/commit/9282d8022f4df5b8eaff4fe80ae119f82f1089c4))
+- *(GUI)* Transport selection tracker test to pytest ([1b5cc68](https://git.xfel.eu/Karabo/Framework/-/commit/1b5cc68af79d48ec8447b7c81f1f5f5fae92f8e8))
+- *(GUI)* Move dependencies in update dialog into an own tab ([e03690f](https://git.xfel.eu/Karabo/Framework/-/commit/e03690ffe925070bbe1378d3340fa7eed0395710))
+- *(GUI)* Transport deprecated widgets test to pytest ([e8c03b9](https://git.xfel.eu/Karabo/Framework/-/commit/e8c03b91693c6f5f1d2d0d97feb4eeacaf554b4b))
+- *(GUI)* Rework mechanism of initializing a model with classmethod instead of staticmethod ([e0ed4b6](https://git.xfel.eu/Karabo/Framework/-/commit/e0ed4b6c6d7234de18f2905309ce0fda22dc6122))
+- *(GUI)* Store the referesh token info in the shared singleton config. ([9902dc6](https://git.xfel.eu/Karabo/Framework/-/commit/9902dc61cf4d025262707fadbc13a9c424c62a65))
+- *(GUI)* Remove console panel configuration and add coverage evaluation to CI ([9d83f06](https://git.xfel.eu/Karabo/Framework/-/commit/9d83f0631d00409aecc73dc294427893c17b6733))
+- *(GUI)* Don't show authentication information in app dialog ([53b410e](https://git.xfel.eu/Karabo/Framework/-/commit/53b410e8b061848c042a07edc3d5ab6fec5939d4))
+- *(GUI)* Try non user space for extensions ([939aea0](https://git.xfel.eu/Karabo/Framework/-/commit/939aea07179509c715d2eaf8a7a0d84030f926d7))
+- *(GUI)* Reload pkgsources on installation of packages ([30b1227](https://git.xfel.eu/Karabo/Framework/-/commit/30b122759de622cdcd17ffccda1a522d8bcaee88))
+- *(GUI)* Remove windowStaysOnTop flag for reactive login dialog ([96f3ee8](https://git.xfel.eu/Karabo/Framework/-/commit/96f3ee8ffb1fdbe53ff077703ffa9ce809d65def))
+- *(GUI Server)* Replace "escalation" with "temporary session" ([97ff407](https://git.xfel.eu/Karabo/Framework/-/commit/97ff407859ea29a119c6c5cb0ee5abfe29e7f9f0))
+- *(GUIServer)* Redefine the way how we use readOnly mode ([836c605](https://git.xfel.eu/Karabo/Framework/-/commit/836c605d61b020e7db08cd05952c1907220b45fc))
+- *(MDL)* Remove metaclass registration ([1c9d6c5](https://git.xfel.eu/Karabo/Framework/-/commit/1c9d6c5e4b75374d1ea48a7440fbd41230cbe314))
+- *(MDL)* Use default daqPolicy ([3d15752](https://git.xfel.eu/Karabo/Framework/-/commit/3d157520ff66720d601d8f5b260c5b8e72223192))
+- *(MDL)* Remove alarm calculation from descriptors ([a8655e7](https://git.xfel.eu/Karabo/Framework/-/commit/a8655e79b58cfbd0714e5099b192beb583bd7068))
+- *(MDL)* Align VectorCharValue for Python compatibility ([1e35548](https://git.xfel.eu/Karabo/Framework/-/commit/1e355487c1112376fbc41d44143523989dc61e18))
+- *(MDL)* Remove build_karabo_Value ([9b2568c](https://git.xfel.eu/Karabo/Framework/-/commit/9b2568c42a936d770e819ab5b06964a2e5082ddc))
+- *(MDL)* Implement Hash pop for multiple python versions ([476efaf](https://git.xfel.eu/Karabo/Framework/-/commit/476efafd02ec43ce9c53b47670ee5a973195c56c))
+- *(MDL)* Provide casting of defaultValues for Strings ([10d18c5](https://git.xfel.eu/Karabo/Framework/-/commit/10d18c5cd7ec6b666fd3f761322593804cb8f841))
+- *(MDL)* Align templates ([424ba64](https://git.xfel.eu/Karabo/Framework/-/commit/424ba6430d76885fbe836dbd0ae645c1c529e380))
+- *(MDL)* Include isStringSet in public namespace ([a0be223](https://git.xfel.eu/Karabo/Framework/-/commit/a0be22376d14ed6448d9f7e09c5b343d1ec5cbdf))
+- *(MDL)* Cleanup table, remove coltypes ([96f93df](https://git.xfel.eu/Karabo/Framework/-/commit/96f93df5a47935f494540d7cb3fa1892df7fe67c))
+- *(MDL)* Transport ikarabo to python 3.11 ([a0f3d17](https://git.xfel.eu/Karabo/Framework/-/commit/a0f3d172056039e58b0fb67260a83af962d336ac))
+- *(MDL)* Move socket information upstream ([d8aa4d9](https://git.xfel.eu/Karabo/Framework/-/commit/d8aa4d95517c447ce3500d725cab43234ae4e117))
+- *(C++)* Add an AmqpConnection as first step of a new AMQP implementation ([996ed1c](https://git.xfel.eu/Karabo/Framework/-/commit/996ed1c07f36309a8fd5a2c0d264872abdf51584))
+- *(C++)* Channel creation added to AMQP refactoring ([66ed753](https://git.xfel.eu/Karabo/Framework/-/commit/66ed75346d7798f8b7faae725645c457231f2aa3))
+- *(C++)* Amqp ChannelCreationHandler with string argument, not const char* ([26bb53b](https://git.xfel.eu/Karabo/Framework/-/commit/26bb53ba2db34c84aab227975db403df6c8af7c8))
+- *(C++)* Miscellaneous minor tuning ([795b555](https://git.xfel.eu/Karabo/Framework/-/commit/795b555597407c24f8487c833d4fddb3bfadfdd9))
+- *(C++)* Improve validation performance by refactoring the loops ([d20cf49](https://git.xfel.eu/Karabo/Framework/-/commit/d20cf49632ebbcf9c1d3adbafe285a03db64ab53))
+- *(C++)* Improve readability for Validator ([a0d8d3d](https://git.xfel.eu/Karabo/Framework/-/commit/a0d8d3d27dde2327e2743f149975ad9bb2d86266))
+- *(C++)* Tune event loop ([21769e2](https://git.xfel.eu/Karabo/Framework/-/commit/21769e2802066e491115715a3727001ec6eb46f7))
+- *(C++)* Rework init string parsing ([7a43ff2](https://git.xfel.eu/Karabo/Framework/-/commit/7a43ff2fb69b1182cc04b784f5635e971d569047))
+
+
+Performance
++++++++++++
+
+- *(C++)* Slot call without copy of arguments ([ac6237a](https://git.xfel.eu/Karabo/Framework/-/commit/ac6237a067f328f8f5fbda1b442305152001cebf))
+- *(MDL)* Cache the schema ([d536ec9](https://git.xfel.eu/Karabo/Framework/-/commit/d536ec9acb7cd587886893c2312697877ce1d53e))
+- *(GUI)* Don't request a schema for a link or status widget ([cc7e9d5](https://git.xfel.eu/Karabo/Framework/-/commit/cc7e9d59bb2a8bd887f24f98922a00a359147a47))
+
+
+Devices
++++++++
+
+- testNodedSlots robust against ordering issues ([43c045b](https://git.xfel.eu/Karabo/Framework/-/commit/43c045ba9a732d47078dda436cfd9f8252cf640a))
+- *(ProjectDB)* Fix projectDB service.in run file ([300489b](https://git.xfel.eu/Karabo/Framework/-/commit/300489be802a814ef64cdb9182a77d4cd8169113))
+
+
+Dependencies
+++++++++++++
+
+- *(GUI)* Update numpy and scipy ([e305d9c](https://git.xfel.eu/Karabo/Framework/-/commit/e305d9cd82a73c57e81dc0b6b6012be6ac1fa3aa))
+- *(DEPS)* Python 3.8 to 3.11 ([2e9609f](https://git.xfel.eu/Karabo/Framework/-/commit/2e9609f4da1bf7500664455673e5c34a6c1b8ebc))
+- *(DEPS)* Build openmq with conan recipe ([65a387b](https://git.xfel.eu/Karabo/Framework/-/commit/65a387b6ad4a2054c433c1c3a158876c55c679b0))
+- *(DEPS)* Re-factor build.sh, remove unneeded files ([16c5c4a](https://git.xfel.eu/Karabo/Framework/-/commit/16c5c4a62e54fa8d7c85d344919b3ca2608f1849))
+- *(DEPS)* CI and cache refactor ([bb01bab](https://git.xfel.eu/Karabo/Framework/-/commit/bb01babfa90c155428fce940bb357d3a75746621))
+- *(DEPS)* Update ipython and pytest dependencies ([381addf](https://git.xfel.eu/Karabo/Framework/-/commit/381addfda5ef14ee7be30824b882f5d257e5949a))
+- *(DEPS)* Re-factor handling of dependency relocations ([810a303](https://git.xfel.eu/Karabo/Framework/-/commit/810a30309fcfd085e2614c17072dff22e3783974))
+- *(DEPS)* Remove unnecessary resolveKaraboLibTarget ([82ec1eb](https://git.xfel.eu/Karabo/Framework/-/commit/82ec1ebf38334184cb2960dc841bf347e43e48af))
+- *(DEPS)* Remove manual dependency caching ([25641dd](https://git.xfel.eu/Karabo/Framework/-/commit/25641ddf639efbe86ada57ce0f4f49c9fdc205a6))
+- *(DEPS)* Use conan to generate cmake imported targets for framework dependencies ([c677222](https://git.xfel.eu/Karabo/Framework/-/commit/c6772227a9c94c2189ac6241eafa76c35e28a2c3))
+- *(DEPS)* Change conan package ID generation mode ([c04b19e](https://git.xfel.eu/Karabo/Framework/-/commit/c04b19e1dace7014411c7dc82f23c22cc7de0e48))
+- *(DEPS)* Add CMakeLists.txt for building daemontools ([58c526c](https://git.xfel.eu/Karabo/Framework/-/commit/58c526c6289d690f629895708ada10aa2ebbc081))
+- *(DEPS)* Fix conan re-install failures ([e2ca5c6](https://git.xfel.eu/Karabo/Framework/-/commit/e2ca5c6140891c5231b049329e9b239313a2d1b5))
+- *(DEPS)* Auto_build_all.sh speed fixes ([7a4cffc](https://git.xfel.eu/Karabo/Framework/-/commit/7a4cffc11717a3796dda2e9443c35ab48914769c))
+- *(DEPS)* Preserve conan toolchain between builds ([3b7b249](https://git.xfel.eu/Karabo/Framework/-/commit/3b7b249e14ea310b0aae9ac9213d22af9966a4b0))
+- *(DEPS)* Openssl 1.0.2t must finally go ([68d23c4](https://git.xfel.eu/Karabo/Framework/-/commit/68d23c4559671f1bd3439c2f12d1b7bbfeb2c6bb))
+- *(DEPS)* Add libdir paths to generated pkg-config file ([783b052](https://git.xfel.eu/Karabo/Framework/-/commit/783b052a7a612dc6c1acc2ba57fbeca103b71678))
+- *(DEPS)* Bump some dep versions ([1de117d](https://git.xfel.eu/Karabo/Framework/-/commit/1de117d856fb847833a3a27e8574dba3920f4dde))
+- *(DEPS)* Update python conan recipe ([101c852](https://git.xfel.eu/Karabo/Framework/-/commit/101c8526ba145af6e3a5e0ab29649b05b0144fac))
+- *(DEPS)* Add openssl certificate test ([57ec8d0](https://git.xfel.eu/Karabo/Framework/-/commit/57ec8d0f2511d5247e3b7d5a453124e598fa0429))
+
+
+Documentation
++++++++++++++
+
+- *(DOC)* Merge log for final release 2.19 ([ba76620](https://git.xfel.eu/Karabo/Framework/-/commit/ba7662072335c719c886f47c9d050f7213e42c14))
+- *(DOC)* Provide detailed changelog for 2.19 ([21aaf63](https://git.xfel.eu/Karabo/Framework/-/commit/21aaf63e6224d8cb84e8883e705130129fbd2b92))
+- *(DOC)* Refine whatsnew for C++/bound pipeline, dependencies, etc. ([9d4aba8](https://git.xfel.eu/Karabo/Framework/-/commit/9d4aba808e8b3df74edf176fd838123687f0d1db))
+- *(DOC)* Include synchronization primitives ([b0e97c1](https://git.xfel.eu/Karabo/Framework/-/commit/b0e97c12082fd41329c40ce6b3e7729621875d15))
+- *(DOC)* Mention that AlarmService device gone and related changes ([038cee6](https://git.xfel.eu/Karabo/Framework/-/commit/038cee6304bd382a7ee2cb11cca8c2e81533c617))
+- *(DOC)* Put up hotfixes for 2.19.X ([13e65c9](https://git.xfel.eu/Karabo/Framework/-/commit/13e65c90962bbf3c7f3b0c37d265834c0443cc3f))
+- *(DOC)* Refurbish contributing and pre-commit info ([c986d5d](https://git.xfel.eu/Karabo/Framework/-/commit/c986d5d10553ae29f274e4517f46cdb757e5e829))
+- *(DOC)* Comment how to change env name in development environment ([c553d8f](https://git.xfel.eu/Karabo/Framework/-/commit/c553d8fab16ef8ba37a057148168d33924929132))
+- *(DOC)* Document 2.20.0 breaking changes ([9509f97](https://git.xfel.eu/Karabo/Framework/-/commit/9509f9780c0d6fefb6333f1dde7576e4f545e72b))
+- *(DOC)* Document changelog for 2.19.1 ([bdf107c](https://git.xfel.eu/Karabo/Framework/-/commit/bdf107cbac76a2897a8bdf8bf786d065b6c3f944))
+- *(DOC)* Document hotfixes for 2.17.X ([c7bdaf1](https://git.xfel.eu/Karabo/Framework/-/commit/c7bdaf1a9eed7983ff1b9418ed07219caf28644f))
+- *(DOC)* Describe 2.19.X hotfixes ([ea072c3](https://git.xfel.eu/Karabo/Framework/-/commit/ea072c3546b33f58dd0e9b958acd4a717fcf64ee))
+
+
+Tools
++++++
+
+- *(Interactive)* Add --all flag to karabo-stop ([b00d5b0](https://git.xfel.eu/Karabo/Framework/-/commit/b00d5b048ae937c2b9a731a8df592a32569b065c))
+- *(TOOLS)* Set alignment reference to left ([98fdb42](https://git.xfel.eu/Karabo/Framework/-/commit/98fdb4244f37fa3417022f81304cda80a292fcd6))
+- *(CI)* Always run karathon once ([023c4e1](https://git.xfel.eu/Karabo/Framework/-/commit/023c4e1c3d8a46081eea8970a0837d23a20c4c44))
+- *(CI)* Refactor test scripts ([1579907](https://git.xfel.eu/Karabo/Framework/-/commit/1579907ae86b8020a36af56bf830acfeeec6bf98))
+- *(CI)* Move variable defs from scripts to gitlab-ci.yml ([e41a997](https://git.xfel.eu/Karabo/Framework/-/commit/e41a9978345bb580279b54af3fd6d5e6700d073e))
+- *(CI)* Move variable defs from scripts to gitlab-ci.yml (part 2) ([889aa27](https://git.xfel.eu/Karabo/Framework/-/commit/889aa27afe580570b7188be6ca0a6409e444df80))
