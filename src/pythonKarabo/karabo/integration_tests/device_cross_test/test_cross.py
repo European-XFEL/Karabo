@@ -62,6 +62,7 @@ class ImageChannel(Configurable):
 
 
 class MiddlelayerDevice(DeviceClientBase):
+    """A simple device with topology info"""
     channelcount = 0
     rawchannelcount = 0
 

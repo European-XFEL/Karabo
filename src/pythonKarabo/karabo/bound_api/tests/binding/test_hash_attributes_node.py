@@ -15,7 +15,6 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 
 from karabo.bound import Hash, HashAttributes, HashAttributesNode, Types
-from karabo.bound_tool import use_karathon
 
 
 def test_hashAttributesNode_getValueAs():
@@ -54,9 +53,8 @@ def test_hashAttributesNode_getValueAs():
     assert n1.getValueAs(Types.UINT64) == 10
     assert n1.getValueAs(Types.FLOAT) == 10
     assert n1.getValueAs(Types.DOUBLE) == 10
-    if not use_karathon:
-        assert n1.getValueAs(Types.COMPLEX_FLOAT) == (10+0j)
-        assert n1.getValueAs(Types.COMPLEX_DOUBLE) == (10+0j)
+    assert n1.getValueAs(Types.COMPLEX_FLOAT) == (10+0j)
+    assert n1.getValueAs(Types.COMPLEX_DOUBLE) == (10+0j)
     assert n1.getValueAs(Types.STRING) == '10'
     assert n1.getValueAs("STRING") == '10'
     assert (
@@ -67,12 +65,11 @@ def test_hashAttributesNode_getValueAs():
     assert n2.getValueAs("VECTOR_UINT32") == [1, 0]
     assert n2.getValueAs("VECTOR_INT64") == [1, 0]
     assert n2.getValueAs("VECTOR_UINT64") == [1, 0]
-    if not use_karathon:
-        assert n2.getValueAs("VECTOR_FLOAT") == [1.0, 0.0]
-        assert n2.getValueAs("VECTOR_DOUBLE") == [1.0, 0.0]
-        assert n2.getValueAs("VECTOR_COMPLEX_FLOAT") == [(1+0j), (0+0j)]
-        assert n2.getValueAs("VECTOR_COMPLEX_DOUBLE") == [(1+0j), (0+0j)]
-        assert n2.getValueAs("VECTOR_STRING") == ['1', '0']
+    assert n2.getValueAs("VECTOR_FLOAT") == [1.0, 0.0]
+    assert n2.getValueAs("VECTOR_DOUBLE") == [1.0, 0.0]
+    assert n2.getValueAs("VECTOR_COMPLEX_FLOAT") == [(1+0j), (0+0j)]
+    assert n2.getValueAs("VECTOR_COMPLEX_DOUBLE") == [(1+0j), (0+0j)]
+    assert n2.getValueAs("VECTOR_STRING") == ['1', '0']
 
     # Test 'setType' & 'setValue' for INT8
     h.setAttribute("a.b.c", "attr1", 10)
@@ -301,26 +298,25 @@ def test_hashAttributesNode_getValueAs():
     n1.setValue([111.22222, 33333.4444])
     assert n1.getValue() == [111.22222, 33333.4444]
 
-    if not use_karathon:
-        # 'setType' VECTOR_COMPLEX_FLOAT
-        h.setAttribute("a.b.c", "attr1", 10)
-        attrs = h.getAttributes("a.b.c")
-        n1 = attrs.getNode("attr1")
-        n1.setType("VECTOR_COMPLEX_FLOAT")
-        assert n1.getType() == Types.VECTOR_COMPLEX_FLOAT
-        assert n1.getValue() == [(10+0j)]
-        n1.setValue([(1.2-3.2j), (5.4+3.3j)])
-        assert n1.getValue() == [(1.2-3.2j), (5.4+3.3j)]
+    # 'setType' VECTOR_COMPLEX_FLOAT
+    h.setAttribute("a.b.c", "attr1", 10)
+    attrs = h.getAttributes("a.b.c")
+    n1 = attrs.getNode("attr1")
+    n1.setType("VECTOR_COMPLEX_FLOAT")
+    assert n1.getType() == Types.VECTOR_COMPLEX_FLOAT
+    assert n1.getValue() == [(10+0j)]
+    n1.setValue([(1.2-3.2j), (5.4+3.3j)])
+    assert n1.getValue() == [(1.2-3.2j), (5.4+3.3j)]
 
-        # 'setType' VECTOR_COMPLEX_DOUBLE
-        h.setAttribute("a.b.c", "attr1", 10)
-        attrs = h.getAttributes("a.b.c")
-        n1 = attrs.getNode("attr1")
-        n1.setType("VECTOR_COMPLEX_DOUBLE")
-        assert n1.getType() == Types.VECTOR_COMPLEX_DOUBLE
-        assert n1.getValue() == [(10+0j)]
-        n1.setValue([(1.2-3.2j), (5.4+3.3j)])
-        assert n1.getValue() == [(1.2-3.2j), (5.4+3.3j)]
+    # 'setType' VECTOR_COMPLEX_DOUBLE
+    h.setAttribute("a.b.c", "attr1", 10)
+    attrs = h.getAttributes("a.b.c")
+    n1 = attrs.getNode("attr1")
+    n1.setType("VECTOR_COMPLEX_DOUBLE")
+    assert n1.getType() == Types.VECTOR_COMPLEX_DOUBLE
+    assert n1.getValue() == [(10+0j)]
+    n1.setValue([(1.2-3.2j), (5.4+3.3j)])
+    assert n1.getValue() == [(1.2-3.2j), (5.4+3.3j)]
 
     # 'setType' VECTOR_STRING
     h.setAttribute("a.b.c", "attr1", 10)
