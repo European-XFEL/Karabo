@@ -17,7 +17,6 @@
 import pytest
 
 from karabo.bound import Hash, HashAttributes, HashAttributesNode, Types
-from karabo.bound_tool import use_karathon
 
 
 def test_hashAttributes():
@@ -67,10 +66,9 @@ def test_hashAttributes():
     assert attrs["minerale"] == [True, False]
 
     # Test "getType", "isType"
-    if not use_karathon:
-        # check attribute types ...
-        assert attrs.getType('minerale') == Types.VECTOR_BOOL
-        # assert attrs.isType('minerale', "VECTOR_BOOL") is True
+    # check attribute types ...
+    assert attrs.getType('minerale') == Types.VECTOR_BOOL
+    # assert attrs.isType('minerale', "VECTOR_BOOL") is True
 
     # Test "__contains__ ..."
     assert "aq" in attrs
@@ -151,9 +149,8 @@ def test_hashAttributes():
     assert attrs.getAs("a2", Types.VECTOR_BOOL) == [True]
     assert attrs.getAs("a2", "VECTOR_UINT64") == [1]
     assert attrs.getAs("a2", "FLOAT") == 1.0
-    if not use_karathon:
-        assert attrs.getAs("a2", "COMPLEX_FLOAT") == (1+0j)
-        assert attrs.getAs("a2", "VECTOR_COMPLEX_DOUBLE") == [(1+0j)]
+    assert attrs.getAs("a2", "COMPLEX_FLOAT") == (1+0j)
+    assert attrs.getAs("a2", "VECTOR_COMPLEX_DOUBLE") == [(1+0j)]
 
     assert attrs.getAs("a1", Types.UINT32) == 12
     assert attrs.getAs("a1", "STRING") == '12'
