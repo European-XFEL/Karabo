@@ -14,7 +14,7 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 
-from karabo.bound_tool import Hash, generateAutoStartHash, jsonToHash
+from karabind import Hash, generateAutoStartHash, jsonToHash
 
 
 def test_init_string_to_auto_start_hash_conversion():

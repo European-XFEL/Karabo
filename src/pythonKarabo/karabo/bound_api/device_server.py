@@ -30,7 +30,7 @@ import traceback
 from itertools import chain
 from subprocess import Popen, TimeoutExpired
 
-from karabo.bound_tool import (
+from karabind import (
     CHOICE_ELEMENT, INT32_ELEMENT, LIST_ELEMENT, NODE_ELEMENT,
     OVERWRITE_ELEMENT, STRING_ELEMENT, VECTOR_STRING_ELEMENT, AccessLevel,
     Broker, EventLoop, Hash, Logger, Schema, SignalSlotable, Unit, Validator,

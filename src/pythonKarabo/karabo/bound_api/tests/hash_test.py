@@ -25,10 +25,8 @@ import weakref
 
 import numpy as np
 
-import karathon
 from karabo.bound import (
-    Hash, HashMergePolicy, Types, VectorHash, fullyEqual,
-    isStdVectorDefaultConversion, setStdVectorDefaultConversion, similar)
+    Hash, HashMergePolicy, Types, VectorHash, fullyEqual, similar)
 from karabo.testing.utils import compare_ndarray_data_ptrs
 
 
@@ -230,33 +228,6 @@ class Hash_TestCase(unittest.TestCase):
         except Exception as e:
             self.fail("test_getSet exception group 6: " + str(e))
 
-        if Hash is karathon.Hash:
-            try:
-                h = Hash('a.b.c', [1, 2, 3, 4, 5, 6, 7], 'b.c.d',
-                         [False, False, True, True, True, False, True])
-                self.assertEqual(isStdVectorDefaultConversion(Types.PYTHON),
-                                 True)
-                self.assertEqual(h.isType('a.b.c', Types.VECTOR_INT32), True)
-                self.assertIsInstance(h['a.b.c'], list)
-                try:
-                    setStdVectorDefaultConversion(Types.VECTOR_INT32)
-                except RuntimeError:
-                    pass
-                self.assertEqual(isStdVectorDefaultConversion(Types.PYTHON),
-                                 True)
-                setStdVectorDefaultConversion(Types.NUMPY)
-                self.assertEqual(isStdVectorDefaultConversion(Types.PYTHON),
-                                 False)
-                self.assertEqual(isStdVectorDefaultConversion(Types.NUMPY),
-                                 True)
-                self.assertIsInstance(h['a.b.c'], np.ndarray)
-                self.assertIsInstance(h['b.c.d'], np.ndarray)
-                setStdVectorDefaultConversion(Types.PYTHON)
-                self.assertEqual(isStdVectorDefaultConversion(Types.PYTHON),
-                                 True)
-            except Exception as e:
-                self.fail("test_getSet exception group 7: " + str(e))
-
     def test_getSetVectorHash(self):
         try:
             h = Hash('a', VectorHash())
@@ -423,11 +394,9 @@ class Hash_TestCase(unittest.TestCase):
         #  h = Hash("b", 2 ** 64)
         # SystemError: <Boost.Python.function object at 0x242c6c0> returned a
         #              result with an error set
-        exc = SystemError if Hash.__module__ == "karathon" else RuntimeError
-        with self.assertRaises(exc):
+        with self.assertRaises(RuntimeError):
             h = Hash("b", 2 ** 64)
-        exc = OverflowError if Hash.__module__ == "karathon" else RuntimeError
-        with self.assertRaises(exc):
+        with self.assertRaises(RuntimeError):
             h = Hash("vb", [2 ** 64])
         for value, type_ in values_and_types.items():
             msg = f"Failed to unbox {value}: "
@@ -702,33 +671,6 @@ class Hash_TestCase(unittest.TestCase):
                              'Should return "someValue"')
         except Exception as e:
             self.fail("test_attributes exception group 5: " + str(e))
-
-        if Hash is karathon.Hash:
-            try:
-                h = Hash("a.b.a.b", 42)
-                h.setAttribute("a.b.a.b", "attr1", [1, 2, 3, 4, 5, 6, 7])
-
-                setStdVectorDefaultConversion(Types.PYTHON)
-                if isStdVectorDefaultConversion(Types.PYTHON):
-                    self.assertEqual(h.getAttribute("a.b.a.b", "attr1"),
-                                     [1, 2, 3, 4, 5, 6, 7])
-                if isStdVectorDefaultConversion(Types.NUMPY):
-                    self.assertEqual(h.getAttribute("a.b.a.b", "attr1").all(),
-                                     np.array([1, 2, 3, 4, 5, 6, 7],
-                                              dtype=np.int32).all())
-
-                setStdVectorDefaultConversion(Types.NUMPY)
-                if isStdVectorDefaultConversion(Types.PYTHON):
-                    self.assertEqual(h.getAttribute("a.b.a.b", "attr1"),
-                                     [1, 2, 3, 4, 5, 6, 7])
-                if isStdVectorDefaultConversion(Types.NUMPY):
-                    self.assertEqual(h.getAttribute("a.b.a.b", "attr1").all(),
-                                     np.array([1, 2, 3, 4, 5, 6, 7],
-                                              dtype=np.int32).all())
-
-                setStdVectorDefaultConversion(Types.PYTHON)
-            except Exception as e:
-                self.fail("test_attributes exception group 6: " + str(e))
 
     def test_attributes_get_copy(self):
         try:

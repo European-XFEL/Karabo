@@ -17,7 +17,6 @@ import pytest
 
 from karabo.bound import (
     HashAttributes as Attributes, HashAttributesNode as Node, Types)
-from karabo.bound_tool import use_karathon
 
 
 def test_constructor():
@@ -31,12 +30,8 @@ def test_constructor():
 
     # Construction of HashAttributesNode is not possible in python
     # (but exceptions differ)
-    if not use_karathon:
-        with pytest.raises(TypeError):
-            _ = Node()
-    else:
-        with pytest.raises(RuntimeError):
-            _ = Node()
+    with pytest.raises(TypeError):
+        _ = Node()
 
 
 def test_set():
@@ -102,15 +97,14 @@ def test_set():
     ha['attr16'] = [1.11111, 2.222222, 3.333333]
     assert ha.getNode('attr16').getType() == Types.VECTOR_DOUBLE
     # VECTOR_COMPLEX_DOUBLE
-    if not use_karathon:
-        ha['attr17'] = [complex(1.0, -5), complex(-2., 188)]
-        assert ha.getNode('attr17').getType() == Types.VECTOR_COMPLEX_DOUBLE
-        assert ha.getType('attr17') == Types.VECTOR_COMPLEX_DOUBLE
-        assert ha.isType('attr17', Types.VECTOR_COMPLEX_DOUBLE)
-        assert ha.isType('attr17', "VECTOR_COMPLEX_DOUBLE")
-        ha.erase('attr17')
-        ha['attr17'] = [complex(1.0, -5), complex(-2., 188)]
-        del ha['attr17']
+    ha['attr17'] = [complex(1.0, -5), complex(-2., 188)]
+    assert ha.getNode('attr17').getType() == Types.VECTOR_COMPLEX_DOUBLE
+    assert ha.getType('attr17') == Types.VECTOR_COMPLEX_DOUBLE
+    assert ha.isType('attr17', Types.VECTOR_COMPLEX_DOUBLE)
+    assert ha.isType('attr17', "VECTOR_COMPLEX_DOUBLE")
+    ha.erase('attr17')
+    ha['attr17'] = [complex(1.0, -5), complex(-2., 188)]
+    del ha['attr17']
 
     # VECTOR_STRING
     ha['attr18'] = ['aaaa', 'bbb', 'cccccccc', 'www']
@@ -125,56 +119,40 @@ def test_set():
     assert node6.getKey() == 'attr6'
     assert node6.getType() == Types.STRING
     assert node6.getValue() == 'abrakadabra'
-    # Implemented only in karabind: check attribute type
-    if not use_karathon:
-        assert ha.getType('attr1') == Types.BOOL
-        assert ha.isType('attr1', Types.BOOL)
-        assert ha.isType('attr1', "BOOL")
-        assert ha.getType('attr2') == Types.INT32
-        assert ha.isType('attr2', Types.INT32)
-        assert ha.isType('attr2', "INT32")
-        assert ha.getType('attr3') == Types.INT64
-        assert ha.isType('attr3', Types.INT64)
-        assert ha.isType('attr3', "INT64")
-        assert ha.getType('attr4') == Types.DOUBLE
-        assert ha.isType('attr4', Types.DOUBLE)
-        assert ha.isType('attr4', "DOUBLE")
-        assert ha.getType('attr5') == Types.COMPLEX_DOUBLE
-        assert ha.isType('attr5', Types.COMPLEX_DOUBLE)
-        assert ha.isType('attr5', "COMPLEX_DOUBLE")
-        assert ha.getType('attr6') == Types.STRING
-        assert ha.isType('attr6', Types.STRING)
-        assert ha.isType('attr6', "STRING")
-        assert ha.getType('attr13') == Types.VECTOR_BOOL
-        assert ha.isType('attr13', Types.VECTOR_BOOL)
-        assert ha.isType('attr13', "VECTOR_BOOL")
-        assert ha.getType('attr14') == Types.VECTOR_INT32
-        assert ha.isType('attr14', Types.VECTOR_INT32)
-        assert ha.isType('attr14', "VECTOR_INT32")
-        assert ha.getType('attr15') == Types.VECTOR_INT64
-        assert ha.isType('attr15', Types.VECTOR_INT64)
-        assert ha.isType('attr15', "VECTOR_INT64")
-        assert ha.getType('attr16') == Types.VECTOR_DOUBLE
-        assert ha.isType('attr16', Types.VECTOR_DOUBLE)
-        assert ha.isType('attr16', "VECTOR_DOUBLE")
-        assert ha.getType('attr18') == Types.VECTOR_STRING
-        assert ha.isType('attr18', Types.VECTOR_STRING)
-        assert ha.isType('attr18', "VECTOR_STRING")
-        assert not ha.isType('attr15', "INT64")
-
-    if use_karathon:
-        assert ha.getNode('attr1').getType() == Types.BOOL
-        assert ha.getNode('attr2').getType() == Types.INT32
-        assert ha.getNode('attr3').getType() == Types.INT64
-        assert ha.getNode('attr4').getType() == Types.DOUBLE
-        assert ha.getNode('attr5').getType() == Types.COMPLEX_DOUBLE
-        assert ha.getNode('attr6').getType() == Types.STRING
-
-        assert ha.getNode('attr13').getType() == Types.VECTOR_BOOL
-        assert ha.getNode('attr14').getType() == Types.VECTOR_INT32
-        assert ha.getNode('attr15').getType() == Types.VECTOR_INT64
-        assert ha.getNode('attr16').getType() == Types.VECTOR_DOUBLE
-        assert ha.getNode('attr18').getType() == Types.VECTOR_STRING
+    assert ha.getType('attr1') == Types.BOOL
+    assert ha.isType('attr1', Types.BOOL)
+    assert ha.isType('attr1', "BOOL")
+    assert ha.getType('attr2') == Types.INT32
+    assert ha.isType('attr2', Types.INT32)
+    assert ha.isType('attr2', "INT32")
+    assert ha.getType('attr3') == Types.INT64
+    assert ha.isType('attr3', Types.INT64)
+    assert ha.isType('attr3', "INT64")
+    assert ha.getType('attr4') == Types.DOUBLE
+    assert ha.isType('attr4', Types.DOUBLE)
+    assert ha.isType('attr4', "DOUBLE")
+    assert ha.getType('attr5') == Types.COMPLEX_DOUBLE
+    assert ha.isType('attr5', Types.COMPLEX_DOUBLE)
+    assert ha.isType('attr5', "COMPLEX_DOUBLE")
+    assert ha.getType('attr6') == Types.STRING
+    assert ha.isType('attr6', Types.STRING)
+    assert ha.isType('attr6', "STRING")
+    assert ha.getType('attr13') == Types.VECTOR_BOOL
+    assert ha.isType('attr13', Types.VECTOR_BOOL)
+    assert ha.isType('attr13', "VECTOR_BOOL")
+    assert ha.getType('attr14') == Types.VECTOR_INT32
+    assert ha.isType('attr14', Types.VECTOR_INT32)
+    assert ha.isType('attr14', "VECTOR_INT32")
+    assert ha.getType('attr15') == Types.VECTOR_INT64
+    assert ha.isType('attr15', Types.VECTOR_INT64)
+    assert ha.isType('attr15', "VECTOR_INT64")
+    assert ha.getType('attr16') == Types.VECTOR_DOUBLE
+    assert ha.isType('attr16', Types.VECTOR_DOUBLE)
+    assert ha.isType('attr16', "VECTOR_DOUBLE")
+    assert ha.getType('attr18') == Types.VECTOR_STRING
+    assert ha.isType('attr18', Types.VECTOR_STRING)
+    assert ha.isType('attr18', "VECTOR_STRING")
+    assert not ha.isType('attr15', "INT64")
 
     ha.clear()
     assert (ha.empty())
@@ -219,10 +197,7 @@ def test_changetype():
     ha['a'] = 65
 
     def current_type_is(reftype):
-        if not use_karathon:
-            assert ha.getType('a') == reftype
-        if use_karathon:
-            assert ha.getNode('a').getType() == reftype
+        assert ha.getType('a') == reftype
 
     current_type_is(Types.INT32)
     # Get as INT64
@@ -237,8 +212,7 @@ def test_changetype():
     with pytest.raises(RuntimeError):
         assert (ha.getAs('a', "BOOL"))
     # Get as COMPLEX_DOUBLE
-    if not use_karathon:
-        assert ha.getAs('a', "COMPLEX_DOUBLE") == complex(65, 0)
+    assert ha.getAs('a', "COMPLEX_DOUBLE") == complex(65, 0)
     # Get as STRING
     assert ha.getAs('a', "STRING") == '65'
 
