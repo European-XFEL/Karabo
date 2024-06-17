@@ -28,10 +28,10 @@ variables:
 .target_os_matrix:
   all_targets:
     matrix:
-      - ARCH_TAG: ["almalinux-9-008", "centos-7-004", "debian-10-004", "ubuntu-20-004", "ubuntu-22-003", "redhat-9-003"]
-  only_centos7:
+      - ARCH_TAG: ["almalinux-9-008", "debian-10-004", "ubuntu-20-004", "ubuntu-22-003", "redhat-9-003"]
+  only_redhat9:
     matrix:
-      - ARCH_TAG: ["centos-7-004"]
+      - ARCH_TAG: ["redhat-9-003"]
 
 .build_cache:
   cache_rw:
@@ -523,7 +523,7 @@ cpp_integration tests:
 # Scheduled coverage tests
 
 coverage tests:
-  parallel: !reference [.target_os_matrix, only_centos7]
+  parallel: !reference [.target_os_matrix, only_redhat9]
   stage: test
   <<: *services_template
   <<: *artifacts-spec

@@ -29,7 +29,7 @@ def event_loop():
     """This is the eventloop fixture for pytest asyncio
 
     It automatically comes with a broker connection via
-    a signal slotable
+    a signal slotable.
     """
 
     loop = EventLoop()
