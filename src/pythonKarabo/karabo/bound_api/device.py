@@ -22,8 +22,7 @@ import sys
 import threading
 import time
 
-from karabo import __version__ as karaboVersion
-from karabo.bound_tool import (
+from karabind import (
     ALARM_ELEMENT, BOOL_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT, MICROSEC,
     NODE_ELEMENT, OBSERVER, OVERWRITE_ELEMENT, SLOT_ELEMENT, STATE_ELEMENT,
     STRING_ELEMENT, UINT32_ELEMENT, WRITE, AccessLevel, AccessType,
@@ -31,6 +30,7 @@ from karabo.bound_tool import (
     EventLoop, Hash, HashFilter, HashMergePolicy, LeafType, Logger,
     MetricPrefix, Schema, SignalSlotable, Timestamp, Trainstamp, Unit,
     Validator, ValidatorValidationRules, VectorHash, loadFromFile)
+from karabo import __version__ as karaboVersion
 from karabo.common.api import (
     KARABO_LOGGER_CONTENT_DEFAULT, AlarmCondition, Capabilities, Interfaces,
     State, karabo_deprecated)

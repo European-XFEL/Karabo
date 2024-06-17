@@ -19,22 +19,19 @@ import numpy as np
 import pytest
 
 from karabo.bound import (
-    ALARM_ELEMENT, BOOL_ELEMENT, CHOICE_ELEMENT, DOUBLE_ELEMENT, EVERY_1S,
-    EVERY_100MS, EVERY_EVENT, FLOAT_ELEMENT, IMAGEDATA_ELEMENT, INT32_ELEMENT,
-    INT64_ELEMENT, KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS,
-    LIST_ELEMENT, METER, MICRO, NDARRAY_ELEMENT, NO_ARCHIVING, NODE_ELEMENT,
-    OVERWRITE_ELEMENT, PATH_ELEMENT, SLOT_ELEMENT, STATE_ELEMENT,
-    STRING_ELEMENT, TABLE_ELEMENT, UINT32_ELEMENT, UINT64_ELEMENT,
-    VECTOR_BOOL_ELEMENT, VECTOR_DOUBLE_ELEMENT, VECTOR_INT32_ELEMENT,
-    VECTOR_STRING_ELEMENT, VECTOR_UINT32_ELEMENT, AccessLevel, AccessType,
-    ArchivePolicy, AssemblyRules, AssignmentType, Encoding, Hash, MetricPrefix,
-    NodeType, Schema, Types, Unit, fullyEqual)
-from karabo.bound_tool import use_karathon
+    ALARM_ELEMENT, BOOL_ELEMENT, BYTEARRAY_ELEMENT, CHOICE_ELEMENT,
+    DOUBLE_ELEMENT, EVERY_1S, EVERY_100MS, EVERY_EVENT, FLOAT_ELEMENT,
+    IMAGEDATA_ELEMENT, INT32_ELEMENT, INT64_ELEMENT, KARABO_CLASSINFO,
+    KARABO_CONFIGURATION_BASE_CLASS, LIST_ELEMENT, METER, MICRO,
+    NDARRAY_ELEMENT, NO_ARCHIVING, NODE_ELEMENT, OVERWRITE_ELEMENT,
+    PATH_ELEMENT, SLOT_ELEMENT, STATE_ELEMENT, STRING_ELEMENT, TABLE_ELEMENT,
+    UINT32_ELEMENT, UINT64_ELEMENT, VECTOR_BOOL_ELEMENT, VECTOR_DOUBLE_ELEMENT,
+    VECTOR_INT32_ELEMENT, VECTOR_STRING_ELEMENT, VECTOR_UINT32_ELEMENT,
+    AccessLevel, AccessType, ArchivePolicy, AssemblyRules, AssignmentType,
+    Encoding, Hash, MetricPrefix, NodeType, Schema, Types, Unit, cppNDArray,
+    cppNDArrayCopy, fullyEqual)
 from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.states import State
-
-if not use_karathon:
-    from karabo.bound_tool import BYTEARRAY_ELEMENT, cppNDArray, cppNDArrayCopy
 
 
 @KARABO_CONFIGURATION_BASE_CLASS
@@ -352,36 +349,35 @@ class TestStruct1:
             .commit(),
         )
 
-        if not use_karathon:
-            (
-                # Always readOnly(), by default as well
-                BYTEARRAY_ELEMENT(expected)
-                .key("rarray")
-                .alias("aliasReadArray")
-                .tags("software")
-                .displayedName("Example read array")
-                .description("Example of ByteArray for reading")
-                .userAccess()
-                .readOnly()
-                .initialValue(bytes('abcdef привет 012345', 'u8'))
-                .commit(),
+        (
+            # Always readOnly(), by default as well
+            BYTEARRAY_ELEMENT(expected)
+            .key("rarray")
+            .alias("aliasReadArray")
+            .tags("software")
+            .displayedName("Example read array")
+            .description("Example of ByteArray for reading")
+            .userAccess()
+            .readOnly()
+            .initialValue(bytes('abcdef привет 012345', 'u8'))
+            .commit(),
 
-                BYTEARRAY_ELEMENT(expected)
-                .key("rarray1")
-                .displayedName("ReadArrayStr")
-                .adminAccess()
-                .readOnly()
-                .initialValue('hello world')
-                .commit(),
+            BYTEARRAY_ELEMENT(expected)
+            .key("rarray1")
+            .displayedName("ReadArrayStr")
+            .adminAccess()
+            .readOnly()
+            .initialValue('hello world')
+            .commit(),
 
-                BYTEARRAY_ELEMENT(expected)
-                .key("rarray2")
-                .displayedName("ReadByteArray")
-                .observerAccess()
-                .readOnly()
-                .initialValue(bytearray('Tschüß!', 'u8'))
-                .commit(),
-            )
+            BYTEARRAY_ELEMENT(expected)
+            .key("rarray2")
+            .displayedName("ReadByteArray")
+            .observerAccess()
+            .readOnly()
+            .initialValue(bytearray('Tschüß!', 'u8'))
+            .commit(),
+        )
 
         (
             INT64_ELEMENT(expected)
@@ -1140,8 +1136,7 @@ def test_getTags():
     assert schema.getTags("exampleKey4")[0] == "software"
     assert schema.getTags("exampleKey5")[0] == "h/w"
     assert schema.getTags("exampleKey5")[1] == "d.m.y"
-    if not use_karathon:
-        assert schema.getTags("rarray")[0] == "software"
+    assert schema.getTags("rarray")[0] == "software"
 
 
 def test_setTags():
@@ -1177,8 +1172,7 @@ def test_getsetAccessLevel():
     assert sch.getRequiredAccessLevel('exampleKey10') == AccessLevel.USER
     # observerAccess in reconfigurable
     assert sch.getRequiredAccessLevel('exampleKey11') == AccessLevel.OBSERVER
-    if not use_karathon:
-        assert sch.getRequiredAccessLevel('rarray') == AccessLevel.USER
+    assert sch.getRequiredAccessLevel('rarray') == AccessLevel.USER
 
 
 def test_isNode():
@@ -1216,8 +1210,7 @@ def test_getValueType():
     assert schema.getValueType("exampleKey7b") == Types.VECTOR_UINT32
     assert schema.getValueType("exampleKey8") == Types.VECTOR_DOUBLE
     assert schema.getValueType("exampleKey9") == Types.VECTOR_STRING
-    if not use_karathon:
-        assert schema.getValueType("rarray") == Types.BYTE_ARRAY
+    assert schema.getValueType("rarray") == Types.BYTE_ARRAY
 
 
 def test_getAliasAsString():
@@ -1229,8 +1222,7 @@ def test_getAliasAsString():
     assert schema.getAliasAsString("exampleKey5") == "exampleAlias5"
     assert schema.getAliasAsString("exampleKey6") == "1193046,43724"
     assert schema.getAliasAsString("testPath") == "5"
-    if not use_karathon:
-        assert schema.getAliasAsString("rarray") == "aliasReadArray"
+    assert schema.getAliasAsString("rarray") == "aliasReadArray"
 
 
 def test_keyHasAlias():
@@ -1243,8 +1235,7 @@ def test_keyHasAlias():
     assert schema.keyHasAlias("exampleKey5") is True
     assert schema.keyHasAlias("exampleKey6") is True
     assert schema.keyHasAlias("testPath") is True
-    if not use_karathon:
-        assert schema.keyHasAlias("rarray") is True
+    assert schema.keyHasAlias("rarray") is True
 
 
 def test_aliasHasKey():
@@ -1257,8 +1248,7 @@ def test_aliasHasKey():
     assert schema.aliasHasKey([0x00123456, 0x0000aacc]) is True
     assert schema.aliasHasKey(7) is False
     assert schema.aliasHasKey(5) is True
-    if not use_karathon:
-        assert schema.aliasHasKey("aliasReadArray") is True
+    assert schema.aliasHasKey("aliasReadArray") is True
 
 
 def test_getAliasFromKey():
@@ -1270,8 +1260,7 @@ def test_getAliasFromKey():
     assert schema.getAliasFromKey("exampleKey5") == "exampleAlias5"
     assert schema.getAliasFromKey("exampleKey6") == [0x00123456, 0x0000aacc]
     assert schema.getAliasFromKey("testPath") == 5
-    if not use_karathon:
-        assert schema.getAliasFromKey("rarray") == "aliasReadArray"
+    assert schema.getAliasFromKey("rarray") == "aliasReadArray"
 
 
 def test_setAlias():
@@ -1293,8 +1282,7 @@ def test_getKeyFromAlias():
     assert schema.getKeyFromAlias("exampleAlias5") == "exampleKey5"
     assert schema.getKeyFromAlias([0x00123456, 0x0000aacc]) == "exampleKey6"
     assert schema.getKeyFromAlias(5) == "testPath"
-    if not use_karathon:
-        assert schema.getKeyFromAlias("aliasReadArray") == "rarray"
+    assert schema.getKeyFromAlias("aliasReadArray") == "rarray"
 
 
 def test_getAccessMode():
@@ -1310,8 +1298,7 @@ def test_getAccessMode():
     assert schema.getAccessMode("testPath") == AccessType.WRITE
     assert schema.getAccessMode("testPath2") == AccessType.READ
     assert schema.getAccessMode("testPath3") == AccessType.INIT
-    if not use_karathon:
-        assert schema.getAccessMode("rarray") == AccessType.READ
+    assert schema.getAccessMode("rarray") == AccessType.READ
 
 
 def test_getAssignment():
@@ -1346,9 +1333,8 @@ def test_getDescription():
     schema = Schema()
     TestStruct1.expectedParameters(schema)
     assert schema.getDescription('exampleKey1') == "Example key 1 description"
-    if not use_karathon:
-        assert schema.getDescription('rarray') == \
-            "Example of ByteArray for reading"
+    assert schema.getDescription('rarray') == \
+        "Example of ByteArray for reading"
 
 
 def test_setDescription():
@@ -1429,11 +1415,10 @@ def test_getDefaultValue():
     # readOnly default specified by 'defaultValue'. not 'initialValue':
     assert schema.getDefaultValue("exampleKey5b") == 42
     assert schema.getDefaultValue("exampleKey7b") == [11, 22, 33]
-    if not use_karathon:
-        assert schema.getDefaultValue("rarray") == \
-            b'abcdef \xd0\xbf\xd1\x80\xd0\xb8\xd0\xb2\xd0\xb5\xd1\x82 012345'
-        assert schema.getDefaultValue("rarray1") == b'hello world'
-        assert schema.getDefaultValue("rarray2") == b'Tsch\xc3\xbc\xc3\x9f!'
+    assert schema.getDefaultValue("rarray") == \
+        b'abcdef \xd0\xbf\xd1\x80\xd0\xb8\xd0\xb2\xd0\xb5\xd1\x82 012345'
+    assert schema.getDefaultValue("rarray1") == b'hello world'
+    assert schema.getDefaultValue("rarray2") == b'Tsch\xc3\xbc\xc3\x9f!'
 
 
 def test_setDefaultValue():
@@ -1981,49 +1966,48 @@ def test_allowed_actions():
         s.setAllowedActions("node.int", ["bla", "blue"])
 
 
-if not use_karathon:
-    def test_cpp_ndarray():
-        # Build numpy arrays on C++ side and convert them to the python objects
-        # using commented binding code below  (see "karabind_test.cc")
-        # Conversions happen at the last step...
+def test_cpp_ndarray():
+    # Build numpy arrays on C++ side and convert them to the python objects
+    # using commented binding code below  (see "karabind_test.cc")
+    # Conversions happen at the last step...
 
-        # m.def("cppNDArray", []() {
-        #     const Dims shape(3, 4);
-        #     std::vector<int> someData(3 * 4, 7);
-        #     for (int i = 0; i < 3; ++i) someData[i] = 100 + i;
-        #     NDArray nda(someData.begin(), someData.end(), shape);
-        #     return karabind::wrapper::castNDArrayToPy(nda);
-        # });
-        # m.def("cppNDArrayCopy", []() {
-        #     const Dims shape(3, 4);
-        #    std::vector<int> someData(3 * 4, 7);
-        #    for (int i = 0; i < 3; ++i) someData[i] = 100 + i;
-        #    NDArray nda(someData.begin(), someData.end(), shape);
-        #    return karabind::wrapper::copyNDArrayToPy(nda);
-        # });
+    # m.def("cppNDArray", []() {
+    #     const Dims shape(3, 4);
+    #     std::vector<int> someData(3 * 4, 7);
+    #     for (int i = 0; i < 3; ++i) someData[i] = 100 + i;
+    #     NDArray nda(someData.begin(), someData.end(), shape);
+    #     return karabind::wrapper::castNDArrayToPy(nda);
+    # });
+    # m.def("cppNDArrayCopy", []() {
+    #     const Dims shape(3, 4);
+    #    std::vector<int> someData(3 * 4, 7);
+    #    for (int i = 0; i < 3; ++i) someData[i] = 100 + i;
+    #    NDArray nda(someData.begin(), someData.end(), shape);
+    #    return karabind::wrapper::copyNDArrayToPy(nda);
+    # });
 
-        # create py::array (numpy.array) objects
-        a = cppNDArray()
-        b = cppNDArrayCopy()
-        # These binding return the same data
-        assert np.all(a == b)
-        # The only difference between them is data ownership ...
-        # C++ is an owner of data array
-        assert a.flags.owndata is False
-        assert a.base is not None
-        # Python is an owner of data array
-        assert b.flags.owndata is True
-        assert b.base is None
-        assert np.all(a == b)
-        # this works like 'deepcopy'
-        c = a.copy()
-        assert c.flags.owndata is True
-        assert c.base is None
-        # or use deepcopy directly ..
-        d = copy.deepcopy(a)
-        assert d.flags.owndata is True
-        assert d.base is None
-        # and copy works like deepcopy
-        e = copy.copy(a)
-        assert e.flags.owndata is True
-        assert e.base is None
+    # create py::array (numpy.array) objects
+    a = cppNDArray()
+    b = cppNDArrayCopy()
+    # These binding return the same data
+    assert np.all(a == b)
+    # The only difference between them is data ownership ...
+    # C++ is an owner of data array
+    assert a.flags.owndata is False
+    assert a.base is not None
+    # Python is an owner of data array
+    assert b.flags.owndata is True
+    assert b.base is None
+    assert np.all(a == b)
+    # this works like 'deepcopy'
+    c = a.copy()
+    assert c.flags.owndata is True
+    assert c.base is None
+    # or use deepcopy directly ..
+    d = copy.deepcopy(a)
+    assert d.flags.owndata is True
+    assert d.base is None
+    # and copy works like deepcopy
+    e = copy.copy(a)
+    assert e.flags.owndata is True
+    assert e.base is None

@@ -16,7 +16,7 @@
 from threading import Condition, Lock, Thread
 from unittest import TestCase, main
 
-from karathon import EventLoop, SignalSlotable
+from karabind import EventLoop, SignalSlotable
 
 
 class Tests(TestCase):
@@ -112,7 +112,7 @@ class Tests(TestCase):
         class SimpleType:
             pass
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(TypeError):
             self.call_and_compare(SimpleType())
             # XXX: Additional tests need to be added (e.g. test Hash, ...).
 
