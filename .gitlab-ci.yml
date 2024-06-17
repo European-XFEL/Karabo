@@ -309,7 +309,6 @@ variables:
     refs:
       - merge_requests
     changes:
-      - "src/karathon/**/*" # bound api old binding code
       - "src/karabind/**/*" # bound api new binding code
       - "src/karabo/**/*" # bound api depends on the c++ build
       - "src/pythonKarabo/**/*"

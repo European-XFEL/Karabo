@@ -20,7 +20,6 @@ import pytest
 
 from karabo.bound import (
     Broker, Connection, EventLoop, Hash, Schema, SignalSlotable, fullyEqual)
-from karabo.bound_tool import use_karathon
 
 debugFlag = False
 lock = threading.Lock()
@@ -96,9 +95,7 @@ def setup_server_client():
     assert alice is not None
     aliceConn2 = alice.getConnection()
     assert type(aliceConn) is Connection
-    if not use_karathon:
-        # karathon creates a new Python object here :-(
-        assert aliceConn2 is aliceConn
+    assert aliceConn2 is aliceConn
 
     # Better return (and thus keep alive) the connections as well:
     # C++ TcpChannel keeps only weak_ptr to its TcpConnection.
@@ -154,12 +151,10 @@ def test_synch_write_read(eventLoop):
         alice.write(Hash("a", "header"), 1)  # not supported
         assert "Python Exception: Not supported type" in str(excinfo.value)
 
-    if not use_karathon:
-        # Not sure which error we would get here with karathon
-        with pytest.raises(TypeError) as excinfo:
-            alice.write(1, "message")  # not supported header type
-            assert ("TypeError:  write(): incompatible function arguments."
-                    in str(excinfo.value))
+    with pytest.raises(TypeError) as excinfo:
+        alice.write(1, "message")  # not supported header type
+        assert ("TypeError:  write(): incompatible function arguments."
+                in str(excinfo.value))
 
 
 def test_asynch_write_read(eventLoop):

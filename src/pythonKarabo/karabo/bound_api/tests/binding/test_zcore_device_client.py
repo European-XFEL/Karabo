@@ -18,26 +18,12 @@ import time
 import uuid
 from threading import Thread
 
-import pytest
+from karabind import (
+    DeviceClient, EventLoop, Hash, Logger, SignalSlotable, startDeviceServer,
+    stopDeviceServer)
 
-import karabind
-import karathon
 
-
-@pytest.mark.parametrize(
-    "EventLoop, DeviceClient, Hash, startDeviceServer, stopDeviceServer, "
-    "Logger",
-    [
-        (karathon.EventLoop, karathon.DeviceClient, karathon.Hash,
-         karathon.startDeviceServer, karathon.stopDeviceServer,
-         karathon.Logger),
-        (karabind.EventLoop, karabind.DeviceClient, karabind.Hash,
-         karabind.startDeviceServer, karabind.stopDeviceServer,
-         karabind.Logger)
-    ])
-def test_device_client_sync_api(EventLoop, DeviceClient, Hash,
-                                startDeviceServer, stopDeviceServer,
-                                Logger):
+def test_device_client_sync_api():
     # Run CPP event loop in background ...
     loopThread = Thread(target=EventLoop.work)
     loopThread.start()
@@ -119,20 +105,7 @@ def test_device_client_sync_api(EventLoop, DeviceClient, Hash,
     loopThread.join()
 
 
-@pytest.mark.parametrize(
-    "EventLoop, DeviceClient, Hash, startDeviceServer, stopDeviceServer, "
-    "Logger",
-    [
-        (karathon.EventLoop, karathon.DeviceClient, karathon.Hash,
-         karathon.startDeviceServer, karathon.stopDeviceServer,
-         karathon.Logger),
-        (karabind.EventLoop, karabind.DeviceClient, karabind.Hash,
-         karabind.startDeviceServer, karabind.stopDeviceServer,
-         karabind.Logger)
-    ])
-def test_device_client_async_api(
-        EventLoop, DeviceClient, Hash, startDeviceServer, stopDeviceServer,
-        Logger):
+def test_device_client_async_api():
     # Run CPP event loop in background ...
     loopThread = Thread(target=EventLoop.work)
     loopThread.start()
@@ -194,10 +167,9 @@ def test_device_client_async_api(
 
 
 def test_slots_with_args():
-    from karabind import DeviceClient, Hash, SignalSlotable
 
     # Run CPP event loop in background ...
-    loopThread = Thread(target=karabind.EventLoop.work)
+    loopThread = Thread(target=EventLoop.work)
     loopThread.start()
 
     deviceId = "slotWithArgsTester"
@@ -280,5 +252,5 @@ def test_slots_with_args():
     assert deDE == "Fünf"
     assert roman == "V"
 
-    karabind.EventLoop.stop()
+    EventLoop.stop()
     loopThread.join()
