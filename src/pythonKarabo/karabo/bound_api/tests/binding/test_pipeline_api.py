@@ -23,7 +23,6 @@ import uuid
 from karabo.bound import (
     ChannelMetaData, ConnectionStatus, EventLoop, Hash, InputChannel,
     OutputChannel, SignalSlotable, Timestamp, Types, VectorHash)
-from karabo.bound_tool import use_karathon
 
 # Enable logs for debugging - does not matter which bindings are used:
 # from karabo.bound import Logger
@@ -259,9 +258,8 @@ def test_pipeline_connect_disconnect():
 
     # Write first data - nobody connected yet.
     meta = ChannelMetaData("outputChannel:output", Timestamp())
-    if not use_karathon:
-        assert meta.getSource() == meta['source']
-        assert meta.getTimestamp() == meta['timestamp']
+    assert meta.getSource() == meta['source']
+    assert meta.getTimestamp() == meta['timestamp']
 
     out.write(Hash("key", 42), meta)
     out.update()

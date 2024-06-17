@@ -20,7 +20,7 @@ __author__ = "Sergey Esenov <serguei.essenov at xfel.eu>"
 __date__ = "$May 10, 2013 2:35:08 PM$"
 
 import karabo.bound_api.base_fsm as base
-from karabo.bound_tool import SLOT_ELEMENT
+from karabind import SLOT_ELEMENT
 from karabo.common.states import State
 
 from .decorators import KARABO_CLASSINFO

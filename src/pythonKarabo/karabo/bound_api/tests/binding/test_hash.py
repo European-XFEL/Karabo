@@ -21,7 +21,6 @@ import pytest
 from karabo.bound import (
     Hash, HashMergePolicy, HashNode as Node, Types, VectorHash, fullyEqual,
     similar)
-from karabo.bound_tool import use_karathon
 
 # Test "clear", "empty", "getKeys", "keys", "getValues", "values",
 #      "getPaths", "paths", "set", "__setitem__", "setAs", "get",
@@ -63,9 +62,8 @@ def test_constructor():
     with pytest.raises(TypeError):
         h = Hash('a', 1, 'b', 2, 'c', 3, 'd', 4, 'e', 5, 'f', 6, 'g', 7)
     # Cannot construct Node object in Python ...
-    if not use_karathon:
-        with pytest.raises(TypeError):
-            print(Node())
+    with pytest.raises(TypeError):
+        print(Node())
 
 
 def test_getset():
@@ -98,9 +96,8 @@ def test_getset():
     # Test "isType"
     assert h.isType('a', Types.STRING)
     assert h.isType('c.c.c.c', Types.BOOL)
-    if not use_karathon:
-        assert h.isType('a', "STRING")
-        assert h.isType('c.c.c.c', "BOOL")
+    assert h.isType('a', "STRING")
+    assert h.isType('c.c.c.c', "BOOL")
 
     # Test "has"
     assert h.has('p.e.r.f')
@@ -272,12 +269,10 @@ def test_getset():
     assert h['a.b.c.d.e.f'] == 88
     # drop the parent Hash in Python
     del h
-    # attempt to access 'g' or 't' gives crash!!!
-    # Now only in karathon! karabind is fixed using lifetime
-    # control via 'keep_alive<...>()' magic
-    if not use_karathon:
-        assert g['d.e.f'], 88
-        assert t['f'], 88
+    # Attempt to access 'g' or 't' gives possible despite 'h' is gone
+    # (lifetime extended via 'keep_alive<...>()' magic)
+    assert g['d.e.f'] == 88
+    assert t['f'] == 88
 
     h = Hash("a[0]", Hash("a", 1), "a[1]", Hash("a", 1))
     assert h["a[0].a"] == 1, "Value should be 1"
@@ -370,29 +365,21 @@ def test_getsetVectorHash():
 def test_copy_and_VectorHash():
     arr = np.arange(20000, dtype=np.int16).reshape(100, 200)
     assert arr[0][0] == 0
-    if not use_karathon:
-        v = VectorHash([Hash('a', arr), Hash('b', 2)])
-    else:
-        # karathon supports only default constructor
-        v = VectorHash()
-        v.append(Hash('a', arr))
-        v.append(Hash('b', 2))
+    v = VectorHash([Hash('a', arr), Hash('b', 2)])
+
     # Shallow copy ...
     vc = copy.copy(v)
     assert not id(vc) == id(v)
-    # karathon has no deepcopy
-    if not use_karathon:
-        # Deep copy ...
-        vd = copy.deepcopy(v)
-        assert not id(vd) == id(v)
+
+    vd = copy.deepcopy(v)
+    assert not id(vd) == id(v)
     # Change origin vector...
     arr[0][0] = 111
     assert v[0]['a'][0][0] == 111
     # Shallow copy has seen the change ...
     assert vc[0]['a'][0][0] == 111
-    if not use_karathon:
-        # But deep copy is unchanged ...
-        assert vd[0]['a'][0][0] == 0
+    # But deep copy is unchanged ...
+    assert vd[0]['a'][0][0] == 0
 
 
 def test_getAs():
@@ -416,9 +403,8 @@ def test_getAs():
     assert h.getAs("a", Types.UINT64) == 1
     assert h.getAs("a", Types.FLOAT) == 1.0
     assert h.getAs("a", Types.DOUBLE) == 1.0
-    if not use_karathon:
-        assert h.getAs("a", Types.COMPLEX_FLOAT) == (1 + 0j)
-        assert h.getAs("a", Types.COMPLEX_DOUBLE) == (1 + 0j)
+    assert h.getAs("a", Types.COMPLEX_FLOAT) == (1 + 0j)
+    assert h.getAs("a", Types.COMPLEX_DOUBLE) == (1 + 0j)
 
     assert h.getAs("a", Types.STRING) == "1"
     assert h.getAs("a", Types.VECTOR_BOOL) == [True]
@@ -433,8 +419,7 @@ def test_getAs():
     assert h.getAs("a", Types.VECTOR_DOUBLE) == [1.0]
     assert h.getAs("a", Types.VECTOR_COMPLEX_FLOAT) == [(1 + 0j)]
     assert h.getAs("a", Types.VECTOR_COMPLEX_DOUBLE) == [(1 + 0j)]
-    if not use_karathon:
-        assert h.getAs("a", Types.VECTOR_STRING) == ['1']
+    assert h.getAs("a", Types.VECTOR_STRING) == ['1']
 
 
 def test_getAttributeAs():
@@ -452,14 +437,12 @@ def test_getAttributeAs():
     assert h.getAttributeAs("a", "a", Types.VECTOR_COMPLEX_FLOAT) == [(1 + 0j)]
     assert h.getAttributeAs("a", "a", Types.VECTOR_COMPLEX_DOUBLE) == [
         (1 + 0j)]
-    if not use_karathon:
-        assert h.getAttributeAs("a", "a", Types.VECTOR_STRING), ['1']
+    assert h.getAttributeAs("a", "a", Types.VECTOR_STRING), ['1']
 
     # DOUBLE
     h.setAttribute("a", "c", 1.23)
     assert h.getAttributes("a").getNode('c').getType() == Types.DOUBLE
-    if not use_karathon:
-        assert h.getAttributeType('a', 'c') == Types.DOUBLE
+    assert h.getAttributeType('a', 'c') == Types.DOUBLE
 
     h = Hash('a', 1)
     # Check that `getAttributes(...)` return reference internal
@@ -504,10 +487,7 @@ def test_setAs():
     h.setAs("a", [127, 0, 77], Types.VECTOR_INT8)
     assert h.getType("a") == Types.VECTOR_INT8
     # byte array: 0x7f -> 127, 0x00 -> 0, 'M' -> 77
-    if use_karathon:
-        assert h["a"] == bytearray(b'\x7f\x00M')
-    elif not use_karathon:
-        assert h["a"] == [127, 0, 77]
+    assert h["a"] == [127, 0, 77]
 
     h.setAs("a", [1260, -21170, 0, 1], Types.VECTOR_INT16)
     assert h.getType("a") == Types.VECTOR_INT16
@@ -517,14 +497,13 @@ def test_setAs():
     assert h.getType("a") == Types.VECTOR_DOUBLE
     assert h["a"] == [1260.0, -21170.0, 0.0, 1.0]
 
-    if not use_karathon:
-        h.setAs("a", [1260, -21170, 0, 1], Types.VECTOR_COMPLEX_FLOAT)
-        assert h.getType("a") == Types.VECTOR_COMPLEX_FLOAT
-        assert h["a"] == [(1260 + 0j), (-21170 + 0j), 0j, (1 + 0j)]
+    h.setAs("a", [1260, -21170, 0, 1], Types.VECTOR_COMPLEX_FLOAT)
+    assert h.getType("a") == Types.VECTOR_COMPLEX_FLOAT
+    assert h["a"] == [(1260 + 0j), (-21170 + 0j), 0j, (1 + 0j)]
 
-        h.setAs("a", [1260, -21170, 0, 1], Types.VECTOR_STRING)
-        assert h.getType("a") == Types.VECTOR_STRING
-        assert h["a"] == ['1260', '-21170', '0', '1']
+    h.setAs("a", [1260, -21170, 0, 1], Types.VECTOR_STRING)
+    assert h.getType("a") == Types.VECTOR_STRING
+    assert h["a"] == ['1260', '-21170', '0', '1']
 
 
 def test_merge():
@@ -962,15 +941,14 @@ def test_ndarray():
     assert h2['a'][0][0] == 255
     assert arr[0][0] == 255
 
-    if not use_karathon:
-        # Check 'deepcopy': it copies even underlying NDArray
-        g = copy.deepcopy(h)
-        assert g['a'][0][0] == 255
+    # Check 'deepcopy': it copies even underlying NDArray
+    g = copy.deepcopy(h)
+    assert g['a'][0][0] == 255
 
-        h['a'][0][0] = 1
+    h['a'][0][0] = 1
 
-        assert h['a'][0][0] == 1
-        assert g['a'][0][0] == 255
+    assert h['a'][0][0] == 1
+    assert g['a'][0][0] == 255
 
     # Check fortran order array:
     # Since the C++ NDArray only knows C order, it has to be copied
