@@ -15,7 +15,6 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 
 from karabo.bound import Hash, HashNode, Types
-from karabo.bound_tool import use_karathon
 
 
 def test_hashNode():
@@ -69,18 +68,16 @@ def test_hashNode():
     # "test_hash_attributes_node.py"
     # .... skipped tests
     assert node.getValueAs(Types.DOUBLE) == 1.0
-    if not use_karathon:
-        assert node.getValueAs("COMPLEX_FLOAT") == (1 + 0j)
-        assert node.getValueAs("COMPLEX_DOUBLE") == (1 + 0J)
+    assert node.getValueAs("COMPLEX_FLOAT") == (1 + 0j)
+    assert node.getValueAs("COMPLEX_DOUBLE") == (1 + 0J)
     assert node.getValueAs(Types.STRING) == '1'
     assert node.getValueAs(Types.VECTOR_BOOL) == [True]
     assert node.getValueAs(Types.VECTOR_INT16) == [1]
     # .... skipped tests ...
-    if not use_karathon:
-        assert node.getValueAs(Types.VECTOR_FLOAT) == [1.0]
-        assert node.getValueAs(Types.VECTOR_DOUBLE) == [1.0]
-        assert node.getValueAs(Types.VECTOR_COMPLEX_FLOAT) == [(1 + 0j)]
-        assert node.getValueAs(Types.VECTOR_COMPLEX_DOUBLE) == [(1 + 0j)]
+    assert node.getValueAs(Types.VECTOR_FLOAT) == [1.0]
+    assert node.getValueAs(Types.VECTOR_DOUBLE) == [1.0]
+    assert node.getValueAs(Types.VECTOR_COMPLEX_FLOAT) == [(1 + 0j)]
+    assert node.getValueAs(Types.VECTOR_COMPLEX_DOUBLE) == [(1 + 0j)]
     # Call is not supported ...
     # FIXME: VECTOR_STRING not supported in both cases
 
@@ -98,9 +95,8 @@ def test_hashNode():
     assert n.getValueAs(Types.UINT64) == 1
     assert n.getValueAs(Types.FLOAT) == 1.0
     assert n.getValueAs(Types.DOUBLE) == 1.0
-    if not use_karathon:
-        assert n.getValueAs(Types.COMPLEX_FLOAT) == (1 + 0j)
-        assert n.getValueAs(Types.COMPLEX_DOUBLE) == (1 + 0j)
+    assert n.getValueAs(Types.COMPLEX_FLOAT) == (1 + 0j)
+    assert n.getValueAs(Types.COMPLEX_DOUBLE) == (1 + 0j)
     assert n.getValueAs(Types.STRING) == '1'
     assert n.getValueAs(Types.VECTOR_BOOL) == [True]
     # assert n.getValueAs(Types.VECTOR_CHAR) == ['1']
@@ -109,11 +105,10 @@ def test_hashNode():
     assert n.getValueAs(Types.VECTOR_INT16) == [1]
     # ... skipped tests
     assert n.getValueAs(Types.VECTOR_UINT64) == [1]
-    if not use_karathon:
-        assert n.getValueAs(Types.VECTOR_FLOAT) == [1.0]
-        assert n.getValueAs(Types.VECTOR_DOUBLE) == [1.0]
-        assert n.getValueAs(Types.VECTOR_COMPLEX_FLOAT) == [(1 + 0j)]
-        assert n.getValueAs(Types.VECTOR_COMPLEX_DOUBLE) == [(1 + 0j)]
+    assert n.getValueAs(Types.VECTOR_FLOAT) == [1.0]
+    assert n.getValueAs(Types.VECTOR_DOUBLE) == [1.0]
+    assert n.getValueAs(Types.VECTOR_COMPLEX_FLOAT) == [(1 + 0j)]
+    assert n.getValueAs(Types.VECTOR_COMPLEX_DOUBLE) == [(1 + 0j)]
     # Call is not supported ...
     # assert n.getValueAs(Types.VECTOR_STRING) == ['1']
 
@@ -124,9 +119,8 @@ def test_hashNode():
     assert n.getValueAs(Types.INT8) == 42
     # ... skipped tests
     assert n.getValueAs(Types.DOUBLE) == 42
-    if not use_karathon:
-        assert n.getValueAs(Types.COMPLEX_FLOAT) == (42 + 0j)
-        assert n.getValueAs(Types.COMPLEX_DOUBLE) == (42 + 0j)
+    assert n.getValueAs(Types.COMPLEX_FLOAT) == (42 + 0j)
+    assert n.getValueAs(Types.COMPLEX_DOUBLE) == (42 + 0j)
     assert n.getValueAs(Types.STRING) == '42'
     # Base64 encoding
     # Since we use `karabo::util::StringTools.hh` for conversion
@@ -137,11 +131,10 @@ def test_hashNode():
     assert n.getValueAs(Types.VECTOR_INT16) == [42]
     # ... skipped tests
     assert n.getValueAs(Types.VECTOR_UINT64) == [42]
-    if not use_karathon:
-        assert n.getValueAs(Types.VECTOR_FLOAT) == [42.0]
-        assert n.getValueAs(Types.VECTOR_DOUBLE) == [42.0]
-        assert n.getValueAs("VECTOR_COMPLEX_FLOAT") == [(42 + 0j)]
-        assert n.getValueAs("VECTOR_COMPLEX_DOUBLE") == [(42 + 0j)]
+    assert n.getValueAs(Types.VECTOR_FLOAT) == [42.0]
+    assert n.getValueAs(Types.VECTOR_DOUBLE) == [42.0]
+    assert n.getValueAs("VECTOR_COMPLEX_FLOAT") == [(42 + 0j)]
+    assert n.getValueAs("VECTOR_COMPLEX_DOUBLE") == [(42 + 0j)]
     # Call is not supported...
     # assert n.getValueAs(Types.VECTOR_STRING) == '42'
 
@@ -158,21 +151,19 @@ def test_hashNode():
     assert node.getAttributeAs("a", Types.INT8) == 15
     # ... skipped tests
     assert node.getAttributeAs("a", "DOUBLE") == 15
-    if not use_karathon:
-        assert node.getAttributeAs("a", Types.COMPLEX_FLOAT) == (15 + 0j)
-        assert node.getAttributeAs("a", Types.COMPLEX_DOUBLE) == (15 + 0j)
+    assert node.getAttributeAs("a", Types.COMPLEX_FLOAT) == (15 + 0j)
+    assert node.getAttributeAs("a", Types.COMPLEX_DOUBLE) == (15 + 0j)
     assert node.getAttributeAs("a", Types.STRING) == '15'
     # Base64 encoding
     # assert node.getAttributeAs("a", Types.VECTOR_INT8) == [15]
     # assert node.getAttributeAs("a", Types.VECTOR_UINT8) == [15]
-    if not use_karathon:
-        assert node.getAttributeAs("a", "VECTOR_INT16") == [15]
-        # ... skipped tests
-        assert node.getAttributeAs("a", Types.VECTOR_DOUBLE) == [15]
-        assert node.getAttributeAs("a", Types.VECTOR_COMPLEX_FLOAT) == [
-            (15 + 0j)]
-        assert node.getAttributeAs("a", Types.VECTOR_COMPLEX_DOUBLE) == [
-            (15 + 0j)]
+    assert node.getAttributeAs("a", "VECTOR_INT16") == [15]
+    # ... skipped tests
+    assert node.getAttributeAs("a", Types.VECTOR_DOUBLE) == [15]
+    assert node.getAttributeAs("a", Types.VECTOR_COMPLEX_FLOAT) == [
+        (15 + 0j)]
+    assert node.getAttributeAs("a", Types.VECTOR_COMPLEX_DOUBLE) == [
+        (15 + 0j)]
     # Not supported
     # assert node.getAttributeAs("a", Types.VECTOR_STRING) == ['15']
 

@@ -17,7 +17,6 @@
 from karabo.bound import (
     INPUT_CHANNEL, INT32_ELEMENT, OUTPUT_CHANNEL, ChannelMetaData, Epochstamp,
     Schema, Timestamp, Trainstamp)
-from karabo.bound_tool import use_karathon
 
 
 def test_metadata_general_functionality():
@@ -30,12 +29,8 @@ def test_metadata_general_functionality():
     assert meta.getTimestamp().getSeconds() == 1356441936
     assert meta.getTimestamp().getFractionalSeconds() == 789333123456789123
     assert meta.getTimestamp().toFormattedString() == ts.toFormattedString()
-    if not use_karathon:
-        # Equality operator is bound
-        assert meta.getTimestamp() == ts
-    else:
-        # Equality operator is not implemented
-        assert meta.getTimestamp() != ts
+    # Equality operator is bound
+    assert meta.getTimestamp() == ts
 
     meta.setSource('xyz')
     assert meta.getSource() != 'abc'

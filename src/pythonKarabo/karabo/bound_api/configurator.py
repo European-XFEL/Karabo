@@ -16,7 +16,7 @@
 # To change this template, choose Tools | Templates
 # and open the template in the editor.
 
-from karabo.bound_tool import AssemblyRules, Schema, Validator
+from karabind import AssemblyRules, Schema, Validator
 
 
 class Configurator:
