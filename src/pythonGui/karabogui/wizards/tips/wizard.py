@@ -80,6 +80,9 @@ class TipsTricksWizard(QWizard):
                   QWizard.CustomButton2]
         self.setButtonLayout(layout)
 
+        self.button(QWizard.BackButton).setObjectName("BackButton")
+        self.button(QWizard.NextButton).setObjectName("NextButton")
+
         self._build_information_pages()
 
     def sizeHint(self):
