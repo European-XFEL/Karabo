@@ -326,21 +326,14 @@ namespace karabo {
                     auto openConnIt = m_openConnections.find(outputChannelString);
                     if (openConnIt != m_openConnections.end()) {
                         const karabo::net::Channel::Pointer& channel = openConnIt->second.second;
-                        if (channel->isOpen()) {
-                            KARABO_LOG_FRAMEWORK_INFO << "InputChannel with id " << getInstanceId()
-                                                      << " already connected to " << outputChannelString;
-                            if (handler) {
-                                m_connectStrand->post(
-                                      boost::bind(handler, bse::make_error_code(bse::already_connected)));
-                            }
-                            return; // bail out, otherwise would enter code to connect
-                        } else {    // How come here?
-                            KARABO_LOG_FRAMEWORK_WARN << "Connection attempt from '" << getInstanceId() << "' to '"
-                                                      << outputChannelString
-                                                      << "' finds existing, but closed channel - erase and retry.";
-                            m_openConnections.erase(openConnIt);
-                            postConnectionTracker(outputChannelString, net::ConnectionStatus::DISCONNECTED);
-                        }
+                        // I see this happening also for channels that claim isOpen() where it is probably correct.
+                        // But we know it is unreliable. So better try to connect as we were told.
+                        KARABO_LOG_FRAMEWORK_WARN << "Connection attempt from '" << getInstanceId() << "' to '"
+                                                  << outputChannelString << "' finds existing channel that claims to "
+                                                  << "be " << (channel->isOpen() ? "" : "not ")
+                                                  << "open - erase and retry anyway.";
+                        m_openConnections.erase(openConnIt);
+                        postConnectionTracker(outputChannelString, net::ConnectionStatus::DISCONNECTED);
                     }
                     if (m_connectionsBeingSetup.find(outputChannelString) != m_connectionsBeingSetup.end()) {
                         KARABO_LOG_FRAMEWORK_INFO << "InputChannel with id " << getInstanceId()
@@ -714,14 +707,25 @@ namespace karabo {
             m_trainIdMap.clear();
             m_reverseMetaDataMap.clear();
             unsigned int i = 0;
-            for (auto it = m_metaDataList.cbegin(); it != m_metaDataList.cend(); ++it) {
+            for (auto it = m_metaDataList.cbegin(); it != m_metaDataList.cend();) {
                 Hash::Pointer& data = m_dataList[i];
                 if (!data) data = boost::make_shared<Hash>(); // previous items cleared in triggerIOEvent
-                Memory::read(*data, i, m_channelId, m_activeChunk);
+                try {
+                    Memory::read(*data, i, m_channelId, m_activeChunk);
+                } catch (const karabo::util::Exception& e) {
+                    // Simply log and skip bad data. Likely corrupt data that cannot be deserialised (How that?)
+                    KARABO_LOG_FRAMEWORK_ERROR << "Failed to read (deserialize) a data item from " << it->getSource()
+                                               << ", so skip it: " << e.userFriendlyMsg();
+                    data->clear();
+                    m_dataList.resize(m_dataList.size() - 1);
+                    it = m_metaDataList.erase(it); // Not efficient on vector, but so rarely happens
+                    continue;
+                }
                 m_sourceMap.emplace(it->getSource(), i);
                 m_trainIdMap.emplace(it->getTimestamp().getTrainId(), i);
                 m_reverseMetaDataMap.emplace(i, *it);
-                i++;
+                ++i;
+                ++it;
             }
         }
 
