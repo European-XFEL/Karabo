@@ -26,6 +26,8 @@
 #ifndef KARABO_UTIL_TOTYPE_HH
 #define KARABO_UTIL_TOTYPE_HH
 
+#include <string>
+
 #include "Exception.hh"
 #include "Types.hh"
 
@@ -117,7 +119,8 @@ namespace karabo {
                     _KARABO_HELPER_MACRO(BYTE_ARRAY)
 
                     default:
-                        throw KARABO_NOT_IMPLEMENTED_EXCEPTION("Requested datatype conversion not implemented");
+                        throw KARABO_NOT_IMPLEMENTED_EXCEPTION("Requested datatype (" + std::to_string(type) +=
+                                                               ") not known");
                 }
             }
 #undef _KARABO_HELPER_MACRO
