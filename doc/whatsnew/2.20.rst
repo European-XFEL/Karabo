@@ -11,25 +11,83 @@ Release date is **June 12 2024**.
 Summary – Release highlights
 ++++++++++++++++++++++++++++
 
-The Bound Python API got a new foundation: The binding code to make Karabo C++
-features available in Python has been completely rewritten using the modern
-and maintained `pybind11` library.
-The Bound interface is basically unchanged. Exceptions are listed
-among the breaking changes below.
+**This release introduces the first production-ready authentication
+mechanism via the GuiServer.**
 
-The C++ API now requires a C++ 17 compliant compiler. A breaking change to
-the interface of `karabo::util::StringTools` resulted from the migration to
-C++ 17 and is documented below.
+Bound Python API
+================
 
+The Bound Python API has a new foundation: the binding code that makes Karabo C++
+features available in Python has been completely rewritten using the modern and
+maintained `pybind11` library. The interface remains mostly unchanged, with
+exceptions noted among the breaking changes below.
+
+C++ API
+=======
+
+- The C++ API now requires a C++ 17 compliant compiler. A breaking change to the
+  interface of karabo::util::StringTools has resulted from the migration to C++ 17
+  and is documented below. The *OVERWRITE_ELEMENT* in C++/Bound is now restrictive
+  and checks for schema inconsistencies.
+- The C++ Device server comes online with all device class plugins preloaded.
+- The DataLoggerManager device now exposes the logger map conveniently in a
+  table element, making it straightforward to see which datalogger is logging which device instance.
+- InputChannels now use the TCP keep-alive mechanism, which has been backported to 2.19.X.
+
+Middlelayer Python API
+======================
+
+- The Python Framework `middlelayer` has been upgraded to utilize **Python Version 3.11**.
+- An important bug fix is that `background` threads can be canceled.
+- The function `get_utc_string` is now public and accepts a timestamp object or `None`,
+  returning a UTC-compliant string for use with the datalogger machinery.
+- The `PipelineContext` has been enhanced to fetch multiple data hashes from the
+  same network update.
+- The performance of classic schema retrievals has been significantly increased. The devices now
+  cache their schema.
+
+
+KaraboGUI
+=========
+
+- KaraboGUI has been upgraded to **Python Version 3.12**.
+- For Image Controllers in the graphical user interface, if the device goes down,
+  the image is now erased. Additionally, the ROI elements can now be freely moved
+  around without boundaries.
+- The Logbook dialog is now available via Cinema and Concert (application mode).
+- The Waterfall Controller can now handle *nan* and *inf* values.
+- GuiExtensions have been rewritten to use an internal pypi mirror, allowing extensions to have dependencies.
+- Clicking on an InstanceStatus widget now provides the Configurator (Editor).
+- Each Scene Panel now has a Home button in the toolbar. In full GUI mode, the main window is brought to the foreground,
+  and in application mode the Editor is opened.
+- It is now possible for an ADMIN to perform a bulk shutdown of all device servers in a Karabo Project. More over, Macros can be restarted after editing with the Run Button.
+- The Configurator now offers a Filter Table by double-clicking on the middle
+  column of a table property and has a toolbar action to retrieve past configurations.
+  These changes aim to further enhance the application mode.
+- AccessLevel information has been added to the Configurator PopUp window.
+- It is now possible to retrieve network information of hosts via a context menu in the System Topology. This requires a new webserver deployed on the control host.
+- The historic text widget now supports hex and bin display types and is available on double-click in the Configurator for the respective properties.
+  The time resolution has been extended to milliseconds.
+- The Login Dialog of the Client has been reworked to align with the new authentication
+  features. User information can be erased through the main window action.
+
+All APIs
+========
+
+In all APIs, the output channel hostname is now validated. If a specified address
+is not found on the control host, the device instantiation fails.
+Additionally, it is now possible to provide interface names, e.g., *ib0*, directly.
+A new tool, *karabo-scene2cpp* is now available to generate C++ code from a karabo svg scene.
 
 Breaking Changes
 ++++++++++++++++
 
 C++ API
-===========
+=======
+
 - *OverwriteElement* got more strict: Before it was silently ignoring cases
-  like overwriting a non-existing key or inconsistencies between options and
-  default values. Now it throws.
+  like overwriting a non-existing key or inconsistencies between options, 
+  default values and/or limits. Now it throws.
 
 Bound API
 ===========
@@ -48,6 +106,11 @@ Bound API
    - `RuntimeError` -> `TypeError` when the result stats of `RollingWindowStatistics` are copied
 
 
+KaraboGUI
+=========
+
+- Remove RunConfigurator widget, as it is superseeded by the RunAssistant widgets
+
 Change of behaviour
 +++++++++++++++++++
 
@@ -58,6 +121,11 @@ with the strings contained in an input string has been renamed to
 in the way a C++ compiler matches template template arguments with defaults introduced
 by C++ 17. More details are provided by comments in **StringTools.hh**.
 
+- MDL: Public **Slot**’s don’t take arguments. If an argument is provided an
+  exception is raised.
+- MDL: Now every device and not only devices inheriting from `DeviceClientBase` can retrieve
+  configurations from past.
+- TOOLS: karabo-stop must take an argument. To stop all services, either *-a* or *--all* is needed.
 
 Dependency Updates
 ++++++++++++++++++
