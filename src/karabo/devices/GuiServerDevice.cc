@@ -1949,9 +1949,8 @@ namespace karabo {
                     const bool notYetRegistered = channelSet.empty();
                     const bool inserted = channelSet.insert(channel).second;
                     if (!inserted) {
-                        // This happens when a GUI client has a scene open while the device is down and then
-                        // restarts: Client [at least until 2.14.X] will call this (but does not have to or
-                        // maybe should not).
+                        // When not cleaning m_networkConnections in instanceGoneHandler, this happens when a GUI
+                        // client has a scene open while the device is down and then restarts: Client will call this.
                         KARABO_LOG_FRAMEWORK_INFO << "A GUI client wants to subscribe a second time to output channel: "
                                                   << channelName;
                     }
@@ -1970,15 +1969,12 @@ namespace karabo {
                             // seen...
                         }
                     } else {
-                        KARABO_LOG_FRAMEWORK_DEBUG << "Do not register to monitor '" << channelName << "' " << "since "
+                        KARABO_LOG_FRAMEWORK_DEBUG << "Do not register to monitor '" << channelName << "' since "
                                                    << channelSet.size() - (1u * inserted) // -1 except if not new
                                                    << " client(s) already registered.";
                     }
                 } else { // i.e. un-subscribe
                     if (0 == channelSet.erase(channel)) {
-                        // Would happen if 'instanceGoneHandler' would clear m_readyNetworkConnections (as done
-                        // before 2.15.X) when a scene is closed that shows channel data, but the device is not
-                        // alive (anymore).
                         KARABO_LOG_FRAMEWORK_WARN << "A GUI client wants to un-subscribe from an output channel that it"
                                                   << " is not subscribed: " << channelName;
                     }
@@ -2196,12 +2192,27 @@ namespace karabo {
                     m_pendingAttributeUpdates.erase(instanceId);
                 }
 
-                // Older versions cleaned m_networkConnections from input channels of the dead 'instanceId'
-                // here. That works since the GUI client (as of 2.14.X) gives an onSubscribeNetwork request
-                // again if it gets notified that the device is back again. But that is not needed: DeviceClient
-                // and SignalSlotable take care to reconnect for any registered channels. In fact, that will
-                // lead to a faster reconnection than waiting for the client's request.
-
+                // Clean m_networkConnections from input channels of the dead 'instanceId'.
+                // The GUI client (as of 2.20.X) gives an onSubscribeNetwork request again if it gets notified
+                // that the device is back again.
+                {
+                    boost::mutex::scoped_lock lock(m_networkMutex);
+                    NetworkMap::const_iterator mapIter = m_networkConnections.cbegin();
+                    while (mapIter != m_networkConnections.cend()) {
+                        const std::string& channelName = mapIter->first;
+                        // If channelName lacks the ':', channelInstanceId will be the full channelName.
+                        const std::string channelInstanceId(channelName, 0, channelName.find_first_of(':'));
+                        if (channelInstanceId == instanceId) {
+                            KARABO_LOG_FRAMEWORK_DEBUG << "Remove connection to input channel: " << channelName;
+                            // Use the reference 'channelName' before invalidating it by invalidating mapIter:
+                            remote().unregisterChannelMonitor(channelName);
+                            m_readyNetworkConnections.erase(channelName);
+                            mapIter = m_networkConnections.erase(mapIter);
+                        } else {
+                            ++mapIter;
+                        }
+                    }
+                }
                 {
                     boost::upgrade_lock<boost::shared_mutex> lk(m_projectManagerMutex);
                     auto manager = m_projectManagers.find(instanceId);
