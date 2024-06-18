@@ -55,6 +55,12 @@ class TestTipWizard(GuiTestCase):
             self.wizard.update_start(1)
             assert config["wizard"] is False
 
+    def test_button_object_names(self):
+        next_button = self.wizard.button(QWizard.NextButton)
+        assert next_button.objectName() == "NextButton"
+        back_button = self.wizard.button(QWizard.BackButton)
+        assert back_button.objectName() == "BackButton"
+
 
 if __name__ == "__main__":
     main()
