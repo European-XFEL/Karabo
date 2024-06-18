@@ -406,9 +406,9 @@ class Manager(QObject):
             access = AccessLevel.OBSERVER
         else:
             access = AccessLevel(info["accessLevel"])
-        if krb_access.GLOBAL_ACCESS_LEVEL != access:
-            krb_access.GLOBAL_ACCESS_LEVEL = access
-            krb_access.HIGHEST_ACCESS_LEVEL = access
+
+        krb_access.GLOBAL_ACCESS_LEVEL = access
+        krb_access.HIGHEST_ACCESS_LEVEL = access
         broadcast_event(KaraboEvent.LoginUserChanged, {})
 
     def handle_onBeginTemporarySession(self, **info):
