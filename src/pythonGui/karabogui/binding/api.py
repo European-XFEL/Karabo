@@ -41,7 +41,6 @@ from .enums import (
 from .proxy import (
     BaseDeviceProxy, DeviceClassProxy, DeviceProxy, ProjectDeviceProxy,
     PropertyProxy)
-from .recursive import ChoiceOfNodesBinding, ListOfNodesBinding
 from .util import (
     REFERENCE_TYPENUM_TO_DTYPE, attr_fast_deepcopy, get_binding_array_value,
     get_binding_format, get_binding_value, get_dtype_format, get_editor_value,
