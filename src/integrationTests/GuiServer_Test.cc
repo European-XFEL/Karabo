@@ -185,6 +185,25 @@ void GuiServer_Test::appTestRunner() {
     testBeginEndTemporarySession();
     testTemporarySessionExpiration();
 
+    // Shutsdown the GUI Server device and brings it up again as an instance that only accepts
+    // connections from ApplicationMode clients like cinema and theater.
+    success = m_deviceClient->killDevice(TEST_GUI_SERVER_ID, KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
+    // clang-format off
+    success_n = m_deviceClient->instantiate(
+          "testGuiVersionServer", "GuiServerDevice",
+          Hash("deviceId", TEST_GUI_SERVER_ID,
+               "port", 44450,
+               "minClientVersion", "2.20.0rc2",
+               "onlyAppModeClients", true,
+               "timeout", 0),
+          KRB_TEST_MAX_TIMEOUT);
+    // clang-format on
+
+    testOnlyAppModeClients();
+
+
     if (m_tcpAdapter->connected()) {
         m_tcpAdapter->disconnect();
     }
@@ -1431,6 +1450,7 @@ void GuiServer_Test::testMissingTokenOnLogin() {
     std::clog << "OK" << std::endl;
 }
 
+
 void GuiServer_Test::testInvalidTokenOnLogin() {
     std::clog << "testInvalidTokenOnLogin: " << std::flush;
 
@@ -1725,6 +1745,33 @@ void GuiServer_Test::testTemporarySessionExpiration() {
         timeout -= 5;
     }
     CPPUNIT_ASSERT_MESSAGE("Disconnection from GUI Server timedout.", m_tcpAdapter->connected());
+
+    std::clog << "OK" << std::endl;
+}
+
+
+void GuiServer_Test::testOnlyAppModeClients() {
+    std::clog << "testOnlyAppModeClients: " << std::flush;
+
+    Hash loginInfo("type", "login", "username", "bob", "applicationMode", false, "version", "2.20.0");
+
+    resetTcpConnection();
+
+    Hash lastMessage;
+    const string expectedMsgPart = "configured to refuse connections from the standard Karabo GUI Client";
+    karabo::TcpAdapter::QueuePtr messageQ =
+          m_tcpAdapter->getNextMessages("notification", 1, [&] { m_tcpAdapter->sendMessage(loginInfo); });
+    messageQ->pop(lastMessage);
+    const std::string& message = lastMessage.get<std::string>("message");
+    CPPUNIT_ASSERT_MESSAGE(
+          "The returned message, '" + message + "' doesn't contain the expected part, '" + expectedMsgPart + "'.",
+          message.find(expectedMsgPart) != std::string::npos);
+    int timeout = 1500;
+    // wait for the GUI server to log us out
+    while (m_tcpAdapter->connected() && timeout > 0) {
+        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        timeout -= 5;
+    }
 
     std::clog << "OK" << std::endl;
 }
