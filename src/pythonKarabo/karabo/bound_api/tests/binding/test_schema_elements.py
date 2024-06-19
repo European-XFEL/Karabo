@@ -74,6 +74,7 @@ class CircleX(ShapeX):
             .commit(),
 
             STATE_ELEMENT(expected).key("state")
+            .options(State.OFF, State.ON, State.ERROR)
             .commit(),
 
             STATE_ELEMENT(expected).key("stateN")
@@ -1051,6 +1052,8 @@ class SomeClass:
 
 def test_buildUp():
     schema = ShapeX.getSchema("CircleX", AssemblyRules())
+    states = [State.OFF.value, State.ON.value, State.ERROR.value]
+    assert schema.getOptions("state") == states
     assert schema.isAccessInitOnly("shadowEnabled") is True
     assert schema.isAccessInitOnly("radius") is True
     assert schema.isLeaf("radius") is True
