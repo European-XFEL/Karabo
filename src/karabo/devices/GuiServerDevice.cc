@@ -289,6 +289,19 @@ namespace karabo {
                   .adminAccess()
                   .commit();
 
+            BOOL_ELEMENT(expected)
+                  .key("onlyAppModeClients")
+                  .displayedName("Only Application Mode Clients")
+                  .description(
+                        "Define if this GUI Server only accepts "
+                        "connections from Application Mode clients like "
+                        "cinema and theater")
+                  .assignmentOptional()
+                  .defaultValue(false)
+                  .init()
+                  .adminAccess()
+                  .commit();
+
             STRING_ELEMENT(expected)
                   .key("dataLogManagerId")
                   .displayedName("Data Log Manager Id")
@@ -369,6 +382,7 @@ namespace karabo {
             m_serializer = BinarySerializer<Hash>::create("Bin"); // for reading
 
             m_isReadOnly = config.get<bool>("isReadOnly");
+            m_onlyAppModeClients = config.get<bool>("onlyAppModeClients");
         }
 
 
@@ -977,6 +991,18 @@ namespace karabo {
                 if (clientVersion < Version(get<std::string>("minClientVersion"))) {
                     const string errorMsg = "Your GUI client has version '" + cliVersion +
                                             "', but the minimum required is: " + get<std::string>("minClientVersion");
+                    sendLoginErrorAndDisconnect(channel, clientId, cliVersion, errorMsg);
+                    return;
+                }
+
+                bool applicationMode = hash.has("applicationMode") ? hash.get<bool>("applicationMode") : false;
+                if (m_onlyAppModeClients && !applicationMode) {
+                    // The GUI Server is configured to only accept ApplicationMode clients (e.g. cinema and
+                    // theater), but the client is a full blown GUI Client. As an onlyAppModeClients GUI
+                    // Server throttles to frequencies higher than 2Hz it could swamp a GUI Client.
+                    const string errorMsg =
+                          "This GUI Server is configured to refuse connections from the standard Karabo GUI Client. "
+                          "Please connect to another GUI Server in the topic.";
                     sendLoginErrorAndDisconnect(channel, clientId, cliVersion, errorMsg);
                     return;
                 }
