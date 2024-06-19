@@ -25,9 +25,9 @@ from karabo.common.api import State
 from karabo.native import AccessMode, Assignment
 from karabogui import icons
 from karabogui.binding.api import (
-    BindingRoot, BoolBinding, CharBinding, ChoiceOfNodesBinding, FloatBinding,
-    ImageBinding, IntBinding, ListOfNodesBinding, NodeBinding, StringBinding,
-    VectorHashBinding, WidgetNodeBinding, get_binding_value, get_editor_value)
+    BindingRoot, BoolBinding, CharBinding, FloatBinding, ImageBinding,
+    IntBinding, NodeBinding, StringBinding, VectorHashBinding,
+    WidgetNodeBinding, get_binding_value, get_editor_value)
 from karabogui.controllers.api import get_compatible_controllers
 from karabogui.indicators import (
     ERROR_COLOR_ALPHA, OK_COLOR, UNKNOWN_COLOR_ALPHA)
@@ -35,7 +35,7 @@ from karabogui.itemtypes import ConfiguratorItemType
 
 # The fixed height of rows in the configurator
 FIXED_ROW_HEIGHT = 30
-RECURSIVE_BINDING = (BindingRoot, ChoiceOfNodesBinding, NodeBinding)
+RECURSIVE_BINDING = (BindingRoot, NodeBinding)
 
 
 class ButtonState:
@@ -192,12 +192,6 @@ def get_proxy_value(index, proxy, is_edit_col=False):
         return ''
 
     binding = proxy.binding
-    if isinstance(binding, ChoiceOfNodesBinding):
-        return binding.choice or ''
-    if isinstance(binding, ListOfNodesBinding):
-        # Use the class_id to represent each node in the ListOfNodes
-        val = [node.class_id for node in get_binding_value(binding, [])]
-        return val
     if isinstance(binding, (BindingRoot, NodeBinding, VectorHashBinding)):
         return ''
 

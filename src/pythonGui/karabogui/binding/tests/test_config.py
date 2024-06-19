@@ -158,15 +158,16 @@ def test_default_values():
     # Make sure the extracted default conversion is minimal
     # It should include properties with default values, options, or node types
     config = extract_configuration(binding)
-    default_props = ('a', 'b', 'h1', 'i1', 'j1')
+    default_props = ('a', 'b', 'h1')
     for prop in default_props:
         assert prop in config, f'{prop!r} missing from config'
     assert "k1" not in config
     assert 'm' not in config
+    assert 'i1' not in config, "recursive in config"
+    assert 'j1' not in config, "recursive in config"
     # Since no user edits, an empty Hash should have been extracted
-    # XXX: ListOfNodeBinding is always extracted
     config = extract_edits(schema, binding)
-    assert config == Hash('j1', [])
+    assert config == Hash()
 
 
 def test_apply_configuration():
@@ -244,7 +245,7 @@ def test_extract_edit():
 
     # 'a' has default value is True, give 'e' an alarm low attribute
     # XXX: j1 will always be extracted
-    config = Hash('a', False, 'e', 0.0, 'j1', [])
+    config = Hash('a', False, 'e', 0.0)
     apply_project_configuration(config, binding)
 
     extracted = extract_edits(schema, binding)
@@ -263,7 +264,8 @@ def test_extract_online_edit():
 
     success, extracted = extract_online_edits(schema, binding)
     assert extracted == Hash('a', False, 'e', 0.0)
-    assert success is False
+    # True since no list of nodes evaluated anymore, before false
+    assert success is True
 
     schema = get_simple_schema()
     binding = build_binding(schema)

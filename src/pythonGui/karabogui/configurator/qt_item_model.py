@@ -26,9 +26,8 @@ from qtpy.QtGui import QBrush, QColor
 from karabo.common.api import State
 from karabo.native import AccessMode, Assignment, has_changes
 from karabogui.binding.api import (
-    BindingRoot, ChoiceOfNodesBinding, DeviceClassProxy, DeviceProxy,
-    ImageBinding, ListOfNodesBinding, NDArrayBinding, NodeBinding,
-    ProjectDeviceProxy, PropertyProxy, SlotBinding, StringBinding,
+    BindingRoot, DeviceClassProxy, DeviceProxy, ImageBinding, NDArrayBinding,
+    NodeBinding, ProjectDeviceProxy, PropertyProxy, SlotBinding, StringBinding,
     WidgetNodeBinding, get_binding_value)
 from karabogui.fonts import get_qfont
 from karabogui.indicators import (
@@ -275,7 +274,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
         flags = Qt.ItemIsEnabled | Qt.ItemIsSelectable
         # Check for draggable rows
         binding = getattr(obj, 'binding', None)
-        is_node = isinstance(binding, (ChoiceOfNodesBinding, NodeBinding))
+        is_node = isinstance(binding, NodeBinding)
         is_special = isinstance(binding, SPECIAL_BINDINGS)
         if is_special or (binding is not None and not is_node):
             flags |= Qt.ItemIsDragEnabled
@@ -313,19 +312,12 @@ class ConfigurationTreeModel(QAbstractItemModel):
         else:
             parent_obj = self.index_ref(parent)
 
+        names = get_child_names(parent_obj)
         binding = parent_obj.binding
-        if isinstance(binding, ChoiceOfNodesBinding):
-            names = [binding.choice]
-        else:
-            names = get_child_names(parent_obj)
-
         if isinstance(binding, BindingRoot):
             path = names[row]
-            if parent_obj is not self.root:
-                # This is the child of a ChoiceOfNodes
-                path = parent_obj.path + '.' + path
             obj = self.property_proxy(path)
-        elif isinstance(binding, (ChoiceOfNodesBinding, NodeBinding)):
+        elif isinstance(binding, NodeBinding):
             # Nodes have properties as children
             path = parent_obj.path + '.' + names[row]
             obj = self.property_proxy(path)
@@ -380,13 +372,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
 
         # From here, we know `proxy` is really a `PropertyProxy` instance
         binding = proxy.binding
-        if isinstance(binding, ChoiceOfNodesBinding):
-            # ChoiceOfNodes only ever appears to have one child
-            return 1
-        elif isinstance(binding, ListOfNodesBinding):
-            # XXX: ListOfNodes should be handled eventually
-            return 0
-        elif isinstance(binding, (BindingRoot, NodeBinding)):
+        if isinstance(binding, (BindingRoot, NodeBinding)):
             # Roots and nodes have children
             return len(get_child_names(proxy))
 
@@ -412,8 +398,6 @@ class ConfigurationTreeModel(QAbstractItemModel):
         state = get_device_state_string(self.root)
         online_device = isinstance(self.root, DeviceProxy)
         old_value = None if proxy.edit_value is None else proxy.value
-        if isinstance(binding, ChoiceOfNodesBinding):
-            old_value = binding.choice  # ChoiceOfNodes is "special"
         changes = has_changes(old_value, value)
         allowed = binding.is_allowed(state) or not online_device
         if allowed and changes:
@@ -498,19 +482,15 @@ class ConfigurationTreeModel(QAbstractItemModel):
             return flags
 
         binding = proxy.binding
-        if is_project:
-            if isinstance(binding, (ListOfNodesBinding, NodeBinding)):
-                return flags
+        if isinstance(binding, NodeBinding):
+            return flags
 
+        if is_project:
             writable = binding.access_mode in (AccessMode.INITONLY,
                                                AccessMode.RECONFIGURABLE)
             if writable and binding.assignment is not Assignment.INTERNAL:
                 flags |= Qt.ItemIsEditable
         else:
-            if isinstance(binding, (ChoiceOfNodesBinding, ListOfNodesBinding,
-                                    NodeBinding)):
-                return flags
-
             writable = binding.access_mode is AccessMode.RECONFIGURABLE
             if (writable and binding.is_allowed(
                     get_device_state_string(self.root))):
