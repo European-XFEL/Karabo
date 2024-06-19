@@ -26,16 +26,15 @@ from karabo.native import (
     VectorInt16, VectorInt32, VectorInt64, VectorString, VectorUInt8,
     VectorUInt16, VectorUInt32, VectorUInt64)
 from karabogui.binding.api import (
-    BoolBinding, ByteArrayBinding, CharBinding, ChoiceOfNodesBinding,
-    ComplexBinding, FloatBinding, HashBinding, Int8Binding, Int16Binding,
-    Int32Binding, Int64Binding, ListOfNodesBinding, NodeBinding, SchemaBinding,
-    SlotBinding, StringBinding, Uint8Binding, Uint16Binding, Uint32Binding,
-    Uint64Binding, VectorBoolBinding, VectorCharBinding,
-    VectorComplexDoubleBinding, VectorComplexFloatBinding, VectorDoubleBinding,
-    VectorFloatBinding, VectorHashBinding, VectorInt8Binding,
-    VectorInt16Binding, VectorInt32Binding, VectorInt64Binding,
-    VectorStringBinding, VectorUint8Binding, VectorUint16Binding,
-    VectorUint32Binding, VectorUint64Binding)
+    BoolBinding, ByteArrayBinding, CharBinding, ComplexBinding, FloatBinding,
+    HashBinding, Int8Binding, Int16Binding, Int32Binding, Int64Binding,
+    NodeBinding, SchemaBinding, SlotBinding, StringBinding, Uint8Binding,
+    Uint16Binding, Uint32Binding, Uint64Binding, VectorBoolBinding,
+    VectorCharBinding, VectorComplexDoubleBinding, VectorComplexFloatBinding,
+    VectorDoubleBinding, VectorFloatBinding, VectorHashBinding,
+    VectorInt8Binding, VectorInt16Binding, VectorInt32Binding,
+    VectorInt64Binding, VectorStringBinding, VectorUint8Binding,
+    VectorUint16Binding, VectorUint32Binding, VectorUint64Binding)
 
 
 def get_all_props_schema():
@@ -146,7 +145,6 @@ ALL_PROPERTIES_MAP = {
     'c1': VectorStringBinding, 'd1': VectorUint16Binding,
     'e1': VectorUint32Binding, 'f1': VectorUint64Binding,
     'g1': VectorUint8Binding, 'h1': NodeBinding,
-    'i1': ChoiceOfNodesBinding, 'j1': ListOfNodesBinding,
     'k1': SlotBinding, 'mm': ByteArrayBinding,
 }
 
