@@ -60,7 +60,7 @@ void exportPyUtilStateElement(py::module_& m) {
           "options",
           [](StateElement& self, py::args args) {
               std::vector<State> states;
-              for (unsigned int i = 1; i < py::len(args); ++i) {
+              for (unsigned int i = 0; i < py::len(args); ++i) {
                   const auto state = args[i].attr("name").cast<std::string>();
                   states.push_back(State::fromString(state));
               }
