@@ -193,6 +193,7 @@ version (string) (GUI Client version)
 [2.16.0]_ oneTimeToken (string) (Sent for authenticated logins; can be omitted for authenticated logins since 2.20.0; more details on description of ``loginInformation`` above)
 version (string) (GUI Client version)
 [2.16.0]_ clientUserId (string) (Sent for non-authenticated logins)
+[2.20.0]_ application (boolean) (False for the standard GUI Client; True for its variants like Karabo Cinema and Karabo Theater)
 
 *reconfigure*
 deviceId (string)
