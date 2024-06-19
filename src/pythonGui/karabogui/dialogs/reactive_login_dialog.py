@@ -112,10 +112,13 @@ class AccessCodeWidget(QWidget):
         super().__init__(parent=parent)
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
+        self.setObjectName("AccessCodeWidget")
 
         self.cells = []
-        for _ in range(6):
+        for i in range(6):
+            object_name = f"Cell_{i}"
             cell = Cell(parent=self)
+            cell.setObjectName(object_name)
             cell.setFixedWidth(30)
             cell.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
             cell.setAlignment(Qt.AlignCenter)
