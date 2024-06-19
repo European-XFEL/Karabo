@@ -148,7 +148,9 @@ def test_authReply(gui_app, mocker):
 def test_access_widget(gui_app):
     widget = AccessCodeWidget()
     assert widget.get_access_code() == ""
-
+    assert widget.objectName() == "AccessCodeWidget"
+    for i, cell in enumerate(widget.cells):
+        assert cell.objectName() == f"Cell_{i}"
     widget.cells[0].setText("4")
     assert widget.get_access_code() == "4"
     assert widget.focusWidget() == widget.cells[1]
