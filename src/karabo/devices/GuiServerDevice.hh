@@ -177,6 +177,8 @@ namespace karabo {
             // method of the GuiServer.
             boost::shared_ptr<GuiServerTemporarySessionManager> m_tempSessionManager;
 
+            bool m_onlyAppModeClients;
+
            public:
             KARABO_CLASSINFO(GuiServerDevice, "GuiServerDevice", "karabo-" + karabo::util::Version::getVersion())
 
