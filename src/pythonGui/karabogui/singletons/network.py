@@ -631,7 +631,7 @@ class Network(QObject):
         # the ClientID with its new key.
         login_info["clientId"] = const.KARABO_CLIENT_ID
         login_info["version"] = const.GUI_VERSION
-        login_info["application"] = const.APPLICATION_MODE
+        login_info["applicationMode"] = const.APPLICATION_MODE
         if krb_access.is_authenticated():
             login_info["oneTimeToken"] = krb_access.ONE_TIME_TOKEN
             # For authenticated logins, don't set the "clientUserId" - the
