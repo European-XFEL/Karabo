@@ -1021,6 +1021,89 @@ void SignalSlotable_Test::_testDisconnectAsync() {
     // No need to test non-existing slot - it is exactly the same as a non-connected slot
 }
 
+void SignalSlotable_Test::testDisconnectConnectAsyncStress() {
+    _loopFunction(__FUNCTION__, [this] { this->_testDisconnectConnectAsyncStress(); });
+}
+
+
+void SignalSlotable_Test::_testDisconnectConnectAsyncStress() {
+    // Stress test a disconnect followed immediately by a connect: We should be connected all the times!
+    auto signaler = boost::make_shared<SignalSlotable>("signalInstance");
+    signaler->registerSignal<int>("signal");
+    signaler->start();
+
+    auto slotter = boost::make_shared<SignalSlotable>("slotInstance");
+    bool slotCalled = false;
+    auto slotFunc = [&slotCalled]() { slotCalled = true; };
+    slotter->registerSlot(slotFunc, "slot");
+    slotter->start();
+
+    // Start connected
+    CPPUNIT_ASSERT(signaler->connect("signalInstance", "signal", "slotInstance", "slot"));
+
+    for (int i = 0; i < 100; ++i) {
+        // Alternate who calls connect/disconnect:
+        // Internal code path may differ for "slotInstance" being caller or not
+        SignalSlotable::Pointer& connectorSigSlot = (i % 2 == 0 ? signaler : slotter);
+
+        // Disconnect handlers
+        bool disconnectSuccess = false;
+        auto disconnectSuccessHandler = [&disconnectSuccess]() { disconnectSuccess = true; };
+        bool disconnectFailed = false;
+        std::string disconnectFailedMsg;
+        auto disconnectFailedHandler = [&disconnectFailed, &disconnectFailedMsg]() {
+            try {
+                throw;
+            } catch (const karabo::util::SignalSlotException& e) {
+                disconnectFailedMsg = e.what();
+            } catch (...) { // Avoid that an exception leaks out and crashes the test program.
+                disconnectFailedMsg = "unknown exception";
+            }
+            disconnectFailed = true; // set after disconnectFailedMsg since loop checks this
+        };
+
+        // Connect handlers
+        bool connectSuccess = false;
+        auto connectSuccessHandler = [&connectSuccess]() { connectSuccess = true; };
+        bool connectFailed = false;
+        std::string connectFailedMsg;
+        auto connectFailedHandler = [&connectFailed, &connectFailedMsg]() {
+            try {
+                throw;
+            } catch (const karabo::util::SignalSlotException& e) {
+                connectFailedMsg = e.what();
+            } catch (...) { // Avoid that an exception leaks out and crashes the test program.
+                connectFailedMsg = "unknown exception";
+            }
+            connectFailed = true; // set after connectFailedMsg since loop checks this
+        };
+
+        // Now call both immediately after each other to run into critical situations
+        connectorSigSlot->asyncDisconnect("signalInstance", "signal", "slotInstance", "slot", disconnectSuccessHandler,
+                                          disconnectFailedHandler);
+        connectorSigSlot->asyncConnect("signalInstance", "signal", "slotInstance", "slot", connectSuccessHandler,
+                                       connectFailedHandler);
+        for (int i = 0; i < numWaitIterations; ++i) {
+            if ((disconnectSuccess || disconnectFailed) && (connectSuccess || connectFailed)) break;
+            boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerWaitIterationMs));
+        };
+        // Both, disconnect and connect, succeeded (show failure message if not)
+        CPPUNIT_ASSERT_MESSAGE(disconnectFailedMsg, disconnectSuccess);
+        CPPUNIT_ASSERT_MESSAGE(connectFailedMsg, connectSuccess);
+        CPPUNIT_ASSERT_EQUAL(std::string(), disconnectFailedMsg);
+        CPPUNIT_ASSERT_EQUAL(std::string(), connectFailedMsg);
+
+        // Now proof connection by emitting signal
+        signaler->emit("signal", 42);
+        for (int i = 0; i < numWaitIterations; ++i) {
+            if (slotCalled) break;
+            boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerWaitIterationMs));
+        };
+        CPPUNIT_ASSERT_MESSAGE(toString(i), slotCalled);
+        slotCalled = false; // reset for next loop
+    }
+}
+
 void SignalSlotable_Test::testMethod() {
     _loopFunction(__FUNCTION__, [this] { this->_testMethod(); });
 }
