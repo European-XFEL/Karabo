@@ -118,6 +118,12 @@ class GuiServer_Test : public CPPUNIT_NS::TestFixture {
      */
     void testTemporarySessionExpiration();
 
+    /**
+     * @brief Checks that a GUI Server that only accepts Application Mode clients refuses
+     * logins from standard GUI Clients.
+     */
+    void testOnlyAppModeClients();
+
     void testDisconnect();
 
     karabo::core::DeviceServer::Pointer m_deviceServer;
