@@ -2086,12 +2086,6 @@ namespace karabo {
             const bool connectionWasKnown =
                   removeStoredConnection(signalInstanceId, signalFunction, slotInstanceId, slotFunction);
 
-            // "fire-and-forget".  Compatibility considerations:
-            // Slot "slotUnsubscribeRemoteSignal" was introduced in karaboFramework 2.10.0
-            // The message resulted from this "call" will be ignored at best if receiving in
-            // older version of karabo.  In future, this 'call' can be replaced by 'request'
-            call(slotInstanceId, "slotUnsubscribeRemoteSignal", signalInstanceId, signalFunction);
-
             // Prepare lambdas as handlers for async request to slotDisconnectFromSignal:
             const std::string instanceId(
                   this->getInstanceId()); // copy for lambda since that should not copy a bare 'this'
@@ -2119,23 +2113,57 @@ namespace karabo {
                 }
             };
 
-            // Now send the request,
-            // potentially giving a non-default timeout and adding a meaningful log message for failures without
-            // handler.
-            auto requestor =
-                  request(signalInstanceId, "slotDisconnectFromSignal", signalFunction, slotInstanceId, slotFunction);
-            if (timeout > 0) requestor.timeout(timeout);
-            requestor.receiveAsync<bool>(
-                  innerSuccessHandler, failureHandler ? failureHandler : [errorMsg]() {
-                      try {
-                          throw;
-                      } catch (const karabo::util::TimeoutException&) {
-                          Exception::clearTrace();
-                          KARABO_LOG_FRAMEWORK_WARN << errorMsg << " - timeout";
-                      } catch (const std::exception& e) {
-                          KARABO_LOG_FRAMEWORK_WARN << errorMsg << " - " << e.what();
+            const boost::function<void(const bool&)> successUnsubRemote =
+                  [this, signalInstanceId, signalFunction, slotInstanceId, slotFunction, timeout,
+                   innerSuccessHandler{std::move(innerSuccessHandler)}, failureHandler,
+                   errorMsg](const bool& unsubRemoteOk) {
+                      if (unsubRemoteOk) {
+                          // Now send the request to signal side,
+                          // potentially giving a non-default timeout and adding a meaningful log message for failures
+                          // without handler.
+                          auto requestor = request(signalInstanceId, "slotDisconnectFromSignal", signalFunction,
+                                                   slotInstanceId, slotFunction);
+                          if (timeout > 0) requestor.timeout(timeout);
+                          requestor.receiveAsync<bool>(
+                                innerSuccessHandler, failureHandler ? failureHandler : [errorMsg]() {
+                                    try {
+                                        throw;
+                                    } catch (const karabo::util::TimeoutException&) {
+                                        Exception::clearTrace();
+                                        KARABO_LOG_FRAMEWORK_WARN << errorMsg << " - timeout";
+                                    } catch (const std::exception& e) {
+                                        KARABO_LOG_FRAMEWORK_WARN << errorMsg << " - " << e.what();
+                                    }
+                                });
+                      } else {
+                          callErrorHandler(failureHandler, errorMsg + " -- slotUnsubscribeRemoteSignal failed");
                       }
-                  });
+                  };
+
+            if (m_instanceId == slotInstanceId) {
+                // Shortcut for the usual case that we connect ourselves to a signal
+                // If ever this shortcut is removed, do the same for the equivalent shortcut in asyncConnect,
+                // otherwise order of unsubscription subscription could go wrong on Amqp level if sayncConnect
+                // comes immediately after asyncDisconnect.
+                auto onComplete = [failureHandler, // move from const reference would not have any effect
+                                   success{std::move(successUnsubRemote)},
+                                   signalFunction](const boost::system::error_code& ec) {
+                    if (ec) {
+                        std::ostringstream oss;
+                        oss << "Karabo disconnect failure for " << signalFunction << ", code #" << ec.value() << " -- "
+                            << ec.message();
+                        callErrorHandler(failureHandler, oss.str());
+                    } else {
+                        success(true);
+                    }
+                };
+                m_connection->subscribeToRemoteSignalAsync(signalInstanceId, signalFunction, onComplete);
+            } else {
+                auto requestorRemote =
+                      request(slotInstanceId, "slotUnsubscribeRemoteSignal", signalInstanceId, signalFunction);
+                if (timeout > 0) requestorRemote.timeout(timeout);
+                requestorRemote.receiveAsync<bool>(successUnsubRemote, failureHandler);
+            }
         }
 
 
