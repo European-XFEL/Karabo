@@ -361,8 +361,10 @@ namespace karabo {
               m_deviceInitTimer(EventLoop::getIOService()),
               m_networkStatsTimer(EventLoop::getIOService()),
               m_checkConnectionTimer(EventLoop::getIOService()),
+              m_isReadOnly(config.get<bool>("isReadOnly")),
               m_timeout(config.get<int>("timeout")),
-              m_authClient(config.get<std::string>("authServer")) {
+              m_authClient(config.get<std::string>("authServer")),
+              m_onlyAppModeClients(config.get<bool>("onlyAppModeClients")) {
             KARABO_INITIAL_FUNCTION(initialize)
 
             KARABO_SLOT(slotLoggerMap, Hash /*loggerMap*/)
@@ -380,9 +382,6 @@ namespace karabo {
             h.set("serializationType", "binary"); // Will lead to binary header hashes
             m_dataConnection = Connection::create("Tcp", h);
             m_serializer = BinarySerializer<Hash>::create("Bin"); // for reading
-
-            m_isReadOnly = config.get<bool>("isReadOnly");
-            m_onlyAppModeClients = config.get<bool>("onlyAppModeClients");
         }
 
 
@@ -998,8 +997,7 @@ namespace karabo {
                 bool applicationMode = hash.has("applicationMode") ? hash.get<bool>("applicationMode") : false;
                 if (m_onlyAppModeClients && !applicationMode) {
                     // The GUI Server is configured to only accept ApplicationMode clients (e.g. cinema and
-                    // theater), but the client is a full blown GUI Client. As an onlyAppModeClients GUI
-                    // Server throttles to frequencies higher than 2Hz it could swamp a GUI Client.
+                    // theater), but the client is a full blown GUI Client.
                     const string errorMsg =
                           "This GUI Server is configured to refuse connections from the standard Karabo GUI Client. "
                           "Please connect to another GUI Server in the topic.";
