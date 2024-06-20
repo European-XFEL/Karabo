@@ -196,13 +196,12 @@ void GuiServer_Test::appTestRunner() {
           Hash("deviceId", TEST_GUI_SERVER_ID,
                "port", 44450,
                "minClientVersion", "2.20.0rc2",
-               "onlyAppModeClients", true,
-               "timeout", 0),
+               "onlyAppModeClients", true),
           KRB_TEST_MAX_TIMEOUT);
     // clang-format on
+    CPPUNIT_ASSERT_MESSAGE(success_n.second, success_n.first);
 
     testOnlyAppModeClients();
-
 
     if (m_tcpAdapter->connected()) {
         m_tcpAdapter->disconnect();
@@ -1757,6 +1756,8 @@ void GuiServer_Test::testOnlyAppModeClients() {
 
     resetTcpConnection();
 
+    // Checks that a login from a non applicationMode client is rejected by a GUI Server set to only
+    // accept applicationMode clients.
     Hash lastMessage;
     const string expectedMsgPart = "configured to refuse connections from the standard Karabo GUI Client";
     karabo::TcpAdapter::QueuePtr messageQ =
@@ -1766,12 +1767,24 @@ void GuiServer_Test::testOnlyAppModeClients() {
     CPPUNIT_ASSERT_MESSAGE(
           "The returned message, '" + message + "' doesn't contain the expected part, '" + expectedMsgPart + "'.",
           message.find(expectedMsgPart) != std::string::npos);
+
     int timeout = 1500;
     // wait for the GUI server to log us out
     while (m_tcpAdapter->connected() && timeout > 0) {
         boost::this_thread::sleep(boost::posix_time::milliseconds(5));
         timeout -= 5;
     }
+    CPPUNIT_ASSERT_MESSAGE("GUI Server should have closed the connection after sending the error notification",
+                           !m_tcpAdapter->connected());
+
+    resetTcpConnection();
+
+    // Checks that a login from an applicationMode client is accepted by a GUI Server set to only accept
+    // applicationMode clients. A successful login (no auth in this case) is followed by the GUI Server
+    // sending the system topology to the client.
+    Hash loginInfoAppMode("type", "login", "username", "alice", "applicationMode", true, "version", "2.20.0");
+    CPPUNIT_ASSERT_NO_THROW(messageQ = m_tcpAdapter->getNextMessages(
+                                  "systemTopology", 1, [&] { m_tcpAdapter->sendMessage(loginInfoAppMode); }));
 
     std::clog << "OK" << std::endl;
 }
