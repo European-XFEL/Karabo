@@ -45,6 +45,7 @@ class SignalSlotable_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testConnectAsync);
     CPPUNIT_TEST(testConnectAsyncMulti);
     CPPUNIT_TEST(testDisconnectAsync);
+    CPPUNIT_TEST(testDisconnectConnectAsyncStress);
     CPPUNIT_TEST(testAsyncReply);
     CPPUNIT_TEST(testAutoConnectSignal);
     CPPUNIT_TEST(testAutoConnectSlot);
@@ -73,6 +74,7 @@ class SignalSlotable_Test : public CPPUNIT_NS::TestFixture {
     void testConnectAsync();
     void testConnectAsyncMulti();
     void testDisconnectAsync();
+    void testDisconnectConnectAsyncStress();
     void testAsyncReply();
     void testAutoConnectSignal();
     void testAutoConnectSlot();
@@ -89,6 +91,7 @@ class SignalSlotable_Test : public CPPUNIT_NS::TestFixture {
     void _testConnectAsync();
     void _testConnectAsyncMulti();
     void _testDisconnectAsync();
+    void _testDisconnectConnectAsyncStress();
     void _testAsyncReply();
     void _testAutoConnectSignal();
     void _testAutoConnectSlot();
