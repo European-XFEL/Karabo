@@ -160,7 +160,7 @@ namespace karabo {
             std::set<std::string> m_projectManagers;
             mutable boost::shared_mutex m_projectManagerMutex;
 
-            bool m_isReadOnly;
+            const bool m_isReadOnly;
             static const std::unordered_set<std::string> m_writeCommands;
             static const std::unordered_map<std::string, karabo::util::Version> m_minVersionRestrictions;
             /// In reported failure reasons, this delimiter comes between short message and details like a trace
@@ -177,7 +177,7 @@ namespace karabo {
             // method of the GuiServer.
             boost::shared_ptr<GuiServerTemporarySessionManager> m_tempSessionManager;
 
-            bool m_onlyAppModeClients;
+            const bool m_onlyAppModeClients;
 
            public:
             KARABO_CLASSINFO(GuiServerDevice, "GuiServerDevice", "karabo-" + karabo::util::Version::getVersion())
