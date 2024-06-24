@@ -98,8 +98,9 @@ namespace karabo {
                   .description("Maximum duration of a temporary session.\nMay be delayed by up to " +
                                toString(CHECK_TEMPSESSION_EXPIRATION_INTERVAL_SECS) + " seconds.")
                   .assignmentOptional()
-                  .defaultValue(45 * 60)
+                  .defaultValue(60 * 60) // 1 hour
                   .minInc(2 * CHECK_TEMPSESSION_EXPIRATION_INTERVAL_SECS)
+                  .maxInc(5 * 60 * 60) // 5 hours
                   .unit(Unit::SECOND)
                   .init()
                   .commit();
