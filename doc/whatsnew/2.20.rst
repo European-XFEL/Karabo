@@ -1,6 +1,49 @@
 ..
   Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 
+
+
+***************************
+What's New in Karabo 2.20.1
+***************************
+
+Release date is **June 24 2024*.
+
+This release addresses a significant bug in the refactored bound `STATE_ELEMENT`
+for option declaration. Additionally, the initial access level for GUI clients
+is now correctly set when switching between authenticated and non-authenticated GUI servers. Furthermore, clients now notify the GUI server if they are in 'applicationMode.'
+
+The GUI server will now fully unregister from pipeline data if a subscribed
+device goes offline, a refactoring expected to resolve pipeline visibility
+issues in the GUI client. Lastly, the C++ signal slotable has received a major
+bug fix for the ordering of signal connection and disconnection.
+
+
+Detailed Original Additions
++++++++++++++++++++++++++++
+
+### Bug Fixes
+
+- *(Bound)* Fix STATE_ELEMENT options ([aa75c8f](https://git.xfel.eu/Karabo/Framework/-/commit/aa75c8f7580d5fb7a6893ecd0389012cf8210236))
+- *(C++)* Protect InputChannel against bad data, do not trust tcpChannel->isOpen() ([47c0508](https://git.xfel.eu/Karabo/Framework/-/commit/47c0508518e5e75ec3aa55b6c2eca71ea5fd6294))
+- *(C++)* Gui server unregisters from channel monitor if device gone ([f6ac5d4](https://git.xfel.eu/Karabo/Framework/-/commit/f6ac5d4e48baec8552b5a7dfd84a8657a929ecb8))
+- *(C++)* Ensure same order of broker and Karabo signal treatment for asyncConnect and asyncDisconnect ([9aa2045](https://git.xfel.eu/Karabo/Framework/-/commit/9aa204554d273d4dfb2728cbdfa295a13d63faf8))
+- *(GUI)* Fix initial high access level ([ac1f673](https://git.xfel.eu/Karabo/Framework/-/commit/ac1f6737000d718f4315cd753f974f92ffb4da25))
+- *(GUI)* Login dialog: objectName for access code widget. ([e4163cf](https://git.xfel.eu/Karabo/Framework/-/commit/e4163cf76c7748f2c4656c65c929df6c318d3c29))
+
+
+### Features
+
+- *(C++)* Exception from type mapping now states which type failed ([a425698](https://git.xfel.eu/Karabo/Framework/-/commit/a425698099b72fa9c1994855f4332983c9250255))
+- *(DOC)* Add extensive whats new features for 2.20.X ([ee76bee](https://git.xfel.eu/Karabo/Framework/-/commit/ee76beedded78b13c80a14a20f75e736296f2280))
+- *(GUI)* Object names for buttons in the Wizard. ([7bc2fae](https://git.xfel.eu/Karabo/Framework/-/commit/7bc2fae645d9f5dd2e465291927b516ecc33a8cc))
+- *(GUI)* Send application information to the gui server ([bcae280](https://git.xfel.eu/Karabo/Framework/-/commit/bcae280a8d22a222b7aa4d9e9d2aabd00c9513fe))
+
+### Refactor
+
+- *(GUI)* Use applicationMode in network ([42dd7c9](https://git.xfel.eu/Karabo/Framework/-/commit/42dd7c9266fd5cbd8312991f8748c3a27fa02eff))
+
+
 ***************************
 What's New in Karabo 2.20.0
 ***************************
