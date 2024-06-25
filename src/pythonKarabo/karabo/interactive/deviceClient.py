@@ -726,6 +726,10 @@ class DeviceClient:
         """Executes a command"""
         return self.__client.execute(instanceId, command)
 
+    def executeN(self, instanceId, command, *args):
+        """Executes a command with args and return values"""
+        return self.__client.executeN(instanceId, command, *args)
+
     def executeNoWait(self, deviceId, command):
         """Executes a command without waiting"""
         self.__client.executeNoWait(deviceId, command)

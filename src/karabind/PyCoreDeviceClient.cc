@@ -812,7 +812,7 @@ void exportPyCoreDeviceClient(py::module_& m) {
                             break;
                         }
                         default:
-                            throw KARABO_PARAMETER_EXCEPTION("Execute supports slots with up to 4 parameters");
+                            throw KARABO_PARAMETER_EXCEPTION("'executeN' supports slots with up to 4 parameters");
                     }
 
                     // Note: currently py::make_tuple can make tuples with cardinalities varying from 0 to 10.
@@ -847,7 +847,7 @@ void exportPyCoreDeviceClient(py::module_& m) {
                             break;
                         }
                         default:
-                            throw KARABO_PARAMETER_EXCEPTION("Execute supports slot replies with up to 4 arguments");
+                            throw KARABO_PARAMETER_EXCEPTION("'executeN' supports slot replies with up to 4 arguments");
                     }
                 },
                 py::arg("instanceId"), py::arg("functionName"), py::kw_only(), py::arg("timeoutInSeconds") = 3,
