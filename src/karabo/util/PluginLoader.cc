@@ -136,11 +136,21 @@ namespace karabo {
                             if (m_loadedPlugins.find(plugin) == m_loadedPlugins.end()) {
                                 void* libHandle = dlopen(plugin.c_str(), RTLD_NOW);
                                 if (libHandle == 0) {
-                                    // Using plain output here as KARABO_LOG_[...] is potentially
-                                    // not active at the time this message is generated and anyway comes from
-                                    // karabo/log/... which should not be included here in karabo/util/...
-                                    cerr << "ERROR Trouble loading plugin " << it->path().filename() << ":\n\t"
-                                         << string(dlerror()) << endl; // dlerror() != 0 since dlopen above failed
+                                    const string loadingError =
+                                          string(dlerror()); // dlerror() != 0 since dlopen above failed
+                                    if (loadingError.find("invalid ELF header") == string::npos &&
+                                        loadingError.find("position independent executable") == string::npos) {
+                                        // The file whose loading failed was a valid ELF file and was not an executable;
+                                        // most likely it was a valid shared library and the failure was unexpected. The
+                                        // error should be communicated.
+                                        // Using plain output here as KARABO_LOG_[...] is potentially
+                                        // not active at the time this message is generated and anyway comes from
+                                        // karabo/log/... which should not be included here in karabo/util/...
+                                        cerr << "ERROR Trouble loading plugin " << it->path().filename() << ":\n\t"
+                                             << loadingError << endl;
+                                    }
+                                    // Log the failure to load the file to avoid any further retry that would also
+                                    // fail.
                                     m_failedPlugins.push_back(plugin);
                                 } else {
                                     m_loadedPlugins[it->path()] = libHandle;
