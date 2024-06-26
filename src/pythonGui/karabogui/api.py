@@ -35,6 +35,7 @@ from karabogui.binding.api import (
     get_native_min_max, has_min_max_attributes, is_signed_vector_integer,
     is_unsigned_vector_integer, is_vector_integer)
 from karabogui.binding.proxy import DeviceProxy, PropertyProxy
+from karabogui.const import WIDGET_MIN_HEIGHT
 from karabogui.controllers.api import (
     DIMENSIONS, BaseArrayGraph, BaseBindingController, BaseLineEditController,
     BindingValidator, ListValidator, SimpleValidator, add_unit_label,
