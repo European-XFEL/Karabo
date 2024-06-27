@@ -984,6 +984,13 @@ namespace karabo {
             void slotBroadcast(const karabo::util::Hash& info);
 
             /**
+             * Slot to provide scene
+             *
+             * @param info Hash with key "name" that provides string identifying which scene
+             */
+            void requestScene(const karabo::util::Hash& info);
+
+            /**
              * Helper for 'slotDumpToLog' and 'slotDumpDebugInfo'
              */
             karabo::util::Hash getDebugInfo(const karabo::util::Hash& info);
