@@ -102,6 +102,11 @@ def cmake_settings(build_type: str,
         "CMAKE_TOOLCHAIN_FILE": cmake_toolchain_file
     }
 
+    # Synchronizes with the behavior of auto_build_all.sh to use Ninja as the
+    # generator if Ninja is available.
+    if shutil.which("ninja") is not None:
+        cmake_config_settings["CMAKE_GENERATOR"] = "Ninja"
+
     return {
         "cmake.sourceDirectory": f"{base_dir}/src",
         "cmake.buildDirectory": cmake_build_directory,
@@ -211,9 +216,11 @@ if __name__ == "__main__":
                     nargs="?", default="Debug",
                     help="Build type (default is 'Debug')")
     ap.add_argument("--skipBuildUnitTests", action="store_true",
-                    help="Skip building of C++ unit tests?")
+                    help="Skip building of C++ unit tests? "
+                    "(default is to build)")
     ap.add_argument("--skipBuildIntegrationTests", action="store_true",
-                    help="Skip building of C++ integration tests?")
+                    help="Skip building of C++ integration tests? "
+                    "(default is to build)")
     ap.add_argument("--buildLongTests", action="store_true",
                     help="Build C++ long-running tests? (default is to skip)")
     cmd_args = ap.parse_args()
