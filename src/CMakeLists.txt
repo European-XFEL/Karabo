@@ -57,7 +57,7 @@ project(
 
 message(
     STATUS
-    "Using cmake ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}.${CMAKE_PATCH_VERSION}"
+    "Using cmake ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}.${CMAKE_PATCH_VERSION} (${CMAKE_GENERATOR})"
 )
 
 include("cmake/cxx-options.cmake")
