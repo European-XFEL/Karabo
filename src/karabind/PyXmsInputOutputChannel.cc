@@ -376,16 +376,7 @@ returned, the data will be dropped.
                    })
 
               .def(
-                    "read",
-                    [](const InputChannel::Pointer& self, size_t idx) {
-                        Hash::Pointer hash;
-                        {
-                            // Release the GIL for the potentially blocking read() call.
-                            py::gil_scoped_release release;
-                            hash = self->read(idx);
-                        }
-                        return py::cast(std::move(hash));
-                    },
+                    "read", [](const InputChannel::Pointer& self, size_t idx) { return self->read(idx); },
                     py::arg("idx"))
 
               .def("size", &InputChannel::size)
