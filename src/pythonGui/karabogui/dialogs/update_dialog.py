@@ -120,7 +120,7 @@ def install_package(package: str, version: str) -> str:
     try:
         output = check_output(
             [sys.executable, "-m", "pip", "install", f"{package}=={version}",
-             "--ignore-installed", "--disable-pip-version-check",
+             "--ignore-installed", "--user", "--disable-pip-version-check",
              "--index-url", _PYPI_INDEX],
             stderr=STDOUT)
         # Reload the entry points
@@ -284,7 +284,7 @@ class UpdateDialog(QDialog):
         """Create a QProcess to update to the latest tag.
 
         This process' signals are connected to the given callbacks."""
-        cmd = (f"pip install {package}=={tag} "
+        cmd = (f"pip install {package}=={tag} --user "
                f"--ignore-installed --index-url {_PYPI_INDEX} "
                "--disable-pip-version-check")
         self._start_process(cmd)
