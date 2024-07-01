@@ -564,6 +564,50 @@ void InputOutputChannel_Test::testConcurrentConnect() {
     }
 }
 
+void InputOutputChannel_Test::testInputHandler() {
+    // Setup output channel
+    OutputChannel::Pointer output = Configurator<OutputChannel>::create("OutputChannel", Hash(), 0);
+    output->setInstanceIdAndName("outputChannel", "output");
+    output->initialize(); // needed due to int == 0 argument above
+
+    // Setup input channel
+    const std::string outputChannelId(output->getInstanceId() + ":output");
+    const Hash cfg("connectedOutputChannels", std::vector<std::string>(1, outputChannelId));
+    InputChannel::Pointer input = Configurator<InputChannel>::create("InputChannel", cfg);
+    input->setInstanceId("inputChannel");
+    Hash::Pointer hashRead;
+    input->registerInputHandler([&hashRead](const InputChannel::Pointer& inputPtr) { hashRead = inputPtr->read(0); });
+
+    // Connect - since handler passed to 'connect' fires already before output proessed "hello" message,
+    //           we directly wait until we know that OutputChannel has us registered
+    Hash outputInfo(output->getInformation());
+    outputInfo.set("outputChannelString", outputChannelId);
+    outputInfo.set("memoryLocation", "local");
+    input->connect(outputInfo); // connectHandler);
+    int timeout = 1000;
+    while (timeout > 0) {
+        if (output->hasRegisteredCopyInputChannel("inputChannel")) break;
+        timeout -= 2;
+        boost::this_thread::sleep(boost::posix_time::milliseconds(2));
+    }
+    CPPUNIT_ASSERT_GREATEREQUAL(0, timeout);
+
+    // Send data
+    output->write(Hash("data", 42));
+    output->asyncUpdate();
+
+    // Wait until inputHandler got the data and stored it - take care that teh expected data is in it
+    timeout = 1000;
+    while (timeout > 0) {
+        if (hashRead) break;
+        timeout -= 2;
+        boost::this_thread::sleep(boost::posix_time::milliseconds(2));
+    }
+    CPPUNIT_ASSERT(hashRead->has("data"));
+    CPPUNIT_ASSERT_EQUAL(42, hashRead->get<int>("data"));
+}
+
+
 void InputOutputChannel_Test::testOutputPreparation() {
     // test an OutputChannel with defaults
     {
