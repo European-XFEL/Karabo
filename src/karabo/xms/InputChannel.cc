@@ -708,17 +708,16 @@ namespace karabo {
             m_reverseMetaDataMap.clear();
             unsigned int i = 0;
             for (auto it = m_metaDataList.cbegin(); it != m_metaDataList.cend();) {
-                Hash::Pointer& data = m_dataList[i];
-                if (!data) data = boost::make_shared<Hash>(); // previous items cleared in triggerIOEvent
+                m_dataList[i] = boost::make_shared<Hash>();
                 try {
-                    Memory::read(*data, i, m_channelId, m_activeChunk);
+                    Memory::read(*(m_dataList[i]), i, m_channelId, m_activeChunk);
                 } catch (const karabo::util::Exception& e) {
                     // Simply log and skip bad data. Likely corrupt data that cannot be deserialised (How that?)
                     KARABO_LOG_FRAMEWORK_ERROR << "Failed to read (deserialize) a data item from " << it->getSource()
                                                << ", so skip it: " << e.userFriendlyMsg();
-                    data->clear();
+                    m_dataList[i].reset();
                     m_dataList.resize(m_dataList.size() - 1);
-                    it = m_metaDataList.erase(it); // Not efficient on vector, but so rarely happens
+                    it = m_metaDataList.erase(it); // Not efficient on vector, but happens so rarely...
                     continue;
                 }
                 m_sourceMap.emplace(it->getSource(), i);
@@ -823,8 +822,8 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_ERROR << "Exception from input/data/endOfStream handler for instance '"
                                            << m_instanceId << "': " << e.what();
             }
-            // Clear cached data (but keep Hash for performance)
-            for (Hash::Pointer& data : m_dataList) data->clear();
+            // Clear cached data - though m_inputhandler might have stored one Hash::Pointer somewhere.
+            m_dataList.clear();
 
             if (notifyForNextRead) {
                 // After swapping the pots, the new active one is ready...
