@@ -419,7 +419,9 @@ def _add_server(project_controller, parent=None):
 
 def _shutdown_servers(project_controller, parent=None):
     """Shutdown all servers in a project group"""
-    ask = "Are you sure you want to shutdown all servers?"
+    project = project_controller.model
+    ask = (f"Are you sure you want to shutdown all servers of project "
+           f"'{project.simple_name}'?")
     msg_box = QMessageBox(QMessageBox.Question, "Shutdown servers",
                           ask, QMessageBox.Yes | QMessageBox.No,
                           parent=parent)
@@ -429,7 +431,6 @@ def _shutdown_servers(project_controller, parent=None):
     if msg_box.exec() != QMessageBox.Yes:
         return
 
-    project = project_controller.model
     for server in project.servers:
         if server.status is not ProxyStatus.ONLINE:
             continue
