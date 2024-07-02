@@ -140,7 +140,7 @@ class ScenePanel(BasePanelWidget):
             self.ac_selection_tool.trigger)
 
         home_tool_bar = ToolBar(parent=self)
-        ac_show_editor = QAction(icons.homeEdit, "&Show Editor", self)
+        ac_show_editor = QAction(icons.homeEdit, "&Home", self)
         ac_show_editor.triggered.connect(self.show_editor)
         home_tool_bar.addSeparator()
         home_tool_bar.addAction(ac_show_editor)
