@@ -1033,8 +1033,10 @@ void SignalSlotable_Test::_testDisconnectConnectAsyncStress() {
     signaler->start();
 
     auto slotter = boost::make_shared<SignalSlotable>("slotInstance");
-    bool slotCalled = false;
-    auto slotFunc = [&slotCalled]() { slotCalled = true; };
+    // Capture ptr by value instead pure bool b reference since we potentially have two slot calls, but the first
+    // arriving one will end the test.
+    auto slotCalled = std::make_shared<bool>(false);
+    auto slotFunc = [slotCalled]() { *slotCalled = true; };
     slotter->registerSlot(slotFunc, "slot");
     slotter->start();
 
@@ -1044,7 +1046,8 @@ void SignalSlotable_Test::_testDisconnectConnectAsyncStress() {
     for (int i = 0; i < 100; ++i) {
         // Alternate who calls connect/disconnect:
         // Internal code path may differ for "slotInstance" being caller or not
-        SignalSlotable::Pointer& connectorSigSlot = (i % 2 == 0 ? signaler : slotter);
+        const bool signalerConnected = (i % 2 == 0);
+        SignalSlotable::Pointer& connectorSigSlot = (signalerConnected ? signaler : slotter);
 
         // Disconnect handlers
         bool disconnectSuccess = false;
@@ -1095,12 +1098,24 @@ void SignalSlotable_Test::_testDisconnectConnectAsyncStress() {
 
         // Now proof connection by emitting signal
         signaler->emit("signal", 42);
-        for (int i = 0; i < numWaitIterations; ++i) {
-            if (slotCalled) break;
+        for (int i = 0; i < 2 * numWaitIterations; ++i) { // factor 2 to give extra time...
+            if (*slotCalled) break;
             boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerWaitIterationMs));
         };
-        CPPUNIT_ASSERT_MESSAGE(toString(i), slotCalled);
-        slotCalled = false; // reset for next loop
+        std::stringstream msg;
+        msg << "Loop " << i << ", i.e. " << (signalerConnected ? "signaler" : "slotter") << " connected";
+        if (!*slotCalled) {
+            // Debugging: If a second emit cures this, there is "only" some delayed connection (still weird...),
+            //            otherwise we can be sure we are not properly subscribed.
+            std::clog << msg.str() << ", signal not received: Emit again!" << std::endl;
+            signaler->emit("signal", 42);
+            for (int i = 0; i < numWaitIterations; ++i) {
+                if (*slotCalled) break;
+                boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerWaitIterationMs));
+            };
+        }
+        CPPUNIT_ASSERT_MESSAGE(msg.str(), *slotCalled);
+        *slotCalled = false; // reset for next loop
     }
 }
 
