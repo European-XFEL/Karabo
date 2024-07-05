@@ -653,6 +653,7 @@ class MainWindow(QMainWindow):
 
         # More information ...
         self.serverInfo = QLabel(self)
+        self.serverInfo.setObjectName("serverInfo_label")
         self.serverInfo.setMinimumWidth(SERVER_INFO_WIDTH)
         self.serverInfo.setAlignment(Qt.AlignCenter)
         status_bar.addPermanentWidget(self.serverInfo)
