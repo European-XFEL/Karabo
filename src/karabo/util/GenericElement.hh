@@ -68,7 +68,7 @@ namespace karabo {
                 // Check whether full path (that in fact has to be specified here!) or its last
                 // key is empty - empty non-last keys are caught elsewhere.
                 // Empty keys or keys with spaces cannot work with instance proxies in Python.
-                if (name.empty() || name.back() == '.' || name.find(' ') != std::string::npos) {
+                if (name.empty() || name.back() == Hash::k_defaultSep || name.find(' ') != std::string::npos) {
                     throw KARABO_PARAMETER_EXCEPTION("Bad (sub-)key '" + name + "': empty or with space.");
                 }
                 m_node->m_key = name;
