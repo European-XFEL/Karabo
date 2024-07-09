@@ -453,7 +453,7 @@ namespace karabo {
             // First check whether id is valid in itself.
 
             // space ' ' causes problem in xml serialisaton
-            // dot '.' is bad if id used as key in Hash
+            // dot '.' (i.e. Hash::k_defaultSep) is bad if id used as key in Hash
             // colon ':' separates instanceId and pipeline channel name
             const char* allowedCharacters =
                   "0123456789_/-" // not std::string to save dynamic memory allocation
@@ -1281,10 +1281,11 @@ namespace karabo {
 
         const SignalSlotable::SlotInstancePointer& SignalSlotable::getSenderInfo(
               const std::string& unmangledSlotFunction) {
+            const char cStringSep[] = {Hash::k_defaultSep, '\0'};
             const std::string& mangledSlotFunction =
-                  (unmangledSlotFunction.find('.') == std::string::npos
+                  (unmangledSlotFunction.find(Hash::k_defaultSep) == std::string::npos
                          ? unmangledSlotFunction
-                         : boost::algorithm::replace_all_copy(unmangledSlotFunction, ".", "_"));
+                         : boost::algorithm::replace_all_copy(unmangledSlotFunction, cStringSep, "_"));
             boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
             auto it = m_slotInstances.find(mangledSlotFunction);
             if (it == m_slotInstances.end())
@@ -1565,10 +1566,11 @@ namespace karabo {
             if (slotInstanceId == "*") return true; // GLOBAL slots may or may not exist
 
             // convert noded slots to follow underscore representation
+            const char cStringSep[] = {Hash::k_defaultSep, '\0'};
             const std::string& mangledSlotFunction =
-                  (unmangledSlotFunction.find('.') == std::string::npos
+                  (unmangledSlotFunction.find(Hash::k_defaultSep) == std::string::npos
                          ? unmangledSlotFunction
-                         : boost::algorithm::replace_all_copy(unmangledSlotFunction, ".", "_"));
+                         : boost::algorithm::replace_all_copy(unmangledSlotFunction, cStringSep, "_"));
 
             bool slotExists = false;
 
@@ -1602,10 +1604,11 @@ namespace karabo {
 
         void SignalSlotable::slotHasSlot(const std::string& unmangledSlotFunction) {
             // handle noded slots
+            const char cStringSep[] = {Hash::k_defaultSep, '\0'};
             const std::string& mangledSlotFunction =
-                  (unmangledSlotFunction.find('.') == std::string::npos
+                  (unmangledSlotFunction.find(Hash::k_defaultSep) == std::string::npos
                          ? unmangledSlotFunction
-                         : boost::algorithm::replace_all_copy(unmangledSlotFunction, ".", "_"));
+                         : boost::algorithm::replace_all_copy(unmangledSlotFunction, cStringSep, "_"));
 
             bool result = false;
             {
@@ -2183,10 +2186,11 @@ namespace karabo {
 
         bool SignalSlotable::hasSlot(const std::string& unmangledSlotFunction) const {
             // handle noded slots
+            const char cStringSep[] = {Hash::k_defaultSep, '\0'};
             const std::string& mangledSlotFunction =
-                  (unmangledSlotFunction.find('.') == std::string::npos
+                  (unmangledSlotFunction.find(Hash::k_defaultSep) == std::string::npos
                          ? unmangledSlotFunction
-                         : boost::algorithm::replace_all_copy(unmangledSlotFunction, ".", "_"));
+                         : boost::algorithm::replace_all_copy(unmangledSlotFunction, cStringSep, "_"));
 
             boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
             return m_slotInstances.find(mangledSlotFunction) != m_slotInstances.end();
@@ -2195,10 +2199,11 @@ namespace karabo {
 
         SignalSlotable::SlotInstancePointer SignalSlotable::getSlot(const std::string& unmangledSlotFunction) const {
             // handle noded slots
+            const char cStringSep[] = {Hash::k_defaultSep, '\0'};
             const std::string& mangledSlotFunction =
-                  (unmangledSlotFunction.find('.') == std::string::npos
+                  (unmangledSlotFunction.find(Hash::k_defaultSep) == std::string::npos
                          ? unmangledSlotFunction
-                         : boost::algorithm::replace_all_copy(unmangledSlotFunction, ".", "_"));
+                         : boost::algorithm::replace_all_copy(unmangledSlotFunction, cStringSep, "_"));
 
             boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
             SlotInstances::const_iterator it = m_slotInstances.find(mangledSlotFunction);
@@ -2209,10 +2214,11 @@ namespace karabo {
 
         void SignalSlotable::removeSlot(const std::string& unmangledSlotFunction) {
             // handle noded slots
+            const char cStringSep[] = {Hash::k_defaultSep, '\0'};
             const std::string& mangledSlotFunction =
-                  (unmangledSlotFunction.find('.') == std::string::npos
+                  (unmangledSlotFunction.find(Hash::k_defaultSep) == std::string::npos
                          ? unmangledSlotFunction
-                         : boost::algorithm::replace_all_copy(unmangledSlotFunction, ".", "_"));
+                         : boost::algorithm::replace_all_copy(unmangledSlotFunction, cStringSep, "_"));
 
             boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
             m_slotInstances.erase(mangledSlotFunction);
