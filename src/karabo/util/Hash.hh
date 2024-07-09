@@ -117,6 +117,8 @@ namespace karabo {
             typedef Container::map_iterator map_iterator;
             typedef Container::const_map_iterator const_map_iterator;
 
+            static const char k_defaultSep;
+
             /**
              * Insertion order iterator (i.e. list iterator)
              */
@@ -143,8 +145,8 @@ namespace karabo {
              * @param separator key separation char
              * @return Hash::Node wrapped in boost::optional
              */
-            boost::optional<const Hash::Node&> find(const std::string& path, const char separator = '.') const;
-            boost::optional<Hash::Node&> find(const std::string& path, const char separator = '.');
+            boost::optional<const Hash::Node&> find(const std::string& path, const char separator = k_defaultSep) const;
+            boost::optional<Hash::Node&> find(const std::string& path, const char separator = k_defaultSep);
 
             /**
              * Default constructor creates an empty hash
@@ -264,7 +266,7 @@ namespace karabo {
              *            referred to as "b[1]".
              * @return true if key exists, otherwise false
              */
-            bool erase(const std::string& path, const char separator = '.');
+            bool erase(const std::string& path, const char separator = k_defaultSep);
 
             /**
              * Remove the element identified by 'path' if it exists.
@@ -283,7 +285,7 @@ namespace karabo {
              *            as well in case of no other child).
              * @return No
              */
-            void erasePath(const std::string& path, const char separator = '.');
+            void erasePath(const std::string& path, const char separator = k_defaultSep);
 
             /**
              * Returns all the keys in the hash in the provided container (vector, list, set, ...)
@@ -304,24 +306,24 @@ namespace karabo {
              */
 
             template <template <class T, class All = std::allocator<T> > class container>
-            void getPaths(container<std::string>& result, const char separator = '.') const;
+            void getPaths(container<std::string>& result, const char separator = k_defaultSep) const;
 
-            void getPaths(std::set<std::string>& result, const char separator = '.') const;
+            void getPaths(std::set<std::string>& result, const char separator = k_defaultSep) const;
 
             template <template <class T, class All = std::allocator<T> > class container>
-            void getDeepPaths(container<std::string>& result, const char separator = '.') const;
+            void getDeepPaths(container<std::string>& result, const char separator = k_defaultSep) const;
 
-            void getDeepPaths(std::set<std::string>& result, const char separator = '.') const;
+            void getDeepPaths(std::set<std::string>& result, const char separator = k_defaultSep) const;
 
             static void getPaths(const Hash& hash, std::vector<std::string>& paths, std::string prefix,
-                                 const char separator = '.', const bool fullPaths = false);
+                                 const char separator = k_defaultSep, const bool fullPaths = false);
 
             /**
              * Check if the key 'key' exist in hash
              * @param key A string hash key
              * @return <b>true</b> if key exists, <b>false</b> otherwise
              */
-            bool has(const std::string& path, const char separator = '.') const;
+            bool has(const std::string& path, const char separator = k_defaultSep) const;
 
 
             // Looks like the 'const ValueType&' version has to stay to ensure that explicit type specifications like
@@ -349,10 +351,10 @@ namespace karabo {
              * the <i>boost::any</i> object associated with <b>key</b>, then copy the given value into it.
              */
             template <typename ValueType>
-            inline Node& set(const std::string& path, const ValueType& value, const char separator = '.');
+            inline Node& set(const std::string& path, const ValueType& value, const char separator = k_defaultSep);
 
             template <typename ValueType>
-            inline Node& set(const std::string& path, ValueType&& value, const char separator = '.');
+            inline Node& set(const std::string& path, ValueType&& value, const char separator = k_defaultSep);
 
             /**
              * Set an arbitray number of key/value pairs, internally using Hash::set(..) with the default separator
@@ -384,7 +386,7 @@ namespace karabo {
              * @endcode
              */
             template <typename ValueType>
-            ValueType& bindReference(const std::string& path, const char separator = '.');
+            ValueType& bindReference(const std::string& path, const char separator = k_defaultSep);
 
             /**
              * Bind a (newly created) object in the map into and external variable
@@ -400,7 +402,7 @@ namespace karabo {
              * @endcode
              */
             template <typename ValueType>
-            ValueType* bindPointer(const std::string& path, const char separator = '.');
+            ValueType* bindPointer(const std::string& path, const char separator = k_defaultSep);
 
             /**
              * Retrieve a constant reference to the value of element identified by 'key'
@@ -412,7 +414,7 @@ namespace karabo {
              * doesn't match the actual node type, a cast exception will be thrown.
              */
             template <typename ValueType>
-            inline const ValueType& get(const std::string& path, const char separator = '.') const;
+            inline const ValueType& get(const std::string& path, const char separator = k_defaultSep) const;
 
             /**
              * Retrieve a (non-const) reference to the stored value of a given key
@@ -420,7 +422,7 @@ namespace karabo {
              * @return The associated value
              */
             template <typename ValueType>
-            inline ValueType& get(const std::string& key, const char separator = '.');
+            inline ValueType& get(const std::string& key, const char separator = k_defaultSep);
 
             /**
              * Retrieve (non-const) reference to the stored value into second parameter
@@ -429,7 +431,7 @@ namespace karabo {
              * @return void
              */
             template <typename ValueType>
-            inline void get(const std::string& path, ValueType& value, const char separator = '.') const;
+            inline void get(const std::string& path, ValueType& value, const char separator = k_defaultSep) const;
 
             /**
              * Casts the the value of element identified by "path" from its original type
@@ -446,10 +448,10 @@ namespace karabo {
              * requested as an UINT32).
              */
             template <typename ValueType>
-            inline ValueType getAs(const std::string& path, const char separator = '.') const;
+            inline ValueType getAs(const std::string& path, const char separator = k_defaultSep) const;
 
             template <typename T, template <typename Elem, typename = std::allocator<Elem> > class Cont>
-            inline Cont<T> getAs(const std::string& key, const char separator = '.') const;
+            inline Cont<T> getAs(const std::string& key, const char separator = k_defaultSep) const;
 
             /**
              * Return the internal Hash node element designated by "path"
@@ -457,9 +459,9 @@ namespace karabo {
              * @param separator
              * @return Hash::Node element
              */
-            const Node& getNode(const std::string& path, const char separator = '.') const;
+            const Node& getNode(const std::string& path, const char separator = k_defaultSep) const;
 
-            Node& getNode(const std::string& path, const char separator = '.');
+            Node& getNode(const std::string& path, const char separator = k_defaultSep);
 
             /**
              * Predicate function calculating if the type of the value associated with the <b>key</b> is
@@ -469,7 +471,7 @@ namespace karabo {
              * @return <b>true</b> or <b>false</b>
              */
             template <typename ValueType>
-            bool is(const std::string& path, const char separator = '.') const;
+            bool is(const std::string& path, const char separator = k_defaultSep) const;
 
             /**
              * Predicate function calculating if the value associated with <b>key</b> is of type <b>type</b>.
@@ -477,14 +479,15 @@ namespace karabo {
              * @param type Some type from Types::Type enumeration
              * @return <b>true</b> or <b>false</b>
              */
-            bool is(const std::string& path, const Types::ReferenceType& type, const char separator = '.') const;
+            bool is(const std::string& path, const Types::ReferenceType& type,
+                    const char separator = k_defaultSep) const;
 
             /**
              * Function to obtain value type information
              * @param key The key to the value of which type information should be returned
              * @return The typeId as defined in @see Types.hh
              */
-            Types::ReferenceType getType(const std::string& path, const char separator = '.') const; /**/
+            Types::ReferenceType getType(const std::string& path, const char separator = k_defaultSep) const;
 
             /** Merges another hash into this one
              * Creates new nodes, if they do not already exists. Creates new leaves, if they do not already exist.
@@ -495,23 +498,25 @@ namespace karabo {
              * @param separator The separator for nested keys in selectedPaths
              */
             void merge(const Hash& other, const MergePolicy policy = REPLACE_ATTRIBUTES,
-                       const std::set<std::string>& selectedPaths = std::set<std::string>(), char separator = '.');
+                       const std::set<std::string>& selectedPaths = std::set<std::string>(),
+                       char separator = k_defaultSep);
 
             /**
              * Subtracts from current hash all nodes that can be found in other hash given as argument.
              * @param other hash used for defining the candidates for subtraction
-             * @param separator.  The default separator is '.'
+             * @param separator.  The default separator is k_defaultSep
              * @return the current hash is shrinked in place, the other hash is untouched
              */
-            void subtract(const Hash& other, const char separator = '.');
+            void subtract(const Hash& other, const char separator = k_defaultSep);
 
             /**
              * Flattens a hierarchical Hash into "one-level", <i>flat</i> Hash object
              * @return A Hash having keys that are all leaves
              */
-            void flatten(Hash& flat, const char separator = '.') const;
+            void flatten(Hash& flat, const char separator = k_defaultSep) const;
 
-            static void flatten(const Hash& hash, Hash& flat, std::string prefix = "", const char separator = '.');
+            static void flatten(const Hash& hash, Hash& flat, std::string prefix = "",
+                                const char separator = k_defaultSep);
 
             /**
              * Arranges <i>flat</i> Hash object in a hierarchy using
@@ -519,7 +524,7 @@ namespace karabo {
              * @param sep An optional separator symbol (default: ".")
              * @return A Hash object containing keys with no separator symbols
              */
-            void unflatten(Hash& tree, const char separator = '.') const;
+            void unflatten(Hash& tree, const char separator = k_defaultSep) const;
 
             /*******************************************************************
              * Attributes manipulation
@@ -532,7 +537,8 @@ namespace karabo {
              * @param separator
              * @return bool
              */
-            bool hasAttribute(const std::string& path, const std::string& attribute, const char separator = '.') const;
+            bool hasAttribute(const std::string& path, const std::string& attribute,
+                              const char separator = k_defaultSep) const;
 
             /**
              * Return the value of the attribute called "attribute" of the element identified by "path"
@@ -543,10 +549,11 @@ namespace karabo {
              */
             template <typename ValueType>
             const ValueType& getAttribute(const std::string& path, const std::string& attribute,
-                                          const char separator = '.') const;
+                                          const char separator = k_defaultSep) const;
 
             template <typename ValueType>
-            ValueType& getAttribute(const std::string& path, const std::string& attribute, const char separator = '.');
+            ValueType& getAttribute(const std::string& path, const std::string& attribute,
+                                    const char separator = k_defaultSep);
 
             /**
              * Casts the value of the attribute called "attribute" of the element identified
@@ -558,11 +565,12 @@ namespace karabo {
              * @return value
              */
             template <typename T>
-            T getAttributeAs(const std::string& path, const std::string& attribute, const char separator = '.') const;
+            T getAttributeAs(const std::string& path, const std::string& attribute,
+                             const char separator = k_defaultSep) const;
 
             template <typename T, template <typename Elem, typename = std::allocator<Elem> > class Cont>
             Cont<T> getAttributeAs(const std::string& path, const std::string& attribute,
-                                   const char separator = '.') const;
+                                   const char separator = k_defaultSep) const;
 
             /**
              * Return the value of the attribute called "attribute" of the element identified as boost::any.
@@ -572,10 +580,10 @@ namespace karabo {
              * @return boost::any
              */
             boost::any& getAttributeAsAny(const std::string& path, const std::string& attribute,
-                                          const char separator = '.');
+                                          const char separator = k_defaultSep);
 
             const boost::any& getAttributeAsAny(const std::string& path, const std::string& attribute,
-                                                const char separator = '.') const;
+                                                const char separator = k_defaultSep) const;
 
             /**
              * Return the list of attributes of the element identified by "path"
@@ -583,8 +591,8 @@ namespace karabo {
              * @param separator
              * @return Hash::Attributes
              */
-            const Attributes& getAttributes(const std::string& path, const char separator = '.') const;
-            Attributes& getAttributes(const std::string& path, const char separator = '.');
+            const Attributes& getAttributes(const std::string& path, const char separator = k_defaultSep) const;
+            Attributes& getAttributes(const std::string& path, const char separator = k_defaultSep);
 
             /**
              * Set the value of an attribute called "attribute" of the element identified by "path"
@@ -595,7 +603,7 @@ namespace karabo {
              */
             template <typename ValueType>
             void setAttribute(const std::string& path, const std::string& attribute, const ValueType& value,
-                              const char separator = '.');
+                              const char separator = k_defaultSep);
 
             /**
              * Set the value of an attribute called "attribute" of the element identified by "path"
@@ -606,7 +614,7 @@ namespace karabo {
              */
             template <typename ValueType>
             void setAttribute(const std::string& path, const std::string& attribute, ValueType&& value,
-                              const char separator = '.');
+                              const char separator = k_defaultSep);
 
             /**
              * Assign of list of attributes (i.e. Hash::Attributes container) to the element identified by "path"
@@ -614,7 +622,8 @@ namespace karabo {
              * @param attributes
              * @param separator
              */
-            void setAttributes(const std::string& path, const Attributes& attributes, const char separator = '.');
+            void setAttributes(const std::string& path, const Attributes& attributes,
+                               const char separator = k_defaultSep);
 
             /**
              * Assign of list of attributes (i.e. Hash::Attributes container) to the element identified by "path"
@@ -622,7 +631,7 @@ namespace karabo {
              * @param attributes to move from
              * @param separator
              */
-            void setAttributes(const std::string& path, Attributes&& attributes, const char separator = '.');
+            void setAttributes(const std::string& path, Attributes&& attributes, const char separator = k_defaultSep);
 
             /**
              * Serialize a hash to standard std::ostream object
@@ -692,7 +701,7 @@ namespace karabo {
              * 'Hash&&', 'const NDArray&', etc.
              */
             template <typename HashType>
-            inline Node& setHash(const std::string& path, HashType value, const char separator = '.');
+            inline Node& setHash(const std::string& path, HashType value, const char separator = k_defaultSep);
 
             /**
              * End point for setMulti(..) with variadic templates
@@ -701,7 +710,7 @@ namespace karabo {
 
             /**
              *  Out of 'paths' select those that belong to child with 'childKey',
-             * e.g. out of ["a", "b.c", "b.d.e"] return ["c", "d.e"] if childKey == "b" and separator == '.'.
+             * e.g. out of ["a", "b.c", "b.d.e"] return ["c", "d.e"] if childKey == "b" and separator == k_defaultSep.
              */
             static std::set<std::string> selectChildPaths(const std::set<std::string>& paths,
                                                           const std::string& childKey, char separator);
@@ -751,12 +760,13 @@ namespace karabo {
 
             Hash* setNodesAsNeeded(const std::vector<std::string>& tokens, char seperator);
 
-            Hash& getLastHash(const std::string& path, std::string& last_key, const char separator = '.');
-            const Hash& getLastHash(const std::string& path, std::string& last_key, const char separator = '.') const;
+            Hash& getLastHash(const std::string& path, std::string& last_key, const char separator = k_defaultSep);
+            const Hash& getLastHash(const std::string& path, std::string& last_key,
+                                    const char separator = k_defaultSep) const;
 
-            Hash* getLastHashPtr(const std::string& path, std::string& last_key, const char separator = '.');
+            Hash* getLastHashPtr(const std::string& path, std::string& last_key, const char separator = k_defaultSep);
             const Hash* getLastHashPtr(const std::string& path, std::string& last_key,
-                                       const char separator = '.') const;
+                                       const char separator = k_defaultSep) const;
 
             const Hash& thisAsConst() const {
                 return const_cast<const Hash&>(*this);
