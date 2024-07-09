@@ -3302,7 +3302,8 @@ namespace karabo {
             std::string addr = tcpChannel->remoteAddress();
 
             // convert periods to underscores, so that this can be used as a Hash key...
-            std::transform(addr.begin(), addr.end(), addr.begin(), [](char c) { return c == '.' ? '_' : c; });
+            std::transform(addr.begin(), addr.end(), addr.begin(),
+                           [](char c) { return c == util::Hash::k_defaultSep ? '_' : c; });
 
             return addr;
         }

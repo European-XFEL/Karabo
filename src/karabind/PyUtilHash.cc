@@ -102,6 +102,8 @@ using namespace karabind;
 
 
 void exportPyUtilHash(py::module_& m) {
+    const char cStringSep[] = {karabo::util::Hash::k_defaultSep, '\0'};
+
     py::enum_<Hash::MergePolicy>(m, "HashMergePolicy",
                                  "This enumeration defines possible options when merging 2 hashes.")
           .value("MERGE_ATTRIBUTES", Hash::MERGE_ATTRIBUTES)
@@ -299,7 +301,7 @@ void exportPyUtilHash(py::module_& m) {
           [](Hash& self, const std::string& key, const py::object& o, const std::string& sep) {
               karabind::hashwrap::set(self, key, o, sep);
           },
-          py::arg("path"), py::arg("value"), py::arg("sep") = ".",
+          py::arg("path"), py::arg("value"), py::arg("sep") = cStringSep,
           R"pbdoc(
             Set the new 'path'/'value' pair into the current Hash object. The third optional parameter is a separator,
             used to form a tree hierarchy out of 'path'.
@@ -317,7 +319,7 @@ void exportPyUtilHash(py::module_& m) {
           [](Hash& self, const std::string& key, const py::object& o, const std::string& sep) {
               karabind::hashwrap::set(self, key, o, sep);
           },
-          py::arg("path"), py::arg("value"), py::arg("sep") = ".",
+          py::arg("path"), py::arg("value"), py::arg("sep") = cStringSep,
           R"pbdoc(
             h[path] = value <==> h.set(path, value)
             Use this setting of the new path/value item if the default separator fits.
@@ -339,7 +341,7 @@ void exportPyUtilHash(py::module_& m) {
               auto cppType = wrapper::pyObjectToCppType(otype);
               node.setType(cppType);
           },
-          py::arg("path"), py::arg("value"), py::arg("type"), py::arg("sep") = ".",
+          py::arg("path"), py::arg("value"), py::arg("type"), py::arg("sep") = cStringSep,
           R"pbdoc(
             h.setAs(path, value, type)
             Use this method if the C++ value type cannot be deduced properly of python value
@@ -357,7 +359,7 @@ void exportPyUtilHash(py::module_& m) {
               if (!self.has(path, separator.at(0))) return default_return;
               return hashwrap::getRef(self, path, separator);
           },
-          py::arg("path"), py::arg("sep") = ".", py::arg("default") = py::none(),
+          py::arg("path"), py::arg("sep") = cStringSep, py::arg("default") = py::none(),
           py::return_value_policy::reference_internal,
           R"pbdoc(
             Get the 'value' by 'path'. Optionally, the separator can be defined as second argument.
@@ -377,7 +379,7 @@ void exportPyUtilHash(py::module_& m) {
     h.def(
           "__getitem__",
           [](Hash& self, const std::string& path, const std::string& sep) { return hashwrap::getRef(self, path, sep); },
-          py::arg("iterator"), py::arg("sep") = ".", py::return_value_policy::reference_internal,
+          py::arg("iterator"), py::arg("sep") = cStringSep, py::return_value_policy::reference_internal,
           R"pbdoc(
             Use this form of getting the 'value' using the 'path' if you need the default separator.
 
@@ -394,7 +396,7 @@ void exportPyUtilHash(py::module_& m) {
           [](Hash& self, const std::string& key, const std::string& separator) {
               return self.has(key, separator.at(0));
           },
-          py::arg("path"), py::arg("sep") = ".",
+          py::arg("path"), py::arg("sep") = cStringSep,
           "Returns true if given 'path' is found in current Hash object. Use separator as needed.");
 
     h.def(
@@ -402,7 +404,7 @@ void exportPyUtilHash(py::module_& m) {
           [](Hash& self, const std::string& key, const std::string& separator) {
               return self.has(key, separator.at(0));
           },
-          py::arg("path"), py::arg("sep") = ".",
+          py::arg("path"), py::arg("sep") = cStringSep,
           R"pbdoc(
             Check if 'path' is known in current Hash object. Use this form if you use the default separator.
 
@@ -418,7 +420,7 @@ void exportPyUtilHash(py::module_& m) {
           [](Hash& self, const std::string& path, const std::string& separator) -> py::bool_ {
               return self.erase(path, separator.at(0));
           },
-          py::arg("path"), py::arg("sep") = ".",
+          py::arg("path"), py::arg("sep") = cStringSep,
           R"pbdoc(
             h.erase(path) -> remove item identified by 'path' from 'h' if it exists (in place)
             Returns True if path is found, otherwise False
@@ -437,7 +439,7 @@ void exportPyUtilHash(py::module_& m) {
     h.def(
           "__delitem__",
           [](Hash& self, const std::string& path, const std::string& separator) { self.erase(path, separator.at(0)); },
-          py::arg("path"), py::arg("sep") = ".",
+          py::arg("path"), py::arg("sep") = cStringSep,
           R"pbdoc(
             del h[path] <==> h.erase(path) <==> h.erasePath(path)
 
@@ -457,7 +459,7 @@ void exportPyUtilHash(py::module_& m) {
           [](Hash& self, const std::string& path, const std::string& separator) {
               self.erasePath(path, separator.at(0));
           },
-          py::arg("path"), py::arg("sep") = ".",
+          py::arg("path"), py::arg("sep") = cStringSep,
           R"pbdoc(
             h.erase(path) -> remove item identified by 'path' from 'h' (in place)
 
@@ -502,7 +504,7 @@ void exportPyUtilHash(py::module_& m) {
               auto type = wrapper::pyObjectToCppType(otype);
               return hashwrap::getAs(self, path, type, sep);
           },
-          py::arg("path"), py::arg("type"), py::arg("sep") = ".",
+          py::arg("path"), py::arg("type"), py::arg("sep") = cStringSep,
           R"pbdoc(
             Get value by 'path' and convert it to 'type' type.  Optionally use separator.
 
@@ -519,7 +521,7 @@ void exportPyUtilHash(py::module_& m) {
               auto type = static_cast<PyTypes::ReferenceType>(self.getType(path, separator.at(0)));
               return py::cast(type);
           },
-          py::arg("path"), py::arg("sep") = ".",
+          py::arg("path"), py::arg("sep") = cStringSep,
           R"pbdoc(
             Get type by 'path'.  Returns 'Types.<value>' object.
 
@@ -541,7 +543,7 @@ void exportPyUtilHash(py::module_& m) {
               self.merge(other, policy, selectedPathsCpp, separator.at(0));
           },
           py::arg("hash"), py::arg("policy") = Hash::REPLACE_ATTRIBUTES, py::arg("selectedPaths") = py::none(),
-          py::arg("sep") = ".",
+          py::arg("sep") = cStringSep,
           R"pbdoc(
             h.merge(h2) <==> h += h2  :  merging 'h2' into 'h'.
 
@@ -565,7 +567,7 @@ void exportPyUtilHash(py::module_& m) {
     h.def(
           "subtract",
           [](Hash& self, const Hash& other, const std::string& separator) { self.subtract(other, separator.at(0)); },
-          py::arg("hash"), py::arg("sep") = ".", "h.subtract(h2) <==> h -= h2  :  subtracting 'h2' from 'h'");
+          py::arg("hash"), py::arg("sep") = cStringSep, "h.subtract(h2) <==> h -= h2  :  subtracting 'h2' from 'h'");
 
     h.def("__isub__", &Hash::operator-=, py::arg("hash"), py::return_value_policy::reference_internal,
           R"pbdoc(
@@ -641,7 +643,7 @@ void exportPyUtilHash(py::module_& m) {
               Types::ReferenceType type = self.getType(path, separator.at(0));
               return (type == targetType);
           },
-          py::arg("path"), py::arg("type"), py::arg("sep") = ".",
+          py::arg("path"), py::arg("type"), py::arg("sep") = cStringSep,
           R"pbdoc(
             h.isType(path, type) -> True if reference type of value in Hash container for given 'path' is equal
             'type'.
@@ -656,7 +658,7 @@ void exportPyUtilHash(py::module_& m) {
     h.def(
           "flatten",
           [](const Hash& self, Hash& flat, const std::string& separator) { self.flatten(flat, separator.at(0)); },
-          py::arg("flat"), py::arg("sep") = ".",
+          py::arg("flat"), py::arg("sep") = cStringSep,
           R"pbdoc(
             Make all key/value pairs flat and put them into 'target' container.  Optionally a separator can be
             used.
@@ -674,7 +676,7 @@ void exportPyUtilHash(py::module_& m) {
     h.def(
           "unflatten",
           [](const Hash& self, Hash& tree, const std::string& separator) { self.unflatten(tree, separator.at(0)); },
-          py::arg("tree"), py::arg("sep") = ".",
+          py::arg("tree"), py::arg("sep") = cStringSep,
           R"pbdoc(
             Make all key/value pairs tree-like structured and put them into 'target' container.  Optionally use
             separator.
@@ -698,7 +700,7 @@ void exportPyUtilHash(py::module_& m) {
               // Wrapping the pointer to the existing memory location with null deleter
               return boost::shared_ptr<Hash::Node>(&node.get(), [](Hash::Node*) {});
           },
-          py::arg("path"), py::arg("sep") = ".",
+          py::arg("path"), py::arg("sep") = cStringSep,
           R"pbdoc(
           Find node in current Hash using \"path\".  Optionally the separator \"sep\" may be defined.
           Returns not a copy but reference to the existing Hash.Node object or \"None\".
@@ -739,7 +741,7 @@ void exportPyUtilHash(py::module_& m) {
               auto node = boost::shared_ptr<Hash::Node>(&nodeRef, [](void*) {});
               return py::cast(node);
           },
-          py::arg("path"), py::arg("sep") = ".",
+          py::arg("path"), py::arg("sep") = cStringSep,
           R"pbdoc(
 
             Returns a reference of found node (not a copy!), so if you do any changes via returned object,
@@ -758,7 +760,7 @@ void exportPyUtilHash(py::module_& m) {
           [](Hash& self, const std::string& path, const std::string& attribute, const std::string& separator) {
               return self.hasAttribute(path, attribute, separator.at(0));
           },
-          py::arg("path"), py::arg("attribute"), py::arg("sep") = ".",
+          py::arg("path"), py::arg("attribute"), py::arg("sep") = cStringSep,
           "Returns true if the questioned attribute exists, else returns false.");
 
     h.def(
@@ -767,7 +769,7 @@ void exportPyUtilHash(py::module_& m) {
              const std::string& separator) {
               return wrapper::castAnyToPy(self.getAttributeAsAny(path, attribute, separator.at(0)));
           },
-          py::arg("path"), py::arg("attribute"), py::arg("sep") = ".",
+          py::arg("path"), py::arg("attribute"), py::arg("sep") = cStringSep,
           R"pbdoc(
             Get attribute value following given 'path' and 'attribute' name. Optionally use separator.
 
@@ -786,7 +788,7 @@ void exportPyUtilHash(py::module_& m) {
               const Hash::Attributes::Node& anode = node.getAttributeNode(attribute);
               return wrapper::detail::castElementToPy(anode, type);
           },
-          py::arg("path"), py::arg("attribute"), py::arg("type"), py::arg("sep") = ".",
+          py::arg("path"), py::arg("attribute"), py::arg("type"), py::arg("sep") = cStringSep,
           R"pbdoc(
               h.getAttributeAs(path, attribute, type, sep = '.') -> value of 'type' type.
 
@@ -809,7 +811,7 @@ void exportPyUtilHash(py::module_& m) {
               PyTypes::ReferenceType type = static_cast<PyTypes::ReferenceType>(node.getType());
               return py::cast(type);
           },
-          py::arg("path"), py::arg("key"), py::arg("sep") = ".",
+          py::arg("path"), py::arg("key"), py::arg("sep") = cStringSep,
           "Returns ReferenceType for given \"path\" and attribute \"key\"");
 
     h.def(
@@ -817,7 +819,7 @@ void exportPyUtilHash(py::module_& m) {
           [](const Hash& self, const std::string& path, const std::string& separator) -> const Hash::Attributes* {
               return &self.getAttributes(path, separator.at(0));
           },
-          py::arg("path"), py::arg("sep") = ".", py::return_value_policy::reference_internal, R"pbdoc(
+          py::arg("path"), py::arg("sep") = cStringSep, py::return_value_policy::reference_internal, R"pbdoc(
               h.getAttributes(path, sep='.') -> iterable container of attributes which is an internal reference,
                                                 not a copy.
               Example:
@@ -837,7 +839,7 @@ void exportPyUtilHash(py::module_& m) {
           [](Hash& self, const std::string& path, const std::string& separator) {
               return py::cast(self.getAttributes(path, separator.at(0)));
           },
-          py::arg("path"), py::arg("sep") = ".",
+          py::arg("path"), py::arg("sep") = cStringSep,
           R"pbdoc(
               h.copyAttributes(path, sep='.') -> iterable container of attributes.
 
@@ -860,7 +862,7 @@ void exportPyUtilHash(py::module_& m) {
               wrapper::castPyToAny(value, any);
               self.setAttribute(path, attribute, any, separator.at(0));
           },
-          py::arg("path"), py::arg("attribute"), py::arg("value"), py::arg("sep") = ".",
+          py::arg("path"), py::arg("attribute"), py::arg("value"), py::arg("sep") = cStringSep,
           R"pbdoc(
             Set attribute associated with path.
 
@@ -875,7 +877,7 @@ void exportPyUtilHash(py::module_& m) {
           [](Hash& self, const std::string& path, const Hash::Attributes& attributes, const std::string& separator) {
               self.setAttributes(path, attributes, separator.at(0));
           },
-          py::arg("path"), py::arg("attributes"), py::arg("sep") = ".",
+          py::arg("path"), py::arg("attributes"), py::arg("sep") = cStringSep,
           R"pbdoc(
             h.setAttributes(path, attributes, sep='.') allows to associate 'attributes' with 'path' in this Hash.
 
