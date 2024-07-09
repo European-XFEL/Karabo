@@ -80,5 +80,7 @@ void exportPyUtilDims(py::module_& m) {
 
     d.def("toArray", &DimsWrap::toVectorPy);
 
-    m.def("setDims", &karabo::util::setDims, py::arg("hash"), py::arg("path"), py::arg("dims"), py::arg("sep") = '.');
+    const char cStringSep[] = {karabo::util::Hash::k_defaultSep, '\0'};
+    m.def("setDims", &karabo::util::setDims, py::arg("hash"), py::arg("path"), py::arg("dims"),
+          py::arg("sep") = cStringSep);
 }

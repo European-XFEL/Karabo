@@ -34,6 +34,7 @@ namespace karabo {
 
     namespace util {
 
+        const char Hash::k_defaultSep = '.'; /// The default path separator for nested Hash
 
         Hash::Hash() {}
 
