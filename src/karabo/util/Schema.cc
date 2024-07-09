@@ -882,7 +882,7 @@ namespace karabo {
 
         bool Schema::isOrphaned(const Hash::Node& node) const {
             const std::string& key = node.getKey();
-            const size_t lastSep = key.find_last_of('.'); // can't get default separator from Hash :-(
+            const size_t lastSep = key.find_last_of(Hash::k_defaultSep);
             if (lastSep == std::string::npos) {
                 // first level key is not an orphan
                 return false;
@@ -1315,7 +1315,7 @@ namespace karabo {
                 }
                 // Treat choices of a choice of nodes and entries in list of nodes, i.e. check whether
                 // there is a mother path - if yes, check whether it points to a CHOICE_OF_NODES or LIST_OF_NODES!
-                const size_t lastDot = path.rfind('.');
+                const size_t lastDot = path.rfind(util::Hash::k_defaultSep);
                 if (lastDot != std::string::npos) {
                     const std::string motherPath(path.substr(0, lastDot));
                     if (isChoiceOfNodes(motherPath) || isListOfNodes(motherPath)) {

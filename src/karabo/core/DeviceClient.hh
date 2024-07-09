@@ -590,7 +590,7 @@ namespace karabo {
              * @return a boolean indicating if the attribute is present
              */
             bool hasAttribute(const std::string& instanceId, const std::string& key, const std::string& attribute,
-                              const char keySep = '.');
+                              const char keySep = util::Hash::k_defaultSep);
 
             /**
              * Return a property from a remote instance. The instance configuration
@@ -604,7 +604,7 @@ namespace karabo {
              * @raise TypeException if the templated type does not match the property type.
              */
             template <class T>
-            T get(const std::string& instanceId, const std::string& key, const char keySep = '.') {
+            T get(const std::string& instanceId, const std::string& key, const char keySep = util::Hash::k_defaultSep) {
                 try {
                     const karabo::util::Hash::Attributes attrs =
                           getDeviceSchema(instanceId).getParameterHash().getNode(key, keySep).getAttributes();
@@ -647,7 +647,8 @@ namespace karabo {
              * @raise TypeException if the templated type does not match the property type.
              */
             template <class T>
-            void get(const std::string& instanceId, const std::string& key, T& value, const char keySep = '.') {
+            void get(const std::string& instanceId, const std::string& key, T& value,
+                     const char keySep = util::Hash::k_defaultSep) {
                 try {
                     const karabo::util::Hash::Attributes attrs =
                           getDeviceSchema(instanceId).getParameterHash().getNode(key, keySep).getAttributes();
@@ -691,7 +692,8 @@ namespace karabo {
              * @raise TypeException if the property cannot be casted to the template type
              */
             template <class T>
-            T getAs(const std::string& instanceId, const std::string& key, const char keySep = '.') {
+            T getAs(const std::string& instanceId, const std::string& key,
+                    const char keySep = util::Hash::k_defaultSep) {
                 try {
                     return cacheAndGetConfiguration(instanceId).getAs<T>(key, keySep);
                 } catch (const karabo::util::Exception& e) {
@@ -712,7 +714,8 @@ namespace karabo {
              * @param keySep path separator
              * @return the current property value on the remote device as boost::any type
              */
-            boost::any getAsAny(const std::string& instanceId, const std::string& key, const char keySep = '.') {
+            boost::any getAsAny(const std::string& instanceId, const std::string& key,
+                                const char keySep = util::Hash::k_defaultSep) {
                 try {
                     return cacheAndGetConfiguration(instanceId).getNode(key, keySep).getValueAsAny();
                 } catch (const karabo::util::Exception& e) {
@@ -1232,7 +1235,7 @@ namespace karabo {
              */
             template <class T>
             void set(const std::string& instanceId, const std::string& key, const T& value, int timeoutInSeconds = -1,
-                     const char keySep = '.') {
+                     const char keySep = util::Hash::k_defaultSep) {
                 karabo::util::Hash tmp;
                 tmp.set(key, value, keySep);
                 set(instanceId, tmp, timeoutInSeconds);
@@ -1248,7 +1251,7 @@ namespace karabo {
              */
             template <class T>
             void setNoWait(const std::string& instanceId, const std::string& key, const T& value,
-                           const char keySep = '.') {
+                           const char keySep = util::Hash::k_defaultSep) {
                 karabo::util::Hash tmp;
                 tmp.set(key, value, keySep);
                 setNoWait(instanceId, tmp);

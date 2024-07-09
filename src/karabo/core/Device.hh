@@ -1075,7 +1075,7 @@ namespace karabo {
                             m_parameters.erasePath(path);
                             // Now we might have removed 'n.m.l.c' completely although 'n.m' is in static schema:
                             // need to restore (empty) node 'n.m':
-                            size_t pos = path.rfind('.'); // Last dot to cut path
+                            size_t pos = path.rfind(util::Hash::k_defaultSep); // Last dot to cut path
                             while (pos != std::string::npos) {
                                 const std::string& p =
                                       path.substr(0, pos); // first 'n.m.l', then 'n.m' (without break below then 'n')
@@ -1083,7 +1083,7 @@ namespace karabo {
                                     m_parameters.set(p, karabo::util::Hash());
                                     break; // 'n.m' added added back (after 'n.m.l' failed)
                                 }
-                                pos = p.rfind('.');
+                                pos = p.rfind(util::Hash::k_defaultSep);
                             }
                         }
                     }
@@ -1865,7 +1865,7 @@ namespace karabo {
 
                 for (const std::string& subKey : subKeys) {
                     // Assemble full path out of topLevel and subKey
-                    const std::string key(topLevel.empty() ? subKey : (topLevel + '.') += subKey);
+                    const std::string key(topLevel.empty() ? subKey : (topLevel + util::Hash::k_defaultSep) += subKey);
                     if (schema.hasDisplayType(key)) {
                         const std::string& displayType = schema.getDisplayType(key);
                         if (displayType == "OutputChannel") {
