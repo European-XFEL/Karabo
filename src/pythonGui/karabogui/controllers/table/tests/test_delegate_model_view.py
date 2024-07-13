@@ -14,7 +14,6 @@
 # The Karabo Gui is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
-from unittest import main
 
 from qtpy.QtWidgets import QStyledItemDelegate
 
@@ -51,7 +50,7 @@ class TableSchema(Configurable):
         maxInc=100.0)
     vector = VectorDouble(
         displayedName="VectorDouble",
-        displayType="TableVectorButton",
+        displayType="TableVector",
         defaultValue=[])
 
 
@@ -122,7 +121,3 @@ def test_custom_delegates_controller(gui_app):
     assert isinstance(delegate, ColorNumberDelegate)
     delegate = widget.itemDelegateForColumn(3)
     assert isinstance(delegate, ProgressBarDelegate)
-
-
-if __name__ == "__main__":
-    main()
