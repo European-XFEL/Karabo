@@ -22,7 +22,7 @@ import webbrowser
 
 from qtpy.QtCore import Qt, Slot
 from qtpy.QtWidgets import (
-    QApplication, QComboBox, QDialog, QMessageBox, QStyle, QStyledItemDelegate,
+    QApplication, QComboBox, QMessageBox, QStyle, QStyledItemDelegate,
     QStyleOptionFrame, QStyleOptionProgressBar)
 
 from karabo.common.api import KARABO_SCHEMA_OPTIONS
@@ -33,7 +33,6 @@ from karabogui.binding.api import (
     VectorBoolBinding, get_default_value, get_min_max)
 from karabogui.controllers.validators import (
     BindingValidator as GenericValidator, ListValidator, SimpleValidator)
-from karabogui.dialogs.api import ListEditDialog
 from karabogui.logger import get_logger
 from karabogui.request import (
     call_device_slot, get_scene_from_server, retrieve_default_scene)
@@ -44,6 +43,7 @@ from karabogui.widgets.edits import LineEditEditor
 from .button_delegate import TableButtonDelegate
 from .utils import (
     create_brushes, get_button_attributes, has_confirmation, parse_table_link)
+from .widgets import TableVectorEdit
 
 
 def get_display_delegate(proxy, binding, parent, read_only=True):
@@ -92,7 +92,7 @@ def get_table_delegate(proxy, binding, parent):
     elif isinstance(binding, (FloatBinding, IntBinding)):
         return NumberDelegate(binding, parent)
     elif isinstance(binding, VectorBinding):
-        if (binding.display_type.split("|")[0] == "TableVectorButton"
+        if (binding.display_type.split("|")[0] == "TableVector"
                 and not isinstance(binding, VectorBoolBinding)):
             return VectorButtonDelegate(binding, parent)
         return VectorDelegate(binding, parent)
@@ -100,30 +100,31 @@ def get_table_delegate(proxy, binding, parent):
         return BindingDelegate(binding, parent)
 
 
-class VectorButtonDelegate(TableButtonDelegate):
+class VectorButtonDelegate(QStyledItemDelegate):
+
     def __init__(self, binding, parent=None):
         super().__init__(parent)
-        self.text = binding.displayed_name
         self.binding = binding
 
-    def get_button_text(self, index):
-        """Reimplemented function of TableButtonDelegate"""
-        return self.text
+    def createEditor(self, parent, option, index):
+        editor = TableVectorEdit(self.binding, parent=parent)
+        values = index.model().data(index, Qt.DisplayRole)
+        old = _create_string_list(values)
+        validator = VectorValidator(self.binding, old, parent=editor)
+        editor.setValidator(validator)
+        return editor
 
-    def click_action(self, index):
-        """Reimplemented function of TableButtonDelegate"""
-        if not index.isValid():
-            return
+    def setEditorData(self, editor, index):
+        """Reimplemented function of QStyledItemDelegate"""
+        values = index.model().data(index, Qt.DisplayRole)
+        editor.setText(values)
 
-        old = index.data()
-        model = index.model()
-        _, data = model.get_model_data(index.row(), index.column())
-        dialog = ListEditDialog(binding=self.binding, parent=self.parent())
-        dialog.set_list(data)
-        if dialog.exec() == QDialog.Accepted:
-            new = dialog.string_values
-            if not is_equal(old, new):
-                model.setData(index, new, Qt.EditRole)
+    def setModelData(self, editor, model, index):
+        """Reimplemented function of QStyledItemDelegate"""
+        old = index.model().data(index, Qt.DisplayRole)
+        new = editor.text()
+        if not is_equal(old, new):
+            model.setData(index, new, Qt.EditRole)
 
 
 class BoolButtonDelegate(TableButtonDelegate):
