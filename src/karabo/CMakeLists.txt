@@ -282,4 +282,3 @@ if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME) AND BUILD_UNIT_TESTING)
     enable_testing()
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/tests ${CMAKE_BINARY_DIR}/karabo/tests)
 endif()
-
