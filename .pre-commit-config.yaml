@@ -27,8 +27,14 @@ repos:
     rev: v17.0.6
     hooks:
       - id: clang-format
-        args: [ "-style=file" ]
-        entry: clang-format -i
+        entry: |
+          bash -c '
+          if [ -n "${CI_JOB_ID}" ]; then
+            clang-format --Werror -i -style=file --dry-run "$@"
+          else
+            clang-format --Werror -i -style=file "$@"
+          fi
+          '
         files: |
           (?x)(
               ^src/karabo/|
