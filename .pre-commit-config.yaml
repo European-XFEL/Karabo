@@ -41,6 +41,28 @@ repos:
               ^src/deviceServer/
           )
 
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: v0.5.1
+    hooks:
+      - id: ruff
+        args: [--fix]
+        exclude: |
+          (?x)(
+              ^conda-recipes/|
+              ^src/pythonKarabo/karabo/integration_tests/|
+              ^src/pythonKarabo/karabo/bound_api/tests/
+          )
+
+  - repo: https://github.com/pycqa/isort
+    rev: 5.11.5
+    hooks:
+      - id: isort
+        name: isort python tests
+        files: |
+          (?x)(
+              ^tests/
+          )
+
   - repo: https://github.com/pycqa/isort
     rev: 5.11.5
     hooks:
@@ -57,17 +79,6 @@ repos:
               ^src/pythonGui/
           )
 
-  - repo: https://github.com/pre-commit/mirrors-autopep8
-    rev: v2.0.4
-    hooks:
-    -   id: autopep8
-        args: [ --in-place ]
-        name: autopep8 pythonKarabo
-        files: |
-          (?x)(
-              ^src/pythonKarabo/
-          )
-
   - repo: https://github.com/pycqa/flake8
     rev: 6.1.0
     hooks:
@@ -80,7 +91,7 @@ repos:
           )
 
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.4.0
+    rev: v3.16.0
     hooks:
       - id: pyupgrade
-        args: [ --py37-plus ]
+        args: [ --py311-plus ]
