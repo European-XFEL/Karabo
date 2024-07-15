@@ -35,9 +35,8 @@ class TestCase(unittest.TestCase):
 
         from karabo.packaging.versioning import get_karabo_framework_version
 
-        with (patch("karabo.packaging.versioning._read_version_file")
-                as mock_version_read):
-
+        p = "karabo.packaging.versioning._read_version_file"
+        with patch(p) as mock_version_read:
             mock_version_read.return_value = "2.20.0rc1.dev21+g30"
             ver = get_karabo_framework_version()
             assert ver == Version("2.20.0rc1.dev21+g30")
