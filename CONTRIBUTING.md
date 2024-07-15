@@ -71,7 +71,7 @@ Python source files must be compliant with `flake8` and `isort` and your
 modified C++ source files must be compliant with the `clang-format` settings in
 the `.clang-format` file at the root of the repository.
 
-The CI linting job ($REPO_ROOT/ci/lint) currently uses `clang-format 17.0.6`.
+The CI linting job (.pre-commit-config.yaml) currently uses `clang-format 17.0.6`.
 Instructions on how to setup a development system based
 on Visual Studio Code can be found at
 [doc/tools/vscode.rst](https://rtd.xfel.eu/docs/karabo/en/latest/tools/vscode.html) in this repository.

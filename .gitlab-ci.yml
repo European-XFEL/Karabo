@@ -24,6 +24,7 @@ stages:
 variables:
   CONAN_USER_HOME: $CI_PROJECT_DIR/.cache/conan
   PIP_CACHE_DIR:   $CI_PROJECT_DIR/.cache/pip
+  PRE_COMMIT_HOME: $CI_PROJECT_DIR/.cache/pre-commit
 
 .target_os_matrix:
   all_targets:
@@ -39,12 +40,14 @@ variables:
     paths:
       - .cache/conan/
       - .cache/pip/
+      - .cache/pre-commit
     policy: pull-push
   cache_ro:
     key: $ARCH_TAG
     paths:
       - .cache/conan/
       - .cache/pip/
+      - .cache/pre-commit
     policy: pull
 
 .build_template: &setup_build_env
@@ -339,16 +342,22 @@ variables:
 ### Jobs
 
 # static source code analysis
-lint:
+pre-commit-check:
   stage: lint
-  image: europeanxfel/karabo-ci:miniconda-3lint-003
+  image: python:3.12
+  before_script:
+    - find /cache || true
   script:
-    - source ci/lint ALL
+    - pip install pre-commit
+    - pre-commit run --all-files
+  cache: !reference [.build_cache, cache_rw]
   only:
     refs:
       - merge_requests
     changes:
       - "src/**/*"
+  allow_failure: false
+
 
 test_docs:
   stage: lint

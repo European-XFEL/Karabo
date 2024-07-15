@@ -1,6 +1,5 @@
 import argparse
 import sys
-from typing import Dict
 
 import yaml
 from qtpy.QtCore import Slot
@@ -14,7 +13,7 @@ from karabogui.programs.utils import close_app
 from karabogui.singletons.api import get_db_conn, get_network, get_topology
 
 
-def create_concert(data: Dict):
+def create_concert(data: dict):
     app = create_gui_app(sys.argv)
     init_gui(app, use_splash=True)
 

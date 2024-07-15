@@ -314,7 +314,7 @@ async def countdown(delay=5, exception=True):
     try:
         async with timeout(delay) as ctx:
             yield ctx
-    except asyncio.TimeoutError:
+    except TimeoutError:
         if exception:
             raise
 
