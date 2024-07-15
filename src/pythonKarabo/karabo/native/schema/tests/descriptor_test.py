@@ -569,7 +569,6 @@ class Tests(TestCase):
         self.assertEqual(repr(v), "'bla'")
 
         for v in ([], 1, {}, Schema(), 2.3, True, False):
-            exc = None
             with pytest.raises(ValueError) as exc:
                 d = String(defaultValue=v)
             assert "A string is required for Attribute" in str(exc)

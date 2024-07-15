@@ -563,7 +563,7 @@ class Network(QObject):
                  "priority", priority)
         self._write_hash(h)
 
-    # --------------------------------------------------------------------------
+    # ------------------------------------------------------------------------
 
     def set_server_information(self, read_only=False, **kwargs):
         """We get the reply from the GUI Server and set the information"""
@@ -585,7 +585,7 @@ class Network(QObject):
         self.username = username
         get_config()['username'] = username
 
-    # --------------------------------------------------------------------------
+    # ------------------------------------------------------------------------
     # private functions
 
     def _load_login_settings(self):

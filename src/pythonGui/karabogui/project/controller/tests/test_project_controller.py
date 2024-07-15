@@ -61,7 +61,7 @@ def test_active_configuration(gui_app):
             assert fconfig.configuration['skey'] == 'svalue'
             assert 'fkey' in sconfig.configuration
             assert sconfig.configuration['fkey'] == 'value_diff'
-            assert not ('skey' in sconfig.configuration)
+            assert 'skey' not in sconfig.configuration
 
         controller = DeviceInstanceController(model=model)
         controller.active_config_changed(sconfig)

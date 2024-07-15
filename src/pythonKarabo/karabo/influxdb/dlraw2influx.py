@@ -129,9 +129,9 @@ class DlRaw2Influx():
             'write_retries': [],
         }
         with open(self.raw_path) as fp:
-            for i, l in enumerate(fp):
+            for i, line in enumerate(fp):
                 try:
-                    self._process_line(l)
+                    self._process_line(line)
                     await self._send_data()
                 except KnownRawIssueException as exc:
                     self._handle_knownRawIssue(exc, i)

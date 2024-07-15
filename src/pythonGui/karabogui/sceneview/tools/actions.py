@@ -247,7 +247,7 @@ class SceneSendToBackAction(BaseSceneAction):
         send_to_back(scene_view)
 
 
-# ----------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # scene_view actions.
 
 def send_to_front(scene_view):

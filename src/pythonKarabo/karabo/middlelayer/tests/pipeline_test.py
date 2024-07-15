@@ -18,8 +18,8 @@ from asyncio import (
     Future, IncompleteReadError, StreamReader, StreamWriter, WriteTransport,
     sleep)
 from asyncio.events import AbstractEventLoop
+from collections.abc import Iterator
 from struct import pack
-from typing import Iterator
 from zlib import adler32
 
 import pytest

@@ -368,7 +368,7 @@ class Influx_TestCase(DeviceTest):
 
         # The timestamp returned from Influx is in microseconds.
         dt = datetime.datetime.fromtimestamp(
-            ts/1_000_000, datetime.timezone.utc
+            ts/1_000_000, datetime.UTC
         )
         # The table property is a base64 encoding of a stream serialized by
         # Karabo's binary serializer.

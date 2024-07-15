@@ -22,7 +22,6 @@ import multiprocessing
 import os
 import subprocess
 import sys
-from typing import Dict
 
 from pkg_resources import iter_entry_points
 
@@ -315,8 +314,8 @@ def checkout(args):
                   .format(os.path.abspath(path)))
 
 
-def _get_lsb_release_info() -> Dict[str, str]:
-    resp: Dict[str, str] = {}
+def _get_lsb_release_info() -> dict[str, str]:
+    resp: dict[str, str] = {}
     if os.path.exists("/etc/os-release"):
         # /etc/os-release contains distribution and version info for both
         # Debian and RHEL based Linux distributions. Use it as the primary

@@ -110,9 +110,9 @@ class DlSchema2Influx():
         bound_bin_ser = BinarySerializerSchema.create("Bin")
         with open(self.schema_path) as fp:
 
-            for i, l in enumerate(fp):
+            for i, line in enumerate(fp):
                 try:
-                    line_fields = self.parse_schema(l)
+                    line_fields = self.parse_schema(line)
 
                     if line_fields:
                         # line has been parsed successfully
