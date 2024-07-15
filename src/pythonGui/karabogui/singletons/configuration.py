@@ -19,7 +19,7 @@
 # or FITNESS FOR A PARTICULAR PURPOSE.
 #############################################################################
 from collections import defaultdict
-from typing import Any, Type
+from typing import Any
 
 from qtpy.QtCore import QObject, QSettings
 
@@ -51,7 +51,7 @@ class Item:
         self.editable = editable
         self.dtype = dtype
 
-    def __get__(self, instance: "Item", owner: Type["Item"]) -> Any:
+    def __get__(self, instance: "Item", owner: type["Item"]) -> Any:
         if instance is None:
             return self
         else:
@@ -62,7 +62,7 @@ class Item:
         if self.q_set:
             QSettings().setValue(self.path, convert_value(value, self.dtype))
 
-    def __set_name__(self, owner: Type["Item"], name: str) -> None:
+    def __set_name__(self, owner: type["Item"], name: str) -> None:
         self.name = name
         self.path = f"{self.group}/{self.name}"
         if self.q_set:
@@ -104,7 +104,7 @@ class SharedItem(Item):
                          editable=editable, dtype=dtype)
 
     def __get__(self, instance: "SharedItem",
-                owner: Type["SharedItem"]) -> Any:
+                owner: type["SharedItem"]) -> Any:
         if instance is None:
             return self
         value = self.get_shared_value()
@@ -116,7 +116,7 @@ class SharedItem(Item):
             value = encrypt(value, self.group)
         QSettings().setValue(self.path, value)
 
-    def __set_name__(self, owner: Type["SharedItem"], name: str) -> None:
+    def __set_name__(self, owner: type["SharedItem"], name: str) -> None:
         self.name = name
         self.path = f"{self.group}/{self.name}"
         self.default = None

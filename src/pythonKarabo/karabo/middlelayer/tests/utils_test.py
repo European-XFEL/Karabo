@@ -397,7 +397,7 @@ async def test_countdown(event_loop):
         async with countdown(0.1) as ctx:
             assert ctx is not None
             await asyncio.sleep(0.2)
-    except asyncio.TimeoutError:
+    except TimeoutError:
         # Must have timeout
         pass
     else:

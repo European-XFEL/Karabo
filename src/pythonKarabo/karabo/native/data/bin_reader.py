@@ -93,13 +93,13 @@ def read_binary_hash(file):
 
 
 def read_binary_schema(file):
-    l, = file.readFormat('I')  # ignore length
+    lsize, = file.readFormat('I')  # ignore length
     op = file.pos
     size, = file.readFormat('B')
     name = str(file.data[file.pos:file.pos + size], "utf8")
     file.pos += size
     ret = read_binary_hash(file)
-    assert file.pos - op == l, f'failed: {file.pos} {op} {l}'
+    assert file.pos - op == lsize, f'failed: {file.pos} {op} {lsize}'
     return Schema(name, hash=ret)
 
 
