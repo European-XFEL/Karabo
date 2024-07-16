@@ -95,7 +95,7 @@ else:
     install_args['packages'] = find_packages()
 
     install_args['package_data'] = {
-        'karabo.bound_api.tests': ['resources/*.*'],
+        'karabo.bound.tests': ['resources/*.*'],
         'karabo.common.scenemodel.tests': [
             'data/*.svg', 'data/inkscape/*.svg', 'data/legacy/*.svg',
             'data/legacy/icon_data/*.svg'
@@ -115,7 +115,7 @@ else:
     install_args['entry_points'] = {
         'console_scripts': [
             'karabo=karabo.interactive.karabo:main',
-            'karabo-pythonserver=karabo.bound_api.device_server:main',
+            'karabo-pythonserver=karabo.bound.device_server:main',
             'karabo-middlelayerserver=karabo.middlelayer.device_server:DeviceServer.main',
             'karabo-macroserver=karabo.macro_devices.macro_server:MacroServer.main',
             'karabo-cli=karabo.interactive.ideviceclient:main',
@@ -155,7 +155,7 @@ else:
             'MetaMacro=karabo.macro_devices.metamacro:MetaMacro'
         ],
         'karabo.bound_device_test': [
-            'TestDevice=karabo.bound_api.tests.boundDevice:TestDevice',
+            'TestDevice=karabo.bound.tests.boundDevice:TestDevice',
             'CommTestDevice=karabo.integration_tests.device_comm_test.commtestdevice:CommTestDevice',
             'SceneProvidingDevice=karabo.integration_tests.device_provided_scenes_test.scene_providing_device:SceneProvidingDevice',
             'NonSceneProvidingDevice=karabo.integration_tests.device_provided_scenes_test.non_scene_providing_device:NonSceneProvidingDevice',
@@ -173,7 +173,7 @@ else:
             'BoundOrderTestDevice=karabo.integration_tests.signal_slot_order_test.bound_ordertest_device:BoundOrderTestDevice',
         ],
         'karabo.bound_broken_device_test': [
-            'BrokenTestDevice=karabo.bound_api.tests.brokenBoundDevice:BrokenTestDevice',
+            'BrokenTestDevice=karabo.bound.tests.brokenBoundDevice:BrokenTestDevice',
         ],
         'karabo.project_db': [
             'file_db=karabo.project_db.file_db.node:DbConnectionNode',

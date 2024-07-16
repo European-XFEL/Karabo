@@ -14,10 +14,6 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 # flake8: noqa: F401
-""" This module provides all the bound API names which a Device might need.
-"""
-
-
 from karabind import (
     ADMIN, ALARM_ELEMENT, AMPERE, AMPERE_PER_SECOND, ATTO, ATTOSEC, BAR, BAYER,
     BECQUEREL, BGR, BGRA, BIT, BMP, BOOL_ELEMENT, BYTE, BYTEARRAY_ELEMENT,
@@ -58,15 +54,16 @@ from karabind import (
     loadSchemaFromFile, saveHashToFile, saveSchemaToFile, saveToFile, setDims,
     similar, startDeviceServer, stopDeviceServer)
 
-from .bound_api.base_fsm import BaseFsm
-from .bound_api.camera_fsm import CameraFsm
-from .bound_api.configurator import Configurator
-from .bound_api.decorators import (
-    KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS)
-from .bound_api.device import PythonDevice, launchPythonDevice
-from .bound_api.device_client import DeviceClient
-from .bound_api.device_server import DeviceServer, Launcher
-from .bound_api.fsm import (
+from ..common.alarm_conditions import AlarmCondition
+from ..common.states import State, StateSignifier
+from .base_fsm import BaseFsm
+from .camera_fsm import CameraFsm
+from .configurator import Configurator
+from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
+from .device import PythonDevice, launchPythonDevice
+from .device_client import DeviceClient
+from .device_server import DeviceServer, Launcher
+from .fsm import (
     KARABO_FSM_ACTION, KARABO_FSM_ACTION0, KARABO_FSM_ACTION1,
     KARABO_FSM_ACTION2, KARABO_FSM_ACTION3, KARABO_FSM_ACTION4,
     KARABO_FSM_CREATE_MACHINE, KARABO_FSM_EVENT0, KARABO_FSM_EVENT1,
@@ -80,19 +77,17 @@ from .bound_api.fsm import (
     KARABO_FSM_STATE_AE, KARABO_FSM_STATE_AEE, KARABO_FSM_STATE_E,
     KARABO_FSM_STATE_EE, KARABO_FSM_STATE_MACHINE, KARABO_FSM_STATE_MACHINE_E,
     KARABO_FSM_STATE_MACHINE_EE)
-from .bound_api.no_fsm import NoFsm
-from .bound_api.ok_error_fsm import OkErrorFsm
-from .bound_api.plugin_loader import PluginLoader
-from .bound_api.runner import Runner
-from .bound_api.server_entry_point import runSingleDeviceServer
-from .bound_api.start_stop_fsm import StartStopFsm
-from .bound_api.start_stop_fsm_periodic import StartStopFsmPeriodic
-from .bound_api.worker import QueueWorker, Worker
-from .common.alarm_conditions import AlarmCondition
+from .no_fsm import NoFsm
+from .ok_error_fsm import OkErrorFsm
+from .plugin_loader import PluginLoader
+from .runner import Runner
+from .server_entry_point import runSingleDeviceServer
+from .start_stop_fsm import StartStopFsm
+from .start_stop_fsm_periodic import StartStopFsmPeriodic
+from .worker import QueueWorker, Worker
+
 # For comptibility with old karathon bindings, take care that e.g.
 # str(Types.INT32) is 'INT32' and not 'Types.INT32'
-from .common.states import State, StateSignifier
-
 
 def __typesToString(self):
     repStr = repr(self)  # i.e. '<Types.{this we want}: {enum value}>'
