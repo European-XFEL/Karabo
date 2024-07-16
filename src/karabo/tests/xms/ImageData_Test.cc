@@ -149,7 +149,7 @@ void ImageData_Test::testSetAndGetMethods() {
         image.setROIOffsets(offsets);
         image.setBinning(binning);
         image.setRotation(Rotation::ROT_90);
-        // false/true flip is tested in bound_api
+        // false/true flip is tested in bound
         image.setFlipX(true);
         image.setFlipY(false);
         image.setDimensionTypes(dimTypes);

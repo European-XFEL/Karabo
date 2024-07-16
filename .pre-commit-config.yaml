@@ -56,7 +56,7 @@ repos:
           (?x)(
               ^conda-recipes/|
               ^src/pythonKarabo/karabo/integration_tests/|
-              ^src/pythonKarabo/karabo/bound_api/tests/
+              ^src/pythonKarabo/karabo/bound/tests/
           )
 
   - repo: https://github.com/pycqa/isort
@@ -93,7 +93,7 @@ repos:
           (?x)(
               ^conda-recipes/|
               ^src/pythonKarabo/karabo/integration_tests/|
-              ^src/pythonKarabo/karabo/bound_api/tests/
+              ^src/pythonKarabo/karabo/bound/tests/
           )
 
   - repo: https://github.com/asottile/pyupgrade

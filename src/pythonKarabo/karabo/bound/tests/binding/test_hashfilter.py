@@ -20,7 +20,7 @@ from karabo.bound import (
     AMPERE, BOOL_ELEMENT, CHOICE_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT,
     INT64_ELEMENT, LIST_ELEMENT, METER, MILLI, NODE_ELEMENT, STRING_ELEMENT,
     UINT32_ELEMENT, AssemblyRules, Hash, HashFilter, Validator)
-from karabo.bound_api.decorators import (
+from karabo.bound.decorators import (
     KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS)
 from karabo.common.states import State
 

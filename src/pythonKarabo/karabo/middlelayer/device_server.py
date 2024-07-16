@@ -632,7 +632,7 @@ class BoundDeviceServer(DeviceServerBase):
                 env = dict(os.environ)
                 env["PYTHONPATH"] = self.pluginDirectory
                 process = await create_subprocess_exec(
-                    sys.executable, "-m", "karabo.bound_api.launcher",
+                    sys.executable, "-m", "karabo.bound.launcher",
                     "schema", self.boundNamespace, ep.name,
                     env=env, stdout=PIPE)
                 try:
@@ -734,7 +734,7 @@ class BoundDeviceServer(DeviceServerBase):
         # the device ID is a parameter on the commandline only such that
         # one can identify via ps which process corresponds to which device
         process = await create_subprocess_exec(
-            sys.executable, "-m", "karabo.bound_api.launcher",
+            sys.executable, "-m", "karabo.bound.launcher",
             "run", self.boundNamespace, classId, deviceId,
             env=env, stdin=PIPE)
         # Pass as binary as expected by launcher

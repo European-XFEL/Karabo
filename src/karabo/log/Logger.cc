@@ -50,7 +50,7 @@ namespace karabo {
 
 
         void Logger::expectedParameters(Schema& s) {
-            // Take care to keep this priority in sync with "Logger.priority" of the Python karabo/bound_api/device.py
+            // Take care to keep this priority in sync with "Logger.priority" of the Python karabo/bound/device.py
             STRING_ELEMENT(s)
                   .key("priority")
                   .displayedName("Priority")
