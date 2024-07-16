@@ -196,7 +196,7 @@ async def test_cross(deviceTest):
     global process
     # it takes typically 2 s for the bound device to start
     process = await create_subprocess_exec(
-        sys.executable, "-m", "karabo.bound_api.launcher",
+        sys.executable, "-m", "karabo.bound.launcher",
         "run", "karabo.bound_device_test", "TestDevice",
         stdin=PIPE, stderr=PIPE, stdout=PIPE)
     # Logging set to FATAL to swallow the misleading ERROR that comes
@@ -467,7 +467,7 @@ async def test_cross_pipeline(deviceTest):
     )
     global process
     process = await create_subprocess_exec(
-        sys.executable, "-m", "karabo.bound_api.launcher",
+        sys.executable, "-m", "karabo.bound.launcher",
         "run", "karabo.bound_device_test", "TestDevice",
         stdin=PIPE, stdout=PIPE)
     process.stdin.write(encodeBinary(config))
