@@ -20,7 +20,7 @@ from karabo import __version__ as karaboVersion
 from karabo.bound import (
     AccessLevel, Epochstamp, Hash, SignalSlotable, Timestamp, Trainstamp,
     fullyEqual)
-from karabo.integration_tests.utils import BoundDeviceTestCase
+from karabo.bound.testing import BoundDeviceTestCase
 
 instTimeout = 30
 instTimeoutMs = instTimeout * 1000
