@@ -13,10 +13,10 @@ Python Bound API
 .. autoclass:: karabo.bound.DeviceClient
    :members:
 
-.. automodule:: karabo.bound_api.worker
+.. automodule:: karabo.bound.worker
    :members:
 
-.. automodule:: karabo.bound_api.decorators
+.. automodule:: karabo.bound.decorators
    :members:
 
 .. autoclass:: karabo.bound.Configurator
