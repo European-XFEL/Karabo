@@ -34,7 +34,7 @@ def start_bound_server(server_id, args, plugin_dir=''):
     if plugin_dir:
         env['PYTHONPATH'] = plugin_dir
 
-    entrypoint = "from karabo.bound_api.device_server import main;main()"
+    entrypoint = "from karabo.bound.device_server import main;main()"
     cmd = [sys.executable, "-c", entrypoint, "serverId=" + server_id] + args
     return subprocess.Popen(cmd, env=env)
 

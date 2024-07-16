@@ -73,7 +73,7 @@ def main():
 
         if "_logger_" in config:
             # Yet unused when started from MDL, but equivalent to
-            # bound_api.device.launchPythonDevice()
+            # bound.device.launchPythonDevice()
             PythonDevice._loggerCfg = copy.copy(config['_logger_'])
             config.erase('_logger_')
 

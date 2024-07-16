@@ -37,7 +37,7 @@ class Tests(unittest.TestCase):
 
     def test_schema(self):
         process = subprocess.Popen(
-            [sys.executable, "-m", "karabo.bound_api.launcher",
+            [sys.executable, "-m", "karabo.bound.launcher",
              "schemaOverwriteVersion",  # fixed default karabo version
              "karabo.bound_device_test", "TestDevice"],
             stdout=subprocess.PIPE)
