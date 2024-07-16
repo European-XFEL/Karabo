@@ -16,6 +16,7 @@
 import os
 import subprocess
 import sys
+from collections.abc import Callable
 from threading import Thread
 from time import sleep
 from unittest import TestCase
@@ -167,22 +168,28 @@ class BoundDeviceTestCase(TestCase):
                   f"{EventLoop.getNumberOfThreads()} threads.")
 
     def waitUntilTrue(self, condition, maxTimeoutSec, maxTries=20):
-        """
-        Wait until condition() gets True.
-        :param condition method to become True
-        :param maxTimeoutSec maximum time in seconds to wait for it to get True
-        :maxTries up to how many times condition() is evaluated within
-                   maxTimeoutSec
+        """A convenience wrapper for sleepUntil
 
-        :return whether condition() became True
+        See `sleepUntil` for more information
         """
-        interval = maxTimeoutSec / maxTries
-        counter = maxTries
-        while counter > 0:
-            if condition():
-                return True
-            else:
-                counter -= 1
-                sleep(interval)
-        # Give up:
-        return False
+        return sleepUntil(condition, maxTimeoutSec, maxTries)
+
+
+def sleepUntil(condition: Callable, timeout: float | int, maxTries: int = 20):
+    """Sleep until condition() gets True
+
+    :param condition: callable
+    :param timeout: maximum time in seconds to evaluate
+    :param maxTries: denominator of timeout. Number of evaluations
+
+    :returns bool
+    """
+    interval = timeout / maxTries
+    counter = maxTries
+    while counter > 0:
+        if condition():
+            return True
+        else:
+            counter -= 1
+            sleep(interval)
+    return False

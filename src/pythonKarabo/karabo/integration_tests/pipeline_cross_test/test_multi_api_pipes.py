@@ -17,7 +17,7 @@ from datetime import datetime
 from time import sleep, time
 
 from karabo.bound import Hash, SignalSlotable, State
-from karabo.integration_tests.utils import BoundDeviceTestCase
+from karabo.bound.testing import BoundDeviceTestCase
 
 
 class TestCrossPipelining(BoundDeviceTestCase):

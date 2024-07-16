@@ -14,7 +14,7 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 from karabo.bound import Hash, State
-from karabo.integration_tests.utils import BoundDeviceTestCase
+from karabo.bound.testing import BoundDeviceTestCase
 
 max_timeout = 60    # in seconds
 

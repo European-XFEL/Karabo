@@ -18,8 +18,8 @@ from datetime import datetime
 from time import sleep
 
 from karabo.bound import Hash
+from karabo.bound.testing import BoundDeviceTestCase
 from karabo.common.states import State
-from karabo.integration_tests.utils import BoundDeviceTestCase
 
 SERVER_ID = "testServerPP"
 
