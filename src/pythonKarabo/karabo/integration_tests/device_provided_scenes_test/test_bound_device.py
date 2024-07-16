@@ -16,8 +16,8 @@
 from time import sleep
 
 from karabo.bound import Hash
+from karabo.bound.testing import BoundDeviceTestCase
 from karabo.common.api import Capabilities, State
-from karabo.integration_tests.utils import BoundDeviceTestCase
 
 SERVER_ID = "testServerSceneProviders"
 

@@ -16,7 +16,7 @@
 import copy
 
 from karabo.bound import Hash, SignalSlotable
-from karabo.integration_tests.utils import BoundDeviceTestCase
+from karabo.bound.testing import BoundDeviceTestCase
 
 
 class TestDeviceServer(BoundDeviceTestCase):
