@@ -1619,11 +1619,10 @@ namespace karabo {
                         } else if (m_timeId >= nPeriods + 1ull) { // sanity check
                             id = m_timeId - nPeriods - 1ull;
                         } else {
-                            KARABO_LOG_FRAMEWORK_WARN << "Bad input: (train)Id zero since "
-                                                      << "epoch = " << epoch.toIso8601()
-                                                      << "; from time server: epoch = " << epochLastReceived.toIso8601()
-                                                      << ", id = " << m_timeId << ", period = " << m_timePeriod
-                                                      << " mus";
+                            KARABO_LOG_FRAMEWORK_WARN
+                                  << "Bad input: (train)Id zero since " << "epoch = " << epoch.toIso8601()
+                                  << "; from time server: epoch = " << epochLastReceived.toIso8601()
+                                  << ", id = " << m_timeId << ", period = " << m_timePeriod << " mus";
                         }
                     }
                 }
@@ -1774,8 +1773,7 @@ namespace karabo {
                 SignalSlotable::start();
 
                 KARABO_LOG_FRAMEWORK_INFO << "'" << m_classId << "' with deviceId: '" << this->getInstanceId()
-                                          << "' got started"
-                                          << " on server '" << this->getServerId() << "'.";
+                                          << "' got started" << " on server '" << this->getServerId() << "'.";
 
                 //
                 // Finally do everything that requires full participation in the system
@@ -1873,15 +1871,15 @@ namespace karabo {
                         } else if (displayType == "InputChannel") {
                             prepareInputChannel(key);
                         } else {
-                            KARABO_LOG_FRAMEWORK_TRACE
-                                  << "'" << this->getInstanceId() << "' does not create in-/output "
-                                  << "channel for '" << key << "' since it's a '" << displayType << "'";
+                            KARABO_LOG_FRAMEWORK_TRACE << "'" << this->getInstanceId()
+                                                       << "' does not create in-/output " << "channel for '" << key
+                                                       << "' since it's a '" << displayType << "'";
                         }
                     } else if (schema.isNode(key)) {
                         // Recursive call going down the tree for channels within nodes
                         KARABO_LOG_FRAMEWORK_TRACE << "'" << this->getInstanceId()
-                                                   << "' looks for input/output channels "
-                                                   << "under node \"" << key << "\"";
+                                                   << "' looks for input/output channels " << "under node \"" << key
+                                                   << "\"";
                         initChannels(schema, key);
                     }
                 }
@@ -2027,9 +2025,7 @@ namespace karabo {
                                                << " and called by '" << callee << "'";
                     if (callee != "unknown" && callee != lockHolder) {
                         std::ostringstream msg;
-                        msg << "Command "
-                            << "\"" << slotName << "\""
-                            << " is not allowed as device is locked by "
+                        msg << "Command " << "\"" << slotName << "\"" << " is not allowed as device is locked by "
                             << "\"" << lockHolder << "\".";
                         throw KARABO_LOCK_EXCEPTION(msg.str());
                     }
@@ -2048,11 +2044,8 @@ namespace karabo {
                     const karabo::util::State currentState = getState();
                     if (std::find(allowedStates.begin(), allowedStates.end(), currentState) == allowedStates.end()) {
                         std::ostringstream msg;
-                        msg << "Command "
-                            << "\"" << slotName << "\""
-                            << " is not allowed in current state "
-                            << "\"" << currentState.name() << "\" of device "
-                            << "\"" << m_deviceId << "\".";
+                        msg << "Command " << "\"" << slotName << "\"" << " is not allowed in current state " << "\""
+                            << currentState.name() << "\" of device " << "\"" << m_deviceId << "\".";
                         throw KARABO_LOGIC_EXCEPTION(msg.str());
                     }
                 }
