@@ -1072,8 +1072,7 @@ void BaseLogging_Test::testLastKnownConfiguration(karabo::util::Epochstamp fileM
     // if data migration happened the data is younger than the file based logging data
     CPPUNIT_ASSERT_MESSAGE(msg, configStamp > (dataWasMigrated ? fileMigratedDataEndsBefore : beforeAnything));
     CPPUNIT_ASSERT_MESSAGE(msg, configStamp < afterDeviceGone);
-    std::clog << "\n... "
-              << "Timestamp of retrieved configuration: " << configTimepoint << "\n "
+    std::clog << "\n... " << "Timestamp of retrieved configuration: " << configTimepoint << "\n "
               << "Ok (retrieved configuration with last known value for 'int32Property' while the device was not being "
                  "logged)."
               << std::endl;
@@ -1098,8 +1097,7 @@ void BaseLogging_Test::testLastKnownConfiguration(karabo::util::Epochstamp fileM
         // if migration failed or was incompatible we would not get a timestamp matching this condition
         // there wouldn't be any data in the DB before this.
         CPPUNIT_ASSERT(configStamp < fileMigratedDataEndsBefore);
-        std::clog << "\n... "
-                  << "Timestamp of retrieved configuration: " << configTimepoint << "\n "
+        std::clog << "\n... " << "Timestamp of retrieved configuration: " << configTimepoint << "\n "
                   << "Ok (retrieved configuration with last known value for 'int32Property' from file logger migrated "
                      "data)."
                   << std::endl;
