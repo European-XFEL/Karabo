@@ -35,7 +35,8 @@ namespace karabo {
 
 
         FromLiteral::FromLiteral() {
-#define _KARABO_HELPER_MACRO(type) {#type, Types::type}
+#define _KARABO_HELPER_MACRO(type) \
+    { #type, Types::type }
 
             _typeInfoMap = {_KARABO_HELPER_MACRO(BOOL),
                             _KARABO_HELPER_MACRO(VECTOR_BOOL),

@@ -155,8 +155,8 @@ void SceneProvider_Test::testRequestSceneFailure() {
     const Hash arg_hash = Hash("scenes", std::vector<std::string>(1, "foo"));
     Hash message("type", "requestGeneric", "instanceId", "noSceneProvider", "slot", "slotGetScenes", "args", arg_hash);
     message.set("token", "notAVeryUniqueToken");
-    karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages(
-          "requestGeneric", 1, [&] { m_tcpAdapter->sendMessage(message); }, 10000);
+    karabo::TcpAdapter::QueuePtr messageQ =
+          m_tcpAdapter->getNextMessages("requestGeneric", 1, [&] { m_tcpAdapter->sendMessage(message); }, 10000);
     Hash lastMessage;
     messageQ->pop(lastMessage);
 
