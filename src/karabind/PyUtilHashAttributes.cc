@@ -144,8 +144,7 @@ void exportPyUtilHashAttributes(py::module_& m) {
           "This function automatically called when HashAttributes object checked in \"if\" expression. \"False\" means "
           "that container is empty.");
 
-    a.def(
-          "clear", [](karabo::util::Hash::Attributes& self) { self.clear(); }, "Make HashAttributes container empty.");
+    a.def("clear", [](karabo::util::Hash::Attributes& self) { self.clear(); }, "Make HashAttributes container empty.");
 
     a.def(
           "getNode",

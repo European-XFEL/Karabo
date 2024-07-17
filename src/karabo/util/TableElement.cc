@@ -132,8 +132,8 @@ namespace karabo {
                     if (colAccessMode != READ) {
                         rowSchema.setAccessMode(col, READ);
                         std::cerr << "\nTABLE SANITIZE (" << m_node->getKey() << "): Non read-only column '" << col
-                                  << "' of read-only table had its access mode "
-                                  << "adjusted to read-only." << std::endl;
+                                  << "' of read-only table had its access mode " << "adjusted to read-only."
+                                  << std::endl;
                     }
                 }
             } else {
@@ -145,8 +145,8 @@ namespace karabo {
                     if (colAccessMode == INIT) {
                         rowSchema.setAccessMode(col, WRITE);
                         std::cerr << "\nTABLE SANITIZE (" << m_node->getKey() << "): init-only column '" << col
-                                  << "' of non read-only table had its access mode "
-                                  << "adjusted to reconfigurable." << std::endl;
+                                  << "' of non read-only table had its access mode " << "adjusted to reconfigurable."
+                                  << std::endl;
                     }
                 }
             }
@@ -159,9 +159,9 @@ namespace karabo {
                 if (!rowSchema.hasDefaultValue(col)) {
                     const Types::ReferenceType colType = rowSchema.getValueType(col);
                     setDefaultValueForColumn(col, colType, rowSchema);
-                    std::cerr << "\nTABLE SANITIZE (" << m_node->getKey() << "):"
-                              << "column '" << col << "' lacked a default value. "
-                              << "A zero or empty default value was added." << std::endl;
+                    std::cerr << "\nTABLE SANITIZE (" << m_node->getKey() << "):" << "column '" << col
+                              << "' lacked a default value. " << "A zero or empty default value was added."
+                              << std::endl;
                 }
             }
         }
@@ -177,8 +177,7 @@ namespace karabo {
                 if (minVecSize > 0) {
                     std::ostringstream oss;
                     oss << "Cannot generate default value for column '" << colName << "': the minimum vector size, '"
-                        << minVecSize << "', is greater than '0', the size of "
-                        << "the default vector.";
+                        << minVecSize << "', is greater than '0', the size of " << "the default vector.";
                     throw KARABO_PARAMETER_EXCEPTION(oss.str());
                 }
             } else if (Types::isSimple(colType)) {

@@ -245,8 +245,8 @@ namespace karabo {
                 const std::string& signalFunction = header->get<std::string>("signalFunction");
                 if (signalInstanceId != m_instanceId) {
                     std::ostringstream oss;
-                    oss << "Cannot publish \"" << signalFunction << "\" from \"" << m_instanceId << "\": "
-                        << "the signalInstanceId should be \"" << signalInstanceId << "\"!";
+                    oss << "Cannot publish \"" << signalFunction << "\" from \"" << m_instanceId
+                        << "\": " << "the signalInstanceId should be \"" << signalInstanceId << "\"!";
                     throw KARABO_LOGIC_EXCEPTION(oss.str());
                 }
                 std::string slotInstanceIds = header->get<std::string>("slotInstanceIds");
