@@ -19,7 +19,7 @@ import time
 from karabo.bound import (
     INPUT_CHANNEL, INT32_ELEMENT, NODE_ELEMENT, OUTPUT_CHANNEL,
     OVERWRITE_ELEMENT, Hash, Schema, SignalSlotable)
-from karabo.integration_tests.utils import BoundDeviceTestCase
+from karabo.bound.testing import BoundDeviceTestCase
 
 max_timeout = 20    # in seconds
 max_timeout_ms = max_timeout * 1000
