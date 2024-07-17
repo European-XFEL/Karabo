@@ -51,8 +51,7 @@ void exportPyUtilHashNode(py::module_& m) {
 
     n.def("__str__", [](const Hash::Node& self) { return py::cast(self.getKey()); });
 
-    n.def(
-          "getKey", [](const Hash::Node& self) { return py::cast(self.getKey()); }, "Returns the key of current node.");
+    n.def("getKey", [](const Hash::Node& self) { return py::cast(self.getKey()); }, "Returns the key of current node.");
 
     n.def(
           "setValue",

@@ -583,9 +583,9 @@ namespace karabo {
             // Should come here only if the hello message failed before the connection is registered in
             // `m_openConnections` on connect.
             auto connectionPtr = channel->getConnection();
-            KARABO_LOG_FRAMEWORK_ERROR << "onTcpChannelError on \"" << m_instanceId << "\"  for untracked connection: "
-                                       << "code #" << error.value() << " -- \"" << error.message() << "\""
-                                       << ((connectionPtr) ? "." : ". Stop connection.");
+            KARABO_LOG_FRAMEWORK_ERROR << "onTcpChannelError on \"" << m_instanceId
+                                       << "\"  for untracked connection: " << "code #" << error.value() << " -- \""
+                                       << error.message() << "\"" << ((connectionPtr) ? "." : ". Stop connection.");
             if (connectionPtr) connectionPtr->stop();
         }
 
