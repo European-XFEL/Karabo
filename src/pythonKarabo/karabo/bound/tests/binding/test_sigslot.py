@@ -251,8 +251,8 @@ def test_sigslot_register_lambda(eventLoopFixt):
     # Auto detection of num(arguments) works, default arg don't harm.
     sigSlot.registerSlot(lambda a, b, c, d=55: sigSlot.reply(a, b, c, d))
     req = sigSlot.request("", "<lambda>", 1, 2, 3, 5)
-    l, m, n, o = req.waitForReply(timeout)
-    assert 1 == l
+    ll, m, n, o = req.waitForReply(timeout)
+    assert 1 == ll
     assert 2 == m
     assert 3 == n
     assert 5 == o
@@ -261,8 +261,8 @@ def test_sigslot_register_lambda(eventLoopFixt):
     sigSlot.registerSlot(lambda a, b, c, d=55: sigSlot.reply(a, b, c, d),
                          "lam", 3)
     req = sigSlot.request("", "lam", 8, 13, 21)
-    l, m, n, o = req.waitForReply(timeout)
-    assert 8 == l
+    ll, m, n, o = req.waitForReply(timeout)
+    assert 8 == ll
     assert 13 == m
     assert 21 == n
     assert 55 == o
