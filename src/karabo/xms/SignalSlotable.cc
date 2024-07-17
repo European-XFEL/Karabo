@@ -1398,15 +1398,14 @@ namespace karabo {
                 } else {
                     KARABO_LOG_FRAMEWORK_WARN << "Could not connect slot '" << slotInstanceId << "." << slotFunction
                                               << "' to (non-existing?) signal '" << signalInstanceId << "."
-                                              << signalFunction << "'. Will try"
-                                              << " again if '" << slotInstanceId << "' or '" << signalInstanceId
-                                              << "' send signalInstanceNew.";
+                                              << signalFunction << "'. Will try" << " again if '" << slotInstanceId
+                                              << "' or '" << signalInstanceId << "' send signalInstanceNew.";
                 }
             } else {
-                KARABO_LOG_FRAMEWORK_WARN
-                      << "Did not try to connect non-existing slot '" << slotInstanceId << "." << slotFunction
-                      << "' to signal '" << signalInstanceId << "." << signalFunction << "'. Will try"
-                      << " again if '" << slotInstanceId << "' or '" << signalInstanceId << "' send signalInstanceNew.";
+                KARABO_LOG_FRAMEWORK_WARN << "Did not try to connect non-existing slot '" << slotInstanceId << "."
+                                          << slotFunction << "' to signal '" << signalInstanceId << "."
+                                          << signalFunction << "'. Will try" << " again if '" << slotInstanceId
+                                          << "' or '" << signalInstanceId << "' send signalInstanceNew.";
             }
 
             return false;
@@ -2057,8 +2056,7 @@ namespace karabo {
                     disconnected = false;
                     KARABO_LOG_FRAMEWORK_WARN << "Remote instance '" << signalInstanceId << "' did not respond in time"
                                               << " the request to disconnect slot '" << slotInstanceId << "."
-                                              << slotFunction << "' from"
-                                              << " its signal '" << signalFunction << "'.";
+                                              << slotFunction << "' from" << " its signal '" << signalFunction << "'.";
                 }
             }
 

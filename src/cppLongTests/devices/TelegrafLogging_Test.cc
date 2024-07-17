@@ -120,8 +120,7 @@ std::pair<bool, std::string> TelegrafLogging_Test::setupTelegrafEnv() {
 
     if (missingVars.size() > 0) {
         std::ostringstream ostr;
-        ostr << "\n=== Telegraf connection parameters not fully defined ==="
-             << "\nMissing environment variables:\n";
+        ostr << "\n=== Telegraf connection parameters not fully defined ===" << "\nMissing environment variables:\n";
         for (const std::string& missingVar : missingVars) {
             ostr << "\t" << missingVar << "\n";
         }

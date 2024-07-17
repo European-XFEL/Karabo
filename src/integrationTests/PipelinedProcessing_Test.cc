@@ -726,8 +726,8 @@ void PipelinedProcessing_Test::testPipeQueueAtLimit(unsigned int processingTime,
     testSenderOutputChannelConnections();
     // Restore the sender's parameters back to their defaults.
     m_deviceClient->set(m_sender, Hash("delay", prev_delay, "nData", prev_nData, "dataSize", prev_dataSize));
-    std::clog << "   Success - test duration " << durMs << " ms: "
-              << "n(data_sent) = " << nData << ", n(data_arrived_when_all_sent) " << receivedWhenWriteDone - nTotalData0
+    std::clog << "   Success - test duration " << durMs << " ms: " << "n(data_sent) = " << nData
+              << ", n(data_arrived_when_all_sent) " << receivedWhenWriteDone - nTotalData0
               << ", n(data_arrived_end) = " << nTotalDataEnd - nTotalData0 << std::endl;
 }
 
@@ -1514,8 +1514,7 @@ void PipelinedProcessing_Test::testQueueClearOnDisconnect() {
 
 
 void PipelinedProcessing_Test::testQueueClearOnDisconnectSharedQueue(bool useRoundRobin) {
-    std::clog << "- input.dataDistribution = 'shared', "
-              << "output1.noInputShared = 'queueDrop', "
+    std::clog << "- input.dataDistribution = 'shared', " << "output1.noInputShared = 'queueDrop', "
               << "sharedInputSelector: " << (useRoundRobin ? "round-robin" : "load-balanced") << std::endl;
 
     killDeviceWithAssert(m_sender);

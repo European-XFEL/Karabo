@@ -227,8 +227,7 @@ void exportPyUtilSchema(py::module_& m) {
 
         //********* General functions on Schema *******
 
-        s.def(
-              "has", [](const Schema& self, string const& path) -> bool { return self.has(path); }, py::arg("path"));
+        s.def("has", [](const Schema& self, string const& path) -> bool { return self.has(path); }, py::arg("path"));
 
         s.def(
               "__contains__", [](const Schema& self, const std::string& path) -> bool { return self.has(path); },
@@ -835,8 +834,7 @@ void exportPyUtilSchema(py::module_& m) {
 
         //********* Help function to show all parameters *******
 
-        s.def(
-              "help", [](Schema& self, const std::string& classId) { self.help(classId); }, py::arg("classId") = "");
+        s.def("help", [](Schema& self, const std::string& classId) { self.help(classId); }, py::arg("classId") = "");
 
         s.def(
               "applyRuntimeUpdates",
