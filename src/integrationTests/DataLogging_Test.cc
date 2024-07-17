@@ -148,8 +148,7 @@ void DataLogging_Test::testMigrateFileLoggerData() {
     cmd << "cd ../../../src/pythonKarabo; ../../karabo/extern/bin/python3 ";
     cmd << "karabo/influxdb/dl_migrator.py ";
 
-    cmd << influxDbName << " " << absLoggerPath << "/karaboHistory/"
-        << " " << migrationResultsPath << " ";
+    cmd << influxDbName << " " << absLoggerPath << "/karaboHistory/" << " " << migrationResultsPath << " ";
     cmd << "--write-url " << boost::algorithm::replace_first_copy(influxUrlWrite, "tcp://", "http://") << " ";
     cmd << "--write-user " << influxUserWrite << " ";
     cmd << "--write-pwd " << influxPwdWrite << " ";

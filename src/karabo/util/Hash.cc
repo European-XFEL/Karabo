@@ -1051,9 +1051,7 @@ namespace karabo {
             return partial_count;
         }
 
-#define COUNTER(ReferenceType, CppType) \
-    ReferenceType:                      \
-    return element.getValue<std::vector<CppType>>().size();
+#define COUNTER(ReferenceType, CppType) ReferenceType : return element.getValue<std::vector<CppType>>().size();
 
 
         size_t counter(const Hash::Node& element) {

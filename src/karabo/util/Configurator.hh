@@ -205,7 +205,7 @@ namespace karabo {
            private:
             template <typename...> // Empty parameter pack with empty implementation as end of recursion
             struct RegisterSchemaFunctionsImpl {
-                static void reg(const std::string& classId){};
+                static void reg(const std::string& classId) {};
             };
 
             template <typename Head, typename... Tail>

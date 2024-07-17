@@ -1115,8 +1115,8 @@ namespace karabo {
                     }
                     hash.set("configuration", config);
                     const std::string& xLogReader = hash.get<std::string>("classId");
-                    KARABO_LOG_FRAMEWORK_INFO << "Trying to instantiate '" << readerId << "' "
-                                              << "of type '" << xLogReader << "' on server '" << serverId << "'";
+                    KARABO_LOG_FRAMEWORK_INFO << "Trying to instantiate '" << readerId << "' " << "of type '"
+                                              << xLogReader << "' on server '" << serverId << "'";
 
                     remote().instantiateNoWait(serverId, hash);
                 }

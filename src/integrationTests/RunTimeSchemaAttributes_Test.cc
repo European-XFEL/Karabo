@@ -165,6 +165,6 @@ void RunTimeSchemaAttributes_Test::testGuiServerApplicationFailure() {
 }
 
 
-void RunTimeSchemaAttributes_Test::dummyMonitor(const std::string&, const karabo::util::Hash&){
+void RunTimeSchemaAttributes_Test::dummyMonitor(const std::string&, const karabo::util::Hash&) {
 
 };
