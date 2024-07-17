@@ -74,7 +74,7 @@ struct Base : public boost::enable_shared_from_this<Base> {
 
 
 struct VirtualBase : public boost::enable_shared_from_this<VirtualBase> {
-    virtual void foo(){};
+    virtual void foo() {};
 
 
     virtual ~VirtualBase(){};
@@ -95,7 +95,7 @@ struct Final : public boost::enable_shared_from_this<Final> {};
 
 
 struct FinalVirtual : public boost::enable_shared_from_this<FinalVirtual> {
-    virtual void foo(){};
+    virtual void foo() {};
 
 
     virtual ~FinalVirtual(){};

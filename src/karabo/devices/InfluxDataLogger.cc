@@ -654,9 +654,8 @@ namespace karabo {
                 const int nFullChunks = schemaSize / m_maxValueStringSize;
                 const int lastChunkSize = schemaSize % m_maxValueStringSize;
                 std::stringstream ss;
-                ss << m_deviceToBeLogged << "__SCHEMAS,"
-                   << "digest=\"" << schemaDigest << "\" digest_start=\"" << schemaDigest.substr(0, 8)
-                   << "\",schema_size=" << schemaSize
+                ss << m_deviceToBeLogged << "__SCHEMAS," << "digest=\"" << schemaDigest << "\" digest_start=\""
+                   << schemaDigest.substr(0, 8) << "\",schema_size=" << schemaSize
                    << "i,n_schema_chunks=" << nFullChunks + (lastChunkSize > 0 ? 1 : 0) << "i";
                 for (int i = 0; i < nFullChunks; i++) {
                     ss << ",schema" << (i > 0 ? "_" + karabo::util::toString(i) : "") << "=\""

@@ -368,8 +368,7 @@ namespace karabo {
              * All the 'write(..)' methods, '[async]Update[NoWait](..)' and '[async]SignalEndOfStream(..)' must not be
              * called concurrently.
              */
-            void asyncUpdate(
-                  bool safeNDArray = false, boost::function<void()>&& writeDoneHandler = []() {});
+            void asyncUpdate(bool safeNDArray = false, boost::function<void()>&& writeDoneHandler = []() {});
 
             /**
              * Expert method
