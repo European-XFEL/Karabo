@@ -18,7 +18,7 @@ import os.path as op
 import unittest
 
 from karabo.bound import Hash, fullyEqual
-from karabo.integration_tests.utils import BoundDeviceTestCase
+from karabo.bound.testing import BoundDeviceTestCase
 from karabo.middlelayer_devices.configuration_manager import (
     KARABO_CONFIG_DB_FOLDER)
 
