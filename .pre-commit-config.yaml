@@ -38,7 +38,6 @@ repos:
         files: |
           (?x)(
               ^src/karabo/|
-              ^src/karathon/|
               ^src/karabind/|
               ^src/integrationTests/|
               ^src/brokerMessageLogger/|
@@ -52,22 +51,6 @@ repos:
     hooks:
       - id: ruff
         args: [--fix]
-        exclude: |
-          (?x)(
-              ^conda-recipes/|
-              ^src/pythonKarabo/karabo/integration_tests/|
-              ^src/pythonKarabo/karabo/bound/tests/
-          )
-
-  - repo: https://github.com/pycqa/isort
-    rev: 5.11.5
-    hooks:
-      - id: isort
-        name: isort python tests
-        files: |
-          (?x)(
-              ^tests/
-          )
 
   - repo: https://github.com/pycqa/isort
     rev: 5.11.5
@@ -89,12 +72,6 @@ repos:
     rev: 6.1.0
     hooks:
       - id: flake8
-        exclude: |
-          (?x)(
-              ^conda-recipes/|
-              ^src/pythonKarabo/karabo/integration_tests/|
-              ^src/pythonKarabo/karabo/bound/tests/
-          )
 
   - repo: https://github.com/asottile/pyupgrade
     rev: v3.16.0
