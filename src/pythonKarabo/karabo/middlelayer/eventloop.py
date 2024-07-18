@@ -234,7 +234,7 @@ class NoEventLoop(AbstractEventLoop):
     def loop(self):
         return self._instance._ss.loop
 
-    def create_task(self, coro, name=None, instance=None):
+    def create_task(self, coro, instance=None, name=None, context=None):
         """Create a task on the main event loop with this instance"""
 
         loop = self.loop
@@ -246,7 +246,8 @@ class NoEventLoop(AbstractEventLoop):
 
         def inner():
             nonlocal task
-            task = loop.create_task(coro, name=name, instance=instance)
+            task = loop.create_task(
+                coro, instance=instance, name=name, context=context)
             hastask.release()
 
         loop.call_soon_threadsafe(inner)
@@ -301,7 +302,7 @@ class EventLoop(SelectorEventLoop):
             self.hosts, self.connection)
         return Cls(self, deviceId, classId, broadcast)
 
-    def create_task(self, coro, instance=None, name=None):
+    def create_task(self, coro, instance=None, name=None, context=None):
         """Create a new task, running coroutine *coro*
 
         As an extension to the standard library method, in Karabo we track
@@ -311,7 +312,7 @@ class EventLoop(SelectorEventLoop):
         *instance* is the device this task should belong to, it defaults
         to the caller's device if existent. Note that a device first
         has to be started with ``startInstance`` before this will work."""
-        task = super().create_task(coro, name=name)
+        task = super().create_task(coro, name=name, context=context)
         try:
             if instance is None:
                 instance = get_event_loop().instance()
