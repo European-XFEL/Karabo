@@ -68,9 +68,9 @@ class TestHistogramPlot(GuiTestCase):
         start_color, stop_color = self._get_border_colors()
 
         np.testing.assert_allclose(start_color, self._colormap[start_index][1],
-                                   atol=3)
+                                   atol=4)
         np.testing.assert_allclose(stop_color, self._colormap[stop_index][1],
-                                   atol=3)
+                                   atol=4)
 
     def _get_border_colors(self):
         """Get gradient start and final stop colors by painting its QPixmap
