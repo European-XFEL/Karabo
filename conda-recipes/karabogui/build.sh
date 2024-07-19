@@ -34,3 +34,9 @@ do
     mkdir -p $TARGET_SCRIPT_DIR
     cp "${RECIPE_DIR}/env_scripts/${CHANGE}.sh" "${TARGET_SCRIPT_DIR}/${PKG_NAME}_${CHANGE}.sh"
 done
+
+# copy the app logo.
+# Otherwise desktop shortcuts depend on the installation path
+# and break at every python upgrade
+TARGET_SCRIPT_DIR="${PREFIX}/etc/"
+cp "karabogui/icons/app_logo.png" "${TARGET_SCRIPT_DIR}/karabo_app_logo.png"
