@@ -35,6 +35,7 @@ COLOR_MAP = {
     QsciLexerPython.DoubleQuotedFString: QColor("#067D17"),
     QsciLexerPython.SingleQuotedString: QColor("#067D17"),
     QsciLexerPython.SingleQuotedFString: QColor("#067D17"),
+    QsciLexerPython.UnclosedString: QColor("#067D17"),
     QsciLexerPython.Keyword: QColor("#0033B3"),
     QsciLexerPython.TripleSingleQuotedString: QColor("#8C8C8C"),
     QsciLexerPython.TripleDoubleQuotedString: QColor("#8C8C8C"),
