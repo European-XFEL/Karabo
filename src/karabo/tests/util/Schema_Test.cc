@@ -33,6 +33,20 @@ using namespace configurationTest;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Schema_Test);
 
+// Enable CPPUNIT_ASSERT_EQUAL for vectors
+namespace CppUnit {
+    template <typename T>
+    struct assertion_traits<std::vector<T>> {
+        static bool equal(const std::vector<T>& a, const std::vector<T>& b) {
+            return a == b;
+        }
+
+        static std::string toString(const std::vector<T>& p) {
+            return karabo::util::toString(p);
+        }
+    };
+} // namespace CppUnit
+
 
 Schema_Test::Schema_Test() {}
 
@@ -1596,15 +1610,23 @@ void Schema_Test::testStateAndAlarmSets() {
 void Schema_Test::testSubSchema() {
     Schema schema("test");
     GraphicsRenderer1::expectedParameters(schema);
+    const int alias = 1;
+    OVERWRITE_ELEMENT(schema).key("shapes.rectangle.c").setNewAlias(alias).commit();
     {
         Schema sub = schema.subSchema("shapes.rectangle");
         CPPUNIT_ASSERT(sub.has("b"));
         CPPUNIT_ASSERT(sub.has("c"));
+        CPPUNIT_ASSERT(sub.keyHasAlias("c"));
+        CPPUNIT_ASSERT(sub.aliasHasKey(alias));
+        CPPUNIT_ASSERT_EQUAL(std::string("c"), sub.getKeyFromAlias(alias));
+        CPPUNIT_ASSERT_EQUAL(alias, sub.getAliasFromKey<int>("c"));
+        CPPUNIT_ASSERT_EQUAL(std::string(), sub.getRootName()); // we have another hierarchy level, not match anymore
     }
     {
-        Schema sub = schema.subSchema("shapes.rectangle", "b");
+        Schema sub = schema.subSchema("shapes.rectangle", "b"); // filter for tag "b"
         CPPUNIT_ASSERT(sub.has("b"));
         CPPUNIT_ASSERT(!sub.has("c"));
+        CPPUNIT_ASSERT(!sub.aliasHasKey(alias));
     }
 
     // Now testing 'by rules':
@@ -1618,7 +1640,7 @@ void Schema_Test::testSubSchema() {
     }
 
     {
-        Schema::AssemblyRules rules(READ | WRITE | INIT, "ON"); // i.e. required sate ON or non-defined
+        Schema::AssemblyRules rules(READ | WRITE | INIT, "ON"); // i.e. required state ON or non-defined
         const Schema sub = schema.subSchemaByRules(rules);
         CPPUNIT_ASSERT(!sub.has("color"));
 
@@ -1626,6 +1648,18 @@ void Schema_Test::testSubSchema() {
         std::vector<std::string> finalPaths;
         sub.getParameterHash().getPaths(finalPaths);
         CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(6), finalPaths.size());
+
+        // Check rules are preserved
+        const Schema::AssemblyRules subRules = sub.getAssemblyRules();
+        CPPUNIT_ASSERT_EQUAL(rules.m_accessLevel, subRules.m_accessLevel);
+        CPPUNIT_ASSERT_EQUAL(rules.m_accessMode, subRules.m_accessMode);
+        CPPUNIT_ASSERT_EQUAL(rules.m_state, subRules.m_state);
+        // ...and alias as well
+        CPPUNIT_ASSERT(sub.keyHasAlias("shapes.rectangle.c"));
+        CPPUNIT_ASSERT(sub.aliasHasKey(alias));
+        CPPUNIT_ASSERT_EQUAL(std::string("shapes.rectangle.c"), sub.getKeyFromAlias(alias));
+        CPPUNIT_ASSERT_EQUAL(alias, sub.getAliasFromKey<int>("shapes.rectangle.c"));
+        CPPUNIT_ASSERT_EQUAL(schema.getRootName(), sub.getRootName());
     }
 
     {
@@ -1658,6 +1692,48 @@ void Schema_Test::testSubSchema() {
         std::vector<std::string> finalPaths;
         sub.getParameterHash().getPaths(finalPaths);
         CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(sub), static_cast<size_t>(4), finalPaths.size());
+    }
+
+    // Test subSchemaByPaths
+    {
+        // Extend the schema to test options
+        OVERWRITE_ELEMENT(schema).key("color").setNewOptions({"red", "yellow", "blue"}).commit();
+        const Schema sub = schema.subSchemaByPaths({"color",                // first level, but endpoint
+                                                    "shapes.circle",        // a node among choices
+                                                    "shapes.rectangle.c"}); // end point within a choice
+        // Check that all the paths (and no more) are there
+        CPPUNIT_ASSERT(sub.has("color"));
+        CPPUNIT_ASSERT(sub.has("shapes"));
+        CPPUNIT_ASSERT(sub.has("shapes.circle"));
+        CPPUNIT_ASSERT(sub.has("shapes.circle.radius"));
+        CPPUNIT_ASSERT(sub.has("shapes.rectangle"));
+        CPPUNIT_ASSERT(!sub.has("shapes.rectangle.b"));
+        CPPUNIT_ASSERT(sub.has("shapes.rectangle.c"));
+        CPPUNIT_ASSERT_EQUAL(3ul, sub.getPaths().size());
+        CPPUNIT_ASSERT_GREATER(3ul, schema.getPaths().size());
+
+        // Check whether attributes are there
+        CPPUNIT_ASSERT_EQUAL(std::string("red"), sub.getDefaultValue<std::string>("color"));
+        CPPUNIT_ASSERT_EQUAL(std::vector<std::string>(1, "prop"), sub.getTags("color"));
+        CPPUNIT_ASSERT_EQUAL(std::string("Color"), sub.getDisplayedName("color"));
+        CPPUNIT_ASSERT_EQUAL(std::vector<std::string>({"red", "yellow", "blue"}), sub.getOptions<std::string>("color"));
+        CPPUNIT_ASSERT(sub.isAssignmentOptional("color"));
+        CPPUNIT_ASSERT(sub.isAccessReconfigurable("color"));
+
+        CPPUNIT_ASSERT_EQUAL(std::string("circle"), sub.getDefaultValue<std::string>("shapes"));
+        CPPUNIT_ASSERT_EQUAL(static_cast<int>(Unit::METER), sub.getUnit("shapes.circle.radius"));
+        CPPUNIT_ASSERT_EQUAL(std::string("m"), sub.getUnitSymbol("shapes.circle.radius"));
+        CPPUNIT_ASSERT_EQUAL(static_cast<int>(MetricPrefix::MILLI), sub.getMetricPrefix("shapes.circle.radius"));
+        CPPUNIT_ASSERT_EQUAL(std::string("m"), sub.getMetricPrefixSymbol("shapes.circle.radius"));
+        CPPUNIT_ASSERT_EQUAL(0.f, sub.getMinExc<float>("shapes.circle.radius"));
+        CPPUNIT_ASSERT_EQUAL(100.f, sub.getMaxExc<float>("shapes.circle.radius"));
+
+        // Test alias and root name
+        CPPUNIT_ASSERT(sub.keyHasAlias("shapes.rectangle.c"));
+        CPPUNIT_ASSERT(sub.aliasHasKey(alias));
+        CPPUNIT_ASSERT_EQUAL(std::string("shapes.rectangle.c"), sub.getKeyFromAlias(alias));
+        CPPUNIT_ASSERT_EQUAL(alias, sub.getAliasFromKey<int>("shapes.rectangle.c"));
+        CPPUNIT_ASSERT_EQUAL(schema.getRootName(), sub.getRootName());
     }
 }
 
