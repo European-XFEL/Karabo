@@ -30,6 +30,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/foreach.hpp>
 #include <boost/tuple/tuple.hpp>
+#include <set>
 
 #include "AlarmConditions.hh"
 #include "Hash.hh"
@@ -283,7 +284,7 @@ namespace karabo {
              * Constructs empty schema for given classId
              * @param classId The factory key of the configurable class (will be stored outside the inner hash)
              * @param rules Assembly rules if the schema is assembled from a class configurations (filters access modes,
-             * states and access rights)
+             *              states and access rights)
              */
             Schema(const std::string& classId = "", const Schema::AssemblyRules& rules = Schema::AssemblyRules());
 
@@ -1698,6 +1699,16 @@ namespace karabo {
              *
              */
             Schema subSchemaByRules(const AssemblyRules& rules) const;
+
+            /**
+             * Retrieves a sub-schema with given paths
+             *
+             * A path to a node means that all further nested paths are kept
+             *
+             * @param paths in the schema whose information should be copied to the resulting sub schema
+             * @return reduced schema
+             */
+            Schema subSchemaByPaths(const std::set<std::string>& paths) const;
 
             /**
              * Set the DAQ data type for a given node element.

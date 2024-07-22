@@ -1077,6 +1077,7 @@ namespace karabo {
 
 
         void Schema::updateAliasMap() {
+            m_aliasToKey.clear();
             r_updateAliasMap(getKeys());
         }
 
@@ -1223,6 +1224,8 @@ namespace karabo {
                 HashFilter::byTag(sub, subHash, filteredHash, filterTags);
                 sub.setParameterHash(std::move(filteredHash));
             }
+
+            sub.updateAliasMap();
             return sub;
         }
 
@@ -1255,15 +1258,25 @@ namespace karabo {
             }
 
             // Finally assemble Schema out of surviving paths
+            Schema result = subSchemaByPaths(selectedPaths);
+            result.setAssemblyRules(rules);
+
+            return result;
+        }
+
+
+        Schema Schema::subSchemaByPaths(const std::set<std::string>& paths) const {
             Schema result;
-            if (!selectedPaths.empty()) {
+            if (!paths.empty()) {
                 Hash resultHash;
                 // Note: 1) Merge policy does not matter since resultHash is empty.
-                //       2) selectedPaths.empty() indicates to ignore this selection and take all!
-                resultHash.merge(getParameterHash(), Hash::REPLACE_ATTRIBUTES, selectedPaths);
+                //       2) paths.empty() indicates to ignore this selection and take all!
+                resultHash.merge(getParameterHash(), Hash::REPLACE_ATTRIBUTES, paths);
                 result.setParameterHash(std::move(resultHash));
             }
 
+            result.updateAliasMap();
+            result.setRootName(getRootName());
             return result;
         }
 
