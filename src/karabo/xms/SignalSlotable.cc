@@ -473,6 +473,7 @@ namespace karabo {
                 // (m_myInstanceMap not yet filled, so use shared one)
                 boost::shared_lock<boost::shared_mutex> lock(m_sharedInstanceMapMutex);
                 if (m_sharedInstanceMap.count(instanceId)) {
+                    // Note: "Another instance with ID" is assumed in DataLoggerManager::loggerInstantiationHandler
                     throw KARABO_SIGNALSLOT_EXCEPTION("Another instance with ID '" + instanceId +
                                                       "' is already online in this process (localhost)");
                 }
@@ -492,6 +493,7 @@ namespace karabo {
             }
             string foreignHost("unknown");
             if (instanceInfo.has("host")) instanceInfo.get("host", foreignHost);
+            // Note: See above about "Another instance with ID"!
             throw KARABO_SIGNALSLOT_EXCEPTION("Another instance with ID '" + instanceId +
                                               "' is already online (on host: " + foreignHost + ")");
         }
