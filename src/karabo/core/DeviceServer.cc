@@ -642,6 +642,7 @@ namespace karabo {
                 {
                     boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
                     if (m_deviceInstanceMap.find(deviceId) != m_deviceInstanceMap.end()) {
+                        // Note: If you alter this string, adjust also DataLoggerManager::loggerInstantiationHandler(..)
                         throw KARABO_LOGIC_EXCEPTION("Device '" + deviceId +
                                                      "' already running/starting on this server.");
                     }
