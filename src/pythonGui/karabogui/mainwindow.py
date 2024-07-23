@@ -973,7 +973,7 @@ class MainWindow(QMainWindow):
         directory = get_config()["data_dir"]
         file_name = getSaveFileName(
             caption="Save Concert file", filter="Yaml file(*.yaml *.yml)",
-            directory=directory, parent=self)
+            suffix="yaml", directory=directory, parent=self)
         if file_name:
             save_concert_file(file_name, scene_data)
             get_config()["data_dir"] = str(Path(file_name).parent)
