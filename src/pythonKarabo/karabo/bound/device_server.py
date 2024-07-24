@@ -793,7 +793,7 @@ def main(args=None):
     except KeyError:
         print("ERROR: $KARABO is not defined. Make sure you have sourced the "
               "'activate' script.")
-        return
+        return 1
 
     args = args or sys.argv
     # Load plugins already here to make them available for -h option
@@ -804,16 +804,18 @@ def main(args=None):
         server = Runner(DeviceServer).instantiate(args)
         if not server:
             EventLoop.stop()
-            # Likely started with -h option: Avoid print after finally.
-            return
+            # We get here with -h option: Avoid print after finally.
+            return 0
     except Exception:
         EventLoop.stop()
-        raise
+        traceback.print_exc()
+        return 2
     finally:
         del server  # increase chance that no log appears after print below
         t.join()
     print(os.path.basename(args[0]), "has exited!\n")
+    return 0
 
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())
