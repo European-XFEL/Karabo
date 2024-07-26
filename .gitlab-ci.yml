@@ -29,7 +29,7 @@ variables:
 .target_os_matrix:
   all_targets:
     matrix:
-      - ARCH_TAG: ["almalinux-9-008", "debian-10-004", "ubuntu-20-004", "ubuntu-22-003", "redhat-9-003"]
+      - ARCH_TAG: ["debian-10-004", "ubuntu-20-004", "ubuntu-22-003", "redhat-9-003"]
   only_redhat9:
     matrix:
       - ARCH_TAG: ["redhat-9-003"]
