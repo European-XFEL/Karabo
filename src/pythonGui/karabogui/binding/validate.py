@@ -26,13 +26,9 @@ from karabogui.binding.binding_types import (
     FloatBinding, IntBinding, NodeBinding, SlotBinding, StringBinding,
     VectorBinding, VectorDoubleBinding, VectorFloatBinding, VectorHashBinding,
     VectorNumberBinding, VectorStringBinding)
-from karabogui.binding.recursive import (
-    ChoiceOfNodesBinding, ListOfNodesBinding)
 from karabogui.binding.util import get_numpy_binding, realign_hash
 
 VECTOR_FLOAT_BINDINGS = (VectorFloatBinding, VectorDoubleBinding)
-NODE_BINDINGS = (NodeBinding, ListOfNodesBinding,
-                 ChoiceOfNodesBinding)
 
 
 def sanitize_table_value(binding, value):
@@ -119,7 +115,7 @@ def validate_value(binding, value):
             # VectorHashBinding is not a valid value and has to be explicitly
             # handled elsewhere, e.g. `validate_binding_configuration`
             value = None
-        elif isinstance(binding, NODE_BINDINGS):
+        elif isinstance(binding, NodeBinding):
             # Nothing to do here! We automatically return the value
             pass
         else:
@@ -314,7 +310,6 @@ def validate_binding_configuration(binding, config):
     assert isinstance(binding, BindingRoot)
 
     def _iter_binding(node, base=''):
-        _recursive_types = (ChoiceOfNodesBinding, ListOfNodesBinding)
         namespace = node.value
         base = base + '.' if base else ''
         for name in namespace:
@@ -322,9 +317,6 @@ def validate_binding_configuration(binding, config):
             subnode = getattr(namespace, name)
             if isinstance(subnode, NodeBinding):
                 yield from _iter_binding(subnode, base=subname)
-            elif isinstance(subnode, _recursive_types):
-                # cannot validate recursive types ...
-                continue
             elif not isinstance(subnode, SlotBinding):
                 yield subname, subnode
 
