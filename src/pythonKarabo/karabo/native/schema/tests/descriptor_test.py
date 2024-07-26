@@ -17,6 +17,7 @@ from enum import Enum
 from unittest import TestCase, main
 
 import numpy as np
+import pint
 import pytest
 from pint import DimensionalityError
 
@@ -244,13 +245,19 @@ class Tests(TestCase):
 
         self.assertEqual(d.defaultValue, [1, 2, 3])
 
-        # Overflow for -1, we are a UInt8
-        d = VectorUInt8(unitSymbol=Unit.METER,
-                        metricPrefixSymbol=MetricPrefix.MICRO,
-                        defaultValue=[-1.0, 2.0, 3.5])
-        default = d.defaultValue
-        self.assertEqual(default, [255, 2, 3])
-        self.assertEqual(type(default[0]), np.uint8)
+        if pint.__version__ > "0.22":
+            # Overflow for -1, we are a UInt8
+            with pytest.raises(OverflowError):
+                d = VectorUInt8(unitSymbol=Unit.METER,
+                                metricPrefixSymbol=MetricPrefix.MICRO,
+                                defaultValue=[-1.0, 2.0, 3.5])
+        else:
+            d = VectorUInt8(unitSymbol=Unit.METER,
+                            metricPrefixSymbol=MetricPrefix.MICRO,
+                            defaultValue=[-1.0, 2.0, 3.5])
+            default = d.defaultValue
+            self.assertEqual(default, [255, 2, 3])
+            self.assertEqual(type(default[0]), np.uint8)
 
         # Check for unsinged int64 bit
         max_uint64 = 18446744073709551615
