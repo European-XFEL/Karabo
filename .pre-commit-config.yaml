@@ -5,6 +5,7 @@ exclude: |
       ^doc/|
       ^src/service.in/|
       ^src/environment.in/|
+      ^src/karabind/stubs|
       ^ci/
   )
 

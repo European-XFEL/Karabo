@@ -11,6 +11,7 @@ GNU_MacPorts-MacOSX
 *.orig
 *.log
 /karabo
+src/karabind/stubs/
 package/
 run/bin/allInfo
 run/etc/*.log
