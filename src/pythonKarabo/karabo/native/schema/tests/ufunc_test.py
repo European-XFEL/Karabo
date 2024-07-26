@@ -1863,7 +1863,7 @@ class Tests(TestCase):
             x1 = QV([np.log(-1.), 1, np.log(0)], unit='m', timestamp=self.ts1)
         self.assertUnaryUfunc(ufunc, x1, [False, True, False])
 
-        x2 = QV([np.nan, np.inf, np.NINF], unit='m', timestamp=self.ts1)
+        x2 = QV([np.nan, np.inf, -np.inf], unit='m', timestamp=self.ts1)
         self.assertUnaryUfunc(ufunc, x2, self.false)
 
     def test_isinf(self):
@@ -1882,7 +1882,7 @@ class Tests(TestCase):
         x1 = QV([np.inf, -np.inf, 1.0, np.nan])
         self.assertUnaryUfunc(ufunc, x1, [True, True, False, False])
 
-        x2 = QV([np.inf, np.nan, np.NINF], unit='m', timestamp=self.ts1)
+        x2 = QV([np.inf, np.nan, -np.inf], unit='m', timestamp=self.ts1)
         self.assertUnaryUfunc(ufunc, x2, [True, False, True])
 
     def test_isnan(self):
@@ -1898,7 +1898,7 @@ class Tests(TestCase):
             x1 = QV([np.log(-1.), 1, np.log(0)], unit='m', timestamp=self.ts1)
         self.assertUnaryUfunc(ufunc, x1, [True, False, False])
 
-        x2 = QV([np.nan, np.inf, np.NINF], unit='m', timestamp=self.ts1)
+        x2 = QV([np.nan, np.inf, -np.inf], unit='m', timestamp=self.ts1)
         self.assertUnaryUfunc(ufunc, x2, [True, False, False])
 
     @skip

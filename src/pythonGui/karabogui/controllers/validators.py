@@ -131,9 +131,10 @@ class ListValidator(QValidator):
             # 4.1 We have to see we can cast it properly (SyntaxError)
             # 4.2 Check for changes in between Vectors (ValueError)
             # 4.3 Casts down integers (AssertionError), limits
+            # 4.4 Overflowing integers (OverflowError)
             try:
                 assert self.literal(value) == self.cast(value)
-            except (ValueError, SyntaxError, AssertionError):
+            except (ValueError, SyntaxError, AssertionError, OverflowError):
                 return self.Intermediate, input, pos
 
         return self.Acceptable, input, pos
