@@ -968,3 +968,10 @@ def test_ndarray():
     assert h_arr[1][2] == 6
     arr[0][0] == 11
     assert h_arr[0][0] == 1  # untouched
+
+    arr = np.arange(20000, dtype=np.int16).reshape(100, 200)
+    arr.flags.writeable = False
+    h = Hash()
+    # Can't insert non-writable arrays into Hash
+    with pytest.raises(ValueError):
+        h['a'] = arr
