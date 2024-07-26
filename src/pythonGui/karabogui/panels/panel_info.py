@@ -3,10 +3,7 @@ from qtpy.QtCore import QModelIndex
 from traits.api import Undefined
 
 from karabo.native import Hash
-from karabogui.binding.api import (
-    ChoiceOfNodesBinding, ListOfNodesBinding, NodeBinding)
-
-_RECURSIVE_BINDINGS = (ListOfNodesBinding, ChoiceOfNodesBinding)
+from karabogui.binding.api import NodeBinding
 
 
 def _friendly_repr(binding, value):
@@ -38,8 +35,6 @@ def create_configurator_info(panel):
             # No pipeline data!
             if proxy is None or proxy.pipeline_parent_path:
                 continue
-            elif isinstance(proxy.binding, _RECURSIVE_BINDINGS):
-                continue
             elif isinstance(proxy.binding, NodeBinding):
                 yield from _get_row_data(model.index(row, 0, parent_index))
             else:
@@ -54,8 +49,7 @@ def create_scene_info(panel):
     """Create the logbook info for the scene panel"""
     scene_view = panel.scene_view
     proxies = [proxy for proxy in scene_view.cached_proxies()
-               if not isinstance(proxy.binding,
-                                 (NodeBinding, _RECURSIVE_BINDINGS))]
+               if not isinstance(proxy.binding, NodeBinding)]
     data = Hash(natsort.natsorted(
         {proxy.key: _friendly_repr(proxy.binding, proxy.value)
          for proxy in proxies}.items()))

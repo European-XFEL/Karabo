@@ -27,8 +27,7 @@ from traits.api import Instance, Undefined
 
 from karabo.common.scenemodel.api import DisplayTimeModel
 from karabogui import messagebox
-from karabogui.binding.api import (
-    BaseBinding, ChoiceOfNodesBinding, NodeBinding, get_binding_value)
+from karabogui.binding.api import BaseBinding, NodeBinding, get_binding_value
 from karabogui.const import WIDGET_MIN_HEIGHT
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
@@ -37,11 +36,9 @@ from karabogui.fonts import get_font_size_from_dpi
 from karabogui.indicators import ALL_OK_COLOR
 from karabogui.util import generateObjectName
 
-FORBIDDEN_BINDING = (ChoiceOfNodesBinding, NodeBinding)
-
 
 def is_compatible(binding):
-    return not isinstance(binding, FORBIDDEN_BINDING)
+    return not isinstance(binding, NodeBinding)
 
 
 @register_binding_controller(ui_name='Time Field',

@@ -23,10 +23,7 @@ from karabo.native import (
 from .binding_types import (
     BindingNamespace, BindingRoot, NodeBinding, SlotBinding, VectorHashBinding)
 from .proxy import PropertyProxy
-from .recursive import ChoiceOfNodesBinding, ListOfNodesBinding
 from .validate import sanitize_table_value
-
-RECURSIVE_NODES = (ChoiceOfNodesBinding, ListOfNodesBinding)
 
 
 def apply_fast_data(config, binding, timestamp):
@@ -102,15 +99,6 @@ def apply_default_configuration(binding):
             subnode = getattr(namespace, name)
             if isinstance(subnode, NodeBinding):
                 yield from _iter_binding(subnode)
-            elif isinstance(subnode, ChoiceOfNodesBinding):
-                yield subnode
-                for choice in subnode.choices:
-                    child = getattr(subnode.choices, choice)
-                    yield from _iter_binding(child)
-            elif isinstance(subnode, ListOfNodesBinding):
-                yield subnode
-                for lnode in subnode.value:
-                    yield from _iter_binding(lnode)
             else:
                 yield subnode
 
@@ -119,9 +107,7 @@ def apply_default_configuration(binding):
         if default_value is not None:
             node.value = default_value
         else:
-            # XXX: Nodes either don't have a value or are not designed!
-            if not isinstance(node, RECURSIVE_NODES):
-                node.value = Undefined
+            node.value = Undefined
 
 
 def apply_project_configuration(config, binding, base=''):
@@ -178,14 +164,7 @@ def extract_configuration(binding):
     assert isinstance(binding, BindingRoot)
 
     def _get_binding_value(binding):
-        if isinstance(binding, ListOfNodesBinding):
-            return [Hash(value.class_id, extract_configuration(value))
-                    for value in binding.value]
-        elif isinstance(binding, ChoiceOfNodesBinding):
-            value = getattr(binding.value, binding.choice)
-            return Hash(value.class_id, extract_configuration(value))
-        else:
-            return binding.value
+        return binding.value
 
     def _iter_binding(node, base=''):
         namespace = node.value
@@ -224,14 +203,9 @@ def extract_edits(schema, binding):
         for name in namespace:
             subname = base + name
             subnode = getattr(namespace, name)
-            if isinstance(subnode, ChoiceOfNodesBinding):
-                chosen = subnode.choice
-                yield from _iter_binding(getattr(subnode.value, chosen),
-                                         f'{subname}.{chosen}')
-            elif isinstance(subnode, NodeBinding):
+            if isinstance(subnode, NodeBinding):
                 yield from _iter_binding(subnode, base=subname)
             elif not isinstance(subnode, SlotBinding):
-                # All rest binding types (including ListOfNodesBinding)
                 yield subname, subnode
 
     def _is_readonly(key):
@@ -239,20 +213,6 @@ def extract_edits(schema, binding):
 
     retval = Hash()
     for key, node in _iter_binding(binding):
-        if isinstance(node, ListOfNodesBinding):
-            value = []
-            for lnode in node.value:
-                # XXX: Each node in ListOfNodesBinding is a device equivalent
-                # We don't have machenism to horizontally loop through sub
-                # devices, so we save the device class id and an empty Hash
-                # i.e sub device's config is not saved
-                # possible fix (currently this fix breaks old GUI):
-                # value.append(Hash(lnode.class_id,
-                #                   extract_configuration(lnode)))
-                value.append(Hash(lnode.class_id, Hash()))
-            retval[key] = value
-            continue
-
         default_val = _get_binding_default(node)
         value = None if node.value is Undefined else node.value
 
@@ -285,8 +245,8 @@ def extract_online_edits(schema, binding):
 
     # Backward compatibility protection for difficult keys. Reconsider
     # in Karabo 2.13 FIXME
-    BLACKLIST_KEYS = ["_deviceId_", "_serverId_", "hostName"]
-    BLACKLIST_NODE = ["Logger."]  # Of course Bound!
+    IGNORE_KEYS = ["_deviceId_", "_serverId_", "hostName"]
+    IGNORE_NODES = ["Logger."]
 
     def _get_binding_default(binding):
         value = binding.attributes.get(const.KARABO_SCHEMA_DEFAULT_VALUE)
@@ -296,14 +256,12 @@ def extract_online_edits(schema, binding):
         namespace = node.value
         base = base + '.' if base else ''
         for name in namespace:
-            if base in BLACKLIST_NODE:
+            if base in IGNORE_NODES:
                 continue
 
             subname = base + name
             subnode = getattr(namespace, name)
-            if isinstance(subnode, (ChoiceOfNodesBinding, ListOfNodesBinding)):
-                yield subname, subnode
-            elif isinstance(subnode, NodeBinding):
+            if isinstance(subnode, NodeBinding):
                 yield from _iter_binding(subnode, base=subname)
             elif not isinstance(subnode, SlotBinding):
                 # All rest binding types
@@ -322,13 +280,7 @@ def extract_online_edits(schema, binding):
     for key, node in _iter_binding(binding):
         # Injected properties are not considered! Blacklisted keys are
         # filtered out as well!
-        if key not in schema.hash or key in BLACKLIST_KEYS:
-            continue
-
-        if isinstance(node, (ChoiceOfNodesBinding, ListOfNodesBinding)):
-            # ChoiceOfNodes and ListOfNodes cannot be properly compared nor
-            # validated and are deprecated.
-            success = False
+        if key not in schema.hash or key in IGNORE_KEYS:
             continue
 
         value = node.value
@@ -365,13 +317,6 @@ def extract_sparse_configurations(proxies, devices=None):
     """
     assert all(isinstance(p, PropertyProxy) for p in proxies)
 
-    def _get_value(proxy):
-        if isinstance(proxy.binding, ListOfNodesBinding):
-            return [Hash(value.class_id, extract_configuration(value))
-                    for value in proxy.edit_value]
-        else:
-            return proxy.edit_value
-
     devices = {} if devices is None else devices
     for proxy in proxies:
         key, binding = proxy.path, proxy.binding
@@ -380,7 +325,7 @@ def extract_sparse_configurations(proxies, devices=None):
 
         device_id = proxy.root_proxy.device_id
         hsh = devices.setdefault(device_id, Hash())
-        hsh[key] = _get_value(proxy)
+        hsh[key] = proxy.edit_value
 
     return devices
 

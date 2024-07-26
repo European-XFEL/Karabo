@@ -17,9 +17,9 @@
 from traits.api import Undefined
 
 from karabo.common import const
-from karabo.native import Hash, NodeType, Schema
+from karabo.native import Hash, NodeType
 
-from . import binding_types as types, recursive
+from . import binding_types as types
 from .util import attr_fast_deepcopy
 
 
@@ -37,6 +37,8 @@ def build_binding(schema, existing=None):
     # Fill it back in recursively
     for key, value, attrs in schema.hash.iterall():
         node = _build_node(value, attrs)
+        if node is None:
+            continue
         setattr(root_namespace, key, node)
 
     # Let any listeners know
@@ -60,14 +62,6 @@ def _build_node(value, attrs):
             setattr(namespace, subname, subnode)
         return namespace
 
-    def _build_node_choices(hashval):
-        assert isinstance(hashval, Hash)
-        namespace = types.BindingNamespace(item_type=types.BindingRoot)
-        for classname, schemahash, _ in hashval.iterall():
-            binding = build_binding(Schema(name=classname, hash=schemahash))
-            setattr(namespace, classname, binding)
-        return namespace
-
     node_type = attrs[const.KARABO_SCHEMA_NODE_TYPE]
     if node_type == NodeType.Leaf:
         value_type = attrs[const.KARABO_SCHEMA_VALUE_TYPE]
@@ -84,12 +78,8 @@ def _build_node(value, attrs):
             return binding_factory(value=namespace, attributes=attrs)
         return types.NodeBinding(value=namespace, attributes=attrs)
 
-    elif node_type in _RECURSIVE_BINDING_MAP:
-        namespace = _build_node_choices(value)
-        binding_factory = _RECURSIVE_BINDING_MAP[node_type]
-        return binding_factory(choices=namespace, attributes=attrs)
-
-    raise ValueError('Unhandled node type!')
+    # Return None for legacy unsupported types
+    return None
 
 
 # ----------------------------------------------------------------------------
@@ -140,8 +130,4 @@ _NODE_BINDING_MAP = {
     'Slot': types.SlotBinding,
     'OutputChannel': types.PipelineOutputBinding,
     'Table': types.TableBinding,
-}
-_RECURSIVE_BINDING_MAP = {
-    NodeType.ChoiceOfNodes: recursive.ChoiceOfNodesBinding,
-    NodeType.ListOfNodes: recursive.ListOfNodesBinding,
 }
