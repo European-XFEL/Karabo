@@ -199,7 +199,7 @@ def test_simple_validator():
     result, _, _ = validator.validate("1", None)
     assert result == QValidator.Acceptable
     result, _, _ = validator.validate("-1", None)
-    assert result == QValidator.Intermediate
+    assert result == QValidator.Invalid
     result, _, _ = validator.validate("-", None)
     assert result == QValidator.Intermediate
     result, _, _ = validator.validate("0", None)
@@ -207,7 +207,7 @@ def test_simple_validator():
     result, _, _ = validator.validate("255", None)
     assert result == QValidator.Acceptable
     result, _, _ = validator.validate("256", None)
-    assert result == QValidator.Intermediate
+    assert result == QValidator.Invalid
     result, _, _ = validator.validate("0001", None)
     assert result == QValidator.Intermediate
 
@@ -222,7 +222,7 @@ def test_simple_validator():
     result, _, _ = validator.validate("2", None)
     assert result == QValidator.Acceptable
     result, _, _ = validator.validate("-1", None)
-    assert result == QValidator.Intermediate
+    assert result == QValidator.Invalid
     result, _, _ = validator.validate("-", None)
     assert result == QValidator.Intermediate
     result, _, _ = validator.validate("0", None)

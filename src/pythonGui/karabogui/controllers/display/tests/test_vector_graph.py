@@ -113,7 +113,7 @@ def test_set_value_inf(vector_graph_setup):
     # None curve in PyQtGraph >= 0.11.1
     assert list(curve.yData) == value
 
-    value = [np.NaN, np.NaN, np.NaN]
+    value = [np.nan, np.nan, np.nan]
     with warnings.catch_warnings(record=True):
         warnings.simplefilter("always")
         set_proxy_value(proxy, "prop", value)
