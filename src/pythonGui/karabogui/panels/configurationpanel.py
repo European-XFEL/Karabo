@@ -29,9 +29,9 @@ from karabo.native import AccessMode, Assignment, Hash, has_changes
 from karabogui import icons, messagebox
 from karabogui.access import AccessRole, access_role_allowed
 from karabogui.binding.api import (
-    ChoiceOfNodesBinding, DeviceClassProxy, DeviceProxy, ListOfNodesBinding,
-    ProjectDeviceProxy, VectorHashBinding, apply_configuration,
-    get_binding_value, validate_table_value, validate_value)
+    DeviceClassProxy, DeviceProxy, ProjectDeviceProxy, VectorHashBinding,
+    apply_configuration, get_binding_value, validate_table_value,
+    validate_value)
 from karabogui.configurator.api import ConfigurationTreeView
 from karabogui.dialogs.api import ConfigurationFromPastDialog
 from karabogui.dialogs.configuration_preview import ConfigPreviewDialog
@@ -53,8 +53,6 @@ from .utils import (
 BLANK_PAGE = 0
 WAITING_PAGE = 1
 CONFIGURATION_PAGE = 2
-
-RECURSIVE_BINDINGS = (ChoiceOfNodesBinding, ListOfNodesBinding)
 
 
 class ConfigurationPanel(BasePanelWidget):
@@ -415,11 +413,9 @@ class ConfigurationPanel(BasePanelWidget):
         for path, value, _ in Hash.flat_iterall(configuration):
             prop_proxy = model.property_proxy(path)
             prop_binding = prop_proxy.binding
-            if prop_binding is None or isinstance(
-                    prop_binding, RECURSIVE_BINDINGS):
+            if prop_binding is None:
                 # NOTE: This property most likely was removed from the
                 # device, we have schema evolution and will continue here!
-                # NOTE: Recursive bindings are not supported here!
                 continue
             if prop_binding.access_mode is not AccessMode.RECONFIGURABLE:
                 continue

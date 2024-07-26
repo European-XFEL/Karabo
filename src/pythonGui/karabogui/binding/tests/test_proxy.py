@@ -345,7 +345,10 @@ def test_multi_device_config_extraction():
     dev_two = DeviceProxy(device_id='two', binding=build_binding(schema))
     prop_bool = PropertyProxy(root_proxy=dev_one, path='a')
     prop_string = PropertyProxy(root_proxy=dev_two, path='m')
+
+    # faulty list of nodes binding
     prop_lon = PropertyProxy(root_proxy=dev_two, path='j1')
+    assert prop_lon.binding is None
 
     prop_bool.edit_value = True
     prop_string.edit_value = 'yo'
@@ -356,7 +359,6 @@ def test_multi_device_config_extraction():
     assert 'one' in configs and 'two' in configs
     assert configs['one']['a'] is True
     assert configs['two']['m'] == 'yo'
-    assert configs['two']['j1'] == [node_val]
 
 
 def test_delegation_with_schema_update():

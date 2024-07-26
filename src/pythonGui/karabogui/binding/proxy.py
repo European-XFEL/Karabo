@@ -28,9 +28,7 @@ from .binding_types import (
     BaseBinding, BindingRoot, FloatBinding, PipelineOutputBinding, SlotBinding,
     VectorBinding)
 from .enums import ONLINE_STATUSES, SCHEMA_STATUSES, ProxyStatus
-from .recursive import ChoiceOfNodesBinding, ListOfNodesBinding
 
-_RECURSIVE_BINDINGS = (ChoiceOfNodesBinding, ListOfNodesBinding)
 _NOCAST_BINDINGS = (FloatBinding, VectorBinding)
 
 
@@ -377,9 +375,6 @@ class PropertyProxy(HasStrictTraits):
         if self._edit_binding is None:
             klass = type(self.binding)
             self._edit_binding = klass()
-            if isinstance(self.binding, _RECURSIVE_BINDINGS):
-                # XXX: Recursive bindings are special
-                self._edit_binding.choices = self.binding.choices
 
         # Validate (and mutate in some cases, like arrays)
         self._edit_binding.value = value
