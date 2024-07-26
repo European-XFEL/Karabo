@@ -529,6 +529,11 @@ class HashList(list):
 
         return HashListFormat.Unknown
 
+    def _safe_repr(self):
+        """A safe repr wrapper to convert ndarray (vectors) to lists"""
+        return [{k: v.tolist() if isinstance(v, np.ndarray) else v
+                for k, v in row.items()} for row in self]
+
     def __repr__(self):
         """Return the pretty representation of a HashList"""
         if not len(self):
@@ -536,7 +541,8 @@ class HashList(list):
 
         fmt = self.hashlist_format(self)
         if fmt is HashListFormat.Table:
-            return tabulate.tabulate(self, headers="keys", tablefmt="grid")
+            return tabulate.tabulate(
+                self._safe_repr(), headers="keys", tablefmt="grid")
         else:
             # XXX: More support for other HashLists
             return "<HashList(" + super().__repr__() + ")>"
