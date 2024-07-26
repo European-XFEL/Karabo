@@ -29,17 +29,17 @@ from karabo.native import (
     wrap)
 
 TEST_REPR_HL = "\
-+-----------+-----------------------+\n\
-|   integer | object                |\n\
-+===========+=======================+\n\
-|         3 | asdf                  |\n\
-+-----------+-----------------------+\n\
-|         2 | [0 1 2 3 4 5 6 7 8 9] |\n\
-+-----------+-----------------------+\n\
-|         4 | b'fdas'               |\n\
-+-----------+-----------------------+\n\
-|         5 | bytearray(b'')        |\n\
-+-----------+-----------------------+"
++-----------+--------------------------------+\n\
+|   integer | object                         |\n\
++===========+================================+\n\
+|         3 | asdf                           |\n\
++-----------+--------------------------------+\n\
+|         2 | [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] |\n\
++-----------+--------------------------------+\n\
+|         4 | b'fdas'                        |\n\
++-----------+--------------------------------+\n\
+|         5 | bytearray(b'')                 |\n\
++-----------+--------------------------------+"
 
 
 class Tests(TestCase):
@@ -322,7 +322,6 @@ class Tests(TestCase):
 
         hl = t.to_hashlist()
         self.assertEqual(repr(hl), TEST_REPR_HL)
-
         h = hl[0]
         self.assertEqual(len(h), 2)
         self.assertEqual(h["integer"], 3)
@@ -670,7 +669,12 @@ class Tests(TestCase):
         a = QuantityValue(3, "m", timestamp=self.t1)
         b = QuantityValue(1000, "mm", timestamp=self.t2)
         # Needs unit less values
-        with self.assertRaises(ValueError):
+
+        if pint.__version__ > "0.22":
+            exc = pint.DimensionalityError
+        else:
+            exc = ValueError
+        with self.assertRaises(exc):
             numpy.mean([a, b])
 
     def test_mean_no_dim(self):
@@ -698,7 +702,11 @@ class Tests(TestCase):
         a = QuantityValue(3, "m", timestamp=self.t1)
         b = QuantityValue(1000, "mm", timestamp=self.t2)
         # Needs unit less values
-        with self.assertRaises(ValueError):
+        if pint.__version__ > "0.22":
+            exc = pint.DimensionalityError
+        else:
+            exc = ValueError
+        with self.assertRaises(exc):
             numpy.std([a, b])
 
     def test_numpy_std_nodim(self):

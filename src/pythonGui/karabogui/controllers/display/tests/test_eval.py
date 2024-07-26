@@ -67,8 +67,7 @@ def test_builtin_function(evaluator_setup):
     controller = Evaluator(proxy=prop, model=model)
     controller.create(None)
     set_proxy_value(prop, "prop", 2.5)
-    expected = str(round(prop.value))
-    assert controller._internal_widget.text() == expected
+    assert controller._internal_widget.text() == "2.0"
 
 
 def test_change_expression(evaluator_setup, mocker):

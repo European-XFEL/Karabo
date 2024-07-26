@@ -63,7 +63,8 @@ class Timestamp:
         if 'sec' not in attrs:
             return None
         ret = cls.__new__(cls)
-        ret.time = attrs['frac'] + attrs['sec'] * RESOLUTION
+        # Avoid overflows, cast back to integer
+        ret.time = int(attrs['frac']) + int(attrs['sec']) * RESOLUTION
         ret.tid = attrs['tid']
         return ret
 
