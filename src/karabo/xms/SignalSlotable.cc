@@ -1943,9 +1943,14 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::eraseTrackedInstance(const std::string& instanceId) {
+        bool SignalSlotable::eraseTrackedInstance(const std::string& instanceId) {
+            bool wasTracked = false;
             boost::mutex::scoped_lock lock(m_trackedInstancesMutex);
-            m_trackedInstances.erase(instanceId);
+            if (m_trackedInstances.erase(instanceId)) {
+                KARABO_LOG_FRAMEWORK_DEBUG << "Instance \"" << instanceId << "\" will not be tracked anymore";
+                wasTracked = true;
+            }
+            return wasTracked;
         }
 
 
@@ -2311,13 +2316,6 @@ namespace karabo {
             for (SignalInstances::iterator it = m_signalInstances.begin(); it != m_signalInstances.end(); ++it) {
                 it->second->unregisterSlot(instanceId);
             }
-        }
-
-
-        void SignalSlotable::stopTracking(const std::string& instanceId) {
-            boost::mutex::scoped_lock lock(m_trackedInstancesMutex);
-            KARABO_LOG_FRAMEWORK_DEBUG << "Instance \"" << instanceId << "\" will not be tracked anymore";
-            m_trackedInstances.erase(instanceId);
         }
 
 
