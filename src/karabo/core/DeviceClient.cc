@@ -435,8 +435,15 @@ namespace karabo {
                     }
                 }
                 // Erase the found devices from m_runtimeSystemDescription ('devices' is a reference into it!):
+                auto sigSlot = m_signalSlotable.lock();
                 for (const auto& pairDeviceIdInstanceInfo : devicesOfServer) {
-                    devices.erase(pairDeviceIdInstanceInfo.first);
+                    const std::string& deviceId = pairDeviceIdInstanceInfo.first;
+                    devices.erase(deviceId);
+                    // Tell signalslotable that device is gone. That ensures that we will get instanceNew even if the
+                    // device recovers before signalslotable itself notices that the device might be gone.
+                    if (sigSlot) {
+                        sigSlot->eraseTrackedInstance(deviceId);
+                    }
                 }
             }
             return devicesOfServer;
@@ -447,7 +454,7 @@ namespace karabo {
                 boost::mutex::scoped_lock lock(m_instanceUsageMutex);
                 InstanceUsage::iterator it = m_instanceUsage.find(instanceId);
                 if (it != m_instanceUsage.end()) {
-                    // Should only happen or devices...
+                    // Should only happen for devices...
                     if (isImmortal(instanceId)) {
                         // Gone (i.e. dead), but immortal for us - a zombie!
                         // Mark it for reconnection (resurrection...) , see age(..) and connectNeeded(..)
