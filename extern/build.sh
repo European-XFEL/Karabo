@@ -156,8 +156,7 @@ install_from_deps() {
         # configure prefix paths
         local folder_opts="--install-folder=$INSTALL_PREFIX/conan_toolchain --output-folder=$INSTALL_PREFIX"
         # when should conan build from sources? missing means if no pre-compiled binary package exists
-        # boost:python_executable comes from a variable, so it must be defined here
-        local build_opts="--build=missing -o boost/*:python_executable=$INSTALL_PREFIX/bin/python"
+        local build_opts="--build=missing"
         # apply custom profile on top of default profile
         local profile_opts="-pr:h=./conanprofile.karabo"
 
