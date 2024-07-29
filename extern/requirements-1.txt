@@ -27,11 +27,11 @@ notebook==4.2.2
 parse==1.19.1
 peewee==3.16.2
 pg8000==1.29.8
-Pint==0.22
+Pint==0.24.3
 pkgconfig==1.2.2
 platformdirs==3.8.0
 psutil==5.9.5
-pybind11[global]==2.10.4
+pybind11[global]==2.13.1
 pybind11-stubgen==2.5.1
 pyelftools==0.30
 pyexistdb==1.0.1
