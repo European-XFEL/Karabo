@@ -71,8 +71,7 @@ boost/*:without_regex=False
 boost/*:without_thread=False
 boost/*:without_system=False
 boost/*:without_program_options=False
-# build libboost_python (for karabo.bound!)
-boost/*:without_python=False
+boost/*:without_python=True
 
 [imports]
 # the ".."s are because conan install uses $INSTALL_PREFIX/conan_out in build.sh
