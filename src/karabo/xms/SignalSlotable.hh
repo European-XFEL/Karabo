@@ -183,6 +183,18 @@ namespace karabo {
 
             void trackAllInstances();
 
+            /**
+             * Erase instance from container of tracked instances
+             *
+             * To be called if one is tracking instances and is sure that the given instance is not alive anymore
+             * (e.g. if another instance in the same process is dead as well).
+             * If erroneously called, the next arriving heartbeat of the instance will trigger an instanceNew event
+             *
+             * @param instanceId that shall be treated as not alive anymore
+             * @return whether instanceId was tracked before
+             */
+            bool eraseTrackedInstance(const std::string& instanceId);
+
             karabo::util::Hash getAvailableInstances(bool /*unused*/ = false);
 
             /**
@@ -1017,16 +1029,13 @@ namespace karabo {
             // Thread safe
             bool hasTrackedInstance(const std::string& instanceId);
 
-            // Thread safe
-            void eraseTrackedInstance(const std::string& instanceId);
+            // In public section: void eraseTrackedInstance(const std::string& instanceId);
 
             void updateTrackedInstanceInfo(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
             void slotGetAvailableFunctions(const std::string& type);
 
             void cleanSignals(const std::string& instanceId);
-
-            void stopTracking(const std::string& instanceId);
 
             // IO channel related
             std::pair<bool, karabo::util::Hash> slotGetOutputChannelInformationImpl(const std::string& channelId,
