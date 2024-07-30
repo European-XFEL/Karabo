@@ -38,7 +38,6 @@ from karabo.middlelayer import (
     background, dictToHash, sanitize_init_configuration, slot)
 
 HIDDEN_KARABO_FOLDER = op.join(os.environ['HOME'], '.karabo')
-KARABO_CONFIG_DB_FOLDER = op.join(HIDDEN_KARABO_FOLDER, 'config_db')
 
 DEVICE_TIMEOUT = 3
 INSTANCE_NEW_TIMEOUT = 15
@@ -287,7 +286,8 @@ class ConfigurationManager(DeviceClientBase):
 
     async def onInitialization(self):
         """Initialize the configuration database device and create the `DB`"""
-        path = op.join(KARABO_CONFIG_DB_FOLDER, self.dbName.value)
+        folder = op.join(os.environ["KARABO"], 'var', 'data', 'config_db')
+        path = op.join(folder, self.dbName.value)
         dir_name = op.dirname(path)
         if not op.exists(dir_name):
             os.makedirs(dir_name, exist_ok=True)
