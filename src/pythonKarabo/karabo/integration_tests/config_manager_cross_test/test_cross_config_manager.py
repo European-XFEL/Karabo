@@ -19,8 +19,6 @@ import unittest
 
 from karabo.bound import Hash, fullyEqual
 from karabo.bound.testing import BoundDeviceTestCase
-from karabo.middlelayer_devices.configuration_manager import (
-    KARABO_CONFIG_DB_FOLDER)
 
 
 class TestCrossConfigManager(BoundDeviceTestCase):
@@ -36,7 +34,8 @@ class TestCrossConfigManager(BoundDeviceTestCase):
     CPP_SERVER_ID = 'propTest_server'
 
     DB_NAME = 'test_cross_config_manager.db'
-    DB_PATH = op.join(KARABO_CONFIG_DB_FOLDER, DB_NAME)
+    DB_PATH = op.join(os.environ["KARABO"], 'var', 'data',
+                      'config_db', DB_NAME)
 
     # CFG_MANAGER_ID must match the default ConfigurationManagerId used by
     # the DeviceClient.
