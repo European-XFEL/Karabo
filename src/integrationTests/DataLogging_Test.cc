@@ -114,10 +114,14 @@ void DataLogging_Test::testLoggerMapProperty() {
     const auto& data_logger = mapEntries[0].get<std::string>("dataLogger");
 
     for (const Hash& entry : mapEntries) {
-        const auto& device = entry.get<std::string>("device");
-        CPPUNIT_ASSERT_MESSAGE((device + " not in loggers map"),
-                               std::find(devices.begin(), devices.end(), device) != devices.end());
         CPPUNIT_ASSERT_EQUAL(data_logger, entry.get<std::string>("dataLogger"));
+    }
+
+    for (const auto& device : devices) {
+        auto found = std::find_if(mapEntries.begin(), mapEntries.end(),
+                                  [device](const Hash& entry) { return device == entry.get<std::string>("device"); });
+
+        CPPUNIT_ASSERT_MESSAGE((device + " not in loggers map"), found != mapEntries.end());
     }
 
     std::clog << "OK" << std::endl;
