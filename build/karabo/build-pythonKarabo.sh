@@ -41,6 +41,7 @@ cd $DIST/bin
 cd $scriptDir/../../src/karabind
 $PYTHON -m pybind11_stubgen karabind --ignore-all-errors
 site_packages=$($PYTHON -c 'import site; print(site.getsitepackages()[0])')
+mkdir -p $site_packages/karabind
 cp -r $scriptDir/../../src/karabind/stubs/* $site_packages/karabind
 
 
