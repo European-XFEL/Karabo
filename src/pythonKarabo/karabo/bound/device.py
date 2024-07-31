@@ -294,7 +294,7 @@ class PythonDevice(NoFsm):
 
     log = None  # make always available, at least as None
 
-    def __init__(self, configuration):
+    def __init__(self, configuration: Hash | None):
         """The initialization method of a device
 
         Expects a configuration passed as a Karabo Hash.
