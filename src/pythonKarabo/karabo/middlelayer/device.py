@@ -260,6 +260,7 @@ class Device(InjectMixin, SignalSlotable):
     async def _run(self, **kwargs):
         self._ss.enter_context(self.log.setBroker(self._ss))
         await super()._run(**kwargs)
+        self.logger.info(f"Device '{self.deviceId}' is up and running.")
 
     @slot
     def slotGetConfiguration(self):
