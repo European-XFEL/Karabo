@@ -354,6 +354,7 @@ def test_table_model_view_tooltip_data(table_model_view_setup):
     # Check the header
     data = model.headerData(section=5, orientation=Qt.Horizontal,
                             role=Qt.ToolTipRole)
+    assert "key" in data
     assert "metricPrefixSymbol" in data
     assert "unitSymbol" in data
     assert "defaultValue" in data

@@ -93,12 +93,12 @@ class TableModel(QAbstractTableModel):
 
         return None
 
-    def _build_tooltip(self, attributes):
+    def _build_tooltip(self, key, attributes):
         """Build a tooltip according to the attributes"""
         selection = ["displayedName", "defaultValue", "valueType",
                      "unitSymbol", "metricPrefixSymbol",
                      "minInc", "maxInc", "minExc", "maxExc", "options"]
-        info = {}
+        info = {"key": key}
         for akey in selection:
             avalue = attributes.get(akey)
             if avalue is not None:
@@ -127,7 +127,7 @@ class TableModel(QAbstractTableModel):
         elif role == Qt.ToolTipRole and orientation == Qt.Horizontal:
             key = self._header[section]
             attrs = self._bindings[key].attributes
-            return self._build_tooltip(attrs)
+            return self._build_tooltip(key=key, attributes=attrs)
 
         return None
 
