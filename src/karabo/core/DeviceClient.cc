@@ -367,8 +367,25 @@ namespace karabo {
             {
                 boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
                 if (!m_runtimeSystemDescription.has(path)) {
-                    KARABO_LOG_FRAMEWORK_ERROR << getInstanceId() << ": ignore instance update from '" << instanceId
-                                               << "' because that instance is not in runtime description";
+                    // Not sure how we can get into this. But we do in the field with 2.20.2, at least if not tracking
+                    // instances. Maybe some instanceGone arrives after instaceNew? Ordering should prevent that,
+                    // but note that bound python instances can send two instanceGone, once from
+                    // `slotKillServer/Device` and once from C++ destructor of `SignalSlotable` (if that is called).
+                    // The latter, if delayed a lot somehow, may come after a new instance of the device sent its
+                    // instanceNew.
+                    //
+                    // As a workaround, we try to clarify the situation:
+                    // - Take care that we do not track the instance.
+                    // - Trigger a call to our slotPingAnswer that will then trigger "signalInstanceNew" (but only
+                    //   if instance is untracked).
+                    if (auto sigSlot = m_signalSlotable.lock()) {
+                        const bool wasTracked = sigSlot->eraseTrackedInstance(instanceId);
+                        sigSlot->call(instanceId, "slotPing", sigSlot->getInstanceId(), 0, true);
+                        KARABO_LOG_FRAMEWORK_WARN << getInstanceId() << ": Received instance update from '"
+                                                  << instanceId << "' although it is not in runtime description"
+                                                  << (wasTracked ? " (but was tracked!)" : "")
+                                                  << ". Clarify by pinging it.";
+                    }
                     return;
                 }
                 m_runtimeSystemDescription.merge(entry);
