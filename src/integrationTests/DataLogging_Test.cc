@@ -168,9 +168,9 @@ void DataLogging_Test::testMigrateFileLoggerData() {
     if (boost::filesystem::is_directory(p)) {
         for (auto& entry : boost::make_iterator_range(boost::filesystem::directory_iterator(p), {})) {
             std::ostringstream msg;
-            msg << "Check if " << entry << " was migrated OK: " << boost::filesystem::extension(entry);
+            msg << "Check if " << entry << " was migrated OK: " << boost::filesystem::path(entry).extension();
             std::clog << msg.str() << std::endl;
-            CPPUNIT_ASSERT_MESSAGE(msg.str(), boost::filesystem::extension(entry) == ".ok");
+            CPPUNIT_ASSERT_MESSAGE(msg.str(), boost::filesystem::path(entry).extension() == ".ok");
         }
     }
 
