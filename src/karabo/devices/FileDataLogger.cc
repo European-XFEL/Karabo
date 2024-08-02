@@ -17,7 +17,7 @@
  */
 #include "FileDataLogger.hh"
 
-#include <boost/filesystem/convenience.hpp>
+#include <boost/filesystem.hpp>
 #include <boost/pointer_cast.hpp>
 #include <iostream>
 #include <nlohmann/json.hpp>
