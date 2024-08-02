@@ -31,7 +31,7 @@ inline std::string resourcePath(const std::string& filename) {
     boost::filesystem::path testPath(KARABO_TESTPATH);
     testPath /= "io/resources";
     testPath /= filename;
-    return testPath.normalize().string();
+    return testPath.lexically_normal().string();
 }
 
 #endif
