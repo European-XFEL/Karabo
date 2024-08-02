@@ -56,7 +56,7 @@ namespace karabo {
             boost::filesystem::path filepath(filename);
             std::string extension = filepath.extension().string().substr(1);
             boost::to_lower(extension);
-            karabo::util::Hash h("filename", filepath.normalize().string());
+            karabo::util::Hash h("filename", filepath.lexically_normal().string());
             h.merge(config);
             if (extension == "h5") {
                 typename Input<T>::Pointer p = Input<T>::create("Hdf5File", h);
@@ -100,7 +100,7 @@ namespace karabo {
             }
 
             boost::to_lower(extension);
-            karabo::util::Hash h("filename", filepath.normalize().string());
+            karabo::util::Hash h("filename", filepath.lexically_normal().string());
             h.merge(config);
 
             if (extension == "h5") {
