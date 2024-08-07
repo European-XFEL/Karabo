@@ -27,6 +27,7 @@
 #include <arpa/inet.h>
 #include <ifaddrs.h>
 
+#include <cstdint>
 #include <fstream>
 #include <map>
 #include <optional>
