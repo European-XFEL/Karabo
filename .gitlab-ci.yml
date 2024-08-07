@@ -29,7 +29,7 @@ variables:
 .target_os_matrix:
   all_targets:
     matrix:
-      - ARCH_TAG: ["debian-10-004", "ubuntu-20-004", "ubuntu-22-003", "redhat-9-003"]
+      - ARCH_TAG: ["debian-10-004", "ubuntu-20-004", "ubuntu-22-003", "ubuntu-24-002", "redhat-9-003"]
   only_redhat9:
     matrix:
       - ARCH_TAG: ["redhat-9-003"]
@@ -60,8 +60,15 @@ variables:
     - hostname || true
     - find /cache || true
     # install conan to docker image
-    - python3 -m pip install --upgrade pip
-    - python3 -m pip install conan==1.62.0
+    - |
+      if type "pipx" > /dev/null; then
+          # use pipx when available; needed for Ubuntu since 23.04; details at:
+          # https://askubuntu.com/questions/1465218/pip-error-on-ubuntu-externally-managed-environment-%C3%97-this-environment-is-extern
+          pipx install --global conan==1.62.0
+      else
+          python3 -m pip install --upgrade pip
+          python3 -m pip install conan==1.62.0
+      fi
     # do CI build
     - source set_lsb_release_info.sh
     - source ci/prepare "$CI_JOB_NAME"
