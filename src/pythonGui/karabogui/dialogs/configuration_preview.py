@@ -26,7 +26,9 @@ from qtpy.QtWidgets import QDialog, QDialogButtonBox
 
 from karabo.native import Hash, create_html_hash, has_changes, writeXML
 from karabogui import icons, messagebox
-from karabogui.binding.api import ProjectDeviceProxy, extract_configuration
+from karabogui.binding.api import (
+    ProjectDeviceProxy, extract_configuration,
+    extract_read_only_and_reconfigurable)
 from karabogui.singletons.api import get_config
 from karabogui.util import SignalBlocker, getSaveFileName
 
@@ -107,6 +109,20 @@ class ConfigPreviewDialog(QDialog):
         self.ui_synchronize_bars.toggled.connect(
             self._synchronize_toggled)
         self._synchronize_toggled(True)
+        self._configuration_by_access_mode()
+
+    def _configuration_by_access_mode(self):
+        read_only_text = "No ReadOnly Property Available"
+        reconfig_text = "No Reconfigurable Property Available"
+        if len(self.proxy.binding.value):
+            read_only, reconfig = extract_read_only_and_reconfigurable(
+                self.proxy.binding, self.configuration)
+            self._read_only_props = read_only
+            self._reconfigurable_props = reconfig
+            read_only_text = create_html_hash(read_only)
+            reconfig_text = create_html_hash(reconfig)
+        self.ui_text_info_readonly.setHtml(read_only_text)
+        self.ui_text_info_configurable.setHtml(reconfig_text)
 
     def _show_configuration_changes(self):
         if not len(self.proxy.binding.value):
@@ -130,7 +146,7 @@ class ConfigPreviewDialog(QDialog):
 
     def _show_configuration(self):
         html = create_html_hash(self.configuration, include_attributes=False)
-        self.ui_text_info.setHtml(html)
+        self.ui_text_info_all.setHtml(html)
 
     # ---------------------------------------------------------------------
     # Slot Interface
