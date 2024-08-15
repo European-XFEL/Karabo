@@ -243,18 +243,18 @@ class KaraboImageItem(GraphicsObject):
                 image = image[::2, ::2]
             mn, mx = np.nanmin(image), np.nanmax(image)
             # Note: mn and mx can still be NaN if the data is all-NaN
-            if mn == mx:
+            if not np.isfinite(mn) or not np.isfinite(mx):
+                # Check for `NaN` as well as `inf`
+                mn = 0
+                mx = 255
+            elif mn == mx:
                 # We have a valid image but same levels.
-                mnn = mn - 1
+                mnn = mn.astype(int) - 1
                 # If the new min greater equal 0 take it!
                 if mnn >= 0:
                     mn = mnn
                 else:
                     mx += 1
-            elif not np.isfinite(mn) or not np.isfinite(mx):
-                # Check for `NaN` as well as `inf`
-                mn = 0
-                mx = 255
             kwargs["levels"] = [mn, mx]
 
         # Apply levels here!
