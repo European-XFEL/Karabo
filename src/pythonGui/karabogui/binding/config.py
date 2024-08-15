@@ -371,3 +371,43 @@ s    """
             ret[key] = value
 
     return ret
+
+
+def extract_read_only_and_reconfigurable(
+        binding: BindingRoot, configuration: Hash) -> tuple[Hash, Hash]:
+    """
+    Extract the readonly and reconfigurable property from the configuration.
+    Considers the 'allowedStates' attribute to determine if the property is
+    reconfigurable or read-only in a given state of the device"""
+
+    assert isinstance(binding, BindingRoot)
+
+    def _iter_binding(node, base=''):
+        namespace = node.value
+        base = base + '.' if base else ''
+        for name in namespace:
+            subname = base + name
+            subnode = getattr(namespace, name)
+            if isinstance(subnode, NodeBinding):
+                yield from _iter_binding(subnode, base=subname)
+            elif not isinstance(subnode, SlotBinding):
+                yield subname, subnode
+
+    device_state = configuration.get("state")
+    read_only = Hash()
+    reconfigurable = Hash()
+    for key, node in _iter_binding(binding):
+        if key not in configuration:
+            continue
+        value, attrs = configuration.getElement(key)
+        access_mode = node.access_mode
+        if value is Undefined or access_mode == AccessMode.UNDEFINED:
+            continue
+        if access_mode == AccessMode.RECONFIGURABLE:
+            if node.is_allowed(state=device_state):
+                reconfigurable[key] = value
+            else:
+                read_only[key] = value
+        else:
+            read_only[key] = value
+    return read_only, reconfigurable

@@ -410,8 +410,20 @@ class SimpleDeviceSchema(Configurable):
         defaultValue=["scene"])
 
 
+class DeviceSchemaAllowedState(SimpleDeviceSchema):
+    """Device Schema with allowed state defined for an integer property"""
+    intProperty = Int32(
+        defaultValue=10,
+        unitSymbol=Unit.METER,
+        allowedStates={State.PASSIVE})
+
+
 def get_device_schema():
     return SimpleDeviceSchema.getClassSchema()
+
+
+def get_device_schema_allowed_state():
+    return DeviceSchemaAllowedState.getClassSchema()
 
 
 def check_renderer_against_svg(renderer, svgfile):
