@@ -23,14 +23,17 @@ from karabogui.binding.api import (
     build_binding)
 from karabogui.dialogs.configuration_preview import ConfigPreviewDialog
 from karabogui.singletons.configuration import Configuration
-from karabogui.testing import get_device_schema, singletons
+from karabogui.testing import (
+    get_device_schema, get_device_schema_allowed_state, singletons)
 
 
 def test_dialog(gui_app):
-    configuration = Hash("stringProperty", "bar")
+    configuration = Hash("stringProperty", "bar",
+                         "intProperty", 3,
+                         )
     config_singleton = Configuration()
     with singletons(configuration=config_singleton):
-        binding = build_binding(get_device_schema())
+        binding = build_binding(get_device_schema_allowed_state())
         proxy = DeviceProxy(binding=binding, server_id="Test",
                             status=ProxyStatus.ONLINE)
         apply_default_configuration(proxy.binding)
@@ -46,14 +49,27 @@ def test_dialog(gui_app):
         assert dialog.ui_swap.text() == "Show Configuration"
         assert dialog.ui_existing.toPlainText() == (
             "\navailableScenes\n['scene']\n"
+            "intProperty\n10\n"
             "readOnlyProperty\n0\n"
             "state\nON\n"
             "stringProperty\nfoo\n")
         assert dialog.ui_retrieved.toPlainText() == (
             "\navailableScenes\nRemoved from configuration\n"
+            "intProperty\n3\n"
             "readOnlyProperty\nRemoved from configuration\n"
             "state\nRemoved from configuration\n"
             "stringProperty\nbar\n")
+        assert dialog.ui_text_info_all.toPlainText() == (
+            "\nstringProperty\nbar\n"
+            "intProperty\n3\n"
+        )
+        assert dialog.ui_text_info_readonly.toPlainText() == (
+            "\nintProperty\n3\n"
+        )
+        assert dialog.ui_text_info_configurable.toPlainText() == (
+            "\nstringProperty\nbar\n"
+        )
+
         save_path = "karabogui.dialogs.configuration_preview." \
                     "getSaveFileName"
         open_path = "karabogui.dialogs.configuration_preview.open"
