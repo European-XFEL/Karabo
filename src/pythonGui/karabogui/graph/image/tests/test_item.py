@@ -17,6 +17,7 @@
 import numpy as np
 from qtpy.QtGui import QImage
 
+from karabogui.graph.image.api import karabo_default_image
 from karabogui.graph.image.base import KaraboImageView
 from karabogui.testing import GuiTestCase
 
@@ -162,3 +163,10 @@ class Test2DImageItem(_BaseImageItemTest):
         for dims, downsampling in zip(DIMENSIONS, MIN_DOWNSAMPLING):
             image = np.random.uniform(-50000, 50000, dims)
             self.assert_indexed_image(image, downsampling)
+
+    def test_set_graph_image(self):
+        """Make sure setting levels with default image (all zero array)"""
+        image = karabo_default_image()
+        self.imageItem.setImage(image)
+        self.imageItem._set_graph_image(autoLevels=True)
+        assert np.array_equal(self.imageItem.levels, np.array([0, 1]))
