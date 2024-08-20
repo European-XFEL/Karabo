@@ -47,6 +47,7 @@ def test_dialog(gui_app):
         assert dialog.ui_swap.text() == "Show changes"
         dialog._swap_view()
         assert dialog.ui_swap.text() == "Show Configuration"
+        assert not dialog.ui_hide_readonly.isChecked()
         assert dialog.ui_existing.toPlainText() == (
             "\navailableScenes\n['scene']\n"
             "intProperty\n10\n"
@@ -133,4 +134,48 @@ def test_dialog_empty_binding(gui_app):
         assert dialog.ui_existing.toPlainText() == (
             "No schema available to extract a configuration")
         assert dialog.ui_retrieved.toPlainText() == (
-            "No schema available for comparison of configurations!")
+            "No schema available for comparing configurations!")
+
+
+def test_dialog_only_reconfigurable_changes(gui_app):
+    configuration = Hash("stringProperty", "bar",
+                         "intProperty", 3,
+                         "readOnlyProperty", 4,
+                         )
+    config_singleton = Configuration()
+    with singletons(configuration=config_singleton):
+        binding = build_binding(get_device_schema_allowed_state())
+        proxy = DeviceProxy(binding=binding, server_id="Test",
+                            status=ProxyStatus.ONLINE)
+        apply_default_configuration(proxy.binding)
+        dialog = ConfigPreviewDialog("This is the title",
+                                     "The information comes here",
+                                     configuration=configuration,
+                                     proxy=proxy)
+
+        # Show all changes
+        dialog._show_configuration_changes(hide_readonly=False)
+        assert dialog.ui_existing.toPlainText() == (
+            "\navailableScenes\n['scene']\n"
+            "intProperty\n10\n"
+            "readOnlyProperty\n0\n"
+            "state\nON\n"
+            "stringProperty\nfoo\n")
+        assert dialog.ui_retrieved.toPlainText() == (
+            "\navailableScenes\nRemoved from configuration\n"
+            "intProperty\n3\n"
+            "readOnlyProperty\n4\n"
+            "state\nRemoved from configuration\n"
+            "stringProperty\nbar\n")
+
+        # Show only reconfigurable changes.
+        dialog._show_configuration_changes(hide_readonly=True)
+        assert dialog.ui_existing.toPlainText() == (
+            "\navailableScenes\n['scene']\n"
+            "state\nON\n"
+            "stringProperty\nfoo\n")
+
+        assert dialog.ui_retrieved.toPlainText() == (
+            "\navailableScenes\nRemoved from configuration\n"
+            "state\nRemoved from configuration\n"
+            "stringProperty\nbar\n")
