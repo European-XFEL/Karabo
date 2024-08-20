@@ -104,12 +104,14 @@ class ConfigPreviewDialog(QDialog):
 
         self.proxy = proxy
         self.configuration = configuration
+        self._configuration_by_access_mode()
         self._show_configuration()
-        self._show_configuration_changes()
+        self._load_configuration_changes()
         self.ui_synchronize_bars.toggled.connect(
             self._synchronize_toggled)
         self._synchronize_toggled(True)
-        self._configuration_by_access_mode()
+        self.ui_hide_readonly.toggled.connect(self._show_configuration_changes)
+        self._show_configuration_changes(hide_readonly=False)
 
     def _configuration_by_access_mode(self):
         read_only_text = "No ReadOnly Property Available"
@@ -124,29 +126,50 @@ class ConfigPreviewDialog(QDialog):
         self.ui_text_info_readonly.setHtml(read_only_text)
         self.ui_text_info_configurable.setHtml(reconfig_text)
 
-    def _show_configuration_changes(self):
+    def _load_configuration_changes(self):
+        """Store the changed configuration """
         if not len(self.proxy.binding.value):
             # Note: We are protected by the menu bar that does not allow us
             # to be launched in this case. However, we protect again here...
-            text = "No schema available to extract a configuration"
-            self.ui_existing.setHtml(text)
-            text = "No schema available for comparison of configurations!"
-            self.ui_retrieved.setHtml(text)
+            self.all_changes_existing = self.configurable_changes_existing = (
+                "No schema available to extract a configuration")
+            self.configurable_changes_existing = self.all_changes_retrieved = (
+                "No schema available for comparing configurations!")
             return
 
         project = isinstance(self.proxy, ProjectDeviceProxy)
         existing = extract_configuration(self.proxy.binding)
         changes_a, changes_b = get_config_changes(existing, self.configuration,
                                                   project)
-        html_a = create_html_hash(changes_a, include_attributes=False)
-        html_b = create_html_hash(changes_b, include_attributes=False)
+        self.all_changes_existing = create_html_hash(
+            changes_a, include_attributes=False)
+        self.all_changes_retrieved = create_html_hash(
+            changes_b, include_attributes=False)
 
-        self.ui_existing.setHtml(html_a)
-        self.ui_retrieved.setHtml(html_b)
+        configurable_changes_a, configurable_changes_b = \
+            self._skip_read_only_changes(changes_a, changes_b)
+        self.configurable_changes_existing = create_html_hash(
+            configurable_changes_a, include_attributes=False)
+        self.configurable_changes_retrieved = create_html_hash(
+            configurable_changes_b, include_attributes=False)
 
     def _show_configuration(self):
         html = create_html_hash(self.configuration, include_attributes=False)
         self.ui_text_info_all.setHtml(html)
+
+    def _skip_read_only_changes(self, changes_a: Hash, changes_b: Hash) -> \
+            tuple[Hash, Hash]:
+        """Remove the read only properties from the given Configurations"""
+        read_only_changes_a, read_only_changes_b = Hash(), Hash()
+        paths_a = changes_a.paths(intermediate=False)
+        paths_b = changes_b.paths(intermediate=False)
+        keys = sorted(set(paths_a).union(set(paths_b)))
+        for key in keys:
+            if key in self._read_only_props:
+                continue
+            read_only_changes_a[key] = changes_a[key]
+            read_only_changes_b[key] = changes_b[key]
+        return read_only_changes_a, read_only_changes_b
 
     # ---------------------------------------------------------------------
     # Slot Interface
@@ -221,3 +244,16 @@ class ConfigPreviewDialog(QDialog):
 
         # save the last config directory
         get_config()['data_dir'] = op.dirname(filename)
+
+    @Slot(bool)
+    def _show_configuration_changes(self, hide_readonly: bool) -> None:
+        """Show the configuration in the widgets.Optionally hides the
+        readonly properties"""
+        if hide_readonly:
+            html_a = self.configurable_changes_existing
+            html_b = self.configurable_changes_retrieved
+        else:
+            html_a = self.all_changes_existing
+            html_b = self.all_changes_retrieved
+        self.ui_existing.setHtml(html_a)
+        self.ui_retrieved.setHtml(html_b)
