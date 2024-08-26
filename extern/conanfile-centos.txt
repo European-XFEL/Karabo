@@ -1,0 +1,12 @@
+[requires]
+patchelf/0.13
+b2/4.10.1
+expat/2.6.2
+libffi/3.4.4
+openssl/1.1.1w
+
+[options]
+openssl/*:openssldir=/etc/pki/tls
+openssl/*:shared=True
+expat/*:shared=True
+libffi/*:shared=True
