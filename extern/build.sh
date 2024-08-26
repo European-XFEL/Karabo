@@ -94,26 +94,20 @@ install_python() {
     safeRunCommandQuiet "rm -rf $INSTALL_PREFIX/conan_toolchain"
 
     # create default build profile
-    safeRunCommandQuiet "conan profile new default --detect --force"
-    # package_revision_mode is best: https://blog.conan.io/2019/09/27/package-id-modes.html
-    safeRunCommandQuiet "conan config set general.revisions_enabled=1"
-    safeRunCommandQuiet "conan config set general.default_package_id_mode=package_revision_mode"
+    safeRunCommandQuiet "conan profile detect --force"
 
     # configure prefix paths
-    local folder_opts="--install-folder=$INSTALL_PREFIX/conan_toolchain --output-folder=$INSTALL_PREFIX"
+    local folder_opts="--deployer=karabo_deployer --deployer-folder=$INSTALL_PREFIX --output-folder=$INSTALL_PREFIX/conan_toolchain"
     # build python if not found in conan cache
     local build_opts="--build=missing"
     # apply custom profile on top of default profile
     local profile_opts="-pr:h=./conanprofile.karabo"
     # always compile patchelf, b2, openssl from source (needed later), ensures linkage against correct GLIBC version symbols
     if [[ $INSTALL_PREFIX == *"CentOS-7"* ]]; then
-        safeRunCommandQuiet "conan install patchelf/0.13@ --build=patchelf --build=missing $profile_opts"
-        safeRunCommandQuiet "conan install b2/4.10.1@ --build=b2 --build=missing $profile_opts"
-        safeRunCommandQuiet "conan install libffi/3.4.4@ --build=libffi --build=missing -o shared=True $profile_opts"
-        safeRunCommandQuiet "conan install expat/2.6.2@ --build=expat --build=missing -o shared=True $profile_opts"
         # openssl:openssldir=/etc/pki/tls on CentOS7
-        build_opts="$build_opts --build=openssl -o openssl/*:openssldir=/etc/pki/tls"
-        safeRunCommandQuiet "conan install openssl/1.1.1w@ -o shared=True $build_opts $profile_opts"
+        build_opts="$build_opts -o openssl/*:openssldir=/etc/pki/tls"
+        # do all the CentOS7 hacks
+        safeRunCommandQuiet "conan install conanfile-centos.txt --build='*' $build_opts $profile_opts"
     else
         build_opts="$build_opts -o openssl/*:openssldir=/etc/ssl"
     fi
@@ -143,18 +137,18 @@ install_from_deps() {
     pushd $scriptDir
 
         # create default build profile
-        safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan profile new default --detect --force"
+        safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan profile detect --force"
 
         # export local conan recipes (for packages where no public recipe exists
         # we keep custom conan recipes in extern/resources/<pkg_name>)
-        safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan export ./resources/daemontools/conanfile.py daemontools-encore/$DAEMONTOOLS_VERSION@karabo/$CONAN_RECIPE_CHANNEL"
-        safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan export ./resources/log4cpp/conanfile.py log4cpp/$LOG4CPP_VERSION@karabo/$CONAN_RECIPE_CHANNEL"
-        safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan export ./resources/openmq/conanfile.py openmq/$OPENMQ_VERSION@karabo/$CONAN_RECIPE_CHANNEL"
-        safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan export ./resources/openmqc/conanfile.py openmqc/$OPENMQC_VERSION@karabo/$CONAN_RECIPE_CHANNEL"
-        safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan export ./resources/nss/conanfile.py nss/$NSS_VERSION@karabo/$CONAN_RECIPE_CHANNEL"
+        safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan export ./resources/daemontools/conanfile.py --name daemontools-encore --version $DAEMONTOOLS_VERSION --user karabo --channel $CONAN_RECIPE_CHANNEL"
+        safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan export ./resources/log4cpp/conanfile.py --name log4cpp --version $LOG4CPP_VERSION --user karabo --channel $CONAN_RECIPE_CHANNEL"
+        safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan export ./resources/openmq/conanfile.py --name openmq --version $OPENMQ_VERSION --user karabo --channel $CONAN_RECIPE_CHANNEL"
+        safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan export ./resources/openmqc/conanfile.py --name openmqc --version $OPENMQC_VERSION --user karabo --channel $CONAN_RECIPE_CHANNEL"
+        safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan export ./resources/nss/conanfile.py --name nss --version $NSS_VERSION --user karabo --channel $CONAN_RECIPE_CHANNEL"
 
         # configure prefix paths
-        local folder_opts="--install-folder=$INSTALL_PREFIX/conan_toolchain --output-folder=$INSTALL_PREFIX"
+        local folder_opts="--deployer=karabo_deployer --deployer-folder=$INSTALL_PREFIX --output-folder=$INSTALL_PREFIX/conan_toolchain"
         # when should conan build from sources? missing means if no pre-compiled binary package exists
         local build_opts="--build=missing"
         # apply custom profile on top of default profile
