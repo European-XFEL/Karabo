@@ -172,6 +172,7 @@ set_target_properties(
         SOVERSION ${KARABO_VERSION_MAJOR}
         INSTALL_RPATH "$ORIGIN/../extern/lib"
 )
+
 target_link_options(
     ${KARABO_LIB_TARGET_NAME}
     PUBLIC

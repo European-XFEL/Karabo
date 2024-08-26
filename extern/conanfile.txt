@@ -6,6 +6,7 @@
 
 # exact
 amqp-cpp/4.3.16
+libev/4.33
 bzip2/1.0.8
 daemontools-encore/1.11-karabo3@karabo/py311
 gtest/1.11.0
@@ -31,9 +32,9 @@ libjpeg/9e
 libtiff/4.3.0
 
 # conan v1
-nss/3.93
+# nss/3.93
 # conan v2
-# nss/3.93@karabo/py311
+nss/3.93@karabo/py311
 
 # forced - these are pinned to allow conan to resolve dependency conflicts
 sqlite3/3.41.2
@@ -43,7 +44,7 @@ zlib/1.2.13
 [generators]
 CMakeDeps
 CMakeToolchain
-pkg_config
+PkgConfigDeps
 
 [options]
 # We intend to use shared libraries
@@ -72,15 +73,3 @@ boost/*:without_thread=False
 boost/*:without_system=False
 boost/*:without_program_options=False
 boost/*:without_python=True
-
-[imports]
-# the ".."s are because conan install uses $INSTALL_PREFIX/conan_out in build.sh
-lib, * -> ../lib
-lib64, * -> ../lib64
-bin, * -> ../bin
-include, * -> ../include
-res, * -> ../res
-share, * -> ../share
-local, * -> ../local
-include/libxml2, * -> ../include    # otherwise pip installs have issues
-MessageQueue, * -> ../MessageQueue  # for openmq package
