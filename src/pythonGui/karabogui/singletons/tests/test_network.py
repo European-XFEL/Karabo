@@ -43,7 +43,6 @@ def test_member_variables(gui_app):
     network = Network()
     with singletons(network=network):
         assert network.hostname == 'localhost'
-        assert network.username == 'operator'
         assert network.password == 'karabo'
         assert network.port == 44444
 
@@ -55,17 +54,14 @@ def test_connect_directly(mocker, gui_app):
     with singletons(network=network, configuration=config):
         host = "xfel-computer-system-control"
         port = 33333
-        username = "karabo"
         mock_login_dialog = mocker.patch(
             "karabogui.singletons.network.ReactiveLoginDialog")
         mock_login_dialog().exec.return_value = QDialog.Accepted
-        success = network.connectToServerDirectly(
-            username, host, port)
+        success = network.connectToServerDirectly(host, port)
         assert success
         socket().connectToHost.assert_called_with(host, port)
 
         network.onConnected()
-        assert config["username"] == username
         # And disconnect!
         network.disconnectFromServer()
         socket().disconnectFromHost.assert_called_once()
@@ -82,12 +78,10 @@ def test_socket_connect_login_protocol(mocker, subtests, gui_app):
     with singletons(network=network, mediator=mediator):
         host = "exfl-client-pc-system-guikarabo"
         port = 32323
-        username = "karabo"
         mock_login_dialog = mocker.patch(
             "karabogui.singletons.network.ReactiveLoginDialog")
         mock_login_dialog().exec.return_value = QDialog.Accepted
-        success = network.connectToServerDirectly(
-            username, host, port)
+        success = network.connectToServerDirectly(host, port)
         assert success
         socket().connectToHost.assert_called_with(host, port)
 
