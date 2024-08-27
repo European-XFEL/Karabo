@@ -59,7 +59,6 @@ class Network(QObject):
         self._waiting_messages = {}
         self._show_proc_delay = False
 
-        self.username = "operator"
         self.gui_servers = []
         self.hostname = "localhost"
         self.port = "44444"
@@ -82,7 +81,6 @@ class Network(QObject):
         and that the user has been successfully authenticated.
         """
         dialog = ReactiveLoginDialog(
-            username=self.username,
             access_level=self.access_level,
             hostname=self.hostname,
             port=self.port,
@@ -103,12 +101,11 @@ class Network(QObject):
 
         return False
 
-    def connectToServerDirectly(self, username, hostname, port):
+    def connectToServerDirectly(self, hostname, port):
         """Connection to server directly via username, host and port
 
         This function is used for fast startup via the karabo cinema
         """
-        self.username = username
         self.hostname = hostname
         self.port = port
         dialog = ReactiveLoginDialog(hostname=hostname, port=port)
@@ -303,7 +300,6 @@ class Network(QObject):
                                                 int(MAX_GUI_SERVER_HISTORY))
 
         # Save to singleton!
-        get_config()['username'] = self.username
         get_config()['access_level'] = self.access_level
         get_config()['gui_servers'] = self.gui_servers
         self._data_reader = self._network_generator()
@@ -581,10 +577,6 @@ class Network(QObject):
         self._send_login_information()
         self._empty_request_queue()
 
-    def set_username(self, username):
-        self.username = username
-        get_config()['username'] = username
-
     # ------------------------------------------------------------------------
     # private functions
 
@@ -594,7 +586,6 @@ class Network(QObject):
         This method sets the default `host`, `port` and `gui_servers`
         """
         config = get_config()
-        self.username = config['username']
         self.access_level = config['access_level']
         self.gui_servers = config['gui_servers']
 

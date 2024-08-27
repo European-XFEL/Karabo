@@ -77,7 +77,7 @@ class CinemaWizardController(HasStrictTraits):
         network = get_network()
         return dict(
             domain=get_config()["domain"],
-            username=network.username,
+            username=get_config()["username"],
             host=network.hostname,
             port=network.port,
             show_login=False,
