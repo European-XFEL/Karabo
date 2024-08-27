@@ -31,8 +31,7 @@ from ..wizard import CinemaWizardController
 
 class NetworkMock:
 
-    def __init__(self, username, host, port):
-        self.username = username
+    def __init__(self, host, port):
         self.hostname = host
         self.port = port
 
@@ -40,9 +39,7 @@ class NetworkMock:
         """Do nothing!"""
 
 
-MOCKED_NETWORK = NetworkMock(username="operator",
-                             host="not-localhost",
-                             port="12345")
+MOCKED_NETWORK = NetworkMock(host="not-localhost", port="12345")
 GET_NETWORK_PATH = "karabogui.wizards.cinema.wizard.get_network"
 
 
@@ -78,8 +75,7 @@ class BaseCinemaInstallerTest(GuiTestCase):
 
     def assert_configure_link_page(self, **kwargs):
         # Defaults here that are updated
-        config = dict(username=MOCKED_NETWORK.username,
-                      host=MOCKED_NETWORK.hostname,
+        config = dict(host=MOCKED_NETWORK.hostname,
                       port=MOCKED_NETWORK.port,
                       show_splash=True,
                       show_login=False)
@@ -96,8 +92,7 @@ class BaseCinemaInstallerTest(GuiTestCase):
                config["show_splash"]
         assert current_page.login_checkbox.isChecked() == \
                config["show_login"]
-        assert current_page.username_combobox.currentText() == \
-               config["username"]
+        assert current_page.username_combobox.currentText() == "admin"
         assert current_page.host_lineedit.text() == config["host"]
         assert current_page.port_lineedit.text() == config["port"]
 
