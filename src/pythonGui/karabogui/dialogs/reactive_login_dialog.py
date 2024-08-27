@@ -188,7 +188,7 @@ QPushButton#skip_authentication_button:hover{border: none;
 
 
 class ReactiveLoginDialog(QDialog):
-    def __init__(self, username="", access_level="admin", hostname="", port="",
+    def __init__(self, access_level="admin", hostname="", port="",
                  gui_servers=None, parent=None):
         super().__init__(parent)
         filepath = get_dialog_ui("reactive_login_dialog.ui")
@@ -568,7 +568,7 @@ class TemporarySessionDialog(QDialog):
 
         self._auth_url = krb_access.AUTHENTICATION_SERVER
 
-        user = get_network().username
+        user = get_config()["username"]
         access_level = krb_access.GLOBAL_ACCESS_LEVEL.name
         text = ACCESS_LEVEL_INFO.format(user=user, access_level=access_level)
         self.info_label.setText(text)
@@ -618,7 +618,7 @@ class TemporarySessionDialog(QDialog):
             highest_access_level = krb_access.HIGHEST_ACCESS_LEVEL.name
             krb_access_level = krb_access.ACCESS_LEVEL_MAP.get(
                 highest_access_level.lower(), 2)
-            username = get_network().username
+            username = get_config()["username"]
             get_network().beginTemporarySession(
                 username=username,
                 temporarySessionToken=auth_result["once_token"],
