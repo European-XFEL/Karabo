@@ -1,10 +1,11 @@
 from collections import namedtuple
 from pathlib import Path
 
+from qtpy.QtCore import QObject, Signal
+
 from karabo.common.scenemodel.api import SceneTargetWindow
 from karabogui.events import KaraboEvent
 from karabogui.programs.concert import create_concert, run_concert
-from karabogui.singletons.network import Network
 from karabogui.testing import singletons, system_hash
 from karabogui.topology.api import SystemTopology
 
@@ -30,18 +31,31 @@ def test_run_concert(gui_app, mocker):
     mock_concert.assert_called_with(DATA)
 
 
+class NetworkMock(QObject):
+    """A basic mock to avoid using the singleton class"""
+    signalServerConnectionChanged = Signal(bool)
+    signalReceivedData = Signal(object)
+    signalNetworkPerformance = Signal(float, bool)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+
 def test_concert(gui_app, mocker):
-    network = Network()
+    network = NetworkMock()
     network.connectToServerDirectly = mocker.Mock()
     network.connectToServerDirectly.return_value = True
     network.onSubscribeLogs = mocker.Mock()
     topology = SystemTopology()
 
     path = "karabogui.programs.concert.broadcast_event"
+    concert_app = mocker.patch("karabogui.programs.concert.create_gui_app")
+    concert_app.return_value = gui_app
+    # Patch the gui_app to avoid collisions between tests
     with singletons(network=network, topology=topology):
         broadcast = mocker.patch(path)
         success, app = create_concert(DATA)
-
+        concert_app.assert_called_once()
         assert success
 
         network.signalServerConnectionChanged.emit(True)
