@@ -313,8 +313,8 @@ class MainWindow(QMainWindow):
         title = " - ".join([info.format(value) for info, value in
                             zip(titles, self.title_info.values())
                             if value is not None])
-        if get_network().username and krb_access.is_authenticated():
-            title = f"{title} - User: {get_network().username}"
+        if get_config()["username"] and krb_access.is_authenticated():
+            title = f"{title} - User: {get_config()['username']}"
         if krb_access.TEMPORARY_SESSION_USER is not None:
             title = (
                 f"{title} - Temporary Session User: "

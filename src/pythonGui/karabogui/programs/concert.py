@@ -56,7 +56,7 @@ def create_concert(data: dict):
     if "host" in data and "port" in data and "username" in data:
         network.signalServerConnectionChanged.connect(_connect_handler)
         success = network.connectToServerDirectly(
-            username=data["username"], hostname=data["host"],
+            hostname=data["host"],
             port=data["port"])
     else:
         # Connect to the GUI Server via dialog"""

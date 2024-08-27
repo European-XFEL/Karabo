@@ -167,7 +167,7 @@ def create_theatre(ns):
     if ns.host and ns.port:
         network.signalServerConnectionChanged.connect(_connect_handler)
         success = get_network().connectToServerDirectly(
-            username=ns.username, hostname=ns.host, port=ns.port)
+            hostname=ns.host, port=ns.port)
     else:
         # Connect to the GUI Server via dialog
         success = network.connectToServer()
