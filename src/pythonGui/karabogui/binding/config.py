@@ -26,13 +26,13 @@ from .proxy import PropertyProxy
 from .validate import sanitize_table_value
 
 
-def iterate_binding(node, base=''):
+def iterate_binding(node, base=""):
     """Flat iterate over the binding namespace to yield `key` and `binding`
 
     Note: Remove recursive binding iteration in future
     """
     namespace = node.value
-    base = base + '.' if base else ''
+    base = base + "." if base else ""
     for name in namespace:
         subname = base + name
         subnode = getattr(namespace, name)
@@ -57,8 +57,7 @@ def apply_fast_data(config, binding, timestamp):
         if isinstance(value, Hash) and isinstance(node, NodeBinding):
             apply_fast_data(value, node, timestamp)
         else:
-            traits = {'value': value}
-            traits['timestamp'] = timestamp
+            traits = {"value": value, "timestamp": timestamp}
             # Set everything at once and notify via the config_update event
             try:
                 node.trait_set(trait_change_notify=False, **traits)
@@ -88,10 +87,9 @@ def apply_configuration(config, binding):
         if isinstance(value, Hash) and isinstance(node, NodeBinding):
             apply_configuration(value, node)
         else:
-            traits = {'value': value}
             # Set the timestamp no matter what
-            ts = Timestamp.fromHashAttributes(attrs)
-            traits['timestamp'] = ts or Timestamp()
+            ts = Timestamp.fromHashAttributes(attrs) or Timestamp()
+            traits = {"value": value, "timestamp": ts}
             # Set everything at once and notify via the config_update event
             try:
                 node.trait_set(trait_change_notify=False, **traits)
@@ -126,7 +124,7 @@ def apply_default_configuration(binding):
             node.value = Undefined
 
 
-def apply_project_configuration(config, binding, base=''):
+def apply_project_configuration(config, binding, base=""):
     """Recursively set values from a configuration Hash object to a binding
     object of a project device.
 
@@ -142,7 +140,7 @@ def apply_project_configuration(config, binding, base=''):
     assert isinstance(namespace, BindingNamespace)
 
     fails = Hash()
-    base = base + '.' if base else ''
+    base = base + "." if base else ""
 
     for key, value, attrs in config.iterall():
         if key not in namespace:
@@ -150,7 +148,6 @@ def apply_project_configuration(config, binding, base=''):
 
         # For storage in fail dict!
         subkey = base + key
-
         node = getattr(namespace, key)
         if isinstance(value, Hash) and isinstance(node, NodeBinding):
             fails.update(apply_project_configuration(value, node, base=subkey))
@@ -161,10 +158,10 @@ def apply_project_configuration(config, binding, base=''):
                     fails.update(
                         {subkey: "The table configuration was "
                                  "sanitized - <b>The table is corrupted</b>"})
-            traits = {'value': value}
+            traits = {"value": value}
             # Set the timestamp no matter what
             ts = Timestamp.fromHashAttributes(attrs)
-            traits['timestamp'] = ts or Timestamp()
+            traits["timestamp"] = ts or Timestamp()
             try:
                 node.trait_set(trait_change_notify=False, **traits)
             except TraitError:
@@ -203,7 +200,7 @@ def extract_edits(schema, binding):
         return val
 
     def _is_readonly(key):
-        return schema.hash[key, 'accessMode'] == AccessMode.READONLY.value
+        return schema.hash[key, "accessMode"] == AccessMode.READONLY.value
 
     retval = Hash()
     for key, node in iterate_binding(binding):
@@ -246,9 +243,9 @@ def extract_online_edits(schema, binding):
         value = binding.attributes.get(const.KARABO_SCHEMA_DEFAULT_VALUE)
         return value
 
-    def _iter_binding(node, base=''):
+    def _iter_binding(node, base=""):
         namespace = node.value
-        base = base + '.' if base else ''
+        base = base + "." if base else ""
         for name in namespace:
             if base in IGNORE_NODES:
                 continue
@@ -264,8 +261,8 @@ def extract_online_edits(schema, binding):
     def not_writable(key):
         """Check if a property is writable from external"""
         attributes = schema.hash[key, ...]
-        read_only = attributes['accessMode'] == AccessMode.READONLY.value
-        internal = attributes['assignment'] == Assignment.INTERNAL.value
+        read_only = attributes["accessMode"] == AccessMode.READONLY.value
+        internal = attributes["assignment"] == Assignment.INTERNAL.value
         # Note: One can define tags such as `plc` here to filter out.
         return read_only or internal
 
