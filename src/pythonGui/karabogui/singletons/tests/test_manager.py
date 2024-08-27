@@ -987,19 +987,15 @@ def test_temp_session(mocker):
         login_info = {"username": "abcd", "accessLevel": 3}
         mocker.patch("karabogui.singletons.manager.broadcast_event")
         manager.handle_loginInformation(**login_info)
-        assert network.set_username.call_count == 1
-        network.set_username.assert_called_with("abcd")
 
         assert krb_access.GLOBAL_ACCESS_LEVEL == AccessLevel(3)
         assert krb_access.HIGHEST_ACCESS_LEVEL == AccessLevel(3)
         assert krb_access.TEMPORARY_SESSION_USER is None
-        network.set_username.reset_mock()
 
         begin_session_info = {
             "username": "karabo", "accessLevel": 4, "success": True}
         manager.handle_onBeginTemporarySession(**begin_session_info)
 
-        assert network.set_username.call_count == 0
         assert krb_access.GLOBAL_ACCESS_LEVEL == AccessLevel(4)
         assert krb_access.HIGHEST_ACCESS_LEVEL == AccessLevel(4)
         assert krb_access.TEMPORARY_SESSION_USER == "karabo"
@@ -1007,14 +1003,12 @@ def test_temp_session(mocker):
         end_session_info = {"levelBeforeTemporarySession": 2}
         manager.handle_onEndTemporarySession(** end_session_info)
 
-        assert network.set_username.call_count == 0
         assert krb_access.GLOBAL_ACCESS_LEVEL == AccessLevel(2)
         assert krb_access.HIGHEST_ACCESS_LEVEL == AccessLevel(2)
         assert krb_access.TEMPORARY_SESSION_USER is None
 
         temp_session_expired_info = {"levelBeforeTemporarySession": 1}
         manager.handle_onTemporarySessionExpired(**temp_session_expired_info)
-        assert network.set_username.call_count == 0
         assert krb_access.GLOBAL_ACCESS_LEVEL == AccessLevel(1)
         assert krb_access.HIGHEST_ACCESS_LEVEL == AccessLevel(1)
         assert krb_access.TEMPORARY_SESSION_USER is None

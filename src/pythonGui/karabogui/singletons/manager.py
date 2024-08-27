@@ -400,7 +400,7 @@ class Manager(QObject):
         If the gui server is in readOnly mode, the readOnly boolean is included
         here as well since 2.20.X.
         """
-        get_network().set_username(info["username"])
+        get_config()['username'] = info["username"]
         read_only = info.get("readOnly", False)
         if read_only:
             access = AccessLevel.OBSERVER
