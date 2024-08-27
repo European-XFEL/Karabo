@@ -26,6 +26,22 @@ from .proxy import PropertyProxy
 from .validate import sanitize_table_value
 
 
+def iterate_binding(node, base=''):
+    """Flat iterate over the binding namespace to yield `key` and `binding`
+
+    Note: Remove recursive binding iteration in future
+    """
+    namespace = node.value
+    base = base + '.' if base else ''
+    for name in namespace:
+        subname = base + name
+        subnode = getattr(namespace, name)
+        if isinstance(subnode, NodeBinding):
+            yield from iterate_binding(subnode, base=subname)
+        elif not isinstance(subnode, SlotBinding):
+            yield subname, subnode
+
+
 def apply_fast_data(config, binding, timestamp):
     """Recursively set values from a fast data Hash object to a binding
     object.
@@ -166,19 +182,8 @@ def extract_configuration(binding):
     def _get_binding_value(binding):
         return binding.value
 
-    def _iter_binding(node, base=''):
-        namespace = node.value
-        base = base + '.' if base else ''
-        for name in namespace:
-            subname = base + name
-            subnode = getattr(namespace, name)
-            if isinstance(subnode, NodeBinding):
-                yield from _iter_binding(subnode, base=subname)
-            elif not isinstance(subnode, SlotBinding):
-                yield subname, subnode
-
     retval = Hash()
-    for key, node in _iter_binding(binding):
+    for key, node in iterate_binding(binding):
         value = _get_binding_value(node)
         if value is Undefined:
             continue
@@ -197,22 +202,11 @@ def extract_edits(schema, binding):
         val = binding.attributes.get(const.KARABO_SCHEMA_DEFAULT_VALUE)
         return val
 
-    def _iter_binding(node, base=''):
-        namespace = node.value
-        base = base + '.' if base else ''
-        for name in namespace:
-            subname = base + name
-            subnode = getattr(namespace, name)
-            if isinstance(subnode, NodeBinding):
-                yield from _iter_binding(subnode, base=subname)
-            elif not isinstance(subnode, SlotBinding):
-                yield subname, subnode
-
     def _is_readonly(key):
         return schema.hash[key, 'accessMode'] == AccessMode.READONLY.value
 
     retval = Hash()
-    for key, node in _iter_binding(binding):
+    for key, node in iterate_binding(binding):
         default_val = _get_binding_default(node)
         value = None if node.value is Undefined else node.value
 
@@ -337,24 +331,9 @@ def extract_init_configuration(binding, config):
     attributes from the configuration
 s    """
 
-    def _iter_binding(node, base=''):
-        """Flat iterate over the binding namespace to yield `key` and `binding`
-
-        Note: Remove recursive binding iteration in future
-        """
-        namespace = node.value
-        base = base + '.' if base else ''
-        for name in namespace:
-            subname = base + name
-            subnode = getattr(namespace, name)
-            if isinstance(subnode, NodeBinding):
-                yield from _iter_binding(subnode, base=subname)
-            elif not isinstance(subnode, SlotBinding):
-                yield subname, subnode
-
     ret = Hash()
 
-    for key, node in _iter_binding(binding):
+    for key, node in iterate_binding(binding):
         # key must be in configuration for processing!
         if key in config:
             value, attrs = config.getElement(key)
@@ -382,26 +361,15 @@ def extract_read_only_and_reconfigurable(
 
     assert isinstance(binding, BindingRoot)
 
-    def _iter_binding(node, base=''):
-        namespace = node.value
-        base = base + '.' if base else ''
-        for name in namespace:
-            subname = base + name
-            subnode = getattr(namespace, name)
-            if isinstance(subnode, NodeBinding):
-                yield from _iter_binding(subnode, base=subname)
-            elif not isinstance(subnode, SlotBinding):
-                yield subname, subnode
-
     device_state = configuration.get("state")
     read_only = Hash()
     reconfigurable = Hash()
-    for key, node in _iter_binding(binding):
+    for key, node in iterate_binding(binding):
         if key not in configuration:
             continue
-        value, attrs = configuration.getElement(key)
+        value = configuration[key]
         access_mode = node.access_mode
-        if value is Undefined or access_mode == AccessMode.UNDEFINED:
+        if value is Undefined:
             continue
         if access_mode == AccessMode.RECONFIGURABLE:
             if node.is_allowed(state=device_state):
