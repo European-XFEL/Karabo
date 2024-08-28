@@ -52,6 +52,7 @@ from .tools import DeviceSceneHandler, ServerLogHandler
 class SystemTreeView(QTreeView):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setObjectName("systemTreeView")
         self._selected_proxy = None  # A BaseDeviceProxy
 
         model = SystemTreeModel(parent=self)
