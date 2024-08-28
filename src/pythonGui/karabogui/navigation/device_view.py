@@ -45,6 +45,7 @@ from .tools import DeviceSceneHandler
 class DeviceTreeView(QTreeView):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setObjectName("deviceTreeView")
         self._selected_proxy = None  # A BaseDeviceProxy
 
         model = DeviceTreeModel(parent=self)
