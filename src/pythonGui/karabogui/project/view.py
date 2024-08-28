@@ -53,7 +53,7 @@ class ProjectView(QTreeView):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-
+        self.setObjectName("projectTreeView")
         project_model = get_project_model()
         project_model.setParent(self)
 
