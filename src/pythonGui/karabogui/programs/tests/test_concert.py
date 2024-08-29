@@ -17,7 +17,7 @@ DATA = {
                 "x": 1458, "y": 93},
                {"uuid": "9b73efec-4523-4a47-b88f-90edc2e9ed89",
                 "x": 2332, "y": 361}],
-    "host": "exflqr46957", "port": 44444, "username": "admin"}
+    "host": "exflqr46957", "port": 44444}
 
 
 def test_run_concert(gui_app, mocker):
