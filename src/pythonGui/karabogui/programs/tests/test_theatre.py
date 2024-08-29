@@ -30,14 +30,13 @@ def test_device_link_regex():
     assert not (match and all(match.groups()))
 
 
-namespace = namedtuple("namespace", "host port username nosplash "
+namespace = namedtuple("namespace", "host port nosplash "
                                     "scene_id timeout")
 
 
 def test_theatre_normal(gui_app, mocker):
     """Test the karabo theatre with a topology"""
-    ns = namespace("myhost", "myport", "admin", True,
-                   ["divvy|scene"], 1)
+    ns = namespace("myhost", "myport", True, ["divvy|scene"], 1)
 
     network = Network()
     network.connectToServerDirectly = mocker.Mock()
@@ -65,8 +64,7 @@ def test_theatre_normal(gui_app, mocker):
 
 def test_theatre_timeout(gui_app, mocker):
     """Test the karabo theatre with a timeout for the topology"""
-    ns = namespace("myhost", "myport", "admin", True,
-                   ["divvy|scene"], 0)
+    ns = namespace("myhost", "myport", True, ["divvy|scene"], 0)
 
     network = Network()
     network.connectToServerDirectly = mocker.Mock()

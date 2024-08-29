@@ -114,13 +114,6 @@ def test_get_cinema_args():
     with pytest.raises(ValueError):
         get_cinema_args(queries)
 
-    # Check query for optional username
-    queries = {"domain": ["SQS"],
-               "scene_uuid": ["xxx-xxx"],
-               "username": ["operator"]}
-    assert get_cinema_args(queries) == ["SQS", "xxx-xxx",
-                                        "--username", "operator"]
-
     # Check query for optional but both supplied host and port
     queries = {"domain": ["SQS"],
                "scene_uuid": ["xxx-xxx"],
@@ -145,12 +138,10 @@ def test_get_cinema_args():
 
 def test_get_theatre_args():
     queries = {"scene_id": ["COMPONENT/TYPE/MEMBER|SCENEname"],
-               "username": ["operator"],
                "host": ["localhost"],
                "port": ["44444"]}
 
     assert get_theatre_args(queries) == ["COMPONENT/TYPE/MEMBER|SCENEname",
-                                         "--username", "operator",
                                          "--host", "localhost",
                                          "--port", "44444"]
 
@@ -159,11 +150,9 @@ def test_get_theatre_args():
     assert get_theatre_args(queries) == ["COMPONENT/TYPE/MEMBER|SCENEname"]
 
     queries = {"scene_id": ["bla", "bli"],
-               "username": ["operator"],
                "host": ["localhost"],
                "port": ["44444"]}
 
     assert get_theatre_args(queries) == ["bla", "bli",
-                                         "--username", "operator",
                                          "--host", "localhost",
                                          "--port", "44444"]
