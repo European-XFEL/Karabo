@@ -199,9 +199,6 @@ def main():
                     help='The hostname of the gui server to connect')
     ap.add_argument('-port', '--port', type=int,
                     help='The port number of the gui server to connect')
-    ap.add_argument('-username', '--username', type=str, default='admin',
-                    help='The user name. Only used when specifying host and '
-                         'port. The default user name is `admin`')
     ap.add_argument('-timeout', '--timeout', type=int, default=10,
                     help='The timeout in seconds to be waited for the devices'
                          'to be visible')
