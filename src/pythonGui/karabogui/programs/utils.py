@@ -78,7 +78,6 @@ def save_concert_file(file_name, scene_data):
     """
     domain = get_config()["domain"]
     network = get_network()
-    user = get_config()["username"]
     hostname = network.hostname
     port = network.port
 
@@ -88,7 +87,7 @@ def save_concert_file(file_name, scene_data):
         y = properties["y"]
         scenes.append({"uuid": uuid, "x": x, "y": y})
 
-    concert = {"domain": domain, "username": user, "host": hostname,
+    concert = {"domain": domain, "host": hostname,
                "port": port, "scenes": scenes}
     with open(file_name, "w") as yaml_file:
         yaml.dump(concert, yaml_file)

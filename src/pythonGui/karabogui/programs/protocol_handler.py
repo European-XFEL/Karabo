@@ -57,8 +57,6 @@ def get_cinema_args(queries):
     # Check optional arguments:
     if queries.get("nosplash", False):
         args.append("--nosplash")
-    if "username" in queries:
-        args.extend(["--username", queries["username"][-1]])
     # Check if host and port is both supplied
     if "host" in queries and "port" in queries:
         args.extend(["--host", queries["host"][-1],
@@ -80,8 +78,6 @@ def get_theatre_args(queries):
     # Check optional arguments:
     if queries.get("nosplash", False):
         args.append("--nosplash")
-    if "username" in queries:
-        args.extend(["--username", queries["username"][-1]])
     # Check if host and port is both supplied
     if "host" in queries and "port" in queries:
         args.extend(["--host", queries["host"][-1],
