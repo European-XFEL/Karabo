@@ -392,6 +392,9 @@ void Validator_Test::testState() {
     CPPUNIT_ASSERT(validated.getAttributes("goofyState").has(KARABO_INDICATE_STATE_SET));
 
     validated.clear();
+
+    STATE_ELEMENT(schema).key("defaultValue").defaultValue(util::State::CHANGING).commit();
+    CPPUNIT_ASSERT_EQUAL(karabo::util::State::CHANGING.name(), schema.getDefaultValue<std::string>("defaultValue"));
 }
 
 
@@ -400,8 +403,9 @@ void Validator_Test::testAlarms() {
     util::Hash validated;
 
     util::Schema schema;
-    ALARM_ELEMENT(schema).key("goofyAlarm").commit();
-
+    ALARM_ELEMENT(schema).key("goofyAlarm").defaultValue(karabo::util::AlarmCondition::ALARM).commit();
+    CPPUNIT_ASSERT_EQUAL(karabo::util::AlarmCondition::ALARM.asString(),
+                         schema.getDefaultValue<std::string>("goofyAlarm"));
     // Test to reject a state that is set with a bad alarm string
     std::pair<bool, std::string> res =
           validator.validate(schema, util::Hash("goofyAlarm", "LondonIsBurningCallTheEngines"), validated);
@@ -1282,8 +1286,9 @@ void Validator_Test::testPropertyTestValidation() {
     }
 
     // Add ALARM_ELEMENT to the schema
-    ALARM_ELEMENT(schema).key("alarmCond").commit();
-
+    ALARM_ELEMENT(schema).key("alarmCond").initialValue(karabo::util::AlarmCondition::WARN).commit();
+    CPPUNIT_ASSERT_EQUAL(karabo::util::AlarmCondition::WARN.asString(),
+                         schema.getDefaultValue<std::string>("alarmCond"));
     // Alarm test: success
     validated.clear();
 
