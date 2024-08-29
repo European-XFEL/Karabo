@@ -105,6 +105,12 @@ namespace karabo {
         }
 
 
+        StateElement& StateElement::defaultValue(const karabo::util::State& s) {
+            m_node->setAttribute(KARABO_SCHEMA_DEFAULT_VALUE, s.name());
+            return *this;
+        }
+
+
         StateElement& StateElement::daqPolicy(const DAQPolicy& policy) {
             m_node->setAttribute<int>(KARABO_SCHEMA_DAQ_POLICY, policy);
             return *this;
