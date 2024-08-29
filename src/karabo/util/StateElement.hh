@@ -83,6 +83,8 @@ namespace karabo {
              */
             StateElement& initialValue(const karabo::util::State& s);
 
+            StateElement& defaultValue(const karabo::util::State& s);
+
             StateElement& daqPolicy(const DAQPolicy& policy);
 
            protected:

@@ -35,6 +35,10 @@ namespace karabo {
             return *this;
         }
 
+        AlarmConditionElement& AlarmConditionElement::defaultValue(const AlarmCondition& a) {
+            m_node->setAttribute(KARABO_SCHEMA_DEFAULT_VALUE, a.asString());
+            return *this;
+        }
 
         void AlarmConditionElement::beforeAddition() {
             m_node->setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::LEAF);

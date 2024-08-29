@@ -47,6 +47,8 @@ namespace karabo {
              */
             AlarmConditionElement& initialValue(const AlarmCondition& a);
 
+            AlarmConditionElement& defaultValue(const AlarmCondition& a);
+
            protected:
             void beforeAddition();
         };
