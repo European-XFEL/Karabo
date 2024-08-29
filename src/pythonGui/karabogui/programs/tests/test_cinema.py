@@ -23,14 +23,13 @@ from karabogui.singletons.network import Network
 from karabogui.testing import singletons, system_hash
 from karabogui.topology.api import SystemTopology
 
-namespace = namedtuple("namespace", "host port username domain nosplash "
+namespace = namedtuple("namespace", "host port domain nosplash "
                                     "scene_uuid timeout")
 
 
 def test_cinema_normal(gui_app, mocker):
     """Test the karabo cinema with a direct connect"""
-    ns = namespace("myhost", "myport", "admin", "CTRL", True,
-                   ["uuid-1231231321"], 1)
+    ns = namespace("myhost", "myport", "CTRL", True, ["uuid-1231231321"], 1)
 
     network = Network()
     network.connectToServerDirectly = mocker.Mock()
