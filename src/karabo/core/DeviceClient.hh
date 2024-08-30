@@ -1443,16 +1443,6 @@ namespace karabo {
              */
             karabo::core::Lock lock(const std::string& deviceId, bool recursive = false, int timeout = -1);
 
-            /**
-             * Get all <i>properties</i> with the suitable <i>accessMode</i> exposed by <i>dataSourceId</i>.
-             * @param dataSourceId   data source containing properties
-             * @param properties     properties that satisfy criteria below (output container)
-             * @param accessMode     criteria used for filtering the data source's properties
-             */
-            void getDataSourceSchemaAsHash(const std::string& dataSourceId, karabo::util::Hash& properties,
-                                           int accessMode = karabo::util::INIT | karabo::util::READ |
-                                                            karabo::util::WRITE);
-
            protected: // functions
             void initTopology();
 
@@ -1583,14 +1573,6 @@ namespace karabo {
             void connectAndRequest(const std::string& deviceId);
 
             int getAccessLevel(const std::string& deviceId);
-
-            void filterDataSchema(const std::string& deviceId, const karabo::util::Schema& schema, int accessMode,
-                                  karabo::util::Hash& hash) const;
-
-            void convertSchemaHash(const karabo::util::Hash& schemaHash, int accessMode,
-                                   karabo::util::Hash& hash) const;
-
-            void recursivelyAddCompoundDataTypes(const karabo::util::Hash& schemaHash, karabo::util::Hash& hash) const;
 
             void completeInitialization(int countdown);
 
