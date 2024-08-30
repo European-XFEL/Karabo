@@ -546,11 +546,9 @@ async def test_history(deviceTest):
     <DataLoggerManager>
     <!-- Frequent flushing of raw and index files every 1 s: -->
     <flushInterval KRB_Type="INT32">1</flushInterval>
-    <logger>
-        <FileDataLogger>
-            <directory KRB_Type="STRING">karaboHistory</directory>
-        </FileDataLogger>
-    </logger>
+    <fileDataLogger>
+        <directory KRB_Type="STRING">karaboHistory</directory>
+    </fileDataLogger>
     <serverList KRB_Type="VECTOR_STRING">karabo/dataLogger</serverList>
     </DataLoggerManager>
 </KRB_Item>
