@@ -885,19 +885,6 @@ void exportPyCoreDeviceClient(py::module_& m) {
                 },
                 py::arg("deviceId"))
 
-          .def(
-                "getDataSourceSchemaAsHash",
-                [](const DeviceClientWrap::Pointer& self, const std::string& dataSourceId, int access) {
-                    Hash::Pointer properties(new Hash());
-                    {
-                        py::gil_scoped_release release;
-                        self->getDataSourceSchemaAsHash(dataSourceId, *properties, access);
-                    }
-                    return py::cast(properties);
-                },
-                py::arg("dataSourceId"),
-                py::arg("accessType") = AccessType::INIT | AccessType::READ | AccessType::WRITE)
-
           .def("lock", &DeviceClientWrap::lockPy, py::arg("deviceId"), py::arg("recursive") = false,
                py::arg("timeout") = -1);
 }
