@@ -27,9 +27,6 @@
 
 using boost::placeholders::_1;
 
-// Open questions/TODO at least when automatic reconnection is put back:
-// - need for m_channel->onError(nullptr); at several places? (See old AmqpClient code about where.)
-
 namespace karabo::net {
 
     AmqpClient2::AmqpClient2(AmqpConnection::Pointer connection, std::string instanceId, AMQP::Table queueArgs,
@@ -50,6 +47,9 @@ namespace karabo::net {
         std::promise<void> promise;
         auto future = promise.get_future();
         m_connection->dispatch([this, &promise]() {
+            // Remove all invalid reconnect registrations - since we are being destructed, that should at least be us
+            m_connection->cleanReconnectRegistrations();
+
             const auto cancelledError = KARABO_ERROR_CODE_OP_CANCELLED;
 
             if (m_channelPreparationCallback) {
@@ -95,6 +95,7 @@ namespace karabo::net {
         // We post and do not dispatch to ensure that also in the most normal case (ChannelStatus::READY below) the
         // onSubscriptionDone inside doSubscribePending does not need posting and still the guarantee holds that it
         // is not called from within asyncSubscribe(..).
+        // Also see comment in reviveIfReconnected() concerning posting!
         m_connection->post([weakThis{weak_from_this()}, this, exchange, routingKey,
                             onSubscriptionDone{std::move(onSubscriptionDone)}]() mutable {
             auto self(weakThis.lock());
@@ -111,8 +112,8 @@ namespace karabo::net {
                     auto combinedOnSubDone = [newOnSubDone{std::move(onSubscriptionDone)},
                                               previousOnSubDone{std::move(it->second.onSubscription)}](
                                                    const boost::system::error_code ec) {
-                        previousOnSubDone(ec);
-                        newOnSubDone(ec);
+                        if (previousOnSubDone) previousOnSubDone(ec);
+                        newOnSubDone(ec); // Docs of asyncSubscribe require that this one is valid
                     };
                     it->second.onSubscription = combinedOnSubDone;
                 } else if (it->second.status == SubscriptionStatus::READY) {
@@ -125,7 +126,7 @@ namespace karabo::net {
                     auto patchedOnUnsubDone =
                           [previousOnSubDone{std::move(it->second.onSubscription)},
                            subscribeAgain{std::move(subscribeAgain)}](const boost::system::error_code ec) {
-                              previousOnSubDone(ec);
+                              if (previousOnSubDone) previousOnSubDone(ec);
                               subscribeAgain();
                           };
                     it->second.onSubscription = std::move(patchedOnUnsubDone);
@@ -182,7 +183,7 @@ namespace karabo::net {
                 auto patchedOnDone =
                       [previousOnDone{std::move(it->second.onSubscription)},
                        unsubscribeAgain{std::move(unsubscribeAgain)}](const boost::system::error_code ec) {
-                          previousOnDone(ec);
+                          if (previousOnDone) previousOnDone(ec);
                           unsubscribeAgain();
                       };
                 it->second.onSubscription = std::move(patchedOnDone);
@@ -237,6 +238,7 @@ namespace karabo::net {
         });
     }
 
+
     void AmqpClient2::asyncPublish(const std::string& exchange, const std::string& routingKey,
                                    const std::shared_ptr<std::vector<char>>& data, AsyncHandler onPublishDone) {
         // Ensure to run in single threaded io context (=> no concurrency problems!).
@@ -254,27 +256,18 @@ namespace karabo::net {
                 case ChannelStatus::REQUEST: {
                     m_channelStatus = ChannelStatus::CREATE;
                     // Postpone message and trigger channel creation - if that done, publish and call callbacks
-                    m_postponedPubMessages.push(PostponedMessage(std::move(exchange), std::move(routingKey),
-                                                                 std::move(data), std::move(onPublishDone)));
+                    queueMessage(PostponedMessage(exchange, routingKey, std::move(data), std::move(onPublishDone)));
                     asyncPrepareChannel([weakThis](const boost::system::error_code& ec) {
                         if (auto self = weakThis.lock()) {
                             if (ec) {
                                 KARABO_LOG_FRAMEWORK_WARN_C("AmqpClient")
                                       << "Channel preparation failed (" << ec.message() << "), so "
                                       << self->m_postponedPubMessages.size()
-                                      << " postponed messaged cannot be published";
-                            }
-                            // First use of m_postponedPubMessages: Collect messages till channel is ready
-                            std::queue<PostponedMessage> postponedMessages;
-                            postponedMessages.swap(self->m_postponedPubMessages); // doPublish may add again
-                            while (!postponedMessages.empty()) {
-                                PostponedMessage& m = postponedMessages.front();
-                                if (ec) {
-                                    m.onPublishDone(ec);
-                                } else {
-                                    self->doPublish(m.exchange, m.routingKey, m.data, m.onPublishDone);
-                                }
-                                postponedMessages.pop();
+                                      << " postponed messaged stay cached until reconnected.";
+                                // Expect a call to reviveIfReconnected() to come and initiate publishing
+                            } else {
+                                // First use of m_postponedPubMessages: Collect messages till channel is ready
+                                self->publishPostponed();
                             }
                         } // else: onPublishDones should be called in destructor
                     });
@@ -284,55 +277,148 @@ namespace karabo::net {
                 case ChannelStatus::CREATE_QUEUE:
                 case ChannelStatus::CREATE_CONSUMER:
                     // Channel being prepared, so just postpone message. If channel ready, that will publish messages
-                    m_postponedPubMessages.push(PostponedMessage(std::move(exchange), std::move(routingKey),
-                                                                 std::move(data), std::move(onPublishDone)));
+                    queueMessage(PostponedMessage(exchange, routingKey, std::move(data), std::move(onPublishDone)));
                     break;
-                case ChannelStatus::READY:
-                    // Channel ready, so directly send
-                    doPublish(exchange, routingKey, data, onPublishDone);
-                    break;
+                case ChannelStatus::READY: {
+                    // Channel ready, but need to check exchange
+                    auto itExchange = m_exchanges.find(exchange);
+                    if (itExchange == m_exchanges.end()) {
+                        queueMessage(PostponedMessage(exchange, routingKey, std::move(data), std::move(onPublishDone)));
+                        asyncDeclareExchangeThenPublish(exchange);
+                    } else if (itExchange->second == ExchangeStatus::DECLARING || !m_postponedPubMessages.empty()) {
+                        // Exchange declaration already triggered, so just queue to be published if that is ready.
+                        // Also, for message order, always queue if there is already a queue
+                        queueMessage(PostponedMessage(exchange, routingKey, std::move(data), std::move(onPublishDone)));
+                    } else {
+                        doPublish(exchange, routingKey, data, onPublishDone);
+                    }
+                } break;
             }
         });
     }
 
+
+    void AmqpClient2::reviveIfReconnected() {
+        if (m_channelPreparationCallback) { // Not sure whether/how that can happen
+            KARABO_LOG_FRAMEWORK_WARN << m_instanceId
+                                      << ": Resubscribe will call old channel creation callback with cancelled error";
+            m_channelPreparationCallback(KARABO_ERROR_CODE_OP_CANCELLED);
+            m_channelPreparationCallback = AsyncHandler();
+        }
+
+        // Reset various objects
+        m_channel.reset();
+        m_channelStatus = ChannelStatus::REQUEST;
+        m_exchanges.clear();
+        m_queue = m_instanceId; // get rid of potential extension
+
+        // Handler to publish postponed messages - requires m_channel to be working again
+        auto doPublishPostponed = [weakThis{weak_from_this()}](const boost::system::error_code& ec) {
+            if (auto self = weakThis.lock()) {
+                if (ec) {
+                    KARABO_LOG_FRAMEWORK_WARN_C("AmqpClient")
+                          << self->m_instanceId << ": Preparations to publish "
+                          << "postponed messages after reconnection failed: " << ec.message();
+                } else if (!self->m_postponedPubMessages.empty()) {
+                    KARABO_LOG_FRAMEWORK_INFO_C("AmqpClient")
+                          << self->m_instanceId << ": Publish " << self->m_postponedPubMessages.size()
+                          << " postponed messages after reconnection";
+                    self->publishPostponed();
+                }
+            }
+        };
+
+        const size_t numSubscriptions = m_subscriptions.size();
+        if (numSubscriptions > 0) {
+            // Redo all subscriptions (which behind the scenes will recreate the channel).
+            // If all subscriptions are done, make use of above handler to publish postponed messages.
+
+            // This handler here carries the shared flags to follow the overall progress.
+            auto singleSubscriptionDone =
+                  [doneFlags{std::make_shared<std::vector<bool>>(numSubscriptions, false)},
+                   commonEc{std::make_shared<boost::system::error_code>(KARABO_ERROR_CODE_SUCCESS)}, doPublishPostponed,
+                   queue{m_queue}](size_t i, const std::string& exchange, const std::string& routingKey,
+                                   const boost::system::error_code& ec) mutable {
+                      (*doneFlags)[i] = true;
+                      if (ec) {
+                          KARABO_LOG_FRAMEWORK_ERROR_C("AmqpClient")
+                                << queue << ": Failed to resubscribe to exchange '" << exchange
+                                << "' with routing key '" << routingKey << "': " << ec.message();
+                          *commonEc = ec; // Track only last failure
+                      } else {
+                          KARABO_LOG_FRAMEWORK_INFO_C("AmqpClient")
+                                << queue << ": Resubscribed to exchange '" << exchange << "' with routing key '"
+                                << routingKey << "'";
+                      }
+                      // Since in single threaded io context, no need for concurrency protection of doneFlags
+                      for (bool flag : *doneFlags) {
+                          if (!flag) return; // Still at least one to go
+                      }
+                      doPublishPostponed(*commonEc);
+                  };
+
+            // Now loop on subscriptions and bind individual handler - last one called will call doPublishPostponed
+            size_t i = 0;
+            for (auto& [exchangeRoutingKey, statusAndHandler] : m_subscriptions) {
+                const std::string& exchange = exchangeRoutingKey.first;
+                const std::string& routingKey = exchangeRoutingKey.second;
+                // AsyncHandler is an std::function, so use bind and placeholder from std, not boost:
+                AsyncHandler newHandler = std::bind(singleSubscriptionDone, i++, // postfix!
+                                                    exchange, routingKey, std::placeholders::_1);
+                // If there was an old subscription ongoing (started before disconnection), we also report there about
+                // success
+                AsyncHandler handler(statusAndHandler.onSubscription ? [oldHandler{std::move(statusAndHandler.onSubscription)},
+                                                                        newHandler{std::move(newHandler)}](
+                        const boost::system::error_code& ec){
+                        oldHandler(ec);
+                        newHandler(ec);
+                    } : newHandler);
+
+                asyncSubscribe(exchange, routingKey, std::move(handler));
+            }
+        } else {
+            // No subscriptions, so publish postponed messages after taking care to prepare channel
+            m_channelStatus = ChannelStatus::REQUEST;
+            asyncPrepareChannel(doPublishPostponed);
+        }
+
+        // Clear 'old' subscriptions, they will be repopulated from requests above.
+        // Note: It is essential that 'asyncSubscribe' posts and does not dispatch,
+        //       otherwise the re-subscriptions would already have been added!
+        m_subscriptions.clear();
+    }
+
+
+    void AmqpClient2::asyncDeclareExchangeThenPublish(const std::string& exchange) {
+        // If exchange does not exist, channel->publish(..) returns true, but the channel is
+        // not usable afterwards (slightly silly library interface, I'd say).
+        m_exchanges[exchange] = ExchangeStatus::DECLARING;
+        // 2nd use of m_postponedPubMessages: collect messages for which exchange needs to be declared
+        // Karabo 3: switch from '0' to AMQP::autodelete
+        m_channel->declareExchange(exchange, AMQP::topic, 0)
+              .onSuccess([weakThis{weak_from_this()}, exchange]() {
+                  if (auto self = weakThis.lock()) {
+                      KARABO_LOG_FRAMEWORK_DEBUG_C("AmqpClient")
+                            << self->m_instanceId << ": Declaring exchange " << exchange << " to publish to succeeded!";
+                      self->m_exchanges[exchange] = ExchangeStatus::READY;
+                      self->publishPostponed();
+                  }
+              })
+              .onError([weakThis{weak_from_this()}, exchange](const char* message) {
+                  KARABO_LOG_FRAMEWORK_ERROR_C("AmqpClient")
+                        << "Failed to to declare exchange '" << exchange << "' to publish to: " << message;
+                  if (auto self = weakThis.lock()) {
+                      self->m_exchanges.erase(exchange);
+                      if (self->m_channel->usable()) { // Usually not usable here since disconnected
+                          self->publishPostponed();    // Should retrigger exchange creation
+                      }
+                  }
+              });
+    }
+
+
     void AmqpClient2::doPublish(const std::string& exchange, const std::string& routingKey,
                                 const std::shared_ptr<std::vector<char>>& data, const AsyncHandler& onPublishDone) {
-        auto itExchange = m_exchanges.find(exchange);
-        const bool needToDeclareExch = (itExchange == m_exchanges.end());
-        if (needToDeclareExch) {
-            // Take care that 'exchange' is declared and thus exists. If it does not exist, channel->publish(..)
-            // returns true, but the channel is not usable afterwards (slightly silly library interface, I'd say).
-            m_exchanges[exchange] = ExchangeStatus::DECLARING;
-            auto wSelf(weak_from_this());
-            m_channel
-                  ->declareExchange(exchange, AMQP::topic, 0) // Karabo 3: switch from '0' to AMQP::autodelete
-                  .onSuccess([wSelf, exchange]() {
-                      if (auto self = wSelf.lock()) {
-                          KARABO_LOG_FRAMEWORK_DEBUG_C("AmqpClient") << self->m_instanceId << ": Declaring exchange "
-                                                                     << exchange << " to publish to succeeded!";
-                          self->m_exchanges[exchange] = ExchangeStatus::READY;
-                          self->publishPostponedIfExchange();
-                      }
-                  })
-                  .onError([wSelf, exchange](const char* message) {
-                      KARABO_LOG_FRAMEWORK_ERROR_C("AmqpClient")
-                            << "Failed to to declare exchange '" << exchange << "' to publish to: " << message;
-                      if (auto self = wSelf.lock()) {
-                          self->m_exchanges.erase(exchange);
-                          self->publishPostponedIfExchange();
-                      }
-                  });
-        }
-
-        // First declare all exchanges, then start publishing
-        for (const auto& exchStatusPair : m_exchanges) {
-            if (exchStatusPair.second != ExchangeStatus::READY) { // e.g. the one added above
-                // Second use of m_postponedPubMessages: collect messages for which the exchanges need to be declared
-                m_postponedPubMessages.push(PostponedMessage(exchange, routingKey, data, onPublishDone));
-                return;
-            }
-        }
-
         // The envelope just stores pointer and size so one might wonder about data lifetime (and there is no
         // callback!). But since there is a publish method that takes the data as a 'const std::string&' that internally
         // creates an envelope as we do here from vector<char>, one can assume that (unfortunately) the data is copied
@@ -340,6 +426,9 @@ namespace karabo::net {
         AMQP::Envelope dataWrap(data->data(), data->size());
         if (m_channel->publish(exchange, routingKey, dataWrap)) {
             onPublishDone(KARABO_ERROR_CODE_SUCCESS);
+        } else if (!m_connection->isConnected() || !m_channel->usable()) {
+            // Likely just disconnected. Not sure connection knows in time, but channel->usable() will know.
+            queueMessage(PostponedMessage(exchange, routingKey, std::move(data), onPublishDone));
         } else {
             KARABO_LOG_FRAMEWORK_WARN_C("AmqpClient")
                   << m_instanceId << ": publish failed. Channel " << (m_channel->usable() ? "" : "not ") << "usable. "
@@ -348,28 +437,49 @@ namespace karabo::net {
         }
     }
 
-    void AmqpClient2::publishPostponedIfExchange() {
+
+    void AmqpClient2::queueMessage(PostponedMessage&& message) {
+        const size_t numPostponed = m_postponedPubMessages.size();
+        if (0 == numPostponed) {
+            KARABO_LOG_FRAMEWORK_WARN << m_instanceId << ": Start postponing messages since disconnected";
+        }
+
+        if (numPostponed == 1'000ul) { // Max. queue length reached
+            KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << ": Start skipping messages since still disconnected";
+            // Pop the front (i.e. oldest message) and let it fail before queuing the current message
+            m_postponedPubMessages.front().onPublishDone(make_error_code(AmqpCppErrc::eMessageDrop));
+            m_postponedPubMessages.pop();
+        }
+
+        m_postponedPubMessages.push(std::move(message));
+    }
+
+
+    void AmqpClient2::publishPostponed() {
         while (!m_postponedPubMessages.empty()) {
             PostponedMessage& postponedMsg = m_postponedPubMessages.front();
             auto itExchange = m_exchanges.find(postponedMsg.exchange);
-            if (itExchange == m_exchanges.end()) { // Failed to declare
-                postponedMsg.onPublishDone(make_error_code(AmqpCppErrc::eCreateExchangeError));
-                m_postponedPubMessages.pop();
-            } else if (itExchange->second == ExchangeStatus::READY) {
+            if (itExchange == m_exchanges.end()) { // e.g. connection lost,
+                asyncDeclareExchangeThenPublish(postponedMsg.exchange);
+                return; // Remaining messages have to wait further
+            } else if (itExchange->second == ExchangeStatus::DECLARING) {
+                // Something triggered exchange creation and will also trigger publishPostponed again
+                return; // All messages have to wait further
+            } else {
                 AMQP::Envelope dataWrap(postponedMsg.data->data(), postponedMsg.data->size());
                 if (m_channel->publish(postponedMsg.exchange, postponedMsg.routingKey, dataWrap)) {
-                    postponedMsg.onPublishDone(KARABO_ERROR_CODE_SUCCESS);
+                    AsyncHandler callback;
+                    callback.swap(postponedMsg.onPublishDone);
+                    m_postponedPubMessages.pop();
+                    callback(KARABO_ERROR_CODE_SUCCESS);
                 } else {
                     KARABO_LOG_FRAMEWORK_WARN_C("AmqpClient")
-                          << m_instanceId << ": publish postponed message failed. Channel "
+                          << m_instanceId << ": publish queued message failed. Channel "
                           << (m_channel->usable() ? "" : "not ") << "usable. " << m_connection->connectionInfo()
                           << " (Use count: " << m_connection.use_count() << ")";
-                    postponedMsg.onPublishDone(KARABO_ERROR_CODE_IO_ERROR);
+                    // Maybe disconnected again? Keep in queue and rely on reconenction
+                    return;
                 }
-                m_postponedPubMessages.pop();
-            } else {
-                // exchange is in DECLARING state, all messages have to wait further
-                return;
             }
         }
     }
@@ -381,25 +491,27 @@ namespace karabo::net {
             m_connection->post(std::bind(onChannelPrepared, KARABO_ERROR_CODE_OP_CANCELLED));
             return;
         }
+        auto weakThis(weak_from_this());
+        m_connection->registerForReconnectInfo(weakThis);
         m_channelPreparationCallback = std::move(onChannelPrepared);
-        m_connection->asyncCreateChannel(
-              [weakThis{weak_from_this()}](const std::shared_ptr<AMQP::Channel>& channel, const std::string& errMsg) {
-                  if (auto self = weakThis.lock()) {
-                      if (channel) {
-                          KARABO_LOG_FRAMEWORK_DEBUG_C("AmqpClient") << "Channel created for id " << self->m_instanceId;
-                          self->m_channel = channel;
-                          self->m_channelStatus = ChannelStatus::CREATE_QUEUE;
-                          self->moveChannelState();
-                      } else {
-                          KARABO_LOG_FRAMEWORK_ERROR_C("AmqpClient")
-                                << "Failed to create channel for id " << self->m_instanceId << ": " << errMsg;
-                          self->m_channelStatus = ChannelStatus::REQUEST; // need start from scratch
-                          AsyncHandler callback; // Better first swap, handler might reset m_channelPreparationCallback
-                          callback.swap(self->m_channelPreparationCallback);
-                          callback(make_error_code(AmqpCppErrc::eCreateChannelError));
-                      }
-                  }
-              });
+        m_connection->asyncCreateChannel([weakThis{std::move(weakThis)}](const std::shared_ptr<AMQP::Channel>& channel,
+                                                                         const std::string& errMsg) {
+            if (auto self = weakThis.lock()) {
+                if (channel) {
+                    KARABO_LOG_FRAMEWORK_DEBUG_C("AmqpClient") << "Channel created for id " << self->m_instanceId;
+                    self->m_channel = channel;
+                    self->m_channelStatus = ChannelStatus::CREATE_QUEUE;
+                    self->moveChannelState();
+                } else {
+                    KARABO_LOG_FRAMEWORK_ERROR_C("AmqpClient")
+                          << "Failed to create channel for id " << self->m_instanceId << ": " << errMsg;
+                    self->m_channelStatus = ChannelStatus::REQUEST; // need start from scratch
+                    AsyncHandler callback; // Better first swap, handler might reset m_channelPreparationCallback
+                    callback.swap(self->m_channelPreparationCallback);
+                    callback(make_error_code(AmqpCppErrc::eCreateChannelError));
+                }
+            }
+        });
     }
 
     void AmqpClient2::moveChannelState() {
@@ -478,8 +590,10 @@ namespace karabo::net {
                               KARABO_LOG_FRAMEWORK_DEBUG_C("AmqpClient") << "Consumer for id " << self->m_instanceId
                                                                          << queue << " ready, tag: " << consumerTag;
                               self->m_channelStatus = ChannelStatus::READY;
-                              // TODO: Overwrite error handler that will notice if channel has a problem
+                              // We could overwrite error handler that will notice if channel has a problem
                               // self->m_channel->onError([](const char* msg){});
+                              // But we keep the one that just logs error (set by connection) since only use case
+                              // so far is 'connection lost' that is well treated by connection.
                               AsyncHandler callback;
                               callback.swap(self->m_channelPreparationCallback);
                               callback(KARABO_ERROR_CODE_SUCCESS);
@@ -528,21 +642,20 @@ namespace karabo::net {
     }
 
     void AmqpClient2::doSubscribePending(const boost::system::error_code& ec) {
-        if (ec) {
+        if (ec && m_subscriptions.empty()) { // If not empty, will see logs below (but how can it be empty?).
             KARABO_LOG_FRAMEWORK_ERROR << m_instanceId
                                        << ": Subscribing failed since channel preparation failed: " << ec.message();
         }
-        for (auto it = m_subscriptions.begin(); it != m_subscriptions.end();) {
+        for (auto it = m_subscriptions.begin(); it != m_subscriptions.end(); ++it) {
             SubscriptionStatusHandler& statusAndHandler = it->second;
             if (statusAndHandler.status == SubscriptionStatus::PENDING) {
                 const std::string& exchange = it->first.first;
                 const std::string& routingKey = it->first.second;
                 if (ec) {
                     KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << " failed to subscribe for exchange '" << exchange
-                                               << "' and routing key '" << routingKey << "': " << ec.message();
-                    statusAndHandler.onSubscription(ec);
-                    m_subscriptions.erase(it++);
-                    continue;
+                                               << "' and routing key '" << routingKey << "': '" << ec.message()
+                                               << "'. Will try again if resubscription triggered after reconnection.";
+                    // Keep subscription and callback PENDING to be triggered on reconnection.
                 } else {
                     KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << " subscribed for exchange '" << exchange
                                                << "' and routing key '" << routingKey << "'";
@@ -550,7 +663,6 @@ namespace karabo::net {
                     moveSubscriptionState(exchange, routingKey);
                 }
             }
-            ++it;
         }
     }
 
@@ -597,10 +709,12 @@ namespace karabo::net {
                                   it->second.status = SubscriptionStatus::BIND_QUEUE;
                                   self->moveSubscriptionState(exchange, routingKey);
                               }
+                              self->publishPostponed();
                           }
                       })
                       .onError([wSelf, exchange, routingKey](const char* message) {
                           if (auto self = wSelf.lock()) {
+                              self->m_exchanges.erase(exchange);
                               auto it = self->m_subscriptions.find({exchange, routingKey});
                               if (it == self->m_subscriptions.end()) { // Should not happen!
                                   KARABO_LOG_FRAMEWORK_ERROR_C("AmqpClient")
@@ -609,11 +723,14 @@ namespace karabo::net {
                               } else {
                                   KARABO_LOG_FRAMEWORK_WARN_C("AmqpClient")
                                         << self->m_instanceId << ": Declaring exchange " << exchange
-                                        << " for routing key " << routingKey << " failed: " << message;
-                                  self->m_exchanges.erase(exchange);
-                                  const AsyncHandler callback(std::move(it->second.onSubscription));
-                                  self->m_subscriptions.erase(it);
-                                  callback(make_error_code(AmqpCppErrc::eCreateExchangeError));
+                                        << " for routing key " << routingKey << " failed: '" << message
+                                        << "'. Will try again if resubscription triggered after reconnection.";
+                                  // Call and erase callback, but keep subscription PENDING to be triggered on
+                                  // reconnection.
+                                  AsyncHandler callback;
+                                  callback.swap(it->second.onSubscription);
+                                  // Note: Leads to failing device instantiation (exception in AmqpBroker::startReading)
+                                  if (callback) callback(make_error_code(AmqpCppErrc::eCreateExchangeError));
                               }
                           }
                       });
@@ -631,7 +748,7 @@ namespace karabo::net {
                                   it->second.status = SubscriptionStatus::READY;
                                   AsyncHandler callback;
                                   callback.swap(it->second.onSubscription);
-                                  callback(KARABO_ERROR_CODE_SUCCESS);
+                                  if (callback) callback(KARABO_ERROR_CODE_SUCCESS);
                               }
                           }
                       })
@@ -645,10 +762,13 @@ namespace karabo::net {
                               } else { // Call handler with failure
                                   KARABO_LOG_FRAMEWORK_WARN_C("AmqpClient")
                                         << "Binding queue " << self->m_queue << " to exchange " << exchange
-                                        << " with routing key " << routingKey << " failed: " << message;
-                                  const AsyncHandler callback(std::move(it->second.onSubscription));
-                                  self->m_subscriptions.erase(it);
-                                  callback(make_error_code(AmqpCppErrc::eBindQueueError));
+                                        << " with routing key " << routingKey << " failed: '" << message
+                                        << "'. Will try again if resubscription triggered after reconnection.";
+                                  // Call and erase callback, but keep subscription PENDING to be triggered on
+                                  // reconnection (as for failing exchange declaration above).
+                                  AsyncHandler callback;
+                                  callback.swap(it->second.onSubscription);
+                                  if (callback) callback(make_error_code(AmqpCppErrc::eBindQueueError));
                               }
                           }
                       });
@@ -669,7 +789,7 @@ namespace karabo::net {
                               } else {
                                   const AsyncHandler callback(std::move(it->second.onSubscription));
                                   self->m_subscriptions.erase(it);
-                                  callback(KARABO_ERROR_CODE_SUCCESS);
+                                  if (callback) callback(KARABO_ERROR_CODE_SUCCESS);
                               }
                           }
                       })
@@ -681,14 +801,19 @@ namespace karabo::net {
                                         << "Unbinding queue " << self->m_queue << " from exchange " << exchange
                                         << " with routing key " << routingKey << " failed and subscription gone!";
                               } else { // Call handler with failure, but keep subscription (but erase handler)
+                                  const bool lost = (std::string(message).find("connection lost") != std::string::npos);
                                   KARABO_LOG_FRAMEWORK_WARN_C("AmqpClient")
                                         << "Unbinding queue " << self->m_queue << " from exchange " << exchange
-                                        << " with routing key " << routingKey
-                                        << " failed, consider subscription alive!";
-                                  it->second.status = SubscriptionStatus::READY;
+                                        << " with routing key " << routingKey << " failed: '" << message
+                                        << "', consider subscription " << (lost ? "gone." : "alive.");
                                   AsyncHandler callback;
                                   callback.swap(it->second.onSubscription);
-                                  callback(make_error_code(AmqpCppErrc::eUnbindQueueError));
+                                  if (lost) { // avoid resubscription if reconnecting
+                                      self->m_subscriptions.erase(it);
+                                  } else {
+                                      it->second.status = SubscriptionStatus::READY;
+                                  }
+                                  if (callback) callback(make_error_code(AmqpCppErrc::eUnbindQueueError));
                               }
                           }
                       });
