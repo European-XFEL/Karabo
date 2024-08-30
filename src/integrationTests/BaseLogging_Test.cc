@@ -399,10 +399,10 @@ std::pair<bool, std::string> BaseLogging_Test::startDataLoggerManager(
     manager_conf.set("deviceId", "loggerManager");
     manager_conf.set("flushInterval", FLUSH_INTERVAL_SEC);
     manager_conf.set<vector<string>>("serverList", {m_server});
-    manager_conf.set("logger", loggerType);
+    manager_conf.set("loggerType", loggerType);
 
     if (loggerType == "FileDataLogger") {
-        manager_conf.set("logger.FileDataLogger.directory",
+        manager_conf.set("fileDataLogger.directory",
                          (m_fileLoggerDirectory.empty() ? "" : m_fileLoggerDirectory + "/") + "karaboHistory");
     } else if (loggerType == "InfluxDataLogger") {
         std::string influxUrlWrite;
@@ -436,16 +436,16 @@ std::pair<bool, std::string> BaseLogging_Test::startDataLoggerManager(
             influxUrlRead = influxUrlWrite;
         }
 
-        manager_conf.set("logger.InfluxDataLogger.urlWrite", influxUrlWrite);
-        manager_conf.set("logger.InfluxDataLogger.urlRead", influxUrlRead);
-        manager_conf.set("logger.InfluxDataLogger.dbname", dbName);
-        manager_conf.set("logger.InfluxDataLogger.maxVectorSize", maxVectorSize);
-        manager_conf.set("logger.InfluxDataLogger.maxPerDevicePropLogRate", maxPerDevicePropLogRate);
-        manager_conf.set("logger.InfluxDataLogger.propLogRatePeriod", propLogRatePeriod);
-        manager_conf.set("logger.InfluxDataLogger.maxSchemaLogRate", maxSchemaLogRate);
-        manager_conf.set("logger.InfluxDataLogger.schemaLogRatePeriod", schemaLogRatePeriod);
-        manager_conf.set("logger.InfluxDataLogger.maxValueStringSize", maxStringLength);
-        manager_conf.set("logger.InfluxDataLogger.safeSchemaRetentionPeriod", safeSchemaRetentionPeriod);
+        manager_conf.set("influxDataLogger.urlWrite", influxUrlWrite);
+        manager_conf.set("influxDataLogger.urlRead", influxUrlRead);
+        manager_conf.set("influxDataLogger.dbname", dbName);
+        manager_conf.set("influxDataLogger.maxVectorSize", maxVectorSize);
+        manager_conf.set("influxDataLogger.maxPerDevicePropLogRate", maxPerDevicePropLogRate);
+        manager_conf.set("influxDataLogger.propLogRatePeriod", propLogRatePeriod);
+        manager_conf.set("influxDataLogger.maxSchemaLogRate", maxSchemaLogRate);
+        manager_conf.set("influxDataLogger.schemaLogRatePeriod", schemaLogRatePeriod);
+        manager_conf.set("influxDataLogger.maxValueStringSize", maxStringLength);
+        manager_conf.set("influxDataLogger.safeSchemaRetentionPeriod", safeSchemaRetentionPeriod);
 
     } else {
         CPPUNIT_FAIL("Unknown logger type '" + loggerType + "'");

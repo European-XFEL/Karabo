@@ -160,21 +160,24 @@ namespace karabo {
                   .defaultValue(true) // true will cause alarms when loggers are too slow
                   .commit();
 
-            CHOICE_ELEMENT(expected)
-                  .key("logger")
-                  .displayedName("Logger type")
+            STRING_ELEMENT(expected)
+                  .key("loggerType")
+                  .displayedName("Logger Type")
+                  .description("Logger type variable to define if influx or file based data logging is used")
+                  .init()
+                  .options(std::vector<std::string>{"FileDataLogger", "InfluxDataLogger"})
                   .assignmentOptional()
                   .defaultValue("FileDataLogger")
                   .commit();
 
             NODE_ELEMENT(expected)
-                  .key("logger.FileDataLogger")
+                  .key("fileDataLogger")
                   .displayedName("FileDataLogger")
                   .description("File based data logging")
                   .commit();
 
             PATH_ELEMENT(expected)
-                  .key("logger.FileDataLogger.directory")
+                  .key("fileDataLogger.directory")
                   .displayedName("Directory")
                   .description("The directory where the log files should be placed")
                   .assignmentOptional()
@@ -182,7 +185,7 @@ namespace karabo {
                   .commit();
 
             INT32_ELEMENT(expected)
-                  .key("logger.FileDataLogger.maximumFileSize")
+                  .key("fileDataLogger.maximumFileSize")
                   .displayedName("Maximum file size")
                   .description(
                         "After any archived file has reached this size it will be time-stamped and not appended "
@@ -194,13 +197,13 @@ namespace karabo {
                   .commit();
 
             NODE_ELEMENT(expected)
-                  .key("logger.InfluxDataLogger")
+                  .key("influxDataLogger")
                   .displayedName("InfluxDataLogger")
                   .description("Influxdb based data logging")
                   .commit();
 
             STRING_ELEMENT(expected)
-                  .key("logger.InfluxDataLogger.urlWrite")
+                  .key("influxDataLogger.urlWrite")
                   .displayedName("Logger InfluxDB URL")
                   .description("URL for writing")
                   .assignmentOptional()
@@ -209,7 +212,7 @@ namespace karabo {
                   .commit();
 
             STRING_ELEMENT(expected)
-                  .key("logger.InfluxDataLogger.urlRead")
+                  .key("influxDataLogger.urlRead")
                   .displayedName("Reader InfluxDB URL")
                   .description("URL for reading configurations and schema from past (typically longer retention time)")
                   .assignmentOptional()
@@ -218,7 +221,7 @@ namespace karabo {
                   .commit();
 
             STRING_ELEMENT(expected)
-                  .key("logger.InfluxDataLogger.urlReadPropHistory")
+                  .key("influxDataLogger.urlReadPropHistory")
                   .displayedName("Reader InfluxDB URL (Prop History)")
                   .description(
                         "URL for reading property history (typically shorter retention time)."
@@ -229,7 +232,7 @@ namespace karabo {
                   .commit();
 
             STRING_ELEMENT(expected)
-                  .key("logger.InfluxDataLogger.dbname")
+                  .key("influxDataLogger.dbname")
                   .displayedName("Database name")
                   .description("Name of the database of the data. If empty, fall back to broker topic.")
                   .assignmentOptional()
@@ -238,7 +241,7 @@ namespace karabo {
                   .commit();
 
             UINT32_ELEMENT(expected)
-                  .key("logger.InfluxDataLogger.maxBatchPoints")
+                  .key("influxDataLogger.maxBatchPoints")
                   .displayedName("Max batch points")
                   .description("Max number of InfluxDB points in the batch")
                   .assignmentOptional()
@@ -247,7 +250,7 @@ namespace karabo {
                   .commit();
 
             INT32_ELEMENT(expected)
-                  .key("logger.InfluxDataLogger.maxTimeAdvance")
+                  .key("influxDataLogger.maxTimeAdvance")
                   .displayedName("Max Time Advance")
                   .description(
                         "Maximum time advance allowed for data. "
@@ -260,7 +263,7 @@ namespace karabo {
                   .commit();
 
             UINT32_ELEMENT(expected)
-                  .key("logger.InfluxDataLogger.maxVectorSize")
+                  .key("influxDataLogger.maxVectorSize")
                   .displayedName("Max Vector Size")
                   .description("Vector properties longer than this are skipped and not written to the database.")
                   .assignmentOptional()
@@ -269,7 +272,7 @@ namespace karabo {
                   .commit();
 
             UINT32_ELEMENT(expected)
-                  .key("logger.InfluxDataLogger.maxValueStringSize")
+                  .key("influxDataLogger.maxValueStringSize")
                   .displayedName("Max String Size")
                   .description(
                         "Maximum size, in characters, for a property value to be inserted into Influx and for a schema "
@@ -282,7 +285,7 @@ namespace karabo {
                   .commit();
 
             UINT32_ELEMENT(expected)
-                  .key("logger.InfluxDataLogger.maxPerDevicePropLogRate")
+                  .key("influxDataLogger.maxPerDevicePropLogRate")
                   .displayedName("Max per Device Property Logging Rate (Kb/sec)")
                   .description(
                         "Entries for a device property that would move its logging rate above this threshold are "
@@ -294,7 +297,7 @@ namespace karabo {
                   .commit();
 
             UINT32_ELEMENT(expected)
-                  .key("logger.InfluxDataLogger.propLogRatePeriod")
+                  .key("influxDataLogger.propLogRatePeriod")
                   .displayedName("Interval for logging rate calc")
                   .description("Interval for calculating per device property logging rate")
                   .assignmentOptional()
@@ -306,7 +309,7 @@ namespace karabo {
                   .commit();
 
             UINT32_ELEMENT(expected)
-                  .key("logger.InfluxDataLogger.maxSchemaLogRate")
+                  .key("influxDataLogger.maxSchemaLogRate")
                   .displayedName("Max Schema Logging Rate (Kb/sec)")
                   .description(
                         "Schema updates for a device that would move its schema logging rate above this threshold are "
@@ -318,7 +321,7 @@ namespace karabo {
                   .commit();
 
             UINT32_ELEMENT(expected)
-                  .key("logger.InfluxDataLogger.schemaLogRatePeriod")
+                  .key("influxDataLogger.schemaLogRatePeriod")
                   .displayedName("Interval for schema logging rate calc")
                   .description("Interval for calculating per device schema logging rate")
                   .assignmentOptional()
@@ -330,7 +333,7 @@ namespace karabo {
                   .commit();
 
             DOUBLE_ELEMENT(expected)
-                  .key("logger.InfluxDataLogger.safeSchemaRetentionPeriod")
+                  .key("influxDataLogger.safeSchemaRetentionPeriod")
                   .displayedName("Period for safe schema retention")
                   .description(
                         "For how long can a stored schema be safely assumed to be kept? Must be an "
@@ -532,14 +535,14 @@ namespace karabo {
               m_loggerClassId("Unsupported"),
               m_blocked(input.get<Hash>("blocklist")),
               m_blockListFile(input.get<string>("blocklistfile")) {
-            if (input.has("logger.FileDataLogger")) {
+            const std::string loggerType = input.get<std::string>("loggerType");
+            if (loggerType == "FileDataLogger") {
                 m_loggerClassId = "FileDataLogger";
                 m_readerClassId = "FileLogReader";
-            } else if (input.has("logger.InfluxDataLogger")) {
+            } else if (loggerType == "InfluxDataLogger") {
                 m_loggerClassId = "InfluxDataLogger";
                 m_readerClassId = "InfluxLogReader";
             }
-
             m_loggerMap.clear();
             if (boost::filesystem::exists(m_loggerMapFile)) {
                 karabo::io::loadFromFile(m_loggerMap, m_loggerMapFile);
@@ -668,12 +671,11 @@ namespace karabo {
                     m_loggerData.set(server, data);
                 }
 
-                if (m_loggerClassId == "InfluxDataLogger" &&
-                    get<std::string>("logger.InfluxDataLogger.dbname").empty()) {
+                if (m_loggerClassId == "InfluxDataLogger" && get<std::string>("influxDataLogger.dbname").empty()) {
                     // Initialise DB name from broker topic
                     const std::string dbName(getTopic());
                     KARABO_LOG_FRAMEWORK_INFO << "Switch to Influx DB name '" << dbName << "'";
-                    set("logger.InfluxDataLogger.dbname", dbName);
+                    set("influxDataLogger.dbname", dbName);
                 }
 
                 // Register handlers here
@@ -1106,14 +1108,14 @@ namespace karabo {
                     if (m_loggerClassId == "FileDataLogger") {
                         hash.set("classId", "FileLogReader");
                         hash.set("deviceId", readerId);
-                        config.set("directory", get<string>("logger.FileDataLogger.directory"));
+                        config.set("directory", get<string>("fileDataLogger.directory"));
                     } else if (m_loggerClassId == "InfluxDataLogger") {
                         hash.set("classId", "InfluxLogReader");
                         hash.set("deviceId", readerId);
-                        config.set("urlConfigSchema", get<string>("logger.InfluxDataLogger.urlRead"));
+                        config.set("urlConfigSchema", get<string>("influxDataLogger.urlRead"));
                         // Schema description assumes that InfluxLogReader treats empty value of "urlReadPropHistory"
-                        config.set("urlPropHistory", get<string>("logger.InfluxDataLogger.urlReadPropHistory"));
-                        config.set("dbname", get<string>("logger.InfluxDataLogger.dbname"));
+                        config.set("urlPropHistory", get<string>("influxDataLogger.urlReadPropHistory"));
+                        config.set("dbname", get<string>("influxDataLogger.dbname"));
                     }
                     hash.set("configuration", config);
                     const std::string& xLogReader = hash.get<std::string>("classId");
@@ -1346,12 +1348,15 @@ namespace karabo {
 
             // Instantiate logger, but do not yet specify "devicesToBeLogged":
             // Having one channel only to transport this info (slotAddDevicesToBeLogged) simplifies logic.
-            Hash config(get<Hash>("logger." + m_loggerClassId));
+            Hash config;
+            if (m_loggerClassId == "FileDataLogger") {
+                config = get<Hash>("fileDataLogger");
+            } else if (m_loggerClassId == "InfluxDataLogger") {
+                config = get<Hash>("influxDataLogger");
+                config.erase("urlReadPropHistory"); // logger needs read address only for schema
+            }
             config.set("flushInterval", get<int>("flushInterval"));
             config.set("performanceStatistics.enable", get<bool>("enablePerformanceStats"));
-
-            config.erase("urlReadPropHistory"); // logger needs read address only for schema
-
             const std::string loggerId(serverIdToLoggerId(serverId));
             const Hash hash("classId", m_loggerClassId, "deviceId", loggerId, "configuration", config);
 
