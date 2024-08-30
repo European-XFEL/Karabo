@@ -64,7 +64,8 @@ namespace karabo::net {
         eCreateConsumerError,
         eConsumerCancelError,
         eUnbindQueueError,
-        eDrop
+        eDrop,
+        eMessageDrop
     };
 
 } // namespace karabo::net
