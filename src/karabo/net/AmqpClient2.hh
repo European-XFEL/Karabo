@@ -98,6 +98,10 @@ namespace karabo::net {
         /**
          * Asynchronously subscribes client
          *
+         * If subscription is reported to have failed, it will be tried again
+         *   - at next subscription or
+         *   - if reviveIfReconnected() is called.
+         *
          * @param exchange name of AMQP exchange that will be created if not yet existing
          * @param routingKey the AMQP routing key
          * @param onSubscriptionDone a valid handler called in AMQP io context (so please no mutex inside, please)
@@ -141,7 +145,30 @@ namespace karabo::net {
         void asyncPublish(const std::string& exchange, const std::string& routingKey,
                           const std::shared_ptr<std::vector<char>>& data, AsyncHandler onPublishDone);
 
+        /**
+         * Revice after connection was lost and re-established
+         *
+         * Means to recreate channel, redo all subscriptions and publish postponed messages
+         *
+         * To be called if AmqpConnection is connected again after connection loss
+         * Must be called within io context of AmqpConnection
+         */
+        void reviveIfReconnected();
+
        private:
+        struct PostponedMessage {
+            PostponedMessage(std::string exchange_, std::string routingKey_, std::shared_ptr<std::vector<char>> data_,
+                             AsyncHandler handler)
+                : exchange(std::move(exchange_)),
+                  routingKey(std::move(routingKey_)),
+                  data(std::move(data_)),
+                  onPublishDone(std::move(handler)) {}
+            std::string exchange;
+            std::string routingKey;
+            std::shared_ptr<std::vector<char>> data;
+            AsyncHandler onPublishDone;
+        };
+
         /**
          * Prepare m_channel until it is ChannelStatus::READY
          *
@@ -161,16 +188,23 @@ namespace karabo::net {
 
         void moveSubscriptionState(const std::string& exchange, const std::string& routingKey);
 
+        void asyncDeclareExchangeThenPublish(const std::string& exchange);
+
         /**
-         * Helper to publish, must run in io context and only when channel is READY
+         * Helper to publish, must run in io context and only when channel is READY and exchange declared
          */
         void doPublish(const std::string& exchange, const std::string& routingKey,
                        const std::shared_ptr<std::vector<char>>& data, const AsyncHandler& onPublishDone);
 
         /**
+         * Queue message (or drop if queueu too long), must run in io context
+         */
+        void queueMessage(PostponedMessage&& message);
+
+        /**
          * Helper to publish postponed messages until first found with an exchange that is not yet declared
          */
-        void publishPostponedIfExchange();
+        void publishPostponed();
 
         AmqpConnection::Pointer m_connection;
         const std::string m_instanceId;
@@ -192,18 +226,7 @@ namespace karabo::net {
         };
         // maybe can use unordered_map?
         std::map<std::pair<std::string, std::string>, SubscriptionStatusHandler> m_subscriptions;
-        struct PostponedMessage {
-            PostponedMessage(std::string exchange_, std::string routingKey_, std::shared_ptr<std::vector<char>> data_,
-                             AsyncHandler handler)
-                : exchange(std::move(exchange_)),
-                  routingKey(std::move(routingKey_)),
-                  data(std::move(data_)),
-                  onPublishDone(std::move(handler)) {}
-            std::string exchange;
-            std::string routingKey;
-            std::shared_ptr<std::vector<char>> data;
-            AsyncHandler onPublishDone;
-        };
+
         /// Messages postponed since channel not yet ready or exchange not yet declared
         std::queue<PostponedMessage> m_postponedPubMessages;
 

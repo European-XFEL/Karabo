@@ -21,6 +21,7 @@
 
 #include "AmqpBroker.hh"
 
+#include "AmqpUtils.hh"
 #include "EventLoop.hh"
 #include "karabo/log/Logger.hh"
 #include "karabo/util/Hash.hh"
@@ -90,6 +91,8 @@ namespace karabo {
                 // In contrast to what is implemented for the JmsBorker, we do not repeat again until a broker
                 // behind one of the urls gets available. The exception here will terminate the process.
                 // Deployment action might be to restart it.
+                // But this happens also if a device is instantiated after a connection loss before successful
+                // reconnection. Then this exception will lead to instantiation failure.
                 std::ostringstream oss;
                 oss << "Failed to connect to AMQP broker: code #" << ec.value() << " -- " << ec.message();
                 throw KARABO_NETWORK_EXCEPTION(oss.str());
@@ -98,7 +101,6 @@ namespace karabo {
             // Create client already here - since no subscriptions yet, read handler will not yet be called
             AMQP::Table queueArgs;
             defaultQueueArgs(queueArgs);
-            auto weakThis(weak_from_this());
             m_client = AmqpHashClient::create(m_connection, (m_topic + ".") += m_instanceId, queueArgs,
                                               bind_weak(&AmqpBroker::amqpReadHandler, this, _1, _2),
                                               bind_weak(&AmqpBroker::amqpErrorNotifier, this, _1));
@@ -167,13 +169,18 @@ namespace karabo {
         void AmqpBroker::subscribeToRemoteSignalAsync(const std::string& signalInstanceId,
                                                       const std::string& signalFunction,
                                                       const AsyncHandler& completionHandler) {
+            if (!m_client) {
+                karabo::net::EventLoop::post(std::bind(completionHandler, KARABO_ERROR_CODE_NOT_CONNECTED));
+                return;
+            }
+
             const std::string exchange = m_topic + ".signals";
             const std::string bindingKey = (signalInstanceId + ".") += signalFunction;
             auto wrapHandler = [completionHandler](const boost::system::error_code& ec) {
                 if (completionHandler) {
                     // Ensure that the passed handler is not running in the AMQP event loop - it may contain synchronous
                     // writing to the broker that would then block that event loop
-                    karabo::net::EventLoop::post(boost::bind(std::move(completionHandler), ec));
+                    karabo::net::EventLoop::post(std::bind(std::move(completionHandler), ec));
                 } else if (ec) {
                     KARABO_LOG_FRAMEWORK_WARN << "Some subscription to remote signal failed: " << ec.message();
                 }
@@ -195,12 +202,17 @@ namespace karabo {
         void AmqpBroker::unsubscribeFromRemoteSignalAsync(const std::string& signalInstanceId,
                                                           const std::string& signalFunction,
                                                           const AsyncHandler& completionHandler) {
+            if (!m_client) {
+                karabo::net::EventLoop::post(std::bind(completionHandler, KARABO_ERROR_CODE_NOT_CONNECTED));
+                return;
+            }
+
             const std::string exchange = m_topic + ".signals";
             const std::string bindingKey = (signalInstanceId + ".") += signalFunction;
             // Wrap handler - see comment in subscribeToRemoteSignalAsync
             auto wrapHandler = [completionHandler](const boost::system::error_code& ec) {
                 if (completionHandler) {
-                    EventLoop::post(boost::bind(std::move(completionHandler), ec));
+                    EventLoop::post(std::bind(std::move(completionHandler), ec));
                 } else if (ec) {
                     KARABO_LOG_FRAMEWORK_WARN << "Some unsubscription from remote signal failed: " << ec.message();
                 }
@@ -215,10 +227,11 @@ namespace karabo {
             if (!header) {
                 throw KARABO_PARAMETER_EXCEPTION("AmqpBroker.write: header pointer is null");
             }
-
-            KARABO_LOG_FRAMEWORK_TRACE << "*** write TARGET = \"" << target << "\", topic=\"" << m_topic
-                                       << "\"...\n... and HEADER is \n"
-                                       << *header;
+            if (!m_client) {
+                KARABO_LOG_FRAMEWORK_WARN << getInstanceId()
+                                          << ": Skip 'write' since not connected, header: " << *header;
+                return;
+            }
 
             std::string exchange = "";
             std::string routingkey = "";
@@ -228,9 +241,7 @@ namespace karabo {
                 exchange = m_topic + ".signals";
                 routingkey = m_instanceId + ".signalHeartbeat";
                 // Use m_heartbeatClient if exists ...
-                if (m_heartbeatClient) {
-                    useHeartbeatClient = true;
-                }
+                useHeartbeatClient = true;
             } else if (target == "karaboGuiDebug") {
                 exchange = m_topic + ".karaboGuiDebug";
             } else if (target == m_topic) {
@@ -325,19 +336,28 @@ namespace karabo {
 
             std::promise<boost::system::error_code> pubDone;
             auto pubFut = pubDone.get_future();
-            (useHeartbeatClient ? m_heartbeatClient : m_client)
+            (useHeartbeatClient && m_heartbeatClient ? m_heartbeatClient : m_client)
                   ->asyncPublish(exchange, routingkey, header, body,
                                  [&pubDone](const boost::system::error_code ec) { pubDone.set_value(ec); });
             const boost::system::error_code ec = pubFut.get();
             if (ec) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Publishing message failed (" << ec.message() << "), header: " << *header;
-                throw KARABO_NETWORK_EXCEPTION("Publishing failed: " + ec.message());
+                if (ec == AmqpCppErrc::eMessageDrop) {
+                    KARABO_LOG_FRAMEWORK_WARN << "Publishing failed since client dropped voluntarily";
+                } else {
+                    KARABO_LOG_FRAMEWORK_ERROR << "Publishing message failed (" << ec.message()
+                                               << "), header: " << *header;
+                    throw KARABO_NETWORK_EXCEPTION("Publishing failed: " + ec.message());
+                }
             }
         }
 
 
         void AmqpBroker::startReading(const consumer::MessageHandler& handler,
                                       const consumer::ErrorNotifier& errorNotifier) {
+            if (!m_client) {
+                throw KARABO_LOGIC_EXCEPTION("Cannot startReading before connected");
+            }
+
             // All access to handler on strand, so post there.
             // Capture 'this' as well since weakThis is Broker, not AmqpBroker.
             m_handlerStrand->post([this, weakThis{weak_from_this()}, handler, errorNotifier]() {
@@ -368,6 +388,9 @@ namespace karabo {
                 ec = subGlobFut.get();
             }
             if (ec) {
+                // Note: Device instantiation fails here if we fail due to broker connection loss.
+                //       Probably, without the throw all would go fine on reconnection _except_ that subscription
+                //       to "global_slots" will miss if already the subscription to "slots" failed.
                 std::ostringstream oss;
                 oss << "Subscription to exchange -> \"" << exchange << "\", binding key -> \"" << bindingKey
                     << "\" failed: #" << ec.value() << " -- " << ec.message();
@@ -377,6 +400,7 @@ namespace karabo {
 
 
         void AmqpBroker::stopReading() {
+            if (!m_client) return; // Not yet connected...
             // Simply unsubscribe from all subscriptions, i.e. slots, global_slots and any signals we have subscribed
             std::promise<boost::system::error_code> unsubDone;
             auto fut = unsubDone.get_future();

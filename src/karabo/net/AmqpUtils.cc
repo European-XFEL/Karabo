@@ -72,6 +72,9 @@ namespace karabo::net {
                 case AmqpCppErrc::eDrop:
                     return "channel dropped error";
 
+                case AmqpCppErrc::eMessageDrop:
+                    return "message dropped error";
+
                 default:
                     return "(unrecognized error)";
             }
