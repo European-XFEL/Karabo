@@ -30,6 +30,8 @@
 #include <boost/enable_shared_from_this.hpp>
 #include <functional>
 #include <memory>
+#include <random>
+#include <set>
 #include <string>
 #include <thread>
 #include <vector>
@@ -45,7 +47,7 @@ namespace AMQP {
 namespace karabo::net {
 
     class ConnectionHandler; // forward declare handler that keeps status of AmqpConnection
-
+    class AmqpClient2;
     /**
      * AmqpConnection
      *
@@ -56,6 +58,20 @@ namespace karabo::net {
     class AmqpConnection : public boost::enable_shared_from_this<AmqpConnection> {
        public:
         KARABO_CLASSINFO(AmqpConnection, "AmqpConnection", "1.0")
+
+        /**
+         * Connection states
+         */
+        enum class State {
+            eUnknown = 2000,   // At the beginning and after a failed connection attempt
+            eStarted,          // Connection attempt is started
+            eNotConnected,     // No connection
+            eConnectionDone,   // Phys.connection done
+            eConnectionReady,  // Logical connection (phys. + login)
+            eConnectionClosed, // Connection just closed
+            eConnectionError,  // Connection error (TCP?) with error message
+            eConnectionLost,   // Connection lost  (cluster node is shut down)
+        };
 
         /**
          * Handler for asyncCreateChannel
@@ -102,12 +118,13 @@ namespace karabo::net {
          *                   The handler (if valid) will be called from within the internal io context,
          *                   but not within the scope of asyncConnect.
          */
-        void asyncConnect(AsyncHandler&& onComplete);
+        void asyncConnect(AsyncHandler onComplete);
 
         /**
          * Trigger creation of an amqp channel and return it via the handler.
          *
          * If not connected yet, try to connect first.
+         * Note that if connection lost, channel creation will not be tried again, but failure is reported.
          *
          * Can be called from any thread.
          *
@@ -116,6 +133,17 @@ namespace karabo::net {
          */
         void asyncCreateChannel(ChannelCreationHandler onComplete);
 
+        /**
+         * Register client to be informed about re-established connection after connection loss
+         */
+        void registerForReconnectInfo(boost::weak_ptr<AmqpClient2> client);
+
+        /**
+         * Clean clients registered to receive reconnect info, i.e. remove all dangling weak pointers
+         *
+         * Can e.g. be called in the destructor of a client that registered before.
+         */
+        void cleanReconnectRegistrations();
 
         /**
          * Post a task to the io context
@@ -159,6 +187,21 @@ namespace karabo::net {
         // Helper to run content of asyncCreateChannel in our io context
         void doCreateChannel(ChannelCreationHandler onComplete);
 
+        /**
+         * Must run in io context
+         */
+        void informReconnection(const boost::system::error_code& ec);
+
+        /**
+         * Must run in io context
+         */
+        void triggerReconnection();
+
+        /**
+         * Convert State to a string (or rather const char*)
+         */
+        const char* stateString(AmqpConnection::State state);
+
         // Broker urls from input
         const std::vector<std::string> m_urls;
         size_t m_urlIndex;
@@ -170,21 +213,15 @@ namespace karabo::net {
 
         // Connection and its state:
         std::shared_ptr<AMQP::TcpConnection> m_connection;
-        enum class State {
-            eUnknown = 2000,   // At the beginning and after a failed connection attempt
-            eStarted,          // Connection attempt is started
-            eNotConnected,     // No connection
-            eConnectionDone,   // Phys.connection done
-            eConnectionReady,  // Logical connection (phys. + login)
-            eConnectionClosed, // Connection just closed
-            eConnectionError,  // Connection error (TCP?) with error message
-            eConnectionLost,   // Connection lost  (cluster node is shut down)
-        };
         State m_state;
 
         // Completion handler
         AsyncHandler m_onConnectionComplete;
         std::vector<ChannelCreationHandler> m_pendingOnChannelCreations;
+
+        /// Track clients to inform about reconnections
+        std::set<boost::weak_ptr<AmqpClient2>> m_registeredClients; // registered to get informed about reconenctions
+        std::unique_ptr<std::minstd_rand0> m_random;
     };
 } // namespace karabo::net
 
