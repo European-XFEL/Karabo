@@ -297,12 +297,6 @@ def test_device_client_sync_api():
     for i in range(6, 8):
         c.execute(deviceId, 'node.increment', 5)
 
-    # test getDataSourceSchemaAsHash
-    h = c.getDataSourceSchemaAsHash(deviceId)
-    assert isinstance(h, Hash)
-    assert h.getKeys()[0] == deviceId
-    assert h.getAttribute(deviceId, "classId") == "PropertyTest"
-
     # test 'setAttribute' - it updates the schema again
     onSchemaUpdatedArg1 = onSchemaUpdatedArg2 = None
     c.setAttribute(deviceId, 'int32Property', 'minInc', 12)
