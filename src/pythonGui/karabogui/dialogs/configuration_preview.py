@@ -114,16 +114,13 @@ class ConfigPreviewDialog(QDialog):
         self._show_configuration_changes(hide_readonly=False)
 
     def _configuration_by_access_mode(self):
-        read_only_text = "No ReadOnly Property Available"
         reconfig_text = "No Reconfigurable Property Available"
         if len(self.proxy.binding.value):
             read_only, reconfig = extract_read_only_and_reconfigurable(
                 self.proxy.binding, self.configuration)
             self._read_only_props = read_only
             self._reconfigurable_props = reconfig
-            read_only_text = create_html_hash(read_only)
             reconfig_text = create_html_hash(reconfig)
-        self.ui_text_info_readonly.setHtml(read_only_text)
         self.ui_text_info_configurable.setHtml(reconfig_text)
 
     def _load_configuration_changes(self):

@@ -64,11 +64,9 @@ def test_dialog(gui_app):
             "\nstringProperty\nbar\n"
             "intProperty\n3\n"
         )
-        assert dialog.ui_text_info_readonly.toPlainText() == (
-            "\nintProperty\n3\n"
-        )
         assert dialog.ui_text_info_configurable.toPlainText() == (
             "\nstringProperty\nbar\n"
+            "intProperty\n3\n"
         )
 
         save_path = "karabogui.dialogs.configuration_preview." \
@@ -172,10 +170,12 @@ def test_dialog_only_reconfigurable_changes(gui_app):
         dialog._show_configuration_changes(hide_readonly=True)
         assert dialog.ui_existing.toPlainText() == (
             "\navailableScenes\n['scene']\n"
+            "intProperty\n10\n"
             "state\nON\n"
             "stringProperty\nfoo\n")
 
         assert dialog.ui_retrieved.toPlainText() == (
             "\navailableScenes\nRemoved from configuration\n"
+            "intProperty\n3\n"
             "state\nRemoved from configuration\n"
             "stringProperty\nbar\n")

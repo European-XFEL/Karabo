@@ -325,8 +325,8 @@ def extract_init_configuration(binding, config):
     """Extract an init configuration from `config` with `binding`
 
     This function will filter out read only properties without runtime
-    attributes from the configuration
-s    """
+    attributes from the configurations
+    """
 
     ret = Hash()
 
@@ -353,12 +353,10 @@ def extract_read_only_and_reconfigurable(
         binding: BindingRoot, configuration: Hash) -> tuple[Hash, Hash]:
     """
     Extract the readonly and reconfigurable property from the configuration.
-    Considers the 'allowedStates' attribute to determine if the property is
-    reconfigurable or read-only in a given state of the device"""
+    """
 
     assert isinstance(binding, BindingRoot)
 
-    device_state = configuration.get("state")
     read_only = Hash()
     reconfigurable = Hash()
     for key, node in iterate_binding(binding):
@@ -369,10 +367,7 @@ def extract_read_only_and_reconfigurable(
         if value is Undefined:
             continue
         if access_mode == AccessMode.RECONFIGURABLE:
-            if node.is_allowed(state=device_state):
-                reconfigurable[key] = value
-            else:
-                read_only[key] = value
+            reconfigurable[key] = value
         else:
             read_only[key] = value
     return read_only, reconfigurable
