@@ -384,11 +384,11 @@ def test_extract_read_only_and_reconfigurable():
 
     read_only, reconfigurable = extract_read_only_and_reconfigurable(
         binding, configuration=config)
-    assert read_only == Hash("readOnlyProperty", 1, "intProperty", 2)
+    assert read_only == Hash("readOnlyProperty", 1)
     assert reconfigurable == Hash("state", State.ON,
                                   "doubleProperty", 10.0,
                                   "stringProperty", "Karabo",
-                                  )
+                                  "intProperty", 2,)
 
     # intProperty is configurable only when the device is in PASSIVE state.
     config["state"] = State.PASSIVE
