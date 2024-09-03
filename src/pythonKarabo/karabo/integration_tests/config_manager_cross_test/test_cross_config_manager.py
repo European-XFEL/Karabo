@@ -140,7 +140,7 @@ class TestCrossConfigManager(BoundDeviceTestCase):
             cfg_name, [self.PROP_TEST_DEVICE_ID]
         )
         self.assertFalse(get_resp_used_name[0])
-        self.assertIn('The config name PropertyTestConfigI is already taken',
+        self.assertIn('The config name PropertyTestConfigI is already used',
                       get_resp_used_name[1])
 
     def _test_save_list_config(self):

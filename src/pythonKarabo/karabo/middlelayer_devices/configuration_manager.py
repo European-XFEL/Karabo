@@ -473,7 +473,10 @@ class ConfigurationManager(DeviceClientBase):
         is_taken = self.db.is_config_name_taken(config_name, deviceIds)
         if is_taken:
             raise KaraboError(f"The config name {config_name} is already "
-                              f"taken from any of the device(s) {deviceIds}")
+                              "used by a read-only configuration saved "
+                              "for at least one of the devices in the list: "
+                              f"{deviceIds}. Or by one writable configuration "
+                              "that doesn't match the same list of devices.")
 
         # Optional information that can be taken as defaults!
         user = info.get("user", ".")
