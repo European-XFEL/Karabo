@@ -14,7 +14,7 @@ LOG4CPP_VERSION=1.1.3
 DAEMONTOOLS_VERSION=1.11-karabo3
 OPENMQ_VERSION=5.1.3
 OPENMQC_VERSION=5.1.4.1
-NSS_VERSION=3.72
+NSS_VERSION=3.93
 
 ##############################################################################
 # Define a bunch of functions to be called later
