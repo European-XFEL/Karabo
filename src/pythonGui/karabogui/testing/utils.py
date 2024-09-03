@@ -417,6 +417,11 @@ class DeviceSchemaAllowedState(SimpleDeviceSchema):
         unitSymbol=Unit.METER,
         allowedStates={State.PASSIVE})
 
+    initOnlyString = String(
+        displayedName="Init Only String",
+        defaultValue="Karabo",
+        accessMode=AccessMode.INITONLY,)
+
 
 def get_device_schema():
     return SimpleDeviceSchema.getClassSchema()
