@@ -160,6 +160,16 @@
           </attribute>
           <layout class="QVBoxLayout" name="verticalLayout_6">
            <item>
+            <widget class="QCheckBox" name="ui_reconfigurable_only">
+             <property name="toolTip">
+              <string>Show properties reconfigurable in current device state.</string>
+             </property>
+             <property name="text">
+              <string>Show Currently Allowed</string>
+             </property>
+            </widget>
+           </item>
+           <item>
             <widget class="QTextEdit" name="ui_text_info_configurable">
              <property name="sizePolicy">
               <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
@@ -201,7 +211,7 @@
          <item>
           <widget class="QCheckBox" name="ui_hide_readonly">
            <property name="text">
-            <string>Hide Read-only</string>
+            <string>Hide ReadOnly</string>
            </property>
           </widget>
          </item>

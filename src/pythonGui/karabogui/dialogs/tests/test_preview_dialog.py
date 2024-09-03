@@ -50,12 +50,15 @@ def test_dialog(gui_app):
         assert not dialog.ui_hide_readonly.isChecked()
         assert dialog.ui_existing.toPlainText() == (
             "\navailableScenes\n['scene']\n"
+            "initOnlyString\nKarabo\n"
             "intProperty\n10\n"
             "readOnlyProperty\n0\n"
             "state\nON\n"
             "stringProperty\nfoo\n")
+
         assert dialog.ui_retrieved.toPlainText() == (
             "\navailableScenes\nRemoved from configuration\n"
+            "initOnlyString\nRemoved from configuration\n"
             "intProperty\n3\n"
             "readOnlyProperty\nRemoved from configuration\n"
             "state\nRemoved from configuration\n"
@@ -155,12 +158,14 @@ def test_dialog_only_reconfigurable_changes(gui_app):
         dialog._show_configuration_changes(hide_readonly=False)
         assert dialog.ui_existing.toPlainText() == (
             "\navailableScenes\n['scene']\n"
+            "initOnlyString\nKarabo\n"
             "intProperty\n10\n"
             "readOnlyProperty\n0\n"
             "state\nON\n"
             "stringProperty\nfoo\n")
         assert dialog.ui_retrieved.toPlainText() == (
             "\navailableScenes\nRemoved from configuration\n"
+            "initOnlyString\nRemoved from configuration\n"
             "intProperty\n3\n"
             "readOnlyProperty\n4\n"
             "state\nRemoved from configuration\n"
@@ -170,12 +175,14 @@ def test_dialog_only_reconfigurable_changes(gui_app):
         dialog._show_configuration_changes(hide_readonly=True)
         assert dialog.ui_existing.toPlainText() == (
             "\navailableScenes\n['scene']\n"
+            "initOnlyString\nKarabo\n"
             "intProperty\n10\n"
             "state\nON\n"
             "stringProperty\nfoo\n")
 
         assert dialog.ui_retrieved.toPlainText() == (
             "\navailableScenes\nRemoved from configuration\n"
+            "initOnlyString\nRemoved from configuration\n"
             "intProperty\n3\n"
             "state\nRemoved from configuration\n"
             "stringProperty\nbar\n")
