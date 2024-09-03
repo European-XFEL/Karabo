@@ -34,7 +34,7 @@ from .config import (
     apply_configuration, apply_default_configuration, apply_fast_data,
     apply_project_configuration, extract_configuration, extract_edits,
     extract_init_configuration, extract_online_edits,
-    extract_read_only_and_reconfigurable, extract_sparse_configurations)
+    extract_sparse_configurations, iterate_binding)
 from .enums import (
     NO_CLASS_STATUSES, NO_CONFIG_STATUSES, ONLINE_CONFIG_STATUSES,
     ONLINE_STATUSES, SCHEMA_STATUSES, ProxyStatus)
