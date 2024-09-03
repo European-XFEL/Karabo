@@ -347,27 +347,3 @@ def extract_init_configuration(binding, config):
             ret[key] = value
 
     return ret
-
-
-def extract_read_only_and_reconfigurable(
-        binding: BindingRoot, configuration: Hash) -> tuple[Hash, Hash]:
-    """
-    Extract the readonly and reconfigurable property from the configuration.
-    """
-
-    assert isinstance(binding, BindingRoot)
-
-    read_only = Hash()
-    reconfigurable = Hash()
-    for key, node in iterate_binding(binding):
-        if key not in configuration:
-            continue
-        value = configuration[key]
-        access_mode = node.access_mode
-        if value is Undefined:
-            continue
-        if access_mode == AccessMode.RECONFIGURABLE:
-            reconfigurable[key] = value
-        else:
-            read_only[key] = value
-    return read_only, reconfigurable
