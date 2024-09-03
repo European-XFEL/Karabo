@@ -26,14 +26,13 @@ from karabo.native import (
     AccessLevel, AccessMode, Assignment, Configurable, Hash, HashList, Int32,
     Schema, String, Timestamp, VectorHash, decodeBinary)
 from karabogui.testing import (
-    ALL_PROPERTIES_MAP, get_all_props_schema, get_device_schema_allowed_state,
-    get_simple_props_schema, get_simple_schema)
+    ALL_PROPERTIES_MAP, get_all_props_schema, get_simple_props_schema,
+    get_simple_schema)
 
 from ..api import (
     apply_configuration, apply_default_configuration, apply_fast_data,
     apply_project_configuration, build_binding, extract_configuration,
-    extract_edits, extract_init_configuration, extract_online_edits,
-    extract_read_only_and_reconfigurable)
+    extract_edits, extract_init_configuration, extract_online_edits)
 
 TEST_DATA_DIR = op.join(op.dirname(__file__), 'data')
 
@@ -369,34 +368,3 @@ def test_extract_reconfigurable_configuration():
     assert "node.bar" not in extracted
     # Assignment.INTERNAL property not considered!
     assert "internal" not in extracted
-
-
-def test_extract_read_only_and_reconfigurable():
-    schema = get_device_schema_allowed_state()
-    binding = build_binding(schema)
-    config = Hash(
-        "state", State.ON,
-        "doubleProperty", 10.0,
-        "stringProperty", "Karabo",
-        "readOnlyProperty", 1,
-        "intProperty", 2,
-    )
-
-    read_only, reconfigurable = extract_read_only_and_reconfigurable(
-        binding, configuration=config)
-    assert read_only == Hash("readOnlyProperty", 1)
-    assert reconfigurable == Hash("state", State.ON,
-                                  "doubleProperty", 10.0,
-                                  "stringProperty", "Karabo",
-                                  "intProperty", 2,)
-
-    # intProperty is configurable only when the device is in PASSIVE state.
-    config["state"] = State.PASSIVE
-    read_only, reconfigurable = extract_read_only_and_reconfigurable(
-        binding, configuration=config)
-
-    assert read_only == Hash("readOnlyProperty", 1, )
-    assert reconfigurable == Hash("state", State.PASSIVE,
-                                  "doubleProperty", 10.0,
-                                  "stringProperty", "Karabo",
-                                  "intProperty", 2)
