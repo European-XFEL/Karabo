@@ -23,12 +23,13 @@ import os.path as op
 from qtpy import uic
 from qtpy.QtCore import Qt, Slot
 from qtpy.QtWidgets import QDialog, QDialogButtonBox
+from traits.api import Undefined
 
-from karabo.native import Hash, create_html_hash, has_changes, writeXML
+from karabo.native import (
+    AccessMode, Assignment, Hash, create_html_hash, has_changes, writeXML)
 from karabogui import icons, messagebox
 from karabogui.binding.api import (
-    ProjectDeviceProxy, extract_configuration,
-    extract_read_only_and_reconfigurable)
+    ProjectDeviceProxy, extract_configuration, iterate_binding)
 from karabogui.singletons.api import get_config
 from karabogui.util import SignalBlocker, getSaveFileName
 
@@ -76,6 +77,7 @@ class ConfigPreviewDialog(QDialog):
 
     def __init__(self, title, info, configuration, proxy, parent=None):
         super().__init__(parent=parent)
+        self._currently_reconfigurable = ""
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setModal(False)
         ui_file = get_dialog_ui("configuration_preview.ui")
@@ -112,15 +114,22 @@ class ConfigPreviewDialog(QDialog):
         self._synchronize_toggled(True)
         self.ui_hide_readonly.toggled.connect(self._show_configuration_changes)
         self._show_configuration_changes(hide_readonly=False)
+        self.ui_reconfigurable_only.setVisible(self.proxy.online)
+        self.ui_reconfigurable_only.toggled.connect(
+            self._show_reconfigurable_only)
 
     def _configuration_by_access_mode(self):
         reconfig_text = "No Reconfigurable Property Available"
         if len(self.proxy.binding.value):
-            read_only, reconfig = extract_read_only_and_reconfigurable(
-                self.proxy.binding, self.configuration)
-            self._read_only_props = read_only
-            self._reconfigurable_props = reconfig
+            if self.proxy.online:
+                reconfig, current_reconfig = \
+                    self._extract_online_reconfigurable()
+                self._currently_reconfigurable = create_html_hash(
+                    current_reconfig)
+            else:
+                reconfig = self._extract_offline_reconfigurable()
             reconfig_text = create_html_hash(reconfig)
+            self._reconfigurable_props = reconfig_text
         self.ui_text_info_configurable.setHtml(reconfig_text)
 
     def _load_configuration_changes(self):
@@ -167,6 +176,60 @@ class ConfigPreviewDialog(QDialog):
             read_only_changes_a[key] = changes_a[key]
             read_only_changes_b[key] = changes_b[key]
         return read_only_changes_a, read_only_changes_b
+
+    def _extract_offline_reconfigurable(self):
+        """
+        Extract the readonly and reconfigurable property from the configuration
+        for an offline device. Reconfigurable properties includes the init only
+        properties as well.
+        """
+        binding = self.proxy.binding
+        read_only = Hash()
+        reconfigurable = Hash()
+
+        for key, node in iterate_binding(binding):
+            value = self.configuration.get(key, None)
+            if value is None or value is Undefined:
+                continue
+
+            access_mode = node.access_mode
+            if access_mode in (
+                    AccessMode.RECONFIGURABLE, AccessMode.INITONLY) and (
+                    node.assignment != Assignment.INTERNAL):
+                reconfigurable[key] = value
+            else:
+                read_only[key] = value
+        self._read_only_props = read_only
+        return reconfigurable
+
+    def _extract_online_reconfigurable(self):
+        """
+        Extract the readonly and reconfigurable property from the configuration
+        for an online device. Consider the 'allowedStates' attribute to
+        determine if the property is reconfigurable or not allowed in the
+        current state of the device.
+        """
+
+        device_state = self.proxy.state_binding
+        binding = self.proxy.binding
+        read_only = Hash()
+        reconfigurable = Hash()
+        currently_reconfigurable = Hash()
+
+        for key, node in iterate_binding(binding):
+            value = self.configuration.get(key, None)
+            if value is None or value is Undefined:
+                continue
+
+            access_mode = node.access_mode
+            if access_mode == AccessMode.RECONFIGURABLE:
+                reconfigurable[key] = value
+                if node.is_allowed(state=device_state):
+                    currently_reconfigurable[key] = value
+            else:
+                read_only[key] = value
+        self._read_only_props = read_only
+        return reconfigurable, currently_reconfigurable
 
     # ---------------------------------------------------------------------
     # Slot Interface
@@ -254,3 +317,14 @@ class ConfigPreviewDialog(QDialog):
             html_b = self.all_changes_retrieved
         self.ui_existing.setHtml(html_a)
         self.ui_retrieved.setHtml(html_b)
+
+    @Slot(bool)
+    def _show_reconfigurable_only(self, toggled: bool) -> None:
+        """
+        For online device, show either only the properties that are
+        reconfigurable in the current state of the device or all
+        reconfigurable properties.
+        """
+        text = (self._currently_reconfigurable if toggled else
+                self._reconfigurable_props)
+        self.ui_text_info_configurable.setHtml(text)
