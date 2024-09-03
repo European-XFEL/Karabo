@@ -155,10 +155,9 @@ class BaseTableController(BaseBindingController):
     def state_update(self, proxy):
         """A change in a state update will only disable reconfigurable tables
         """
-        if self._readonly:
-            return
-        enable = is_proxy_allowed(proxy)
-        self.widget.setEnabled(enable)
+        if not self._readonly or self._table_buttons:
+            enable = is_proxy_allowed(proxy)
+            self.widget.setEnabled(enable)
 
     def destroy_widget(self):
         if self._item_model is not None:

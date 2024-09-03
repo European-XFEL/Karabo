@@ -23,14 +23,14 @@ from karabo.common.api import State
 from karabo.common.scenemodel.api import (
     FilterTableElementModel, TableElementModel)
 from karabo.native import (
-    AccessMode, Bool, Configurable, Double, Hash, Int32, MetricPrefix, String,
-    Unit, VectorHash, VectorString)
+    AccessLevel, AccessMode, Bool, Configurable, Double, Hash, Int32,
+    MetricPrefix, String, Unit, VectorHash, VectorString)
 from karabogui.binding.config import apply_configuration
 from karabogui.controllers.table.api import (
     BaseFilterTableController, BaseTableController, KaraboTableView,
     StringButtonDelegate, TableButtonDelegate, create_mime_data, list2string)
 from karabogui.testing import (
-    get_property_proxy, keySequence, set_proxy_value, singletons)
+    access_level, get_property_proxy, keySequence, set_proxy_value, singletons)
 from karabogui.topology.api import SystemTopology
 
 DELEGATES = "karabogui.controllers.table.delegates"
@@ -91,7 +91,8 @@ class StateObject(Configurable):
     state = String(
         defaultValue=State.ON)
     prop = VectorHash(
-        rows=TableSchema,
+        rows=ButtonSchema,
+        requiredAccessLevel=AccessLevel.OPERATOR,
         accessMode=AccessMode.READONLY,
         allowedStates=[State.ON])
 
@@ -798,8 +799,15 @@ def test_filter_table_model_view_table_controller_state(gui_app):
     set_proxy_value(proxy, "state", "ON")
     assert controller.widget.isEnabled()
 
+    # We have buttons and are also disabled
     controller.set_read_only(True)
     set_proxy_value(proxy, "state", "CHANGING")
+    assert not controller.widget.isEnabled()
+    set_proxy_value(proxy, "state", "ON")
     assert controller.widget.isEnabled()
+
+    with access_level(AccessLevel.USER):
+        set_proxy_value(proxy, "state", "ON")
+        assert not controller.widget.isEnabled()
 
     controller.destroy()
