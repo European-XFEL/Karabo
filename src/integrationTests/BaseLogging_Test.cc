@@ -399,7 +399,7 @@ std::pair<bool, std::string> BaseLogging_Test::startDataLoggerManager(
     manager_conf.set("deviceId", "loggerManager");
     manager_conf.set("flushInterval", FLUSH_INTERVAL_SEC);
     manager_conf.set<vector<string>>("serverList", {m_server});
-    manager_conf.set("loggerType", loggerType);
+    manager_conf.set("logger", loggerType);
 
     if (loggerType == "FileDataLogger") {
         manager_conf.set("fileDataLogger.directory",
