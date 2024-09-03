@@ -161,7 +161,7 @@ namespace karabo {
                   .commit();
 
             STRING_ELEMENT(expected)
-                  .key("loggerType")
+                  .key("logger")
                   .displayedName("Logger Type")
                   .description("Logger type variable to define if influx or file based data logging is used")
                   .init()
@@ -535,7 +535,7 @@ namespace karabo {
               m_loggerClassId("Unsupported"),
               m_blocked(input.get<Hash>("blocklist")),
               m_blockListFile(input.get<string>("blocklistfile")) {
-            const std::string loggerType = input.get<std::string>("loggerType");
+            const std::string loggerType = input.get<std::string>("logger");
             if (loggerType == "FileDataLogger") {
                 m_loggerClassId = "FileDataLogger";
                 m_readerClassId = "FileLogReader";
