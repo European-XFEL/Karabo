@@ -451,8 +451,10 @@ class DisplaySparkline(BaseBindingController):
     def _fetch_property_history(self, t0, t1):
         if not self.proxy.visible:
             return
-        t0 = str(datetime.datetime.utcfromtimestamp(t0).isoformat())
-        t1 = str(datetime.datetime.utcfromtimestamp(t1).isoformat())
+        t0 = str(datetime.datetime.fromtimestamp(t0,
+                                                 tz=datetime.UTC).isoformat())
+        t1 = str(datetime.datetime.fromtimestamp(t1,
+                                                 tz=datetime.UTC).isoformat())
         self.proxy.get_history(t0, t1)
 
     def _set_text(self):

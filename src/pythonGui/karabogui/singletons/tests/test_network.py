@@ -27,7 +27,7 @@ from karabogui.singletons.network import Network
 from karabogui.testing import singletons
 
 
-class TestReceiver:
+class MockReceiver:
     def __init__(self):
         self.last_hash = None
         self.server_connection = False
@@ -71,7 +71,7 @@ def test_socket_connect_login_protocol(mocker, subtests, gui_app):
     socket = mocker.patch('karabogui.singletons.network.QTcpSocket')
     network = Network()
     mediator = Mediator()
-    receiver = TestReceiver()
+    receiver = MockReceiver()
     network.signalReceivedData.connect(receiver.slotReceiveData)
     network.signalServerConnectionChanged.connect(
         receiver.slotServerConnection)
