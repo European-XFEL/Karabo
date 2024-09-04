@@ -128,7 +128,7 @@ class UnknownWidget(KaraboSceneWidget, QWidget):
 
     def translate(self, offset):
         new_pos = self.pos() + offset
-        self.model.set(x=new_pos.x(), y=new_pos.y())
+        self.model.trait_set(x=new_pos.x(), y=new_pos.y())
         self.move(new_pos)
 
     def paintEvent(self, event):
