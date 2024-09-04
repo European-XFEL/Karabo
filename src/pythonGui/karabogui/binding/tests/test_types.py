@@ -14,6 +14,7 @@
 # The Karabo Gui is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
+import numpy
 from pytest import raises as assert_raises
 
 from karabo.native import AccessLevel, AccessMode, Assignment, Hash
@@ -61,7 +62,11 @@ def test_binding_traits():
         assert obj.display_type == ""
         assert obj.access_mode is AccessMode.UNDEFINED
         assert obj.assignment is Assignment.OPTIONAL
-        assert not obj.options
+        if isinstance(obj.options, numpy.ndarray):
+            # truth value of array ambiguous, must check size explicitly
+            assert obj.options.size == 0
+        else:
+            assert not obj.options
         assert obj.unit_label == ""
 
 
