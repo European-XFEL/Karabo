@@ -195,7 +195,7 @@ def test_npy2csv():
     plot1 = np.vstack((x, y1))
     plot2 = np.vstack((x, y2))
     plot3 = np.vstack((x, y3))
-    expected = np.row_stack((plot1, plot2, plot3))
+    expected = np.vstack((plot1, plot2, plot3))
 
     np.testing.assert_array_equal(data_from_csv, expected)
     Path(output_file).unlink()
