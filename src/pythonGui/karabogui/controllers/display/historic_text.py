@@ -18,7 +18,7 @@
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
 #############################################################################
-from datetime import datetime
+from datetime import datetime, timezone
 
 import numpy as np
 from qtpy.QtCore import QDateTime, QSortFilterProxyModel, QStringListModel, Qt
@@ -229,8 +229,8 @@ class DisplayHistoricText(BaseBindingController):
 
     def _convert_datetime_utc(self, start, end):
         """Convert datetime objects for `start` and `end` to UTC strings"""
-        start = str(datetime.utcfromtimestamp(start).isoformat())
-        end = str(datetime.utcfromtimestamp(end).isoformat())
+        start = str(datetime.fromtimestamp(start, tz=timezone.utc).isoformat())
+        end = str(datetime.fromtimestamp(end, tz=timezone.utc).isoformat())
         return start, end
 
     @on_trait_change("proxy:binding:historic_data")

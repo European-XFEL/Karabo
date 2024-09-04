@@ -15,9 +15,9 @@
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
 import importlib
+import importlib.metadata
 import os
 
-import pkg_resources
 from traits.api import Undefined
 
 import karabogui.access as krb_access
@@ -87,7 +87,8 @@ def load_extensions():
     """Load the entrypoints for our gui extensions"""
     EXT_PACKAGE = 'karabogui.gui_extensions'
 
-    entry_points = pkg_resources.iter_entry_points(EXT_PACKAGE)
+    all_entry_points = importlib.metadata.entry_points()
+    entry_points = all_entry_points.select(group=EXT_PACKAGE)
     for entry in entry_points:
         try:
             entry.load()
