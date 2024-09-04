@@ -21,7 +21,6 @@ from argparse import ArgumentParser
 from collections import defaultdict
 from subprocess import STDOUT, CalledProcessError, check_output
 
-import pkg_resources
 import requests
 from qtpy import uic
 from qtpy.QtCore import (
@@ -168,7 +167,7 @@ class UpdateDialog(QDialog):
         self.extension_url.setText(
             "The extensions can be installed via PyPi Index: "
             f"<b>{_PYPI_INDEX}</b>")
-        self.refresh_versions(modules=False)
+        self.refresh_versions()
 
     @property
     def package_index(self):
@@ -235,11 +234,8 @@ class UpdateDialog(QDialog):
             self._set_buttons_uninstall()
             self._start_package_uninstall(name)
 
-    def refresh_versions(self, modules=True):
+    def refresh_versions(self):
         """Refreshing the current and latest package versions"""
-        # This is deprecated, but should keep packages in sync
-        if modules:
-            importlib.reload(pkg_resources)
         self._update_current_version()
         self._update_latest_version()
         current = self.label_current.text()
