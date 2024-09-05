@@ -15,6 +15,7 @@
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
 import numpy as np
+import pytest
 from numpy.testing import assert_array_equal
 
 from karabo.native import Configurable, VectorFloat
@@ -94,6 +95,7 @@ def test_multiple_proxies(gui_app, mocker):
     assert method.call_count == 1
 
 
+@pytest.mark.filterwarnings("ignore::scipy.optimize.OptimizeWarning")
 def test_sub_region_roi(gui_app):
     schema = Object.getClassSchema()
     proxy = get_class_property_proxy(schema, "prop")
