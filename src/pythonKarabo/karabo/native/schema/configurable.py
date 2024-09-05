@@ -28,7 +28,7 @@ from .descriptors import Attribute, Descriptor, Integer, Slot
 __all__ = ['Configurable', 'ChoiceOfNodes', 'ListOfNodes', 'Node', 'Overwrite']
 
 
-def _get_setters(instance, hsh, only_changes=False):
+def _get_setters(instance, hsh, only_changes=False, strict=True):
     """Get the list of tuples of decriptor, instance and value
 
     :param hsh: configuration Hash
@@ -45,9 +45,9 @@ def _get_setters(instance, hsh, only_changes=False):
         desc = getattr(instance.__class__, k)
         if isinstance(desc, Node):
             node = getattr(instance, k)
-            setter.extend(_get_setters(node, v, only_changes))
+            setter.extend(_get_setters(node, v, only_changes, strict))
         else:
-            v = desc.toKaraboValue(v)
+            v = desc.toKaraboValue(v, strict=strict)
             if v.timestamp is None:
                 # If there is no timestamp, try to get it
                 # from attributes
@@ -234,13 +234,13 @@ class Configurable:
         setters = (s() for s in setters)
         await gather(*[s for s in setters if s is not None])
 
-    def set(self, config, only_changes=False):
+    def set(self, config, only_changes=False, strict=True):
         """Internal handler to set a Hash on the Configurable
 
         :param only_changes: Boolean to check if only changed values should
                              be set, the default is `False`.
         """
-        setters = _get_setters(self, config, only_changes)
+        setters = _get_setters(self, config, only_changes, strict)
         for desc, instance, value in setters:
             # This is similar to descriptor's `__set__`
             value._parent = instance
