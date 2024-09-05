@@ -271,6 +271,7 @@ class Tests(TestCase):
         # 1. Test the basic node setting
         a = A()
         self.assertFalse(isSet(a.value))
+        self.assertFalse(isSet(a.state))
         self.assertFalse(isSet(a.node.bvalue))
         self.assertFalse(isSet(a.node.node.cvalue))
 
@@ -352,6 +353,12 @@ class Tests(TestCase):
         a.set(h)
         self.assertEqual(a.state, State.ON)
         self.assertEqual(a.state.timestamp, ts)
+
+        # 5.1 Be less strict, so enums can convert
+        h = Hash("state", "OFF")
+        ts.toHashAttributes(h)
+        a.set(h, strict=False)
+        self.assertEqual(a.state, State.OFF)
 
         # 6. Invalid Option for string
         a = A()
