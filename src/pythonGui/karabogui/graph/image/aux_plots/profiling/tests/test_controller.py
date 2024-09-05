@@ -15,6 +15,7 @@
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
 import numpy as np
+import pytest
 
 from karabogui.graph.common.api import ImageRegion
 from karabogui.testing import GuiTestCase
@@ -51,6 +52,7 @@ class TestProfileAuxPlot(GuiTestCase):
 
         assert not self._controller.show_stats
 
+    @pytest.mark.filterwarnings("ignore::scipy.optimize.OptimizeWarning")
     def test_analyze(self):
         # 1. Check default
         self._assert_analyze(valid=False, fitted=False)
@@ -111,6 +113,7 @@ class TestProfileAuxPlot(GuiTestCase):
             np.testing.assert_array_equal(fit_item.xData, x_fit)
             np.testing.assert_array_equal(fit_item.yData, y_fit)
 
+    @pytest.mark.filterwarnings("ignore::scipy.optimize.OptimizeWarning")
     def test_enable_fitting(self):
         # 1. Check default
         self._assert_show_stats(valid=False)
