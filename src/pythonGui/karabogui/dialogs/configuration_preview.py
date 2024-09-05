@@ -89,6 +89,8 @@ class ConfigPreviewDialog(QDialog):
         if info is None:
             self.ui_info.setVisible(False)
         else:
+            status_text = "online" if proxy.online else "offline"
+            info = f"{info} The device is {status_text}."
             self.ui_info.setText(info)
 
         self._show_changes = False
@@ -115,6 +117,7 @@ class ConfigPreviewDialog(QDialog):
         self.ui_hide_readonly.toggled.connect(self._show_configuration_changes)
         self._show_configuration_changes(hide_readonly=False)
         self.ui_reconfigurable_only.setVisible(self.proxy.online)
+        self.ui_config_count.setVisible(self.proxy.online)
         self.ui_reconfigurable_only.toggled.connect(
             self._show_reconfigurable_only)
 
@@ -126,6 +129,11 @@ class ConfigPreviewDialog(QDialog):
                     self._extract_online_reconfigurable()
                 self._currently_reconfigurable = create_html_hash(
                     current_reconfig)
+                allowed_count = len(current_reconfig.paths(intermediate=False))
+                reconfig_count = len(reconfig.paths(intermediate=False))
+                text = (f"Showing {reconfig_count} reconfigurable parameters "
+                        f"and {allowed_count} are currently allowed.")
+                self.ui_config_count.setText(text)
             else:
                 reconfig = self._extract_offline_reconfigurable()
             reconfig_text = create_html_hash(reconfig)
