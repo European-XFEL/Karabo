@@ -160,14 +160,46 @@
           </attribute>
           <layout class="QVBoxLayout" name="verticalLayout_6">
            <item>
-            <widget class="QCheckBox" name="ui_reconfigurable_only">
-             <property name="toolTip">
-              <string>Show properties reconfigurable in current device state.</string>
+            <layout class="QHBoxLayout" name="horizontalLayout_5">
+             <property name="spacing">
+              <number>0</number>
              </property>
-             <property name="text">
-              <string>Show Currently Allowed</string>
-             </property>
-            </widget>
+             <item>
+              <widget class="QCheckBox" name="ui_reconfigurable_only">
+               <property name="toolTip">
+                <string>Show properties reconfigurable in current device state.</string>
+               </property>
+               <property name="text">
+                <string>Show Currently Allowed</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="QLabel" name="ui_config_count">
+               <property name="font">
+                <font>
+                 <italic>true</italic>
+                </font>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </item>
            <item>
             <widget class="QTextEdit" name="ui_text_info_configurable">

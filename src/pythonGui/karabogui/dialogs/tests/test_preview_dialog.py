@@ -42,8 +42,10 @@ def test_dialog(gui_app):
                                      configuration=configuration,
                                      proxy=proxy)
         assert dialog.windowTitle() == "This is the title"
-        assert dialog.ui_info.text() == "The information comes here"
-
+        assert dialog.ui_info.text() == ("The information comes here "
+                                         "The device is online.")
+        assert dialog.ui_config_count.text() == (
+            "Showing 2 reconfigurable parameters and 1 are currently allowed.")
         assert dialog.ui_swap.text() == "Show changes"
         dialog._swap_view()
         assert dialog.ui_swap.text() == "Show Configuration"
