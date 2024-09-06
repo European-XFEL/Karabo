@@ -296,7 +296,7 @@ def get_temporary_button_data() -> (QIcon, str):
     user = krb_access.TEMPORARY_SESSION_USER
     level = krb_access.GLOBAL_ACCESS_LEVEL.name
     if user is None:
-        tooltip = "Start a temporary session ..."
+        tooltip = "Start a temporary session"
         return icons.switchNormal, tooltip
     if krb_access.TEMPORARY_SESSION_WARNING:
         tooltip = (f"Logged in as '{user}' with access level '{level}'. "
