@@ -74,6 +74,10 @@ def get_macro_servers(development=False):
                 return
             macro_servers[attrs["serverId"]] += 1
             macro_servers_set.add(node.node_id)
+        elif (attrs.get("type") == "macro"
+              and attrs.get("serverId") is not None
+              and attrs.get("serverId") != "__none__"):
+            macro_servers[attrs["serverId"]] += 1
 
     topology.visit_system_tree(visitor)
 
