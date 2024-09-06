@@ -379,3 +379,45 @@ class TestSystemTopology(GuiTestCase):
             servers = get_macro_servers(True)
             assert len(servers) == 2
             assert servers[1] == "karabo/macroServer1"
+
+            # And one more macro server
+            h = Hash()
+            h["server.karabo/macroServer2"] = None
+            h["server.karabo/macroServer2", ...] = {
+                "host": "BIG_IRON",
+                "deviceClasses": ["Macro", "MetaMacro"],
+                "lang": "macro",
+                "type": "server",
+                "serverId": "karabo/macroServer2",
+                "heartbeatInterval": 20,
+                "karaboVersion": "2.20.0",
+                "visibility": 4,
+                "log": "INFO",
+                "visibilities": [4, 4],
+            }
+            changes = Hash("new", h, "update", Hash(), "gone", Hash())
+            topology.topology_update(changes)
+            servers = get_macro_servers(False)
+            assert len(servers) == 2
+            # Least loaded
+            assert servers[0] == "karabo/macroServer"
+
+            # add one more macro
+            h["macro.macromotor"] = None
+            h["macro.macromotor", ...] = {
+                "host": "BIG_IRON",
+                "classId": "RogueClass",
+                "type": "macro",
+                "serverId": "karabo/macroServer",
+                "heartbeatInterval": 120,
+                "karaboVersion": "2.13.0",
+                "visibility": 4,
+                "status": "ok",
+                "capabilities": 0,
+            }
+            changes = Hash("new", h, "update", Hash(), "gone", Hash())
+            topology.topology_update(changes)
+            servers = get_macro_servers(False)
+            assert len(servers) == 2
+            # Least loaded changed
+            assert servers[0] == "karabo/macroServer2"
