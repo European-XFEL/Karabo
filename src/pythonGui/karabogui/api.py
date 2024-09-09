@@ -67,7 +67,8 @@ from karabogui.graph.plots.api import (
     KaraboPlotView, ScatterGraphPlot, TransformDialog, VectorBarGraphPlot,
     generate_baseline, generate_down_sample, get_view_range)
 from karabogui.indicators import get_state_color
-from karabogui.itemtypes import NavigationItemTypes, ProjectItemTypes
+from karabogui.itemtypes import (
+    ConfiguratorItemType, NavigationItemTypes, ProjectItemTypes)
 from karabogui.logger import get_logger
 from karabogui.request import (
     call_device_slot, get_macro_from_server, get_scene_from_server,
