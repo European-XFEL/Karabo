@@ -102,9 +102,10 @@ class SingleBit(BaseBindingController):
                 bit = int(s.split(":")[0])
         else:
             _, high = get_min_max(binding)
+            max_value = int(log2(high) + 1)
             bit, ok = QInputDialog.getInt(
                 self.widget, "Bit Number", "Enter number of bit:",
-                self.model.bit, 0, log2(high) + 1)
+                self.model.bit, 0, max_value)
 
         if ok:
             self.model.bit = bit
