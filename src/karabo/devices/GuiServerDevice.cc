@@ -2036,8 +2036,12 @@ namespace karabo {
                 str << "Cannot determine DataLogReaderId for '" << deviceId << "'. ";
                 if (deviceId.find("Macro-") != std::string::npos) {
                     str << "Note that macros are not logged.";
+                } else if (m_loggerMap.empty()) {
+                    str << "Logger map empty - maybe logging system is offline or GUI server's "
+                        << "'dataLogManagerId' (pointing to '" << get<std::string>("dataLogManagerId")
+                        << "') is misconfigured?";
                 } else {
-                    str << "No '" << loggerId << "' in map for '" << deviceId << "'";
+                    str << "No entry in logger map for '" << deviceId << "'";
                 }
                 throw KARABO_PARAMETER_EXCEPTION(str.str());
                 return std::string(); // please the compiler
