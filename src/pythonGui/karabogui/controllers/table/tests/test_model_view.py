@@ -670,6 +670,27 @@ def test_filter_table_model_view_set_value(filter_table_model_view_setup):
     assert_model_row(controller, 3, "d", True, "CHANGING", 1, 5.0, ["d"])
 
 
+def test_filter_table_model_view_filter_combo(filter_table_model_view_setup):
+    controller, _, _ = filter_table_model_view_setup
+    model = controller.sourceModel()
+    for i in range(controller.columnCombo.count()):
+        header_text = model.headerData(i, orientation=Qt.Horizontal,
+                                       role=Qt.DisplayRole)
+        assert header_text == controller.columnCombo.itemText(i)
+    controller.columnCombo.setCurrentIndex(2)
+    controller.searchLabel.setText("ACTIVE")
+
+    filter_model = controller.tableModel()
+
+    # check if its in the filtered view
+    index = model.index(0, 2, QModelIndex())
+    # ACTIVE is visible
+    assert filter_model.mapFromSource(index).isValid()
+    index = model.index(1, 2, QModelIndex())
+    # row with ERROR cell is not visible
+    assert not filter_model.mapFromSource(index).isValid()
+
+
 def test_filter_table_model_view_table_actions(filter_table_model_view_setup,
                                                mocker):
     controller, _, model = filter_table_model_view_setup
