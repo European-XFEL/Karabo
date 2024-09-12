@@ -341,7 +341,7 @@ async def _getHistory(prop, begin, end, maxNumData, verbose=False):
         Hash("from", begin, "to", end, "maxNumData", maxNumData))
     assert r_deviceId == deviceId and r_attr == attr
     return [(float(d["v", "frac"]) / 10 ** 18 + float(d["v", "sec"]),
-             d["v", "tid"], "isLast" in d["v", ...], d["v"]) for d in data]
+             "isLast" in d["v", ...], d["v"]) for d in data]
 
 
 def getHistory(prop, begin,
@@ -410,18 +410,16 @@ async def printHistory(prop, begin, end=None, maxNumData=100):
 
     See getHistory about arguments and their meaning and format
     """
-    res = await getHistory(prop, begin, end, maxNumData=maxNumData,
+    ret = await getHistory(prop, begin, end, maxNumData=maxNumData,
                            verbose=True)
 
     def create_lines():
-        for tup in res:
-            stamp = Timestamp(tup[0]).toLocal(sep=' ')
-            # Print only non-zero trainId:
-            trainId = "" if not tup[1] else f"(tid {tup[1]})"
-            item = str(tup[3])
+        for item in ret:
+            stamp = Timestamp(item[0]).toLocal(sep=' ')
+            value = str(item[2])
             # Newline for all stuff with new line (e.g. table) else space
-            sep = "\n" if "\n" in item else " "
-            yield f"{stamp} {trainId}:{sep}{item}"
+            sep = "\n" if "\n" in value else " "
+            yield f"{stamp}{sep}{value}"
 
     print("\n".join(line for line in create_lines()))
 
