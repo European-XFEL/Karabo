@@ -51,6 +51,8 @@ def get_config_changes(old, new, project):
     for key in keys:
         old_value = old.get(key, None)
         new_value = new.get(key, None)
+        if isinstance(old_value, (bytes, bytearray)):
+            continue
         if old_value is None and new_value is not None:
             if not project:
                 changes_old[key] = "Missing from configuration"
