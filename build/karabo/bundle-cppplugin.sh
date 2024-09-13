@@ -49,7 +49,7 @@ NUM_CORES=2  # default
 source "$KARABO/bin/.set_lsb_release_info.sh"
 if [ "$OS" = "Linux" ]; then
     DISTRO_ID=( $LSB_RELEASE_DIST )
-    DISTRO_RELEASE=$(LSB_RELEASE_VERSION | sed -r "s/^([0-9]+).*/\1/")
+    DISTRO_RELEASE=$(echo $LSB_RELEASE_VERSION | sed -r "s/^([0-9]+).*/\1/")
     NUM_CORES=`grep "processor" /proc/cpuinfo | wc -l`
 fi
 
