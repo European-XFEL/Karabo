@@ -26,7 +26,7 @@
 // e.g. export KARABO_CI_BROKERS=tcp://a-jms-broker:7777;amqp://an-amqp-broker:5672
 
 #define JMS_BROKER_DEFAULT "tcp://exfl-broker:7777"
-#define AMQP_BROKER_DEFAULT "amqp://xfel:karabo@exflctrl01:5672"
+#define AMQP_BROKER_DEFAULT "amqp://xfel:karabo@exfl-broker-1:5672"
 #define INVALID_JMS "tcp://invalid.example.org:7777"
 #define INVALID_AMQP "amqp://invalid.example.org:5672"
 
