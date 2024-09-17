@@ -181,7 +181,7 @@ runPythonTests() {
         else
             # Uncomment or adjust depending on the broker environment
             # BROKER="tcp://exflbkr02n0:7777"
-            BROKER="amqp://xfel:karabo@exflctrl01:5672"
+            BROKER="amqp://xfel:karabo@exfl-broker-1:5672"
         fi
         safeRunTests $BROKER $*
     fi
