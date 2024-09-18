@@ -1,1 +1,1 @@
-amqp://xfel:karabo@exflctrl01:5672
+amqp://xfel:karabo@exfl-broker-1:5672
