@@ -17,7 +17,6 @@
 from traits.api import pop_exception_handler, push_exception_handler
 
 from karabo.common.api import InstanceStatus
-from karabo.native import AccessLevel
 from karabogui.itemtypes import NavigationItemTypes
 from karabogui.testing import system_hash, system_hash_server_and_plugins
 
@@ -35,21 +34,13 @@ def tearDown():
 def test_tree_node_basics():
     empty = SystemTreeNode(
         node_id='node_id', path='path',
-        visibility=AccessLevel.EXPERT,
         status=InstanceStatus.NONE,
         children=[]
-    )
-
-    # default global accesslevel is OPERATOR in test
-    empty2 = SystemTreeNode(
-        visibility=AccessLevel.OBSERVER
     )
 
     assert empty.child('a_child') is None
     assert empty.info() is None
     assert empty.row() == 0
-    assert empty.is_visible is False
-    assert empty2.is_visible is True
 
 
 def test_tree_node_levels():
@@ -97,7 +88,7 @@ def test_tree_basics():
 
     tree.initialize(sys_hash)
     for node_id in names:
-        assert len(tree.find(node_id)) > 0
+        assert len(tree.find(node_id)) > 0, node_id
 
     tree.clear_all()
     for node_id in names:
@@ -116,15 +107,13 @@ def test_tree_find():
     assert len(tree.find('BarClass')) == 1
     assert len(tree.find('barclass', case_sensitive=False)) == 1
     assert len(tree.find('Bar')) == 1
-    assert len(tree.find('FooClass', access_level=AccessLevel.ADMIN)) == 1
-    assert len(tree.find('FooClass', access_level=AccessLevel.OBSERVER)) == 1
-    assert len(tree.find('BarClass', access_level=AccessLevel.OBSERVER)) == 1
-    assert len(tree.find('BlahClass', access_level=AccessLevel.ADMIN)) == 0
-    kwargs = {'access_level': AccessLevel.ADMIN, 'case_sensitive': True,
+    assert len(tree.find('FooClass')) == 1
+    assert len(tree.find('BarClass')) == 1
+    assert len(tree.find('BlahClass')) == 0
+    kwargs = {'case_sensitive': True,
               'use_reg_ex': True}
     assert len(tree.find('(.*)Class', **kwargs)) == 2
     assert len(tree.find('(.*)class', **kwargs)) == 1
-    kwargs['access_level'] = AccessLevel.ADMIN
     kwargs['case_sensitive'] = False
     kwargs['use_reg_ex'] = True
     assert len(tree.find('(.*)fooclass', **kwargs)) == 1
