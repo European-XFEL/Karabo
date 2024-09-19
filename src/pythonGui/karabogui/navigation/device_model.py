@@ -22,10 +22,8 @@ import json
 
 from qtpy.QtCore import QAbstractItemModel, QMimeData, QModelIndex, Qt
 
-import karabogui.access as krb_access
 from karabo.common.api import InstanceStatus
 from karabogui import icons
-from karabogui.events import KaraboEvent, register_for_broadcasts
 from karabogui.singletons.api import get_topology
 
 from .context import _UpdateContext
@@ -40,16 +38,8 @@ class DeviceTreeModel(QAbstractItemModel):
         self.tree.update_context = _UpdateContext(item_model=self)
         self.tree.on_trait_change(self._status_update, 'status_update')
 
-        event_map = {
-            KaraboEvent.AccessLevelChanged: self._event_access_level,
-        }
-        register_for_broadcasts(event_map)
-
     def supportedDragActions(self):
         return Qt.CopyAction
-
-    def _event_access_level(self, data):
-        self._clear_tree_cache()
 
     def clear(self):
         self.tree.clear_all()
@@ -197,20 +187,6 @@ class DeviceTreeModel(QAbstractItemModel):
             if node is not None:
                 index = self.createIndex(node.row(), 0, node)
                 self.dataChanged.emit(index, index, [Qt.DecorationRole])
-
-    def _clear_tree_cache(self):
-        """Clear the tree and reset the model to account visibility
-        """
-        self.beginResetModel()
-        try:
-            access = krb_access.GLOBAL_ACCESS_LEVEL
-
-            def visitor(node):
-                node.is_visible = not (node.visibility > access)
-
-            self.tree.visit(visitor)
-        finally:
-            self.endResetModel()
 
     def currentIndex(self):
         return self.selectionModel.currentIndex()
