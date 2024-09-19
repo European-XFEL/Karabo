@@ -22,7 +22,6 @@ import json
 
 from qtpy.QtCore import QAbstractItemModel, QMimeData, QModelIndex, Qt
 
-import karabogui.access as krb_access
 from karabo.common.api import InstanceStatus
 from karabogui import icons
 from karabogui.events import KaraboEvent, register_for_broadcasts
@@ -45,7 +44,6 @@ class SystemTreeModel(QAbstractItemModel):
         # Register to KaraboBroadcastEvent, Note: unregister_from_broadcasts is
         # not necessary
         event_map = {
-            KaraboEvent.AccessLevelChanged: self._event_access_level,
             KaraboEvent.StartMonitoringDevice: self._event_monitor,
             KaraboEvent.StopMonitoringDevice: self._event_monitor,
         }
@@ -53,9 +51,6 @@ class SystemTreeModel(QAbstractItemModel):
 
     def supportedDragActions(self):
         return Qt.CopyAction
-
-    def _event_access_level(self, data):
-        self._clear_tree_cache()
 
     def _event_monitor(self, data):
         node_id = data['device_id']
@@ -231,17 +226,3 @@ class SystemTreeModel(QAbstractItemModel):
         if node is not None:
             index = self.createIndex(node.row(), column, node)
             self.dataChanged.emit(index, index, [Qt.DecorationRole])
-
-    def _clear_tree_cache(self):
-        """Clear the tree and reset the model to account visibility
-        """
-        self.beginResetModel()
-        try:
-            access = krb_access.GLOBAL_ACCESS_LEVEL
-
-            def visitor(node):
-                node.is_visible = not (node.visibility > access)
-
-            self.tree.visit(visitor)
-        finally:
-            self.endResetModel()

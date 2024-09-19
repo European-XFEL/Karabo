@@ -17,7 +17,6 @@
 from traits.api import pop_exception_handler, push_exception_handler
 
 from karabo.common.api import InstanceStatus
-from karabo.native import AccessLevel
 from karabogui.itemtypes import NavigationItemTypes
 
 from ..device_tree import DeviceTreeNode
@@ -34,21 +33,13 @@ def tearDown():
 def test_tree_node_basics():
     empty = DeviceTreeNode(
         node_id='node_id',
-        visibility=AccessLevel.EXPERT,
         status=InstanceStatus.OK,
         children=[]
-    )
-
-    # default global accesslevel is OBSERVER
-    empty2 = DeviceTreeNode(
-        visibility=AccessLevel.OBSERVER
     )
 
     assert empty.child('a_child') is None
     assert empty.info() is None
     assert empty.row() == 0
-    assert empty.is_visible is False
-    assert empty2.is_visible is True
 
 
 def test_tree_node_levels():

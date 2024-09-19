@@ -59,16 +59,10 @@ class TopologyFilterModel(QSortFilterProxyModel):
         model = self.sourceModel()
         source_index = model.index(source_row, self.filterKeyColumn(),
                                    source_parent)
-        # Normally, this should not happen, we go safe here!
-        # We expect a QModelIndex to have a node behind. But these nodes
-        # are stored weak and might vanish. The original Qt C++ code
-        # returns `True` for invalid QModelIndex (`None` object on Pointer).
         if source_index.isValid():
             node = source_index.internalPointer()
             if node is None:
                 return True
-            if not node.is_visible:
-                return False
 
             if self._filter_status is not None:
                 status = node.status is self._filter_status
