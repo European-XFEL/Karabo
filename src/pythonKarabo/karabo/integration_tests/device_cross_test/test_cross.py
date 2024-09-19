@@ -634,7 +634,7 @@ async def test_history(deviceTest):
         # (E.g. if shortcut communication between logged device and
         #  logger is switched on...)
         hist.sort(key=lambda x: x[0])
-        assert [v for _, _, _, v in hist[-5:]] == list(range(5))
+        assert [v for _, _, v in hist[-5:]] == list(range(5))
 
     node_history = await getHistory(
         "middlelayerDevice.child.number", before.isoformat(),
@@ -645,7 +645,7 @@ async def test_history(deviceTest):
     for hist in node_history, node_proxy_history:
         # Sort needed - see above.
         hist.sort(key=lambda x: x[0])
-        assert [-v for _, _, _, v in hist[-5:]] == list(range(5))
+        assert [-v for _, _, v in hist[-5:]] == list(range(5))
 
     await call(server, "slotKillServer")
     await process.wait()
