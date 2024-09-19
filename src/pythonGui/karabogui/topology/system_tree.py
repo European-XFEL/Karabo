@@ -25,9 +25,7 @@ from traits.api import (
     Bool, Dict, Enum, Event, HasStrictTraits, Instance, Int, List, String,
     WeakRef)
 
-import karabogui.access as krb_access
 from karabo.common.api import InstanceStatus
-from karabo.native import AccessLevel
 from karabogui.itemtypes import NavigationItemTypes
 
 HOST_LEVEL = 0
@@ -41,7 +39,6 @@ class SystemTreeNode(HasStrictTraits):
     """
     node_id = String
     path = String
-    visibility = Enum(*AccessLevel)
     status = Enum(*InstanceStatus)
     capabilities = Int
     attributes = Dict
@@ -51,12 +48,6 @@ class SystemTreeNode(HasStrictTraits):
 
     parent = WeakRef('SystemTreeNode')
     children = List(Instance('SystemTreeNode'))
-
-    # cached current visibility
-    is_visible = Bool(True)
-
-    def _is_visible_default(self):
-        return not (self.visibility > krb_access.GLOBAL_ACCESS_LEVEL)
 
     def child(self, node_id):
         for child in self.children:
@@ -146,21 +137,17 @@ class SystemTree(HasStrictTraits):
 
         return existing_devices
 
-    def find(self, node_id, access_level=None, case_sensitive=True,
+    def find(self, node_id, case_sensitive=True,
              use_reg_ex=True, full_match=False):
         """Find all nodes with the given `node_id` and return them in a list
 
         :param node_id: The actual string we are looking for in the tree
-        :param access_level: The global access level
         :param case_sensitive: States whether the given string should match
                                case or not
         :param full_match: States whether the given string matches fully
         :param use_reg_ex: Defines the given string as a regular expression
         :return list of found nodes (which could be empty)
         """
-        access_level = (
-            krb_access.GLOBAL_ACCESS_LEVEL if access_level is None
-            else access_level)
 
         found_nodes = []
         pattern = node_id if use_reg_ex else f".*{re.escape(node_id)}"
@@ -169,10 +156,9 @@ class SystemTree(HasStrictTraits):
 
         def visitor(node):
             parent_node = node.parent
-            parent_check = (parent_node is not None
-                            and parent_node.visibility > access_level)
-            if (node.visibility > access_level or parent_check):
-                # Do not look for nodes which are not visible or its parent
+            parent_check = parent_node is None
+            if parent_check:
+                # Do not look for nodes which are its parent
                 return
 
             matcher = regex.fullmatch if full_match else regex.match
@@ -407,7 +393,6 @@ class SystemTree(HasStrictTraits):
                 continue
 
             host = attrs['host']
-            visibility = AccessLevel(attrs['visibility'])
 
             # Create node for host
             host_node = self.root.child(host)
@@ -422,7 +407,6 @@ class SystemTree(HasStrictTraits):
             if server_node is None:
                 server_node = SystemTreeNode(node_id=server_id,
                                              path=server_id, parent=host_node,
-                                             visibility=visibility,
                                              level=SERVER_LEVEL)
                 handler(host_node, server_node)
             server_node.attributes = attrs
@@ -444,7 +428,6 @@ class SystemTree(HasStrictTraits):
                 continue
 
             host = attrs['host']
-            visibility = AccessLevel(attrs['visibility'])
             capabilities = attrs['capabilities']
             server_id = attrs['serverId']
             class_id = attrs['classId']
@@ -466,7 +449,6 @@ class SystemTree(HasStrictTraits):
                 path = f'{server_id}.{class_id}'
                 class_node = SystemTreeNode(node_id=class_id,
                                             path=path, parent=server_node,
-                                            visibility=visibility,
                                             level=CLASS_LEVEL)
                 handler(server_node, class_node)
 
@@ -475,7 +457,6 @@ class SystemTree(HasStrictTraits):
             if device_node is None:
                 device_node = SystemTreeNode(node_id=device_id, path=device_id,
                                              parent=class_node,
-                                             visibility=visibility,
                                              status=status,
                                              capabilities=capabilities,
                                              attributes=attrs,

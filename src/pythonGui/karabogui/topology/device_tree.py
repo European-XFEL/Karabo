@@ -22,12 +22,9 @@ import re
 from contextlib import contextmanager
 
 from traits.api import (
-    Bool, Dict, Enum, Event, HasStrictTraits, Instance, Int, List, String,
-    WeakRef)
+    Dict, Enum, Event, HasStrictTraits, Instance, Int, List, String, WeakRef)
 
-import karabogui.access as krb_access
 from karabo.common.api import InstanceStatus
-from karabo.native import AccessLevel
 from karabogui.itemtypes import NavigationItemTypes
 
 DOMAIN_LEVEL = 0
@@ -40,7 +37,6 @@ class DeviceTreeNode(HasStrictTraits):
     """
     node_id = String
     server_id = String
-    visibility = Enum(*AccessLevel)
     status = Enum(*InstanceStatus)
     capabilities = Int
     interfaces = Int
@@ -49,12 +45,6 @@ class DeviceTreeNode(HasStrictTraits):
 
     parent = WeakRef('DeviceTreeNode')
     children = List(Instance('DeviceTreeNode'))
-
-    # cached current visibility
-    is_visible = Bool(True)
-
-    def _is_visible_default(self):
-        return not (self.visibility > krb_access.GLOBAL_ACCESS_LEVEL)
 
     def child(self, node_id):
         for child in self.children:
@@ -254,7 +244,6 @@ class DeviceSystemTree(HasStrictTraits):
                 continue
 
             domain, dev_type, member = device
-            visibility = AccessLevel(attrs['visibility'])
             capabilities = attrs['capabilities']
             server_id = attrs['serverId']
             status = InstanceStatus(attrs['status'])
@@ -284,28 +273,22 @@ class DeviceSystemTree(HasStrictTraits):
                                              attributes=attrs,
                                              capabilities=capabilities,
                                              interfaces=interfaces,
-                                             visibility=visibility,
                                              level=MEMBER_LEVEL)
                 handler(type_node, device_node)
 
             self._device_nodes[karabo_name] = device_node
 
-    def find(self, node_id, access_level=None, case_sensitive=True,
+    def find(self, node_id, case_sensitive=True,
              use_reg_ex=True, full_match=False):
         """Find all nodes with the given `node_id` and return them in a list
 
         :param node_id: The actual string we are looking for in the tree
-        :param access_level: The global access level
         :param case_sensitive: States whether the given string should match
                                case or not
         :param full_match: States whether the given string matches fully
         :param use_reg_ex: Defines the given string as a regular expression
         :return list of found nodes (which could be empty)
         """
-        access_level = (
-            krb_access.GLOBAL_ACCESS_LEVEL if access_level is None
-            else access_level)
-
         found_nodes = []
         pattern = node_id if use_reg_ex else f".*{re.escape(node_id)}"
         flags = 0 if case_sensitive else re.IGNORECASE
@@ -313,10 +296,9 @@ class DeviceSystemTree(HasStrictTraits):
 
         def visitor(node):
             parent_node = node.parent
-            parent_check = (parent_node is not None
-                            and parent_node.visibility > access_level)
-            if (node.visibility > access_level or parent_check):
-                # Do not look for nodes which are not visible or its parent
+            parent_check = parent_node is None
+            if parent_check:
+                # Do not look for nodes which are its parent
                 return
 
             matcher = regex.fullmatch if full_match else regex.match
