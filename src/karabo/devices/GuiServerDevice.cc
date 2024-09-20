@@ -414,7 +414,7 @@ namespace karabo {
                         "If client requests to 'reconfigure', 'execute' or 'requestGeneric' have a 'timeout' "
                         "specified, take in fact the maximum of that value and this one.")
                   .assignmentOptional()
-                  .defaultValue(10) // in 2.10.0, client has 5
+                  .defaultValue(5)
                   .reconfigurable()
                   .adminAccess()
                   .commit();
