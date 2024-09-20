@@ -135,11 +135,6 @@ class TestCase(GuiTestCase):
                 self.view.onKillInstance()
                 manager.shutdownDevice.assert_called_once()
 
-        docu = "karabogui.navigation.device_view.open_documentation_link"
-        with mock.patch(docu) as d:
-            self.view.onGetDocumenation()
-            d.assert_called_with("XFEL/FOO/2")
-
     def test_context_menu_device_view(self):
         pos = QPoint(0, 0)
         selection_tracker = mock.Mock()

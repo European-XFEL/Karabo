@@ -18,7 +18,6 @@ import html
 import os
 import os.path as op
 import re
-import webbrowser
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
@@ -307,33 +306,6 @@ def _get_invalid_chars(filename):
         invalid_regex = re.compile(r"[^a-zA-Z0-9\/\_\-]")
         invalid_chars = list(set(invalid_regex.findall(filename)))
     return invalid_chars
-
-
-def open_documentation_link(deviceId):
-    """Return the valid configuration link for a deviceId
-
-    NOTE: The respective karabo topic and deviceId must be provided
-    in the raw documentation template
-
-    :param deviceId: The deviceId of the instance
-    """
-    configuration = get_config()
-    web_link = configuration['documentation']
-
-    # XXX: The topic is lower case
-    topic = configuration['broker_topic'].lower()
-    # XXX: This configuration link can be edited. We protect ourselves here!
-    try:
-        url = web_link.format(topic=topic, deviceId=deviceId)
-    except KeyError:
-        messagebox.show_error("The documentation link is wrongly formatted:\n"
-                              "{}".format(web_link))
-        return
-
-    try:
-        webbrowser.open_new(url)
-    except webbrowser.Error:
-        messagebox.show_error("No web browser available!")
 
 
 def move_to_cursor(widget):
