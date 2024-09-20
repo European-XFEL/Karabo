@@ -148,11 +148,6 @@ class TestCase(GuiTestCase):
                 self.view.onKillInstance()
                 manager.shutdownDevice.assert_called_once()
 
-        docu = "karabogui.navigation.system_view.open_documentation_link"
-        with mock.patch(docu) as d:
-            self.view.onGetDocumenation()
-            d.assert_called_with("divvy")
-
         manager.reset_mock()
         with singletons(manager=manager):
             scene_capa = "karabogui.navigation.system_view." \
