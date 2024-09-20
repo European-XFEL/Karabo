@@ -51,7 +51,7 @@ from karabogui.request import (
     get_macro_from_server, get_scene_from_server, retrieve_default_scene)
 from karabogui.singletons.api import get_config, get_manager, get_topology
 from karabogui.topology.api import ProjectDeviceInstance
-from karabogui.util import move_to_cursor, open_documentation_link
+from karabogui.util import move_to_cursor
 
 from .bases import BaseProjectGroupController, ProjectControllerUiData
 from .server import DeviceServerController
@@ -164,9 +164,6 @@ class DeviceInstanceController(BaseProjectGroupController):
         about_action.triggered.connect(partial(self._about_device,
                                                parent=parent))
 
-        docu_action = QAction(icons.weblink, 'Documentation', menu)
-        docu_action.triggered.connect(self._get_documentation_device)
-
         up_action = QAction(icons.arrowFancyUp, 'Move Up', menu)
         up_action.triggered.connect(partial(self._move_up,
                                             project_controller))
@@ -192,7 +189,6 @@ class DeviceInstanceController(BaseProjectGroupController):
         menu.addAction(shutdown_action)
         menu.addSeparator()
         menu.addAction(about_action)
-        menu.addAction(docu_action)
         menu.addAction(up_action)
         menu.addAction(down_action)
 
@@ -518,10 +514,6 @@ class DeviceInstanceController(BaseProjectGroupController):
             devices.remove(device)
             devices.insert(new_index, device)
             server_model.devices.extend(devices)
-
-    def _get_documentation_device(self):
-        deviceId = self.model.instance_id
-        open_documentation_link(deviceId)
 
     def _add_configuration(self, project_controller, parent=None):
         device = self.model

@@ -34,7 +34,6 @@ from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.itemtypes import NavigationItemTypes
 from karabogui.request import get_scene_from_server
 from karabogui.singletons.api import get_manager, get_selection_tracker
-from karabogui.util import open_documentation_link
 from karabogui.widgets.popup import PopupWidget
 
 from .device_filter_model import DeviceFilterModel
@@ -111,10 +110,6 @@ class DeviceTreeView(QTreeView):
         self.ac_kill_device.setToolTip(text)
         self.ac_kill_device.triggered.connect(self.onKillInstance)
 
-        text = "Documentation"
-        self.ac_docu = QAction(icons.weblink, text, self)
-        self.ac_docu.triggered.connect(self.onGetDocumenation)
-
         self.menu.addAction(self.ac_config_past)
         self.menu.addAction(self.ac_config_name)
         self.menu.addSeparator()
@@ -122,7 +117,6 @@ class DeviceTreeView(QTreeView):
         self.menu.addAction(self.ac_open_device_scene)
         self.menu.addSeparator()
         self.menu.addAction(self.ac_about)
-        self.menu.addAction(self.ac_docu)
 
     def indexInfo(self, index=None):
         """Return the info about the index.
@@ -258,11 +252,6 @@ class DeviceTreeView(QTreeView):
         if node_type is NavigationItemTypes.DEVICE:
             deviceId = info.get('deviceId')
             manager.shutdownDevice(deviceId, parent=self)
-
-    @Slot()
-    def onGetDocumenation(self):
-        deviceId = self.indexInfo().get('deviceId')
-        open_documentation_link(deviceId)
 
     @Slot()
     def onDoubleClickHeader(self):
