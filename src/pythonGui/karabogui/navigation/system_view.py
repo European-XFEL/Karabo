@@ -412,11 +412,6 @@ class SystemTreeView(QTreeView):
             self.acAbout.setVisible(True)
             self.acTimeInformation.setVisible(False)
             self.mServerItem.exec(QCursor.pos())
-        elif node_type is NavigationItemTypes.CLASS:
-            self.acKillDevice.setVisible(False)
-            self.acAbout.setVisible(False)
-            self.acTimeInformation.setVisible(False)
-            self.mDeviceItem.exec(QCursor.pos())
         elif node_type is NavigationItemTypes.DEVICE:
             self.acKillDevice.setVisible(True)
             self.acKillDevice.setEnabled(enable_shutdown)
