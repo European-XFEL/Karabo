@@ -127,7 +127,6 @@ NETWORK = "network"
 PROJECT = "project"
 BACKBONE = "backbone"
 DIRECTORIES = "dir"
-DOCU = "https://rtd.xfel.eu/docs/deployed-controls-{topic}/en/latest/{deviceId}.html"  # noqa
 USER = "user"
 
 
@@ -166,8 +165,6 @@ class Configuration(QObject):
             might be wrong.
     """
     broker_topic = Item(q_set=False, group=BACKBONE)
-    documentation = Item(default=DOCU, q_set=False,
-                         group=BACKBONE)
 
     # ----------------------------------------------
     # Last directories stored and used

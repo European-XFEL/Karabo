@@ -42,7 +42,7 @@ from karabogui.singletons.api import (
 from karabogui.topology.api import is_device_online
 from karabogui.util import (
     get_reason_parts, load_configuration_from_file, move_to_cursor,
-    open_documentation_link, save_configuration_to_file)
+    save_configuration_to_file)
 from karabogui.widgets.popup import PopupWidget
 
 from .system_model import SystemTreeModel
@@ -186,14 +186,8 @@ class SystemTreeView(QTreeView):
 
         self.mDeviceItem.addSeparator()
 
-        text = "Documentation"
-        self.acDocu = QAction(icons.weblink, text, self)
-        self.acDocu.triggered.connect(self.onGetDocumenation)
-        self.acDocu.setVisible(False)  # Classes don't have documentation
-
         self.mDeviceItem.addAction(self.acTimeInformation)
         self.mDeviceItem.addAction(self.acAbout)
-        self.mDeviceItem.addAction(self.acDocu)
 
     def currentIndex(self):
         return self.model().currentIndex()
@@ -353,11 +347,6 @@ class SystemTreeView(QTreeView):
         call_device_slot(handler, instanceId, 'slotGetTime')
 
     @Slot()
-    def onGetDocumenation(self):
-        deviceId = self.indexInfo().get('deviceId')
-        open_documentation_link(deviceId)
-
-    @Slot()
     def onLoggerPriority(self):
         info = self.indexInfo()
         levels = ["DEBUG", "INFO", "WARN", "ERROR"]
@@ -421,7 +410,6 @@ class SystemTreeView(QTreeView):
             self.acKillDevice.setVisible(True)
             self.acKillDevice.setEnabled(enable_shutdown)
             self.acAbout.setVisible(True)
-            self.acDocu.setVisible(True)
             self.acTimeInformation.setVisible(True)
             has_scenes = _test_mask(info.get('capabilities', 0),
                                     Capabilities.PROVIDES_SCENES)
