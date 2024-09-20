@@ -18,6 +18,7 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 #############################################################################
 import json
+import socket
 from asyncio import CancelledError
 
 from tornado.httpclient import AsyncHTTPClient
@@ -39,6 +40,13 @@ STATUS_UP = "UP"
 STATUS_DOWN = "DOWN"
 STATUS_CHANGING = "CHANGING"
 WAIT_STATUS_POLLTIME = 1  # seconds
+
+
+def get_hostname_from_alias(host_alias):
+    """Get the hostname from the alias."""
+    ip_address = socket.gethostbyname(host_alias)
+    host_name = socket.getfqdn(ip_address).split(".")[0]
+    return host_name
 
 
 def get_table_row(entry):
@@ -216,9 +224,9 @@ class DaemonManager(Device):
 
     @slot
     async def requestNetwork(self, params):
-        """Fulfill a scene request from another device.
+        """ Fetch the network information of the given host.
 
-        :param params: A `Hash` containing the method parameters
+        :param params: A `Hash` containing the hostname.
         """
         host = params.get("host")
         payload = Hash("host", host, "network", Hash())
@@ -234,7 +242,13 @@ class DaemonManager(Device):
                 f"Network information not supported for {host}.")
         else:
             reply = json.loads(response.body)
-            payload["network"] = dictToHash(reply["network"])
+
+            # Extract the network info of the host
+            host_name = get_hostname_from_alias(host)
+            network_info = reply["network"][host_name]
+            host_info = Hash(host, dictToHash(network_info))
+            payload["network"] = host_info
+
         return Hash("type", "requestNetwork",
                     "origin", self.deviceId,
                     "payload", payload)
