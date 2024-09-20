@@ -33,14 +33,15 @@ from karabogui.binding.api import (
     apply_configuration, get_binding_value, validate_table_value,
     validate_value)
 from karabogui.configurator.api import ConfigurationTreeView
-from karabogui.dialogs.api import ConfigurationFromPastDialog
-from karabogui.dialogs.configuration_preview import ConfigPreviewDialog
+from karabogui.dialogs.api import (
+    ConfigPreviewDialog, ConfigurationFromPastDialog, DeviceSelectorDialog)
 from karabogui.events import (
     KaraboEvent, register_for_broadcasts, unregister_from_broadcasts)
 from karabogui.logger import get_logger
 from karabogui.singletons.api import get_manager
 from karabogui.util import (
-    get_spin_widget, load_configuration_from_file, save_configuration_to_file)
+    get_spin_widget, load_configuration_from_file, move_to_cursor,
+    save_configuration_to_file)
 from karabogui.widgets.toolbar import ToolBar
 
 from .base import BasePanelWidget
@@ -265,6 +266,14 @@ class ConfigurationPanel(BasePanelWidget):
         tb_history_config.setVisible(False)
         tb_history_config.clicked.connect(self._on_config_from_past)
 
+        text = "Compare Configuration"
+        tb_compare_config = QToolButton()
+        tb_compare_config.setIcon(icons.change)
+        tb_compare_config.setStatusTip(text)
+        tb_compare_config.setToolTip(text)
+        tb_compare_config.setVisible(False)
+        tb_compare_config.clicked.connect(self._on_compare_configuration)
+
         text = "Search Device Properties"
         tb_search_device = QToolButton()
         tb_search_device.setIcon(icons.zoomImage)
@@ -277,6 +286,7 @@ class ConfigurationPanel(BasePanelWidget):
         self.ui_open_config = toolbar.addWidget(tb_open_config)
         self.ui_save_config = toolbar.addWidget(tb_save_config)
         self.ui_history_config = toolbar.addWidget(tb_history_config)
+        self.ui_compare_config = toolbar.addWidget(tb_compare_config)
         self.ui_search_device = toolbar.addWidget(tb_search_device)
 
         return [toolbar]
@@ -537,6 +547,7 @@ class ConfigurationPanel(BasePanelWidget):
         allow_fetch_config = isinstance(proxy,
                                         (DeviceProxy, ProjectDeviceProxy))
         self.ui_history_config.setVisible(allow_fetch_config)
+        self.ui_compare_config.setVisible(allow_fetch_config and proxy.online)
 
     def _show_button_visibility(self, visible):
         """Show the configurator buttons depending of the `visible` parameter
@@ -771,6 +782,16 @@ class ConfigurationPanel(BasePanelWidget):
         dialog.show()
         dialog.raise_()
         dialog.activateWindow()
+
+    @Slot()
+    def _on_compare_configuration(self) -> None:
+        if not isinstance(self._showing_proxy,
+                          (DeviceProxy, ProjectDeviceProxy)):
+            return
+        device_id = self._showing_proxy.device_id
+        dialog = DeviceSelectorDialog(device_id, parent=self)
+        move_to_cursor(dialog)
+        dialog.show()
 
     # -----------------------------------------------------------------------
     # Qt
