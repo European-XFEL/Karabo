@@ -25,6 +25,8 @@
 #define KARABO_UTIL_TEST_EXPECTEDPARAMETERCLASSES_HH
 
 #include <boost/assign/std/vector.hpp> // for 'operator+=()'
+#include <karabo/util/AlarmConditionElement.hh>
+#include <karabo/util/AlarmConditions.hh>
 #include <karabo/util/ByteArrayElement.hh>
 #include <karabo/util/ChoiceElement.hh>
 #include <karabo/util/Configurator.hh>
@@ -35,6 +37,7 @@
 #include <karabo/util/PathElement.hh>
 #include <karabo/util/SimpleElement.hh>
 #include <karabo/util/State.hh>
+#include <karabo/util/StateElement.hh>
 #include <karabo/util/TableElement.hh>
 #include <karabo/util/VectorElement.hh>
 #include <karabo/util/karaboDll.hh>
@@ -508,6 +511,10 @@ namespace configurationTest {
         virtual ~OtherSchemaElements() {}
 
         static void expectedParameters(karabo::util::Schema& expected) {
+            ALARM_ELEMENT(expected).key("alarmCondition").initialValue(AlarmCondition::NONE).commit();
+
+            STATE_ELEMENT(expected).key("state").options(State::UNKNOWN, State::INIT, State::ON, State::ERROR).commit();
+
             SLOT_ELEMENT(expected)
                   .key("slotTest")
                   .displayedName("Reset")
