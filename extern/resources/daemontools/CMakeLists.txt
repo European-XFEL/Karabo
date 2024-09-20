@@ -17,21 +17,8 @@ file(CONFIGURE OUTPUT hassgprm.h CONTENT "#cmakedefine HASSIGPROCMASK\n")
 file(CONFIGURE OUTPUT hassgact.h CONTENT "#cmakedefine HASSIGACTION\n")
 file(CONFIGURE OUTPUT hasattribute.h CONTENT "#define HASATTRIBUTE\n")
 file(CONFIGURE OUTPUT haswaitp.h CONTENT "#cmakedefine HASWAITPID\n")
-
-try_run(CHKSHSGR_OUT DONTCARE SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/chkshsgr.c)
-try_run(TRYSHSGR_OUT DONTCARE SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/tryshsgr.c)
-if (${CHKSHSGR_OUT} OR ${TRYSHSGR_OUT})
-    configure_file(hasshsgr.h1 hasshsgr.h)
-else()
-    configure_file(hasshsgr.h2 hasshsgr.h)
-endif()
-
-try_run(TRYMEMRCHR_OUT DONTCARE SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/trymemrchr.c)
-if (${TRYMEMRCHR_OUT})
-    configure_file(hasmemrchr.h1 hasmemrchr.h)
-else()
-    configure_file(hasmemrchr.h2 hasmemrchr.h)
-endif()
+file(CONFIGURE OUTPUT hasshsgr.h CONTENT "/* do not define HASSHORTSETGROUPS */\n")
+file(CONFIGURE OUTPUT hasmemrchr.h CONTENT "#define HASMEMRCHR 1\n")
 
 try_run(TRYULONG64_OUT DONTCARE SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/tryulong64.c)
 if(${TRYULONG64_OUT})
@@ -68,7 +55,7 @@ file(READ svscanboot.sh SVSCANBOOT_2)
 file(CONFIGURE OUTPUT svscanboot CONTENT ${SVSCANBOOT_1}${SVSCANBOOT_2})
 install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/svscanboot TYPE BIN)
 
-add_compile_options(-Wall -Wshadow -Wcast-align -Wwrite-strings)
+add_compile_options(-Wall -Wshadow -Wcast-align -Wwrite-strings -Wno-implicit)
 
 file(GLOB_RECURSE byte_srcs CONFIGURE_DEPENDS
     byte_*.c
