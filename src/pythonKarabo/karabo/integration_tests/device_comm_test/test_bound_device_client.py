@@ -57,6 +57,29 @@ class TestDeviceClientComm(BoundDeviceTestCase):
                       'configuration', configuration or Hash())
         return self.dc.instantiate(serverId, config, timeout)
 
+    def test_mdl_schema(self):
+        # We test that the Schema functions work also for schema from MDL
+
+        server_mdl = 'MdlDeviceServer0'
+        devId = "propTestDeviceMdl"
+        self.start_server("mdl", server_mdl, ["PropertyTestMDL"])
+        self.instantiate_device(server_mdl, classId="PropertyTestMDL",
+                                deviceId=devId)
+
+        schema = self.dc.getDeviceSchema(devId)
+
+        # state and alarmCondition have "leafType" attribute,
+        # normal properties do not.
+        self.assertTrue(schema.isProperty("state"))
+        self.assertTrue(schema.isProperty("alarmCondition"))
+        self.assertTrue(schema.isProperty("boolProperty"))
+        self.assertFalse(schema.isProperty("slotClearLock"))
+
+        self.assertFalse(schema.isCommand("state"))
+        self.assertFalse(schema.isCommand("alarmCondition"))
+        self.assertFalse(schema.isCommand("boolProperty"))
+        self.assertTrue(schema.isCommand("slotClearLock"))
+
     def test_channel_monitor(self):
         channel = f'{self.data_device}:output'
         config = Hash('onSlowness', 'wait', 'dataDistribution', 'copy')
