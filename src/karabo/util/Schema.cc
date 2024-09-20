@@ -182,10 +182,8 @@ namespace karabo {
 
 
         bool Schema::isProperty(const std::string& path) const {
-            if (this->isLeaf(path) && m_hash.getAttribute<int>(path, KARABO_SCHEMA_LEAF_TYPE) == PROPERTY) return true;
-
-
-            else return false;
+            // Commands (Slots) are not leafs
+            return this->isLeaf(path);
         }
 
         //**********************************************

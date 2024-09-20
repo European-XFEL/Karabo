@@ -1829,11 +1829,15 @@ void Schema_Test::testGetLeaves() {
     h.set("filename", string("here"));
     h.set("testTable", vector<Hash>(3, Hash("a", -1, "b", "this_is a va|id string")));
     vector<string> leaves;
-    getLeaves(h, schema, leaves, '.');
+    getLeaves(h, schema, leaves, '.'); // from DataLogUtils
     CPPUNIT_ASSERT_EQUAL(std::string("shapeList.BizarreForm.length"), leaves[0]);
     CPPUNIT_ASSERT_EQUAL(std::string("filename"), leaves[1]);
     CPPUNIT_ASSERT_EQUAL(std::string("testTable"), leaves[2]);
     CPPUNIT_ASSERT_EQUAL(3ul, leaves.size());
+
+    // Hijack this to test isProperty here.
+    CPPUNIT_ASSERT(schema.isProperty("alarmCondition"));
+    CPPUNIT_ASSERT(schema.isProperty("state"));
 }
 
 
