@@ -46,7 +46,7 @@ def test_configuration_namespace():
     config['device_domain'] = 'CAS_INTERNAL'
     config['domain'] = 'CAS_INTERNAL'
     config['db_token'] = 'admin'
-    assert len(config) == 21
+    assert len(config) == 20
     assert config['db_token'] == 'admin'
     assert config['device_domain'] == 'CAS_INTERNAL'
     assert config['domain'] == 'CAS_INTERNAL'
@@ -58,7 +58,6 @@ def test_configuration_namespace():
         'db_token',
         'development',
         'device_domain',
-        'documentation',
         'domain',
         'gui_servers',
         'highDPI',
@@ -155,9 +154,8 @@ def test_configuration_groups_info():
     assert len(dir_group) == 1
     assert 'data_dir' in dir_group
     bone_group = [item.name for item in groups[BACKBONE]]
-    assert len(bone_group) == 2
+    assert len(bone_group) == 1
     assert 'broker_topic' in bone_group
-    assert 'documentation' in bone_group
 
     info = config.info()
     assert USER in info
