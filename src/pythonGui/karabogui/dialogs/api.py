@@ -18,6 +18,7 @@
 from .about import AboutDialog
 from .alarm_dialog import AlarmDialog
 from .client_topology import ClientTopologyDialog
+from .compare_device_configurations import DeviceSelectorDialog
 from .configuration import ConfigurationDialog
 from .configuration_comparison import ConfigComparisonDialog
 from .configuration_from_name import (
