@@ -4,8 +4,10 @@ from qtpy.QtWidgets import QCompleter, QDialog, QLineEdit
 from traits.api import Undefined
 
 from karabo.native import AccessMode, Hash, create_html_hash
+from karabogui import icons
 from karabogui.binding.api import (
-    BindingRoot, DeviceProxy, ProjectDeviceProxy, iterate_binding)
+    BindingRoot, DeviceProxy, ProjectDeviceProxy, get_config_changes,
+    iterate_binding)
 from karabogui.singletons.api import get_topology
 from karabogui.util import SignalBlocker
 
@@ -46,6 +48,7 @@ class CompareDeviceConfigurationsDialog(QDialog):
         self.target_device.setText(target_proxy.device_id)
         self._show_reference_config(reference_proxy.binding)
         self._show_target_config(target_proxy.binding)
+        self._load_differences()
 
         self.ui_synchronize_bars.toggled.connect(
             self._synchronize_toggled)
@@ -53,19 +56,65 @@ class CompareDeviceConfigurationsDialog(QDialog):
         self.ui_show_only_reconfigurable.toggled.connect(
             self._show_only_reconfigurable)
 
+        self._show_changes = False
+        self.ui_swap_button.setIcon(icons.change)
+        self.ui_swap_button.clicked.connect(self._show_only_changes)
+        self._show_only_changes()
+
     def _show_reference_config(self, binding: BindingRoot) -> None:
         all_config, reconfigurable_config = extract_configuration(binding)
         self.reference_all_config = create_html_hash(all_config)
         self.reference_configurable_config = create_html_hash(
             reconfigurable_config)
-        self.reference_device_config.setHtml(self.reference_all_config)
+        self.reference_all = all_config
+        self.reference_reconfigurable = reconfigurable_config
 
     def _show_target_config(self, binding: BindingRoot) -> None:
         all_config, reconfigurable_config = extract_configuration(binding)
         self.target_all_config = create_html_hash(all_config)
         self.target_reconfigurable_config = create_html_hash(
             reconfigurable_config)
-        self.target_device_config.setHtml(self.target_all_config)
+        self.target_all = all_config
+        self.target_reconfigurable = reconfigurable_config
+
+    def _load_differences(self) -> None:
+        """Store the difference between the configuration- full
+        configurations and reconfigurable configurations seperately."""
+        reference_all_diff, target_all_diff = get_config_changes(
+            self.reference_all, self.target_all, False)
+        self.reference_all_diff = create_html_hash(reference_all_diff)
+        self.target_all_diff = create_html_hash(target_all_diff)
+
+        ref_reconf_diff, target_reconf_diff = get_config_changes(
+            self.reference_reconfigurable, self.target_reconfigurable, False)
+        self.reference_reconfigurable_diff = create_html_hash(ref_reconf_diff)
+        self.target_reconfigurable_diff = create_html_hash(target_reconf_diff)
+
+    def _update_text(self) -> None:
+        """Update the text edit with appropriate configuration depending on
+        the state of options in the gui."""
+        reference = self.reference_all_config
+        target = self.target_all_config
+        if self._show_changes:
+            if self.ui_show_only_reconfigurable.isChecked():
+                reference = self.reference_reconfigurable_diff
+                target = self.target_reconfigurable_diff
+            else:
+                reference = self.reference_all_diff
+                target = self.target_all_diff
+        elif self.ui_show_only_reconfigurable.isChecked():
+            reference = self.reference_configurable_config
+            target = self.target_reconfigurable_config
+
+        self.reference_device_config.setHtml(reference)
+        self.target_device_config.setHtml(target)
+
+    @Slot()
+    def _show_only_changes(self) -> None:
+        self._show_changes = not self._show_changes
+        text = "Show Configuration" if self._show_changes else "Show Changes"
+        self.ui_swap_button.setText(text)
+        self._update_text()
 
     @Slot(bool)
     def _synchronize_toggled(self, toggled: bool) -> None:
@@ -93,13 +142,7 @@ class CompareDeviceConfigurationsDialog(QDialog):
 
     @Slot(bool)
     def _show_only_reconfigurable(self, toggled: bool) -> None:
-        reference_text = (self.reference_configurable_config if toggled
-                          else self.reference_all_config)
-        target_text = (self.target_reconfigurable_config if toggled
-                       else self.target_all_config)
-
-        self.reference_device_config.setHtml(reference_text)
-        self.target_device_config.setHtml(target_text)
+        self._update_text()
 
 
 class DeviceSelectorDialog(QDialog):
