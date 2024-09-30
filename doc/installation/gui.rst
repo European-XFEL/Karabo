@@ -8,11 +8,11 @@
 *******************
 
 KaraboGUI can now be installed in Windows, MacOS, and Ubuntu via ``conda``.
-Conda is a cross-platform package manager and dependency resolution tool which offers a very
-straightforward way to install packages and its dependencies.
+Conda is a cross-platform package manager and dependency resolution tool which offers a
+way to install python packages and its dependencies.
 
 In order to use Conda, three basic steps are needed:
-    1. Install Conda (through an Anaconda or Miniconda distribution);
+    1. Install Conda (through a `recommended conda installer<https://docs.desy.de/maxwell/documentation/licensing/conda_terms/>`_);
     2. Configure its channels;
     3. Install the desired package
 
@@ -21,9 +21,9 @@ Installing Conda
 
 The following steps are needed in order to obtain Conda.
 
-* Download and install miniconda (Python version >= 3) using the provided script `here <https://docs.conda.io/projects/miniconda/en/latest/#quick-command-line-install>`_,
+* Download and install miniconda (Python version >= 3) using the provided script `here <https://github.com/conda-forge/miniforge>`_,
   available for Linux, Mac, and Windows, to simplify the process and avoid manual downloads
-* Open your terminal (Anaconda Prompt on Windows or Bash on Linux or MacOS)
+* Open your terminal (Miniforge3 Prompt on Windows or Bash on Linux and MacOS)
 * If conda is in your path, you should be able to run **conda --version**
     * If it isn't, you need to activate conda first
         * **Linux/MacOS**: ``source <miniconda_path>/etc/profile.d/conda.sh``
@@ -39,6 +39,18 @@ Or add it to your ``.bashrc`` (or similar).
 Channel Configuration
 =====================
 
+The Conda packages of Karabo are currently only available in an internal conda channel
+and a few configuration steps are needed for `Conda` to find the right package.
+
+Also, please be aware of the licenses issues of the various channels as highlighted
+`here<https://docs.desy.de/maxwell/documentation/licensing/conda_terms/>`_
+and `here<https://mamba.readthedocs.io/en/latest/user_guide/troubleshooting.html#defaults-channels>`_.
+
+.. _framework/xfel_installation:
+
+Installations in the XFEL network or using the VPN (recommended)
+----------------------------------------------------------------
+
 For KaraboGUI, some package channels are needed besides Conda's defaults. You
 only need to do this once and it can be done either from command line or
 editting Conda's configuration file (``.condarc``).
@@ -51,26 +63,31 @@ From your terminal, add the needed channels executing the following commands::
 
 .. _framework/remote_installation:
 
-Remote installations
----------------------
+Remote installations using SSH tunneling
+----------------------------------------
 
-The channel ``http://exflctrl01.desy.de/karabo/channel`` is not open to
-the public until Karabo will be released. For this reason if one is installing
-from a network outside the DESY internal network, some SSH tunneling is needed.
-Two options exist (but should not be mixed):
+The channel ``http://exflctrl01.desy.de/karabo/channel`` is not reachable outside the
+XFEL office network. For this reason if one is installing from a network outside
+the DESY internal network and not using VPN, the connection can be established with
+an SSH tunnel.
 
-The first option is to create the tunnel to ``exflctrl01``
-(e.g. via ``ssh <user>@bastion.desy.de -L 8081:exflctrl01.desy.de:80``),
-and then configure
+In order to create the tunnel to ``exflctrl01``, one can open a terminal or `PuTTY`
+(e.g. via ``ssh <user>@bastion.desy.de -L 8081:exflctrl01.desy.de:80`` in Linux and MacOS
+and the equivalent for the PuTTY SSH client in Windows), and then configure
 the following channel definitions on your local machine (may be from a new terminal)::
 
     conda config --add channels http://localhost:8081/karabo/channel
     conda config --add channels http://localhost:8081/karabo/channel/mirror/conda-forge
 
-N.B. the two channel definitions are mutually exclusive. Remove the channels that
-are not reachable with the command::
+Please note that if you added the channels as instructed in :ref:`framework/xfel_installation`
+you will have to remove the channels for the internal network with the commands::
 
-    conda config --remove channels http://channel_to_be_removed
+    conda config --remove channels http://exflctrl01.desy.de/karabo/channel
+    conda config --remove channels http://exflctrl01.desy.de/karabo/channel/mirror/conda-forge
+
+
+Remote installations using dynamic SSH tunneling (SOCKS)
+--------------------------------------------------------
 
 The second option is to use a proxy and dynamic port forwarding, i.e.
 setup connection::
