@@ -77,7 +77,9 @@ class DeviceHandleDialog(QDialog):
             if add_config:
                 title = 'Add device configuration'
                 self.cbConfig.setEditable(True)
-                self.cbConfig.lineEdit().setFocus()
+                line_edit = self.cbConfig.lineEdit()
+                line_edit.setValidator(InputValidator(parent=self))
+                line_edit.setFocus()
 
                 # These widgets belong to a ``DeviceInstanceModel`` and
                 # should not be changed in case a configuration is added
