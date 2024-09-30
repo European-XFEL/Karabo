@@ -347,3 +347,34 @@ def extract_init_configuration(binding, config):
             ret[key] = value
 
     return ret
+
+
+def get_config_changes(old, new, project):
+    """Extract the changes of Hash `new` with respect to Hash `old`
+
+    :param project: Additional parameter denoting if this comparison is
+                    happening for a project device proxy
+    """
+    changes_old, changes_new = Hash(), Hash()
+
+    old_paths = old.paths(intermediate=False)
+    new_paths = new.paths(intermediate=False)
+
+    keys = sorted(set(old_paths).union(set(new_paths)))
+    for key in keys:
+        old_value = old.get(key, None)
+        new_value = new.get(key, None)
+        if isinstance(old_value, (bytes, bytearray)):
+            continue
+        if old_value is None and new_value is not None:
+            if not project:
+                changes_old[key] = "Missing from configuration"
+            changes_new[key] = new_value
+        elif old_value is not None and new_value is None:
+            changes_old[key] = old_value
+            changes_new[key] = "Removed from configuration"
+        elif has_changes(old_value, new_value):
+            changes_old[key] = old_value
+            changes_new[key] = new_value
+
+    return changes_old, changes_new
