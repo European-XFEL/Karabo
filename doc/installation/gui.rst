@@ -12,7 +12,7 @@ Conda is a cross-platform package manager and dependency resolution tool which o
 way to install python packages and its dependencies.
 
 In order to use Conda, three basic steps are needed:
-    1. Install Conda (through a `recommended conda installer <https://docs.desy.de/maxwell/documentation/licensing/conda_terms/>`_);
+    1. Install Conda (through a `recommended conda installer`_);
     2. Configure its channels;
     3. Install the desired package
 
@@ -21,7 +21,8 @@ Installing Conda
 
 The following steps are needed in order to obtain Conda.
 
-* Download and install miniconda (Python version >= 3) using the provided script `here <https://github.com/conda-forge/miniforge>`_,
+* Download and install miniforge (Python version >= 3), for example using the provided
+  script `here <https://github.com/conda-forge/miniforge>`_,
   available for Linux, Mac, and Windows, to simplify the process and avoid manual downloads
 * Open your terminal (Miniforge3 Prompt on Windows or Bash on Linux and MacOS)
 * If conda is in your path, you should be able to run **conda --version**
@@ -43,8 +44,8 @@ The Conda packages of Karabo are currently only available in an internal conda c
 and a few configuration steps are needed for `Conda` to find the right package.
 
 Also, please be aware of the licenses issues of the various channels as highlighted
-`here <https://docs.desy.de/maxwell/documentation/licensing/conda_terms/>`_
-and `here <https://mamba.readthedocs.io/en/latest/user_guide/troubleshooting.html#defaults-channels>`_.
+in this link `recommended conda installer`_
+and `here <https://mamba.readthedocs.io/en/latest/user_guide/troubleshooting.html#defaults-channels>`__.
 
 .. _framework/xfel_installation:
 
@@ -226,3 +227,5 @@ For that, to go `Settings -> Project: Framework -> Project Interpreter`. Go to
 ![Configure Conda Interpreter](./images/addinterpreter.png)
 
 After applying, your IDE will index everything and you're good to go.
+
+.. _recommended conda installer: https://docs.desy.de/maxwell/documentation/licensing/conda_terms/
