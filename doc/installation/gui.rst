@@ -12,7 +12,7 @@ Conda is a cross-platform package manager and dependency resolution tool which o
 way to install python packages and its dependencies.
 
 In order to use Conda, three basic steps are needed:
-    1. Install Conda (through a `recommended conda installer<https://docs.desy.de/maxwell/documentation/licensing/conda_terms/>`_);
+    1. Install Conda (through a `recommended conda installer <https://docs.desy.de/maxwell/documentation/licensing/conda_terms/>`_);
     2. Configure its channels;
     3. Install the desired package
 
@@ -43,8 +43,8 @@ The Conda packages of Karabo are currently only available in an internal conda c
 and a few configuration steps are needed for `Conda` to find the right package.
 
 Also, please be aware of the licenses issues of the various channels as highlighted
-`here<https://docs.desy.de/maxwell/documentation/licensing/conda_terms/>`_
-and `here<https://mamba.readthedocs.io/en/latest/user_guide/troubleshooting.html#defaults-channels>`_.
+`here <https://docs.desy.de/maxwell/documentation/licensing/conda_terms/>`_
+and `here <https://mamba.readthedocs.io/en/latest/user_guide/troubleshooting.html#defaults-channels>`_.
 
 .. _framework/xfel_installation:
 
