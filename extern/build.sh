@@ -16,6 +16,11 @@ OPENMQ_VERSION=5.1.3
 OPENMQC_VERSION=5.1.4.1
 NSS_VERSION=3.93
 
+declare -A CONAN_MIRRORS=(
+    ["GNU_DOGADO"]="http://mirror.dogado.de/gnu/"
+    ["GNU_FAU"]="http://ftp.fau.de/gnu"
+)
+
 ##############################################################################
 # Define a bunch of functions to be called later
 
@@ -88,6 +93,19 @@ safeRunCommandQuiet() {
     exec 3>&1
 }
 
+add_conan_mirrors() {
+    # Setup mirrors for conan to look for
+    for mirror in "${!CONAN_MIRRORS[@]}"; do
+        mirror_url="${CONAN_MIRRORS[$mirror]}"
+        if conan remote list | grep -q "$mirror_url"; then
+            echo "Remote $mirror is already added."
+        else
+            echo "Adding remote $mirror with URL $mirror_url"
+            safeRunCommandQuiet conan remote add "$mirror" "$mirror_url"
+        fi
+    done
+}
+
 install_python() {
     pushd $scriptDir
 
@@ -96,6 +114,7 @@ install_python() {
     # create default build profile
     safeRunCommandQuiet "conan profile detect --force"
 
+    add_conan_mirrors
     # configure prefix paths
     local folder_opts="--deployer=karabo_deployer --deployer-folder=$INSTALL_PREFIX --output-folder=$INSTALL_PREFIX/conan_toolchain"
     # build python if not found in conan cache
@@ -139,6 +158,7 @@ install_from_deps() {
         # create default build profile
         safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan profile detect --force"
 
+        add_conan_mirrors
         # export local conan recipes (for packages where no public recipe exists
         # we keep custom conan recipes in extern/resources/<pkg_name>)
         safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan export ./resources/daemontools/conanfile.py --name daemontools-encore --version $DAEMONTOOLS_VERSION --user karabo --channel $CONAN_RECIPE_CHANNEL"
