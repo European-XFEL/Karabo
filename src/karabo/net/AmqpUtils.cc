@@ -63,9 +63,6 @@ namespace karabo::net {
                 case AmqpCppErrc::eCreateConsumerError:
                     return "error creating consumer";
 
-                case AmqpCppErrc::eConsumerCancelError:
-                    return "error cancelling consumer";
-
                 case AmqpCppErrc::eUnbindQueueError:
                     return "error unbinding queue";
 
@@ -90,10 +87,5 @@ namespace karabo::net {
     }
 
     //----- https://akrzemi1.wordpress.com/2017/07/12/your-own-error-code/ -----^
-
-
-    //------------------------------------------------------------------------------------ ConnectionHandler
-    ConnectionHandler::ConnectionHandler(boost::asio::io_context& ctx) : AMQP::LibBoostAsioHandler(ctx) {}
-
 
 } // namespace karabo::net

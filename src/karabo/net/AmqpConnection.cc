@@ -40,6 +40,8 @@ namespace karabo {
 
     namespace net {
 
+        ConnectionHandler::ConnectionHandler(boost::asio::io_context& ctx) : AMQP::LibBoostAsioHandler(ctx) {}
+
         AmqpConnection::AmqpConnection(std::vector<std::string> urls)
             : m_urls(std::move(urls)),
               m_urlIndex(0),
