@@ -361,14 +361,12 @@ void exportPyNetConnectionChannel(py::module_& m) {
 }
 
 #include <karabo/net/AmqpBroker.hh>
-#include <karabo/net/AmqpClient.hh>
 #include <karabo/net/InfluxDbClient.hh>
 #include <karabo/net/JmsBroker.hh>
 #include <karabo/net/JmsConnection.hh>
 #include <karabo/net/Strand.hh>
 #include <karabo/net/TcpConnection.hh>
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::net::Broker, karabo::net::AmqpBroker)
-KARABO_REGISTER_FOR_CONFIGURATION_ADDON(AMQP::Table, karabo::net::AmqpClient)
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::net::InfluxDbClient)
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::net::JmsConnection)
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::net::Broker, karabo::net::JmsBroker)
