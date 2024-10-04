@@ -410,7 +410,8 @@ class EventLoop(SelectorEventLoop):
 
     def something_changed(self):
         for future in self.changedFutures:
-            future.set_result(None)
+            if not future.done():
+                future.set_result(None)
         self.changedFutures = set()
 
     def sync(self, coro, timeout, wait):
