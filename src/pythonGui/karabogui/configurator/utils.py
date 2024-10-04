@@ -95,18 +95,17 @@ def dragged_configurator_items(proxies):
 
 def get_child_names(proxy):
     """Return all the names of a proxy's accessible children."""
-    ret = []
     binding = proxy.binding
-    if isinstance(binding, RECURSIVE_BINDING):
-        level = krb_access.GLOBAL_ACCESS_LEVEL
-        ret = binding.children_names.get(level, [])
-        # lazily cache visible children names
-        if len(ret) == 0:
-            for name in binding.value:
-                node = getattr(binding.value, name)
-                if node.required_access_level <= level:
-                    ret.append(name)
-            binding.children_names[level] = ret
+    if not isinstance(binding, RECURSIVE_BINDING):
+        return []
+
+    level = krb_access.GLOBAL_ACCESS_LEVEL
+    ret = binding.children_names.get(level, None)
+    # lazily cache visible children names
+    if ret is None:
+        ret = [name for name in binding.value if
+               getattr(binding.value, name).required_access_level <= level]
+        binding.children_names[level] = ret
 
     return ret
 
