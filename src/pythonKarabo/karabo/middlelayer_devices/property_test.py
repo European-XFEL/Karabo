@@ -538,7 +538,9 @@ class PropertyTestMDL(Device):
                 delay = 1 / self.outputFrequency.value
                 # Adjust the delay by what it took to send data
                 delay = max(0., delay - (time.time() - before))
-                await sleep(delay)
+                # Cast since with numpy 2.0.1 delay is np.float32 and that
+                # causes extra delay (with numpy 2.0.1).
+                await sleep(float(delay))
             except CancelledError:
                 self.state = State.NORMAL
                 self.acquiring_task = None
