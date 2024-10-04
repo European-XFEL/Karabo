@@ -150,7 +150,7 @@ namespace karabo::net {
         }
     };
 
-    class AmqpClient2;
+    class AmqpClient;
     /**
      * AmqpConnection
      *
@@ -239,7 +239,7 @@ namespace karabo::net {
         /**
          * Register client to be informed about re-established connection after connection loss
          */
-        void registerForReconnectInfo(boost::weak_ptr<AmqpClient2> client);
+        void registerForReconnectInfo(boost::weak_ptr<AmqpClient> client);
 
         /**
          * Clean clients registered to receive reconnect info, i.e. remove all dangling weak pointers
@@ -323,7 +323,7 @@ namespace karabo::net {
         std::vector<ChannelCreationHandler> m_pendingOnChannelCreations;
 
         /// Track clients to inform about reconnections
-        std::set<boost::weak_ptr<AmqpClient2>> m_registeredClients; // registered to get informed about reconenctions
+        std::set<boost::weak_ptr<AmqpClient>> m_registeredClients; // registered to get informed about reconenctions
         std::unique_ptr<std::minstd_rand0> m_random;
     };
 } // namespace karabo::net
