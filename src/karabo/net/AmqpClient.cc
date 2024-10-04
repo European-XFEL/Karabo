@@ -16,7 +16,7 @@
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#include "AmqpClient2.hh"
+#include "AmqpClient.hh"
 
 #include <amqpcpp.h>
 
@@ -29,8 +29,8 @@ using boost::placeholders::_1;
 
 namespace karabo::net {
 
-    AmqpClient2::AmqpClient2(AmqpConnection::Pointer connection, std::string instanceId, AMQP::Table queueArgs,
-                             ReadHandler readHandler)
+    AmqpClient::AmqpClient(AmqpConnection::Pointer connection, std::string instanceId, AMQP::Table queueArgs,
+                           ReadHandler readHandler)
         : m_connection(std::move(connection)),
           m_instanceId(std::move(instanceId)),
           m_queue(m_instanceId),
@@ -39,7 +39,7 @@ namespace karabo::net {
           m_channel(),
           m_channelStatus(ChannelStatus::REQUEST) {}
 
-    AmqpClient2::~AmqpClient2() {
+    AmqpClient::~AmqpClient() {
         // Call remaining handlers with operation_cancelled indicator - in io context as promised.
         // Better use that io context also for AMQP::Channel since AMQP library is not thread safe.
         // (AMQP::Table seems to be safe. If not, we should use shared_ptr and reset that.)
@@ -76,7 +76,7 @@ namespace karabo::net {
         future.wait();
     }
 
-    void AmqpClient2::setReadHandler(ReadHandler readHandler) {
+    void AmqpClient::setReadHandler(ReadHandler readHandler) {
         if (!readHandler) throw KARABO_PARAMETER_EXCEPTION("Read handler must be valid");
 
         // To avoid concurrency with incoming messages, setting the read handler has to detour via io context thread
@@ -89,8 +89,8 @@ namespace karabo::net {
         fut.wait();
     }
 
-    void AmqpClient2::asyncSubscribe(const std::string& exchange, const std::string& routingKey,
-                                     AsyncHandler onSubscriptionDone) {
+    void AmqpClient::asyncSubscribe(const std::string& exchange, const std::string& routingKey,
+                                    AsyncHandler onSubscriptionDone) {
         // Ensure to run in single threaded io context - no concurrency problems!
         // We post and do not dispatch to ensure that also in the most normal case (ChannelStatus::READY below) the
         // onSubscriptionDone inside doSubscribePending does not need posting and still the guarantee holds that it
@@ -121,7 +121,7 @@ namespace karabo::net {
                     onSubscriptionDone(KARABO_ERROR_CODE_SUCCESS);
                 } else if (it->second.status > SubscriptionStatus::READY) {
                     // There is an ongoing unsubscription. Attach a repost of this to its handler
-                    auto subscribeAgain = util::bind_weak(&AmqpClient2::asyncSubscribe, this, exchange, routingKey,
+                    auto subscribeAgain = util::bind_weak(&AmqpClient::asyncSubscribe, this, exchange, routingKey,
                                                           std::move(onSubscriptionDone));
                     auto patchedOnUnsubDone =
                           [previousOnSubDone{std::move(it->second.onSubscription)},
@@ -142,7 +142,7 @@ namespace karabo::net {
                 case ChannelStatus::REQUEST: {
                     // request preparation of channel and then subscribe all (then) pending subscriptions
                     m_channelStatus = ChannelStatus::CREATE;
-                    asyncPrepareChannel(util::bind_weak(&AmqpClient2::doSubscribePending, this, _1));
+                    asyncPrepareChannel(util::bind_weak(&AmqpClient::doSubscribePending, this, _1));
                     break;
                 }
                 case ChannelStatus::CREATE:
@@ -158,8 +158,8 @@ namespace karabo::net {
         });
     }
 
-    void AmqpClient2::asyncUnsubscribe(const std::string& exchange, const std::string& routingKey,
-                                       AsyncHandler onUnsubscriptionDone) {
+    void AmqpClient::asyncUnsubscribe(const std::string& exchange, const std::string& routingKey,
+                                      AsyncHandler onUnsubscriptionDone) {
         // Ensure to run in single threaded io context - no concurrency problems!
         m_connection->post([weakThis{weak_from_this()}, this, exchange, routingKey,
                             onUnsubscriptionDone{std::move(onUnsubscriptionDone)}]() mutable {
@@ -178,7 +178,7 @@ namespace karabo::net {
 
             if (it->second.status != SubscriptionStatus::READY) {
                 // Not yet connected or being unsubscribed: try again once READY or removed from subscriptions
-                auto unsubscribeAgain = util::bind_weak(&AmqpClient2::asyncUnsubscribe, this, exchange, routingKey,
+                auto unsubscribeAgain = util::bind_weak(&AmqpClient::asyncUnsubscribe, this, exchange, routingKey,
                                                         std::move(onUnsubscriptionDone));
                 auto patchedOnDone =
                       [previousOnDone{std::move(it->second.onSubscription)},
@@ -197,7 +197,7 @@ namespace karabo::net {
         });
     }
 
-    void AmqpClient2::asyncUnsubscribeAll(AsyncHandler onUnsubscriptionsDone) {
+    void AmqpClient::asyncUnsubscribeAll(AsyncHandler onUnsubscriptionsDone) {
         m_connection->dispatch([weakThis{weak_from_this()}, onUnsubscriptionsDone{std::move(onUnsubscriptionsDone)}]() {
             if (auto self = weakThis.lock()) {
                 // Prepare handler for each subscription 'i': If last unsubscriptions is handled (all done flags are
@@ -239,8 +239,8 @@ namespace karabo::net {
     }
 
 
-    void AmqpClient2::asyncPublish(const std::string& exchange, const std::string& routingKey,
-                                   const std::shared_ptr<std::vector<char>>& data, AsyncHandler onPublishDone) {
+    void AmqpClient::asyncPublish(const std::string& exchange, const std::string& routingKey,
+                                  const std::shared_ptr<std::vector<char>>& data, AsyncHandler onPublishDone) {
         // Ensure to run in single threaded io context (=> no concurrency problems!).
         // We post and do not dispatch to ensure that also in the most normal case (ChannelStatus::READY below)
         // the onPublishDone does not need posting and still the guarantee holds that it is not called from within
@@ -298,7 +298,7 @@ namespace karabo::net {
     }
 
 
-    void AmqpClient2::reviveIfReconnected() {
+    void AmqpClient::reviveIfReconnected() {
         if (m_channelPreparationCallback) { // Not sure whether/how that can happen
             KARABO_LOG_FRAMEWORK_WARN << m_instanceId
                                       << ": Resubscribe will call old channel creation callback with cancelled error";
@@ -389,7 +389,7 @@ namespace karabo::net {
     }
 
 
-    void AmqpClient2::asyncDeclareExchangeThenPublish(const std::string& exchange) {
+    void AmqpClient::asyncDeclareExchangeThenPublish(const std::string& exchange) {
         // If exchange does not exist, channel->publish(..) returns true, but the channel is
         // not usable afterwards (slightly silly library interface, I'd say).
         m_exchanges[exchange] = ExchangeStatus::DECLARING;
@@ -417,8 +417,8 @@ namespace karabo::net {
     }
 
 
-    void AmqpClient2::doPublish(const std::string& exchange, const std::string& routingKey,
-                                const std::shared_ptr<std::vector<char>>& data, const AsyncHandler& onPublishDone) {
+    void AmqpClient::doPublish(const std::string& exchange, const std::string& routingKey,
+                               const std::shared_ptr<std::vector<char>>& data, const AsyncHandler& onPublishDone) {
         // The envelope just stores pointer and size so one might wonder about data lifetime (and there is no
         // callback!). But since there is a publish method that takes the data as a 'const std::string&' that internally
         // creates an envelope as we do here from vector<char>, one can assume that (unfortunately) the data is copied
@@ -438,7 +438,7 @@ namespace karabo::net {
     }
 
 
-    void AmqpClient2::queueMessage(PostponedMessage&& message) {
+    void AmqpClient::queueMessage(PostponedMessage&& message) {
         const size_t numPostponed = m_postponedPubMessages.size();
         if (0 == numPostponed) {
             KARABO_LOG_FRAMEWORK_WARN << m_instanceId << ": Start postponing messages since disconnected";
@@ -455,7 +455,7 @@ namespace karabo::net {
     }
 
 
-    void AmqpClient2::publishPostponed() {
+    void AmqpClient::publishPostponed() {
         while (!m_postponedPubMessages.empty()) {
             PostponedMessage& postponedMsg = m_postponedPubMessages.front();
             auto itExchange = m_exchanges.find(postponedMsg.exchange);
@@ -484,7 +484,7 @@ namespace karabo::net {
         }
     }
 
-    void AmqpClient2::asyncPrepareChannel(AsyncHandler onChannelPrepared) {
+    void AmqpClient::asyncPrepareChannel(AsyncHandler onChannelPrepared) {
         if (m_channelStatus != ChannelStatus::CREATE) {
             KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << ".asyncPrepareChannel called in status "
                                        << static_cast<int>(m_channelStatus) << ", so fails.";
@@ -514,7 +514,7 @@ namespace karabo::net {
         });
     }
 
-    void AmqpClient2::moveChannelState() {
+    void AmqpClient::moveChannelState() {
         auto wSelf(weak_from_this());
 
         switch (m_channelStatus) {
@@ -641,7 +641,7 @@ namespace karabo::net {
         }
     }
 
-    void AmqpClient2::doSubscribePending(const boost::system::error_code& ec) {
+    void AmqpClient::doSubscribePending(const boost::system::error_code& ec) {
         if (ec && m_subscriptions.empty()) { // If not empty, will see logs below (but how can it be empty?).
             KARABO_LOG_FRAMEWORK_ERROR << m_instanceId
                                        << ": Subscribing failed since channel preparation failed: " << ec.message();
@@ -666,7 +666,7 @@ namespace karabo::net {
         }
     }
 
-    void AmqpClient2::moveSubscriptionState(const std::string& exchange, const std::string& routingKey) {
+    void AmqpClient::moveSubscriptionState(const std::string& exchange, const std::string& routingKey) {
         auto it = m_subscriptions.find({exchange, routingKey});
         if (it == m_subscriptions.end()) { // Should not happen!
             KARABO_LOG_FRAMEWORK_WARN << "Moving subscription state for exchange " << exchange << " and routingKey "
