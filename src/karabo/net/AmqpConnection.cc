@@ -25,7 +25,7 @@
 
 #include <boost/asio/deadline_timer.hpp>
 
-#include "AmqpClient2.hh"
+#include "AmqpClient.hh"
 #include "AmqpUtils.hh" // for ConnectionHandler, KARABO_ERROR_CODE_XXX
 #include "karabo/log/Logger.hh"
 #include "karabo/util/Exception.hh"
@@ -490,7 +490,7 @@ namespace karabo {
             }
         }
 
-        void AmqpConnection::registerForReconnectInfo(boost::weak_ptr<AmqpClient2> client) {
+        void AmqpConnection::registerForReconnectInfo(boost::weak_ptr<AmqpClient> client) {
             dispatch([weakThis{weak_from_this()}, client{std::move(client)}]() {
                 // std::set takes care that client is registered only once
                 if (auto self = weakThis.lock()) self->m_registeredClients.emplace(std::move(client));
