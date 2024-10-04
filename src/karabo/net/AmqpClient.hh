@@ -22,8 +22,8 @@
  * Created on April 3, 2024
  */
 
-#ifndef KARABO_NET_AMQPCLIENT2_HH
-#define KARABO_NET_AMQPCLIENT2_HH
+#ifndef KARABO_NET_AMQPCLIENT_HH
+#define KARABO_NET_AMQPCLIENT_HH
 
 #include <amqpcpp.h>
 
@@ -59,9 +59,9 @@ namespace karabo::net {
      * "shared" among all clients connected to the same broker.
      *
      */
-    class AmqpClient2 : public boost::enable_shared_from_this<AmqpClient2> {
+    class AmqpClient : public boost::enable_shared_from_this<AmqpClient> {
        public:
-        KARABO_CLASSINFO(AmqpClient2, "AmqpClient2", "2.0")
+        KARABO_CLASSINFO(AmqpClient, "AmqpClient", "3.0")
 
         /** Channel status tells what should be the next step to do in channel preparation */
         enum class ChannelStatus { REQUEST, CREATE, CREATE_QUEUE, CREATE_CONSUMER, READY };
@@ -83,10 +83,10 @@ namespace karabo::net {
          * @param readHandler a read handler for all received messages
          *                    (if an invalid function, must call setReadHandler before the first subscription)
          */
-        AmqpClient2(AmqpConnection::Pointer connection, std::string instanceId, AMQP::Table queueArgs,
-                    ReadHandler readHandler);
+        AmqpClient(AmqpConnection::Pointer connection, std::string instanceId, AMQP::Table queueArgs,
+                   ReadHandler readHandler);
 
-        virtual ~AmqpClient2();
+        virtual ~AmqpClient();
 
         /**
          * (Re-)set the read handler that will be called for all received messages
@@ -232,8 +232,8 @@ namespace karabo::net {
 
         std::unordered_map<std::string, ExchangeStatus> m_exchanges; // known exchanges and their status
 
-    }; // AmqpClient2
+    }; // AmqpClient
 
 } // namespace karabo::net
 
-#endif /* KARABO_NET_AMQPCLIENT2_HH */
+#endif /* KARABO_NET_AMQPCLIENT_HH */
