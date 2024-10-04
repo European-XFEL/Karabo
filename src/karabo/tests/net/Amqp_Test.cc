@@ -29,7 +29,7 @@
 #include <mutex>
 
 #include "karabo/log/Logger.hh"
-#include "karabo/net/AmqpClient2.hh"
+#include "karabo/net/AmqpClient.hh"
 #include "karabo/net/AmqpConnection.hh"
 #include "karabo/net/AmqpHashClient.hh"
 #include "karabo/net/Broker.hh"
@@ -359,8 +359,8 @@ void Amqp_Test::testClient() {
     // To avoid interference of different test runs, any exchange and queue (i.e. nominal client instanceId) are
     // prefixed with broker domain (i.e. Karabo topic)
     const std::string prefix = net::Broker::brokerDomainFromEnv() += ".";
-    net::AmqpClient2::Pointer bob(
-          boost::make_shared<net::AmqpClient2>(connection, prefix + "bob", AMQP::Table(), readHandlerBob));
+    net::AmqpClient::Pointer bob(
+          boost::make_shared<net::AmqpClient>(connection, prefix + "bob", AMQP::Table(), readHandlerBob));
 
     // In parallel subscribe twice while channel is created under the hood
     auto subDone1 = std::make_shared<std::promise<boost::system::error_code>>();
@@ -407,8 +407,8 @@ void Amqp_Test::testClient() {
     auto numReadAlice = std::make_shared<std::atomic<int>>(0);
     auto readHandlerAlice = [numReadAlice](const std::shared_ptr<std::vector<char>>& data, const std::string& exchange,
                                            const std::string& routingKey) { ++(*numReadAlice); };
-    net::AmqpClient2::Pointer alice(
-          boost::make_shared<net::AmqpClient2>(connection, prefix + "alice", AMQP::Table(), readHandlerAlice));
+    net::AmqpClient::Pointer alice(
+          boost::make_shared<net::AmqpClient>(connection, prefix + "alice", AMQP::Table(), readHandlerAlice));
 
     std::vector<std::future<boost::system::error_code>> publishFutures;
     for (size_t i = 0; i < 5; ++i) {
@@ -488,7 +488,7 @@ void Amqp_Test::testClient() {
     CPPUNIT_ASSERT_EQUAL(1, numReadAlice->load()); // as before
 
     // Cannot set an invalid read handler
-    CPPUNIT_ASSERT_THROW(alice->setReadHandler(net::AmqpClient2::ReadHandler()), karabo::util::ParameterException);
+    CPPUNIT_ASSERT_THROW(alice->setReadHandler(net::AmqpClient::ReadHandler()), karabo::util::ParameterException);
 
     //***************************************************************
     // Now test unsubscribing
@@ -613,15 +613,15 @@ void Amqp_Test::testClientConcurrentSubscripts() {
 
     const std::string prefix = net::Broker::brokerDomainFromEnv() += ".";
     auto readCount = std::make_shared<std::atomic<int>>(0);
-    net::AmqpClient2::ReadHandler readerBob([readCount](const std::shared_ptr<std::vector<char>>& data,
-                                                        const std::string& exch,
-                                                        const std::string& key) { ++(*readCount); });
-    net::AmqpClient2::Pointer bob(
-          boost::make_shared<net::AmqpClient2>(connection, prefix + "bob", AMQP::Table(), readerBob));
+    net::AmqpClient::ReadHandler readerBob([readCount](const std::shared_ptr<std::vector<char>>& data,
+                                                       const std::string& exch,
+                                                       const std::string& key) { ++(*readCount); });
+    net::AmqpClient::Pointer bob(
+          boost::make_shared<net::AmqpClient>(connection, prefix + "bob", AMQP::Table(), readerBob));
     const std::string exchange(prefix + "exchange");
 
     // Many subsequent subscriptions of the same, intermangled with an unsubscriptions and some sleeps in between:
-    // This triggers the different code paths in AmqpClient2::asyncSubscribe for already existing subscriptions.
+    // This triggers the different code paths in AmqpClient::asyncSubscribe for already existing subscriptions.
     const size_t nSubscriptions = 200;
     auto subPromises = std::make_shared<std::vector<std::promise<boost::system::error_code>>>();
     std::vector<std::future<boost::system::error_code>> subFutures;
@@ -685,8 +685,8 @@ void Amqp_Test::testClientSameId() {
     auto bobReadFut = bobReadDone->get_future();
     auto readHandlerBob = [bobReadDone](const std::shared_ptr<std::vector<char>>& data, const std::string& exchange,
                                         const std::string& routingKey) { bobReadDone->set_value(data); };
-    net::AmqpClient2::Pointer bob(
-          boost::make_shared<net::AmqpClient2>(connection, prefix + "bob", AMQP::Table(), readHandlerBob));
+    net::AmqpClient::Pointer bob(
+          boost::make_shared<net::AmqpClient>(connection, prefix + "bob", AMQP::Table(), readHandlerBob));
 
     auto bobSubDone = std::make_shared<std::promise<boost::system::error_code>>();
     auto bobSubFut = bobSubDone->get_future();
@@ -702,8 +702,8 @@ void Amqp_Test::testClientSameId() {
     auto bob2ReadFut = bob2ReadDone->get_future();
     auto readHandlerBob2 = [bob2ReadDone](const std::shared_ptr<std::vector<char>>& data, const std::string& exchange,
                                           const std::string& routingKey) { bob2ReadDone->set_value(data); };
-    net::AmqpClient2::Pointer bob2( // Same id (prefix + "bob") as above!
-          boost::make_shared<net::AmqpClient2>(connection, prefix + "bob", AMQP::Table(), readHandlerBob2));
+    net::AmqpClient::Pointer bob2( // Same id (prefix + "bob") as above!
+          boost::make_shared<net::AmqpClient>(connection, prefix + "bob", AMQP::Table(), readHandlerBob2));
 
     auto bob2SubDone = std::make_shared<std::promise<boost::system::error_code>>();
     auto bob2SubFut = bob2SubDone->get_future();
@@ -732,14 +732,14 @@ void Amqp_Test::testClientSameId() {
     const int numClients = 20;
 
     // First create the clients
-    std::vector<net::AmqpClient2::Pointer> clients;
+    std::vector<net::AmqpClient::Pointer> clients;
     auto receivedFlags = std::make_shared<std::vector<std::atomic<int>>>(numClients);
     for (int i = 0; i < numClients; ++i) {
         auto readHandler = [i, receivedFlags](const std::shared_ptr<std::vector<char>>& data,
                                               const std::string& exchange,
                                               const std::string& routingKey) { ++(receivedFlags->at(i)); };
         clients.push_back(
-              boost::make_shared<net::AmqpClient2>(connection, prefix + "alice", AMQP::Table(), readHandler));
+              boost::make_shared<net::AmqpClient>(connection, prefix + "alice", AMQP::Table(), readHandler));
     }
 
     // Now let them all subscribe (and thus create channel, queue and consumer) in parallel
@@ -793,11 +793,11 @@ void Amqp_Test::testClientUnsubscribeAll() {
 
     const std::string prefix = net::Broker::brokerDomainFromEnv() += ".";
     auto readCount = std::make_shared<std::atomic<size_t>>(0);
-    net::AmqpClient2::ReadHandler readerBob([readCount](const std::shared_ptr<std::vector<char>>& data,
-                                                        const std::string& exch,
-                                                        const std::string& key) { ++(*readCount); });
-    net::AmqpClient2::Pointer bob(
-          boost::make_shared<net::AmqpClient2>(connection, prefix + "bob", AMQP::Table(), readerBob));
+    net::AmqpClient::ReadHandler readerBob([readCount](const std::shared_ptr<std::vector<char>>& data,
+                                                       const std::string& exch,
+                                                       const std::string& key) { ++(*readCount); });
+    net::AmqpClient::Pointer bob(
+          boost::make_shared<net::AmqpClient>(connection, prefix + "bob", AMQP::Table(), readerBob));
     const std::string exchange(prefix + "exchange");
 
     const size_t nSubscriptions = 20;
@@ -933,8 +933,8 @@ void Amqp_Test::testHashClient() {
 
     // Test sending something that fails (e.g. cannot be deserialised)
     // Create a rawbob to send binary data - no need for a read handler
-    net::AmqpClient2::Pointer rawBob(boost::make_shared<net::AmqpClient2>(connection, prefix + "rawbob", AMQP::Table(),
-                                                                          net::AmqpClient2::ReadHandler()));
+    net::AmqpClient::Pointer rawBob(boost::make_shared<net::AmqpClient>(connection, prefix + "rawbob", AMQP::Table(),
+                                                                        net::AmqpClient::ReadHandler()));
     CPPUNIT_ASSERT_EQUAL(0, readErrorNumber->load()); // no error yet
     rawBob->asyncPublish(prefix + "hashExchange", "alice", std::make_shared<std::vector<char>>(100, 'r'),
                          [](const boost::system::error_code ec) {});

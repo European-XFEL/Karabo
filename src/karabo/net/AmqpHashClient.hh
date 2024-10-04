@@ -27,7 +27,7 @@
 
 #include <string>
 
-#include "AmqpClient2.hh"
+#include "AmqpClient.hh"
 #include "AmqpConnection.hh"
 #include "Strand.hh"
 #include "karabo/io/BinarySerializer.hh"
@@ -37,7 +37,7 @@
 namespace karabo::net {
 
     /**
-     * @brief Class that wraps around AmqpClient2 to provide a message interface with Hash header and body
+     * @brief Class that wraps around AmqpClient to provide a message interface with Hash header and body
      *
      * Deserialisation of incoming messages is done via a karabo::net::Strand,
      * i.e. a running karabo::net::EventLoop is needed.
@@ -127,7 +127,7 @@ namespace karabo::net {
         void deserialize(const std::shared_ptr<std::vector<char>>& data, const std::string& exchange,
                          const std::string& routingKey);
 
-        AmqpClient2::Pointer m_rawClient;
+        AmqpClient::Pointer m_rawClient;
 
         karabo::io::BinarySerializer<util::Hash>::Pointer m_serializer;
         karabo::net::Strand::Pointer m_deserializeStrand;
