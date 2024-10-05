@@ -321,6 +321,11 @@ class TestCase(GuiTestCase):
         device_index = self.system_model.index(0, 0, class_index)
         assert device_index.data() == "divvy"
 
+    def test_find_nodes(self):
+        """Test that we can find a node"""
+        node = self.model.findNodes("divvy")
+        assert len(node)
+
     # ------------------------------------------------------------
     # Filter test
 
