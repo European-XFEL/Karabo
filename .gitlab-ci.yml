@@ -613,6 +613,18 @@ internal_mirror_publish:
     - cd FrameworkMirror
     - git-filter-repo --invert-paths --path src/environment.in/KARABO_BROKER
     - git-filter-repo --strip-blobs-bigger-than 100M
+    # in the conversion from SVN to git, email addresses were not correctly preserved,
+    # rather we have, username@some-uuid-token. Here we map known users to correct email
+    # addresses. Since the commits affected by this are all long in the past, a static definition
+    # of the mapping suffices.
+    - |
+      git-filter-repo --email-callback 'import yaml;
+        f=open('$PWD/../contriboptouts/karabo-svn-fixer.yaml');
+        mapping=yaml.safe_load(f);
+        f.close();
+        user, _ = email.decode().split('@');
+        return mapping.get(user, email.decode()).encode()'
+    # we filter mails now
     - git-filter-repo --mailmap ../contriboptouts/karabo-mailmap
     # As git-filter-repo for safety reasons removes the "origin" remote, we set again the new remote,
     # "internal_mirror" (a remote with the same name had been defined a few steps back, but for another local).
