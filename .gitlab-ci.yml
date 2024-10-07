@@ -619,11 +619,11 @@ internal_mirror_publish:
     # of the mapping suffices.
     - |
       git-filter-repo --email-callback 'import yaml;
-        f=open('$PWD/../contriboptouts/karabo-svn-fixer.yaml');
-        mapping=yaml.safe_load(f);
-        f.close();
-        user, _ = email.decode().split('@');
-        return mapping.get(user, email.decode()).encode()'
+      f=open("$PWD/../contriboptouts/karabo-svn-fixer.yaml");
+      mapping=yaml.safe_load(f);
+      f.close();
+      user, _ = email.decode().split("@");
+      return mapping.get(user, email.decode()).encode()'
     # we filter mails now
     - git-filter-repo --mailmap ../contriboptouts/karabo-mailmap
     # As git-filter-repo for safety reasons removes the "origin" remote, we set again the new remote,
