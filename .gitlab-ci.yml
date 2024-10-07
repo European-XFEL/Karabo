@@ -619,7 +619,7 @@ internal_mirror_publish:
     # of the mapping suffices.
     - |
       git-filter-repo --email-callback 'import yaml;
-      f=open("$PWD/../contriboptouts/karabo-svn-fixer.yaml");
+      f=open("../contriboptouts/karabo-svn-fixer.yaml");
       mapping=yaml.safe_load(f);
       f.close();
       user, _ = email.decode().split("@");
