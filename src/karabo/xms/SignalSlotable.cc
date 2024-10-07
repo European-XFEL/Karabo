@@ -1680,7 +1680,7 @@ namespace karabo {
             // Prepare a success handler for the request to slotConnectToSignal:
             auto signalConnectedHandler = [signalInstanceId, signalSignature, slotInstanceId, slotSignature,
                                            successHandler{std::move(successHandler)},
-                                           failureHandler{std::move(failureHandler)}](bool signalExists) {
+                                           failureHandler](bool signalExists) {
                 if (signalExists) {
                     try {
                         if (successHandler) successHandler();
@@ -1696,10 +1696,14 @@ namespace karabo {
             };
 
             // If slot is there, we want to connect it to the signal - so here is the handler for that:
-            auto hasSlotSuccessHandler = [=](bool hasSlot) { // capture copies
-                if (hasSlot) {
-                    auto requestor = request(signalInstanceId, "slotConnectToSignal", signalSignature, slotInstanceId,
-                                             slotSignature);
+            auto weakSelf{weak_from_this()};
+            auto hasSlotSuccessHandler = [weakSelf, signalInstanceId, signalSignature, slotInstanceId, slotSignature,
+                                          timeout, signalConnectedHandler{std::move(signalConnectedHandler)},
+                                          failureHandler](bool hasSlot) {
+                auto self = weakSelf.lock();
+                if (self && hasSlot) {
+                    auto requestor = self->request(signalInstanceId, "slotConnectToSignal", signalSignature,
+                                                   slotInstanceId, slotSignature);
                     if (timeout > 0) requestor.timeout(timeout);
                     requestor.receiveAsync<bool>(signalConnectedHandler,
                                                  (failureHandler ? failureHandler : [signalInstanceId] {
@@ -1707,13 +1711,15 @@ namespace karabo {
                                                                                 << "'.slotConnectToSignal failed.";
                                                  }));
                 } else {
-                    callErrorHandler(failureHandler, slotInstanceId + " has no slot '" + slotSignature + "'.");
+                    std::string msg(self ? (slotInstanceId + " has no slot '" + slotSignature + "'.")
+                                         : "Already (being) destructed.");
+                    callErrorHandler(failureHandler, msg);
                 }
             }; // end of lambda definition of success handler for slotHasSlot
 
             auto successConnectSignalSlot = [weakSelf{weak_from_this()}, slotInstanceId, slotSignature, timeout,
                                              hasSlotSuccessHandler{std::move(hasSlotSuccessHandler)},
-                                             failureHandler{std::move(failureHandler)}]() {
+                                             failureHandler]() {
                 auto self = weakSelf.lock();
                 if (!self) return;
                 // First check whether slot exists to avoid signal emits are sent if no-one listens correctly.
@@ -1726,7 +1732,7 @@ namespace karabo {
             };
 
             if (m_instanceId == slotInstanceId) {
-                auto onComplete = [failureHandler{std::move(failureHandler)},
+                auto onComplete = [failureHandler{std::move(failureHandler)}, // can move, last use of failureHandler
                                    successConnectSignalSlot{std::move(successConnectSignalSlot)}](
                                         const boost::system::error_code& ec) {
                     if (ec) {
@@ -1744,7 +1750,8 @@ namespace karabo {
                       request(slotInstanceId, "slotSubscribeRemoteSignal", signalInstanceId, signalSignature);
                 if (timeout > 0) requestor.timeout(timeout);
 
-                auto handler = [slotInstanceId, failureHandler{std::move(failureHandler)},
+                auto handler = [slotInstanceId,
+                                failureHandler{std::move(failureHandler)}, // can move, last use of failureHandler
                                 successConnectSignalSlot{std::move(successConnectSignalSlot)}](const bool& ok) {
                     if (ok) {
                         successConnectSignalSlot();
@@ -2100,7 +2107,8 @@ namespace karabo {
             const std::string errorMsg(instanceId + " failed to disconnect slot '" + slotInstanceId + "." +
                                        slotFunction + "' from signal '" + signalInstanceId + "." + signalFunction +
                                        "'");
-            auto innerSuccessHandler = [=](bool disconnected) { // '[ = ]' to copy all stuff by value
+            auto innerSuccessHandler = [connectionWasKnown, instanceId, slotInstanceId, slotFunction, signalInstanceId,
+                                        signalFunction, successHandler, failureHandler, errorMsg](bool disconnected) {
                 if (disconnected) {
                     if (!connectionWasKnown) {
                         KARABO_LOG_FRAMEWORK_WARN << instanceId << " disconnected slot '" << slotInstanceId << "."
@@ -2121,16 +2129,17 @@ namespace karabo {
                 }
             };
 
-            const boost::function<void(const bool&)> successUnsubRemote =
-                  [this, signalInstanceId, signalFunction, slotInstanceId, slotFunction, timeout,
+            boost::function<void(const bool&)> successUnsubRemote = // not const to move it away
+                  [weakSelf{weak_from_this()}, signalInstanceId, signalFunction, slotInstanceId, slotFunction, timeout,
                    innerSuccessHandler{std::move(innerSuccessHandler)}, failureHandler,
                    errorMsg](const bool& unsubRemoteOk) {
-                      if (unsubRemoteOk) {
+                      auto self = weakSelf.lock();
+                      if (unsubRemoteOk && self) {
                           // Now send the request to signal side,
                           // potentially giving a non-default timeout and adding a meaningful log message for failures
                           // without handler.
-                          auto requestor = request(signalInstanceId, "slotDisconnectFromSignal", signalFunction,
-                                                   slotInstanceId, slotFunction);
+                          auto requestor = self->request(signalInstanceId, "slotDisconnectFromSignal", signalFunction,
+                                                         slotInstanceId, slotFunction);
                           if (timeout > 0) requestor.timeout(timeout);
                           requestor.receiveAsync<bool>(
                                 innerSuccessHandler, failureHandler ? failureHandler : [errorMsg]() {
@@ -2144,7 +2153,9 @@ namespace karabo {
                                     }
                                 });
                       } else {
-                          callErrorHandler(failureHandler, errorMsg + " -- slotUnsubscribeRemoteSignal failed");
+                          std::string msg(errorMsg + (self ? " -- slotUnsubscribeRemoteSignal failed"
+                                                           : "Already (being) destructed."));
+                          callErrorHandler(failureHandler, msg);
                       }
                   };
 
