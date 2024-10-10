@@ -537,6 +537,12 @@ namespace karabo::net {
                                   self->m_queue += oss.str();
                                   self->moveChannelState(); // simply try again with new queue name
                               } else {
+                                  if (self->m_queue != name) {
+                                      KARABO_LOG_FRAMEWORK_WARN_C("AmqpClient")
+                                            << "Tried to declare queue '" << self->m_queue << "', but received "
+                                            << "success for queue '" << name << "'. Will use that name.";
+                                      self->m_queue = name;
+                                  }
                                   const std::string queue(self->m_instanceId == self->m_queue ? ""
                                                                                               : self->m_queue + " ");
                                   KARABO_LOG_FRAMEWORK_DEBUG_C("AmqpClient")
