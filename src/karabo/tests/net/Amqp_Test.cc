@@ -779,6 +779,38 @@ void Amqp_Test::testClientSameId() {
         else boost::this_thread::sleep(boost::posix_time::milliseconds(1));
     }
     CPPUNIT_ASSERT(allReceivedOne);
+
+    // Also test weird ids:
+    // Amqp (client lib or rabbit broker itself?) will sanitize \r and \n away when declaring a queue with a name.
+    // Routing keyes seem fine.
+    std::vector<std::string> weirdIds(
+          {"LF_END\n", "LF\nMIDDLE", "CR_END\r", "CR\rMIDDLE", "TAB_END\t", "TAB\tMIDDLE"}); // tabs look untouched
+    for (const std::string& weirdId : weirdIds) {
+        auto weirdReadDone = std::make_shared<std::promise<std::shared_ptr<std::vector<char>>>>();
+        auto weirdReadFut = weirdReadDone->get_future();
+        auto readHandlerWeird = [weirdReadDone](const std::shared_ptr<std::vector<char>>& data,
+                                                const std::string& exchange,
+                                                const std::string& routingKey) { weirdReadDone->set_value(data); };
+        net::AmqpClient::Pointer weird(
+              boost::make_shared<net::AmqpClient>(connection, prefix + weirdId, AMQP::Table(), readHandlerWeird));
+
+        auto weirdSubDone = std::make_shared<std::promise<boost::system::error_code>>();
+        auto weirdSubFut = weirdSubDone->get_future();
+        weird->asyncSubscribe(prefix + "exchange", weirdId, //"some",
+                              [weirdSubDone](const boost::system::error_code ec) { weirdSubDone->set_value(ec); });
+        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, weirdSubFut.wait_for(m_timeout));
+        const boost::system::error_code weirdSubEc = weirdSubFut.get();
+        CPPUNIT_ASSERT_EQUAL_MESSAGE(weirdSubEc.message(), static_cast<int>(boost::system::errc::success),
+                                     weirdSubEc.value());
+
+        // Write a message and verify it is received
+        clients[0]->asyncPublish(prefix + "exchange", weirdId, std::make_shared<std::vector<char>>(4, 'a'),
+                                 [](const boost::system::error_code ec) {});
+        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, weirdReadFut.wait_for(m_timeout));
+        const std::shared_ptr<std::vector<char>> weirdReadData = weirdReadFut.get();
+        CPPUNIT_ASSERT_EQUAL(4ul, weirdReadData->size());
+        CPPUNIT_ASSERT_EQUAL('a', weirdReadData->at(0));
+    }
 }
 
 void Amqp_Test::testClientUnsubscribeAll() {
