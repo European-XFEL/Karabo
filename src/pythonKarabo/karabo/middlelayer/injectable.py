@@ -19,22 +19,6 @@ from itertools import chain
 from karabo.native import Configurable, Descriptor, Overwrite
 
 
-class MetaInjectable(type):
-
-    def __init__(self, name, bases, namespace):
-        super().__init__(name, bases, namespace)
-        self._added_attrs.clear()
-
-    def __setattr__(self, name, value):
-        super().__setattr__(name, value)
-        self._added_attrs.append(name)
-        if isinstance(value, Descriptor):
-            value.key = name
-        elif isinstance(value, Overwrite):
-            setattr(self, name,
-                    value.overwrite(getattr(super(self, self), name)))
-
-
 class InjectMixin(Configurable):
     """This is a mixin class for all classes that want to inject parameters
 
@@ -92,7 +76,7 @@ class InjectMixin(Configurable):
 
     def __new__(cls, configuration={}, **kwargs):
         """each object gets its own personal class, that it may modify"""
-        newtype = MetaInjectable(cls.__name__, (cls,), {"_added_attrs": []})
+        newtype = type(cls.__name__, (cls,), {})
         ret = super(Configurable, cls).__new__(newtype)
         # Make the original module available
         ret.__module_orig__ = cls.__module__
@@ -103,7 +87,15 @@ class InjectMixin(Configurable):
 
     def _collect_attrs(self):
         cls = self.__class__
-        added_attrs = list(cls._added_attrs)
+        added_attrs = []
+        for k, v in cls.__dict__.items():
+            if isinstance(v, Descriptor):
+                if v.key == '(unknown key)':
+                    v.key = k
+                    added_attrs.append(k)
+            elif isinstance(v, Overwrite):
+                added_attrs.append(k)
+                setattr(cls, k, v.overwrite(getattr(super(cls, cls), k)))
 
         def unique_everseen(iter):
             seen = set()
@@ -120,7 +112,6 @@ class InjectMixin(Configurable):
         seen = set(cls._allattrs)
         cls._allattrs.extend(attr for attr in cls._attrs if attr not in seen)
         self._register_slots()
-        self._added_attrs.clear()
         return added_attrs
 
     async def publishInjectedParameters(self, *args, **kwargs):
