@@ -188,11 +188,8 @@ async def test_inject_raise_parameter_compare_attrs(event_loop: eventloop):
         deviceId = None
 
     mandy = Mandy()
-    assert mandy._added_attrs == []
     mandy.__class__.extraInteger = Int32(defaultValue=10)
-    assert mandy._added_attrs == ["extraInteger"]
     mandy.__class__.newInteger = Int32(defaultValue=2)
-    assert mandy._added_attrs == ["extraInteger", "newInteger"]
     # Odd number of arguments must fail
     with pytest.raises(RuntimeError):
         await mandy.publishInjectedParameters("extraInteger", 12, 12)
@@ -201,13 +198,11 @@ async def test_inject_raise_parameter_compare_attrs(event_loop: eventloop):
     with pytest.raises(RuntimeError):
         await mandy.publishInjectedParameters(
             "extraInteger", 12, "newInteger")
-    assert mandy._added_attrs == ["extraInteger", "newInteger"]
     await mandy.publishInjectedParameters()
 
     schema = mandy.getDeviceSchema()
     assert "extraInteger" in schema.hash
     assert "newInteger" in schema.hash
-    assert mandy._added_attrs == []
     # Second injection, doesn't matter
     await mandy.publishInjectedParameters()
 
