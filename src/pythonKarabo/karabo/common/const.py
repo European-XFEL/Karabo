@@ -58,6 +58,11 @@ KARABO_SCHEMA_DAQ_DATA_TYPE = "daqDataType"
 KARABO_SCHEMA_DAQ_POLICY = "daqPolicy"
 KARABO_SCHEMA_REGEX = "regex"
 
+# Fixed classId definitions
+
+KARABO_CLASS_ID_STATE = "State"
+KARABO_CLASS_ID_ALARM = "AlarmCondition"
+
 # These are from AlarmConditions.hh, but they also apply to schemata
 KARABO_WARN_LOW = "warnLow"
 KARABO_WARN_HIGH = "warnHigh"
