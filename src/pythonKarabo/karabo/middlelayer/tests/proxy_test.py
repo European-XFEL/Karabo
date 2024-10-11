@@ -43,6 +43,7 @@ class Tests(TestCase):
         h["a", "tags"] = ["mpod", "plc"]
         h["setA", "nodeType"] = NodeType.Node.value
         h["setA", "displayType"] = "Slot"
+        h["setA", "classId"] = "Slot"
         h["setA", "description"] = "setA's description"
         self.schema = Schema("test", hash=h)
 
@@ -152,7 +153,8 @@ class Tests(TestCase):
         h["a.c", "valueType"] = "STRING"
         h["setB", "nodeType"] = NodeType.Node.value
         h["setB", "displayType"] = "Slot"
-        h["setB", "description"] = "setA's description"
+        h["setB", "classId"] = "Slot"
+        h["setB", "description"] = "setB's description"
         schema = Schema("test", hash=h)
 
         cls = ProxyFactory.createProxy(self.schema)
