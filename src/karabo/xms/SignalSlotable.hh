@@ -910,9 +910,14 @@ namespace karabo {
                                                  int messageTimeToLive = KARABO_SYS_TTL);
 
             /**
-             * If instanceId not valid (i.e. not unique in system), throws SignalSlotException.
+             * If instanceId has invalid characters, throws SignalSlotException.
              */
             void ensureInstanceIdIsValid(const std::string& instanceId);
+
+            /**
+             * If instanceId not unique in system, throws SignalSlotException.
+             */
+            void ensureInstanceIdIsUnique(const std::string& instanceId);
 
             void slotInstanceNew(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
