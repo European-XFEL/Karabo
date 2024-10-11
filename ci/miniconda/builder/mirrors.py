@@ -9,7 +9,7 @@ from conda.exceptions import PackagesNotFoundError
 
 from .utils import conda_run
 
-CHANNEL_MAP = {"pkgs/main": "https://repo.anaconda.com/pkgs/main/"}
+CHANNEL_MAP = {}
 EXCLUDED_CHANNELS = [
     "karabo/channel",
     "karabo/channel/mirror/conda-forge",

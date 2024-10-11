@@ -417,9 +417,7 @@ class Builder:
         cmds.append("source ~/miniconda3/bin/activate")
         dirs = [
             self.args.remote_channel_dir,
-            f"{self.args.remote_mirror_dir}/anaconda",
             f"{self.args.remote_mirror_dir}/conda-forge",
-            f"{self.args.remote_mirror_dir}/pkgs-main",
         ]
         for dir_ in dirs:
             cmds.append(f"rm {dir_}/channeldata.json")
