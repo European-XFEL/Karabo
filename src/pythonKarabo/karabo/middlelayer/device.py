@@ -108,7 +108,9 @@ class Device(InjectMixin, SignalSlotable):
     )
 
     state = String(
-        displayedName="State", enum=State, displayType='State',
+        displayedName="State",
+        enum=State,
+        displayType='State',
         description="The current state the device is in",
         accessMode=AccessMode.READONLY, assignment=Assignment.OPTIONAL,
         defaultValue=State.UNKNOWN,
@@ -127,9 +129,7 @@ class Device(InjectMixin, SignalSlotable):
         displayType="AlarmCondition",
         description="The current alarm condition of the device.",
         accessMode=AccessMode.READONLY,
-        defaultValue=AlarmCondition.NONE,
-        classId="AlarmCondition",
-    )
+        defaultValue=AlarmCondition.NONE)
 
     @property
     def globalAlarmCondition(self):
