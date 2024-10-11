@@ -39,10 +39,14 @@ mkdir -p $DIST/bin
 cd $DIST/bin
 
 cd $scriptDir/../../src/karabind
+# Move original file as it will be modified
+mv $scriptDir/../../src/karabind/stubs/karabind.pyi $scriptDir/../../src/karabind/karabind.pyi
 $PYTHON -m pybind11_stubgen karabind --ignore-all-errors
 site_packages=$($PYTHON -c 'import site; print(site.getsitepackages()[0])')
 mkdir -p $site_packages/karabind
 cp -r $scriptDir/../../src/karabind/stubs/* $site_packages/karabind
+# Move original file back
+mv $scriptDir/../../src/karabind/karabind.pyi $scriptDir/../../src/karabind/stubs/karabind.pyi
 
 
 cd $scriptDir/../../src/pythonKarabo

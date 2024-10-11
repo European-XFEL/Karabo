@@ -42,6 +42,7 @@ build/python/*.exe
 /ci/coverage/report/????-??-??_????_integrationTest
 /ci/coverage/report/*.zip
 /ci/coverage/pyReport/
+ci/utils/cppunitxmlparser/build/
 junit*.xml
 junitoutput.xml
 # Conda stuff
