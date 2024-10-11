@@ -279,9 +279,7 @@ class ProxyFactory:
                     strict=False, key=k, **a)
                 descriptor.longkey = prefix + k
             elif nodeType is NodeType.Node:
-                # once also Slots have the classId set, we better use
-                # classId, not displayType
-                classId = a.get("displayType")
+                classId = a.get("classId")
                 factory = cls.node_factories.get(classId, cls.createNode)
                 descriptor = factory(key=k, node=v, prefix=prefix,
                                      strict=False, **a)
