@@ -8,7 +8,7 @@
 # the terms of the MPL-2 Mozilla Public License.
 #
 # You should have received a copy of the MPL-2 Public License along with
-# Karabo. If not, see <https://www.mozilla.org/en-US/MPL/2.0/>.
+# Karabo. If not, see <https://www.mozilla.oStaterg/en-US/MPL/2.0/>.
 #
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -22,6 +22,7 @@ import pytest
 from pint import DimensionalityError
 
 from karabo.common.alarm_conditions import AlarmCondition
+from karabo.common.api import KARABO_CLASS_ID_ALARM, KARABO_CLASS_ID_STATE
 from karabo.common.states import State
 from karabo.native import (
     AccessLevel, AccessMode, ArchivePolicy, Assignment, Attribute, Bool,
@@ -1024,7 +1025,7 @@ class Tests(TestCase):
         with self.assertRaises(ValueError):
             Double(strict=False, metricPrefixSymbol="asdf")
 
-    def test_leafType(self):
+    def test_enum_leaf_classId(self):
 
         state = String(
             displayType="State",
@@ -1035,11 +1036,13 @@ class Tests(TestCase):
             enum=AlarmCondition)
 
         # Check for state
-        schema, attrs = state.toSchemaAndAttrs(None, None)
+        _, attrs = state.toSchemaAndAttrs(None, None)
         self.assertEqual(attrs["leafType"], LeafType.State)
+        self.assertEqual(attrs["classId"], KARABO_CLASS_ID_STATE)
         # Check for Alarms
-        schema, attrs = alarm.toSchemaAndAttrs(None, None)
+        _, attrs = alarm.toSchemaAndAttrs(None, None)
         self.assertEqual(attrs["leafType"], LeafType.AlarmCondition)
+        self.assertEqual(attrs["classId"], KARABO_CLASS_ID_ALARM)
 
     def _min_max_desc(self, d, min_, max_):
         minv, maxv = d.getMinMax()
