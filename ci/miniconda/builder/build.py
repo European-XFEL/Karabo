@@ -158,7 +158,7 @@ class Builder:
             "conda", "build", "purge-all", "--quiet")
         conda_run(
             Commands.RUN, "-n", "base",
-            "conda", "clean", "--all", "--quiet", "--yes")
+            "conda", "clean", "--all", "--force-pkgs-dirs", "--quiet", "--yes")
         for recipe in self.recipes:
             self.clean_environment(name=recipe)
 
