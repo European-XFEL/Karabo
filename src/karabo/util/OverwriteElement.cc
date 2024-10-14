@@ -311,8 +311,8 @@ namespace karabo {
         const auto it = std::find(options.begin(), options.end(), m_schema->getDefaultValue<CppType>(m_path)); \
         if (it == options.end()) {                                                                             \
             std::string defAsStr(m_schema->getDefaultValueAs<std::string>(m_path));                            \
-            throw KARABO_LOGIC_EXCEPTION("Default value " + defAsStr +=                                        \
-                                         " not in options: " + karabo::util::toString(options));               \
+            throw KARABO_LOGIC_EXCEPTION("Default value for " + m_path + " (i.e. '" + defAsStr +=              \
+                                         "') not in options: " + karabo::util::toString(options));             \
         }                                                                                                      \
         break;                                                                                                 \
     }
