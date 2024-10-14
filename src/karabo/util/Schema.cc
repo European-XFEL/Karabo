@@ -172,8 +172,8 @@ namespace karabo {
 
         bool Schema::isCommand(const std::string& path) const {
             if (this->isNode(path)) {
-                return this->hasDisplayType(path) &&
-                       m_hash.getAttribute<string>(path, KARABO_SCHEMA_DISPLAY_TYPE) == "Slot";
+                return m_hash.hasAttribute(path, KARABO_SCHEMA_CLASS_ID) &&
+                       m_hash.getAttribute<string>(path, KARABO_SCHEMA_CLASS_ID) == "Slot";
             }
             return false;
         }
