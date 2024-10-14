@@ -44,7 +44,7 @@
         </font>
        </property>
        <property name="text">
-        <string>Show changes</string>
+        <string>Show Comparison</string>
        </property>
        <property name="iconSize">
         <size>
