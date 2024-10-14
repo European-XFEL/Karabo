@@ -29,9 +29,9 @@ from karabo.common.scenemodel.api import (
     FilterTableElementModel, LabelModel, RectangleModel, SceneModel,
     write_scene)
 from karabo.middlelayer import (
-    AccessLevel, AccessMode, Assignment, Bool, Configurable, DaqPolicy, Device,
-    Double, Hash, KaraboError, Overwrite, State, String, UInt32, Unit,
-    VectorHash, VectorString, background, dictToHash, has_changes, sleep, slot)
+    AccessLevel, AccessMode, Assignment, Bool, Configurable, Device, Double,
+    Hash, KaraboError, Overwrite, State, String, UInt32, Unit, VectorHash,
+    VectorString, background, dictToHash, has_changes, sleep, slot)
 
 STATUS_PAGE = "{}/status.json"
 NETWORK_PAGE = "{}/network.json"
@@ -140,30 +140,26 @@ class DaemonManager(Device):
         defaultValue="localhost",
         description="The host name of the web aggregator service",
         accessMode=AccessMode.INITONLY,
-        assignment=Assignment.MANDATORY,
-        daqPolicy=DaqPolicy.OMIT)
+        assignment=Assignment.MANDATORY)
 
     port = UInt32(
         displayedName="Port",
         defaultValue=8585,
         description="The port of the daemon service aggregator",
         accessMode=AccessMode.INITONLY,
-        assignment=Assignment.MANDATORY,
-        daqPolicy=DaqPolicy.OMIT)
+        assignment=Assignment.MANDATORY)
 
     numHosts = UInt32(
         displayedName="Number of Hosts",
         defaultValue=0,
         description="This value provides the number of hosts observed",
-        accessMode=AccessMode.READONLY,
-        daqPolicy=DaqPolicy.OMIT)
+        accessMode=AccessMode.READONLY)
 
     numServices = UInt32(
         displayedName="Number of Services",
         defaultValue=0,
         description="This value provides the number of services observed",
-        accessMode=AccessMode.READONLY,
-        daqPolicy=DaqPolicy.OMIT)
+        accessMode=AccessMode.READONLY)
 
     services = VectorHash(
         defaultValue=[],
@@ -171,23 +167,20 @@ class DaemonManager(Device):
         description="Servers Table with interactive interface",
         rows=ServiceInteractiveRow,
         accessMode=AccessMode.READONLY,
-        requiredAccessLevel=AccessLevel.EXPERT,
-        daqPolicy=DaqPolicy.OMIT)
+        requiredAccessLevel=AccessLevel.OPERATOR)
 
     updateTime = Double(
         defaultValue=5.0,
         minInc=1.0,
         maxInc=20.0,
         description="Update time",
-        unitSymbol=Unit.SECOND,
-        daqPolicy=DaqPolicy.OMIT)
+        unitSymbol=Unit.SECOND)
 
     availableScenes = VectorString(
         displayedName="Available Scenes",
         displayType="Scenes",
         description="Provides a scene for the Daemon Manager.",
         accessMode=AccessMode.READONLY,
-        daqPolicy=DaqPolicy.OMIT,
         defaultValue=["scene"])
 
     def __init__(self, configuration):
