@@ -328,9 +328,20 @@ namespace karabo {
             return m_hash.getAttribute<std::vector<std::string> >(path, KARABO_SCHEMA_TAGS);
         }
 
+        //**********************************************
+        //                  classId                    *
+        //**********************************************
+
+        bool Schema::hasClassId(const std::string& path) const {
+            return m_hash.hasAttribute(path, KARABO_SCHEMA_CLASS_ID);
+        }
+
+        const string& Schema::getClassId(const std::string& path) const {
+            return m_hash.getAttribute<string>(path, KARABO_SCHEMA_CLASS_ID);
+        }
 
         //**********************************************
-        //                  DisplayType                      *
+        //                  DisplayType                *
         //**********************************************
 
 
