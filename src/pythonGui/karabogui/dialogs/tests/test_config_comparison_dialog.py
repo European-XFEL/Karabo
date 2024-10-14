@@ -26,7 +26,7 @@ def test_config_dialog_basics(gui_app):
     dialog = ConfigComparisonDialog("Compare", old, new, None)
 
     assert not dialog._show_comparison
-    assert dialog.ui_swap.text() == "Show changes"
+    assert dialog.ui_swap.text() == "Show Comparison"
     assert dialog.ui_config_existing.toPlainText() == "\nfloat\n1.0\n"
     assert dialog.ui_config_new.toPlainText() == "\nfloat\n1.2\n"
 
