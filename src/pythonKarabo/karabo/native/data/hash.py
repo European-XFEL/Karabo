@@ -558,21 +558,22 @@ class HashByte(str):
 
 
 class Schema:
+    """This represents a Karabo Schema, it encapsulates a schema `hash`
+    and has a `name`.
+    """
     _hashType = HashType.Schema
 
-    def __init__(self, name=None, rules=None, hash=None):
+    def __init__(self, name=None, *, hash=None):
         self.name = name
         if hash is None:
             self.hash = Hash()
         else:
             self.hash = hash
-        self.rules = rules
 
     def copy(self, other):
         self.hash = Hash()
         self.hash.merge(other.hash)
         self.name = other.name
-        self.rules = other.rules
 
     def keyHasAlias(self, key):
         return "alias" in self.hash[key, ...]
