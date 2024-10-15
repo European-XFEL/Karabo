@@ -20,22 +20,22 @@
 #############################################################################
 from abc import abstractmethod
 
-from qtpy.QtCore import (
-    QLine, QLineF, QMargins, QPoint, QPointF, QRect, QSize, Qt)
-from qtpy.QtGui import QBrush, QColor, QPainterPath, QPen, QTransform
+from qtpy.QtCore import QLine, QMargins, QRect, QSize, Qt
+from qtpy.QtGui import (
+    QBrush, QColor, QPainterPath, QPen, QPolygonF, QTransform)
 from qtpy.QtWidgets import QDialog
 from traits.api import (
-    ABCHasStrictTraits, Bool, Constant, Float, Instance, List, Property, Tuple,
-    cached_property, on_trait_change)
+    ABCHasStrictTraits, Bool, Constant, Float, Instance, Property, Tuple,
+    cached_property)
 
-from karabo.common.scenemodel.api import BaseShapeObjectData, XMLElementModel
+from karabo.common.scenemodel.api import BaseShapeObjectData
 from karabogui.dialogs.pen_dialogs import PenDialog
 from karabogui.pathparser import Parser
+from karabogui.sceneview.utils import get_arrowhead_points
 
 from .const import (
     GRID_STEP, QT_PEN_CAP_STYLE_FROM_STR, QT_PEN_CAP_STYLE_TO_STR,
     QT_PEN_JOIN_STYLE_FROM_STR, QT_PEN_JOIN_STYLE_TO_STR, SCREEN_MAX_VALUE)
-from .utils import calc_rotated_point
 
 _BRUSH_ATTRS = ('fill', 'fill_opacity')
 _PEN_ATTRS = ('stroke', 'stroke_opacity', 'stroke_linecap',
@@ -246,129 +246,35 @@ class LineShape(BaseShape):
         return QSize(left + right, top + bottom)
 
 
-class MarkerShape(BaseShape):
-    """This assumes that the child marker element is a path.
-       Rects, circles, etc. are not yet supported."""
-
-    model = Instance(XMLElementModel)
-
-    children = List
-    _offset = Instance(QPoint, args=())
-    _scale = Float(1.0)
-    _angle = Float(0.0)
-
-    ref_point = Property(Instance(QPointF),
-                         depends_on=["_angle", "_offset", "_scale"])
-
-    use_stroke_width = Bool
-
-    def _children_default(self):
-        return [PathShape(model=model) for model in self.model.children]
+class ArrowShape(LineShape):
+    """Arrow has an additional arrowhead painted at the end of the line"""
 
     def draw(self, painter):
-        for child in self.children:
-            child.draw(painter)
-
-    def geometry(self):
-        rect = QRect()
-        for child in self.children:
-            rect = rect.united(child.geometry())
-        return rect
-
-    def set_geometry(self, rect):
-        """Marker geometry depend on the union of the children geometries.
-           We do not support setting the geometry from here, hence the
-           blank reimplementation"""
+        super().draw(painter)
+        x1 = self.shape.p1().x()
+        y1 = self.shape.p1().y()
+        x2 = self.shape.p2().x()
+        y2 = self.shape.p2().y()
+        hp1, hp2 = get_arrowhead_points(x1=x1, y1=y1, x2=x2, y2=y2)
+        # Paint arrowhead as a polygon of three points
+        painter.setBrush(QBrush(painter.pen().color()))
+        painter.drawPolygon(QPolygonF([self.shape.p2(), hp1, hp2]))
 
     def translate(self, offset):
-        self._offset = offset
-
-    @on_trait_change("_offset, ref_point")
-    def _translate(self):
-        for child in self.children:
-            child.translate(self._offset - self.ref_point)
-
-    def rotate(self, angle):
-        if self.model.orient == "auto":
-            self._angle = angle
-            for child in self.children:
-                child.rotate(angle)
-
-    def scale(self, scale):
-        """SVG markers are scaled wrt strokeWidth or userSpaceOnUse.
-           Currently, we only support strokeWidth scaling."""
-        if self.use_stroke_width:
-            self._scale = scale
-
-            for child in self.children:
-                # Correct scale if stroke width is 0
-                child.scale(scale or 1)
-
-    @cached_property
-    def _get_ref_point(self):
-        return calc_rotated_point(x=self.model.refX, y=self.model.refY,
-                                  angle=self._angle, scale=self._scale)
-
-    def _use_stroke_width_default(self):
-        # This is used for scaling the the arrow and the marker by either the
-        # stroke width or by user space. The current implementation is build by
-        # around stroke width scaling, but we still have to check against
-        # `useSpaceOnUse`. If markerUnits is not specified, we default to
-        # using stroke width.
-        return self.model.markerUnits != "userSpaceOnUse"
-
-
-class ArrowShape(LineShape):
-
-    line = Property(Instance(QLineF), depends_on="shape")
-    marker = Instance(MarkerShape)
-
-    def _marker_default(self):
-        return MarkerShape(model=self.model.marker)
-
-    @cached_property
-    def _get_line(self):
-        return QLineF(self.shape)
-
-    def draw(self, painter):
-        """Draw the line and the marker shapes"""
-        super().draw(painter)  # line
-        self.marker.draw(painter)  # marker
-
-    def geometry(self):
-        """The geometry of the arrow shape depends on the union of the line
-           shape and marker shape geometries."""
-        line_geom = super().geometry()
-        return line_geom.united(self.marker.geometry())
+        super().translate(offset)
+        hp1, hp2 = get_arrowhead_points(
+            self.model.x1, self.model.y1, self.model.x2, self.model.y2)
+        hx1, hy1 = hp1.x(), hp1.y()
+        hx2, hy2 = hp2.x(), hp2.y()
+        self.model.trait_set(hx1=hx1, hy1=hy1, hx2=hx2, hy2=hy2)
 
     def set_geometry(self, rect):
-        """Set the geometry by accounting the difference of the rects with the
-           markers and applying the difference on the plain the rect"""
-        diff = tuple(new - old for new, old in
-                     zip(rect.getCoords(), self.geometry().getCoords()))
-
-        # Adjust line rect.
-        line_rect = super().geometry()
-        super().set_geometry(line_rect.adjusted(*diff))
-
-    @on_trait_change("line")
-    def _transform_marker(self):
-        """Rotate the marker with the angle made by the line"""
-        self.marker.translate(self.shape.p2())
-        if self.line.length() != 0:
-            self.marker.rotate(self.line.angle())
-
-    @on_trait_change("model.stroke_width")
-    def _scale_marker(self):
-        self.marker.scale(self.model.stroke_width)
-
-    def minimumSize(self):
-        """We use the line and the marker sizes for the effective
-           minimum size."""
-        line_size = super().minimumSize()
-        marker_size = self.marker.geometry().size()
-        return QSize(max(line_size.width(), marker_size.width()),
-                     max(line_size.height(), marker_size.height()))
+        super().set_geometry(rect)
+        hp1, hp2 = get_arrowhead_points(
+            self.model.x1, self.model.y1, self.model.x2, self.model.y2)
+        hx1, hy1 = hp1.x(), hp1.y()
+        hx2, hy2 = hp2.x(), hp2.y()
+        self.model.trait_set(hx1=hx1, hy1=hy1, hx2=hx2, hy2=hy2)
 
 
 class RectangleShape(BaseShape):
