@@ -17,6 +17,7 @@
 
 from qtpy.QtCore import Qt
 
+from karabo.common.project.api import ProjectModel
 from karabo.common.project.device import DeviceInstanceModel
 from karabo.common.project.device_config import DeviceConfigurationModel
 from karabo.common.project.server import DeviceServerModel
@@ -25,6 +26,7 @@ from karabogui.project.controller.device import DeviceInstanceController
 from karabogui.project.controller.device_config import (
     DeviceConfigurationController)
 from karabogui.singletons.mediator import Mediator
+from karabogui.singletons.project_model import ProjectViewItemModel
 from karabogui.testing import singletons
 
 STATUS_ICON = 'karabogui.project.controller.' \
@@ -79,3 +81,60 @@ def test_check_mark_configuration():
     model.initialized = True
     controller = DeviceConfigurationController(model=model)
     assert controller.initial_check_state == Qt.Checked
+
+
+def test_menu(gui_app, mocker):
+    _tooltip = "Requires minimum 'OPERATOR' access level"
+    proj = ProjectModel(scenes=[], servers=[],
+                        subprojects=[])
+
+    qt_model = ProjectViewItemModel(parent=None)
+    # Cause the controllers to be created and get a ref to the root
+    qt_model.root_model = proj
+    controller = qt_model.root_controller
+
+    # Macro group menu-items
+    macro_group = controller.children[0]
+    assert macro_group.group_name == "Macros"
+    mock_project_enabled = mocker.patch(
+        "karabogui.project.controller.project_groups.access_role_allowed")
+    mock_project_enabled.return_value = False
+    menu = macro_group.context_menu(macro_group)
+
+    actions = menu.actions()
+    assert not any([act.isEnabled() for act in actions])
+    arrange_macros = actions[3]
+    assert arrange_macros.text() == "Arrange Macros"
+    assert arrange_macros.toolTip() == _tooltip
+
+    mock_project_enabled = mocker.patch(
+        "karabogui.project.controller.project_groups.access_role_allowed")
+    mock_project_enabled.return_value = True
+    menu = macro_group.context_menu(macro_group)
+    actions = menu.actions()
+    assert all([act.isEnabled() for act in actions])
+
+    # Scene group menu-items
+    scene_group = controller.children[1]
+    assert scene_group.group_name == "Scenes"
+
+    mock_project_enabled = mocker.patch(
+        "karabogui.project.controller.project_groups.access_role_allowed")
+    mock_project_enabled.return_value = False
+    menu = scene_group.context_menu(scene_group)
+
+    actions = menu.actions()
+    arrange_scenes = actions[6]
+    assert arrange_scenes.text() == "Arrange Scenes"
+    assert arrange_scenes.toolTip() == _tooltip
+    assert not arrange_scenes.isEnabled()
+    about = actions[-1]
+    assert about.text() == "About"
+    assert about.isEnabled()
+
+    mock_project_enabled = mocker.patch(
+        "karabogui.project.controller.project_groups.access_role_allowed")
+    mock_project_enabled.return_value = True
+    menu = scene_group.context_menu(scene_group)
+    actions = menu.actions()
+    assert all([act.isEnabled() for act in actions])
