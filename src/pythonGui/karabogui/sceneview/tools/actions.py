@@ -21,24 +21,10 @@ from qtpy.QtWidgets import QBoxLayout
 from traits.api import Callable, Int
 
 from karabo.common.scenemodel.api import (
-    ArrowModel, BaseLayoutModel, BoxLayoutModel, FixedLayoutModel,
-    GridLayoutChildData, GridLayoutModel)
-from karabogui import messagebox
+    BaseLayoutModel, BoxLayoutModel, FixedLayoutModel, GridLayoutChildData,
+    GridLayoutModel)
 from karabogui.sceneview.bases import BaseSceneAction
 from karabogui.sceneview.utils import calc_bounding_rect
-
-_XML_DEFS_MODELS = (ArrowModel,)
-
-
-def _check_xml_defs_model(models, scene_view) -> bool:
-    """Check if there is a special XML defs model"""
-    if any([isinstance(model, _XML_DEFS_MODELS) for model in models]):
-        text = ("Grouping <b>XMLDefsModels</b> models such as the "
-                "<b>Arrow</b> model on the scene view is currently not "
-                "available.")
-        messagebox.show_error(text, parent=scene_view)
-        return True
-    return False
 
 
 class CreateToolAction(BaseSceneAction):
@@ -90,9 +76,6 @@ class BaseLayoutAction(BaseSceneAction):
             pass
 
         child_models = [obj.model for obj in child_objects]
-        # Check for XML def models, as they are special and cannot be grouped
-        if _check_xml_defs_model(child_models, scene_view):
-            return
         # Get the new layout model
         selection_rect = calc_bounding_rect(selection_model)
         layout_model = self.create_layout(child_objects, child_models,
