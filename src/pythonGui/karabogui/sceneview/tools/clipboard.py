@@ -23,8 +23,7 @@ from qtpy.QtGui import QCursor
 from qtpy.QtWidgets import QApplication, QDialog, QMessageBox
 
 from karabo.common.scenemodel.api import (
-    ArrowModel, BaseLayoutModel, BaseWidgetObjectData, SceneModel, read_scene,
-    write_scene)
+    BaseLayoutModel, BaseWidgetObjectData, SceneModel, read_scene, write_scene)
 from karabogui.dialogs.api import ReplaceDialog
 from karabogui.sceneview.bases import BaseSceneAction
 from karabogui.sceneview.utils import add_offset, calc_relative_pos
@@ -101,12 +100,6 @@ class BaseScenePasteAction(BaseSceneAction):
         pasted_models = _read_models_from_clipboard()
         if len(pasted_models) == 0:
             return
-
-        # Reset the ID of the defs model. This is to avoid conflicts
-        # with the existing ones.
-        for model in pasted_models:
-            if isinstance(model, ArrowModel):
-                model.marker.reset_id()
 
         self.run_action(pasted_models, scene_view)
         scene_view.update()
