@@ -15,13 +15,12 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 from xml.etree.ElementTree import SubElement
 
-from traits.api import CInt, Dict, Instance, List, Property, String
+from traits.api import CInt, Property, String
 
-from .bases import BaseShapeObjectData, XMLElementModel
+from .bases import BaseShapeObjectData
 from .const import ARROW_MIN_SIZE, NS_KARABO, NS_SVG, SVG_GROUP_TAG
 from .io_utils import get_numbers, set_numbers
-from .registry import (
-    read_element, register_scene_reader, register_scene_writer, write_element)
+from .registry import register_scene_reader, register_scene_writer
 
 
 class LineModel(BaseShapeObjectData):
@@ -72,8 +71,8 @@ class ArrowPolygonModel(LineModel):
     hx2 = CInt
     hy2 = CInt
 
-    width = Property(CInt, depends_on=["x1", "x2"])
-    height = Property(CInt, depends_on=["y1", "y2"])
+    width = Property(CInt)
+    height = Property(CInt)
 
     def _get_width(self):
         return max(abs(self.x1 - self.x2), ARROW_MIN_SIZE)
@@ -93,15 +92,6 @@ class RectangleModel(BaseShapeObjectData):
     height = CInt
     # The width of the rect
     width = CInt
-
-
-class XMLDefsModel(XMLElementModel):
-    """<defs>"""
-
-    # The element attributes aside from 'id'
-    attributes = Dict
-    # The element's children
-    children = List(Instance(XMLElementModel))
 
 
 def _convert_measurement(measure):
@@ -301,26 +291,4 @@ def __rectangle_writer(model, parent):
     element = SubElement(parent, NS_SVG + "rect")
     _write_base_shape_data(model, element)
     set_numbers(("x", "y", "width", "height"), model, element)
-    return element
-
-
-@register_scene_reader("XML Defs", xmltag=NS_SVG + "defs")
-def __xml_defs_reader(element):
-    return XMLDefsModel(
-        id=element.get("id", ""),
-        attributes={k: v for k, v in element.attrib.items() if k != "id"},
-        children=[read_element(el) for el in element],
-    )
-
-
-# Writer is not registered as we write the defs on the shape writer
-def write_defs_model(model, element):
-    assert isinstance(model, XMLDefsModel)
-    if model.id:
-        element.set("id", model.id)
-    for name, value in model.attributes.items():
-        element.set(name, value)
-    for child in model.children:
-        write_element(model=child, parent=element)
-
     return element
