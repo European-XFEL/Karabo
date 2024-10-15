@@ -21,7 +21,7 @@
 import math
 from contextlib import contextmanager
 
-from qtpy.QtCore import QPoint
+from qtpy.QtCore import QPoint, QPointF
 from qtpy.QtGui import QFontMetrics
 
 from karabogui.fonts import get_qfont
@@ -125,3 +125,22 @@ def calc_relative_pos(models):
         x = min(x, model.x)
         y = min(y, model.y)
     return x, y
+
+
+def get_arrowhead_points(x1: int, y1: int, x2: int, y2: int) -> tuple[QPointF,
+                                                                      QPointF]:
+    """Calculate the two points for the arrow head for the given lines"""
+    arrow_size = 10
+    angle_offset = math.pi / 10
+    angle = math.atan2(y2 - y1, x2 - x1)
+
+    # The points for the arrowhead triangle
+    left_arrow = QPointF(
+        x2 - arrow_size * math.cos(angle - angle_offset),
+        y2 - arrow_size * math.sin(angle - angle_offset)
+    )
+    right_arrow = QPointF(
+        x2 - arrow_size * math.cos(angle + angle_offset),
+        y2 - arrow_size * math.sin(angle + angle_offset)
+    )
+    return left_arrow, right_arrow

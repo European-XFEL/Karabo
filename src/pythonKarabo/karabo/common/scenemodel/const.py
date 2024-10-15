@@ -92,15 +92,9 @@ for prefix, ns in XML_NAMESPACES.items():
 WIDGET_ELEMENT_TAG = NS_SVG + "rect"
 IMAGE_ELEMENT_TAG = NS_SVG + "image"
 UNKNOWN_WIDGET_CLASS = "UnknownWidget"
-
-# SVG default values
-ARROW_HEAD = {
-    "width": 10,
-    "height": 10,
-    "path": "M0,0 L0,6 L9,3 z",
-    "ref_x": 0,
-    "ref_y": 3,
-}
+SVG_GROUP_TAG = NS_SVG + "g"
+# Minimum width or height of the arrow.
+ARROW_MIN_SIZE = 10
 
 # Float formatting constants
 DEFAULT_FORMAT = "g"
