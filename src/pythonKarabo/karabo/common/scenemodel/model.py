@@ -28,8 +28,7 @@ from .const import (
 from .io_utils import (
     read_unknown_display_editable_widget, set_numbers, write_base_widget_data)
 from .registry import (
-    add_temporary_defs, read_element, register_scene_reader,
-    register_scene_writer, write_element)
+    read_element, register_scene_reader, register_scene_writer, write_element)
 
 
 class SceneModel(BaseProjectObjectModel):
@@ -110,14 +109,6 @@ def __scene_reader(element):
         del traits["uuid"]
 
     scene = SceneModel(**traits)
-
-    # We get the first level defs first
-    defs = []
-    for d in element.findall(f"./{NS_SVG}defs"):
-        defs.append(read_element(d))
-        element.remove(d)
-    # Record the defs on the reader registry
-    add_temporary_defs(defs)
 
     # Now we iterate over the children elements
     for child in element:

@@ -133,9 +133,9 @@ def test_svg_arrow():
         scene_model = read_scene(fn)
 
         # Check if the scene model contains a defs model and an arrow model
-        assert len(scene_model.children) == 1
+        assert len(scene_model.children) == 2
         for child in scene_model.children:
-            assert isinstance(child, ArrowPolygonModel)
+            assert isinstance(child, (ArrowPolygonModel, UnknownXMLDataModel))
 
         # Check arrow model
         arrow_model = _get_child_model(scene_model, ArrowPolygonModel)
@@ -161,8 +161,8 @@ def test_svg_defs():
 
     with temp_xml_file(SCENE_SVG) as fn:
         scene_model = read_scene(fn)
-
-    assert len(scene_model.children) == 0
+    assert len(scene_model.children) == 1
+    assert isinstance(scene_model.children[0], UnknownXMLDataModel)
 
 
 def test_svg_unknowns():
