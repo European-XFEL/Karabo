@@ -584,6 +584,24 @@ namespace karabo {
             const std::vector<std::string>& getTags(const std::string& path) const;
 
             //**********************************************
+            //               classId                       *
+            //**********************************************
+
+            /**
+             * Check if the element identified by path has a classId
+             * @param path
+             * @return
+             */
+            bool hasClassId(const std::string& path) const;
+
+            /**
+             * Get the classId for the element identified by path
+             * @param path
+             * @return
+             */
+            const std::string& getClassId(const std::string& path) const;
+
+            //**********************************************
             //               DisplayType                   *
             //**********************************************
 

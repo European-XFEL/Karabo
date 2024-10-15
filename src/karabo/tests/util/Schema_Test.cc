@@ -632,6 +632,8 @@ void Schema_Test::testSlotElement() {
     CPPUNIT_ASSERT(sch.getAllowedStates("slotTest")[2] == State::ERROR);
     CPPUNIT_ASSERT(sch.isCommand("slotTest") == true);
     CPPUNIT_ASSERT(sch.isProperty("slotTest") == false);
+    CPPUNIT_ASSERT(sch.hasClassId("slotTest") == true);
+    CPPUNIT_ASSERT(sch.getClassId("slotTest") == "Slot");
 
     // An underscores should not be allowed in slot keys since they interfere with slots under a node.
     // But currently we cannot exclude them for backward compatibility of some Beckhoff devices.
@@ -1819,7 +1821,7 @@ void Schema_Test::testNodeDisplayType() {
 }
 
 
-void Schema_Test::testGetLeaves() {
+void Schema_Test::testAlarmStateElement() {
     Schema schema("test");
     TestStruct1::expectedParameters(schema);
     OtherSchemaElements::expectedParameters(schema);
@@ -1838,6 +1840,12 @@ void Schema_Test::testGetLeaves() {
     // Hijack this to test isProperty here.
     CPPUNIT_ASSERT(schema.isProperty("alarmCondition"));
     CPPUNIT_ASSERT(schema.isProperty("state"));
+
+    // And the classId for both elements
+    CPPUNIT_ASSERT(schema.hasClassId("alarmCondition"));
+    CPPUNIT_ASSERT(schema.hasClassId("state"));
+    CPPUNIT_ASSERT(schema.getClassId("alarmCondition") == "AlarmCondition");
+    CPPUNIT_ASSERT(schema.getClassId("state") == "State");
 }
 
 
