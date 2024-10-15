@@ -15,15 +15,13 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 from xml.etree.ElementTree import SubElement
 
-from traits.api import Any, CInt, Dict, Float, Instance, List, Property, String
+from traits.api import CInt, Dict, Instance, List, Property, String
 
-from .bases import BaseSceneObjectData, BaseShapeObjectData, XMLElementModel
-from .const import ARROW_HEAD, NS_SVG
-from .io_utils import (
-    convert_number_or_string, get_defs_id, get_numbers, is_empty, set_numbers)
+from .bases import BaseShapeObjectData, XMLElementModel
+from .const import ARROW_MIN_SIZE, NS_KARABO, NS_SVG, SVG_GROUP_TAG
+from .io_utils import get_numbers, set_numbers
 from .registry import (
-    find_def, read_element, register_scene_reader, register_scene_writer,
-    write_element)
+    read_element, register_scene_reader, register_scene_writer, write_element)
 
 
 class LineModel(BaseShapeObjectData):
@@ -66,38 +64,22 @@ class PathModel(BaseShapeObjectData):
     svg_data = String
 
 
-class MarkerModel(XMLElementModel):
-    markerHeight = Float
-    markerWidth = Float
-    markerUnits = String("strokeWidth")
-    preserveAspectRatio = String
-    orient = Any("auto")  # can be string or number
-    refX = Any  # can be string or number
-    refY = Any  # can be string or number
+class ArrowPolygonModel(LineModel):
+    """Model for Arrow with polygon head"""
+    # Points to draw the arrowhead as polygon. The third point in x2, y2.
+    hx1 = CInt
+    hy1 = CInt
+    hx2 = CInt
+    hy2 = CInt
 
-    children = List(BaseSceneObjectData)
+    width = Property(CInt, depends_on=["x1", "x2"])
+    height = Property(CInt, depends_on=["y1", "y2"])
 
-    def generate_id(self):
-        return self.randomize("marker")
+    def _get_width(self):
+        return max(abs(self.x1 - self.x2), ARROW_MIN_SIZE)
 
-
-class ArrowModel(LineModel):
-
-    marker = Instance(MarkerModel)
-
-    def _marker_default(self):
-        arrow_path = PathModel(svg_data=ARROW_HEAD["path"], fill=self.stroke)
-        return MarkerModel(
-            markerHeight=ARROW_HEAD["height"],
-            markerWidth=ARROW_HEAD["width"],
-            refX=ARROW_HEAD["ref_x"],
-            refY=ARROW_HEAD["ref_y"],
-            children=[arrow_path],
-        )
-
-    def _stroke_changed(self, stroke):
-        arrow_path = self.marker.children[0]
-        arrow_path.fill = stroke
+    def _get_height(self):
+        return max(abs(self.y1 - self.y2), ARROW_MIN_SIZE)
 
 
 class RectangleModel(BaseShapeObjectData):
@@ -211,7 +193,7 @@ def _write_base_shape_data(model, element):
 @register_scene_reader("Line", xmltag=NS_SVG + "line", version=1)
 def __line_reader(element):
     """A reader for Line objects in Version 1 scenes"""
-    # # Check if it is an arrow:
+    # Check if it is an older arrow with XML defs arrow head.
     if "marker-end" in element.attrib:
         return __arrow_reader(element)
 
@@ -231,85 +213,60 @@ def __line_writer(model, parent):
 
 # Don't register because this is called from the line reader
 def __arrow_reader(element):
-    """A reader for Line objects in Version 1 scenes"""
     traits = _read_base_shape_data(element)
     traits.update(get_numbers(("x1", "y1", "x2", "y2"), element))
-
-    # Retrieve marker model from the registry
-    id_ = get_defs_id(element.get("marker-end"))
-    traits["marker"] = find_def(id_)
-
-    return ArrowModel(**traits)
+    return ArrowPolygonModel(**traits)
 
 
-@register_scene_writer(ArrowModel)
-def __arrow_writer(model, parent):
-    """A writer for LineModel objects"""
-    # Write the defs model first, it's the same level as the arrow
-    defs_element = SubElement(parent, NS_SVG + "defs")
-    write_defs_model(XMLDefsModel(children=[model.marker]), defs_element)
-
-    element = SubElement(parent, NS_SVG + "line")
-    _write_base_shape_data(model, element)
-    set_numbers(("x1", "y1", "x2", "y2"), model, element)
-
-    # Write marker-end attribute
-    element.set("marker-end", f"url(#{model.marker.id})")
-
-    return element
+def __set_points(model, polygon_element):
+    """ Sets the arrowhead points as string. eg 'x1,y1 x2,y2 x3,y3' """
+    points = (f"{model.x2},{model.y2} "
+              f"{model.hx1},{model.hy1} "
+              f"{model.hx2},{model.hy2} ")
+    polygon_element.set("points", points)
 
 
-@register_scene_reader("Marker", xmltag=NS_SVG + "marker", version=1)
-def __marker_reader(element):
-    """A reader for Markers"""
-
-    d = element.attrib.copy()
-
-    # Read all the trait values
-    converters = {
-        "id": str,
-        "markerHeight": float,
-        "markerUnits": str,
-        "markerWidth": float,
-        "preserveAspectRatio": str,
-        "orient": convert_number_or_string,
-        "refX": convert_number_or_string,
-        "refY": convert_number_or_string,
-    }
-
-    traits = {
-        name: converters[name](d[name]) for name in converters if name in d
-    }
-
-    # Add children definitions
-    traits["children"] = [read_element(el) for el in element]
-
-    return MarkerModel(**traits)
+def __get_points(polygon_element):
+    """Reads the polygon element's points . Point is stored as
+    'x1,y1 x2,y2 x3,y3'  """
+    points = polygon_element.get("points").strip()
+    _, hp1, hp2 = points.split(" ")
+    hx1, hy1 = hp1.split(",")
+    hx2, hy2 = hp2.split(",")
+    return {"hx1": hx1, "hy1": hy1, "hx2": hx2, "hy2": hy2}
 
 
-@register_scene_writer(MarkerModel)
-def __marker_writer(model, parent):
-    """A writer for PathModel objects"""
-    element = SubElement(parent, NS_SVG + "marker")
-    attribs = (
-        "id",
-        "markerHeight",
-        "markerUnits",
-        "markerWidth",
-        "preserveAspectRatio",
-        "orient",
-        "refX",
-        "refY",
-    )
+@register_scene_reader("ArrowPolygonModel", xmltag=SVG_GROUP_TAG,
+                       version=2)
+def arrow_polygon_reader(element):
+    line = element.find(NS_SVG + "line")
+    polygon = element.find(NS_SVG + "polygon")
 
-    # Write attributes
-    for attr, value in model.trait_get(attribs).items():
-        if not is_empty(value):
-            element.set(attr, str(value))
+    traits = _read_base_shape_data(line)
+    traits.update(get_numbers(("x1", "y1", "x2", "y2"), line))
 
-    # Write children elements
-    for child in model.children:
-        write_element(child, element)
+    points = __get_points(polygon_element=polygon)
+    traits.update(points)
+    return ArrowPolygonModel(**traits)
+
+
+@register_scene_writer(ArrowPolygonModel)
+def arrow_polygon_writer(model, parent):
+    element = SubElement(parent, NS_SVG + "g")
+    element.set(NS_KARABO + "class", "ArrowPolygonModel")
+
+    # x, y, width and height are added so that in KaraboGUI older than 2.21
+    # the unsupported widget is shown.
+    set_numbers(("x", "y", "width", "height"), model, element)
+    # Write line and polygon(arrowhead) as separate elements.
+    line = SubElement(element, NS_SVG + "line")
+    _write_base_shape_data(model, line)
+    set_numbers(("x1", "y1", "x2", "y2"), model, line)
+
+    polygon_element = SubElement(element, NS_SVG + "polygon")
+    __set_points(model=model, polygon_element=polygon_element)
+    model.fill = model.stroke
+    _write_base_shape_data(model, polygon_element)
     return element
 
 

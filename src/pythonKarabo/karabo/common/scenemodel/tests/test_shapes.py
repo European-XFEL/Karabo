@@ -17,7 +17,7 @@ from karabo.testing.utils import temp_xml_file
 
 from ..model import UnknownXMLDataModel
 from ..modelio import read_scene
-from ..shapes import ArrowModel, LineModel, PathModel, RectangleModel
+from ..shapes import ArrowPolygonModel, LineModel, PathModel, RectangleModel
 from .utils import single_model_round_trip
 
 
@@ -135,10 +135,10 @@ def test_svg_arrow():
         # Check if the scene model contains a defs model and an arrow model
         assert len(scene_model.children) == 1
         for child in scene_model.children:
-            assert isinstance(child, ArrowModel)
+            assert isinstance(child, ArrowPolygonModel)
 
         # Check arrow model
-        arrow_model = _get_child_model(scene_model, ArrowModel)
+        arrow_model = _get_child_model(scene_model, ArrowPolygonModel)
         assert arrow_model.x1 == 295
         assert arrow_model.y1 == 50
         assert arrow_model.x2 == 95
@@ -146,16 +146,6 @@ def test_svg_arrow():
 
         assert arrow_model.stroke == "#000"
         assert arrow_model.stroke_width == 5
-
-        marker_model = arrow_model.marker
-        assert marker_model is not None
-        assert marker_model.id == "arrow"
-        assert marker_model.markerWidth == 10
-        assert marker_model.markerHeight == 10
-        assert marker_model.refX == 0
-        assert marker_model.refY == 3
-        assert marker_model.orient == "auto"
-        assert marker_model.markerUnits == "strokeWidth"
 
 
 def test_svg_defs():
