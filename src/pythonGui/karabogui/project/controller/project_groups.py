@@ -29,7 +29,8 @@ from karabo.common.project.api import (
     DeviceServerModel, MacroModel, ProjectModel, read_macro)
 from karabo.common.scenemodel.api import SceneModel, read_scene
 from karabogui import icons, messagebox
-from karabogui.access import AccessRole, access_role_allowed
+from karabogui.access import (
+    ACCESS_LEVEL_ROLES, AccessRole, access_role_allowed)
 from karabogui.binding.api import ProxyStatus
 from karabogui.dialogs.device_capability import DeviceCapabilityDialog
 from karabogui.itemtypes import ProjectItemTypes
@@ -70,6 +71,7 @@ class ProjectSubgroupController(BaseProjectGroupController):
         }
         filler = menu_fillers.get(self.trait_name)
         menu = QMenu(parent)
+        menu.setToolTipsVisible(True)
         filler(menu, project_controller)
         return menu
 
@@ -126,11 +128,14 @@ def _fill_macros_menu(menu, project_controller):
     move_action.triggered.connect(partial(_move_project_macros,
                                           project_controller,
                                           parent=menu.parent()))
+    move_action.setEnabled(project_allowed)
 
     menu.addAction(add_action)
     menu.addAction(load_action)
     menu.addAction(load_from_device)
     menu.addAction(move_action)
+    if not project_allowed:
+        _add_disabled_tooltip(menu)
 
 
 def _fill_scenes_menu(menu, project_controller):
@@ -162,6 +167,7 @@ def _fill_scenes_menu(menu, project_controller):
     move_action.triggered.connect(partial(_move_project_scenes,
                                           project_controller,
                                           parent=menu.parent()))
+    move_action.setEnabled(project_allowed)
 
     about_action = QAction(icons.about, 'About', menu)
     about_action.triggered.connect(partial(_about_scene,
@@ -176,6 +182,9 @@ def _fill_scenes_menu(menu, project_controller):
     menu.addAction(move_action)
     menu.addSeparator()
     menu.addAction(about_action)
+
+    if not project_allowed:
+        _add_disabled_tooltip(menu)
 
 
 def _fill_servers_menu(menu, project_controller):
@@ -196,6 +205,20 @@ def _fill_servers_menu(menu, project_controller):
 
     menu.addAction(add_action)
     menu.addAction(server_action)
+
+    if not project_allowed:
+        _add_disabled_tooltip(menu)
+
+
+def _add_disabled_tooltip(menu: QMenu) -> None:
+    """Add a tooltip to each disabled item in the menu to explain why it is
+    disabled."""
+    required_access_level = ACCESS_LEVEL_ROLES.get(
+        AccessRole.PROJECT_EDIT).name
+    tooltip = f"Requires minimum '{required_access_level}' access level"
+    for action in menu.actions():
+        if not action.isEnabled():
+            action.setToolTip(tooltip)
 
 
 # ----------------------------------------------------------------------
