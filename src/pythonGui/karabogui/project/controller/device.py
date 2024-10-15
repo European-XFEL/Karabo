@@ -33,7 +33,8 @@ from karabo.common.project.api import (
     find_parent_object)
 from karabo.native import Hash, read_project_model, write_project_model
 from karabogui import messagebox
-from karabogui.access import AccessRole, access_role_allowed
+from karabogui.access import (
+    ACCESS_LEVEL_ROLES, AccessRole, access_role_allowed)
 from karabogui.binding.api import (
     NO_CLASS_STATUSES, NO_CONFIG_STATUSES, ONLINE_CONFIG_STATUSES)
 from karabogui.dialogs.api import (
@@ -56,6 +57,11 @@ from karabogui.util import move_to_cursor
 from .bases import BaseProjectGroupController, ProjectControllerUiData
 from .server import DeviceServerController
 
+ACCESS_LEVEL_TOOLTIP = "Requires minimum '{}' access level"
+SERVER_OFFLINE_TOOLTIP = "Server is offline"
+DEVICE_ONLINE_TOOLTIP = "Device is already instantiated"
+INCORRECT_STATE_TOOLTIP = "Device is not in correct State"
+
 
 class DeviceInstanceController(BaseProjectGroupController):
     """ A wrapper for DeviceInstanceModel objects
@@ -72,7 +78,7 @@ class DeviceInstanceController(BaseProjectGroupController):
             return (mask & bit) == bit
 
         menu = QMenu(parent)
-
+        menu.setToolTipsVisible(True)
         server_controller = find_parent_object(self, project_controller,
                                                DeviceServerController)
         server_online = server_controller.online
@@ -85,11 +91,23 @@ class DeviceInstanceController(BaseProjectGroupController):
         project_allowed = access_role_allowed(AccessRole.PROJECT_EDIT)
         service_allowed = access_role_allowed(AccessRole.SERVICE_EDIT)
 
+        project_edit_access_level = ACCESS_LEVEL_ROLES.get(
+            AccessRole.PROJECT_EDIT).name
+        project_allowed_tooltip = ACCESS_LEVEL_TOOLTIP.format(
+            project_edit_access_level)
+
+        service_edit_access_level = ACCESS_LEVEL_ROLES.get(
+            AccessRole.SERVICE_EDIT).name
+        service_allowed_tooltip = ACCESS_LEVEL_TOOLTIP.format(
+            service_edit_access_level)
+
         edit_action = QAction(icons.edit, 'Edit', menu)
         edit_action.triggered.connect(partial(self._edit_device,
                                               project_controller,
                                               parent=parent))
         edit_action.setEnabled(project_allowed)
+        if not project_allowed:
+            edit_action.setToolTip(project_allowed_tooltip)
 
         config_menu = self._create_sub_menu(menu, project_controller,
                                             project_allowed)
@@ -98,19 +116,26 @@ class DeviceInstanceController(BaseProjectGroupController):
                                               project_controller,
                                               parent=parent))
         dupe_action.setEnabled(project_allowed)
+        if not project_allowed:
+            dupe_action.setToolTip(project_allowed_tooltip)
 
         delete_action = QAction(icons.delete, 'Delete', menu)
         delete_action.triggered.connect(partial(self._delete_device,
                                                 project_controller,
                                                 parent=parent))
         delete_action.setEnabled(project_allowed)
-
+        if not project_allowed:
+            delete_action.setToolTip(project_allowed_tooltip)
         macro_action = QAction(icons.download, 'Open device macro', menu)
         has_macro = _test_mask(capabilities, Capabilities.PROVIDES_MACROS)
         macro_action.triggered.connect(partial(self._load_macro_from_device,
                                                project_controller,
                                                parent=parent))
         macro_action.setEnabled(has_macro and project_allowed)
+        if not has_macro:
+            macro_action.setToolTip("The device has no Macro")
+        elif not project_allowed:
+            macro_action.setToolTip(project_allowed_tooltip)
 
         scene_action = QAction(icons.download, 'Open device scene', menu)
         has_scene = _test_mask(capabilities, Capabilities.PROVIDES_SCENES)
@@ -118,6 +143,10 @@ class DeviceInstanceController(BaseProjectGroupController):
                                                project_controller,
                                                parent=parent))
         scene_action.setEnabled(has_scene and project_allowed)
+        if not has_scene:
+            scene_action.setToolTip("Device has no scene")
+        elif not project_allowed:
+            scene_action.setToolTip(project_allowed_tooltip)
 
         conf_action = QAction(icons.clock, 'Get Configuration (Time)', menu)
         can_get_conf = (server_online and
@@ -125,6 +154,10 @@ class DeviceInstanceController(BaseProjectGroupController):
         conf_action.triggered.connect(partial(
             self._get_configuration_from_past, parent=parent))
         conf_action.setEnabled(can_get_conf)
+        if not server_online:
+            conf_action.setToolTip(SERVER_OFFLINE_TOOLTIP)
+        elif not can_get_conf:
+            conf_action.setToolTip(INCORRECT_STATE_TOOLTIP)
 
         conf_action_name = QAction('Get && Save Configuration (Name)', menu)
         can_get_conf_name = (server_online and
@@ -132,6 +165,10 @@ class DeviceInstanceController(BaseProjectGroupController):
         conf_action_name.triggered.connect(partial(
             self._get_configuration_from_name, parent=parent))
         conf_action_name.setEnabled(can_get_conf_name)
+        if not server_online:
+            conf_action.setToolTip(SERVER_OFFLINE_TOOLTIP)
+        elif not can_get_conf:
+            conf_action.setToolTip(INCORRECT_STATE_TOOLTIP)
 
         show_action = QAction(icons.deviceInstance, 'Select in topology', menu)
         show_action.triggered.connect(self._show_device)
@@ -141,6 +178,10 @@ class DeviceInstanceController(BaseProjectGroupController):
         set_can_get_conf = (server_online and proj_device_status
                             in ONLINE_CONFIG_STATUSES)
         set_conf_action.setEnabled(set_can_get_conf)
+        if not server_online:
+            set_conf_action.setToolTip(SERVER_OFFLINE_TOOLTIP)
+        elif not set_can_get_conf:
+            set_conf_action.setToolTip(INCORRECT_STATE_TOOLTIP)
         set_conf_action.triggered.connect(partial(
             self._store_online_configuration, parent=parent))
 
@@ -152,12 +193,24 @@ class DeviceInstanceController(BaseProjectGroupController):
                                                      project_controller,
                                                      parent=parent))
         instantiate_action.setEnabled(can_instantiate and service_allowed)
+        if not server_online:
+            instantiate_action.setToolTip(INCORRECT_STATE_TOOLTIP)
+        elif proj_device_online:
+            instantiate_action.setToolTip(DEVICE_ONLINE_TOOLTIP)
+        elif not can_instantiate:
+            instantiate_action.setToolTip(INCORRECT_STATE_TOOLTIP)
+        elif not service_allowed:
+            instantiate_action.setToolTip(service_allowed_tooltip)
 
         shutdown_action = QAction(icons.kill, 'Shutdown', menu)
         shutdown_action.triggered.connect(partial(self.shutdown_device,
                                                   show_confirm=True,
                                                   parent=parent))
         shutdown_action.setEnabled(proj_device_online and service_allowed)
+        if not proj_device_online:
+            shutdown_action.setToolTip(DEVICE_ONLINE_TOOLTIP)
+        elif not service_allowed:
+            shutdown_action.setToolTip(service_allowed_tooltip)
 
         menu.addSeparator()
         about_action = QAction(icons.about, 'About', menu)
@@ -167,10 +220,16 @@ class DeviceInstanceController(BaseProjectGroupController):
         up_action = QAction(icons.arrowFancyUp, 'Move Up', menu)
         up_action.triggered.connect(partial(self._move_up,
                                             project_controller))
+        up_action.setEnabled(project_allowed)
+        if not project_allowed:
+            up_action.setToolTip(project_allowed_tooltip)
 
         down_action = QAction(icons.arrowFancyDown, 'Move Down', menu)
         down_action.triggered.connect(partial(self._move_down,
                                               project_controller))
+        down_action.setEnabled(project_allowed)
+        if not project_allowed:
+            down_action.setToolTip(project_allowed_tooltip)
 
         menu.addAction(edit_action)
         menu.addMenu(config_menu)
