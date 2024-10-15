@@ -614,7 +614,7 @@ def test_shapes(setup_scene_view):
     assert_clipboard_action(proxy_map, scene_view, line_model)
 
     # Test single arrow shape
-    arrow_model = sm.ArrowModel(x1=30, y1=40, x2=300, y2=400)
+    arrow_model = sm.ArrowPolygonModel(x1=30, y1=40, x2=300, y2=400)
     assert_clipboard_action(proxy_map, scene_view, arrow_model)
 
     # Test multiple shapes

@@ -19,7 +19,7 @@ from .bases import (
     BaseSceneObjectData, BaseShapeObjectData, BaseWidgetObjectData,
     XMLElementModel)
 from .const import (
-    ARROW_HEAD, DISPLAY_COMPONENT, EDITABLE_COMPONENT, NS_KARABO, NS_SVG,
+    DISPLAY_COMPONENT, EDITABLE_COMPONENT, NS_KARABO, NS_SVG,
     SCENE_DEFAULT_DPI, SCENE_FILE_VERSION, SCENE_FONT_FAMILY, SCENE_FONT_SIZE,
     SCENE_FONT_WEIGHT, SCENE_MAC_DPI, SCENE_MIN_HEIGHT, SCENE_MIN_WIDTH,
     WIDGET_ELEMENT_TAG, SceneTargetWindow)
@@ -33,8 +33,7 @@ from .layouts import (
 from .model import SceneModel, UnknownWidgetDataModel, UnknownXMLDataModel
 from .modelio import read_scene, write_scene, write_single_model
 from .registry import register_scene_reader, register_scene_writer
-from .shapes import (
-    ArrowModel, LineModel, MarkerModel, PathModel, RectangleModel)
+from .shapes import ArrowPolygonModel, LineModel, PathModel, RectangleModel
 from .widgets.complex import (
     ColorBoolModel, DisplayCommandModel, DisplayIconCommandModel,
     DisplayProgressBarModel, DisplayStateColorModel, DoubleLineEditModel,
