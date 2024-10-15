@@ -59,7 +59,6 @@ class ReaderRegistry(HasStrictTraits):
 
     entries = Dict(String, Instance(ReaderEntry))  # `{name: entry}`
     version = Int
-    defs = Dict
 
     def register(self, name=None, func=None, version=None):
         entry = self.entries.get(name)
@@ -80,23 +79,6 @@ class ReaderRegistry(HasStrictTraits):
             return reader(read_element, element)
 
         return reader(element)
-
-    def add_defs(self, models):
-        self.defs.clear()
-        for model in models:
-            # Record child model if it has an id trait.
-            for child in model.children:
-                if not child.id:
-                    continue
-                self.defs[child.id] = child
-
-            # Store the whole defs if it has an id attribute.
-            if not model.id:
-                continue
-            self.defs[model.id] = model
-
-    def find(self, id_):
-        return self.defs.get(id_)
 
     def _fetch_klass(self, element):
         for kind in ("widget", "class"):
@@ -163,21 +145,6 @@ def read_element(element):
 def write_element(model, parent):
     global _writer_registry
     return _writer_registry.write(model, parent)
-
-
-def add_temporary_defs(defs):
-    """For every scene opening, the SVG defs are temporarily added in the
-    registry. These can be then used by the readers with `find_def`.
-
-    This is very useful for SVG elements with defs such as a
-    line with a marker def (arrow)"""
-    global _reader_registry
-    _reader_registry.add_defs(defs)
-
-
-def find_def(id_):
-    global _reader_registry
-    return _reader_registry.find(id_)
 
 
 class register_scene_reader:
