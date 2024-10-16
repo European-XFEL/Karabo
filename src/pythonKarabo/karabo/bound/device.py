@@ -27,11 +27,12 @@ from karabind import (
     NODE_ELEMENT, OBSERVER, OVERWRITE_ELEMENT, SLOT_ELEMENT, STATE_ELEMENT,
     STRING_ELEMENT, UINT32_ELEMENT, WRITE, AccessLevel, AccessType,
     AssemblyRules, Broker, ChannelMetaData, ConnectionStatus, Epochstamp,
-    EventLoop, Hash, HashFilter, HashMergePolicy, LeafType, Logger,
-    MetricPrefix, Schema, SignalSlotable, Timestamp, Trainstamp, Unit,
-    Validator, ValidatorValidationRules, VectorHash, loadFromFile)
+    EventLoop, Hash, HashFilter, HashMergePolicy, Logger, MetricPrefix, Schema,
+    SignalSlotable, Timestamp, Trainstamp, Unit, Validator,
+    ValidatorValidationRules, VectorHash, loadFromFile)
 from karabo import __version__ as karaboVersion
 from karabo.common.api import (
+    KARABO_CLASS_ID_ALARM, KARABO_CLASS_ID_STATE,
     KARABO_LOGGER_CONTENT_DEFAULT, AlarmCondition, Capabilities, Interfaces,
     State, karabo_deprecated)
 
@@ -767,14 +768,14 @@ class PythonDevice(NoFsm):
             try:
                 result = self._parameters[key]
                 if not self._fullSchema.getParameterHash()\
-                        .hasAttribute(key, "leafType"):
-                    leafType = None
+                        .hasAttribute(key, "classId"):
+                    classId = None
                 else:
-                    leafType = self._fullSchema.getParameterHash()\
-                        .getAttribute(key, "leafType")
-                if leafType == LeafType.STATE:
+                    classId = self._fullSchema.getParameterHash()\
+                        .getAttribute(key, "classId")
+                if classId == KARABO_CLASS_ID_STATE:
                     return State(result)
-                elif leafType == LeafType.ALARM_CONDITION:
+                elif classId == KARABO_CLASS_ID_ALARM:
                     return AlarmCondition(result)
                 elif isinstance(result, (Hash, VectorHash)):
                     # For Hash and VectorHash, 'result' is a reference, so if
