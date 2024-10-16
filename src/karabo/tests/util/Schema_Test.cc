@@ -1821,7 +1821,7 @@ void Schema_Test::testNodeDisplayType() {
 }
 
 
-void Schema_Test::testAlarmStateElement() {
+void Schema_Test::testGetLeaves() {
     Schema schema("test");
     TestStruct1::expectedParameters(schema);
     OtherSchemaElements::expectedParameters(schema);
@@ -1836,8 +1836,12 @@ void Schema_Test::testAlarmStateElement() {
     CPPUNIT_ASSERT_EQUAL(std::string("filename"), leaves[1]);
     CPPUNIT_ASSERT_EQUAL(std::string("testTable"), leaves[2]);
     CPPUNIT_ASSERT_EQUAL(3ul, leaves.size());
+}
 
-    // Hijack this to test isProperty here.
+
+void Schema_Test::testAlarmStateElement() {
+    Schema schema("test");
+    OtherSchemaElements::expectedParameters(schema);
     CPPUNIT_ASSERT(schema.isProperty("alarmCondition"));
     CPPUNIT_ASSERT(schema.isProperty("state"));
 
