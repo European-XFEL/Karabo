@@ -365,6 +365,17 @@ def test_displayType():
         pytest.fail(e, pytrace=True)
 
 
+def test_classId():
+    try:
+        schema = cppShapeSchemaCircle()
+        assert schema.hasClassId("state")
+        assert schema.getClassId("state") == "State"
+        assert schema.hasClassId("alarm")
+        assert schema.getClassId("alarm") == "AlarmCondition"
+    except Exception as e:
+        pytest.fail(e, pytrace=True)
+
+
 def test_getDefaultValue():
     try:
         schema = cppTestStruct1SchemaTestStruct1()

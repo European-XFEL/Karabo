@@ -293,6 +293,11 @@ void exportPyUtilSchema(py::module_& m) {
               py::arg("path"), py::return_value_policy::reference_internal);
 
         s.def(
+              "getClassId",
+              [](const Schema& self, const std::string& path) -> py::str { return self.getClassId(path); },
+              py::arg("path"), py::return_value_policy::reference_internal);
+
+        s.def(
               "getDisplayedName",
               [](const Schema& self, const std::string& path) -> py::str { return self.getDisplayedName(path); },
               py::arg("path"), py::return_value_policy::reference_internal);
@@ -744,6 +749,11 @@ void exportPyUtilSchema(py::module_& m) {
         s.def(
               "hasDisplayType",
               [](const Schema& self, const std::string& path) -> py::bool_ { return self.hasDisplayType(path); },
+              py::arg("path"));
+
+        s.def(
+              "hasClassId",
+              [](const Schema& self, const std::string& path) -> py::bool_ { return self.hasClassId(path); },
               py::arg("path"));
 
         s.def(
