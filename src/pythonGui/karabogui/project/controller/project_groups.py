@@ -30,7 +30,7 @@ from karabo.common.project.api import (
 from karabo.common.scenemodel.api import SceneModel, read_scene
 from karabogui import icons, messagebox
 from karabogui.access import (
-    ACCESS_LEVEL_ROLES, AccessRole, access_role_allowed)
+    AccessRole, access_role_allowed, get_access_level_for_role)
 from karabogui.binding.api import ProxyStatus
 from karabogui.dialogs.device_capability import DeviceCapabilityDialog
 from karabogui.itemtypes import ProjectItemTypes
@@ -213,8 +213,8 @@ def _fill_servers_menu(menu, project_controller):
 def _add_disabled_tooltip(menu: QMenu) -> None:
     """Add a tooltip to each disabled item in the menu to explain why it is
     disabled."""
-    required_access_level = ACCESS_LEVEL_ROLES.get(
-        AccessRole.PROJECT_EDIT).name
+    required_access_level = get_access_level_for_role(
+        AccessRole.PROJECT_EDIT)
     tooltip = f"Requires minimum '{required_access_level}' access level"
     for action in menu.actions():
         if not action.isEnabled():

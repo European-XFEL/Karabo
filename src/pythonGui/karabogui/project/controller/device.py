@@ -34,7 +34,7 @@ from karabo.common.project.api import (
 from karabo.native import Hash, read_project_model, write_project_model
 from karabogui import messagebox
 from karabogui.access import (
-    ACCESS_LEVEL_ROLES, AccessRole, access_role_allowed)
+    AccessRole, access_role_allowed, get_access_level_for_role)
 from karabogui.binding.api import (
     NO_CLASS_STATUSES, NO_CONFIG_STATUSES, ONLINE_CONFIG_STATUSES)
 from karabogui.dialogs.api import (
@@ -91,13 +91,13 @@ class DeviceInstanceController(BaseProjectGroupController):
         project_allowed = access_role_allowed(AccessRole.PROJECT_EDIT)
         service_allowed = access_role_allowed(AccessRole.SERVICE_EDIT)
 
-        project_edit_access_level = ACCESS_LEVEL_ROLES.get(
-            AccessRole.PROJECT_EDIT).name
+        project_edit_access_level = get_access_level_for_role(
+            AccessRole.PROJECT_EDIT)
         project_allowed_tooltip = ACCESS_LEVEL_TOOLTIP.format(
             project_edit_access_level)
 
-        service_edit_access_level = ACCESS_LEVEL_ROLES.get(
-            AccessRole.SERVICE_EDIT).name
+        service_edit_access_level = get_access_level_for_role(
+            AccessRole.SERVICE_EDIT)
         service_allowed_tooltip = ACCESS_LEVEL_TOOLTIP.format(
             service_edit_access_level)
 

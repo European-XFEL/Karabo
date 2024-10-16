@@ -89,3 +89,8 @@ def reset_login():
     ONE_TIME_TOKEN = None
     TEMPORARY_SESSION_USER = None
     TEMPORARY_SESSION_WARNING = False
+
+
+def get_access_level_for_role(role: AccessRole) -> str:
+    """Get the access level needed for the AccessRole. """
+    return ACCESS_LEVEL_ROLES[role].name
