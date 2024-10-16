@@ -14,8 +14,10 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 
-from karabind import DeviceClient as BoundDeviceClient, Hash, LeafType
+from karabind import DeviceClient as BoundDeviceClient, Hash
 from karabo.common.alarm_conditions import AlarmCondition
+from karabo.common.api import (
+    KARABO_CLASS_ID_ALARM, KARABO_CLASS_ID_STATE, KARABO_SCHEMA_CLASS_ID)
 from karabo.common.states import State
 
 
@@ -33,11 +35,12 @@ class DeviceClient(BoundDeviceClient):
             key = args[0]
             if schema.isLeaf(key):
                 paramHash = schema.getParameterHash()
-                if paramHash.hasAttribute(key, "leafType"):
-                    leafType = paramHash.getAttribute(key, "leafType")
-                    if leafType == LeafType.STATE:
+                if paramHash.hasAttribute(key, KARABO_SCHEMA_CLASS_ID):
+                    dt = paramHash.getAttribute(
+                        key, KARABO_SCHEMA_CLASS_ID)
+                    if dt == KARABO_CLASS_ID_STATE:
                         return State(value)
-                    elif leafType == LeafType.ALARM_CONDITION:
+                    elif dt == KARABO_CLASS_ID_ALARM:
                         return AlarmCondition(value)
 
         return value
