@@ -1,6 +1,102 @@
 ..
   Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
+***************************
+What's New in Karabo 2.20.7
+***************************
 
+This patch release is dedicated for the KaraboGUI. The mirror process was not working anymore. Also an exception message
+is fine tuned.
+
+Detailed Original Additions
++++++++++++++++++++++++++++
+
+### Bug Fixes
+
+- *(C++)* Also add path in exception msg for inconsistent default and options (BACKPORT for 2.20.X) ([6fa5ac5](https://git.xfel.eu/Karabo/Framework/-/commit/6fa5ac5e62d02a0acd49d390fe327c24d0a2ea4c))
+
+
+### Refactor
+
+- *(CI)* Only use conda-forge in mirror process (Cherry-pick hotfix) ([63fe614](https://git.xfel.eu/Karabo/Framework/-/commit/63fe614d1b236a6eae46bf2047f560afcd85505f))
+
+***************************
+What's New in Karabo 2.20.6
+***************************
+
+Several little fixes for the KaraboGUI and an invalidState exception fix for the middlelayer.
+
+Detailed Original Additions
++++++++++++++++++++++++++++
+
+### Bug Fixes
+
+- *(GUI)* Temporary button- Make tooltip consistant (Cherry-pick) ([029e073](https://git.xfel.eu/Karabo/Framework/-/commit/029e073a4cb3869514c5149aa218ebb1db81cc6d))
+- *(GUI)* Always use the least loaded macro server when instantiating a macro (Cherry-pick hotfix) ([8fa62f7](https://git.xfel.eu/Karabo/Framework/-/commit/8fa62f786d4fe1e72f7680be6757fe54b3940295))
+- *(GUI)* Int type cast of max value for QInputDialog.getInput(Cherry-pick 2.20.X)) ([b027975](https://git.xfel.eu/Karabo/Framework/-/commit/b027975b8702dac7bfe00da4b379c66d56bb1016))
+- *(GUI)* Skip pipeline data from binding in configuration comparison (Cherry-pick 2.20.X) ([c9b1b58](https://git.xfel.eu/Karabo/Framework/-/commit/c9b1b58aabf6f2c5f85856b3e311174dfd51a802))
+- *(MDL)* DaemonManager:requestNetwork reply with only the requested host (Cherry-pick 2.20.X) ([f1b78e8](https://git.xfel.eu/Karabo/Framework/-/commit/f1b78e88e3bf8d33754218b7b25a8b91d946a022))
+- *(MDL)* EventLoop: Prevent InvalidState exception (Cherry-pick hotfix) ([1738feb](https://git.xfel.eu/Karabo/Framework/-/commit/1738febc8df9c326afefe0135c5c3c531319d29d))
+- *(No Category)* Use proper alias for Karabo's default broker (BACKPORT for 2.20.X) ([5dd3438](https://git.xfel.eu/Karabo/Framework/-/commit/5dd34382ece8d6dc96b0842002611ac0e6dde47f))
+
+***************************
+What's New in Karabo 2.20.5
+***************************
+
+This patch release contains little tweaks for testing and a provides tables now to consider state changes properly when using table buttons.
+
+Detailed Original Additions
++++++++++++++++++++++++++++
+
+- *(GUI)* Object name for server info label (Cherry-pick 2.20.X) ([425289c](https://git.xfel.eu/Karabo/Framework/-/commit/425289cf473b7fd22b9bece718700c77d642461a))
+- *(GUI)* ObjectName for Navigation Tree Views (Cherry-pick 2.20.X) ([e8b833e](https://git.xfel.eu/Karabo/Framework/-/commit/e8b833e052a5134560752bb313fd787b48fc8c1b))
+- *(GUI)* Consider also buttons when enabling or disabling table controller (Cherry-pick hotfix) ([fea8b14](https://git.xfel.eu/Karabo/Framework/-/commit/fea8b1471529c9251ec68529f835933bf505d993))
+
+***************************
+What's New in Karabo 2.20.4
+***************************
+
+A **major** fix for heartbeat recovery in the C++ framework and a workaround for instance update retrieval. Backbones should update at least to
+this release.
+
+Detailed Original Additions
++++++++++++++++++++++++++++
+
+### Bug Fixes
+
+- *(C++)* Fix heartbeat recovery for devices treated as gone since server gone (BACKPORT to 2.20.X) ([1f7845d](https://git.xfel.eu/Karabo/Framework/-/commit/1f7845d1facbc5980e2a097cf5665811973090cd))
+- *(C++)* Fix test for data logger map (BACKPORT 2.20.X) ([ec71e14](https://git.xfel.eu/Karabo/Framework/-/commit/ec71e147ce307f11b6b3edcd480d4f58d6b212f2))
+- *(C++)* Workaround arrival of instanceUpdate for unknown devices (BACKPORT for 2.20.X) ([e512cdf](https://git.xfel.eu/Karabo/Framework/-/commit/e512cdfaa7b920ea5e109eb8e802f2b02d82a05b))
+
+***************************
+What's New in Karabo 2.20.3
+***************************
+
+Some client machines have conflicting user spaces for the GUIExtensions. This patch release makes sure to install GuiExtensions globally.
+
+Detailed Original Additions
++++++++++++++++++++++++++++
+
+### Bug Fixes
+
+- *(GUI)* Don't install extensions in user space (Cherry-pick hotfix 2.20.X) ([877ea10](https://git.xfel.eu/Karabo/Framework/-/commit/877ea10bcb70824ecc8e981d16aeb316285a30d9))
+
+### Refactor
+
+- *(GUI)* Change tooltip to Home for scene panel button (Cherry-pick hotfix) ([d7de1cd](https://git.xfel.eu/Karabo/Framework/-/commit/d7de1cdb2f201791380c03d6bd4ee9eba5474367))
+
+***************************
+What's New in Karabo 2.20.2
+***************************
+
+Patch release targeted for C++/Bound pipelining.
+
+Detailed Original Additions
++++++++++++++++++++++++++++
+
+### Bug Fixes
+
+- *(C++)* Protect InputChannel against bad data, don not trust tcpChannel->isOpen() (BACKPORT for 2.20.X) ([a297a63](https://git.xfel.eu/Karabo/Framework/-/commit/a297a6328e8d0bdbbc81cd1be44816393daaa3fd))
+- *(C++/Bound)* Input handler could not cache pipeline data pointer (BACKPORT to 2.20.X) ([917c796](https://git.xfel.eu/Karabo/Framework/-/commit/917c796a1fd6d4a44d4db2d9ee2b83d9c8a8ae27))
 
 
 ***************************
@@ -129,7 +225,7 @@ C++ API
 =======
 
 - *OverwriteElement* got more strict: Before it was silently ignoring cases
-  like overwriting a non-existing key or inconsistencies between options, 
+  like overwriting a non-existing key or inconsistencies between options,
   default values and/or limits. Now it throws.
 
 Bound API
