@@ -85,19 +85,19 @@ class DeviceTreeView(QTreeView):
         self.ac_about.setToolTip(text)
         self.ac_about.triggered.connect(self.onAbout)
 
-        text = "Get Configuration (Time)"
+        text = "Get configuration (time)"
         self.ac_config_past = QAction(icons.clock, text, self)
         self.ac_config_past.setStatusTip(text)
         self.ac_config_past.setToolTip(text)
         self.ac_config_past.triggered.connect(self.onGetConfigurationFromPast)
 
-        text = "Get && Save Configuration (Name)"
+        text = "Get && save configuration (name)"
         self.ac_config_name = QAction(text, self)
         self.ac_config_name.setStatusTip(text)
         self.ac_config_name.setToolTip(text)
         self.ac_config_name.triggered.connect(self.onGetConfigurationFromName)
 
-        text = "Open Device Scene..."
+        text = "Open device scene..."
         self.ac_open_device_scene = QAction(text, self)
         self.ac_open_device_scene.setStatusTip(text)
         self.ac_open_device_scene.setToolTip(text)
