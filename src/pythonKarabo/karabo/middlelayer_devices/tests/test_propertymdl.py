@@ -17,7 +17,6 @@ from contextlib import contextmanager
 
 from karabo.middlelayer import (
     KaraboError, get_property, getDevice, setWait, updateDevice)
-from karabo.middlelayer.broker import jms
 from karabo.middlelayer.tests.eventloop import DeviceTest, async_tst
 
 from ..property_test import PropertyTestMDL
@@ -49,8 +48,7 @@ class Tests(DeviceTest):
                      "node.counter"]
 
             with (await getDevice("Test_PropertyTestMDL")) as d:
-                if not jms:
-                    await updateDevice(d)
+                await updateDevice(d)
                 for i, prop in enumerate(props, 10):
                     self.assertNotEqual(get_property(d, prop), i)
                     await setWait(d, prop, i)
@@ -59,8 +57,7 @@ class Tests(DeviceTest):
 
         with self.subTest(msg="Test alarm slots"):
             with (await getDevice("Test_PropertyTestMDL")) as d:
-                if not jms:
-                    await updateDevice(d)
+                await updateDevice(d)
                 # invalid alarm condition in stringProperty
                 await setWait(d, "stringProperty", "")
                 with self.assertRaises(KaraboError):
@@ -77,8 +74,7 @@ class Tests(DeviceTest):
 
         with self.subTest(msg="Test noded slots"):
             with (await getDevice("Test_PropertyTestMDL")) as d:
-                if not jms:
-                    await updateDevice(d)
+                await updateDevice(d)
                 await d.node.reset()
                 self.assertEqual(d.node.counterReadOnly, 0)
                 await d.node.increment()

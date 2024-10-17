@@ -23,11 +23,9 @@
 // or might be not reacheable to outside the European XFEL network
 // use the environment variables
 // KARABO_CI_BROKERS
-// e.g. export KARABO_CI_BROKERS=tcp://a-jms-broker:7777;amqp://an-amqp-broker:5672
+// e.g. export KARABO_CI_BROKERS=amqp://an-amqp-broker:5672
 
-#define JMS_BROKER_DEFAULT "tcp://exfl-broker:7777"
 #define AMQP_BROKER_DEFAULT "amqp://xfel:karabo@exfl-broker-1:5672"
-#define INVALID_JMS "tcp://invalid.example.org:7777"
 #define INVALID_AMQP "amqp://invalid.example.org:5672"
 
 
@@ -35,4 +33,3 @@ std::vector<std::string> getBrokersFromEnvVar(const std::string& envVar, const s
 std::vector<std::string> getBrokersFromEnv(const std::string& protocol);
 karabo::util::Hash getBrokersFromEnv();
 std::vector<std::string> getBrokerFromEnv(const std::string& protocol);
-std::vector<std::string> getJmsBrokerFromEnv();

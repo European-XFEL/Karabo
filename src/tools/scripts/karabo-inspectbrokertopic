@@ -16,15 +16,15 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 
 SCRIPT=$(basename $0)
-DEFAULT_DEFAULT=exfl-broker:7777
+DEFAULT_DEFAULT=exfl-broker-1:5672
 if [ -z $KARABO_BROKER ]; then
     BROKER_DEFAULT=$DEFAULT_DEFAULT
 else
     # KARABO_BROKER is set, but might contain more than one URI.
     # So just use the first one, i.e. everything before the first ',':
     BROKER_DEFAULT=${KARABO_BROKER%%,*}
-    # Then strip off the leading 'tcp://' to have e.g. exflbkr02n0.desy.de:7777:
-    BROKER_DEFAULT=${BROKER_DEFAULT#tcp://}
+    # Then strip off the leading 'amqp://' to have e.g. exflbkr02n0.desy.de:5672:
+    BROKER_DEFAULT=${BROKER_DEFAULT#amqp://}
 fi
 
 if [ ${#@} -le 0 ] || [ $1 == "-h" ] || [ $1 == "--help" ]; then

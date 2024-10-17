@@ -126,9 +126,6 @@ safeRunTests() {
     BROKER=$1
     TEST_SUITE_NAME=$2
     BROKER_TYPE=$(echo $BROKER | sed -E "s|(.+)://(.+)|\1|g")
-    if [ "${BROKER_TYPE}" == "tcp" ]; then
-        BROKER_TYPE="jms"
-    fi
     export KARABO_BROKER=$BROKER
 
     echo
