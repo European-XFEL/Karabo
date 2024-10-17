@@ -16,8 +16,7 @@
 
 from karabind import DeviceClient as BoundDeviceClient, Hash
 from karabo.common.alarm_conditions import AlarmCondition
-from karabo.common.api import (
-    KARABO_CLASS_ID_ALARM, KARABO_CLASS_ID_STATE, KARABO_SCHEMA_CLASS_ID)
+from karabo.common.api import KARABO_CLASS_ID_ALARM, KARABO_CLASS_ID_STATE
 from karabo.common.states import State
 
 
@@ -34,13 +33,11 @@ class DeviceClient(BoundDeviceClient):
             schema = self.getDeviceSchema(instanceId)
             key = args[0]
             if schema.isLeaf(key):
-                paramHash = schema.getParameterHash()
-                if paramHash.hasAttribute(key, KARABO_SCHEMA_CLASS_ID):
-                    dt = paramHash.getAttribute(
-                        key, KARABO_SCHEMA_CLASS_ID)
-                    if dt == KARABO_CLASS_ID_STATE:
+                if schema.hasClassId(key):
+                    classId = schema.getClassId(key)
+                    if classId == KARABO_CLASS_ID_STATE:
                         return State(value)
-                    elif dt == KARABO_CLASS_ID_ALARM:
+                    elif classId == KARABO_CLASS_ID_ALARM:
                         return AlarmCondition(value)
 
         return value
