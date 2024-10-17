@@ -14,7 +14,6 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 # flake8: noqa
-from . import openmq
 from .base import Broker
-from .compat import amqp, jms, suppressBrokerException
+from .compat import amqp, suppressBrokerException
 from .utils import check_broker_scheme

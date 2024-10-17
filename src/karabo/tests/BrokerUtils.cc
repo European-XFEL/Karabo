@@ -82,9 +82,7 @@ karabo::util::Hash getBrokersFromEnv() {
                 continue;
             }
             const std::string protocol = vBrokerUrl[0].substr(0, n);
-            if (protocol == "tcp") {
-                ret.set("jms", vBrokerUrl);
-            } else if (protocol == "amqp") {
+            if (protocol == "amqp") {
                 ret.set(protocol, vBrokerUrl);
             }
         }
@@ -99,8 +97,4 @@ std::vector<std::string> getBrokerFromEnv(const std::string& protocol) {
         brokers = getBrokersFromEnvName("KARABO_BROKER", protocol);
     }
     return brokers;
-}
-
-std::vector<std::string> getJmsBrokerFromEnv() {
-    return getBrokersFromEnv("tcp");
 }
