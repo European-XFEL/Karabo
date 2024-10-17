@@ -27,7 +27,8 @@ from traits.api import Bool, Instance, Property, on_trait_change
 import karabogui.icons as icons
 from karabo.common.api import walk_traits_object
 from karabo.common.project.api import DeviceServerModel
-from karabogui.access import AccessRole, access_role_allowed
+from karabogui.access import (
+    AccessRole, access_role_allowed, get_access_level_for_role)
 from karabogui.binding.api import ProxyStatus
 from karabogui.dialogs.api import LogDialog
 from karabogui.events import (
@@ -43,6 +44,9 @@ from karabogui.singletons.api import get_manager, get_topology
 from karabogui.util import move_to_cursor, version_compatible
 
 from .bases import BaseProjectGroupController, ProjectControllerUiData
+
+ACCESS_LEVEL_TOOLTIP = "Requires minimum '{}' access level"
+SERVER_OFFLINE_TOOLTIP = "Server is offline"
 
 
 class DeviceServerController(BaseProjectGroupController):
@@ -61,32 +65,53 @@ class DeviceServerController(BaseProjectGroupController):
 
         project_allowed = access_role_allowed(AccessRole.PROJECT_EDIT)
         service_allowed = access_role_allowed(AccessRole.SERVICE_EDIT)
+        project_edit_access_level = get_access_level_for_role(
+            AccessRole.PROJECT_EDIT)
+        project_allowed_tooltip = ACCESS_LEVEL_TOOLTIP.format(
+            project_edit_access_level)
 
+        service_edit_access_level = get_access_level_for_role(
+            AccessRole.SERVICE_EDIT)
+        service_allowed_tooltip = ACCESS_LEVEL_TOOLTIP.format(
+            service_edit_access_level)
         menu = QMenu(parent)
+        menu.setToolTipsVisible(True)
         edit_action = QAction(icons.edit, 'Edit', menu)
         edit_action.triggered.connect(partial(self._edit_server,
                                               parent=parent))
         edit_action.setEnabled(project_allowed)
-
+        if not project_allowed:
+            edit_action.setToolTip(project_allowed_tooltip)
         delete_action = QAction(icons.delete, 'Delete', menu)
         delete_action.triggered.connect(partial(self._delete_server,
                                                 project_controller,
                                                 parent=parent))
         delete_action.setEnabled(project_allowed)
-
+        if not project_allowed:
+            delete_action.setToolTip(project_allowed_tooltip)
         shutdown_action = QAction(icons.kill, 'Shutdown', menu)
-        shutdown_action.setEnabled(online)
         shutdown_action.triggered.connect(partial(self._shutdown_server,
                                                   parent=parent))
-        shutdown_action.setEnabled(service_allowed)
-
+        shutdown_action.setEnabled(online and service_allowed)
+        if not online:
+            shutdown_action.setToolTip(SERVER_OFFLINE_TOOLTIP)
+        elif not service_allowed:
+            shutdown_action.setToolTip(service_allowed_tooltip)
         add_action = QAction(icons.add, 'Add device', menu)
         add_action.setEnabled(online and project_allowed)
+        if not online:
+            add_action.setToolTip(SERVER_OFFLINE_TOOLTIP)
+        elif not project_allowed:
+            add_action.setToolTip(project_allowed_tooltip)
         add_action.triggered.connect(partial(self._add_device, parent=parent))
 
         instantiate_all_action = QAction(
             icons.run, 'Instantiate all devices', menu)
         instantiate_all_action.setEnabled(online and service_allowed)
+        if not online:
+            instantiate_all_action.setToolTip(SERVER_OFFLINE_TOOLTIP)
+        elif not service_allowed:
+            instantiate_all_action.setToolTip(service_allowed_tooltip)
         instantiate_all_action.triggered.connect(
             partial(self.instantiate_devices,
                     parent=parent))
@@ -95,12 +120,17 @@ class DeviceServerController(BaseProjectGroupController):
             icons.kill, 'Shutdown all devices', menu)
         shutdown_all_action.triggered.connect(partial(self._shutdown_devices,
                                                       parent=parent))
-        shutdown_all_action.setEnabled(service_allowed)
-
+        shutdown_all_action.setEnabled(online and service_allowed)
+        if not online:
+            shutdown_all_action.setToolTip(SERVER_OFFLINE_TOOLTIP)
+        elif not service_allowed:
+            shutdown_all_action.setToolTip(service_allowed_tooltip)
         remove_all_action = QAction(icons.delete, 'Delete all devices', menu)
         remove_all_action.triggered.connect(partial(self._delete_all_devices,
                                                     parent=parent))
         remove_all_action.setEnabled(project_allowed)
+        if not project_allowed:
+            instantiate_all_action.setToolTip(project_allowed_tooltip)
 
         show_action = QAction(icons.yes, 'Select in topology', menu)
         show_action.triggered.connect(self._show_server)
@@ -118,6 +148,10 @@ class DeviceServerController(BaseProjectGroupController):
         # Sub menu for device sorting
         sort_menu = menu.addMenu("&Sort options")
         sort_menu.setIcon(icons.edit)
+        sort_menu.setEnabled(project_allowed)
+        if not project_allowed:
+            sort_menu.setToolTip(project_allowed_tooltip)
+
         sort_alpha = QAction(
             icons.stringAttribute, 'Sort devices alphabetically', menu)
         sort_alpha.triggered.connect(partial(self._sort_alphabetically,
