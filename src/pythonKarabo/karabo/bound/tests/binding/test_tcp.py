@@ -59,7 +59,7 @@ def test_broker():
     sigSlot = SignalSlotable("brokerCreator", Hash(), 60, Hash())
     broker = sigSlot.getConnection()
     assert type(broker) is Broker
-    brokerProtocol = "tcp" if brokerType == "jms" else brokerType
+    brokerProtocol = brokerType
     assert broker.getBrokerUrl().startswith(brokerProtocol + "://")
 
 
