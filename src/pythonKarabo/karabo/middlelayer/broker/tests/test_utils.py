@@ -41,13 +41,6 @@ def test_check_broker_scheme():
              "amqp://control:spirit@192.168.1.1:1111"]
     assert not check_broker_scheme(hosts)
 
-    # 3.2 correct scheme jms
-    hosts = ["tcp://exfl-broker:7777",
-             "tcp://exfl-broker:7777"]
-    assert not check_broker_scheme(hosts)
-    hosts = ["tcp://exfl-broker:7777"]
-    assert not check_broker_scheme(hosts)
-
     # 4.1 incomplete scheme amqp, first missing port
     hosts = ["amqp://control:spirit@exflc1",
              "amqp://control:spirit@exflc1:1111"]

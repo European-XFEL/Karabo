@@ -12,8 +12,6 @@ source "$scriptDir/../set_lsb_release_info.sh"
 CONAN_RECIPE_CHANNEL=py311
 LOG4CPP_VERSION=1.1.3
 DAEMONTOOLS_VERSION=1.11-karabo3
-OPENMQ_VERSION=5.1.3
-OPENMQC_VERSION=5.1.4.1
 NSS_VERSION=3.93
 
 declare -A CONAN_MIRRORS=(
@@ -163,8 +161,6 @@ install_from_deps() {
         # we keep custom conan recipes in extern/resources/<pkg_name>)
         safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan export ./resources/daemontools/conanfile.py --name daemontools-encore --version $DAEMONTOOLS_VERSION --user karabo --channel $CONAN_RECIPE_CHANNEL"
         safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan export ./resources/log4cpp/conanfile.py --name log4cpp --version $LOG4CPP_VERSION --user karabo --channel $CONAN_RECIPE_CHANNEL"
-        safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan export ./resources/openmq/conanfile.py --name openmq --version $OPENMQ_VERSION --user karabo --channel $CONAN_RECIPE_CHANNEL"
-        safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan export ./resources/openmqc/conanfile.py --name openmqc --version $OPENMQC_VERSION --user karabo --channel $CONAN_RECIPE_CHANNEL"
         safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan export ./resources/nss/conanfile.py --name nss --version $NSS_VERSION --user karabo --channel $CONAN_RECIPE_CHANNEL"
 
         # configure prefix paths

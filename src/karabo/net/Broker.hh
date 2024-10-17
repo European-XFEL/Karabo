@@ -96,7 +96,7 @@ namespace karabo {
 
             /**
              * Get type string identifying broker.
-             * Example: "OpenMQBroker"
+             * Example: "AmqpBroker"
              * @return the type defined by active uri
              */
             virtual std::string getBrokerType() const = 0;

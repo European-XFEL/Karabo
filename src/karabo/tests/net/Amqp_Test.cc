@@ -47,7 +47,7 @@ std::atomic<bool> Amqp_Test::m_loggingIsSetup(false);
 
 Amqp_Test::Amqp_Test()
     // Use the environment variable KARABO_CI_BROKERS to define the brokers to use in tests:
-    // e.g. export KARABO_CI_BROKERS=tcp://a-jms-broker:7777;amqp://an-amqp-broker:5672
+    // e.g. export KARABO_CI_BROKERS=amqp://an-amqp-broker:5672
     // If that variable is not defined, KARABO_BROKER with an amqp broker also works
     : m_defaultBrokers(getBrokerFromEnv("amqp")), m_timeout(10), m_timeoutMs(10'000) {
     if (false &&                            // remove 'false &&' to switch on logging

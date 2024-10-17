@@ -32,8 +32,6 @@
 #include <karabo/net/AmqpHashClient.hh>
 #include <karabo/net/Broker.hh>
 #include <karabo/net/EventLoop.hh>
-#include <karabo/net/JmsConnection.hh>
-#include <karabo/net/JmsConsumer.hh>
 #include <karabo/util/Hash.hh>
 #include <karabo/util/StringTools.hh>
 #include <karabo/xms/SignalSlotable.hh>
@@ -57,7 +55,6 @@ void printHelp(const char* execName) {
     cout << "  -b brokerUrl: URL(s) of broker" << endl;
     cout << "                if not specified, use environment variable KARABO_BROKER" << endl;
     cout << "  -s selector : Broker type specific selection of messages" << endl;
-    cout << "                OpenMQ: selector string, e.g. \"slotInstanceIds LIKE '%|deviceId|%'\"" << endl;
     cout << "                AMQP:   Selection criteria involves 2 values: exchange and binding key " << endl;
     cout << "                        separated by colon sign (:) and such pairs are comma separated. " << endl;
     cout << "                        e.g. signals:*.signalChanged,global_slots:,slots:INSTANCE/1\"" << endl << endl;
@@ -67,33 +64,6 @@ void readHandler(const Hash::Pointer& header, const Hash::Pointer& body) {
     cout << *header << endl;
     cout << *body << endl;
     cout << "-----------------------------------------------------------------------" << endl << endl;
-}
-
-
-void jmsErrorNotifier(consumer::Error errCode, const string& errDesc) {
-    cout << ">>>> Error >>>>" << endl;
-    cout << " Code: " << static_cast<int>(errCode) << endl;
-    cout << " Description: " << errDesc << endl;
-    cout << "-----------------------------------------------------------------------" << endl << endl;
-}
-
-
-void logOpenMQ(const std::vector<std::string>& brokerUrls, const std::string& topic, const std::string& selector) {
-    JmsConnection::Pointer connection = boost::make_shared<JmsConnection>(brokerUrls);
-    connection->connect();
-    const string effectiveUrl = connection->getBrokerUrl(); // one of the potentially several
-
-    cout << "# Starting to consume messages..." << std::endl;
-    cout << "# Broker (OpenMQ): " << effectiveUrl << endl;
-    cout << "# Topic: " << topic << endl;
-    cout << "# Selector: " << selector << endl << endl;
-
-    // Obtain consumer
-    JmsConsumer::Pointer consumer = connection->createConsumer(topic, selector);
-
-    // Read and logs messages and errors.
-    consumer->startReading(boost::bind(&readHandler, _1, _2), boost::bind(&jmsErrorNotifier, _1, _2));
-    EventLoop::work(); // Block forever
 }
 
 
@@ -210,9 +180,7 @@ int main(int argc, char** argv) {
 
         const std::string brkType = Broker::brokerTypeFrom(brokerUrls);
         cout << "# Trying to connect to broker '" << toString(brokerUrls) << "'...\n" << endl;
-        if (brkType == "jms") {
-            logOpenMQ(brokerUrls, topic, selector);
-        } else if (brkType == "amqp") {
+        if (brkType == "amqp") {
             logAmqp(brokerUrls, topic, selector);
         } else {
             throw KARABO_NOT_IMPLEMENTED_EXCEPTION(brkType + " not supported!");
