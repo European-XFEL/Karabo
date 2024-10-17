@@ -46,7 +46,7 @@ def test_dialog(gui_app):
                                          "The device is online.")
         assert dialog.ui_config_count.text() == (
             "Showing 2 reconfigurable parameters and 1 are currently allowed.")
-        assert dialog.ui_swap.text() == "Show changes"
+        assert dialog.ui_swap.text() == "Show Changes"
         dialog._swap_view()
         assert dialog.ui_swap.text() == "Show Configuration"
         assert not dialog.ui_hide_readonly.isChecked()
