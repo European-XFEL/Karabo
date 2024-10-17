@@ -13,10 +13,10 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
-
 import os
 import subprocess
 import sys
+import uuid
 from collections.abc import Callable
 from threading import Thread
 from time import sleep
@@ -186,6 +186,13 @@ class BoundDeviceTestCase(TestCase):
             return True
         except RuntimeError:
             return False
+
+
+def create_instanceId(name=None):
+    """Create a unique instanceId with `name` and append a uuid"""
+    if name is None:
+        name = "test-bound"
+    return f"{name}-{uuid.uuid4()}"
 
 
 def sleepUntil(condition: Callable[[], bool], timeout: float | int,
