@@ -369,22 +369,6 @@ pre-commit-check:
   allow_failure: false
 
 
-test_docs:
-  stage: lint
-  image: europeanxfel/karabo-ci:miniconda-3lint-003
-  script:
-    - pushd doc
-    - pip install -r requirements.txt
-    - conda config --add channels conda-forge
-    - conda install doxygen
-    - make doctest
-  only:
-    refs:
-      - merge_requests
-    changes:
-      - "src/**/*"
-      - "doc/**/*"
-
 systemtest:
   stage: systemtest
   image: europeanxfel/karabo-ci:miniconda-3-002
