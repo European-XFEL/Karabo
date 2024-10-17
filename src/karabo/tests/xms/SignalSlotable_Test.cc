@@ -259,17 +259,19 @@ void SignalSlotable_Test::_testValidInstanceId() {
     auto s = boost::make_shared<SignalSlotable>(allowedChars);
     CPPUNIT_ASSERT_NO_THROW(s->start());
 
-    // dot '.' is bad since id often used as key in Hash, so instance must not start
-    s = boost::make_shared<SignalSlotable>("a.b");
-    CPPUNIT_ASSERT_THROW(s->start(), SignalSlotException);
-
-    // space ' ' causes problem in xml serialisation, so instance must not start
-    s = boost::make_shared<SignalSlotable>("a b");
-    CPPUNIT_ASSERT_THROW(s->start(), SignalSlotException);
-
-    // colon ':' separates instanceId and pipeline channel name, so instance must not start
-    s = boost::make_shared<SignalSlotable>("a:b");
-    CPPUNIT_ASSERT_THROW(s->start(), SignalSlotException);
+    // Now check that bad character lead to exceptions:
+    // No dot '.' since id often used as key in Hash.
+    // A space ' ' causes problem in xml serialisation.
+    // The ':' (and historically the '@') separates instanceId and pipeline channel name.
+    // LF '\n' and CR '\r' caused trouble (now fixed) with AMQP queue names.
+    // Tab '\t' is also non-sense.
+    const char badCharacters[] = ". :@\n\r\t";
+    std::string instanceId(allowedChars);
+    for (size_t i = 0; i < sizeof(badCharacters) / sizeof(badCharacters[0]); ++i) {
+        instanceId[1] = badCharacters[i]; // Replace 2nd character by an invalid one
+        s = boost::make_shared<SignalSlotable>(instanceId);
+        CPPUNIT_ASSERT_THROW_MESSAGE("Tested id: " + instanceId, s->start(), SignalSlotException);
+    }
 }
 
 
