@@ -417,17 +417,6 @@ namespace karabo {
     karabo::util::FileNotFoundIOException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         /**
-         * The MQException handles exceptions that are caused by the JMS openMQ c-client implementation
-         */
-        class OpenMqException : public Exception {
-           public:
-            OpenMqException(const std::string& message, const std::string& filename, const std::string& function,
-                            int lineNumber)
-                : Exception(message, "OpenMq Exception", filename, function, lineNumber) {}
-        };
-#define KARABO_OPENMQ_EXCEPTION(msg) karabo::util::OpenMqException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
-
-        /**
          * The MessageException handles exceptions that are caused during messaging
          */
         class MessageException : public Exception {
@@ -510,7 +499,7 @@ namespace karabo {
 
         /**
          * The NetworkException handles exceptions that are caused by network protocol related libraries (BoostAsio,
-         * SNMP, OpenMQ,...)
+         * SNMP, ...)
          */
         class NetworkException : public Exception {
            public:
