@@ -19,18 +19,13 @@ from contextlib import suppress
 broker = os.environ.get("KARABO_BROKER")
 if broker:
     amqp = broker.startswith("amqp://")
-    jms = broker.startswith("tcp://")
 else:
     # For now, keep JMS as the default
     amqp = False
-    jms = True
 
 
 def _get_exception():
-    if jms:
-        from .openmq import Error as JMSError
-        return JMSError
-    elif amqp:
+    if amqp:
         from aiormq.exceptions import AMQPException
         return AMQPException
 

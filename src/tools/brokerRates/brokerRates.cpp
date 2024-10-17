@@ -35,8 +35,6 @@
 #include <karabo/net/AmqpHashClient.hh>
 #include <karabo/net/Broker.hh>
 #include <karabo/net/EventLoop.hh>
-#include <karabo/net/JmsConnection.hh>
-#include <karabo/net/JmsConsumer.hh>
 #include <karabo/util/Epochstamp.hh>
 #include <karabo/util/Hash.hh>
 #include <karabo/util/MetaTools.hh>
@@ -465,60 +463,6 @@ void printHelp(const char* name) {
               << std::endl;
 }
 
-std::string assembleJmsSelector(const std::vector<std::string>& receivers, std::vector<std::string>& senders) {
-    std::ostringstream str;
-    bool first = true;
-    for (const auto& receiverId : receivers) {
-        if (first) first = false;
-        else str << " OR ";
-        str << "slotInstanceIds LIKE '%|" << receiverId << "|%'";
-    }
-    for (const auto& senderId : senders) {
-        if (first) first = false;
-        else str << " OR ";
-        str << "signalInstanceId = '" << senderId << "'";
-    }
-    if (!first) {
-        // Take care that broadcasts are also listed if senders/receivers are specified
-        str << " OR slotInstanceIds LIKE '%|*|%'";
-    }
-    return str.str();
-}
-
-void startJmsMonitor(const std::vector<std::string>& brokers, const std::string& topic,
-                     const std::vector<std::string>& receivers, std::vector<std::string>& senders,
-                     const util::TimeValue& interval) {
-    // Create connection object
-    net::JmsConnection::Pointer connection = boost::make_shared<net::JmsConnection>(brokers);
-    connection->connect();
-
-    // Assemble selector
-    const std::string selector = assembleJmsSelector(receivers, senders);
-
-    if (debug) std::cout << "\nSelector:\n" << selector << std::endl;
-
-    // 3rd argument true: skip serialisation (but get access to raw message size)!
-    net::JmsConsumer::Pointer consumer = connection->createConsumer(topic, selector, true);
-
-    std::cout << "\nStart monitoring signal and slot rates of \n   topic         '" << topic << "'\n   on broker     '"
-              << connection->getBrokerUrl() << "',\n   ";
-    if (!receivers.empty()) {
-        std::cout << "messages to   '" << util::toString(receivers) << "',\n   ";
-    }
-    if (!senders.empty()) {
-        std::cout << "messages from '" << util::toString(senders) << "',\n   ";
-    }
-    std::cout << "interval is   " << interval << " s." << std::endl;
-
-    // Register our registration message as async reader:
-    boost::shared_ptr<BrokerStatistics> stats(boost::make_shared<BrokerStatistics>(interval, receivers, senders));
-    consumer->startReading(boost::bind(&BrokerStatistics::registerMessage, stats, _1, _2));
-
-    if (debug) std::cout << "\n------------------ wait on work" << std::endl;
-    // Block forever
-    net::EventLoop::work();
-}
-
 
 void startAmqpMonitor(const std::vector<std::string>& brokers, const std::string& domain,
                       const std::vector<std::string>& receivers, std::vector<std::string>& senders,
@@ -636,7 +580,7 @@ void startAmqpMonitor(const std::vector<std::string>& brokers, const std::string
 
 
 int main(int argc, const char** argv) {
-    net::EventLoop::addThread(2); // e.g. for JmsConsumer's serializer and handler strands
+    net::EventLoop::addThread(2);
 
     // Setup option defaults
     karabo::util::Hash options("period", static_cast<util::TimeValue>(5ull), "--receivers", "", "--senders", "",
@@ -683,9 +627,7 @@ int main(int argc, const char** argv) {
     const std::string brkType = net::Broker::brokerTypeFrom(brokers);
 
     try {
-        if (brkType == "jms") {
-            startJmsMonitor(brokers, topic, receivers, senders, interval);
-        } else if (brkType == "amqp") {
+        if (brkType == "amqp") {
             startAmqpMonitor(brokers, topic, receivers, senders, interval);
         } else {
             throw KARABO_NOT_IMPLEMENTED_EXCEPTION(brkType + " not supported!");

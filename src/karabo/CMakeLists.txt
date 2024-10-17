@@ -163,7 +163,6 @@ find_package(Boost REQUIRED)
 find_package(amqpcpp REQUIRED)
 find_package(log4cpp REQUIRED)
 find_package(nlohmann_json REQUIRED)
-find_package(openmqc REQUIRED)
 find_package(pugixml REQUIRED)
 
 set_target_properties(
@@ -207,7 +206,6 @@ target_link_libraries(
     Boost::headers
     log4cpp::log4cpp
     nlohmann_json::nlohmann_json
-    openmqc::openmqc
     pugixml::pugixml
 )
 

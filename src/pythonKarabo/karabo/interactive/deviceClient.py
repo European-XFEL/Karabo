@@ -270,7 +270,7 @@ class DeviceClient:
     connection to the broker. You may specify which broker and topic should be
     used via the environment variables
 
-      KARABO_BROKER       (default: tcp://exfl-broker:7777)
+      KARABO_BROKER       (default: amqp://xfel:karabo@exfl-broker-1:5672)
       KARABO_BROKER_TOPIC (default: $USER)
 
     where defaults stated above are given if the environment variable is not

@@ -46,7 +46,7 @@ Broker_Test::Broker_Test()
       m_thread(),
       m_config(),
       m_brokersUnderTest(getBrokersFromEnv()),
-      m_invalidBrokers({{"jms", INVALID_JMS}, {"amqp", INVALID_AMQP}}) {}
+      m_invalidBrokers({{"amqp", INVALID_AMQP}}) {}
 
 Broker_Test::~Broker_Test() {}
 

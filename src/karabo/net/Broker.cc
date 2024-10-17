@@ -84,7 +84,7 @@ namespace karabo {
         std::vector<std::string> Broker::brokersFromEnv() {
             const char* env = getenv("KARABO_BROKER");
             return karabo::util::fromString<std::string, std::vector>(
-                  env ? env : "tcp://exfl-broker.desy.de:7777,tcp://localhost:7777");
+                  env ? env : "amqp://xfel::karabo@exfl-broker-1.desy.de:5672,amqp://guest:guest@localhost:5672");
         }
 
 
@@ -107,10 +107,6 @@ namespace karabo {
                     throw KARABO_LOGIC_EXCEPTION("Inconsistent broker types in " +
                                                  karabo::util::toString(brokersFromEnv()));
                 }
-            }
-            // For backward compatibility: jms uses a tcp connection, specified in KARABO_BROKER...
-            if (type == "tcp") {
-                type = "jms";
             }
             return type;
         }
