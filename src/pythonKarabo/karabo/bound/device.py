@@ -767,12 +767,10 @@ class PythonDevice(NoFsm):
         with self._stateChangeLock:
             try:
                 result = self._parameters[key]
-                if not self._fullSchema.getParameterHash()\
-                        .hasAttribute(key, "classId"):
+                if not self._fullSchema.hasClassId(key):
                     classId = None
                 else:
-                    classId = self._fullSchema.getParameterHash()\
-                        .getAttribute(key, "classId")
+                    classId = self._fullSchema.getClassId(key)
                 if classId == KARABO_CLASS_ID_STATE:
                     return State(result)
                 elif classId == KARABO_CLASS_ID_ALARM:
@@ -885,13 +883,11 @@ class PythonDevice(NoFsm):
                         self._ss.removeOutputChannel(outChannel)
                 if (self._staticSchema.has(outChannel)
                     and schema.has(outChannel)
-                    and (not schema.hasDisplayType(outChannel)
-                         or schema.getDisplayType(outChannel)
+                    and (not schema.hasClassId(outChannel)
+                         or schema.getClassId(outChannel)
                          != "OutputChannel"
                          )):
                     outChannelsToRecreate.add(outChannel)
-                # elif schema.getDisplayType(outChannel) == "OutputChannel":
-                #    will be recreated by _initChannels(injectedSchema) below
 
             self._injectedSchema.copy(schema)
             self._fullSchema.copy(self._staticSchema)
@@ -953,11 +949,11 @@ class PythonDevice(NoFsm):
             outChannelsToRecreate = set()
             for path in self._ss.getOutputChannelNames():
                 if (self._fullSchema.has(path) and schema.has(path)
-                    and (not schema.hasDisplayType(path) or
-                         schema.getDisplayType(path) != "OutputChannel")):
+                    and (not schema.hasClassId(path) or
+                         schema.getClassId(path) != "OutputChannel")):
                     # maybe output schema change without using OUTPUT_CHANNEL
                     outChannelsToRecreate.add(path)
-                # elif schema.getDisplayType(path) == "OutputChannel":
+                # elif schema.getClassId(path) == "OutputChannel":
                 #      will be recreated by _initChannels(schema) below
 
             self._stateDependentSchema = {}
@@ -1306,16 +1302,16 @@ class PythonDevice(NoFsm):
         # Now go recursively down the node:
         for subKey in subKeys:
             key = topLevel + '.' + subKey if topLevel else subKey
-            if schema.hasDisplayType(key):
-                displayType = schema.getDisplayType(key)
-                if displayType == "OutputChannel":
+            if schema.hasClassId(key):
+                classId = schema.getClassId(key)
+                if classId == "OutputChannel":
                     self._prepareOutputChannel(key)
-                elif displayType == "InputChannel":
+                elif classId == "InputChannel":
                     self._prepareInputChannel(key)
                 else:
                     self.log.DEBUG("Not creating in-/output channel for '"
                                    + key + "' since it's a '"
-                                   + displayType + "'")
+                                   + classId + "'")
             elif schema.isNode(key):
                 # Recursively go down the tree for channels within nodes
                 self.log.DEBUG("Looking for input/output channels " +
