@@ -178,11 +178,7 @@ class Broker(ABC):
     def create_connection(hosts, connection):
         # Get scheme (protocol) of first URI...
         scheme, _ = hosts[0].split("://")
-        if scheme == "tcp":
-            from .jms_broker import JmsBroker
-            return (JmsBroker.create_connection(hosts, connection),
-                    JmsBroker)
-        elif scheme == "amqp":
+        if scheme == "amqp":
             from .amqp_broker import AmqpBroker
             return (AmqpBroker.create_connection(hosts, connection),
                     AmqpBroker)

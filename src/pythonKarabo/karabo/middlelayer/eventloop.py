@@ -33,7 +33,7 @@ from karabo.native import KaraboValue, unit_registry as unit
 # Number of threads that can be scheduled in the thread pool executor.
 _NUM_THREADS = 200
 _SYNC_LOOP = False
-_DEFAULT_HOSTS = "tcp://exfl-broker.desy.de:7777,tcp://localhost:7777"
+_DEFAULT_HOSTS = "amqp://guest:guest@localhost:5672"
 
 
 def set_global_sync():
