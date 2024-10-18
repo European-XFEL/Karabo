@@ -8,9 +8,9 @@
 amqp-cpp/4.3.16
 libev/4.33
 bzip2/1.0.8
-daemontools-encore/1.11-karabo3@karabo/py311
+daemontools-encore/1.11-karabo3@karabo/py312
 gtest/1.11.0
-log4cpp/1.1.3@karabo/py311
+log4cpp/1.1.3@karabo/py312
 nlohmann_json/3.7.3
 zeromq/4.3.2
 xz_utils/5.4.5
@@ -32,7 +32,7 @@ libtiff/4.3.0
 # conan v1
 # nss/3.93
 # conan v2
-nss/3.93@karabo/py311
+nss/3.93@karabo/py312
 
 # forced - these are pinned to allow conan to resolve dependency conflicts
 sqlite3/3.41.2

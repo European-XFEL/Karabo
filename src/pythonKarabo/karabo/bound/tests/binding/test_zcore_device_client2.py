@@ -57,7 +57,6 @@ def test_device_client_sync_api():
         c.getConfigurationFromPast("data/gen/22", "2023-11-01")
 
     # Test listConfigurationFromName...
-    # with pytest.raises(RuntimeError):
     h = c.listConfigurationFromName("data/gen/22", "config1")
     assert h['success'] is False
     assert 'timed out' in h['reason']
