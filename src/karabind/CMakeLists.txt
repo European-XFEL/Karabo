@@ -30,7 +30,7 @@ set(KARABIND_LIB_TARGET_NAME "karabind")
 # system with wrong NumPy version or no NumPy package at all.
 set(Python3_ROOT_DIR ${CMAKE_PREFIX_PATH})
 find_package(
-    Python3 3.11 EXACT REQUIRED
+    Python3 3.12 EXACT REQUIRED
     COMPONENTS Interpreter Development NumPy
 )
 
@@ -52,7 +52,7 @@ add_library(
 )
 
 # The last two RPATH entries are for when libkarabind.so is packaged as
-# karabind.so inside INSTALL_PACKAGE_ROOT/extern/lib/python3.11/site-packages.
+# karabind.so inside INSTALL_PACKAGE_ROOT/extern/lib/python3.12/site-packages.
 set_target_properties(
     ${KARABIND_LIB_TARGET_NAME} PROPERTIES
     INSTALL_RPATH "$ORIGIN/../extern/lib;$ORIGIN;$ORIGIN/../../../../lib;$ORIGIN/../.."

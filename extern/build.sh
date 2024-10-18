@@ -3,13 +3,13 @@
 ##############################################################################
 # Packages that we know how to build
 
-scriptDir=$(dirname `[[ $0 = /* ]] && echo "$0" || echo "$PWD/${0#./}"`)
+scriptDir=$(dirname $([[ $0 = /* ]] && echo "$0" || echo "$PWD/${0#./}"))
 source "$scriptDir/../set_lsb_release_info.sh"
 
 ##############################################################################
 # Important constants
 
-CONAN_RECIPE_CHANNEL=py311
+CONAN_RECIPE_CHANNEL=py312
 LOG4CPP_VERSION=1.1.3
 DAEMONTOOLS_VERSION=1.11-karabo3
 NSS_VERSION=3.93
@@ -23,7 +23,7 @@ declare -A CONAN_MIRRORS=(
 # Define a bunch of functions to be called later
 
 check_for() {
-    which $1 &> /dev/null
+    which $1 &>/dev/null
     if [ $? -ne 0 ]; then
         return 1
     fi
@@ -43,6 +43,7 @@ get_abs_path() {
     *)
         cd "$parent_dir"
         local abs_path="$(pwd -P)"/"$_basename"
+        ;;
     esac
     cd - >/dev/null
     echo "$abs_path"
@@ -53,7 +54,7 @@ checkReturnCode() {
     if [ $ret_code != 0 ]; then
         if [ -n "$1" ]; then
             # if the output is present, print it in case of error
-            cat $1>&1
+            cat $1 >&1
             # remove the temporary file before exiting
             rm -f $1
             # redirect the filedescriptor 3 to stdout as is tradition
@@ -82,7 +83,7 @@ safeRunCommandQuiet() {
     # redirect the stream with file descriptor 3 to the temporary file
     exec 3>"$tmp_output"
     # execute the command redirecting the output to 3
-    eval $cmnd>&3 2>&3
+    eval $cmnd >&3 2>&3
     # `checkReturnCode` will print the output even in quiet mode.
     checkReturnCode $tmp_output
     # remove the temporary file to clean up
@@ -129,10 +130,19 @@ install_python() {
         build_opts="$build_opts -o openssl/*:openssldir=/etc/ssl"
     fi
     # install packages listed in the extern/conanfile-bootstrap.txt
+    if [[ $INSTALL_PREFIX == *"Ubuntu-20"* ]]; then
+        # Work around a failure for building the conan package "cpython/3.12.2"
+        # on Ubuntu 20. For an unknown reason the "configure" that ships with the
+        # cpython source package fails to check that the function "shm_open" is
+        # exported by "librt.so". The same "configure" works as expected on the
+        # same Ubuntu 20 system during a manual installation of cpython from source.
+        # Details at https://git.xfel.eu/Karabo/Framework/-/merge_requests/8551#note_467905
+        export POSIXSHMEM_LIBS="-lrt"
+    fi
     safeRunCommandQuiet "conan install conanfile-bootstrap.txt $folder_opts $build_opts $profile_opts"
 
     # ensure that python can always find its libpython.so
-    safeRunCommand "$INSTALL_PREFIX/bin/patchelf --force-rpath --set-rpath '\$ORIGIN/../lib' $INSTALL_PREFIX/bin/python3.11"
+    safeRunCommand "$INSTALL_PREFIX/bin/patchelf --force-rpath --set-rpath '\$ORIGIN/../lib' $INSTALL_PREFIX/bin/python3.12"
 
     # use pip in INSTALL_PREFIX by calling python3 -m pip <args>
     local pip_install_cmd="$INSTALL_PREFIX/bin/python3 -m pip install"
@@ -153,8 +163,8 @@ install_python() {
 install_from_deps() {
     pushd $scriptDir
 
-        # create default build profile
-        safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan profile detect --force"
+    # create default build profile
+    safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan profile detect --force"
 
         add_conan_mirrors
         # export local conan recipes (for packages where no public recipe exists
@@ -163,12 +173,12 @@ install_from_deps() {
         safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan export ./resources/log4cpp/conanfile.py --name log4cpp --version $LOG4CPP_VERSION --user karabo --channel $CONAN_RECIPE_CHANNEL"
         safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan export ./resources/nss/conanfile.py --name nss --version $NSS_VERSION --user karabo --channel $CONAN_RECIPE_CHANNEL"
 
-        # configure prefix paths
-        local folder_opts="--deployer=karabo_deployer --deployer-folder=$INSTALL_PREFIX --output-folder=$INSTALL_PREFIX/conan_toolchain"
-        # when should conan build from sources? missing means if no pre-compiled binary package exists
-        local build_opts="--build=missing"
-        # apply custom profile on top of default profile
-        local profile_opts="-pr:h=./conanprofile.karabo"
+    # configure prefix paths
+    local folder_opts="--deployer=karabo_deployer --deployer-folder=$INSTALL_PREFIX --output-folder=$INSTALL_PREFIX/conan_toolchain"
+    # when should conan build from sources? missing means if no pre-compiled binary package exists
+    local build_opts="--build=missing"
+    # apply custom profile on top of default profile
+    local profile_opts="-pr:h=./conanprofile.karabo"
 
     # always compile openssl from source (needed later), ensures linkage against correct GLIBC version symbols
     if [[ $INSTALL_PREFIX == *"CentOS-7"* ]]; then
@@ -224,13 +234,13 @@ BUILD_PACKAGE="n"
 QUIET=""
 until [ ${1:0:1} != "-" ]; do
     case $1 in
-        --package|-p)
+    --package | -p)
         BUILD_PACKAGE="y"
         ;;
-        --quiet|-q)
+    --quiet | -q)
         QUIET="-q"
         ;;
-        *)
+    *)
         echo "Unrecognized argument '$1'"
         usage
         exit 1
