@@ -209,7 +209,7 @@ Pint                 0.17              BSD-3-Clause                             
 pip                  7.1               MIT                                                         yes                   yes
 pkgconfig            1.2.2             MIT                                                         yes                   yes
 pluggy               0.13.1            MIT                                                         yes                   no
-ply                  3.11              BSD                                                         yes                   no
+ply                  3.12              BSD                                                         yes                   no
 prompt-toolkit       3.0.10            BSD-3-Clause                                                yes                   yes
 ptyprocess           0.7.0             ISCL                                                        yes                   no
 psutil               4.3.1             BSD                                                         no                    no
