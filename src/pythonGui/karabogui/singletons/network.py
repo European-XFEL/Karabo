@@ -108,7 +108,9 @@ class Network(QObject):
         """
         self.hostname = hostname
         self.port = port
-        dialog = ReactiveLoginDialog(hostname=hostname, port=port)
+        dialog = ReactiveLoginDialog(hostname=hostname,
+                                     gui_servers=self.gui_servers,
+                                     port=port)
         if dialog.exec() != QDialog.Accepted:
             return False
 
