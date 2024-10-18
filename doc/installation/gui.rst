@@ -27,13 +27,13 @@ The following steps are needed in order to obtain Conda.
 * Open your terminal (Miniforge3 Prompt on Windows or Bash on Linux and MacOS)
 * If conda is in your path, you should be able to run **conda --version**
     * If it isn't, you need to activate conda first
-        * **Linux/MacOS**: ``source <miniconda_path>/etc/profile.d/conda.sh``
-        * **Win**: ``CALL <miniconda_path>/condabin/activate.bat``
+        * **Linux/MacOS**: ``source <miniforge_path>/etc/profile.d/conda.sh``
+        * **Win**: ``CALL <miniforge_path>/condabin/activate.bat``
 
 If you find errors such as "Your shell has not been properly configured to use 'conda activate'", run the following
 command:
 
-    . <your miniconda3 path>/etc/profile.d/conda.sh
+    . <your miniforge3 path>/etc/profile.d/conda.sh
 
 Or add it to your ``.bashrc`` (or similar).
 
@@ -170,7 +170,7 @@ Developing
 
 For developing in KaraboGUI using Qt5 we need to be inside a conda environment
 
-After installing your miniconda3 distribution, install the package
+After installing your miniforge3 distribution, install the package
 ``conda-devenv`` from the conda-forge channel::
 
     conda install conda-devenv -c conda-forge
