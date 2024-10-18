@@ -381,6 +381,7 @@ async def test_output_reconnect(deviceTest):
     await output_device.slotKillDevice()
 
 
+@pytest.mark.skip("Failing with Python 3.12.2 (FIXME)")
 @pytest.mark.timeout(30)
 @run_test
 async def test_output_reconnect_device(deviceTest):

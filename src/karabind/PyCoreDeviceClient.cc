@@ -19,6 +19,7 @@
 #include <pybind11/pybind11.h>
 
 #include <karabo/core/DeviceClient.hh>
+#include <memory>
 
 #include "HandlerWrap.hh"
 #include "PyCoreLockWrap.hh"
@@ -514,8 +515,12 @@ void exportPyCoreDeviceClient(py::module_& m) {
           .def(
                 "listConfigurationFromName",
                 [](const DeviceClientWrap::Pointer& self, const std::string& deviceId, const std::string& namePart) {
-                    py::gil_scoped_release release;
-                    return py::cast(self->listConfigurationFromName(deviceId, namePart));
+                    Hash result;
+                    {
+                        py::gil_scoped_release release;
+                        result = self->listConfigurationFromName(deviceId, namePart);
+                    }
+                    return py::cast(std::move(result));
                 },
                 py::arg("deviceId"), py::arg("namePart") = "",
                 "listConfigurationFromName(deviceId, namePart): Returns the device configurations saved under "
@@ -532,8 +537,12 @@ void exportPyCoreDeviceClient(py::module_& m) {
           .def(
                 "getConfigurationFromName",
                 [](const DeviceClientWrap::Pointer& self, const std::string& deviceId, const std::string& name) {
-                    py::gil_scoped_release release;
-                    return py::cast(self->getConfigurationFromName(deviceId, name));
+                    Hash result;
+                    {
+                        py::gil_scoped_release release;
+                        result = self->getConfigurationFromName(deviceId, name);
+                    }
+                    return py::cast(std::move(result));
                 },
                 py::arg("deviceId"), py::arg("name"),
                 "getConfigurationFromName(deviceId, name): Returns the device configuration saved under a given "
@@ -548,8 +557,12 @@ void exportPyCoreDeviceClient(py::module_& m) {
           .def(
                 "getLastConfiguration",
                 [](const DeviceClientWrap::Pointer& self, const std::string& deviceId, int priority) {
-                    py::gil_scoped_release release;
-                    return py::cast(self->getLastConfiguration(deviceId, priority));
+                    Hash result;
+                    {
+                        py::gil_scoped_release release;
+                        result = self->getLastConfiguration(deviceId, priority);
+                    }
+                    return py::cast(std::move(result));
                 },
                 py::arg("deviceId"), py::arg("priority") = 1,
                 "getLastConfiguration(deviceId, priority): Returns the most recently saved device"
