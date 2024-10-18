@@ -58,10 +58,10 @@ if (karabo_FOUND)
         INTERFACE_LINK_DIRECTORIES "$ENV{KARABO}/lib;$ENV{KARABO}/extern/lib;$ENV{KARABO}/extern/lib64"
     )
 else()
-     # If using pkg-config fails,
-     # fallback to the version shipped with the device
-     include(cmake/import_karabo_lib.cmake)
-     importKaraboLib()
+    # If using pkg-config fails,
+    # fallback to the version shipped with the device
+    include(cmake/import_karabo_lib.cmake)
+    importKaraboLib()
 endif()
 
 if(NOT DEFINED KARABO_LIB_TARGET_NAME)
