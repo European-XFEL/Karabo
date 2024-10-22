@@ -60,6 +60,7 @@ from .server import DeviceServerController
 ACCESS_LEVEL_TOOLTIP = "Requires minimum '{}' access level"
 SERVER_OFFLINE_TOOLTIP = "Server is offline"
 DEVICE_ONLINE_TOOLTIP = "Device is already instantiated"
+DEVICE_OFFLINE_TOOLTIP = "Device is offline"
 INCORRECT_STATE_TOOLTIP = "Device is not in correct State"
 
 
@@ -208,7 +209,7 @@ class DeviceInstanceController(BaseProjectGroupController):
                                                   parent=parent))
         shutdown_action.setEnabled(proj_device_online and service_allowed)
         if not proj_device_online:
-            shutdown_action.setToolTip(DEVICE_ONLINE_TOOLTIP)
+            shutdown_action.setToolTip(DEVICE_OFFLINE_TOOLTIP)
         elif not service_allowed:
             shutdown_action.setToolTip(service_allowed_tooltip)
 
