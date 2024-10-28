@@ -29,7 +29,8 @@ from qtpy.QtWidgets import (
 from karabo.common.api import KARABO_DAEMON_MANAGER, Capabilities
 from karabo.native import Timestamp
 from karabogui import icons, messagebox
-from karabogui.access import AccessRole, access_role_allowed
+from karabogui.access import (
+    AccessRole, access_role_allowed, get_access_level_for_role)
 from karabogui.dialogs.api import (
     ConfigurationFromNameDialog, ConfigurationFromPastDialog,
     DeviceCapabilityDialog)
@@ -47,6 +48,10 @@ from karabogui.widgets.popup import PopupWidget
 
 from .system_model import SystemTreeModel
 from .tools import DeviceSceneHandler, ServerLogHandler
+
+DISABLED_TOOLTIP = (
+    f"Requires minimum '"
+    f"{get_access_level_for_role(AccessRole.SERVICE_EDIT)}' access level.")
 
 
 class SystemTreeView(QTreeView):
@@ -114,6 +119,7 @@ class SystemTreeView(QTreeView):
 
         # Device server instance menu
         self.mServerItem = QMenu(self)
+        self.mServerItem.setToolTipsVisible(True)
 
         text = "Set Logger Priority"
         self.acLoggerPriority = QAction(icons.edit, text, self)
@@ -136,6 +142,7 @@ class SystemTreeView(QTreeView):
 
         # Device class/instance menu
         self.mDeviceItem = QMenu(self)
+        self.mDeviceItem.setToolTipsVisible(True)
 
         text = "Open configuration (*.xml)"
         self.acOpenFromFile = QAction(icons.load, text, self)
@@ -391,19 +398,23 @@ class SystemTreeView(QTreeView):
         info = self.indexInfo()
         node_type = info.get('type', NavigationItemTypes.UNDEFINED)
         # Killing services is access level dependent!
-        enable_shutdown = access_role_allowed(AccessRole.SERVICE_EDIT)
+        allow_service_edit = access_role_allowed(AccessRole.SERVICE_EDIT)
         if node_type is NavigationItemTypes.HOST:
             instance_control = access_role_allowed(AccessRole.INSTANCE_CONTROL)
             self.acNetworkInfo.setEnabled(instance_control)
             self.mHostItem.exec(QCursor.pos())
         elif node_type is NavigationItemTypes.SERVER:
-            self.acKillServer.setEnabled(enable_shutdown)
+            self.acKillServer.setEnabled(allow_service_edit)
+            self.acLoggerPriority.setEnabled(allow_service_edit)
+            _set_tooltip(self.acKillServer, allow_service_edit)
+            _set_tooltip(self.acLoggerPriority, allow_service_edit)
             self.acAbout.setVisible(True)
             self.acTimeInformation.setVisible(False)
             self.mServerItem.exec(QCursor.pos())
         elif node_type is NavigationItemTypes.DEVICE:
             self.acKillDevice.setVisible(True)
-            self.acKillDevice.setEnabled(enable_shutdown)
+            self.acKillDevice.setEnabled(allow_service_edit)
+            _set_tooltip(self.acKillDevice, allow_service_edit)
             self.acAbout.setVisible(True)
             self.acTimeInformation.setVisible(True)
             has_scenes = _test_mask(info.get('capabilities', 0),
@@ -458,3 +469,9 @@ class SystemTreeView(QTreeView):
     def expandAll(self):
         self.expanded = True
         super().expandAll()
+
+
+def _set_tooltip(action: QAction, enabled: bool) -> None:
+    """Add tooltip about lacking acces level when menu-item is disabled."""
+    text = action.text() if enabled else DISABLED_TOOLTIP
+    action.setToolTip(text)
