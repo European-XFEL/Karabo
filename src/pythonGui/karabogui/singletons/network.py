@@ -113,9 +113,11 @@ class Network(QObject):
                                      port=port)
         if dialog.exec() != QDialog.Accepted:
             return False
-
+        self.hostname = dialog.hostname
+        self.port = dialog.port
+        self.gui_servers = dialog.gui_servers
+        self.access_level = dialog.access_level
         self.startServerConnection()
-
         # Allow external runner to see the status of the connection!
         return True
 
