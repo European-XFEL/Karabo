@@ -56,6 +56,10 @@ def test_connect_directly(mocker, gui_app):
         port = 33333
         mock_login_dialog = mocker.patch(
             "karabogui.singletons.network.ReactiveLoginDialog")
+        mock_login_dialog().hostname = host
+        mock_login_dialog().port = port
+        mock_login_dialog().gui_servers = []
+        mock_login_dialog().access_level = "operator"
         mock_login_dialog().exec.return_value = QDialog.Accepted
         success = network.connectToServerDirectly(host, port)
         assert success
@@ -80,6 +84,11 @@ def test_socket_connect_login_protocol(mocker, subtests, gui_app):
         port = 32323
         mock_login_dialog = mocker.patch(
             "karabogui.singletons.network.ReactiveLoginDialog")
+        mock_login_dialog().hostname = host
+        mock_login_dialog().port = port
+        mock_login_dialog().gui_servers = []
+        mock_login_dialog().access_level = "operator"
+
         mock_login_dialog().exec.return_value = QDialog.Accepted
         success = network.connectToServerDirectly(host, port)
         assert success
