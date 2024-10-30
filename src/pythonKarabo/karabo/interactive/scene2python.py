@@ -21,12 +21,15 @@ from karabo.common.api import BaseSavableModel
 from karabo.common.scenemodel.api import FixedLayoutChildData, read_scene
 
 
-def code_for(model, key, children=None):
+def code_for(
+        model: BaseSavableModel,
+        children_keys: list[str],
+        children: list[list[str]] | None = None) -> tuple[set[str], list[str]]:
     """Generate the Python code which can build a scene model object.
 
-    :param key: the key under which more children items can be found
+    :param children_keys: the list of children item key, in the model.
     """
-    ignored_traits = (key, 'uuid')
+    ignored_traits = (*children_keys, 'uuid')
     traits = []
     for name in sorted(model.copyable_trait_names()):
         value = getattr(model, name)
@@ -40,7 +43,9 @@ def code_for(model, key, children=None):
         traits.append(f'{name}={repr(value)}')
 
     if children:
-        traits.append('{}=[{}]'.format(key, ', '.join(children)))
+        for key, child in zip(children_keys, children):
+            if child:
+                traits.append('{}=[{}]'.format(key, ', '.join(child)))
 
     klass_name = model.__class__.__name__
     return klass_name, '{}({})'.format(klass_name, ', '.join(traits))
@@ -65,7 +70,9 @@ def _find_children(obj):
     return children
 
 
-def convert_scene_model_to_code(model, name='scene'):
+def convert_scene_model_to_code(
+        model: BaseSavableModel,
+        name: str = 'scene') -> tuple[set[str], list[str]]:
     """Given a `SceneModel` object, generate the Python code which can
     reproduce it.
     """
@@ -75,21 +82,23 @@ def convert_scene_model_to_code(model, name='scene'):
     # Note: Compatibility, not all models have a `children` list, but others.
     # If we find multiple children, we still choose `children`
     keys = _find_children(model)
-    key = "children" if len(keys) > 1 else keys[0]
-    children = getattr(model, key, [])
-    child_names = []
-    for i, child in enumerate(children):
-        child_name = name + str(i)
-        child_names.append(child_name)
-        child_cls, child_stmts = convert_scene_model_to_code(
-            child, name=child_name)
-        code.extend(child_stmts)
-        classes.update(child_cls)
 
-    klass_name, stmt = code_for(model, key, children=child_names)
+    child_names = []
+    for j, key in enumerate(keys):
+        children = getattr(model, key, [])
+        key_child_names = []
+        for i, child in enumerate(children):
+            child_name = name + str(j) + str(i)
+            key_child_names.append(child_name)
+            child_cls, child_stmts = convert_scene_model_to_code(
+                child, name=child_name)
+            code.extend(child_stmts)
+            classes.update(child_cls)
+        child_names.append(key_child_names)
+
+    klass_name, stmt = code_for(model, keys, children=child_names)
     code.append(f'{name} = {stmt}')
     classes.add(klass_name)
-
     return classes, code
 
 
