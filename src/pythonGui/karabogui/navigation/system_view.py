@@ -99,7 +99,7 @@ class SystemTreeView(QTreeView):
 
         # Device server instance menu
         self.mHostItem = QMenu(self)
-        text = "Network Information"
+        text = "Network information"
         self.acNetworkInfo = QAction(icons.about, text, self)
         self.acNetworkInfo.setStatusTip(text)
         self.acNetworkInfo.setToolTip(text)
@@ -112,7 +112,7 @@ class SystemTreeView(QTreeView):
         self.acAbout.setToolTip(text)
         self.acAbout.triggered.connect(self.onAbout)
 
-        text = "Time Information"
+        text = "Time information"
         self.acTimeInformation = QAction(icons.clock, text, self)
         self.acTimeInformation.triggered.connect(self.onTimeInformation)
         self.acTimeInformation.setVisible(False)  # Classes don't have time
@@ -121,7 +121,7 @@ class SystemTreeView(QTreeView):
         self.mServerItem = QMenu(self)
         self.mServerItem.setToolTipsVisible(True)
 
-        text = "Set Logger Priority"
+        text = "Set logger priority"
         self.acLoggerPriority = QAction(icons.edit, text, self)
         self.acLoggerPriority.setStatusTip(text)
         self.acLoggerPriority.setToolTip(text)
@@ -160,14 +160,14 @@ class SystemTreeView(QTreeView):
 
         self.mDeviceItem.addSeparator()
 
-        text = "Get Configuration (Time)"
+        text = "Get configuration (time)"
         self.ac_config_past = QAction(icons.clock, text, self)
         self.ac_config_past.setStatusTip(text)
         self.ac_config_past.setToolTip(text)
         self.ac_config_past.triggered.connect(self.onGetConfigurationFromPast)
         self.mDeviceItem.addAction(self.ac_config_past)
 
-        text = "Get && Save Configuration (Name)"
+        text = "Get && save configuration (name)"
         self.ac_config_name = QAction(text, self)
         self.ac_config_name.setStatusTip(text)
         self.ac_config_name.setToolTip(text)
@@ -183,7 +183,7 @@ class SystemTreeView(QTreeView):
         self.acKillDevice.triggered.connect(self.onKillInstance)
         self.mDeviceItem.addAction(self.acKillDevice)
 
-        text = "Open Device Scene..."
+        text = "Open device scene..."
         self.acOpenScene = QAction(text, self)
         self.acOpenScene.setStatusTip(text)
         self.acOpenScene.setToolTip(text)
