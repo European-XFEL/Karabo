@@ -2,9 +2,28 @@ import os
 import subprocess
 from functools import wraps
 
-from conda.cli.python_api import Commands, run_command
+from conda.cli.python_api import run_command
 from conda.core.envs_manager import list_all_known_prefixes
 from paramiko import AutoAddPolicy, SSHClient
+
+
+def conda_run_command(cmd: list, *, env_name: str = None):
+    """Run the 'conda run' command as subprocess on the provided environment"""
+    conda_command = ["conda", "run"]
+    if env_name is not None:
+        conda_command.extend(["-n", env_name])
+    command = conda_command + cmd
+    try:
+        result = subprocess.run(command, capture_output=True, text=True,
+                                check=True)
+        print(f"Executed in the '{env_name}'  environment: {cmd}")
+        print(result.stdout)
+        return result.stdout
+    except subprocess.CalledProcessError as err:
+        print("\n---------------------------------------------------")
+        print(f"Failed to execute in the '{env_name}' environment: {cmd}")
+        print(f"ERROR: {err}")
+
 
 
 def conda_run(command, *args, **kwargs):
@@ -21,9 +40,14 @@ def conda_run(command, *args, **kwargs):
 
 
 def command_run(cmd):
+    """Run the command and capture the output, errors, and decode
+    it to string"""
+
     try:
-        return subprocess.check_output(cmd)
+        output = subprocess.check_output(cmd)
+        return output
     except subprocess.CalledProcessError as e:
+        # Print the error message and raise the exception again
         print(f"Error in running command: {e.output}")
         raise e
 
