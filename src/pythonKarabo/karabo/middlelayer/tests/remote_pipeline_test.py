@@ -381,7 +381,6 @@ async def test_output_reconnect(deviceTest):
     await output_device.slotKillDevice()
 
 
-@pytest.mark.skip("Failing with Python 3.12.2 (FIXME)")
 @pytest.mark.timeout(30)
 @run_test
 async def test_output_reconnect_device(deviceTest):
@@ -410,6 +409,8 @@ async def test_output_reconnect_device(deviceTest):
         assert not isAlive(proxy)
         # The device is gone, now we instantiate the device with same
         # deviceId to see if the output automatically reconnects
+        await sleepUntil(
+            lambda: name in receiver.input.missingConnections, timeout=2)
         assert name in receiver.input.missingConnections
         output_device = Sender({"_deviceId_": "outputdevice"})
         await output_device.startInstance()
@@ -435,11 +436,14 @@ async def test_output_reconnect_device(deviceTest):
         assert receiver.received > 0
         assert receiver.node.received > 0
         connections = output_device.output.connections
+        await sleepUntil(lambda: len(connections) == 2, timeout=timeout)
         assert len(connections.value) == 2
-
         await receiver.slotKillDevice()
-        connections = output_device.output.connections
-        assert len(connections.value) == 0
+        output = proxy.output
+
+        await sleepUntil(
+            lambda: len(output.connections.value) == 0, timeout=timeout)
+        assert len(output.connections.value) == 0
 
     del proxy
     await output_device.slotKillDevice()
