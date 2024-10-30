@@ -107,7 +107,8 @@ variables:
     INFLUXDB_USER_PASSWORD: "usrpwd"
 
 .image_miniconda_: &image_miniconda
-  image: europeanxfel/karabo-ci:miniconda-3-006
+  image: europeanxfel/karabo-ci:miniforge-3-002
+  cache: !reference [.build_cache, cache_rw]
   tags:
     - KaraboFramework
 
