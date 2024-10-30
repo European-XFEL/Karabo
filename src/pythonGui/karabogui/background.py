@@ -22,6 +22,7 @@ from qtpy.QtCore import QObject, QRunnable, QThreadPool, QTimer, Signal, Slot
 
 
 class TaskMediator(QObject):
+    """A task mediator to launch finished signal"""
     finished = Signal(object)
 
 
