@@ -7,13 +7,11 @@ from platform import system as sys_name
 from tempfile import gettempdir
 
 import yaml
-from conda import CondaMultiError
 from conda.cli.python_api import Commands
 
 from .mirrors import Mirrors
-from .utils import (
-    chdir, command_run, conda_run, connected_to_remote, get_conda_prefix,
-    mkdir)
+from .utils import (chdir, command_run, conda_run, conda_run_command,
+                    connected_to_remote, get_conda_prefix, mkdir)
 
 PLATFORMS = {"Windows": "win-64", "Darwin": "osx-64", "Linux": "linux-64"}
 
@@ -46,11 +44,7 @@ class Builder:
         self.recipes = set()
 
         # Conda setup
-        conda_run(
-            Commands.RUN,
-            "-n", "base", "conda",
-            "config", "--set", "pip_interop_enabled", "True",
-        )
+        conda_run(Commands.CONFIG, '--set', 'pip_interop_enabled', 'True')
 
     # -----------------------------------------------------------------------
     # Main logic
@@ -153,12 +147,10 @@ class Builder:
 
     def clean(self):
         print("Cleaning conda..")
+        command = ["conda", "build",  "purge-all", "--quiet"]
+        conda_run_command(cmd=command, env_name="base")
         conda_run(
-            Commands.RUN, "-n", "base",
-            "conda", "build", "purge-all", "--quiet")
-        conda_run(
-            Commands.RUN, "-n", "base",
-            "conda", "clean", "--all", "--force-pkgs-dirs", "--quiet", "--yes")
+            Commands.CLEAN, "--all", "--force-pkgs-dirs", "--quiet", "--yes")
         for recipe in self.recipes:
             self.clean_environment(name=recipe)
 
@@ -169,17 +161,11 @@ class Builder:
         try:
             # Remove the environment for the recipe
             conda_run(Commands.REMOVE, "-n", name, "--all", "--quiet", "--yes")
-        except RuntimeError:
+        except Exception as e:
             # this might fail if the environment does not exist
             print(
-                f"Tried removing `{name}` environment, "
-                f"but it does not exist"
-            )
-        except CondaMultiError as e:
-            # this might fail if there are files that have been removed before
-            print(f"There are errors with {name}:")
-            print(e)
-            print(f"Will proceed as intended.")
+                f"Tried removing `{name}` environment, ..."
+                f"got exception {e}")
 
     # -----------------------------------------------------------------------
     # Installing and testing Karabo
@@ -192,16 +178,12 @@ class Builder:
         # Install pythonKarabo in the `recipe` environment
         # FIXME: install native without environment variable
         os.environ["BUILD_KARABO_SUBMODULE"] = "NATIVE"
-        conda_run(
-            Commands.RUN, "-n", recipe,
-            "--cwd", py_karabo_root,
-            "python", "setup.py", "install")
+        command = ["pip", "install", "-e", py_karabo_root]
+        conda_run_command(cmd=command, env_name=recipe)
         os.environ.pop("BUILD_KARABO_SUBMODULE")
         # Install pythonGui in the `recipe` environment
-        conda_run(
-            Commands.RUN, "-n", recipe,
-            "--cwd", gui_root,
-            "python", "setup.py", "install")
+        command = ["pip", "install", "-e", gui_root]
+        conda_run_command(cmd=command, env_name=recipe)
 
     def uninstall_karabo(self, recipe):
         # no need to uninstall if we are not building an env pack
@@ -209,9 +191,8 @@ class Builder:
             return
         # Prepare env pack by uninstalling karabo and karabogui
         for excluded_pkgs in ["karabo", "karabogui"]:
-            conda_run(
-                Commands.RUN, "-n", recipe,
-                "pip", "uninstall", excluded_pkgs, "--yes")
+            command = ["pip", "uninstall", excluded_pkgs, "--yes"]
+            conda_run_command(cmd=command, env_name=recipe)
 
     @contextmanager
     def karabo_installed(self, recipe):
@@ -226,7 +207,7 @@ class Builder:
         if not (recipe == KARABOGUI and self.args.test):
             return
         recipe_dir = op.dirname(self.recipe_path(recipe))
-        test_script = op.join(recipe_dir, f"_run_test.py")
+        test_script = op.join(recipe_dir, "_run_test.py")
         if not op.exists(test_script):
             print(f"Test script '{test_script}' missing")
 
@@ -238,9 +219,11 @@ class Builder:
             cmd = [Commands.LIST]
             output = conda_run(*cmd)
             print(output)
-            cmd = [Commands.RUN, "-n", recipe, "python", test_script]
-            output = conda_run(*cmd)
-            print(output)
+
+            command = ["python", test_script]
+            output = conda_run_command(cmd=command, env_name=recipe)
+            if output:
+                print(output)
             print("Tests successful")
 
     # -----------------------------------------------------------------------
@@ -248,6 +231,8 @@ class Builder:
 
     def prepare_build(self, recipe):
         # Build settings
+        command = ["python", "-m", "pip", "install", "cogapp"]
+        conda_run_command(cmd=command)
         osx_sysroot = os.environ.get("OSX_SYSROOT")
         if osx_sysroot:
             conf = {"CONDA_BUILD_SYSROOT": [osx_sysroot]}
@@ -272,21 +257,16 @@ class Builder:
         # Clean again just safety
         self.clean_environment(name=recipe)
         os.environ["XFEL_CONDA_CHANNEL"] = self.args.channel
-        conda_run(
-            Commands.RUN,
-            "-n", "base",
-            "conda", "devenv", "--file",
-            self.devenv_path(recipe),
-        )
+        command_run(
+            ["conda", "run", "-n", "base", "conda", "devenv", "--file",
+             self.devenv_path(recipe)])
 
     def build_recipe_from_base(self, recipe):
         # build the meta.yaml file from the meta_base file
         output_file = self.recipe_path(recipe)
-        conda_run(
-            Commands.RUN,
-            "-n", "base",
-            "python", "-m", "cogapp", "-o", output_file,
-            self.recipe_base_path(recipe))
+        command = ["python", "-m", "cogapp", "-o", output_file,
+                   self.recipe_base_path(recipe)]
+        conda_run_command(cmd=command, env_name="base")
         # Print the recipe
         print(f'Building Recipe for "{recipe}":')
         with open(output_file) as recipe_file:
@@ -297,16 +277,17 @@ class Builder:
         """ "Builds a recipe from meta.yaml file"""
         print(f"Building recipe for {recipe}")
         recipe_dir = op.dirname(self.recipe_path(recipe))
-        conda_run(
-            Commands.RUN,
-            "-n", "base",
+        command = [
             "conda", "build", recipe_dir,
             "-c", "local",
             "-c", self.mirror_channel,
             "-c", self.mirror_conda_forge,
             "-c", "conda-forge",
-            "--override-channels", "--no-anaconda-upload",
-            "--quiet")
+            "--override-channels",
+            "--no-anaconda-upload",
+            "--quiet"
+        ]
+        conda_run_command(cmd=command, env_name="base")
         print("Recipe build successful")
 
     def install_build(self, recipe):
@@ -320,16 +301,13 @@ class Builder:
             conda_run(Commands.CREATE, "-n", env)
         # locate the package
         print(f'install local package for "{recipe}" in env "{env}"')
-        conda_run(
-            Commands.RUN,
-            "-n", env,
-            "conda", "install", recipe,
-            "-y", "--quiet",
-            "-c", "local",
-            "-c", self.mirror_channel,
-            "-c", self.mirror_conda_forge,
-            "-c", "conda-forge",
-        )
+        command = ["conda", "install", recipe,
+                   "-y", "--quiet",
+                   "-c", "local",
+                   "-c", self.mirror_channel,
+                   "-c", self.mirror_conda_forge,
+                   "-c", "conda-forge"]
+        conda_run_command(cmd=command, env_name=env)
         return env
 
     # -----------------------------------------------------------------------
