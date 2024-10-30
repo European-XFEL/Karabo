@@ -16,7 +16,6 @@
 import os
 import re
 import socket
-import warnings
 from asyncio import (
     CancelledError, Future, IncompleteReadError, Lock, Queue, TimeoutError,
     ensure_future, gather, get_event_loop, open_connection, shield,
@@ -502,18 +501,6 @@ class NetworkInput(Configurable):
                 await shield(self.call_handler(self.handler, proxy, meta))
             pos += length
         return True
-
-    async def readChunk(self, channel, cls):
-        """Deprecated function for channel readChunk"""
-        warnings.warn("`Channel.readChunk` is deprecated, please use "
-                      "`Channel.processChunk` instead")
-        await self.processChunk(channel, cls)
-
-    def setChildValue(self, key, value, descriptor):
-        """Set the child values on the Configurable
-
-        Overwrite the method of Configurable to prevent sending values.
-        """
 
 
 class PipelineContext(NetworkInput):
