@@ -563,9 +563,9 @@ class BaseFilterTableController(BaseTableController):
 
     def binding_update(self, proxy):
         super().binding_update(proxy)
-        columns = [self.tableModel().headerData(col, Qt.Horizontal,
-                                                Qt.DisplayRole)
-                   for col in range(self.tableModel().columnCount())]
+        model = self.tableModel()
+        columns = [model.headerData(col, Qt.Horizontal, Qt.DisplayRole)
+                   for col in range(model.columnCount())]
         with SignalBlocker(self.columnCombo):
             self.columnCombo.clear()
             self.columnCombo.addItems(columns)
