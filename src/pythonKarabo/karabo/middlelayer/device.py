@@ -437,7 +437,8 @@ class DeviceClientBase(Device):
 
     async def _run(self, **kwargs):
         await super()._run(**kwargs)
-        self._ss.emit("call", {"*": ["slotPing"]}, self.deviceId, 0, False)
+        await self._ss.async_emit(
+            "call", {"*": ["slotPing"]}, self.deviceId, 0, False)
         # We are collecting all the instanceInfo's and wait for their arrival
         # before the device comes online.
         # Some clients, such as ikarabo, don't want to wait this additional
