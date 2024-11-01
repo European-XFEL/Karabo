@@ -16,17 +16,37 @@
 import asyncio
 import logging
 import os
+import re
 from contextlib import asynccontextmanager, contextmanager
 from functools import reduce, wraps
 from time import perf_counter
 from types import MethodType
 from weakref import WeakMethod, ref
 
-from async_timeout import timeout
-
 from karabo.native import Hash
 
-from .eventloop import ensure_coroutine
+_SCHEME_DELIMITER = "://"
+_BROKER_REGEX = re.compile(
+    r"^(amqp:\/\/)([A-Za-z0-9]+)(\:)+([A-Za-z0-9]+)"
+    r"(\@)+([A-Za-z0-9\-\.]+)(\:)+([0-9]+)")
+
+
+def ensure_coroutine(coro):
+    """Ensure that a function `coro` is a coroutine to play well
+    in our eventloops"""
+    if asyncio.iscoroutinefunction(coro):
+        return coro
+
+    def create_coroutine(func):
+        """Create a coroutine wrapper around the sync function `func`"""
+
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return create_coroutine(coro)
 
 
 def get_karabo_version():
@@ -312,7 +332,7 @@ async def countdown(delay=5, exception=True):
                       defaults to `True`
     """
     try:
-        async with timeout(delay) as ctx:
+        async with asyncio.timeout(delay) as ctx:
             yield ctx
     except TimeoutError:
         if exception:
@@ -344,3 +364,45 @@ class suppress:
             logger.error(text, exc_info=(exc_type, exc_value, exc_tb))
 
         return suppressed
+
+
+def check_broker_scheme(urls: list):
+    """Check the list of broker hosts
+
+    :param hosts: The list of broker hosts
+
+    This function will raise a `RuntimeError` if the provided list
+    contains invalid broker host data.
+    """
+
+    def _all_equal(iterable):
+        """Check if all elements of an iterable are equal"""
+        iterator = iter(iterable)
+        try:
+            first = next(iterator)
+        except StopIteration:
+            return True
+        return all(first == x for x in iterator)
+
+    def _all_match(iterable, regex):
+        """Check if all iterables match the regex"""
+        iterator = iter(iterable)
+        return all(regex.match(x) for x in iterator)
+
+    if not len(urls):
+        raise RuntimeError(
+            "The list of broker hosts does contain any url.")
+
+    schemes = [url.split(_SCHEME_DELIMITER)[0] for url in urls]
+    if not len(schemes) or not all([scheme in "amqp" for scheme in schemes]):
+        raise RuntimeError(
+            "The list of broker hosts does provide unknown schemes.")
+
+    if not _all_equal(schemes):
+        raise RuntimeError(
+            "The list of broker hosts contains different schemes.")
+
+    if not _all_match(urls, _BROKER_REGEX):
+        raise RuntimeError(
+            "Incomplete broker schemes for amqp provided. It must be "
+            "assembled like `amqp://user:password@host:port`.")

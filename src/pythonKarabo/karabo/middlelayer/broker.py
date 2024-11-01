@@ -13,15 +13,19 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
-import asyncio
+import inspect
 import logging
 import os
 import socket
 import time
+import traceback
 import weakref
 from asyncio import (
-    CancelledError, Lock, TimeoutError, ensure_future, gather, sleep, wait_for)
-from functools import partial
+    CancelledError, Event, Future, Lock, TimeoutError, current_task,
+    ensure_future, gather, get_event_loop, iscoroutinefunction, shield, sleep,
+    wait_for)
+from contextlib import AsyncExitStack
+from functools import partial, wraps
 from itertools import count
 
 import aiormq
@@ -31,9 +35,7 @@ from aiormq.base import TaskWrapper
 from karabo.native import (
     Hash, KaraboError, decodeBinary, decodeBinaryPos, encodeBinary)
 
-from ..eventloop import EventLoop
-from ..utils import suppress
-from .base import Broker
+from .utils import suppress
 
 _OVERFLOW_POLICY = "drop-head"  # Drop oldest messages
 _TIME_TO_LIVE = 120_000  # 120 seconds expiry time [ms]
@@ -54,7 +56,7 @@ aiormq.base.TaskWrapper = KaraboWrapper
 
 def ensure_running(func):
     """Ensure a running eventloop for `func`"""
-    if asyncio.iscoroutinefunction(func):
+    if iscoroutinefunction(func):
         async def wrapper(self, *args, **kwargs):
             if self.loop.is_closed() or not self.loop.is_running():
                 self.logger.warning(
@@ -73,9 +75,8 @@ def ensure_running(func):
     return wrapper
 
 
-class AmqpBroker(Broker):
+class Broker:
     def __init__(self, loop, deviceId, classId, broadcast=True):
-        super().__init__(True)
         self.domain = loop.topic
         self.loop = loop
         self.connection = None
@@ -85,6 +86,12 @@ class AmqpBroker(Broker):
         # Interest in receiving broadcasts
         self.broadcast = broadcast
         self.logger = logging.getLogger(deviceId)
+        # Basics
+        self.exitStack = AsyncExitStack()
+        self.slots = {}
+        self.info = None
+        self.repliers = {}
+        self.tasks = set()
         # AMQP specific bookkeeping ...
         self.subscriptions = set()  # registered tuple: exchange, routing key
         self.channel = None  # channel for communication
@@ -92,7 +99,7 @@ class AmqpBroker(Broker):
         self.consumer_tag = None  # tag returned by consume method
         self.heartbeat_queue = None
         self.heartbeat_consumer_tag = None
-        self.exit_event = asyncio.Event()
+        self.exit_event = Event()
         self.heartbeat_task = None
         self.subscribe_lock = Lock()
         # Flag to indicate when a channel is about to be closed
@@ -156,6 +163,76 @@ class AmqpBroker(Broker):
         exchange = f"{self.domain}.signals"
         await self.channel.exchange_declare(exchange=exchange,
                                             exchange_type="topic")
+
+    def enter_context(self, context):
+        """Synchronously enter the exit stack context"""
+        return self.exitStack.enter_context(context)
+
+    async def enter_async_context(self, context):
+        """Asynchronously enter the exit stack context"""
+        return await self.exitStack.enter_async_context(context)
+
+    async def main(self, device):
+        """This is the main loop of a device (SignalSlotable instance)
+
+        A device is running if this coroutine is still running.
+        Use `stop_tasks` to stop this main loop."""
+        async with self.exitStack:
+            device = weakref.ref(device)
+            await self.consume(device())
+
+    def register_slot(self, name, slot):
+        """register a slot on the device
+
+        :param name: the name of the slot
+        :param slot: the slot to be called. If this is a bound method, it is
+            assured that no reference to the object holding the method is kept.
+        """
+        if inspect.ismethod(slot):
+            def delete(ref):
+                del self.slots[name]
+
+            weakself = weakref.ref(slot.__self__, delete)
+            func = slot.__func__
+
+            if iscoroutinefunction(func):
+                @wraps(func)
+                async def wrapper(*args):
+                    return await func(weakself(), *args)
+            else:
+                @wraps(func)
+                def wrapper(*args):
+                    return func(weakself(), *args)
+
+            self.slots[name] = wrapper
+        else:
+            self.slots[name] = slot
+
+    def updateInstanceInfo(self, info):
+        """update the short information about this instance
+
+        the instance info hash contains a very brief summary of the device.
+        It is regularly published, and even lives longer than a device,
+        as it is published with the message that the device died."""
+        self.info.merge(info)
+        self.emit("call", {"*": ["slotInstanceUpdated"]},
+                  self.deviceId, self.info)
+
+    def replyException(self, message, exception):
+        trace = ''.join(traceback.format_exception(
+            type(exception), exception, exception.__traceback__))
+        self.reply(message, (str(exception), trace), error=True)
+
+    def emit(self, signal, targets, *args):
+        self.call(signal, targets, None, args)
+
+    async def request(self, device, target, *arguments):
+        reply = f"{self.deviceId}-{time.monotonic().hex()[4:-4]}"
+        self.call("call", {device: [target]}, reply, arguments)
+        future = Future(loop=self.loop)
+        self.repliers[reply] = future
+        future.add_done_callback(lambda _: self.repliers.pop(reply))
+        return (await future)
 
     def encode_binary_message(self, header, arguments):
         body = Hash()
@@ -366,7 +443,7 @@ class AmqpBroker(Broker):
         futures = [sleep(0)]
         async with self.subscribe_lock:
             futures.extend([
-                asyncio.shield(self.channel.queue_unbind(
+                shield(self.channel.queue_unbind(
                     queue=self.queue, exchange=exchange, routing_key=key)
                 ) for exchange, key in self.subscriptions])
             self.subscriptions = set()
@@ -425,7 +502,7 @@ class AmqpBroker(Broker):
     async def stop_tasks(self):
         """Reimplemented method of `Broker`"""
         await self._on_stop_tasks()
-        me = asyncio.current_task(loop=None)
+        me = current_task(loop=None)
         # Services that are listening to broadcasts don't need their
         # channel closed, e.g. clients or servers. This will happen
         # on connection closure
@@ -567,7 +644,8 @@ class AmqpBroker(Broker):
         return header.get(prop) if header is not None else None
 
     async def create_global_connection(self):
-        connection = EventLoop.global_loop.connection
+        loop = get_event_loop().global_loop
+        connection = loop.connection
         if connection and connection.is_opened:
             return connection
         urls = os.environ.get("KARABO_BROKER",
@@ -576,7 +654,7 @@ class AmqpBroker(Broker):
             try:
                 # Perform connection
                 connection = await aiormq.connect(url)
-                EventLoop.global_loop.connection = connection
+                loop.connection = connection
                 break
             except BaseException as e:
                 print(f"While trying node '{url}': {str(e)}")
@@ -585,7 +663,7 @@ class AmqpBroker(Broker):
 
     async def ensure_connection(self):
         if self.connection is None:
-            self.connection = await asyncio.shield(
+            self.connection = await shield(
                 self.create_global_connection())
         if self.connection is None:
             raise RuntimeError("No connection established")
