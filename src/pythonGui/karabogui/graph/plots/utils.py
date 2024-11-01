@@ -18,35 +18,45 @@ import lttbc
 import numpy as np
 
 
-def get_view_range(plot_item):
-    """Get the viewing rect of a plot item for the X-Axis"""
-    view_range = None
-    view_box = plot_item.getViewBox()
-    if view_box is None or not view_box.autoRangeEnabled()[0]:
-        view_rect = plot_item.viewRect()
-        view_range = (view_rect.left(), view_rect.right())
-    return view_range
+def get_view_range(plot_item) -> tuple[float, float] | None:
+    """Retrieve the viewing range (rect) of a plot item along the X-axis.
 
-
-def generate_baseline(data, offset=0.0, step=1.0):
-    """Generate a baseline for vector data
-
-    :param data: The actual data to generate a baseline
-    :param start: The offset to start the baseline
-    :param step: The bin size (step) of the baseline
+    :param plot_item: The plot item from which to get the view range.
+    :return: A tuple with the left and right X-axis boundaries,
+             or None if unavailable.
     """
-    # XXX: No matter what, prevent ourselves against zero
-    step = step if step else 1.0
-    stop = offset + data.size * step
+    view_box = plot_item.getViewBox()
+    if view_box is not None and view_box.autoRangeEnabled()[0]:
+        # Return early if auto-range is enabled
+        return None
+    view_rect = plot_item.viewRect()
+    return view_rect.left(), view_rect.right()
 
+
+def generate_baseline(
+        data: np.ndarray,
+        offset: float | int = 0.0,
+        step: float | int = 1.0
+) -> np.ndarray:
+    """Generate a baseline array for vector data.
+
+    :param data: The input data array to determine baseline length.
+    :param offset: Starting point for the baseline.
+    :param step: Interval between baseline values.
+    :return: A NumPy array representing the generated baseline.
+    """
+    # Ensure step is non-zero to avoid infinite arrays
+    step = step or 1.0
+    stop = offset + data.size * step
     return np.arange(start=offset, stop=stop, step=step, dtype=np.float64)
 
 
-TYPICAL_POINTS = 20000
-STD_SIGNAL_THRESHOLD = 5
+_TYPICAL_POINTS = 20000
+_CLIP_THRESHOLD = _TYPICAL_POINTS // 100
+_STD_THRESHOLD = 5
 
 # [(size, data points)]
-DIMENSION_DOWNSAMPLE = [
+_DIMENSION_DOWNSAMPLE = [
     (200000, 30000),
     (300000, 40000),
     (400000, 50000),
@@ -54,15 +64,13 @@ DIMENSION_DOWNSAMPLE = [
 ]
 
 
-def _get_sample_threshold(size):
-    """Calculate the downsample factor by a given data dimension
-
-    Typically every 10th data point is provided!
-    """
-    threshold = TYPICAL_POINTS
-    for dsize, dpoints in DIMENSION_DOWNSAMPLE:
-        if size > dsize:
-            threshold = dpoints
+def _get_sample_threshold(size: int):
+    """Calculate the downsample factor based on data size,
+    typically every 10th data point."""
+    threshold = _TYPICAL_POINTS
+    for d_size, d_points in _DIMENSION_DOWNSAMPLE:
+        if size > d_size:
+            threshold = d_points
         else:
             # No need to look further!
             break
@@ -70,47 +78,40 @@ def _get_sample_threshold(size):
     return threshold
 
 
-def generate_down_sample(y, x=None, threshold=None, rect=None,
-                         deviation=False):
-    """This method creates a sampled y to keep a plot_item ``live``
-
-    :param y: The actual y data set from which the downsample is generated
-    :param x: Optional x array for sampling.
-    :param threshold: The threshold of data points
-    :param rect: `Tuple` of the view range, e.g. (0, 100)
-    :param deviation: Boolean flag to take into account standard deviation
+def generate_down_sample(
+        y: np.ndarray, x: np.ndarray | None = None,
+        threshold: int | None = None,
+        rect: tuple[float, float] | None = None,
+        deviation: bool = False) -> tuple[np.ndarray, np.ndarray]:
     """
+    Generates a downsampled version of the `y` data for efficient plotting.
 
+    :param y: The original dataset for the `y` values to be downsampled.
+    :param x: Optional `x` array to use for sampling; defaults to None.
+    :param threshold: Max number of data points to retain after downsampling.
+    :param rect: Tuple specifying the view range (e.g., (0, 100)).
+    :param deviation: If True, considers standard deviation in downsampling.
+    :return: A tuple containing the downsampled `x` and `y` arrays.
+    """
     if x is None:
-        size = len(y)
-        x = np.arange(size)
-    else:
+        x = np.arange(len(y))
+    size = len(x)
+
+    if rect is not None and size > _CLIP_THRESHOLD:
+        x_start = x[0]
+        size_d = size - 1
+        dx = (x[-1] - x_start) / size_d
+        x_min = np.clip(int((rect[0] - x_start) / dx), 0, size_d)
+        x_max = np.clip(int((rect[1] - x_start) / dx), 0, size_d)
+        x, y = x[x_min:x_max], y[x_min:x_max]
         size = len(x)
 
-    # Get a new threshold if required based on size!
-    initial = threshold is not None
     if threshold is None:
         threshold = _get_sample_threshold(size)
 
     if size > threshold:
-        if rect is not None:
-            sizec = (size - 1)
-            dx = float(x[-1] - x[0]) / sizec
-            x_min = np.clip(int((rect[0] - x[0]) / dx), 0, sizec)
-            x_max = np.clip(int((rect[1] - x[0]) / dx), 0, sizec)
-            x = x[x_min:x_max]
-            y = y[x_min:x_max]
-            if not initial:
-                # Get a new size and recalculate the threshold!
-                size = len(x)
-                threshold = _get_sample_threshold(size)
-
-        if deviation and np.std(y) < STD_SIGNAL_THRESHOLD:
-            # If there is no signal, we can drastically reduce the number of
-            # points we have to plot. This is especially important if we have
-            # noisy curves!
-            threshold = int(threshold / 10)
-
+        if deviation and np.std(y) < _STD_THRESHOLD:
+            threshold //= 10  # Drastically reduce threshold if no signal
         x, y = lttbc.downsample(x, y, threshold)
 
     return x, y
