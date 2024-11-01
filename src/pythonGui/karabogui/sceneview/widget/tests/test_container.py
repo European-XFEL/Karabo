@@ -84,7 +84,6 @@ def test_display_widget_container(gui_app):
 
     controller = container.widget_controller
     assert controller.widget is not None
-
     assert container.toolTip() == "TestDevice.base, TestDevice.rotary"
     proxy = get_property_proxy(IntDevice.getClassSchema(), "linear")
 
@@ -126,15 +125,15 @@ def test_editable_widget_container(gui_app):
     container = ControllerContainer(EditableController, model, None)
 
     controller = container.widget_controller
-    # assert controller.widget is not None
+    assert controller.widget is not None
 
     assert container.toolTip() == "TestDevice.base, TestDevice.rotary"
-
     proxy = get_property_proxy(IntDevice.getClassSchema(), "linear")
     assert container.add_proxies([proxy])
     assert len(controller.proxies) == 3
-    assert container.toolTip() == ("TestDevice.base, TestDevice.rotary, "
-                                   "TestDevice.linear")
+    assert container.toolTip() == (
+        "AccessLevel: USER - Access: True\n\nTestDevice.base, "
+        "TestDevice.rotary, TestDevice.linear")
     network = Mock()
     manager = Mock()
     with singletons(network=network, manager=manager):
