@@ -17,6 +17,7 @@
 from qtpy.QtCore import QRect, QSize, Qt
 from qtpy.QtWidgets import QHBoxLayout, QLabel, QStackedLayout, QWidget
 
+import karabogui.access as krb_access
 from karabo.common.api import State
 from karabogui.binding.api import ProxyStatus
 from karabogui.indicators import STATE_COLORS, get_device_status_pixmap
@@ -48,10 +49,7 @@ class ControllerContainer(KaraboSceneWidget, QWidget):
         proxies = [get_proxy(*key.split(".", 1)) for key in self.model.keys]
         self.widget_controller = self._create_controller(klass, proxies)
         self._setup_wrapped_widget()
-
         self.setGeometry(QRect(model.x, model.y, model.width, model.height))
-        self.setToolTip(", ".join(self.model.keys))
-
         # Trigger the status change once (might be offline)
         proxy = self.widget_controller.proxy.root_proxy
         self._proxy_status_changed("status", proxy.status)
@@ -70,7 +68,9 @@ class ControllerContainer(KaraboSceneWidget, QWidget):
             if self.is_editable:
                 proxy.on_trait_change(
                     self._on_user_edit, "edit_value,binding.config_update")
-        self.setToolTip(", ".join(self.model.keys))
+                self.setEditableToolTip(proxy.binding.required_access_level)
+            else:
+                self.setToolTip(", ".join(self.model.keys))
         return len(proxies_added) == len(proxies)
 
     def remove_proxies(self, proxies):
@@ -88,7 +88,9 @@ class ControllerContainer(KaraboSceneWidget, QWidget):
                 proxy.on_trait_change(
                     self._on_user_edit, "edit_value,binding.config_update",
                     remove=True)
-        self.setToolTip(", ".join(self.model.keys))
+                self.setEditableToolTip(proxy.binding.required_access_level)
+            else:
+                self.setToolTip(", ".join(self.model.keys))
         return len(proxies_removed) == len(proxies)
 
     def apply_changes(self):
@@ -122,6 +124,10 @@ class ControllerContainer(KaraboSceneWidget, QWidget):
                 proxy.on_trait_change(
                     self._on_user_edit, "edit_value,binding.config_update",
                     remove=True)
+            if proxy.binding is None:
+                proxy.on_trait_change(
+                    self._proxy_binding_changed, "binding.schema_update",
+                    remove=True)
         self.widget_controller.destroy()
         self.widget_controller = None
 
@@ -149,6 +155,8 @@ class ControllerContainer(KaraboSceneWidget, QWidget):
         if binding is not None:
             enabled = is_controller_enabled(proxy, level)
             self.widget_controller.setEnabled(enabled)
+            if self.is_editable:
+                self.setEditableToolTip(binding.required_access_level)
 
     # ---------------------------------------------------------------------
     # Qt methods
@@ -180,6 +188,22 @@ class ControllerContainer(KaraboSceneWidget, QWidget):
         proxy.on_trait_change(self._proxy_status_changed, "existing")
         proxy.root_proxy.on_trait_change(self._proxy_status_changed, "status")
         return controller
+
+    def setEditableToolTip(self, level):
+        """Set a tooltip for an editable controller"""
+        keys = ", ".join(self.model.keys)
+        allowed = krb_access.GLOBAL_ACCESS_LEVEL >= level
+        tooltip = f"AccessLevel: {level.name} - Access: {allowed}\n\n{keys}"
+        self.setToolTip(tooltip)
+
+    def _proxy_binding_changed(self, proxy, name, new):
+        """Traits notification callback when the binding of the proxy changes.
+
+        This is set to synchronize the access level of the widget
+        """
+        proxy.on_trait_change(self._proxy_binding_changed,
+                              "binding.schema_update", remove=True)
+        self.setEditableToolTip(proxy.binding.required_access_level)
 
     def _proxy_status_changed(self, name, value):
         """Traits notification callback when the status of the proxy changes.
@@ -222,9 +246,10 @@ class ControllerContainer(KaraboSceneWidget, QWidget):
         self._style_sheet = (f"QWidget#{objectName}" +
                              " {{ background-color : rgba{}; }}")
 
+        proxies = controller.proxies
         if self.model.parent_component == "EditableApplyLaterComponent":
             self.is_editable = True
-            for proxy in controller.proxies:
+            for proxy in proxies:
                 proxy.on_trait_change(
                     self._on_user_edit, "edit_value,binding.config_update")
             layout.setContentsMargins(2, 1, 2, 1)
@@ -233,6 +258,17 @@ class ControllerContainer(KaraboSceneWidget, QWidget):
 
         # Tell the widget if it's editing
         controller.set_read_only(not self.is_editable)
+        if self.is_editable:
+            binding = proxies[0].binding
+            if binding is None:
+                proxy.on_trait_change(self._proxy_binding_changed,
+                                      "binding.schema_update")
+                # Use normal tooltip and wait for update
+                self.setToolTip(", ".join(self.model.keys))
+            else:
+                self.setEditableToolTip(level=binding.required_access_level)
+        else:
+            self.setToolTip(", ".join(self.model.keys))
 
         # Make the widget show something
         controller.finish_initialization()
