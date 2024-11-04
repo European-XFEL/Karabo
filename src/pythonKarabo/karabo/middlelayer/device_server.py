@@ -23,6 +23,7 @@ from asyncio import (
     set_event_loop, sleep, wait_for)
 from collections import ChainMap
 from enum import Enum
+from importlib.metadata import entry_points
 from json import loads
 from signal import SIGTERM
 from subprocess import PIPE
@@ -41,7 +42,6 @@ from .eventloop import EventLoop
 from .heartbeat_mixin import HeartBeatMixin
 from .logger import CacheLog, build_logger_node
 from .output import KaraboStream
-from .plugin_loader import PluginLoader
 from .signalslot import SignalSlotable, slot
 from .synchronization import (
     FutureDict, allCompleted, background, firstCompleted)
@@ -124,15 +124,15 @@ class DeviceServerBase(SignalSlotable):
         assignment=Assignment.INTERNAL,
         accessMode=AccessMode.INITONLY)
 
+    def list_plugins(self, namespace):
+        return list(entry_points(group=namespace))
+
     def __init__(self, configuration):
         super().__init__(configuration)
         if not isSet(self.hostName):
             self.hostName = socket.gethostname().partition('.')[0]
         if not isSet(self.serverId):
             self.serverId = self._generateDefaultServerId()
-
-        self.pluginLoader = PluginLoader(
-            Hash("pluginDirectory", self.pluginDirectory))
 
         self.deviceId = self._deviceId_ = self.serverId
         self.deviceInstanceMap = {}
@@ -169,7 +169,6 @@ class DeviceServerBase(SignalSlotable):
     async def _run(self, **kwargs):
         # Scan the plugins very early to send the full instanceInfo
         # before coming online.
-        await self.pluginLoader.update()
         await self.scanPluginsOnce()
         await super()._run(**kwargs)
         self._ss.enter_context(self.log.setBroker(self._ss))
@@ -495,7 +494,7 @@ class MiddleLayerDeviceServer(HeartBeatMixin, DeviceServerBase):
         if not self.pluginNamespace:
             return changes
         classes = set(self.deviceClasses)
-        entrypoints = self.pluginLoader.list_plugins(self.pluginNamespace)
+        entrypoints = self.list_plugins(self.pluginNamespace)
         for ep in entrypoints:
             if ep.name in self.plugins or (classes and ep.name not in classes):
                 continue
@@ -628,7 +627,7 @@ class BoundDeviceServer(DeviceServerBase):
             return changes
         classes = set(self.deviceClasses)
         class_ban = set(self.bannedClasses)
-        entrypoints = self.pluginLoader.list_plugins(self.boundNamespace)
+        entrypoints = self.list_plugins(self.boundNamespace)
         for ep in entrypoints:
             if (ep.name in self.bounds or (classes and
                                            ep.name not in classes) or
