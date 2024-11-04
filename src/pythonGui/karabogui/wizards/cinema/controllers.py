@@ -18,8 +18,6 @@ from qtpy.QtWidgets import QWizard, QWizardPage
 from traits.api import (
     Constant, DelegatesTo, HasStrictTraits, Instance, on_trait_change)
 
-from karabogui.access import ACCESS_LEVELS
-
 from .pages import ConfigurePage, LinkPage, SelectScenesPage
 
 
@@ -136,9 +134,7 @@ class ConfigureController(BasePageController):
     # Trait methods
 
     def _page_default(self):
-        page = ConfigurePage()
-        page.set_usernames([level.lower() for level in ACCESS_LEVELS.keys()])
-        return page
+        return ConfigurePage()
 
     # ----------------------------------------------------------------------
     # Helper methods
