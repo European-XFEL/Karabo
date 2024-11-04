@@ -78,7 +78,7 @@ class BaseCinemaInstallerTest(GuiTestCase):
         config = dict(host=MOCKED_NETWORK.hostname,
                       port=MOCKED_NETWORK.port,
                       show_splash=True,
-                      show_login=False)
+                      include_host=False)
         config.update(kwargs)
 
         current_controller = self.installer.current_controller
@@ -90,9 +90,8 @@ class BaseCinemaInstallerTest(GuiTestCase):
         current_page = current_controller.page
         assert current_page.splash_checkbox.isChecked() == \
                config["show_splash"]
-        assert current_page.login_checkbox.isChecked() == \
-               config["show_login"]
-        assert current_page.username_combobox.currentText() == "admin"
+        assert current_page.include_host_checkbox.isChecked() == \
+               config["include_host"]
         assert current_page.host_lineedit.text() == config["host"]
         assert current_page.port_lineedit.text() == config["port"]
 
@@ -250,16 +249,11 @@ class TestConfigureLink(BaseCinemaInstallerTest):
         assert link["show_splash"] == page.splash_checkbox.isChecked()
 
         # Toggle login checkbox
-        page.login_checkbox.toggle()
-        is_checked = page.login_checkbox.isChecked()
-        assert link["show_login"] == is_checked
-        assert page.username_combobox.isVisible() == (not is_checked)
-        assert page.host_lineedit.isVisible() == (not is_checked)
-        assert page.port_lineedit.isVisible() == (not is_checked)
-
-        # Admin Level
-        page.username_combobox.setCurrentText("operator")
-        assert link["username"] == "operator"
+        page.include_host_checkbox.toggle()
+        is_checked = page.include_host_checkbox.isChecked()
+        assert link["include_host"] == is_checked
+        assert page.host_lineedit.isVisible() == is_checked
+        assert page.port_lineedit.isVisible() == is_checked
 
         # Edit host field: invalid
         self._edit_lineedit('', page.host_lineedit)

@@ -217,10 +217,9 @@ class ConfigurePage(Page):
     edits = None
 
     def setup_page(self):
+        self.host_info_widget.setVisible(False)
         self.splash_checkbox.toggled.connect(self._show_splash_changed)
-        self.login_checkbox.toggled.connect(self._show_login_changed)
-        self.username_combobox.currentTextChanged.connect(
-            self._username_changed)
+        self.include_host_checkbox.toggled.connect(self._show_host_info)
         self.host_lineedit.textChanged.connect(self._host_changed)
         self.port_lineedit.setValidator(QIntValidator())
         self.port_lineedit.textChanged.connect(self._port_changed)
@@ -236,28 +235,20 @@ class ConfigurePage(Page):
         complete = all([field.text() for field in self.edits])
         self.set_complete(complete)
 
-    def set_usernames(self, usernames):
-        self.username_combobox.addItems(usernames)
-
     def set_config(self, config):
         self.splash_checkbox.setChecked(config["show_splash"])
-        self.login_checkbox.setChecked(config["show_login"])
-        self.username_combobox.setCurrentText(config["username"])
+        self.include_host_checkbox.setChecked(config["include_host"])
         self.host_lineedit.setText(config["host"])
         self.port_lineedit.setText(str(config["port"]))
 
     @Slot(bool)
-    def _show_login_changed(self, enabled):
-        self.login_widget.setVisible(not enabled)
-        self.configChanged.emit({"show_login": enabled})
+    def _show_host_info(self, enabled):
+        self.host_info_widget.setVisible(enabled)
+        self.configChanged.emit({"include_host": enabled})
 
     @Slot(bool)
     def _show_splash_changed(self, enabled):
         self.configChanged.emit({"show_splash": enabled})
-
-    @Slot(str)
-    def _username_changed(self, username):
-        self.configChanged.emit({"username": username})
 
     @Slot()
     def _host_changed(self):
@@ -337,8 +328,8 @@ class LinkPage(Page):
             self.name_label.setVisible(True)
 
     def set_data(self, data):
-        blacklist = (["uuids", "host", "port"] if data["show_login"]
-                     else ["uuids"])
+        blacklist = (["uuids"] if data["include_host"]
+                     else ["uuids", "host", "port"])
         meta = ("<table>" +
                 "".join("<tr><td><b>{}</b>:   </td><td>{}</td></tr>".
                         format(key, str(value))
@@ -347,10 +338,9 @@ class LinkPage(Page):
         self.label.setText(meta)
 
         domain = data["domain"]
-        show_login = data["show_login"]
+        include_host = data["include_host"]
         host = data["host"]
         port = data["port"]
-        username = data["username"]
         show_splash = data["show_splash"]
         uuids = data["uuids"]
 
@@ -365,10 +355,10 @@ class LinkPage(Page):
                 + [f"scene_uuid={uuid}" for uuid in uuids])
 
         # Optional args: login details
-        if not show_login:
-            args.extend([f"username={username}",  # username
-                         f"host={host}",  # host
-                         f"port={port}",  # port
+        if include_host:
+            args.extend([
+                         f"host={host}",
+                         f"port={port}",
                          ])
         # Optional args: no splash
         if not show_splash:
