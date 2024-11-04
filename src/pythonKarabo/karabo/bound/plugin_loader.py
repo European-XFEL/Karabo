@@ -13,9 +13,8 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
-import warnings
-
-from pkg_resources import WorkingSet
+import traceback
+from importlib.metadata import entry_points
 
 from karabind import STRING_ELEMENT
 
@@ -39,6 +38,8 @@ class PluginLoader:
 
     def __init__(self, config):
         self._entrypoints = []
+        self.plugin_errors = {}
+
         if "pluginNamespace" in config:
             self.pluginNamespace = config["pluginNamespace"]
         else:
@@ -53,19 +54,17 @@ class PluginLoader:
             raise RuntimeError(f"Plugin {name} not found!")
 
     def update(self):
-        ws = WorkingSet()
-
+        """Protected entry to update the entrypoints"""
         def load(ep):
             try:
                 ep.load()
                 return True
-            except Exception as e:
-                msg = f'Failed to load plugin {ep} for registry: {e}'
-                warnings.warn(msg, ImportWarning)
+            except BaseException:
+                self.plugin_errors[ep.name] = traceback.format_exc()
                 return False
 
         self._entrypoints = [
-            ep for ep in ws.iter_entry_points(self.pluginNamespace)
-            if load(ep)
-        ]
+            ep for ep in entry_points(group=self.pluginNamespace)
+            if load(ep)]
+
         return self._entrypoints

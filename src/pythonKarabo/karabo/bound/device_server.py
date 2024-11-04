@@ -350,26 +350,21 @@ class DeviceServer:
         loaderCfg = Hash("pluginNamespace", pluginNamespace)
         loader = PluginLoader.create("PythonPluginLoader", loaderCfg)
         entrypoints = loader.update()
-
-        logs = []
+        logs = [("ERROR",
+                 f"scanPlugins: Cannot load device plugin {name} -- {exc}")
+                for name, exc in loader.plugin_errors.items()]
         for ep in entrypoints:
             if not self.deviceClasses or ep.name in self.deviceClasses:
-                try:
-                    deviceClass = ep.load()
-                except ImportError as e:
-                    logs.append(("WARN",
-                                 "scanPlugins: Cannot import module "
-                                 "{} -- {}".format(ep.name, e)))
-                    continue
-
+                # All entry points have been verified already
+                deviceClass = ep.load()
                 classid = deviceClass.__classid__
                 try:
                     schema = Configurator(PythonDevice).getSchema(classid)
                     self.availableDevices[classid] = {"module": ep.name,
                                                       "schema": schema}
                     logs.append(("INFO",
-                                 'Successfully loaded plugin: "{}:{}"'
-                                 .format(ep.module_name, ep.name)))
+                                 'Successfully loaded plugin: "{}"'.format(
+                                     ep.name)))
                 # A generic handler is used here due to the different kind
                 # of exceptions that may be raised when obtained the schema
                 # for the just loaded plugin.
