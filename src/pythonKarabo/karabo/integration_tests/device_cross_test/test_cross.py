@@ -118,7 +118,6 @@ class MiddlelayerDevice(DeviceClientBase):
 
     @Slot()
     async def retrieveInterfaces(self):
-        # Get the device topology
         device_topology = self.systemTopology["device"]
         capa = device_topology[self.boundDevice, "capabilities"]
         interfaces = device_topology[self.boundDevice, "interfaces"]
