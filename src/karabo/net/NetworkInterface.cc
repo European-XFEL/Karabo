@@ -55,6 +55,8 @@ namespace {
      */
     struct CIDRAddress {
         CIDRAddress() = delete;
+        CIDRAddress(std::string a, std::uint32_t b, int m)
+            : m_presentationAddress(std::move(a)), m_binaryAddress(b), m_mask(m) {}
 
         std::string m_presentationAddress;
         std::uint32_t m_binaryAddress;
