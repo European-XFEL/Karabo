@@ -21,6 +21,7 @@ from karabo.middlelayer.tests.eventloop import (
 from ..conftest import event_loop
 from .device_context import AsyncDeviceContext
 from .naming import check_device_package_properties
+from .server_context import AsyncServerContext
 from .utils import (
-    assertLogs, create_instanceId, get_ast_objects, run_test, sleepUntil,
-    switch_instance)
+    assert_wait_property, assertLogs, create_instanceId, get_ast_objects,
+    run_test, sleepUntil, switch_instance)
