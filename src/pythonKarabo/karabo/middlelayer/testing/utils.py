@@ -23,9 +23,11 @@ import weakref
 from asyncio import get_event_loop, sleep, wait_for
 from contextlib import contextmanager
 from pathlib import Path
+from typing import Any
 
 import pytest
 
+from ..device_client import getProperties
 from ..eventloop import synchronize_notimeout
 
 
@@ -160,3 +162,33 @@ def switch_instance(instance):
         yield
     finally:
         loop.instance = loop_instance
+
+
+async def assert_wait_property(
+        deviceId: str, path: str, value: Any, timeout: int = 5):
+    """Asserts the successful wait for a property with `path`.
+
+    We timeout after timeout seconds.
+    """
+    POLL_WAIT = 0.5
+    current = None
+
+    async def internal_wait():
+        nonlocal current
+
+        while True:
+            try:
+                h = await wait_for(getProperties(deviceId, path), POLL_WAIT)
+            except TimeoutError:
+                continue
+            current = h[path]
+            if current == value:
+                break
+            else:
+                await sleep(POLL_WAIT)
+
+    try:
+        await wait_for(internal_wait(), timeout=timeout)
+    except TimeoutError:
+        text = f"Waiting for path {path}, {value} on {deviceId}: {current}"
+        assert False, text

@@ -13,6 +13,7 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
+import json
 import uuid
 from asyncio import ensure_future, get_event_loop, sleep
 
@@ -20,9 +21,10 @@ import pytest
 import pytest_asyncio
 
 from karabo.middlelayer import (
-    Device, Slot, String, connectDevice, getDevice, isSet, lock)
+    Device, Slot, State, String, connectDevice, getDevice, isSet, lock)
 from karabo.middlelayer.testing import (
-    AsyncDeviceContext, create_device_server, run_test)
+    AsyncDeviceContext, AsyncServerContext, assert_wait_property,
+    create_device_server, run_test)
 
 
 class Figure(Device):
@@ -135,3 +137,15 @@ async def test_loop_instance(event_loop):
         assert sleep_task is not None
         assert sleep_task.instance() is ww
         sleep_task.cancel()
+
+
+@pytest.mark.timeout(30)
+@pytest.mark.asyncio
+async def test_async_server_context(event_loop):
+    config = {"PropertyTestContext": {"classId": "PropertyTest"}}
+    init = json.dumps(config)
+    server = AsyncServerContext(
+        "testServerContext", [f"init={init}"], api="middlelayer")
+    async with server:
+        await assert_wait_property(
+            "PropertyTestContext", "state", State.NORMAL.value, timeout=10)
