@@ -114,7 +114,6 @@ class PythonDevice(NoFsm):
             STRING_ELEMENT(expected).key("classId")
             .displayedName("ClassID")
             .description("The (factory)-name of the class of this device")
-            .expertAccess()
             .readOnly().initialValue(PythonDevice.__classid__)
             .commit(),
 
@@ -185,7 +184,6 @@ class PythonDevice(NoFsm):
             .displayedName("Locked by")
             .reconfigurable()
             .assignmentOptional().defaultValue("")
-            .expertAccess()
             .setSpecialDisplayType("lockedBy")
             .commit(),
 
