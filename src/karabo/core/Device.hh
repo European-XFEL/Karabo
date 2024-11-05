@@ -289,7 +289,6 @@ namespace karabo {
                       .key("classId")
                       .displayedName("ClassID")
                       .description("The (factory)-name of the class of this device")
-                      .expertAccess()
                       .readOnly()
                       .initialValue(Device::classInfo().getClassId())
                       .commit();
@@ -371,7 +370,6 @@ namespace karabo {
                       .reconfigurable()
                       .assignmentOptional()
                       .defaultValue("")
-                      .expertAccess()
                       .setSpecialDisplayType("lockedBy")
                       .commit();
 
