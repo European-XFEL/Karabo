@@ -63,7 +63,6 @@ class Device(InjectMixin, SignalSlotable):
     classId = String(
         displayedName="ClassID",
         description="The (factory)-name of the class of this device",
-        requiredAccessLevel=AccessLevel.EXPERT,
         accessMode=AccessMode.READONLY,
     )
 
@@ -147,7 +146,7 @@ class Device(InjectMixin, SignalSlotable):
                     "(empty if not locked)",
         displayType="lockedBy",
         accessMode=AccessMode.RECONFIGURABLE, assignment=Assignment.OPTIONAL,
-        requiredAccessLevel=AccessLevel.EXPERT, defaultValue="",
+        defaultValue="",
     )
 
     @Slot(displayedName="Clear Lock", requiredAccessLevel=AccessLevel.EXPERT,
