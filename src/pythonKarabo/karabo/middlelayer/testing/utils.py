@@ -20,7 +20,7 @@ import logging
 import os
 import uuid
 import weakref
-from asyncio import get_event_loop, sleep, wait_for
+from asyncio import get_running_loop, sleep, wait_for
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
@@ -57,7 +57,7 @@ def run_test(func):
     @functools.wraps(func)
     @pytest.mark.asyncio
     async def wrapper(*args, **kwargs):
-        loop = get_event_loop()
+        loop = get_running_loop()
         lead = getattr(loop, "lead", None)
         task = loop.create_task(loop.run_coroutine_or_thread(
             func, *args, **kwargs), instance=lead)
@@ -155,7 +155,7 @@ def create_instanceId(name=None):
 @contextmanager
 def switch_instance(instance):
     """Switch the owning instance of the loop"""
-    loop = get_event_loop()
+    loop = get_running_loop()
     try:
         loop_instance = loop.instance
         loop.instance = weakref.ref(instance)

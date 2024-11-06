@@ -41,7 +41,7 @@ class FaultyDevice(Device):
 @pytest.mark.flaky(max_runs=FLAKY_MAX_RUNS, min_passes=FLAKY_MIN_PASSES)
 @pytest.mark.timeout(30)
 @pytest.mark.asyncio
-async def test_device_server_no_plugins(event_loop):
+async def test_device_server_no_plugins():
     serverId = f"testMDLServer-{uuid.uuid4()}"
     configuration = {"timeServerId": "KaraboTimeServer",
                      "scanPlugins": False,
@@ -83,7 +83,7 @@ async def test_device_server_no_plugins(event_loop):
 
 @pytest.mark.timeout(30)
 @pytest.mark.asyncio
-async def test_device_server_instantiate_plugins(event_loop):
+async def test_device_server_instantiate_plugins():
     serverId = f"testMDLServer-{uuid.uuid4()}"
 
     configuration = {"deviceClasses": ["PropertyTestMDL"],
@@ -145,7 +145,7 @@ async def test_device_server_instantiate_plugins(event_loop):
 
 @pytest.mark.timeout(30)
 @pytest.mark.asyncio
-async def test_device_server_autostart(event_loop):
+async def test_device_server_autostart():
     deviceId_1 = f"test-prop-{uuid.uuid4()}"
     deviceId_2 = f"test-prop-{uuid.uuid4()}"
     serverId = f"testMDLServer-{uuid.uuid4()}"
@@ -183,7 +183,7 @@ async def test_device_server_autostart(event_loop):
 
 @pytest.mark.timeout(30)
 @pytest.mark.asyncio
-async def test_device_server_start_faulty(event_loop):
+async def test_device_server_start_faulty():
     try:
         serverId = create_instanceId()
         server = create_device_server(serverId,
@@ -212,7 +212,7 @@ async def test_device_server_start_faulty(event_loop):
 
 @pytest.mark.timeout(30)
 @pytest.mark.asyncio
-async def test_device_server_concurrence(event_loop):
+async def test_device_server_concurrence():
     try:
         serverId = create_instanceId()
         configuration = {"deviceClasses": ["PropertyTestMDL"]}

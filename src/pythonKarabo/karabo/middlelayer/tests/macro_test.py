@@ -16,7 +16,8 @@
 import sys
 import time
 import weakref
-from asyncio import Future, TimeoutError, ensure_future, wait_for
+from asyncio import (
+    Future, TimeoutError, ensure_future, get_running_loop, wait_for)
 
 import pytest
 import pytest_asyncio
@@ -281,7 +282,7 @@ class LocalMacroSlot(Macro):
 
 @pytest_asyncio.fixture(scope="module")
 @pytest.mark.asyncio
-async def deviceTest(event_loop):
+async def deviceTest():
     local = Local(_deviceId_="local", project="test", module="test",
                   may_start_thread=False)
     remote = Remote(dict(_deviceId_="remote"))
@@ -289,7 +290,7 @@ async def deviceTest(event_loop):
     localMacro = LocalMacroSlot(_deviceId_="localMacroSlot",
                                 project="no", module="test")
     waitUntilRemote = Remote(dict(_deviceId_="remotewaituntil"))
-    event_loop.lead = local
+    get_running_loop().lead = local
     async with AsyncDeviceContext(
             remote=remote, local=local, waitUntilRemote=waitUntilRemote,
             localMacro=localMacro, remotePipeline=remotePipeline) as ctx:
@@ -495,7 +496,7 @@ def test_execute(deviceTest):
 
 @pytest.mark.timeout(30)
 @run_test
-async def test_destruct_macro_timer(event_loop):
+async def test_destruct_macro_timer():
     macro = Local(_deviceId_="macrodestruct", project="timer",
                   module="timer")
     await macro.startInstance()
@@ -1090,7 +1091,7 @@ def test_macro_klass_inheritance():
 
 @pytest_asyncio.fixture(scope="function")
 @pytest.mark.asyncio
-async def abstractDeviceTest(event_loop):
+async def abstractDeviceTest():
     local = LocalAbstract(_deviceId_="local_abstract",
                           project="test", module="test")
     async with AsyncDeviceContext(local=local):

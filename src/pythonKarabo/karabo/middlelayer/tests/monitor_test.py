@@ -80,7 +80,7 @@ class Local(Macro):
 
 @pytest_asyncio.fixture(scope="module")
 @pytest.mark.asyncio
-async def deviceTest(event_loop):
+async def deviceTest():
     local = Local(_deviceId_="local", project="test", module="test",
                   may_start_thread=False)
     remA = Remote(dict(_deviceId_="remA"))
@@ -115,7 +115,7 @@ def test_error(deviceTest):
 
 @pytest.mark.timeout(30)
 @run_test
-async def test_quick_shutdown(event_loop):
+async def test_quick_shutdown():
     """Test that a quick instantiation and shutdown works"""
     device = LocalRemoteDevice(dict(_deviceId_="localWithRemote"))
     ensure_future(device.startInstance())

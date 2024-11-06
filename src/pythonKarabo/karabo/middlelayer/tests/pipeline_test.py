@@ -16,9 +16,7 @@
 import socket
 from asyncio import (
     Future, IncompleteReadError, StreamReader, StreamWriter, WriteTransport,
-    sleep)
-from asyncio.events import AbstractEventLoop
-from collections.abc import Iterator
+    get_running_loop, sleep)
 from struct import pack
 from zlib import adler32
 
@@ -139,9 +137,10 @@ def test_ip_pattern():
 
 
 @pytest_asyncio.fixture(scope="function")
-async def channelContext(event_loop):
-    reader = StreamReader(loop=event_loop)
-    writer = StreamWriter(ChecksumTransport(), None, None, loop=event_loop)
+async def channelContext():
+    loop = get_running_loop()
+    reader = StreamReader(loop=loop)
+    writer = StreamWriter(ChecksumTransport(), None, None, loop=loop)
     channel = Channel(reader, writer, "channelname")
     ctx = ChannelContext(channel)
     yield ctx
@@ -154,7 +153,7 @@ def test_writeSize(channelContext):
 
 
 @run_test
-async def test_ring_queue(event_loop: Iterator[AbstractEventLoop]):
+async def test_ring_queue():
     size = 5
     ring = RingQueue(size)
     # Drop 0

@@ -44,7 +44,7 @@ _DEVICE_INSTANCES = Hash(
 
 
 @pytest.fixture(scope="function")
-def mixin(event_loop):
+def mixin():
     """The fixture creates a mixin and fills it with servers and devices"""
     mixin = HeartBeatMixin()
     for server, info in _SERVER_INSTANCES.items():

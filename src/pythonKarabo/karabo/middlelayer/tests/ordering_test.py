@@ -65,7 +65,7 @@ class Remote(Device):
 
 @pytest_asyncio.fixture(scope="module")
 @pytest.mark.asyncio
-async def deviceTest(event_loop):
+async def deviceTest():
     remote = Remote({"_deviceId_": "OrderRemote"})
     ctx = AsyncDeviceContext(remote=remote)
     async with ctx:

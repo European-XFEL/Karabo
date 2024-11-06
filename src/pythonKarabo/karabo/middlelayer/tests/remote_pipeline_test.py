@@ -13,7 +13,7 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
-from asyncio import Future, TimeoutError, sleep, wait_for
+from asyncio import Future, TimeoutError, get_running_loop, sleep, wait_for
 
 import pytest
 import pytest_asyncio
@@ -205,12 +205,12 @@ class Receiver(InputSchema, Device):
 
 @pytest_asyncio.fixture(scope="module")
 @pytest.mark.asyncio
-async def deviceTest(event_loop):
+async def deviceTest():
     alice = Sender({"_deviceId_": "alice"})
     bob = Receiver({"_deviceId_": "bob",
                     "input": {"dataDistribution": "copy",
                               "onSlowness": "drop"}})
-    event_loop.lead = alice
+    get_running_loop().lead = alice
     ctx = AsyncDeviceContext(alice=alice, bob=bob)
     async with ctx:
         yield ctx
@@ -786,7 +786,7 @@ async def test_noded_output_channel(deviceTest):
 
 @pytest.mark.timeout(60)
 @run_test
-async def test_injected_output_channel_connection(event_loop):
+async def test_injected_output_channel_connection():
     """Test the re/connect to an injected output channel"""
     output_device = InjectedSender({"_deviceId_": "InjectedSender"})
     receiver = Receiver(
@@ -889,7 +889,7 @@ async def test_injected_output_channel_connection(event_loop):
 
 @pytest.mark.timeout(30)
 @run_test
-async def test_output_fail_address(event_loop):
+async def test_output_fail_address():
     """Test the output with a wrong address"""
 
     class Output(NetworkOutput):

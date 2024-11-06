@@ -14,12 +14,22 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 import uuid
-from asyncio import set_event_loop, sleep
+from asyncio import DefaultEventLoopPolicy, set_event_loop, sleep
 
 import pytest
 
 from .eventloop import EventLoop
 from .signalslot import SignalSlotable
+
+
+def async_test_placeholder(func):
+    return False
+
+
+try:
+    from pytest_asyncio import is_async_test
+except Exception:
+    is_async_test = async_test_placeholder
 
 SHUTDOWN_TIME = 2
 
@@ -50,3 +60,43 @@ def event_loop():
         loop.run_until_complete(lead.slotKillDevice())
         loop.run_until_complete(sleep(SHUTDOWN_TIME))
         loop.close()
+
+
+class KaraboTestLoopPolicy(DefaultEventLoopPolicy):
+    def new_event_loop(self):
+        loop = EventLoop()
+        set_event_loop(loop)
+        lead = SignalSlotable(
+            {"_deviceId_": f"SigSlot-{uuid.uuid4()}"})
+        loop.run_until_complete(lead.startInstance())
+        instance_handler = loop.instance
+
+        def instance(loop):
+            """A new instance handler for the loop"""
+            return instance_handler() or lead
+
+        loop.lead = lead
+        loop.instance = instance.__get__(loop, type(loop))
+
+        close_handler = loop.close
+
+        def close(loop):
+            loop.run_until_complete(lead.slotKillDevice())
+            loop.run_until_complete(sleep(SHUTDOWN_TIME))
+            return close_handler()
+
+        loop.close = close.__get__(loop, type(loop))
+
+        return loop
+
+
+@pytest.fixture(scope="module")
+def event_loop_policy():
+    return KaraboTestLoopPolicy()
+
+
+def pytest_collection_modifyitems(items):
+    pytest_asyncio_tests = (item for item in items if is_async_test(item))
+    session_scope_marker = pytest.mark.asyncio(loop_scope="module")
+    for async_test in pytest_asyncio_tests:
+        async_test.add_marker(session_scope_marker, append=False)
