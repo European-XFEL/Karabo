@@ -375,4 +375,37 @@ void StringTools_Test::testTokenize() {
     CPPUNIT_ASSERT_EQUAL(std::string(), out[0]);
     CPPUNIT_ASSERT_EQUAL(std::string(), out[1]);
     CPPUNIT_ASSERT_EQUAL(std::string(), out[2]);
+
+    std::string str1 = "\n\r\t AbRa - kaDaBRa\r\t\n";
+    trim(str1);
+    CPPUNIT_ASSERT_EQUAL(str1, std::string("AbRa - kaDaBRa"));
+
+    toLower(str1);
+    CPPUNIT_ASSERT_EQUAL(str1, std::string("abra - kadabra"));
+
+    toUpper(str1);
+    CPPUNIT_ASSERT_EQUAL(str1, std::string("ABRA - KADABRA"));
+
+    // Split tests
+    auto v1 = split(str1);
+    CPPUNIT_ASSERT(v1.size() == 3);
+    CPPUNIT_ASSERT_EQUAL(v1[0], std::string("ABRA"));
+    CPPUNIT_ASSERT_EQUAL(v1[1], std::string("-"));
+    CPPUNIT_ASSERT_EQUAL(v1[2], std::string("KADABRA"));
+
+    std::string str2 = "HH:MM:SS";
+    auto v2 = split(str2, ":");
+    CPPUNIT_ASSERT(v2.size() == 3);
+    CPPUNIT_ASSERT_EQUAL(v2[0], std::string("HH"));
+    CPPUNIT_ASSERT_EQUAL(v2[1], std::string("MM"));
+    CPPUNIT_ASSERT_EQUAL(v2[2], std::string("SS"));
+
+    std::string str3 = "2024-10-25T12:32:44.035 [debug] abrakadabra : Body message that can be quite long... ";
+    auto v3 = split(str3, " ", 5);
+    CPPUNIT_ASSERT(v3.size() == 5);
+    CPPUNIT_ASSERT_EQUAL(v3[0], std::string("2024-10-25T12:32:44.035"));
+    CPPUNIT_ASSERT_EQUAL(v3[1], std::string("[debug]"));
+    CPPUNIT_ASSERT_EQUAL(v3[2], std::string("abrakadabra"));
+    CPPUNIT_ASSERT_EQUAL(v3[3], std::string(":"));
+    CPPUNIT_ASSERT_EQUAL(v3[4], std::string("Body message that can be quite long... "));
 }

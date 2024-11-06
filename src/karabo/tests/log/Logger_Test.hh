@@ -49,7 +49,7 @@ class LogSomething {
     LogSomething(const karabo::util::Hash& input) {
         using namespace karabo::log;
         Logger::configure(input.get<karabo::util::Hash>("Logger"));
-        Logger::useOstream();
+        Logger::useConsole();
     }
 
     virtual ~LogSomething() {}

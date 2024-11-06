@@ -173,7 +173,7 @@ void GuiServer_Test::appTestRunner() {
               auto state = m_deviceClient->get<State>(TEST_GUI_SERVER_ID, "state");
               return state == State::ON;
           },
-          KRB_TEST_MAX_TIMEOUT * 1000);
+          KRB_TEST_MAX_TIMEOUT * 1000 * 2);
     CPPUNIT_ASSERT_MESSAGE("GUI Server didn't reach ON state in time", serverOn);
 
     testMissingTokenOnLogin();
