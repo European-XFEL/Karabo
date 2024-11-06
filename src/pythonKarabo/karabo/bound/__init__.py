@@ -44,7 +44,7 @@ from karabind import (
     Encoding, Epochstamp, ErrorCode, EventLoop, Hash, HashAttributes,
     HashAttributesNode, HashFilter, HashMergePolicy, HashNode, ImageData,
     InputChannel, InputHash, InputSchema, LeafType, Logger, MetricPrefix,
-    NodeType, OutputChannel, OutputHash, OutputSchema, Priority, PriorityLevel,
+    NodeType, OutputChannel, OutputHash, OutputSchema, PriorityLevel,
     Requestor, RollingWindowStatistics, Rotation, Schema, SignalSlotable,
     SignalSlotableIntern, Slot, SlotElementBase, TextSerializerHash,
     TextSerializerSchema, TimeDuration, Timestamp, Trainstamp, Types,

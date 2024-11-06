@@ -1022,13 +1022,13 @@ namespace karabo {
 
             processingStandardAttributes(key, stream);
 
-            if (getAccessMode(key) == INIT) stream << "     " << "Access mode    : initialization" << endl;
-            else if (getAccessMode(key) == READ) stream << "     " << "Access mode    : read only" << endl;
-            else if (getAccessMode(key) == WRITE) stream << "     " << "Access mode    : reconfigurable" << endl;
+            if (getAccessMode(key) == INIT) stream << "     Access mode    : initialization" << endl;
+            else if (getAccessMode(key) == READ) stream << "     Access mode    : read only" << endl;
+            else if (getAccessMode(key) == WRITE) stream << "     Access mode    : reconfigurable" << endl;
 
             if (hasAllowedStates(key)) {
                 const vector<State> states = getAllowedStates(key);
-                stream << "     " << "Allowed states : " << karabo::util::toString(states) << endl;
+                stream << "     Allowed states : " << karabo::util::toString(states) << endl;
             }
         }
 
@@ -1038,7 +1038,7 @@ namespace karabo {
             stream << "\n  " << showKey << " (NODE)" << endl;
 
 
-            if (hasDescription(key)) stream << "     " << "Description    : " << getDescription(key) << endl;
+            if (hasDescription(key)) stream << "     Description    : " << getDescription(key) << endl;
         }
 
 
@@ -1057,15 +1057,14 @@ namespace karabo {
 
 
         void Schema::processingStandardAttributes(const std::string& key, ostringstream& stream) {
-            if (getAssignment(key) == OPTIONAL_PARAM) stream << "     " << "Assignment     : OPTIONAL" << endl;
-            else if (getAssignment(key) == MANDATORY_PARAM) stream << "     " << "Assignment     : MANDATORY" << endl;
-            else if (getAssignment(key) == INTERNAL_PARAM) stream << "     " << "Assignment     : INTERNAL" << endl;
+            if (getAssignment(key) == OPTIONAL_PARAM) stream << "     Assignment     : OPTIONAL" << endl;
+            else if (getAssignment(key) == MANDATORY_PARAM) stream << "     Assignment     : MANDATORY" << endl;
+            else if (getAssignment(key) == INTERNAL_PARAM) stream << "     Assignment     : INTERNAL" << endl;
 
-            if (hasDefaultValue(key))
-                stream << "     " << "Default value  : " << getDefaultValueAs<string>(key) << endl;
+            if (hasDefaultValue(key)) stream << "     Default value  : " << getDefaultValueAs<string>(key) << endl;
 
 
-            if (hasDescription(key)) stream << "     " << "Description    : " << getDescription(key) << endl;
+            if (hasDescription(key)) stream << "     Description    : " << getDescription(key) << endl;
         }
 
 
