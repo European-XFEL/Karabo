@@ -102,6 +102,7 @@ class Broker:
         self.exit_event = Event()
         self.heartbeat_task = None
         self.subscribe_lock = Lock()
+        self._hostname = socket.gethostname()
         # Flag to indicate when a channel is about to be closed
         self.shutdown_channel = False
 
@@ -295,15 +296,15 @@ class Broker:
 
     def build_arguments(self, signal, targets, reply):
         p = Hash()
-        p["signalFunction"] = signal
+        p.setElement("signalFunction", signal, {})
         slotInstanceIds = "||".join(targets)
-        p["slotInstanceIds"] = f"|{slotInstanceIds}|"
+        p.setElement("slotInstanceIds", f"|{slotInstanceIds}|", {})
         funcs = "||".join(f"{k}:{','.join(v)}" for k, v in targets.items())
-        p["slotFunctions"] = f"|{funcs}|"
+        p.setElement("slotFunctions", f"|{funcs}|", {})
         if reply is not None:
-            p["replyTo"] = reply
-        p["hostname"] = socket.gethostname()
-        p["classId"] = self.classId
+            p.setElement("replyTo", reply, {})
+        p.setElement("hostname", self._hostname, {})
+        p.setElement("classId", self.classId, {})
         # AMQP specific follows ...
         if signal in {"__replyNoWait__", "__reply__"}:
             name = f"{self.domain}.slots"
@@ -345,20 +346,20 @@ class Broker:
 
         if replyTo := header.get("replyTo"):
             p = Hash()
-            p["replyFrom"] = replyTo
-            p["signalFunction"] = "__reply__"
-            p["slotInstanceIds"] = f"|{sender}|"
-            p["error"] = error
+            p.setElement("replyFrom", replyTo, {})
+            p.setElement("signalFunction", "__reply__", {})
+            p.setElement("slotInstanceIds", f"|{sender}|", {})
+            p.setElement("error", error, {})
             name = f"{self.domain}.slots"
             routing_key = sender
             self.send(name, routing_key, p, reply)
 
         if replyId := header.get("replyInstanceIds"):
             p = Hash()
-            p["signalFunction"] = "__replyNoWait__"
-            p["slotInstanceIds"] = replyId
-            p["slotFunctions"] = header["replyFunctions"]
-            p["error"] = error
+            p.setElement("signalFunction", "__replyNoWait__", {})
+            p.setElement("slotInstanceIds", replyId, {})
+            p.setElement("slotFunctions", header["replyFunctions"], {})
+            p.setElement("error", error, {})
             dest = replyId.strip("|")
             name = f"{self.domain}.slots"
             routing_key = dest
