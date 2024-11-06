@@ -21,7 +21,8 @@ from unittest import TestCase
 from unittest.mock import Mock
 
 from karabo.middlelayer.device_server import MiddleLayerDeviceServer
-from karabo.middlelayer.eventloop import EventLoop, ensure_coroutine
+from karabo.middlelayer.eventloop import EventLoop
+from karabo.middlelayer.utils import ensure_coroutine
 
 
 def async_tst(f=None, *, timeout=None):
