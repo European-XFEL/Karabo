@@ -16,11 +16,13 @@
 import asyncio
 import time
 from collections import defaultdict
+from contextlib import suppress
 from inspect import isfunction
 from weakref import WeakSet
 
+from aiormq.exceptions import AMQPException
+
 from karabo.common.api import WeakMethodRef
-from karabo.middlelayer.broker import suppressBrokerException
 from karabo.middlelayer.synchronization import synchronize, synchronous
 from karabo.native import (
     Descriptor, Hash, KaraboError, KaraboValue, NDArray, NodeType, NoneValue,
@@ -583,21 +585,21 @@ class DeviceClientProxyFactory(ProxyFactory):
 
         def __del__(self):
             self._disconnect_outputs()
-            with suppressBrokerException():
+            with suppress(AMQPException):
                 self._disconnectSchemaUpdated()
             if self._used > 0:
                 self._used = 1
-                with suppressBrokerException():
+                with suppress(AMQPException):
                     self.__exit__(None, None, None)
 
         async def delete_proxy(self):
             """Delete the proxy, disconnect all channels and signals"""
             self._disconnect_outputs()
-            with suppressBrokerException():
+            with suppress(AMQPException):
                 await self._async_disconnectSchemaUpdated()
             if self._used > 0:
                 self._used = 1
-                with suppressBrokerException():
+                with suppress(AMQPException):
                     await self.__aexit__(None, None, None)
 
         async def update_proxy(self):
