@@ -82,6 +82,24 @@ namespace karabo {
         }
 
 
+        std::vector<std::string> split(std::string& str, const char* dl, std::size_t maxsplit) {
+            std::size_t start, end;
+            std::vector<std::string> v;
+            start = end = 0;
+            int steps = maxsplit;
+            while ((start = str.find_first_not_of(dl, end)) != std::string::npos) {
+                if (steps == 1) {
+                    v.push_back(str.substr(start));
+                    break;
+                }
+                end = str.find(dl, start);
+                v.push_back(str.substr(start, end - start));
+                if (steps > 1) --steps;
+            }
+            return v;
+        }
+
+
         std::string toString(const karabo::util::NDArray& value) {
             switch (value.getType()) {
                 case Types::BOOL: {
