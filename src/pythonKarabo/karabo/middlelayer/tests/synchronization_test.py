@@ -15,7 +15,8 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 import logging
 import time
-from asyncio import CancelledError, Future, TimeoutError, ensure_future
+from asyncio import (
+    CancelledError, Future, TimeoutError, ensure_future, get_event_loop)
 
 import pytest
 from pint import DimensionalityError
@@ -30,12 +31,15 @@ global called
 called = False
 
 
+def get_device():
+    return get_event_loop().instance().deviceId
+
+
 @pytest.fixture(scope="function")
-def loopTest(event_loop):
+def loopTest():
     global called
     called = False
-    deviceId = event_loop.instance().deviceId
-    yield deviceId
+    yield
     called = False
 
 
@@ -80,7 +84,7 @@ def func_sleep():
 @pytest.mark.timeout(30)
 @run_test
 async def test_coro_coro_raise(loopTest):
-    deviceId = loopTest
+    deviceId = get_device()
     with assertLogs(deviceId, level=logging.ERROR) as log, \
             pytest.raises(RuntimeError):
         await background(coro, False)
@@ -90,7 +94,7 @@ async def test_coro_coro_raise(loopTest):
 @pytest.mark.timeout(30)
 @run_test
 async def test_coro_coro_direct_raise(loopTest):
-    deviceId = loopTest
+    deviceId = get_device()
     with assertLogs(deviceId, level=logging.ERROR) as log, \
             pytest.raises(RuntimeError):
         await background(coro(False))
@@ -100,7 +104,7 @@ async def test_coro_coro_direct_raise(loopTest):
 @pytest.mark.timeout(30)
 @run_test
 async def test_coro_func_raise(loopTest):
-    deviceId = loopTest
+    deviceId = get_device()
     with assertLogs(deviceId, level=logging.ERROR) as log, \
             pytest.raises(RuntimeError):
         await background(func, False)
@@ -110,7 +114,7 @@ async def test_coro_func_raise(loopTest):
 @pytest.mark.timeout(30)
 @run_test
 def test_func_coro_raise(loopTest):
-    deviceId = loopTest
+    deviceId = get_device()
     with assertLogs(deviceId, level=logging.ERROR) as log, \
             pytest.raises(RuntimeError):
         background(coro, False).wait()
@@ -120,7 +124,7 @@ def test_func_coro_raise(loopTest):
 @pytest.mark.timeout(30)
 @run_test
 def test_func_func_raise(loopTest):
-    deviceId = loopTest
+    deviceId = get_device()
     with assertLogs(deviceId, level=logging.ERROR) as log, \
             pytest.raises(RuntimeError):
         background(func, False).wait()
