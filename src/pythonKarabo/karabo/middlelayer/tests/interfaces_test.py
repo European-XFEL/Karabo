@@ -13,6 +13,8 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
+from asyncio import get_running_loop
+
 import pytest
 import pytest_asyncio
 
@@ -27,10 +29,10 @@ class MyDevice(DeviceClientBase):
         defaultValue=["Motor", "Camera", "Processor", "DeviceInstantiator"])
 
 
-@pytest_asyncio.fixture()
-async def deviceTest(event_loop):
+@pytest_asyncio.fixture(scope="module")
+async def deviceTest():
     myDevice = MyDevice(dict(_deviceId_="MyDevice"))
-    event_loop.lead = myDevice
+    get_running_loop().lead = myDevice
     async with AsyncDeviceContext(myDevice=myDevice) as ctx:
         yield ctx
 

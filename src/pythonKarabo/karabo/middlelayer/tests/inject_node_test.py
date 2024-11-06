@@ -20,7 +20,6 @@ from karabo.middlelayer import (
     Float, Int32, MetricPrefix, Node, Overwrite, Slot, State, String, Unit,
     unit)
 from karabo.middlelayer.injectable import InjectMixin
-from karabo.middlelayer.tests import eventloop
 
 
 class InjectConfigurable(InjectMixin):
@@ -56,7 +55,7 @@ def test_deviceNode_default():
 
 
 @pytest.mark.asyncio
-async def test_overwrite_inject(event_loop: eventloop):
+async def test_overwrite_inject():
     class Mandy(InjectConfigurable):
         number = Int32(displayedName="whatever", minExc=7,
                        accessMode=AccessMode.READONLY,
@@ -116,7 +115,7 @@ async def test_overwrite_inject(event_loop: eventloop):
 
 
 @pytest.mark.asyncio
-async def test_inject_parameter(event_loop: eventloop):
+async def test_inject_parameter():
     class Mandy(InjectConfigurable):
         number = Int32(displayedName="whatever", minExc=7,
                        accessMode=AccessMode.READONLY,
@@ -151,7 +150,7 @@ async def test_inject_parameter(event_loop: eventloop):
 
 
 @pytest.mark.asyncio
-async def test_inject_node(event_loop: eventloop):
+async def test_inject_node():
     class Mandy(InjectConfigurable):
         integer = Int32(defaultValue=0)
 
@@ -166,7 +165,7 @@ async def test_inject_node(event_loop: eventloop):
 
 
 @pytest.mark.asyncio
-async def test_inject_options(event_loop: eventloop):
+async def test_inject_options():
     class Mandy(InjectConfigurable):
         integer = String(defaultValue=None, accessMode=AccessMode.READONLY)
 
@@ -181,7 +180,7 @@ async def test_inject_options(event_loop: eventloop):
 
 
 @pytest.mark.asyncio
-async def test_inject_raise_parameter_compare_attrs(event_loop: eventloop):
+async def test_inject_raise_parameter_compare_attrs():
     class Mandy(InjectConfigurable):
         integer = Int32(defaultValue=0)
 
