@@ -26,7 +26,6 @@
 
 #include <atomic>
 #include <boost/shared_ptr.hpp>
-#include <krb_log4cpp/Priority.hh>
 #include <set>
 #include <unordered_map>
 

@@ -35,8 +35,7 @@ class StartStopUser(StartStopFsm):
         self.log.DEBUG("-- StartStopUser.noStateTransition")
 
     def updateState(self, currentState):
-        self.log.DEBUG(
-            f"-- StartStopUser.updateState to '{currentState}'")
+        self.log.DEBUG(f"-- StartStopUser.updateState to '{currentState}'")
 
     def errorStateOnEntry(self):
         self.log.DEBUG("-- StartStopUser.errorStateOnEntry")
