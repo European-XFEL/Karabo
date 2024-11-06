@@ -41,6 +41,7 @@
 #include "karabo/io/Input.hh"
 #include "karabo/io/Output.hh"
 #include "karabo/log/Logger.hh"
+#include "karabo/log/utils.hh"
 #include "karabo/net/Broker.hh"
 #include "karabo/net/EventLoop.hh"
 #include "karabo/net/Strand.hh"
@@ -74,7 +75,6 @@ namespace karabo {
         using namespace karabo::log;
         using namespace karabo::net;
         using namespace karabo::xms;
-        using namespace krb_log4cpp;
         using namespace boost::placeholders;
 
         void DeviceServer::expectedParameters(Schema& expected) {
@@ -207,8 +207,7 @@ namespace karabo {
         }
 
         DeviceServer::DeviceServer(const karabo::util::Hash& config)
-            : m_log(0),
-              m_timeId(0ull),
+            : m_timeId(0ull),
               m_timeSec(0ull),
               m_timeFrac(0ull),
               m_timePeriod(1ull) // non-zero as double protection against division by zero in DeviceServer::timeTick
@@ -287,9 +286,7 @@ namespace karabo {
 
         DeviceServer::~DeviceServer() {
             stopDeviceServer();
-            KARABO_LOG_FRAMEWORK_TRACE << "DeviceServer::~DeviceServer() dtor : m_logger.use_count()="
-                                       << m_logger.use_count();
-            m_logger.reset();
+            Logger::reset();
         }
 
 
@@ -307,14 +304,11 @@ namespace karabo {
             // By default all categories use all three appenders
             // Note: If logging via broker shall be established, take care that its Logger::useXxx()
             //       is called after broker communication is established.
-            Logger::useOstream();
+            Logger::useConsole();
             Logger::useFile();
             Logger::useCache();
 
-            // Initialize category
-            m_log = &(karabo::log::Logger::getCategory(m_serverId));
-
-            KARABO_LOG_FRAMEWORK_INFO << "Logfiles are written to: " << path;
+            KARABO_LOG_INFO << "Logfiles are written to: " << path;
         }
 
 
@@ -491,11 +485,6 @@ namespace karabo {
             m_timeTickerTimer.expires_at((stamp += periodDuration).getPtime());
             m_timeTickerTimer.async_wait(
                   util::bind_weak(&DeviceServer::timeTick, this, boost::asio::placeholders::error, ++newId));
-        }
-
-
-        krb_log4cpp::Category& DeviceServer::log() {
-            return (*m_log);
         }
 
 
@@ -777,8 +766,7 @@ namespace karabo {
 
 
         void DeviceServer::slotLoggerPriority(const std::string& newprio) {
-            using namespace krb_log4cpp;
-            string oldprio = Logger::getPriority();
+            std::string oldprio = Logger::getPriority();
             Logger::setPriority(newprio);
             KARABO_LOG_INFO << "Logger Priority changed : " << oldprio << " ==> " << newprio;
             this->updateInstanceInfo(Hash("log", newprio));

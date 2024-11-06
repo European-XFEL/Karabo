@@ -19,7 +19,6 @@
 #include "Runner.hh"
 
 #include <algorithm>
-#include <krb_log4cpp/Category.hh>
 #include <nlohmann/json.hpp>
 #include <regex>
 #include <string>

@@ -25,7 +25,6 @@
 #include <boost/filesystem.hpp>
 
 #include "karabo/core/InstanceChangeThrottler.hh"
-#include "karabo/log/AuditFileFilter.hh"
 #include "karabo/log/Logger.hh"
 #include "karabo/net/EventLoop.hh"
 #include "karabo/net/TcpChannel.hh"
@@ -619,7 +618,7 @@ namespace karabo {
             boost::filesystem::create_directories(path);
             path += "/user-actions.log";
 
-            Hash logConfig = Hash("auditfile.filename", path.generic_string());
+            Hash logConfig = Hash("audit.filename", path.generic_string());
             Logger::configure(logConfig);
 
             Logger::useAuditFile();
@@ -648,10 +647,9 @@ namespace karabo {
                         }
                     }
                     lock.unlock();
-                    // NOTE: The AUDIT_ENTRY_MARK is what the audit log appender (instance of class
-                    // karabo::log::AuditFileAppender) uses to accept writting a given message to the audit log.
-                    KARABO_LOG_INFO << karabo::log::AUDIT_ENTRY_MARK << (tempSession ? "[Temporary Session] - " : "")
-                                    << "User with token '" << token << "' action: " << entryText;
+                    // NOTE: Use special logging macro to write message to special audit file log
+                    KARABO_AUDIT_INFO("{}User with token '{}' action: {}",
+                                      (tempSession ? "[Temporary Session] - " : ""), token, entryText);
                 }
             }
         }

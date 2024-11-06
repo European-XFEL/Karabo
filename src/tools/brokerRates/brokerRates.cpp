@@ -467,14 +467,14 @@ void printHelp(const char* name) {
 void startAmqpMonitor(const std::vector<std::string>& brokers, const std::string& domain,
                       const std::vector<std::string>& receivers, std::vector<std::string>& senders,
                       const util::TimeValue& interval) {
-
     net::AmqpConnection::Pointer connection(boost::make_shared<net::AmqpConnection>(brokers));
 
     // boost::shared_ptr<BrokerStatistics> stats(boost::make_shared<BrokerStatistics>(interval, receivers, senders));
     // auto binSerializer = io::BinarySerializer<util::Hash>::create("Bin");
 
     auto readHandler = [stats{boost::make_shared<BrokerStatistics>(interval, receivers, senders)},
-                        binSerializer{io::BinarySerializer<util::Hash>::create("Bin")}](const util::Hash::Pointer& header, const util::Hash::Pointer& body) {
+                        binSerializer{io::BinarySerializer<util::Hash>::create("Bin")}](
+                             const util::Hash::Pointer& header, const util::Hash::Pointer& body) {
         // `BrokerStatistics' expects the message formatted as a Hash: with 'header' as Hash and 'body' as Hash with the
         // single key 'raw' as vector<char> which is the serialized 'body' value.
         // If the incoming 'body' does not contain a proper 'raw' key, serialize the body part.
@@ -507,14 +507,14 @@ void startAmqpMonitor(const std::vector<std::string>& brokers, const std::string
     // Wait until connection established and thus connection->getCurrentUrl() shows proper url
     std::promise<boost::system::error_code> isConnected;
     auto futConnected = isConnected.get_future();
-    connection->asyncConnect([&isConnected](const boost::system::error_code& ec){isConnected.set_value(ec);});
+    connection->asyncConnect([&isConnected](const boost::system::error_code& ec) { isConnected.set_value(ec); });
     const boost::system::error_code ec = futConnected.get();
     if (ec) {
         throw KARABO_NETWORK_EXCEPTION("Broker connection failed: " + ec.message());
     }
 
-    std::cout << "\nStart monitoring signal and slot rates of \n   domain        '" << domain
-              << "'\n   on broker     '" << connection->getCurrentUrl() << "',\n   ";
+    std::cout << "\nStart monitoring signal and slot rates of \n   domain        '" << domain << "'\n   on broker     '"
+              << connection->getCurrentUrl() << "',\n   ";
     if (!receivers.empty()) {
         std::cout << "messages to   '" << util::toString(receivers) << "',\n   ";
     }
@@ -524,10 +524,11 @@ void startAmqpMonitor(const std::vector<std::string>& brokers, const std::string
     std::cout << "interval is    " << interval << " s." << std::endl;
 
     // Lambda to initiate subscription, returns future to wait for:
-    auto subscribe = [](net::AmqpHashClient::Pointer& client, const std::string& exchange, const std::string& bindingKey) {
+    auto subscribe = [](net::AmqpHashClient::Pointer& client, const std::string& exchange,
+                        const std::string& bindingKey) {
         if (debug) {
-            std::cout << "Subscribing to exchange: '" << exchange << "' and binding key: '"
-                      << bindingKey << "'" << std::endl;
+            std::cout << "Subscribing to exchange: '" << exchange << "' and binding key: '" << bindingKey << "'"
+                      << std::endl;
         }
 
         auto done = std::make_shared<std::promise<boost::system::error_code>>();
@@ -621,7 +622,7 @@ int main(int argc, const char** argv) {
 
     // Start Logger, but suppress INFO and DEBUG
     log::Logger::configure(util::Hash("priority", "WARN"));
-    log::Logger::useOstream();
+    log::Logger::useConsole();
 
     const std::vector<std::string> brokers(net::Broker::brokersFromEnv());
     const std::string brkType = net::Broker::brokerTypeFrom(brokers);

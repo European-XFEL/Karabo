@@ -37,6 +37,7 @@
 #include "Lock.hh"
 #include "NoFsm.hh"
 #include "karabo/log/Logger.hh"
+#include "karabo/log/utils.hh"
 #include "karabo/net/EventLoop.hh"
 #include "karabo/net/utils.hh"
 #include "karabo/util/AlarmConditionElement.hh"
@@ -66,10 +67,10 @@ namespace karabo {
     namespace core {
 
         // Convenient logging
-#define KARABO_LOG_DEBUG this->log() << krb_log4cpp::Priority::DEBUG
-#define KARABO_LOG_INFO this->log() << krb_log4cpp::Priority::INFO
-#define KARABO_LOG_WARN this->log() << krb_log4cpp::Priority::WARN
-#define KARABO_LOG_ERROR this->log() << krb_log4cpp::Priority::ERROR
+#define KARABO_LOG_DEBUG karabo::log::LoggerStream(this->getInstanceId(), spdlog::level::debug)
+#define KARABO_LOG_INFO karabo::log::LoggerStream(this->getInstanceId(), spdlog::level::info)
+#define KARABO_LOG_WARN karabo::log::LoggerStream(this->getInstanceId(), spdlog::level::warn)
+#define KARABO_LOG_ERROR karabo::log::LoggerStream(this->getInstanceId(), spdlog::level::err)
 
 #define KARABO_NO_SERVER "__none__"
 
@@ -208,8 +209,6 @@ namespace karabo {
             unsigned long long m_timeFrac;   // attoseconds
             unsigned long long m_timePeriod; // microseconds
             mutable boost::mutex m_timeChangeMutex;
-
-            krb_log4cpp::Category* m_log;
 
             mutable boost::mutex m_objectStateChangeMutex;
             karabo::util::Hash m_parameters;
@@ -515,9 +514,6 @@ namespace karabo {
                 m_validatorIntern.setValidationRules(rules);
                 rules.forceInjectedTimestamp = true; // no externally contributed timestamp!
                 m_validatorExtern.setValidationRules(rules);
-
-                // Setup device logger
-                m_log = &(karabo::log::Logger::getCategory(m_deviceId));
             }
 
             /**
@@ -937,20 +933,6 @@ namespace karabo {
                     KARABO_RETHROW_AS(
                           KARABO_PARAMETER_EXCEPTION("Error whilst retrieving parameter (" + key + ") from device"));
                 }
-            }
-
-            /**
-             * Use this function for any logging information.
-             * @code
-             * log() << Priority::DEBUG << "My logging message on debug priority";
-             * log() << Priority::INFO << "My logging message on info priority";
-             * log() << Priority::WARN << "My logging message on warn priority";
-             * log() << Priority::ERROR << "My logging message on error priority";
-             * @endcode
-             * @return Logging object
-             */
-            krb_log4cpp::Category& log() const {
-                return (*m_log);
             }
 
             /**
@@ -1617,10 +1599,10 @@ namespace karabo {
                         } else if (m_timeId >= nPeriods + 1ull) { // sanity check
                             id = m_timeId - nPeriods - 1ull;
                         } else {
-                            KARABO_LOG_FRAMEWORK_WARN
-                                  << "Bad input: (train)Id zero since " << "epoch = " << epoch.toIso8601()
-                                  << "; from time server: epoch = " << epochLastReceived.toIso8601()
-                                  << ", id = " << m_timeId << ", period = " << m_timePeriod << " mus";
+                            KARABO_LOG_FRAMEWORK_WARN << "Bad input: (train)Id zero since epoch = " << epoch.toIso8601()
+                                                      << "; from time server: epoch = " << epochLastReceived.toIso8601()
+                                                      << ", id = " << m_timeId << ", period = " << m_timePeriod
+                                                      << " mus";
                         }
                     }
                 }
@@ -1681,8 +1663,9 @@ namespace karabo {
                     karabo::util::Hash validated;
                     std::pair<bool, std::string> result =
                           m_validatorIntern.validate(m_fullSchema, m_parameters, validated, getActualTimestamp());
-                    if (result.first == false)
+                    if (result.first == false) {
                         KARABO_LOG_WARN << "Bad parameter setting attempted, validation reports: " << result.second;
+                    }
                     m_parameters.merge(validated, karabo::util::Hash::REPLACE_ATTRIBUTES);
 
                     // Do this under mutex protection
@@ -1771,7 +1754,7 @@ namespace karabo {
                 SignalSlotable::start();
 
                 KARABO_LOG_FRAMEWORK_INFO << "'" << m_classId << "' with deviceId: '" << this->getInstanceId()
-                                          << "' got started" << " on server '" << this->getServerId() << "'.";
+                                          << "' got started on server '" << this->getServerId() << "'.";
 
                 //
                 // Finally do everything that requires full participation in the system
@@ -1869,15 +1852,14 @@ namespace karabo {
                         } else if (displayType == "InputChannel") {
                             prepareInputChannel(key);
                         } else {
-                            KARABO_LOG_FRAMEWORK_TRACE << "'" << this->getInstanceId()
-                                                       << "' does not create in-/output " << "channel for '" << key
-                                                       << "' since it's a '" << displayType << "'";
+                            KARABO_LOG_FRAMEWORK_TRACE << "'" << this->getInstanceId() << "' does not create "
+                                                       << "in-/output channel for '" << key << "' since it's a '"
+                                                       << displayType << "'";
                         }
                     } else if (schema.isNode(key)) {
                         // Recursive call going down the tree for channels within nodes
-                        KARABO_LOG_FRAMEWORK_TRACE << "'" << this->getInstanceId()
-                                                   << "' looks for input/output channels " << "under node \"" << key
-                                                   << "\"";
+                        KARABO_LOG_FRAMEWORK_TRACE << "'" << this->getInstanceId() << "' looks for input/output "
+                                                   << "channels under node \"" << key << "\"";
                         initChannels(schema, key);
                     }
                 }
@@ -2023,8 +2005,8 @@ namespace karabo {
                                                << " and called by '" << callee << "'";
                     if (callee != "unknown" && callee != lockHolder) {
                         std::ostringstream msg;
-                        msg << "Command " << "\"" << slotName << "\"" << " is not allowed as device is locked by "
-                            << "\"" << lockHolder << "\".";
+                        msg << "Command \"" << slotName << "\" is not allowed as device is locked by \"" << lockHolder
+                            << "\".";
                         throw KARABO_LOCK_EXCEPTION(msg.str());
                     }
                 }
@@ -2042,8 +2024,8 @@ namespace karabo {
                     const karabo::util::State currentState = getState();
                     if (std::find(allowedStates.begin(), allowedStates.end(), currentState) == allowedStates.end()) {
                         std::ostringstream msg;
-                        msg << "Command " << "\"" << slotName << "\"" << " is not allowed in current state " << "\""
-                            << currentState.name() << "\" of device " << "\"" << m_deviceId << "\".";
+                        msg << "Command \"" << slotName << "\" is not allowed in current state \""
+                            << currentState.name() << "\" of device \"" << m_deviceId << "\".";
                         throw KARABO_LOGIC_EXCEPTION(msg.str());
                     }
                 }

@@ -45,7 +45,6 @@ namespace karabo {
 
     namespace devices {
 
-        using namespace krb_log4cpp;
         using namespace karabo::core;
         using namespace karabo::io;
         using namespace karabo::util;
@@ -320,8 +319,7 @@ namespace karabo {
                     } else {
                         allNumbers = false;
                         KARABO_LOG_FRAMEWORK_ERROR << "Query for property '" << ctxt->deviceId << "." << ctxt->property
-                                                   << "'" << " returned column without type separator '" << column
-                                                   << "'";
+                                                   << "' returned column without type separator '" << column << "'";
                     }
                 }
             } catch (const std::exception& e) {
@@ -1037,10 +1035,10 @@ namespace karabo {
                         const Types::ReferenceType type = Types::from<FromLiteral>(typeName);
                         addNodeToHash(hash, "v", type, tid, epoch, *(valuesRow[col]));
                     } catch (const std::exception& e) {
-                        KARABO_LOG_FRAMEWORK_ERROR
-                              << "Error adding node to hash:" << "\nValue type: " << colTypeNames[col]
-                              << "\nValue (as string): " << *(valuesRow[col]) << "\nTimestamp: " << epoch.toIso8601Ext()
-                              << "\nError: " << e.what();
+                        KARABO_LOG_FRAMEWORK_ERROR << "Error adding node to hash:\nValue type: " << colTypeNames[col]
+                                                   << "\nValue (as string): " << *(valuesRow[col])
+                                                   << "\nTimestamp: " << epoch.toIso8601Ext()
+                                                   << "\nError: " << e.what();
                     }
                 }
                 if (hash.has("v")) {
@@ -1160,8 +1158,8 @@ namespace karabo {
                   Configurator<InfluxDbClient>::create("InfluxDbClient", config);
 
             std::ostringstream query;
-            query << "SELECT * FROM \"__BAD__DATA__\"" << " WHERE time >= " << epochAsMicrosecString(from)
-                  << m_durationUnit << " AND time <= " << epochAsMicrosecString(to) << m_durationUnit;
+            query << "SELECT * FROM \"__BAD__DATA__\" WHERE time >= " << epochAsMicrosecString(from) << m_durationUnit
+                  << " AND time <= " << epochAsMicrosecString(to) << m_durationUnit;
             const std::string queryStr = query.str();
             try {
                 // Not a priory clear which client to use. Since this slot is called so rarely, dare to use the one
