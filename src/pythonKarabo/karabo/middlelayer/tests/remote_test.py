@@ -41,11 +41,12 @@ FIXED_TIMESTAMP = Timestamp("2009-04-20T10:32:22 UTC")
 
 
 @pytest_asyncio.fixture(scope="module")
-@pytest.mark.asyncio
-async def deviceTest(event_loop):
+@pytest.mark.asyncio(loop_scope="module")
+async def deviceTest():
     local = Local({"_deviceId_": "local"})
     remote = Remote({"_deviceId_": "remote"})
-    event_loop.lead = local
+    import asyncio
+    asyncio.get_running_loop().lead = local
     ctx = AsyncDeviceContext(local=local, remote=remote)
     async with ctx:
         yield ctx
@@ -1056,7 +1057,7 @@ async def test_connectDevice(deviceTest):
 
 @pytest.mark.timeout(30)
 @run_test
-async def test_nonproper_connectDevice(event_loop):
+async def test_nonproper_connectDevice():
     with pytest.raises(KaraboError) as exc:
         await connectDevice(None)
     assert "Need a proper" in str(exc)
@@ -1134,7 +1135,7 @@ async def test_prenatal_proxy(deviceTest):
 
 @pytest.mark.timeout(30)
 @run_test
-async def test_proxy_dead(event_loop):
+async def test_proxy_dead():
     a = Remote({"_deviceId_": "moriturus"})
     async with AsyncDeviceContext(a=a):
         proxy = await getDevice("moriturus")
@@ -1146,7 +1147,7 @@ async def test_proxy_dead(event_loop):
 
 @pytest.mark.timeout(30)
 @run_test
-async def test_device_schema(event_loop):
+async def test_device_schema():
     remote = Remote({"_deviceId_": "remoteschema"})
     async with AsyncDeviceContext(remote=remote):
         schema = await getSchema("remoteschema", False)
@@ -1340,7 +1341,7 @@ async def test_earlyinject(deviceTest):
 
 @pytest.mark.timeout(30)
 @run_test
-async def test_device_restart(event_loop):
+async def test_device_restart():
     remote = Remote({"_deviceId_": "reconremote"})
     async with AsyncDeviceContext(remote=remote):
         await sleep(0.1)
@@ -1433,7 +1434,7 @@ async def test_config_handler(deviceTest):
 
 @pytest.mark.timeout(30)
 @run_test
-async def test_async_disconnect(event_loop):
+async def test_async_disconnect():
     remote = Remote({"_deviceId_": "newremote"})
     async with AsyncDeviceContext(remote=remote):
         remote.counter = -1
@@ -1506,7 +1507,7 @@ async def test_crazy_injection_destruction(deviceTest):
 
 @pytest.mark.timeout(30)
 @run_test
-def test_async_yield_from_connectDevice(event_loop):
+def test_async_yield_from_connectDevice():
     """Test the old syntax for connectDevice"""
     deviceId = "yield_from_remote-device"
     remote = Remote({"_deviceId_": deviceId})
@@ -1523,7 +1524,7 @@ def test_async_yield_from_connectDevice(event_loop):
 
 @pytest.mark.timeout(30)
 @run_test
-def test_async_yield_from_getDevice(event_loop):
+def test_async_yield_from_getDevice():
     """Test the old syntax for getDevice"""
     deviceId = "another_yield_from_remote-device"
     remote = Remote({"_deviceId_": deviceId})
