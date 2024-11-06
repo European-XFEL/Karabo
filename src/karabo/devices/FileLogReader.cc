@@ -51,7 +51,6 @@ KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device
 namespace karabo {
     namespace devices {
 
-        using namespace krb_log4cpp;
         using namespace std;
         using namespace karabo::util;
         using namespace karabo::io;

@@ -15,38 +15,37 @@
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
-
-
 #include "Logger.hh"
 
-#include <karabo/util/ListElement.hh>
-#include <karabo/util/SimpleElement.hh>
+#include <spdlog/cfg/env.h>
+#include <spdlog/sinks/rotating_file_sink.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/spdlog.h>
 
-#include "AuditFileAppender.hh"
-#include "CacheAppender.hh"
-#include "OstreamAppender.hh"
-#include "RollingFileAppender.hh"
+#include <filesystem>
+
+#include "karabo/util/ListElement.hh"
 #include "karabo/util/NodeElement.hh"
-#include "krb_log4cpp/Appender.hh"
-#include "krb_log4cpp/Category.hh"
+#include "karabo/util/PathElement.hh"
+#include "karabo/util/SimpleElement.hh"
+#include "karabo/util/StringTools.hh"
 
 
 using namespace karabo::util;
 using namespace std;
 
+
 namespace karabo {
     namespace log {
 
-        // Static initialization of logMutex
-        boost::shared_mutex Logger::m_logMutex;
-        boost::shared_mutex Logger::m_frameworkLogMutex;
-
         // Static initialization of LogStreamRegistry
-        Logger::CategoryMap Logger::m_categories;
-
-        Logger::CategorySet Logger::m_frameworkCategories;
-
-        Hash Logger::m_config;
+        std::shared_ptr<Logger> Logger::m_instance = nullptr;
+        karabo::util::Hash Logger::m_config = karabo::util::Hash();
+        std::shared_ptr<spdlog::logger> Logger::m_audit = nullptr;
+        std::shared_ptr<spdlog::sinks::ringbuffer_sink_mt> Logger::m_ring = nullptr;
+        int Logger::m_sinks = 0;
+        std::map<std::string, std::vector<std::shared_ptr<spdlog::sinks::sink>>> Logger::m_usemap;
+        std::mutex Logger::m_globalLoggerMutex;
 
 
         void Logger::expectedParameters(Schema& s) {
@@ -60,17 +59,237 @@ namespace karabo {
                   .defaultValue("INFO")
                   .commit();
 
-            NODE_ELEMENT(s).key("ostream").appendParametersOf<OstreamAppender>().commit();
+            STRING_ELEMENT(s)
+                  .key("pattern")
+                  .description("Formatting pattern for the logstream")
+                  .displayedName("Pattern")
+                  .assignmentOptional()
+                  .defaultValue("%Y-%m-%dT%H:%M:%S.%e [%^%l%$] %n : %v")
+                  .commit();
 
-            NODE_ELEMENT(s).key("file").appendParametersOf<RollingFileAppender>().commit();
+            NODE_ELEMENT(s).key("console").commit();
 
-            NODE_ELEMENT(s).key("cache").appendParametersOf<CacheAppender>().commit();
+            STRING_ELEMENT(s)
+                  .key("console.output")
+                  .description("Output Stream")
+                  .displayedName("OutputStream")
+                  .options(std::vector<std::string>({"STDERR", "STDOUT"}))
+                  .assignmentOptional()
+                  .defaultValue("STDERR")
+                  .commit();
 
-            NODE_ELEMENT(s).key("auditfile").appendParametersOf<AuditFileAppender>().commit();
+            STRING_ELEMENT(s)
+                  .key("console.pattern")
+                  .description("Formatting pattern for the logstream")
+                  .displayedName("Pattern")
+                  .assignmentOptional()
+                  .defaultValue("%Y-%m-%dT%H:%M:%S.%e [%^%l%$] %n : %v")
+                  .commit();
+
+            STRING_ELEMENT(s)
+                  .key("console.threshold")
+                  .description(
+                        "The Logger will not log messages with a level lower than defined here.\
+                                  Use Priority::NOTSET to disable threshold checking.")
+                  .displayedName("Threshold")
+                  .options({"NOTSET", "DEBUG", "INFO", "WARN", "ERROR"})
+                  .assignmentOptional()
+                  .defaultValue("NOTSET")
+                  .commit();
+
+            NODE_ELEMENT(s).key("ostream").commit();
+
+            STRING_ELEMENT(s)
+                  .key("ostream.output")
+                  .description("Output Stream")
+                  .displayedName("OutputStream")
+                  .options(std::vector<std::string>({"STDERR", "STDOUT"}))
+                  .assignmentOptional()
+                  .defaultValue("STDERR")
+                  .commit();
+
+            STRING_ELEMENT(s)
+                  .key("ostream.pattern")
+                  .description("Formatting pattern for the logstream")
+                  .displayedName("Pattern")
+                  .assignmentOptional()
+                  .defaultValue("%Y-%m-%dT%H:%M:%S.%e [%^%l%$] %n : %v")
+                  .commit();
+
+            STRING_ELEMENT(s)
+                  .key("ostream.threshold")
+                  .description(
+                        "The Logger will not log messages with a level lower than defined here.\
+                                  Use Priority::NOTSET to disable threshold checking.")
+                  .displayedName("Threshold")
+                  .options({"NOTSET", "DEBUG", "INFO", "WARN", "ERROR"})
+                  .assignmentOptional()
+                  .defaultValue("NOTSET")
+                  .commit();
+
+            NODE_ELEMENT(s).key("file").commit();
+
+            PATH_ELEMENT(s)
+                  .key("file.filename")
+                  .description("Filename")
+                  .displayedName("Filename")
+                  .isOutputFile()
+                  .assignmentOptional()
+                  .defaultValue("karabo.log")
+                  .commit();
+
+            UINT32_ELEMENT(s)
+                  .key("file.maxFileSize")
+                  .description("Maximum file size")
+                  .displayedName("MaxFileSize")
+                  .unit(Unit::BYTE)
+                  .assignmentOptional()
+                  .defaultValue(10 * 1024 * 1024)
+                  .commit();
+
+            UINT32_ELEMENT(s)
+                  .key("file.maxBackupIndex")
+                  .description("Maximum backup index (rolling file index)")
+                  .displayedName("MaxBackupIndex")
+                  .assignmentOptional()
+                  .defaultValue(10)
+                  .commit();
+
+            STRING_ELEMENT(s)
+                  .key("file.pattern")
+                  .description("Formatting pattern for the logstream")
+                  .displayedName("Pattern")
+                  .assignmentOptional()
+                  .defaultValue("%Y-%m-%dT%H:%M:%S.%e [%^%l%$] %n : %v")
+                  .commit();
+
+            STRING_ELEMENT(s)
+                  .key("file.threshold")
+                  .description(
+                        "The sink will not appended log message with a priority lower than the threshold.\
+                                  Use Priority::NOTSET or OFF to disable threshold checking.")
+                  .displayedName("Threshold")
+                  .options({"NOTSET", "DEBUG", "INFO", "WARN", "ERROR"})
+                  .assignmentOptional()
+                  .defaultValue("NOTSET")
+                  .commit();
+
+
+            NODE_ELEMENT(s).key("cache").commit();
+
+            STRING_ELEMENT(s)
+                  .key("cache.logger")
+                  .description("Name identifying the logger")
+                  .displayedName("Logger name")
+                  .assignmentOptional()
+                  .defaultValue("") // default logger
+                  .commit();
+
+            UINT32_ELEMENT(s)
+                  .key("cache.maxNumMessages")
+                  .displayedName("Max. Num. Messages")
+                  .description("Maximum number of messages in the cache")
+                  .assignmentOptional()
+                  .defaultValue(100u)
+                  .maxInc(1000u)
+                  .commit();
+
+            STRING_ELEMENT(s)
+                  .key("cache.pattern")
+                  .description("Formatting pattern for the logstream")
+                  .displayedName("Pattern")
+                  .assignmentOptional()
+                  .defaultValue("%Y-%m-%dT%H:%M:%S.%e [%^%l%$] %n : %v")
+                  .commit();
+
+            STRING_ELEMENT(s)
+                  .key("cache.threshold")
+                  .description(
+                        "The Logger will not log messages with a level lower than defined here.\
+                                  Use Priority::NOTSET to disable threshold checking.")
+                  .displayedName("Threshold")
+                  .options({"NOTSET", "DEBUG", "INFO", "WARN", "ERROR"})
+                  .assignmentOptional()
+                  .defaultValue("INFO")
+                  .commit();
+
+            NODE_ELEMENT(s).key("audit").commit();
+
+            STRING_ELEMENT(s)
+                  .key("audit.logger")
+                  .description("Audit logger name")
+                  .displayedName("Audit logger")
+                  .assignmentOptional()
+                  .defaultValue(KARABO_AUDIT_LOGGER)
+                  .commit();
+
+            PATH_ELEMENT(s)
+                  .key("audit.filename")
+                  .description("Filename of audit file data")
+                  .displayedName("Filename")
+                  .isOutputFile()
+                  .assignmentOptional()
+                  .defaultValue("audit.log")
+                  .commit();
+
+            UINT32_ELEMENT(s)
+                  .description("Hour for file rotation")
+                  .key("audit.hour")
+                  .displayedName("Hour")
+                  .assignmentOptional()
+                  .defaultValue(2)
+                  .minInc(0)
+                  .maxInc(23)
+                  .commit();
+
+            UINT32_ELEMENT(s)
+                  .key("audit.minute")
+                  .description("Minute for file rotation")
+                  .displayedName("Minute")
+                  .assignmentOptional()
+                  .defaultValue(30)
+                  .minInc(0)
+                  .maxInc(59)
+                  .commit();
+
+            UINT16_ELEMENT(s)
+                  .key("audit.maxFiles")
+                  .description("Maximum number of files in the files ring; 0 - no limits")
+                  .displayedName("MaxBackups")
+                  .assignmentOptional()
+                  .defaultValue(14)
+                  .commit();
+
+            STRING_ELEMENT(s)
+                  .key("audit.pattern")
+                  .description("Formatting pattern for the logstream")
+                  .displayedName("Pattern")
+                  .assignmentOptional()
+                  .defaultValue("%Y-%m-%dT%H:%M:%S.%e [%l] AUDIT : %v")
+                  .commit();
+
+            STRING_ELEMENT(s)
+                  .key("audit.threshold")
+                  .description(
+                        "The sink will not appended log message with a priority lower than the threshold.\
+                                  Use Priority::NOTSET or OFF to disable threshold checking.")
+                  .displayedName("Threshold")
+                  .options({"NOTSET", "DEBUG", "INFO", "WARN", "ERROR"})
+                  .assignmentOptional()
+                  .defaultValue("INFO")
+                  .commit();
         }
 
 
         void Logger::configure(const karabo::util::Hash& config) {
+            bool startFlushThread = false;
+            if (!Logger::m_instance) {
+                // 'spdlog' default settings provides default_logger with console sink
+                // In karabo console (ostream) sink should be activated by useConsole(useOstream)
+                spdlog::default_logger()->sinks().clear();
+                Logger::m_instance = std::shared_ptr<Logger>(new Logger);
+                startFlushThread = true;
+            }
             // Clear m_config in case a call to configure happened before
             m_config.clear();
             // Validate given configuration
@@ -78,117 +297,316 @@ namespace karabo {
             expectedParameters(schema);
             Validator validator; // Default validation
             std::pair<bool, std::string> ret = validator.validate(schema, config, m_config);
-            if (ret.first) { // Validation succeeded
-                setPriority(m_config.get<string>("priority"));
-            } else {
+            if (!ret.first) { // Validation failed
                 throw KARABO_PARAMETER_EXCEPTION("Logger configuration failed. \n" + ret.second);
+            }
+
+            m_audit = nullptr;
+            setPattern(m_config.get<std::string>("pattern"));
+            setPriority("OFF");
+            if (startFlushThread) {
+                spdlog::flush_every(std::chrono::seconds(3));
+                startFlushThread = false;
             }
         }
 
 
-        void Logger::useCache(const std::string& category, bool inheritAppenders) {
-            auto p = Configurator<CacheAppender>::createNode("cache", m_config);
-            useAppender(category, inheritAppenders, p->getAppender());
+        LoggerStream::~LoggerStream() {
+            if (!Logger::m_instance) Logger::configure(Hash());
+            auto l = details::getLogger(m_name);
+            if (!l) return;
+            l->log(m_level, m_oss.str().c_str());
         }
 
 
-        void Logger::useOstream(const std::string& category, bool inheritAppenders) {
-            auto p = Configurator<OstreamAppender>::createNode("ostream", m_config);
-            useAppender(category, inheritAppenders, p->getAppender());
+        std::shared_ptr<spdlog::sinks::sink> Logger::_useConsole() {
+            std::shared_ptr<spdlog::sinks::sink> sink = nullptr;
+            if (m_config.get<std::string>("console.output") == "STDOUT") {
+                sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+            } else {
+                sink = std::make_shared<spdlog::sinks::stderr_color_sink_mt>();
+            }
+            sink->set_pattern(m_config.get<std::string>("console.pattern"));
+            auto val = m_config.get<std::string>("priority");
+            toLower(val);
+            sink->set_level(spdlog::level::from_str(val));
+            return sink;
         }
 
 
-        void Logger::useFile(const std::string& category, bool inheritAppenders) {
-            auto p = Configurator<RollingFileAppender>::createNode("file", m_config);
-            useAppender(category, inheritAppenders, p->getAppender());
+        std::shared_ptr<spdlog::sinks::sink> Logger::_useOstream() {
+            std::shared_ptr<spdlog::sinks::sink> sink = nullptr;
+            if (m_config.get<std::string>("ostream.output") == "STDOUT") {
+                sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+            } else {
+                sink = std::make_shared<spdlog::sinks::stderr_color_sink_mt>();
+            }
+            sink->set_pattern(m_config.get<std::string>("ostream.pattern"));
+            auto val = m_config.get<std::string>("priority");
+            toLower(val);
+            sink->set_level(spdlog::level::from_str(val));
+            return sink;
         }
 
-        void Logger::useAuditFile(const std::string& category, bool inheritAppenders) {
-            auto p = Configurator<AuditFileAppender>::createNode("auditfile", m_config);
-            useAppender(category, inheritAppenders, p->getAppender());
+
+        std::shared_ptr<spdlog::sinks::sink> Logger::_useFile() {
+            auto sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
+                  m_config.get<std::string>("file.filename"), m_config.get<unsigned int>("file.maxFileSize"),
+                  m_config.get<unsigned int>("file.maxBackupIndex"));
+            sink->set_pattern(m_config.get<std::string>("file.pattern"));
+            auto val = m_config.get<std::string>("priority");
+            toLower(val);
+            sink->set_level(spdlog::level::from_str(val));
+            return sink;
         }
 
 
-        void Logger::useAppender(const std::string& category, bool inheritAppenders, krb_log4cpp::Appender* appender) {
-            if (m_config.empty()) configure(Hash());
-            krb_log4cpp::Category& c = Logger::getCategory(category);
-            c.addAppender(appender);
-            c.setAdditivity(inheritAppenders);
+        std::shared_ptr<spdlog::sinks::sink> Logger::_useCache() {
+            auto sink = std::make_shared<spdlog::sinks::ringbuffer_sink_mt>(
+                  m_config.get<unsigned int>("cache.maxNumMessages"));
+            sink->set_pattern(m_config.get<std::string>("cache.pattern"));
+            auto val = m_config.get<std::string>("priority");
+            toLower(val);
+            sink->set_level(spdlog::level::from_str(val));
+            Logger::m_ring = sink;
+            return sink;
+        }
+
+
+        void Logger::useConsole(const std::string& name, bool inheritSinks) {
+            if (!m_instance) configure(Hash());
+            auto sink = _useConsole();
+            std::shared_ptr<spdlog::logger> logger = nullptr;
+            if (name.empty()) logger = spdlog::default_logger();
+            else logger = spdlog::get(name);
+            if (!logger) logger = details::getLogger(name);
+            if (!inheritSinks) logger->sinks().clear();
+            logger->sinks().push_back(sink);
+            setPriority(m_config.get<std::string>("priority"), name);
+        }
+
+        // for backward compatibility
+        void Logger::useOstream(const std::string name, bool inheritSinks) {
+            if (!m_instance) configure(Hash());
+            auto sink = _useOstream();
+            std::shared_ptr<spdlog::logger> logger = nullptr;
+            if (name.empty()) logger = spdlog::default_logger();
+            else logger = spdlog::get(name);
+            if (!logger) logger = details::getLogger(name);
+            if (!inheritSinks) logger->sinks().clear();
+            logger->sinks().push_back(sink);
+            setPriority(m_config.get<std::string>("priority"), name);
+        }
+
+
+        void Logger::useFile(const std::string& name, bool inheritSinks) {
+            if (!m_instance) configure(Hash());
+            auto sink = _useFile();
+            std::shared_ptr<spdlog::logger> logger = nullptr;
+            if (name.empty()) logger = spdlog::default_logger();
+            else logger = spdlog::get(name);
+            if (!logger) logger = details::getLogger(name);
+            if (!inheritSinks) logger->sinks().clear();
+            logger->sinks().push_back(sink);
+            setPriority(m_config.get<std::string>("priority"), name);
+        }
+
+
+        void Logger::useCache(const std::string& name, bool inheritSinks) {
+            if (!m_instance) configure(Hash());
+            auto sink = _useCache();
+            std::shared_ptr<spdlog::logger> logger = nullptr;
+            if (name.empty()) logger = spdlog::default_logger();
+            else logger = spdlog::get(name);
+            if (!logger) logger = details::getLogger(name);
+            if (!inheritSinks) logger->sinks().clear();
+            logger->sinks().push_back(sink);
+            setPriority(m_config.get<std::string>("priority"), name);
+        }
+
+
+        void Logger::useAuditFile(const std::string& name, bool inheritSinks) {
+            if (!m_instance) configure(Hash());
+            if (name.empty()) {
+                throw KARABO_PARAMETER_EXCEPTION("Audit file logger name should not be empty!");
+            }
+            if (!m_config.has("logger")) {
+                m_config.set("logger", name);
+            } else if (m_config.get<std::string>("logger") != name) {
+                throw KARABO_PARAMETER_EXCEPTION("Audit logger name mismatch in argument and config");
+            }
+            std::filesystem::path fname(m_config.get<std::string>("audit.filename"));
+            uint16_t maxFiles = m_config.get<uint16_t>("audit.maxFiles");
+            applyRotationRulesFor(fname, maxFiles);
+            std::string fpattern = fname.stem().string() + "-%Y-%m-%dT%H:%M:%S.log";
+            auto log = spdlog::daily_logger_format_mt(name, fpattern, m_config.get<uint32_t>("audit.hour"),
+                                                      m_config.get<uint32_t>("audit.minute"), false, maxFiles);
+            log->set_pattern(m_config.get<std::string>("audit.pattern"));
+            auto val = m_config.get<std::string>("audit.threshold");
+            toLower(val);
+            log->set_level(spdlog::level::from_str(val));
+            setPriority(m_config.get<std::string>("priority"), name);
+        }
+
+
+        void Logger::applyRotationRulesFor(const std::filesystem::path& fpath, std::size_t maxFiles) {
+            namespace fs = std::filesystem;
+            // use temporary map to sort paths by 'last write time' in seconds
+            std::map<std::size_t, fs::path> tmpmap;
+            // get directory where log file located ...
+            fs::path dir = fpath.parent_path();
+            auto stem = fpath.stem().string();
+            for (const auto& entry : fs::directory_iterator(dir)) {
+                if (!entry.is_regular_file()) continue;
+                auto p = entry.path();
+                // filter entries where 'filename' starts with 'stem'
+                std::size_t found = p.filename().string().find(stem);
+                if (found == std::string::npos) continue;
+                if (found != 0) continue;
+                // get last file modified time since epoch ...
+                auto epoch = entry.last_write_time().time_since_epoch();
+                // convert to seconds since epoch
+                std::size_t secs = std::chrono::duration_cast<std::chrono::seconds>(epoch).count();
+                // use this seconds for sorting in the map
+                tmpmap.emplace(secs, p);
+            }
+            size_t size = tmpmap.size();
+            if (size > maxFiles) {
+                auto removeCount = size - maxFiles;
+                // remove the oldest 'removeCount' paths...
+                for (auto it = tmpmap.begin(); it != tmpmap.end(); ++it) {
+                    fs::remove(it->second);
+                    if (--removeCount == 0) break;
+                }
+            }
+        }
+
+
+        void Logger::setPattern(const std::string& pattern, const std::string& name) {
+            if (name.empty()) {
+                // apply new pattern to all existing loggers
+                spdlog::apply_all([&](std::shared_ptr<spdlog::logger> l) { l->set_pattern(pattern); });
+                return;
+            }
+            if (!spdlog::get(name)) {
+                throw KARABO_PARAMETER_EXCEPTION("No logger is registered with name : " + name);
+            }
+            karabo::log::details::getLogger(name)->set_pattern(pattern);
         }
 
 
         void Logger::setPriority(const std::string& priority, const std::string& category) {
-            getCategory(category).setPriority(krb_log4cpp::Priority::getPriorityValue(priority));
+            std::string prio = priority;
+            toLower(prio);                            // update 'prio' in place
+            auto lvl = spdlog::level::from_str(prio); // convert to level::level_enum
+            // apply new priority to all known loggers
+            spdlog::apply_all([&](std::shared_ptr<spdlog::logger> l) {
+                auto name = l->name();
+                if (category.empty()) {
+                    l->set_level(lvl);
+                    // for (auto& s : l->sinks()) s->set_level(lvl);
+                } else if (name.empty()) {
+                    return;
+                } else {
+                    size_t pos = name.find(category);
+                    if (pos != 0) return;
+                    l->set_level(lvl);
+                    // for (auto& s : l->sinks()) s->set_level(lvl);
+                }
+            });
         }
 
 
-        const std::string& Logger::getPriority(const std::string& category) {
-            return krb_log4cpp::Priority::getPriorityName(getCategory(category).getPriority());
+        const std::string Logger::getPriority(const std::string& name) {
+            using namespace spdlog;
+            level::level_enum prio = level::off;
+            if (name.empty()) {
+                prio = get_level();
+            } else if (!get(name)) {
+                throw KARABO_PARAMETER_EXCEPTION("No registered logger found with the name : " + name);
+            } else {
+                prio = get(name)->level();
+            }
+
+            switch (prio) {
+                case level::trace:
+                    return "TRACE";
+                case level::debug:
+                    return "DEBUG";
+                case level::info:
+                    return "INFO";
+                case level::warn:
+                    return "WARN";
+                case level::err:
+                    return "ERROR";
+                case level::critical:
+                    return "FATAL";
+                default:
+                    break;
+            }
+            return "OFF";
         }
 
-        std::vector<Hash> Logger::getCachedContent(unsigned int nMessages) {
-            return CacheAppender::getCachedContent(nMessages);
+        std::vector<karabo::util::Hash> Logger::getCachedContent(size_t lim) {
+            std::vector<Hash> ret;
+            if (!Logger::m_ring) return ret;
+            std::vector<std::string> lines = Logger::m_ring->last_formatted(lim);
+            for (const auto& line : lines) {
+                size_t pos = line.find_first_of(":", 25);
+                string prefix(line.begin(), line.begin() + pos);
+                string message(line.begin() + pos + 2, line.end());
+                trim(message);
+                std::vector<std::string> tmp;
+                boost::split(tmp, prefix, boost::is_any_of(" \n\t"), boost::token_compress_on);
+                assert(tmp.size() >= 3);
+                std::string type = "UNKNOWN";
+                if (tmp[1] == "[trace]") type = "TRACE";
+                else if (tmp[1] == "[debug]") type = "DEBUG";
+                else if (tmp[1] == "[info]") type = "INFO";
+                else if (tmp[1] == "[warning]") type = "WARN";
+                else if (tmp[1] == "[error]") type = "ERROR";
+                else if (tmp[1] == "[critical]") type = "FATAL";
+                Hash entry("timestamp", tmp[0], "type", type, "category", tmp[2], "message", message);
+                ret.push_back(entry);
+            }
+            return ret;
         }
+
+
+        std::shared_ptr<spdlog::logger> Logger::getCategory(const std::string& name) {
+            if (name.empty()) return spdlog::default_logger();
+            auto logger = spdlog::get(name);
+            if (logger) return logger;
+            return details::getLogger(name); // inherits settings (sinks, levels, ...)
+        }
+
+
+        std::shared_ptr<spdlog::logger> Logger::create_new_default() {
+            auto logger = spdlog::get("");
+            if (!logger) {
+                logger = std::make_shared<spdlog::logger>("");
+                spdlog::initialize_logger(logger);
+            }
+            spdlog::set_default_logger(logger);
+            return logger;
+        }
+
 
         void Logger::reset() {
-            CacheAppender::reset();
-            krb_log4cpp::Category::getRoot().removeAllAppenders();
-            // Also remove all nested appenders
-            boost::shared_lock<boost::shared_mutex> lock(m_logMutex);
-            for (auto it : m_categories) {
-                it.second->removeAllAppenders();
+            {
+                std::lock_guard<std::mutex> lock(m_globalLoggerMutex);
+                spdlog::shutdown();
+                // Logger::m_instance = nullptr;
+                Logger::m_sinks = 0;
+                Logger::m_ring = nullptr;
+                Logger::m_audit = nullptr;
+                // restore default logger
+                Logger::create_new_default();
             }
+            setPriority("OFF");
+            if (m_config.has("pattern")) setPattern(m_config.get<std::string>("pattern"));
+            else setPattern("%Y:%m:%dT%H:%M:%S.%e [%^%l%$] %n : %v");
         }
 
-
-        krb_log4cpp::CategoryStream Logger::logDebug(const std::string& category) {
-            return getCategory(category).getStream(krb_log4cpp::Priority::DEBUG);
-        }
-
-
-        krb_log4cpp::CategoryStream Logger::logInfo(const std::string& category) {
-            return getCategory(category).getStream(krb_log4cpp::Priority::INFO);
-        }
-
-
-        krb_log4cpp::CategoryStream Logger::logWarn(const std::string& category) {
-            return getCategory(category).getStream(krb_log4cpp::Priority::WARN);
-        }
-
-
-        krb_log4cpp::CategoryStream Logger::logError(const std::string& category) {
-            return getCategory(category).getStream(krb_log4cpp::Priority::ERROR);
-        }
-
-
-        krb_log4cpp::Category& Logger::getCategory(const std::string& category) {
-            if (category.empty()) return krb_log4cpp::Category::getRoot();
-            boost::upgrade_lock<boost::shared_mutex> lock(m_logMutex);
-            CategoryMap::const_iterator it = m_categories.find(category);
-            if (it != m_categories.end()) {
-                return *(it->second);
-            } else {
-                boost::upgrade_to_unique_lock<boost::shared_mutex> uniqueLock(lock);
-                krb_log4cpp::Category* cat = &(krb_log4cpp::Category::getInstance(category));
-                m_categories[category] = cat;
-                return *cat;
-            }
-        }
-
-
-        krb_log4cpp::Category& Logger::getCategory_(const std::string& category) {
-            boost::upgrade_lock<boost::shared_mutex> lock(m_frameworkLogMutex);
-            if (m_frameworkCategories.find(category) == m_frameworkCategories.end()) {
-                boost::upgrade_to_unique_lock<boost::shared_mutex> uniqueLock(lock);
-                m_frameworkCategories.insert(category);
-            }
-            return getCategory(category);
-        }
-
-
-        bool Logger::isInCategoryNameSet(const std::string& category) {
-            boost::shared_lock<boost::shared_mutex> lock(m_frameworkLogMutex);
-            return (m_frameworkCategories.find(category) != m_frameworkCategories.end());
-        }
     } // namespace log
 } // namespace karabo

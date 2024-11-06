@@ -41,7 +41,6 @@
 namespace karabo {
     namespace devices {
 
-        using namespace krb_log4cpp;
         using namespace std;
         using namespace karabo::util;
         using namespace karabo::io;
@@ -216,8 +215,9 @@ namespace karabo {
                     // Influx server availability.
                     updateState(State::ON);
                 } else {
-                    KARABO_LOG_ERROR << "DataLogger '" << m_instanceId << "' in ERROR state and cannot goto ON state. "
-                                     << "Current status is '" << this->get<string>("status") << "'";
+                    KARABO_LOG_ERROR << "DataLogger '" << m_instanceId
+                                     << "' in ERROR state and cannot goto ON state. Current status is '"
+                                     << this->get<string>("status") << "'";
                 }
             } else {
                 for (DeviceDataMap::value_type& pair : m_perDeviceData) {
@@ -347,8 +347,9 @@ namespace karabo {
                     // InfluxServer availabilty.
                     updateState(State::ON);
                 } else {
-                    KARABO_LOG_ERROR << "DataLogger '" << m_instanceId << "' in ERROR state and cannot goto ON state. "
-                                     << "Current status is '" << this->get<string>("status") << "'";
+                    KARABO_LOG_ERROR << "DataLogger '" << m_instanceId
+                                     << "' in ERROR state and cannot goto ON state. Current status is '"
+                                     << this->get<string>("status") << "'";
                 }
             }
         }

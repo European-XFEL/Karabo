@@ -19,16 +19,78 @@
 #ifndef KARABO_LOGCONFIG_LOGGER_HH
 #define KARABO_LOGCONFIG_LOGGER_HH
 
+#include <spdlog/common.h>
+#include <spdlog/details/log_msg_buffer.h>
+#include <spdlog/fmt/ostr.h>
+#include <spdlog/sinks/daily_file_sink.h>
+#include <spdlog/sinks/ringbuffer_sink.h>
+#include <spdlog/spdlog.h>
+
+#include <boost/filesystem.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
 #include <boost/type_index.hpp>
-#include <krb_log4cpp/Category.hh>
-#include <krb_log4cpp/Priority.hh>
+#include <filesystem>
 #include <unordered_map>
 #include <unordered_set>
 
+#include "LoggerStream.hh"
 #include "karabo/util/Configurator.hh"
+#include "karabo/util/Exception.hh"
 #include "karabo/util/Hash.hh"
+#include "karabo/util/Schema.hh"
+#include "utils.hh"
+
+#define KARABO_AUDIT_LOGGER "audit_logger"
+
+// Support Hash formatting
+template <>
+struct fmt::formatter<karabo::util::Hash> : fmt::formatter<std::string> {
+    auto format(const karabo::util::Hash& hash, format_context& ctx) const -> decltype(ctx.out()) {
+        return fmt::format_to(ctx.out(), "\n{}", karabo::util::toString(hash));
+    }
+};
+
+// Support Schema formatting
+template <>
+struct fmt::formatter<karabo::util::Schema> : fmt::formatter<std::string> {
+    auto format(const karabo::util::Schema& schema, format_context& ctx) const -> decltype(ctx.out()) {
+        return fmt::format_to(ctx.out(), "\n{}", karabo::util::toString(schema));
+    }
+};
+
+// Support std::filesystem::path formatting
+template <>
+struct fmt::formatter<std::filesystem::path> : fmt::formatter<std::string> {
+    auto format(std::filesystem::path p, format_context& ctx) const -> decltype(ctx.out()) {
+        return fmt::format_to(ctx.out(), "{}", p.string());
+    }
+};
+
+// Support boost::filesystem::path formatting
+template <>
+struct fmt::formatter<boost::filesystem::path> : fmt::formatter<std::string> {
+    auto format(boost::filesystem::path p, format_context& ctx) const -> decltype(ctx.out()) {
+        return fmt::format_to(ctx.out(), "{}", p.string());
+    }
+};
+
+// Support karabo::util::Exception formatting
+template <>
+struct fmt::formatter<karabo::util::Exception> : fmt::formatter<std::string> {
+    auto format(karabo::util::Exception e, format_context& ctx) const -> decltype(ctx.out()) {
+        return fmt::format_to(ctx.out(), "{}", e.detailedMsg());
+    }
+};
+
+// Support std::exception formatting
+template <>
+struct fmt::formatter<std::exception> : fmt::formatter<std::string> {
+    auto format(std::exception e, format_context& ctx) const -> decltype(ctx.out()) {
+        return fmt::format_to(ctx.out(), "{}", e.what());
+    }
+};
+
 
 namespace karabo {
 
@@ -36,9 +98,12 @@ namespace karabo {
 
         /**
          * The Logger class.
-         * Configures log4cpp logging system
+         * Configures spdlog logging system
          */
         class Logger {
+            friend class LoggerStream;
+            friend std::shared_ptr<spdlog::logger> details::getLogger(const std::string& name);
+
            public:
             KARABO_CLASSINFO(Logger, "Logger", "")
 
@@ -53,47 +118,37 @@ namespace karabo {
             static void configure(const karabo::util::Hash& config);
 
             /**
-             * Enables the cache appender on the specified category.
-             *
-             * By default any appenders defined on parent categories will be inherited. A boolean flag
-             * allows to disable this behavior
-             * @param category The category on which the appender should work (empty string reflects root category)
-             * @param inheritAppenders If true will inherit appenders defined in parent categories
+             * Enables the cache sink for the specified logger.
+             * @param name The logger name on which the sink should work (empty string reflects default logger)
              */
-            static void useCache(const std::string& category = "", bool inheritAppenders = true);
+            static void useCache(const std::string& name = "", bool inheritSinks = true);
 
             /**
-             * Enables the ostream appender on the specified category.
-             *
-             * By default any appenders defined on parent categories will be inherited. A boolean flag
-             * allows to disable this behavior
-             * @param category The category on which the appender should work (empty string reflects root category)
-             * @param inheritAppenders If true will inherit appenders defined in parent categories
+             * Enables the console (color) sink for the specified logger
+             * @param name The logger name on which the sink should work (empty string reflects default logger)
              */
-            static void useOstream(const std::string& category = "", bool inheritAppenders = true);
+            static void useConsole(const std::string& name = "", bool inheritSinks = true);
 
             /**
-             * Enables the rolling file appender on the specified category.
-             *
-             * By default any appenders defined on parent categories will be inherited. A boolean flag
-             * allows to disable this behavior
-             * @param category The category on which the appender should work (empty string reflects root category)
-             * @param inheritAppenders If true will inherit appenders defined in parent categories
+             * Enables console sink (backward compatibility)
              */
-            static void useFile(const std::string& category = "", bool inheritAppenders = true);
+            static void useOstream(const std::string name = "", bool inheritSinks = true);
+
+            /**
+             * Enables the rotating file sink for the specified logger.
+             * @param name The logger name on which the sink should work (empty string reflects default logger)
+             */
+            static void useFile(const std::string& name = "", bool inheritSinks = true);
 
             /**
              * Enables the rolling file appender on the specified category for auditing.
              *
-             * By default any appenders defined on parent categories will be inherited. A boolean flag
-             * allows to disable this behavior
-             * @param category The category on which the appender should work (empty string reflects root category)
-             * @param inheritAppenders If true will inherit appenders defined in parent categories
+             * @param name The logger name for audit type messages
              */
-            static void useAuditFile(const std::string& category = "", bool inheritAppenders = true);
+            static void useAuditFile(const std::string& name = KARABO_AUDIT_LOGGER, bool inheritSinks = true);
 
             /**
-             * Resets all appenders from all categories and clear the cache.
+             * Resets all sinks from all loggers and destroy the cache.
              * Nothing will be logged after a call to this function.
              *
              * Use this function to re-configure logger behavior at runtime.
@@ -101,119 +156,209 @@ namespace karabo {
             static void reset();
 
             /**
-             * Adds a debug message on the defined category
-             * @param category The category for this message (empty string reflects root category)
-             * @return A stream object that can be used with the \<\< operator
+             * Logs trace message using specified logger
+             * @param name of registered logger
+             * @param fmt - format string followed by optional args
              */
-            static krb_log4cpp::CategoryStream logDebug(const std::string& category = "");
+            template <typename... Args>
+            static void trace(const std::string& name, spdlog::format_string_t<Args...> fmt, Args&&... args) {
+                if (!m_instance) Logger::configure(karabo::util::Hash());
+                if (name == KARABO_AUDIT_LOGGER) {
+                    if (!spdlog::get(KARABO_AUDIT_LOGGER)) {
+                        throw KARABO_PARAMETER_EXCEPTION(std::string("Do not use reserved logger name: ") +
+                                                         KARABO_AUDIT_LOGGER);
+                    }
+                    if (!Logger::m_audit) {
+                        throw KARABO_PARAMETER_EXCEPTION("Activate audit channel 'useAuditFile()' first!");
+                    }
+                    Logger::m_audit->trace(fmt, std::forward<Args>(args)...);
+                    return;
+                }
+                auto logger = karabo::log::details::getLogger(name);
+                if (logger) logger->trace(fmt, std::forward<Args>(args)...);
+            }
 
             /**
-             * Adds a info message on the defined category
-             * @param category The category for this message (empty string reflects root category)
-             * @return A stream object that can be used with the \<\< operator
+             * Logs debug message using specified logger
+             * @param name of registered logger
+             * @param fmt - format string followed by optional args
+             * @param ... following by args
              */
-            static krb_log4cpp::CategoryStream logInfo(const std::string& category = "");
+            template <typename... Args>
+            static void debug(const std::string& name, spdlog::format_string_t<Args...> fmt, Args&&... args) {
+                if (!m_instance) Logger::configure(karabo::util::Hash());
+                if (name == KARABO_AUDIT_LOGGER) {
+                    if (!spdlog::get(KARABO_AUDIT_LOGGER)) {
+                        throw KARABO_PARAMETER_EXCEPTION(std::string("Do not use reserved logger name: ") +
+                                                         KARABO_AUDIT_LOGGER);
+                    }
+                    if (!Logger::m_audit) {
+                        throw KARABO_PARAMETER_EXCEPTION("Activate audit channel 'useAuditFile()' first!");
+                    }
+                    Logger::m_audit->debug(fmt, std::forward<Args>(args)...);
+                    return;
+                }
+                auto logger = karabo::log::details::getLogger(name);
+                if (logger) logger->debug(fmt, std::forward<Args>(args)...);
+            }
 
             /**
-             * Adds a warn message on the defined category
-             * @param category The category for this message (empty string reflects root category)
-             * @return A stream object that can be used with the \<\< operator
+             * Logs info message using specified logger
+             * @param name of registered logger
+             * @param fmt - format string followed by optional args
              */
-            static krb_log4cpp::CategoryStream logWarn(const std::string& category = "");
+            template <typename... Args>
+            static void info(const std::string& name, spdlog::format_string_t<Args...> fmt, Args&&... args) {
+                if (!m_instance) Logger::configure(karabo::util::Hash());
+                if (name == KARABO_AUDIT_LOGGER) {
+                    if (!spdlog::get(KARABO_AUDIT_LOGGER)) {
+                        throw KARABO_PARAMETER_EXCEPTION(std::string("Do not use reserved logger name: ") +
+                                                         KARABO_AUDIT_LOGGER);
+                    }
+                    if (!Logger::m_audit) {
+                        throw KARABO_PARAMETER_EXCEPTION("Activate audit channel 'useAuditFile()' first!");
+                    }
+                    Logger::m_audit->info(fmt, std::forward<Args>(args)...);
+                    return;
+                }
+                auto logger = karabo::log::details::getLogger(name);
+                if (logger) logger->info(fmt, std::forward<Args>(args)...);
+            }
 
             /**
-             * Adds a error message on the defined category
-             * @param category The category for this message (empty string reflects root category)
-             * @return A stream object that can be used with the \<\< operator
+             * Logs warn message using specified logger
+             * @param name of registered logger
+             * @param fmt - format string followed by optional args
              */
-            static krb_log4cpp::CategoryStream logError(const std::string& category = "");
+            template <typename... Args>
+            static void warn(const std::string& name, spdlog::format_string_t<Args...> fmt, Args&&... args) {
+                if (!m_instance) Logger::configure(karabo::util::Hash());
+                if (name == KARABO_AUDIT_LOGGER) {
+                    if (!spdlog::get(KARABO_AUDIT_LOGGER)) {
+                        throw KARABO_PARAMETER_EXCEPTION(std::string("Do not use reserved logger name: ") +
+                                                         KARABO_AUDIT_LOGGER);
+                    }
+                    if (!Logger::m_audit) {
+                        throw KARABO_PARAMETER_EXCEPTION("Activate audit channel 'useAuditFile()' first!");
+                    }
+                    Logger::m_audit->warn(fmt, std::forward<Args>(args)...);
+                    return;
+                }
+                auto logger = karabo::log::details::getLogger(name);
+                if (logger) logger->warn(fmt, std::forward<Args>(args)...);
+            }
 
             /**
-             * Allows to set the priority filter on specified category
-             * @param priority DEBUG,INFO,WARN of ERROR
-             * @param category The category to apply the filter to (empty string reflects root category)
+             * Logs error message using specified logger
+             * @param name of registered logger
+             * @param fmt - format string followed by optional args
              */
-            static void setPriority(const std::string& priority, const std::string& category = "");
+            template <typename... Args>
+            static void error(const std::string& name, spdlog::format_string_t<Args...> fmt, Args&&... args) {
+                if (!m_instance) Logger::configure(karabo::util::Hash());
+                if (name == KARABO_AUDIT_LOGGER) {
+                    if (!spdlog::get(KARABO_AUDIT_LOGGER)) {
+                        throw KARABO_PARAMETER_EXCEPTION(std::string("Do not use reserved logger name: ") +
+                                                         KARABO_AUDIT_LOGGER);
+                    }
+                    if (!Logger::m_audit) {
+                        throw KARABO_PARAMETER_EXCEPTION("Activate audit channel 'useAuditFile()' first!");
+                    }
+                    Logger::m_audit->error(fmt, std::forward<Args>(args)...);
+                    return;
+                }
+                auto logger = karabo::log::details::getLogger(name);
+                if (logger) logger->error(fmt, std::forward<Args>(args)...);
+            }
 
             /**
-             * Retrieve the currently enabled priority level for the given category
-             * @param category The category (empty string reflects root category)
+             * Logs critical message using specified logger
+             * @param name of registered logger
+             * @param fmt - format string followed by optional args
              */
-            static const std::string& getPriority(const std::string& category = "");
+            template <typename... Args>
+            static void critical(const std::string& name, spdlog::format_string_t<Args...> fmt, Args&&... args) {
+                if (name == KARABO_AUDIT_LOGGER) {
+                    if (!spdlog::get(KARABO_AUDIT_LOGGER)) {
+                        throw KARABO_PARAMETER_EXCEPTION(std::string("Do not use reserved logger name: ") +
+                                                         KARABO_AUDIT_LOGGER);
+                    }
+                    if (!Logger::m_audit) {
+                        throw KARABO_PARAMETER_EXCEPTION("Activate audit channel 'useAuditFile()' first!");
+                    }
+                    Logger::m_audit->critical(fmt, std::forward<Args>(args)...);
+                    return;
+                }
+                auto logger = karabo::log::details::getLogger(name);
+                if (logger) logger->critical(fmt, std::forward<Args>(args)...);
+            }
 
             /**
-             * This returns a log category reference, automatically configured using the type introspection system
-             * CAVEAT: This function only works for classes that declare the KARABO_CLASSINFO macro!
-             * @return a log4cpp category object
+             * Allows to set the priority (level) filter for specified logger or globally (empty 'logger')
+             * @param priority TRACE,DEBUG,INFO,WARN,ERROR,CRITICAL
+             * @param logger The category to apply the filter to (empty string reflects default logger)
              */
-            template <typename T>
-            static krb_log4cpp::Category& getCategory();
+            static void setPriority(const std::string& priority, const std::string& logger = "");
 
             /**
-             * Retrieves a log4cpp category object for specified name.
-             * Categories are created on demand and cached from then on
-             * @param category Name for the category (empty string reflects root category)
-             * @return a log4cpp category object
+             * Retrieve the currently enabled priority level for the given logger name or global level
+             * @param logger The logger name (empty string reflects default logger)
              */
-            static krb_log4cpp::Category& getCategory(const std::string& category = std::string());
+            static const std::string getPriority(const std::string& logger = "");
+
+            static void setPattern(const std::string& pattern, const std::string& logger = "");
 
             /**
-             * Register category name in category name set and
-             * call getCategory(category)
-             * @param category name
-             * @return log4cpp Category object
+             * Get (log) messages in internal ringbuffer
              */
-            static krb_log4cpp::Category& getCategory_(const std::string& category = std::string());
+            static std::vector<karabo::util::Hash> getCachedContent(size_t lim);
 
-            /**
-             * Check if category name is found in the category name set
-             * @param category name
-             * @return true if found else false
-             */
-            static bool isInCategoryNameSet(const std::string& category);
-
-            /**
-             * gets the last messages from the CacheAppender
-             * @param nMessages
-             * @return a std::vector<std::string>
-             */
-            static std::vector<karabo::util::Hash> getCachedContent(unsigned int nMessages);
+            static std::shared_ptr<spdlog::logger> getCategory(const std::string& name);
 
            private:
-            static void useAppender(const std::string& category, bool inheritAppenders, krb_log4cpp::Appender*);
+            static std::shared_ptr<spdlog::logger> create_new_default();
+            static std::shared_ptr<spdlog::sinks::sink> _useConsole();
+            static std::shared_ptr<spdlog::sinks::sink> _useOstream(); // for backward compat
+            static std::shared_ptr<spdlog::sinks::sink> _useCache();
+            static std::shared_ptr<spdlog::sinks::sink> _useFile();
+            static void applyRotationRulesFor(const std::filesystem::path& fname, std::size_t maxFiles);
 
+           private:
             Logger() = default;
-
-            typedef std::unordered_map<std::string, krb_log4cpp::Category*> CategoryMap;
-            static CategoryMap m_categories;
-
-            // Declare FRAMEWORK category name set
-            typedef std::unordered_set<std::string> CategorySet;
-            static CategorySet m_frameworkCategories;
-            static boost::shared_mutex m_logMutex;
-            static boost::shared_mutex m_frameworkLogMutex;
-
+            static std::shared_ptr<Logger> m_instance;
             static karabo::util::Hash m_config;
+            static std::shared_ptr<spdlog::logger> m_audit;
+            static std::shared_ptr<spdlog::sinks::ringbuffer_sink_mt> m_ring;
+            static int m_sinks;
+            static std::map<std::string, std::vector<std::shared_ptr<spdlog::sinks::sink>>> m_usemap;
+            static std::mutex m_globalLoggerMutex;
         };
 
-        template <typename T>
-        krb_log4cpp::Category& Logger::getCategory() {
-            return getCategory_(T::classInfo().getLogCategory());
-        }
     } // namespace log
 } // namespace karabo
 #endif
 
+// Macros for logging using stream style (deprecated! 20% slower than function style)
+// for example, KARABO_LOG_FRAMEWORK_INFO << "Hello, " << "World!\n";
+// or, KARABO_LOG_FRAMEWORK_DEBUG_C("LOCAL_DAQ/DM/DA01") << "Hello, " << "Data Aggregator!";
+
 // Convenient logging
+
 #ifdef KARABO_ENABLE_TRACE_LOG
+
 #define KARABO_LOG_FRAMEWORK_TRACE KARABO_LOG_FRAMEWORK_DEBUG
+
 #define KARABO_LOG_FRAMEWORK_TRACE_C(category) KARABO_LOG_FRAMEWORK_DEBUG_C(category)
+
 #define KARABO_LOG_FRAMEWORK_TRACE_CF KARABO_LOG_FRAMEWORK_DEBUG_C(Self::classInfo().getLogCategory() + "." + __func__)
+
 #else
+
 #define KARABO_LOG_FRAMEWORK_TRACE \
     if (1)                         \
         ;                          \
     else std::cerr
+
 #define KARABO_LOG_FRAMEWORK_TRACE_C(category) \
     if (1)                                     \
         ;                                      \
@@ -222,16 +367,39 @@ namespace karabo {
     if (1)                            \
         ;                             \
     else std::cerr
+
 #endif
 
-#define KARABO_LOG_FRAMEWORK_DEBUG karabo::log::Logger::getCategory<Self>() << krb_log4cpp::Priority::DEBUG
-#define KARABO_LOG_FRAMEWORK_INFO karabo::log::Logger::getCategory<Self>() << krb_log4cpp::Priority::INFO
-#define KARABO_LOG_FRAMEWORK_WARN karabo::log::Logger::getCategory<Self>() << krb_log4cpp::Priority::WARN
-#define KARABO_LOG_FRAMEWORK_ERROR karabo::log::Logger::getCategory<Self>() << krb_log4cpp::Priority::ERROR
+#define KARABO_LOG_FRAMEWORK_DEBUG karabo::log::LoggerStream(Self::classInfo().getLogCategory(), spdlog::level::debug)
+#define KARABO_LOG_FRAMEWORK_INFO karabo::log::LoggerStream(Self::classInfo().getLogCategory(), spdlog::level::info)
+#define KARABO_LOG_FRAMEWORK_WARN karabo::log::LoggerStream(Self::classInfo().getLogCategory(), spdlog::level::warn)
+#define KARABO_LOG_FRAMEWORK_ERROR karabo::log::LoggerStream(Self::classInfo().getLogCategory(), spdlog::level::err)
 
-#define KARABO_LOG_FRAMEWORK_DEBUG_C(category) \
-    karabo::log::Logger::getCategory_(category) << krb_log4cpp::Priority::DEBUG
-#define KARABO_LOG_FRAMEWORK_INFO_C(category) karabo::log::Logger::getCategory_(category) << krb_log4cpp::Priority::INFO
-#define KARABO_LOG_FRAMEWORK_WARN_C(category) karabo::log::Logger::getCategory_(category) << krb_log4cpp::Priority::WARN
-#define KARABO_LOG_FRAMEWORK_ERROR_C(category) \
-    karabo::log::Logger::getCategory_(category) << krb_log4cpp::Priority::ERROR
+
+#define KARABO_LOG_FRAMEWORK_DEBUG_C(id) karabo::log::LoggerStream(id, spdlog::level::debug)
+#define KARABO_LOG_FRAMEWORK_INFO_C(id) karabo::log::LoggerStream(id, spdlog::level::info)
+#define KARABO_LOG_FRAMEWORK_WARN_C(id) karabo::log::LoggerStream(id, spdlog::level::warn)
+#define KARABO_LOG_FRAMEWORK_ERROR_C(id) karabo::log::LoggerStream(id, spdlog::level::err)
+
+// Macros for logging using function (fmtlib) style (recommended!)
+// For example, KARABO_LOGGING_DEBUG("*** Hello, {}!\n", "World");
+#define KARABO_LOGGING_TRACE(...) karabo::log::Logger::trace(Self::classInfo().getLogCategory(), __VA_ARGS__)
+#define KARABO_LOGGING_DEBUG(...) karabo::log::Logger::debug(Self::classInfo().getLogCategory(), __VA_ARGS__)
+#define KARABO_LOGGING_INFO(...) karabo::log::Logger::info(Self::classInfo().getLogCategory(), __VA_ARGS__)
+#define KARABO_LOGGING_WARN(...) karabo::log::Logger::warn(Self::classInfo().getLogCategory(), __VA_ARGS__)
+#define KARABO_LOGGING_ERROR(...) karabo::log::Logger::error(Self::classInfo().getLogCategory(), __VA_ARGS__)
+#define KARABO_LOGGING_FATAL(...) karabo::log::Logger::critical(Self::classInfo().getLogCategory(), __VA_ARGS__)
+
+#define KARABO_LOGGING_TRACE_C(id, ...) karabo::log::Logger::trace(id, __VA_ARGS__)
+#define KARABO_LOGGING_DEBUG_C(id, ...) karabo::log::Logger::debug(id, __VA_ARGS__)
+#define KARABO_LOGGING_INFO_C(id, ...) karabo::log::Logger::info(id, __VA_ARGS__)
+#define KARABO_LOGGING_WARN_C(id, ...) karabo::log::Logger::warn(id, __VA_ARGS__)
+#define KARABO_LOGGING_ERROR_C(id, ...) karabo::log::Logger::error(id, __VA_ARGS__)
+#define KARABO_LOGGING_FATAL_C(id, ...) karabo::log::Logger::critical(id, __VA_ARGS__)
+
+#define KARABO_AUDIT_TRACE(...) karabo::log::Logger::trace(KARABO_AUDIT_LOGGER, __VA_ARGS__)
+#define KARABO_AUDIT_DEBUG(...) karabo::log::Logger::debug(KARABO_AUDIT_LOGGER, __VA_ARGS__)
+#define KARABO_AUDIT_INFO(...) karabo::log::Logger::info(KARABO_AUDIT_LOGGER, __VA_ARGS__)
+#define KARABO_AUDIT_WARN(...) karabo::log::Logger::warn(KARABO_AUDIT_LOGGER, __VA_ARGS__)
+#define KARABO_AUDIT_ERROR(...) karabo::log::Logger::error(KARABO_AUDIT_LOGGER, __VA_ARGS__)
+#define KARABO_AUDIT_FATAL(...) karabo::log::Logger::critical(KARABO_AUDIT_LOGGER, __VA_ARGS__)

@@ -31,7 +31,6 @@ KARABO_REGISTER_IN_FACTORY_1(karabo::devices::DeviceData, karabo::devices::FileD
 namespace karabo {
     namespace devices {
 
-        using namespace krb_log4cpp;
         using namespace std;
         using namespace karabo::util;
         using namespace karabo::io;

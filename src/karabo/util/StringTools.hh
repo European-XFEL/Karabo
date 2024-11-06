@@ -86,6 +86,37 @@ namespace karabo {
         std::string createTypeMismatchMessage(const std::string& key, const std::type_info& srcType,
                                               const std::type_info& tgtType);
 
+        // inplace convert to lowercase
+        inline std::string& toLower(std::string& str) {
+            std::transform(str.begin(), str.end(), str.begin(),
+                           [](char ch) { return static_cast<char>((ch >= 'A' && ch <= 'Z') ? ch + ('a' - 'A') : ch); });
+            return str;
+        }
+
+        // inplace convert to uppercase
+        inline std::string& toUpper(std::string& str) {
+            std::transform(str.begin(), str.end(), str.begin(),
+                           [](char ch) { return static_cast<char>((ch >= 'a' && ch <= 'z') ? ch - ('a' - 'A') : ch); });
+            return str;
+        }
+
+        // inplace trim spaces
+        inline std::string& trim(std::string& str) {
+            const char* spaces = " \n\r\t";
+            str.erase(str.find_last_not_of(spaces) + 1);
+            str.erase(0, str.find_first_not_of(spaces));
+            return str;
+        }
+
+        /**
+         * Split input string using delimiter (default = space) into vector of strings.
+         * @param str input string to split
+         * @param dl delimiter character used for splitting (default = " ")
+         * @param maxsplit max size of resulting vector ... (default = 0: unlimited)
+         * @return vector of splitted parts of input string
+         */
+        std::vector<std::string> split(std::string& str, const char* dl = " ", std::size_t maxsplit = 0);
+
         /**
          * Return a string representation of a value of type T. Overloads for
          * common value types exist. In general std::ostream is used for output

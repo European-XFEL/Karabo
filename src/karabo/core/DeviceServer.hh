@@ -25,6 +25,8 @@
 #ifndef KARABO_CORE_DEVICESERVER_HH
 #define KARABO_CORE_DEVICESERVER_HH
 
+#include <spdlog/spdlog.h>
+
 #include <boost/asio/deadline_timer.hpp>
 #include <unordered_map>
 #include <utility>
@@ -62,9 +64,6 @@ namespace karabo {
          * NORMAL karabo::util::State states.
          */
         class DeviceServer : public karabo::xms::SignalSlotable {
-            krb_log4cpp::Category* m_log;
-            karabo::log::Logger::Pointer m_logger;
-
             bool m_serverIsRunning;
             std::vector<karabo::util::Hash> m_autoStart;
             std::vector<std::string> m_deviceClasses;
@@ -202,7 +201,7 @@ namespace karabo {
 
             void stopDeviceServer();
 
-            krb_log4cpp::Category& log();
+            std::shared_ptr<spdlog::logger> log();
 
             void registerSlots();
 
