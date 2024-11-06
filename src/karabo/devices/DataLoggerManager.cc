@@ -98,7 +98,6 @@ using boost::placeholders::_2;
 namespace karabo {
     namespace devices {
 
-        using namespace krb_log4cpp;
         using namespace std;
         using namespace karabo::util;
         using namespace karabo::io;
@@ -1119,8 +1118,8 @@ namespace karabo {
                     }
                     hash.set("configuration", config);
                     const std::string& xLogReader = hash.get<std::string>("classId");
-                    KARABO_LOG_FRAMEWORK_INFO << "Trying to instantiate '" << readerId << "' " << "of type '"
-                                              << xLogReader << "' on server '" << serverId << "'";
+                    KARABO_LOG_FRAMEWORK_INFO << "Trying to instantiate '" << readerId << "' of type '" << xLogReader
+                                              << "' on server '" << serverId << "'";
 
                     remote().instantiateNoWait(serverId, hash);
                 }

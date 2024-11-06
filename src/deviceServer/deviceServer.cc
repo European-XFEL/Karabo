@@ -87,13 +87,13 @@ int main(int argc, const char** argv) {
             serverInitialized.get(); // throws if initializer failed
         }
 
-        Logger::logInfo() << argv[0] << " has exited!\n";
+        Logger::info("", "{} has exited!\n", argv[0]);
         return EXIT_SUCCESS;
 
     } catch (const std::exception& e) {
         std::string msg(argv[0]);
         (msg += " has exited after catching an exception: ") += e.what();
-        Logger::logError() << msg << "\n";
+        Logger::error("", "{}\n", msg);
         std::cerr << msg << std::endl; // in case logger could not be established
     }
     // else: Don't care about insane exceptions.

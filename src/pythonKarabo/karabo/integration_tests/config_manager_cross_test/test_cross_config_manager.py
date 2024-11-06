@@ -17,8 +17,10 @@ import os
 import os.path as op
 import unittest
 
-from karabo.bound import Hash, fullyEqual
+from karabo.bound import Hash, Logger, fullyEqual
 from karabo.bound.testing import BoundDeviceTestCase
+
+Logger.configure(Hash())
 
 
 class TestCrossConfigManager(BoundDeviceTestCase):

@@ -56,47 +56,65 @@ void Logger_Test::test1() {
     // There is no ASSERT unfortunately, so this test needs visual inspection
     Hash config("priority", "DEBUG");
     Logger::configure(config);
-    Logger::logDebug() << "ERROR";
+    LoggerStream("", spdlog::level::debug) << "ERROR";
 
-    Logger::useOstream();
-    Logger::logDebug() << "OK";
-    Logger::logDebug("a1") << "OK";
-    Logger::logDebug("a1.a2") << "OK";
-    Logger::logInfo() << "OK";
-    Logger::logInfo("a1") << "OK";
-    Logger::logInfo("a1.a2") << "OK";
+    Logger::useConsole();
+    Logger::debug("", "{}", "OK");
+    Logger::debug("a1", "{}", "OK");
+    Logger::debug("a1.a2", "{}", "OK");
+    Logger::info("", "{}", "OK");
+    Logger::info("a1", "{}", "OK");
+    Logger::info("a1.a2", "{}", "OK");
+    LoggerStream("", spdlog::level::debug) << "OK";
+    LoggerStream("a1", spdlog::level::debug) << "OK";
+    LoggerStream("a1.a2", spdlog::level::debug) << "OK";
+    LoggerStream("", spdlog::level::info) << "OK";
+    LoggerStream("a1", spdlog::level::info) << "OK";
+    LoggerStream("a1.a2", spdlog::level::info) << "OK";
 
     Logger::reset();
-    Logger::logDebug() << "ERROR";
-    Logger::logDebug("a1") << "ERROR";
-    Logger::logDebug("a1.a2") << "ERROR";
-    Logger::logInfo() << "ERROR";
-    Logger::logInfo("a1") << "ERROR";
-    Logger::logInfo("a1.a2") << "ERROR";
+    Logger::debug("", "{}", "ERROR");
+    Logger::debug("a1", "{}", "ERROR");
+    Logger::debug("a1.a2", "{}", "ERROR");
+    Logger::info("", "{}", "ERROR");
+    Logger::info("a1", "{}", "ERROR");
+    Logger::info("a1.a2", "{}", "ERROR");
+    LoggerStream("", spdlog::level::debug) << "ERROR";
+    LoggerStream("a1", spdlog::level::debug) << "ERROR";
+    LoggerStream("a1.a2", spdlog::level::debug) << "ERROR";
+    LoggerStream("", spdlog::level::info) << "ERROR";
+    LoggerStream("a1", spdlog::level::info) << "ERROR";
+    LoggerStream("a1.a2", spdlog::level::info) << "ERROR";
 
-    Logger::useOstream("a1");
-    Logger::logDebug() << "ERROR";
-    Logger::logDebug("a1") << "OK";
-    Logger::logDebug("a1.a2") << "OK";
-    Logger::logInfo() << "ERROR";
-    Logger::logInfo("a1") << "OK";
-    Logger::logInfo("a1.a2") << "OK";
+    Logger::useConsole("a1");
+    Logger::debug("", "{}", "ERROR");
+    Logger::debug("a1", "{}", "OK");
+    Logger::debug("a1.a2", "{}", "OK");
+    Logger::info("", "{}", "ERROR");
+    Logger::info("a1", "{}", "OK");
+    Logger::info("a1.a2", "{}", "OK");
+    LoggerStream("", spdlog::level::debug) << "ERROR";
+    LoggerStream("a1", spdlog::level::debug) << "OK";
+    LoggerStream("a1.a2", spdlog::level::debug) << "OK";
+    LoggerStream("", spdlog::level::info) << "ERROR";
+    LoggerStream("a1", spdlog::level::info) << "OK";
+    LoggerStream("a1.a2", spdlog::level::info) << "OK";
 
     Logger::setPriority("INFO");
-    Logger::logDebug() << "ERROR";
-    Logger::logDebug("a1") << "ERROR";
-    Logger::logDebug("a1.a2") << "ERROR";
-    Logger::logInfo() << "ERROR";
-    Logger::logInfo("a1") << "OK";
-    Logger::logInfo("a1.a2") << "OK";
+    Logger::debug("", "{}", "ERROR");
+    Logger::debug("a1", "{}", "ERROR");
+    Logger::debug("a1.a2", "{}", "ERROR");
+    Logger::info("", "{}", "ERROR");
+    Logger::info("a1", "{}", "OK");
+    Logger::info("a1.a2", "{}", "OK");
 
     Logger::setPriority("WARN");
-    Logger::logDebug() << "ERROR";
-    Logger::logDebug("a1") << "ERROR";
-    Logger::logDebug("a1.a2") << "ERROR";
-    Logger::logInfo() << "ERROR";
-    Logger::logInfo("a1") << "ERROR";
-    Logger::logInfo("a1.a2") << "ERROR";
+    Logger::debug("", "{}", "ERROR");
+    Logger::debug("a1", "{}", "ERROR");
+    Logger::debug("a1.a2", "{}", "ERROR");
+    Logger::info("", "{}", "ERROR");
+    Logger::info("a1", "{}", "ERROR");
+    Logger::info("a1.a2", "{}", "ERROR");
 }
 
 
@@ -104,14 +122,20 @@ void Logger_Test::test2() {
     Logger::reset();
     Hash config("priority", "INFO");
     Logger::configure(config);
-    Logger::useOstream();
-    Logger::useFile("a1", false); // do not inherit appenders from parents
-    Logger::logDebug() << "ERROR";
-    Logger::logDebug("a1") << "ERROR";
-    Logger::logDebug("a1.a2") << "ERROR";
-    Logger::logInfo() << "CONSOLE-OK";
-    Logger::logInfo("a1") << "FILE-OK";
-    Logger::logInfo("a1.a2") << "FILE-OK";
+    Logger::useConsole();
+    Logger::useFile("a1");
+    Logger::debug("", "{}", "ERROR");
+    Logger::debug("a1", "{}", "ERROR");
+    Logger::debug("a1.a2", "{}", "ERROR");
+    Logger::info("", "{}", "CONSOLE-OK");
+    Logger::info("a1", "{}", "FILE-OK");
+    Logger::info("a1.a2", "{}", "FILE-OK");
+    LoggerStream("", spdlog::level::debug) << "ERROR";
+    LoggerStream("a1", spdlog::level::debug) << "ERROR";
+    LoggerStream("a1.a2", spdlog::level::debug) << "ERROR";
+    LoggerStream("", spdlog::level::info) << "CONSOLE-OK";
+    LoggerStream("a1", spdlog::level::info) << "FILE-OK";
+    LoggerStream("a1.a2", spdlog::level::info) << "FILE-OK";
 }
 
 
@@ -143,8 +167,8 @@ void Logger_Test::testLastMessages() {
 
     // log something
     for (int i = 0; i < 100; i++) {
-        Logger::logDebug("VERBOSE_STUFF") << "This should not be logged - " << i;
-        Logger::logInfo("INFORMATIVE_STUFF") << "line - " << i;
+        Logger::debug("VERBOSE_STUFF", "This should not be logged - {}", i);
+        Logger::info("INFORMATIVE_STUFF", "line - {}", i);
     }
 
     // get the last 10 entries

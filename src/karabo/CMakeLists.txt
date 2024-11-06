@@ -161,7 +161,8 @@ add_library(
 # finding dependencies
 find_package(Boost REQUIRED)
 find_package(amqpcpp REQUIRED)
-find_package(log4cpp REQUIRED)
+find_package(spdlog REQUIRED)
+find_package(fmt REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(pugixml REQUIRED)
 
@@ -181,6 +182,7 @@ target_link_options(
 target_compile_definitions(
     ${KARABO_LIB_TARGET_NAME}
     PUBLIC __SO__
+    SPDLOG_FMT_EXTERNAL
 )
 
 target_compile_options(
@@ -204,7 +206,8 @@ target_link_libraries(
     PUBLIC
     amqpcpp  # not a typo, this package does not define a namespace
     Boost::headers
-    log4cpp::log4cpp
+    spdlog::spdlog
+    fmt::fmt
     nlohmann_json::nlohmann_json
     pugixml::pugixml
 )

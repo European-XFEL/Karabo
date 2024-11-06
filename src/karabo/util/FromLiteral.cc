@@ -30,7 +30,6 @@
 #include "Hash.hh"
 
 namespace karabo {
-
     namespace util {
 
 

@@ -20,15 +20,15 @@ import threading
 import time
 import uuid
 
+# Enable logs for debugging - does not matter which bindings are used:
 from karabo.bound import (
-    ChannelMetaData, ConnectionStatus, EventLoop, Hash, InputChannel,
+    ChannelMetaData, ConnectionStatus, EventLoop, Hash, InputChannel, Logger,
     OutputChannel, SignalSlotable, Timestamp, Types, VectorHash)
 
-# Enable logs for debugging - does not matter which bindings are used:
-# from karabo.bound import Logger
+config = Hash("priority", "FATAL")
 # config = Hash("priority", "DEBUG")
-# Logger.configure(config)
-# Logger.useOstream()
+Logger.configure(config)
+Logger.useConsole()
 
 
 def createConnectedInput(InputClass,

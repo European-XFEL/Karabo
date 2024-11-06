@@ -26,6 +26,7 @@ from karabo.bound import (
     stopDeviceServer)
 
 timeoutSec = 15  # test_zcore_device_client2.py::test_device_client_sync_api
+Logger.configure(Hash())
 
 
 def test_device_client_sync_api():
