@@ -153,7 +153,7 @@ class MyDevice(Device):
 
 @pytest_asyncio.fixture(scope="module")
 @pytest.mark.asyncio
-async def deviceTest(event_loop):
+async def deviceTest():
     myDevice = MyDevice(dict(_deviceId_="MyDevice"))
     async with AsyncDeviceContext(myDevice=myDevice) as ctx:
         yield ctx
