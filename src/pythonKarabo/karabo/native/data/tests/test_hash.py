@@ -332,6 +332,8 @@ def test_constructors():
     h = Hash({"foo": 42, "bar": np.pi})
     assert h["foo"] == 42
     assert h["bar"] == np.pi
+    assert h["foo", ...] == {}
+    assert h["bar", ...] == {}
 
 
 def test_iteration():
