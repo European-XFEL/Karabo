@@ -28,7 +28,7 @@ from karabo.native import Float, QuantityValue, String
 
 
 @pytest.fixture(scope="module")
-def utilsTest(event_loop):
+def utilsTest():
 
     class Stamp:
         pass
@@ -188,7 +188,7 @@ def test_get_mimimum(utilsTest):
 
 @pytest.mark.timeout(30)
 @pytest.mark.asyncio
-async def test_no_quantity(event_loop):
+async def test_no_quantity():
     @removeQuantity
     def calculate(a, b, c=5, d=10):
         return a + b + c - d
@@ -239,7 +239,7 @@ async def test_no_quantity(event_loop):
 
 @pytest.mark.timeout(30)
 @pytest.mark.asyncio
-async def test_profiler(event_loop):
+async def test_profiler():
     sleep_time = 0.1
 
     @profiler()
@@ -299,11 +299,11 @@ async def test_profiler(event_loop):
 
 @pytest.mark.timeout(30)
 @pytest.mark.asyncio
-async def test_async_timer(event_loop):
+async def test_async_timer():
     """Test the async timer class"""
     called = 0
 
-    instance = event_loop.instance()
+    instance = asyncio.get_event_loop().instance()
 
     def call():
         nonlocal called
@@ -391,7 +391,7 @@ async def test_async_timer(event_loop):
 
 @pytest.mark.timeout(30)
 @pytest.mark.asyncio
-async def test_countdown(event_loop):
+async def test_countdown():
     """Test that we can use a countdown error context"""
     # 1. exception is `True`
     try:
