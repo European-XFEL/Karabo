@@ -23,6 +23,9 @@
 
 #include "AmqpConnection.hh"
 
+#include <boost/asio/deadline_timer.hpp>
+
+#include "AmqpClient2.hh"
 #include "AmqpUtils.hh" // for ConnectionHandler, KARABO_ERROR_CODE_XXX
 #include "karabo/log/Logger.hh"
 #include "karabo/util/Exception.hh"
@@ -109,6 +112,7 @@ namespace karabo {
         bool AmqpConnection::isConnected() const {
             std::promise<bool> connectedDone;
             auto connectedFut = connectedDone.get_future();
+            // Also check m_connection->usable();?
             dispatch([this, &connectedDone]() { connectedDone.set_value(m_state == State::eConnectionReady); });
             return connectedFut.get();
         }
@@ -135,7 +139,7 @@ namespace karabo {
             return resultFut.get();
         }
 
-        void AmqpConnection::asyncConnect(AsyncHandler&& onComplete) {
+        void AmqpConnection::asyncConnect(AsyncHandler onComplete) {
             // Jump to the internal thread (if not yet in it)
             dispatch([weakThis{weak_from_this()}, onComplete{std::move(onComplete)}]() {
                 if (auto self = weakThis.lock()) {
@@ -209,10 +213,10 @@ namespace karabo {
                 return;
             }
             if (m_state == State::eStarted) {
-                KARABO_LOG_FRAMEWORK_DEBUG << "AmqpConnection attached. url=" << url;
+                KARABO_LOG_FRAMEWORK_DEBUG << "AmqpConnection attached, url=" << url;
             } else {
-                KARABO_LOG_FRAMEWORK_WARN << "AmqpConnection attached called, but in state "
-                                          << static_cast<int>(m_state) << ", " << url;
+                KARABO_LOG_FRAMEWORK_WARN << "AmqpConnection attached called, but in state " << stateString(m_state)
+                                          << ", " << url;
             }
             m_state = State::eNotConnected;
         }
@@ -227,7 +231,7 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "AmqpConnection connected (Tcp). url=" << url;
             } else {
                 KARABO_LOG_FRAMEWORK_WARN << "AmqpConnection connected (Tcp) called, but in state "
-                                          << static_cast<int>(m_state) << ", url = " << url;
+                                          << stateString(m_state) << ", url = " << url;
             }
             m_state = State::eConnectionDone;
         }
@@ -243,7 +247,7 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Established connection to '" << url << "'";
             } else {
                 KARABO_LOG_FRAMEWORK_WARN << "Established connection to '" << url << "', but state was "
-                                          << static_cast<int>(m_state);
+                                          << stateString(m_state);
             }
             m_state = State::eConnectionReady;
             callOnComplete(KARABO_ERROR_CODE_SUCCESS);
@@ -255,14 +259,16 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_WARN << "Ignore 'onError' for wrong url: " << url << " != " << m_urls[m_urlIndex];
                 return;
             }
-            KARABO_LOG_FRAMEWORK_WARN << "AMQP error: '" << message << "', state " << static_cast<int>(m_state)
-                                      << ". url=" << url;
+            KARABO_LOG_FRAMEWORK_WARN << "AMQP error: '" << message << "', state " << stateString(m_state)
+                                      << ", url=" << url;
             // This is e.g. called
             // - for an invalid tcp address (then we are eNotConnected)
             // - a valid tcp address, but invalid credentials with the url (eConnectionDone)
             // What is weird is that in the former case onDetached is called afterwards, in the latter not.
             if (m_state == State::eNotConnected) {
                 // Invalid Tcp address: onDetached will be called afterwards
+                // (Since no connection yet, could not yet be 'connection lost' scenario...
+                //   ==> No need to check that message contains "Name or service not known".)
                 return; // Do not set m_state, see onDetached
             } else if (m_state == State::eConnectionDone) {
                 // Connected on Tcp level, but invalid credentials in the url:
@@ -284,14 +290,46 @@ namespace karabo {
             m_state = State::eConnectionClosed;
         }
 
-
-        void AmqpConnection::onLost(AMQP::TcpConnection*, const std::string& url) {
+        void AmqpConnection::onLost(AMQP::TcpConnection* connection, const std::string& url) {
             if (url != m_urls[m_urlIndex]) {
                 KARABO_LOG_FRAMEWORK_WARN << "Ignore 'onLost' for wrong url: " << url << " != " << m_urls[m_urlIndex];
                 return;
             }
-            KARABO_LOG_FRAMEWORK_WARN << "Connection lost in state " << static_cast<int>(m_state) << ", url=" << url;
+            if (connection != m_connection.get()) {
+                KARABO_LOG_FRAMEWORK_WARN << "Loss of unknown connection (claimed url '" << url << "') ignored.";
+                return;
+            }
+            // Saw this print 114 ms after first sign of connection loss in channelPtr->onError!
+            KARABO_LOG_FRAMEWORK_WARN << "Connection lost in state " << stateString(m_state) << ", url=" << url
+                                      << ". Now try to reconnect, recreate channels and subscriptions.";
             m_state = State::eConnectionLost;
+
+            m_connection.reset(); // use_count should still be > 0: channels are not yet destroyed...
+
+            triggerReconnection();
+        }
+
+
+        void AmqpConnection::triggerReconnection() {
+            if (!m_random) {
+                // A simple random generator: since disconnections happen at the same time, seed from 'this', not time
+                const auto seed = reinterpret_cast<unsigned long long>(this); // Could also use process id.
+                m_random = std::make_unique<std::minstd_rand0>(static_cast<unsigned int>(seed));
+            }
+            // Do not let all connections bombard any now available broker at once (that is why we need different
+            // seeds!):
+            std::uniform_int_distribution<int> distribution(2000, 15000); // 2 to 15 seconds in ms
+            boost::posix_time::milliseconds delay(distribution(*m_random));
+            KARABO_LOG_FRAMEWORK_INFO << "Delay reconnection a bit: " << delay;
+            auto timer = std::make_shared<boost::asio::deadline_timer>(m_ioContext);
+            timer->expires_from_now(delay);
+            timer->async_wait([weakThis{weak_from_this()}, timer](const boost::system::error_code& e) {
+                if (e) return;
+                if (auto self = weakThis.lock()) {
+                    self->asyncConnect(
+                          bind_weak(&AmqpConnection::informReconnection, self.get(), boost::asio::placeholders::error));
+                }
+            });
         }
 
 
@@ -302,8 +340,7 @@ namespace karabo {
                 return;
             }
 
-            KARABO_LOG_FRAMEWORK_DEBUG << "Connection detached in state " << static_cast<int>(m_state)
-                                       << ", url=" << url;
+            KARABO_LOG_FRAMEWORK_DEBUG << "Connection detached in state " << stateString(m_state) << ", url=" << url;
 
             if (m_state == State::eNotConnected) {
                 // We come here after onError if connection failed due to invalid credentials
@@ -398,14 +435,18 @@ namespace karabo {
             // Capturing channelPtr here keeps channel alive (via a temporary [!] circular reference...)
             channelPtr->onReady([onComplete, channelPtr]() mutable {
                 // Reset error handler: Previous one indicates creation failure. When will the new one be called?
-                // E.g. "Channel reports: ACCESS_REFUSED - queue '<name>' in vhost '/xxx' in exclusive use"
-                // when a channel creates a consumer for a queue that already has an AMQP::exclusive consumer.
-                // Note that text after "...reports: " is also sent to the method registered with
-                // channel->consume(...).onError(..) and that that channel is disabled afterwards.
-                // Other case seen during development when channel tried to create a consumer for a non-existing queue
-                // "Channel reports: NOT_FOUND - no queue '<name>' in vhost '/'xxx""
+                // - "ACCESS_REFUSED - queue '<name>' in vhost '/xxx' in exclusive use"
+                //   when a channel creates a consumer for a queue that already has an AMQP::exclusive consumer.
+                //   Note that same is also sent to the method registered with
+                //   channel->consume(...).onError(..) and that that channel is disabled afterwards.
+                // - When channel tried to create a consumer for a non-existing queue
+                //   "NOT_FOUND - no queue '<name>' in vhost '/'xxx""
+                // - When the broker goes down: "connection lost"
+                //   (Here is some duplication since also AmqpConnection::onLost is called
+                // NOTE: To avoid message duplication consider to do 'channelPtr->onError(nullptr);' instead!
+                //       But for now we keep it.
                 channelPtr->onError([](const char* errMsg) {
-                    KARABO_LOG_FRAMEWORK_ERROR_C("AmqpConnection") << "Channel reports: " << errMsg;
+                    KARABO_LOG_FRAMEWORK_WARN_C("AmqpConnection") << "Channel reports: " << errMsg;
                 });
                 // Reset also 'onReady' handler to get rid of circular reference
                 // To be able to call 'onComplete' at the very end (i.e. it sees the channel after reset of handler) we
@@ -416,6 +457,7 @@ namespace karabo {
                 callback(channel, std::string());
             });
             channelPtr->onError([onComplete, channelPtr](const char* errMsg) {
+                // Also error "connection lost" just forwarded as failure here, calling code has to take care.
                 // Reset both handlers to get rid of circular reference
                 channelPtr->onReady(AMQP::SuccessCallback());
                 onComplete(nullptr, errMsg);
@@ -424,5 +466,70 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_WARN_C("AmqpConnection") << "Channel creation failed: " << errMsg;
             });
         }
+
+        void AmqpConnection::informReconnection(const boost::system::error_code& ec) {
+            if (ec) {
+                KARABO_LOG_FRAMEWORK_WARN << "Reconnection failed (" << ec.message() << "), try again.";
+                triggerReconnection();
+                return;
+            }
+
+            KARABO_LOG_FRAMEWORK_INFO << "Successfully reconnected, now inform up to " << m_registeredClients.size()
+                                      << " registered clients";
+
+            for (auto weakClientIt = m_registeredClients.begin(); weakClientIt != m_registeredClients.end();) {
+                if (auto client = weakClientIt->lock()) {
+                    client->reviveIfReconnected();
+                    ++weakClientIt;
+                } else {
+                    KARABO_LOG_FRAMEWORK_WARN << "AmqpConnection::informReconnection: a client is gone!";
+                    weakClientIt = m_registeredClients.erase(weakClientIt);
+                }
+            }
+        }
+
+        void AmqpConnection::registerForReconnectInfo(boost::weak_ptr<AmqpClient2> client) {
+            dispatch([weakThis{weak_from_this()}, client{std::move(client)}]() {
+                // std::set takes care that client is registered only once
+                if (auto self = weakThis.lock()) self->m_registeredClients.emplace(std::move(client));
+            });
+        }
+
+        void AmqpConnection::cleanReconnectRegistrations() {
+            dispatch([weakThis{weak_from_this()}]() {
+                if (auto self = weakThis.lock()) {
+                    for (auto it = self->m_registeredClients.begin(); it != self->m_registeredClients.end();) {
+                        if (it->use_count() == 0) { // weak_ptr with no shared_ptr left
+                            it = self->m_registeredClients.erase(it);
+                        } else {
+                            ++it;
+                        }
+                    }
+                }
+            });
+        }
+
+        const char* AmqpConnection::stateString(AmqpConnection::State state) {
+            switch (state) {
+                case State::eUnknown:
+                    return "'unknown'";
+                case State::eStarted:
+                    return "'started'";
+                case State::eNotConnected:
+                    return "'not connected'";
+                case State::eConnectionDone:
+                    return "'connection done'";
+                case State::eConnectionReady:
+                    return "'connection ready'";
+                case State::eConnectionClosed:
+                    return "'connection closed'";
+                case State::eConnectionError:
+                    return "'connection error'";
+                case State::eConnectionLost:
+                    return "'connection lost'";
+            }
+            return "''"; // Please compiler warning
+        }
+
     } // namespace net
 } // namespace karabo
