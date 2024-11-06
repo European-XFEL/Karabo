@@ -14,11 +14,22 @@ from karabogui.testing.utils import click_button, keySequence, singletons
 
 
 def test_access_level(gui_app):
-    dialog = ReactiveLoginDialog()
-    assert dialog.access_level == krb_access.GLOBAL_ACCESS_LEVEL.name.lower()
+    configuration = Configuration()
 
-    dialog.login_type = LoginType.ACCESS_LEVEL
-    assert dialog.access_level == "admin"
+    with singletons(configuration=configuration):
+        dialog = ReactiveLoginDialog()
+        assert dialog.access_level == (
+               krb_access.GLOBAL_ACCESS_LEVEL.name.lower())
+
+        # Non-authenticated login type, access level from the dialog.
+        dialog.login_type = LoginType.ACCESS_LEVEL
+        assert dialog.combo_access_level.currentText() == "admin"
+        assert dialog.access_level == "admin"
+
+        # For authenticated login type, access level from configuration.
+        configuration["access_level"] = "user"
+        dialog.login_type = LoginType.REFRESH_TOKEN
+        assert dialog.access_level == "user"
 
 
 def test_temporarySessionDialog(gui_app, mocker):

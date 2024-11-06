@@ -275,7 +275,7 @@ class ReactiveLoginDialog(QDialog):
 
     @property
     def access_level(self) -> str:
-        level = krb_access.GLOBAL_ACCESS_LEVEL.name.lower()
+        level = get_config()["access_level"]
         if self.login_type is LoginType.ACCESS_LEVEL:
             level = self.combo_access_level.currentText()
         return level
