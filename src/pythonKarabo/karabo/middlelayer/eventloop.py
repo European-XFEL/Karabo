@@ -27,8 +27,10 @@ from asyncio import (
 from concurrent.futures import ThreadPoolExecutor
 from functools import wraps
 
-from karabo.middlelayer.broker import Broker, check_broker_scheme
 from karabo.native import KaraboValue, unit_registry as unit
+
+from .broker import Broker
+from .utils import check_broker_scheme, ensure_coroutine
 
 # Number of threads that can be scheduled in the thread pool executor.
 _NUM_THREADS = 200
@@ -46,24 +48,6 @@ def set_global_sync():
 def global_sync():
     """Return an indicator if the main thread runs in sync"""
     return _SYNC_LOOP
-
-
-def ensure_coroutine(coro):
-    """Ensure that a function `coro` is a coroutine to play well
-    in our eventloops"""
-    if iscoroutinefunction(coro):
-        return coro
-
-    def create_coroutine(func):
-        """Create a coroutine wrapper around the sync function `func`"""
-
-        @wraps(func)
-        async def wrapper(*args, **kwargs):
-            return func(*args, **kwargs)
-
-        return wrapper
-
-    return create_coroutine(coro)
 
 
 def synchronize(coro):
@@ -298,9 +282,7 @@ class EventLoop(SelectorEventLoop):
             self.default_exception_handler(context)
 
     def getBroker(self, deviceId, classId, broadcast):
-        self.connection, Cls = Broker.create_connection(
-            self.hosts, self.connection)
-        return Cls(self, deviceId, classId, broadcast)
+        return Broker(self, deviceId, classId, broadcast)
 
     def create_task(self, coro, instance=None, name=None, context=None):
         """Create a new task, running coroutine *coro*

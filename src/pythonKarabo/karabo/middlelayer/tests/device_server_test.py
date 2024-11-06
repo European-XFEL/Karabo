@@ -19,13 +19,12 @@ from asyncio import gather, sleep, wait_for
 
 import pytest
 
-from karabo.middlelayer.broker.compat import amqp
 from karabo.middlelayer.device import Device
 from karabo.middlelayer.device_client import (
     call, getClassSchema, getInstanceInfo, instantiateNoWait, waitUntil)
 from karabo.middlelayer.testing import (
     create_device_server, create_instanceId, sleepUntil)
-from karabo.native import Hash, KaraboError, Schema, Timestamp
+from karabo.native import Hash, Schema, Timestamp
 
 SHUTDOWN_TIME = 1
 
@@ -39,7 +38,6 @@ class FaultyDevice(Device):
         raise RuntimeError("Not allowed to start")
 
 
-@pytest.mark.skipif(not amqp, reason="Only works reliable on amqp")
 @pytest.mark.flaky(max_runs=FLAKY_MAX_RUNS, min_passes=FLAKY_MIN_PASSES)
 @pytest.mark.timeout(30)
 @pytest.mark.asyncio
@@ -204,11 +202,10 @@ async def test_device_server_start_faulty(event_loop):
         # Device is not there in server map
         assert deviceId not in server.deviceInstanceMap
 
-        if not amqp:
-            # TODO: Find a way to propagate exception
-            with pytest.raises(KaraboError):
-                fut = [server.slotStartDevice(hsh) for _ in range(2)]
-                await gather(*fut)
+        # TODO: Find a way to propagate exception
+        # with pytest.raises(KaraboError):
+        #    fut = [server.slotStartDevice(hsh) for _ in range(2)]
+        #     await gather(*fut)
     finally:
         await finalize_server(server)
 
