@@ -384,9 +384,9 @@ class Macro(Device):
 
     def printToConsole(self, data):
         """Put a data from the std out on the print stack"""
-        sp = self.stacked_print
-        if data == "\n" and sp and sp[-1] == "":
+        if data == "\n":
             return
+        sp = self.stacked_print
         sp.extend(data.splitlines())
 
     async def _timer_callback(self):
