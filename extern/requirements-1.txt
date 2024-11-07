@@ -54,3 +54,5 @@ tomli==2.0.1
 tornado==6.3.3
 traits==5.2.0
 tzlocal==5.0.1
+# Unpin due to bug with Pint
+flexparser==0.3.1
