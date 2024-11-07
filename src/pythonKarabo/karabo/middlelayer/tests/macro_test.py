@@ -744,7 +744,7 @@ async def test_print(deviceTest):
         await sleep(0.5)
         assert local.doNotCompressEvents >= 1
         if local.doNotCompressEvents == 1:
-            assert local.print == "superpuper\n\nhero\n"
+            assert local.print == "superpuper\nhero"
         else:
             assert "superpuper" not in local.print
             assert "hero" in local.print
