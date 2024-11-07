@@ -374,7 +374,13 @@ class DeviceServerBase(SignalSlotable):
                 loop = get_event_loop()
                 loop.create_task(server.slotKillServer(), instance=server)
 
-            loop.add_signal_handler(SIGTERM, sig_kill_handler)
+            if os.name == "nt":
+                print(
+                    "WARNING: process interruptions will not be handled "
+                    "gracefully due to limitations of the operating system."
+                )
+            else:
+                loop.add_signal_handler(SIGTERM, sig_kill_handler)
             # NOTE: The server listens to broadcasts and we set a flag in the
             # signal slotable
             server.is_server = True
