@@ -90,11 +90,6 @@ namespace karabo {
             }
         }
 
-        std::string Version::getPathToVersionFile() {
-            return getPathToKaraboInstallation() += "/VERSION";
-        }
-
-
         std::string Version::getPathToKaraboInstallation() {
             const char* envKarabo = getenv("KARABO");
             if (envKarabo) {
@@ -102,25 +97,6 @@ namespace karabo {
                 return std::string(envKarabo);
             }
 
-            // TODO: remove this exceptional handling for older Karabo versions.
-            //       suggested time-frame: Summer 2022.
-
-            // Check whether we are acting as framework developers with the build
-            // directory located inside the source tree (at build/netbeans/karabo).
-            // This is the directory structure used by the deprecated Netbeans
-            // based build system and is checked for backward compatibility
-            // reasons - Karabo versions released before Summer 2021 used the
-            // Netbeans based build.
-            const std::string karaboParentDir("../../../karabo");
-            boost::system::error_code ec;
-            bool karaboParentDirFound = boost::filesystem::exists(karaboParentDir, ec);
-            if (!ec && karaboParentDirFound) {
-                // Yes, we are using the in source build tree of
-                // the Netbeans based build environment.
-                return karaboParentDir;
-            }
-
-            // All the attempts to obtain a path for the Karabo installation failed.
             throw KARABO_INIT_EXCEPTION(
                   "$KARABO environment variable is not defined but needed to get the path to the Karabo installation.");
         }
