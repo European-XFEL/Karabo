@@ -25,6 +25,7 @@ import sys
 
 from pkg_resources import iter_entry_points
 
+from karabo import __version__ as karabo_version
 from karabo.packaging.device_template import configure_template
 
 
@@ -346,7 +347,7 @@ def download(args):
     if args.repo == '':
         return None
     with pushd_popd():
-        karabo_tag = run_cmd('cat VERSION').decode("utf-8").rstrip()
+        karabo_tag = karabo_version
         lsb_release_info = _get_lsb_release_info()
         dist_name = lsb_release_info["LSB_RELEASE_DIST"]
         dist_ver = lsb_release_info["LSB_RELEASE_VERSION"]
