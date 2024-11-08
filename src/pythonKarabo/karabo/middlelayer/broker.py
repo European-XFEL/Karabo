@@ -102,7 +102,7 @@ class Broker:
         self.exit_event = Event()
         self.heartbeat_task = None
         self.subscribe_lock = Lock()
-        self._hostname = socket.gethostname()
+        self.hostname = socket.gethostname()
         # Flag to indicate when a channel is about to be closed
         self.shutdown_channel = False
 
@@ -257,10 +257,10 @@ class Broker:
     async def heartbeat(self, interval, info):
         header = Hash("signalFunction", "signalHeartbeat")
         header["signalInstanceId"] = self.deviceId
-        body = Hash()
-        body["a1"] = self.deviceId
-        body["a2"] = interval
-        body["a3"] = info
+        body = Hash(
+            "a1", self.deviceId,
+            "a2", interval,
+            "a3", info)
         msg = encodeBinary(header) + encodeBinary(body)
         exch = f"{self.domain}.signals"
         key = f"{self.deviceId}.signalHeartbeat"
@@ -295,16 +295,17 @@ class Broker:
         self.heartbeat_task = ensure_future(heartbeat())
 
     def build_arguments(self, signal, targets, reply):
-        p = Hash()
-        p.setElement("signalFunction", signal, {})
-        slotInstanceIds = "||".join(targets)
-        p.setElement("slotInstanceIds", f"|{slotInstanceIds}|", {})
         funcs = "||".join(f"{k}:{','.join(v)}" for k, v in targets.items())
-        p.setElement("slotFunctions", f"|{funcs}|", {})
+        slotInstanceIds = "||".join(targets)
+        p = Hash(
+            "signalFunction", signal,
+            "slotInstanceIds", f"|{slotInstanceIds}|",
+            "slotFunctions", f"|{funcs}|",
+            "hostname", self.hostname,
+            "classId", self.classId)
         if reply is not None:
             p.setElement("replyTo", reply, {})
-        p.setElement("hostname", self._hostname, {})
-        p.setElement("classId", self.classId, {})
+
         # AMQP specific follows ...
         if signal in {"__replyNoWait__", "__reply__"}:
             name = f"{self.domain}.slots"
@@ -345,21 +346,21 @@ class Broker:
             reply = reply,
 
         if replyTo := header.get("replyTo"):
-            p = Hash()
-            p.setElement("replyFrom", replyTo, {})
-            p.setElement("signalFunction", "__reply__", {})
-            p.setElement("slotInstanceIds", f"|{sender}|", {})
-            p.setElement("error", error, {})
+            p = Hash(
+                "replyFrom", replyTo,
+                "signalFunction", "__reply__",
+                "slotInstanceIds", f"|{sender}|",
+                "error", error)
             name = f"{self.domain}.slots"
             routing_key = sender
             self.send(name, routing_key, p, reply)
 
         if replyId := header.get("replyInstanceIds"):
-            p = Hash()
-            p.setElement("signalFunction", "__replyNoWait__", {})
-            p.setElement("slotInstanceIds", replyId, {})
-            p.setElement("slotFunctions", header["replyFunctions"], {})
-            p.setElement("error", error, {})
+            p = Hash(
+                "signalFunction", "__replyNoWait__",
+                "slotInstanceIds", replyId,
+                "slotFunctions", header["replyFunctions"],
+                "error", error)
             dest = replyId.strip("|")
             name = f"{self.domain}.slots"
             routing_key = dest

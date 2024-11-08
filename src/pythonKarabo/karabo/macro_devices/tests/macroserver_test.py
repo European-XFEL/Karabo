@@ -14,13 +14,11 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 import uuid
-from asyncio import get_event_loop, set_event_loop
-from contextlib import ExitStack, contextmanager
-from unittest import TestCase, main
 
-from karabo.middlelayer import getDevice, updateDevice
-from karabo.middlelayer.signalslot import SignalSlotable
-from karabo.middlelayer.tests.eventloop import EventLoop
+import pytest
+
+from karabo.middlelayer import call, getDevice, updateDevice
+from karabo.middlelayer.conftest import event_loop
 from karabo.native import Hash
 
 from ..macro_server import MacroServer
@@ -48,69 +46,26 @@ class TestMacro(Macro):
 """
 
 
-class Tests(TestCase):
-
-    @classmethod
-    @contextmanager
-    def createComm(cls):
-
-        loop = cls.loop
-        sigslot = SignalSlotable(
-            {"_deviceId_": f"test-mdlserver-{uuid.uuid4()}"})
-        sigslot.startInstance(loop=loop)
-        cls.lead = sigslot
-
-        loop.instance = lambda: sigslot
-        yield
-        loop.run_until_complete(sigslot.slotKillDevice())
-
-    @classmethod
-    def setUpClass(cls):
-        with ExitStack() as cls.exit_stack:
-            cls.loop = EventLoop()
-            cls.old_event_loop = get_event_loop()
-            cls.exit_stack.enter_context(cls.createComm())
-            set_event_loop(cls.loop)
-            cls.exit_stack = cls.exit_stack.pop_all()
-
-    @classmethod
-    def tearDownClass(cls):
-        try:
-            with cls.exit_stack:
-                pass
-        finally:
-            del cls.lead
-            cls.loop.close()
-            set_event_loop(cls.old_event_loop)
-
-    async def init_macro(self, code, expected, server):
-        # allow the server to start
-        uuid_ = str(uuid.uuid4())
-        config = Hash("uuid", uuid_, "module", "test",
-                      "code", code)
-        h = Hash("classId", "MetaMacro", "configuration", config,
-                 "deviceId", f"bla-{uuid_}")
-        await server.call(TEST_MACROSERVER, "slotStartDevice", h)
-        proxy = await getDevice(f"bla-{uuid_}")
-        with proxy:
-            await updateDevice(proxy)
-            await proxy.do()
-            self.assertEqual(proxy.s.value, expected)
-        await server.call(proxy.deviceId, "slotKillDevice")
-
-    def test_macroserver(self):
-        loop = get_event_loop()
-        server = MacroServer(dict(serverId=TEST_MACROSERVER))
-        loop.run_until_complete(server.startInstance())
-
-        task = loop.create_task(
-            self.init_macro(SYNC_CODE, "sync", server), server)
-        loop.run_until_complete(task)
-
-        task = loop.create_task(
-            self.init_macro(ASYNC_CODE, "async", server), server)
-        loop.run_until_complete(task)
+async def init_macro(code, expected):
+    uuid_ = str(uuid.uuid4())
+    config = Hash("uuid", uuid_, "module", "test",
+                  "code", code)
+    h = Hash("classId", "MetaMacro", "configuration", config,
+             "deviceId", f"bla-{uuid_}")
+    assert h["configuration"] == config
+    await call(TEST_MACROSERVER, "slotStartDevice", h)
+    proxy = await getDevice(f"bla-{uuid_}")
+    with proxy:
+        await updateDevice(proxy)
+        await proxy.do()
+        assert proxy.s.value == expected
+    await call(proxy.deviceId, "slotKillDevice")
 
 
-if __name__ == "__main__":
-    main()
+@pytest.mark.timeout(20)
+@pytest.mark.asyncio
+async def test_macroserver(event_loop: event_loop):
+    server = MacroServer(dict(serverId=TEST_MACROSERVER))
+    await server.startInstance(loop=event_loop)
+    await init_macro(SYNC_CODE, "sync")
+    await init_macro(ASYNC_CODE, "async")
