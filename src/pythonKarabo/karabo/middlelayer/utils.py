@@ -23,6 +23,7 @@ from time import perf_counter
 from types import MethodType
 from weakref import WeakMethod, ref
 
+from karabo import __version__ as karabo_version
 from karabo.native import Hash
 
 _SCHEME_DELIMITER = "://"
@@ -50,17 +51,12 @@ def ensure_coroutine(coro):
 
 
 def get_karabo_version():
-    """Return the karabo version from the KARABO VERSION file
+    """Return the karabo version
     """
-    try:
-        path = os.path.join(os.environ['KARABO'], 'VERSION')
-    except KeyError:
+    if "KARABO" not in os.environ:
         print("ERROR: $KARABO is not defined. Make sure you have sourced "
               "the 'activate' script.")
-        return ''
-    with open(path) as fp:
-        version = fp.read()
-    return version
+    return karabo_version
 
 
 def get_property_hash(device, properties):
