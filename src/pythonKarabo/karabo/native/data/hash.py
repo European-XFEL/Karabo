@@ -86,7 +86,7 @@ class Hash(OrderedDict):
         else:
             OrderedDict.__init__(self)
             for k, v in zip(args[::2], args[1::2]):
-                self[k] = v
+                self.setElement(k, v, {})
 
     def _path(self, path, auto=False):
         path = path.split(SEPARATOR)
