@@ -14,8 +14,8 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 from abc import abstractmethod
+from importlib.metadata import entry_points
 
-import pkg_resources
 from lxml import etree
 
 from karabo.native import (
@@ -44,7 +44,7 @@ class DbConnectionNodeBase(Configurable):
 
 
 def get_node():
-    entrypoints = list(pkg_resources.iter_entry_points("karabo.project_db"))
+    entrypoints = list(entry_points(group="karabo.project_db"))
     protocols = [ep.name for ep in entrypoints]
     assert DEFAULT_PROTOCOL in protocols, ",".join(protocols)
 
