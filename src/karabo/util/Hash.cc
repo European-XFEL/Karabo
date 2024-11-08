@@ -28,7 +28,6 @@
 #include "Schema.hh"
 #include "TableElement.hh"
 #include "ToLiteral.hh"
-#include "Validator.hh"
 
 namespace karabo {
 
@@ -603,31 +602,23 @@ namespace karabo {
 
         void Hash::mergeTableElement(const Hash::Node& source, Hash::Node& target,
                                      const std::set<std::string>& selectedPaths, char separator) {
+            // A table is an atomic entity, so merging two tables means replacing the target by source
+            // (except that we might use a selected subset of rows).
             std::vector<Hash>& targetVec = target.getValue<std::vector<Hash>>();
             const std::vector<Hash>& sourceVec = source.getValue<std::vector<Hash>>();
             const std::set<unsigned int> selectedIndices(
                   Hash::selectIndicesOfKey(sourceVec.size(), selectedPaths, source.getKey(), separator));
 
-            // replace rows for table elements
-            const Schema& nodeSchema = target.getAttribute<Schema>(KARABO_SCHEMA_ROW_SCHEMA);
-            Validator validator(karabo::util::tableValidationRules);
-
-            std::vector<Hash> validatedSourceVec;
+            std::vector<Hash> selectedSourceVec;
             unsigned int rowCounter = 0;
             for (std::vector<Hash>::const_iterator it = sourceVec.begin(); it != sourceVec.end(); ++it, ++rowCounter) {
                 if (!selectedIndices.empty() && selectedIndices.find(rowCounter) == selectedIndices.end()) {
                     // Skip non-selected indices
                     continue;
                 }
-                validatedSourceVec.push_back(Hash());
-                std::pair<bool, std::string> validationResult =
-                      validator.validate(nodeSchema, *it, validatedSourceVec.back());
-                if (!validationResult.first) {
-                    throw KARABO_PARAMETER_EXCEPTION("Node schema didn't validate against present node schema: " +
-                                                     validationResult.second);
-                }
+                selectedSourceVec.push_back(*it);
             }
-            targetVec.swap(validatedSourceVec);
+            targetVec.swap(selectedSourceVec);
         }
 
 
