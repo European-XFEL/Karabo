@@ -17,15 +17,14 @@ import argparse
 import copy
 import os
 import threading
-
-from pkg_resources import iter_entry_points
+from importlib.metadata import entry_points
 
 from karabo.bound import Configurator, EventLoop, Hash, PythonDevice
 
 
 def _load_entrypoint(classid):
     """Load the module containing `classid` so that it gets registered"""
-    for ep in iter_entry_points('karabo.bound_device'):
+    for ep in entry_points(group='karabo.bound_device'):
         if ep.name == classid:
             ep.load()
             return
