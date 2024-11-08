@@ -31,10 +31,12 @@ from karabogui import icons
 from karabogui.binding.api import StringBinding, get_binding_value
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
+from karabogui.events import KaraboEvent, broadcast_event
+from karabogui.generic_scenes import get_property_proxy_model
 from karabogui.indicators import ALL_OK_COLOR
 from karabogui.util import generateObjectName
 
-W_SIZE = 32
+BUTTON_SIZE = 32
 
 
 @register_binding_controller(ui_name='Text Log', klassname='DisplayTextLog',
@@ -67,16 +69,23 @@ class DisplayTextLog(BaseBindingController):
         hor_layout.addStretch(1)
         hor_layout.setSpacing(0)
 
+        history_button = QPushButton()
+        history_button.setFixedSize(BUTTON_SIZE, BUTTON_SIZE)
+        history_button.setFocusPolicy(Qt.NoFocus)
+        history_button.setToolTip('Historic Text Log')
+        history_button.setIcon(icons.clock)
+        history_button.clicked.connect(self.launch_history)
         button = QPushButton()
-        button.setFixedSize(W_SIZE, W_SIZE)
+        button.setFixedSize(BUTTON_SIZE, BUTTON_SIZE)
         button.setFocusPolicy(Qt.NoFocus)
         button.setToolTip('Clear log')
         button.setIcon(icons.editClear)
         button.clicked.connect(self.log_widget.clear)
+
+        hor_layout.addWidget(history_button)
         hor_layout.addWidget(button)
 
         # spacer item to align button to the right!
-
         ver_layout.addLayout(hor_layout)
 
         # nice color background
@@ -118,3 +127,8 @@ class DisplayTextLog(BaseBindingController):
         enable_copy = not self.log_widget.textCursor().selection().isEmpty()
         copy_action.setEnabled(enable_copy)
         menu.exec(self.log_widget.viewport().mapToGlobal(pos))
+
+    def launch_history(self):
+        model = get_property_proxy_model(self.proxy)
+        data = {"model": model}
+        broadcast_event(KaraboEvent.ShowUnattachedController, data)
