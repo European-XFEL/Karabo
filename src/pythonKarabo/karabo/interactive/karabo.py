@@ -78,7 +78,7 @@ def resolve_project(package):
 
 def parse_commandline():
     parser = argparse.ArgumentParser(
-        description=('Karabo Utility Script'),
+        description=(f'Karabo Utility Script - version {karabo_version}'),
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     sps = parser.add_subparsers(metavar='')
 
@@ -247,10 +247,17 @@ def parse_commandline():
                         help='Specifies the number of make jobs (commands) '
                              'to run simultaneously.')
 
+    parser.add_argument('-v', '--version', action='store_true',
+                        help='prints the version of Karabo. '
+                             'No command will be executed.')
+
     args = parser.parse_args()
     if len(sys.argv) <= 1:
         parser.print_help()
         parser.exit()
+    if args.version:
+        print(f"Karabo Version - {karabo_version}")
+        return
     args.command(args)
 
 
