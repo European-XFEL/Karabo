@@ -32,8 +32,8 @@ def start_bound_server(
     """Start a Bound API device server in its own process"""
     # set the plugin directory to directory of this file
     # the static .egg-info file located in the test directory
-    # assures the pkg_resources plugin loader will identify
-    # the test device as a valid plugin with an entry point
+    # assures the plugin loader will identify the test
+    # device as a valid plugin with an entry point
     env = os.environ.copy()
     if plugin_dir:
         env["PYTHONPATH"] = plugin_dir
@@ -59,8 +59,8 @@ def start_mdl_server(
     """Start a Middlelayer API device server in its own process"""
     # set the plugin directory to directory of this file
     # the static .egg-info file located in the test directory
-    # assures the pkg_resources plugin loader will identify
-    # the test device as a valid plugin with an entry point
+    # assures the plugin loader will identify the test device
+    # as a valid plugin with an entry point
     env = os.environ.copy()  # needed?
     if plugin_dir:
         env["PYTHONPATH"] = plugin_dir

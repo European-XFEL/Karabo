@@ -19,9 +19,8 @@ import signal
 import sys
 import threading
 from contextlib import redirect_stdout
+from importlib.metadata import entry_points
 from io import StringIO
-
-from pkg_resources import working_set
 
 from karabo.bound import (
     OVERWRITE_ELEMENT, BinarySerializerHash, Configurator, EventLoop, Hash,
@@ -33,7 +32,11 @@ def main():
     # lack of documentation.
     command, namespace, name = sys.argv[1:4]
 
-    entrypoint = next(working_set.iter_entry_points(namespace, name))
+    entrypoints = [
+        ep
+        for ep in entry_points(group=namespace)
+        if ep.name == name]
+    entrypoint = entrypoints[0]
 
     if command == "schema" or command == "schemaOverwriteVersion":
         # print the schema of a device class to stdout

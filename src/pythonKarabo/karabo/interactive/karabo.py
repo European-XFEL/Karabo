@@ -22,8 +22,7 @@ import multiprocessing
 import os
 import subprocess
 import sys
-
-from pkg_resources import iter_entry_points
+from importlib.metadata import entry_points
 
 from karabo import __version__ as karabo_version
 from karabo.packaging.device_template import configure_template
@@ -563,7 +562,7 @@ def list_devices(args):
                 collected.setdefault(name, []).append(path)
         else:
             # Python devices
-            for ep in iter_entry_points(api):
+            for ep in entry_points(group=api):
                 if args.internal or ep.dist.project_name != 'karabo':
                     collected.setdefault(name, []).append(ep)
 
