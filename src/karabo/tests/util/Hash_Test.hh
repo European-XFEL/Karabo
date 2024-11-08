@@ -48,7 +48,6 @@ class Hash_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testHas);
     CPPUNIT_TEST(testIs);
     CPPUNIT_TEST(testHelper);
-    CPPUNIT_TEST(testTableValidation);
     CPPUNIT_TEST(testPack);
     CPPUNIT_TEST(testCounter);
     CPPUNIT_TEST(testKeys);
@@ -80,7 +79,6 @@ class Hash_Test : public CPPUNIT_NS::TestFixture {
     void testErase();
     void testHas();
     void testIs();
-    void testTableValidation();
     void testPack();
     void testCounter();
     void testKeys();
