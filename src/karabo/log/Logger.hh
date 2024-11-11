@@ -59,14 +59,6 @@ struct fmt::formatter<karabo::util::Schema> : fmt::formatter<std::string> {
     }
 };
 
-// Support std::filesystem::path formatting
-template <>
-struct fmt::formatter<std::filesystem::path> : fmt::formatter<std::string> {
-    auto format(std::filesystem::path p, format_context& ctx) const -> decltype(ctx.out()) {
-        return fmt::format_to(ctx.out(), "{}", p.string());
-    }
-};
-
 // Support boost::filesystem::path formatting
 template <>
 struct fmt::formatter<boost::filesystem::path> : fmt::formatter<std::string> {
