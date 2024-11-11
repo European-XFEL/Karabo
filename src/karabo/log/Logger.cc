@@ -64,7 +64,7 @@ namespace karabo {
                   .description("Formatting pattern for the logstream")
                   .displayedName("Pattern")
                   .assignmentOptional()
-                  .defaultValue("%Y-%m-%dT%H:%M:%S.%e [%^%l%$] %n : %v")
+                  .defaultValue("%Y-%m-%d %H:%M:%S.%e [%^%l%$] %n : %v")
                   .commit();
 
             NODE_ELEMENT(s).key("console").commit();
@@ -83,7 +83,7 @@ namespace karabo {
                   .description("Formatting pattern for the logstream")
                   .displayedName("Pattern")
                   .assignmentOptional()
-                  .defaultValue("%Y-%m-%dT%H:%M:%S.%e [%^%l%$] %n : %v")
+                  .defaultValue("%Y-%m-%d %H:%M:%S.%e [%^%l%$] %n : %v")
                   .commit();
 
             STRING_ELEMENT(s)
@@ -113,7 +113,7 @@ namespace karabo {
                   .description("Formatting pattern for the logstream")
                   .displayedName("Pattern")
                   .assignmentOptional()
-                  .defaultValue("%Y-%m-%dT%H:%M:%S.%e [%^%l%$] %n : %v")
+                  .defaultValue("%Y-%m-%d %H:%M:%S.%e [%^%l%$] %n : %v")
                   .commit();
 
             STRING_ELEMENT(s)
@@ -160,7 +160,7 @@ namespace karabo {
                   .description("Formatting pattern for the logstream")
                   .displayedName("Pattern")
                   .assignmentOptional()
-                  .defaultValue("%Y-%m-%dT%H:%M:%S.%e [%^%l%$] %n : %v")
+                  .defaultValue("%Y-%m-%d %H:%M:%S.%e [%^%l%$] %n : %v")
                   .commit();
 
             STRING_ELEMENT(s)
@@ -199,7 +199,7 @@ namespace karabo {
                   .description("Formatting pattern for the logstream")
                   .displayedName("Pattern")
                   .assignmentOptional()
-                  .defaultValue("%Y-%m-%dT%H:%M:%S.%e [%^%l%$] %n : %v")
+                  .defaultValue("%Y-%m-%d %H:%M:%S.%e [%^%l%$] %n : %v")
                   .commit();
 
             STRING_ELEMENT(s)
@@ -265,7 +265,7 @@ namespace karabo {
                   .description("Formatting pattern for the logstream")
                   .displayedName("Pattern")
                   .assignmentOptional()
-                  .defaultValue("%Y-%m-%dT%H:%M:%S.%e [%l] AUDIT : %v")
+                  .defaultValue("%Y-%m-%d %H:%M:%S.%e [%l] AUDIT : %v")
                   .commit();
 
             STRING_ELEMENT(s)
@@ -558,15 +558,18 @@ namespace karabo {
                 trim(message);
                 std::vector<std::string> tmp;
                 boost::split(tmp, prefix, boost::is_any_of(" \n\t"), boost::token_compress_on);
-                assert(tmp.size() >= 3);
+                assert(tmp.size() >= 4);
                 std::string type = "UNKNOWN";
-                if (tmp[1] == "[trace]") type = "TRACE";
-                else if (tmp[1] == "[debug]") type = "DEBUG";
-                else if (tmp[1] == "[info]") type = "INFO";
-                else if (tmp[1] == "[warning]") type = "WARN";
-                else if (tmp[1] == "[error]") type = "ERROR";
-                else if (tmp[1] == "[critical]") type = "FATAL";
-                Hash entry("timestamp", tmp[0], "type", type, "category", tmp[2], "message", message);
+                if (tmp[2] == "[trace]") type = "TRACE";
+                else if (tmp[2] == "[debug]") type = "DEBUG";
+                else if (tmp[2] == "[info]") type = "INFO";
+                else if (tmp[2] == "[warning]") type = "WARN";
+                else if (tmp[2] == "[error]") type = "ERROR";
+                else if (tmp[2] == "[critical]") type = "FATAL";
+                std::string ts = tmp[0];
+                ts += " ";
+                ts += tmp[1];
+                Hash entry("timestamp", ts, "type", type, "category", tmp[3], "message", message);
                 ret.push_back(entry);
             }
             return ret;
