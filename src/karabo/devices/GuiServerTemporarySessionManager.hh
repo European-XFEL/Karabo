@@ -132,11 +132,11 @@ namespace karabo::devices {
          *
          * @note an error due to a beginTemporarySession token not found isn't necessarily an error from the GUI client
          * point of view. In the unlikely scenario of an endTemporarySession request that reaches the GUI server while
-         *the expiration check that will detect the expiration of the same token is already running, the end temporary
+         * the expiration check that will detect the expiration of the same token is already running, the end temporary
          * session request will "fail" with a "token not found" message. It is up to the GUI client to decide what to
          * do in such cases - maybe keep track of an "over the wire" end temporary session request token and ignore any
-         *error related to it if an expiration notification is received for that token between the request dispatch and
-         *the arrival of its reponse.
+         * error related to it if an expiration notification is received for that token between the request dispatch and
+         * the arrival of its reponse.
          **/
         EndTemporarySessionResult endTemporarySession(const std::string& temporarySessionToken);
 
