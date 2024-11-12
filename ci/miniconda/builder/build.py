@@ -10,8 +10,9 @@ import yaml
 from conda.cli.python_api import Commands
 
 from .mirrors import Mirrors
-from .utils import (chdir, command_run, conda_run, conda_run_command,
-                    connected_to_remote, get_conda_prefix, mkdir)
+from .utils import (
+    chdir, command_run, conda_run, conda_run_command, connected_to_remote,
+    get_conda_prefix, mkdir)
 
 PLATFORMS = {"Windows": "win-64", "Darwin": "osx-64", "Linux": "linux-64"}
 
