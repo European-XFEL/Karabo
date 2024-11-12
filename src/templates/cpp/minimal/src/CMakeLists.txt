@@ -81,8 +81,7 @@ if (BUILD_TESTS)
 
     )
 
-    include("../cmake/find_dep.cmake")
-    find_dep(gtest gtest)
+    pkg_check_modules(GTEST IMPORTED_TARGET gtest)
 
     target_compile_options(
         test-${CMAKE_PROJECT_NAME}
@@ -94,7 +93,8 @@ if (BUILD_TESTS)
         PRIVATE
         Threads::Threads
         ${CMAKE_PROJECT_NAME}
-        ${gtest_LIB}
+        ${KARABO_LIB_TARGET_NAME}
+        ${GTEST_LINK_LIBRARIES}
     )
 
     add_test(NAME ${CMAKE_PROJECT_NAME}Tests COMMAND test-${CMAKE_PROJECT_NAME})
