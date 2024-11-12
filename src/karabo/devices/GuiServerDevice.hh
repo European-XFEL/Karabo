@@ -34,6 +34,7 @@
 #include "karabo/net/Broker.hh"
 #include "karabo/net/Connection.hh"
 #include "karabo/net/UserAuthClient.hh"
+#include "karabo/util/Epochstamp.hh"
 #include "karabo/util/Schema.hh"
 #include "karabo/util/Version.hh"
 #include "karabo/xms/InputChannel.hh"
@@ -72,9 +73,12 @@ namespace karabo {
                 // on the remote host.
                 std::string userId;
                 // The one-time token for an authenticated GUI Client session -
-                // might be used for logs if GDPR requirements forbid using the
-                // userId directly in the logs.
+                // used for logging locally - the log files must, for privacy
+                // reasons not contain any userId associated to execution of
+                // operations.
                 std::string oneTimeToken;
+                // Timestamp for the start of the GUI Client session.
+                karabo::util::Epochstamp sessionStartTime;
                 // The userId for an authenticated GUI Client temporary session.
                 // Temporary sessions can only be "derived" from a user authenticated
                 // session and can only exist for a limited amount of time. A
@@ -85,6 +89,10 @@ namespace karabo {
                 // session. Only available for client sessions with user authentication
                 // while inside the temporary session duration.
                 std::string temporarySessionToken;
+                // Timestamp for the start of the GUI Client session - only
+                // available for client sessions with user authentication while
+                // inside the temporary session duration.
+                karabo::util::Epochstamp temporarySessionStartTime;
                 // Access level when the user began the temporary session. Sent by the
                 // client as part of a begin temporary session request so the server can
                 // send it back later at temporary session end time.
@@ -92,11 +100,15 @@ namespace karabo {
                       karabo::util::Schema::AccessLevel::OBSERVER};
 
 
-                ChannelData() : clientVersion("0.0.0"){};
+                ChannelData() : clientVersion("0.0.0"), temporarySessionStartTime(0ULL, 0ULL){};
 
                 ChannelData(const karabo::util::Version& version, const std::string& userId = "",
                             const std::string& oneTimeToken = "")
-                    : clientVersion(version), userId(userId), oneTimeToken(oneTimeToken){};
+                    : clientVersion(version),
+                      userId(userId),
+                      oneTimeToken(oneTimeToken),
+                      sessionStartTime(karabo::util::Epochstamp()),
+                      temporarySessionStartTime(0ULL, 0ULL){};
             };
 
             enum NewInstanceAttributeUpdateEvents {
@@ -937,6 +949,40 @@ namespace karabo {
             void schemaUpdatedHandler(const std::string& deviceId, const karabo::util::Schema& schema);
 
             void slotLoggerMap(const karabo::util::Hash& loggerMap);
+
+
+            /**
+             * @brief Retrieve information about the current client sessions of
+             * the GUI server.
+             *
+             * @param options Hash with a single key "onlyWithTempSession" and a
+             * boolean value that when "true" makes the slot include only
+             * client sessions with active temporary sessions in the reply.
+             *
+             * The reply is a hash with a single key, "clientSessions", whose
+             * value is a vector of hashes with one hash per existing client
+             * connection. The hash for each connection has the following keys:
+             *
+             *     . "clientVersion": string with the version of the connected
+             *       client;
+             *
+             *     . "sessionStartTime": UTC timestamp of session start time as
+             *       an ISO8601 string;
+             *
+             *     . "sessionToken": one-time token for the client session.
+             *       Will be empty if the GUI Server is not in authenticated
+             *       mode;
+             *
+             *     . "temporarySessionStartTime": UTC timestamps of temporary
+             *       session start time as an ISO8601 string. If there's no
+             *       active temporary session on top of the client session, an
+             *       empty string is returned;
+             *
+             *     . "temporarySessionToken": one-time token for the temporary
+             *       session (an empty string if there's no active temporary
+             *       session).
+             */
+            void slotGetClientSessions(const karabo::util::Hash& options);
 
             /**
              * Called from projectManagers to notify about updated Projects
