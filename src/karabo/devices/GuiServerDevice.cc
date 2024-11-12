@@ -458,7 +458,7 @@ namespace karabo {
             KARABO_SLOT(slotNotify, karabo::util::Hash);
             KARABO_SLOT(slotBroadcast, karabo::util::Hash);
             KARABO_SLOT(requestScene, karabo::util::Hash);
-
+            KARABO_SLOT(slotGetClientSessions, karabo::util::Hash);
 
             Hash h;
             h.set("port", config.get<unsigned int>("port"));
@@ -890,6 +890,7 @@ namespace karabo {
                         chanForExpiration = channel;
                         levelBeforeTemporarySession = channelData.levelBeforeTemporarySession;
                         loggedUserId = channelData.userId;
+                        channelData.temporarySessionStartTime = Epochstamp(0ULL, 0ULL);
                         channelData.temporarySessionToken = "";
                         channelData.temporarySessionUserId = "";
                         break;
@@ -987,6 +988,7 @@ namespace karabo {
                 auto it = m_channels.find(chan);
                 if (it != m_channels.end()) {
                     ChannelData& data = it->second;
+                    data.temporarySessionStartTime = karabo::util::Epochstamp();
                     data.temporarySessionToken = result.temporarySessionToken;
                     data.temporarySessionUserId = result.userId;
                     data.levelBeforeTemporarySession = levelBeforeTemporarySession;
@@ -1040,6 +1042,7 @@ namespace karabo {
                 auto it = m_channels.find(chan);
                 if (it != m_channels.end()) {
                     ChannelData& data = it->second;
+                    data.temporarySessionStartTime = Epochstamp(0ULL, 0ULL);
                     data.temporarySessionToken = "";
                     data.temporarySessionUserId = "";
                     h.set("levelBeforeTemporarySession", static_cast<int>(data.levelBeforeTemporarySession));
@@ -1096,10 +1099,9 @@ namespace karabo {
 
                 if (userAuthActive) {
                     // GUI Server is in authenticated mode
-                    // TODO: bump minAuthClientVersion to 2.20.0 right after release. rc2 allows pre-release tests.
                     // TODO: replace minAuthClientVersion with minClientVersion bumped to 2.20.0 right after 2.21 (or
                     //       later) is released.
-                    const std::string minAuthClientVersion = "2.20.0rc2";
+                    const std::string minAuthClientVersion = "2.20.0";
                     if (clientVersion < Version(minAuthClientVersion)) {
                         const string errorMsg =
                               "Your GUI client has version '" + cliVersion +
@@ -1124,9 +1126,8 @@ namespace karabo {
                         return;
                     } else {
                         // For versions of the GUI Client prior to 2.20.0 a login message with no OneTimeToken is
-                        // considered an error by an authenticated GUI Server. 2.20.0rc2 is used as a reference to
-                        // allow development versions of 2.20.0, to be also accepted.
-                        if (clientVersion < Version("2.20.0rc2")) {
+                        // considered an error by an authenticated GUI Server.
+                        if (clientVersion < Version("2.20.0")) {
                             const string message = "GUI server at '" + get<string>("hostName") + ":" +
                                                    toString(get<unsigned int>("port")) +
                                                    "' requires authenticated logins.";
@@ -2529,6 +2530,37 @@ namespace karabo {
         void GuiServerDevice::slotLoggerMap(const karabo::util::Hash& loggerMap) {
             boost::mutex::scoped_lock lock(m_loggerMapMutex);
             m_loggerMap = loggerMap;
+        }
+
+        void GuiServerDevice::slotGetClientSessions(const Hash& options) {
+            const std::string optionKey("onlyTempSessions");
+            bool withTempSessions = false;
+            if (options.has(optionKey)) {
+                withTempSessions = options.get<bool>(optionKey);
+            }
+            boost::mutex::scoped_lock lock(m_channelMutex);
+            std::vector<Hash> cliSessions;
+            for (auto it = m_channels.begin(); it != m_channels.end(); ++it) {
+                // When there's no active temporary session, the start time is the zero epoch
+                std::string temporarySessionStartTime = it->second.temporarySessionStartTime == Epochstamp(0ULL, 0ULL)
+                                                              ? ""
+                                                              : it->second.temporarySessionStartTime.toIso8601Ext();
+                if (withTempSessions && temporarySessionStartTime.empty()) {
+                    // Only sessions with active temporary sessions should be
+                    // returned and that's not the case of the currently
+                    // iterated one; skip it.
+                    continue;
+                }
+                // clang-format off
+                cliSessions.emplace_back(
+                    "clientVersion", it->second.clientVersion.getString(),
+                    "sessionStartTime", it->second.sessionStartTime.toIso8601Ext(),
+                    "sessionToken", it->second.oneTimeToken,
+                    "temporarySessionStartTime", temporarySessionStartTime,
+                    "temporarySessionToken", it->second.temporarySessionToken);
+                // clang-format on
+            }
+            reply(Hash("clientSessions", cliSessions));
         }
 
 

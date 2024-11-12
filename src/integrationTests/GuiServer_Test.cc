@@ -32,6 +32,7 @@ using namespace std;
 
 #define LOG_LEVEL "FATAL"
 #define KRB_TEST_MAX_TIMEOUT 10
+#define EXECUTE_SLOT_TIMEOUT 3
 // Next line must be kept in sync with DeviceClient.hh:
 #define CONNECTION_KEEP_ALIVE 15
 
@@ -160,7 +161,7 @@ void GuiServer_Test::appTestRunner() {
           "testGuiVersionServer", "GuiServerDevice",
           Hash("deviceId", TEST_GUI_SERVER_ID,
                "port", 44450,
-               "minClientVersion", "2.20.0rc2",
+               "minClientVersion", "2.20.0",
                "authServer", "http://" + authServerAddr + ":" + toString(authServerPort),
                "timeout", 0,
                "maxTemporarySessionTime", MAX_TEMPORARY_SESSION_TIME,
@@ -195,7 +196,7 @@ void GuiServer_Test::appTestRunner() {
           "testGuiVersionServer", "GuiServerDevice",
           Hash("deviceId", TEST_GUI_SERVER_ID,
                "port", 44450,
-               "minClientVersion", "2.20.0rc2",
+               "minClientVersion", "2.20.0",
                "onlyAppModeClients", true),
           KRB_TEST_MAX_TIMEOUT);
     // clang-format on
@@ -248,7 +249,7 @@ void GuiServer_Test::resetClientConnection() {
 
 
 void GuiServer_Test::testVersionControl() {
-    std::clog << "testVersionControl: " << std::flush;
+    std::clog << "\ntestVersionControl: " << std::flush;
     Hash loginInfo("type", "login", "username", "mrusp", "password", "12345", "version", "100.1.0");
     // description , client version, server version, should connect
     typedef std::tuple<std::string, std::string, std::string, bool> TestData;
@@ -387,6 +388,27 @@ void GuiServer_Test::testExecute() {
     resetClientConnection();
     // check if we are connected
     CPPUNIT_ASSERT(m_tcpAdapter->connected());
+
+    // As GuiServerTest::testExecute is called on a non-authenticated GUI Server
+    // (call made from GuiServer_Test::appTestRunner) after instantiation of the
+    // GUI Server, only one client session is expected with no token or temporary
+    // session information.
+    const auto clientSessionsHash = m_deviceClient->execute1<Hash>(TEST_GUI_SERVER_ID, "slotGetClientSessions",
+                                                                   EXECUTE_SLOT_TIMEOUT, Hash("dummy", ""));
+    const auto clientSessions = clientSessionsHash.get<std::vector<Hash>>("clientSessions");
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Number of client connections differs from expected", 1U,
+                                 static_cast<unsigned>(clientSessions.size()));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Client version should not be empty", false,
+                                 clientSessions[0].get<std::string>("clientVersion").empty());
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("A session token is not expected (empty sessionToken)", true,
+                                 clientSessions[0].get<std::string>("sessionToken").empty());
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("A session start time is expected (non-empty sessionStartTime)", false,
+                                 clientSessions[0].get<std::string>("sessionStartTime").empty());
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("No temporary session is expected (empty temporarySessionToken)", true,
+                                 clientSessions[0].get<std::string>("temporarySessionToken").empty());
+    const std::string tempSessionTime = clientSessions[0].get<std::string>("temporarySessionStartTime");
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("No temporary session is expected (empty temporarySessionStartTime)", true,
+                                 clientSessions[0].get<std::string>("temporarySessionStartTime").empty());
 
     //
     // Request execution of slot of non-existing device
@@ -1410,7 +1432,7 @@ void GuiServer_Test::testMissingTokenOnLogin() {
 
     // From version 2.20.0 (or a development version of 2.20.0) a missing one time token is interpreted as the login for
     // a a read-only session with no user authentication involved.
-    Hash loginReadOnlySession("type", "login", "clientId", "bobHost(pid 10264)", "version", "2.20.0rc2");
+    Hash loginReadOnlySession("type", "login", "clientId", "bobHost(pid 10264)", "version", "2.20.0");
 
     resetTcpConnection();
 
@@ -1597,6 +1619,14 @@ void GuiServer_Test::testBeginEndTemporarySession() {
 
     resetTcpConnection();
 
+    // Before any client connection is established, slotGetClientSessions should return no connection data
+    // An options hash-in without the expected "onlyTempSessions" key should behave the same as specifying
+    // the key with false.
+    auto clientSessionsHash = m_deviceClient->execute1<Hash>(TEST_GUI_SERVER_ID, "slotGetClientSessions",
+                                                             EXECUTE_SLOT_TIMEOUT, Hash("dummy", ""));
+    auto clientSessions = clientSessionsHash.get<std::vector<Hash>>("clientSessions");
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("No client connection was expected", 0U, static_cast<unsigned>(clientSessions.size()));
+
     // Performs an authenticated login successfully - temporary sessions are only available from that point on.
     Hash lastMessage;
     karabo::TcpAdapter::QueuePtr messageQ =
@@ -1604,6 +1634,31 @@ void GuiServer_Test::testBeginEndTemporarySession() {
     messageQ->pop(lastMessage);
     CPPUNIT_ASSERT_MESSAGE("'accessLevel' missing in loginInformation sent by the GUI Server",
                            lastMessage.has("accessLevel"));
+    // Retrieves information about existing client sessions. There should be one
+    // session with no temporary session on top.
+    clientSessionsHash = m_deviceClient->execute1<Hash>(TEST_GUI_SERVER_ID, "slotGetClientSessions",
+                                                        EXECUTE_SLOT_TIMEOUT, Hash(CLIENT_SESSIONS_OPTION_KEY, false));
+    clientSessions = clientSessionsHash.get<std::vector<Hash>>("clientSessions");
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Number of client connections differs from expected", 1U,
+                                 static_cast<unsigned>(clientSessions.size()));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Client version differs from expected", std::string("2.20.0"),
+                                 clientSessions[0].get<std::string>("clientVersion"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("A session token is expected (non-empty sessionToken)", false,
+                                 clientSessions[0].get<std::string>("sessionToken").empty());
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("A session start time is expected (non-empty sessionStartTime)", false,
+                                 clientSessions[0].get<std::string>("sessionStartTime").empty());
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("No temporary session is expected (empty temporarySessionToken)", true,
+                                 clientSessions[0].get<std::string>("temporarySessionToken").empty());
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("No temporary session is expected (empty temporarySessionStartTime)", true,
+                                 clientSessions[0].get<std::string>("temporarySessionStartTime").empty());
+    const auto sessionToken = clientSessions[0].get<std::string>("sessionToken");
+    const auto sessionStartTime = clientSessions[0].get<std::string>("sessionStartTime");
+    // If "onlyTempSessions" is set to true, the reply at this point should be empty
+    clientSessionsHash = m_deviceClient->execute1<Hash>(TEST_GUI_SERVER_ID, "slotGetClientSessions",
+                                                        EXECUTE_SLOT_TIMEOUT, Hash(CLIENT_SESSIONS_OPTION_KEY, true));
+    clientSessions = clientSessionsHash.get<std::vector<Hash>>("clientSessions");
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Number of client connections differs from expected", 0U,
+                                 static_cast<unsigned>(clientSessions.size()));
     // Request a temporary session begining with a valid token.
     messageQ = m_tcpAdapter->getNextMessages("onBeginTemporarySession", 1,
                                              [&] { m_tcpAdapter->sendMessage(beginTempSessionInfo); });
@@ -1620,8 +1675,38 @@ void GuiServer_Test::testBeginEndTemporarySession() {
                            lastMessage.has("username"));
     const std::string& userId = lastMessage.get<std::string>("username");
     CPPUNIT_ASSERT_EQUAL_MESSAGE("User differs from expected", TestKaraboAuthServer::VALID_USER_ID, userId);
-
-    // Request a begin temporary session a valid token - should be rejected since we are already in a temporary
+    // Retrieves information about existing client sessions. There should be one
+    // session with a temporary session on top. The sessionToken and the
+    // sessionStartTime should match what was retrieved before starting the
+    // temporary session.
+    clientSessionsHash = m_deviceClient->execute1<Hash>(TEST_GUI_SERVER_ID, "slotGetClientSessions",
+                                                        EXECUTE_SLOT_TIMEOUT, Hash(CLIENT_SESSIONS_OPTION_KEY, true));
+    clientSessions = clientSessionsHash.get<std::vector<Hash>>("clientSessions");
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Number of client connections differs from expected", 1U,
+                                 static_cast<unsigned>(clientSessions.size()));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Client version differs from expected", std::string("2.20.0"),
+                                 clientSessions[0].get<std::string>("clientVersion"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("A session token is expected (non-empty sessionToken)", false,
+                                 clientSessions[0].get<std::string>("sessionToken").empty());
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("The session token differs from the expected value", sessionToken,
+                                 clientSessions[0].get<std::string>("sessionToken"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("The session start time differs from the expected value", sessionStartTime,
+                                 clientSessions[0].get<std::string>("sessionStartTime"));
+    const std::string temporarySessionToken = clientSessions[0].get<std::string>("temporarySessionToken");
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("A temporary session is expected (non-empty temporarySessionToken)", false,
+                                 temporarySessionToken.empty());
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("A temporary session is expected (non-empty temporarySessionStartTime)", false,
+                                 clientSessions[0].get<std::string>("temporarySessionStartTime").empty());
+    // At this point "onlyTempSessions" set to false should also return the
+    // same single existing session with the active temporary session.
+    clientSessionsHash = m_deviceClient->execute1<Hash>(TEST_GUI_SERVER_ID, "slotGetClientSessions",
+                                                        EXECUTE_SLOT_TIMEOUT, Hash(CLIENT_SESSIONS_OPTION_KEY, false));
+    clientSessions = clientSessionsHash.get<std::vector<Hash>>("clientSessions");
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Number of client connections differs from expected", 1U,
+                                 static_cast<unsigned>(clientSessions.size()));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Temporary Session Token differs from expected", temporarySessionToken,
+                                 clientSessions[0].get<std::string>("temporarySessionToken"));
+    // Request a begin temporary session with a valid token - should be rejected since we are already in a temporary
     // session
     messageQ = m_tcpAdapter->getNextMessages("onBeginTemporarySession", 1,
                                              [&] { m_tcpAdapter->sendMessage(beginTempSessionInfo); });
