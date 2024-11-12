@@ -32,6 +32,7 @@
 #include "karabo/core/DeviceServer.hh"
 #include "karabo/karabo.hpp"
 
+#define CLIENT_SESSIONS_OPTION_KEY "onlyTempSessions"
 
 class GuiServer_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(GuiServer_Test);
