@@ -19,6 +19,19 @@
 #ifndef KARABO_LOGCONFIG_LOGGER_HH
 #define KARABO_LOGCONFIG_LOGGER_HH
 
+// configure the spdlog formatting depending on the compiler version
+#if defined(__GNUC__) && !defined(__clang__)
+#if __GNUC__ >= 13 && !defined(SPDLOG_FMT_EXTERNAL) && !defined(SPDLOG_USE_STD_FORMAT)
+#define SPDLOG_USE_STD_FORMAT
+#elif !defined(SPDLOG_FMT_EXTERNAL)
+#define SPDLOG_FMT_EXTERNAL
+#endif
+#endif
+
+#if defined(__clang__)
+#define SPDLOG_USE_STD_FORMAT
+#endif
+
 #include <spdlog/common.h>
 #include <spdlog/details/log_msg_buffer.h>
 #include <spdlog/fmt/ostr.h>

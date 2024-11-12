@@ -182,7 +182,6 @@ target_link_options(
 target_compile_definitions(
     ${KARABO_LIB_TARGET_NAME}
     PUBLIC __SO__
-    SPDLOG_FMT_EXTERNAL
 )
 
 target_compile_options(
