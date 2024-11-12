@@ -7,7 +7,7 @@ from functools import partial
 from conda.cli.python_api import Commands
 from conda.exceptions import PackagesNotFoundError
 
-from .utils import conda_run
+from .utils import conda_run, conda_run_command
 
 CHANNEL_MAP = {}
 EXCLUDED_CHANNELS = [
@@ -59,7 +59,7 @@ class _MirrorChannel:
                         (package["version"], package["build"])
                     )
             return to_exclude
-        except PackagesNotFoundError as e:
+        except PackagesNotFoundError:
             print(f"no packages from {self.mirror_channel} for {platform}")
             return {}
 
@@ -154,19 +154,10 @@ Creating mirror {mirror.name} - {pkg_platform} with the following configuration
             os.makedirs(target_mirror_directory)
 
         print(f"Mirroring channel {mirror.name}...")
-        conda_run(
-            Commands.RUN,
-            "-n",
-            "base",
-            "conda",
-            "mirror",
-            "--upstream-channel",
-            mirror.original_repo,
-            "--target-directory",
-            target_mirror_directory,
-            "--platform",
-            platform,
-            "--config",
-            str(conf_file),
-        )
+        conda_run_command([
+            "conda", "mirror", "--upstream-channel", mirror.original_repo,
+            "--target-directory", target_mirror_directory,
+            "--platform", platform,
+            "--config", str(conf_file)],
+            conda_env="base")
         os.remove(conf_file)
