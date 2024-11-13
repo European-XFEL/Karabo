@@ -23,6 +23,7 @@
 #if defined(__GNUC__) && !defined(__clang__)
 #if __GNUC__ >= 13 && !defined(SPDLOG_FMT_EXTERNAL) && !defined(SPDLOG_USE_STD_FORMAT)
 #define SPDLOG_USE_STD_FORMAT
+namespace fmt = std;
 #elif !defined(SPDLOG_FMT_EXTERNAL)
 #define SPDLOG_FMT_EXTERNAL
 #endif
