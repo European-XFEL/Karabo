@@ -39,7 +39,8 @@ from karabogui.access import ACCESS_LEVELS, AccessRole
 from karabogui.background import background
 from karabogui.dialogs.api import (
     AboutDialog, ClientTopologyDialog, ConfigurationDialog, DataViewDialog,
-    DevelopmentTopologyDialog, TemporarySessionDialog, UpdateDialog)
+    DevelopmentTopologyDialog, GuiSessionInfo, TemporarySessionDialog,
+    UpdateDialog)
 from karabogui.events import (
     KaraboEvent, broadcast_event, register_for_broadcasts)
 from karabogui.indicators import get_processing_color
@@ -488,6 +489,9 @@ class MainWindow(QMainWindow):
         self.acHelpAbout = QAction("About", self)
         self.acHelpAbout.triggered.connect(self.onHelpAbout)
 
+        self.acSessionInfo = QAction("Session Information", self)
+        self.acSessionInfo.triggered.connect(self.onSessionInfo)
+
         self.acClientTopology = QAction(
             icons.deviceInstance, "Client Topology", self)
         self.acClientTopology.triggered.connect(self.onClientTopology)
@@ -618,6 +622,10 @@ class MainWindow(QMainWindow):
         mHelpMenu.addAction(self.acHelpAboutQt)
         mHelpMenu.addAction(self.acWizard)
         mHelpMenu.addAction(self.acCheckUpdates)
+
+        if get_config()["development"]:
+            mDevMenu = menuBar.addMenu("&Developer")
+            mDevMenu.addAction(self.acSessionInfo)
 
     def _setupToolBar(self):
 
@@ -808,6 +816,10 @@ class MainWindow(QMainWindow):
     @Slot()
     def onHelpAbout(self):
         AboutDialog(parent=self).open()
+
+    @Slot()
+    def onSessionInfo(self):
+        GuiSessionInfo(parent=self).show()
 
     @Slot()
     def onCheckUpdates(self):
