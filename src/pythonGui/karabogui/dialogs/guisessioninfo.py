@@ -28,6 +28,8 @@ from qtpy.QtWidgets import (
 
 from karabo.native import Hash, Timestamp
 from karabogui import icons
+from karabogui.events import (
+    KaraboEvent, register_for_broadcasts, unregister_from_broadcasts)
 from karabogui.request import call_device_slot
 from karabogui.topology.api import getTopology
 from karabogui.util import get_spin_widget
@@ -73,6 +75,10 @@ class GuiSessionInfo(QDialog):
 
         self.refresh_button.setIcon(icons.refresh)
         self.refresh_button.clicked.connect(self.refresh)
+
+        self._event_map = {
+            KaraboEvent.NetworkConnectStatus: self._event_network}
+        register_for_broadcasts(self._event_map)
 
     def fill_servers(self):
         topology = getTopology()
@@ -125,3 +131,11 @@ class GuiSessionInfo(QDialog):
         self.set_stack_index(WAITING_PAGE)
         deviceId = item.data(Qt.DisplayRole)
         call_device_slot(handler, deviceId, "slotGetClientSessions")
+
+    def done(self, result):
+        unregister_from_broadcasts(self._event_map)
+        return super().done(result)
+
+    def _event_network(self, data):
+        if not data.get("status"):
+            self.close()
