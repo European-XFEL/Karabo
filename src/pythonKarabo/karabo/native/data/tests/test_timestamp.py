@@ -56,6 +56,14 @@ class Tests(TestCase):
         self.assertEqual(t.toLocal(), local_str)
         # can define any other separator
         self.assertEqual(t.toLocal(' '), "2022-05-01 11:22:33.123456")
+        self.assertEqual(t.toLocal(' ', timespec="hours"),
+                         "2022-05-01 11")
+        self.assertEqual(t.toLocal(' ', timespec="minutes"),
+                         "2022-05-01 11:22")
+        self.assertEqual(t.toLocal(' ', timespec="seconds"),
+                         "2022-05-01 11:22:33")
+        self.assertEqual(t.toLocal(' ', timespec="milliseconds"),
+                         "2022-05-01 11:22:33.123")
 
     def test_hash_read(self):
         self.assertIsNone(Timestamp.fromHashAttributes(dict()))
