@@ -32,6 +32,7 @@ from .device_capability import DeviceCapabilityDialog
 from .font_dialog import FontDialog
 from .format_fmt import FormatFmtDialog
 from .format_label import FormatLabelDialog
+from .guisessioninfo import GuiSessionInfo
 from .listedit import ListEditDialog
 from .log_dialog import LogDialog
 from .messagebox import KaraboMessageBox
