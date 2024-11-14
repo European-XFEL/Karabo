@@ -159,5 +159,5 @@ Creating mirror {mirror.name} - {pkg_platform} with the following configuration
             "--target-directory", target_mirror_directory,
             "--platform", platform,
             "--config", str(conf_file)],
-            conda_env="base")
+            env_name="base")
         os.remove(conf_file)
