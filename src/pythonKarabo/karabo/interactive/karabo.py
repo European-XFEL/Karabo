@@ -20,12 +20,15 @@ import csv
 import glob
 import multiprocessing
 import os
+import platform
+import re
 import subprocess
 import sys
 from typing import Dict
 
 from pkg_resources import iter_entry_points
 
+from karabo import __version__ as karabo_version
 from karabo.packaging.device_template import configure_template
 
 
@@ -78,7 +81,7 @@ def resolve_project(package):
 
 def parse_commandline():
     parser = argparse.ArgumentParser(
-        description=('Karabo Utility Script'),
+        description=(f'Karabo Utility Script - version {karabo_version}'),
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     sps = parser.add_subparsers(metavar='')
 
@@ -247,10 +250,17 @@ def parse_commandline():
                         help='Specifies the number of make jobs (commands) '
                              'to run simultaneously.')
 
+    parser.add_argument('-v', '--version', action='store_true',
+                        help='prints the version of Karabo. '
+                             'No command will be executed.')
+
     args = parser.parse_args()
     if len(sys.argv) <= 1:
         parser.print_help()
         parser.exit()
+    if args.version:
+        print(f"Karabo Version - {karabo_version}")
+        return
     args.command(args)
 
 
@@ -342,38 +352,107 @@ def download(args):
     """
     attempts the download of a package
 
-    :return: the path of the package or None in case of failure
+    :return: the path of the downloaded package, or None in case of failure.
     """
     if args.repo == '':
         return None
     with pushd_popd():
-        karabo_tag = run_cmd('cat VERSION').decode("utf-8").rstrip()
+        karabo_tag = karabo_version
         lsb_release_info = _get_lsb_release_info()
         dist_name = lsb_release_info["LSB_RELEASE_DIST"]
         dist_ver = lsb_release_info["LSB_RELEASE_VERSION"]
         arch_name = os.uname().machine
-        filename = '{device}-{tag}-{ktag}-{dist_name}-' \
-                   '{dist_ver}-{arch}-{config}.sh'.format(device=args.device,
-                                                          tag=args.tag,
-                                                          ktag=karabo_tag,
-                                                          dist_name=dist_name,
-                                                          dist_ver=dist_ver,
-                                                          arch=arch_name,
-                                                          config=args.config)
+        device = args.device
+        tag = args.tag
+        url = f"{args.repo}/{device}/tags/{tag}/"
+        files = list_repo(url)
+        if len(files) == 0:
+            print(f"Binary for {device}-{tag} unavailable for download.")
+            return None
+        # first attempt to download a self extracting binary
+        # that depends on the karabo framework version:
+        # e.g. karabo Devices or karabo dependent libraries
+        filename = (
+            f"{device}-{tag}-{karabo_tag}-"
+            f"{dist_name}-{dist_ver}-{arch_name}-"
+            f"{args.config}.sh")
+        if filename in files:
+            dest = os.path.join('installed', args.device, filename)
+            return _download(f"{url}{filename}", dest)
+        # first attempt to download a self extracting binary
+        # that depends on the Distribution:
+        # e.g. DOOCS and other Libraries depending on libldap
+        # since the library location is distribution dependent
+        filename = (
+            f"{device}-{tag}-"
+            f"{dist_name}-{dist_ver}-{arch_name}.sh")
+        if filename in files:
+            dest = os.path.join('installed', args.device, filename)
+            return _download(f"{url}{filename}", dest)
+        # if this fails, attempt to download a self extracting
+        # binary that is independent from the karabo framework
+        # version: e.g. external libraries (hdf5, EPICS)
+        # that is compatible with the libc version of the system
+        glibc_major, glibc_minor = platform.libc_ver()[1].split(".")
+        glibc_minor = int(glibc_minor)
+        pattern = (f"{device}-{tag}-manylinux_"
+                   f"{glibc_major}_([0-9]+)-{arch_name}.sh")
+        minors = []
+        for filename in files:
+            groups = re.search(pattern, filename)
+            if not groups:
+                continue
+            minor = int(groups[1])
+            if minor > glibc_minor:
+                continue
+            minors.append(minor)
+        if len(minors) == 0:
+            # if this fails too, the binaries might just be missing
+            print(f"Binary for {device}-{tag} unavailable for download.")
+            return None
+        minor = max(minors)
+        filename = (f"{device}-{tag}-manylinux_"
+                    f"{glibc_major}_{minor}-{arch_name}.sh")
         dest = os.path.join('installed', args.device, filename)
-        cmd = 'curl {repo}/{device}/tags/{tag}/{filename} -f ' \
-              '-o {dest}'.format(device=args.device, tag=args.tag,
-                                 repo=args.repo, filename=filename, dest=dest)
-        try:
-            subprocess.check_output(cmd, shell=True, stderr=subprocess.DEVNULL)
-            return dest
-        except subprocess.CalledProcessError:
-            print("Dowloading binary for {}-{} failed."
-                  .format(args.device, args.tag))
+        return _download(f"{url}{filename}", dest)
+
+
+def _download(url, dest):
+    """Downloads a file from `url` and saves it as `dest`
+
+    :return: None on failure and `dest` on success"""
+    cmd = f"curl {url} -f -o {dest}"
+    try:
+        subprocess.check_output(cmd, shell=True, stderr=subprocess.DEVNULL)
+        return dest
+    except subprocess.CalledProcessError:
         return None
 
 
+def list_repo(url):
+    """returns the files contained in a folder at the URL
+
+    assumes the repository webserver will serve the list of files
+    in the usual apache standard page
+
+    :return: a list of files without the URL prefix.
+             an empty list is returned for empty folders or errors
+    """
+    cmd = (f"curl {url} | grep href "
+           "| sed 's/.*href=\"//' | sed 's/\".*//' | grep '\\.sh$'")
+    try:
+        out = subprocess.check_output(
+            cmd, shell=True, stderr=subprocess.DEVNULL)
+        return out.decode().split('\n')[:-1]
+    except subprocess.CalledProcessError:
+        print(f"URL '{url}' not found")
+        return []
+
+
 def install(args):
+    """Install a karabo plugin or package.
+
+    it will recursively call itself to install dependencies"""
     with pushd_popd():
         copyFlag = args.copy
         path = os.path.join('installed', args.device.split('/')[-1])
@@ -397,13 +476,18 @@ def install(args):
             os.remove(os.path.join(tag_dir, tag_file))
         print('done.')
         os.chdir(path)
-        if os.path.exists('DEPENDS'):
-            install_dependencies(args)
+        install_dependencies(args)
         if os.path.exists('Makefile'):
             # download needs to happen after the processing of DEPENDS
+            tgt = os.path.join(os.environ['KARABO'], "plugins")
             package = download(args)
-            tgt = os.path.join(os.environ['KARABO'], 'plugins')
             if package:
+                # NOTE: for backwards compatibility the $KARABO/plugins
+                # directory is passed to the prefix option.
+                # If the package does not need to be installed the plugins
+                # folder, the burden of doing the "right" thing falls
+                # on the downloaded binary script, e.g. ignore the
+                # prefix option.
                 print('Installing {} binaries, please wait...'
                       ''.format(args.device), end='', flush=True)
                 cmd = os.path.join(os.environ['KARABO'], package)
@@ -631,8 +715,7 @@ def develop(args):
             return
         checkout(args)
         os.chdir(path)
-        if os.path.exists('DEPENDS'):
-            install_dependencies(args, True)
+        install_dependencies(args, True)
         if os.path.exists('Makefile'):
             print(f'Compiling {args.device}, please wait... ',
                   end='', flush=True)
@@ -653,6 +736,8 @@ def install_dependencies(args, is_develop=False):
     """Installs dependencies as specified in the DEPENDS file.
     NOTE: This function must be run in the directory of the DEPENDS file!
     """
+    if not os.path.exists('DEPENDS'):
+        return
     devices = parse_configuration_file('DEPENDS')
     dep_names = ', '.join(f'{e[0]} ({e[1]})' for e in devices)
     print('Found dependencies:', dep_names)
