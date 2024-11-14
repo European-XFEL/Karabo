@@ -121,14 +121,8 @@ install_python() {
     # apply custom profile on top of default profile
     local profile_opts="-pr:h=./conanprofile.karabo"
     # always compile patchelf, b2, openssl from source (needed later), ensures linkage against correct GLIBC version symbols
-    if [[ $INSTALL_PREFIX == *"CentOS-7"* ]]; then
-        # openssl:openssldir=/etc/pki/tls on CentOS7
-        build_opts="$build_opts -o openssl/*:openssldir=/etc/pki/tls"
-        # do all the CentOS7 hacks
-        safeRunCommandQuiet "conan install conanfile-centos.txt --build='*' $build_opts $profile_opts"
-    else
-        build_opts="$build_opts -o openssl/*:openssldir=/etc/ssl"
-    fi
+    # (Still needed after removal of opemq(c)?)
+    build_opts="$build_opts -o openssl/*:openssldir=/etc/ssl"
     # install packages listed in the extern/conanfile-bootstrap.txt
     if [[ $INSTALL_PREFIX == *"Ubuntu-20"* ]]; then
         # Work around a failure for building the conan package "cpython/3.12.2"
@@ -181,12 +175,8 @@ install_from_deps() {
     local profile_opts="-pr:h=./conanprofile.karabo"
 
     # always compile openssl from source (needed later), ensures linkage against correct GLIBC version symbols
-    if [[ $INSTALL_PREFIX == *"CentOS-7"* ]]; then
-        # openssl:openssldir=/etc/pki/tls on CentOS7
-        build_opts="$build_opts -o openssl/*:openssldir=/etc/pki/tls"
-    else
-        build_opts="$build_opts -o openssl/*:openssldir=/etc/ssl"
-    fi
+    # (Still needed after removal of openmq(c)?)
+    build_opts="$build_opts -o openssl/*:openssldir=/etc/ssl"
 
     # install packages listed in the extern/conanfile.txt
     safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan install . $folder_opts $build_opts $profile_opts"
@@ -271,6 +261,9 @@ if [ $? -ne 0 ]; then
     # Give the user time to see the message
     sleep 2
     return 1
+else
+   # Make aware of which conan is used
+   conan --version
 fi
 
 # python download and install to allow full bootstrap
