@@ -133,6 +133,11 @@ class Tests(TestCase):
         self.assertIs(v.value, True)
         self.check_general(d, v)
 
+        d = Bool(defaultValue=False)
+        self.assertFalse(d.defaultValue)
+        with self.assertRaises(ValueError):
+            d = Bool(defaultValue="")
+
     def test_vector_bool(self):
         d = VectorBool()
         v = d.toKaraboValue([True, False, True])
