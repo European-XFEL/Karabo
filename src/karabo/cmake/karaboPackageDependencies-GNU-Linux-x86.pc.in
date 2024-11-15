@@ -4,10 +4,10 @@ extern_include="${prefix}/extern/include"
 libdir="${prefix}/lib"
 extern_libdir="${prefix}/extern/lib"
 
-Name: KaraboPackageDependencies
+Name: karaboDependencies
 Version: @KARABO_VERSION_MAJOR@.@KARABO_VERSION_MINOR@.@KARABO_VERSION_PATCH@
 Description: This file describes all karabo dependencies. It only works within the software bundle.
-URL: https://docs.xfel.eu/share/page/site/KaraboFramework/dashboard
-Requires: karabo amqpcpp pugixml boost-chrono boost-date_time boost-filesystem boost-regex boost-system boost-thread spdlog
-Libs: -L${libdir} -L${extern_libdir} -lpthread
+URL: https://rtd.xfel.eu/docs/karabo/en/latest/
+Requires: amqpcpp pugixml boost-chrono boost-date_time boost-filesystem boost-regex boost-system boost-thread spdlog
+Libs: -L${libdir} -lkarabo -L${extern_libdir} -lpthread
 Cflags: -I${include} -I${extern_include} -Dcimg_display=0

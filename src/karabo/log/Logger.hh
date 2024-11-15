@@ -19,18 +19,11 @@
 #ifndef KARABO_LOGCONFIG_LOGGER_HH
 #define KARABO_LOGCONFIG_LOGGER_HH
 
-// configure the spdlog formatting depending on the compiler version
-#if defined(__GNUC__) && !defined(__clang__)
-#if __GNUC__ >= 13 && !defined(SPDLOG_FMT_EXTERNAL) && !defined(SPDLOG_USE_STD_FORMAT)
-#define SPDLOG_USE_STD_FORMAT
-namespace fmt = std;
-#elif !defined(SPDLOG_FMT_EXTERNAL)
+// The conan package currently used by the Karabo Framework uses the default
+// value "false" for "use_std_fmt", meaning that an external "fmt" library is
+// assumed.
+#ifndef SPDLOG_FMT_EXTERNAL
 #define SPDLOG_FMT_EXTERNAL
-#endif
-#endif
-
-#if defined(__clang__)
-#define SPDLOG_USE_STD_FORMAT
 #endif
 
 #include <spdlog/common.h>
