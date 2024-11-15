@@ -863,6 +863,7 @@ class Bool(Type):
     """This describes a boolean: ``True`` or ``False``"""
     number = 0
     numpy = np.bool_
+    defaultValue = Attribute(dtype=bool)
 
     def cast(self, other):
         return bool(other)
