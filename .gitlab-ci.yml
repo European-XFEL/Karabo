@@ -25,6 +25,7 @@ variables:
   CONAN_USER_HOME: $CI_PROJECT_DIR/.cache/conan
   PIP_CACHE_DIR:   $CI_PROJECT_DIR/.cache/pip
   PRE_COMMIT_HOME: $CI_PROJECT_DIR/.cache/pre-commit
+  PRE_COMMIT_HOME: $CI_PROJECT_DIR/.cache/pre-commit
 
 .target_os_matrix:
   all_targets:
