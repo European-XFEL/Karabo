@@ -327,7 +327,7 @@ def test_constructors():
     assert h["F"]["f"]["f"]["f"]["f"]["x"]["y"]["z"] == 99
 
     del h["a.b.c"]
-    assert not ("a.b.c" in h)
+    assert "a.b.c" not in h
 
     h = Hash({"foo": 42, "bar": np.pi})
     assert h["foo"] == 42
