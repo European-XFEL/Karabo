@@ -18,8 +18,8 @@ from asyncio import DefaultEventLoopPolicy, set_event_loop, sleep
 
 import pytest
 
+from .device import DeviceClientBase
 from .eventloop import EventLoop
-from .signalslot import SignalSlotable
 
 
 def async_test_placeholder(func):
@@ -34,6 +34,15 @@ except Exception:
 SHUTDOWN_TIME = 2
 
 
+class TopologyClient(DeviceClientBase):
+    """A test client with SystemTopology information
+
+    Note: The client does not wait by default on collecting
+    the topology on startup.
+    """
+    wait_topology = False
+
+
 @pytest.fixture(scope="module")
 def event_loop():
     """This is the eventloop fixture for pytest asyncio
@@ -45,7 +54,7 @@ def event_loop():
     loop = EventLoop()
     set_event_loop(loop)
     try:
-        lead = SignalSlotable(
+        lead = TopologyClient(
             {"_deviceId_": f"SigSlot-{uuid.uuid4()}"})
         loop.run_until_complete(lead.startInstance())
         instance_handler = loop.instance
@@ -66,8 +75,8 @@ class KaraboTestLoopPolicy(DefaultEventLoopPolicy):
     def new_event_loop(self):
         loop = EventLoop()
         set_event_loop(loop)
-        lead = SignalSlotable(
-            {"_deviceId_": f"SigSlot-{uuid.uuid4()}"})
+        lead = TopologyClient(
+            {"_deviceId_": f"topoClient-{uuid.uuid4()}"})
         loop.run_until_complete(lead.startInstance())
         instance_handler = loop.instance
 
