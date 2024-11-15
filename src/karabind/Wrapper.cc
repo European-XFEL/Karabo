@@ -784,8 +784,9 @@ namespace karabind {
                     // Increment Python array ref counter again to compensate decrementing
                     // because of 'newarr' destruction
                     Py_INCREF(newarr.ptr());
-                    // get mutable data as char* to build dataPtr
-                    char* data = static_cast<char*>(newarr.mutable_data());
+                    // data()/mutable_data()  points to the same location in internal buffer
+                    // but mutable_data() checks in addition "writable" bit in arr.flags()
+                    char* data = static_cast<char*>(const_cast<void*>(newarr.data()));
                     // Store array via PyArrayDeleter constructor
                     auto pydeleter = PyArrayDeleter(newarr.ptr());
                     // Construct dataPtr with deleter which decrements Python refcount

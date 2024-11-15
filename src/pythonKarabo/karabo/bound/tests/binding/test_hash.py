@@ -972,6 +972,8 @@ def test_ndarray():
     arr = np.arange(20000, dtype=np.int16).reshape(100, 200)
     arr.flags.writeable = False
     h = Hash()
+    h['a'] = arr
+    assert np.all(h['a'] == arr) is np.True_
     # Can't insert non-writable arrays into Hash
-    with pytest.raises(ValueError):
-        h['a'] = arr
+    # with pytest.raises(ValueError):
+    #     h['a'] = arr
