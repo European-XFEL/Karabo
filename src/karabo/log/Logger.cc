@@ -438,14 +438,14 @@ namespace karabo {
             std::filesystem::path fname(m_config.get<std::string>("audit.filename"));
             uint16_t maxFiles = m_config.get<uint16_t>("audit.maxFiles");
             applyRotationRulesFor(fname, maxFiles);
-            std::string fpattern = fname.stem().string() + "-%Y-%m-%dT%H:%M:%S.log";
-            auto log = spdlog::daily_logger_format_mt(name, fpattern, m_config.get<uint32_t>("audit.hour"),
+            auto log = spdlog::daily_logger_format_mt(name, fname.string(), m_config.get<uint32_t>("audit.hour"),
                                                       m_config.get<uint32_t>("audit.minute"), false, maxFiles);
             log->set_pattern(m_config.get<std::string>("audit.pattern"));
             auto val = m_config.get<std::string>("audit.threshold");
             toLower(val);
             log->set_level(spdlog::level::from_str(val));
             setPriority(m_config.get<std::string>("priority"), name);
+            m_audit = log;
         }
 
 
