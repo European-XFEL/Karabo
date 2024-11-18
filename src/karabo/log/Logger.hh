@@ -171,6 +171,7 @@ namespace karabo {
                         throw KARABO_PARAMETER_EXCEPTION("Activate audit channel 'useAuditFile()' first!");
                     }
                     Logger::m_audit->trace(fmt, std::forward<Args>(args)...);
+                    Logger::m_audit->flush();
                     return;
                 }
                 auto logger = karabo::log::details::getLogger(name);
@@ -195,6 +196,7 @@ namespace karabo {
                         throw KARABO_PARAMETER_EXCEPTION("Activate audit channel 'useAuditFile()' first!");
                     }
                     Logger::m_audit->debug(fmt, std::forward<Args>(args)...);
+                    Logger::m_audit->flush();
                     return;
                 }
                 auto logger = karabo::log::details::getLogger(name);
@@ -218,6 +220,7 @@ namespace karabo {
                         throw KARABO_PARAMETER_EXCEPTION("Activate audit channel 'useAuditFile()' first!");
                     }
                     Logger::m_audit->info(fmt, std::forward<Args>(args)...);
+                    Logger::m_audit->flush();
                     return;
                 }
                 auto logger = karabo::log::details::getLogger(name);
@@ -241,6 +244,7 @@ namespace karabo {
                         throw KARABO_PARAMETER_EXCEPTION("Activate audit channel 'useAuditFile()' first!");
                     }
                     Logger::m_audit->warn(fmt, std::forward<Args>(args)...);
+                    Logger::m_audit->flush();
                     return;
                 }
                 auto logger = karabo::log::details::getLogger(name);
@@ -264,6 +268,7 @@ namespace karabo {
                         throw KARABO_PARAMETER_EXCEPTION("Activate audit channel 'useAuditFile()' first!");
                     }
                     Logger::m_audit->error(fmt, std::forward<Args>(args)...);
+                    Logger::m_audit->flush();
                     return;
                 }
                 auto logger = karabo::log::details::getLogger(name);
@@ -286,6 +291,7 @@ namespace karabo {
                         throw KARABO_PARAMETER_EXCEPTION("Activate audit channel 'useAuditFile()' first!");
                     }
                     Logger::m_audit->critical(fmt, std::forward<Args>(args)...);
+                    Logger::m_audit->flush();
                     return;
                 }
                 auto logger = karabo::log::details::getLogger(name);
