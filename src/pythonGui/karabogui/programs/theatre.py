@@ -136,9 +136,30 @@ class DeviceWaiter(QObject):
                 self.not_capable_devices.append(node.node_id)
 
         topology.visit_system_tree(alive_visitor)
-
-        # We specified devices that are not available in the topology, exit!
+        # Warning message if provided device is invalid or has no scene.
+        non_exisiting_device = False
+        no_capable_service = False
+        msg = ""
         if self.no_scenes:
+            missing = ',\n'.join(
+                [device_id for device_id in self.device_scenes])
+            if missing:
+                msg += "The following deviceIds are not present " \
+                       f"in the system topology: '{missing}'. \n\n"
+                non_exisiting_device = True
+        if self.not_capable_devices:
+            incapables = ',\n'.join([device_id for device_id in
+                                     self.not_capable_devices])
+            if incapables:
+                msg += ("The following deviceIds do not provide scenes: "
+                        f"'{incapables}'. \n\n")
+            no_capable_service = True
+        if msg:
+            msg += "Please review command line arguments accordingly."
+            messagebox.show_warning(msg, title='Theater')
+        #  All the specified devices are not available in the topology or have
+        #  no scene,  exit!
+        if non_exisiting_device and no_capable_service:
             close_app()
 
 
