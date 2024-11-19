@@ -157,6 +157,7 @@ RTD_LINK = "https://rtd.xfel.eu/docs"
 RTD_GUI_LINK = f"{RTD_LINK}/howtogui/en/latest/"
 RTD_FW_LINK = f"{RTD_LINK}/karabo/en/latest/"
 RTD_MACRO_LINK = f"{RTD_LINK}/howtomacro/en/latest/"
+KEYBOARD_SHORTCUTS = f"{RTD_LINK}/howtogui/en/latest/keyboard_shortcuts.html"
 
 
 class MainWindow(QMainWindow):
@@ -554,6 +555,9 @@ class MainWindow(QMainWindow):
             self.onMacroDocumentation)
         self.acMacroDocumentation.setCheckable(False)
 
+        self.acShortCuts = QAction(icons.weblink, "Keyboard Shortcuts", self)
+        self.acShortCuts.triggered.connect(self.showShortcuts)
+
         self.acRemoveUserLogin = QAction(
             icons.removeUser, "Clear User Login", self)
         self.acRemoveUserLogin.triggered.connect(self.clearUserLogin)
@@ -622,6 +626,7 @@ class MainWindow(QMainWindow):
         mHelpMenu.addAction(self.acHelpAboutQt)
         mHelpMenu.addAction(self.acWizard)
         mHelpMenu.addAction(self.acCheckUpdates)
+        mHelpMenu.addAction(self.acShortCuts)
 
         if get_config()["development"]:
             mDevMenu = menuBar.addMenu("&Developer")
@@ -1024,3 +1029,7 @@ class MainWindow(QMainWindow):
         del get_config()["refresh_token"]
         del get_config()["refresh_token_user"]
         get_logger().info("Removed the user login information")
+
+    @Slot()
+    def showShortcuts(self) -> None:
+        self._open_link(KEYBOARD_SHORTCUTS)
