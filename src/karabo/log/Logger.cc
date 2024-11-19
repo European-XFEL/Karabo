@@ -302,9 +302,9 @@ namespace karabo {
             }
 
             m_audit = nullptr;
-            setPattern(m_config.get<std::string>("pattern"));
-            setPriority("OFF");
             if (startFlushThread) {
+                setPattern(m_config.get<std::string>("pattern"));
+                setPriority("OFF");
                 spdlog::flush_every(std::chrono::seconds(3));
                 startFlushThread = false;
             }
