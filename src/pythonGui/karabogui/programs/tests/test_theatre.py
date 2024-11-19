@@ -88,3 +88,43 @@ def test_theatre_timeout(gui_app, mocker):
         process_qt_events(timeout=1000)
         scene.assert_not_called()
         mbox.show_warning.assert_called_once()
+
+
+def test_missing_device(gui_app, mocker):
+    """Verify the warning message is displyed when device is invalid or has
+    no scene."""
+    ns = namespace("myhost", "myport", True, ["divvy|scene"], 1)
+
+    network = Network()
+    network.connectToServerDirectly = mocker.Mock()
+    network.connectToServerDirectly.return_value = True
+    network.onSubscribeLogs = mocker.Mock()
+
+    topology = SystemTopology()
+    waring_dialog = "karabogui.programs.theatre.messagebox.show_warning"
+    with singletons(network=network, topology=topology):
+        success, waiter, app = create_theatre(ns)
+        app.setOrganizationName("NoXFEL")
+
+        mbox = mocker.patch(waring_dialog)
+
+        # Device doesn't exist in the Topology.
+        waiter._topo_update()
+        msg = ("The following deviceIds are not present in the system "
+               "topology: 'divvy'. \n\nPlease review command line arguments "
+               "accordingly.")
+        assert mbox.call_count == 1
+        mbox.assert_called_with(msg, title="Theater")
+
+        mbox.reset_mock()
+        waiter.no_scenes = False
+        waiter._topo_update()
+        assert mbox.call_count == 0
+
+        # Device with no Scene
+        waiter.not_capable_devices = ["FooClass"]
+        waiter._topo_update()
+        msg = ("The following deviceIds do not provide scenes: 'FooClass'. "
+               "\n\nPlease review command line arguments accordingly.")
+        assert mbox.call_count == 1
+        mbox.assert_called_with(msg, title="Theater")
