@@ -520,6 +520,9 @@ namespace karabo {
              */
             karabo::io::BufferSet::Pointer bufferSetFromHash(const karabo::util::Hash& data, bool copyAllData);
 
+            using Channel::read;
+            using Channel::write;
+
             void read(char*& data, size_t& size, char*& hdr, size_t& hsize);
             void write(const char* header, const size_t& headerSize, const char* body, const size_t& bodySize);
 
