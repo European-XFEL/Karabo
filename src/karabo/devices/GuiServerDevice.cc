@@ -1524,7 +1524,10 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onInitDevice: Queuing request to start device instance \"" << deviceId
                                            << "\" on server \"" << serverId << "\"";
 
-                logUserAction(channel, "Init device '" + deviceId + "' on server '" + serverId + "'");
+                const Hash& config = hash.get<Hash>("configuration");
+                std::ostringstream oss;
+                oss << "Init device '" + deviceId + "' on server '" + serverId + "' with:\n" << config;
+                logUserAction(channel, oss.str());
 
                 if (!deviceId.empty() && hash.has("schemaUpdates")) {
                     KARABO_LOG_FRAMEWORK_DEBUG << "Schema updates were provided for device " << deviceId;
