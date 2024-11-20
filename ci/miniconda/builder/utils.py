@@ -22,7 +22,9 @@ def conda_run_command(cmd: list, *, env_name: str = None):
     except subprocess.CalledProcessError as err:
         print("\n---------------------------------------------------")
         print(f"Failed to execute in the '{env_name}' environment: {cmd}")
-        print(f"ERROR: {err}")
+        print(f"ERROR: {err.stderr}\n")
+        print(err.stdout)
+        raise
 
 
 
