@@ -26,7 +26,11 @@ def get_view_range(plot_item) -> tuple[float, float] | None:
              or None if unavailable.
     """
     view_box = plot_item.getViewBox()
-    if view_box is not None and view_box.autoRangeEnabled()[0]:
+    has_autorange = (
+        view_box is not None and
+        (view_box.autoRangeEnabled()[0] or view_box.linkedView(0))
+    )
+    if has_autorange:
         # Return early if auto-range is enabled
         return None
     view_rect = plot_item.viewRect()
