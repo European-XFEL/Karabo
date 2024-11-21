@@ -9,16 +9,20 @@ REM from cleaning itself. Here we choose the nuclear option of
 REM wiping everything clean.
 
 REM clean the conda-bld directory
-PUSHD conda-bld
-DEL /q /f /s * > nul
-POPD
-RMDIR /q /s conda-bld
+IF EXIST conda-bld (
+    PUSHD conda-bld
+    DEL /q /f /s * > nul
+    POPD
+    RMDIR /q /s conda-bld
+)
 MKDIR conda-bld
 
 REM remove all environments
-PUSHD envs
-DEL /q /f /s * > nul
-POPD
-RMDIR /q /s envs
+IF EXIST envs (
+    PUSHD envs
+    DEL /q /f /s * > nul
+    POPD
+    RMDIR /q /s envs
+)
 MKDIR envs
 POPD
