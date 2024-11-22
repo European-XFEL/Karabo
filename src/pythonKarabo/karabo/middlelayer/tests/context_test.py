@@ -141,7 +141,7 @@ async def test_loop_instance():
 
 @pytest.mark.timeout(30)
 @pytest.mark.asyncio
-async def test_async_server_context(event_loop):
+async def test_async_server_context():
     config = {"PropertyTestContext": {"classId": "PropertyTest"}}
     init = json.dumps(config)
     server = AsyncServerContext(
