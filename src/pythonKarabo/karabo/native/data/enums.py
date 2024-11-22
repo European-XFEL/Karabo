@@ -265,6 +265,13 @@ class EncodingType(IntEnum):
     PNG = 9
     BMP = 10
     TIFF = 11
+    BAYER_RG = 12
+    BAYER_BG = 13
+    BAYER_GR = 14
+    BAYER_GB = 15
+    YUV444 = 16
+    YUV422_YUYV = 17
+    YUV422_UYVY = 18
 
 
 @unique
