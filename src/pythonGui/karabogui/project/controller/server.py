@@ -158,15 +158,15 @@ class DeviceServerController(BaseProjectGroupController):
                                              parent=parent))
 
         sort_domain = QAction(icons.folderDomain,
-                              'Sort devices by Domain', menu)
+                              'Sort devices by domain', menu)
         sort_domain.triggered.connect(partial(self._sort_devices_naming,
                                               level=0, parent=parent))
         sort_type = QAction(icons.folderType,
-                            'Sort devices by Type', menu)
+                            'Sort devices by type', menu)
         sort_type.triggered.connect(partial(self._sort_devices_naming,
                                             level=1, parent=parent))
         sort_member = QAction(icons.deviceInstance,
-                              'Sort devices by Member', menu)
+                              'Sort devices by member', menu)
         sort_member.triggered.connect(partial(self._sort_devices_naming,
                                               level=2, parent=parent))
 
