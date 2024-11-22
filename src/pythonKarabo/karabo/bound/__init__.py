@@ -40,19 +40,19 @@ from karabind import (
     AccessLevel, AccessType, ArchivePolicy, AssemblyRules, AssignmentType,
     BinarySerializerHash, BinarySerializerSchema, Broker, Category, Channel,
     ChannelMetaData, ClassInfo, Connection, ConnectionStatus, DaqDataType,
-    DAQPolicy, DateTimeString, DeviceClient as BoundDeviceClient, Dims,
-    Encoding, Epochstamp, ErrorCode, EventLoop, Hash, HashAttributes,
-    HashAttributesNode, HashFilter, HashMergePolicy, HashNode, ImageData,
-    InputChannel, InputHash, InputSchema, LeafType, Logger, MetricPrefix,
-    NodeType, OutputChannel, OutputHash, OutputSchema, PriorityLevel,
-    Requestor, RollingWindowStatistics, Rotation, Schema, SignalSlotable,
-    SignalSlotableIntern, Slot, SlotElementBase, TextSerializerHash,
-    TextSerializerSchema, TimeDuration, Timestamp, Trainstamp, Types,
-    TypesClass, Unit, Validator, ValidatorValidationRules, VectorHash,
-    VectorHashPointer, _DimsIntern, cppNDArray, cppNDArrayCopy, fullyEqual,
-    generateAutoStartHash, jsonToHash, loadFromFile, loadHashFromFile,
-    loadSchemaFromFile, saveHashToFile, saveSchemaToFile, saveToFile, setDims,
-    similar, startDeviceServer, stopDeviceServer)
+    DAQPolicy, DateTimeString, DeviceClient as BoundDeviceClient,
+    DimensionType, Dims, Encoding, Epochstamp, ErrorCode, EventLoop, Hash,
+    HashAttributes, HashAttributesNode, HashFilter, HashMergePolicy, HashNode,
+    ImageData, InputChannel, InputHash, InputSchema, LeafType, Logger,
+    MetricPrefix, NodeType, OutputChannel, OutputHash, OutputSchema,
+    PriorityLevel, Requestor, RollingWindowStatistics, Rotation, Schema,
+    SignalSlotable, SignalSlotableIntern, Slot, SlotElementBase,
+    TextSerializerHash, TextSerializerSchema, TimeDuration, Timestamp,
+    Trainstamp, Types, TypesClass, Unit, Validator, ValidatorValidationRules,
+    VectorHash, VectorHashPointer, _DimsIntern, cppNDArray, cppNDArrayCopy,
+    fullyEqual, generateAutoStartHash, jsonToHash, loadFromFile,
+    loadHashFromFile, loadSchemaFromFile, saveHashToFile, saveSchemaToFile,
+    saveToFile, setDims, similar, startDeviceServer, stopDeviceServer)
 
 from ..common.alarm_conditions import AlarmCondition
 from ..common.states import State, StateSignifier

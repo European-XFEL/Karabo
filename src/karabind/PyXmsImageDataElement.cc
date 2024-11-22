@@ -69,6 +69,13 @@ void exportPyXmsImageDataElement(py::module_& m) {
     }
 
     {
+        py::enum_<Dimension::DimensionType>(m, "DimensionType")
+              .value("UNDEFINED", DimensionType::UNDEFINED)
+              .value("STACK", DimensionType::STACK)
+              .value("DATA", DimensionType::DATA);
+    }
+
+    {
         py::class_<ImageData, boost::shared_ptr<ImageData>> img(m, "ImageData");
 
         img.def(py::init<>());
