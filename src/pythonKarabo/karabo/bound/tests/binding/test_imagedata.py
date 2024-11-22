@@ -16,7 +16,9 @@
 
 import numpy as np
 
-from karabo.bound import Dims, Encoding, Hash, ImageData, Rotation
+from karabo.bound import (
+    DimensionType, Dims, Encoding, Hash, ImageData, Rotation, Types)
+from karabo.testing.utils import compare_ndarray_data_ptrs
 
 
 def test_imagedata_buildUp():
@@ -74,10 +76,103 @@ def test_imagedata_buildUp():
     img.setRotation(Rotation.ROT_180)
     assert img.getRotation() == Rotation.ROT_180
 
-    # FIXME:
-    # Add tests for setData, getDataCopy, setDataCopy (also from F-style arr!),
-    # setType, setDimensions, setDimensionsTypes, setROIOffsets, setBinning,
-    # setFlipX/Y, setDimensionScales
+    # Check that C-order is guaranteed in C++ NDArray
+    # The original order is not kept and returned from C++ as C-style.
+
+    # Input array is F_CONTIGUOUS array
+    x = np.asarray(np.arange(20000, dtype=np.int16).reshape(100, 200),
+                   order='F')
+    assert x.flags.owndata is True
+    assert x.flags.c_contiguous is False
+    assert x.flags.f_contiguous is True
+    ix = ImageData(x)
+    # array inside ImageData is kept as C++ NDArray in c-order
+    assert not ix.getData().flags.owndata
+    assert ix.getData().flags.c_contiguous is True
+    assert ix.getData().flags.f_contiguous is False
+    assert compare_ndarray_data_ptrs(x, ix.getData()) is False
+
+    # Input array is C_CONTIGUOUS array
+    y = np.asarray(np.arange(20000, dtype=np.int16).reshape(100, 200),
+                   order='C', copy=True)
+    assert compare_ndarray_data_ptrs(x, y) is False
+    assert y.flags.owndata is True
+    assert y.flags.c_contiguous is True
+    assert y.flags.f_contiguous is False
+    assert np.all(x == y) is np.True_
+    assert compare_ndarray_data_ptrs(x, y) is False
+    iy = ImageData(y)
+    assert iy.getData().flags.c_contiguous is True
+    assert iy.getData().flags.f_contiguous is False
+    assert compare_ndarray_data_ptrs(y, iy.getData()) is True
+
+    assert np.all(ix.getData() == iy.getData())
+    assert compare_ndarray_data_ptrs(ix.getData(), iy.getData()) is False
+
+    # getDataCopy: the new python object will be created
+    nx = ix.getDataCopy()
+    assert nx.flags.owndata is True
+    assert nx.flags.c_contiguous is True
+    assert nx.flags.f_contiguous is False
+    ny = iy.getDataCopy()
+    assert ny.flags.owndata is True
+    assert ny.flags.c_contiguous is True
+    assert ny.flags.f_contiguous is False
+
+    assert np.all(nx == ny) == np.True_
+    assert np.all(ix.getData() == nx) == np.True_
+
+    # getData/setData
+    assert x.flags.owndata is True
+    assert x.flags.f_contiguous is True
+    img = ImageData()
+    img.setData(x)
+    assert img.getData().flags.owndata is False
+    assert img.getData().flags.c_contiguous is True
+    assert np.all(img.getData() == ix.getData()) == np.True_
+
+    # setDataCopy
+    img = ImageData()  # empty ImageData object
+    img.setDataCopy(ix.getData())
+    assert img.getData().flags.owndata is False
+    assert img.getData().flags.c_contiguous is True
+    assert img.getData().flags.f_contiguous is False
+    assert np.all(img.getData() == ix.getData()) == np.True_
+
+    # getType/setType
+    assert img.getType() == Types.INT16
+    img.setType(Types.UINT16)
+    assert img.getType() == Types.UINT16
+
+    # getDimensions/setDimensions
+    assert img.getDimensions() == (100, 200)
+    img.setDimensions([200, 100])
+    assert img.getDimensions() == (200, 100)
+
+    # getDimensionTypes/setDimensionTypes
+    img.setDimensionTypes((DimensionType.STACK, DimensionType.STACK))
+    assert img.getDimensionTypes() == (DimensionType.STACK,
+                                       DimensionType.STACK)
+
+    # getDimensionScales/setDimesionScales
+    img.setDimensionScales("Power, kw per hour")
+    assert img.getDimensionScales() == "Power, kw per hour"
+
+    # getROIOffsets/setROIOffsets
+    assert img.getROIOffsets() == (0,)
+    img.setROIOffsets((30, 40))
+    assert img.getROIOffsets() == (30, 40)
+
+    # getBinning/setBinning
+    binning = Dims(3, 8)
+    img.setBinning(binning)  # or img,setBinning((3, 8))
+    assert img.getBinning() == (3, 8)
+
+    # setFlipX/Y
+    img.setFlipY(True)
+    img.setFlipX(False)
+    assert img.getFlipX() is False
+    assert img.getFlipY() is True
 
 
 def test_imagedata_hash():
