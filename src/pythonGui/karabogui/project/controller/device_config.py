@@ -74,7 +74,7 @@ class DeviceConfigurationController(BaseProjectController):
                                                 parent=parent))
         delete_action.setEnabled(conf_allowed)
 
-        conf_action = QAction(icons.load, 'Load in Configurator', menu)
+        conf_action = QAction(icons.load, 'Load in configurator', menu)
         conf_action.triggered.connect(partial(self._load_config,
                                               project_controller,
                                               parent=parent))
