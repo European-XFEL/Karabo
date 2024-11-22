@@ -149,7 +149,7 @@ class DeviceInstanceController(BaseProjectGroupController):
         elif not project_allowed:
             scene_action.setToolTip(project_allowed_tooltip)
 
-        conf_action = QAction(icons.clock, 'Get Configuration (Time)', menu)
+        conf_action = QAction(icons.clock, 'Get configuration (time)', menu)
         can_get_conf = (server_online and
                         proj_device_status not in NO_CONFIG_STATUSES)
         conf_action.triggered.connect(partial(
@@ -160,7 +160,7 @@ class DeviceInstanceController(BaseProjectGroupController):
         elif not can_get_conf:
             conf_action.setToolTip(INCORRECT_STATE_TOOLTIP)
 
-        conf_action_name = QAction('Get && Save Configuration (Name)', menu)
+        conf_action_name = QAction('Get && save configuration (name)', menu)
         can_get_conf_name = (server_online and
                              proj_device_status not in NO_CONFIG_STATUSES)
         conf_action_name.triggered.connect(partial(
@@ -218,14 +218,14 @@ class DeviceInstanceController(BaseProjectGroupController):
         about_action.triggered.connect(partial(self._about_device,
                                                parent=parent))
 
-        up_action = QAction(icons.arrowFancyUp, 'Move Up', menu)
+        up_action = QAction(icons.arrowFancyUp, 'Move up', menu)
         up_action.triggered.connect(partial(self._move_up,
                                             project_controller))
         up_action.setEnabled(project_allowed)
         if not project_allowed:
             up_action.setToolTip(project_allowed_tooltip)
 
-        down_action = QAction(icons.arrowFancyDown, 'Move Down', menu)
+        down_action = QAction(icons.arrowFancyDown, 'Move down', menu)
         down_action.triggered.connect(partial(self._move_down,
                                               project_controller))
         down_action.setEnabled(project_allowed)
