@@ -1981,7 +1981,8 @@ namespace karabo {
                 }
 
                 // Check whether the slot can be called given the current locking state
-                if (allowLock() && (isSchemaSlot || slotName == "slotReconfigure") && slotName != "slotClearLock") {
+                const bool lockableSlot = isSchemaSlot || slotName == "slotReconfigure";
+                if (allowLock() && lockableSlot && slotName != "slotClearLock") {
                     ensureSlotIsValidUnderCurrentLock(slotName, callee);
                 }
 
@@ -1991,7 +1992,7 @@ namespace karabo {
                 }
 
                 // Log the call of this slot by setting a parameter of the device
-                if (isSchemaSlot) {
+                if (lockableSlot) {
                     std::stringstream source;
                     source << slotName << " <- " << callee;
                     set("lastCommand", source.str());
