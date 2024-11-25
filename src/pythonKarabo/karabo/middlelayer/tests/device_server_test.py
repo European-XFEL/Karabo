@@ -13,6 +13,7 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
+import getpass
 import json
 import uuid
 from asyncio import gather, sleep, wait_for
@@ -125,6 +126,8 @@ async def test_device_server_instantiate_plugins():
         server.slotLoggerPriority("ERROR")
         assert server.log.level == "ERROR"
         assert device.log.level == "ERROR"
+        # Provide user
+        assert info["user"] == getpass.getuser()
 
         info = await getInstanceInfo(serverId)
         assert info["log"] == "ERROR"
