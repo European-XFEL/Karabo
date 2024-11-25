@@ -1463,6 +1463,7 @@ class PythonDevice(NoFsm):
                                         self.deviceid)
                             raise RuntimeError(msg)
 
+        if lockableSlot:
             # Log the call of this slot by setting a parameter of the device
             self.set("lastCommand", slotName + " <- " + callee)
 
