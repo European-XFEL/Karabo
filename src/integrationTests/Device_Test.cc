@@ -1407,6 +1407,10 @@ void Device_Test::testGetconfigReconfig() {
           m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(cfgHash));
     CPPUNIT_ASSERT_EQUAL(true, cfgHash.get<bool>("performanceStatistics.enable"));
 
+    // Test the lastCommand for slotReconfigure
+    CPPUNIT_ASSERT_EQUAL(std::string("slotReconfigure <- ") += m_deviceServer->getInstanceId(),
+                         cfgHash.get<std::string>("lastCommand"));
+
     // Now try to set performanceStatistics again, but with an old timestamp - that should not be taken!
     const Timestamp enableTimestamp(
           Timestamp::fromHashAttributes(cfgHash.getAttributes("performanceStatistics.enable")));
