@@ -14,6 +14,7 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 import copy
+import getpass
 import os
 import socket
 import sys
@@ -151,6 +152,7 @@ class DeviceServerBase(SignalSlotable):
         info["version"] = self.__class__.__version__
         info["host"] = self.hostName
         info["visibility"] = self.visibility.value
+        info["user"] = getpass.getuser()
         info["lang"] = "python"
         info["log"] = self.log.level
         info.merge(self.deviceClassesHash())
