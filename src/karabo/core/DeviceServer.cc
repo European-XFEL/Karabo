@@ -257,6 +257,9 @@ namespace karabo {
             instanceInfo.set("serverId", m_serverId);
             instanceInfo.set("version", karabo::util::Version::getVersion());
             instanceInfo.set("host", m_hostname);
+            // getlogin() is a linux function only
+            auto user = getlogin();
+            instanceInfo.set("user", (user ? user : "none"));
             instanceInfo.set("lang", "cpp");
             instanceInfo.set("visibility", m_visibility);
             instanceInfo.set("log", config.get<std::string>("Logger.priority"));
