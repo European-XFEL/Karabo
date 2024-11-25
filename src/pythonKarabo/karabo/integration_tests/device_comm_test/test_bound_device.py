@@ -82,12 +82,17 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
 
         with self.subTest(msg="Test lastCommand"):
             lastCommand = self.dc.get(deviceId, "lastCommand")
-            self.assertEqual(lastCommand, '')
+            assertion = "slotClearLock <- " + self.dc.getInstanceId()
+            self.assertNotEqual(lastCommand, assertion)
 
             self.dc.execute(deviceId, "slotClearLock")
             lastCommand = self.dc.get(deviceId, "lastCommand")
-            self.assertEqual(lastCommand,
-                             "slotClearLock <- " + self.dc.getInstanceId())
+            self.assertEqual(lastCommand, assertion)
+
+            self.dc.set(deviceId, "boolProperty", True)
+            lastCommand = self.dc.get(deviceId, "lastCommand")
+            self.assertEqual(
+                lastCommand,  "slotReconfigure <- " + self.dc.getInstanceId())
 
         ok, msg = self.dc.killDevice(deviceId, instTimeout)
         self.assertTrue(ok, "Problem killing device '{}': {}.".format(deviceId,
