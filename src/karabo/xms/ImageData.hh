@@ -65,6 +65,13 @@ namespace karabo {
                 PNG,
                 BMP,
                 TIFF,
+                BAYER_RG,
+                BAYER_BG,
+                BAYER_GR,
+                BAYER_GB,
+                YUV444,
+                YUV422_YUYV,
+                YUV422_UYVY,
             };
             /// True if encoding is such that one can index the underlying array
             bool isIndexable(int encoding);
