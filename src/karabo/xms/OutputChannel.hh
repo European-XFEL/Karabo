@@ -375,19 +375,23 @@ namespace karabo {
              *
              * Asynchronously update the output channel, i.e. asynchronously send all data over the wire that was
              * previously written by calling write(...) without any blocking.
-             * This method must not be called again before either 'readyForNextHandler' or 'writeDoneHandler' have been
-             * called which happens when sending data to all connected InputChannels that should receive the written
-             * data (note that for other InputChannels data may be dropped or queued) has
-             * - started: 'readyForNextHandler'
-             * - finished, as confirmed by Tcp, or stopped due to disconnection: 'writeDoneHandler'
              *
-             * @param readyForNextHandler callback when asyncUpdateNoWait maye be called again
-             * @param writeDoneHandler callback when sending is finished, i.e. now all NDArray inside the Hash passed to
-             *                         write(..) before can be re-used again (except if safeNDArray was set to 'true' in
-             *                         which case its memory may still be used in a queue)
+             * This method must not be called again before either 'readyForNextHandler' or 'writeDoneHandler' have
+             * been called. If next data should be sent, but neither handler has been called yet, one has to block or
+             * skip the data. In the latter case, the wish of a connected input channel that is configured to make the
+             * output "wait" if not ready, is ignored (policy violation).
+             *
+             * Both handlers have to be valid function pointers.
+             *
+             * @param readyForNextHandler callback when asyncUpdateNoWait may be called again (this can only be
+             *                            delayed if any blocking input channel ["wait"] is connected)
+             * @param writeDoneHandler callback when sending is finished (as confirmed by Tcp) or stopped due to
+             *                         disconnection, or data is internally queued. So now all NDArray inside the Hash
+             *                         passed to write(..) before can be re-used again (except if safeNDArray was set
+             *                         to 'true' in which case its memory may still be used in a queue)
              * @param safeNDArray boolean to indicate whether all NDArrays inside the Hash passed to write(..) before
              *                    are 'safe', i.e. their memory will not be referred to elsewhere after update is
-             *                    finished.
+             *                    finished. False triggers a data copy if data needs to be queued.
              *
              * TODO: Provide a handler called when sending data is completed, including any queued data, and thus
              *       NDArray data can be re-used again even if safeNDArray=false (i.e. buffers could be re-used).
