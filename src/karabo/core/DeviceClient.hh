@@ -1013,12 +1013,14 @@ namespace karabo {
                   const boost::function<void(const std::string&, const karabo::util::Hash&)>& callbackFunction);
 
             /**
-             * Registers a device for configuration changes monitoring.
-             *
-             * In order to receive notifications about configuration changes for any of the monitored devices, one
-             * must connect a handler for those changes by calling DeviceClient::connectDevicesMonitor.
+             * Registers a device to have its configurations changes monitored.
              *
              * @param deviceId of the device to be added to the set of monitored devices.
+             *
+             * @note In order to receive notifications about configuration changes for any of the
+             * monitored devices, one needs to register handlers by calling registerDeviceMonitor
+             * (updates one by one - even if updates are throttled) or with registerDevicesMonitor
+             * (bulk updates).
              */
             void registerDeviceForMonitoring(const std::string& deviceId);
 
