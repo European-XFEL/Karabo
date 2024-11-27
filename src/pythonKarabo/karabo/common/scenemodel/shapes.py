@@ -180,6 +180,12 @@ def _write_base_shape_data(model, element):
         write("fill-opacity", str(model.fill_opacity))
 
 
+def _write_arrow_data(model, element):
+    _write_base_shape_data(model, element)
+    set_numbers(("x", "y", "width", "height", "x1", "y1", "x2", "y2", "hx1",
+                 "hy1", "hx2", "hy2", ), model, element)
+
+
 @register_scene_reader("Line", xmltag=NS_SVG + "line", version=1)
 def __line_reader(element):
     """A reader for Line objects in Version 1 scenes"""
@@ -231,12 +237,23 @@ def __get_points(polygon_element):
 def arrow_polygon_reader(element):
     line = element.find(NS_SVG + "line")
     polygon = element.find(NS_SVG + "polygon")
+    # line and polygon are None if the model is written  by UnknownWidget,
+    # from older KaraboGUI.
+    if line is None:
+        traits = _read_base_shape_data(element)
+    else:
+        traits = _read_base_shape_data(line)
 
-    traits = _read_base_shape_data(line)
-    traits.update(get_numbers(("x1", "y1", "x2", "y2"), line))
-
-    points = __get_points(polygon_element=polygon)
+    if polygon is None:
+        hx1 = element.attrib["hx1"]
+        hx2 = element.attrib["hx2"]
+        hy1 = element.attrib["hy1"]
+        hy2 = element.attrib["hy2"]
+        points = {"hx1": hx1, "hy1": hy1, "hx2": hx2, "hy2": hy2}
+    else:
+        points = __get_points(polygon_element=polygon)
     traits.update(points)
+    traits.update(get_numbers(("x", "y", "x1", "y1", "x2", "y2"), element))
     return ArrowPolygonModel(**traits)
 
 
@@ -245,10 +262,8 @@ def arrow_polygon_writer(model, parent):
     element = SubElement(parent, NS_SVG + "g")
     element.set(NS_KARABO + "class", "ArrowPolygonModel")
 
-    # x, y, width and height are added so that in KaraboGUI older than 2.21
-    # the unsupported widget is shown.
-    set_numbers(("x", "y", "width", "height"), model, element)
-    # Write line and polygon(arrowhead) as separate elements.
+    # Write line and polygon(arrowhead) as separate elements. This enables
+    # the reading of the arrow in an SVG editor like Inkscape.
     line = SubElement(element, NS_SVG + "line")
     _write_base_shape_data(model, line)
     set_numbers(("x1", "y1", "x2", "y2"), model, line)
@@ -256,6 +271,9 @@ def arrow_polygon_writer(model, parent):
     polygon_element = SubElement(element, NS_SVG + "polygon")
     __set_points(model=model, polygon_element=polygon_element)
     model.fill = model.stroke
+    # Write all the model values to element also, so that in KaraboGUI
+    # older  than 2.21 the unsupported widget is shown.
+    _write_arrow_data(model, element)
     _write_base_shape_data(model, polygon_element)
     return element
 
