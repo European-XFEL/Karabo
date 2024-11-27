@@ -59,6 +59,7 @@ class UnknownWidgetDataModel(BaseWidgetObjectData):
     attributes = Dict
     # The data of the SVG element, if there is any
     data = String
+    children = List(Instance(BaseSceneObjectData))
 
 
 class UnknownXMLDataModel(XMLElementModel):
@@ -167,8 +168,11 @@ def __unknown_xml_data_writer(model, parent):
 def __unknown_widget_data_reader(element):
     traits = read_unknown_display_editable_widget(element)
     attributes = {k: element.get(k) for k in element.attrib if k not in traits}
+
+    children = [read_element(child_elem) for child_elem in element]
     return UnknownWidgetDataModel(
-        attributes=attributes, data=element.text or "", **traits
+        attributes=attributes, data=element.text or "", children=children,
+        **traits
     )
 
 
@@ -180,4 +184,6 @@ def __unknown_widget_data_writer(model, parent):
         element.text = model.data
     for name, value in model.attributes.items():
         element.set(name, value)
+    for child in model.children:
+        write_element(model=child, parent=element)
     return element
