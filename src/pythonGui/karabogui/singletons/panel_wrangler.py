@@ -229,9 +229,11 @@ class PanelWrangler(QObject):
         """
         scene_editable = access_role_allowed(AccessRole.SCENE_EDIT)
         macro_editable = access_role_allowed(AccessRole.MACRO_EDIT)
+        apply_scene_edit = access_role_allowed(AccessRole.APPLY_SCENE_EDIT)
         for panel in self._project_item_panels.values():
             if isinstance(panel, ScenePanel):
                 panel.setReadOnly(scene_editable)
+                panel.toggleAlwaysVisibleToolbar(apply_scene_edit)
             elif isinstance(panel, MacroPanel):
                 panel.setReadOnly(not macro_editable)
 
