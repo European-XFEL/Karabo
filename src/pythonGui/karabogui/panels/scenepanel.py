@@ -157,6 +157,7 @@ class ScenePanel(BasePanelWidget):
         home_tool_bar.addAction(self.tbTempSession)
 
         self.home_tool_bar = home_tool_bar
+        self.always_visible_tb = always_visible_tb
 
         return [always_visible_tb, self.drawing_tool_bar, home_tool_bar]
 
@@ -310,6 +311,9 @@ class ScenePanel(BasePanelWidget):
         if not value and self.scene_view.design_mode:
             self.ac_design_mode.setChecked(False)
         self.ac_design_mode.setVisible(value)
+
+    def toggleAlwaysVisibleToolbar(self, value: bool) -> None:
+        self.always_visible_tb.setVisible(value)
 
     def info(self):
         return create_scene_info(self)

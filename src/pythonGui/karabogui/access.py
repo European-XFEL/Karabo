@@ -57,6 +57,7 @@ class AccessRole(Enum):
     SERVICE_EDIT = 'service_edit'
     CONSOLE_EDIT = 'console_edit'
     INSTANCE_CONTROL = 'instance_control'
+    APPLY_SCENE_EDIT = 'apply_edit'
 
 
 ACCESS_LEVEL_ROLES = {
@@ -65,7 +66,8 @@ ACCESS_LEVEL_ROLES = {
     AccessRole.PROJECT_EDIT: AccessLevel.OPERATOR,
     AccessRole.SERVICE_EDIT: AccessLevel.OPERATOR,
     AccessRole.CONSOLE_EDIT: AccessLevel.EXPERT,
-    AccessRole.INSTANCE_CONTROL: AccessLevel.OPERATOR}
+    AccessRole.INSTANCE_CONTROL: AccessLevel.OPERATOR,
+    AccessRole.APPLY_SCENE_EDIT: AccessLevel.USER}
 
 
 def access_role_allowed(role):
