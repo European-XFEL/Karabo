@@ -324,8 +324,12 @@ class Device(InjectMixin, SignalSlotable):
         msg = self._checkLocked(message)
         if msg is not None:
             raise KaraboError(msg)
-        await super().slotReconfigure(reconfiguration)
-        self.update()
+        caller = self._ss.get_property(message, "signalInstanceId")
+        try:
+            await super().slotReconfigure(reconfiguration)
+        finally:
+            self.lastCommand = f"slotReconfigure <- {caller}"
+            self.update()
 
     slotReconfigure = slot(slotReconfigure, passMessage=True)
 
