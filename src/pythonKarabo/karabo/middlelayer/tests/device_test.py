@@ -292,13 +292,19 @@ async def test_lastCommand(deviceTest):
     myDevice = deviceTest["myDevice"]
     assert myDevice.lastCommand == ""
     leadId = get_event_loop().instance().deviceId
-    with (await getDevice("MyDevice")) as d:
+    d = await getDevice("MyDevice")
+    with d:
         await d.nodeWithSlot.pressMe()
         assert myDevice.lastCommand == f"nodeWithSlot.pressMe <- {leadId}"
         await d.start()
     assert myDevice.lastCommand == f"start <- {leadId}"
     await getSchema("MyDevice")
     assert myDevice.lastCommand == f"start <- {leadId}"
+    with d:
+        current = d.integer
+        await setWait(d, integer=2)
+        assert d.lastCommand == f"slotReconfigure <- {leadId}"
+        await setWait(d, integer=current)
 
 
 @pytest.mark.timeout(30)
