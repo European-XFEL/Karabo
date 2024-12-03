@@ -629,13 +629,8 @@ internal_mirror_publish:
 pages:
   stage: docs
   image: python:3.12
-  # uncomment after testing
-  #only:
   rules:
    - if: $CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH
-  #except:
-  #  - branches
-  #  - schedules
   script:
     - apt-get -y update
     - apt-get -y install doxygen graphviz
