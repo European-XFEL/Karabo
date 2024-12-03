@@ -27,7 +27,6 @@ sys.path.append(op.abspath("../src/pythonGui"))
 LOCAL_MODULES = [
     "karabo", "karabo.bound", "traits",
     "karabo.common", "karabo.middlelayer", "karabo.native",
-    "karabo.middlelayer_api", "karabo.bound_api",
     "karabo.project_db", "karabo.common.api",
     "karabo.common.scenemodel", "karabo.common.scenemodel.api"]
 
@@ -37,6 +36,9 @@ for mod_name in LOCAL_MODULES:
 MOCK_MODULES = [
     "traits.traits_listener", "lxml", "paho", "async_timeout",
     "paho.mqtt", "paho.mqtt.client", "karabogui._version",
+    "aiormq", "aiormq.exceptions", "aiormq.base",
+    "karabind",
+    "pycodestyle", "pyflakes.api",
     "karabo._version", "karabo.common.packaging.utils",
     "qtpy", "qtpy.QtGui", "qtpy.QtCore", "qtpy.QtWidgets", "qtpy.Qsci",
     "pyqtgraph", "pyqtgraph.exporters", "pyqtgraph.graphicsItems",
@@ -77,6 +79,7 @@ templates_path = [".templates"]
 
 # The suffix of source filenames.
 source_suffix = ".rst"
+graphviz_output_format = 'svg'
 
 # The encoding of source files.
 # source_encoding = "utf-8-sig"
@@ -135,7 +138,7 @@ pygments_style = "sphinx"
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = "default"
+html_theme = "sphinx_rtd_theme"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
