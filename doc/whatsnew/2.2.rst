@@ -149,6 +149,9 @@ Graphical user interface
 What's New in Karabo 2.2.4
 **************************
 
+Summary
+=======
+
 The **most relevant improvements** and fixes are:
 
 ikarabo enhancements
