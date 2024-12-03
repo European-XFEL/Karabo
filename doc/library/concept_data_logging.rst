@@ -32,6 +32,7 @@ made. On a default Karabo installation, this run configuration file is located a
 configuration file using the text file based backend is presented below:
 
 .. code-block:: bash
+
    #!/bin/bash
    # This file is part of the initial configuration of Karabo
    cd $KARABO/var/data
