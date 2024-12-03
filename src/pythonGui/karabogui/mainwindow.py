@@ -153,11 +153,12 @@ _PANELS = {
 SETTINGS_TITLE = '&Application Settings'
 GEOMETRY_TITLE = "&Window Geometry"
 GRAFANA_LINK = "https://ctrend.xfel.eu/"
-RTD_LINK = "https://rtd.xfel.eu/docs"
-RTD_GUI_LINK = f"{RTD_LINK}/howtogui/en/latest/"
-RTD_FW_LINK = f"{RTD_LINK}/karabo/en/latest/"
-RTD_MACRO_LINK = f"{RTD_LINK}/howtomacro/en/latest/"
-KEYBOARD_SHORTCUTS = f"{RTD_LINK}/howtogui/en/latest/keyboard_shortcuts.html"
+PAGES_FW_LINK = "https://karabo.pages.xfel.eu/Framework/"
+
+PAGES_LINK = "https://karabodevices.pages.xfel.eu"
+PAGES_MACRO_LINK = f"{PAGES_LINK}/howtomacro/"
+PAGES_GUI_LINK = f"{PAGES_LINK}/howtogui/"
+KEYBOARD_SHORTCUTS = f"{PAGES_LINK}/howtogui/keyboard_shortcuts.html"
 
 
 class MainWindow(QMainWindow):
@@ -860,15 +861,15 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def onGuiDocumentation(self):
-        self._open_link(RTD_GUI_LINK)
+        self._open_link(PAGES_GUI_LINK)
 
     @Slot()
     def onKaraboDocumentation(self):
-        self._open_link(RTD_FW_LINK)
+        self._open_link(PAGES_FW_LINK)
 
     @Slot()
     def onMacroDocumentation(self):
-        self._open_link(RTD_MACRO_LINK)
+        self._open_link(PAGES_MACRO_LINK)
 
     @Slot()
     def onWizard(self):
