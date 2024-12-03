@@ -100,7 +100,7 @@ return value is not expected. This is the *call* pattern.
 
 	A special case of the call pattern is the global call. The idea is to call a specific
 	slot function irrespective of the device that carries it. This is expressed by using
-	a “*” instead of a specific device name. Global calls should not be used in device
+	a "*" instead of a specific device name. Global calls should not be used in device
 	code but are mentioned here for completeness.
 
 The call follows a fire-and-forget mentality and any potential reply statement on the
@@ -154,8 +154,8 @@ using ``karabo::util::bind_weak``:
 
 .. code-block:: c++
 
-    string txt(“The answer is: ”);
-    request(“some/device/1”, “slotFoo”, 21)
+    string txt("The answer is: ");
+    request("some/device/1", "slotFoo", 21)
 	.receiveAsynce<int>(bind_weak(&onReply, this, txt, _1),
                             bind_weak(&onError, this));
 
@@ -167,7 +167,7 @@ using ``karabo::util::bind_weak``:
         try {
 		throw;
 	} catch (const std::exception& e) {
-		std::cout << An error occurred when calling 'slotFoo': "
+		std::cout << "An error occurred when calling 'slotFoo': "
 		<< e.what() << std::endl;
 	}
     }
