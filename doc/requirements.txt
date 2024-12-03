@@ -1,4 +1,5 @@
 sphinx==1.8.5
+sphinx_rtd_theme==0.4.3
 git+https://git.xfel.eu/xfel-rtd/rtd-conf.git
 slumber
 alabaster==0.7.13
