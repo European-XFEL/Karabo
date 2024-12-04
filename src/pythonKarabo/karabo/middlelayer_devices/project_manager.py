@@ -195,11 +195,11 @@ class ProjectManager(Device):
         """Implements a generic Hash-in/Hash-out interface
 
         :param params: the input Hash.
-                      it must contain:
-                      - a `dbtoken` string matching an open session
-                      - a `type` string matching a non-generic slot name
-                      - the optional fields required by the non-generic slot
-                        requested.
+            it must contain:
+            - a `dbtoken` string matching an open session
+            - a `type` string matching a non-generic slot name
+            - the optional fields required by the non-generic slot
+            requested.
         """
         try:
             msg = "Input must be a Hash"
@@ -241,18 +241,18 @@ class ProjectManager(Device):
 
         :param token: database user token
         :param items: items to be save. Should be a list(Hash) object were each
-                      entry is of the form:
+            entry is of the form:
 
-                      - xml: xml of item
-                      - uuid: uuid of item
-                      - overwrite: behavior in case of conflict
-                      - domain: to write to
+            - xml: xml of item
+            - uuid: uuid of item
+            - overwrite: behavior in case of conflict
+            - domain: to write to
         :param client: the client information (string) if provided
 
         :raises: `ProjectDBError` in case of database (connection) problems
-                 `TypeError` in case an no type information or an unknown type
-                 is found in the root element.
-                 `RuntimeError` if no database if connected.
+            `TypeError` in case an no type information or an unknown type
+            is found in the root element.
+            `RuntimeError` if no database if connected.
         """
 
         self.logger.debug("Saving items: {}".format([i.get("uuid") for i in
@@ -273,14 +273,13 @@ class ProjectManager(Device):
 
         :param token: database user token
         :param items: list of Hashes containing information on which items
-                      to load. Each list entry should be a Hash containing
-
-                      - uuid: the uuid of the item
-                      - domain: domain to load item from
+            to load. Each list entry should be a Hash containing
+            - uuid: the uuid of the item
+            - domain: domain to load item from
 
         :return: a Hash where the keys are the item uuids and values are the
-                 item XML. If the load failed the value for this uuid is set
-                 to False
+            item XML. If the load failed the value for this uuid is set
+            to False
         """
 
         self.logger.debug("Loading items: {}"
@@ -325,11 +324,12 @@ class ProjectManager(Device):
         """
         List items in domain which match item_types if given, or all items
         if not given
+
         :param token: database user token
         :param domain: domain to list items from
         :param item_types: list or tuple of item_types to list
         :return: a list of Hashes where each entry has keys: uuid, item_type
-                 and simple_name
+            and simple_name
         """
         self._checkDbInitialized(token)
 
@@ -365,7 +365,7 @@ class ProjectManager(Device):
         :param item_type: item_type to match
         :param simple_name: simple_name to match
         :return: a list of Hashes where each entry has keys: uuid, date,
-                 item_type and simple_name sorted by date
+            item_type and simple_name sorted by date
         """
         self._checkDbInitialized(token)
 
@@ -397,6 +397,7 @@ class ProjectManager(Device):
     def slotListDomains(self, token):
         """
         List domains available on this database
+
         :param token: database user token
         :return:
         """
@@ -422,24 +423,26 @@ class ProjectManager(Device):
     def slotListProjectsWithDevice(self, args):
         """
         List projects in domain which have configurations for a given device.
+
         :param args: a hash that must contain the keys "token", "domain" and
-                     "device_id" with the following meanings: "token" is the
-                     database user token, "domain" is the domain to list
-                     projects from and "device_id" is the part that must be
-                     contained in the ids of the devices with configurations
-                     stored in the projects to be listed.
+            "device_id" with the following meanings: "token" is the
+            database user token, "domain" is the domain to list
+            projects from and "device_id" is the part that must be
+            contained in the ids of the devices with configurations
+            stored in the projects to be listed.
+
         :return: a Hash with key, "projects", with a list of Hashes for its
-                 value. Each Hash in the list has four keys: "uuid",
-                 "name", "last_modified" and "devices". "uuid" is the unique id
-                 of the project in the project database, "name" is the project
-                 name, "last_modified" is the UTC imestamp of the projects's
-                 most recent modification in "%Y-%m-%d %H:%M:%S" format and
-                 "devices" is a list of the device ids in the project that
-                 match the given device_id part passed to the slot.
-                 The returned Hash also has a boolean key "success" that
-                 indicates whether the slot execution has been successful
-                 (True) and a string key "reason", that will contain an error
-                 description when the slot execution fails.
+            value. Each Hash in the list has four keys: "uuid",
+            "name", "last_modified" and "devices". "uuid" is the unique id
+            of the project in the project database, "name" is the project
+            name, "last_modified" is the UTC imestamp of the projects's
+            most recent modification in "%Y-%m-%d %H:%M:%S" format and
+            "devices" is a list of the device ids in the project that
+            match the given device_id part passed to the slot.
+            The returned Hash also has a boolean key "success" that
+            indicates whether the slot execution has been successful
+            (True) and a string key "reason", that will contain an error
+            description when the slot execution fails.
         """
         for k in ["token", "domain", "device_id"]:
             if not args.has(k):
