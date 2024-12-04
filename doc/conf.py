@@ -37,15 +37,18 @@ MOCK_MODULES = [
     "traits.traits_listener", "lxml", "paho", "async_timeout",
     "paho.mqtt", "paho.mqtt.client", "karabogui._version",
     "aiormq", "aiormq.exceptions", "aiormq.base",
-    "karabind",
-    "pycodestyle", "pyflakes.api",
-    "karabo._version", "karabo.common.packaging.utils",
+    "pycodestyle", "pyflakes.api", "natsort", "dateutil",
+    "dateutil.parser", "dateutil.tz", "psutil", "lxml",
+    "lxml.builder",
     "qtpy", "qtpy.QtGui", "qtpy.QtCore", "qtpy.QtWidgets", "qtpy.Qsci",
     "pyqtgraph", "pyqtgraph.exporters", "pyqtgraph.graphicsItems",
     "pyqtgraph.graphicsItems.LegendItem", "scipy", "scipy.optimize",
     "scipy.ndimage", "scipy.stats", "lttbc", "karabogui.sceneview.api",
     "qtpy.QtSvg", "tabulate", "karabogui.controllers.table.api", "aioredis",
-    "IPython.qt.console.pygments_highlighter", "qtpy.QtNetwork"]
+    "IPython.qt.console.pygments_highlighter", "qtpy.QtNetwork",
+    "karabind",
+    "karabo._version", "karabo.common.packaging.utils",
+]
 
 sys.modules.update((mod_name, MagicMock()) for mod_name in MOCK_MODULES)
 
