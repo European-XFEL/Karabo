@@ -437,7 +437,7 @@ namespace karabo {
              * "shared" input channels (e.g. "deviceId:input") as argument. The returned channel id will receive the
              * data. If an empty string or an unknown id is returned, the data will be dropped.
              *
-             * @param: selector takes vector<string> as argument and returns string
+             * @param selector takes vector<string> as argument and returns string
              */
             void registerSharedInputSelector(SharedInputSelector&& selector);
 
