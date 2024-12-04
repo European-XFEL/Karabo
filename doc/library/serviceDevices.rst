@@ -19,8 +19,8 @@ C++ Service Devices
    :private-members:
 
 
-Python Bound Service Devices
-============================
+Python Service Devices
+======================
 
 .. autoclass:: karabo.middlelayer_devices.project_manager.ProjectManager
    :members:
