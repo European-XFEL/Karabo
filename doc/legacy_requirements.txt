@@ -1,0 +1,19 @@
+# These are the modules required by the legacy
+# readthedocs server.
+sphinx==1.8.5
+sphinx_rtd_theme==0.4.3
+git+https://git.xfel.eu/xfel-rtd/rtd-conf.git
+slumber
+alabaster==0.7.13
+breathe==4.7.3
+numpy<2.0
+matplotlib
+typing
+natsort
+psutil
+Jinja2<=3.0.3
+traits==6.0.0
+pint==0.17.0
+pytz>=2015.6
+urllib3<2.0.0
+#lxml==3.6.4 # does not build on https://rtd.xfel.eu/
