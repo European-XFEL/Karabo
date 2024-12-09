@@ -55,6 +55,13 @@ void exportPyXmsImageDataElement(py::module_& m) {
               .value("PNG", Encoding::PNG)
               .value("BMP", Encoding::BMP)
               .value("TIFF", Encoding::TIFF)
+              .value("YUV444", Encoding::YUV444)
+              .value("YUV422_YUYV", Encoding::YUV422_YUYV)
+              .value("YUV422_UYVY", Encoding::YUV422_UYVY)
+              .value("BAYER_RG", Encoding::BAYER_RG)
+              .value("BAYER_BG", Encoding::BAYER_BG)
+              .value("BAYER_GR", Encoding::BAYER_GR)
+              .value("BAYER_GB", Encoding::BAYER_GB)
               .export_values();
     }
 
