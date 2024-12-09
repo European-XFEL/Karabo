@@ -18,6 +18,7 @@ import getpass
 import os
 import socket
 import sys
+import traceback
 from asyncio import (
     TimeoutError, all_tasks, create_subprocess_exec, gather, get_event_loop,
     set_event_loop, sleep, wait_for)
@@ -138,6 +139,7 @@ class DeviceServerBase(SignalSlotable):
         self.deviceInstanceMap = {}
 
         self.plugins = {}
+        self.plugin_errors = {}
         self.processes = {}
         self.bounds = {}
         self.pid = os.getpid()
@@ -178,6 +180,9 @@ class DeviceServerBase(SignalSlotable):
             f"Starting Karabo {karaboVersion} DeviceServer "
             f"(pid: {self.pid}) on host {self.hostName}, topic "
             f"{get_event_loop().topic}")
+        for name, detail in self.plugin_errors.items():
+            self.logger.error(
+                f"Problem loading device class {name}: {detail}")
 
         sys.stdout = KaraboStream(sys.stdout)
         sys.stderr = KaraboStream(sys.stderr)
@@ -501,8 +506,9 @@ class MiddleLayerDeviceServer(HeartBeatMixin, DeviceServerBase):
                                          run_in_executor(None, ep.load))
                 changes = True
             except BaseException:
-                self.logger.exception('Cannot load middle layer plugin "%s"',
-                                      ep.name)
+                details = traceback.format_exc()
+                self.plugin_errors[ep.name] = details
+
         return changes
 
     def getVisibilities(self):
