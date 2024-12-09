@@ -44,7 +44,7 @@ dependencies:
   - pyqt=5.15.9
   - qscintilla2=2.14.0
   # Plotting and utils
-  - numpy=2.1.1
+  - numpy=2.1.3
   - scipy=1.14.0
   - lttbc=0.2.4
   - natsort=6.2.0
