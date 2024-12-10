@@ -52,7 +52,7 @@ dependencies:
   - cycler=0.10.0
   - tabulate=0.8.9
   - traits=6.4.3
-  - lxml=5.1.*
+  - lxml=5.3.0
   - requests=2.28.1
   - python-dateutil=2.9.0
   - conda
