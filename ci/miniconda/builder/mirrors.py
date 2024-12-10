@@ -62,6 +62,10 @@ class _MirrorChannel:
         except PackagesNotFoundError:
             print(f"no packages from {self.mirror_channel} for {platform}")
             return {}
+        except json.decoder.JSONDecodeError:
+            print("Json decode error, continuing without packages on "
+                  f"{self.mirror_channel} for {platform}")
+            return {}
 
 
 class Mirrors:
