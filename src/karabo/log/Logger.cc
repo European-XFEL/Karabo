@@ -437,9 +437,13 @@ namespace karabo {
             }
             std::filesystem::path fname(m_config.get<std::string>("audit.filename"));
             uint16_t maxFiles = m_config.get<uint16_t>("audit.maxFiles");
+            uint32_t audit_hour = m_config.get<uint32_t>("audit.hour");
+            uint32_t audit_min = m_config.get<uint32_t>("audit.minute");
+
+            // Clean archive of log-files using 'maxFiles' filter
             applyRotationRulesFor(fname, maxFiles);
-            auto log = spdlog::daily_logger_format_mt(name, fname.string(), m_config.get<uint32_t>("audit.hour"),
-                                                      m_config.get<uint32_t>("audit.minute"), false, maxFiles);
+            auto log = spdlog::daily_logger_mt(name, fname.string(), audit_hour, audit_min, false, maxFiles);
+
             log->set_pattern(m_config.get<std::string>("audit.pattern"));
             auto val = m_config.get<std::string>("audit.threshold");
             toLower(val);
@@ -451,11 +455,11 @@ namespace karabo {
 
         void Logger::applyRotationRulesFor(const std::filesystem::path& fpath, std::size_t maxFiles) {
             namespace fs = std::filesystem;
-            // use temporary map to sort paths by 'last write time' in seconds
-            std::map<std::size_t, fs::path> tmpmap;
             // get directory where log file located ...
             fs::path dir = fpath.parent_path();
+            // get file stem: name without dir path and extension
             auto stem = fpath.stem().string();
+            std::map<std::size_t, fs::path> tmpmap;
             for (const auto& entry : fs::directory_iterator(dir)) {
                 if (!entry.is_regular_file()) continue;
                 auto p = entry.path();
