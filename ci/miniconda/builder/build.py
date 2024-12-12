@@ -361,9 +361,16 @@ class Builder:
 
     def upload_recipes(self, sftp):
         """Transfers packages using the sftp client"""
-        print("uploading packages")
+        print("uploading recipes")
         target_dir = self.platform
-        conda_build_path = conda_run(Commands.INFO, "--root").strip()
+        if target_dir == "win-64":
+            # XXX: Special treatment for windows as conda info return
+            # difficult return value on CI
+            conda_build_path = os.getenv("WIN_CONDA_ROOT").strip()
+            assert conda_build_path, "Conda root must be set in CI variables"
+        else:
+            conda_build_path = conda_run(Commands.INFO, "--root").strip()
+        print("Conda build path", conda_build_path)
         packages_path = op.join(conda_build_path, "conda-bld", target_dir)
         chdir(self.args.remote_channel_dir, sftp)
         mkdir(target_dir, sftp)
@@ -393,7 +400,7 @@ class Builder:
         """all local mirror content to upstream mirror"""
         # Collect the commands to be run
         cmds = []
-        cmds.append("source ~/miniconda3/bin/activate")
+        cmds.append("source ~/miniforge3/bin/activate")
         dirs = [
             self.args.remote_channel_dir,
             f"{self.args.remote_mirror_dir}/conda-forge",
@@ -406,8 +413,8 @@ class Builder:
                 cmds.append(f"rm -f {plat_dir}/repodata.json*")
                 cmds.append(f"rm -f {plat_dir}/repodata_from_packages.json*")
                 cmds.append(f"rm -f {plat_dir}/current_repodata.json*")
-            cmds.append(f"conda index {dir_} --check-md5 --no-progress")
-
+            cmds.append(f"conda index {dir_}")
+            print(f"Adding conda index for dir: {dir_}")
         if os.environ.get("MIRROR_HOSTNAME", None) == "exflctrl01":
             # a version of this script is available in the conda-recipes
             # repository
