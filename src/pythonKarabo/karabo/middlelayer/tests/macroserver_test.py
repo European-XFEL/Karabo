@@ -18,7 +18,7 @@ import uuid
 import pytest
 
 from karabo.middlelayer import call, getDevice, updateDevice
-from karabo.middlelayer.conftest import event_loop
+from karabo.middlelayer.testing import AsyncDeviceContext
 from karabo.native import Hash
 
 from ..macro_server import MacroServer
@@ -62,10 +62,10 @@ async def init_macro(code, expected):
     await call(proxy.deviceId, "slotKillDevice")
 
 
-@pytest.mark.timeout(20)
+@pytest.mark.timeout(30)
 @pytest.mark.asyncio
-async def test_macroserver(event_loop: event_loop):
+async def test_macroserver():
     server = MacroServer(dict(serverId=TEST_MACROSERVER))
-    await server.startInstance(loop=event_loop)
-    await init_macro(SYNC_CODE, "sync")
-    await init_macro(ASYNC_CODE, "async")
+    async with AsyncDeviceContext(server=server):
+        await init_macro(SYNC_CODE, "sync")
+        await init_macro(ASYNC_CODE, "async")

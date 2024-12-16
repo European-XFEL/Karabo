@@ -953,7 +953,7 @@ def test_connectdevice(deviceTest):
 
 @pytest.mark.timeout(30)
 @run_test
-def test_proxy_dead(deviceTest):
+def test_proxy_dead():
     async def starter():
         a = Remote({"_deviceId_": "moriturus"})
         await a.startInstance()
@@ -1089,31 +1089,25 @@ def test_macro_klass_inheritance():
     assert issubclass(macro.klass, B)
 
 
-@pytest_asyncio.fixture(scope="function")
-@pytest.mark.asyncio
-async def abstractDeviceTest():
+@pytest.mark.timeout(30)
+@run_test
+async def test_state_machine():
+    """test the execution of abstract macro with new state machine"""
     local = LocalAbstract(_deviceId_="local_abstract",
                           project="test", module="test")
     async with AsyncDeviceContext(local=local):
-        yield
+        with await getDevice("local_abstract") as d:
+            assert d.state == State.ON
+            seen = False
 
+            async def show_active():
+                nonlocal d, seen
+                await waitUntil(lambda: d.state == State.MOVING)
+                seen = True
 
-@pytest.mark.timeout(30)
-@run_test
-async def test_state_machine(abstractDeviceTest):
-    """test the execution of abstract macro with new state machine"""
-    with await getDevice("local_abstract") as d:
-        assert d.state == State.ON
-        seen = False
-
-        async def show_active():
-            nonlocal d, seen
-            await waitUntil(lambda: d.state == State.MOVING)
-            seen = True
-
-        task = background(show_active())
-        # Give background a chance to post on loop!
-        await sleep(0.05)
-        await d.start()
-        await task
-        assert seen
+            task = background(show_active())
+            # Give background a chance to post on loop!
+            await sleep(0.05)
+            await d.start()
+            await task
+            assert seen
