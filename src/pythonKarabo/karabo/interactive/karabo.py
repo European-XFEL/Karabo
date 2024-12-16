@@ -639,7 +639,7 @@ def list_devices(args):
         else:
             # Python devices
             for ep in entry_points(group=api):
-                if args.internal or ep.dist.project_name != 'karabo':
+                if args.internal or ep.dist.name != 'karabo':
                     collected.setdefault(name, []).append(ep)
 
     def _show_py_devices(name, entries):
@@ -649,7 +649,7 @@ def list_devices(args):
         print(TEMPLATE.format('Class', 'Package', 'Version'))
         print('=' * 79)
         for ep in entries:
-            print(TEMPLATE.format(ep.name, ep.dist.project_name,
+            print(TEMPLATE.format(ep.name, ep.dist.name,
                                   ep.dist.version))
         print()
 
