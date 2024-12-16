@@ -440,13 +440,8 @@ namespace karabo {
                 boost::shared_lock<boost::shared_mutex> lock(m_instanceInfoMutex);
                 call("*", "slotInstanceNew", m_instanceId, m_instanceInfo);
             }
-            // Start emitting heartbeats, but do not send one immediately: All others will just got notified about us.
-            // If they are interested to track us, they will not miss our heartbeat before (five times [see
-            // letInstanceSlowlyDieWithoutHeartbeat]) our heartbeat interval. But if we send the heartbeat immediately,
-            // in a busy system this first heartbeat might be processed before our instanceNew which is weird.
-            // - '/ 2' protects us from changing factor five to one or close to one.
-            // - '+ 1' protects us from 0 (for the crazy interval of 1).
-            delayedEmitHeartbeat(m_heartbeatInterval / 2 + 1);
+            // Start emitting heartbeats
+            delayedEmitHeartbeat(m_heartbeatInterval);
         }
 
 
