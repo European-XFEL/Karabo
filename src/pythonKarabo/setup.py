@@ -117,7 +117,7 @@ else:
             'karabo=karabo.interactive.karabo:main',
             'karabo-pythonserver=karabo.bound.device_server:main',
             'karabo-middlelayerserver=karabo.middlelayer.device_server:DeviceServer.main',
-            'karabo-macroserver=karabo.macro_devices.macro_server:MacroServer.main',
+            'karabo-macroserver=karabo.middlelayer.macro_server:MacroServer.main',
             'karabo-cli=karabo.interactive.ideviceclient:main',
             'ikarabo=karabo.interactive.ikarabo:main',
             'convert-karabo-device=karabo.interactive.convert_device_project:main',
@@ -152,7 +152,7 @@ else:
             'MdlOrderTestDevice=karabo.integration_tests.signal_slot_order_test.mdl_ordertest_device:MdlOrderTestDevice',
         ],
         'karabo.macro_device': [
-            'MetaMacro=karabo.macro_devices.metamacro:MetaMacro'
+            'MetaMacro=karabo.middlelayer.metamacro:MetaMacro'
         ],
         'karabo.bound_device_test': [
             'TestDevice=karabo.bound.tests.boundDevice:TestDevice',
