@@ -17,6 +17,7 @@ import sys
 
 from karabo.middlelayer import AccessLevel, Overwrite
 from karabo.middlelayer.device_server import MiddleLayerDeviceServer
+from karabo.middlelayer.output import KaraboStream
 
 
 class MacroServer(MiddleLayerDeviceServer):
@@ -34,6 +35,11 @@ class MacroServer(MiddleLayerDeviceServer):
         info = super()._initInfo()
         info["lang"] = "macro"
         return info
+
+    async def _run(self, **kwargs):
+        await super()._run(**kwargs)
+        sys.stdout = KaraboStream(sys.stdout)
+        sys.stderr = KaraboStream(sys.stderr)
 
 
 if __name__ == '__main__':

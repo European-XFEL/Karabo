@@ -28,8 +28,8 @@ from karabo.middlelayer.device_client import (
     Queue, call, callNoWait, connectDevice, executeNoWait, getConfiguration,
     getDevice, getInstanceInfo, getProperties, getSchema, lock, setNoWait,
     setWait, updateDevice, waitUntil, waitUntilNew, waitWhile)
-from karabo.middlelayer.device_server import KaraboStream
 from karabo.middlelayer.macro import Macro, MacroSlot
+from karabo.middlelayer.output import KaraboStream
 from karabo.middlelayer.pipeline import OutputChannel, PipelineContext
 from karabo.middlelayer.signalslot import slot
 from karabo.middlelayer.synchronization import background, sleep
