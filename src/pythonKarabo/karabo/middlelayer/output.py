@@ -18,7 +18,6 @@
 from asyncio import get_event_loop
 
 
-# XXX: This class should probably inherit from io.IOBase
 class KaraboStream:
     """ An output stream that redirects output to the karabo network """
 
