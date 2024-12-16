@@ -41,7 +41,6 @@ from .configuration import validate_init_configuration
 from .eventloop import EventLoop
 from .heartbeat_mixin import HeartBeatMixin
 from .logger import CacheLog, build_logger_node
-from .output import KaraboStream
 from .signalslot import SignalSlotable, slot
 from .synchronization import (
     FutureDict, allCompleted, background, firstCompleted)
@@ -180,9 +179,6 @@ class DeviceServerBase(SignalSlotable):
         for name, detail in self.plugin_errors.items():
             self.logger.error(
                 f"Problem loading device class {name}: {detail}")
-
-        sys.stdout = KaraboStream(sys.stdout)
-        sys.stderr = KaraboStream(sys.stderr)
 
     def _generateDefaultServerId(self):
         return self.hostName + "_Server_" + str(os.getpid())
