@@ -1286,19 +1286,13 @@ class VectorHash(Vector):
                             for ele in data]
             table = np.array(data, dtype=self.dtype)
         else:
-            table = []
-            for datarow in data:
-                tablerow = ()
-                for name in self.dtype.names:
-                    desc = self.bindings[name]
-                    # Convert all cells to their respective dtype and check
-                    # the values with toKaraboValue for their attribute
-                    # (min, max, ...) compliance
-                    value = desc.cast(datarow[name])
-                    kvalue = desc.toKaraboValue(value, strict=False)
-                    tablerow += (kvalue.value,)
-                table.append(tablerow)
-            table = np.array(table, dtype=self.dtype)
+            table = np.empty(len(data), dtype=self.dtype)
+            for index, row_data in enumerate(data):
+                row = [self.bindings[name].toKaraboValue(
+                    self.bindings[name].cast(
+                        row_data[name]), strict=False).value
+                       for name in self.dtype.names]
+                table[index] = tuple(row)
 
         self.check(table)
         return TableValue(table, descriptor=self, units=self.units,
