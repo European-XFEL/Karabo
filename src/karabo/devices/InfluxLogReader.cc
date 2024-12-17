@@ -24,9 +24,7 @@
 
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
-#include <boost/make_shared.hpp>
 #include <boost/optional.hpp>
-#include <boost/smart_ptr/enable_shared_from_this.hpp>
 #include <complex>
 #include <nlohmann/json.hpp>
 #include <sstream>
@@ -50,7 +48,7 @@ namespace karabo {
         using namespace karabo::util;
         using namespace karabo::net;
         using namespace karabo::xms;
-        using namespace boost::placeholders;
+        using namespace std::placeholders;
 
         namespace nl = nlohmann;
 
@@ -225,14 +223,14 @@ namespace karabo {
             karabo::net::InfluxDbClient::Pointer influxClient =
                   Configurator<InfluxDbClient>::create("InfluxDbClient", config);
 
-            auto ctxtPtr(boost::make_shared<PropertyHistoryContext>(deviceId, property, from, to, maxNumData, aReply,
-                                                                    influxClient));
+            auto ctxtPtr(std::make_shared<PropertyHistoryContext>(deviceId, property, from, to, maxNumData, aReply,
+                                                                  influxClient));
 
             asyncDataCountForProperty(ctxtPtr);
         }
 
 
-        void InfluxLogReader::asyncDataCountForProperty(const boost::shared_ptr<PropertyHistoryContext>& ctxt) {
+        void InfluxLogReader::asyncDataCountForProperty(const std::shared_ptr<PropertyHistoryContext>& ctxt) {
             std::ostringstream iqlQuery;
 
             /* The query for data count, differently from the query for the property values (or samples) that will
@@ -256,10 +254,10 @@ namespace karabo {
                 // reply registered and will send the default empty reply, ignoring that a reply has already been sent.
                 // That's the reason for posting the reply to the event loop instead of sending it directly. The
                 // remaining calls to ctxt->aReply.error in the processing of the slot can be sent directly.
-                boost::weak_ptr<karabo::xms::SignalSlotable> weakThis(weak_from_this());
+                std::weak_ptr<karabo::xms::SignalSlotable> weakThis(weak_from_this());
                 EventLoop::getIOService().post([weakThis, ctxt, errMsg]() {
                     // Only sends a reply if the InfluxLogReader instance is still alive - lock() call is successful.
-                    boost::shared_ptr<karabo::xms::SignalSlotable> ptr = weakThis.lock();
+                    std::shared_ptr<karabo::xms::SignalSlotable> ptr = weakThis.lock();
                     if (ptr) {
                         ctxt->aReply.error(errMsg);
                     }
@@ -269,7 +267,7 @@ namespace karabo {
 
 
         void InfluxLogReader::onDataCountForProperty(const karabo::net::HttpResponse& dataCountResp,
-                                                     const boost::shared_ptr<PropertyHistoryContext>& ctxt) {
+                                                     const std::shared_ptr<PropertyHistoryContext>& ctxt) {
             bool errorHandled = handleHttpResponseError(dataCountResp, ctxt->aReply);
 
             if (errorHandled) {
@@ -342,7 +340,7 @@ namespace karabo {
         }
 
 
-        void InfluxLogReader::asyncGetPropertyValues(const boost::shared_ptr<PropertyHistoryContext>& ctxt) {
+        void InfluxLogReader::asyncGetPropertyValues(const std::shared_ptr<PropertyHistoryContext>& ctxt) {
             std::ostringstream iqlQuery;
 
             iqlQuery << "SELECT /^" << ctxt->property << "-[A-Z0-9_]+$/ FROM \"" << ctxt->deviceId
@@ -360,7 +358,7 @@ namespace karabo {
             }
         }
 
-        void InfluxLogReader::asyncGetPropertyValuesSamples(const boost::shared_ptr<PropertyHistoryContext>& ctxt) {
+        void InfluxLogReader::asyncGetPropertyValuesSamples(const std::shared_ptr<PropertyHistoryContext>& ctxt) {
             std::ostringstream iqlQuery;
 
             iqlQuery << "SELECT SAMPLE(/^" << ctxt->property << "-[A-Z0-9_]+$/, " << ctxt->maxDataPoints << ") FROM \""
@@ -381,7 +379,7 @@ namespace karabo {
 
         void InfluxLogReader::onPropertyValues(const karabo::net::HttpResponse& valuesResp,
                                                const std::string& columnPrefixToRemove,
-                                               const boost::shared_ptr<PropertyHistoryContext>& ctxt) {
+                                               const std::shared_ptr<PropertyHistoryContext>& ctxt) {
             bool errorHandled = handleHttpResponseError(valuesResp, ctxt->aReply);
 
             if (errorHandled) {
@@ -409,7 +407,7 @@ namespace karabo {
             }
         }
 
-        void InfluxLogReader::asyncGetPropertyValuesMean(const boost::shared_ptr<PropertyHistoryContext>& ctxt) {
+        void InfluxLogReader::asyncGetPropertyValuesMean(const std::shared_ptr<PropertyHistoryContext>& ctxt) {
             std::ostringstream iqlQuery;
             iqlQuery << "SELECT MEAN(/^" << ctxt->property << "-[A-Z0-9_]+$/) FROM \"" << ctxt->deviceId
                      << "\" WHERE time >= " << epochAsMicrosecString(ctxt->from) << m_durationUnit
@@ -429,7 +427,7 @@ namespace karabo {
 
 
         void InfluxLogReader::onMeanPropertyValues(const karabo::net::HttpResponse& valuesResp,
-                                                   const boost::shared_ptr<PropertyHistoryContext>& ctxt) {
+                                                   const std::shared_ptr<PropertyHistoryContext>& ctxt) {
             bool errorHandled = handleHttpResponseError(valuesResp, ctxt->aReply);
 
             if (errorHandled) {
@@ -509,11 +507,11 @@ namespace karabo {
 
             ConfigFromPastContext ctxt(deviceId, atTime, aReply, influxClient);
 
-            asyncLastLoginFormatBeforeTime(boost::make_shared<ConfigFromPastContext>(ctxt));
+            asyncLastLoginFormatBeforeTime(std::make_shared<ConfigFromPastContext>(ctxt));
         }
 
 
-        void InfluxLogReader::asyncLastLoginFormatBeforeTime(const boost::shared_ptr<ConfigFromPastContext>& ctxt) {
+        void InfluxLogReader::asyncLastLoginFormatBeforeTime(const std::shared_ptr<ConfigFromPastContext>& ctxt) {
             std::ostringstream iqlQuery;
 
             iqlQuery << "SELECT karabo_user, format FROM \"" << ctxt->deviceId
@@ -527,10 +525,10 @@ namespace karabo {
                                             bind_weak(&InfluxLogReader::onLastLoginFormatBeforeTime, this, _1, ctxt));
             } catch (const std::exception& e) {
                 const std::string errMsg = onException("Error querying last login before time");
-                boost::weak_ptr<karabo::xms::SignalSlotable> weakThis(weak_from_this());
+                std::weak_ptr<karabo::xms::SignalSlotable> weakThis(weak_from_this());
                 EventLoop::getIOService().post([weakThis, ctxt, errMsg]() {
                     // Only sends a reply if the InfluxLogReader instance is still alive - lock() call is successful.
-                    boost::shared_ptr<karabo::xms::SignalSlotable> ptr = weakThis.lock();
+                    std::shared_ptr<karabo::xms::SignalSlotable> ptr = weakThis.lock();
                     if (ptr) {
                         ctxt->aReply.error(errMsg);
                     }
@@ -540,7 +538,7 @@ namespace karabo {
 
 
         void InfluxLogReader::onLastLoginFormatBeforeTime(const karabo::net::HttpResponse& valueResp,
-                                                          const boost::shared_ptr<ConfigFromPastContext>& ctxt) {
+                                                          const std::shared_ptr<ConfigFromPastContext>& ctxt) {
             bool errorHandled = handleHttpResponseError(valueResp, ctxt->aReply);
 
             if (errorHandled) {
@@ -582,7 +580,7 @@ namespace karabo {
         }
 
 
-        void InfluxLogReader::asyncLastLogoutBeforeTime(const boost::shared_ptr<ConfigFromPastContext>& ctxt) {
+        void InfluxLogReader::asyncLastLogoutBeforeTime(const std::shared_ptr<ConfigFromPastContext>& ctxt) {
             std::ostringstream iqlQuery;
 
             iqlQuery << "SELECT LAST(karabo_user) FROM \"" << ctxt->deviceId << "__EVENTS\""
@@ -602,7 +600,7 @@ namespace karabo {
 
 
         void InfluxLogReader::onLastLogoutBeforeTime(const karabo::net::HttpResponse& valueResp,
-                                                     const boost::shared_ptr<ConfigFromPastContext>& ctxt) {
+                                                     const std::shared_ptr<ConfigFromPastContext>& ctxt) {
             bool errorHandled = handleHttpResponseError(valueResp, ctxt->aReply);
 
             if (errorHandled) {
@@ -643,7 +641,7 @@ namespace karabo {
         }
 
 
-        void InfluxLogReader::asyncLastSchemaDigestBeforeTime(const boost::shared_ptr<ConfigFromPastContext>& ctxt) {
+        void InfluxLogReader::asyncLastSchemaDigestBeforeTime(const std::shared_ptr<ConfigFromPastContext>& ctxt) {
             std::ostringstream iqlQuery;
 
             iqlQuery << "SELECT LAST(schema_digest) FROM \"" << ctxt->deviceId
@@ -663,7 +661,7 @@ namespace karabo {
 
 
         void InfluxLogReader::onLastSchemaDigestBeforeTime(const karabo::net::HttpResponse& valueResp,
-                                                           const boost::shared_ptr<ConfigFromPastContext>& ctxt) {
+                                                           const std::shared_ptr<ConfigFromPastContext>& ctxt) {
             bool errorHandled = handleHttpResponseError(valueResp, ctxt->aReply);
 
             if (errorHandled) {
@@ -711,7 +709,7 @@ namespace karabo {
 
 
         void InfluxLogReader::asyncSchemaForDigest(const std::string& digest,
-                                                   const boost::shared_ptr<ConfigFromPastContext>& ctxt) {
+                                                   const std::shared_ptr<ConfigFromPastContext>& ctxt) {
             std::ostringstream iqlQuery;
 
             iqlQuery << R"(SELECT * FROM ")" << ctxt->deviceId << R"(__SCHEMAS" WHERE "digest"='")" << digest
@@ -729,7 +727,7 @@ namespace karabo {
 
 
         void InfluxLogReader::onSchemaForDigest(const karabo::net::HttpResponse& schemaResp,
-                                                const boost::shared_ptr<ConfigFromPastContext>& ctxt,
+                                                const std::shared_ptr<ConfigFromPastContext>& ctxt,
                                                 const std::string& digest) {
             bool errorHandled = handleHttpResponseError(schemaResp, ctxt->aReply);
 
@@ -838,7 +836,7 @@ namespace karabo {
         }
 
 
-        void InfluxLogReader::asyncPropValueBeforeTime(const boost::shared_ptr<ConfigFromPastContext>& ctxt) {
+        void InfluxLogReader::asyncPropValueBeforeTime(const std::shared_ptr<ConfigFromPastContext>& ctxt) {
             int nProps = 0;
             std::ostringstream iqlQuery;
             std::vector<PropFromPastInfo> propInfos;
@@ -887,7 +885,7 @@ namespace karabo {
 
         void InfluxLogReader::onPropValueBeforeTime(const std::vector<PropFromPastInfo>& propInfos,
                                                     const karabo::net::HttpResponse& propValueResp,
-                                                    const boost::shared_ptr<ConfigFromPastContext>& ctxt) {
+                                                    const std::shared_ptr<ConfigFromPastContext>& ctxt) {
             bool errorHandled = handleHttpResponseError(propValueResp, ctxt->aReply);
 
             if (errorHandled) {
@@ -1173,9 +1171,9 @@ namespace karabo {
                 std::string errMsg("Error querying for bad data");
                 KARABO_LOG_FRAMEWORK_ERROR << errMsg << ": " << details;
                 // In the thread where AsyncReply was created we must not use it, so post:
-                boost::weak_ptr<karabo::xms::SignalSlotable> weakThis(weak_from_this());
+                std::weak_ptr<karabo::xms::SignalSlotable> weakThis(weak_from_this());
                 EventLoop::getIOService().post([weakThis, errMsg, details, aReply]() {
-                    boost::shared_ptr<karabo::xms::SignalSlotable> ptr(weakThis.lock());
+                    std::shared_ptr<karabo::xms::SignalSlotable> ptr(weakThis.lock());
                     if (ptr) {                         // Cannot use AsyncReply if its SignalSlotable is dying/dead
                         aReply.error(errMsg, details); // 2.13.X: aReply.error(errMsg + ": " + details);
                     }

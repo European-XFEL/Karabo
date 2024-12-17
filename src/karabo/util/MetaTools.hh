@@ -25,23 +25,23 @@
 #ifndef KARABO_UTIL_METATOOLS_HH
 #define KARABO_UTIL_METATOOLS_HH
 
-#include <boost/bind/bind.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/type_traits/integral_constant.hpp>
-#include <boost/type_traits/is_virtual_base_of.hpp>
+#include <functional>
 #include <iostream>
+#include <memory>
 #include <type_traits>
 #include <utility>
+
+
 namespace karabo {
     namespace util {
 
         class Hash;
 
         template <class T>
-        struct is_shared_ptr : boost::false_type {};
+        struct is_shared_ptr : std::false_type {};
 
         template <class T>
-        struct is_shared_ptr<boost::shared_ptr<T> > : boost::true_type {};
+        struct is_shared_ptr<std::shared_ptr<T>> : std::true_type {};
 
         /**
          * Conditionally cast a type to Hash, if Hash is a base class, but
@@ -53,7 +53,7 @@ namespace karabo {
         template <typename is_hash_base>
         struct conditional_hash_cast {
             // Here is for T deriving from Hash or Hash itself,
-            // below is the specialisation for is_hash_base = boost::false_type.
+            // below is the specialisation for is_hash_base = std::false_type.
 
             template <typename T>
             static const Hash& cast(const T& v) {
@@ -88,14 +88,14 @@ namespace karabo {
             }
 
             template <typename T>
-            static const boost::shared_ptr<T> cast(const boost::shared_ptr<T>& v) {
+            static const std::shared_ptr<T> cast(const std::shared_ptr<T>& v) {
                 // if the compiler ever reaches this point compilation is to fail on purpose, as
                 // we only support explicit setting of Hash::Pointer to the Hash
 
-                // is_hash_base: will always be boost::true_type when dealing
+                // is_hash_base: will always be std::true_type when dealing
                 // with types derived from Hash, i.e in the context of this
                 // template method evaluation.
-                static_assert(std::is_same<is_hash_base, boost::false_type>::value, // this evaluates false
+                static_assert(std::is_same<is_hash_base, std::false_type>::value, // this evaluates false
                               "Inserting derived hash classes as pointers is not supported");
                 return v;
             }
@@ -103,7 +103,7 @@ namespace karabo {
 
 
         template <>
-        struct conditional_hash_cast<boost::false_type> {
+        struct conditional_hash_cast<std::false_type> {
             template <typename T>
             static T&& cast(T&& v) {
                 return std::forward<T>(v);
@@ -119,36 +119,50 @@ namespace karabo {
         template <typename, typename>
         struct static_or_dyn_cast {
             template <typename T>
-            static boost::shared_ptr<T> cast(T* p) {
-                return boost::static_pointer_cast<T>(p->shared_from_this());
+            static std::shared_ptr<T> cast(T* p) {
+                return std::static_pointer_cast<T>(p->shared_from_this());
             }
         };
 
         // if it is a virtual base a dynamic cast must be made
 
         template <>
-        struct static_or_dyn_cast<boost::true_type, boost::true_type> {
+        struct static_or_dyn_cast<std::true_type, std::true_type> {
             template <typename T>
-            static boost::shared_ptr<T> cast(T* p) {
-                return boost::dynamic_pointer_cast<T>(p->shared_from_this());
+            static std::shared_ptr<T> cast(T* p) {
+                return std::dynamic_pointer_cast<T>(p->shared_from_this());
             }
         };
 
 
+        // First, a type trait to check whether a type can be static_casted to another
+        template <typename From, typename To, typename = void>
+        struct can_static_cast : std::false_type {};
+
+        template <typename From, typename To>
+        struct can_static_cast<From, To, std::void_t<decltype(static_cast<To>(std::declval<From>()))>>
+            : std::true_type {};
+
+        // Then, we apply the fact that a virtual base is first and foremost a base,
+        // that, however, cannot be static_casted to its derived class.
+        template <typename Base, typename Derived>
+        struct is_virtual_base_of
+            : std::conjunction<std::is_base_of<Base, Derived>, std::negation<can_static_cast<Base*, Derived*>>> {};
+
         // if this is not a direct base a dynamic cast must be made
 
         template <>
-        struct static_or_dyn_cast<boost::false_type, boost::false_type> {
+        struct static_or_dyn_cast<std::false_type, std::false_type> {
             template <typename T>
-            static boost::shared_ptr<T> cast(T* p) {
-                return boost::dynamic_pointer_cast<T>(p->shared_from_this());
+            static std::shared_ptr<T> cast(T* p) {
+                return std::dynamic_pointer_cast<T>(p->shared_from_this());
             }
         };
 
         template <typename>
         struct cond_dyn_cast {
             template <typename T>
-            static boost::shared_ptr<T> cast(T* p) {
+            static std::shared_ptr<T> cast(T* p) {
                 return p->shared_from_this();
             }
         };
@@ -156,9 +170,10 @@ namespace karabo {
         template <>
         struct cond_dyn_cast<std::false_type> {
             template <typename T>
-            static boost::shared_ptr<T> cast(T* p) {
-                typedef typename boost::is_virtual_base_of<decltype(*(p->shared_from_this())), T>::type is_virtual_base;
-                typedef typename boost::is_base_of<decltype(*(p->shared_from_this())), T>::type is_base;
+            static std::shared_ptr<T> cast(T* p) {
+                typedef typename std::remove_reference<decltype(*(p->shared_from_this()))>::type BaseType;
+                typedef typename is_virtual_base_of<BaseType, T>::type is_virtual_base;
+                typedef typename std::is_base_of<BaseType, T>::type is_base;
                 return static_or_dyn_cast<is_virtual_base, is_base>::cast(p);
             }
         };
@@ -173,8 +188,8 @@ namespace karabo {
          */
         template <typename Ret, typename... Args, typename Obj>
         std::function<Ret(Args...)> exec_weak_impl(Ret (Obj::*f)(Args...) const, const Obj* o) {
-            typedef typename std::is_same<boost::shared_ptr<Obj>, decltype(o->shared_from_this())>::type is_same_type;
-            boost::weak_ptr<const Obj> wp(cond_dyn_cast<is_same_type>::template cast(o));
+            typedef typename std::is_same<std::shared_ptr<Obj>, decltype(o->shared_from_this())>::type is_same_type;
+            std::weak_ptr<const Obj> wp(cond_dyn_cast<is_same_type>::template cast(o));
             // we need to copy-capture here -> otherwise segfault, because f and wp go out of scope
             auto wrapped = [f, wp](Args... fargs) -> Ret {
                 auto ptr = wp.lock();
@@ -209,7 +224,7 @@ namespace karabo {
          * Weakly binds member function f to an object of class Obj, but assures shared ownership of the object while f
          * is executed. This means that during the lifetime of calling f, the object cannot be destroyed, but
          * destruction is not blocked if f is not being executed but only bound.
-         * Class Obj needs to derive from boost::enable_shared_from_this and the object pointer o has to be held by a
+         * Class Obj needs to derive from std::enable_shared_from_this and the object pointer o has to be held by a
          * shared_ptr. This means that you cannot use bind_weak within the constructor of Obj nor for objects
          * constructed on the stack.
          * Note that f may have any default constructable return type: If the bound functor will be called when the
@@ -225,14 +240,14 @@ namespace karabo {
          *
          * @param f: function to bind, give as &Foo::bar
          * @param o: pointer to object to bind to
-         * @param p: parameters as one would give to boost::bind. Placeholders are fully supported.
+         * @param p: parameters as one would give to std::bind. Placeholders are fully supported.
          * @return: bound functor, compatible with boost bind.
          */
         template <typename F, typename Obj, typename... P>
-        auto bind_weak(const F& f, Obj* const o, const P... p) -> decltype(boost::bind(exec_weak_impl(f, o), p...)) {
-            // note that boost::arg<N>s cannot be forwarded, thus we work with references here.
+        auto bind_weak(const F& f, Obj* const o, const P... p) -> decltype(std::bind(exec_weak_impl(f, o), p...)) {
+            // note that std::arg<N>s cannot be forwarded, thus we work with references here.
             auto wrapped = exec_weak_impl(f, o);
-            return boost::bind(wrapped, p...);
+            return std::bind(wrapped, p...);
         }
 
         // implementation details, users never invoke these directly

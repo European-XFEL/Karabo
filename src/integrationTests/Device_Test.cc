@@ -370,7 +370,7 @@ class TestDeviceBadInit : public karabo::core::Device<> {
             // This will be caught by the event loop - if logging is enabled, one can see a printout...
             throw KARABO_SIGNALSLOT_EXCEPTION("Throw during initialization - for test purposes!");
         } else if (behaviour == "delay") {
-            boost::this_thread::sleep(boost::posix_time::seconds(get<unsigned int>("delay")));
+            boost::this_thread::sleep_for(boost::chrono::seconds(get<unsigned int>("delay")));
         } // No else - there are not other options!
 
         updateState(State::NORMAL);
@@ -401,7 +401,7 @@ void Device_Test::setUp() {
     // setenv("KARABO_BROKER", "tcp://localhost:7777", true);
 
     // Start central event-loop
-    m_eventLoopThread = boost::thread(boost::bind(&EventLoop::work));
+    m_eventLoopThread = boost::thread(std::bind(&EventLoop::work));
     // Create and start server
     {
         Hash config("serverId", "testServerDevice", "scanPlugins", false, "Logger.priority", "FATAL", "serverFlags",
@@ -411,7 +411,7 @@ void Device_Test::setUp() {
     }
 
     // Create client
-    m_deviceClient = boost::make_shared<DeviceClient>(std::string(), false);
+    m_deviceClient = std::make_shared<DeviceClient>(std::string(), false);
     m_deviceClient->initialize();
 }
 
@@ -1093,12 +1093,12 @@ void Device_Test::testOutputRecreatesOnSchemaChange(const std::string& updateSlo
     // Note: Since we cannot remove the slot from the server again, we choose a test run dependent slot name
     //       and disconnect at the end. So the slot lambda (that takes variables that are local to the test by
     //       reference) cannot be called later - it would likely crash.
-    boost::mutex connectionChangesMutex;
+    std::mutex connectionChangesMutex;
     std::vector<std::vector<std::string>> connectionChanges;
     auto changedHandler = [&connectionChanges, &connectionChangesMutex, receiverId](const karabo::util::Hash& h,
                                                                                     const std::string& id) {
         if (id == receiverId && h.has("input.missingConnections")) {
-            boost::mutex::scoped_lock lock(connectionChangesMutex);
+            std::lock_guard<std::mutex> lock(connectionChangesMutex);
             connectionChanges.push_back(h.get<std::vector<std::string>>("input.missingConnections"));
         }
     };
@@ -1142,12 +1142,12 @@ void Device_Test::testOutputRecreatesOnSchemaChange(const std::string& updateSlo
         // If triggerReconnect is false, nothing such happens and we run into the timeout :-(.
         const bool changed = waitForCondition(
               [this, &connectionChanges, &connectionChangesMutex]() {
-                  boost::mutex::scoped_lock lock(connectionChangesMutex);
+                  std::lock_guard<std::mutex> lock(connectionChangesMutex);
                   return connectionChanges.size() >= 2ul;
               },
               KRB_TEST_MAX_TIMEOUT * 1000);
         {
-            boost::mutex::scoped_lock lock(connectionChangesMutex);
+            std::lock_guard<std::mutex> lock(connectionChangesMutex);
             CPPUNIT_ASSERT_EQUAL_MESSAGE(karabo::util::toString(connectionChanges), triggerReconnect, changed);
             if (triggerReconnect) {
                 CPPUNIT_ASSERT_EQUAL_MESSAGE(karabo::util::toString(connectionChanges), 2ul, connectionChanges.size());
@@ -1163,18 +1163,18 @@ void Device_Test::testOutputRecreatesOnSchemaChange(const std::string& updateSlo
             // If schema changed in the first place, it changes back now and thus has to reconnect
             const bool changed = waitForCondition(
                   [this, &connectionChanges, &connectionChangesMutex]() {
-                      boost::mutex::scoped_lock lock(connectionChangesMutex);
+                      std::lock_guard<std::mutex> lock(connectionChangesMutex);
                       return connectionChanges.size() >= 4ul; // two more than before
                   },
                   KRB_TEST_MAX_TIMEOUT * 2000); // Factor two: reconnection cycle is included!
-            boost::mutex::scoped_lock lock(connectionChangesMutex);
+            std::lock_guard<std::mutex> lock(connectionChangesMutex);
             CPPUNIT_ASSERT_MESSAGE(karabo::util::toString(connectionChanges), changed);
             CPPUNIT_ASSERT_EQUAL_MESSAGE(karabo::util::toString(connectionChanges), 4ul, connectionChanges.size());
             CPPUNIT_ASSERT_EQUAL(std::vector<std::string>({senderId + ":output"}), connectionChanges[2]);
             CPPUNIT_ASSERT_EQUAL(std::vector<std::string>(), connectionChanges[3]);
         }
         // Clean-up for next round
-        boost::mutex::scoped_lock lock(connectionChangesMutex);
+        std::lock_guard<std::mutex> lock(connectionChangesMutex);
         connectionChanges.clear();
     }
 
@@ -1298,7 +1298,7 @@ void Device_Test::testInputOutputChannelInjection(const std::string& updateSlot)
           sigSlot->request("TestDevice", "slotAppendSchema", inputOnlySchema).timeout(requestTimeoutMs).receive());
     // Wait for connection being re-established
     // HACK: Without sleep might be fooled, i.e. traces of connection of previous input channel not yet erased...
-    boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     ok = waitForCondition(inputsConnected, cacheUpdateWaitMs * 20); // longer timeout again, see above
     CPPUNIT_ASSERT_MESSAGE(toString(m_deviceClient->get("TestDevice")), ok);
     // Request again data to be sent from "output" to "injectedInput" channel
@@ -1678,7 +1678,7 @@ void Device_Test::testSignal() {
 
     std::string signalInstanceId;
     DeviceServer::WeakPointer weakServer(m_deviceServer);
-    boost::function<void()> slot = [&signalInstanceId, weakServer]() {
+    std::function<void()> slot = [&signalInstanceId, weakServer]() {
         DeviceServer::Pointer ptr(weakServer.lock());
         if (ptr) {
             const karabo::util::Hash::Pointer header(ptr->getSenderInfo("slotForSignalA")->getHeaderOfSender());
@@ -1833,12 +1833,12 @@ void Device_Test::testBadInit() {
     CPPUNIT_ASSERT_MESSAGE(sstr.str(), duration > testDuration);
 }
 
-bool Device_Test::waitForCondition(boost::function<bool()> checker, unsigned int timeoutMillis) {
+bool Device_Test::waitForCondition(std::function<bool()> checker, unsigned int timeoutMillis) {
     constexpr unsigned int sleepIntervalMillis = 5;
     unsigned int numOfWaits = 0;
     const unsigned int maxNumOfWaits = static_cast<unsigned int>(std::ceil(timeoutMillis / sleepIntervalMillis));
     while (numOfWaits < maxNumOfWaits && !checker()) {
-        boost::this_thread::sleep_for(boost::chrono::milliseconds(sleepIntervalMillis));
+        std::this_thread::sleep_for(std::chrono::milliseconds(sleepIntervalMillis));
         numOfWaits++;
     }
     return (numOfWaits < maxNumOfWaits);

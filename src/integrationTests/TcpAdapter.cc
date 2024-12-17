@@ -33,8 +33,8 @@ using namespace karabo::net;
 using namespace karabo::io;
 using namespace karabo::xms;
 
-using boost::placeholders::_1;
-using boost::placeholders::_2;
+using std::placeholders::_1;
+using std::placeholders::_2;
 
 namespace karabo {
 
@@ -50,7 +50,7 @@ namespace karabo {
         m_dataConnection = Connection::create("Tcp", h);
 
         // Cannot yet use bind_weak in constructor - not worth to recfactor this test class
-        m_dataConnection->startAsync(boost::bind(&karabo::TcpAdapter::onConnect, this, _1, 500, 10, _2));
+        m_dataConnection->startAsync(std::bind(&karabo::TcpAdapter::onConnect, this, _1, 500, 10, _2));
         m_debug = config.has("debug") ? config.get<bool>("debug") : false;
     }
 
@@ -65,13 +65,13 @@ namespace karabo {
         if (ec) {
             onError(ec, channel);
             if (ec != boost::asio::error::eof && repetition >= 0) {
-                m_deadline.expires_from_now(boost::posix_time::milliseconds(timeout));
+                m_deadline.expires_from_now(boost::asio::chrono::milliseconds(timeout));
                 m_deadline.async_wait(bind_weak(&karabo::TcpAdapter::waitHandler, this,
                                                 boost::asio::placeholders::error, timeout, repetition));
             }
             return;
         }
-        m_channel = boost::dynamic_pointer_cast<TcpChannel>(channel);
+        m_channel = std::dynamic_pointer_cast<TcpChannel>(channel);
         if (channel->isOpen()) channel->readAsyncHash(bind_weak(&karabo::TcpAdapter::onRead, this, _1, channel, _2));
     }
 

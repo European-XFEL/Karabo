@@ -33,12 +33,12 @@ using namespace std;
 
 USING_KARABO_NAMESPACES
 
-static bool waitForCondition(const boost::function<bool()>& checker, unsigned int timeoutMillis) {
+static bool waitForCondition(const std::function<bool()>& checker, unsigned int timeoutMillis) {
     constexpr unsigned int sleepIntervalMillis = 5;
     unsigned int numOfWaits = 0;
     const unsigned int maxNumOfWaits = static_cast<unsigned int>(std::ceil(timeoutMillis / sleepIntervalMillis));
     while (numOfWaits < maxNumOfWaits && !checker()) {
-        boost::this_thread::sleep_for(boost::chrono::milliseconds(sleepIntervalMillis));
+        std::this_thread::sleep_for(std::chrono::milliseconds(sleepIntervalMillis));
         numOfWaits++;
     }
     return (numOfWaits < maxNumOfWaits);
@@ -58,13 +58,13 @@ void SceneProvider_Test::setUp() {
     // uncomment this if ever testing against a local broker
     // setenv("KARABO_BROKER", "tcp://localhost:7777", true);
     // Start central event-loop
-    m_eventLoopThread = boost::thread(boost::bind(&EventLoop::work));
+    m_eventLoopThread = boost::thread(std::bind(&EventLoop::work));
     // Create and start server
     Hash config("serverId", "testServerSceneProvider", "scanPlugins", false, "Logger.priority", "FATAL");
     m_deviceServer = DeviceServer::create("DeviceServer", config);
     m_deviceServer->finalizeInternalInitialization();
     // Create client
-    m_deviceClient = boost::make_shared<DeviceClient>(std::string(), false);
+    m_deviceClient = std::make_shared<DeviceClient>(std::string(), false);
     m_deviceClient->initialize();
 }
 
@@ -92,7 +92,7 @@ void SceneProvider_Test::appTestRunner() {
           },
           KRB_TEST_MAX_TIMEOUT * 1000);
     m_tcpAdapter =
-          boost::shared_ptr<karabo::TcpAdapter>(new karabo::TcpAdapter(Hash("port", 44447u /*, "debug", true*/)));
+          std::shared_ptr<karabo::TcpAdapter>(new karabo::TcpAdapter(Hash("port", 44447u /*, "debug", true*/)));
 
     waitForCondition([this]() { return m_tcpAdapter->connected(); }, KRB_TEST_MAX_TIMEOUT * 1000);
     CPPUNIT_ASSERT(m_tcpAdapter->connected());

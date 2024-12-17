@@ -119,7 +119,7 @@ namespace karabo {
              */
             static size_t getNumberOfThreads();
 
-            typedef boost::function<void(int /*signal*/)> SignalHandler;
+            typedef std::function<void(int /*signal*/)> SignalHandler;
             /** Set the handler to be called if a system signal is caught.
              *
              * See work() about which signals are caught.
@@ -137,7 +137,7 @@ namespace karabo {
 
             static void init();
 
-            static boost::shared_ptr<EventLoop> instance();
+            static std::shared_ptr<EventLoop> instance();
 
             void _run();
 
@@ -164,16 +164,16 @@ namespace karabo {
 
             boost::asio::io_service m_ioService;
             boost::thread_group m_threadPool;
-            mutable boost::mutex m_threadPoolMutex;
+            mutable std::mutex m_threadPoolMutex;
             std::atomic<bool> m_running;
 
-            static boost::shared_ptr<EventLoop> m_instance;
+            static std::shared_ptr<EventLoop> m_instance;
             static boost::once_flag m_initInstanceFlag;
 
             typedef std::map<boost::thread::id, boost::thread*> ThreadMap;
             ThreadMap m_threadMap;
 
-            boost::mutex m_signalHandlerMutex;
+            std::mutex m_signalHandlerMutex;
             SignalHandler m_signalHandler;
         };
 
@@ -184,8 +184,8 @@ namespace karabo {
             if (0 == delayMs) {
                 service.post(std::forward<Function>(func));
             } else {
-                auto timer = std::make_shared<boost::asio::deadline_timer>(service);
-                timer->expires_from_now(boost::posix_time::milliseconds(delayMs));
+                auto timer = std::make_shared<boost::asio::steady_timer>(service);
+                timer->expires_from_now(boost::asio::chrono::milliseconds(delayMs));
                 // Bind timer shared_ptr to lambda to keep it alive as long as needed
 #if __cplusplus < 201402L
                 // Pre-C++14 does not support generalized lambda capture

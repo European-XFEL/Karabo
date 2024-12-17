@@ -37,10 +37,10 @@ namespace karabo {
         //<editor-fold desc="Construction & Destruction">
 
 
-        boost::shared_ptr<InstanceChangeThrottler> InstanceChangeThrottler::createThrottler(
+        std::shared_ptr<InstanceChangeThrottler> InstanceChangeThrottler::createThrottler(
               const InstanceChangeHandler& instChangeHandler, unsigned int cycleIntervalMs,
               unsigned int maxChangesPerCycle) {
-            boost::shared_ptr<InstanceChangeThrottler> pt(
+            std::shared_ptr<InstanceChangeThrottler> pt(
                   new InstanceChangeThrottler(instChangeHandler, cycleIntervalMs, maxChangesPerCycle));
             pt->initCycleInstChanges();
             pt->kickNextThrottlerCycleAsync();
@@ -60,7 +60,7 @@ namespace karabo {
             // The mutex lock below is an overkill - the factory method for this class returns
             // a shared_ptr to an instance of it, decreasing the chances of existing another
             // thread that refers to the instance being destroyed.
-            boost::mutex::scoped_lock lock(m_instChangesMutex);
+            std::lock_guard<std::mutex> lock(m_instChangesMutex);
             flushThrottler(false);
         }
 
@@ -81,7 +81,7 @@ namespace karabo {
 
 
         void InstanceChangeThrottler::submitInstanceNew(const std::string& instanceId, const Hash& instanceInfo) {
-            boost::mutex::scoped_lock lock(m_instChangesMutex);
+            std::lock_guard<std::mutex> lock(m_instChangesMutex);
 
             const std::string& instType = instanceInfo.get<std::string>("type");
             std::string updateTypeKey = getInstChangeTypeStr(InstChangeType::UPDATE) + "." + instType;
@@ -101,7 +101,7 @@ namespace karabo {
         void InstanceChangeThrottler::submitInstanceUpdate(const std::string& instanceId, const Hash& instanceInfo) {
             const std::string& instType = instanceInfo.get<std::string>("type");
 
-            boost::mutex::scoped_lock lock(m_instChangesMutex);
+            std::lock_guard<std::mutex> lock(m_instChangesMutex);
 
             std::string newTypeKey = getInstChangeTypeStr(InstChangeType::NEW) + "." + instType;
             std::string updateTypeKey = getInstChangeTypeStr(InstChangeType::UPDATE) + "." + instType;
@@ -134,7 +134,7 @@ namespace karabo {
         void InstanceChangeThrottler::submitInstanceGone(const std::string& instanceId, const Hash& instanceInfo) {
             const std::string& instType = instanceInfo.get<std::string>("type");
 
-            boost::mutex::scoped_lock lock(m_instChangesMutex);
+            std::lock_guard<std::mutex> lock(m_instChangesMutex);
 
             std::string newTypeKey = getInstChangeTypeStr(InstChangeType::NEW) + "." + instType;
             std::string updateTypeKey = getInstChangeTypeStr(InstChangeType::UPDATE) + "." + instType;
@@ -248,13 +248,13 @@ namespace karabo {
         void InstanceChangeThrottler::runThrottlerCycleAsync(const boost::system::error_code& e) {
             if (e) return;
 
-            boost::mutex::scoped_lock lock(m_instChangesMutex);
+            std::lock_guard<std::mutex> lock(m_instChangesMutex);
             flushThrottler();
         }
 
 
         void InstanceChangeThrottler::flush() {
-            boost::mutex::scoped_lock lock(m_instChangesMutex);
+            std::lock_guard<std::mutex> lock(m_instChangesMutex);
             flushThrottler(true);
         }
 
@@ -279,7 +279,7 @@ namespace karabo {
 
 
         void InstanceChangeThrottler::kickNextThrottlerCycleAsync() {
-            m_throttlerTimer.expires_from_now(boost::posix_time::milliseconds(m_cycleIntervalMs));
+            m_throttlerTimer.expires_from_now(boost::asio::chrono::milliseconds(m_cycleIntervalMs));
             m_throttlerTimer.async_wait(
                   bind_weak(&InstanceChangeThrottler::runThrottlerCycleAsync, this, boost::asio::placeholders::error));
         }

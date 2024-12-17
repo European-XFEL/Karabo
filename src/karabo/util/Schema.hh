@@ -29,8 +29,8 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/foreach.hpp>
-#include <boost/tuple/tuple.hpp>
 #include <set>
+#include <tuple>
 
 #include "AlarmConditions.hh"
 #include "Hash.hh"

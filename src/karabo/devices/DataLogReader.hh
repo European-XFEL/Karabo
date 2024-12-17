@@ -25,8 +25,6 @@
 #ifndef DATALOGREADER_HH
 #define DATALOGREADER_HH
 
-#include <boost/filesystem.hpp>
-
 #include "karabo/core/Device.hh"
 #include "karabo/net/Strand.hh"
 #include "karabo/util/DataLogUtils.hh"

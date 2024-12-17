@@ -303,7 +303,7 @@ void StringTools_Test::testToString() {
     // ByteArray
     static char s[] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11,
                        0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x20, 0x21, 0x22, 0x23};
-    ByteArray ba = std::make_pair(boost::shared_ptr<char>(s, boost::null_deleter()), 24);
+    ByteArray ba = std::make_pair(std::shared_ptr<char>(s, [](char*) {}), 24);
     CPPUNIT_ASSERT(toString(ba, 16) == "0x0001020304050607...(skip 8 bytes)...1617181920212223");
     CPPUNIT_ASSERT(toString(ba, 24) == "0x000102030405060708091011121314151617181920212223");
     CPPUNIT_ASSERT(toString(ba, 4) == "0x0001...(skip 20 bytes)...2223");

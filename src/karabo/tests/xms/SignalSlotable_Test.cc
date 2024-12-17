@@ -39,7 +39,7 @@
 using namespace karabo::util;
 using namespace karabo::xms;
 
-using boost::placeholders::_1;
+using std::placeholders::_1;
 
 const int numWaitIterations = 1000;
 const int sleepPerWaitIterationMs = 5;
@@ -49,7 +49,7 @@ class SignalSlotDemo : public karabo::xms::SignalSlotable {
     const std::string m_othersId;
     int m_messageCount;
     bool m_allOk;
-    boost::mutex m_mutex;
+    std::mutex m_mutex;
 
    public:
     KARABO_CLASSINFO(SignalSlotDemo, "SignalSlotDemo", "1.0")
@@ -71,7 +71,7 @@ class SignalSlotDemo : public karabo::xms::SignalSlotable {
 
 
     void slotA(const std::string& msg) {
-        boost::mutex::scoped_lock lock(m_mutex);
+        std::lock_guard<std::mutex> lock(m_mutex);
         m_messageCount++;
         const std::string sender = getSenderInfo("slotA")->getInstanceIdOfSender();
         // Assertions
@@ -89,7 +89,7 @@ class SignalSlotDemo : public karabo::xms::SignalSlotable {
 
 
     void slotB(int someInteger, const karabo::util::Hash& someConfig) {
-        boost::mutex::scoped_lock lock(m_mutex);
+        std::lock_guard<std::mutex> lock(m_mutex);
         // Assertions
         m_messageCount++;
         if (someInteger != 42) m_allOk = false;
@@ -98,7 +98,7 @@ class SignalSlotDemo : public karabo::xms::SignalSlotable {
 
 
     void slotC(int number) {
-        boost::mutex::scoped_lock lock(m_mutex);
+        std::lock_guard<std::mutex> lock(m_mutex);
         // Assertions
         m_messageCount++;
         if (number != 1) m_allOk = false;
@@ -107,7 +107,7 @@ class SignalSlotDemo : public karabo::xms::SignalSlotable {
 
 
     void noded_slot(int number) {
-        boost::mutex::scoped_lock lock(m_mutex);
+        std::lock_guard<std::mutex> lock(m_mutex);
         // Assertions
         m_messageCount++;
         if (number != 1) m_allOk = false;
@@ -116,7 +116,7 @@ class SignalSlotDemo : public karabo::xms::SignalSlotable {
 
 
     void noded_asyncSlot() {
-        boost::mutex::scoped_lock lock(m_mutex);
+        std::lock_guard<std::mutex> lock(m_mutex);
         m_messageCount++;
 
         AsyncReply aReply(this);
@@ -139,7 +139,7 @@ class SignalSlotDemo : public karabo::xms::SignalSlotable {
 
 
     void myCallBack(const std::string& someData, int number) {
-        boost::mutex::scoped_lock lock(m_mutex);
+        std::lock_guard<std::mutex> lock(m_mutex);
         m_messageCount++;
     }
 };
@@ -167,7 +167,7 @@ void waitEqual(Type target, const Type& test, int trials = 10) {
         if (target == test) {
             return;
         }
-        boost::this_thread::sleep(boost::posix_time::milliseconds(millisecondsSleep));
+        std::this_thread::sleep_for(std::chrono::milliseconds(millisecondsSleep));
         millisecondsSleep *= 2;
     } while (--trials > 0); // trials is signed to avoid --trials to be very large for input of 0
 }
@@ -230,10 +230,9 @@ void SignalSlotable_Test::testUniqueInstanceId() {
 
 
 void SignalSlotable_Test::_testUniqueInstanceId() {
-    auto one = boost::make_shared<SignalSlotable>("one");
-    auto two =
-          boost::make_shared<SignalSlotable>("two", karabo::util::Hash(), 30, karabo::util::Hash("type", "sigslot"));
-    auto one_again = boost::make_shared<SignalSlotable>("one");
+    auto one = std::make_shared<SignalSlotable>("one");
+    auto two = std::make_shared<SignalSlotable>("two", karabo::util::Hash(), 30, karabo::util::Hash("type", "sigslot"));
+    auto one_again = std::make_shared<SignalSlotable>("one");
 
     // Hijack test to check default "type"
     Hash instanceInfo(one->getInstanceInfo());
@@ -256,7 +255,7 @@ void SignalSlotable_Test::testValidInstanceId() {
 void SignalSlotable_Test::_testValidInstanceId() {
     const auto allowedChars = "0123456789_abcdefghijklmnopqrstuvwxyz-ABCDEFGHIJKLMNOPQRSTUVWXYZ/";
     // all allowed characters should allow the instance to start
-    auto s = boost::make_shared<SignalSlotable>(allowedChars);
+    auto s = std::make_shared<SignalSlotable>(allowedChars);
     CPPUNIT_ASSERT_NO_THROW(s->start());
 
     // Now check that bad character lead to exceptions:
@@ -269,7 +268,7 @@ void SignalSlotable_Test::_testValidInstanceId() {
     std::string instanceId(allowedChars);
     for (size_t i = 0; i < sizeof(badCharacters) / sizeof(badCharacters[0]); ++i) {
         instanceId[1] = badCharacters[i]; // Replace 2nd character by an invalid one
-        s = boost::make_shared<SignalSlotable>(instanceId);
+        s = std::make_shared<SignalSlotable>(instanceId);
         CPPUNIT_ASSERT_THROW_MESSAGE("Tested id: " + instanceId, s->start(), SignalSlotException);
     }
 }
@@ -281,8 +280,8 @@ void SignalSlotable_Test::testReceiveAsync() {
 
 
 void SignalSlotable_Test::_testReceiveAsync() {
-    auto greeter = boost::make_shared<SignalSlotable>("greeter");
-    auto responder = boost::make_shared<SignalSlotable>("responder");
+    auto greeter = std::make_shared<SignalSlotable>("greeter");
+    auto responder = std::make_shared<SignalSlotable>("responder");
     greeter->start();
     responder->start();
 
@@ -298,7 +297,7 @@ void SignalSlotable_Test::_testReceiveAsync() {
     int trials = 10;
     while (--trials >= 0) {
         if (result == "Hello, world!") break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(20));
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
     }
     CPPUNIT_ASSERT(result == "Hello, world!");
 
@@ -310,7 +309,7 @@ void SignalSlotable_Test::_testReceiveAsync() {
     greeter->request("responder", "slotAnswer", "Hello").timeout(200).receiveAsync(badSuccessHandler, errHandler);
     waitEqual(receivedIgnoringReplyValue, true);
     // Sleep > 200 ms (the timeout used) so that any wrong call to error handler due to timeout would have happened
-    boost::this_thread::sleep(boost::posix_time::milliseconds(210));
+    std::this_thread::sleep_for(std::chrono::milliseconds(210));
     CPPUNIT_ASSERT_EQUAL(calledErrorHandler, false);
     CPPUNIT_ASSERT_EQUAL(receivedIgnoringReplyValue, true);
 }
@@ -322,8 +321,8 @@ void SignalSlotable_Test::testReceiveAsyncError() {
 
 
 void SignalSlotable_Test::_testReceiveAsyncError() {
-    auto greeter = boost::make_shared<SignalSlotable>("greeter");
-    auto responder = boost::make_shared<SignalSlotable>("responder");
+    auto greeter = std::make_shared<SignalSlotable>("greeter");
+    auto responder = std::make_shared<SignalSlotable>("responder");
     greeter->start();
     responder->start();
 
@@ -333,7 +332,7 @@ void SignalSlotable_Test::_testReceiveAsyncError() {
               if (q == "Please, throw!") {
                   throw KARABO_PARAMETER_EXCEPTION("Exception was requested");
               }
-              boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+              std::this_thread::sleep_for(std::chrono::milliseconds(100));
               responder->reply(q + ", world!");
           },
           "slotAnswer");
@@ -342,8 +341,8 @@ void SignalSlotable_Test::_testReceiveAsyncError() {
     const auto successHandler = [&result](const std::string& answer) { result = answer; };
     greeter->request("responder", "slotAnswer", "Hello").timeout(50).receiveAsync<std::string>(successHandler);
 
-    boost::this_thread::sleep(
-          boost::posix_time::milliseconds(200)); // ensure reply could be delivered (though not in time)
+    // ensure reply could be delivered (though not in time)
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
     CPPUNIT_ASSERT(result == "");
 
@@ -376,7 +375,7 @@ void SignalSlotable_Test::_testReceiveAsyncError() {
     waitEqual(ExceptionType::timeout, caughtType);
     // Wait furher (timeout + sleep > 100 ms that slotAnswer sleeps) to check that successHandler is
     // not called when delayed reply finally comes:
-    boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
     CPPUNIT_ASSERT_EQUAL(int(ExceptionType::timeout), int(caughtType));
     CPPUNIT_ASSERT_EQUAL(std::string("some"), result); // Would be "Hello, world!" if successHandler called
@@ -445,8 +444,8 @@ void SignalSlotable_Test::testReceiveAsyncNoReply() {
 
 
 void SignalSlotable_Test::_testReceiveAsyncNoReply() {
-    auto greeter = boost::make_shared<SignalSlotable>("greeter");
-    auto responder = boost::make_shared<SignalSlotable>("responder");
+    auto greeter = std::make_shared<SignalSlotable>("greeter");
+    auto responder = std::make_shared<SignalSlotable>("responder");
     greeter->start();
     responder->start();
 
@@ -477,7 +476,7 @@ void SignalSlotable_Test::_testReceiveAsyncNoReply() {
     int trials = 20;
     while (--trials >= 0) {
         if (handlerCalled || errorCode != 0) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(20));
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
     }
     CPPUNIT_ASSERT(handlerCalled);
     CPPUNIT_ASSERT_EQUAL(0, errorCode);
@@ -497,7 +496,7 @@ void SignalSlotable_Test::_testReceiveAsyncNoReply() {
     trials = 20;
     while (--trials >= 0) {
         if (handlerCalled || errorCode != 0) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(20));
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
     }
 
     // Assert that the handler was not called, but the error handler with the correct exception (due to argument
@@ -514,13 +513,13 @@ void SignalSlotable_Test::testReceiveExceptions() {
 
 void SignalSlotable_Test::_testReceiveExceptions() {
     // Testing the different kinds of exceptions
-    auto greeter = boost::make_shared<SignalSlotable>("greeter");
-    auto responder = boost::make_shared<SignalSlotable>("responder");
+    auto greeter = std::make_shared<SignalSlotable>("greeter");
+    auto responder = std::make_shared<SignalSlotable>("responder");
     greeter->start();
     responder->start();
 
     auto replyString = [&responder](const std::string& q) {
-        boost::this_thread::sleep(boost::posix_time::milliseconds(10)); // little sleep for TimeoutException below
+        std::this_thread::sleep_for(std::chrono::milliseconds(10)); // little sleep for TimeoutException below
         responder->reply(q + ", world!");
     };
     responder->registerSlot<std::string>(replyString, "slotAnswer");
@@ -588,11 +587,11 @@ void SignalSlotable_Test::testConnectAsync() {
 
 
 void SignalSlotable_Test::_testConnectAsync() {
-    auto signaler = boost::make_shared<SignalSlotable>("signalInstance");
+    auto signaler = std::make_shared<SignalSlotable>("signalInstance");
     signaler->registerSignal<int>("signal");
     signaler->start();
 
-    auto slotter = boost::make_shared<SignalSlotable>("slotInstance");
+    auto slotter = std::make_shared<SignalSlotable>("slotInstance");
     bool slotCalled = false;
     int inSlot = -10;
     auto slotFunc = [&slotCalled, &inSlot](int i) {
@@ -610,7 +609,7 @@ void SignalSlotable_Test::_testConnectAsync() {
     // Give some time to connect
     for (int i = 0; i < numWaitIterations; ++i) {
         if (connected) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerWaitIterationMs));
+        std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerWaitIterationMs));
     };
     CPPUNIT_ASSERT(connected);
 
@@ -619,7 +618,7 @@ void SignalSlotable_Test::_testConnectAsync() {
     // Give signal some time to travel
     for (int i = 0; i < numWaitIterations; ++i) {
         if (slotCalled) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerWaitIterationMs));
+        std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerWaitIterationMs));
     };
     CPPUNIT_ASSERT(slotCalled);
     CPPUNIT_ASSERT_EQUAL(42, inSlot);
@@ -650,7 +649,7 @@ void SignalSlotable_Test::_testConnectAsync() {
     // Give some time to find out that signal is not there
     for (int i = 0; i < numWaitIterations; ++i) {
         if (connectFailed) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerWaitIterationMs));
+        std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerWaitIterationMs));
     };
     CPPUNIT_ASSERT(connectFailed);
     CPPUNIT_ASSERT(!connectTimeout);
@@ -670,7 +669,7 @@ void SignalSlotable_Test::_testConnectAsync() {
     // Give some time to find out that slot is not there.
     for (int i = 0; i < numWaitIterations; ++i) {
         if (connectFailed) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerWaitIterationMs));
+        std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerWaitIterationMs));
     };
     CPPUNIT_ASSERT(connectFailed);
     CPPUNIT_ASSERT(!connectTimeout);
@@ -688,7 +687,7 @@ void SignalSlotable_Test::_testConnectAsync() {
     // But in a busy system even the timeout handle may be stuck, so wait.
     for (int i = 0; i < numWaitIterations; ++i) {
         if (connectFailed) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerWaitIterationMs));
+        std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerWaitIterationMs));
     };
     CPPUNIT_ASSERT(connectFailed);
     CPPUNIT_ASSERT(connectTimeout);
@@ -705,7 +704,7 @@ void SignalSlotable_Test::_testConnectAsync() {
     // But in a busy system even the timeout handle may be stuck, so wait.
     for (int i = 0; i < numWaitIterations; ++i) {
         if (connectFailed) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerWaitIterationMs));
+        std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerWaitIterationMs));
     };
     CPPUNIT_ASSERT(connectFailed);
     CPPUNIT_ASSERT(connectTimeout);
@@ -720,7 +719,7 @@ void SignalSlotable_Test::testConnectAsyncMulti() {
 
 void SignalSlotable_Test::_testConnectAsyncMulti() {
     // One instance with and signalA and slotB...
-    auto signalerA = boost::make_shared<SignalSlotable>("signalA_slotB");
+    auto signalerA = std::make_shared<SignalSlotable>("signalA_slotB");
     signalerA->registerSignal<int>("signalA");
     bool slotCalledB = false;
     int inSlotB = -10;
@@ -732,7 +731,7 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
     signalerA->start();
 
     // .. and one with and signalB and slotA...
-    auto signalerB = boost::make_shared<SignalSlotable>("signalB_slotA");
+    auto signalerB = std::make_shared<SignalSlotable>("signalB_slotA");
     signalerB->registerSignal<int>("signalB");
     bool slotCalledA = false;
     int inSlotA = -10;
@@ -758,7 +757,7 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
     // Give some time to connect
     for (int i = 0; i < numWaitIterations; ++i) {
         if (connected) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerWaitIterationMs));
+        std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerWaitIterationMs));
     };
     CPPUNIT_ASSERT(connected);
     CPPUNIT_ASSERT(!connectFailed);
@@ -769,7 +768,7 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
     // Give signal some time to travel
     for (int i = 0; i < numWaitIterations; ++i) {
         if (slotCalledA && slotCalledB) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerWaitIterationMs));
+        std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerWaitIterationMs));
     };
     CPPUNIT_ASSERT(slotCalledA);
     CPPUNIT_ASSERT(slotCalledB);
@@ -811,7 +810,7 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
     // Give some time to find out that signal is not there
     for (int i = 0; i < numWaitIterations; ++i) {
         if (connected || connectFailed) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerWaitIterationMs));
+        std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerWaitIterationMs));
     };
     CPPUNIT_ASSERT(connectFailed);
     CPPUNIT_ASSERT(!connected);
@@ -839,7 +838,7 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
     // Give some time to find out that slot is not there
     for (int i = 0; i < numWaitIterations; ++i) {
         if (connected || connectFailed) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerWaitIterationMs));
+        std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerWaitIterationMs));
     };
     CPPUNIT_ASSERT(connectFailed);
     CPPUNIT_ASSERT(!connected);
@@ -868,7 +867,7 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
     signalerA->asyncConnect(badConnections, connectedHandler, connectFailedHandler, 50);
 
     // The first request will succeed, the second (to "NOT_A_sig...") not - so wait 4 * 25 ms plus margin to be sure
-    boost::this_thread::sleep(boost::posix_time::milliseconds(105));
+    std::this_thread::sleep_for(std::chrono::milliseconds(105));
 
     CPPUNIT_ASSERT(connectFailed);
     CPPUNIT_ASSERT(!connected);
@@ -894,7 +893,7 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
     // The first request (to "NOT_A_slot...") will fail, but one nevers knows how the timeout handler is stuck
     for (int i = 0; i < numWaitIterations; ++i) {
         if (connectFailed) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerWaitIterationMs));
+        std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerWaitIterationMs));
     };
 
     CPPUNIT_ASSERT(connectFailed);
@@ -910,11 +909,11 @@ void SignalSlotable_Test::testDisconnectAsync() {
 
 
 void SignalSlotable_Test::_testDisconnectAsync() {
-    auto signaler = boost::make_shared<SignalSlotable>("signalInstance");
+    auto signaler = std::make_shared<SignalSlotable>("signalInstance");
     signaler->registerSignal<int>("signal");
     signaler->start();
 
-    auto slotter = boost::make_shared<SignalSlotable>("slotInstance");
+    auto slotter = std::make_shared<SignalSlotable>("slotInstance");
     bool slotCalled = false;
     auto slotFunc = [&slotCalled]() { slotCalled = true; };
     slotter->registerSlot(slotFunc, "slot");
@@ -925,7 +924,7 @@ void SignalSlotable_Test::_testDisconnectAsync() {
     CPPUNIT_ASSERT(signaler->connect("signalInstance", "signal", "slotInstance", "slot"));
 
     // Give signal some time to travel - but it won't, since disconnected!
-    boost::this_thread::sleep(boost::posix_time::milliseconds(200));
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
     bool disconnectSuccess = false;
     auto disconnectSuccessHandler = [&disconnectSuccess]() { disconnectSuccess = true; };
@@ -950,14 +949,14 @@ void SignalSlotable_Test::_testDisconnectAsync() {
     // Give disconnection call some time to travel
     for (int i = 0; i < numWaitIterations; ++i) {
         if (disconnectSuccess || disconnectFailed) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerWaitIterationMs));
+        std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerWaitIterationMs));
     };
     CPPUNIT_ASSERT_MESSAGE(disconnectFailedMsg, !disconnectFailed);
     CPPUNIT_ASSERT(disconnectSuccess);
 
     signaler->emit("signal");
     // Give signal some time to travel - but it won't, since disconnected!
-    boost::this_thread::sleep(boost::posix_time::milliseconds(200));
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
     CPPUNIT_ASSERT(!slotCalled);
 
     ///////////////////////////////////////////////////////////////////////////
@@ -971,7 +970,7 @@ void SignalSlotable_Test::_testDisconnectAsync() {
     // Give some time to find out that signal is not there
     for (int i = 0; i < numWaitIterations; ++i) {
         if (disconnectSuccess || disconnectFailed) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerWaitIterationMs));
+        std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerWaitIterationMs));
     };
     CPPUNIT_ASSERT(!disconnectSuccess);
     CPPUNIT_ASSERT(disconnectFailed);
@@ -992,7 +991,7 @@ void SignalSlotable_Test::_testDisconnectAsync() {
     // Give some time to find out that signal is not there
     for (int i = 0; i < numWaitIterations; ++i) {
         if (disconnectSuccess || disconnectFailed) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerWaitIterationMs));
+        std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerWaitIterationMs));
     };
     CPPUNIT_ASSERT(!disconnectSuccess);
     CPPUNIT_ASSERT(disconnectFailed);
@@ -1013,7 +1012,7 @@ void SignalSlotable_Test::_testDisconnectAsync() {
     // Give some time to find out that signal is not there
     for (int i = 0; i < numWaitIterations; ++i) {
         if (disconnectSuccess || disconnectFailed) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerWaitIterationMs));
+        std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerWaitIterationMs));
     };
     CPPUNIT_ASSERT(!disconnectSuccess);
     CPPUNIT_ASSERT_MESSAGE(disconnectFailedMsg, disconnectFailed);
@@ -1030,11 +1029,11 @@ void SignalSlotable_Test::testDisconnectConnectAsyncStress() {
 
 void SignalSlotable_Test::_testDisconnectConnectAsyncStress() {
     // Stress test a disconnect followed immediately by a connect: We should be connected all the times!
-    auto signaler = boost::make_shared<SignalSlotable>("signalInstance");
+    auto signaler = std::make_shared<SignalSlotable>("signalInstance");
     signaler->registerSignal<int>("signal");
     signaler->start();
 
-    auto slotter = boost::make_shared<SignalSlotable>("slotInstance");
+    auto slotter = std::make_shared<SignalSlotable>("slotInstance");
     // Capture ptr by value instead pure bool b reference since we potentially have two slot calls, but the first
     // arriving one will end the test.
     auto slotCalled = std::make_shared<bool>(false);
@@ -1090,7 +1089,7 @@ void SignalSlotable_Test::_testDisconnectConnectAsyncStress() {
                                        connectFailedHandler);
         for (int i = 0; i < numWaitIterations; ++i) {
             if ((disconnectSuccess || disconnectFailed) && (connectSuccess || connectFailed)) break;
-            boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerWaitIterationMs));
+            std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerWaitIterationMs));
         };
         // Both, disconnect and connect, succeeded (show failure message if not)
         CPPUNIT_ASSERT_MESSAGE(disconnectFailedMsg, disconnectSuccess);
@@ -1102,7 +1101,7 @@ void SignalSlotable_Test::_testDisconnectConnectAsyncStress() {
         signaler->emit("signal", 42);
         for (int i = 0; i < 2 * numWaitIterations; ++i) { // factor 2 to give extra time...
             if (*slotCalled) break;
-            boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerWaitIterationMs));
+            std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerWaitIterationMs));
         };
         std::stringstream msg;
         msg << "Loop " << i << ", i.e. " << (signalerConnected ? "signaler" : "slotter") << " connected";
@@ -1113,7 +1112,7 @@ void SignalSlotable_Test::_testDisconnectConnectAsyncStress() {
             signaler->emit("signal", 42);
             for (int i = 0; i < numWaitIterations; ++i) {
                 if (*slotCalled) break;
-                boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerWaitIterationMs));
+                std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerWaitIterationMs));
             };
         }
         CPPUNIT_ASSERT_MESSAGE(msg.str(), *slotCalled);
@@ -1128,7 +1127,7 @@ void SignalSlotable_Test::testMethod() {
 
 void SignalSlotable_Test::_testMethod() {
     const std::string instanceId("SignalSlotDemo");
-    auto demo = boost::make_shared<SignalSlotDemo>(instanceId, "dummy");
+    auto demo = std::make_shared<SignalSlotDemo>(instanceId, "dummy");
     demo->start();
 
     demo->connect("signalA", "slotA");
@@ -1156,10 +1155,9 @@ void SignalSlotable_Test::_testMethod() {
     CPPUNIT_ASSERT_NO_THROW(demo->request("", "slotC", 1).timeout(slotCallTimeout).receive());
 
     std::string someData("myPrivateStuff");
-    demo->request(instanceId, "slotC", 1)
-          .receiveAsync<int>(boost::bind(&SignalSlotDemo::myCallBack, demo, someData, _1));
+    demo->request(instanceId, "slotC", 1).receiveAsync<int>(std::bind(&SignalSlotDemo::myCallBack, demo, someData, _1));
     // shortcut address:
-    demo->request("", "slotC", 1).receiveAsync<int>(boost::bind(&SignalSlotDemo::myCallBack, demo, someData, _1));
+    demo->request("", "slotC", 1).receiveAsync<int>(std::bind(&SignalSlotDemo::myCallBack, demo, someData, _1));
 
     demo->call(instanceId, "slotC", 1);
     // shortcut address:
@@ -1209,7 +1207,7 @@ void SignalSlotable_Test::_testAsyncReply() {
             const AsyncReply reply(this);
 
             // Let's stop this function call soon, but nevertheless send reply in 100 ms (likely in another thread!)
-            m_timer.expires_from_now(boost::posix_time::milliseconds(100));
+            m_timer.expires_from_now(boost::asio::chrono::milliseconds(100));
             m_timer.async_wait([reply, i, this](const boost::system::error_code& ec) {
                 if (ec) return;
                 reply(2 * i + 1);
@@ -1224,7 +1222,7 @@ void SignalSlotable_Test::_testAsyncReply() {
 
             // Let's stop this function call soon, but nevertheless send error reply in 100 ms (likely in another
             // thread!)
-            m_timer.expires_from_now(boost::posix_time::milliseconds(100));
+            m_timer.expires_from_now(boost::asio::chrono::milliseconds(100));
             m_timer.async_wait([reply, this](const boost::system::error_code& ec) {
                 if (ec) return;
                 reply.error("Something nasty to be expected!");
@@ -1241,11 +1239,11 @@ void SignalSlotable_Test::_testAsyncReply() {
         bool m_asynReplyHandlerCalled_error;
 
        private:
-        boost::asio::deadline_timer m_timer;
+        boost::asio::steady_timer m_timer;
     };
 
-    auto slotter = boost::make_shared<SignalSlotableAsyncReply>("slotter");
-    auto sender = boost::make_shared<SignalSlotable>("sender");
+    auto slotter = std::make_shared<SignalSlotableAsyncReply>("slotter");
+    auto sender = std::make_shared<SignalSlotable>("sender");
     sender->start();
     slotter->start();
 
@@ -1262,7 +1260,7 @@ void SignalSlotable_Test::_testAsyncReply() {
     int counter = numWaitIterations;
     while (--counter >= 0) {
         if (slotter->m_slotCallEnded) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerWaitIterationMs));
+        std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerWaitIterationMs));
     }
     CPPUNIT_ASSERT(slotter->m_slotCallEnded);
     // ...but reply is not yet received
@@ -1272,7 +1270,7 @@ void SignalSlotable_Test::_testAsyncReply() {
     counter = numWaitIterations;
     while (--counter >= 0) {
         if (received) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerWaitIterationMs));
+        std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerWaitIterationMs));
     }
     // Assert and also check result:
     CPPUNIT_ASSERT(slotter->m_asynReplyHandlerCalled);
@@ -1305,7 +1303,7 @@ void SignalSlotable_Test::_testAsyncReply() {
     counter = numWaitIterations;
     while (--counter >= 0) {
         if (slotter->m_slotCallEnded_error) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerWaitIterationMs));
+        std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerWaitIterationMs));
     }
     CPPUNIT_ASSERT(slotter->m_slotCallEnded_error);
     // ...but reply is not yet received
@@ -1315,7 +1313,7 @@ void SignalSlotable_Test::_testAsyncReply() {
     counter = numWaitIterations;
     while (--counter >= 0) {
         if (receivedSuccess || receivedError) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerWaitIterationMs));
+        std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerWaitIterationMs));
     }
     // Assert and also check result:
     CPPUNIT_ASSERT(slotter->m_asynReplyHandlerCalled_error);
@@ -1343,7 +1341,7 @@ void SignalSlotable_Test::_testAsyncReply() {
     counter = numWaitIterations;
     while (--counter >= 0) {
         if (slotter->m_asynReplyHandlerCalled) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerWaitIterationMs));
+        std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerWaitIterationMs));
     }
     CPPUNIT_ASSERT(slotter->m_asynReplyHandlerCalled);
 }
@@ -1358,7 +1356,7 @@ void SignalSlotable_Test::_testAutoConnectSignal() {
     // Give a unique name to exclude interference with other tests
     const std::string instanceId("SignalSlotDemoAutoConnectSignal");
     const std::string instanceId2(instanceId + "2");
-    auto demo = boost::make_shared<SignalSlotDemo>(instanceId, instanceId2);
+    auto demo = std::make_shared<SignalSlotDemo>(instanceId, instanceId2);
     demo->start();
 
     // Connect the other's signal to my slot - although the other is not yet there!
@@ -1368,14 +1366,14 @@ void SignalSlotable_Test::_testAutoConnectSignal() {
     waitDemoOk(demo, 0, 6);         // 6 trials: slightly more than 100 ms sleep
     CPPUNIT_ASSERT(demo->wasOk(0)); // demo is not interested in its own signals
 
-    auto demo2 = boost::make_shared<SignalSlotDemo>(instanceId2, instanceId);
+    auto demo2 = std::make_shared<SignalSlotDemo>(instanceId2, instanceId);
     demo2->start();
 
     int count = 0;
     do {
         if (count == 0) { // Locally, one 10 ms sleep seems enough, but CI failed once with 100 ms.
             // Give demo some time to auto-connect now that demo2 is there:
-            boost::this_thread::sleep(boost::posix_time::milliseconds(10));
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
         } else {
             // Probably above time was not enough
             std::clog << "\t\tEmit again signalA, count is " << count << std::endl;
@@ -1401,7 +1399,7 @@ void SignalSlotable_Test::_testAutoConnectSlot() {
     // slot instance comes into game after connect was called.
     const std::string instanceId("SignalSlotDemoAutoConnectSlot");
     const std::string instanceId2(instanceId + "2");
-    auto demo = boost::make_shared<SignalSlotDemo>(instanceId, instanceId2);
+    auto demo = std::make_shared<SignalSlotDemo>(instanceId, instanceId2);
     demo->start();
 
 
@@ -1413,14 +1411,14 @@ void SignalSlotable_Test::_testAutoConnectSlot() {
     CPPUNIT_ASSERT(demo->wasOk(0)); // demo is not interested in its own signals
 
 
-    auto demo2 = boost::make_shared<SignalSlotDemo>(instanceId2, instanceId);
+    auto demo2 = std::make_shared<SignalSlotDemo>(instanceId2, instanceId);
     demo2->start();
 
     int count = 0;
     do {
         if (count == 0) {
             // Give demo some time to auto-connect now that demo2 is there (failed with 100 in a CI at least once):
-            boost::this_thread::sleep(boost::posix_time::milliseconds(10));
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
         } else {
             std::clog << "\t\tEmit again signalA, count is " << count << std::endl;
         }
@@ -1442,7 +1440,7 @@ void SignalSlotable_Test::testRegisterSlotTwice() {
 void SignalSlotable_Test::_testRegisterSlotTwice() {
     // Registering two function of the same signature for the same slot means that both are executed
     // when the slot is called.
-    auto instance = boost::make_shared<SignalSlotable>("instance");
+    auto instance = std::make_shared<SignalSlotable>("instance");
     instance->start();
 
     bool firstIsCalled = false;
@@ -1454,7 +1452,7 @@ void SignalSlotable_Test::_testRegisterSlotTwice() {
     // Adding second with same signature is fine in contrast to third below:
     CPPUNIT_ASSERT_NO_THROW(instance->registerSlot(second, "slot"));
 
-    auto tester = boost::make_shared<SignalSlotable>("tester");
+    auto tester = std::make_shared<SignalSlotable>("tester");
     tester->start();
     // Synchronous request to avoid sleeps in test - assert that no timeout happens.
     // Our slot functions do not place any answers, so an empty one will be added.
@@ -1480,13 +1478,13 @@ void SignalSlotable_Test::_testAsyncConnectInputChannel() {
     using karabo::util::Hash;
 
     // Setup sender
-    auto sender = boost::make_shared<SignalSlotable>("sender");
+    auto sender = std::make_shared<SignalSlotable>("sender");
     OutputChannel::Pointer outputChannel = sender->createOutputChannel("output", // default config
                                                                        Hash("output", karabo::util::Hash()));
     sender->start();
 
     // Setup receiver
-    auto receiver = boost::make_shared<SignalSlotable>("receiver");
+    auto receiver = std::make_shared<SignalSlotable>("receiver");
     karabo::util::Hash inputCfg("connectedOutputChannels", std::vector<std::string>(1, "sender:output"));
     InputChannel::Pointer inputChannel = receiver->createInputChannel("input", Hash("input", inputCfg));
     receiver->start();
@@ -1593,7 +1591,7 @@ void SignalSlotable_Test::testUuid() {
         futures.push_back(promise.get_future());
     }
 
-    boost::function<void(size_t)> generate = [&uuidSets, &promises, numGen](size_t num) {
+    std::function<void(size_t)> generate = [&uuidSets, &promises, numGen](size_t num) {
         for (size_t i = 0; i < numGen; ++i) {
             uuidSets[num].insert(SignalSlotable::generateUUID());
         }
@@ -1604,7 +1602,7 @@ void SignalSlotable_Test::testUuid() {
     karabo::net::EventLoop::addThread(numParallel);
 
     for (size_t i = 0; i < numParallel; ++i) {
-        karabo::net::EventLoop::getIOService().post(boost::bind(generate, i));
+        karabo::net::EventLoop::getIOService().post(std::bind(generate, i));
     }
     // Wait until all are done
     for (size_t i = 0; i < numParallel; ++i) {
@@ -1628,14 +1626,14 @@ void SignalSlotable_Test::testUuid() {
 }
 
 
-void SignalSlotable_Test::waitDemoOk(const boost::shared_ptr<SignalSlotDemo>& demo, int messageCalls, int trials) {
+void SignalSlotable_Test::waitDemoOk(const std::shared_ptr<SignalSlotDemo>& demo, int messageCalls, int trials) {
     // trials = 10 => maximum wait for millisecondsSleep = 2 is about 2 seconds
     unsigned int millisecondsSleep = 2;
     do {
         if (demo->wasOk(messageCalls)) {
             break;
         }
-        boost::this_thread::sleep(boost::posix_time::milliseconds(millisecondsSleep));
+        std::this_thread::sleep_for(std::chrono::milliseconds(millisecondsSleep));
         millisecondsSleep *= 2;
     } while (--trials > 0); // trials is signed to avoid --trials to be very large for input of 0
 }

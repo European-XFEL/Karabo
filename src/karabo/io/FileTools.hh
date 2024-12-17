@@ -22,7 +22,7 @@
  * Created on March 1, 2013, 6:18 PM
  */
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <karabo/log/Logger.hh>
 #include <ostream>
 
@@ -53,7 +53,7 @@ namespace karabo {
         template <class T>
         inline void loadFromFile(T& object, const std::string& filename,
                                  const karabo::util::Hash& config = karabo::util::Hash()) {
-            boost::filesystem::path filepath(filename);
+            std::filesystem::path filepath(filename);
             std::string extension = filepath.extension().string().substr(1);
             boost::to_lower(extension);
             karabo::util::Hash h("filename", filepath.lexically_normal().string());
@@ -84,14 +84,14 @@ namespace karabo {
         template <class T>
         inline void saveToFile(const T& object, const std::string& filename,
                                const karabo::util::Hash& config = karabo::util::Hash()) {
-            boost::filesystem::path filepath(filename);
+            std::filesystem::path filepath(filename);
             std::string extension = filepath.extension().string().substr(1);
-            boost::filesystem::path directory = filepath.parent_path();
+            std::filesystem::path directory = filepath.parent_path();
 
             // Create the directory and any parents if not existing already
-            if (!directory.empty() && !boost::filesystem::exists(directory)) {
+            if (!directory.empty() && !std::filesystem::exists(directory)) {
                 boost::system::error_code ec;
-                boost::filesystem::create_directories(directory, ec);
+                std::filesystem::create_directories(directory, ec);
                 if (ec) {
                     KARABO_LOG_FRAMEWORK_ERROR_C("karabo::io::saveToFile")
                           << "Failed to create directories: " << directory << ". code = " << ec.value() << " -- "

@@ -25,7 +25,7 @@
 #ifndef _KARABO_UTIL_STATE_HH
 #define _KARABO_UTIL_STATE_HH
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include <mutex> // for once_flag
 #include <string>
 #include <unordered_map>

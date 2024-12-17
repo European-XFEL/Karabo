@@ -11,9 +11,9 @@
 #define KARABO_NET_UTILS_HH
 
 #include <boost/asio/io_service.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/tuple/tuple.hpp>
+#include <memory>
 #include <string>
+#include <tuple>
 
 
 namespace karabo {
@@ -35,7 +35,7 @@ namespace karabo {
          * @param errorMessage will be part of the logged error
          * @param delayInMilliSec is the delay after each catch
          */
-        void runProtected(boost::shared_ptr<boost::asio::io_service> service, const std::string& category,
+        void runProtected(std::shared_ptr<boost::asio::io_service> service, const std::string& category,
                           const std::string& errorMessage, unsigned int delayInMilliSec = 100);
 
         /**
@@ -46,7 +46,7 @@ namespace karabo {
          * @param url A well formed URL
          * @return tuple containing scheme and scheme dependent part
          */
-        boost::tuple<std::string, std::string> parseGenericUrl(const std::string& url);
+        std::tuple<std::string, std::string> parseGenericUrl(const std::string& url);
 
         /**
          * Parses a HTTP-like URL and returns a tuple.
@@ -56,7 +56,7 @@ namespace karabo {
          * @param url A well formed URL
          * @return tuple containing scheme, domain, port, path and query
          */
-        boost::tuple<std::string, std::string, std::string, std::string, std::string> parseUrl(const std::string& url);
+        std::tuple<std::string, std::string, std::string, std::string, std::string> parseUrl(const std::string& url);
 
         std::string urlencode(const std::string& value);
 

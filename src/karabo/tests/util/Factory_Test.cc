@@ -53,7 +53,7 @@ void Factory_Test::tearDown() {}
 void Factory_Test::testObjectCreation() {
     // Factory::registerClass<A>("A");
     // Factory::registerClass<A, std::string>("A");
-    boost::shared_ptr<Interface> ptr1 = Factory<Interface>::create("AAA");
+    std::shared_ptr<Interface> ptr1 = Factory<Interface>::create("AAA");
     CPPUNIT_ASSERT(ptr1->foo() == "A:void");
     Interface::Pointer ptr2 = Factory<Interface>::create<std::string>("AAA", "Horrey!");
     CPPUNIT_ASSERT(ptr2->foo() == "A:string");
@@ -89,7 +89,7 @@ void Factory_Test::testClassInfo() {
     CPPUNIT_ASSERT(karabo::util::PluginLoader::classInfo().getNamespace() == "karabo::util");
     CPPUNIT_ASSERT(karabo::util::PluginLoader::classInfo().getVersion() == "1.0");
 
-    boost::shared_ptr<Interface> ptr1 = Factory<Interface>::create("AAA");
+    std::shared_ptr<Interface> ptr1 = Factory<Interface>::create("AAA");
     ci = ptr1->getClassInfo();
     CPPUNIT_ASSERT(ci.getClassId() == "AAA");
     CPPUNIT_ASSERT(ci.getClassName() == "A");

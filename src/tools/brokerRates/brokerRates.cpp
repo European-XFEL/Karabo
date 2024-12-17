@@ -23,8 +23,6 @@
  */
 
 #include <boost/algorithm/string/split.hpp>
-#include <boost/enable_shared_from_this.hpp>
-#include <boost/shared_ptr.hpp>
 #include <cstdlib>
 #include <iomanip>
 #include <iosfwd>
@@ -40,12 +38,13 @@
 #include <karabo/util/MetaTools.hh>
 #include <karabo/util/Schema.hh>
 #include <map>
+#include <memory>
 #include <unordered_set>
 
 using namespace karabo;
-using namespace boost::placeholders;
+using namespace std::placeholders;
 
-class BrokerStatistics : public boost::enable_shared_from_this<BrokerStatistics> {
+class BrokerStatistics : public std::enable_shared_from_this<BrokerStatistics> {
    public:
     /// Stats as pair of number of calls and accumulated size in bytes.
     typedef std::pair<unsigned int, size_t> Stats;
@@ -381,11 +380,11 @@ std::pair<std::vector<std::string>, std::vector<std::string>> instancesOfServers
         // Instead of the gymnastics below, we could add a slot to the server to query it for all their devices...
 
         // Need an event loop for
-        boost::thread thread(boost::bind(&net::EventLoop::work));
+        boost::thread thread(std::bind(&net::EventLoop::work));
         std::cout << ". " << std::flush;
 
         auto client =
-              boost::make_shared<core::DeviceClient>("", false); // default unique id, explicitly call initialize()
+              std::make_shared<core::DeviceClient>("", false); // default unique id, explicitly call initialize()
         client->initialize();
         std::cout << ". " << std::flush;  // output some progress markers...
         client->enableInstanceTracking(); // blocking a while to gather topology
@@ -393,7 +392,7 @@ std::pair<std::vector<std::string>, std::vector<std::string>> instancesOfServers
 
         // If servers busy, discovery might take longer than the above blocking
         while (sleepSeconds-- > 0u) { // postfix decrement!
-            boost::this_thread::sleep(boost::posix_time::seconds(1));
+            std::this_thread::sleep_for(std::chrono::seconds(1));
             std::cout << ". " << std::flush;
         }
         std::cout << "\n";
@@ -467,12 +466,12 @@ void printHelp(const char* name) {
 void startAmqpMonitor(const std::vector<std::string>& brokers, const std::string& domain,
                       const std::vector<std::string>& receivers, std::vector<std::string>& senders,
                       const util::TimeValue& interval) {
-    net::AmqpConnection::Pointer connection(boost::make_shared<net::AmqpConnection>(brokers));
+    net::AmqpConnection::Pointer connection(std::make_shared<net::AmqpConnection>(brokers));
 
-    // boost::shared_ptr<BrokerStatistics> stats(boost::make_shared<BrokerStatistics>(interval, receivers, senders));
+    // std::shared_ptr<BrokerStatistics> stats(std::make_shared<BrokerStatistics>(interval, receivers, senders));
     // auto binSerializer = io::BinarySerializer<util::Hash>::create("Bin");
 
-    auto readHandler = [stats{boost::make_shared<BrokerStatistics>(interval, receivers, senders)},
+    auto readHandler = [stats{std::make_shared<BrokerStatistics>(interval, receivers, senders)},
                         binSerializer{io::BinarySerializer<util::Hash>::create("Bin")}](
                              const util::Hash::Pointer& header, const util::Hash::Pointer& body) {
         // `BrokerStatistics' expects the message formatted as a Hash: with 'header' as Hash and 'body' as Hash with the
@@ -482,7 +481,7 @@ void startAmqpMonitor(const std::vector<std::string>& brokers, const std::string
         if (body->has("raw") && body->is<std::vector<char>>("raw")) {
             finalBody = body;
         } else {
-            finalBody = boost::make_shared<util::Hash>();
+            finalBody = std::make_shared<util::Hash>();
             std::vector<char>& raw = finalBody->bindReference<std::vector<char>>("raw");
             binSerializer->save(body, raw); // body -> raw
         }

@@ -110,7 +110,7 @@ void exportPyUtilHash(py::module_& m) {
           .value("REPLACE_ATTRIBUTES", Hash::REPLACE_ATTRIBUTES)
           .export_values();
 
-    py::class_<Hash, boost::shared_ptr<Hash>> h(m, "Hash", R"pbdoc(
+    py::class_<Hash, std::shared_ptr<Hash>> h(m, "Hash", R"pbdoc(
             The Hash class can be regarded as a generic hash container, which
             associates a string key to a value of any type.
             Optionally attributes of any value-type can be associated to each
@@ -696,9 +696,9 @@ void exportPyUtilHash(py::module_& m) {
           [](Hash& self, const std::string& path, const std::string& separator) {
               using namespace karabo::util;
               boost::optional<Hash::Node&> node = self.find(path, separator.at(0));
-              if (!node) return boost::shared_ptr<karabo::util::Hash::Node>();
+              if (!node) return std::shared_ptr<karabo::util::Hash::Node>();
               // Wrapping the pointer to the existing memory location with null deleter
-              return boost::shared_ptr<Hash::Node>(&node.get(), [](Hash::Node*) {});
+              return std::shared_ptr<Hash::Node>(&node.get(), [](Hash::Node*) {});
           },
           py::arg("path"), py::arg("sep") = cStringSep,
           R"pbdoc(
@@ -738,7 +738,7 @@ void exportPyUtilHash(py::module_& m) {
           "getNode",
           [](Hash& self, const std::string& path, const std::string& separator) {
               Hash::Node& nodeRef = self.getNode(path, separator.at(0));
-              auto node = boost::shared_ptr<Hash::Node>(&nodeRef, [](void*) {});
+              auto node = std::shared_ptr<Hash::Node>(&nodeRef, [](void*) {});
               return py::cast(node);
           },
           py::arg("path"), py::arg("sep") = cStringSep,
@@ -970,7 +970,7 @@ void exportPyUtilHash(py::module_& m) {
     //           return t.cast<std::vector<Hash>>();
     //       }));
 
-    //     py::class_<CppArrayRefHandler, boost::shared_ptr<CppArrayRefHandler>>(m, "_CppArrayRefHandler_")
+    //     py::class_<CppArrayRefHandler, std::shared_ptr<CppArrayRefHandler>>(m, "_CppArrayRefHandler_")
     //         .def(py::init<CppArrayRefHandler>());
 
     auto vhp = py::bind_vector<std::vector<Hash::Pointer>>(m, "VectorHashPointer");

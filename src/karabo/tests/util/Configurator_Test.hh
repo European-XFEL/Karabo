@@ -51,10 +51,10 @@ class Base {
         return m_extra0;
     }
 
-    boost::shared_ptr<Aggregated>& getAggregated();
+    std::shared_ptr<Aggregated>& getAggregated();
 
    private:
-    boost::shared_ptr<Aggregated> m_aggregated;
+    std::shared_ptr<Aggregated> m_aggregated;
     int m_extra0 = -1;
 };
 

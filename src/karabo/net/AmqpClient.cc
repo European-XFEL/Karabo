@@ -25,7 +25,7 @@
 #include "karabo/util/Exception.hh"
 
 
-using boost::placeholders::_1;
+using std::placeholders::_1;
 
 namespace karabo::net {
 

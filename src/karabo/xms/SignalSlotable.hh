@@ -69,7 +69,7 @@ namespace karabo {
          * For a full documentation of the signal-slot component see the documentation in the software-guide.
          *
          */
-        class SignalSlotable : public boost::enable_shared_from_this<SignalSlotable> {
+        class SignalSlotable : public std::enable_shared_from_this<SignalSlotable> {
             friend class Signal;
 
            protected:
@@ -82,23 +82,23 @@ namespace karabo {
             // Forward
             class AsyncReply;
 
-            typedef boost::function<void(const std::string& /*slotFunction*/, const std::string& /*callee*/)>
+            typedef std::function<void(const std::string& /*slotFunction*/, const std::string& /*callee*/)>
                   SlotCallGuardHandler;
 
-            typedef boost::function<void(const karabo::util::Hash::Pointer& /*performanceMeasures*/)>
+            typedef std::function<void(const karabo::util::Hash::Pointer& /*performanceMeasures*/)>
                   UpdatePerformanceStatisticsHandler;
 
-            typedef boost::function<void(const std::string& /*message*/)> BrokerErrorHandler;
+            typedef std::function<void(const std::string& /*message*/)> BrokerErrorHandler;
 
             typedef InputChannel::DataHandler DataHandler;
 
             typedef InputChannel::InputHandler InputHandler;
 
-            typedef boost::function<void(const OutputChannel::Pointer&)> OutputHandler;
+            typedef std::function<void(const OutputChannel::Pointer&)> OutputHandler;
 
-            typedef boost::shared_ptr<karabo::xms::Slot> SlotInstancePointer;
+            typedef std::shared_ptr<karabo::xms::Slot> SlotInstancePointer;
 
-            typedef boost::shared_ptr<karabo::xms::Signal> SignalInstancePointer;
+            typedef std::shared_ptr<karabo::xms::Signal> SignalInstancePointer;
 
             typedef std::map<std::string, InputChannel::Pointer> InputChannels;
 
@@ -300,7 +300,7 @@ namespace karabo {
             ///         KARABO_LOG_FRAMEWORK_WARN << "Probem when trying to do something: " << e.what();
             ///     }
             ///  }
-            typedef boost::function<void()> AsyncErrorHandler;
+            typedef std::function<void()> AsyncErrorHandler;
 
             /**
              * This function tries to establish asynchronously a connection between a signal
@@ -325,7 +325,7 @@ namespace karabo {
              */
             void asyncConnect(const std::string& signalInstanceId, const std::string& signalSignature,
                               const std::string& slotInstanceId, const std::string& slotSignature,
-                              const boost::function<void()>& successHandler = boost::function<void()>(),
+                              const std::function<void()>& successHandler = std::function<void()>(),
                               const AsyncErrorHandler& failureHandler = AsyncErrorHandler(), int timeout = 0);
 
             /**
@@ -344,7 +344,7 @@ namespace karabo {
              *                            default timeout
              */
             void asyncConnect(const std::vector<SignalSlotConnection>& signalSlotConnections,
-                              const boost::function<void()>& successHandler = boost::function<void()>(),
+                              const std::function<void()>& successHandler = std::function<void()>(),
                               const AsyncErrorHandler& failureHandler = AsyncErrorHandler(), int timeout = 0);
             /**
              * Disconnects a slot from a signal, identified both by their
@@ -382,7 +382,7 @@ namespace karabo {
              */
             void asyncDisconnect(const std::string& signalInstanceId, const std::string& signalFunction,
                                  const std::string& slotInstanceId, const std::string& slotFunction,
-                                 const boost::function<void()>& successHandler = boost::function<void()>(),
+                                 const std::function<void()>& successHandler = std::function<void()>(),
                                  const AsyncErrorHandler& failureHandler = AsyncErrorHandler(), int timeout = 0);
             /**
              * Emits a signal, i.e. publishes the given payload
@@ -442,20 +442,20 @@ namespace karabo {
              * if so necessary. It is checked that the signature of the new
              * slot is the same as an already registered one.
              */
-            void registerSlot(const boost::function<void()>& slot, const std::string& funcName);
+            void registerSlot(const std::function<void()>& slot, const std::string& funcName);
 
             template <class A1>
-            void registerSlot(const boost::function<void(const A1&)>& slot, const std::string& funcName);
+            void registerSlot(const std::function<void(const A1&)>& slot, const std::string& funcName);
 
             template <class A1, class A2>
-            void registerSlot(const boost::function<void(const A1&, const A2&)>& slot, const std::string& funcName);
+            void registerSlot(const std::function<void(const A1&, const A2&)>& slot, const std::string& funcName);
 
             template <class A1, class A2, class A3>
-            void registerSlot(const boost::function<void(const A1&, const A2&, const A3&)>& slot,
+            void registerSlot(const std::function<void(const A1&, const A2&, const A3&)>& slot,
                               const std::string& funcName);
 
             template <class A1, class A2, class A3, class A4>
-            void registerSlot(const boost::function<void(const A1&, const A2&, const A3&, const A4&)>& slot,
+            void registerSlot(const std::function<void(const A1&, const A2&, const A3&, const A4&)>& slot,
                               const std::string& funcName);
 
             /**
@@ -575,7 +575,7 @@ namespace karabo {
              *                               connected (defaults to empty vector)
              */
             void asyncConnectInputChannel(
-                  const InputChannel::Pointer& channel, const boost::function<void(bool)>& handler,
+                  const InputChannel::Pointer& channel, const std::function<void(bool)>& handler,
                   const std::vector<std::string>& outputChannelsToIgnore = std::vector<std::string>());
 
             /**
@@ -661,25 +661,24 @@ namespace karabo {
                                          const std::string& requestSlotFunction, const std::string replySlotInstanceId,
                                          const std::string& replySlotFunction, const Args&... args);
 
-                void receiveAsync(const boost::function<void()>& replyCallback,
+                void receiveAsync(const std::function<void()>& replyCallback,
                                   const AsyncErrorHandler& errorHandlerHandler = AsyncErrorHandler());
 
                 template <class A1>
-                void receiveAsync(const boost::function<void(const A1&)>& replyCallback,
+                void receiveAsync(const std::function<void(const A1&)>& replyCallback,
                                   const AsyncErrorHandler& errorHandlerHandler = AsyncErrorHandler());
 
                 template <class A1, class A2>
-                void receiveAsync(const boost::function<void(const A1&, const A2&)>& replyCallback,
+                void receiveAsync(const std::function<void(const A1&, const A2&)>& replyCallback,
                                   const AsyncErrorHandler& errorHandlerHandler = AsyncErrorHandler());
 
                 template <class A1, class A2, class A3>
-                void receiveAsync(const boost::function<void(const A1&, const A2&, const A3&)>& replyCallback,
+                void receiveAsync(const std::function<void(const A1&, const A2&, const A3&)>& replyCallback,
                                   const AsyncErrorHandler& errorHandlerHandler = AsyncErrorHandler());
 
                 template <class A1, class A2, class A3, class A4>
-                void receiveAsync(
-                      const boost::function<void(const A1&, const A2&, const A3&, const A4&)>& replyCallback,
-                      const AsyncErrorHandler& errorHandlerHandler = AsyncErrorHandler());
+                void receiveAsync(const std::function<void(const A1&, const A2&, const A3&, const A4&)>& replyCallback,
+                                  const AsyncErrorHandler& errorHandlerHandler = AsyncErrorHandler());
 
                 template <typename... Args>
                 void receive(Args&... args);
@@ -738,8 +737,8 @@ namespace karabo {
 
             // Use (mutex, condition variable) pair for waiting simultaneously many events
             struct BoostMutexCond {
-                boost::mutex m_mutex;
-                boost::condition_variable m_cond;
+                std::mutex m_mutex;
+                std::condition_variable m_cond;
 
                 BoostMutexCond() : m_mutex(), m_cond() {}
 
@@ -748,7 +747,7 @@ namespace karabo {
             };
 
             std::string m_instanceId;
-            mutable boost::shared_mutex m_instanceInfoMutex;
+            mutable std::shared_mutex m_instanceInfoMutex;
             karabo::util::Hash m_instanceInfo;
             std::string m_username;
 
@@ -758,17 +757,17 @@ namespace karabo {
             typedef std::map<std::string, SlotInstancePointer> SlotInstances;
             SlotInstances m_slotInstances;
 
-            typedef std::map<std::string, std::pair<boost::shared_ptr<boost::asio::deadline_timer>, AsyncErrorHandler>>
+            typedef std::map<std::string, std::pair<std::shared_ptr<boost::asio::steady_timer>, AsyncErrorHandler>>
                   ReceiveAsyncErrorHandles;
             ReceiveAsyncErrorHandles m_receiveAsyncErrorHandles;
 
             // TODO Split into two mutexes
-            mutable boost::mutex m_signalSlotInstancesMutex;
+            mutable std::mutex m_signalSlotInstancesMutex;
 
             // key is instanceId of signal or slot
             typedef std::map<std::string, std::set<SignalSlotConnection>> SignalSlotConnections;
             SignalSlotConnections m_signalSlotConnections; // keep track of established connections
-            boost::mutex m_signalSlotConnectionsMutex;
+            std::mutex m_signalSlotConnectionsMutex;
 
             karabo::net::Broker::Pointer m_connection;
 
@@ -776,7 +775,7 @@ namespace karabo {
 
            private:
             karabo::net::Strand::Pointer m_broadcastEventStrand;
-            boost::mutex m_unicastEventStrandsMutex;
+            std::mutex m_unicastEventStrandsMutex;
             std::unordered_map<std::string, karabo::net::Strand::Pointer> m_unicastEventStrands; // one per sender
 
             // Reply/Request related
@@ -784,61 +783,60 @@ namespace karabo {
             // Map slot name and whether it was called globally
             std::map<boost::thread::id, std::pair<std::string, bool>>
                   m_currentSlots; // unordered? needs std::hash<boost::thread::id>...
-            mutable boost::mutex m_currentSlotsMutex;
+            mutable std::mutex m_currentSlotsMutex;
 
             // which one succeeded, successHandler, errorHandler
-            typedef std::tuple<std::vector<bool>, boost::function<void()>, boost::function<void()>>
-                  MultiAsyncConnectInfo;
+            typedef std::tuple<std::vector<bool>, std::function<void()>, std::function<void()>> MultiAsyncConnectInfo;
             std::unordered_map<std::string, MultiAsyncConnectInfo> m_currentMultiAsyncConnects;
-            boost::mutex m_currentMultiAsyncConnectsMutex;
+            std::mutex m_currentMultiAsyncConnectsMutex;
 
-            static boost::mutex m_uuidGeneratorMutex;
+            static std::mutex m_uuidGeneratorMutex;
             static boost::uuids::random_generator m_uuidGenerator;
 
            protected:
             typedef std::map<boost::thread::id, karabo::util::Hash::Pointer> Replies;
             Replies m_replies;
-            mutable boost::mutex m_replyMutex;
+            mutable std::mutex m_replyMutex;
 
             typedef std::pair<karabo::util::Hash::Pointer /*header*/, karabo::util::Hash::Pointer /*body*/> Event;
             typedef std::map<std::string, Event> ReceivedReplies;
             ReceivedReplies m_receivedReplies;
-            mutable boost::mutex m_receivedRepliesMutex;
+            mutable std::mutex m_receivedRepliesMutex;
 
-            typedef std::map<std::string, boost::shared_ptr<BoostMutexCond>> ReceivedRepliesBMC;
+            typedef std::map<std::string, std::shared_ptr<BoostMutexCond>> ReceivedRepliesBMC;
             ReceivedRepliesBMC m_receivedRepliesBMC;
-            mutable boost::mutex m_receivedRepliesBMCMutex;
+            mutable std::mutex m_receivedRepliesBMCMutex;
 
             karabo::util::Hash m_trackedInstances;
             bool m_trackAllInstances;
             int m_heartbeatInterval;
 
-            mutable boost::mutex m_trackedInstancesMutex;
+            mutable std::mutex m_trackedInstancesMutex;
 
-            boost::asio::deadline_timer m_trackingTimer;
-            boost::asio::deadline_timer m_heartbeatTimer;
-            boost::asio::deadline_timer m_performanceTimer;
+            boost::asio::steady_timer m_trackingTimer;
+            boost::asio::steady_timer m_heartbeatTimer;
+            boost::asio::steady_timer m_performanceTimer;
 
             // IO channel related
-            boost::asio::deadline_timer m_channelConnectTimer;
-            mutable boost::mutex m_pipelineChannelsMutex;
+            boost::asio::steady_timer m_channelConnectTimer;
+            mutable std::mutex m_pipelineChannelsMutex;
             InputChannels m_inputChannels;
             OutputChannels m_outputChannels;
 
             SlotCallGuardHandler m_slotCallGuardHandler;
             UpdatePerformanceStatisticsHandler m_updatePerformanceStatistics;
 
-            boost::mutex m_brokerErrorHandlerMutex;
+            std::mutex m_brokerErrorHandlerMutex;
             BrokerErrorHandler m_brokerErrorHandler;
 
             // Two maps of local (i.e. same process) instances:
             // A shared static one that everybody registers and deregisters, and a copy for each instance that can be
             // accessed whenever a message is sent.
             static std::unordered_map<std::string, SignalSlotable::WeakPointer> m_sharedInstanceMap;
-            static boost::shared_mutex m_sharedInstanceMapMutex;
+            static std::shared_mutex m_sharedInstanceMapMutex;
 
             std::unordered_map<std::string, SignalSlotable::WeakPointer> m_myInstanceMap;
-            mutable boost::mutex m_myInstanceMapMutex;
+            mutable std::mutex m_myInstanceMapMutex;
 
             // TODO This is a helper variable
             std::string m_topic;
@@ -891,8 +889,8 @@ namespace karabo {
              *
              * @param handler with header and body (as Hash::Pointer) of the message
              */
-            void registerBroadcastHandler(boost::function<void(const karabo::util::Hash::Pointer& header,
-                                                               const karabo::util::Hash::Pointer& body)>
+            void registerBroadcastHandler(std::function<void(const karabo::util::Hash::Pointer& header,
+                                                             const karabo::util::Hash::Pointer& body)>
                                                 handler);
 
            private: // Functions
@@ -1053,23 +1051,22 @@ namespace karabo {
 
             void connectInputToOutputChannel(const InputChannel::Pointer& channel,
                                              const std::string& outputChannelString,
-                                             const boost::function<void(bool)>& handler);
+                                             const std::function<void(bool)>& handler);
 
             /// helper for connectInputChannels()
-            void handleInputConnected(bool success, const std::string& channel,
-                                      const boost::shared_ptr<boost::mutex>& mut,
-                                      const boost::shared_ptr<std::vector<karabo::net::AsyncStatus>>& status, size_t i,
+            void handleInputConnected(bool success, const std::string& channel, const std::shared_ptr<std::mutex>& mut,
+                                      const std::shared_ptr<std::vector<karabo::net::AsyncStatus>>& status, size_t i,
                                       size_t numOutputsToIgnore);
 
             void connectSingleInputHandler(
-                  boost::shared_ptr<
-                        std::tuple<boost::mutex, std::vector<karabo::net::AsyncStatus>, boost::function<void(bool)>>>
+                  std::shared_ptr<
+                        std::tuple<std::mutex, std::vector<karabo::net::AsyncStatus>, std::function<void(bool)>>>
                         status,
                   unsigned int counter, const std::string& outputChannelString, bool singleSuccess);
 
             void connectInputChannelHandler(const InputChannel::Pointer& inChannel,
                                             const std::string& outputChannelString,
-                                            const boost::function<void(bool)>& handler, bool outChannelExists,
+                                            const std::function<void(bool)>& handler, bool outChannelExists,
                                             const karabo::util::Hash& outChannelInfo);
 
             // Deprecated since only used in the deprecated connectInputChannel(..)
@@ -1130,10 +1127,10 @@ namespace karabo {
             /// For the given replyId of a 'request.receiveAsync', register error handling,
             /// i.e. the timer for timeout and the handler for remote exceptions.
             void addReceiveAsyncErrorHandles(const std::string& replyId,
-                                             const boost::shared_ptr<boost::asio::deadline_timer>& timer,
+                                             const std::shared_ptr<boost::asio::steady_timer>& timer,
                                              const AsyncErrorHandler& errorHandler);
 
-            std::pair<boost::shared_ptr<boost::asio::deadline_timer>, AsyncErrorHandler> getReceiveAsyncErrorHandles(
+            std::pair<std::shared_ptr<boost::asio::steady_timer>, AsyncErrorHandler> getReceiveAsyncErrorHandles(
                   const std::string& replyId) const;
 
             /// Helper that calls 'handler' such that it can do
@@ -1161,11 +1158,11 @@ namespace karabo {
                 float average() const;
             };
 
-            mutable boost::mutex m_latencyMutex;
+            mutable std::mutex m_latencyMutex;
             LatencyStats m_processingLatency; // measurements in milliseconds
             LatencyStats m_eventLoopLatency;  // measurements in milliseconds for
 
-            boost::function<void(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body)>
+            std::function<void(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body)>
                   m_broadCastHandler;
         };
 
@@ -1176,7 +1173,7 @@ namespace karabo {
                                                                       const std::string& slotFunction,
                                                                       const Args&... args) {
             karabo::util::Hash::Pointer header = prepareRequestHeader(slotInstanceId, slotFunction);
-            auto body = boost::make_shared<karabo::util::Hash>();
+            auto body = std::make_shared<karabo::util::Hash>();
             pack(*body, args...);
             registerRequest(slotInstanceId, header, body);
             return *this;
@@ -1191,14 +1188,14 @@ namespace karabo {
             karabo::util::Hash::Pointer header = prepareRequestNoWaitHeader(requestSlotInstanceId, requestSlotFunction,
                                                                             replySlotInstanceId, replySlotFunction);
 
-            auto body = boost::make_shared<karabo::util::Hash>();
+            auto body = std::make_shared<karabo::util::Hash>();
             pack(*body, args...);
             m_signalSlotable->doSendMessage(requestSlotInstanceId, header, body, KARABO_SYS_PRIO, KARABO_SYS_TTL);
             return *this;
         }
 
         template <class A1>
-        void SignalSlotable::Requestor::receiveAsync(const boost::function<void(const A1&)>& replyCallback,
+        void SignalSlotable::Requestor::receiveAsync(const std::function<void(const A1&)>& replyCallback,
                                                      const AsyncErrorHandler& errorHandler) {
             m_signalSlotable->registerSlot<A1>(replyCallback, m_replyId);
             registerErrorHandler(errorHandler);
@@ -1206,7 +1203,7 @@ namespace karabo {
         }
 
         template <class A1, class A2>
-        void SignalSlotable::Requestor::receiveAsync(const boost::function<void(const A1&, const A2&)>& replyCallback,
+        void SignalSlotable::Requestor::receiveAsync(const std::function<void(const A1&, const A2&)>& replyCallback,
                                                      const AsyncErrorHandler& errorHandler) {
             m_signalSlotable->registerSlot<A1, A2>(replyCallback, m_replyId);
             registerErrorHandler(errorHandler);
@@ -1215,7 +1212,7 @@ namespace karabo {
 
         template <class A1, class A2, class A3>
         void SignalSlotable::Requestor::receiveAsync(
-              const boost::function<void(const A1&, const A2&, const A3&)>& replyCallback,
+              const std::function<void(const A1&, const A2&, const A3&)>& replyCallback,
               const AsyncErrorHandler& errorHandler) {
             m_signalSlotable->registerSlot<A1, A2, A3>(replyCallback, m_replyId);
             registerErrorHandler(errorHandler);
@@ -1224,7 +1221,7 @@ namespace karabo {
 
         template <class A1, class A2, class A3, class A4>
         void SignalSlotable::Requestor::receiveAsync(
-              const boost::function<void(const A1&, const A2&, const A3&, const A4&)>& replyCallback,
+              const std::function<void(const A1&, const A2&, const A3&, const A4&)>& replyCallback,
               const AsyncErrorHandler& errorHandler) {
             m_signalSlotable->registerSlot<A1, A2, A3, A4>(replyCallback, m_replyId);
             registerErrorHandler(errorHandler);
@@ -1281,7 +1278,7 @@ namespace karabo {
         void SignalSlotable::emit(const std::string& signalFunction, const Args&... args) const {
             SignalInstancePointer s = getSignal(signalFunction);
             if (s) {
-                auto hash = boost::make_shared<karabo::util::Hash>();
+                auto hash = std::make_shared<karabo::util::Hash>();
                 pack(*hash, args...);
                 s->emit<Args...>(hash);
             }
@@ -1291,7 +1288,7 @@ namespace karabo {
         void SignalSlotable::call(const std::string& instanceId, const std::string& functionName,
                                   const Args&... args) const {
             const std::string& id = (instanceId.empty() ? m_instanceId : instanceId);
-            auto body = boost::make_shared<karabo::util::Hash>();
+            auto body = std::make_shared<karabo::util::Hash>();
             pack(*body, args...);
             karabo::util::Hash::Pointer header = prepareCallHeader(id, functionName);
             doSendMessage(id, header, body, KARABO_SYS_PRIO, KARABO_SYS_TTL);
@@ -1318,7 +1315,7 @@ namespace karabo {
 
         template <typename... Args>
         void SignalSlotable::reply(const Args&... args) {
-            karabo::util::Hash::Pointer hash = boost::make_shared<karabo::util::Hash>();
+            karabo::util::Hash::Pointer hash = std::make_shared<karabo::util::Hash>();
             karabo::util::pack(*hash, args...);
             registerReply(hash);
         }
@@ -1334,48 +1331,48 @@ namespace karabo {
         }
 
         template <class A1>
-        void SignalSlotable::registerSlot(const boost::function<void(const A1&)>& slot, const std::string& funcName) {
+        void SignalSlotable::registerSlot(const std::function<void(const A1&)>& slot, const std::string& funcName) {
             // About the dynamic_pointer_cast: see non-template version of registerSlot.
-            auto s = boost::dynamic_pointer_cast<SlotN<void, A1>>(findSlot(funcName));
+            auto s = std::dynamic_pointer_cast<SlotN<void, A1>>(findSlot(funcName));
             if (!s) {
-                s = boost::make_shared<SlotN<void, A1>>(funcName);
-                registerNewSlot(funcName, boost::static_pointer_cast<Slot>(s));
+                s = std::make_shared<SlotN<void, A1>>(funcName);
+                registerNewSlot(funcName, std::static_pointer_cast<Slot>(s));
             }
             s->registerSlotFunction(slot);
         }
 
         template <class A1, class A2>
-        void SignalSlotable::registerSlot(const boost::function<void(const A1&, const A2&)>& slot,
+        void SignalSlotable::registerSlot(const std::function<void(const A1&, const A2&)>& slot,
                                           const std::string& funcName) {
             // About the dynamic_pointer_cast: see non-template version of registerSlot.
-            auto s = boost::dynamic_pointer_cast<SlotN<void, A1, A2>>(findSlot(funcName));
+            auto s = std::dynamic_pointer_cast<SlotN<void, A1, A2>>(findSlot(funcName));
             if (!s) {
-                s = boost::make_shared<SlotN<void, A1, A2>>(funcName);
-                registerNewSlot(funcName, boost::static_pointer_cast<Slot>(s));
+                s = std::make_shared<SlotN<void, A1, A2>>(funcName);
+                registerNewSlot(funcName, std::static_pointer_cast<Slot>(s));
             }
             s->registerSlotFunction(slot);
         }
 
         template <class A1, class A2, class A3>
-        void SignalSlotable::registerSlot(const boost::function<void(const A1&, const A2&, const A3&)>& slot,
+        void SignalSlotable::registerSlot(const std::function<void(const A1&, const A2&, const A3&)>& slot,
                                           const std::string& funcName) {
             // About the dynamic_pointer_cast: see non-template version of registerSlot.
-            auto s = boost::dynamic_pointer_cast<SlotN<void, A1, A2, A3>>(findSlot(funcName));
+            auto s = std::dynamic_pointer_cast<SlotN<void, A1, A2, A3>>(findSlot(funcName));
             if (!s) {
-                s = boost::make_shared<SlotN<void, A1, A2, A3>>(funcName);
-                registerNewSlot(funcName, boost::static_pointer_cast<Slot>(s));
+                s = std::make_shared<SlotN<void, A1, A2, A3>>(funcName);
+                registerNewSlot(funcName, std::static_pointer_cast<Slot>(s));
             }
             s->registerSlotFunction(slot);
         }
 
         template <class A1, class A2, class A3, class A4>
-        void SignalSlotable::registerSlot(const boost::function<void(const A1&, const A2&, const A3&, const A4&)>& slot,
+        void SignalSlotable::registerSlot(const std::function<void(const A1&, const A2&, const A3&, const A4&)>& slot,
                                           const std::string& funcName) {
             // About the dynamic_pointer_cast: see non-template version of registerSlot.
-            auto s = boost::dynamic_pointer_cast<SlotN<void, A1, A2, A3, A4>>(findSlot(funcName));
+            auto s = std::dynamic_pointer_cast<SlotN<void, A1, A2, A3, A4>>(findSlot(funcName));
             if (!s) {
-                s = boost::make_shared<SlotN<void, A1, A2, A3, A4>>(funcName);
-                registerNewSlot(funcName, boost::static_pointer_cast<Slot>(s));
+                s = std::make_shared<SlotN<void, A1, A2, A3, A4>>(funcName);
+                registerNewSlot(funcName, std::static_pointer_cast<Slot>(s));
             }
             s->registerSlotFunction(slot);
         }
@@ -1385,10 +1382,10 @@ namespace karabo {
                                                                              int priority, int messageTimeToLive) {
             SignalInstancePointer s;
             {
-                boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
+                std::lock_guard<std::mutex> lock(m_signalSlotInstancesMutex);
                 if (m_signalInstances.find(signalFunction) == m_signalInstances.end()) {
-                    s = boost::make_shared<Signal>(this, m_connection, m_instanceId, signalFunction, priority,
-                                                   messageTimeToLive);
+                    s = std::make_shared<Signal>(this, m_connection, m_instanceId, signalFunction, priority,
+                                                 messageTimeToLive);
                     s->setSignature<Args...>();
                     m_signalInstances[signalFunction] = s;
                 }
@@ -1419,30 +1416,30 @@ namespace karabo {
 #define KARABO_SYSTEM_SIGNAL4(signalName, a1, a2, a3, a4) \
     this->template registerSystemSignal<a1, a2, a3, a4>(signalName);
 
-#define KARABO_SLOT0(slotName) this->registerSlot(boost::bind(&Self::slotName, this), #slotName);
+#define KARABO_SLOT0(slotName) this->registerSlot(std::bind(&Self::slotName, this), #slotName);
 #define KARABO_SLOT1(slotName, a1) \
-    this->template registerSlot<a1>(boost::bind(&Self::slotName, this, boost::placeholders::_1), #slotName);
+    this->template registerSlot<a1>(std::bind(&Self::slotName, this, std::placeholders::_1), #slotName);
 #define KARABO_SLOT2(slotName, a1, a2)   \
     this->template registerSlot<a1, a2>( \
-          boost::bind(&Self::slotName, this, boost::placeholders::_1, boost::placeholders::_2), #slotName);
-#define KARABO_SLOT3(slotName, a1, a2, a3)                                                                 \
-    this->template registerSlot<a1, a2, a3>(boost::bind(&Self::slotName, this, boost::placeholders::_1,    \
-                                                        boost::placeholders::_2, boost::placeholders::_3), \
-                                            #slotName);
-#define KARABO_SLOT4(slotName, a1, a2, a3, a4)                                                 \
-    this->template registerSlot<a1, a2, a3, a4>(                                               \
-          boost::bind(&Self::slotName, this, boost::placeholders::_1, boost::placeholders::_2, \
-                      boost::placeholders::_3, boost::placeholders::_4),                       \
+          std::bind(&Self::slotName, this, std::placeholders::_1, std::placeholders::_2), #slotName);
+#define KARABO_SLOT3(slotName, a1, a2, a3)                                                                       \
+    this->template registerSlot<a1, a2, a3>(                                                                     \
+          std::bind(&Self::slotName, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), \
+          #slotName);
+#define KARABO_SLOT4(slotName, a1, a2, a3, a4)                                                                  \
+    this->template registerSlot<a1, a2, a3, a4>(                                                                \
+          std::bind(&Self::slotName, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, \
+                    std::placeholders::_4),                                                                     \
           #slotName);
 
 #define KARABO_ON_INPUT(channelName, funcName) \
-    this->registerInputHandler(channelName, karabo::util::bind_weak(&Self::funcName, this, boost::placeholders::_1));
-#define KARABO_ON_DATA(channelName, funcName)                                                                      \
-    this->registerDataHandler(channelName, karabo::util::bind_weak(&Self::funcName, this, boost::placeholders::_1, \
-                                                                   boost::placeholders::_2));
+    this->registerInputHandler(channelName, karabo::util::bind_weak(&Self::funcName, this, std::placeholders::_1));
+#define KARABO_ON_DATA(channelName, funcName) \
+    this->registerDataHandler(                \
+          channelName, karabo::util::bind_weak(&Self::funcName, this, std::placeholders::_1, std::placeholders::_2));
 #define KARABO_ON_EOS(channelName, funcName)      \
     this->registerEndOfStreamHandler(channelName, \
-                                     karabo::util::bind_weak(&Self::funcName, this, boost::placeholders::_1));
+                                     karabo::util::bind_weak(&Self::funcName, this, std::placeholders::_1));
 
 #define _KARABO_SIGNAL_N(x0, x1, x2, x3, x4, x5, FUNC, ...) FUNC
 #define _KARABO_SYSTEM_SIGNAL_N(x0, x1, x2, x3, x4, x5, FUNC, ...) FUNC

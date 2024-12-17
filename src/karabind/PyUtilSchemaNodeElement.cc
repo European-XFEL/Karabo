@@ -146,7 +146,7 @@ void exportPyUtilSchemaNodeElement(py::module_& m) {
                               "NODE_ELEMENT must be a class in Python");
                     }
                     std::string classId(obj.attr("__name__").cast<std::string>());
-                    auto schema = boost::make_shared<Schema>();
+                    auto schema = std::make_shared<Schema>();
                     obj.attr("expectedParameters")(schema);
                     self.getNode().setValue<Hash>(schema->getParameterHash());
                     self.getNode().setAttribute(KARABO_SCHEMA_CLASS_ID, classId);

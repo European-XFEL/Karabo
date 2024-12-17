@@ -25,7 +25,7 @@
 #define KARABO_CORE_DATALOGGERMANAGER_HH
 
 #include <boost/asio/deadline_timer.hpp>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <map>
 #include <vector>
 
@@ -112,11 +112,11 @@ namespace karabo {
              */
             void printLoggerData() const;
 
-            void checkLoggerConfig(bool ok, const boost::shared_ptr<std::atomic<size_t>>& counter,
+            void checkLoggerConfig(bool ok, const std::shared_ptr<std::atomic<size_t>>& counter,
                                    const karabo::util::Hash& config, const std::string& loggerId);
 
             void checkLoggerConfigOnStrand(const std::string& errorTxt,
-                                           const boost::shared_ptr<std::atomic<size_t>>& counter,
+                                           const std::shared_ptr<std::atomic<size_t>>& counter,
                                            const karabo::util::Hash& config, const std::string& loggerId);
             /**
              * If deviceId's logging status is fishy, re-add to its logger.
@@ -126,16 +126,16 @@ namespace karabo {
              */
             void forceDeviceToBeLogged(const std::string& deviceId);
 
-            void checkDeviceConfig(bool ok, const boost::shared_ptr<std::atomic<size_t>>& loggerCounter,
+            void checkDeviceConfig(bool ok, const std::shared_ptr<std::atomic<size_t>>& loggerCounter,
                                    const std::string& loggerId, unsigned int toleranceSec,
-                                   const boost::shared_ptr<std::atomic<size_t>>& loggedDevCounter,
+                                   const std::shared_ptr<std::atomic<size_t>>& loggedDevCounter,
                                    karabo::util::Epochstamp lastUpdateLogger, const karabo::util::Hash& config,
                                    const std::string& deviceId);
 
             void checkDeviceConfigOnStrand(const std::string& errorTxt,
-                                           const boost::shared_ptr<std::atomic<size_t>>& loggerCounter,
+                                           const std::shared_ptr<std::atomic<size_t>>& loggerCounter,
                                            const std::string& loggerId, unsigned int toleranceSec,
-                                           const boost::shared_ptr<std::atomic<size_t>>& loggedDevCounter,
+                                           const std::shared_ptr<std::atomic<size_t>>& loggedDevCounter,
                                            karabo::util::Epochstamp lastUpdateLogger, const karabo::util::Hash& config,
                                            const std::string& deviceId);
 
@@ -270,7 +270,7 @@ namespace karabo {
             const std::vector<std::string> m_serverList;
             size_t m_serverIndex;
 
-            boost::mutex m_loggerMapMutex;
+            std::mutex m_loggerMapMutex;
             karabo::util::Hash m_loggerMap;
             const std::string m_loggerMapFile;
 
@@ -291,11 +291,11 @@ namespace karabo {
             std::unordered_map<std::string, std::set<std::string>> m_knownClasses; /// to be accessed on the strand
             karabo::net::Strand::Pointer m_strand;
 
-            boost::asio::deadline_timer m_topologyCheckTimer;
+            boost::asio::steady_timer m_topologyCheckTimer;
             std::string m_loggerClassId;
             std::string m_readerClassId;
 
-            boost::mutex m_blockedMutex;
+            std::mutex m_blockedMutex;
             karabo::util::Hash m_blocked;      /// Hash with 'deviceIds' and 'classIds' entries
             const std::string m_blockListFile; /// File name of blocked devices and/or device classes
         };

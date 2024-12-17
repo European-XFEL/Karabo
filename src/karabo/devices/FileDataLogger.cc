@@ -17,9 +17,9 @@
  */
 #include "FileDataLogger.hh"
 
-#include <boost/filesystem.hpp>
-#include <boost/pointer_cast.hpp>
+#include <chrono>
 #include <iostream>
+#include <memory>
 #include <nlohmann/json.hpp>
 
 #include "karabo/util/PathElement.hh"
@@ -36,6 +36,7 @@ namespace karabo {
         using namespace karabo::io;
         using namespace karabo::xms;
         using json = nlohmann::json;
+        using namespace std::chrono_literals;
 
 
         FileDeviceData::FileDeviceData(const karabo::util::Hash& input)
@@ -47,7 +48,7 @@ namespace karabo {
               m_idxMap(),
               m_idxprops(),
               m_propsize(0u),
-              m_lasttime(0),
+              m_lasttime(0h),
               m_serializer(TextSerializer<Hash>::create(Hash("Xml.indentation", -1))) {}
 
 
@@ -68,7 +69,7 @@ namespace karabo {
                     // the device and cannot be screwed up if clocks of logger and device are off from each other.
                     // Since the time when logging stops might be of interest as well (for silent devices), we add it to
                     // value field
-                    boost::mutex::scoped_lock lock(m_lastTimestampMutex);
+                    std::lock_guard<std::mutex> lock(m_lastTimestampMutex);
                     karabo::util::Timestamp& lastTs = m_lastDataTimestamp;
                     m_configStream << lastTs.toIso8601Ext() << "|" << fixed << lastTs.toTimestamp() << "|"
                                    << lastTs.getTrainId() << "|.||"
@@ -132,7 +133,7 @@ namespace karabo {
             config.set("maximumFileSize", get<int>("maximumFileSize"));
             DeviceData::Pointer devicedata =
                   Factory<karabo::devices::DeviceData>::create<karabo::util::Hash>("FileDataLoggerDeviceData", config);
-            FileDeviceData::Pointer data = boost::static_pointer_cast<FileDeviceData>(devicedata);
+            FileDeviceData::Pointer data = std::static_pointer_cast<FileDeviceData>(devicedata);
             data->setupDirectory();
             return devicedata;
         }
@@ -144,21 +145,21 @@ namespace karabo {
         FileDataLogger::~FileDataLogger() {}
 
 
-        void FileDataLogger::flushImpl(const boost::shared_ptr<SignalSlotable::AsyncReply>& aReplyPtr) {
+        void FileDataLogger::flushImpl(const std::shared_ptr<SignalSlotable::AsyncReply>& aReplyPtr) {
             // We loop on all m_perDeviceData - their flushOne() method needs to run on the strand.
             // If a reply is needed, we have to instruct the handler to use it if all are ready.
 
             // Setup all variables needed for sending reply
-            boost::shared_ptr<std::pair<boost::mutex, std::vector<bool>>> fencePtr;
-            boost::function<void(const FileDeviceData::Pointer&, size_t)> callback;
-            boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
+            std::shared_ptr<std::pair<std::mutex, std::vector<bool>>> fencePtr;
+            std::function<void(const FileDeviceData::Pointer&, size_t)> callback;
+            std::lock_guard<std::mutex> lock(m_perDeviceDataMutex);
             if (aReplyPtr) {
-                fencePtr = boost::make_shared<std::pair<boost::mutex, std::vector<bool>>>();
+                fencePtr = std::make_shared<std::pair<std::mutex, std::vector<bool>>>();
                 fencePtr->second.resize(m_perDeviceData.size(), false);
                 callback = [aReplyPtr, fencePtr](const FileDeviceData::Pointer& data, size_t num) -> void {
                     data->flushOne();
 
-                    boost::mutex::scoped_lock lock(fencePtr->first);
+                    std::lock_guard<std::mutex> lock(fencePtr->first);
                     fencePtr->second[num] = true;
                     for (bool ok : fencePtr->second) {
                         if (!ok) return; // not all done yet, nothing to do
@@ -170,15 +171,15 @@ namespace karabo {
             // Actually loop on deviceData
             size_t counter = 0;
             for (auto& idData : m_perDeviceData) {
-                FileDeviceData::Pointer data = boost::static_pointer_cast<FileDeviceData>(idData.second);
+                FileDeviceData::Pointer data = std::static_pointer_cast<FileDeviceData>(idData.second);
                 // We post on strand to exclude parallel access to data->m_configStream and data->m_idxMap.
                 if (aReplyPtr) {
                     // Bind the shared_ptr data to ensure that reply is given, even if logging is stopped
-                    data->m_strand->post(boost::bind(callback, data, counter));
+                    data->m_strand->post(std::bind(callback, data, counter));
                     ++counter;
                 } else {
                     // Here we could use bind_weak - but FileDeviceData does not inherit from enable_shared_from_this...
-                    data->m_strand->post(boost::bind(&FileDeviceData::flushOne, data));
+                    data->m_strand->post(std::bind(&FileDeviceData::flushOne, data));
                 }
             }
         }
@@ -187,8 +188,8 @@ namespace karabo {
         void FileDeviceData::setupDirectory() {
             boost::system::error_code ec;
             const std::string fullDir(m_directory + "/" + m_deviceToBeLogged);
-            if (!boost::filesystem::exists(fullDir)) {
-                boost::filesystem::create_directories(fullDir, ec);
+            if (!std::filesystem::exists(fullDir)) {
+                std::filesystem::create_directories(fullDir, ec);
                 if (ec) {
                     const std::string msg("Failed to create directories : " + fullDir +
                                                 ". code = " + toString(ec.value()) += " -- " + ec.message());
@@ -196,11 +197,11 @@ namespace karabo {
                     throw KARABO_INIT_EXCEPTION(msg);
                 }
             }
-            if (!boost::filesystem::exists(fullDir + "/raw")) {
-                boost::filesystem::create_directory(fullDir + "/raw");
+            if (!std::filesystem::exists(fullDir + "/raw")) {
+                std::filesystem::create_directory(fullDir + "/raw");
             }
-            if (!boost::filesystem::exists(fullDir + "/idx")) {
-                boost::filesystem::create_directory(fullDir + "/idx");
+            if (!std::filesystem::exists(fullDir + "/idx")) {
+                std::filesystem::create_directory(fullDir + "/idx");
             }
 
             m_lastIndex = determineLastIndex(m_deviceToBeLogged);
@@ -250,7 +251,7 @@ namespace karabo {
                 {
                     // Update time stamp for updates of property "lastUpdatesUtc" and for LOGOUT timestamp.
                     // Since for "lastUpdatesUtc" it is accessed when not posted on m_strand, need mutex protection:
-                    boost::mutex::scoped_lock lock(m_lastTimestampMutex);
+                    std::lock_guard<std::mutex> lock(m_lastTimestampMutex);
                     if (t.getEpochstamp() > m_lastDataTimestamp.getEpochstamp()) {
                         // If mixed timestamps in single message (or arrival in wrong order), always take most recent
                         // one.
@@ -387,10 +388,10 @@ namespace karabo {
 
         bool FileDeviceData::updatePropsToIndex() {
             const std::string& deviceId = m_deviceToBeLogged;
-            boost::filesystem::path propPath(m_directory + "/" + deviceId + "/raw/properties_with_index.txt");
-            if (boost::filesystem::exists(propPath)) {
-                const size_t propsize = boost::filesystem::file_size(propPath);
-                const time_t lasttime = boost::filesystem::last_write_time(propPath);
+            std::filesystem::path propPath(m_directory + "/" + deviceId + "/raw/properties_with_index.txt");
+            if (std::filesystem::exists(propPath)) {
+                const size_t propsize = std::filesystem::file_size(propPath);
+                const std::filesystem::file_time_type lasttime = std::filesystem::last_write_time(propPath);
                 // read prop file only if it was changed
                 if (m_propsize != propsize || m_lasttime != lasttime) {
                     m_propsize = propsize;
@@ -443,10 +444,10 @@ namespace karabo {
             string lastIndexFilename = m_directory + "/" + deviceId + "/raw/archive.last";
             int idx;
             fstream fs;
-            if (!boost::filesystem::exists(lastIndexFilename)) {
+            if (!std::filesystem::exists(lastIndexFilename)) {
                 for (size_t i = 0;; i++) {
                     string filename = m_directory + "/" + deviceId + "/raw/archive_" + toString(i) + ".txt";
-                    if (!boost::filesystem::exists(filename)) {
+                    if (!std::filesystem::exists(filename)) {
                         idx = i;
                         break;
                     }
@@ -465,7 +466,7 @@ namespace karabo {
         int FileDeviceData::incrementLastIndex(const std::string& deviceId) {
             string lastIndexFilename = m_directory + "/" + deviceId + "/raw/archive.last";
             int idx;
-            if (!boost::filesystem::exists(lastIndexFilename)) {
+            if (!std::filesystem::exists(lastIndexFilename)) {
                 idx = determineLastIndex(deviceId);
             }
             fstream file(lastIndexFilename.c_str(), ios::in | ios::out);

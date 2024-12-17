@@ -25,7 +25,7 @@
 #ifndef KARABO_IO_BINARYFILEINPUT_HH
 #define KARABO_IO_BINARYFILEINPUT_HH
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <fstream>
 #include <iosfwd>
 #include <karabo/util/ChoiceElement.hh>
@@ -56,7 +56,7 @@ namespace karabo {
          */
         template <class T>
         class BinaryFileInput : public Input<T> {
-            boost::filesystem::path m_filename;
+            std::filesystem::path m_filename;
             typename BinarySerializer<T>::Pointer m_serializer;
             std::vector<T> m_sequenceBuffer;
 
@@ -110,7 +110,7 @@ namespace karabo {
                 using namespace karabo::util;
 
                 vector<string> keys = BinarySerializer<Hash>::getRegisteredClasses();
-                string extension = boost::filesystem::path(m_filename).extension().string().substr(1);
+                string extension = std::filesystem::path(m_filename).extension().string().substr(1);
                 boost::to_lower(extension);
 
                 for (const string& key : keys) {

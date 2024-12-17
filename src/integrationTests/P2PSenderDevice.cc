@@ -27,7 +27,7 @@
 
 using namespace std;
 
-using boost::placeholders::_1;
+using std::placeholders::_1;
 
 USING_KARABO_NAMESPACES;
 
@@ -196,9 +196,9 @@ namespace karabo {
         // start extra thread since write is a slot and must not block
         if (get<std::string>("scenario") == "test") {
             const unsigned int dataSize = get<unsigned int>("dataSize");
-            m_writingThread = boost::thread(boost::bind(&Self::writing, this, dataSize));
+            m_writingThread = boost::thread(std::bind(&Self::writing, this, dataSize));
         } else {
-            m_writingThread = boost::thread(boost::bind(&Self::writingProfile, this));
+            m_writingThread = boost::thread(std::bind(&Self::writingProfile, this));
         }
 
         updateState(State::ACTIVE);
@@ -253,7 +253,7 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Written data # " << iData;
                 set("currentDataId", iData);
                 if (delayInMs > 0) {
-                    boost::this_thread::sleep(boost::posix_time::milliseconds(delayInMs));
+                    boost::this_thread::sleep_for(boost::chrono::milliseconds(delayInMs));
                 }
             }
         } catch (const std::exception& eStd) {
@@ -334,7 +334,7 @@ namespace karabo {
                 KARABO_LOG_INFO << "Written data # " << iData;
                 set("currentDataId", iData);
 
-                boost::this_thread::sleep(boost::posix_time::milliseconds(delayInMs));
+                boost::this_thread::sleep_for(boost::chrono::milliseconds(delayInMs));
             }
         } catch (const std::exception& eStd) {
             KARABO_LOG_ERROR << "Stop writing since:\n" << eStd.what();

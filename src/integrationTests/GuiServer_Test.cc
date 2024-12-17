@@ -47,12 +47,12 @@ USING_KARABO_NAMESPACES
 
 CPPUNIT_TEST_SUITE_REGISTRATION(GuiServer_Test);
 
-bool waitForCondition(boost::function<bool()> checker, unsigned int timeoutMillis) {
+bool waitForCondition(std::function<bool()> checker, unsigned int timeoutMillis) {
     const unsigned int sleepIntervalMillis = 5;
     unsigned int numOfWaits = 0;
     const unsigned int maxNumOfWaits = static_cast<unsigned int>(std::ceil(timeoutMillis / sleepIntervalMillis));
     while (numOfWaits < maxNumOfWaits && !checker()) {
-        boost::this_thread::sleep_for(boost::chrono::milliseconds(sleepIntervalMillis));
+        std::this_thread::sleep_for(std::chrono::milliseconds(sleepIntervalMillis));
         numOfWaits++;
     }
     return (numOfWaits < maxNumOfWaits);
@@ -69,13 +69,13 @@ void GuiServer_Test::setUp() {
     // uncomment this if ever testing against a local broker
     // setenv("KARABO_BROKER", "tcp://localhost:7777", true);
     // Start central event-loop
-    m_eventLoopThread = boost::thread(boost::bind(&EventLoop::work));
+    m_eventLoopThread = boost::thread(std::bind(&EventLoop::work));
     // Create and start server, but don't scan plugins
     Hash config("serverId", "testGuiVersionServer", "scanPlugins", false, "Logger.priority", LOG_LEVEL);
     m_deviceServer = DeviceServer::create("DeviceServer", config);
     m_deviceServer->finalizeInternalInitialization();
     // Create client
-    m_deviceClient = boost::shared_ptr<DeviceClient>(new DeviceClient());
+    m_deviceClient = std::shared_ptr<DeviceClient>(new DeviceClient());
 }
 
 
@@ -217,15 +217,15 @@ void GuiServer_Test::resetTcpConnection() {
             m_tcpAdapter->disconnect();
         }
         while (m_tcpAdapter->connected() && timeout > 0) {
-            boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+            boost::this_thread::sleep_for(boost::chrono::milliseconds(5));
             timeout -= 5;
         }
     }
     m_tcpAdapter =
-          boost::shared_ptr<karabo::TcpAdapter>(new karabo::TcpAdapter(Hash("port", 44450u /*, "debug", true*/)));
+          std::shared_ptr<karabo::TcpAdapter>(new karabo::TcpAdapter(Hash("port", 44450u /*, "debug", true*/)));
     timeout = 5000;
     while (!m_tcpAdapter->connected() && timeout > 0) {
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(5));
         timeout -= 5;
     }
     CPPUNIT_ASSERT(m_tcpAdapter->connected());
@@ -284,7 +284,7 @@ void GuiServer_Test::testVersionControl() {
             int timeout = 1500;
             // wait for the GUI server to log us out
             while (m_tcpAdapter->connected() && timeout > 0) {
-                boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+                boost::this_thread::sleep_for(boost::chrono::milliseconds(5));
                 timeout -= 5;
             }
         }
@@ -490,7 +490,7 @@ void GuiServer_Test::testExecute() {
         // Just make sure that it really happened - we have to wait a bit for it:
         int timeout = 1500;
         while (!m_deviceClient->get<std::string>(TEST_GUI_SERVER_ID, "lockedBy").empty()) {
-            boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+            boost::this_thread::sleep_for(boost::chrono::milliseconds(5));
             timeout -= 5;
         }
         CPPUNIT_ASSERT(m_deviceClient->get<std::string>(TEST_GUI_SERVER_ID, "lockedBy").empty());
@@ -942,7 +942,7 @@ void GuiServer_Test::testReconfigure() {
         int timeout = 1500;
         while (m_deviceClient->get<int>(TEST_GUI_SERVER_ID, "networkPerformance.sampleInterval") != newTarget &&
                timeout > 0) {
-            boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+            boost::this_thread::sleep_for(boost::chrono::milliseconds(5));
             timeout -= 5;
         }
         CPPUNIT_ASSERT_EQUAL(newTarget,
@@ -959,10 +959,10 @@ void GuiServer_Test::testDeviceConfigUpdates() {
     CPPUNIT_ASSERT(m_tcpAdapter->connected());
 
     // Need a 2nd client for parts of this test to test that a badly behaving client does not harm the other one:
-    auto tcpAdapter2 = boost::make_shared<karabo::TcpAdapter>(Hash("port", 44450u /*, "debug", true*/));
+    auto tcpAdapter2 = std::make_shared<karabo::TcpAdapter>(Hash("port", 44450u /*, "debug", true*/));
     int timeout = 5000;
     while (!tcpAdapter2->connected() && timeout > 0) {
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(5));
         timeout -= 5;
     }
     CPPUNIT_ASSERT(tcpAdapter2->connected());
@@ -1050,7 +1050,7 @@ void GuiServer_Test::testDeviceConfigUpdates() {
         // unfortunately only seen after the device has "aged to death" inside the DeviceClient.
         // That requires this very long sleep to be sure to test that the issue is fixed - without it, the
         // next m_tcpAdapter->getNextMessages("deviceConfigurations", ...) does NOT timeout despite of the bug.
-        boost::this_thread::sleep(boost::posix_time::milliseconds(CONNECTION_KEEP_ALIVE * 1000 + 250));
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(CONNECTION_KEEP_ALIVE * 1000 + 250));
     }
     // Changes properties on the two devices and assures that an update message arrives containing only the change
     // to the subscribed one - and 2nd client does not receive anything anymore.
@@ -1134,8 +1134,7 @@ void GuiServer_Test::testDeviceConfigUpdates() {
             targetTime += duration;
         } while (targetTime < currentTime &&
                  targetTime.elapsed(currentTime).getFractions(TIME_UNITS::MILLISEC) <= tolerance);
-        boost::this_thread::sleep(
-              boost::posix_time::milliseconds(targetTime.elapsed().getFractions(TIME_UNITS::MILLISEC)));
+        std::this_thread::sleep_for(std::chrono::milliseconds(targetTime.elapsed().getFractions(TIME_UNITS::MILLISEC)));
 
         karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages(
               "deviceConfigurations", 1,
@@ -1243,7 +1242,7 @@ void GuiServer_Test::testDisconnect() {
     // Wait until disconnected (disconnection delayed by one second in GUI server)
     int timeout = 2000;
     while (m_tcpAdapter->connected() && timeout > 0) {
-        boost::this_thread::sleep(boost::posix_time::milliseconds(50));
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(50));
         timeout -= 50;
     }
     CPPUNIT_ASSERT(!m_tcpAdapter->connected());
@@ -1292,17 +1291,17 @@ void GuiServer_Test::testSlotNotify() {
     }
 
     // Create second adapter that connects - it should receive the stored notification "banner"
-    auto tcpAdapter2 = boost::make_shared<karabo::TcpAdapter>(Hash("port", 44450u /*, "debug", true*/));
+    auto tcpAdapter2 = std::make_shared<karabo::TcpAdapter>(Hash("port", 44450u /*, "debug", true*/));
     int timeout = 5000;
     while (!tcpAdapter2->connected() && timeout > 0) {
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(5));
         timeout -= 5;
     }
     CPPUNIT_ASSERT(tcpAdapter2->connected());
     std::vector<Hash> messages(tcpAdapter2->getAllMessages("notification"));
     timeout = 1000;
     while (messages.empty() && timeout > 0) {
-        boost::this_thread::sleep(boost::posix_time::milliseconds(2));
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(2));
         timeout -= 2;
         messages = tcpAdapter2->getAllMessages("notification");
     }
@@ -1338,10 +1337,10 @@ void GuiServer_Test::testSlotNotify() {
     CPPUNIT_ASSERT_EQUAL(std::string("banner"), messageReceived.get<std::string>("contentType"));
 
     // new clients do not get the banner
-    auto tcpAdapter3 = boost::make_shared<karabo::TcpAdapter>(Hash("port", 44450u /*, "debug", true*/));
+    auto tcpAdapter3 = std::make_shared<karabo::TcpAdapter>(Hash("port", 44450u /*, "debug", true*/));
     timeout = 5000;
     while (!tcpAdapter2->connected() && timeout > 0) {
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(5));
         timeout -= 5;
     }
     CPPUNIT_ASSERT(tcpAdapter3->connected());
@@ -1464,7 +1463,7 @@ void GuiServer_Test::testMissingTokenOnLogin() {
     int timeout = 1500;
     // wait for the GUI server to log us out
     while (m_tcpAdapter->connected() && timeout > 0) {
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(5));
         timeout -= 5;
     }
 
@@ -1491,7 +1490,7 @@ void GuiServer_Test::testInvalidTokenOnLogin() {
     int timeout = 1500;
     // wait for the GUI server to log us out
     while (m_tcpAdapter->connected() && timeout > 0) {
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(5));
         timeout -= 5;
     }
 
@@ -1519,7 +1518,7 @@ void GuiServer_Test::testValidTokenOnLogin() {
     int timeout = 1500;
     // wait for the GUI server to log us out
     while (m_tcpAdapter->connected() && timeout > 0) {
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(5));
         timeout -= 5;
     }
 
@@ -1556,7 +1555,7 @@ void GuiServer_Test::testMissingTokenOnBeginTemporarySession() {
     int timeout = 1500;
     // wait for the GUI server to log us out
     while (m_tcpAdapter->connected() && timeout > 0) {
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(5));
         timeout -= 5;
     }
     CPPUNIT_ASSERT_MESSAGE("Disconnection from GUI Server timedout.", m_tcpAdapter->connected());
@@ -1596,7 +1595,7 @@ void GuiServer_Test::testInvalidTokenOnBeginTemporarySession() {
     int timeout = 1500;
     // wait for the GUI server to log us out
     while (m_tcpAdapter->connected() && timeout > 0) {
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(5));
         timeout -= 5;
     }
     CPPUNIT_ASSERT_MESSAGE("Disconnection from GUI Server timedout.", m_tcpAdapter->connected());
@@ -1743,7 +1742,7 @@ void GuiServer_Test::testBeginEndTemporarySession() {
     int timeout = 1500;
     // wait for the GUI server to log us out
     while (m_tcpAdapter->connected() && timeout > 0) {
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(5));
         timeout -= 5;
     }
     CPPUNIT_ASSERT_MESSAGE("Disconnection from GUI Server timedout.", m_tcpAdapter->connected());
@@ -1825,7 +1824,7 @@ void GuiServer_Test::testTemporarySessionExpiration() {
     int timeout = 1500;
     // wait for the GUI server to log us out
     while (m_tcpAdapter->connected() && timeout > 0) {
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(5));
         timeout -= 5;
     }
     CPPUNIT_ASSERT_MESSAGE("Disconnection from GUI Server timedout.", m_tcpAdapter->connected());
@@ -1856,7 +1855,7 @@ void GuiServer_Test::testOnlyAppModeClients() {
     int timeout = 1500;
     // wait for the GUI server to log us out
     while (m_tcpAdapter->connected() && timeout > 0) {
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(5));
         timeout -= 5;
     }
     CPPUNIT_ASSERT_MESSAGE("GUI Server should have closed the connection after sending the error notification",

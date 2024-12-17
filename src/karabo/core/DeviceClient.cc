@@ -23,8 +23,7 @@
 #include "DeviceClient.hh"
 
 #include <atomic>
-#include <boost/asio/deadline_timer.hpp>
-#include <boost/bind/bind.hpp>
+#include <functional>
 #include <mutex>
 
 #include "Device.hh"
@@ -41,7 +40,7 @@
 using namespace std;
 using namespace karabo::util;
 using namespace karabo::xms;
-using namespace boost::placeholders;
+using namespace std::placeholders;
 
 
 namespace karabo {
@@ -94,21 +93,21 @@ namespace karabo {
             instanceInfo.set("host", net::bareHostName());
             instanceInfo.set("status", "ok");
 
-            m_internalSignalSlotable = boost::make_shared<karabo::xms::SignalSlotable>(ownInstanceId,
-                                                                                       Hash(), // default broker cfg
-                                                                                       60, instanceInfo);
+            m_internalSignalSlotable = std::make_shared<karabo::xms::SignalSlotable>(ownInstanceId,
+                                                                                     Hash(), // default broker cfg
+                                                                                     60, instanceInfo);
             m_internalSignalSlotable->start();
 
             m_signalSlotable = m_internalSignalSlotable;
 
             if (implicitInit) {
                 karabo::net::EventLoop::getIOService().post(
-                      boost::bind(&DeviceClient::completeInitialization, this, kMaxCompleteInitializationAttempts));
+                      std::bind(&DeviceClient::completeInitialization, this, kMaxCompleteInitializationAttempts));
             }
         }
 
 
-        DeviceClient::DeviceClient(const boost::shared_ptr<SignalSlotable>& signalSlotable, bool implicitInit,
+        DeviceClient::DeviceClient(const std::shared_ptr<SignalSlotable>& signalSlotable, bool implicitInit,
                                    const Hash& serviceDeviceIds)
             : m_internalSignalSlotable(),
               m_signalSlotable(signalSlotable),
@@ -126,7 +125,7 @@ namespace karabo {
             initServiceDeviceIds(serviceDeviceIds);
             if (implicitInit) {
                 karabo::net::EventLoop::getIOService().post(
-                      boost::bind(&DeviceClient::completeInitialization, this, kMaxCompleteInitializationAttempts));
+                      std::bind(&DeviceClient::completeInitialization, this, kMaxCompleteInitializationAttempts));
             }
         }
 
@@ -135,7 +134,7 @@ namespace karabo {
             : DeviceClient(instanceId, false, serviceDeviceIds) {}
 
 
-        DeviceClient::DeviceClient(const boost::shared_ptr<karabo::xms::SignalSlotable>& signalSlotable,
+        DeviceClient::DeviceClient(const std::shared_ptr<karabo::xms::SignalSlotable>& signalSlotable,
                                    const Hash& serviceDeviceIds)
             : DeviceClient(signalSlotable, false, serviceDeviceIds) {}
 
@@ -164,11 +163,11 @@ namespace karabo {
                     // Post another attempt in the event loop.
                     // First rely on yield() to give constructor time to finish, but if that is not enough, sleep a bit.
                     if (2 * countdown < kMaxCompleteInitializationAttempts) {
-                        boost::this_thread::sleep(boost::posix_time::milliseconds(1));
+                        std::this_thread::sleep_for(std::chrono::milliseconds(1));
                     }
                     boost::this_thread::yield();
                     karabo::net::EventLoop::getIOService().post(
-                          boost::bind(&DeviceClient::completeInitialization, this, --countdown));
+                          std::bind(&DeviceClient::completeInitialization, this, --countdown));
                     return;
                 } else {
                     const std::string msg(
@@ -241,7 +240,7 @@ namespace karabo {
 
 
         std::string DeviceClient::findInstance(const std::string& instanceId) const {
-            // NOT: boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+            // NOT: std::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
             //      As documented, that is callers responsibility.
             for (Hash::const_iterator it = m_runtimeSystemDescription.begin(); it != m_runtimeSystemDescription.end();
                  ++it) {
@@ -256,19 +255,19 @@ namespace karabo {
 
 
         std::string DeviceClient::findInstanceSafe(const std::string& instanceId) const {
-            boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+            std::lock_guard<std::mutex> lock(m_runtimeSystemDescriptionMutex);
             return this->findInstance(instanceId);
         }
 
 
         void DeviceClient::mergeIntoRuntimeSystemDescription(const karabo::util::Hash& entry) {
-            boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+            std::lock_guard<std::mutex> lock(m_runtimeSystemDescriptionMutex);
             m_runtimeSystemDescription.merge(entry);
         }
 
 
         bool DeviceClient::existsInRuntimeSystemDescription(const std::string& path) const {
-            boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+            std::lock_guard<std::mutex> lock(m_runtimeSystemDescriptionMutex);
             return m_runtimeSystemDescription.has(path);
         }
 
@@ -280,7 +279,7 @@ namespace karabo {
             const Hash entry(prepareTopologyEntry(path, instanceInfo));
 
             {
-                boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+                std::unique_lock<std::mutex> lock(m_runtimeSystemDescriptionMutex);
                 if (m_runtimeSystemDescription.has(path)) {
                     // The instance was probably killed and restarted again before we noticed that the heartbeats
                     // stopped. We should properly treat its death first (especially for servers, see
@@ -325,7 +324,7 @@ namespace karabo {
 
         bool DeviceClient::eraseFromRuntimeSystemDescription(const std::string& path) {
             try {
-                boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+                std::lock_guard<std::mutex> lock(m_runtimeSystemDescriptionMutex);
                 return m_runtimeSystemDescription.erase(path);
             } catch (...) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Could not erase path \"" << path << " from device-client cache";
@@ -335,7 +334,7 @@ namespace karabo {
 
 
         util::Hash DeviceClient::getSectionFromRuntimeDescription(const std::string& section) const {
-            boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+            std::lock_guard<std::mutex> lock(m_runtimeSystemDescriptionMutex);
 
             boost::optional<const util::Hash::Node&> sectionNode = m_runtimeSystemDescription.find(section);
             if (sectionNode && sectionNode->is<util::Hash>()) {
@@ -347,7 +346,7 @@ namespace karabo {
 
 
         void DeviceClient::removeFromSystemTopology(const std::string& instanceId) {
-            boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+            std::lock_guard<std::mutex> lock(m_runtimeSystemDescriptionMutex);
             for (Hash::iterator it = m_runtimeSystemDescription.begin(); it != m_runtimeSystemDescription.end(); ++it) {
                 Hash& tmp = it->getValue<Hash>();
                 boost::optional<Hash::Node&> node = tmp.find(instanceId);
@@ -365,7 +364,7 @@ namespace karabo {
             const Hash entry(prepareTopologyEntry(path, instanceInfo));
 
             {
-                boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+                std::lock_guard<std::mutex> lock(m_runtimeSystemDescriptionMutex);
                 if (!m_runtimeSystemDescription.has(path)) {
                     // Not sure how we can get into this. But we do in the field with 2.20.2, at least if not tracking
                     // instances. Maybe some instanceGone arrives after instaceNew? Ordering should prevent that,
@@ -406,7 +405,7 @@ namespace karabo {
 
                 std::vector<std::pair<std::string, Hash>> devicesOfServer;
                 {
-                    boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+                    std::lock_guard<std::mutex> lock(m_runtimeSystemDescriptionMutex);
                     if (!m_runtimeSystemDescription.has(path)) {
                         KARABO_LOG_FRAMEWORK_ERROR << instanceId
                                                    << " received instance gone although not in runtime description";
@@ -468,7 +467,7 @@ namespace karabo {
 
         void DeviceClient::treatInstanceAsGone(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
             {
-                boost::mutex::scoped_lock lock(m_instanceUsageMutex);
+                std::lock_guard<std::mutex> lock(m_instanceUsageMutex);
                 InstanceUsage::iterator it = m_instanceUsage.find(instanceId);
                 if (it != m_instanceUsage.end()) {
                     // Should only happen for devices...
@@ -504,7 +503,7 @@ namespace karabo {
         void DeviceClient::setAgeing(bool on) {
             if (on && !m_getOlder) {
                 m_getOlder = true;
-                m_ageingTimer.expires_from_now(boost::posix_time::milliseconds(m_ageingIntervallMilliSec));
+                m_ageingTimer.expires_from_now(boost::asio::chrono::milliseconds(m_ageingIntervallMilliSec));
                 m_ageingTimer.async_wait(bind_weak(&DeviceClient::age, this, boost::asio::placeholders::error));
                 KARABO_LOG_FRAMEWORK_DEBUG << "Ageing is started";
             } else if (!on && m_getOlder) {
@@ -531,7 +530,7 @@ namespace karabo {
 
         void DeviceClient::kickSignalsChangedTimer() {
             m_signalsChangedTimer.expires_from_now(
-                  boost::posix_time::milliseconds(std::atomic_load(&m_signalsChangedInterval)));
+                  boost::asio::chrono::milliseconds(std::atomic_load(&m_signalsChangedInterval)));
             m_signalsChangedTimer.async_wait(
                   bind_weak(&DeviceClient::sendSignalsChanged, this, boost::asio::placeholders::error));
         }
@@ -556,7 +555,7 @@ namespace karabo {
             if (!m_topologyInitialized) {
                 karabo::net::EventLoop::addThread(); // to avoid any thread starvation during the sleep(s).
                 while (!m_topologyInitialized) {
-                    boost::this_thread::sleep_for(boost::chrono::milliseconds(50));
+                    std::this_thread::sleep_for(std::chrono::milliseconds(50));
                 }
                 karabo::net::EventLoop::removeThread();
             }
@@ -577,7 +576,7 @@ namespace karabo {
         Hash DeviceClient::getSystemInformation() {
             KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN(Hash());
             initTopology();
-            boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+            std::lock_guard<std::mutex> lock(m_runtimeSystemDescriptionMutex);
             return m_runtimeSystemDescription;
         }
 
@@ -585,7 +584,7 @@ namespace karabo {
         Hash DeviceClient::getSystemTopology() {
             KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN(Hash());
             initTopology();
-            boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+            std::lock_guard<std::mutex> lock(m_runtimeSystemDescriptionMutex);
             Hash topology;
             for (Hash::const_map_iterator it = m_runtimeSystemDescription.mbegin();
                  it != m_runtimeSystemDescription.mend(); ++it) {
@@ -604,7 +603,7 @@ namespace karabo {
         std::vector<std::string> DeviceClient::getServers() {
             KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN(vector<string>());
             initTopology();
-            boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+            std::lock_guard<std::mutex> lock(m_runtimeSystemDescriptionMutex);
             if (m_runtimeSystemDescription.has("server")) {
                 const Hash& tmp = m_runtimeSystemDescription.get<Hash>("server");
                 vector<string> deviceServers;
@@ -628,7 +627,7 @@ namespace karabo {
         std::vector<std::string> DeviceClient::getClasses(const std::string& deviceServer) {
             KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN(std::vector<std::string>());
             initTopology();
-            boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+            std::lock_guard<std::mutex> lock(m_runtimeSystemDescriptionMutex);
             if (!m_runtimeSystemDescription.has("server." + deviceServer)) {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Requested device server '" << deviceServer << "' does not exist.";
                 return vector<string>();
@@ -648,7 +647,7 @@ namespace karabo {
             initTopology();
             karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
 
-            boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+            std::lock_guard<std::mutex> lock(m_runtimeSystemDescriptionMutex);
             if (!m_runtimeSystemDescription.has("device")) {
                 return vector<string>();
             } else {
@@ -672,7 +671,7 @@ namespace karabo {
             initTopology();
             karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
 
-            boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+            std::lock_guard<std::mutex> lock(m_runtimeSystemDescriptionMutex);
             if (!m_runtimeSystemDescription.has("device")) {
                 return vector<string>();
             } else {
@@ -707,7 +706,7 @@ namespace karabo {
             std::string path;
 
             {
-                boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+                std::lock_guard<std::mutex> lock(m_runtimeSystemDescriptionMutex);
                 path = findInstance(instanceId);
                 if (path.empty()) {
                     path = "device." + instanceId + ".fullSchema";
@@ -729,7 +728,7 @@ namespace karabo {
                   .timeout(m_internalTimeout)
                   .receive(schema, dummy); // 2nd "return value" is deviceId
 
-            boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+            std::lock_guard<std::mutex> lock(m_runtimeSystemDescriptionMutex);
             return m_runtimeSystemDescription.set(path, schema).getValue<Schema>();
         }
 
@@ -737,7 +736,7 @@ namespace karabo {
         karabo::util::Schema DeviceClient::getDeviceSchemaNoWait(const std::string& instanceId) {
             KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN(Schema());
             {
-                boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+                std::lock_guard<std::mutex> lock(m_runtimeSystemDescriptionMutex);
                 std::string path(findInstance(instanceId));
                 if (!path.empty()) {
                     path += ".fullSchema";
@@ -781,7 +780,7 @@ namespace karabo {
         void DeviceClient::_slotSchemaUpdated(const karabo::util::Schema& schema, const std::string& deviceId) {
             KARABO_LOG_FRAMEWORK_DEBUG << "_slotSchemaUpdated for " << deviceId;
             {
-                boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+                std::lock_guard<std::mutex> lock(m_runtimeSystemDescriptionMutex);
                 const string path(findInstance(deviceId));
                 if (path.empty()) {
                     KARABO_LOG_FRAMEWORK_WARN << "got schema for unknown instance '" << deviceId << "'.";
@@ -804,7 +803,7 @@ namespace karabo {
             const std::string state(get<State>(instanceId, "state").name());
             std::string path;
             {
-                boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+                std::lock_guard<std::mutex> lock(m_runtimeSystemDescriptionMutex);
                 path = findInstance(instanceId);
                 if (path.empty()) {
                     path = "device." + instanceId + ".activeSchema." + state;
@@ -823,7 +822,7 @@ namespace karabo {
                   .timeout(m_internalTimeout)
                   .receive(schema, dummy); // 2nd "return value" is deviceId
 
-            boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+            std::lock_guard<std::mutex> lock(m_runtimeSystemDescriptionMutex);
             return m_runtimeSystemDescription.set(path, schema).getValue<Schema>();
         }
 
@@ -838,7 +837,7 @@ namespace karabo {
             KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN(Schema());
             std::string path("server." + serverId + ".classes." + classId + ".description");
             {
-                boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+                std::lock_guard<std::mutex> lock(m_runtimeSystemDescriptionMutex);
                 boost::optional<Hash::Node&> node = m_runtimeSystemDescription.find(path);
                 if (node) return node->getValue<Schema>();
             }
@@ -850,7 +849,7 @@ namespace karabo {
                   .timeout(m_internalTimeout)
                   .receive(schema); // Retrieves full schema
 
-            boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+            std::lock_guard<std::mutex> lock(m_runtimeSystemDescriptionMutex);
             return m_runtimeSystemDescription.set(path, schema).getValue<Schema>();
         }
 
@@ -861,7 +860,7 @@ namespace karabo {
 
             {
                 std::string path("server." + serverId + ".classes." + classId + ".description");
-                boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+                std::lock_guard<std::mutex> lock(m_runtimeSystemDescriptionMutex);
                 boost::optional<Hash::Node&> node = m_runtimeSystemDescription.find(path);
                 if (node && !node->getValue<Schema>().empty()) return node->getValue<Schema>();
             }
@@ -877,7 +876,7 @@ namespace karabo {
             KARABO_LOG_FRAMEWORK_DEBUG << "_slotClassSchema";
             {
                 std::string path("server." + serverId + ".classes." + classId + ".description");
-                boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+                std::lock_guard<std::mutex> lock(m_runtimeSystemDescriptionMutex);
                 m_runtimeSystemDescription.set(path, schema);
             }
             if (m_classSchemaHandler) m_classSchemaHandler(serverId, classId, schema);
@@ -1036,10 +1035,10 @@ namespace karabo {
                 int waitedInMillis = 0;
                 while (!isThere && waitedInMillis < timeoutInMillis) {
                     {
-                        boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+                        std::lock_guard<std::mutex> lock(m_runtimeSystemDescriptionMutex);
                         isThere = m_runtimeSystemDescription.has("device." + reply);
                     }
-                    boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
                     waitedInMillis += 100;
                 }
 
@@ -1071,9 +1070,9 @@ namespace karabo {
             bool isThere;
             int nTrials = 0;
             do {
-                boost::this_thread::sleep(boost::posix_time::seconds(1));
+                std::this_thread::sleep_for(std::chrono::seconds(1));
                 nTrials++;
-                boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+                std::lock_guard<std::mutex> lock(m_runtimeSystemDescriptionMutex);
                 isThere = m_runtimeSystemDescription.has("device." + deviceId);
             } while (isThere && (nTrials < timeoutInSeconds));
 
@@ -1108,9 +1107,9 @@ namespace karabo {
             bool isThere;
             int nTrials = 0;
             do {
-                boost::this_thread::sleep(boost::posix_time::seconds(1));
+                std::this_thread::sleep_for(std::chrono::seconds(1));
                 nTrials++;
-                boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+                std::lock_guard<std::mutex> lock(m_runtimeSystemDescriptionMutex);
                 isThere = m_runtimeSystemDescription.has("server." + serverId);
             } while (isThere && (nTrials < timeoutInSeconds));
 
@@ -1139,7 +1138,7 @@ namespace karabo {
             Hash result;
             std::string path;
             {
-                boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+                std::lock_guard<std::mutex> lock(m_runtimeSystemDescriptionMutex);
                 path = findInstance(deviceId);
 
                 if (path.empty()) {
@@ -1168,7 +1167,7 @@ namespace karabo {
                           KARABO_TIMEOUT_EXCEPTION("Configuration request for device \"" + deviceId + "\" timed out"));
                     return result; // empty Hash
                 }
-                boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+                std::lock_guard<std::mutex> lock(m_runtimeSystemDescriptionMutex);
                 result = m_runtimeSystemDescription.set(path, hash).getValue<Hash>();
             }
             return result;
@@ -1183,7 +1182,7 @@ namespace karabo {
         karabo::util::Hash DeviceClient::getConfigurationNoWait(const std::string& deviceId) {
             KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN(Hash());
             {
-                boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+                std::lock_guard<std::mutex> lock(m_runtimeSystemDescriptionMutex);
                 std::string path(findInstance(deviceId));
                 if (!path.empty()) {
                     path += ".configuration";
@@ -1231,7 +1230,7 @@ namespace karabo {
                               .timeout(m_internalTimeout)
                               .receive(loggerMap);
                         // Next 3 lines would better fit in an else block as in Python's try-except-else...
-                        boost::mutex::scoped_lock lock(m_loggerMapMutex);
+                        std::lock_guard<std::mutex> lock(m_loggerMapMutex);
                         m_loggerMap = loggerMap;
                         m_loggerMapCached = true;
                         return true;
@@ -1250,7 +1249,7 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_WARN << "Failed to disconnect _slotLoggerMap";
                     return false;
                 }
-                boost::mutex::scoped_lock lock(m_loggerMapMutex);
+                std::lock_guard<std::mutex> lock(m_loggerMapMutex);
                 m_loggerMap.clear();
                 return true;
             }
@@ -1259,7 +1258,7 @@ namespace karabo {
 
         void DeviceClient::_slotLoggerMap(const karabo::util::Hash& loggerMap) {
             KARABO_LOG_FRAMEWORK_DEBUG << "DeviceClient::_slotLoggerMap called";
-            boost::mutex::scoped_lock lock(m_loggerMapMutex);
+            std::lock_guard<std::mutex> lock(m_loggerMapMutex);
             m_loggerMap = loggerMap;
         }
 
@@ -1302,7 +1301,7 @@ namespace karabo {
             std::string dataLogServer;
             const std::string loggerId(util::DATALOGGER_PREFIX + deviceId);
             if (m_loggerMapCached) {
-                boost::mutex::scoped_lock lock(m_loggerMapMutex);
+                std::lock_guard<std::mutex> lock(m_loggerMapMutex);
                 if (m_loggerMap.has(loggerId)) {
                     dataLogServer = m_loggerMap.get<std::string>(loggerId);
                 } // else: empty loggerMap, i.e. not tracked, or non-existing/non-logged device
@@ -1582,11 +1581,11 @@ namespace karabo {
 
         void DeviceClient::registerDeviceMonitor(
               const std::string& deviceId,
-              const boost::function<void(const std::string& /*deviceId*/, const karabo::util::Hash& /*config*/)>&
+              const std::function<void(const std::string& /*deviceId*/, const karabo::util::Hash& /*config*/)>&
                     callbackFunction) {
             // Store handler
             {
-                boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
+                std::lock_guard<std::mutex> lock(m_deviceChangedHandlersMutex);
                 m_deviceChangedHandlers.set(deviceId + "._function", callbackFunction);
             }
 
@@ -1604,7 +1603,7 @@ namespace karabo {
 
 
         void DeviceClient::registerDevicesMonitor(const DevicesChangedHandler& devicesChangesHandler) {
-            boost::mutex::scoped_lock lock(m_devicesChangesMutex);
+            std::lock_guard<std::mutex> lock(m_devicesChangesMutex);
             m_devicesChangesHandler = devicesChangesHandler;
         }
 
@@ -1627,7 +1626,7 @@ namespace karabo {
         void DeviceClient::unregisterPropertyMonitor(const std::string& instanceId, const std::string& key) {
             bool isMortal = false;
             {
-                boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
+                std::lock_guard<std::mutex> lock(m_propertyChangedHandlersMutex);
                 boost::optional<Hash::Node&> node = m_propertyChangedHandlers.find(instanceId);
                 if (node) {
                     Hash& tmp = node->getValue<Hash>();
@@ -1648,7 +1647,7 @@ namespace karabo {
 
         void DeviceClient::unregisterDeviceMonitor(const std::string& instanceId) {
             {
-                boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
+                std::lock_guard<std::mutex> lock(m_deviceChangedHandlersMutex);
                 if (m_deviceChangedHandlers.has(instanceId)) m_deviceChangedHandlers.erase(instanceId);
                 // Cache will be cleaned once age() disconnected the device.
             }
@@ -1786,7 +1785,7 @@ namespace karabo {
 
 
         bool DeviceClient::connectNeeded(const std::string& instanceId) {
-            boost::mutex::scoped_lock lock(m_instanceUsageMutex);
+            std::lock_guard<std::mutex> lock(m_instanceUsageMutex);
             InstanceUsage::iterator it = m_instanceUsage.find(instanceId);
             if (it == m_instanceUsage.end()) {
                 m_instanceUsage[instanceId] = 0;
@@ -1802,8 +1801,8 @@ namespace karabo {
 
 
         void DeviceClient::stayConnected(const std::string& instanceId,
-                                         const boost::function<void()>& asyncSuccessHandler,
-                                         const boost::function<void()>& asyncFailureHandler) {
+                                         const std::function<void()>& asyncSuccessHandler,
+                                         const std::function<void()>& asyncFailureHandler) {
             if (connectNeeded(instanceId)) { // Not there yet
                 karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
                 if (!p) return;
@@ -1836,14 +1835,14 @@ namespace karabo {
 
 
         void DeviceClient::eraseFromInstanceUsage(const std::string& instanceId) {
-            boost::mutex::scoped_lock lock(m_instanceUsageMutex);
+            std::lock_guard<std::mutex> lock(m_instanceUsageMutex);
             m_instanceUsage.erase(instanceId);
         }
 
 
         void DeviceClient::_slotChanged(const karabo::util::Hash& hash, const std::string& instanceId) {
             {
-                boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+                std::lock_guard<std::mutex> lock(m_runtimeSystemDescriptionMutex);
                 // TODO Optimize speed
                 string path(findInstance(instanceId));
                 if (path.empty()) {
@@ -1881,13 +1880,13 @@ namespace karabo {
                     // we are sending it directly, no throttling.
                     // Note: Since we updated m_runtimeSystemDescription above, there is no problem if a previous
                     // time: the next "flushing"  of m_runtimeSystemDescription will send the new value again.
-                    boost::mutex::scoped_lock lock(m_devicesChangesMutex);
+                    std::lock_guard<std::mutex> lock(m_devicesChangesMutex);
                     if (m_devicesChangesHandler) {
                         Hash deviceChanges(instanceId, hash);
                         m_devicesChangesHandler(deviceChanges);
                     }
                 } else {
-                    boost::mutex::scoped_lock lock(m_signalsChangedMutex);
+                    std::lock_guard<std::mutex> lock(m_signalsChangedMutex);
                     // Just book keep paths here and call 'notifyDeviceChangedMonitors'
                     // later with content from m_runtimeSystemDescription.
                     // Note:
@@ -1909,7 +1908,7 @@ namespace karabo {
             Hash entry;
 
             {
-                boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
+                std::lock_guard<std::mutex> lock(m_deviceChangedHandlersMutex);
                 boost::optional<Hash::Node&> node = m_deviceChangedHandlers.find(instanceId);
                 if (node) {
                     entry = node->getValue<Hash>();
@@ -1921,10 +1920,10 @@ namespace karabo {
                 boost::optional<Hash::Node&> nodeData = entry.find("_userData");
                 if (nodeData) {
                     boost::any_cast<
-                          boost::function<void(const std::string&, const karabo::util::Hash&, const boost::any&)>>(
+                          std::function<void(const std::string&, const karabo::util::Hash&, const boost::any&)>>(
                           nodeFunc->getValueAsAny())(instanceId, hash, nodeData->getValueAsAny());
                 } else {
-                    boost::any_cast<boost::function<void(const std::string&, const karabo::util::Hash&)>>(
+                    boost::any_cast<std::function<void(const std::string&, const karabo::util::Hash&)>>(
                           nodeFunc->getValueAsAny())(instanceId, hash);
                 }
             }
@@ -1936,7 +1935,7 @@ namespace karabo {
             Hash registered;
 
             {
-                boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
+                std::lock_guard<std::mutex> lock(m_propertyChangedHandlersMutex);
                 if (m_propertyChangedHandlers.has(instanceId)) {
                     registered = m_propertyChangedHandlers.get<Hash>(instanceId);
                 }
@@ -1950,16 +1949,16 @@ namespace karabo {
 
         void DeviceClient::castAndCall(const std::string& instanceId, const Hash& registered, const Hash& current,
                                        std::string path) const {
-#define KARABO_REGISTER_CALLBACK(valueType)                                                                \
-    if (nodeData) {                                                                                        \
-        boost::any_cast<boost::function<void(const std::string&, const std::string&, const valueType&,     \
-                                             const karabo::util::Timestamp&, const boost::any&)>>(         \
-              nodeFunc->getValueAsAny())(instanceId, currentPath, it->getValue<valueType>(), t,            \
-                                         nodeData->getValueAsAny());                                       \
-    } else {                                                                                               \
-        boost::any_cast<boost::function<void(const std::string&, const std::string&, const valueType&,     \
-                                             const karabo::util::Timestamp&)>>(nodeFunc->getValueAsAny())( \
-              instanceId, currentPath, it->getValue<valueType>(), t);                                      \
+#define KARABO_REGISTER_CALLBACK(valueType)                                                              \
+    if (nodeData) {                                                                                      \
+        boost::any_cast<std::function<void(const std::string&, const std::string&, const valueType&,     \
+                                           const karabo::util::Timestamp&, const boost::any&)>>(         \
+              nodeFunc->getValueAsAny())(instanceId, currentPath, it->getValue<valueType>(), t,          \
+                                         nodeData->getValueAsAny());                                     \
+    } else {                                                                                             \
+        boost::any_cast<std::function<void(const std::string&, const std::string&, const valueType&,     \
+                                           const karabo::util::Timestamp&)>>(nodeFunc->getValueAsAny())( \
+              instanceId, currentPath, it->getValue<valueType>(), t);                                    \
     }
 
             for (karabo::util::Hash::const_iterator it = current.begin(); it != current.end(); ++it) {
@@ -2001,8 +2000,8 @@ namespace karabo {
                         KARABO_REGISTER_CALLBACK(double);
                     } else if (it->is<std::string>()) {
                         KARABO_REGISTER_CALLBACK(std::string);
-                    } else if (it->is<boost::filesystem::path>()) {
-                        KARABO_REGISTER_CALLBACK(boost::filesystem::path);
+                    } else if (it->is<std::filesystem::path>()) {
+                        KARABO_REGISTER_CALLBACK(std::filesystem::path);
                     } else if (it->is<karabo::util::Hash>()) {
                         KARABO_REGISTER_CALLBACK(karabo::util::Hash);
                     } else if (it->is<std::vector<bool>>()) {
@@ -2067,7 +2066,7 @@ namespace karabo {
             if (e) return;
 
             try {
-                boost::mutex::scoped_lock lock(m_instanceUsageMutex);
+                std::lock_guard<std::mutex> lock(m_instanceUsageMutex);
                 // Loop connected instances
                 for (InstanceUsage::iterator it = m_instanceUsage.begin(); it != m_instanceUsage.end(); /*NOT ++it*/) {
                     const bool immortal = this->isImmortal(it->first);
@@ -2090,7 +2089,7 @@ namespace karabo {
             }
 
             if (m_getOlder) {
-                m_ageingTimer.expires_from_now(boost::posix_time::milliseconds(m_ageingIntervallMilliSec));
+                m_ageingTimer.expires_from_now(boost::asio::chrono::milliseconds(m_ageingIntervallMilliSec));
                 m_ageingTimer.async_wait(bind_weak(&DeviceClient::age, this, boost::asio::placeholders::error));
             }
         }
@@ -2142,7 +2141,7 @@ namespace karabo {
                 // Get map of all properties that changed (and clear original)
                 SignalChangedMap localChanged;
                 {
-                    boost::mutex::scoped_lock lock(m_signalsChangedMutex);
+                    std::lock_guard<std::mutex> lock(m_signalsChangedMutex);
                     m_signalsChanged.swap(localChanged);
                 }
                 this->doSendSignalsChanged(localChanged);
@@ -2157,7 +2156,7 @@ namespace karabo {
                 // Just in case anything was added before 'm_runSignalsChangedTimer' was set to false
                 // and while we processed the previous content (keep lock until done completely):
                 try {
-                    boost::mutex::scoped_lock lock(m_signalsChangedMutex);
+                    std::lock_guard<std::mutex> lock(m_signalsChangedMutex);
                     this->doSendSignalsChanged(m_signalsChanged);
                     m_signalsChanged.clear();
                 } catch (...) { // lazy to catch all levels - we are anyway done with the thread...
@@ -2190,7 +2189,7 @@ namespace karabo {
 
             // Sends all updates if there's a handler defined.
             {
-                boost::mutex::scoped_lock lock(m_devicesChangesMutex);
+                std::lock_guard<std::mutex> lock(m_devicesChangesMutex);
                 if (m_devicesChangesHandler && !allUpdates.empty()) {
                     m_devicesChangesHandler(allUpdates);
                 }
@@ -2199,7 +2198,7 @@ namespace karabo {
 
 
         void DeviceClient::immortalize(const std::string& deviceId) {
-            boost::mutex::scoped_lock lock(m_immortalsMutex);
+            std::lock_guard<std::mutex> lock(m_immortalsMutex);
             m_immortals.insert(deviceId);
         }
 
@@ -2209,7 +2208,7 @@ namespace karabo {
                 // If we want to mortalize a zombie, it has to be dead immediately, so remove it from usage.
                 // Otherwise age(..) could be fooled and resurrect the zombie to have a normal age counter. Thus a
                 // request to the device within the CONNECTION_KEEP_ALIVE time will assume that it is alive and cached!
-                boost::mutex::scoped_lock lock(m_instanceUsageMutex);
+                std::lock_guard<std::mutex> lock(m_instanceUsageMutex);
                 InstanceUsage::iterator it = m_instanceUsage.find(deviceId);
                 if (it != m_instanceUsage.end() && it->second < 0) { // a zombie
                     m_instanceUsage.erase(it);
@@ -2217,13 +2216,13 @@ namespace karabo {
             }
             // Better erase from m_immortals after the clean-up above. Otherwise any loop on m_instanceUsage that asks
             // isImmortal(..) could be fooled.
-            boost::mutex::scoped_lock lock(m_immortalsMutex);
+            std::lock_guard<std::mutex> lock(m_immortalsMutex);
             m_immortals.erase(deviceId);
         }
 
 
         bool DeviceClient::isImmortal(const std::string& deviceId) const {
-            boost::mutex::scoped_lock lock(m_immortalsMutex);
+            std::lock_guard<std::mutex> lock(m_immortalsMutex);
             return m_immortals.find(deviceId) != m_immortals.end();
         }
 
@@ -2283,7 +2282,7 @@ namespace karabo {
                         KARABO_RETHROW;
                     }
                     // otherwise pass through and try again
-                    boost::this_thread::sleep(boost::posix_time::seconds(waitTime));
+                    std::this_thread::sleep_for(std::chrono::seconds(waitTime));
                 }
             }
         }

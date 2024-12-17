@@ -37,7 +37,7 @@ namespace karabo {
      */
     namespace devices {
 
-        struct DeviceData : public boost::enable_shared_from_this<DeviceData> {
+        struct DeviceData : public std::enable_shared_from_this<DeviceData> {
             KARABO_CLASSINFO(DeviceData, "DataLoggerDeviceData", "karabo-" + karabo::util::Version::getVersion())
 
             enum class InitLevel {
@@ -94,7 +94,7 @@ namespace karabo {
 
             std::string m_user;
 
-            boost::mutex m_lastTimestampMutex;
+            std::mutex m_lastTimestampMutex;
 
             karabo::util::Timestamp m_lastDataTimestamp;
 
@@ -120,13 +120,13 @@ namespace karabo {
            protected:
             // https://www.quora.com/Is-it-thread-safe-to-write-to-distinct-keys-different-key-for-each-thread-in-a-std-map-in-C-for-keys-that-have-existing-entries-in-the-map
             typedef std::unordered_map<std::string, DeviceData::Pointer> DeviceDataMap;
-            boost::mutex m_perDeviceDataMutex;
+            std::mutex m_perDeviceDataMutex;
             DeviceDataMap m_perDeviceData;
             std::unordered_map<std::string, unsigned int>
                   m_nonTreatedSlotChanged; // also needs m_perDeviceDataMutex protection
 
            private:
-            boost::asio::deadline_timer m_flushDeadline;
+            boost::asio::steady_timer m_flushDeadline;
             unsigned int m_flushInterval;
 
            public:
@@ -154,7 +154,7 @@ namespace karabo {
             void startConnection();
 
             void initConnection(const DeviceData::Pointer& data,
-                                const boost::shared_ptr<std::atomic<unsigned int>>& counter);
+                                const std::shared_ptr<std::atomic<unsigned int>>& counter);
 
             /**
              * Helper to remove an element from a vector<string> element - needs protection by m_perDeviceDataMutex.
@@ -207,29 +207,29 @@ namespace karabo {
             void slotAddDevicesToBeLogged(const std::vector<std::string>& deviceId);
 
             void handleFailure(const std::string& reason, const DeviceData::Pointer& data,
-                               const boost::shared_ptr<std::atomic<unsigned int>>& counter);
+                               const std::shared_ptr<std::atomic<unsigned int>>& counter);
 
             void handleSchemaConnected(const DeviceData::Pointer& data,
-                                       const boost::shared_ptr<std::atomic<unsigned int>>& counter);
+                                       const std::shared_ptr<std::atomic<unsigned int>>& counter);
 
             void handleSchemaReceived(const karabo::util::Schema& schema, const std::string& deviceId,
                                       const DeviceData::Pointer& data,
-                                      const boost::shared_ptr<std::atomic<unsigned int>>& counter);
+                                      const std::shared_ptr<std::atomic<unsigned int>>& counter);
 
             void handleSchemaReceived2(const karabo::util::Schema& schema, const karabo::util::Timestamp& stamp,
                                        const DeviceData::Pointer& data,
-                                       const boost::shared_ptr<std::atomic<unsigned int>>& counter);
+                                       const std::shared_ptr<std::atomic<unsigned int>>& counter);
 
             /// Helper for connecting to both signalChanged and signalStateChanged
             void handleConfigConnected(const DeviceData::Pointer& data,
-                                       const boost::shared_ptr<std::atomic<unsigned int>>& counter);
+                                       const std::shared_ptr<std::atomic<unsigned int>>& counter);
 
             void checkReady(std::atomic<unsigned int>& counter);
 
             void disconnect(const std::string& deviceId);
 
             void disconnectHandler(bool isFailure, const std::string& devId, const std::string& signal,
-                                   const boost::shared_ptr<std::atomic<int>>& counter);
+                                   const std::shared_ptr<std::atomic<int>>& counter);
 
             void flushActor(const boost::system::error_code& e);
 
@@ -238,7 +238,7 @@ namespace karabo {
              * @param aReplyPtr if pointer to an AsyncReply that (if non-empty) has to be called without
              *                  argument when done
              */
-            void updateTableAndFlush(const boost::shared_ptr<SignalSlotable::AsyncReply>& aReplyPtr);
+            void updateTableAndFlush(const std::shared_ptr<SignalSlotable::AsyncReply>& aReplyPtr);
 
             // The flush slot
             void flush();
@@ -246,7 +246,7 @@ namespace karabo {
             /**
              * "Flush" data accumulated in the internal cache to the external storage (file, database,...)
              */
-            virtual void flushImpl(const boost::shared_ptr<SignalSlotable::AsyncReply>& aReplyPtr) = 0;
+            virtual void flushImpl(const std::shared_ptr<SignalSlotable::AsyncReply>& aReplyPtr) = 0;
 
             /**
              * This device may not be locked

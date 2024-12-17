@@ -36,7 +36,7 @@ void exportPyUtilHashAttributes(py::module_& m) {
     using namespace karabo::util;
     using namespace karabind;
 
-    py::class_<Hash::Attributes::Node, boost::shared_ptr<Hash::Attributes::Node>> an(m, "HashAttributesNode");
+    py::class_<Hash::Attributes::Node, std::shared_ptr<Hash::Attributes::Node>> an(m, "HashAttributesNode");
 
     an.def(
           "getKey", [](const Hash::Attributes::Node& self) -> std::string { return self.getKey(); },
@@ -152,7 +152,7 @@ void exportPyUtilHashAttributes(py::module_& m) {
               using namespace karabo::util;
               Hash::Attributes::Node& nodeRef = self.getNode(key);
               boost::optional<Hash::Attributes::Node&> node(nodeRef);
-              return py::cast(boost::shared_ptr<Hash::Attributes::Node>(&(*node), [](const void*) {}));
+              return py::cast(std::shared_ptr<Hash::Attributes::Node>(&(*node), [](const void*) {}));
           },
           py::arg("key"), "Returns HashAttributesNode object associated with \"key\" attribute.");
 

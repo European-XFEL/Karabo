@@ -105,23 +105,23 @@ namespace karabo {
             m_ioContext = &ioContext;
         }
 
-        void Strand::post(const boost::function<void()>& handler) {
-            boost::mutex::scoped_lock lock(m_tasksMutex);
+        void Strand::post(const std::function<void()>& handler) {
+            std::lock_guard<std::mutex> lock(m_tasksMutex);
             m_tasks.push(handler);
 
             startRunningIfNeeded(); // needs mutex to be locked!
         }
 
 
-        void Strand::post(boost::function<void()>&& handler) {
-            boost::mutex::scoped_lock lock(m_tasksMutex);
+        void Strand::post(std::function<void()>&& handler) {
+            std::lock_guard<std::mutex> lock(m_tasksMutex);
             m_tasks.push(std::move(handler)); // actually forward the rvalue-ness
 
             startRunningIfNeeded(); // needs mutex to be locked!
         }
 
 
-        boost::function<void()> Strand::wrap(boost::function<void()> handler) {
+        std::function<void()> Strand::wrap(std::function<void()> handler) {
             return karabo::util::bind_weak(&Strand::postWrapped, this, std::move(handler));
         }
 
@@ -130,7 +130,7 @@ namespace karabo {
             // We rely on being called under protection of m_tasksMutex
             if (!m_tasksRunning) {
                 m_tasksRunning = true;
-                // Instead of bind_weak to 'this' we could boost::bind to 'shared_from_this()'.
+                // Instead of bind_weak to 'this' we could std::bind to 'shared_from_this()'.
                 // The difference would only be that in the latter 'run' (and thus the tasks to be executed
                 // sequentially) would be executed even if all other shared pointers to it are reset between
                 // this post and when m_ioContext actually invokes it.
@@ -140,11 +140,11 @@ namespace karabo {
 
 
         void Strand::run() {
-            boost::function<void()> nextTask;
+            std::function<void()> nextTask;
             unsigned int counter = 0;
             while (++counter <= m_maxInARow) {
                 {
-                    boost::mutex::scoped_lock lock(m_tasksMutex);
+                    std::lock_guard<std::mutex> lock(m_tasksMutex);
                     if (m_tasks.empty()) {
                         m_tasksRunning = false;
                         // Nothing else to do, so stop running
@@ -170,7 +170,7 @@ namespace karabo {
         }
 
 
-        void Strand::postWrapped(boost::function<void()> handler) {
+        void Strand::postWrapped(std::function<void()> handler) {
             // Hm - this will probably be the second copy of the handler...
             post(std::move(handler));
         }

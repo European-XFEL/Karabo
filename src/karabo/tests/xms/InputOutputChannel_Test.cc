@@ -226,7 +226,7 @@ void InputOutputChannel_Test::testManyToOne() {
             registered = outputs[i]->hasRegisteredCopyInputChannel(input->getInstanceId());
             if (registered) break;
             // Happens very rarely - seen 6 times in 20,000 local test runs.
-            boost::this_thread::sleep(boost::posix_time::milliseconds(1));
+            boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
         }
         CPPUNIT_ASSERT_MESSAGE("Not yet ready: output " + karabo::util::toString(i), registered);
     }
@@ -249,13 +249,13 @@ void InputOutputChannel_Test::testManyToOne() {
     // Wait for endOfStream arrival
     int trials = 3000;
     do {
-        boost::this_thread::sleep(boost::posix_time::milliseconds(3));
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(3));
         if (nReceivedEos > 0) break;
     } while (--trials >= 0);
 
     // endOfStream received once
     // We give some time for more to arrive - but there should only be one, although each output sent it!
-    boost::this_thread::sleep(boost::posix_time::milliseconds(200));
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(200));
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Data received:\n" + karabo::util::toString(receivedData), 1u,
                                  static_cast<unsigned int>(nReceivedEos));
 
@@ -312,7 +312,7 @@ void InputOutputChannel_Test::testConnectDisconnect() {
     // Write first data - nobody connected yet.
     output->write(Hash("key", 42));
     output->update();
-    boost::this_thread::sleep(boost::posix_time::milliseconds(20)); // time for call back
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(20)); // time for call back
     CPPUNIT_ASSERT_EQUAL(0u, calls);
     {
         boost::mutex::scoped_lock lock(handlerDataMutex);
@@ -371,7 +371,7 @@ void InputOutputChannel_Test::testConnectDisconnect() {
         // Now ensure that output channel took note of input registration:
         int trials = 200;
         do {
-            boost::this_thread::sleep(boost::posix_time::milliseconds(2));
+            boost::this_thread::sleep_for(boost::chrono::milliseconds(2));
             boost::mutex::scoped_lock lock(handlerDataMutex);
             if (!table.empty()) {
                 break;
@@ -400,7 +400,7 @@ void InputOutputChannel_Test::testConnectDisconnect() {
         trials = 200;
         while (--trials >= 0) {
             if (2u == calls) break;
-            boost::this_thread::sleep(boost::posix_time::milliseconds(2)); // time for callback
+            boost::this_thread::sleep_for(boost::chrono::milliseconds(2)); // time for callback
         }
         CPPUNIT_ASSERT_EQUAL(2u, calls);
 
@@ -415,7 +415,7 @@ void InputOutputChannel_Test::testConnectDisconnect() {
         // Some time to travel for message
         trials = 1000; // failed with 200 in https://git.xfel.eu/Karabo/Framework/-/jobs/131075/raw
         do {
-            boost::this_thread::sleep(boost::posix_time::milliseconds(2));
+            boost::this_thread::sleep_for(boost::chrono::milliseconds(2));
             boost::mutex::scoped_lock lock(handlerDataMutex);
             if (table.empty() && trackedStatus.size() > 2ul) {
                 break;
@@ -433,7 +433,7 @@ void InputOutputChannel_Test::testConnectDisconnect() {
     output->write(Hash("key", 44));
     output->update();
     // Extended time for callback to be really sure nothing comes.
-    boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
     // still 2:
     CPPUNIT_ASSERT_EQUAL(2u, calls);
 
@@ -588,7 +588,7 @@ void InputOutputChannel_Test::testInputHandler() {
     while (timeout > 0) {
         if (output->hasRegisteredCopyInputChannel("inputChannel")) break;
         timeout -= 2;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(2));
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(2));
     }
     CPPUNIT_ASSERT_GREATEREQUAL(0, timeout);
 
@@ -601,7 +601,7 @@ void InputOutputChannel_Test::testInputHandler() {
     while (timeout > 0) {
         if (hashRead) break;
         timeout -= 2;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(2));
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(2));
     }
     CPPUNIT_ASSERT(hashRead->has("data"));
     CPPUNIT_ASSERT_EQUAL(42, hashRead->get<int>("data"));
@@ -701,7 +701,7 @@ void InputOutputChannel_Test::testConnectHandler() {
         auto connectHandler = [&connectPromise](const karabo::net::ErrorCode& ec) { connectPromise->set_value(ec); };
         input->connect(outputInfo, connectHandler);
         const int sleepMs = count % 4; // i.e. test 0 to 3 ms delay before destruction of InputChannel
-        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepMs));
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(sleepMs));
         input.reset();
         // Now ensure that handler is called
         CPPUNIT_ASSERT_EQUAL_MESSAGE("attempt for " + karabo::util::toString(count), std::future_status::ready,
@@ -800,8 +800,8 @@ void InputOutputChannel_Test::testWriteUpdateFlags() {
                             auto byteArr = data.get<karabo::util::ByteArray>("array.data");
                             ptrsReceived.push_back(byteArr.first.get());
                             if (ptrsReceived.size() == nData) ptrPromise.set_value();
-                            boost::this_thread::sleep(
-                                  boost::posix_time::milliseconds(9)); // some sleep to enforce queue
+                            // some sleep to enforce queue
+                            boost::this_thread::sleep_for(boost::chrono::milliseconds(9));
                         });
                         bool safeNDArray, shouldPtrBeEqual;
                         std::tie(safeNDArray, shouldPtrBeEqual) = tup;
@@ -818,7 +818,7 @@ void InputOutputChannel_Test::testWriteUpdateFlags() {
                                 if (output->hasRegisteredCopyInputChannel(inputId)) break;
                             }
                             timeout -= 2;
-                            boost::this_thread::sleep(boost::posix_time::milliseconds(2));
+                            boost::this_thread::sleep_for(boost::chrono::milliseconds(2));
                         }
                         CPPUNIT_ASSERT_GREATEREQUAL(0, timeout);
 
@@ -963,7 +963,7 @@ void InputOutputChannel_Test::testAsyncUpdate(const std::string& onSlowness, con
             if (output->hasRegisteredCopyInputChannel(input->getInstanceId())) break;
         }
         timeout -= 1;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(1));
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
     }
     CPPUNIT_ASSERT_GREATEREQUAL(0, timeout);
 

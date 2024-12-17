@@ -32,6 +32,7 @@
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/numeric/conversion/cast.hpp>
 #include <complex>
 #include <cstdlib>
 #include <deque>
@@ -497,7 +498,7 @@ namespace karabo {
             karabo::util::base64Decode(value, array);
 
             const size_t byteSize = array.size();
-            boost::shared_ptr<char> data(new char[byteSize], &karabo::util::byteArrayDeleter);
+            std::shared_ptr<char> data(new char[byteSize], std::default_delete<char[]>());
             std::memcpy(data.get(), reinterpret_cast<char*>(&array[0]), byteSize);
             return karabo::util::ByteArray(data, byteSize);
         }

@@ -24,7 +24,6 @@
 
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
 #include <cstdlib>
 #include <map>
 #include <nlohmann/json.hpp>
@@ -43,7 +42,7 @@
 #include "karabo/util/TimeProfiler.hh"
 #include "karabo/util/Version.hh"
 
-namespace bf = boost::filesystem;
+namespace bf = std::filesystem;
 namespace bs = boost::system;
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, karabo::devices::DataLogReader,
                                   karabo::devices::FileLogReader)
@@ -68,14 +67,14 @@ namespace karabo {
 
         IndexBuilderService::IndexBuilderService()
             : m_cache(),
-              m_idxBuildStrand(boost::make_shared<karabo::net::Strand>(karabo::net::EventLoop::getIOService())) {}
+              m_idxBuildStrand(std::make_shared<karabo::net::Strand>(karabo::net::EventLoop::getIOService())) {}
 
 
         IndexBuilderService::~IndexBuilderService() {}
 
 
         void IndexBuilderService::buildIndexFor(const std::string& commandLineArguments) {
-            boost::mutex::scoped_lock lock(m_mutex);
+            std::lock_guard<std::mutex> lock(m_mutex);
             if (!m_cache.insert(commandLineArguments).second) {
                 // such a request is in the queue
                 return;
@@ -101,7 +100,7 @@ namespace karabo {
             karabo::net::EventLoop::removeThread(); // ... and remove the thread again
 
             // Remove the request to allow another try even if we failed here.
-            boost::mutex::scoped_lock lock(m_mutex);
+            std::lock_guard<std::mutex> lock(m_mutex);
             m_cache.erase(commandLineArguments);
         }
 
@@ -175,12 +174,12 @@ namespace karabo {
                 // touching properties_with_index.txt file will cause the DataLogger to close current raw file
                 // and increment the content of archive.last
                 try {
-                    boost::mutex::scoped_lock lock(m_propFileInfoMutex);
+                    std::lock_guard<std::mutex> lock(m_propFileInfoMutex);
                     bf::path propPath(get<string>("directory") + "/" + deviceId + "/raw/properties_with_index.txt");
                     if (!bf::exists(propPath)) {
                         // create prop file
                         m_mapPropFileInfo[deviceId] = PropFileInfo::Pointer(new PropFileInfo());
-                        // boost::mutex::scoped_lock lock(m_mapPropFileInfo[deviceId]->filelock);
+                        // std::lock_guard<std::mutex> lock(m_mapPropFileInfo[deviceId]->filelock);
                         ofstream out(propPath.c_str(), ios::out | ios::app);
                         out << property << "\n";
                         out.close();
@@ -190,7 +189,7 @@ namespace karabo {
                         rebuildIndex = true;
                     } else {
                         // check if the prop file was changed
-                        time_t lastTime = bf::last_write_time(propPath);
+                        auto lastTime = bf::last_write_time(propPath);
                         size_t propsize = bf::file_size(propPath);
 
                         map<string, PropFileInfo::Pointer>::iterator mapit = m_mapPropFileInfo.find(deviceId);
@@ -218,7 +217,7 @@ namespace karabo {
                             // not found, then add to vector
                             ptr->properties.push_back(property);
                             {
-                                // boost::mutex::scoped_lock lock(ptr->filelock);
+                                // std::lock_guard<std::mutex> lock(ptr->filelock);
                                 ofstream out(propPath.c_str(), ios::out | ios::app);
                                 out << property << "\n";
                                 out.close();
@@ -1046,5 +1045,5 @@ namespace karabo {
 
 } // namespace karabo
 
-boost::mutex karabo::devices::FileLogReader::m_propFileInfoMutex;
+std::mutex karabo::devices::FileLogReader::m_propFileInfoMutex;
 std::map<std::string, karabo::devices::PropFileInfo::Pointer> karabo::devices::FileLogReader::m_mapPropFileInfo;

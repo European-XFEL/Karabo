@@ -30,13 +30,12 @@
 #include <boost/asio/dispatch.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/post.hpp>
-#include <boost/enable_shared_from_this.hpp>
+#include <boost/thread.hpp>
 #include <functional>
 #include <memory>
 #include <random>
 #include <set>
 #include <string>
-#include <thread>
 #include <vector>
 
 #include "karabo/util/ClassInfo.hh"
@@ -158,7 +157,7 @@ namespace karabo::net {
      * Wraps the AMQP::TcpConnection and the single threaded io context where all calls to the amqp library must run
      *
      */
-    class AmqpConnection : public boost::enable_shared_from_this<AmqpConnection> {
+    class AmqpConnection : public std::enable_shared_from_this<AmqpConnection> {
        public:
         KARABO_CLASSINFO(AmqpConnection, "AmqpConnection", "1.0")
 
@@ -239,7 +238,7 @@ namespace karabo::net {
         /**
          * Register client to be informed about re-established connection after connection loss
          */
-        void registerForReconnectInfo(boost::weak_ptr<AmqpClient> client);
+        void registerForReconnectInfo(std::weak_ptr<AmqpClient> client);
 
         /**
          * Clean clients registered to receive reconnect info, i.e. remove all dangling weak pointers
@@ -312,7 +311,7 @@ namespace karabo::net {
         // For internal event loop for all AMQP communication
         mutable boost::asio::io_context m_ioContext;
         std::unique_ptr<boost::asio::io_context::work> m_work;
-        std::thread m_thread;
+        boost::thread m_thread;
 
         // Connection and its state:
         std::shared_ptr<AMQP::TcpConnection> m_connection;
@@ -323,7 +322,8 @@ namespace karabo::net {
         std::vector<ChannelCreationHandler> m_pendingOnChannelCreations;
 
         /// Track clients to inform about reconnections
-        std::set<boost::weak_ptr<AmqpClient>> m_registeredClients; // registered to get informed about reconenctions
+        std::set<std::weak_ptr<AmqpClient>, std::owner_less<std::weak_ptr<AmqpClient>>>
+              m_registeredClients; // registered to get informed about reconenctions
         std::unique_ptr<std::minstd_rand0> m_random;
     };
 } // namespace karabo::net

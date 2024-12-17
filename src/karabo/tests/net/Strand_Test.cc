@@ -23,6 +23,8 @@
  */
 #include "karabo/net/Strand.hh"
 
+#include <thread>
+
 #include "Strand_Test.hh"
 #include "boost/asio/deadline_timer.hpp"
 #include "karabo/net/EventLoop.hh"
@@ -47,7 +49,7 @@ Strand_Test::~Strand_Test() {}
 
 
 void Strand_Test::setUp() {
-    m_thread = boost::make_shared<boost::thread>(EventLoop::work);
+    m_thread = std::make_shared<boost::thread>(EventLoop::work);
     // really switch on parallelism:
     EventLoop::addThread(m_nThreadsInPool);
 }
@@ -66,14 +68,14 @@ void Strand_Test::tearDown() {
 
 
 void Strand_Test::testSequential() {
-    boost::mutex aMutex;
+    std::mutex aMutex;
     unsigned int counter = 0;
     const unsigned int sleepTimeMs = 40; // must be above 10, see below
 
     auto sleepAndCount = [&aMutex, &counter, &sleepTimeMs]() {
-        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepTimeMs));
+        std::this_thread::sleep_for(std::chrono::milliseconds(sleepTimeMs));
 
-        boost::mutex::scoped_lock lock(aMutex);
+        std::lock_guard<std::mutex> lock(aMutex);
         ++counter;
     };
     // All helpers before timing starts via creating 'now'
@@ -85,8 +87,8 @@ void Strand_Test::testSequential() {
     Epochstamp now;
     // A timer to concurrently run Strand::post (and to start the duration),
     // not sure whether several handlers of the timer will really be executed at the same time or not...
-    boost::asio::deadline_timer timer(EventLoop::getIOService());
-    timer.expires_from_now(boost::posix_time::milliseconds(10));
+    boost::asio::steady_timer timer(EventLoop::getIOService());
+    timer.expires_from_now(boost::asio::chrono::milliseconds(10));
     timer.async_wait([&now](const boost::system::error_code& e) { now.now(); });
     for (unsigned int i = 0; i < numPosts; ++i) {
         timer.async_wait(
@@ -95,14 +97,14 @@ void Strand_Test::testSequential() {
 
     while (--numTest > 0) {
         {
-            boost::mutex::scoped_lock lock(aMutex);
+            std::lock_guard<std::mutex> lock(aMutex);
             if (counter >= numPosts) {
                 duration = Epochstamp().elapsed(now);
                 break;
             }
         }
 
-        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepTimeMs / 10));
+        std::this_thread::sleep_for(std::chrono::milliseconds(sleepTimeMs / 10));
     }
 
     CPPUNIT_ASSERT(numTest > 0);
@@ -115,11 +117,11 @@ void Strand_Test::testThrowing() {
     // Test that a std::exception thrown in posted handler does not stop the Strand to work
     // but goes on with next handler
 
-    auto strand = boost::make_shared<karabo::net::Strand>(EventLoop::getIOService());
+    auto strand = std::make_shared<karabo::net::Strand>(EventLoop::getIOService());
     const int size = 10;
     std::vector<int> vec(size, -1); // initialize all entries with -1
     bool done = false;
-    boost::function<void(int)> handler = [&vec, &done](int i) {
+    std::function<void(int)> handler = [&vec, &done](int i) {
         if (i == 2) {
             throw std::runtime_error("trouble");
         } else {
@@ -128,10 +130,10 @@ void Strand_Test::testThrowing() {
         }
     };
     for (int i = 0; i < size; ++i) {
-        strand->post(boost::bind(handler, i));
+        strand->post(std::bind(handler, i));
     }
     while (!done) {
-        boost::this_thread::sleep(boost::posix_time::milliseconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
     for (int i = 0; i < size; ++i) {
@@ -155,7 +157,7 @@ void Strand_Test::testStrandDies() {
                                                        {Hash("guaranteeToRun", true, "maxInARow", 3u), true}};
     // Some initial sleep needed to get the event loop ready as just started in setUp().
     // Otherwise the first case ("guaranteeToRun" is true) has not enough time.
-    boost::this_thread::sleep(boost::posix_time::milliseconds(300));
+    std::this_thread::sleep_for(std::chrono::milliseconds(300));
     for (const std::pair<Hash, bool>& testCase : testCases) {
         const Hash& cfg = testCase.first;
         const bool allHandlersRun = testCase.second;
@@ -163,11 +165,11 @@ void Strand_Test::testStrandDies() {
         // to the event loop before it died and then the handler is called when the test function is done and
         // its scope is cleaned.
         // By using a copy of shared pointer inside the handler we avoid any crash potential of that.
-        auto counterPtr = boost::make_shared<std::atomic<unsigned int>>(0);
+        auto counterPtr = std::make_shared<std::atomic<unsigned int>>(0);
         const unsigned int sleepTimeMs = 10;
 
         auto sleepAndCount = [counterPtr, sleepTimeMs]() {
-            boost::this_thread::sleep(boost::posix_time::milliseconds(sleepTimeMs));
+            std::this_thread::sleep_for(std::chrono::milliseconds(sleepTimeMs));
 
             ++(*counterPtr);
         };
@@ -191,7 +193,7 @@ void Strand_Test::testStrandDies() {
                     strand.reset();
                 }
             }
-            boost::this_thread::sleep(boost::posix_time::milliseconds(waitLoopSleep));
+            std::this_thread::sleep_for(std::chrono::milliseconds(waitLoopSleep));
         }
 
         CPPUNIT_ASSERT_GREATER(0u, counterPtr->load());
@@ -217,20 +219,20 @@ void Strand_Test::testMaxInARow() {
 
     std::promise<Epochstamp> promise1;
     auto future1 = promise1.get_future();
-    boost::function<void(int)> handler1 = [numPosts, &promise1](unsigned int i) {
+    std::function<void(int)> handler1 = [numPosts, &promise1](unsigned int i) {
         if (i == numPosts) promise1.set_value(Epochstamp());
     };
 
     std::promise<Epochstamp> promiseMany;
     auto futureMany = promiseMany.get_future();
-    boost::function<void(int)> handlerMany = [numPosts, &promiseMany](unsigned int i) {
+    std::function<void(int)> handlerMany = [numPosts, &promiseMany](unsigned int i) {
         if (i == numPosts) promiseMany.set_value(Epochstamp());
     };
 
     const Epochstamp beforePost;
     for (unsigned int i = 0; i < numPosts; ++i) {
-        strand1->post(boost::bind(handler1, i + 1));
-        strandMany->post(boost::bind(handlerMany, i + 1));
+        strand1->post(std::bind(handler1, i + 1));
+        strandMany->post(std::bind(handlerMany, i + 1));
     }
 
     const Epochstamp doneManyStamp = futureMany.get();

@@ -27,6 +27,8 @@
 #include <dlfcn.h>
 #endif
 
+#include <filesystem>
+
 #include "PathElement.hh"
 #include "PluginLoader.hh"
 #include "VectorElement.hh"
@@ -40,7 +42,7 @@ namespace karabo {
 
         using namespace std;
         using namespace boost;
-        using namespace boost::filesystem;
+        using namespace std::filesystem;
 
         // Static initialization
         map<path, void*> PluginLoader::m_loadedPlugins = map<path, void*>();
@@ -75,7 +77,7 @@ namespace karabo {
 
 
         PluginLoader::PluginLoader(const Hash& input) {
-            m_pluginDirectory = boost::filesystem::path(input.get<string>("pluginDirectory"));
+            m_pluginDirectory = std::filesystem::path(input.get<string>("pluginDirectory"));
             const std::vector<std::string>& pluginsToLoad = input.get<std::vector<std::string> >("pluginsToLoad");
             m_pluginsToLoad.insert(pluginsToLoad.cbegin(), pluginsToLoad.cend());
         }

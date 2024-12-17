@@ -24,8 +24,8 @@
 
 #include "DataLogging_Test.hh"
 
-#include <boost/filesystem.hpp>
 #include <cstdlib>
+#include <filesystem>
 #include <future>
 #include <karabo/net/EventLoop.hh>
 #include <karabo/net/InfluxDbClientUtils.hh>
@@ -148,7 +148,7 @@ void DataLogging_Test::testMigrateFileLoggerData() {
           (getenv("KARABO_INFLUXDB_QUERY_USER") ? getenv("KARABO_INFLUXDB_QUERY_USER") : influxUserWrite);
     const std::string influxPwdRead =
           (getenv("KARABO_INFLUXDB_QUERY_PASSWORD") ? getenv("KARABO_INFLUXDB_QUERY_PASSWORD") : influxPwdWrite);
-    const std::string absLoggerPath = boost::filesystem::absolute("./" + m_fileLoggerDirectory).string();
+    const std::string absLoggerPath = std::filesystem::absolute("./" + m_fileLoggerDirectory).string();
     const std::string migrationResultsPath = absLoggerPath + std::string("/migrationresults");
     std::ostringstream cmd;
     cmd << "cd ../../../src/pythonKarabo; ../../karabo/extern/bin/python3 ";
@@ -166,20 +166,20 @@ void DataLogging_Test::testMigrateFileLoggerData() {
     const int ret = system(cmd.str().c_str());
     CPPUNIT_ASSERT_EQUAL(0, ret);
 
-    boost::filesystem::path p(migrationResultsPath + "/processed/" + m_deviceId + "/");
-    if (boost::filesystem::is_directory(p)) {
-        for (auto& entry : boost::make_iterator_range(boost::filesystem::directory_iterator(p), {})) {
+    std::filesystem::path p(migrationResultsPath + "/processed/" + m_deviceId + "/");
+    if (std::filesystem::is_directory(p)) {
+        for (auto& entry : boost::make_iterator_range(std::filesystem::directory_iterator(p), {})) {
             std::ostringstream msg;
-            msg << "Check if " << entry << " was migrated OK: " << boost::filesystem::path(entry).extension();
+            msg << "Check if " << entry << " was migrated OK: " << std::filesystem::path(entry).extension();
             std::clog << msg.str() << std::endl;
-            CPPUNIT_ASSERT_MESSAGE(msg.str(), boost::filesystem::path(entry).extension() == ".ok");
+            CPPUNIT_ASSERT_MESSAGE(msg.str(), std::filesystem::path(entry).extension() == ".ok");
         }
     }
 
     unsigned int errorCount = 0;
-    boost::filesystem::path perr(migrationResultsPath + "/part_processed/" + m_deviceId + "/");
-    if (boost::filesystem::is_directory(perr)) {
-        for (auto& entry : boost::make_iterator_range(boost::filesystem::directory_iterator(perr), {})) {
+    std::filesystem::path perr(migrationResultsPath + "/part_processed/" + m_deviceId + "/");
+    if (std::filesystem::is_directory(perr)) {
+        for (auto& entry : boost::make_iterator_range(std::filesystem::directory_iterator(perr), {})) {
             // print out the error
             std::ostringstream cmd;
             cmd << "cat " << entry;
@@ -192,7 +192,7 @@ void DataLogging_Test::testMigrateFileLoggerData() {
 
     m_dataWasMigrated = true;
     // remove migration results
-    boost::filesystem::remove_all(migrationResultsPath);
+    std::filesystem::remove_all(migrationResultsPath);
 }
 
 
@@ -202,7 +202,7 @@ void DataLogging_Test::influxAllTestRunnerWithDataMigration() {
     // and epoch stamp certainly before the next round of influx logging
     m_fileMigratedDataEndsBefore = Epochstamp();
 
-    boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
     std::pair<bool, std::string> success =
           m_deviceClient->instantiate(m_server, "PropertyTest", Hash("deviceId", m_deviceId), KRB_TEST_MAX_TIMEOUT);
@@ -229,9 +229,9 @@ void DataLogging_Test::influxAllTestRunnerWithDataMigration() {
     //       the influx logger test. The generated file logging tests would them be temporary
     //       CI artifacts passed from one stage to the other.
 
-    const boost::filesystem::path migratorPackageBase("../../../src/pythonKarabo");
+    const std::filesystem::path migratorPackageBase("../../../src/pythonKarabo");
     boost::system::error_code ec;
-    if (boost::filesystem::exists(migratorPackageBase, ec)) {
+    if (std::filesystem::exists(migratorPackageBase, ec)) {
         testMigrateFileLoggerData();
     } else {
         std::clog << "Migrator script not available - skipping migration test." << std::endl;
@@ -337,16 +337,16 @@ void DataLogging_Test::testInfluxMaxSchemaLogRate() {
     waitUntilLogged(deviceId, "testInfluxMaxSchemaLogRate");
 
     // Wait some time to isolate the schema update bursts.
-    boost::this_thread::sleep(boost::posix_time::milliseconds(rateWinSecs * 1000 + 1));
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(rateWinSecs * 1000 + 1));
 
     ///////  Checks that a schema update within the rating limit is accepted.
     Epochstamp beforeFirstBurst;
     CPPUNIT_ASSERT_NO_THROW(
           m_sigSlot->request(deviceId, "slotUpdateSchema", schemaStrA).timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive());
     // Makes sure that data has been received by logger and written to Influx.
-    boost::this_thread::sleep(boost::posix_time::milliseconds(500));
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", FLUSH_REQUEST_TIMEOUT_MILLIS / 1000));
-    boost::this_thread::sleep(boost::posix_time::milliseconds(afterFlushWait));
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(afterFlushWait));
     Epochstamp afterFirstBurst;
 
     // Checks that the schema update has not been flagged as bad data.
@@ -359,7 +359,7 @@ void DataLogging_Test::testInfluxMaxSchemaLogRate() {
     CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(badDataAllDevices), 0ul, badDataAllDevices.size());
 
     // Wait some time to isolate the schema update bursts.
-    boost::this_thread::sleep(boost::posix_time::milliseconds(rateWinSecs * 1000 + 1));
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(rateWinSecs * 1000 + 1));
 
     ////////  Checks that two schema updates in a fast succession would go above the
     ////////  threshold and one of the updates (the second) would be rejected.
@@ -369,9 +369,9 @@ void DataLogging_Test::testInfluxMaxSchemaLogRate() {
     CPPUNIT_ASSERT_NO_THROW(
           m_sigSlot->request(deviceId, "slotUpdateSchema", schemaStrC).timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive());
     // Makes sure that data has been received by logger and written to Influx.
-    boost::this_thread::sleep(boost::posix_time::milliseconds(500));
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", FLUSH_REQUEST_TIMEOUT_MILLIS / 1000));
-    boost::this_thread::sleep(boost::posix_time::milliseconds(afterFlushWait));
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(afterFlushWait));
     Epochstamp afterSecondBurst;
 
     // Checks that one of the schema updates failed.
@@ -401,7 +401,7 @@ void DataLogging_Test::testInfluxMaxSchemaLogRate() {
           badDataInfo.find(deviceId + "::schema") != std::string::npos);
 
     // Wait some time to isolate the schema update bursts.
-    boost::this_thread::sleep(boost::posix_time::milliseconds(rateWinSecs * 1000 + 1));
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(rateWinSecs * 1000 + 1));
 
     //////  Checks that after the updates have settled down for a while, schemas
     //////  can be logged again.
@@ -409,9 +409,9 @@ void DataLogging_Test::testInfluxMaxSchemaLogRate() {
     CPPUNIT_ASSERT_NO_THROW(
           m_sigSlot->request(deviceId, "slotUpdateSchema", schemaStrD).timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive());
     // Makes sure that data has been received by logger and written to Influx.
-    boost::this_thread::sleep(boost::posix_time::milliseconds(500));
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", FLUSH_REQUEST_TIMEOUT_MILLIS / 1000));
-    boost::this_thread::sleep(boost::posix_time::milliseconds(afterFlushWait));
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(afterFlushWait));
     Epochstamp afterThirdBurst;
     // Checks that the schema update succeeded.
     badDataAllDevices.clear();
@@ -437,7 +437,7 @@ void DataLogging_Test::testInfluxMaxSchemaLogRate() {
                     .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                     .receive(pastCfg, schema, cfgAtTime, cfgTime));
         if (schema.has("stringPropertyD")) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(PAUSE_BEFORE_RETRY_MILLIS));
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(PAUSE_BEFORE_RETRY_MILLIS));
     } while (nTries-- > 0);
     CPPUNIT_ASSERT_MESSAGE("Schema lacks expected key, \"stringPropertyD\"", schema.has("stringPropertyD"));
     CPPUNIT_ASSERT_EQUAL(Types::STRING, schema.getValueType("stringPropertyD"));
@@ -482,7 +482,7 @@ void DataLogging_Test::testInfluxMaxStringLength() {
     m_deviceClient->set(propTestDevice, "stringProperty", belowLimitStr);
     // Makes sure the data has been written to Influx
     CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(loggerId, "flush").timeout(FLUSH_REQUEST_TIMEOUT_MILLIS).receive());
-    boost::this_thread::sleep(boost::posix_time::milliseconds(afterFlushWait));
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(afterFlushWait));
     Epochstamp afterBelowLimit;
 
     Hash badDataAllDevices;
@@ -498,7 +498,7 @@ void DataLogging_Test::testInfluxMaxStringLength() {
     m_deviceClient->set(propTestDevice, "stringProperty", atLimitStr);
     // Makes sure the data has been written to Influx.
     CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(loggerId, "flush").timeout(FLUSH_REQUEST_TIMEOUT_MILLIS).receive());
-    boost::this_thread::sleep(boost::posix_time::milliseconds(afterFlushWait));
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(afterFlushWait));
     Epochstamp afterAtLimit;
 
     badDataAllDevices.clear();
@@ -514,7 +514,7 @@ void DataLogging_Test::testInfluxMaxStringLength() {
     m_deviceClient->set(propTestDevice, "stringProperty", aboveLimitStr);
     // Makes sure the data has been written to Influx.
     CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(loggerId, "flush").timeout(FLUSH_REQUEST_TIMEOUT_MILLIS).receive());
-    boost::this_thread::sleep(boost::posix_time::milliseconds(afterFlushWait));
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(afterFlushWait));
     Epochstamp afterAboveLimit;
 
     badDataAllDevices.clear();
@@ -606,7 +606,7 @@ void DataLogging_Test::testInfluxMaxPerDevicePropLogRate() {
     Epochstamp after32KbWrite(before32KbWrite + TimeDuration(0, 5 * rateWinSecs * millisecInAtto));
     // Make sure that data has been written to Influx.
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", FLUSH_REQUEST_TIMEOUT_MILLIS / 1000));
-    boost::this_thread::sleep(boost::posix_time::milliseconds(afterFlushWait));
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(afterFlushWait));
 
     // Checks that the 32Kb strings have not been flagged as bad data.
     Hash badDataAllDevices;
@@ -652,7 +652,7 @@ void DataLogging_Test::testInfluxMaxPerDevicePropLogRate() {
     Epochstamp after64KbWrite(before64KbWrite + TimeDuration(0, 9 * rateWinSecs * millisecInAtto));
     // Make sure that data has been written to Influx.
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", FLUSH_REQUEST_TIMEOUT_MILLIS / 1000));
-    boost::this_thread::sleep(boost::posix_time::milliseconds(afterFlushWait));
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(afterFlushWait));
 
     // Checks that the half of the stringProperty updates has exceeded the max log rate and has been rated as bad data.
     badDataAllDevices.clear();
@@ -713,7 +713,7 @@ void DataLogging_Test::testInfluxMaxPerDevicePropLogRate() {
     Epochstamp afterSingle32KbWrite(beforeSingle32KbWrite + TimeDuration(0, 8 * millisecInAtto));
     // Make sure that data has been written to Influx.
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", FLUSH_REQUEST_TIMEOUT_MILLIS / 1000));
-    boost::this_thread::sleep(boost::posix_time::milliseconds(afterFlushWait));
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(afterFlushWait));
 
     // Checks that the 32 Kb string has been successfully set as property values.
     history.clear();
@@ -769,7 +769,7 @@ void DataLogging_Test::testInfluxSafeSchemaRetentionPeriod() {
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
     // Waits for an interval long enough to guarantee that any other schema saving attempt will happen after the
     // one saved for the previous PropertyTest device under test has gone outside the safe retention window.
-    boost::this_thread::sleep(boost::posix_time::milliseconds(1'600));
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(1'600));
     success =
           m_deviceClient->instantiate(m_server, "PropertyTest", Hash("deviceId", propTestDevice), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
@@ -777,7 +777,7 @@ void DataLogging_Test::testInfluxSafeSchemaRetentionPeriod() {
 
     // Makes sure all the data has been saved in Influx.
     CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(loggerId, "flush").timeout(FLUSH_REQUEST_TIMEOUT_MILLIS).receive());
-    boost::this_thread::sleep(boost::posix_time::milliseconds(afterFlushWait));
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(afterFlushWait));
 
     Epochstamp afterWritesEpoch;
 
@@ -984,7 +984,7 @@ void DataLogging_Test::testInfluxPropHistoryAveraging() {
 
     // Make sure that data has been written to Influx.
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", FLUSH_REQUEST_TIMEOUT_MILLIS / 1000));
-    boost::this_thread::sleep(boost::posix_time::milliseconds(1500));
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(1500));
 
     // Checks that slotGetPropertyHistory gets the averages consistently - the same number of data points and the same
     // values - when invoked multiple times with the same parameters. This test systematically fails if the fix

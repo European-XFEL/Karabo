@@ -25,10 +25,10 @@
 #ifndef KARABO_TESTPATHSETUP_HH
 #define KARABO_TESTPATHSETUP_HH
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
 inline std::string resourcePath(const std::string& filename) {
-    boost::filesystem::path testPath(KARABO_TESTPATH);
+    std::filesystem::path testPath(KARABO_TESTPATH);
     testPath /= "io/resources";
     testPath /= filename;
     return testPath.lexically_normal().string();

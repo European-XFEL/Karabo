@@ -25,10 +25,10 @@
 namespace karabind {
 
     class LockWrap {
-        boost::shared_ptr<karabo::core::Lock> m_lock;
+        std::shared_ptr<karabo::core::Lock> m_lock;
 
        public:
-        LockWrap(const boost::shared_ptr<karabo::core::Lock>& l) : m_lock(l){};
+        LockWrap(const std::shared_ptr<karabo::core::Lock>& l) : m_lock(l){};
 
 
         /**

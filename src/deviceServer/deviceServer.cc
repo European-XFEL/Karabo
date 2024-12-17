@@ -36,7 +36,7 @@ using namespace karabo::core;
 int main(int argc, const char** argv) {
     try {
         // We always change the directory to $KARABO/var/data
-        boost::filesystem::current_path(boost::filesystem::path(Version::getPathToKaraboInstallation() + "/var/data"));
+        std::filesystem::current_path(std::filesystem::path(Version::getPathToKaraboInstallation() + "/var/data"));
 
         // It is important to load plugins even before having a device server
         // instance, as this allows the help function to correctly show available

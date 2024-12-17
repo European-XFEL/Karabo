@@ -42,7 +42,7 @@ namespace py = pybind11;
 
 #define KARABO_PYTHON_FACTORY_CONFIGURATOR(baseClass)                                                                  \
     .def_static("create",                                                                                              \
-                (boost::shared_ptr<baseClass>(*)(karabo::util::Hash const&, bool const)) &                             \
+                (std::shared_ptr<baseClass>(*)(karabo::util::Hash const&, bool const)) &                               \
                       karabo::util::Configurator<baseClass>::create,                                                   \
                 py::arg("input"), py::arg("validate") = true,                                                          \
                 "The factory method to create instance of C++ class derived from C++ base class \"" #baseClass         \
@@ -51,7 +51,7 @@ namespace py = pybind11;
                 "determine if the input configuration should be validated.")                                           \
           .def_static(                                                                                                 \
                 "create",                                                                                              \
-                (boost::shared_ptr<baseClass>(*)(std::string const&, karabo::util::Hash const&, bool const)) &         \
+                (std::shared_ptr<baseClass>(*)(std::string const&, karabo::util::Hash const&, bool const)) &           \
                       karabo::util::Configurator<baseClass>::create,                                                   \
                 py::arg("classId"), py::arg("input") = karabo::util::Hash(), py::arg("validate") = true,               \
                 "The factory method to create the instance of C++ class with \"classId\" derived from C++ base class " \
@@ -60,8 +60,8 @@ namespace py = pybind11;
                 "The last argument is a flag to determine if the input configuration should be validated.")            \
           .def_static(                                                                                                 \
                 "createNode",                                                                                          \
-                (boost::shared_ptr<baseClass>(*)(const std::string&, std::string const&, karabo::util::Hash const&,    \
-                                                 bool const))(&karabo::util::Configurator<baseClass>::createNode),     \
+                (std::shared_ptr<baseClass>(*)(const std::string&, std::string const&, karabo::util::Hash const&,      \
+                                               bool const))(&karabo::util::Configurator<baseClass>::createNode),       \
                 py::arg("nodeName"), py::arg("classId"), py::arg("input") = karabo::util::Hash(),                      \
                 py::arg("validate") = true,                                                                            \
                 "The factory method to create the instance of C++ class with \"classId\" derived from C++ base class " \
@@ -70,7 +70,7 @@ namespace py = pybind11;
                 "The last argument is a flag to determine if the input configuration should be validated.")            \
           .def_static(                                                                                                 \
                 "createChoice",                                                                                        \
-                (boost::shared_ptr<baseClass>(*)(std::string const&, karabo::util::Hash const&, bool const)) &         \
+                (std::shared_ptr<baseClass>(*)(std::string const&, karabo::util::Hash const&, bool const)) &           \
                       karabo::util::Configurator<baseClass>::createChoice,                                             \
                 py::arg("choiceName"), py::arg("input") = karabo::util::Hash(), py::arg("validate") = true,            \
                 "The factory method to create the instance of C++ class with \"classId\" derived from C++ base class " \
@@ -79,7 +79,7 @@ namespace py = pybind11;
                 "The last argument is a flag to determine if the input configuration should be validated.")            \
           .def_static(                                                                                                 \
                 "createList",                                                                                          \
-                (boost::shared_ptr<baseClass>(*)(std::string const&, karabo::util::Hash const&, bool const)) &         \
+                (std::shared_ptr<baseClass>(*)(std::string const&, karabo::util::Hash const&, bool const)) &           \
                       karabo::util::Configurator<baseClass>::createList,                                               \
                 py::arg("listName"), py::arg("input") = karabo::util::Hash(), py::arg("validate") = true,              \
                 "The factory method to create the instance of C++ class with \"classId\" derived from C++ base class " \

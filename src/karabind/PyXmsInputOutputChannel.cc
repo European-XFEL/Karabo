@@ -127,7 +127,7 @@ void exportPyXmsInputOutputChannel(py::module_& m) {
                 py::arg("key"), py::arg("value"));
 
     {
-        py::class_<OutputChannel, PyOutputChannel, boost::shared_ptr<OutputChannel>>(m, "OutputChannel")
+        py::class_<OutputChannel, PyOutputChannel, std::shared_ptr<OutputChannel>>(m, "OutputChannel")
 
               .def("setInstanceIdAndName", &OutputChannel::setInstanceIdAndName, py::arg("instanceId"), py::arg("name"))
 
@@ -140,7 +140,7 @@ void exportPyXmsInputOutputChannel(py::module_& m) {
               .def("registerIOEventHandler",
                    [](const OutputChannel::Pointer& self, const py::object& handler) {
                        if (handler.is_none()) {
-                           self->registerIOEventHandler(boost::function<void(const OutputChannel::Pointer&)>());
+                           self->registerIOEventHandler(std::function<void(const OutputChannel::Pointer&)>());
                        } else {
                            using Wrap = HandlerWrap<OutputChannel::Pointer>;
                            self->registerIOEventHandler(Wrap(handler, "IOEvent"));
@@ -188,7 +188,7 @@ void exportPyXmsInputOutputChannel(py::module_& m) {
               .def(
                     "asyncUpdate",
                     [](const OutputChannel::Pointer& self, bool safeNDArray, const py::object& readyHandler) {
-                        boost::function<void()> handler;
+                        std::function<void()> handler;
                         if (readyHandler.is_none()) {
                             handler = []() {};
                         } else {
@@ -229,7 +229,7 @@ void exportPyXmsInputOutputChannel(py::module_& m) {
               .def(
                     "asyncSignalEndOfStream",
                     [](const OutputChannel::Pointer& self, const py::object& readyHandler) {
-                        boost::function<void()> handler;
+                        std::function<void()> handler;
                         if (readyHandler.is_none()) {
                             handler = []() {};
                         } else {
@@ -311,7 +311,7 @@ returned, the data will be dropped.
     }
 
     {
-        py::class_<InputChannel, PyInputChannel, boost::shared_ptr<karabo::xms::InputChannel>>(m, "InputChannel")
+        py::class_<InputChannel, PyInputChannel, std::shared_ptr<karabo::xms::InputChannel>>(m, "InputChannel")
 
               .def("reconfigure", &InputChannel::reconfigure, py::arg("configuration"), py::arg("allowMissing") = true)
 

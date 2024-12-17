@@ -72,7 +72,7 @@ class RunTimeSchemaAttributes_Test : public CPPUNIT_NS::TestFixture {
     karabo::core::DeviceClient::Pointer m_deviceClient;
 
     // m_tcpAdapter mocks a GUI Client for the test.
-    boost::shared_ptr<karabo::TcpAdapter> m_tcpAdapter;
+    std::shared_ptr<karabo::TcpAdapter> m_tcpAdapter;
 };
 
 #endif /* RUNTIMESCHEMAATTRIBUTES_HH */

@@ -169,7 +169,7 @@ namespace karabo {
         // Sum total number of data
         set("nTotalData", get<unsigned int>("nTotalData") + 1);
         unsigned int processingTime = get<unsigned int>("processingTime");
-        if (processingTime > 0) boost::this_thread::sleep(boost::posix_time::milliseconds(processingTime));
+        if (processingTime > 0) boost::this_thread::sleep_for(boost::chrono::milliseconds(processingTime));
     }
 
 

@@ -34,14 +34,14 @@ namespace karabo {
 
 
         double RollingWindowStatistics::getRollingWindowVariance() const {
-            boost::shared_lock<boost::shared_mutex> lock(m_updateMutex);
+            std::shared_lock<std::shared_mutex> lock(m_updateMutex);
             unsigned long long n = std::min(m_evalInterval, m_nvals);
             return (m_s2 - m_s * m_s / n) / (n - 1);
         }
 
 
         double RollingWindowStatistics::getRollingWindowMean() const {
-            boost::shared_lock<boost::shared_mutex> lock(m_updateMutex);
+            std::shared_lock<std::shared_mutex> lock(m_updateMutex);
             unsigned long long n = std::min(m_evalInterval, m_nvals);
             return m_s / n + m_meanEstimate;
         }
@@ -49,7 +49,7 @@ namespace karabo {
 
         void RollingWindowStatistics::update(double v) {
             const double varBeforeUpdate = getRollingWindowVariance();
-            boost::unique_lock<boost::shared_mutex> lock(m_updateMutex);
+            std::unique_lock<std::shared_mutex> lock(m_updateMutex);
             if (m_nvals == 0) {
                 m_meanEstimate = v;
             }
@@ -71,7 +71,7 @@ namespace karabo {
 
         void RollingWindowStatistics::updateEstimate(const double currentMean) {
             // we need to go through all data in current estimate
-            boost::unique_lock<boost::shared_mutex> lock(m_updateMutex);
+            std::unique_lock<std::shared_mutex> lock(m_updateMutex);
             m_s = 0.;
             m_s2 = 0.;
             m_meanEstimate = currentMean;

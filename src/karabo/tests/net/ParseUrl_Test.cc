@@ -24,8 +24,8 @@
 
 #include "ParseUrl_Test.hh"
 
-#include <boost/tuple/tuple.hpp>
 #include <karabo/net/utils.hh>
+#include <tuple>
 
 using namespace karabo::net;
 
@@ -46,87 +46,87 @@ void ParseUrl_Test::tearDown() {}
 
 void ParseUrl_Test::testGenericParse() {
     {
-        const boost::tuple<std::string, std::string> parsed_url = parseGenericUrl("invalid-url");
-        CPPUNIT_ASSERT_EQUAL(std::string(""), parsed_url.get<0>());
-        CPPUNIT_ASSERT_EQUAL(std::string(""), parsed_url.get<1>());
+        const std::tuple<std::string, std::string> parsed_url = parseGenericUrl("invalid-url");
+        CPPUNIT_ASSERT_EQUAL(std::string(""), std::get<0>(parsed_url));
+        CPPUNIT_ASSERT_EQUAL(std::string(""), std::get<1>(parsed_url));
     }
 
     {
-        const boost::tuple<std::string, std::string> parsed_url = parseGenericUrl("invalid-url:");
-        CPPUNIT_ASSERT_EQUAL(std::string(""), parsed_url.get<0>());
-        CPPUNIT_ASSERT_EQUAL(std::string(""), parsed_url.get<1>());
+        const std::tuple<std::string, std::string> parsed_url = parseGenericUrl("invalid-url:");
+        CPPUNIT_ASSERT_EQUAL(std::string(""), std::get<0>(parsed_url));
+        CPPUNIT_ASSERT_EQUAL(std::string(""), std::get<1>(parsed_url));
     }
 
     {
-        const boost::tuple<std::string, std::string> parsed_url = parseGenericUrl(":invalid-url");
-        CPPUNIT_ASSERT_EQUAL(std::string(""), parsed_url.get<0>());
-        CPPUNIT_ASSERT_EQUAL(std::string(""), parsed_url.get<1>());
+        const std::tuple<std::string, std::string> parsed_url = parseGenericUrl(":invalid-url");
+        CPPUNIT_ASSERT_EQUAL(std::string(""), std::get<0>(parsed_url));
+        CPPUNIT_ASSERT_EQUAL(std::string(""), std::get<1>(parsed_url));
     }
 
     {
-        const boost::tuple<std::string, std::string> parsed_url = parseGenericUrl("mailto:john.smith@example.com");
-        CPPUNIT_ASSERT_EQUAL(std::string("mailto"), parsed_url.get<0>());
-        CPPUNIT_ASSERT_EQUAL(std::string("john.smith@example.com"), parsed_url.get<1>());
+        const std::tuple<std::string, std::string> parsed_url = parseGenericUrl("mailto:john.smith@example.com");
+        CPPUNIT_ASSERT_EQUAL(std::string("mailto"), std::get<0>(parsed_url));
+        CPPUNIT_ASSERT_EQUAL(std::string("john.smith@example.com"), std::get<1>(parsed_url));
     }
 
     {
-        const boost::tuple<std::string, std::string> parsed_url = parseGenericUrl("mac://0A:0B:0C:0D:10:11");
-        CPPUNIT_ASSERT_EQUAL(std::string("mac"), parsed_url.get<0>());
-        CPPUNIT_ASSERT_EQUAL(std::string("0A:0B:0C:0D:10:11"), parsed_url.get<1>());
+        const std::tuple<std::string, std::string> parsed_url = parseGenericUrl("mac://0A:0B:0C:0D:10:11");
+        CPPUNIT_ASSERT_EQUAL(std::string("mac"), std::get<0>(parsed_url));
+        CPPUNIT_ASSERT_EQUAL(std::string("0A:0B:0C:0D:10:11"), std::get<1>(parsed_url));
     }
 
     {
-        const boost::tuple<std::string, std::string> parsed_url = parseGenericUrl("sn://s123456");
-        CPPUNIT_ASSERT_EQUAL(std::string("sn"), parsed_url.get<0>());
-        CPPUNIT_ASSERT_EQUAL(std::string("s123456"), parsed_url.get<1>());
+        const std::tuple<std::string, std::string> parsed_url = parseGenericUrl("sn://s123456");
+        CPPUNIT_ASSERT_EQUAL(std::string("sn"), std::get<0>(parsed_url));
+        CPPUNIT_ASSERT_EQUAL(std::string("s123456"), std::get<1>(parsed_url));
     }
 
     {
-        const boost::tuple<std::string, std::string> parsed_url = parseGenericUrl("file:///tmp/file.txt");
-        CPPUNIT_ASSERT_EQUAL(std::string("file"), parsed_url.get<0>());
-        CPPUNIT_ASSERT_EQUAL(std::string("/tmp/file.txt"), parsed_url.get<1>());
+        const std::tuple<std::string, std::string> parsed_url = parseGenericUrl("file:///tmp/file.txt");
+        CPPUNIT_ASSERT_EQUAL(std::string("file"), std::get<0>(parsed_url));
+        CPPUNIT_ASSERT_EQUAL(std::string("/tmp/file.txt"), std::get<1>(parsed_url));
     }
 }
 
 
 void ParseUrl_Test::testHttpParse() {
     {
-        const boost::tuple<std::string, std::string, std::string, std::string, std::string> parsed_url =
+        const std::tuple<std::string, std::string, std::string, std::string, std::string> parsed_url =
               parseUrl("tcp://host1:1234");
-        CPPUNIT_ASSERT_EQUAL(std::string("tcp"), parsed_url.get<0>());
-        CPPUNIT_ASSERT_EQUAL(std::string("host1"), parsed_url.get<1>());
-        CPPUNIT_ASSERT_EQUAL(std::string("1234"), parsed_url.get<2>());
-        CPPUNIT_ASSERT_EQUAL(std::string(""), parsed_url.get<3>());
-        CPPUNIT_ASSERT_EQUAL(std::string(""), parsed_url.get<4>());
+        CPPUNIT_ASSERT_EQUAL(std::string("tcp"), std::get<0>(parsed_url));
+        CPPUNIT_ASSERT_EQUAL(std::string("host1"), std::get<1>(parsed_url));
+        CPPUNIT_ASSERT_EQUAL(std::string("1234"), std::get<2>(parsed_url));
+        CPPUNIT_ASSERT_EQUAL(std::string(""), std::get<3>(parsed_url));
+        CPPUNIT_ASSERT_EQUAL(std::string(""), std::get<4>(parsed_url));
     }
 
     {
-        const boost::tuple<std::string, std::string, std::string, std::string, std::string> parsed_url =
+        const std::tuple<std::string, std::string, std::string, std::string, std::string> parsed_url =
               parseUrl("socket://host2/path1");
-        CPPUNIT_ASSERT_EQUAL(std::string("socket"), parsed_url.get<0>());
-        CPPUNIT_ASSERT_EQUAL(std::string("host2"), parsed_url.get<1>());
-        CPPUNIT_ASSERT_EQUAL(std::string(""), parsed_url.get<2>());
-        CPPUNIT_ASSERT_EQUAL(std::string("/path1"), parsed_url.get<3>());
-        CPPUNIT_ASSERT_EQUAL(std::string(""), parsed_url.get<4>());
+        CPPUNIT_ASSERT_EQUAL(std::string("socket"), std::get<0>(parsed_url));
+        CPPUNIT_ASSERT_EQUAL(std::string("host2"), std::get<1>(parsed_url));
+        CPPUNIT_ASSERT_EQUAL(std::string(""), std::get<2>(parsed_url));
+        CPPUNIT_ASSERT_EQUAL(std::string("/path1"), std::get<3>(parsed_url));
+        CPPUNIT_ASSERT_EQUAL(std::string(""), std::get<4>(parsed_url));
     }
 
     {
-        const boost::tuple<std::string, std::string, std::string, std::string, std::string> parsed_url =
+        const std::tuple<std::string, std::string, std::string, std::string, std::string> parsed_url =
               parseUrl("http://host3:2345/path2");
-        CPPUNIT_ASSERT_EQUAL(std::string("http"), parsed_url.get<0>());
-        CPPUNIT_ASSERT_EQUAL(std::string("host3"), parsed_url.get<1>());
-        CPPUNIT_ASSERT_EQUAL(std::string("2345"), parsed_url.get<2>());
-        CPPUNIT_ASSERT_EQUAL(std::string("/path2"), parsed_url.get<3>());
-        CPPUNIT_ASSERT_EQUAL(std::string(""), parsed_url.get<4>());
+        CPPUNIT_ASSERT_EQUAL(std::string("http"), std::get<0>(parsed_url));
+        CPPUNIT_ASSERT_EQUAL(std::string("host3"), std::get<1>(parsed_url));
+        CPPUNIT_ASSERT_EQUAL(std::string("2345"), std::get<2>(parsed_url));
+        CPPUNIT_ASSERT_EQUAL(std::string("/path2"), std::get<3>(parsed_url));
+        CPPUNIT_ASSERT_EQUAL(std::string(""), std::get<4>(parsed_url));
     }
 
     {
-        const boost::tuple<std::string, std::string, std::string, std::string, std::string> parsed_url =
+        const std::tuple<std::string, std::string, std::string, std::string, std::string> parsed_url =
               parseUrl("https://host4:3456/path3?some-query");
-        CPPUNIT_ASSERT_EQUAL(std::string("https"), parsed_url.get<0>());
-        CPPUNIT_ASSERT_EQUAL(std::string("host4"), parsed_url.get<1>());
-        CPPUNIT_ASSERT_EQUAL(std::string("3456"), parsed_url.get<2>());
-        CPPUNIT_ASSERT_EQUAL(std::string("/path3"), parsed_url.get<3>());
-        CPPUNIT_ASSERT_EQUAL(std::string("some-query"), parsed_url.get<4>());
+        CPPUNIT_ASSERT_EQUAL(std::string("https"), std::get<0>(parsed_url));
+        CPPUNIT_ASSERT_EQUAL(std::string("host4"), std::get<1>(parsed_url));
+        CPPUNIT_ASSERT_EQUAL(std::string("3456"), std::get<2>(parsed_url));
+        CPPUNIT_ASSERT_EQUAL(std::string("/path3"), std::get<3>(parsed_url));
+        CPPUNIT_ASSERT_EQUAL(std::string("some-query"), std::get<4>(parsed_url));
     }
 }

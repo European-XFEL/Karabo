@@ -40,7 +40,7 @@ namespace karabo {
              * @param deviceId: the deviceId of the device to lock
              * @param recursive: allow recursive locking if true
              */
-            Lock(boost::weak_ptr<karabo::xms::SignalSlotable> sigSlot, const std::string& deviceId,
+            Lock(std::weak_ptr<karabo::xms::SignalSlotable> sigSlot, const std::string& deviceId,
                  bool recursive = false);
 
 
@@ -106,7 +106,7 @@ namespace karabo {
              */
             void unlock_impl() const;
 
-            boost::weak_ptr<karabo::xms::SignalSlotable> m_sigSlot;
+            std::weak_ptr<karabo::xms::SignalSlotable> m_sigSlot;
             const std::string m_deviceId;
             mutable bool m_valid;
             const int m_lockQueryTimeout = 5000;

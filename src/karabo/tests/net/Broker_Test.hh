@@ -27,6 +27,7 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 
+#include <boost/thread.hpp>
 #include <karabo/net/Broker.hh>
 #include <karabo/util/Hash.hh>
 
@@ -67,7 +68,7 @@ class Broker_Test : public CPPUNIT_NS::TestFixture {
 
    private:
     std::string m_domain;
-    boost::shared_ptr<boost::thread> m_thread;
+    std::shared_ptr<boost::thread> m_thread;
     karabo::util::Hash m_config;
     // using a Karabo Hash to match the insertion order.
     karabo::util::Hash m_brokersUnderTest;

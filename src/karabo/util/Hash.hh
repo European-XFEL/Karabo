@@ -39,7 +39,7 @@
 #include <vector>
 #include <list>
 
-#include <boost/tuple/tuple.hpp>
+#include <tuple>
 #include <boost/algorithm/string.hpp>
 #include <boost/optional.hpp>
 
