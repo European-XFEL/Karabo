@@ -42,11 +42,11 @@ namespace karabo {
         class GenericElement {
            protected:
             Schema* m_schema;
-            boost::shared_ptr<Hash::Node> m_node;
+            std::shared_ptr<Hash::Node> m_node;
 
            public:
             GenericElement(Schema& expected)
-                : m_schema(&expected), m_node(boost::shared_ptr<Hash::Node>(new Hash::Node(std::string(), 0))) {}
+                : m_schema(&expected), m_node(std::shared_ptr<Hash::Node>(new Hash::Node(std::string(), 0))) {}
 
             virtual ~GenericElement() {}
 

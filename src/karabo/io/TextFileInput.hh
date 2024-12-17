@@ -25,7 +25,7 @@
 #ifndef KARABO_IO_TEXTFILEINPUT_HH
 #define KARABO_IO_TEXTFILEINPUT_HH
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <fstream>
 #include <iosfwd>
 #include <karabo/util/ChoiceElement.hh>
@@ -57,7 +57,7 @@ namespace karabo {
         class TextFileInput : public Input<T> {
             typename TextSerializer<T>::Pointer m_serializer;
 
-            boost::filesystem::path m_filename;
+            std::filesystem::path m_filename;
             std::vector<T> m_sequenceBuffer;
 
            public:
@@ -110,7 +110,7 @@ namespace karabo {
                 using namespace karabo::util;
 
                 vector<string> keys = TextSerializer<T>::getRegisteredClasses();
-                string extension = boost::filesystem::path(m_filename).extension().string().substr(1);
+                string extension = std::filesystem::path(m_filename).extension().string().substr(1);
                 boost::to_lower(extension);
 
                 for (const string& key : keys) {

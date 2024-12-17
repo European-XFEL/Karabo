@@ -39,7 +39,7 @@ namespace karabo {
          * KARABO_INFLUXDB_QUERY_USER
          * KARABO_INFLUXDB_QUERY_PASSWORD
          *
-         * @returns A boost::shared_ptr to the built InfluxDbClient instance.
+         * @returns A std::shared_ptr to the built InfluxDbClient instance.
          */
         InfluxDbClient::Pointer buildInfluxReadClient();
 

@@ -172,7 +172,7 @@ void exportPyUtilSchema(py::module_& m) {
                   return oss.str();
               });
 
-        py::class_<Schema, boost::shared_ptr<Schema>> s(m, "Schema");
+        py::class_<Schema, std::shared_ptr<Schema>> s(m, "Schema");
 
         s.def(py::init<>());
 
@@ -1192,7 +1192,7 @@ void exportPyUtilSchema(py::module_& m) {
           .def_static(
                 "byTag",
                 [](const Schema& schema, const Hash& config, const std::string& tags, const std::string& sep = ",") {
-                    boost::shared_ptr<Hash> result(new Hash);
+                    std::shared_ptr<Hash> result(new Hash);
                     HashFilter::byTag(schema, config, *result, tags, sep);
                     return result;
                 },
@@ -1201,7 +1201,7 @@ void exportPyUtilSchema(py::module_& m) {
           .def_static(
                 "byAccessMode",
                 [](const Schema& schema, const Hash& config, const AccessType& value) {
-                    boost::shared_ptr<Hash> result(new Hash);
+                    std::shared_ptr<Hash> result(new Hash);
                     HashFilter::byAccessMode(schema, config, *result, value);
                     return result;
                 },

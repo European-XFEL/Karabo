@@ -41,8 +41,8 @@
 using boost::asio::ip::tcp;
 using namespace std;
 
-using boost::placeholders::_1;
-using boost::placeholders::_2;
+using std::placeholders::_1;
+using std::placeholders::_2;
 
 
 CPPUNIT_TEST_SUITE_REGISTRATION(ReadAsyncStringUntil_Test);
@@ -65,7 +65,7 @@ struct TestClient {
           m_expected(""),
           m_promise(std::promise<std::string>()) {
         m_connection = karabo::net::Connection::create("Tcp", input);
-        m_connection->startAsync(boost::bind(&TestClient::connectHandler, this, _1, _2));
+        m_connection->startAsync(std::bind(&TestClient::connectHandler, this, _1, _2));
     }
 
 
@@ -87,10 +87,9 @@ struct TestClient {
 
         // The first statement will be read in two steps by changing terminator...
         const std::string& tmp = "When the going gets tough... the tough get going\r\n";
-        auto datap = boost::make_shared<std::vector<char>>(tmp.begin(), tmp.end());
+        auto datap = std::make_shared<std::vector<char>>(tmp.begin(), tmp.end());
         // NOTE: First we use "..." as a terminator!
-        channel->writeAsyncVectorPointer(datap,
-                                         boost::bind(&TestClient::writeCompleteHandler, this, _1, channel, "..."));
+        channel->writeAsyncVectorPointer(datap, std::bind(&TestClient::writeCompleteHandler, this, _1, channel, "..."));
     }
 
 
@@ -125,11 +124,11 @@ struct TestClient {
             }
 
             m_expected = "Yet another test string\r\n";
-            auto datap = boost::make_shared<std::vector<char>>(m_expected.begin(), m_expected.end());
+            auto datap = std::make_shared<std::vector<char>>(m_expected.begin(), m_expected.end());
             // NOTE: After first reading we change terminator to "\r\n" (CRLF) to read
             //  a second part of first statement and all others ...
             channel->writeAsyncVectorPointer(datap,
-                                             boost::bind(&TestClient::writeCompleteHandler, this, _1, channel, "\r\n"));
+                                             std::bind(&TestClient::writeCompleteHandler, this, _1, channel, "\r\n"));
         };
         channel->readAsyncStringUntil(terminator, readHandler);
     }

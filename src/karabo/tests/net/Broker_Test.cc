@@ -53,7 +53,7 @@ Broker_Test::~Broker_Test() {}
 void Broker_Test::setUp() {
     auto prom = std::promise<void>();
     auto fut = prom.get_future();
-    m_thread = boost::make_shared<boost::thread>([&prom]() {
+    m_thread = std::make_shared<boost::thread>([&prom]() {
         // postpone promise setting until EventLoop is activated
         EventLoop::getIOService().post([&prom]() { prom.set_value(); });
         EventLoop::work();
@@ -173,9 +173,9 @@ void Broker_Test::_testPublishSubscribe() {
     CPPUNIT_ASSERT(bob->getBrokerUrl() == alice->getBrokerUrl());
     CPPUNIT_ASSERT(bob->getDomain() == alice->getDomain());
 
-    auto hdr = boost::make_shared<Hash>("signalInstanceId", "bob", "signalFunction", "signalFromBob", "slotInstanceIds",
-                                        "|alice|", "slotFunctions", "|alice:aliceSlot");
-    auto body = boost::make_shared<Hash>("a.b.c", 42);
+    auto hdr = std::make_shared<Hash>("signalInstanceId", "bob", "signalFunction", "signalFromBob", "slotInstanceIds",
+                                      "|alice|", "slotFunctions", "|alice:aliceSlot");
+    auto body = std::make_shared<Hash>("a.b.c", 42);
 
     for (int i = 0; i < maxLoop; ++i) {
         hdr->set("count", i + 1);
@@ -235,7 +235,7 @@ void Broker_Test::_testPublishSubscribeAsync() {
 
     auto bob = alice->clone("bob");
 
-    auto t = std::thread([this, maxLoop, classId, alice, bob]() {
+    auto t = boost::thread([this, maxLoop, classId, alice, bob]() {
         using namespace std::chrono_literals;
 
         CPPUNIT_ASSERT_NO_THROW(bob->connect());
@@ -245,10 +245,10 @@ void Broker_Test::_testPublishSubscribeAsync() {
         CPPUNIT_ASSERT(bob->getDomain() == alice->getDomain());
 
         Hash::Pointer header =
-              boost::make_shared<Hash>("signalInstanceId", "bob", "signalFunction", "signalFromBob", "slotInstanceIds",
-                                       "|alice|", "slotFunctions", "|alice:aliceSlot|");
+              std::make_shared<Hash>("signalInstanceId", "bob", "signalFunction", "signalFromBob", "slotInstanceIds",
+                                     "|alice|", "slotFunctions", "|alice:aliceSlot|");
 
-        Hash::Pointer data = boost::make_shared<Hash>("a", std::string("free text"), "b", 3.1415F);
+        Hash::Pointer data = std::make_shared<Hash>("a", std::string("free text"), "b", 3.1415F);
 
         for (int i = 0; i < maxLoop; ++i) {
             data->set<int>("c", i + 1);
@@ -362,7 +362,7 @@ void Broker_Test::_testReadingHeartbeats() {
 
     auto bob = alice->clone("bob");
 
-    auto t = std::thread([this, maxLoop, classId, alice, bob]() {
+    auto t = boost::thread([this, maxLoop, classId, alice, bob]() {
         using namespace std::chrono_literals;
 
         CPPUNIT_ASSERT_NO_THROW(bob->connect());
@@ -371,10 +371,10 @@ void Broker_Test::_testReadingHeartbeats() {
         CPPUNIT_ASSERT(bob->getInstanceId() == "bob");
         CPPUNIT_ASSERT(bob->getDomain() == alice->getDomain());
 
-        Hash::Pointer header = boost::make_shared<Hash>("signalInstanceId", "bob", "signalFunction", "signalHeartbeat",
-                                                        "slotInstanceIds", "__none__", "slotFunctions", "__none__");
+        Hash::Pointer header = std::make_shared<Hash>("signalInstanceId", "bob", "signalFunction", "signalHeartbeat",
+                                                      "slotInstanceIds", "__none__", "slotFunctions", "__none__");
 
-        Hash::Pointer data = boost::make_shared<Hash>(
+        Hash::Pointer data = std::make_shared<Hash>(
               "a1", std::string("bob"), "a2", 1, "a3",
               Hash("type", "device", "classId", "Broker", "serverId", "__none__", "visibilty", 4, "lang", "cpp"));
 
@@ -384,9 +384,9 @@ void Broker_Test::_testReadingHeartbeats() {
             CPPUNIT_ASSERT_NO_THROW(bob->write(m_domain + "_beats", header, data, 0, 0));
         }
 
-        Hash::Pointer h2 = boost::make_shared<Hash>("signalInstanceId", "bob", "signalFunction", "signalFromBob",
-                                                    "slotInstanceIds", "|alice|", "slotFunctions", "|alice:someSlot");
-        Hash::Pointer d2 = boost::make_shared<Hash>("c", 1);
+        Hash::Pointer h2 = std::make_shared<Hash>("signalInstanceId", "bob", "signalFunction", "signalFromBob",
+                                                  "slotInstanceIds", "|alice|", "slotFunctions", "|alice:someSlot");
+        Hash::Pointer d2 = std::make_shared<Hash>("c", 1);
 
         // Trigger the end of the test
         CPPUNIT_ASSERT_NO_THROW(bob->write(m_domain, h2, d2, 4, 0));
@@ -481,16 +481,16 @@ void Broker_Test::_testReadingGlobalCalls(const std::vector<std::string>& broker
     notListenGlobal->startReading(readHandlerBoth2, errorHandlerBoth2);
 
     // Prepare and send global message
-    auto hdr = boost::make_shared<Hash>("signalInstanceId", sender->getInstanceId(), "signalFunction", "__call__",
-                                        "slotInstanceIds", "|*|", "slotFunctions",
-                                        "|*:aSlot|"); //
-    auto bodyGlobal = boost::make_shared<Hash>("msgToAll", "A global message");
+    auto hdr = std::make_shared<Hash>("signalInstanceId", sender->getInstanceId(), "signalFunction", "__call__",
+                                      "slotInstanceIds", "|*|", "slotFunctions",
+                                      "|*:aSlot|"); //
+    auto bodyGlobal = std::make_shared<Hash>("msgToAll", "A global message");
     sender->write(m_domain, hdr, bodyGlobal, 4, 0);
 
     // Prepare and send specific messages
     hdr->erase("slotFunctions"); // Specific slot calls do not need their slot for routing, ...
     hdr->set("slotInstanceIds", "|" + listenGlobal->getInstanceId() + "|"); // ... but a specific instanceId
-    auto bodyNonGlobal = boost::make_shared<Hash>("msg", "A specific message");
+    auto bodyNonGlobal = std::make_shared<Hash>("msg", "A specific message");
     sender->write(m_domain, hdr, bodyNonGlobal, 4, 0);
     hdr->set("slotInstanceIds", "|" + notListenGlobal->getInstanceId() + "|");
     sender->write(m_domain, hdr, bodyNonGlobal, 4, 0);
@@ -565,7 +565,7 @@ void Broker_Test::_testProducerRestartConsumerContinues() {
     ec = alice->subscribeToRemoteSignal("bob", "signalFromBob");
     CPPUNIT_ASSERT(!ec);
 
-    auto t = std::thread([this]() {
+    auto t = boost::thread([this]() {
         std::string classId = m_config.begin()->getKey();
         Hash bobConfig = m_config;
         bobConfig.set(classId + ".instanceId", "bob");
@@ -574,11 +574,11 @@ void Broker_Test::_testProducerRestartConsumerContinues() {
         CPPUNIT_ASSERT_NO_THROW(bob->connect());
         CPPUNIT_ASSERT(bob->isConnected());
 
-        Hash::Pointer header = boost::make_shared<Hash>("signalInstanceId", "bob", "signalFunction", "signalFromBob");
+        Hash::Pointer header = std::make_shared<Hash>("signalInstanceId", "bob", "signalFunction", "signalFromBob");
         header->set("slotInstanceIds", "|alice|");
         header->set("slotFunctions", "|alice:aliceSlot|");
 
-        Hash::Pointer data = boost::make_shared<Hash>("fill", "bottle1");
+        Hash::Pointer data = std::make_shared<Hash>("fill", "bottle1");
 
         for (int i = 1; i <= 16; ++i) {
             data->set("c", i);
@@ -649,10 +649,10 @@ void Broker_Test::_testProducerContinuesConsumerRestart() {
     CPPUNIT_ASSERT_NO_THROW(bob->connect());
     CPPUNIT_ASSERT(bob->isConnected());
 
-    Hash::Pointer header = boost::make_shared<Hash>("signalInstanceId", "bob", "signalFunction", "signalBob");
+    Hash::Pointer header = std::make_shared<Hash>("signalInstanceId", "bob", "signalFunction", "signalBob");
     header->set("slotInstanceIds", "|alice|");
     header->set("slotFunctions", "|alice:aliceSlot|");
-    Hash::Pointer data = boost::make_shared<Hash>(); // data container
+    Hash::Pointer data = std::make_shared<Hash>(); // data container
 
     Broker::Pointer alice;
 

@@ -31,9 +31,9 @@
 #include "karabo/util/MetaTools.hh" // for bind_weak
 
 
-using boost::placeholders::_1;
-using boost::placeholders::_2;
-using boost::placeholders::_3;
+using std::placeholders::_1;
+using std::placeholders::_2;
+using std::placeholders::_3;
 
 namespace karabo::net {
 
@@ -50,12 +50,11 @@ namespace karabo::net {
     AmqpHashClient::AmqpHashClient(AmqpConnection::Pointer connection, std::string instanceId, AMQP::Table queueArgs,
                                    AmqpHashClient::HashReadHandler readHandler,
                                    AmqpHashClient::ErrorReadHandler errorReadHandler)
-        : m_rawClient(
-                boost::make_shared<AmqpClient>(std::move(connection), std::move(instanceId), std::move(queueArgs),
-                                               AmqpClient::ReadHandler())), // Cannot use bind_weak in constructor, so
-                                                                            // handler setting must be postponed
+        : m_rawClient(std::make_shared<AmqpClient>(std::move(connection), std::move(instanceId), std::move(queueArgs),
+                                                   AmqpClient::ReadHandler())), // Cannot use bind_weak in constructor,
+                                                                                // so handler setting must be postponed
           m_serializer(io::BinarySerializer<util::Hash>::create("Bin")),
-          m_deserializeStrand(boost::make_shared<Strand>(EventLoop::getIOService())),
+          m_deserializeStrand(std::make_shared<Strand>(EventLoop::getIOService())),
           m_readHandler(std::move(readHandler)),
           m_errorReadHandler(std::move(errorReadHandler)) {}
 
@@ -85,8 +84,8 @@ namespace karabo::net {
 
     void AmqpHashClient::deserialize(const std::shared_ptr<std::vector<char>>& data, const std::string& exchange,
                                      const std::string& routingKey) {
-        util::Hash::Pointer header(boost::make_shared<util::Hash>());
-        util::Hash::Pointer body(boost::make_shared<util::Hash>());
+        util::Hash::Pointer header(std::make_shared<util::Hash>());
+        util::Hash::Pointer body(std::make_shared<util::Hash>());
         try {
             const size_t bytes = m_serializer->load(*header, data->data(), data->size());
             header->set("exchange", exchange);

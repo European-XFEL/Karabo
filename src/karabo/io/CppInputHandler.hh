@@ -34,7 +34,7 @@ namespace karabo {
         /**
          * @class CppInputHandler
          * @brief The CppInputHandler specializes the InputHandler class for Karabo's C++ interface.
-         *        The handlers used here are boost::function objects
+         *        The handlers used here are std::function objects
          */
         template <class InputType>
         class CppInputHandler : public InputHandler {
@@ -44,33 +44,33 @@ namespace karabo {
             CppInputHandler() {}
 
             CppInputHandler(const AbstractInput::Pointer& input)
-                : m_input(boost::static_pointer_cast<InputType>(input)) {}
+                : m_input(std::static_pointer_cast<InputType>(input)) {}
 
             virtual ~CppInputHandler() {}
 
             void registerIOEventHandler(const boost::any& ioEventHandler) {
                 m_ioEventHandler =
-                      boost::any_cast<boost::function<void(const typename InputType::Pointer&)> >(ioEventHandler);
+                      boost::any_cast<std::function<void(const typename InputType::Pointer&)> >(ioEventHandler);
             }
 
             void registerEndOfStreamEventHandler(const boost::any& endOfStreamEventHandler) {
-                m_endOfStreamEventHandler = boost::any_cast<boost::function<void()> >(endOfStreamEventHandler);
+                m_endOfStreamEventHandler = boost::any_cast<std::function<void()> >(endOfStreamEventHandler);
             }
 
             void triggerIOEvent() {
-                if (!m_ioEventHandler.empty()) {
+                if (!m_ioEventHandler) {
                     if (typename InputType::Pointer in = m_input.lock()) m_ioEventHandler(in);
                 }
             }
 
             void triggerEndOfStreamEvent() {
-                if (!m_endOfStreamEventHandler.empty()) m_endOfStreamEventHandler();
+                if (!m_endOfStreamEventHandler) m_endOfStreamEventHandler();
             }
 
            private:
-            boost::weak_ptr<InputType> m_input;
-            boost::function<void(const typename InputType::Pointer&)> m_ioEventHandler;
-            boost::function<void()> m_endOfStreamEventHandler;
+            std::weak_ptr<InputType> m_input;
+            std::function<void(const typename InputType::Pointer&)> m_ioEventHandler;
+            std::function<void()> m_endOfStreamEventHandler;
         };
 
     } // namespace io

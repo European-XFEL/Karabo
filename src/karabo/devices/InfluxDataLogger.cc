@@ -43,7 +43,7 @@ namespace karabo {
         using namespace karabo::io;
         using namespace karabo::net;
         using namespace karabo::util;
-        using namespace boost::placeholders;
+        using namespace std::placeholders;
 
 
         const unsigned int InfluxDataLogger::k_httpResponseTimeoutMs = 1500u;
@@ -83,7 +83,7 @@ namespace karabo {
                 // Timestamp shall be the one of the most recent update - this ensures that all stamps come from
                 // the device and cannot be screwed up if clocks of logger and device are off from each other.
                 // But we store the local time of the logger as well.
-                boost::mutex::scoped_lock lock(m_lastTimestampMutex);
+                std::lock_guard<std::mutex> lock(m_lastTimestampMutex);
                 const unsigned long long ts = m_lastDataTimestamp.toTimestamp() * INFLUX_PRECISION_FACTOR;
                 ss << deviceId << "__EVENTS,type=\"-LOG\" karabo_user=\"" << m_user << "\",logger_time=\""
                    << Epochstamp().toIso8601Ext() << "\" " << ts << "\n";
@@ -206,7 +206,7 @@ namespace karabo {
                 {
                     // Update time stamp for updates of property "lastUpdatesUtc"
                     // Since the former is accessing it when not posted on m_strand, need mutex protection:
-                    boost::mutex::scoped_lock lock(m_lastTimestampMutex);
+                    std::lock_guard<std::mutex> lock(m_lastTimestampMutex);
                     if (t.getEpochstamp() != m_lastDataTimestamp.getEpochstamp()) {
                         // If mixed timestamps in single message (or arrival in wrong order), always take last
                         // received.
@@ -554,7 +554,7 @@ namespace karabo {
 
             karabo::io::BinarySerializer<karabo::util::Schema>::Pointer serializer =
                   karabo::io::BinarySerializer<karabo::util::Schema>::create("Bin");
-            auto archive(boost::make_shared<std::vector<char>>());
+            auto archive(std::make_shared<std::vector<char>>());
             // Avoid re-allocations - small devices need around 10'000 bytes, DataLoggerManager almost 20'000
             archive->reserve(20'000);
             serializer->save(schema, *archive);
@@ -582,7 +582,7 @@ namespace karabo {
         }
 
         void InfluxDeviceData::onCheckSchemaInDb(const karabo::util::Timestamp& stamp, const std::string& schDigest,
-                                                 const boost::shared_ptr<std::vector<char>>& schemaArchive,
+                                                 const std::shared_ptr<std::vector<char>>& schemaArchive,
                                                  const HttpResponse& o) {
             // Not running in Strand anymore - take care not to access any potentially changing data members!
 
@@ -902,7 +902,7 @@ namespace karabo {
             DataLogger::preDestruction();
 
             if (m_clientWrite->isConnected()) {
-                auto prom = boost::make_shared<std::promise<void>>();
+                auto prom = std::make_shared<std::promise<void>>();
                 std::future<void> fut = prom->get_future();
                 m_clientWrite->flushBatch([prom](const HttpResponse& resp) { prom->set_value(); });
 
@@ -1037,7 +1037,7 @@ namespace karabo {
         }
 
 
-        void InfluxDataLogger::flushImpl(const boost::shared_ptr<SignalSlotable::AsyncReply>& aReplyPtr) {
+        void InfluxDataLogger::flushImpl(const std::shared_ptr<SignalSlotable::AsyncReply>& aReplyPtr) {
             karabo::net::InfluxResponseHandler handler;
             if (aReplyPtr) {
                 handler = [weakThis{weak_from_this()}, aReplyPtr](const HttpResponse& resp) {

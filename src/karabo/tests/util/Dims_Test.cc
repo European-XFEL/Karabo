@@ -97,7 +97,8 @@ void Dims_Test::testDims() {
 
 void Dims_Test::testArrayTools() {
     Dims dimsD(10, 6);
-    boost::shared_array<unsigned short> d = boost::shared_array<unsigned short>(new unsigned short[dimsD.size()]);
+    // boost::shared_array<unsigned short> d = boost::shared_array<unsigned short>(new unsigned short[dimsD.size()]);
+    std::shared_ptr<unsigned short[]> d = std::shared_ptr<unsigned short[]>(new unsigned short[dimsD.size()]);
     for (size_t i = 0; i < dimsD.size(); ++i) {
         d[i] = 100 + i;
     }

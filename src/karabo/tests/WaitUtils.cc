@@ -18,17 +18,17 @@
 
 #include "WaitUtils.hh"
 
-#include <boost/chrono/chrono.hpp>
-#include <boost/thread.hpp>
+#include <chrono>
 #include <cmath>
+#include <thread>
 
 namespace karabo::tests {
-    bool waitForCondition(boost::function<bool()> checker, unsigned int timeoutMillis) {
+    bool waitForCondition(std::function<bool()> checker, unsigned int timeoutMillis) {
         constexpr unsigned int sleepIntervalMillis = 2;
         unsigned int numOfWaits = 0;
         const unsigned int maxNumOfWaits = static_cast<unsigned int>(std::ceil(timeoutMillis / sleepIntervalMillis));
         while (numOfWaits < maxNumOfWaits && !checker()) {
-            boost::this_thread::sleep_for(boost::chrono::milliseconds(sleepIntervalMillis));
+            std::this_thread::sleep_for(std::chrono::milliseconds(sleepIntervalMillis));
             numOfWaits++;
         }
         return (numOfWaits < maxNumOfWaits);

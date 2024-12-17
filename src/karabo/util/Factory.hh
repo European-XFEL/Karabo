@@ -27,7 +27,7 @@
 #include <boost/any.hpp>
 #include <boost/functional/factory.hpp>
 #include <boost/functional/value_factory.hpp>
-#include <boost/shared_ptr.hpp>
+#include <memory> // std::shared_ptr<T>
 
 #include "Exception.hh"
 #include "FromTypeInfo.hh"
@@ -67,8 +67,8 @@ namespace karabo {
                 // std::cout << "Registering class: " << factoryKey << " with constructor: " << factoryKey << "(" <<
                 // ctorKey() << ")" << std::endl;
                 Factory::init().m_registry[factoryKey][ctorKey()] =
-                      static_cast<boost::function<boost::shared_ptr<AbstractClass>()> >(
-                            boost::factory<boost::shared_ptr<ConcreteClass> >());
+                      static_cast<std::function<std::shared_ptr<AbstractClass>()> >(
+                            boost::factory<std::shared_ptr<ConcreteClass> >());
             }
 
             /**
@@ -80,8 +80,8 @@ namespace karabo {
                 // std::cout << "Registering class: " << factoryKey << " with constructor: " << factoryKey << "(const "
                 // << ctorKey<A1 > () << "&)" << std::endl;
                 Factory::init().m_registry[factoryKey][ctorKey<A1>()] =
-                      static_cast<boost::function<boost::shared_ptr<AbstractClass>(const A1&)> >(
-                            boost::factory<boost::shared_ptr<ConcreteClass> >());
+                      static_cast<std::function<std::shared_ptr<AbstractClass>(const A1&)> >(
+                            boost::factory<std::shared_ptr<ConcreteClass> >());
             }
 
             /**
@@ -89,9 +89,9 @@ namespace karabo {
              * @param factoryKey
              * @return a shared pointer to the created object
              */
-            static boost::shared_ptr<AbstractClass> create(const std::string& factoryKey) {
+            static std::shared_ptr<AbstractClass> create(const std::string& factoryKey) {
                 CtorMap::const_iterator it = Factory::findCtor(factoryKey, ctorKey());
-                return (boost::any_cast<boost::function<boost::shared_ptr<AbstractClass>()> >(it->second))();
+                return (boost::any_cast<std::function<std::shared_ptr<AbstractClass>()> >(it->second))();
             }
 
             /**
@@ -100,9 +100,9 @@ namespace karabo {
              * @return a shared pointer to the created object cast to A1
              */
             template <typename A1>
-            static boost::shared_ptr<AbstractClass> create(const std::string& factoryKey, const A1& a1) {
+            static std::shared_ptr<AbstractClass> create(const std::string& factoryKey, const A1& a1) {
                 CtorMap::const_iterator it = Factory::findCtor(factoryKey, ctorKey<A1>());
-                return (boost::any_cast<boost::function<boost::shared_ptr<AbstractClass>(const A1&)> >(it->second))(a1);
+                return (boost::any_cast<std::function<std::shared_ptr<AbstractClass>(const A1&)> >(it->second))(a1);
             }
 
             /**

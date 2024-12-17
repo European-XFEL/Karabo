@@ -24,7 +24,7 @@
 #define KARABO_CORE_DEVICE_CLIENT_HH
 
 #include <atomic>
-#include <boost/asio/deadline_timer.hpp>
+#include <boost/asio.hpp>
 #include <karabo/core/InstanceChangeThrottler.hh>
 #include <karabo/core/Lock.hh>
 #include <karabo/util/DataLogUtils.hh>
@@ -64,26 +64,26 @@ namespace karabo {
          * In the context of a Device the DeviceClient is available using the Device::remote() function;
          * it then shares the SignalSlotable instance of the device, e.g. there is no instantiation overhead.
          */
-        class DeviceClient : public boost::enable_shared_from_this<DeviceClient> {
+        class DeviceClient : public std::enable_shared_from_this<DeviceClient> {
             template <class T>
             friend class Device;
 
             /// keys are instance IDs, values are a sets of properties that changed
             typedef std::map<std::string, std::set<std::string>> SignalChangedMap;
-            typedef boost::function<void(const karabo::util::Hash& /*topologyEntry*/)> InstanceNewHandler;
-            typedef boost::function<void(const karabo::util::Hash& /*topologyEntry*/)> InstanceUpdatedHandler;
-            typedef boost::function<void(const std::string& /*instanceId*/, const karabo::util::Hash& /*instanceInfo*/)>
+            typedef std::function<void(const karabo::util::Hash& /*topologyEntry*/)> InstanceNewHandler;
+            typedef std::function<void(const karabo::util::Hash& /*topologyEntry*/)> InstanceUpdatedHandler;
+            typedef std::function<void(const std::string& /*instanceId*/, const karabo::util::Hash& /*instanceInfo*/)>
                   InstanceGoneHandler;
-            typedef boost::function<void(const std::string& /*deviceId*/, const karabo::util::Schema& /*schema*/)>
+            typedef std::function<void(const std::string& /*deviceId*/, const karabo::util::Schema& /*schema*/)>
                   SchemaUpdatedHandler;
-            typedef boost::function<void(const std::string& /*serverId*/, const std::string& /*classId*/,
-                                         const karabo::util::Schema& /*schema*/)>
+            typedef std::function<void(const std::string& /*serverId*/, const std::string& /*classId*/,
+                                       const karabo::util::Schema& /*schema*/)>
                   ClassSchemaHandler;
-            typedef boost::function<void(const karabo::util::Hash& /* devicesChanges */)> DevicesChangedHandler;
+            typedef std::function<void(const karabo::util::Hash& /* devicesChanges */)> DevicesChangedHandler;
 
             static const int CONNECTION_KEEP_ALIVE = 15; // keep in sync with GuiSever_Test.cc!
 
-            boost::shared_ptr<karabo::xms::SignalSlotable> m_internalSignalSlotable;
+            std::shared_ptr<karabo::xms::SignalSlotable> m_internalSignalSlotable;
 
            protected: // members
             /**
@@ -106,9 +106,9 @@ namespace karabo {
              */
             karabo::util::Hash m_runtimeSystemDescription;
 
-            mutable boost::mutex m_runtimeSystemDescriptionMutex;
+            mutable std::mutex m_runtimeSystemDescriptionMutex;
 
-            boost::weak_ptr<karabo::xms::SignalSlotable> m_signalSlotable;
+            std::weak_ptr<karabo::xms::SignalSlotable> m_signalSlotable;
 
             bool m_isShared;
 
@@ -123,34 +123,34 @@ namespace karabo {
              * Handler for all monitored devices configuration updates during last interval.
              */
             DevicesChangedHandler m_devicesChangesHandler;
-            boost::mutex m_devicesChangesMutex;
+            std::mutex m_devicesChangesMutex;
 
             karabo::util::Hash m_propertyChangedHandlers;
 
-            boost::mutex m_instanceUsageMutex;
+            std::mutex m_instanceUsageMutex;
 
-            boost::mutex m_deviceChangedHandlersMutex;
+            std::mutex m_deviceChangedHandlersMutex;
 
-            boost::mutex m_propertyChangedHandlersMutex;
+            std::mutex m_propertyChangedHandlersMutex;
 
             int m_internalTimeout;
 
             std::atomic<bool> m_topologyInitialized;
             std::once_flag m_initTopologyOnce;
 
-            boost::asio::deadline_timer m_ageingTimer;
+            boost::asio::steady_timer m_ageingTimer;
 
             static const unsigned int m_ageingIntervallMilliSec;
 
             bool m_getOlder; /// defines whether aging is running or not
 
-            boost::asio::deadline_timer m_signalsChangedTimer;
+            boost::asio::steady_timer m_signalsChangedTimer;
             bool m_runSignalsChangedTimer;
             std::atomic<long int> m_signalsChangedInterval;
-            boost::mutex m_signalsChangedMutex;
+            std::mutex m_signalsChangedMutex;
             SignalChangedMap m_signalsChanged; /// map of collected signalChanged
 
-            boost::mutex m_loggerMapMutex;
+            std::mutex m_loggerMapMutex;
 
             util::Hash m_loggerMap;
 
@@ -162,10 +162,10 @@ namespace karabo {
             SchemaUpdatedHandler m_schemaUpdatedHandler;
             ClassSchemaHandler m_classSchemaHandler;
 
-            boost::shared_ptr<karabo::core::InstanceChangeThrottler> m_instanceChangeThrottler;
+            std::shared_ptr<karabo::core::InstanceChangeThrottler> m_instanceChangeThrottler;
 
             std::set<std::string> m_immortals;
-            mutable boost::mutex m_immortalsMutex;
+            mutable std::mutex m_immortalsMutex;
 
             int m_accessLevel = karabo::util::Schema::ADMIN;
 
@@ -207,7 +207,7 @@ namespace karabo {
              *                         for data logging operations. Currently keys "dataLoggerManagerId" and
              *                         "configurationManagerId" are supported.
              */
-            explicit DeviceClient(const boost::shared_ptr<karabo::xms::SignalSlotable>& signalSlotable,
+            explicit DeviceClient(const std::shared_ptr<karabo::xms::SignalSlotable>& signalSlotable,
                                   bool implicitInit = true,
                                   const karabo::util::Hash& serviceDeviceIds = karabo::util::Hash());
 
@@ -237,7 +237,7 @@ namespace karabo {
              *                         for data logging operations. Currently keys "dataLoggerManagerId" and
              *                         "configurationManagerId" are supported.
              */
-            DeviceClient(const boost::shared_ptr<karabo::xms::SignalSlotable>& signalSlotable,
+            DeviceClient(const std::shared_ptr<karabo::xms::SignalSlotable>& signalSlotable,
                          const karabo::util::Hash& serviceDeviceIds);
 
             virtual ~DeviceClient();
@@ -921,7 +921,7 @@ namespace karabo {
              *
              *       Example:
              *
-             *       DeviceClient dc = boost::shared_ptr<DeviceClient>(new DeviceClient());
+             *       DeviceClient dc = std::shared_ptr<DeviceClient>(new DeviceClient());
              *       dc->registerSchemaUpdateMonitor(fnSchemaUpdateHandler);
              *       dc->registerPropertyMonitor("deviceId", "property_to_monitor", fnCallback);
              */
@@ -945,14 +945,14 @@ namespace karabo {
             template <class ValueType>
             bool registerPropertyMonitor(
                   const std::string& instanceId, const std::string& key,
-                  const boost::function<void(const std::string& /*deviceId*/, const std::string& /*key*/,
-                                             const ValueType& /*value*/, const karabo::util::Timestamp& /*timestamp*/)>&
+                  const std::function<void(const std::string& /*deviceId*/, const std::string& /*key*/,
+                                           const ValueType& /*value*/, const karabo::util::Timestamp& /*timestamp*/)>&
                         callbackFunction) {
                 karabo::util::Schema schema = this->getDeviceSchema(instanceId);
                 if (schema.has(key)) {
                     this->cacheAndGetConfiguration(instanceId);
                     {
-                        boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
+                        std::lock_guard<std::mutex> lock(m_propertyChangedHandlersMutex);
                         m_propertyChangedHandlers.set(instanceId + "." + key + "._function", callbackFunction);
                     }
                     immortalize(instanceId);
@@ -975,15 +975,15 @@ namespace karabo {
             template <class ValueType, class UserDataType>
             bool registerPropertyMonitor(
                   const std::string& instanceId, const std::string& key,
-                  const boost::function<void(const std::string& /*deviceId*/, const std::string& /*key*/,
-                                             const ValueType& /*value*/, const karabo::util::Timestamp& /*timestamp*/,
-                                             const boost::any& /*userData*/)>& callbackFunction,
+                  const std::function<void(const std::string& /*deviceId*/, const std::string& /*key*/,
+                                           const ValueType& /*value*/, const karabo::util::Timestamp& /*timestamp*/,
+                                           const boost::any& /*userData*/)>& callbackFunction,
                   const UserDataType& userData) {
                 karabo::util::Schema schema = this->getDeviceSchema(instanceId);
                 if (schema.has(key)) {
                     this->cacheAndGetConfiguration(instanceId);
                     {
-                        boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
+                        std::lock_guard<std::mutex> lock(m_propertyChangedHandlersMutex);
                         m_propertyChangedHandlers.set(instanceId + "." + key + "._function", callbackFunction);
                         m_propertyChangedHandlers.set(instanceId + "." + key + "._userData", userData);
                     }
@@ -1010,7 +1010,7 @@ namespace karabo {
              */
             void registerDeviceMonitor(
                   const std::string& instanceId,
-                  const boost::function<void(const std::string&, const karabo::util::Hash&)>& callbackFunction);
+                  const std::function<void(const std::string&, const karabo::util::Hash&)>& callbackFunction);
 
             /**
              * Registers a device to have its configurations changes monitored.
@@ -1053,15 +1053,15 @@ namespace karabo {
              */
             template <class UserDataType>
             void registerDeviceMonitor(const std::string& instanceId,
-                                       const boost::function<void(const std::string&, const karabo::util::Hash&,
-                                                                  const boost::any&)>& callbackFunction,
+                                       const std::function<void(const std::string&, const karabo::util::Hash&,
+                                                                const boost::any&)>& callbackFunction,
                                        const UserDataType& userData) {
                 // It would be better to use stayConnected with async handlers as in the non-templated version of
                 // registerDeviceMonitor - but since this version is probably not used at all (at least not in the
                 // framework, there is no pressure to do so...
                 stayConnected(instanceId);
                 {
-                    boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
+                    std::lock_guard<std::mutex> lock(m_deviceChangedHandlersMutex);
                     m_deviceChangedHandlers.set(instanceId + "._function", callbackFunction);
                     m_deviceChangedHandlers.set(instanceId + "._userData", userData);
                 }
@@ -1095,8 +1095,8 @@ namespace karabo {
                 explicit InputChannelHandlers(const karabo::xms::SignalSlotable::DataHandler& data,
                                               const karabo::xms::SignalSlotable::InputHandler& eos =
                                                     karabo::xms::SignalSlotable::InputHandler(),
-                                              const boost::function<void(karabo::net::ConnectionStatus)>& status =
-                                                    boost::function<void(karabo::net::ConnectionStatus)>())
+                                              const std::function<void(karabo::net::ConnectionStatus)>& status =
+                                                    std::function<void(karabo::net::ConnectionStatus)>())
                     : dataHandler(data), inputHandler(), eosHandler(eos), statusTracker(status){};
 
                 /**
@@ -1105,8 +1105,8 @@ namespace karabo {
                 explicit InputChannelHandlers(const karabo::xms::SignalSlotable::InputHandler& input,
                                               const karabo::xms::SignalSlotable::InputHandler& eos =
                                                     karabo::xms::SignalSlotable::InputHandler(),
-                                              const boost::function<void(karabo::net::ConnectionStatus)>& status =
-                                                    boost::function<void(karabo::net::ConnectionStatus)>())
+                                              const std::function<void(karabo::net::ConnectionStatus)>& status =
+                                                    std::function<void(karabo::net::ConnectionStatus)>())
                     : dataHandler(), inputHandler(input), eosHandler(eos), statusTracker(status){};
 
                 // Could switch to 'karabo::xms::InputChannel::Handlers streamHandlers;', replacing the following three
@@ -1114,7 +1114,7 @@ namespace karabo {
                 karabo::xms::SignalSlotable::DataHandler dataHandler;
                 karabo::xms::SignalSlotable::InputHandler inputHandler;
                 karabo::xms::SignalSlotable::InputHandler eosHandler;
-                boost::function<void(karabo::net::ConnectionStatus)> statusTracker;
+                std::function<void(karabo::net::ConnectionStatus)> statusTracker;
             };
 
             /**
@@ -1125,12 +1125,12 @@ namespace karabo {
              * @param channelName identifies the channel as a concatenation of the id of its devices, a colon (:) and
              *                    the name of the output channel (e.g. A/COOL/DEVICE:output)
              * @param handlers container for various handlers (handlers can be empty function pointers):
-             *                 - dataHandler boost::function<void (const karabo::util::Hash&, const MetaData&)> to be
+             *                 - dataHandler std::function<void (const karabo::util::Hash&, const MetaData&)> to be
              *                               called whenever data arrives
-             *                 - inputHandler boost::function<void (const InputChannel::Pointer&)> to be called whenever
+             *                 - inputHandler std::function<void (const InputChannel::Pointer&)> to be called whenever
              *                                data arrives
-             *                 - eosHandler boost::function<void (const InputChannel::Pointer&)> called for EOS
-             *                 - statusTracker boost::function<void(karabo::net::ConnectionStatus)> called whenever
+             *                 - eosHandler std::function<void (const InputChannel::Pointer&)> called for EOS
+             *                 - statusTracker std::function<void(karabo::net::ConnectionStatus)> called whenever
              *                                 the connection status of the underlying InputChannel changes
              * @param inputChannelCfg configures via InputChanel::create(..) - use default except you know what your are
              *                        doing.
@@ -1148,12 +1148,12 @@ namespace karabo {
              *
              * @param instanceId of the device having the output channel
              * @param channel is name of the output channel
-             * @param dataHandler boost::function<void (const karabo::util::Hash&, const MetaData&) to be called
+             * @param dataHandler std::function<void (const karabo::util::Hash&, const MetaData&) to be called
              * whenever data arrives
              * @param inputChannelCfg configures via InputChanel::create(..) - use default except you know what your are
              * doing for the expert:  "connectedOutputChannels" will be overwritten
-             * @param eosHandler boost::function<void (const InputChannel::Pointer&)> called for EOS if given
-             * @param inputHandler boost::function<void (const InputChannel::Pointer&)> to be called whenever data
+             * @param eosHandler std::function<void (const InputChannel::Pointer&)> called for EOS if given
+             * @param inputHandler std::function<void (const InputChannel::Pointer&)> to be called whenever data
              * arrives
              *
              * @return false if channel is already registered
@@ -1173,12 +1173,12 @@ namespace karabo {
              *
              * @param channelName identifies the channel as a concatenation of the id of its devices, a colon (:) and
              *                     the name of the output channel (e.g. A/COOL/DEVICE:output)
-             * @param dataHandler boost::function<void (const karabo::util::Hash&, const MetaData&) to be called
+             * @param dataHandler std::function<void (const karabo::util::Hash&, const MetaData&) to be called
              * whenever data arrives
              * @param inputChannelCfg configures via InputChanel::create(..) - use default except you know what your are
              * doing for the expert:  "connectedOutputChannels" will be overwritten
-             * @param eosHandler boost::function<void (const InputChannel::Pointer&)> called for EOS if given
-             * @param inputHandler boost::function<void (const InputChannel::Pointer&)> to be called whenever data
+             * @param eosHandler std::function<void (const InputChannel::Pointer&)> called for EOS if given
+             * @param inputHandler std::function<void (const InputChannel::Pointer&)> to be called whenever data
              * arrives
              *
              * @return false if channel is already registered
@@ -1501,8 +1501,8 @@ namespace karabo {
              * can make use of the "try { throw;} catch(..) {..}" pattern to get details of the problems.
              */
             void stayConnected(const std::string& instanceId,
-                               const boost::function<void()>& asyncSuccessHandler = boost::function<void()>(),
-                               const boost::function<void()>& asyncFailureHandler = boost::function<void()>());
+                               const std::function<void()>& asyncSuccessHandler = std::function<void()>(),
+                               const std::function<void()>& asyncFailureHandler = std::function<void()>());
 
             void eraseFromInstanceUsage(const std::string& instanceId);
 

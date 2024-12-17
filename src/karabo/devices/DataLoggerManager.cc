@@ -93,15 +93,15 @@
 
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, karabo::devices::DataLoggerManager)
 
-using boost::placeholders::_1;
-using boost::placeholders::_2;
+using std::placeholders::_1;
+using std::placeholders::_2;
 namespace karabo {
     namespace devices {
 
         using namespace std;
         using namespace karabo::util;
         using namespace karabo::io;
-        using namespace boost::placeholders;
+        using namespace std::placeholders;
         using karabo::xms::SLOT_ELEMENT;
 
 
@@ -529,7 +529,7 @@ namespace karabo {
               m_serverList(input.get<vector<string>>("serverList")),
               m_serverIndex(0),
               m_loggerMapFile(input.get<string>("loggermap")),
-              m_strand(boost::make_shared<karabo::net::Strand>(karabo::net::EventLoop::getIOService())),
+              m_strand(std::make_shared<karabo::net::Strand>(karabo::net::EventLoop::getIOService())),
               m_topologyCheckTimer(karabo::net::EventLoop::getIOService()),
               m_loggerClassId("Unsupported"),
               m_blocked(input.get<Hash>("blocklist")),
@@ -543,7 +543,7 @@ namespace karabo {
                 m_readerClassId = "InfluxLogReader";
             }
             m_loggerMap.clear();
-            if (boost::filesystem::exists(m_loggerMapFile)) {
+            if (std::filesystem::exists(m_loggerMapFile)) {
                 karabo::io::loadFromFile(m_loggerMap, m_loggerMapFile);
             }
 
@@ -551,7 +551,7 @@ namespace karabo {
             KARABO_SLOT(slotGetLoggerMap);
             KARABO_SLOT(topologyCheck_slotForceCheck);
 
-            if (boost::filesystem::exists(m_blockListFile)) {
+            if (std::filesystem::exists(m_blockListFile)) {
                 Hash blocked;
                 karabo::io::loadFromFile(blocked, m_blockListFile);
                 if (blocked.has("deviceIds")) {
@@ -574,7 +574,7 @@ namespace karabo {
 
         void DataLoggerManager::preReconfigure(karabo::util::Hash& incomingReconfiguration) {
             if (incomingReconfiguration.has("blocklist")) {
-                boost::mutex::scoped_lock lock(m_blockedMutex);
+                std::lock_guard<std::mutex> lock(m_blockedMutex);
                 Hash oldList = m_blocked; // save old version
                 const Hash& config = incomingReconfiguration.get<Hash>("blocklist");
                 if (config.has("deviceIds")) {
@@ -593,7 +593,7 @@ namespace karabo {
 
 
         void DataLoggerManager::postReconfigure() {
-            boost::mutex::scoped_lock lock(m_blockedMutex);
+            std::lock_guard<std::mutex> lock(m_blockedMutex);
             karabo::io::saveToFile(m_blocked, m_blockListFile);
         }
 
@@ -654,7 +654,7 @@ namespace karabo {
         void DataLoggerManager::initialize() {
             if (!m_blocked.empty()) {
                 // Fill out the values from file to the blocklist node for proper rendering in GUI
-                boost::mutex::scoped_lock lock(m_blockedMutex);
+                std::lock_guard<std::mutex> lock(m_blockedMutex);
                 set("blocklist", m_blocked);
             }
 
@@ -678,9 +678,8 @@ namespace karabo {
                 }
 
                 // Register handlers here
-                remote().registerInstanceNewMonitor(boost::bind(&DataLoggerManager::instanceNewHandler, this, _1));
-                remote().registerInstanceGoneMonitor(
-                      boost::bind(&DataLoggerManager::instanceGoneHandler, this, _1, _2));
+                remote().registerInstanceNewMonitor(std::bind(&DataLoggerManager::instanceNewHandler, this, _1));
+                remote().registerInstanceGoneMonitor(std::bind(&DataLoggerManager::instanceGoneHandler, this, _1, _2));
 
                 // Switch on instance tracking - which is blocking a while.
                 // Note that instanceNew(..) will be called for all instances already in the game.
@@ -689,7 +688,7 @@ namespace karabo {
                 // Publish logger map read from disc. Do that as late as possible in the initialization procedure
                 // to give those interested the chance to register their slots after we sent signalInstanceNew.
                 {
-                    boost::mutex::scoped_lock lock(
+                    std::lock_guard<std::mutex> lock(
                           m_loggerMapMutex); // m_loggerMap must not be changed while we process it
                     set("loggerMap", makeLoggersTable());
                     emit<Hash>("signalLoggerMap", m_loggerMap);
@@ -718,7 +717,8 @@ namespace karabo {
             // First get server ids - the values of the logger map.
             std::unordered_set<std::string> serversInMap; // use set to filter out duplications
             {
-                boost::mutex::scoped_lock lock(m_loggerMapMutex); // m_loggerMap must not be changed while we process it
+                std::lock_guard<std::mutex> lock(
+                      m_loggerMapMutex); // m_loggerMap must not be changed while we process it
                 for (Hash::const_iterator it = m_loggerMap.begin(), itEnd = m_loggerMap.end(); it != itEnd; ++it) {
                     serversInMap.insert(it->getValue<std::string>());
                 }
@@ -753,7 +753,7 @@ namespace karabo {
 
             updateState(State::ON);
             m_topologyCheckTimer.expires_from_now(
-                  boost::posix_time::minutes(get<unsigned int>("topologyCheck.interval")));
+                  boost::asio::chrono::minutes(get<unsigned int>("topologyCheck.interval")));
             m_topologyCheckTimer.async_wait(bind_weak(&Self::topologyCheck, this, boost::asio::placeholders::error));
         }
 
@@ -843,7 +843,7 @@ namespace karabo {
         void DataLoggerManager::topologyCheckOnStrand() {
             printLoggerData();
 
-            auto loggerCounter = boost::make_shared<std::atomic<size_t>>(m_loggerData.size());
+            auto loggerCounter = std::make_shared<std::atomic<size_t>>(m_loggerData.size());
             const unsigned int timeout = get<unsigned int>("timeout");
             for (const Hash::Node& serverNode : m_loggerData) {
                 const std::string& serverId = serverNode.getKey();
@@ -896,7 +896,7 @@ namespace karabo {
         }
 
 
-        void DataLoggerManager::checkLoggerConfig(bool ok, const boost::shared_ptr<std::atomic<size_t>>& loggerCounter,
+        void DataLoggerManager::checkLoggerConfig(bool ok, const std::shared_ptr<std::atomic<size_t>>& loggerCounter,
                                                   const Hash& config, const std::string& loggerId) {
             // Put on strand to be sequential, but take care that the re-throw trick for exception details
             // will not work anymore.
@@ -914,7 +914,7 @@ namespace karabo {
 
 
         void DataLoggerManager::checkLoggerConfigOnStrand(const std::string& errorTxt,
-                                                          const boost::shared_ptr<std::atomic<size_t>>& loggerCounter,
+                                                          const std::shared_ptr<std::atomic<size_t>>& loggerCounter,
                                                           const Hash& config, const std::string& loggerId) {
             Epochstamp now;
             const std::string serverId(loggerIdToServerId(loggerId));
@@ -923,7 +923,7 @@ namespace karabo {
                                              0ull); // from minutes
                 const std::vector<Hash>& updates = config.get<std::vector<Hash>>("lastUpdatesUtc");
                 // DataLogger logic ensures that the content of the last updates table matches devicesToBeLogged
-                auto loggedDevCounter = boost::make_shared<std::atomic<size_t>>(updates.size());
+                auto loggedDevCounter = std::make_shared<std::atomic<size_t>>(updates.size());
                 const unsigned int timeout = get<unsigned int>("timeout");
                 std::vector<std::string> idsWithoutTimestamp;
                 for (const Hash& row : updates) {
@@ -1005,9 +1005,9 @@ namespace karabo {
         }
 
 
-        void DataLoggerManager::checkDeviceConfig(bool ok, const boost::shared_ptr<std::atomic<size_t>>& loggerCounter,
+        void DataLoggerManager::checkDeviceConfig(bool ok, const std::shared_ptr<std::atomic<size_t>>& loggerCounter,
                                                   const std::string& loggerId, unsigned int toleranceSec,
-                                                  const boost::shared_ptr<std::atomic<size_t>>& loggedDevCounter,
+                                                  const std::shared_ptr<std::atomic<size_t>>& loggedDevCounter,
                                                   Epochstamp lastUpdateLogger, const Hash& config,
                                                   const std::string& deviceId) {
             std::string errorTxt;
@@ -1027,11 +1027,12 @@ namespace karabo {
         }
 
 
-        void DataLoggerManager::checkDeviceConfigOnStrand(
-              const std::string& errorTxt, const boost::shared_ptr<std::atomic<size_t>>& loggerCounter,
-              const std::string& loggerId, unsigned int toleranceSec,
-              const boost::shared_ptr<std::atomic<size_t>>& loggedDevCounter, Epochstamp lastUpdateLogger,
-              const Hash& config, const std::string& deviceId) {
+        void DataLoggerManager::checkDeviceConfigOnStrand(const std::string& errorTxt,
+                                                          const std::shared_ptr<std::atomic<size_t>>& loggerCounter,
+                                                          const std::string& loggerId, unsigned int toleranceSec,
+                                                          const std::shared_ptr<std::atomic<size_t>>& loggedDevCounter,
+                                                          Epochstamp lastUpdateLogger, const Hash& config,
+                                                          const std::string& deviceId) {
             if (errorTxt.empty()) {
                 const Epochstamp lastDeviceUpdate = mostRecentEpochstamp(config);
                 const TimeDuration tolerance(0, 0, 0, toleranceSec, 0ull);
@@ -1127,7 +1128,7 @@ namespace karabo {
         }
 
         void DataLoggerManager::slotGetLoggerMap() {
-            boost::mutex::scoped_lock lock(m_loggerMapMutex); // m_loggerMap must not be changed while we process it
+            std::lock_guard<std::mutex> lock(m_loggerMapMutex); // m_loggerMap must not be changed while we process it
             reply(m_loggerMap);
         }
 
@@ -1137,7 +1138,7 @@ namespace karabo {
 
             const std::string& deviceIdInMap(DATALOGGER_PREFIX +
                                              deviceId); // DATALOGGER_PREFIX for xml files from < 2.6.0
-            boost::mutex::scoped_lock lock(m_loggerMapMutex);
+            std::lock_guard<std::mutex> lock(m_loggerMapMutex);
             if (m_loggerMap.has(deviceIdInMap)) {
                 serverId = m_loggerMap.get<string>(deviceIdInMap);
             } else if (addIfNotYetInMap) {
@@ -1576,7 +1577,7 @@ namespace karabo {
             if (typeIds != "classIds" && typeIds != "deviceIds") {
                 throw KARABO_PARAMETER_EXCEPTION("Valid blocklist types are \"classIds\" and \"deviceIds\"");
             }
-            boost::mutex::scoped_lock lock(m_blockedMutex);
+            std::lock_guard<std::mutex> lock(m_blockedMutex);
             if (!m_blocked.has(typeIds)) return false;
             const auto& ids = m_blocked.get<std::vector<std::string>>(typeIds);
             const auto it = std::find(ids.begin(), ids.end(), id);

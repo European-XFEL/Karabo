@@ -27,7 +27,6 @@
 #include <pybind11/stl.h>
 
 #include <boost/any.hpp>
-#include <boost/shared_ptr.hpp>
 #include <karabo/util/Hash.hh>
 #include <karabo/util/NDArray.hh>
 #include <karabo/util/ToLiteral.hh>
@@ -35,7 +34,6 @@
 
 namespace py = pybind11;
 
-PYBIND11_DECLARE_HOLDER_TYPE(T, boost::shared_ptr<T>);
 
 PYBIND11_MAKE_OPAQUE(std::vector<karabo::util::Hash>);
 PYBIND11_MAKE_OPAQUE(std::vector<karabo::util::Hash::Pointer>);

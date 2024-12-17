@@ -676,12 +676,7 @@ namespace configurationTest {
 
             using std::vector;
 
-            vector<int> vecInit;
-            {
-                using namespace boost::assign; // bring 'operator+=()' into scope
-                vecInit += 10, 20, 30;
-            }
-
+            vector<int> vecInit{10, 20, 30};
             vector<int> vecWarnL(3, 50);
             vector<int> vecWarnH(3, 100);
 

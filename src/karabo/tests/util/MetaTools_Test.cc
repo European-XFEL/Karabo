@@ -24,7 +24,7 @@
 
 #include "MetaTools_Test.hh"
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 #include "karabo/util/PackParameters.hh"
 
@@ -32,9 +32,9 @@ CPPUNIT_TEST_SUITE_REGISTRATION(MetaTools_Test);
 
 using namespace karabo::util;
 
-using boost::placeholders::_1;
-using boost::placeholders::_2;
-using boost::placeholders::_3;
+using std::placeholders::_1;
+using std::placeholders::_2;
+using std::placeholders::_3;
 
 
 MetaTools_Test::MetaTools_Test() {}
@@ -44,7 +44,7 @@ MetaTools_Test::~MetaTools_Test() {}
 
 
 void MetaTools_Test::testMethod() {
-    CPPUNIT_ASSERT(PointerTest::isSharedPointer<boost::shared_ptr<int> >());
+    CPPUNIT_ASSERT(PointerTest::isSharedPointer<std::shared_ptr<int> >());
     CPPUNIT_ASSERT(!PointerTest::isSharedPointer<int>());
 
     CPPUNIT_ASSERT((std::is_base_of<Hash, MyPublicHash>::value));
@@ -68,12 +68,12 @@ void MetaTools_Test::testWeakBind() {
 }
 
 
-struct Base : public boost::enable_shared_from_this<Base> {
+struct Base : public std::enable_shared_from_this<Base> {
     virtual ~Base() {}
 };
 
 
-struct VirtualBase : public boost::enable_shared_from_this<VirtualBase> {
+struct VirtualBase : public std::enable_shared_from_this<VirtualBase> {
     virtual void foo() {};
 
 
@@ -91,10 +91,10 @@ struct FinalInterimVirtual : public virtual VirtualBase {
 };
 
 
-struct Final : public boost::enable_shared_from_this<Final> {};
+struct Final : public std::enable_shared_from_this<Final> {};
 
 
-struct FinalVirtual : public boost::enable_shared_from_this<FinalVirtual> {
+struct FinalVirtual : public std::enable_shared_from_this<FinalVirtual> {
     virtual void foo() {};
 
 
@@ -105,20 +105,20 @@ struct FinalVirtual : public boost::enable_shared_from_this<FinalVirtual> {
 void MetaTools_Test::testCastResolvers() {
     // note that we verify compile-time functionality here. This will simply not compile if the cast resolvers
     // do not treat cases appropriately.
-    boost::shared_ptr<Final> f(new Final());
-    { boost::shared_ptr<Final> sf = karabo::util::cond_dyn_cast<std::true_type>::cast(f.get()); }
+    std::shared_ptr<Final> f(new Final());
+    { std::shared_ptr<Final> sf = karabo::util::cond_dyn_cast<std::true_type>::cast(f.get()); }
 
 
-    boost::shared_ptr<FinalVirtual> fv(new FinalVirtual());
-    { boost::shared_ptr<FinalVirtual> sfv = karabo::util::cond_dyn_cast<std::true_type>::cast(fv.get()); }
+    std::shared_ptr<FinalVirtual> fv(new FinalVirtual());
+    { std::shared_ptr<FinalVirtual> sfv = karabo::util::cond_dyn_cast<std::true_type>::cast(fv.get()); }
 
 
-    boost::shared_ptr<FinalInterim> fi(new FinalInterim());
-    { boost::shared_ptr<FinalInterim> sfi = karabo::util::cond_dyn_cast<std::false_type>::cast(fi.get()); }
+    std::shared_ptr<FinalInterim> fi(new FinalInterim());
+    { std::shared_ptr<FinalInterim> sfi = karabo::util::cond_dyn_cast<std::false_type>::cast(fi.get()); }
 
-    boost::shared_ptr<FinalInterimVirtual> fiv(new FinalInterimVirtual());
+    std::shared_ptr<FinalInterimVirtual> fiv(new FinalInterimVirtual());
 
-    { boost::shared_ptr<FinalInterimVirtual> sfiv = karabo::util::cond_dyn_cast<std::false_type>::cast(fiv.get()); }
+    { std::shared_ptr<FinalInterimVirtual> sfiv = karabo::util::cond_dyn_cast<std::false_type>::cast(fiv.get()); }
 
     CPPUNIT_ASSERT(true);
 }
@@ -161,7 +161,7 @@ void MetaTools_Test::testCallFromTuple() {
     Hash h;
     pack(h, i, s, f); // We will copy f once here!!
     CPPUNIT_ASSERT_EQUAL(1, Foo::nCopies);
-    auto barFn = boost::bind(&Bar::bar, &b, _1, _2, _3);
+    auto barFn = std::bind(&Bar::bar, &b, _1, _2, _3);
     call(barFn, unpack<int, std::string, Foo>(h)); // But not here!!
 
     CPPUNIT_ASSERT(b.gotCalled == true);
@@ -169,7 +169,7 @@ void MetaTools_Test::testCallFromTuple() {
 
     // But we copy if we go via function with arguments by value
     b.gotCalled = false;
-    boost::function<void(int, std::string, Foo)> funcWithArgsByValue = barFn;
+    std::function<void(int, std::string, Foo)> funcWithArgsByValue = barFn;
     call(funcWithArgsByValue, unpack<int, std::string, Foo>(h));
     CPPUNIT_ASSERT(b.gotCalled == true);
     CPPUNIT_ASSERT_GREATER(1, Foo::nCopies); // At least one extra copy

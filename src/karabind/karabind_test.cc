@@ -59,7 +59,7 @@ namespace py = pybind11;
 using namespace karabo::util;
 using namespace configurationTest;
 
-static std::map<std::string, boost::shared_ptr<karabo::core::DeviceServer>> testServersRegistry;
+static std::map<std::string, std::shared_ptr<karabo::core::DeviceServer>> testServersRegistry;
 
 void exportPyKarabindTestUtilities(py::module_& m) {
     m.def("cppShapeSchemaCircle", []() {

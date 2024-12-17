@@ -115,7 +115,7 @@ namespace karabo {
         class Configurator {
             typedef std::map<std::string, boost::any> CtorMap;
             typedef std::map<std::string, CtorMap> Registry;
-            typedef std::vector<boost::function<void(Schema&)>> SchemaFuncs;
+            typedef std::vector<std::function<void(Schema&)>> SchemaFuncs;
             typedef std::map<std::string, SchemaFuncs> SchemaFuncRegistry;
 
             Registry m_registry;
@@ -139,8 +139,8 @@ namespace karabo {
 
                 // Try to insert construction method
                 const std::pair<CtorMap::iterator, bool> ctrIt_isInserted =
-                      ctrs.insert({ctorKey(), static_cast<boost::function<boost::shared_ptr<BaseClass>(const Hash&)>>(
-                                                    boost::factory<boost::shared_ptr<DerivedClass>>())});
+                      ctrs.insert({ctorKey(), static_cast<std::function<std::shared_ptr<BaseClass>(const Hash&)>>(
+                                                    boost::factory<std::shared_ptr<DerivedClass>>())});
 
                 if (!ctrIt_isInserted.second) { // So there was already something in the map
                     // Registering same constructor type again for a derived class smells like asking for trouble:
@@ -167,10 +167,9 @@ namespace karabo {
                 CtorMap& ctrs = Configurator::init().m_registry[classId];
 
                 // Try to insert construction method
-                const std::pair<CtorMap::iterator, bool> ctrIt_isInserted =
-                      ctrs.insert({ctorKey<A1>(),
-                                   static_cast<boost::function<boost::shared_ptr<BaseClass>(const Hash&, const A1&)>>(
-                                         boost::factory<boost::shared_ptr<DerivedClass>>())});
+                const std::pair<CtorMap::iterator, bool> ctrIt_isInserted = ctrs.insert(
+                      {ctorKey<A1>(), static_cast<std::function<std::shared_ptr<BaseClass>(const Hash&, const A1&)>>(
+                                            boost::factory<std::shared_ptr<DerivedClass>>())});
 
                 if (!ctrIt_isInserted.second) { // So there was already something in the map
                     // Registering same constructor type again for a derived class smells like asking for trouble:
@@ -251,7 +250,7 @@ namespace karabo {
                 if (it != Configurator::init().m_schemaFuncRegistry.end()) {
                     const SchemaFuncs& schemaFunctions = it->second;
                     for (size_t i = 0; i < schemaFunctions.size(); ++i) {
-                        if (!schemaFunctions[i].empty()) {
+                        if (schemaFunctions[i]) {
                             schemaFunctions[i](schema);
                         }
                     }
@@ -304,10 +303,10 @@ namespace karabo {
                 if (validate) {
                     Hash validated;
                     validateConfiguration(classId, configuration, validated);
-                    return (boost::any_cast<boost::function<boost::shared_ptr<BaseClass>(const Hash&)>>(it->second))(
+                    return (boost::any_cast<std::function<std::shared_ptr<BaseClass>(const Hash&)>>(it->second))(
                           validated);
                 } else {
-                    return (boost::any_cast<boost::function<boost::shared_ptr<BaseClass>(const Hash&)>>(it->second))(
+                    return (boost::any_cast<std::function<std::shared_ptr<BaseClass>(const Hash&)>>(it->second))(
                           configuration);
                 }
             }
@@ -350,10 +349,10 @@ namespace karabo {
                 if (validate) {
                     Hash validated;
                     validateConfiguration(classId, configuration, validated);
-                    return (boost::any_cast<boost::function<boost::shared_ptr<BaseClass>(const Hash&, const A1&)>>(
+                    return (boost::any_cast<std::function<std::shared_ptr<BaseClass>(const Hash&, const A1&)>>(
                           it->second))(validated, a1);
                 } else {
-                    return (boost::any_cast<boost::function<boost::shared_ptr<BaseClass>(const Hash&, const A1&)>>(
+                    return (boost::any_cast<std::function<std::shared_ptr<BaseClass>(const Hash&, const A1&)>>(
                           it->second))(configuration, a1);
                 }
             }
@@ -695,51 +694,51 @@ namespace karabo {
 
 #define KARABO_EXPLICIT_TEMPLATE(className) template class className;
 
-#define KARABO_CONFIGURATION_BASE_CLASS                                                                          \
-    static boost::shared_ptr<Self> create(const karabo::util::Hash& configuration, const bool validate = true) { \
-        return karabo::util::Configurator<Self>::create(configuration, validate);                                \
-    }                                                                                                            \
-                                                                                                                 \
-    static boost::shared_ptr<Self> create(const std::string& classId,                                            \
-                                          const karabo::util::Hash& configuration = karabo::util::Hash(),        \
-                                          const bool validate = true) {                                          \
-        return karabo::util::Configurator<Self>::create(classId, configuration, validate);                       \
-    }                                                                                                            \
-                                                                                                                 \
-    static boost::shared_ptr<Self> createNode(const std::string& nodeName, const std::string& classId,           \
-                                              const karabo::util::Hash& input, const bool validate = true) {     \
-        return karabo::util::Configurator<Self>::createNode(nodeName, classId, input, validate);                 \
-    }                                                                                                            \
-                                                                                                                 \
-    static boost::shared_ptr<Self> createChoice(const std::string& choiceName, const karabo::util::Hash& input,  \
-                                                const bool validate = true) {                                    \
-        return karabo::util::Configurator<Self>::createChoice(choiceName, input, validate);                      \
-    }                                                                                                            \
-                                                                                                                 \
-    static std::vector<boost::shared_ptr<Self>> createList(                                                      \
-          const std::string& listName, const karabo::util::Hash& input, const bool validate = true) {            \
-        return karabo::util::Configurator<Self>::createList(listName, input, validate);                          \
-    }                                                                                                            \
-                                                                                                                 \
-    static karabo::util::Schema getSchema(                                                                       \
-          const std::string& classId,                                                                            \
-          const karabo::util::Schema::AssemblyRules& rules = karabo::util::Schema::AssemblyRules()) {            \
-        return karabo::util::Configurator<Self>::getSchema(classId, rules);                                      \
-    }                                                                                                            \
-                                                                                                                 \
-    static std::vector<std::string> getRegisteredClasses() {                                                     \
-        return karabo::util::Configurator<Self>::getRegisteredClasses();                                         \
+#define KARABO_CONFIGURATION_BASE_CLASS                                                                                \
+    static std::shared_ptr<Self> create(const karabo::util::Hash& configuration, const bool validate = true) {         \
+        return karabo::util::Configurator<Self>::create(configuration, validate);                                      \
+    }                                                                                                                  \
+                                                                                                                       \
+    static std::shared_ptr<Self> create(const std::string& classId,                                                    \
+                                        const karabo::util::Hash& configuration = karabo::util::Hash(),                \
+                                        const bool validate = true) {                                                  \
+        return karabo::util::Configurator<Self>::create(classId, configuration, validate);                             \
+    }                                                                                                                  \
+                                                                                                                       \
+    static std::shared_ptr<Self> createNode(const std::string& nodeName, const std::string& classId,                   \
+                                            const karabo::util::Hash& input, const bool validate = true) {             \
+        return karabo::util::Configurator<Self>::createNode(nodeName, classId, input, validate);                       \
+    }                                                                                                                  \
+                                                                                                                       \
+    static std::shared_ptr<Self> createChoice(const std::string& choiceName, const karabo::util::Hash& input,          \
+                                              const bool validate = true) {                                            \
+        return karabo::util::Configurator<Self>::createChoice(choiceName, input, validate);                            \
+    }                                                                                                                  \
+                                                                                                                       \
+    static std::vector<std::shared_ptr<Self>> createList(const std::string& listName, const karabo::util::Hash& input, \
+                                                         const bool validate = true) {                                 \
+        return karabo::util::Configurator<Self>::createList(listName, input, validate);                                \
+    }                                                                                                                  \
+                                                                                                                       \
+    static karabo::util::Schema getSchema(                                                                             \
+          const std::string& classId,                                                                                  \
+          const karabo::util::Schema::AssemblyRules& rules = karabo::util::Schema::AssemblyRules()) {                  \
+        return karabo::util::Configurator<Self>::getSchema(classId, rules);                                            \
+    }                                                                                                                  \
+                                                                                                                       \
+    static std::vector<std::string> getRegisteredClasses() {                                                           \
+        return karabo::util::Configurator<Self>::getRegisteredClasses();                                               \
     }
 
-#define KARABO_CONFIGURATION_BASE_CLASS_ADDON(A1)                                                              \
-    static boost::shared_ptr<Self> create(const karabo::util::Hash& configuration, const A1& a1,               \
-                                          const bool validate = true) {                                        \
-        return karabo::util::Configurator<Self>::create<A1>(configuration, a1, validate);                      \
-    }                                                                                                          \
-                                                                                                               \
-    static boost::shared_ptr<Self> create(const std::string& classId, const karabo::util::Hash& configuration, \
-                                          const A1& a1, const bool validate = true) {                          \
-        return karabo::util::Configurator<Self>::create<A1>(classId, configuration, a1, validate);             \
+#define KARABO_CONFIGURATION_BASE_CLASS_ADDON(A1)                                                            \
+    static std::shared_ptr<Self> create(const karabo::util::Hash& configuration, const A1& a1,               \
+                                        const bool validate = true) {                                        \
+        return karabo::util::Configurator<Self>::create<A1>(configuration, a1, validate);                    \
+    }                                                                                                        \
+                                                                                                             \
+    static std::shared_ptr<Self> create(const std::string& classId, const karabo::util::Hash& configuration, \
+                                        const A1& a1, const bool validate = true) {                          \
+        return karabo::util::Configurator<Self>::create<A1>(classId, configuration, a1, validate);           \
     }
 
     } // namespace util

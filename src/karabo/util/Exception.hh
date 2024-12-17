@@ -29,11 +29,11 @@
 
 #include <boost/circular_buffer.hpp>
 #include <boost/current_function.hpp>
-#include <boost/function.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
+#include <functional>
 #include <iostream>
 #include <map>
+#include <memory>
 #include <sstream>
 #include <string>
 
@@ -49,7 +49,7 @@ namespace karabo {
          */
         class KARABO_DECLSPEC Exception : public std::exception {
            public:
-            typedef boost::function<void(const Exception&)> ExceptionHandler; // unused - remove?
+            typedef std::function<void(const Exception&)> ExceptionHandler; // unused - remove?
 
 
             /**
@@ -176,9 +176,11 @@ namespace karabo {
              */
             static void addToTrace(const ExceptionInfo& value);
 
+            static std::string current_time_string();
+
             ExceptionInfo m_exceptionInfo;
             mutable std::string m_detailedMsg;
-            static boost::mutex m_mutex;
+            static std::mutex m_mutex;
             static std::map<boost::thread::id, boost::circular_buffer<Exception::ExceptionInfo>> m_trace;
         };
 

@@ -71,7 +71,7 @@ void Timing_Test::setUp() {
     // setenv("KARABO_BROKER", "tcp://localhost:7777", true);
 
     // Start central event-loop
-    m_eventLoopThread = boost::thread(boost::bind(&EventLoop::work));
+    m_eventLoopThread = boost::thread(std::bind(&EventLoop::work));
     // Create and start server
     {
         // No need to connect the server hosting the time server device to any time server...
@@ -86,7 +86,7 @@ void Timing_Test::setUp() {
         m_deviceServer2->finalizeInternalInitialization();
     }
     // Create client
-    m_deviceClient = boost::make_shared<DeviceClient>(std::string(), false);
+    m_deviceClient = std::make_shared<DeviceClient>(std::string(), false);
     m_deviceClient->initialize();
 }
 
@@ -126,7 +126,7 @@ void Timing_Test::testWrongPeriod() {
             devices.erase(onlineDeviceId);
         }
         if (devices.empty()) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
         timeout -= 100;
     }
 
@@ -138,7 +138,7 @@ void Timing_Test::testWrongPeriod() {
         while (true) {
             if (m_deviceClient->get<bool>("timeTester_" + toString(i), "slot_connected")) break;
             CPPUNIT_ASSERT_MESSAGE("'timeTester_" + toString(i) += "' not yet connected", counter++ < 500);
-            boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+            boost::this_thread::sleep_for(boost::chrono::milliseconds(5));
         }
     }
 
@@ -148,7 +148,7 @@ void Timing_Test::testWrongPeriod() {
 
     // some time to test the timing
     const unsigned int testDurationInMicrosec = 5432109u;
-    boost::this_thread::sleep(boost::posix_time::microseconds(testDurationInMicrosec));
+    boost::this_thread::sleep_for(boost::chrono::microseconds(testDurationInMicrosec));
 
     for (size_t i = nDevices; i >= 1; --i) {
         m_deviceClient->execute("timeTester_" + toString(i), "stop");
@@ -266,7 +266,7 @@ void Timing_Test::testIdReset() {
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(timeServerId, "resetId"));
 
     // Wait for a tick actually sent so this reset gets seen by devices
-    boost::this_thread::sleep(boost::posix_time::millisec(tickPeriodInMs * tickCountdown));
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(tickPeriodInMs * tickCountdown));
 
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->set(testDevice, "int32Property", 100));
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->get(testDevice, cfg));

@@ -17,7 +17,7 @@
  */
 
 
-#include <boost/function.hpp>
+#include <functional>
 
 namespace karabo::tests {
 
@@ -34,6 +34,6 @@ namespace karabo::tests {
      * @return true if the condition has been reached; false if time expired before
      *         the condition could have been reached.
      */
-    bool waitForCondition(boost::function<bool()> checker, unsigned int timeoutMillis);
+    bool waitForCondition(std::function<bool()> checker, unsigned int timeoutMillis);
 
 } // namespace karabo::tests

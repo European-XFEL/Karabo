@@ -56,8 +56,8 @@ namespace karabo {
             updateSize();
 
             if (type == BufferContents::COPY) { // allocate space as std::vector<char>
-                auto vec = boost::shared_ptr<BufferType>(new BufferType(size));
-                auto ptr = boost::shared_ptr<BufferType::value_type>();
+                auto vec = std::shared_ptr<BufferType>(new BufferType(size));
+                auto ptr = std::shared_ptr<BufferType::value_type>();
                 if (!m_buffers.size() || m_buffers.back().size) {
                     m_buffers.push_back(Buffer(vec, ptr, size, BufferContents::COPY));
                     m_currentBuffer++;
@@ -67,16 +67,15 @@ namespace karabo {
             } else if (type == BufferContents::NO_COPY_BYTEARRAY_CONTENTS) { // allocate space as char array
                 if (m_buffers.empty() || m_buffers.back().size) {
                     // See https://www.boost.org/doc/libs/1_61_0/libs/smart_ptr/sp_techniques.html#array
-                    m_buffers.push_back(
-                          Buffer(boost::shared_ptr<BufferType>(new BufferType()),
-                                 boost::shared_ptr<char>(new char[size], boost::checked_array_deleter<char>()), size,
-                                 BufferContents::NO_COPY_BYTEARRAY_CONTENTS));
+                    m_buffers.push_back(Buffer(std::shared_ptr<BufferType>(new BufferType()),
+                                               std::shared_ptr<char>(new char[size], std::default_delete<char[]>()),
+                                               size, BufferContents::NO_COPY_BYTEARRAY_CONTENTS));
                     m_currentBuffer++;
                 } else {
                     // Last buffer in BufferSet has size 0 - assign it a newly allocated buffer of size.
                     m_buffers[m_buffers.size() - 1] =
-                          Buffer(boost::shared_ptr<BufferType>(new BufferType()),
-                                 boost::shared_ptr<char>(new char[size], boost::checked_array_deleter<char>()), size,
+                          Buffer(std::shared_ptr<BufferType>(new BufferType()),
+                                 std::shared_ptr<char>(new char[size], std::default_delete<char[]>()), size,
                                  BufferContents::NO_COPY_BYTEARRAY_CONTENTS);
                 }
             } else {
@@ -111,17 +110,16 @@ namespace karabo {
             const size_t arraySize = array.second;
             if (m_copyAllData) {
                 // Copy, but keep an extra buffer: That's beneficial when further processed, e.g. de-serialised.
-                m_buffers.push_back(
-                      Buffer(boost::shared_ptr<BufferType>(new BufferType()),
-                             boost::shared_ptr<char>(new char[arraySize], boost::checked_array_deleter<char>()),
-                             arraySize, BufferContents::NO_COPY_BYTEARRAY_CONTENTS));
+                m_buffers.push_back(Buffer(std::shared_ptr<BufferType>(new BufferType()),
+                                           std::shared_ptr<char>(new char[arraySize], std::default_delete<char[]>()),
+                                           arraySize, BufferContents::NO_COPY_BYTEARRAY_CONTENTS));
 
                 auto* rawPtrDest = m_buffers.back().ptr.get();
                 const auto* rawPtrSrc = array.first.get();
                 std::memcpy(rawPtrDest, rawPtrSrc, arraySize);
             } else {
-                m_buffers.push_back(Buffer(boost::shared_ptr<BufferType>(new BufferType()),
-                                           boost::const_pointer_cast<BufferType::value_type>(array.first), arraySize,
+                m_buffers.push_back(Buffer(std::shared_ptr<BufferType>(new BufferType()),
+                                           std::const_pointer_cast<BufferType::value_type>(array.first), arraySize,
                                            BufferContents::NO_COPY_BYTEARRAY_CONTENTS));
             }
             m_currentBuffer++;
@@ -129,7 +127,7 @@ namespace karabo {
         }
 
 
-        void BufferSet::emplaceBack(const boost::shared_ptr<BufferType>& ptr) {
+        void BufferSet::emplaceBack(const std::shared_ptr<BufferType>& ptr) {
             if (m_copyAllData) {
                 const char* src = reinterpret_cast<const char*>(ptr->data());
                 const size_t n = ptr->size();
@@ -144,13 +142,13 @@ namespace karabo {
             } else {
                 if (m_buffers.back().size == 0) {
                     Buffer& buffer = m_buffers.back();
-                    buffer.vec = boost::const_pointer_cast<BufferType>(ptr);
-                    buffer.ptr = boost::shared_ptr<BufferType::value_type>();
+                    buffer.vec = std::const_pointer_cast<BufferType>(ptr);
+                    buffer.ptr = std::shared_ptr<BufferType::value_type>();
                     buffer.size = ptr->size();
                     buffer.contentType = BufferContents::COPY;
                 } else {
-                    m_buffers.push_back(Buffer(boost::const_pointer_cast<BufferType>(ptr),
-                                               boost::shared_ptr<BufferType::value_type>(), ptr->size(),
+                    m_buffers.push_back(Buffer(std::const_pointer_cast<BufferType>(ptr),
+                                               std::shared_ptr<BufferType::value_type>(), ptr->size(),
                                                BufferContents::COPY));
 
                     m_currentBuffer++;
@@ -190,7 +188,7 @@ namespace karabo {
 
 
         karabo::util::ByteArray BufferSet::currentAsByteArray() const {
-            return std::make_pair(boost::const_pointer_cast<char>(m_buffers[m_currentBuffer].ptr),
+            return std::make_pair(std::const_pointer_cast<char>(m_buffers[m_currentBuffer].ptr),
                                   m_buffers[m_currentBuffer].size);
         }
 

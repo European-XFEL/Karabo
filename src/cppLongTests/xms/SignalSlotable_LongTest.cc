@@ -38,7 +38,7 @@
 using namespace karabo::util;
 using namespace karabo::xms;
 
-using boost::placeholders::_1;
+using std::placeholders::_1;
 
 
 CPPUNIT_TEST_SUITE_REGISTRATION(SignalSlotable_LongTest);
@@ -61,7 +61,7 @@ void SignalSlotable_LongTest::tearDown() {}
 
 
 void SignalSlotable_LongTest::testStressSyncReplies() {
-    auto instance = boost::make_shared<SignalSlotable>("instance");
+    auto instance = std::make_shared<SignalSlotable>("instance");
     instance->start();
 
     std::atomic<size_t> firstCalledCounter(0);
@@ -100,7 +100,7 @@ void SignalSlotable_LongTest::testStressSyncReplies() {
 
 
 void SignalSlotable_LongTest::testStressAsyncReplies() {
-    auto instance = boost::make_shared<SignalSlotable>("instance");
+    auto instance = std::make_shared<SignalSlotable>("instance");
     instance->start();
 
     auto slot = [&instance](unsigned int counter) { instance->reply(counter); };
@@ -108,8 +108,8 @@ void SignalSlotable_LongTest::testStressAsyncReplies() {
 
     std::promise<unsigned int> promise;
     unsigned int counter = 0;
-    boost::function<void(bool, unsigned int)> handler = [&instance, &promise, &counter, &handler](
-                                                              bool failure, unsigned int countdown) {
+    std::function<void(bool, unsigned int)> handler = [&instance, &promise, &counter, &handler](
+                                                            bool failure, unsigned int countdown) {
         ++counter;
         if (failure || --countdown == 0) {
             promise.set_value(countdown);
@@ -117,8 +117,8 @@ void SignalSlotable_LongTest::testStressAsyncReplies() {
             if (counter % 100000 == 0) {
                 std::clog << counter << " ";
             }
-            auto successHandler = boost::bind(handler, false, _1);
-            auto failureHandler = boost::bind(handler, true, countdown);
+            auto successHandler = std::bind(handler, false, _1);
+            auto failureHandler = std::bind(handler, true, countdown);
             instance->request("", "slot", countdown)
                   .timeout(1000)
                   .receiveAsync<unsigned int>(successHandler, failureHandler);

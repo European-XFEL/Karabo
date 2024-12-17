@@ -19,6 +19,8 @@
 #ifndef KARABO_DEVICES_FILEDATALOGGER_HH
 #define KARABO_DEVICES_FILEDATALOGGER_HH
 
+#include <filesystem>
+
 #include "DataLogger.hh"
 #include "karabo/io/TextSerializer.hh"
 #include "karabo/util/Version.hh"
@@ -73,7 +75,7 @@ namespace karabo {
             std::map<std::string, karabo::util::MetaData::Pointer> m_idxMap;
             std::vector<std::string> m_idxprops;
             size_t m_propsize;
-            time_t m_lasttime;
+            std::filesystem::file_time_type m_lasttime;
 
             karabo::io::TextSerializer<karabo::util::Hash>::Pointer m_serializer;
         };
@@ -92,7 +94,7 @@ namespace karabo {
            private:
             DeviceData::Pointer createDeviceData(const karabo::util::Hash& config) override;
 
-            void flushImpl(const boost::shared_ptr<SignalSlotable::AsyncReply>& aReplyPtr) override;
+            void flushImpl(const std::shared_ptr<SignalSlotable::AsyncReply>& aReplyPtr) override;
         };
     } // namespace devices
 } // namespace karabo

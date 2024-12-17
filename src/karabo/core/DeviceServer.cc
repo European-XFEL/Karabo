@@ -29,12 +29,12 @@
 // temp change to trigger CI
 
 #include <boost/algorithm/string.hpp>
-#include <boost/bind/bind.hpp>
-#include <boost/filesystem.hpp>
 #include <boost/regex.hpp>
-#include <boost/tuple/tuple.hpp>
 #include <csignal>
 #include <cstdlib>
+#include <filesystem>
+#include <functional>
+#include <tuple>
 
 #include "Device.hh"
 #include "karabo/io/FileTools.hh"
@@ -75,7 +75,7 @@ namespace karabo {
         using namespace karabo::log;
         using namespace karabo::net;
         using namespace karabo::xms;
-        using namespace boost::placeholders;
+        using namespace std::placeholders;
 
         void DeviceServer::expectedParameters(Schema& expected) {
             STRING_ELEMENT(expected)
@@ -296,8 +296,8 @@ namespace karabo {
         void DeviceServer::loadLogger(const Hash& input) {
             Hash config = input.get<Hash>("Logger");
 
-            boost::filesystem::path path(Version::getPathToKaraboInstallation() + "/var/log/" + m_serverId);
-            boost::filesystem::create_directories(path);
+            std::filesystem::path path(Version::getPathToKaraboInstallation() + "/var/log/" + m_serverId);
+            std::filesystem::create_directories(path);
             path += "/device-server.log";
 
             config.set("file.filename", path.generic_string());
@@ -317,8 +317,8 @@ namespace karabo {
 
         void DeviceServer::finalizeInternalInitialization() {
             // Do before calling start() since not thread safe,
-            // boost::bind is safe since handler is only called directly from SignalSlotable code of 'this'.
-            registerBroadcastHandler(boost::bind(&DeviceServer::onBroadcastMessage, this, _1, _2));
+            // std::bind is safe since handler is only called directly from SignalSlotable code of 'this'.
+            registerBroadcastHandler(std::bind(&DeviceServer::onBroadcastMessage, this, _1, _2));
             // This starts SignalSlotable
             SignalSlotable::start();
 
@@ -348,7 +348,7 @@ namespace karabo {
             }
             // Message header is properly formed, so forward to all devices
             const std::string& slotInstanceIds = ids->getValue<std::string>();
-            boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
+            std::lock_guard<std::mutex> lock(m_deviceInstanceMutex);
             for (const auto& deviceId_ptr : m_deviceInstanceMap) {
                 const std::string& devId = deviceId_ptr.first;
                 // Check whether besides to '*', message was also addressed to device directly (theoretically...)
@@ -393,7 +393,7 @@ namespace karabo {
             bool firstCall = false;
             {
                 karabo::util::Epochstamp epochNow; // before mutex lock since that could add a delay
-                boost::mutex::scoped_lock lock(m_timeChangeMutex);
+                std::lock_guard<std::mutex> lock(m_timeChangeMutex);
                 m_timeId = id;
                 m_timeSec = sec;
                 m_timeFrac = frac;
@@ -409,7 +409,7 @@ namespace karabo {
 
             {
                 // Just forward to devices this external update
-                boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
+                std::lock_guard<std::mutex> lock(m_deviceInstanceMutex);
                 for (auto& kv : m_deviceInstanceMap) {
                     // We could post via Strand kv.second.second: That would still guarantee ordering and a long
                     // blocking Device::onTimeTick would not delay the call of slotTimeTick of the following
@@ -437,7 +437,7 @@ namespace karabo {
             unsigned long long id = 0, period = 0;
             util::Epochstamp stamp(0ull, 0ull);
             {
-                boost::mutex::scoped_lock lock(m_timeChangeMutex);
+                std::lock_guard<std::mutex> lock(m_timeChangeMutex);
                 id = m_timeId;
                 stamp = util::Epochstamp(m_timeSec, m_timeFrac);
                 period = m_timePeriod;
@@ -474,7 +474,7 @@ namespace karabo {
             }
             while (m_timeIdLastTick < newId) {
                 ++m_timeIdLastTick;
-                boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
+                std::lock_guard<std::mutex> lock(m_deviceInstanceMutex);
                 for (auto& kv : m_deviceInstanceMap) {
                     if (kv.second.second) { // otherwise not yet fully initialized
                         kv.second.second->post(bind_weak(&BaseDevice::onTimeUpdate, kv.second.first.get(),
@@ -522,7 +522,7 @@ namespace karabo {
 
             // Then stop devices
             {
-                boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
+                std::lock_guard<std::mutex> lock(m_deviceInstanceMutex);
 
                 // Notify all devices
                 KARABO_LOG_FRAMEWORK_DEBUG << "stopServer() device map size: " << m_deviceInstanceMap.size();
@@ -556,18 +556,18 @@ namespace karabo {
 
         void DeviceServer::startDevice(const karabo::util::Hash& configuration,
                                        const SignalSlotable::AsyncReply& reply) {
-            const boost::tuple<std::string, std::string, util::Hash>& idClassIdConfig =
+            const std::tuple<std::string, std::string, util::Hash>& idClassIdConfig =
                   this->prepareInstantiate(configuration);
 
-            const std::string& deviceId = idClassIdConfig.get<0>();
-            const std::string& classId = idClassIdConfig.get<1>();
+            const std::string& deviceId = std::get<0>(idClassIdConfig);
+            const std::string& classId = std::get<1>(idClassIdConfig);
             KARABO_LOG_FRAMEWORK_INFO << "Trying to start a '" << classId << "' with deviceId '" << deviceId << "'...";
             KARABO_LOG_FRAMEWORK_DEBUG << "...with the following configuration:\n" << configuration;
-            instantiate(deviceId, classId, idClassIdConfig.get<2>(), reply);
+            instantiate(deviceId, classId, std::get<2>(idClassIdConfig), reply);
         }
 
 
-        boost::tuple<std::string, std::string, util::Hash> DeviceServer::prepareInstantiate(
+        std::tuple<std::string, std::string, util::Hash> DeviceServer::prepareInstantiate(
               const karabo::util::Hash& configuration) {
             if (configuration.has("classId")) {
                 // New style
@@ -591,7 +591,7 @@ namespace karabo {
                 // Inject Hostname
                 config.set("hostName", m_hostname);
 
-                return boost::make_tuple(config.get<std::string>("_deviceId_"), classId, config);
+                return std::make_tuple(config.get<std::string>("_deviceId_"), classId, config);
             } else {
                 // Old style, e.g. used for auto started devices
                 const std::string& classId = configuration.begin()->getKey();
@@ -615,7 +615,7 @@ namespace karabo {
 
                 const std::pair<std::string, util::Hash>& idCfg =
                       util::confTools::splitIntoClassIdAndConfiguration(modifiedConfig);
-                return boost::make_tuple(tmp.get<std::string>("_deviceId_"), idCfg.first, idCfg.second);
+                return std::make_tuple(tmp.get<std::string>("_deviceId_"), idCfg.first, idCfg.second);
             }
         }
 
@@ -632,7 +632,7 @@ namespace karabo {
                 BaseDevice::Pointer device = BaseDevice::create(classId, config);
 
                 {
-                    boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
+                    std::lock_guard<std::mutex> lock(m_deviceInstanceMutex);
                     if (m_deviceInstanceMap.find(deviceId) != m_deviceInstanceMap.end()) {
                         // Note: If you alter this string, adjust also DataLoggerManager::loggerInstantiationHandler(..)
                         throw KARABO_LOGIC_EXCEPTION("Device '" + deviceId +
@@ -651,9 +651,9 @@ namespace karabo {
                       m_timeServerId);
 
                 {
-                    boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
+                    std::lock_guard<std::mutex> lock(m_deviceInstanceMutex);
                     // After finalizeInternalInitialization, the device participates in time information distribution
-                    m_deviceInstanceMap[deviceId].second = boost::make_shared<Strand>(EventLoop::getIOService());
+                    m_deviceInstanceMap[deviceId].second = std::make_shared<Strand>(EventLoop::getIOService());
                 }
 
             } catch (const karabo::util::Exception& e) {
@@ -673,7 +673,7 @@ namespace karabo {
                     // killed itself during its initialization phase and slotStartDevice has been called once more for
                     // the same deviceId and placed it into the map again before we get here to remove the one that
                     // killed itself.
-                    boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
+                    std::lock_guard<std::mutex> lock(m_deviceInstanceMutex);
                     m_deviceInstanceMap.erase(deviceId);
                 }
                 const std::string message("Device '" + deviceId + "' of class '" + classId +
@@ -742,7 +742,7 @@ namespace karabo {
             KARABO_LOG_FRAMEWORK_INFO << "Device '" << instanceId << "' notifies '" << this->getInstanceId()
                                       << "' about its future death.";
 
-            boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
+            std::lock_guard<std::mutex> lock(m_deviceInstanceMutex);
             if (m_deviceInstanceMap.erase(instanceId) > 0) {
                 KARABO_LOG_INFO << "Device '" << instanceId << "' removed from server.";
             }

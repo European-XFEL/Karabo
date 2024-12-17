@@ -97,7 +97,7 @@ namespace karabo {
          * A structure defining meta data as used by the data loggers
          */
         struct MetaData {
-            typedef boost::shared_ptr<MetaData> Pointer;
+            typedef std::shared_ptr<MetaData> Pointer;
 
             struct Record {
                 double epochstamp;

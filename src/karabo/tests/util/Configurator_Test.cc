@@ -56,7 +56,7 @@ Base::Base(const karabo::util::Hash& hash, int extra) : Base(hash) {
 Base::~Base() {}
 
 
-boost::shared_ptr<Aggregated>& Base::getAggregated() {
+std::shared_ptr<Aggregated>& Base::getAggregated() {
     return m_aggregated;
 }
 

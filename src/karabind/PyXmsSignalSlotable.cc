@@ -208,7 +208,7 @@ namespace karabind {
             RequestorWrap& requestPy(const std::string& slotInstanceId, const std::string& slotFunction,
                                      const Args&... args) {
                 try {
-                    auto body = boost::make_shared<karabo::util::Hash>();
+                    auto body = std::make_shared<karabo::util::Hash>();
                     packPy(*body, args...);
                     py::gil_scoped_release release;
                     registerRequest(slotInstanceId, prepareRequestHeader(slotInstanceId, slotFunction), body);
@@ -224,7 +224,7 @@ namespace karabind {
                                            const std::string replySlotInstanceId, const std::string& replySlotFunction,
                                            const Args&... args) {
                 try {
-                    auto body = boost::make_shared<karabo::util::Hash>();
+                    auto body = std::make_shared<karabo::util::Hash>();
                     packPy(*body, args...);
                     py::gil_scoped_release release;
                     karabo::util::Hash::Pointer header = prepareRequestNoWaitHeader(
@@ -258,8 +258,8 @@ namespace karabind {
                 }
                 switch (numReturnArgs) {
                     case 0: {
-                        // Do everthing (incl. copying) on boost::object with GIL.
-                        boost::function<void()> handler(HandlerWrap<>(replyCallback, "receiveAsyncPy0"));
+                        // Do everthing (incl. copying) on std::object with GIL.
+                        std::function<void()> handler(HandlerWrap<>(replyCallback, "receiveAsyncPy0"));
                         // Release GIL since receiveAsync(..) in fact synchronously writes the message.
                         py::gil_scoped_release release;
                         // There is no move semantics for receiveAsync (yet?), but 'handler' holds the
@@ -269,29 +269,28 @@ namespace karabind {
                         break;
                     }
                     case 1: {
-                        boost::function<void(const boost::any&)> handler(
+                        std::function<void(const boost::any&)> handler(
                               HandlerWrapAny1(replyCallback, "receiveAsyncPy1"));
                         py::gil_scoped_release release;
                         receiveAsync<boost::any>(std::move(handler), std::move(errorHandler));
                         break;
                     }
                     case 2: {
-                        boost::function<void(const boost::any&, const boost::any&)> handler(
+                        std::function<void(const boost::any&, const boost::any&)> handler(
                               HandlerWrapAny2(replyCallback, "receiveAsyncPy2"));
                         py::gil_scoped_release release;
                         receiveAsync<boost::any, boost::any>(std::move(handler), std::move(errorHandler));
                         break;
                     }
                     case 3: {
-                        boost::function<void(const boost::any&, const boost::any&, const boost::any&)> handler(
+                        std::function<void(const boost::any&, const boost::any&, const boost::any&)> handler(
                               HandlerWrapAny3(replyCallback, "receiveAsyncPy3"));
                         py::gil_scoped_release release;
                         receiveAsync<boost::any, boost::any, boost::any>(std::move(handler), std::move(errorHandler));
                         break;
                     }
                     case 4: {
-                        boost::function<void(const boost::any&, const boost::any&, const boost::any&,
-                                             const boost::any&)>
+                        std::function<void(const boost::any&, const boost::any&, const boost::any&, const boost::any&)>
                               handler(HandlerWrapAny4(replyCallback, "receiveAsyncPy4"));
                         py::gil_scoped_release release;
                         receiveAsync<boost::any, boost::any, boost::any, boost::any>(std::move(handler),
@@ -485,11 +484,11 @@ namespace karabind {
 
         virtual ~SignalSlotableWrap() {}
 
-        static boost::shared_ptr<SignalSlotableWrap> create(
+        static std::shared_ptr<SignalSlotableWrap> create(
               const std::string& instanceId = generateInstanceId<SignalSlotable>(),
               const karabo::util::Hash& connectionParameters = karabo::util::Hash(), int heartbeatInterval = 10,
               const karabo::util::Hash& instanceInfo = karabo::util::Hash()) {
-            return boost::shared_ptr<SignalSlotableWrap>(
+            return std::shared_ptr<SignalSlotableWrap>(
                   new SignalSlotableWrap(instanceId, connectionParameters, heartbeatInterval, instanceInfo));
         }
 
@@ -508,12 +507,12 @@ namespace karabind {
             if (slotName.empty()) {
                 slotName = slotFunction.attr("__name__").cast<std::string>();
             }
-            boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
+            std::lock_guard<std::mutex> lock(m_signalSlotInstancesMutex);
             SlotInstances::const_iterator it = m_slotInstances.find(slotName);
             if (it != m_slotInstances.end()) { // Already registered
-                (boost::static_pointer_cast<SlotWrap>(it->second))->registerSlotFunction(slotFunction, numArgs);
+                (std::static_pointer_cast<SlotWrap>(it->second))->registerSlotFunction(slotFunction, numArgs);
             } else {
-                boost::shared_ptr<SlotWrap> s(boost::make_shared<SlotWrap>(slotName));
+                std::shared_ptr<SlotWrap> s(std::make_shared<SlotWrap>(slotName));
                 s->registerSlotFunction(slotFunction, numArgs); // Bind user's slot-function to Slot
                 m_slotInstances[slotName] = s;
             }
@@ -555,7 +554,7 @@ namespace karabind {
         void emitPy(const std::string& signalFunction, const Args&... args) {
             auto s = getSignal(signalFunction);
             if (s) {
-                auto hash = boost::make_shared<karabo::util::Hash>();
+                auto hash = std::make_shared<karabo::util::Hash>();
                 packPy(*hash, args...);
                 s->emit<Args...>(hash);
             }
@@ -563,7 +562,7 @@ namespace karabind {
 
         template <typename... Args>
         void callPy(const std::string& instanceId, const std::string& functionName, const Args&... args) const {
-            auto body = boost::make_shared<karabo::util::Hash>();
+            auto body = std::make_shared<karabo::util::Hash>();
             packPy(*body, args...);
             const std::string& id = (instanceId.empty() ? m_instanceId : instanceId);
             auto header = prepareCallHeader(id, functionName);
@@ -572,7 +571,7 @@ namespace karabind {
 
         template <typename... Args>
         void replyPy(const Args&... args) {
-            auto reply(boost::make_shared<karabo::util::Hash>());
+            auto reply(std::make_shared<karabo::util::Hash>());
             packPy(*reply, args...);
             registerReply(reply);
         }
@@ -621,7 +620,7 @@ using namespace std;
 
 
 void exportPyXmsSignalSlotable(py::module_& m) {
-    py::class_<SlotWrap, boost::shared_ptr<SlotWrap>>(m, "Slot").def(
+    py::class_<SlotWrap, std::shared_ptr<SlotWrap>>(m, "Slot").def(
           "getInstanceIdOfSender", &SlotWrap::getInstanceIdOfSender, py::return_value_policy::reference_internal);
 
     py::class_<SignalSlotableWrap::RequestorWrap>(m, "Requestor")
@@ -664,10 +663,10 @@ void exportPyXmsSignalSlotable(py::module_& m) {
                "Reply failure of slot call stating an error message and details like the\n"
                "stack trace from 'traceback.format_exc()'");
 
-    py::class_<SignalSlotable, boost::shared_ptr<SignalSlotable>>(m, "SignalSlotableIntern")
+    py::class_<SignalSlotable, std::shared_ptr<SignalSlotable>>(m, "SignalSlotableIntern")
           .def(py::init<const std::string&, const karabo::net::Broker::Pointer&>());
 
-    py::class_<SignalSlotableWrap, boost::shared_ptr<SignalSlotableWrap>, SignalSlotable>(m, "SignalSlotable")
+    py::class_<SignalSlotableWrap, std::shared_ptr<SignalSlotableWrap>, SignalSlotable>(m, "SignalSlotable")
           .def(py::init<>())
           .def(py::init<const std::string&>())
           .def(py::init<const std::string&, const karabo::util::Hash&>())

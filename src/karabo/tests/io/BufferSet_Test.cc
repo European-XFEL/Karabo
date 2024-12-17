@@ -56,19 +56,19 @@ void BufferSet_Test::testEmplaceAppend() {
     BufferSet bufferCopy(true);
 
     // a simple vector buffer
-    bufferCopy.emplaceBack(boost::make_shared<BufferSet::BufferType>(bufferSize, 1));
+    bufferCopy.emplaceBack(std::make_shared<BufferSet::BufferType>(bufferSize, 1));
     // a raw data buffer without writing its size first
     bufferCopy.emplaceBack(
-          karabo::util::ByteArray(boost::shared_ptr<char>(new char[bufferSize], boost::checked_array_deleter<char>()),
+          karabo::util::ByteArray(std::shared_ptr<char>(new char[bufferSize], std::default_delete<char[]>()),
                                   bufferSize),
           false);
     // a raw data buffer with writing its size first (as unsigned int)
     bufferCopy.emplaceBack(
-          karabo::util::ByteArray(boost::shared_ptr<char>(new char[bufferSize], boost::checked_array_deleter<char>()),
+          karabo::util::ByteArray(std::shared_ptr<char>(new char[bufferSize], std::default_delete<char[]>()),
                                   bufferSize),
           true);
     // another simple vector buffer at the end
-    bufferCopy.emplaceBack(boost::make_shared<BufferSet::BufferType>(bufferSize, 2));
+    bufferCopy.emplaceBack(std::make_shared<BufferSet::BufferType>(bufferSize, 2));
 
     CPPUNIT_ASSERT_EQUAL(4 * bufferSize + sizeof(unsigned int), bufferCopy.totalSize());
     bufferCopy.appendTo(boostBuffers);
@@ -77,19 +77,19 @@ void BufferSet_Test::testEmplaceAppend() {
 
     BufferSet bufferNoCopy(false);
     // a simple vector buffer
-    bufferNoCopy.emplaceBack(boost::make_shared<BufferSet::BufferType>(bufferSize, 1));
+    bufferNoCopy.emplaceBack(std::make_shared<BufferSet::BufferType>(bufferSize, 1));
     // a raw data buffer without writing its size first
     bufferNoCopy.emplaceBack(
-          karabo::util::ByteArray(boost::shared_ptr<char>(new char[bufferSize], boost::checked_array_deleter<char>()),
+          karabo::util::ByteArray(std::shared_ptr<char>(new char[bufferSize], std::default_delete<char[]>()),
                                   bufferSize),
           false);
     // a raw data buffer with writing its size first (as unsigned int)
     bufferNoCopy.emplaceBack(
-          karabo::util::ByteArray(boost::shared_ptr<char>(new char[bufferSize], boost::checked_array_deleter<char>()),
+          karabo::util::ByteArray(std::shared_ptr<char>(new char[bufferSize], std::default_delete<char[]>()),
                                   bufferSize),
           true);
     // another simple vector buffer at the end
-    bufferNoCopy.emplaceBack(boost::make_shared<BufferSet::BufferType>(bufferSize, 2));
+    bufferNoCopy.emplaceBack(std::make_shared<BufferSet::BufferType>(bufferSize, 2));
 
     CPPUNIT_ASSERT_EQUAL(4 * bufferSize + sizeof(unsigned int), bufferNoCopy.totalSize());
     bufferNoCopy.appendTo(boostBuffers);

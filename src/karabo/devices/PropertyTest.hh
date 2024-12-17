@@ -129,7 +129,7 @@ namespace karabo {
             void slotCount(int count);
 
             bool m_writingOutput;
-            boost::asio::deadline_timer m_writingOutputTimer;
+            boost::asio::steady_timer m_writingOutputTimer;
 
             std::vector<int> m_counts; // used for message order test
         };

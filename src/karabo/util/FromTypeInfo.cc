@@ -25,7 +25,7 @@
 
 #include "FromTypeInfo.hh"
 
-#include <boost/assign.hpp>
+// #include <boost/assign.hpp>
 
 #include "Hash.hh"
 #include "Schema.hh"

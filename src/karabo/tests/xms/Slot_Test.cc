@@ -84,9 +84,9 @@ void Slot_Test::testCallSlot() {
     CPPUNIT_ASSERT_EQUAL(std::string("me"), user);
     CPPUNIT_ASSERT_EQUAL(std::string("senderId"), sender);
 
-    // Using an intermediate boost::function with args by value, there are copies:
+    // Using an intermediate std::function with args by value, there are copies:
     MySlot slot2("slot2");
-    boost::function<void(int, Foo)> func2 = slotLambda;
+    std::function<void(int, Foo)> func2 = slotLambda;
     fooAddressInFunc = nullptr;
     slot2.registerSlotFunction(func2);
     slot2.callRegisteredSlotFunctions(karabo::util::Hash(), h); // Do not care about header here

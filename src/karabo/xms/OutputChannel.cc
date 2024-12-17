@@ -24,7 +24,6 @@
 
 #include "OutputChannel.hh"
 
-#include <boost/pointer_cast.hpp>
 #include <exception>
 
 #include "InputChannel.hh"
@@ -41,8 +40,8 @@ using namespace karabo::util;
 using namespace karabo::io;
 using namespace karabo::net;
 using namespace std::string_literals; // For '"abc"s'
-using boost::placeholders::_1;
-using boost::placeholders::_2;
+using std::placeholders::_1;
+using std::placeholders::_2;
 
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::xms::OutputChannel)
 // Register also the constructor with an extra int flag:
@@ -261,11 +260,11 @@ namespace karabo {
 
             if (autoInit != 0) {
                 // Initialize server connectivity:
-                // Cannot use bind_weak in constructor but... usually it is safe to use here boost::bind.
+                // Cannot use bind_weak in constructor but... usually it is safe to use here std::bind.
                 // And in this way we ensure that onTcpConnect is properly bound with bind_weak.
                 // But see the HACK in initializeServerConnection if even that is called too early.
                 karabo::net::EventLoop::post(
-                      boost::bind(&OutputChannel::initializeServerConnection, this, kMaxServerInitializationAttempts));
+                      std::bind(&OutputChannel::initializeServerConnection, this, kMaxServerInitializationAttempts));
             }
         }
 
@@ -294,12 +293,12 @@ namespace karabo {
                     // time: First rely on yield() to give constructor time to finish, but if that is not enough, sleep
                     // a bit.
                     if (2 * countdown < kMaxServerInitializationAttempts) {
-                        boost::this_thread::sleep(boost::posix_time::milliseconds(1));
+                        std::this_thread::sleep_for(std::chrono::milliseconds(1));
                     }
                     boost::this_thread::yield();
-                    // Bare boost::bind with this as in constructor.
+                    // Bare std::bind with this as in constructor.
                     karabo::net::EventLoop::post(
-                          boost::bind(&OutputChannel::initializeServerConnection, this, --countdown));
+                          std::bind(&OutputChannel::initializeServerConnection, this, --countdown));
                     return;
                 } else {
                     // m_instanceId not known yet...
@@ -355,19 +354,19 @@ namespace karabo {
         }
 
         bool OutputChannel::hasRegisteredCopyInputChannel(const std::string& instanceId) const {
-            boost::mutex::scoped_lock lock(m_registeredInputsMutex);
+            std::lock_guard<std::mutex> lock(m_registeredInputsMutex);
             return (m_registeredCopyInputs.find(instanceId) != m_registeredCopyInputs.end());
         }
 
 
         bool OutputChannel::hasRegisteredSharedInputChannel(const std::string& instanceId) const {
-            boost::mutex::scoped_lock lock(m_registeredInputsMutex);
+            std::lock_guard<std::mutex> lock(m_registeredInputsMutex);
             return (m_registeredSharedInputs.find(instanceId) != m_registeredSharedInputs.end());
         }
 
 
         void OutputChannel::registerIOEventHandler(
-              const boost::function<void(const OutputChannel::Pointer&)>& ioEventHandler) {
+              const std::function<void(const OutputChannel::Pointer&)>& ioEventHandler) {
             m_ioEventHandler = ioEventHandler;
         }
 
@@ -419,7 +418,7 @@ namespace karabo {
             KARABO_LOG_FRAMEWORK_DEBUG << "***** Connection established *****";
             {
                 // Move responsibility to keep channel alive to one place
-                boost::mutex::scoped_lock lock(m_inputNetChannelsMutex);
+                std::lock_guard<std::mutex> lock(m_inputNetChannelsMutex);
                 m_inputNetChannels.insert(channel);
             }
             channel->readAsyncHash(bind_weak(&karabo::xms::OutputChannel::onTcpChannelRead, this, _1,
@@ -491,7 +490,7 @@ namespace karabo {
 
                 std::string finalSlownessForLog = info.get<std::string>("onSlowness");
                 {
-                    boost::mutex::scoped_lock lockShared(m_registeredInputsMutex);
+                    std::lock_guard<std::mutex> lockShared(m_registeredInputsMutex);
                     eraseOldChannel(m_registeredSharedInputs, instanceId, channel);
                     eraseOldChannel(m_registeredCopyInputs, instanceId, channel);
 
@@ -541,7 +540,7 @@ namespace karabo {
                         KARABO_LOG_FRAMEWORK_WARN << "Existing channel '" << instanceId
                                                   << "' sent hello message again.";
                     } else {
-                        const TcpChannel::Pointer oldTcpChannel = boost::static_pointer_cast<TcpChannel>(oldChannel);
+                        const TcpChannel::Pointer oldTcpChannel = std::static_pointer_cast<TcpChannel>(oldChannel);
                         const Hash oldTcpInfo(TcpChannel::getChannelInfo(oldTcpChannel));
                         KARABO_LOG_FRAMEWORK_INFO << "New channel says hello with existing id '" << instanceId << "'. "
                                                   << "Close old one to " << oldTcpInfo.get<std::string>("remoteAddress")
@@ -559,16 +558,16 @@ namespace karabo {
 
 
         void OutputChannel::updateConnectionTable() {
-            boost::mutex::scoped_lock lock(m_showConnectionsHandlerMutex);
+            std::lock_guard<std::mutex> lock(m_showConnectionsHandlerMutex);
             m_updateDeadline.cancel();
             m_connections.clear();
             {
-                boost::mutex::scoped_lock lock(m_registeredInputsMutex);
+                std::lock_guard<std::mutex> lock(m_registeredInputsMutex);
                 for (const auto& idInfoPair : m_registeredSharedInputs) {
                     const Hash& channelInfo = idInfoPair.second;
                     Channel::WeakPointer wptr = channelInfo.get<Channel::WeakPointer>("tcpChannel");
                     Channel::Pointer channel = wptr.lock();
-                    net::TcpChannel::Pointer tcpChannel = boost::static_pointer_cast<TcpChannel>(channel);
+                    net::TcpChannel::Pointer tcpChannel = std::static_pointer_cast<TcpChannel>(channel);
                     Hash row = TcpChannel::getChannelInfo(tcpChannel);
                     row.set("remoteId", channelInfo.get<std::string>("instanceId"));
                     row.set("memoryLocation", channelInfo.get<std::string>("memoryLocation"));
@@ -581,12 +580,12 @@ namespace karabo {
                 }
             }
             {
-                boost::mutex::scoped_lock lock(m_registeredInputsMutex);
+                std::lock_guard<std::mutex> lock(m_registeredInputsMutex);
                 for (const auto& idInfoPair : m_registeredCopyInputs) {
                     const Hash& channelInfo = idInfoPair.second;
                     Channel::WeakPointer wptr = channelInfo.get<Channel::WeakPointer>("tcpChannel");
                     Channel::Pointer channel = wptr.lock();
-                    TcpChannel::Pointer tcpChannel = boost::static_pointer_cast<TcpChannel>(channel);
+                    TcpChannel::Pointer tcpChannel = std::static_pointer_cast<TcpChannel>(channel);
                     Hash row = TcpChannel::getChannelInfo(tcpChannel);
                     row.set("remoteId", channelInfo.get<std::string>("instanceId"));
                     row.set("memoryLocation", channelInfo.get<std::string>("memoryLocation"));
@@ -609,7 +608,7 @@ namespace karabo {
             m_showConnectionsHandler(connections);
             // Check if we have to update this table periodically ...
             if (!m_connections.empty() && m_period > 0) {
-                m_updateDeadline.expires_from_now(boost::posix_time::seconds(m_period));
+                m_updateDeadline.expires_from_now(boost::asio::chrono::seconds(m_period));
                 m_updateDeadline.async_wait(
                       bind_weak(&OutputChannel::updateNetworkStatistics, this, boost::asio::placeholders::error));
             }
@@ -620,7 +619,7 @@ namespace karabo {
             if (e) return;
             if (m_period <= 0) return;
 
-            boost::mutex::scoped_lock lock(m_showConnectionsHandlerMutex);
+            std::lock_guard<std::mutex> lock(m_showConnectionsHandlerMutex);
             size_t length = m_connections.size();
             std::vector<unsigned long long> vBytesRead(length);
             std::vector<unsigned long long> vBytesWritten(length);
@@ -638,14 +637,14 @@ namespace karabo {
             }
             m_showStatisticsHandler(vBytesRead, vBytesWritten);
 
-            m_updateDeadline.expires_from_now(boost::posix_time::seconds(m_period));
+            m_updateDeadline.expires_from_now(boost::asio::chrono::seconds(m_period));
             m_updateDeadline.async_wait(
                   bind_weak(&OutputChannel::updateNetworkStatistics, this, boost::asio::placeholders::error));
         }
 
 
         void OutputChannel::onInputAvailable(const std::string& instanceId) {
-            boost::mutex::scoped_lock lock(m_registeredInputsMutex);
+            std::unique_lock<std::mutex> lock(m_registeredInputsMutex);
 
             auto itIdChannelInfo = m_registeredSharedInputs.find(instanceId);
             if (itIdChannelInfo != m_registeredSharedInputs.end()) {
@@ -659,7 +658,7 @@ namespace karabo {
                 // First check whether instanceId unblocks something
                 if (m_unblockSharedHandler) {
                     m_unblockSharedHandler(&channelInfo);
-                    m_unblockSharedHandler.clear();
+                    m_unblockSharedHandler = nullptr;
                     return;
                 }
                 auto itUnblockHandler = m_unblockHandlers.find(instanceId);
@@ -750,7 +749,7 @@ namespace karabo {
         void OutputChannel::onInputGone(const karabo::net::Channel::Pointer& channel,
                                         const karabo::net::ErrorCode& error) {
             using namespace karabo::net;
-            const Hash tcpInfo(TcpChannel::getChannelInfo(boost::static_pointer_cast<TcpChannel>(channel)));
+            const Hash tcpInfo(TcpChannel::getChannelInfo(std::static_pointer_cast<TcpChannel>(channel)));
             const std::string tcpAddress(tcpInfo.get<std::string>("remoteAddress") + ':' +
                                          toString(tcpInfo.get<unsigned short>("remotePort")));
 
@@ -758,7 +757,7 @@ namespace karabo {
             // ... clean expired entries as well (we are not expecting them but we want to be on the safe side!)
             unsigned int inputsLeft = 0;
             {
-                boost::mutex::scoped_lock lock(m_registeredInputsMutex);
+                std::lock_guard<std::mutex> lock(m_registeredInputsMutex);
                 // SHARED Inputs
                 for (InputChannels::iterator it = m_registeredSharedInputs.begin();
                      it != m_registeredSharedInputs.end();) {
@@ -796,7 +795,7 @@ namespace karabo {
                             m_sharedLoadBalancedQueuedChunks.clear();
                             if (m_unblockSharedHandler) {
                                 m_unblockSharedHandler(&channelInfo); // tries to send (and fails), but no harm
-                                m_unblockSharedHandler.clear();
+                                m_unblockSharedHandler = nullptr;
                             }
                         }
 
@@ -844,7 +843,7 @@ namespace karabo {
             } // end lock of m_registeredInputsMutex
             {
                 // Erase from container that keeps channel alive - and warn about inconsistencies:
-                boost::mutex::scoped_lock lock(m_inputNetChannelsMutex);
+                std::lock_guard<std::mutex> lock(m_inputNetChannelsMutex);
                 if (m_inputNetChannels.erase(channel) < 1u) {
                     KARABO_LOG_FRAMEWORK_WARN << getInstanceIdName() << " : Failed to remove channel with address "
                                               << channel.get();
@@ -969,7 +968,7 @@ namespace karabo {
             awaitUpdateFuture(fut, "update");
         }
 
-        void OutputChannel::asyncUpdate(bool safeNDArray, boost::function<void()>&& writeDoneHandler) {
+        void OutputChannel::asyncUpdate(bool safeNDArray, std::function<void()>&& writeDoneHandler) {
             auto prom = std::make_shared<std::promise<void>>();
             auto fut = prom->get_future();
             auto readyForNextHandler = [prom{std::move(prom)}]() { prom->set_value(); };
@@ -978,8 +977,8 @@ namespace karabo {
             awaitUpdateFuture(fut, "asyncUpdate");
         }
 
-        void OutputChannel::asyncUpdateNoWait(boost::function<void()>&& readyForNextHandler,
-                                              boost::function<void()>&& writeDoneHandler, bool safeNDArray) {
+        void OutputChannel::asyncUpdateNoWait(std::function<void()>&& readyForNextHandler,
+                                              std::function<void()>&& writeDoneHandler, bool safeNDArray) {
             // If no data was written and not endOfStream: nothing to do
             if (Memory::size(m_channelId, m_chunkId) == 0 && !Memory::isEndOfStream(m_channelId, m_chunkId)) {
                 karabo::net::EventLoop::post(std::move(readyForNextHandler));
@@ -994,7 +993,7 @@ namespace karabo {
             std::vector<Hash*> toSendImmediately, toQueue, toBlock;
             bool blockForShared = false, queueForShared = false;
 
-            boost::mutex::scoped_lock lock(m_registeredInputsMutex);
+            std::unique_lock<std::mutex> lock(m_registeredInputsMutex);
             // Need to keep this mutex lock as long as we deal with anything filled into the above containers
             asyncPrepareCopy(chunkId, toSendImmediately, toQueue, toBlock);
             asyncPrepareDistribute(chunkId, toSendImmediately, toQueue, toBlock, queueForShared, blockForShared);
@@ -1030,12 +1029,12 @@ namespace karabo {
                 // Prepare handler
                 const size_t numBlock = toBlock.size() + blockForShared;
                 const size_t numToWrite = toSendImmediately.size() + numBlock;
-                auto doneFlags = boost::make_shared<std::vector<bool>>(numToWrite, false);
-                auto doneFlagMutex = boost::make_shared<boost::mutex>();
-                boost::function<void(size_t)> singleWriteDone =
+                auto doneFlags = std::make_shared<std::vector<bool>>(numToWrite, false);
+                auto doneFlagMutex = std::make_shared<std::mutex>();
+                std::function<void(size_t)> singleWriteDone =
                       [doneFlags{std::move(doneFlags)}, doneFlagMutex{std::move(doneFlagMutex)},
                        writeDoneHandler{std::move(writeDoneHandler)}](size_t n) mutable {
-                          boost::mutex::scoped_lock lock(*doneFlagMutex);
+                          std::lock_guard<std::mutex> lock(*doneFlagMutex);
                           (*doneFlags)[n] = true;
                           for (const bool ready : *doneFlags) {
                               if (!ready) return;
@@ -1047,17 +1046,17 @@ namespace karabo {
                 size_t counter = 0;
                 for (Hash* channelInfo : toSendImmediately) {
                     Memory::incrementChunkUsage(m_channelId, chunkId);
-                    asyncSendOne(chunkId, *channelInfo, boost::bind(singleWriteDone, counter++)); // post-fix increment!
+                    asyncSendOne(chunkId, *channelInfo, std::bind(singleWriteDone, counter++)); // post-fix increment!
                 }
 
                 if (numBlock) {
                     // Finally register handlers for blocking receivers
-                    auto doneBlockFlags = boost::make_shared<std::vector<bool>>(numBlock, false);
-                    auto doneBlockFlagMutex = boost::make_shared<boost::mutex>();
+                    auto doneBlockFlags = std::make_shared<std::vector<bool>>(numBlock, false);
+                    auto doneBlockFlagMutex = std::make_shared<std::mutex>();
                     // Technical comment: I failed to compile it with 'Hash&', maybe (!) related to
                     // https://www.boost.org/doc/libs/1_82_0/libs/bind/doc/html/bind.html#bind.limitations
                     // Works with 'const Hash&' and casting away the const downstream where needed...
-                    boost::function<void(Hash*, size_t, size_t, bool)> singleUnblockTrigger =
+                    std::function<void(Hash*, size_t, size_t, bool)> singleUnblockTrigger =
                           [this, chunkId, singleWriteDone{std::move(singleWriteDone)},
                            doneBlockFlags{std::move(doneBlockFlags)}, doneBlockFlagMutex{std::move(doneBlockFlagMutex)},
                            readyForNext{std::move(readyForNextHandler)}](Hash* channelInfo, size_t blockCounter,
@@ -1066,9 +1065,9 @@ namespace karabo {
                               if (copyIfLocal && channelInfo->get<std::string>("memoryLocation") == "local") {
                                   Memory::assureAllDataIsCopied(m_channelId, chunkId);
                               }
-                              this->asyncSendOne(chunkId, *channelInfo, boost::bind(singleWriteDone, allCounter));
+                              this->asyncSendOne(chunkId, *channelInfo, std::bind(singleWriteDone, allCounter));
                               // Check whether all blockings are resolved and if so call handler that waits for that
-                              boost::mutex::scoped_lock lock(*doneBlockFlagMutex);
+                              std::lock_guard<std::mutex> lock(*doneBlockFlagMutex);
                               (*doneBlockFlags)[blockCounter] = true;
                               for (const bool ready : *doneBlockFlags) {
                                   if (!ready) return;
@@ -1080,7 +1079,7 @@ namespace karabo {
                         Memory::incrementChunkUsage(m_channelId, chunkId);
                         // If NDArray not safe, need to request copy if input channel will be local
                         m_unblockSharedHandler =
-                              boost::bind(singleUnblockTrigger, _1, blockCounter++, counter++, !safeNDArray);
+                              std::bind(singleUnblockTrigger, _1, blockCounter++, counter++, !safeNDArray);
                     }
 
                     for (const Hash* channelInfo : toBlock) {
@@ -1088,7 +1087,7 @@ namespace karabo {
                         const std::string& instanceId = channelInfo->get<std::string>("instanceId");
                         // Last argument false since any needed copy was done already before
                         m_unblockHandlers[instanceId] =
-                              boost::bind(singleUnblockTrigger, _1, blockCounter++, counter++, false);
+                              std::bind(singleUnblockTrigger, _1, blockCounter++, counter++, false);
                     }
                 } else {
                     // no blocking, so ready immediately
@@ -1279,7 +1278,7 @@ namespace karabo {
             } // end else - not found
         }
 
-        void OutputChannel::ensureValidChunkId(boost::mutex::scoped_lock& lockOfRegisteredInputsMutex) {
+        void OutputChannel::ensureValidChunkId(std::unique_lock<std::mutex>& lockOfRegisteredInputsMutex) {
             // If still invalid, drop from queueDrop channels until resources freed and valid chunkId available.
 
             // Loop until dropping from "queueDrop" queues makes a valid chunkId available.
@@ -1325,7 +1324,7 @@ namespace karabo {
 
                 // Give queues a chance to shrink via onInputAvailable
                 lockOfRegisteredInputsMutex.unlock();
-                boost::this_thread::sleep(boost::posix_time::milliseconds(1));
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
                 lockOfRegisteredInputsMutex.lock();
             }
         }
@@ -1341,7 +1340,7 @@ namespace karabo {
         }
 
 
-        void OutputChannel::asyncSignalEndOfStream(boost::function<void()>&& readyForNextHandler) {
+        void OutputChannel::asyncSignalEndOfStream(std::function<void()>&& readyForNextHandler) {
             // If there is still some data in the pipe, put it out
             if (Memory::size(m_channelId, m_chunkId) > 0) {
                 // Lambda for what to do when data is out
@@ -1365,7 +1364,7 @@ namespace karabo {
 
 
         void OutputChannel::registerShowConnectionsHandler(const ShowConnectionsHandler& handler) {
-            boost::mutex::scoped_lock lock(m_showConnectionsHandlerMutex);
+            std::lock_guard<std::mutex> lock(m_showConnectionsHandlerMutex);
             if (!handler) {
                 m_showConnectionsHandler = [](const std::vector<karabo::util::Hash>&) {};
             } else {
@@ -1375,7 +1374,7 @@ namespace karabo {
 
 
         void OutputChannel::registerShowStatisticsHandler(const ShowStatisticsHandler& handler) {
-            boost::mutex::scoped_lock lock(m_showConnectionsHandlerMutex);
+            std::lock_guard<std::mutex> lock(m_showConnectionsHandlerMutex);
             if (!handler) {
                 m_showStatisticsHandler = [](const std::vector<unsigned long long>&,
                                              const std::vector<unsigned long long>&) {};
@@ -1384,7 +1383,7 @@ namespace karabo {
             }
         }
         void OutputChannel::registerSharedInputSelector(SharedInputSelector&& selector) {
-            boost::mutex::scoped_lock lock(m_registeredInputsMutex);
+            std::lock_guard<std::mutex> lock(m_registeredInputsMutex);
             m_sharedInputSelector = std::move(selector);
         }
 
@@ -1396,7 +1395,7 @@ namespace karabo {
         }
 
         void OutputChannel::resetSendOngoing(const std::string& instanceId) {
-            boost::mutex::scoped_lock lock(m_registeredInputsMutex);
+            std::lock_guard<std::mutex> lock(m_registeredInputsMutex);
             auto it = m_registeredCopyInputs.find(instanceId);
             if (it != m_registeredCopyInputs.end()) {
                 it->second.set("sendOngoing", false);
@@ -1409,7 +1408,7 @@ namespace karabo {
         }
 
         void OutputChannel::asyncSendOne(unsigned int chunkId, InputChannelInfo& channelInfo,
-                                         boost::function<void()>&& doneHandler) {
+                                         std::function<void()>&& doneHandler) {
             const bool local = (channelInfo.get<std::string>("memoryLocation") == "local"); // else 'remote'
             KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << "Async send chunk "
                                        << chunkId // << (isEos ? " (EOS)" : "")
@@ -1495,7 +1494,7 @@ namespace karabo {
 
         void OutputChannel::disable() {
             {
-                boost::mutex::scoped_lock lock(m_inputNetChannelsMutex);
+                std::lock_guard<std::mutex> lock(m_inputNetChannelsMutex);
                 for (const Channel::Pointer& channel : m_inputNetChannels) {
                     // Be sure to close, even if shared_ptr still around somewhere and thus destructor won't be
                     // called by clear() below.

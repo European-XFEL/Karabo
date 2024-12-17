@@ -26,8 +26,9 @@
 #define KARABO_ROLLINGWINDOWSTATISTICS_HH
 
 #include <algorithm>
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/shared_mutex.hpp>
+#include <memory>
+#include <mutex>
+#include <shared_mutex>
 #include <vector>
 
 
@@ -36,8 +37,8 @@ namespace karabo {
 
         class RollingWindowStatistics {
            public:
-            typedef boost::shared_ptr<RollingWindowStatistics> Pointer;
-            typedef boost::shared_ptr<const RollingWindowStatistics> ConstPointer;
+            typedef std::shared_ptr<RollingWindowStatistics> Pointer;
+            typedef std::shared_ptr<const RollingWindowStatistics> ConstPointer;
 
             /**
              * A rolling window statistics evaluator
@@ -88,7 +89,7 @@ namespace karabo {
             double m_s, m_s2;
             std::vector<double> m_vals;
 
-            mutable boost::shared_mutex m_updateMutex;
+            mutable std::shared_mutex m_updateMutex;
         };
 
     } // namespace util

@@ -27,8 +27,6 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 
-#include <boost/date_time/posix_time/posix_time.hpp>
-
 #include "karabo/log/Logger.hh"
 #include "karabo/net/Channel.hh"
 #include "karabo/net/Connection.hh"
@@ -46,12 +44,12 @@ class MQTcpNetworking : public CPPUNIT_NS::TestFixture {
     int m_serverPort;
     boost::thread m_serverThread;
     karabo::net::Connection::Pointer m_serverConnection;
-    boost::posix_time::ptime m_ts;
+    std::chrono::steady_clock::time_point m_ts;
 
     // client
     int m_clientCount;
     karabo::net::Connection::Pointer m_connection;
-    boost::posix_time::ptime m_clientTimestamp;
+    std::chrono::steady_clock::time_point m_clientTimestamp;
 
     CPPUNIT_TEST_SUITE(MQTcpNetworking);
 

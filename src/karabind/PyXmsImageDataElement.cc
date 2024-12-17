@@ -83,22 +83,22 @@ void exportPyXmsImageDataElement(py::module_& m) {
     }
 
     {
-        py::class_<ImageData, boost::shared_ptr<ImageData>> img(m, "ImageData");
+        py::class_<ImageData, std::shared_ptr<ImageData>> img(m, "ImageData");
 
         img.def(py::init<>());
 
         // Custom constructors: https://pybind11.readthedocs.io/en/stable/advanced/classes.html#custom-constructors
         img.def(py::init([](const py::array& arr, const Dims& dimensions, const EncodingType encoding,
                             const int bitsPerPixel) {
-                    return boost::make_shared<ImageData>(wrapper::castPyArrayToND(arr), dimensions, encoding,
-                                                         bitsPerPixel);
+                    return std::make_shared<ImageData>(wrapper::castPyArrayToND(arr), dimensions, encoding,
+                                                       bitsPerPixel);
                 }),
                 py::arg("array"), py::arg("dims") = Dims(), py::arg("encoding") = Encoding::UNDEFINED,
                 py::arg("bitsPerPixel") = 0);
 
         // Dimensions are deduced from ndarray
         img.def(py::init([](const py::array& arr, const EncodingType encoding, const int bitsPerPixel) {
-                    return boost::make_shared<ImageData>(wrapper::castPyArrayToND(arr), encoding, bitsPerPixel);
+                    return std::make_shared<ImageData>(wrapper::castPyArrayToND(arr), encoding, bitsPerPixel);
                 }),
                 py::arg("array"), py::arg("encoding") = Encoding::UNDEFINED, py::arg("bitsPerPixel") = 0);
 

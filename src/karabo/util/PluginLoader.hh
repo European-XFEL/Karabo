@@ -26,7 +26,7 @@
 #ifndef KARABO_UTIL_PLUGINLOADER_HH
 #define KARABO_UTIL_PLUGINLOADER_HH
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
 #include "Configurator.hh"
 #include "Schema.hh"
@@ -62,7 +62,7 @@ namespace karabo {
 
             bool update();
 
-            const boost::filesystem::path& getPluginDirectory() const;
+            const std::filesystem::path& getPluginDirectory() const;
 
             std::vector<std::string> getKnownPlugins() const;
 
@@ -70,9 +70,9 @@ namespace karabo {
 
            protected:
            private:
-            boost::filesystem::path m_pluginDirectory;
+            std::filesystem::path m_pluginDirectory;
 
-            static std::map<boost::filesystem::path, void*> m_loadedPlugins;
+            static std::map<std::filesystem::path, void*> m_loadedPlugins;
             static std::vector<std::string> m_failedPlugins;
             static std::set<std::string> m_knownPlugins;
             std::set<std::string> m_pluginsToLoad;

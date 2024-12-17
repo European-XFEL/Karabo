@@ -23,14 +23,14 @@
 
 #include "InstanceChangeThrottler_Test.hh"
 
-#include <boost/bind/bind.hpp>
-#include <boost/make_shared.hpp>
 #include <cmath>
+#include <functional>
+#include <memory>
 
 #include "karabo/tests/WaitUtils.hh"
 
-using boost::placeholders::_1;
 using karabo::tests::waitForCondition;
+using std::placeholders::_1;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(InstanceChangeThrottler_Test);
 
@@ -60,9 +60,9 @@ void InstanceChangeThrottler_Test::tearDown() {}
 
 
 void InstanceChangeThrottler_Test::testThrottleInterval() {
-    auto instChangeHandler = boost::bind(&InstanceChangeThrottler_Test::handleInstChange, this, _1);
+    auto instChangeHandler = std::bind(&InstanceChangeThrottler_Test::handleInstChange, this, _1);
 
-    boost::shared_ptr<karabo::core::InstanceChangeThrottler> throttler =
+    std::shared_ptr<karabo::core::InstanceChangeThrottler> throttler =
           karabo::core::InstanceChangeThrottler::createThrottler(instChangeHandler, 200u);
 
     // Sends an initial burst of events.
@@ -95,11 +95,11 @@ void InstanceChangeThrottler_Test::testThrottleInterval() {
 
 
 void InstanceChangeThrottler_Test::testNewGoneOptimization() {
-    auto instChangeHandler = boost::bind(&InstanceChangeThrottler_Test::handleInstChange, this, _1);
+    auto instChangeHandler = std::bind(&InstanceChangeThrottler_Test::handleInstChange, this, _1);
 
     // Instantiates a throttler with an update that is long enough to guarantee that the
     // sequence to be optimized will be dispatched in the same cycle.
-    boost::shared_ptr<karabo::core::InstanceChangeThrottler> throttler =
+    std::shared_ptr<karabo::core::InstanceChangeThrottler> throttler =
           karabo::core::InstanceChangeThrottler::createThrottler(instChangeHandler, 200u);
 
     // Sends a burst composed of a sequence that should be optimized and a sequence that
@@ -125,11 +125,11 @@ void InstanceChangeThrottler_Test::testNewGoneOptimization() {
 
 
 void InstanceChangeThrottler_Test::testUpdateOptimization() {
-    auto instChangeHandler = boost::bind(&InstanceChangeThrottler_Test::handleInstChange, this, _1);
+    auto instChangeHandler = std::bind(&InstanceChangeThrottler_Test::handleInstChange, this, _1);
 
     // Instantiates a throttler with an update that is long enough to guarantee that the
     // sequence to be optimized will be dispatched in the same cycle.
-    boost::shared_ptr<karabo::core::InstanceChangeThrottler> throttler =
+    std::shared_ptr<karabo::core::InstanceChangeThrottler> throttler =
           karabo::core::InstanceChangeThrottler::createThrottler(instChangeHandler, 200u);
 
     // InstanceInfo that will be the payload for the second update.
@@ -156,11 +156,11 @@ void InstanceChangeThrottler_Test::testUpdateOptimization() {
 
 
 void InstanceChangeThrottler_Test::testNewUpdateOptimization() {
-    auto instChangeHandler = boost::bind(&InstanceChangeThrottler_Test::handleInstChange, this, _1);
+    auto instChangeHandler = std::bind(&InstanceChangeThrottler_Test::handleInstChange, this, _1);
 
     // Instantiates a throttler with an update that is long enough to guarantee that the
     // sequence to be optimized will be dispatched in the same cycle.
-    boost::shared_ptr<karabo::core::InstanceChangeThrottler> throttler =
+    std::shared_ptr<karabo::core::InstanceChangeThrottler> throttler =
           karabo::core::InstanceChangeThrottler::createThrottler(instChangeHandler, 200u);
 
     // InstanceInfo that will be the payload for the second update.
@@ -187,11 +187,11 @@ void InstanceChangeThrottler_Test::testNewUpdateOptimization() {
 
 
 void InstanceChangeThrottler_Test::testUpdateNewOptimization() {
-    auto instChangeHandler = boost::bind(&InstanceChangeThrottler_Test::handleInstChange, this, _1);
+    auto instChangeHandler = std::bind(&InstanceChangeThrottler_Test::handleInstChange, this, _1);
 
     // Instantiates a throttler with an update that is long enough to guarantee that the
     // sequence to be optimized will be dispatched in the same cycle.
-    boost::shared_ptr<karabo::core::InstanceChangeThrottler> throttler =
+    std::shared_ptr<karabo::core::InstanceChangeThrottler> throttler =
           karabo::core::InstanceChangeThrottler::createThrottler(instChangeHandler, 200u);
 
     // Sends a sequence that should be optimized.
@@ -214,11 +214,11 @@ void InstanceChangeThrottler_Test::testUpdateNewOptimization() {
 
 
 void InstanceChangeThrottler_Test::testNewGoneOptimization2Cycles() {
-    auto instChangeHandler = boost::bind(&InstanceChangeThrottler_Test::handleInstChange, this, _1);
+    auto instChangeHandler = std::bind(&InstanceChangeThrottler_Test::handleInstChange, this, _1);
 
     // Instantiates a throttler with an update that is long enough to guarantee that the
     // sequence that should not be optimized will be splitted in two different cycles.
-    boost::shared_ptr<karabo::core::InstanceChangeThrottler> throttler =
+    std::shared_ptr<karabo::core::InstanceChangeThrottler> throttler =
           karabo::core::InstanceChangeThrottler::createThrottler(instChangeHandler, 200u);
 
     // Sends a first burst composed of a sequence that should not be optimized - but is
@@ -272,11 +272,11 @@ void InstanceChangeThrottler_Test::testNewGoneOptimization2Cycles() {
 
 
 void InstanceChangeThrottler_Test::testUpdateOptimization2Cycles() {
-    auto instChangeHandler = boost::bind(&InstanceChangeThrottler_Test::handleInstChange, this, _1);
+    auto instChangeHandler = std::bind(&InstanceChangeThrottler_Test::handleInstChange, this, _1);
 
     // Instantiates a throttler with an update that is long enough to guarantee that the
     // sequence that shoud not be optimized will be splitted in two different cycles.
-    boost::shared_ptr<karabo::core::InstanceChangeThrottler> throttler =
+    std::shared_ptr<karabo::core::InstanceChangeThrottler> throttler =
           karabo::core::InstanceChangeThrottler::createThrottler(instChangeHandler, 200u);
 
     // InstanceInfo that will be the payload for the second update.
@@ -341,9 +341,9 @@ void InstanceChangeThrottler_Test::testUpdateOptimization2Cycles() {
 
 
 void InstanceChangeThrottler_Test::testMaxChangesPerCycle() {
-    auto instChangeHandler = boost::bind(&InstanceChangeThrottler_Test::handleInstChange, this, _1);
+    auto instChangeHandler = std::bind(&InstanceChangeThrottler_Test::handleInstChange, this, _1);
 
-    boost::shared_ptr<karabo::core::InstanceChangeThrottler> throttler =
+    std::shared_ptr<karabo::core::InstanceChangeThrottler> throttler =
           karabo::core::InstanceChangeThrottler::createThrottler(instChangeHandler, 200u, 2u);
 
     // InstanceInfo that will be the payload for the update.
@@ -388,12 +388,12 @@ void InstanceChangeThrottler_Test::testMaxChangesPerCycle() {
 
 
 void InstanceChangeThrottler_Test::testBigUpdateSequence() {
-    auto instChangeHandler = boost::bind(&InstanceChangeThrottler_Test::handleInstChange, this, _1);
+    auto instChangeHandler = std::bind(&InstanceChangeThrottler_Test::handleInstChange, this, _1);
     const int kNumOfUpdateChanges = 5000;
     const unsigned int kThrottlerIntervalMs = 100u;
     const unsigned int kThrottlerMaxChanges = 4500u;
 
-    boost::shared_ptr<karabo::core::InstanceChangeThrottler> throttler =
+    std::shared_ptr<karabo::core::InstanceChangeThrottler> throttler =
           karabo::core::InstanceChangeThrottler::createThrottler(instChangeHandler, kThrottlerIntervalMs,
                                                                  kThrottlerMaxChanges);
 
@@ -442,13 +442,13 @@ void InstanceChangeThrottler_Test::testBigUpdateSequence() {
 
 
 void InstanceChangeThrottler_Test::testThrottlerLifecycle() {
-    auto instChangeHandler = boost::bind(&InstanceChangeThrottler_Test::handleInstChange, this, _1);
+    auto instChangeHandler = std::bind(&InstanceChangeThrottler_Test::handleInstChange, this, _1);
 
     const unsigned int kChangesPerInstantiation = 500u;
     const unsigned int kThrottlerIntervalMs = 5000u;
     const unsigned int kThrottlerMaxChanges = 2000u;
 
-    boost::shared_ptr<karabo::core::InstanceChangeThrottler> throttler =
+    std::shared_ptr<karabo::core::InstanceChangeThrottler> throttler =
           karabo::core::InstanceChangeThrottler::createThrottler(instChangeHandler, kThrottlerIntervalMs,
                                                                  kThrottlerMaxChanges);
 
@@ -484,14 +484,14 @@ void InstanceChangeThrottler_Test::testThrottlerLifecycle() {
 
 
 void InstanceChangeThrottler_Test::testChangesWithFlushes() {
-    auto instChangeHandler = boost::bind(&InstanceChangeThrottler_Test::handleInstChange, this, _1);
+    auto instChangeHandler = std::bind(&InstanceChangeThrottler_Test::handleInstChange, this, _1);
 
     const unsigned int kChangesToSubmit = 5000u;
     const unsigned int kIntervalBetweenFlushes = 500u;
     const unsigned int kThrottlerIntervalMs = 500u;
     const unsigned int kThrottlerMaxChanges = 6000u;
 
-    boost::shared_ptr<karabo::core::InstanceChangeThrottler> throttler =
+    std::shared_ptr<karabo::core::InstanceChangeThrottler> throttler =
           karabo::core::InstanceChangeThrottler::createThrottler(instChangeHandler, kThrottlerIntervalMs,
                                                                  kThrottlerMaxChanges);
 
@@ -545,47 +545,47 @@ void InstanceChangeThrottler_Test::handleInstChange(const karabo::util::Hash& ch
 //<editor-fold desc="InstanceChangeObserver helper class">
 
 int InstanceChangeObserver::numOfInstNewChanges() const {
-    boost::mutex::scoped_lock lock(m_instChangesMutex);
+    std::lock_guard<std::mutex> lock(m_instChangesMutex);
     return m_instNewChanges.size();
 }
 
 int InstanceChangeObserver::numOfInstGoneChanges() const {
-    boost::mutex::scoped_lock lock(m_instChangesMutex);
+    std::lock_guard<std::mutex> lock(m_instChangesMutex);
     return m_instGoneChanges.size();
 }
 
 int InstanceChangeObserver::numOfInstUpdateChanges() const {
-    boost::mutex::scoped_lock lock(m_instChangesMutex);
+    std::lock_guard<std::mutex> lock(m_instChangesMutex);
     return m_instUpdateChanges.size();
 }
 
 int InstanceChangeObserver::numOfInstChanges() const {
-    boost::mutex::scoped_lock lock(m_instChangesMutex);
+    std::lock_guard<std::mutex> lock(m_instChangesMutex);
     return m_instNewChanges.size() + m_instGoneChanges.size() + m_instUpdateChanges.size();
 }
 
 int InstanceChangeObserver::numOfThrottlerBursts() const {
-    boost::mutex::scoped_lock lock(m_instChangesMutex);
+    std::lock_guard<std::mutex> lock(m_instChangesMutex);
     return m_numOfThrottlerBursts;
 }
 
 InstanceChange InstanceChangeObserver::instNewChangeAt(size_t obsNum) const {
-    boost::mutex::scoped_lock lock(m_instChangesMutex);
+    std::lock_guard<std::mutex> lock(m_instChangesMutex);
     return m_instNewChanges.at(obsNum);
 }
 
 InstanceChange InstanceChangeObserver::instGoneChangeAt(size_t obsNum) const {
-    boost::mutex::scoped_lock lock(m_instChangesMutex);
+    std::lock_guard<std::mutex> lock(m_instChangesMutex);
     return m_instGoneChanges.at(obsNum);
 }
 
 InstanceChange InstanceChangeObserver::instUpdateChangeAt(size_t obsNum) const {
-    boost::mutex::scoped_lock lock(m_instChangesMutex);
+    std::lock_guard<std::mutex> lock(m_instChangesMutex);
     return m_instUpdateChanges.at(obsNum);
 }
 
 void InstanceChangeObserver::clearInstChanges() {
-    boost::mutex::scoped_lock lock(m_instChangesMutex);
+    std::lock_guard<std::mutex> lock(m_instChangesMutex);
     m_numOfThrottlerBursts = 0;
     m_instNewChanges.clear();
     m_instGoneChanges.clear();
@@ -593,12 +593,12 @@ void InstanceChangeObserver::clearInstChanges() {
 }
 
 InstanceChange InstanceChangeObserver::newestInstChange() const {
-    boost::mutex::scoped_lock lock(m_instChangesMutex);
+    std::lock_guard<std::mutex> lock(m_instChangesMutex);
     return m_newestInstChange;
 }
 
 InstanceChange InstanceChangeObserver::oldestInstChange() const {
-    boost::mutex::scoped_lock lock(m_instChangesMutex);
+    std::lock_guard<std::mutex> lock(m_instChangesMutex);
     return m_oldestInstChange;
 }
 
@@ -641,7 +641,7 @@ void InstanceChangeObserver::addInstChangesOfType(
 
 
 void InstanceChangeObserver::addInstChanges(const karabo::util::Hash& changeInfo) {
-    boost::mutex::scoped_lock lock(m_instChangesMutex);
+    std::lock_guard<std::mutex> lock(m_instChangesMutex);
 
     auto yearAgoTimePoint = boost::chrono::high_resolution_clock::now() - boost::chrono::hours(24 * 365);
     auto yearAheadTimePoint = boost::chrono::high_resolution_clock::now() + boost::chrono::hours(24 * 365);

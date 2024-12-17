@@ -47,7 +47,7 @@ PropertyTest_Test::~PropertyTest_Test() {}
 
 void PropertyTest_Test::setUp() {
     // Start central event-loop
-    m_eventLoopThread = boost::thread(boost::bind(&EventLoop::work));
+    m_eventLoopThread = boost::thread(std::bind(&EventLoop::work));
     // Create and start server
     // FATAL log level since testAttributeEditing() triggers ERRORs on purpose which
     // might mislead someone checking the log output (e.g. when hunting some other problem).
@@ -55,7 +55,7 @@ void PropertyTest_Test::setUp() {
     m_deviceServer = DeviceServer::create("DeviceServer", config);
     m_deviceServer->finalizeInternalInitialization();
     // Create client
-    m_deviceClient = boost::make_shared<DeviceClient>(std::string(), false);
+    m_deviceClient = std::make_shared<DeviceClient>(std::string(), false);
     m_deviceClient->initialize();
 }
 
@@ -795,7 +795,7 @@ void PropertyTest_Test::testAttributeEditing() {
 
     // Need a SignalSlotable instead of DeviceClient to circumvent the checks done in the
     // DeviceClient before sending requests!
-    auto caller = boost::make_shared<SignalSlotable>("caller");
+    auto caller = std::make_shared<SignalSlotable>("caller");
     caller->start();
 
     Hash toSend;

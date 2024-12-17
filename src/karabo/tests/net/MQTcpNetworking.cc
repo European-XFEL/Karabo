@@ -23,7 +23,6 @@
  */
 #include "MQTcpNetworking.hh"
 
-#include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/thread.hpp>
 #include <karabo/net/Channel.hh>
 #include <karabo/net/EventLoop.hh>
@@ -105,7 +104,7 @@ void MQTcpNetworking::serverReadHashHashHandler(const karabo::net::ErrorCode& ec
         m_numberOfMessages = body.get<int>("START");
         KARABO_LOG_FRAMEWORK_DEBUG << "\nSERVER:  CLIENT sent START command with counter = " << m_numberOfMessages;
         m_serverCount = 0;
-        m_ts = boost::posix_time::second_clock::local_time();
+        m_ts = std::chrono::steady_clock::now();
         karabo::net::EventLoop::getIOService().post(boost::bind(&MQTcpNetworking::serverPublish, this, channel));
     } else if (body.has("STOP")) {
         KARABO_LOG_FRAMEWORK_DEBUG << "\nSERVER:  CLIENT requests exiting together!\n";
@@ -119,11 +118,10 @@ void MQTcpNetworking::serverPublish(const karabo::net::Channel::Pointer& channel
     if (m_serverCount < m_numberOfMessages)
         karabo::net::EventLoop::getIOService().post(boost::bind(&MQTcpNetworking::serverPublish, this, channel));
     else {
-        boost::posix_time::ptime t = boost::posix_time::second_clock::local_time();
-        boost::posix_time::time_duration diff = t - m_ts;
-        KARABO_LOG_FRAMEWORK_DEBUG << "SERVER : " << diff.total_milliseconds() << " ms";
-        KARABO_LOG_FRAMEWORK_DEBUG << "\tpublishing rate = " << double(m_serverCount) / diff.total_milliseconds()
-                                   << " per ms";
+        auto t = std::chrono::steady_clock::now();
+        auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(t - m_ts);
+        KARABO_LOG_FRAMEWORK_DEBUG << "SERVER : " << diff.count() << " ms";
+        KARABO_LOG_FRAMEWORK_DEBUG << "\tpublishing rate = " << double(m_serverCount) / diff.count() << " per ms";
     }
 }
 
@@ -170,7 +168,7 @@ void MQTcpNetworking::onClientConnected(const karabo::net::ErrorCode& e, const k
     // first sending
     channel->writeAsync(header, data);
     m_clientCount = 0;
-    m_clientTimestamp = boost::posix_time::second_clock::local_time();
+    m_clientTimestamp = std::chrono::steady_clock::now();
     channel->readAsyncHashHash(boost::bind(&MQTcpNetworking::clientReadHashHashHandler, this, _1, channel, _2, _3));
 }
 
@@ -222,9 +220,9 @@ void MQTcpNetworking::onClientEnd(const karabo::net::ErrorCode& e, const karabo:
         return;
     }
 
-    boost::posix_time::ptime t = boost::posix_time::second_clock::local_time();
-    boost::posix_time::time_duration diff = t - m_clientTimestamp;
-    double rate = double(m_clientCount) / diff.total_milliseconds();
-    KARABO_LOG_FRAMEWORK_DEBUG << "CLIENT Summary : " << diff.total_milliseconds() << " ms, rate = " << rate << " 1/ms";
+    auto t = std::chrono::steady_clock::now();
+    auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(t - m_clientTimestamp);
+    double rate = double(m_clientCount) / diff.count();
+    KARABO_LOG_FRAMEWORK_DEBUG << "CLIENT Summary : " << diff.count() << " ms, rate = " << rate << " 1/ms";
     channel->close();
 }
