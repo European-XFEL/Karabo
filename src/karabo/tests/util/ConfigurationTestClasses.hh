@@ -409,11 +409,8 @@ namespace configurationTest {
                   .readOnly()
                   .commit();
 
-            std::vector<int> vecIntAlias;
-            {
-                using namespace boost::assign; // bring 'operator+=()' into scope
-                vecIntAlias += 10, 20, 30;     // use boost::assign to initialize vector
-            }
+            std::vector<int> vecIntAlias{10, 20, 30};
+
             INT64_ELEMENT(expected)
                   .key("exampleKey5")
                   .alias(vecIntAlias)
@@ -552,12 +549,7 @@ namespace configurationTest {
 
             using std::vector;
 
-            vector<int> vecInit;
-            {
-                using namespace boost::assign; // bring 'operator+=()' into scope
-                vecInit += 10, 20, 30;
-            }
-
+            vector<int> vecInit{10, 20, 30};
             vector<int> vecWarnL(3, 50);
             vector<int> vecWarnH(3, 100);
 

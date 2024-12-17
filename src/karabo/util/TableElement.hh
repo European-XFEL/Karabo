@@ -25,8 +25,8 @@
 #ifndef KARABO_UTIL_TABLEELEMENT_HH
 #define KARABO_UTIL_TABLEELEMENT_HH
 
-#include <boost/any.hpp>
-#include <boost/cast.hpp>
+#include <any>
+// #include <boost/cast.hpp>
 #include <utility>
 #include <vector>
 

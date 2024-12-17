@@ -49,7 +49,7 @@ namespace karabo {
            public:
             KARABO_CLASSINFO(NDArray, "NDArray", "1.5");
 
-            typedef boost::shared_ptr<char> DataPointer;
+            typedef std::shared_ptr<char> DataPointer;
 
             struct NullDeleter {
                 void operator()(void const*) const {

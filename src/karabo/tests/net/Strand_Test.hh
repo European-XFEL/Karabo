@@ -27,8 +27,8 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 
-#include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
+#include <memory>
 
 class Strand_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(Strand_Test);
@@ -53,7 +53,7 @@ class Strand_Test : public CPPUNIT_NS::TestFixture {
 
     void testMaxInARow();
 
-    boost::shared_ptr<boost::thread> m_thread;
+    std::shared_ptr<boost::thread> m_thread;
     const unsigned int m_nThreadsInPool;
 };
 

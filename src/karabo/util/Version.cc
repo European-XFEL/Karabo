@@ -22,8 +22,8 @@
 
 #include "Version.hh"
 
-#include <boost/filesystem/operations.hpp>
 #include <boost/regex.hpp>
+#include <filesystem>
 #include <fstream>
 #include <iosfwd>
 #include <sstream>

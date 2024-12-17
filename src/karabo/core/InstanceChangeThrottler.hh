@@ -24,12 +24,12 @@
 #ifndef KARABO_CORE_INSTANCEMESSAGETHROTTLER_HH
 #define KARABO_CORE_INSTANCEMESSAGETHROTTLER_HH
 
-#include <boost/asio/deadline_timer.hpp>
-#include <boost/enable_shared_from_this.hpp>
-#include <boost/function.hpp>
-#include <boost/thread/mutex.hpp>
+#include <boost/asio/steady_timer.hpp>
+#include <functional>
 #include <karabo/util/ClassInfo.hh>
 #include <karabo/util/Hash.hh>
+#include <memory>
+#include <mutex>
 #include <queue>
 #include <string>
 #include <unordered_map>
@@ -60,11 +60,11 @@ namespace karabo {
          * hash will be an empty hash with the input InstanceInfo fields as attributes. For "gone" changes the third
          * level hash will not be empty and will have the same lay-out as the input InstanceInfo hash.
          */
-        class InstanceChangeThrottler : public boost::enable_shared_from_this<InstanceChangeThrottler> {
+        class InstanceChangeThrottler : public std::enable_shared_from_this<InstanceChangeThrottler> {
            public:
             KARABO_CLASSINFO(InstanceChangeThrottler, "InstanceMessageThrottler", "2.0")
 
-            typedef boost::function<void(const karabo::util::Hash&)> InstanceChangeHandler;
+            typedef std::function<void(const karabo::util::Hash&)> InstanceChangeHandler;
 
             enum class InstChangeType { NEW, UPDATE, GONE };
 
@@ -86,7 +86,7 @@ namespace karabo {
              * DeviceClient::prepareTopologyEntry without directly knowing DeviceClient.
              *
              */
-            static boost::shared_ptr<InstanceChangeThrottler> createThrottler(
+            static std::shared_ptr<InstanceChangeThrottler> createThrottler(
                   const InstanceChangeHandler& instChangeHandler, unsigned int cycleIntervalMs = 500u,
                   unsigned int maxChangesPerCycle = 100);
 
@@ -154,7 +154,7 @@ namespace karabo {
             karabo::util::Hash m_instChanges;
 
             // Protects against simultaneous accesses to m_instChanges.
-            boost::mutex m_instChangesMutex;
+            std::mutex m_instChangesMutex;
 
             void initCycleInstChanges();
             void resetCycleInstChanges();
@@ -165,7 +165,7 @@ namespace karabo {
             // The number of changes to be dispatched in the next Throttler cycle (<=  m_maxChangesPerCycle).
             unsigned int m_totalChangesInCycle;
 
-            boost::asio::deadline_timer m_throttlerTimer;
+            boost::asio::steady_timer m_throttlerTimer;
 
             InstanceChangeHandler m_instChangeHandler;
 

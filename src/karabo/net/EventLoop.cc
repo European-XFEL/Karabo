@@ -37,7 +37,7 @@ namespace karabo {
     namespace net {
 
 
-        boost::shared_ptr<EventLoop> EventLoop::m_instance{nullptr};
+        std::shared_ptr<EventLoop> EventLoop::m_instance{nullptr};
         boost::once_flag EventLoop::m_initInstanceFlag = BOOST_ONCE_INIT;
 
 
@@ -46,7 +46,7 @@ namespace karabo {
         }
 
 
-        boost::shared_ptr<EventLoop> EventLoop::instance() {
+        std::shared_ptr<EventLoop> EventLoop::instance() {
             boost::call_once(&EventLoop::init, m_initInstanceFlag);
             return m_instance;
         }
@@ -62,7 +62,7 @@ namespace karabo {
             boost::asio::signal_set signals(getIOService(), SIGINT, SIGTERM);
             auto loop = instance();
             // TODO: Consider to use ordinary function instead of this lengthy lambda.
-            boost::function<void(boost::system::error_code ec, int signo)> signalHandler =
+            std::function<void(boost::system::error_code ec, int signo)> signalHandler =
                   [&loop](boost::system::error_code ec, int signo) {
                       if (ec == boost::asio::error::operation_aborted) {
                           KARABO_LOG_FRAMEWORK_WARN
@@ -71,15 +71,15 @@ namespace karabo {
                       if (ec) return;
 
                       {
-                          boost::mutex::scoped_lock lock(loop->m_signalHandlerMutex);
+                          std::lock_guard<std::mutex> lock(loop->m_signalHandlerMutex);
                           if (loop->m_signalHandler) {
                               loop->m_signalHandler(signo);
                               // Clear handler, so it is called exactly once as handlers passed to 'signals.async_wait'
-                              loop->m_signalHandler.clear();
+                              loop->m_signalHandler = nullptr;
                           }
                       }
                       // Some time to do all actions possibly triggered by handler.
-                      boost::this_thread::sleep(boost::posix_time::seconds(1));
+                      boost::this_thread::sleep_for(boost::chrono::seconds(1));
                       // Finally go down, i.e. leave work()
                       EventLoop::stop();
                       // TODO (check!):
@@ -122,7 +122,7 @@ namespace karabo {
 
 
         size_t EventLoop::_getNumberOfThreads() const {
-            boost::mutex::scoped_lock lock(m_threadPoolMutex);
+            std::lock_guard<std::mutex> lock(m_threadPoolMutex);
             return m_threadPool.size();
         }
 
@@ -133,7 +133,7 @@ namespace karabo {
 
 
         void EventLoop::_setSignalHandler(const SignalHandler& handler) {
-            boost::mutex::scoped_lock lock(m_signalHandlerMutex);
+            std::lock_guard<std::mutex> lock(m_signalHandlerMutex);
             m_signalHandler = handler;
         }
 
@@ -147,10 +147,9 @@ namespace karabo {
         void EventLoop::_addThread(const int nThreads) {
             auto loop = instance();
             auto add = [loop, nThreads]() {
-                boost::mutex::scoped_lock lock(loop->m_threadPoolMutex);
+                std::lock_guard<std::mutex> lock(loop->m_threadPoolMutex);
                 for (int i = 0; i < nThreads; ++i) {
-                    boost::thread* thread =
-                          loop->m_threadPool.create_thread(boost::bind(&EventLoop::runProtected, loop));
+                    boost::thread* thread = loop->m_threadPool.create_thread(std::bind(&EventLoop::runProtected, loop));
                     loop->m_threadMap[thread->get_id()] = thread;
                     KARABO_LOG_FRAMEWORK_DEBUG
                           << "A thread (id: " << thread->get_id()
@@ -187,7 +186,7 @@ namespace karabo {
 
 
         void EventLoop::asyncDestroyThread(const boost::thread::id& id) {
-            boost::mutex::scoped_lock lock(m_threadPoolMutex);
+            std::lock_guard<std::mutex> lock(m_threadPoolMutex);
             ThreadMap::iterator it = m_threadMap.find(id);
             if (it != m_threadMap.end()) {
                 boost::thread* theThread = it->second;
@@ -214,7 +213,7 @@ namespace karabo {
         }
 
         void EventLoop::clearThreadPool() {
-            boost::mutex::scoped_lock lock(m_threadPoolMutex);
+            std::unique_lock<std::mutex> lock(m_threadPoolMutex);
 
             int round = 1;
             auto clearThreads = [this, &round]() {
@@ -246,7 +245,7 @@ namespace karabo {
                                                          toString(m_threadPool.size()) += " threads left");
                 };
                 lock.unlock();
-                boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+                boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
                 lock.lock();
                 clearThreads();
             }
@@ -272,10 +271,9 @@ namespace karabo {
                 } catch (const RemoveThreadException&) {
                     // This is a sign to remove this thread from the pool
                     // As we can not kill ourselves we will ask another thread to kindly do so
-                    boost::mutex::scoped_lock lock(m_threadPoolMutex);
+                    std::unique_lock<std::mutex> lock(m_threadPoolMutex);
                     if (m_threadPool.is_this_thread_in()) {
-                        m_ioService.post(
-                              boost::bind(&EventLoop::asyncDestroyThread, this, boost::this_thread::get_id()));
+                        m_ioService.post(std::bind(&EventLoop::asyncDestroyThread, this, boost::this_thread::get_id()));
                         return; // No more while, we want to die
                     } else {
                         // We are in the main blocking thread here, which we never want to kill

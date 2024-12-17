@@ -24,8 +24,8 @@
 #ifndef INFLUXLOGREADER_HH
 #define INFLUXLOGREADER_HH
 
-#include <boost/shared_ptr.hpp>
 #include <deque>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -128,7 +128,7 @@ namespace karabo {
              *
              * @param context
              */
-            void asyncDataCountForProperty(const boost::shared_ptr<PropertyHistoryContext>& context);
+            void asyncDataCountForProperty(const std::shared_ptr<PropertyHistoryContext>& context);
 
             /**
              * Handles the retrieval of the number of data points for an ongoing GetPropertyHistory
@@ -139,14 +139,14 @@ namespace karabo {
              * @param context
              */
             void onDataCountForProperty(const karabo::net::HttpResponse& dataCountResp,
-                                        const boost::shared_ptr<PropertyHistoryContext>& ctxt);
+                                        const std::shared_ptr<PropertyHistoryContext>& ctxt);
 
             /**
              * Triggers the retrieval of the property values in an ongoing GetPropertyHistory process.
              *
              * @param context
              */
-            void asyncGetPropertyValues(const boost::shared_ptr<PropertyHistoryContext>& ctxt);
+            void asyncGetPropertyValues(const std::shared_ptr<PropertyHistoryContext>& ctxt);
 
             /**
              * Triggers the retrieval of the property values mean in an ongoing GetPropertyHistory process.
@@ -157,7 +157,7 @@ namespace karabo {
              *
              * @param context
              */
-            void asyncGetPropertyValuesMean(const boost::shared_ptr<PropertyHistoryContext>& ctxt);
+            void asyncGetPropertyValuesMean(const std::shared_ptr<PropertyHistoryContext>& ctxt);
 
             /**
              * Triggers the retrieval of the property values samples in an ongoing GetPropertyHistory process.
@@ -166,7 +166,7 @@ namespace karabo {
              *
              * @param context
              */
-            void asyncGetPropertyValuesSamples(const boost::shared_ptr<PropertyHistoryContext>& ctxt);
+            void asyncGetPropertyValuesSamples(const std::shared_ptr<PropertyHistoryContext>& ctxt);
 
             /**
              * Handles the retrieval of the values of a property in an ongoing GetPropertyHistory
@@ -179,7 +179,7 @@ namespace karabo {
              * @param context
              */
             void onPropertyValues(const karabo::net::HttpResponse& valuesResp, const std::string& columnPrefixToRemove,
-                                  const boost::shared_ptr<PropertyHistoryContext>& ctxt);
+                                  const std::shared_ptr<PropertyHistoryContext>& ctxt);
             /**
              * Handles the retrieval of the values of a property in an ongoing GetPropertyHistory
              * process. Responsible for transforming the json formatted values received from
@@ -193,29 +193,29 @@ namespace karabo {
              * @param context
              */
             void onMeanPropertyValues(const karabo::net::HttpResponse& valuesResp,
-                                      const boost::shared_ptr<PropertyHistoryContext>& ctxt);
+                                      const std::shared_ptr<PropertyHistoryContext>& ctxt);
 
-            void asyncLastLogoutBeforeTime(const boost::shared_ptr<ConfigFromPastContext>& ctxt);
+            void asyncLastLogoutBeforeTime(const std::shared_ptr<ConfigFromPastContext>& ctxt);
             void onLastLogoutBeforeTime(const karabo::net::HttpResponse& valueResp,
-                                        const boost::shared_ptr<ConfigFromPastContext>& ctxt);
+                                        const std::shared_ptr<ConfigFromPastContext>& ctxt);
 
-            void asyncLastLoginFormatBeforeTime(const boost::shared_ptr<ConfigFromPastContext>& ctxt);
+            void asyncLastLoginFormatBeforeTime(const std::shared_ptr<ConfigFromPastContext>& ctxt);
             void onLastLoginFormatBeforeTime(const karabo::net::HttpResponse& valueResp,
-                                             const boost::shared_ptr<ConfigFromPastContext>& ctxt);
+                                             const std::shared_ptr<ConfigFromPastContext>& ctxt);
 
-            void asyncLastSchemaDigestBeforeTime(const boost::shared_ptr<ConfigFromPastContext>& ctxt);
+            void asyncLastSchemaDigestBeforeTime(const std::shared_ptr<ConfigFromPastContext>& ctxt);
             void onLastSchemaDigestBeforeTime(const karabo::net::HttpResponse& valueResp,
-                                              const boost::shared_ptr<ConfigFromPastContext>& ctxt);
+                                              const std::shared_ptr<ConfigFromPastContext>& ctxt);
 
-            void asyncSchemaForDigest(const std::string& digest, const boost::shared_ptr<ConfigFromPastContext>& ctxt);
+            void asyncSchemaForDigest(const std::string& digest, const std::shared_ptr<ConfigFromPastContext>& ctxt);
             void onSchemaForDigest(const karabo::net::HttpResponse& schemaResp,
-                                   const boost::shared_ptr<ConfigFromPastContext>& ctxt, const std::string& digest);
+                                   const std::shared_ptr<ConfigFromPastContext>& ctxt, const std::string& digest);
 
 
-            void asyncPropValueBeforeTime(const boost::shared_ptr<ConfigFromPastContext>& ctxt);
+            void asyncPropValueBeforeTime(const std::shared_ptr<ConfigFromPastContext>& ctxt);
             void onPropValueBeforeTime(const std::vector<PropFromPastInfo>& propInfos,
                                        const karabo::net::HttpResponse& propValueResp,
-                                       const boost::shared_ptr<ConfigFromPastContext>& ctxt);
+                                       const std::shared_ptr<ConfigFromPastContext>& ctxt);
 
             void slotGetBadData(const std::string& fromStr, const std::string& toStr);
             void onGetBadData(const karabo::net::HttpResponse& response, karabo::xms::SignalSlotable::AsyncReply aReply,

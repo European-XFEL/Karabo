@@ -42,7 +42,7 @@ using namespace karabo::util;
 using namespace karabo::net;
 using namespace karabo::log;
 using namespace karabo::xms;
-using namespace boost::placeholders;
+using namespace std::placeholders;
 
 
 void printHelp(const char* execName) {
@@ -72,7 +72,7 @@ void logAmqp(const std::vector<std::string>& brokerUrls, const std::string& doma
     //   separated by comma where each pair is separated by colon:
     //     "exchange1:bindingKey1,exchange2:bindingKey2,..."
 
-    AmqpConnection::Pointer connection(boost::make_shared<AmqpConnection>(brokerUrls));
+    AmqpConnection::Pointer connection(std::make_shared<AmqpConnection>(brokerUrls));
 
     const Hash config("brokers", brokerUrls, "domain", domain);
     AMQP::Table queueArgs;

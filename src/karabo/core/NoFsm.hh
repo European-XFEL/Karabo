@@ -25,8 +25,7 @@
 #ifndef KARABO_CORE_NOFSM_HH
 #define KARABO_CORE_NOFSM_HH
 
-#include <boost/bind/bind.hpp>
-#include <boost/function.hpp>
+#include <functional>
 #include <karabo/util/ClassInfo.hh>
 #include <vector>
 
@@ -60,14 +59,14 @@ namespace karabo {
 
             virtual void stopFsm() {}
 
-            void registerInitialFunction(const boost::function<void()>& func) {
+            void registerInitialFunction(const std::function<void()>& func) {
                 m_initialFunc.push_back(func);
             }
 
-#define KARABO_INITIAL_FUNCTION(function) this->registerInitialFunction(boost::bind(&Self::function, this));
+#define KARABO_INITIAL_FUNCTION(function) this->registerInitialFunction(std::bind(&Self::function, this));
 
            private:
-            std::vector<boost::function<void()> > m_initialFunc;
+            std::vector<std::function<void()> > m_initialFunc;
         };
     } // namespace core
 } // namespace karabo

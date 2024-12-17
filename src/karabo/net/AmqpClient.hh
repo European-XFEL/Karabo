@@ -59,7 +59,7 @@ namespace karabo::net {
      * "shared" among all clients connected to the same broker.
      *
      */
-    class AmqpClient : public boost::enable_shared_from_this<AmqpClient> {
+    class AmqpClient : public std::enable_shared_from_this<AmqpClient> {
        public:
         KARABO_CLASSINFO(AmqpClient, "AmqpClient", "3.0")
 

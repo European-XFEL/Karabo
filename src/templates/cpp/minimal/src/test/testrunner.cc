@@ -16,7 +16,7 @@
 
 
 KaraboDeviceFixture::KaraboDeviceFixture() {
-    m_eventLoopThread = std::thread(&karabo::net::EventLoop::work);
+    m_eventLoopThread = boost::thread(&karabo::net::EventLoop::work);
 
     // Instantiate C++ Device Client
     m_deviceCli = boost::make_shared<karabo::core::DeviceClient>(std::string(), false);

@@ -24,13 +24,12 @@
 #define KARABO_NET_INFLUXDBCLIENT_HH
 
 #include <atomic>
-#include <boost/enable_shared_from_this.hpp>
-#include <boost/function.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/thread/mutex.hpp>
 #include <boost/uuid/random_generator.hpp>
+#include <functional>
 #include <future>
 #include <iostream>
+#include <memory>
+#include <mutex>
 #include <queue>
 #include <string>
 #include <unordered_map>
@@ -50,8 +49,8 @@ namespace karabo {
     namespace net {
 
 
-        using InfluxResponseHandler = boost::function<void(const HttpResponse&)>;
-        using InfluxConnectedHandler = boost::function<void(bool)>;
+        using InfluxResponseHandler = std::function<void(const HttpResponse&)>;
+        using InfluxConnectedHandler = std::function<void(bool)>;
 
 
         /**
@@ -71,7 +70,7 @@ namespace karabo {
          * condition can be encountered.  The practice should show how we can handle
          * these problems.
          */
-        class InfluxDbClient : public boost::enable_shared_from_this<InfluxDbClient> {
+        class InfluxDbClient : public std::enable_shared_from_this<InfluxDbClient> {
            public:
             KARABO_CLASSINFO(InfluxDbClient, "InfluxDbClient", "2.6")
 
@@ -91,7 +90,7 @@ namespace karabo {
              * Returns true if connection is established to InfluxDB server
              */
             bool isConnected() {
-                boost::mutex::scoped_lock lock(m_connectionRequestedMutex);
+                std::lock_guard<std::mutex> lock(m_connectionRequestedMutex);
                 return m_dbChannel && m_dbChannel->isOpen();
             }
 
@@ -185,7 +184,7 @@ namespace karabo {
             /**
              * Low-level callback called when writing into networks interface is done
              */
-            void onDbWrite(const karabo::net::ErrorCode& ec, boost::shared_ptr<std::vector<char> > p);
+            void onDbWrite(const karabo::net::ErrorCode& ec, std::shared_ptr<std::vector<char> > p);
 
             /**
              * HTTP request "POST /write ..." to InfluxDB server is registered in internal queue.
@@ -234,7 +233,7 @@ namespace karabo {
              * @param requestQueueLock must be locked scoped_lock of m_requestQueueMutex, will be unlocked
              * afterwards
              */
-            void tryNextRequest(boost::mutex::scoped_lock& requestQueueLock);
+            void tryNextRequest(std::unique_lock<std::mutex>& requestQueueLock);
 
             /**
              * Send HTTP request to InfluxDb.  Helper function.
@@ -282,13 +281,13 @@ namespace karabo {
             std::string m_url;
             karabo::net::Connection::Pointer m_dbConnection;
             karabo::net::Channel::Pointer m_dbChannel;
-            std::queue<boost::function<void()> > m_requestQueue;
-            boost::mutex m_requestQueueMutex;
+            std::queue<std::function<void()> > m_requestQueue;
+            std::mutex m_requestQueueMutex;
             std::atomic<bool> m_active;
-            boost::mutex m_connectionRequestedMutex;
+            std::mutex m_connectionRequestedMutex;
             std::atomic<bool> m_connectionRequested;
             // maps Request-Id to pair of HTTP request string and action callback
-            boost::mutex m_responseHandlersMutex;
+            std::mutex m_responseHandlersMutex;
             std::unordered_map<std::string, std::pair<std::string, InfluxResponseHandler> >
                   m_registeredInfluxResponseHandlers;
 
@@ -302,13 +301,13 @@ namespace karabo {
             std::string m_hostname;
             std::string m_dbname;
             std::string m_durationUnit;
-            boost::mutex m_influxVersionMutex;
+            std::mutex m_influxVersionMutex;
             std::string m_influxVersion;
-            static boost::mutex m_uuidGeneratorMutex;
+            static std::mutex m_uuidGeneratorMutex;
             static boost::uuids::random_generator m_uuidGenerator;
             static const unsigned int k_connTimeoutMs;
             const std::uint32_t m_maxPointsInBuffer;
-            boost::mutex m_bufferMutex;
+            std::mutex m_bufferMutex;
             std::stringstream m_buffer;
             std::uint32_t m_nPoints;
             std::string m_dbUser;

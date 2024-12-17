@@ -77,7 +77,7 @@ namespace karabo {
             for (int i = 0; i < 5; ++i) {
                 if (lk.valid()) {
                     remote().set(deviceId, "intProperty", i);
-                    boost::this_thread::sleep(boost::posix_time::milliseconds(200));
+                    boost::this_thread::sleep_for(boost::chrono::milliseconds(200));
                 }
             }
         } catch (const std::exception& e) {
@@ -105,7 +105,7 @@ namespace karabo {
             for (int i = 0; i < 5; ++i) {
                 if (lk.valid()) {
                     remote().set(deviceId, "intProperty", i);
-                    boost::this_thread::sleep(boost::posix_time::milliseconds(5000));
+                    boost::this_thread::sleep_for(boost::chrono::milliseconds(5000));
                 }
             }
         } catch (const std::exception& e) {
@@ -154,7 +154,7 @@ namespace karabo {
             for (int i = 0; i < 5; ++i) {
                 Lock lk = remote().lock(deviceId, true, 0);
                 remote().set(deviceId, "intProperty", i);
-                boost::this_thread::sleep(boost::posix_time::milliseconds(500));
+                boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
             }
         } catch (const std::exception& e) {
             // karabo::util::LockException is likely...
@@ -181,7 +181,7 @@ namespace karabo {
             for (int i = 0; i < 5; ++i) {
                 Lock lk = remote().lock(deviceId, false, 0);
                 remote().set(deviceId, "intProperty", i);
-                boost::this_thread::sleep(boost::posix_time::milliseconds(500));
+                boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
             }
         } catch (const std::exception& e) {
             // karabo::util::LockException is likely...

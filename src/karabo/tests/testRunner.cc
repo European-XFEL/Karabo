@@ -17,7 +17,8 @@
  */
 #include "testRunner.hh"
 
-#include "boost/thread.hpp"
+#include <boost/thread.hpp>
+
 #include "karabo/net/EventLoop.hh"
 
 int main(int argc, char* argv[]) {

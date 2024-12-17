@@ -7,7 +7,7 @@
  *
  * Karabo is free software: you can redistribute it and/or modify it under
  * the terms of the MPL-2 Mozilla Public License.
- *
+ *b
  * You should have received a copy of the MPL-2 Public License along with
  * Karabo. If not, see <https://www.mozilla.org/en-US/MPL/2.0/>.
  *
@@ -33,11 +33,11 @@
 #include <spdlog/sinks/ringbuffer_sink.h>
 #include <spdlog/spdlog.h>
 
-#include <boost/filesystem.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
 #include <boost/type_index.hpp>
 #include <filesystem>
+#include <memory>
+#include <thread>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -66,10 +66,10 @@ struct fmt::formatter<karabo::util::Schema> : fmt::formatter<std::string> {
     }
 };
 
-// Support boost::filesystem::path formatting
+// Support std::filesystem::path formatting
 template <>
-struct fmt::formatter<boost::filesystem::path> : fmt::formatter<std::string> {
-    auto format(boost::filesystem::path p, format_context& ctx) const -> decltype(ctx.out()) {
+struct fmt::formatter<std::filesystem::path> : fmt::formatter<std::string> {
+    auto format(std::filesystem::path p, format_context& ctx) const -> decltype(ctx.out()) {
         return fmt::format_to(ctx.out(), "{}", p.string());
     }
 };

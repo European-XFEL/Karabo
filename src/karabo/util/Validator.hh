@@ -26,9 +26,9 @@
 #define KARABO_UTIL_VALIDATOR_HH
 
 #include <boost/foreach.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/shared_mutex.hpp>
 #include <map>
+#include <mutex>
+#include <shared_mutex>
 
 #include "RollingWindowStatistics.hh"
 #include "Schema.hh"
@@ -66,7 +66,7 @@ namespace karabo {
             karabo::util::Timestamp m_timestamp;
             bool m_hasReconfigurableParameter;
 
-            mutable boost::shared_mutex m_rollingStatMutex;
+            mutable std::shared_mutex m_rollingStatMutex;
             std::map<std::string, RollingWindowStatistics::Pointer> m_parameterRollingStats;
 
            public:

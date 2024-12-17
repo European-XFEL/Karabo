@@ -27,8 +27,7 @@
 #define KARABO_UTIL_NODE_HH
 
 #include <boost/any.hpp>
-#include <boost/cast.hpp>
-#include <boost/type_traits/is_base_of.hpp>
+#include <boost/numeric/conversion/cast.hpp>
 #include <complex>
 #include <string>
 #include <type_traits>
@@ -80,7 +79,7 @@ namespace karabo {
              */
             template <typename ValueType, typename isHashTheBase>
             struct SetClassIdAttribute {
-                // This generic implementation is for isHashTheBase = boost::true_type and ValueType != Hash,
+                // This generic implementation is for isHashTheBase = std::true_type and ValueType != Hash,
                 // see specialisations for false_type and Hash below.
                 /**
                  * Set the classId attribute as given by value.getClassInfo()
@@ -112,7 +111,7 @@ namespace karabo {
              * Types that are neither Hashes nor derived from Hashes are not touched.
              */
             template <typename ValueType>
-            struct SetClassIdAttribute<ValueType, boost::false_type> {
+            struct SetClassIdAttribute<ValueType, std::false_type> {
                 /**
                  * For non Hash-derived types this is a no-op
                  * @param value
@@ -134,7 +133,7 @@ namespace karabo {
             template <typename isHashTheBase>
             struct SetClassIdAttribute<Hash, isHashTheBase> {
                 /**
-                 * For the Hash itself (i.e. where boost::is_base_of<Hash, Hash>::type is not boost::false_type),
+                 * For the Hash itself (i.e. where std::is_base_of<Hash, Hash>::type is not std::false_type),
                  * this is a no-op as well.
                  * @param value
                  * @param e
@@ -207,18 +206,18 @@ namespace karabo {
             inline void setValue(ValueType&& value);
 
             /**
-             * Set the value to a boost::shared_ptr of ValueType
+             * Set the value to a std::shared_ptr of ValueType
              * @param value
              */
             template <class ValueType>
-            inline void setValue(const boost::shared_ptr<ValueType>& value);
+            inline void setValue(const std::shared_ptr<ValueType>& value);
 
             /**
              *  For downward compatibility we allow insertion of
              * shared_ptr<Hash>. In general, we will create a compiler
              * error for all objects deriving from Hash and wrapped as shared pointer.
              */
-            void setValue(const boost::shared_ptr<Hash>& value);
+            void setValue(const std::shared_ptr<Hash>& value);
 
             /**
              * Overload for setting char pointers (c-strings). Internally, the
@@ -536,10 +535,10 @@ namespace karabo {
 
 
             template <class ValueType>
-            inline const ValueType& getValue(boost::true_type /*is_hash_the_base*/) const;
+            inline const ValueType& getValue(std::true_type /*is_hash_the_base*/) const;
 
             template <class ValueType>
-            inline const ValueType& getValue(boost::false_type /*is_hash_the_base*/) const;
+            inline const ValueType& getValue(std::false_type /*is_hash_the_base*/) const;
 
             inline void setKey(const KeyType& key);
 
@@ -620,7 +619,7 @@ namespace karabo {
         template <class KeyType, typename AttributeType>
         template <class ValueType>
         inline void Element<KeyType, AttributeType>::setValue(const ValueType& value) {
-            this->setValue<ValueType, typename boost::is_base_of<Hash, ValueType>::type>(value);
+            this->setValue<ValueType, typename std::is_base_of<Hash, ValueType>::type>(value);
         }
 
         template <class KeyType, typename AttributeType>
@@ -631,14 +630,13 @@ namespace karabo {
             using removed_reference = typename std::remove_reference<ValueType>::type;
             using removed_const_and_ref = typename std::remove_const<removed_reference>::type;
             this->setValue<decltype(std::forward<ValueType>(value)),
-                           typename boost::is_base_of<Hash, removed_const_and_ref>::type>(
-                  std::forward<ValueType>(value));
+                           typename std::is_base_of<Hash, removed_const_and_ref>::type>(std::forward<ValueType>(value));
         }
 
         template <class KeyType, typename AttributeType>
         template <class ValueType>
-        inline void Element<KeyType, AttributeType>::setValue(const boost::shared_ptr<ValueType>& value) {
-            this->setValue<boost::shared_ptr<ValueType>, typename boost::is_base_of<Hash, ValueType>::type>(value);
+        inline void Element<KeyType, AttributeType>::setValue(const std::shared_ptr<ValueType>& value) {
+            this->setValue<std::shared_ptr<ValueType>, typename std::is_base_of<Hash, ValueType>::type>(value);
         }
 
         template <class KeyType, typename AttributeType>
@@ -665,7 +663,7 @@ namespace karabo {
         }
 
         template <class KeyType, class AttributeType>
-        inline void Element<KeyType, AttributeType>::setValue(const boost::shared_ptr<Hash>& value) {
+        inline void Element<KeyType, AttributeType>::setValue(const std::shared_ptr<Hash>& value) {
             m_value = value;
         }
 
@@ -716,7 +714,7 @@ namespace karabo {
         template <class KeyType, typename AttributeType>
         template <class ValueType>
         inline const ValueType& Element<KeyType, AttributeType>::getValue() const {
-            return getValue<ValueType>(typename boost::is_base_of<Hash, ValueType>::type());
+            return getValue<ValueType>(typename std::is_base_of<Hash, ValueType>::type());
         }
 
         template <class KeyType, typename AttributeType>
@@ -749,12 +747,12 @@ namespace karabo {
         template <class ValueType>
         inline ValueType& Element<KeyType, AttributeType>::getValue() {
             return const_cast<ValueType&>(static_cast<const Element*>(this)->getValue<ValueType>(
-                  typename boost::is_base_of<Hash, ValueType>::type()));
+                  typename std::is_base_of<Hash, ValueType>::type()));
         }
 
         template <class KeyType, typename AttributeType>
         template <class ValueType>
-        inline const ValueType& Element<KeyType, AttributeType>::getValue(boost::true_type /*is_hash_the_base*/) const {
+        inline const ValueType& Element<KeyType, AttributeType>::getValue(std::true_type /*is_hash_the_base*/) const {
             const Hash* ptr = boost::any_cast<Hash>(&m_value);
             if (ptr) return reinterpret_cast<const ValueType&>(*ptr);
             throw KARABO_CAST_EXCEPTION(
@@ -763,8 +761,7 @@ namespace karabo {
 
         template <class KeyType, typename AttributeType>
         template <class ValueType>
-        inline const ValueType& Element<KeyType, AttributeType>::getValue(
-              boost::false_type /*is_hash_the_base*/) const {
+        inline const ValueType& Element<KeyType, AttributeType>::getValue(std::false_type /*is_hash_the_base*/) const {
             const ValueType* ptr = boost::any_cast<ValueType>(&m_value);
             if (ptr) return *ptr;
             throw KARABO_CAST_EXCEPTION(

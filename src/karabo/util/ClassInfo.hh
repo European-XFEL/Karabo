@@ -24,7 +24,7 @@
 #define KARABO_UTIL_CLASSINFO_HH
 
 #include <boost/current_function.hpp>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include <string>
 
 #include "karaboDll.hh"
@@ -94,9 +94,9 @@ namespace karabo {
         return classInfo();                                                            \
     }                                                                                  \
     typedef className Self;                                                            \
-    typedef boost::shared_ptr<className> Pointer;                                      \
-    typedef boost::shared_ptr<const className> ConstPointer;                           \
-    typedef boost::weak_ptr<className> WeakPointer;
+    typedef std::shared_ptr<className> Pointer;                                        \
+    typedef std::shared_ptr<const className> ConstPointer;                             \
+    typedef std::weak_ptr<className> WeakPointer;
 
 
 #endif

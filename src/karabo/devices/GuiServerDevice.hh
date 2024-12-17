@@ -25,7 +25,7 @@
 #define KARABO_CORE_GUISERVERDEVICE_HH
 
 #include <atomic>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include <set>
 #include <unordered_map>
 
@@ -57,7 +57,7 @@ namespace karabo {
          */
         class GuiServerDevice : public karabo::core::Device<> {
             struct DeviceInstantiation {
-                boost::weak_ptr<karabo::net::Channel> channel;
+                std::weak_ptr<karabo::net::Channel> channel;
                 karabo::util::Hash hash;
             };
 
@@ -126,10 +126,11 @@ namespace karabo {
             };
 
             typedef karabo::net::Channel::WeakPointer WeakChannelPointer;
+            using WeakChannelPointerCompare = std::owner_less<WeakChannelPointer>;
             // There is no way to have a reliable unordered_set of weak pointers...
             // Before C++14 we cannot use unordered_map since that does not (yet) guarantee that we can erase
             // entries while looping over it.
-            typedef std::map<std::string, std::set<WeakChannelPointer>> NetworkMap;
+            typedef std::map<std::string, std::set<WeakChannelPointer, WeakChannelPointerCompare>> NetworkMap;
 
             enum QueueBehaviorsTypes {
 
@@ -145,27 +146,28 @@ namespace karabo {
             std::map<std::string, AttributeUpdates> m_pendingAttributeUpdates;
             std::queue<DeviceInstantiation> m_pendingDeviceInstantiations;
 
-            mutable boost::mutex m_channelMutex;
-            mutable boost::mutex m_networkMutex;
-            mutable boost::mutex m_pendingAttributesMutex;
-            mutable boost::mutex m_pendingInstantiationsMutex;
+            mutable std::mutex m_channelMutex;
+            mutable std::mutex m_networkMutex;
+            mutable std::mutex m_pendingAttributesMutex;
+            mutable std::mutex m_pendingInstantiationsMutex;
             // TODO: remove this once "fast slot reply policy" is enforced
-            mutable boost::mutex m_timingOutDevicesMutex;
+            mutable std::mutex m_timingOutDevicesMutex;
 
-            boost::asio::deadline_timer m_deviceInitTimer;
-            boost::asio::deadline_timer m_networkStatsTimer;
-            boost::asio::deadline_timer m_checkConnectionTimer;
+            boost::asio::steady_timer m_deviceInitTimer;
+            boost::asio::steady_timer m_networkStatsTimer;
+            boost::asio::steady_timer m_checkConnectionTimer;
 
             NetworkMap m_networkConnections;
             // Next map<string, ...> not unordered before use of C++14 because we erase from it while looping over it.
-            std::map<std::string, std::map<WeakChannelPointer, bool>> m_readyNetworkConnections;
+            std::map<std::string, std::map<WeakChannelPointer, bool, WeakChannelPointerCompare>>
+                  m_readyNetworkConnections;
 
             karabo::net::Broker::Pointer m_guiDebugProducer;
 
             typedef std::map<karabo::net::Channel::Pointer, ChannelData>::const_iterator ConstChannelIterator;
             typedef std::map<karabo::net::Channel::Pointer, ChannelData>::iterator ChannelIterator;
 
-            mutable boost::mutex m_loggerMapMutex;
+            mutable std::mutex m_loggerMapMutex;
             karabo::util::Hash m_loggerMap;
 
             std::set<std::string> m_projectManagers;
@@ -186,7 +188,7 @@ namespace karabo {
             karabo::net::UserAuthClient m_authClient;
             // The temporary session manager has to be built after the GuiServer is fully constructed - it binds to a
             // method of the GuiServer.
-            boost::shared_ptr<GuiServerTemporarySessionManager> m_tempSessionManager;
+            std::shared_ptr<GuiServerTemporarySessionManager> m_tempSessionManager;
 
             const bool m_onlyAppModeClients;
 

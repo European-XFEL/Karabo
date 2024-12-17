@@ -25,7 +25,7 @@
 #ifndef FSMBASESTATE_HH
 #define FSMBASESTATE_HH
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include <string>
 // back-end
 #include <boost/msm/back/state_machine.hpp>
@@ -110,14 +110,14 @@ namespace karabo {
             }
 
             // Signature of the accept function
-            typedef boost::msm::back::args<void, boost::shared_ptr<StateVisitor>, bool> accept_sig;
+            typedef boost::msm::back::args<void, std::shared_ptr<StateVisitor>, bool> accept_sig;
 
             // This makes states polymorphic
 
             virtual ~FsmBaseState() {}
 
             // Default implementation for states who need to be visited
-            void accept(boost::shared_ptr<StateVisitor> visitor, bool stopWorker) const {
+            void accept(std::shared_ptr<StateVisitor> visitor, bool stopWorker) const {
                 visitor->visitState(this, stopWorker);
             }
 

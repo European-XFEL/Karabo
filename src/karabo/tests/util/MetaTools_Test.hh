@@ -28,14 +28,13 @@
 #include <cppunit/extensions/HelperMacros.h>
 
 #include <boost/asio.hpp>
-#include <boost/bind/bind.hpp>
-#include <boost/enable_shared_from_this.hpp>
-#include <boost/function.hpp>
-#include <boost/thread.hpp>
+#include <functional>
 #include <iostream>
 #include <karabo/net/EventLoop.hh>
 #include <karabo/util/Hash.hh>
 #include <karabo/util/MetaTools.hh>
+#include <memory>
+#include <thread>
 #include <unordered_map>
 
 struct MyPublicHash : public karabo::util::Hash {};
@@ -51,17 +50,17 @@ struct PointerTest {
     }
 
     template <class T>
-    static bool isSharedPointer(boost::true_type) {
+    static bool isSharedPointer(std::true_type) {
         return true;
     }
 
     template <class T>
-    static bool isSharedPointer(boost::false_type) {
+    static bool isSharedPointer(std::false_type) {
         return false;
     }
 };
 
-struct BindWeakTest : public boost::enable_shared_from_this<BindWeakTest> {
+struct BindWeakTest : public std::enable_shared_from_this<BindWeakTest> {
     int add(const int a, const int b) {
         return a + b;
     }
@@ -70,12 +69,12 @@ struct BindWeakTest : public boost::enable_shared_from_this<BindWeakTest> {
     }
 };
 
-struct Test_SignalSlotable : public boost::enable_shared_from_this<Test_SignalSlotable> {
+struct Test_SignalSlotable : public std::enable_shared_from_this<Test_SignalSlotable> {
     virtual ~Test_SignalSlotable() {}
 };
 
 struct Test_Device : public virtual Test_SignalSlotable {
-    boost::asio::deadline_timer m_timer;
+    boost::asio::steady_timer m_timer;
     std::vector<std::string>* m_messages;
 
     Test_Device(std::vector<std::string>* messages)
@@ -85,9 +84,9 @@ struct Test_Device : public virtual Test_SignalSlotable {
 
     void init() {
         // This is just testing that binding a const member function compiles - both with a this which is const or not:
-        using boost::placeholders::_1;
-        using boost::placeholders::_2;
-        m_timer.expires_from_now(boost::posix_time::millisec(100));
+        using std::placeholders::_1;
+        using std::placeholders::_2;
+        m_timer.expires_from_now(boost::asio::chrono::milliseconds(100));
         m_timer.async_wait(karabo::util::bind_weak(&Test_Device::dummyConstFunction, this, 0, _1));
         m_timer.async_wait(
               karabo::util::bind_weak(&Test_Device::dummyConstFunction, const_cast<const Test_Device*>(this), 0, _1));
@@ -95,7 +94,7 @@ struct Test_Device : public virtual Test_SignalSlotable {
 
         // This is just testing that binding a member function that returns a value works
         {
-            boost::shared_ptr<BindWeakTest> bindWeakTest = boost::make_shared<BindWeakTest>();
+            std::shared_ptr<BindWeakTest> bindWeakTest = std::make_shared<BindWeakTest>();
 
             auto f1 = karabo::util::bind_weak(&BindWeakTest::add, bindWeakTest.get(), _1, _2);
             int v = f1(1, 1);
@@ -126,7 +125,7 @@ struct Test_Device : public virtual Test_SignalSlotable {
         }
 
         // Now the real test starts:
-        m_timer.expires_from_now(boost::posix_time::millisec(100));
+        m_timer.expires_from_now(boost::asio::chrono::milliseconds(100));
         m_timer.async_wait(karabo::util::bind_weak(&Test_Device::executeStepFunction, this, 5, _1));
     }
 
@@ -148,27 +147,27 @@ struct Test_Device : public virtual Test_SignalSlotable {
         // Schedule next step
         m_messages->push_back("Tick " + boost::lexical_cast<std::string>(arg));
 
-        boost::this_thread::sleep(boost::posix_time::milliseconds(50));
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
-        m_timer.expires_from_now(boost::posix_time::millisec(500));
+        m_timer.expires_from_now(boost::asio::chrono::milliseconds(500));
 
         m_timer.async_wait(
-              karabo::util::bind_weak(&Test_Device::executeStepFunction, this, arg + 1, boost::placeholders::_1));
+              karabo::util::bind_weak(&Test_Device::executeStepFunction, this, arg + 1, std::placeholders::_1));
     }
 };
 
 struct Test_DeviceServer {
-    boost::asio::deadline_timer m_deviceDestructTimer;
-    std::map<std::string, boost::shared_ptr<Test_Device> > m_devices;
+    boost::asio::steady_timer m_deviceDestructTimer;
+    std::map<std::string, std::shared_ptr<Test_Device> > m_devices;
 
     Test_DeviceServer(std::vector<std::string>* messages)
         : m_deviceDestructTimer(karabo::net::EventLoop::getIOService()) {
-        m_devices["someTest_Device"] = boost::shared_ptr<Test_Device>(new Test_Device(messages));
+        m_devices["someTest_Device"] = std::shared_ptr<Test_Device>(new Test_Device(messages));
         m_devices["someTest_Device"]->init();
 
-        m_deviceDestructTimer.expires_from_now(boost::posix_time::millisec(1500));
+        m_deviceDestructTimer.expires_from_now(boost::asio::chrono::milliseconds(1500));
         m_deviceDestructTimer.async_wait(
-              boost::bind(&Test_DeviceServer::killTest_Device, this, boost::placeholders::_1, "someTest_Device"));
+              std::bind(&Test_DeviceServer::killTest_Device, this, std::placeholders::_1, "someTest_Device"));
     }
 
     void killTest_Device(const boost::system::error_code& error, const std::string& deviceName) {

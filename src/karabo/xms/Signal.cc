@@ -74,7 +74,7 @@ namespace karabo {
 
 
         bool Signal::registerSlot(const std::string& slotInstanceId, const std::string& slotFunction) {
-            boost::mutex::scoped_lock lock(m_registeredSlotsMutex);
+            std::lock_guard<std::mutex> lock(m_registeredSlotsMutex);
             // Note: m_registeredSlots[slotInstanceId] is a set<std::string> and set<..>::insert(arg) returns an
             //       std::pair where second tells whether arg was already in the set or is newly added.
             return m_registeredSlots[slotInstanceId].insert(slotFunction).second;
@@ -82,7 +82,7 @@ namespace karabo {
 
 
         bool Signal::unregisterSlot(const std::string& slotInstanceId, const std::string& slotFunction) {
-            boost::mutex::scoped_lock lock(m_registeredSlotsMutex);
+            std::lock_guard<std::mutex> lock(m_registeredSlotsMutex);
             auto it = m_registeredSlots.find(slotInstanceId);
             bool didErase = false;
             if (it != m_registeredSlots.end()) {
@@ -104,7 +104,7 @@ namespace karabo {
                 // prepareHeader should be called once per 'emit'!
                 SlotMap registeredSlots;
                 {
-                    boost::mutex::scoped_lock lock(m_registeredSlotsMutex);
+                    std::lock_guard<std::mutex> lock(m_registeredSlotsMutex);
                     registeredSlots = m_registeredSlots;
                 }
                 Hash::Pointer header = prepareHeader(registeredSlots);
@@ -156,7 +156,7 @@ namespace karabo {
                 *const_cast<std::string*>(&m_signalInstanceId) = m_signalSlotable->getInstanceId();
             }
 
-            karabo::util::Hash::Pointer header(boost::make_shared<karabo::util::Hash>());
+            karabo::util::Hash::Pointer header(std::make_shared<karabo::util::Hash>());
             header->set("signalInstanceId", m_signalInstanceId);
             header->set("signalFunction", m_signalFunction);
             setSlotStrings(slots, *header);

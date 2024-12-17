@@ -24,8 +24,8 @@
 
 #include "Exception.hh"
 
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/filesystem.hpp>
+#include <chrono>
+#include <filesystem>
 
 #if defined(__GNUC__) || defined(__clang__)
 #include <cxxabi.h>
@@ -36,11 +36,10 @@ using namespace std;
 namespace karabo {
     namespace util {
 
-        using namespace boost::posix_time;
-        using namespace boost::filesystem;
+        using namespace std::filesystem;
 
         // Init static members
-        boost::mutex Exception::m_mutex;
+        std::mutex Exception::m_mutex;
         std::map<boost::thread::id, boost::circular_buffer<Exception::ExceptionInfo>> Exception::m_trace;
 
 
@@ -70,12 +69,12 @@ namespace karabo {
             } else {
                 m_exceptionInfo.lineNumber = "";
             }
-            m_exceptionInfo.timestamp = to_simple_string(ptime(microsec_clock::local_time()));
+            m_exceptionInfo.timestamp = current_time_string();
         }
 
 
         void Exception::addToTrace(const ExceptionInfo& value) {
-            boost::mutex::scoped_lock lock(Exception::m_mutex);
+            std::lock_guard<std::mutex> lock(Exception::m_mutex);
             boost::circular_buffer<ExceptionInfo>& buffer = Exception::m_trace[boost::this_thread::get_id()];
             if (buffer.empty()) buffer.set_capacity(100u); // limit size in case never cleared
             buffer.push_back(value);
@@ -88,7 +87,7 @@ namespace karabo {
 
 
         void Exception::clearTrace() {
-            boost::mutex::scoped_lock lock(Exception::m_mutex);
+            std::lock_guard<std::mutex> lock(Exception::m_mutex);
             Exception::m_trace.erase(boost::this_thread::get_id());
         }
 
@@ -157,7 +156,7 @@ namespace karabo {
 
 
         void Exception::showTrace(ostream& os) {
-            boost::mutex::scoped_lock lock(Exception::m_mutex);
+            std::lock_guard<std::mutex> lock(Exception::m_mutex);
             auto& currentBuffer = Exception::m_trace[boost::this_thread::get_id()];
             if (currentBuffer.empty()) return;
             ostringstream oss;
@@ -176,7 +175,7 @@ namespace karabo {
             Exception::showTrace(os); // no-op if m_trace[boost::this_thread::get_id()] is empty
 
             {
-                boost::mutex::scoped_lock lock(Exception::m_mutex);
+                std::lock_guard<std::mutex> lock(Exception::m_mutex);
                 auto& currentBuffer = Exception::m_trace[boost::this_thread::get_id()];
                 string fill(currentBuffer.size() * 3, ' ');
                 os << fill << currentBuffer.size() + 1 << ". Exception " << string(5, '=') << ">  {" << endl;
@@ -221,7 +220,7 @@ namespace karabo {
             err << m_exceptionInfo.message;
             bool hasMsg = !m_exceptionInfo.message.empty();
             {
-                boost::mutex::scoped_lock lock(Exception::m_mutex);
+                std::lock_guard<std::mutex> lock(Exception::m_mutex);
                 auto& currentBuffer = Exception::m_trace[boost::this_thread::get_id()];
 
                 unsigned int j = 0;
@@ -266,6 +265,19 @@ namespace karabo {
 
         const std::string& Exception::details() const {
             return m_exceptionInfo.details;
+        }
+
+
+        std::string Exception::current_time_string() {
+            std::ostringstream oss;
+#if __GNUC__ >= 13 && __cplusplus >= 202002
+            oss << std::chrono::system_clock::now();
+#else
+            auto now = std::chrono::system_clock::now();
+            auto timet = std::chrono::system_clock::to_time_t(now);
+            oss << std::put_time(std::localtime(&timet), "%F %T");
+#endif
+            return oss.str();
         }
     } // namespace util
 } // namespace karabo

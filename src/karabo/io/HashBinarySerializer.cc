@@ -614,7 +614,7 @@ namespace karabo {
             const unsigned int size = readSize(is);
             Schema schema;
             if (size) {
-                boost::scoped_array<char> buffer(new char[size]);
+                std::unique_ptr<char> buffer(new char[size]);
                 is.read(buffer.get(), size);
                 serializer.load(schema, buffer.get(), size);
             }
@@ -656,13 +656,13 @@ namespace karabo {
         template <>
         karabo::util::ByteArray HashBinarySerializer::readSingleValue(std::istream& is) const {
             const size_t size = readSize(is);
-            ByteArray result(boost::shared_ptr<char>(new char[size], &byteArrayDeleter), size);
+            ByteArray result(std::shared_ptr<char>(new char[size], std::default_delete<char[]>()), size);
             is.read(result.first.get(), size);
             return result;
         }
 
         karabo::util::ByteArray HashBinarySerializer::readByteArrayAsCopy(std::istream& is, size_t size) const {
-            ByteArray result(boost::shared_ptr<char>(new char[size], &byteArrayDeleter), size);
+            ByteArray result(std::shared_ptr<char>(new char[size], std::default_delete<char[]>()), size);
             is.read(result.first.get(), size);
             return result;
         }

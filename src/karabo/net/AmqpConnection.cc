@@ -23,7 +23,7 @@
 
 #include "AmqpConnection.hh"
 
-#include <boost/asio/deadline_timer.hpp>
+#include <boost/asio.hpp>
 
 #include "AmqpClient.hh"
 #include "AmqpUtils.hh" // for ConnectionHandler, KARABO_ERROR_CODE_XXX
@@ -31,8 +31,8 @@
 #include "karabo/util/Exception.hh"
 #include "karabo/util/MetaTools.hh" // for bind_weak
 
-using boost::placeholders::_1;
-using boost::placeholders::_2;
+using std::placeholders::_1;
+using std::placeholders::_2;
 
 using karabo::util::bind_weak;
 
@@ -89,7 +89,7 @@ namespace karabo {
             m_work.reset();
 
             // Join thread except if running in that thread.
-            if (m_thread.get_id() == std::this_thread::get_id()) {
+            if (m_thread.get_id() == boost::this_thread::get_id()) {
                 // Happened while development when onError and onDetached handlers where both called in a connection
                 // attempt that failed due to invalid address. At that stage, onError called the AsyncHandler that then
                 // removed all external reference counts to the connection. Likely the bind_weak mechanism for
@@ -321,10 +321,10 @@ namespace karabo {
             // Do not let all connections bombard any now available broker at once (that is why we need different
             // seeds!):
             std::uniform_int_distribution<int> distribution(2000, 15000); // 2 to 15 seconds in ms
-            boost::posix_time::milliseconds delay(distribution(*m_random));
+            size_t delay(distribution(*m_random));
             KARABO_LOG_FRAMEWORK_INFO << "Delay reconnection a bit: " << delay;
-            auto timer = std::make_shared<boost::asio::deadline_timer>(m_ioContext);
-            timer->expires_from_now(delay);
+            auto timer = std::make_shared<boost::asio::steady_timer>(m_ioContext);
+            timer->expires_from_now(boost::asio::chrono::milliseconds(delay));
             timer->async_wait([weakThis{weak_from_this()}, timer](const boost::system::error_code& e) {
                 if (e) return;
                 if (auto self = weakThis.lock()) {
@@ -490,7 +490,7 @@ namespace karabo {
             }
         }
 
-        void AmqpConnection::registerForReconnectInfo(boost::weak_ptr<AmqpClient> client) {
+        void AmqpConnection::registerForReconnectInfo(std::weak_ptr<AmqpClient> client) {
             dispatch([weakThis{weak_from_this()}, client{std::move(client)}]() {
                 // std::set takes care that client is registered only once
                 if (auto self = weakThis.lock()) self->m_registeredClients.emplace(std::move(client));

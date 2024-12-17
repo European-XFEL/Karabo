@@ -50,24 +50,24 @@ namespace karabo {
 
         class Channel;
 
-        typedef boost::function<void(const ErrorCode&)> ErrorHandler;
+        typedef std::function<void(const ErrorCode&)> ErrorHandler;
 
         /**
          * @class Connection
          * @brief This class serves as the interface for all connections.
          * A connection is only established upon call of the start() function.
          */
-        class Connection : public boost::enable_shared_from_this<Connection> {
+        class Connection : public std::enable_shared_from_this<Connection> {
             friend class Channel;
 
            protected:
-            typedef boost::shared_ptr<Channel> ChannelPointer;
+            typedef std::shared_ptr<Channel> ChannelPointer;
 
            public:
             KARABO_CLASSINFO(Connection, "Connection", "1.0")
             KARABO_CONFIGURATION_BASE_CLASS
 
-            typedef boost::function<void(const ErrorCode&, const ChannelPointer&)> ConnectionHandler;
+            typedef std::function<void(const ErrorCode&, const ChannelPointer&)> ConnectionHandler;
 
             virtual ~Connection();
 
@@ -103,7 +103,7 @@ namespace karabo {
 
 
            protected: // functions
-            boost::shared_ptr<Connection> getConnectionPointer() {
+            std::shared_ptr<Connection> getConnectionPointer() {
                 return shared_from_this();
             }
 

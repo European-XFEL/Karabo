@@ -23,11 +23,11 @@
 #include "InfluxDbClient.hh"
 
 #include <boost/chrono/chrono.hpp>
-#include <boost/thread.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <cmath>
 #include <cstdlib>
 #include <sstream>
+#include <thread>
 
 #include "karabo/io/BinarySerializer.hh"
 #include "karabo/log/Logger.hh"
@@ -39,8 +39,8 @@
 
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::net::InfluxDbClient);
 
-using boost::placeholders::_1;
-using boost::placeholders::_2;
+using std::placeholders::_1;
+using std::placeholders::_2;
 
 namespace karabo {
 
@@ -50,7 +50,7 @@ namespace karabo {
         using namespace karabo::net;
         using namespace karabo::util;
 
-        boost::mutex InfluxDbClient::m_uuidGeneratorMutex;
+        std::mutex InfluxDbClient::m_uuidGeneratorMutex;
         boost::uuids::random_generator InfluxDbClient::m_uuidGenerator;
         const unsigned int InfluxDbClient::k_connTimeoutMs = 3500u;
 
@@ -137,9 +137,9 @@ namespace karabo {
               m_dbPassword(input.get<std::string>("dbPassword")),
               m_disconnectOnIdle(input.get<bool>("disconnectOnIdle")) {
             if (!m_url.empty()) {
-                const boost::tuple<std::string, std::string, std::string, std::string, std::string> partsWrite =
+                const std::tuple<std::string, std::string, std::string, std::string, std::string> partsWrite =
                       karabo::net::parseUrl(m_url);
-                m_hostname = partsWrite.get<1>();
+                m_hostname = std::get<1>(partsWrite);
             } else {
                 m_hostname = "";
             }
@@ -158,7 +158,7 @@ namespace karabo {
 
         std::string InfluxDbClient::generateUUID() {
             // The generator is not thread safe, but we rely on real uniqueness!
-            boost::mutex::scoped_lock lock(m_uuidGeneratorMutex);
+            std::lock_guard<std::mutex> lock(m_uuidGeneratorMutex);
             return boost::uuids::to_string(m_uuidGenerator());
         }
 
@@ -177,7 +177,7 @@ namespace karabo {
 
 
         void InfluxDbClient::startDbConnectIfDisconnected(const InfluxConnectedHandler& hook) {
-            boost::mutex::scoped_lock lock(m_connectionRequestedMutex);
+            std::lock_guard<std::mutex> lock(m_connectionRequestedMutex);
             if (!m_dbChannel || !m_dbChannel->isOpen()) {
                 if (m_connectionRequested) return;
                 Hash config("url", m_url, "sizeofLength", 0, "type", "client");
@@ -200,15 +200,15 @@ namespace karabo {
 
 
         std::string InfluxDbClient::influxVersion() {
-            boost::mutex::scoped_lock lock(m_influxVersionMutex);
+            std::lock_guard<std::mutex> lock(m_influxVersionMutex);
             return m_influxVersion;
         }
 
 
-        void InfluxDbClient::tryNextRequest(boost::mutex::scoped_lock& requestQueueLock) {
+        void InfluxDbClient::tryNextRequest(std::unique_lock<std::mutex>& requestQueueLock) {
             if (!m_active && !m_requestQueue.empty()) { // activate processing
                 m_active = true;
-                boost::function<void()> nextRequest;
+                std::function<void()> nextRequest;
                 nextRequest.swap(m_requestQueue.front());
                 m_requestQueue.pop();
                 requestQueueLock.unlock();
@@ -227,7 +227,7 @@ namespace karabo {
                                            << e.what();
             }
 
-            boost::mutex::scoped_lock lock(m_requestQueueMutex);
+            std::unique_lock<std::mutex> lock(m_requestQueueMutex);
             if (m_requestQueue.empty()) {
                 m_active = false;
                 if (m_disconnectOnIdle) {
@@ -237,7 +237,7 @@ namespace karabo {
                     // disconnection process - a request could be queued and the code below would
                     // close the connection without the original pre-condition of the queue being
                     // empty.
-                    boost::mutex::scoped_lock lockConnect(m_connectionRequestedMutex);
+                    std::lock_guard<std::mutex> lockConnect(m_connectionRequestedMutex);
                     if (!m_connectionRequested) {
                         // There's no ongoing connection attempt.
                         KARABO_LOG_FRAMEWORK_INFO << "onResponse: disconnecting from InfluxDB (no more requests in the "
@@ -249,7 +249,7 @@ namespace karabo {
                     }
                 }
             } else {
-                boost::function<void()> nextRequest;
+                std::function<void()> nextRequest;
                 nextRequest.swap(m_requestQueue.front());
                 m_requestQueue.pop();
                 lock.unlock();
@@ -266,7 +266,7 @@ namespace karabo {
                                             const std::string& requestId) {
             auto handler = bind_weak(&InfluxDbClient::onResponse, this, _1, action);
             {
-                boost::mutex::scoped_lock lock(m_responseHandlersMutex);
+                std::lock_guard<std::mutex> lock(m_responseHandlersMutex);
                 m_registeredInfluxResponseHandlers.emplace(std::make_pair(requestId, std::make_pair(message, handler)));
             }
             writeDb(message, requestId);
@@ -274,7 +274,7 @@ namespace karabo {
 
 
         void InfluxDbClient::postQueryDb(const std::string& sel, const InfluxResponseHandler& action) {
-            boost::mutex::scoped_lock lock(m_requestQueueMutex);
+            std::unique_lock<std::mutex> lock(m_requestQueueMutex);
             m_requestQueue.push(bind_weak(&InfluxDbClient::postQueryDbTask, this, sel, action));
             tryNextRequest(lock);
         }
@@ -286,7 +286,7 @@ namespace karabo {
                 oss << "Could not connect to InfluxDb at \"" << m_url << "\".";
                 const std::string errMsg = oss.str();
                 {
-                    boost::mutex::scoped_lock lock(m_influxVersionMutex);
+                    std::lock_guard<std::mutex> lock(m_influxVersionMutex);
                     m_influxVersion.clear();
                 }
                 KARABO_LOG_FRAMEWORK_ERROR << errMsg;
@@ -326,7 +326,7 @@ namespace karabo {
 
 
         void InfluxDbClient::getPingDb(const InfluxResponseHandler& action) {
-            boost::mutex::scoped_lock lock(m_requestQueueMutex);
+            std::unique_lock<std::mutex> lock(m_requestQueueMutex);
             m_requestQueue.push(bind_weak(&InfluxDbClient::getPingDbTask, this, action));
             tryNextRequest(lock);
         }
@@ -355,7 +355,7 @@ namespace karabo {
 
         void InfluxDbClient::writeDb(const std::string& message, const std::string& requestId) {
             if (m_dbChannel) {
-                auto datap = boost::make_shared<std::vector<char>>(std::vector<char>(message.begin(), message.end()));
+                auto datap = std::make_shared<std::vector<char>>(std::vector<char>(message.begin(), message.end()));
                 m_flyingId = requestId;
                 m_dbChannel->writeAsyncVectorPointer(datap, bind_weak(&InfluxDbClient::onDbWrite, this, _1, datap));
                 KARABO_LOG_FRAMEWORK_DEBUG << "writeDb: \n" << message;
@@ -372,7 +372,7 @@ namespace karabo {
 
 
         void InfluxDbClient::enqueueQuery(const std::string& line) {
-            boost::mutex::scoped_lock lock(m_bufferMutex);
+            std::lock_guard<std::mutex> lock(m_bufferMutex);
             m_buffer << line;
             if (++m_nPoints > m_maxPointsInBuffer) {
                 flushBatchImpl();
@@ -381,7 +381,7 @@ namespace karabo {
 
 
         void InfluxDbClient::flushBatch(const InfluxResponseHandler& respHandler) {
-            boost::mutex::scoped_lock lock(m_bufferMutex);
+            std::lock_guard<std::mutex> lock(m_bufferMutex);
             flushBatchImpl(respHandler);
         }
 
@@ -401,7 +401,7 @@ namespace karabo {
                 HttpResponse resp;
                 resp.code = 204;
                 // Go via event loop to avoid dead lock in case the handler calls a function that locks m_bufferMutex
-                EventLoop::getIOService().post(boost::bind(respHandler, resp));
+                EventLoop::getIOService().post(std::bind(respHandler, resp));
             }
             m_buffer.str(""); // clear buffer stream
             m_nPoints = 0;
@@ -415,22 +415,22 @@ namespace karabo {
                     << ", message: '" << ec.message() << "'";
                 KARABO_LOG_FRAMEWORK_ERROR << oss.str();
                 {
-                    boost::mutex::scoped_lock lock(m_connectionRequestedMutex);
+                    std::lock_guard<std::mutex> lock(m_connectionRequestedMutex);
                     m_dbChannel.reset();
                     m_connectionRequested = false;
                 }
                 {
-                    boost::mutex::scoped_lock lock(m_responseHandlersMutex);
+                    std::lock_guard<std::mutex> lock(m_responseHandlersMutex);
                     m_registeredInfluxResponseHandlers.clear();
                 }
                 {
-                    boost::mutex::scoped_lock lock(m_influxVersionMutex);
+                    std::lock_guard<std::mutex> lock(m_influxVersionMutex);
                     m_influxVersion.clear();
                 }
                 if (hook) hook(false); // false means connection failed
                 return;
             } else {
-                boost::mutex::scoped_lock lock(m_connectionRequestedMutex);
+                std::lock_guard<std::mutex> lock(m_connectionRequestedMutex);
                 m_connectionRequested = false;
                 m_dbChannel = channel;
             }
@@ -451,7 +451,7 @@ namespace karabo {
         void InfluxDbClient::onDbRead(const karabo::net::ErrorCode& ec, const std::string& line) {
             std::string flyingId;
             {
-                boost::mutex::scoped_lock lock(m_requestQueueMutex);
+                std::lock_guard<std::mutex> lock(m_requestQueueMutex);
                 flyingId = m_flyingId;
             }
 
@@ -499,7 +499,7 @@ namespace karabo {
                         // happen on different phases of the processing of a single request, the possible
                         // race conditions are all between external reads and internal writes. Internal reads
                         // and writes won't concur with each other.
-                        boost::mutex::scoped_lock lock(m_influxVersionMutex);
+                        std::lock_guard<std::mutex> lock(m_influxVersionMutex);
                         m_influxVersion = m_response.version;
                         KARABO_LOG_FRAMEWORK_INFO << "Influx instance " << m_url << " has version '" << m_influxVersion
                                                   << "'.";
@@ -550,7 +550,7 @@ namespace karabo {
                         if (m_response.code >= 300) {
                             KARABO_LOG_FRAMEWORK_ERROR << "InfluxDB ERROR RESPONSE:\n" << m_response;
                         }
-                        boost::mutex::scoped_lock lock(m_responseHandlersMutex);
+                        std::unique_lock<std::mutex> lock(m_responseHandlersMutex);
                         auto it = m_registeredInfluxResponseHandlers.find(m_response.requestId);
                         if (it != m_registeredInfluxResponseHandlers.end()) {
                             if (m_response.code >= 300) {
@@ -582,7 +582,7 @@ namespace karabo {
             if (m_response.connection == "close") {
                 KARABO_LOG_FRAMEWORK_ERROR << "InfluxDB server at '" << m_hostname << "' closed connection...\n"
                                            << line;
-                boost::mutex::scoped_lock lock(m_connectionRequestedMutex);
+                std::lock_guard<std::mutex> lock(m_connectionRequestedMutex);
                 m_dbChannel.reset();
                 m_connectionRequested = false;
             }
@@ -593,12 +593,12 @@ namespace karabo {
         }
 
 
-        void InfluxDbClient::onDbWrite(const karabo::net::ErrorCode& ec, boost::shared_ptr<std::vector<char>> p) {
+        void InfluxDbClient::onDbWrite(const karabo::net::ErrorCode& ec, std::shared_ptr<std::vector<char>> p) {
             p.reset();
             if (ec) {
                 std::string flyingId;
                 {
-                    boost::mutex::scoped_lock lock(m_requestQueueMutex);
+                    std::lock_guard<std::mutex> lock(m_requestQueueMutex);
                     flyingId = m_flyingId;
                 }
                 std::ostringstream oss;
@@ -617,14 +617,14 @@ namespace karabo {
                                                  bool logAsError) {
             (logAsError ? KARABO_LOG_FRAMEWORK_ERROR : KARABO_LOG_FRAMEWORK_INFO) << errMsg;
             {
-                boost::mutex::scoped_lock lock(m_connectionRequestedMutex);
+                std::lock_guard<std::mutex> lock(m_connectionRequestedMutex);
                 m_dbChannel.reset();
                 m_active = false;
                 m_connectionRequested = false;
             }
             InfluxResponseHandler handler;
             {
-                boost::mutex::scoped_lock lock(m_responseHandlersMutex);
+                std::lock_guard<std::mutex> lock(m_responseHandlersMutex);
                 auto it = m_registeredInfluxResponseHandlers.find(requestId);
                 if (it != m_registeredInfluxResponseHandlers.end()) {
                     handler = it->second.second;
@@ -639,14 +639,14 @@ namespace karabo {
                 o.connection = "close";
                 handler(o);
             }
-            boost::mutex::scoped_lock lock(m_requestQueueMutex);
+            std::unique_lock<std::mutex> lock(m_requestQueueMutex);
             // Channel closed above. Need to trigger to continue on any pending requests.
             tryNextRequest(lock);
         }
 
 
         void InfluxDbClient::postWriteDb(const std::string& batch, const InfluxResponseHandler& action) {
-            boost::mutex::scoped_lock lock(m_requestQueueMutex);
+            std::unique_lock<std::mutex> lock(m_requestQueueMutex);
             m_requestQueue.push(bind_weak(&InfluxDbClient::postWriteDbTask, this, batch, action));
             tryNextRequest(lock);
         }
@@ -658,7 +658,7 @@ namespace karabo {
                 oss << "Could not connect to InfluxDb at \"" << m_url << "\".";
                 const std::string errMsg = oss.str();
                 {
-                    boost::mutex::scoped_lock lock(m_influxVersionMutex);
+                    std::lock_guard<std::mutex> lock(m_influxVersionMutex);
                     m_influxVersion.clear();
                 }
                 KARABO_LOG_FRAMEWORK_ERROR << errMsg;
@@ -697,7 +697,7 @@ namespace karabo {
 
 
         void InfluxDbClient::queryDb(const std::string& sel, const InfluxResponseHandler& action) {
-            boost::mutex::scoped_lock lock(m_requestQueueMutex);
+            std::unique_lock<std::mutex> lock(m_requestQueueMutex);
             m_requestQueue.push(bind_weak(&InfluxDbClient::queryDbTask, this, sel, action));
             tryNextRequest(lock);
         }
@@ -709,7 +709,7 @@ namespace karabo {
                 oss << "Could not connect to InfluxDb at \"" << m_url << "\".";
                 const std::string errMsg = oss.str();
                 {
-                    boost::mutex::scoped_lock lock(m_influxVersionMutex);
+                    std::lock_guard<std::mutex> lock(m_influxVersionMutex);
                     m_influxVersion.clear();
                 }
                 KARABO_LOG_FRAMEWORK_ERROR << errMsg;
@@ -749,7 +749,7 @@ namespace karabo {
 
         bool InfluxDbClient::connectWait(std::size_t millis) {
             if (isConnected()) return true;
-            auto prom = boost::make_shared<std::promise<bool>>();
+            auto prom = std::make_shared<std::promise<bool>>();
             std::future<bool> fut = prom->get_future();
             startDbConnectIfDisconnected([prom](bool connected) { prom->set_value(connected); });
             auto status = fut.wait_for(std::chrono::milliseconds(millis));

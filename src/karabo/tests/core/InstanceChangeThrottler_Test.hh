@@ -27,10 +27,10 @@
 #include <cppunit/extensions/HelperMacros.h>
 
 #include <boost/chrono.hpp>
-#include <boost/function.hpp>
-#include <boost/thread/mutex.hpp>
+#include <functional>
 #include <karabo/core/InstanceChangeThrottler.hh>
 #include <karabo/util/Hash.hh>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -64,7 +64,7 @@ class InstanceChangeObserver {
                               std::vector<InstanceChange>& destChangeVector);
 
    private:
-    mutable boost::mutex m_instChangesMutex;
+    mutable std::mutex m_instChangesMutex;
     std::vector<InstanceChange> m_instNewChanges;
     std::vector<InstanceChange> m_instGoneChanges;
     std::vector<InstanceChange> m_instUpdateChanges;

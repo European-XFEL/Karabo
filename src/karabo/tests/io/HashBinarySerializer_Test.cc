@@ -120,9 +120,9 @@ void HashBinarySerializer_Test::testSerialization() {
     h.setAttribute<vector<complex<double>>>("vec_cd", "vec_cd", vector<complex<double>>(1000, complex<double>(3., 4.)));
     h.setAttribute<vector<string>>("vec_str", "vec_str", vector<string>(1000, "Hello Karabo"));
     m_hash.set<Hash>("hash", h);
-    m_hash.set<Hash::Pointer>("hash_ptr", boost::make_shared<Hash>(h));
+    m_hash.set<Hash::Pointer>("hash_ptr", std::make_shared<Hash>(h));
     m_hash.set<vector<Hash>>("vec_hash", vector<Hash>(100, h));
-    m_hash.set<vector<Hash::Pointer>>("vec_hash_ptr", vector<Hash::Pointer>(10, boost::make_shared<Hash>(h)));
+    m_hash.set<vector<Hash::Pointer>>("vec_hash_ptr", vector<Hash::Pointer>(10, std::make_shared<Hash>(h)));
     Schema s;
     s.setParameterHash(h);
     m_hash.set<Schema>("schema", s);
@@ -130,37 +130,37 @@ void HashBinarySerializer_Test::testSerialization() {
 
     BinarySerializer<Hash>::Pointer p = BinarySerializer<Hash>::create("Bin");
     vector<char> archive1;
-    boost::posix_time::ptime tick = boost::posix_time::microsec_clock::local_time();
+    std::chrono::steady_clock::time_point tick = std::chrono::steady_clock::now();
     const int ntests = 1; // for measurements, better increase...
     for (int i = 0; i < ntests; ++i) {
         p->save(m_hash, archive1);
     }
-    boost::posix_time::time_duration diff = boost::posix_time::microsec_clock::local_time() - tick;
-    float ave = diff.total_milliseconds() / static_cast<double>(ntests);
+    auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - tick);
+    float ave = diff.count() / static_cast<double>(ntests);
     KARABO_LOG_FRAMEWORK_DEBUG << " Average serialization time: " << ave
                                << " ms for Hash of size: " << archive1.size() / 10.e6 << " MB";
 
     const Hash schemaOnlyHash("schema", s);
-    tick = boost::posix_time::microsec_clock::local_time();
+    tick = std::chrono::steady_clock::now();
     std::vector<char> archiveSchema;
     const int ntestsSchema = ntests * 10;
     for (int i = 0; i < ntestsSchema; ++i) {
         archiveSchema.clear();
         p->save(schemaOnlyHash, archiveSchema);
     }
-    diff = boost::posix_time::microsec_clock::local_time() - tick;
-    ave = diff.total_milliseconds() / static_cast<double>(ntestsSchema);
+    diff = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - tick);
+    ave = diff.count() / static_cast<double>(ntestsSchema);
     KARABO_LOG_FRAMEWORK_DEBUG << " Average serialization time schema only: " << ave << " ms";
 
     Hash hash;
-    tick = boost::posix_time::microsec_clock::local_time();
+    tick = std::chrono::steady_clock::now();
     for (int i = 0; i < ntestsSchema; ++i) {
         hash.clear();
         size_t size = p->load(hash, archiveSchema);
         CPPUNIT_ASSERT_EQUAL(archiveSchema.size(), size);
     }
-    diff = boost::posix_time::microsec_clock::local_time() - tick;
-    ave = diff.total_milliseconds() / static_cast<double>(ntestsSchema);
+    diff = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - tick);
+    ave = diff.count() / static_cast<double>(ntestsSchema);
     KARABO_LOG_FRAMEWORK_DEBUG << " Average de-serialization time schema only: " << ave << " ms";
 
     // Check how save2 and load work together
@@ -182,13 +182,13 @@ void HashBinarySerializer_Test::testSerialization() {
 
     CPPUNIT_ASSERT_EQUAL(bytes, archiveSchema.size());
 
-    tick = boost::posix_time::microsec_clock::local_time();
+    tick = std::chrono::steady_clock::now();
     for (int i = 0; i < ntests; ++i) {
         hash.clear();
         p->load(hash, archive1);
     }
-    diff = boost::posix_time::microsec_clock::local_time() - tick;
-    ave = diff.total_milliseconds() / static_cast<double>(ntests);
+    diff = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - tick);
+    ave = diff.count() / static_cast<double>(ntests);
     KARABO_LOG_FRAMEWORK_DEBUG << " Average de-serialization time: " << ave << " ms";
     CPPUNIT_ASSERT(karabo::util::similar(hash, m_hash));
     CPPUNIT_ASSERT_NO_THROW(hashContentTest(hash.get<Hash>("hash"), "std::vector<char>"));
@@ -443,13 +443,14 @@ void HashBinarySerializer_Test::testSpeedLargeArrays() {
     h.set("ndarr", ndarr);
 
     int numTries = 10;
-    auto printSerializationTime = [&numTries](const boost::posix_time::time_duration& diff, size_t sizeInBytes) {
-        const float ave = diff.total_milliseconds() / static_cast<float>(numTries);
+    auto printSerializationTime = [&numTries](const std::chrono::duration<long long, std::milli>& diff,
+                                              size_t sizeInBytes) {
+        const float ave = diff.count() / static_cast<float>(numTries);
         std::clog << " --- Average serialization time: " << ave << " ms for Hash of size: " << sizeInBytes * 1.e-6
                   << " MB" << std::endl;
     };
-    auto printDeserializationTime = [&numTries](const boost::posix_time::time_duration& diff) {
-        const float ave = diff.total_milliseconds() / static_cast<float>(numTries);
+    auto printDeserializationTime = [&numTries](const std::chrono::duration<long long, std::milli>& diff) {
+        const float ave = diff.count() / static_cast<float>(numTries);
         std::clog << " --- Average de-serialization time: " << ave << " ms" << std::endl;
     };
 
@@ -459,7 +460,7 @@ void HashBinarySerializer_Test::testSpeedLargeArrays() {
     //////////////////////////////////////////////////
     //////////////////////////////////////////////////
     std::clog << "\nvector<char> copy -- allocate always...\n";
-    boost::posix_time::ptime tick = boost::posix_time::microsec_clock::local_time();
+    auto tick = std::chrono::steady_clock::now();
 
     size_t totalSize = 0;
     for (int i = 0; i < numTries; ++i) {
@@ -469,7 +470,8 @@ void HashBinarySerializer_Test::testSpeedLargeArrays() {
         p->save(h, vecInLoop);
         if (i == numTries - 1) {
             totalSize = vecInLoop.size();
-            printSerializationTime(boost::posix_time::microsec_clock::local_time() - tick, totalSize);
+            auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - tick);
+            printSerializationTime(dur, totalSize);
         }
     }
 
@@ -479,16 +481,18 @@ void HashBinarySerializer_Test::testSpeedLargeArrays() {
     std::clog << "\nvector<char> copy -- re-use memory...\n";
     vector<char> archive1;
     archive1.reserve(totalSize); // pre-allocate capacity
-    tick = boost::posix_time::microsec_clock::local_time();
+    tick = std::chrono::steady_clock::now();
 
     for (int i = 0; i < numTries; ++i) {
         p->save(h, archive1);
     }
 
-    printSerializationTime(boost::posix_time::microsec_clock::local_time() - tick, archive1.size());
-
+    {
+        auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - tick);
+        printSerializationTime(dur, archive1.size());
+    }
     Hash dh;
-    tick = boost::posix_time::microsec_clock::local_time();
+    tick = std::chrono::steady_clock::now();
     for (int i = 0; i < numTries; ++i) {
         Hash hInternal;
         p->load(hInternal, archive1);
@@ -496,7 +500,10 @@ void HashBinarySerializer_Test::testSpeedLargeArrays() {
             dh = std::move(hInternal);
         }
     }
-    printDeserializationTime(boost::posix_time::microsec_clock::local_time() - tick);
+    {
+        auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - tick);
+        printDeserializationTime(dur);
+    }
 
     CPPUNIT_ASSERT(karabo::util::similar(h, dh));
     //////////////////////////////////////////////////
@@ -505,17 +512,19 @@ void HashBinarySerializer_Test::testSpeedLargeArrays() {
     {
         std::clog << "\nBufferSet copy ...\n";
         karabo::io::BufferSet archive3(true);
-        tick = boost::posix_time::microsec_clock::local_time();
+        tick = std::chrono::steady_clock::now();
 
         for (int i = 0; i < numTries; ++i) {
             p->save(h, archive3);
         }
 
-        printSerializationTime(boost::posix_time::microsec_clock::local_time() - tick, archive3.totalSize());
-
+        {
+            auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - tick);
+            printSerializationTime(dur, archive3.totalSize());
+        }
         archive3.rewind();
         Hash dh2;
-        tick = boost::posix_time::microsec_clock::local_time();
+        tick = std::chrono::steady_clock::now();
         for (int i = 0; i < numTries; ++i) {
             Hash hInternal;
             p->load(hInternal, archive3);
@@ -523,7 +532,10 @@ void HashBinarySerializer_Test::testSpeedLargeArrays() {
                 dh2 = std::move(hInternal);
             }
         }
-        printDeserializationTime(boost::posix_time::microsec_clock::local_time() - tick);
+        {
+            auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - tick);
+            printDeserializationTime(dur);
+        }
         std::clog << "------ " << archive3 << std::endl;
 
         // Check the content of boost::asio::buffer ....
@@ -567,17 +579,19 @@ void HashBinarySerializer_Test::testSpeedLargeArrays() {
         std::clog << "\n--- BufferSet no copy...\n";
         numTries = 1000; // This is so fast that we can afford much more tries to get a nice average.
         karabo::io::BufferSet archive3(false);
-        tick = boost::posix_time::microsec_clock::local_time();
+        tick = std::chrono::steady_clock::now();
 
         for (int i = 0; i < numTries; ++i) {
             p->save(h, archive3);
         }
-
-        printSerializationTime(boost::posix_time::microsec_clock::local_time() - tick, archive3.totalSize());
+        {
+            auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - tick);
+            printSerializationTime(dur, archive3.totalSize());
+        }
 
         archive3.rewind();
         Hash dh3;
-        tick = boost::posix_time::microsec_clock::local_time();
+        tick = std::chrono::steady_clock::now();
         for (int i = 0; i < numTries; ++i) {
             Hash hInternal;
             p->load(hInternal, archive3);
@@ -585,7 +599,10 @@ void HashBinarySerializer_Test::testSpeedLargeArrays() {
                 dh3 = std::move(hInternal);
             }
         }
-        printDeserializationTime(boost::posix_time::microsec_clock::local_time() - tick);
+        {
+            auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - tick);
+            printDeserializationTime(dur);
+        }
         std::clog << "------ " << archive3 << std::endl;
 
         // Check the content of boost::asio::buffer ....

@@ -30,7 +30,6 @@
 #include <future>
 #include <karabo/core/DeviceClient.hh>
 #include <string>
-#include <thread>
 #include <tuple>
 
 #include "karabo/util/Hash.hh"
@@ -80,7 +79,7 @@ void DeviceClient_Test::setUp() {
     m_deviceServer->finalizeInternalInitialization();
 
     // Create client
-    m_deviceClient = boost::shared_ptr<DeviceClient>(new DeviceClient());
+    m_deviceClient = std::shared_ptr<DeviceClient>(new DeviceClient());
 }
 
 
@@ -130,7 +129,7 @@ void DeviceClient_Test::testConcurrentInitTopology() {
 
     // Dispatches two calls to getDeviceWorker, each in a different thread and then asserts on the results.
     auto getDev1 = std::async(std::launch::async, getDeviceWorker);
-    boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     auto getDev2 = std::async(std::launch::async, getDeviceWorker);
 
     const auto getDev1Result = getDev1.get();
@@ -228,7 +227,7 @@ void DeviceClient_Test::testSet() {
 }
 
 void DeviceClient_Test::testProperServerSignalsSent() {
-    auto client = boost::shared_ptr<DeviceClient>(new DeviceClient("device_client-plugin_tests"));
+    auto client = std::shared_ptr<DeviceClient>(new DeviceClient("device_client-plugin_tests"));
 
     auto plugins_promise = std::make_shared<std::promise<bool>>();
     std::future<bool> plugins_future = plugins_promise->get_future();
@@ -322,7 +321,7 @@ void DeviceClient_Test::testMonitorChannel() {
     int counter = 0;
     while (counter++ < maxIterWait) { // failed with 100 in https://git.xfel.eu/Karabo/Framework/-/jobs/144940
         if (imageEntry == 1) break;   // Check the last variable assigned in dataHandler
-        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerIter));
+        std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerIter));
     }
     // Now check all data arrived as it should:
     CPPUNIT_ASSERT_EQUAL(1, int32inChannel);
@@ -339,7 +338,7 @@ void DeviceClient_Test::testMonitorChannel() {
     CPPUNIT_ASSERT(m_deviceClient->unregisterChannelMonitor("TestedDevice2", "output"));
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("TestedDevice2", "writeOutput", KRB_TEST_MAX_TIMEOUT));
     // Give some time to any data that would travel - though there is none... Any way around this sleep?
-    boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
     // Since writing output is not monitored, int32inChannel stays as it is, i.e. we miss the '2'
     CPPUNIT_ASSERT_EQUAL(1, int32inChannel);
 
@@ -360,7 +359,7 @@ void DeviceClient_Test::testMonitorChannel() {
     counter = 0;
     while (counter++ < maxIterWait) {
         if (int32inChannel == 3) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerIter));
+        std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerIter));
     }
     CPPUNIT_ASSERT_EQUAL(3, int32inChannel);
 
@@ -377,7 +376,7 @@ void DeviceClient_Test::testMonitorChannel() {
     while (counter++ < maxIterWait) {
         if (int32inChannel > 0) break; // see comment below
         CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("TestedDevice2", "writeOutput", KRB_TEST_MAX_TIMEOUT));
-        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerIter));
+        std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerIter));
     }
     // Do not care about the exact value of int32inChannel since auto-reconnect might take time
     CPPUNIT_ASSERT(int32inChannel > 0);
@@ -388,7 +387,7 @@ void DeviceClient_Test::testMonitorChannel() {
                                           KRB_TEST_MAX_TIMEOUT);
 
     // Re-use the above InputChannelHandlers object ('handlers'), now with input instead of data handler
-    handlers.dataHandler.clear();
+    handlers.dataHandler = nullptr;
     int sizeMsg = 0;
     int dataCounter = 0;
     handlers.inputHandler = [&dataCounter, &sizeMsg](const InputChannel::Pointer& channel) {
@@ -415,7 +414,7 @@ void DeviceClient_Test::testMonitorChannel() {
     counter = 0;
     while (counter++ < maxIterWait) {
         if (dataCounter == 3) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerIter));
+        std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerIter));
     }
     CPPUNIT_ASSERT_EQUAL(3, dataCounter);
     CPPUNIT_ASSERT_EQUAL(1, sizeMsg);
@@ -490,10 +489,10 @@ void DeviceClient_Test::testSlotsWithArgs() {
 
     // Register slots with args dynamically in a SignalSlotable instance used
     // only by this test case.
-    SignalSlotable::Pointer ss = boost::make_shared<SignalSlotable>(deviceId);
+    SignalSlotable::Pointer ss = std::make_shared<SignalSlotable>(deviceId);
     auto weakSs = SignalSlotable::WeakPointer(ss);
 
-    boost::function<void(int, int)> argSlotMultiply = [weakSs](int num1, int num2) {
+    std::function<void(int, int)> argSlotMultiply = [weakSs](int num1, int num2) {
         auto shrSs = weakSs.lock();
         if (shrSs != nullptr) {
             shrSs->reply(num1 * num2);
@@ -501,7 +500,7 @@ void DeviceClient_Test::testSlotsWithArgs() {
     };
     ss->registerSlot<int, int>(argSlotMultiply, "argSlotMultiply");
 
-    boost::function<void(int, int)> argSlotDivide = [weakSs](int dividend, int divisor) {
+    std::function<void(int, int)> argSlotDivide = [weakSs](int dividend, int divisor) {
         auto shrSs = weakSs.lock();
         if (shrSs != nullptr) {
             if (divisor == 0) {
@@ -512,7 +511,7 @@ void DeviceClient_Test::testSlotsWithArgs() {
     };
     ss->registerSlot<int, int>(argSlotDivide, "argSlotDivide");
 
-    boost::function<void(std::string)> argSlotThreeCases = [weakSs](std::string str) {
+    std::function<void(std::string)> argSlotThreeCases = [weakSs](std::string str) {
         auto shrSs = weakSs.lock();
         if (shrSs != nullptr) {
             std::string strUpp = boost::to_upper_copy(str);
@@ -522,7 +521,7 @@ void DeviceClient_Test::testSlotsWithArgs() {
     };
     ss->registerSlot<std::string>(argSlotThreeCases, "argSlotThreeCases");
 
-    boost::function<void(short)> argSlotZahlen = [weakSs](short digit) {
+    std::function<void(short)> argSlotZahlen = [weakSs](short digit) {
         auto shrSs = weakSs.lock();
         if (shrSs != nullptr) {
             using VDigit = std::vector<std::string>;
@@ -537,7 +536,7 @@ void DeviceClient_Test::testSlotsWithArgs() {
     ss->registerSlot<short>(argSlotZahlen, "argSlotZahlen");
 
     int productCaptMult = 0;
-    boost::function<void(int, int)> argSlotCaptMultiply = [&productCaptMult](int num1, int num2) {
+    std::function<void(int, int)> argSlotCaptMultiply = [&productCaptMult](int num1, int num2) {
         productCaptMult = num1 * num2;
     };
     ss->registerSlot<int, int>(argSlotCaptMultiply, "argSlotCaptMultiply");
@@ -603,7 +602,7 @@ void DeviceClient_Test::testGetSchemaNoWait() {
     unsigned int counter = 0;
     while (counter++ < maxIterWait) {
         if (schemaReceived) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerIter));
+        std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerIter));
     }
     CPPUNIT_ASSERT_MESSAGE("Timeout waiting for schema update monitor", schemaReceived);
     // Now take from cache
@@ -622,7 +621,7 @@ void DeviceClient_Test::testGetSchemaNoWait() {
     counter = 0;
     while (counter++ < maxIterWait) {
         if (schemaReceived) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerIter));
+        std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerIter));
     }
     CPPUNIT_ASSERT_MESSAGE("Timeout waiting for schema update monitor", schemaReceived);
 
@@ -693,7 +692,7 @@ void DeviceClient_Test::testConnectionHandling() {
     int trials = 100;
     while (--trials >= 0) {
         if (cfgArrived) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(2));
+        std::this_thread::sleep_for(std::chrono::milliseconds(2));
     }
     // Kill the device again - within client it shall be a zombie now
     success = m_deviceClient->killDevice(devId, KRB_TEST_MAX_TIMEOUT);

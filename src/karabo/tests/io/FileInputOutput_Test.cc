@@ -24,7 +24,7 @@
 
 #include "FileInputOutput_Test.hh"
 
-#include <boost/filesystem/path.hpp>
+#include <filesystem>
 #include <karabo/io/FileTools.hh>
 #include <karabo/util.hpp>
 #include <karabo/util/TimeProfiler.hh>
@@ -271,11 +271,11 @@ void FileInputOutput_Test::setUp() {
 
 void FileInputOutput_Test::tearDown() {
     if (m_canCleanUp) {
-        if (boost::filesystem::exists(resourcePath("folder"))) {
-            boost::filesystem::remove_all(resourcePath("folder"));
+        if (std::filesystem::exists(resourcePath("folder"))) {
+            std::filesystem::remove_all(resourcePath("folder"));
         }
-        if (boost::filesystem::exists(resourcePath("/tmp/folder/"))) {
-            boost::filesystem::remove_all(resourcePath("/tmp/folder/"));
+        if (std::filesystem::exists(resourcePath("/tmp/folder/"))) {
+            std::filesystem::remove_all(resourcePath("/tmp/folder/"));
         }
     }
 }
@@ -315,12 +315,12 @@ void FileInputOutput_Test::writeTextFile() {
                Hash("format.Xml.indentation", 0, "format.Xml.writeDataTypes", true));
 
     // Check different folder levels
-    if (boost::filesystem::exists(resourcePath("folder/"))) {
+    if (std::filesystem::exists(resourcePath("folder/"))) {
         CPPUNIT_FAIL("'folder' already exists!");
     }
     saveToFile(m_rootedHash, resourcePath("folder/file5a.xml"));
 
-    if (boost::filesystem::exists(resourcePath("/tmp/folder/"))) {
+    if (std::filesystem::exists(resourcePath("/tmp/folder/"))) {
         CPPUNIT_FAIL("'/tmp/folder' already exists!");
     }
     saveToFile(m_rootedHash, "/tmp/folder/file6a.xml");

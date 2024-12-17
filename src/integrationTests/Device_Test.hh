@@ -86,7 +86,7 @@ class Device_Test : public CPPUNIT_NS::TestFixture {
      */
     void testNodedSlot();
 
-    bool waitForCondition(boost::function<bool()> checker, unsigned int timeoutMs);
+    bool waitForCondition(std::function<bool()> checker, unsigned int timeoutMs);
 
     karabo::core::DeviceServer::Pointer m_deviceServer;
     boost::thread m_eventLoopThread;

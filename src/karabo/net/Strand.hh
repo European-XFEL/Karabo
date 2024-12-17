@@ -24,9 +24,8 @@
  */
 
 #include <boost/asio/io_context.hpp>
-#include <boost/function.hpp>
-#include <boost/smart_ptr/enable_shared_from_this.hpp>
-#include <boost/thread/mutex.hpp>
+#include <functional>
+#include <mutex>
 #include <queue>
 
 #include "karabo/util/ClassInfo.hh"
@@ -65,7 +64,7 @@ namespace karabo {
          * is already destructed.
          *
          */
-        class Strand : public boost::enable_shared_from_this<Strand> {
+        class Strand : public std::enable_shared_from_this<Strand> {
            public:
             KARABO_CLASSINFO(Strand, "Strand", "2.1")
 
@@ -112,7 +111,7 @@ namespace karabo {
              *
              * @param handler function without arguments and return value - will be copied
              */
-            void post(const boost::function<void()>& handler);
+            void post(const std::function<void()>& handler);
 
             /**
              * Post a handler to the io_context with the guarantee that it is not executed before any other handler
@@ -125,7 +124,7 @@ namespace karabo {
              * @param handler function without arguments and return value as r-value reference - will be moved to avoid
              * a copy
              */
-            void post(boost::function<void()>&& handler);
+            void post(std::function<void()>&& handler);
 
             /**
              * This function is used to create a new handler function object that, when invoked,
@@ -139,7 +138,7 @@ namespace karabo {
              * @return A function object that, when invoked, passes the wrapped handler to
              * the Strand's post function.
              */
-            boost::function<void()> wrap(boost::function<void()> handler);
+            std::function<void()> wrap(std::function<void()> handler);
 
             /**
              * This function may be used to obtain the io_context object that the strand uses to post handlers.
@@ -166,13 +165,13 @@ namespace karabo {
             /// Helper to run one task after another until tasks queue is empty
             void run();
 
-            void postWrapped(boost::function<void()> handler);
+            void postWrapped(std::function<void()> handler);
 
             boost::asio::io_context* m_ioContext; // pointer to be able to re-assign it
 
-            boost::mutex m_tasksMutex; // to protect both, m_tasksRunning and m_tasks
+            std::mutex m_tasksMutex; // to protect both, m_tasksRunning and m_tasks
             bool m_tasksRunning;
-            std::queue<boost::function<void()> > m_tasks;
+            std::queue<std::function<void()> > m_tasks;
 
             unsigned int m_maxInARow;
             const bool m_guaranteeToRun;

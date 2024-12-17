@@ -170,7 +170,7 @@ void InputOutputChannel_LongTest::testDisconnectWhileSending_impl(const std::str
           0); // shared_ptr to capture by value in lambda avoids trouble if handler called after test done
     input->registerDataHandler([calls, processTime](const Hash& data, const InputChannel::MetaData& meta) {
         ++(*calls);
-        boost::this_thread::sleep(boost::posix_time::milliseconds(processTime));
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(processTime));
     });
 
     Hash outputInfo = output->getInformation();
@@ -220,7 +220,7 @@ void InputOutputChannel_LongTest::testDisconnectWhileSending_impl(const std::str
                 (exceptionText += (async ? "output->asyncUpdate(): " : "output->update(): ")) += e.what();
                 break;
             }
-            boost::this_thread::sleep(boost::posix_time::milliseconds(writeIntervall));
+            boost::this_thread::sleep_for(boost::chrono::milliseconds(writeIntervall));
             ++num;
         }
         numSent.set_value(num);
@@ -268,7 +268,7 @@ void InputOutputChannel_LongTest::testDisconnectWhileSending_impl(const std::str
                 doGoOn = false;
                 break;
             }
-            boost::this_thread::sleep(boost::posix_time::milliseconds(reconnectCycle));
+            boost::this_thread::sleep_for(boost::chrono::milliseconds(reconnectCycle));
         }
         disReconnectDone.set_value();
     };

@@ -29,8 +29,8 @@
 
 
 using namespace karabo::util;
-using boost::placeholders::_1;
-using boost::placeholders::_2;
+using std::placeholders::_1;
+using std::placeholders::_2;
 
 
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::net::Broker, karabo::net::AmqpBroker)
@@ -51,7 +51,7 @@ namespace karabo {
 
         AmqpBroker::AmqpBroker(const karabo::util::Hash& config)
             : Broker(config),
-              m_connection(boost::make_shared<AmqpConnection>(m_availableBrokerUrls)),
+              m_connection(std::make_shared<AmqpConnection>(m_availableBrokerUrls)),
               m_client(),
               m_handlerStrand(Configurator<Strand>::create("Strand", Hash("maxInARow", 10u))),
               m_heartbeatClient() {}
@@ -126,7 +126,7 @@ namespace karabo {
 
         void AmqpBroker::amqpReadHandler(const Hash::Pointer& header, const Hash::Pointer& body) {
             if (m_readHandler) {
-                m_handlerStrand->post(boost::bind(m_readHandler, header, body));
+                m_handlerStrand->post(std::bind(m_readHandler, header, body));
             } else {
                 KARABO_LOG_FRAMEWORK_ERROR << "Lack read handler for message with header " << *header;
             }
@@ -134,7 +134,7 @@ namespace karabo {
 
         void AmqpBroker::amqpReadHandlerBeats(const Hash::Pointer& header, const Hash::Pointer& body) {
             if (m_readHandlerBeats) {
-                m_handlerStrandBeats->post(boost::bind(m_readHandlerBeats, header, body));
+                m_handlerStrandBeats->post(std::bind(m_readHandlerBeats, header, body));
             } else {
                 KARABO_LOG_FRAMEWORK_ERROR << "Lack read handler for beats with header " << *header;
             }
@@ -142,7 +142,7 @@ namespace karabo {
 
         void AmqpBroker::amqpErrorNotifier(const std::string& msg) {
             if (m_errorNotifier) {
-                m_handlerStrand->post(boost::bind(m_errorNotifier, net::consumer::Error::type, msg));
+                m_handlerStrand->post(std::bind(m_errorNotifier, net::consumer::Error::type, msg));
             } else {
                 KARABO_LOG_FRAMEWORK_ERROR << "Lack error notifier for error message " << msg;
             }
@@ -150,7 +150,7 @@ namespace karabo {
 
         void AmqpBroker::amqpErrorNotifierBeats(const std::string& msg) {
             if (m_errorNotifierBeats) {
-                m_handlerStrandBeats->post(boost::bind(m_errorNotifierBeats, net::consumer::Error::type, msg));
+                m_handlerStrandBeats->post(std::bind(m_errorNotifierBeats, net::consumer::Error::type, msg));
             } else {
                 KARABO_LOG_FRAMEWORK_ERROR << "Lack error notifier for beats error message " << msg;
             }
@@ -416,8 +416,8 @@ namespace karabo {
             // Post erasure of handlers on the handler strands, see startReading
             m_handlerStrand->post([this, weakThis{weak_from_this()}]() {
                 if (auto self = weakThis.lock()) {
-                    this->m_readHandler.clear();
-                    this->m_errorNotifier.clear();
+                    this->m_readHandler = nullptr;
+                    this->m_errorNotifier = nullptr;
                 }
             });
 
@@ -435,8 +435,8 @@ namespace karabo {
                 }
                 m_handlerStrandBeats->post([this, weakThis{weak_from_this()}]() {
                     if (auto self = weakThis.lock()) {
-                        this->m_readHandlerBeats.clear();
-                        this->m_errorNotifierBeats.clear();
+                        this->m_readHandlerBeats = nullptr;
+                        this->m_errorNotifierBeats = nullptr;
                     }
                 });
                 // Erase heartbeat client and strand: Next round might not startReadingHeartbeats.

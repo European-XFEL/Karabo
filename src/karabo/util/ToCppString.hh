@@ -95,7 +95,7 @@ namespace karabo {
         KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, VECTOR_NONE, "vector<None>")
         KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, HASH_POINTER, "Hash::Pointer")
         KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, VECTOR_HASH_POINTER, "vector<Hash::Pointer>")
-        KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, BYTE_ARRAY, "std::pair<boost::shared_ptr<char>,size_t>")
+        KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, BYTE_ARRAY, "std::pair<std::shared_ptr<char>,size_t>")
     } // namespace util
 } // namespace karabo
 

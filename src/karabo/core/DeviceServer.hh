@@ -71,7 +71,7 @@ namespace karabo {
             typedef std::unordered_map<std::string, std::pair<BaseDevice::Pointer, karabo::net::Strand::Pointer> >
                   DeviceInstanceMap;
             DeviceInstanceMap m_deviceInstanceMap;
-            boost::mutex m_deviceInstanceMutex;
+            std::mutex m_deviceInstanceMutex;
             std::map<std::string, unsigned int> m_deviceInstanceCount;
             int m_visibility;
 
@@ -84,7 +84,7 @@ namespace karabo {
             unsigned long long m_timeFrac;   // attoseconds
             unsigned long long m_timePeriod; // microseconds
             bool m_noTimeTickYet;            // whether slotTimeTick received a first call
-            mutable boost::mutex m_timeChangeMutex;
+            mutable std::mutex m_timeChangeMutex;
             unsigned long long m_timeIdLastTick; // only for onTimeTick, no need for mutex protection
             boost::asio::deadline_timer m_timeTickerTimer;
             std::string m_hostname;
@@ -215,7 +215,7 @@ namespace karabo {
 
             /// Helper to create input passed to instantiate.
             /// Returns a tuple of the deviceId, the classId and the configuration.
-            boost::tuple<std::string, std::string, util::Hash> prepareInstantiate(const util::Hash& configuration);
+            std::tuple<std::string, std::string, util::Hash> prepareInstantiate(const util::Hash& configuration);
 
             /// Helper for instantiateDevices - e.g. provides the (async) reply for slotStartDevice.
             void instantiate(const std::string& deviceId, const std::string& classId, const util::Hash& config,

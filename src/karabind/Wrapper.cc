@@ -25,7 +25,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <karabo/util/FromLiteral.hh>
 #include <karabo/util/Hash.hh>
 #include <karabo/util/Schema.hh>
@@ -54,7 +54,7 @@ namespace karabind {
             using namespace karabo::util;
             Hash::Node& node = self.getNode(path, sep.at(0));
             if (node.getType() == Types::HASH) {
-                boost::shared_ptr<Hash> hp = boost::shared_ptr<Hash>(&node.getValue<Hash>(), [](const void*) {});
+                std::shared_ptr<Hash> hp = std::shared_ptr<Hash>(&node.getValue<Hash>(), [](const Hash*) {});
                 if (node.hasAttribute(KARABO_HASH_CLASS_ID)) {
                     const std::string& classId = node.getAttribute<std::string>(KARABO_HASH_CLASS_ID);
                     if (classId == "NDArray") {
@@ -63,7 +63,8 @@ namespace karabind {
                     if (classId == "ImageData") {
                         using namespace karabo::xms;
                         const ImageData& imgData = reinterpret_cast<const ImageData&>(*hp);
-                        return py::cast(boost::shared_ptr<ImageData>(new ImageData(imgData)));
+                        return py::cast(
+                              std::shared_ptr<ImageData>(new ImageData(imgData), std::default_delete<ImageData>()));
                     }
                 }
                 return py::cast(self).attr("_getref_hash_")(hp);
@@ -324,8 +325,8 @@ namespace karabind {
                     return py::cast(boost::any_cast<std::complex<double>>(operand));
                 } else if (operand.type() == typeid(std::string)) {
                     return py::cast(boost::any_cast<std::string>(operand));
-                } else if (operand.type() == typeid(boost::filesystem::path)) {
-                    return py::cast(boost::any_cast<boost::filesystem::path>(operand).string());
+                } else if (operand.type() == typeid(std::filesystem::path)) {
+                    return py::cast(boost::any_cast<std::filesystem::path>(operand).string());
                 } else if (operand.type() == typeid(karabo::util::CppNone)) {
                     return py::none();
                 } else if (operand.type() == typeid(karabo::util::NDArray)) {
@@ -599,7 +600,7 @@ namespace karabind {
                 const size_t n = s.size();
                 char* cp = new char[n + 1]{};
                 std::copy(s.begin(), s.end(), cp);
-                return std::make_pair(boost::shared_ptr<char>(cp), n);
+                return std::make_pair(std::shared_ptr<char>(cp, std::default_delete<char[]>()), n);
             }
             throw KARABO_PYTHON_EXCEPTION("Python type can not be converted to ByteArray");
         }
@@ -738,7 +739,7 @@ namespace karabind {
             }
             py::object dtype = py::dtype(typenum);
             NDArray::DataPointer dataPtr(bytearr.first);
-            auto pBase = boost::make_shared<ArrayDataPtrBase>(dataPtr);
+            auto pBase = std::make_shared<ArrayDataPtrBase>(dataPtr);
             auto base = py::cast(pBase);
             pBase.reset();
             void* ptr = static_cast<void*>(dataPtr.get());

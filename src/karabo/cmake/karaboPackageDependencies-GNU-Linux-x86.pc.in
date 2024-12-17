@@ -8,6 +8,6 @@ Name: karaboDependencies
 Version: @KARABO_VERSION_MAJOR@.@KARABO_VERSION_MINOR@.@KARABO_VERSION_PATCH@
 Description: This file describes all karabo dependencies. It only works within the software bundle.
 URL: https://rtd.xfel.eu/docs/karabo/en/latest/
-Requires: amqpcpp pugixml boost-chrono boost-date_time boost-filesystem boost-regex boost-system boost-thread spdlog
+Requires: amqpcpp pugixml boost-chrono boost-date_time boost-regex boost-system boost-thread spdlog
 Libs: -L${libdir} -lkarabo -L${extern_libdir} -lpthread
 Cflags: -I${include} -I${extern_include} -Dcimg_display=0

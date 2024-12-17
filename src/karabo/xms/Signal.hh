@@ -159,7 +159,7 @@ namespace karabo {
             const karabo::net::Broker::Pointer& m_channel;
             const std::string m_signalInstanceId;
             const std::string m_signalFunction;
-            boost::mutex m_registeredSlotsMutex;
+            std::mutex m_registeredSlotsMutex;
             SlotMap m_registeredSlots;
             int m_priority;
             int m_messageTimeToLive;

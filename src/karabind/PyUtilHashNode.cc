@@ -43,9 +43,9 @@ using namespace karabind;
 
 
 void exportPyUtilHashNode(py::module_& m) {
-    typedef boost::shared_ptr<karabo::util::Hash::Node> Pointer;
+    typedef std::shared_ptr<karabo::util::Hash::Node> Pointer;
 
-    py::class_<Hash::Node, boost::shared_ptr<Hash::Node>> n(m, "HashNode");
+    py::class_<Hash::Node, std::shared_ptr<Hash::Node>> n(m, "HashNode");
 
     n.def("__repr__", [](const Hash::Node& self) { return py::cast(self.getKey()); });
 

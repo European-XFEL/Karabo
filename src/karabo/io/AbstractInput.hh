@@ -27,7 +27,7 @@
 #define KARABO_IO_ABSTRACTINPUT_HH
 
 #include <boost/any.hpp>
-#include <boost/function.hpp>
+#include <functional>
 #include <karabo/io/InputHandler.hh>
 #include <karabo/util/Configurator.hh>
 #include <karabo/util/SimpleElement.hh>
@@ -43,7 +43,7 @@ namespace karabo {
          * can be either through a network or in memory connection, or through a
          * data source accessing persited data.
          */
-        class AbstractInput : public boost::enable_shared_from_this<AbstractInput> {
+        class AbstractInput : public std::enable_shared_from_this<AbstractInput> {
            public:
             KARABO_CLASSINFO(AbstractInput, "AbstractInput", "1.0")
             KARABO_CONFIGURATION_BASE_CLASS
@@ -197,7 +197,7 @@ namespace karabo {
             }
 
            private:
-            boost::shared_ptr<InputHandler> m_handler;
+            std::shared_ptr<InputHandler> m_handler;
             std::string m_instanceId;
         };
     } // namespace io

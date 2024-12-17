@@ -25,7 +25,7 @@
 #ifndef FSMMACROSDEVEL_HH
 #define	FSMMACROSDEVEL_HH
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 // back-end
 #include <boost/msm/back/state_machine.hpp>
 //front-end
@@ -57,10 +57,10 @@ namespace karabo {
 /**************************************************************/
 
 // Declares a shared pointer of a state machine
-#define KARABO_FSM_DECLARE_MACHINE(machineName, instanceName) boost::shared_ptr<machineName> instanceName; boost::recursive_mutex instanceName ## _mutex;
+#define KARABO_FSM_DECLARE_MACHINE(machineName, instanceName) std::shared_ptr<machineName> instanceName; std::recursive_mutex instanceName ## _mutex;
 
 // Instantiates a state machine as a shared pointer
-#define KARABO_FSM_CREATE_MACHINE(machineName, instanceName) instanceName = boost::shared_ptr<machineName > (new machineName());
+#define KARABO_FSM_CREATE_MACHINE(machineName, instanceName) instanceName = std::shared_ptr<machineName > (new machineName());
 
 #define KARABO_FSM_TABLE_BEGIN(tableName) struct tableName : boost::mpl::vector<
 
@@ -78,8 +78,8 @@ namespace karabo {
 
 // Getting State pointer to the state in deeply nested state machines...
 // It is possible to use in code KARABO_FSM_GET(3,A,B,C)->setContext(this);
-#define KARABO_FSM_GET_DECLARE(machineName, instanceName) boost::shared_ptr<machineName> getFsm() { return instanceName; } \
-    virtual void stopFsm() { boost::shared_ptr<StateVisitor> v(new StateVisitor); this->getFsm()->visit_current_states(v, true); }
+#define KARABO_FSM_GET_DECLARE(machineName, instanceName) std::shared_ptr<machineName> getFsm() { return instanceName; } \
+    virtual void stopFsm() { std::shared_ptr<StateVisitor> v(new StateVisitor); this->getFsm()->visit_current_states(v, true); }
 
 #define KARABO_FSM_GET0() getFsm()
 #define KARABO_FSM_GET1(A)            KARABO_FSM_GET0()->get_state<A*>()
@@ -107,7 +107,7 @@ template <class Fsm> \
 static void _updateCurrentState(Fsm& fsm, bool isGoingToChange = false) { \
     if (isGoingToChange) fsm.getContext()->stateChangeFunction(karabo::util::State::CHANGING); \
     else { \
-        boost::shared_ptr<StateVisitor> v(new StateVisitor); \
+        std::shared_ptr<StateVisitor> v(new StateVisitor); \
         fsm.visit_current_states(v, false); \
         fsm.getContext()->stateChangeFunction(v->getState()->getState()); \
     } \
@@ -122,20 +122,20 @@ static void _updateCurrentState(Fsm& fsm, bool isGoingToChange = false) { \
 // 'm' - state machine pointer, 'name' - event name, 'f' - slot function, t1,t2,... - argument types
 #define KARABO_FSM_EVENT0(m,name,f) \
     struct name {};\
-    void f() { boost::recursive_mutex::scoped_lock lock(m ## _mutex); _updateCurrentState(*m, true); m->process_event(name()); _updateCurrentState(*m); }
+    void f() { std::lock_guard<std::recursive_mutex> lock(m ## _mutex); _updateCurrentState(*m, true); m->process_event(name()); _updateCurrentState(*m); }
 
 #define KARABO_FSM_EVENT1(m,name,f,t1) \
     struct name { \
         name(const t1& b1) : a1(b1) {} \
         t1 a1; };\
-    void f(const t1& c1) { boost::recursive_mutex::scoped_lock lock(m ## _mutex); _updateCurrentState(*m, true); m->process_event(name(c1));  _updateCurrentState(*m); }
+    void f(const t1& c1) { std::lock_guard<std::recursive_mutex> lock(m ## _mutex); _updateCurrentState(*m, true); m->process_event(name(c1));  _updateCurrentState(*m); }
 
 #define KARABO_FSM_EVENT2(m,name,f,t1,t2) \
     struct name { \
         name(const t1& b1,const t2& b2) : a1(b1),a2(b2) {}\
         t1 a1; \
         t2 a2; }; \
-    void f(const t1& c1, const t2& c2) { boost::recursive_mutex::scoped_lock lock(m ## _mutex); _updateCurrentState(*m, true); m->process_event(name(c1,c2)); _updateCurrentState(*m);}
+    void f(const t1& c1, const t2& c2) { std::lock_guard<std::recursive_mutex> lock(m ## _mutex); _updateCurrentState(*m, true); m->process_event(name(c1,c2)); _updateCurrentState(*m);}
 
 #define KARABO_FSM_EVENT3(m,name,f,t1,t2,t3) \
     struct name { \
@@ -143,7 +143,7 @@ static void _updateCurrentState(Fsm& fsm, bool isGoingToChange = false) { \
         t1 a1; \
         t2 a2; \
         t3 a3; }; \
-    void f(const t1& c1, const t2& c2, const t3& c3) { boost::recursive_mutex::scoped_lock lock(m ## _mutex); _updateCurrentState(*m, true); m->process_event(name(c1,c2,c3));_updateCurrentState(*m);}
+    void f(const t1& c1, const t2& c2, const t3& c3) { std::lock_guard<std::recursive_mutex> lock(m ## _mutex); _updateCurrentState(*m, true); m->process_event(name(c1,c2,c3));_updateCurrentState(*m);}
 
 #define KARABO_FSM_EVENT4(m,name,f,t1,t2,t3,t4) \
     struct name { \
@@ -152,7 +152,7 @@ static void _updateCurrentState(Fsm& fsm, bool isGoingToChange = false) { \
         t2 a2; \
         t3 a3; \
         t4 a4; };\
-    void f(const t1& c1, const t2& c2, const t3& c3, const t4& c4) { boost::recursive_mutex::scoped_lock lock(m ## _mutex); _updateCurrentState(*m, true); m->process_event(name(c1,c2,c3,c4)); _updateCurrentState(*m);}
+    void f(const t1& c1, const t2& c2, const t3& c3, const t4& c4) { std::lock_guard<std::recursive_mutex> lock(m ## _mutex); _updateCurrentState(*m, true); m->process_event(name(c1,c2,c3,c4)); _updateCurrentState(*m);}
 
 
 /**************************************************************/
@@ -517,7 +517,7 @@ template <class Event, class Fsm> void on_entry(Event const& e, Fsm & f) { \
 #define KARABO_FSM_STATE_A(name, TargetAction) \
 struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
     TargetAction _ta; \
-    boost::shared_ptr<Worker> _worker; \
+    std::shared_ptr<Worker> _worker; \
     name() : _ta(), _worker(new Worker) {this->setState(karabo::util::State::name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
     template <class Event, class Fsm> void on_entry(Event const& e, Fsm & f) { \
         try { \
@@ -581,7 +581,7 @@ virtual void entryFunc() = 0;
 #define _KARABO_FSM_STATE_IMPL_AE(name, TargetAction, entryFunc) \
 struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
     TargetAction _ta; \
-    boost::shared_ptr<Worker> _worker; \
+    std::shared_ptr<Worker> _worker; \
     name() : _ta(), _worker(new Worker) {this->setState(karabo::util::State::name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
     template <class Event, class Fsm> void on_entry(Event const& e, Fsm & f) { \
         try { \
@@ -785,7 +785,7 @@ virtual void exitFunc()  = 0;
 struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
 private: \
     TargetAction _ta; \
-    boost::shared_ptr<Worker> _worker; \
+    std::shared_ptr<Worker> _worker; \
 public: \
     name() : _ta(), _worker(new Worker) {this->setState(karabo::util::State::name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
     template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
@@ -943,7 +943,7 @@ struct name : public boost::msm::front::interrupt_state<event, karabo::core::Fsm
 #define KARABO_FSM_INTERRUPT_STATE_A(name, event, TargetAction) \
 struct name : public boost::msm::front::interrupt_state<event, karabo::core::FsmBaseState > { \
     TargetAction _ta; \
-    boost::shared_ptr<Worker> _worker; \
+    std::shared_ptr<Worker> _worker; \
     name() : _ta(), _worker(new Worker) {this->setState(karabo::util::State::name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
     template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
         try { \
@@ -1007,7 +1007,7 @@ virtual void entryFunc() = 0;
 #define _KARABO_FSM_INTERRUPT_STATE_IMPL_AE(name, event, TargetAction, entryFunc) \
 struct name : public boost::msm::front::interrupt_state<event, karabo::core::FsmBaseState > { \
     TargetAction _ta; \
-    boost::shared_ptr<Worker> _worker; \
+    std::shared_ptr<Worker> _worker; \
     name() : _ta(), _worker(new Worker) {this->setState(karabo::util::State::name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
     template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
         try { \
@@ -1097,7 +1097,7 @@ virtual void exitFunc()  = 0;
 #define _KARABO_FSM_INTERRUPT_STATE_IMPL_AEE(name, event, TargetAction, entryFunc, exitFunc) \
 struct name : public boost::msm::front::interrupt_state<event, karabo::core::FsmBaseState > { \
     TargetAction _ta; \
-    boost::shared_ptr<Worker> _worker; \
+    std::shared_ptr<Worker> _worker; \
     name() : _ta(), _worker(new Worker) {this->setState(karabo::util::State::name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
     template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
         try { \
@@ -1302,7 +1302,7 @@ virtual void exitFunc()  = 0;
             Worker* getWorker() const  {return _worker.get();} \
         private: \
             TargetAction _ta; \
-            boost::shared_ptr<Worker> _worker; \
+            std::shared_ptr<Worker> _worker; \
             CTX* m_context; \
         }; \
         typedef boost::msm::back::state_machine<name ## _<> > name;
@@ -1383,7 +1383,7 @@ virtual void entryFunc() = 0;
             Worker* getWorker() const  {return _worker.get();} \
         private: \
             TargetAction _ta; \
-            boost::shared_ptr<Worker> _worker; \
+            std::shared_ptr<Worker> _worker; \
             CTX* m_context; \
         }; \
         typedef boost::msm::back::state_machine<name ## _<> > name;
@@ -1489,7 +1489,7 @@ virtual void exitFunc()  = 0;
             Worker* getWorker() const  {return _worker.get();} \
         private: \
             TargetAction _ta; \
-            boost::shared_ptr<Worker> _worker; \
+            std::shared_ptr<Worker> _worker; \
             CTX* m_context; \
         }; \
         typedef boost::msm::back::state_machine<name ## _<> > name;

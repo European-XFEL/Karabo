@@ -26,8 +26,8 @@
 #define KARABO_NET_QUEUES_HH
 
 #include <boost/circular_buffer.hpp>
-#include <boost/shared_ptr.hpp>
 #include <deque>
+#include <memory>
 #include <vector>
 
 #include "karabo/log/Logger.hh"
@@ -35,7 +35,7 @@
 namespace karabo {
     namespace net {
 
-        typedef boost::shared_ptr<std::vector<char> > VectorCharPointer;
+        typedef std::shared_ptr<std::vector<char> > VectorCharPointer;
 
         /**
          * @class Message
@@ -43,7 +43,7 @@ namespace karabo {
          */
         class Message {
            public:
-            typedef boost::shared_ptr<Message> Pointer;
+            typedef std::shared_ptr<Message> Pointer;
 
             Message() : m_body(new karabo::io::BufferSet()), m_header() {}
 

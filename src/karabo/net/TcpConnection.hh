@@ -28,8 +28,7 @@
 #define KARABO_NET_ATCPCONNECTION_HH
 
 #include <boost/asio.hpp>
-#include <boost/enable_shared_from_this.hpp>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include <string>
 
 #include "Connection.hh"
@@ -48,7 +47,7 @@ namespace karabo {
         class Channel;
         class TcpChannel;
         typedef boost::system::error_code ErrorCode;
-        typedef boost::shared_ptr<Channel> ChannelPointer;
+        typedef std::shared_ptr<Channel> ChannelPointer;
 
         /**
          * @class TcpConnection

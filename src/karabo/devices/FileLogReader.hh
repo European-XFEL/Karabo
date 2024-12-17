@@ -24,7 +24,9 @@
 #define FILELOGREADER_HH
 
 #include <boost/regex.hpp>
-#include <boost/thread/mutex.hpp>
+#include <chrono>
+#include <filesystem>
+#include <mutex>
 #include <string>
 
 #include "DataLogReader.hh"
@@ -37,6 +39,8 @@
 namespace karabo {
 
     namespace devices {
+
+        using namespace std::chrono_literals;
 
         /**
          * @struct FileLoggerIndex
@@ -58,13 +62,13 @@ namespace karabo {
          * @brief A compound structure holding data on an logger archive file
          */
         struct PropFileInfo {
-            typedef boost::shared_ptr<PropFileInfo> Pointer;
-            boost::mutex filelock;
+            typedef std::shared_ptr<PropFileInfo> Pointer;
+            std::mutex filelock;
             size_t filesize;
-            time_t lastwrite;
+            std::filesystem::file_time_type lastwrite;
             std::vector<std::string> properties;
 
-            PropFileInfo() : filelock(), filesize(0), lastwrite(0), properties() {}
+            PropFileInfo() : filelock(), filesize(0), lastwrite(0h), properties() {}
         };
 
         /**
@@ -72,7 +76,7 @@ namespace karabo {
          * @brief A singleton class for building logger indices from logger files. It calls
          *    karabo-idxbuild with a list of command line arguments
          */
-        class IndexBuilderService : public boost::enable_shared_from_this<IndexBuilderService> {
+        class IndexBuilderService : public std::enable_shared_from_this<IndexBuilderService> {
            public:
             // Needed for 'Pointer' and KARABO_LOG_FRAMEWORK
             KARABO_CLASSINFO(IndexBuilderService, "IndexBuilderService", "1.4")
@@ -110,7 +114,7 @@ namespace karabo {
 
             static Pointer m_instance;
             std::set<std::string> m_cache;
-            boost::mutex m_mutex;
+            std::mutex m_mutex;
             karabo::net::Strand::Pointer m_idxBuildStrand;
         };
 
@@ -189,7 +193,7 @@ namespace karabo {
             /// Works for lines written to archive_index.txt by >= 1.5
             void extractTailOfArchiveIndex(const std::string& tail, FileLoggerIndex& entry) const;
 
-            static boost::mutex m_propFileInfoMutex;
+            static std::mutex m_propFileInfoMutex;
             static std::map<std::string, PropFileInfo::Pointer> m_mapPropFileInfo;
             IndexBuilderService::Pointer m_ibs;
             static const boost::regex m_lineRegex;

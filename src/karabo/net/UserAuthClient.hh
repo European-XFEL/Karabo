@@ -27,7 +27,7 @@
 #ifndef KARABO_NET_USERAUTHCLIENT_HH
 #define KARABO_NET_USERAUTHCLIENT_HH
 
-#include <boost/function.hpp>
+#include <functional>
 #include <string>
 
 #include "karabo/net/HttpClient.hh"
@@ -51,7 +51,7 @@ namespace karabo {
             std::string errMsg;
         };
 
-        using AuthOneTimeTokenHandler = boost::function<void(const OneTimeTokenAuthorizeResult&)>;
+        using AuthOneTimeTokenHandler = std::function<void(const OneTimeTokenAuthorizeResult&)>;
 
         class UserAuthClient {
            public:

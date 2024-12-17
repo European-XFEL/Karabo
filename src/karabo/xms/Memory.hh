@@ -96,7 +96,7 @@ namespace karabo {
             };
 
             typedef karabo::io::BufferSet DataType;
-            typedef boost::shared_ptr<DataType> DataPointer;
+            typedef std::shared_ptr<DataType> DataPointer;
             typedef std::vector<DataPointer> Data;
             typedef std::vector<Data> Chunks;
             typedef std::vector<Chunks> Channels;
@@ -117,9 +117,9 @@ namespace karabo {
             static ChannelMetaDataEntries m_metaData;
             static std::vector<std::vector<bool>> m_isEndOfStream;
 
-            static boost::mutex m_accessMutex;
+            static std::mutex m_accessMutex;
 
-            static boost::shared_ptr<SerializerType> m_serializer;
+            static std::shared_ptr<SerializerType> m_serializer;
 
             static const int MAX_N_CHANNELS = 128;
             static const int MAX_N_CHUNKS = 2056;
