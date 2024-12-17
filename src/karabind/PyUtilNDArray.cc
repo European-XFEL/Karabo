@@ -24,6 +24,6 @@ namespace py = pybind11;
 using namespace karabind;
 
 void exportPyUtilNDArray(py::module_& m) {
-    py::class_<ArrayDataPtrBase, boost::shared_ptr<ArrayDataPtrBase>>(m, "_ArrayDataPtrBase_")
+    py::class_<ArrayDataPtrBase, std::shared_ptr<ArrayDataPtrBase>>(m, "_ArrayDataPtrBase_")
           .def(py::init<ArrayDataPtrBase>());
 }

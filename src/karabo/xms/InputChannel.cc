@@ -37,10 +37,10 @@ using namespace karabo::util;
 using namespace karabo::io;
 using namespace karabo::net;
 
-using boost::placeholders::_1;
-using boost::placeholders::_2;
-using boost::placeholders::_3;
 using std::string;
+using std::placeholders::_1;
+using std::placeholders::_2;
+using std::placeholders::_3;
 
 
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::xms::InputChannel)
@@ -140,7 +140,7 @@ namespace karabo {
 
 
         InputChannel::InputChannel(const karabo::util::Hash& config)
-            : m_strand(boost::make_shared<Strand>(karabo::net::EventLoop::getIOService())),
+            : m_strand(std::make_shared<Strand>(karabo::net::EventLoop::getIOService())),
               m_deadline(karabo::net::EventLoop::getIOService()),
               // "guaranteeToRun" = true to ensure handlers are all called under all circumstances
               m_connectStrand(Configurator<Strand>::create("Strand", Hash("guaranteeToRun", true))),
@@ -218,7 +218,7 @@ namespace karabo {
 
 
         size_t InputChannel::dataQuantityRead() {
-            boost::mutex::scoped_lock lock(m_outputChannelsMutex);
+            std::lock_guard<std::mutex> lock(m_outputChannelsMutex);
             size_t bytesRead = 0;
             for (auto it = m_openConnections.begin(); it != m_openConnections.end(); ++it) {
                 bytesRead += it->second.second->dataQuantityRead();
@@ -227,7 +227,7 @@ namespace karabo {
         }
 
         size_t InputChannel::dataQuantityWritten() {
-            boost::mutex::scoped_lock lock(m_outputChannelsMutex);
+            std::lock_guard<std::mutex> lock(m_outputChannelsMutex);
             size_t bytesWritten = 0;
             for (auto it = m_openConnections.begin(); it != m_openConnections.end(); ++it) {
                 bytesWritten += it->second.second->dataQuantityWritten();
@@ -236,14 +236,14 @@ namespace karabo {
         }
 
         std::map<std::string, karabo::util::Hash> InputChannel::getConnectedOutputChannels() {
-            boost::mutex::scoped_lock lock(m_outputChannelsMutex);
+            std::lock_guard<std::mutex> lock(m_outputChannelsMutex);
             return m_configuredOutputChannels;
         }
 
         std::unordered_map<std::string, karabo::net::ConnectionStatus> InputChannel::getConnectionStatus() {
             std::unordered_map<std::string, karabo::net::ConnectionStatus> result;
 
-            boost::mutex::scoped_lock lock(m_outputChannelsMutex);
+            std::lock_guard<std::mutex> lock(m_outputChannelsMutex);
             for (auto itChannel = m_configuredOutputChannels.begin(); itChannel != m_configuredOutputChannels.end();
                  ++itChannel) {
                 const std::string& outputChannel = itChannel->first;
@@ -297,7 +297,7 @@ namespace karabo {
 
 
         void InputChannel::connect(const karabo::util::Hash& outputChannelInfo,
-                                   const boost::function<void(const karabo::net::ErrorCode&)>& handler) {
+                                   const std::function<void(const karabo::net::ErrorCode&)>& handler) {
             namespace bse = boost::system::errc;
             karabo::net::ErrorCode ec;
             const std::string& connectionType = outputChannelInfo.get<std::string>("connectionType");
@@ -317,7 +317,7 @@ namespace karabo {
                 ec = bse::make_error_code(bse::argument_out_of_domain);
             } else {
                 const string& outputChannelString = outputChannelInfo.get<string>("outputChannelString");
-                boost::mutex::scoped_lock lock(m_outputChannelsMutex);
+                std::unique_lock<std::mutex> lock(m_outputChannelsMutex);
                 if (m_configuredOutputChannels.find(outputChannelString) == m_configuredOutputChannels.end()) {
                     KARABO_LOG_FRAMEWORK_WARN << "InputChannel with id " << getInstanceId()
                                               << " not configured to connect to " << outputChannelString;
@@ -361,8 +361,8 @@ namespace karabo {
                         // 2) It may look fishy to bind 'connection' to a handler passed to 'connection' itself. Indeed,
                         //    this creates circular shared pointers, but we expect the handler to be called by boost
                         //    (be it with success or failure) and then to be dropped which solves the circularity again.
-                        connection->startAsync(boost::bind(&InputChannel::onConnectWrap, weak_from_this(), _1,
-                                                           connection, outputChannelInfo, _2, id, handler));
+                        connection->startAsync(std::bind(&InputChannel::onConnectWrap, weak_from_this(), _1, connection,
+                                                         outputChannelInfo, _2, id, handler));
                         return; // Do not call handler below
                     }
                 }
@@ -370,7 +370,7 @@ namespace karabo {
 
             // We are left here with a detected failure:
             if (handler) {
-                m_connectStrand->post(boost::bind(handler, ec));
+                m_connectStrand->post(std::bind(handler, ec));
             }
         }
 
@@ -383,7 +383,7 @@ namespace karabo {
                 // Not directly configured, so try host/port
                 const std::string& hostname = outputChannelInfo.get<std::string>("hostname");
                 unsigned int port = outputChannelInfo.get<unsigned int>("port");
-                boost::mutex::scoped_lock lock(m_outputChannelsMutex);
+                std::lock_guard<std::mutex> lock(m_outputChannelsMutex);
                 for (ConfiguredOutputChannels::const_iterator it = m_configuredOutputChannels.begin();
                      it != m_configuredOutputChannels.end(); ++it) {
                     if (it->second.get<string>("hostname") != hostname) continue;
@@ -399,7 +399,7 @@ namespace karabo {
 
 
         void InputChannel::disconnect(const std::string& outputChannelString) {
-            boost::mutex::scoped_lock lock(m_outputChannelsMutex);
+            std::lock_guard<std::mutex> lock(m_outputChannelsMutex);
             disconnectImpl(outputChannelString);
         }
 
@@ -412,7 +412,7 @@ namespace karabo {
                 m_connectionsBeingSetup.erase(itBeingSetup);
                 if (handler) {
                     auto ec = boost::system::errc::make_error_code(boost::system::errc::operation_canceled);
-                    m_connectStrand->post(boost::bind(handler, ec));
+                    m_connectStrand->post(std::bind(handler, ec));
                 }
                 postConnectionTracker(outputChannelString, net::ConnectionStatus::DISCONNECTED);
                 return;
@@ -430,7 +430,7 @@ namespace karabo {
 
 
         void InputChannel::disconnectAll() {
-            boost::mutex::scoped_lock lock(m_outputChannelsMutex);
+            std::lock_guard<std::mutex> lock(m_outputChannelsMutex);
             std::vector<std::string> openConnections;
             for (OpenConnections::iterator it = m_openConnections.begin(); it != m_openConnections.end(); ++it) {
                 openConnections.push_back(it->first);
@@ -456,7 +456,7 @@ namespace karabo {
                                          karabo::net::Connection::Pointer connection,
                                          const karabo::util::Hash& outputChannelInfo,
                                          karabo::net::Channel::Pointer channel, unsigned int connectId,
-                                         const boost::function<void(const karabo::net::ErrorCode&)>& handler) {
+                                         const std::function<void(const karabo::net::ErrorCode&)>& handler) {
             Pointer self = weakSelf.lock();
             if (self) {
                 self->onConnect(ec, connection, outputChannelInfo, channel, connectId, handler);
@@ -471,14 +471,14 @@ namespace karabo {
         void InputChannel::onConnect(karabo::net::ErrorCode ec, karabo::net::Connection::Pointer& connection,
                                      const karabo::util::Hash& outputChannelInfo,
                                      karabo::net::Channel::Pointer& channel, unsigned int connectId,
-                                     const boost::function<void(const karabo::net::ErrorCode&)>& handler) {
+                                     const std::function<void(const karabo::net::ErrorCode&)>& handler) {
             KARABO_LOG_FRAMEWORK_DEBUG << "onConnect  :  outputChannelInfo is ...\n" << outputChannelInfo;
             // NOTE: Locking this mutex here before a synchronous write is not ideal.
             //       However, we subscribe a read operation before a write to make sure the connection status
             //       is properly caught and there is no race condition. In case the handler is called asynchronously
             //       with an error code while we register the channel, connection pair in the `m_openConnections`
             //       set, it will wait for the mutex to be unlocked and properly deregister the channels.
-            boost::mutex::scoped_lock lock(m_outputChannelsMutex);
+            std::lock_guard<std::mutex> lock(m_outputChannelsMutex);
             if (!ec) { // succeeded so far
                 try {
                     channel->readAsyncHashVectorBufferSetPointer(
@@ -527,7 +527,7 @@ namespace karabo {
             auto status = (ec ? net::ConnectionStatus::DISCONNECTED : net::ConnectionStatus::CONNECTED);
             postConnectionTracker(outputChannelString, status);
             if (handler) {
-                m_connectStrand->post(boost::bind(handler, ec));
+                m_connectStrand->post(std::bind(handler, ec));
             }
         }
 
@@ -536,7 +536,7 @@ namespace karabo {
                                              const karabo::net::Channel::Pointer& channel) {
             bool runEndOfStream = false;
             {
-                boost::mutex::scoped_lock lock(m_outputChannelsMutex);
+                std::lock_guard<std::mutex> lock(m_outputChannelsMutex);
                 for (auto it = m_eosChannels.begin(); it != m_eosChannels.end();) {
                     net::Channel::Pointer ptr = it->lock();
                     if (!ptr // should not happen, but if it does clean up nevertheless
@@ -552,7 +552,7 @@ namespace karabo {
             }
 
             if (runEndOfStream) {
-                boost::mutex::scoped_lock twoPotsLock(m_twoPotsMutex);
+                std::lock_guard<std::mutex> twoPotsLock(m_twoPotsMutex);
                 // FIXME: When fixing the handling of multiple output channels, check that eos is really called
                 //        (might not be the case when no more data arrives - as expected after EOS...)
                 Memory::setEndOfStream(m_channelId, m_inactiveChunk, true);
@@ -566,7 +566,7 @@ namespace karabo {
                 return;
             }
 
-            boost::mutex::scoped_lock lock(m_outputChannelsMutex);
+            std::lock_guard<std::mutex> lock(m_outputChannelsMutex);
             for (OpenConnections::iterator ii = m_openConnections.begin(); ii != m_openConnections.end(); ++ii) {
                 if (ii->second.second == channel) {
                     const std::string outputChannelString = std::move(ii->first); // move: erase(ii) will invalidate
@@ -619,10 +619,10 @@ namespace karabo {
                 // m_outputChannelsMutex, but that fortunately does not harm. Instead of the m_twoPotsMutex, one
                 // might consider to post onTcpChannelRead on the same strand as triggerIOEvent - anyway almost all of
                 // these functions is protected by that mutex...
-                boost::mutex::scoped_lock twoPotsLock(m_twoPotsMutex);
+                std::unique_lock<std::mutex> twoPotsLock(m_twoPotsMutex);
                 bool treatEndOfStream = false;
                 if (header.has("endOfStream")) {
-                    boost::mutex::scoped_lock lock(m_outputChannelsMutex);
+                    std::lock_guard<std::mutex> lock(m_outputChannelsMutex);
                     m_eosChannels.insert(channel);
                     if (m_eosChannels.size() < m_openConnections.size()) {
                         KARABO_LOG_FRAMEWORK_DEBUG << debugId << "Received EOS #" << m_eosChannels.size() << ", await "
@@ -708,7 +708,7 @@ namespace karabo {
             m_reverseMetaDataMap.clear();
             unsigned int i = 0;
             for (auto it = m_metaDataList.cbegin(); it != m_metaDataList.cend();) {
-                m_dataList[i] = boost::make_shared<Hash>();
+                m_dataList[i] = std::make_shared<Hash>();
                 try {
                     Memory::read(*(m_dataList[i]), i, m_channelId, m_activeChunk);
                 } catch (const karabo::util::Exception& e) {
@@ -772,7 +772,7 @@ namespace karabo {
             bool treatEndOfStream = false;
             bool notifyForNextRead = false;
             {
-                boost::mutex::scoped_lock twoPotsLock(m_twoPotsMutex);
+                std::lock_guard<std::mutex> twoPotsLock(m_twoPotsMutex);
 
                 // Cache need for endOfStream handling since cleared in clearChunkData
                 treatEndOfStream = Memory::isEndOfStream(m_channelId, m_activeChunk);
@@ -860,7 +860,7 @@ namespace karabo {
             if (m_delayOnInput <= 0) { // no delay
                 deferredNotificationOfOutputChannelForPossibleRead(channel);
             } else {
-                m_deadline.expires_from_now(boost::posix_time::milliseconds(m_delayOnInput));
+                m_deadline.expires_from_now(boost::asio::chrono::milliseconds(m_delayOnInput));
                 m_deadline.async_wait(util::bind_weak(&InputChannel::deferredNotificationOfOutputChannelForPossibleRead,
                                                       this, channel));
             }
@@ -871,7 +871,7 @@ namespace karabo {
             // Get channels to update under mutex lock - weak pointers ensure that channels are not kept alive by this
             std::vector<karabo::net::Channel::WeakPointer> channelsToUpdate;
             {
-                boost::mutex::scoped_lock lock(m_outputChannelsMutex);
+                std::lock_guard<std::mutex> lock(m_outputChannelsMutex);
                 channelsToUpdate.reserve(m_openConnections.size());
                 for (OpenConnections::const_iterator it = m_openConnections.begin(); it != m_openConnections.end();
                      ++it) {
@@ -912,7 +912,7 @@ namespace karabo {
             if (m_delayOnInput <= 0) // no delay
                 deferredNotificationsOfOutputChannelsForPossibleRead();
             else { // wait "asynchronously"
-                m_deadline.expires_from_now(boost::posix_time::milliseconds(m_delayOnInput));
+                m_deadline.expires_from_now(boost::asio::chrono::milliseconds(m_delayOnInput));
                 m_deadline.async_wait(
                       util::bind_weak(&InputChannel::deferredNotificationsOfOutputChannelsForPossibleRead, this));
             }
@@ -928,7 +928,7 @@ namespace karabo {
             if (config.has("connectedOutputChannels")) {
                 std::vector<std::string> connectedOutputChannels;
                 config.get("connectedOutputChannels", connectedOutputChannels);
-                boost::mutex::scoped_lock lock(m_outputChannelsMutex);
+                std::lock_guard<std::mutex> lock(m_outputChannelsMutex);
                 m_configuredOutputChannels.clear();
                 for (size_t i = 0; i < connectedOutputChannels.size(); ++i) {
                     std::vector<std::string> tmp;
@@ -959,14 +959,14 @@ namespace karabo {
         void InputChannel::postConnectionTracker(const std::string& outputChannel,
                                                  karabo::net::ConnectionStatus status) {
             if (m_connectionTracker) {
-                m_connectStrand->post(boost::bind(m_connectionTracker, outputChannel, status));
+                m_connectStrand->post(std::bind(m_connectionTracker, outputChannel, status));
             }
         }
 
 
         void InputChannel::updateOutputChannelConfiguration(const std::string& outputChannelString,
                                                             const karabo::util::Hash& config) {
-            boost::mutex::scoped_lock lock(m_outputChannelsMutex);
+            std::lock_guard<std::mutex> lock(m_outputChannelsMutex);
             m_configuredOutputChannels[outputChannelString] = config;
         }
 

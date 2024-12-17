@@ -27,6 +27,8 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 
+#include <boost/asio.hpp>
+
 class EventLoop_Test : public CPPUNIT_NS::TestFixture {
     boost::mutex m_mutex;
     bool m_finished;
@@ -45,7 +47,7 @@ class EventLoop_Test : public CPPUNIT_NS::TestFixture {
     virtual ~EventLoop_Test();
 
    private:
-    void handler1(boost::asio::deadline_timer&, int count);
+    void handler1(boost::asio::steady_timer&, int count);
     void handler2();
     void handler3();
     void testMethod();

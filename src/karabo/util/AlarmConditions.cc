@@ -34,12 +34,12 @@ namespace karabo {
         AlarmCondition::AlarmCondition(const std::string& cs, const AlarmCondition& b)
             : m_conditionString(cs),
               m_rank(b.m_rank),
-              m_base(boost::make_shared<AlarmCondition>(b)){
+              m_base(std::make_shared<AlarmCondition>(b)){
 
               };
 
 
-        boost::shared_ptr<const AlarmCondition> AlarmCondition::getBase() const {
+        std::shared_ptr<const AlarmCondition> AlarmCondition::getBase() const {
             return m_base;
         }
 

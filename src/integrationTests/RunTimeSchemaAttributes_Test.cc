@@ -28,8 +28,8 @@ using namespace karabo::core;
 using namespace karabo::net;
 using namespace karabo::util;
 
-using boost::placeholders::_1;
-using boost::placeholders::_2;
+using std::placeholders::_1;
+using std::placeholders::_2;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(RunTimeSchemaAttributes_Test);
 
@@ -44,13 +44,13 @@ RunTimeSchemaAttributes_Test::~RunTimeSchemaAttributes_Test() {}
 
 void RunTimeSchemaAttributes_Test::setUp() {
     // Start central event-loop
-    m_eventLoopThread = boost::thread(boost::bind(&EventLoop::work));
+    m_eventLoopThread = boost::thread(std::bind(&EventLoop::work));
     // Create and start server
     Hash config("serverId", "testServerSchema", "scanPlugins", false, "Logger.priority", "ERROR");
     m_deviceServer = DeviceServer::create("DeviceServer", config);
     m_deviceServer->finalizeInternalInitialization();
     // Create client
-    m_deviceClient = boost::make_shared<DeviceClient>(std::string(), false);
+    m_deviceClient = std::make_shared<DeviceClient>(std::string(), false);
     m_deviceClient->initialize();
 }
 
@@ -69,10 +69,10 @@ void RunTimeSchemaAttributes_Test::appTestRunner() {
           m_deviceClient->instantiate("testServerSchema", "GuiServerDevice",
                                       Hash("deviceId", "testGuiServerSchema", "port", 44447), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT(success.first);
-    boost::this_thread::sleep(boost::posix_time::milliseconds(3000));
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(3000));
     m_tcpAdapter =
-          boost::shared_ptr<karabo::TcpAdapter>(new karabo::TcpAdapter(Hash("port", 44447u /*, "debug", true*/)));
-    boost::this_thread::sleep(boost::posix_time::milliseconds(5000));
+          std::shared_ptr<karabo::TcpAdapter>(new karabo::TcpAdapter(Hash("port", 44447u /*, "debug", true*/)));
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(5000));
     CPPUNIT_ASSERT(m_tcpAdapter->connected());
     m_tcpAdapter->login();
 
@@ -81,7 +81,7 @@ void RunTimeSchemaAttributes_Test::appTestRunner() {
                                           KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT(success.first);
 
-    boost::this_thread::sleep(boost::posix_time::milliseconds(5000));
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(5000));
 
     testRuntimeApplication();
     testGuiServerApplication();
@@ -96,8 +96,8 @@ void RunTimeSchemaAttributes_Test::appTestRunner() {
 void RunTimeSchemaAttributes_Test::testRuntimeApplication() {
     // register a dummy monitor to assure that signals from the device are tracked
     m_deviceClient->registerDeviceMonitor("alarmTesterSchema",
-                                          boost::bind(&RunTimeSchemaAttributes_Test::dummyMonitor, this, _1, _2));
-    boost::this_thread::sleep(boost::posix_time::milliseconds(5000));
+                                          std::bind(&RunTimeSchemaAttributes_Test::dummyMonitor, this, _1, _2));
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(5000));
     m_deviceClient->setAttribute("alarmTesterSchema", "intPropNeedsAck", "warnLow", -1000);
     m_deviceClient->setAttribute("alarmTesterSchema", "intPropNeedsAck", "minInc", -10);
 

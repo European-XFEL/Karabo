@@ -42,8 +42,8 @@
 #endif
 #endif
 
-#include <boost/shared_ptr.hpp>
 #include <complex>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -51,12 +51,7 @@ namespace karabo {
 
     namespace util {
 
-        typedef std::pair<boost::shared_ptr<char>, size_t> ByteArray;
-
-        inline void byteArrayDeleter(const char* dataPtr) {
-            delete[] dataPtr;
-        }
-
+        typedef std::pair<std::shared_ptr<char>, size_t> ByteArray;
 
         // Forward ToType
         template <class To>

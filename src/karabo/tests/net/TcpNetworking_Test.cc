@@ -46,9 +46,9 @@
 
 using namespace std::literals::string_literals; // For '"blabla"s'
 
-using boost::placeholders::_1;
-using boost::placeholders::_2;
-using boost::placeholders::_3;
+using std::placeholders::_1;
+using std::placeholders::_2;
+using std::placeholders::_3;
 
 using karabo::net::Channel;
 using karabo::net::Connection;
@@ -90,7 +90,7 @@ createClientServer(Hash clientCfg, Hash serverCfg) {
     int timeout = 10000;
     while (timeout >= 0) {
         if (serverChannel) break;
-        boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
         timeout -= 10;
     }
     CPPUNIT_ASSERT_MESSAGE(failureReasonServ + ", timeout: " + toString(timeout), serverChannel);
@@ -106,7 +106,7 @@ struct TcpServer {
 
     TcpServer() : m_count(0), m_port(0) {
         m_connection = karabo::net::Connection::create(karabo::util::Hash("Tcp.port", 0, "Tcp.type", "server"));
-        m_port = m_connection->startAsync(boost::bind(&TcpServer::connectHandler, this, _1, _2));
+        m_port = m_connection->startAsync(std::bind(&TcpServer::connectHandler, this, _1, _2));
     }
 
 
@@ -124,7 +124,7 @@ struct TcpServer {
             if (channel) channel->close();
             return;
         }
-        channel->readAsyncHashHash(boost::bind(&TcpServer::readHashHashHandler, this, _1, channel, _2, _3));
+        channel->readAsyncHashHash(std::bind(&TcpServer::readHashHashHandler, this, _1, channel, _2, _3));
     }
 
 
@@ -160,7 +160,7 @@ struct TcpServer {
 
 
         channel->writeAsyncHashHash(header, body,
-                                    boost::bind(&TcpServer::writeCompleteHandler, this, _1, channel, "some string"));
+                                    std::bind(&TcpServer::writeCompleteHandler, this, _1, channel, "some string"));
     }
 
 
@@ -172,7 +172,7 @@ struct TcpServer {
         }
 
         BOOST_ASSERT(id == "some string");
-        channel->readAsyncHashHash(boost::bind(&TcpServer::readHashHashHandler, this, _1, channel, _2, _3));
+        channel->readAsyncHashHash(std::bind(&TcpServer::readHashHashHandler, this, _1, channel, _2, _3));
     }
 
    private:
@@ -191,7 +191,7 @@ struct TcpClient {
           m_connection(karabo::net::Connection::create(
                 karabo::util::Hash("Tcp.port", m_port, "Tcp.hostname", "sample.example.org"))),
           m_deadline(karabo::net::EventLoop::getIOService()) { // timeout repetition channel ec
-        m_connection->startAsync(boost::bind(&TcpClient::connectHandler, this, _1, 1000, 3, _2));
+        m_connection->startAsync(std::bind(&TcpClient::connectHandler, this, _1, 1000, 3, _2));
     }
 
 
@@ -203,9 +203,9 @@ struct TcpClient {
         if (ec) {
             errorHandler(ec, channel);
             if (ec != boost::asio::error::eof && repetition >= 0) {
-                m_deadline.expires_from_now(boost::posix_time::milliseconds(timeout));
-                m_deadline.async_wait(boost::bind(&TcpClient::waitHandler, this, boost::asio::placeholders::error,
-                                                  timeout, repetition));
+                m_deadline.expires_from_now(boost::asio::chrono::milliseconds(timeout));
+                m_deadline.async_wait(
+                      std::bind(&TcpClient::waitHandler, this, boost::asio::placeholders::error, timeout, repetition));
             }
             return;
         }
@@ -214,7 +214,7 @@ struct TcpClient {
         karabo::util::Hash data("a.b", "?", "a.c", 42.22f, "a.d", 12);
 
         // first sending
-        channel->writeAsyncHashHash(header, data, boost::bind(&TcpClient::writeCompleteHandler, this, channel, 42));
+        channel->writeAsyncHashHash(header, data, std::bind(&TcpClient::writeCompleteHandler, this, channel, 42));
     }
 
 
@@ -235,7 +235,7 @@ struct TcpClient {
         if (repetition == 0)
             m_connection =
                   karabo::net::Connection::create(karabo::util::Hash("Tcp.port", m_port, "Tcp.hostname", "localhost"));
-        m_connection->startAsync(boost::bind(&TcpClient::connectHandler, this, _1, timeout, repetition, _2));
+        m_connection->startAsync(std::bind(&TcpClient::connectHandler, this, _1, timeout, repetition, _2));
     }
 
 
@@ -274,14 +274,14 @@ struct TcpClient {
         for (int i = 1; i <= 20; i++) x.push_back(static_cast<unsigned char>(i % 256));
 
         // send client data asynchronous: define "write" completion handler
-        channel->writeAsyncHashHash(header, body, boost::bind(&TcpClient::writeCompleteHandler, this, channel, 42));
+        channel->writeAsyncHashHash(header, body, std::bind(&TcpClient::writeCompleteHandler, this, channel, 42));
     }
 
 
     void writeCompleteHandler(const karabo::net::Channel::Pointer& channel, int id) {
         CPPUNIT_ASSERT(id == 42);
         // data was sent successfully! Prepare to read a reply asynchronous from a server: placeholder _1 is a Hash
-        channel->readAsyncHashHash(boost::bind(&TcpClient::readHashHashHandler, this, _1, channel, _2, _3));
+        channel->readAsyncHashHash(std::bind(&TcpClient::readHashHashHandler, this, _1, channel, _2, _3));
     }
 
 
@@ -289,7 +289,7 @@ struct TcpClient {
     int m_count;
     int m_port;
     karabo::net::Connection::Pointer m_connection;
-    boost::asio::deadline_timer m_deadline;
+    boost::asio::steady_timer m_deadline;
     int m_timeout;
     int m_repetition;
 };
@@ -306,7 +306,7 @@ struct WriteAsyncTestsParams {
     const std::string dataString = std::string("Sample of std::string");
     const karabo::util::Hash headerHash = karabo::util::Hash("Header", "hdr", "NumOfFields", 3, "required", true);
     const karabo::net::VectorCharPointer vectorCharPointer =
-          boost::make_shared<std::vector<char>>(std::vector<char>(10, 'A'));
+          std::make_shared<std::vector<char>>(std::vector<char>(10, 'A'));
     const std::vector<char> vectorChar = std::vector<char>(20, 'B');
     const std::size_t charArraySize = CHAR_ARRAY_SIZE;
     const char charArray[CHAR_ARRAY_SIZE] = {'1', '2', '5', 'A'};
@@ -346,10 +346,10 @@ struct WriteAsyncSrv {
     KARABO_CLASSINFO(WriteAsyncSrv, "WriteAsyncSrv", "1.0");
 
 
-    WriteAsyncSrv(boost::function<void(const TestOutcome&, const std::string&, const std::string&)> testReportFn)
+    WriteAsyncSrv(std::function<void(const TestOutcome&, const std::string&, const std::string&)> testReportFn)
         : m_port(0), m_testReportFn(testReportFn) {
         m_connection = karabo::net::Connection::create(karabo::util::Hash("Tcp.port", 0, "Tcp.type", "server"));
-        m_port = m_connection->startAsync(boost::bind(&WriteAsyncSrv::connectHandler, this, _1, _2));
+        m_port = m_connection->startAsync(std::bind(&WriteAsyncSrv::connectHandler, this, _1, _2));
     }
 
     int port() const {
@@ -358,7 +358,7 @@ struct WriteAsyncSrv {
 
    private:
     int m_port;
-    boost::function<void(const TestOutcome&, const std::string&, const std::string&)> m_testReportFn;
+    std::function<void(const TestOutcome&, const std::string&, const std::string&)> m_testReportFn;
     karabo::net::Connection::Pointer m_connection;
     WriteAsyncTestsParams m_params;
 
@@ -371,7 +371,7 @@ struct WriteAsyncSrv {
             if (channel) channel->close();
             return;
         }
-        channel->readAsyncHash(boost::bind(&WriteAsyncSrv::readAsyncHashHandlerCopyFalse, this, _1, channel, _2));
+        channel->readAsyncHash(std::bind(&WriteAsyncSrv::readAsyncHashHandlerCopyFalse, this, _1, channel, _2));
         std::clog << "[Srv]\t 0.2. First read handler registered." << std::endl;
     }
 
@@ -396,7 +396,7 @@ struct WriteAsyncSrv {
         } else {
             std::clog << "[Srv]\t 1.2. Hash checked to be OK." << std::endl;
             // Reads the next piece of data sent by WriteAsyncCli as part of the test.
-            channel->readAsyncHash(boost::bind(&WriteAsyncSrv::readAsyncHashHandlerCopyTrue, this, _1, channel, _2));
+            channel->readAsyncHash(std::bind(&WriteAsyncSrv::readAsyncHashHandlerCopyTrue, this, _1, channel, _2));
         }
     }
 
@@ -421,7 +421,7 @@ struct WriteAsyncSrv {
         } else {
             std::clog << "[Srv]\t 2.2. Hash checked to be OK." << std::endl;
             // Reads the next piece of data sent by WriteAsyncCli as part of the test.
-            channel->readAsyncString(boost::bind(&WriteAsyncSrv::readAsyncStringHandler, this, _1, channel, _2));
+            channel->readAsyncString(std::bind(&WriteAsyncSrv::readAsyncStringHandler, this, _1, channel, _2));
         }
     }
 
@@ -446,7 +446,7 @@ struct WriteAsyncSrv {
             std::clog << "[Srv]\t 3.2. String checked to be OK." << std::endl;
             // Reads the next piece of data sent by the WriteAsyncCli as part of the test.
             channel->readAsyncHashHash(
-                  boost::bind(&WriteAsyncSrv::readAsyncHashHashHandlerCopyFalse, this, _1, channel, _2, _3));
+                  std::bind(&WriteAsyncSrv::readAsyncHashHashHandlerCopyFalse, this, _1, channel, _2, _3));
         }
     }
 
@@ -475,7 +475,7 @@ struct WriteAsyncSrv {
             std::clog << "[Srv]\t 4.2. Hashes checked to be OK." << std::endl;
             // Reads the next piece of data sent by the WriteAsyncCli as part of the test.
             channel->readAsyncHashHash(
-                  boost::bind(&WriteAsyncSrv::readAsyncHashHashHandlerCopyTrue, this, _1, channel, _2, _3));
+                  std::bind(&WriteAsyncSrv::readAsyncHashHashHandlerCopyTrue, this, _1, channel, _2, _3));
         }
     }
 
@@ -503,7 +503,7 @@ struct WriteAsyncSrv {
         } else {
             std::clog << "[Srv]\t 5.2. Hashes checked to be OK." << std::endl;
             // Reads the next piece of data sent by the WriteAsyncCli as part of the test.
-            channel->readAsyncVector(boost::bind(&WriteAsyncSrv::readAsyncCharArrayHandler, this, _1, channel, _2));
+            channel->readAsyncVector(std::bind(&WriteAsyncSrv::readAsyncCharArrayHandler, this, _1, channel, _2));
         }
     }
 
@@ -526,14 +526,14 @@ struct WriteAsyncSrv {
             std::clog << "[Srv]\t 6.2. Vector checked to be OK." << std::endl;
             // Reads the next piece of data sent by the WriteAsyncCli as part of the test.
             channel->readAsyncVectorPointer(
-                  boost::bind(&WriteAsyncSrv::readAsyncVectorPointerHandler, this, _1, channel, _2));
+                  std::bind(&WriteAsyncSrv::readAsyncVectorPointerHandler, this, _1, channel, _2));
         }
     }
 
 
     void readAsyncVectorPointerHandler(const boost::system::error_code& ec,
                                        const karabo::net::Channel::Pointer& channel,
-                                       boost::shared_ptr<std::vector<char>>& vectorCharPointer) {
+                                       std::shared_ptr<std::vector<char>>& vectorCharPointer) {
         if (ec) {
             KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAsyncSrv error at readAysncVectorPointerHandler: " << ec.value()
                                        << " -- " << ec.message();
@@ -556,7 +556,7 @@ struct WriteAsyncSrv {
             std::clog << "[Srv]\t 7.2. VectorCharPointer checked to be OK." << std::endl;
             // Reads the next piece of data sent by the WriteAsyncCli as part of the test.
             channel->readAsyncHashVectorPointer(
-                  boost::bind(&WriteAsyncSrv::readAsyncHashVectorPointerHandler, this, _1, channel, _2, _3));
+                  std::bind(&WriteAsyncSrv::readAsyncHashVectorPointerHandler, this, _1, channel, _2, _3));
         }
     }
 
@@ -589,7 +589,7 @@ struct WriteAsyncSrv {
             std::clog << "[Srv]\t 8.2. Hash header and VectorCharPointer body checked to be OK." << std::endl;
             // Reads the next piece of data sent by the WriteAsyncCli as part of the test.
             channel->readAsyncHash(
-                  boost::bind(&WriteAsyncSrv::readAsyncHashNDArrayHandlerCopyFalse, this, _1, channel, _2));
+                  std::bind(&WriteAsyncSrv::readAsyncHashNDArrayHandlerCopyFalse, this, _1, channel, _2));
         }
     }
 
@@ -619,7 +619,7 @@ struct WriteAsyncSrv {
             std::clog << "[Srv]\t 9.2. Hash with NDArray checked to be OK." << std::endl;
             // Reads the next piece of data sent by the WriteAsyncCli as part of the test.
             channel->readAsyncHash(
-                  boost::bind(&WriteAsyncSrv::readAsyncHashNDArrayHandlerCopyTrue, this, _1, channel, _2));
+                  std::bind(&WriteAsyncSrv::readAsyncHashNDArrayHandlerCopyTrue, this, _1, channel, _2));
         }
     }
 
@@ -649,7 +649,7 @@ struct WriteAsyncSrv {
             std::clog << "[Srv]\t 10.2. Hash with NDArray checked to be OK." << std::endl;
             // Reads the next piece of data sent by the WriteAsyncCli as part of the test.
             channel->readAsyncHashVector(
-                  boost::bind(&WriteAsyncSrv::readAsyncHashCharArrayHandler, this, _1, channel, _2, _3));
+                  std::bind(&WriteAsyncSrv::readAsyncHashCharArrayHandler, this, _1, channel, _2, _3));
         }
     }
 
@@ -678,7 +678,7 @@ struct WriteAsyncSrv {
             std::clog << "[Srv]\t 11.2. Header hash and array of char for body matched." << std::endl;
             // Reads the next piece of data sent by the WriteAsyncCli as part of the test.
             channel->readAsyncHashString(
-                  boost::bind(&WriteAsyncSrv::readAsyncHashStringHandler, this, _1, channel, _2, _3));
+                  std::bind(&WriteAsyncSrv::readAsyncHashStringHandler, this, _1, channel, _2, _3));
         }
     }
 
@@ -705,7 +705,7 @@ struct WriteAsyncSrv {
             std::clog << "[Srv]\t 12.2. Header hash and string for body matched." << std::endl;
             // Reads the next piece of data sent by the WriteAsyncCli as part of the test.
             channel->readAsyncHashVector(
-                  boost::bind(&WriteAsyncSrv::readAsyncHashVectorHandler, this, _1, channel, _2, _3));
+                  std::bind(&WriteAsyncSrv::readAsyncHashVectorHandler, this, _1, channel, _2, _3));
         }
     }
 
@@ -733,7 +733,7 @@ struct WriteAsyncSrv {
         } else {
             std::clog << "[Srv]\t 13.2. Header hash and vector of char for body matched." << std::endl;
             // Reads the next piece of data sent by the WriteAsyncCli as part of the test.
-            channel->readAsyncVector(boost::bind(&WriteAsyncSrv::readAsyncVectorHandler, this, _1, channel, _2));
+            channel->readAsyncVector(std::bind(&WriteAsyncSrv::readAsyncVectorHandler, this, _1, channel, _2));
         }
     }
 
@@ -769,16 +769,16 @@ struct WriteAsyncCli {
     KARABO_CLASSINFO(WriteAsyncCli, "WriteAndForgetCli", "1.0");
 
     WriteAsyncCli(const std::string& host, int port,
-                  boost::function<void(const TestOutcome&, const std::string&, const std::string&)> testReportFn)
+                  std::function<void(const TestOutcome&, const std::string&, const std::string&)> testReportFn)
         : m_port(port),
           m_testReportFn(testReportFn),
           m_connection(karabo::net::Connection::create(karabo::util::Hash("Tcp.port", m_port, "Tcp.hostname", host))) {
-        m_connection->startAsync(boost::bind(&WriteAsyncCli::connectHandler, this, _1, _2));
+        m_connection->startAsync(std::bind(&WriteAsyncCli::connectHandler, this, _1, _2));
     }
 
    private:
     int m_port;
-    boost::function<void(const TestOutcome&, const std::string&, const std::string&)> m_testReportFn;
+    std::function<void(const TestOutcome&, const std::string&, const std::string&)> m_testReportFn;
     karabo::net::Connection::Pointer m_connection;
     karabo::net::Channel::Pointer m_channel;
     WriteAsyncTestsParams m_params;
@@ -954,7 +954,7 @@ void TcpNetworking_Test::testBufferSet() {
     int timeout = 10000;
     while (timeout >= 0) {
         if (serverChannel) break;
-        boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
         timeout -= 10;
     }
     CPPUNIT_ASSERT_MESSAGE(failureReasonServ + ", timeout: " + toString(timeout), serverChannel);
@@ -973,7 +973,7 @@ void TcpNetworking_Test::testBufferSet() {
     }
     auto serializer = karabo::io::BinarySerializer<Hash>::create("Bin");
     auto buffers = std::vector<karabo::io::BufferSet::Pointer>( // vector of two BufferSets
-          {boost::make_shared<karabo::io::BufferSet>(), boost::make_shared<karabo::io::BufferSet>()});
+          {std::make_shared<karabo::io::BufferSet>(), std::make_shared<karabo::io::BufferSet>()});
     serializer->save(data1, *(buffers[0])); // save into first BufferSet
     // Add a second BufferSet with normally big NDArray
     const Hash data2("vec", std::vector<short>(100, 7), // vector of length 100 shorts
@@ -1125,7 +1125,7 @@ void TcpNetworking_Test::testConsumeBytesAfterReadUntil() {
     int timeout = 10000;
     while (timeout >= 0) {
         if (clientChannel && serverChannel) break;
-        boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
         timeout -= 10;
     }
     CPPUNIT_ASSERT_MESSAGE(failureReasonServ + ", timeout: " + toString(timeout), serverChannel);
@@ -1175,7 +1175,7 @@ void TcpNetworking_Test::testConsumeBytesAfterReadUntil() {
     timeout = 12000;
     while (timeout >= 0) {
         if (readSeqCompleted) break;
-        boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
         timeout -= 10;
     }
 
@@ -1202,12 +1202,12 @@ void TcpNetworking_Test::testWriteAsync() {
     decltype(boost::chrono::high_resolution_clock::now()) finishTime;
 
     // Mutex for test results access
-    boost::mutex testResultsMutex;
+    std::mutex testResultsMutex;
 
     // Setter for test results data.
     auto testReportFn = [&](const TestOutcome& outcome, const std::string& outcomeMessage,
                             const std::string& failTestCaseName) -> void {
-        boost::mutex::scoped_lock lock(testResultsMutex);
+        std::lock_guard<std::mutex> lock(testResultsMutex);
         testOutcome = outcome;
         testOutcomeMessage = outcomeMessage;
         failingTestCaseName = failTestCaseName;
@@ -1221,7 +1221,7 @@ void TcpNetworking_Test::testWriteAsync() {
 
     karabo::net::EventLoop::run();
 
-    boost::mutex::scoped_lock lock(testResultsMutex);
+    std::lock_guard<std::mutex> lock(testResultsMutex);
     if (testOutcome == TestOutcome::SUCCESS) {
         auto testDuration = finishTime - startTime;
         std::clog << "Test took " << boost::chrono::duration_cast<boost::chrono::milliseconds>(testDuration).count()

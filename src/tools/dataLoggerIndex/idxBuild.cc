@@ -24,8 +24,8 @@
 
 #include <algorithm>
 #include <boost/algorithm/string/predicate.hpp>
-#include <boost/filesystem.hpp>
 #include <cstdlib>
+#include <filesystem>
 #include <iostream>
 #include <karabo/io/TextSerializer.hh>
 #include <karabo/util/DataLogUtils.hh>
@@ -35,7 +35,7 @@
 #include <sstream>
 #include <vector>
 
-namespace bf = boost::filesystem;
+namespace bf = std::filesystem;
 namespace bs = boost::system;
 using namespace std;
 using namespace karabo::util;

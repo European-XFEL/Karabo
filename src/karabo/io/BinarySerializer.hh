@@ -119,7 +119,7 @@ namespace karabo {
              * @param object to save
              * @param archive to save to
              */
-            void save(const boost::shared_ptr<T>& object, std::vector<char>& archive) {
+            void save(const std::shared_ptr<T>& object, std::vector<char>& archive) {
                 save(*object, archive);
             }
 
@@ -130,7 +130,7 @@ namespace karabo {
              * @param nBytes size in bytes of the data archive
              * @return number of processed bytes in archive
              */
-            size_t load(const boost::shared_ptr<T>& object, const char* archive, const size_t nBytes) {
+            size_t load(const std::shared_ptr<T>& object, const char* archive, const size_t nBytes) {
                 return load(*object, archive, nBytes);
             }
 
@@ -140,7 +140,7 @@ namespace karabo {
              * @param archive binary archive containing the data
              * @return number of processed bytes in archive
              */
-            size_t load(const boost::shared_ptr<T>& object, const std::vector<char>& archive) {
+            size_t load(const std::shared_ptr<T>& object, const std::vector<char>& archive) {
                 if (archive.empty()) return 0;
                 else return load(*object, &archive[0], archive.size());
             }

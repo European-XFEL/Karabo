@@ -46,7 +46,7 @@ namespace karabind {
 
     template <class T>
     struct OutputWrap {
-        static void update(const boost::shared_ptr<karabo::io::Output<T>>& self) {
+        static void update(const std::shared_ptr<karabo::io::Output<T>>& self) {
             py::gil_scoped_release release;
             self->update();
         }
@@ -55,13 +55,13 @@ namespace karabind {
 
     template <class T>
     struct InputWrap {
-        static void registerIOEventHandler(const boost::shared_ptr<karabo::io::Input<T>>& self,
+        static void registerIOEventHandler(const std::shared_ptr<karabo::io::Input<T>>& self,
                                            const py::object& handler) {
             self->registerIOEventHandler(handler);
         }
 
 
-        static void registerEndOfStreamEventHandler(const boost::shared_ptr<karabo::io::Input<T>>& self,
+        static void registerEndOfStreamEventHandler(const std::shared_ptr<karabo::io::Input<T>>& self,
                                                     const py::object& handler) {
             self->registerEndOfStreamEventHandler(handler);
         }
@@ -187,7 +187,7 @@ void exportPyIoTextSerializer(py::module_& m) {
     typedef karabo::io::TextSerializer<T> SpecificSerializer;
     std::string clsId = "TextSerializer" + T::classInfo().getClassName();
 
-    py::class_<SpecificSerializer, boost::shared_ptr<SpecificSerializer>>(m, clsId.c_str())
+    py::class_<SpecificSerializer, std::shared_ptr<SpecificSerializer>>(m, clsId.c_str())
 
           KARABO_PYTHON_FACTORY_CONFIGURATOR(SpecificSerializer)
 
@@ -210,7 +210,7 @@ void exportPyIoBinarySerializer(py::module_& m) {
     typedef karabo::io::BinarySerializer<T> SpecificSerializer;
     std::string clsId = "BinarySerializer" + T::classInfo().getClassName();
 
-    py::class_<SpecificSerializer, boost::shared_ptr<SpecificSerializer>>(m, clsId.c_str())
+    py::class_<SpecificSerializer, std::shared_ptr<SpecificSerializer>>(m, clsId.c_str())
 
           KARABO_PYTHON_FACTORY_CONFIGURATOR(SpecificSerializer)
 
@@ -232,14 +232,14 @@ template <class T>
 void exportPyIoInputOutput(py::module_& m) {
     { // exposing karabo::io::Output<karabo::util::Hash>
         typedef karabo::io::Output<T> SpecificOutput;
-        py::class_<SpecificOutput, boost::shared_ptr<SpecificOutput>>(
+        py::class_<SpecificOutput, std::shared_ptr<SpecificOutput>>(
               m, string("Output" + T::classInfo().getClassName()).c_str())
               .def("write", (void(SpecificOutput::*)(T const&))(&SpecificOutput::write), py::arg("data"))
               .def("update", &OutputWrap<T>::update) KARABO_PYTHON_FACTORY_CONFIGURATOR(SpecificOutput);
     }
     { // exposing karabo::io::Input<karabo::util::Hash>
         typedef karabo::io::Input<T> SpecificInput;
-        py::class_<SpecificInput, boost::shared_ptr<SpecificInput>>(
+        py::class_<SpecificInput, std::shared_ptr<SpecificInput>>(
               m, string("Input" + T::classInfo().getClassName()).c_str())
               .def("read", (void(SpecificInput::*)(T&, size_t))(&SpecificInput::read), py::arg("data"),
                    py::arg("idx") = 0)

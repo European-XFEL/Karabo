@@ -36,8 +36,8 @@ namespace karabo {
         class InfluxDataLogger;
 
 
-        using AsyncHandler = boost::function<void()>;
-        using InfluxResponseHandler = boost::function<void(const karabo::net::HttpResponse&)>;
+        using AsyncHandler = std::function<void()>;
+        using InfluxResponseHandler = std::function<void(const karabo::net::HttpResponse&)>;
 
         enum class RejectionType {
             TOO_MANY_ELEMENTS = 0, // Vector property values with more elements than allowed.
@@ -87,7 +87,7 @@ namespace karabo {
                                 std::vector<RejectedData>& rejectedPathReasons);
 
             void onCheckSchemaInDb(const karabo::util::Timestamp& stamp, const std::string& schDigest,
-                                   const boost::shared_ptr<std::vector<char>>& schemaArchive,
+                                   const std::shared_ptr<std::vector<char>>& schemaArchive,
                                    const karabo::net::HttpResponse& o);
 
             void handleSchemaUpdated(const karabo::util::Schema& schema, const karabo::util::Timestamp& stamp) override;
@@ -196,7 +196,7 @@ namespace karabo {
 
             void initializeLoggerSpecific() override;
 
-            void flushImpl(const boost::shared_ptr<SignalSlotable::AsyncReply>& aReplyPtr) override;
+            void flushImpl(const std::shared_ptr<SignalSlotable::AsyncReply>& aReplyPtr) override;
 
            private:
             void checkDb(bool connected);

@@ -23,7 +23,7 @@
 #include "DataLogger.hh"
 
 #include <algorithm>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <streambuf>
 
 #include "karabo/io/Input.hh"
@@ -45,7 +45,7 @@ namespace karabo {
         using namespace karabo::util;
         using namespace karabo::io;
         using namespace karabo::xms;
-        using namespace boost::placeholders;
+        using namespace std::placeholders;
 
 
         void DataLogger::expectedParameters(Schema& expected) {
@@ -156,7 +156,7 @@ namespace karabo {
         void DataLogger::preDestruction() {
             std::vector<std::string> devices;
             {
-                boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
+                std::lock_guard<std::mutex> lock(m_perDeviceDataMutex);
                 for (auto it = m_perDeviceData.begin(), itEnd = m_perDeviceData.end(); it != itEnd; ++it) {
                     devices.push_back(it->first);
                 }
@@ -204,8 +204,8 @@ namespace karabo {
 
         void DataLogger::startConnection() {
             // Initiate connection to logged devices - will leave INIT state when all are connected (or failed)
-            boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
-            auto counter = boost::make_shared<std::atomic<unsigned int>>(m_perDeviceData.size());
+            std::lock_guard<std::mutex> lock(m_perDeviceDataMutex);
+            auto counter = std::make_shared<std::atomic<unsigned int>>(m_perDeviceData.size());
             if (0 == *counter) {
                 // No devices to log, so declare readiness immediately.
                 if (this->get<karabo::util::State>("state") != State::ERROR) {
@@ -227,14 +227,14 @@ namespace karabo {
             }
 
             // Start the flushing
-            m_flushDeadline.expires_from_now(boost::posix_time::seconds(m_flushInterval));
+            m_flushDeadline.expires_from_now(boost::asio::chrono::seconds(m_flushInterval));
             m_flushDeadline.async_wait(
                   util::bind_weak(&DataLogger::flushActor, this, boost::asio::placeholders::error));
         }
 
 
         void DataLogger::initConnection(const DeviceData::Pointer& data,
-                                        const boost::shared_ptr<std::atomic<unsigned int>>& counter) {
+                                        const std::shared_ptr<std::atomic<unsigned int>>& counter) {
             const std::string& deviceId = data->m_deviceToBeLogged;
 
             // Connect to schema updates and afterwards request Schema (in other order we might miss an update).
@@ -252,7 +252,7 @@ namespace karabo {
 
 
         void DataLogger::handleFailure(const std::string& reason, const DeviceData::Pointer& data,
-                                       const boost::shared_ptr<std::atomic<unsigned int>>& counter) {
+                                       const std::shared_ptr<std::atomic<unsigned int>>& counter) {
             const std::string& deviceId = data->m_deviceToBeLogged;
             try {
                 throw; // This will tell us which exception triggered the call to this error handler.
@@ -261,7 +261,7 @@ namespace karabo {
             }
             data->stopLogging(); // Likely nothing to do (did not reach 'connected' state), but be sure.
 
-            boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
+            std::unique_lock<std::mutex> lock(m_perDeviceDataMutex);
             auto it = m_perDeviceData.find(deviceId);
             if (it == m_perDeviceData.end()) {
                 // Should not be logged anymore, i.e. not in "devicesToBeLogged", either.
@@ -286,7 +286,7 @@ namespace karabo {
 
 
         void DataLogger::handleSchemaConnected(const DeviceData::Pointer& data,
-                                               const boost::shared_ptr<std::atomic<unsigned int>>& counter) {
+                                               const std::shared_ptr<std::atomic<unsigned int>>& counter) {
             const std::string& deviceId = data->m_deviceToBeLogged;
             KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << ": Requesting slotGetSchema (receiveAsync) for "
                                       << deviceId;
@@ -300,7 +300,7 @@ namespace karabo {
 
         void DataLogger::handleSchemaReceived(const karabo::util::Schema& schema, const std::string& deviceId,
                                               const DeviceData::Pointer& data,
-                                              const boost::shared_ptr<std::atomic<unsigned int>>& counter) {
+                                              const std::shared_ptr<std::atomic<unsigned int>>& counter) {
             // We need to store the received schema and then connect to configuration updates.
             // Since the first should not be done concurrently, we just post to the strand here,
             // adding the best timestamp we can get for this change - 'now' (better would be to receive the stamp
@@ -312,7 +312,7 @@ namespace karabo {
 
         void DataLogger::handleSchemaReceived2(const karabo::util::Schema& schema, const karabo::util::Timestamp& stamp,
                                                const DeviceData::Pointer& data,
-                                               const boost::shared_ptr<std::atomic<unsigned int>>& counter) {
+                                               const std::shared_ptr<std::atomic<unsigned int>>& counter) {
             // Set initial Schema - needed for receiving properly in slotChanged
             data->handleSchemaUpdated(schema, stamp);
 
@@ -326,7 +326,7 @@ namespace karabo {
 
 
         void DataLogger::handleConfigConnected(const DeviceData::Pointer& data,
-                                               const boost::shared_ptr<std::atomic<unsigned int>>& counter) {
+                                               const std::shared_ptr<std::atomic<unsigned int>>& counter) {
             const std::string& deviceId = data->m_deviceToBeLogged;
             data->m_initLevel = DeviceData::InitLevel::CONNECTED;
             KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << ": Requesting " << deviceId
@@ -356,24 +356,24 @@ namespace karabo {
 
 
         void DataLogger::disconnect(const std::string& deviceId) {
-            auto disconnectCounter = boost::make_shared<std::atomic<int>>(3); // three signals to disconnect below
+            auto disconnectCounter = std::make_shared<std::atomic<int>>(3); // three signals to disconnect below
             auto genericHandler = bind_weak(&DataLogger::disconnectHandler, this, _1, deviceId, _2, disconnectCounter);
 
             // Use the very long default timeout for the disconnection:
             asyncDisconnect(deviceId, "signalSchemaUpdated", "", "slotSchemaUpdated",
-                            boost::bind(genericHandler, false, "signalSchemaUpdated"), // successHandler for schema
-                            boost::bind(genericHandler, true, "signalSchemaUpdated")); // failureHandler for schema
+                            std::bind(genericHandler, false, "signalSchemaUpdated"), // successHandler for schema
+                            std::bind(genericHandler, true, "signalSchemaUpdated")); // failureHandler for schema
             asyncDisconnect(deviceId, "signalStateChanged", "", "slotChanged",
-                            boost::bind(genericHandler, false, "signalStateChanged"), // successHandler for stateChanged
-                            boost::bind(genericHandler, true, "signalStateChanged")); // failureHandler for...
+                            std::bind(genericHandler, false, "signalStateChanged"), // successHandler for stateChanged
+                            std::bind(genericHandler, true, "signalStateChanged")); // failureHandler for...
             asyncDisconnect(deviceId, "signalChanged", "", "slotChanged",
-                            boost::bind(genericHandler, false, "signalChanged"), // ... for changed
-                            boost::bind(genericHandler, true, "signalChanged")); // ... for changed
+                            std::bind(genericHandler, false, "signalChanged"), // ... for changed
+                            std::bind(genericHandler, true, "signalChanged")); // ... for changed
         }
 
 
         void DataLogger::disconnectHandler(bool isFailure, const std::string& devId, const std::string& signal,
-                                           const boost::shared_ptr<std::atomic<int>>& counter) {
+                                           const std::shared_ptr<std::atomic<int>>& counter) {
             const int count = --(*counter);
             if (isFailure) {
                 try {
@@ -398,7 +398,7 @@ namespace karabo {
                                       << "' requested since: " << reason;
 
             {
-                boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
+                std::lock_guard<std::mutex> lock(m_perDeviceDataMutex);
                 auto it = m_perDeviceData.find(deviceId);
                 if (it == m_perDeviceData.end()) {
                     throw KARABO_LOGIC_EXCEPTION("Device '" + deviceId + "' not treated.");
@@ -418,7 +418,7 @@ namespace karabo {
 
             // Initiate logging for all of them
             for (const std::string& deviceId : deviceIds) {
-                boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
+                std::unique_lock<std::mutex> lock(m_perDeviceDataMutex);
                 // (Try to) put first into "devicesNotLogged" so that outside can check whether device is logged by the
                 // following procedure:
                 // - first check that it is in "devicesToBeLogged" (if not, slotAddDevicesToBeLogged was not yet called)
@@ -438,7 +438,7 @@ namespace karabo {
                 // using an empty pointer to counter since addition of logged devices at runtime shall not influence
                 // State.
                 lock.unlock(); // writing to broker inside initConnection...
-                initConnection(data, boost::shared_ptr<std::atomic<unsigned int>>());
+                initConnection(data, std::shared_ptr<std::atomic<unsigned int>>());
             }
 
             reply(badIds);
@@ -446,7 +446,7 @@ namespace karabo {
 
 
         void DataLogger::slotChanged(const karabo::util::Hash& configuration, const std::string& deviceId) {
-            boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
+            std::lock_guard<std::mutex> lock(m_perDeviceDataMutex);
             DeviceDataMap::iterator it = m_perDeviceData.find(deviceId);
             if (it != m_perDeviceData.end()) {
                 DeviceData::Pointer& data = it->second;
@@ -482,9 +482,9 @@ namespace karabo {
                 }
                 // UserId only available in real slot call, before posting to event loop:
                 const std::string& user = getSenderInfo("slotChanged")->getUserIdOfSender();
-                // See DataLogger::slotSchemaUpdated for  a consideration about using boost::bind with 'data' instead
+                // See DataLogger::slotSchemaUpdated for  a consideration about using std::bind with 'data' instead
                 // of bind_weak with bare pointer
-                data->m_strand->post(boost::bind(&DeviceData::handleChanged, data, configuration, user));
+                data->m_strand->post(std::bind(&DeviceData::handleChanged, data, configuration, user));
             } else {
                 // Throttled logging, see above.
                 const unsigned int numLogs = ++m_nonTreatedSlotChanged[deviceId]; // prefix increment
@@ -564,13 +564,13 @@ namespace karabo {
             int nTries = 2000;
             while (--nTries >= 0) {
                 if (m_flushDeadline.cancel()) {
-                    updateTableAndFlush(boost::make_shared<SignalSlotable::AsyncReply>(this));
-                    m_flushDeadline.expires_from_now(boost::posix_time::seconds(m_flushInterval));
+                    updateTableAndFlush(std::make_shared<SignalSlotable::AsyncReply>(this));
+                    m_flushDeadline.expires_from_now(boost::asio::chrono::seconds(m_flushInterval));
                     m_flushDeadline.async_wait(
                           util::bind_weak(&DataLogger::flushActor, this, boost::asio::placeholders::error));
                     return;
                 }
-                boost::this_thread::sleep(boost::posix_time::milliseconds(1));
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
             }
             throw KARABO_TIMEOUT_EXCEPTION("Tried 2000 times to cancel flush timer...");
         }
@@ -581,26 +581,26 @@ namespace karabo {
                 return;
             }
             // Use empty reply pointer here: not inside slot, so no reply handling needed
-            updateTableAndFlush(boost::shared_ptr<SignalSlotable::AsyncReply>());
+            updateTableAndFlush(std::shared_ptr<SignalSlotable::AsyncReply>());
             // arm timer again
-            m_flushDeadline.expires_from_now(boost::posix_time::seconds(m_flushInterval));
+            m_flushDeadline.expires_from_now(boost::asio::chrono::seconds(m_flushInterval));
             m_flushDeadline.async_wait(
                   util::bind_weak(&DataLogger::flushActor, this, boost::asio::placeholders::error));
         }
 
 
-        void DataLogger::updateTableAndFlush(const boost::shared_ptr<SignalSlotable::AsyncReply>& aReplyPtr) {
+        void DataLogger::updateTableAndFlush(const std::shared_ptr<SignalSlotable::AsyncReply>& aReplyPtr) {
             // Update lastUpdatesUtc
             std::vector<Hash> lastStamps;
             bool updatedAnyStamp = false;
             {
-                boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
+                std::lock_guard<std::mutex> lock(m_perDeviceDataMutex);
                 lastStamps.reserve(m_perDeviceData.size());
                 for (auto& idData : m_perDeviceData) {
                     DeviceData::Pointer data = idData.second;
                     {
                         // To avoid this mutex lock, access to m_lastTimestampMutex would have to be posted on m_strand.
-                        boost::mutex::scoped_lock lock(data->m_lastTimestampMutex);
+                        std::lock_guard<std::mutex> lock(data->m_lastTimestampMutex);
                         updatedAnyStamp |= data->m_updatedLastTimestamp;
                         data->m_updatedLastTimestamp = false;
                         const karabo::util::Timestamp& ts = data->m_lastDataTimestamp;
@@ -629,13 +629,13 @@ namespace karabo {
         void DataLogger::slotSchemaUpdated(const karabo::util::Schema& schema, const std::string& deviceId) {
             KARABO_LOG_FRAMEWORK_INFO << "slotSchemaUpdated: Schema for " << deviceId << " arrived...";
 
-            boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
+            std::lock_guard<std::mutex> lock(m_perDeviceDataMutex);
             DeviceDataMap::iterator it = m_perDeviceData.find(deviceId);
             if (it != m_perDeviceData.end()) {
                 Timestamp stamp; // Best time stamp we can get for this schema change (or take it from broker message
                                  // header?)
                 DeviceData::Pointer data = it->second;
-                // Or bind_weak with 'data.get()' instead of boost::bind the shared pointer 'data'?
+                // Or bind_weak with 'data.get()' instead of std::bind the shared pointer 'data'?
                 //
                 // Using the latter introduces a cyclic reference:
                 // data has a strand that has a queue that contains a handler that has a pointer to data.
@@ -643,7 +643,7 @@ namespace karabo {
                 // since the strand is not fed with further tasks if 'data' removed from m_perDeviceData.
                 // Together with the strand configuration "guaranteeToRun" = true, this has the advantage that our
                 // update will be processed even if 'data' is removed from m_perDeviceData.
-                data->m_strand->post(boost::bind(&DeviceData::handleSchemaUpdated, data, schema, stamp));
+                data->m_strand->post(std::bind(&DeviceData::handleSchemaUpdated, data, schema, stamp));
             } else {
                 KARABO_LOG_FRAMEWORK_WARN << "slotSchemaUpdated called from non-treated device " << deviceId << ".";
             }

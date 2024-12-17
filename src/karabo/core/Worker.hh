@@ -26,8 +26,9 @@
 #define KARABO_CORE_WORKER_HH
 
 #include <boost/chrono.hpp>
-#include <boost/function.hpp>
 #include <boost/thread.hpp>
+#include <condition_variable>
+#include <functional>
 #include <queue>
 
 #include "karabo/util/Hash.hh"
@@ -65,7 +66,7 @@ namespace karabo {
              * <i>nowait</i> mode; ,-1 means <i>waiting forever</i>
              * @param repetition -1 means <i>cycling forever</i>; >0 means number of cycles.
              */
-            BaseWorker(const boost::function<void()>& callback, int timeout = -1, int repetition = -1)
+            BaseWorker(const std::function<void()>& callback, int timeout = -1, int repetition = -1)
                 : m_callback(callback),
                   m_timeout(timeout),
                   m_repetition(repetition),
@@ -110,7 +111,7 @@ namespace karabo {
              * @param timeout     timeout for receiving from queue
              * @param repetition  repetition counter
              */
-            BaseWorker& set(const boost::function<void()>& callback, int timeout = -1, int repetition = -1) {
+            BaseWorker& set(const std::function<void()>& callback, int timeout = -1, int repetition = -1) {
                 m_callback = callback;
                 m_timeout = timeout;
                 m_repetition = repetition;
@@ -159,7 +160,7 @@ namespace karabo {
              */
             BaseWorker& stop() {
                 if (m_running) {
-                    boost::mutex::scoped_lock lock(m_mutexRequest);
+                    std::lock_guard<std::mutex> lock(m_mutexRequest);
                     m_running = false;
                     m_suspended = false;
                 }
@@ -172,7 +173,7 @@ namespace karabo {
              */
             BaseWorker& abort() {
                 if (!m_abort) {
-                    boost::mutex::scoped_lock lock(m_mutexRequest);
+                    std::lock_guard<std::mutex> lock(m_mutexRequest);
                     m_abort = true;
                     m_suspended = false;
                     m_condRequest.notify_all();
@@ -182,7 +183,7 @@ namespace karabo {
 
             BaseWorker& pause() {
                 if (!m_suspended) {
-                    boost::mutex::scoped_lock lock(m_mutexRequest);
+                    std::lock_guard<std::mutex> lock(m_mutexRequest);
                     m_suspended = true;
                     m_condRequest.notify_all();
                 }
@@ -210,7 +211,7 @@ namespace karabo {
              */
             void push(const T& t) {
                 if (m_running) {
-                    boost::mutex::scoped_lock lock(m_mutexRequest);
+                    std::lock_guard<std::mutex> lock(m_mutexRequest);
                     m_request.push(t);
                     m_condRequest.notify_all();
                 }
@@ -218,11 +219,11 @@ namespace karabo {
 
             virtual bool stopCondition(const T& t) = 0;
 
-            void setErrorHandler(const boost::function<void(const karabo::util::Exception&)>& handler) {
+            void setErrorHandler(const std::function<void(const karabo::util::Exception&)>& handler) {
                 m_error = handler;
             }
 
-            void setExitHandler(const boost::function<void()>& handler) {
+            void setExitHandler(const std::function<void()>& handler) {
                 m_exit = handler;
             }
 
@@ -246,7 +247,7 @@ namespace karabo {
                             break;
                         }
                         {
-                            boost::mutex::scoped_lock lock(m_mutexRequest);
+                            std::unique_lock<std::mutex> lock(m_mutexRequest);
                             while (m_suspended) {
                                 m_condRequest.wait(lock); // use the same condition variable for "suspended" case
                             }
@@ -256,10 +257,10 @@ namespace karabo {
                                     m_condRequest.wait(lock);
                                 }
                             } else if (m_timeout > 0) {
-                                boost::system_time const expired =
-                                      boost::get_system_time() + boost::posix_time::milliseconds(m_timeout);
+                                auto const expiredAt =
+                                      std::chrono::system_clock::now() + std::chrono::milliseconds(m_timeout);
                                 while (m_request.empty() && !m_abort && m_running && !m_suspended) {
-                                    if (!m_condRequest.timed_wait(lock, expired)) break;
+                                    if (m_condRequest.wait_until(lock, expiredAt) == std::cv_status::timeout) break;
                                 }
                             }
                             if (m_suspended) continue;
@@ -288,25 +289,25 @@ namespace karabo {
                                                         BOOST_CURRENT_FUNCTION, __LINE__));
                 }
                 if (m_running) {
-                    boost::mutex::scoped_lock lock(m_mutexRequest);
+                    std::lock_guard<std::mutex> lock(m_mutexRequest);
                     m_running = false;
                 }
             }
 
            private:
-            boost::function<void()> m_callback;      // this callback defined once in constructor
-            int m_timeout;                           // timeout (milliseconds), 0 = nowait, -1 = wait forever
-            int m_repetition;                        // number of periodic cycles, <0 = no limit
-            bool m_running;                          // "running" flag (default: true)
-            bool m_abort;                            // "abort" flag   (default: false)
-            bool m_suspended;                        // "suspended" flag (default: false))
-            std::queue<T> m_request;                 // request queue
-            boost::thread* m_thread;                 // auxiliary thread
-            boost::mutex m_mutexRequest;             // mutex of request queue
-            boost::condition_variable m_condRequest; // condition variable of the request queue
-            int m_count;                             // current repetition counter
-            boost::function<void(const karabo::util::Exception&)> m_error;
-            boost::function<void()> m_exit; // this callback defined once in constructor
+            std::function<void()> m_callback;      // this callback defined once in constructor
+            int m_timeout;                         // timeout (milliseconds), 0 = nowait, -1 = wait forever
+            int m_repetition;                      // number of periodic cycles, <0 = no limit
+            bool m_running;                        // "running" flag (default: true)
+            bool m_abort;                          // "abort" flag   (default: false)
+            bool m_suspended;                      // "suspended" flag (default: false))
+            std::queue<T> m_request;               // request queue
+            boost::thread* m_thread;               // auxiliary thread
+            std::mutex m_mutexRequest;             // mutex of request queue
+            std::condition_variable m_condRequest; // condition variable of the request queue
+            int m_count;                           // current repetition counter
+            std::function<void(const karabo::util::Exception&)> m_error;
+            std::function<void()> m_exit; // this callback defined once in constructor
         };
 
         /**
@@ -325,7 +326,7 @@ namespace karabo {
              * @param delay
              * @param repetitions
              */
-            Worker(const boost::function<void()>& callback, int delay = -1, int repetitions = -1)
+            Worker(const std::function<void()>& callback, int delay = -1, int repetitions = -1)
                 : BaseWorker<bool>(callback, delay, repetitions) {}
 
             virtual ~Worker() {
@@ -341,17 +342,17 @@ namespace karabo {
             KARABO_CLASSINFO(QueueWorker, "QueueWorker", "1.0")
 
             QueueWorker()
-                : BaseWorker<karabo::util::Hash::Pointer>(boost::bind(&QueueWorker::onWork, this)),
+                : BaseWorker<karabo::util::Hash::Pointer>(std::bind(&QueueWorker::onWork, this)),
                   m_hash(new karabo::util::Hash),
                   m_callback() {}
 
-            QueueWorker(const boost::function<void(const karabo::util::Hash::Pointer&)>& callback)
-                : BaseWorker<karabo::util::Hash::Pointer>(boost::bind(&QueueWorker::onWork, this)),
+            QueueWorker(const std::function<void(const karabo::util::Hash::Pointer&)>& callback)
+                : BaseWorker<karabo::util::Hash::Pointer>(std::bind(&QueueWorker::onWork, this)),
                   m_hash(new karabo::util::Hash),
                   m_callback(callback) {}
 
             QueueWorker(const QueueWorker& other)
-                : BaseWorker<karabo::util::Hash::Pointer>(boost::bind(&QueueWorker::onWork, this)),
+                : BaseWorker<karabo::util::Hash::Pointer>(std::bind(&QueueWorker::onWork, this)),
                   m_hash(new karabo::util::Hash),
                   m_callback(other.m_callback) {}
 
@@ -380,7 +381,7 @@ namespace karabo {
 
            private:
             karabo::util::Hash::Pointer m_hash;
-            boost::function<void(const karabo::util::Hash::Pointer&)> m_callback;
+            std::function<void(const karabo::util::Hash::Pointer&)> m_callback;
         };
     } // namespace core
 } // namespace karabo

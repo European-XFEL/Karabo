@@ -1003,7 +1003,7 @@ namespace karabo {
 
 
         void Validator::assureRollingStatsInitialized(const std::string& scope, const unsigned int& evalInterval) {
-            boost::unique_lock<boost::shared_mutex> lock(m_rollingStatMutex);
+            std::unique_lock<std::shared_mutex> lock(m_rollingStatMutex);
             auto rollingStatsEntry = m_parameterRollingStats.find(scope);
             if (rollingStatsEntry == m_parameterRollingStats.end()) {
                 m_parameterRollingStats.insert(std::pair<std::string, RollingWindowStatistics::Pointer>(
@@ -1015,7 +1015,7 @@ namespace karabo {
 
 
         RollingWindowStatistics::ConstPointer Validator::getRollingStatistics(const std::string& scope) const {
-            boost::shared_lock<boost::shared_mutex> lock(m_rollingStatMutex);
+            std::shared_lock<std::shared_mutex> lock(m_rollingStatMutex);
             std::map<std::string, RollingWindowStatistics::Pointer>::const_iterator stats =
                   m_parameterRollingStats.find(scope);
             if (stats == m_parameterRollingStats.end()) {

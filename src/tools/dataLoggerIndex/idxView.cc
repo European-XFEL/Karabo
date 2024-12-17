@@ -22,8 +22,8 @@
  * Created on July 28, 2015, 12:11 PM
  */
 
-#include <boost/filesystem.hpp>
 #include <cstdlib>
+#include <filesystem>
 #include <iostream>
 #include <karabo/util/DataLogUtils.hh>
 #include <karabo/util/Epochstamp.hh>
@@ -31,7 +31,7 @@
 
 
 using namespace std;
-namespace bf = boost::filesystem;
+namespace bf = std::filesystem;
 namespace bs = boost::system;
 using namespace karabo::util;
 

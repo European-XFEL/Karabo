@@ -26,7 +26,7 @@
 #ifndef KARABO_IO_BINARYFILEOUTPUT_HH
 #define KARABO_IO_BINARYFILEOUTPUT_HH
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <fstream>
 #include <iosfwd>
 #include <karabo/util/ChoiceElement.hh>
@@ -51,7 +51,7 @@ namespace karabo {
          */
         template <class T>
         class BinaryFileOutput : public Output<T> {
-            boost::filesystem::path m_filename;
+            std::filesystem::path m_filename;
             std::string m_writeMode;
             typename BinarySerializer<T>::Pointer m_serializer;
             std::vector<T> m_sequenceBuffer;
@@ -142,7 +142,7 @@ namespace karabo {
 
                 string filename = m_filename.string();
                 if (m_writeMode == "exclusive") {
-                    if (boost::filesystem::exists(m_filename)) {
+                    if (std::filesystem::exists(m_filename)) {
                         throw KARABO_IO_EXCEPTION("File " + filename + " does already exist");
                     }
                     ofstream file(filename.c_str(), ios::out | ios::binary);

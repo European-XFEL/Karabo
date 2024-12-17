@@ -21,7 +21,7 @@ namespace karabo {
     namespace core {
 
 
-        Lock::Lock(boost::weak_ptr<karabo::xms::SignalSlotable> sigSlot, const std::string& deviceId, bool recursive)
+        Lock::Lock(std::weak_ptr<karabo::xms::SignalSlotable> sigSlot, const std::string& deviceId, bool recursive)
             : m_sigSlot(sigSlot), m_deviceId(deviceId), m_valid(true) {
             lock_impl(recursive);
         }
@@ -54,7 +54,7 @@ namespace karabo {
             m_valid = false;
 
 
-            boost::shared_ptr<karabo::xms::SignalSlotable> p = m_sigSlot.lock();
+            std::shared_ptr<karabo::xms::SignalSlotable> p = m_sigSlot.lock();
             if (p) {
                 const std::string& ownInstance = p->getInstanceId();
                 // check that lock is empty
@@ -97,7 +97,7 @@ namespace karabo {
 
         void Lock::unlock_impl() const {
             if (m_valid) {
-                boost::shared_ptr<karabo::xms::SignalSlotable> p = m_sigSlot.lock();
+                std::shared_ptr<karabo::xms::SignalSlotable> p = m_sigSlot.lock();
                 if (p) {
                     // now we can clear the lock
                     p->call(m_deviceId, "slotClearLock");
@@ -109,7 +109,7 @@ namespace karabo {
         bool Lock::valid() const {
             if (!m_valid) return false;
 
-            boost::shared_ptr<karabo::xms::SignalSlotable> p = m_sigSlot.lock();
+            std::shared_ptr<karabo::xms::SignalSlotable> p = m_sigSlot.lock();
             if (p) {
                 const std::string& ownInstance = m_sigSlot.lock()->getInstanceId();
                 karabo::util::Hash hash;

@@ -159,7 +159,7 @@ namespace karabo {
 
             std::ostringstream os;
             const size_t size = value.second;
-            const boost::shared_ptr<char>& ptr = value.first;
+            const std::shared_ptr<char>& ptr = value.first;
             if (maxBytesShown == 0) {
                 maxBytesShown = std::numeric_limits<size_t>::max();
             }

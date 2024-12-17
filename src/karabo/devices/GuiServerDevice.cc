@@ -22,7 +22,7 @@
 
 #include "GuiServerDevice.hh"
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
 #include "karabo/core/InstanceChangeThrottler.hh"
 #include "karabo/log/Logger.hh"
@@ -43,7 +43,7 @@ using namespace karabo::core;
 using namespace karabo::net;
 using namespace karabo::io;
 using namespace karabo::xms;
-using namespace boost::placeholders;
+using namespace std::placeholders;
 
 
 KARABO_REGISTER_FOR_CONFIGURATION(BaseDevice, Device<>, karabo::devices::GuiServerDevice)
@@ -443,6 +443,8 @@ namespace karabo {
               m_deviceInitTimer(EventLoop::getIOService()),
               m_networkStatsTimer(EventLoop::getIOService()),
               m_checkConnectionTimer(EventLoop::getIOService()),
+              m_networkConnections(),
+              m_readyNetworkConnections(),
               m_isReadOnly(config.get<bool>("isReadOnly")),
               m_timeout(config.get<int>("timeout")),
               m_authClient(config.get<std::string>("authServer")),
@@ -480,16 +482,16 @@ namespace karabo {
                 remote().setDeviceMonitorInterval(get<int>("propertyUpdateInterval"));
 
                 // Register handlers
-                // NOTE: boost::bind() is OK for these handlers because SignalSlotable calls them directly instead
+                // NOTE: std::bind() is OK for these handlers because SignalSlotable calls them directly instead
                 // of dispatching them via the event loop.
                 remote().registerInstanceNewMonitor(
-                      boost::bind(&karabo::devices::GuiServerDevice::instanceNewHandler, this, _1));
+                      std::bind(&karabo::devices::GuiServerDevice::instanceNewHandler, this, _1));
                 remote().registerInstanceGoneMonitor(
-                      boost::bind(&karabo::devices::GuiServerDevice::instanceGoneHandler, this, _1, _2));
+                      std::bind(&karabo::devices::GuiServerDevice::instanceGoneHandler, this, _1, _2));
                 remote().registerSchemaUpdatedMonitor(
-                      boost::bind(&karabo::devices::GuiServerDevice::schemaUpdatedHandler, this, _1, _2));
+                      std::bind(&karabo::devices::GuiServerDevice::schemaUpdatedHandler, this, _1, _2));
                 remote().registerClassSchemaMonitor(
-                      boost::bind(&karabo::devices::GuiServerDevice::classSchemaHandler, this, _1, _2, _3));
+                      std::bind(&karabo::devices::GuiServerDevice::classSchemaHandler, this, _1, _2, _3));
 
                 remote().registerInstanceChangeMonitor(
                       bind_weak(&karabo::devices::GuiServerDevice::instanceChangeHandler, this, _1));
@@ -533,7 +535,7 @@ namespace karabo {
                     set("endTemporarySessionNoticeTime", endTemporarySessionNoticeTime);
                 }
 
-                m_tempSessionManager = boost::make_shared<GuiServerTemporarySessionManager>(
+                m_tempSessionManager = std::make_shared<GuiServerTemporarySessionManager>(
                       m_topic, get<std::string>("authServer"), maxTemporarySessionTime, endTemporarySessionNoticeTime,
                       bind_weak(&GuiServerDevice::onEndTemporarySessionNotice, this, _1),
                       bind_weak(&GuiServerDevice::onTemporarySessionExpiration, this, _1));
@@ -583,7 +585,7 @@ namespace karabo {
 
 
         bool GuiServerDevice::skipExecutionTimeout(const std::string& deviceId) {
-            boost::mutex::scoped_lock lock(m_timingOutDevicesMutex);
+            std::lock_guard<std::mutex> lock(m_timingOutDevicesMutex);
             return m_timingOutDevices.find(deviceId) != m_timingOutDevices.end();
         }
 
@@ -591,7 +593,7 @@ namespace karabo {
         void GuiServerDevice::recalculateTimingOutDevices(const karabo::util::Hash& topologyEntry,
                                                           const std::vector<std::string>& timingOutClasses,
                                                           bool clearSet) {
-            boost::mutex::scoped_lock lock(m_timingOutDevicesMutex);
+            std::lock_guard<std::mutex> lock(m_timingOutDevicesMutex);
             if (clearSet) m_timingOutDevices.clear();
             if (topologyEntry.has("device")) {
                 const karabo::util::Hash& devices = topologyEntry.get<Hash>("device");
@@ -613,9 +615,8 @@ namespace karabo {
 
             using namespace karabo::log;
 
-            boost::filesystem::path path(Version::getPathToKaraboInstallation() + "/var/log/" + getServerId() +
-                                         "/audit");
-            boost::filesystem::create_directories(path);
+            std::filesystem::path path(Version::getPathToKaraboInstallation() + "/var/log/" + getServerId() + "/audit");
+            std::filesystem::create_directories(path);
             path += "/user-actions.log";
 
             Hash logConfig = Hash("audit.filename", path.generic_string());
@@ -633,7 +634,7 @@ namespace karabo {
             }
             const auto& chan = channel.lock();
             if (chan) {
-                boost::mutex::scoped_lock lock(m_channelMutex);
+                std::unique_lock<std::mutex> lock(m_channelMutex);
                 auto it = m_channels.find(chan);
                 if (it != m_channels.end()) {
                     std::string token;
@@ -670,21 +671,21 @@ namespace karabo {
 
         void GuiServerDevice::startDeviceInstantiation() {
             // NOTE: This timer is a rate limiter for device instantiations
-            m_deviceInitTimer.expires_from_now(boost::posix_time::milliseconds(get<int>("waitInitDevice")));
+            m_deviceInitTimer.expires_from_now(boost::asio::chrono::milliseconds(get<int>("waitInitDevice")));
             m_deviceInitTimer.async_wait(bind_weak(&karabo::devices::GuiServerDevice::initSingleDevice, this,
                                                    boost::asio::placeholders::error));
         }
 
         void GuiServerDevice::startNetworkMonitor() {
             m_networkStatsTimer.expires_from_now(
-                  boost::posix_time::seconds(get<int>("networkPerformance.sampleInterval")));
+                  boost::asio::chrono::seconds(get<int>("networkPerformance.sampleInterval")));
             m_networkStatsTimer.async_wait(bind_weak(&karabo::devices::GuiServerDevice::collectNetworkStats, this,
                                                      boost::asio::placeholders::error));
         }
 
         void GuiServerDevice::startMonitorConnectionQueues(const Hash& currentSuspects) {
             const int interval = get<int>("checkConnectionsInterval");
-            m_checkConnectionTimer.expires_from_now(boost::posix_time::seconds(interval));
+            m_checkConnectionTimer.expires_from_now(boost::asio::chrono::seconds(interval));
             m_checkConnectionTimer.async_wait(bind_weak(&GuiServerDevice::monitorConnectionQueues, this,
                                                         boost::asio::placeholders::error, currentSuspects));
         }
@@ -697,7 +698,7 @@ namespace karabo {
 
             size_t clientBytesRead = 0, clientBytesWritten = 0;
             {
-                boost::mutex::scoped_lock lock(m_channelMutex);
+                std::lock_guard<std::mutex> lock(m_channelMutex);
                 for (auto it = m_channels.begin(); it != m_channels.end(); ++it) {
                     clientBytesRead += it->first->dataQuantityRead();
                     clientBytesWritten += it->first->dataQuantityWritten();
@@ -706,7 +707,7 @@ namespace karabo {
 
             size_t pipeBytesRead = 0, pipeBytesWritten = 0;
             {
-                boost::mutex::scoped_lock lock(m_networkMutex);
+                std::lock_guard<std::mutex> lock(m_networkMutex);
                 for (const auto& nameAndChannelSet : m_networkConnections) {
                     const std::string& channelName = nameAndChannelSet.first;
                     const InputChannel::Pointer inputChannel = getInputChannelNoThrow(channelName);
@@ -787,7 +788,7 @@ namespace karabo {
         void GuiServerDevice::registerConnect(const karabo::util::Version& version,
                                               const karabo::net::Channel::Pointer& channel, const std::string& userId,
                                               const std::string& oneTimeToken) {
-            boost::mutex::scoped_lock lock(m_channelMutex);
+            std::lock_guard<std::mutex> lock(m_channelMutex);
             m_channels[channel] = ChannelData(version, userId, oneTimeToken); // keeps channel information
             // Update the number of clients connected
             set("connectedClientCount", static_cast<unsigned int>(m_channels.size()));
@@ -884,7 +885,7 @@ namespace karabo {
             std::string loggedUserId;
             Channel::Pointer chanForExpiration;
             {
-                boost::mutex::scoped_lock lock(m_channelMutex);
+                std::lock_guard<std::mutex> lock(m_channelMutex);
                 for (auto& [channel, channelData] : m_channels) {
                     if (channelData.temporarySessionToken == expiredToken) {
                         chanForExpiration = channel;
@@ -912,7 +913,7 @@ namespace karabo {
             const std::string& token = info.aboutToExpireToken;
             Channel::Pointer chanForExpiration;
             {
-                boost::mutex::scoped_lock lock(m_channelMutex);
+                std::lock_guard<std::mutex> lock(m_channelMutex);
                 for (auto& [channel, channelData] : m_channels) {
                     if (channelData.temporarySessionToken == token) {
                         chanForExpiration = channel;
@@ -949,7 +950,7 @@ namespace karabo {
                     << info << std::endl;
                 errorMsg = oss.str();
             } else {
-                boost::mutex::scoped_lock lock(m_channelMutex);
+                std::lock_guard<std::mutex> lock(m_channelMutex);
                 auto it = m_channels.find(chan);
                 if (it != m_channels.end() && !it->second.temporarySessionToken.empty()) {
                     errorMsg = "There's already an active temporary session.";
@@ -984,7 +985,7 @@ namespace karabo {
                          result.temporarySessionDurationSecs, "accessLevel", static_cast<int>(result.accessLevel),
                          "username", result.userId);
             if (result.success) {
-                boost::mutex::scoped_lock lock(m_channelMutex);
+                std::lock_guard<std::mutex> lock(m_channelMutex);
                 auto it = m_channels.find(chan);
                 if (it != m_channels.end()) {
                     ChannelData& data = it->second;
@@ -1011,7 +1012,7 @@ namespace karabo {
                 errorMsg = "Required \"temporarySessionToken\" field missing in endTemporarySession request.";
             } else {
                 temporarySessionToken = info.get<std::string>("temporarySessionToken");
-                boost::mutex::scoped_lock lock(m_channelMutex);
+                std::lock_guard<std::mutex> lock(m_channelMutex);
                 auto it = m_channels.find(chan);
                 if (it != m_channels.end()) {
                     const std::string& chanTemporarySessionToken = it->second.temporarySessionToken;
@@ -1038,7 +1039,7 @@ namespace karabo {
                 // Even if the endTemporarySession didn't return a success - meaning it didn't find the
                 // temporarySessionToken in its internal data (see note on
                 // GuiServerTemporarySessionManager::endTemporarySession doc comments), we must clear the channel data.
-                boost::mutex::scoped_lock lock(m_channelMutex);
+                std::lock_guard<std::mutex> lock(m_channelMutex);
                 auto it = m_channels.find(chan);
                 if (it != m_channels.end()) {
                     ChannelData& data = it->second;
@@ -1318,7 +1319,7 @@ namespace karabo {
             } else {
                 auto chan = channel.lock();
                 if (chan) {
-                    boost::mutex::scoped_lock lock(m_channelMutex);
+                    std::lock_guard<std::mutex> lock(m_channelMutex);
                     ConstChannelIterator itChannelData = m_channels.find(chan);
                     if (itChannelData != m_channels.end()) {
                         return (itChannelData->second.clientVersion < itTypeMinVersion->second);
@@ -1335,8 +1336,8 @@ namespace karabo {
         void GuiServerDevice::onGuiError(const karabo::util::Hash& hash) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onGuiError";
-                Hash::Pointer hdr = boost::make_shared<Hash>();
-                Hash::Pointer body = boost::make_shared<Hash>(hash);
+                Hash::Pointer hdr = std::make_shared<Hash>();
+                Hash::Pointer body = std::make_shared<Hash>(hash);
                 m_guiDebugProducer->write("karaboGuiDebug", hdr, body, 0, 0);
 
             } catch (const std::exception& e) {
@@ -1536,7 +1537,7 @@ namespace karabo {
                     attrUpdates.eventMask = 0;
                     attrUpdates.updates = hash.get<std::vector<Hash>>("schemaUpdates");
 
-                    boost::mutex::scoped_lock lock(m_pendingAttributesMutex);
+                    std::lock_guard<std::mutex> lock(m_pendingAttributesMutex);
                     m_pendingAttributeUpdates[deviceId] = attrUpdates;
                 }
 
@@ -1544,7 +1545,7 @@ namespace karabo {
                 inst.channel = channel;
                 inst.hash = hash;
                 {
-                    boost::mutex::scoped_lock lock(m_pendingInstantiationsMutex);
+                    std::lock_guard<std::mutex> lock(m_pendingInstantiationsMutex);
                     m_pendingDeviceInstantiations.push(inst);
                 }
             } catch (const std::exception& e) {
@@ -1560,7 +1561,7 @@ namespace karabo {
             }
 
             try {
-                boost::mutex::scoped_lock lock(m_pendingInstantiationsMutex);
+                std::lock_guard<std::mutex> lock(m_pendingInstantiationsMutex);
                 if (!m_pendingDeviceInstantiations.empty()) {
                     const DeviceInstantiation& inst = m_pendingDeviceInstantiations.front();
                     const string& serverId = inst.hash.get<string>("serverId");
@@ -1647,7 +1648,7 @@ namespace karabo {
 
 
         void GuiServerDevice::safeAllClientsWrite(const karabo::util::Hash& message, int prio) {
-            boost::mutex::scoped_lock lock(m_channelMutex);
+            std::lock_guard<std::mutex> lock(m_channelMutex);
             // Broadcast to all GUIs
             for (ConstChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                 if (it->first && it->first->isOpen()) it->first->writeAsync(message, prio);
@@ -1706,7 +1707,7 @@ namespace karabo {
 
                 {
                     bool isKnown = false; // Assume it is yet unknown - if any channel knows it, change this flag
-                    boost::mutex::scoped_lock lock(m_channelMutex);
+                    std::lock_guard<std::mutex> lock(m_channelMutex);
                     karabo::net::Channel::Pointer chan = channel.lock();
                     for (ChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                         ChannelData& channelData = it->second;
@@ -1744,7 +1745,7 @@ namespace karabo {
             try {
                 const string& deviceId = info.get<string>("deviceId");
 
-                boost::mutex::scoped_lock lock(m_channelMutex);
+                std::lock_guard<std::mutex> lock(m_channelMutex);
                 karabo::net::Channel::Pointer chan = channel.lock();
                 size_t newCount = 0;
                 for (ChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
@@ -1781,7 +1782,7 @@ namespace karabo {
                 const string serverId = info.get<string>("serverId");
                 const string classId = info.get<string>("classId");
                 {
-                    boost::mutex::scoped_lock lock(m_channelMutex);
+                    std::lock_guard<std::mutex> lock(m_channelMutex);
                     ChannelIterator itChannelData = m_channels.find(chan);
                     if (itChannelData != m_channels.end()) {
                         itChannelData->second.requestedClassSchemas[serverId].insert(classId);
@@ -1796,7 +1797,7 @@ namespace karabo {
                                                << classId << "\": provided direct answer";
                     // Remove registration again - but we had to register before we trigger the schema request
                     // via getClassSchemaNoWait since otherwise registration may come too late.
-                    boost::mutex::scoped_lock lock(m_channelMutex);
+                    std::lock_guard<std::mutex> lock(m_channelMutex);
                     ChannelIterator itChannelData = m_channels.find(chan);
                     if (itChannelData != m_channels.end()) {
                         ChannelData& chData = itChannelData->second;
@@ -1821,7 +1822,7 @@ namespace karabo {
                 karabo::net::Channel::Pointer chan = channel.lock();
                 const string& deviceId = info.get<string>("deviceId");
                 {
-                    boost::mutex::scoped_lock lock(m_channelMutex);
+                    std::lock_guard<std::mutex> lock(m_channelMutex);
                     if (chan) {
                         ChannelIterator itChannelData = m_channels.find(chan);
                         if (itChannelData != m_channels.end()) {
@@ -1841,7 +1842,7 @@ namespace karabo {
                     // Clean-up again, registration not needed. But it had to be registered before calling
                     // getDeviceSchemaNoWait since with weird threading, schemaUpdatedHandler could have been
                     // called before we register here.
-                    boost::mutex::scoped_lock lock(m_channelMutex);
+                    std::lock_guard<std::mutex> lock(m_channelMutex);
                     if (chan) {
                         ChannelIterator itChannelData = m_channels.find(chan);
                         if (itChannelData != m_channels.end()) {
@@ -2030,7 +2031,7 @@ namespace karabo {
 
         std::string GuiServerDevice::getDataReaderId(const std::string& deviceId) const {
             const string loggerId = DATALOGGER_PREFIX + deviceId;
-            boost::mutex::scoped_lock lock(m_loggerMapMutex);
+            std::lock_guard<std::mutex> lock(m_loggerMapMutex);
             if (m_loggerMap.has(loggerId)) {
                 return DATALOGREADER_PREFIX + ("0-" + m_loggerMap.get<string>(loggerId));
             } else {
@@ -2058,8 +2059,8 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onSubscribeNetwork : channelName = '" << channelName << "' "
                                            << (subscribe ? "+" : "-");
 
-                boost::mutex::scoped_lock lock(m_networkMutex);
-                std::set<WeakChannelPointer>& channelSet = m_networkConnections[channelName]; // might create empty set
+                std::lock_guard<std::mutex> lock(m_networkMutex);
+                auto& channelSet = m_networkConnections[channelName];
                 if (subscribe) {
                     const bool notYetRegistered = channelSet.empty();
                     const bool inserted = channelSet.insert(channel).second;
@@ -2177,7 +2178,7 @@ namespace karabo {
             try {
                 const string& channelName = info.get<string>("channelName");
                 KARABO_LOG_FRAMEWORK_DEBUG << "onRequestNetwork for " << channelName;
-                boost::mutex::scoped_lock lock(m_networkMutex);
+                std::lock_guard<std::mutex> lock(m_networkMutex);
                 m_readyNetworkConnections[channelName][channel] = true;
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onRequestNetwork: " << e.what();
@@ -2199,7 +2200,7 @@ namespace karabo {
                 dataNode.getValue<Hash>() = std::move(const_cast<Hash&>(data));
                 Hash::Node& metaNode = h.set("meta.timestamp", true);
                 meta.getTimestamp().toHashAttributes(metaNode.getAttributes());
-                boost::mutex::scoped_lock lock(m_networkMutex);
+                std::lock_guard<std::mutex> lock(m_networkMutex);
                 NetworkMap::const_iterator iter = m_networkConnections.find(channelName);
                 if (iter != m_networkConnections.cend()) {
                     for (const WeakChannelPointer& channel : iter->second) { // iter->second is set<WeakChannelPointer>
@@ -2241,7 +2242,7 @@ namespace karabo {
                     const Hash& deviceHash = topologyEntry.get<Hash>(type);
                     const std::string& instanceId = deviceHash.begin()->getKey();
                     {
-                        boost::mutex::scoped_lock lock(m_channelMutex);
+                        std::lock_guard<std::mutex> lock(m_channelMutex);
                         for (ChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                             if (it->second.visibleInstances.find(instanceId) != it->second.visibleInstances.end()) {
                                 KARABO_LOG_FRAMEWORK_INFO << "instanceNewHandler registers " << instanceId;
@@ -2284,7 +2285,7 @@ namespace karabo {
                                                   const karabo::util::Hash& /*instInfo*/) {
             try {
                 {
-                    boost::mutex::scoped_lock lock(m_channelMutex);
+                    std::lock_guard<std::mutex> lock(m_channelMutex);
 
                     size_t numClientsUnregister = 0ul;
                     for (ChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
@@ -2303,7 +2304,7 @@ namespace karabo {
 
                 {
                     // Erase instance from the attribute update map (maybe)
-                    boost::mutex::scoped_lock lock(m_pendingAttributesMutex);
+                    std::lock_guard<std::mutex> lock(m_pendingAttributesMutex);
                     m_pendingAttributeUpdates.erase(instanceId);
                 }
 
@@ -2311,7 +2312,7 @@ namespace karabo {
                 // The GUI client (as of 2.20.X) gives an onSubscribeNetwork request again if it gets notified
                 // that the device is back again.
                 {
-                    boost::mutex::scoped_lock lock(m_networkMutex);
+                    std::lock_guard<std::mutex> lock(m_networkMutex);
                     NetworkMap::const_iterator mapIter = m_networkConnections.cbegin();
                     while (mapIter != m_networkConnections.cend()) {
                         const std::string& channelName = mapIter->first;
@@ -2338,7 +2339,7 @@ namespace karabo {
                 }
                 {
                     // clean up the device from the list of slow devices
-                    boost::mutex::scoped_lock lock(m_timingOutDevicesMutex);
+                    std::lock_guard<std::mutex> lock(m_timingOutDevicesMutex);
                     auto it = m_timingOutDevices.find(instanceId);
                     if (it != m_timingOutDevices.end()) {
                         m_timingOutDevices.erase(it);
@@ -2356,7 +2357,7 @@ namespace karabo {
             // The keys of 'deviceUpdates' are the deciveIds with updates and the values behind the keys are
             // Hashes with the updated properties.
             try {
-                boost::mutex::scoped_lock lock(m_channelMutex);
+                std::lock_guard<std::mutex> lock(m_channelMutex);
                 // Loop on all clients
                 for (ConstChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                     if (!it->first || !it->first->isOpen()) continue;
@@ -2392,7 +2393,7 @@ namespace karabo {
 
                 Hash h("type", "classSchema", "serverId", serverId, "classId", classId, "schema", classSchema);
 
-                boost::mutex::scoped_lock lock(m_channelMutex);
+                std::lock_guard<std::mutex> lock(m_channelMutex);
                 for (ChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                     auto itReq = it->second.requestedClassSchemas.find(serverId);
                     if (itReq != it->second.requestedClassSchemas.end()) {
@@ -2430,7 +2431,7 @@ namespace karabo {
 
                 Hash h("type", "deviceSchema", "deviceId", deviceId, "schema", schema);
 
-                boost::mutex::scoped_lock lock(m_channelMutex);
+                std::lock_guard<std::mutex> lock(m_channelMutex);
                 // Loop on all clients
                 for (ChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                     // Optimization: write only to clients subscribed to deviceId
@@ -2460,7 +2461,7 @@ namespace karabo {
                 karabo::net::Channel::Pointer chan = channel.lock();
                 {
                     std::set<std::string> devIdsToUnregister;
-                    boost::mutex::scoped_lock lock(m_channelMutex);
+                    std::lock_guard<std::mutex> lock(m_channelMutex);
                     ChannelIterator it = m_channels.find(chan);
                     if (it != m_channels.end()) {
                         it->first->close(); // This closes socket and unregisters channel from connection
@@ -2498,10 +2499,10 @@ namespace karabo {
                 }
 
                 {
-                    boost::mutex::scoped_lock lock(m_networkMutex);
+                    std::lock_guard<std::mutex> lock(m_networkMutex);
                     NetworkMap::iterator iter = m_networkConnections.begin();
                     while (iter != m_networkConnections.end()) {
-                        std::set<WeakChannelPointer>& channelSet = iter->second;
+                        auto& channelSet = iter->second;
                         channelSet.erase(channel); // no matter whether in or not...
                         // Remove from readiness structures
                         for (auto itPair = m_readyNetworkConnections.begin();
@@ -2531,7 +2532,7 @@ namespace karabo {
 
 
         void GuiServerDevice::slotLoggerMap(const karabo::util::Hash& loggerMap) {
-            boost::mutex::scoped_lock lock(m_loggerMapMutex);
+            std::lock_guard<std::mutex> lock(m_loggerMapMutex);
             m_loggerMap = loggerMap;
         }
 
@@ -2541,7 +2542,7 @@ namespace karabo {
             if (options.has(optionKey)) {
                 withTempSessions = options.get<bool>(optionKey);
             }
-            boost::mutex::scoped_lock lock(m_channelMutex);
+            std::lock_guard<std::mutex> lock(m_channelMutex);
             std::vector<Hash> cliSessions;
             for (auto it = m_channels.begin(); it != m_channels.end(); ++it) {
                 // When there's no active temporary session, the start time is the zero epoch
@@ -2590,13 +2591,13 @@ namespace karabo {
 
                 // Start with the client TCP connections
                 {
-                    boost::mutex::scoped_lock lock(m_channelMutex);
+                    std::lock_guard<std::mutex> lock(m_channelMutex);
 
                     for (auto it = m_channels.begin(); it != m_channels.end(); ++it) {
                         const std::string clientAddr = getChannelAddress(it->first);
                         const std::vector<std::string> monitoredDevices(it->second.visibleInstances.begin(),
                                                                         it->second.visibleInstances.end());
-                        TcpChannel::Pointer tcpChannel = boost::static_pointer_cast<TcpChannel>(it->first);
+                        TcpChannel::Pointer tcpChannel = std::static_pointer_cast<TcpChannel>(it->first);
 
                         data.set(clientAddr,
                                  Hash("queueInfo", tcpChannel->queueInfo(), "monitoredDevices", monitoredDevices,
@@ -2609,11 +2610,11 @@ namespace karabo {
 
                 // Then add pipeline information to the client connection infos
                 {
-                    boost::mutex::scoped_lock lock(m_networkMutex);
+                    std::lock_guard<std::mutex> lock(m_networkMutex);
                     for (auto mapIter = m_networkConnections.begin(); mapIter != m_networkConnections.end();
                          ++mapIter) {
                         const std::string& channelName = mapIter->first;
-                        const std::set<WeakChannelPointer>& channelSet = mapIter->second;
+                        const auto& channelSet = mapIter->second;
                         for (const WeakChannelPointer& channel : channelSet) {
                             Channel::Pointer channelPtr = channel.lock(); // promote to shared pointer
                             if (channelPtr) {
@@ -2671,7 +2672,7 @@ namespace karabo {
                 Hash& monitoredDevices = data.bindReference<Hash>("monitoredDeviceConfigs");
                 // Create a superset of all devices seen by any of the clients
                 std::set<std::string> visibleDevices; // ordered set => monitoredDevices will have ids sorted
-                boost::mutex::scoped_lock lock(m_channelMutex);
+                std::lock_guard<std::mutex> lock(m_channelMutex);
                 for (auto it = m_channels.begin(); it != m_channels.end(); ++it) {
                     visibleDevices.insert(it->second.visibleInstances.begin(), it->second.visibleInstances.end());
                 }
@@ -2704,10 +2705,10 @@ namespace karabo {
             // Get queue infos from mutex protected list of channels
             Hash queueInfos;
             {
-                boost::mutex::scoped_lock lock(m_channelMutex);
+                std::lock_guard<std::mutex> lock(m_channelMutex);
                 for (auto it = m_channels.begin(); it != m_channels.end(); ++it) {
                     const std::string clientAddr = getChannelAddress(it->first);
-                    TcpChannel::Pointer tcpChannel = boost::static_pointer_cast<TcpChannel>(it->first);
+                    TcpChannel::Pointer tcpChannel = std::static_pointer_cast<TcpChannel>(it->first);
                     queueInfos.set(clientAddr, tcpChannel->queueInfo());
                 }
             }
@@ -2752,7 +2753,7 @@ namespace karabo {
             WeakChannelPointer channel;
             bool found = false;
             {
-                boost::mutex::scoped_lock lock(m_channelMutex);
+                std::lock_guard<std::mutex> lock(m_channelMutex);
 
                 for (auto it = m_channels.begin(); it != m_channels.end(); ++it) {
                     const karabo::net::Channel::Pointer& chan = it->first;
@@ -2837,7 +2838,7 @@ namespace karabo {
                 safeAllClientsWrite(info.get<Hash>("message"));
                 result.set("success", true);
             } else {
-                boost::mutex::scoped_lock lock(m_channelMutex);
+                std::lock_guard<std::mutex> lock(m_channelMutex);
                 for (auto it = m_channels.begin(); it != m_channels.end(); ++it) {
                     const std::string channelAddress = getChannelAddress(it->first);
                     if (clientAddress == channelAddress) {
@@ -2868,7 +2869,7 @@ namespace karabo {
 
         void GuiServerDevice::tryToUpdateNewInstanceAttributes(const std::string& deviceId, const int callerMask) {
             try {
-                boost::mutex::scoped_lock lock(m_pendingAttributesMutex);
+                std::lock_guard<std::mutex> lock(m_pendingAttributesMutex);
                 const auto it = m_pendingAttributeUpdates.find(deviceId);
 
                 if (it != m_pendingAttributeUpdates.end()) {
@@ -2902,7 +2903,7 @@ namespace karabo {
                     KARABO_LOG_ERROR << "Schema attribute update failed for device: " << deviceId;
                 }
 
-                boost::mutex::scoped_lock lock(m_pendingAttributesMutex);
+                std::lock_guard<std::mutex> lock(m_pendingAttributesMutex);
                 if (m_pendingAttributeUpdates.erase(deviceId) == 0) {
                     KARABO_LOG_ERROR << "Received non-requested attribute update response from: " << deviceId;
                 }
@@ -3335,7 +3336,7 @@ namespace karabo {
         }
 
         std::string GuiServerDevice::getChannelAddress(const karabo::net::Channel::Pointer& channel) const {
-            TcpChannel::Pointer tcpChannel = boost::static_pointer_cast<TcpChannel>(channel);
+            TcpChannel::Pointer tcpChannel = std::static_pointer_cast<TcpChannel>(channel);
             std::string addr = tcpChannel->remoteAddress();
 
             // convert periods to underscores, so that this can be used as a Hash key...

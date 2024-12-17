@@ -66,7 +66,7 @@ namespace karabo {
             node = header.find("sessionToken");
             if (node) m_sessionTokenOfSender = node->getValue<std::string>();
 
-            m_headerOfSender = boost::make_shared<karabo::util::Hash>(header);
+            m_headerOfSender = std::make_shared<karabo::util::Hash>(header);
         }
 
 
@@ -87,7 +87,7 @@ namespace karabo {
                 // senders can run in parallel which was guaranteed not to happen from the Karabo beginning.
                 // If we give up that guarantee, the caching in extractSenderInformation(..) has to be made thread
                 // safe in another way - and the protection not to add function while being called as well.
-                boost::mutex::scoped_lock lock(m_registeredSlotFunctionsMutex);
+                std::lock_guard<std::mutex> lock(m_registeredSlotFunctionsMutex);
                 extractSenderInformation(header);
                 doCallRegisteredSlotFunctions(body);
                 invalidateSenderInformation();

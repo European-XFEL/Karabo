@@ -63,7 +63,7 @@ namespace karabo {
 
         std::atomic<unsigned long long> m_id;
         unsigned long long m_emitCount;
-        boost::asio::deadline_timer m_timeTickerTimer;
+        boost::asio::steady_timer m_timeTickerTimer;
         unsigned int m_tickCountdown;
     };
 } // namespace karabo

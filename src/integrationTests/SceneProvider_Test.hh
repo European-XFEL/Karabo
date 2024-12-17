@@ -26,7 +26,7 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 #include "TcpAdapter.hh"
 #include "karabo/core/DeviceClient.hh"
@@ -57,7 +57,7 @@ class SceneProvider_Test : public CPPUNIT_NS::TestFixture {
     boost::thread m_eventLoopThread;
 
     karabo::core::DeviceClient::Pointer m_deviceClient;
-    boost::shared_ptr<karabo::TcpAdapter> m_tcpAdapter;
+    std::shared_ptr<karabo::TcpAdapter> m_tcpAdapter;
 };
 
 #endif /* SCENEPROVIDER_TEST_HH */

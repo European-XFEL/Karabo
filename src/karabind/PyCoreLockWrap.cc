@@ -44,7 +44,7 @@ namespace karabind {
 
 
 void exportPyCoreLock(py::module_& m) {
-    py::class_<karabind::LockWrap, boost::shared_ptr<karabind::LockWrap>>(m, "Lock")
+    py::class_<karabind::LockWrap, std::shared_ptr<karabind::LockWrap>>(m, "Lock")
           .def("lock", &karabind::LockWrap::lock, py::arg("recursive") = false)
           .def("unlock", &karabind::LockWrap::unlock)
           .def("valid", &karabind::LockWrap::valid);

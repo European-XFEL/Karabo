@@ -25,11 +25,10 @@
 #ifndef KARABO_IO_BUFFERSET_HH
 #define KARABO_IO_BUFFERSET_HH
 
-#include <boost/asio/buffer.hpp>       //boost::asio::const_buffer
-#include <boost/core/null_deleter.hpp> //boost::null_delter
-#include <boost/shared_ptr.hpp>        //boost::shared_ptr<T>
-#include <ostream>                     //std::ostream
-#include <vector>                      //std::vector
+#include <boost/asio/buffer.hpp> //boost::asio::const_buffer
+#include <memory>                //std::shared_ptr<T>
+#include <ostream>               //std::ostream
+#include <vector>                //std::vector
 
 #include "karabo/util/ClassInfo.hh" //BufferSet::Pointer
 #include "karabo/util/Exception.hh" //KARABO_LOGIC_EXCEPTION
@@ -76,17 +75,17 @@ namespace karabo {
              * to indicate which kind of buffer we have.
              */
             struct Buffer {
-                boost::shared_ptr<BufferType::value_type> ptr;
-                boost::shared_ptr<BufferType> vec;
+                std::shared_ptr<BufferType::value_type> ptr;
+                std::shared_ptr<BufferType> vec;
                 std::size_t size;
                 int contentType;
 
                 Buffer() : size(0), contentType(BufferContents::COPY) {
-                    vec = boost::shared_ptr<BufferType>(new BufferType());
-                    ptr = boost::shared_ptr<BufferType::value_type>(vec->data(), boost::null_deleter());
+                    vec = std::shared_ptr<BufferType>(new BufferType());
+                    ptr = std::shared_ptr<BufferType::value_type>(vec->data(), [](void*) {});
                 }
 
-                Buffer(boost::shared_ptr<BufferType> v, boost::shared_ptr<BufferType::value_type> p, std::size_t s,
+                Buffer(std::shared_ptr<BufferType> v, std::shared_ptr<BufferType::value_type> p, std::size_t s,
                        BufferContents cType) {
                     ptr = p;
                     vec = v;
@@ -167,7 +166,7 @@ namespace karabo {
             /**
              * Emplace a shared pointer to a vector at the end of the BufferSet
              */
-            void emplaceBack(const boost::shared_ptr<BufferType>& ptr);
+            void emplaceBack(const std::shared_ptr<BufferType>& ptr);
 
             /**
              * Append the contents of this BufferSet to another BufferSet

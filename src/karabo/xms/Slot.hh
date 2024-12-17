@@ -64,7 +64,7 @@ namespace karabo {
 
             std::string m_slotFunction;
 
-            boost::mutex m_registeredSlotFunctionsMutex;
+            std::mutex m_registeredSlotFunctionsMutex;
 
             void extractSenderInformation(const karabo::util::Hash& header);
 
@@ -85,10 +85,10 @@ namespace karabo {
         template <typename Ret, typename... Args>
         class SlotN : public Slot {
            public:
-            typedef typename boost::function<Ret(const Args&...)> SlotHandler;
+            typedef typename std::function<Ret(const Args&...)> SlotHandler;
 
             void registerSlotFunction(const SlotHandler& slotHandler) {
-                boost::mutex::scoped_lock lock(m_registeredSlotFunctionsMutex);
+                std::lock_guard<std::mutex> lock(m_registeredSlotFunctionsMutex);
                 m_slotHandlers.push_back(slotHandler);
             }
 

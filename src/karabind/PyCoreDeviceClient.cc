@@ -33,17 +33,17 @@ namespace karabind {
 
     class DeviceClientWrap : public karabo::core::DeviceClient {
        public:
-        typedef boost::shared_ptr<DeviceClientWrap> Pointer;
+        typedef std::shared_ptr<DeviceClientWrap> Pointer;
 
         DeviceClientWrap(const std::string& instanceId = std::string()) : karabo::core::DeviceClient(instanceId) {
-            boost::shared_ptr<karabo::xms::SignalSlotable> p = m_signalSlotable.lock();
+            std::shared_ptr<karabo::xms::SignalSlotable> p = m_signalSlotable.lock();
             if (!p) {
                 throw KARABO_PARAMETER_EXCEPTION("Broker connection is not valid.");
             }
             p->updateInstanceInfo(karabo::util::Hash("lang", "bound"));
         }
 
-        DeviceClientWrap(boost::shared_ptr<karabo::xms::SignalSlotable>& o) : karabo::core::DeviceClient(o) {}
+        DeviceClientWrap(std::shared_ptr<karabo::xms::SignalSlotable>& o) : karabo::core::DeviceClient(o) {}
 
         ~DeviceClientWrap() {}
 
@@ -104,9 +104,9 @@ namespace karabind {
 #undef KARABO_REGISTER_PROPERTY_MONITOR
 
                 // case Types::BYTE_ARRAY:
-                //     return DeviceClient::registerPropertyMonitor<std::pair<boost::shared_ptr<char>, size_t>>(
+                //     return DeviceClient::registerPropertyMonitor<std::pair<std::shared_ptr<char>, size_t>>(
                 //           instanceId, key,
-                //           HandlerWrap<std::string, std::string, std::pair<boost::shared_ptr<char>, size_t>,
+                //           HandlerWrap<std::string, std::string, std::pair<std::shared_ptr<char>, size_t>,
                 //                       karabo::util::Timestamp>(handler, "property_BYTE_ARRAY"));
                 default:
                     KARABO_LOG_FRAMEWORK_WARN << "Unsupported property \"" << key << "\" of type  \""
@@ -165,12 +165,12 @@ namespace karabind {
             this->karabo::core::DeviceClient::killServerNoWait(serverId);
         }
 
-        boost::shared_ptr<LockWrap> lockPy(const std::string& deviceId, bool recursive, int timeout) {
+        std::shared_ptr<LockWrap> lockPy(const std::string& deviceId, bool recursive, int timeout) {
             // non waiting request for lock
 
             if (timeout == 0) {
-                return boost::make_shared<LockWrap>(
-                      boost::make_shared<karabo::core::Lock>(m_signalSlotable, deviceId, recursive));
+                return std::make_shared<LockWrap>(
+                      std::make_shared<karabo::core::Lock>(m_signalSlotable, deviceId, recursive));
             }
 
             // timeout was given
@@ -178,14 +178,14 @@ namespace karabind {
             int nTries = 0;
             while (true) {
                 try {
-                    return boost::make_shared<LockWrap>(
-                          boost::make_shared<karabo::core::Lock>(m_signalSlotable, deviceId, recursive));
+                    return std::make_shared<LockWrap>(
+                          std::make_shared<karabo::core::Lock>(m_signalSlotable, deviceId, recursive));
                 } catch (const karabo::util::LockException& e) {
                     if (nTries++ > timeout / waitTime && timeout != -1) {
                         KARABO_RETHROW;
                     }
                     // otherwise pass through and try again
-                    boost::this_thread::sleep(boost::posix_time::seconds(waitTime));
+                    std::this_thread::sleep_for(std::chrono::seconds(waitTime));
                 }
             }
         }
@@ -203,13 +203,13 @@ using namespace std;
 void exportPyCoreDeviceClient(py::module_& m) {
     // py::class_<DeviceClient>("DeviceClientBase").def(bp::init<const string&>());
 
-    py::class_<DeviceClientWrap, boost::shared_ptr<DeviceClientWrap>>(m, "DeviceClient")
+    py::class_<DeviceClientWrap, std::shared_ptr<DeviceClientWrap>>(m, "DeviceClient")
 
           .def(py::init<>())
 
           .def(py::init<const string&>())
 
-          .def(py::init<boost::shared_ptr<SignalSlotable>&>())
+          .def(py::init<std::shared_ptr<SignalSlotable>&>())
 
           .def("getInstanceId", &DeviceClientWrap::getInstanceId)
 

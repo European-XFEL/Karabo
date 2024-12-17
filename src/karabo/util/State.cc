@@ -17,8 +17,6 @@
  */
 #include "State.hh"
 
-#include <boost/smart_ptr/make_shared.hpp>
-
 namespace karabo {
     namespace util {
 

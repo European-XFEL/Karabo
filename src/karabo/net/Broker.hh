@@ -21,8 +21,9 @@
 #ifndef KARABO_NET_BROKER_HH
 #define KARABO_NET_BROKER_HH
 
-#include <boost/enable_shared_from_this.hpp>
+#include <functional>
 #include <list>
+#include <memory>
 #include <vector>
 
 #include "karabo/net/utils.hh"
@@ -45,13 +46,13 @@ namespace karabo {
                 unknown   /// status reported is not specially treated or unknown
             };
             // TODO: Why not 'const karabo::util::Hash::Pointer&'?
-            using MessageHandler = boost::function<void(karabo::util::Hash::Pointer, karabo::util::Hash::Pointer)>;
+            using MessageHandler = std::function<void(karabo::util::Hash::Pointer, karabo::util::Hash::Pointer)>;
 
-            using ErrorNotifier = boost::function<void(Error, const std::string& description)>;
+            using ErrorNotifier = std::function<void(Error, const std::string& description)>;
         } // namespace consumer
 
 
-        class Broker : public boost::enable_shared_from_this<Broker> {
+        class Broker : public std::enable_shared_from_this<Broker> {
            public:
             KARABO_CLASSINFO(Broker, "Broker", "1.0")
             KARABO_CONFIGURATION_BASE_CLASS

@@ -137,7 +137,7 @@ class BaseLogging_Test : public CPPUNIT_NS::TestFixture {
 
     std::string getDeviceIdPrefix();
 
-    bool waitForCondition(boost::function<bool()> checker, unsigned int timeoutMillis,
+    bool waitForCondition(std::function<bool()> checker, unsigned int timeoutMillis,
                           unsigned int sleepIntervalMillis = 5u);
 
     /**

@@ -68,7 +68,7 @@ void PipelinedProcessing_Test::setUp() {
     m_deviceServer->finalizeInternalInitialization();
 
     // Create client
-    m_deviceClient = boost::shared_ptr<DeviceClient>(new DeviceClient());
+    m_deviceClient = std::shared_ptr<DeviceClient>(new DeviceClient());
 }
 
 
@@ -239,7 +239,7 @@ void PipelinedProcessing_Test::testSenderOutputChannelConnections(
             break;
         }
         waitMs -= 50;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(50));
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(50));
     }
     CPPUNIT_ASSERT_EQUAL(tsize, output1.size());
     CPPUNIT_ASSERT_EQUAL(tsize, output2.size());
@@ -689,7 +689,7 @@ void PipelinedProcessing_Test::testPipeQueueAtLimit(unsigned int processingTime,
         // Though there is no guarantee - seen a CI with none of 1100 received, so wait a bit if needed
         int nTries = 100;
         while (0 == receivedWhenWriteDone && --nTries >= 0) {
-            boost::this_thread::sleep(boost::posix_time::milliseconds(10));
+            boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
             receivedWhenWriteDone = m_deviceClient->get<unsigned int>(m_receiver, "nTotalData");
         }
         CPPUNIT_ASSERT(receivedWhenWriteDone > 0);
@@ -1205,7 +1205,7 @@ void PipelinedProcessing_Test::testTwoSharedReceiversQueuing(unsigned int proces
 
         // Poll the device until it responds with the correct answer or times out.
         while (pollWaitTimeInMs * pollCounter <= m_maxTestTimeOut * 1000) {
-            boost::this_thread::sleep(boost::posix_time::milliseconds(pollWaitTimeInMs));
+            boost::this_thread::sleep_for(boost::chrono::milliseconds(pollWaitTimeInMs));
             const unsigned int received1 = m_deviceClient->get<unsigned int>(m_receiver1, "nTotalData");
             const unsigned int received2 = m_deviceClient->get<unsigned int>(m_receiver2, "nTotalData");
             const unsigned int received = received1 + received2;
@@ -1448,7 +1448,7 @@ void PipelinedProcessing_Test::testSharedReceiversSelector() {
 
     // Ensure sender is done and then sleep a bit, so any data would have had enough time to travel
     CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
-    boost::this_thread::sleep(boost::posix_time::milliseconds(250));
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(250));
 
     // No further new data has arrived at connected destinations
     CPPUNIT_ASSERT_EQUAL(nData, m_deviceClient->get<unsigned int>(m_receiver1, "nTotalData"));
@@ -1463,7 +1463,7 @@ void PipelinedProcessing_Test::testSharedReceiversSelector() {
 
     // Ensure sender is done and then sleep a bit, so any data would have had enough time to travel
     CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
-    boost::this_thread::sleep(boost::posix_time::milliseconds(250));
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(250));
 
     // Also now: no further new data has arrived at connected destinations
     CPPUNIT_ASSERT_EQUAL(nData, m_deviceClient->get<unsigned int>(m_receiver1, "nTotalData"));
@@ -1578,7 +1578,7 @@ void PipelinedProcessing_Test::testQueueClearOnDisconnectSharedQueue(bool useRou
 
     // Asserts that after a while (around 1 second), the receiver hasn't received any data - meaning that the queue
     // has been properly cleared after the receiver disconnected.
-    boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
     const unsigned int receivedAfterReconnect = m_deviceClient->get<unsigned int>(m_receiver, "nTotalData");
     CPPUNIT_ASSERT_EQUAL(0u, receivedAfterReconnect);
 
@@ -1654,7 +1654,7 @@ void PipelinedProcessing_Test::testQueueClearOnDisconnectCopyQueue() {
 
     // Asserts that after a while (around 1 second), the receiver hasn't received any data - meaning that the queue
     // has been properly cleared after the receiver disconnected.
-    boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
     const unsigned int receivedAfterReconnect = m_deviceClient->get<unsigned int>(m_receiver, "nTotalData");
     CPPUNIT_ASSERT_EQUAL(0u, receivedAfterReconnect);
 
@@ -1739,7 +1739,7 @@ bool PipelinedProcessing_Test::pollDeviceProperty(const std::string& deviceId, c
 
     // Poll the device until it responds with the correct answer or times out.
     while (pollWaitTimeInMs * pollCounter <= maxTimeoutInSec * 1000) {
-        boost::this_thread::sleep(boost::posix_time::milliseconds(pollWaitTimeInMs));
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(pollWaitTimeInMs));
         const T nReceived = m_deviceClient->get<T>(deviceId, propertyName);
         if ((checkForEqual && nReceived == expected) || (!checkForEqual && nReceived != expected)) {
             return true;

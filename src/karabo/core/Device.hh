@@ -196,7 +196,7 @@ namespace karabo {
             karabo::util::Validator m_validatorIntern; /// ...internal updates via 'Device::set'
             karabo::util::Validator m_validatorExtern; /// ...external updates via 'Device::slotReconfigure'
 
-            boost::shared_ptr<DeviceClient> m_deviceClient;
+            std::shared_ptr<DeviceClient> m_deviceClient;
 
             std::string m_classId;
             std::string m_serverId;
@@ -208,9 +208,9 @@ namespace karabo {
             unsigned long long m_timeSec;    // seconds
             unsigned long long m_timeFrac;   // attoseconds
             unsigned long long m_timePeriod; // microseconds
-            mutable boost::mutex m_timeChangeMutex;
+            mutable std::mutex m_timeChangeMutex;
 
-            mutable boost::mutex m_objectStateChangeMutex;
+            mutable std::mutex m_objectStateChangeMutex;
             karabo::util::Hash m_parameters;
             karabo::util::Schema m_staticSchema;
             karabo::util::Schema m_injectedSchema;
@@ -536,7 +536,7 @@ namespace karabo {
             DeviceClient& remote() {
                 if (!m_deviceClient) {
                     // Initialize an embedded device client (for composition)
-                    m_deviceClient = boost::make_shared<DeviceClient>(shared_from_this(), false);
+                    m_deviceClient = std::make_shared<DeviceClient>(shared_from_this(), false);
                     m_deviceClient->initialize();
                 }
                 return *(m_deviceClient);
@@ -584,7 +584,7 @@ namespace karabo {
             void setVectorUpdate(const std::string& key, const std::vector<ItemType>& updates, VectorUpdate updateType,
                                  const karabo::util::Timestamp& timestamp) {
                 // Get current value and update as requested
-                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
                 std::vector<ItemType> vec(m_parameters.get<std::vector<ItemType>>(key));
                 switch (updateType) {
                     case VectorUpdate::add:
@@ -650,7 +650,7 @@ namespace karabo {
                      const karabo::util::Timestamp& timestamp) {
                 karabo::util::Hash h(key, condition.asString());
                 h.setAttribute(key, KARABO_INDICATE_ALARM_SET, true);
-                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
                 setNoLock(h, timestamp);
                 // also set the fields attribute
                 m_parameters.setAttribute(key, KARABO_ALARM_ATTR, condition.asString());
@@ -753,7 +753,7 @@ namespace karabo {
              *                  Timestamp::hashAttributesContainTimeInformation(hash.getAttributes(<path>)))
              */
             void set(const karabo::util::Hash& hash, const karabo::util::Timestamp& timestamp) {
-                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
                 setNoLock(hash, timestamp);
             }
 
@@ -836,7 +836,7 @@ namespace karabo {
              * @param timestamp optional timestamp to indicate when the set occurred.
              */
             void setNoValidate(const karabo::util::Hash& hash, const karabo::util::Timestamp& timestamp) {
-                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
                 this->setNoValidateNoLock(hash, timestamp);
             }
 
@@ -884,7 +884,7 @@ namespace karabo {
              */
             template <class T>
             T get(const std::string& key) const {
-                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
 
                 try {
                     const karabo::util::Hash::Attributes& attrs =
@@ -926,7 +926,7 @@ namespace karabo {
              */
             template <class T>
             T getAs(const std::string& key) const {
-                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
                 try {
                     return m_parameters.getAs<T>(key);
                 } catch (const karabo::util::Exception& e) {
@@ -940,7 +940,7 @@ namespace karabo {
              * @return Schema object containing all expected parameters
              */
             karabo::util::Schema getFullSchema() const {
-                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
                 return m_fullSchema;
             }
 
@@ -967,7 +967,7 @@ namespace karabo {
                 // Set default values for all parameters in appended Schema
                 v.validate(schema, karabo::util::Hash(), validated);
                 {
-                    boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                    std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
 
                     // Take care of OutputChannels schema changes - have to recreate to make other end aware
                     std::unordered_set<std::string> outChannelsToRecreate;
@@ -1046,7 +1046,7 @@ namespace karabo {
                 const karabo::util::Timestamp stamp(getActualTimestamp());
                 v.validate(schema, karabo::util::Hash(), validated);
                 {
-                    boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                    std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
                     // Clear previously injected parameters.
                     // But not blindly all paths (not only keys!) from m_injectedSchema: injection might have been done
                     // to update attributes like alarm levels, min/max values, size, etc. of existing properties.
@@ -1152,7 +1152,7 @@ namespace karabo {
             template <class AliasType>
             AliasType getAliasFromKey(const std::string& key) const {
                 try {
-                    boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                    std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
                     return m_fullSchema.getAliasFromKey<AliasType>(key);
                 } catch (const karabo::util::Exception& e) {
                     KARABO_RETHROW_AS(
@@ -1170,7 +1170,7 @@ namespace karabo {
             template <class AliasType>
             std::string getKeyFromAlias(const AliasType& alias) const {
                 try {
-                    boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                    std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
                     return m_fullSchema.getKeyFromAlias(alias);
                 } catch (const karabo::util::Exception& e) {
                     KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Error whilst retrieving parameter from alias (" +
@@ -1187,7 +1187,7 @@ namespace karabo {
              */
             template <class T>
             const bool aliasHasKey(const T& alias) const {
-                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
                 return m_fullSchema.aliasHasKey(alias);
             }
 
@@ -1197,7 +1197,7 @@ namespace karabo {
              * @return true if the alias exists
              */
             bool keyHasAlias(const std::string& key) const {
-                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
                 return m_fullSchema.keyHasAlias(key);
             }
 
@@ -1207,7 +1207,7 @@ namespace karabo {
              * @return The enumerated internal reference type of the value
              */
             karabo::util::Types::ReferenceType getValueType(const std::string& key) const {
-                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
                 return m_fullSchema.getValueType(key);
             }
 
@@ -1219,7 +1219,7 @@ namespace karabo {
              * @return A Hash containing the current value of the selected configuration
              */
             karabo::util::Hash getCurrentConfiguration(const std::string& tags = "") const {
-                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
                 if (tags.empty()) return m_parameters;
                 karabo::util::Hash filtered;
                 karabo::util::HashFilter::byTag(m_fullSchema, m_parameters, filtered, tags);
@@ -1237,7 +1237,7 @@ namespace karabo {
             karabo::util::Hash getCurrentConfigurationSlice(const std::vector<std::string>& paths) const {
                 karabo::util::Hash result;
 
-                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
                 for (const std::string& path : paths) {
                     const karabo::util::Hash::Node& node = m_parameters.getNode(path);
                     // Copy value and attributes
@@ -1256,7 +1256,7 @@ namespace karabo {
              */
             karabo::util::Hash filterByTags(const karabo::util::Hash& hash, const std::string& tags) const {
                 karabo::util::Hash filtered;
-                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
                 karabo::util::HashFilter::byTag(m_fullSchema, hash, filtered, tags);
                 return filtered;
             }
@@ -1469,7 +1469,7 @@ namespace karabo {
                 using namespace karabo::util;
 
                 const Timestamp timestamp(getActualTimestamp());
-                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
                 Hash h;
                 h.set("alarmCondition", condition.asString()).setAttribute(KARABO_INDICATE_ALARM_SET, true);
                 // also set the fields attribute to this condition
@@ -1485,7 +1485,7 @@ namespace karabo {
              */
             const karabo::util::AlarmCondition& getAlarmCondition(const std::string& key,
                                                                   const std::string& sep = ".") const {
-                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
                 const std::string& propertyCondition =
                       this->m_parameters.template getAttribute<std::string>(key, KARABO_ALARM_ATTR, sep.at(0));
                 return karabo::util::AlarmCondition::fromString(propertyCondition);
@@ -1513,7 +1513,7 @@ namespace karabo {
             void slotTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac,
                               unsigned long long period) {
                 {
-                    boost::mutex::scoped_lock lock(m_timeChangeMutex);
+                    std::lock_guard<std::mutex> lock(m_timeChangeMutex);
                     m_timeId = id;
                     m_timeSec = sec;
                     m_timeFrac = frac;
@@ -1537,7 +1537,7 @@ namespace karabo {
              */
             void appendSchemaMaxSize(const std::string& path, unsigned int value, bool emitFlag = true) {
                 using karabo::util::OVERWRITE_ELEMENT;
-                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
                 if (!m_fullSchema.has(path)) {
                     throw KARABO_PARAMETER_EXCEPTION("Path \"" + path + "\" not found in the device schema.");
                 }
@@ -1586,7 +1586,7 @@ namespace karabo {
             karabo::util::Timestamp getTimestamp(const karabo::util::Epochstamp& epoch) const {
                 unsigned long long id = 0;
                 {
-                    boost::mutex::scoped_lock lock(m_timeChangeMutex);
+                    std::lock_guard<std::mutex> lock(m_timeChangeMutex);
                     if (m_timePeriod > 0) {
                         const karabo::util::Epochstamp epochLastReceived(m_timeSec, m_timeFrac);
                         // duration is always positive, irrespective whether epoch or epochLastReceived is more recent
@@ -1625,7 +1625,7 @@ namespace karabo {
                                                 const std::string& timeServerId) {
                 using namespace karabo::util;
                 using namespace karabo::net;
-                using namespace boost::placeholders;
+                using namespace std::placeholders;
 
                 //
                 // First set all parameters (which could not yet be set in constructor) and init the SignalSlotable
@@ -1644,7 +1644,7 @@ namespace karabo {
 
                 int heartbeatInterval = 0;
                 {
-                    boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                    std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
                     // ClassId
                     m_parameters.set("classId", m_classId);
                     m_parameters.set("classVersion", getClassInfo().getVersion());
@@ -1732,20 +1732,19 @@ namespace karabo {
                 this->initDeviceSlots();
 
                 // Register guard for slot calls
-                this->registerSlotCallGuardHandler(
-                      boost::bind(&karabo::core::Device<FSM>::slotCallGuard, this, _1, _2));
+                this->registerSlotCallGuardHandler(std::bind(&karabo::core::Device<FSM>::slotCallGuard, this, _1, _2));
 
                 // Register updateLatencies handler -
                 // bind_weak not needed since (and as long as...) handler will not be posted on event loop
                 this->registerPerformanceStatisticsHandler(
-                      boost::bind(&karabo::core::Device<FSM>::updateLatencies, this, _1));
+                      std::bind(&karabo::core::Device<FSM>::updateLatencies, this, _1));
 
                 // Register message consumption error handler - bind_weak not needed as above
-                this->registerBrokerErrorHandler(boost::bind(&karabo::core::Device<FSM>::onBrokerError, this, _1));
+                this->registerBrokerErrorHandler(std::bind(&karabo::core::Device<FSM>::onBrokerError, this, _1));
 
                 // Instantiate all channels - needs mutex
                 {
-                    boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                    std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
                     this->initChannels(m_fullSchema);
                 }
                 //
@@ -1792,7 +1791,7 @@ namespace karabo {
                 using namespace karabo::util;
                 const Schema staticSchema = getSchema(m_classId, Schema::AssemblyRules(INIT | WRITE | READ));
                 {
-                    boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                    std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
                     // The static schema is the regular schema as assembled by parsing the expectedParameters functions
                     m_staticSchema = staticSchema; // Here we lack a Schema::swap(..)...
                     // At startup the static schema is identical with the runtime schema
@@ -1879,7 +1878,7 @@ namespace karabo {
                         KARABO_LOG_FRAMEWORK_ERROR << "*** 'createOutputChannel' for channel name '" << path
                                                    << "' failed to create output channel";
                     } else {
-                        Device::WeakPointer weakThis(boost::dynamic_pointer_cast<Device>(shared_from_this()));
+                        Device::WeakPointer weakThis(std::dynamic_pointer_cast<Device>(shared_from_this()));
                         channel->registerShowConnectionsHandler(
                               [weakThis, path](const std::vector<karabo::util::Hash>& connections) {
                                   Device::Pointer self(weakThis.lock());
@@ -1911,7 +1910,7 @@ namespace karabo {
             void prepareInputChannel(const std::string& path) {
                 KARABO_LOG_FRAMEWORK_INFO << "'" << this->getInstanceId() << "' creates input channel '" << path << "'";
                 using karabo::xms::InputChannel;
-                using namespace boost::placeholders;
+                using namespace std::placeholders;
                 InputChannel::Handlers handlers;
                 // If there was already an InputChannel, "rescue" any registered handlers for new channel
                 InputChannel::Pointer channel = getInputChannelNoThrow(path);
@@ -1976,7 +1975,7 @@ namespace karabo {
                 // as the call guard only works on those and will ignore all others
                 bool isSchemaSlot = false;
                 {
-                    boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                    std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
                     isSchemaSlot = m_fullSchema.has(slotName);
                 }
 
@@ -2016,7 +2015,7 @@ namespace karabo {
             void ensureSlotIsValidUnderCurrentState(const std::string& slotName) {
                 std::vector<karabo::util::State> allowedStates;
                 {
-                    boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                    std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
                     if (m_fullSchema.hasAllowedStates(slotName)) {
                         allowedStates = m_fullSchema.getAllowedStates(slotName);
                     }
@@ -2033,7 +2032,7 @@ namespace karabo {
             }
 
             void slotGetConfiguration() {
-                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
                 reply(m_parameters, m_deviceId);
             }
 
@@ -2048,7 +2047,7 @@ namespace karabo {
                     const karabo::util::Schema schema(getStateDependentSchema(currentState));
                     reply(schema, m_deviceId);
                 } else {
-                    boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                    std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
                     reply(m_fullSchema, m_deviceId);
                 }
             }
@@ -2092,7 +2091,7 @@ namespace karabo {
 
             void applyReconfiguration(const karabo::util::Hash& reconfiguration) {
                 {
-                    boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                    std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
                     m_parameters.merge(reconfiguration);
                 }
                 KARABO_LOG_DEBUG << "After user interaction:\n" << reconfiguration;
@@ -2120,7 +2119,7 @@ namespace karabo {
                 const std::string& currentState = state.name();
                 KARABO_LOG_FRAMEWORK_DEBUG << "call: getStateDependentSchema() for state: " << currentState;
                 // Check cache whether a special state-dependent Schema was created before
-                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
                 std::map<std::string, Schema>::iterator it = m_stateDependentSchema.find(currentState);
                 if (it == m_stateDependentSchema.end()) { // No
                     const Schema::AssemblyRules rules(WRITE, currentState);
@@ -2169,7 +2168,7 @@ namespace karabo {
              * original update request, as received through onUpdateAttributes
              */
             void slotUpdateSchemaAttributes(const std::vector<karabo::util::Hash>& updates) {
-                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
                 // Whenever updating the m_fullSchema, we have to clear the cache
                 m_stateDependentSchema.clear();
                 bool success = m_fullSchema.applyRuntimeUpdates(updates);
@@ -2205,7 +2204,7 @@ namespace karabo {
                 Hash::Node& refNode = result.set("reference", true);
                 auto& attrs = refNode.getAttributes();
                 {
-                    boost::mutex::scoped_lock lock(m_timeChangeMutex);
+                    std::lock_guard<std::mutex> lock(m_timeChangeMutex);
                     const Epochstamp epoch(m_timeSec, m_timeFrac);
                     const Trainstamp train(m_timeId);
                     const Timestamp stamp(epoch, train);

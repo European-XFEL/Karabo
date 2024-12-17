@@ -25,8 +25,7 @@
 #ifndef KARABO_UTIL_ALARMCONDITIONS_HH
 #define KARABO_UTIL_ALARMCONDITIONS_HH
 
-#include <boost/make_shared.hpp>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include <mutex> // for once_flag
 #include <string>
 #include <unordered_map>
@@ -153,13 +152,13 @@ namespace karabo {
 
             AlarmCondition(const std::string& cs, const AlarmCondition& b);
 
-            boost::shared_ptr<const AlarmCondition> getBase() const;
+            std::shared_ptr<const AlarmCondition> getBase() const;
 
             static void initFromString();
 
             std::string m_conditionString;
             unsigned int m_rank;
-            boost::shared_ptr<const AlarmCondition> m_base;
+            std::shared_ptr<const AlarmCondition> m_base;
 
             static std::once_flag m_initFromStringFlag;
             static std::unordered_map<std::string, const AlarmCondition&> m_alarmFactory;

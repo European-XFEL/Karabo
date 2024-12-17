@@ -26,7 +26,7 @@
 #define KARABO_XMS_NETWORKOUTPUT_HH
 
 #include <boost/asio.hpp>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include <unordered_set>
 #include <vector>
 
@@ -44,11 +44,11 @@ namespace karabo {
 
     namespace xms {
 
-        typedef boost::function<void(const std::vector<karabo::util::Hash>&)> ShowConnectionsHandler;
-        typedef boost::function<void(const std::vector<unsigned long long>&, const std::vector<unsigned long long>&)>
+        typedef std::function<void(const std::vector<karabo::util::Hash>&)> ShowConnectionsHandler;
+        typedef std::function<void(const std::vector<unsigned long long>&, const std::vector<unsigned long long>&)>
               ShowStatisticsHandler;
 
-        typedef boost::function<std::string(const std::vector<std::string>&)> SharedInputSelector;
+        typedef std::function<std::string(const std::vector<std::string>&)> SharedInputSelector;
 
         /**
          * @class OutputChannel
@@ -91,7 +91,7 @@ namespace karabo {
          * output->update();
          * @endcode
          */
-        class OutputChannel : public boost::enable_shared_from_this<OutputChannel> {
+        class OutputChannel : public std::enable_shared_from_this<OutputChannel> {
             /*
              * InputChannelInfo (karabo::util::Hash)
              *
@@ -109,7 +109,7 @@ namespace karabo {
             typedef std::map<std::string, InputChannelInfo> InputChannels; // input channel id is key
 
             // Callback on available input
-            boost::function<void(const boost::shared_ptr<OutputChannel>&)> m_ioEventHandler;
+            std::function<void(const std::shared_ptr<OutputChannel>&)> m_ioEventHandler;
 
             std::string m_instanceId;
             std::string m_channelName;
@@ -122,10 +122,10 @@ namespace karabo {
 
             std::string m_onNoSharedInputChannelAvailable;
 
-            boost::mutex m_inputNetChannelsMutex;
+            std::mutex m_inputNetChannelsMutex;
             std::set<karabo::net::Channel::Pointer> m_inputNetChannels;
 
-            mutable boost::mutex m_registeredInputsMutex;
+            mutable std::mutex m_registeredInputsMutex;
             InputChannels m_registeredSharedInputs;
             // Used for storing chunks for shared input channels when
             // distribution mode is "load-balanced" and the strategy for
@@ -133,8 +133,8 @@ namespace karabo {
             // Relies on lock protection using m_registeredInputsMutex.
             std::deque<int> m_sharedLoadBalancedQueuedChunks;
             // Handlers to unblock synchronous update actions - one for shared and map of individual ones
-            boost::function<void(InputChannelInfo*)> m_unblockSharedHandler;
-            std::map<std::string, boost::function<void(InputChannelInfo*)>> m_unblockHandlers;
+            std::function<void(InputChannelInfo*)> m_unblockSharedHandler;
+            std::map<std::string, std::function<void(InputChannelInfo*)>> m_unblockHandlers;
 
             InputChannels m_registeredCopyInputs;
 
@@ -150,12 +150,12 @@ namespace karabo {
             // Mark m_chunkId as invalid with this number
             static const unsigned int m_invalidChunkId = std::numeric_limits<unsigned int>::max();
 
-            mutable boost::mutex m_showConnectionsHandlerMutex;
+            mutable std::mutex m_showConnectionsHandlerMutex;
             ShowConnectionsHandler m_showConnectionsHandler;
             ShowStatisticsHandler m_showStatisticsHandler;
             SharedInputSelector m_sharedInputSelector; // protected by m_registeredInputsMutex
             std::vector<karabo::util::Hash> m_connections;
-            boost::asio::deadline_timer m_updateDeadline;
+            boost::asio::steady_timer m_updateDeadline;
             int m_period;
             int m_addedThreads;
 
@@ -257,7 +257,7 @@ namespace karabo {
              */
             bool hasRegisteredSharedInputChannel(const std::string& instanceId) const;
 
-            void registerIOEventHandler(const boost::function<void(const OutputChannel::Pointer&)>& ioEventHandler);
+            void registerIOEventHandler(const std::function<void(const OutputChannel::Pointer&)>& ioEventHandler);
 
 
             karabo::util::Hash getInformation() const;
@@ -368,7 +368,7 @@ namespace karabo {
              * All the 'write(..)' methods, '[async]Update[NoWait](..)' and '[async]SignalEndOfStream(..)' must not be
              * called concurrently.
              */
-            void asyncUpdate(bool safeNDArray = false, boost::function<void()>&& writeDoneHandler = []() {});
+            void asyncUpdate(bool safeNDArray = false, std::function<void()>&& writeDoneHandler = []() {});
 
             /**
              * Expert method
@@ -400,8 +400,8 @@ namespace karabo {
              * All the 'write(..)' methods, '[async]Update[NoWait](..)' and '[async]SignalEndOfStream(..)' must not be
              * called concurrently.
              */
-            void asyncUpdateNoWait(boost::function<void()>&& readyForNextHandler,
-                                   boost::function<void()>&& writeDoneHandler, bool safeNDArray);
+            void asyncUpdateNoWait(std::function<void()>&& readyForNextHandler,
+                                   std::function<void()>&& writeDoneHandler, bool safeNDArray);
 
             /**
              * Synchronously send end-of-stream (EOS) notification to all connected input channels to indicate a logical
@@ -423,7 +423,7 @@ namespace karabo {
              * All the 'write(..)' methods, 'update()'/'asyncUpdate(cb)' and
              * 'signalEndOfStream()'/'asyncSignalEndOfStream(cb)' must not be called concurrently.
              */
-            void asyncSignalEndOfStream(boost::function<void()>&& readyHandler);
+            void asyncSignalEndOfStream(std::function<void()>&& readyHandler);
 
             void registerShowConnectionsHandler(const ShowConnectionsHandler& handler);
 
@@ -537,7 +537,7 @@ namespace karabo {
              * @param lockOfRegisteredInputsMutex a scoped_lock locking m_registeredInputsMutex
              *                                    (may be unlocked and locked again during execution)
              */
-            void ensureValidChunkId(boost::mutex::scoped_lock& lockOfRegisteredInputsMutex);
+            void ensureValidChunkId(std::unique_lock<std::mutex>& lockOfRegisteredInputsMutex);
 
             void unregisterWriterFromChunk(int chunkId);
 
@@ -602,8 +602,7 @@ namespace karabo {
              * @param channelInfo Container with info about channel to send to
              * @param doneHandler Callback when sending done or failed
              */
-            void asyncSendOne(unsigned int chunkId, InputChannelInfo& channelInfo,
-                              boost::function<void()>&& doneHandler);
+            void asyncSendOne(unsigned int chunkId, InputChannelInfo& channelInfo, std::function<void()>&& doneHandler);
 
             /**
              * Helper for waiting for future that in case of long delay adds a thread to unblock

@@ -28,7 +28,7 @@
 #define KARABO_IO_ABSTRACTOUTPUT_HH
 
 #include <boost/any.hpp>
-#include <boost/function.hpp>
+#include <functional>
 #include <karabo/util/Configurator.hh>
 #include <karabo/util/SimpleElement.hh>
 

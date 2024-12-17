@@ -62,7 +62,7 @@ class SignalSlotable_Test : public CPPUNIT_NS::TestFixture {
     void tearDown();
 
    private:
-    void waitDemoOk(const boost::shared_ptr<SignalSlotDemo>& demo, int messageCalls, int trials = 10);
+    void waitDemoOk(const std::shared_ptr<SignalSlotDemo>& demo, int messageCalls, int trials = 10);
     void _loopFunction(const std::string& functionName, const std::function<void()>& testFunction);
     void testUniqueInstanceId();
     void testValidInstanceId();

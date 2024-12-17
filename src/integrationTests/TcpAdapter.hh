@@ -38,9 +38,9 @@
  */
 namespace karabo {
 
-    class TcpAdapter : public boost::enable_shared_from_this<TcpAdapter> {
+    class TcpAdapter : public std::enable_shared_from_this<TcpAdapter> {
        public:
-        typedef boost::shared_ptr<boost::lockfree::spsc_queue<karabo::util::Hash> > QueuePtr;
+        typedef std::shared_ptr<boost::lockfree::spsc_queue<karabo::util::Hash> > QueuePtr;
 
         /**
          * Constructor for a TcpAdapter, takes a config Hash as parameter
@@ -78,7 +78,7 @@ namespace karabo {
               const std::string& type, size_t nMessages, F&& triggeringFunction = [] {}, size_t timeout = 10000) {
             {
                 boost::unique_lock<boost::shared_mutex> lock(m_queueAccessMutex);
-                m_nextMessageQueues[type] = boost::shared_ptr<boost::lockfree::spsc_queue<karabo::util::Hash> >(
+                m_nextMessageQueues[type] = std::shared_ptr<boost::lockfree::spsc_queue<karabo::util::Hash> >(
                       new boost::lockfree::spsc_queue<karabo::util::Hash>(nMessages));
             }
 
@@ -96,7 +96,7 @@ namespace karabo {
                     throw KARABO_TIMEOUT_EXCEPTION(msg);
                 }
                 i++;
-                boost::this_thread::sleep(boost::posix_time::milliseconds(waitTime));
+                boost::this_thread::sleep_for(boost::chrono::milliseconds(waitTime));
                 if (m_debug) {
                     std::clog << "Have " << m_nextMessageQueues[type]->read_available() << " of " << nMessages
                               << " in queue for '" << type << "'!" << std::endl;
@@ -159,9 +159,9 @@ namespace karabo {
         std::map<std::string, bool> m_messageConditions;
         mutable boost::shared_mutex m_messageAccessMutex;
         mutable boost::shared_mutex m_queueAccessMutex;
-        mutable std::map<std::string, boost::shared_ptr<boost::lockfree::spsc_queue<karabo::util::Hash> > >
+        mutable std::map<std::string, std::shared_ptr<boost::lockfree::spsc_queue<karabo::util::Hash> > >
               m_nextMessageQueues;
-        boost::asio::deadline_timer m_deadline;
+        boost::asio::steady_timer m_deadline;
         bool m_debug;
         size_t m_MessageId;
         mutable boost::mutex m_writeConditionMutex;

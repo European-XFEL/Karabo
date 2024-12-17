@@ -46,7 +46,7 @@ EventLoop_Test::EventLoop_Test() {}
 EventLoop_Test::~EventLoop_Test() {}
 
 
-void EventLoop_Test::handler1(boost::asio::deadline_timer& timer, int count) {
+void EventLoop_Test::handler1(boost::asio::steady_timer& timer, int count) {
     if (count == -1) {
         CPPUNIT_ASSERT(EventLoop::getNumberOfThreads() == 0);
         return;
@@ -57,7 +57,7 @@ void EventLoop_Test::handler1(boost::asio::deadline_timer& timer, int count) {
     if (count == 5) {
         EventLoop::removeThread(5);
         count = -1;
-        timer.expires_at(timer.expires_at() + boost::posix_time::millisec(500));
+        timer.expires_at(timer.expires_at() + boost::asio::chrono::milliseconds(500));
         timer.async_wait(boost::bind(&EventLoop_Test::handler1, this, boost::ref(timer), count));
         return;
     }
@@ -65,13 +65,13 @@ void EventLoop_Test::handler1(boost::asio::deadline_timer& timer, int count) {
     EventLoop::addThread();
     count++;
 
-    timer.expires_at(timer.expires_at() + boost::posix_time::millisec(500));
+    timer.expires_at(timer.expires_at() + boost::asio::chrono::milliseconds(500));
     timer.async_wait(boost::bind(&EventLoop_Test::handler1, this, boost::ref(timer), count));
 }
 
 
 void EventLoop_Test::testMethod() {
-    boost::asio::deadline_timer timer(EventLoop::getIOService(), boost::posix_time::millisec(500));
+    boost::asio::steady_timer timer(EventLoop::getIOService(), boost::asio::chrono::milliseconds(500));
     timer.async_wait(boost::bind(&EventLoop_Test::handler1, this, boost::ref(timer), 0));
 
     EventLoop::run();
@@ -81,7 +81,7 @@ void EventLoop_Test::testMethod() {
 void EventLoop_Test::handler2() {
     if (m_finished) return;
 
-    boost::asio::deadline_timer timer(EventLoop::getIOService(), boost::posix_time::millisec(5));
+    boost::asio::steady_timer timer(EventLoop::getIOService(), boost::asio::chrono::milliseconds(5));
     EventLoop::getIOService().post(boost::bind(&EventLoop_Test::handler2, this));
 }
 
@@ -96,7 +96,7 @@ void EventLoop_Test::testMethod2() {
     boost::thread t(boost::bind(&EventLoop::run));
 
     m_finished = false;
-    boost::asio::deadline_timer timer(EventLoop::getIOService(), boost::posix_time::millisec(500));
+    boost::asio::steady_timer timer(EventLoop::getIOService(), boost::asio::chrono::milliseconds(500));
     EventLoop::addThread(10);
     EventLoop::getIOService().post(boost::bind(&EventLoop_Test::handler2, this));
     timer.async_wait(boost::bind(&EventLoop_Test::handler3, this));
@@ -120,7 +120,7 @@ void EventLoop_Test::testSignalCapture() {
     });
 
     // Allow signal handling to be activated (1 ms sleep seems OK, but the test fails without sleep).
-    boost::this_thread::sleep(boost::posix_time::milliseconds(10));
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
 
     std::raise(SIGTERM);
 
@@ -194,7 +194,7 @@ void EventLoop_Test::testExceptionTrace() {
 
     const int nParallel = 10;
     EventLoop::addThread(nParallel);
-    boost::this_thread::sleep(boost::posix_time::milliseconds(100)); // now all threads should be available
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(100)); // now all threads should be available
 
 
     std::vector<std::promise<std::string>> promises(nParallel);

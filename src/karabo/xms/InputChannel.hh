@@ -28,8 +28,8 @@
 #define KARABO_XMS_INPUTCHANNEL_HH
 
 #include <boost/asio.hpp>
-#include <boost/function.hpp>
 #include <boost/random/mersenne_twister.hpp>
+#include <functional>
 #include <map>
 #include <string>
 #include <unordered_map>
@@ -72,14 +72,14 @@ namespace karabo {
          * }
          * @endcode
          */
-        class InputChannel : public boost::enable_shared_from_this<InputChannel> {
+        class InputChannel : public std::enable_shared_from_this<InputChannel> {
            public:
             KARABO_CLASSINFO(InputChannel, "InputChannel", "1.0")
 
             typedef Memory::MetaData MetaData;
-            typedef boost::function<void(const InputChannel::Pointer&)> InputHandler;
-            typedef boost::function<void(const karabo::util::Hash&, const MetaData&)> DataHandler;
-            using ConnectionTracker = boost::function<void(const std::string&, net::ConnectionStatus)>;
+            typedef std::function<void(const InputChannel::Pointer&)> InputHandler;
+            typedef std::function<void(const karabo::util::Hash&, const MetaData&)> DataHandler;
+            using ConnectionTracker = std::function<void(const std::string&, net::ConnectionStatus)>;
 
             /**
              * Container for InputChannel handlers that concern data handling.
@@ -121,7 +121,7 @@ namespace karabo {
                   OpenConnections;
 
             karabo::net::Strand::Pointer m_strand;
-            boost::asio::deadline_timer m_deadline;
+            boost::asio::steady_timer m_deadline;
 
             /// Callback on available data (per InputChannel)
             InputHandler m_inputHandler;
@@ -145,25 +145,25 @@ namespace karabo {
             unsigned int m_channelId;
 
             // Prevents simultaneous access to the inactive data and active data pots.
-            boost::mutex m_twoPotsMutex;
+            std::mutex m_twoPotsMutex;
 
             int m_activeChunk;
             int m_inactiveChunk;
 
-            boost::mutex m_outputChannelsMutex;
+            std::mutex m_outputChannelsMutex;
             ConfiguredOutputChannels m_configuredOutputChannels;
             OpenConnections m_openConnections;
             /// All 'outputChannelString' for that a connection attempt is currently ongoing, with their handlers and
             /// ids
-            std::unordered_map<std::string,
-                               std::pair<unsigned int, boost::function<void(const karabo::net::ErrorCode&)>>>
+            std::unordered_map<std::string, std::pair<unsigned int, std::function<void(const karabo::net::ErrorCode&)>>>
                   m_connectionsBeingSetup;
             boost::random::mt19937 m_random; // any random generator would suite...
 
             bool m_respondToEndOfStream;
 
             // Tracks channels that sent EOS - to be protected by m_outputChannelsMutex
-            std::set<karabo::net::Channel::WeakPointer> m_eosChannels;
+            std::set<karabo::net::Channel::WeakPointer, std::owner_less<karabo::net::Channel::WeakPointer>>
+                  m_eosChannels;
 
             int m_delayOnInput;
 
@@ -331,8 +331,8 @@ namespace karabo {
              * @param handler  indicates asynchronously (like via EventLoop::post) the success of the connection request
              */
             void connect(const karabo::util::Hash& outputChannelInfo,
-                         const boost::function<void(const karabo::net::ErrorCode&)>& handler =
-                               boost::function<void(const karabo::net::ErrorCode&)>());
+                         const std::function<void(const karabo::net::ErrorCode&)>& handler =
+                               std::function<void(const karabo::net::ErrorCode&)>());
 
             void disconnect(const karabo::util::Hash& outputChannelInfo);
 
@@ -350,11 +350,11 @@ namespace karabo {
                                       karabo::net::Connection::Pointer connection,
                                       const karabo::util::Hash& outputChannelInfo,
                                       karabo::net::Channel::Pointer channel, unsigned int connectId,
-                                      const boost::function<void(const karabo::net::ErrorCode&)>& handler);
+                                      const std::function<void(const karabo::net::ErrorCode&)>& handler);
 
             void onConnect(karabo::net::ErrorCode error, karabo::net::Connection::Pointer& connection,
                            const karabo::util::Hash& outputChannelInfo, karabo::net::Channel::Pointer& channel,
-                           unsigned int connectId, const boost::function<void(const karabo::net::ErrorCode&)>& handler);
+                           unsigned int connectId, const std::function<void(const karabo::net::ErrorCode&)>& handler);
 
             void onTcpChannelError(const karabo::net::ErrorCode&, const karabo::net::Channel::Pointer&);
 

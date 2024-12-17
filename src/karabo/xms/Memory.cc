@@ -31,9 +31,9 @@ namespace karabo {
     namespace xms {
 
         // Static initializations
-        // std::vector< std::vector< std::vector<boost::shared_ptr<std::vector<char> > > > Memory::m_cache =
-        // std::vector< std::vector< std::vector< boost::shared_ptr<std::vector<char> > > > >(MAX_N_CHANNELS,
-        // std::vector< std::vector< boost::shared_ptr<std::vector<char> > > >(MAX_N_CHUNKS));
+        // std::vector< std::vector< std::vector<std::shared_ptr<std::vector<char> > > > Memory::m_cache =
+        // std::vector< std::vector< std::vector< std::shared_ptr<std::vector<char> > > > >(MAX_N_CHANNELS,
+        // std::vector< std::vector< std::shared_ptr<std::vector<char> > > >(MAX_N_CHUNKS));
         Memory::Channels Memory::m_cache = Memory::Channels(MAX_N_CHANNELS, Memory::Chunks(MAX_N_CHUNKS));
         Memory::ChannelMetaDataEntries Memory::m_metaData =
               Memory::ChannelMetaDataEntries(MAX_N_CHANNELS, Memory::ChunkMetaDataEntries(MAX_N_CHUNKS));
@@ -46,9 +46,9 @@ namespace karabo {
 
         Memory::ChannelStatus Memory::m_channelStatus = Memory::ChannelStatus(MAX_N_CHANNELS, 0);
 
-        boost::mutex Memory::m_accessMutex;
+        std::mutex Memory::m_accessMutex;
 
-        boost::shared_ptr<Memory::SerializerType> Memory::m_serializer;
+        std::shared_ptr<Memory::SerializerType> Memory::m_serializer;
 
 
         void Memory::read(karabo::util::Hash& data, const size_t dataIdx, const size_t channelIdx,
@@ -102,7 +102,7 @@ namespace karabo {
 
 
         size_t Memory::registerChannel() {
-            boost::mutex::scoped_lock lock(m_accessMutex);
+            std::lock_guard<std::mutex> lock(m_accessMutex);
             for (size_t i = 0; i < m_cache.size(); ++i) { // Find free channel
                 if (m_channelStatus[i] == 0) {            // Found a free channel
                     m_channelStatus[i] = 1;
@@ -117,12 +117,12 @@ namespace karabo {
         }
 
         void Memory::incrementChannelUsage(const size_t& channelIdx) {
-            boost::mutex::scoped_lock lock(m_accessMutex);
+            std::lock_guard<std::mutex> lock(m_accessMutex);
             m_channelStatus[channelIdx]++;
         }
 
         void Memory::decrementChannelUsage(const size_t& channelIdx) {
-            boost::mutex::scoped_lock lock(m_accessMutex);
+            std::lock_guard<std::mutex> lock(m_accessMutex);
             if (--m_channelStatus[channelIdx] == 0) {
                 for (size_t i = 0; i < m_chunkStatus[channelIdx].size(); ++i) {
                     m_chunkStatus[channelIdx][i] = 0;
@@ -133,7 +133,7 @@ namespace karabo {
         }
 
         size_t Memory::registerChunk(const size_t channelIdx) {
-            boost::mutex::scoped_lock lock(m_accessMutex);
+            std::lock_guard<std::mutex> lock(m_accessMutex);
             for (size_t i = 0; i < m_cache[channelIdx].size(); ++i) { // Find free chunk
                 if (m_chunkStatus[channelIdx][i] == 0) {              // Found a free chunk
                     m_cache[channelIdx][i] = Data();
@@ -151,12 +151,12 @@ namespace karabo {
         }
 
         void Memory::incrementChunkUsage(const size_t& channelIdx, const size_t& chunkIdx) {
-            boost::mutex::scoped_lock lock(m_accessMutex);
+            std::lock_guard<std::mutex> lock(m_accessMutex);
             m_chunkStatus[channelIdx][chunkIdx]++;
         }
 
         void Memory::decrementChunkUsage(const size_t& channelIdx, const size_t& chunkIdx) {
-            boost::mutex::scoped_lock lock(m_accessMutex);
+            std::lock_guard<std::mutex> lock(m_accessMutex);
             if (--m_chunkStatus[channelIdx][chunkIdx] == 0) {
                 KARABO_LOG_FRAMEWORK_TRACE << "Freeing memory for [" << channelIdx << "][" << chunkIdx << "]";
                 clearChunkData(channelIdx, chunkIdx);
@@ -170,17 +170,17 @@ namespace karabo {
         }
 
         int Memory::getChannelStatus(const size_t channelIdx) {
-            boost::mutex::scoped_lock lock(m_accessMutex);
+            std::lock_guard<std::mutex> lock(m_accessMutex);
             return m_channelStatus[channelIdx];
         }
 
         void Memory::setChannelStatus(const size_t channelIdx, const int status) {
-            boost::mutex::scoped_lock lock(m_accessMutex);
+            std::lock_guard<std::mutex> lock(m_accessMutex);
             m_channelStatus[channelIdx] = status;
         }
 
         int Memory::getChunkStatus(const size_t channelIdx, const size_t chunkIdx) {
-            boost::mutex::scoped_lock lock(m_accessMutex);
+            std::lock_guard<std::mutex> lock(m_accessMutex);
             return m_chunkStatus[channelIdx][chunkIdx];
         }
 

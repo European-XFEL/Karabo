@@ -28,9 +28,9 @@
 
 #include <atomic>
 #include <boost/asio/deadline_timer.hpp>
-#include <boost/enable_shared_from_this.hpp>
-#include <boost/function.hpp>
+#include <functional>
 #include <map>
+#include <memory>
 #include <mutex>
 #include <string>
 
@@ -77,13 +77,13 @@ namespace karabo::devices {
         karabo::util::TimeDuration timeForExpiration;
     };
 
-    using BeginTemporarySessionHandler = boost::function<void(const BeginTemporarySessionResult&)>;
+    using BeginTemporarySessionHandler = std::function<void(const BeginTemporarySessionResult&)>;
 
     /** Handler for expired temporary session events. */
-    using ExpirationHandler = boost::function<void(const ExpiredTemporarySessionInfo&)>;
+    using ExpirationHandler = std::function<void(const ExpiredTemporarySessionInfo&)>;
 
     /** Handler for "temporary session about to expire" events. */
-    using EminentExpirationHandler = boost::function<void(const EminentExpirationInfo&)>;
+    using EminentExpirationHandler = std::function<void(const EminentExpirationInfo&)>;
 
     /**
      * @brief Manages temporary sessions on top of user-authenticated GUI Sessions.
@@ -91,7 +91,7 @@ namespace karabo::devices {
      * Takes care of authorizing one-time temporary session tokens to start temporary sessions and of communicating
      * temporary sessions about to expire or already expired.
      */
-    class GuiServerTemporarySessionManager : public boost::enable_shared_from_this<GuiServerTemporarySessionManager> {
+    class GuiServerTemporarySessionManager : public std::enable_shared_from_this<GuiServerTemporarySessionManager> {
        public:
         /**
          * @brief Construct a new Gui Server Temporary Session Manager object
@@ -176,7 +176,7 @@ namespace karabo::devices {
         karabo::util::TimeDuration m_temporarySessionEndNoticeSecs;
         EminentExpirationHandler m_eminentExpirationHandler;
         ExpirationHandler m_expirationHandler;
-        boost::asio::deadline_timer m_checkExpirationsTimer;
+        boost::asio::steady_timer m_checkExpirationsTimer;
         std::atomic<bool> m_expirationTimerWaiting;
         std::map<std::string /* temporarySessionToken */, karabo::util::Epochstamp /* expiration time */>
               m_tempSessions;

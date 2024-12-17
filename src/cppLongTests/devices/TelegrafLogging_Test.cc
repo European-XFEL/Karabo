@@ -86,7 +86,7 @@ void TelegrafLogging_Test::testInfluxDbNotAvailableTelegraf() {
         if (loggerState == karabo::util::State::ERROR) {
             break;
         }
-        boost::this_thread::sleep(boost::posix_time::milliseconds(50));
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(50));
         timeout -= 50;
     }
 
@@ -175,7 +175,7 @@ bool TelegrafLogging_Test::isTelegrafEnvResponsive() {
 
 
     // Captures the timepoint after updating the property
-    boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
     Epochstamp afterPropUpdate;
 
     // Makes sure all the writes are done before retrieval.
@@ -213,7 +213,7 @@ bool TelegrafLogging_Test::isTelegrafEnvResponsive() {
             // Just consume the exception as it is expected while data is not
             // ready.
         }
-        boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
         nTries--;
     }
 

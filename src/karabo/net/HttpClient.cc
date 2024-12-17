@@ -50,17 +50,17 @@ namespace karabo {
                 : m_baseURL{baseURL}, m_sslCtx{ssl::context::tlsv12_client} {
                 if (!m_baseURL.empty()) {
                     const auto& urlParts = parseUrl(baseURL);
-                    const std::string& protocol = boost::algorithm::to_lower_copy(urlParts.get<0>());
+                    const std::string& protocol = boost::algorithm::to_lower_copy(std::get<0>(urlParts));
                     if (protocol != "http" && protocol != "https") {
                         throw KARABO_PARAMETER_EXCEPTION("Unsupported protocol, '" + protocol +
                                                          "' in baseURL argument, '" + baseURL + "'.");
                     }
                     m_ssl = (protocol == "https");
-                    m_host = urlParts.get<1>();
+                    m_host = std::get<1>(urlParts);
                     if (m_host.empty()) {
                         throw KARABO_PARAMETER_EXCEPTION("No host specified in baseURL argument, '" + baseURL + "'.");
                     }
-                    const std::string portStr = urlParts.get<2>();
+                    const std::string portStr = std::get<2>(urlParts);
                     m_port = 0;
                     if (portStr.empty()) {
                         m_port = (m_ssl ? 443 : 80);

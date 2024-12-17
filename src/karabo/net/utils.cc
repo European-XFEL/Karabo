@@ -52,7 +52,7 @@ std::string karabo::net::bareHostName() {
 }
 
 
-void karabo::net::runProtected(boost::shared_ptr<boost::asio::io_service> service, const std::string& category,
+void karabo::net::runProtected(std::shared_ptr<boost::asio::io_service> service, const std::string& category,
                                const std::string& errorMessage, unsigned int delayInMilliSec) {
     // See http://www.boost.org/doc/libs/1_55_0/doc/html/boost_asio/reference/io_service.html:
     // "If an exception is thrown from a handler, the exception is allowed to propagate through the throwing
@@ -79,13 +79,13 @@ void karabo::net::runProtected(boost::shared_ptr<boost::asio::io_service> servic
             KARABO_LOG_FRAMEWORK_ERROR_C(category) << "Unknown exception" << fullMessage << ".";
         }
         if (caught) {
-            boost::this_thread::sleep(boost::posix_time::milliseconds(delayInMilliSec));
+            std::this_thread::sleep_for(std::chrono::milliseconds(delayInMilliSec));
         }
     }
 }
 
 
-boost::tuple<std::string, std::string> karabo::net::parseGenericUrl(const std::string& url) {
+std::tuple<std::string, std::string> karabo::net::parseGenericUrl(const std::string& url) {
     boost::regex ex("([^:]+):(?://)?(.+)");
     boost::cmatch what;
     string scheme;
@@ -94,15 +94,15 @@ boost::tuple<std::string, std::string> karabo::net::parseGenericUrl(const std::s
         scheme = string(what[1].first, what[1].second);
         schemeSpecific = string(what[2].first, what[2].second);
     }
-    return boost::make_tuple(scheme, schemeSpecific);
+    return std::make_tuple(scheme, schemeSpecific);
 }
 
 
-boost::tuple<std::string, std::string, std::string, std::string, std::string> karabo::net::parseUrl(
+std::tuple<std::string, std::string, std::string, std::string, std::string> karabo::net::parseUrl(
       const std::string& url) {
-    const boost::tuple<std::string, std::string> parsed_url = karabo::net::parseGenericUrl(url);
-    const string& scheme = parsed_url.get<0>();
-    const string& schemeDependent = parsed_url.get<1>();
+    const std::tuple<std::string, std::string> parsed_url = karabo::net::parseGenericUrl(url);
+    const string& scheme = std::get<0>(parsed_url);
+    const string& schemeDependent = std::get<1>(parsed_url);
 
     boost::regex ex("([^/ :]+):?([^/ ]*)(/?[^ #?]*)\\x3f?([^ #]*)#?([^ ]*)");
     boost::cmatch what;
@@ -117,7 +117,7 @@ boost::tuple<std::string, std::string, std::string, std::string, std::string> ka
         path = string(what[3].first, what[3].second);
         query = string(what[4].first, what[4].second);
     }
-    return boost::make_tuple(scheme, domain, port, path, query);
+    return std::make_tuple(scheme, domain, port, path, query);
 }
 
 

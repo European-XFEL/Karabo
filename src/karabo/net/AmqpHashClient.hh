@@ -43,13 +43,13 @@ namespace karabo::net {
      * i.e. a running karabo::net::EventLoop is needed.
      *
      */
-    class AmqpHashClient : public boost::enable_shared_from_this<AmqpHashClient> {
+    class AmqpHashClient : public std::enable_shared_from_this<AmqpHashClient> {
        public:
         KARABO_CLASSINFO(AmqpHashClient, "AmqpHashClient", "2.0")
 
-        // boost::function fits better than std::function to assigning bind_weak results to these handlers in AmqpBroker
-        using HashReadHandler = boost::function<void(const util::Hash::Pointer&, const util::Hash::Pointer&)>;
-        using ErrorReadHandler = boost::function<void(const std::string&)>;
+        // std::function fits better than std::function to assigning bind_weak results to these handlers in AmqpBroker
+        using HashReadHandler = std::function<void(const util::Hash::Pointer&, const util::Hash::Pointer&)>;
+        using ErrorReadHandler = std::function<void(const std::string&)>;
 
         /**
          * Create client with message interface based on two Hashes (header and body).

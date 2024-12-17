@@ -280,7 +280,7 @@ namespace karabo {
             std::string lowerOption(boost::to_lower_copy(option));
             if (argc > 2) {
                 std::string possibleFileName(argv[2]);
-                if (boost::filesystem::exists(possibleFileName)) {
+                if (std::filesystem::exists(possibleFileName)) {
                     argc--;
                 }
             }
@@ -380,8 +380,8 @@ namespace karabo {
                 throw KARABO_PARAMETER_EXCEPTION("Syntax error in command line. Token cannot start with dot (" + token +
                                                  ")");
             }
-            boost::filesystem::path possibleFile(token);
-            if (boost::filesystem::exists(possibleFile)) {
+            std::filesystem::path possibleFile(token);
+            if (std::filesystem::exists(possibleFile)) {
                 karabo::util::Hash fileConfig;
                 karabo::io::loadFromFile<Hash>(fileConfig, possibleFile.string());
                 fileConfig.flatten(config);

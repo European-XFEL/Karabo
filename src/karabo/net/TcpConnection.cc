@@ -25,9 +25,9 @@
 
 #include "TcpConnection.hh"
 
-#include <boost/any.hpp>
+#include <any>
 #include <boost/asio/basic_socket_acceptor.hpp>
-#include <boost/pointer_cast.hpp>
+#include <memory>
 
 #include "EventLoop.hh"
 #include "TcpChannel.hh"
@@ -172,13 +172,12 @@ namespace karabo {
                 input.get("hostname", m_hostname);
                 input.get("port", m_port);
             } else {
-                const boost::tuple<std::string, std::string, std::string, std::string, std::string> parts =
-                      parseUrl(url);
-                if (parts.get<0>() != "tcp") {
+                const std::tuple<std::string, std::string, std::string, std::string, std::string> parts = parseUrl(url);
+                if (std::get<0>(parts) != "tcp") {
                     throw KARABO_NETWORK_EXCEPTION(("url '" + url) += "' does not start with 'tcp'");
                 }
-                m_hostname = parts.get<1>();
-                m_port = fromString<unsigned int>(parts.get<2>());
+                m_hostname = std::get<1>(parts);
+                m_port = fromString<unsigned int>(std::get<2>(parts));
             }
             input.get("type", m_connectionType);
             input.get("sizeofLength", m_sizeofLength);
@@ -221,7 +220,7 @@ namespace karabo {
             Channel::Pointer channel;
             try {
                 channel = this->createChannel();
-                TcpChannel::Pointer tcpChannel = boost::static_pointer_cast<TcpChannel>(channel);
+                TcpChannel::Pointer tcpChannel = std::static_pointer_cast<TcpChannel>(channel);
                 tcpChannel->acceptSocket(m_acceptor);
             } catch (...) {
                 KARABO_RETHROW
@@ -236,7 +235,7 @@ namespace karabo {
                 ip::tcp::resolver::query query(ip::tcp::v4(), m_hostname, karabo::util::toString(m_port));
                 ip::tcp::resolver::iterator endpoint_iterator = m_resolver.resolve(query);
                 channel = this->createChannel();
-                TcpChannel::Pointer tcpChannel = boost::static_pointer_cast<TcpChannel>(channel);
+                TcpChannel::Pointer tcpChannel = std::static_pointer_cast<TcpChannel>(channel);
                 tcpChannel->socketConnect(*endpoint_iterator);
             } catch (...) {
                 KARABO_RETHROW
@@ -285,14 +284,14 @@ namespace karabo {
         void TcpConnection::startServer(const ConnectionHandler& handler) {
             try {
                 Channel::Pointer channel = this->createChannel();
-                TcpChannel::Pointer tcpChannel = boost::static_pointer_cast<TcpChannel>(channel);
+                TcpChannel::Pointer tcpChannel = std::static_pointer_cast<TcpChannel>(channel);
                 // Caveat - cyclic shared_ptr to 'this' TcpConnection if 'channel' would have a shared_ptr to its
-                // TcpConnection: Then 'channel' is bound to the callback created by boost::bind and asyncAcceptSocket
+                // TcpConnection: Then 'channel' is bound to the callback created by std::bind and asyncAcceptSocket
                 // will call 'm_acceptor.async_accept(aSocket, callback)' and that certainly has to store the callback
                 // somewhere. So the datamember 'm_acceptor' holds a shared_ptr to this - if now the callback is never
                 // called (why?), the TcpConnection lives forever even if nothing outside keeps a pointer to it.
                 tcpChannel->asyncAcceptSocket(m_acceptor,
-                                              boost::bind(handler, boost::asio::placeholders::error, channel));
+                                              std::bind(handler, boost::asio::placeholders::error, channel));
             } catch (...) {
                 KARABO_RETHROW
             }
@@ -318,12 +317,12 @@ namespace karabo {
                     // No errors... create channel
                     Channel::Pointer channel = createChannel();
                     // ... cast it to the TcpChannel
-                    TcpChannel::Pointer tcpChannel = boost::static_pointer_cast<TcpChannel>(channel);
+                    TcpChannel::Pointer tcpChannel = std::static_pointer_cast<TcpChannel>(channel);
                     // ... get peer endpoint ...
                     const boost::asio::ip::tcp::endpoint& peerEndpoint = *it;
                     // ... and let the tcpChannel connect its socket asynchronously to the endpoint
                     tcpChannel->asyncSocketConnect(peerEndpoint,
-                                                   boost::bind(handler, boost::asio::placeholders::error, channel));
+                                                   std::bind(handler, boost::asio::placeholders::error, channel));
                 } else {
                     Channel::Pointer c;
                     handler(e, c);
@@ -354,7 +353,7 @@ namespace karabo {
 
         ChannelPointer TcpConnection::createChannel() {
             ChannelPointer channel(
-                  new TcpChannel(boost::dynamic_pointer_cast<TcpConnection>(this->getConnectionPointer())));
+                  new TcpChannel(std::dynamic_pointer_cast<TcpConnection>(this->getConnectionPointer())));
             return channel;
         }
     } // namespace net
