@@ -99,13 +99,13 @@ void exportPyUtilSchemaListElement(py::module_& m) {
                     Hash& listOfNodes = self.getNode().getValue<Hash>();
 
                     py::object nodeNameList = classobj.attr("getRegisteredClasses")();
-                    boost::any any;
+                    std::any any;
                     wrapper::castPyToAny(nodeNameList, any);
 
                     if (any.type() != typeid(std::vector<std::string>)) {
                         throw KARABO_PYTHON_EXCEPTION("getRegisteredClasses() doesn't return vector<string>!");
                     }
-                    const std::vector<std::string>& nodeNames = boost::any_cast<std::vector<std::string>>(any);
+                    const std::vector<std::string>& nodeNames = std::any_cast<std::vector<std::string>>(any);
                     for (size_t i = 0; i < nodeNames.size(); i++) {
                         const std::string& nodeName = nodeNames[i];
                         py::object schemaObj = classobj.attr("getSchema")(nodeName, Schema::AssemblyRules());

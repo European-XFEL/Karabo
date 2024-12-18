@@ -67,7 +67,7 @@ namespace karabo {
             boost::asio::ip::tcp::socket m_socket;
             HandlerType m_activeHandler;
             bool m_readHeaderFirst;
-            boost::any m_readHandler;
+            std::any m_readHandler;
             karabo::io::TextSerializer<karabo::util::Hash>::Pointer m_textSerializer;
             karabo::io::BinarySerializer<karabo::util::Hash>::Pointer m_binarySerializer;
 

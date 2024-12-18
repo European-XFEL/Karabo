@@ -51,7 +51,7 @@ void exportPyUtilSchemaOverwriteElement(py::module_& m) {
           .def(
                 "setNewAlias",
                 [](OverwriteElement& self, const py::object& alias) {
-                    boost::any any;
+                    std::any any;
                     wrapper::castPyToAny(alias, any);
                     return self.setNewAlias(any);
                 },
@@ -93,7 +93,7 @@ void exportPyUtilSchemaOverwriteElement(py::module_& m) {
 
                         return self.setNewDefaultValue(karabo::util::AlarmCondition::fromString(condition));
                     } else {
-                        boost::any any;
+                        std::any any;
                         if (className == "AccessLevel") {
                             // Special treatment for Enum: convert to int first, like int(value)
                             // TODO: should we implement Enum conversion to 'int' in `castPyToAny'?
@@ -108,7 +108,7 @@ void exportPyUtilSchemaOverwriteElement(py::module_& m) {
           .def(
                 "setNewMinInc",
                 [](OverwriteElement& self, const py::object& value) {
-                    boost::any any;
+                    std::any any;
                     wrapper::castPyToAny(value, any);
                     return self.setNewMinInc(any);
                 },
@@ -116,7 +116,7 @@ void exportPyUtilSchemaOverwriteElement(py::module_& m) {
           .def(
                 "setNewMaxInc",
                 [](OverwriteElement& self, const py::object& value) {
-                    boost::any any;
+                    std::any any;
                     wrapper::castPyToAny(value, any);
                     return self.setNewMaxInc(any);
                 },
@@ -124,7 +124,7 @@ void exportPyUtilSchemaOverwriteElement(py::module_& m) {
           .def(
                 "setNewMinExc",
                 [](OverwriteElement& self, const py::object& value) {
-                    boost::any any;
+                    std::any any;
                     wrapper::castPyToAny(value, any);
                     return self.setNewMinExc(any);
                 },
@@ -132,7 +132,7 @@ void exportPyUtilSchemaOverwriteElement(py::module_& m) {
           .def(
                 "setNewMaxExc",
                 [](OverwriteElement& self, const py::object& value) {
-                    boost::any any;
+                    std::any any;
                     wrapper::castPyToAny(value, any);
                     return self.setNewMaxExc(any);
                 },

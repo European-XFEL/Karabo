@@ -623,7 +623,7 @@ void InstanceChangeObserver::addInstChangesOfType(
             const karabo::util::Hash::Attributes& attrs = changesEntries.getAttributes(instIdKey);
             karabo::util::Hash instInfo;
             for (karabo::util::Hash::Attributes::const_iterator attr = attrs.begin(); attr != attrs.end(); ++attr) {
-                instInfo.set<boost::any>(attr->getKey(), attr->getValueAsAny());
+                instInfo.set<std::any>(attr->getKey(), attr->getValueAsAny());
             }
             instChange.instanceInfo = instInfo;
 

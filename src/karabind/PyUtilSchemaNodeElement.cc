@@ -65,12 +65,12 @@ namespace karabind {
             Hash& choiceOfNodes = self.getNode().getValue<Hash>();
 
             py::object nodeNameList = classobj.attr("getRegisteredClasses")();
-            boost::any any;
+            std::any any;
             karabind::wrapper::castPyToAny(nodeNameList, any);
 
             if (any.type() != typeid(vector<string>))
                 throw KARABO_PYTHON_EXCEPTION("getRegisteredClasses() doesn't return vector<string>!");
-            const vector<string>& nodeNames = boost::any_cast<vector<string>>(any);
+            const vector<string>& nodeNames = std::any_cast<vector<string>>(any);
             for (size_t i = 0; i < nodeNames.size(); i++) {
                 std::string nodeName = nodeNames[i];
                 py::object schemaObj = classobj.attr("getSchema")(nodeName);
@@ -108,12 +108,12 @@ namespace karabind {
             Hash& choiceOfNodes = self.getNode().getValue<Hash>();
 
             py::object nodeNameList = classobj.attr("getRegisteredClasses")();
-            boost::any any;
+            std::any any;
             karabind::wrapper::castPyToAny(nodeNameList, any);
 
             if (any.type() != typeid(vector<string>))
                 throw KARABO_PYTHON_EXCEPTION("getRegisteredClasses() doesn't return vector<string>!");
-            const vector<string>& nodeNames = boost::any_cast<vector<string>>(any);
+            const vector<string>& nodeNames = std::any_cast<vector<string>>(any);
             for (size_t i = 0; i < nodeNames.size(); i++) {
                 std::string nodeName = nodeNames[i];
                 py::object schemaObj = classobj.attr("getSchema")(nodeName);

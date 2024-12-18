@@ -27,7 +27,7 @@
 #ifndef KARABO_IO_ABSTRACTOUTPUT_HH
 #define KARABO_IO_ABSTRACTOUTPUT_HH
 
-#include <boost/any.hpp>
+#include <any>
 #include <functional>
 #include <karabo/util/Configurator.hh>
 #include <karabo/util/SimpleElement.hh>
@@ -77,7 +77,7 @@ namespace karabo {
             //                return m_handlers;
             //            }
 
-            //            void registerIOEventHandler(const boost::any& ioEventHandler) {
+            //            void registerIOEventHandler(const std::any& ioEventHandler) {
             //                if (!m_handlers)
             //                    throw KARABO_LOGIC_EXCEPTION("Handler storage not initialized: call 'setOutputHandler'
             //                    first.");

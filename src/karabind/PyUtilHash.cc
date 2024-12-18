@@ -858,7 +858,7 @@ void exportPyUtilHash(py::module_& m) {
           "setAttribute",
           [](Hash& self, const std::string& path, const std::string& attribute, const py::object& value,
              const std::string& separator) {
-              boost::any any;
+              std::any any;
               wrapper::castPyToAny(value, any);
               self.setAttribute(path, attribute, any, separator.at(0));
           },

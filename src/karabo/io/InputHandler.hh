@@ -44,13 +44,13 @@ namespace karabo {
              * Register an input handler for I/O events. The handler must be of a callable type.
              * @param eventHandler
              */
-            virtual void registerIOEventHandler(const boost::any& eventHandler) = 0;
+            virtual void registerIOEventHandler(const std::any& eventHandler) = 0;
 
             /**
              * Register an input handler for end of stream events. The handler must be of a callable type.
              * @param endOfStreamEventHandler
              */
-            virtual void registerEndOfStreamEventHandler(const boost::any& endOfStreamEventHandler) = 0;
+            virtual void registerEndOfStreamEventHandler(const std::any& endOfStreamEventHandler) = 0;
 
             /**
              * Trigger an I/O event on the registered handler

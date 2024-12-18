@@ -160,56 +160,55 @@ namespace karabind {
     };
 
     /**
-     * Specialisation of HandlerWrap for one boost::any argument
+     * Specialisation of HandlerWrap for one std::any argument
      *
      * The argument is converted to pybind11::object before passed to the Python handler.
      */
-    class HandlerWrapAny1 : public HandlerWrap<const boost::any&> {
+    class HandlerWrapAny1 : public HandlerWrap<const std::any&> {
        public:
         HandlerWrapAny1(const py::object& handler, char const* const where)
-            : HandlerWrap<const boost::any&>(handler, where) {}
+            : HandlerWrap<const std::any&>(handler, where) {}
 
-        void operator()(const boost::any& a1) const;
+        void operator()(const std::any& a1) const;
     };
 
     /**
-     * Specialisation of HandlerWrap for two boost::any arguments
+     * Specialisation of HandlerWrap for two std::any arguments
      *
      * The arguments are converted to pybind11::object before passed to the Python handler.
      */
-    class HandlerWrapAny2 : public HandlerWrap<const boost::any&, const boost::any&> {
+    class HandlerWrapAny2 : public HandlerWrap<const std::any&, const std::any&> {
        public:
         HandlerWrapAny2(const py::object& handler, char const* const where)
-            : HandlerWrap<const boost::any&, const boost::any&>(handler, where) {}
+            : HandlerWrap<const std::any&, const std::any&>(handler, where) {}
 
-        void operator()(const boost::any& a1, const boost::any& a2) const;
+        void operator()(const std::any& a1, const std::any& a2) const;
     };
 
     /**
-     * Specialisation of HandlerWrap for three boost::any arguments
+     * Specialisation of HandlerWrap for three std::any arguments
      *
      * The arguments are converted to pybind11::object before passed to the Python handler.
      */
-    class HandlerWrapAny3 : public HandlerWrap<const boost::any&, const boost::any&, const boost::any&> {
+    class HandlerWrapAny3 : public HandlerWrap<const std::any&, const std::any&, const std::any&> {
        public:
         HandlerWrapAny3(const py::object& handler, char const* const where)
-            : HandlerWrap<const boost::any&, const boost::any&, const boost::any&>(handler, where) {}
+            : HandlerWrap<const std::any&, const std::any&, const std::any&>(handler, where) {}
 
-        void operator()(const boost::any& a1, const boost::any& a2, const boost::any& a3) const;
+        void operator()(const std::any& a1, const std::any& a2, const std::any& a3) const;
     };
 
     /**
-     * Specialisation of HandlerWrap for four boost::any arguments
+     * Specialisation of HandlerWrap for four std::any arguments
      *
      * The arguments are converted to pybind11::object before passed to the Python handler.
      */
-    class HandlerWrapAny4
-        : public HandlerWrap<const boost::any&, const boost::any&, const boost::any&, const boost::any&> {
+    class HandlerWrapAny4 : public HandlerWrap<const std::any&, const std::any&, const std::any&, const std::any&> {
        public:
         HandlerWrapAny4(const py::object& handler, char const* const where)
-            : HandlerWrap<const boost::any&, const boost::any&, const boost::any&, const boost::any&>(handler, where) {}
+            : HandlerWrap<const std::any&, const std::any&, const std::any&, const std::any&>(handler, where) {}
 
-        void operator()(const boost::any& a1, const boost::any& a2, const boost::any& a3, const boost::any& a4) const;
+        void operator()(const std::any& a1, const std::any& a2, const std::any& a3, const std::any& a4) const;
     };
 
     /**

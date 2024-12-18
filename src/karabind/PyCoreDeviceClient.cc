@@ -144,11 +144,11 @@ namespace karabind {
          * @param deviceId The devideId
          * @param command The command
          * @param timeoutInSeconds Timeout
-         * @returns a vector with the values that compose the reply as instances of boost::any.
+         * @returns a vector with the values that compose the reply as instances of std::any.
          */
         template <typename... Args>
-        std::vector<boost::any> executeVectOfAnyReplyPy(const std::string& deviceId, const std::string& command,
-                                                        int timeoutInSeconds = 3, const Args&... slotArgs) {
+        std::vector<std::any> executeVectOfAnyReplyPy(const std::string& deviceId, const std::string& command,
+                                                      int timeoutInSeconds = 3, const Args&... slotArgs) {
             // For supporting legacy code that uses -1 as the default timeout value.
             if (timeoutInSeconds == -1) timeoutInSeconds = 3;
             KARABO_GET_SHARED_FROM_WEAK(sp, m_signalSlotable);
@@ -469,7 +469,7 @@ void exportPyCoreDeviceClient(py::module_& m) {
                 "get",
                 [](const DeviceClientWrap::Pointer& self, const std::string& instanceId, const std::string& key,
                    const std::string& keysep) {
-                    boost::any value;
+                    std::any value;
                     try {
                         py::gil_scoped_release release;
                         if (key.empty()) {
@@ -657,10 +657,10 @@ void exportPyCoreDeviceClient(py::module_& m) {
                         self->registerDeviceMonitor(
                               instanceId, HandlerWrap<const std::string&, const Hash&>(handler, "device monitor"));
                     } else {
-                        self->registerDeviceMonitor(instanceId,
-                                                    HandlerWrap<const std::string&, const Hash&, const boost::any&>(
-                                                          handler, "device monitor"),
-                                                    userData);
+                        self->registerDeviceMonitor(
+                              instanceId,
+                              HandlerWrap<const std::string&, const Hash&, const std::any&>(handler, "device monitor"),
+                              userData);
                     }
                 },
                 py::arg("instanceId"), py::arg("callbackFunction"), py::arg("userData") = py::none())
@@ -753,7 +753,7 @@ void exportPyCoreDeviceClient(py::module_& m) {
                 "setAttribute",
                 [](const DeviceClientWrap::Pointer& self, const std::string& instanceId, const std::string& key,
                    const std::string& attributeKey, const py::object& attributeValue, int timeoutInSeconds) {
-                    boost::any attrValueAsAny;
+                    std::any attrValueAsAny;
                     wrapper::castPyToAny(attributeValue, attrValueAsAny);
                     py::gil_scoped_release release;
                     self->setAttribute(instanceId, key, attributeKey, attrValueAsAny, timeoutInSeconds);
@@ -779,7 +779,7 @@ void exportPyCoreDeviceClient(py::module_& m) {
                 "executeN",
                 [](const DeviceClientWrap::Pointer& self, std::string& instanceId, const std::string& functionName,
                    py::args args, int timeoutInSeconds = 3) -> py::tuple {
-                    std::vector<boost::any> replyValues;
+                    std::vector<std::any> replyValues;
                     switch (args.size()) {
                         case 0: {
                             py::gil_scoped_release release;
@@ -787,40 +787,40 @@ void exportPyCoreDeviceClient(py::module_& m) {
                             break;
                         }
                         case 1: {
-                            boost::any a1;
+                            std::any a1;
                             wrapper::castPyToAny(args[0], a1);
                             py::gil_scoped_release release;
-                            replyValues = self->executeVectOfAnyReplyPy<boost::any>(instanceId, functionName,
-                                                                                    timeoutInSeconds, a1);
+                            replyValues = self->executeVectOfAnyReplyPy<std::any>(instanceId, functionName,
+                                                                                  timeoutInSeconds, a1);
                             break;
                         }
                         case 2: {
-                            boost::any a1, a2;
+                            std::any a1, a2;
                             wrapper::castPyToAny(args[0], a1);
                             wrapper::castPyToAny(args[1], a2);
                             py::gil_scoped_release release;
-                            replyValues = self->executeVectOfAnyReplyPy<boost::any, boost::any>(
-                                  instanceId, functionName, timeoutInSeconds, a1, a2);
+                            replyValues = self->executeVectOfAnyReplyPy<std::any, std::any>(instanceId, functionName,
+                                                                                            timeoutInSeconds, a1, a2);
                             break;
                         }
                         case 3: {
-                            boost::any a1, a2, a3;
+                            std::any a1, a2, a3;
                             wrapper::castPyToAny(args[0], a1);
                             wrapper::castPyToAny(args[1], a2);
                             wrapper::castPyToAny(args[2], a3);
                             py::gil_scoped_release release;
-                            replyValues = self->executeVectOfAnyReplyPy<boost::any, boost::any, boost::any>(
+                            replyValues = self->executeVectOfAnyReplyPy<std::any, std::any, std::any>(
                                   instanceId, functionName, timeoutInSeconds, a1, a2, a3);
                             break;
                         }
                         case 4: {
-                            boost::any a1, a2, a3, a4;
+                            std::any a1, a2, a3, a4;
                             wrapper::castPyToAny(args[0], a1);
                             wrapper::castPyToAny(args[1], a2);
                             wrapper::castPyToAny(args[2], a3);
                             wrapper::castPyToAny(args[3], a4);
                             py::gil_scoped_release release;
-                            replyValues = self->executeVectOfAnyReplyPy<boost::any, boost::any, boost::any, boost::any>(
+                            replyValues = self->executeVectOfAnyReplyPy<std::any, std::any, std::any, std::any>(
                                   instanceId, functionName, timeoutInSeconds, a1, a2, a3, a4);
                             break;
                         }

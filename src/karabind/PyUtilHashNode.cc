@@ -56,7 +56,7 @@ void exportPyUtilHashNode(py::module_& m) {
     n.def(
           "setValue",
           [](Hash::Node& self, const py::object& o) {
-              boost::any any;
+              std::any any;
               wrapper::castPyToAny(o, any);
               self.setValue(std::move(any));
           },
@@ -66,10 +66,10 @@ void exportPyUtilHashNode(py::module_& m) {
           "getValue",
           [](Hash::Node& self) {
               using namespace karabo::util;
-              boost::any& a = self.getValueAsAny();
+              std::any& a = self.getValueAsAny();
               // handle Hash differently returning reference to Hash
-              if (boost::any_cast<Hash>(&a)) {
-                  Hash* hp = &boost::any_cast<Hash&>(a);
+              if (std::any_cast<Hash>(&a)) {
+                  Hash* hp = &std::any_cast<Hash&>(a);
                   return py::cast(hp);
               }
               return wrapper::castAnyToPy(a);
@@ -87,7 +87,7 @@ void exportPyUtilHashNode(py::module_& m) {
     n.def(
           "setAttribute",
           [](Hash::Node& self, const std::string& key, const py::object& o) {
-              boost::any value;
+              std::any value;
               wrapper::castPyToAny(o, value);
               self.setAttribute(key, std::move(value));
           },
