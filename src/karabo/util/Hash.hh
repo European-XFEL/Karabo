@@ -346,9 +346,9 @@ namespace karabo {
              * hash.set("myFloat", float(12.44));
              * @endcode
              *
-             * Optimization: to avoid double-copy, ie *value* into <i>boost::any</i> object, and the later
-             * into the map, we first insert an empty object of type <b>boost::any</b> into the map, get a reference to
-             * the <i>boost::any</i> object associated with <b>key</b>, then copy the given value into it.
+             * Optimization: to avoid double-copy, ie *value* into <i>std::any</i> object, and the later
+             * into the map, we first insert an empty object of type <b>std::any</b> into the map, get a reference to
+             * the <i>std::any</i> object associated with <b>key</b>, then copy the given value into it.
              */
             template <typename ValueType>
             inline Node& set(const std::string& path, const ValueType& value, const char separator = k_defaultSep);
@@ -372,7 +372,7 @@ namespace karabo {
 
             /**
              * Bind a (newly created) object in the map into and external variable
-             * Optimization: This is useful in order to avoid the later copy of the value into <b>boost::any</b>, in the
+             * Optimization: This is useful in order to avoid the later copy of the value into <b>std::any</b>, in the
              * hash::set(key, value). This function provides a reference to the object in the map where you can build
              * your data directly.
              * @param key A string hash key
@@ -390,7 +390,7 @@ namespace karabo {
 
             /**
              * Bind a (newly created) object in the map into and external variable
-             * Optimization: This is useful in order to avoid the later copy of the value into <b>boost::any</b>, in the
+             * Optimization: This is useful in order to avoid the later copy of the value into <b>std::any</b>, in the
              * hash::set(key, value). This function provides a pointer to the object in the map where you can build your
              * data directly.
              * @param key A string hash key
@@ -573,17 +573,17 @@ namespace karabo {
                                    const char separator = k_defaultSep) const;
 
             /**
-             * Return the value of the attribute called "attribute" of the element identified as boost::any.
+             * Return the value of the attribute called "attribute" of the element identified as std::any.
              * @param path
              * @param attribute
              * @param separator
-             * @return boost::any
+             * @return std::any
              */
-            boost::any& getAttributeAsAny(const std::string& path, const std::string& attribute,
-                                          const char separator = k_defaultSep);
+            std::any& getAttributeAsAny(const std::string& path, const std::string& attribute,
+                                        const char separator = k_defaultSep);
 
-            const boost::any& getAttributeAsAny(const std::string& path, const std::string& attribute,
-                                                const char separator = k_defaultSep) const;
+            const std::any& getAttributeAsAny(const std::string& path, const std::string& attribute,
+                                              const char separator = k_defaultSep) const;
 
             /**
              * Return the list of attributes of the element identified by "path"
@@ -788,7 +788,7 @@ namespace karabo {
         }
 
         template <>
-        inline const boost::any& Hash::get(const std::string& path, const char separator) const {
+        inline const std::any& Hash::get(const std::string& path, const char separator) const {
             return getNode(path, separator).getValueAsAny();
         }
 
@@ -815,7 +815,7 @@ namespace karabo {
         }
 
         template <>
-        inline boost::any& Hash::get(const std::string& path, const char separator) {
+        inline std::any& Hash::get(const std::string& path, const char separator) {
             return getNode(path, separator).getValueAsAny();
         }
 

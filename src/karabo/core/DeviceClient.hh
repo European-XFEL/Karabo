@@ -705,24 +705,24 @@ namespace karabo {
             }
 
             /**
-             * Return a property from a remote instance as a boost::any value. The instance configuration
+             * Return a property from a remote instance as a std::any value. The instance configuration
              * is internally cached, so it does not necessarily result in a query to the distributed system if
              * the device configuration has not changed since the last query.
              *
              * @param instanceId to retrieve the property from
              * @param key identifying the property
              * @param keySep path separator
-             * @return the current property value on the remote device as boost::any type
+             * @return the current property value on the remote device as std::any type
              */
-            boost::any getAsAny(const std::string& instanceId, const std::string& key,
-                                const char keySep = util::Hash::k_defaultSep) {
+            std::any getAsAny(const std::string& instanceId, const std::string& key,
+                              const char keySep = util::Hash::k_defaultSep) {
                 try {
                     return cacheAndGetConfiguration(instanceId).getNode(key, keySep).getValueAsAny();
                 } catch (const karabo::util::Exception& e) {
                     KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Could not fetch parameter \"" + key +
                                                                  "\" from device \"" + instanceId + "\""));
                 }
-                return boost::any();
+                return std::any();
             }
 
 
@@ -968,8 +968,8 @@ namespace karabo {
              * @param instanceId of the device to be monitored
              * @param key path to the property to be monitored
              * @param callbackFunction handling the update notification. It receives the device id, path, value and
-             * timestamp of the updated property as well as boost::any userData.
-             * @param userData to be passed to the callback as boost::any
+             * timestamp of the updated property as well as std::any userData.
+             * @param userData to be passed to the callback as std::any
              * @return true if the operation was successful
              */
             template <class ValueType, class UserDataType>
@@ -977,7 +977,7 @@ namespace karabo {
                   const std::string& instanceId, const std::string& key,
                   const std::function<void(const std::string& /*deviceId*/, const std::string& /*key*/,
                                            const ValueType& /*value*/, const karabo::util::Timestamp& /*timestamp*/,
-                                           const boost::any& /*userData*/)>& callbackFunction,
+                                           const std::any& /*userData*/)>& callbackFunction,
                   const UserDataType& userData) {
                 karabo::util::Schema schema = this->getDeviceSchema(instanceId);
                 if (schema.has(key)) {
@@ -1048,13 +1048,13 @@ namespace karabo {
              *
              * @param instanceId of the device to register to
              * @param callbackFunction handling the update. It will receive the device instance id and the updated
-             * device configuration Hash as well as boost::any userData.
-             * @param userData to be passed to the callback as boost::any
+             * device configuration Hash as well as std::any userData.
+             * @param userData to be passed to the callback as std::any
              */
             template <class UserDataType>
             void registerDeviceMonitor(const std::string& instanceId,
                                        const std::function<void(const std::string&, const karabo::util::Hash&,
-                                                                const boost::any&)>& callbackFunction,
+                                                                const std::any&)>& callbackFunction,
                                        const UserDataType& userData) {
                 // It would be better to use stayConnected with async handlers as in the non-templated version of
                 // registerDeviceMonitor - but since this version is probably not used at all (at least not in the

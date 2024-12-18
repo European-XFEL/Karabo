@@ -26,7 +26,7 @@
 #ifndef KARABO_UTIL_NODE_HH
 #define KARABO_UTIL_NODE_HH
 
-#include <boost/any.hpp>
+#include <any>
 #include <boost/numeric/conversion/cast.hpp>
 #include <complex>
 #include <string>
@@ -71,7 +71,7 @@ namespace karabo {
             // Members
             KeyType m_key;
             AttributesType m_attributes;
-            boost::any m_value;
+            std::any m_value;
 
             /**
              * Helper struct adding a classId attribute for classes inheriting (but not being) Hash.
@@ -152,18 +152,18 @@ namespace karabo {
             Element();
 
             /**
-             * Construct a Hash element from a boost::any value
+             * Construct a Hash element from a std::any value
              * @param key identifies the element
              * @param value of the element
              */
-            Element(const KeyType& key, const boost::any& value);
+            Element(const KeyType& key, const std::any& value);
 
             /**
-             * Construct a Hash element from a boost::any value
+             * Construct a Hash element from a std::any value
              * @param key identifies the element
              * @param value of the element
              */
-            Element(const KeyType& key, boost::any&& value);
+            Element(const KeyType& key, std::any&& value);
 
             /**
              * Construct a Hash element from an arbitrary value type
@@ -248,16 +248,16 @@ namespace karabo {
             void setValue(wchar_t* value);
 
             /**
-             * Set a boost::any value to the Element
+             * Set a std::any value to the Element
              * @param value
              */
-            void setValue(const boost::any& value);
+            void setValue(const std::any& value);
 
             /**
-             * Set a boost::any value to the Element
+             * Set a std::any value to the Element
              * @param value
              */
-            void setValue(boost::any&& value);
+            void setValue(std::any&& value);
 
             /**
              * Set the value of another element to this Element, key and attributes are unchanged.
@@ -307,16 +307,16 @@ namespace karabo {
             inline ValueType& getValue();
 
             /**
-             * Return the value as boost::any. Does not throw
+             * Return the value as std::any. Does not throw
              * @return
              */
-            boost::any& getValueAsAny();
+            std::any& getValueAsAny();
 
             /**
-             * Return the value as boost::any. Does not throw
+             * Return the value as std::any. Does not throw
              * @return
              */
-            const boost::any& getValueAsAny() const;
+            const std::any& getValueAsAny() const;
 
             /**
              * Return the value cast to ValueType. Casting is performed via
@@ -405,18 +405,18 @@ namespace karabo {
             inline void getAttribute(const std::string& key, const T& value) const;
 
             /**
-             * Return the value as boost::any. Does not throw
+             * Return the value as std::any. Does not throw
              * @param key identifying the attribute
              * @return
              */
-            inline const boost::any& getAttributeAsAny(const std::string& key) const;
+            inline const std::any& getAttributeAsAny(const std::string& key) const;
 
             /**
-             * Return the value as boost::any. Does not throw
+             * Return the value as std::any. Does not throw
              * @param key identifying the attribute
              * @return
              */
-            inline boost::any& getAttributeAsAny(const std::string& key);
+            inline std::any& getAttributeAsAny(const std::string& key);
 
             /**
              * Return the attribute cast to ValueType. Casting is performed via
@@ -557,11 +557,11 @@ namespace karabo {
         Element<KeyType, AttributeType>::Element() {}
 
         template <class KeyType, typename AttributeType>
-        Element<KeyType, AttributeType>::Element(const KeyType& key, const boost::any& value)
+        Element<KeyType, AttributeType>::Element(const KeyType& key, const std::any& value)
             : m_key(key), m_value(value) {}
 
         template <class KeyType, typename AttributeType>
-        Element<KeyType, AttributeType>::Element(const KeyType& key, boost::any&& value)
+        Element<KeyType, AttributeType>::Element(const KeyType& key, std::any&& value)
             : m_key(key), m_value(std::move(value)) {}
 
         template <class KeyType, typename AttributeType>
@@ -688,12 +688,12 @@ namespace karabo {
         }
 
         template <class KeyType, class AttributeType>
-        inline void Element<KeyType, AttributeType>::setValue(const boost::any& value) {
+        inline void Element<KeyType, AttributeType>::setValue(const std::any& value) {
             m_value = value;
         }
 
         template <class KeyType, class AttributeType>
-        inline void Element<KeyType, AttributeType>::setValue(boost::any&& value) {
+        inline void Element<KeyType, AttributeType>::setValue(std::any&& value) {
             m_value = std::move(value);
         }
 
@@ -720,8 +720,8 @@ namespace karabo {
         template <class KeyType, typename AttributeType>
         template <class DestValueType, class SourceValueType, class... SourceValueTypes>
         inline DestValueType Element<KeyType, AttributeType>::getValue() const {
-            // First try to cast from boost::any to the destination type
-            const SourceValueType* ptr = boost::any_cast<SourceValueType>(&m_value);
+            // First try to cast from std::any to the destination type
+            const SourceValueType* ptr = std::any_cast<SourceValueType>(&m_value);
 
             if (ptr) {
                 if (std::is_arithmetic<DestValueType>::value && std::is_arithmetic<SourceValueType>::value) {
@@ -753,7 +753,7 @@ namespace karabo {
         template <class KeyType, typename AttributeType>
         template <class ValueType>
         inline const ValueType& Element<KeyType, AttributeType>::getValue(std::true_type /*is_hash_the_base*/) const {
-            const Hash* ptr = boost::any_cast<Hash>(&m_value);
+            const Hash* ptr = std::any_cast<Hash>(&m_value);
             if (ptr) return reinterpret_cast<const ValueType&>(*ptr);
             throw KARABO_CAST_EXCEPTION(
                   karabo::util::createTypeMismatchMessage(m_key, m_value.type(), typeid(ValueType)));
@@ -762,7 +762,7 @@ namespace karabo {
         template <class KeyType, typename AttributeType>
         template <class ValueType>
         inline const ValueType& Element<KeyType, AttributeType>::getValue(std::false_type /*is_hash_the_base*/) const {
-            const ValueType* ptr = boost::any_cast<ValueType>(&m_value);
+            const ValueType* ptr = std::any_cast<ValueType>(&m_value);
             if (ptr) return *ptr;
             throw KARABO_CAST_EXCEPTION(
                   karabo::util::createTypeMismatchMessage(m_key, m_value.type(), typeid(ValueType)));
@@ -853,12 +853,12 @@ namespace karabo {
 
 
         template <class KeyType, typename AttributeType>
-        boost::any& Element<KeyType, AttributeType>::getValueAsAny() {
+        std::any& Element<KeyType, AttributeType>::getValueAsAny() {
             return m_value;
         }
 
         template <class KeyType, typename AttributeType>
-        const boost::any& Element<KeyType, AttributeType>::getValueAsAny() const {
+        const std::any& Element<KeyType, AttributeType>::getValueAsAny() const {
             return m_value;
         }
 
@@ -919,12 +919,12 @@ namespace karabo {
         }
 
         template <typename KeyType, typename AttributeType>
-        inline const boost::any& Element<KeyType, AttributeType>::getAttributeAsAny(const std::string& key) const {
+        inline const std::any& Element<KeyType, AttributeType>::getAttributeAsAny(const std::string& key) const {
             return m_attributes.getAny(key);
         }
 
         template <typename KeyType, typename AttributeType>
-        inline boost::any& Element<KeyType, AttributeType>::getAttributeAsAny(const std::string& key) {
+        inline std::any& Element<KeyType, AttributeType>::getAttributeAsAny(const std::string& key) {
             return m_attributes.getAny(key);
         }
 
@@ -957,7 +957,7 @@ namespace karabo {
 
         template <typename KeyType, typename AttributeType>
         struct SetType {
-            inline SetType(Element<KeyType, AttributeType>& element, boost::any& value)
+            inline SetType(Element<KeyType, AttributeType>& element, std::any& value)
                 : m_element(element), m_value(value) {}
 
             template <class T>
@@ -971,7 +971,7 @@ namespace karabo {
             }
 
             Element<KeyType, AttributeType>& m_element;
-            boost::any& m_value;
+            std::any& m_value;
         };
 
         template <typename KeyType, typename AttributeType>

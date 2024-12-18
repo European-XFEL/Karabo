@@ -133,7 +133,7 @@ namespace karabind {
                 self.set(key, karabind::hashwrap::setPyDictAsHash(h, d, separator.at(0)), separator.at(0));
                 return;
             }
-            boost::any any;
+            std::any any;
             karabind::wrapper::castPyToAny(o, any);
             self.set(key, std::move(any), separator.at(0));
         }
@@ -293,97 +293,97 @@ namespace karabind {
         }
 
 
-        py::object castAnyToPy(const boost::any& operand) {
+        py::object castAnyToPy(const std::any& operand) {
             try {
                 if (operand.type() == typeid(bool)) {
-                    return py::cast(boost::any_cast<bool>(operand));
+                    return py::cast(std::any_cast<bool>(operand));
                 } else if (operand.type() == typeid(char)) {
-                    return py::cast(boost::any_cast<char>(operand));
+                    return py::cast(std::any_cast<char>(operand));
                 } else if (operand.type() == typeid(signed char)) {
-                    return py::cast(boost::any_cast<signed char>(operand));
+                    return py::cast(std::any_cast<signed char>(operand));
                 } else if (operand.type() == typeid(unsigned char)) {
-                    return py::cast(boost::any_cast<unsigned char>(operand));
+                    return py::cast(std::any_cast<unsigned char>(operand));
                 } else if (operand.type() == typeid(short)) {
-                    return py::cast(boost::any_cast<short>(operand));
+                    return py::cast(std::any_cast<short>(operand));
                 } else if (operand.type() == typeid(unsigned short)) {
-                    return py::cast(boost::any_cast<unsigned short>(operand));
+                    return py::cast(std::any_cast<unsigned short>(operand));
                 } else if (operand.type() == typeid(int)) {
-                    return py::cast(boost::any_cast<int>(operand));
+                    return py::cast(std::any_cast<int>(operand));
                 } else if (operand.type() == typeid(unsigned int)) {
-                    return py::cast(boost::any_cast<unsigned int>(operand));
+                    return py::cast(std::any_cast<unsigned int>(operand));
                 } else if (operand.type() == typeid(long long)) {
-                    return py::cast(boost::any_cast<long long>(operand));
+                    return py::cast(std::any_cast<long long>(operand));
                 } else if (operand.type() == typeid(unsigned long long)) {
-                    return py::cast(boost::any_cast<unsigned long long>(operand));
+                    return py::cast(std::any_cast<unsigned long long>(operand));
                 } else if (operand.type() == typeid(float)) {
-                    return py::cast(boost::any_cast<float>(operand));
+                    return py::cast(std::any_cast<float>(operand));
                 } else if (operand.type() == typeid(double)) {
-                    return py::cast(boost::any_cast<double>(operand));
+                    return py::cast(std::any_cast<double>(operand));
                 } else if (operand.type() == typeid(std::complex<float>)) {
-                    return py::cast(boost::any_cast<std::complex<float>>(operand));
+                    return py::cast(std::any_cast<std::complex<float>>(operand));
                 } else if (operand.type() == typeid(std::complex<double>)) {
-                    return py::cast(boost::any_cast<std::complex<double>>(operand));
+                    return py::cast(std::any_cast<std::complex<double>>(operand));
                 } else if (operand.type() == typeid(std::string)) {
-                    return py::cast(boost::any_cast<std::string>(operand));
+                    return py::cast(std::any_cast<std::string>(operand));
                 } else if (operand.type() == typeid(std::filesystem::path)) {
-                    return py::cast(boost::any_cast<std::filesystem::path>(operand).string());
+                    return py::cast(std::any_cast<std::filesystem::path>(operand).string());
                 } else if (operand.type() == typeid(karabo::util::CppNone)) {
                     return py::none();
                 } else if (operand.type() == typeid(karabo::util::NDArray)) {
-                    return castNDArrayToPy(boost::any_cast<karabo::util::NDArray>(operand));
+                    return castNDArrayToPy(std::any_cast<karabo::util::NDArray>(operand));
                 } else if (operand.type() == typeid(karabo::util::Hash)) {
-                    return py::cast(boost::any_cast<karabo::util::Hash>(operand));
+                    return py::cast(std::any_cast<karabo::util::Hash>(operand));
                 } else if (operand.type() == typeid(karabo::util::Hash::Pointer)) {
-                    return py::cast(boost::any_cast<karabo::util::Hash::Pointer>(operand));
+                    return py::cast(std::any_cast<karabo::util::Hash::Pointer>(operand));
                 } else if (operand.type() == typeid(std::vector<bool>)) {
-                    return py::cast(boost::any_cast<std::vector<bool>>(operand));
+                    return py::cast(std::any_cast<std::vector<bool>>(operand));
                 } else if (operand.type() == typeid(std::vector<char>)) {
-                    const std::vector<char>& v = boost::any_cast<std::vector<char>>(operand);
+                    const std::vector<char>& v = std::any_cast<std::vector<char>>(operand);
                     return py::bytes(v.data(), v.size());
                 } else if (operand.type() == typeid(std::vector<signed char>)) {
-                    return py::cast(boost::any_cast<std::vector<signed char>>(operand));
+                    return py::cast(std::any_cast<std::vector<signed char>>(operand));
                 } else if (operand.type() == typeid(std::vector<unsigned char>)) {
-                    return py::cast(boost::any_cast<std::vector<unsigned char>>(operand));
+                    return py::cast(std::any_cast<std::vector<unsigned char>>(operand));
                 } else if (operand.type() == typeid(std::vector<short>)) {
-                    return py::cast(boost::any_cast<std::vector<short>>(operand));
+                    return py::cast(std::any_cast<std::vector<short>>(operand));
                 } else if (operand.type() == typeid(std::vector<unsigned short>)) {
-                    return py::cast(boost::any_cast<std::vector<unsigned short>>(operand));
+                    return py::cast(std::any_cast<std::vector<unsigned short>>(operand));
                 } else if (operand.type() == typeid(std::vector<int>)) {
-                    return py::cast(boost::any_cast<std::vector<int>>(operand));
+                    return py::cast(std::any_cast<std::vector<int>>(operand));
                 } else if (operand.type() == typeid(std::vector<unsigned int>)) {
-                    return py::cast(boost::any_cast<std::vector<unsigned int>>(operand));
+                    return py::cast(std::any_cast<std::vector<unsigned int>>(operand));
                 } else if (operand.type() == typeid(std::vector<long long>)) {
-                    return py::cast(boost::any_cast<std::vector<long long>>(operand));
+                    return py::cast(std::any_cast<std::vector<long long>>(operand));
                 } else if (operand.type() == typeid(std::vector<unsigned long long>)) {
-                    return py::cast(boost::any_cast<std::vector<unsigned long long>>(operand));
+                    return py::cast(std::any_cast<std::vector<unsigned long long>>(operand));
                 } else if (operand.type() == typeid(std::vector<float>)) {
-                    return py::cast(boost::any_cast<std::vector<float>>(operand));
+                    return py::cast(std::any_cast<std::vector<float>>(operand));
                 } else if (operand.type() == typeid(std::vector<double>)) {
-                    return py::cast(boost::any_cast<std::vector<double>>(operand));
+                    return py::cast(std::any_cast<std::vector<double>>(operand));
                 } else if (operand.type() == typeid(std::vector<std::complex<float>>)) {
-                    return py::cast(boost::any_cast<std::vector<std::complex<float>>>(operand));
+                    return py::cast(std::any_cast<std::vector<std::complex<float>>>(operand));
                 } else if (operand.type() == typeid(std::vector<std::complex<double>>)) {
-                    return py::cast(boost::any_cast<std::vector<std::complex<double>>>(operand));
+                    return py::cast(std::any_cast<std::vector<std::complex<double>>>(operand));
                 } else if (operand.type() == typeid(std::vector<std::string>)) {
-                    return py::cast(boost::any_cast<std::vector<std::string>>(operand));
+                    return py::cast(std::any_cast<std::vector<std::string>>(operand));
                 } else if (operand.type() == typeid(std::vector<karabo::util::CppNone>)) {
-                    const auto& v = boost::any_cast<std::vector<karabo::util::CppNone>>(operand);
+                    const auto& v = std::any_cast<std::vector<karabo::util::CppNone>>(operand);
                     std::vector<py::object> vo(v.size(), py::none());
                     return py::cast(vo);
                 } else if (operand.type() == typeid(karabo::util::Schema)) {
-                    return py::cast(boost::any_cast<karabo::util::Schema>(operand));
+                    return py::cast(std::any_cast<karabo::util::Schema>(operand));
                 } else if (operand.type() == typeid(std::vector<karabo::util::Hash>)) {
-                    return py::cast(boost::any_cast<std::vector<karabo::util::Hash>>(operand));
+                    return py::cast(std::any_cast<std::vector<karabo::util::Hash>>(operand));
                 } else if (operand.type() == typeid(std::vector<karabo::util::Hash::Pointer>)) {
-                    return py::cast(boost::any_cast<std::vector<karabo::util::Hash::Pointer>>(operand));
+                    return py::cast(std::any_cast<std::vector<karabo::util::Hash::Pointer>>(operand));
                 } else if (operand.type() == typeid(karabo::util::ByteArray)) {
-                    const auto& ba = boost::any_cast<karabo::util::ByteArray>(operand);
+                    const auto& ba = std::any_cast<karabo::util::ByteArray>(operand);
                     return py::bytes(ba.first.get(), ba.second);
                 }
                 std::ostringstream oss;
                 oss << "Failed to convert inner Hash type: " << operand.type().name() << " to python";
                 throw KARABO_PYTHON_EXCEPTION(oss.str());
-            } catch (const boost::bad_any_cast& e) {
+            } catch (const std::bad_any_cast& e) {
                 KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION(e.what()));
             }
             return py::none(); // make compiler happy -- we never reach this statement
@@ -429,7 +429,7 @@ namespace karabind {
         }
 
 
-        karabo::util::Types::ReferenceType castPyToAny(const py::object& o, boost::any& any) {
+        karabo::util::Types::ReferenceType castPyToAny(const py::object& o, std::any& any) {
             if (o.is_none()) {
                 any = karabo::util::CppNone();
                 return karabo::util::Types::NONE;

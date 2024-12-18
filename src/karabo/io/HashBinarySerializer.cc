@@ -183,7 +183,7 @@ namespace karabo {
         }
 
 
-        void HashBinarySerializer::writeAny(const boost::any& value, const karabo::util::Types::ReferenceType type,
+        void HashBinarySerializer::writeAny(const std::any& value, const karabo::util::Types::ReferenceType type,
                                             std::vector<char>& buffer) const {
             switch (Types::category(type)) {
                 case Types::SCHEMA:
@@ -199,7 +199,7 @@ namespace karabo {
             }
         }
 
-        void HashBinarySerializer::writeAny(const boost::any& value, const karabo::util::Types::ReferenceType type,
+        void HashBinarySerializer::writeAny(const std::any& value, const karabo::util::Types::ReferenceType type,
                                             BufferSet& buffers) const {
             switch (Types::category(type)) {
                 case Types::SCHEMA:
@@ -216,93 +216,93 @@ namespace karabo {
         }
 
 
-        void HashBinarySerializer::writeSingleValue(std::vector<char>& buffer, const boost::any& value,
+        void HashBinarySerializer::writeSingleValue(std::vector<char>& buffer, const std::any& value,
                                                     const Types::ReferenceType type) const {
             switch (type) {
                 case Types::CHAR:
-                    return writeSingleValue(buffer, boost::any_cast<const char&>(value));
+                    return writeSingleValue(buffer, std::any_cast<const char&>(value));
                 case Types::INT8:
-                    return writeSingleValue(buffer, boost::any_cast<const signed char&>(value));
+                    return writeSingleValue(buffer, std::any_cast<const signed char&>(value));
                 case Types::INT16:
-                    return writeSingleValue(buffer, boost::any_cast<const short&>(value));
+                    return writeSingleValue(buffer, std::any_cast<const short&>(value));
                 case Types::INT32:
-                    return writeSingleValue(buffer, boost::any_cast<const int&>(value));
+                    return writeSingleValue(buffer, std::any_cast<const int&>(value));
                 case Types::INT64:
-                    return writeSingleValue(buffer, boost::any_cast<const long long&>(value));
+                    return writeSingleValue(buffer, std::any_cast<const long long&>(value));
                 case Types::UINT8:
-                    return writeSingleValue(buffer, boost::any_cast<const unsigned char&>(value));
+                    return writeSingleValue(buffer, std::any_cast<const unsigned char&>(value));
                 case Types::UINT16:
-                    return writeSingleValue(buffer, boost::any_cast<const unsigned short&>(value));
+                    return writeSingleValue(buffer, std::any_cast<const unsigned short&>(value));
                 case Types::UINT32:
-                    return writeSingleValue(buffer, boost::any_cast<const unsigned int&>(value));
+                    return writeSingleValue(buffer, std::any_cast<const unsigned int&>(value));
                 case Types::UINT64:
-                    return writeSingleValue(buffer, boost::any_cast<const unsigned long long&>(value));
+                    return writeSingleValue(buffer, std::any_cast<const unsigned long long&>(value));
                 case Types::FLOAT:
-                    return writeSingleValue(buffer, boost::any_cast<const float&>(value));
+                    return writeSingleValue(buffer, std::any_cast<const float&>(value));
                 case Types::DOUBLE:
-                    return writeSingleValue(buffer, boost::any_cast<const double&>(value));
+                    return writeSingleValue(buffer, std::any_cast<const double&>(value));
                 case Types::BOOL:
-                    return writeSingleValue(buffer, boost::any_cast<const bool&>(value));
+                    return writeSingleValue(buffer, std::any_cast<const bool&>(value));
                 case Types::COMPLEX_FLOAT:
-                    return writeSingleValue(buffer, boost::any_cast<const std::complex<float>&>(value));
+                    return writeSingleValue(buffer, std::any_cast<const std::complex<float>&>(value));
                 case Types::COMPLEX_DOUBLE:
-                    return writeSingleValue(buffer, boost::any_cast<const std::complex<double>&>(value));
+                    return writeSingleValue(buffer, std::any_cast<const std::complex<double>&>(value));
                 case Types::STRING:
-                    return writeSingleValue(buffer, boost::any_cast<const std::string&>(value)); //
+                    return writeSingleValue(buffer, std::any_cast<const std::string&>(value)); //
                 case Types::SCHEMA:
-                    return writeSingleValue(buffer, boost::any_cast<const Schema&>(value));
+                    return writeSingleValue(buffer, std::any_cast<const Schema&>(value));
                 case Types::HASH:
-                    return writeSingleValue(buffer, boost::any_cast<const Hash&>(value));
+                    return writeSingleValue(buffer, std::any_cast<const Hash&>(value));
                 case Types::NONE:
-                    return writeSingleValue(buffer, boost::any_cast<const CppNone&>(value));
+                    return writeSingleValue(buffer, std::any_cast<const CppNone&>(value));
                 case Types::BYTE_ARRAY:
-                    return writeSingleValue(buffer, boost::any_cast<const ByteArray&>(value));
+                    return writeSingleValue(buffer, std::any_cast<const ByteArray&>(value));
                 default:
                     throw KARABO_IO_EXCEPTION("Encountered unknown data type while writing to binary archive");
             }
         }
 
-        void HashBinarySerializer::writeSingleValue(BufferSet& buffers, const boost::any& value,
+        void HashBinarySerializer::writeSingleValue(BufferSet& buffers, const std::any& value,
                                                     const Types::ReferenceType type) const {
             switch (type) {
                 case Types::CHAR:
-                    return writeSingleValue(buffers.back(), boost::any_cast<const char&>(value));
+                    return writeSingleValue(buffers.back(), std::any_cast<const char&>(value));
                 case Types::INT8:
-                    return writeSingleValue(buffers.back(), boost::any_cast<const signed char&>(value));
+                    return writeSingleValue(buffers.back(), std::any_cast<const signed char&>(value));
                 case Types::INT16:
-                    return writeSingleValue(buffers.back(), boost::any_cast<const short&>(value));
+                    return writeSingleValue(buffers.back(), std::any_cast<const short&>(value));
                 case Types::INT32:
-                    return writeSingleValue(buffers.back(), boost::any_cast<const int&>(value));
+                    return writeSingleValue(buffers.back(), std::any_cast<const int&>(value));
                 case Types::INT64:
-                    return writeSingleValue(buffers.back(), boost::any_cast<const long long&>(value));
+                    return writeSingleValue(buffers.back(), std::any_cast<const long long&>(value));
                 case Types::UINT8:
-                    return writeSingleValue(buffers.back(), boost::any_cast<const unsigned char&>(value));
+                    return writeSingleValue(buffers.back(), std::any_cast<const unsigned char&>(value));
                 case Types::UINT16:
-                    return writeSingleValue(buffers.back(), boost::any_cast<const unsigned short&>(value));
+                    return writeSingleValue(buffers.back(), std::any_cast<const unsigned short&>(value));
                 case Types::UINT32:
-                    return writeSingleValue(buffers.back(), boost::any_cast<const unsigned int&>(value));
+                    return writeSingleValue(buffers.back(), std::any_cast<const unsigned int&>(value));
                 case Types::UINT64:
-                    return writeSingleValue(buffers.back(), boost::any_cast<const unsigned long long&>(value));
+                    return writeSingleValue(buffers.back(), std::any_cast<const unsigned long long&>(value));
                 case Types::FLOAT:
-                    return writeSingleValue(buffers.back(), boost::any_cast<const float&>(value));
+                    return writeSingleValue(buffers.back(), std::any_cast<const float&>(value));
                 case Types::DOUBLE:
-                    return writeSingleValue(buffers.back(), boost::any_cast<const double&>(value));
+                    return writeSingleValue(buffers.back(), std::any_cast<const double&>(value));
                 case Types::BOOL:
-                    return writeSingleValue(buffers.back(), boost::any_cast<const bool&>(value));
+                    return writeSingleValue(buffers.back(), std::any_cast<const bool&>(value));
                 case Types::COMPLEX_FLOAT:
-                    return writeSingleValue(buffers.back(), boost::any_cast<const std::complex<float>&>(value));
+                    return writeSingleValue(buffers.back(), std::any_cast<const std::complex<float>&>(value));
                 case Types::COMPLEX_DOUBLE:
-                    return writeSingleValue(buffers.back(), boost::any_cast<const std::complex<double>&>(value));
+                    return writeSingleValue(buffers.back(), std::any_cast<const std::complex<double>&>(value));
                 case Types::STRING:
-                    return writeSingleValue(buffers.back(), boost::any_cast<const std::string&>(value)); //
+                    return writeSingleValue(buffers.back(), std::any_cast<const std::string&>(value)); //
                 case Types::SCHEMA:
-                    return writeSingleValue(buffers.back(), boost::any_cast<const Schema&>(value));
+                    return writeSingleValue(buffers.back(), std::any_cast<const Schema&>(value));
                 case Types::HASH:
-                    return writeSingleValue(buffers.back(), boost::any_cast<const Hash&>(value));
+                    return writeSingleValue(buffers.back(), std::any_cast<const Hash&>(value));
                 case Types::NONE:
-                    return writeSingleValue(buffers.back(), boost::any_cast<const CppNone&>(value));
+                    return writeSingleValue(buffers.back(), std::any_cast<const CppNone&>(value));
                 case Types::BYTE_ARRAY:
-                    return writeSingleValue(buffers, boost::any_cast<const ByteArray&>(value));
+                    return writeSingleValue(buffers, std::any_cast<const ByteArray&>(value));
                 default:
                     throw KARABO_IO_EXCEPTION("Encountered unknown data type while writing to binary archive");
             }
@@ -374,43 +374,43 @@ namespace karabo {
         }
 
 
-        void HashBinarySerializer::writeSequence(std::vector<char>& buffer, const boost::any& value,
+        void HashBinarySerializer::writeSequence(std::vector<char>& buffer, const std::any& value,
                                                  const Types::ReferenceType type) const {
             switch (type) {
                 case Types::VECTOR_CHAR:
-                    return writeSequenceBulk(buffer, boost::any_cast<const vector<char>&>(value));
+                    return writeSequenceBulk(buffer, std::any_cast<const vector<char>&>(value));
                 case Types::VECTOR_INT8:
-                    return writeSequenceBulk(buffer, boost::any_cast<const vector<signed char>&>(value));
+                    return writeSequenceBulk(buffer, std::any_cast<const vector<signed char>&>(value));
                 case Types::VECTOR_INT16:
-                    return writeSequenceBulk(buffer, boost::any_cast<const vector<short>&>(value));
+                    return writeSequenceBulk(buffer, std::any_cast<const vector<short>&>(value));
                 case Types::VECTOR_INT32:
-                    return writeSequenceBulk(buffer, boost::any_cast<const vector<int>&>(value));
+                    return writeSequenceBulk(buffer, std::any_cast<const vector<int>&>(value));
                 case Types::VECTOR_INT64:
-                    return writeSequenceBulk(buffer, boost::any_cast<const vector<long long>&>(value));
+                    return writeSequenceBulk(buffer, std::any_cast<const vector<long long>&>(value));
                 case Types::VECTOR_UINT8:
-                    return writeSequenceBulk(buffer, boost::any_cast<const vector<unsigned char>&>(value));
+                    return writeSequenceBulk(buffer, std::any_cast<const vector<unsigned char>&>(value));
                 case Types::VECTOR_UINT16:
-                    return writeSequenceBulk(buffer, boost::any_cast<const vector<unsigned short>&>(value));
+                    return writeSequenceBulk(buffer, std::any_cast<const vector<unsigned short>&>(value));
                 case Types::VECTOR_UINT32:
-                    return writeSequenceBulk(buffer, boost::any_cast<const vector<unsigned int>&>(value));
+                    return writeSequenceBulk(buffer, std::any_cast<const vector<unsigned int>&>(value));
                 case Types::VECTOR_UINT64:
-                    return writeSequenceBulk(buffer, boost::any_cast<const vector<unsigned long long>&>(value));
+                    return writeSequenceBulk(buffer, std::any_cast<const vector<unsigned long long>&>(value));
                 case Types::VECTOR_FLOAT:
-                    return writeSequenceBulk(buffer, boost::any_cast<const vector<float>&>(value));
+                    return writeSequenceBulk(buffer, std::any_cast<const vector<float>&>(value));
                 case Types::VECTOR_DOUBLE:
-                    return writeSequenceBulk(buffer, boost::any_cast<const vector<double>&>(value));
+                    return writeSequenceBulk(buffer, std::any_cast<const vector<double>&>(value));
                 case Types::VECTOR_COMPLEX_FLOAT:
-                    return writeSequence(buffer, boost::any_cast<const vector<std::complex<float>>&>(value));
+                    return writeSequence(buffer, std::any_cast<const vector<std::complex<float>>&>(value));
                 case Types::VECTOR_COMPLEX_DOUBLE:
-                    return writeSequence(buffer, boost::any_cast<const vector<std::complex<double>>&>(value));
+                    return writeSequence(buffer, std::any_cast<const vector<std::complex<double>>&>(value));
                 case Types::VECTOR_STRING:
-                    return writeSequence(buffer, boost::any_cast<const vector<std::string>&>(value));
+                    return writeSequence(buffer, std::any_cast<const vector<std::string>&>(value));
                 case Types::VECTOR_BOOL:
-                    return writeSequence(buffer, boost::any_cast<const vector<bool>&>(value));
+                    return writeSequence(buffer, std::any_cast<const vector<bool>&>(value));
                 case Types::VECTOR_HASH:
-                    return writeSequence(buffer, boost::any_cast<const vector<Hash>&>(value));
+                    return writeSequence(buffer, std::any_cast<const vector<Hash>&>(value));
                 case Types::VECTOR_NONE:
-                    return writeSequence(buffer, boost::any_cast<const vector<CppNone>&>(value));
+                    return writeSequence(buffer, std::any_cast<const vector<CppNone>&>(value));
                 default:
                     throw KARABO_IO_EXCEPTION("Encountered unknown array data type whilst writing to binary archive");
             }
@@ -526,14 +526,14 @@ namespace karabo {
             for (unsigned i = 0; i < size; ++i) {
                 std::string name = readKey(is);
                 Types::ReferenceType type = readType(is);
-                boost::any value;
+                std::any value;
                 readAny(value, type, is);
                 attributes.set(name, std::move(value));
             }
         }
 
 
-        void HashBinarySerializer::readAny(boost::any& value, const Types::ReferenceType type, std::istream& is) const {
+        void HashBinarySerializer::readAny(std::any& value, const Types::ReferenceType type, std::istream& is) const {
             switch (Types::category(type)) {
                 case Types::SCHEMA:
                 case Types::SIMPLE:
@@ -543,12 +543,12 @@ namespace karabo {
                     readSequence(is, value, type);
                     return;
                 case Types::HASH:
-                    readHash(boost::any_cast<Hash&>(value), is);
+                    readHash(std::any_cast<Hash&>(value), is);
                     return;
                 case Types::VECTOR_HASH: {
                     unsigned size = readSize(is);
                     value = std::vector<Hash>();
-                    std::vector<Hash>& result = boost::any_cast<std::vector<Hash>&>(value);
+                    std::vector<Hash>& result = std::any_cast<std::vector<Hash>&>(value);
                     result.resize(size);
                     for (unsigned i = 0; i < size; ++i) {
                         readHash(result[i], is);
@@ -561,7 +561,7 @@ namespace karabo {
             }
         }
 
-        void HashBinarySerializer::readAny(boost::any& value, const Types::ReferenceType type, std::istream& is,
+        void HashBinarySerializer::readAny(std::any& value, const Types::ReferenceType type, std::istream& is,
                                            const BufferSet& buffers) const {
             switch (Types::category(type)) {
                 case Types::SCHEMA:
@@ -572,12 +572,12 @@ namespace karabo {
                     readSequence(is, value, type);
                     return;
                 case Types::HASH:
-                    readHash(boost::any_cast<Hash&>(value), is, buffers);
+                    readHash(std::any_cast<Hash&>(value), is, buffers);
                     return;
                 case Types::VECTOR_HASH: {
                     unsigned size = readSize(is);
                     value = std::vector<Hash>();
-                    std::vector<Hash>& result = boost::any_cast<std::vector<Hash>&>(value);
+                    std::vector<Hash>& result = std::any_cast<std::vector<Hash>&>(value);
                     result.resize(size);
                     for (unsigned i = 0; i < size; ++i) {
                         readHash(result[i], is, buffers);
@@ -668,7 +668,7 @@ namespace karabo {
         }
 
 
-        void HashBinarySerializer::readSingleValue(std::istream& is, boost::any& value,
+        void HashBinarySerializer::readSingleValue(std::istream& is, std::any& value,
                                                    const Types::ReferenceType type) const {
             switch (type) {
                 case Types::CHAR:
@@ -733,7 +733,7 @@ namespace karabo {
             }
         }
 
-        void HashBinarySerializer::readSingleValue(std::istream& is, boost::any& value, const Types::ReferenceType type,
+        void HashBinarySerializer::readSingleValue(std::istream& is, std::any& value, const Types::ReferenceType type,
                                                    const BufferSet& buffers) const {
             switch (type) {
                 case Types::CHAR:
@@ -811,7 +811,7 @@ namespace karabo {
         }
 
 
-        void HashBinarySerializer::readSequence(std::istream& is, boost::any& result,
+        void HashBinarySerializer::readSequence(std::istream& is, std::any& result,
                                                 const Types::ReferenceType type) const {
             unsigned size = readSize(is);
             switch (type) {

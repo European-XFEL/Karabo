@@ -286,10 +286,10 @@ namespace karabo {
             }
         }
 
-        std::vector<boost::any> SignalSlotable::Requestor::receiveAsVecOfAny() {
+        std::vector<std::any> SignalSlotable::Requestor::receiveAsVecOfAny() {
             karabo::util::Hash::Pointer replyBodyPtr = receiveResponseHashes().second;
             std::set<std::string> paths;
-            std::vector<boost::any> replyValues;
+            std::vector<std::any> replyValues;
             replyValues.reserve(replyBodyPtr->size());
             for (auto it = replyBodyPtr->mbegin(); it != replyBodyPtr->mend(); ++it) {
                 replyValues.push_back(it->second.getValueAsAny());

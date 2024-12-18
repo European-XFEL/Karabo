@@ -88,9 +88,9 @@ namespace karabo {
             void writeNode(const karabo::util::Hash::Node& element, std::vector<char>& buffer) const;
             void writeNodeMultiBuffer(const karabo::util::Hash::Node& element, BufferSet& buffers) const;
             void writeAttributes(const karabo::util::Hash::Attributes& attributes, std::vector<char>& buffer) const;
-            void writeAny(const boost::any& value, const karabo::util::Types::ReferenceType type,
+            void writeAny(const std::any& value, const karabo::util::Types::ReferenceType type,
                           std::vector<char>& buffer) const;
-            void writeAny(const boost::any& value, const karabo::util::Types::ReferenceType type,
+            void writeAny(const std::any& value, const karabo::util::Types::ReferenceType type,
                           BufferSet& buffers) const;
 
             template <typename T>
@@ -150,16 +150,16 @@ namespace karabo {
                 std::memcpy(&buffer[pos], src, n);
             }
 
-            inline void writeSingleValue(std::vector<char>& buffer, const boost::any&,
+            inline void writeSingleValue(std::vector<char>& buffer, const std::any&,
                                          const karabo::util::Types::ReferenceType type) const;
 
-            inline void writeSingleValue(BufferSet& buffers, const boost::any&,
+            inline void writeSingleValue(BufferSet& buffers, const std::any&,
                                          const karabo::util::Types::ReferenceType type) const;
 
-            inline void writeSequence(std::vector<char>& buffer, const boost::any&,
+            inline void writeSequence(std::vector<char>& buffer, const std::any&,
                                       const karabo::util::Types::ReferenceType type) const;
 
-            inline void writeRawArray(std::vector<char>& buffer, const boost::any&,
+            inline void writeRawArray(std::vector<char>& buffer, const std::any&,
                                       const karabo::util::Types::ReferenceType type) const;
 
             inline void writeKey(std::vector<char>& buffer, const std::string& str) const;
@@ -178,9 +178,9 @@ namespace karabo {
 
             void readAttributes(karabo::util::Hash::Attributes& attributes, std::istream& is) const;
 
-            void readAny(boost::any& value, const karabo::util::Types::ReferenceType type, std::istream& is) const;
+            void readAny(std::any& value, const karabo::util::Types::ReferenceType type, std::istream& is) const;
 
-            void readAny(boost::any& value, const karabo::util::Types::ReferenceType type, std::istream& is,
+            void readAny(std::any& value, const karabo::util::Types::ReferenceType type, std::istream& is,
                          const BufferSet& buffers) const;
 
             inline bool nextBufIfEos(std::istream& is, const BufferSet& buffers) const {
@@ -219,30 +219,29 @@ namespace karabo {
             }
 
             template <typename T>
-            inline void readSequenceBulk(std::istream& is, boost::any& value, unsigned size) const {
+            inline void readSequenceBulk(std::istream& is, std::any& value, unsigned size) const {
                 value = std::vector<T>();
-                std::vector<T>& result = boost::any_cast<std::vector<T>&>(value);
+                std::vector<T>& result = std::any_cast<std::vector<T>&>(value);
                 result.resize(size);
                 is.read(reinterpret_cast<char*>(&result[0]), size * sizeof(T));
             }
 
             template <typename T>
-            inline void readSequence(std::istream& is, boost::any& value, unsigned size) const {
+            inline void readSequence(std::istream& is, std::any& value, unsigned size) const {
                 value = std::vector<T>();
-                std::vector<T>& result = boost::any_cast<std::vector<T>&>(value);
+                std::vector<T>& result = std::any_cast<std::vector<T>&>(value);
                 result.resize(size);
                 for (unsigned i = 0; i < size; ++i) {
                     result[i] = readSingleValue<T>(is);
                 }
             }
 
-            inline void readSingleValue(std::istream& is, boost::any& value,
+            inline void readSingleValue(std::istream& is, std::any& value,
                                         const karabo::util::Types::ReferenceType type) const;
-            inline void readSingleValue(std::istream& is, boost::any& value,
+            inline void readSingleValue(std::istream& is, std::any& value,
                                         const karabo::util::Types::ReferenceType type, const BufferSet& buffers) const;
 
-            inline void readSequence(std::istream& is, boost::any&,
-                                     const karabo::util::Types::ReferenceType type) const;
+            inline void readSequence(std::istream& is, std::any&, const karabo::util::Types::ReferenceType type) const;
 
 
             static inline unsigned readSize(std::istream& is);

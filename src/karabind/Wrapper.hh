@@ -26,7 +26,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include <boost/any.hpp>
+#include <any>
 #include <karabo/util/Hash.hh>
 #include <karabo/util/NDArray.hh>
 #include <karabo/util/ToLiteral.hh>
@@ -166,9 +166,9 @@ namespace karabind {
         karabo::util::Types::ReferenceType pyObjectToCppType(const py::object& otype)
               __attribute__((visibility("default")));
 
-        py::object castAnyToPy(const boost::any& operand) __attribute__((visibility("default")));
+        py::object castAnyToPy(const std::any& operand) __attribute__((visibility("default")));
 
-        karabo::util::Types::ReferenceType castPyToAny(const py::object& operand, boost::any& a)
+        karabo::util::Types::ReferenceType castPyToAny(const py::object& operand, std::any& a)
               __attribute__((visibility("default")));
 
         karabo::util::ByteArray copyPyToByteArray(const py::object& o) __attribute__((visibility("default")));

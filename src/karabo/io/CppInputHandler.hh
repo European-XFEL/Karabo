@@ -48,13 +48,13 @@ namespace karabo {
 
             virtual ~CppInputHandler() {}
 
-            void registerIOEventHandler(const boost::any& ioEventHandler) {
+            void registerIOEventHandler(const std::any& ioEventHandler) {
                 m_ioEventHandler =
-                      boost::any_cast<std::function<void(const typename InputType::Pointer&)> >(ioEventHandler);
+                      std::any_cast<std::function<void(const typename InputType::Pointer&)> >(ioEventHandler);
             }
 
-            void registerEndOfStreamEventHandler(const boost::any& endOfStreamEventHandler) {
-                m_endOfStreamEventHandler = boost::any_cast<std::function<void()> >(endOfStreamEventHandler);
+            void registerEndOfStreamEventHandler(const std::any& endOfStreamEventHandler) {
+                m_endOfStreamEventHandler = std::any_cast<std::function<void()> >(endOfStreamEventHandler);
             }
 
             void triggerIOEvent() {
