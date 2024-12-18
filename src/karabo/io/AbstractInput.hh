@@ -26,7 +26,7 @@
 #ifndef KARABO_IO_ABSTRACTINPUT_HH
 #define KARABO_IO_ABSTRACTINPUT_HH
 
-#include <boost/any.hpp>
+#include <any>
 #include <functional>
 #include <karabo/io/InputHandler.hh>
 #include <karabo/util/Configurator.hh>
@@ -108,7 +108,7 @@ namespace karabo {
             /**
              * Register a handler to be called for I/O events
              */
-            void registerIOEventHandler(const boost::any& ioEventHandler) {
+            void registerIOEventHandler(const std::any& ioEventHandler) {
                 if (!m_handler)
                     throw KARABO_LOGIC_EXCEPTION("Handler storage not initialized: call 'setInputHandlerType' first.");
                 m_handler->registerIOEventHandler(ioEventHandler);
@@ -120,7 +120,7 @@ namespace karabo {
              * data token follow
              * @param endOfStreamEventHandler
              */
-            void registerEndOfStreamEventHandler(const boost::any& endOfStreamEventHandler) {
+            void registerEndOfStreamEventHandler(const std::any& endOfStreamEventHandler) {
                 if (!m_handler)
                     throw KARABO_LOGIC_EXCEPTION("Handler storage not initialized: call 'setInputHandlerType' first.");
                 m_handler->registerEndOfStreamEventHandler(endOfStreamEventHandler);

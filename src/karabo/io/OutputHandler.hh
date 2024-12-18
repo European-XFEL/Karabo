@@ -34,7 +34,7 @@ namespace karabo {
            public:
             KARABO_CLASSINFO(OutputHandler, "OutputHandler", "1.0")
 
-            virtual void registerIOEventHandler(const boost::any& eventHandler) = 0;
+            virtual void registerIOEventHandler(const std::any& eventHandler) = 0;
             virtual void triggerIOEvent() = 0;
         };
     } // namespace io

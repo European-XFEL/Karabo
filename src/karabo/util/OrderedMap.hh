@@ -25,7 +25,7 @@
 #ifndef KARABO_UTIL_ORDERED_MAP_HH
 #define KARABO_UTIL_ORDERED_MAP_HH
 
-#include <boost/any.hpp>
+#include <any>
 #include <boost/iterator/indirect_iterator.hpp>
 #include <list>
 #include <map>
@@ -367,13 +367,13 @@ namespace karabo {
             inline Node& getNode(const KeyType& key);
 
             /**
-             * Get the Element identified by key as a boost::any value
+             * Get the Element identified by key as a std::any value
              * @param key
              * @return
              */
-            inline const boost::any& getAny(const KeyType& key) const;
+            inline const std::any& getAny(const KeyType& key) const;
 
-            inline boost::any& getAny(const KeyType& key);
+            inline std::any& getAny(const KeyType& key);
 
             /**
              * Check if the element at key is of type T
@@ -680,7 +680,7 @@ namespace karabo {
         }
 
         template <class KeyType, class MappedType>
-        inline const boost::any& OrderedMap<KeyType, MappedType>::getAny(const KeyType& key) const {
+        inline const std::any& OrderedMap<KeyType, MappedType>::getAny(const KeyType& key) const {
             const_map_iterator it;
             if ((it = find(key)) == m_mapNodes.end()) {
                 throw KARABO_PARAMETER_EXCEPTION("Key '" + key + "' does not exist");
@@ -689,7 +689,7 @@ namespace karabo {
         }
 
         template <class KeyType, class MappedType>
-        inline boost::any& OrderedMap<KeyType, MappedType>::getAny(const KeyType& key) {
+        inline std::any& OrderedMap<KeyType, MappedType>::getAny(const KeyType& key) {
             map_iterator it;
             if ((it = find(key)) == m_mapNodes.end()) {
                 throw KARABO_PARAMETER_EXCEPTION("Key '" + key + "' does not exist");
