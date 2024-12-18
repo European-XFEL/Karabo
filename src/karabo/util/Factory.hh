@@ -24,7 +24,7 @@
 #ifndef FOOCONBAR_FACTORY_H
 #define FOOCONBAR_FACTORY_H
 
-#include <boost/any.hpp>
+#include <any>
 #include <boost/functional/factory.hpp>
 #include <boost/functional/value_factory.hpp>
 #include <memory> // std::shared_ptr<T>
@@ -52,7 +52,7 @@ namespace karabo {
         template <class AbstractClass>
         class Factory {
            protected:
-            typedef std::map<std::string, boost::any> CtorMap;
+            typedef std::map<std::string, std::any> CtorMap;
             typedef std::map<std::string, CtorMap> Registry;
 
             Registry m_registry;
@@ -91,7 +91,7 @@ namespace karabo {
              */
             static std::shared_ptr<AbstractClass> create(const std::string& factoryKey) {
                 CtorMap::const_iterator it = Factory::findCtor(factoryKey, ctorKey());
-                return (boost::any_cast<std::function<std::shared_ptr<AbstractClass>()> >(it->second))();
+                return (std::any_cast<std::function<std::shared_ptr<AbstractClass>()> >(it->second))();
             }
 
             /**
@@ -102,7 +102,7 @@ namespace karabo {
             template <typename A1>
             static std::shared_ptr<AbstractClass> create(const std::string& factoryKey, const A1& a1) {
                 CtorMap::const_iterator it = Factory::findCtor(factoryKey, ctorKey<A1>());
-                return (boost::any_cast<std::function<std::shared_ptr<AbstractClass>(const A1&)> >(it->second))(a1);
+                return (std::any_cast<std::function<std::shared_ptr<AbstractClass>(const A1&)> >(it->second))(a1);
             }
 
             /**

@@ -978,7 +978,7 @@ namespace karabo {
 
             for (const std::string& key : keys) {
                 if (incomingReconfiguration.has(key)) {
-                    h.set(key + "ReadOnly", incomingReconfiguration.get<boost::any>(key));
+                    h.set(key + "ReadOnly", incomingReconfiguration.get<std::any>(key));
                 }
             }
             set(h);

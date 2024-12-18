@@ -113,7 +113,7 @@ namespace karabo {
          */
         template <class BaseClass>
         class Configurator {
-            typedef std::map<std::string, boost::any> CtorMap;
+            typedef std::map<std::string, std::any> CtorMap;
             typedef std::map<std::string, CtorMap> Registry;
             typedef std::vector<std::function<void(Schema&)>> SchemaFuncs;
             typedef std::map<std::string, SchemaFuncs> SchemaFuncRegistry;
@@ -303,10 +303,10 @@ namespace karabo {
                 if (validate) {
                     Hash validated;
                     validateConfiguration(classId, configuration, validated);
-                    return (boost::any_cast<std::function<std::shared_ptr<BaseClass>(const Hash&)>>(it->second))(
+                    return (std::any_cast<std::function<std::shared_ptr<BaseClass>(const Hash&)>>(it->second))(
                           validated);
                 } else {
-                    return (boost::any_cast<std::function<std::shared_ptr<BaseClass>(const Hash&)>>(it->second))(
+                    return (std::any_cast<std::function<std::shared_ptr<BaseClass>(const Hash&)>>(it->second))(
                           configuration);
                 }
             }
@@ -349,10 +349,10 @@ namespace karabo {
                 if (validate) {
                     Hash validated;
                     validateConfiguration(classId, configuration, validated);
-                    return (boost::any_cast<std::function<std::shared_ptr<BaseClass>(const Hash&, const A1&)>>(
+                    return (std::any_cast<std::function<std::shared_ptr<BaseClass>(const Hash&, const A1&)>>(
                           it->second))(validated, a1);
                 } else {
-                    return (boost::any_cast<std::function<std::shared_ptr<BaseClass>(const Hash&, const A1&)>>(
+                    return (std::any_cast<std::function<std::shared_ptr<BaseClass>(const Hash&, const A1&)>>(
                           it->second))(configuration, a1);
                 }
             }

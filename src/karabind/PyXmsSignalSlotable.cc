@@ -269,32 +269,31 @@ namespace karabind {
                         break;
                     }
                     case 1: {
-                        std::function<void(const boost::any&)> handler(
-                              HandlerWrapAny1(replyCallback, "receiveAsyncPy1"));
+                        std::function<void(const std::any&)> handler(HandlerWrapAny1(replyCallback, "receiveAsyncPy1"));
                         py::gil_scoped_release release;
-                        receiveAsync<boost::any>(std::move(handler), std::move(errorHandler));
+                        receiveAsync<std::any>(std::move(handler), std::move(errorHandler));
                         break;
                     }
                     case 2: {
-                        std::function<void(const boost::any&, const boost::any&)> handler(
+                        std::function<void(const std::any&, const std::any&)> handler(
                               HandlerWrapAny2(replyCallback, "receiveAsyncPy2"));
                         py::gil_scoped_release release;
-                        receiveAsync<boost::any, boost::any>(std::move(handler), std::move(errorHandler));
+                        receiveAsync<std::any, std::any>(std::move(handler), std::move(errorHandler));
                         break;
                     }
                     case 3: {
-                        std::function<void(const boost::any&, const boost::any&, const boost::any&)> handler(
+                        std::function<void(const std::any&, const std::any&, const std::any&)> handler(
                               HandlerWrapAny3(replyCallback, "receiveAsyncPy3"));
                         py::gil_scoped_release release;
-                        receiveAsync<boost::any, boost::any, boost::any>(std::move(handler), std::move(errorHandler));
+                        receiveAsync<std::any, std::any, std::any>(std::move(handler), std::move(errorHandler));
                         break;
                     }
                     case 4: {
-                        std::function<void(const boost::any&, const boost::any&, const boost::any&, const boost::any&)>
-                              handler(HandlerWrapAny4(replyCallback, "receiveAsyncPy4"));
+                        std::function<void(const std::any&, const std::any&, const std::any&, const std::any&)> handler(
+                              HandlerWrapAny4(replyCallback, "receiveAsyncPy4"));
                         py::gil_scoped_release release;
-                        receiveAsync<boost::any, boost::any, boost::any, boost::any>(std::move(handler),
-                                                                                     std::move(errorHandler));
+                        receiveAsync<std::any, std::any, std::any, std::any>(std::move(handler),
+                                                                             std::move(errorHandler));
                         break;
                     }
                     default:
@@ -429,8 +428,8 @@ namespace karabind {
             }
 
             void replyPy1(const py::object& a1) const {
-                // Convert Python object to boost::any - may involve a copy :-(
-                boost::any a1Any;
+                // Convert Python object to std::any - may involve a copy :-(
+                std::any a1Any;
                 wrapper::castPyToAny(a1, a1Any);
                 // Call inherited operator(..) - no GIL since that synchronously sends a message:
                 py::gil_scoped_release release;
@@ -438,8 +437,8 @@ namespace karabind {
             }
 
             void replyPy2(const py::object& a1, const py::object& a2) const {
-                // Convert Python objects to boost::any - may involve copies :-(
-                boost::any a1Any, a2Any;
+                // Convert Python objects to std::any - may involve copies :-(
+                std::any a1Any, a2Any;
                 wrapper::castPyToAny(a1, a1Any);
                 wrapper::castPyToAny(a2, a2Any);
                 // Call inherited operator(..) - no GIL since that synchronously sends a message:
@@ -448,8 +447,8 @@ namespace karabind {
             }
 
             void replyPy3(const py::object& a1, const py::object& a2, const py::object& a3) const {
-                // Convert Python objects to boost::any - may involve copies :-(
-                boost::any a1Any, a2Any, a3Any;
+                // Convert Python objects to std::any - may involve copies :-(
+                std::any a1Any, a2Any, a3Any;
                 wrapper::castPyToAny(a1, a1Any);
                 wrapper::castPyToAny(a2, a2Any);
                 wrapper::castPyToAny(a3, a3Any);
@@ -460,8 +459,8 @@ namespace karabind {
 
             void replyPy4(const py::object& a1, const py::object& a2, const py::object& a3,
                           const py::object& a4) const {
-                // Convert Python objects to boost::any - may involve copies :-(
-                boost::any a1Any, a2Any, a3Any, a4Any;
+                // Convert Python objects to std::any - may involve copies :-(
+                std::any a1Any, a2Any, a3Any, a4Any;
                 wrapper::castPyToAny(a1, a1Any);
                 wrapper::castPyToAny(a2, a2Any);
                 wrapper::castPyToAny(a3, a3Any);

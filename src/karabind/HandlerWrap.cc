@@ -23,7 +23,7 @@
 
 namespace karabind {
 
-    void HandlerWrapAny1::operator()(const boost::any& a1) const {
+    void HandlerWrapAny1::operator()(const std::any& a1) const {
         py::gil_scoped_acquire gil;
         try {
             if (*m_handler) {
@@ -36,7 +36,7 @@ namespace karabind {
         }
     }
 
-    void HandlerWrapAny2::operator()(const boost::any& a1, const boost::any& a2) const {
+    void HandlerWrapAny2::operator()(const std::any& a1, const std::any& a2) const {
         py::gil_scoped_acquire gil;
         try {
             if (*m_handler) {
@@ -49,7 +49,7 @@ namespace karabind {
         }
     }
 
-    void HandlerWrapAny3::operator()(const boost::any& a1, const boost::any& a2, const boost::any& a3) const {
+    void HandlerWrapAny3::operator()(const std::any& a1, const std::any& a2, const std::any& a3) const {
         py::gil_scoped_acquire gil;
         try {
             if (*m_handler) {
@@ -62,8 +62,8 @@ namespace karabind {
         }
     }
 
-    void HandlerWrapAny4::operator()(const boost::any& a1, const boost::any& a2, const boost::any& a3,
-                                     const boost::any& a4) const {
+    void HandlerWrapAny4::operator()(const std::any& a1, const std::any& a2, const std::any& a3,
+                                     const std::any& a4) const {
         py::gil_scoped_acquire gil;
         try {
             if (*m_handler) {

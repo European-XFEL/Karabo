@@ -683,7 +683,7 @@ namespace karabo {
                 template <typename... Args>
                 void receive(Args&... args);
 
-                std::vector<boost::any> receiveAsVecOfAny();
+                std::vector<std::any> receiveAsVecOfAny();
 
                 Requestor& timeout(const int& milliseconds);
 

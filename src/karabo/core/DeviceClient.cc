@@ -1919,11 +1919,10 @@ namespace karabo {
                 boost::optional<Hash::Node&> nodeFunc = entry.find("_function");
                 boost::optional<Hash::Node&> nodeData = entry.find("_userData");
                 if (nodeData) {
-                    boost::any_cast<
-                          std::function<void(const std::string&, const karabo::util::Hash&, const boost::any&)>>(
+                    std::any_cast<std::function<void(const std::string&, const karabo::util::Hash&, const std::any&)>>(
                           nodeFunc->getValueAsAny())(instanceId, hash, nodeData->getValueAsAny());
                 } else {
-                    boost::any_cast<std::function<void(const std::string&, const karabo::util::Hash&)>>(
+                    std::any_cast<std::function<void(const std::string&, const karabo::util::Hash&)>>(
                           nodeFunc->getValueAsAny())(instanceId, hash);
                 }
             }
@@ -1949,16 +1948,16 @@ namespace karabo {
 
         void DeviceClient::castAndCall(const std::string& instanceId, const Hash& registered, const Hash& current,
                                        std::string path) const {
-#define KARABO_REGISTER_CALLBACK(valueType)                                                              \
-    if (nodeData) {                                                                                      \
-        boost::any_cast<std::function<void(const std::string&, const std::string&, const valueType&,     \
-                                           const karabo::util::Timestamp&, const boost::any&)>>(         \
-              nodeFunc->getValueAsAny())(instanceId, currentPath, it->getValue<valueType>(), t,          \
-                                         nodeData->getValueAsAny());                                     \
-    } else {                                                                                             \
-        boost::any_cast<std::function<void(const std::string&, const std::string&, const valueType&,     \
-                                           const karabo::util::Timestamp&)>>(nodeFunc->getValueAsAny())( \
-              instanceId, currentPath, it->getValue<valueType>(), t);                                    \
+#define KARABO_REGISTER_CALLBACK(valueType)                                                            \
+    if (nodeData) {                                                                                    \
+        std::any_cast<std::function<void(const std::string&, const std::string&, const valueType&,     \
+                                         const karabo::util::Timestamp&, const std::any&)>>(           \
+              nodeFunc->getValueAsAny())(instanceId, currentPath, it->getValue<valueType>(), t,        \
+                                         nodeData->getValueAsAny());                                   \
+    } else {                                                                                           \
+        std::any_cast<std::function<void(const std::string&, const std::string&, const valueType&,     \
+                                         const karabo::util::Timestamp&)>>(nodeFunc->getValueAsAny())( \
+              instanceId, currentPath, it->getValue<valueType>(), t);                                  \
     }
 
             for (karabo::util::Hash::const_iterator it = current.begin(); it != current.end(); ++it) {

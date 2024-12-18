@@ -93,7 +93,7 @@ namespace karabo {
          * The Schema class correlates to the Hash class like an XML Schema document correlates to an XML document.
          * The Schema object is a description of type of Hash objects, expressed in terms of constraints
          * on the structure and content of Hash objects of that type. Because generally the Hash object is
-         * a collection of key/value pairs of quite a common nature (std::string, boost::any), the constraints
+         * a collection of key/value pairs of quite a common nature (std::string, std::any), the constraints
          * applied by Schema object may define which keys has to be in Hash, some rules for the value range,
          * access type, assignment type, existence of additional attributes associated with some particular key
          * like description, visual representation, aliases, default value and so on. The Schema object is the

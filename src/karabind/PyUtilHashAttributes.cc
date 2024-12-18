@@ -47,7 +47,7 @@ void exportPyUtilHashAttributes(py::module_& m) {
     an.def(
           "setValue",
           [](Hash::Attributes::Node& self, const py::object& o) {
-              boost::any any;
+              std::any any;
               wrapper::castPyToAny(o, any);
               self.setValue(any);
           },
@@ -182,7 +182,7 @@ void exportPyUtilHashAttributes(py::module_& m) {
     a.def(
           "set",
           [](karabo::util::Hash::Attributes& self, const std::string& key, const py::object& value) {
-              boost::any a;
+              std::any a;
               wrapper::castPyToAny(value, a);
               return py::cast(self.set(key, a));
           },
@@ -191,7 +191,7 @@ void exportPyUtilHashAttributes(py::module_& m) {
     a.def(
           "__setitem__",
           [](karabo::util::Hash::Attributes& self, const std::string& key, const py::object& value) {
-              boost::any a;
+              std::any a;
               wrapper::castPyToAny(value, a);
               return py::cast(self.set(key, a));
           },
