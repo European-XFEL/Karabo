@@ -101,7 +101,6 @@ namespace karabo {
         void Signal::doEmit(const karabo::util::Hash::Pointer& message) {
             using namespace karabo::util;
             try {
-                // prepareHeader should be called once per 'emit'!
                 SlotMap registeredSlots;
                 {
                     std::lock_guard<std::mutex> lock(m_registeredSlotsMutex);
@@ -137,8 +136,10 @@ namespace karabo {
                 // publish leftovers via broker
                 if (registeredSlots.size() > 0) {
                     if (registeredSlots.size() != fullNumRegisteredSlots) {
-                        // overwrite destinations to erase those that received locally, to avoid duplicates
-                        setSlotStrings(registeredSlots, *header);
+                        // A smaller list of destinations is left, so recreate header to avoid duplicated messages
+                        // Note: Do not do 'setSlotStrings(registeredSlots, *header);' since original header is
+                        //       likely still used in the short-cut processing triggered above!
+                        header = prepareHeader(registeredSlots);
                     }
                     m_channel->write(m_topic, header, message, m_priority, m_messageTimeToLive);
                 }
