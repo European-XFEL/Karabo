@@ -14,6 +14,7 @@
 # The Karabo Gui is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
+import numpy as np
 import pytest
 
 from karabo.common.scenemodel.api import EvaluatorModel
@@ -106,3 +107,12 @@ def test_alarm_warning_fine_color(evaluator_setup):
 
     set_proxy_value(alarms, "alarms", 1.5)
     assert controller._bg_color == PROPERTY_WARN_COLOR
+
+
+def test_type_conversion(evaluator_setup):
+    prop, _ = evaluator_setup
+    model = EvaluatorModel(expression="round(x,6)")
+    controller = Evaluator(proxy=prop, model=model)
+    controller.create(None)
+    set_proxy_value(prop, "prop", np.float32(2.1234567899999))
+    assert controller._internal_widget.text() == "2.123457"

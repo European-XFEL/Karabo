@@ -108,7 +108,7 @@ class Evaluator(BaseBindingController):
         self._check_alarms(binding, value)
 
         try:
-            disp_value = f"{self.function(value)}"
+            disp_value = str(self.function(value))
         except Exception as e:
             disp_value = traceback.format_exception_only(type(e), e)[0]
         self._internal_widget.setText(disp_value)
