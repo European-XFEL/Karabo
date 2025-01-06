@@ -10,70 +10,43 @@ Release date is **12 December 2024**.
 Summary – Release highlights
 ++++++++++++++++++++++++++++
 
-**This release updates the software stack and addresses some technical debts,
-like replacing log4ccp with spdlog, updating Python to 3.12 and the C++ standard
-from C++ 17 to C++ 20. Some improvements to the broker support (AMQP) and
-adjustments to the authorization logic enforced by Karabo Authentication are also in.**
+This release updates the software stack and addresses some technical debts,
+like:
 
-Bound Python API
-================
+- C++: replacing log4ccp with spdlog
+- Framework: Updating Python to 3.12
+- Framework: Update the C++ standard to C++20
 
+Adjustments to the authorization logic enforced by Karabo Authentication are also in.
+Another important change is that all API's provide the callee in the device implementation in `lastCommand` for a property reconfiguration and furthemore
+report faulty device plugins after device server restart. Previously these log messages were not forwarded. Additionally,
+karabo-middlelayerserver are able to run on a windows machine and all servers provide their `user` information in the instance info.
 
+Requesting network information from the `DaemonManager` will now only provide the requested host details.
 
-C++ API
-=======
+For the **KaraboGUI**, the relevant changes are:
 
-
-
-Middlelayer Python API
-======================
-
-
-
-
-KaraboGUI
-=========
-
-- Minconda is no longer used, minforge used instead
+- Miniconda is no longer used, miniforge used instead
 - Provide history for Text Log widget (https://git.xfel.eu/Karabo/Framework/-/merge_requests/8718 )
 - Authentication changes:
   - GUI components - including in Daemon Manager - are disabled, when the required access level is not met. A tooltip shows why they are disabled. Especially, the context menu items in the Topology panels and Project panel.
-  - Karabo-cinema and concert also honours authentication.
+  - Karabo-cinema and concert also honours authentication
 
 - Option to Compare configuration of one device with another (of same class )
 - Configuration Preview dialog (When fetches from past) options to show only currently editable properties.
-- Numpy upgraded to version 2.x.x
+- Numpy upgraded to version 2.X
+- Scene2py can make use of multiple children elements
 - GUI extension - dependency management independently, using the ‘Check for update’  Dialog.
-
-
-All APIs
-========
-
 
 
 Breaking Changes
 ++++++++++++++++
 
-C++ API
+All API
 =======
 
-
-
-Bound API
-===========
-
-
-
-
-KaraboGUI
-=========
-
-
-
-Change of behaviour
-+++++++++++++++++++
-
-
+- A Table element value update will not send the schema as attribute anymore. Instead a boolean is provided.
+- Change directory of *config db* to **var/data/config_db** instead of using the hidden karabo folder.
 
 Dependency Updates
 ++++++++++++++++++
@@ -167,7 +140,6 @@ Bug Fixes
 - *(No Category)* Prevent karabind stubs and cppunit build being seen by git versioning when building framework ([3817459](https://git.xfel.eu/Karabo/Framework/-/commit/38174591909e659312eb0dc7e95165795d0650a6))
 - *(No Category)* Properly ignore karabind stubs ([eaca79d](https://git.xfel.eu/Karabo/Framework/-/commit/eaca79d2dbf81148aab3e6d2c7f320fce0b1dd06))
 - *(No Category)* Workaround bad behaving comilation scripts ([79c6a49](https://git.xfel.eu/Karabo/Framework/-/commit/79c6a49bfe9cd0bc8595c7860c0471289dedbf29))
-
 
 
 Features
@@ -296,11 +268,6 @@ Performance
 - *(MDL)* Make sure slotPing goes out before we start collecting topology ([cda3c51](https://git.xfel.eu/Karabo/Framework/-/commit/cda3c5116f7d41387db7f32a295e761926787f33))
 - *(MDL)* Optimize broker dictionary settings ([3f5d224](https://git.xfel.eu/Karabo/Framework/-/commit/3f5d224738add13375d9f0fcf0fa0f2128fcef18))
 - *(MDL)* More Hash performance natively ([723ff90](https://git.xfel.eu/Karabo/Framework/-/commit/723ff90556442cf6659214f6cf26a875e849605a))
-
-
-Devices
-+++++++
-
 
 
 Dependencies
