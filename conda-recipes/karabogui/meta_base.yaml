@@ -61,7 +61,6 @@ requirements:
   # required_build_pkgs = {
   #     'python': '3.12.*',
   #     'setuptools': '69.0.*',
-  #     'libzlib': '1.2.13',
   #     'setuptools_scm': '7.0.5'}
   # for dep in dependencies:
   #     name = dep.split('=')[0]

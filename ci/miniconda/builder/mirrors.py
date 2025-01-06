@@ -4,10 +4,7 @@ import os.path as op
 from collections import defaultdict
 from functools import partial
 
-from conda.cli.python_api import Commands
-from conda.exceptions import PackagesNotFoundError
-
-from .utils import conda_run, conda_run_command
+from .utils import command_run, conda_run_command
 
 CHANNEL_MAP = {}
 EXCLUDED_CHANNELS = [
@@ -40,15 +37,12 @@ class _MirrorChannel:
     def _obtain_packages_on_mirror(self, platform):
         """Returns the packages that are already on our mirror channel"""
         try:
-            packages_on_mirror = conda_run(
-                Commands.SEARCH,
-                "--override-channels",
-                "-c",
-                self.mirror_channel,
-                f"*[subdir={platform}]",
-                "--json",
-            )
-
+            packages_on_mirror = command_run(["conda", "search",
+                                              "--override-channels", "-c",
+                                              self.mirror_channel,
+                                              f"*[subdir={platform}]",
+                                              "--json", ]
+                                             )
             # All these packages are already on the target mirror,
             # so it is not necessary to upload them
             to_exclude = defaultdict(list)
@@ -59,12 +53,13 @@ class _MirrorChannel:
                         (package["version"], package["build"])
                     )
             return to_exclude
-        except PackagesNotFoundError:
-            print(f"no packages from {self.mirror_channel} for {platform}")
-            return {}
         except json.decoder.JSONDecodeError:
             print("Json decode error, continuing without packages on "
                   f"{self.mirror_channel} for {platform}")
+            return {}
+        except Exception as e:
+            print(f"Failed to find packages in  {self.mirror_channel} for "
+                  f"{platform}.\n{e}")
             return {}
 
 
@@ -79,12 +74,10 @@ class Mirrors:
         self.reference_environment = reference_environment
 
     def _generate_needed_packages(self):
-        """Returns the packages we will need to download. This excludes packages
-        already present in our mirror channels"""
-        output = conda_run(
-            Commands.LIST, "-n", self.reference_environment, "--json"
-        )
-
+        """Returns the packages we will need to download. This excludes
+        packages already present in our mirror channels"""
+        output = command_run(
+            ["conda", "list", "-n", self.reference_environment, "--json"])
         for pkg in json.loads(output):
             if pkg["base_url"].startswith("file://"):
                 continue
