@@ -2,10 +2,7 @@ import os
 import subprocess
 from functools import wraps
 
-from conda.cli.python_api import run_command
-from conda.core.envs_manager import list_all_known_prefixes
 from paramiko import AutoAddPolicy, SSHClient
-
 
 def conda_run_command(cmd: list, *, env_name: str = None):
     """Run the 'conda run' command as subprocess on the provided environment"""
@@ -27,40 +24,25 @@ def conda_run_command(cmd: list, *, env_name: str = None):
         raise
 
 
-
-def conda_run(command, *args, **kwargs):
-    stdout, stderr, ret_code = run_command(command, *args, **kwargs)
-    if ret_code != 0:
-        msg = (
-            f"Command {command} [{args}] "
-            f"{kwargs} returned {ret_code}\n"
-            f"STDOUT:\n {stdout}\n"
-            f"STDERR:\n {stderr}"
-        )
-        raise RuntimeError(msg)
-    return stdout
-
-
-def command_run(cmd):
+def command_run(cmd) -> str:
     """Run the command and capture the output, errors, and decode
     it to string"""
 
     try:
         output = subprocess.check_output(cmd)
-        return output
+        return output.decode("utf-8")
     except subprocess.CalledProcessError as e:
         # Print the error message and raise the exception again
         print(f"Error in running command: {e.output}")
         raise e
 
 
-def get_conda_prefix(env_name):
-    prefix = None
-    for path in list_all_known_prefixes():
-        if os.path.basename(path) == env_name:
-            prefix = path
-    return prefix
-
+def environment_exists(env_name: str) -> bool:
+    """Check if the environment already exists"""
+    result = command_run(["conda","env", "list"])
+    return any(
+        env_name in line.split()[0] for line in result.splitlines() if
+        line.strip())
 
 def get_host_from_env():
     """Retrieve hostname, user and password from the environment"""

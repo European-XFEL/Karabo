@@ -7,12 +7,10 @@ from platform import system as sys_name
 from tempfile import gettempdir
 
 import yaml
-from conda.cli.python_api import Commands
 
 from .mirrors import Mirrors
-from .utils import (
-    chdir, command_run, conda_run, conda_run_command, connected_to_remote,
-    get_conda_prefix, mkdir)
+from .utils import (chdir, command_run, conda_run_command, connected_to_remote,
+                    environment_exists, mkdir)
 
 PLATFORMS = {"Windows": "win-64", "Darwin": "osx-64", "Linux": "linux-64"}
 
@@ -31,7 +29,7 @@ class Builder:
 
         # Local paths
         r = command_run(["git", "rev-parse", "--show-toplevel"])
-        self.root_path = op.normpath(r.decode().strip())
+        self.root_path = op.normpath(r.strip())
         self.mirror_dir = op.join(gettempdir(), "mirror")
 
         # Platform
@@ -45,7 +43,8 @@ class Builder:
         self.recipes = set()
 
         # Conda setup
-        conda_run(Commands.CONFIG, '--set', 'pip_interop_enabled', 'True')
+        command_run(["conda", "config", "--set", "pip_interop_enabled",
+                     "True"])
 
     # -----------------------------------------------------------------------
     # Main logic
@@ -148,10 +147,10 @@ class Builder:
 
     def clean(self):
         print("Cleaning conda..")
-        command = ["conda", "build",  "purge-all", "--quiet"]
+        command = ["conda", "build", "purge-all", "--quiet"]
         conda_run_command(cmd=command, env_name="base")
-        conda_run(
-            Commands.CLEAN, "--all", "--force-pkgs-dirs", "--quiet", "--yes")
+        command_run(["conda", "clean", "--all", "--force-pkgs-dirs", "--quiet",
+                     "--yes"])
         for recipe in self.recipes:
             self.clean_environment(name=recipe)
 
@@ -161,7 +160,8 @@ class Builder:
 
         try:
             # Remove the environment for the recipe
-            conda_run(Commands.REMOVE, "-n", name, "--all", "--quiet", "--yes")
+            command_run(
+                ["conda", "remove", "-n", name, "--all", "quiet", "--yes"])
         except Exception as e:
             # this might fail if the environment does not exist
             print(
@@ -213,12 +213,11 @@ class Builder:
             print(f"Test script '{test_script}' missing")
 
         # Check if there's an existing devenv environment
-        if get_conda_prefix(recipe) is None:
+        if not environment_exists(recipe):
             self.create_devenv(recipe)
 
         with self.karabo_installed(recipe):
-            cmd = [Commands.LIST]
-            output = conda_run(*cmd)
+            output = command_run(["conda", "list"])
             print(output)
 
             command = ["python", test_script]
@@ -297,9 +296,10 @@ class Builder:
             return
         # Create or use the existing environment
         env = self.get_env_name(recipe)
-        if get_conda_prefix(env) is None:
+        if not environment_exists(env):
             print(f"Create environment {env}")
-            conda_run(Commands.CREATE, "-n", env)
+            command_run(["conda", "create", "-n", env, "--yes"])
+
         # locate the package
         print(f'install local package for "{recipe}" in env "{env}"')
         command = ["conda", "install", recipe,
@@ -369,7 +369,8 @@ class Builder:
             conda_build_path = os.getenv("WIN_CONDA_ROOT").strip()
             assert conda_build_path, "Conda root must be set in CI variables"
         else:
-            conda_build_path = conda_run(Commands.INFO, "--root").strip()
+            conda_build_path = command_run(["conda", "info", "--root"]).strip()
+
         print("Conda build path", conda_build_path)
         packages_path = op.join(conda_build_path, "conda-bld", target_dir)
         chdir(self.args.remote_channel_dir, sftp)
