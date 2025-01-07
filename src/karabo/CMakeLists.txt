@@ -115,8 +115,10 @@ else()
   )
 endif()
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/util/repositoryVersion.in
-               ${CMAKE_BINARY_DIR}/include/repositoryVersion.hh
+# Create header with version macros from its template.
+# Yes, we place the generated header into the source code directory...
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/util/VersionMacros.in
+               ${CMAKE_CURRENT_SOURCE_DIR}/util/VersionMacros.hh
                @ONLY
 )
 
