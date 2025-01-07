@@ -30,9 +30,7 @@
 
 #include "Exception.hh"
 #include "StringTools.hh"
-#include "repositoryVersion.hh"
-
-// Temporary change to trigger CI build.
+#include "VersionMacros.hh" // for KARABO_VERSION
 
 namespace karabo {
 
@@ -41,7 +39,7 @@ namespace karabo {
 
         Version::Version()
             : m_major(-1), m_minor(-1), m_patch(-1), m_postType(PostfixType::NONE), m_post(-1), m_dev(-1) {
-            processString(KARABO_VERSION); // from repositoryVersion
+            processString(KARABO_VERSION); // from VersionMacros.hh
         }
 
         Version::Version(const std::string& version)
