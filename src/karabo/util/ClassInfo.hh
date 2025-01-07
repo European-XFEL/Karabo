@@ -25,6 +25,7 @@
 
 #include <boost/current_function.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/smart_ptr/make_shared.hpp>
 #include <string>
 
 #include "karaboDll.hh"
@@ -96,7 +97,10 @@ namespace karabo {
     typedef className Self;                                                            \
     typedef boost::shared_ptr<className> Pointer;                                      \
     typedef boost::shared_ptr<const className> ConstPointer;                           \
-    typedef boost::weak_ptr<className> WeakPointer;
-
+    typedef boost::weak_ptr<className> WeakPointer;                                    \
+    template <typename... Args>                                                        \
+    static Self::Pointer MakeShared(Args&&... args) {                                  \
+        return boost::make_shared<Self>(std::forward<Args>(args)...);                  \
+    }
 
 #endif
