@@ -176,11 +176,14 @@ class DeviceInstanceController(BaseProjectGroupController):
         show_action.setVisible(proj_device_online)
 
         set_conf_action = QAction('Store online configuration', menu)
-        set_can_get_conf = (server_online and proj_device_status
-                            in ONLINE_CONFIG_STATUSES)
+        set_can_get_conf = (server_online and
+                            proj_device_status in ONLINE_CONFIG_STATUSES and
+                            project_allowed)
         set_conf_action.setEnabled(set_can_get_conf)
         if not server_online:
             set_conf_action.setToolTip(SERVER_OFFLINE_TOOLTIP)
+        elif not project_allowed:
+            set_conf_action.setToolTip(project_allowed_tooltip)
         elif not set_can_get_conf:
             set_conf_action.setToolTip(INCORRECT_STATE_TOOLTIP)
         set_conf_action.triggered.connect(partial(
