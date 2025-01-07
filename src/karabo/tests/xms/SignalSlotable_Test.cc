@@ -1172,8 +1172,7 @@ void SignalSlotable_Test::testAsyncReply() {
     _loopFunction(__FUNCTION__, [this] { this->_testAsyncReply(); });
 }
 
-
-void SignalSlotable_Test::_testAsyncReply() {
+namespace {
     class SignalSlotableAsyncReply : public karabo::xms::SignalSlotable {
        public:
         KARABO_CLASSINFO(SignalSlotableAsyncReply, "SignalSlotAsyncReply", "1.0")
@@ -1188,7 +1187,6 @@ void SignalSlotable_Test::_testAsyncReply() {
             KARABO_SLOT(slotAsyncReply, int);
             KARABO_SLOT(slotAsyncErrorReply);
         }
-
 
         void slotAsyncReply(int i) {
             const AsyncReply reply(this);
@@ -1228,7 +1226,9 @@ void SignalSlotable_Test::_testAsyncReply() {
        private:
         boost::asio::deadline_timer m_timer;
     };
+} // namespace
 
+void SignalSlotable_Test::_testAsyncReply() {
     auto slotter = boost::make_shared<SignalSlotableAsyncReply>("slotter");
     auto sender = boost::make_shared<SignalSlotable>("sender");
     sender->start();
