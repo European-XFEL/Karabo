@@ -28,6 +28,7 @@
 
 #include <string>
 
+
 namespace karabo {
 
     namespace util {

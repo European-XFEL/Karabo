@@ -120,6 +120,7 @@ set(utilTestRunner_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/util/AlarmCondition_Test.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/util/Base64_Test.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/util/ByteSwap_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/ClassInfo_Test.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/util/ConfigurationTestClasses.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/util/Configurator_Test.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/util/DataLogUtils_Test.cc

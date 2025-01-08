@@ -96,7 +96,10 @@ namespace karabo {
     typedef className Self;                                                            \
     typedef std::shared_ptr<className> Pointer;                                        \
     typedef std::shared_ptr<const className> ConstPointer;                             \
-    typedef std::weak_ptr<className> WeakPointer;
-
+    typedef std::weak_ptr<className> WeakPointer;                                      \
+    template <typename... Args>                                                        \
+    static Self::Pointer MakeShared(Args&&... args) {                                  \
+        return std::make_shared<Self>(std::forward<Args>(args)...);                    \
+    }
 
 #endif
