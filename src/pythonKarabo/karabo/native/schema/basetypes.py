@@ -660,12 +660,7 @@ class TableValue(KaraboValue):
         yield "</tr></table>"
 
 
-# Pint is based on the concept of a unit registry. For each unit registry,
-# a new class (!) is created, and quantities are only compatible if we
-# use the same class. Here we define the Karabo quantity class.
-
-unit_registry = pint.UnitRegistry()
-Quantity = unit_registry.Quantity
+Quantity = pint.UnitRegistry.Quantity
 
 
 @wrap_methods
@@ -891,21 +886,26 @@ class QuantityValue(KaraboValue, Quantity):
         return self._format(self)
 
 
-# Whenever Pint does calculations, it returns the results as an objecti
-# of the registries' Quantity class. We set that to our own class so
-# that we keep our data.
-unit_registry.Quantity = QuantityValue
+class KaraboUnitRegistry(pint.UnitRegistry):
+    """Provide the Karabo Unit Registry
 
-# define the Karabo units that Pint doen't know about
+    Define the `Quantity` as our QuantityValue to keep our data.
+    """
+    Quantity = QuantityValue
+
+
+unit_registry = KaraboUnitRegistry()
+
+# define the Karabo units that Pint doesn't know about
 unit_registry.define("number = []")
-unit_registry.define("count = [] = #")
-unit_registry.define("electronvolt = electron_volt")
-unit_registry.define("degree_celsius = degC")
-unit_registry.define("meter_per_second = m / s")
 unit_registry.define("volt_per_second = V / s")
 unit_registry.define("ampere_per_second = A / s")
+unit_registry.define("electronvolt = electron_volt")
+# This is differently defined in Pint
+unit_registry.define("count = [] = #")
 unit_registry.define("percent = number / 100 = %")
-# for backward compatibility with Pint version < 0.9
-if '0.9' > pint.__version__:
-    unit_registry.define("katal = mol / s = kat")
-    unit_registry.define("pixel = number = px")
+unit_registry.define("pixel = number = px")
+# Backward compatibility
+unit_registry.define("degree_celsius = degree_Celsius")
+
+pint.set_application_registry(unit_registry)
