@@ -25,8 +25,7 @@
 #include "Version_Test.hh"
 
 #include <karabo/util/Version.hh>
-
-#include "repositoryVersion.hh"
+#include <karabo/util/VersionMacros.hh>
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Version_Test);
 
@@ -41,7 +40,7 @@ void Version_Test::testVersion() {
     std::clog << "### KARABO VERSION: " << karabo::util::Version::getVersion() << " ###" << std::endl;
     const karabo::util::Version& v = karabo::util::Version::getKaraboVersion();
     CPPUNIT_ASSERT_EQUAL(karabo::util::Version::getVersion(), v.getString());
-    CPPUNIT_ASSERT_EQUAL(karabo::util::Version::getVersion(), std::string(KARABO_VERSION)); // from repositoryVersion
+    CPPUNIT_ASSERT_EQUAL(karabo::util::Version::getVersion(), std::string(KARABO_VERSION)); // from VersionMacros.hh
 }
 
 void Version_Test::testVersionFromString() {
@@ -146,4 +145,19 @@ void Version_Test::testVersionComparison() {
             }
         }
     }
+}
+
+void Version_Test::testVersionMacro() {
+    CPPUNIT_ASSERT_LESS(KARABO_VERSION_NUM(1, 2, 3), KARABO_VERSION_NUM(0, 3, 4));
+    CPPUNIT_ASSERT_LESS(KARABO_VERSION_NUM(1, 2, 3), KARABO_VERSION_NUM(1, 1, 4));
+    CPPUNIT_ASSERT_LESS(KARABO_VERSION_NUM(1, 2, 3), KARABO_VERSION_NUM(1, 2, 2));
+
+    // Minor and patch are supported up to 999
+    CPPUNIT_ASSERT_LESS(KARABO_VERSION_NUM(2, 0, 0), KARABO_VERSION_NUM(1, 999, 999));
+
+    // Exact represantation (test needed?)
+    CPPUNIT_ASSERT_EQUAL(1'004'014, KARABO_VERSION_NUM(1, 4, 14));
+
+    // Version macros are introduced far after Karabo 1.4.14
+    CPPUNIT_ASSERT_GREATER(KARABO_VERSION_NUM(1, 4, 14), KARABO_VERSION_NUM_CURRENT);
 }
