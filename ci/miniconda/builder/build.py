@@ -9,17 +9,12 @@ from tempfile import gettempdir
 import yaml
 
 from .mirrors import Mirrors
-from .utils import (chdir, command_run, conda_run_command, connected_to_remote,
-                    environment_exists, mkdir)
+from .utils import (
+    chdir, command_run, conda_run_command, connected_to_remote,
+    environment_exists, mkdir)
 
 PLATFORMS = {"Windows": "win-64", "Darwin": "osx-64", "Linux": "linux-64"}
-
 KARABOGUI = "karabogui"
-
-XDG_RUNTIME_DIR = "/tmp/runtime-root"
-XVFB_ARGS = "-screen 0 1280x1024x24"
-XVFB_DISPLAY = ":0"
-XAUTHORITY_PATH = op.join(XDG_RUNTIME_DIR, ".Xauthority")
 
 
 class Builder:
@@ -135,15 +130,6 @@ class Builder:
         """Performs platform specific tasks per recipe"""
         if self.platform == "osx-64":
             os.environ["LANG"] = "en_US.UTF-8"
-        elif self.platform == "linux-64":
-            # Setup XVFB
-            os.environ["DISPLAY"] = XVFB_DISPLAY
-            os.environ["XDG_RUNTIME_DIR"] = XDG_RUNTIME_DIR
-            os.environ["XAUTHORITY"] = XAUTHORITY_PATH
-            command_run(["start-stop-daemon", "--start",
-                         "-b", "-x", "/usr/bin/Xvfb", "--", XVFB_DISPLAY,
-                         "-screen", "0", "1024x768x24",
-                         "-extension", "GLX", ])
 
     def clean(self):
         print("Cleaning conda..")
@@ -219,6 +205,10 @@ class Builder:
         with self.karabo_installed(recipe):
             output = command_run(["conda", "list"])
             print(output)
+
+            conda_run_command(
+                ["python", "-m", "pip", "install", "pytest-xvfb"],
+                env_name=recipe)
 
             command = ["python", test_script]
             output = conda_run_command(cmd=command, env_name=recipe)

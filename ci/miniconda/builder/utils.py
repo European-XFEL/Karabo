@@ -4,6 +4,7 @@ from functools import wraps
 
 from paramiko import AutoAddPolicy, SSHClient
 
+
 def conda_run_command(cmd: list, *, env_name: str = None):
     """Run the 'conda run' command as subprocess on the provided environment"""
     conda_command = ["conda", "run"]

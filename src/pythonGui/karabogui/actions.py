@@ -24,7 +24,7 @@ from traits.api import Bool, Callable, HasStrictTraits, Instance, String
 
 
 class KaraboAction(HasStrictTraits):
-    """ Base class for actions"""
+    """Base class for actions"""
     # The icon for this action
     icon = Instance(QIcon)
     # The text label for the action
