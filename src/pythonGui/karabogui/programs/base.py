@@ -22,8 +22,8 @@ from platform import system
 from traceback import format_exception, print_exception
 
 from pyqtgraph import setConfigOptions
-from qtpy.QtCore import QLocale, Qt, Slot
-from qtpy.QtGui import QFont, QFontDatabase, QIcon, QPalette, QPixmap
+from qtpy.QtCore import QLocale, Qt
+from qtpy.QtGui import QFont, QFontDatabase, QIcon, QPixmap
 from qtpy.QtWidgets import QApplication, QSplashScreen, QStyleFactory
 
 from karabo.common.scenemodel.api import (
@@ -44,15 +44,6 @@ def excepthook(exc_type, value, traceback):
         network.onError(text)
     except Exception:
         print("could not send exception to network")
-
-
-@Slot()
-def updatePalette(palette):
-    """Configure the pyqtgraph widgets on runtime automatically to `QPalette`
-    changes"""
-    bg = palette.color(QPalette.Background).name()
-    fg = palette.color(QPalette.Foreground).name()
-    setConfigOptions(background=bg, foreground=fg)
 
 
 def create_gui_app(args):
@@ -93,8 +84,6 @@ def create_gui_app(args):
         app.setApplicationName('KaraboGUI')
 
     create_background_timer()
-    # Set the style among all operating systems
-    app.paletteChanged.connect(updatePalette)
     style = QStyleFactory.create("Fusion")
     palette = style.standardPalette()
     app.setStyle(style)
