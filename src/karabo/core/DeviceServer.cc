@@ -37,9 +37,6 @@
 #include <tuple>
 
 #include "Device.hh"
-#include "karabo/io/FileTools.hh"
-#include "karabo/io/Input.hh"
-#include "karabo/io/Output.hh"
 #include "karabo/log/Logger.hh"
 #include "karabo/log/utils.hh"
 #include "karabo/net/Broker.hh"
@@ -50,6 +47,7 @@
 #include "karabo/util/Configurator.hh"
 #include "karabo/util/ListElement.hh"
 #include "karabo/util/NodeElement.hh"
+#include "karabo/util/PathElement.hh"
 #include "karabo/util/SimpleElement.hh"
 #include "karabo/util/VectorElement.hh"
 #include "karabo/util/Version.hh"

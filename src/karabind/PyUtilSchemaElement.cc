@@ -22,8 +22,6 @@
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
-#include <karabo/io/InputElement.hh>
-#include <karabo/io/OutputElement.hh>
 #include <karabo/util/ByteArrayElement.hh>
 #include <karabo/util/ChoiceElement.hh>
 #include <karabo/util/Exception.hh>
@@ -38,7 +36,6 @@
 
 namespace py = pybind11;
 using namespace karabo::util;
-using namespace karabo::io;
 using namespace std;
 using namespace karabind;
 
