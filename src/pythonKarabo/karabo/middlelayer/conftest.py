@@ -31,6 +31,16 @@ try:
 except Exception:
     is_async_test = async_test_placeholder
 
+
+def async_test_placeholder(func):
+    return False
+
+
+try:
+    from pytest_asyncio import is_async_test
+except Exception:
+    is_async_test = async_test_placeholder
+
 SHUTDOWN_TIME = 2
 
 
@@ -89,12 +99,12 @@ class KaraboTestLoopPolicy(DefaultEventLoopPolicy):
 
         close_handler = loop.close
 
-        def close(loop):
+        def new_close_handler(loop):
             loop.run_until_complete(lead.slotKillDevice())
             loop.run_until_complete(sleep(SHUTDOWN_TIME))
             return close_handler()
 
-        loop.close = close.__get__(loop, type(loop))
+        loop.close = new_close_handler.__get__(loop, type(loop))
 
         return loop
 
