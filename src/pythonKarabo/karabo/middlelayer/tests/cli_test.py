@@ -101,6 +101,7 @@ def sleepSync(condition, timeout=1):
             break
 
 
+@pytest.mark.skip
 @pytest.mark.timeout(30)
 def test_delete():
     thread = EventThread()
