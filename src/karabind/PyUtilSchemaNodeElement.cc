@@ -20,8 +20,6 @@
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
-#include <karabo/io/InputElement.hh>
-#include <karabo/io/OutputElement.hh>
 #include <karabo/util/ByteArrayElement.hh>
 #include <karabo/util/ChoiceElement.hh>
 #include <karabo/util/Exception.hh>
@@ -36,98 +34,9 @@
 
 
 namespace py = pybind11;
-using namespace karabo::io;
 using namespace karabo::util;
 using namespace std;
 using namespace karabind;
-
-
-namespace karabind {
-
-    struct InputElementWrap {
-        static InputElement& setInputType(InputElement& self, const py::object& classobj) {
-            if (!PyType_Check(classobj.ptr())) {
-                throw KARABO_PYTHON_EXCEPTION(
-                      "Argument 'classobj' given in 'setInputType(classobj)' of INPUT_ELEMENT must be a class in "
-                      "Python");
-            }
-            if (!PyObject_HasAttrString(classobj.ptr(), "getSchema")) {
-                throw KARABO_PYTHON_EXCEPTION(
-                      "Class given in 'setInputType(classobj)' of INPUT_ELEMENT has no 'getSchema' method");
-            }
-            std::string classid;
-            if (PyObject_HasAttrString(classobj.ptr(), "__karabo_cpp_classid__")) {
-                classid = classobj.attr("__karabo_cpp_classid__").cast<std::string>();
-            } else {
-                classid = classobj.attr("__classid__").cast<std::string>();
-            }
-            if (self.getNode().getType() != Types::HASH) self.getNode().setValue(Hash());
-            Hash& choiceOfNodes = self.getNode().getValue<Hash>();
-
-            py::object nodeNameList = classobj.attr("getRegisteredClasses")();
-            std::any any;
-            karabind::wrapper::castPyToAny(nodeNameList, any);
-
-            if (any.type() != typeid(vector<string>))
-                throw KARABO_PYTHON_EXCEPTION("getRegisteredClasses() doesn't return vector<string>!");
-            const vector<string>& nodeNames = std::any_cast<vector<string>>(any);
-            for (size_t i = 0; i < nodeNames.size(); i++) {
-                std::string nodeName = nodeNames[i];
-                py::object schemaObj = classobj.attr("getSchema")(nodeName);
-                const Schema& schema = schemaObj.cast<const Schema&>();
-                Hash::Node& node = choiceOfNodes.set<Hash>(nodeName, schema.getParameterHash());
-                node.setAttribute(KARABO_SCHEMA_CLASS_ID, nodeName);
-                node.setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, "Input-" + nodeName);
-                node.setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::NODE);
-                node.setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, WRITE);
-            }
-            return self;
-        }
-    };
-
-
-    struct OutputElementWrap {
-        static OutputElement& setOutputType(OutputElement& self, const py::object& classobj) {
-            if (!PyType_Check(classobj.ptr())) {
-                throw KARABO_PYTHON_EXCEPTION(
-                      "Argument 'classobj' given in 'setOutputType(classobj)' of OUTPUT_ELEMENT must be a class in "
-                      "Python");
-            }
-            if (!PyObject_HasAttrString(classobj.ptr(), "getSchema")) {
-                throw KARABO_PYTHON_EXCEPTION(
-                      "Class given in 'setOutputType(classobj)' of OUTPUT_ELEMENT has no 'getSchema' method");
-            }
-            std::string classid;
-            if (PyObject_HasAttrString(classobj.ptr(), "__karabo_cpp_classid__")) {
-                classid = classobj.attr("__karabo_cpp_classid__").cast<std::string>();
-            } else {
-                classid = classobj.attr("__classid__").cast<std::string>();
-            }
-            if (self.getNode().getType() != Types::HASH) self.getNode().setValue(Hash());
-            // Retrieve reference for filling
-            Hash& choiceOfNodes = self.getNode().getValue<Hash>();
-
-            py::object nodeNameList = classobj.attr("getRegisteredClasses")();
-            std::any any;
-            karabind::wrapper::castPyToAny(nodeNameList, any);
-
-            if (any.type() != typeid(vector<string>))
-                throw KARABO_PYTHON_EXCEPTION("getRegisteredClasses() doesn't return vector<string>!");
-            const vector<string>& nodeNames = std::any_cast<vector<string>>(any);
-            for (size_t i = 0; i < nodeNames.size(); i++) {
-                std::string nodeName = nodeNames[i];
-                py::object schemaObj = classobj.attr("getSchema")(nodeName);
-                const Schema& schema = schemaObj.cast<const Schema&>();
-                Hash::Node& node = choiceOfNodes.set<Hash>(nodeName, schema.getParameterHash());
-                node.setAttribute(KARABO_SCHEMA_CLASS_ID, nodeName);
-                node.setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, "Output-" + nodeName);
-                node.setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::NODE);
-                node.setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, WRITE);
-            }
-            return self;
-        }
-    };
-} // namespace karabind
 
 
 void exportPyUtilSchemaNodeElement(py::module_& m) {
@@ -224,27 +133,4 @@ void exportPyUtilSchemaNodeElement(py::module_& m) {
 
     // TODO: evaluate if implicitly_convertible should be applied
     // py::implicitly_convertible<Schema&, NodeElement>();
-
-
-    //////////////////////////////////////////////////////////////////////
-    // Binding InputElement
-    // In Python : INPUT_ELEMENT
-    {
-        // bp::implicitly_convertible<Schema&, InputElement>();
-        py::class_<InputElement>(m, "INPUT_ELEMENT")
-              .def(py::init<Schema&>(), py::arg("expected")) KARABO_PYTHON_NODE_CHOICE_LIST(InputElement)
-              .def("setInputType", &InputElementWrap::setInputType, py::arg("python_base_class"),
-                   py::return_value_policy::reference_internal);
-    }
-
-    //////////////////////////////////////////////////////////////////////
-    // Binding OutputElement
-    // In Python : OUTPUT_ELEMENT
-    {
-        // py::implicitly_convertible<Schema&, OutputElement>();
-        py::class_<OutputElement>(m, "OUTPUT_ELEMENT")
-              .def(py::init<Schema&>(), py::arg("expected")) KARABO_PYTHON_NODE_CHOICE_LIST(OutputElement)
-              .def("setOutputType", &OutputElementWrap::setOutputType, py::arg("python_base_class"),
-                   py::return_value_policy::reference_internal);
-    }
 }

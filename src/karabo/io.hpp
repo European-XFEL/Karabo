@@ -28,9 +28,7 @@
 #include "io/BinarySerializer.hh"
 #include "io/FileTools.hh"
 #include "io/Input.hh"
-#include "io/InputElement.hh"
 #include "io/Output.hh"
-#include "io/OutputElement.hh"
 #include "io/TextSerializer.hh"
 
 #endif

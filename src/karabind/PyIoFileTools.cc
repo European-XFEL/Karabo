@@ -25,9 +25,7 @@
 #include <karabo/io/HashBinarySerializer.hh>
 #include <karabo/io/HashXmlSerializer.hh>
 #include <karabo/io/Input.hh>
-#include <karabo/io/InputElement.hh>
 #include <karabo/io/Output.hh>
-#include <karabo/io/OutputElement.hh>
 #include <karabo/io/SchemaBinarySerializer.hh>
 #include <karabo/io/SchemaXmlSerializer.hh>
 #include <karabo/io/TextFileInput.hh>
