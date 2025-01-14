@@ -322,7 +322,14 @@ void exportPyXmsImageDataElement(py::module_& m) {
                       encLuT["BGRA"] = EncodingType::BGRA;
                       encLuT["CMYK"] = EncodingType::CMYK;
                       encLuT["YUV"] = EncodingType::YUV;
+                      encLuT["YUV444"] = Encoding::YUV444;
+                      encLuT["YUV422_YUYV"] = Encoding::YUV422_YUYV;
+                      encLuT["YUV422_UYVY"] = Encoding::YUV422_UYVY;
                       encLuT["BAYER"] = EncodingType::BAYER;
+                      encLuT["BAYER_RG"] = EncodingType::BAYER_RG;
+                      encLuT["BAYER_BG"] = EncodingType::BAYER_BG;
+                      encLuT["BAYER_GR"] = EncodingType::BAYER_GR;
+                      encLuT["BAYER_GB"] = EncodingType::BAYER_GB;
                       encLuT["JPEG"] = EncodingType::JPEG;
                       encLuT["PNG"] = EncodingType::PNG;
                       encLuT["BMP"] = EncodingType::BMP;
