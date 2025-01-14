@@ -19,7 +19,8 @@ from karabo.middlelayer.tests.eventloop import (
     DeviceTest, async_tst, create_device_server, setEventLoop, sync_tst)
 
 from ..conftest import (
-    KaraboTestLoopPolicy, event_loop_policy, pytest_collection_modifyitems)
+    KaraboTestLoopPolicy, event_loop, event_loop_policy,
+    pytest_collection_modifyitems)
 from .device_context import AsyncDeviceContext
 from .naming import check_device_package_properties
 from .server_context import AsyncServerContext
