@@ -26,8 +26,7 @@ from qtpy.QtWidgets import (
     QAbstractItemDelegate, QApplication, QComboBox, QDialog, QHBoxLayout,
     QLineEdit, QStyle, QStyledItemDelegate, QStyleOptionButton, QWidget)
 
-from karabo.common.api import KARABO_EDITABLE_ATTRIBUTES, State
-from karabo.native import DaqPolicy, MetricPrefix, Unit
+from karabo.common.api import State
 from karabogui.binding.api import IntBinding, PropertyProxy, VectorHashBinding
 from karabogui.controllers.api import get_compatible_controllers
 from karabogui.indicators import STATE_COLORS
@@ -54,6 +53,7 @@ def _get_table_button_rect(option):
 class EditDelegate(QStyledItemDelegate):
     """A QStyledItemDelegate for configurator values
     """
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self._button_states = {}
@@ -228,25 +228,17 @@ class EditDelegate(QStyledItemDelegate):
 
 class EditWidgetWrapper(QWidget):
     """A QWidget container which can be returned as an item's editor."""
+
     def __init__(self, obj, index, parent=None):
         super().__init__(parent)
         self.setAutoFillBackground(True)
 
-        if isinstance(obj, PropertyProxy):
-            klass = get_compatible_controllers(obj.binding, can_edit=True)[0]
-            self.controller = klass(proxy=obj)
-            self.controller.create(self)
-            # Enable editing for the widget
-            self.controller.set_read_only(False)
-        else:
-            # The data of the 0th column is the attribute name!
-            row = index.row()
-            model = index.model()
-            index = model.index(row, 0, parent=index.parent())
-            attr_name = index.data(Qt.DisplayRole)
-            klass = _ATTR_EDITOR_FACTORIES[attr_name]
-            self.controller = klass(obj, parent=self)
-
+        assert isinstance(obj, PropertyProxy)
+        klass = get_compatible_controllers(obj.binding, can_edit=True)[0]
+        self.controller = klass(proxy=obj)
+        self.controller.create(self)
+        # Enable editing for the widget
+        self.controller.set_read_only(False)
         self.setFocusProxy(self.controller.widget)
 
         # Introduce layout to have some border to show
@@ -300,21 +292,6 @@ class EnumAttributeEditor:
             self.widget.addItem(text, e.value)
 
 
-class UnitAttributeEditor(EnumAttributeEditor):
-    """An EnumAttributeEditor for Unit values."""
-    enum_klass = Unit
-
-
-class MetricPrefixAttributeEditor(EnumAttributeEditor):
-    """An EnumAttributeEditor for MetricPrefix values."""
-    enum_klass = MetricPrefix
-
-
-class DaqPolicyAttributeEditor(EnumAttributeEditor):
-    """An EnumAttributeEditor for DaqPolicy values."""
-    enum_klass = DaqPolicy
-
-
 class IntValidator(QValidator):
     def validate(self, input, pos):
         if input in ('+', '-', ''):
@@ -329,6 +306,7 @@ class IntValidator(QValidator):
 class NumberAttributeEditor:
     """An editor for numerical attribute values
     """
+
     def __init__(self, binding, parent=None):
         self.widget = QLineEdit(parent)
 
@@ -369,10 +347,3 @@ class NumberAttributeEditor:
         if state == QValidator.Invalid or state == QValidator.Intermediate:
             value = 0
         return value
-
-
-_ATTR_EDITOR_FACTORIES = {name: NumberAttributeEditor
-                          for name in KARABO_EDITABLE_ATTRIBUTES}
-_ATTR_EDITOR_FACTORIES['metricPrefixSymbol'] = MetricPrefixAttributeEditor
-_ATTR_EDITOR_FACTORIES['unitSymbol'] = UnitAttributeEditor
-_ATTR_EDITOR_FACTORIES['daqPolicy'] = DaqPolicyAttributeEditor
