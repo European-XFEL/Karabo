@@ -32,10 +32,10 @@ from karabo.config_db import (
     ConfigurationDatabase, DbHandle, hashFromBase64Bin, hashToBase64Bin,
     schemaFromBase64Bin, schemaToBase64Bin)
 from karabo.middlelayer import (
-    AccessLevel, AccessMode, Assignment, Bool, Configurable, DaqPolicy,
-    DeviceClientBase, Hash, HashList, KaraboError, Overwrite, RegexString,
-    Slot, State, String, Timestamp, UInt32, VectorHash, VectorString,
-    background, dictToHash, sanitize_init_configuration, slot)
+    AccessLevel, AccessMode, Assignment, Bool, Configurable, DeviceClientBase,
+    Hash, HashList, KaraboError, Overwrite, RegexString, Slot, State, String,
+    Timestamp, UInt32, VectorHash, VectorString, background, dictToHash,
+    sanitize_init_configuration, slot)
 
 HIDDEN_KARABO_FOLDER = op.join(os.environ['HOME'], '.karabo')
 
@@ -123,7 +123,6 @@ class ConfigurationManager(DeviceClientBase):
         displayType="Scenes",
         description="Provides a scene for the Configuration Manager.",
         accessMode=AccessMode.READONLY,
-        daqPolicy=DaqPolicy.OMIT,
         defaultValue=['scene'])
 
     lastSuccess = Bool(
@@ -136,8 +135,7 @@ class ConfigurationManager(DeviceClientBase):
         rows=RowSchema,
         defaultValue=[],
         displayedName="View",
-        accessMode=AccessMode.READONLY,
-        daqPolicy=DaqPolicy.OMIT)
+        accessMode=AccessMode.READONLY)
 
     dbName = String(
         defaultValue="karaboDB",
