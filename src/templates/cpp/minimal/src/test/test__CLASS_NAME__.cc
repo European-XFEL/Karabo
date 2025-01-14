@@ -63,7 +63,7 @@ class __CLASS_NAME__DefaultCfg : public KaraboDeviceFixture {
         // karabo::core::BaseDevice::Pointer baseDevice;
         // baseDevice = instantiateAndGetPointer("__CLASS_NAME__", TEST_DEVICE_ID, devCfg);
         // cast the BaseDevice::Pointer to the derived class Pointer
-        // deviceUnderTest = boost::dynamic_pointer_cast<karabo::__CLASS_NAME__>(baseDevice);
+        // deviceUnderTest = std::dynamic_pointer_cast<karabo::__CLASS_NAME__>(baseDevice);
 
         /**
          * Instantiate device inside a device server
