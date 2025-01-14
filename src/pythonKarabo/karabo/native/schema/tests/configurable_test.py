@@ -25,8 +25,8 @@ from pint import DimensionalityError
 from karabo.common.states import State
 from karabo.native import (
     AccessLevel, AccessMode, ArchivePolicy, Assignment, Bool, ChoiceOfNodes,
-    ComplexDouble, ComplexFloat, Configurable, DaqDataType, DaqPolicy, Double,
-    Float, Hash, Image, ImageData, Int8, Int16, Int32, Int64, KaraboError,
+    ComplexDouble, ComplexFloat, Configurable, DaqDataType, Double, Float,
+    Hash, Image, ImageData, Int8, Int16, Int32, Int64, KaraboError,
     ListOfNodes, MetricPrefix, Node, Overwrite, QuantityValue, RegexString,
     Slot, String, Timestamp, TypeHash, TypeSchema, UInt8, UInt16, UInt32,
     UInt64, Unit, VectorBool, VectorChar, VectorComplexDouble,
@@ -1332,85 +1332,6 @@ class Tests(TestCase):
 
         a = A()
         self.assertEqual(a.node.allowedActions, ["ROI", "CROP"])
-
-    def test_daqPolicy(self):
-        class MyNode(Configurable):
-            string = String()
-
-        class A(Configurable):
-            a = Bool()
-            b = Float()
-            c = VectorFloat()
-            d = Int8()
-            e = VectorInt8()
-            f = UInt8()
-            g = VectorUInt8()
-            h = Int16()
-            i = VectorInt16()
-            j = UInt16()
-            k = VectorUInt16()
-            l = Int32()  # noqa
-            m = VectorInt32()
-            n = UInt32()
-            o = VectorUInt32()
-            p = Int64()
-            q = VectorInt64()
-            r = UInt64()
-            s = VectorUInt64()
-            t = Double()
-            u = VectorDouble()
-            v = ComplexFloat()
-            w = VectorComplexFloat()
-            x = ComplexDouble()
-            y = VectorComplexDouble()
-            z = String()
-            az = VectorString()
-            aa = VectorBool()
-
-            node = Node(MyNode)
-
-            @Slot(requiredAccessLevel=AccessLevel.EXPERT)
-            def mySlot(self):
-                pass
-
-        conf = A()
-        self.assertEqual(conf.a.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
-        self.assertEqual(conf.b.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
-        self.assertEqual(conf.c.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
-        self.assertEqual(conf.e.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
-        self.assertEqual(conf.f.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
-        self.assertEqual(conf.g.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
-        self.assertEqual(conf.h.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
-        self.assertEqual(conf.i.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
-        self.assertEqual(conf.j.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
-        self.assertEqual(conf.k.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
-        self.assertEqual(conf.l.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
-        self.assertEqual(conf.m.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
-        self.assertEqual(conf.n.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
-        self.assertEqual(conf.o.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
-        self.assertEqual(conf.p.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
-        self.assertEqual(conf.q.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
-        self.assertEqual(conf.r.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
-        self.assertEqual(conf.s.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
-        self.assertEqual(conf.t.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
-        self.assertEqual(conf.u.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
-        self.assertEqual(conf.v.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
-        self.assertEqual(conf.w.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
-        self.assertEqual(conf.x.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
-        self.assertEqual(conf.y.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
-        self.assertEqual(conf.z.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
-        self.assertEqual(conf.az.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
-        self.assertEqual(conf.aa.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
-
-        # Slots have descriptor but no daqPolicy
-        self.assertIsNotNone(conf.mySlot.descriptor)
-        with self.assertRaises(AttributeError):
-            print(conf.mySlot.descriptor.daqPolicy)
-
-        # Nodes don't have default daqPolicy or descriptor
-        self.assertIsNotNone(conf.node)
-        with self.assertRaises(AttributeError):
-            print(conf.node.descriptor)
 
     def test_regex_string(self):
 

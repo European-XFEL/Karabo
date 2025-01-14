@@ -1155,7 +1155,6 @@ async def test_device_schema():
         h = schema.hash
         assert h["value", ...] == {
             'requiredAccessLevel': 1,
-            'daqPolicy': -1,
             'metricPrefixSymbol': '',
             'accessMode': 4,
             'description': 'The Value',

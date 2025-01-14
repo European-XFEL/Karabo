@@ -258,7 +258,7 @@ class TestConfiguratorDevice(GuiTestCase):
                              ('minExc', 'n/a'), ('maxExc', 'n/a'),
                              ('minInc', 'n/a'), ('maxInc', 'n/a'),
                              ('minSize', 'n/a'), ('maxSize', 'n/a'),
-                             ('DAQ Policy', -1), ('ArchivePolicy', 'n/a'),
+                             ('ArchivePolicy', 'n/a'),
                              ]))
             assert self.view.popup_widget is not None
 
