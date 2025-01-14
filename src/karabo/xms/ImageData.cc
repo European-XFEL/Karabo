@@ -50,6 +50,13 @@ namespace karabo {
                 case Encoding::CMYK:
                 case Encoding::YUV:
                 case Encoding::BAYER:
+                case Encoding::YUV444:
+                case Encoding::YUV422_YUYV:
+                case Encoding::YUV422_UYVY:
+                case Encoding::BAYER_RG:
+                case Encoding::BAYER_BG:
+                case Encoding::BAYER_GR:
+                case Encoding::BAYER_GB:
                     return true;
                 case Encoding::JPEG:
                 case Encoding::PNG:
