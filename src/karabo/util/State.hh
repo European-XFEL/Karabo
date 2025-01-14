@@ -32,7 +32,6 @@
 #include <vector>
 
 #include "ClassInfo.hh"
-#include "Factory.hh"
 
 #define KARABO_INDICATE_STATE_SET "indicateState"
 

@@ -17,6 +17,8 @@
  */
 #include "State.hh"
 
+#include "Exception.hh"
+
 namespace karabo {
     namespace util {
 
