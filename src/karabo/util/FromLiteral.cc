@@ -25,10 +25,6 @@
 
 #include "FromLiteral.hh"
 
-// #include <boost/assign.hpp>
-
-#include "Hash.hh"
-
 namespace karabo {
     namespace util {
 

@@ -26,11 +26,9 @@
 #define KARABO_UTIL_TABLEELEMENT_HH
 
 #include <any>
-// #include <boost/cast.hpp>
 #include <utility>
 #include <vector>
 
-#include "Configurator.hh"
 #include "GenericElement.hh"
 #include "LeafElement.hh"
 #include "OverwriteElement.hh"
