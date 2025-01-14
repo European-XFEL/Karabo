@@ -269,7 +269,6 @@ class Builder:
         recipe_dir = op.dirname(self.recipe_path(recipe))
         command = [
             "conda", "build", recipe_dir,
-            "-c", "local",
             "-c", self.mirror_channel,
             "-c", self.mirror_conda_forge,
             "-c", "conda-forge",
@@ -294,10 +293,10 @@ class Builder:
         print(f'install local package for "{recipe}" in env "{env}"')
         command = ["conda", "install", recipe,
                    "-y", "--quiet",
-                   "-c", "local",
                    "-c", self.mirror_channel,
                    "-c", self.mirror_conda_forge,
-                   "-c", "conda-forge"]
+                   "-c", "conda-forge",
+                   "-c", "local"]
         conda_run_command(cmd=command, env_name=env)
         return env
 
