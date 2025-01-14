@@ -29,8 +29,8 @@ from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.states import State
 from karabo.native import KaraboError
 from karabo.native.data import (
-    AccessLevel, AccessMode, ArchivePolicy, Assignment, DaqPolicy, Hash,
-    HashByte, HashList, LeafType, MetricPrefix, NodeType, Schema, Unit,
+    AccessLevel, AccessMode, ArchivePolicy, Assignment, Hash, HashByte,
+    HashList, LeafType, MetricPrefix, NodeType, Schema, Unit,
     hashtype_from_string)
 
 from .basetypes import (
@@ -707,7 +707,6 @@ class Type(Descriptor):
     """
     unitSymbol = Attribute(Unit.NUMBER)
     metricPrefixSymbol = Attribute(MetricPrefix.NONE)
-    daqPolicy = Attribute(DaqPolicy.UNSPECIFIED)
     enum = None
 
     # Note: Require lookup dicts!

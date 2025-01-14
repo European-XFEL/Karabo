@@ -23,7 +23,7 @@ from karabo.common.api import (
 
 __all__ = ['AccessLevel', 'AccessMode', 'ArchivePolicy', 'Assignment',
            'NodeType', 'LeafType', 'DaqDataType', 'MetricPrefix',
-           'Unit', 'DimensionType', 'EncodingType', 'DaqPolicy']
+           'Unit', 'DimensionType', 'EncodingType']
 
 
 @total_ordering
@@ -34,7 +34,6 @@ class AccessLevel(Enum):
     OPERATOR = 2
     EXPERT = 3
     ADMIN = 4
-    GOD = 5
 
     def __gt__(self, other):
         if self.__class__ is other.__class__:
@@ -272,12 +271,3 @@ class EncodingType(IntEnum):
     YUV444 = 16
     YUV422_YUYV = 17
     YUV422_UYVY = 18
-
-
-@unique
-class DaqPolicy(IntEnum):
-    """DAQ storage policy
-    """
-    UNSPECIFIED = -1
-    OMIT = 0
-    SAVE = 1

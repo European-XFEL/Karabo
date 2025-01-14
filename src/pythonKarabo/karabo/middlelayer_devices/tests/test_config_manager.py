@@ -22,7 +22,7 @@ from contextlib import contextmanager
 
 from karabo.common.services import KARABO_CONFIG_MANAGER as MANAGER
 from karabo.middlelayer import (
-    DaqPolicy, Device, Double, Hash, HashList, KaraboError, Slot, String, call,
+    Device, Double, Hash, HashList, KaraboError, Slot, String, call,
     connectDevice, getConfigurationFromName, getLastConfiguration,
     instantiateFromName, listConfigurationFromName,
     listDevicesWithConfiguration, saveConfigurationFromName, slot)
@@ -54,7 +54,6 @@ conf_charlie = {
 class TestDevice(Device):
     value = Double(
         defaultValue=5.0,
-        daqPolicy=DaqPolicy.SAVE,
         warnHigh=100.0)
 
 
@@ -224,9 +223,6 @@ class TestConfigurationManager(DeviceTest):
         config = item["config"]
         value = config["value"]
         self.assertEqual(value, 5.0)
-        schema = item["schema"]
-        policy = schema.hash["value", "daqPolicy"]
-        self.assertEqual(policy, DaqPolicy.SAVE)
 
     @async_tst
     async def test_list_configuration(self):
@@ -282,9 +278,6 @@ class TestConfigurationManager(DeviceTest):
         config = item["config"]
         value = config["value"]
         self.assertEqual(value, 5.0)
-        schema = item["schema"]
-        policy = schema.hash["value", "daqPolicy"]
-        self.assertEqual(policy, DaqPolicy.SAVE)
 
         # Get the last config without schema!
         h = Hash("deviceId", "ALICE", "priority", 3)
