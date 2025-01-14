@@ -25,6 +25,7 @@ channels:
 
 dependencies:
   - python=3.12.*
+  - libzlib=1.2.13
   # for tests and building
   - flake8=6.1.0
   - isort=5.8.0
