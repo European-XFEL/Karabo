@@ -26,7 +26,6 @@
 #include "Hash.hh"
 
 #include "Schema.hh"
-#include "TableElement.hh"
 #include "ToLiteral.hh"
 
 namespace karabo {

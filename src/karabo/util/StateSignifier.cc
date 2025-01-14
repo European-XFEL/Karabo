@@ -19,7 +19,6 @@
 
 #include <algorithm>
 
-#include "Factory.hh"
 #include "StringTools.hh"
 
 using namespace std;

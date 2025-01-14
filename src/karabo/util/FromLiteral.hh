@@ -29,8 +29,7 @@
 #include <map>
 
 #include "Exception.hh"
-#include "FromType.hh"
-
+#include "Types.hh"
 namespace karabo {
 
     namespace util {
