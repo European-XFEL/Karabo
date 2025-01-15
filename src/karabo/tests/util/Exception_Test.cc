@@ -349,6 +349,24 @@ void Exception_Test::testDetails() {
     } catch (...) {
         CPPUNIT_ASSERT_MESSAGE("Missed RemoteException", false);
     }
+
+
+    try {
+        throw karabo::util::IOException("A message", "filename", "function", 42,
+                                        "Details are usually the trace, e.g. from hdf5 code");
+    } catch (const karabo::util::IOException& e) {
+        CPPUNIT_ASSERT_EQUAL(std::string("IO Exception"), e.type());
+        CPPUNIT_ASSERT_EQUAL(std::string("Details are usually the trace, e.g. from hdf5 code"), e.details());
+        CPPUNIT_ASSERT_EQUAL(std::string("A message"), e.userFriendlyMsg(false));
+        // Now check that both, message and details are in the trace:
+        const std::string fullMsg(e.detailedMsg());
+        CPPUNIT_ASSERT_MESSAGE(fullMsg, std::string::npos != fullMsg.find("A message"));
+        CPPUNIT_ASSERT_MESSAGE(fullMsg, std::string::npos != fullMsg.find("Details...........:"));
+        CPPUNIT_ASSERT_MESSAGE(fullMsg,
+                               std::string::npos != fullMsg.find("Details are usually the trace, e.g. from hdf5 code"));
+    } catch (...) {
+        CPPUNIT_ASSERT_MESSAGE("Missed IOException", false);
+    }
 }
 
 
@@ -360,7 +378,7 @@ void Exception_Test::testTraceOrder() {
             try {
                 throw KARABO_CAST_EXCEPTION("Exception 1");
             } catch (const std::exception&) {
-                KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Exception 2"));
+                KARABO_RETHROW_MSG("Exception 2");
             }
         } catch (const std::exception&) {
             KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Exception 3"));
