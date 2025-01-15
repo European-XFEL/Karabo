@@ -205,6 +205,7 @@ namespace karabo {
 
         // Convenience defines
 #define KARABO_RETHROW karabo::util::Exception::rethrow(KARABO_PROPAGATED_EXCEPTION(""));
+#define KARABO_RETHROW_MSG(msg) karabo::util::Exception::rethrow(KARABO_PROPAGATED_EXCEPTION(msg));
 #define KARABO_RETHROW_AS(exception) karabo::util::Exception::rethrow(exception);
 
         // ---- Fundamental Exceptions
@@ -366,12 +367,12 @@ namespace karabo {
         class IOException : public Exception {
            public:
             IOException(const std::string& message, const std::string& filename, const std::string& function,
-                        int lineNumber)
-                : Exception(message, "IO Exception", filename, function, lineNumber) {}
+                        int lineNumber, const std::string& detailsMsg = std::string())
+                : Exception(message, "IO Exception", filename, function, lineNumber, detailsMsg) {}
 
             IOException(const std::string& message, std::string type, const std::string& filename,
-                        const std::string& function, int lineNumber)
-                : Exception(message, type, filename, function, lineNumber) {}
+                        const std::string& function, int lineNumber, const std::string& detailsMsg = std::string())
+                : Exception(message, type, filename, function, lineNumber, detailsMsg) {}
         };
 #define KARABO_IO_EXCEPTION(msg) karabo::util::IOException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
