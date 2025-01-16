@@ -15,21 +15,26 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 import time
 from asyncio import gather, get_event_loop, sleep
-from contextlib import contextmanager
 from datetime import datetime
-from unittest import main, mock
+
+import pytest
 
 from karabo.middlelayer import (
     Device, DeviceClientBase, Hash, KaraboError, Schema, Timestamp, background,
     get_utc_string, getConfigurationFromPast, getInstanceInfo,
     getSchemaFromPast, getTopology, slot, synchronize)
-from karabo.middlelayer.testing import DeviceTest, async_tst
+from karabo.middlelayer.testing import AsyncDeviceContext
 
 DEVICE_ID = "data_logger_device_id"
 
 conf = {
     "classId": "DataLogReader",
     "_deviceId_": DEVICE_ID,
+}
+
+confd = {
+    "classId": "DeviceClient",
+    "_deviceId_": "Deviceclient-09",
 }
 
 
@@ -68,62 +73,49 @@ class DataLogReader(Device):
         return h, s, True, datetime.now().isoformat()
 
 
-class TestDeviceClient(DeviceTest):
+def test_parse_timestamp():
+    points = [datetime.now().isoformat(), Timestamp(), None]
+    for timepoint in points:
+        assert isinstance(get_utc_string(timepoint), str)
 
-    @classmethod
-    @contextmanager
-    def lifetimeManager(cls):
-        cls.dev = DataLogReader(conf)
-        with cls.deviceManager(lead=cls.dev):
-            yield
 
-    def test_parse_timestamp(self):
-        points = [datetime.now().isoformat(), Timestamp(), None]
-        for timepoint in points:
-            self.assertIsInstance(get_utc_string(timepoint), str)
+@pytest.mark.timeout(30)
+@pytest.mark.asyncio
+async def test_getConfigurationSchemaFromPast(mocker):
+    async with AsyncDeviceContext(reader=DataLogReader(conf)):
+        mocker.patch('karabo.middlelayer.device_client._getLogReaderId',
+                     new=_getLogReaderId)
+        time = datetime.now().isoformat()
 
-    @async_tst
-    async def test_getConfigurationSchemaFromPast(self):
-        with mock.patch('karabo.middlelayer.device_client._getLogReaderId',
-                        new=_getLogReaderId):
+        with pytest.raises(KaraboError):
+            await getConfigurationFromPast("aDeviceNotInHistory", time)
 
-            time = datetime.now().isoformat()
+        h = await getConfigurationFromPast("aDeviceInHistory", time)
+        assert isinstance(h, Hash)
+        assert h['value'] == 42
 
-            with self.assertRaises(KaraboError):
-                await getConfigurationFromPast("aDeviceNotInHistory", time)
+        s = await getSchemaFromPast("aDeviceInHistory", time)
+        assert isinstance(s, Schema)
+        assert s.name == DEVICE_ID
 
-            h = await getConfigurationFromPast("aDeviceInHistory", time)
-            self.assertIsInstance(h, Hash)
-            self.assertEqual(h['value'], 42)
-
-            s = await getSchemaFromPast("aDeviceInHistory", time)
-            self.assertIsInstance(s, Schema)
-            self.assertEqual(s.name, DEVICE_ID)
-
-    @async_tst
-    async def test_getInstanceInfo(self):
         info = await getInstanceInfo(DEVICE_ID)
-        self.assertEqual(info["TestInfo"], "This is a karabo test info")
-        self.assertEqual(info["classId"], "DataLogReader")
+        assert info["TestInfo"] == "This is a karabo test info"
+        assert info["classId"] == "DataLogReader"
 
 
-class TestDeviceClientBase(DeviceTest):
+@pytest.mark.fail
+@pytest.mark.timeout(40)
+@pytest.mark.asyncio
+async def test_device_client_base():
+    dev = HiddenDeviceClient(confd)
+    async with AsyncDeviceContext(device=dev):
 
-    @classmethod
-    @contextmanager
-    def lifetimeManager(cls):
-        cls.dev = HiddenDeviceClient(conf)
-        with cls.deviceManager(lead=cls.dev):
-            yield
-
-    @async_tst
-    async def test_system_topology(self):
-        """This will test the thread access to the topology Hash"""
         class DefaultDevice(Device):
             __version__ = "1.2.3"
 
-        self.assertEqual(len(getTopology()["device"]), 0,
-                         f"Topology not empty: {getTopology()['device']}")
+        msg = f"Topology has more: {getTopology()['device']}"
+        # 1 since signal slotable is there
+        assert len(getTopology()["device"]) == 1, msg
 
         devices = []
 
@@ -142,7 +134,7 @@ class TestDeviceClientBase(DeviceTest):
             while True:
                 num_devices = len(getTopology()["device"])
                 count += 1
-                if num_devices == NUMBER_DEVICES:
+                if num_devices == NUMBER_DEVICES + 1:
                     # release test
                     finished = True
                     break
@@ -166,13 +158,8 @@ class TestDeviceClientBase(DeviceTest):
         # Busy wait until the thread is finished
         while not finished:
             await sleep(0.5)
-        self.assertGreaterEqual(len(getTopology()["device"]),
-                                NUMBER_DEVICES)
+        assert len(getTopology()["device"]) == NUMBER_DEVICES + 1
 
         # Kill all devices
         futures = [d.slotKillDevice() for d in devices]
         await gather(*futures, return_exceptions=False)
-
-
-if __name__ == "__main__":
-    main()
