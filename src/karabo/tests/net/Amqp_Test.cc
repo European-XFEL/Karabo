@@ -33,6 +33,7 @@
 #include "karabo/net/AmqpClient.hh"
 #include "karabo/net/AmqpConnection.hh"
 #include "karabo/net/AmqpHashClient.hh"
+#include "karabo/net/AmqpUtils.hh"
 #include "karabo/net/Broker.hh"
 #include "karabo/net/EventLoop.hh"
 #include "karabo/tests/BrokerUtils.hh"
@@ -882,6 +883,134 @@ void Amqp_Test::testClientUnsubscribeAll() {
     CPPUNIT_ASSERT_EQUAL(nSubscriptions, readCount->load());
 }
 
+void Amqp_Test::testClientTooBigMessage() {
+    // Test that client stays connected if a message beyond limits is sent
+    if (m_defaultBrokers.empty()) {
+        std::clog << " No AMQP broker in environment. Skipping client tests for too big message..." << std::endl;
+        return;
+    }
+
+    // Prepare connection - will get connected automatically once clients need that
+    net::AmqpConnection::Pointer connection(net::AmqpConnection::MakeShared(m_defaultBrokers));
+
+    // Create alice (for sending) and bob (for reading ) clients
+    const std::string prefix = net::Broker::brokerDomainFromEnv() += ".";
+    std::shared_ptr<std::vector<char>> readMsg; // empty
+    net::AmqpClient::ReadHandler readerBob([&readMsg](const std::shared_ptr<std::vector<char>>& data,
+                                                      const std::string& exch,
+                                                      const std::string& key) { readMsg = data; });
+    net::AmqpClient::Pointer bob(net::AmqpClient::MakeShared(connection, prefix + "bob", AMQP::Table(), readerBob));
+    net::AmqpClient::Pointer alice(net::AmqpClient::MakeShared(connection, prefix + "alice", AMQP::Table(),
+                                                               net::AmqpClient::ReadHandler())); // alice won't read
+
+    //  Subscribe bob
+    const std::string exchange(prefix + "exchange");
+    auto subPromise = std::make_shared<std::promise<boost::system::error_code>>();
+    std::future<boost::system::error_code> subFuture = subPromise->get_future();
+    net::AsyncHandler callback([subPromise](const boost::system::error_code ec) { subPromise->set_value(ec); });
+    bob->asyncSubscribe(exchange, "forBob", callback);
+
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, subFuture.wait_for(m_timeout));
+    boost::system::error_code ec = subFuture.get();
+    CPPUNIT_ASSERT_EQUAL(0, ec.value());
+
+    // Now send a big, but supported message
+    const size_t supportedSize = net::AmqpClient::m_maxMessageSize; //  134'217'728ul;
+    auto pubPromise = std::make_shared<std::promise<boost::system::error_code>>();
+    std::future<boost::system::error_code> pubFuture = pubPromise->get_future();
+    alice->asyncPublish(exchange, "forBob", std::make_shared<std::vector<char>>(supportedSize, 'a'),
+                        [pubPromise](const boost::system::error_code ec) { pubPromise->set_value(ec); });
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, pubFuture.wait_for(m_timeout));
+    ec = pubFuture.get();
+    CPPUNIT_ASSERT_EQUAL(0, ec.value());
+
+    // Wait until message arrived and check it
+    for (unsigned int i = 0; i < m_timeoutMs; ++i) {
+        if (readMsg) break;
+        boost::this_thread::sleep(boost::posix_time::milliseconds(1));
+    }
+    CPPUNIT_ASSERT(readMsg);
+    CPPUNIT_ASSERT_EQUAL(supportedSize, readMsg->size());
+    CPPUNIT_ASSERT_EQUAL('a', readMsg->at(0));
+    readMsg.reset(); // for next message
+
+    // Now send the message that is too big (but where the client will notice directly).
+    pubPromise = std::make_shared<std::promise<boost::system::error_code>>();
+    pubFuture = pubPromise->get_future();
+    const size_t nTooBig = supportedSize + 1ul; // Should be 134,217,729...
+    alice->asyncPublish(exchange, "forBob", std::make_shared<std::vector<char>>(nTooBig, 'b'),
+                        [pubPromise](const boost::system::error_code ec) { pubPromise->set_value(ec); });
+
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, pubFuture.wait_for(m_timeout));
+    ec = pubFuture.get();
+    CPPUNIT_ASSERT_EQUAL(KARABO_ERROR_CODE_IO_ERROR.value(), ec.value());
+
+    // Bad message will not arrive - but give it a bit of time
+    boost::this_thread::sleep(boost::posix_time::milliseconds(50));
+    CPPUNIT_ASSERT(!readMsg);
+
+    // Now send again a supported message size.
+    pubPromise = std::make_shared<std::promise<boost::system::error_code>>();
+    pubFuture = pubPromise->get_future();
+    alice->asyncPublish(exchange, "forBob", std::make_shared<std::vector<char>>(11, 'c'),
+                        [pubPromise](const boost::system::error_code ec) { pubPromise->set_value(ec); });
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, pubFuture.wait_for(m_timeout));
+    ec = pubFuture.get();
+    CPPUNIT_ASSERT_EQUAL(0, ec.value());
+
+    // Wait until received
+    for (unsigned int i = 0; i < m_timeoutMs; ++i) {
+        if (readMsg) break;
+        boost::this_thread::sleep(boost::posix_time::milliseconds(1));
+    }
+    CPPUNIT_ASSERT(readMsg);
+    CPPUNIT_ASSERT_EQUAL(11ul, readMsg->size());
+    CPPUNIT_ASSERT_EQUAL('c', readMsg->at(0));
+    readMsg.reset(); // for next use
+
+    // Now manipulate AmqpClient to not catch a too big message - but let broker complain.
+    // In this case, the channel will get unusable after a delay. So several more message can be sent
+    // (and get lost!), but broker communication gets revived.
+    net::AmqpClient::m_maxMessageSize += 1;
+    pubPromise = std::make_shared<std::promise<boost::system::error_code>>();
+    pubFuture = pubPromise->get_future();
+    alice->asyncPublish(exchange, "forBob", std::make_shared<std::vector<char>>(nTooBig, 'd'),
+                        [pubPromise](const boost::system::error_code ec) { pubPromise->set_value(ec); });
+
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, pubFuture.wait_for(m_timeout));
+    ec = pubFuture.get();
+    CPPUNIT_ASSERT_EQUAL(0, ec.value()); // Unfortunately, success is claimed!
+
+    // Bad message will not arrive - but give it a bit of time
+    boost::this_thread::sleep(boost::posix_time::milliseconds(50));
+    CPPUNIT_ASSERT(!readMsg);
+
+    // Unfortunately, it takes a while until the broker/AMQP lib will notice the too big message
+    // and make the channel unusable. All messages published till then are lost.
+    // We send until one arrives, i.e. we know that channel was recovered.
+    unsigned int iSent = 0;
+    for (; iSent < m_timeoutMs; ++iSent) {
+        pubPromise = std::make_shared<std::promise<boost::system::error_code>>();
+        pubFuture = pubPromise->get_future();
+        alice->asyncPublish(exchange, "forBob", std::make_shared<std::vector<char>>(iSent + 1, 'e'),
+                            [pubPromise](const boost::system::error_code ec) { pubPromise->set_value(ec); });
+        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, pubFuture.wait_for(m_timeout));
+        ec = pubFuture.get();
+        CPPUNIT_ASSERT_EQUAL(0, ec.value());
+        if (readMsg) break;
+        boost::this_thread::sleep(boost::posix_time::milliseconds(1));
+    }
+    CPPUNIT_ASSERT(readMsg);
+    CPPUNIT_ASSERT_EQUAL('e', readMsg->at(0));
+    // Locally using our office broker the size of the message is about 775.
+    // I also see that there are about 2.5 seconds between my try to send the too big message and the
+    // responding log message from AmqpClient::channelErrorhandler(..).
+    // So it is pretty delayed...
+    CPPUNIT_ASSERT_LESS(2000ul, readMsg->size()); // Limit a bit to get aware if sometimes it takes longer...
+
+    // Back to original value (no big harm if this line is not met due to previous exception).
+    net::AmqpClient::m_maxMessageSize -= 1;
+}
 
 void Amqp_Test::testHashClient() {
     if (m_defaultBrokers.empty()) {

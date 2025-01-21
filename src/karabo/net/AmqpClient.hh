@@ -74,6 +74,8 @@ namespace karabo::net {
         using ReadHandler = std::function<void(const std::shared_ptr<std::vector<char>>& data,
                                                const std::string& exchange, const std::string& routingKey)>;
 
+        static size_t m_maxMessageSize;
+
         /**
          * Create client with raw data interface from connection
          *
@@ -183,6 +185,8 @@ namespace karabo::net {
          * If READY (or failure), call and erase the m_channelPreparationCallback
          */
         void moveChannelState();
+
+        void channelErrorHandler(const char* errMsg);
 
         void doSubscribePending(const boost::system::error_code& ec);
 
