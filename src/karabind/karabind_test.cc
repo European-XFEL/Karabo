@@ -39,7 +39,7 @@ namespace py = pybind11;
 // void exportPyUtilSchemaTest(py::module_ &);
 //
 //
-// Build one big module, 'karabind.so', similar to how we build 'karathon' module
+// Build one big module, 'karabind.so'
 //
 // PYBIND11_MODULE(karabind_test, m) {
 //     util

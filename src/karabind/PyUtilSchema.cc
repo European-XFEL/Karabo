@@ -52,7 +52,6 @@ struct ConvertOptions {
     inline void operator()(T*) {
         const Hash& h = m_schema.getParameterHash();
         result = wrapper::castAnyToPy(h.getAttributeAsAny(m_path, KARABO_SCHEMA_OPTIONS));
-        // result = karathon::Wrapper::fromStdVectorToPyArray<T>(m_schema.getOptions<T>(m_path));
     }
 
     const string& m_path;
