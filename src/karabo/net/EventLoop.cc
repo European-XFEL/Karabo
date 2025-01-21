@@ -58,7 +58,7 @@ namespace karabo {
 
 
         void EventLoop::work() {
-            // Note: If signal set is changed, adjust documentation (also in karathon)
+            // Note: If signal set is changed, adjust documentation (also in karabind)
             boost::asio::signal_set signals(getIOService(), SIGINT, SIGTERM);
             auto loop = instance();
             // TODO: Consider to use ordinary function instead of this lengthy lambda.
