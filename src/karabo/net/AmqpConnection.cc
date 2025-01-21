@@ -440,13 +440,15 @@ namespace karabo {
                 // - "ACCESS_REFUSED - queue '<name>' in vhost '/xxx' in exclusive use"
                 //   when a channel creates a consumer for a queue that already has an AMQP::exclusive consumer.
                 //   Note that same is also sent to the method registered with
-                //   channel->consume(...).onError(..) and that that channel is disabled afterwards.
+                //   channel->consume(...).onError(..) and that channel is disabled afterwards.
                 // - When channel tried to create a consumer for a non-existing queue
                 //   "NOT_FOUND - no queue '<name>' in vhost '/'xxx""
                 // - When the broker goes down: "connection lost"
                 //   (Here is some duplication since also AmqpConnection::onLost is called
-                // NOTE: To avoid message duplication consider to do 'channelPtr->onError(nullptr);' instead!
-                //       But for now we keep it.
+                // - "PRECONDITION_FAILED - message size <NNN> is larger than configured max size 134217728"
+                //   a while after publishing a message bigger than the configured maximum of the broker,
+                //   the channel wis ususable afterwards
+                // NOTE: Once its channel status is READY, AmqpClient sets a new error handler.
                 channelPtr->onError([](const char* errMsg) {
                     KARABO_LOG_FRAMEWORK_WARN_C("AmqpConnection") << "Channel reports: " << errMsg;
                 });
