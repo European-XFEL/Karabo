@@ -331,5 +331,5 @@ def test_hashAttributesNode_getValueAs():
     h.setAttribute("a.b.c", "attr2", "test")
     n2 = attrs.getNode("attr2")
     assert n2.getType() == Types.STRING
-    n1.setValue(['karathon', 'karabind'])
-    assert n1.getValue() == ['karathon', 'karabind']
+    n1.setValue(['karabim', 'karabom'])
+    assert n1.getValue() == ['karabim', 'karabom']
