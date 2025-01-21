@@ -28,6 +28,13 @@
 using std::placeholders::_1;
 
 namespace karabo::net {
+    // The maximum supported by default AMQP broker settings, see
+    // https://www.cloudamqp.com/blog/what-is-the-message-size-limit-in-rabbitmq.html.
+    // Larger message create this error (seen in AmqpClient::channelErrorHandler):
+    // PRECONDITION_FAILED - message size XXX is larger than configured max size 134217728
+    // But also see https://github.com/rabbitmq/rabbitmq-server/issues/11187, it looks as
+    // they are redcucing the (default) message size much further, down to 16 MiB!
+    size_t AmqpClient::m_maxMessageSize = 134'217'728ul; // 128 MB
 
     AmqpClient::AmqpClient(AmqpConnection::Pointer connection, std::string instanceId, AMQP::Table queueArgs,
                            ReadHandler readHandler)
@@ -316,13 +323,13 @@ namespace karabo::net {
         auto doPublishPostponed = [weakThis{weak_from_this()}](const boost::system::error_code& ec) {
             if (auto self = weakThis.lock()) {
                 if (ec) {
-                    KARABO_LOG_FRAMEWORK_WARN_C("AmqpClient")
-                          << self->m_instanceId << ": Preparations to publish "
-                          << "postponed messages after reconnection failed: " << ec.message();
+                    KARABO_LOG_FRAMEWORK_WARN << self->m_instanceId << ": Preparations to publish "
+                                              << self->m_postponedPubMessages.size()
+                                              << "postponed messages after reconnection failed: " << ec.message();
                 } else if (!self->m_postponedPubMessages.empty()) {
-                    KARABO_LOG_FRAMEWORK_INFO_C("AmqpClient")
-                          << self->m_instanceId << ": Publish " << self->m_postponedPubMessages.size()
-                          << " postponed messages after reconnection";
+                    KARABO_LOG_FRAMEWORK_INFO << self->m_instanceId << ": Publish "
+                                              << self->m_postponedPubMessages.size()
+                                              << " postponed messages after reconnection";
                     self->publishPostponed();
                 }
             }
@@ -341,14 +348,12 @@ namespace karabo::net {
                                    const boost::system::error_code& ec) mutable {
                       (*doneFlags)[i] = true;
                       if (ec) {
-                          KARABO_LOG_FRAMEWORK_ERROR_C("AmqpClient")
-                                << queue << ": Failed to resubscribe to exchange '" << exchange
-                                << "' with routing key '" << routingKey << "': " << ec.message();
+                          KARABO_LOG_FRAMEWORK_ERROR << queue << ": Failed to resubscribe to exchange '" << exchange
+                                                     << "' with routing key '" << routingKey << "': " << ec.message();
                           *commonEc = ec; // Track only last failure
                       } else {
-                          KARABO_LOG_FRAMEWORK_INFO_C("AmqpClient")
-                                << queue << ": Resubscribed to exchange '" << exchange << "' with routing key '"
-                                << routingKey << "'";
+                          KARABO_LOG_FRAMEWORK_INFO << queue << ": Resubscribed to exchange '" << exchange
+                                                    << "' with routing key '" << routingKey << "'";
                       }
                       // Since in single threaded io context, no need for concurrency protection of doneFlags
                       for (bool flag : *doneFlags) {
@@ -378,7 +383,7 @@ namespace karabo::net {
             }
         } else {
             // No subscriptions, so publish postponed messages after taking care to prepare channel
-            m_channelStatus = ChannelStatus::REQUEST;
+            m_channelStatus = ChannelStatus::CREATE;
             asyncPrepareChannel(doPublishPostponed);
         }
 
@@ -424,7 +429,11 @@ namespace karabo::net {
         // creates an envelope as we do here from vector<char>, one can assume that (unfortunately) the data is copied
         // here (and our 'onPublishDone(success)' is called a bit too soon).
         AMQP::Envelope dataWrap(data->data(), data->size());
-        if (m_channel->publish(exchange, routingKey, dataWrap)) {
+        if (data->size() > m_maxMessageSize) {
+            KARABO_LOG_FRAMEWORK_ERROR << "Dropping too big message of size " << data->size()
+                                       << " instead of sending to " << exchange << "." << routingKey;
+            onPublishDone(KARABO_ERROR_CODE_IO_ERROR);
+        } else if (m_channel->publish(exchange, routingKey, dataWrap)) {
             onPublishDone(KARABO_ERROR_CODE_SUCCESS);
         } else if (!m_connection->isConnected() || !m_channel->usable()) {
             // Likely just disconnected. Not sure connection knows in time, but channel->usable() will know.
@@ -467,17 +476,25 @@ namespace karabo::net {
                 return; // All messages have to wait further
             } else {
                 AMQP::Envelope dataWrap(postponedMsg.data->data(), postponedMsg.data->size());
-                if (m_channel->publish(postponedMsg.exchange, postponedMsg.routingKey, dataWrap)) {
+                if (postponedMsg.data->size() > m_maxMessageSize) {
+                    AsyncHandler callback;
+                    KARABO_LOG_FRAMEWORK_ERROR << "Dropping too big postponed message of size "
+                                               << postponedMsg.data->size() << " instead " << "of sending to "
+                                               << postponedMsg.exchange << "." << postponedMsg.routingKey;
+                    callback.swap(postponedMsg.onPublishDone);
+                    m_postponedPubMessages.pop();
+                    callback(KARABO_ERROR_CODE_IO_ERROR);
+                } else if (m_channel->publish(postponedMsg.exchange, postponedMsg.routingKey, dataWrap)) {
                     AsyncHandler callback;
                     callback.swap(postponedMsg.onPublishDone);
                     m_postponedPubMessages.pop();
                     callback(KARABO_ERROR_CODE_SUCCESS);
                 } else {
-                    KARABO_LOG_FRAMEWORK_WARN_C("AmqpClient")
-                          << m_instanceId << ": publish queued message failed. Channel "
-                          << (m_channel->usable() ? "" : "not ") << "usable. " << m_connection->connectionInfo()
-                          << " (Use count: " << m_connection.use_count() << ")";
-                    // Maybe disconnected again? Keep in queue and rely on reconenction
+                    KARABO_LOG_FRAMEWORK_WARN << m_instanceId << ": publish queued message failed. Channel "
+                                              << (m_channel->usable() ? "" : "not ") << "usable. "
+                                              << m_connection->connectionInfo()
+                                              << " (Use count: " << m_connection.use_count() << ")";
+                    // Maybe disconnected again? Keep in queue and rely on reconnection
                     return;
                 }
             }
@@ -596,10 +613,11 @@ namespace karabo::net {
                               KARABO_LOG_FRAMEWORK_DEBUG_C("AmqpClient") << "Consumer for id " << self->m_instanceId
                                                                          << queue << " ready, tag: " << consumerTag;
                               self->m_channelStatus = ChannelStatus::READY;
-                              // We could overwrite error handler that will notice if channel has a problem
-                              // self->m_channel->onError([](const char* msg){});
-                              // But we keep the one that just logs error (set by connection) since only use case
-                              // so far is 'connection lost' that is well treated by connection.
+                              // Overwrite error handler that will notice if channel has a problem.
+                              // The one set by connection before just logs errors. Note that channelErrorHandler(..)
+                              // only knows how to treat errors after channel status is READY.
+                              self->m_channel->onError(
+                                    util::bind_weak(&AmqpClient::channelErrorHandler, self.get(), _1));
                               AsyncHandler callback;
                               callback.swap(self->m_channelPreparationCallback);
                               callback(KARABO_ERROR_CODE_SUCCESS);
@@ -644,6 +662,35 @@ namespace karabo::net {
                 break;
             case ChannelStatus::READY:
                 break;
+        }
+    }
+
+    void AmqpClient::channelErrorHandler(const char* errMsg) {
+        if (!errMsg) errMsg = "<empty error message ptr>";
+        std::stringstream msg;
+        msg << "Amqp channel of '" << m_instanceId << "' reports '" << errMsg << "'";
+        bool error = false;
+        if (m_channelStatus == ChannelStatus::READY) {
+            if (!m_channel->usable()) {
+                if (std::string(errMsg).find("connection lost") != std::string::npos) {
+                    msg << ", but connection loss treated elsewhere";
+                } else {
+                    error = true;
+                    msg << ", so revive channel";
+                    m_connection->post([weakSelf{weak_from_this()}]() {
+                        if (auto self = weakSelf.lock()) {
+                            self->reviveIfReconnected();
+                        }
+                    });
+                }
+            } else {
+                msg << ", but channel still usable";
+            }
+        }
+        if (error) {
+            KARABO_LOG_FRAMEWORK_ERROR << msg.str();
+        } else {
+            KARABO_LOG_FRAMEWORK_WARN << msg.str();
         }
     }
 
