@@ -906,9 +906,22 @@ void DataLogging_Test::testNoInfluxServerHandling() {
 
     std::clog << "... Influx logger in ERROR state, as expected, with status '" << loggerStatus << "'" << std::endl;
 
+    // The LogReader should be still in ON state - it only goes to error after failing to connect to the Influx
+    // instance.
+    const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
+    karabo::util::State readerState = karabo::util::State::UNKNOWN;
+    waitForCondition(
+          [this, &readerState, &dlreader0]() {
+              readerState = m_deviceClient->get<karabo::util::State>(dlreader0, "state");
+              return (readerState == karabo::util::State::ON);
+          },
+          KRB_TEST_MAX_TIMEOUT * 1000);
+
+    CPPUNIT_ASSERT_MESSAGE("Timeout while waiting for LogReader '" + dlreader0 + "' to reach ON state.",
+                           readerState == karabo::util::State::ON);
+
     // Any attempt to recover a configuration from Influx should fail when the Influx Server is not
     // available.
-    const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
     Epochstamp withNoServer;
     std::clog << "Requested config at '" << withNoServer.toIso8601() << "' with an invalid server url ... "
               << std::endl;
@@ -933,6 +946,18 @@ void DataLogging_Test::testNoInfluxServerHandling() {
     }
 
     CPPUNIT_ASSERT(remoteExceptionCaught);
+
+    // At this point the LogReader will have tried to access Influx and failed. It should now be in ERROR.
+    readerState = karabo::util::State::UNKNOWN;
+    waitForCondition(
+          [this, &readerState, &dlreader0]() {
+              readerState = m_deviceClient->get<karabo::util::State>(dlreader0, "state");
+              return (readerState == karabo::util::State::ERROR);
+          },
+          KRB_TEST_MAX_TIMEOUT * 1000);
+
+    CPPUNIT_ASSERT_MESSAGE("Timeout while waiting for LogReader '" + dlreader0 + "' to reach ERROR state.",
+                           readerState == karabo::util::State::ERROR);
 
     std::clog << "... request failed with RemoteException as expected." << std::endl;
 
