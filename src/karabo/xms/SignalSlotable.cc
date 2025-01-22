@@ -817,6 +817,15 @@ namespace karabo {
             if (m_updatePerformanceStatistics) {
                 updateLatencies(header, whenPostedEpochMs);
             }
+            // Helper for log message in case of exception
+            auto slotCaller = [](const Hash::Pointer& header) -> std::string {
+                if (header) {
+                    auto node = header->find("signalInstanceId");
+                    if (node) return node->getValue<std::string>();
+                }
+                return "<unknown>"; // no header or no "signalInstanceId" key in it
+            };
+
             try {
                 // Check whether slot is callable
                 if (m_slotCallGuardHandler) {
@@ -849,12 +858,13 @@ namespace karabo {
             } catch (const karabo::util::Exception& e) {
                 const std::string friendlyMsg(e.userFriendlyMsg(false));
                 const std::string details(e.detailedMsg());
-                KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << ": Exception in slot '" << slotFunction
-                                           << "': " << details;
+                KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << ": Exception in slot '" << slotFunction << "' called by '"
+                                           << slotCaller(header) << "': " << details;
                 replyException(*header, friendlyMsg, details);
             } catch (const std::exception& e) {
                 const std::string msg(e.what());
-                KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << ": Exception in slot '" << slotFunction << "': " << msg;
+                KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << ": Exception in slot '" << slotFunction << "' called by '"
+                                           << slotCaller(header) << "': " << msg;
                 replyException(*header, msg, std::string());
             }
         }
