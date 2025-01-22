@@ -238,10 +238,14 @@ namespace karabo {
             std::string unescapeLoggedString(const std::string& loggedStr);
 
             /**
-             * Handles a given Http response whenever it indicates an error.
+             * Performs an initial common handling of an HTTP response received by the
+             * Log Reader.
              *
              * In the InfluxDb client <-> server communication context, any response with a status
-             * code greater or equal to 300 is considered an error and will be handled by this method.
+             * code greater or equal to 300 is considered an error and will be completely handled
+             * by this method. A specific status code, 503, indicates that the InfluxDb server was
+             * not available and puts the Log Reader in ERROR state. Any other error puts the Log
+             * Reader in ON state.
              *
              * The error handling consists of sending the appropriate error reply to the caller of
              * the InfluxLogReader slot affected by the error and of optionally disconnecting the
@@ -250,11 +254,13 @@ namespace karabo {
              * @param httpResponse the response that potentially indicates an error.
              * @param asyncReply the reply to be sent to the caller of the slot where the error
              *                   happened.
-             * @return true if the httpResponse indicated an error that has been handled. false if
-             *              the httpResponse didn't indicate an error.
+             * @return true if the preHandle method completely processed the HttpResponse and no
+             *         further action from the Log Reader is needed. This is the case for responses
+             *         with status codes indicating errors. false if the response should still be
+             *         processed by the response handler that called preHandleHttpResponse.
              */
-            bool handleHttpResponseError(const karabo::net::HttpResponse& httpResponse,
-                                         const karabo::xms::SignalSlotable::AsyncReply& asyncReply);
+            bool preHandleHttpResponse(const karabo::net::HttpResponse& httpResponse,
+                                       const karabo::xms::SignalSlotable::AsyncReply& asyncReply);
 
             /**
              * Convert a time point from influx to karabo Epochstamp

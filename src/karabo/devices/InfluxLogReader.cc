@@ -95,6 +95,12 @@ namespace karabo {
         const TimeValue InfluxLogReader::kMaxInfluxDataDelaySecs = 300ull;
 
         void InfluxLogReader::expectedParameters(karabo::util::Schema& expected) {
+            OVERWRITE_ELEMENT(expected)
+                  .key("state")
+                  .setNewOptions(State::ON, State::ERROR)
+                  .setNewDefaultValue(State::ON)
+                  .commit();
+
             STRING_ELEMENT(expected)
                   .key("urlPropHistory")
                   .displayedName("URL for Property History")
@@ -268,9 +274,9 @@ namespace karabo {
 
         void InfluxLogReader::onDataCountForProperty(const karabo::net::HttpResponse& dataCountResp,
                                                      const std::shared_ptr<PropertyHistoryContext>& ctxt) {
-            bool errorHandled = handleHttpResponseError(dataCountResp, ctxt->aReply);
+            bool fullyHandled = preHandleHttpResponse(dataCountResp, ctxt->aReply);
 
-            if (errorHandled) {
+            if (fullyHandled) {
                 // An error happened and has been reported to the slot caller.
                 // Nothing left for the execution of this slot.
                 return;
@@ -380,9 +386,9 @@ namespace karabo {
         void InfluxLogReader::onPropertyValues(const karabo::net::HttpResponse& valuesResp,
                                                const std::string& columnPrefixToRemove,
                                                const std::shared_ptr<PropertyHistoryContext>& ctxt) {
-            bool errorHandled = handleHttpResponseError(valuesResp, ctxt->aReply);
+            bool fullyHandled = preHandleHttpResponse(valuesResp, ctxt->aReply);
 
-            if (errorHandled) {
+            if (fullyHandled) {
                 // An error happened and has been reported to the slot caller.
                 // Nothing left for the execution of this slot.
                 return;
@@ -428,9 +434,9 @@ namespace karabo {
 
         void InfluxLogReader::onMeanPropertyValues(const karabo::net::HttpResponse& valuesResp,
                                                    const std::shared_ptr<PropertyHistoryContext>& ctxt) {
-            bool errorHandled = handleHttpResponseError(valuesResp, ctxt->aReply);
+            bool fullyHandled = preHandleHttpResponse(valuesResp, ctxt->aReply);
 
-            if (errorHandled) {
+            if (fullyHandled) {
                 // An error happened and has been reported to the slot caller.
                 // Nothing left for the execution of this slot.
                 return;
@@ -539,9 +545,9 @@ namespace karabo {
 
         void InfluxLogReader::onLastLoginFormatBeforeTime(const karabo::net::HttpResponse& valueResp,
                                                           const std::shared_ptr<ConfigFromPastContext>& ctxt) {
-            bool errorHandled = handleHttpResponseError(valueResp, ctxt->aReply);
+            bool fullyHandled = preHandleHttpResponse(valueResp, ctxt->aReply);
 
-            if (errorHandled) {
+            if (fullyHandled) {
                 // An error happened and has been reported to the slot caller.
                 // Nothing left for the execution of this slot.
                 return;
@@ -601,9 +607,9 @@ namespace karabo {
 
         void InfluxLogReader::onLastLogoutBeforeTime(const karabo::net::HttpResponse& valueResp,
                                                      const std::shared_ptr<ConfigFromPastContext>& ctxt) {
-            bool errorHandled = handleHttpResponseError(valueResp, ctxt->aReply);
+            bool fullyHandled = preHandleHttpResponse(valueResp, ctxt->aReply);
 
-            if (errorHandled) {
+            if (fullyHandled) {
                 // An error happened and has been reported to the slot caller.
                 // Nothing left for the execution of this slot.
                 return;
@@ -662,9 +668,9 @@ namespace karabo {
 
         void InfluxLogReader::onLastSchemaDigestBeforeTime(const karabo::net::HttpResponse& valueResp,
                                                            const std::shared_ptr<ConfigFromPastContext>& ctxt) {
-            bool errorHandled = handleHttpResponseError(valueResp, ctxt->aReply);
+            bool fullyHandled = preHandleHttpResponse(valueResp, ctxt->aReply);
 
-            if (errorHandled) {
+            if (fullyHandled) {
                 // An error happened and has been reported to the slot caller.
                 // Nothing left for the execution of this slot.
                 return;
@@ -729,9 +735,9 @@ namespace karabo {
         void InfluxLogReader::onSchemaForDigest(const karabo::net::HttpResponse& schemaResp,
                                                 const std::shared_ptr<ConfigFromPastContext>& ctxt,
                                                 const std::string& digest) {
-            bool errorHandled = handleHttpResponseError(schemaResp, ctxt->aReply);
+            bool fullyHandled = preHandleHttpResponse(schemaResp, ctxt->aReply);
 
-            if (errorHandled) {
+            if (fullyHandled) {
                 // An error happened and has been reported to the slot caller.
                 // Nothing left for the execution of this slot.
                 return;
@@ -886,9 +892,9 @@ namespace karabo {
         void InfluxLogReader::onPropValueBeforeTime(const std::vector<PropFromPastInfo>& propInfos,
                                                     const karabo::net::HttpResponse& propValueResp,
                                                     const std::shared_ptr<ConfigFromPastContext>& ctxt) {
-            bool errorHandled = handleHttpResponseError(propValueResp, ctxt->aReply);
+            bool fullyHandled = preHandleHttpResponse(propValueResp, ctxt->aReply);
 
-            if (errorHandled) {
+            if (fullyHandled) {
                 // An error happened and has been reported to the slot caller.
                 // Nothing left for the execution of this slot.
                 return;
@@ -1184,7 +1190,7 @@ namespace karabo {
 
         void InfluxLogReader::onGetBadData(const HttpResponse& response, SignalSlotable::AsyncReply aReply,
                                            const karabo::net::InfluxDbClient::Pointer& /* influxClient */) {
-            if (handleHttpResponseError(response, aReply)) {
+            if (preHandleHttpResponse(response, aReply)) {
                 // Nothing left to do, failure is already replied.
                 return;
             }
@@ -1233,9 +1239,10 @@ namespace karabo {
             }
         }
 
-        bool InfluxLogReader::handleHttpResponseError(const karabo::net::HttpResponse& httpResponse,
-                                                      const karabo::xms::SignalSlotable::AsyncReply& asyncReply) {
-            bool errorHandled = false;
+        bool InfluxLogReader::preHandleHttpResponse(const karabo::net::HttpResponse& httpResponse,
+                                                    const karabo::xms::SignalSlotable::AsyncReply& asyncReply) {
+            bool fullyHandled = false;
+            const State currentState(get<State>("state"));
 
             if (httpResponse.code >= 300) {
                 // Some error happened while processing the request.
@@ -1248,10 +1255,32 @@ namespace karabo {
                            << "\nResponse message: " << httpResponse.message;
                 }
                 asyncReply.error(errMsg.str());
-                errorHandled = true;
+
+                if (httpResponse.code == 503) {
+                    // A 503 reply from the InfluxDbClient (or even one originated from Influx
+                    // and propagated by the InfluxDbClient) can be interpreted as server not
+                    // available and should put the log reader in ERROR state (if not already).
+                    if (currentState != State::ERROR) {
+                        updateState(State::ERROR, Hash("status", "Influx server not available"));
+                    }
+                } else {
+                    // Any other status code means the server was responsive. The log reader should
+                    // go to ON state (if not already).
+                    if (currentState != State::ON) {
+                        updateState(State::ON, Hash("status", std::string()));
+                    }
+                }
+
+                fullyHandled = true;
+            } else {
+                // For status codes that don't indicate errors while processing the request,
+                // the state of the log reader should be ON.
+                if (currentState != State::ON) {
+                    updateState(State::ON, Hash("status", std::string()));
+                }
             }
 
-            return errorHandled;
+            return fullyHandled;
         }
 
         karabo::util::Epochstamp InfluxLogReader::toEpoch(unsigned long long timeFromInflux) const {
