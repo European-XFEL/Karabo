@@ -1752,8 +1752,10 @@ namespace karabo {
                 //
                 SignalSlotable::start();
 
-                KARABO_LOG_FRAMEWORK_INFO << "'" << m_classId << "' with deviceId: '" << this->getInstanceId()
-                                          << "' got started on server '" << this->getServerId() << "'.";
+                KARABO_LOG_FRAMEWORK_INFO << "'" << m_classId << "' (version '"
+                                          << this->get<std::string>("classVersion") << "') with deviceId: '"
+                                          << this->getInstanceId() << "' got started" << " on server '"
+                                          << this->getServerId() << "'.";
 
                 //
                 // Finally do everything that requires full participation in the system
