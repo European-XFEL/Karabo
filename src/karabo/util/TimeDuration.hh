@@ -241,7 +241,8 @@ namespace karabo {
             /// Sanitize, i.e. take care that 'frac' is below 1 second and adjust 'sec' accordingly.
             static inline void sanitize(TimeValue& sec, TimeValue& frac);
             /// One second expressed in attoseconds
-            static const TimeValue m_oneSecondInAtto = 1000000000000000000ULL; // initialise integer type directly here
+            static const TimeValue m_oneSecondInAtto = 1'000'000'000'000'000'000ULL;
+
            private:
             TimeValue m_Seconds;
             TimeValue m_Fractions;
