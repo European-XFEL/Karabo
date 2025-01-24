@@ -10,7 +10,7 @@ Simply type:
 
 ``pip install -e .``
 
-in the directory of where the ``setup.py`` file is located, or use the ``karabo``
+in the directory of where the ``pyproject.toml`` file is located, or use the ``karabo``
 utility script:
 
 ``karabo develop __PACKAGE_NAME__``
