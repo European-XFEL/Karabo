@@ -48,7 +48,7 @@ namespace karabo {
              * Return Epochstamp part of the timestamp
              * @return
              */
-            inline Epochstamp getEpochstamp() const {
+            inline const Epochstamp& getEpochstamp() const {
                 return m_epochstamp;
             }
 
@@ -56,7 +56,7 @@ namespace karabo {
              * Return Trainstamp part of the timestamp
              * @return
              */
-            inline Trainstamp getTrainstamp() const {
+            inline const Trainstamp& getTrainstamp() const {
                 return m_trainstamp;
             }
 
