@@ -14,7 +14,7 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 import uuid
-from asyncio import gather, get_event_loop, set_event_loop, sleep, wait_for
+from asyncio import gather, set_event_loop, sleep, wait_for
 from contextlib import ExitStack, contextmanager
 from functools import partial, wraps
 from unittest import TestCase
@@ -58,7 +58,6 @@ class DeviceTest(TestCase):
     def setUpClass(cls):
         with ExitStack() as cls.exit_stack:
             cls.loop = EventLoop()
-            cls.old_event_loop = get_event_loop()
             set_event_loop(cls.loop)
             cls.exit_stack.enter_context(cls.lifetimeManager())
             cls.exit_stack = cls.exit_stack.pop_all()
@@ -69,12 +68,8 @@ class DeviceTest(TestCase):
             with cls.exit_stack:
                 pass
         finally:
-            # return the event loop at the conditions we found it.
-            # multiple tests might fail if we do not do this.
-            # also: closing the event loop in a `finally`
-            # as insurance against failures in exit_stack
             cls.loop.close()
-            set_event_loop(cls.old_event_loop)
+            set_event_loop(None)
 
     @classmethod
     @contextmanager
