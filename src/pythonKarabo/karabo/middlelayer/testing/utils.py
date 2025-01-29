@@ -55,7 +55,7 @@ def run_test(func):
     """Run a pytest test function `func` in the karabo eventloop"""
 
     @functools.wraps(func)
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="module")
     async def wrapper(*args, **kwargs):
         loop = get_running_loop()
         lead = getattr(loop, "lead", None)
