@@ -19,7 +19,8 @@ import os
 import shutil
 import sys
 from asyncio import (
-    TimeoutError, create_subprocess_exec, ensure_future, wait_for)
+    TimeoutError, create_subprocess_exec, ensure_future, get_running_loop,
+    wait_for)
 from datetime import datetime
 from subprocess import PIPE
 
@@ -35,8 +36,8 @@ from karabo.middlelayer import (
     String, UInt32, Unit, VectorDouble, background, call, encodeBinary,
     getDevice, getHistory, isSet, setWait, shutdown, sleep, unit, updateDevice,
     waitUntil, waitUntilNew)
-from karabo.middlelayer.testing import (
-    AsyncDeviceContext, event_loop, sleepUntil)
+from karabo.middlelayer.testing import (  # noqa
+    AsyncDeviceContext, event_loop_policy, sleepUntil)
 
 
 class Child(Configurable):
@@ -142,12 +143,12 @@ LOGGER_MAP = "loggermap.xml"
 process = None
 
 
-@pytest_asyncio.fixture()
-async def deviceTest(event_loop: event_loop):
+@pytest_asyncio.fixture(scope="module")
+async def deviceTest():
     global process
     process = None
 
-    instance = event_loop.instance()
+    instance = get_running_loop().instance()
     instance.loggerMap = LOGGER_MAP
 
     starting_dir = os.getcwd()
@@ -189,7 +190,7 @@ async def deviceTest(event_loop: event_loop):
 
 
 @pytest.mark.timeout(90)
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="module")
 async def test_cross(deviceTest):
     await getDevice("middlelayerDevice")
     global process
@@ -452,7 +453,7 @@ async def test_cross(deviceTest):
 
 
 @pytest.mark.timeout(90)
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="module")
 async def test_cross_pipeline(deviceTest):
     config = Hash(
         "Logger.priority", "FATAL",
@@ -529,7 +530,7 @@ async def test_cross_pipeline(deviceTest):
 
 
 @pytest.mark.timeout(90)
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="module")
 async def test_history(deviceTest):
     before = datetime.now()
     # Wherever we run this test (by hands or in CI) we should
