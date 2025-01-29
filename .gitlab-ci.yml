@@ -630,7 +630,7 @@ pages:
   stage: docs
   image: python:3.12
   rules:
-   - if: $CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH
   script:
     - apt-get -y update
     - apt-get -y install doxygen graphviz
