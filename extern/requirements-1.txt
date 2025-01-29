@@ -36,8 +36,8 @@ pybind11[global]==2.13.1
 pybind11-stubgen==2.5.1
 pyelftools==0.30
 pyexistdb==1.0.1
-pytest==8.1.0
-pytest-asyncio==0.21.1
+pytest==8.3.3
+pytest-asyncio==0.25.2
 pytest-cov==4.1.0
 pytest-mock==3.12.0
 pytest-rerunfailures==12.0

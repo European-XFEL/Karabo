@@ -136,7 +136,7 @@ def test_ip_pattern():
             get_hostname_from_interface(ip_address)
 
 
-@pytest_asyncio.fixture(scope="function")
+@pytest_asyncio.fixture(scope="function", loop_scope="module")
 async def channelContext():
     loop = get_running_loop()
     reader = StreamReader(loop=loop)
