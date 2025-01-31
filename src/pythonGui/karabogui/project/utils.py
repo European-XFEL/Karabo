@@ -20,7 +20,8 @@
 #############################################################################
 from qtpy.QtWidgets import QDialog, QMessageBox
 
-from karabo.common.api import set_modified_flag, walk_traits_object
+from karabo.common.api import (
+    KARABO_PROJECT_MANAGER, set_modified_flag, walk_traits_object)
 from karabo.common.project.api import (
     BaseProjectObjectModel, DeviceConfigurationModel, DeviceInstanceModel,
     DeviceServerModel, MacroModel, ProjectModel, device_config_exists,
@@ -37,7 +38,8 @@ from karabogui.request import onShutdown
 from karabogui.singletons.api import (
     get_config, get_db_conn, get_network, get_project_model, get_topology)
 from karabogui.topology.util import get_macro_servers
-from karabogui.util import create_list_string, version_compatible
+from karabogui.util import (
+    create_list_string, move_to_cursor, version_compatible)
 
 
 def add_device_to_server(server, class_id='', parent=None):
@@ -377,6 +379,12 @@ def save_object(obj, domain=None):
 
     :param obj A project model object
     """
+    if not _is_karabo3():
+        dialog = QMessageBox(QMessageBox.Critical, "Error",
+                             "Can not Save project to Karabo2")
+        move_to_cursor(dialog)
+        dialog.exec()
+        return
     db_conn = get_db_conn()
     if domain is None:
         domain = db_conn.default_domain
@@ -570,3 +578,13 @@ def _run_macro(macro_model, serverId, parent):
     if version_compatible(version, 2, 16):
         h["project"] = macro_model.project_name
     get_network().onInitDevice(serverId, "MetaMacro", instance_id, h)
+
+
+def _is_karabo3() -> bool:
+    path = f"device.{KARABO_PROJECT_MANAGER}"
+    attributes = get_topology().get_attributes(path)
+    is_karabo3 = False
+    if attributes is not None:
+        version = attributes.get("karaboVersion", "0.0.0")
+        is_karabo3 = version_compatible(version, 3, 0)
+    return is_karabo3
