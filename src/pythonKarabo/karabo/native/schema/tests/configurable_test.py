@@ -14,7 +14,9 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 import asyncio
+import inspect
 import string
+from types import MethodType
 from unittest import TestCase, main
 from zlib import adler32
 
@@ -1214,12 +1216,27 @@ class Tests(TestCase):
                            unitSymbol=Unit.METER,
                            metricPrefixSymbol=MetricPrefix.MILLI,
                            options=[8, 9, 10])
+
+            def align(self):
+                return self.options
+
+            number.align = align
+
             cookies = String(allowedStates={State.HOMING},
                              displayedName="else",
                              unitSymbol=Unit.METER,
                              metricPrefixSymbol=MetricPrefix.MILLI,
                              options=["a", "b"])
+            cookies.poll = True
+
+            def parse(self):
+                """A simple test of having a parse method"""
+                return self.poll
+
+            cookies.parse = MethodType(parse, cookies)
+
             state = String(enum=State)
+            state.transformed = True
 
         class Brian(Mandy):
             number = Overwrite(minExc=3, allowedStates={State.OFF},
@@ -1227,8 +1244,9 @@ class Tests(TestCase):
                                unitSymbol=Unit.SECOND,
                                metricPrefixSymbol=MetricPrefix.MEGA,
                                tags={"naughty"},
-                               options=[6, 4])
-            cookies = Overwrite()
+                               options=[6, 4],
+                               extras={"align"})
+            cookies = Overwrite(extras=["poll", "parse"])
             state = Overwrite(options=[State.ON, State.OFF])
 
         self.assertEqual(Brian.number.key, "number")
@@ -1249,10 +1267,28 @@ class Tests(TestCase):
         self.assertEqual(Mandy.number.options, [8, 9, 10])
         self.assertEqual(Brian.number.options, [6, 4])
 
+        # Some extras ...
+        # Not a method on Mandy
+        assert not inspect.ismethod(Mandy.number.align)
+        assert not inspect.ismethod(Brian.number.align)
+        # Method in mandy
+        assert inspect.ismethod(Mandy.number.setter)
+        assert inspect.ismethod(Brian.number.setter)
+        # Parse method defined
+        self.assertIsNotNone(Brian.cookies.parse)
+        assert inspect.ismethod(Mandy.cookies.parse)
+        assert inspect.ismethod(Brian.cookies.parse)
+
+        # Not transformed
+        self.assertIsNotNone(Mandy.state.transformed)
+        self.assertIsNone(getattr(Brian.state, "transformed", None))
+
         self.assertEqual(Mandy.cookies.allowedStates, {State.HOMING})
         self.assertEqual(Brian.cookies.allowedStates, {State.HOMING})
         self.assertEqual(Mandy.cookies.displayedName, "else")
         self.assertEqual(Brian.cookies.displayedName, "else")
+        self.assertEqual(Brian.cookies.poll, True)
+
         self.assertIs(Mandy.cookies.unitSymbol, Unit.METER)
         self.assertIs(Brian.cookies.unitSymbol, Unit.METER)
         self.assertEqual(Mandy.cookies.units, unit.millimeter)
