@@ -15,6 +15,8 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 from asyncio import gather
 from functools import partial
+from inspect import ismethod
+from types import MethodType
 from weakref import WeakKeyDictionary
 
 from karabo.common.api import KARABO_RUNTIME_ATTRIBUTES_MDL
@@ -310,20 +312,30 @@ class Overwrite:
             number = Overwrite(minExc=7)
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, extras: set | list | None = None, **kwargs):
         kwargs.update(zip(args[::2], args[1::2]))
         self.kwargs = kwargs
+        self.extras = set(extras) if extras is not None else set()
 
     def overwrite(self, original):
-        _, attrs = original.toSchemaAndAttrs(None, None)
+        attrs = original.attributes
         attrs.pop("enum", None)
+
+        def _setup_extras():
+            for name in self.extras:
+                assert name not in attrs
+                attr = getattr(original, name)
+                if callable(attr):
+                    attr = MethodType(attr, ret) if ismethod(attr) else attr
+                setattr(ret, name, attr)
+
         if issubclass(original.__class__, Integer):
             # Integers might have enum values and have to be treated special
             # as their options have to be reinitialized!
             ret = original.__class__(strict=False, enum=original.enum, **attrs)
             ret.setter = original.setter
+            _setup_extras()
             ret.__init__(key=original.key, enum=original.enum, **self.kwargs)
-
             return ret
 
         if issubclass(original.__class__, Slot):
@@ -333,6 +345,8 @@ class Overwrite:
             ret = original.__class__(strict=False,
                                      enum=original.enum, **attrs)
             ret.setter = original.setter
+
+        _setup_extras()
         ret.__init__(key=original.key, **self.kwargs)
 
         return ret
