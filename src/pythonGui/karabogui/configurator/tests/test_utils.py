@@ -19,7 +19,8 @@ import json
 from qtpy.QtGui import QColor
 
 from karabo.native import (
-    AccessMode, Assignment, Configurable, Int8, Node, String, Unit)
+    AccessLevel, AccessMode, Assignment, Configurable, Int8, Node, String,
+    Unit)
 from karabogui import icons
 from karabogui.testing import get_class_property_proxy
 
@@ -77,11 +78,11 @@ def test_get_child_names():
     schema = Object.getClassSchema()
     proxy = get_class_property_proxy(schema, 'integer')
 
-    property_names = get_child_names(proxy)
+    property_names = get_child_names(proxy, AccessLevel.ADMIN)
     # Attributes are empty for this proxy
     assert property_names == []
 
-    device_names = get_child_names(proxy.root_proxy)
+    device_names = get_child_names(proxy.root_proxy, AccessLevel.ADMIN)
     assert device_names == ['string', 'integer', 'nodeMandatory',
                             'nodeNormal', 'nodeOfNode']
 
