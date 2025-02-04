@@ -46,6 +46,7 @@ from karabogui.widgets.toolbar import ToolBar
 
 from .base import BasePanelWidget
 from .panel_info import create_configurator_info
+from .switch import SwitchButton
 from .tool_widget import ConfiguratorSearch
 from .utils import (
     compare_proxy_essential, format_property_details,
@@ -73,6 +74,7 @@ class ConfigurationPanel(BasePanelWidget):
             KaraboEvent.ShowConfigurationFromName: self._event_config_name,
             KaraboEvent.NetworkConnectStatus: self._event_network,
             KaraboEvent.AccessLevelChanged: self._event_access_level,
+            KaraboEvent.LoginUserChanged: self._event_access_level,
         }
         register_for_broadcasts(self.event_map)
 
@@ -81,6 +83,8 @@ class ConfigurationPanel(BasePanelWidget):
 
     def _event_access_level(self, data):
         self._update_buttons(self._showing_proxy)
+        access = krb_access.GLOBAL_ACCESS_LEVEL
+        self.treeView().setAccessLevel(access)
 
     def _event_show_configuration(self, data):
         proxy = data['proxy']
@@ -274,6 +278,14 @@ class ConfigurationPanel(BasePanelWidget):
         tb_compare_config.setVisible(False)
         tb_compare_config.clicked.connect(self._on_compare_configuration)
 
+        text = "Switch Configuration"
+        tb_switch_mode = SwitchButton()
+        tb_switch_mode.setStatusTip(text)
+        tb_switch_mode.setToolTip(text)
+        tb_switch_mode.setVisible(True)
+        tb_switch_mode.setMinimumWidth(140)
+        tb_switch_mode.toggled.connect(self._switch_mode_toggled)
+
         text = "Search Device Properties"
         tb_search_device = QToolButton()
         tb_search_device.setIcon(icons.zoomImage)
@@ -288,6 +300,7 @@ class ConfigurationPanel(BasePanelWidget):
         self.ui_history_config = toolbar.addWidget(tb_history_config)
         self.ui_compare_config = toolbar.addWidget(tb_compare_config)
         self.ui_search_device = toolbar.addWidget(tb_search_device)
+        self.ui_switch_mode = toolbar.addWidget(tb_switch_mode)
 
         return [toolbar]
 
@@ -713,6 +726,10 @@ class ConfigurationPanel(BasePanelWidget):
         tree_widget = self._stacked_tree_widgets.widget(CONFIGURATION_PAGE)
         return tree_widget.model()
 
+    def treeView(self):
+        """Returns the `QTreeView` associated with the configuration panel"""
+        return self._stacked_tree_widgets.widget(CONFIGURATION_PAGE)
+
     def info(self):
         """Returns the panel data for the `KaraboLogBook`"""
         return create_configurator_info(self)
@@ -782,6 +799,12 @@ class ConfigurationPanel(BasePanelWidget):
         dialog.show()
         dialog.raise_()
         dialog.activateWindow()
+
+    @Slot(bool)
+    def _switch_mode_toggled(self, expert):
+        """Change the mode setting of the tree widget"""
+        tree_widget = self._stacked_tree_widgets.widget(CONFIGURATION_PAGE)
+        tree_widget.setMode(expert)
 
     @Slot()
     def _on_compare_configuration(self) -> None:

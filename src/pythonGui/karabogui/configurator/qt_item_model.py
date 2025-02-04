@@ -23,8 +23,9 @@ from weakref import WeakValueDictionary
 from qtpy.QtCore import QAbstractItemModel, QModelIndex, Qt, Signal
 from qtpy.QtGui import QBrush, QColor
 
+import karabogui.access as krb_access
 from karabo.common.api import State
-from karabo.native import AccessMode, Assignment, has_changes
+from karabo.native import AccessLevel, AccessMode, Assignment, has_changes
 from karabogui.binding.api import (
     BindingRoot, DeviceClassProxy, DeviceProxy, ImageBinding, NDArrayBinding,
     NodeBinding, ProjectDeviceProxy, PropertyProxy, SlotBinding, StringBinding,
@@ -70,8 +71,20 @@ class ConfigurationTreeModel(QAbstractItemModel):
         self._model_index_refs = WeakValueDictionary()
         self._header_labels = ('Property', 'Current value on device', 'Value')
 
+        self.global_access = krb_access.GLOBAL_ACCESS_LEVEL
+        self.mode_level = AccessLevel.OPERATOR
+
     # ----------------------------
     # Public interface
+
+    def setAccessLevel(self, level: AccessLevel):
+        """Set the global access level of this ConfigurationTreeModel"""
+        self.global_access = level
+
+    def setMode(self, expert: bool):
+        """Set the mode of this ConfigurationTreeModel"""
+        self.mode_level = (AccessLevel.ADMIN if expert
+                           else AccessLevel.OPERATOR)
 
     @property
     def root(self):
@@ -200,7 +213,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
             parent = self.root
             proxy_key = proxy.path
 
-        properties = get_child_names(parent)
+        properties = get_child_names(parent, self.mode_level)
         return properties.index(proxy_key)
 
     # ----------------------------
@@ -312,7 +325,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
         else:
             parent_obj = self.index_ref(parent)
 
-        names = get_child_names(parent_obj)
+        names = get_child_names(parent_obj, self.mode_level)
         binding = parent_obj.binding
         if isinstance(binding, BindingRoot):
             path = names[row]
@@ -374,7 +387,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
         binding = proxy.binding
         if isinstance(binding, (BindingRoot, NodeBinding)):
             # Roots and nodes have children
-            return len(get_child_names(proxy))
+            return len(get_child_names(proxy, self.mode_level))
 
         # otherwise no children
         return 0
@@ -493,7 +506,8 @@ class ConfigurationTreeModel(QAbstractItemModel):
         else:
             writable = binding.access_mode is AccessMode.RECONFIGURABLE
             if (writable and binding.is_allowed(
-                    get_device_state_string(self.root))):
+                    get_device_state_string(self.root)) and (
+                    self.global_access >= binding.required_access_level)):
                 flags |= Qt.ItemIsEditable
 
         return flags

@@ -20,7 +20,6 @@ from qtpy.QtCore import QMimeData, Qt
 from qtpy.QtGui import QColor, QPalette
 from qtpy.QtWidgets import QStyle
 
-import karabogui.access as krb_access
 from karabo.common.api import State
 from karabo.native import AccessMode, Assignment
 from karabogui import icons
@@ -93,20 +92,18 @@ def dragged_configurator_items(proxies):
     return mimeData
 
 
-def get_child_names(proxy):
-    """Return all the names of a proxy's accessible children."""
+def get_child_names(proxy, level):
+    """Return all the names of a proxy's editable children."""
     binding = proxy.binding
     if not isinstance(binding, RECURSIVE_BINDING):
         return []
 
-    level = krb_access.GLOBAL_ACCESS_LEVEL
     ret = binding.children_names.get(level, None)
     # lazily cache visible children names
     if ret is None:
         ret = [name for name in binding.value if
                getattr(binding.value, name).required_access_level <= level]
         binding.children_names[level] = ret
-
     return ret
 
 

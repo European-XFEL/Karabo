@@ -42,8 +42,7 @@ from karabo.native import AccessLevel, AccessMode, Assignment
 from karabogui import icons
 from karabogui.binding.api import (
     BaseBinding, DeviceProxy, PropertyProxy, VectorHashBinding)
-from karabogui.events import (
-    KaraboEvent, broadcast_event, register_for_broadcasts)
+from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.generic_scenes import get_property_proxy_model
 from karabogui.indicators import ALARM_HIGH, ALARM_LOW, WARN_HIGH, WARN_LOW
 from karabogui.widgets.popup import PopupWidget
@@ -83,8 +82,8 @@ class ConfigurationTreeView(QTreeView):
         self._filter_model = None
 
         # Add a delegate for rows with slot buttons
-        delegate = SlotButtonDelegate(parent=self)
-        self.setItemDelegateForColumn(0, delegate)
+        self.slot_delegate = SlotButtonDelegate(parent=self)
+        self.setItemDelegateForColumn(0, self.slot_delegate)
         # ... and a delegate for the value column
         self.setItemDelegateForColumn(1, ValueDelegate(parent=self))
         # ... and a delegate for the editable value column
@@ -97,12 +96,6 @@ class ConfigurationTreeView(QTreeView):
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self._show_context_menu)
         self.setUniformRowHeights(True)
-
-        event_map = {
-            KaraboEvent.AccessLevelChanged: self._event_access_level
-        }
-        # Don't forget to unregister!
-        register_for_broadcasts(event_map)
 
     # ------------------------------------
     # Public methods
@@ -392,10 +385,20 @@ class ConfigurationTreeView(QTreeView):
         self.edit_delegate.current_changed(current)
         super().currentChanged(current, previous)
 
-    def _event_access_level(self, data):
+    def setAccessLevel(self, level: AccessLevel):
+        """Set the Global Access Level"""
         model = self.sourceModel()
         proxy = model.root
         self.assign_proxy(None)
+        model.setAccessLevel(level)
+        self.slot_delegate.setAccessLevel(level)
+        self.assign_proxy(proxy)
+
+    def setMode(self, expert: bool):
+        model = self.sourceModel()
+        proxy = model.root
+        self.assign_proxy(None)
+        model.setMode(expert)
         self.assign_proxy(proxy)
 
     def mousePressEvent(self, event):
