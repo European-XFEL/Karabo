@@ -72,22 +72,17 @@ def test_alarm_controller(gui_app, mocker):
     set_proxy_value(new_proxy, "alarmCondition", "warn")
     # Add a new proxy
     controller.add_proxy(new_proxy)
+    # Not taken into account
     warn_svg = get_alarm_svg("warn")
-    assert controller.widget.loaded_data == warn_svg
+    assert controller.widget.loaded_data != warn_svg
 
     # Change the old ``none`` alarm to ``alarm``
     set_proxy_value(proxy, "alarmCondition", "alarm")
     alarm_svg = get_alarm_svg("alarm")
     assert controller.widget.loaded_data == alarm_svg
 
-    no_alarm_proxy = get_class_property_proxy(new_schema, "noAlarmCondition")
-    assert no_alarm_proxy.binding is not None
-    assert not controller.visualize_additional_property(no_alarm_proxy)
-
-    another_alarm_proxy = get_class_property_proxy(
-        new_schema, "anotherAlarmCondition")
-    assert another_alarm_proxy.binding is not None
-    assert controller.visualize_additional_property(another_alarm_proxy)
+    controller.clear_widget()
+    assert controller.widget.loaded_data not in {alarm_svg, warn_svg, none_svg}
 
     controller.destroy()
     assert controller.widget is None
