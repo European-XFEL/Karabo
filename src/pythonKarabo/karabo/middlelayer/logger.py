@@ -92,12 +92,13 @@ def build_logger_node(handles=None):
 
         handlers = VectorString(
             defaultValue=handles,
-            requiredAccessLevel=AccessLevel.OPERATOR,
+            requiredAccessLevel=AccessLevel.EXPERT,
             accessMode=AccessMode.READONLY)
 
         @String(
             displayedName="Logging Level",
             options=("DEBUG", "INFO", "WARN", "ERROR", "FATAL"),
+            requiredAccessLevel=AccessLevel.EXPERT,
             defaultValue="INFO")
         def level(self, value):
             """The minimum level for this logger to log"""
