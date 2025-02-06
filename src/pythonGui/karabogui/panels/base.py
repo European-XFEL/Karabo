@@ -20,9 +20,7 @@
 #############################################################################
 from enum import Enum
 
-from qtpy.QtCore import Qt, Signal, Slot
-from qtpy.QtGui import QPainter
-from qtpy.QtPrintSupport import QPrinter, QPrintPreviewDialog
+from qtpy.QtCore import Signal, Slot
 from qtpy.QtWidgets import (
     QAction, QFrame, QHBoxLayout, QSizePolicy, QVBoxLayout, QWidget)
 
@@ -135,31 +133,6 @@ class BasePanelWidget(QFrame):
         dialog = LogBookPreview(parent=self)
         dialog.show()
 
-    @Slot()
-    def handlePreview(self):
-        printer = QPrinter()
-        printer.setPageSize(QPrinter.A4)
-        printer.setOutputFormat(QPrinter.PdfFormat)
-        dialog = QPrintPreviewDialog(printer, parent=self)
-        dialog.setModal(False)
-        dialog.paintRequested.connect(self.handle_paint_request)
-        dialog.exec()
-
-    @Slot(QPrinter)
-    def handle_paint_request(self, printer):
-        """Executed for each paint request in the print preview dialog"""
-        pixmap = self.grab()
-        pixmap = pixmap.scaled(printer.pageRect().width(),
-                               printer.pageRect().height(),
-                               Qt.KeepAspectRatio,
-                               Qt.SmoothTransformation)
-
-        center_x = (printer.pageRect().width() - pixmap.width()) // 2
-        center_y = (printer.pageRect().height() - pixmap.height()) // 2
-        painter = QPainter(printer)
-        painter.drawPixmap(center_x, center_y, pixmap)
-        painter.end()
-
     def closeEvent(self, event):
         if not self.allow_closing and self.panel_container is not None:
             self.onDock()
@@ -214,11 +187,6 @@ class BasePanelWidget(QFrame):
         """This toolbar is shown by all panels which are attached to a
         container.
         """
-        text = "Print"
-        self.acPrint = QAction(icons.printer, "&Print", self)
-        self.acPrint.setToolTip(text)
-        self.acPrint.setStatusTip(text)
-        self.acPrint.triggered.connect(self.handlePreview)
 
         text = "Unpin as individual window"
         self.acUndock = QAction(icons.undock, "&Undock", self)
@@ -247,7 +215,6 @@ class BasePanelWidget(QFrame):
         self.acMinimize.setVisible(False)
 
         self.standard_toolbar = ToolBar("Standard", parent=self)
-        self.standard_toolbar.addAction(self.acPrint)
         self.standard_toolbar.addAction(self.acUndock)
         self.standard_toolbar.addAction(self.acDock)
         self.standard_toolbar.addAction(self.acMaximize)
