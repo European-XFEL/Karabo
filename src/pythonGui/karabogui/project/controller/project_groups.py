@@ -203,8 +203,15 @@ def _fill_servers_menu(menu, project_controller):
     instance_allowed = access_role_allowed(AccessRole.INSTANCE_CONTROL)
     server_action.setEnabled(instance_allowed)
 
+    move_action = QAction(icons.move, 'Arrange Servers', menu)
+    move_action.triggered.connect(partial(_move_project_servers,
+                                          project_controller,
+                                          parent=menu.parent()))
+    move_action.setEnabled(project_allowed)
+
     menu.addAction(add_action)
     menu.addAction(server_action)
+    menu.addAction(move_action)
 
     if not project_allowed:
         _add_disabled_tooltip(menu)
@@ -321,6 +328,16 @@ def _move_project_macros(project_controller, parent=None):
     if dialog.exec() == QDialog.Accepted:
         del project.macros[:]
         project.macros.extend(dialog.items)
+
+
+def _move_project_servers(project_controller, parent=None):
+    """Move the project servers"""
+    project = project_controller.model
+    servers = list(project.servers)
+    dialog = MoveHandleDialog(servers, parent=parent)
+    if dialog.exec() == QDialog.Accepted:
+        del project.servers[:]
+        project.servers.extend(dialog.items)
 
 
 def _add_scene(project_controller, parent=None):
