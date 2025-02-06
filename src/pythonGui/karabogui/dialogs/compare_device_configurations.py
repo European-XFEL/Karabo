@@ -9,6 +9,7 @@ from karabogui.binding.api import (
     BindingRoot, DeviceProxy, ProjectDeviceProxy, get_config_changes,
     iterate_binding)
 from karabogui.singletons.api import get_topology
+from karabogui.topology.api import getTopology
 from karabogui.util import SignalBlocker
 
 from .utils import get_dialog_ui
@@ -150,7 +151,7 @@ class DeviceSelectorDialog(QDialog):
     classId."""
     def __init__(self, device_id: str, parent: QObject = None):
         super().__init__(parent=parent)
-        uic.loadUi(get_dialog_ui("compare_configuraiton_launcher.ui"), self)
+        uic.loadUi(get_dialog_ui("compare_configuration_launcher.ui"), self)
         self.device_id = device_id
         text = (
             f"Select a device to compare the configuration with <span style=' "
@@ -160,21 +161,18 @@ class DeviceSelectorDialog(QDialog):
 
     def _load_matching_devices(self, device_id: str) -> None:
         """Populate the matching devices with same class id. """
-        topology = get_topology()
-        reference = topology.get_device(device_id)
-        class_id = reference.binding.class_id
+        topology = getTopology()
+        attrs = topology[f"device.{device_id}", ...]
+        class_id = attrs["classId"]
         matching_devices = []
 
-        def visitor(node):
-            if node.node_id == device_id:
+        for deviceId, _, attrs in topology["device"].iterall():
+            if deviceId == self.device_id:
                 # Do not show the initial device.
-                return
-            attributes = node.attributes
-            if attributes.get("type") == "device":
-                if attributes.get("classId") == class_id:
-                    matching_devices.append(node.node_id)
-
-        topology.visit_system_tree(visitor=visitor)
+                continue
+            classId = attrs.get("classId")
+            if classId in (class_id, f"{class_id}Copy"):
+                matching_devices.append(deviceId)
 
         if not matching_devices:
             self.info_label.setText("No devices with same classId are online")
