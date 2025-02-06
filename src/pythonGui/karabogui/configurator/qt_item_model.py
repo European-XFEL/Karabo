@@ -470,6 +470,8 @@ class ConfigurationTreeModel(QAbstractItemModel):
                     return QColor(*PROPERTY_READONLY_COLOR)
             elif role == Qt.DecorationRole:
                 return get_icon(binding)
+            elif role == Qt.UserRole:
+                return proxy.path
         elif column == 1 and role == Qt.DisplayRole:
             value = get_proxy_value(index, proxy)
             return value if isinstance(value, str) else _friendly_repr(proxy,

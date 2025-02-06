@@ -117,6 +117,24 @@ class ConfigurationTreeView(QTreeView):
         # Select row of index and set current index
         self.setRowSelection(index)
 
+    @contextmanager
+    def assign_property_proxy(self):
+        """Context manager to maintain a proxy selection"""
+        model = self.model()
+        try:
+            index = self.currentIndex()
+            proxy = model.index_ref(index)
+            yield
+        finally:
+            if proxy is None:
+                # XXX: Avoid a full model search for `None`
+                return
+            root_index = model.index(0, 0, QModelIndex())
+            matches = model.match(root_index, Qt.UserRole, proxy.path, 1,
+                                  Qt.MatchRecursive)
+            index = matches[0] if matches else QModelIndex()
+            self.setCurrentIndex(index)
+
     def sourceModel(self):
         """Public method to retrieve the source model"""
         return self._source_model
@@ -395,11 +413,12 @@ class ConfigurationTreeView(QTreeView):
         self.assign_proxy(proxy)
 
     def setMode(self, expert: bool):
-        model = self.sourceModel()
-        proxy = model.root
-        self.assign_proxy(None)
-        model.setMode(expert)
-        self.assign_proxy(proxy)
+        with self.assign_property_proxy():
+            model = self.sourceModel()
+            proxy = model.root
+            self.assign_proxy(None)
+            model.setMode(expert)
+            self.assign_proxy(proxy)
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
