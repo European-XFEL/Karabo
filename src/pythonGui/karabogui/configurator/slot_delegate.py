@@ -22,6 +22,8 @@ from qtpy.QtCore import QEvent, QRect, Qt
 from qtpy.QtWidgets import (
     QApplication, QStyle, QStyledItemDelegate, QStyleOptionButton)
 
+import karabogui.access as krb_access
+from karabo.native import AccessLevel
 from karabogui import icons
 from karabogui.binding.api import DeviceProxy, SlotBinding
 
@@ -61,6 +63,7 @@ class SlotButtonDelegate(QStyledItemDelegate):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._button_states = {}
+        self._global_access = krb_access.GLOBAL_ACCESS_LEVEL
 
     def paint(self, painter, option, index):
         """Reimplemented function of QStyledItemDelegate."""
@@ -87,13 +90,14 @@ class SlotButtonDelegate(QStyledItemDelegate):
         return super().editorEvent(
             event, model, option, index)
 
+    def setAccessLevel(self, level: AccessLevel):
+        self._global_access = level
+
     def _draw_button(self, painter, option, index, proxy):
-        """Draw a button"""
+        """Draw a button for this slot delegate"""
         key = proxy.key
         state = self._button_states.get(key, ButtonState.DISABLED)
-        is_device = isinstance(proxy.root_proxy, DeviceProxy)
-        dev_state = get_device_state_string(proxy.root_proxy)
-        allowed = is_device and proxy.binding.is_allowed(dev_state)
+        allowed = self.is_allowed(proxy)
         button_state = handle_default_state(allowed, state)
         self._button_states[key] = state
         button = QStyleOptionButton()
@@ -114,15 +118,21 @@ class SlotButtonDelegate(QStyledItemDelegate):
         QApplication.style().drawItemPixmap(painter, pix_rect, Qt.AlignCenter,
                                             slot_pixmap)
 
+    def is_allowed(self, proxy):
+        is_device = isinstance(proxy.root_proxy, DeviceProxy)
+        allowed = (is_device and proxy.binding.is_allowed(
+            get_device_state_string(proxy.root_proxy))
+                   and (self._global_access >=
+                        proxy.binding.required_access_level))
+        return allowed
+
     def _handle_event_state(self, proxy, event, option):
         """Determine the state of a given proxy's button during user
         interaction.
         """
         key = proxy.key
-        is_device = isinstance(proxy.root_proxy, DeviceProxy)
-        dev_state = get_device_state_string(proxy.root_proxy)
         state = self._button_states.get(key, ButtonState.DISABLED)
-        if is_device and proxy.binding.is_allowed(dev_state):
+        if self.is_allowed(proxy):
             rect = _get_button_rect(option.rect)
             if rect.contains(event.pos()):
                 if event.type() == QEvent.MouseButtonPress:

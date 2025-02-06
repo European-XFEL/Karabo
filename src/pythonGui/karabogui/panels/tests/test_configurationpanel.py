@@ -571,6 +571,8 @@ def test_configuration_panel_info(gui_app):
                             status=ProxyStatus.ONLINE)
 
         panel = ConfigurationPanel()
+        # XXX: Make to see all
+        panel._switch_mode_toggled(True)
         panel.model().root = proxy
         panel._set_configuration(proxy)
         # Make sure the extracted default conversion is minimal
