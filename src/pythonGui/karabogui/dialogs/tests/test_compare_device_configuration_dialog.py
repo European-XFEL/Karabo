@@ -1,11 +1,16 @@
+from copy import deepcopy
+
 import pytest
 
+from karabo.native import AccessLevel
 from karabogui.binding.api import (
     DeviceProxy, ProxyStatus, apply_default_configuration, build_binding)
 from karabogui.dialogs.compare_device_configurations import (
-    CompareDeviceConfigurationsDialog)
+    CompareDeviceConfigurationsDialog, DeviceSelectorDialog)
 from karabogui.testing import (
-    get_device_schema, get_device_schema_allowed_state)
+    get_device_schema, get_device_schema_allowed_state, singletons,
+    system_hash)
+from karabogui.topology.api import SystemTopology
 
 
 @pytest.fixture()
@@ -22,6 +27,28 @@ def dialog(gui_app):
 
     dialog = CompareDeviceConfigurationsDialog(proxy1, proxy2)
     yield dialog
+
+
+def test_selector_dialog(gui_app):
+    topology = SystemTopology()
+    h = deepcopy(system_hash())
+    h["device.davyy"] = None
+    h["device.davyy", ...] = {
+        "host": "BIG_IRON",
+        "archive": True,
+        "visibility": AccessLevel.OBSERVER,
+        "type": "device",
+        "capabilities": 0,
+        "serverId": "otherserver",
+        "classId": "FooClassCopy",
+        "status": "ok",
+        "interfaces": 0,
+    }
+    topology.initialize(h)
+    with singletons(topology=topology):
+        dialog = DeviceSelectorDialog("divvy")
+        assert dialog.devices_combobox.count() == 1
+        assert dialog.devices_combobox.currentText() == "davyy"
 
 
 def test_compare_config_dialog(dialog):
