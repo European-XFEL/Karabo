@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>403</width>
-    <height>289</height>
+    <height>78</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -32,16 +32,6 @@
         <bool>true</bool>
        </property>
       </widget>
-     </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="laDescription">
-       <property name="text">
-        <string>Description:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="1">
-      <widget class="QTextEdit" name="ui_description"/>
      </item>
     </layout>
    </item>
