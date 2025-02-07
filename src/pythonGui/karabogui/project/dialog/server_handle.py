@@ -19,12 +19,10 @@
 # or FITNESS FOR A PARTICULAR PURPOSE.
 #############################################################################
 from qtpy import uic
-from qtpy.QtCore import Slot
-from qtpy.QtWidgets import QDialog, QDialogButtonBox
+from qtpy.QtCore import Qt, Slot
+from qtpy.QtWidgets import QCompleter, QDialog, QDialogButtonBox
 
-import karabogui.access as krb_access
-from karabo.native import AccessLevel
-from karabogui.singletons.api import get_topology
+from karabogui.topology.api import getTopology
 from karabogui.util import InputValidator
 
 from .utils import get_dialog_ui
@@ -33,16 +31,20 @@ from .utils import get_dialog_ui
 class ServerHandleDialog(QDialog):
     def __init__(self, model=None, parent=None):
         super().__init__(parent)
-        uic.loadUi(get_dialog_ui('server_handle.ui'), self)
+        uic.loadUi(get_dialog_ui("server_handle.ui"), self)
 
-        avail_servers = self.get_available_servers()
-        for server_id in avail_servers:
-            self.ui_server_id.addItem(server_id)
+        servers = self.get_available_servers()
+        self.ui_server_id.addItems(servers)
+        completer = QCompleter(servers, parent=self)
+        completer.setCaseSensitivity(False)
+        completer.setCompletionMode(QCompleter.PopupCompletion)
+        completer.setFilterMode(Qt.MatchContains)
+        self.ui_server_id.setCompleter(completer)
 
         if model is None:
-            title = 'Add server'
+            title = "Add server"
         else:
-            title = 'Edit server'
+            title = "Edit server"
             index = self.ui_server_id.findText(model.server_id)
             if index < 0:
                 server_edit = self.ui_server_id.lineEdit()
@@ -50,7 +52,6 @@ class ServerHandleDialog(QDialog):
             else:
                 self.ui_server_id.setCurrentIndex(index)
 
-            self.ui_description.setPlainText(model.description)
         self.setWindowTitle(title)
 
         validator = InputValidator(object_type="server", parent=self)
@@ -61,21 +62,9 @@ class ServerHandleDialog(QDialog):
         self._update_button_box()
 
     def get_available_servers(self):
-        """ Get all available servers of the `systemTopology`
-        """
-        available_servers = set()
-
-        def visitor(node):
-            if node.attributes.get('type') != 'server':
-                return
-
-            visibility = AccessLevel(node.attributes['visibility'])
-            if visibility < krb_access.GLOBAL_ACCESS_LEVEL:
-                available_servers.add(node.node_id)
-
-        get_topology().visit_system_tree(visitor)
-
-        return sorted(available_servers)
+        """ Get all available servers of the `systemTopology`"""
+        servers = list(getTopology()["server"])
+        return sorted(servers)
 
     @Slot()
     def _update_button_box(self):
@@ -87,7 +76,3 @@ class ServerHandleDialog(QDialog):
     @property
     def server_id(self):
         return self.ui_server_id.currentText()
-
-    @property
-    def description(self):
-        return self.ui_description.toPlainText()

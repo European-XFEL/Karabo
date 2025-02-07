@@ -309,7 +309,6 @@ class DeviceServerController(BaseProjectGroupController):
         result = dialog.exec()
         if result == QDialog.Accepted:
             self.model.server_id = dialog.server_id
-            self.model.description = dialog.description
 
     def _shutdown_server(self, parent=None):
         server = self.model
