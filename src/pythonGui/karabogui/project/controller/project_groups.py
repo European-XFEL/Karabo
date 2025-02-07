@@ -432,7 +432,6 @@ def _add_server(project_controller, parent=None):
             return
         traits = {
             'server_id': serverId,
-            'description': dialog.description
         }
         server = DeviceServerModel(**traits)
         # Set initialized and modified last
