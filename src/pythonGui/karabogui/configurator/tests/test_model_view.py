@@ -100,8 +100,18 @@ class TestConfiguratorProjectDevice(GuiTestCase):
         assert self.model.rowCount() == 9
 
     def test_get_property_proxy_data(self):
+        state_index = self.model.index(0, 0)
+        assert state_index.data() == "State"
+        assert state_index.data(role=Qt.ToolTipRole) is None
+
         bar_index = self.model.index(2, 0)
         assert bar_index.data() == "bar"
+        text = "Key: bar - AccessLevel: USER - Access Allowed: True"
+        assert bar_index.data(role=Qt.ToolTipRole) == text
+        bar_index = self.model.index(2, 2)
+        text = "Key: bar - AccessLevel: USER - Access Allowed: True"
+        assert bar_index.data(role=Qt.ToolTipRole) == text
+
         proxy = self.model.property_proxy("bar")
         assert proxy.binding is not None
         assert proxy.value == 1.2
