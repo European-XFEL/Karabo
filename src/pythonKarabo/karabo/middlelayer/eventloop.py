@@ -29,7 +29,7 @@ from functools import wraps
 
 from karabo.native import KaraboValue, unit_registry as unit
 
-from .broker import Broker
+from .broker import Broker, get_connector
 from .utils import check_broker_scheme, ensure_coroutine
 
 # Number of threads that can be scheduled in the thread pool executor.
@@ -246,13 +246,14 @@ class EventLoop(SelectorEventLoop):
     Queue = Queue
     sync_set = False
     global_loop = None
+    connector = None
 
     def __init__(self, topic=None):
         super().__init__()
-        self.connection = None
         if EventLoop.global_loop is not None:
             raise RuntimeError("There can be only one Karabo Eventloop")
         EventLoop.global_loop = self
+        self.connector = get_connector()
 
         if topic is not None:
             self.topic = topic
@@ -402,11 +403,8 @@ class EventLoop(SelectorEventLoop):
     def close(self):
         for t in asyncio.all_tasks(loop=self):
             t.cancel()
-        if self.connection is not None:
-            if iscoroutinefunction(self.connection.close):
-                self.run_until_complete(self.connection.close())
-            else:
-                self.connection.close()
-            self.connection = None
+        if self.connector is not None:
+            self.run_until_complete(self.connector.close())
+            self.connector = None
         super().close()
         EventLoop.global_loop = None
