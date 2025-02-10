@@ -450,6 +450,17 @@ class ConfigurationTreeModel(QAbstractItemModel):
                 return PROPERTY_ALARM_COLOR_MAP.get(value)
         return None  # indicate no color
 
+    def access_level_tooltip(self, proxy):
+        binding = proxy.binding
+        writable = (binding.access_mode is not AccessMode.READONLY
+                    or isinstance(binding, SlotBinding))
+        if not writable:
+            return
+        level = proxy.binding.required_access_level
+        allowed = self.global_access >= level
+        return (f"Key: {proxy.path} - AccessLevel: {level.name} "
+                f"- Access Allowed: {allowed}")
+
     def _proxy_data(self, index, proxy, role, column):
         """data() implementation for properties"""
         binding = proxy.binding
@@ -457,6 +468,8 @@ class ConfigurationTreeModel(QAbstractItemModel):
             if role == Qt.DisplayRole:
                 name = binding.displayed_name
                 return name or proxy.path.split('.')[-1]
+            elif role == Qt.BackgroundRole:
+                return None
             elif role == Qt.FontRole:
                 is_class = isinstance(self.root, DeviceClassProxy)
                 if is_class and is_mandatory(binding):
@@ -472,22 +485,26 @@ class ConfigurationTreeModel(QAbstractItemModel):
                 return get_icon(binding)
             elif role == Qt.UserRole:
                 return proxy.path
+            elif role == Qt.ToolTipRole:
+                return self.access_level_tooltip(proxy)
         elif column == 1 and role == Qt.DisplayRole:
             value = get_proxy_value(index, proxy)
-            return value if isinstance(value, str) else _friendly_repr(proxy,
-                                                                       value)
+            return value if isinstance(value, str) else _friendly_repr(
+                proxy, value)
         elif column == 2:
-            if role == Qt.BackgroundRole:
-                if proxy.edit_value is not None:
-                    color = QColor(*STATE_COLORS[State.CHANGING])
-                    color.setAlpha(128)
-                    return QBrush(color)
-            elif role in (Qt.DisplayRole, Qt.EditRole):
+            if role in (Qt.DisplayRole, Qt.EditRole):
                 value = get_proxy_value(index, proxy, is_edit_col=True)
                 if role == Qt.EditRole or isinstance(value, str):
                     return value
                 elif role == Qt.DisplayRole:
                     return _friendly_repr(proxy, value)
+            elif role == Qt.BackgroundRole:
+                if proxy.edit_value is not None:
+                    color = QColor(*STATE_COLORS[State.CHANGING])
+                    color.setAlpha(128)
+                    return QBrush(color)
+            elif role == Qt.ToolTipRole:
+                return self.access_level_tooltip(proxy)
 
     def _proxy_flags(self, proxy):
         """flags() implementation for properties"""
