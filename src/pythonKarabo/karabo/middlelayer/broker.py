@@ -22,8 +22,7 @@ import traceback
 import weakref
 from asyncio import (
     CancelledError, Event, Future, Lock, TimeoutError, current_task,
-    ensure_future, gather, get_event_loop, iscoroutinefunction, shield, sleep,
-    wait_for)
+    ensure_future, gather, iscoroutinefunction, shield, sleep, wait_for)
 from contextlib import AsyncExitStack
 from functools import partial, wraps
 from itertools import count
@@ -73,6 +72,53 @@ def ensure_running(func):
                 return
             return func(self, *args, **kwargs)
     return wrapper
+
+
+class Connector:
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def __init__(self):
+        self._connection = None
+        self._lock = Lock()
+        self._urls = os.environ.get(
+            "KARABO_BROKER", "amqp://localhost:5672").split(",")
+
+    @property
+    def is_connected(self):
+        return self._connection is not None and self._connection.is_opened
+
+    async def get_connection(self):
+        """Retrieve or establish the singleton connection."""
+        async with self._lock:
+            if self.is_connected:
+                return self._connection
+
+            for url in self._urls:
+                try:
+                    self._connection = await aiormq.connect(url)
+                    return self._connection
+                except Exception as e:
+                    print(f"Failed to connect to '{url}': {str(e)}")
+
+            self._connection = None
+            return self._connection
+
+    async def close(self):
+        """Close the connection if it is open."""
+        async with self._lock:
+            if self.is_connected:
+                await self._connection.close()
+                self._connection = None
+
+
+def get_connector():
+    """Get the connector singleton"""
+    return Connector()
 
 
 class Broker:
@@ -645,28 +691,10 @@ class Broker:
         header = message.get("header")
         return header.get(prop) if header is not None else None
 
-    async def create_global_connection(self):
-        loop = get_event_loop().global_loop
-        connection = loop.connection
-        if connection and connection.is_opened:
-            return connection
-        urls = os.environ.get("KARABO_BROKER",
-                              "amqp://localhost:5672").split(",")
-        for url in urls:
-            try:
-                # Perform connection
-                connection = await aiormq.connect(url)
-                loop.connection = connection
-                break
-            except BaseException as e:
-                print(f"While trying node '{url}': {str(e)}")
-                connection = None
-        return connection
-
     async def ensure_connection(self):
         if self.connection is None:
             self.connection = await shield(
-                self.create_global_connection())
+                get_connector().get_connection())
         if self.connection is None:
             raise RuntimeError("No connection established")
         # Creating a channel
@@ -674,7 +702,3 @@ class Broker:
             publisher_confirms=False)
         await self.channel.basic_qos(prefetch_count=1)
         await self.subscribe_default()
-
-    @staticmethod
-    def create_connection(hosts, connection):
-        return connection
