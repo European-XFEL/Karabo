@@ -18,13 +18,13 @@ import numpy as np
 
 from karabo.common.states import State
 from karabo.native import (
-    AccessLevel, AccessMode, Assignment, Bool, ByteArray, Char, ChoiceOfNodes,
-    ComplexDouble, ComplexFloat, Configurable, Double, Float, Int8, Int16,
-    Int32, Int64, ListOfNodes, Node, Slot, String, TypeHash, TypeSchema, UInt8,
-    UInt16, UInt32, UInt64, Unit, VectorBool, VectorChar, VectorComplexDouble,
-    VectorComplexFloat, VectorDouble, VectorFloat, VectorHash, VectorInt8,
-    VectorInt16, VectorInt32, VectorInt64, VectorString, VectorUInt8,
-    VectorUInt16, VectorUInt32, VectorUInt64)
+    AccessLevel, AccessMode, Assignment, Bool, ByteArray, Char, ComplexDouble,
+    ComplexFloat, Configurable, Double, Float, Int8, Int16, Int32, Int64, Node,
+    Slot, String, TypeHash, TypeSchema, UInt8, UInt16, UInt32, UInt64, Unit,
+    VectorBool, VectorChar, VectorComplexDouble, VectorComplexFloat,
+    VectorDouble, VectorFloat, VectorHash, VectorInt8, VectorInt16,
+    VectorInt32, VectorInt64, VectorString, VectorUInt8, VectorUInt16,
+    VectorUInt32, VectorUInt64)
 from karabogui.binding.api import (
     BoolBinding, ByteArrayBinding, CharBinding, ComplexBinding, FloatBinding,
     HashBinding, Int8Binding, Int16Binding, Int32Binding, Int64Binding,
@@ -59,10 +59,6 @@ def get_simple_schema():
 
 def get_slotted_schema():
     return SlottedDevice.getClassSchema()
-
-
-def get_recursive_schema():
-    return Recursive.getClassSchema()
 
 
 def get_vectorattr_schema():
@@ -187,20 +183,11 @@ class AllProperties(Configurable):
     f1 = VectorUInt64()
     g1 = VectorUInt8()
     h1 = Node(_NodeOne)
-    i1 = ChoiceOfNodes(Multi)
-    j1 = ListOfNodes(Multi)
     mm = ByteArray()
 
     @Slot(allowedStates=[State.INTERLOCKED, State.ACTIVE])
     def k1(self):
         pass
-
-
-class Recursive(Configurable):
-    """A `Configurable` for testing recursive node types
-    """
-    con = ChoiceOfNodes(Multi, defaultValue='_NodeTwo')
-    lon = ListOfNodes(Multi, defaultValue=['_NodeOne'])
 
 
 class VectorAttr(Configurable):
@@ -220,8 +207,6 @@ class SimpleProperties(Configurable):
     vectorStringProperty = VectorString()
     table = VectorHash(Simple)
     node = Node(Simple)
-    i1 = ChoiceOfNodes(Multi, accessMode=AccessMode.READONLY)
-    j1 = ListOfNodes(Multi)
     internal = Bool(defaultValue=True,
                     assignment=Assignment.INTERNAL)
 

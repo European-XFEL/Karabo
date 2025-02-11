@@ -26,16 +26,15 @@ from pint import DimensionalityError
 
 from karabo.common.states import State
 from karabo.native import (
-    AccessLevel, AccessMode, ArchivePolicy, Assignment, Bool, ChoiceOfNodes,
-    ComplexDouble, ComplexFloat, Configurable, DaqDataType, Double, Float,
-    Hash, Image, ImageData, Int8, Int16, Int32, Int64, KaraboError,
-    ListOfNodes, MetricPrefix, Node, Overwrite, QuantityValue, RegexString,
-    Slot, String, Timestamp, TypeHash, TypeSchema, UInt8, UInt16, UInt32,
-    UInt64, Unit, VectorBool, VectorChar, VectorComplexDouble,
-    VectorComplexFloat, VectorDouble, VectorFloat, VectorHash, VectorInt8,
-    VectorInt16, VectorInt32, VectorInt64, VectorRegexString, VectorString,
-    VectorUInt8, VectorUInt16, VectorUInt32, VectorUInt64, decodeBinary,
-    encodeBinary, isSet, unit_registry as unit)
+    AccessLevel, AccessMode, ArchivePolicy, Assignment, Bool, ComplexDouble,
+    ComplexFloat, Configurable, DaqDataType, Double, Float, Hash, Image,
+    ImageData, Int8, Int16, Int32, Int64, KaraboError, MetricPrefix, Node,
+    Overwrite, QuantityValue, RegexString, Slot, String, Timestamp, TypeHash,
+    TypeSchema, UInt8, UInt16, UInt32, UInt64, Unit, VectorBool, VectorChar,
+    VectorComplexDouble, VectorComplexFloat, VectorDouble, VectorFloat,
+    VectorHash, VectorInt8, VectorInt16, VectorInt32, VectorInt64,
+    VectorRegexString, VectorString, VectorUInt8, VectorUInt16, VectorUInt32,
+    VectorUInt64, decodeBinary, encodeBinary, isSet, unit_registry as unit)
 
 
 class RowSchema(Configurable):
@@ -1729,34 +1728,6 @@ class Tests(TestCase):
         self.assertIn("frac", data["state", ...])
         self.assertEqual(data["position"], 25.76)
         self.assertEqual(data["expert.gear"], 25000)
-
-    def test_recursive_nodes(self):
-        """These are place holder tests that we can get at least the schema
-        from the `evil` nodes
-
-        DO NOT USE THIS CODE SNIPPED AS EXAMPLE CODE. `ChoiceOfNodes` and
-        `ListOfNodes` are not recommended in the middlelayer api (and in
-        general)"""
-
-        class Multi(Configurable):
-            """`ChoiceOfNodes` and `ListOfNodes` are evil
-            """
-
-        class _NodeOne(Multi):
-            zero = String(defaultValue='First')
-
-        class _NodeTwo(Multi):
-            one = String(defaultValue='Second')
-
-        class Recursive(Configurable):
-            """A `Configurable` for testing recursive node types
-            """
-            con = ChoiceOfNodes(Multi, displayedName="Choice")
-            lon = ListOfNodes(Multi, displayedName="LoN")
-
-        schema = Recursive.getClassSchema()
-        self.assertEqual(schema.hash["con", "displayedName"], "Choice")
-        self.assertEqual(schema.hash["lon", "displayedName"], "LoN")
 
     def test_get_root(self):
         """Test the root retrieval of the configurable"""
