@@ -37,8 +37,6 @@ def build_binding(schema, existing=None):
     # Fill it back in recursively
     for key, value, attrs in schema.hash.iterall():
         node = _build_node(value, attrs)
-        if node is None:
-            continue
         setattr(root_namespace, key, node)
 
     # Let any listeners know
@@ -78,8 +76,7 @@ def _build_node(value, attrs):
             return binding_factory(value=namespace, attributes=attrs)
         return types.NodeBinding(value=namespace, attributes=attrs)
 
-    # Return None for legacy unsupported types
-    return None
+    raise RuntimeError(f"Not supported value type {node_type}")
 
 
 # ----------------------------------------------------------------------------
