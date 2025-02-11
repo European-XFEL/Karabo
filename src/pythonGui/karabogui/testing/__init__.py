@@ -17,8 +17,8 @@
 # flake8: noqa
 from .schema import (
     ALL_PROPERTIES_MAP, get_all_props_schema, get_pipeline_schema,
-    get_pipeline_vector_schema, get_recursive_schema, get_simple_props_schema,
-    get_simple_schema, get_slotted_schema, get_vectorattr_schema)
+    get_pipeline_vector_schema, get_simple_props_schema, get_simple_schema,
+    get_slotted_schema, get_vectorattr_schema)
 from .utils import (
     GuiTestCase, SimpleDeviceSchema, access_level, assert_no_throw,
     assert_trait_change, check_renderer_against_svg, click_button,
