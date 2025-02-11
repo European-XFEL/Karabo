@@ -45,16 +45,6 @@ ROI_CANVAS_MAP = {
 ACTIONS = [action for action in ACTION_ITEMS if action != "x_log"]
 
 
-class _PlotItem(PlotItem):
-
-    def setMenuEnabled(self, enableMenu=True, enableViewBoxMenu=None):
-        """Reimplemented function of PyQtGraph
-
-        Note: This patch is not required in pyqtgraph > 0.11.1
-        """
-        self._menuEnabled = enableMenu
-
-
 class KaraboPlotView(QWidget):
     """ The main KaraboPlotView widget for ImagePlots
 
@@ -81,8 +71,8 @@ class KaraboPlotView(QWidget):
         viewbox.menu.addAction("Reset Range", self.reset_range)
 
         # Add our basic plotItem to this widget
-        self.plotItem = _PlotItem(viewBox=viewbox, axisItems=axis_items,
-                                  enableMenu=False, parent=None)
+        self.plotItem = PlotItem(viewBox=viewbox, axisItems=axis_items,
+                                 enableMenu=False, parent=None)
 
         # Improve axes rendering
         for axis in AXIS_ITEMS:
