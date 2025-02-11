@@ -181,7 +181,7 @@ namespace karabo {
                   .assignmentOptional()
                   .defaultValue(60 * 60) // 1 hour
                   .minInc(2 * CHECK_TEMPSESSION_EXPIRATION_INTERVAL_SECS)
-                  .maxInc(5 * 60 * 60) // 5 hours
+                  .maxInc(10 * 60 * 60) // 10 hours
                   .unit(Unit::SECOND)
                   .init()
                   .commit();
