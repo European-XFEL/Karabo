@@ -33,7 +33,7 @@ from . import binding_types as types
 def get_editor_value(property_proxy, default=None):
     """Return the correct value of a PropertyProxy to show in an editor
 
-    :param default: return default if value is None or Undefined
+    :param default: return default if value is `None` or `Undefined`
     """
     value = property_proxy.edit_value
     if value is None or value is Undefined:
@@ -42,10 +42,10 @@ def get_editor_value(property_proxy, default=None):
 
 
 def get_binding_value(binding, default=None):
-    """Get the binding value, this function is used to deal with Undefined or
-    None binding values.
+    """Get the binding value, this function is used to deal with `Undefined`
+    or `None` binding values.
 
-    :param default: return default if value is None or Undefined
+    :param default: return default if value is Undefined or None
     """
     value = binding.value
     return default if value is None or value is Undefined else value
