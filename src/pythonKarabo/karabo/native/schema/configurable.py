@@ -21,13 +21,13 @@ from weakref import WeakKeyDictionary
 
 from karabo.common.api import KARABO_RUNTIME_ATTRIBUTES_MDL
 from karabo.native.data import (
-    AccessLevel, Hash, HashList, NodeType, Schema, Timestamp, has_changes)
+    AccessLevel, Hash, NodeType, Schema, Timestamp, has_changes)
 from karabo.native.time_mixin import get_timestamp
 
 from .basetypes import KaraboValue, NoneValue, isSet
-from .descriptors import Attribute, Descriptor, Integer, Slot
+from .descriptors import Descriptor, Integer, Slot
 
-__all__ = ['Configurable', 'ChoiceOfNodes', 'ListOfNodes', 'Node', 'Overwrite']
+__all__ = ['Configurable', 'Node', 'Overwrite']
 
 
 def _get_setters(instance, hsh, only_changes=False, strict=True):
@@ -177,18 +177,6 @@ class Configurable:
 
         This is mostly for tab-expansion in IPython."""
         return list(self._allattrs)
-
-    @classmethod
-    def node(cls, **kwargs):
-        return Node(cls, **kwargs)
-
-    @classmethod
-    def choiceOfNodes(cls, **kwargs):
-        return ChoiceOfNodes(cls, **kwargs)
-
-    @classmethod
-    def listOfNodes(cls, **kwargs):
-        return ListOfNodes(cls, **kwargs)
 
     def setValue(self, descriptor, value):
         if isinstance(value, KaraboValue) and value.timestamp is None:
@@ -420,85 +408,3 @@ class Node(Descriptor):
         for key in self.cls._allattrs:
             yield from getattr(self.cls, key).allDescriptors(
                 f"{prefix}{self.key}.")
-
-
-class ChoiceOfNodes(Node):
-    defaultValue = Attribute()
-
-    def toSchemaAndAttrs(self, device, state):
-        h = Hash()
-        for k, v in self.cls._subclasses.items():
-            h[k] = v.getClassSchema(device, state).hash
-            h[k, "nodeType"] = NodeType.Node
-
-        _, attrs = super().toSchemaAndAttrs(device, state)
-        attrs["nodeType"] = NodeType.ChoiceOfNodes
-        return h, attrs
-
-    def _initialize(self, instance, value):
-        for k, v in value.items():  # there should be only one entry
-            node = self.cls._subclasses[k](v)
-            instance.__dict__[self.key] = node
-            ret = node._initializers
-            del node._initializers
-            return ret
-
-    def toDataAndAttrs(self, instance):
-        r = Hash()
-        t = type(instance)
-        for k in t._allattrs:
-            a = getattr(instance, k, None)
-            if a is not None:
-                value, attrs = getattr(t, k).toDataAndAttrs(a)
-                r.setElement(k, value, attrs)
-        return Hash(t.__name__, r), {}
-
-
-class ListOfNodes(Node):
-    defaultValue = Attribute()
-
-    def toSchemaAndAttrs(self, device, state):
-        h = Hash()
-        for k, v in self.cls._subclasses.items():
-            h[k] = v.getClassSchema(device, state).hash
-            h[k, "nodeType"] = NodeType.Node
-
-        _, attrs = super().toSchemaAndAttrs(device, state)
-        attrs["nodeType"] = NodeType.ListOfNodes
-        return h, attrs
-
-    def _initialize(self, instance, value):
-        if isinstance(value, Hash):
-            new = [self.cls._subclasses[k](v) for k, v in value.items()]
-        else:
-            new = []
-            for vv in value:
-                if isinstance(vv, Hash):
-                    # If it is a Hash, we have a single key which is the name
-                    # of the class and the value for that key is the config
-                    klassname = next(iter(vv))
-                    new.append(self.cls._subclasses[klassname](vv[klassname]))
-                # We might get strings as defaults or values
-                elif isinstance(vv, str):
-                    new.append(self.cls._subclasses[vv](Hash()))
-        old = instance.__dict__.get(self.key, [])
-        for obj in old:
-            obj._parents.pop(self, None)
-        ret = []
-        for obj in new:
-            obj._parents[self] = self.key
-            ret += obj._initializers
-            del obj._initializers
-        instance.__dict__[self.key] = new
-        return ret
-
-    def toDataAndAttrs(self, instance):
-        ret = HashList()
-        for v in instance:
-            r = Hash()
-            t = type(v)
-            for k in t._allattrs:
-                value, attrs = getattr(t, k).toDataAndAttrs(getattr(v, k))
-                r.setElement(k, value, attrs)
-            ret.append(Hash(t.__name__, r))
-        return ret, {}
