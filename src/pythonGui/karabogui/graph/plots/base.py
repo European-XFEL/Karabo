@@ -623,11 +623,12 @@ class KaraboPlotView(QWidget):
         self._show_legend_action = show_legend_action
         return self._legend
 
-    def set_legend(self, visible):
+    def set_legend(self, visible: bool):
         """Set the legend item visible or invisible"""
         self._set_legend(visible)
         self._toggle_legend_menu(visible)
 
+    @Slot(bool)
     def _set_legend(self, visible: bool):
         if self._legend is None:
             return
