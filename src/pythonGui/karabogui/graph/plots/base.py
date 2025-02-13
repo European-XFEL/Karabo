@@ -106,6 +106,9 @@ class KaraboPlotView(QWidget):
 
         self._show_symbols = False
 
+        self._data_point_toggle_enabled = False
+        self._show_legend_action = None
+
     def sizeHint(self):
         """Provide a size hint slightly larger than the minimum size"""
         return QSize(WIDGET_WIDTH_HINT, WIDGET_HEIGHT_HINT)
@@ -344,9 +347,11 @@ class KaraboPlotView(QWidget):
         toggle_action.setChecked(False)
         toggle_action.toggled.connect(self.toggle_data_symbols)
         viewbox = self.plotItem.vb
-        viewbox.add_action(toggle_action)
+        seperator = self._legend is None
+        viewbox.add_action(toggle_action, separator=seperator)
         if activate:
             toggle_action.setChecked(True)
+        self._data_point_toggle_enabled = True
 
     def enable_export(self):
         """Optionally enable the showing of data points"""
@@ -608,14 +613,28 @@ class KaraboPlotView(QWidget):
         if not visible:
             self.plotItem.legend.setVisible(False)
 
+        # Add a menu-item to show/hide the legend
+        show_legend_action = QAction("Show Legend", parent=self)
+        show_legend_action.setCheckable(True)
+        show_legend_action.setChecked(False)
+        show_legend_action.triggered.connect(self._set_legend)
+        seperator = not self._data_point_toggle_enabled
+        self.plotItem.vb.add_action(show_legend_action, separator=seperator)
+        self._show_legend_action = show_legend_action
         return self._legend
 
     def set_legend(self, visible):
         """Set the legend item visible or invisible"""
+        self._set_legend(visible)
+        self._toggle_legend_menu(visible)
+
+    def _set_legend(self, visible: bool):
         if self._legend is None:
             return
-
         self.plotItem.legend.setVisible(visible)
+
+    def _toggle_legend_menu(self, toggled: bool):
+        self._show_legend_action.setChecked(toggled)
 
     # ----------------------------------------------------------------
     # Axis and Title methods
