@@ -41,6 +41,21 @@ CPPUNIT_TEST_SUITE_REGISTRATION(Hash_Test);
 using namespace karabo::util;
 using namespace std;
 
+namespace CppUnit {
+    // Enable CPPUNIT_ASSERT_EQUAL for vectors
+    // (Note: vector<unsigned char> might need special casing, vector<Hash> even more!)
+    template <typename T>
+    struct assertion_traits<std::vector<T>> {
+        static bool equal(const std::vector<T>& a, const std::vector<T>& b) {
+            return a == b;
+        }
+
+        static std::string toString(const std::vector<T>& p) {
+            return karabo::util::toString(p);
+        }
+    };
+} // namespace CppUnit
+
 
 Hash_Test::Hash_Test() {}
 
@@ -1319,6 +1334,22 @@ void Hash_Test::testIteration() {
         CPPUNIT_ASSERT(alphaNumericOrder[4] == "order");
         CPPUNIT_ASSERT(alphaNumericOrder[5] == "should");
     }
+    {
+        // erase during map iteration
+        Hash h2(h); // local copy
+        for (auto it = h2.mbegin(); it != h2.mend();) {
+            if (it->first == "be" || it->first == "correct") {
+                it = h2.erase(it);
+            } else {
+                ++it;
+            }
+        }
+        std::vector<std::string> insertionOrder;
+        for (auto it = h2.begin(); it != h2.end(); ++it) {
+            insertionOrder.push_back(it->getKey());
+        }
+        CPPUNIT_ASSERT_EQUAL(std::vector<std::string>({"should", "iterated", "in", "order"}), insertionOrder);
+    }
 
     //  getKeys(...) to ...
     //         "set"
@@ -1345,6 +1376,8 @@ void Hash_Test::testIteration() {
         CPPUNIT_ASSERT(*it++ == "correct");
         CPPUNIT_ASSERT(*it++ == "order");
         CPPUNIT_ASSERT(*it++ == "be");
+
+        CPPUNIT_ASSERT_EQUAL(tmp, h.getKeys());
     }
 
     //         "list"
@@ -1377,6 +1410,7 @@ void Hash_Test::testIteration() {
 
 void Hash_Test::testGetPaths() {
     {
+        // getPaths for vector
         Hash h;
         h.set("a", 1);
         h.set("b.c", "foo");
@@ -1400,9 +1434,12 @@ void Hash_Test::testGetPaths() {
         CPPUNIT_ASSERT(*it++ == "vector.hash.one[1]");
         CPPUNIT_ASSERT(*it++ == "empty.vector.hash");
         CPPUNIT_ASSERT(*it++ == "empty.hash");
+
+        CPPUNIT_ASSERT_EQUAL(paths, h.getPaths());
     }
 
     {
+        // getDeepPaths for vector
         Hash h;
         h.set("a", 1);
         h.set("b.c", "foo");
@@ -1419,6 +1456,8 @@ void Hash_Test::testGetPaths() {
         CPPUNIT_ASSERT_EQUAL(*it++, std::string("b.array.shape"));
         CPPUNIT_ASSERT_EQUAL(*it++, std::string("b.array.isBigEndian"));
         CPPUNIT_ASSERT_EQUAL(*it++, std::string("emptyhash"));
+
+        CPPUNIT_ASSERT_EQUAL(paths, h.getDeepPaths());
     }
 }
 
