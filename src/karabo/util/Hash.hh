@@ -269,6 +269,17 @@ namespace karabo {
             bool erase(const std::string& path, const char separator = k_defaultSep);
 
             /**
+             * Remove element identified by map_iterator of this Hash.
+             *
+             * The iterator must not belong to a Hash nested in this one.
+             *
+             * @param it a valid iterator (invalid afterwards)
+             *
+             * @return a map_iterator pointing to the element after 'it' (or mend() if it was the last element)
+             */
+            map_iterator erase(map_iterator it);
+
+            /**
              * Remove the element identified by 'path' if it exists.
              * If 'key' is composite (e.g. "a.b.c") and the last component ("c")
              * is the only child of its parent, the parent is removed as well.
@@ -288,32 +299,100 @@ namespace karabo {
             void erasePath(const std::string& path, const char separator = k_defaultSep);
 
             /**
-             * Returns all the keys in the hash in the provided container (vector, list, set, ...)
-             * Keys in inner-hashes are not included
-             * @param container
+             * Returns all first level keys of the hash in the provided container (vector, list, ...)
+             *
+             * No recursion, i.e. keys in inner hashes are not included
+             *
+             * @param container that the keys are appended to (it is not cleared before)
              */
             template <template <class T, class All = std::allocator<T> > class container>
             void getKeys(container<std::string>& result) const;
 
+            /**
+             * Returns all first level keys of the hash in the provided set
+             *
+             * No recursion, i.e. keys in inner hashes are not included
+             *
+             * @param result that the keys are inserted into (it is not cleared before!))
+             */
             void getKeys(std::set<std::string>& result) const;
 
             /**
-             * Returns all root-to-leaves paths in hash in the provided container (vector, list, set, ...)
-             * This function goes recursively through the whole hash and
-             * should just be called for frequently lookup in log(n) ????????????????????
-             * @param container
-             * @return std::vector<std::string> object
+             * Returns all first level keys of the hash as a vector<string>
+             *
+             * No recursion, i.e. keys in inner hashes are not included
+             *
+             * @return first level keys
              */
+            std::vector<std::string> getKeys() const;
 
+            /**
+             * Returns all root-to-leaves paths in hash in the provided container (vector, list, ...)
+             *
+             * This function goes recursively through the whole hash and the returned paths are their keys
+             * "glued" together via the given separator
+             *
+             * @param result container to which paths get appended (it is not cleared before)
+             * @param separator to glue keys of the hierarchy levels
+             */
             template <template <class T, class All = std::allocator<T> > class container>
             void getPaths(container<std::string>& result, const char separator = k_defaultSep) const;
 
+            /**
+             * Returns all root-to-leaves paths in hash in the provided set
+             *
+             * This function goes recursively through the whole hash and the returned paths are their keys
+             * "glued" together via the given separator
+             *
+             * @param result set into which paths get inserted (it is not cleared before)
+             * @param separator to glue keys of the hierarchy levels
+             */
             void getPaths(std::set<std::string>& result, const char separator = k_defaultSep) const;
 
+            /**
+             * Returns all root-to-leaves paths in hash as vector<string>
+             *
+             * This function goes recursively through the whole hash and the returned paths are their keys
+             * "glued" together via the given separator
+             *
+             * @param separator to glue keys of the hierarchy levels
+             * @return vector of all paths
+             */
+            std::vector<std::string> getPaths(const char separator = k_defaultSep) const;
+
+            /**
+             * Returns all root-to-leaves paths in hash in the provided container (vector, list, ...)
+             *
+             * In contrast to getPaths, inserted data of C++ objects with protected inheritance from Hash
+             * (NDarray, ImageData) ar not treated as atomic, but as another Hash level
+             *
+             * @param result container to which paths get appended (it is not cleared before)
+             * @param separator to glue keys of the hierarchy levels
+             */
             template <template <class T, class All = std::allocator<T> > class container>
             void getDeepPaths(container<std::string>& result, const char separator = k_defaultSep) const;
 
+            /**
+             * Returns all root-to-leaves paths in hash in the provided set
+             *
+             * In contrast to getPaths, inserted data of C++ objects with protected inheritance from Hash
+             * (NDarray, ImageData) ar not treated as atomic, but as another Hash level
+             *
+             * @param result container to which paths get appended (it is not cleared before)
+             * @param separator to glue keys of the hierarchy levels
+             */
             void getDeepPaths(std::set<std::string>& result, const char separator = k_defaultSep) const;
+
+            /**
+             * Returns all root-to-leaves paths in hash in the provided set
+             *
+             * In contrast to getPaths, inserted data of C++ objects with protected inheritance from Hash
+             * (NDarray, ImageData) ar not treated as atomic, but as another Hash level
+             *
+             * @param separator to glue keys of the hierarchy levels
+             * @return vector of all deep paths
+             */
+            std::vector<std::string> getDeepPaths(const char separator = k_defaultSep) const;
 
             static void getPaths(const Hash& hash, std::vector<std::string>& paths, std::string prefix,
                                  const char separator = k_defaultSep, const bool fullPaths = false);

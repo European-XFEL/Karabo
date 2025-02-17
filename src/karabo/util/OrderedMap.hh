@@ -274,9 +274,9 @@ namespace karabo {
             /**
              * Erase element identified by map_iterator.
              * @param it - a valid map_iterator
-             * @return no
+             * @return a map_iterator pointing to the element after 'it' (or mend() if 'it' was the last element)
              */
-            inline void erase(const map_iterator& it);
+            inline map_iterator erase(const map_iterator& it);
 
             /**
              * Return the number or elements in this map
@@ -613,10 +613,11 @@ namespace karabo {
         }
 
         template <class KeyType, class MappedType>
-        inline void OrderedMap<KeyType, MappedType>::erase(const map_iterator& it) {
+        inline OrderedMap<KeyType, MappedType>::map_iterator OrderedMap<KeyType, MappedType>::erase(
+              const map_iterator& it) {
             // it must be valid!
             m_listNodes.remove(&it->second);
-            m_mapNodes.erase(it);
+            return m_mapNodes.erase(it);
         }
 
         template <class KeyType, class MappedType>

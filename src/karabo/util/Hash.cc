@@ -172,6 +172,9 @@ namespace karabo {
             }
         }
 
+        Hash::map_iterator Hash::erase(map_iterator it) {
+            return m_container.erase(it);
+        }
 
         static std::string concat(const std::vector<std::string>& vec, size_t len, const std::string& sep) {
             std::string result;
@@ -222,8 +225,9 @@ namespace karabo {
                     }
                     if ((this->is<Hash>(thePath, separator) && !this->get<Hash>(thePath, separator).empty()) ||
                         (this->is<std::vector<Hash>>(thePath, separator) &&
-                         !this->get<std::vector<Hash>>(thePath, separator).empty()))
+                         !this->get<std::vector<Hash>>(thePath, separator).empty())) {
                         break;
+                    }
                 }
             } catch (const karabo::util::Exception& e) {
                 KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Error whilst erasing path '" + path + "' from Hash"));
@@ -343,6 +347,14 @@ namespace karabo {
             }
         }
 
+        std::vector<std::string> Hash::getKeys() const {
+            std::vector<std::string> result;
+            result.reserve(size());
+
+            getKeys(result);
+
+            return result;
+        }
 
         void Hash::getPaths(std::set<std::string>& result, const char separator) const {
             if (this->empty()) return;
@@ -352,6 +364,15 @@ namespace karabo {
             for (size_t i = 0; i < vect.size(); ++i) {
                 result.insert(vect[i]);
             }
+        }
+
+        std::vector<std::string> Hash::getPaths(const char separator) const {
+            std::vector<std::string> result;
+            result.reserve(size()); // Not yet big enough if Hash is nested, but at least a start
+
+            getPaths(result, separator);
+
+            return result; // return value optimization avoids copy
         }
 
         void Hash::getDeepPaths(std::set<std::string>& result, const char separator) const {
@@ -364,11 +385,20 @@ namespace karabo {
             }
         }
 
+        std::vector<std::string> Hash::getDeepPaths(const char separator) const {
+            std::vector<std::string> result;
+            result.reserve(size()); // Not yet big enough if Hash is nested, but at least a start
+
+            getDeepPaths(result, separator);
+
+            return result;
+        }
+
 
         void Hash::getPaths(const Hash& hash, std::vector<std::string>& result, std::string prefix,
                             const char separator, const bool fullPaths) {
             if (hash.empty()) {
-                result.push_back(prefix);
+                result.push_back(std::move(prefix));
                 return;
             }
             for (const_iterator it = hash.begin(); it != hash.end(); ++it) {
