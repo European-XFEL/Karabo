@@ -87,7 +87,7 @@ def test_move_action(gui_app):
     assert label.y == 10
 
 
-def test_align_action():
+def test_align_action(gui_app):
     for action in ("Left", "Right", "Top", "Bottom"):
         labels = [
             LabelModel(x=i * 10, y=i * 10, text="bar") for i in range(4)
