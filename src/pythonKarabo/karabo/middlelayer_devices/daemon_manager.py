@@ -131,10 +131,6 @@ class DaemonManager(Device):
         options=[State.INIT, State.UNKNOWN, State.CHANGING,
                  State.ON])
 
-    visibility = Overwrite(
-        defaultValue=AccessLevel.ADMIN,
-        options=[AccessLevel.ADMIN])
-
     host = String(
         displayedName="Host",
         defaultValue="localhost",
