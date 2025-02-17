@@ -14,8 +14,7 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 from karabo.common.sanity_check import validate_macro
-from karabo.middlelayer import (
-    AccessLevel, AccessMode, Device, Macro, Overwrite, String, isSet)
+from karabo.middlelayer import AccessMode, Device, Macro, String, isSet
 
 
 class MetaMacro(Device):
@@ -42,10 +41,6 @@ class MetaMacro(Device):
         displayedName="Project DB UUID",
         description="The UUID for this macro",
         accessMode=AccessMode.INITONLY)
-
-    visibility = Overwrite(
-        options=[level for level in AccessLevel],
-        defaultValue=AccessLevel.ADMIN)
 
     def __init__(self, config):
         super().__init__(config)
@@ -75,7 +70,6 @@ class MetaMacro(Device):
             "hostName": self.hostName.value,
             "uuid": self.uuid.value,
             "module": self.module.value,
-            "visibility": self.visibility.value,
         }
         if isSet(self.project):
             parameters["project"] = self.project.value

@@ -29,14 +29,12 @@ from json import loads
 from signal import SIGTERM
 from subprocess import PIPE
 
-import numpy
-
 from karabo import __version__ as karaboVersion
 from karabo.common.api import KARABO_LOGGER_CONTENT_DEFAULT, ServerFlags
 from karabo.native import (
-    AccessLevel, AccessMode, Assignment, Bool, Descriptor, Hash, Int32,
-    KaraboError, Node, String, TimeMixin, VectorString, decodeBinary,
-    encodeBinary, get_timestamp, isSet)
+    AccessLevel, AccessMode, Assignment, Bool, Descriptor, Hash, KaraboError,
+    Node, String, TimeMixin, VectorString, decodeBinary, encodeBinary,
+    get_timestamp, isSet)
 
 from .configuration import validate_init_configuration
 from .eventloop import EventLoop
@@ -75,14 +73,6 @@ class DeviceServerBase(SignalSlotable):
         "string. The host's definition will be used if not specified.",
         assignment=Assignment.OPTIONAL,
         requiredAccessLevel=AccessLevel.EXPERT)
-
-    visibility = Int32(
-        enum=AccessLevel, displayedName="Visibility",
-        description="Configures who is allowed to see this server at all",
-        assignment=Assignment.OPTIONAL,
-        defaultValue=AccessLevel.OBSERVER,
-        requiredAccessLevel=AccessLevel.ADMIN,
-        accessMode=AccessMode.RECONFIGURABLE)
 
     pluginDirectory = String(
         displayedName="Plugin Directory",
@@ -124,6 +114,10 @@ class DeviceServerBase(SignalSlotable):
         assignment=Assignment.INTERNAL,
         accessMode=AccessMode.INITONLY)
 
+    def getClasses(self):
+        """This is an endpoint of multiple inheritance."""
+        return []
+
     def list_plugins(self, namespace):
         return list(entry_points(group=namespace))
 
@@ -150,7 +144,6 @@ class DeviceServerBase(SignalSlotable):
         info["serverId"] = self.serverId
         info["version"] = self.__class__.__version__
         info["host"] = self.hostName
-        info["visibility"] = self.visibility.value
         info["user"] = getpass.getuser()
         info["lang"] = "python"
         info["log"] = self.log.level
@@ -245,23 +238,11 @@ class DeviceServerBase(SignalSlotable):
         return classId, deviceId, config
 
     def deviceClassesHash(self):
-        visibilities = self.getVisibilities()
-        if visibilities:
-            return Hash("deviceClasses", list(visibilities),
-                        "visibilities",
-                        numpy.array(list(visibilities.values())))
+        classes = self.getClasses()
+        if classes:
+            return Hash("deviceClasses", list(classes))
         else:
             return Hash()
-
-    def getVisibilities(self):
-        """return a dictionary of class visibility.
-
-        This is an endpoint for multiple inheritance. This method should
-        return a dictionary that maps the names of all available classes
-        to their visibilities. The default implementation returns an empty
-        dict, all specializations should add their classes to it.
-        """
-        return {}
 
     async def slotKillServer(self, message=None):
         await self.slotKillDevice(message)
@@ -512,11 +493,11 @@ class MiddleLayerDeviceServer(HeartBeatMixin, DeviceServerBase):
 
         return changes
 
-    def getVisibilities(self):
-        visibilities = super().getVisibilities()
-        visibilities.update((k, v.visibility.defaultValue.value)
-                            for k, v in self.plugins.items())
-        return visibilities
+    def getClasses(self) -> list:
+        classes = super().getClasses()
+        classes.extend(list(self.plugins))
+
+        return classes
 
     @slot
     def slotGetClassSchema(self, classId):
@@ -661,12 +642,6 @@ class BoundDeviceServer(DeviceServerBase):
                 self.logger.exception('Cannot load bound plugin "%s"', ep.name)
         self.bannedClasses = list(class_ban)
         return changes
-
-    def getVisibilities(self):
-        visibilities = super().getVisibilities()
-        visibilities.update((k, v.hash["visibility", "defaultValue"])
-                            for k, v in self.bounds.items())
-        return visibilities
 
     @slot
     def slotGetClassSchema(self, classId):

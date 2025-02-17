@@ -52,14 +52,6 @@ class Device(InjectMixin, SignalSlotable):
         defaultValue="__none__",
     )
 
-    visibility = Int32(
-        enum=AccessLevel, displayedName="Visibility",
-        description="Configures who is allowed to see this device at all",
-        assignment=Assignment.OPTIONAL, defaultValue=AccessLevel.OBSERVER,
-        requiredAccessLevel=AccessLevel.EXPERT,
-        accessMode=AccessMode.INITONLY,
-    )
-
     classId = String(
         displayedName="ClassID",
         description="The (factory)-name of the class of this device",
@@ -227,7 +219,6 @@ class Device(InjectMixin, SignalSlotable):
         info["type"] = "device"
         info["classId"] = self.classId.value
         info["serverId"] = self.serverId.value
-        info["visibility"] = self.visibility.value
         info["host"] = self.hostName
         info["status"] = self._statusInfo
 

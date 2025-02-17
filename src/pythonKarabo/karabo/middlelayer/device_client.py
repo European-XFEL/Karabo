@@ -902,36 +902,31 @@ async def lock(proxy, wait_for_release=None):
     return context()
 
 
-def findDevices(matchPattern, visibility=3):
+def findDevices(matchPattern):
     """Return a list of found deviceId's.
 
     This function is a shortcut to find deviceIds with `getDevices`
 
     :param matchPattern: String pattern, to find the deviceId's containing
                          the matchPattern.
-    :param visibility: Integer specifying the visibility of desired devices.
-                       Default visibility level is 3.
     """
-    return getDevices(matchPattern=matchPattern, visibility=visibility)
+    return getDevices(matchPattern=matchPattern)
 
 
-def getDevices(serverId=None, visibility=3, matchPattern=None):
+def getDevices(serverId=None, matchPattern=None):
     """Return a list of currently running devices
 
     :param serverId: Optional serverId, so that only devices are returned
                      running on device server.
-    :param visibility: Integer specifying the visibility of desired devices.
-                       Default visibility level is 3.
     :param matchPattern: Optional string pattern, to find deviceId's containing
                          the matchPattern.
     """
     topology = getTopology()
     if serverId is None:
-        ret = [k for k, v, a in topology["device"].iterall()
-               if a["visibility"] <= visibility]
+        ret = list(topology["device"])
     else:
         ret = [k for k, v, a in topology["device"].iterall()
-               if a["serverId"] == serverId and a["visibility"] <= visibility]
+               if a["serverId"] == serverId]
     if matchPattern is not None:
         ret = [dev for dev in ret if matchPattern.lower() in dev.lower()]
 
@@ -954,32 +949,25 @@ def getTopology():
     return deepcopy(get_instance().systemTopology)
 
 
-def findServers(matchPattern, visibility=3):
+def findServers(matchPattern):
     """Return a list of found serverId's
 
     This function is a shortcut to find serverId's with `getServers`
 
     :param matchPattern: String pattern, to find the serverId's containing
                          the matchPattern.
-    :param visibility: Integer specifying the visibility of desired servers.
-                       Default visibility level is 3.
     """
-    ret = getServers(matchPattern=matchPattern, visibility=visibility)
-
-    return ret
+    return getServers(matchPattern=matchPattern)
 
 
-def getServers(visibility=3, matchPattern=None):
+def getServers(matchPattern=None):
     """Return a list of currently running servers
 
-    :param visibility: Integer specifying the visiblity of desired servers.
-                       Default visibility level is 3.
     :param matchPattern: Optional string pattern, to find serverId's containing
                          the matchPattern.
     """
     topology = getTopology()
-    ret = [k for k, v, a in topology["server"].iterall()
-           if a["visibility"] <= visibility]
+    ret = list(topology["server"])
     if matchPattern is not None:
         ret = [serv for serv in ret if matchPattern.lower() in serv.lower()]
 
@@ -988,7 +976,8 @@ def getServers(visibility=3, matchPattern=None):
 
 def getClasses(serverId):
     """Return a list of device classes (plugins) available on a server"""
-    servers = getTopology()["server"]
+    topology = getTopology()
+    servers = topology["server"]
     return servers.getAttributes(serverId)["deviceClasses"]
 
 
