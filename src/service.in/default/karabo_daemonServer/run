@@ -17,4 +17,4 @@
 # This file is part of the initial configuration of Karabo
 cd $KARABO/var/data
 DAEMON_HOST=localhost
-exec envdir $KARABO/var/environment karabo-middlelayerserver serverId=karabo/daemonServer 'deviceClasses=DaemonManager' init='{"KaraboDaemonManager":{"classId":"DaemonManager", "port":8585, "host": "'$DAEMON_HOST'"}}' 'visibility=4' 'log.level=INFO' 2>&1
+exec envdir $KARABO/var/environment karabo-middlelayerserver serverId=karabo/daemonServer 'deviceClasses=DaemonManager' init='{"KaraboDaemonManager":{"classId":"DaemonManager", "port":8585, "host": "'$DAEMON_HOST'"}}' 'log.level=INFO' 2>&1

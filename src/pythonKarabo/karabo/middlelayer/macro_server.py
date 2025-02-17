@@ -15,7 +15,7 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 import sys
 
-from karabo.middlelayer import AccessLevel, Overwrite
+from karabo.middlelayer import Overwrite
 from karabo.middlelayer.device_server import MiddleLayerDeviceServer
 from karabo.middlelayer.output import KaraboStream
 
@@ -25,11 +25,6 @@ class MacroServer(MiddleLayerDeviceServer):
         defaultValue="karabo/macroServer")
     pluginNamespace = Overwrite(
         defaultValue="karabo.macro_device")
-    visibility = Overwrite(
-        # when overwriting a descriptor with an enum attribute
-        # one must always specify the options
-        options=[level for level in AccessLevel],
-        defaultValue=AccessLevel.ADMIN)
 
     def _initInfo(self):
         info = super()._initInfo()
