@@ -104,7 +104,7 @@ class BoundDeviceTestCase(TestCase):
             classes = self.dc.getClasses(server_id)
             return all(cls_id in classes for cls_id in class_ids)
 
-        server_args = ["deviceClasses=" + ",".join(class_ids), "visibility=1"]
+        server_args = ["deviceClasses=" + ",".join(class_ids)]
         for k, v in kw_server_args.items():
             server_args.append(k + "=" + str(v))
 

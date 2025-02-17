@@ -196,10 +196,6 @@ class PropertyTestMDL(Device):
         defaultValue=State.INIT,
         options=allowedStates)
 
-    visibility = Overwrite(
-        defaultValue=AccessLevel.EXPERT,
-        options=[AccessLevel.EXPERT])
-
     @Bool(displayedName="Bool",
           description="a boolean value",
           defaultValue=False)

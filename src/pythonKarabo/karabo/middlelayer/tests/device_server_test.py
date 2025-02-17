@@ -104,8 +104,8 @@ async def test_device_server_instantiate_plugins():
         await server.startDevice("PropertyTestMDL", deviceId,
                                  Hash())
         assert len(server.deviceInstanceMap.keys()) == 1
-        vis = server.getVisibilities()
-        assert vis == {"PropertyTestMDL": 3}
+        classes = server.getClasses()
+        assert classes == ["PropertyTestMDL"]
 
         schema, classId, serv_id = server.slotGetClassSchema(
             "PropertyTestMDL")
@@ -171,8 +171,8 @@ async def test_device_server_autostart():
         assert len(server.deviceInstanceMap.keys()) == 2
         assert deviceId_1 in server.deviceInstanceMap
         assert deviceId_2 in server.deviceInstanceMap
-        vis = server.getVisibilities()
-        assert vis == {"PropertyTestMDL": 3}
+        classes = server.getClasses()
+        assert classes == ["PropertyTestMDL"]
         device = server.deviceInstanceMap[deviceId_1]
         assert server == device.device_server
         local = device.getLocalDevice(deviceId_2)

@@ -35,10 +35,6 @@ class ProjectManager(Device):
         defaultValue=State.INIT,
         options=[State.ERROR, State.ON, State.INIT])
 
-    visibility = Overwrite(
-        defaultValue=AccessLevel.ADMIN,
-        options=[AccessLevel.ADMIN])
-
     # node containing Database connection details.
     projectDB = get_node()
 

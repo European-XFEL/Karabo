@@ -86,10 +86,6 @@ class ConfigurationManager(DeviceClientBase):
         defaultValue=State.INIT,
         options=[State.INIT, State.CHANGING, State.UNKNOWN, State.ON])
 
-    visibility = Overwrite(
-        defaultValue=AccessLevel.ADMIN,
-        options=[AccessLevel.ADMIN])
-
     @String(
         defaultValue="",
         description="The deviceId to look for a configuration",
