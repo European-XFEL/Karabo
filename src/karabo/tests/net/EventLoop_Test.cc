@@ -142,6 +142,35 @@ void EventLoop_Test::testPost() {
         CPPUNIT_ASSERT(future.get());
     }
 
+    // Post a method that throws and verify we stay alive if catch exception flag is true
+    {
+        const bool oldFlag = EventLoop::setCatchExceptions(true);
+        auto promise = std::make_shared<std::promise<bool>>();
+        auto future = promise->get_future();
+        auto func = [promise]() {
+            promise->set_value(true);
+            throw std::runtime_error("induced");
+        };
+        EventLoop::post(func);
+        EventLoop::run();
+
+        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, future.wait_for(std::chrono::milliseconds(2000)));
+        CPPUNIT_ASSERT(future.get());
+
+        EventLoop::setCatchExceptions(oldFlag);
+    }
+
+    // Post a method that throws and see the exception leaking out of the event loop
+    {
+        const bool oldFlag = EventLoop::setCatchExceptions(false);
+        auto func = []() { throw std::runtime_error("induced"); };
+        EventLoop::post(func);
+
+        CPPUNIT_ASSERT_THROW(EventLoop::run(), std::runtime_error);
+
+        EventLoop::setCatchExceptions(oldFlag);
+    }
+
     // Post method with a delay and verify delay
     {
         auto promise = std::make_shared<std::promise<bool>>();
