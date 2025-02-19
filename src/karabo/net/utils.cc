@@ -30,8 +30,8 @@
 #include <boost/asio.hpp>
 #include <boost/asio/ip/address_v4.hpp>
 #include <boost/asio/ip/network_v4.hpp>
-#include <boost/regex.hpp>
 #include <iostream>
+#include <regex>
 
 #include "karabo/log/Logger.hh"
 #include "karabo/util/Exception.hh"
@@ -86,8 +86,8 @@ void karabo::net::runProtected(std::shared_ptr<boost::asio::io_service> service,
 
 
 std::tuple<std::string, std::string> karabo::net::parseGenericUrl(const std::string& url) {
-    boost::regex ex("([^:]+):(?://)?(.+)");
-    boost::cmatch what;
+    std::regex ex("([^:]+):(?://)?(.+)");
+    std::cmatch what;
     string scheme;
     string schemeSpecific;
     if (regex_match(url.c_str(), what, ex)) {
@@ -104,8 +104,8 @@ std::tuple<std::string, std::string, std::string, std::string, std::string> kara
     const string& scheme = std::get<0>(parsed_url);
     const string& schemeDependent = std::get<1>(parsed_url);
 
-    boost::regex ex("([^/ :]+):?([^/ ]*)(/?[^ #?]*)\\x3f?([^ #]*)#?([^ ]*)");
-    boost::cmatch what;
+    std::regex ex("([^/ :]+):?([^/ ]*)(/?[^ #?]*)\\x3f?([^ #]*)#?([^ ]*)");
+    std::cmatch what;
     string domain;
     string port;
     string path;

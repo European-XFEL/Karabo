@@ -15,12 +15,6 @@
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
-/*
- * File:   idxBuild.cc
- * Author: Sergey Esenov <serguei.essenov at xfel.eu>
- *
- * Created on July 28, 2015, 2:35 PM
- */
 
 #include <algorithm>
 #include <boost/algorithm/string/predicate.hpp>
@@ -32,6 +26,7 @@
 #include <karabo/util/Epochstamp.hh>
 #include <karabo/util/Exception.hh>
 #include <karabo/util/Schema.hh>
+#include <regex>
 #include <sstream>
 #include <vector>
 
@@ -283,7 +278,7 @@ void processNextFile(const std::string& deviceId, size_t number, const std::stri
     TextSerializer<Schema>::Pointer serializer = TextSerializer<Schema>::create(Hash("Xml"));
     Schema::Pointer schema(new Schema);
     serializer->load(*schema, schemaRange.fromSchemaArchive);
-    boost::regex lineRegex(karabo::util::DATALOG_LINE_REGEX, boost::regex::extended);
+    std::regex lineRegex(karabo::util::DATALOG_LINE_REGEX, std::regex::extended);
 
     string infile = historyDir + "/" + deviceId + "/raw/archive_" + toString(number) + ".txt";
     ifstream irs(infile.c_str());
@@ -310,8 +305,8 @@ void processNextFile(const std::string& deviceId, size_t number, const std::stri
                 }
                 continue;
             }
-            boost::smatch tokens;
-            bool search_res = boost::regex_search(line, tokens, lineRegex);
+            std::smatch tokens;
+            bool search_res = std::regex_search(line, tokens, lineRegex);
             if (!search_res) {
                 cout << "*** idxBuild: skip corrupted record : line = " << line << ", token.size() = " << tokens.size()
                      << endl;

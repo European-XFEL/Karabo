@@ -32,8 +32,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(DataLogUtils_Test);
 namespace nl = nlohmann;
 
 DataLogUtils_Test::DataLogUtils_Test()
-    : m_indexRegex(karabo::util::DATALOG_INDEX_LINE_REGEX, boost::regex::extended),
-      m_indexTailRegex(karabo::util::DATALOG_INDEX_TAIL_REGEX, boost::regex::extended) {}
+    : m_indexRegex(karabo::util::DATALOG_INDEX_LINE_REGEX), m_indexTailRegex(karabo::util::DATALOG_INDEX_TAIL_REGEX) {}
 
 
 void DataLogUtils_Test::setUp() {}
@@ -78,15 +77,15 @@ void DataLogUtils_Test::testValidIndexLines() {
     };
 
     for (auto& aPair : resultTable) {
-        boost::smatch indexFields;
-        CPPUNIT_ASSERT(boost::regex_search(aPair.first, indexFields, m_indexRegex));
+        std::smatch indexFields;
+        CPPUNIT_ASSERT(std::regex_search(aPair.first, indexFields, m_indexRegex));
         CPPUNIT_ASSERT_EQUAL(aPair.second[0], std::string(indexFields[1])); // indexFields[1] is not a string - LOG
         CPPUNIT_ASSERT_EQUAL(aPair.second[1], std::string(indexFields[2])); // iso timestamp
         CPPUNIT_ASSERT_EQUAL(aPair.second[2], std::string(indexFields[3])); // double timestamp
         // Now the tail:
-        boost::smatch tailFields;
+        std::smatch tailFields;
         std::string tail = std::string(indexFields[4]);
-        CPPUNIT_ASSERT(boost::regex_search(tail, tailFields, m_indexTailRegex));
+        CPPUNIT_ASSERT(std::regex_search(tail, tailFields, m_indexTailRegex));
         CPPUNIT_ASSERT_EQUAL(aPair.second[3], std::string(tailFields[1])); // train id
         CPPUNIT_ASSERT_EQUAL(aPair.second[4], std::string(tailFields[2])); // index file position
         CPPUNIT_ASSERT_EQUAL(aPair.second[5], std::string(tailFields[3])); // user name
@@ -120,14 +119,15 @@ void DataLogUtils_Test::testInvalidIndexLines() {
 
     int invalidTestIdx = 0;
     for (auto& aPair : resultsTable) {
-        boost::smatch indexFields;
+        std::smatch indexFields;
         int faillingRegEx = 0;
-        bool matchIndex = boost::regex_search(aPair.first, indexFields, m_indexRegex);
+        bool matchIndex = std::regex_search(aPair.first, indexFields, m_indexRegex);
         if (!matchIndex) {
             faillingRegEx = 1;
         } else {
-            boost::smatch tailFields;
-            bool matchTail = boost::regex_search(std::string(indexFields[4]), tailFields, m_indexTailRegex);
+            std::smatch tailFields;
+            std::string tail = indexFields[4];
+            bool matchTail = std::regex_search(tail, tailFields, m_indexTailRegex);
             if (!matchTail) {
                 faillingRegEx = 2;
             }
