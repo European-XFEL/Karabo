@@ -27,7 +27,6 @@
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
 #include <boost/date_time/time_duration.hpp>
-#include <boost/regex.hpp>
 #include <cstdlib>
 #include <string>
 #include <vector>
