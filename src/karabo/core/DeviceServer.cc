@@ -29,11 +29,11 @@
 // temp change to trigger CI
 
 #include <boost/algorithm/string.hpp>
-#include <boost/regex.hpp>
 #include <csignal>
 #include <cstdlib>
 #include <filesystem>
 #include <functional>
+#include <regex>
 #include <tuple>
 
 #include "Device.hh"
@@ -713,9 +713,9 @@ namespace karabo {
 
         void DeviceServer::noStateTransition(const std::string& typeId, int state) {
             string eventName(typeId);
-            boost::regex re(".*\\d+(.+Event).*");
-            boost::smatch what;
-            bool result = boost::regex_search(typeId, what, re);
+            std::regex re(".*\\d+(.+Event).*");
+            std::smatch what;
+            bool result = std::regex_search(typeId, what, re);
             if (result && what.size() == 2) {
                 eventName = what.str(1);
             }

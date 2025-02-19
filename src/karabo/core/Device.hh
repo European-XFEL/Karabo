@@ -28,7 +28,7 @@
 #include <unistd.h>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/regex.hpp>
+#include <regex>
 #include <string>
 #include <tuple>
 #include <unordered_set>
@@ -1385,9 +1385,9 @@ namespace karabo {
 
             virtual void onNoStateTransition(const std::string& typeId, int state) {
                 std::string eventName(typeId);
-                boost::regex re(".*\\d+(.+Event).*");
-                boost::smatch what;
-                bool result = boost::regex_search(typeId, what, re);
+                std::regex re(".*\\d+(.+Event).*");
+                std::smatch what;
+                bool result = std::regex_search(typeId, what, re);
                 if (result && what.size() == 2) {
                     eventName = what.str(1);
                 }

@@ -42,8 +42,8 @@
 #include "ClassInfo.hh"
 
 #include <boost/algorithm/string.hpp>
-#include <boost/regex.hpp>
 #include <iostream>
+#include <regex>
 #include <string>
 
 #include "Exception.hh"
@@ -94,12 +94,12 @@ namespace karabo {
             if (found == std::string::npos) {
                 // no templates in the signature
 #if defined(_WIN32)
-                boost::regex re("class karabo::util::ClassInfo __cdecl\\s(.+::)*(.+)::classInfo");
+                std::regex re("class karabo::util::ClassInfo __cdecl\\s(.+::)*(.+)::classInfo");
 #else
-                boost::regex re("static karabo::util::ClassInfo\\s*(.+::)*(.+)::classInfo");
+                std::regex re("static karabo::util::ClassInfo\\s*(.+::)*(.+)::classInfo");
 #endif
-                boost::smatch what;
-                bool result = boost::regex_search(signature, what, re);
+                std::smatch what;
+                bool result = std::regex_search(signature, what, re);
                 if (result && what.size() == 3) {
                     m_className = what.str(2);
                     m_namespace = what.str(1);
@@ -117,14 +117,14 @@ namespace karabo {
                 string tmp = signature.substr(0, found);
 
 #if defined(_WIN32)
-                boost::regex re("class karabo::util::ClassInfo __cdecl\\s(.+::)*(.+)");
+                std::regex re("class karabo::util::ClassInfo __cdecl\\s(.+::)*(.+)");
 #else
-                boost::regex re("static karabo::util::ClassInfo\\s*(.+::)*(.+)");
+                std::regex re("static karabo::util::ClassInfo\\s*(.+::)*(.+)");
 #endif
 
-                boost::smatch what;
+                std::smatch what;
 
-                bool result = boost::regex_search(tmp, what, re);
+                bool result = std::regex_search(tmp, what, re);
                 if (result && what.size() == 3) {
                     m_className = what.str(2);
                     m_namespace = what.str(1);
