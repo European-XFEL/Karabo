@@ -128,8 +128,21 @@ namespace karabo {
              */
             static void setSignalHandler(const SignalHandler& handler);
 
+            /**
+             * Public flag to change behaviour of catching exceptions in threads
+             *
+             * By default, flag is true and the event loop runs its threads such that any exception is caught
+             * and logged as error. If flag is false, exceptions are rethrown after logging them.
+             *
+             * @param flag that should be valid now
+             * @return previous value of flag
+             */
+            static bool setCatchExceptions(bool flag) {
+                return instance()->m_catchExceptions.exchange(flag);
+            }
+
            private:
-            EventLoop() : m_running(false){};
+            EventLoop() : m_running(false), m_catchExceptions(true){};
 
             // Delete copy constructor and assignment operator since EventLoop is a singleton:
             EventLoop(const EventLoop&) = delete;
@@ -166,6 +179,7 @@ namespace karabo {
             boost::thread_group m_threadPool;
             mutable std::mutex m_threadPoolMutex;
             std::atomic<bool> m_running;
+            std::atomic<bool> m_catchExceptions;
 
             static std::shared_ptr<EventLoop> m_instance;
             static boost::once_flag m_initInstanceFlag;

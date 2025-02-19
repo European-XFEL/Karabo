@@ -289,8 +289,14 @@ namespace karabo {
                     }
                 } catch (karabo::util::Exception& e) {
                     KARABO_LOG_FRAMEWORK_ERROR << "Exception" << fullMessage << ": " << e;
+                    if (!m_catchExceptions.load()) {
+                        throw;
+                    }
                 } catch (std::exception& e) {
                     KARABO_LOG_FRAMEWORK_ERROR << "Standard exception" << fullMessage << ": " << e.what();
+                    if (!m_catchExceptions.load()) {
+                        throw;
+                    }
                 } catch (...) {
                     std::string extraInfo;
 #if defined(__GNUC__) || defined(__clang__)
@@ -305,6 +311,9 @@ namespace karabo {
                     }
 #endif
                     KARABO_LOG_FRAMEWORK_ERROR << "Unknown exception" << fullMessage << extraInfo << ".";
+                    if (!m_catchExceptions.load()) {
+                        throw;
+                    }
                 }
             }
         }
