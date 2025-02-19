@@ -22,10 +22,10 @@
 
 #include "Version.hh"
 
-#include <boost/regex.hpp>
 #include <filesystem>
 #include <fstream>
 #include <iosfwd>
+#include <regex>
 #include <sstream>
 
 #include "Exception.hh"
@@ -51,10 +51,10 @@ namespace karabo {
             //                       MANDATORY FIELDS       |OPTIONAL FIELDS                        |
             //                         Major   .Minor   .Patch(suffix         )(suf_n )(dev_suf)(dev_n)
             m_versionString = version;
-            boost::regex versionRegex("(\\d+)\\.(\\d+)\\.(\\d+)(a|b|rc|\\.post)?(\\d+)?(\\.dev)?(\\d+)?");
-            boost::smatch versionParts;
+            std::regex versionRegex("(\\d+)\\.(\\d+)\\.(\\d+)(a|b|rc|\\.post)?(\\d+)?(\\.dev)?(\\d+)?");
+            std::smatch versionParts;
             // could not use std::regex because some legacy hardware uses gcc 4.8
-            bool result = boost::regex_search(version, versionParts, versionRegex);
+            bool result = std::regex_search(version, versionParts, versionRegex);
             if (result && versionParts.size() == 8) {
                 // versionParts[0] is the full matched string.
                 m_major = fromString<unsigned int>(versionParts.str(1));

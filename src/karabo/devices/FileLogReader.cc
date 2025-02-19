@@ -104,15 +104,13 @@ namespace karabo {
             m_cache.erase(commandLineArguments);
         }
 
-        const boost::regex FileLogReader::m_lineRegex(karabo::util::DATALOG_LINE_REGEX, boost::regex::extended);
+        const std::regex FileLogReader::m_lineRegex(karabo::util::DATALOG_LINE_REGEX);
 
-        const boost::regex FileLogReader::m_lineLogRegex(karabo::util::DATALOG_LOGOUT_REGEX, boost::regex::extended);
+        const std::regex FileLogReader::m_lineLogRegex(karabo::util::DATALOG_LOGOUT_REGEX);
 
-        const boost::regex FileLogReader::m_indexLineRegex(karabo::util::DATALOG_INDEX_LINE_REGEX,
-                                                           boost::regex::extended);
+        const std::regex FileLogReader::m_indexLineRegex(karabo::util::DATALOG_INDEX_LINE_REGEX);
 
-        const boost::regex FileLogReader::m_indexTailRegex(karabo::util::DATALOG_INDEX_TAIL_REGEX,
-                                                           boost::regex::extended);
+        const std::regex FileLogReader::m_indexTailRegex(karabo::util::DATALOG_INDEX_TAIL_REGEX);
 
 
         void FileLogReader::expectedParameters(Schema& expected) {
@@ -353,11 +351,11 @@ namespace karabo {
                             string line;
                             if (getline(df, line)) {
                                 if (line.empty()) continue;
-                                boost::smatch tokens;
-                                bool search_res = boost::regex_search(line, tokens, m_lineRegex);
+                                std::smatch tokens;
+                                bool search_res = std::regex_search(line, tokens, m_lineRegex);
                                 if (!search_res) {
                                     // attempt to parse login/logout line instead
-                                    search_res = boost::regex_search(line, tokens, m_lineLogRegex);
+                                    search_res = std::regex_search(line, tokens, m_lineLogRegex);
                                 }
                                 if (search_res) {
                                     const string& flag = tokens[8];
@@ -501,11 +499,11 @@ namespace karabo {
 
                         string line;
                         while (getline(file, line)) {
-                            boost::smatch tokens;
-                            bool search_res = boost::regex_search(line, tokens, m_lineRegex);
+                            std::smatch tokens;
+                            bool search_res = std::regex_search(line, tokens, m_lineRegex);
                             if (!search_res) {
                                 // attempt to parse login/logout line instead
-                                search_res = boost::regex_search(line, tokens, m_lineLogRegex);
+                                search_res = std::regex_search(line, tokens, m_lineLogRegex);
                             }
                             if (search_res) {
                                 const string& flag = tokens[8];
@@ -672,8 +670,8 @@ namespace karabo {
                 lineNum++;
                 // If any parsing or processing problem happens for the current line, proceed to the next line.
                 try {
-                    boost::smatch indexFields;
-                    bool matches = boost::regex_search(line, indexFields, m_indexLineRegex);
+                    std::smatch indexFields;
+                    bool matches = std::regex_search(line, indexFields, m_indexLineRegex);
                     if (!matches) {
                         // The line doesn't have the required values; ignore it and go to the next line.
                         KARABO_LOG_FRAMEWORK_ERROR
@@ -770,8 +768,8 @@ namespace karabo {
                 lineNum++;
                 // If any parsing or processing problem happens for the current line, proceed to the next line.
                 try {
-                    boost::smatch indexFields;
-                    bool matches = boost::regex_search(line, indexFields, m_indexLineRegex);
+                    std::smatch indexFields;
+                    bool matches = std::regex_search(line, indexFields, m_indexLineRegex);
                     if (!matches) {
                         // The line doesn't have the expected values; ignore it and go to the next line.
                         KARABO_LOG_FRAMEWORK_ERROR
@@ -1025,8 +1023,8 @@ namespace karabo {
 
         void FileLogReader::extractTailOfArchiveIndex(const std::string& tail, FileLoggerIndex& entry) const {
             // Match tail fields;
-            boost::smatch tailFields;
-            bool matches = boost::regex_search(tail, tailFields, m_indexTailRegex);
+            std::smatch tailFields;
+            bool matches = std::regex_search(tail, tailFields, m_indexTailRegex);
             if (matches) {
                 // Assign tail fields.
                 entry.m_train = karabo::util::fromString<unsigned long long>(tailFields[1]);

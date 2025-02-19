@@ -25,7 +25,7 @@
 #define KARABO_UTIL_DATETIMESTRING_HH
 
 #include <boost/date_time.hpp>
-#include <boost/regex.hpp>
+#include <regex>
 
 #include "Exception.hh"
 #include "Hash.hh"
