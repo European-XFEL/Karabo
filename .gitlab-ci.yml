@@ -30,10 +30,10 @@ variables:
 .target_os_matrix:
   all_targets:
     matrix:
-      - ARCH_TAG: ["ubuntu-22-003", "ubuntu-24-002", "redhat-9-003"]
+      - ARCH_TAG: ["ubuntu-22-004", "ubuntu-24-002", "redhat-9-004"]
   only_redhat9:
     matrix:
-      - ARCH_TAG: ["redhat-9-003"]
+      - ARCH_TAG: ["redhat-9-004"]
 
 .build_cache:
   cache_rw:
