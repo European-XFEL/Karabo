@@ -38,6 +38,7 @@
 #include "FromTypeInfo.hh"
 #include "MetaTools.hh"
 #include "ToCppString.hh"
+#include "ToLiteral.hh"
 #include "Types.hh"
 
 
@@ -776,9 +777,10 @@ namespace karabo {
             Types::ReferenceType srcType = this->getType();
             Types::ReferenceType tgtType = Types::from<ValueType>();
 
-            if (srcType == Types::UNKNOWN)
+            if (srcType == Types::UNKNOWN) {
                 throw KARABO_CAST_EXCEPTION("Unknown source type for key: \"" + m_key +
-                                            "\". Cowardly refusing to cast.");
+                                            "\". Cowardly refusing to cast to " + Types::to<ToLiteral>(tgtType));
+            }
 
             try {
                 // Avoid extra copy if source is already string:
