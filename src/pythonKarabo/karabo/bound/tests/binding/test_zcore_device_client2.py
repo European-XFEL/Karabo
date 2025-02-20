@@ -299,6 +299,10 @@ def test_device_client_sync_api():
 
     # test 'setAttribute' - it updates the schema again
     onSchemaUpdatedArg1 = onSchemaUpdatedArg2 = None
+    # There seems to be another schema being sent and received during
+    # c.setAttribute(..) that disturbes the test here sometimes.
+    # Not really clear why it does so, but if we sleep a bit, it won't happen
+    time.sleep(1)
     c.setAttribute(deviceId, 'int32Property', 'minInc', 12)
     assert type(onSchemaUpdatedArg1) is str
     assert onSchemaUpdatedArg1 == deviceId
