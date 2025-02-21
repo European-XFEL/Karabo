@@ -25,6 +25,7 @@
 #include "karabo/net/EventLoop.hh"
 
 #include <boost/algorithm/string_regex.hpp>
+#include <chrono>
 #include <csignal>
 
 #include "EventLoop_Test.hh"
@@ -36,6 +37,8 @@
 
 using namespace karabo::util;
 using namespace karabo::net;
+using namespace std::chrono;
+using namespace std::literals::chrono_literals;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(EventLoop_Test);
 
@@ -57,7 +60,7 @@ void EventLoop_Test::handler1(boost::asio::steady_timer& timer, int count) {
     if (count == 5) {
         EventLoop::removeThread(5);
         count = -1;
-        timer.expires_at(timer.expires_at() + boost::asio::chrono::milliseconds(500));
+        timer.expires_at(timer.expires_at() + 500ms);
         timer.async_wait(boost::bind(&EventLoop_Test::handler1, this, boost::ref(timer), count));
         return;
     }
@@ -65,13 +68,13 @@ void EventLoop_Test::handler1(boost::asio::steady_timer& timer, int count) {
     EventLoop::addThread();
     count++;
 
-    timer.expires_at(timer.expires_at() + boost::asio::chrono::milliseconds(500));
+    timer.expires_at(timer.expires_at() + 500ms);
     timer.async_wait(boost::bind(&EventLoop_Test::handler1, this, boost::ref(timer), count));
 }
 
 
 void EventLoop_Test::testMethod() {
-    boost::asio::steady_timer timer(EventLoop::getIOService(), boost::asio::chrono::milliseconds(500));
+    boost::asio::steady_timer timer(EventLoop::getIOService(), 500ms);
     timer.async_wait(boost::bind(&EventLoop_Test::handler1, this, boost::ref(timer), 0));
 
     EventLoop::run();
@@ -81,7 +84,7 @@ void EventLoop_Test::testMethod() {
 void EventLoop_Test::handler2() {
     if (m_finished) return;
 
-    boost::asio::steady_timer timer(EventLoop::getIOService(), boost::asio::chrono::milliseconds(5));
+    boost::asio::steady_timer timer(EventLoop::getIOService(), 5ms);
     EventLoop::getIOService().post(boost::bind(&EventLoop_Test::handler2, this));
 }
 
@@ -96,7 +99,7 @@ void EventLoop_Test::testMethod2() {
     boost::thread t(boost::bind(&EventLoop::run));
 
     m_finished = false;
-    boost::asio::steady_timer timer(EventLoop::getIOService(), boost::asio::chrono::milliseconds(500));
+    boost::asio::steady_timer timer(EventLoop::getIOService(), 500ms);
     EventLoop::addThread(10);
     EventLoop::getIOService().post(boost::bind(&EventLoop_Test::handler2, this));
     timer.async_wait(boost::bind(&EventLoop_Test::handler3, this));
@@ -120,7 +123,7 @@ void EventLoop_Test::testSignalCapture() {
     });
 
     // Allow signal handling to be activated (1 ms sleep seems OK, but the test fails without sleep).
-    boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
+    std::this_thread::sleep_for(milliseconds(10));
 
     std::raise(SIGTERM);
 
@@ -138,7 +141,7 @@ void EventLoop_Test::testPost() {
         EventLoop::post(func);
         EventLoop::run();
 
-        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, future.wait_for(std::chrono::milliseconds(2000)));
+        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, future.wait_for(milliseconds(2000)));
         CPPUNIT_ASSERT(future.get());
     }
 
@@ -181,7 +184,7 @@ void EventLoop_Test::testPost() {
         EventLoop::post(std::move(func), 100); // 100 ms delay, move semantics function
         EventLoop::run();
 
-        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, future.wait_for(std::chrono::milliseconds(2000)));
+        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, future.wait_for(milliseconds(2000)));
         const TimeDuration period = before.elapsed();
         CPPUNIT_ASSERT(future.get());
         CPPUNIT_ASSERT_EQUAL(0ull, period.getTotalSeconds());               // less than a full second
@@ -198,8 +201,8 @@ void EventLoop_Test::testAddThreadDirectly() {
 
     std::future_status status = std::future_status::deferred;
     auto question = [&future, &status]() {
-        EventLoop::addThread();                                    // thread is added and allows 'answer' to run
-        status = future.wait_for(std::chrono::milliseconds(1000)); // wait for 'answer' to unblock here
+        EventLoop::addThread();                       // thread is added and allows 'answer' to run
+        status = future.wait_for(milliseconds(1000)); // wait for 'answer' to unblock here
         EventLoop::removeThread();
     };
 
@@ -223,7 +226,7 @@ void EventLoop_Test::testExceptionTrace() {
 
     const int nParallel = 10;
     EventLoop::addThread(nParallel);
-    boost::this_thread::sleep_for(boost::chrono::milliseconds(100)); // now all threads should be available
+    std::this_thread::sleep_for(milliseconds(100)); // now all threads should be available
 
 
     std::vector<std::promise<std::string>> promises(nParallel);

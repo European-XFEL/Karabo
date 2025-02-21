@@ -26,6 +26,7 @@
 
 #include <cppunit/TestAssert.h>
 
+#include <chrono>
 #include <future>
 #include <string>
 
@@ -36,6 +37,8 @@
 #include "karabo/util/Hash.hh"
 #include "karabo/xms/SignalSlotable.hh"
 
+using namespace std::chrono;
+using namespace std::literals::chrono_literals;
 using namespace karabo::util;
 using namespace karabo::xms;
 
@@ -167,7 +170,7 @@ void waitEqual(Type target, const Type& test, int trials = 10) {
         if (target == test) {
             return;
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(millisecondsSleep));
+        std::this_thread::sleep_for(milliseconds(millisecondsSleep));
         millisecondsSleep *= 2;
     } while (--trials > 0); // trials is signed to avoid --trials to be very large for input of 0
 }
@@ -297,7 +300,7 @@ void SignalSlotable_Test::_testReceiveAsync() {
     int trials = 10;
     while (--trials >= 0) {
         if (result == "Hello, world!") break;
-        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        std::this_thread::sleep_for(20ms);
     }
     CPPUNIT_ASSERT(result == "Hello, world!");
 
@@ -309,7 +312,7 @@ void SignalSlotable_Test::_testReceiveAsync() {
     greeter->request("responder", "slotAnswer", "Hello").timeout(200).receiveAsync(badSuccessHandler, errHandler);
     waitEqual(receivedIgnoringReplyValue, true);
     // Sleep > 200 ms (the timeout used) so that any wrong call to error handler due to timeout would have happened
-    std::this_thread::sleep_for(std::chrono::milliseconds(210));
+    std::this_thread::sleep_for(210ms);
     CPPUNIT_ASSERT_EQUAL(calledErrorHandler, false);
     CPPUNIT_ASSERT_EQUAL(receivedIgnoringReplyValue, true);
 }
@@ -332,7 +335,7 @@ void SignalSlotable_Test::_testReceiveAsyncError() {
               if (q == "Please, throw!") {
                   throw KARABO_PARAMETER_EXCEPTION("Exception was requested");
               }
-              std::this_thread::sleep_for(std::chrono::milliseconds(100));
+              std::this_thread::sleep_for(100ms);
               responder->reply(q + ", world!");
           },
           "slotAnswer");
@@ -342,7 +345,7 @@ void SignalSlotable_Test::_testReceiveAsyncError() {
     greeter->request("responder", "slotAnswer", "Hello").timeout(50).receiveAsync<std::string>(successHandler);
 
     // ensure reply could be delivered (though not in time)
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    std::this_thread::sleep_for(200ms);
 
     CPPUNIT_ASSERT(result == "");
 
@@ -375,7 +378,7 @@ void SignalSlotable_Test::_testReceiveAsyncError() {
     waitEqual(ExceptionType::timeout, caughtType);
     // Wait furher (timeout + sleep > 100 ms that slotAnswer sleeps) to check that successHandler is
     // not called when delayed reply finally comes:
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(100ms);
 
     CPPUNIT_ASSERT_EQUAL(int(ExceptionType::timeout), int(caughtType));
     CPPUNIT_ASSERT_EQUAL(std::string("some"), result); // Would be "Hello, world!" if successHandler called
@@ -476,7 +479,7 @@ void SignalSlotable_Test::_testReceiveAsyncNoReply() {
     int trials = 20;
     while (--trials >= 0) {
         if (handlerCalled || errorCode != 0) break;
-        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        std::this_thread::sleep_for(20ms);
     }
     CPPUNIT_ASSERT(handlerCalled);
     CPPUNIT_ASSERT_EQUAL(0, errorCode);
@@ -496,7 +499,7 @@ void SignalSlotable_Test::_testReceiveAsyncNoReply() {
     trials = 20;
     while (--trials >= 0) {
         if (handlerCalled || errorCode != 0) break;
-        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        std::this_thread::sleep_for(20ms);
     }
 
     // Assert that the handler was not called, but the error handler with the correct exception (due to argument
@@ -519,7 +522,7 @@ void SignalSlotable_Test::_testReceiveExceptions() {
     responder->start();
 
     auto replyString = [&responder](const std::string& q) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10)); // little sleep for TimeoutException below
+        std::this_thread::sleep_for(10ms); // little sleep for TimeoutException below
         responder->reply(q + ", world!");
     };
     responder->registerSlot<std::string>(replyString, "slotAnswer");
@@ -609,7 +612,7 @@ void SignalSlotable_Test::_testConnectAsync() {
     // Give some time to connect
     for (int i = 0; i < numWaitIterations; ++i) {
         if (connected) break;
-        std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerWaitIterationMs));
+        std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
     };
     CPPUNIT_ASSERT(connected);
 
@@ -618,7 +621,7 @@ void SignalSlotable_Test::_testConnectAsync() {
     // Give signal some time to travel
     for (int i = 0; i < numWaitIterations; ++i) {
         if (slotCalled) break;
-        std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerWaitIterationMs));
+        std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
     };
     CPPUNIT_ASSERT(slotCalled);
     CPPUNIT_ASSERT_EQUAL(42, inSlot);
@@ -649,7 +652,7 @@ void SignalSlotable_Test::_testConnectAsync() {
     // Give some time to find out that signal is not there
     for (int i = 0; i < numWaitIterations; ++i) {
         if (connectFailed) break;
-        std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerWaitIterationMs));
+        std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
     };
     CPPUNIT_ASSERT(connectFailed);
     CPPUNIT_ASSERT(!connectTimeout);
@@ -669,7 +672,7 @@ void SignalSlotable_Test::_testConnectAsync() {
     // Give some time to find out that slot is not there.
     for (int i = 0; i < numWaitIterations; ++i) {
         if (connectFailed) break;
-        std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerWaitIterationMs));
+        std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
     };
     CPPUNIT_ASSERT(connectFailed);
     CPPUNIT_ASSERT(!connectTimeout);
@@ -687,7 +690,7 @@ void SignalSlotable_Test::_testConnectAsync() {
     // But in a busy system even the timeout handle may be stuck, so wait.
     for (int i = 0; i < numWaitIterations; ++i) {
         if (connectFailed) break;
-        std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerWaitIterationMs));
+        std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
     };
     CPPUNIT_ASSERT(connectFailed);
     CPPUNIT_ASSERT(connectTimeout);
@@ -704,7 +707,7 @@ void SignalSlotable_Test::_testConnectAsync() {
     // But in a busy system even the timeout handle may be stuck, so wait.
     for (int i = 0; i < numWaitIterations; ++i) {
         if (connectFailed) break;
-        std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerWaitIterationMs));
+        std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
     };
     CPPUNIT_ASSERT(connectFailed);
     CPPUNIT_ASSERT(connectTimeout);
@@ -757,7 +760,7 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
     // Give some time to connect
     for (int i = 0; i < numWaitIterations; ++i) {
         if (connected) break;
-        std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerWaitIterationMs));
+        std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
     };
     CPPUNIT_ASSERT(connected);
     CPPUNIT_ASSERT(!connectFailed);
@@ -768,7 +771,7 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
     // Give signal some time to travel
     for (int i = 0; i < numWaitIterations; ++i) {
         if (slotCalledA && slotCalledB) break;
-        std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerWaitIterationMs));
+        std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
     };
     CPPUNIT_ASSERT(slotCalledA);
     CPPUNIT_ASSERT(slotCalledB);
@@ -810,7 +813,7 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
     // Give some time to find out that signal is not there
     for (int i = 0; i < numWaitIterations; ++i) {
         if (connected || connectFailed) break;
-        std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerWaitIterationMs));
+        std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
     };
     CPPUNIT_ASSERT(connectFailed);
     CPPUNIT_ASSERT(!connected);
@@ -838,7 +841,7 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
     // Give some time to find out that slot is not there
     for (int i = 0; i < numWaitIterations; ++i) {
         if (connected || connectFailed) break;
-        std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerWaitIterationMs));
+        std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
     };
     CPPUNIT_ASSERT(connectFailed);
     CPPUNIT_ASSERT(!connected);
@@ -867,7 +870,7 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
     signalerA->asyncConnect(badConnections, connectedHandler, connectFailedHandler, 50);
 
     // The first request will succeed, the second (to "NOT_A_sig...") not - so wait 4 * 25 ms plus margin to be sure
-    std::this_thread::sleep_for(std::chrono::milliseconds(105));
+    std::this_thread::sleep_for(105ms);
 
     CPPUNIT_ASSERT(connectFailed);
     CPPUNIT_ASSERT(!connected);
@@ -893,7 +896,7 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
     // The first request (to "NOT_A_slot...") will fail, but one nevers knows how the timeout handler is stuck
     for (int i = 0; i < numWaitIterations; ++i) {
         if (connectFailed) break;
-        std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerWaitIterationMs));
+        std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
     };
 
     CPPUNIT_ASSERT(connectFailed);
@@ -924,7 +927,7 @@ void SignalSlotable_Test::_testDisconnectAsync() {
     CPPUNIT_ASSERT(signaler->connect("signalInstance", "signal", "slotInstance", "slot"));
 
     // Give signal some time to travel - but it won't, since disconnected!
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    std::this_thread::sleep_for(200ms);
 
     bool disconnectSuccess = false;
     auto disconnectSuccessHandler = [&disconnectSuccess]() { disconnectSuccess = true; };
@@ -949,14 +952,14 @@ void SignalSlotable_Test::_testDisconnectAsync() {
     // Give disconnection call some time to travel
     for (int i = 0; i < numWaitIterations; ++i) {
         if (disconnectSuccess || disconnectFailed) break;
-        std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerWaitIterationMs));
+        std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
     };
     CPPUNIT_ASSERT_MESSAGE(disconnectFailedMsg, !disconnectFailed);
     CPPUNIT_ASSERT(disconnectSuccess);
 
     signaler->emit("signal");
     // Give signal some time to travel - but it won't, since disconnected!
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    std::this_thread::sleep_for(200ms);
     CPPUNIT_ASSERT(!slotCalled);
 
     ///////////////////////////////////////////////////////////////////////////
@@ -970,7 +973,7 @@ void SignalSlotable_Test::_testDisconnectAsync() {
     // Give some time to find out that signal is not there
     for (int i = 0; i < numWaitIterations; ++i) {
         if (disconnectSuccess || disconnectFailed) break;
-        std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerWaitIterationMs));
+        std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
     };
     CPPUNIT_ASSERT(!disconnectSuccess);
     CPPUNIT_ASSERT(disconnectFailed);
@@ -991,7 +994,7 @@ void SignalSlotable_Test::_testDisconnectAsync() {
     // Give some time to find out that signal is not there
     for (int i = 0; i < numWaitIterations; ++i) {
         if (disconnectSuccess || disconnectFailed) break;
-        std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerWaitIterationMs));
+        std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
     };
     CPPUNIT_ASSERT(!disconnectSuccess);
     CPPUNIT_ASSERT(disconnectFailed);
@@ -1012,7 +1015,7 @@ void SignalSlotable_Test::_testDisconnectAsync() {
     // Give some time to find out that signal is not there
     for (int i = 0; i < numWaitIterations; ++i) {
         if (disconnectSuccess || disconnectFailed) break;
-        std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerWaitIterationMs));
+        std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
     };
     CPPUNIT_ASSERT(!disconnectSuccess);
     CPPUNIT_ASSERT_MESSAGE(disconnectFailedMsg, disconnectFailed);
@@ -1089,7 +1092,7 @@ void SignalSlotable_Test::_testDisconnectConnectAsyncStress() {
                                        connectFailedHandler);
         for (int i = 0; i < numWaitIterations; ++i) {
             if ((disconnectSuccess || disconnectFailed) && (connectSuccess || connectFailed)) break;
-            std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerWaitIterationMs));
+            std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
         };
         // Both, disconnect and connect, succeeded (show failure message if not)
         CPPUNIT_ASSERT_MESSAGE(disconnectFailedMsg, disconnectSuccess);
@@ -1101,7 +1104,7 @@ void SignalSlotable_Test::_testDisconnectConnectAsyncStress() {
         signaler->emit("signal", 42);
         for (int i = 0; i < 2 * numWaitIterations; ++i) { // factor 2 to give extra time...
             if (*slotCalled) break;
-            std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerWaitIterationMs));
+            std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
         };
         std::stringstream msg;
         msg << "Loop " << i << ", i.e. " << (signalerConnected ? "signaler" : "slotter") << " connected";
@@ -1112,7 +1115,7 @@ void SignalSlotable_Test::_testDisconnectConnectAsyncStress() {
             signaler->emit("signal", 42);
             for (int i = 0; i < numWaitIterations; ++i) {
                 if (*slotCalled) break;
-                std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerWaitIterationMs));
+                std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
             };
         }
         CPPUNIT_ASSERT_MESSAGE(msg.str(), *slotCalled);
@@ -1205,7 +1208,7 @@ namespace {
             const AsyncReply reply(this);
 
             // Let's stop this function call soon, but nevertheless send reply in 100 ms (likely in another thread!)
-            m_timer.expires_from_now(boost::asio::chrono::milliseconds(100));
+            m_timer.expires_after(100ms);
             m_timer.async_wait([reply, i, this](const boost::system::error_code& ec) {
                 if (ec) return;
                 reply(2 * i + 1);
@@ -1220,7 +1223,7 @@ namespace {
 
             // Let's stop this function call soon, but nevertheless send error reply in 100 ms (likely in another
             // thread!)
-            m_timer.expires_from_now(boost::asio::chrono::milliseconds(100));
+            m_timer.expires_after(100ms);
             m_timer.async_wait([reply, this](const boost::system::error_code& ec) {
                 if (ec) return;
                 reply.error("Something nasty to be expected!");
@@ -1260,7 +1263,7 @@ void SignalSlotable_Test::_testAsyncReply() {
     int counter = numWaitIterations;
     while (--counter >= 0) {
         if (slotter->m_slotCallEnded) break;
-        std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerWaitIterationMs));
+        std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
     }
     CPPUNIT_ASSERT(slotter->m_slotCallEnded);
     // ...but reply is not yet received
@@ -1270,7 +1273,7 @@ void SignalSlotable_Test::_testAsyncReply() {
     counter = numWaitIterations;
     while (--counter >= 0) {
         if (received) break;
-        std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerWaitIterationMs));
+        std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
     }
     // Assert and also check result:
     CPPUNIT_ASSERT(slotter->m_asynReplyHandlerCalled);
@@ -1303,7 +1306,7 @@ void SignalSlotable_Test::_testAsyncReply() {
     counter = numWaitIterations;
     while (--counter >= 0) {
         if (slotter->m_slotCallEnded_error) break;
-        std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerWaitIterationMs));
+        std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
     }
     CPPUNIT_ASSERT(slotter->m_slotCallEnded_error);
     // ...but reply is not yet received
@@ -1313,7 +1316,7 @@ void SignalSlotable_Test::_testAsyncReply() {
     counter = numWaitIterations;
     while (--counter >= 0) {
         if (receivedSuccess || receivedError) break;
-        std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerWaitIterationMs));
+        std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
     }
     // Assert and also check result:
     CPPUNIT_ASSERT(slotter->m_asynReplyHandlerCalled_error);
@@ -1341,7 +1344,7 @@ void SignalSlotable_Test::_testAsyncReply() {
     counter = numWaitIterations;
     while (--counter >= 0) {
         if (slotter->m_asynReplyHandlerCalled) break;
-        std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerWaitIterationMs));
+        std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
     }
     CPPUNIT_ASSERT(slotter->m_asynReplyHandlerCalled);
 }
@@ -1373,7 +1376,7 @@ void SignalSlotable_Test::_testAutoConnectSignal() {
     do {
         if (count == 0) { // Locally, one 10 ms sleep seems enough, but CI failed once with 100 ms.
             // Give demo some time to auto-connect now that demo2 is there:
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            std::this_thread::sleep_for(10ms);
         } else {
             // Probably above time was not enough
             std::clog << "\t\tEmit again signalA, count is " << count << std::endl;
@@ -1418,7 +1421,7 @@ void SignalSlotable_Test::_testAutoConnectSlot() {
     do {
         if (count == 0) {
             // Give demo some time to auto-connect now that demo2 is there (failed with 100 in a CI at least once):
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            std::this_thread::sleep_for(10ms);
         } else {
             std::clog << "\t\tEmit again signalA, count is " << count << std::endl;
         }
@@ -1506,8 +1509,7 @@ void SignalSlotable_Test::_testAsyncConnectInputChannel() {
     // First test: successful connection
     receiver->asyncConnectInputChannel(inputChannel, handler);
     // slotCallTimeout + 1000: asyncConnectInputChannel includes a slot call and TCP connection on top
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready,
-                         handlerFuture.wait_for(std::chrono::milliseconds(slotCallTimeout + 1000)));
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, handlerFuture.wait_for(milliseconds(slotCallTimeout + 1000)));
     std::pair<bool, std::string> result(handlerFuture.get());
     CPPUNIT_ASSERT(result.first);
     CPPUNIT_ASSERT_EQUAL(std::string(), result.second);
@@ -1521,8 +1523,7 @@ void SignalSlotable_Test::_testAsyncConnectInputChannel() {
     inputCfg.get<std::vector<std::string>>("connectedOutputChannels").push_back("sender:not_an_output");
     inputChannel = receiver->createInputChannel("input", Hash("input", inputCfg));
     receiver->asyncConnectInputChannel(inputChannel, handler);
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready,
-                         handlerFuture.wait_for(std::chrono::milliseconds(slotCallTimeout + 1000)));
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, handlerFuture.wait_for(milliseconds(slotCallTimeout + 1000)));
     result = handlerFuture.get();
     CPPUNIT_ASSERT(!result.first);
     CPPUNIT_ASSERT_MESSAGE("Full message: " + result.second,
@@ -1542,7 +1543,7 @@ void SignalSlotable_Test::_testAsyncConnectInputChannel() {
     receiver->asyncConnectInputChannel(inputChannel, handler);
     // Larger timeout here: In SignalSlotable::connectInputToOutputChannel it is 10 s to receive the reply from
     // slotGetOutputChannelInformation of the (in this case not existing) instance of the output
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, handlerFuture.wait_for(std::chrono::milliseconds(12500)));
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, handlerFuture.wait_for(12500ms));
     result = handlerFuture.get();
     CPPUNIT_ASSERT(!result.first);
     CPPUNIT_ASSERT_MESSAGE("Full message: " + result.second,
@@ -1560,8 +1561,7 @@ void SignalSlotable_Test::_testAsyncConnectInputChannel() {
     inputCfg.get<std::vector<std::string>>("connectedOutputChannels").clear();
     inputChannel = receiver->createInputChannel("input", Hash("input", inputCfg));
     receiver->asyncConnectInputChannel(inputChannel, handler);
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready,
-                         handlerFuture.wait_for(std::chrono::milliseconds(slotCallTimeout + 1000)));
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, handlerFuture.wait_for(milliseconds(slotCallTimeout + 1000)));
     result = handlerFuture.get();
     CPPUNIT_ASSERT_MESSAGE("Failure reason: " + result.second, result.first);
     CPPUNIT_ASSERT_EQUAL(std::string(), result.second);
@@ -1633,7 +1633,7 @@ void SignalSlotable_Test::waitDemoOk(const std::shared_ptr<SignalSlotDemo>& demo
         if (demo->wasOk(messageCalls)) {
             break;
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(millisecondsSleep));
+        std::this_thread::sleep_for(milliseconds(millisecondsSleep));
         millisecondsSleep *= 2;
     } while (--trials > 0); // trials is signed to avoid --trials to be very large for input of 0
 }

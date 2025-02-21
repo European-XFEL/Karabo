@@ -26,6 +26,7 @@
 
 #include <csignal>
 #include <iostream>
+#include <thread>
 
 #include "karabo/log/Logger.hh"
 
@@ -36,6 +37,7 @@
 namespace karabo {
     namespace net {
 
+        using namespace std::chrono;
 
         std::shared_ptr<EventLoop> EventLoop::m_instance{nullptr};
         boost::once_flag EventLoop::m_initInstanceFlag = BOOST_ONCE_INIT;
@@ -79,7 +81,7 @@ namespace karabo {
                           }
                       }
                       // Some time to do all actions possibly triggered by handler.
-                      boost::this_thread::sleep_for(boost::chrono::seconds(1));
+                      std::this_thread::sleep_for(seconds(1));
                       // Finally go down, i.e. leave work()
                       EventLoop::stop();
                       // TODO (check!):
@@ -245,7 +247,7 @@ namespace karabo {
                                                          toString(m_threadPool.size()) += " threads left");
                 };
                 lock.unlock();
-                boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
+                std::this_thread::sleep_for(milliseconds(100));
                 lock.lock();
                 clearThreads();
             }

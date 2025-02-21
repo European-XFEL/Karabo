@@ -26,12 +26,14 @@
 #include "GuiServerTemporarySessionManager.hh"
 
 #include <boost/asio/placeholders.hpp>
+#include <chrono>
 #include <vector>
 
 #include "karabo/net/EventLoop.hh"
 #include "karabo/util/MetaTools.hh"
 #include "karabo/util/TimeDuration.hh"
 
+using namespace std::chrono;
 using namespace karabo::util;
 using namespace karabo::net;
 using namespace std::placeholders;
@@ -62,8 +64,7 @@ namespace karabo::devices {
 
     void GuiServerTemporarySessionManager::scheduleNextExpirationsCheck() {
         if (m_tempSessions.size() > 0 && !m_expirationTimerWaiting.exchange(true)) {
-            m_checkExpirationsTimer.expires_from_now(
-                  boost::asio::chrono::seconds(CHECK_TEMPSESSION_EXPIRATION_INTERVAL_SECS));
+            m_checkExpirationsTimer.expires_after(seconds(CHECK_TEMPSESSION_EXPIRATION_INTERVAL_SECS));
             m_checkExpirationsTimer.async_wait(
                   bind_weak(&GuiServerTemporarySessionManager::checkTemporarySessionsExpirations, this,
                             boost::asio::placeholders::error));

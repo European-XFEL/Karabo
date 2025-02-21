@@ -22,6 +22,7 @@
 
 #include "Device_Test.hh"
 
+#include <chrono>
 #include <karabo/core/Device.hh>
 #include <karabo/net/EventLoop.hh>
 #include <karabo/util/Epochstamp.hh>
@@ -41,8 +42,10 @@
 
 #include "CppUnitMacroExtension.hh"
 
+
 #define KRB_TEST_MAX_TIMEOUT \
     10 // larger than the 6 s input channel reconnect interval, for testOutputRecreatesOnSchemaChange
+
 
 using karabo::core::DeviceClient;
 using karabo::core::DeviceServer;
@@ -370,7 +373,7 @@ class TestDeviceBadInit : public karabo::core::Device<> {
             // This will be caught by the event loop - if logging is enabled, one can see a printout...
             throw KARABO_SIGNALSLOT_EXCEPTION("Throw during initialization - for test purposes!");
         } else if (behaviour == "delay") {
-            boost::this_thread::sleep_for(boost::chrono::seconds(get<unsigned int>("delay")));
+            std::this_thread::sleep_for(std::chrono::seconds(get<unsigned int>("delay")));
         } // No else - there are not other options!
 
         updateState(State::NORMAL);
@@ -458,7 +461,7 @@ void Device_Test::appTestRunner() {
 }
 
 void Device_Test::testInstanceInfoServer() {
-    std::clog << "Testing instanceInfo and configuration round trip for deviceServer" << std::flush;
+    std::clog << "\nTesting instanceInfo and configuration round trip for deviceServer " << std::flush;
 
     auto sigSlotA = m_deviceServer;
     const int timeOutInMs = 250;

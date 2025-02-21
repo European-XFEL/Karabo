@@ -24,6 +24,7 @@
 
 #include "InputOutputChannel_LongTest.hh"
 
+#include <chrono>
 #include <future>
 
 #include "karabo/net/EventLoop.hh"
@@ -33,6 +34,7 @@
 #include "karabo/xms/OutputChannel.hh"
 
 using namespace karabo;
+using namespace std::chrono;
 using util::Configurator;
 using util::Hash;
 using xms::InputChannel;
@@ -170,7 +172,7 @@ void InputOutputChannel_LongTest::testDisconnectWhileSending_impl(const std::str
           0); // shared_ptr to capture by value in lambda avoids trouble if handler called after test done
     input->registerDataHandler([calls, processTime](const Hash& data, const InputChannel::MetaData& meta) {
         ++(*calls);
-        boost::this_thread::sleep_for(boost::chrono::milliseconds(processTime));
+        std::this_thread::sleep_for(milliseconds(processTime));
     });
 
     Hash outputInfo = output->getInformation();
@@ -220,7 +222,7 @@ void InputOutputChannel_LongTest::testDisconnectWhileSending_impl(const std::str
                 (exceptionText += (async ? "output->asyncUpdate(): " : "output->update(): ")) += e.what();
                 break;
             }
-            boost::this_thread::sleep_for(boost::chrono::milliseconds(writeIntervall));
+            std::this_thread::sleep_for(milliseconds(writeIntervall));
             ++num;
         }
         numSent.set_value(num);
@@ -268,7 +270,7 @@ void InputOutputChannel_LongTest::testDisconnectWhileSending_impl(const std::str
                 doGoOn = false;
                 break;
             }
-            boost::this_thread::sleep_for(boost::chrono::milliseconds(reconnectCycle));
+            std::this_thread::sleep_for(milliseconds(reconnectCycle));
         }
         disReconnectDone.set_value();
     };

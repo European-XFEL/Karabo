@@ -22,19 +22,36 @@
  * Created on June 19, 2013, 3:22 PM
  */
 
-#ifdef __MACH__
-#include <mach/clock.h>
-#include <mach/mach.h>
-#include <mach/mach_time.h>
-typedef int clockid_t;
-#define CLOCK_REALTIME 0
-#endif
+#include "Epochstamp.hh"
 
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/format.hpp>
 
 #include "DateTimeString.hh"
-#include "Epochstamp.hh"
+// Check level of <chrono> library support in compiler
+#if __GNUC__ < 13
+
+#include <date/tz.h>
+using date::floor;
+using date::format;
+using date::January;
+using date::sys_days;
+using hours = std::chrono::duration<long int, std::ratio<3600>>;
+using minutes = std::chrono::duration<long int, std::ratio<60>>;
+using seconds = std::chrono::duration<long int>;
+
+#else
+
+#include <chrono>
+#include <format> // std::format, std::vformat,...
+using std::chrono::floor;
+using std::chrono::hours;
+using std::chrono::January;
+using std::chrono::minutes;
+using std::chrono::seconds;
+using std::chrono::sys_days;
+
+#endif
 
 namespace karabo {
     namespace util {
@@ -56,11 +73,11 @@ namespace karabo {
 
 
         Epochstamp::Epochstamp(const timeval& tv)
-            : m_seconds(tv.tv_sec), m_fractionalSeconds(tv.tv_usec * 1000000000000ULL) {}
+            : m_seconds(tv.tv_sec), m_fractionalSeconds(tv.tv_usec * 1'000'000'000'000ULL) {}
 
 
         Epochstamp::Epochstamp(const timespec& ts)
-            : m_seconds(ts.tv_sec), m_fractionalSeconds(ts.tv_nsec * 1000000000ULL) {}
+            : m_seconds(ts.tv_sec), m_fractionalSeconds(ts.tv_nsec * 1'000'000'000ULL) {}
 
 
         Epochstamp::Epochstamp(const std::string& pTime) {
@@ -82,62 +99,29 @@ namespace karabo {
 
 
         timeval Epochstamp::getTimeOfDay() const {
-            timeval result = {long(m_seconds), long(m_fractionalSeconds / 1000000000000ULL)};
+            timeval result = {long(m_seconds), long(m_fractionalSeconds / 1'000'000'000'000ULL)};
             return result;
         }
 
 
         timespec Epochstamp::getClockTime() const {
-            timespec result = {long(m_seconds), long(m_fractionalSeconds / 1000000000ULL)};
+            timespec result = {long(m_seconds), long(m_fractionalSeconds / 1'000'000'000ULL)};
             return result;
         }
 
 
-        boost::posix_time::ptime Epochstamp::getPtime() const {
-            using namespace boost::posix_time;
-            static ptime epoch(boost::gregorian::date(1970, 1, 1));
-            // nanoseconds not available in our boost, so choose microsecond precision
-            return epoch + seconds(long(m_seconds)) +
-                   microseconds(long(m_fractionalSeconds / 1000000000000ULL)); // 10^12: atto to micro
-        }
         // retrieve the current time
-#ifdef _WIN32
 
 
         void Epochstamp::now() {
-            assert();
-
-            LARGE_INTEGER wts;
-            QueryPerformanceCounter((LARGE_INTEGER*)&wts);
-
-            m_TimeVale = static_cast<uint64_t>(static_cast<long double>(wts) / getFrequency() * NANOSEC / resolution);
+            // C++ 20 API: function 'now()' returns with precision nanoseconds
+            auto now = std::chrono::system_clock::now();
+            // truncate up to second's precision
+            auto secs = floor<seconds>(now).time_since_epoch();
+            m_seconds = secs.count();
+            m_fractionalSeconds = (now.time_since_epoch() - secs).count();
+            m_fractionalSeconds *= 1'000'000'000ULL; // attosecond's precision
         }
-
-#elif __MACH__
-
-
-        void Epochstamp::now() {
-            clock_serv_t cclock;
-            host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock); // REALTIME_CLOCKSYSTEM_CLOCK
-
-            mach_timespec_t mts;
-            clock_get_time(cclock, &mts);
-            mach_port_deallocate(mach_task_self(), cclock);
-
-            m_seconds = mts.tv_sec;
-            m_fractionalSeconds = mts.tv_nsec * 1000000000ull;
-        }
-
-#else
-
-
-        void Epochstamp::now() {
-            timespec ts;
-            clock_gettime(CLOCK_REALTIME, &ts); //    CLOCK_REALTIME,  CLOCK_PROCESS_CPUTIME_ID
-            this->m_seconds = ts.tv_sec;
-            this->m_fractionalSeconds = ts.tv_nsec * 1000000000ULL; // in ATTOSEC
-        }
-#endif
 
 
         std::string Epochstamp::toIso8601(TIME_UNITS precision, bool extended) const {
@@ -151,40 +135,23 @@ namespace karabo {
 
 
         std::string Epochstamp::toIso8601Internal(TIME_UNITS precision, bool extended,
-                                                  const std::string& localTimeZone) const {
-            const karabo::util::Hash timeZone =
-                  karabo::util::DateTimeString::getTimeDurationFromTimeZone(localTimeZone);
+                                                  const std::string& locZone) const {
+            auto secondsSinceEpoch = sys_days(January / 1 / 1970) + seconds(m_seconds);
+            std::chrono::time_point<std::chrono::system_clock, seconds> utcTimePoint(secondsSinceEpoch);
 
-            std::string timeZoneSignal = timeZone.get<std::string>("timeZoneSignal");
-            int timeZoneHours = timeZone.get<int>("timeZoneHours");
-            int timeZoneMinutes = timeZone.get<int>("timeZoneMinutes");
-            boost::posix_time::time_duration timeZoneDifference(timeZoneHours, timeZoneMinutes, 0);
+            std::string dateTime;
 
+#if __GNUC__ < 13
+            std::string fmt = extended ? "%Y-%m-%dT%H:%M:%S" : "%Y%m%dT%H%M%S";
+            dateTime = format(fmt, utcTimePoint);
+#else
+            std::string fmt = extended ? "{0:%Y-%m-%dT%H:%M:%S}" : "{0:%Y%m%dT%H%M%S}";
+            dateTime = std::vformat(fmt, std::make_format_args(utcTimePoint));
+#endif
 
-            using namespace boost::posix_time;
-            static boost::posix_time::ptime epoch(boost::gregorian::date(1970, 1, 1));
-
-
-            // The solution is to print out two separated elements:
-            // 1. The time in seconds
-            // 2. Fractional (second) part with the desired precision
-            boost::posix_time::ptime time_point = epoch + seconds(m_seconds);
-
-            if (timeZoneSignal == "+") {
-                time_point = time_point + timeZoneDifference;
-            } else {
-                time_point = time_point - timeZoneDifference;
-            }
-
-            std::string dateTime = (extended ? to_iso_extended_string(time_point) : to_iso_string(time_point));
             std::string dateTimeWithFractional =
                   this->concatDateTimeWithFractional<std::string, std::string&>(dateTime, precision);
-
-            // If applicable, add information about the time zone
-            // Necessary because of method "toIso8601Ext"
-            if (localTimeZone != "") {
-                dateTimeWithFractional = dateTimeWithFractional + localTimeZone;
-            }
+            if (!locZone.empty()) dateTimeWithFractional += locZone;
 
             return dateTimeWithFractional;
         }
@@ -203,46 +170,64 @@ namespace karabo {
         }
 
 
-        std::string Epochstamp::getPTime2String(const boost::posix_time::ptime pt,
-                                                const boost::posix_time::time_facet* facet,
-                                                const std::string& localeName) {
-            std::ostringstream datetime_ss;
-            std::string pt_str;
-
-#ifdef __MACH__
-            pt_str = to_simple_string(pt);
-#else
-            // special_locale takes ownership of the p_time_output facet
-            std::locale special_locale(std::locale(localeName.c_str()), facet);
-            datetime_ss.imbue(special_locale);
-            datetime_ss << pt;
-
-            pt_str = datetime_ss.str();
-#endif
-
-            // return timestamp as string
-            return pt_str;
+        std::string Epochstamp::toFormattedString(const std::string& fmt, const std::string& localTimeZone) const {
+            if (fmt.empty()) return this->toFormattedStringInternal("", "%Y-%b-%d %H:%M:%S", localTimeZone);
+            return this->toFormattedStringInternal("", fmt, localTimeZone);
         }
 
 
-        std::string Epochstamp::toFormattedString(const std::string& format, const std::string& localTimeZone) const {
-            return this->toFormattedStringInternal("", format, localTimeZone);
-        }
-
-
-        std::string Epochstamp::toFormattedStringLocale(const std::string& localeName, const std::string& format,
+        std::string Epochstamp::toFormattedStringLocale(const std::string& localeName, const std::string& fmt,
                                                         const std::string& localTimeZone) const {
-            return this->toFormattedStringInternal(localeName, format, localTimeZone);
+            if (fmt.empty()) return this->toFormattedStringInternal(localeName, "%Y-%b-%d %H:%M:%S", localTimeZone);
+            return this->toFormattedStringInternal(localeName, fmt, localTimeZone);
         }
 
 
-        std::string Epochstamp::toFormattedStringInternal(const std::string& localeName, const std::string& format,
+        std::string Epochstamp::toFormattedStringInternal(const std::string& localeName, const std::string& fm,
                                                           const std::string& localTimeZone) const {
-            const boost::posix_time::time_facet* facet = new boost::posix_time::time_facet(format.c_str());
-            std::string pTime = this->toIso8601Internal(SECOND, false, localTimeZone);
-            const boost::posix_time::ptime pt = boost::posix_time::from_iso_string(pTime);
+            using namespace karabo::util;
 
-            return getPTime2String(pt, facet, localeName);
+            assert(!fm.empty());
+            auto secondsSinceEpoch = sys_days(January / 1 / 1970) + seconds(m_seconds);
+            std::chrono::time_point<std::chrono::system_clock, seconds> timePoint(secondsSinceEpoch);
+
+            Hash tz = DateTimeString::getTimeDurationFromTimeZone(localTimeZone);
+            auto zSign = tz.get<std::string>("timeZoneSignal");
+            auto zHours = hours(tz.get<int>("timeZoneHours"));
+            auto zMinutes = minutes(tz.get<int>("timeZoneMinutes"));
+
+            if (zSign == "+") timePoint += (zHours + zMinutes);
+            if (zSign == "-") timePoint -= (zHours + zMinutes);
+
+            std::string dateTime;
+            std::string fmt;
+#if __GNUC__ < 13
+            if (localeName.empty()) {
+                fmt = fm;
+                dateTime = format(fmt, timePoint);
+            } else {
+                std::locale loc(localeName);
+                fmt = fm;
+                dateTime = format(loc, fmt, timePoint);
+            }
+#else
+            if (localeName.empty()) {
+                fmt = std::string("{0:") + fm + "}";
+                dateTime = std::vformat(fmt, std::make_format_args(timePoint));
+            } else {
+                std::locale loc(localeName);
+                fmt = std::string("{0:L") + fm + "}";
+                dateTime = std::vformat(loc, fmt, std::make_format_args(timePoint));
+            }
+#endif
+            // %S (or %T) : If they are not used in format then NO fractional seconds in output
+            bool noFractional = (fmt.find("%S") == std::string::npos && fmt.find("%T") == std::string::npos);
+            noFractional = noFractional || m_fractionalSeconds == 0ULL;
+            if (!noFractional) {
+                dateTime += karabo::util::DateTimeString::fractionalSecondToString(MICROSEC, m_fractionalSeconds);
+            }
+
+            return dateTime;
         }
 
 

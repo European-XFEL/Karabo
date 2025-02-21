@@ -22,6 +22,7 @@
 
 #include "GuiServerDevice.hh"
 
+#include <chrono>
 #include <filesystem>
 
 #include "karabo/core/InstanceChangeThrottler.hh"
@@ -37,6 +38,8 @@
 #include "karabo/util/VectorElement.hh"
 #include "karabo/util/Version.hh"
 
+using namespace std::chrono;
+using namespace std::literals::chrono_literals;
 using namespace std;
 using namespace karabo::util;
 using namespace karabo::core;
@@ -671,21 +674,20 @@ namespace karabo {
 
         void GuiServerDevice::startDeviceInstantiation() {
             // NOTE: This timer is a rate limiter for device instantiations
-            m_deviceInitTimer.expires_from_now(boost::asio::chrono::milliseconds(get<int>("waitInitDevice")));
+            m_deviceInitTimer.expires_after(milliseconds(get<int>("waitInitDevice")));
             m_deviceInitTimer.async_wait(bind_weak(&karabo::devices::GuiServerDevice::initSingleDevice, this,
                                                    boost::asio::placeholders::error));
         }
 
         void GuiServerDevice::startNetworkMonitor() {
-            m_networkStatsTimer.expires_from_now(
-                  boost::asio::chrono::seconds(get<int>("networkPerformance.sampleInterval")));
+            m_networkStatsTimer.expires_after(seconds(get<int>("networkPerformance.sampleInterval")));
             m_networkStatsTimer.async_wait(bind_weak(&karabo::devices::GuiServerDevice::collectNetworkStats, this,
                                                      boost::asio::placeholders::error));
         }
 
         void GuiServerDevice::startMonitorConnectionQueues(const Hash& currentSuspects) {
             const int interval = get<int>("checkConnectionsInterval");
-            m_checkConnectionTimer.expires_from_now(boost::asio::chrono::seconds(interval));
+            m_checkConnectionTimer.expires_after(seconds(interval));
             m_checkConnectionTimer.async_wait(bind_weak(&GuiServerDevice::monitorConnectionQueues, this,
                                                         boost::asio::placeholders::error, currentSuspects));
         }

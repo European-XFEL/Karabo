@@ -103,7 +103,7 @@ class Timestamp_TestCase(unittest.TestCase):
 
                 # Validate that "UNIVERSAL" format is corrected generated
                 pTimeConvertedStr01 = ts01.toFormattedStringLocale(
-                    localeNameUS, "%Y%m%dT%H%M%S.%f")
+                    localeNameUS, "%Y%m%dT%H%M%S")
                 self.assertEqual(pTimeConvertedStr01, ptime_osx_simple_str,
                                  "These strings must be equal")
 
@@ -124,22 +124,25 @@ class Timestamp_TestCase(unittest.TestCase):
             else:
                 # Validate that "UNIVERSAL" format is corrected generated
                 pTimeConvertedStr01 = ts01.toFormattedStringLocale(
-                    localeNameUS, "%Y%m%dT%H%M%S.%f")
-                self.assertEqual(pTimeConvertedStr01, "20121225T132536.789333",
+                    localeNameUS, "%Y%m%dT%H%M%S")
+                self.assertEqual(pTimeConvertedStr01,
+                                 "20121225T132536.789333",
                                  "These strings must be equal")
 
                 # Validate that default "user-friendly" format is
                 # corrected generated
                 pTimeConvertedStr02 = ts01.toFormattedStringLocale(
                     localeNameUS)
-                self.assertEqual(pTimeConvertedStr02, "2012-Dec-25 13:25:36",
+                self.assertEqual(pTimeConvertedStr02,
+                                 "2012-Dec-25 13:25:36.789333",
                                  "These strings must be equal")
 
                 # Validate that INPUT "user-friendly" format is
                 # corrected generated
                 pTimeConvertedStr03 = ts01.toFormattedStringLocale(
                     localeNameUS, "%Y/%m/%d %H:%M:%S")
-                self.assertEqual(pTimeConvertedStr03, "2012/12/25 13:25:36",
+                self.assertEqual(pTimeConvertedStr03,
+                                 "2012/12/25 13:25:36.789333",
                                  "These strings must be equal")
 
         except Exception as e:

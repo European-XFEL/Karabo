@@ -23,6 +23,7 @@
 #include "DataLogger.hh"
 
 #include <algorithm>
+#include <chrono>
 #include <filesystem>
 #include <streambuf>
 
@@ -41,6 +42,8 @@
 namespace karabo {
     namespace devices {
 
+        using namespace std::chrono;
+        using namespace std::literals::chrono_literals;
         using namespace std;
         using namespace karabo::util;
         using namespace karabo::io;
@@ -227,7 +230,7 @@ namespace karabo {
             }
 
             // Start the flushing
-            m_flushDeadline.expires_from_now(boost::asio::chrono::seconds(m_flushInterval));
+            m_flushDeadline.expires_after(seconds(m_flushInterval));
             m_flushDeadline.async_wait(
                   util::bind_weak(&DataLogger::flushActor, this, boost::asio::placeholders::error));
         }
@@ -565,12 +568,12 @@ namespace karabo {
             while (--nTries >= 0) {
                 if (m_flushDeadline.cancel()) {
                     updateTableAndFlush(std::make_shared<SignalSlotable::AsyncReply>(this));
-                    m_flushDeadline.expires_from_now(boost::asio::chrono::seconds(m_flushInterval));
+                    m_flushDeadline.expires_after(seconds(m_flushInterval));
                     m_flushDeadline.async_wait(
                           util::bind_weak(&DataLogger::flushActor, this, boost::asio::placeholders::error));
                     return;
                 }
-                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                std::this_thread::sleep_for(1ms);
             }
             throw KARABO_TIMEOUT_EXCEPTION("Tried 2000 times to cancel flush timer...");
         }
@@ -583,7 +586,7 @@ namespace karabo {
             // Use empty reply pointer here: not inside slot, so no reply handling needed
             updateTableAndFlush(std::shared_ptr<SignalSlotable::AsyncReply>());
             // arm timer again
-            m_flushDeadline.expires_from_now(boost::asio::chrono::seconds(m_flushInterval));
+            m_flushDeadline.expires_after(seconds(m_flushInterval));
             m_flushDeadline.async_wait(
                   util::bind_weak(&DataLogger::flushActor, this, boost::asio::placeholders::error));
         }

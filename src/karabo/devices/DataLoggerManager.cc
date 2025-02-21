@@ -75,6 +75,7 @@
 #include <algorithm> // std::find, std::max
 #include <boost/algorithm/string.hpp>
 #include <boost/asio/deadline_timer.hpp>
+#include <chrono>
 #include <set>
 #include <string>
 #include <unordered_set>
@@ -98,6 +99,7 @@ using std::placeholders::_2;
 namespace karabo {
     namespace devices {
 
+        using namespace std::chrono;
         using namespace std;
         using namespace karabo::util;
         using namespace karabo::io;
@@ -752,8 +754,7 @@ namespace karabo {
             }
 
             updateState(State::ON);
-            m_topologyCheckTimer.expires_from_now(
-                  boost::asio::chrono::minutes(get<unsigned int>("topologyCheck.interval")));
+            m_topologyCheckTimer.expires_after(minutes(get<unsigned int>("topologyCheck.interval")));
             m_topologyCheckTimer.async_wait(bind_weak(&Self::topologyCheck, this, boost::asio::placeholders::error));
         }
 
