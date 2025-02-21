@@ -25,7 +25,6 @@
 
 #include "Hash.hh"
 
-#include "Schema.hh"
 #include "ToLiteral.hh"
 
 namespace karabo {
@@ -934,7 +933,8 @@ namespace karabo {
                         toStream(os, *(hashes[i]), depth + 1);
                     }
                 } else if (type == Types::SCHEMA) {
-                    os << " => " << hit->getValue<Schema>() << std::endl;
+                    // Avoid dependence of Hash on Schema:
+                    os << " => <...> " /* << hit->getValue<Schema>() */ << Types::to<ToLiteral>(type) << std::endl;
                 } else if (Types::isPointer(type)) { // TODO Add pointer types
                     os << " => xxx " << Types::to<ToLiteral>(type) << std::endl;
                 } else if (type == Types::UNKNOWN) {

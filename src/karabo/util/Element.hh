@@ -1034,7 +1034,8 @@ namespace karabo {
                 case Types::VECTOR_NONE:
                     return karabo::util::toString(getValue<std::vector<CppNone> >());
                 case Types::SCHEMA:
-                    return karabo::util::toString(getValue<Schema>());
+                    // Keep Hash stuff independent of schema stuff:
+                    return "<a schema>"; // karabo::util::toString(getValue<Schema>());
                 case Types::BYTE_ARRAY: {
                     const karabo::util::ByteArray& array = getValue<karabo::util::ByteArray>();
                     const unsigned char* data = reinterpret_cast<unsigned char*>(array.first.get());
