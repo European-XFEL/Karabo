@@ -21,9 +21,13 @@
  *
  * Created on September 13, 2016, 7:10 PM
  */
-
 #include "RunTimeSchemaAttributes_Test.hh"
 
+#include <chrono>
+#include <thread>
+
+using namespace std::chrono;
+using namespace std::literals::chrono_literals;
 using namespace karabo::core;
 using namespace karabo::net;
 using namespace karabo::util;
@@ -69,10 +73,10 @@ void RunTimeSchemaAttributes_Test::appTestRunner() {
           m_deviceClient->instantiate("testServerSchema", "GuiServerDevice",
                                       Hash("deviceId", "testGuiServerSchema", "port", 44447), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT(success.first);
-    boost::this_thread::sleep_for(boost::chrono::milliseconds(3000));
+    std::this_thread::sleep_for(3000ms);
     m_tcpAdapter =
           std::shared_ptr<karabo::TcpAdapter>(new karabo::TcpAdapter(Hash("port", 44447u /*, "debug", true*/)));
-    boost::this_thread::sleep_for(boost::chrono::milliseconds(5000));
+    std::this_thread::sleep_for(5000ms);
     CPPUNIT_ASSERT(m_tcpAdapter->connected());
     m_tcpAdapter->login();
 
@@ -81,7 +85,7 @@ void RunTimeSchemaAttributes_Test::appTestRunner() {
                                           KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT(success.first);
 
-    boost::this_thread::sleep_for(boost::chrono::milliseconds(5000));
+    std::this_thread::sleep_for(5000ms);
 
     testRuntimeApplication();
     testGuiServerApplication();
@@ -97,7 +101,7 @@ void RunTimeSchemaAttributes_Test::testRuntimeApplication() {
     // register a dummy monitor to assure that signals from the device are tracked
     m_deviceClient->registerDeviceMonitor("alarmTesterSchema",
                                           std::bind(&RunTimeSchemaAttributes_Test::dummyMonitor, this, _1, _2));
-    boost::this_thread::sleep_for(boost::chrono::milliseconds(5000));
+    std::this_thread::sleep_for(5000ms);
     m_deviceClient->setAttribute("alarmTesterSchema", "intPropNeedsAck", "warnLow", -1000);
     m_deviceClient->setAttribute("alarmTesterSchema", "intPropNeedsAck", "minInc", -10);
 

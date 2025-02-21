@@ -24,6 +24,7 @@
 
 #include "OutputChannel.hh"
 
+#include <chrono>
 #include <exception>
 
 #include "InputChannel.hh"
@@ -35,6 +36,7 @@
 #include "karabo/util/TableElement.hh"
 #include "karabo/util/VectorElement.hh"
 
+using namespace std::chrono;
 namespace bs = boost::system;
 using namespace karabo::util;
 using namespace karabo::io;
@@ -293,7 +295,7 @@ namespace karabo {
                     // time: First rely on yield() to give constructor time to finish, but if that is not enough, sleep
                     // a bit.
                     if (2 * countdown < kMaxServerInitializationAttempts) {
-                        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                        std::this_thread::sleep_for(1ms);
                     }
                     boost::this_thread::yield();
                     // Bare std::bind with this as in constructor.
@@ -608,7 +610,7 @@ namespace karabo {
             m_showConnectionsHandler(connections);
             // Check if we have to update this table periodically ...
             if (!m_connections.empty() && m_period > 0) {
-                m_updateDeadline.expires_from_now(boost::asio::chrono::seconds(m_period));
+                m_updateDeadline.expires_after(seconds(m_period));
                 m_updateDeadline.async_wait(
                       bind_weak(&OutputChannel::updateNetworkStatistics, this, boost::asio::placeholders::error));
             }
@@ -637,7 +639,7 @@ namespace karabo {
             }
             m_showStatisticsHandler(vBytesRead, vBytesWritten);
 
-            m_updateDeadline.expires_from_now(boost::asio::chrono::seconds(m_period));
+            m_updateDeadline.expires_after(seconds(m_period));
             m_updateDeadline.async_wait(
                   bind_weak(&OutputChannel::updateNetworkStatistics, this, boost::asio::placeholders::error));
         }
@@ -938,7 +940,7 @@ namespace karabo {
             // acquired?
             // ==> We will stay blocked here because the unblock handler cannot run.
             //     As a work around we add a thread here.
-            while (fut.wait_for(std::chrono::seconds(1)) != std::future_status::ready) {
+            while (fut.wait_for(1s) != std::future_status::ready) {
                 std::stringstream sstr;
                 sstr << getInstanceIdName() << " awaiting future for '" << which << "' takes more than "
                      << ++overallSeconds << " seconds. Likely, the code calling '" << which << "' has locked a mutex "
@@ -1324,7 +1326,7 @@ namespace karabo {
 
                 // Give queues a chance to shrink via onInputAvailable
                 lockOfRegisteredInputsMutex.unlock();
-                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                std::this_thread::sleep_for(1ms);
                 lockOfRegisteredInputsMutex.lock();
             }
         }

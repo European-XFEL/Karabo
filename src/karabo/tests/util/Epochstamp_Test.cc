@@ -275,17 +275,17 @@ void Epochstamp_Test::testConstructors() {
      *
      * (New tests)
      */
-    unsigned long long expectedSeconds = 475111250ULL;
-    unsigned long long expectedSecondsSinceEpochMinos7hULL = 475136450;   // 475111250 + (60*60*7)
-    unsigned long long expectedSecondsSinceEpochPlus3h30mULL = 475098650; // 475111250 - (60*60*3.5)
+    unsigned long long expectedSeconds = 475'111'250ULL;
+    unsigned long long expectedSecondsSinceEpochMinos7hULL = 475'136'450;   // 475111250 + (60*60*7)
+    unsigned long long expectedSecondsSinceEpochPlus3h30mULL = 475'098'650; // 475111250 - (60*60*3.5)
 
     // Validate Extended strings
-    validateStringConstructor("1985-01-20T23:20:50.789333123456789123", expectedSeconds, 789333123456789123ULL, false,
-                              "");
+    validateStringConstructor("1985-01-20T23:20:50.789333123456789123", expectedSeconds, 789'333'123'456'789'123ULL,
+                              false, "");
     validateStringConstructor("1985-01-20T23:20:50", expectedSeconds, 0ULL, false, "");
-    validateStringConstructor("1985-01-20T23:20:50,123", expectedSeconds, 123000000000000000ULL, false, "");
-    validateStringConstructor("1985-01-20T23:20:50.123", expectedSeconds, 123000000000000000ULL, false, "");
-    validateStringConstructor("1985-01-20T23:20:50.123z", expectedSeconds, 123000000000000000ULL, false, "");
+    validateStringConstructor("1985-01-20T23:20:50,123", expectedSeconds, 123'000'000'000'000'000ULL, false, "");
+    validateStringConstructor("1985-01-20T23:20:50.123", expectedSeconds, 123'000'000'000'000'000ULL, false, "");
+    validateStringConstructor("1985-01-20T23:20:50.123z", expectedSeconds, 123'000'000'000'000'000ULL, false, "");
     validateStringConstructor("1985-01-20T23:20:50z", expectedSeconds, 0ULL, false, "");
     validateStringConstructor("1985-01-20T23:20:50Z", expectedSeconds, 0ULL, false, "");
     validateStringConstructor("1985-01-20T23:20:50+00:00", expectedSeconds, 0ULL, false, "");
@@ -294,11 +294,12 @@ void Epochstamp_Test::testConstructors() {
     validateStringConstructor("1985-01-20T23:20:50+03:30", expectedSecondsSinceEpochPlus3h30mULL, 0ULL, false, "");
 
     // Validate Compact strings
-    validateStringConstructor("19850120T232050.789333123456789123", expectedSeconds, 789333123456789123ULL, true, "");
+    validateStringConstructor("19850120T232050.789333123456789123", expectedSeconds, 789'333'123'456'789'123ULL, true,
+                              "");
     validateStringConstructor("19850120T232050", expectedSeconds, 0ULL, true, "");
-    validateStringConstructor("19850120T232050,123", expectedSeconds, 123000000000000000ULL, true, "");
-    validateStringConstructor("19850120T232050.123", expectedSeconds, 123000000000000000ULL, true, "");
-    validateStringConstructor("19850120T232050.123z", expectedSeconds, 123000000000000000ULL, true, "");
+    validateStringConstructor("19850120T232050,123", expectedSeconds, 123'000'000'000'000'000ULL, true, "");
+    validateStringConstructor("19850120T232050.123", expectedSeconds, 123'000'000'000'000'000ULL, true, "");
+    validateStringConstructor("19850120T232050.123z", expectedSeconds, 123'000'000'000'000'000ULL, true, "");
     validateStringConstructor("19850120T232050z", expectedSeconds, 0ULL, true, "");
     validateStringConstructor("19850120T232050Z", expectedSeconds, 0ULL, true, "");
     validateStringConstructor("19850120T232050+0000", expectedSeconds, 0ULL, true, "");
@@ -309,12 +310,12 @@ void Epochstamp_Test::testConstructors() {
 
 
 void Epochstamp_Test::testOperators() {
-    const TimeValue point1secInAtto = 100000000000000000ull;
-    const TimeValue point2secInAtto = 200000000000000000ull;
-    const TimeValue point4secInAtto = 400000000000000000ull;
-    const TimeValue point8secInAtto = 800000000000000000ull;
-    const TimeValue point7secInAtto = 700000000000000000ull;
-    const TimeValue point9secInAtto = 900000000000000000ull;
+    const TimeValue point1secInAtto = 100'000'000'000'000'000ull;
+    const TimeValue point2secInAtto = 200'000'000'000'000'000ull;
+    const TimeValue point4secInAtto = 400'000'000'000'000'000ull;
+    const TimeValue point8secInAtto = 800'000'000'000'000'000ull;
+    const TimeValue point7secInAtto = 700'000'000'000'000'000ull;
+    const TimeValue point9secInAtto = 900'000'000'000'000'000ull;
 
     const Epochstamp e1(8ull, point1secInAtto);
     const TimeDuration d1(8ull, point1secInAtto);
@@ -384,37 +385,37 @@ void Epochstamp_Test::testOperators() {
 
 void Epochstamp_Test::testToIso8601String() {
     // Validate "UNIVERSAL" compact ISO8601 format
-    validateStringConstructor("20121225T132536.789333123456789123", 1356441936ULL, 789333123456789123ULL, true,
+    validateStringConstructor("20121225T132536.789333123456789123", 1'356'441'936ULL, 789'333'123'456'789'123ULL, true,
                               "20121225T132536.789333123456789123");
-    validateStringConstructor("2012-12-25T13:25:36.789333123456789123", 1356441936ULL, 789333123456789123ULL, true,
-                              "20121225T132536.789333123456789123");
-    validateStringConstructor("2012-12-25T13:25:36.100", 1356441936ULL, 100000000000000000ULL, true,
+    validateStringConstructor("2012-12-25T13:25:36.789333123456789123", 1'356'441'936ULL, 789'333'123'456'789'123ULL,
+                              true, "20121225T132536.789333123456789123");
+    validateStringConstructor("2012-12-25T13:25:36.100", 1'356'441'936ULL, 100'000'000'000'000'000ULL, true,
                               "20121225T132536.100000000000000000");
-    validateStringConstructor("2012-12-25T13:25:36.001", 1356441936ULL, 1000000000000000ULL, true,
+    validateStringConstructor("2012-12-25T13:25:36.001", 1'356'441'936ULL, 1'000'000'000'000'000ULL, true,
                               "20121225T132536.001000000000000000");
-    validateStringConstructor("2012-12-25T13:25:36.000000000000000001", 1356441936ULL, 1ULL, true,
+    validateStringConstructor("2012-12-25T13:25:36.000000000000000001", 1'356'441'936ULL, 1ULL, true,
                               "20121225T132536.000000000000000001");
-    validateStringConstructor("2012-12-25T13:25:36.000000000000000123", 1356441936ULL, 123ULL, true,
+    validateStringConstructor("2012-12-25T13:25:36.000000000000000123", 1'356'441'936ULL, 123ULL, true,
                               "20121225T132536.000000000000000123");
-    validateStringConstructor("2012-12-25T13:25:36.123456789", 1356441936ULL, 123456789000000000ULL, true,
+    validateStringConstructor("2012-12-25T13:25:36.123456789", 1'356'441'936ULL, 123'456'789'000'000'000ULL, true,
                               "20121225T132536.123456789000000000");
-    validateStringConstructor("2012-12-25T13:25:36.000123456789", 1356441936ULL, 123456789000000ULL, true,
+    validateStringConstructor("2012-12-25T13:25:36.000123456789", 1'356'441'936ULL, 123'456'789'000'000ULL, true,
                               "20121225T132536.000123456789000000");
 
     // Validate "UNIVERSAL" extended ISO8601 format
-    validateStringConstructor("2012-12-25T13:25:36.123456789123456789", 1356441936ULL, 123456789123456789ULL, false,
+    validateStringConstructor("2012-12-25T13:25:36.123456789123456789", 1'356'441'936ULL, 123'456'789'123'456'789ULL,
+                              false, "2012-12-25T13:25:36.123456789123456789");
+    validateStringConstructor("20121225T132536.123456789123456789", 1'356'441'936ULL, 123'456'789'123'456'789ULL, false,
                               "2012-12-25T13:25:36.123456789123456789");
-    validateStringConstructor("20121225T132536.123456789123456789", 1356441936ULL, 123456789123456789ULL, false,
-                              "2012-12-25T13:25:36.123456789123456789");
-    validateStringConstructor("20121225T132536.100", 1356441936ULL, 100000000000000000ULL, false,
+    validateStringConstructor("20121225T132536.100", 1'356'441'936ULL, 100'000'000'000'000'000ULL, false,
                               "2012-12-25T13:25:36.100000000000000000");
-    validateStringConstructor("20121225T132536.001", 1356441936ULL, 1000000000000000ULL, false,
+    validateStringConstructor("20121225T132536.001", 1'356'441'936ULL, 1'000'000'000'000'000ULL, false,
                               "2012-12-25T13:25:36.001000000000000000");
-    validateStringConstructor("20121225T132536.000000000000000001", 1356441936ULL, 1ULL, false,
+    validateStringConstructor("20121225T132536.000000000000000001", 1'356'441'936ULL, 1ULL, false,
                               "2012-12-25T13:25:36.000000000000000001");
-    validateStringConstructor("20121225T132536.000000000000000123", 1356441936ULL, 123ULL, false,
+    validateStringConstructor("20121225T132536.000000000000000123", 1'356'441'936ULL, 123ULL, false,
                               "2012-12-25T13:25:36.000000000000000123");
-    validateStringConstructor("20121225T132536.000123456789", 1356441936ULL, 123456789000000ULL, true,
+    validateStringConstructor("20121225T132536.000123456789", 1'356'441'936ULL, 123'456'789'000'000ULL, true,
                               "20121225T132536.000123456789000000");
 }
 
@@ -495,12 +496,11 @@ void Epochstamp_Test::testToFormattedString() {
     std::string pTime = "20121225T132536.789333123456789123";
     std::string utcTimeZone = "Z"; //"UTC" == "Z"
 
-    validateToFormattedString(pTime, "", utcTimeZone, "2012-Dec-25 13:25:36");
-    validateToFormattedString(pTime, "%Y/%m/%d %H:%M:%S", utcTimeZone, "2012/12/25 13:25:36");
+    validateToFormattedString(pTime, "", utcTimeZone, "2012-Dec-25 13:25:36.789333");
+    validateToFormattedString(pTime, "%Y/%m/%d %H:%M:%S", utcTimeZone, "2012/12/25 13:25:36.789333");
     validateToFormattedString(pTime, "%Y/%m/%d", utcTimeZone, "2012/12/25");
-    validateToFormattedString(pTime, "%c", utcTimeZone, "Tue 25 Dec 2012 01:25:36 PM ");
-    validateToFormattedString(pTime, "%H:%M:%S", utcTimeZone, "13:25:36");
-    validateToFormattedString(pTime, "%H:%M:%S.%f", utcTimeZone, "13:25:36.789333");
+    validateToFormattedString(pTime, "%c", utcTimeZone, "Tue 25 Dec 2012 01:25:36 PM UTC");
+    validateToFormattedString(pTime, "%H:%M:%S", utcTimeZone, "13:25:36.789333");
 
 
     std::string pTime2 = "1985-01-20T23:20:50-07:00";

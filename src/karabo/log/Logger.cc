@@ -22,6 +22,7 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
+#include <chrono>
 #include <filesystem>
 
 #include "karabo/util/ListElement.hh"
@@ -31,6 +32,8 @@
 #include "karabo/util/StringTools.hh"
 
 
+using namespace std::chrono;
+using namespace std::literals::chrono_literals;
 using namespace karabo::util;
 using namespace std;
 
@@ -305,7 +308,7 @@ namespace karabo {
             if (startFlushThread) {
                 setPattern(m_config.get<std::string>("pattern"));
                 setPriority("OFF");
-                spdlog::flush_every(std::chrono::seconds(3));
+                spdlog::flush_every(3s);
                 startFlushThread = false;
             }
         }
@@ -470,7 +473,7 @@ namespace karabo {
                 // get last file modified time since epoch ...
                 auto epoch = entry.last_write_time().time_since_epoch();
                 // convert to seconds since epoch
-                std::size_t secs = std::chrono::duration_cast<std::chrono::seconds>(epoch).count();
+                std::size_t secs = duration_cast<seconds>(epoch).count();
                 // use this seconds for sorting in the map
                 tmpmap.emplace(secs, p);
             }

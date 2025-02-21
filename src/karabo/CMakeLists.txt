@@ -167,6 +167,7 @@ find_package(spdlog REQUIRED)
 find_package(fmt REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(pugixml REQUIRED)
+find_package(date REQUIRED)
 
 set_target_properties(
         ${KARABO_LIB_TARGET_NAME} PROPERTIES
@@ -211,6 +212,9 @@ target_link_libraries(
     fmt::fmt
     nlohmann_json::nlohmann_json
     pugixml::pugixml
+    date::date
+    curl
+    openssl::openssl
 )
 
 # Adding interface libraries to KARABO_LIB_TARGET_NAME

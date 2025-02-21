@@ -29,6 +29,7 @@
 
 #include "karabo/tests/WaitUtils.hh"
 
+using namespace std::chrono;
 using karabo::tests::waitForCondition;
 using std::placeholders::_1;
 
@@ -86,7 +87,7 @@ void InstanceChangeThrottler_Test::testThrottleInterval() {
 
     auto secondBurstStartTime = m_instChangeObserver.oldestInstChange().timePoint;
     auto interval = secondBurstStartTime - fistBurstEndTime;
-    auto intervalMilli = boost::chrono::duration_cast<boost::chrono::milliseconds>(interval);
+    auto intervalMilli = duration_cast<milliseconds>(interval);
 
     CPPUNIT_ASSERT_MESSAGE("Spacing between throttler cycles, " + karabo::util::toString(intervalMilli.count()) +
                                  ", much smaller than expected.",
@@ -264,7 +265,7 @@ void InstanceChangeThrottler_Test::testNewGoneOptimization2Cycles() {
 
     auto secondBurstStartTime = m_instChangeObserver.oldestInstChange().timePoint;
     auto interval = secondBurstStartTime - fistBurstEndTime;
-    auto intervalMilli = boost::chrono::duration_cast<boost::chrono::milliseconds>(interval);
+    auto intervalMilli = duration_cast<milliseconds>(interval);
 
     CPPUNIT_ASSERT_MESSAGE("Could not verify that the Gone changes came in a different throttler cycle.",
                            intervalMilli.count() > 190u);
@@ -332,7 +333,7 @@ void InstanceChangeThrottler_Test::testUpdateOptimization2Cycles() {
 
     auto secondBurstStartTime = m_instChangeObserver.newestInstChange().timePoint;
     auto interval = secondBurstStartTime - fistBurstEndTime;
-    auto intervalMilli = boost::chrono::duration_cast<boost::chrono::milliseconds>(interval);
+    auto intervalMilli = duration_cast<milliseconds>(interval);
 
     CPPUNIT_ASSERT_MESSAGE(
           "Could not verify that the second batch of update changes came in a different throttler cycle.",
@@ -380,7 +381,7 @@ void InstanceChangeThrottler_Test::testMaxChangesPerCycle() {
 
     auto secondBurstStartTime = m_instChangeObserver.newestInstChange().timePoint;
     auto interval = secondBurstStartTime - fistBurstEndTime;
-    auto intervalMilli = boost::chrono::duration_cast<boost::chrono::milliseconds>(interval);
+    auto intervalMilli = duration_cast<milliseconds>(interval);
 
     CPPUNIT_ASSERT_MESSAGE("Could not verify that the second batch of changes came in a different throttler cycle.",
                            intervalMilli.count() > 190u);
@@ -397,7 +398,7 @@ void InstanceChangeThrottler_Test::testBigUpdateSequence() {
           karabo::core::InstanceChangeThrottler::createThrottler(instChangeHandler, kThrottlerIntervalMs,
                                                                  kThrottlerMaxChanges);
 
-    auto startTimePoint = boost::chrono::high_resolution_clock::now();
+    auto startTimePoint = high_resolution_clock::now();
 
     // InstanceInfo that will be the payload for the updates.
     karabo::util::Hash updatedInstInfo = karabo::util::Hash(m_instInfoDevice);
@@ -422,7 +423,7 @@ void InstanceChangeThrottler_Test::testBigUpdateSequence() {
                                  },
                                  12000u));
 
-    auto finishTimePoint = boost::chrono::high_resolution_clock::now();
+    auto finishTimePoint = high_resolution_clock::now();
     std::clog << "\ntestBigUpdateSequence parameters:" << std::endl;
     std::clog << "\tThrottler interval between bursts: " << kThrottlerIntervalMs << " milliseconds" << std::endl;
     std::clog << "\tThrottler max. changes per burst: " << kThrottlerMaxChanges << std::endl;
@@ -435,9 +436,8 @@ void InstanceChangeThrottler_Test::testBigUpdateSequence() {
     // the throttler maximum allowed number of changes being reached.
     std::clog << "\tThrottler bursts: " << m_instChangeObserver.numOfThrottlerBursts() << std::endl;
     auto testDuration = finishTimePoint - startTimePoint;
-    std::clog << "\tTime to receive all updates: "
-              << boost::chrono::duration_cast<boost::chrono::milliseconds>(testDuration).count() << " milliseconds"
-              << std::endl;
+    std::clog << "\tTime to receive all updates: " << duration_cast<milliseconds>(testDuration).count()
+              << " milliseconds" << std::endl;
 }
 
 
@@ -627,7 +627,7 @@ void InstanceChangeObserver::addInstChangesOfType(
             }
             instChange.instanceInfo = instInfo;
 
-            instChange.timePoint = boost::chrono::high_resolution_clock::now();
+            instChange.timePoint = high_resolution_clock::now();
             if (instChange.timePoint > m_newestInstChange.timePoint) {
                 m_newestInstChange = instChange;
             }
@@ -643,8 +643,8 @@ void InstanceChangeObserver::addInstChangesOfType(
 void InstanceChangeObserver::addInstChanges(const karabo::util::Hash& changeInfo) {
     std::lock_guard<std::mutex> lock(m_instChangesMutex);
 
-    auto yearAgoTimePoint = boost::chrono::high_resolution_clock::now() - boost::chrono::hours(24 * 365);
-    auto yearAheadTimePoint = boost::chrono::high_resolution_clock::now() + boost::chrono::hours(24 * 365);
+    auto yearAgoTimePoint = high_resolution_clock::now() - hours(24 * 365);
+    auto yearAheadTimePoint = high_resolution_clock::now() + hours(24 * 365);
     m_oldestInstChange.timePoint = yearAheadTimePoint;
     m_newestInstChange.timePoint = yearAgoTimePoint;
 

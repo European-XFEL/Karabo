@@ -23,6 +23,7 @@
 
 #include "TelegrafLogging_Test.hh"
 
+#include <chrono>
 #include <sstream>
 
 #include "karabo/net/EventLoop.hh"
@@ -32,6 +33,8 @@
 #include "karabo/util/StringTools.hh"
 
 USING_KARABO_NAMESPACES;
+using namespace std::chrono;
+using namespace std::literals::chrono_literals;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(TelegrafLogging_Test);
 
@@ -86,7 +89,7 @@ void TelegrafLogging_Test::testInfluxDbNotAvailableTelegraf() {
         if (loggerState == karabo::util::State::ERROR) {
             break;
         }
-        boost::this_thread::sleep_for(boost::chrono::milliseconds(50));
+        std::this_thread::sleep_for(50ms);
         timeout -= 50;
     }
 
@@ -175,7 +178,7 @@ bool TelegrafLogging_Test::isTelegrafEnvResponsive() {
 
 
     // Captures the timepoint after updating the property
-    boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
+    std::this_thread::sleep_for(100ms);
     Epochstamp afterPropUpdate;
 
     // Makes sure all the writes are done before retrieval.
@@ -213,7 +216,7 @@ bool TelegrafLogging_Test::isTelegrafEnvResponsive() {
             // Just consume the exception as it is expected while data is not
             // ready.
         }
-        boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
+        std::this_thread::sleep_for(1000ms);
         nTries--;
     }
 
@@ -238,7 +241,7 @@ void TelegrafLogging_Test::influxAllTestRunnerWithTelegraf() {
 
     std::clog << "\n==== Influx tests for Telegraf environment ====" << std::endl;
 
-    boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
+    std::this_thread::sleep_for(1000ms);
 
     std::pair<bool, std::string> success =
           m_deviceClient->instantiate(m_server, "PropertyTest", Hash("deviceId", m_deviceId), KRB_TEST_MAX_TIMEOUT);

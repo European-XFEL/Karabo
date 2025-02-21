@@ -24,6 +24,7 @@
 #include "AmqpConnection.hh"
 
 #include <boost/asio.hpp>
+#include <chrono>
 
 #include "AmqpClient.hh"
 #include "AmqpUtils.hh" // for ConnectionHandler, KARABO_ERROR_CODE_XXX
@@ -31,6 +32,7 @@
 #include "karabo/util/Exception.hh"
 #include "karabo/util/MetaTools.hh" // for bind_weak
 
+using namespace std::chrono;
 using std::placeholders::_1;
 using std::placeholders::_2;
 
@@ -324,7 +326,7 @@ namespace karabo {
             size_t delay(distribution(*m_random));
             KARABO_LOG_FRAMEWORK_INFO << "Delay reconnection a bit: " << delay;
             auto timer = std::make_shared<boost::asio::steady_timer>(m_ioContext);
-            timer->expires_from_now(boost::asio::chrono::milliseconds(delay));
+            timer->expires_after(milliseconds(delay));
             timer->async_wait([weakThis{weak_from_this()}, timer](const boost::system::error_code& e) {
                 if (e) return;
                 if (auto self = weakThis.lock()) {

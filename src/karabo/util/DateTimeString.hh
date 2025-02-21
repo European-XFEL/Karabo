@@ -24,7 +24,7 @@
 #ifndef KARABO_UTIL_DATETIMESTRING_HH
 #define KARABO_UTIL_DATETIMESTRING_HH
 
-#include <boost/date_time.hpp>
+#include <chrono>
 #include <regex>
 
 #include "Exception.hh"
@@ -231,12 +231,12 @@ namespace karabo {
 
            private:
             /**
-             * Convert a specific boost ptime to the number of seconds since epoch (1970-Jan-1 00:00:00)
+             * Convert a specific clock time point to the number of seconds since epoch (1970-Jan-1 00:00:00)
              *
-             * @param pt specific boost ptime
+             * @param tp specific (std::chrono::system_clock) time point
              * @return number of seconds since epoch
              */
-            static const unsigned long long ptimeToSecondsSinceEpoch(boost::posix_time::ptime& pt);
+            static const unsigned long long ptimeToSecondsSinceEpoch(std::chrono::system_clock::time_point tp);
 
             /**
              * Creates an DateTimeString from an ISO-8601 formatted string (string must be a complete and valid

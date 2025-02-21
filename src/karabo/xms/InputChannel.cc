@@ -27,12 +27,14 @@
 #include "InputChannel.hh"
 
 #include <boost/system/error_code.hpp>
+#include <chrono>
 
 #include "karabo/net/EventLoop.hh"
 #include "karabo/util/MetaTools.hh"
 #include "karabo/util/SimpleElement.hh"
 #include "karabo/util/VectorElement.hh"
 
+using namespace std::chrono;
 using namespace karabo::util;
 using namespace karabo::io;
 using namespace karabo::net;
@@ -860,7 +862,7 @@ namespace karabo {
             if (m_delayOnInput <= 0) { // no delay
                 deferredNotificationOfOutputChannelForPossibleRead(channel);
             } else {
-                m_deadline.expires_from_now(boost::asio::chrono::milliseconds(m_delayOnInput));
+                m_deadline.expires_after(milliseconds(m_delayOnInput));
                 m_deadline.async_wait(util::bind_weak(&InputChannel::deferredNotificationOfOutputChannelForPossibleRead,
                                                       this, channel));
             }
@@ -912,7 +914,7 @@ namespace karabo {
             if (m_delayOnInput <= 0) // no delay
                 deferredNotificationsOfOutputChannelsForPossibleRead();
             else { // wait "asynchronously"
-                m_deadline.expires_from_now(boost::asio::chrono::milliseconds(m_delayOnInput));
+                m_deadline.expires_after(milliseconds(m_delayOnInput));
                 m_deadline.async_wait(
                       util::bind_weak(&InputChannel::deferredNotificationsOfOutputChannelsForPossibleRead, this));
             }

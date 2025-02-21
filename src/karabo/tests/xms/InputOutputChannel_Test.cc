@@ -27,8 +27,10 @@
 #include <ifaddrs.h>
 #include <sys/types.h>
 
+#include <chrono>
 #include <future>
 #include <regex>
+#include <thread>
 
 #include "karabo/net/EventLoop.hh"
 #include "karabo/net/utils.hh"
@@ -40,6 +42,8 @@
 #include "karabo/xms/InputChannel.hh"
 #include "karabo/xms/OutputChannel.hh"
 
+using namespace std::chrono;
+using namespace std::literals::chrono_literals;
 using namespace std::string_literals; // for '"abc"s'
 
 using namespace karabo;
@@ -195,7 +199,7 @@ void InputOutputChannel_Test::testManyToOne() {
         // Being more clever and waiting only once for all connections in one go is not worth it in the test here.
         input->connect(outputInfo, connectHandler);
         CPPUNIT_ASSERT_EQUAL_MESSAGE("attempt for " + outputIds[i], std::future_status::ready,
-                                     connectFuture.wait_for(std::chrono::milliseconds(connectTimeoutMs)));
+                                     connectFuture.wait_for(milliseconds(connectTimeoutMs)));
         CPPUNIT_ASSERT_EQUAL_MESSAGE("attempt for " + outputIds[i],
                                      karabo::net::ErrorCode(), // i.e. no error
                                      connectFuture.get());
@@ -226,7 +230,7 @@ void InputOutputChannel_Test::testManyToOne() {
             registered = outputs[i]->hasRegisteredCopyInputChannel(input->getInstanceId());
             if (registered) break;
             // Happens very rarely - seen 6 times in 20,000 local test runs.
-            boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+            std::this_thread::sleep_for(1ms);
         }
         CPPUNIT_ASSERT_MESSAGE("Not yet ready: output " + karabo::util::toString(i), registered);
     }
@@ -249,13 +253,13 @@ void InputOutputChannel_Test::testManyToOne() {
     // Wait for endOfStream arrival
     int trials = 3000;
     do {
-        boost::this_thread::sleep_for(boost::chrono::milliseconds(3));
+        std::this_thread::sleep_for(3ms);
         if (nReceivedEos > 0) break;
     } while (--trials >= 0);
 
     // endOfStream received once
     // We give some time for more to arrive - but there should only be one, although each output sent it!
-    boost::this_thread::sleep_for(boost::chrono::milliseconds(200));
+    std::this_thread::sleep_for(200ms);
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Data received:\n" + karabo::util::toString(receivedData), 1u,
                                  static_cast<unsigned int>(nReceivedEos));
 
@@ -312,7 +316,7 @@ void InputOutputChannel_Test::testConnectDisconnect() {
     // Write first data - nobody connected yet.
     output->write(Hash("key", 42));
     output->update();
-    boost::this_thread::sleep_for(boost::chrono::milliseconds(20)); // time for call back
+    std::this_thread::sleep_for(20ms); // time for call back
     CPPUNIT_ASSERT_EQUAL(0u, calls);
     {
         boost::mutex::scoped_lock lock(handlerDataMutex);
@@ -351,7 +355,7 @@ void InputOutputChannel_Test::testConnectDisconnect() {
                                      connectStatusMap[outputChannelId] == karabo::net::ConnectionStatus::CONNECTED);
 
         CPPUNIT_ASSERT_EQUAL_MESSAGE("attempt number " + karabo::util::toString(i), std::future_status::ready,
-                                     connectFuture.wait_for(std::chrono::milliseconds(connectTimeoutMs)));
+                                     connectFuture.wait_for(milliseconds(connectTimeoutMs)));
         CPPUNIT_ASSERT_EQUAL_MESSAGE("attempt number " + karabo::util::toString(i), connectFuture.get(),
                                      karabo::net::ErrorCode()); // i.e. no error
 
@@ -371,7 +375,7 @@ void InputOutputChannel_Test::testConnectDisconnect() {
         // Now ensure that output channel took note of input registration:
         int trials = 200;
         do {
-            boost::this_thread::sleep_for(boost::chrono::milliseconds(2));
+            std::this_thread::sleep_for(2ms);
             boost::mutex::scoped_lock lock(handlerDataMutex);
             if (!table.empty()) {
                 break;
@@ -400,7 +404,7 @@ void InputOutputChannel_Test::testConnectDisconnect() {
         trials = 200;
         while (--trials >= 0) {
             if (2u == calls) break;
-            boost::this_thread::sleep_for(boost::chrono::milliseconds(2)); // time for callback
+            std::this_thread::sleep_for(2ms); // time for callback
         }
         CPPUNIT_ASSERT_EQUAL(2u, calls);
 
@@ -415,7 +419,7 @@ void InputOutputChannel_Test::testConnectDisconnect() {
         // Some time to travel for message
         trials = 1000; // failed with 200 in https://git.xfel.eu/Karabo/Framework/-/jobs/131075/raw
         do {
-            boost::this_thread::sleep_for(boost::chrono::milliseconds(2));
+            std::this_thread::sleep_for(2ms);
             boost::mutex::scoped_lock lock(handlerDataMutex);
             if (table.empty() && trackedStatus.size() > 2ul) {
                 break;
@@ -433,7 +437,7 @@ void InputOutputChannel_Test::testConnectDisconnect() {
     output->write(Hash("key", 44));
     output->update();
     // Extended time for callback to be really sure nothing comes.
-    boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
+    std::this_thread::sleep_for(100ms);
     // still 2:
     CPPUNIT_ASSERT_EQUAL(2u, calls);
 
@@ -465,8 +469,7 @@ void InputOutputChannel_Test::testConnectDisconnect() {
         input->connect(badOutputInfo, connectHandler);
         // See failure in https: // git.xfel.eu/Karabo/Framework/-/jobs/290206 with 5000 ms wait_for
         CPPUNIT_ASSERT_EQUAL_MESSAGE("Connection handler not called in time for " + toString(badOutputInfo),
-                                     std::future_status::ready,
-                                     connectFuture.wait_for(std::chrono::milliseconds(connectTimeoutMs)));
+                                     std::future_status::ready, connectFuture.wait_for(milliseconds(connectTimeoutMs)));
         CPPUNIT_ASSERT_MESSAGE(
               "Connection did not fail for " + toString(badOutputInfo),
               connectFuture.get() != karabo::net::ErrorCode()); // not all OK (do not care which problem)
@@ -511,10 +514,8 @@ void InputOutputChannel_Test::testConcurrentConnect() {
         // Subsequent connect(..): first succeeds, second fails since already connected (less likely) or connecting
         input->connect(outputInfo, connectHandler1);
         input->connect(outputInfo, connectHandler2);
-        CPPUNIT_ASSERT_EQUAL(std::future_status::ready,
-                             connectFuture1.wait_for(std::chrono::milliseconds(connectTimeoutMs)));
-        CPPUNIT_ASSERT_EQUAL(std::future_status::ready,
-                             connectFuture2.wait_for(std::chrono::milliseconds(connectTimeoutMs)));
+        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, connectFuture1.wait_for(milliseconds(connectTimeoutMs)));
+        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, connectFuture2.wait_for(milliseconds(connectTimeoutMs)));
 
         CPPUNIT_ASSERT_EQUAL(karabo::net::ErrorCode(), connectFuture1.get());
         const karabo::net::ErrorCode ec = connectFuture2.get();
@@ -545,10 +546,8 @@ void InputOutputChannel_Test::testConcurrentConnect() {
         input->disconnect(outputInfo);
         input->connect(outputInfo, connectHandler4);
 
-        CPPUNIT_ASSERT_EQUAL(std::future_status::ready,
-                             connectFuture3.wait_for(std::chrono::milliseconds(connectTimeoutMs)));
-        CPPUNIT_ASSERT_EQUAL(std::future_status::ready,
-                             connectFuture4.wait_for(std::chrono::milliseconds(connectTimeoutMs)));
+        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, connectFuture3.wait_for(milliseconds(connectTimeoutMs)));
+        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, connectFuture4.wait_for(milliseconds(connectTimeoutMs)));
 
         // Now it is not exactly clear what to expect - depends on timing of threads:
         // - 1st fails as operation_canceled, 2nd succeeds, i.e. disconnect(..) clears from "being setup"
@@ -588,7 +587,7 @@ void InputOutputChannel_Test::testInputHandler() {
     while (timeout > 0) {
         if (output->hasRegisteredCopyInputChannel("inputChannel")) break;
         timeout -= 2;
-        boost::this_thread::sleep_for(boost::chrono::milliseconds(2));
+        std::this_thread::sleep_for(2ms);
     }
     CPPUNIT_ASSERT_GREATEREQUAL(0, timeout);
 
@@ -601,7 +600,7 @@ void InputOutputChannel_Test::testInputHandler() {
     while (timeout > 0) {
         if (hashRead) break;
         timeout -= 2;
-        boost::this_thread::sleep_for(boost::chrono::milliseconds(2));
+        std::this_thread::sleep_for(2ms);
     }
     CPPUNIT_ASSERT(hashRead->has("data"));
     CPPUNIT_ASSERT_EQUAL(42, hashRead->get<int>("data"));
@@ -701,11 +700,11 @@ void InputOutputChannel_Test::testConnectHandler() {
         auto connectHandler = [&connectPromise](const karabo::net::ErrorCode& ec) { connectPromise->set_value(ec); };
         input->connect(outputInfo, connectHandler);
         const int sleepMs = count % 4; // i.e. test 0 to 3 ms delay before destruction of InputChannel
-        boost::this_thread::sleep_for(boost::chrono::milliseconds(sleepMs));
+        std::this_thread::sleep_for(milliseconds(sleepMs));
         input.reset();
         // Now ensure that handler is called
         CPPUNIT_ASSERT_EQUAL_MESSAGE("attempt for " + karabo::util::toString(count), std::future_status::ready,
-                                     connectFuture.wait_for(std::chrono::milliseconds(connectTimeoutMs)));
+                                     connectFuture.wait_for(milliseconds(connectTimeoutMs)));
     }
 }
 
@@ -774,7 +773,7 @@ void InputOutputChannel_Test::testWriteUpdateFlags() {
                     // Call connect and block until connection established
                     input->connect(outputInfo, connectHandler);
                     CPPUNIT_ASSERT_EQUAL(std::future_status::ready,
-                                         connectFuture.wait_for(std::chrono::milliseconds(connectTimeoutMs)));
+                                         connectFuture.wait_for(milliseconds(connectTimeoutMs)));
                     CPPUNIT_ASSERT_EQUAL(connectFuture.get(), karabo::net::ErrorCode()); // i.e. no error
 
                     // Create data with NDArray and get hands on its pointer
@@ -801,7 +800,7 @@ void InputOutputChannel_Test::testWriteUpdateFlags() {
                             ptrsReceived.push_back(byteArr.first.get());
                             if (ptrsReceived.size() == nData) ptrPromise.set_value();
                             // some sleep to enforce queue
-                            boost::this_thread::sleep_for(boost::chrono::milliseconds(9));
+                            std::this_thread::sleep_for(9ms);
                         });
                         bool safeNDArray, shouldPtrBeEqual;
                         std::tie(safeNDArray, shouldPtrBeEqual) = tup;
@@ -818,7 +817,7 @@ void InputOutputChannel_Test::testWriteUpdateFlags() {
                                 if (output->hasRegisteredCopyInputChannel(inputId)) break;
                             }
                             timeout -= 2;
-                            boost::this_thread::sleep_for(boost::chrono::milliseconds(2));
+                            std::this_thread::sleep_for(2ms);
                         }
                         CPPUNIT_ASSERT_GREATEREQUAL(0, timeout);
 
@@ -830,7 +829,7 @@ void InputOutputChannel_Test::testWriteUpdateFlags() {
                         // Receive data and check
                         CPPUNIT_ASSERT_EQUAL_MESSAGE(
                               testFlags, std::future_status::ready,
-                              ptrFuture.wait_for(std::chrono::milliseconds(
+                              ptrFuture.wait_for(milliseconds(
                                     9 * nData * 50))); // * 50 as robustness margin - failed with 20 in one CI
                         ptrFuture.get();
 
@@ -948,7 +947,7 @@ void InputOutputChannel_Test::testAsyncUpdate(const std::string& onSlowness, con
     // initiate connect and block until done (fail test if timeout)
     karabo::net::ErrorCode ec;
     input->connect(outputInfo, connectHandler); // this is async!
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, connectFuture.wait_for(std::chrono::milliseconds(5000)));
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, connectFuture.wait_for(5000ms));
     ec = connectFuture.get();                                                 // Can get() only once...
     CPPUNIT_ASSERT_EQUAL_MESSAGE(ec.message(), karabo::net::ErrorCode(), ec); // i.e. no error
 
@@ -963,7 +962,7 @@ void InputOutputChannel_Test::testAsyncUpdate(const std::string& onSlowness, con
             if (output->hasRegisteredCopyInputChannel(input->getInstanceId())) break;
         }
         timeout -= 1;
-        boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+        std::this_thread::sleep_for(1ms);
     }
     CPPUNIT_ASSERT_GREATEREQUAL(0, timeout);
 
@@ -981,11 +980,11 @@ void InputOutputChannel_Test::testAsyncUpdate(const std::string& onSlowness, con
     std::promise<void> eosSentPromise;
     auto eosSentFuture = eosSentPromise.get_future();
     output->asyncSignalEndOfStream([&eosSentPromise]() { eosSentPromise.set_value(); });
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, eosSentFuture.wait_for(std::chrono::milliseconds(5000)));
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, eosSentFuture.wait_for(5000ms));
     CPPUNIT_ASSERT_NO_THROW(eosSentFuture.get());
     CPPUNIT_ASSERT_EQUAL_MESSAGE(
           (receivedData.empty() ? std::string("nothing received") : karabo::util::toString(receivedData.back())),
-          std::future_status::ready, eosReadFuture.wait_for(std::chrono::milliseconds(5000)));
+          std::future_status::ready, eosReadFuture.wait_for(5000ms));
     CPPUNIT_ASSERT_NO_THROW(eosReadFuture.get());
 
     // Now investigate data received

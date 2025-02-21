@@ -29,6 +29,7 @@
 #include <boost/bind/bind.hpp>
 #include <boost/thread.hpp>
 #include <cassert>
+#include <chrono>
 #include <fstream>
 #include <iosfwd>
 #include <iostream>
@@ -44,6 +45,8 @@
 #include "karabo/util/Exception.hh"
 #include "karabo/util/NDArray.hh"
 
+using namespace std::chrono;
+using namespace std::literals::chrono_literals; // 10ms == 10 milliseconds
 using namespace std::literals::string_literals; // For '"blabla"s'
 
 using std::placeholders::_1;
@@ -90,7 +93,7 @@ createClientServer(Hash clientCfg, Hash serverCfg) {
     int timeout = 10000;
     while (timeout >= 0) {
         if (serverChannel) break;
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::this_thread::sleep_for(10ms);
         timeout -= 10;
     }
     CPPUNIT_ASSERT_MESSAGE(failureReasonServ + ", timeout: " + toString(timeout), serverChannel);
@@ -203,7 +206,7 @@ struct TcpClient {
         if (ec) {
             errorHandler(ec, channel);
             if (ec != boost::asio::error::eof && repetition >= 0) {
-                m_deadline.expires_from_now(boost::asio::chrono::milliseconds(timeout));
+                m_deadline.expires_from_now(milliseconds(timeout));
                 m_deadline.async_wait(
                       std::bind(&TcpClient::waitHandler, this, boost::asio::placeholders::error, timeout, repetition));
             }
@@ -791,8 +794,8 @@ struct WriteAsyncCli {
             return;
         }
 
-        decltype(boost::chrono::high_resolution_clock::now()) startTime;
-        decltype(boost::chrono::high_resolution_clock::now()) stopTime;
+        decltype(high_resolution_clock::now()) startTime;
+        decltype(high_resolution_clock::now()) stopTime;
         decltype(startTime - stopTime) startStopInterval;
 
         std::clog << "[Cli] Write async client connected. Sending data ..." << std::endl;
@@ -819,22 +822,22 @@ struct WriteAsyncCli {
             channel->writeAsync(m_params.headerHash, m_params.vectorCharPointer, m_params.writePriority);
             std::clog << "[Cli]\t8. sent a hash for header and VectorCharPointer for body." << std::endl;
 
-            startTime = boost::chrono::high_resolution_clock::now();
+            startTime = high_resolution_clock::now();
             channel->writeAsync(m_params.dataHashNDArray, m_params.writePriority, false);
-            stopTime = boost::chrono::high_resolution_clock::now();
+            stopTime = high_resolution_clock::now();
             startStopInterval = stopTime - startTime;
             std::clog << "[Cli]\t9. sent a hash with an NDArray as field with copyAllData false (in "
-                      << boost::chrono::duration_cast<boost::chrono::milliseconds>(startStopInterval).count() << "."
-                      << boost::chrono::duration_cast<boost::chrono::microseconds>(startStopInterval).count() % 1000
-                      << " milliseconds)." << std::endl;
-            startTime = boost::chrono::high_resolution_clock::now();
+                      << duration_cast<milliseconds>(startStopInterval).count() << "."
+                      << duration_cast<microseconds>(startStopInterval).count() % 1000 << " milliseconds)."
+                      << std::endl;
+            startTime = high_resolution_clock::now();
             channel->writeAsync(m_params.dataHashNDArray, m_params.writePriority, true);
-            stopTime = boost::chrono::high_resolution_clock::now();
+            stopTime = high_resolution_clock::now();
             startStopInterval = stopTime - startTime;
             std::clog << "[Cli]\t10. sent a hash with an NDArray as field with copyAllData true (in "
-                      << boost::chrono::duration_cast<boost::chrono::milliseconds>(startStopInterval).count() << "."
-                      << boost::chrono::duration_cast<boost::chrono::microseconds>(startStopInterval).count() % 1000
-                      << " milliseconds)." << std::endl;
+                      << duration_cast<milliseconds>(startStopInterval).count() << "."
+                      << duration_cast<microseconds>(startStopInterval).count() % 1000 << " milliseconds)."
+                      << std::endl;
 
             channel->writeAsync(m_params.headerHash, m_params.charArray, m_params.charArraySize,
                                 m_params.writePriority);
@@ -954,7 +957,7 @@ void TcpNetworking_Test::testBufferSet() {
     int timeout = 10000;
     while (timeout >= 0) {
         if (serverChannel) break;
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::this_thread::sleep_for(10ms);
         timeout -= 10;
     }
     CPPUNIT_ASSERT_MESSAGE(failureReasonServ + ", timeout: " + toString(timeout), serverChannel);
@@ -1011,7 +1014,7 @@ void TcpNetworking_Test::testBufferSet() {
     const Hash header("my", "header", "data", 42);
     serverChannel->write(header, buffers); // synchronous writing with header
 
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, recvFut.wait_for(std::chrono::seconds(10)));
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, recvFut.wait_for(seconds(10)));
     CPPUNIT_ASSERT_MESSAGE("Error Sending data" + failureReason, recvFut.get());
 
     // Check that content is as expected - in a lambda to do the exact same checks for both sync and async writing
@@ -1070,9 +1073,9 @@ void TcpNetworking_Test::testBufferSet() {
     serverChannel->writeAsyncHashVectorBufferSetPointer(header, buffers, onWriteComplete);
 
     // Wait for confirmation that data is written and read
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, sendFut.wait_for(std::chrono::seconds(10)));
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, sendFut.wait_for(seconds(10)));
     CPPUNIT_ASSERT_MESSAGE("Error sending data: " + sendFailureReason, sendFut.get());
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, recvFut.wait_for(std::chrono::seconds(10)));
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, recvFut.wait_for(seconds(10)));
     CPPUNIT_ASSERT_MESSAGE("Error Sending data" + failureReason, recvFut.get());
 
     // Now check correctness of asynchronously written data
@@ -1125,7 +1128,7 @@ void TcpNetworking_Test::testConsumeBytesAfterReadUntil() {
     int timeout = 10000;
     while (timeout >= 0) {
         if (clientChannel && serverChannel) break;
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::this_thread::sleep_for(10ms);
         timeout -= 10;
     }
     CPPUNIT_ASSERT_MESSAGE(failureReasonServ + ", timeout: " + toString(timeout), serverChannel);
@@ -1175,7 +1178,7 @@ void TcpNetworking_Test::testConsumeBytesAfterReadUntil() {
     timeout = 12000;
     while (timeout >= 0) {
         if (readSeqCompleted) break;
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::this_thread::sleep_for(10ms);
         timeout -= 10;
     }
 
@@ -1198,8 +1201,8 @@ void TcpNetworking_Test::testWriteAsync() {
     TestOutcome testOutcome = TestOutcome::UNKNOWN;
     std::string testOutcomeMessage("");
     std::string failingTestCaseName("");
-    decltype(boost::chrono::high_resolution_clock::now()) startTime;
-    decltype(boost::chrono::high_resolution_clock::now()) finishTime;
+    decltype(high_resolution_clock::now()) startTime;
+    decltype(high_resolution_clock::now()) finishTime;
 
     // Mutex for test results access
     std::mutex testResultsMutex;
@@ -1211,10 +1214,10 @@ void TcpNetworking_Test::testWriteAsync() {
         testOutcome = outcome;
         testOutcomeMessage = outcomeMessage;
         failingTestCaseName = failTestCaseName;
-        finishTime = boost::chrono::high_resolution_clock::now();
+        finishTime = high_resolution_clock::now();
     };
 
-    startTime = boost::chrono::high_resolution_clock::now();
+    startTime = high_resolution_clock::now();
 
     WriteAsyncSrv server(testReportFn);
     WriteAsyncCli client("localhost", server.port(), testReportFn);
@@ -1224,8 +1227,7 @@ void TcpNetworking_Test::testWriteAsync() {
     std::lock_guard<std::mutex> lock(testResultsMutex);
     if (testOutcome == TestOutcome::SUCCESS) {
         auto testDuration = finishTime - startTime;
-        std::clog << "Test took " << boost::chrono::duration_cast<boost::chrono::milliseconds>(testDuration).count()
-                  << " milliseconds." << std::endl;
+        std::clog << "Test took " << duration_cast<milliseconds>(testDuration).count() << " milliseconds." << std::endl;
         CPPUNIT_ASSERT(true);
     } else {
         CPPUNIT_ASSERT_MESSAGE(
@@ -1257,7 +1259,7 @@ void TcpNetworking_Test::testAsyncWriteCompleteHandler() {
         clientChannel.reset();
         clientConn.reset();
 
-        auto ok = fut.wait_for(std::chrono::seconds(timeoutSec));
+        auto ok = fut.wait_for(seconds(timeoutSec));
         CPPUNIT_ASSERT_EQUAL(std::future_status::ready, ok);
     }
 
@@ -1328,7 +1330,7 @@ void TcpNetworking_Test::testConnCloseChannelStop(Channel::Pointer& alice, Chann
     };
     alice->readAsyncHash(readHandler);
     bob->writeAsyncHash(Hash("a", 1), [](const boost::system::error_code& ec) {});
-    auto ok = readFut.wait_for(std::chrono::seconds(timeoutSec));
+    auto ok = readFut.wait_for(seconds(timeoutSec));
     CPPUNIT_ASSERT_EQUAL(std::future_status::ready, ok);
     boost::system::error_code ec = readFut.get();
     CPPUNIT_ASSERT_EQUAL_MESSAGE(ec.message(), 0, ec.value());
@@ -1351,7 +1353,7 @@ void TcpNetworking_Test::testConnCloseChannelStop(Channel::Pointer& alice, Chann
     // This will fail if channel closed, but we do not care
     bob->writeAsyncHash(Hash("a", 2), [](const boost::system::error_code& ec) {});
 
-    ok = readFut.wait_for(std::chrono::seconds(timeoutSec));
+    ok = readFut.wait_for(seconds(timeoutSec));
     CPPUNIT_ASSERT_EQUAL(std::future_status::ready, ok);
 
     ec = readFut.get();

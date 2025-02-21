@@ -25,7 +25,9 @@
 #include "TcpAdapter.hh"
 
 #include <cassert>
+#include <chrono>
 
+using namespace std::chrono;
 using namespace std;
 using namespace karabo::util;
 using namespace karabo::core;
@@ -65,7 +67,7 @@ namespace karabo {
         if (ec) {
             onError(ec, channel);
             if (ec != boost::asio::error::eof && repetition >= 0) {
-                m_deadline.expires_from_now(boost::asio::chrono::milliseconds(timeout));
+                m_deadline.expires_after(milliseconds(timeout));
                 m_deadline.async_wait(bind_weak(&karabo::TcpAdapter::waitHandler, this,
                                                 boost::asio::placeholders::error, timeout, repetition));
             }

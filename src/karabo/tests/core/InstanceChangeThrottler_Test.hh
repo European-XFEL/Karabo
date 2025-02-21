@@ -38,7 +38,7 @@
 //<editor-fold desc="Helper types for InstanceChangeThrottler unit tests">
 
 struct InstanceChange {
-    boost::chrono::high_resolution_clock::time_point timePoint;
+    std::chrono::high_resolution_clock::time_point timePoint;
     karabo::core::InstanceChangeThrottler::InstChangeType changeType;
     std::string instanceId;
     karabo::util::Hash instanceInfo;
