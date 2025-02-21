@@ -829,14 +829,6 @@ namespace karabo {
             static void mergeTableElement(const Hash::Node& source, Hash::Node& target,
                                           const std::set<std::string>& selectedPaths, char separator);
 
-            /**
-             * Merge two ordinary vector<Hash> nodes, respecting the 'selectedPaths' with their 'separator'.
-             * Note that the 'selectedPaths' are those that selected 'source' node for merging, i.e. begin with
-             * the key of 'source', possibly suffixed by some indices.
-             */
-            static void mergeVectorHashNodes(const Hash::Node& source, Hash::Node& target, Hash::MergePolicy policy,
-                                             const std::set<std::string>& selectedPaths, char separator);
-
             Hash* setNodesAsNeeded(const std::vector<std::string>& tokens, char seperator);
 
             Hash& getLastHash(const std::string& path, std::string& last_key, const char separator = k_defaultSep);
