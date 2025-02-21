@@ -575,15 +575,10 @@ def test_merge():
 
     # Attributes overwritten by nothing or kept
     assert h1.getAttributes("c.b").size() == 0
-    assert h1.getAttributes("c.b[0].g").size() == 1
-    assert h1.hasAttribute("c.b[0].g", "attrKey3")
-    assert h1.getAttribute("c.b[0].g", "attrKey3") == 4.
+
     assert h1b.getAttributes("c.b").size() == 1
-    assert h1b.getAttributes("c.b[0].g").size() == 1
     assert h1b.hasAttribute("c.b", "attrKey2")
     assert h1b.getAttribute("c.b", "attrKey2") == 3
-    assert h1b.hasAttribute("c.b[0].g", "attrKey3")
-    assert h1b.getAttribute("c.b[0].g", "attrKey3") == 4.
 
     assert not h1.has("c.b.d")
     assert h1.has("c.b[0]")
@@ -653,7 +648,7 @@ def test_merge():
     assert h1c.has("b.c")
     assert h1c.has("g.h.i")
     assert h1c.has("h.i")
-    assert h1c.has("i[2].k.l")
+    assert h1c.has("i[0].k.l")  # only row 2 selected, which becomes row 0
     # But not the other ones from h2:
     assert not h1c.has("c.b[0].key")  # neither at old position of h2
     assert not h1c.has("c.b[2]")  # nor an extended vector<Hash> at all
@@ -680,7 +675,7 @@ def test_merge():
     hashTargetB = Hash("a[1].b", 1, "c", "Does not matter")
     hashTargetC = Hash(hashTargetB)
     hashTargetD = Hash(hashTargetB)
-    hashSourceBCD = Hash("a[2]", Hash("a", 33, "b", 4.4), "ha", 9,
+    hashSourceBCD = Hash("a[2]", Hash("a", 33, "c", 4.4), "ha", 9,
                          "c[1]", Hash("k", 5, "l", 6),
                          "c[2]", Hash("b", -3), "d[2].b", 66,
                          "e[1]", Hash("1", 1, "2", 2, "3", 3))
@@ -688,36 +683,36 @@ def test_merge():
                      # trigger selecting first HashVec item
                      # overwriting what was not a hashVec before, but
                      # only keep selected items
-                     "c[1].l",
+                     "c[1].l",  # for rows no key selection, => '.l' is ignored
                      "d",  # trigger adding full new vector
-                     "e[1].2",
-                     # selective adding of hashVec where there
-                     #  was no node before
-                     "e[1].3"]
+                     "e[1].2",  # here '.2' is ignored
+                     ]
     hashTargetB.merge(hashSourceBCD, HashMergePolicy.MERGE_ATTRIBUTES,
                       selectedPaths)
-    assert hashTargetB.has("a[1].b")
+    assert hashTargetB.has("a[0]")  # The empty one merged into it
+    assert not hashTargetB.has("a[0].b")
+    assert hashTargetB.has("a[1]")  # dito
+    assert not hashTargetB.has("a[1].b")  # target table a got replaced
     assert hashTargetB.has("a[2].a")
-    assert hashTargetB.has("a[2].b")
     assert not hashTargetB.has("a[5]")
     assert hashTargetB.has("c[0]")
-    assert not hashTargetB.has("c[0].k")
-    assert hashTargetB.has("c[1].l")
+    assert hashTargetB.has("c[0].k")
+    assert hashTargetB.has("c[0].l")
     assert hashTargetB.has("d[2].b")
     assert not hashTargetB.has("d[3]")
-    assert not hashTargetB.has("e[0].1")
-    assert hashTargetB.has("e[1].2")
-    assert hashTargetB.has("e[1].3")
+    assert hashTargetB.has("e[0].1")
+    assert hashTargetB.has("e[0].2")
+    assert hashTargetB.has("e[0].3")
 
     selectedPaths = ("a[0]",
-                     "a[2].b",  # trigger selective vector items
+                     "a[2].b",  #
                      "c")  # trigger overwriting with complete vector
     hashTargetC.merge(hashSourceBCD, HashMergePolicy.MERGE_ATTRIBUTES,
                       selectedPaths)
-    assert hashTargetC.has("a[1].b")
-    assert not hashTargetC.has("a[2].a")
-    assert hashTargetC.has("a[2].b")
-    assert not hashTargetC.has("a[3]")
+    assert not hashTargetC.has("a[1].b")  # all table rows are overwritten
+    assert hashTargetC.has("a[1].a")
+    assert hashTargetC.has("a[1].c")
+    assert not hashTargetC.has("a[2]")
     assert hashTargetC.has("c[1].k")
     assert hashTargetC.has("c[1].l")
     assert hashTargetC.has("c[2].b")
@@ -736,10 +731,10 @@ def test_merge():
     h = Hash('a[0].a.b.c', 1, 'a[1].a.b.d', 2)
     g = Hash('a[0].x.y.w', 77, 'a[0].a.c', 33, 'a[2].abc', 12)
     h += g
-    assert h['a[0].a.b.c'] == 1
+    assert not h.has('a[0].a.b.c')  # overwritten
     assert h['a[0].x.y.w'] == 77
     assert h['a[0].a.c'] == 33
-    assert h['a[1].a.b.d'] == 2
+    assert not h.has('a[1].a.b.d')  # dito
     assert h['a[2].abc'] == 12
 
 
@@ -767,7 +762,7 @@ def test_subtract():
 
     assert "a" not in h1
     assert h1["b"].empty()
-    assert h1["c.b[0].g"] == 3
+    assert not h1.has("c.b[0].g")
     assert h1["c.c[0].d"] == 4
     assert h1["c.c[1].a.b.c"] == 6
     assert h1["d.e"] == 7
