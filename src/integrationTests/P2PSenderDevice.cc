@@ -22,9 +22,12 @@
  * Created on September 20, 2016, 3:49 PM
  */
 
-
 #include "P2PSenderDevice.hh"
 
+#include <chrono>
+#include <thread>
+
+using namespace std::chrono;
 using namespace std;
 
 using std::placeholders::_1;
@@ -253,7 +256,7 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Written data # " << iData;
                 set("currentDataId", iData);
                 if (delayInMs > 0) {
-                    boost::this_thread::sleep_for(boost::chrono::milliseconds(delayInMs));
+                    std::this_thread::sleep_for(milliseconds(delayInMs));
                 }
             }
         } catch (const std::exception& eStd) {
@@ -290,31 +293,28 @@ namespace karabo {
             bool safeNDArray = get<bool>("safeNDArray");
             auto channel = this->getOutputChannel("output2");
 
+            auto microseconds_today = []() -> unsigned long long {
+                auto now = system_clock::now();
+                return round<microseconds>(now - floor<days>(now)).count();
+            };
+
             // Loop all the data to be send
             for (int iData = 0; iData < nData && !m_stopWriting; ++iData) {
                 // Fill the data object - for now only dataId.
                 data1.set("array", ndarr1);
-                data1.set("inTime", (unsigned long long)boost::posix_time::microsec_clock::local_time()
-                                          .time_of_day()
-                                          .total_microseconds());
+                data1.set("inTime", microseconds_today());
                 OutputChannel::MetaData meta1("source1", Timestamp());
 
                 data2.set("array", ndarr2);
-                data2.set("inTime", (unsigned long long)boost::posix_time::microsec_clock::local_time()
-                                          .time_of_day()
-                                          .total_microseconds());
+                data2.set("inTime", microseconds_today());
                 OutputChannel::MetaData meta2("source2", Timestamp());
 
                 data3.set("array", ndarr3);
-                data3.set("inTime", (unsigned long long)boost::posix_time::microsec_clock::local_time()
-                                          .time_of_day()
-                                          .total_microseconds());
+                data3.set("inTime", microseconds_today());
                 OutputChannel::MetaData meta3("source3", Timestamp());
 
                 data4.set("array", ndarr4);
-                data4.set("inTime", (unsigned long long)boost::posix_time::microsec_clock::local_time()
-                                          .time_of_day()
-                                          .total_microseconds());
+                data4.set("inTime", microseconds_today());
                 OutputChannel::MetaData meta4("source4", Timestamp());
 
                 // Write four items from different sources
@@ -334,7 +334,7 @@ namespace karabo {
                 KARABO_LOG_INFO << "Written data # " << iData;
                 set("currentDataId", iData);
 
-                boost::this_thread::sleep_for(boost::chrono::milliseconds(delayInMs));
+                std::this_thread::sleep_for(milliseconds(delayInMs));
             }
         } catch (const std::exception& eStd) {
             KARABO_LOG_ERROR << "Stop writing since:\n" << eStd.what();

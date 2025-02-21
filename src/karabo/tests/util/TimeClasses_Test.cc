@@ -43,6 +43,22 @@ using namespace std;
 using namespace karabo;
 using namespace karabo::util;
 
+#if __GNUC__ < 13
+
+#include <date/date.h>
+using hours = std::chrono::duration<long int, std::ratio<3600>>;
+using minutes = std::chrono::duration<long int, std::ratio<60>>;
+using seconds = std::chrono::duration<long int>;
+using nanoseconds = std::chrono::duration<long int, std::nano>;
+
+#else
+
+#include <chrono>
+
+#endif
+
+using namespace std::literals::chrono_literals;
+
 
 TimeClasses_Test::TimeClasses_Test() {}
 
@@ -68,7 +84,7 @@ void TimeClasses_Test::testEpochstamp() {
     //    KARABO_LOG_FRAMEWORK_DEBUG << "Duration: " << t2 - t1;
 
     Epochstamp t3;
-    t2 += TimeDuration(0ULL, 1000000000000000ULL);
+    t2 += TimeDuration(0ULL, 1'000'000'000'000'000ULL);
 
     //    KARABO_LOG_FRAMEWORK_DEBUG << "Duration: " << t2 - t1;
 
@@ -79,7 +95,7 @@ void TimeClasses_Test::testEpochstamp() {
     //    KARABO_LOG_FRAMEWORK_DEBUG << "Duration: " << t4 - t1;
     //    KARABO_LOG_FRAMEWORK_DEBUG << "Duration: " << t4.elapsed(t1);
 
-    t4 -= TimeDuration(0ULL, 2000000000000000ULL);
+    t4 -= TimeDuration(0ULL, 2'000'000'000'000'000ULL);
 
     //    KARABO_LOG_FRAMEWORK_DEBUG << "Duration: " << t4.elapsed(t1);
 
@@ -88,23 +104,51 @@ void TimeClasses_Test::testEpochstamp() {
 
 
 void TimeClasses_Test::testEpochstampConversion() {
-    // to boost::posix_time::ptime
+#if __GNUC__ < 13
+    using namespace date;
+#else
+    using namespace std::chrono;
+#endif
+    // to std::chrono::time_point...
     const Epochstamp stamp(3600ull * 24ull * (365ull + 30ull) // 31.1.1971 0.00 h
                                  + 3ull * 3600ull             // => 3.00 h
                                  + 125ull,                    // => 3.02:05 h
                            123456ull * 1000000000ull);        // 123456 nanosec
-    const boost::posix_time::ptime asPtime = stamp.getPtime();
+    const auto asPtime = stamp.getPtime();
+    auto dp = floor<days>(asPtime);
+    const year_month_day ymd{dp};
 
-    CPPUNIT_ASSERT_EQUAL(1971, static_cast<int>(asPtime.date().year()));
-    CPPUNIT_ASSERT_EQUAL(1, static_cast<int>(asPtime.date().month()));
-    CPPUNIT_ASSERT_EQUAL(31, static_cast<int>(asPtime.date().day()));
+#if __GNUC__ < 13
+    // 'date' library
+    CPPUNIT_ASSERT_EQUAL(1971_y, ymd.year());
+    CPPUNIT_ASSERT_EQUAL(month(1), ymd.month());
+    CPPUNIT_ASSERT_EQUAL(31_d, ymd.day());
 
-    CPPUNIT_ASSERT_EQUAL(3, static_cast<int>(asPtime.time_of_day().hours()));
-    CPPUNIT_ASSERT_EQUAL(2, static_cast<int>(asPtime.time_of_day().minutes()));
-    CPPUNIT_ASSERT_EQUAL(5, static_cast<int>(asPtime.time_of_day().seconds()));
-    auto totalNanoSec = asPtime.time_of_day().total_nanoseconds();
-    auto nanoSec = totalNanoSec - asPtime.time_of_day().total_seconds() * 1000000000ull;
-    CPPUNIT_ASSERT_EQUAL(123000ull, nanoSec); // nanoseconds are truncated to microseconds
+    const auto time = (asPtime - dp);
+    auto hh = floor<hours>(time);
+    CPPUNIT_ASSERT_EQUAL(3L, hh.count());
+    auto mm = floor<minutes>(time - hh);
+    CPPUNIT_ASSERT_EQUAL(2L, mm.count());
+    auto ss = floor<seconds>(time - hh - mm);
+    CPPUNIT_ASSERT_EQUAL(5L, ss.count());
+    auto nanosec = floor<nanoseconds>(time - hh - mm - ss);
+    CPPUNIT_ASSERT_EQUAL(123456L, nanosec.count());
+#else
+    // 'chrono' library
+    CPPUNIT_ASSERT_EQUAL(1971y, ymd.year());
+    CPPUNIT_ASSERT_EQUAL(month(1), ymd.month());
+    CPPUNIT_ASSERT_EQUAL(31d, ymd.day());
+
+    const auto time = (asPtime - dp);
+    auto hh = floor<hours>(time);
+    CPPUNIT_ASSERT_EQUAL(3h, hh);
+    auto mm = floor<minutes>(time - hh);
+    CPPUNIT_ASSERT_EQUAL(2min, mm);
+    auto ss = floor<seconds>(time - hh - mm);
+    CPPUNIT_ASSERT_EQUAL(5s, ss);
+    auto nanosec = floor<nanoseconds>(time - hh - mm - ss);
+    CPPUNIT_ASSERT_EQUAL(123456ns, nanosec);
+#endif
 
     // output to ostream
     std::ostringstream oss;

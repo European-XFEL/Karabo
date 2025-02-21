@@ -86,7 +86,7 @@ namespace karabo {
             bool m_noTimeTickYet;            // whether slotTimeTick received a first call
             mutable std::mutex m_timeChangeMutex;
             unsigned long long m_timeIdLastTick; // only for onTimeTick, no need for mutex protection
-            boost::asio::deadline_timer m_timeTickerTimer;
+            boost::asio::system_timer m_timeTickerTimer;
             std::string m_hostname;
 
            public:

@@ -23,6 +23,7 @@
  */
 #include "karabo/net/Strand.hh"
 
+#include <chrono>
 #include <thread>
 
 #include "Strand_Test.hh"
@@ -32,6 +33,8 @@
 #include "karabo/util/Epochstamp.hh"
 #include "karabo/util/TimeDuration.hh"
 
+using namespace std::chrono;
+using namespace std::literals::chrono_literals;
 using karabo::net::EventLoop;
 using karabo::net::Strand;
 using karabo::util::Configurator;
@@ -73,7 +76,7 @@ void Strand_Test::testSequential() {
     const unsigned int sleepTimeMs = 40; // must be above 10, see below
 
     auto sleepAndCount = [&aMutex, &counter, &sleepTimeMs]() {
-        std::this_thread::sleep_for(std::chrono::milliseconds(sleepTimeMs));
+        std::this_thread::sleep_for(milliseconds(sleepTimeMs));
 
         std::lock_guard<std::mutex> lock(aMutex);
         ++counter;
@@ -88,7 +91,7 @@ void Strand_Test::testSequential() {
     // A timer to concurrently run Strand::post (and to start the duration),
     // not sure whether several handlers of the timer will really be executed at the same time or not...
     boost::asio::steady_timer timer(EventLoop::getIOService());
-    timer.expires_from_now(boost::asio::chrono::milliseconds(10));
+    timer.expires_after(10ms);
     timer.async_wait([&now](const boost::system::error_code& e) { now.now(); });
     for (unsigned int i = 0; i < numPosts; ++i) {
         timer.async_wait(
@@ -104,7 +107,7 @@ void Strand_Test::testSequential() {
             }
         }
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(sleepTimeMs / 10));
+        std::this_thread::sleep_for(milliseconds(sleepTimeMs / 10));
     }
 
     CPPUNIT_ASSERT(numTest > 0);
@@ -133,7 +136,7 @@ void Strand_Test::testThrowing() {
         strand->post(std::bind(handler, i));
     }
     while (!done) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::sleep_for(1ms);
     }
 
     for (int i = 0; i < size; ++i) {
@@ -157,7 +160,7 @@ void Strand_Test::testStrandDies() {
                                                        {Hash("guaranteeToRun", true, "maxInARow", 3u), true}};
     // Some initial sleep needed to get the event loop ready as just started in setUp().
     // Otherwise the first case ("guaranteeToRun" is true) has not enough time.
-    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    std::this_thread::sleep_for(300ms);
     for (const std::pair<Hash, bool>& testCase : testCases) {
         const Hash& cfg = testCase.first;
         const bool allHandlersRun = testCase.second;
@@ -169,7 +172,7 @@ void Strand_Test::testStrandDies() {
         const unsigned int sleepTimeMs = 10;
 
         auto sleepAndCount = [counterPtr, sleepTimeMs]() {
-            std::this_thread::sleep_for(std::chrono::milliseconds(sleepTimeMs));
+            std::this_thread::sleep_for(milliseconds(sleepTimeMs));
 
             ++(*counterPtr);
         };
@@ -193,7 +196,7 @@ void Strand_Test::testStrandDies() {
                     strand.reset();
                 }
             }
-            std::this_thread::sleep_for(std::chrono::milliseconds(waitLoopSleep));
+            std::this_thread::sleep_for(milliseconds(waitLoopSleep));
         }
 
         CPPUNIT_ASSERT_GREATER(0u, counterPtr->load());

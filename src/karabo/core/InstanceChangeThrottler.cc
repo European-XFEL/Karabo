@@ -24,10 +24,12 @@
 #include "InstanceChangeThrottler.hh"
 
 #include <boost/asio/placeholders.hpp>
+#include <chrono>
 #include <karabo/log/Logger.hh>
 #include <karabo/net/EventLoop.hh>
 #include <karabo/util/MetaTools.hh>
 
+using namespace std::chrono;
 using namespace karabo::util;
 
 namespace karabo {
@@ -279,7 +281,7 @@ namespace karabo {
 
 
         void InstanceChangeThrottler::kickNextThrottlerCycleAsync() {
-            m_throttlerTimer.expires_from_now(boost::asio::chrono::milliseconds(m_cycleIntervalMs));
+            m_throttlerTimer.expires_after(milliseconds(m_cycleIntervalMs));
             m_throttlerTimer.async_wait(
                   bind_weak(&InstanceChangeThrottler::runThrottlerCycleAsync, this, boost::asio::placeholders::error));
         }

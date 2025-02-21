@@ -23,6 +23,17 @@
 
 #include "DateTimeString.hh"
 
+#include <version> // '__cpp_lib_chrono'
+
+// Check level of <chrono> library support in compiler
+#if __cpp_lib_chrono < 201907L
+#include <date/date.h>
+using date::from_stream;
+#else
+using std::chrono::from_stream;
+#endif
+
+
 namespace karabo {
     namespace util {
 
@@ -207,46 +218,31 @@ namespace karabo {
         }
 
 
-        const std::locale formats[] = {
-              // std::locale(std::locale::classic(), new boost::posix_time::time_input_facet("%Y-%m-%dT%H:%M:%S%z")),
-              // //2012-12-25T13:25:36-0700 std::locale(std::locale::classic(), new
-              // boost::posix_time::time_input_facet("%Y%m%dT%H%M%S.%f%z")), //19951231T235959.9942+0000
-              std::locale(std::locale::classic(), new boost::posix_time::time_input_facet(
-                                                        "%Y%m%dT%H%M%S%.%f")), // 19951231T235959.789333(123456789123)
-              std::locale(std::locale::classic(),
-                          new boost::posix_time::time_input_facet("%Y-%m-%dT%H:%M:%S")) // 2012-12-25T13:25:36
-        };
-        const size_t formats_n = sizeof(formats) / sizeof(formats[0]);
-
-
-        const unsigned long long DateTimeString::ptimeToSecondsSinceEpoch(boost::posix_time::ptime& pt) {
-            static boost::posix_time::ptime timet_start(boost::gregorian::date(1970, 1, 1));
-            boost::posix_time::time_duration diff = pt - timet_start;
-            return diff.total_seconds();
+        const unsigned long long DateTimeString::ptimeToSecondsSinceEpoch(std::chrono::system_clock::time_point tp) {
+            return std::chrono::floor<std::chrono::seconds>(tp.time_since_epoch()).count();
         }
 
 
         const unsigned long long DateTimeString::getSecondsSinceEpoch() {
-            std::string dateAndTime = m_dateTime;
+            std::chrono::sys_time<std::chrono::microseconds> timePoint;
+            std::istringstream stream(m_dateTime);
 
-            // Try to convert String to PTIME taking into consideration the date formats defined above
-            boost::posix_time::ptime ptimeLocal;
-            for (size_t i = 0; i < formats_n; ++i) {
-                std::istringstream is(dateAndTime);
-                is.imbue(formats[i]);
-                is >> ptimeLocal;
-                if (ptimeLocal != boost::posix_time::ptime()) break;
+            if (m_dateTime.size() == 19) {
+                if (m_dateTime[10] == 'T') from_stream(stream, "%Y-%m-%dT%H:%M:%S", timePoint);
+                else from_stream(stream, "%Y-%m-%d %H:%M:%S", timePoint);
+            } else if (m_dateTime.size() == 15) {
+                if (m_dateTime[8] == 'T') from_stream(stream, "%Y%m%dT%H%M%S", timePoint);
             }
 
-            boost::posix_time::time_duration timeZoneDifference(m_timeZoneHours, m_timeZoneMinutes, 0);
-            boost::posix_time::ptime ptimeUtc;
+            auto zoneDifference = std::chrono::seconds(m_timeZoneHours * 3600 + m_timeZoneMinutes * 60);
+            std::chrono::sys_time<std::chrono::microseconds> timeUtc;
             if (m_timeZoneSignal == "+") {
-                ptimeUtc = ptimeLocal - timeZoneDifference; // Berlin hour - 1h == London hour
+                timeUtc = timePoint - zoneDifference; // Berlin hour - 1h == London hour
             } else {
-                ptimeUtc = ptimeLocal + timeZoneDifference; // Azores hour + 1h == London hour
+                timeUtc = timePoint + zoneDifference; // Azores hour + 1h == London hour
             }
 
-            return ptimeToSecondsSinceEpoch(ptimeUtc);
+            return ptimeToSecondsSinceEpoch(timeUtc);
         }
 
 

@@ -23,6 +23,10 @@
 
 #include "TimingTestDevice.hh"
 
+#include <chrono>
+
+using namespace std::chrono;
+using namespace std::literals::chrono_literals;
 using namespace std;
 
 USING_KARABO_NAMESPACES
@@ -95,7 +99,7 @@ namespace karabo {
         m_started = false;
 
         // Some sleep to guarantee that any onTimeUpdate has finished to avoid races on members.
-        boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
+        std::this_thread::sleep_for(10ms);
 
         set(Hash("ids", m_ids, "seconds", m_seconds, "fractions", m_fractions, "idsTick", m_idsTick, "secondsTick",
                  m_secondsTick, "fractionsTick", m_fractionsTick));
