@@ -25,8 +25,8 @@
 #ifndef KARABO_CORE_WORKER_HH
 #define KARABO_CORE_WORKER_HH
 
-#include <boost/chrono.hpp>
 #include <boost/thread.hpp>
+#include <chrono>
 #include <condition_variable>
 #include <functional>
 #include <queue>

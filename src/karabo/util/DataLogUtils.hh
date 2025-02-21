@@ -24,6 +24,7 @@
 #define DATALOGGERSTRUCTS_HH
 
 #include <boost/optional.hpp>
+#include <fstream>
 #include <nlohmann/json.hpp>
 #include <vector>
 

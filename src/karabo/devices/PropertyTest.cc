@@ -17,6 +17,8 @@
  */
 #include "PropertyTest.hh"
 
+#include <chrono>
+
 #include "karabo/net/EventLoop.hh"
 #include "karabo/util/Dims.hh"
 #include "karabo/util/Hash.hh"
@@ -35,6 +37,8 @@ KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device
 namespace karabo {
     namespace devices {
 
+        using namespace std::chrono;
+        using namespace std::literals::chrono_literals;
         using namespace std;
         using namespace karabo::core;
         using namespace karabo::util;
@@ -1032,7 +1036,7 @@ namespace karabo {
                 auto next = m_writingOutputTimer.expires_at(); // at first time set in startWritingOutput())
                 const int delayTime =
                       1000.f / this->get<float>("outputFrequency"); // minExc(0.f) guarantees non-zero value
-                next += boost::asio::chrono::milliseconds(delayTime);
+                next += milliseconds(delayTime);
                 // now fire again
                 m_writingOutputTimer.expires_at(next);
                 m_writingOutputTimer.async_wait(karabo::util::bind_weak(&PropertyTest::writeOutputHandler, this,
@@ -1048,7 +1052,7 @@ namespace karabo {
             this->updateState(State::STARTED);
 
             // Start right away
-            m_writingOutputTimer.expires_from_now(boost::asio::chrono::milliseconds(0)); // see writeOutputHandler
+            m_writingOutputTimer.expires_after(milliseconds(0)); // see writeOutputHandler
             karabo::net::EventLoop::getIOService().post(
                   karabo::util::bind_weak(&PropertyTest::writeOutputHandler, this, boost::system::error_code()));
         }
@@ -1063,7 +1067,7 @@ namespace karabo {
 
         void PropertyTest::onData(const karabo::util::Hash& data, const karabo::xms::InputChannel::MetaData& meta) {
             // First sleep to simulate heavy work
-            std::this_thread::sleep_for(std::chrono::milliseconds(get<unsigned int>("processingTime")));
+            std::this_thread::sleep_for(milliseconds(get<unsigned int>("processingTime")));
 
             const int currentInputId = data.get<int>("node.int32");
             const unsigned int inputCounter = get<unsigned int>("inputCounter");
@@ -1137,7 +1141,7 @@ namespace karabo {
             // Even if this is not a command, but a low level slot, instead of sleeping a long time,
             // it would be better to use a deadline timer and an AsyncReply instead of blocking within
             // a slot.
-            std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+            std::this_thread::sleep_for(2000ms);
         }
 
         void PropertyTest::logSomething(const Hash& input) {
@@ -1212,7 +1216,7 @@ namespace karabo {
                     // From time to time, give a chance to die if requested
                     if ((i % 1000) == 0) {
                         me.reset();
-                        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                        std::this_thread::sleep_for(10ms);
                         boost::this_thread::yield();
                         me = weakThis.lock();
                     }

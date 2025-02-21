@@ -23,7 +23,10 @@
 
 #include "SimulatedTimeServerDevice.hh"
 
+#include <chrono>
+
 using namespace std;
+using namespace std::chrono;
 
 USING_KARABO_NAMESPACES
 
@@ -102,7 +105,7 @@ namespace karabo {
         m_tickCountdown = 0;
         const unsigned long long period = get<unsigned long long>("period");
 
-        m_timeTickerTimer.expires_from_now(boost::asio::chrono::microseconds(period));
+        m_timeTickerTimer.expires_after(microseconds(period));
         m_timeTickerTimer.async_wait(
               util::bind_weak(&SimulatedTimeServerDevice::tickTock, this, boost::asio::placeholders::error));
     }
@@ -137,7 +140,7 @@ namespace karabo {
         --m_tickCountdown;
 
         //
-        m_timeTickerTimer.expires_at(m_timeTickerTimer.expires_at() + boost::asio::chrono::microseconds(period));
+        m_timeTickerTimer.expires_at(m_timeTickerTimer.expires_at() + microseconds(period));
         m_timeTickerTimer.async_wait(
               util::bind_weak(&SimulatedTimeServerDevice::tickTock, this, boost::asio::placeholders::error));
         ++m_id;

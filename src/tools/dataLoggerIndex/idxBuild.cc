@@ -18,6 +18,7 @@
 
 #include <algorithm>
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/regex.hpp>
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>

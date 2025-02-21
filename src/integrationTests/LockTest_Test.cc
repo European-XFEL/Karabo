@@ -21,11 +21,13 @@
  *
  * Created on Oct 2, 2016, 1:21:17 PM
  */
-
 #include "LockTest_Test.hh"
 
+#include <chrono>
 #include <karabo/net/EventLoop.hh>
+#include <thread>
 
+using namespace std::literals::chrono_literals;
 using namespace std;
 
 #define KRB_TEST_MAX_TIMEOUT 10
@@ -90,7 +92,7 @@ void LockTest_Test::testLocking() {
     // This will lock "lockTest3" and work on it for 1s (asynchronously)
     m_deviceClient->executeNoWait("lockTest1", "lockAndWait");
     // We are waiting here to give the machinery time to really lock "lockTest3"
-    boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
+    std::this_thread::sleep_for(100ms);
 
     // This should fail, as lockAndWait is configured to throw once we are trying to also lock "lockTest3"
     CPPUNIT_ASSERT_THROW(m_deviceClient->execute("lockTest2", "lockAndWait", KRB_TEST_MAX_TIMEOUT), Exception);
@@ -102,7 +104,7 @@ void LockTest_Test::testLocking() {
 
     m_deviceClient->executeNoWait("lockTest1", "lockAndWaitLong");
     // We are waiting here to give the machinery time to really lock "lockTest3"
-    boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
+    std::this_thread::sleep_for(100ms);
 
     CPPUNIT_ASSERT_THROW(m_deviceClient->execute("lockTest2", "lockAndWaitTimeout", 10), Exception);
     Exception::clearTrace();
@@ -147,7 +149,7 @@ void LockTest_Test::testSettingOnLocked() {
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("lockTest3", "slotClearLock"));
     m_deviceClient->executeNoWait("lockTest1", "lockAndWait");
     // We are waiting here to give the machinery time to really lock "lockTest3"
-    boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
+    std::this_thread::sleep_for(100ms);
     CPPUNIT_ASSERT_THROW(m_deviceClient->set("lockTest3", "intProperty", 100), Exception);
     Exception::clearTrace();
 
@@ -162,7 +164,7 @@ void LockTest_Test::testLockStealing() {
 
     m_deviceClient->executeNoWait("lockTest1", "lockAndWait");
     // We are waiting here to give the machinery time to really lock "lockTest3"
-    boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
+    std::this_thread::sleep_for(100ms);
 
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("lockTest3", "slotClearLock"));
 
@@ -176,7 +178,7 @@ void LockTest_Test::testLockStealing() {
 void LockTest_Test::waitUntilLockClears(const std::string& deviceId) {
     unsigned int counter = 1000; // Do not wait forever...
     while (m_deviceClient->get<std::string>(deviceId, "lockedBy") != "" && counter-- > 0) {
-        boost::this_thread::sleep_for(boost::chrono::milliseconds(5));
+        std::this_thread::sleep_for(5ms);
     };
     if (0 == counter) {
         throw KARABO_TIMEOUT_EXCEPTION("Lock on '" + deviceId + "' did not clear.");

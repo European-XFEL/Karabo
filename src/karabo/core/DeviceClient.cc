@@ -23,6 +23,7 @@
 #include "DeviceClient.hh"
 
 #include <atomic>
+#include <chrono>
 #include <functional>
 #include <mutex>
 
@@ -37,6 +38,8 @@
 #include "karabo/util/NDArray.hh"
 #include "karabo/util/Schema.hh"
 
+using namespace std::chrono;
+using namespace std::literals::chrono_literals;
 using namespace std;
 using namespace karabo::util;
 using namespace karabo::xms;
@@ -163,7 +166,7 @@ namespace karabo {
                     // Post another attempt in the event loop.
                     // First rely on yield() to give constructor time to finish, but if that is not enough, sleep a bit.
                     if (2 * countdown < kMaxCompleteInitializationAttempts) {
-                        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                        std::this_thread::sleep_for(1ms);
                     }
                     boost::this_thread::yield();
                     karabo::net::EventLoop::getIOService().post(
@@ -503,7 +506,7 @@ namespace karabo {
         void DeviceClient::setAgeing(bool on) {
             if (on && !m_getOlder) {
                 m_getOlder = true;
-                m_ageingTimer.expires_from_now(boost::asio::chrono::milliseconds(m_ageingIntervallMilliSec));
+                m_ageingTimer.expires_after(milliseconds(m_ageingIntervallMilliSec));
                 m_ageingTimer.async_wait(bind_weak(&DeviceClient::age, this, boost::asio::placeholders::error));
                 KARABO_LOG_FRAMEWORK_DEBUG << "Ageing is started";
             } else if (!on && m_getOlder) {
@@ -529,8 +532,7 @@ namespace karabo {
 
 
         void DeviceClient::kickSignalsChangedTimer() {
-            m_signalsChangedTimer.expires_from_now(
-                  boost::asio::chrono::milliseconds(std::atomic_load(&m_signalsChangedInterval)));
+            m_signalsChangedTimer.expires_after(milliseconds(std::atomic_load(&m_signalsChangedInterval)));
             m_signalsChangedTimer.async_wait(
                   bind_weak(&DeviceClient::sendSignalsChanged, this, boost::asio::placeholders::error));
         }
@@ -555,7 +557,7 @@ namespace karabo {
             if (!m_topologyInitialized) {
                 karabo::net::EventLoop::addThread(); // to avoid any thread starvation during the sleep(s).
                 while (!m_topologyInitialized) {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                    std::this_thread::sleep_for(50ms);
                 }
                 karabo::net::EventLoop::removeThread();
             }
@@ -1038,7 +1040,7 @@ namespace karabo {
                         std::lock_guard<std::mutex> lock(m_runtimeSystemDescriptionMutex);
                         isThere = m_runtimeSystemDescription.has("device." + reply);
                     }
-                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                    std::this_thread::sleep_for(100ms);
                     waitedInMillis += 100;
                 }
 
@@ -1070,7 +1072,7 @@ namespace karabo {
             bool isThere;
             int nTrials = 0;
             do {
-                std::this_thread::sleep_for(std::chrono::seconds(1));
+                std::this_thread::sleep_for(1s);
                 nTrials++;
                 std::lock_guard<std::mutex> lock(m_runtimeSystemDescriptionMutex);
                 isThere = m_runtimeSystemDescription.has("device." + deviceId);
@@ -1107,7 +1109,7 @@ namespace karabo {
             bool isThere;
             int nTrials = 0;
             do {
-                std::this_thread::sleep_for(std::chrono::seconds(1));
+                std::this_thread::sleep_for(1s);
                 nTrials++;
                 std::lock_guard<std::mutex> lock(m_runtimeSystemDescriptionMutex);
                 isThere = m_runtimeSystemDescription.has("server." + serverId);
@@ -2088,7 +2090,7 @@ namespace karabo {
             }
 
             if (m_getOlder) {
-                m_ageingTimer.expires_from_now(boost::asio::chrono::milliseconds(m_ageingIntervallMilliSec));
+                m_ageingTimer.expires_after(milliseconds(m_ageingIntervallMilliSec));
                 m_ageingTimer.async_wait(bind_weak(&DeviceClient::age, this, boost::asio::placeholders::error));
             }
         }
@@ -2281,7 +2283,7 @@ namespace karabo {
                         KARABO_RETHROW;
                     }
                     // otherwise pass through and try again
-                    std::this_thread::sleep_for(std::chrono::seconds(waitTime));
+                    std::this_thread::sleep_for(seconds(waitTime));
                 }
             }
         }

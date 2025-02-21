@@ -25,18 +25,11 @@
 #ifndef KARABO_UTIL_EPOCHSTAMP_HH
 #define KARABO_UTIL_EPOCHSTAMP_HH
 
-#include <boost/date_time.hpp>
-#include <boost/regex.hpp>
+#include <chrono>
 
 #include "Hash.hh"
 #include "TimeDuration.hh"
 
-// This test can only be run in LINUX since C++ locale support seems completely broken on MAC OSX
-// The solution to make locale works in OSX passes for CLANG use
-#ifdef __MACH__
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/date_time/posix_time/posix_time_io.hpp>
-#endif
 
 namespace karabo {
     namespace util {
@@ -154,10 +147,19 @@ namespace karabo {
              * @return timeval struct
              * @return timespec struct
              */
-            time_t getTime() const;                    // Unix time_t, Resolution = seconds
-            timeval getTimeOfDay() const;              // Resolution micro-sec
-            timespec getClockTime() const;             // Resolution nano-sec
-            boost::posix_time::ptime getPtime() const; // Resolution micro-seconds
+            time_t getTime() const; // Unix time_t, Resolution = seconds
+
+            timeval getTimeOfDay() const; // Resolution micro-sec
+
+            timespec getClockTime() const; // Resolution nano-sec
+
+            std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds> getPtime() const {
+                using namespace std::chrono;
+                constexpr unsigned long long coeff = 1000000000ULL;
+                return time_point<system_clock, nanoseconds>(
+                      nanoseconds(m_seconds * coeff + m_fractionalSeconds / coeff));
+            }
+
 
             /**
              * Retrieve current time for the system. Highest resolution is Nano-seconds
@@ -214,8 +216,8 @@ namespace karabo {
              * @param localTimeZone - String that represents an ISO8601 time zone [Default: "Z" == UTC]
              * @return formated string in the specified Time Zone
              */
-            std::string toFormattedString(const std::string& format = std::string("%Y-%b-%d %H:%M:%S"),
-                                          const std::string& localTimeZone = std::string("Z")) const;
+            std::string toFormattedString(const std::string& format = "%Y-%b-%d %H:%M:%S",
+                                          const std::string& localTimeZone = "Z") const;
 
             /**
              * Formats to specified format time stored in the object
@@ -226,9 +228,9 @@ namespace karabo {
              * @param localTimeZone - String that represents an ISO8601 time zone [Default: "Z" == UTC]
              * @return formated string in the specified Time Zone
              */
-            std::string toFormattedStringLocale(const std::string& localeName = std::string(""),
-                                                const std::string& format = std::string("%Y-%b-%d %H:%M:%S"),
-                                                const std::string& localTimeZone = std::string("Z")) const;
+            std::string toFormattedStringLocale(const std::string& localeName = "",
+                                                const std::string& format = "%Y-%b-%d %H:%M:%S",
+                                                const std::string& localTimeZone = "Z") const;
 
 
             static bool hashAttributesContainTimeInformation(const Hash::Attributes& attributes);
@@ -248,18 +250,6 @@ namespace karabo {
             void toHashAttributes(Hash::Attributes& attributes) const;
 
            private:
-            /**
-             * Returns timestamp string in "ANY SPECIFIED" format (format must be a valid format)
-             *
-             * @param pt Boost ptime of a specific moment in time
-             * @param facet Boost time_facet to be applied
-             * @param localeName - String that represents the locale to be used
-             * @return The specified date/time formatted according to the specified time_facet
-             */
-            static std::string getPTime2String(const boost::posix_time::ptime pt,
-                                               const boost::posix_time::time_facet* facet,
-                                               const std::string& localeName);
-
             /**
              * Formats to specified format time stored in the object
              *
@@ -284,7 +274,7 @@ namespace karabo {
              * @return ISO 8601 formatted string (extended or compact)
              */
             std::string toIso8601Internal(TIME_UNITS precision = MICROSEC, bool extended = false,
-                                          const std::string& localTimeZone = std::string("Z")) const;
+                                          const std::string& localTimeZone = "") const;
 
 
             /**

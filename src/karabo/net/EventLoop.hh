@@ -29,6 +29,7 @@
 #include <boost/core/noncopyable.hpp>
 #include <boost/function/function_fwd.hpp>
 #include <boost/thread.hpp>
+#include <chrono>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -199,7 +200,7 @@ namespace karabo {
                 service.post(std::forward<Function>(func));
             } else {
                 auto timer = std::make_shared<boost::asio::steady_timer>(service);
-                timer->expires_from_now(boost::asio::chrono::milliseconds(delayMs));
+                timer->expires_after(std::chrono::milliseconds(delayMs));
                 // Bind timer shared_ptr to lambda to keep it alive as long as needed
 #if __cplusplus < 201402L
                 // Pre-C++14 does not support generalized lambda capture

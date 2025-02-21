@@ -23,16 +23,19 @@
 
 #include "Timing_Test.hh"
 
+#include <chrono>
 #include <cstdlib>
 #include <karabo/devices/PropertyTest.hh>
 #include <karabo/net/EventLoop.hh>
 #include <karabo/util/SimpleElement.hh>
 #include <karabo/util/StringTools.hh>
 #include <karabo/util/Trainstamp.hh>
+#include <thread>
 
 #include "PropertyTest_Test.hh"
 
-
+using namespace std::chrono;
+using namespace std::literals::chrono_literals;
 using namespace std;
 
 #define KRB_TEST_MAX_TIMEOUT 10
@@ -126,7 +129,7 @@ void Timing_Test::testWrongPeriod() {
             devices.erase(onlineDeviceId);
         }
         if (devices.empty()) break;
-        boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
+        std::this_thread::sleep_for(100ms);
         timeout -= 100;
     }
 
@@ -138,7 +141,7 @@ void Timing_Test::testWrongPeriod() {
         while (true) {
             if (m_deviceClient->get<bool>("timeTester_" + toString(i), "slot_connected")) break;
             CPPUNIT_ASSERT_MESSAGE("'timeTester_" + toString(i) += "' not yet connected", counter++ < 500);
-            boost::this_thread::sleep_for(boost::chrono::milliseconds(5));
+            std::this_thread::sleep_for(5ms);
         }
     }
 
@@ -148,7 +151,7 @@ void Timing_Test::testWrongPeriod() {
 
     // some time to test the timing
     const unsigned int testDurationInMicrosec = 5432109u;
-    boost::this_thread::sleep_for(boost::chrono::microseconds(testDurationInMicrosec));
+    std::this_thread::sleep_for(microseconds(testDurationInMicrosec));
 
     for (size_t i = nDevices; i >= 1; --i) {
         m_deviceClient->execute("timeTester_" + toString(i), "stop");
@@ -266,7 +269,7 @@ void Timing_Test::testIdReset() {
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(timeServerId, "resetId"));
 
     // Wait for a tick actually sent so this reset gets seen by devices
-    boost::this_thread::sleep_for(boost::chrono::milliseconds(tickPeriodInMs * tickCountdown));
+    std::this_thread::sleep_for(milliseconds(tickPeriodInMs * tickCountdown));
 
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->set(testDevice, "int32Property", 100));
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->get(testDevice, cfg));

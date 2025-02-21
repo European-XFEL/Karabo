@@ -21,12 +21,16 @@
  *
  * Created on October 2, 2016, 1:23 PM
  */
-
 #include "LockTestDevice.hh"
+
+#include <chrono>
+#include <thread>
 
 #include "karabo/net/EventLoop.hh"
 #include "karabo/util/MetaTools.hh"
 
+using namespace std::chrono;
+using namespace std::literals::chrono_literals;
 using namespace std;
 
 USING_KARABO_NAMESPACES
@@ -77,7 +81,7 @@ namespace karabo {
             for (int i = 0; i < 5; ++i) {
                 if (lk.valid()) {
                     remote().set(deviceId, "intProperty", i);
-                    boost::this_thread::sleep_for(boost::chrono::milliseconds(200));
+                    std::this_thread::sleep_for(200ms);
                 }
             }
         } catch (const std::exception& e) {
@@ -105,7 +109,7 @@ namespace karabo {
             for (int i = 0; i < 5; ++i) {
                 if (lk.valid()) {
                     remote().set(deviceId, "intProperty", i);
-                    boost::this_thread::sleep_for(boost::chrono::milliseconds(5000));
+                    std::this_thread::sleep_for(5000ms);
                 }
             }
         } catch (const std::exception& e) {
@@ -154,7 +158,7 @@ namespace karabo {
             for (int i = 0; i < 5; ++i) {
                 Lock lk = remote().lock(deviceId, true, 0);
                 remote().set(deviceId, "intProperty", i);
-                boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
+                std::this_thread::sleep_for(500ms);
             }
         } catch (const std::exception& e) {
             // karabo::util::LockException is likely...
@@ -181,7 +185,7 @@ namespace karabo {
             for (int i = 0; i < 5; ++i) {
                 Lock lk = remote().lock(deviceId, false, 0);
                 remote().set(deviceId, "intProperty", i);
-                boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
+                std::this_thread::sleep_for(500ms);
             }
         } catch (const std::exception& e) {
             // karabo::util::LockException is likely...

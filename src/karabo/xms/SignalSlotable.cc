@@ -26,7 +26,7 @@
 
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
-#include <boost/date_time/time_duration.hpp>
+#include <chrono>
 #include <cstdlib>
 #include <string>
 #include <vector>
@@ -39,6 +39,8 @@
 #include "karabo/util/Validator.hh"
 #include "karabo/util/Version.hh"
 
+using namespace std::chrono;
+using namespace std::literals::chrono_literals;
 using std::placeholders::_1;
 using std::placeholders::_2;
 
@@ -102,7 +104,7 @@ namespace karabo {
 
             // Register a timer and error handler into map
             auto timer = std::make_shared<boost::asio::steady_timer>(EventLoop::getIOService());
-            timer->expires_from_now(boost::asio::chrono::milliseconds(timeout));
+            timer->expires_after(milliseconds(timeout));
             timer->async_wait(bind_weak(&SignalSlotable::receiveAsyncTimeoutHandler, m_signalSlotable,
                                         boost::asio::placeholders::error, m_replyId, errorHandler));
             m_signalSlotable->addReceiveAsyncErrorHandles(m_replyId, timer, errorHandler);
@@ -514,9 +516,7 @@ namespace karabo {
 
 
         long long SignalSlotable::getEpochMillis() const {
-            return std::chrono::duration_cast<std::chrono::milliseconds>(
-                         std::chrono::system_clock::now().time_since_epoch())
-                  .count();
+            return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
         }
 
 
@@ -638,7 +638,7 @@ namespace karabo {
 
         void SignalSlotable::startTrackingSystem() {
             // Countdown and finally timeout registered heartbeats
-            m_trackingTimer.expires_from_now(boost::asio::chrono::milliseconds(10));
+            m_trackingTimer.expires_after(10ms);
             m_trackingTimer.async_wait(bind_weak(&karabo::xms::SignalSlotable::letInstanceSlowlyDieWithoutHeartbeat,
                                                  this, boost::asio::placeholders::error));
         }
@@ -650,7 +650,7 @@ namespace karabo {
 
 
         void SignalSlotable::startPerformanceMonitor() {
-            m_performanceTimer.expires_from_now(boost::asio::chrono::milliseconds(10));
+            m_performanceTimer.expires_after(10ms);
             m_performanceTimer.async_wait(bind_weak(&karabo::xms::SignalSlotable::updatePerformanceStatistics, this,
                                                     boost::asio::placeholders::error));
         }
@@ -683,7 +683,7 @@ namespace karabo {
             } catch (...) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Unknown exception in updatePerformanceStatistics";
             }
-            m_performanceTimer.expires_from_now(boost::asio::chrono::seconds(5));
+            m_performanceTimer.expires_after(5s);
             m_performanceTimer.async_wait(bind_weak(&karabo::xms::SignalSlotable::updatePerformanceStatistics, this,
                                                     boost::asio::placeholders::error));
         }
@@ -1179,7 +1179,7 @@ namespace karabo {
         void SignalSlotable::delayedEmitHeartbeat(int delayInSeconds) {
             // Protect against any bad interval that causes spinning:
             delayInSeconds = (delayInSeconds ? std::abs(delayInSeconds) : 10);
-            m_heartbeatTimer.expires_from_now(boost::asio::chrono::seconds(delayInSeconds));
+            m_heartbeatTimer.expires_after(seconds(delayInSeconds));
             m_heartbeatTimer.async_wait(
                   bind_weak(&karabo::xms::SignalSlotable::emitHeartbeat, this, boost::asio::placeholders::error));
         }
@@ -1202,7 +1202,7 @@ namespace karabo {
             // Lets wait a fair amount of time - huaaah this is bad isn't it :-(
             // Since we block here for a long time, add a thread to ensure that all slotPingAnswer can be processed.
             EventLoop::addThread();
-            std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+            std::this_thread::sleep_for(2000ms);
             EventLoop::removeThread();
             std::lock_guard<std::mutex> lock(m_trackedInstancesMutex);
             KARABO_LOG_FRAMEWORK_DEBUG << "Available instances: " << m_trackedInstances;
@@ -2297,7 +2297,7 @@ namespace karabo {
             }
 
             // We are sleeping five times as long as the count-down ticks (which ticks in seconds)
-            m_trackingTimer.expires_from_now(boost::asio::chrono::seconds(5));
+            m_trackingTimer.expires_after(5s);
             m_trackingTimer.async_wait(bind_weak(&karabo::xms::SignalSlotable::letInstanceSlowlyDieWithoutHeartbeat,
                                                  this, boost::asio::placeholders::error));
         }
@@ -2562,7 +2562,7 @@ namespace karabo {
                                        << toString(channelsToCheck) << "' (" << fullyConnected
                                        << " of them do not need reconnection)";
 
-            m_channelConnectTimer.expires_from_now(boost::asio::chrono::seconds(channelReconnectIntervalSec));
+            m_channelConnectTimer.expires_after(seconds(channelReconnectIntervalSec));
             m_channelConnectTimer.async_wait(
                   bind_weak(&SignalSlotable::connectInputChannels, this, boost::asio::placeholders::error));
         }
@@ -3039,7 +3039,7 @@ namespace karabo {
             try {
                 std::unique_lock<std::mutex> lock(bmc->m_mutex);
                 while (!this->hasReceivedReply(replyId)) {
-                    if (bmc->m_cond.wait_for(lock, std::chrono::milliseconds(timeout)) == std::cv_status::timeout) {
+                    if (bmc->m_cond.wait_for(lock, milliseconds(timeout)) == std::cv_status::timeout) {
                         result = false;
                         break;
                     }

@@ -21,8 +21,10 @@
  *
  * Created on October 14, 2016, 2:30 PM
  */
-
 #include "PipeReceiverDevice.hh"
+
+#include <chrono>
+#include <thread>
 
 #include "karabo/util/Hash.hh"
 #include "karabo/util/NDArray.hh"
@@ -169,7 +171,7 @@ namespace karabo {
         // Sum total number of data
         set("nTotalData", get<unsigned int>("nTotalData") + 1);
         unsigned int processingTime = get<unsigned int>("processingTime");
-        if (processingTime > 0) boost::this_thread::sleep_for(boost::chrono::milliseconds(processingTime));
+        if (processingTime > 0) std::this_thread::sleep_for(std::chrono::milliseconds(processingTime));
     }
 
 
@@ -178,13 +180,17 @@ namespace karabo {
     }
 
     void PipeReceiverDevice::onInputProfile(const xms::InputChannel::Pointer& input) {
+        using namespace std::chrono;
         util::Hash data;
+
+        auto microseconds_today = []() -> unsigned long long {
+            auto now = system_clock::now();
+            return round<microseconds>(now - floor<days>(now)).count();
+        };
 
         for (size_t i = 0; i < input->size(); ++i) {
             input->read(data, i); // clears data before filling
-            unsigned long long transferTime =
-                  boost::posix_time::microsec_clock::local_time().time_of_day().total_microseconds() -
-                  data.get<unsigned long long>("inTime");
+            unsigned long long transferTime = microseconds_today() - data.get<unsigned long long>("inTime");
             m_transferTimes.push_back(transferTime);
             set("nTotalData", get<unsigned int>("nTotalData") + 1);
             const karabo::util::NDArray& arr = data.get<karabo::util::NDArray>("array");

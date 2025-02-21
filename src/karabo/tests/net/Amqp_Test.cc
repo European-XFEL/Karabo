@@ -41,6 +41,8 @@
 #include "karabo/util/StringTools.hh"
 
 using namespace karabo;
+using namespace std::chrono;
+using namespace std::literals::chrono_literals;
 using karabo::tests::waitForCondition;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Amqp_Test);
@@ -152,7 +154,7 @@ void Amqp_Test::testConnection() {
             futs3.push_back(dones3->back().get_future());
             connection->asyncConnect([dones3, i](const boost::system::error_code ec) { dones3->at(i).set_value(ec); });
             // Little sleep to have asyncConnect requests happen in different stages of creation of connection
-            std::this_thread::sleep_for(std::chrono::microseconds(500));
+            std::this_thread::sleep_for(500us);
         }
         for (int i = 0; i < numConcurrentConnect; ++i) {
             CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futs3[i].wait_for(3 * m_timeout));
@@ -200,7 +202,7 @@ void Amqp_Test::testConnection() {
                       else channelPromises->at(i).set_value(errMsg);
                   });
             // Little sleep to have asyncCreateChannel requests happen in different stages of creation of connection
-            std::this_thread::sleep_for(std::chrono::microseconds(500));
+            std::this_thread::sleep_for(500us);
         }
         for (int i = 0; i < numChannels; ++i) {
             CPPUNIT_ASSERT_EQUAL(std::future_status::ready, channelFutures[i].wait_for(m_timeout));
@@ -451,7 +453,7 @@ void Amqp_Test::testClient() {
     }
 
     // Give some time for the fifth message - though it should not come
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(100ms);
     CPPUNIT_ASSERT_EQUAL(4ul, readByBob->size());
 
     //***************************************************************
@@ -470,7 +472,7 @@ void Amqp_Test::testClient() {
                       [](const boost::system::error_code ec) {});
     for (unsigned int i = 0; i < m_timeoutMs; ++i) {
         if (*numReadAlice >= 1) break;
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::sleep_for(1ms);
     }
     CPPUNIT_ASSERT_EQUAL(1, numReadAlice->load());
 
@@ -482,11 +484,11 @@ void Amqp_Test::testClient() {
                       [](const boost::system::error_code ec) {});
     for (unsigned int i = 0; i < m_timeoutMs; ++i) {
         if (*numNewReadAlice >= 1) break;
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::sleep_for(1ms);
     }
     CPPUNIT_ASSERT_EQUAL(1, numNewReadAlice->load());
     // Even with some extra time for message travel, old handler does not receive
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(100ms);
     CPPUNIT_ASSERT_EQUAL(1, numReadAlice->load()); // as before
 
     // Cannot set an invalid read handler
@@ -514,8 +516,8 @@ void Amqp_Test::testClient() {
     CPPUNIT_ASSERT_EQUAL_MESSAGE(ecBobWrite.message(), static_cast<int>(boost::system::errc::success),
                                  ecBobWrite.value());
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Grant some message travel time...
-    CPPUNIT_ASSERT_EQUAL(1, numNewReadAlice->load());            // ...but nothing arrives due to unsubscription!
+    std::this_thread::sleep_for(100ms);               // Grant some message travel time...
+    CPPUNIT_ASSERT_EQUAL(1, numNewReadAlice->load()); // ...but nothing arrives due to unsubscription!
 
     //***************************************************************
     // Test unsubscription of something not subscribed - gives success (though that is debatable)
@@ -557,8 +559,8 @@ void Amqp_Test::testClient() {
     CPPUNIT_ASSERT_EQUAL_MESSAGE(ecBobWrite2.message(), static_cast<int>(boost::system::errc::success),
                                  ecBobWrite2.value());
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Grant some message travel time...
-    CPPUNIT_ASSERT_EQUAL(1, numNewReadAlice->load());            // ...but nothing arrives due to unsubscription!
+    std::this_thread::sleep_for(100ms);               // Grant some message travel time...
+    CPPUNIT_ASSERT_EQUAL(1, numNewReadAlice->load()); // ...but nothing arrives due to unsubscription!
 
     //***************************************************************
     // Test sending a message to an exchange that does not yet exist
@@ -597,7 +599,7 @@ void Amqp_Test::testClient() {
 
     for (unsigned int i = 0; i < m_timeoutMs; ++i) {
         if (*numNewReadAlice >= 2) break;
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::sleep_for(1ms);
     }
     CPPUNIT_ASSERT_EQUAL(2, numNewReadAlice->load());
 }
@@ -638,7 +640,7 @@ void Amqp_Test::testClientConcurrentSubscripts() {
         } else {
             bob->asyncUnsubscribe(exchange, "", callback);
         }
-        std::this_thread::sleep_for(std::chrono::microseconds(500));
+        std::this_thread::sleep_for(500us);
     }
 
     for (size_t i = 0; i < nSubscriptions; ++i) {
@@ -656,9 +658,9 @@ void Amqp_Test::testClientConcurrentSubscripts() {
     // Wait until the one expected message arrived and then 100 ms more for any further
     for (unsigned int i = 0; i < m_timeoutMs; ++i) {
         if (readCount->load() >= 1) break;
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::sleep_for(1ms);
     }
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(100ms);
     // If this fails, something may have gone wrong and the unsubscribe got executed last (How that?):
     CPPUNIT_ASSERT_EQUAL(1, readCount->load());
 }
@@ -777,7 +779,7 @@ void Amqp_Test::testClientSameId() {
             }
         }
         if (allReceivedOne) break;
-        else std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        else std::this_thread::sleep_for(1ms);
     }
     CPPUNIT_ASSERT(allReceivedOne);
 
@@ -860,7 +862,7 @@ void Amqp_Test::testClientUnsubscribeAll() {
     // Wait until they all arrived
     for (unsigned int i = 0; i < m_timeoutMs; ++i) {
         if (readCount->load() >= nSubscriptions) break;
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::sleep_for(1ms);
     }
     CPPUNIT_ASSERT_EQUAL(nSubscriptions, readCount->load());
 
@@ -879,7 +881,7 @@ void Amqp_Test::testClientUnsubscribeAll() {
     }
 
     // Even after sleeping, nothing more has arrived
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(100ms);
     CPPUNIT_ASSERT_EQUAL(nSubscriptions, readCount->load());
 }
 
@@ -927,7 +929,7 @@ void Amqp_Test::testClientTooBigMessage() {
     // Wait until message arrived and check it
     for (unsigned int i = 0; i < m_timeoutMs; ++i) {
         if (readMsg) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(1));
+        std::this_thread::sleep_for(1ms);
     }
     CPPUNIT_ASSERT(readMsg);
     CPPUNIT_ASSERT_EQUAL(supportedSize, readMsg->size());
@@ -946,7 +948,7 @@ void Amqp_Test::testClientTooBigMessage() {
     CPPUNIT_ASSERT_EQUAL(KARABO_ERROR_CODE_IO_ERROR.value(), ec.value());
 
     // Bad message will not arrive - but give it a bit of time
-    boost::this_thread::sleep(boost::posix_time::milliseconds(50));
+    std::this_thread::sleep_for(50ms);
     CPPUNIT_ASSERT(!readMsg);
 
     // Now send again a supported message size.
@@ -961,7 +963,7 @@ void Amqp_Test::testClientTooBigMessage() {
     // Wait until received
     for (unsigned int i = 0; i < m_timeoutMs; ++i) {
         if (readMsg) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(1));
+        std::this_thread::sleep_for(1ms);
     }
     CPPUNIT_ASSERT(readMsg);
     CPPUNIT_ASSERT_EQUAL(11ul, readMsg->size());
@@ -982,7 +984,7 @@ void Amqp_Test::testClientTooBigMessage() {
     CPPUNIT_ASSERT_EQUAL(0, ec.value()); // Unfortunately, success is claimed!
 
     // Bad message will not arrive - but give it a bit of time
-    boost::this_thread::sleep(boost::posix_time::milliseconds(50));
+    std::this_thread::sleep_for(50ms);
     CPPUNIT_ASSERT(!readMsg);
 
     // Unfortunately, it takes a while until the broker/AMQP lib will notice the too big message
@@ -998,7 +1000,7 @@ void Amqp_Test::testClientTooBigMessage() {
         ec = pubFuture.get();
         CPPUNIT_ASSERT_EQUAL(0, ec.value());
         if (readMsg) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(1));
+        std::this_thread::sleep_for(1ms);
     }
     CPPUNIT_ASSERT(readMsg);
     CPPUNIT_ASSERT_EQUAL('e', readMsg->at(0));
@@ -1072,7 +1074,7 @@ void Amqp_Test::testHashClient() {
     CPPUNIT_ASSERT_EQUAL_MESSAGE(bobPubEc.message(), static_cast<int>(boost::system::errc::success), bobPubEc.value());
 
     for (unsigned int i = 0; i < m_timeoutMs; ++i) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::sleep_for(1ms);
         std::scoped_lock lock(*readMutex);
         if (!readHeader->empty() && !readBody->empty()) break;
     }
@@ -1102,7 +1104,7 @@ void Amqp_Test::testHashClient() {
 
     for (unsigned int i = 0; i < m_timeoutMs; ++i) {
         if (readErrorNumber->load() > 0) break;
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::sleep_for(1ms);
     }
     CPPUNIT_ASSERT_EQUAL(1, readErrorNumber->load());
     CPPUNIT_ASSERT_MESSAGE(*readErrorString, !readErrorString->empty()); // no matter what fails

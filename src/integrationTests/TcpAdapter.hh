@@ -27,11 +27,14 @@
 
 #include <boost/lockfree/spsc_queue.hpp>
 #include <boost/thread.hpp>
+#include <chrono>
 #include <future>
+#include <thread>
 
 #include "karabo/karabo.hpp"
 #include "karabo/net/TcpChannel.hh"
 #include "karabo/util/Exception.hh"
+
 
 /**
  * The main Karabo namespace
@@ -96,7 +99,7 @@ namespace karabo {
                     throw KARABO_TIMEOUT_EXCEPTION(msg);
                 }
                 i++;
-                boost::this_thread::sleep_for(boost::chrono::milliseconds(waitTime));
+                std::this_thread::sleep_for(std::chrono::milliseconds(waitTime));
                 if (m_debug) {
                     std::clog << "Have " << m_nextMessageQueues[type]->read_available() << " of " << nMessages
                               << " in queue for '" << type << "'!" << std::endl;
