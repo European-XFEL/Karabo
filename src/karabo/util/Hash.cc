@@ -527,13 +527,9 @@ namespace karabo {
                           (selectedPaths.empty() ? selectedPaths : Hash::selectChildPaths(selectedPaths, key, sep));
                     thisNode->getValue<Hash>().merge(otherNode.getValue<Hash>(), policy, subPaths, sep);
 
-                } else { // Both nodes are vector<Hash>
+                } else { // Both nodes are vector<Hash> which we treat as table
                     // Note that thisNode's attributes are already copied from otherNode!
-                    if (thisNode->hasAttribute(KARABO_SCHEMA_ROW_SCHEMA)) {
-                        Hash::mergeTableElement(otherNode, *thisNode, selectedPaths, sep);
-                    } else {
-                        Hash::mergeVectorHashNodes(otherNode, *thisNode, policy, selectedPaths, sep);
-                    }
+                    Hash::mergeTableElement(otherNode, *thisNode, selectedPaths, sep);
                 }
 
             } // loop on other
@@ -648,41 +644,6 @@ namespace karabo {
                 selectedSourceVec.push_back(*it);
             }
             targetVec.swap(selectedSourceVec);
-        }
-
-
-        void Hash::mergeVectorHashNodes(const Hash::Node& source, Hash::Node& target, Hash::MergePolicy policy,
-                                        const std::set<std::string>& selectedPaths, char separator) {
-            std::vector<Hash>& targetVec = target.getValue<std::vector<Hash>>();
-            const std::vector<Hash>& sourceVec = source.getValue<std::vector<Hash>>();
-            std::set<unsigned int> selectedIndices(
-                  Hash::selectIndicesOfKey(sourceVec.size(), selectedPaths, source.getKey(), separator));
-
-            // Merge Hashes for ordinary vector<Hash>
-            std::set<unsigned int>::const_iterator it = selectedIndices.begin();
-            for (size_t i = 0; i < sourceVec.size(); ++i) {
-                if (!selectedIndices.empty()) {
-                    // Check if the left indices are out of range ...
-                    if (it == selectedIndices.end() || *it >= sourceVec.size()) break;
-                }
-                if (i == targetVec.size()) {
-                    // Align the target vector size with the source one
-                    targetVec.push_back(Hash());
-                }
-                if (selectedIndices.empty()) {
-                    // There cannot be sub-path selections here.
-                    targetVec[i].merge(sourceVec[i], policy, std::set<std::string>(), separator);
-                } else if (selectedIndices.find(i) == selectedIndices.end()) {
-                    // this is not our index -> don't merge!
-                    continue;
-                } else {
-                    // sub-path selection
-                    const std::string indexedKey((source.getKey() + '[') += util::toString(i) += ']');
-                    const std::set<std::string> paths(Hash::selectChildPaths(selectedPaths, indexedKey, separator));
-                    targetVec[i].merge(sourceVec[i], policy, paths, separator);
-                    ++it;
-                }
-            }
         }
 
 
@@ -938,7 +899,7 @@ namespace karabo {
 
 
         void Hash::toStream(std::ostream& os, const Hash& hash, int depth) const {
-            std::string fill(depth * 2, ' ');
+            const std::string fill(depth * 2, ' ');
 
             for (Hash::const_iterator hit = hash.begin(); hit != hash.end(); ++hit) {
                 os << fill << "'" << hit->getKey() << "'";
