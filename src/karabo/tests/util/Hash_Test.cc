@@ -1523,23 +1523,14 @@ void Hash_Test::testMerge() {
 
     // Attributes overwritten by nothing or kept
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Attributes on node kept", 0ul, h1.getAttributes("c.b").size());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Attributes on untouched leaf not kept", 1ul, h1.getAttributes("c.b[0].g").size());
-    CPPUNIT_ASSERT_MESSAGE("Attribute on untouched leaf not kept", h1.hasAttribute("c.b[0].g", "attrKey3"));
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Attribute on untouched leaf changed", 4.,
-                                 h1.getAttribute<double>("c.b[0].g", "attrKey3"));
 
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Number of attributes on node changed (MERGE)", 1ul, h1b.getAttributes("c.b").size());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Number of attributes on leaf changed (MERGE)", 1ul,
-                                 h1b.getAttributes("c.b[0].g").size());
     CPPUNIT_ASSERT_MESSAGE("Attribute on node not kept (MERGE)", h1b.hasAttribute("c.b", "attrKey2"));
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Attribute on node changed (MERGE)", 3, h1b.getAttribute<int>("c.b", "attrKey2"));
-    CPPUNIT_ASSERT_MESSAGE("Attribute on untouched leaf not kept (MERGE)", h1b.hasAttribute("c.b[0].g", "attrKey3"));
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Attribute on untouched leaf changed (MERGE)", 4.,
-                                 h1b.getAttribute<double>("c.b[0].g", "attrKey3"));
 
     CPPUNIT_ASSERT(!h1.has("c.b.d"));
     CPPUNIT_ASSERT(h1.has("c.b[0]"));
-    CPPUNIT_ASSERT(h1.has("c.b[1]"));
+    CPPUNIT_ASSERT_MESSAGE(toString(h1), h1.has("c.b[1]"));
     CPPUNIT_ASSERT(!h1.has("c.b[2]"));
     CPPUNIT_ASSERT(h1.get<int>("c.b[1].d") == 24);
     CPPUNIT_ASSERT(h1.has("c.c[0].d"));
@@ -1612,7 +1603,7 @@ void Hash_Test::testMerge() {
     selectedPaths.insert("h.i");
     selectedPaths.insert(".i[2]");
     selectedPaths.insert(".i[5]"); // check that we tolerate to select path with invalid index
-    h1c.merge(h2, Hash::MERGE_ATTRIBUTES, selectedPaths);
+    CPPUNIT_ASSERT_NO_THROW(h1c.merge(h2, Hash::MERGE_ATTRIBUTES, selectedPaths));
 
     // Keep everything it had before merging:
     CPPUNIT_ASSERT(h1c.has("a"));
@@ -1626,7 +1617,7 @@ void Hash_Test::testMerge() {
     CPPUNIT_ASSERT(h1c.has("b.c"));
     CPPUNIT_ASSERT(h1c.has("g.h.i"));
     CPPUNIT_ASSERT(h1c.has("h.i"));
-    CPPUNIT_ASSERT(h1c.has(".i[2].k.l"));
+    CPPUNIT_ASSERT_MESSAGE(toString(h1c), h1c.has(".i[0].k.l")); // only row 2 (i[2]) selected, which becomes row 0
     // But not the other ones from h2:
     CPPUNIT_ASSERT(!h1c.has("c.b[0].key")); // neither at old position of h2
     CPPUNIT_ASSERT(!h1c.has("c.b[2]"));     // nor an extended vector<Hash> at all
@@ -1644,47 +1635,51 @@ void Hash_Test::testMerge() {
     selectedPaths.clear();
     selectedPaths.insert(""); // trigger merging '.d'
     selectedPaths.insert("e..e[1]");
-    hashTarget.merge(hashSource, Hash::MERGE_ATTRIBUTES, selectedPaths);
+    CPPUNIT_ASSERT_NO_THROW(hashTarget.merge(hashSource, Hash::MERGE_ATTRIBUTES, selectedPaths));
     CPPUNIT_ASSERT(hashTarget.has(".d"));
     CPPUNIT_ASSERT(hashTarget.has("e..e[0]"));
+    CPPUNIT_ASSERT(hashTarget.has("e..e[0].g"));  // the selected e[1] becomes e[0]
     CPPUNIT_ASSERT(!hashTarget.has("e..e[0].f")); // no children of e[0] since e[0] not selected (see test above)
-    CPPUNIT_ASSERT(hashTarget.has("e..e[1]"));
-    CPPUNIT_ASSERT(hashTarget.has("e..e[1].g"));
+    CPPUNIT_ASSERT(!hashTarget.has("e..e[1]"));
 
     Hash hashTargetB("a[1].b", 1, "c", "Does not matter");
     Hash hashTargetC(hashTargetB);
     Hash hashTargetD(hashTargetB);
-    const Hash hashSourceBCD("a[2]", Hash("a", 33, "b", 4.4), "ha", 9, "c[1]", Hash("k", 5, "l", 6), "c[2]",
+    const Hash hashSourceBCD("a[2]", Hash("a", 33, "c", 4.4), "ha", 9, "c[1]", Hash("k", 5, "l", 6), "c[2]",
                              Hash("b", -3), "d[2].b", 66, "e[1]", Hash("1", 1, "2", 2, "3", 3));
     selectedPaths.clear();
     selectedPaths.insert("a"); // trigger merging full vector
     // trigger selecting first HashVec item overwriting what was not a hashVec before, but only keep selected items
-    selectedPaths.insert("c[1].l");
+    selectedPaths.insert("c[1].l"); // for table rows one cannot select keys, i.e. '.l' is ignored
     selectedPaths.insert("d");      // trigger adding full new vector
-    selectedPaths.insert("e[1].2"); // trigger selective adding of hashVec where there was not node before
-    selectedPaths.insert("e[1].3");
-    hashTargetB.merge(hashSourceBCD, Hash::MERGE_ATTRIBUTES, selectedPaths);
-    CPPUNIT_ASSERT(hashTargetB.has("a[1].b"));
+    selectedPaths.insert("e[1].2"); // tabel row 1 is selected - the following '.2' is ignored
+    CPPUNIT_ASSERT_NO_THROW(hashTargetB.merge(hashSourceBCD, Hash::MERGE_ATTRIBUTES, selectedPaths));
+    CPPUNIT_ASSERT(hashTargetB.has("a[0]")); // the empty one merged into it
+    CPPUNIT_ASSERT(!hashTargetB.has("a[0].b"));
+    CPPUNIT_ASSERT(hashTargetB.has("a[1]"));    // dito
+    CPPUNIT_ASSERT(!hashTargetB.has("a[1].b")); // target table a got replaced
     CPPUNIT_ASSERT(hashTargetB.has("a[2].a"));
-    CPPUNIT_ASSERT(hashTargetB.has("a[2].b"));
+    CPPUNIT_ASSERT(hashTargetB.has("a[2].c"));
     CPPUNIT_ASSERT(!hashTargetB.has("a[3]"));
     CPPUNIT_ASSERT(hashTargetB.has("c[0]"));
-    CPPUNIT_ASSERT(!hashTargetB.has("c[0].k"));
-    CPPUNIT_ASSERT(hashTargetB.has("c[1].l"));
+    CPPUNIT_ASSERT_MESSAGE(toString(hashTargetB), hashTargetB.has("c[0].k"));
+    CPPUNIT_ASSERT(hashTargetB.has("c[0].l"));
     CPPUNIT_ASSERT(hashTargetB.has("d[2].b"));
     CPPUNIT_ASSERT(!hashTargetB.has("d[3]"));
     CPPUNIT_ASSERT(hashTargetB.has("e[0]"));
-    CPPUNIT_ASSERT(hashTargetB.has("e[1].2"));
-    CPPUNIT_ASSERT(hashTargetB.has("e[1].3"));
+    CPPUNIT_ASSERT(hashTargetB.has("e[0].1"));
+    CPPUNIT_ASSERT(hashTargetB.has("e[0].2"));
+    CPPUNIT_ASSERT(hashTargetB.has("e[0].3"));
 
     selectedPaths.clear();
     selectedPaths.insert("a[0]");
     selectedPaths.insert("a[2].b"); // trigger selective vector items
     selectedPaths.insert("c");      // trigger overwriting with complete vector
     hashTargetC.merge(hashSourceBCD, Hash::MERGE_ATTRIBUTES, selectedPaths);
-    CPPUNIT_ASSERT(hashTargetC.has("a[1].b"));
-    CPPUNIT_ASSERT(!hashTargetC.has("a[3]"));
-    CPPUNIT_ASSERT(hashTargetC.has("a[2].b"));
+    CPPUNIT_ASSERT(!hashTargetC.has("a[1].b")); // all table rows are overwritten
+    CPPUNIT_ASSERT(hashTargetC.has("a[1].a"));
+    CPPUNIT_ASSERT(hashTargetC.has("a[1].c"));
+    CPPUNIT_ASSERT(!hashTargetC.has("a[2]"));
     CPPUNIT_ASSERT(hashTargetC.has("c[1].k"));
     CPPUNIT_ASSERT(hashTargetC.has("c[1].l"));
     CPPUNIT_ASSERT(hashTargetC.has("c[2].b"));
@@ -1701,13 +1696,11 @@ void Hash_Test::testMerge() {
     CPPUNIT_ASSERT_MESSAGE("Selecting only invalid indices changed something", similar(copyD, hashTargetD));
 
     ////////////////////////////////////////////////////////////////////////////////////
-    // Add test with merges of vector<Hash> marked as a table
+    // Few more tests for a table
     const Hash targetTemplate("table", std::vector<Hash>({Hash("a", 1, "b", "1"), Hash("a", 12, "b", "12")}));
     Hash source("table", std::vector<Hash>(
                                {Hash("a", 101, "b", "101"), Hash("a", 102, "b", "102"), Hash("a", 103, "b", "103")}));
-    source.setAttribute("table", "rowSchema", true); // mark vector<Hash> as a table
 
-    // Merging tables replaces complete vector<Hash>
     Hash target1(targetTemplate);
     target1.merge(source);
     CPPUNIT_ASSERT_MESSAGE(toString(target1), target1.fullyEquals(source));
@@ -1733,7 +1726,7 @@ void Hash_Test::testSubtract() {
     h1 -= h2;
     CPPUNIT_ASSERT(h1.has("a") == false);
     CPPUNIT_ASSERT(h1.get<Hash>("b").empty() == true);
-    CPPUNIT_ASSERT(h1.get<int>("c.b[0].g") == 3);
+    CPPUNIT_ASSERT(!h1.has("c.b[0].g"));
     CPPUNIT_ASSERT(!h1.has("c.b[1]"));
     CPPUNIT_ASSERT(h1.get<int>("c.c[0].d") == 4);
     CPPUNIT_ASSERT(h1.get<int>("c.c[1].a.b.c") == 6);
