@@ -1,12 +1,10 @@
 import json
 from ast import literal_eval
 
-import pytest
 from qtpy.QtCore import Qt
 from qtpy.QtNetwork import QNetworkReply, QNetworkRequest
 
 from karabogui import access as krb_access
-from karabogui.const import IS_WINDOWS_SYSTEM
 from karabogui.dialogs.reactive_login_dialog import (
     AccessCodeWidget, LoginType, ReactiveLoginDialog, TemporarySessionDialog)
 from karabogui.singletons.configuration import Configuration
@@ -77,8 +75,6 @@ def test_refresh_token(gui_app, mocker):
         assert mocked_method.call_count
 
 
-@pytest.mark.skipif(IS_WINDOWS_SYSTEM,
-                    reason="issue with configuration singletons")
 def test_refresh_authentication(gui_app, mocker):
     """With REFRESH_TOKEN, the login dialog should call the correct post
     request."""
@@ -132,8 +128,6 @@ def test_access_code_login(gui_app, mocker):
         assert post_access_code.call_count == 1
 
 
-@pytest.mark.skipif(IS_WINDOWS_SYSTEM,
-                    reason="issue with configuration singletons")
 def test_authReply(gui_app, mocker):
     configuration = Configuration()
     with singletons(configuration=configuration):
