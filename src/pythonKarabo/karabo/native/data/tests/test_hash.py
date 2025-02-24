@@ -475,11 +475,37 @@ def test_is_equal():
     assert not is_equal("bar", "foo")
     assert is_equal([1, 2, 3, 7, 8], [1, 2, 3, 7, 8])
     assert not is_equal([1, 2, 3, 8], [1, 2, 3, 9])
+    # Vectors are different
+    assert not is_equal(np.array([1, 2, 3, 8]), np.array([1, 2, 3, 9]))
+    assert is_equal(np.array([1, 2, 3, 8]), np.array([1, 2, 3, 8]))
+    # Shape mismatch of arrays
+    assert not is_equal(np.array([1, 2, 3, 8, 1]), np.array([1, 2, 3, 8]))
+    # Type mismatch, but values are correct
+    assert is_equal(np.array([1, 2, 3, 8, 1]), [1, 2, 3, 8, 1])
+    # Unequal types and length
+    assert not is_equal(np.array([1, 2, 3, 8]), [1, 2, 3, 8, 1])
+    # Array comparison with other values
+    assert not is_equal(np.array([1, 2, 3, 8, 1]), 1)
+    assert not is_equal(np.array([1, 2, 3, 8, 1]), "")
+    assert not is_equal(np.array([1, 2, 3, 8, 1]), True)
+    assert not is_equal(np.array([1, 2, 3, 8, 1]), None)
+
     h = Hash("value", "None")
     assert is_equal(Schema(name="foo", hash=h), Schema(name="foo", hash=h))
     assert not is_equal(Schema(name="bar", hash=h), Schema(name="foo", hash=h))
     assert not is_equal(Schema(name="foo", hash=h),
                         Schema(name="foo", hash=Hash()))
+    assert is_equal(Schema(name="test", hash=h), Schema(name="test", hash=h))
+
+    hh = Hash("value", "None", "position", 1,
+              "schema", Schema(name="foo", hash=h))
+    assert is_equal(hh, hh)
+
+    # Compare numpy values
+    assert is_equal(np.uint8(1), np.uint8(1))
+    assert is_equal(np.uint8(1), np.uint16(1))
+    assert is_equal(np.uint8(1), np.uint32(1))
+    assert is_equal(np.uint8(1), np.uint64(1))
 
 
 def test_merge():
