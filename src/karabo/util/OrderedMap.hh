@@ -613,7 +613,7 @@ namespace karabo {
         }
 
         template <class KeyType, class MappedType>
-        inline OrderedMap<KeyType, MappedType>::map_iterator OrderedMap<KeyType, MappedType>::erase(
+        inline typename OrderedMap<KeyType, MappedType>::map_iterator OrderedMap<KeyType, MappedType>::erase(
               const map_iterator& it) {
             // it must be valid!
             m_listNodes.remove(&it->second);
