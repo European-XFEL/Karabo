@@ -18,16 +18,20 @@
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
 #############################################################################
+from pathlib import Path
 
 from qtpy.QtSvg import QSvgWidget
 from traits.api import Instance
 
-from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.scenemodel.api import GlobalAlarmModel
+from karabogui import icons
 from karabogui.binding.api import StringBinding, get_binding_value
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller, with_display_type)
 from karabogui.indicators import get_alarm_svg
+
+ICON_PATH = Path(icons.__file__).parent
+SVG_OFFLINE = str(ICON_PATH.joinpath("statusOffline.svg"))
 
 
 @register_binding_controller(ui_name="Alarm Widget",
@@ -44,25 +48,15 @@ class DisplayAlarm(BaseBindingController):
         return widget
 
     def add_proxy(self, proxy):
-        """Add an alarm condition proxy to the widget"""
-        if proxy.binding is None:
-            return True
-        if not proxy.binding.display_type == "AlarmCondition":
-            return False
+        # XXX: Only for backward compatibility
+        return False
 
-        self._update_alarm_widget(proxy)
-        return True
-
-    def _update_alarm_widget(self, proxy=None):
-        widget_alarms = [AlarmCondition(get_binding_value(p, "none"))
-                         for p in self.proxies]
-        if proxy is not None:
-            widget_alarms.append(
-                AlarmCondition(get_binding_value(proxy, "none")))
-        widget_alarms.sort()
-        alarm_type = widget_alarms[-1].asString()
-        svg = get_alarm_svg(alarm_type)
-        self.widget.load(svg)
+    def clear_widget(self):
+        self.widget.load(SVG_OFFLINE)
 
     def value_update(self, proxy):
-        self._update_alarm_widget()
+        value = get_binding_value(proxy)
+        svg = get_alarm_svg(value)
+        if svg is None:
+            svg = SVG_OFFLINE
+        self.widget.load(svg)
