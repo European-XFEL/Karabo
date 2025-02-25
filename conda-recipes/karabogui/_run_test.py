@@ -23,7 +23,7 @@ def run(module, generate_coverage=False):
     opts = ["-v", "--disable-warnings", "--pyargs",
             f"--junitxml=junit.{module}.xml", module]
     if generate_coverage:
-        opts.extend([f"--cov={module}", "--cov-report", "term",
+        opts.extend(["--cov-report", "term",
                      "--cov-report", "xml"])
     return pytest.main(opts)
 
