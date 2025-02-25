@@ -22,8 +22,6 @@ from qtpy import uic
 from qtpy.QtCore import Slot
 from qtpy.QtWidgets import QDialog, QDialogButtonBox
 
-import karabogui.access as krb_access
-from karabo.native import AccessLevel
 from karabogui.singletons.api import get_topology
 from karabogui.util import InputValidator
 
@@ -123,23 +121,9 @@ class DeviceHandleDialog(QDialog):
         """Get all available plugins of `systemTopology` for the given
         ``device_server_id``
         """
-        available_plugins = set()
-
-        def visitor(node):
-            if device_server_id != node.node_id:
-                return
-            attrs = node.attributes
-            for class_id, visibility in zip(attrs.get('deviceClasses', []),
-                                            attrs.get('visibilities', [])):
-                # Admin devices can only be created differently
-                if AccessLevel(visibility) is AccessLevel.ADMIN:
-                    continue
-                # Only show accessible plugins depending on global access level
-                if AccessLevel(visibility) > krb_access.GLOBAL_ACCESS_LEVEL:
-                    continue
-                available_plugins.add(class_id)
-
-        get_topology().visit_system_tree(visitor)
+        attrs = get_topology().get_attributes(f"server.{device_server_id}")
+        attrs = attrs if attrs is not None else {}
+        available_plugins = attrs.get("deviceClasses", [])
         return sorted(available_plugins)
 
     def _update_config_widgets(self, dev_config_model):
