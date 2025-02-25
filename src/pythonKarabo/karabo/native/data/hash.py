@@ -143,7 +143,7 @@ class Hash(OrderedDict):
                     except (ValueError, TypeError):
                         hash_type = "Unknown"
                     yield (tabular * n + f"{key}{attrs!r}: "
-                           f"{value!r} => {hash_type}\n")
+                                         f"{value!r} => {hash_type}\n")
 
         return f"<\n{''.join(_pretty_generator(self))}>"
 
@@ -532,7 +532,7 @@ class HashList(list):
     def _safe_repr(self):
         """A safe repr wrapper to convert ndarray (vectors) to lists"""
         return [{k: v.tolist() if isinstance(v, np.ndarray) else v
-                for k, v in row.items()} for row in self]
+                 for k, v in row.items()} for row in self]
 
     def __repr__(self):
         """Return the pretty representation of a HashList"""
@@ -586,6 +586,15 @@ class Schema:
         for k in self.hash.paths(intermediate=True):
             if alias == self.hash[k, ...].get("alias", None):
                 return k
+
+    def __eq__(self, other):
+        if (other.__class__ is self.__class__
+                and other.name == self.name and other.hash == self.hash):
+            return True
+        return False
+
+    def __hash__(self):
+        return id(self)
 
     def getValueType(self, key):
         return XML_TYPE_TO_HASH_TYPE[self.hash[key, "valueType"]]
@@ -701,19 +710,16 @@ def _get_hash_num_from_data(data):
 
 
 def is_equal(a, b):
-    """A compare function deals with element-wise comparison result and
-    Schema object comparison
-    """
-    type_check = map(lambda x: isinstance(x, Schema), (a, b))
-    if any(type_check):
-        if all(type_check):
-            # Compare Schema objects' names and hashes
-            return a.name == b.name and a.hash == b.hash
-        else:
-            # one of a, b is not Schema, simply return False
-            return False
-    res = (a == b)
-    # comparison of numpy arrays result in an array
+    """A compare function deals with element-wise comparison"""
+    try:
+        res = (a == b)
+    except ValueError:
+        # If shapes can't be broadcasted together, we have a dimension
+        # mismatch of ndarrays
+        array_check = map(lambda x: isinstance(x, np.ndarray), (a, b))
+        assert any(array_check)
+        return False
+
     return all(res) if isinstance(res, Iterable) else res
 
 
