@@ -1,7 +1,7 @@
 [requires]
 
 # Be aware that many will need to be built from source because of C++14 standard,
-# C++11 ABI compatability. This only happens once though, as conan then haufs
+# C++11 ABI compatibility. This only happens once though, as conan then keeps
 # cached versions
 
 # exact
@@ -15,7 +15,7 @@ gtest/1.11.0
 nlohmann_json/3.7.3
 spdlog/1.14.1
 zeromq/4.3.2
-xz_utils/5.4.5
+
 
 # patch-any
 fftw/3.3.8
