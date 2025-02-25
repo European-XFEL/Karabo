@@ -115,10 +115,10 @@ def test_icon_command_state_change(gui_app):
     assert controller._button.isEnabled()
 
     controller.setEnabled(False)
-    assert not controller.widget.isEnabled()
+    assert not controller._button.isEnabled()
 
     controller.setEnabled(True)
-    assert controller.widget.isEnabled()
+    assert controller._button.isEnabled()
 
 
 def test_icon_command_icon_change(icon_command_setup, mocker):
