@@ -147,4 +147,4 @@ class DisplayIconCommand(BaseBindingController):
 
     def setEnabled(self, enable):
         """Reimplemented to account for access level changes"""
-        self.widget.setEnabled(enable)
+        self._button.setEnabled(enable)
