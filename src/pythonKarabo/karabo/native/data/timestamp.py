@@ -14,7 +14,7 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from functools import total_ordering
 
 import dateutil.parser
@@ -111,7 +111,9 @@ class Timestamp:
 
         :param sep: unicode character to separate date and time, default is 'T'
         :param timespec: specifies the number of additional components
-                         of the time to include, defaults to 'auto'
+                         of the time to include, defaults to 'auto'.
+                         Further options are 'hours', 'minutes', 'seconds',
+                         'milliseconds' and 'microseconds'
         """
         return datetime.fromtimestamp(self.toTimestamp()).isoformat(
             sep, timespec=timespec)
@@ -132,7 +134,8 @@ class Timestamp:
 
     def __repr__(self):
         """Return the time as an ISO 8601 string in UTC"""
-        ts = datetime.utcfromtimestamp(self.toTimestamp())
+        ts = datetime.fromtimestamp(
+            self.toTimestamp(), tz=timezone.utc).replace(tzinfo=None)
         return ts.isoformat() + " UTC"
 
     def __add__(self, other):
