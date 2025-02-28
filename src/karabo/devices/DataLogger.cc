@@ -138,7 +138,7 @@ namespace karabo {
 
 
         DataLogger::DataLogger(const Hash& input)
-            : karabo::core::Device<>(input), m_flushDeadline(karabo::net::EventLoop::getIOService()) {
+            : karabo::core::Device(input), m_flushDeadline(karabo::net::EventLoop::getIOService()) {
             // start "flush" actor ...
             input.get("flushInterval", m_flushInterval); // in seconds
 

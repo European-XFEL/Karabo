@@ -72,7 +72,7 @@ using karabo::xms::SLOT_ELEMENT;
 static void assertChildNodesEmpty(const Hash& h);
 
 const std::string fakeClassVersion("FakePackage-1.2.3");
-class TestDevice : public karabo::core::Device<> {
+class TestDevice : public karabo::core::Device {
    public:
     KARABO_CLASSINFO(TestDevice, "TestDevice", fakeClassVersion)
 
@@ -188,7 +188,7 @@ class TestDevice : public karabo::core::Device<> {
     }
 
 
-    TestDevice(const karabo::util::Hash& input) : karabo::core::Device<>(input) {
+    TestDevice(const karabo::util::Hash& input) : karabo::core::Device(input) {
         // Bind to a slot what now is called from deviceServer:
         KARABO_SLOT(slotTimeTick, unsigned long long /*id*/, unsigned long long /*sec*/, unsigned long long /*frac*/,
                     unsigned long long /*period*/)
@@ -333,12 +333,12 @@ class TestDevice : public karabo::core::Device<> {
     }
 };
 
-KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, TestDevice)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device, TestDevice)
 
 
 // =================================================================================
 
-class TestDeviceBadInit : public karabo::core::Device<> {
+class TestDeviceBadInit : public karabo::core::Device {
    public:
     KARABO_CLASSINFO(TestDeviceBadInit, "TestDeviceBadInit", "2.9")
 
@@ -360,7 +360,7 @@ class TestDeviceBadInit : public karabo::core::Device<> {
     }
 
 
-    TestDeviceBadInit(const karabo::util::Hash& input) : karabo::core::Device<>(input) {
+    TestDeviceBadInit(const karabo::util::Hash& input) : karabo::core::Device(input) {
         KARABO_INITIAL_FUNCTION(initialize);
     }
 
@@ -388,7 +388,7 @@ class TestDeviceBadInit : public karabo::core::Device<> {
     }
 };
 
-KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, TestDeviceBadInit)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device, TestDeviceBadInit)
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Device_Test);
 
@@ -1606,7 +1606,7 @@ void Device_Test::testSetVectorUpdate() {
     const int timeoutInMs = 10000;
     const std::string deviceId("TestDevice");
 
-    using VectorUpdate = karabo::core::Device<karabo::core::NoFsm>::VectorUpdate;
+    using VectorUpdate = karabo::core::Device::VectorUpdate;
 
     Hash hash;
     CPPUNIT_ASSERT_NO_THROW(

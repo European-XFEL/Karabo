@@ -33,7 +33,6 @@
 #include <vector>
 
 #include "Device.hh"
-#include "FsmMacros.hh"
 #include "karabo/log/Logger.hh"
 #include "karabo/net/Strand.hh"
 #include "karabo/util/Configurator.hh"
@@ -128,60 +127,21 @@ namespace karabo {
              */
             bool isRunning() const;
 
+            void autostartDevices();
 
-            /**************************************************************/
-            /*                 Special Functions                          */
+            /**
+             * This function was called before in case of error events in FSM. Now it is a candidate
+             * to be removed since we don't have any references to it in DeviceServer code.
+             * @param user level error message
+             * @param detail level error message
+             */
+            void errorFoundAction(const std::string& user, const std::string& detail);
 
-            /**************************************************************/
-
-            KARABO_FSM_ON_EXCEPTION(errorFound)
-
-            KARABO_FSM_NO_TRANSITION_V_ACTION(noStateTransition)
-
-            KARABO_FSM_ON_CURRENT_STATE_CHANGE(onStateUpdate)
-
-
-            /**************************************************************/
-            /*                        Events                              */
-            /**************************************************************/
-
-            KARABO_FSM_EVENT2(m_fsm, ErrorFoundEvent, errorFound, std::string, std::string)
-
-            KARABO_FSM_EVENT0(m_fsm, ResetEvent, reset)
-
-            /**************************************************************/
-            /*                        States                              */
-            /**************************************************************/
-
-            KARABO_FSM_STATE_V_E(NORMAL, okStateOnEntry)
-
-            KARABO_FSM_STATE(ERROR)
-
-            /**************************************************************/
-            /*                    Transition Actions                      */
-            /**************************************************************/
-
-            KARABO_FSM_V_ACTION2(ErrorFoundAction, errorFoundAction, std::string, std::string);
-
-            /**************************************************************/
-            /*                      Top Machine                         */
-            /**************************************************************/
-
-            //  Source-State    Event        Target-State    Action         Guard
-
-            KARABO_FSM_TABLE_BEGIN(StateMachineTransitionTable)
-            Row<NORMAL, ErrorFoundEvent, ERROR, ErrorFoundAction, none>, Row<ERROR, ResetEvent, NORMAL, none, none>,
-                  Row<ERROR, ErrorFoundEvent, ERROR, ErrorFoundAction, none> KARABO_FSM_TABLE_END
-
-
-                  //                       Name          Transition-Table             Initial-State Context
-                  KARABO_FSM_STATE_MACHINE(StateMachine, StateMachineTransitionTable, NORMAL, Self)
-
-
-                        void startFsm() {
-                KARABO_FSM_CREATE_MACHINE(StateMachine, m_fsm);
-                KARABO_FSM_SET_CONTEXT_TOP(this, m_fsm)
-                KARABO_FSM_START_MACHINE(m_fsm)
+            /**
+             * It just launches devices that marked to be started by server automatically.
+             */
+            void startInitialActions() {
+                autostartDevices();
             }
 
            private: // Functions
@@ -190,8 +150,6 @@ namespace karabo {
             void slotStartDevice(const karabo::util::Hash& configuration);
 
             void startDevice(const karabo::util::Hash& configuration, const SignalSlotable::AsyncReply& reply);
-
-            void onStateUpdate(const karabo::util::State& currentState);
 
             void loadLogger(const karabo::util::Hash& input);
 
@@ -244,8 +202,6 @@ namespace karabo {
             void timeTick(const boost::system::error_code ec, unsigned long long newId);
 
             void onBroadcastMessage(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
-
-            KARABO_FSM_DECLARE_MACHINE(StateMachine, m_fsm);
         };
 
     } // namespace core

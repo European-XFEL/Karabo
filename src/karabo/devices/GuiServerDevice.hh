@@ -55,7 +55,7 @@ namespace karabo {
          * the distributed system and pushes them to the clients. Conversly, it handles requests
          * by clients and passes them on to devices in the distributed system.
          */
-        class GuiServerDevice : public karabo::core::Device<> {
+        class GuiServerDevice : public karabo::core::Device {
             struct DeviceInstantiation {
                 std::weak_ptr<karabo::net::Channel> channel;
                 karabo::util::Hash hash;

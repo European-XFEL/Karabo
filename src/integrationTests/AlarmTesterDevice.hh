@@ -32,7 +32,7 @@
  */
 namespace karabo {
 
-    class AlarmTester : public karabo::core::Device<> {
+    class AlarmTester : public karabo::core::Device {
        public:
         // Add reflection information and Karabo framework compatibility to this class
         KARABO_CLASSINFO(AlarmTester, "AlarmTester", "2.0")

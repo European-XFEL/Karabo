@@ -62,7 +62,7 @@ namespace karabo {
         }
 
 
-        DataLogReader::DataLogReader(const Hash& input) : karabo::core::Device<>(input) {
+        DataLogReader::DataLogReader(const Hash& input) : karabo::core::Device(input) {
             KARABO_INITIAL_FUNCTION(initialize)
             KARABO_SLOT(slotGetPropertyHistory, string /*deviceId*/, string /*key*/, Hash /*params*/);
             KARABO_SLOT(slotGetConfigurationFromPast, string /*deviceId*/, string /*timepoint*/);
