@@ -37,7 +37,7 @@ USING_KARABO_NAMESPACES;
 namespace karabo {
 
 
-    KARABO_REGISTER_FOR_CONFIGURATION(BaseDevice, Device<>, P2PSenderDevice)
+    KARABO_REGISTER_FOR_CONFIGURATION(BaseDevice, Device, P2PSenderDevice)
 
     void P2PSenderDevice::expectedParameters(Schema& expected) {
         OVERWRITE_ELEMENT(expected)
@@ -139,7 +139,7 @@ namespace karabo {
     }
 
 
-    P2PSenderDevice::P2PSenderDevice(const Hash& config) : Device<>(config), m_stopWriting(true) {
+    P2PSenderDevice::P2PSenderDevice(const Hash& config) : Device(config), m_stopWriting(true) {
         KARABO_SLOT0(write);
         KARABO_SLOT0(stop);
 

@@ -51,7 +51,7 @@ namespace karabo {
          * methods.
          *
          */
-        class DataLogReader : public karabo::core::Device<> {
+        class DataLogReader : public karabo::core::Device {
            public:
             KARABO_CLASSINFO(DataLogReader, "DataLogReader", "karabo-" + karabo::util::Version::getVersion())
 

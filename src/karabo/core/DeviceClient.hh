@@ -47,7 +47,6 @@ namespace karabo {
     namespace core {
 
         // Forward
-        template <class T>
         class Device;
 
         /**
@@ -65,7 +64,6 @@ namespace karabo {
          * it then shares the SignalSlotable instance of the device, e.g. there is no instantiation overhead.
          */
         class DeviceClient : public std::enable_shared_from_this<DeviceClient> {
-            template <class T>
             friend class Device;
 
             /// keys are instance IDs, values are a sets of properties that changed

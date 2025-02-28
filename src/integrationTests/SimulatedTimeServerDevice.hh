@@ -31,7 +31,7 @@
  */
 namespace karabo {
 
-    class SimulatedTimeServerDevice : public karabo::core::Device<> {
+    class SimulatedTimeServerDevice : public karabo::core::Device {
        public:
         // Add reflection information and Karabo framework compatibility to this class
         KARABO_CLASSINFO(SimulatedTimeServerDevice, "SimulatedTimeServerDevice", "2.0")

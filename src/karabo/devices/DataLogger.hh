@@ -116,7 +116,7 @@ namespace karabo {
          * but can also dynamically changed by the slots slotTagDeviceToBeDiscontinued and slotAddDevicesToBeLogged.
          * When the logger is ready to log data, its state changes from INIT to NORMAL.
          */
-        class DataLogger : public karabo::core::Device<> {
+        class DataLogger : public karabo::core::Device {
            protected:
             // https://www.quora.com/Is-it-thread-safe-to-write-to-distinct-keys-different-key-for-each-thread-in-a-std-map-in-C-for-keys-that-have-existing-entries-in-the-map
             typedef std::unordered_map<std::string, DeviceData::Pointer> DeviceDataMap;

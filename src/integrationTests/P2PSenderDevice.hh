@@ -29,7 +29,7 @@
 
 namespace karabo {
 
-    class P2PSenderDevice : public karabo::core::Device<> {
+    class P2PSenderDevice : public karabo::core::Device {
        public:
         KARABO_CLASSINFO(P2PSenderDevice, "P2PSenderDevice", "2.0")
 

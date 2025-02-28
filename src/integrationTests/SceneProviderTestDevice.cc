@@ -32,14 +32,14 @@ USING_KARABO_NAMESPACES
 namespace karabo {
 
 
-    KARABO_REGISTER_FOR_CONFIGURATION(BaseDevice, Device<>, SceneProviderTestDevice)
+    KARABO_REGISTER_FOR_CONFIGURATION(BaseDevice, Device, SceneProviderTestDevice)
 
     void SceneProviderTestDevice::expectedParameters(Schema& expected) {
         VECTOR_STRING_ELEMENT(expected).key("availableScenes").readOnly().initialValue(std::vector<string>()).commit();
     }
 
 
-    SceneProviderTestDevice::SceneProviderTestDevice(const karabo::util::Hash& config) : Device<>(config) {
+    SceneProviderTestDevice::SceneProviderTestDevice(const karabo::util::Hash& config) : Device(config) {
         KARABO_INITIAL_FUNCTION(initialize);
         registerSlot<karabo::util::Hash>(boost::bind(&SceneProviderTestDevice::slotGetScenes, this, _1),
                                          "slotGetScenes");

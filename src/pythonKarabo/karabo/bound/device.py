@@ -40,12 +40,11 @@ from .configurator import Configurator
 from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 # Use patched DeviceClient, not the one directly from bound_tool:
 from .device_client import DeviceClient
-from .no_fsm import NoFsm
 
 
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("PythonDevice", karaboVersion)
-class PythonDevice(NoFsm):
+class PythonDevice:
     """The PythonDevice class is the basis for all karabo.bound devices
 
     Devices implemented in the karabo.bound API should derive from this
@@ -306,7 +305,7 @@ class PythonDevice(NoFsm):
         """
         if configuration is None:
             raise ValueError("Configuration must be Hash object, not None")
-        super().__init__(configuration)
+        super().__init__()
 
         self._parameters = configuration
         if "_serverId_" in self._parameters:
@@ -449,6 +448,19 @@ class PythonDevice(NoFsm):
 
         self._ss.registerBrokerErrorHandler(self.onBrokerError)
 
+        # Initial functions one can register
+        self._func = []
+
+    def registerInitialFunction(self, func):
+        self._func.append(func)
+
+    def startInitialFunctions(self):
+        """Start initial functions: second constructors(?)"""
+        # call initial function registered in the device constructor
+        # in registration's order
+        for f in self._func:
+            f()
+
     def _finalizeInternalInitialization(self):
         # Start - after all settings/registrations done:
         # Communication (incl. system registration) starts and thus parallelism
@@ -467,13 +479,11 @@ class PythonDevice(NoFsm):
         # Trigger connection of input channels
         self._ss.connectInputChannels()
 
-        # A Failing FSM start (e.g. calling the registered initialisation
-        # methods) will not stop the device, so we post it on the event
-        # loop and take care of exceptions.
-        # If an exception occurs, we will kill it
+        # Am attempt to start initial functions a.k.a second constructor if any
+        # via event loop. If an exception occurs, we will kill it
         def wrapStartFsm():
             try:
-                self.startFsm()
+                self.startInitialFunctions()
             except Exception as e:
                 msg = f"{repr(e)} in initialisation"
                 self.log.ERROR(msg)
@@ -483,11 +493,12 @@ class PythonDevice(NoFsm):
         # As long as the below connect(..) to the time server is not turned
         # into a non-blocking asyncConnect(..), we better add a thread here:
         # Otherwise, we can get into trouble if the init function (registered
-        # by the device coder and called from self.startFsm() above) also does
-        # some synchronous operation (e.g. another connect(..)):
+        # by the device coder and called from self.startInitialFunctions()
+        # above) also does some synchronous operation (e.g. another
+        # connect(..)):
         # Both operations block at the same time and we have only two threads
-        # (main one and one from our SignalSlotable), so the blocking cannot be
-        # resolved and thus both actions time out.
+        # (main one and one from our SignalSlotable), so the blocking cannot
+        # be resolved and thus both actions time out.
         EventLoop.addThread()
         EventLoop.post(wrapStartFsm)
 

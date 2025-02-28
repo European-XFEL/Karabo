@@ -27,28 +27,10 @@
 
 #include <memory>
 #include <string>
-// back-end
-#include <boost/msm/back/state_machine.hpp>
-// front-end
-#include <boost/msm/front/state_machine_def.hpp>
-// functors
-#include <boost/msm/front/euml/common.hpp>
-#include <boost/msm/front/functor_row.hpp>
-// for And_ operator
-#include <boost/msm/front/euml/operator.hpp>
-// for func_state and func_state_machine
-#include <boost/msm/front/euml/state_grammar.hpp>
-#include <boost/preprocessor/arithmetic/sub.hpp>
-#include <boost/preprocessor/cat.hpp>
 
 #include "Worker.hh"
 #include "karabo/util/State.hh"
 
-// Allow boost msm names appear globally in karabo namespace
-namespace karabo {
-    using boost::msm::front::none;
-    using boost::msm::front::Row;
-} // namespace karabo
 
 namespace karabo {
     namespace core {
@@ -108,11 +90,6 @@ namespace karabo {
             void setContained(bool isContained) {
                 m_isContained = isContained;
             }
-
-            // Signature of the accept function
-            typedef boost::msm::back::args<void, std::shared_ptr<StateVisitor>, bool> accept_sig;
-
-            // This makes states polymorphic
 
             virtual ~FsmBaseState() {}
 

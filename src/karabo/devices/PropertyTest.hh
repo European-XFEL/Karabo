@@ -58,7 +58,7 @@ namespace karabo {
          *        in it's expected parameter section. It is a test device to
          *        assure changes to the framework do not result in broken types.
          */
-        class PropertyTest : public karabo::core::Device<> {
+        class PropertyTest : public karabo::core::Device {
            public:
             KARABO_CLASSINFO(PropertyTest, "PropertyTest", "karabo-" + karabo::util::Version::getVersion())
 

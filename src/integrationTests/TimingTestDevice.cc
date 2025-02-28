@@ -34,7 +34,7 @@ USING_KARABO_NAMESPACES
 namespace karabo {
 
 
-    KARABO_REGISTER_FOR_CONFIGURATION(BaseDevice, Device<>, TimingTestDevice)
+    KARABO_REGISTER_FOR_CONFIGURATION(BaseDevice, Device, TimingTestDevice)
 
     void TimingTestDevice::expectedParameters(Schema& expected) {
         SLOT_ELEMENT(expected).key("start").commit();
@@ -81,7 +81,7 @@ namespace karabo {
     }
 
 
-    TimingTestDevice::TimingTestDevice(const karabo::util::Hash& config) : Device<>(config), m_started(false) {
+    TimingTestDevice::TimingTestDevice(const karabo::util::Hash& config) : Device(config), m_started(false) {
         KARABO_SLOT(start);
         KARABO_SLOT(stop);
     }
