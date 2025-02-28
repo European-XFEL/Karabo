@@ -23,6 +23,8 @@ from karabo.middlelayer.injectable import InjectMixin
 
 
 class InjectConfigurable(InjectMixin):
+    deviceId = "Injection"
+
     def _register_slots(self):
         pass
 
@@ -177,6 +179,21 @@ async def test_inject_options():
     await mandy.publishInjectedParameters()
     assert mandy.integer.descriptor.options == ["serial", "tcp"]
     assert mandy.integer.value is None
+
+    mandy.__class__.integer = String(options=["serial", "usb"],
+                                     accessMode=AccessMode.READONLY)
+    await mandy.publishInjectedParameters(integer="usb")
+    assert mandy.integer.descriptor.options == ["serial", "usb"]
+    assert mandy.integer.descriptor.defaultValue is None
+    # For readonly values initial values are ignored
+    assert mandy.integer.value is None
+
+    mandy.__class__.integer = String(options=["serial", "usb"],
+                                     accessMode=AccessMode.RECONFIGURABLE)
+    await mandy.publishInjectedParameters(integer="usb")
+    assert mandy.integer.descriptor.options == ["serial", "usb"]
+    assert mandy.integer.descriptor.defaultValue is None
+    assert mandy.integer.value == "usb"
 
 
 @pytest.mark.asyncio
