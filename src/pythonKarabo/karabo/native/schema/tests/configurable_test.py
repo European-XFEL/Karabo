@@ -1358,16 +1358,6 @@ class Tests(TestCase):
         self.assertEqual(a.aa, None)
         self.assertEqual(a.ab, None)
 
-    def test_allowedActions(self):
-        class B(Configurable):
-            allowedActions = ["ROI", "CROP"]
-
-        class A(StoreChanges):
-            node = Node(B)
-
-        a = A()
-        self.assertEqual(a.node.allowedActions, ["ROI", "CROP"])
-
     def test_regex_string(self):
 
         class A(Configurable):
@@ -1660,7 +1650,6 @@ class Tests(TestCase):
 
     def test_node_schema_attrs(self):
         class Nested(Configurable):
-            allowedActions = ["Zoom"]
             daqDataType = DaqDataType.TRAIN
             state = String(
                 displayType="State",
@@ -1681,7 +1670,6 @@ class Tests(TestCase):
         self.assertIsInstance(attrs, dict)
         self.assertEqual(attrs["classId"], "KaraboNode")
         self.assertEqual(attrs["daqDataType"], DaqDataType.TRAIN)
-        self.assertEqual(attrs["allowedActions"], {"Zoom"})
         self.assertIn("state", h)
         self.assertIn("integer", h)
         self.assertIn("double", h)
