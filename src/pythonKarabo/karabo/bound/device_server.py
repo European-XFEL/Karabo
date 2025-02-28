@@ -35,15 +35,11 @@ from karabind import (
     OVERWRITE_ELEMENT, STRING_ELEMENT, VECTOR_STRING_ELEMENT, AccessLevel,
     Broker, EventLoop, Hash, Logger, Schema, SignalSlotable, Unit, Validator,
     saveToFile)
-from karabo.common.api import KARABO_LOGGER_CONTENT_DEFAULT, ServerFlags, State
+from karabo.common.api import KARABO_LOGGER_CONTENT_DEFAULT, ServerFlags
 
 from .configurator import Configurator
 from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from .device import PythonDevice
-from .fsm import (
-    KARABO_FSM_ACTION2, KARABO_FSM_CREATE_MACHINE, KARABO_FSM_EVENT0,
-    KARABO_FSM_EVENT2, KARABO_FSM_NO_TRANSITION_ACTION, KARABO_FSM_STATE,
-    KARABO_FSM_STATE_E, KARABO_FSM_STATE_MACHINE)
 from .plugin_loader import DEFAULT_NAMESPACE, PluginLoader
 from .runner import Runner
 
@@ -165,39 +161,6 @@ class DeviceServer:
             .commit(),
         )
 
-    def setupFsm(self):
-        """Description of DeviceServer state machine"""
-        # **************************************************************
-        # *                        Events                              *
-        # **************************************************************
-
-        KARABO_FSM_EVENT2(self, 'ErrorFoundEvent', 'errorFound')
-        KARABO_FSM_EVENT0(self, 'ResetEvent', 'reset')
-
-        # **************************************************************
-        # *                        States                              *
-        # **************************************************************
-
-        KARABO_FSM_STATE_E(State.NORMAL, self.okStateOnEntry)
-        KARABO_FSM_STATE(State.ERROR)
-
-        # **************************************************************
-        # *                    Transition Actions                      *
-        # **************************************************************
-
-        KARABO_FSM_ACTION2('ErrorFoundAction', self.errorFoundAction, str, str)
-        KARABO_FSM_NO_TRANSITION_ACTION(self.noStateTransition)
-
-        deviceServerMachineSTT = [
-            (State.NORMAL, 'ErrorFoundEvent', State.ERROR,
-             'ErrorFoundAction', 'none'),
-            (State.ERROR, 'ResetEvent', State.NORMAL, 'none', 'none')]
-
-        KARABO_FSM_STATE_MACHINE('DeviceServerMachine', deviceServerMachineSTT,
-                                 State.NORMAL)
-
-        return KARABO_FSM_CREATE_MACHINE('DeviceServerMachine')
-
     def signal_handler(self, signum, frame):
         if signum == signal.SIGINT:
             print('INTERRUPT : You pressed Ctrl-C!')
@@ -216,10 +179,6 @@ class DeviceServer:
             raise ValueError(
                 "Input configuration for constructor should be Hash, not None")
         super().__init__()
-        # describe FSM
-        self.processEventLock = threading.RLock()
-        self.fsm = self.setupFsm()
-
         self.ss = self.log = None
         self.availableDevices = dict()
         self.deviceInstanceMap = dict()
@@ -304,7 +263,7 @@ class DeviceServer:
         self.log.INFO(msg.format(self,
                                  self.ss.getConnection().getBrokerUrl()))
 
-        self.fsm.start()
+        self.doAutoStart()
 
     def _generateDefaultServerId(self):
         return self.hostname + "_Server_" + str(os.getpid())
@@ -331,12 +290,6 @@ class DeviceServer:
         self.ss.registerSlot(self.slotGetClassSchema)
         self.ss.registerSlot(self.slotLoggerPriority)
         self.ss.registerSlot(self.slotLoggerContent)
-
-    def onStateUpdate(self, currentState):
-        """This function is DEPRECATED and will be removed."""
-
-    def okStateOnEntry(self):
-        self.doAutoStart()
 
     def scanPlugins(self, pluginNamespace):
         """Scan for available device classes
@@ -418,9 +371,6 @@ class DeviceServer:
         # HACK end
 
         EventLoop.stop()
-
-    def errorFoundAction(self, m1, m2):
-        self.log.ERROR(f"{m1} -- {m2}")
 
     def slotStartDevice(self, configuration):
         self.instantiateDevice(configuration)
@@ -571,10 +521,6 @@ class DeviceServer:
 
         if somethingLeft:
             EventLoop.post(self._checkStartingDevices, 0.5)
-
-    def noStateTransition(self):
-        self.log.WARN("DeviceServer \"{}\" does not allow the transition for"
-                      " this event.".format(self.serverid))
 
     def slotKillServer(self):
         if self.log:
@@ -736,10 +682,6 @@ class DeviceServer:
         # reply
         areply(Hash("serverId", self.serverid,
                     "content", content[-1 * nMessages:]))
-
-    def processEvent(self, event):
-        with self.processEventLock:
-            self.fsm.process_event(event)
 
     def _generateDefaultDeviceInstanceId(self, devClassId):
         cls = self.__class__

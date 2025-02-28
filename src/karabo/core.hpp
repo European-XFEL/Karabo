@@ -25,14 +25,10 @@
 #ifndef KARABO_CORE_CORE_HH
 #define KARABO_CORE_CORE_HH
 
-#include "core/CameraFsm.hh"
 #include "core/Device.hh"
 #include "core/DeviceClient.hh"
 #include "core/DeviceServer.hh"
-#include "core/NoFsm.hh"
-#include "core/OkErrorFsm.hh"
 #include "core/Runner.hh"
-#include "core/StartStopFsm.hh"
 #include "core/StartStopInterface.hh"
 
 #endif

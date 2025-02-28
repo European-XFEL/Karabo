@@ -31,7 +31,7 @@
  */
 namespace karabo {
 
-    class TimingTestDevice : public karabo::core::Device<> {
+    class TimingTestDevice : public karabo::core::Device {
        public:
         // Add reflection information and Karabo framework compatibility to this class
         KARABO_CLASSINFO(TimingTestDevice, "TimingTestDevice", "2.0")

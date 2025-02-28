@@ -31,7 +31,7 @@
  */
 namespace karabo {
 
-    class NonSceneProviderTestDevice : public karabo::core::Device<> {
+    class NonSceneProviderTestDevice : public karabo::core::Device {
        public:
         // Add reflection information and Karabo framework compatibility to this class
         KARABO_CLASSINFO(NonSceneProviderTestDevice, "NonSceneProviderTestDevice", "2.0")

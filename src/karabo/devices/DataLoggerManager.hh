@@ -72,7 +72,7 @@ namespace karabo {
          *               places for reading the data back.
          *
          */
-        class DataLoggerManager : public karabo::core::Device<> {
+        class DataLoggerManager : public karabo::core::Device {
            public:
             KARABO_CLASSINFO(DataLoggerManager, "DataLoggerManager", "karabo-" + karabo::util::Version::getVersion())
 

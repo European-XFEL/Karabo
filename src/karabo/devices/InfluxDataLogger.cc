@@ -32,7 +32,7 @@
 
 #define SECONDS_PER_YEAR 365 * 24 * 60 * 60
 
-KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, karabo::devices::DataLogger,
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device, karabo::devices::DataLogger,
                                   karabo::devices::InfluxDataLogger)
 KARABO_REGISTER_IN_FACTORY_1(karabo::devices::DeviceData, karabo::devices::InfluxDeviceData, karabo::util::Hash)
 

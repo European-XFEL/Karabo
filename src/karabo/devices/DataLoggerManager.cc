@@ -92,7 +92,7 @@
 #include "karabo/util/TableElement.hh"
 #include "karabo/util/VectorElement.hh"
 
-KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, karabo::devices::DataLoggerManager)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device, karabo::devices::DataLoggerManager)
 
 using std::placeholders::_1;
 using std::placeholders::_2;
@@ -527,7 +527,7 @@ namespace karabo {
         }
 
         DataLoggerManager::DataLoggerManager(const Hash& input)
-            : karabo::core::Device<>(input),
+            : karabo::core::Device(input),
               m_serverList(input.get<vector<string>>("serverList")),
               m_serverIndex(0),
               m_loggerMapFile(input.get<string>("loggermap")),

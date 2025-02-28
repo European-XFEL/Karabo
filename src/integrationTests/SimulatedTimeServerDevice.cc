@@ -33,7 +33,7 @@ USING_KARABO_NAMESPACES
 namespace karabo {
 
 
-    KARABO_REGISTER_FOR_CONFIGURATION(BaseDevice, Device<>, SimulatedTimeServerDevice)
+    KARABO_REGISTER_FOR_CONFIGURATION(BaseDevice, Device, SimulatedTimeServerDevice)
 
     void SimulatedTimeServerDevice::expectedParameters(Schema& expected) {
         UINT64_ELEMENT(expected)
@@ -85,7 +85,7 @@ namespace karabo {
 
 
     SimulatedTimeServerDevice::SimulatedTimeServerDevice(const karabo::util::Hash& config)
-        : Device<>(config),
+        : Device(config),
           m_id(config.get<unsigned long long>("initialId")),
           m_emitCount(0ull),
           m_timeTickerTimer(karabo::net::EventLoop::getIOService()) {

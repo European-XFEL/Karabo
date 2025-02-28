@@ -44,7 +44,7 @@
 
 namespace bf = std::filesystem;
 namespace bs = boost::system;
-KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, karabo::devices::DataLogReader,
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device, karabo::devices::DataLogReader,
                                   karabo::devices::FileLogReader)
 
 namespace karabo {
