@@ -32,7 +32,7 @@
 #include "karabo/xms/InputChannel.hh"
 
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::devices::NestedClass)
-KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, karabo::devices::PropertyTest)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device, karabo::devices::PropertyTest)
 
 namespace karabo {
     namespace devices {
@@ -934,7 +934,7 @@ namespace karabo {
 
 
         PropertyTest::PropertyTest(const Hash& input)
-            : Device<>(input), m_writingOutput(false), m_writingOutputTimer(karabo::net::EventLoop::getIOService()) {
+            : Device(input), m_writingOutput(false), m_writingOutputTimer(karabo::net::EventLoop::getIOService()) {
             // Signal for test of order between emitted signal and direct slot calls.
             // Note that (using JMS broker) the order is NOT guaranteed for KARABO_SIGNAL since that has
             // lower priority - seen that a slot call overtook few hundred messages triggered by signals!

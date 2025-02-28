@@ -49,7 +49,7 @@ using namespace karabo::xms;
 using namespace std::placeholders;
 
 
-KARABO_REGISTER_FOR_CONFIGURATION(BaseDevice, Device<>, karabo::devices::GuiServerDevice)
+KARABO_REGISTER_FOR_CONFIGURATION(BaseDevice, Device, karabo::devices::GuiServerDevice)
 
 namespace {
     std::string getOverviewScene(const std::string& instanceId) {
@@ -442,7 +442,7 @@ namespace karabo {
 
 
         GuiServerDevice::GuiServerDevice(const Hash& config)
-            : Device<>(config),
+            : Device(config),
               m_deviceInitTimer(EventLoop::getIOService()),
               m_networkStatsTimer(EventLoop::getIOService()),
               m_checkConnectionTimer(EventLoop::getIOService()),

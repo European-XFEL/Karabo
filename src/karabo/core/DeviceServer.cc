@@ -320,7 +320,7 @@ namespace karabo {
             // This starts SignalSlotable
             SignalSlotable::start();
 
-            startFsm();
+            startInitialActions();
 
             KARABO_LOG_INFO << "Starting Karabo DeviceServer (pid: " << ::getpid() << ") on host: " << m_hostname
                             << ", serverId: " << m_serverId << ", Broker: " << m_connection->getBrokerUrl();
@@ -503,10 +503,7 @@ namespace karabo {
         }
 
 
-        void DeviceServer::onStateUpdate(const State& currentState) {}
-
-
-        void DeviceServer::okStateOnEntry() {
+        void DeviceServer::autostartDevices() {
             for (const Hash& device : m_autoStart) {
                 slotStartDevice(device);
             }
@@ -708,19 +705,6 @@ namespace karabo {
                 }
             }
             return Hash{"deviceClasses", deviceClasses, "visibilities", visibilities};
-        }
-
-
-        void DeviceServer::noStateTransition(const std::string& typeId, int state) {
-            string eventName(typeId);
-            std::regex re(".*\\d+(.+Event).*");
-            std::smatch what;
-            bool result = std::regex_search(typeId, what, re);
-            if (result && what.size() == 2) {
-                eventName = what.str(1);
-            }
-            KARABO_LOG_WARN << "Current state of server \"" << getInstanceId()
-                            << "\" does not allow a transition for event \"" << eventName << "\"";
         }
 
 

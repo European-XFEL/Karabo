@@ -30,7 +30,7 @@ class Schema_Injection_TestCase(unittest.TestCase):
     def test_schemaInjection(self):
         device = Configurator(PythonDevice).create(
             "PythonDevice", self.deviceCfg)
-        device.startFsm()
+        device.startInitialFunctions()
 
         # Test appendSchema appends
         schema = Schema()
@@ -195,7 +195,7 @@ class Schema_Injection_TestCase(unittest.TestCase):
             "DeviceWithTableElementParam", self.deviceCfg)
 
         assert isinstance(device, DeviceWithTableElementParam)
-        device.startFsm()
+        device.startInitialFunctions()
 
         self.assertIn(
             "deviceTable",
@@ -224,7 +224,7 @@ class Schema_Injection_TestCase(unittest.TestCase):
         in the static schema."""
         device = Configurator(PythonDevice).create(
             "DeviceWithTableElementParam", self.deviceCfg)
-        device.startFsm()
+        device.startInitialFunctions()
 
         self.assertIn(
             "deviceTable",
@@ -252,7 +252,7 @@ class Schema_Injection_TestCase(unittest.TestCase):
         """Tests that updateSchema resets attributes in the static schema."""
         device = Configurator(PythonDevice).create(
             "DeviceWithAlarm", self.deviceCfg)
-        device.startFsm()
+        device.startInitialFunctions()
 
         # Update the alarmHigh
         schema = Schema()
@@ -305,7 +305,7 @@ class Schema_Injection_TestCase(unittest.TestCase):
         schema."""
         device = Configurator(PythonDevice).create(
             "DeviceWithAlarm", self.deviceCfg)
-        device.startFsm()
+        device.startInitialFunctions()
 
         # Update the alarmHigh
         schema = Schema()
@@ -362,7 +362,7 @@ class Schema_Injection_TestCase(unittest.TestCase):
         """
         device = Configurator(PythonDevice).create(
             "DeviceWithAlarm", self.deviceCfg)
-        device.startFsm()
+        device.startInitialFunctions()
 
         # VECTOR_ELEMENT
         vec = device.get("vector")
@@ -415,7 +415,7 @@ class Schema_Injection_TestCase(unittest.TestCase):
         self.deviceCfg["vector"] = [1, 2, 3]
         device = Configurator(PythonDevice).create("DeviceWithAlarm",
                                                    self.deviceCfg)
-        device.startFsm()
+        device.startInitialFunctions()
         del self.deviceCfg["vector"]  # clean-up
 
         # Testing sequence copied from C++ Device_Test::testSetVectorUpdate

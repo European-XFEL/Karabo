@@ -70,7 +70,7 @@ static Epochstamp threeDaysBack = Epochstamp() - TimeDuration(3, 0, 0, 0, 0);
 
 const unsigned int maxVectorSize = 2000u; // smaller than default to test that setting it works.
 
-class DataLogTestDevice : public karabo::core::Device<> {
+class DataLogTestDevice : public karabo::core::Device {
    public:
     KARABO_CLASSINFO(DataLogTestDevice, "DataLogTestDevice", "integrationTests-" + karabo::util::Version::getVersion())
 
@@ -115,7 +115,7 @@ class DataLogTestDevice : public karabo::core::Device<> {
         SLOT_ELEMENT(expected).key("slotUpdateSchema").commit();
     }
 
-    DataLogTestDevice(const karabo::util::Hash& input) : karabo::core::Device<>(input) {
+    DataLogTestDevice(const karabo::util::Hash& input) : karabo::core::Device(input) {
         KARABO_SLOT(slotIncreaseValue);
         KARABO_SLOT(slotUpdateSchema, const karabo::util::Schema);
         // NOTE: this is a terrible idea. Never do this in the field.
@@ -148,12 +148,12 @@ class DataLogTestDevice : public karabo::core::Device<> {
         updateSchema(sch);
     }
 };
-KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, DataLogTestDevice)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device, DataLogTestDevice)
 
 
 // A device with float and double properties without limits to be able to set inf and nan.
 // Otherwise copy PropertyTest behaviour as needed for testNans().
-class NanTestDevice : public karabo::core::Device<> {
+class NanTestDevice : public karabo::core::Device {
    public:
     KARABO_CLASSINFO(NanTestDevice, "NanTestDevice", "integrationTests-" + karabo::util::Version::getVersion())
 
@@ -178,7 +178,7 @@ class NanTestDevice : public karabo::core::Device<> {
     }
 
 
-    NanTestDevice(const karabo::util::Hash& input) : karabo::core::Device<>(input) {}
+    NanTestDevice(const karabo::util::Hash& input) : karabo::core::Device(input) {}
 
 
     void preReconfigure(Hash& incomingReconfiguration) {
@@ -188,7 +188,7 @@ class NanTestDevice : public karabo::core::Device<> {
     }
 };
 
-KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, NanTestDevice)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device, NanTestDevice)
 
 
 // Very special vector<Hash> treatment for CppUnit, ignoring differences in attributes.

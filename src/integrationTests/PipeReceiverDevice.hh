@@ -37,7 +37,7 @@ namespace karabo {
         class InputChannel;
     }
 
-    class PipeReceiverDevice : public karabo::core::Device<> {
+    class PipeReceiverDevice : public karabo::core::Device {
        public:
         KARABO_CLASSINFO(PipeReceiverDevice, "PipeReceiverDevice", "2.0")
 

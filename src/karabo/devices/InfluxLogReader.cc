@@ -36,7 +36,7 @@
 // The size of the batch of properties queried at once during slotGetConfigurationFromPast
 constexpr int PROPS_BATCH_SIZE = 20;
 
-KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, karabo::devices::DataLogReader,
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device, karabo::devices::DataLogReader,
                                   karabo::devices::InfluxLogReader)
 
 namespace karabo {

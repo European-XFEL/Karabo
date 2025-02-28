@@ -36,7 +36,7 @@ USING_KARABO_NAMESPACES
 namespace karabo {
 
 
-    KARABO_REGISTER_FOR_CONFIGURATION(BaseDevice, Device<>, AlarmTester)
+    KARABO_REGISTER_FOR_CONFIGURATION(BaseDevice, Device, AlarmTester)
 
     void AlarmTester::expectedParameters(Schema& expected) {
         NODE_ELEMENT(expected).key("nodeA").commit();
@@ -193,7 +193,7 @@ namespace karabo {
               .commit();
     }
 
-    AlarmTester::AlarmTester(const karabo::util::Hash& config) : Device<>(config) {
+    AlarmTester::AlarmTester(const karabo::util::Hash& config) : Device(config) {
         KARABO_SLOT(triggerWarnLowAck);
         KARABO_SLOT(triggerWarnHighAck);
         KARABO_SLOT(triggerAlarmLowAck);

@@ -46,7 +46,7 @@ namespace karabo {
     using util::VECTOR_STRING_ELEMENT;
     using xms::INPUT_CHANNEL;
 
-    KARABO_REGISTER_FOR_CONFIGURATION(core::BaseDevice, core::Device<>, PipeReceiverDevice)
+    KARABO_REGISTER_FOR_CONFIGURATION(core::BaseDevice, core::Device, PipeReceiverDevice)
 
     void PipeReceiverDevice::expectedParameters(util::Schema& expected) {
         util::Schema data;
@@ -123,7 +123,7 @@ namespace karabo {
     }
 
 
-    PipeReceiverDevice::PipeReceiverDevice(const karabo::util::Hash& config) : Device<>(config) {
+    PipeReceiverDevice::PipeReceiverDevice(const karabo::util::Hash& config) : Device(config) {
         KARABO_SLOT0(reset);
         KARABO_INITIAL_FUNCTION(initialization)
     }
