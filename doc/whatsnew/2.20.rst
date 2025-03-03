@@ -1,5 +1,6 @@
 ..
   Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
+
 ***************************
 What's New in Karabo 2.20.7
 ***************************
