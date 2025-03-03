@@ -80,7 +80,7 @@ namespace karabo {
         QueuePtr getNextMessages(
               const std::string& type, size_t nMessages, F&& triggeringFunction = [] {}, size_t timeout = 10000) {
             {
-                boost::unique_lock<boost::shared_mutex> lock(m_queueAccessMutex);
+                std::unique_lock lock(m_queueAccessMutex);
                 m_nextMessageQueues[type] = std::shared_ptr<boost::lockfree::spsc_queue<karabo::util::Hash> >(
                       new boost::lockfree::spsc_queue<karabo::util::Hash>(nMessages));
             }
@@ -88,7 +88,7 @@ namespace karabo {
             // call the function which triggers the expected messages
             triggeringFunction();
 
-            boost::shared_lock<boost::shared_mutex> lock(m_queueAccessMutex);
+            std::shared_lock lock(m_queueAccessMutex);
             const size_t waitTime = 100; // ms
             const size_t maxLoops = std::ceil(timeout / waitTime);
             size_t i = 0;
@@ -160,19 +160,19 @@ namespace karabo {
         karabo::net::Connection::Pointer m_dataConnection;
         std::map<std::string, std::vector<karabo::util::Hash> > m_messages;
         std::map<std::string, bool> m_messageConditions;
-        mutable boost::shared_mutex m_messageAccessMutex;
-        mutable boost::shared_mutex m_queueAccessMutex;
+        mutable std::shared_mutex m_messageAccessMutex;
+        mutable std::shared_mutex m_queueAccessMutex;
         mutable std::map<std::string, std::shared_ptr<boost::lockfree::spsc_queue<karabo::util::Hash> > >
               m_nextMessageQueues;
         boost::asio::steady_timer m_deadline;
         bool m_debug;
         size_t m_MessageId;
-        mutable boost::mutex m_writeConditionMutex;
-        boost::condition_variable m_writeCondition;
+        mutable std::mutex m_writeConditionMutex;
+        std::condition_variable m_writeCondition;
         std::atomic_size_t m_writeWaitForId;
         karabo::net::TcpChannel::Pointer m_channel;
         static const karabo::util::Hash k_defaultLoginData;
-        mutable boost::shared_mutex m_callbackMutex;
+        mutable std::shared_mutex m_callbackMutex;
         std::function<void(const karabo::util::Hash&)> m_callback;
     };
 } // namespace karabo
