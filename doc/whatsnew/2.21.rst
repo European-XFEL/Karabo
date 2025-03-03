@@ -1,5 +1,67 @@
 ..
   Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
+
+
+***************************
+What's New in Karabo 2.21.2
+***************************
+
+Release date is **3 March 2025**.
+
+
+This patch release is specifically for KaraboGUI. Following a NumPy update,
+vector comparisons were failing, which caused project configuration saving to fail.
+
+Additionally, the icon command widget now includes an authentication adjustment
+to properly enable or disable the button based on access level changes.
+
+Bug Fixes
++++++++++
+
+- *(C++)* Set typename definition for orderedmap (Cherry-pick hotfix) ([a84743f](https://git.xfel.eu/Karabo/Framework/-/commit/a84743fa5f53cd12b9a254a738a6585450ce35e4))
+- *(GUI)* Fix icon command setting enabled to correct widget (Cherry-pick hotfix) ([db4edee](https://git.xfel.eu/Karabo/Framework/-/commit/db4edee0533c6d5defe5d9099cedfabd22ae1e59))
+- *(MDL)* Fix array comparison in is_equal function and provide more tests (Cherry-pick hotfix 2.21.X) ([037aae5](https://git.xfel.eu/Karabo/Framework/-/commit/037aae516b0f822cb8a12741595a194448e003cb))
+- *(MDL)* Add event_loop fixture back to MDL (Cherry-pick hotfix) ([e7d0e51](https://git.xfel.eu/Karabo/Framework/-/commit/e7d0e5115df790b1694d432e11dcce8e6cefd700))
+
+Features
+++++++++
+
+- *(C++)* Useful new functionality for Hash (backport 2.21.X) ([970f508](https://git.xfel.eu/Karabo/Framework/-/commit/970f5088631f89b0e52e5e64f0e4dac1b9400844))
+
+Refactor
+++++++++
+
+- *(GUI)* Remove module from coverage testing (Cherry-pick hotfix) ([a8a4d78](https://git.xfel.eu/Karabo/Framework/-/commit/a8a4d786dbd00c2904bf13fe653ee718fcb85249))
+- *(MDL)* Make use of event_loop_policy fixture and update pytest asyncio (Cherry-pick hotfix) ([1084f4c](https://git.xfel.eu/Karabo/Framework/-/commit/1084f4c973d55fdc6a4759d8a6ce5bb6891f275d))
+
+
+***************************
+What's New in Karabo 2.21.1
+***************************
+
+This is the first patch release for Karabo 2.21. It includes a crucial fix for the broker shortcut in C++.
+This update is recommended for installations that utilize Beckhoff device servers.
+
+Bug Fixes
++++++++++
+
+- *(C++)* Signal did update msg header that was in flight for in-process shortcut (backport 2.21.X) ([c505951](https://git.xfel.eu/Karabo/Framework/-/commit/c505951fe405329f7a6752916a019186ae91ef7c))
+- *(C++)* Package template makes use of DeviceClient::MakeShared (backport for 2.21.X) ([98118c8](https://git.xfel.eu/Karabo/Framework/-/commit/98118c80bc488ffce7dddd59d39ebadec3e4b833))
+- *(C++)* Refuse too big messages sent to AMQP broker (for 2.21.X) ([2f6331a](https://git.xfel.eu/Karabo/Framework/-/commit/2f6331a6f6fe02519ee1f86094faed7b9a24ea8b))
+- *(No Category)* Full support of the new ImageData encodings (Cherry-pick hotfix 2.21) ([4029cc7](https://git.xfel.eu/Karabo/Framework/-/commit/4029cc79d5b331c50b2ac22c9cecb1195b16f598))
+
+
+Features
+++++++++
+
+- *(C++)* Provide helper for migration to Karabo 3 ([a03d50c](https://git.xfel.eu/Karabo/Framework/-/commit/a03d50c1a1d9760f19377631b9e00133b1111d16))
+
+Refactor
+++++++++
+
+- *(MDL)* Align tests to update pytest dependency chain (Cherry-pick hotfix) ([13ebce4](https://git.xfel.eu/Karabo/Framework/-/commit/13ebce4c05d1a8d64d816122c2af5986ee898f37))
+
+
 ***************************
 What's New in Karabo 2.21.0
 ***************************
