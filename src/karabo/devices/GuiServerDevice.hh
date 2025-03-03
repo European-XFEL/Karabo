@@ -27,6 +27,7 @@
 #include <atomic>
 #include <memory>
 #include <set>
+#include <shared_mutex>
 #include <unordered_map>
 
 #include "karabo/core/Device.hh"
@@ -171,7 +172,7 @@ namespace karabo {
             karabo::util::Hash m_loggerMap;
 
             std::set<std::string> m_projectManagers;
-            mutable boost::shared_mutex m_projectManagerMutex;
+            mutable std::shared_mutex m_projectManagerMutex;
 
             const bool m_isReadOnly;
             static const std::unordered_set<std::string> m_writeCommands;

@@ -109,19 +109,19 @@ namespace karabo {
             {
                 const std::string& type = info.has("type") ? info.get<std::string>("type") : "unspecified";
                 {
-                    boost::unique_lock<boost::shared_mutex> lock(m_messageAccessMutex);
+                    std::unique_lock lock(m_messageAccessMutex);
                     std::vector<Hash>& messages = m_messages[type];
                     messages.push_back(info);
                 }
                 {
-                    boost::shared_lock<boost::shared_mutex> lock(m_queueAccessMutex);
+                    std::shared_lock lock(m_queueAccessMutex);
                     if (m_nextMessageQueues.find(type) != m_nextMessageQueues.end()) {
                         if (m_debug) std::clog << "Pushing to queue " << type << std::endl;
                         m_nextMessageQueues[type]->push(info);
                     }
                 }
                 {
-                    boost::shared_lock<boost::shared_mutex> lock(m_callbackMutex);
+                    std::shared_lock lock(m_callbackMutex);
                     if (m_callback) {
                         m_callback(info);
                     }
@@ -161,13 +161,13 @@ namespace karabo {
 
 
     std::vector<Hash> TcpAdapter::getAllMessages(const std::string& type) {
-        boost::shared_lock<boost::shared_mutex> lock(m_messageAccessMutex);
+        std::shared_lock lock(m_messageAccessMutex);
         return m_messages[type];
     }
 
 
     void TcpAdapter::clearAllMessages(const std::string& type) {
-        boost::shared_lock<boost::shared_mutex> lock(m_messageAccessMutex);
+        std::shared_lock lock(m_messageAccessMutex);
         if (type.empty()) {
             m_messages.clear();
         } else {
@@ -182,7 +182,7 @@ namespace karabo {
 
     void TcpAdapter::sendMessage(const karabo::util::Hash& message, bool block) {
         if (!connected()) return;
-        boost::unique_lock<boost::mutex> lock(m_writeConditionMutex);
+        std::unique_lock lock(m_writeConditionMutex);
         m_writeWaitForId = ++m_MessageId;
         m_channel->writeAsyncHash(message,
                                   bind_weak(&karabo::TcpAdapter::onWriteComplete, this, _1, m_channel, m_MessageId));
@@ -196,13 +196,13 @@ namespace karabo {
         if (ec) {
             onError(ec, channel);
             if (channel) channel->close();
-            boost::lock_guard<boost::mutex> lock(m_writeConditionMutex);
+            std::lock_guard<std::mutex> lock(m_writeConditionMutex);
             m_writeCondition.notify_all();
             return;
         }
 
         if (m_writeWaitForId == id) {
-            boost::lock_guard<boost::mutex> lock(m_writeConditionMutex);
+            std::lock_guard<std::mutex> lock(m_writeConditionMutex);
             m_writeCondition.notify_all();
         }
     }
@@ -218,7 +218,7 @@ namespace karabo {
         auto cbPromise = std::make_shared<std::promise<void>>();
         auto cbFuture = cbPromise->get_future();
         {
-            boost::shared_lock<boost::shared_mutex> lock(m_callbackMutex);
+            std::shared_lock lock(m_callbackMutex);
             // create a lambda function to be attached to the m_callback
             m_callback = [cbPromise, type, callback](const karabo::util::Hash& newData) {
                 if (newData.has("type") && newData.get<std::string>("type") == type) {
@@ -232,7 +232,7 @@ namespace karabo {
         const std::future_status status = cbFuture.wait_for(std::chrono::milliseconds(timeoutInMs));
         // empty the callback
         {
-            boost::shared_lock<boost::shared_mutex> lock(m_callbackMutex);
+            std::shared_lock lock(m_callbackMutex);
             m_callback = std::function<void(const karabo::util::Hash&)>();
         }
         return status;

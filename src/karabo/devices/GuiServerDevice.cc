@@ -2332,10 +2332,9 @@ namespace karabo {
                     }
                 }
                 {
-                    boost::upgrade_lock<boost::shared_mutex> lk(m_projectManagerMutex);
+                    std::unique_lock lk(m_projectManagerMutex);
                     auto manager = m_projectManagers.find(instanceId);
                     if (manager != m_projectManagers.end()) {
-                        boost::upgrade_to_unique_lock<boost::shared_mutex> ulk(lk);
                         m_projectManagers.erase(manager);
                     }
                 }
@@ -3016,7 +3015,7 @@ namespace karabo {
             typeAndInstanceFromTopology(topologyEntry, type, instanceId);
             if (topologyEntry.get<Hash>(type).begin()->hasAttribute("classId") &&
                 topologyEntry.get<Hash>(type).begin()->getAttribute<std::string>("classId") == "ProjectManager") {
-                boost::unique_lock<boost::shared_mutex> lk(m_projectManagerMutex);
+                std::unique_lock lk(m_projectManagerMutex);
                 asyncConnect(instanceId, "signalProjectUpdate", "", "slotProjectUpdate");
                 m_projectManagers.insert(instanceId);
             }
@@ -3048,7 +3047,7 @@ namespace karabo {
 
 
         std::vector<std::string> GuiServerDevice::getKnownProjectManagers() const {
-            boost::shared_lock<boost::shared_mutex> lk(m_projectManagerMutex);
+            std::shared_lock lk(m_projectManagerMutex);
             return std::vector<std::string>(m_projectManagers.begin(), m_projectManagers.end());
         }
 
@@ -3330,7 +3329,7 @@ namespace karabo {
 
         bool GuiServerDevice::checkProjectManagerId(WeakChannelPointer channel, const std::string& deviceId,
                                                     const std::string& type, const std::string& reason) {
-            boost::shared_lock<boost::shared_mutex> lk(m_projectManagerMutex);
+            std::shared_lock lk(m_projectManagerMutex);
             if (m_projectManagers.find(deviceId) != m_projectManagers.end()) return true;
             Hash h("type", type, "reply", Hash("success", false, "reason", reason));
             safeClientWrite(channel, h, LOSSLESS);
