@@ -277,7 +277,6 @@ class ProjectManager(Device):
             item XML. If the load failed the value for this uuid is set
             to False
         """
-
         self.logger.debug("Loading items: {}"
                           .format([i.get("uuid") for i in items]))
 
@@ -311,6 +310,7 @@ class ProjectManager(Device):
             except ProjectDBError as e:
                 exceptionReason = str(e)
                 success = False
+
         return Hash('items', loadedItems,
                     'success', success,
                     'reason', exceptionReason)
