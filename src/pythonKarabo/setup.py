@@ -187,6 +187,14 @@ else:
     except ImportError:
         pass
 
+    try:
+        import pymysql
+        install_args['entry_points']['karabo.project_db'].append(
+            'mysql_db=karabo.project_db.mysql_db.node:DbConnectionNode'
+        )
+    except ImportError:
+        pass
+
 
 if __name__ == '__main__':
     setup(**install_args)
