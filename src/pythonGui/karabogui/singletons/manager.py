@@ -740,13 +740,14 @@ class Manager(QObject):
         """
 
         def show_data():
-            if name not in self._big_data:
-                # This should never happen, but keep going
+            item = self._big_data.pop(name, None)
+            if item is None:
+                # XXX: This should never happen, but keep going
                 get_network().onError(
                     f"Received big data although not scheduled for {name}.")
                 get_network().onRequestNetwork(name)
                 return
-            data_hash, meta_hash = self._big_data.pop(name)
+            data_hash, meta_hash = item
             device_id, prop_path = name.split(":")
             device_proxy = self._topology.get_device(device_id)
             if not device_proxy.online:
