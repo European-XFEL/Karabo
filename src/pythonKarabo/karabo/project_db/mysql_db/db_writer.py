@@ -17,6 +17,7 @@
 # DB data reading functions
 
 import datetime
+import logging
 
 from lxml import etree
 from sqlalchemy import func
@@ -26,6 +27,8 @@ from sqlmodel import select
 from .models import (
     DeviceConfig, DeviceInstance, DeviceServer, DeviceServerDeviceInstance,
     Macro, Project, ProjectDomain, ProjectSubproject, Scene)
+
+logger = logging.getLogger(__file__)
 
 
 class DbWriter:
@@ -58,6 +61,12 @@ class DbWriter:
                     date=date,
                     last_modified_user=prj.attrib['user'],
                     project_domain_id=project_domain.id)
+                session.add(project)
+                # The commit / refresh sequence is needed for the case of a
+                # new project. A new project only gets its ID after being
+                # stored in the database.
+                session.commit()
+                session.refresh(project)
             else:
                 # There's a record for the project in the DB - update its
                 # attributes from the data in the xml
@@ -70,13 +79,7 @@ class DbWriter:
                 project.date = date
                 project.last_modified_user = prj.attrib['user']
                 project.project_domain_id = project_domain.id
-
-            session.add(project)
-            # The commit / refresh sequence is needed for the case of a
-            # new project. A new project only gets its ID after being
-            # stored in the database.
-            session.commit()
-            session.refresh(project)
+                session.add(project)
 
             project_id = project.id
 
@@ -104,10 +107,11 @@ class DbWriter:
                 query = select(Macro).where(Macro.uuid == macro_uuid)
                 macro = session.exec(query).first()
                 if not macro:
-                    raise RuntimeError(
+                    logger.error(
                         f'Macro with uuid "{macro_uuid}" not found in the '
                         'database. Cannot link the macro to project '
                         f'"{project.name}" ({project.uuid})')
+                    continue
                 updated_macros.add(macro_uuid)
                 macro.project_id = project_id
                 macro.order = macro_idx
@@ -133,10 +137,11 @@ class DbWriter:
                 query = select(Scene).where(Scene.uuid == scene_uuid)
                 scene = session.exec(query).first()
                 if not scene:
-                    raise RuntimeError(
+                    logger.error(
                         f'Scene with uuid "{scene_uuid}" not found in the '
                         'database. Cannot link the scene to project '
                         f'"{project.name}" ({project.uuid})')
+                    continue
                 updated_scenes.add(scene_uuid)
                 scene.project_id = project_id
                 scene.order = scene_idx
@@ -164,10 +169,11 @@ class DbWriter:
                     DeviceServer.uuid == server_uuid)
                 server = session.exec(query).first()
                 if not server:
-                    raise RuntimeError(
+                    logger.error(
                         f'Server with uuid "{server_uuid}" not found in the '
                         'database. Cannot link the server to project'
                         f'"{project.name}" ({project.uuid})')
+                    continue
                 updated_servers.add(server_uuid)
                 server.project_id = project_id
                 server.order = server_idx
@@ -228,30 +234,56 @@ class DbWriter:
             query = select(ProjectSubproject).where(
                 ProjectSubproject.project_id == project_id)
             curr_subprojects = session.exec(query).all()
-            for curr_subproject in curr_subprojects:
-                # this deletes only the relations between the project being
-                # saved and its subprojects. The new relationships to be saved
-                # contained in the xml will be added do the database in the
-                # same transaction right after
-                session.delete(curr_subproject)
 
             subproject_idx = 0
+            # Initially all the previously saved subproject are to be
+            # potentially removed
+            subprojects_to_delete = {
+                subproject.subproject_id for subproject in curr_subprojects}
+            # Iterate over the subprojects to be saved
             for subprj_elem in subprjs_elem.getchildren():
                 subprj_uuid = subprj_elem.getchildren()[0].text
                 query = select(Project).where(
                     Project.uuid == subprj_uuid)
                 subprj = session.exec(query).first()
                 if not subprj:
-                    raise RuntimeError(
+                    logger.error(
                         f'Subproject with uuid "{server_uuid}" not found in '
                         'the database. Cannot link the subproject to project'
                         f'"{project.name}" ({project.uuid})')
-                project_subproject = ProjectSubproject(
-                    project_id=project_id,
-                    subproject_id=subprj.id,
-                    order=subproject_idx)
-                session.add(project_subproject)
+                    continue
+                # Search for the subproject among the current projects, and
+                # either add it, update it or leave it in the list of
+                # subproject to be removed
+                if subprj.id in subprojects_to_delete:
+                    # The project was in the DB and should be kept - just
+                    # update it
+                    subprojects_to_delete.remove(subprj.id)
+                    query = select(ProjectSubproject).where(
+                        ProjectSubproject.project_id == project_id,
+                        ProjectSubproject.subproject_id == subprj.id)
+                    prj_subprj = session.exec(query).first()
+                    if prj_subprj:
+                        prj_subprj.order = subproject_idx
+                    session.add(prj_subprj)
+                else:
+                    # The project wasn't in the DB - add it
+                    prj_subprj = ProjectSubproject(
+                        project_id=project_id,
+                        subproject_id=subprj.id,
+                        order=subproject_idx)
+                    session.add(prj_subprj)
                 subproject_idx += 1
+
+            # Remove the subprojects that were in the DB before but shouldn't
+            # be there after the save
+            for subprj_id in subprojects_to_delete:
+                query = select(ProjectSubproject).where(
+                    ProjectSubproject.project_id == project_id,
+                    ProjectSubproject.subproject_id == subprj_id)
+                subprj_to_delete = session.exec(query).first()
+                if subprj_to_delete:
+                    session.delete(subprj_to_delete)
 
             session.commit()
 
@@ -372,6 +404,7 @@ class DbWriter:
                 instance.class_id = instance_class_id
                 instance.last_modified_user = instance_user
                 instance.date = datetime.datetime.now(datetime.UTC)
+                session.add(instance)
             else:
                 # The device instance must be added to the DB
                 instance = DeviceInstance(
@@ -380,9 +413,9 @@ class DbWriter:
                     class_id=instance_class_id,
                     date=date,
                     last_modified_user=instance_user)
-            session.add(instance)
-            session.commit()
-            session.refresh(instance)
+                session.add(instance)
+                session.commit()
+                session.refresh(instance)
 
             # Saves the device configs linked to the device instance that
             # has been just saved. First the currently linked configs
@@ -440,6 +473,7 @@ class DbWriter:
                 server.name = server_name
                 server.last_modified_user = server_user
                 server.date = date
+                session.add(server)
             else:
                 # A new device server is being saved
                 server = DeviceServer(
@@ -447,10 +481,9 @@ class DbWriter:
                     name=server_name,
                     date=date,
                     last_modified_user=server_user)
-
-            session.add(server)
-            session.commit()
-            session.refresh(server)
+                session.add(server)
+                session.commit()
+                session.refresh(server)
 
             # Saves the device instances linked to the device server just saved
             # First unlinks all the currently linked device instances
@@ -463,6 +496,9 @@ class DbWriter:
                 # of any of the two entities), we simply remove the relation
                 # record.
                 session.delete(curr_linked_instance)
+            # FIXME:remove this commit after the agregation of device instances
+            #       by name is dropped and each device instance refers to its
+            #       server
             session.commit()
 
             instance_idx = 0
@@ -483,6 +519,9 @@ class DbWriter:
                 instance_idx += 1
                 session.add(server_instance)
 
+            # FIXME:remove this commit after the agregation of device instances
+            #       by name is dropped and each device instance refers to its
+            #       server
             session.commit()
 
             # Cleans up curr_instances that became orphans (along with their
@@ -509,4 +548,8 @@ class DbWriter:
                     orphan_instances = session.exec(query).all()
                     for orphan_instance in orphan_instances:
                         session.delete(orphan_instance)
+                    # FIXME: make this a top level (unindented) commit after
+                    #        the agregation of device instances by name is
+                    #        dropped and each device instance refers to its
+                    #        server
                     session.commit()
