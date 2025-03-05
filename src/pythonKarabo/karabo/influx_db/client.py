@@ -23,7 +23,6 @@ from textwrap import dedent
 from urllib.parse import urlencode
 
 from tornado.httpclient import AsyncHTTPClient, HTTPError
-from tornado.platform.asyncio import AsyncIOMainLoop, to_asyncio_future
 
 from karabo.native import (
     HASH_TYPE_TO_XML_TYPE, Hash, get_hash_type_from_data, string_from_hashtype)
@@ -178,9 +177,6 @@ class InfluxDbClient():
         self.user = user
         self.password = password
         self.request_timeout = request_timeout
-        if hasattr(AsyncIOMainLoop, "initialized"):
-            if not AsyncIOMainLoop.initialized():
-                AsyncIOMainLoop().install()
         self.client = AsyncHTTPClient(force_instance=False)
         self.basic_auth_header = self._get_basic_auth_header()
 
@@ -189,9 +185,8 @@ class InfluxDbClient():
 
     async def connect(self):
         uri = self.get_url("ping")
-        reply = await to_asyncio_future(
-            self.client.fetch(uri, method="GET",
-                              request_timeout=self.request_timeout))
+        reply = await self.client.fetch(
+            uri, method="GET", request_timeout=self.request_timeout)
         assert reply.code == 204, f"{reply.code}: {reply.body}"
 
     def disconnect(self):
@@ -223,7 +218,7 @@ class InfluxDbClient():
             auth_header = {'Authorization': f'Basic {b64_cred}'}
         return auth_header
 
-    def query(self, args, method="GET"):
+    async def query(self, args, method="GET"):
         """Sends a query from a set of arguments
 
         args : dict
@@ -233,29 +228,20 @@ class InfluxDbClient():
         """
         uri = self._build_query_uri(args, method)
         if method == "GET":
-            return to_asyncio_future(
-                self.client.fetch(uri,
-                                  method=method,
-                                  request_timeout=self.request_timeout))
+            return await self.client.fetch(
+                uri, method=method, request_timeout=self.request_timeout)
         elif method == "POST":
             # For POST requests the user credentials must be URL parameters,
             # not body data.
             query = urlencode(args)
-            return to_asyncio_future(
-                self.client.fetch(uri,
-                                  body=query,
-                                  method=method,
-                                  request_timeout=self.request_timeout))
-        else:
-            return
+            return await self.client.fetch(
+                uri, body=query, method=method,
+                request_timeout=self.request_timeout)
 
-    def write(self, data):
+    async def write(self, data: bytes | str):
         """Posts the data to the `write` entrypoint of influxDb
 
         The precision is set statically to uSeconds
-
-        data: bytes or str
-            matching a line protocol
         """
         uri = self.get_url("write")
         args = {
@@ -267,12 +253,10 @@ class InfluxDbClient():
         if len(self.password) > 0:
             args["p"] = self.password
         query = urlencode(args)
-        future = to_asyncio_future(
-            self.client.fetch(f"{uri}?{query}", body=data,
-                              headers=self.basic_auth_header,
-                              method="POST",
-                              request_timeout=self.request_timeout))
-        return future
+        ret = await self.client.fetch(
+            f"{uri}?{query}", body=data, headers=self.basic_auth_header,
+            method="POST", request_timeout=self.request_timeout)
+        return ret
 
     async def write_with_retry(self, data,
                                max_retries=20,
@@ -398,8 +382,8 @@ class InfluxDbClient():
         """
         await self.db_query(f'DROP MEASUREMENT "{measurement}"')
 
-    def write_measurement(self, measurement, field_dict,
-                          tag_dict=None, timestamp=None):
+    async def write_measurement(self, measurement, field_dict,
+                                tag_dict=None, timestamp=None):
         """Writes a line into the DB
 
         using the line protocol
@@ -415,7 +399,7 @@ class InfluxDbClient():
             optional timestamp in microseconds
         """
         line = get_line_fromdicts(measurement, field_dict, tag_dict, timestamp)
-        return self.write(line)
+        return await self.write(line)
 
     async def get_measurements(self):
         """Returns a list of measurements names
