@@ -26,13 +26,13 @@
 #define KARABO_NET_EVENTLOOP_HH
 
 #include <boost/asio.hpp>
-#include <boost/core/noncopyable.hpp>
-#include <boost/function/function_fwd.hpp>
-#include <boost/thread.hpp>
 #include <chrono>
+#include <functional>
+#include <list>
 #include <map>
 #include <memory>
 #include <mutex>
+#include <thread>
 
 #include "karabo/util/ClassInfo.hh"
 
@@ -50,7 +50,7 @@ namespace karabo {
          * @brief Karabo's central event loop. Asynchronous events are passed throughout
          *        the distributed system by posting to the loop.
          */
-        class EventLoop : private boost::noncopyable {
+        class EventLoop {
            public:
             KARABO_CLASSINFO(EventLoop, "EventLoop", "1.0")
 
@@ -82,7 +82,7 @@ namespace karabo {
              * Return the Eventloop's underlying boost::asio::io_service
              * @return
              */
-            static boost::asio::io_service& getIOService();
+            static boost::asio::io_context& getIOService();
 
             /** Start the event loop and block until EventLoop::stop() is called.
              *
@@ -159,11 +159,11 @@ namespace karabo {
 
             void _removeThread(const int nThreads);
 
-            void runProtected();
+            bool runProtected();
 
             static void asyncInjectException();
 
-            void asyncDestroyThread(const boost::thread::id& id);
+            void asyncDestroyThread(const std::jthread::id& id);
 
             /**
              * Clears the thread pool and joins the threads
@@ -176,17 +176,18 @@ namespace karabo {
 
             void _setSignalHandler(const SignalHandler& handler);
 
-            boost::asio::io_service m_ioService;
-            boost::thread_group m_threadPool;
-            mutable std::mutex m_threadPoolMutex;
+            bool is_this_thread_in();
+
+            boost::asio::io_context m_ioService;
             std::atomic<bool> m_running;
             std::atomic<bool> m_catchExceptions;
 
             static std::shared_ptr<EventLoop> m_instance;
-            static boost::once_flag m_initInstanceFlag;
+            static std::once_flag m_initInstanceFlag;
 
-            typedef std::map<boost::thread::id, boost::thread*> ThreadMap;
+            typedef std::map<std::thread::id, std::jthread*> ThreadMap;
             ThreadMap m_threadMap;
+            mutable std::mutex m_threadMapMutex;
 
             std::mutex m_signalHandlerMutex;
             SignalHandler m_signalHandler;
@@ -195,7 +196,7 @@ namespace karabo {
         // Implementation of templated functions
         template <class Function>
         void EventLoop::post(Function&& func, unsigned int delayMs) {
-            boost::asio::io_service& service = getIOService();
+            boost::asio::io_context& service = getIOService();
             if (0 == delayMs) {
                 service.post(std::forward<Function>(func));
             } else {
