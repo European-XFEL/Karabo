@@ -23,6 +23,7 @@ from qtpy.QtGui import QPalette
 from qtpy.QtWidgets import QDialog, QDialogButtonBox, QHeaderView
 
 import karabogui.icons as icons
+from karabo.native import Timestamp
 from karabogui import messagebox
 from karabogui.events import (
     KaraboEvent, broadcast_event, register_for_broadcasts,
@@ -32,17 +33,8 @@ from karabogui.validators import RegexValidator
 
 from .utils import get_dialog_ui
 
-NAME_FIELD = 0
-PRIORITY_FIELD = 2
-DESCRIPTION_FIELD = 4
-
-PRIORITY_TEXT = ["TEST", "COMMISSIONED", "SAFE"]
-PRIORITY_EXP = [
-    "The configuration is either transient or only used for testing.",
-    "The configuration is declared as commissioned and defines a possible "
-    "setting this device can operate with.",
-    "A safe configuration can be used for start up of this device."
-]
+NAME_COLUMN = 0
+TIME_COLUMN = 1
 
 
 class SaveConfigurationDialog(QDialog):
@@ -51,9 +43,6 @@ class SaveConfigurationDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         uic.loadUi(get_dialog_ui("config_save.ui"), self)
-        self.ui_priority.currentIndexChanged.connect(self._change_text)
-        index = self.ui_priority.currentIndex()
-        self.ui_priority_text.setText(PRIORITY_EXP[index])
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
         self.ui_name.textChanged.connect(self._check_button)
         # We allow only characters and numbers up to a length of 30!
@@ -79,10 +68,6 @@ class SaveConfigurationDialog(QDialog):
             self.ui_name.setPalette(self._error_palette)
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enable)
 
-    @Slot(int)
-    def _change_text(self, index):
-        self.ui_priority_text.setText(PRIORITY_EXP[index])
-
     def _event_network(self, data):
         if not data.get("status"):
             self.close()
@@ -91,14 +76,6 @@ class SaveConfigurationDialog(QDialog):
         """Stop listening for broadcast events"""
         unregister_from_broadcasts(self.event_map)
         super().done(result)
-
-    @property
-    def description(self):
-        return self.ui_description.toPlainText()
-
-    @property
-    def priority(self):
-        return int(self.ui_priority.currentIndex()) + 1
 
     @property
     def name(self):
@@ -209,12 +186,9 @@ class ConfigurationFromNameDialog(QDialog):
                         f"configuration cannot be saved.")
                 messagebox.show_alarm(text, parent=self)
                 return
-            priority = dialog.priority
-            description = dialog.description
             name = dialog.name
             get_network().onSaveConfigurationFromName(
-                name, [self.instance_id], priority=priority,
-                description=description, update=True)
+                name, [self.instance_id], update=True)
 
     @Slot()
     def accept(self):
@@ -229,10 +203,10 @@ class ConfigurationFromNameDialog(QDialog):
         if not index.isValid():
             return
         model = index.model()
-        name = model.index(index.row(), NAME_FIELD).data()
+        name = model.index(index.row(), NAME_COLUMN).data()
         preview = self.ui_preview.isChecked()
-        get_network().onGetConfigurationFromName(self.instance_id, name,
-                                                 preview)
+        get_network().onGetConfigurationFromName(
+            self.instance_id, name, preview)
 
     @Slot()
     def on_ui_button_refresh_clicked(self):
@@ -249,27 +223,11 @@ class ConfigurationFromNameDialog(QDialog):
         self._check_button_state()
 
 
-# Keys to mangle capital letters
-CONFIG_DB_NAME = "name"
-CONFIG_DB_TIMEPOINT = "timepoint"
-CONFIG_DB_PRIORITY = "priority"
-CONFIG_DB_USER = "user"
-CONFIG_DB_DESCRIPTION = "description"
-
-CONFIG_DATA = {}
-CONFIG_DATA[CONFIG_DB_NAME] = "Name"
-CONFIG_DATA[CONFIG_DB_TIMEPOINT] = "Timepoint"
-CONFIG_DATA[CONFIG_DB_PRIORITY] = "Priority"
-CONFIG_DATA[CONFIG_DB_USER] = "User"
-CONFIG_DATA[CONFIG_DB_DESCRIPTION] = "Description"
-
-ConfigurationEntry = namedtuple("ConfigurationEntry", list(CONFIG_DATA.keys()))
+ConfigurationEntry = namedtuple("ConfigurationEntry", ["name", "timestamp"])
 
 
 class TableModel(QAbstractTableModel):
-    headers = [CONFIG_DATA[CONFIG_DB_NAME],
-               CONFIG_DATA[CONFIG_DB_TIMEPOINT],
-               CONFIG_DATA[CONFIG_DB_PRIORITY]]
+    headers = ["Name", "Timestamp"]
 
     def __init__(self, instance_id="", parent=None):
         super().__init__(parent)
@@ -284,10 +242,7 @@ class TableModel(QAbstractTableModel):
             self.data = [
                 ConfigurationEntry(
                     name=str(item["name"]),
-                    timepoint=item["timepoint"],
-                    priority=str(item["priority"]),
-                    user=item["user"],
-                    description=item["description"],
+                    timestamp=item["timepoint"],
                 ) for item in data]
         finally:
             self.endResetModel()
@@ -302,18 +257,13 @@ class TableModel(QAbstractTableModel):
         if not index.isValid():
             return None
 
-        entry = self.data[index.row()]
-        column = index.column()
-        if role == Qt.DisplayRole:
-            if column == PRIORITY_FIELD:
-                return PRIORITY_TEXT[int(entry[column]) - 1]
-            else:
-                return entry[column]
-        elif role == Qt.ToolTipRole:
-            return entry[DESCRIPTION_FIELD]
-        elif role == Qt.UserRole:
+        if role in (Qt.DisplayRole, Qt.ToolTipRole):
+            entry = self.data[index.row()]
+            column = index.column()
+            if column == TIME_COLUMN:
+                data = entry[column]
+                return Timestamp(data).toLocal(" ", "seconds")
             return entry[column]
-        return None
 
     def headerData(self, section, orientation, role):
         if role == Qt.DisplayRole and orientation == Qt.Horizontal:
