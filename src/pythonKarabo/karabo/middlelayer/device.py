@@ -423,7 +423,7 @@ class DeviceClientBase(Device):
     abstract = True
     wait_topology = True
 
-    def __init__(self, configuration):
+    def __init__(self, configuration: dict):
         # "unknown" is default type for bare C++ SignalSlotable
         self.systemTopology = Hash("device", Hash(), "server", Hash(),
                                    "macro", Hash(), "client", Hash(),
@@ -442,25 +442,25 @@ class DeviceClientBase(Device):
             await sleep(3)
 
     @slot
-    async def slotInstanceNew(self, instanceId, info):
+    async def slotInstanceNew(self, instanceId: str, info: Hash):
         self.removeServerChildren(instanceId, info)
-        self.updateSystemTopology(instanceId, info, "instanceNew")
+        self.updateSystemTopology(instanceId, info)
         await super().slotInstanceNew(instanceId, info)
 
     @slot
-    def slotInstanceUpdated(self, instanceId, info):
-        self.updateSystemTopology(instanceId, info, "instanceUpdated")
+    def slotInstanceUpdated(self, instanceId: str, info: Hash):
+        self.updateSystemTopology(instanceId, info)
         super().slotInstanceUpdated(instanceId, info)
 
     @slot
-    def slotInstanceGone(self, instanceId, info):
+    def slotInstanceGone(self, instanceId: str, info: Hash):
         self.removeServerChildren(instanceId, info)
         self.systemTopology[info["type"]].pop(instanceId, None)
         return super().slotInstanceGone(instanceId, info)
 
     @slot
-    def slotPingAnswer(self, deviceId, info):
-        self.updateSystemTopology(deviceId, info, None)
+    def slotPingAnswer(self, deviceId: str, info: Hash):
+        self.updateSystemTopology(deviceId, info)
 
     def removeServerChildren(self, instanceId, info):
         """Cleanup the device children from the server
@@ -471,10 +471,10 @@ class DeviceClientBase(Device):
             for deviceId in devices:
                 self.systemTopology["device"].pop(deviceId, None)
 
-    def updateSystemTopology(self, instanceId, info, task):
-        type = info["type"]
-        ret = Hash(type, Hash())
-        ret[type][instanceId] = Hash()
-        ret[type][instanceId, ...] = dict(info.items())
-        self.systemTopology.merge(ret)
-        return ret
+    def updateSystemTopology(self, instanceId: str, info: Hash):
+        """Update the systemTopology Hash with new information from `info`"""
+        h = Hash()
+        h.setElement(
+            f"{info['type']}.{instanceId}", Hash(), dict(info.items()))
+        self.systemTopology.merge(h)
+        return h
