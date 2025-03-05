@@ -24,7 +24,6 @@
 
 #include "karabo/net/EventLoop.hh"
 
-#include <boost/algorithm/string_regex.hpp>
 #include <chrono>
 #include <csignal>
 
@@ -61,7 +60,7 @@ void EventLoop_Test::handler1(boost::asio::steady_timer& timer, int count) {
         EventLoop::removeThread(5);
         count = -1;
         timer.expires_at(timer.expires_at() + 500ms);
-        timer.async_wait(boost::bind(&EventLoop_Test::handler1, this, boost::ref(timer), count));
+        timer.async_wait(std::bind(&EventLoop_Test::handler1, this, std::ref(timer), count));
         return;
     }
 
@@ -69,13 +68,13 @@ void EventLoop_Test::handler1(boost::asio::steady_timer& timer, int count) {
     count++;
 
     timer.expires_at(timer.expires_at() + 500ms);
-    timer.async_wait(boost::bind(&EventLoop_Test::handler1, this, boost::ref(timer), count));
+    timer.async_wait(std::bind(&EventLoop_Test::handler1, this, std::ref(timer), count));
 }
 
 
 void EventLoop_Test::testMethod() {
     boost::asio::steady_timer timer(EventLoop::getIOService(), 500ms);
-    timer.async_wait(boost::bind(&EventLoop_Test::handler1, this, boost::ref(timer), 0));
+    timer.async_wait(std::bind(&EventLoop_Test::handler1, this, std::ref(timer), 0));
 
     EventLoop::run();
 }
@@ -85,7 +84,7 @@ void EventLoop_Test::handler2() {
     if (m_finished) return;
 
     boost::asio::steady_timer timer(EventLoop::getIOService(), 5ms);
-    EventLoop::getIOService().post(boost::bind(&EventLoop_Test::handler2, this));
+    EventLoop::getIOService().post(std::bind(&EventLoop_Test::handler2, this));
 }
 
 
@@ -95,14 +94,14 @@ void EventLoop_Test::handler3() {
 
 
 void EventLoop_Test::testMethod2() {
-    boost::asio::io_service::work work(EventLoop::getIOService());
-    boost::thread t(boost::bind(&EventLoop::run));
+    boost::asio::io_context::work work(EventLoop::getIOService());
+    std::jthread t(std::bind(&EventLoop::run));
 
     m_finished = false;
     boost::asio::steady_timer timer(EventLoop::getIOService(), 500ms);
     EventLoop::addThread(10);
-    EventLoop::getIOService().post(boost::bind(&EventLoop_Test::handler2, this));
-    timer.async_wait(boost::bind(&EventLoop_Test::handler3, this));
+    EventLoop::getIOService().post(std::bind(&EventLoop_Test::handler2, this));
+    timer.async_wait(std::bind(&EventLoop_Test::handler3, this));
 
     t.join();
 
@@ -113,7 +112,7 @@ void EventLoop_Test::testMethod2() {
 
 
 void EventLoop_Test::testSignalCapture() {
-    boost::thread t(boost::bind(&EventLoop::work));
+    std::jthread t(std::bind(&EventLoop::work));
 
     bool terminateCaught = false;
     EventLoop::setSignalHandler([&terminateCaught](int signal) {
@@ -222,7 +221,7 @@ void EventLoop_Test::testExceptionTrace() {
     // Test thread safety of karabo::util::Exception's trace here and not in Exception_Test since requires event loop
     using karabo::util::Exception;
 
-    boost::thread t(boost::bind(&EventLoop::work));
+    std::jthread t(std::bind(&EventLoop::work));
 
     const int nParallel = 10;
     EventLoop::addThread(nParallel);
@@ -235,7 +234,7 @@ void EventLoop_Test::testExceptionTrace() {
         futures.push_back(promises[i].get_future());
     }
 
-    boost::function<void(int)> func = [&promises](int n) {
+    std::function<void(int)> func = [&promises](int n) {
         const std::string strN(karabo::util::toString(n));
         try {
             try {
@@ -266,7 +265,7 @@ void EventLoop_Test::testExceptionTrace() {
 
     // Now start executing all exception handling in parallel
     for (int i = 0; i < nParallel; ++i) {
-        EventLoop::getIOService().post(boost::bind(func, i));
+        EventLoop::getIOService().post(std::bind(func, i));
     }
 
     // Collect all traces
@@ -281,9 +280,10 @@ void EventLoop_Test::testExceptionTrace() {
 
     // Finally collect that exception traces contain al 'their' messages
     for (int i = 0; i < nParallel; ++i) {
-        std::vector<std::string> split;
         std::string numStr(karabo::util::toString(i));
-        boost::algorithm::split_regex(split, exceptionTxts[i], boost::regex("because: "));
+        std::vector<std::string> split = splitByPattern(exceptionTxts[i], "because: ");
+        // obsolete:
+        // boost::algorithm::split_regex(split, exceptionTxts[i], boost::regex("because: "));
         CPPUNIT_ASSERT_EQUAL_MESSAGE("Trace for " + numStr + " is " + exceptionTxts[i], //
                                      6ul, split.size());                                // 6 exceptions
         numStr += ": ";
@@ -293,4 +293,19 @@ void EventLoop_Test::testExceptionTrace() {
             CPPUNIT_ASSERT_MESSAGE(singleMsg + " does not start with " + numStr, boost::starts_with(singleMsg, numStr));
         }
     }
+}
+
+
+std::vector<std::string> EventLoop_Test::splitByPattern(std::string_view source, std::string_view pattern) {
+    std::vector<std::string> output;
+    std::string::size_type prev = 0, pos = 0;
+    while ((pos = source.find(pattern, pos)) != std::string::npos) {
+        std::string sub(source.substr(prev, pos - prev));
+        output.push_back(sub);
+        pos += pattern.size();
+        prev = pos;
+    }
+    std::string tail{source.substr(prev)};
+    if (!tail.empty()) output.push_back(tail);
+    return output;
 }
