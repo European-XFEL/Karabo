@@ -456,16 +456,13 @@ class Network(QObject):
         h["replyType"] = "listConfigurationFromName"
         self._write_hash(h)
 
-    def onSaveConfigurationFromName(self, name, deviceIds, description='',
-                                    priority=1, update=False):
+    def onSaveConfigurationFromName(self, name, deviceIds, update=False):
         logger.info(f"Saving configuration by name {name} for devices "
-                    f"<b>{deviceIds}</b> with priority {priority}")
+                    f"<b>{deviceIds}</b>")
         h = Hash("type", "requestGeneric")
         args = Hash(
             "name", name,
             "deviceIds", deviceIds,
-            "description", description,
-            "priority", priority,
             "client", const.KARABO_CLIENT_ID)
         h["args"] = args
         h["update"] = update
