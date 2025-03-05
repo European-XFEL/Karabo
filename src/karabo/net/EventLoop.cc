@@ -40,8 +40,7 @@ namespace karabo {
         using namespace std::chrono;
 
         std::shared_ptr<EventLoop> EventLoop::m_instance{nullptr};
-        boost::once_flag EventLoop::m_initInstanceFlag = BOOST_ONCE_INIT;
-
+        std::once_flag EventLoop::m_initInstanceFlag;
 
         void EventLoop::init() {
             m_instance.reset(new EventLoop);
@@ -49,12 +48,12 @@ namespace karabo {
 
 
         std::shared_ptr<EventLoop> EventLoop::instance() {
-            boost::call_once(&EventLoop::init, m_initInstanceFlag);
+            std::call_once(m_initInstanceFlag, std::bind(EventLoop::init));
             return m_instance;
         }
 
 
-        boost::asio::io_service& EventLoop::getIOService() {
+        boost::asio::io_context& EventLoop::getIOService() {
             return instance()->m_ioService;
         }
 
@@ -81,7 +80,7 @@ namespace karabo {
                           }
                       }
                       // Some time to do all actions possibly triggered by handler.
-                      std::this_thread::sleep_for(seconds(1));
+                      std::this_thread::sleep_for(1s);
                       // Finally go down, i.e. leave work()
                       EventLoop::stop();
                       // TODO (check!):
@@ -92,7 +91,7 @@ namespace karabo {
                   };
             signals.async_wait(signalHandler);
 
-            boost::asio::io_service::work work(getIOService());
+            boost::asio::io_context::work work(getIOService());
             run();
         }
 
@@ -102,12 +101,17 @@ namespace karabo {
             loop->_run();
         }
 
+
         void EventLoop::_run() {
             // First restart io service if e.g. stop() was called
             // before this run() and after a previous run() had finished since out of work.
             m_ioService.restart();
             m_running = true; // _addThread(..) must not directly add a thread before m_ioService.restart();
-            runProtected();
+            bool ret = true;
+            while (ret) {
+                if (m_ioService.stopped()) break;
+                ret = runProtected();
+            }
             m_running = false;
             clearThreadPool();
         }
@@ -124,8 +128,8 @@ namespace karabo {
 
 
         size_t EventLoop::_getNumberOfThreads() const {
-            std::lock_guard<std::mutex> lock(m_threadPoolMutex);
-            return m_threadPool.size();
+            std::lock_guard<std::mutex> lock(m_threadMapMutex);
+            return m_threadMap.size();
         }
 
 
@@ -149,18 +153,25 @@ namespace karabo {
         void EventLoop::_addThread(const int nThreads) {
             auto loop = instance();
             auto add = [loop, nThreads]() {
-                std::lock_guard<std::mutex> lock(loop->m_threadPoolMutex);
+                std::lock_guard<std::mutex> lock(loop->m_threadMapMutex);
                 for (int i = 0; i < nThreads; ++i) {
-                    boost::thread* thread = loop->m_threadPool.create_thread(std::bind(&EventLoop::runProtected, loop));
-                    loop->m_threadMap[thread->get_id()] = thread;
+                    std::unique_ptr<std::jthread> jt(new std::jthread([](std::stop_token stoken) {
+                        while (true) {
+                            if (stoken.stop_requested()) return;
+                            if (!instance()->runProtected()) return;
+                        }
+                    }));
+                    std::jthread::id jid = jt->get_id();
+                    loop->m_threadMap[jid] = jt.release(); // 'release()' returns pointer
                     KARABO_LOG_FRAMEWORK_DEBUG
-                          << "A thread (id: " << thread->get_id()
-                          << ") was added to the event-loop, now running: " << loop->m_threadPool.size()
+                          << "A thread (id: " << jid
+                          << ") was added to the event-loop, now running: " << loop->m_threadMap.size()
                           << " threads in total";
                 }
             };
-            // If main thread is already running, we can directly add the thread. Otherwise we have to postpone to avoid
-            // that the new thread calls m_ioService.run() before EventLoop::run() calls m_ioService.restart().
+            // If main thread is already running, we can directly add the thread. Otherwise we have to
+            // postpone to avoid that the new thread calls m_ioService.run() before EventLoop::run() calls
+            // m_ioService.restart().
             if (m_running) {
                 add();
             } else {
@@ -187,64 +198,63 @@ namespace karabo {
         }
 
 
-        void EventLoop::asyncDestroyThread(const boost::thread::id& id) {
-            std::lock_guard<std::mutex> lock(m_threadPoolMutex);
+        void EventLoop::asyncDestroyThread(const std::jthread::id& id) {
+            std::lock_guard<std::mutex> lock(m_threadMapMutex);
             ThreadMap::iterator it = m_threadMap.find(id);
             if (it != m_threadMap.end()) {
-                boost::thread* theThread = it->second;
+                std::jthread* theThread = it->second;
                 m_threadMap.erase(it);
-                m_threadPool.remove_thread(theThread);
-                const size_t poolSize = m_threadPool.size();
+                const size_t poolSize = m_threadMap.size();
                 if (poolSize > 1) { // Failed to print the last thread: SIGSEGV
                     // An attempt to use Logger API here may result in SIGSEGV: we are depending on
-                    // life time of this object (that's bad!!!).  We depend on the answer to the following questions:
-                    // 1. How does the order of static's initialization (and the corresponding destruction order) work?
+                    // life time of this object (that's bad!!!).  We depend on the answer to the following
+                    // questions:
+                    // 1. How does the order of static's initialization (and the corresponding destruction order)
+                    // work?
                     // 2. How does the static'c re-initialization influence on such order?
                     KARABO_LOG_FRAMEWORK_DEBUG << "Removed thread (id: " << id
                                                << ") from event-loop, now running: " << poolSize << " threads in total";
                 }
                 // Join _with_ lock:
-                // * We get here only when m_ioService.run() has finished for 'theThread', so nothing running anymore
+                // * We get here only when m_ioService.run() has finished for 'theThread', so nothing running
+                // anymore
                 //   and join() is trivial.
-                // * The lock guarantees that two threads do not try to join each other concurrently which would be a
-                //   deadlock (though logically that cannot happen anyway here since m_ioService.run() is not running
-                //   anymore and thus the thread cannot get the task to destroy another thread).
+                // * The lock guarantees that two threads do not try to join each other concurrently which would be
+                // a
+                //   deadlock (though logically that cannot happen anyway here since m_ioService.run() is not
+                //   running anymore and thus the thread cannot get the task to destroy another thread).
+                theThread->request_stop();
                 theThread->join();
                 delete theThread;
             }
         }
 
+
         void EventLoop::clearThreadPool() {
-            std::unique_lock<std::mutex> lock(m_threadPoolMutex);
+            std::unique_lock<std::mutex> lock(m_threadMapMutex);
 
             int round = 1;
             auto clearThreads = [this, &round]() {
                 for (ThreadMap::iterator it = m_threadMap.begin(); it != m_threadMap.end();) {
-                    boost::thread* theThread = it->second;
+                    std::jthread* theThread = it->second;
                     // Try to join the thread and clean-up
-                    if (theThread->try_join_for(boost::chrono::milliseconds(100))) {
-                        m_threadPool.remove_thread(theThread);
-                        delete theThread;
-                        it = m_threadMap.erase(it);
-                    } else {
-                        // Joining can fail if 'asyncDestroyThread()' is blocked when it tries to lock
-                        // m_threadPoolMutex that is locked here as well.
-                        ++it;
-                        KARABO_LOG_FRAMEWORK_WARN << "Thread not joined after 100 ms (round " << round << ")";
-                    }
+                    theThread->request_stop();
+                    theThread->join();
+                    delete theThread;
+                    it = m_threadMap.erase(it);
                 }
             };
             clearThreads();
 
             // There may be threads left. Hopefully only those that ran 'asyncDestroyThread', but were stuck on the
-            // mutex. For those we release the lock and try a few more times. If that does not help, there is probably
-            // something misbehaving and we give up - the exception will likely finish the process.
+            // mutex. For those we release the lock and try a few more times. If that does not help, there is
+            // probably something misbehaving and we give up - the exception will likely finish the process.
             while (!m_threadMap.empty()) {
                 // 100 rounds: overall delay of up to 10 s from this loop plus 0.1 s per loop times stuck thread
                 if (++round > 100) {
-                    using karabo::util::toString; // note that m_threadPool.size() needs mutex
+                    using karabo::util::toString; // note that m_threadMap.size() needs mutex
                     throw KARABO_TIMEOUT_EXCEPTION("Repeated failure to join all threads, " +
-                                                         toString(m_threadPool.size()) += " threads left");
+                                                         toString(m_threadMap.size()) += " threads left");
                 };
                 lock.unlock();
                 std::this_thread::sleep_for(milliseconds(100));
@@ -254,70 +264,80 @@ namespace karabo {
         }
 
 
-        void EventLoop::runProtected() {
+        bool EventLoop::is_this_thread_in() {
+            std::jthread::id id = std::this_thread::get_id();
+            for (std::map<std::jthread::id, std::jthread*>::iterator it = m_threadMap.begin(); it != m_threadMap.end();
+                 ++it) {
+                if (it->first == id) return true;
+            }
+            return false;
+        }
+
+
+        bool EventLoop::runProtected() {
             // See http://www.boost.org/doc/libs/1_55_0/doc/html/boost_asio/reference/io_service.html:
             // "If an exception is thrown from a handler, the exception is allowed to propagate through the throwing
-            //  thread's invocation of run(), run_one(), poll() or poll_one(). No other threads that are calling any of
-            //  these functions are affected. It is then the responsibility of the application to catch the exception.
+            //  thread's invocation of run(), run_one(), poll() or poll_one(). No other threads that are calling any
+            //  of these functions are affected. It is then the responsibility of the application to catch the
+            //  exception.
             //
-            //  After the exception has been caught, the run(), run_one(), poll() or poll_one() call may be restarted
-            //  without the need for an intervening call to reset(). This allows the thread to rejoin the io_service
-            //  object's thread pool without impacting any other threads in the pool."
+            //  After the exception has been caught, the run(), run_one(), poll() or poll_one() call may be
+            //  restarted without the need for an intervening call to reset(). This allows the thread to rejoin the
+            //  io_service object's thread pool without impacting any other threads in the pool."
 
-            const std::string fullMessage(" during event-loop callback (io_service) ");
+            const std::string fullMessage(" during event-loop callback (io_context) ");
 
-            while (true) {
-                try {
-                    m_ioService.run();
-                    return; // Regular exit
-                } catch (const RemoveThreadException&) {
-                    // This is a sign to remove this thread from the pool
-                    // As we can not kill ourselves we will ask another thread to kindly do so
-                    std::unique_lock<std::mutex> lock(m_threadPoolMutex);
-                    if (m_threadPool.is_this_thread_in()) {
-                        m_ioService.post(std::bind(&EventLoop::asyncDestroyThread, this, boost::this_thread::get_id()));
-                        return; // No more while, we want to die
-                    } else {
-                        // We are in the main blocking thread here, which we never want to kill
-                        // Hence, we are injecting the exception again to be taken by another thread
-                        // Only if at least one thread to kill
-                        if (m_threadPool.size() > 0) {
-                            m_ioService.post(&asyncInjectException);
-                            // We kindly ask the scheduler to put us on the back of the threads queue, avoiding we will
-                            // eat the just posted exception again
-                            lock.unlock(); // Just in case yield() could block...
-                            boost::this_thread::yield();
-                        }
-                    }
-                } catch (karabo::util::Exception& e) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "Exception" << fullMessage << ": " << e;
-                    if (!m_catchExceptions.load()) {
-                        throw;
-                    }
-                } catch (std::exception& e) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "Standard exception" << fullMessage << ": " << e.what();
-                    if (!m_catchExceptions.load()) {
-                        throw;
-                    }
-                } catch (...) {
-                    std::string extraInfo;
-#if defined(__GNUC__) || defined(__clang__)
-                    // See
-                    // https://stackoverflow.com/questions/561997/determining-exception-type-after-the-exception-is-caught
-                    int status = 42; // Better init with a non-zero value...
-                    char* txt = abi::__cxa_demangle(abi::__cxa_current_exception_type()->name(), 0, 0, &status);
-                    if (status == 0 && txt) {
-                        extraInfo = ": ";
-                        extraInfo += txt;
-                        free(txt);
-                    }
-#endif
-                    KARABO_LOG_FRAMEWORK_ERROR << "Unknown exception" << fullMessage << extraInfo << ".";
-                    if (!m_catchExceptions.load()) {
-                        throw;
+            try {
+                m_ioService.run();
+                return false; // Regular exit
+            } catch (const RemoveThreadException&) {
+                // This is a sign to remove this thread from the pool
+                // As we can not kill ourselves we will ask another thread to kindly do so
+                std::unique_lock<std::mutex> lock(m_threadMapMutex);
+                if (is_this_thread_in()) {
+                    m_ioService.post(std::bind(&EventLoop::asyncDestroyThread, this, std::this_thread::get_id()));
+                    return false; // No more while, we want to die
+                } else {
+                    // We are in the main blocking thread here, which we never want to kill
+                    // Hence, we are injecting the exception again to be taken by another thread
+                    // Only if at least one thread to kill
+                    if (m_threadMap.size() > 0) {
+                        m_ioService.post(&asyncInjectException);
+                        // We kindly ask the scheduler to put us on the back of the threads queue, avoiding we will
+                        // eat the just posted exception again
+                        lock.unlock(); // Just in case yield() could block...
+                        std::this_thread::yield();
                     }
                 }
+            } catch (karabo::util::Exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Exception" << fullMessage << ": " << e;
+                if (!m_catchExceptions.load()) {
+                    throw;
+                }
+            } catch (std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Standard exception" << fullMessage << ": " << e.what();
+                if (!m_catchExceptions.load()) {
+                    throw;
+                }
+            } catch (...) {
+                std::string extraInfo;
+#if defined(__GNUC__) || defined(__clang__)
+                // See
+                // https://stackoverflow.com/questions/561997/determining-exception-type-after-the-exception-is-caught
+                int status = 42; // Better init with a non-zero value...
+                char* txt = abi::__cxa_demangle(abi::__cxa_current_exception_type()->name(), 0, 0, &status);
+                if (status == 0 && txt) {
+                    extraInfo = ": ";
+                    extraInfo += txt;
+                    free(txt);
+                }
+#endif
+                KARABO_LOG_FRAMEWORK_ERROR << "Unknown exception" << fullMessage << extraInfo << ".";
+                if (!m_catchExceptions.load()) {
+                    throw;
+                }
             }
+            return true;
         }
     } // namespace net
 } // namespace karabo

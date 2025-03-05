@@ -28,9 +28,11 @@
 #include <cppunit/extensions/HelperMacros.h>
 
 #include <boost/asio.hpp>
+#include <mutex>
+#include <string_view>
 
 class EventLoop_Test : public CPPUNIT_NS::TestFixture {
-    boost::mutex m_mutex;
+    std::mutex m_mutex;
     bool m_finished;
 
     CPPUNIT_TEST_SUITE(EventLoop_Test);
@@ -56,6 +58,7 @@ class EventLoop_Test : public CPPUNIT_NS::TestFixture {
     void testPost();
     void testAddThreadDirectly();
     void testExceptionTrace();
+    std::vector<std::string> splitByPattern(std::string_view src, std::string_view pattern);
 };
 
 #endif /* EVENTLOOP_TEST_HH */
