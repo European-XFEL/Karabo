@@ -25,8 +25,8 @@ from urllib.parse import urlparse
 
 import numpy as np
 
-from karabo.influxdb.client import InfluxDbClient
-from karabo.influxdb.dlutils import (
+from karabo.influx_db.client import InfluxDbClient
+from karabo.influx_db.dlutils import (
     device_id_from_path, escape_measurement, escape_tag_field_key,
     format_line_protocol_body)
 from karabo.native import decodeXML, encodeBinary

@@ -109,7 +109,7 @@ else:
             'static/favicon.ico',
             'templates/*.html'],
         'karabo.testing': ['resources/*.*'],
-        'karabo.influxdb.tests': ['sample_data/PropertyTestDevice/raw/*.txt'],
+        'karabo.influx_db.tests': ['sample_data/PropertyTestDevice/raw/*.txt'],
     }
 
     install_args['entry_points'] = {
@@ -135,7 +135,7 @@ else:
             'karabo-create-services=karabo.interactive.startkarabo:make_service_dir',
             'karabo-webserver=karabo.interactive.webserver:run_webserver',
             'karabo-webaggregatorserver=karabo.interactive.webaggregatorserver:run_webserver',
-            'migrate-karabo-history=karabo.influxdb.dl_migrator:main',
+            'migrate-karabo-history=karabo.influx_db.dl_migrator:main',
             'karabo-check-container=karabo.interactive.container_monitor:main',
         ],
         'karabo.bound_device': [
