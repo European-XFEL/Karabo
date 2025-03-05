@@ -24,7 +24,7 @@ import shutil
 import time
 from asyncio import gather, get_event_loop
 
-from karabo.influxdb import (
+from karabo.influx_db import (
     PROCESSED_RAWS_FILE_NAME, PROCESSED_SCHEMAS_FILE_NAME, DlRaw2Influx,
     DlSchema2Influx)
 

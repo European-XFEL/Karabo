@@ -27,8 +27,8 @@ import numpy as np
 # we use bound here to ensure serialization compatiblity between
 # the loggers running in C++ and the migration script
 from karabo.bound import BinarySerializerSchema, TextSerializerSchema
-from karabo.influxdb.client import InfluxDbClient
-from karabo.influxdb.dlutils import device_id_from_path, escape_measurement
+from karabo.influx_db.client import InfluxDbClient
+from karabo.influx_db.dlutils import device_id_from_path, escape_measurement
 
 PROCESSED_SCHEMAS_FILE_NAME = '.processed_schemas.txt'
 MAX_SCHEMA_TRUNK_SIZE = 1_048_576  # in bytes

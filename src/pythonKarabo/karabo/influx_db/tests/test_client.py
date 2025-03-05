@@ -24,8 +24,8 @@ from asyncio import sleep
 from contextlib import contextmanager
 from random import choice
 
-from karabo.influxdb import InfluxDbClient, get_line_fromdicts
-from karabo.influxdb.dl_migrator import DlMigrator
+from karabo.influx_db import InfluxDbClient, get_line_fromdicts
+from karabo.influx_db.dl_migrator import DlMigrator
 from karabo.middlelayer.tests.eventloop import DeviceTest, async_tst
 from karabo.native import decodeBinary
 
