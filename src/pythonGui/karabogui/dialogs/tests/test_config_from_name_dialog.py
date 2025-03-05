@@ -16,7 +16,7 @@
 # or FITNESS FOR A PARTICULAR PURPOSE.
 from unittest import main, mock
 
-from qtpy.QtCore import QModelIndex, Qt
+from qtpy.QtCore import QModelIndex
 from qtpy.QtWidgets import QDialog
 
 from karabo.native import Timestamp
@@ -34,9 +34,6 @@ def get_config_items():
         config = {}
         config["name"] = f"default{i}"
         config["timepoint"] = Timestamp().toLocal()
-        config["priority"] = 1
-        config["user"] = "."
-        config["description"] = "No desc"
         items.append(config)
     return items
 
@@ -102,20 +99,16 @@ class TestConfigurationFromNameDialog(GuiTestCase):
 
             index = source_model.index(0, 0)
             self.assertEqual(index.data(), "default0")
-            self.assertEqual(index.data(role=Qt.ToolTipRole), "No desc")
 
             save = "karabogui.dialogs.configuration_from_name." \
                    "SaveConfigurationDialog"
             with mock.patch(save) as dia:
                 dia().name = "Next"
-                dia().priority = 2
-                dia().description = "new desc"
                 dia().exec.return_value = QDialog.Accepted
                 # Call it!
                 dialog.open_save_dialog()
                 network.onSaveConfigurationFromName.assert_called_with(
-                    "Next", ["divvy"], description="new desc", priority=2,
-                    update=True)
+                    "Next", ["divvy"], update=True)
 
     def test_config_save_dialog(self):
         """Test the save config dialog"""
@@ -128,8 +121,6 @@ class TestConfigurationFromNameDialog(GuiTestCase):
             dialog.done(1)
             mediator.unregister_listener.assert_called_once()
             # Asserts simple defaults
-            self.assertEqual(dialog.description, "")
-            self.assertEqual(dialog.priority, 1)
             self.assertEqual(dialog.name, "")
 
             # Network event should be there and closes
