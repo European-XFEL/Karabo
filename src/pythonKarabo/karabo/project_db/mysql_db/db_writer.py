@@ -35,6 +35,12 @@ class DbWriter:
     def __init__(self, session_gen: sessionmaker):
         self.session_gen = session_gen
 
+    def register_project_load(self, project: Project):
+        with self.session_gen() as session:
+            project.last_loaded = datetime.datetime.now(datetime.UTC)
+            session.add(project)
+            session.commit()
+
     def save_project_item(self, domain: str, uuid: str, xml: str,
                           timestamp: str):
         prj = etree.fromstring(xml)
