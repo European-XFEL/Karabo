@@ -107,6 +107,7 @@ class ProjectDatabase(DatabaseBase):
                     "uuid": item_uuid,
                     "xml": emit_project_xml(
                         project, scenes, macros, servers, subprojects)})
+                self.writer.register_project_load(project)
                 continue
             scene = self.reader.get_scene_from_uuid(item_uuid)
             if scene:
