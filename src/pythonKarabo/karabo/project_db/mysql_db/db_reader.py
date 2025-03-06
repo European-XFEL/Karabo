@@ -20,8 +20,8 @@ from sqlalchemy.orm import sessionmaker
 from sqlmodel import select
 
 from .models import (
-    DeviceConfig, DeviceInstance, DeviceServer, DeviceServerDeviceInstance,
-    Macro, Project, ProjectDomain, ProjectSubproject, Scene)
+    DeviceConfig, DeviceInstance, DeviceServer, Macro, Project, ProjectDomain,
+    ProjectSubproject, Scene)
 
 
 class DbReader:
@@ -95,10 +95,9 @@ class DbReader:
             self, server: DeviceServer) -> list[DeviceInstance]:
         instances = []
         with self.session_gen() as session:
-            query = select(DeviceInstance).join(
-                DeviceServerDeviceInstance).where(
-                    DeviceServerDeviceInstance.device_server_id ==
-                    server.id).order_by(DeviceServerDeviceInstance.order)
+            query = select(DeviceInstance).where(
+                DeviceInstance.device_server_id == server.id).order_by(
+                    DeviceInstance.order)
             instances = session.exec(query).all()
         return instances
 
