@@ -46,6 +46,7 @@ class Project(SQLModel, table=True):
         default=datetime.datetime.now(), nullable=True)
     last_modified_user: str | None = Field(default=None, max_length=64,
                                            nullable=True)
+    last_loaded: datetime.datetime | None = Field(default=None, nullable=True)
 
     project_domain_id: int = Field(foreign_key="ProjectDomain.id",
                                    nullable=False)
