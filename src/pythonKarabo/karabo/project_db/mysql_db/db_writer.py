@@ -20,13 +20,12 @@ import datetime
 import logging
 
 from lxml import etree
-from sqlalchemy import func
 from sqlalchemy.orm import sessionmaker
 from sqlmodel import select
 
 from .models import (
-    DeviceConfig, DeviceInstance, DeviceServer, DeviceServerDeviceInstance,
-    Macro, Project, ProjectDomain, ProjectSubproject, Scene)
+    DeviceConfig, DeviceInstance, DeviceServer, Macro, Project, ProjectDomain,
+    ProjectSubproject, Scene)
 
 logger = logging.getLogger(__file__)
 
@@ -183,51 +182,23 @@ class DbWriter:
             # project but is not anymore
             for curr_server in curr_servers:
                 if curr_server.uuid not in updated_servers:
-                    # Before deleting the server, its relations to device
-                    # instances must be cleared.
-                    related_instances_ids = set()
-                    query = select(DeviceServerDeviceInstance).where(
-                        DeviceServerDeviceInstance.device_server_id ==
-                        curr_server.id)
-                    relations = session.exec(query).all()
-                    for relation in relations:
-                        related_instances_ids.add(relation.device_instance_id)
-                        session.delete(relation)
-                    # This commit is needed. With the transaction isolation
-                    # level in the MySQL session, if the commit is omitted the
-                    # checkings for remaining relations between device server's
-                    # instances and any other server won't ever be zero and the
-                    # instance (and its configs) won't be removed from the DB.
-                    session.commit()
-                    # If the instances associated to the about to be deleted
-                    # server have no further association, they should also go
-                    # (along with their associated configs)
-                    # FIXME: remove the query for remaining relations (and
-                    # the commit right above) once the aggregation of device
-                    # instances by name is gone - then each device instance
-                    # will be associated with a single device server. The
-                    # DeviceServerDeviceInstance will be also removable, with
-                    # the device_server_id becoming a nullable FK of
-                    # DeviceInstance.
-                    for related_instance_id in related_instances_ids:
-                        query = select(
-                            func.count(DeviceServerDeviceInstance.id)).where(
-                                DeviceServerDeviceInstance.device_instance_id
-                                == related_instance_id)
-                        remaining = session.exec(query).one()
-                        if remaining == 0:
-                            query = select(DeviceConfig).where(
-                                DeviceConfig.device_instance_id ==
-                                related_instance_id)
-                            related_configs = session.exec(query).all()
-                            for related_config in related_configs:
-                                session.delete(related_config)
-                            query = select(DeviceInstance).where(
-                                DeviceInstance.id == related_instance_id)
-                            related_instance = session.exec(query).first()
-                            if related_instance:
-                                session.delete(related_instance)
-
+                    # Before deleting the server, its device instances must
+                    # be deleted - after deleting those instances configs.
+                    query = select(DeviceInstance).where(
+                        DeviceInstance.device_server_id == curr_server.id)
+                    instances = session.exec(query).all()
+                    for instance in instances:
+                        # Delete the instances configs
+                        query = select(DeviceConfig).where(
+                            DeviceConfig.device_instance_id == instance.id)
+                        related_configs = session.exec(query).all()
+                        for related_config in related_configs:
+                            session.delete(related_config)
+                        query = select(DeviceInstance).where(
+                            DeviceInstance.id == instance.id)
+                        related_instance = session.exec(query).first()
+                        if related_instance:
+                            session.delete(related_instance)
                     # Now finally the server can go
                     session.delete(curr_server)
 
@@ -486,22 +457,17 @@ class DbWriter:
                 session.refresh(server)
 
             # Saves the device instances linked to the device server just saved
-            # First unlinks all the currently linked device instances
-            query = select(DeviceServerDeviceInstance).where(
-                DeviceServerDeviceInstance.device_server_id == server.id)
+            # First unlinks all the currently linked device instances.
+            query = select(DeviceInstance).where(
+                DeviceInstance.device_server_id == server.id)
             curr_linked_instances = session.exec(query).all()
             for curr_linked_instance in curr_linked_instances:
-                # As the DeviceServerDeviceInstance only contains data about
-                # the relation between a server and its instances (no attrib
-                # of any of the two entities), we simply remove the relation
-                # record.
-                session.delete(curr_linked_instance)
-            # FIXME:remove this commit after the agregation of device instances
-            #       by name is dropped and each device instance refers to its
-            #       server
-            session.commit()
+                curr_linked_instance.device_server_id = None
+                curr_linked_instance.order = 0
+                session.add(curr_linked_instance)
 
             instance_idx = 0
+            updated_instances = set()
             for instance_obj in instance_objs:
                 instance_obj_uuid = instance_obj.attrib["uuid"]
                 query = select(DeviceInstance).where(
@@ -512,44 +478,17 @@ class DbWriter:
                         f'Device instance with uuid "{instance_obj_uuid}" not '
                         "found in the database. Cannot link the instance to "
                         f'server "{server.name}" ({server.uuid})')
-                server_instance = DeviceServerDeviceInstance(
-                    device_server_id=server.id,
-                    device_instance_id=instance.id,
-                    order=instance_idx)
+                updated_instances.add(instance.id)
+                instance.device_server_id = server.id
+                instance.order = instance_idx
                 instance_idx += 1
-                session.add(server_instance)
+                session.add(instance)
 
-            # FIXME:remove this commit after the agregation of device instances
-            #       by name is dropped and each device instance refers to its
-            #       server
-            session.commit()
-
-            # Cleans up curr_instances that became orphans (along with their
-            # configs). Any curr_linked_instance not linked with any device
-            # server should be cleaned up.
+            # Removes any instance that is not linked to the device server
+            # anymore - all the curr_linked_instances whose ids are not in
+            # the updated_instances set
             for curr_linked_instance in curr_linked_instances:
-                query = select(
-                    func.count(DeviceServerDeviceInstance.id)).where(
-                        DeviceServerDeviceInstance.device_instance_id ==
-                        curr_linked_instance.device_instance_id,
-                        DeviceServerDeviceInstance.device_server_id ==
-                        server.id)
-                remaining = session.exec(query).one()
-                if remaining == 0:
-                    query = select(DeviceConfig).where(
-                        DeviceConfig.device_instance_id ==
-                        curr_linked_instance.device_instance_id)
-                    orphan_configs = session.exec(query).all()
-                    for orphan_config in orphan_configs:
-                        session.delete(orphan_config)
-                    query = select(DeviceInstance).where(
-                        DeviceInstance.id ==
-                        curr_linked_instance.device_instance_id)
-                    orphan_instances = session.exec(query).all()
-                    for orphan_instance in orphan_instances:
-                        session.delete(orphan_instance)
-                    # FIXME: make this a top level (unindented) commit after
-                    #        the agregation of device instances by name is
-                    #        dropped and each device instance refers to its
-                    #        server
-                    session.commit()
+                if curr_linked_instance.id not in updated_instances:
+                    session.delete(curr_linked_instance)
+
+            session.commit()
