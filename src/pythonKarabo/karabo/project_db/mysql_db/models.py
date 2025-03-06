@@ -96,6 +96,9 @@ class DeviceServer(SQLModel, table=True):
     project_id: int = Field(foreign_key="Project.id", nullable=True)
     project: Project = Relationship(back_populates="device_servers")
 
+    device_instances: list["DeviceInstance"] = Relationship(
+        back_populates="device_server")
+
     # Order of the device servers in a project
     order: int = Field(default=0, nullable=False)
 
@@ -114,32 +117,20 @@ class DeviceInstance(SQLModel, table=True):
     #       migration transformation registry table.
     class_id: str = Field(max_length=64, nullable=False, index=True)
 
+    device_server_id: int = Field(foreign_key="DeviceServer.id",
+                                  nullable=True)
+
     date: datetime.datetime | None = Field(
         default=datetime.datetime.now(), nullable=True)
     last_modified_user: str | None = Field(default=None, max_length=64,
                                            nullable=True)
 
+    device_server: DeviceServer = Relationship(
+        back_populates="device_instances")
     configs: list["DeviceConfig"] = Relationship(back_populates="device")
 
-
-class DeviceServerDeviceInstance(SQLModel, table=True):
-    """The many-to-many relationship between device servers and device
-    instances."""
-
-    __tablename__ = "DeviceServerDeviceInstance"
-
-    id: int | None = Field(default=None, primary_key=True)
-
-    device_server_id: int = Field(foreign_key="DeviceServer.id",
-                                  nullable=False)
-    device_instance_id: int = Field(foreign_key="DeviceInstance.id",
-                                    nullable=False)
-
-    # The order of the device instances in a device server
+    # The order of the devices instances of a device server
     order: int = Field(default=0, nullable=False)
-
-    __table_args__ = (UniqueConstraint("device_server_id",
-                                       "device_instance_id"), )
 
 
 class DeviceConfig(SQLModel, table=True):
