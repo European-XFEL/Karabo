@@ -1373,7 +1373,7 @@ void Device_Test::testGetconfigReconfig() {
     const int timeoutInMs = 10000;
     const std::string deviceId("TestDevice");
 
-    // Check default visibility value and other device properties
+    // Check device properties
     Hash cfgHash;
     CPPUNIT_ASSERT_NO_THROW(
           m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(cfgHash));
@@ -1381,24 +1381,11 @@ void Device_Test::testGetconfigReconfig() {
     CPPUNIT_ASSERT_EQUAL(std::string("TestDevice"), cfgHash.get<std::string>("classId"));
     CPPUNIT_ASSERT_EQUAL(fakeClassVersion, cfgHash.get<std::string>("classVersion"));
     CPPUNIT_ASSERT_EQUAL(karabo::util::Version::getVersion(), cfgHash.get<std::string>("karaboVersion"));
-    CPPUNIT_ASSERT_EQUAL(static_cast<int>(karabo::util::Schema::OBSERVER), cfgHash.get<int>("visibility"));
     CPPUNIT_ASSERT_EQUAL(std::string("testServerDevice"), cfgHash.get<std::string>("serverId"));
     CPPUNIT_ASSERT_EQUAL(::getpid(), cfgHash.get<int>("pid"));
 
     // test pipeline channel schema is an empty node or has empty nodes under it.
     assertChildNodesEmpty(cfgHash.get<Hash>("output.schema"));
-
-    // We cannot set visibility
-    cfgHash.clear();
-    CPPUNIT_ASSERT_THROW(m_deviceServer
-                               ->request(deviceId, "slotReconfigure",
-                                         Hash("visibility", static_cast<int>(karabo::util::Schema::ADMIN)))
-                               .timeout(timeoutInMs)
-                               .receive(),
-                         karabo::util::RemoteException);
-    CPPUNIT_ASSERT_NO_THROW(
-          m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(cfgHash));
-    CPPUNIT_ASSERT_EQUAL(static_cast<int>(karabo::util::Schema::OBSERVER), cfgHash.get<int>("visibility"));
 
     // But we can set the performance statistics
     cfgHash.clear();

@@ -24,12 +24,12 @@ import time
 
 from karabind import (
     ALARM_ELEMENT, BOOL_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT, MICROSEC,
-    NODE_ELEMENT, OBSERVER, OVERWRITE_ELEMENT, SLOT_ELEMENT, STATE_ELEMENT,
-    STRING_ELEMENT, UINT32_ELEMENT, WRITE, AccessLevel, AccessType,
-    AssemblyRules, Broker, ChannelMetaData, ConnectionStatus, Epochstamp,
-    EventLoop, Hash, HashFilter, HashMergePolicy, Logger, MetricPrefix, Schema,
-    SignalSlotable, Timestamp, Trainstamp, Unit, Validator,
-    ValidatorValidationRules, VectorHash, loadFromFile)
+    NODE_ELEMENT, OVERWRITE_ELEMENT, SLOT_ELEMENT, STATE_ELEMENT,
+    STRING_ELEMENT, UINT32_ELEMENT, WRITE, AccessType, AssemblyRules, Broker,
+    ChannelMetaData, ConnectionStatus, Epochstamp, EventLoop, Hash, HashFilter,
+    HashMergePolicy, Logger, MetricPrefix, Schema, SignalSlotable, Timestamp,
+    Trainstamp, Unit, Validator, ValidatorValidationRules, VectorHash,
+    loadFromFile)
 from karabo import __version__ as karaboVersion
 from karabo.common.api import (
     KARABO_CLASS_ID_ALARM, KARABO_CLASS_ID_STATE,
@@ -100,14 +100,6 @@ class PythonDevice:
             .description("Do not set this property, it will be set by the"
                          " device-server")
             .expertAccess().assignmentInternal().noDefaultValue().init()
-            .commit(),
-
-            INT32_ELEMENT(expected).key("visibility")
-            .displayedName("Visibility")
-            .description("Configures who is allowed to see this device at all")
-            .assignmentOptional().defaultValue(AccessLevel(OBSERVER))
-            .expertAccess()
-            .init()
             .commit(),
 
             STRING_ELEMENT(expected).key("classId")
@@ -386,7 +378,6 @@ class PythonDevice:
         info = Hash("type", "device")
         info["classId"] = self.classid
         info["serverId"] = self.serverid
-        info["visibility"] = self["visibility"]
         info["host"] = self.hostname
         currentState = self["state"]
         if currentState is State.ERROR:

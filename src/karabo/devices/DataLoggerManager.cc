@@ -137,8 +137,6 @@ namespace karabo {
 
             OVERWRITE_ELEMENT(expected).key("performanceStatistics.enable").setNewDefaultValue(true).commit();
 
-            OVERWRITE_ELEMENT(expected).key("visibility").setNewDefaultValue<int>(Schema::AccessLevel::ADMIN).commit();
-
             OVERWRITE_ELEMENT(expected).key("deviceId").setNewDefaultValue("Karabo_DataLoggerManager_0").commit();
 
             INT32_ELEMENT(expected)
@@ -536,6 +534,7 @@ namespace karabo {
               m_loggerClassId("Unsupported"),
               m_blocked(input.get<Hash>("blocklist")),
               m_blockListFile(input.get<string>("blocklistfile")) {
+            m_visibility = karabo::util::Schema::ADMIN;
             const std::string loggerType = input.get<std::string>("logger");
             if (loggerType == "FileDataLogger") {
                 m_loggerClassId = "FileDataLogger";

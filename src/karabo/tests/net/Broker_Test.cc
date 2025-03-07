@@ -294,7 +294,6 @@ void Broker_Test::_testReadingHeartbeats() {
     //      'type' => device STRING
     //      'classId' => MqttBroker STRING
     //      'serverId' => __none__ STRING
-    //      'visibility' => 4 INT32
     //      'host' => exflpcx21502 STRING
     //      'status' => ok STRING
     //      'archive' => 0 BOOL
