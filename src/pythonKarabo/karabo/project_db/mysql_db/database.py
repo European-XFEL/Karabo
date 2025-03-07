@@ -306,30 +306,6 @@ class ProjectDatabase(DatabaseBase):
 
         return meta
 
-    def update_attributes(self, items):
-        """ Update attribute for the given ``items``
-
-        :param items: list of Hashes containing information on which items
-                      to update. Each list entry should be a Hash containing
-
-                      - domain: domain the item resides at
-                      - uuid: the uuid of the item
-                      - item_type: indicate type of item which attribute should
-                                   be changed
-                      - attr_name: name of attribute which should be changed
-                      - attr_value: value of attribute which should be changed
-
-        :return: a list of dicts where each entry has keys: domain, uuid,
-                 item_type, attr_name, attr_value
-        """
-        # TODO: Add real implementation
-        print("")
-        print("**** @ProjectDatabase.update_attributes ****")
-        print(f"items = {items}")
-        print("************************************")
-        print("")
-        return []
-
     def get_configurations_from_device_name_part(self, domain, device_id_part):
         """
         Returns a list of configurations for a given device

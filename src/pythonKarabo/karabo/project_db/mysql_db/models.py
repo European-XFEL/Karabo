@@ -38,7 +38,7 @@ class Project(SQLModel, table=True):
     # storages must coexist for some time; e.g. some topics on ExistDB and some
     # on a Relational Database).
     uuid: str = Field(max_length=64, nullable=False, unique=True)
-    name: str = Field(max_length=128, nullable=False)
+    name: str = Field(max_length=256, nullable=False, index=True)
     description: str | None = Field(default=None, nullable=True)
     trashed: bool = Field(default=False)
 
