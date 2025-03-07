@@ -40,8 +40,6 @@ namespace karabo {
 
 
         void DataLogReader::expectedParameters(Schema& expected) {
-            OVERWRITE_ELEMENT(expected).key("visibility").setNewDefaultValue<int>(Schema::AccessLevel::ADMIN).commit();
-
             UINT32_ELEMENT(expected)
                   .key("numGetPropertyHistory")
                   .displayedName("N(get history)")
@@ -63,6 +61,7 @@ namespace karabo {
 
 
         DataLogReader::DataLogReader(const Hash& input) : karabo::core::Device(input) {
+            m_visibility = karabo::util::Schema::ADMIN;
             KARABO_INITIAL_FUNCTION(initialize)
             KARABO_SLOT(slotGetPropertyHistory, string /*deviceId*/, string /*key*/, Hash /*params*/);
             KARABO_SLOT(slotGetConfigurationFromPast, string /*deviceId*/, string /*timepoint*/);

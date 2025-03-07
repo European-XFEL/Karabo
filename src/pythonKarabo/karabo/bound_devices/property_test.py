@@ -26,7 +26,7 @@ import numpy as np
 
 from karabo import __version__ as karaboVersion
 from karabo.bound import (
-    BOOL_ELEMENT, DOUBLE_ELEMENT, EXPERT, FLOAT_ELEMENT, IMAGEDATA_ELEMENT,
+    BOOL_ELEMENT, DOUBLE_ELEMENT, FLOAT_ELEMENT, IMAGEDATA_ELEMENT,
     INPUT_CHANNEL, INT32_ELEMENT, INT64_ELEMENT, KARABO_CLASSINFO,
     NDARRAY_ELEMENT, NODE_ELEMENT, OUTPUT_CHANNEL, OVERWRITE_ELEMENT,
     SLOT_ELEMENT, STRING_ELEMENT, TABLE_ELEMENT, UINT32_ELEMENT,
@@ -72,10 +72,6 @@ class PropertyTest(PythonDevice):
             .setNewOptions(State.INIT, State.NORMAL, State.ERROR,
                            State.STARTED, State.STOPPING)
             .setNewDefaultValue(State.INIT)
-            .commit(),
-
-            OVERWRITE_ELEMENT(expected).key("visibility")
-            .setNewDefaultValue(EXPERT)
             .commit(),
 
             BOOL_ELEMENT(expected).key("boolProperty")

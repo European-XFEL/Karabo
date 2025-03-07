@@ -18,8 +18,7 @@ from time import sleep
 
 from karabo import __version__ as karaboVersion
 from karabo.bound import (
-    AccessLevel, Epochstamp, Hash, SignalSlotable, Timestamp, Trainstamp,
-    fullyEqual)
+    Epochstamp, Hash, SignalSlotable, Timestamp, Trainstamp, fullyEqual)
 from karabo.bound.testing import BoundDeviceTestCase
 
 instTimeout = 30
@@ -53,7 +52,6 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
             self.assertEqual(props.get("classVersion"),
                              "karabo-" + karaboVersion)
             self.assertEqual(props.get("karaboVersion"), karaboVersion)
-            self.assertEqual(props.get("visibility"), AccessLevel.EXPERT)
             self.assertEqual(props.get("serverId"), SERVER_ID)
             # Cannot know the pid - but it is non-zero and different from ours
             self.assertNotEqual(props.get("pid"), 0)

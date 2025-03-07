@@ -32,8 +32,8 @@ from subprocess import Popen, TimeoutExpired
 
 from karabind import (
     CHOICE_ELEMENT, INT32_ELEMENT, LIST_ELEMENT, NODE_ELEMENT,
-    OVERWRITE_ELEMENT, STRING_ELEMENT, VECTOR_STRING_ELEMENT, AccessLevel,
-    Broker, EventLoop, Hash, Logger, Schema, SignalSlotable, Unit, Validator,
+    OVERWRITE_ELEMENT, STRING_ELEMENT, VECTOR_STRING_ELEMENT, Broker,
+    EventLoop, Hash, Logger, Schema, SignalSlotable, Unit, Validator,
     saveToFile)
 from karabo.common.api import KARABO_LOGGER_CONTENT_DEFAULT, ServerFlags
 
@@ -74,15 +74,6 @@ class DeviceServer:
                 "The host's definition will be used if not specified.")
             .assignmentOptional().noDefaultValue()
             .expertAccess()
-            .init()
-            .commit(),
-
-            INT32_ELEMENT(expected).key("visibility")
-            .displayedName("Visibility")
-            .description("Configures who is allowed to see this server at all")
-            .assignmentOptional().defaultValue(AccessLevel.OBSERVER)
-            .options("0 1 2 3 4")
-            .adminAccess()
             .init()
             .commit(),
 
@@ -199,9 +190,6 @@ class DeviceServer:
         else:
             self.serverid = self._generateDefaultServerId()
 
-        # What visibility this server should have
-        self.visibility = config.get("visibility")
-
         self.connectionParameters = copy.copy(config['connection'])
         self.loggerParameters = None  # assemble in loadLogger
         self.pid = os.getpid()
@@ -216,7 +204,6 @@ class DeviceServer:
         info["serverId"] = self.serverid
         info["version"] = self.__class__.__version__
         info["host"] = self.hostname
-        info["visibility"] = self.visibility
         info["lang"] = "bound"
         info["log"] = config.get("Logger.priority")
 
@@ -330,10 +317,8 @@ class DeviceServer:
                     logs.append(("ERROR", m))
 
         instInfo = Hash("deviceClasses",
-                        [classid for classid in self.availableDevices.keys()],
-                        "visibilities",
-                        [d['schema'].getDefaultValue("visibility")
-                         for d in self.availableDevices.values()])
+                        [classid for classid in self.availableDevices.keys()])
+
         return instInfo, logs
 
     def doAutoStart(self):
