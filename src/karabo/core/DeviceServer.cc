@@ -107,17 +107,6 @@ namespace karabo {
                 Schema::AccessLevel::ADMIN};
             // clang-format on
 
-            INT32_ELEMENT(expected)
-                  .key("visibility")
-                  .displayedName("Visibility")
-                  .description("Configures who is allowed to see this server at all")
-                  .assignmentOptional()
-                  .defaultValue(Schema::AccessLevel::OBSERVER)
-                  .options(visibilityOptions)
-                  .adminAccess()
-                  .init()
-                  .commit();
-
             CHOICE_ELEMENT(expected)
                   .key("connection")
                   .displayedName("Connection")
@@ -225,7 +214,7 @@ namespace karabo {
             if (config.has("autoStart")) config.get("autoStart", m_autoStart);
 
             // What visibility this server should have
-            config.get("visibility", m_visibility);
+            m_visibility = Schema::AccessLevel::OBSERVER;
 
             // What is the TimeServer ID
             config.get("timeServerId", m_timeServerId);
@@ -694,7 +683,8 @@ namespace karabo {
                               Schema::AssemblyRules(karabo::util::READ | karabo::util::WRITE | karabo::util::INIT));
 
                         // Hash conf{"mustNotify", false, "xsd", schema};
-                        visibilities.push_back(schema.getDefaultValue<int>("visibility"));
+                        // "visibility" is not a parameter and hard-coded default is ...
+                        visibilities.push_back(karabo::util::Schema::OBSERVER);
 
                     } catch (const std::exception& e) {
                         KARABO_LOG_ERROR << "Device \"" << baseDevice

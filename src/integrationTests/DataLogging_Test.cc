@@ -155,7 +155,7 @@ void DataLogging_Test::testMigrateFileLoggerData() {
     const std::string migrationResultsPath = absLoggerPath + std::string("/migrationresults");
     std::ostringstream cmd;
     cmd << "cd ../../../src/pythonKarabo; ../../karabo/extern/bin/python3 ";
-    cmd << "karabo/influxdb/dl_migrator.py ";
+    cmd << "karabo/influx_db/dl_migrator.py ";
 
     cmd << influxDbName << " " << absLoggerPath << "/karaboHistory/" << " " << migrationResultsPath << " ";
     cmd << "--write-url " << boost::algorithm::replace_first_copy(influxUrlWrite, "tcp://", "http://") << " ";

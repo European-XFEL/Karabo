@@ -92,8 +92,6 @@ namespace karabo {
                   .setNewDefaultValue(State::INIT)
                   .commit();
 
-            OVERWRITE_ELEMENT(expected).key("visibility").setNewDefaultValue<int>(Schema::AccessLevel::EXPERT).commit();
-
             BOOL_ELEMENT(expected)
                   .key("boolProperty")
                   .displayedName("Bool property")
@@ -935,6 +933,7 @@ namespace karabo {
 
         PropertyTest::PropertyTest(const Hash& input)
             : Device(input), m_writingOutput(false), m_writingOutputTimer(karabo::net::EventLoop::getIOService()) {
+            m_visibility = karabo::util::Schema::EXPERT;
             // Signal for test of order between emitted signal and direct slot calls.
             // Note that (using JMS broker) the order is NOT guaranteed for KARABO_SIGNAL since that has
             // lower priority - seen that a slot call overtook few hundred messages triggered by signals!

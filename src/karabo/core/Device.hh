@@ -222,6 +222,8 @@ namespace karabo {
 
             karabo::util::Epochstamp m_lastBrokerErrorStamp;
 
+           protected:
+            int m_visibility = 0;
 
            public:
             // Derived classes shall use "<packageName>-<repositoryVersion>" as their version
