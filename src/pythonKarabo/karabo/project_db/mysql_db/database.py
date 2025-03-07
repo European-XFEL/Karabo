@@ -238,14 +238,6 @@ class ProjectDatabase(DatabaseBase):
             AttributeError if a non-supported type is passed
         """
 
-        print("")
-        print("**** @ProjectDatabase.save_item ****")
-        print(f"domain = {domain}")
-        print(f"uuid = {uuid}")
-        print(f"item_xml = {item_xml}")
-        print("************************************")
-        print("")
-
         with self.session_gen() as session:
             query = select(ProjectDomain).where(ProjectDomain.name == domain)
             project_domain = session.exec(query).first()
@@ -307,22 +299,10 @@ class ProjectDatabase(DatabaseBase):
                 raise ProjectDBError(
                     f"Saving of items of type '{item_type}' not supported")
 
-        # print("")
-        # print("**** @ProjectDatabase.save_item ****")
-        # print(f"item_xml = {item_xml}")
-        # print("************************************")
-        # print("")
-
         meta = {}
         meta['domain'] = domain
         meta['uuid'] = uuid
         meta['date'] = timestamp
-
-        print("")
-        print("**** @ProjectDatabase.save_item ****")
-        print(f"return value: meta = {meta}")
-        print("************************************")
-        print("")
 
         return meta
 
@@ -349,3 +329,49 @@ class ProjectDatabase(DatabaseBase):
         print("************************************")
         print("")
         return []
+
+    def get_configurations_from_device_name_part(self, domain, device_id_part):
+        """
+        Returns a list of configurations for a given device
+        :param domain: DB domain
+        :param device_id_part: part of device name; search is case-insensitive.
+        :return: a list of dicts:
+            [{"config_id": uuid of the configuration,
+              "device_uuid": device instance uuid in the DB,
+              "device_id": device instance id},
+              ...
+            ]
+        """
+        instances_by_name_part = (
+            self.reader.get_domain_device_instances_by_name_part(
+                domain, device_id_part))
+        results = []
+        for instance in instances_by_name_part:
+            configs = self.reader.get_device_configs_of_instance(instance)
+            for config in configs:
+                results.append(
+                    {"config_id": config.uuid,
+                     "device_uuid": instance.uuid,
+                     "device_id": instance.name})
+        return results
+
+    def get_projects_data_from_device(self, domain, uuid):
+        """
+        Returns the project which contain a device instance with a given uuid
+
+        :param domain: DB domain
+        :param uuid: the uuid of the device instance from the database
+        :return: a list containing project names, uuids and last modification
+                 data.
+        """
+        instance = self.reader.get_device_instance_from_uuid(uuid)
+        # From the DB structure, a given device instance only belongs to
+        # one project
+        project = self.reader.get_device_instance_project(instance)
+        results = None
+        if project:
+            results = [
+                {"projectname": project.name,
+                 "date": project.date.strftime("%Y-%m-%d %H:%M:%S"),
+                 "uuid": project.uuid}]
+        return results

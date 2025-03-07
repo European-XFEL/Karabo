@@ -17,7 +17,7 @@
 # DB data reading functions
 
 from sqlalchemy.orm import sessionmaker
-from sqlmodel import select
+from sqlmodel import column, select
 
 from .models import (
     DeviceConfig, DeviceInstance, DeviceServer, Macro, Project, ProjectDomain,
@@ -154,3 +154,32 @@ class DbReader:
             query = select(DeviceConfig).where(DeviceConfig.uuid == uuid)
             config = session.exec(query).first()
         return config
+
+    def get_domain_device_instances_by_name_part(
+            self, domain: str, name_part: str) -> list[DeviceInstance]:
+        with self.session_gen() as session:
+            query = select(DeviceInstance).filter(
+                column("name").contains(name_part))
+            instances_by_name_part = session.exec(query).all()
+            # Only keep the instances linked to projects in the domain
+            instances_in_domain = []
+            for instance in instances_by_name_part:
+                device_server = instance.device_server
+                if device_server:
+                    project = device_server.project
+                    if project:
+                        project_domain = project.project_domain
+                        if project_domain.name == domain:
+                            instances_in_domain.append(instance)
+            return instances_in_domain
+
+    def get_device_instance_project(
+            self, instance: DeviceInstance) -> Project | None:
+        project = None
+        with self.session_gen() as session:
+            query = select(DeviceServer).where(
+                DeviceServer.id == instance.device_server_id)
+            device_server = session.exec(query).first()
+            if device_server:
+                project = device_server.project
+        return project
