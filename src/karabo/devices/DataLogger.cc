@@ -108,9 +108,6 @@ namespace karabo {
                   .minInc(1)
                   .commit();
 
-            // Hide the loggers from the standard view in clients
-            OVERWRITE_ELEMENT(expected).key("visibility").setNewDefaultValue<int>(Schema::AccessLevel::ADMIN).commit();
-
             SLOT_ELEMENT(expected)
                   .key("flush")
                   .displayedName("Flush")
@@ -141,6 +138,7 @@ namespace karabo {
             : karabo::core::Device(input), m_flushDeadline(karabo::net::EventLoop::getIOService()) {
             // start "flush" actor ...
             input.get("flushInterval", m_flushInterval); // in seconds
+            m_visibility = karabo::util::Schema::ADMIN;
 
             // Register slots in constructor to ensure existence when sending instanceNew
             KARABO_SLOT(slotChanged, Hash /*changedConfig*/, string /*deviceId*/);

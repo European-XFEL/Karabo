@@ -114,16 +114,6 @@ namespace karabo {
                   .init()
                   .commit();
 
-            INT32_ELEMENT(expected)
-                  .key("visibility")
-                  .displayedName("Visibility")
-                  .description("Configures who is allowed to see this device at all")
-                  .assignmentOptional()
-                  .defaultValue(karabo::util::Schema::OBSERVER)
-                  .adminAccess()
-                  .init()
-                  .commit();
-
             STRING_ELEMENT(expected)
                   .key("classId")
                   .displayedName("ClassID")
@@ -319,6 +309,9 @@ namespace karabo {
             // Set instanceId
             if (configuration.has("_deviceId_")) configuration.get("_deviceId_", m_deviceId);
             else m_deviceId = "__none__";
+
+            // Default visibility/accessLevel...
+            m_visibility = karabo::util::Schema::OBSERVER;
 
             // Make the configuration the initial state of the device
             m_parameters = configuration;
@@ -894,7 +887,7 @@ namespace karabo {
             instanceInfo.set("type", "device");
             instanceInfo.set("classId", getClassInfo().getClassId());
             instanceInfo.set("serverId", m_serverId);
-            instanceInfo.set("visibility", this->get<int>("visibility"));
+            instanceInfo.set("visibility", m_visibility);
             instanceInfo.set("host", this->get<std::string>("hostName"));
             std::string status;
             const karabo::util::State state = this->getState();

@@ -204,8 +204,6 @@ namespace karabo {
 
             OVERWRITE_ELEMENT(expected).key("deviceId").setNewDefaultValue("Karabo_GuiServer_0").commit();
 
-            OVERWRITE_ELEMENT(expected).key("visibility").setNewDefaultValue<int>(Schema::AccessLevel::ADMIN).commit();
-
             // Monitor performance of this system relevant device
             OVERWRITE_ELEMENT(expected).key("performanceStatistics.enable").setNewDefaultValue(true).commit();
 
@@ -452,6 +450,7 @@ namespace karabo {
               m_timeout(config.get<int>("timeout")),
               m_authClient(config.get<std::string>("authServer")),
               m_onlyAppModeClients(config.get<bool>("onlyAppModeClients")) {
+            m_visibility = karabo::util::Schema::ADMIN;
             KARABO_INITIAL_FUNCTION(initialize)
 
             KARABO_SLOT(slotLoggerMap, Hash /*loggerMap*/)

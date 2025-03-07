@@ -555,7 +555,6 @@ async def test_history(deviceTest):
 </autoStart>
 <scanPlugins KRB_Type="STRING">false</scanPlugins>
 <serverId KRB_Type="STRING">karabo/dataLogger</serverId>
-<visibility>4</visibility>
 <Logger><priority>INFO</priority></Logger>
 </DeviceServer>""")
     xml.close()
