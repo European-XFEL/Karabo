@@ -21,8 +21,6 @@ from karabo.common import const as constmod
 def test_schema_attributes_def():
     tuple_symbol = "KARABO_SCHEMA_ATTRIBUTES"
     ignored_symbols = (
-        "KARABO_EDITABLE_ATTRIBUTES",
-        "KARABO_RUNTIME_ATTRIBUTES_MDL",
         "KARABO_SCHEMA_DEFAULT_SCENE",
         "KARABO_LOGGER_CONTENT_DEFAULT",
         "KARABO_CLASS_ID_STATE",
