@@ -16,6 +16,8 @@
 
 # XML emitters for Models
 
+import datetime
+
 from .models import (
     DeviceConfig, DeviceInstance, DeviceServer, Macro, Project, Scene)
 
@@ -73,7 +75,8 @@ def emit_project_xml(project: Project,
         '<xml xmlns:exist="http://exist.sourceforge.net/NS/exist" '
         f'uuid="{project.uuid}" simple_name="{project.name}" '
         f'description="{project.description}" '
-        f'date="{project.date}" is_trashed="{project.trashed}" '
+        f'date="{project.date.replace(tzinfo=datetime.UTC)}" '
+        f'is_trashed="{project.trashed}" '
         f'item_type="project" user="{project.last_modified_user}" '
         'revision="0" alias="default">'
         '<root KRB_Artificial="">'
@@ -85,6 +88,7 @@ def emit_project_xml(project: Project,
         '</project>'
         '</root>'
         '</xml>')
+
     return xml
 
 
@@ -92,10 +96,11 @@ def emit_scene_xml(scene: Scene) -> str:
     xml = (
         '<xml xmlns:exist="http://exist.sourceforge.net/NS/exist" '
         f'uuid="{scene.uuid}" simple_name="{scene.name}" '
-        f'date="{scene.date}" item_type="scene" '
+        f'date="{scene.date.replace(tzinfo=datetime.UTC)}" item_type="scene" '
         f'user="{scene.last_modified_user}" revision="0" alias="default">'
         f'{scene.svg_data}'
         '</xml>')
+
     return xml
 
 
@@ -104,12 +109,13 @@ def emit_macro_xml(macro: Macro) -> str:
     xml = (
         '<xml xmlns:exist="http://exist.sourceforge.net/NS/exist" '
         f'uuid="{macro.uuid}" simple_name="{macro.name}" description="" '
-        f'date="{macro.date}" item_type="macro" '
+        f'date="{macro.date.replace(tzinfo=datetime.UTC)}" item_type="macro" '
         f'user="{macro.last_modified_user}" revision="0" alias="default">'
         '  <macro>'
         f'{base64.b64encode(macro.body.encode('utf-8')).decode()}'
         '  </macro>'
         '</xml>')
+
     return xml
 
 
@@ -118,7 +124,8 @@ def emit_device_server_xml(server: DeviceServer,
     xml = (
         '<xml xmlns:exist="http://exist.sourceforge.net/NS/exist" '
         f'uuid="{server.uuid}" simple_name="{server.name}" '
-        f'item_type="device_server" date="{server.date}" '
+        'item_type="device_server" '
+        f'date="{server.date.replace(tzinfo=datetime.UTC)}" '
         f'user="{server.last_modified_user}" revision="0" alias="default">'
         f'<device_server server_id="{server.name}" host="">')
     for device_instance in device_instances:
@@ -128,6 +135,7 @@ def emit_device_server_xml(server: DeviceServer,
     xml += (
         '</device_server>'
         '</xml>')
+
     return xml
 
 
@@ -137,7 +145,8 @@ def emit_device_instance_xml(instance: DeviceInstance,
         '<xml xmlns:exist="http://exist.sourceforge.net/NS/exist" '
         f'uuid="{instance.uuid}" simple_name="{instance.name}" '
         'description="" item_type="device_instance" '
-        f'date="{instance.date}" user="{instance.last_modified_user}"'
+        f'date="{instance.date.replace(tzinfo=datetime.UTC)}" '
+        f'user="{instance.last_modified_user}"'
         ' revision="0" alias="default">')
     xml += (
         f'<device_instance class_id="{instance.class_id}" '
@@ -149,6 +158,7 @@ def emit_device_instance_xml(instance: DeviceInstance,
             f'<device_config class_id="{instance.class_id}" '
             f'uuid="{config.uuid}" revision="0"/>')
     xml += '</device_instance></xml>'
+
     return xml
 
 
@@ -157,8 +167,10 @@ def emit_device_config_xml(config: DeviceConfig) -> str:
         '<xml xmlns:exist="http://exist.sourceforge.net/NS/exist" '
         f'uuid="{config.uuid}" simple_name="{config.name}" '
         f'description="{config.description}" '
-        f'date="{config.date}" item_type="device_config" '
+        f'date="{config.date.replace(tzinfo=datetime.UTC)}" '
+        'item_type="device_config" '
         f'user="{config.last_modified_user}" revision="0" alias="default">'
         f'{config.config_data}'
         '</xml>')
+
     return xml

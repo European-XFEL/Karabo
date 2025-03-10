@@ -44,7 +44,7 @@ class DbWriter:
     def save_project_item(self, domain: str, uuid: str, xml: str,
                           timestamp: str):
         prj = etree.fromstring(xml)
-        date = datetime.datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
+        date = datetime.datetime.fromisoformat(timestamp)
 
         # Save the project attributes
         project_id = None  # the id of the updated or new project
@@ -273,7 +273,7 @@ class DbWriter:
         # In MySQL the macro bodies are not Base64 encoded
         macro_body = base64.b64decode(macro_obj.getchildren()[0].text)
 
-        date = datetime.datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
+        date = datetime.datetime.fromisoformat(timestamp)
 
         with self.session_gen() as session:
             query = select(Macro).where(Macro.uuid == uuid)
@@ -296,7 +296,7 @@ class DbWriter:
             session.commit()
 
     def save_scene_item(self, uuid: str, xml: str, timestamp: str):
-        date = datetime.datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
+        date = datetime.datetime.fromisoformat(timestamp)
         scene_obj = etree.fromstring(xml)
         scene_uuid = scene_obj.attrib["uuid"]
         scene_name = scene_obj.attrib["simple_name"]
@@ -326,7 +326,7 @@ class DbWriter:
             session.commit()
 
     def save_device_config_item(self, uuid: str, xml: str, timestamp: str):
-        date = datetime.datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
+        date = datetime.datetime.fromisoformat(timestamp)
         config_obj = etree.fromstring(xml)
         config_uuid = config_obj.attrib["uuid"]
         config_name = config_obj.attrib["simple_name"]
@@ -361,7 +361,7 @@ class DbWriter:
             session.commit()
 
     def save_device_instance_item(self, uuid: str, xml: str, timestamp: str):
-        date = datetime.datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
+        date = datetime.datetime.fromisoformat(timestamp)
         instance_obj = etree.fromstring(xml)
         instance_uuid = instance_obj.attrib["uuid"]
         instance_user = instance_obj.attrib["user"]
@@ -432,7 +432,7 @@ class DbWriter:
             session.commit()
 
     def save_device_server_item(self, uuid: str, xml: str, timestamp: str):
-        date = datetime.datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
+        date = datetime.datetime.fromisoformat(timestamp)
         server_obj = etree.fromstring(xml)
         server_uuid = server_obj.attrib["uuid"]
         server_name = server_obj.attrib["simple_name"]
