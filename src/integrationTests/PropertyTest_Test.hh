@@ -65,7 +65,7 @@ class PropertyTest_Test : public CPPUNIT_NS::TestFixture {
    private:
     karabo::core::DeviceServer::Pointer m_deviceServer;
 
-    boost::thread m_eventLoopThread;
+    std::jthread m_eventLoopThread;
 
     karabo::core::DeviceClient::Pointer m_deviceClient;
 };

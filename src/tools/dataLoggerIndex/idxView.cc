@@ -22,6 +22,7 @@
  * Created on July 28, 2015, 12:11 PM
  */
 
+#include <boost/system/error_code.hpp>
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>

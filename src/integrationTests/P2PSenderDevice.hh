@@ -60,7 +60,7 @@ namespace karabo {
         void writing(unsigned int dataSize);
         void writingProfile();
 
-        boost::thread m_writingThread;
+        std::jthread m_writingThread;
 
         bool m_stopWriting;
     };

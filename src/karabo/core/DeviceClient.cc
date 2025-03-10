@@ -168,7 +168,7 @@ namespace karabo {
                     if (2 * countdown < kMaxCompleteInitializationAttempts) {
                         std::this_thread::sleep_for(1ms);
                     }
-                    boost::this_thread::yield();
+                    std::this_thread::yield();
                     karabo::net::EventLoop::getIOService().post(
                           std::bind(&DeviceClient::completeInitialization, this, --countdown));
                     return;

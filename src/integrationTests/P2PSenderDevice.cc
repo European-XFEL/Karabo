@@ -199,9 +199,9 @@ namespace karabo {
         // start extra thread since write is a slot and must not block
         if (get<std::string>("scenario") == "test") {
             const unsigned int dataSize = get<unsigned int>("dataSize");
-            m_writingThread = boost::thread(std::bind(&Self::writing, this, dataSize));
+            m_writingThread = std::jthread(std::bind(&Self::writing, this, dataSize));
         } else {
-            m_writingThread = boost::thread(std::bind(&Self::writingProfile, this));
+            m_writingThread = std::jthread(std::bind(&Self::writingProfile, this));
         }
 
         updateState(State::ACTIVE);

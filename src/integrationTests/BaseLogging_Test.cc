@@ -268,7 +268,7 @@ void BaseLogging_Test::setUp() {
     // setenv("KARABO_BROKER", "tcp://localhost:7777", true);
 
     // Start central event-loop
-    auto work = []() {
+    auto work = [](std::stop_token stoken) {
         try {
             EventLoop::work();
         } catch (const karabo::util::TimeoutException& e) {
@@ -276,7 +276,7 @@ void BaseLogging_Test::setUp() {
             std::clog << "Timeout from EventLoop::work(): " << e << std::endl;
         }
     };
-    m_eventLoopThread = boost::thread(work);
+    m_eventLoopThread = std::jthread(work);
 
     // Create and start server
     Hash config("serverId", m_server, "scanPlugins", false, "Logger.priority", DEFAULT_TEST_LOG_PRIORITY);
@@ -306,11 +306,8 @@ void BaseLogging_Test::tearDown() {
     m_sigSlot.reset();
     m_deviceClient.reset();
     m_deviceServer.reset();
-
     EventLoop::stop();
-    if (m_eventLoopThread.joinable()) {
-        m_eventLoopThread.join();
-    }
+    if (m_eventLoopThread.joinable()) m_eventLoopThread.join();
 
     // Clean up directory - you may want to comment out these lines for debugging
     std::filesystem::remove("loggermap.xml");

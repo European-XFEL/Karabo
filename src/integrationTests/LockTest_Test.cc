@@ -45,7 +45,7 @@ LockTest_Test::~LockTest_Test() {}
 
 void LockTest_Test::setUp() {
     // Start central event-loop
-    m_eventLoopThread = boost::thread(std::bind(&EventLoop::work));
+    m_eventLoopThread = std::jthread([](std::stop_token stoken) { EventLoop::work(); });
     // Create and start server
     Hash config("serverId", "testServerLock", "scanPlugins", false, "Logger.priority", "FATAL");
     m_deviceServer = DeviceServer::create("DeviceServer", config);
@@ -60,7 +60,6 @@ void LockTest_Test::tearDown() {
     m_deviceClient.reset();
     m_deviceServer.reset();
     EventLoop::stop();
-    m_eventLoopThread.join();
 }
 
 

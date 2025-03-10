@@ -30,12 +30,12 @@
 #include <boost/asio/dispatch.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/post.hpp>
-#include <boost/thread.hpp>
 #include <functional>
 #include <memory>
 #include <random>
 #include <set>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include "karabo/util/ClassInfo.hh"
@@ -311,7 +311,7 @@ namespace karabo::net {
         // For internal event loop for all AMQP communication
         mutable boost::asio::io_context m_ioContext;
         std::unique_ptr<boost::asio::io_context::work> m_work;
-        boost::thread m_thread;
+        std::jthread m_thread;
 
         // Connection and its state:
         std::shared_ptr<AMQP::TcpConnection> m_connection;

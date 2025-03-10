@@ -607,7 +607,7 @@ namespace karabo {
             KARABO_LOG_FRAMEWORK_DEBUG << debugId << "ENTRY onTcpChannelRead  header is ...\n"
                                        << header << "\nand data.size=" << data.size();
 
-            const std::string traceId("(" + boost::lexical_cast<std::string>(boost::this_thread::get_id()) +
+            const std::string traceId("(" + boost::lexical_cast<std::string>(std::this_thread::get_id()) +
                                       ": onTcpChannelRead) ");
 
             try {
@@ -840,7 +840,7 @@ namespace karabo {
               const karabo::net::Channel::WeakPointer& channelW) {
             const net::Channel::Pointer channel = channelW.lock();
             if (channel && channel->isOpen()) {
-                const std::string traceId("(" + boost::lexical_cast<std::string>(boost::this_thread::get_id()) +
+                const std::string traceId("(" + boost::lexical_cast<std::string>(std::this_thread::get_id()) +
                                           ": deferredNotificationOfOutputChannel...) ");
                 KARABO_LOG_FRAMEWORK_TRACE << traceId << "INPUT Notifying output channel that " << this->getInstanceId()
                                            << " is ready for next read.";

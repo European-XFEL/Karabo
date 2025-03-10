@@ -25,11 +25,11 @@
 #include "DeviceClient_Test.hh"
 
 #include <boost/algorithm/string/case_conv.hpp>
-#include <boost/thread.hpp>
 #include <chrono>
 #include <future>
 #include <karabo/core/DeviceClient.hh>
 #include <string>
+#include <thread>
 #include <tuple>
 
 #include "karabo/util/Hash.hh"
@@ -114,7 +114,7 @@ void DeviceClient_Test::testConcurrentInitTopology() {
     // Calls DeviceClient::getDevices and returns the elapsed time, in milliseconds, for
     // the call to complete, a vector with the device names and the id of the thread
     // that executed the call.
-    auto getDeviceWorker = [this]() -> std::tuple<unsigned, std::vector<std::string>, boost::thread::id> {
+    auto getDeviceWorker = [this]() -> std::tuple<unsigned, std::vector<std::string>, std::jthread::id> {
         const auto startTimePoint = std::chrono::high_resolution_clock::now();
 
         const std::vector<std::string> devices = this->m_deviceClient->getDevices();
@@ -124,7 +124,7 @@ void DeviceClient_Test::testConcurrentInitTopology() {
 
         unsigned elapsedTimeMs = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
 
-        return make_tuple(elapsedTimeMs, devices, boost::this_thread::get_id());
+        return make_tuple(elapsedTimeMs, devices, std::this_thread::get_id());
     };
 
     // Dispatches two calls to getDeviceWorker, each in a different thread and then asserts on the results.
@@ -146,8 +146,8 @@ void DeviceClient_Test::testConcurrentInitTopology() {
     CPPUNIT_ASSERT(getDev2Time > 600u && getDev2Time <= 1400u);
 
     // ... should have been executed in different threads and ...
-    const boost::thread::id getDev1ThreadId = std::get<2>(getDev1Result);
-    const boost::thread::id getDev2ThreadId = std::get<2>(getDev2Result);
+    const std::jthread::id getDev1ThreadId = std::get<2>(getDev1Result);
+    const std::jthread::id getDev2ThreadId = std::get<2>(getDev2Result);
     CPPUNIT_ASSERT(getDev1ThreadId != getDev2ThreadId);
 
     // ... should return the same list of devices.
