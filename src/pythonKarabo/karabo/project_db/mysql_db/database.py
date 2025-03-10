@@ -15,7 +15,6 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 
 import datetime
-from time import gmtime, strftime
 
 from sqlmodel import SQLModel, select
 
@@ -28,8 +27,6 @@ from .models import ProjectDomain
 from .models_xml import (
     emit_device_config_xml, emit_device_instance_xml, emit_device_server_xml,
     emit_macro_xml, emit_project_xml, emit_scene_xml)
-
-DATE_FORMAT: str = '%Y-%m-%d %H:%M:%S'
 
 
 # TODO: HandleABC is an "artificial" dependency for the mysql case. Put here
@@ -181,18 +178,13 @@ class ProjectDatabase(DatabaseBase):
                 if config:
                     current_modified = config.date
 
-        print("")
-        print("%%%%%% @_check_for_modification %%%%%")
-        print(f"uuid = {uuid}")
-        print(f"old_date = {old_date}")
-        print(f"item_type = {item_type}")
-        print(f"last_modified (from DB) = {current_modified}")
-        print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
-        print("")
-
         if current_modified:
-            old_date_date = datetime.datetime.strptime(
-                old_date, "%Y-%m-%d %H:%M:%S")
+            old_date_date = datetime.datetime.fromisoformat(old_date)
+            # current_modified was read from the DB as a naive datetime, but we
+            # know it is in UTC. Add the timezone information so it can be
+            # compared to the non-naive obtained from old_date.
+            current_modified = current_modified.replace(
+                tzinfo=datetime.UTC)
             if old_date_date < current_modified:
                 # The data has been changed in the database between the
                 # old_date that the GUI client sent and the current time.
@@ -259,7 +251,9 @@ class ProjectDatabase(DatabaseBase):
         if 'user' not in item_tree.attrib:
             item_tree.attrib['user'] = 'Karabo User'
         if not item_tree.attrib.get('date'):
-            timestamp = strftime(DATE_FORMAT, gmtime())
+            timestamp = datetime.datetime.now(datetime.UTC).isoformat(
+                timespec="seconds")
+            # timestamp = strftime(DATE_FORMAT, gmtime())
             item_tree.attrib['date'] = timestamp
         else:
             modified, reason = self._check_for_modification(
@@ -271,7 +265,9 @@ class ProjectDatabase(DatabaseBase):
                                       reason)
                 raise ProjectDBError(message)
             # Update time stamp
-            timestamp = strftime(DATE_FORMAT, gmtime())
+            timestamp = datetime.datetime.now(datetime.UTC).isoformat(
+                timespec="seconds")
+            # timestamp = strftime(DATE_FORMAT, gmtime())
             item_tree.attrib['date'] = timestamp
 
         # XXX: Add a revision/alias to keep old code from blowing up
