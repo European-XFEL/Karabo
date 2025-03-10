@@ -1587,67 +1587,6 @@ class Tests(TestCase):
         with self.assertRaises(ValueError):
             Int32(archivePolicy=42)
 
-    def test_runtime_updates(self):
-        """We cannot test and create overwrite schema injection in this test,
-        but we can test the acceptance of the input"""
-
-        class Nested(Configurable):
-            integer = Int32(defaultValue=50,
-                            warnHigh=100)
-
-        class Device(Configurable):
-            counter = Int32(
-                defaultValue=20,
-                alarmLow=0, alarmHigh=2000)
-
-            noDefault = Int32(
-                alarmLow=0, alarmHigh=2000)
-
-            nested = Node(Nested)
-
-        d = Device()
-        properties = dir(d)
-        self.assertEqual(properties, ["counter", "nested", "noDefault"])
-        nested_properties = dir(d.nested)
-        self.assertEqual(nested_properties, ["integer"])
-
-        # True - Successful alarm change
-        updates = [Hash('path', "counter",
-                        'attribute', "alarmHigh",
-                        'value', 100)]
-        reply = d.applyRuntimeUpdates(updates)
-        self.assertTrue(reply)
-
-        # False - Test wrong property key
-        updates = [Hash('path', "counterX",
-                        'attribute', "alarmHigh",
-                        'value', 100)]
-        reply = d.applyRuntimeUpdates(updates)
-        self.assertFalse(reply)
-
-        # False - We cannot change if there is no value
-        # This was a necessary design choice back then
-        # It won't be tackled due to cost and risk
-        updates = [Hash('path', "noDefault",
-                        'attribute', "alarmHigh",
-                        'value', 100)]
-        reply = d.applyRuntimeUpdates(updates)
-        self.assertFalse(reply)
-
-        # False - Unknown attribute
-        updates = [Hash('path', "counter",
-                        'attribute', "unknown",
-                        'value', 100)]
-        reply = d.applyRuntimeUpdates(updates)
-        self.assertFalse(reply)
-
-        # False - Node attributes cannot be changed
-        updates = [Hash('path', "nested.integer",
-                        'attribute', "warnHigh",
-                        'value', 100)]
-        reply = d.applyRuntimeUpdates(updates)
-        self.assertFalse(reply)
-
     def test_node_schema_attrs(self):
         class Nested(Configurable):
             daqDataType = DaqDataType.TRAIN

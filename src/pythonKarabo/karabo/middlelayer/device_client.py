@@ -493,25 +493,6 @@ async def getConfigurationFromName(device, name):
 
 
 @synchronize
-async def getLastConfiguration(device, priority=3):
-    """Get the last configuration of a deviceId with given `priority`::
-
-        getLastConfiguration(device, 3)
-
-    :returns: A karabo configuration hash `Hash` of the device.
-    """
-    if isinstance(device, ProxyBase):
-        device = device._deviceId
-    instance = get_instance()
-    slot = "slotGetLastConfiguration"
-    h = Hash("deviceId", device, "priority", priority)
-    reply = await instance.call(KARABO_CONFIG_MANAGER, slot, h)
-    item = reply["item"]
-
-    return item
-
-
-@synchronize
 async def listConfigurationFromName(device, name_part=''):
     """List the list of configurations of a deviceId with given `name_part`::
 
@@ -523,10 +504,7 @@ async def listConfigurationFromName(device, name_part=''):
     Each configuration item is a Hash containing:
 
         - name: the configuration name
-        - timepoint: the timepoint the device was taken
-        - description: the description of the configuration
-        - priority: the priority of the configuration
-        - user: the user belonging to the configuration
+        - timepoint: the timepoint the configuration of the device was taken
     """
     if isinstance(device, ProxyBase):
         device = device._deviceId
@@ -540,39 +518,36 @@ async def listConfigurationFromName(device, name_part=''):
 
 
 @synchronize
-async def listDevicesWithConfiguration(priority=3):
-    """Return the list of devices which have a configuration of `priority`::
+async def listDevicesWithConfiguration():
+    """Return the list of devices which have a configuration::
 
-        listDevicesWithConfiguration(priority=3)
+        listDevicesWithConfiguration()
 
     :returns: List of deviceIds, e.g. ["deviceA", "deviceB"].
     """
     instance = get_instance()
     slot = "slotListDevices"
-    h = Hash("priority", priority)
-    reply = await instance.call(KARABO_CONFIG_MANAGER, slot, h)
+    reply = await instance.call(KARABO_CONFIG_MANAGER, slot, Hash())
     deviceIds = reply["item"]
-
     return deviceIds
 
 
 @synchronize
-async def instantiateFromName(device, name=None, classId=None, serverId=None):
+async def instantiateFromName(
+    device: str | ProxyBase, name: str,
+        classId: str | None = None, serverId: str | None = None):
     """Instantiate a device from `name` via the ConfigurationManager::
 
         instantiateFromName(device, name='run2015')
 
-    - device: The mandatory parameter, either deviceId or proxy
-    - name: Optional parameter. If no `name` is provided, the latest
-            configuration is retrieved with priority 3 (INIT).
+    - device: Mandatory parameter, either deviceId or proxy
+    - name: Mandatory parameter, name of configuration
     - classId: Optional parameter for validation of classId
     - serverId: Optional parameter
     """
     if isinstance(device, ProxyBase):
         device = device._deviceId
-    h = Hash("deviceId", device)
-    if name is not None:
-        h["name"] = name
+    h = Hash("deviceId", device, "name", name)
     if classId is not None:
         h["classId"] = classId
     if serverId is not None:
@@ -587,22 +562,14 @@ async def instantiateFromName(device, name=None, classId=None, serverId=None):
 
 
 @synchronize
-async def saveConfigurationFromName(devices, name, description='', priority=1,
-                                    overwritable=False):
+async def saveConfigurationFromName(devices, name):
     """Save configuration(s) in the KaraboConfigurationManager::
 
         - The parameter `devices` can be a Karabo `proxy`, a list of deviceIds,
           a list of proxies or a mixture of them. It can be as well a single
           deviceId string.
 
-        - The description is by default empty.
-
-        - The priority default is the lowest -> 1.
-
-        - The overwritable is by default False
-
-        saveConfigurationFromName(devices, name="proposal2020",
-                                  description="working at end", priority=3)
+        saveConfigurationFromName(devices, name="proposal2020")
     """
     if isinstance(devices, list):
         devices = [dev._deviceId if isinstance(dev, ProxyBase)
@@ -616,10 +583,7 @@ async def saveConfigurationFromName(devices, name, description='', priority=1,
         devices = [devices]
     instance = get_instance()
     slot = "slotSaveConfigurationFromName"
-    h = Hash("deviceIds", devices, "priority", priority,
-             "name", name, "description", description,
-             "overwritable", overwritable)
-
+    h = Hash("deviceIds", devices, "name", name)
     await instance.call(KARABO_CONFIG_MANAGER, slot, h)
 
 

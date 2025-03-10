@@ -390,29 +390,6 @@ class Device(InjectMixin, SignalSlotable):
         self._cachedSchema = self.getDeviceSchema()
         self.signalSchemaUpdated(self._cachedSchema, self.deviceId)
 
-    @slot
-    async def slotUpdateSchemaAttributes(self, updates):
-        """Apply runtime attribute updates to the device
-
-        This method will apply all attributes to the device. If a single
-        attribute cannot be set, the success return boolean is set to False.
-        However, even with a single failure, all other remaining attributes
-        are still tried to be set.
-
-        :param updates: List of Hashes with "path", "attribute" and "value"
-                        as keys
-        """
-        success = self.applyRuntimeUpdates(updates)
-        await self.publishInjectedParameters()
-
-        ret = Hash()
-        ret["success"] = success
-        ret["instanceId"] = self.deviceId
-        ret["updatedSchema"] = self.getDeviceSchema()
-        ret["requestedUpdate"] = updates
-
-        return ret
-
 
 class DeviceClientBase(Device):
     """Keep track of other devices
