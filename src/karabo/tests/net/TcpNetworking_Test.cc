@@ -27,12 +27,12 @@
 
 #include <array>
 #include <boost/bind/bind.hpp>
-#include <boost/thread.hpp>
 #include <cassert>
 #include <chrono>
 #include <fstream>
 #include <iosfwd>
 #include <iostream>
+#include <thread>
 
 #include "karabo/io/BinarySerializer.hh"
 #include "karabo/io/BufferSet.hh"
@@ -931,7 +931,7 @@ void TcpNetworking_Test::testBufferSet() {
     using namespace karabo::util;
     using namespace karabo::net;
 
-    auto thr = boost::thread(&EventLoop::work);
+    auto thr = std::jthread(&EventLoop::work);
 
     // Create server with handler for connections
     auto serverCon = Connection::create("Tcp", Hash("type", "server"));
@@ -1090,7 +1090,7 @@ void TcpNetworking_Test::testConsumeBytesAfterReadUntil() {
     using namespace karabo::util;
     using namespace karabo::net;
 
-    auto thr = boost::thread(&EventLoop::work);
+    auto thr = std::jthread(&EventLoop::work);
 
     // Create server with handler for connections
     auto serverCon = Connection::create("Tcp", Hash("type", "server", "sizeofLength", 0));
@@ -1239,7 +1239,7 @@ void TcpNetworking_Test::testWriteAsync() {
 void TcpNetworking_Test::testAsyncWriteCompleteHandler() {
     constexpr int timeoutSec = 10;
 
-    auto thr = boost::thread(&EventLoop::work);
+    auto thr = std::jthread(&EventLoop::work);
 
     //
     // Create server, client and connect them
@@ -1269,7 +1269,7 @@ void TcpNetworking_Test::testAsyncWriteCompleteHandler() {
 
 
 void TcpNetworking_Test::testConnCloseChannelStop() {
-    auto thr = boost::thread(&EventLoop::work);
+    auto thr = std::jthread(&EventLoop::work);
 
     Connection::Pointer emptyConnPtr;
     {

@@ -47,7 +47,7 @@ PropertyTest_Test::~PropertyTest_Test() {}
 
 void PropertyTest_Test::setUp() {
     // Start central event-loop
-    m_eventLoopThread = boost::thread(std::bind(&EventLoop::work));
+    m_eventLoopThread = std::jthread([](std::stop_token stoken) { karabo::net::EventLoop::work(); });
     // Create and start server
     // FATAL log level since testAttributeEditing() triggers ERRORs on purpose which
     // might mislead someone checking the log output (e.g. when hunting some other problem).
@@ -64,7 +64,6 @@ void PropertyTest_Test::tearDown() {
     m_deviceClient.reset();
     m_deviceServer.reset();
     EventLoop::stop();
-    m_eventLoopThread.join();
 }
 
 

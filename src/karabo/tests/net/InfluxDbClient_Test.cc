@@ -51,7 +51,7 @@ void InfluxDbClient_Test::setUp() {
     Logger::configure(config);
     Logger::useOstream();
 
-    m_eventLoopThread = boost::thread(boost::bind(&EventLoop::work));
+    m_eventLoopThread = std::jthread([](std::stop_token stoken) { EventLoop::work(); });
 
     m_influxClient = karabo::net::buildInfluxReadClient();
 }
@@ -62,11 +62,8 @@ void InfluxDbClient_Test::tearDown() {
 
     EventLoop::stop();
     if (m_eventLoopThread.joinable()) {
-        bool joined = m_eventLoopThread.try_join_for(boost::chrono::seconds(10));
-        if (!joined) {
-            std::clog << "\nWARNING: Event loop thread join timed out.\n" << std::endl;
-            std::clog << "Thread(s) in the event loop: " << EventLoop::getNumberOfThreads() << std::endl;
-        }
+        m_eventLoopThread.join();
+        std::clog << "Thread(s) in the event loop: " << EventLoop::getNumberOfThreads() << std::endl;
     }
 }
 

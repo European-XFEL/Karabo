@@ -27,7 +27,7 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 #include "AlarmTesterDevice.hh"
 #include "TcpAdapter.hh"
@@ -67,7 +67,7 @@ class RunTimeSchemaAttributes_Test : public CPPUNIT_NS::TestFixture {
     void dummyMonitor(const std::string&, const karabo::util::Hash&);
 
     karabo::core::DeviceServer::Pointer m_deviceServer;
-    boost::thread m_eventLoopThread;
+    std::jthread m_eventLoopThread;
 
     karabo::core::DeviceClient::Pointer m_deviceClient;
 

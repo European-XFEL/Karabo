@@ -781,8 +781,8 @@ namespace karabo {
             // Reply/Request related
 
             // Map slot name and whether it was called globally
-            std::map<boost::thread::id, std::pair<std::string, bool>>
-                  m_currentSlots; // unordered? needs std::hash<boost::thread::id>...
+            std::map<std::jthread::id, std::pair<std::string, bool>>
+                  m_currentSlots; // unordered? needs std::hash<std::jthread::id>...
             mutable std::mutex m_currentSlotsMutex;
 
             // which one succeeded, successHandler, errorHandler
@@ -794,7 +794,7 @@ namespace karabo {
             static boost::uuids::random_generator m_uuidGenerator;
 
            protected:
-            typedef std::map<boost::thread::id, karabo::util::Hash::Pointer> Replies;
+            typedef std::map<std::jthread::id, karabo::util::Hash::Pointer> Replies;
             Replies m_replies;
             mutable std::mutex m_replyMutex;
 

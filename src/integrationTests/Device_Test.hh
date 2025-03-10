@@ -25,8 +25,8 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 
-#include <boost/function.hpp>
-#include <boost/thread.hpp>
+#include <functional>
+#include <thread>
 
 #include "karabo/core/DeviceClient.hh"
 #include "karabo/core/DeviceServer.hh"
@@ -89,7 +89,7 @@ class Device_Test : public CPPUNIT_NS::TestFixture {
     bool waitForCondition(std::function<bool()> checker, unsigned int timeoutMs);
 
     karabo::core::DeviceServer::Pointer m_deviceServer;
-    boost::thread m_eventLoopThread;
+    std::jthread m_eventLoopThread;
 
     karabo::core::DeviceClient::Pointer m_deviceClient;
 };

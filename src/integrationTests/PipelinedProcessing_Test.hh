@@ -29,7 +29,8 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
+#include <thread>
 
 #include "karabo/core/DeviceClient.hh"
 #include "karabo/core/DeviceServer.hh"
@@ -201,7 +202,7 @@ class PipelinedProcessing_Test : public CPPUNIT_NS::TestFixture {
     void killDeviceWithAssert(const std::string& deviceId);
 
     karabo::core::DeviceServer::Pointer m_deviceServer;
-    boost::thread m_eventLoopThread;
+    std::jthread m_eventLoopThread;
 
     karabo::core::DeviceClient::Pointer m_deviceClient;
 

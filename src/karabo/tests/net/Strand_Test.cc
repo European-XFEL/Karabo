@@ -52,7 +52,7 @@ Strand_Test::~Strand_Test() {}
 
 
 void Strand_Test::setUp() {
-    m_thread = std::make_shared<boost::thread>(EventLoop::work);
+    m_thread = std::make_shared<std::jthread>(EventLoop::work);
     // really switch on parallelism:
     EventLoop::addThread(m_nThreadsInPool);
 }

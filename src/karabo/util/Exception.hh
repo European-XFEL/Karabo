@@ -29,13 +29,13 @@
 
 #include <boost/circular_buffer.hpp>
 #include <boost/current_function.hpp>
-#include <boost/thread.hpp>
 #include <functional>
 #include <iostream>
 #include <map>
 #include <memory>
 #include <sstream>
 #include <string>
+#include <thread>
 
 #include "karaboDll.hh"
 
@@ -181,7 +181,7 @@ namespace karabo {
             ExceptionInfo m_exceptionInfo;
             mutable std::string m_detailedMsg;
             static std::mutex m_mutex;
-            static std::map<boost::thread::id, boost::circular_buffer<Exception::ExceptionInfo>> m_trace;
+            static std::map<std::jthread::id, boost::circular_buffer<Exception::ExceptionInfo>> m_trace;
         };
 
 

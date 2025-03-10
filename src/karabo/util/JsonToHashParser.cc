@@ -1,6 +1,7 @@
 #include "JsonToHashParser.hh"
 
 #include <nlohmann/json.hpp>
+#include <optional>
 #include <string>
 
 namespace karabo {

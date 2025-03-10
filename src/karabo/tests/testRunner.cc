@@ -17,11 +17,13 @@
  */
 #include "testRunner.hh"
 
-#include <boost/thread.hpp>
+#include <thread>
 
 #include "karabo/net/EventLoop.hh"
 
 int main(int argc, char* argv[]) {
-    boost::thread eventLoopThread = boost::thread(karabo::net::EventLoop::work);
-    return run_test(argc, argv);
+    std::jthread eventLoopThread = std::jthread([](std::stop_token stoken) { karabo::net::EventLoop::work(); });
+    int result = run_test(argc, argv);
+    karabo::net::EventLoop::stop();
+    return result;
 }
