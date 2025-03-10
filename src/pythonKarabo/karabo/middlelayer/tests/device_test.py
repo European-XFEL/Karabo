@@ -432,31 +432,6 @@ async def test_output_information_hash_version(deviceTest):
 
 @pytest.mark.timeout(30)
 @run_test
-async def test_applyRunTimeUpdates(deviceTest):
-    myDevice = deviceTest["myDevice"]
-    with (await getDevice("MyDevice")) as d:
-        assert d.counter.descriptor.minInc == 0
-        assert d.counter.descriptor.maxInc == 2000
-
-    updates = [Hash("path", "counter",
-                    "attribute", "maxInc",
-                    "value", 100.0)]
-    reply = await myDevice.slotUpdateSchemaAttributes(updates)
-    assert reply["success"]
-
-    with (await getDevice("MyDevice")) as d:
-        assert d.counter.descriptor.minInc == 0
-        assert d.counter.descriptor.maxInc == 100
-
-    updates = [Hash("path", "nocounter",
-                    "attribute", "maxExc",
-                    "value", 100.0)]
-    reply = await myDevice.slotUpdateSchemaAttributes(updates)
-    assert not reply["success"]
-
-
-@pytest.mark.timeout(30)
-@run_test
 async def test_get_property_set_property(deviceTest):
     myDevice = deviceTest["myDevice"]
 

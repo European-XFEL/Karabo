@@ -160,7 +160,7 @@ def start_ikarabo():
                        "(getConfiguration|saveConfiguration)FromName|"
                        "listConfigurationFromName|call(NoWait)?|"
                        "getConfiguration(FromPast)?|"
-                       "getLastConfiguration|getSchema(FromPast)?|"
+                       "getSchema(FromPast)?|"
                        "compareDeviceWithPast|compareDeviceConfiguration|"
                        "compareConfigurationsFromPast|getTimeInfo)")
 

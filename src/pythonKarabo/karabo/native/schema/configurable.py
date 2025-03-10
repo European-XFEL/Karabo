@@ -19,7 +19,6 @@ from inspect import ismethod
 from types import MethodType
 from weakref import WeakKeyDictionary
 
-from karabo.common.api import KARABO_RUNTIME_ATTRIBUTES_MDL
 from karabo.native.data import (
     AccessLevel, Hash, NodeType, Schema, Timestamp, has_changes)
 from karabo.native.time_mixin import get_timestamp
@@ -249,37 +248,6 @@ class Configurable:
         """
         await gather(*self._initializers)
         del self._initializers
-
-    def applyRuntimeUpdates(self, updates):
-        """Apply run-time attribute updates to a schema
-
-        :param updates: List of Hashes with "path", "attribute" and "value"
-        :return success: True if all updates could be applied, False otherwise
-        """
-
-        def _overwrite_attribute(path, attr_name, attr_value):
-            # Basic check if the attribute is allowed to be set
-            if attr_name not in KARABO_RUNTIME_ATTRIBUTES_MDL:
-                return False
-
-            if len(path.split('.')) > 1:
-                return False
-
-            value = getattr(self, path, None)
-            if not isSet(value):
-                return False
-
-            # Overwrite the attribute
-            setattr(self.__class__, path, Overwrite(attr_name, attr_value))
-            return True
-
-        success = True
-        for update in updates:
-            path, attr_name, attr_value = (update["path"], update["attribute"],
-                                           update["value"])
-            success &= _overwrite_attribute(path, attr_name, attr_value)
-
-        return success
 
     def _use(self):
         """this method is called each time an attribute of this configurable
