@@ -153,7 +153,7 @@ class BaseLogging_Test : public CPPUNIT_NS::TestFixture {
     const std::string m_deviceId;
 
     karabo::core::DeviceServer::Pointer m_deviceServer;
-    boost::thread m_eventLoopThread;
+    std::jthread m_eventLoopThread;
     karabo::xms::SignalSlotable::Pointer m_sigSlot;
     karabo::core::DeviceClient::Pointer m_deviceClient;
 

@@ -29,6 +29,7 @@
 #include <karabo/util/Hash.hh>
 #include <karabo/util/StringTools.hh>
 #include <stack>
+#include <thread>
 #include <tuple>
 
 
@@ -53,7 +54,7 @@ Broker_Test::~Broker_Test() {}
 void Broker_Test::setUp() {
     auto prom = std::promise<void>();
     auto fut = prom.get_future();
-    m_thread = std::make_shared<boost::thread>([&prom]() {
+    m_thread = std::make_shared<std::jthread>([&prom]() {
         // postpone promise setting until EventLoop is activated
         EventLoop::getIOService().post([&prom]() { prom.set_value(); });
         EventLoop::work();
@@ -235,7 +236,7 @@ void Broker_Test::_testPublishSubscribeAsync() {
 
     auto bob = alice->clone("bob");
 
-    auto t = boost::thread([this, maxLoop, classId, alice, bob]() {
+    auto t = std::jthread([this, maxLoop, classId, alice, bob]() {
         using namespace std::chrono_literals;
 
         CPPUNIT_ASSERT_NO_THROW(bob->connect());
@@ -361,7 +362,7 @@ void Broker_Test::_testReadingHeartbeats() {
 
     auto bob = alice->clone("bob");
 
-    auto t = boost::thread([this, maxLoop, classId, alice, bob]() {
+    auto t = std::jthread([this, maxLoop, classId, alice, bob]() {
         using namespace std::chrono_literals;
 
         CPPUNIT_ASSERT_NO_THROW(bob->connect());
@@ -564,7 +565,7 @@ void Broker_Test::_testProducerRestartConsumerContinues() {
     ec = alice->subscribeToRemoteSignal("bob", "signalFromBob");
     CPPUNIT_ASSERT(!ec);
 
-    auto t = boost::thread([this]() {
+    auto t = std::jthread([this]() {
         std::string classId = m_config.begin()->getKey();
         Hash bobConfig = m_config;
         bobConfig.set(classId + ".instanceId", "bob");

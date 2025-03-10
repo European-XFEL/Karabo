@@ -72,7 +72,7 @@ void GuiServer_Test::setUp() {
     // uncomment this if ever testing against a local broker
     // setenv("KARABO_BROKER", "tcp://localhost:7777", true);
     // Start central event-loop
-    m_eventLoopThread = boost::thread(std::bind(&EventLoop::work));
+    m_eventLoopThread = std::jthread([](std::stop_token stoken) { karabo::net::EventLoop::work(); });
     // Create and start server, but don't scan plugins
     Hash config("serverId", "testGuiVersionServer", "scanPlugins", false, "Logger.priority", LOG_LEVEL);
     m_deviceServer = DeviceServer::create("DeviceServer", config);
@@ -84,8 +84,8 @@ void GuiServer_Test::setUp() {
 
 void GuiServer_Test::tearDown() {
     m_deviceServer.reset();
+    m_deviceClient.reset();
     EventLoop::stop();
-    m_eventLoopThread.join();
 }
 
 
@@ -155,7 +155,7 @@ void GuiServer_Test::appTestRunner() {
 
     // Instantiates the testing authentication server
     TestKaraboAuthServer tstAuthServer(authServerAddr, authServerPort);
-    boost::thread srvRunner = boost::thread([&tstAuthServer]() { tstAuthServer.run(); });
+    std::jthread srvRunner = std::jthread([&tstAuthServer](std::stop_token stoken) { tstAuthServer.run(); });
 
     // Instantiates a GUI Server in Authenticated mode with a maximum temporary session time of 15 seconds for
     // the purposes of the integrated tests.
@@ -206,6 +206,8 @@ void GuiServer_Test::appTestRunner() {
     CPPUNIT_ASSERT_MESSAGE(success_n.second, success_n.first);
 
     testOnlyAppModeClients();
+
+    srvRunner.detach();
 
     if (m_tcpAdapter->connected()) {
         m_tcpAdapter->disconnect();

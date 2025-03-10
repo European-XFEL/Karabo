@@ -18,7 +18,6 @@
 
 #include <algorithm>
 #include <boost/algorithm/string/predicate.hpp>
-#include <boost/regex.hpp>
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
@@ -32,7 +31,6 @@
 #include <vector>
 
 namespace bf = std::filesystem;
-namespace bs = boost::system;
 using namespace std;
 using namespace karabo::util;
 using namespace karabo::io;

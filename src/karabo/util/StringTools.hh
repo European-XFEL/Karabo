@@ -109,6 +109,7 @@ namespace karabo {
             return str;
         }
 
+
         /**
          * Split input string using delimiter (default = space) into vector of strings.
          * @param str input string to split
@@ -603,7 +604,8 @@ namespace karabo {
         // Details about this change of behavior in C++ 17 can be seem
         // https://developers.redhat.com/articles/2021/08/06/porting-your-code-c17-gcc-11#new_template_template_parameter_matching
         //
-        template <typename T, template <typename ELEM, typename = std::less<ELEM>, typename = std::allocator<ELEM>>
+        template <typename T, template <typename ELEM, typename = std::less<ELEM>,
+                                        typename = std::allocator<ELEM>>
                               class CONT> // e.g. for set
         inline CONT<T> fromStringToSortedCont(const std::string& value, const std::string& separator = ",") {
             try {

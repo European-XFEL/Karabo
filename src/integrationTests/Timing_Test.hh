@@ -26,8 +26,8 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 
-#include <boost/shared_ptr.hpp>
 #include <karabo/util/Epochstamp.hh>
+#include <memory>
 
 #include "karabo/core/DeviceClient.hh"
 #include "karabo/core/DeviceServer.hh"
@@ -54,7 +54,7 @@ class Timing_Test : public CPPUNIT_NS::TestFixture {
 
     karabo::core::DeviceServer::Pointer m_deviceServer;
     karabo::core::DeviceServer::Pointer m_deviceServer2;
-    boost::thread m_eventLoopThread;
+    std::jthread m_eventLoopThread;
 
     karabo::core::DeviceClient::Pointer m_deviceClient;
 };

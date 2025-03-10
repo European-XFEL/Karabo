@@ -24,6 +24,7 @@
 
 #include "Exception.hh"
 
+#include <boost/exception/diagnostic_information.hpp>
 #include <chrono>
 #include <filesystem>
 
@@ -40,7 +41,7 @@ namespace karabo {
 
         // Init static members
         std::mutex Exception::m_mutex;
-        std::map<boost::thread::id, boost::circular_buffer<Exception::ExceptionInfo>> Exception::m_trace;
+        std::map<std::jthread::id, boost::circular_buffer<Exception::ExceptionInfo>> Exception::m_trace;
 
 
         Exception::Exception(const string& message, const string& type, const string& filename, const string& function,
@@ -75,7 +76,7 @@ namespace karabo {
 
         void Exception::addToTrace(const ExceptionInfo& value) {
             std::lock_guard<std::mutex> lock(Exception::m_mutex);
-            boost::circular_buffer<ExceptionInfo>& buffer = Exception::m_trace[boost::this_thread::get_id()];
+            boost::circular_buffer<ExceptionInfo>& buffer = Exception::m_trace[std::this_thread::get_id()];
             if (buffer.empty()) buffer.set_capacity(100u); // limit size in case never cleared
             buffer.push_back(value);
         }
@@ -88,7 +89,7 @@ namespace karabo {
 
         void Exception::clearTrace() {
             std::lock_guard<std::mutex> lock(Exception::m_mutex);
-            Exception::m_trace.erase(boost::this_thread::get_id());
+            Exception::m_trace.erase(std::this_thread::get_id());
         }
 
 
@@ -157,7 +158,7 @@ namespace karabo {
 
         void Exception::showTrace(ostream& os) {
             std::lock_guard<std::mutex> lock(Exception::m_mutex);
-            auto& currentBuffer = Exception::m_trace[boost::this_thread::get_id()];
+            auto& currentBuffer = Exception::m_trace[std::this_thread::get_id()];
             if (currentBuffer.empty()) return;
             ostringstream oss;
             oss << "Exception with trace (listed from inner to outer):" << endl;
@@ -172,11 +173,11 @@ namespace karabo {
 
 
         ostream& operator<<(ostream& os, const Exception& exception) {
-            Exception::showTrace(os); // no-op if m_trace[boost::this_thread::get_id()] is empty
+            Exception::showTrace(os); // no-op if m_trace[std::this_thread::get_id()] is empty
 
             {
                 std::lock_guard<std::mutex> lock(Exception::m_mutex);
-                auto& currentBuffer = Exception::m_trace[boost::this_thread::get_id()];
+                auto& currentBuffer = Exception::m_trace[std::this_thread::get_id()];
                 string fill(currentBuffer.size() * 3, ' ');
                 os << fill << currentBuffer.size() + 1 << ". Exception " << string(5, '=') << ">  {" << endl;
                 Exception::format(os, exception.m_exceptionInfo, fill);
@@ -221,7 +222,7 @@ namespace karabo {
             bool hasMsg = !m_exceptionInfo.message.empty();
             {
                 std::lock_guard<std::mutex> lock(Exception::m_mutex);
-                auto& currentBuffer = Exception::m_trace[boost::this_thread::get_id()];
+                auto& currentBuffer = Exception::m_trace[std::this_thread::get_id()];
 
                 unsigned int j = 0;
                 for (size_t i = currentBuffer.size(); i > 0; --i) {

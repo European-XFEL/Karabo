@@ -25,11 +25,11 @@
 #ifndef KARABO_CORE_WORKER_HH
 #define KARABO_CORE_WORKER_HH
 
-#include <boost/thread.hpp>
 #include <chrono>
 #include <condition_variable>
 #include <functional>
 #include <queue>
+#include <thread>
 
 #include "karabo/util/Hash.hh"
 
@@ -145,7 +145,7 @@ namespace karabo {
                     m_running = true;
                     m_abort = false;
                     m_suspended = false;
-                    m_thread = new boost::thread(&BaseWorker::run, this);
+                    m_thread = new std::jthread(&BaseWorker::run, this);
                 }
                 if (m_suspended) {
                     m_suspended = false;
@@ -302,7 +302,7 @@ namespace karabo {
             bool m_abort;                          // "abort" flag   (default: false)
             bool m_suspended;                      // "suspended" flag (default: false))
             std::queue<T> m_request;               // request queue
-            boost::thread* m_thread;               // auxiliary thread
+            std::jthread* m_thread;                // auxiliary thread
             std::mutex m_mutexRequest;             // mutex of request queue
             std::condition_variable m_condRequest; // condition variable of the request queue
             int m_count;                           // current repetition counter

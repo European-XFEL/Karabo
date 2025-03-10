@@ -58,7 +58,7 @@ void SceneProvider_Test::setUp() {
     // uncomment this if ever testing against a local broker
     // setenv("KARABO_BROKER", "tcp://localhost:7777", true);
     // Start central event-loop
-    m_eventLoopThread = boost::thread(std::bind(&EventLoop::work));
+    m_eventLoopThread = std::jthread([](std::stop_token stoken) { karabo::net::EventLoop::work(); });
     // Create and start server
     Hash config("serverId", "testServerSceneProvider", "scanPlugins", false, "Logger.priority", "FATAL");
     m_deviceServer = DeviceServer::create("DeviceServer", config);
@@ -73,7 +73,6 @@ void SceneProvider_Test::tearDown() {
     m_deviceClient.reset();
     m_deviceServer.reset();
     EventLoop::stop();
-    m_eventLoopThread.join();
 }
 
 
