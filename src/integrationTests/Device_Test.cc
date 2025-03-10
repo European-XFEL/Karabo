@@ -404,7 +404,7 @@ void Device_Test::setUp() {
     // setenv("KARABO_BROKER", "tcp://localhost:7777", true);
 
     // Start central event-loop
-    m_eventLoopThread = boost::thread(std::bind(&EventLoop::work));
+    m_eventLoopThread = std::jthread([](std::stop_token stoken) { karabo::net::EventLoop::work(); });
     // Create and start server
     {
         Hash config("serverId", "testServerDevice", "scanPlugins", false, "Logger.priority", "FATAL", "serverFlags",
@@ -422,9 +422,7 @@ void Device_Test::setUp() {
 void Device_Test::tearDown() {
     m_deviceServer.reset();
     m_deviceClient.reset();
-
     EventLoop::stop();
-    m_eventLoopThread.join();
 }
 
 

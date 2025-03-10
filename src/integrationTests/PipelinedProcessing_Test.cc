@@ -54,7 +54,7 @@ void PipelinedProcessing_Test::setUp() {
     // putenv("KARABO_BROKER=tcp://localhost:7777");
 
     // Start central event-loop
-    auto work = []() {
+    auto work = [](std::stop_token stoken) {
         try {
             EventLoop::work();
         } catch (const karabo::util::TimeoutException& e) {
@@ -62,7 +62,7 @@ void PipelinedProcessing_Test::setUp() {
             std::clog << "Timeout from EventLoop::work(): " << e << std::endl;
         }
     };
-    m_eventLoopThread = boost::thread(work);
+    m_eventLoopThread = std::jthread(work);
 
     // Create and start server
     Hash config("serverId", m_server, "scanPlugins", false, "Logger.priority", "ERROR");
@@ -77,11 +77,7 @@ void PipelinedProcessing_Test::setUp() {
 void PipelinedProcessing_Test::tearDown() {
     m_deviceClient.reset();
     m_deviceServer.reset();
-
     EventLoop::stop();
-    if (m_eventLoopThread.joinable()) {
-        m_eventLoopThread.join();
-    }
 }
 
 

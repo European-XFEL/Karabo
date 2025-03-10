@@ -297,7 +297,7 @@ namespace karabo {
                     if (2 * countdown < kMaxServerInitializationAttempts) {
                         std::this_thread::sleep_for(1ms);
                     }
-                    boost::this_thread::yield();
+                    std::this_thread::yield();
                     // Bare std::bind with this as in constructor.
                     karabo::net::EventLoop::post(
                           std::bind(&OutputChannel::initializeServerConnection, this, --countdown));

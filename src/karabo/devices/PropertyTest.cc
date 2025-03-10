@@ -1216,7 +1216,7 @@ namespace karabo {
                     if ((i % 1000) == 0) {
                         me.reset();
                         std::this_thread::sleep_for(10ms);
-                        boost::this_thread::yield();
+                        std::this_thread::yield();
                         me = weakThis.lock();
                     }
                 }

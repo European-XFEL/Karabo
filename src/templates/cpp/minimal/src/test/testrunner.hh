@@ -17,7 +17,7 @@
 
 #include <gtest/gtest.h>
 
-#include <boost/thread.hpp>
+#include <thread>
 #include <utility>
 
 #include "karabo/core/DeviceClient.hh"
@@ -54,7 +54,7 @@ class KaraboDeviceFixture : public testing::Test {
     void instantiateWithDeviceServer(const std::string& classId, const std::string& instanceId,
                                      const karabo::util::Hash& devCfg);
 
-    boost::thread m_eventLoopThread;
+    std::jthread m_eventLoopThread;
     karabo::core::DeviceServer::Pointer m_deviceSrv;
     karabo::core::DeviceClient::Pointer m_deviceCli;
 };

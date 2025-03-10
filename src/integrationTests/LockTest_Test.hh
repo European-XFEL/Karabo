@@ -27,7 +27,8 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
+#include <thread>
 
 #include "LockTestDevice.hh"
 #include "karabo/core/DeviceClient.hh"
@@ -59,7 +60,7 @@ class LockTest_Test : public CPPUNIT_NS::TestFixture {
     void waitUntilLockClears(const std::string& deviceId);
 
     karabo::core::DeviceServer::Pointer m_deviceServer;
-    boost::thread m_eventLoopThread;
+    std::jthread m_eventLoopThread;
 
     karabo::core::DeviceClient::Pointer m_deviceClient;
 };

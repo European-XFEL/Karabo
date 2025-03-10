@@ -91,7 +91,7 @@ namespace karabo {
             m_work.reset();
 
             // Join thread except if running in that thread.
-            if (m_thread.get_id() == boost::this_thread::get_id()) {
+            if (m_thread.get_id() == std::this_thread::get_id()) {
                 // Happened while development when onError and onDetached handlers where both called in a connection
                 // attempt that failed due to invalid address. At that stage, onError called the AsyncHandler that then
                 // removed all external reference counts to the connection. Likely the bind_weak mechanism for

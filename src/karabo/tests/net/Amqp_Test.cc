@@ -24,10 +24,10 @@
 
 #include "Amqp_Test.hh"
 
-#include <boost/thread.hpp>
 #include <chrono>
 #include <future>
 #include <mutex>
+#include <thread>
 
 #include "karabo/log/Logger.hh"
 #include "karabo/net/AmqpClient.hh"
@@ -1020,7 +1020,7 @@ void Amqp_Test::testHashClient() {
         return;
     }
     // The AmqpHashClient needs an EventLoop for the deserialisation
-    boost::thread eventLoopThread(karabo::net::EventLoop::work);
+    std::jthread eventLoopThread([](std::stop_token stoken) { karabo::net::EventLoop::work(); });
 
     // Prepare connection - will get connected automatically once clients need that
     net::AmqpConnection::Pointer connection(std::make_shared<net::AmqpConnection>(m_defaultBrokers));
@@ -1110,5 +1110,4 @@ void Amqp_Test::testHashClient() {
     CPPUNIT_ASSERT_MESSAGE(*readErrorString, !readErrorString->empty()); // no matter what fails
 
     karabo::net::EventLoop::stop();
-    CPPUNIT_ASSERT(eventLoopThread.try_join_for(boost::chrono::milliseconds(m_timeoutMs)));
 }

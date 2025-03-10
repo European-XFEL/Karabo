@@ -74,7 +74,7 @@ void Timing_Test::setUp() {
     // setenv("KARABO_BROKER", "tcp://localhost:7777", true);
 
     // Start central event-loop
-    m_eventLoopThread = boost::thread(std::bind(&EventLoop::work));
+    m_eventLoopThread = std::jthread([](std::stop_token stoken) { karabo::net::EventLoop::work(); });
     // Create and start server
     {
         // No need to connect the server hosting the time server device to any time server...
@@ -99,7 +99,6 @@ void Timing_Test::tearDown() {
     m_deviceServer.reset();
     m_deviceClient.reset();
     EventLoop::stop();
-    m_eventLoopThread.join();
 }
 
 

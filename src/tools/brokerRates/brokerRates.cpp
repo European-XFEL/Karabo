@@ -380,7 +380,7 @@ std::pair<std::vector<std::string>, std::vector<std::string>> instancesOfServers
         // Instead of the gymnastics below, we could add a slot to the server to query it for all their devices...
 
         // Need an event loop for
-        boost::thread thread(std::bind(&net::EventLoop::work));
+        std::jthread thread(std::bind(&net::EventLoop::work));
         std::cout << ". " << std::flush;
 
         auto client =

@@ -42,7 +42,7 @@ class MQTcpNetworking : public CPPUNIT_NS::TestFixture {
     // server
     int m_serverCount;
     int m_serverPort;
-    boost::thread m_serverThread;
+    std::jthread m_serverThread;
     karabo::net::Connection::Pointer m_serverConnection;
     std::chrono::steady_clock::time_point m_ts;
 

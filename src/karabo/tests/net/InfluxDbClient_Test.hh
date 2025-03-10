@@ -25,7 +25,7 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 
-#include <boost/thread/thread.hpp>
+#include <thread>
 
 #include "karabo/net/InfluxDbClient.hh"
 
@@ -42,7 +42,7 @@ class InfluxDbClient_Test : public CPPUNIT_NS::TestFixture {
     void testShowDatabases();
 
     karabo::net::InfluxDbClient::Pointer m_influxClient;
-    boost::thread m_eventLoopThread;
+    std::jthread m_eventLoopThread;
 };
 
 #endif

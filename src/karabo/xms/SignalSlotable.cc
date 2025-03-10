@@ -836,14 +836,14 @@ namespace karabo {
                 if (slot) {
                     { // Store slot for asyncReply
                         std::lock_guard<std::mutex> lock(m_currentSlotsMutex);
-                        m_currentSlots[boost::this_thread::get_id()] = std::make_pair(slotFunction, globalCall);
+                        m_currentSlots[std::this_thread::get_id()] = std::make_pair(slotFunction, globalCall);
                     }
                     // TODO: callRegisteredSlotFunctions copies header since it is passed by value :-(.
                     slot->callRegisteredSlotFunctions(*header, *body);
                     sendPotentialReply(*header, slotFunction, globalCall);
                     { // Clean again
                         std::lock_guard<std::mutex> lock(m_currentSlotsMutex);
-                        m_currentSlots.erase(boost::this_thread::get_id());
+                        m_currentSlots.erase(std::this_thread::get_id());
                     }
                 } else if (!globalCall) {
                     // Warn on non-existing slot, but only if directly addressed:
@@ -871,7 +871,7 @@ namespace karabo {
 
         void SignalSlotable::registerReply(const karabo::util::Hash::Pointer& reply) {
             std::lock_guard<std::mutex> lock(m_replyMutex);
-            m_replies[boost::this_thread::get_id()] = reply;
+            m_replies[std::this_thread::get_id()] = reply;
         }
 
 
@@ -880,7 +880,7 @@ namespace karabo {
             std::pair<std::string, bool> slotName_calledGlobally;
             {
                 std::lock_guard<std::mutex> lock(m_currentSlotsMutex);
-                const auto it = m_currentSlots.find(boost::this_thread::get_id());
+                const auto it = m_currentSlots.find(std::this_thread::get_id());
                 if (it != m_currentSlots.end()) {
                     slotName_calledGlobally = it->second;
                 }
@@ -947,7 +947,7 @@ namespace karabo {
             const bool caseRequestNoWait = header.has("replyInstanceIds");
 
             std::lock_guard<std::mutex> lock(m_replyMutex);
-            Replies::iterator replyIter = m_replies.find(boost::this_thread::get_id());
+            Replies::iterator replyIter = m_replies.find(std::this_thread::get_id());
             const bool replyPlaced = (replyIter != m_replies.end());
             if (!caseRequest && !caseRequestNoWait) {
                 // Not requested, so nothing to reply, but we have to remove the
