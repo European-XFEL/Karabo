@@ -22,6 +22,7 @@ from collections import defaultdict
 from subprocess import STDOUT, CalledProcessError, check_output
 
 import requests
+from packaging.version import Version
 from qtpy import uic
 from qtpy.QtCore import (
     QAbstractAnimation, QEasingCurve, QProcess, QPropertyAnimation, Qt, Slot)
@@ -101,7 +102,14 @@ def get_index_list() -> dict:
             continue
         uniques[name].append(version)
 
-    return {name: max(versions) for name, versions in uniques.items()}
+    def safe_version(semver: str):
+        try:
+            return Version(semver)
+        except Exception:
+            return Version('0.0.0')
+
+    return {name: max(versions, key=safe_version)
+            for name, versions in uniques.items()}
 
 
 def uninstall_package(package: str) -> str:
