@@ -29,6 +29,5 @@
 #include "core/DeviceClient.hh"
 #include "core/DeviceServer.hh"
 #include "core/Runner.hh"
-#include "core/StartStopInterface.hh"
 
 #endif
