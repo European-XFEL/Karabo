@@ -718,7 +718,6 @@ namespace karabo {
              *
              * @param currentState: the state to update to
              */
-            // Note that for inheritance from BaseFsm (in contrast to NoFsm), this overrides a virtual function!
             void updateState(const karabo::util::State& currentState) {
                 updateState(currentState, karabo::util::Hash(), getActualTimestamp());
             }
