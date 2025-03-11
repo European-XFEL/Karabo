@@ -466,7 +466,7 @@ void DataLogging_Test::testInfluxMaxStringLength() {
     // value used for the Influx logger "maxStringValueLength" property is 8 kb.
     const std::string propTestDevice = m_deviceId + "__MAX__STRING";
 
-    const unsigned int afterFlushWait = 500u;
+    const unsigned int afterFlushWait = 1'000u;
 
     Epochstamp beforeServerInstantiation;
 
