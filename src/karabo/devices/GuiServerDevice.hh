@@ -144,12 +144,10 @@ namespace karabo {
 
             karabo::io::BinarySerializer<karabo::util::Hash>::Pointer m_serializer;
             std::map<karabo::net::Channel::Pointer, ChannelData> m_channels;
-            std::map<std::string, AttributeUpdates> m_pendingAttributeUpdates;
             std::queue<DeviceInstantiation> m_pendingDeviceInstantiations;
 
             mutable std::mutex m_channelMutex;
             mutable std::mutex m_networkMutex;
-            mutable std::mutex m_pendingAttributesMutex;
             mutable std::mutex m_pendingInstantiationsMutex;
             // TODO: remove this once "fast slot reply policy" is enforced
             mutable std::mutex m_timingOutDevicesMutex;
@@ -481,18 +479,6 @@ namespace karabo {
              *      subscribeNetwork               onSubscribeNetwork
              *      requestNetwork                 onRequestNetwork
              *      error                          onGuiError
-             *      acknowledgeAlarm               onAcknowledgeAlarm
-             *      requestAlarms                  onRequestAlarms
-             *      updateAttributes               onUpdateAttributes
-             *      projectUpdateAttribute         onProjectUpdateAttribute
-             *      projectBeginUserSession        onProjectBeginUserSession
-             *      projectEndUserSession          onProjectEndUserSession
-             *      projectSaveItems               onProjectSaveItems
-             *      projectLoadItems               onProjectLoadItems
-             *      projectListProjectManagers     onProjectListProjectManagers
-             *      projectListItems               onProjectListItems
-             *      projectListProjectsWithDevice  onProjectListProjectsWithDevice
-             *      projectListDomains             onProjectListDomains
              *      requestGeneric                 onRequestGeneric
              *      subscribeLogs                  <no action anymore>
              *      setLogPriority                 onSetLogPriority
@@ -1054,104 +1040,6 @@ namespace karabo {
             void slotDisconnectClient(const std::string& client);
 
             /**
-             * Called from instanceNewHandler to handle schema attribute updates which
-             * were received at initialization time. The slotUpdateSchemaAttributes slot
-             * is invoked if any updates are pending.
-             * @param deviceId: the instance id of the new device
-             */
-            void updateNewInstanceAttributes(const std::string& deviceId);
-
-            /**
-             * A slot called by alarm service devices if they want to notify of an alarm update
-             * @param alarmServiceId: the instance id of the service device
-             * @param type: the type of the update: can be alarmUpdate, alarmInit
-             * @param updateRows: the rows which should be updated. This is a Hash of Hashes, were
-             * the unique row indices, as managed by the alarm service are keys, and the values are
-             * Hashes of the form updateType->entry
-             *
-             * updateType is a string of any of the following: init, update, delete,
-             *  acknowledgeable, deviceKilled, refuseAcknowledgement
-             *
-             * entry is a Hash with the following entries:
-             *
-             *  timeOfFirstOccurrence -> string: timestamp of first occurrence of alarm
-             *  trainOfFirstOccurrence -> unsigned long long: train id of first occurrence of alarm
-             *  timeOfOccurrence -> string: timestamp of most resent occurrence of alarm
-             *  trainOfOccurrence -> unsigned long long: train id of most resent occurrence of alarm
-             *  needsAcknowledging -> bool: does the alarm require acknowledging
-             *  acknowledgeable -> bool: can the alarm be acknowledged
-             *  deviceId -> string: deviceId of device that raised the alarm
-             *  property -> string: property the alarm refers to
-             *  id -> the unique row id
-             *
-             * it send the following Hash to the client (lossless)
-             *
-             * Hash h("type", type, "instanceId", alarmServiceId, "rows", updateRows);
-             */
-            void slotAlarmSignalsUpdate(const std::string& alarmServiceId, const std::string& type,
-                                        const karabo::util::Hash& updateRows);
-
-            /**
-             * Called if the client wants to acknowledge an alarm, by sending a message of type "acknowledgeAlarm"
-             * @param channel: the channel the client is connected to
-             * @param info: the message from the client. Should contain the unique row ids of the alarms
-             * to acknowledge. It is a Hash of Hashes of the same form as described for slotAlarmSignalsUpdate,
-             * where the keys give the unique row indices
-             */
-            void onAcknowledgeAlarm(WeakChannelPointer channel, const karabo::util::Hash& info);
-
-            /**
-             * Called if a client sends a message of type "requestAlarms"
-             * @param channel: the channel the calling client is connected to
-             * @param info: message passed from the client. It is a Hash that needs to contain
-             * a string field "alarmInstanceId", which either contains a specifiy alarm service's
-             * instance id, or an empty string. In the latter case a request for current alarms
-             * is forwarded to all known alarm services, otherwise to the specific one. Replies
-             * from the alarm services trigger calling "onRequestedAlarmsReply" asynchroniously.
-             * @param replyToAllClients: If true, reply to all clients instead of only the
-             * requesting client.
-             */
-            void onRequestAlarms(WeakChannelPointer channel, const karabo::util::Hash& info,
-                                 const bool replyToAllClients = false);
-
-            /**
-             * Callback executed upon reply from an alarm service to "onRequestAlarms".
-             * @param channel: the client channel the request came from, bound by "onRequestAlarms"
-             * @param reply: reply from the alarm service, expected to contain fields
-             * @param replyToAllClients: If true, reply to all clients
-             *
-             * instanceId -> string: instance id of the replying alarm service
-             * alarms -> Nested Hash of form given in "slotAlarmSignalsUpdate"
-             *
-             * It sends out a Hash of form:
-             * Hash h("type", "alarmInit", "instanceId", reply.get<std::string>("instanceId"), "rows",
-             * reply.get<Hash>("alarms"));
-             */
-            void onRequestedAlarmsReply(WeakChannelPointer channel, const karabo::util::Hash& reply,
-                                        const bool replyToAllClients);
-
-
-            /**
-             * Executed when the gui requests an update to schema attributes via the updateAttributes signal.
-             * @param channel: gui channel that requested the update
-             * @param info: updated attributes, expected to be of form Hash("instanceId", str, "updates", vector<Hash>)
-             * where each entry in updates is of the form Hash("path", str, "attribute", str, "value", valueType)
-             */
-            void onUpdateAttributes(WeakChannelPointer channel, const karabo::util::Hash& info);
-
-            /**
-             * Callback for onUpdateAttributes
-             * @param channel: gui channel that requested the update
-             * @param reply: reply from the device that performed the attribute update. Is of form
-             * Hash("success" bool, "instanceId", str, "updatedSchema", Schema, "requestedUpdate", vector<Hash>)
-             * where success indicates a successful update, instanceId the device that performed the update
-             * updatedSchema the new valid schema, regardless of success or not, and requestedUpdates the
-             * original update request, as received through onUpdateAttributes
-             */
-            void onRequestedAttributeUpdate(WeakChannelPointer channel, const karabo::util::Hash& reply);
-
-
-            /**
              * Returns the instance type and instance id from a topology entry
              * @param topologyEntry: a Hash of the topology format
              * @param type: string which will afterwards contain type
@@ -1181,122 +1069,6 @@ namespace karabo {
              */
             std::vector<std::string> getKnownProjectManagers() const;
 
-
-            /**
-             * Initialize a configuration database session for a user.
-             * The token should continue to be passed to subsequent database
-             * interactions to identify this session.
-             * @param channel from which the request originates
-             * @param info is a Hash that should contain:
-             *          - projectManager: project manager device to forward request to
-             *          - token: token of the database user
-             * For the reply written to channel see the documentation of karabo.bound_devices.ProjectManager
-             */
-            void onProjectBeginUserSession(WeakChannelPointer channel, const karabo::util::Hash& info);
-
-
-            /**
-             * End a configuration database session for a user.
-             * @param channel from which the request originates
-             * @param info is a Hash that should contain:
-             *          - projectManager: project manager device to forward request to
-             *          - token: token of the database user
-             * For the reply written to channel see the documentation of karabo.bound_devices.ProjectManager
-             */
-            void onProjectEndUserSession(WeakChannelPointer channel, const karabo::util::Hash& info);
-
-
-            /**
-             * Save items to the project database
-             * @param channel from which the request originates
-             * @param info is a Hash that should contain:
-             *          - projectManager: project manager device to forward request to
-             *          - token: token of the database user - identifies the session
-             *          - items: a vector of Hashes where each Hash is of the form:
-             *                   - xml: xml of the item
-             *                   - uuid: uuid of the item
-             *                   - overwrite: Boolean indicating behavior in case of revision conflict
-             *                   - domain: to write this item to.
-             * For the reply written to channel see the documentation of karabo.bound_devices.ProjectManager
-             */
-            void onProjectSaveItems(WeakChannelPointer channel, const karabo::util::Hash& info);
-
-
-            /**
-             * Load items from project database
-             * @param channel from which the request originates
-             * @param info is a Hash that should contain:
-             *          - projectManager: project manager device to forward request to
-             *          - token: token of the database user - identifies the session
-             *          - items: a vector of Hashes where each Hash is of the form:
-             *                   - uuid: uuid of the item
-             *                   - revision (optional): revision to load. If not given the newest revision will be
-             * returned
-             *                   - domain: to load this item from.
-             * For the reply written to channel see the documentation of karabo.bound_devices.ProjectManager
-             */
-            void onProjectLoadItems(WeakChannelPointer channel, const karabo::util::Hash& info);
-
-
-            /**
-             * Request the list of project manager devices known to the GUI server
-             * @param channel from which the request originates
-             * @param info is given for compatability with all other calls but not further evaluated.
-             *
-             * Will write to the calling channel a Hash where "type" = projectListProjectManagers and "reply" is a
-             * vector of strings containing the project manager device ids. For the reply written to channel see the
-             * documentation of karabo.bound_devices.ProjectManager
-             */
-            void onProjectListProjectManagers(WeakChannelPointer channel, const karabo::util::Hash& info);
-
-            /**
-             * Request a list of the items present in a domain. Optionally, an item type filter can be specified
-             * @param channel from which the request originates
-             * @param info is a Hash that should contain:
-             *          - projectManager: project manager device to forward request to
-             *          - token: token of the database user - identifies the session
-             *          - domain: domain to list items from
-             *          - item_types: a vector of strings indicating the itemtypes to filter for.
-             * For the reply written to channel see the documentation of karabo.bound_devices.ProjectManager
-             */
-            void onProjectListItems(WeakChannelPointer channel, const karabo::util::Hash& info);
-
-
-            /**
-             * Request a list of the domains in the database.
-             * @param channel from which the request originates
-             * @param info is a Hash that should contain:
-             *          - projectManager: project manager device to forward request to
-             *          - token: token of the database user - identifies the session
-             * For the reply written to channel see the documentation of karabo.bound_devices.ProjectManager
-             */
-            void onProjectListDomains(WeakChannelPointer channel, const karabo::util::Hash& info);
-
-            /**
-             * Update item attributes in the project database
-             * @param channel from which the request originates
-             * @param info is a Hash that should contain:
-             *          - projectManager: project manager device to forward request to
-             *          - token: token of the database user - identifies the session
-             *          - items: a vector of Hashes where each Hash is of the form:
-             *                   - domain: to load this item from
-             *                   - uuid: uuid of the item
-             *                   - item_type: indicate type of item which attribute should be changed
-             *                   - attr_name: name of attribute which should be changed
-             *                   - attr_value: value of attribute which should be changed
-             * For the reply written to channel see the documentation of karabo.bound_devices.ProjectManager
-             */
-            void onProjectUpdateAttribute(WeakChannelPointer channel, const karabo::util::Hash& info);
-
-            /**
-             * Forward a reply from a remote slot call to a requesting GUI channel.
-             * @param channel to forward reply to
-             * @param replyType type of reply
-             * @param reply the reply to forward
-             */
-            void forwardReply(WeakChannelPointer channel, const std::string& replyType,
-                              const karabo::util::Hash& reply);
-
             /**
              * Check if a given project manager identified by id is known in the distributed system
              * @param channel to forward a failure message to if not
@@ -1311,16 +1083,6 @@ namespace karabo {
              * Utility for getting a "name" from client connections.
              */
             std::string getChannelAddress(const karabo::net::Channel::Pointer& channel) const;
-
-            /**
-             * Possibly update schema attributes on device
-             */
-            void tryToUpdateNewInstanceAttributes(const std::string& deviceId, const int callerMask);
-
-            /**
-             * Response handler for updating schema attributes on device
-             */
-            void onUpdateNewInstanceAttributesHandler(const std::string& deviceId, const karabo::util::Hash& response);
 
             /**
              * Helper Function to identify whether a device belongs to the timeout violation list
