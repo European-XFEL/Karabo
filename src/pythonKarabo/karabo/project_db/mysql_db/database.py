@@ -327,14 +327,15 @@ class ProjectDatabase(DatabaseBase):
                      "device_id": instance.name})
         return results
 
-    def get_projects_data_from_device(self, domain, uuid):
+    def get_projects_data_from_device(
+            self, domain: str, uuid: str) -> list[dict[str, any]]:
         """
         Returns the project which contain a device instance with a given uuid
 
         :param domain: DB domain
         :param uuid: the uuid of the device instance from the database
         :return: a list containing project names, uuids and last modification
-                 data.
+                 date.
         """
         instance = self.reader.get_device_instance_from_uuid(uuid)
         # From the DB structure, a given device instance only belongs to
