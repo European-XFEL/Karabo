@@ -41,8 +41,6 @@ namespace karabo {
         class ReadOnlySpecific;
         template <class T, class U, class W>
         class AlarmSpecific;
-        template <class T, class U>
-        class RollingStatsSpecific;
 
         /**
          * The LeafElement represents a leaf and can be of any (supported) type
@@ -310,8 +308,6 @@ namespace karabo {
            public:
             template <class U, class V>
             friend class ReadOnlySpecific;
-            template <class U, class V>
-            friend class RollingStatsSpecific;
 
             /**
              * The <b>needsAcknowledging</b> method serves for setting up whether
@@ -350,83 +346,6 @@ namespace karabo {
         };
 
         /**
-         * The RollingStatsSpecific Class configures alarms on rolling statistics
-         */
-        template <class Element, class ValueType>
-        class RollingStatsSpecific {
-            typedef RollingStatsSpecific<Element, ValueType> Self;
-            ReadOnlySpecific<Element, ValueType>* m_readOnlyElement;
-            AlarmSpecific<Element, ValueType, Self> m_alarmSpecific;
-
-           public:
-            template <class U, class V>
-            friend class ReadOnlySpecific;
-            template <class U, class V, class W>
-            friend class AlarmSpecific;
-
-            /**
-             * Set lower warning threshold for rolling window variance
-             * @param value
-             * @return
-             */
-            AlarmSpecific<Element, ValueType, Self>& warnVarianceLow(const double value) {
-                m_readOnlyElement->getElement()->getNode().setAttribute(KARABO_WARN_VARIANCE_LOW, value);
-                m_alarmSpecific.setScope(m_readOnlyElement, this, KARABO_WARN_VARIANCE_LOW);
-                return m_alarmSpecific;
-            }
-
-            /**
-             * Set upper warning threshold for rolling window variance
-             * @param value
-             * @return
-             */
-            AlarmSpecific<Element, ValueType, Self>& warnVarianceHigh(const double value) {
-                m_readOnlyElement->getElement()->getNode().setAttribute(KARABO_WARN_VARIANCE_HIGH, value);
-                m_alarmSpecific.setScope(m_readOnlyElement, this, KARABO_WARN_VARIANCE_HIGH);
-                return m_alarmSpecific;
-            }
-
-            /**
-             * Set lower alarm threshold for rolling window variance
-             * @param value
-             * @return
-             */
-            AlarmSpecific<Element, ValueType, Self>& alarmVarianceLow(const double value) {
-                m_readOnlyElement->getElement()->getNode().setAttribute(KARABO_ALARM_VARIANCE_LOW, value);
-                m_alarmSpecific.setScope(m_readOnlyElement, this, KARABO_ALARM_VARIANCE_LOW);
-                return m_alarmSpecific;
-            }
-
-            /**
-             * Set upper alarm threshold for rolling window variance
-             * @param value
-             * @return
-             */
-            AlarmSpecific<Element, ValueType, Self>& alarmVarianceHigh(const double value) {
-                m_readOnlyElement->getElement()->getNode().setAttribute(KARABO_ALARM_VARIANCE_HIGH, value);
-                m_alarmSpecific.setScope(m_readOnlyElement, this, KARABO_ALARM_VARIANCE_HIGH);
-                return m_alarmSpecific;
-            }
-
-            /**
-             * Set the size/interval for the rolling window the variance is evaluated over.
-             * @param value
-             * @return
-             */
-            ReadOnlySpecific<Element, ValueType>& evaluationInterval(const unsigned int interval) {
-                m_readOnlyElement->getElement()->getNode().setAttribute(KARABO_SCHEMA_ROLLING_STATS_EVAL, interval);
-                return *m_readOnlyElement;
-            }
-
-           private:
-            RollingStatsSpecific() : m_readOnlyElement(0) {}
-
-            void setElement(ReadOnlySpecific<Element, ValueType>* el) {
-                m_readOnlyElement = el;
-            }
-        };
-
-        /**
          * The ReadOnlySpecific class defines specific values for 'readOnly'-element.
          */
         template <class Element, class ValueType>
@@ -434,13 +353,10 @@ namespace karabo {
             typedef ReadOnlySpecific<Element, ValueType> Self;
             Element* m_genericElement;
             AlarmSpecific<Element, ValueType, Self> m_alarmSpecific;
-            RollingStatsSpecific<Element, ValueType> m_rollingStatsSpecific;
 
            public:
             template <class U, class V>
             friend class LeafElement;
-            template <class U, class V>
-            friend class RollingStatsSpecific;
             template <class U, class V, class W>
             friend class AlarmSpecific;
             friend class TableElement;
@@ -517,17 +433,6 @@ namespace karabo {
                 m_genericElement->getNode().setAttribute(KARABO_ALARM_HIGH, value);
                 m_alarmSpecific.setScope(this, this, KARABO_ALARM_HIGH);
                 return m_alarmSpecific;
-            }
-
-            /**
-             * Enable rolling window statistics for this element. Allows to set
-             * variance alarms.
-             * @return
-             */
-            RollingStatsSpecific<Element, ValueType>& enableRollingStats() {
-                m_genericElement->getNode().setAttribute(KARABO_SCHEMA_ENABLE_ROLLING_STATS, true);
-                m_rollingStatsSpecific.setElement(this);
-                return m_rollingStatsSpecific;
             }
 
             /**

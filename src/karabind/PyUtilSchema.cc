@@ -31,7 +31,6 @@
 #include <karabo/util/NodeElement.hh>
 #include <karabo/util/OverwriteElement.hh>
 #include <karabo/util/PathElement.hh>
-#include <karabo/util/RollingWindowStatistics.hh>
 #include <karabo/util/TableElement.hh>
 #include <karabo/util/Validator.hh>
 
@@ -523,26 +522,6 @@ void exportPyUtilSchema(py::module_& m) {
             return h.attr("getAttribute")(path, AlarmCondition::ALARM_HIGH.asString());
         });
 
-        s.def("getWarnVarianceLow", [](const Schema& self, const py::object& path) {
-            py::object h = py::cast(self).attr("getParameterHash")();
-            return h.attr("getAttribute")(path, AlarmCondition::WARN_VARIANCE_LOW.asString());
-        });
-
-        s.def("getWarnVarianceHigh", [](const Schema& self, const py::object& path) {
-            py::object h = py::cast(self).attr("getParameterHash")();
-            return h.attr("getAttribute")(path, AlarmCondition::WARN_VARIANCE_HIGH.asString());
-        });
-
-        s.def("getAlarmVarianceLow", [](const Schema& self, const py::object& path) {
-            py::object h = py::cast(self).attr("getParameterHash")();
-            return h.attr("getAttribute")(path, AlarmCondition::ALARM_VARIANCE_LOW.asString());
-        });
-
-        s.def("getAlarmVarianceHigh", [](const Schema& self, const py::object& path) {
-            py::object h = py::cast(self).attr("getParameterHash")();
-            return h.attr("getAttribute")(path, AlarmCondition::ALARM_VARIANCE_HIGH.asString());
-        });
-
         s.def(
               "getWarnLowAs",
               [](const Schema& self, const py::object& path, const py::object& otype) {
@@ -575,12 +554,6 @@ void exportPyUtilSchema(py::module_& m) {
               },
               py::arg("path"), py::arg("pytype"));
 
-        s.def(
-              "getRollingStatsEvalInterval",
-              [](const Schema& self, const std::string& path) -> py::int_ {
-                  return self.getRollingStatsEvalInterval(path);
-              },
-              py::arg("path"));
 
         //********* 'has'-methods ****************
 
@@ -710,26 +683,6 @@ void exportPyUtilSchema(py::module_& m) {
         s.def(
               "hasAlarmHigh",
               [](const Schema& self, const std::string& path) -> py::bool_ { return self.hasAlarmHigh(path); },
-              py::arg("path"));
-
-        s.def(
-              "hasWarnVarianceLow",
-              [](const Schema& self, const std::string& path) -> py::bool_ { return self.hasWarnVarianceLow(path); },
-              py::arg("path"));
-
-        s.def(
-              "hasWarnVarianceHigh",
-              [](const Schema& self, const std::string& path) -> py::bool_ { return self.hasWarnVarianceHigh(path); },
-              py::arg("path"));
-
-        s.def(
-              "hasAlarmVarianceLow",
-              [](const Schema& self, const std::string& path) -> py::bool_ { return self.hasAlarmVarianceLow(path); },
-              py::arg("path"));
-
-        s.def(
-              "hasAlarmVarianceHigh",
-              [](const Schema& self, const std::string& path) -> py::bool_ { return self.hasAlarmVarianceHigh(path); },
               py::arg("path"));
 
         s.def(
@@ -1019,38 +972,6 @@ void exportPyUtilSchema(py::module_& m) {
                   wrapper::setAttributeAsPy(h, path, AlarmCondition::ALARM_HIGH.asString(), value);
               },
               py::arg("path"), py::arg("value"));
-
-        s.def(
-              "setWarnVarianceLow",
-              [](Schema& self, const std::string& path, double value) { self.setWarnVarianceLow(path, value); },
-              py::arg("path"), py::arg("value"));
-
-        s.def(
-              "setWarnVarianceHigh",
-              [](Schema& self, const std::string& path, double value) { self.setWarnVarianceHigh(path, value); },
-              py::arg("path"), py::arg("value"));
-
-        s.def(
-              "setAlarmVarianceLow",
-              [](Schema& self, const std::string& path, double value) { self.setAlarmVarianceLow(path, value); },
-              py::arg("path"), py::arg("value"));
-
-        s.def(
-              "setAlarmVarianceHigh",
-              [](Schema& self, const std::string& path, double value) { self.setAlarmVarianceHigh(path, value); },
-              py::arg("path"), py::arg("value"));
-
-        s.def(
-              "setRollingStatistics",
-              [](Schema& self, const std::string& path, unsigned int interval) {
-                  self.setRollingStatistics(path, interval);
-              },
-              py::arg("path"), py::arg("value"));
-
-        s.def(
-              "hasRollingStatistics",
-              [](Schema& self, const std::string& path) -> py::bool_ { return self.hasRollingStatistics(path); },
-              py::arg("path"));
 
         s.def(
               "getInfoForAlarm",
