@@ -47,7 +47,6 @@
 #include "karabo/util/OverwriteElement.hh"
 #include "karabo/util/RollingWindowStatistics.hh"
 #include "karabo/util/SimpleElement.hh"
-#include "karabo/util/StackTrace.hh"
 #include "karabo/util/State.hh"
 #include "karabo/util/StateElement.hh"
 #include "karabo/util/Timestamp.hh"
