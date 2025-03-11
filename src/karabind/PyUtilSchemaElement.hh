@@ -36,7 +36,6 @@
 #include <karabo/util/NodeElement.hh>
 #include <karabo/util/OverwriteElement.hh>
 #include <karabo/util/PathElement.hh>
-#include <karabo/util/RollingWindowStatistics.hh>
 #include <karabo/util/SimpleElement.hh>
 #include <karabo/util/State.hh>
 #include <karabo/util/TableElement.hh>
@@ -216,32 +215,16 @@ struct ReadOnlySpecificVectorWrap {
               .def("info", &AlarmSpec::info, py::return_value_policy::reference_internal);                            \
     }
 
-/////////////////////////////////////////////////////////////
-
-#define KARABO_PYTHON_ELEMENT_ROLLINGSTATSPECIFIC(U, EType, e)                  \
-    {                                                                           \
-        typedef ReadOnlySpecific<U, EType> ReadOnlySpec;                        \
-        typedef RollingStatsSpecific<U, EType> RollingStatsSpec;                \
-        typedef AlarmSpecific<U, EType, RollingStatsSpec> AlarmSpec;            \
-        py::class_<RollingStatsSpec>(m, "RollingStatsSpecific" #e)              \
-              .def("evaluationInterval", &RollingStatsSpec::evaluationInterval, \
-                   py::return_value_policy::reference_internal);                \
-    }
-
-/////////////////////////////////////////////////////////////
 
 #define KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(U, EType, e)                                                    \
     {                                                                                                          \
         typedef ReadOnlySpecific<U, EType> ReadOnlySpec;                                                       \
         typedef AlarmSpecific<U, EType, ReadOnlySpec> AlarmSpec;                                               \
-        typedef RollingStatsSpecific<U, EType> RollingStatsSpec;                                               \
         py::class_<ReadOnlySpec>(m, "ReadOnlySpecific" #e)                                                     \
               .def("alarmHigh", &ReadOnlySpec::alarmHigh, py::return_value_policy::reference_internal)         \
               .def("alarmLow", &ReadOnlySpec::alarmLow, py::return_value_policy::reference_internal)           \
               .def("warnHigh", &ReadOnlySpec::warnHigh, py::return_value_policy::reference_internal)           \
               .def("warnLow", &ReadOnlySpec::warnLow, py::return_value_policy::reference_internal)             \
-              .def("enableRollingStats", &ReadOnlySpec::enableRollingStats,                                    \
-                   py::return_value_policy::reference_internal)                                                \
               .def("initialValueFromString", &ReadOnlySpec::initialValueFromString,                            \
                    py::return_value_policy::reference_internal)                                                \
               .def("initialValue", &ReadOnlySpec::initialValue, py::return_value_policy::reference_internal)   \
@@ -258,7 +241,6 @@ struct ReadOnlySpecificVectorWrap {
         typedef karabo::util::VectorElement<T> U;                                                                 \
         typedef karabo::util::ReadOnlySpecific<U, VType> ReadOnlySpecVec;                                         \
         typedef karabo::util::AlarmSpecific<U, VType, ReadOnlySpecVec> AlarmSpecVec;                              \
-        typedef RollingStatsSpecific<U, VType> RollingStatsSpecArr;                                               \
         py::class_<ReadOnlySpecVec>(m, "ReadOnlySpecificVector" #e)                                               \
               .def("initialValue", &ReadOnlySpecificVectorWrap<T>::initialValue, py::arg("pyList"),               \
                    py::return_value_policy::reference_internal)                                                   \
@@ -268,7 +250,6 @@ struct ReadOnlySpecificVectorWrap {
               .def("alarmLow", &ReadOnlySpecificVectorWrap<T>::alarmLowValue, py::arg("pyList"))                  \
               .def("warnHigh", &ReadOnlySpecificVectorWrap<T>::warnHighValue, py::arg("pyList"))                  \
               .def("warnLow", &ReadOnlySpecificVectorWrap<T>::warnLowValue, py::arg("pyList"))                    \
-              .def("enableRollingStats", &ReadOnlySpecVec::enableRollingStats)                                    \
               .def("initialValueFromString", &ReadOnlySpecVec::initialValueFromString,                            \
                    py::return_value_policy::reference_internal)                                                   \
               .def("archivePolicy", &ReadOnlySpecVec::archivePolicy, py::return_value_policy::reference_internal) \

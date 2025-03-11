@@ -136,7 +136,6 @@ set(utilTestRunner_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/util/Schema_Test.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/util/Serializable_Test.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/util/States_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/util/StatisticalEvaluator_Test.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/util/StringTools_Test.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/util/TimeClasses_Test.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/util/Types_Test.cc

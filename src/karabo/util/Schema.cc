@@ -679,7 +679,6 @@ namespace karabo {
 
         //******************************************************
         //    has/ WarnLow, WarnHigh, AlarmLow, AlarmHigh      *
-        //    also for Variance                                *
         //******************************************************
 
 
@@ -702,48 +701,8 @@ namespace karabo {
             return m_hash.hasAttribute(path, KARABO_ALARM_HIGH);
         }
 
-
-        bool Schema::hasWarnVarianceLow(const std::string& path) const {
-            return m_hash.hasAttribute(path, KARABO_WARN_VARIANCE_LOW);
-        }
-
-
-        bool Schema::hasWarnVarianceHigh(const std::string& path) const {
-            return m_hash.hasAttribute(path, KARABO_WARN_VARIANCE_HIGH);
-        }
-
-
-        bool Schema::hasAlarmVarianceLow(const std::string& path) const {
-            return m_hash.hasAttribute(path, KARABO_ALARM_VARIANCE_LOW);
-        }
-
-
-        bool Schema::hasAlarmVarianceHigh(const std::string& path) const {
-            return m_hash.hasAttribute(path, KARABO_ALARM_VARIANCE_HIGH);
-        }
-
-
         bool Schema::hasInterlock(const std::string& path) const {
             return m_hash.hasAttribute(path, KARABO_INTERLOCK);
-        }
-
-
-        bool Schema::hasRollingStatistics(const std::string& path) const {
-            return m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS);
-        }
-
-
-        unsigned int Schema::getRollingStatsEvalInterval(const std::string& path) const {
-            if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)) {
-                throw KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '" + path + "'!");
-            }
-            return m_hash.getAttribute<unsigned int>(path, KARABO_SCHEMA_ROLLING_STATS_EVAL);
-        }
-
-
-        void Schema::setRollingStatistics(const std::string& path, unsigned int interval) {
-            m_hash.setAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS, true);
-            m_hash.setAttribute(path, KARABO_SCHEMA_ROLLING_STATS_EVAL, interval);
         }
 
 
@@ -1192,16 +1151,6 @@ namespace karabo {
                     checkForRunttimeUpdateTemplatedType(type, AlarmCondition::WARN_HIGH.asString(), setWarnHigh);
                     checkForRunttimeUpdateTemplatedType(type, AlarmCondition::ALARM_LOW.asString(), setAlarmLow);
                     checkForRunttimeUpdateTemplatedType(type, AlarmCondition::ALARM_HIGH.asString(), setAlarmHigh);
-                    checkForRunttimeUpdateFixedType(AlarmCondition::WARN_VARIANCE_LOW.asString(), setWarnVarianceLow,
-                                                    double);
-                    checkForRunttimeUpdateFixedType(AlarmCondition::WARN_VARIANCE_HIGH.asString(), setWarnVarianceHigh,
-                                                    double);
-                    checkForRunttimeUpdateFixedType(AlarmCondition::ALARM_VARIANCE_LOW.asString(), setAlarmVarianceLow,
-                                                    double);
-                    checkForRunttimeUpdateFixedType(AlarmCondition::ALARM_VARIANCE_HIGH.asString(),
-                                                    setAlarmVarianceHigh, double);
-                    checkForRunttimeUpdateFixedType(KARABO_SCHEMA_ENABLE_ROLLING_STATS, setRollingStatistics,
-                                                    unsigned int);
                     checkForRunttimeUpdateFixedTypeEnum(KARABO_SCHEMA_DAQ_POLICY, setDAQPolicy, DAQPolicy);
 
                 } catch (...) {
