@@ -454,7 +454,6 @@ namespace karabo {
             KARABO_INITIAL_FUNCTION(initialize)
 
             KARABO_SLOT(slotLoggerMap, Hash /*loggerMap*/)
-            KARABO_SLOT(slotAlarmSignalsUpdate, std::string, std::string, karabo::util::Hash);
             KARABO_SLOT(slotProjectUpdate, karabo::util::Hash, std::string);
             KARABO_SLOT(slotDumpToLog);
             KARABO_SLOT(slotDumpDebugInfo, karabo::util::Hash);
@@ -1237,28 +1236,6 @@ namespace karabo {
                         onRequestNetwork(channel, info);
                     } else if (type == "error") {
                         onGuiError(info);
-                    } else if (type == "acknowledgeAlarm") {
-                        onAcknowledgeAlarm(channel, info);
-                    } else if (type == "requestAlarms") {
-                        onRequestAlarms(channel, info);
-                    } else if (type == "updateAttributes") {
-                        onUpdateAttributes(channel, info);
-                    } else if (type == "projectBeginUserSession") {
-                        onProjectBeginUserSession(channel, info);
-                    } else if (type == "projectEndUserSession") {
-                        onProjectEndUserSession(channel, info);
-                    } else if (type == "projectSaveItems") {
-                        onProjectSaveItems(channel, info);
-                    } else if (type == "projectLoadItems") {
-                        onProjectLoadItems(channel, info);
-                    } else if (type == "projectListProjectManagers") {
-                        onProjectListProjectManagers(channel, info);
-                    } else if (type == "projectListItems") {
-                        onProjectListItems(channel, info);
-                    } else if (type == "projectListDomains") {
-                        onProjectListDomains(channel, info);
-                    } else if (type == "projectUpdateAttribute") {
-                        onProjectUpdateAttribute(channel, info);
                     } else if (type == "requestGeneric") {
                         onRequestGeneric(channel, info);
                     } else if (type == "subscribeLogs") {
@@ -1531,17 +1508,6 @@ namespace karabo {
                 oss << "Init device '" + deviceId + "' on server '" + serverId + "' with:\n" << config;
                 logUserAction(channel, oss.str());
 
-                if (!deviceId.empty() && hash.has("schemaUpdates")) {
-                    KARABO_LOG_FRAMEWORK_DEBUG << "Schema updates were provided for device " << deviceId;
-
-                    AttributeUpdates attrUpdates;
-                    attrUpdates.eventMask = 0;
-                    attrUpdates.updates = hash.get<std::vector<Hash>>("schemaUpdates");
-
-                    std::lock_guard<std::mutex> lock(m_pendingAttributesMutex);
-                    m_pendingAttributeUpdates[deviceId] = attrUpdates;
-                }
-
                 DeviceInstantiation inst;
                 inst.channel = channel;
                 inst.hash = hash;
@@ -1626,10 +1592,6 @@ namespace karabo {
                                               << "' failed: " << h.get<std::string>("message");
                 }
                 safeClientWrite(channel, h);
-
-                const NewInstanceAttributeUpdateEvents event =
-                      (isFailureHandler || !success ? INSTANCE_GONE_EVENT : DEVICE_SERVER_REPLY_EVENT);
-                tryToUpdateNewInstanceAttributes(givenDeviceId, event);
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in initReply " << e.what();
             }
@@ -2260,9 +2222,6 @@ namespace karabo {
                         // registered in time.
                         requestNoWait(get<std::string>("dataLogManagerId"), "slotGetLoggerMap", "", "slotLoggerMap");
                     }
-
-                    tryToUpdateNewInstanceAttributes(instanceId, INSTANCE_NEW_EVENT);
-
                     registerPotentialProjectManager(topologyEntry);
                 }
             } catch (const std::exception& e) {
@@ -2303,12 +2262,6 @@ namespace karabo {
                     }
                 }
 
-                {
-                    // Erase instance from the attribute update map (maybe)
-                    std::lock_guard<std::mutex> lock(m_pendingAttributesMutex);
-                    m_pendingAttributeUpdates.erase(instanceId);
-                }
-
                 // Clean m_networkConnections from input channels of the dead 'instanceId'.
                 // The GUI client (as of 2.20.X) gives an onSubscribeNetwork request again if it gets notified
                 // that the device is back again.
@@ -2345,8 +2298,6 @@ namespace karabo {
                         m_timingOutDevices.erase(it);
                     }
                 }
-                tryToUpdateNewInstanceAttributes(instanceId, INSTANCE_GONE_EVENT);
-
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in instanceGoneHandler(): " << e.what();
             }
@@ -2867,148 +2818,6 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::tryToUpdateNewInstanceAttributes(const std::string& deviceId, const int callerMask) {
-            try {
-                std::lock_guard<std::mutex> lock(m_pendingAttributesMutex);
-                const auto it = m_pendingAttributeUpdates.find(deviceId);
-
-                if (it != m_pendingAttributeUpdates.end()) {
-                    if (callerMask == INSTANCE_GONE_EVENT) {
-                        m_pendingAttributeUpdates.erase(it);
-                        return;
-                    }
-                    // Set the caller's bit in the event mask
-                    it->second.eventMask |= callerMask;
-                    if ((it->second.eventMask & FULL_MASK_EVENT) != FULL_MASK_EVENT) {
-                        KARABO_LOG_FRAMEWORK_DEBUG << "Updating schema attributes of device: " << deviceId
-                                                   << " still pending until all events received...";
-                        return;
-                    }
-
-                    KARABO_LOG_FRAMEWORK_DEBUG << "Updating schema attributes of device: " << deviceId;
-                    request(deviceId, "slotUpdateSchemaAttributes", it->second.updates)
-                          .receiveAsync<Hash>(
-                                bind_weak(&GuiServerDevice::onUpdateNewInstanceAttributesHandler, this, deviceId, _1));
-                }
-
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in sending attribute update " << e.what();
-            }
-        }
-
-        void GuiServerDevice::onUpdateNewInstanceAttributesHandler(const std::string& deviceId, const Hash& response) {
-            try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "Handling attribute update response from " << deviceId;
-                if (!response.get<bool>("success")) {
-                    KARABO_LOG_ERROR << "Schema attribute update failed for device: " << deviceId;
-                }
-
-                std::lock_guard<std::mutex> lock(m_pendingAttributesMutex);
-                if (m_pendingAttributeUpdates.erase(deviceId) == 0) {
-                    KARABO_LOG_ERROR << "Received non-requested attribute update response from: " << deviceId;
-                }
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in receiving attribute update response: " << e.what();
-            }
-        }
-
-
-        void GuiServerDevice::slotAlarmSignalsUpdate(const std::string& alarmServiceId, const std::string& type,
-                                                     const karabo::util::Hash& updateRows) {
-            try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting alarm update";
-                // Flushes all the instance changes that are waiting for the next throttler cycle to be
-                // dispatched. This is done to guarantee that the clients will receive those instance changes
-                // before the alarm updates. An alarm info, for instance, may refer to a device whose
-                // instanceNew event was being held by the Throttler.
-                remote().flushThrottledInstanceChanges();
-                Hash h("type", type, "instanceId", alarmServiceId, "rows", updateRows);
-                // Broadcast to all GUIs
-                safeAllClientsWrite(h, LOSSLESS);
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in broad casting alarms(): " << e.what();
-            }
-        }
-
-
-        void GuiServerDevice::onAcknowledgeAlarm(WeakChannelPointer channel, const karabo::util::Hash& info) {
-            try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "onAcknowledgeAlarm : info ...\n" << info;
-                const std::string& alarmServiceId = info.get<std::string>("alarmInstanceId");
-                call(alarmServiceId, "slotAcknowledgeAlarm", info.get<Hash>("acknowledgedRows"));
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onAcknowledgeAlarm(): " << e.what();
-            }
-        };
-
-
-        void GuiServerDevice::onRequestAlarms(WeakChannelPointer channel, const karabo::util::Hash& info,
-                                              const bool replyToAllClients) {
-            try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "onRequestAlarms : info ...\n" << info;
-                // TODO: Add error handling for receiveAsync!
-                //       (But protocol does anyway not foresee to forwared failure to GUI client as of 2.14.0.)
-                const std::string& requestedInstance = info.get<std::string>("alarmInstanceId");
-                request(requestedInstance, "slotRequestAlarmDump")
-                      .receiveAsync<karabo::util::Hash>(
-                            bind_weak(&GuiServerDevice::onRequestedAlarmsReply, this, channel, _1, replyToAllClients));
-
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onRequestAlarms(): " << e.what();
-            }
-        };
-
-
-        void GuiServerDevice::onRequestedAlarmsReply(WeakChannelPointer channel, const karabo::util::Hash& reply,
-                                                     const bool replyToAllClients) {
-            try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "onRequestedAlarmsReply : info ...\n" << reply;
-                // Flushes all the instance changes that are waiting for the next throttler cycle to be
-                // dispatched. This is done to guarantee that the clients will receive those instance changes
-                // before the alarm updates. An alarm info, for instance, may refer to a device whose
-                // instanceNew event was being held by the Throttler.
-                remote().flushThrottledInstanceChanges();
-                Hash h("type", "alarmInit", "instanceId", reply.get<std::string>("instanceId"), "rows",
-                       reply.get<Hash>("alarms"));
-                if (replyToAllClients) {
-                    safeAllClientsWrite(h, LOSSLESS);
-                } else {
-                    safeClientWrite(channel, h, LOSSLESS);
-                }
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onRequestedAlarmsReply(): " << e.what();
-            }
-        }
-
-
-        void GuiServerDevice::onUpdateAttributes(WeakChannelPointer channel, const karabo::util::Hash& info) {
-            try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "onUpdateAttributes : info ...\n" << info;
-                const std::string& instanceId = info.get<std::string>("instanceId");
-                const std::vector<Hash>& updates = info.get<std::vector<Hash>>("updates");
-
-                // TODO: Add error handling for receiveAsync!
-                //       (But protocol does anyway not foresee to forwared failure to GUI client as of 2.14.0.)
-                request(instanceId, "slotUpdateSchemaAttributes", updates)
-                      .receiveAsync<Hash>(bind_weak(&GuiServerDevice::onRequestedAttributeUpdate, this, channel, _1));
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onUpdateAttributes(): " << e.what();
-            }
-        }
-
-
-        void GuiServerDevice::onRequestedAttributeUpdate(WeakChannelPointer channel, const karabo::util::Hash& reply) {
-            try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "onRequestedAttributeUpdate : success ...\n"
-                                           << reply.get<bool>("success");
-                Hash h("type", "attributesUpdated", "reply", reply);
-                safeClientWrite(channel, h, LOSSLESS);
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onRequestedAttributeUpdate(): " << e.what();
-            }
-        }
-
-
         void GuiServerDevice::registerPotentialProjectManager(const karabo::util::Hash& topologyEntry) {
             std::string type, instanceId;
             typeAndInstanceFromTopology(topologyEntry, type, instanceId);
@@ -3152,178 +2961,6 @@ namespace karabo {
                 h.set("reason", std::move(failTxt));
             }
             safeClientWrite(channel, h);
-        }
-
-
-        void GuiServerDevice::onProjectBeginUserSession(WeakChannelPointer channel, const karabo::util::Hash& info) {
-            try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "onProjectBeginUserSession : info ...\n" << info;
-                const std::string& projectManager = info.get<std::string>("projectManager");
-                if (!checkProjectManagerId(channel, projectManager, "projectBeginUserSession",
-                                           "Project manager does not exist: Begin User Session failed."))
-                    return;
-                const std::string& token = info.get<std::string>("token");
-                // TODO: Add failure handling for receiveAsync?
-                //       (But protocol does anyway not foresee to forwared failure to GUI client as of 2.14.0.)
-                request(projectManager, "slotBeginUserSession", token)
-                      .receiveAsync<Hash>(util::bind_weak(&GuiServerDevice::forwardReply, this, channel,
-                                                          "projectBeginUserSession", _1));
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectBeginUserSession(): " << e.what();
-            }
-        }
-
-
-        void GuiServerDevice::onProjectEndUserSession(WeakChannelPointer channel, const karabo::util::Hash& info) {
-            try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "onProjectEndUserSession : info ...\n" << info;
-                const std::string& projectManager = info.get<std::string>("projectManager");
-                if (!checkProjectManagerId(channel, projectManager, "projectEndUserSession",
-                                           "Project manager does not exist: End User Session failed."))
-                    return;
-                const std::string& token = info.get<std::string>("token");
-                // TODO: Add failure handling for receiveAsync?
-                //       (But protocol does anyway not foresee to forwared failure to GUI client as of 2.14.0.)
-                request(projectManager, "slotEndUserSession", token)
-                      .receiveAsync<Hash>(util::bind_weak(&GuiServerDevice::forwardReply, this, channel,
-                                                          "projectEndUserSession", _1));
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectEndUserSession(): " << e.what();
-            }
-        }
-
-
-        void GuiServerDevice::onProjectSaveItems(WeakChannelPointer channel, const karabo::util::Hash& info) {
-            try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "onProjectSaveItems : info ...\n" << info;
-                const std::string& projectManager = info.get<std::string>("projectManager");
-                if (!checkProjectManagerId(channel, projectManager, "projectSaveItems",
-                                           "Project manager does not exist: Project items cannot be saved."))
-                    return;
-                const std::string& token = info.get<std::string>("token");
-                const std::vector<Hash>& items = info.get<std::vector<Hash>>("items");
-                const std::string& client = (info.has("client") ? info.get<std::string>("client") : std::string());
-
-                // TODO: truncate the number of items output or summarize each of them.
-                std::ostringstream oss;
-                oss << "Save " << items.size() << " project item(s):\n";
-                for (const auto& item : items) {
-                    oss << item << "\n";
-                }
-                logUserAction(channel, oss.str());
-
-                // TODO: Add failure handling for receiveAsync?
-                //       (But protocol does anyway not foresee to forwared failure to GUI client as of 2.14.0.)
-                request(projectManager, "slotSaveItems", token, items, client)
-                      .receiveAsync<Hash>(
-                            util::bind_weak(&GuiServerDevice::forwardReply, this, channel, "projectSaveItems", _1));
-
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectSaveItems(): " << e.what();
-            }
-        }
-
-
-        void GuiServerDevice::onProjectLoadItems(WeakChannelPointer channel, const karabo::util::Hash& info) {
-            try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "onProjectLoadItems : info ...\n" << info;
-                const std::string& projectManager = info.get<std::string>("projectManager");
-                if (!checkProjectManagerId(channel, projectManager, "projectLoadItems",
-                                           "Project manager does not exist: Project items cannot be loaded."))
-                    return;
-                const std::string& token = info.get<std::string>("token");
-                const std::vector<Hash>& items = info.get<std::vector<Hash>>("items");
-                // TODO: Add failure handling for receiveAsync?
-                //       (But protocol does anyway not foresee to forwared failure to GUI client as of 2.14.0.)
-                request(projectManager, "slotLoadItems", token, items)
-                      .receiveAsync<Hash>(
-                            util::bind_weak(&GuiServerDevice::forwardReply, this, channel, "projectLoadItems", _1));
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectLoadItems(): " << e.what();
-            }
-        }
-
-
-        void GuiServerDevice::onProjectListProjectManagers(WeakChannelPointer channel, const karabo::util::Hash& info) {
-            try {
-                Hash h("type", "projectListProjectManagers", "reply", getKnownProjectManagers());
-                safeClientWrite(channel, h, LOSSLESS);
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectListProjectManagers(): " << e.what();
-            }
-        }
-
-
-        void GuiServerDevice::onProjectListItems(WeakChannelPointer channel, const karabo::util::Hash& info) {
-            try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "onProjectListItems : info ...\n" << info;
-                const std::string& projectManager = info.get<std::string>("projectManager");
-                if (!checkProjectManagerId(channel, projectManager, "projectListItems",
-                                           "Project manager does not exist: Project list cannot be retrieved."))
-                    return;
-                const std::string& token = info.get<std::string>("token");
-                const std::string& domain = info.get<std::string>("domain");
-                const std::vector<std::string>& item_types = info.get<std::vector<std::string>>("item_types");
-                // TODO: Add failure handling for receiveAsync?
-                //       (But protocol does anyway not foresee to forwared failure to GUI client as of 2.14.0.)
-                request(projectManager, "slotListItems", token, domain, item_types)
-                      .receiveAsync<Hash>(
-                            util::bind_weak(&GuiServerDevice::forwardReply, this, channel, "projectListItems", _1));
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectListItems(): " << e.what();
-            }
-        }
-
-
-        void GuiServerDevice::onProjectListDomains(WeakChannelPointer channel, const karabo::util::Hash& info) {
-            try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "onProjectListDomains : info ...\n" << info;
-                const std::string& projectManager = info.get<std::string>("projectManager");
-                if (!checkProjectManagerId(channel, projectManager, "projectListDomains",
-                                           "Project manager does not exist: Domain list cannot be retrieved."))
-                    return;
-                const std::string& token = info.get<std::string>("token");
-                // TODO: Add failure handling for receiveAsync?
-                //       (But protocol does anyway not foresee to forwared failure to GUI client as of 2.14.0.)
-                request(projectManager, "slotListDomains", token)
-                      .receiveAsync<Hash>(
-                            util::bind_weak(&GuiServerDevice::forwardReply, this, channel, "projectListDomains", _1));
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectListDomains(): " << e.what();
-            }
-        }
-
-
-        void GuiServerDevice::onProjectUpdateAttribute(WeakChannelPointer channel, const karabo::util::Hash& info) {
-            try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "onProjectUpdateAttribute : info ...\n" << info;
-                const std::string& projectManager = info.get<std::string>("projectManager");
-                if (!checkProjectManagerId(channel, projectManager, "projectUpdateAttribute",
-                                           "Project manager does not exist: Cannot update project attribute (trash)."))
-                    return;
-                const std::string& token = info.get<std::string>("token");
-                const std::vector<Hash>& items = info.get<std::vector<Hash>>("items");
-
-                // TODO: Add failure handling for receiveAsync?
-                //       (But protocol does anyway not foresee to forwared failure to GUI client as of 2.14.0.)
-                request(projectManager, "slotUpdateAttribute", token, items)
-                      .receiveAsync<Hash>(util::bind_weak(&GuiServerDevice::forwardReply, this, channel,
-                                                          "projectUpdateAttribute", _1));
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectUpdateAttribute(): " << e.what();
-            }
-        }
-
-
-        void GuiServerDevice::forwardReply(WeakChannelPointer channel, const std::string& replyType,
-                                           /*const karabo::net::ErrorCode& e,*/ const karabo::util::Hash& reply) {
-            try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "forwardReply : " << replyType;
-                Hash h("type", replyType, "reply", reply);
-                safeClientWrite(channel, h, LOSSLESS);
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in forwarding reply of type '" << replyType << "': " << e.what();
-            }
         }
 
         bool GuiServerDevice::checkProjectManagerId(WeakChannelPointer channel, const std::string& deviceId,
