@@ -52,13 +52,6 @@ class PythonDevice:
     properties that represent the state of a device. Commands may be exposed
     through it using so-called slots.
 
-    Devices can optionally either use a full finite state machine, deriving
-    from the `FSM` class, or use a simplified approach (`NoFSM`), where state
-    updates are explicitly called from the device logic. The latter is the
-    default if a device class just inherits from this PythonDevice.
-    Otherwise the device class has to also inherit from a concrete FSM
-    implementation that inherits from BaseFsm.
-
     Devices run in a separate process, but internally use an event loop with
     multiple threads to serve requests from the distributed system.
     """
