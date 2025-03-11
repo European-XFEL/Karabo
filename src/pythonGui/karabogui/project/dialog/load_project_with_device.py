@@ -28,7 +28,7 @@ from karabogui import messagebox
 from karabogui.events import (
     KaraboEvent, register_for_broadcasts, unregister_from_broadcasts)
 from karabogui.singletons.api import get_config, get_db_conn
-from karabogui.util import SignalBlocker, get_spin_widget
+from karabogui.util import SignalBlocker, get_spin_widget, utc_to_local
 
 from .utils import get_dialog_ui
 
@@ -228,7 +228,7 @@ class LoadProjectWithDeviceDialog(QDialog):
             prj_name.setData(Qt.UserRole, rec["uuid"])
             self.tbl_projects.setItem(row, 0, prj_name)
             self.tbl_projects.setItem(
-                row, 1, QTableWidgetItem(rec["last_modified"]))
+                row, 1, QTableWidgetItem(utc_to_local(rec["last_modified"])))
             devices = ", ".join(sorted(rec["devices"]))
             device_item = QTableWidgetItem(devices)
             device_item.setToolTip(devices)

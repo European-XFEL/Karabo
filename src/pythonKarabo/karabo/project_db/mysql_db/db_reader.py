@@ -175,11 +175,19 @@ class DbReader:
 
     def get_device_instance_project(
             self, instance: DeviceInstance) -> Project | None:
+        import datetime
         project = None
         with self.session_gen() as session:
             query = select(DeviceServer).where(
                 DeviceServer.id == instance.device_server_id)
             device_server = session.exec(query).first()
             if device_server:
-                project = device_server.project
+                project: Project = device_server.project
+                # Add tzinfo to the project dates (naive datetimes stored in
+                # in the DB)
+                if project.date:
+                    project.date = project.date.replace(tzinfo=datetime.UTC)
+                if project.last_loaded:
+                    project.last_loaded = project.last_loaded.replace(
+                        tzinfo=datetime.UTC)
         return project
