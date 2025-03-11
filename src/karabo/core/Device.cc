@@ -27,6 +27,7 @@
 #include <unistd.h>
 
 #include <boost/algorithm/string.hpp>
+#include <boost/stacktrace.hpp>
 #include <regex>
 #include <string>
 #include <tuple>
@@ -46,7 +47,6 @@
 #include "karabo/util/OverwriteElement.hh"
 #include "karabo/util/RollingWindowStatistics.hh"
 #include "karabo/util/SimpleElement.hh"
-#include "karabo/util/StackTrace.hh"
 #include "karabo/util/State.hh"
 #include "karabo/util/StateElement.hh"
 #include "karabo/util/Timestamp.hh"
@@ -337,7 +337,7 @@ namespace karabo {
         Device::~Device() {
             KARABO_LOG_FRAMEWORK_TRACE << "Device::~Device() dtor : m_deviceClient.use_count()="
                                        << m_deviceClient.use_count() << "\n"
-                                       << karabo::util::StackTrace();
+                                       << boost::stacktrace::stacktrace(); // in C++23 replace with std
             m_deviceClient.reset();
         };
 
