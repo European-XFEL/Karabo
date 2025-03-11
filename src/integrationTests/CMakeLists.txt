@@ -54,7 +54,6 @@ set(INTEGRATION_TEST_TARGETS
     guiServerIntegrTestRunner
     pipelinedProcessingIntegrTestRunner
     propertyTestIntegrTestRunner
-    runtimeSchemaAttrsIntegrTestRunner
     sceneProviderIntegrTestRunner
     timingIntegrTestRunner
 )
@@ -96,12 +95,6 @@ set(propertyTestIntegrTestRunner_FILES
     $<TARGET_OBJECTS:INTEGRATION_RUNNER>
 )
 
-set(runtimeSchemaAttrsIntegrTestRunner_FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/AlarmTesterDevice.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/RunTimeSchemaAttributes_Test.cc
-    $<TARGET_OBJECTS:TCP_ADAPTER>
-    $<TARGET_OBJECTS:INTEGRATION_RUNNER>
-)
 
 set(sceneProviderIntegrTestRunner_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/NonSceneProviderTestDevice.cc

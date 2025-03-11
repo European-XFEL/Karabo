@@ -311,12 +311,8 @@ void GuiServer_Test::testReadOnly() {
     std::vector<Hash> commands = {
           Hash("type", "execute"),
           Hash("type", "killDevice"),
-          Hash("type", "projectSaveItems"),
-          Hash("type", "initDevice"),
+          Hash("type", "initDevice"), //
           Hash("type", "killServer"),
-          Hash("type", "acknowledgeAlarm"),
-          Hash("type", "projectUpdateAttribute"),
-          Hash("type", "updateAttributes"),
           Hash("type", "reconfigure"),
           Hash("type", "requestGeneric", "slot", "slotSaveConfigurationFromName"),
     };
@@ -359,17 +355,6 @@ void GuiServer_Test::testExecuteBeforeLogin() {
                                              "subscribeNetwork",
                                              "requestNetwork",
                                              "error",
-                                             "acknowledgeAlarm",
-                                             "requestAlarms",
-                                             "updateAttributes",
-                                             "projectBeginUserSession",
-                                             "projectEndUserSession",
-                                             "projectSaveItems",
-                                             "projectLoadItems",
-                                             "projectListProjectManagers",
-                                             "projectListItems",
-                                             "projectListDomains",
-                                             "projectUpdateAttribute",
                                              "requestGeneric"};
     for (const std::string& type : blockedTypes) {
         const Hash h("type", type);
