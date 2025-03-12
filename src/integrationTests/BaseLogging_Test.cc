@@ -363,35 +363,11 @@ void BaseLogging_Test::waitUntilLogged(const std::string& deviceId, const std::s
           isLogged);
 }
 
-
 void BaseLogging_Test::setPropertyTestSchema() {
-    std::vector<Hash> updates;
-    updates.push_back(Hash("path", "floatProperty", "attribute", KARABO_SCHEMA_MIN_INC, "value",
-                           -1.f * std::numeric_limits<float>::infinity()));
-    updates.push_back(Hash("path", "floatProperty", "attribute", KARABO_SCHEMA_MAX_INC, "value",
-                           std::numeric_limits<float>::infinity()));
-    updates.push_back(Hash("path", "doubleProperty", "attribute", KARABO_SCHEMA_MIN_INC, "value",
-                           -1. * std::numeric_limits<double>::infinity()));
-    updates.push_back(Hash("path", "doubleProperty", "attribute", KARABO_SCHEMA_MAX_INC, "value",
-                           std::numeric_limits<double>::infinity()));
-    updates.push_back(Hash("path", "vectors.int8Property", "attribute", KARABO_SCHEMA_MIN_SIZE, "value", 0));
-    updates.push_back(Hash("path", "vectors.uint8Property", "attribute", KARABO_SCHEMA_MIN_SIZE, "value", 0));
-    updates.push_back(Hash("path", "vectors.stringProperty", "attribute", KARABO_SCHEMA_MIN_SIZE, "value", 0));
-    updates.push_back(Hash("path", "vectors.boolProperty", "attribute", KARABO_SCHEMA_MIN_SIZE, "value", 0));
-    updates.push_back(Hash("path", "vectors.int16Property", "attribute", KARABO_SCHEMA_MIN_SIZE, "value", 0));
-    updates.push_back(Hash("path", "vectors.uint16Property", "attribute", KARABO_SCHEMA_MIN_SIZE, "value", 0));
-    updates.push_back(Hash("path", "vectors.int32Property", "attribute", KARABO_SCHEMA_MIN_SIZE, "value", 0));
-    updates.push_back(Hash("path", "vectors.uint32Property", "attribute", KARABO_SCHEMA_MIN_SIZE, "value", 0));
-    updates.push_back(Hash("path", "vectors.int64Property", "attribute", KARABO_SCHEMA_MIN_SIZE, "value", 0));
-    updates.push_back(Hash("path", "vectors.uint64Property", "attribute", KARABO_SCHEMA_MIN_SIZE, "value", 0));
-
     Hash response;
-    m_sigSlot->request(m_deviceId, "slotUpdateSchemaAttributes", updates)
-          .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
-          .receive(response);
+    m_sigSlot->request(m_deviceId, "useLoggingTestSchema").timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive(response);
     CPPUNIT_ASSERT_MESSAGE("Could not update schema", response.get<bool>("success"));
 }
-
 
 std::pair<bool, std::string> BaseLogging_Test::startDataLoggerManager(
       const std::string& loggerType, bool useInvalidInfluxUrl, bool useInvalidDbName,

@@ -1266,7 +1266,6 @@ class PythonDevice:
         self._ss.registerSlot(self.slotGetConfigurationSlice)
         self._ss.registerSlot(self.slotGetSchema)
         self._ss.registerSlot(self.slotKillDevice)
-        self._ss.registerSlot(self.slotUpdateSchemaAttributes)
         # Timeserver related slots
         self._ss.registerSlot(self.slotTimeTick)
         self._ss.registerSlot(self.slotGetTime)
@@ -1591,31 +1590,6 @@ class PythonDevice:
 
             # This will trigger the central event-loop to finish
             os.kill(os.getpid(), signal.SIGTERM)
-
-    def slotUpdateSchemaAttributes(self, updates):
-        success = False
-
-        with self._stateChangeLock:
-            success = self._fullSchema.applyRuntimeUpdates(updates)
-            # Whenever updating self._fullSchema, we have to clear the cache
-            self._stateDependentSchema.clear()
-
-            if success:
-                # Once the attributes in the fullSchema have been successfully
-                # updated, also perform any required attribute update on the
-                # injectedSchema. The update of attributes for the injected
-                # Schema is performed on a best effort basis - every path in
-                # updates that is found in the injectedSchema will have its
-                # attribute updated; those that are not found will be skipped.
-                self._injectedSchema.applyRuntimeUpdates(updates)
-                # Notify everyone
-                self._ss.emit("signalSchemaUpdated", self._fullSchema,
-                              self.deviceid)
-
-            self._ss.reply(Hash("success", success,
-                                "instanceId", self.deviceid,
-                                "updatedSchema", self._fullSchema,
-                                "requestedUpdate", updates))
 
     def slotTimeTick(self, id, sec, frac, period):
         epochNow = Epochstamp()

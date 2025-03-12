@@ -1208,28 +1208,6 @@ namespace karabo {
             bool unregisterChannelMonitor(const std::string& channelName);
 
             /**
-             * Sets an attribute of a device.
-             * @param deviceId The id of the device
-             * @param key The parameter key (can be nested using "." as separator)
-             * @param attributeKey The attribute key
-             * @param attributeValue The attribute value
-             * @param timeoutInSeconds Timeout in seconds, as this call is synchronous
-             */
-            template <class T>
-            void setAttribute(const std::string& deviceId, const std::string& key, const std::string& attributeKey,
-                              const T& attributeValue, int timeoutInSeconds = -1) {
-                KARABO_GET_SHARED_FROM_WEAK(sp, m_signalSlotable);
-                if (timeoutInSeconds == -1) timeoutInSeconds = 3;
-                karabo::util::Hash h("path", key, "attribute", attributeKey, "value", attributeValue);
-                std::vector<karabo::util::Hash> v{h};
-                karabo::util::Hash reply;
-                sp->request(deviceId, "slotUpdateSchemaAttributes", v).timeout(timeoutInSeconds * 1000).receive(reply);
-                if (!reply.get<bool>("success")) {
-                    throw KARABO_RECONFIGURE_EXCEPTION("Attribute update failed, reply is: " + toString(reply));
-                }
-            }
-
-            /**
              * Set a remote property in the distributed system
              * @param instanceId of the device to set the property on
              * @param key path to the property to set
