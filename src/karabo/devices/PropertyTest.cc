@@ -958,8 +958,8 @@ namespace karabo {
             KARABO_SLOT(orderTest_slotStart);
             KARABO_SLOT(slotStartCount); // Do not expose to Schema although no arguments...
             KARABO_SLOT(slotCount, int);
+            KARABO_SLOT(useLoggingTestSchema);
         }
-
 
         PropertyTest::~PropertyTest() {}
 
@@ -970,6 +970,153 @@ namespace karabo {
             KARABO_ON_EOS("input", onEndOfStream);
 
             updateState(State::NORMAL);
+        }
+
+        void PropertyTest::useLoggingTestSchema() {
+            Schema newSchema;
+
+            FLOAT_ELEMENT(newSchema)
+                  .key("floatProperty")
+                  .displayedName("Float property")
+                  .description("A float property")
+                  .minInc(-1.f * std::numeric_limits<float>::infinity())
+                  .maxInc(std::numeric_limits<float>::infinity())
+                  .reconfigurable()
+                  .assignmentOptional()
+                  .defaultValue(3.141596)
+                  .commit();
+
+            DOUBLE_ELEMENT(newSchema)
+                  .key("doubleProperty")
+                  .displayedName("Double property")
+                  .description("A double property")
+                  .minInc(-1. * std::numeric_limits<double>::infinity())
+                  .maxInc(std::numeric_limits<double>::infinity())
+                  .reconfigurable()
+                  .assignmentOptional()
+                  .defaultValue(3.1415967773331)
+                  .commit();
+
+            NODE_ELEMENT(newSchema)
+                  .key("vectors")
+                  .displayedName("Vectors")
+                  .description("A node containing vector properties")
+                  .commit();
+
+            VECTOR_INT8_ELEMENT(newSchema)
+                  .key("vectors.int8Property")
+                  .displayedName("Int8 property")
+                  .description("A vector int8 property")
+                  .reconfigurable()
+                  .minSize(0)
+                  .maxSize(10)
+                  .assignmentOptional()
+                  .defaultValue({41, 42, 43, 44, 45, 46})
+                  .commit();
+
+            VECTOR_UINT8_ELEMENT(newSchema)
+                  .key("vectors.uint8Property")
+                  .displayedName("UInt8 property")
+                  .description("A vector uint8 property")
+                  .reconfigurable()
+                  .minSize(0)
+                  .maxSize(10)
+                  .assignmentOptional()
+                  .defaultValue({41, 42, 43, 44, 45, 46})
+                  .commit();
+
+            VECTOR_STRING_ELEMENT(newSchema)
+                  .key("vectors.stringProperty")
+                  .displayedName("String property")
+                  .description("A vector string property")
+                  .reconfigurable()
+                  .minSize(0)
+                  .maxSize(10)
+                  .assignmentOptional()
+                  .defaultValue({"1111111", "2222222", "3333333", "4444444", "5555555", "6666666"})
+                  .commit();
+
+            VECTOR_BOOL_ELEMENT(newSchema)
+                  .key("vectors.boolProperty")
+                  .displayedName("Bool property")
+                  .description("A vector boolean property")
+                  .reconfigurable()
+                  .minSize(0)
+                  .maxSize(10)
+                  .assignmentOptional()
+                  .defaultValue({true, false, true, false, true, false})
+                  .commit();
+
+            VECTOR_INT16_ELEMENT(newSchema)
+                  .key("vectors.int16Property")
+                  .displayedName("Int16 property")
+                  .description("A vector int16 property")
+                  .reconfigurable()
+                  .minSize(0)
+                  .maxSize(10)
+                  .assignmentOptional()
+                  .defaultValue({20041, 20042, 20043, 20044, 20045, 20046})
+                  .commit();
+
+            VECTOR_UINT16_ELEMENT(newSchema)
+                  .key("vectors.uint16Property")
+                  .displayedName("UInt16 property")
+                  .description("A vector uint16 property")
+                  .reconfigurable()
+                  .minSize(0)
+                  .maxSize(10)
+                  .assignmentOptional()
+                  .defaultValue({10041, 10042, 10043, 10044, 10045, 10046})
+                  .commit();
+
+            VECTOR_INT32_ELEMENT(newSchema)
+                  .key("vectors.int32Property")
+                  .displayedName("Int32 property")
+                  .description("A vector int32 property")
+                  .reconfigurable()
+                  .minSize(0)
+                  .maxSize(10)
+                  .assignmentOptional()
+                  .defaultValue({20000041, 20000042, 20000043, 20000044, 20000045, 20000046})
+                  .commit();
+
+            VECTOR_UINT32_ELEMENT(newSchema)
+                  .key("vectors.uint32Property")
+                  .displayedName("UInt32 property")
+                  .description("A vector uint32 property")
+                  .reconfigurable()
+                  .minSize(0)
+                  .maxSize(10)
+                  .assignmentOptional()
+                  .defaultValue({90000041, 90000042, 90000043, 90000044, 90000045, 90000046})
+                  .commit();
+
+            VECTOR_INT64_ELEMENT(newSchema)
+                  .key("vectors.int64Property")
+                  .displayedName("Int64 property")
+                  .description("A vector int64 property")
+                  .reconfigurable()
+                  .minSize(0)
+                  .maxSize(10)
+                  .assignmentOptional()
+                  .defaultValue(
+                        {20000000041LL, 20000000042LL, 20000000043LL, 20000000044LL, 20000000045LL, 20000000046LL})
+                  .commit();
+
+            VECTOR_UINT64_ELEMENT(newSchema)
+                  .key("vectors.uint64Property")
+                  .displayedName("UInt64 property")
+                  .description("A vector uint64 property")
+                  .reconfigurable()
+                  .minSize(0)
+                  .maxSize(10)
+                  .assignmentOptional()
+                  .defaultValue({90000000041ULL, 90000000042ULL, 90000000043ULL, 90000000044ULL, 90000000045ULL,
+                                 90000000046ULL})
+                  .commit();
+
+            this->updateSchema(newSchema);
+            reply(karabo::util::Hash("success", true, "instanceId", getInstanceId()));
         }
 
         void PropertyTest::preReconfigure(Hash& incomingReconfiguration) {
