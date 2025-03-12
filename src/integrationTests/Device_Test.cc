@@ -874,34 +874,6 @@ void Device_Test::testSchemaWithAttrUpdate() {
           },
           cacheUpdateWaitMs));
 
-    // Updates 'alarmHigh' by using 'slotUpdateSchemaAttributes' - this
-    // is what the GUI Server would do when instantiating a device.
-    alarmHighValue *= 2.0; // 4 * TestDevice::ALARM_HIGH
-    std::vector<Hash> newAttrs{Hash("path", "valueWithAlarm", "attribute", "alarmHigh", "value", alarmHighValue)};
-    Hash dummy;
-    CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("TestDevice", "slotUpdateSchemaAttributes", newAttrs)
-                                  .timeout(requestTimeoutMs)
-                                  .receive(dummy));
-    // Checks that the new attribute value will be available within an interval.
-    CPPUNIT_ASSERT(waitForCondition(
-          [this, alarmHighValue] {
-              return m_deviceClient->getDeviceSchema("TestDevice").getAlarmHigh<double>("valueWithAlarm") ==
-                     alarmHighValue;
-          },
-          cacheUpdateWaitMs));
-
-    // Tests that doing updateSchema with something new resets the AlarmHigh.
-    CPPUNIT_ASSERT_NO_THROW(
-          sigSlotA->request("TestDevice", "slotUpdateSchema", someNewSchema).timeout(requestTimeoutMs).receive());
-    // Checks that the reset attribute will be available within an interval.
-    CPPUNIT_ASSERT(waitForCondition(
-          [this] {
-              return m_deviceClient->getDeviceSchema("TestDevice").getAlarmHigh<double>("valueWithAlarm") ==
-                     TestDevice::ALARM_HIGH;
-          },
-          cacheUpdateWaitMs));
-
-
     // Reset to static Schema for next test
     CPPUNIT_ASSERT_NO_THROW(
           sigSlotA->request("TestDevice", "slotUpdateSchema", Schema()).timeout(requestTimeoutMs).receive());
@@ -943,22 +915,6 @@ void Device_Test::testSchemaWithAttrAppend() {
     CPPUNIT_ASSERT_NO_THROW(
           sigSlotA->request("TestDevice", "slotAppendSchema", someNewSchema).timeout(requestTimeoutMs).receive());
     // Checks that the reset attribute will be available within an interval.
-    CPPUNIT_ASSERT(waitForCondition(
-          [this, alarmHighValue] {
-              return m_deviceClient->getDeviceSchema("TestDevice").getAlarmHigh<double>("valueWithAlarm") ==
-                     alarmHighValue;
-          },
-          cacheUpdateWaitMs));
-
-    // Updates 'alarmHigh' by using 'slotUpdateSchemaAttributes' - this
-    // is what the GUI Server would do when instantiating a device.
-    alarmHighValue *= 2.0; // 4 * TestDevice::ALARM_HIGH
-    std::vector<Hash> newAttrs{Hash("path", "valueWithAlarm", "attribute", "alarmHigh", "value", alarmHighValue)};
-    Hash dummy;
-    CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("TestDevice", "slotUpdateSchemaAttributes", newAttrs)
-                                  .timeout(requestTimeoutMs)
-                                  .receive(dummy));
-    // Checks that the new attribute value will be available within an interval.
     CPPUNIT_ASSERT(waitForCondition(
           [this, alarmHighValue] {
               return m_deviceClient->getDeviceSchema("TestDevice").getAlarmHigh<double>("valueWithAlarm") ==

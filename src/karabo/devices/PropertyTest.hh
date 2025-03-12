@@ -105,6 +105,7 @@ namespace karabo {
 
             void logSomething(const karabo::util::Hash& input);
 
+            void useLoggingTestSchema();
 
             /**
              * The order test started with this slot works as follows:
