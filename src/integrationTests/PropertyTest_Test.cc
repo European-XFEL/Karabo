@@ -820,42 +820,6 @@ void PropertyTest_Test::testAttributeEditing() {
                                .receive(),
                          karabo::util::RemoteException);
 
-    // Now make 11 to be fine
-    m_deviceClient->setAttribute("testPropertyTest_0", "vectors.int32Property", KARABO_SCHEMA_MAX_SIZE, 11u);
-    CPPUNIT_ASSERT_NO_THROW(caller->request("testPropertyTest_0", "slotReconfigure", toSend)
-                                  .timeout(1000) // in ms
-                                  .receive());
-
-    // But 12 is still too long
-    vec = std::vector<int>(12, 2);
-    CPPUNIT_ASSERT_THROW(caller->request("testPropertyTest_0", "slotReconfigure", toSend)
-                               .timeout(1000) // in ms
-                               .receive(),
-                         karabo::util::RemoteException);
-
-    // Now make empty vec to be fine
-    m_deviceClient->setAttribute("testPropertyTest_0", "vectors.int32Property", KARABO_SCHEMA_MIN_SIZE, 0u);
-    vec.clear();
-    CPPUNIT_ASSERT_NO_THROW(caller->request("testPropertyTest_0", "slotReconfigure", toSend)
-                                  .timeout(1000) // in ms
-                                  .receive());
-
-    // Now make 2 the minumum and test that size 1 is not ok
-    m_deviceClient->setAttribute("testPropertyTest_0", "vectors.int32Property", KARABO_SCHEMA_MIN_SIZE, 2u);
-    vec = std::vector<int>(1, 0);
-    CPPUNIT_ASSERT_THROW(caller->request("testPropertyTest_0", "slotReconfigure", toSend)
-                               .timeout(1000) // in ms
-                               .receive(),
-                         karabo::util::RemoteException);
-
-    // Now make 8 the minumum and test that size 9 now is too long
-    m_deviceClient->setAttribute("testPropertyTest_0", "vectors.int32Property", KARABO_SCHEMA_MAX_SIZE, 8u);
-    vec = std::vector<int>(9, 100);
-    CPPUNIT_ASSERT_THROW(caller->request("testPropertyTest_0", "slotReconfigure", toSend)
-                               .timeout(1000) // in ms
-                               .receive(),
-                         karabo::util::RemoteException);
-
     std::clog << "Tested attribute editing.. Ok" << std::endl;
 }
 

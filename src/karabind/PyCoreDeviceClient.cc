@@ -750,18 +750,6 @@ void exportPyCoreDeviceClient(py::module_& m) {
                 py::arg("deviceId"), py::arg("hash"), py::arg("timeoutInSeconds") = -1)
 
           .def(
-                "setAttribute",
-                [](const DeviceClientWrap::Pointer& self, const std::string& instanceId, const std::string& key,
-                   const std::string& attributeKey, const py::object& attributeValue, int timeoutInSeconds) {
-                    std::any attrValueAsAny;
-                    wrapper::castPyToAny(attributeValue, attrValueAsAny);
-                    py::gil_scoped_release release;
-                    self->setAttribute(instanceId, key, attributeKey, attrValueAsAny, timeoutInSeconds);
-                },
-                py::arg("deviceId"), py::arg("key"), py::arg("attributeKey"), py::arg("attributeValue"),
-                py::arg("timeoutInSeconds") = -1)
-
-          .def(
                 "setNoWait",
                 [](const DeviceClientWrap::Pointer& self, const std::string& instanceId, const std::string& key,
                    const py::object& value, const std::string& keySep = ".") {

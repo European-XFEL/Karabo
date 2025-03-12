@@ -16,8 +16,7 @@
 import unittest
 
 from karabo.bound import (
-    DOUBLE_ELEMENT, INT32_ELEMENT, Configurator, Hash, PythonDevice, Schema,
-    VectorHash)
+    DOUBLE_ELEMENT, INT32_ELEMENT, Configurator, Hash, PythonDevice, Schema)
 
 # import the device classes to trigger their registration in the Configurator
 from .device_with_alarm import DeviceWithAlarm
@@ -283,23 +282,6 @@ class Schema_Injection_TestCase(unittest.TestCase):
             device.getFullSchema().getAlarmHigh("valueWithAlarm"),
             DeviceWithAlarm.ALARM_HIGH)
 
-        # Update the alarmHigh by using slotUpdateSchemaAttributes,
-        # as the guiServer would do when instantiating a device
-        alarm_high *= 2
-        vh = VectorHash()
-        g = Hash("path", "valueWithAlarm", "attribute", "alarmHigh",
-                 "value", alarm_high)
-        vh.append(g)
-        device.slotUpdateSchemaAttributes(vh)
-        self.assertEqual(device.getFullSchema().getAlarmHigh("valueWithAlarm"),
-                         alarm_high)
-
-        # Test that doing updateSchema with something new resets
-        # the alarmHigh
-        device.updateSchema(schema)
-        self.assertEqual(device.getFullSchema().getAlarmHigh("valueWithAlarm"),
-                         DeviceWithAlarm.ALARM_HIGH)
-
     def test_schemaWithAttributeAppend(self):
         """Tests that appendSchema preserves attributes in the static
         schema."""
@@ -335,23 +317,6 @@ class Schema_Injection_TestCase(unittest.TestCase):
         self.assertEqual(
             device.getFullSchema().getAlarmHigh("valueWithAlarm"),
             alarm_high)
-
-        # Update the alarmHigh by using slotUpdateSchemaAttributes,
-        # as the guiServer would do when instantiating a device
-        alarm_high *= 2
-        vh = VectorHash()
-        g = Hash("path", "valueWithAlarm", "attribute", "alarmHigh",
-                 "value", alarm_high)
-        vh.append(g)
-        device.slotUpdateSchemaAttributes(vh)
-        self.assertEqual(device.getFullSchema().getAlarmHigh("valueWithAlarm"),
-                         alarm_high)
-
-        # Test that doing appendSchema with something new keeps
-        # the alarmHigh
-        device.appendSchema(schema)
-        self.assertEqual(device.getFullSchema().getAlarmHigh("valueWithAlarm"),
-                         alarm_high)
 
     def test_ensureGetCopies(self):
         """

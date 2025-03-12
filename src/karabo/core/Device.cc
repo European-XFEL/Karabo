@@ -1020,8 +1020,6 @@ namespace karabo {
 
             KARABO_SLOT(slotKillDevice)
 
-            KARABO_SLOT(slotUpdateSchemaAttributes, std::vector<karabo::util::Hash>);
-
             KARABO_SLOT(slotClearLock);
 
             KARABO_SLOT(slotGetTime, karabo::util::Hash /* UNUSED */);
@@ -1334,22 +1332,6 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_ERROR << getInstanceId() << ": Broker consumption problem: " << message;
             }
         }
-
-
-        void Device::slotUpdateSchemaAttributes(const std::vector<karabo::util::Hash>& updates) {
-            std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
-            // Whenever updating the m_fullSchema, we have to clear the cache
-            m_stateDependentSchema.clear();
-            bool success = m_fullSchema.applyRuntimeUpdates(updates);
-            if (success) {
-                m_injectedSchema.applyRuntimeUpdates(updates);
-                // Notify the distributed system
-                emit("signalSchemaUpdated", m_fullSchema, m_deviceId);
-            }
-            reply(karabo::util::Hash("success", success, "instanceId", getInstanceId(), "updatedSchema", m_fullSchema,
-                                     "requestedUpdate", updates));
-        }
-
 
         karabo::util::Hash Device::getTimeInfo() {
             using namespace karabo::util;

@@ -381,7 +381,7 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
                                    ).waitForReply(timeOutInMs)
             self.assertEqual(ret[0], 0)
 
-        with self.subTest(msg="Test attribute setting"):
+        with self.subTest(msg="Test reconfigure vector with attribute"):
             # This tests that attributes relevant for reconfiguring
             # are taken into account - here min and max size of vector elements
 
@@ -395,34 +395,6 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
             # 11 is too long
             self.assertRaises(RuntimeError, self.dc.set,
                               "testComm1", "vectorInt32", [1]*11)  # not OK!
-
-            KARABO_SCHEMA_MIN_SIZE = "minSize"
-            KARABO_SCHEMA_MAX_SIZE = "maxSize"
-            # Now make 11 to be fine
-            self.dc.setAttribute("testComm1", "vectorInt32",
-                                 KARABO_SCHEMA_MAX_SIZE, 11)
-            self.dc.set("testComm1", "vectorInt32", [1]*11)  # OK now!
-
-            # But 12 is still too long
-            self.assertRaises(RuntimeError, self.dc.set,
-                              "testComm1", "vectorInt32", [2]*12)
-            self.dc.setAttribute("testComm1", "vectorInt32",
-                                 KARABO_SCHEMA_MAX_SIZE, 11)
-            # Now make empty vec to be fine
-            self.dc.setAttribute("testComm1", "vectorInt32",
-                                 KARABO_SCHEMA_MIN_SIZE, 0)
-            self.dc.set("testComm1", "vectorInt32", [])  # OK now!
-
-            # Now make 2 the minumum and test that size 1 is not ok
-            self.dc.setAttribute("testComm1", "vectorInt32",
-                                 KARABO_SCHEMA_MIN_SIZE, 2)
-            self.assertRaises(RuntimeError, self.dc.set,
-                              "testComm1", "vectorInt32", [3])  # not OK now!
-            # Now make 8 the minumum and test that size 9 now is too long
-            self.dc.setAttribute("testComm1", "vectorInt32",
-                                 KARABO_SCHEMA_MAX_SIZE, 8)
-            self.assertRaises(RuntimeError, self.dc.set,
-                              "testComm1", "vectorInt32", [4]*9)  # not OK now!
 
         with self.subTest(msg="Test slotReconfigure"):
             # Non-reconfigurables cannot be modified:
@@ -470,9 +442,8 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
             self.assertEqual(len(cfgSlice), 2)
             self.assertTrue(selectedPaths[0] in cfgSlice)
             self.assertTrue(selectedPaths[1] in cfgSlice)
-            # Make sure that we have an empty vector here to ensure we test
-            # such a case, see PythonDevice.getCurrentConfigurationSlice:
-            self.assertEqual(len(cfgSlice["vectorInt32"]), 0)
+            # The last set value was with length of 4
+            self.assertEqual(len(cfgSlice["vectorInt32"]), 4)
             # remove all non-selected paths from full config and check full
             # equality, i.e values and attributes (e.g. timestamp)
             for p in cfg.getPaths():

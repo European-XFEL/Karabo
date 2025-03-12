@@ -1011,19 +1011,6 @@ namespace karabo {
             void onBrokerError(const std::string& message);
 
             /**
-             * Updates attributes in the device's runtime schema.
-             * @param updates: updated attributes, expected to be of form Hash("instanceId", str, "updates",
-             * vector<Hash>) where each entry in updates is of the form Hash("path", str, "attribute", str, "value",
-             * valueType)
-             *
-             * reply is of the form Hash("success" bool, "instanceId", str, "updatedSchema", Schema, "requestedUpdate",
-             * vector<Hash>) where success indicates a successful update, instanceId the device that performed the
-             * update updatedSchema the new valid schema, regardless of success or not, and requestedUpdates the
-             * original update request, as received through onUpdateAttributes
-             */
-            void slotUpdateSchemaAttributes(const std::vector<karabo::util::Hash>& updates);
-
-            /**
              * Clear any lock on this device
              */
             void slotClearLock() {
