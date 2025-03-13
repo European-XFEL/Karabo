@@ -75,7 +75,9 @@ def emit_project_xml(project: Project,
         '<xml xmlns:exist="http://exist.sourceforge.net/NS/exist" '
         f'uuid="{project.uuid}" simple_name="{project.name}" '
         f'description="{project.description}" '
-        f'date="{project.date.replace(tzinfo=datetime.UTC)}" '
+        f'date="{(
+            project.date.replace(tzinfo=datetime.UTC)
+            if project.date is not None else '')}" '
         # NOTE: The GUI Client compares the is_trashed value
         #       with the constants 'true' and 'false' (all lower)
         f'is_trashed="{'true' if project.is_trashed else 'false'}" '
@@ -98,7 +100,8 @@ def emit_scene_xml(scene: Scene) -> str:
     xml = (
         '<xml xmlns:exist="http://exist.sourceforge.net/NS/exist" '
         f'uuid="{scene.uuid}" simple_name="{scene.name}" '
-        f'date="{scene.date.replace(tzinfo=datetime.UTC)}" item_type="scene" '
+        f'date="{(scene.date.replace(tzinfo=datetime.UTC)
+                  if scene.date is not None else '')}" item_type="scene" '
         f'user="{scene.last_modified_user}" revision="0" alias="default">'
         f'{scene.svg_data}'
         '</xml>')
@@ -111,7 +114,8 @@ def emit_macro_xml(macro: Macro) -> str:
     xml = (
         '<xml xmlns:exist="http://exist.sourceforge.net/NS/exist" '
         f'uuid="{macro.uuid}" simple_name="{macro.name}" description="" '
-        f'date="{macro.date.replace(tzinfo=datetime.UTC)}" item_type="macro" '
+        f'date="{(macro.date.replace(tzinfo=datetime.UTC)
+                  if macro.date is not None else '')}" item_type="macro" '
         f'user="{macro.last_modified_user}" revision="0" alias="default">'
         '  <macro>'
         f'{base64.b64encode(macro.body.encode('utf-8')).decode()}'
@@ -127,7 +131,8 @@ def emit_device_server_xml(server: DeviceServer,
         '<xml xmlns:exist="http://exist.sourceforge.net/NS/exist" '
         f'uuid="{server.uuid}" simple_name="{server.name}" '
         'item_type="device_server" '
-        f'date="{server.date.replace(tzinfo=datetime.UTC)}" '
+        f'date="{(server.date.replace(tzinfo=datetime.UTC)
+                  if server.date is not None else '')}" '
         f'user="{server.last_modified_user}" revision="0" alias="default">'
         f'<device_server server_id="{server.name}" host="">')
     for device_instance in device_instances:
@@ -152,7 +157,8 @@ def emit_device_instance_xml(instance: DeviceInstance,
         '<xml xmlns:exist="http://exist.sourceforge.net/NS/exist" '
         f'uuid="{instance.uuid}" simple_name="{instance.name}" '
         'description="" item_type="device_instance" '
-        f'date="{instance.date.replace(tzinfo=datetime.UTC)}" '
+        f'date="{(instance.date.replace(tzinfo=datetime.UTC)
+                  if instance.date is not None else '')}" '
         f'user="{instance.last_modified_user}"'
         ' revision="0" alias="default">')
     xml += (
@@ -173,7 +179,8 @@ def emit_device_config_xml(config: DeviceConfig) -> str:
         '<xml xmlns:exist="http://exist.sourceforge.net/NS/exist" '
         f'uuid="{config.uuid}" simple_name="{config.name}" '
         f'description="{config.description}" '
-        f'date="{config.date.replace(tzinfo=datetime.UTC)}" '
+        f'date="{(config.date.replace(tzinfo=datetime.UTC)
+                  if config.date is not None else '')}" '
         'item_type="device_config" '
         f'user="{config.last_modified_user}" revision="0" alias="default">'
         f'{config.config_data}'

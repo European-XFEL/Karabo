@@ -42,8 +42,7 @@ class Project(SQLModel, table=True):
     description: str | None = Field(default=None, nullable=True)
     is_trashed: bool = Field(default=False)
 
-    date: datetime.datetime | None = Field(
-        default=datetime.datetime.now(), nullable=True)
+    date: datetime.datetime | None = Field(default=None, nullable=True)
 
     last_modified_user: str | None = Field(default=None, max_length=64,
                                            nullable=True)
@@ -93,8 +92,7 @@ class DeviceServer(SQLModel, table=True):
     name: str = Field(max_length=128)
     uuid: str = Field(max_length=64, nullable=False, unique=True)
 
-    date: datetime.datetime | None = Field(
-        default=datetime.datetime.now(), nullable=True)
+    date: datetime.datetime | None = Field(default=None, nullable=True)
     last_modified_user: str | None = Field(default=None, max_length=64,
                                            nullable=True)
 
@@ -125,8 +123,7 @@ class DeviceInstance(SQLModel, table=True):
     device_server_id: int = Field(foreign_key="DeviceServer.id",
                                   nullable=True)
 
-    date: datetime.datetime | None = Field(
-        default=datetime.datetime.now(), nullable=True)
+    date: datetime.datetime | None = Field(default=None, nullable=True)
     last_modified_user: str | None = Field(default=None, max_length=64,
                                            nullable=True)
 
@@ -148,8 +145,7 @@ class DeviceConfig(SQLModel, table=True):
     config_data: str = Field(sa_column=Column(Text(4_194_304), nullable=False))
     description: str | None = Field(default=None, nullable=True)
 
-    date: datetime.datetime | None = Field(
-        default=datetime.datetime.now(), nullable=True)
+    date: datetime.datetime | None = Field(default=None, nullable=True)
     last_modified_user: str | None = Field(default=None, max_length=64,
                                            nullable=True)
 
@@ -175,8 +171,7 @@ class Scene(SQLModel, table=True):
     # Max size for svg_data is 4Mb
     svg_data: str = Field(sa_column=Column(Text(4_194_304), nullable=False))
 
-    date: datetime.datetime | None = Field(
-        default=datetime.datetime.now(), nullable=True)
+    date: datetime.datetime | None = Field(default=None, nullable=True)
     last_modified_user: str | None = Field(default=None, max_length=64,
                                            nullable=True)
 
@@ -196,8 +191,7 @@ class Macro(SQLModel, table=True):
     # Max size for macro body is 4Mb
     body: str = Field(sa_column=Column(Text(4_194_304), nullable=False))
 
-    date: datetime.datetime | None = Field(
-        default=datetime.datetime.now(), nullable=True)
+    date: datetime.datetime | None = Field(default=None, nullable=True)
     last_modified_user: str | None = Field(default=None, max_length=64,
                                            nullable=True)
 
