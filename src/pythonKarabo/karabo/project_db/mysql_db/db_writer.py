@@ -62,7 +62,7 @@ class DbWriter:
                     uuid=uuid,
                     name=prj.attrib['simple_name'],
                     description=prj.attrib['description'],
-                    trashed=prj.attrib['is_trashed'].lower() == "true",
+                    is_trashed=prj.attrib['is_trashed'].lower() == "true",
                     date=date,
                     last_modified_user=prj.attrib['user'],
                     project_domain_id=project_domain.id)
@@ -80,7 +80,7 @@ class DbWriter:
                 # SQLmodel converts 'true' and 'false' strings to boolean
                 # values successfuly on init, but not on an assignment - this
                 # is the reason for the expression with the comparison to lower
-                project.trashed = prj.attrib['is_trashed'].lower() == "true"
+                project.is_trashed = prj.attrib['is_trashed'].lower() == "true"
                 project.date = date
                 project.last_modified_user = prj.attrib['user']
                 project.project_domain_id = project_domain.id
@@ -368,6 +368,7 @@ class DbWriter:
         instance_tag = instance_obj.getchildren()[0]
         instance_id = instance_tag.attrib['instance_id']
         instance_class_id = instance_tag.attrib['class_id']
+        instance_active_uuid = instance_tag.attrib['active_uuid']
         config_objs = instance_tag.getchildren()
 
         # Insert or update the device instance in the DB
@@ -419,6 +420,7 @@ class DbWriter:
                         f'instance "{instance.name}" ({instance.uuid})')
                 config.device_instance_id = instance.id
                 config.order = config_idx
+                config.is_active = (instance_active_uuid == config_obj_uuid)
                 config_idx += 1
                 session.add(config)
                 updated_configs.add(config_obj_uuid)

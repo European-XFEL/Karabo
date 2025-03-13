@@ -76,7 +76,9 @@ def emit_project_xml(project: Project,
         f'uuid="{project.uuid}" simple_name="{project.name}" '
         f'description="{project.description}" '
         f'date="{project.date.replace(tzinfo=datetime.UTC)}" '
-        f'is_trashed="{project.trashed}" '
+        # NOTE: The GUI Client compares the is_trashed value
+        #       with the constants 'true' and 'false' (all lower)
+        f'is_trashed="{'true' if project.is_trashed else 'false'}" '
         f'item_type="project" user="{project.last_modified_user}" '
         'revision="0" alias="default">'
         '<root KRB_Artificial="">'
@@ -141,6 +143,11 @@ def emit_device_server_xml(server: DeviceServer,
 
 def emit_device_instance_xml(instance: DeviceInstance,
                              configs: list[DeviceConfig]) -> str:
+    active_uuid = configs[0].uuid if len(configs) > 0 else ''
+    for config in configs:
+        if config.is_active:
+            active_uuid = config.uuid
+
     xml = (
         '<xml xmlns:exist="http://exist.sourceforge.net/NS/exist" '
         f'uuid="{instance.uuid}" simple_name="{instance.name}" '
@@ -151,8 +158,7 @@ def emit_device_instance_xml(instance: DeviceInstance,
     xml += (
         f'<device_instance class_id="{instance.class_id}" '
         f'instance_id="{instance.name}" '
-        f'active_uuid="{configs[0].uuid if len(configs) > 0 else ''}" '
-        'active_rev="0">')
+        f'active_uuid="{active_uuid}" active_rev="0">')
     for config in configs:
         xml += (
             f'<device_config class_id="{instance.class_id}" '
