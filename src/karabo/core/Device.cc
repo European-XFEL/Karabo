@@ -44,7 +44,6 @@
 #include "karabo/util/HashFilter.hh"
 #include "karabo/util/MetaTools.hh"
 #include "karabo/util/OverwriteElement.hh"
-#include "karabo/util/RollingWindowStatistics.hh"
 #include "karabo/util/SimpleElement.hh"
 #include "karabo/util/StackTrace.hh"
 #include "karabo/util/State.hh"

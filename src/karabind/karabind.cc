@@ -23,22 +23,21 @@
 namespace py = pybind11;
 
 // util
-void exportPyUtilClassInfo(py::module_&);             // PyUtilClassInfo.cc
-void exportPyUtilTypesReferenceType(py::module_&);    // PyUtilTypesReferenceType.cc
-void exportPyUtilTimestamp(py::module_&);             // PyUtilTimestamp.cc
-void exportPyUtilTimeDuration(py::module_&);          // PyUtilTimeDuration.cc
-void exportPyUtilTrainstamp(py::module_&);            // PyUtilTrainstamp.cc
-void exportPyUtilHashAttributes(py::module_&);        // PyUtilHashAttributes.cc
-void exportPyUtilDims(py::module_&);                  // PyUtilDims.cc
-void exportPyUtilHashNode(py::module_&);              // PyUtilHashNode.cc
-void exportPyUtilNDArray(py::module_&);               // PyUtilNDArray.cc
-void exportPyUtilHash(py::module_&);                  // PyUtilHash.cc
-void exportPyUtilAlarmConditionElement(py::module_&); // PyUtilAlarmElement.cc
-void exportPyUtilStateElement(py::module_&);          // PyUtilStateElement.cc
-void exportPyUtilDateTimeString(py::module_&);        // PyUtilDateTimeString.cc
-void exportPyUtilEpochstamp(py::module_&);            // PyUtilEpochstamp.cc
-void exportPyUtilException(py::module_&);             // PyUtilException.cc
-void exportPyUtilRollingWindowStatistics(py::module_&);
+void exportPyUtilClassInfo(py::module_&);              // PyUtilClassInfo.cc
+void exportPyUtilTypesReferenceType(py::module_&);     // PyUtilTypesReferenceType.cc
+void exportPyUtilTimestamp(py::module_&);              // PyUtilTimestamp.cc
+void exportPyUtilTimeDuration(py::module_&);           // PyUtilTimeDuration.cc
+void exportPyUtilTrainstamp(py::module_&);             // PyUtilTrainstamp.cc
+void exportPyUtilHashAttributes(py::module_&);         // PyUtilHashAttributes.cc
+void exportPyUtilDims(py::module_&);                   // PyUtilDims.cc
+void exportPyUtilHashNode(py::module_&);               // PyUtilHashNode.cc
+void exportPyUtilNDArray(py::module_&);                // PyUtilNDArray.cc
+void exportPyUtilHash(py::module_&);                   // PyUtilHash.cc
+void exportPyUtilAlarmConditionElement(py::module_&);  // PyUtilAlarmElement.cc
+void exportPyUtilStateElement(py::module_&);           // PyUtilStateElement.cc
+void exportPyUtilDateTimeString(py::module_&);         // PyUtilDateTimeString.cc
+void exportPyUtilEpochstamp(py::module_&);             // PyUtilEpochstamp.cc
+void exportPyUtilException(py::module_&);              // PyUtilException.cc
 void exportPyUtilSchema(py::module_&);                 // PyUtilSchema.cc
 void exportPyUtilSchemaElement(py::module_&);          // PyUtilSchemaElement.cc (simple & vector)
 void exportPyUtilSchemaNodeElement(py::module_&);      // PyUtilSchemaNodeElement.cc
@@ -91,7 +90,6 @@ PYBIND11_MODULE(karabind, m) {
     exportPyUtilDims(m);
     exportPyUtilAlarmConditionElement(m);
     exportPyUtilStateElement(m);
-    exportPyUtilRollingWindowStatistics(m);
     exportPyUtilSchema(m);
     exportPyUtilSchemaElement(m);
     exportPyUtilSchemaNodeElement(m);

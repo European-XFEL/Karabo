@@ -355,8 +355,6 @@ class TestStruct1:
             .warnHigh(10).needsAcknowledging(True)
             .alarmLow(-20).needsAcknowledging(True)
             .alarmHigh(20).info("bla").needsAcknowledging(True)
-            .enableRollingStats()
-            .evaluationInterval(100)
             .archivePolicy(EVERY_EVENT)
             .commit(),
 

@@ -30,7 +30,6 @@
 #include <mutex>
 #include <shared_mutex>
 
-#include "RollingWindowStatistics.hh"
 #include "Schema.hh"
 #include "StringTools.hh"
 #include "Timestamp.hh"
@@ -65,9 +64,6 @@ namespace karabo {
 
             karabo::util::Timestamp m_timestamp;
             bool m_hasReconfigurableParameter;
-
-            mutable std::shared_mutex m_rollingStatMutex;
-            std::map<std::string, RollingWindowStatistics::Pointer> m_parameterRollingStats;
 
            public:
             /**
@@ -207,13 +203,6 @@ namespace karabo {
              */
             bool hasReconfigurableParameter() const;
 
-            /**
-             * Get the rolling window statistics for the element identified by scope
-             * @param scope
-             * @return
-             */
-            RollingWindowStatistics::ConstPointer getRollingStatistics(const std::string& scope) const;
-
            private:
             void validateUserOnly(const Hash& master, const Hash& user, Hash& working, std::ostringstream& report,
                                   std::string scope = "");
@@ -228,8 +217,6 @@ namespace karabo {
                                             std::ostringstream& report);
 
             void attachTimestampIfNotAlreadyThere(Hash::Node& node);
-
-            void assureRollingStatsInitialized(const std::string& scope, const unsigned int& evalInterval);
         };
     } // namespace util
 } // namespace karabo
