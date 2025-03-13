@@ -18,6 +18,8 @@ import datetime
 
 from sqlmodel import SQLModel, select
 
+from karabo.native import HashList
+
 from ..bases import DatabaseBase, HandleABC
 from ..util import ProjectDBError
 from .db_engine import init_db_engine
@@ -140,8 +142,9 @@ class ProjectDatabase(DatabaseBase):
                 continue
         return loaded_items
 
-    def _check_for_modification(self, uuid: str,
-                                old_date: str, item_type: str):
+    def _check_for_modification(self,
+                                uuid: str, old_date: str,
+                                item_type: str) -> tuple[bool, str]:
         """ Check whether the item with of the given `domain` and `uuid` was
         modified
 
@@ -196,7 +199,9 @@ class ProjectDatabase(DatabaseBase):
 
         return (False, "")
 
-    def save_item(self, domain, uuid, item_xml, overwrite=False):
+    def save_item(self,
+                  domain: str, uuid: str, item_xml: str,
+                  overwrite: bool) -> dict[str, any]:
         """
         Saves a item xml file into the database. It will
         create a new entry if the item does not exist yet, or update the item
@@ -212,23 +217,18 @@ class ProjectDatabase(DatabaseBase):
         :param domain: the domain under which this item is to be stored
         :param uuid: the item's uuid
         :param item_xml: the xml containing the item information
-        :param overwrite: defaults to False. If set to True versioning
-                          information is removed prior to database injection,
-                          allowing to overwrite in case of versioning
-                          conflicts.
+        :param overwrite (unused): defaults to False. If set to True versioning
+                                   information is removed prior to database
+                                   injection, allowing to overwrite in case of
+                                   versioning conflicts.
 
-        :return: (True, dict) if successful, (false, dict) with dict
-                 representing the item's versioning information. In case of
-                 version conflict this will contain the information of the
-                 *newest existing* entry in the database. If saving was
-                 successful (no conflict), it will contain the updated
-                 versioning information after saving the item.
+        :return: If saving was successful (no conflict), a dictionary with
+                 the updated versioning information after saving the item.
 
 
-        :raises: ProjectDBError on Handle Failure.
-            RuntimeError if item saving failed otherwise.
-            AttributeError if a non-supported type is passed
+        :raises: ProjectDBError on failure.
         """
+        del overwrite  # To avoid unintentional use of unused parameter
 
         with self.session_gen() as session:
             query = select(ProjectDomain).where(ProjectDomain.name == domain)
@@ -302,7 +302,8 @@ class ProjectDatabase(DatabaseBase):
 
         return meta
 
-    def get_configurations_from_device_name_part(self, domain, device_id_part):
+    def get_configurations_from_device_name_part(
+            self, domain: str, device_id_part: str) -> list[dict[str, any]]:
         """
         Returns a list of configurations for a given device
         :param domain: DB domain
@@ -348,3 +349,70 @@ class ProjectDatabase(DatabaseBase):
                  "date": project.date.strftime("%Y-%m-%d %H:%M:%S"),
                  "uuid": project.uuid}]
         return results
+
+    def update_attributes(self, items: HashList) -> list[dict[str, any]]:
+        """ Update attribute for the given ``items``
+
+        :param items: list of Hashes containing information on which items
+                      to update. Each list entry should be a Hash containing
+
+                      - domain: domain the item resides at
+                      - uuid: the uuid of the item
+                      - item_type: indicate type of item which attribute should
+                                   be changed
+                      - attr_name: name of attribute which should be changed
+                      - attr_value: value of attribute which should be changed
+
+        :return: a list of dicts where each entry has keys: domain, uuid,
+                 item_type, attr_name, attr_value
+
+        :raises: ProjectDBError on failure
+        """
+
+        res_items = []
+        for item in items:
+            model: SQLModel | None = None
+            item_uuid = item['uuid']
+            item_type = item['item_type']
+            attr_value = item['attr_value']
+            # NOTE: The GUI client sends a bool as either "true" or "false"
+            #       which are not accepted as valid values for a bool field
+            #       by SQLModel (actually by SQLAlchemy). So those special
+            #       cases are handled manually.
+            if attr_value == "true":
+                attr_value = True
+            elif attr_value == "false":
+                attr_value = False
+
+            match item_type:
+                case "project":
+                    model = self.reader.get_project_from_uuid(item_uuid)
+                case "device_server":
+                    model = self.reader.get_device_server_from_uuid(item_uuid)
+                case "device_instance":
+                    model = self.reader.get_device_instance_from_uuid(
+                        item_uuid)
+                case "device_config":
+                    model = self.reader.get_device_config_from_uuid(item_uuid)
+                case "macro":
+                    model = self.reader.get_macro_from_uuid(item_uuid)
+                case "scene":
+                    model = self.reader.get_scene_from_uuid(item_uuid)
+                case _:
+                    raise ProjectDBError(
+                        f"Unsupported item_type, '{item_type}', "
+                        "for operation 'update_attributes'")
+
+            if model is None:
+                raise ProjectDBError(
+                    f"No item of type '{item_type}' with UUID '{item_uuid}' "
+                    "found in the database")
+
+            setattr(model, item['attr_name'], attr_value)
+            with self.session_gen() as session:
+                session.add(model)
+                session.commit()
+
+            res_items.append(item)
+
+        return res_items
