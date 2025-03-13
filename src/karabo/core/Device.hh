@@ -45,7 +45,6 @@
 #include "karabo/util/HashFilter.hh"
 #include "karabo/util/MetaTools.hh"
 #include "karabo/util/OverwriteElement.hh"
-#include "karabo/util/RollingWindowStatistics.hh"
 #include "karabo/util/SimpleElement.hh"
 #include "karabo/util/StackTrace.hh"
 #include "karabo/util/State.hh"
@@ -844,25 +843,6 @@ namespace karabo {
              */
             const karabo::util::AlarmCondition& getAlarmCondition(const std::string& key,
                                                                   const std::string& sep = ".") const;
-
-            /**
-             * Query if the property at path has rolling statistics enabled
-             * @param path
-             * @return
-             */
-            bool hasRollingStatistics(const std::string& path) const {
-                return this->getFullSchema().hasRollingStatistics(path);
-            }
-
-            /**
-             * Get a pointer to the rolling statistics for the property at path
-             * @param path
-             * @return a pointer to the rolling statistics object keeping track
-             * of the statistics for the property identified by path.
-             */
-            karabo::util::RollingWindowStatistics::ConstPointer getRollingStatistics(const std::string& path) const {
-                return m_validatorIntern.getRollingStatistics(path);
-            }
 
             void slotTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac,
                               unsigned long long period);

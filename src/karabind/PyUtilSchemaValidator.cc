@@ -66,9 +66,5 @@ void exportPyUtilSchemaValidator(py::module_& m) {
                 py::arg("schema"), py::arg("configuration"), py::arg("timestamp") = py::none())
           .def("setValidationRules", &Validator::setValidationRules, py::arg("rules"))
           .def("getValidationRules", &Validator::getValidationRules)
-          .def("hasReconfigurableParameter", &Validator::hasReconfigurableParameter)
-          .def("getRollingStatistics", &Validator::getRollingStatistics, py::arg("path"),
-               py::return_value_policy::reference_internal)
-          // .def_property_readonly("kAlarmParamPathSeparator", &Validator::kAlarmParamPathSeparator)
-          ;
+          .def("hasReconfigurableParameter", &Validator::hasReconfigurableParameter);
 }

@@ -875,14 +875,6 @@ namespace karabo {
                     }
                 }
 
-                const karabo::util::Types::ReferenceType workType = workNode.getType();
-                if (karabo::util::Types::isNumericPod(workType) &&
-                    (masterNode.hasAttribute(KARABO_SCHEMA_ENABLE_ROLLING_STATS))) {
-                    assureRollingStatsInitialized(scope,
-                                                  masterNode.getAttributeAs<double>(KARABO_SCHEMA_ROLLING_STATS_EVAL));
-                    RollingWindowStatistics::Pointer rollingStats = m_parameterRollingStats[scope];
-                    rollingStats->update(workNode.getValueAs<double>());
-                }
             } else if (referenceCategory == Types::SEQUENCE) {
                 int currentSize = 0;
                 // "vector<char>" and "vector<unsigned char>" have "toString"
@@ -1000,30 +992,6 @@ namespace karabo {
         bool Validator::hasReconfigurableParameter() const {
             return m_hasReconfigurableParameter;
         }
-
-
-        void Validator::assureRollingStatsInitialized(const std::string& scope, const unsigned int& evalInterval) {
-            std::unique_lock<std::shared_mutex> lock(m_rollingStatMutex);
-            auto rollingStatsEntry = m_parameterRollingStats.find(scope);
-            if (rollingStatsEntry == m_parameterRollingStats.end()) {
-                m_parameterRollingStats.insert(std::pair<std::string, RollingWindowStatistics::Pointer>(
-                      scope, RollingWindowStatistics::Pointer(new RollingWindowStatistics(evalInterval))));
-            } else if (rollingStatsEntry->second->getInterval() != evalInterval) {
-                rollingStatsEntry->second.reset(new RollingWindowStatistics(evalInterval));
-            }
-        }
-
-
-        RollingWindowStatistics::ConstPointer Validator::getRollingStatistics(const std::string& scope) const {
-            std::shared_lock<std::shared_mutex> lock(m_rollingStatMutex);
-            std::map<std::string, RollingWindowStatistics::Pointer>::const_iterator stats =
-                  m_parameterRollingStats.find(scope);
-            if (stats == m_parameterRollingStats.end()) {
-                throw KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '" + scope + "'!");
-            }
-
-            return stats->second;
-        };
 
 
         // The schema field of a output pipeline channel is identified with the OutputSchema tag.

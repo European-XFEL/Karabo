@@ -141,9 +141,6 @@ namespace karabo {
 #define KARABO_SCHEMA_MIN_SIZE "minSize"
 #define KARABO_SCHEMA_MAX_SIZE "maxSize"
 
-#define KARABO_SCHEMA_ENABLE_ROLLING_STATS "enableRollingStats"
-#define KARABO_SCHEMA_ROLLING_STATS_EVAL "rollingStatsEvalInterval"
-
 
 #define KARABO_SCHEMA_ARCHIVE_POLICY "archivePolicy"
 
@@ -1411,178 +1408,12 @@ namespace karabo {
              */
             bool hasAlarmHigh(const std::string& path) const;
 
-            //******************************************************
-            //                   WarnVarianceLow                          *
-            //******************************************************
-
-            /**
-             * Set the lower rolling window variance warning limit for the element identified by path
-             * @param path
-             * @param value
-             */
-            void setWarnVarianceLow(const std::string& path, const double value) {
-                if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)) {
-                    throw KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '" + path + "'!");
-                }
-                m_hash.setAttribute(path, karabo::util::AlarmCondition::WARN_VARIANCE_LOW.asString(), value);
-            }
-
-            /**
-             * Get the lower rolling window variance warning limit for the
-             * element identified by path.
-             * @param path
-             */
-            double getWarnVarianceLow(const std::string& path) const {
-                if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)) {
-                    throw KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '" + path + "'!");
-                }
-                return m_hash.getAttribute<double>(path, karabo::util::AlarmCondition::WARN_VARIANCE_LOW.asString());
-            }
-
-            /**
-             * Check if a lower rolling window variance warning limit for the
-             * element identified by path has been set
-             * @param path
-             * @return
-             */
-            bool hasWarnVarianceLow(const std::string& path) const;
-
-            //******************************************************
-            //                   WarnVarianceHigh                          *
-            //******************************************************
-
-            /**
-             * Set the upper rolling window variance warning limit for the element identified by path
-             * @param path
-             * @param value
-             */
-            void setWarnVarianceHigh(const std::string& path, const double value) {
-                if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)) {
-                    throw KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '" + path + "'!");
-                }
-                m_hash.setAttribute(path, karabo::util::AlarmCondition::WARN_VARIANCE_HIGH.asString(), value);
-            }
-
-            /**
-             * Get the upper rolling window variance warning limit for the
-             * element identified by path.
-             * @param path
-             */
-            double getWarnVarianceHigh(const std::string& path) const {
-                if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)) {
-                    throw KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '" + path + "'!");
-                }
-                return m_hash.getAttribute<double>(path, karabo::util::AlarmCondition::WARN_VARIANCE_HIGH.asString());
-            }
-
-            /**
-             * Check if a upper rolling window variance warning limit for the
-             * element identified by path has been set
-             * @param path
-             * @return
-             */
-            bool hasWarnVarianceHigh(const std::string& path) const;
-
-
-            //******************************************************
-            //                   AlarmVarianceLow                          *
-            //******************************************************
-
-            /**
-             * Set the lower rolling window variance alarm limit for the element identified by path
-             * @param path
-             * @param value
-             */
-            void setAlarmVarianceLow(const std::string& path, const double value) {
-                if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)) {
-                    throw KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '" + path + "'!");
-                }
-                m_hash.setAttribute(path, karabo::util::AlarmCondition::ALARM_VARIANCE_LOW.asString(), value);
-            }
-
-            /**
-             * Get the lower rolling window variance alarm limit for the
-             * element identified by path.
-             * @param path
-             */
-            double getAlarmVarianceLow(const std::string& path) const {
-                if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)) {
-                    throw KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '" + path + "'!");
-                }
-                return m_hash.getAttribute<double>(path, karabo::util::AlarmCondition::ALARM_VARIANCE_LOW.asString());
-            }
-
-            /**
-             * Check if a lower rolling window variance alarm limit for the
-             * element identified by path has been set
-             * @param path
-             * @return
-             */
-            bool hasAlarmVarianceLow(const std::string& path) const;
-
-            //******************************************************
-            //                   WarnVarianceHigh                          *
-            //******************************************************
-
-            /**
-             * Set the upper rolling window variance alarm limit for the element identified by path
-             * @param path
-             * @param value
-             */
-            void setAlarmVarianceHigh(const std::string& path, const double value) {
-                if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)) {
-                    throw KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '" + path + "'!");
-                }
-                m_hash.setAttribute(path, karabo::util::AlarmCondition::ALARM_VARIANCE_HIGH.asString(), value);
-            }
-
-            /**
-             * Get the upper rolling window variance alarm limit for the
-             * element identified by path.
-             * @param path
-             */
-            double getAlarmVarianceHigh(const std::string& path) const {
-                if (!m_hash.hasAttribute(path, KARABO_SCHEMA_ENABLE_ROLLING_STATS)) {
-                    throw KARABO_LOGIC_EXCEPTION("Rolling statistics have not been enabled for '" + path + "'!");
-                }
-                return m_hash.getAttribute<double>(path, karabo::util::AlarmCondition::ALARM_VARIANCE_HIGH.asString());
-            }
-
-            /**
-             * Check if a upper rolling window variance alarm limit for the
-             * element identified by path has been set
-             * @param path
-             * @return
-             */
-            bool hasAlarmVarianceHigh(const std::string& path) const;
-
             /**
              * Check if the element identified by path has interlocks defined
              * @param path
              * @return
              */
             bool hasInterlock(const std::string& path) const;
-
-            /**
-             * Set/enable rolling window statistics for the element identified by path
-             * @param path
-             * @param interval or window size of the rolling window
-             */
-            void setRollingStatistics(const std::string& path, unsigned int interval);
-
-            /**
-             * Check if the element identified by path has rolling window statistics enabled
-             * @param path
-             * @return
-             */
-            bool hasRollingStatistics(const std::string& path) const;
-
-            /**
-             * Get the rolling window statistics interval for the element identified by path
-             * @param path
-             * @return
-             */
-            unsigned int getRollingStatsEvalInterval(const std::string& path) const;
 
             /**
              * Get additional information for the alarm condition present on the element

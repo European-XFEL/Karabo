@@ -106,28 +106,6 @@ void exportPyUtilSchemaElement(py::module_& m) {
     KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<std::string>, std::string, ReadOnlySpecific, STRING)
     KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<bool>, bool, ReadOnlySpecific, BOOL)
 
-    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<int>, int, RollingStatsSpecific, INT32)
-    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<unsigned int>, unsigned int, RollingStatsSpecific, UINT32)
-    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<long long>, long long, RollingStatsSpecific, INT64)
-    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<unsigned long long>, unsigned long long, RollingStatsSpecific,
-                                        UINT64)
-    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<float>, float, RollingStatsSpecific, FLOAT)
-    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<double>, double, RollingStatsSpecific, DOUBLE)
-    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<std::string>, std::string, RollingStatsSpecific, STRING)
-    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<bool>, bool, RollingStatsSpecific, BOOL)
-
-    ///////////////////////////////////////////////////////////////
-    // RollingStatSpecific<SimpleElement< EType >, EType >, where EType:
-    // INT32, UINT32, INT64, UINT64, DOUBLE, STRING, BOOL
-
-    KARABO_PYTHON_ELEMENT_ROLLINGSTATSPECIFIC(SimpleElement<int>, int, INT32)
-    KARABO_PYTHON_ELEMENT_ROLLINGSTATSPECIFIC(SimpleElement<unsigned int>, unsigned int, UINT32)
-    KARABO_PYTHON_ELEMENT_ROLLINGSTATSPECIFIC(SimpleElement<long long>, long long, INT64)
-    KARABO_PYTHON_ELEMENT_ROLLINGSTATSPECIFIC(SimpleElement<unsigned long long>, unsigned long long, UINT64)
-    KARABO_PYTHON_ELEMENT_ROLLINGSTATSPECIFIC(SimpleElement<float>, float, FLOAT)
-    KARABO_PYTHON_ELEMENT_ROLLINGSTATSPECIFIC(SimpleElement<double>, double, DOUBLE)
-    KARABO_PYTHON_ELEMENT_ROLLINGSTATSPECIFIC(SimpleElement<bool>, bool, BOOL)
-
     ///////////////////////////////////////////////////////////////
     // ReadOnlySpecific<SimpleElement< EType >, EType >, where EType:
     // INT32, UINT32, INT64, UINT64, DOUBLE, STRING, BOOL
@@ -148,7 +126,6 @@ void exportPyUtilSchemaElement(py::module_& m) {
     {
         typedef ReadOnlySpecific<ByteArrayElement, ByteArray> ReadOnlySpec;
         typedef AlarmSpecific<ByteArrayElement, ByteArray, ReadOnlySpec> AlarmSpec;
-        typedef RollingStatsSpecific<ByteArrayElement, ByteArray> RollingStatsSpec;
         py::class_<ReadOnlySpec>(m, "ReadOnlySpecificBYTEARRAY")
               .def("initialValue",
                    [](ReadOnlySpec& self, const py::object& o) -> ReadOnlySpec& {
