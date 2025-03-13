@@ -43,7 +43,8 @@ class DbReader:
                     # NOTE: The GUI Client compares the is_trashed value
                     #       with the constants 'true' and 'false' (all lower)
                     "is_trashed": "true" if project.is_trashed else "false",
-                    "date": str(project.date),
+                    "date": (str(project.date)
+                             if project.date is not None else ''),
                     "user": project.last_modified_user,
                     "description": project.description
                 }
