@@ -16,4 +16,4 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 # This file is part of the initial configuration of Karabo
 cd $KARABO/var/data
-exec envdir $KARABO/var/environment karabo-cppserver serverId=karabo/dataLogger 'deviceClasses=FileDataLogger,FileLogReader,InfluxDataLogger,InfluxLogReader' 'visibility=4' 'Logger.priority=INFO' 2>&1
+exec envdir $KARABO/var/environment karabo-cppserver serverId=karabo/dataLogger 'deviceClasses=FileDataLogger,FileLogReader,InfluxDataLogger,InfluxLogReader' 'Logger.priority=INFO' 2>&1
