@@ -38,14 +38,16 @@ class Project(SQLModel, table=True):
     # storages must coexist for some time; e.g. some topics on ExistDB and some
     # on a Relational Database).
     uuid: str = Field(max_length=64, nullable=False, unique=True)
-    name: str = Field(max_length=256, nullable=False, index=True)
+    name: str = Field(max_length=128, nullable=False)
     description: str | None = Field(default=None, nullable=True)
-    trashed: bool = Field(default=False)
+    is_trashed: bool = Field(default=False)
 
     date: datetime.datetime | None = Field(
         default=datetime.datetime.now(), nullable=True)
+
     last_modified_user: str | None = Field(default=None, max_length=64,
                                            nullable=True)
+
     last_loaded: datetime.datetime | None = Field(default=None, nullable=True)
 
     project_domain_id: int = Field(foreign_key="ProjectDomain.id",
@@ -63,7 +65,9 @@ class Project(SQLModel, table=True):
         return self.__str__()
 
     def __str__(self):
-        return f"{self.domain_id}/{self.name} ({self.uuid})"
+        return (
+            f"{self.project_domain.name}/{self.name} ({self.uuid} - "
+            f"{self.is_trashed})")
 
 
 class ProjectSubproject(SQLModel, table=True):
@@ -108,7 +112,7 @@ class DeviceInstance(SQLModel, table=True):
     __tablename__ = "DeviceInstance"
 
     id: int | None = Field(default=None, primary_key=True)
-    name: str = Field(max_length=128, nullable=False)
+    name: str = Field(max_length=256, nullable=False, index=True)
     uuid: str = Field(max_length=64, nullable=False, unique=True)
     # NOTE: if a device instance changes its class_id, all the stored
     #       configurations must be erased upon an user agreement (on normal
@@ -155,6 +159,9 @@ class DeviceConfig(SQLModel, table=True):
 
     # The order of the devices configs of a device instance
     order: int = Field(default=0, nullable=False)
+
+    # Is this the active config for among its device instance configs?
+    is_active: bool = Field(default=False)
 
     __table_args__ = (UniqueConstraint("device_instance_id", "name"),)
 

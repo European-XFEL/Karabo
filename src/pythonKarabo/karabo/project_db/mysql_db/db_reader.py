@@ -40,12 +40,15 @@ class DbReader:
                     "uuid": project.uuid,
                     "item_type": "project",
                     "simple_name": project.name,
-                    "is_trashed": project.trashed,
+                    # NOTE: The GUI Client compares the is_trashed value
+                    #       with the constants 'true' and 'false' (all lower)
+                    "is_trashed": "true" if project.is_trashed else "false",
                     "date": str(project.date),
                     "user": project.last_modified_user,
                     "description": project.description
                 }
                 projects.append(prj_dict)
+
         return projects
 
     def get_subprojects_of_project(self, project: Project) -> list[Project]:
