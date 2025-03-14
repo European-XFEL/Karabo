@@ -14,24 +14,11 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 import base64
-import hashlib
-from datetime import datetime
+from datetime import datetime, timezone
+
+from dateutil.parser import isoparse
 
 from karabo.native import Hash, decodeBinary, encodeBinary
-
-CONFIG_DB_DEVICE_ID = "deviceId"
-CONFIG_DB_NAME = "name"
-CONFIG_DB_DATA = "config"
-CONFIG_DB_DESCRIPTION = "description"
-CONFIG_DB_PRIORITY = "priority"
-CONFIG_DB_SCHEMA = "schema"
-CONFIG_DB_MIN_TIMEPOINT = "min_timepoint"
-CONFIG_DB_MAX_TIMEPOINT = "max_timepoint"
-CONFIG_DB_DIFF_TIMEPOINT = "diff_timepoint"
-CONFIG_DB_TIMEPOINT = "timepoint"
-CONFIG_DB_USER = "user"
-CONFIG_DB_OVERWRITABLE = "overwritable"
-CONFIG_DB_CONFIG_SET_ID = "config_set_id"
 
 ISO8601_FORMAT = '%Y-%m-%dT%H:%M:%S.%f'
 
@@ -70,8 +57,6 @@ def schemaToBase64Bin(sch):
     :returns: a string with the base64 encoding of the binary serialized form
         of the schema.
     """
-    # TODO: Fix the schema serialization in the middlelayer-api and get rid of
-    #       the "hack" of piggy-backing on the hash serialization.
     hashWithSch = Hash('sch', sch)
     binSch = encodeBinary(hashWithSch)
     b64Bin = base64.b64encode(binSch).decode('utf-8')
@@ -90,27 +75,13 @@ def schemaFromBase64Bin(encodedSch):
     return sch
 
 
-def create_config_set_id(deviceIds):
-    """Generates a setId that is unique for a given set of devices.
-
-    :param deviceIds: list of deviceIds whose setId should be generated.
-
-    :return: a sha1 hash that is unique for a given set of devices.
-    """
-    assert type(deviceIds) is list
-    uniques = sorted({devId.upper() for devId in deviceIds})
-    ids_str = '::'.join(uniques)
-    return hashlib.sha1(ids_str.encode('utf-8')).hexdigest()
+def datetime_from_string(date: str) -> datetime:
+    """Parses a datetime string in ISO8601 or
+    'YYYY-MM-DD HH:mm:SS.Micro' formats."""
+    return isoparse(date)
 
 
-def datetime_from_string(str_date):
-    """Obtains the datetime object equivalent to a string that is assumed to
-    be in either ISO8601 or 'YYYY-MM-DD HH:mm:SS.Micro' formats.
-
-    An exception will be thrown if the string isn't in any of the expected
-    formats.
-    """
-    if str_date.find('T') >= 0:
-        return datetime.strptime(str_date, ISO8601_FORMAT)
-    else:
-        return datetime.strptime(str_date, '%Y-%m-%d %H:%M:%S.%f')
+def utc_to_local(timestamp: datetime) -> str:
+    """Format a datetime object to a local str representation"""
+    return timestamp.replace(tzinfo=timezone.utc).astimezone().strftime(
+        ISO8601_FORMAT)

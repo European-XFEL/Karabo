@@ -18,34 +18,32 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 #############################################################################
 import os
-import os.path as op
 import re
 from asyncio import CancelledError, Future, TimeoutError, gather, wait_for
 from collections import defaultdict
+from pathlib import Path
 
 from karabo.common.scenemodel.api import (
     BoxLayoutModel, DisplayCommandModel, DisplayLabelModel,
     DisplayStateColorModel, DisplayTextLogModel, EditableRegexModel,
-    ErrorBoolModel, IntLineEditModel, LabelModel, LineEditModel, LineModel,
-    SceneModel, TableElementModel, write_scene)
+    ErrorBoolModel, LabelModel, LineEditModel, LineModel, SceneModel,
+    StickerModel, TableElementModel, write_scene)
 from karabo.config_db import (
-    ConfigurationDatabase, DbHandle, hashFromBase64Bin, hashToBase64Bin,
-    schemaFromBase64Bin, schemaToBase64Bin)
+    ConfigurationDatabase, DbHandle, hashFromBase64Bin, hashToBase64Bin)
 from karabo.middlelayer import (
     AccessLevel, AccessMode, Assignment, Bool, Configurable, DeviceClientBase,
     Hash, HashList, KaraboError, Overwrite, RegexString, Slot, State, String,
     Timestamp, UInt32, VectorHash, VectorString, background, dictToHash,
-    sanitize_init_configuration, slot)
-
-HIDDEN_KARABO_FOLDER = op.join(os.environ['HOME'], '.karabo')
+    getClassSchema, getConfiguration, isStringSet, sanitize_init_configuration,
+    slot)
 
 DEVICE_TIMEOUT = 3
-INSTANCE_NEW_TIMEOUT = 15
-FILTER_KEYS = ["name", "timepoint", "description", "priority"]
+FILTER_KEYS = ["name", "timepoint"]
+NAME_REGEX = r"^(?!default$)[A-Za-z0-9_-]{1,30}$"
 
 
-def scratch_conf(c: dict) -> dict:
-    """Create a scoped down dictionary of the configuration"""
+def view_item(c: dict) -> dict:
+    """Create a view dictionary of the configuration"""
     ret = {k: v for k, v in c.items() if k in FILTER_KEYS}
     return ret
 
@@ -61,21 +59,9 @@ class RowSchema(Configurable):
         description="The timepoint when the configuration was saved",
         accessMode=AccessMode.READONLY)
 
-    description = String(
-        defaultValue="",
-        description="The description of the configuration",
-        accessMode=AccessMode.READONLY)
-
-    priority = UInt32(
-        defaultValue=1,
-        description="The priority of the configuration",
-        accessMode=AccessMode.READONLY)
-
 
 class ConfigurationManager(DeviceClientBase):
     """This configuration manager service is to control device configurations
-
-    Requests from various clients (GUI's and devices) will be managed.
 
     - Tag device configurations by ``name``
     - Retrieve device configurations by ``name``
@@ -97,21 +83,9 @@ class ConfigurationManager(DeviceClientBase):
                 background(self._list_configurations())
 
     configurationName = RegexString(
-        regex="^[A-Za-z0-9_-]{1,30}$",
-        defaultValue="default",
+        regex=NAME_REGEX,
+        defaultValue="name",
         description="The configuration name",
-        requiredAccessLevel=AccessLevel.OPERATOR)
-
-    priority = UInt32(
-        defaultValue=1,
-        minInc=1,
-        maxInc=3,
-        description="The priority of the configuration",
-        requiredAccessLevel=AccessLevel.OPERATOR)
-
-    description = String(
-        defaultValue="",
-        description="The configuration description",
         requiredAccessLevel=AccessLevel.OPERATOR)
 
     availableScenes = VectorString(
@@ -119,7 +93,7 @@ class ConfigurationManager(DeviceClientBase):
         displayType="Scenes",
         description="Provides a scene for the Configuration Manager.",
         accessMode=AccessMode.READONLY,
-        defaultValue=['scene'])
+        defaultValue=["scene"])
 
     lastSuccess = Bool(
         defaultValue=True,
@@ -142,21 +116,18 @@ class ConfigurationManager(DeviceClientBase):
         accessMode=AccessMode.INITONLY)
 
     @slot
-    def requestScene(self, params):
-        """Fulfill a scene request from another device.
+    def requestScene(self, params: Hash):
+        """Fulfill a scene request from another device."""
+        payload = Hash("success", False)
+        name = params.get("name", default="scene")
+        if name == "scene":
+            payload.set("success", True)
+            payload.set("name", name)
+            payload.set("data", get_scene(self.deviceId))
 
-        :param params: A `Hash` containing the method parameters
-        """
-        payload = Hash('success', False)
-        name = params.get('name', default='scene')
-        if name == 'scene':
-            payload.set('success', True)
-            payload.set('name', name)
-            payload.set('data', get_scene(self.deviceId))
-
-        return Hash('type', 'deviceScene',
-                    'origin', self.deviceId,
-                    'payload', payload)
+        return Hash("type", "deviceScene",
+                    "origin", self.deviceId,
+                    "payload", payload)
 
     @Slot(displayedName="List configurations",
           requiredAccessLevel=AccessLevel.OPERATOR,
@@ -171,10 +142,9 @@ class ConfigurationManager(DeviceClientBase):
         name_part = ""
         items = []
         try:
-            items = self.db.list_configurations(deviceId, name_part)
+            items = await self.db.list_configurations(deviceId, name_part)
             # Adjust for the table element!
-            items = [scratch_conf(c) for c in items]
-            # Convert to a list of Hashes!
+            items = [view_item(c) for c in items]
             items = [dictToHash(c) for c in items]
         except Exception as e:
             self.status = str(e)
@@ -196,23 +166,14 @@ class ConfigurationManager(DeviceClientBase):
 
     async def _save_configuration(self):
         deviceId = self.deviceName.value
-        priority = int(self.priority.value)
-        description = self.description.value
         config_name = self.configurationName.value
-
-        taken = self.db.is_config_name_taken(config_name, [deviceId])
-        if taken:
-            self.status = (f"Failure: Configuration name {config_name} "
-                           f"is already taken for device {deviceId}")
-            self.lastSuccess = False
-            self.state = State.ON
-            return
-        # Get the schema and the configuration first!
         try:
-            schema, _ = await wait_for(self.call(
-                deviceId, "slotGetSchema", False), timeout=DEVICE_TIMEOUT)
-            conf, _ = await wait_for(self.call(
-                deviceId, "slotGetConfiguration"), timeout=DEVICE_TIMEOUT)
+            # Get the schema and the configuration first!
+            # serverId, classId = self._get_server_attributes(deviceId)
+            # class_schema, _ = await wait_for(
+            #    getClassSchema(serverId, classId), timeout=DEVICE_TIMEOUT)
+            conf = await wait_for(
+                getConfiguration(deviceId), timeout=DEVICE_TIMEOUT)
         except (CancelledError, TimeoutError):
             self.status = (f"Failure: Saving configuration for {deviceId} "
                            f"failed. The device is not online.")
@@ -222,22 +183,16 @@ class ConfigurationManager(DeviceClientBase):
             self.status = str(e)
             self.lastSuccess = False
         else:
-            configs = {}
-            configs.update({"deviceId": deviceId})
-            configs.update({"config": hashToBase64Bin(conf)})
-            configs.update({"schema": schemaToBase64Bin(schema)})
+            # XXX: Sanitize configuration
+            configs = {"deviceId": deviceId, "config": hashToBase64Bin(conf)}
             items = [configs]
             # Now we save and list again, and we should not expect any errors
             try:
-                self.db.save_configuration(
-                    config_name, items, description=description, user=".",
-                    priority=priority, timestamp="")
-
+                await self.db.save_configuration(config_name, items)
                 self.status = (f"Success: Saved configuration {config_name} "
                                f"for device {deviceId}!")
-                current_items = self.db.list_configurations(
-                    deviceId, name_part="")
-                current_items = [scratch_conf(c) for c in current_items]
+                current_items = await self.db.list_configurations(deviceId)
+                current_items = [view_item(c) for c in current_items]
                 current_items = [dictToHash(c) for c in current_items]
                 self.view = current_items
             except Exception as e:
@@ -256,6 +211,14 @@ class ConfigurationManager(DeviceClientBase):
                     "configuration call",
         requiredAccessLevel=AccessLevel.ADMIN,
         accessMode=AccessMode.READONLY)
+
+    def _get_server_attributes(self, deviceId: str) -> tuple[str, str]:
+        """Return the attributes `classId` and `serverId` of a device"""
+        attrs = self.systemTopology[f"device.{deviceId}", ...]
+        classId = attrs["classId"]
+        serverId = attrs["serverId"]
+
+        return serverId, classId
 
     @slot
     async def slotInstanceNew(self, instanceId, info):
@@ -280,19 +243,14 @@ class ConfigurationManager(DeviceClientBase):
 
     async def onInitialization(self):
         """Initialize the configuration database device and create the `DB`"""
-        folder = op.join(os.environ["KARABO"], 'var', 'data', 'config_db')
-        path = op.join(folder, self.dbName.value)
-        dir_name = op.dirname(path)
-        if not op.exists(dir_name):
-            os.makedirs(dir_name, exist_ok=True)
-
+        if not isStringSet(self.dbName):
+            raise RuntimeError("DbName needs to be configured.")
+        folder = Path(os.environ["KARABO"]) / "var" / "data" / "config_db"
+        path = folder / self.dbName.value
+        path.parent.mkdir(parents=True, exist_ok=True)
         connection = DbHandle(path)
-        if not connection.authenticate():
-            # XXX: We bring the device down if the db is not available!
-            raise KaraboError(f"Database with address {self.dbName.value} is"
-                              f"not available.")
         self.db = ConfigurationDatabase(connection)
-        self.db.assureExisting()
+        await self.db.assure_existing()
         self.state = State.ON
 
         self._schema_futures = {}
@@ -313,29 +271,7 @@ class ConfigurationManager(DeviceClientBase):
         """
         deviceId = info["deviceId"]
         name_part = info.get("name", "")
-
-        items = self.db.list_configurations(deviceId, name_part)
-        items = HashList([dictToHash(config) for config in items])
-
-        return Hash("success", True, "items", items)
-
-    @slot
-    async def slotListConfigurationSets(self, info):
-        """Slot to list configurations from name
-
-        This slot requires an info Hash with:
-            - `deviceIds`: list of deviceIds whose configurations should be
-                           listed.
-
-        :returns: list of configuration items (can be empty) with meta
-                  information.
-                  A configuration item has keys `name`, `priority`,
-                  `description`, `user`, `min_point`, `max_timepoint`
-                  and `diff_timepoint`.
-        """
-        deviceIds = info["deviceIds"]
-
-        items = self.db.list_configuration_sets(deviceIds)
+        items = await self.db.list_configurations(deviceId, name_part)
         items = HashList([dictToHash(config) for config in items])
 
         return Hash("success", True, "items", items)
@@ -352,7 +288,7 @@ class ConfigurationManager(DeviceClientBase):
         deviceId = info["deviceId"]
         name = info["name"]
 
-        item = self.db.get_configuration(deviceId, name)
+        item = await self.db.get_configuration(deviceId, name)
         if not item:
             reason = (f"Failure: No configuration for device {deviceId} and "
                       f"name {name} found!")
@@ -360,15 +296,7 @@ class ConfigurationManager(DeviceClientBase):
 
         item = dictToHash(item)
         config64 = item["config"]
-        schema64 = item["schema"]
         item["config"] = hashFromBase64Bin(config64)
-        item["schema"] = schemaFromBase64Bin(schema64)
-
-        # A configuration is always connected to a schema, but typically
-        # the majority is not interested in that. Hence, we remove it
-        # under conditions here and not in the config db logic.
-        if not info.has("schema") or info["schema"] is False:
-            item.pop("schema")
 
         return Hash("success", True, "item", item)
 
@@ -376,56 +304,23 @@ class ConfigurationManager(DeviceClientBase):
     async def slotGetLastConfiguration(self, info):
         """Slot to get a the last configuration
 
-        The info `Hash` must contain `deviceId` and can obtain `priority`.
-
-        Note: If the info `Hash` contains `schema`, a schema is returned
-        as well.
-        """
+        The info `Hash` must contain `deviceId`."""
         deviceId = info["deviceId"]
-        priority = info.get("priority", 3)
-
-        item = self.db.get_last_configuration(deviceId, priority=priority)
+        item = self.db.get_last_configuration(deviceId)
         if not item:
-            reason = (f"No configuration for device {deviceId} and "
-                      f"priority {priority} found!")
+            reason = f"No configuration for device {deviceId} found!"
             raise KaraboError(reason)
 
         item = dictToHash(item)
         config64 = item["config"]
-        schema64 = item["schema"]
         item["config"] = hashFromBase64Bin(config64)
-        item["schema"] = schemaFromBase64Bin(schema64)
-
-        # A configuration is always connected to a schema, but typically
-        # the majority is not interested in that. Hence, we remove it
-        # under conditions here and not in the config db logic.
-        if not info.has("schema") or info["schema"] is False:
-            item.pop("schema")
-
         return Hash("success", True, "item", item)
 
     @slot
-    async def slotCheckConfigurationFromName(self, info):
-        """Slot to check configuration(s) from name
-           - name: the non-empty (and unique for the device) name to be
-                   associated with the configuration(s)
-
-           - deviceIds: a vector of strings with deviceIds
+    async def slotListDevices(self, info: Hash):
+        """List deviceIds that are stored in the database
         """
-        config_name = info["name"]  # Note: Must be there!
-        deviceIds = info["deviceIds"]
-        taken = self.db.is_config_name_taken(config_name, deviceIds)
-
-        return Hash("success", True, "taken", taken)
-
-    @slot
-    async def slotListDevices(self, info):
-        """List deviceIds that are stored in the database for a priority
-
-        The info hash must contain the priority!
-        """
-        priority = info.get("priority", 3)
-        devices = self.db.list_devices(priority=int(priority))
+        devices = await self.db.list_devices()
         return Hash("success", True, "item", devices)
 
     @slot
@@ -438,18 +333,7 @@ class ConfigurationManager(DeviceClientBase):
            - name: the non-empty (and unique for the device) name to be
                    associated with the configuration(s)
 
-           - priority: priority of the configuration(s) as integer ranging
-                       from 1-3 with 3 being the highest priority
-
-           - description: an optional description for the named configs
-
-           - user: the user name of the currently logged in user in the client
-
            - deviceIds: a vector of strings with deviceIds
-
-           - overwritable: Will the configuration be overwritable?
-                           Ignored if the named configuration already exists
-
         """
         config_name = info["name"]  # Note: Must be there!
         deviceIds = info["deviceIds"]
@@ -464,43 +348,24 @@ class ConfigurationManager(DeviceClientBase):
                 f"The number of configurations {len(deviceIds)}"
                 f" exceeds the allowed limit {self.confBulkLimit}")
 
-        is_taken = self.db.is_config_name_taken(config_name, deviceIds)
-        if is_taken:
-            raise KaraboError(f"The config name {config_name} is already "
-                              "used by a read-only configuration saved "
-                              "for at least one of the devices in the list: "
-                              f"{deviceIds}. Or by one writable configuration "
-                              "that doesn't match the same list of devices.")
+        async def fetch_config(device_id):
+            """Poll a single device for server and classId"""
+            # serverId, classId = self._get_server_attributes(device_id)
+            # schema = await getClassSchema(serverId, classId)
+            config = await getConfiguration(device_id)
+            # XXX: Sanitization of configuration
+            config64 = hashToBase64Bin(config)
+            config_dict = {"deviceId": device_id, "config": config64}
+            return config_dict
 
-        # Optional information that can be taken as defaults!
-        user = info.get("user", ".")
-        description = info.get("description", "")
-        priority = info.get("priority", 1)
-        timestamp = info.get("timestamp", Timestamp().toLocal())
-        overwritable = info.get("overwritable", False)
+        futures = [fetch_config(device_id) for device_id in deviceIds]
+        timeout = len(deviceIds) * DEVICE_TIMEOUT
+        items = await wait_for(gather(*futures), timeout=timeout)
 
-        try:
-            async def poll_(device_id):
-                schema, _ = await self.call(device_id, "slotGetSchema", False)
-                config, _ = await self.call(device_id, "slotGetConfiguration")
-                config_dict = {}
-                config64 = hashToBase64Bin(config)
-                schema64 = schemaToBase64Bin(schema)
-                config_dict.update({"deviceId": device_id})
-                config_dict.update({"config": config64})
-                config_dict.update({"schema": schema64})
-                return config_dict
-
-            futures = [poll_(device_id) for device_id in deviceIds]
-            timeout = len(deviceIds) * DEVICE_TIMEOUT
-            items = await wait_for(gather(*futures), timeout=timeout)
-        except (CancelledError, TimeoutError):
-            raise
-
+        timestamp = Timestamp().toLocal()
         # Let it throw here if needed!
-        self.db.save_configuration(
-            config_name, items, description=description, user=user,
-            priority=priority, overwritable=overwritable, timestamp=timestamp)
+        await self.db.save_configuration(
+            config_name, items, timestamp=timestamp)
 
         return Hash("success", True)
 
@@ -511,31 +376,23 @@ class ConfigurationManager(DeviceClientBase):
         The required info `Hash` must have at least the params:
 
         - deviceId: The mandatory parameter
-        - name: Optional parameter. If no `name` is provided, the latest
-                configuration is retrieved with priority 3 (INIT).
+        - name: Mandatory parameter
         - classId: Optional parameter for validation
         - serverId: Optional parameter
         """
         deviceId = info["deviceId"]
-        name = info.get("name", None)
+        name = info["name"]
         # Note: classId and serverId can be optional
         # classId is taken for validation!
         classId = info.get("classId", None)
         serverId = info.get("serverId", None)
 
-        # If no `name` is provided, we try to get the latest config
-        if name is None:
-            item = self.db.get_last_configuration(deviceId, priority=3)
-            if not item:
-                reason = (f"No configuration for device {deviceId} and "
-                          f"priority 3 (INIT) found!")
-                raise KaraboError(reason)
-        else:
-            item = self.db.get_configuration(deviceId, name)
-            if not item:
-                reason = (f"No configuration for device {deviceId} and name "
-                          f"{name} found!")
-                raise KaraboError(reason)
+        item = await self.db.get_configuration(deviceId, name)
+        if not item:
+            reason = (f"No configuration for device {deviceId} and name "
+                      f"{name} found!")
+            raise KaraboError(reason)
+
         config = hashFromBase64Bin(item["config"])
         # If the classId was provided we can validate!
         if classId is not None and classId != config["classId"]:
@@ -548,6 +405,7 @@ class ConfigurationManager(DeviceClientBase):
         # If we did not provide a serverId, we take it from the config
         if serverId is None:
             serverId = config["serverId"]
+
         # Get the class schema for this device!
         schema = self._class_schemas[serverId].get(classId, None)
         if schema is None:
@@ -561,8 +419,8 @@ class ConfigurationManager(DeviceClientBase):
                 future = Future()
                 self._schema_futures[(serverId, classId)] = future
                 try:
-                    schema, *_ = await wait_for(
-                        self.call(serverId, "slotGetClassSchema", classId),
+                    schema = await wait_for(
+                        getClassSchema(serverId, classId),
                         timeout=DEVICE_TIMEOUT)
                 except (CancelledError, TimeoutError) as e:
                     future.set_exception(e)
@@ -598,128 +456,192 @@ class ConfigurationManager(DeviceClientBase):
 
 
 def get_scene(deviceId):
-    scene0 = TableElementModel(
-        height=431.0, keys=[f'{deviceId}.view'],
-        parent_component='DisplayComponent',
-        width=601.0, x=340.0, y=230.0)
-    scene1 = DisplayTextLogModel(
-        height=199.0, keys=[f'{deviceId}.status'],
-        parent_component='DisplayComponent',
-        width=531.0, x=410.0, y=10.0)
-    scene20 = DisplayCommandModel(
-        height=35.0, keys=[f'{deviceId}.listConfigurations'],
-        parent_component='DisplayComponent', width=321.0, x=80.0, y=311.0)
-    scene21 = DisplayCommandModel(
-        height=35.0, keys=[f'{deviceId}.saveConfigurations'],
-        parent_component='DisplayComponent', width=321.0, x=80.0, y=346.0)
-    scene2 = BoxLayoutModel(
-        direction=2, height=80.0, width=321.0, x=10.0, y=320.0,
-        children=[scene20, scene21])
-    scene3 = LabelModel(
-        font='Source Sans Pro,14,-1,5,50,0,1,0,0,0', height=31.0,
-        parent_component='DisplayComponent', text='Configuration Manager',
-        width=391.0, x=20.0, y=10.0)
-    scene40 = DisplayLabelModel(
-        font_size=10, height=31.0, keys=[f'{deviceId}.deviceId'],
-        parent_component='DisplayComponent', width=311.0, x=70.0, y=50.0)
-    scene41 = DisplayStateColorModel(
-        height=31.0, keys=[f'{deviceId}.state'],
-        parent_component='DisplayComponent',
-        show_string=True, width=311.0, x=70.0, y=90.0)
-    scene420 = LabelModel(
-        font='Source Sans Pro,10,-1,5,50,0,0,0,0,0', foreground='#000000',
-        height=31.0, parent_component='DisplayComponent', text='Last Success',
-        width=73.0, x=70.0, y=130.0)
-    scene421 = ErrorBoolModel(
-        height=31.0, keys=[f'{deviceId}.lastSuccess'],
-        parent_component='DisplayComponent', width=68.0, x=143.0, y=130.0)
-    scene42 = BoxLayoutModel(
-        height=37.0, width=391.0, x=10.0, y=114.0,
-        children=[scene420, scene421])
-    scene4 = BoxLayoutModel(
-        direction=2, height=111.0, width=391.0, x=10.0, y=40.0,
-        children=[scene40, scene41, scene42])
-    scene5 = LineModel(
-        stroke='#000000', x1=30.0, x2=900.0, y1=210.0, y2=210.0)
-    scene6 = LabelModel(
-        font='Source Sans Pro,10,-1,5,50,0,0,0,0,0,Normal', height=31.0,
-        parent_component='DisplayComponent', text='Save options', width=161.0,
-        x=10.0, y=410.0)
-    scene7 = LineModel(
-        stroke='#000000', x1=10.0, x2=330.0, y1=450.0, y2=450.0)
-    scene800 = LabelModel(
-        font='Source Sans Pro,10,-1,5,50,0,0,0,0,0', foreground='#000000',
-        height=20.0, parent_component='DisplayComponent',
-        text='configurationName', width=321.0, x=10.0, y=470.0)
-    scene8010 = DisplayLabelModel(
-        font_size=10, height=27.0,
-        keys=[f'{deviceId}.configurationName'],
-        parent_component='DisplayComponent', width=161.0, x=10.0, y=490.0)
-    scene8011 = EditableRegexModel(
-        height=27.0, keys=[f'{deviceId}.configurationName'],
-        parent_component='EditableApplyLaterComponent', width=160.0, x=171.0,
-        y=490.0)
-    scene801 = BoxLayoutModel(
-        height=37.0, width=321.0, x=10.0, y=490.0,
-        children=[scene8010, scene8011])
-    scene80 = BoxLayoutModel(
-        direction=2, height=57.0, width=321.0, x=10.0, y=470.0,
-        children=[scene800, scene801])
-    scene810 = LabelModel(
-        font='Source Sans Pro,10,-1,5,50,0,0,0,0,0', foreground='#000000',
-        height=20.0, parent_component='DisplayComponent', text='priority',
-        width=321.0, x=10.0, y=530.0)
-    scene8110 = DisplayLabelModel(
-        font_size=10, height=34.0, keys=[f'{deviceId}.priority'],
-        parent_component='DisplayComponent', width=161.0, x=10.0, y=550.0)
-    scene8111 = IntLineEditModel(
-        height=34.0, keys=[f'{deviceId}.priority'],
-        parent_component='EditableApplyLaterComponent', width=160.0, x=171.0,
-        y=550.0)
-    scene811 = BoxLayoutModel(
-        height=37.0, width=321.0, x=10.0, y=547.0,
-        children=[scene8110, scene8111])
-    scene81 = BoxLayoutModel(
-        direction=2, height=57.0, width=321.0, x=10.0, y=527.0,
-        children=[scene810, scene811])
-    scene820 = LabelModel(
-        font='Source Sans Pro,10,-1,5,50,0,0,0,0,0', foreground='#000000',
-        height=20.0, parent_component='DisplayComponent', text='description',
-        width=321.0, x=10.0, y=584.0)
-    scene8210 = DisplayLabelModel(
-        font_size=10, height=34.0, keys=[f'{deviceId}.description'],
-        parent_component='DisplayComponent', width=161.0, x=10.0, y=604.0)
-    scene8211 = LineEditModel(
-        height=34.0, keys=[f'{deviceId}.description'],
-        klass='EditableLineEdit',
-        parent_component='EditableApplyLaterComponent', width=160.0, x=171.0,
-        y=604.0)
-    scene821 = BoxLayoutModel(
-        height=37.0, width=321.0, x=10.0, y=604.0,
-        children=[scene8210, scene8211])
-    scene82 = BoxLayoutModel(
-        direction=2, height=57.0, width=321.0, x=10.0, y=584.0,
-        children=[scene820, scene821])
-    scene8 = BoxLayoutModel(
-        direction=2, height=171.0, width=321.0, x=10.0, y=470.0,
-        children=[scene80, scene81, scene82])
-    scene90 = LabelModel(
-        font='Source Sans Pro,10,-1,5,50,0,0,0,0,0', foreground='#000000',
-        height=20.0, parent_component='DisplayComponent', text='Device',
-        width=311.0, x=10.0, y=220.0)
-    scene91 = DisplayLabelModel(
-        font_size=10, height=27.0, keys=[f'{deviceId}.deviceName'],
-        parent_component='DisplayComponent', width=311.0, x=10.0, y=240.0)
-    scene92 = LineEditModel(
-        height=27.0, keys=[f'{deviceId}.deviceName'],
-        klass='EditableLineEdit',
-        parent_component='EditableApplyLaterComponent', width=311.0, x=10.0,
-        y=270.0)
-    scene9 = BoxLayoutModel(
-        direction=2, height=91.0, width=321.0, x=10.0, y=220.0,
-        children=[scene90, scene91, scene92])
+    scene00 = TableElementModel(
+        height=391,
+        keys=[f"{deviceId}.view"],
+        parent_component="DisplayComponent",
+        width=481,
+        x=370,
+        y=270,
+    )
+    scene01 = DisplayTextLogModel(
+        height=121,
+        keys=[f"{deviceId}.status"],
+        parent_component="DisplayComponent",
+        width=671,
+        x=190,
+        y=80,
+    )
+    scene02 = LabelModel(
+        font="Source Sans Pro,14,-1,5,75,0,1,0,0,0",
+        height=31,
+        parent_component="DisplayComponent",
+        text="Karabo Configuration Manager",
+        width=391,
+        x=10,
+        y=10,
+    )
+    scene03 = LineModel(
+        stroke="#000000",
+        stroke_width=2.0,
+        x=20,
+        x1=20,
+        x2=840,
+        y=200,
+        y1=200,
+        y2=200,
+    )
+    scene04 = DisplayLabelModel(
+        font_size=10,
+        font_weight="normal",
+        height=27,
+        keys=[f"{deviceId}.deviceId"],
+        parent_component="DisplayComponent",
+        width=391,
+        x=10,
+        y=50,
+    )
+    scene05 = DisplayStateColorModel(
+        font_size=10,
+        font_weight="normal",
+        height=27,
+        keys=[f"{deviceId}.state"],
+        parent_component="DisplayComponent",
+        show_string=True,
+        width=441,
+        x=410,
+        y=50,
+    )
+    scene0600 = LabelModel(
+        font="Source Sans Pro,10,-1,5,50,0,0,0,0,0",
+        foreground="#000000",
+        height=37,
+        parent_component="DisplayComponent",
+        text="Last Success",
+        width=78,
+        x=10,
+        y=90,
+    )
+    scene0601 = ErrorBoolModel(
+        height=37,
+        keys=[f"{deviceId}.lastSuccess"],
+        parent_component="DisplayComponent",
+        width=103,
+        x=88,
+        y=90,
+    )
+    scene06 = BoxLayoutModel(
+        height=37, width=181, x=10, y=90, children=[scene0600, scene0601]
+    )
+    scene07 = LabelModel(
+        font="Source Sans Pro,10,-1,5,50,0,0,0,0,0",
+        foreground="#000000",
+        height=30,
+        parent_component="DisplayComponent",
+        text="Device",
+        width=81,
+        x=10,
+        y=220,
+    )
+    scene08 = DisplayLabelModel(
+        font_size=10,
+        font_weight="normal",
+        height=31,
+        keys=[f"{deviceId}.deviceName"],
+        parent_component="DisplayComponent",
+        width=291,
+        x=70,
+        y=220,
+    )
+    scene09 = LineEditModel(
+        height=31,
+        keys=[f"{deviceId}.deviceName"],
+        klass="EditableLineEdit",
+        parent_component="EditableApplyLaterComponent",
+        width=321,
+        x=370,
+        y=220,
+    )
+    scene010 = DisplayCommandModel(
+        font_size=10,
+        height=31,
+        keys=[f"{deviceId}.listConfigurations"],
+        parent_component="DisplayComponent",
+        width=151,
+        x=700,
+        y=220,
+    )
+    scene011 = DisplayCommandModel(
+        font_size=10,
+        height=31,
+        keys=[f"{deviceId}.saveConfigurations"],
+        parent_component="DisplayComponent",
+        width=171,
+        x=190,
+        y=350,
+    )
+    scene012 = LabelModel(
+        font="Source Sans Pro,12,-1,5,50,0,1,0,0,0",
+        foreground="#000000",
+        height=37,
+        parent_component="DisplayComponent",
+        text="Save Configuration Name",
+        width=191,
+        x=10,
+        y=270,
+    )
+    scene01300 = DisplayLabelModel(
+        font_size=10,
+        font_weight="normal",
+        height=31,
+        keys=[f"{deviceId}.configurationName"],
+        parent_component="DisplayComponent",
+        width=176,
+        x=10,
+        y=310,
+    )
+    scene01301 = EditableRegexModel(
+        height=31,
+        keys=[f"{deviceId}.configurationName"],
+        parent_component="EditableApplyLaterComponent",
+        width=175,
+        x=186,
+        y=310,
+    )
+    scene013 = BoxLayoutModel(
+        height=31, width=351, x=10, y=310, children=[scene01300, scene01301]
+    )
+    scene014 = StickerModel(
+        background="#d9d9d9",
+        font="Source Sans Pro,10,-1,5,50,0,0,0,0,0",
+        height=111,
+        parent_component="DisplayComponent",
+        text="- Configuration names are unique.\n- If there is an existing "
+        "name, the configuration for that name is overwritten.\n- "
+        "Configurations can only be deleted with an EXPERT access.\n",
+        width=351,
+        x=10,
+        y=420,
+    )
     scene = SceneModel(
-        height=673.0, width=948.0,
-        children=[scene0, scene1, scene2, scene3, scene4, scene5, scene6,
-                  scene7, scene8, scene9])
+        height=673,
+        width=862,
+        children=[
+            scene00,
+            scene01,
+            scene02,
+            scene03,
+            scene04,
+            scene05,
+            scene06,
+            scene07,
+            scene08,
+            scene09,
+            scene010,
+            scene011,
+            scene012,
+            scene013,
+            scene014,
+        ],
+    )
     return write_scene(scene)
