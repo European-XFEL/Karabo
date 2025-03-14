@@ -64,8 +64,7 @@ def test_device_client_sync_api():
 
     # Test 'saveConfigurationFromName'...
     (success, errmsg) = c.saveConfigurationFromName(
-        "config1", ["data/gen/22", "data/gen/33"],
-        "Description for config1", 2, "johnsmith")
+        "config1", ["data/gen/22", "data/gen/33"])
     assert success is False
     assert 'timed out' in errmsg
 
@@ -251,10 +250,6 @@ def test_device_client_sync_api():
     props = c.getProperties(deviceId)
     assert 'status' in props
     assert 'vectors.boolProperty' in props
-    # Test getLastConfiguration...
-    last_conf = c.getLastConfiguration(deviceId)
-    assert last_conf['success'] is False
-    assert 'config' in last_conf
     # Test getCurrentlyExecutableCommands...
     comms = c.getCurrentlyExecutableCommands(deviceId)
     assert 'writeOutput' in comms

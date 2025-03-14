@@ -51,7 +51,6 @@ class TestCrossConfigManager(BoundDeviceTestCase):
         self._setup_devices()
         self._test_save_get_config()
         self._test_save_list_config()
-        self._test_save_get_last_config()
 
     def _setup_devices(self):
         # Starts the MDL server that will host the ConfigurationManager device.
@@ -102,48 +101,31 @@ class TestCrossConfigManager(BoundDeviceTestCase):
            rations.
         """
         # Gets the current device configuration for later checking
-        dev_cfg = self.dc.get(self.PROP_TEST_DEVICE_ID)
+        dev_config = self.dc.get(self.PROP_TEST_DEVICE_ID)
 
-        cfg_name = 'PropertyTestConfigI'
-        cfg_desc = 'A simple description for the configuration'
+        config_name = 'PropertyTestConfigI'
         ok, msg = self.dc.saveConfigurationFromName(
-            cfg_name, [self.PROP_TEST_DEVICE_ID], cfg_desc
-        )
+            config_name, [self.PROP_TEST_DEVICE_ID])
         self.assertTrue(
             ok,
             f"Save configuration for device '{self.PROP_TEST_DEVICE_ID}' "
             f"failed: '{msg}'"
         )
-        get_resp = self.dc.getConfigurationFromName(
-            self.PROP_TEST_DEVICE_ID, cfg_name
+        ret = self.dc.getConfigurationFromName(
+            self.PROP_TEST_DEVICE_ID, config_name
         )
         self.assertTrue(
-            get_resp['success'],
-            f"Get configuration named '{cfg_name}' failed for device "
-            f"'{self.PROP_TEST_DEVICE_ID}: '{get_resp['reason']}"
-        )
-        config = get_resp['config']
-        self.assertEqual(config['name'], cfg_name)
-        self.assertEqual(config['description'], cfg_desc)
-        self.assertEqual(config['priority'], 1)  # 1 is the default priority
-        self.assertEqual(config['user'], '.')  # '.' is the "default" user
-        self.assertTrue(fullyEqual(config['config'], dev_cfg))
+            ret['success'],
+            f"Get configuration named '{config_name}' failed for device "
+            f"'{self.PROP_TEST_DEVICE_ID}: '{ret['reason']}")
+        config = ret['config']
+        self.assertEqual(config['name'], config_name)
+        self.assertTrue(fullyEqual(config['config'], dev_config))
 
-        # Attempt to save with invalid priority is rejected
-        get_resp_inv_pri = self.dc.saveConfigurationFromName(
-            'An invalid priority', [self.PROP_TEST_DEVICE_ID], 'Desc.', 5
-        )
-        self.assertFalse(get_resp_inv_pri[0])
-        self.assertIn('argument out of range', get_resp_inv_pri[1])
-
-        # Attempt to save with existing name triggers RemoteException.
-        # cfg_name was used for the successful save case.
-        get_resp_used_name = self.dc.saveConfigurationFromName(
-            cfg_name, [self.PROP_TEST_DEVICE_ID]
-        )
-        self.assertFalse(get_resp_used_name[0])
-        self.assertIn('The config name PropertyTestConfigI is already used',
-                      get_resp_used_name[1])
+        # config_name was used for the successful save case. Always overwrite!
+        ret_used_name = self.dc.saveConfigurationFromName(
+            config_name, [self.PROP_TEST_DEVICE_ID])
+        self.assertTrue(ret_used_name[0])
 
     def _test_save_list_config(self):
         """Checks that saving more than one config and then retrieving them by
@@ -153,132 +135,55 @@ class TestCrossConfigManager(BoundDeviceTestCase):
            for the device and that an unused name part returns an empty list
            of configurations.
         """
-        cfg_name_2 = 'PropertyTestConfigII'
-        cfg_desc_2 = 'Another simple description for the configuration'
+        config_name_2 = 'PropertyTestConfigII'
         ok, msg = self.dc.saveConfigurationFromName(
-            cfg_name_2, [self.PROP_TEST_DEVICE_ID], cfg_desc_2
-        )
+            config_name_2, [self.PROP_TEST_DEVICE_ID])
+        self.assertTrue(
+            ok, f"Save configuration for device '{self.PROP_TEST_DEVICE_ID}' "
+                f"failed: '{msg}'")
+        config_name_3 = 'PropertyTestConfigIII'
+        ok, msg = self.dc.saveConfigurationFromName(
+            config_name_3, [self.PROP_TEST_DEVICE_ID])
         self.assertTrue(
             ok,
             f"Save configuration for device '{self.PROP_TEST_DEVICE_ID}' "
-            f"failed: '{msg}'"
-        )
-        cfg_name_3 = 'PropertyTestConfigIII'
-        cfg_desc_3 = 'Yet another simple description for the configuration'
-        ok, msg = self.dc.saveConfigurationFromName(
-            cfg_name_3, [self.PROP_TEST_DEVICE_ID], cfg_desc_3
-        )
+            f"failed: '{msg}'")
+
+        ret = self.dc.listConfigurationFromName(
+            self.PROP_TEST_DEVICE_ID, config_name_2)
         self.assertTrue(
-            ok,
-            f"Save configuration for device '{self.PROP_TEST_DEVICE_ID}' "
-            f"failed: '{msg}'"
-        )
-        # cfg_desc_2 is part of cfg_desc_3, so the two are expected in the
-        # reply
-        get_resp = self.dc.listConfigurationFromName(
-            self.PROP_TEST_DEVICE_ID, cfg_name_2
-        )
-        self.assertTrue(
-            get_resp['success'],
-            f"List configuration with name containting '{cfg_name_2}' failed "
-            f"for device '{self.PROP_TEST_DEVICE_ID}': {get_resp['reason']}"
-        )
-        self.assertEqual(len(get_resp['configs']), 2)
-        config = get_resp['configs'][0]
-        self.assertEqual(config['name'], cfg_name_2)
-        self.assertEqual(config['description'], cfg_desc_2)
-        self.assertEqual(config['priority'], 1)  # 1 is the default priority
-        self.assertEqual(config['user'], '.')  # '.' is the "default" user
+            ret['success'],
+            f"List configuration containting '{config_name_2}' failed "
+            f"for device '{self.PROP_TEST_DEVICE_ID}': {ret['reason']}")
+        self.assertEqual(len(ret['configs']), 2)
+        config = ret['configs'][0]
+        self.assertEqual(config['name'], config_name_2)
         # NOTE: listConfigurationFromName doesn't return the full details of
         #       each configuration. In particular, it neither returns the
         #       config itself nor the associated schema.
-        config = get_resp['configs'][1]
-        self.assertEqual(config['name'], cfg_name_3)
-        self.assertEqual(config['description'], cfg_desc_3)
-        self.assertEqual(config['priority'], 1)  # 1 is the default priority
-        self.assertEqual(config['user'], '.')  # '.' is the "default" user
-
+        config = ret['configs'][1]
+        self.assertEqual(config['name'], config_name_3)
         # Empty name part should retrieve all the configs for the device in
         # the database - the two saved in this test and a third one that should
         # have been saved by the previous test, _test_save_get_config.
-        # NOTE: an attempt to reuse get_resp in here caused the test to
+        # NOTE: an attempt to reuse ret in here caused the test to
         #       crash immediately. Debugging the crash showed that it
         #       happened in the interop layer built with Boost::Python.
-        get_resp_all = self.dc.listConfigurationFromName(
-            self.PROP_TEST_DEVICE_ID, ''
-        )
+        ret_all = self.dc.listConfigurationFromName(
+            self.PROP_TEST_DEVICE_ID, '')
         self.assertTrue(
-            get_resp_all['success'],
+            ret_all['success'],
             f"List configuration with empty name part failed for device "
-            f"'{self.PROP_TEST_DEVICE_ID}': {get_resp_all['reason']}"
+            f"'{self.PROP_TEST_DEVICE_ID}': {ret_all['reason']}"
         )
-        self.assertEqual(len(get_resp_all['configs']), 3)
+        self.assertEqual(len(ret_all['configs']), 3)
 
         # An unused name part returns an empty list.
-        get_resp_unused = self.dc.listConfigurationFromName(
+        ret_unused = self.dc.listConfigurationFromName(
             self.PROP_TEST_DEVICE_ID, 'An unused config name'
         )
-        self.assertTrue(get_resp_unused['success'])
-        self.assertEqual(len(get_resp_unused['configs']), 0)
-
-    def _test_save_get_last_config(self):
-        """Checks that saving more than one config and then retrieving the
-           latest with a given priority works.
-
-           Also checks that an attempt to retrieve the latest configuration
-           for a priority that hasn't yet been used triggers a RemoteException.
-        """
-        cfg_name_4 = 'PropertyTestConfigIV'
-        cfg_desc_4 = 'Another simple description for the configuration'
-        ok, msg = self.dc.saveConfigurationFromName(
-            cfg_name_4, [self.PROP_TEST_DEVICE_ID], cfg_desc_4, 2
-        )
-        self.assertTrue(
-            ok,
-            f"Save configuration for device '{self.PROP_TEST_DEVICE_ID}' "
-            f"failed: '{msg}'"
-        )
-        cfg_name_5 = 'PropertyTestConfigV'
-        cfg_desc_5 = 'Yet another simple description for the configuration'
-        ok, msg = self.dc.saveConfigurationFromName(
-            cfg_name_5, [self.PROP_TEST_DEVICE_ID], cfg_desc_5, 1
-        )
-
-        get_resp = self.dc.getLastConfiguration(
-            self.PROP_TEST_DEVICE_ID, 2
-        )
-        self.assertTrue(
-            get_resp['success'],
-            "Get last configuration with priority '2' failed for device "
-            f"'{self.PROP_TEST_DEVICE_ID}: '{get_resp['reason']}"
-        )
-        config = get_resp['config']
-        self.assertEqual(config['name'], cfg_name_4)
-        self.assertEqual(config['description'], cfg_desc_4)
-        self.assertEqual(config['priority'], 2)
-
-        get_resp_pri1 = self.dc.getLastConfiguration(
-            self.PROP_TEST_DEVICE_ID, 1
-        )
-        self.assertTrue(
-            get_resp_pri1['success'],
-            "Get last configuration with priority '1' failed for device "
-            f"'{self.PROP_TEST_DEVICE_ID}: '{get_resp_pri1['reason']}"
-        )
-        config = get_resp_pri1['config']
-        self.assertEqual(config['name'], cfg_name_5)
-        self.assertEqual(config['description'], cfg_desc_5)
-        self.assertEqual(config['priority'], 1)
-
-        # An attempt to retrieve the last configuration of a given
-        # priority when such a configuration has not yet been saved,
-        # raises a RemoteException and returns a failure.
-        get_resp_pri3 = self.dc.getLastConfiguration(
-            self.PROP_TEST_DEVICE_ID, 3
-        )
-        self.assertEqual(get_resp_pri3['success'], False)
-        self.assertIn('Remote Exception', get_resp_pri3['reason'])
-        self.assertIn('No configuration for device', get_resp_pri3['reason'])
+        self.assertTrue(ret_unused['success'])
+        self.assertEqual(len(ret_unused['configs']), 0)
 
 
 if __name__ == '__main__':

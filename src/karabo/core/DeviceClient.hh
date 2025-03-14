@@ -809,9 +809,7 @@ namespace karabo {
              *         in the case of success. The returned hash will also have a key "configs" whose value will be
              *         a vector of hashes with data about the configs that match the name part. If no configuration
              *         is saved for the device under a name that contains the namePart, the "configs" vector will be
-             *         empty. Each hash in the "configs" vector contains the keys "name", "timepoint", "description",
-             *         "priority" and "user". The configuration itself and its corresponding schema are not returned
-             *         by this method.
+             *         empty. Each hash in the "configs" vector contains the keys "name", "timepoint".
              */
             karabo::util::Hash listConfigurationFromName(const std::string& deviceId, const std::string& namePart = "");
 
@@ -853,18 +851,12 @@ namespace karabo {
              *
              * @param name to be assigned to the saved collection of device configurations (with schemas).
              * @param deviceIds the devices whose current configurations (and schemas) are to be saved.
-             * @param description the description for the collection of saved configurations.
-             * @param priority the priority of the configurations saved (value between 1 and 3). An invalid
-             *                 value leads to an operation failure.
-             * @param user the user that requested the operation ("." means anonymous).
              * @return a pair with a success flag (true when the operation succeeds) in the first position and
              *         a reason failture description (empty in case of success) in the second position.
              *
              */
             std::pair<bool, std::string> saveConfigurationFromName(const std::string& name,
-                                                                   const std::vector<std::string>& deviceIds,
-                                                                   const std::string& description = std::string(),
-                                                                   int priority = 1, const std::string& user = ".");
+                                                                   const std::vector<std::string>& deviceIds);
 
             /**
              * Register a throttled callback handler to be triggered when a new device instance appears, updates its
