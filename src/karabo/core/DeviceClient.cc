@@ -1448,68 +1448,11 @@ namespace karabo {
         }
 
 
-        karabo::util::Hash DeviceClient::getLastConfiguration(const std::string& deviceId, int priority) {
-            karabo::util::Hash slotReply;
+        std::pair<bool, std::string> DeviceClient::saveConfigurationFromName(
+              const std::string& name, const std::vector<std::string>& deviceIds) {
             karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
             if (p) {
-                try {
-                    const auto& getParams = karabo::util::Hash("deviceId", deviceId, "priority", priority);
-                    p->request(m_configManagerId, "slotGetLastConfiguration", getParams)
-                          .timeout(10 * m_internalTimeout)
-                          .receive(slotReply);
-                    // The slot returns a hash with the slot arguments (input hash) under the key "input"
-                    // and the retrieved config (if any) under the key "item".
-                    karabo::util::Hash resultHash("success", true, "reason", "");
-                    if (slotReply.has("item")) {
-                        resultHash.set("config", slotReply.get<karabo::util::Hash>("item"));
-                    } else {
-                        resultHash.set("config", karabo::util::Hash());
-                    }
-                    return resultHash;
-                } catch (const TimeoutException&) {
-                    Exception::clearTrace();
-                    std::string errMsg = "Request to get last configuration with priority '" +
-                                         karabo::util::toString(priority) + "' for device '" + deviceId +
-                                         "' timed out.";
-                    KARABO_LOG_FRAMEWORK_ERROR << errMsg;
-                    return karabo::util::Hash("success", false, "reason", errMsg, "config", karabo::util::Hash());
-                } catch (const std::exception& ex) {
-                    std::string errMsg = "Request to get configuration with priority '" +
-                                         karabo::util::toString(priority) + "' for device '" + deviceId +
-                                         "' failed with error: " + ex.what();
-                    KARABO_LOG_FRAMEWORK_ERROR << errMsg;
-                    return karabo::util::Hash("success", false, "reason", errMsg, "config", karabo::util::Hash());
-                }
-
-            } else {
-                // Could not promote m_signalSlotable to shared pointer. This should happen only when
-                // inappropriate use of DeviceClient is made.
-                std::string errMsg = "Request to get configuration with priority '" + karabo::util::toString(priority) +
-                                     "' for device '" + deviceId +
-                                     "' failed with error: DeviceClient being destroyed; " +
-                                     "could not call ConfigurationManager slot.";
-                KARABO_LOG_FRAMEWORK_ERROR << errMsg;
-                return karabo::util::Hash("success", false, "reason", errMsg, "config", karabo::util::Hash());
-            }
-        }
-
-
-        std::pair<bool, std::string> DeviceClient::saveConfigurationFromName(const std::string& name,
-                                                                             const std::vector<std::string>& deviceIds,
-                                                                             const std::string& description,
-                                                                             int priority, const std::string& user) {
-            // TODO: turn priority into an Enum class once ConfigurationManager moves into the Framework.
-            if (priority < 1 || priority > 3) {
-                return std::make_pair(false, "'priority' argument out of range; must be between 1 and 3.");
-            }
-
-            karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
-            if (p) {
-                auto saveParams = karabo::util::Hash("name", name, "deviceIds", deviceIds, "priority", priority,
-                                                     "description", description);
-                if (user != ".") {
-                    saveParams.set<std::string>("user", user);
-                }
+                auto saveParams = karabo::util::Hash("name", name, "deviceIds", deviceIds);
 
                 try {
                     karabo::util::Hash slotReply;

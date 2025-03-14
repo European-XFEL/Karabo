@@ -13,35 +13,49 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
-import unittest
+from datetime import datetime
+
+import pytest
 
 from karabo.config_db.utils import (
-    hashFromBase64Bin, hashToBase64Bin, schemaFromBase64Bin, schemaToBase64Bin)
+    datetime_from_string, hashFromBase64Bin, hashToBase64Bin,
+    schemaFromBase64Bin, schemaToBase64Bin)
 from karabo.native import Hash, NodeType, Schema
 
 
-class TestUtils(unittest.TestCase):
-
-    def testHashConversions(self):
-        h = Hash('a', 1, 'b', 2.0)
-        encHash = hashToBase64Bin(h)
-        decHash = hashFromBase64Bin(encHash)
-        self.assertEqual(h, decHash)
-
-    def testSchemaConversions(self):
-        h = Hash("a", None)
-        h["a", "nodeType"] = NodeType.Leaf.value
-        h["a", "valueType"] = "INT32"
-        h["a", "description"] = "a's description"
-        h["a", "allowedStates"] = ["INIT", "UNKNOWN"]
-        h["a", "unitSymbol"] = "A"
-        h["a", "defaultValue"] = 22.5
-        h["a", "alias"] = "Karabo"
-        sch = Schema('blub', hash=h)
-        encSch = schemaToBase64Bin(sch)
-        decSch = schemaFromBase64Bin(encSch)
-        self.assertEqual(sch.hash, decSch.hash)
+def test_HashConversions():
+    h = Hash('a', 1, 'b', 2.0)
+    encHash = hashToBase64Bin(h)
+    decHash = hashFromBase64Bin(encHash)
+    assert h == decHash
 
 
-if __name__ == '__main__':
-    unittest.main()
+def test_SchemaConversions():
+    h = Hash("a", None)
+    h["a", "nodeType"] = NodeType.Leaf.value
+    h["a", "valueType"] = "INT32"
+    h["a", "description"] = "a's description"
+    h["a", "allowedStates"] = ["INIT", "UNKNOWN"]
+    h["a", "unitSymbol"] = "A"
+    h["a", "defaultValue"] = 22.5
+    h["a", "alias"] = "Karabo"
+    sch = Schema('blub', hash=h)
+    encSch = schemaToBase64Bin(sch)
+    decSch = schemaFromBase64Bin(encSch)
+    assert sch.hash == decSch.hash
+
+
+def test_datetime_from_string():
+    iso_date = "2024-03-10T15:30:45.123456"
+    normal_date = "2024-03-10 15:30:45.123456"
+    normal_strip_date = "2024-03-10 15:30:45"
+
+    assert datetime_from_string(iso_date) == datetime(
+        2024, 3, 10, 15, 30, 45, 123456)
+    assert datetime_from_string(normal_date) == datetime(
+        2024, 3, 10, 15, 30, 45, 123456)
+    assert datetime_from_string(normal_strip_date) == datetime(
+        2024, 3, 10, 15, 30, 45)
+
+    with pytest.raises(ValueError):
+        datetime_from_string("Throw-Date")

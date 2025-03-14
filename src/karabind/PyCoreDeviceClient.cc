@@ -555,46 +555,21 @@ void exportPyCoreDeviceClient(py::module_& m) {
                 "\"config\" a hash with data about the named device configuration.")
 
           .def(
-                "getLastConfiguration",
-                [](const DeviceClientWrap::Pointer& self, const std::string& deviceId, int priority) {
-                    Hash result;
-                    {
-                        py::gil_scoped_release release;
-                        result = self->getLastConfiguration(deviceId, priority);
-                    }
-                    return py::cast(std::move(result));
-                },
-                py::arg("deviceId"), py::arg("priority") = 1,
-                "getLastConfiguration(deviceId, priority): Returns the most recently saved device"
-                "configuration with a "
-                "given priority.\n"
-                "May return an empty result if there's no"
-                "configuration stored for the device with the given priority.\n"
-                "The function return is a"
-                "Hash with the following keys:\n",
-                "\"success\" a boolean indicating whether the operation was successful.\n"
-                "\"reason\" a string describing the failure condition - empty on success.\n"
-                "\"config\" a hash with data about the most recent device configuration with the given"
-                "priority.")
-
-          .def(
                 "saveConfigurationFromName",
-                [](const DeviceClientWrap::Pointer& self, const std::string& name, const py::object& deviceIds,
-                   const std::string& description, int priority, const std::string& user) {
+                [](const DeviceClientWrap::Pointer& self, const std::string& name, const py::object& deviceIds) {
                     std::vector<std::string> devices = wrapper::fromPySequenceToVectorString(deviceIds);
                     std::pair<bool, std::string> p;
                     {
                         py::gil_scoped_release release;
-                        p = self->saveConfigurationFromName(name, devices, description, priority, user);
+                        p = self->saveConfigurationFromName(name, devices);
                     }
                     return py::make_tuple(p.first, p.second);
                 },
-                py::arg("name"), py::arg("deviceIds"), py::arg("description") = "", py::arg("priority") = 1,
-                py::arg("user") = ".",
-                "saveConfigurationFromName(name, deviceIds, description, priority, user):\n"
+                py::arg("name"), py::arg("deviceIds"),
+                "saveConfigurationFromName(name, deviceIds):\n"
                 "Saves the current device configurations (and the corresponding schemas) for a list of "
-                "deviceIds\nin the Configuration Database under a common name, user, priority and "
-                "description.\nThe function return is a pair (tuple) with a boolean value indicating the "
+                "deviceIds\nin the Configuration Database under a common name.\nThe function return is a pair (tuple) "
+                "with a boolean value indicating the "
                 "operation success as\nthe first value and a string detailing the failure cause when the "
                 "operation fails.")
 

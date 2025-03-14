@@ -73,10 +73,6 @@ def test_device_client_sync_api():
     assert 'status' in props
     assert 'vectors.boolProperty' in props
 
-    last_conf = c.getLastConfiguration(deviceId)
-    assert last_conf['success'] is False
-    assert 'config' in last_conf
-
     comms = c.getCurrentlyExecutableCommands(deviceId)
     assert 'writeOutput' in comms
     assert 'eosOutput' in comms
