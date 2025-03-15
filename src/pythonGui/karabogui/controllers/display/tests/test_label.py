@@ -19,8 +19,7 @@ import pytest
 from karabo.native import Configurable, Float, String
 from karabogui.binding.api import (
     DeviceClassProxy, PropertyProxy, ProxyStatus, build_binding)
-from karabogui.indicators import (
-    ALL_OK_COLOR, PROPERTY_ALARM_COLOR, PROPERTY_WARN_COLOR)
+from karabogui.indicators import ALL_OK_COLOR
 from karabogui.testing import set_proxy_value
 
 from ..label import DisplayLabel
@@ -28,8 +27,7 @@ from ..label import DisplayLabel
 
 class Object(Configurable):
     string = String()
-    alarms = Float(alarmLow=-2.0, alarmHigh=2.0,
-                   warnLow=-1.0, warnHigh=1.0)
+    alarms = Float()
     faulty = Float(displayType="fmt|{:*1271f}")
 
 
@@ -71,9 +69,9 @@ def test_alarm_color(label_setup):
     assert controller.internal_widget.text() == "0.75"
     assert controller.bg_color == ALL_OK_COLOR
     set_proxy_value(alarms, "alarms", 3.0)
-    assert controller.bg_color == PROPERTY_ALARM_COLOR
+    assert controller.bg_color == ALL_OK_COLOR
     set_proxy_value(alarms, "alarms", 1.5)
-    assert controller.bg_color == PROPERTY_WARN_COLOR
+    assert controller.bg_color == ALL_OK_COLOR
 
 
 def test_wrong_format(label_setup):

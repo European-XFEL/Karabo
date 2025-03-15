@@ -1096,48 +1096,6 @@ class Tests(TestCase):
         self.assertEqual(attrs["displayType"], "Slot")
         self.assertEqual(attrs["nodeType"], 1)
 
-    def assert_alarm_schema(self, descriptor, value, alarm_type):
-        _, attrs = descriptor.toSchemaAndAttrs(None, None)
-        self.assertEqual(attrs[alarm_type], value)
-        self.assertIn(f"alarmInfo_{alarm_type}", attrs)
-        self.assertIn(f"alarmNeedsAck_{alarm_type}", attrs)
-
-        for other in ["alarmHigh", "warnHigh", "warnLow", "alarmLow"]:
-            if other == alarm_type:
-                continue
-            self.assertNotIn(other, attrs)
-            self.assertNotIn(f"alarmInfo_{other}", attrs)
-            self.assertNotIn(f"alarmNeedsAck_{other}", attrs)
-
-    def test_alarms_schema(self):
-        # Test alarmLow
-        descriptor = UInt8(alarmLow=5)
-        self.assert_alarm_schema(descriptor, 5, "alarmLow")
-
-        # Test that alarmNeedsAck can be set to `True`
-        # and info is not empty when set
-        descriptor = UInt8(alarmLow=15, alarmNeedsAck_alarmLow=True,
-                           alarmInfo_alarmLow="Info not empty")
-        _, attrs = descriptor.toSchemaAndAttrs(None, None)
-        self.assertEqual(attrs["alarmLow"], 15)
-        self.assertEqual(attrs["alarmInfo_alarmLow"], "Info not empty")
-        self.assertEqual(attrs["alarmNeedsAck_alarmLow"], True)
-
-        # Test all other alarm types generally
-        descriptor = UInt8(alarmHigh=15)
-        self.assert_alarm_schema(descriptor, 15, "alarmHigh")
-        descriptor = UInt8(warnHigh=35)
-        self.assert_alarm_schema(descriptor, 35, "warnHigh")
-        descriptor = UInt8(warnLow=95)
-        self.assert_alarm_schema(descriptor, 95, "warnLow")
-
-        empty = UInt8()
-        _, attrs = empty.toSchemaAndAttrs(None, None)
-        for other in ["alarmHigh", "warnHigh", "warnLow", "alarmHigh"]:
-            self.assertNotIn(other, attrs)
-            self.assertNotIn(f"alarmInfo_{other}", attrs)
-            self.assertNotIn(f"alarmNeedsAck_{other}", attrs)
-
     def test_initialize_wrong(self):
         """Test the initialization of a descriptor with wrong input"""
         # Allowed states must be states
@@ -1152,12 +1110,7 @@ class Tests(TestCase):
         d = UInt8(tags=["1", "2"])
         self.assertIsNotNone(d)
 
-        # Boolean attributes must be booleans, e.g. needsAck
-        with self.assertRaises(ValueError):
-            d = UInt16(defaultValue=2, alarmLow=0.2,
-                       alarmNeedsAck_alarmLow=1)
-        d = UInt16(defaultValue=2, alarmLow=0.2,
-                   alarmNeedsAck_alarmLow=True)
+        d = UInt16(defaultValue=2)
         self.assertIsNotNone(d)
 
         # Integers can have Enums and defaultValue of Enums, although
@@ -1222,8 +1175,7 @@ class Tests(TestCase):
             self.assertEqual(desc, get_descriptor_from_data(d))
 
     def assert_numpy_attributes(self, descr_klass, minInc, maxInc,
-                                minExc, maxExc, alarmLow, warnLow,
-                                warnHigh, alarmHigh, defaultValue,
+                                minExc, maxExc, defaultValue,
                                 dtype=None):
 
         descriptor = descr_klass(
@@ -1231,11 +1183,7 @@ class Tests(TestCase):
             minInc=minInc,
             maxInc=maxInc,
             minExc=minExc,
-            maxExc=maxExc,
-            alarmLow=alarmLow,
-            warnLow=warnLow,
-            warnHigh=warnHigh,
-            alarmHigh=alarmHigh)
+            maxExc=maxExc)
 
         dtype = dtype or descriptor.numpy
         self.assertEqual(descriptor.defaultValue, defaultValue)
@@ -1251,16 +1199,6 @@ class Tests(TestCase):
         self.assertEqual(descriptor.maxExc, maxExc)
         self.assertEqual(descriptor.maxExc.dtype, dtype)
 
-        # Alarms
-        self.assertEqual(descriptor.alarmLow, alarmLow)
-        self.assertEqual(descriptor.alarmLow.dtype, dtype)
-        self.assertEqual(descriptor.warnLow, warnLow)
-        self.assertEqual(descriptor.warnLow.dtype, dtype)
-        self.assertEqual(descriptor.warnHigh, warnHigh)
-        self.assertEqual(descriptor.warnHigh.dtype, dtype)
-        self.assertEqual(descriptor.alarmHigh, alarmHigh)
-        self.assertEqual(descriptor.alarmHigh.dtype, dtype)
-
         # Assert type
         self.assertEqual(descriptor.__class__, Type.types[descriptor.number])
         self.assertEqual(descriptor.__class__,
@@ -1273,7 +1211,7 @@ class Tests(TestCase):
                      UInt8, UInt16, UInt32, UInt64]:
             self.assert_numpy_attributes(
                 desc, 1, 10, 0, 11,  # Desc, minInc, maxInc, minExc, maxExc,
-                2, 5, 8, 9, 3)  # alarmLow, warnLow, warnHigh, alarmHigh, value
+                3)  # value
 
         # We assert numpy attributes as well for Float and Double, they will
         # be casted, but all attribute for floating points have 64 bit!
@@ -1281,8 +1219,6 @@ class Tests(TestCase):
             self.assert_numpy_attributes(
                 desc, 1.30, 10.02,  # Desc, minInc, maxInc,
                 0.12, 11.37,  # minExc, maxExc,
-                2.02, 5.02,  # alarmLow, warnLow,
-                8.012, 9.013,  # warnHigh, alarmHigh,
                 3.07, dtype=np.float64)  # default value, dtype
 
         # Attributes are casted to their numpy type

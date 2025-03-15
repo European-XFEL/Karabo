@@ -22,14 +22,13 @@ from karabo.native import Configurable, Float
 from karabogui.binding.api import (
     DeviceClassProxy, PropertyProxy, ProxyStatus, build_binding)
 from karabogui.controllers.display.eval import Evaluator
-from karabogui.indicators import (
-    ALL_OK_COLOR, PROPERTY_ALARM_COLOR, PROPERTY_WARN_COLOR)
+from karabogui.indicators import ALL_OK_COLOR
 from karabogui.testing import set_proxy_value
 
 
 class Object(Configurable):
     prop = Float()
-    alarms = Float(alarmLow=-2.0, alarmHigh=2.0, warnLow=-1.0, warnHigh=1.0)
+    alarms = Float()
 
 
 @pytest.fixture
@@ -103,10 +102,10 @@ def test_alarm_warning_fine_color(evaluator_setup):
     assert controller._bg_color == ALL_OK_COLOR
 
     set_proxy_value(alarms, "alarms", 3.0)
-    assert controller._bg_color == PROPERTY_ALARM_COLOR
+    assert controller._bg_color == ALL_OK_COLOR
 
     set_proxy_value(alarms, "alarms", 1.5)
-    assert controller._bg_color == PROPERTY_WARN_COLOR
+    assert controller._bg_color == ALL_OK_COLOR
 
 
 def test_type_conversion(evaluator_setup):

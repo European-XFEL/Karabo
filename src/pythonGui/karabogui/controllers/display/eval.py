@@ -20,8 +20,6 @@ from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QAction, QDialog, QFrame, QInputDialog, QLabel
 from traits.api import Callable, Dict, Instance, Str, Tuple
 
-from karabo.common.api import (
-    KARABO_ALARM_HIGH, KARABO_ALARM_LOW, KARABO_WARN_HIGH, KARABO_WARN_LOW)
 from karabo.common.scenemodel.api import EvaluatorModel
 from karabogui import messagebox
 from karabogui.binding.api import (
@@ -32,8 +30,7 @@ from karabogui.controllers.api import (
     BaseBindingController, add_unit_label, register_binding_controller)
 from karabogui.dialogs.format_label import FormatLabelDialog
 from karabogui.fonts import get_font_size_from_dpi
-from karabogui.indicators import (
-    ALL_OK_COLOR, PROPERTY_ALARM_COLOR, PROPERTY_WARN_COLOR)
+from karabogui.indicators import ALL_OK_COLOR
 from karabogui.util import generateObjectName
 
 BINDING_TYPES = (CharBinding, ComplexBinding, FloatBinding, StringBinding,
@@ -104,9 +101,6 @@ class Evaluator(BaseBindingController):
         if value is None:
             return
 
-        binding = proxy.binding
-        self._check_alarms(binding, value)
-
         try:
             disp_value = str(self.function(value))
         except Exception as e:
@@ -130,23 +124,6 @@ class Evaluator(BaseBindingController):
         self.model.expression = text
         if get_binding_value(self.proxy) is not None:
             self.value_update(self.proxy)
-
-    def _check_alarms(self, binding, value):
-        attributes = binding.attributes
-        alarm_low = attributes.get(KARABO_ALARM_LOW)
-        alarm_high = attributes.get(KARABO_ALARM_HIGH)
-        warn_low = attributes.get(KARABO_WARN_LOW)
-        warn_high = attributes.get(KARABO_WARN_HIGH)
-        if ((alarm_low is not None and value < alarm_low) or
-                (alarm_high is not None and value > alarm_high)):
-            self._bg_color = PROPERTY_ALARM_COLOR
-        elif ((warn_low is not None and value < warn_low) or
-                (warn_high is not None and value > warn_high)):
-            self._bg_color = PROPERTY_WARN_COLOR
-        else:
-            self._bg_color = ALL_OK_COLOR
-        sheet = self._style_sheet.format(self._bg_color)
-        self.widget.setStyleSheet(sheet)
 
     # -----------------------------------------------------------------------
     # Formatting methods
