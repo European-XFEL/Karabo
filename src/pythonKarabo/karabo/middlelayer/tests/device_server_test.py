@@ -45,7 +45,6 @@ class FaultyDevice(Device):
 async def test_device_server_no_plugins():
     serverId = f"testMDLServer-{uuid.uuid4()}"
     configuration = {"timeServerId": "KaraboTimeServer",
-                     "scanPlugins": False,
                      "track": True}
     server = create_device_server(serverId, config=configuration)
     assert server is not None
@@ -89,7 +88,6 @@ async def test_device_server_instantiate_plugins():
 
     configuration = {"deviceClasses": ["PropertyTestMDL"],
                      "timeServerId": "KaraboTimeServer",
-                     "scanPlugins": False,
                      "serverFlags": ["Development"]}
     server = create_device_server(serverId, config=configuration)
     assert server is not None

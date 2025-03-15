@@ -20,29 +20,25 @@ import socket
 import sys
 import traceback
 from asyncio import (
-    TimeoutError, all_tasks, create_subprocess_exec, gather, get_event_loop,
-    set_event_loop, sleep, wait_for)
+    all_tasks, gather, get_event_loop, set_event_loop, sleep, wait_for)
 from collections import ChainMap
 from enum import Enum
 from importlib.metadata import entry_points
 from json import loads
 from signal import SIGTERM
-from subprocess import PIPE
 
 from karabo import __version__ as karaboVersion
 from karabo.common.api import KARABO_LOGGER_CONTENT_DEFAULT, ServerFlags
 from karabo.native import (
-    AccessLevel, AccessMode, Assignment, Bool, Descriptor, Hash, KaraboError,
-    Node, String, TimeMixin, VectorString, decodeBinary, encodeBinary,
-    get_timestamp, isSet)
+    AccessLevel, AccessMode, Assignment, Descriptor, Hash, KaraboError, Node,
+    String, TimeMixin, VectorString, get_timestamp, isSet)
 
 from .configuration import validate_init_configuration
 from .eventloop import EventLoop
 from .heartbeat_mixin import HeartBeatMixin
 from .logger import CacheLog, build_logger_node
 from .signalslot import SignalSlotable, slot
-from .synchronization import (
-    FutureDict, allCompleted, background, firstCompleted)
+from .synchronization import allCompleted, background
 
 INIT_DESCRIPTION = """A JSON object representing the devices to be initialized.
 It should be formatted like a dictionary of dictionaries.
@@ -55,11 +51,10 @@ For example:
             }
         }.
 """
-SCAN_PLUGINS_TIME = 3
 
 
-class DeviceServerBase(SignalSlotable):
-    __version__ = "1.3"
+class MiddleLayerDeviceServer(HeartBeatMixin, SignalSlotable):
+    __version__ = "3.0"
 
     serverId = String(
         displayedName="Server ID",
@@ -88,13 +83,6 @@ class DeviceServerBase(SignalSlotable):
 
     _device_initializer = {}
 
-    scanPlugins = Bool(
-        displayedName="Scan plug-ins?",
-        description="Unused variable.",
-        assignment=Assignment.OPTIONAL, defaultValue=True,
-        accessMode=AccessMode.INITONLY,
-        requiredAccessLevel=AccessLevel.EXPERT)
-
     log = Node(build_logger_node(),
                description="Logging settings",
                displayedName="Logger",
@@ -114,10 +102,6 @@ class DeviceServerBase(SignalSlotable):
         assignment=Assignment.INTERNAL,
         accessMode=AccessMode.INITONLY)
 
-    def getClasses(self):
-        """This is an endpoint of multiple inheritance."""
-        return []
-
     def list_plugins(self, namespace):
         return list(entry_points(group=namespace))
 
@@ -133,10 +117,7 @@ class DeviceServerBase(SignalSlotable):
 
         self.plugins = {}
         self.plugin_errors = {}
-        self.processes = {}
-        self.bounds = {}
         self.pid = os.getpid()
-        self.seqnum = 0
 
     def _initInfo(self):
         info = super()._initInfo()
@@ -165,6 +146,9 @@ class DeviceServerBase(SignalSlotable):
         # before coming online.
         await self.scanPluginsOnce()
         await super()._run(**kwargs)
+        if isSet(self.timeServerId):
+            await self._ss.async_connect(self.timeServerId, "signalTimeTick",
+                                         self.slotTimeTick)
         self._ss.enter_context(self.log.setBroker(self._ss))
         self.logger = self.log.logger
         self.logger.info(
@@ -177,17 +161,6 @@ class DeviceServerBase(SignalSlotable):
 
     def _generateDefaultServerId(self):
         return self.hostName + "_Server_" + str(os.getpid())
-
-    async def scanPluginsOnce(self):
-        """load all available entry points, return whether new plugin found
-
-        This is an endpoint for multiple inheritance. Specializations should
-        try to load their plugins, and return whether a new plugin was found.
-        They should then call ``super()``, as another specialization may
-        also need to find new plugins. The default implementation returns
-        `False`, as it can never load a plugin.
-        """
-        return False
 
     @slot
     async def slotStartDevice(self, hash):
@@ -202,15 +175,6 @@ class DeviceServerBase(SignalSlotable):
             e.logmessage = ('Could not start device "%s" of class "%s"',
                             deviceId, classId)
             raise
-
-    async def startDevice(self, classId, deviceId, config):
-        """Start the device `deviceId`
-
-        This is an endpoint of multiple inheritance. Every specialization
-        should start a device if it can, or otherwise call super(). This is
-        the failback that just raises an error.
-        """
-        raise RuntimeError(f"Unknown class '{classId}'")
 
     def parse(self, hash):
         classId = hash['classId']
@@ -241,26 +205,7 @@ class DeviceServerBase(SignalSlotable):
         classes = self.getClasses()
         if classes:
             return Hash("deviceClasses", list(classes))
-        else:
-            return Hash()
-
-    async def slotKillServer(self, message=None):
-        await self.slotKillDevice(message)
-        # Stop event loop on the next cycle ...
-        await sleep(0.1)
-        get_event_loop().call_soon(self.stopEventLoop)
-
-    slotKillServer = slot(slotKillServer, passMessage=True)
-
-    @slot
-    def slotGetClassSchema(self, classId):
-        """Return the schema of class `classId`
-
-        This is an endpoint for multiple inheritance. Any specialization
-        should return the schema for `classId`, or call super(). This fail
-        back implementation just raises an error.
-        """
-        raise RuntimeError(f'Unknown class "{classId}"')
+        return Hash()
 
     def _generateDefaultDeviceId(self, devClassId):
         self.instanceCount += 1
@@ -353,12 +298,7 @@ class DeviceServerBase(SignalSlotable):
                 loop = get_event_loop()
                 loop.create_task(server.slotKillServer(), instance=server)
 
-            if os.name == "nt":
-                print(
-                    "WARNING: process interruptions will not be handled "
-                    "gracefully due to limitations of the operating system."
-                )
-            else:
+            if not os.name == "nt":
                 loop.add_signal_handler(SIGTERM, sig_kill_handler)
             # NOTE: The server listens to broadcasts and we set a flag in the
             # signal slotable
@@ -401,8 +341,6 @@ class DeviceServerBase(SignalSlotable):
         # Not required information anymore!
         del self._device_initializer
 
-
-class MiddleLayerDeviceServer(HeartBeatMixin, DeviceServerBase):
     pluginNamespace = String(
         displayedName="Plugin Namespace",
         description="Namespace to search for middle layer plugins",
@@ -413,15 +351,6 @@ class MiddleLayerDeviceServer(HeartBeatMixin, DeviceServerBase):
     timeServerId = String(
         displayedName="TimeServer",
         accessMode=AccessMode.INITONLY)
-
-    def __init__(self, configuration):
-        super().__init__(configuration)
-
-    async def _run(self, **kwargs):
-        await super()._run(**kwargs)
-        if isSet(self.timeServerId):
-            await self._ss.async_connect(self.timeServerId, "signalTimeTick",
-                                         self.slotTimeTick)
 
     @slot
     def slotLoggerContent(self, info):
@@ -475,9 +404,8 @@ class MiddleLayerDeviceServer(HeartBeatMixin, DeviceServerBase):
             Hash("log", level))
 
     async def scanPluginsOnce(self):
-        changes = await super().scanPluginsOnce()
         if not self.pluginNamespace:
-            return changes
+            return
         classes = set(self.deviceClasses)
         entrypoints = self.list_plugins(self.pluginNamespace)
         for ep in entrypoints:
@@ -486,17 +414,12 @@ class MiddleLayerDeviceServer(HeartBeatMixin, DeviceServerBase):
             try:
                 self.plugins[ep.name] = (await get_event_loop().
                                          run_in_executor(None, ep.load))
-                changes = True
             except BaseException:
                 details = traceback.format_exc()
                 self.plugin_errors[ep.name] = details
 
-        return changes
-
     def getClasses(self) -> list:
-        classes = super().getClasses()
-        classes.extend(list(self.plugins))
-
+        classes = list(self.plugins)
         return classes
 
     @slot
@@ -504,12 +427,14 @@ class MiddleLayerDeviceServer(HeartBeatMixin, DeviceServerBase):
         cls = self.plugins.get(classId)
         if cls is not None:
             return cls.getClassSchema(), classId, self.serverId
-        return super().slotGetClassSchema(classId)
+        raise RuntimeError(
+            f"Class {classId} not available on this server")
 
     async def startDevice(self, classId, deviceId, config):
         cls = self.plugins.get(classId)
         if cls is None:
-            return (await super().startDevice(classId, deviceId, config))
+            raise RuntimeError(
+                f"Class {classId} not available on this server")
         # Server validates the configuration of the device
         invalid = validate_init_configuration(
             cls.getClassSchema(), config)
@@ -550,7 +475,10 @@ class MiddleLayerDeviceServer(HeartBeatMixin, DeviceServerBase):
                     f"were shutdown: {devices} --- {errors.values()}")
 
         # then kill the server
-        await super().slotKillServer(message)
+        await self.slotKillDevice(message)
+        # Stop event loop on the next cycle ...
+        await sleep(0.1)
+        get_event_loop().call_soon(self.stopEventLoop)
 
         return self.serverId
 
@@ -588,196 +516,13 @@ class MiddleLayerDeviceServer(HeartBeatMixin, DeviceServerBase):
             device.slotInstanceUpdated(instanceId, info)
 
 
-class BoundDeviceServer(DeviceServerBase):
-    boundNamespace = String(
-        displayedName="Bound Namespace",
-        description="Namespace to search for bound API plugins",
-        assignment=Assignment.OPTIONAL,
-        defaultValue="karabo.bound_device",
-        requiredAccessLevel=AccessLevel.EXPERT)
-
-    bannedClasses = VectorString(
-        displayedName="Banned Classes",
-        description="Device classes banned from scanning "
-                    "as they made problems",
-        defaultValue=[], requiredAccessLevel=AccessLevel.EXPERT)
-
-    def __init__(self, configuration):
-        super().__init__(configuration)
-        self._process_futures = FutureDict()
-
-    async def scanPluginsOnce(self):
-        changes = await super().scanPluginsOnce()
-        if not self.boundNamespace:
-            return changes
-        classes = set(self.deviceClasses)
-        class_ban = set(self.bannedClasses)
-        entrypoints = self.list_plugins(self.boundNamespace)
-        for ep in entrypoints:
-            if (ep.name in self.bounds or (classes and
-                                           ep.name not in classes) or
-                    ep.name in class_ban):
-                continue
-            try:
-                env = dict(os.environ)
-                env["PYTHONPATH"] = self.pluginDirectory
-                process = await create_subprocess_exec(
-                    sys.executable, "-m", "karabo.bound.launcher",
-                    "schema", self.boundNamespace, ep.name,
-                    env=env, stdout=PIPE)
-                try:
-                    schema = await process.stdout.read()
-                    await process.wait()
-                except BaseException:
-                    process.kill()
-                    raise
-                if process.returncode != 0:
-                    # the parsing failed. raise an error so we do not repeat
-                    msg = f"schema conversion returned {process.returncode}"
-                    raise RuntimeError(msg)
-                self.bounds[ep.name] = decodeBinary(schema)[ep.name]
-                changes = True
-            except BaseException:
-                class_ban.add(ep.name)
-                self.logger.exception('Cannot load bound plugin "%s"', ep.name)
-        self.bannedClasses = list(class_ban)
-        return changes
-
-    @slot
-    def slotGetClassSchema(self, classId):
-        schema = self.bounds.get(classId)
-        if schema is not None:
-            return schema, classId, self.serverId
-        return super().slotGetClassSchema(classId)
-
-    @slot
-    def slotDeviceGone(self, instanceId):
-        self.logger.info("Device '{0}' notifies '{1.serverId}' about its "
-                         "future death.".format(instanceId, self))
-        self.deviceInstanceMap.pop(instanceId, None)
-        self.processes.pop(instanceId, None)
-
-    async def supervise(self, deviceId, process, info):
-        async def supervisor():
-            while True:
-                await sleep(100)
-                for i in range(5):
-                    try:
-                        nonlocal info
-                        info = await wait_for(
-                            self.call(deviceId, "slotPing", deviceId,
-                                      1, False),
-                            timeout=5)
-                        break
-                    except TimeoutError:
-                        self.logger.info('could not ping device "%s"',
-                                         deviceId)
-                    except KaraboError as e:
-                        self.logger.warn('ping failed for device "%s": %s',
-                                         deviceId, e.args[0])
-                else:
-                    self.logger.warn('terminating non-responding device "%s"',
-                                     deviceId)
-                    process.terminate()
-                    try:
-                        await sleep(5)
-                        self.logger.warn('killing non-responding device "%s"',
-                                         deviceId)
-                        process.kill()
-                    finally:
-                        self._ss.emit("call", {"*": ['slotInstanceGone']},
-                                      deviceId, info)
-                        self.processes.pop(deviceId, None)
-
-        task = background(supervisor())
-        try:
-            await process.wait()
-        finally:
-            task.cancel()
-
-    async def startDevice(self, classId, deviceId, config):
-        if classId not in self.bounds:
-            return (await super().startDevice(classId, deviceId, config))
-        if "Logger.priority" not in config:
-            config["Logger.priority"] = self.log.level
-        # Logger settings for the three appenders (ostream, file, cache)
-        # would have to be passed via config["_logger_"], as a copy of the
-        # settings of the server. But there are no such parameters for the mdl
-        # server, so we let the bound device choose the defaults...
-
-        config["timeServerId"] = self.timeServerId
-
-        # Would be nice to inject _connection_ config here from what the
-        # server uses, i.e. domain, brokers and the broker type.
-        # Since that is not easily available (except domain via
-        # 'get_event_loop().topic'), we rely on the bound device extracting
-        # the defaults from the environment.
-        env = dict(os.environ)
-        env["PYTHONPATH"] = self.pluginDirectory
-        future = self._process_futures[deviceId]
-        # the device ID is a parameter on the commandline only such that
-        # one can identify via ps which process corresponds to which device
-        process = await create_subprocess_exec(
-            sys.executable, "-m", "karabo.bound.launcher",
-            "run", self.boundNamespace, classId, deviceId,
-            env=env, stdin=PIPE)
-        # Pass as binary as expected by launcher
-        # (XML has trouble with vector_string where str contains comma):
-        process.stdin.write(encodeBinary(config))
-        process.stdin.close()
-        done, pending, error = await firstCompleted(
-            ok=future, error=process.wait())
-        if data := done.get("ok"):
-            success, reason = data
-            msg = deviceId
-            if not success:
-                msg = (f"could not instantiate device {deviceId}."
-                       f" Reason: {reason}")
-                return False, msg
-            self.processes[deviceId] = process
-            background(self.supervise(deviceId, process, done["ok"]))
-            return True, deviceId
-        else:
-            return False, deviceId
-
-    @slot
-    def slotDeviceUp(self, instanceId, success, reason):
-        """A Bound device will announce whether it is up and running
-
-        here.
-        success is a boolean and reason is a string"""
-        is_ = "is" if success else "is not"
-        msg = f"Bound device {instanceId} {is_} up : Reason {reason}"
-        self.logger.info(msg)
-        self._process_futures[instanceId] = (success, reason)
-
-    async def slotKillServer(self, message=None):
-        for device in self.processes:
-            self._ss.emit("call", {device: ["slotKillDevice"]})
-        try:
-            await wait_for(
-                gather(*(p.wait() for p in self.processes.values())),
-                timeout=10)
-        except TimeoutError:
-            self.logger.exception("some processes did not finish in time")
-            for p in self.processes.values():
-                p.kill()
-        self.processes.clear()
-        await super().slotKillServer(message)
-
-        return self.serverId
-
-    slotKillServer = slot(slotKillServer, passMessage=True)
-
-
-class DeviceServer(MiddleLayerDeviceServer, BoundDeviceServer):
+class DeviceServer(MiddleLayerDeviceServer):
     """A Python native Karabo Server
 
     It will load plugins and starts instances of the plugins.
     The plugins are loaded either from specific namespaces
     or from a specific plugin directory.
     """
-    pass
 
 
 if __name__ == '__main__':
