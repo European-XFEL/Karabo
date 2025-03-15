@@ -14,6 +14,8 @@
 # The Karabo Gui is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
+from traits.api import Undefined
+
 from karabo.native import Configurable, Float, Int32
 from karabogui.binding.api import (
     DeviceClassProxy, PropertyProxy, ProxyStatus, build_binding)
@@ -26,12 +28,8 @@ from ..label import DisplayAlarmFloat, DisplayAlarmInteger
 
 class Object(Configurable):
     number = Float(
-        displayType="format|fmt=f&decimals=4",
-        alarmLow=-2.0, alarmHigh=2.0,
-        warnLow=-1.0, warnHigh=1.0)
-    integer = Int32(
-        alarmLow=-3, alarmHigh=3,
-        warnLow=-1, warnHigh=1)
+        displayType="format|fmt=f&decimals=4")
+    integer = Int32()
 
 
 def test_alarm_numbers(gui_app):
@@ -47,11 +45,17 @@ def test_alarm_numbers(gui_app):
     controller.initialize_model(proxy, model)
     controller.create(None)
 
+    # Attributes not available anymore
+    assert model.warnLow == Undefined
+    assert model.warnHigh == Undefined
+    assert model.alarmHigh == Undefined
+    assert model.alarmLow == Undefined
+
     assert controller.fmt == "{:.4f}"
-    assert model.warnLow == -1.0
-    assert model.warnHigh == 1.0
-    assert model.alarmHigh == 2.0
-    assert model.alarmLow == -2.0
+    model.warnLow = -1.0
+    model.warnHigh = 1.0
+    model.alarmHigh = 2.0
+    model.alarmLow = -2.0
 
     set_proxy_value(proxy, "number", 0.75)
     assert controller.internal_widget.text() == "0.7500"
@@ -70,10 +74,15 @@ def test_alarm_numbers(gui_app):
     controller.initialize_model(proxy, model)
     controller.create(None)
 
-    assert model.warnLow == -1
-    assert model.warnHigh == 1
-    assert model.alarmHigh == 3
-    assert model.alarmLow == -3
+    assert model.warnLow == Undefined
+    assert model.warnHigh == Undefined
+    assert model.alarmHigh == Undefined
+    assert model.alarmLow == Undefined
+
+    model.warnLow = -1
+    model.warnHigh = 1
+    model.alarmHigh = 3
+    model.alarmLow = -3
 
     set_proxy_value(proxy, "integer", 1)
     assert controller.internal_widget.text() == "1"
