@@ -29,8 +29,7 @@ TIMEBASES = {"60s": 60, "10m": 600, "10h": 36000}
 
 
 class Object(Configurable):
-    prop = Float(defaultValue=0.0, warnLow=-5.0, warnHigh=5.0, alarmLow=-10.0,
-                 alarmHigh=10.0)
+    prop = Float(defaultValue=0.0)
 
 
 @pytest.fixture

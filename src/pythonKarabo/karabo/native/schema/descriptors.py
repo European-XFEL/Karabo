@@ -208,34 +208,6 @@ class Simple:
     minInc = Attribute(dtype=Undefined)
     maxInc = Attribute(dtype=Undefined)
 
-    alarmHigh = Attribute(dtype=Undefined)
-    alarmLow = Attribute(dtype=Undefined)
-    warnHigh = Attribute(dtype=Undefined)
-    warnLow = Attribute(dtype=Undefined)
-
-    alarmInfo_alarmHigh = Attribute(dtype=str)
-    alarmInfo_alarmLow = Attribute(dtype=str)
-    alarmInfo_warnHigh = Attribute(dtype=str)
-    alarmInfo_warnLow = Attribute(dtype=str)
-
-    alarmNeedsAck_alarmHigh = Attribute(dtype=bool)
-    alarmNeedsAck_alarmLow = Attribute(dtype=bool)
-    alarmNeedsAck_warnHigh = Attribute(dtype=bool)
-    alarmNeedsAck_warnLow = Attribute(dtype=bool)
-
-    def __init__(self, strict=True, **kwargs):
-        super().__init__(strict=strict, **kwargs)
-        # Note: Attribute information should only be filled lazily,
-        # e.g. when the Attribute is really set
-        for alarm in ["alarmHigh", "warnHigh", "warnLow", "alarmLow"]:
-            if alarm in kwargs:
-                info = f"alarmInfo_{alarm}"
-                if info not in kwargs:
-                    setattr(self, info, "")
-                ack = f"alarmNeedsAck_{alarm}"
-                if ack not in kwargs:
-                    setattr(self, ack, False)
-
     def cast(self, other):
         if self.enum is not None:
             ret = super().cast(other)
@@ -958,11 +930,6 @@ def _create_numpy_integer(name, number, numpy):
         minInc = Attribute(dtype=numpy)
         maxInc = Attribute(dtype=numpy)
 
-        alarmHigh = Attribute(dtype=numpy)
-        alarmLow = Attribute(dtype=numpy)
-        warnHigh = Attribute(dtype=numpy)
-        warnLow = Attribute(dtype=numpy)
-
     return type(name, (NumpyInteger,), {"number": number,
                                         "numpy": numpy})
 
@@ -989,11 +956,6 @@ def _create_numpy_floating(name, number, numpy):
         maxExc = Attribute(dtype=numpy)
         minInc = Attribute(dtype=numpy)
         maxInc = Attribute(dtype=numpy)
-
-        alarmHigh = Attribute(dtype=numpy)
-        alarmLow = Attribute(dtype=numpy)
-        warnHigh = Attribute(dtype=numpy)
-        warnLow = Attribute(dtype=numpy)
 
         absoluteError = Attribute(dtype=numpy)
         relativeError = Attribute(dtype=numpy)

@@ -175,14 +175,7 @@ class CounterNode(Configurable):
     counterReadOnly = UInt32(
         displayedName="Counter read-only",
         accessMode=AccessMode.READONLY,
-        defaultValue=0,
-
-        warnHigh=1_000_000,
-        alarmInfo_warnHigh="Rather high",
-        alarmNeedsAck_warnHigh=True,
-        alarmHigh=100_000_000,
-        alarmInfo_alarmHigh="Too high",
-        alarmNeedsAck_alarmHigh=False)  # False for tests
+        defaultValue=0)
 
 
 class PropertyTestMDL(Device):
@@ -220,13 +213,7 @@ class PropertyTestMDL(Device):
         displayedName="Int32 (RO)",
         description="An integer property",
         defaultValue=32_000_000,
-        accessMode=AccessMode.READONLY,
-        alarmLow=-32_000_000,
-        alarmInfo_alarmLow="Too low",
-        alarmNeedsAck_alarmLow=True,
-        warnLow=-10,
-        alarmInfo_warnLow="Rather low",
-        alarmNeedsAck_warnLow=False)
+        accessMode=AccessMode.READONLY)
 
     @UInt32(displayedName="UInt32",
             description="An unsigned integer property (32 Bit)",
@@ -239,12 +226,6 @@ class PropertyTestMDL(Device):
         displayedName="UInt32 (RO)",
         description="A readonly integer property",
         defaultValue=32_000_000,
-        warnHigh=32_000_001,
-        alarmNeedsAck_warnHigh=False,
-        alarmInfo_warnHigh="Rather high",
-        alarmHigh=64_000_000,
-        alarmNeedsAck_alarmHigh=True,
-        alarmInfo_alarmHigh="Too high",
         accessMode=AccessMode.READONLY)
 
     @Int64(displayedName="Int64",
@@ -258,13 +239,7 @@ class PropertyTestMDL(Device):
         displayedName="Int64 (RO)",
         description="A readonly integer property",
         defaultValue=3_200_000_000,
-        accessMode=AccessMode.READONLY,
-        alarmLow=-3_200_000_000,
-        alarmInfo_alarmLow="Too low",
-        alarmNeedsAck_alarmLow=True,
-        warnLow=-3200,
-        alarmInfo_warnLow="Rather low",
-        alarmNeedsAck_warnLow=False)
+        accessMode=AccessMode.READONLY)
 
     @UInt64(displayedName="UInt64",
             description="An unsigned integer property (64 Bit)",
@@ -277,13 +252,7 @@ class PropertyTestMDL(Device):
         displayedName="UInt64 (RO)",
         description="A readonly integer property (64 Bit)",
         defaultValue=3_200_000_000,
-        accessMode=AccessMode.READONLY,
-        warnHigh=3_200_000_001,
-        alarmInfo_warnHigh="Rather High",
-        alarmNeedsAck_warnHigh=False,
-        alarmHigh=6_400_000_000,
-        alarmInfo_alarmHigh="Too high",
-        alarmNeedsAck_alarmHigh=True)
+        accessMode=AccessMode.READONLY)
 
     @Float(displayedName="Float (Min / Max)",
            description="A float property",
@@ -298,20 +267,7 @@ class PropertyTestMDL(Device):
         displayedName="Float (RO)",
         description="A readonly float property",
         defaultValue=0.0,
-        accessMode=AccessMode.READONLY,
-        alarmLow=-1000.0,
-        alarmInfo_alarmLow="Too low",
-        alarmNeedsAck_alarmLow=True,
-        warnLow=-100.0,
-        alarmInfo_warnLow="Rather low",
-        alarmNeedsAck_warnLow=False,
-        warnHigh=100.0,
-        alarmInfo_warnHigh="Rather high",
-        alarmNeedsAck_warnHigh=False,
-        alarmHigh=1000.0,
-        alarmInfo_alarmHigh="Too high",
-        alarmNeedsAck_alarmHigh=True
-    )
+        accessMode=AccessMode.READONLY)
 
     @Double(displayedName="Double",
             description="A double property",
@@ -324,19 +280,7 @@ class PropertyTestMDL(Device):
         displayedName="Double (RO)",
         description="A readonly double property for testing alarms",
         defaultValue=3.1415,
-        accessMode=AccessMode.READONLY,
-        alarmLow=-100.0,
-        alarmInfo_alarmLow="Too low",
-        alarmNeedsAck_alarmLow=True,
-        warnLow=-10.0,
-        alarmInfo_warnLow="Rather low",
-        alarmNeedsAck_warnLow=False,
-        warnHigh=10.0,
-        alarmInfo_warnHigh="Rather high",
-        alarmNeedsAck_warnHigh=False,
-        alarmHigh=100.0,
-        alarmInfo_alarmHigh="Too high",
-        alarmNeedsAck_alarmHigh=True)
+        accessMode=AccessMode.READONLY)
 
     stringProperty = String(
         displayedName="String",
