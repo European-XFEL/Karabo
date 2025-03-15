@@ -51,8 +51,7 @@ class Object(Configurable):
     bar = Float(
         defaultValue=1.2,
         minInc=0.0,
-        maxInc=10.0,
-        warnHigh=0.1)
+        maxInc=10.0)
 
     baz = Int32()
 
