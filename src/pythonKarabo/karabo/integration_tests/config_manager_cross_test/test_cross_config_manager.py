@@ -17,7 +17,7 @@ import os
 import os.path as op
 import unittest
 
-from karabo.bound import Hash, Logger, fullyEqual
+from karabo.bound import Hash, Logger
 from karabo.bound.testing import BoundDeviceTestCase
 
 Logger.configure(Hash())
@@ -120,7 +120,12 @@ class TestCrossConfigManager(BoundDeviceTestCase):
             f"'{self.PROP_TEST_DEVICE_ID}: '{ret['reason']}")
         config = ret['config']
         self.assertEqual(config['name'], config_name)
-        self.assertTrue(fullyEqual(config['config'], dev_config))
+        # XXX: Config Attributes for Tables have a rowSchema, hence
+        # cannot use fullyEqual at the moment
+        for node in dev_config:
+            value = node.getValue()
+            key = node.getKey()
+            assert config['config'][key] == value
 
         # config_name was used for the successful save case. Always overwrite!
         ret_used_name = self.dc.saveConfigurationFromName(
