@@ -28,14 +28,13 @@ from karabo.common.scenemodel.api import (
     DisplayStateColorModel, DisplayTextLogModel, EditableRegexModel,
     ErrorBoolModel, LabelModel, LineEditModel, LineModel, SceneModel,
     StickerModel, TableElementModel, write_scene)
-from karabo.config_db import (
-    ConfigurationDatabase, DbHandle, hashFromBase64Bin, hashToBase64Bin)
+from karabo.config_db import ConfigurationDatabase, DbHandle
 from karabo.middlelayer import (
     AccessLevel, AccessMode, Assignment, Bool, Configurable, DeviceClientBase,
     Hash, HashList, KaraboError, Overwrite, RegexString, Slot, State, String,
-    Timestamp, UInt32, VectorHash, VectorString, background, dictToHash,
-    getClassSchema, getConfiguration, isStringSet, sanitize_init_configuration,
-    slot)
+    Timestamp, UInt32, VectorHash, VectorString, background, decodeXML,
+    dictToHash, encodeXML, getClassSchema, getConfiguration, isStringSet,
+    sanitize_init_configuration, slot)
 
 DEVICE_TIMEOUT = 3
 FILTER_KEYS = ["name", "timepoint"]
@@ -184,7 +183,7 @@ class ConfigurationManager(DeviceClientBase):
             self.lastSuccess = False
         else:
             # XXX: Sanitize configuration
-            configs = {"deviceId": deviceId, "config": hashToBase64Bin(conf)}
+            configs = {"deviceId": deviceId, "config": encodeXML(conf)}
             items = [configs]
             # Now we save and list again, and we should not expect any errors
             try:
@@ -295,9 +294,8 @@ class ConfigurationManager(DeviceClientBase):
             raise KaraboError(reason)
 
         item = dictToHash(item)
-        config64 = item["config"]
-        item["config"] = hashFromBase64Bin(config64)
-
+        config = item["config"]
+        item["config"] = decodeXML(config)
         return Hash("success", True, "item", item)
 
     @slot
@@ -313,7 +311,7 @@ class ConfigurationManager(DeviceClientBase):
 
         item = dictToHash(item)
         config64 = item["config"]
-        item["config"] = hashFromBase64Bin(config64)
+        item["config"] = decodeXML(config64)
         return Hash("success", True, "item", item)
 
     @slot
@@ -354,7 +352,7 @@ class ConfigurationManager(DeviceClientBase):
             # schema = await getClassSchema(serverId, classId)
             config = await getConfiguration(device_id)
             # XXX: Sanitization of configuration
-            config64 = hashToBase64Bin(config)
+            config64 = encodeXML(config)
             config_dict = {"deviceId": device_id, "config": config64}
             return config_dict
 
@@ -393,7 +391,7 @@ class ConfigurationManager(DeviceClientBase):
                       f"{name} found!")
             raise KaraboError(reason)
 
-        config = hashFromBase64Bin(item["config"])
+        config = decodeXML(item["config"])
         # If the classId was provided we can validate!
         if classId is not None and classId != config["classId"]:
             raise KaraboError(f"The configuration for {deviceId} was "
