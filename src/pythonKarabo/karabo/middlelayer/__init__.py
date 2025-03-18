@@ -78,7 +78,8 @@ from .eventloop import (
     synchronize_notimeout)
 from .logger import CacheLog
 from .macro import (
-    EventThread, Macro, MacroSlot, Monitor, RemoteDevice, TopologyMacro)
+    EventThread, Macro, MacroSlot, Monitor, RemoteDevice, TopologyMacro,
+    run_macro)
 from .pipeline import (
     Channel, InputChannel, NetworkInput, NetworkOutput, OutputChannel,
     OutputProxy, PipelineContext, PipelineMetaData, RingQueue)

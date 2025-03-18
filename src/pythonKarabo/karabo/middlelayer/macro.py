@@ -40,6 +40,39 @@ DEFAULT_ACTION_NAME = "_last_action"
 PRINT_THROTTLE = 0.5  # seconds
 
 
+def run_macro(cls: "Macro", call: str, config: dict | None = None):
+    """Convenience function to run a macro from command line"""
+    assert issubclass(cls, Macro), "Class must be of type `Macro`"
+    if config is None:
+        config = {}
+    if "deviceId" in config:
+        config["_deviceId_"] = config["deviceId"]
+    else:
+        bareHostName = socket.gethostname().partition('.')[0]
+        config["_deviceId_"] = "{}_{}_{}".format(
+              cls.__name__, bareHostName, os.getpid())
+
+    loop = EventLoop()
+    set_event_loop(loop)
+
+    macro = cls(config)
+    slot = getattr(cls, call)
+    # We are run from a shell and don't have a device server!
+    # Hence, we set this internal variable, which will declare this macro
+    # as client in the instanceInfo if `_has_server` is `False`!
+    macro._has_server = False
+    assert isinstance(slot, Slot), "Only slots can be called"
+
+    async def run():
+        await macro.startInstance()
+        future = loop.run_coroutine_or_thread(slot.method, macro)
+        await loop.create_task(future, instance=macro)
+        await macro.slotKillDevice()
+
+    with closing(loop):
+        loop.run_until_complete(run())
+
+
 def Monitor():
     def outer(prop):
         prop.accessMode = AccessMode.READONLY
@@ -420,33 +453,7 @@ class Macro(Device):
         args = {k: getattr(cls, k).fromstring(v)
                 for k, v in (a.split("=", 1) for a in argv[2:])}
         call = argv[1]
-        slot = getattr(cls, call)
-        assert isinstance(slot, Slot), "only slots can be called"
-
-        loop = EventLoop()
-        set_event_loop(loop)
-        if "deviceId" in args:
-            args["_deviceId_"] = args["deviceId"]
-        else:
-            bareHostName = socket.gethostname().partition('.')[0]
-            args["_deviceId_"] = "{}_{}_{}".format(
-                cls.__name__, bareHostName, os.getpid())
-
-        macro = cls(args)
-        # We are run from a shell and don't have a device server!
-        # Hence, we set this internal variable, which will declare this macro
-        # as client in the instanceInfo if `_has_server` is `False`!
-        macro._has_server = False
-
-        async def run():
-            # Starting a macro from command line should receive broadcasts!
-            await macro.startInstance()
-            future = loop.run_coroutine_or_thread(slot.method, macro)
-            await loop.create_task(future, macro)
-            await macro.slotKillDevice()
-
-        with closing(loop):
-            loop.run_until_complete(run())
+        run_macro(cls, call, config=args)
 
     availableMacros = VectorString(
         displayedName="Available Macros",
