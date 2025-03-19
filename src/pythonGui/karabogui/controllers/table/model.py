@@ -120,7 +120,7 @@ class TableModel(QAbstractTableModel):
                 binding = self._bindings[key]
                 units = binding.unit_label
                 # Make sure to always show a header!
-                displayed = binding.displayed_name or key
+                displayed = binding.displayedName or key
 
                 return f"{displayed} [{units}]" if units else displayed
 
@@ -142,12 +142,12 @@ class TableModel(QAbstractTableModel):
         key = self._header[index.column()]
         # Get an enum for the AccessMode
         binding = self._bindings[key]
-        access_mode = binding.access_mode
+        accessMode = binding.accessMode
         if isinstance(binding, BoolBinding) and not self._readonly:
             flags &= ~Qt.ItemIsEditable
-            if access_mode is AccessMode.RECONFIGURABLE:
+            if accessMode is AccessMode.RECONFIGURABLE:
                 flags |= Qt.ItemIsUserCheckable
-        elif access_mode is AccessMode.READONLY:
+        elif accessMode is AccessMode.READONLY:
             flags &= ~Qt.ItemIsEditable
 
         return flags

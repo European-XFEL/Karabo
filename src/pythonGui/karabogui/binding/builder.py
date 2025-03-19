@@ -67,12 +67,12 @@ def _build_node(value, attrs):
         return binding_factory(attributes=attrs, value=Undefined)
 
     elif node_type == NodeType.Node:
-        display_type = attrs.get(
+        displayType = attrs.get(
             const.KARABO_SCHEMA_DISPLAY_TYPE, '').split('|')[0]
         namespace = _build_subnamespace(value, types.BaseBinding)
-        if display_type in _NODE_BINDING_MAP:
+        if displayType in _NODE_BINDING_MAP:
             # Certain display types get a different binding class
-            binding_factory = _NODE_BINDING_MAP[display_type]
+            binding_factory = _NODE_BINDING_MAP[displayType]
             return binding_factory(value=namespace, attributes=attrs)
         return types.NodeBinding(value=namespace, attributes=attrs)
 

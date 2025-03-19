@@ -123,7 +123,7 @@ class SlotButtonDelegate(QStyledItemDelegate):
         allowed = (is_device and proxy.binding.is_allowed(
             get_device_state_string(proxy.root_proxy))
                    and (self._global_access >=
-                        proxy.binding.required_access_level))
+                        proxy.binding.requiredAccessLevel))
         return allowed
 
     def _handle_event_state(self, proxy, event, option):

@@ -60,15 +60,15 @@ class BaseBinding(HasStrictTraits):
     Attribute shortcuts for often used properties
     ---------------------------------------------
 
-    :param displayed_name: The displayed name of the property
-    :param display_type: The display type of the property. This might provide
+    :param displayedName: The displayed name of the property
+    :param displayType: The display type of the property. This might provide
                          more options later on.
-    :param access_mode: The access mode specification of the binding taking an
+    :param accessMode: The access mode specification of the binding taking an
                         enum of `karabo.native.AccessMode`.
     :param assignment: The assignment setting with an enum of
                        `karabo.native.Assignment`.
     :param options: The list of options for this base binding.
-    :param required_access_level: The required access level with enums of
+    :param requiredAccessLevel: The required access level with enums of
                                   `karabo.native.AccessLevel`.
     :param unit_label: The unit label string combining the unit and metric
                        prefix.
@@ -86,12 +86,12 @@ class BaseBinding(HasStrictTraits):
     historic_data = Event
 
     # Attribute shortcuts
-    displayed_name = String
-    display_type = String
-    access_mode = Enum(*AccessMode)
+    displayedName = String
+    displayType = String
+    accessMode = Enum(*AccessMode)
     assignment = Enum(*Assignment)
     options = List
-    required_access_level = Enum(*AccessLevel)
+    requiredAccessLevel = Enum(*AccessLevel)
     unit_label = String
 
     def is_allowed(self, state):
@@ -121,13 +121,13 @@ class BaseBinding(HasStrictTraits):
             self.trait_setq(**traits)
             self._update_shortcuts(attrs)
 
-    def _displayed_name_default(self):
+    def _displayedName_default(self):
         return self._attributes.get(KEY_DISPLAYED_NAME, '')
 
-    def _display_type_default(self):
+    def _displayType_default(self):
         return self._attributes.get(KEY_DISPLAY_TYPE, '')
 
-    def _access_mode_default(self):
+    def _accessMode_default(self):
         mode = self._attributes.get(KEY_ACCMODE)
         return AccessMode.UNDEFINED if mode is None else AccessMode(mode)
 
@@ -138,7 +138,7 @@ class BaseBinding(HasStrictTraits):
     def _options_default(self):
         return self._attributes.get(KEY_OPT, [])
 
-    def _required_access_level_default(self):
+    def _requiredAccessLevel_default(self):
         level = self._attributes.get(KEY_ACCLVL)
         return AccessLevel.OBSERVER if level is None else AccessLevel(level)
 
@@ -149,13 +149,13 @@ class BaseBinding(HasStrictTraits):
 
     def _update_shortcuts(self, attrs):
         if KEY_DISPLAYED_NAME in attrs:
-            self.displayed_name = attrs[KEY_DISPLAYED_NAME]
+            self.displayedName = attrs[KEY_DISPLAYED_NAME]
         if KEY_DISPLAY_TYPE in attrs:
-            self.display_type = attrs[KEY_DISPLAY_TYPE]
+            self.displayType = attrs[KEY_DISPLAY_TYPE]
         if KEY_ACCMODE in attrs:
-            self.access_mode = AccessMode(attrs[KEY_ACCMODE])
+            self.accessMode = AccessMode(attrs[KEY_ACCMODE])
         if KEY_ACCLVL in attrs:
-            self.required_access_level = AccessLevel(attrs[KEY_ACCLVL])
+            self.requiredAccessLevel = AccessLevel(attrs[KEY_ACCLVL])
         if KEY_ASSIGNMENT in attrs:
             self.assignment = Assignment(attrs[KEY_ASSIGNMENT])
         if KEY_OPT in attrs:

@@ -58,8 +58,8 @@ class DisplayWidgetNode(BaseBindingController):
         return widget
 
     def binding_update(self, proxy):
-        info = proxy.binding.display_type.split('|')
-        # The real node type is mangled in the display_type
+        info = proxy.binding.displayType.split('|')
+        # The real node type is mangled in the displayType
         node_type = info[1] if len(info) > 1 else "NaN"
         template = f"WidgetNode\nNodeType: {node_type}"
         self.widget.setText(template)

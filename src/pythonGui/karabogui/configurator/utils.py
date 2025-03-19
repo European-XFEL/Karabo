@@ -67,14 +67,14 @@ def dragged_configurator_items(proxies):
         default_name = proxy.path.split('.')[-1]
         data = {
             'key': proxy.key,
-            'label': binding.displayed_name or default_name,
+            'label': binding.displayedName or default_name,
             'type': item_type,
         }
 
         factories = get_compatible_controllers(binding, can_edit=False)
         if factories:
             data['display_widget_class'] = factories[0].__name__
-        if binding.access_mode is AccessMode.RECONFIGURABLE:
+        if binding.accessMode is AccessMode.RECONFIGURABLE:
             factories = get_compatible_controllers(binding, can_edit=True)
             if factories:
                 data['edit_widget_class'] = factories[0].__name__
@@ -102,7 +102,7 @@ def get_child_names(proxy, level):
     # lazily cache visible children names
     if ret is None:
         ret = [name for name in binding.value if
-               getattr(binding.value, name).required_access_level <= level]
+               getattr(binding.value, name).requiredAccessLevel <= level]
         binding.children_names[level] = ret
     return ret
 
