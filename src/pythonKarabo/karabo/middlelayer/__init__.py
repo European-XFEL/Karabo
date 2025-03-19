@@ -70,7 +70,7 @@ from .device_client import (
 from .device_interface import (
     listCameras, listDeviceInstantiators, listMotors, listMultiAxisMotors,
     listProcessors, listTriggers)
-from .device_server import DeviceServerBase, MiddleLayerDeviceServer
+from .device_server import MiddleLayerDeviceServer
 from .devicenode import DeviceNode
 from .eventloop import (
     EventLoop, KaraboFuture, NoEventLoop, global_sync, synchronize,
