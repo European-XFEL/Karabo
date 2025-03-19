@@ -172,8 +172,8 @@ class ConfigPreviewDialog(QDialog):
             if value is None or value is Undefined:
                 continue
 
-            access_mode = node.access_mode
-            if access_mode in (
+            accessMode = node.accessMode
+            if accessMode in (
                     AccessMode.RECONFIGURABLE, AccessMode.INITONLY) and (
                     node.assignment != Assignment.INTERNAL):
                 reconfigurable[key] = value
@@ -201,8 +201,8 @@ class ConfigPreviewDialog(QDialog):
             if value is None or value is Undefined:
                 continue
 
-            access_mode = node.access_mode
-            if access_mode == AccessMode.RECONFIGURABLE:
+            accessMode = node.accessMode
+            if accessMode == AccessMode.RECONFIGURABLE:
                 reconfigurable[key] = value
                 if node.is_allowed(state=device_state):
                     currently_reconfigurable[key] = value

@@ -38,5 +38,5 @@ def is_controller_enabled(proxy: PropertyProxy, level: AccessLevel) -> bool:
 
     binding = proxy.binding
     is_allowed = binding.is_allowed(value)
-    is_accessible = level >= binding.required_access_level
+    is_accessible = level >= binding.requiredAccessLevel
     return is_accessible and is_allowed

@@ -54,19 +54,19 @@ def get_display_delegate(proxy, binding, parent, read_only=True):
     :param parent: The parent widget
     :param read_only: If only read_only display delegates are considered
     """
-    display_type = binding.display_type.split("|")[0]
-    if not display_type:
+    displayType = binding.displayType.split("|")[0]
+    if not displayType:
         return None
-    if (display_type == "TableBoolButton" and read_only and
+    if (displayType == "TableBoolButton" and read_only and
             isinstance(binding, BoolBinding)):
         return BoolButtonDelegate(proxy, binding, parent)
-    elif (display_type == "TableStringButton" and read_only and
+    elif (displayType == "TableStringButton" and read_only and
           isinstance(binding, StringBinding)):
         return StringButtonDelegate(proxy, binding, parent)
-    elif (display_type == "TableProgressBar"
+    elif (displayType == "TableProgressBar"
           and isinstance(binding, (FloatBinding, IntBinding))):
         return ProgressBarDelegate(binding, parent)
-    elif display_type == "TableColor":
+    elif displayType == "TableColor":
         if isinstance(binding, (FloatBinding, IntBinding)):
             return ColorNumberDelegate(binding, parent)
         elif isinstance(binding, StringBinding):
@@ -92,7 +92,7 @@ def get_table_delegate(proxy, binding, parent):
     elif isinstance(binding, (FloatBinding, IntBinding)):
         return NumberDelegate(binding, parent)
     elif isinstance(binding, VectorBinding):
-        if (binding.display_type.split("|")[0] == "TableVector"
+        if (binding.displayType.split("|")[0] == "TableVector"
                 and not isinstance(binding, VectorBoolBinding)):
             return VectorButtonDelegate(binding, parent)
         return VectorDelegate(binding, parent)
@@ -130,10 +130,10 @@ class VectorButtonDelegate(QStyledItemDelegate):
 class BoolButtonDelegate(TableButtonDelegate):
     def __init__(self, proxy, binding, parent=None):
         super().__init__(parent)
-        self.text = binding.displayed_name or proxy.path
+        self.text = binding.displayedName or proxy.path
         self.deviceId = proxy.root_proxy.device_id
         self.path = proxy.path
-        self.confirm = has_confirmation(binding.display_type)
+        self.confirm = has_confirmation(binding.displayType)
 
     def isEnabled(self, index=None):
         """Reimplemented function of TableButtonDelegate"""
@@ -196,9 +196,9 @@ class BoolButtonDelegate(TableButtonDelegate):
 class StringButtonDelegate(TableButtonDelegate):
     def __init__(self, proxy, binding, parent=None):
         super().__init__(parent)
-        self.text = binding.displayed_name or proxy.path
+        self.text = binding.displayedName or proxy.path
         self.deviceId = proxy.root_proxy.device_id
-        self.attributes = get_button_attributes(binding.display_type)
+        self.attributes = get_button_attributes(binding.displayType)
 
     def get_button_text(self, index):
         """Reimplemented function of TableButtonDelegate"""
@@ -464,7 +464,7 @@ def _color_delegate(name, base):
             super().__init__(binding, parent)
             self.editing = {}
             self.default_brush, self.brushes = create_brushes(
-                binding.display_type)
+                binding.displayType)
 
         def createEditor(self, parent, option, index):
             """Reimplemented function of QStyledItemDelegate."""

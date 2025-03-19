@@ -68,7 +68,7 @@ class ControllerContainer(KaraboSceneWidget, QWidget):
             if self.is_editable:
                 proxy.on_trait_change(
                     self._on_user_edit, "edit_value,binding.config_update")
-                self.setEditableToolTip(proxy.binding.required_access_level)
+                self.setEditableToolTip(proxy.binding.requiredAccessLevel)
             else:
                 self.setToolTip(", ".join(self.model.keys))
         return len(proxies_added) == len(proxies)
@@ -88,7 +88,7 @@ class ControllerContainer(KaraboSceneWidget, QWidget):
                 proxy.on_trait_change(
                     self._on_user_edit, "edit_value,binding.config_update",
                     remove=True)
-                self.setEditableToolTip(proxy.binding.required_access_level)
+                self.setEditableToolTip(proxy.binding.requiredAccessLevel)
             else:
                 self.setToolTip(", ".join(self.model.keys))
         return len(proxies_removed) == len(proxies)
@@ -156,7 +156,7 @@ class ControllerContainer(KaraboSceneWidget, QWidget):
             enabled = is_controller_enabled(proxy, level)
             self.widget_controller.setEnabled(enabled)
             if self.is_editable:
-                self.setEditableToolTip(binding.required_access_level)
+                self.setEditableToolTip(binding.requiredAccessLevel)
 
     # ---------------------------------------------------------------------
     # Qt methods
@@ -203,7 +203,7 @@ class ControllerContainer(KaraboSceneWidget, QWidget):
         """
         proxy.on_trait_change(self._proxy_binding_changed,
                               "binding.schema_update", remove=True)
-        self.setEditableToolTip(proxy.binding.required_access_level)
+        self.setEditableToolTip(proxy.binding.requiredAccessLevel)
 
     def _proxy_status_changed(self, name, value):
         """Traits notification callback when the status of the proxy changes.
@@ -266,7 +266,7 @@ class ControllerContainer(KaraboSceneWidget, QWidget):
                 # Use normal tooltip and wait for update
                 self.setToolTip(", ".join(self.model.keys))
             else:
-                self.setEditableToolTip(level=binding.required_access_level)
+                self.setEditableToolTip(level=binding.requiredAccessLevel)
         else:
             self.setToolTip(", ".join(self.model.keys))
 

@@ -94,7 +94,7 @@ class SingleBit(BaseBindingController):
         if binding is None:
             return
 
-        dt = binding.display_type
+        dt = binding.displayType
         if dt.startswith("bin|"):
             s, ok = QInputDialog.getItem(self.widget, "Select Bit",
                                          "Select Bit:", dt[4:].split(","))

@@ -260,9 +260,9 @@ class ConfigurationTreeView(QTreeView):
         if binding.timestamp is not None:
             info['Timestamp'] = binding.timestamp.toLocal()
             info['Timing Id'] = binding.timestamp.tid
-        display_type = binding.display_type
-        if display_type and display_type.startswith('bin|'):
-            info['Bits'] = display_type[4:]
+        displayType = binding.displayType
+        if displayType and displayType.startswith('bin|'):
+            info['Bits'] = displayType[4:]
         if isinstance(obj.root_proxy, DeviceProxy):
             info['Value on device'] = get_proxy_value(index, obj)
 

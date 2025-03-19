@@ -48,19 +48,19 @@ def test_binding_traits():
     # Defined trait names in Binding models,
     # children_names should not be used for binding types whose value are of
     # type BindingNamespace
-    expected_traits = ('_attributes', 'access_mode', 'assignment',
+    expected_traits = ('_attributes', 'accessMode', 'assignment',
                        'attributes', 'children_names', 'options',
-                       'required_access_level', 'timestamp', 'unit_label',
-                       'value', 'displayed_name', 'display_type', 'row_schema')
+                       'requiredAccessLevel', 'timestamp', 'unit_label',
+                       'value', 'displayedName', 'displayType', 'row_schema')
     for binding_factory in ALL_BINDINGS:
         obj = binding_factory()
         for trait in obj.copyable_trait_names():
             assert trait in expected_traits
 
-        assert obj.required_access_level is AccessLevel.OBSERVER
-        assert obj.displayed_name == ""
-        assert obj.display_type == ""
-        assert obj.access_mode is AccessMode.UNDEFINED
+        assert obj.requiredAccessLevel is AccessLevel.OBSERVER
+        assert obj.displayedName == ""
+        assert obj.displayType == ""
+        assert obj.accessMode is AccessMode.UNDEFINED
         assert obj.assignment is Assignment.OPTIONAL
         if isinstance(obj.options, numpy.ndarray):
             # truth value of array ambiguous, must check size explicitly

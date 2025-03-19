@@ -317,14 +317,14 @@ def test_property_attributes():
     schema = get_all_props_schema()
     binding = build_binding(schema)
 
-    assert binding.value.c.required_access_level is AccessLevel.EXPERT
-    assert binding.value.d.access_mode is AccessMode.READONLY
+    assert binding.value.c.requiredAccessLevel is AccessLevel.EXPERT
+    assert binding.value.d.accessMode is AccessMode.READONLY
     assert binding.value.d.assignment is Assignment.INTERNAL
     assert binding.value.e.unit_label == 'm'
 
-    assert binding.value.a.access_mode is AccessMode.RECONFIGURABLE
+    assert binding.value.a.accessMode is AccessMode.RECONFIGURABLE
     assert binding.value.a.assignment is Assignment.OPTIONAL
-    assert binding.value.a.required_access_level is AccessLevel.USER
+    assert binding.value.a.requiredAccessLevel is AccessLevel.USER
 
     assert binding.value.m.options == ['foo', 'bar', 'baz', 'qux']
 
