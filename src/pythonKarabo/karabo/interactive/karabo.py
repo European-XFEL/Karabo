@@ -515,6 +515,10 @@ def str2bool(v):
     return v.lower() in ("yes", "true", "t", "1")
 
 
+def is_git_repo(directory: str):
+    return os.path.isdir(os.path.join(directory, ".git"))
+
+
 def clean_dir(path, args):
     """
     Removes a path
@@ -522,6 +526,14 @@ def clean_dir(path, args):
     :return: True if path has been removed, False otherwise
     """
     if os.path.isdir(path):
+        if not is_git_repo(path):
+            if args.force:
+                run_cmd(f'rm -rf {path}')
+            else:
+                print(f"Directory is not git initialized {path} and needs to "
+                      "be removed. Use -f option to remove directory.")
+                return
+        # XXX: Git command might fail
         tag = run_cmd(f'cd {path}; git tag').decode("utf-8").rstrip()
         if not hasattr(args, 'tag'):
             # we are called by develop, the depth is more than 1
