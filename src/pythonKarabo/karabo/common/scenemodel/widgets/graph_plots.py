@@ -16,7 +16,7 @@
 import warnings
 from xml.etree.ElementTree import SubElement
 
-from traits.api import Bool, Enum, Float, Instance, Int, List, String
+from traits.api import Bool, Float, Instance, Int, List, String
 
 from karabo.common.scenemodel.bases import BaseWidgetObjectData
 from karabo.common.scenemodel.const import NS_KARABO, WIDGET_ELEMENT_TAG
@@ -85,26 +85,8 @@ class ScatterGraphModel(BasePlotModel):
     psize = Float(7.0)
 
 
-class XYPlotModel(ScatterGraphModel):
-    """a legacy model"""
-
-    def __init__(self, **traits):
-        super().__init__(**traits)
-        msg = f"{type(self).__name__} is deprecated, use ScatterGraphModel"
-        warnings.warn(msg, DeprecationWarning)
-
-
 class MultiCurveGraphModel(BasePlotModel):
     """A model for the MultiCurve Graph"""
-
-
-class MultiCurvePlotModel(MultiCurveGraphModel):
-    """a legacy model"""
-
-    def __init__(self, **traits):
-        super().__init__(**traits)
-        msg = f"{type(self).__name__} is deprecated, use MultiCurveGraphModel"
-        warnings.warn(msg, DeprecationWarning)
 
 
 class VectorScatterGraphModel(BasePlotModel):
@@ -172,41 +154,11 @@ class VectorGraphModel(BasePlotModel):
     y_grid = Bool(True)
 
 
-class DisplayPlotModel(VectorGraphModel):
-    """a legacy model"""
-
-    def __init__(self, **traits):
-        super().__init__(**traits)
-        msg = f"{type(self).__name__} is deprecated, use VectorGraphModel"
-        warnings.warn(msg, DeprecationWarning)
-
-
 class TrendGraphModel(BasePlotModel):
     """Trendline graph model"""
 
     x_grid = Bool(True)
     y_grid = Bool(True)
-
-
-class DisplayTrendlineModel(TrendGraphModel):
-    """a legacy model"""
-
-    def __init__(self, **traits):
-        super().__init__(**traits)
-        msg = f"{type(self).__name__} is deprecated, use TrendGraphModel"
-        warnings.warn(msg, DeprecationWarning)
-
-
-class LinePlotModel(DisplayTrendlineModel):
-    """A legacy model for line plot objects"""
-
-    # Note: LinePlotModel is a class model but was never serialized
-    # under its own name. It was the ghost writer of DisplayTrendline.
-    # The original model had a trait `boxes`. and other functions.
-    # this are removed. It should not have been used in device code.
-    # if they were used, the code should fail.
-
-    klass = Enum("DisplayTrendline", "XYVector")
 
 
 class StateGraphModel(BasePlotModel):
@@ -223,7 +175,6 @@ class AlarmGraphModel(BasePlotModel):
     y_grid = Bool(True)
 
 
-@register_scene_reader("XYPlot")  # deprecated matplotlib model
 @register_scene_reader("ScatterGraph")
 def _scatter_graph_reader(element):
     traits = read_base_plot(element)
@@ -233,7 +184,6 @@ def _scatter_graph_reader(element):
     return ScatterGraphModel(**traits)
 
 
-@register_scene_writer(XYPlotModel)
 @register_scene_writer(ScatterGraphModel)
 def _scatter_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
@@ -261,7 +211,6 @@ def _vector_scatter_graph_writer(model, parent):
     return element
 
 
-@register_scene_reader("XYVector")  # deprecated Qwt model
 @register_scene_reader("VectorXYGraph")
 def _vector_xy_graph_reader(element):
     traits = read_base_plot(element)
@@ -349,7 +298,6 @@ def _vector_fill_graph_writer(model, parent):
     return element
 
 
-@register_scene_reader("DisplayPlot")  # deprecated Qwt model
 @register_scene_reader("VectorGraph")
 def _vector_graph_reader(element):
     traits = read_base_plot(element)
@@ -361,7 +309,6 @@ def _vector_graph_reader(element):
     return VectorGraphModel(**traits)
 
 
-@register_scene_writer(DisplayPlotModel)
 @register_scene_writer(VectorGraphModel)
 def _vector_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
@@ -374,7 +321,6 @@ def _vector_graph_writer(model, parent):
     return element
 
 
-@register_scene_reader("DisplayTrendline")  # deprecated Qwt model
 @register_scene_reader("DisplayTrendGraph")
 def _trend_graph_reader(element):
     traits = read_base_plot(element)
@@ -382,26 +328,12 @@ def _trend_graph_reader(element):
     return TrendGraphModel(**traits)
 
 
-@register_scene_writer(DisplayTrendlineModel)  # deprecated Qwt model
 @register_scene_writer(TrendGraphModel)
 def _trend_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_plot(model, element, "DisplayTrendGraph")
 
     return element
-
-
-@register_scene_writer(LinePlotModel)  # deprecated Qwt model
-def _line_plot_writer(model, parent):
-    # Delegate the co writer to the respective new models
-    WRITER_MAP = {
-        "DisplayTrendline": _trend_graph_writer,
-        "XYVector": _vector_xy_graph_writer,
-    }
-
-    # The model will always have a `klass` due to its Enum traits
-    writer = WRITER_MAP.get(model.klass)
-    return writer(model, parent)
 
 
 @register_scene_reader("DisplayStateGraph")
@@ -434,7 +366,6 @@ def _alarm_graph_writer(model, parent):
     return element
 
 
-@register_scene_reader("MultiCurvePlot")  # deprecated matplotlib model
 @register_scene_reader("MultiCurveGraph")
 def _multi_graph_reader(element):
     traits = read_base_plot(element)
@@ -442,7 +373,6 @@ def _multi_graph_reader(element):
     return MultiCurveGraphModel(**traits)
 
 
-@register_scene_writer(MultiCurvePlotModel)
 @register_scene_writer(MultiCurveGraphModel)
 def _multi_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)

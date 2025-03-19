@@ -68,7 +68,6 @@ def test_all_empty_widgets():
         api.DisplayLabelModel,
         api.DisplayListModel,
         api.WidgetNodeModel,
-        api.ComboBoxModel,
         api.InstanceStatusModel,
     )
     for klass in model_classes:
@@ -94,7 +93,6 @@ def test_editable_simple_model():
         api.HexadecimalModel,
         api.IntLineEditModel,
         api.EditableRegexListModel,
-        api.SliderModel,
         api.EditableRegexModel,
     )
     for klass in model_classes:
@@ -106,16 +104,6 @@ def test_missing_parent_component():
     traits["parent_component"] = ""  # explicitly empty!
     model = api.DisplayLabelModel(**traits)
     assert_raises(api.SceneWriterException, single_model_round_trip, model)
-
-
-def test_combobox_editable_round():
-    """Test that we rewrite the editable combobox"""
-    traits = base_widget_traits()
-    traits["klass"] = "EditableComboBox"
-    model = api.ComboBoxModel(**traits)
-    read_model = single_model_round_trip(model)
-    _assert_geometry_traits(read_model)
-    assert isinstance(read_model, api.EditableComboBoxModel)
 
 
 def test_displaylabel_model():
@@ -210,24 +198,6 @@ def test_timelabel():
     assert read_model.time_format == "%H:%M:%S"
     assert read_model.font_size == 18
     assert read_model.font_weight == "bold"
-
-
-def test_deprecated_file_system_model():
-    traits = _geometry_traits()
-    model = api.FileInModel(klass="EditableFileIn", **traits)
-    read_model = single_model_round_trip(model)
-    _assert_geometry_traits(read_model)
-    assert isinstance(read_model, api.LineEditModel)
-
-    model = api.FileOutModel(klass="EditableFileOut", **traits)
-    read_model = single_model_round_trip(model)
-    _assert_geometry_traits(read_model)
-    assert isinstance(read_model, api.LineEditModel)
-
-    model = api.DirectoryModel(klass="EditableDirectory", **traits)
-    read_model = single_model_round_trip(model)
-    _assert_geometry_traits(read_model)
-    assert isinstance(read_model, api.LineEditModel)
 
 
 def test_list():

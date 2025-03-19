@@ -47,15 +47,6 @@ class EditableChoiceElementModel(BaseEditWidget):
     """A model for DisplayChoiceElement/EditableChoiceElement"""
 
 
-class ComboBoxModel(BaseDisplayEditableWidget):
-    """DEPRECATED model for DisplayComboBox/EditableComboBox
-
-    This model is deprecated with Karabo 2.16 and stays for backward
-    compatibility
-    """
-    klass = Enum("DisplayComboBox", "EditableComboBox")
-
-
 class EditableComboBoxModel(BaseEditWidget):
     """A model for EditableComboBox"""
 
@@ -196,10 +187,6 @@ class StickerModel(BaseWidgetObjectData):
     background = String("white")
 
 
-class SliderModel(BaseEditWidget):
-    """A model for Slider"""
-
-
 class TickSliderModel(BaseEditWidget):
     """A model for TickSlider"""
     ticks = Int(1)
@@ -264,7 +251,6 @@ def __label_writer(model, parent):
 
 
 @register_scene_reader("TickSlider")
-@register_scene_reader("Slider")  # Deprecated Slider
 def _tick_slider_reader(element):
     traits = read_base_widget_data(element)
     traits["ticks"] = int(element.get(NS_KARABO + "ticks", 1))
@@ -272,16 +258,6 @@ def _tick_slider_reader(element):
     traits["show_value"] = show_value.lower() == "true"
 
     return TickSliderModel(**traits)
-
-
-@register_scene_writer(SliderModel)
-def _slider_writer(model, parent):
-    element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, "TickSlider")
-    element.set(NS_KARABO + "ticks", "1")
-    element.set(NS_KARABO + "show_value", "true")
-
-    return element
 
 
 @register_scene_writer(TickSliderModel)
@@ -313,7 +289,6 @@ def _time_label_writer(model, parent):
     return element
 
 
-@register_scene_reader("DisplayComboBox")  # DEPRECATED
 @register_scene_reader("DisplayLabel")
 def _display_label_reader(element):
     traits = read_base_widget_data(element)
@@ -417,36 +392,6 @@ def __sticker_widget_writer(model, parent):
     return element
 
 
-class DirectoryModel(BaseDisplayEditableWidget):
-    """A model for DisplayDirectory/EditableDirectory"""
-
-    # The actual type of the widget
-    klass = Enum("DisplayDirectory", "EditableDirectory")
-
-
-class FileInModel(BaseDisplayEditableWidget):
-    """A model for DisplayFileIn/EditableFileIn"""
-
-    # The actual type of the widget
-    klass = Enum("DisplayFileIn", "EditableFileIn")
-
-
-class FileOutModel(BaseDisplayEditableWidget):
-    """A model for DisplayFileOut/EditableFileOut"""
-
-    # The actual type of the widget
-    klass = Enum("DisplayFileOut", "EditableFileOut")
-
-
-@register_scene_writer(ComboBoxModel)
-def _editable_combobox_old_writer(model, parent):
-    element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, "EditableComboBox")
-
-    return element
-
-
-@register_scene_reader("EditableSpinbox")  # Deprecated, falsely in 2.15.X
 @register_scene_reader("EditableSpinBox")
 def _editable_spinbox_reader(element):
     traits = read_base_widget_data(element)
@@ -461,15 +406,6 @@ def _editable_spinbox_writer(model, parent):
     write_font_format_data(model, element)
 
     return element
-
-
-@register_scene_reader("EditableDirectory", version=1)
-@register_scene_reader("EditableFileOut", version=1)
-@register_scene_reader("EditableFileIn", version=1)
-def _deprecated_filesystem_reader(element):
-    """Deprecated directory and file edit reader now showing as line edit"""
-    traits = read_base_widget_data(element)
-    return LineEditModel(klass="EditableLineEdit", **traits)
 
 
 @register_scene_reader("DisplayList")
@@ -501,17 +437,6 @@ def _display_list_writer(model, parent):
 def _editable_list_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, "EditableList")
-
-
-@register_scene_writer(FileInModel)
-@register_scene_writer(FileOutModel)
-@register_scene_writer(DirectoryModel)
-def _deprecated_filesystem_writer(model, parent):
-    """Deprecated directory and file edit writer now showing as line edit"""
-    element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, "EditableLineEdit")
-
-    return element
 
 
 def _build_empty_widget_readers_and_writers():
