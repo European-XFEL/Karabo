@@ -42,15 +42,13 @@ from .widgets.complex import (
 # deprecated widgets
 # Graph widgets
 from .widgets.graph_image import (
-    DetectorGraphModel, DisplayAlignedImageModel, DisplayImageElementModel,
-    DisplayImageModel, ImageGraphModel, ScientificImageModel,
-    VectorRollGraphModel, WebCamGraphModel, WebcamImageModel)
+    DetectorGraphModel, ImageGraphModel, VectorRollGraphModel,
+    WebCamGraphModel)
 from .widgets.graph_plots import (
-    AlarmGraphModel, BasePlotModel, DisplayPlotModel, LinePlotModel,
-    MultiCurveGraphModel, MultiCurvePlotModel, NDArrayGraphModel,
+    AlarmGraphModel, BasePlotModel, MultiCurveGraphModel, NDArrayGraphModel,
     ScatterGraphModel, StateGraphModel, TrendGraphModel, VectorBarGraphModel,
     VectorFillGraphModel, VectorGraphModel, VectorHistGraphModel,
-    VectorScatterGraphModel, VectorXYGraphModel, XYPlotModel, XYVectorModel)
+    VectorScatterGraphModel, VectorXYGraphModel, XYVectorModel)
 from .widgets.graph_utils import (
     BaseROIData, CrossROIData, RectROIData, build_graph_config,
     build_model_config, read_axes_set, read_base_karabo_image_model,
@@ -63,16 +61,15 @@ from .widgets.icon import (
 from .widgets.links import DeviceSceneLinkModel, SceneLinkModel, WebLinkModel
 from .widgets.plot import SparklineModel
 from .widgets.simple import (
-    BaseLabelModel, CheckBoxModel, ComboBoxModel, DirectoryModel,
-    DisplayAlarmFloatModel, DisplayAlarmIntegerModel, DisplayFloatModel,
-    DisplayLabelModel, DisplayListModel, DisplayTextLogModel, DisplayTimeModel,
+    BaseLabelModel, CheckBoxModel, DisplayAlarmFloatModel,
+    DisplayAlarmIntegerModel, DisplayFloatModel, DisplayLabelModel,
+    DisplayListModel, DisplayTextLogModel, DisplayTimeModel,
     EditableChoiceElementModel, EditableComboBoxModel,
     EditableListElementModel, EditableListModel, EditableRegexListModel,
-    EditableRegexModel, EditableSpinBoxModel, FileInModel, FileOutModel,
-    GlobalAlarmModel, HexadecimalModel, HistoricTextModel, InstanceStatusModel,
-    IntLineEditModel, LabelModel, LampModel, LineEditModel, SliderModel,
-    StickerModel, TickSliderModel, WidgetNodeModel)
+    EditableRegexModel, EditableSpinBoxModel, GlobalAlarmModel,
+    HexadecimalModel, HistoricTextModel, InstanceStatusModel, IntLineEditModel,
+    LabelModel, LampModel, LineEditModel, StickerModel, TickSliderModel,
+    WidgetNodeModel)
 from .widgets.statefulicon import StatefulIconWidgetModel
 from .widgets.tools import (
     ImageRendererModel, create_base64image, extract_base64image)
-from .widgets.vacuum import VacuumWidgetModel
