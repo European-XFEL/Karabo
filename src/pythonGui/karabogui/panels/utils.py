@@ -53,7 +53,7 @@ def format_vector_hash_details(binding, value):
 
 
 def format_property_details(binding, path, value=''):
-    name = binding.displayed_name or path
+    name = binding.displayedName or path
     data_type = type(binding).__name__[:-len('binding')]
     return f"- {name} ({data_type}): {value}"
 

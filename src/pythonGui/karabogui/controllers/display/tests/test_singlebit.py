@@ -95,7 +95,7 @@ def test_actions(singlebit_setup, mocker):
     change_action.trigger()
     assert model.bit == 3
 
-    proxy.binding.display_type = "bin|1,2,3"
+    proxy.binding.displayType = "bin|1,2,3"
     QInputDialog.getItem.return_value = "2:", True
     change_action.trigger()
 

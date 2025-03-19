@@ -29,7 +29,7 @@ from karabogui.controllers.table.utils import (
     quick_table_copy, string2list)
 
 
-def test_display_type_state():
+def test_displayType_state():
     string = StringBinding(attributes={KARABO_SCHEMA_DISPLAY_TYPE: "State"})
     assert is_state_display_type(string)
     string = StringBinding(attributes={KARABO_SCHEMA_DISPLAY_TYPE: "Alarm"})

@@ -28,7 +28,7 @@ from karabo.native import AccessMode, Hash, encodeBinary
 
 def is_writable_binding(binding, binding_type=None):
     """Return if the `binding` is a writable string binding"""
-    writable = binding.access_mode is AccessMode.RECONFIGURABLE
+    writable = binding.accessMode is AccessMode.RECONFIGURABLE
     if binding_type is None:
         return writable
     return isinstance(binding, binding_type) and writable
@@ -36,7 +36,7 @@ def is_writable_binding(binding, binding_type=None):
 
 def is_state_display_type(binding):
     """Return if the display type belongs to a state element"""
-    return binding.display_type == KARABO_SCHEMA_DISPLAY_TYPE_STATE
+    return binding.displayType == KARABO_SCHEMA_DISPLAY_TYPE_STATE
 
 
 def string2list(value: str) -> list:

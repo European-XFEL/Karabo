@@ -262,7 +262,7 @@ def get_dtype_format(binding):
     """
     fmt = "{}"
     if isinstance(binding, types.IntBinding):
-        dt = binding.display_type.split("|")
+        dt = binding.displayType.split("|")
         prefix = dt[0]
         _fmt = {
             "bin": "0b{:b}",
@@ -287,7 +287,7 @@ def get_dtype_format(binding):
 
 def get_binding_format(binding):
     """Read the initial format information from a binding"""
-    display = binding.display_type.split("|")
+    display = binding.displayType.split("|")
     if display[0] != "format" or len(display) != 2:
         return DEFAULT_FORMAT, DEFAULT_DECIMALS
 

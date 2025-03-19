@@ -12,7 +12,7 @@ def _friendly_repr(binding, value):
         return str(value)
 
     converters = {"hex": hex, "oct": oct, "bin": bin}
-    base = binding.display_type
+    base = binding.displayType
     if base in converters:
         try:
             return converters[base](value)

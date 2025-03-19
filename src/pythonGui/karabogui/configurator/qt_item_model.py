@@ -49,7 +49,7 @@ def _friendly_repr(proxy, value):
     """Return a user-friendly value, convert base or with units displayed.
     """
     converters = {'hex': hex, 'oct': oct, 'bin': bin}
-    base = proxy.binding.display_type
+    base = proxy.binding.displayType
     if base in converters:
         try:
             return converters[base](value)
@@ -443,20 +443,20 @@ class ConfigurationTreeModel(QAbstractItemModel):
             return None  # indicate no color
 
         if isinstance(binding, StringBinding):
-            if binding.display_type == 'State':
+            if binding.displayType == 'State':
                 return get_state_color(value) + (128,)
 
-            if binding.display_type == 'AlarmCondition':
+            if binding.displayType == 'AlarmCondition':
                 return PROPERTY_ALARM_COLOR_MAP.get(value)
         return None  # indicate no color
 
     def access_level_tooltip(self, proxy):
         binding = proxy.binding
-        writable = (binding.access_mode is not AccessMode.READONLY
+        writable = (binding.accessMode is not AccessMode.READONLY
                     or isinstance(binding, SlotBinding))
         if not writable:
             return
-        level = proxy.binding.required_access_level
+        level = proxy.binding.requiredAccessLevel
         allowed = self.global_access >= level
         return (f"Key: {proxy.path} - AccessLevel: {level.name} "
                 f"- Access Allowed: {allowed}")
@@ -466,7 +466,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
         binding = proxy.binding
         if column == 0:
             if role == Qt.DisplayRole:
-                name = binding.displayed_name
+                name = binding.displayedName
                 return name or proxy.path.split('.')[-1]
             elif role == Qt.BackgroundRole:
                 return None
@@ -478,7 +478,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
                     return font
             elif role == Qt.ForegroundRole:
                 is_class = isinstance(self.root, DeviceClassProxy)
-                if (is_class and (binding.access_mode is AccessMode.READONLY or
+                if (is_class and (binding.accessMode is AccessMode.READONLY or
                                   binding.assignment is Assignment.INTERNAL)):
                     return QColor(*PROPERTY_READONLY_COLOR)
             elif role == Qt.DecorationRole:
@@ -518,15 +518,15 @@ class ConfigurationTreeModel(QAbstractItemModel):
             return flags
 
         if is_project:
-            writable = binding.access_mode in (AccessMode.INITONLY,
-                                               AccessMode.RECONFIGURABLE)
+            writable = binding.accessMode in (AccessMode.INITONLY,
+                                              AccessMode.RECONFIGURABLE)
             if writable and binding.assignment is not Assignment.INTERNAL:
                 flags |= Qt.ItemIsEditable
         else:
-            writable = binding.access_mode is AccessMode.RECONFIGURABLE
+            writable = binding.accessMode is AccessMode.RECONFIGURABLE
             if (writable and binding.is_allowed(
                     get_device_state_string(self.root)) and (
-                    self.global_access >= binding.required_access_level)):
+                        self.global_access >= binding.requiredAccessLevel)):
                 flags |= Qt.ItemIsEditable
 
         return flags

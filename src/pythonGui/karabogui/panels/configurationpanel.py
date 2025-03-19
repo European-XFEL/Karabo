@@ -440,11 +440,11 @@ class ConfigurationPanel(BasePanelWidget):
                 # NOTE: This property most likely was removed from the
                 # device, we have schema evolution and will continue here!
                 continue
-            if prop_binding.access_mode is not AccessMode.RECONFIGURABLE:
+            if prop_binding.accessMode is not AccessMode.RECONFIGURABLE:
                 continue
             prop_value = get_binding_value(prop_binding)
             edit_value = None
-            if (prop_binding.required_access_level <= access_level
+            if (prop_binding.requiredAccessLevel <= access_level
                     and prop_binding.is_allowed(state)):
                 if isinstance(prop_binding, VectorHashBinding):
                     valid, invalid = validate_table_value(prop_binding, value)
@@ -507,7 +507,7 @@ class ConfigurationPanel(BasePanelWidget):
         for path, value, attrs in Hash.flat_iterall(configuration):
             binding = proxy.get_property_binding(path)
             writable = (binding is not None and
-                        binding.access_mode != AccessMode.READONLY and
+                        binding.accessMode != AccessMode.READONLY and
                         binding.assignment != Assignment.INTERNAL)
             if not writable:
                 continue

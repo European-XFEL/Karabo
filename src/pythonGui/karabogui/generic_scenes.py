@@ -52,11 +52,11 @@ def get_generic_scene(proxy, include_images=True):
         return
 
     instance_id = proxy.root_proxy.device_id
-    display_type = binding.attributes.get(KARABO_SCHEMA_DISPLAY_TYPE, '')
-    if display_type == KARABO_SCHEMA_DISPLAY_TYPE_STATE:
+    displayType = binding.attributes.get(KARABO_SCHEMA_DISPLAY_TYPE, '')
+    if displayType == KARABO_SCHEMA_DISPLAY_TYPE_STATE:
         path = proxy.path
         return get_state_graph_scene(instance_id, path)
-    elif display_type == KARABO_SCHEMA_DISPLAY_TYPE_ALARM:
+    elif displayType == KARABO_SCHEMA_DISPLAY_TYPE_ALARM:
         path = proxy.path
         return get_alarm_graph_scene(instance_id, path)
 
@@ -128,13 +128,13 @@ def get_property_proxy_model(proxy, include_images=True):
     if binding is None:
         return
 
-    display_type = binding.attributes.get(
+    displayType = binding.attributes.get(
         KARABO_SCHEMA_DISPLAY_TYPE, "").split("|")[0]
-    if display_type == KARABO_SCHEMA_DISPLAY_TYPE_STATE:
+    if displayType == KARABO_SCHEMA_DISPLAY_TYPE_STATE:
         return StateGraphModel(**_get_plot_attributes(proxy))
-    elif display_type == KARABO_SCHEMA_DISPLAY_TYPE_ALARM:
+    elif displayType == KARABO_SCHEMA_DISPLAY_TYPE_ALARM:
         return AlarmGraphModel(**_get_plot_attributes(proxy))
-    elif display_type in (
+    elif displayType in (
             KARABO_SCHEMA_DISPLAY_TYPE_BIN, KARABO_SCHEMA_DISPLAY_TYPE_HEX):
         return HistoricTextModel(**_get_widget_attributes(proxy.key))
 

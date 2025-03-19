@@ -275,7 +275,7 @@ def extract_online_edits(schema, binding):
             continue
 
         value = node.value
-        if node.display_type == "deviceNode":
+        if node.displayType == "deviceNode":
             # DeviceNode may not be successful, until ~2.15 or forever ...
             # Future versions of the device node always have a value
             if not value or value is Undefined:
@@ -336,7 +336,7 @@ def extract_init_configuration(binding, config):
             value, attrs = config.getElement(key)
             # We only want reconfigurable properties, but in Karabo 2.11
             # read only parameter can still have attributes.
-            read_only = node.access_mode is AccessMode.READONLY
+            read_only = node.accessMode is AccessMode.READONLY
             is_internal = node.assignment is Assignment.INTERNAL
             if read_only or is_internal:
                 continue
