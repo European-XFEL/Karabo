@@ -85,7 +85,7 @@ def _create_scene_model(devs, controllers=None):
     all_controllers = set()
     for device_id in devs:
         for device_key, binding_data in type_map.items():
-            binding, display_type, can_edit = binding_data
+            binding, displayType, can_edit = binding_data
             klasses = get_compatible_controllers(binding())
             klasses += get_compatible_controllers(binding(), can_edit=True)
             klasses.sort(key=lambda x: x.__name__)

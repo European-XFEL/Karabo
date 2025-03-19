@@ -29,7 +29,7 @@ def extract_configuration(binding):
             # Skip pipeline data
             continue
         all_config[key] = value
-        if node.access_mode == AccessMode.RECONFIGURABLE:
+        if node.accessMode == AccessMode.RECONFIGURABLE:
             reconfigurable[key] = value
 
     return all_config, reconfigurable

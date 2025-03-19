@@ -142,7 +142,7 @@ class DisplayCommand(BaseBindingController):
             elif item_dev is updated_dev:
                 is_allowed = item_binding.is_allowed(state)
                 is_accessible = (krb_access.GLOBAL_ACCESS_LEVEL >=
-                                 item_binding.required_access_level)
+                                 item_binding.requiredAccessLevel)
                 item.action.setEnabled(is_allowed and is_accessible)
 
         self._set_default_action()
@@ -166,7 +166,7 @@ class DisplayCommand(BaseBindingController):
                 continue
             is_allowed = binding.is_allowed(state)
             is_accessible = (krb_access.GLOBAL_ACCESS_LEVEL >=
-                             binding.required_access_level)
+                             binding.requiredAccessLevel)
             item.action.setEnabled(is_allowed and is_accessible)
 
         self._set_default_action()
@@ -178,7 +178,7 @@ class DisplayCommand(BaseBindingController):
         :type initial: bool
         """
         proxy = item.proxy
-        display_name = proxy.binding.displayed_name or proxy.path
+        display_name = proxy.binding.displayedName or proxy.path
         # if displayed name is not set, use path
         item.action.setText(display_name)
         item.action.setToolTip(proxy.key)

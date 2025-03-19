@@ -138,7 +138,7 @@ class ConfigurationDropHandler(SceneDnDHandler):
             insert_model_layout(klasses[0], proxy, layout_model)
 
         # Only editable if RECONFIGURABLE
-        if proxy.binding.access_mode is AccessMode.RECONFIGURABLE:
+        if proxy.binding.accessMode is AccessMode.RECONFIGURABLE:
             klasses = get_compatible_controllers(proxy.binding, can_edit=True)
             if klasses:
                 insert_model_layout(klasses[0], proxy, layout_model)

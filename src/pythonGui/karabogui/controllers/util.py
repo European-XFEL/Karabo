@@ -32,7 +32,7 @@ def axis_label(proxy):
         return ''
 
     unit = binding.unit_label
-    name = binding.displayed_name
+    name = binding.displayedName
     return f"{name} [{unit}]" if unit else name
 
 
@@ -96,15 +96,15 @@ def load_extensions():
             print(f'Cannot load plugin {entry.name}: {e}')
 
 
-def with_display_type(display_type):
+def with_display_type(displayType):
     """Create a checker function for the `is_compatible` argument of
     `register_binding_controller` which looks for a specific display type
     of property.
     """
 
     def is_compatible(binding):
-        dt = binding.display_type
-        return dt == display_type
+        dt = binding.displayType
+        return dt == displayType
 
     return is_compatible
 
@@ -120,5 +120,5 @@ def is_proxy_allowed(proxy):
     binding = proxy.binding
     is_allowed = binding.is_allowed(value)
     is_accessible = (krb_access.GLOBAL_ACCESS_LEVEL >=
-                     binding.required_access_level)
+                     binding.requiredAccessLevel)
     return is_accessible and is_allowed

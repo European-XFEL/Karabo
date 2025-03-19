@@ -59,7 +59,7 @@ def get_dtype(binding):
     """Return a dtype corresponding to binding"""
     fmt = "{}"
     if isinstance(binding, UnsignedIntBinding):
-        dt = binding.display_type.split("|")[0]
+        dt = binding.displayType.split("|")[0]
         _fmt = {
             "bin": "0b{{:0{}b}}".format(
                 np.iinfo(get_numpy_binding(binding)).bits),
