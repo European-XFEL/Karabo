@@ -22,7 +22,7 @@ from karabo.common.api import BaseSavableModel
 
 # Hey Code Reviewers! Be sure to ask questions when this value changes!
 EXPECTED_HASH = (
-    "09e3bf2d6d7c0d71bd5a5c80ebb9071be9926dbc110cedc4c2ac99d8db360bfd"
+    "1c8d16211fae9d4a8e170a79fd550e0c239e86e7af45a084788e8f3e7c752ee8"
 )
 FAILURE_MSG = """
 ##############################################################################

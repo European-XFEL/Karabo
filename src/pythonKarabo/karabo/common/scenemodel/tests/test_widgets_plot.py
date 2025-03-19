@@ -15,9 +15,7 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 from io import StringIO
 
-from ..api import (
-    LinePlotModel, SparklineModel, TrendGraphModel, VectorXYGraphModel,
-    read_scene)
+from ..api import SparklineModel, read_scene
 from .utils import (
     assert_base_traits, base_widget_traits, single_model_round_trip)
 
@@ -36,24 +34,6 @@ OLD_SPARKY = """
     </svg:rect>
 </svg:svg>
 """
-
-
-def test_line_plot_widget():
-    _check_line_plot_widget(
-        klass_name="DisplayTrendline", new_klass=TrendGraphModel
-    )
-    _check_line_plot_widget(
-        klass_name="XYVector", new_klass=VectorXYGraphModel
-    )
-
-
-def _check_line_plot_widget(klass_name, new_klass):
-    traits = base_widget_traits()
-    traits["klass"] = klass_name
-    model = LinePlotModel(**traits)
-    read_model = single_model_round_trip(model)
-    assert_base_traits(read_model)
-    assert isinstance(read_model, new_klass)
 
 
 def test_sparkline_basics():
