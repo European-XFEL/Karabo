@@ -50,7 +50,6 @@ from karabo.native import (
     sanitize_table_schema, saveToFile, simple_deepcopy, string_from_hashtype,
     unit_registry as unit, write_project_model, writeBinary, writeXML)
 
-from . import numeric
 from .configuration import (
     config_changes, sanitize_init_configuration, sanitize_write_configuration)
 from .device import Device, DeviceClientBase
