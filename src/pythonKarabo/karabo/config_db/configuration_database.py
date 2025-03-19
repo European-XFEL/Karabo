@@ -16,12 +16,12 @@
 from datetime import datetime, timezone
 from pathlib import Path
 
-from sqlalchemy import insert
+from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.future import select
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import selectinload, sessionmaker
+from sqlmodel import SQLModel
 
-from .models import Base, DeviceConfig
+from .models import NamedDeviceConfig, NamedDeviceInstance
 from .utils import ConfigurationDBError, datetime_from_string, utc_to_local
 
 
@@ -29,7 +29,11 @@ class DbHandle:
     def __init__(self, db_name: str):
         self.db_name = db_name
         self.engine = create_async_engine(
-            f"sqlite+aiosqlite:///{self.db_name}")
+            f"sqlite+aiosqlite:///{self.db_name}",
+            # True for debugging SQL queries
+            echo=False,
+            pool_pre_ping=True,
+            connect_args={"check_same_thread": True})
         self.session_handle = sessionmaker(
             bind=self.engine, class_=AsyncSession,
             expire_on_commit=False)
@@ -41,9 +45,11 @@ class DbHandle:
     async def __aexit__(self, exc_type, exc_value, traceback):
         await self.session.close()
 
+    async def dispose(self):
+        await self.engine.dispose()
+
 
 class ConfigurationDatabase:
-
     def __init__(self, db_handle):
         self.db_handle = db_handle
 
@@ -53,18 +59,18 @@ class ConfigurationDatabase:
 
     @property
     def dirname(self) -> str | None:
-        return self.path.parent if self.path.exists() else None
+        return str(self.path.parent) if self.path.exists() else None
 
     async def assure_existing(self):
         """Ensures the database schema is created."""
         async with self.db_handle.engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
+            await conn.run_sync(SQLModel.metadata.create_all)
 
     async def delete(self):
         """Deletes the database schema and file."""
         async with self.db_handle.engine.begin() as conn:
-            await conn.run_sync(Base.metadata.drop_all)
-        await self.db_handle.engine.dispose()
+            await conn.run_sync(SQLModel.metadata.drop_all)
+        await self.db_handle.dispose()
         if self.path.exists():
             self.path.unlink()
 
@@ -72,23 +78,35 @@ class ConfigurationDatabase:
     # --------------------------------------------------------------------
 
     async def list_configurations(
-            self, device_id: str, name_part: str = "") -> dict:
-        """Retrieves the set of device configurations related to a name part
+            self, device_id: str, name_part: str = "") -> list[dict]:
+        """Retrieves the set of device configurations related to a name part.
 
-        :param device_id: the id of the device
-        :param name_part: the name part of the device configurations.
-                          Empty means all named configurations.
+        :param device_id: The ID of the device.
+        :param name_part: Partial name filter for configurations.
+                        If empty, retrieves all configurations.
+        :return: List of configuration dictionaries (can be empty).
         """
-        async with self.db_handle as session:
-            stmt = select(DeviceConfig.name, DeviceConfig.timestamp).where(
-                DeviceConfig.device_id == device_id)
-            if name_part:
-                stmt = stmt.where(DeviceConfig.name.contains(name_part))
+        async with self.get_session() as session:
+            stmt = (
+                select(NamedDeviceInstance)
+                .where(NamedDeviceInstance.device_id == device_id)
+                # Orm query
+                .options(selectinload(NamedDeviceInstance.configurations)))
+
             result = await session.execute(stmt)
+            device = result.scalars().first()
+            if not device:
+                return []
+
+            configurations = device.configurations
+            if name_part:
+                configurations = [config for config in configurations
+                                  if name_part in config.name]
+
             return [
-                {"name": name,
-                 "timepoint": utc_to_local(timestamp)}
-                for name, timestamp in result.fetchall()]
+                {"name": config.name,
+                 "timepoint": utc_to_local(config.timestamp)}
+                for config in configurations]
 
     def get_session(self):
         return self.db_handle
@@ -99,10 +117,9 @@ class ConfigurationDatabase:
         :returns: list of deviceIds records (can be empty).
         """
         async with self.get_session() as session:
-            stmt = select(DeviceConfig.device_id).distinct()
+            stmt = select(NamedDeviceInstance.device_id).distinct()
             result = await session.execute(stmt)
-            devices = result.scalars().all()
-            return [str(device) for device in devices]
+            return result.scalars().all()
 
     async def get_configuration(self, device_id: str, name: str) -> dict:
         """Retrieves a device configuration given its name.
@@ -114,10 +131,10 @@ class ConfigurationDatabase:
                   timestamp is returned in ISO8601 format.
         """
         async with self.get_session() as session:
-            stmt = select(DeviceConfig.timestamp,
-                          DeviceConfig.config_data).where(
-                DeviceConfig.device_id == device_id,
-                DeviceConfig.name == name)
+            stmt = select(NamedDeviceConfig.timestamp,
+                          NamedDeviceConfig.config_data).where(
+                NamedDeviceConfig.device_id == device_id,
+                NamedDeviceConfig.name == name)
             result = await session.execute(stmt)
             config = result.fetchone()
             if config is None:
@@ -129,21 +146,21 @@ class ConfigurationDatabase:
             "timestamp": utc_to_local(config[0]),
             "config": config[1]}
 
-    async def save_configuration(self, name: str, configs: list[dict],
-                                 timestamp: str | None = None):
-        """Saves one or more device configurations.
+    async def save_configuration(
+            self, name: str, configs: list[dict],
+            timestamp: str | None = None):
+        """Saves one or more device configurations, ensuring the Device exists.
 
-        :param name: the configuration(s) name
-        :param configs: a list of dictionaries with keys:
+        :param name: The configuration(s) name.
+        :param configs: A list of dictionaries with keys:
                         - "deviceId"
-                        - "config" (Base64 encoded binary serialization of
-                                    the configuration)
+                        - "config"
         :param timestamp: Optional ISO8601 timestamp;
-                          if not provided, the current UTC timestamp is used.
+                          defaults to current UTC time.
         """
         if len(name) >= 80:
-            raise ConfigurationDBError(
-                "Please provide a name with less than 80 characters.")
+            text = "Please provide a name with less than 80 characters."
+            raise ConfigurationDBError(text)
 
         required_keys = ["deviceId", "config"]
         for index, config in enumerate(configs):
@@ -153,21 +170,28 @@ class ConfigurationDatabase:
 
         async with self.get_session() as session:
             try:
-                if timestamp is None:
-                    timestamp = datetime.now(timezone.utc)
-                else:
-                    timestamp = datetime_from_string(timestamp)
+                timestamp = (datetime_from_string(timestamp) if timestamp
+                             is not None else datetime.now(timezone.utc))
 
                 for config in configs:
-                    stmt = insert(DeviceConfig).values(
-                        device_id=config["deviceId"],
-                        name=name,
-                        timestamp=timestamp,
-                        config_data=config["config"]
-                    ).prefix_with("OR REPLACE")
-                    await session.execute(stmt)
+                    device_id = config["deviceId"]
+                    stmt_device = select(NamedDeviceInstance).where(
+                        NamedDeviceInstance.device_id == device_id)
+                    device = (await session.execute(
+                        stmt_device)).scalars().first()
+                    if not device:
+                        session.add(NamedDeviceInstance(device_id=device_id))
 
+                    stmt_config = (
+                        insert(NamedDeviceConfig)
+                        .values(
+                            device_id=device_id,
+                            name=name,
+                            timestamp=timestamp,
+                            config_data=config["config"]
+                        ).prefix_with("OR REPLACE"))
+                    await session.execute(stmt_config)
                 await session.commit()
             except Exception as e:
                 await session.rollback()
-                raise ConfigurationDBError(f"{e}")
+                raise ConfigurationDBError(f"Unexpected Error: {e}")
