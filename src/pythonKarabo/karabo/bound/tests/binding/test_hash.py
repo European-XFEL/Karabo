@@ -324,6 +324,56 @@ def test_getset():
     assert n.getValue() == 12
     assert f.getType('a') == Types.INT32
 
+    # test 'items()'...
+    h = Hash('a.b', 12, 'c.d', 23, 'e', 65, 'f.g.m', 'abrakadabra', 'x', 88.9)
+    h['v'] = VectorHash([Hash('a', 21), Hash('z', Hash())])
+    h['w'] = Hash('q.r', 77.7)
+    # get iterator of ItemView...
+    it = iter(h.items())
+    k, v = next(it)
+    assert k == 'a'
+    assert v == Hash('b', 12)
+    assert isinstance(v, Hash)
+    # iterate over this Hash...
+    jt = iter(v.items())
+    k1, v1 = next(jt)
+    assert k1 == 'b'
+    assert isinstance(v1, int)
+    assert v1 == 12
+    with pytest.raises(StopIteration):
+        next(jt)
+    k, v = next(it)
+    assert k == 'c'
+    assert v == Hash('d', 23)
+    k, v = next(it)
+    assert k == 'e'
+    assert v == 65
+    k, v = next(it)
+    assert k == 'f'
+    assert v == Hash('g.m', 'abrakadabra')
+    k, v = next(it)
+    assert k == 'x'
+    assert v == 88.9
+    k, v = next(it)
+    assert k == 'v'
+    assert isinstance(v, VectorHash)
+    assert v == VectorHash([Hash('a', 21), Hash('z', Hash())])
+    assert len(v) == 2
+    # iterate over VectorHash...
+    jt = iter(v)
+    hsh = next(jt)
+    assert isinstance(hsh, Hash)
+    assert hsh == Hash('a', 21)
+    hsh = next(jt)
+    assert hsh == Hash('z', Hash())
+    with pytest.raises(StopIteration):
+        next(jt)
+    k, v = next(it)
+    assert k == 'w'
+    assert v == Hash('q.r', 77.7)
+    with pytest.raises(StopIteration):
+        next(it)
+
 
 def test_getsetVectorHash():
     vh = VectorHash()

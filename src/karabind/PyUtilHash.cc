@@ -96,6 +96,24 @@ namespace karabo {
 } // namespace karabo
 
 
+namespace karabind {
+
+    struct HashIteratorAccess {
+        py::object operator()(karabo::util::Hash::iterator& it) const {
+            return py::make_tuple(py::cast((*it).getKey()), wrapper::castAnyToPy((*it).getValueAsAny()));
+        }
+    };
+
+
+    py::iterator make_iterator(karabo::util::Hash::iterator first, karabo::util::Hash::iterator last) {
+        return py::detail::make_iterator_impl<HashIteratorAccess, py::return_value_policy::reference_internal,
+                                              karabo::util::Hash::iterator, karabo::util::Hash::iterator, py::object>(
+              first, last);
+    }
+
+} // namespace karabind
+
+
 using namespace karabo::util;
 using namespace std;
 using namespace karabind;
@@ -152,6 +170,18 @@ void exportPyUtilHash(py::module_& m) {
     h.def("clear", &Hash::clear, "h.clear() makes empty the content of current Hash object 'h' (in place).\n");
 
     h.def("empty", &Hash::empty, "h.empty() -> True if 'h' is empty otherwise False.\n");
+
+    struct ItemView {
+        Hash& map;
+    };
+
+    py::class_<ItemView>(h, "ItemView")
+          .def("__len__", [](ItemView& v) { v.map.size(); })
+          .def(
+                "__iter__", [](ItemView& v) { return make_iterator(v.map.begin(), v.map.end()); },
+                py::keep_alive<0, 1>());
+
+    h.def("items", [](Hash& self) { return std::unique_ptr<ItemView>(new ItemView{self}); }, py::keep_alive<0, 1>());
 
     h.def(
           "getKeys",
