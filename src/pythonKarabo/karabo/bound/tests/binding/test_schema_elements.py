@@ -24,8 +24,8 @@ from karabo.bound import (
     IMAGEDATA_ELEMENT, INT32_ELEMENT, INT64_ELEMENT, KARABO_CLASSINFO,
     KARABO_CONFIGURATION_BASE_CLASS, LIST_ELEMENT, METER, MICRO,
     NDARRAY_ELEMENT, NO_ARCHIVING, NODE_ELEMENT, OVERWRITE_ELEMENT,
-    PATH_ELEMENT, SLOT_ELEMENT, STATE_ELEMENT, STRING_ELEMENT, TABLE_ELEMENT,
-    UINT32_ELEMENT, UINT64_ELEMENT, VECTOR_BOOL_ELEMENT, VECTOR_DOUBLE_ELEMENT,
+    SLOT_ELEMENT, STATE_ELEMENT, STRING_ELEMENT, TABLE_ELEMENT, UINT32_ELEMENT,
+    UINT64_ELEMENT, VECTOR_BOOL_ELEMENT, VECTOR_DOUBLE_ELEMENT,
     VECTOR_INT32_ELEMENT, VECTOR_STRING_ELEMENT, VECTOR_UINT32_ELEMENT,
     AccessLevel, AccessType, ArchivePolicy, AssemblyRules, AssignmentType,
     Encoding, Hash, MetricPrefix, NodeType, Schema, Types, Unit, cppNDArray,
@@ -558,27 +558,24 @@ class TestStruct1:
             .defaultValue(0xbeefface)
             .commit(),
 
-            PATH_ELEMENT(expected)
+            STRING_ELEMENT(expected)
             .key("testPath")
             .alias(5)
             .displayedName("Filename")
-            .isOutputFile()
-            .options("file1, file2")
+            .options("file1, file2, karabo.log")
             .assignmentOptional()
             .defaultValue("karabo.log")
             .reconfigurable()
             .commit(),
 
-            PATH_ELEMENT(expected)
+            STRING_ELEMENT(expected)
             .key("testPath2")
-            .isInputFile()
             .readOnly()
             .archivePolicy(EVERY_1S)
             .commit(),
 
-            PATH_ELEMENT(expected)
+            STRING_ELEMENT(expected)
             .key("testPath3")
-            .isDirectory()
             .assignmentMandatory()
             .commit(),
 
@@ -698,13 +695,12 @@ class OtherSchemaElementsX:
             .allowedStates(State.STARTED, State.STOPPED, State.ERROR)
             .commit(),
 
-            PATH_ELEMENT(expected)
+            STRING_ELEMENT(expected)
             .description("File name")
             .key("filename")
             .alias(5)
             .displayedName("Filename")
-            .isOutputFile()
-            .options("file1, file2")
+            .options("file1, file2, karabo.log")
             .assignmentOptional()
             .defaultValue("karabo.log")
             .reconfigurable()

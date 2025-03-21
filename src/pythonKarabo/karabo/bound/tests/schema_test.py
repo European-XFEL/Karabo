@@ -737,16 +737,6 @@ class Schema_TestCase(unittest.TestCase):
         assert sch.isLeaf("shapeList.BizarreForm.length") is True
 
     def test_getDisplayType(self):
-
-        schema = Configurator(TestStruct1).getSchema("TestStruct1")
-        self.assertEqual(schema.getDisplayType("testPath"), "fileOut")
-        self.assertEqual(schema.getDisplayType("testPath2"), "fileIn")
-        self.assertEqual(schema.getDisplayType("testPath3"), "directory")
-        #  self.assertEqual(schema.getDisplayType("exampleBitsKey1"), "Bitset")
-        #  self.assertEqual(schema.getDisplayType("exampleBitsKey2"), "Bitset")
-        #  self.assertEqual(schema.getDisplayType("exampleBitsKey3"), "Bitset")
-        #  self.assertEqual(schema.getDisplayType("exampleBitsKey4"), "Bitset")
-
         schema = TestStruct1.getSchema("TestStruct1")
         self.assertEqual(schema.getDisplayType("exampleBitsKey1"), "bin")
         self.assertEqual(schema.getDisplayType("exampleBitsKey2"),

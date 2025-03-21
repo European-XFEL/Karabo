@@ -22,7 +22,6 @@
 #include <memory>
 #include <nlohmann/json.hpp>
 
-#include "karabo/util/PathElement.hh"
 
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device, karabo::devices::DataLogger,
                                   karabo::devices::FileDataLogger)
@@ -105,7 +104,7 @@ namespace karabo {
 
 
         void FileDataLogger::expectedParameters(karabo::util::Schema& expected) {
-            PATH_ELEMENT(expected)
+            STRING_ELEMENT(expected)
                   .key("directory")
                   .displayedName("Directory")
                   .description("The directory where the log files should be placed")

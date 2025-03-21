@@ -23,7 +23,6 @@
 #include "karabo/util/Dims.hh"
 #include "karabo/util/Hash.hh"
 #include "karabo/util/NDArray.hh"
-#include "karabo/util/PathElement.hh"
 #include "karabo/util/Schema.hh"
 #include "karabo/util/State.hh"
 #include "karabo/util/TableElement.hh"
@@ -819,31 +818,28 @@ namespace karabo {
                   .allowedStates(State::NORMAL)
                   .commit();
 
-            PATH_ELEMENT(expected)
+            STRING_ELEMENT(expected)
                   .key("inputPath")
                   .displayedName("Input File")
                   .description("An input file")
-                  .isInputFile()
                   .assignmentOptional()
                   .defaultValue("./input_file")
                   .reconfigurable()
                   .commit();
 
-            PATH_ELEMENT(expected)
+            STRING_ELEMENT(expected)
                   .key("outputPath")
                   .displayedName("Output File")
                   .description("An output file")
-                  .isOutputFile()
                   .assignmentOptional()
                   .defaultValue("./output_file")
                   .reconfigurable()
                   .commit();
 
-            PATH_ELEMENT(expected)
+            STRING_ELEMENT(expected)
                   .key("directoryPath")
                   .displayedName("Directory")
                   .description("A directory")
-                  .isDirectory()
                   .assignmentOptional()
                   .defaultValue(".")
                   .reconfigurable()

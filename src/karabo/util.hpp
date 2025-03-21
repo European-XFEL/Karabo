@@ -45,7 +45,6 @@
 #include "util/NDArray.hh"
 #include "util/NodeElement.hh"
 #include "util/OverwriteElement.hh"
-#include "util/PathElement.hh"
 #include "util/Schema.hh"
 #include "util/SimpleElement.hh"
 #include "util/State.hh"
