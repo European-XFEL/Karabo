@@ -35,7 +35,6 @@
 #include <karabo/util/NDArray.hh>
 #include <karabo/util/NodeElement.hh>
 #include <karabo/util/OverwriteElement.hh>
-#include <karabo/util/PathElement.hh>
 #include <karabo/util/SimpleElement.hh>
 #include <karabo/util/State.hh>
 #include <karabo/util/TableElement.hh>

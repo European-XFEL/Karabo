@@ -47,7 +47,6 @@
 #include "karabo/util/Configurator.hh"
 #include "karabo/util/ListElement.hh"
 #include "karabo/util/NodeElement.hh"
-#include "karabo/util/PathElement.hh"
 #include "karabo/util/SimpleElement.hh"
 #include "karabo/util/VectorElement.hh"
 #include "karabo/util/Version.hh"
@@ -154,13 +153,12 @@ namespace karabo {
                   .defaultValue(true)
                   .commit();
 
-            PATH_ELEMENT(expected)
+            STRING_ELEMENT(expected)
                   .key("pluginDirectory")
                   .displayedName("Plugin Directory")
                   .description("Directory to search for plugins")
                   .assignmentOptional()
                   .defaultValue(PluginLoader::defaultPluginPath())
-                  .isDirectory()
                   .expertAccess()
                   .commit();
 

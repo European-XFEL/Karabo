@@ -27,7 +27,6 @@
 #include <karabo/util/NDArray.hh>
 #include <karabo/util/NodeElement.hh>
 #include <karabo/util/OverwriteElement.hh>
-#include <karabo/util/PathElement.hh>
 #include <karabo/util/SimpleElement.hh>
 #include <karabo/util/State.hh>
 #include <karabo/util/StateElement.hh>
@@ -572,20 +571,19 @@ namespace configurationTest {
                   .defaultValue(0xbeefface)
                   .commit();
 
-            PATH_ELEMENT(expected)
+            STRING_ELEMENT(expected)
                   .key("testPath")
                   .alias(5)
                   .displayedName("Filename")
-                  .isOutputFile()
-                  .options("file1, file2")
+                  .options("file1, file2, karabo.log")
                   .assignmentOptional()
                   .defaultValue("karabo.log")
                   .reconfigurable()
                   .commit();
 
-            PATH_ELEMENT(expected).key("testPath2").isInputFile().readOnly().commit();
+            STRING_ELEMENT(expected).key("testPath2").readOnly().commit();
 
-            PATH_ELEMENT(expected).key("testPath3").isDirectory().assignmentMandatory().commit();
+            STRING_ELEMENT(expected).key("testPath3").assignmentMandatory().commit();
 
             SLOT_ELEMENT(expected)
                   .key("slotTest")
@@ -646,31 +644,21 @@ namespace configurationTest {
                   .allowedStates(State::STARTED, State::STOPPED, State::ERROR)
                   .commit();
 
-            PATH_ELEMENT(expected)
+            STRING_ELEMENT(expected)
                   .description("File name")
                   .key("filename")
                   .alias(5)
                   .displayedName("Filename")
-                  .isOutputFile()
-                  .options("file1, file2")
+                  .options("file1, file2, karabo.log")
                   .assignmentOptional()
                   .defaultValue("karabo.log")
                   .reconfigurable()
                   .commit();
 
-            PATH_ELEMENT(expected)
+            STRING_ELEMENT(expected)
                   .key("testfile")
-                  .isInputFile()
                   .readOnly()
                   .defaultValue("initFile") // (now) for readOnly it's the same as initialValue
-                  .alarmHigh("a")
-                  .needsAcknowledging(false)
-                  .alarmLow("b")
-                  .needsAcknowledging(false)
-                  .warnHigh("c")
-                  .needsAcknowledging(false)
-                  .warnLow("d")
-                  .needsAcknowledging(false)
                   .archivePolicy(Schema::EVERY_10MIN)
                   .commit();
 

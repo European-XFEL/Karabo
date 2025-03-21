@@ -31,7 +31,6 @@
 #include <iosfwd>
 #include <karabo/util/ChoiceElement.hh>
 #include <karabo/util/Configurator.hh>
-#include <karabo/util/PathElement.hh>
 #include <karabo/util/SimpleElement.hh>
 #include <sstream>
 
@@ -63,7 +62,7 @@ namespace karabo {
             static void expectedParameters(karabo::util::Schema& expected) {
                 using namespace karabo::util;
 
-                PATH_ELEMENT(expected)
+                STRING_ELEMENT(expected)
                       .key("filename")
                       .description("Name of the file to be written")
                       .displayedName("Filename")

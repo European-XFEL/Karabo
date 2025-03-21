@@ -27,7 +27,6 @@
 
 #include "karabo/util/ListElement.hh"
 #include "karabo/util/NodeElement.hh"
-#include "karabo/util/PathElement.hh"
 #include "karabo/util/SimpleElement.hh"
 #include "karabo/util/StringTools.hh"
 
@@ -132,11 +131,10 @@ namespace karabo {
 
             NODE_ELEMENT(s).key("file").commit();
 
-            PATH_ELEMENT(s)
+            STRING_ELEMENT(s)
                   .key("file.filename")
                   .description("Filename")
                   .displayedName("Filename")
-                  .isOutputFile()
                   .assignmentOptional()
                   .defaultValue("karabo.log")
                   .commit();
@@ -226,11 +224,10 @@ namespace karabo {
                   .defaultValue(KARABO_AUDIT_LOGGER)
                   .commit();
 
-            PATH_ELEMENT(s)
+            STRING_ELEMENT(s)
                   .key("audit.filename")
                   .description("Filename of audit file data")
                   .displayedName("Filename")
-                  .isOutputFile()
                   .assignmentOptional()
                   .defaultValue("audit.log")
                   .commit();

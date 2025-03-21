@@ -30,7 +30,6 @@
 #include <iosfwd>
 #include <karabo/util/ChoiceElement.hh>
 #include <karabo/util/Configurator.hh>
-#include <karabo/util/PathElement.hh>
 #include <sstream>
 
 #include "Input.hh"
@@ -66,7 +65,7 @@ namespace karabo {
             static void expectedParameters(karabo::util::Schema& expected) {
                 using namespace karabo::util;
 
-                PATH_ELEMENT(expected)
+                STRING_ELEMENT(expected)
                       .key("filename")
                       .description("Name of the file to be read")
                       .displayedName("Filename")
