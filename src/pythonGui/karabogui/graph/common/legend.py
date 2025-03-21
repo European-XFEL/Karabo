@@ -17,7 +17,7 @@
 from pyqtgraph import LabelItem, mkBrush, mkPen
 from pyqtgraph.graphicsItems.LegendItem import ItemSample, LegendItem
 from qtpy.QtCore import Qt
-from qtpy.QtGui import QColor
+from qtpy.QtGui import QColor, QPen
 
 SYMBOL_COLUMN = 0
 TEXT_COLUMN = 1
@@ -77,6 +77,9 @@ class ColorBox(ItemSample):
         painter.setPen(self._pen)
         painter.setBrush(self._brush)
         painter.drawRect(0, 0, 10, 14)
+
+    def setPen(self, pen: QPen):
+        self._pen = pen
 
     def setBrush(self, brush):
         self._brush = brush

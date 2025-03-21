@@ -412,6 +412,28 @@ class KaraboPlotView(QWidget):
         if 'title' in config:
             self.set_title(config['title'])
 
+    def apply_curve_options(self, options: dict):
+        """Apply the plotting options to the corresponding curves"""
+        for plot_item in self.plotItem.listDataItems():
+            plot_item_options = options.get(plot_item.name(), None)
+            if plot_item_options is None:
+                continue
+            legend_name = plot_item_options.get("legend_name",
+                                                plot_item.name())
+            opts = plot_item.opts
+            pen_color = plot_item_options.get("pen_color")
+            pen = mkPen(pen_color)
+            _curve_options = plot_item_options.copy()
+            _curve_options["pen"] = pen
+            opts.update(_curve_options)
+
+            for sample, label in self._legend.items:
+                if sample.item == plot_item:
+                    sample.setBrush(mkBrush(pen.color()))
+                    sample.setPen(pen)
+                    label.setText(legend_name)
+            self._legend.updateSize()
+            plot_item.updateItems()
     # ----------------------------------------------------------------
     # Toolbar functions Events
 
@@ -733,6 +755,13 @@ class KaraboPlotView(QWidget):
         if config['y_log']:
             y_min, y_max = safe_log10(y_min), safe_log10(y_max)
         return y_min, y_max
+
+    def update_legend_text(self, plot_item, text):
+        """Set the label text for the  plot item's legend"""
+        legend = self._legend.getLabel(plot_item)
+        if legend is not None:
+            legend.setText(text)
+            self._legend.updateSize()
 
     # -----------------------------------------------------------------------
     # ROI methods

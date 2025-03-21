@@ -20,8 +20,8 @@ from .axis_item import (
     create_axis_items)
 from .canvas import PointCanvas, RectCanvas
 from .colors import (
-    COLORMAPS, Colors, get_brush_cycler, get_default_brush, get_default_pen,
-    get_pen_cycler, make_brush, make_pen)
+    COLORMAPS, Colors, get_allowed_colors, get_brush_cycler, get_default_brush,
+    get_default_pen, get_pen_cycler, make_brush, make_pen, rgba_to_hex)
 from .const import get_alarm_string, get_state_string
 from .dialogs.axes_labels import AxesLabelsDialog
 from .enums import (
