@@ -16,6 +16,7 @@
 # or FITNESS FOR A PARTICULAR PURPOSE.
 # flake8: noqa
 from .base import KaraboPlotView
+from .dialogs.curve_options import CurveOptionsDialog
 from .dialogs.hist_config import HistogramDialog
 from .dialogs.range_config import RangeDialog
 from .dialogs.transform_config import TransformDialog

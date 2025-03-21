@@ -13,9 +13,10 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
+from enum import IntEnum
 from xml.etree.ElementTree import SubElement
 
-from traits.api import Float, Int, String
+from traits.api import Bool, Float, Int, String
 
 from karabo.common.savable import BaseSavableModel
 from karabo.common.scenemodel.const import NS_KARABO
@@ -36,6 +37,12 @@ TRANSFORM_SET = ["x_scale", "y_scale", "x_translate", "y_translate"]
 
 KARABO_ROI_ITEMS = "roi_items"
 KARABO_ROI_TYPE = "roi_type"
+KARABO_CURVE_OPTIONS = "curve_options"
+
+
+class PlotType(IntEnum):
+    Curve = 1
+    Scatter = 2
 
 
 class BaseROIData(BaseSavableModel):
@@ -67,6 +74,25 @@ class RectROIData(BaseROIData):
     @property
     def coords(self):
         return self.x, self.y, self.w, self.h
+
+
+class BaseCurveOptions(BaseSavableModel):
+    key = String()
+    legend_name = String()
+    plot_type = Int()
+
+    def _legend_name_default(self):
+        return self.key
+
+
+class CurveOptions(BaseCurveOptions):
+    pen_color = String()
+    show_data_points = Bool()
+    symbol_brush_color = String()
+
+
+class ScatterOptions(BaseCurveOptions):
+    brush_color = String()
 
 
 def read_base_karabo_image_model(element):
@@ -251,6 +277,17 @@ def build_graph_config(model):
                     traits[subname] = getattr(roi, subname)
                 roi_items.append(traits)
             config[KARABO_ROI_ITEMS] = roi_items
+        elif name == KARABO_CURVE_OPTIONS:
+            curve_options = getattr(model, KARABO_CURVE_OPTIONS)
+            options = {}
+            for option in curve_options:
+                key = getattr(option, "key")
+                traits = {}
+                for subname in option.copyable_trait_names():
+                    traits[subname] = getattr(option, subname)
+
+                options[key] = traits
+            config[KARABO_CURVE_OPTIONS] = options
         else:
             # No special case, just write!
             config[name] = getattr(model, name)
@@ -275,6 +312,15 @@ def restore_graph_config(config):
                 roi_items.append(CrossROIData(**roi))
         config[KARABO_ROI_ITEMS] = roi_items
 
+    curve_options_data = config.get(KARABO_CURVE_OPTIONS, None)
+    curve_options = []
+    if curve_options_data is not None:
+        for options in curve_options_data:
+            if options["plot_type"] == PlotType.Curve:
+                curve_options.append(CurveOptions(**options))
+            elif options["plot_type"] == PlotType.Scatter:
+                curve_options.append(ScatterOptions(**options))
+        config[KARABO_CURVE_OPTIONS] = curve_options
     return config
 
 
@@ -302,3 +348,33 @@ def write_histogram_model(model, element):
     element.set(NS_KARABO + "auto", str(model.auto))
 
     return element
+
+
+def read_curve_options(element) -> list:
+    curve_options = [_read_options(child_elem) for child_elem in element if
+                     child_elem.tag == NS_KARABO + KARABO_CURVE_OPTIONS]
+    return curve_options
+
+
+def write_curve_options(model, element):
+    if not model.curve_options:
+        return
+    for options in model.curve_options:
+        options_element = SubElement(element, NS_KARABO + KARABO_CURVE_OPTIONS)
+        for name in options.copyable_trait_names():
+            options_element.set(name, str(getattr(options, name)))
+
+
+def _read_options(element):
+    key = element.get("key")
+    plot_type = int(element.get("plot_type", 0))
+    name = element.get("legend_name")
+    traits = {"plot_type": plot_type, "legend_name": name, "key": key}
+    if plot_type == PlotType.Curve:
+        traits["pen_color"] = element.get("pen_color")
+        traits["show_data_points"] = (
+                element.get("show_data_points", "").lower() == "true")
+        return CurveOptions(**traits)
+    if plot_type == PlotType.Scatter:
+        traits["brush_color"] = element.get("brush_color")
+        return ScatterOptions(**traits)
