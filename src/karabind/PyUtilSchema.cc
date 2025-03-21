@@ -30,7 +30,6 @@
 #include <karabo/util/ListElement.hh>
 #include <karabo/util/NodeElement.hh>
 #include <karabo/util/OverwriteElement.hh>
-#include <karabo/util/PathElement.hh>
 #include <karabo/util/TableElement.hh>
 #include <karabo/util/Validator.hh>
 

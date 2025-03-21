@@ -26,7 +26,6 @@
 #include <karabo/util/ChoiceElement.hh>
 #include <karabo/util/Exception.hh>
 #include <karabo/util/ListElement.hh>
-#include <karabo/util/PathElement.hh>
 #include <karabo/util/SimpleElement.hh>
 #include <karabo/util/VectorElement.hh>
 
@@ -44,7 +43,6 @@ void exportPyUtilSchemaElement(py::module_& m) {
     /////////////////////////////////////////////////////////////
     // DefaultValue<SimpleElement< EType >, EType >, where EType:
     // INT32, UINT32, INT64, UINT64, DOUBLE, STRING, BOOL
-    // and DefaultValue<PathElement, std::string >
     // and DefaultValue<ByteArrayElement, ByteArray >
     /////////////////////////////////////////////////////////////
 
@@ -56,7 +54,6 @@ void exportPyUtilSchemaElement(py::module_& m) {
     KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(SimpleElement<double>, double, DOUBLE)
     KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(SimpleElement<string>, string, STRING)
     KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(SimpleElement<bool>, bool, BOOL)
-    KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(PathElement, string, PATH)
     // KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(ByteArrayElement, ByteArray, BYTEARRAY)
     {
         typedef DefaultValue<ByteArrayElement, ByteArray> DefValue;
@@ -109,7 +106,6 @@ void exportPyUtilSchemaElement(py::module_& m) {
     ///////////////////////////////////////////////////////////////
     // ReadOnlySpecific<SimpleElement< EType >, EType >, where EType:
     // INT32, UINT32, INT64, UINT64, DOUBLE, STRING, BOOL
-    //  and ReadOnlySpecific<PathElement, std::string >
     //  and ReadOnlySpecific<ByteArrayElement, ByteArray >
 
 
@@ -121,7 +117,6 @@ void exportPyUtilSchemaElement(py::module_& m) {
     KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(SimpleElement<double>, double, DOUBLE)
     KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(SimpleElement<std::string>, std::string, STRING)
     KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(SimpleElement<bool>, bool, BOOL)
-    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(PathElement, std::string, PATH)
     // KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(ByteArrayElement, ByteArray, BYTEARRAY)
     {
         typedef ReadOnlySpecific<ByteArrayElement, ByteArray> ReadOnlySpec;
@@ -182,20 +177,6 @@ void exportPyUtilSchemaElement(py::module_& m) {
         // py::implicitly_convertible<Schema&, ByteArrayElement>();
         py::class_<ByteArrayElement>(m, "BYTEARRAY_ELEMENT")
               .def(py::init<Schema&>(), py::arg("expected")) KARABO_PYTHON_COMMON_ATTRIBUTES(ByteArrayElement);
-    }
-
-    //////////////////////////////////////////////////////////////////////
-    // Binding PathElement
-    // In Python : PATH_ELEMENT
-    {
-        // py::implicitly_convertible<Schema&, PathElement>();
-        typedef std::string EType;
-        py::class_<PathElement>(m, "PATH_ELEMENT")
-              .def(py::init<Schema&>(), py::arg("expected")) KARABO_PYTHON_COMMON_ATTRIBUTES(PathElement)
-                    KARABO_PYTHON_OPTIONS_NONVECTOR(PathElement)
-              .def("isInputFile", &PathElement::isInputFile, py::return_value_policy::reference_internal)
-              .def("isOutputFile", &PathElement::isOutputFile, py::return_value_policy::reference_internal)
-              .def("isDirectory", &PathElement::isDirectory, py::return_value_policy::reference_internal);
     }
 
     //////////////////////////////////////////////////////////////////////

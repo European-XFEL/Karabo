@@ -86,7 +86,6 @@
 #include "karabo/util/ChoiceElement.hh"
 #include "karabo/util/DataLogUtils.hh"
 #include "karabo/util/Epochstamp.hh"
-#include "karabo/util/PathElement.hh"
 #include "karabo/util/SimpleElement.hh"
 #include "karabo/util/StringTools.hh"
 #include "karabo/util/TableElement.hh"
@@ -175,7 +174,7 @@ namespace karabo {
                   .description("File based data logging")
                   .commit();
 
-            PATH_ELEMENT(expected)
+            STRING_ELEMENT(expected)
                   .key("fileDataLogger.directory")
                   .displayedName("Directory")
                   .description("The directory where the log files should be placed")

@@ -125,10 +125,10 @@ void Schema_Test::testGetRequiredAccessLevel() {
     Schema ose("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
     OtherSchemaElements::expectedParameters(ose);
 
-    // check default requiredAccessLevel by elements : slot, path, vector, image
+    // check default requiredAccessLevel by elements : slot, vector, image
     CPPUNIT_ASSERT(ose.getRequiredAccessLevel("slotTest") == Schema::USER);       // SLOT
     CPPUNIT_ASSERT(ose.getRequiredAccessLevel("filename") == Schema::USER);       // reconfigurable PATH
-    CPPUNIT_ASSERT(ose.getRequiredAccessLevel("testfile") == Schema::OBSERVER);   // readOnly PATH
+    CPPUNIT_ASSERT(ose.getRequiredAccessLevel("testfile") == Schema::OBSERVER);   // readOnly STRING
     CPPUNIT_ASSERT(ose.getRequiredAccessLevel("vecIntReconfig") == Schema::USER); // reconfigurable VECTOR_INT32
     CPPUNIT_ASSERT(ose.getRequiredAccessLevel("vecInt") == Schema::OBSERVER);     // readOnly VECTOR_INT32
     CPPUNIT_ASSERT(ose.getRequiredAccessLevel("vecBool") == Schema::USER);        // init VECTOR_BOOL
@@ -780,8 +780,6 @@ void Schema_Test::testPathElement() {
     CPPUNIT_ASSERT(sch.isAccessReadOnly("testfile") == true);
     CPPUNIT_ASSERT(sch.hasDefaultValue("testfile") == true);
     CPPUNIT_ASSERT(sch.getDefaultValue<string>("testfile") == "initFile");
-    CPPUNIT_ASSERT(sch.hasAlarmHigh("testfile") == true);
-    CPPUNIT_ASSERT(sch.getAlarmLow<string>("testfile") == "b");
 
     CPPUNIT_ASSERT(sch.isProperty("testfile") == true);
 }
@@ -807,7 +805,7 @@ void Schema_Test::testImageElement() {
     // ... and its entries
     CPPUNIT_ASSERT(!sch.isCustomNode("shapeList.Circle"));
     CPPUNIT_ASSERT(!sch.isCustomNode("shapeList.Rectangle"));
-    // A PathElement
+    // A String Element
     CPPUNIT_ASSERT(!sch.isCustomNode("filename"));
     // A vector element
     CPPUNIT_ASSERT(!sch.isCustomNode("vecInt"));
@@ -1452,9 +1450,9 @@ void Schema_Test::testInvalidNodes() {
 
 void Schema_Test::testOverwriteRestrictions() {
     Schema schema;
-    PATH_ELEMENT(schema).key("path").readOnly().commit();
+    STATE_ELEMENT(schema).key("state").commit();
 
-    CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(schema).key("path").setNewMinInc(100).commit(),
+    CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(schema).key("state").setNewMinInc(100).commit(),
                          karabo::util::LogicException);
 }
 

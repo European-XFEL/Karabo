@@ -29,8 +29,8 @@
 
 #include <filesystem>
 
-#include "PathElement.hh"
 #include "PluginLoader.hh"
+#include "SimpleElement.hh"
 #include "VectorElement.hh"
 #include "Version.hh"
 
@@ -56,13 +56,12 @@ namespace karabo {
 
 
         void PluginLoader::expectedParameters(Schema& expected) {
-            PATH_ELEMENT(expected)
+            STRING_ELEMENT(expected)
                   .key("pluginDirectory")
                   .displayedName("Plugin Directory")
                   .description("Directory to search for plugins")
                   .assignmentOptional()
                   .defaultValue(defaultPluginPath())
-                  .isDirectory()
                   .expertAccess()
                   .commit();
 
