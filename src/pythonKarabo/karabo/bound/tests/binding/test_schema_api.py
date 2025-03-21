@@ -745,15 +745,6 @@ def test_ndarrayElement():
 
 def test_getDisplayType():
     schema = cppTestStruct1SchemaTestStruct1()
-    assert schema.getDisplayType("testPath") == "fileOut"
-    assert schema.getDisplayType("testPath2") == "fileIn"
-    assert schema.getDisplayType("testPath3") == "directory"
-    # assert schema.getDisplayType("exampleBitsKey1") == "Bitset"
-    # assert schema.getDisplayType("exampleBitsKey2") == "Bitset"
-    # assert schema.getDisplayType("exampleBitsKey3") == "Bitset"
-    # assert schema.getDisplayType("exampleBitsKey4") == "Bitset"
-
-    schema = cppTestStruct1SchemaTestStruct1()
     assert schema.getDisplayType("exampleBitsKey1") == "bin"
     assert schema.getDisplayType("exampleBitsKey2") == \
         "bin|10:In Error, 21:Busy, 35:HV On, 55:Crate On"

@@ -37,7 +37,6 @@
 #include "karabo/util/DataLogUtils.hh"
 #include "karabo/util/Epochstamp.hh"
 #include "karabo/util/FromLiteral.hh"
-#include "karabo/util/PathElement.hh"
 #include "karabo/util/TimeDuration.hh"
 #include "karabo/util/TimeProfiler.hh"
 #include "karabo/util/Version.hh"
@@ -114,7 +113,7 @@ namespace karabo {
 
 
         void FileLogReader::expectedParameters(Schema& expected) {
-            PATH_ELEMENT(expected)
+            STRING_ELEMENT(expected)
                   .key("directory")
                   .displayedName("Directory")
                   .description("The directory where the log files should be placed")

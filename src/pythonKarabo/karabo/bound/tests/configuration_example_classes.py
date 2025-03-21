@@ -20,8 +20,8 @@ from karabo.bound import (
     INT32_ELEMENT, INT64_ELEMENT, KARABO_CLASSINFO,
     KARABO_CONFIGURATION_BASE_CLASS, LIST_ELEMENT, METER, MILLI,
     NDARRAY_ELEMENT, NO_ARCHIVING, NODE_ELEMENT, OVERWRITE_ELEMENT,
-    PATH_ELEMENT, SLOT_ELEMENT, STATE_ELEMENT, STRING_ELEMENT, TABLE_ELEMENT,
-    UINT32_ELEMENT, UINT64_ELEMENT, VECTOR_BOOL_ELEMENT, VECTOR_DOUBLE_ELEMENT,
+    SLOT_ELEMENT, STATE_ELEMENT, STRING_ELEMENT, TABLE_ELEMENT, UINT32_ELEMENT,
+    UINT64_ELEMENT, VECTOR_BOOL_ELEMENT, VECTOR_DOUBLE_ELEMENT,
     VECTOR_INT32_ELEMENT, VECTOR_STRING_ELEMENT, AlarmCondition, Hash,
     MetricPrefix, Schema, Unit)
 from karabo.common.states import State
@@ -476,22 +476,19 @@ class TestStruct1:
             .assignmentOptional().defaultValue(0xbeefface)
             .commit(),
 
-            PATH_ELEMENT(expected).key("testPath")
+            STRING_ELEMENT(expected).key("testPath")
             .alias(5)
             .displayedName("Filename")
-            .isOutputFile()
-            .options("file1, file2")
+            .options("file1, file2, karabo.log")
             .assignmentOptional().defaultValue("karabo.log")
             .reconfigurable()
             .commit(),
 
-            PATH_ELEMENT(expected).key("testPath2")
-            .isInputFile()
+            STRING_ELEMENT(expected).key("testPath2")
             .readOnly()
             .commit(),
 
-            PATH_ELEMENT(expected).key("testPath3")
-            .isDirectory()
+            STRING_ELEMENT(expected).key("testPath3")
             .assignmentMandatory()
             .commit(),
 
@@ -855,13 +852,12 @@ class OtherSchemaElements:
     @staticmethod
     def expectedParameters(expected):
         (
-            PATH_ELEMENT(expected)
+            STRING_ELEMENT(expected)
             .description("File name")
             .key("filename")
             .alias(5)
             .displayedName("Filename")
-            .isOutputFile()
-            .options("file1, file2")
+            .options("file1, file2, karabo.log")
             .assignmentOptional()
             .defaultValue("karabo.log")
             .reconfigurable()

@@ -24,7 +24,6 @@
 #include <karabo/util/ChoiceElement.hh>
 #include <karabo/util/Exception.hh>
 #include <karabo/util/ListElement.hh>
-#include <karabo/util/PathElement.hh>
 #include <karabo/util/SimpleElement.hh>
 #include <karabo/util/VectorElement.hh>
 
