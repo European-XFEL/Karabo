@@ -26,9 +26,10 @@ from karabo.common.scenemodel.registry import (
     register_scene_reader, register_scene_writer)
 
 from .graph_utils import (
-    BaseROIData, read_axes_set, read_baseline, read_basic_label,
-    read_histogram_model, read_range_set, read_roi_info, read_view_set,
-    write_axes_set, write_baseline, write_basic_label, write_histogram_model,
+    BaseCurveOptions, BaseROIData, read_axes_set, read_baseline,
+    read_basic_label, read_curve_options, read_histogram_model, read_range_set,
+    read_roi_info, read_view_set, write_axes_set, write_baseline,
+    write_basic_label, write_curve_options, write_histogram_model,
     write_range_set, write_roi_info, write_view_set)
 
 
@@ -127,6 +128,7 @@ class NDArrayGraphModel(BasePlotModel):
     step = Float(1.0)
     x_grid = Bool(True)
     y_grid = Bool(True)
+    curve_options = List(Instance(BaseCurveOptions))
 
 
 class VectorHistGraphModel(BasePlotModel):
@@ -152,6 +154,7 @@ class VectorGraphModel(BasePlotModel):
     step = Float(1.0)
     x_grid = Bool(True)
     y_grid = Bool(True)
+    curve_options = List(Instance(BaseCurveOptions))
 
 
 class TrendGraphModel(BasePlotModel):
@@ -267,7 +270,8 @@ def _ndarray_graph_reader(element):
     traits["roi_items"] = read_roi_info(element)
     traits["roi_tool"] = int(element.get(NS_KARABO + "roi_tool", 0))
     traits["half_samples"] = int(element.get(NS_KARABO + "half_samples", 6000))
-
+    curve_options = read_curve_options(element)
+    traits.update({"curve_options": curve_options})
     return NDArrayGraphModel(**traits)
 
 
@@ -277,6 +281,7 @@ def _ndarray_graph_writer(model, parent):
     write_base_plot(model, element, "NDArrayGraph")
     write_roi_info(model, element)
     write_baseline(model, element)
+    write_curve_options(model, element)
     element.set(NS_KARABO + "roi_tool", str(model.roi_tool))
     element.set(NS_KARABO + "half_samples", str(model.half_samples))
 
@@ -305,7 +310,8 @@ def _vector_graph_reader(element):
     traits["roi_items"] = read_roi_info(element)
     traits["roi_tool"] = int(element.get(NS_KARABO + "roi_tool", 0))
     traits["half_samples"] = int(element.get(NS_KARABO + "half_samples", 6000))
-
+    curve_options = read_curve_options(element)
+    traits.update({"curve_options": curve_options})
     return VectorGraphModel(**traits)
 
 
@@ -315,6 +321,7 @@ def _vector_graph_writer(model, parent):
     write_base_plot(model, element, "VectorGraph")
     write_roi_info(model, element)
     write_baseline(model, element)
+    write_curve_options(model, element)
     element.set(NS_KARABO + "roi_tool", str(model.roi_tool))
     element.set(NS_KARABO + "half_samples", str(model.half_samples))
 

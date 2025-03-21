@@ -16,6 +16,9 @@
 # or FITNESS FOR A PARTICULAR PURPOSE.
 import lttbc
 import numpy as np
+from pyqtgraph import ScatterPlotItem
+
+from karabo.common.scenemodel.api import PlotType
 
 
 def get_view_range(plot_item) -> tuple[float, float] | None:
@@ -119,3 +122,22 @@ def generate_down_sample(
         x, y = lttbc.downsample(x, y, threshold)
 
     return x, y
+
+
+def generate_curve_options(curves, curve_options):
+    """Fill in  the options for the curce, if it is not defined in the model
+    already. This modifies the the curve_options dictionary in place."""
+
+    for proxy, curve in curves.items():
+        if proxy.key in curve_options:
+            continue
+        plot_type = PlotType.Scatter if isinstance(curve, ScatterPlotItem) \
+            else PlotType.Curve
+        settings = {
+            "key": proxy.key,
+            "pen_color": curve.opts["pen"].color().name(),
+            "legend_name": curve.name(),
+            "plot_type": plot_type,
+        }
+        curve_options[proxy.key] = settings
+    return curve_options

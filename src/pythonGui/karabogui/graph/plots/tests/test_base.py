@@ -264,6 +264,31 @@ class TestCurveItem(_BasePlotTest):
         corrected_low = 10 ** safe_log10(low)  # 1e-25
         self.assert_range_y(y_expected=(corrected_low, high), log_y=True)
 
+    def test_legend_text(self):
+        legend = self.widget.add_legend()
+        plot = self.widget.add_curve_item(name="test_plot")
+        label = legend.getLabel(plot)
+        assert label.text == "test_plot"
+
+        self.widget.update_legend_text(plot, "new_legend")
+        label = legend.getLabel(plot)
+        assert label.text == "new_legend"
+
+    def test_apply_options(self):
+        plot_1_color = self._plot.opts["pen"].color().name()
+        legend = self.widget.add_legend()
+        plot = self.widget.add_curve_item(name="test_plot")
+        options = {"test_plot": {"pen_color": "#ff7f00",
+                                 "legend_name": "new_legend"}}
+        self.widget.apply_curve_options(options)
+        label = legend.getLabel(plot)
+        assert label.text == "new_legend"
+        plot.opts["pen"].color().name() == "#ff7f00"
+
+        # The other curve should have no change.
+        assert legend.getLabel(self._plot) is None
+        assert self._plot.opts["pen"].color().name() == plot_1_color
+
 
 class TestBarItem(_BasePlotTest):
 
