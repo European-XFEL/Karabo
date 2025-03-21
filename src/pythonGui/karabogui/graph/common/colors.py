@@ -67,6 +67,18 @@ def get_pen_cycler():
                   make_pen('s'), make_pen('d'), make_pen('k')])
 
 
+def get_allowed_colors():
+    """Helper function to get the allowed colors - single letter name and
+    their rgba code - from 'Colors' class."""
+    yield from vars(Colors(255)).items()
+
+
+def rgba_to_hex(rgba):
+    """Converts an (R, G, B, A) tuple to a hex string, ignoring alpha."""
+    r, g, b, a = rgba
+    return f"#{r:02x}{g:02x}{b:02x}"
+
+
 JET = [
     (0.000, (0, 0, 127)),
     (0.110, (0, 0, 255)),

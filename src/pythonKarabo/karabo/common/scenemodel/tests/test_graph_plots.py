@@ -15,6 +15,7 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 from karabo.common.scenemodel.api import CrossROIData
 from karabo.common.scenemodel.tests.utils import single_model_round_trip
+from karabo.common.scenemodel.widgets.graph_utils import CurveOptions
 
 from .. import api
 
@@ -119,6 +120,16 @@ def test_vector_graph():
     traits["roi_tool"] = 1
     traits["offset"] = 15.0
     traits["step"] = 17.0
+    curve_options = [
+        CurveOptions(**{"key": "first_plot",
+                        "pen_color": "#ff7f00",
+                        "legend_name": "Curve 1",
+                        "plot_type": 1}),
+        CurveOptions(**{"key": "second_plot",
+                        "pen_color": "#fb9a99",
+                        "legend_name": "Curve 2",
+                        "plot_type": 1})]
+    traits["curve_options"] = curve_options
 
     model = api.VectorGraphModel(**traits)
     read_model = single_model_round_trip(model)
@@ -132,6 +143,10 @@ def test_vector_graph():
     assert read_model.roi_tool == 1
     assert read_model.offset == 15.0
     assert read_model.step == 17.0
+
+    for orig, read in zip(model.curve_options, read_model.curve_options):
+        for trait in orig.copyable_trait_names():
+            assert getattr(orig, trait) == getattr(read, trait)
 
 
 def test_vector_scatter_graph():
