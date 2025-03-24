@@ -50,10 +50,11 @@ from karabo.native import (
     sanitize_table_schema, saveToFile, simple_deepcopy, string_from_hashtype,
     unit_registry as unit, write_project_model, writeBinary, writeXML)
 
+# Middlelayer api
+from .broker import get_connector
 from .configuration import (
     config_changes, sanitize_init_configuration, sanitize_write_configuration)
 from .device import Device, DeviceClientBase
-# Middlelayer api
 from .device_client import (
     Queue, call, callNoWait, compareConfigurationsFromPast,
     compareDeviceConfiguration, compareDeviceWithPast, connectDevice,
