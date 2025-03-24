@@ -15,8 +15,6 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 
 import asyncio
-import getpass
-import os
 import queue
 import threading
 import weakref
@@ -30,12 +28,11 @@ from functools import wraps
 from karabo.native import KaraboValue, unit_registry as unit
 
 from .broker import Broker, get_connector
-from .utils import check_broker_scheme, ensure_coroutine
+from .utils import ensure_coroutine
 
 # Number of threads that can be scheduled in the thread pool executor.
 _NUM_THREADS = 200
 _SYNC_LOOP = False
-_DEFAULT_HOSTS = "amqp://guest:guest@localhost:5672"
 
 
 def set_global_sync():
@@ -248,30 +245,19 @@ class EventLoop(SelectorEventLoop):
     global_loop = None
     connector = None
 
-    def __init__(self, topic=None):
+    def __init__(self, connector=None):
         super().__init__()
         if EventLoop.global_loop is not None:
             raise RuntimeError("There can be only one Karabo Eventloop")
         EventLoop.global_loop = self
-        self.connector = get_connector()
-
-        if topic is not None:
-            self.topic = topic
-        elif "KARABO_BROKER_TOPIC" in os.environ:
-            self.topic = os.environ["KARABO_BROKER_TOPIC"]
-        else:
-            self.topic = getpass.getuser()
-        if self.topic.endswith("_beats"):
-            raise RuntimeError(f"Topic ('{self.topic}') must not end with "
-                               "'_beats'")
-
+        if connector is None:
+            connector = get_connector()
+        self.connector = connector
+        self.topic = connector.topic
         self.changedFutures = set()  # call if some property changes
         self._default_executor = ThreadPoolExecutor(_NUM_THREADS)
         self.set_default_executor(self._default_executor)
         self.set_exception_handler(EventLoop.exceptionHandler)
-
-        self.hosts = os.environ.get("KARABO_BROKER", _DEFAULT_HOSTS).split(',')
-        check_broker_scheme(self.hosts)
 
     def exceptionHandler(self, context):
         try:

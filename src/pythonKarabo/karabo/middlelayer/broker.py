@@ -13,6 +13,7 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
+import getpass
 import inspect
 import logging
 import os
@@ -23,7 +24,7 @@ import weakref
 from asyncio import (
     CancelledError, Event, Future, Lock, TimeoutError, current_task,
     ensure_future, gather, iscoroutinefunction, shield, sleep, wait_for)
-from contextlib import AsyncExitStack
+from contextlib import AsyncExitStack, asynccontextmanager
 from functools import partial, wraps
 from itertools import count
 
@@ -34,12 +35,13 @@ from aiormq.base import TaskWrapper
 from karabo.native import (
     Hash, KaraboError, decodeBinary, decodeBinaryPos, encodeBinary)
 
-from .utils import suppress
+from .utils import check_broker_scheme, suppress
 
 _OVERFLOW_POLICY = "drop-head"  # Drop oldest messages
 _TIME_TO_LIVE = 120_000  # 120 seconds expiry time [ms]
 _BEATS_QSIZE = 12_000
 _CONSUME_QSIZE = 100_000
+_DEFAULT_HOSTS = "amqp://guest:guest@localhost:5672"
 
 
 class KaraboWrapper(TaskWrapper):
@@ -75,30 +77,53 @@ def ensure_running(func):
 
 
 class Connector:
-    _instance = None
 
-    def __new__(cls, *args, **kwargs):
-        if not cls._instance:
-            cls._instance = super().__new__(cls)
-        return cls._instance
-
-    def __init__(self):
+    def __init__(self, urls: str | None = None, topic: str | None = None):
         self._connection = None
-        self._lock = Lock()
-        self._urls = os.environ.get(
-            "KARABO_BROKER", "amqp://localhost:5672").split(",")
+        if urls is None:
+            urls = os.environ.get(
+                "KARABO_BROKER", _DEFAULT_HOSTS).split(",")
+        else:
+            urls = urls.split(",")
+        self.urls = urls
+        check_broker_scheme(urls)
+        if topic is not None:
+            self.topic = topic
+        elif "KARABO_BROKER_TOPIC" in os.environ:
+            self.topic = os.environ["KARABO_BROKER_TOPIC"]
+        else:
+            self.topic = getpass.getuser()
+        if self.topic.endswith("_beats"):
+            raise RuntimeError(f"Topic ('{self.topic}') must not end with "
+                               "'_beats'")
+        self._lock = None
 
     @property
     def is_connected(self):
         return self._connection is not None and self._connection.is_opened
 
+    @asynccontextmanager
+    async def lock(self):
+        """Transient locking mechanism that enables a Lock instance to be
+        between different loop mixins
+        """
+        if self._lock is None:
+            self._lock = Lock()
+        await self._lock.acquire()
+        try:
+            yield
+        finally:
+            if self._lock is not None:
+                self._lock.release()
+            self._lock = None
+
     async def get_connection(self):
         """Retrieve or establish the singleton connection."""
-        async with self._lock:
+        async with self.lock():
             if self.is_connected:
                 return self._connection
 
-            for url in self._urls:
+            for url in self.urls:
                 try:
                     self._connection = await aiormq.connect(url)
                     return self._connection
@@ -110,15 +135,25 @@ class Connector:
 
     async def close(self):
         """Close the connection if it is open."""
-        async with self._lock:
+        async with self.lock():
             if self.is_connected:
                 await self._connection.close()
                 self._connection = None
 
 
-def get_connector():
-    """Get the connector singleton"""
-    return Connector()
+# The connector singleton
+_CONNECTOR = None
+
+
+def get_connector(urls: str | None = None, topic: str | None = None):
+    """The `Connector` singleton. Can be initialized with `urls` and `topic`
+    """
+    global _CONNECTOR
+    if _CONNECTOR is not None:
+        return _CONNECTOR
+    connector = Connector(urls, topic)
+    _CONNECTOR = connector
+    return connector
 
 
 class Broker:
