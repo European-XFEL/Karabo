@@ -138,6 +138,10 @@ class DestinationWidget(QWidget):
     def add_new_topic(self):
         """Add a new item to the Topic combobox"""
         new_topic = self.combo_topic.lineEdit().text()
+        if not new_topic.strip():
+            self.combo_topic.setEditable(False)
+            self.create_topic.setChecked(False)
+            return
         self._add_topic(new_topic)
 
     def _add_topic(self, new_topic):
