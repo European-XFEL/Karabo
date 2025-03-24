@@ -81,7 +81,9 @@ def datetime_from_string(date: str) -> datetime:
     return isoparse(date)
 
 
-def utc_to_local(timestamp: datetime) -> str:
+def utc_to_local(timestamp: datetime | None) -> str:
     """Format a datetime object to a local str representation"""
+    if timestamp is None:
+        return ""
     return timestamp.replace(tzinfo=timezone.utc).astimezone().strftime(
         ISO8601_FORMAT)

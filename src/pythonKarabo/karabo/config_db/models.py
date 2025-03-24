@@ -29,6 +29,9 @@ class NamedDeviceConfig(SQLModel, table=True):
     timestamp: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc))
 
+    last_loaded: datetime | None = Field(
+        default=None, nullable=True)
+
     # Relationship back to DeviceInstance
     instance: NamedDeviceInstance | None = Relationship(
         back_populates="configurations")
