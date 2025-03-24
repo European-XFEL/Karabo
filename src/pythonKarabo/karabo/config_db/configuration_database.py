@@ -16,7 +16,7 @@
 from datetime import datetime, timezone
 from pathlib import Path
 
-from sqlalchemy import insert, select
+from sqlalchemy import insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import selectinload, sessionmaker
 from sqlmodel import SQLModel
@@ -105,7 +105,8 @@ class ConfigurationDatabase:
 
             return [
                 {"name": config.name,
-                 "timepoint": utc_to_local(config.timestamp)}
+                 "timepoint": utc_to_local(config.timestamp),
+                 "last_loaded": utc_to_local(config.last_loaded)}
                 for config in configurations]
 
     def get_session(self):
@@ -122,29 +123,41 @@ class ConfigurationDatabase:
             return result.scalars().all()
 
     async def get_configuration(self, device_id: str, name: str) -> dict:
-        """Retrieves a device configuration given its name.
+        """Retrieve a device configuration with name and update `last_loaded`
 
-        :param device_id: the id of the device.
-        :param name: the name of the device configuration.
-
-        :returns: dictionary result (can be empty). The configuration
-                  timestamp is returned in ISO8601 format.
+        :param device_id: The ID of the device.
+        :param name: The name of the configuration.
+        :return: Configuration dictionary (or None if not found).
         """
         async with self.get_session() as session:
-            stmt = select(NamedDeviceConfig.timestamp,
-                          NamedDeviceConfig.config_data).where(
-                NamedDeviceConfig.device_id == device_id,
-                NamedDeviceConfig.name == name)
+            stmt = (
+                select(NamedDeviceConfig)
+                .where(
+                    NamedDeviceConfig.device_id == device_id,
+                    NamedDeviceConfig.name == name
+                )
+                # Lock for update
+                .with_for_update()
+            )
             result = await session.execute(stmt)
-            config = result.fetchone()
-            if config is None:
+            config = result.scalars().first()
+            if not config:
                 return {}
 
-        return {
-            "name": name,
-            "deviceId": device_id,
-            "timestamp": utc_to_local(config[0]),
-            "config": config[1]}
+            update_stmt = (
+                update(NamedDeviceConfig)
+                .where(NamedDeviceConfig.id == config.id)
+                .values(last_loaded=datetime.now(timezone.utc))
+            )
+
+            await session.execute(update_stmt)
+            await session.commit()
+
+            return {
+                "name": name,
+                "deviceId": device_id,
+                "timestamp": utc_to_local(config.timestamp),
+                "config": config.config_data}
 
     async def save_configuration(
             self, name: str, configs: list[dict],

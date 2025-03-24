@@ -31,7 +31,8 @@ async def test_save_and_get_configuration(database):
 
 
 @pytest.mark.asyncio
-async def test_list_devices_namepart(database):
+async def test_device_config_roundtrip(database):
+    # 1. Saving configurations with overwrite
     devices = await database.list_devices()
     assert devices == []
     config1 = {"deviceId": "device_1", "config": "data_1"}
@@ -43,13 +44,27 @@ async def test_list_devices_namepart(database):
     devices = await database.list_devices()
     assert "device_1" in devices
     assert "device_2" in devices
+
+    # 2. Listing Configuration
     configurations = await database.list_configurations("device_1")
     assert len(configurations) == 1
     assert configurations[0]["name"] == "TestConfig"
+    assert configurations[0]["timepoint"] is not None
+    assert configurations[0]["last_loaded"] == ""
+
     configurations = await database.list_configurations("device_3")
     assert not len(configurations)
     configurations = await database.list_configurations("device_1", "NO")
     assert not len(configurations)
+
+    # 3. Get a config and check last loaded again
+    result = await database.get_configuration("device_1", "TestConfig")
+    assert result is not None
+    assert result["config"] == "data_1"
+    configurations = await database.list_configurations("device_1")
+    assert len(configurations) == 1
+    assert configurations[0]["name"] == "TestConfig"
+    assert configurations[0]["last_loaded"] != ""
 
 
 @pytest.mark.asyncio
