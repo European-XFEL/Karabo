@@ -316,6 +316,12 @@ def test_create_new_topic(dialog):
     destination_widget.create_topic.setChecked(False)
     assert not destination_widget.combo_topic.isEditable()
 
+    # Do not allow empty topic
+    destination_widget.create_topic.clicked.emit(True)
+    destination_widget.combo_topic.lineEdit().setText("")
+    destination_widget.combo_topic.lineEdit().editingFinished.emit()
+    assert destination_widget.combo_topic.currentText() == "NewTopic"
+
 
 def test_concurrency(dialog):
     """
