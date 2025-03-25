@@ -229,10 +229,6 @@ namespace karabo {
                   .displayedName("Messaging problems")
                   .description("If true, there is a problem consuming broker messages")
                   .expertAccess()
-                  // threshold is exclusive: value true fulfills "> false" and triggers alarm whereas false does not
-                  // .alarmHigh(false)
-                  // .info("Unreliable broker message consumption - consider restarting device!")
-                  // .needsAcknowledging(true)
                   .readOnly()
                   .initialValue(false)
                   .commit();
@@ -256,12 +252,6 @@ namespace karabo {
                   .expertAccess()
                   .readOnly()
                   .initialValue(0.f)
-                  .warnHigh(3000.f) // 3 s
-                  .info("Long average time between message being sent and start of its processing")
-                  .needsAcknowledging(false)
-                  .alarmHigh(10000.f) // 10 s
-                  .info("Very long average time between message being sent and start of its processing")
-                  .needsAcknowledging(false)
                   .commit();
 
             UINT32_ELEMENT(expected)

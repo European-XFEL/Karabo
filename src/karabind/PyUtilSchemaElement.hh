@@ -119,7 +119,6 @@ struct ReadOnlySpecificVectorWrap {
     typedef std::vector<T> VType;
     typedef karabo::util::VectorElement<T> U;
     typedef karabo::util::ReadOnlySpecific<U, VType> ReadOnlySpecVec;
-    typedef karabo::util::AlarmSpecific<U, VType, ReadOnlySpecVec> AlarmSpecVec;
 
     static ReadOnlySpecVec& initialValue(ReadOnlySpecVec& self, const py::object& obj) {
         if (py::isinstance<py::list>(obj)) {
@@ -128,42 +127,6 @@ struct ReadOnlySpecificVectorWrap {
             return self.initialValue(v);
         } else {
             throw KARABO_PYTHON_EXCEPTION("Python type of the initialValue of VectorElement must be a list");
-        }
-    }
-
-    static AlarmSpecVec warnLowValue(ReadOnlySpecVec& self, const py::object& obj) {
-        if (py::isinstance<py::list>(obj)) {
-            VType v = obj.cast<VType>();
-            return self.warnLow(v);
-        } else {
-            throw KARABO_PYTHON_EXCEPTION("Python type of the warnLow value of VectorElement must be a list");
-        }
-    }
-
-    static AlarmSpecVec warnHighValue(ReadOnlySpecVec& self, const py::object& obj) {
-        if (py::isinstance<py::list>(obj)) {
-            VType v = obj.cast<VType>();
-            return self.warnHigh(v);
-        } else {
-            throw KARABO_PYTHON_EXCEPTION("Python type of the warnHigh value of VectorElement must be a list");
-        }
-    }
-
-    static AlarmSpecVec alarmLowValue(ReadOnlySpecVec& self, const py::object& obj) {
-        if (py::isinstance<py::list>(obj)) {
-            VType v = obj.cast<VType>();
-            return self.alarmLow(v);
-        } else {
-            throw KARABO_PYTHON_EXCEPTION("Python type of the alarmLow value of VectorElement must be a list");
-        }
-    }
-
-    static AlarmSpecVec alarmHighValue(ReadOnlySpecVec& self, const py::object& obj) {
-        if (py::isinstance<py::list>(obj)) {
-            VType v = obj.cast<VType>();
-            return self.alarmHigh(v);
-        } else {
-            throw KARABO_PYTHON_EXCEPTION("Python type of the alarmHigh value of VectorElement must be a list");
         }
     }
 };
@@ -205,25 +168,11 @@ struct ReadOnlySpecificVectorWrap {
 
 /////////////////////////////////////////////////////////////
 
-#define KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(U, EType, Rtype, e)                                                       \
-    {                                                                                                                 \
-        typedef Rtype<U, EType> ReturnSpec;                                                                           \
-        typedef AlarmSpecific<U, EType, ReturnSpec> AlarmSpec;                                                        \
-        py::class_<AlarmSpec>(m, "AlarmSpecific" #e #Rtype)                                                           \
-              .def("needsAcknowledging", &AlarmSpec::needsAcknowledging, py::return_value_policy::reference_internal) \
-              .def("info", &AlarmSpec::info, py::return_value_policy::reference_internal);                            \
-    }
-
 
 #define KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(U, EType, e)                                                    \
     {                                                                                                          \
         typedef ReadOnlySpecific<U, EType> ReadOnlySpec;                                                       \
-        typedef AlarmSpecific<U, EType, ReadOnlySpec> AlarmSpec;                                               \
         py::class_<ReadOnlySpec>(m, "ReadOnlySpecific" #e)                                                     \
-              .def("alarmHigh", &ReadOnlySpec::alarmHigh, py::return_value_policy::reference_internal)         \
-              .def("alarmLow", &ReadOnlySpec::alarmLow, py::return_value_policy::reference_internal)           \
-              .def("warnHigh", &ReadOnlySpec::warnHigh, py::return_value_policy::reference_internal)           \
-              .def("warnLow", &ReadOnlySpec::warnLow, py::return_value_policy::reference_internal)             \
               .def("initialValueFromString", &ReadOnlySpec::initialValueFromString,                            \
                    py::return_value_policy::reference_internal)                                                \
               .def("initialValue", &ReadOnlySpec::initialValue, py::return_value_policy::reference_internal)   \
@@ -239,16 +188,11 @@ struct ReadOnlySpecificVectorWrap {
         typedef std::vector<T> VType;                                                                             \
         typedef karabo::util::VectorElement<T> U;                                                                 \
         typedef karabo::util::ReadOnlySpecific<U, VType> ReadOnlySpecVec;                                         \
-        typedef karabo::util::AlarmSpecific<U, VType, ReadOnlySpecVec> AlarmSpecVec;                              \
         py::class_<ReadOnlySpecVec>(m, "ReadOnlySpecificVector" #e)                                               \
               .def("initialValue", &ReadOnlySpecificVectorWrap<T>::initialValue, py::arg("pyList"),               \
                    py::return_value_policy::reference_internal)                                                   \
               .def("defaultValue", &ReadOnlySpecificVectorWrap<T>::initialValue, py::arg("pyList"),               \
                    py::return_value_policy::reference_internal)                                                   \
-              .def("alarmHigh", &ReadOnlySpecificVectorWrap<T>::alarmHighValue, py::arg("pyList"))                \
-              .def("alarmLow", &ReadOnlySpecificVectorWrap<T>::alarmLowValue, py::arg("pyList"))                  \
-              .def("warnHigh", &ReadOnlySpecificVectorWrap<T>::warnHighValue, py::arg("pyList"))                  \
-              .def("warnLow", &ReadOnlySpecificVectorWrap<T>::warnLowValue, py::arg("pyList"))                    \
               .def("initialValueFromString", &ReadOnlySpecVec::initialValueFromString,                            \
                    py::return_value_policy::reference_internal)                                                   \
               .def("archivePolicy", &ReadOnlySpecVec::archivePolicy, py::return_value_policy::reference_internal) \

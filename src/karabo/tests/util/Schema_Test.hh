@@ -61,9 +61,6 @@ class Schema_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testPaths);
     CPPUNIT_TEST(testGetRequiredAccessLevel);
     CPPUNIT_TEST(testSetRequiredAccessLevel);
-    CPPUNIT_TEST(testGetAlarmLowAlarmHigh);
-    CPPUNIT_TEST(testGetWarnLowWarnHigh);
-    CPPUNIT_TEST(testHasAlarmWarn);
     CPPUNIT_TEST(testSlotElement);
     CPPUNIT_TEST(testVectorElements);
     CPPUNIT_TEST(testArrayElements);
@@ -80,7 +77,6 @@ class Schema_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testOverwriteTags);
     CPPUNIT_TEST(testTagsFromVector);
     CPPUNIT_TEST(testOverwriteRestrictionsForOptions);
-    CPPUNIT_TEST(testRuntimeAttributes);
     CPPUNIT_TEST(testStateAndAlarmSets);
     CPPUNIT_TEST(testSubSchema);
     CPPUNIT_TEST(testDaqDataType);
@@ -135,9 +131,6 @@ class Schema_Test : public CPPUNIT_NS::TestFixture {
     void testPaths();
     void testGetRequiredAccessLevel();
     void testSetRequiredAccessLevel();
-    void testGetAlarmLowAlarmHigh();
-    void testGetWarnLowWarnHigh();
-    void testHasAlarmWarn();
     void testSlotElement();
     void testVectorElements();
     void testArrayElements();
@@ -152,7 +145,6 @@ class Schema_Test : public CPPUNIT_NS::TestFixture {
     void testMerge();
     void testList();
     void testInvalidNodes();
-    void testRuntimeAttributes();
     void testOverwriteRestrictions();
     void testOverwriteTags();
     void testTagsFromVector();
