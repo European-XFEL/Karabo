@@ -37,6 +37,9 @@ class Colors:
         self.d = (202, 178, 214, alpha)  # orchid
         self.k = (0, 0, 0, alpha)  # black
 
+    def __iter__(self):
+        return iter(self.__dict__.items())
+
 
 def make_brush(color, alpha=180):
     return mkBrush(getattr(Colors(alpha=alpha), color[0]))
@@ -67,10 +70,10 @@ def get_pen_cycler():
                   make_pen('s'), make_pen('d'), make_pen('k')])
 
 
-def get_allowed_colors():
-    """Helper function to get the allowed colors - single letter name and
+def get_available_colors(alpha=255):
+    """Helper function to get the available colors - single letter name and
     their rgba code - from 'Colors' class."""
-    yield from vars(Colors(255)).items()
+    yield from Colors(alpha)
 
 
 def rgba_to_hex(rgba):

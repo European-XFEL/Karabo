@@ -6,12 +6,12 @@ from qtpy.QtGui import QColor, QIcon, QPixmap
 from qtpy.QtWidgets import (
     QDialog, QDialogButtonBox, QListWidgetItem, QMessageBox)
 
-from karabogui.graph.common.api import get_allowed_colors, rgba_to_hex
+from karabogui.graph.common.api import get_available_colors, rgba_to_hex
 
 
 class CurveOptionsDialog(QDialog):
 
-    requestCustomOptionsRestore = Signal()
+    requestRestore = Signal()
 
     def __init__(self, curve_options: dict | None = None,
                  parent: QObject = None):
@@ -38,7 +38,7 @@ class CurveOptionsDialog(QDialog):
 
         # Fixed width for the icon as the text is empty.
         self.color_combo_box.setFixedWidth(50)
-        for single_letter, rgba_code in get_allowed_colors():
+        for single_letter, rgba_code in get_available_colors():
             pixmap = QPixmap(32, 32)
             pixmap.fill(QColor(*rgba_code))
             icon = QIcon(pixmap)
@@ -94,7 +94,7 @@ class CurveOptionsDialog(QDialog):
             QMessageBox.Yes | QMessageBox.No)
         if reply == QMessageBox.No:
             return
-        self.requestCustomOptionsRestore.emit()
+        self.requestRestore.emit()
         self.reject()
 
     def _update_item_data(self, key: str, value: str):
