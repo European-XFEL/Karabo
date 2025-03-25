@@ -16,7 +16,7 @@
 # or FITNESS FOR A PARTICULAR PURPOSE.
 from functools import partial
 
-from pyqtgraph import GraphicsView, PlotItem, mkBrush, mkPen
+from pyqtgraph import GraphicsObject, GraphicsView, PlotItem, mkBrush, mkPen
 from qtpy.QtCore import QSize, Signal, Slot
 from qtpy.QtGui import QColor, QPalette
 from qtpy.QtWidgets import QAction, QGridLayout, QSizePolicy, QWidget
@@ -415,25 +415,28 @@ class KaraboPlotView(QWidget):
     def apply_curve_options(self, options: dict):
         """Apply the plotting options to the corresponding curves"""
         for plot_item in self.plotItem.listDataItems():
-            plot_item_options = options.get(plot_item.name(), None)
-            if plot_item_options is None:
+            curve_opts = options.get(plot_item.name(), None)
+            if curve_opts is None:
                 continue
-            legend_name = plot_item_options.get("legend_name",
-                                                plot_item.name())
-            opts = plot_item.opts
-            pen_color = plot_item_options.get("pen_color")
+            # Safety copy
+            curve_opts = curve_opts.copy()
+            legend_name = curve_opts.get("legend_name", plot_item.name())
+            pen_color = curve_opts.get("pen_color")
             pen = mkPen(pen_color)
-            _curve_options = plot_item_options.copy()
-            _curve_options["pen"] = pen
-            opts.update(_curve_options)
+            curve_opts["pen"] = pen
+            opts = plot_item.opts
+            opts.update(curve_opts)
 
             for sample, label in self._legend.items:
-                if sample.item == plot_item:
+                if sample.item is plot_item:
                     sample.setBrush(mkBrush(pen.color()))
                     sample.setPen(pen)
                     label.setText(legend_name)
+                    break
+
             self._legend.updateSize()
             plot_item.updateItems()
+
     # ----------------------------------------------------------------
     # Toolbar functions Events
 
@@ -756,11 +759,11 @@ class KaraboPlotView(QWidget):
             y_min, y_max = safe_log10(y_min), safe_log10(y_max)
         return y_min, y_max
 
-    def update_legend_text(self, plot_item, text):
+    def update_legend_text(self, plot_item: GraphicsObject, text: str):
         """Set the label text for the  plot item's legend"""
-        legend = self._legend.getLabel(plot_item)
-        if legend is not None:
-            legend.setText(text)
+        label = self._legend.getLabel(plot_item)
+        if label is not None:
+            label.setText(text)
             self._legend.updateSize()
 
     # -----------------------------------------------------------------------
