@@ -155,7 +155,7 @@ namespace karabo {
                   .description("Value of 'performanceStatistics.enable' used when instantiating loggers")
                   .reconfigurable()
                   .assignmentOptional()
-                  .defaultValue(true) // true will cause alarms when loggers are too slow
+                  .defaultValue(true)
                   .commit();
 
             STRING_ELEMENT(expected)
@@ -389,9 +389,6 @@ namespace karabo {
                   .description("Non-zero if topology check discovered a problem")
                   .readOnly()
                   .initialValue(0)
-                  .alarmHigh(0) // i.e. alarm if value > 0... (grr, should be >= 1)
-                  .info("Likely something not logged, see 'Check result' field and contact experts.")
-                  .needsAcknowledging(false)
                   .commit();
 
             STRING_ELEMENT(expected)

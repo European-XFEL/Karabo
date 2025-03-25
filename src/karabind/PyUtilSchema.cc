@@ -664,27 +664,6 @@ void exportPyUtilSchema(py::module_& m) {
               py::arg("path"));
 
         s.def(
-              "hasWarnLow",
-              [](const Schema& self, const std::string& path) -> py::bool_ { return self.hasWarnLow(path); },
-              py::arg("path"));
-
-        s.def(
-              "hasWarnHigh",
-              [](const Schema& self, const std::string& path) -> py::bool_ { return self.hasWarnHigh(path); },
-              py::arg("path"));
-
-
-        s.def(
-              "hasAlarmLow",
-              [](const Schema& self, const std::string& path) -> py::bool_ { return self.hasAlarmLow(path); },
-              py::arg("path"));
-
-        s.def(
-              "hasAlarmHigh",
-              [](const Schema& self, const std::string& path) -> py::bool_ { return self.hasAlarmHigh(path); },
-              py::arg("path"));
-
-        s.def(
               "hasArchivePolicy",
               [](const Schema& self, const std::string& path) -> py::bool_ { return self.hasArchivePolicy(path); },
               py::arg("path"));
@@ -793,13 +772,6 @@ void exportPyUtilSchema(py::module_& m) {
         //********* Help function to show all parameters *******
 
         s.def("help", [](Schema& self, const std::string& classId) { self.help(classId); }, py::arg("classId") = "");
-
-        s.def(
-              "applyRuntimeUpdates",
-              [](Schema& self, const std::vector<Hash>& updates) -> py::bool_ {
-                  return self.applyRuntimeUpdates(updates);
-              },
-              py::arg("updates"));
 
         s.def("getClassInfo", [](const Schema& self) { return self.getClassInfo(); });
 
@@ -939,62 +911,6 @@ void exportPyUtilSchema(py::module_& m) {
               "setMaxSize",
               [](Schema& self, const std::string& path, const unsigned int& value) { self.setMaxSize(path, value); },
               py::arg("path"), py::arg("value"));
-
-        s.def(
-              "setWarnLow",
-              [](Schema& self, const std::string& path, const py::object& value) {
-                  Hash& h = self.getParameterHash();
-                  wrapper::setAttributeAsPy(h, path, AlarmCondition::WARN_LOW.asString(), value);
-              },
-              py::arg("path"), py::arg("value"));
-
-        s.def(
-              "setWarnHigh",
-              [](Schema& self, const std::string& path, const py::object& value) {
-                  Hash& h = self.getParameterHash();
-                  wrapper::setAttributeAsPy(h, path, AlarmCondition::WARN_HIGH.asString(), value);
-              },
-              py::arg("path"), py::arg("value"));
-
-        s.def(
-              "setAlarmLow",
-              [](Schema& self, const std::string& path, const py::object& value) {
-                  Hash& h = self.getParameterHash();
-                  wrapper::setAttributeAsPy(h, path, AlarmCondition::ALARM_LOW.asString(), value);
-              },
-              py::arg("path"), py::arg("value"));
-
-        s.def(
-              "setAlarmHigh",
-              [](Schema& self, const std::string& path, const py::object& value) {
-                  Hash& h = self.getParameterHash();
-                  wrapper::setAttributeAsPy(h, path, AlarmCondition::ALARM_HIGH.asString(), value);
-              },
-              py::arg("path"), py::arg("value"));
-
-        s.def(
-              "getInfoForAlarm",
-              [](Schema& self, const std::string& path, const py::object& ocond) -> py::str {
-                  const std::string className = ocond.attr("__class__").attr("__name__").cast<std::string>();
-                  if (className != "AlarmCondition") {
-                      throw KARABO_PARAMETER_EXCEPTION("Parameter is not of AlarmCondition type");
-                  }
-                  const std::string& condition = ocond.attr("value").cast<std::string>();
-                  return self.getInfoForAlarm(path, karabo::util::AlarmCondition::fromString(condition));
-              },
-              py::arg("path"), py::arg("condition"));
-
-        s.def(
-              "doesAlarmNeedAcknowledging",
-              [](Schema& self, const std::string& path, const py::object& ocond) -> py::bool_ {
-                  const std::string className = ocond.attr("__class__").attr("__name__").cast<std::string>();
-                  if (className != "AlarmCondition") {
-                      throw KARABO_PARAMETER_EXCEPTION("Parameter is not of AlarmCondition type");
-                  }
-                  const std::string& condition = ocond.attr("value").cast<std::string>();
-                  return self.doesAlarmNeedAcknowledging(path, karabo::util::AlarmCondition::fromString(condition));
-              },
-              py::arg("path"), py::arg("condition"));
 
         s.def(
               "setArchivePolicy",

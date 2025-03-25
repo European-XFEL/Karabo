@@ -413,14 +413,6 @@ namespace configurationTest {
                   .setSpecialDisplayType("Int64DisplayType")
                   .readOnly()
                   .initialValue(1442244)
-                  .warnLow(-10)
-                  .needsAcknowledging(false)
-                  .warnHigh(10)
-                  .needsAcknowledging(false)
-                  .alarmLow(-20)
-                  .needsAcknowledging(false)
-                  .alarmHigh(20)
-                  .needsAcknowledging(false)
                   .commit();
 
             INT64_ELEMENT(expected).key("exampleKey5b").readOnly().defaultValue(42).commit();
@@ -432,15 +424,6 @@ namespace configurationTest {
                   .description("Example key 6 description")
                   .readOnly()
                   .initialValue(1.11)
-                  .alarmLow(-22.1)
-                  .needsAcknowledging(true)
-                  .alarmHigh(22.777)
-                  .needsAcknowledging(true)
-                  .warnLow(-5.5)
-                  .info("Some info")
-                  .needsAcknowledging(true)
-                  .warnHigh(5.5)
-                  .needsAcknowledging(true)
                   .archivePolicy(Schema::EVERY_100MS)
                   .commit();
 
@@ -672,24 +655,12 @@ namespace configurationTest {
                   .key("vecInt")
                   .readOnly()
                   .initialValue(vecInit)
-                  .warnLow(vecWarnL)
-                  .needsAcknowledging(false)
-                  .warnHigh(vecWarnH)
-                  .needsAcknowledging(false)
                   .archivePolicy(Schema::EVERY_EVENT)
                   .commit();
 
             vector<double> vecAlarmL(3, -5.5);
             vector<double> vecAlarmH(3, 7.7);
-            VECTOR_DOUBLE_ELEMENT(expected)
-                  .key("vecDouble")
-                  .readOnly()
-                  .alarmLow(vecAlarmL)
-                  .needsAcknowledging(false)
-                  .alarmHigh(vecAlarmH)
-                  .needsAcknowledging(false)
-                  .archivePolicy(Schema::NO_ARCHIVING)
-                  .commit();
+            VECTOR_DOUBLE_ELEMENT(expected).key("vecDouble").readOnly().archivePolicy(Schema::NO_ARCHIVING).commit();
 
             VECTOR_INT32_ELEMENT(expected)
                   .key("vecIntReconfig")
@@ -893,20 +864,7 @@ namespace configurationTest {
                   .init()
                   .commit();
 
-            DOUBLE_ELEMENT(expected)
-                  .key("a")
-                  .readOnly()
-                  .initialValue(1.11)
-                  .alarmLow(-22.1)
-                  .needsAcknowledging(true)
-                  .alarmHigh(22.777)
-                  .needsAcknowledging(true)
-                  .warnLow(-5.5)
-                  .needsAcknowledging(true)
-                  .warnHigh(5.5)
-                  .needsAcknowledging(true)
-                  .archivePolicy(Schema::EVERY_100MS)
-                  .commit();
+            DOUBLE_ELEMENT(expected).key("a").readOnly().initialValue(1.11).archivePolicy(Schema::EVERY_100MS).commit();
 
             VECTOR_INT32_ELEMENT(expected)
                   .key("somelist")

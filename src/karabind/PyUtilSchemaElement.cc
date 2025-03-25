@@ -91,23 +91,9 @@ void exportPyUtilSchemaElement(py::module_& m) {
     KARABO_PYTHON_VECTOR_DEFAULT_VALUE(char, CHAR)
 
     ///////////////////////////////////////////////////////////////
-    // AlarmSpecific<SimpleElement< EType >, EType >, where EType:
-    // INT32, UINT32, INT64, UINT64, DOUBLE, STRING, BOOL
-
-    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<int>, int, ReadOnlySpecific, INT32)
-    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<unsigned int>, unsigned int, ReadOnlySpecific, UINT32)
-    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<long long>, long long, ReadOnlySpecific, INT64)
-    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<unsigned long long>, unsigned long long, ReadOnlySpecific, UINT64)
-    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<float>, float, ReadOnlySpecific, FLOAT)
-    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<double>, double, ReadOnlySpecific, DOUBLE)
-    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<std::string>, std::string, ReadOnlySpecific, STRING)
-    KARABO_PYTHON_ELEMENT_ALARMSPECIFIC(SimpleElement<bool>, bool, ReadOnlySpecific, BOOL)
-
-    ///////////////////////////////////////////////////////////////
     // ReadOnlySpecific<SimpleElement< EType >, EType >, where EType:
     // INT32, UINT32, INT64, UINT64, DOUBLE, STRING, BOOL
     //  and ReadOnlySpecific<ByteArrayElement, ByteArray >
-
 
     KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(SimpleElement<int>, int, INT32)
     KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(SimpleElement<unsigned int>, unsigned int, UINT32)
@@ -120,7 +106,6 @@ void exportPyUtilSchemaElement(py::module_& m) {
     // KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(ByteArrayElement, ByteArray, BYTEARRAY)
     {
         typedef ReadOnlySpecific<ByteArrayElement, ByteArray> ReadOnlySpec;
-        typedef AlarmSpecific<ByteArrayElement, ByteArray, ReadOnlySpec> AlarmSpec;
         py::class_<ReadOnlySpec>(m, "ReadOnlySpecificBYTEARRAY")
               .def("initialValue",
                    [](ReadOnlySpec& self, const py::object& o) -> ReadOnlySpec& {

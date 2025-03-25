@@ -39,8 +39,6 @@ namespace karabo {
         class DefaultValue;
         template <class T, class U>
         class ReadOnlySpecific;
-        template <class T, class U, class W>
-        class AlarmSpecific;
 
         /**
          * The LeafElement represents a leaf and can be of any (supported) type
@@ -296,69 +294,16 @@ namespace karabo {
         };
 
         /**
-         * The AlarmSpecific Class assures acknowledgements are configured for
-         * alarm conditions
-         */
-        template <class Element, class ValueType, class ReturnType>
-        class AlarmSpecific {
-            ReturnType* m_returnElement;
-            ReadOnlySpecific<Element, ValueType>* m_readOnlyElement;
-            std::string m_lastConfig;
-
-           public:
-            template <class U, class V>
-            friend class ReadOnlySpecific;
-
-            /**
-             * The <b>needsAcknowledging</b> method serves for setting up whether
-             * an alarm condition needs to be acknowledged to clear from alarm
-             * service devices
-             * @param ack: acknowledgement is needed if true.
-             * @return reference to the Element for proper methods chaining
-             */
-            ReturnType& needsAcknowledging(const bool ack) {
-                m_readOnlyElement->getElement()->getNode().setAttribute(
-                      std::string(KARABO_ALARM_ACK) + "_" + m_lastConfig, ack);
-                return *m_returnElement;
-            }
-
-            /**
-             * The <b>info</b> method allows for setting an optional description
-             * of the alarm
-             * @param description: optional description
-             * @return reference to the Element for proper methods chaining
-             */
-            AlarmSpecific<Element, ValueType, ReturnType>& info(const std::string& desc) {
-                m_readOnlyElement->getElement()->getNode().setAttribute(
-                      std::string(KARABO_ALARM_INFO) + "_" + m_lastConfig, desc);
-
-                return *this;
-            }
-
-           private:
-            AlarmSpecific() : m_readOnlyElement(0) {}
-
-            void setScope(ReadOnlySpecific<Element, ValueType>* el, ReturnType* rel, const std::string& config) {
-                m_readOnlyElement = el;
-                m_returnElement = rel;
-                m_lastConfig = config;
-            }
-        };
-
-        /**
          * The ReadOnlySpecific class defines specific values for 'readOnly'-element.
          */
         template <class Element, class ValueType>
         class ReadOnlySpecific {
             typedef ReadOnlySpecific<Element, ValueType> Self;
             Element* m_genericElement;
-            AlarmSpecific<Element, ValueType, Self> m_alarmSpecific;
 
            public:
             template <class U, class V>
             friend class LeafElement;
-            template <class U, class V, class W>
-            friend class AlarmSpecific;
             friend class TableElement;
 
             /**
@@ -389,50 +334,6 @@ namespace karabo {
             ReadOnlySpecific& initialValueFromString(const std::string& initialValue) {
                 m_genericElement->getNode().setAttribute(KARABO_SCHEMA_DEFAULT_VALUE, initialValue);
                 return *this;
-            }
-
-            /**
-             * Set lower warning threshold for this value
-             * @param value
-             * @return
-             */
-            AlarmSpecific<Element, ValueType, Self>& warnLow(const ValueType& value) {
-                m_genericElement->getNode().setAttribute(KARABO_WARN_LOW, value);
-                m_alarmSpecific.setScope(this, this, KARABO_WARN_LOW);
-                return m_alarmSpecific;
-            }
-
-            /**
-             * Set upper warning threshold for this value
-             * @param value
-             * @return
-             */
-            AlarmSpecific<Element, ValueType, Self>& warnHigh(const ValueType& value) {
-                m_genericElement->getNode().setAttribute(KARABO_WARN_HIGH, value);
-                m_alarmSpecific.setScope(this, this, KARABO_WARN_HIGH);
-                return m_alarmSpecific;
-            }
-
-            /**
-             * Set lower alarm threshold for this value
-             * @param value
-             * @return
-             */
-            AlarmSpecific<Element, ValueType, Self>& alarmLow(const ValueType& value) {
-                m_genericElement->getNode().setAttribute(KARABO_ALARM_LOW, value);
-                m_alarmSpecific.setScope(this, this, KARABO_ALARM_LOW);
-                return m_alarmSpecific;
-            }
-
-            /**
-             * Set upper alarm threshold for this value
-             * @param value
-             * @return
-             */
-            AlarmSpecific<Element, ValueType, Self>& alarmHigh(const ValueType& value) {
-                m_genericElement->getNode().setAttribute(KARABO_ALARM_HIGH, value);
-                m_alarmSpecific.setScope(this, this, KARABO_ALARM_HIGH);
-                return m_alarmSpecific;
             }
 
             /**

@@ -215,14 +215,6 @@ class PythonDevice:
             .unit(Unit.SECOND).metricPrefix(MetricPrefix.MILLI)
             .expertAccess()
             .readOnly().initialValue(0.0)
-            .warnHigh(3000.)  # 3 s
-            .info("Long average time between message being sent and"
-                  " start of its processing")
-            .needsAcknowledging(False)
-            .alarmHigh(10000.)  # 10 s
-            .info("Very long average time between message being sent "
-                  "and start of its processing")
-            .needsAcknowledging(False)
             .commit(),
 
             UINT32_ELEMENT(expected).key("performanceStatistics"
