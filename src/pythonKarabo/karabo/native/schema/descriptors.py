@@ -1265,11 +1265,6 @@ class VectorHash(Vector):
             attrs = value.timestamp.toDict()
         else:
             attrs = {}
-        attrs["rowSchema"] = True
-        # C++ Hash::merge chooses the code path of merging tables
-        # (replace or append) by checking existing of `rowSchema`
-        # attribute. We want to replace, hence, need the attribute.
-        # Migration until Karabo 3
 
         data = HashList(Hash((col, row[col]) for col in self.dtype.names)
                         for row in value.value)
