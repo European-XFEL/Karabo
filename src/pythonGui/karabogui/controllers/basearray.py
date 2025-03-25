@@ -70,7 +70,7 @@ class BaseArrayGraph(BaseBindingController):
             curve_options = generate_curve_options(
                 curves=self._curves, curve_options=curve_options)
         dialog = CurveOptionsDialog(curve_options, parent=self.widget)
-        dialog.requestCustomOptionsRestore.connect(self.reset_curve_options)
+        dialog.requestRestore.connect(self.reset_curve_options)
         if dialog.exec() != QDialog.Accepted:
             return
         options = dialog.get_curve_options()
