@@ -25,7 +25,6 @@ from karabind import (
     cppOtherSchemaElementsSchemaOtherSchemaElements, cppShapeSchemaCircle,
     cppShapeSchemaEditableCircle, cppSomeClassSchemaSomeClassId,
     cppTestStruct1SchemaMyTest, cppTestStruct1SchemaTestStruct1, fullyEqual)
-from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.states import State
 
 
@@ -56,15 +55,6 @@ def test_buildUp():
         assert schema.isLeaf("shapes.circle.radius")
     except Exception as e:
         pytest.fail(e, pytrace=True)
-
-    # try:
-    #     instance = GraphicsRenderer.create("GraphicsRenderer",
-    #                                        Hash("shapes.Circle.radius",
-    #                                             0.5, "color", "red",
-    #                                             "antiAlias", "true"))
-    #     assert instance is not None
-    # except Exception as e:
-    #     pytest.fail(e, pytrace=True)
 
 
 def test_getRootName():
@@ -578,76 +568,6 @@ def test_hasgetsetMinMax():
     assert schema.getMax('shapeList') == 5
 
 
-def test_getWarnAlarmLowHigh():
-    schema = cppTestStruct1SchemaTestStruct1()
-    try:
-        assert schema.getWarnLow("exampleKey5") == -10
-        assert schema.getWarnLow("exampleKey6") == -5.5
-    except Exception as e:
-        pytest.fail(e, pytrace=True)
-
-    try:
-        assert schema.getWarnHigh("exampleKey5") == 10
-        assert schema.getWarnHigh("exampleKey6") == 5.5
-    except Exception as e:
-        pytest.fail(e, pytrace=True)
-
-    try:
-        assert schema.getAlarmLow("exampleKey5") == -20
-        assert schema.getAlarmLow("exampleKey6") == -22.1
-    except Exception as e:
-        pytest.fail(e, pytrace=True)
-
-    try:
-        assert schema.getAlarmHigh("exampleKey5") == 20
-        assert schema.getAlarmHigh("exampleKey6") == 22.777
-    except Exception as e:
-        pytest.fail(e, pytrace=True)
-
-
-def test_getWarnAlarmLowHighAs():
-    schema = cppTestStruct1SchemaTestStruct1()
-    try:
-        assert schema.getWarnLowAs("exampleKey5", Types.STRING) == "-10"
-        assert schema.getWarnLowAs("exampleKey6", Types.STRING) == "-5.5"
-    except Exception as e:
-        pytest.fail(e, pytrace=True)
-
-    try:
-        assert schema.getWarnHighAs("exampleKey5", Types.STRING) == "10"
-        assert schema.getWarnHighAs("exampleKey6", Types.STRING) == "5.5"
-    except Exception as e:
-        pytest.fail(e, pytrace=True)
-
-    try:
-        assert schema.getAlarmLowAs("exampleKey5", Types.STRING) == "-20"
-        assert schema.getAlarmLowAs("exampleKey6", Types.STRING) == "-22.1"
-    except Exception as e:
-        pytest.fail(e, pytrace=True)
-
-    try:
-        assert schema.getAlarmHighAs("exampleKey5", Types.STRING) == "20"
-        assert schema.getAlarmHighAs("exampleKey6", Types.STRING) == "22.777"
-    except Exception as e:
-        pytest.fail(e, pytrace=True)
-
-
-def test_hasWarnAlarm():
-    try:
-        schema = cppTestStruct1SchemaTestStruct1()
-        assert schema.hasWarnLow("exampleKey5")
-        assert schema.hasWarnHigh("exampleKey5")
-
-        assert schema.hasWarnLow("exampleKey6")
-        assert schema.hasWarnHigh("exampleKey6")
-        assert schema.hasAlarmLow("exampleKey6")
-        assert schema.hasAlarmHigh("exampleKey6")
-
-        assert schema.hasAlarmHigh("exampleKey1") is False
-    except Exception as e:
-        pytest.fail(e, pytrace=True)
-
-
 def test_vectorElement():
     try:
         schema = cppTestStruct1SchemaTestStruct1()
@@ -997,12 +917,6 @@ def test_schemaImageElement():
         "Is big-endian"
     assert schema.getValueType("myImage1.pixels.isBigEndian") == Types.BOOL
     assert schema.getDefaultValue("myImage1.pixels.isBigEndian") is False
-
-
-def test_alarm_info():
-    schema = cppTestStruct1SchemaTestStruct1()
-    assert schema.getInfoForAlarm("exampleKey6", AlarmCondition.WARN_LOW) == \
-        "Some info"
 
 
 def test_allowed_states():

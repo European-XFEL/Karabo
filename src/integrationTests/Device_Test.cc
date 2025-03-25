@@ -76,7 +76,7 @@ class TestDevice : public karabo::core::Device {
    public:
     KARABO_CLASSINFO(TestDevice, "TestDevice", fakeClassVersion)
 
-    static const int ALARM_HIGH = 1000.0;
+    static const int LIMIT_HIGH = 1000.0;
 
 
     static void expectedParameters(karabo::util::Schema& expected) {
@@ -112,10 +112,11 @@ class TestDevice : public karabo::core::Device {
               .commit();
 
         DOUBLE_ELEMENT(expected)
-              .key("valueWithAlarm")
-              .readOnly()
-              .alarmHigh(TestDevice::ALARM_HIGH)
-              .needsAcknowledging(false)
+              .key("valueWithExc")
+              .reconfigurable()
+              .assignmentOptional()
+              .defaultValue(0.0)
+              .maxExc(TestDevice::LIMIT_HIGH)
               .observerAccess()
               .commit();
 
@@ -252,12 +253,12 @@ class TestDevice : public karabo::core::Device {
 
         const State& newState = State::fromString(otherIn.get<std::string>("state"));
 
-        Hash otherOut("valueWithAlarm", -1.);
+        Hash otherOut("valueWithExc", -1.);
         Hash::Attributes& attrs =
               otherOut.set("countStateToggles", get<unsigned int>("countStateToggles") + 1).getAttributes();
         getTimestamp(stampCountToggles).toHashAttributes(attrs);
 
-        // So "state" and "valueWithAlarm" get timestamp from 'stampState', "countStateToggles" from 'stampCountToggles'
+        // So "state" and "valueWithExc" get timestamp from 'stampState', "countStateToggles" from 'stampCountToggles'
         updateState(newState, otherOut, getTimestamp(stampState));
     }
 
@@ -841,27 +842,27 @@ void Device_Test::testSchemaWithAttrUpdate() {
     // Time, in milliseconds, to wait for DeviceClient to update its internal cache after a schema change.
     const int cacheUpdateWaitMs = 1000;
 
-    // Updates 'alarmHigh'
+    // Updates 'maxExc'
     Schema schema;
-    double alarmHighValue = 2.0 * TestDevice::ALARM_HIGH;
+    double maxHighValue = 2.0 * TestDevice::LIMIT_HIGH;
     DOUBLE_ELEMENT(schema)
-          .key("valueWithAlarm")
-          .readOnly()
-          .alarmHigh(alarmHighValue)
-          .needsAcknowledging(false)
+          .key("valueWithExc")
+          .assignmentOptional()
+          .defaultValue(0.0) //
+          .reconfigurable()
+          .maxExc(maxHighValue)
           .commit();
     CPPUNIT_ASSERT_NO_THROW(
           sigSlotA->request("TestDevice", "slotUpdateSchema", schema).timeout(requestTimeoutMs).receive());
 
     // Checks that the updated attribute will be available within an interval.
     CPPUNIT_ASSERT(waitForCondition(
-          [this, alarmHighValue] {
-              return m_deviceClient->getDeviceSchema("TestDevice").getAlarmHigh<double>("valueWithAlarm") ==
-                     alarmHighValue;
+          [this, maxHighValue] {
+              return m_deviceClient->getDeviceSchema("TestDevice").getMaxExc<double>("valueWithExc") == maxHighValue;
           },
           cacheUpdateWaitMs));
 
-    // Tests that doing updateSchema with something new resets the AlarmHigh.
+    // Tests that doing updateSchema with something new resets the maxExc.
     Schema someNewSchema;
     INT32_ELEMENT(someNewSchema).key("somethingNew").assignmentOptional().defaultValue(4).reconfigurable().commit();
     CPPUNIT_ASSERT_NO_THROW(
@@ -869,8 +870,8 @@ void Device_Test::testSchemaWithAttrUpdate() {
     // Checks that the reset attribute will be available within an interval.
     CPPUNIT_ASSERT(waitForCondition(
           [this] {
-              return m_deviceClient->getDeviceSchema("TestDevice").getAlarmHigh<double>("valueWithAlarm") ==
-                     TestDevice::ALARM_HIGH;
+              return m_deviceClient->getDeviceSchema("TestDevice").getMaxExc<double>("valueWithExc") ==
+                     TestDevice::LIMIT_HIGH;
           },
           cacheUpdateWaitMs));
 
@@ -889,36 +890,35 @@ void Device_Test::testSchemaWithAttrAppend() {
     // Time, in milliseconds, to wait for DeviceClient to update its internal cache after a schema change.
     const int cacheUpdateWaitMs = 1000;
 
-    // Updates 'alarmHigh'
+    // Updates 'maxExc'
     Schema schema;
-    double alarmHighValue = 2.0 * TestDevice::ALARM_HIGH;
+    double maxHighValue = 2.0 * TestDevice::LIMIT_HIGH;
     DOUBLE_ELEMENT(schema)
-          .key("valueWithAlarm")
-          .readOnly()
-          .alarmHigh(alarmHighValue)
-          .needsAcknowledging(false)
+          .key("valueWithExc") //
+          .assignmentOptional()
+          .defaultValue(0.0)
+          .reconfigurable()
+          .maxExc(maxHighValue)
           .commit();
     CPPUNIT_ASSERT_NO_THROW(
           sigSlotA->request("TestDevice", "slotUpdateSchema", schema).timeout(requestTimeoutMs).receive());
 
     // Checks that the updated attribute will be available within an interval.
     CPPUNIT_ASSERT(waitForCondition(
-          [this, alarmHighValue] {
-              return m_deviceClient->getDeviceSchema("TestDevice").getAlarmHigh<double>("valueWithAlarm") ==
-                     alarmHighValue;
+          [this, maxHighValue] {
+              return m_deviceClient->getDeviceSchema("TestDevice").getMaxExc<double>("valueWithExc") == maxHighValue;
           },
           cacheUpdateWaitMs));
 
-    // Tests that doing appendSchema with something new keeps the AlarmHigh.
+    // Tests that doing appendSchema with something new keeps the maxExc.
     Schema someNewSchema;
     INT32_ELEMENT(someNewSchema).key("somethingNew").assignmentOptional().defaultValue(4).reconfigurable().commit();
     CPPUNIT_ASSERT_NO_THROW(
           sigSlotA->request("TestDevice", "slotAppendSchema", someNewSchema).timeout(requestTimeoutMs).receive());
     // Checks that the reset attribute will be available within an interval.
     CPPUNIT_ASSERT(waitForCondition(
-          [this, alarmHighValue] {
-              return m_deviceClient->getDeviceSchema("TestDevice").getAlarmHigh<double>("valueWithAlarm") ==
-                     alarmHighValue;
+          [this, maxHighValue] {
+              return m_deviceClient->getDeviceSchema("TestDevice").getMaxExc<double>("valueWithExc") == maxHighValue;
           },
           cacheUpdateWaitMs));
 
@@ -1424,7 +1424,7 @@ void Device_Test::testUpdateState() {
     const State state(m_deviceClient->get<State>(deviceId, "state"));
     CPPUNIT_ASSERT_MESSAGE("State is " + state.name(), state == State::UNKNOWN);
     CPPUNIT_ASSERT_EQUAL(0u, m_deviceClient->get<unsigned int>(deviceId, "countStateToggles"));
-    CPPUNIT_ASSERT(std::abs(-1. - m_deviceClient->get<double>(deviceId, "valueWithAlarm")) > 1.e-7);
+    CPPUNIT_ASSERT(std::abs(-1. - m_deviceClient->get<double>(deviceId, "valueWithExc")) > 1.e-7);
 
     const int timeOutInMs = 1000 * KRB_TEST_MAX_TIMEOUT;
     Hash hash;
@@ -1454,7 +1454,7 @@ void Device_Test::testUpdateState() {
 
     // ... test that other values updated as well,
     CPPUNIT_ASSERT_EQUAL(1u, m_deviceClient->get<unsigned int>(deviceId, "countStateToggles"));
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(-1., m_deviceClient->get<double>(deviceId, "valueWithAlarm"), 1.e-7);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(-1., m_deviceClient->get<double>(deviceId, "valueWithExc"), 1.e-7);
 
     reply = "";
     msg.set("state", "ERROR");
@@ -1481,7 +1481,7 @@ void Device_Test::testUpdateState() {
     CPPUNIT_ASSERT_MESSAGE("State is " + state3.name(), state3 == State::NORMAL);
 
     // ... and finally test the desired timestamps:
-    //     * state and valueWithAlarm get the same as given explicitly to updateState
+    //     * state and valueWithExc get the same as given explicitly to updateState
     //     * countStateToggles gets the one mingled into the 'other' Hash
     const auto atto = karabo::util::ATTOSEC;
     const Hash cfg(m_deviceClient->get(deviceId));
@@ -1489,7 +1489,7 @@ void Device_Test::testUpdateState() {
     CPPUNIT_ASSERT_MESSAGE(stampStateNew.toIso8601(atto) += " != " + stampState.toIso8601(atto),
                            stampStateNew == stampState);
 
-    const Epochstamp stampValue(Epochstamp::fromHashAttributes(cfg.getAttributes("valueWithAlarm")));
+    const Epochstamp stampValue(Epochstamp::fromHashAttributes(cfg.getAttributes("valueWithExc")));
     CPPUNIT_ASSERT_MESSAGE(stampValue.toIso8601(atto) += " != " + stampState.toIso8601(atto), stampValue == stampState);
 
     const Epochstamp stampToggleNew(Epochstamp::fromHashAttributes(cfg.getAttributes("countStateToggles")));

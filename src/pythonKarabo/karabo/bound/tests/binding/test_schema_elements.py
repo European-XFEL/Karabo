@@ -390,14 +390,6 @@ class TestStruct1:
             .setSpecialDisplayType("Int64DisplayType")
             .readOnly()
             .initialValue(1442244)
-            .warnLow(-10)
-            .needsAcknowledging(False)
-            .warnHigh(10)
-            .needsAcknowledging(False)
-            .alarmLow(-20)
-            .needsAcknowledging(False)
-            .alarmHigh(20)
-            .needsAcknowledging(False)
             .commit(),
 
             UINT64_ELEMENT(expected)
@@ -413,15 +405,6 @@ class TestStruct1:
             .description("Example key 6 description")
             .readOnly()
             .initialValue(1.11)
-            .alarmLow(-22.1)
-            .needsAcknowledging(True)
-            .alarmHigh(22.777)
-            .needsAcknowledging(True)
-            .warnLow(-5.5)
-            .info("Some info")
-            .needsAcknowledging(True)
-            .warnHigh(5.5)
-            .needsAcknowledging(True)
             .archivePolicy(EVERY_100MS)
             .commit(),
 
@@ -711,37 +694,7 @@ class OtherSchemaElementsX:
             # .isInputFile()
             .readOnly()
             .defaultValue("initFile")  # == initialValue
-            .alarmHigh("a")
-            .needsAcknowledging(False)
-            # .alarmLow("b")
-            # .needsAcknowledging(False)
-            # .warnHigh("c")
-            # .needsAcknowledging(False)
-            # .warnLow("d")
-            # .needsAcknowledging(False)
-            # .archivePolicy(EVERY_10MIN)
             .commit(),
-
-            # VECTOR_INT32_ELEMENT(expected)
-            # .key("vecInt")
-            # .readOnly()
-            # .initialValue([10, 20, 30])
-            # .warnLow([50, 50, 50])
-            # .needsAcknowledging(False)
-            # .warnHigh([100, 100, 100])
-            # .needsAcknowledging(False)
-            # .archivePolicy(EVERY_EVENT)
-            # .commit(),
-
-            # VECTOR_DOUBLE_ELEMENT(expected)
-            # .key("vecDouble")
-            # .readOnly()
-            # .alarmLow(-5.5)
-            # .needsAcknowledging(False)
-            # .alarmHigh([7.7, 7.7, 7.7])
-            # .needsAcknowledging(False)
-            # .archivePolicy(NO_ARCHIVING)
-            # .commit(),
 
             VECTOR_INT32_ELEMENT(expected)
             .key("vecIntReconfig")
@@ -976,14 +929,6 @@ class SomeClass:
             .key("a")
             .readOnly()
             .initialValue(1.11)
-            .alarmLow(-22.1)
-            .needsAcknowledging(True)
-            .alarmHigh(22.777)
-            .needsAcknowledging(True)
-            .warnLow(-5.5)
-            .needsAcknowledging(True)
-            .warnHigh(5.5)
-            .needsAcknowledging(True)
             .archivePolicy(EVERY_100MS)
             .commit(),
 
@@ -1577,44 +1522,6 @@ def test_listelem():
     assert sch.isNode("shapeList.BizarreForm") is True
     assert sch.has("shapeList.BizarreForm.length") is True
     assert sch.isLeaf("shapeList.BizarreForm.length") is True
-
-
-def test_getWarnAlarmLowHigh():
-    schema = Schema()
-    TestStruct1.expectedParameters(schema)
-    assert schema.getWarnLow("exampleKey5") == -10
-    assert schema.getWarnLow("exampleKey6") == -5.5
-    assert schema.getWarnHigh("exampleKey5") == 10
-    assert schema.getWarnHigh("exampleKey6") == 5.5
-    assert schema.getAlarmLow("exampleKey5") == -20
-    assert schema.getAlarmLow("exampleKey6") == -22.1
-    assert schema.getAlarmHigh("exampleKey5") == 20
-    assert schema.getAlarmHigh("exampleKey6") == 22.777
-
-
-def test_getWarnAlarmLowHighAs():
-    schema = Schema()
-    TestStruct1.expectedParameters(schema)
-    assert schema.getWarnLowAs("exampleKey5", Types.STRING) == "-10"
-    assert schema.getWarnLowAs("exampleKey6", Types.STRING) == "-5.5"
-    assert schema.getWarnHighAs("exampleKey5", Types.STRING) == "10"
-    assert schema.getWarnHighAs("exampleKey6", Types.STRING) == "5.5"
-    assert schema.getAlarmLowAs("exampleKey5", Types.STRING) == "-20"
-    assert schema.getAlarmLowAs("exampleKey6", Types.STRING) == "-22.1"
-    assert schema.getAlarmHighAs("exampleKey5", Types.STRING) == "20"
-    assert schema.getAlarmHighAs("exampleKey6", Types.STRING) == "22.777"
-
-
-def test_hasWarnAlarm():
-    schema = Schema()
-    TestStruct1.expectedParameters(schema)
-    assert schema.hasWarnLow("exampleKey5") is True
-    assert schema.hasWarnHigh("exampleKey5") is True
-    assert schema.hasWarnLow("exampleKey6") is True
-    assert schema.hasWarnHigh("exampleKey6") is True
-    assert schema.hasAlarmLow("exampleKey6") is True
-    assert schema.hasAlarmHigh("exampleKey6") is True
-    assert schema.hasAlarmHigh("exampleKey1") is False
 
 
 def test_vectorElement():

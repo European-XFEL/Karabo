@@ -677,35 +677,6 @@ namespace karabo {
             return m_hash.getAttribute<unsigned int>(path, KARABO_SCHEMA_MAX_SIZE);
         }
 
-        //******************************************************
-        //    has/ WarnLow, WarnHigh, AlarmLow, AlarmHigh      *
-        //******************************************************
-
-
-        bool Schema::hasWarnLow(const std::string& path) const {
-            return m_hash.hasAttribute(path, KARABO_WARN_LOW);
-        }
-
-
-        bool Schema::hasWarnHigh(const std::string& path) const {
-            return m_hash.hasAttribute(path, KARABO_WARN_HIGH);
-        }
-
-
-        bool Schema::hasAlarmLow(const std::string& path) const {
-            return m_hash.hasAttribute(path, KARABO_ALARM_LOW);
-        }
-
-
-        bool Schema::hasAlarmHigh(const std::string& path) const {
-            return m_hash.hasAttribute(path, KARABO_ALARM_HIGH);
-        }
-
-        bool Schema::hasInterlock(const std::string& path) const {
-            return m_hash.hasAttribute(path, KARABO_INTERLOCK);
-        }
-
-
         //**********************************************
         //               archivePolicy                 *
         //**********************************************
@@ -1075,100 +1046,6 @@ namespace karabo {
         bool similar(const Schema& left, const Schema& right) {
             return similar(left.getParameterHash(), right.getParameterHash());
         }
-
-
-        const std::string Schema::getInfoForAlarm(const std::string& path, const AlarmCondition& condition) const {
-            const std::string attr = std::string(KARABO_ALARM_INFO) + "_" + condition.asString();
-            if (m_hash.hasAttribute(path, attr)) {
-                return m_hash.getAttribute<std::string>(path, attr);
-            } else {
-                return std::string();
-            }
-        }
-
-
-        const bool Schema::doesAlarmNeedAcknowledging(const std::string& path,
-                                                      const karabo::util::AlarmCondition& condition) const {
-            const std::string attr = std::string(KARABO_SCHEMA_ALARM_ACK) + "_" + condition.asString();
-            if (m_hash.hasAttribute(path, attr)) {
-                return m_hash.getAttribute<bool>(path, attr);
-            } else {
-                return false;
-            }
-        }
-
-#define applyRuntimeUpdateTypeResolver(Type, RefType, CppType, Func) \
-    if (Type == RefType) Func(path, it->getAs<CppType>("value"));
-#define checkForRunttimeUpdateTemplatedType(Type, Attr, Func)                                                         \
-    if (attribute == Attr) {                                                                                          \
-        applyRuntimeUpdateTypeResolver(Type, Types::BOOL, bool, Func) applyRuntimeUpdateTypeResolver(                 \
-              Type, Types::CHAR, char, Func) applyRuntimeUpdateTypeResolver(Type, Types::UINT8, unsigned char, Func)  \
-              applyRuntimeUpdateTypeResolver(Type, Types::INT8, signed char, Func) applyRuntimeUpdateTypeResolver(    \
-                    Type, Types::UINT16, unsigned short, Func)                                                        \
-                    applyRuntimeUpdateTypeResolver(Type, Types::INT16, short, Func) applyRuntimeUpdateTypeResolver(   \
-                          Type, Types::UINT32, unsigned int, Func) applyRuntimeUpdateTypeResolver(Type, Types::INT32, \
-                                                                                                  int, Func)          \
-                          applyRuntimeUpdateTypeResolver(Type, Types::UINT64, unsigned long long, Func)               \
-                                applyRuntimeUpdateTypeResolver(Type, Types::INT64, long long, Func)                   \
-                                      applyRuntimeUpdateTypeResolver(Type, Types::FLOAT, float, Func)                 \
-                                            applyRuntimeUpdateTypeResolver(Type, Types::DOUBLE, double, Func)         \
-                                                  applyRuntimeUpdateTypeResolver(Type, Types::COMPLEX_FLOAT,          \
-                                                                                 std::complex<float>, Func)           \
-                                                        applyRuntimeUpdateTypeResolver(Type, Types::COMPLEX_DOUBLE,   \
-                                                                                       std::complex<double>, Func)    \
-                                                              applyRuntimeUpdateTypeResolver(Type, Types::STRING,     \
-                                                                                             string, Func)            \
-    }
-
-#define checkForRunttimeUpdateFixedType(Attr, Func, CppType) \
-    if (attribute == Attr) Func(path, it->getAs<CppType>("value"));
-#define checkForRunttimeUpdateFixedTypeEnum(Attr, Func, EnumType) \
-    if (attribute == Attr) Func(path, EnumType(it->get<int>("value")));
-
-
-        bool Schema::applyRuntimeUpdates(const std::vector<karabo::util::Hash>& updates) {
-            bool success = true;
-            const Schema schCpy = *this;
-            for (auto it = updates.begin(); it != updates.end(); ++it) {
-                try {
-                    const std::string& path = it->get<std::string>("path");
-                    const std::string& attribute = it->get<std::string>("attribute");
-
-                    Types::ReferenceType type = getValueType(path);
-
-                    checkForRunttimeUpdateFixedTypeEnum(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, setRequiredAccessLevel,
-                                                        AccessLevel);
-                    checkForRunttimeUpdateFixedTypeEnum(KARABO_SCHEMA_UNIT_ENUM, setUnit, UnitType);
-                    checkForRunttimeUpdateFixedTypeEnum(KARABO_SCHEMA_METRIC_PREFIX_ENUM, setMetricPrefix,
-                                                        MetricPrefixType);
-                    checkForRunttimeUpdateTemplatedType(type, KARABO_SCHEMA_MIN_INC, setMinInc);
-                    checkForRunttimeUpdateTemplatedType(type, KARABO_SCHEMA_MAX_INC, setMaxInc);
-                    checkForRunttimeUpdateTemplatedType(type, KARABO_SCHEMA_MIN_EXC, setMinExc);
-                    checkForRunttimeUpdateTemplatedType(type, KARABO_SCHEMA_MAX_EXC, setMaxExc);
-                    checkForRunttimeUpdateFixedType(KARABO_SCHEMA_MIN_SIZE, setMinSize, unsigned int);
-                    checkForRunttimeUpdateFixedType(KARABO_SCHEMA_MAX_SIZE, setMaxSize, unsigned int);
-                    checkForRunttimeUpdateTemplatedType(type, AlarmCondition::WARN_LOW.asString(), setWarnLow);
-                    checkForRunttimeUpdateTemplatedType(type, AlarmCondition::WARN_HIGH.asString(), setWarnHigh);
-                    checkForRunttimeUpdateTemplatedType(type, AlarmCondition::ALARM_LOW.asString(), setAlarmLow);
-                    checkForRunttimeUpdateTemplatedType(type, AlarmCondition::ALARM_HIGH.asString(), setAlarmHigh);
-                    checkForRunttimeUpdateFixedTypeEnum(KARABO_SCHEMA_DAQ_POLICY, setDAQPolicy, DAQPolicy);
-
-                } catch (...) {
-                    success = false;
-                }
-            }
-            if (!success) {
-                // At least one of the updates failed; rolls-back the schema.
-                *this = schCpy;
-            }
-            return success;
-        }
-
-#undef checkForRunttimeUpdateFixedTypeEnum
-#undef checkForRunttimeUpdateFixedType
-#undef checkForRunttimeUpdateTemplatedType
-#undef applyRuntimeUpdateTypeResolver
-
 
         Schema Schema::subSchema(const std::string& subNodePath, const std::string& filterTags) const {
             Schema sub;

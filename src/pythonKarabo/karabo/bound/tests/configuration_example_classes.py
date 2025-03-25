@@ -351,10 +351,6 @@ class TestStruct1:
             .description("Example key 5 description")
             .setSpecialDisplayType("Int64DisplayType")
             .readOnly().initialValue(1442244)
-            .warnLow(-10).needsAcknowledging(True)
-            .warnHigh(10).needsAcknowledging(True)
-            .alarmLow(-20).needsAcknowledging(True)
-            .alarmHigh(20).info("bla").needsAcknowledging(True)
             .archivePolicy(EVERY_EVENT)
             .commit(),
 
@@ -367,10 +363,6 @@ class TestStruct1:
             .displayedName("Example key 6")
             .description("Example key 6 description")
             .readOnly().initialValue(1.11)
-            .alarmLow(-22.1).needsAcknowledging(True)
-            .alarmHigh(22.777).needsAcknowledging(True)
-            .warnLow(-5.5).info("Some info").needsAcknowledging(True)
-            .warnHigh(5.5).needsAcknowledging(True)
             .archivePolicy(EVERY_100MS)
             .commit(),
 
@@ -560,10 +552,6 @@ class SomeClass:
 
             DOUBLE_ELEMENT(expected).key("a")
             .readOnly().initialValue(1.11)
-            .alarmLow(-22.1).needsAcknowledging(True)
-            .alarmHigh(22.777).needsAcknowledging(True)
-            .warnLow(-5.5).needsAcknowledging(True)
-            .warnHigh(5.5).needsAcknowledging(True)
             .archivePolicy(EVERY_100MS)
             .commit(),
 

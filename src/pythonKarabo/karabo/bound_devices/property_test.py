@@ -85,7 +85,6 @@ class PropertyTest(PythonDevice):
             .displayedName("Readonly Bool")
             .description("A bool property for testing alarms")
             .readOnly().initialValue(True)
-            .warnLow(True).info("Rather low").needsAcknowledging(False)
             .commit(),
 
             # CHAR_ELEMENT, (U)INT8_ELEMENT, (U)INT16_ELEMENT do not exists
@@ -99,10 +98,8 @@ class PropertyTest(PythonDevice):
 
             INT32_ELEMENT(expected).key("int32PropertyReadOnly")
             .displayedName("Readonly Int32")
-            .description("An int32 property for testing alarms")
+            .description("An int32 property for testing")
             .readOnly().initialValue(32_000_000)
-            .warnLow(-10).info("Rather low").needsAcknowledging(False)
-            .alarmLow(-32_000_000).info("Too low").needsAcknowledging(True)
             .commit(),
 
             UINT32_ELEMENT(expected).key("uint32Property")
@@ -114,10 +111,8 @@ class PropertyTest(PythonDevice):
 
             UINT32_ELEMENT(expected).key("uint32PropertyReadOnly")
             .displayedName("Readonly UInt32")
-            .description("A uint32 property for testing alarms")
+            .description("A uint32 property for testing")
             .readOnly().initialValue(32_000_000)
-            .warnHigh(32_000_001).info("Rather high").needsAcknowledging(False)
-            .alarmHigh(64_000_000).info("Too high").needsAcknowledging(True)
             .commit(),
 
             INT64_ELEMENT(expected).key("int64Property")
@@ -129,10 +124,8 @@ class PropertyTest(PythonDevice):
 
             INT64_ELEMENT(expected).key("int64PropertyReadOnly")
             .displayedName("Readonly Int64")
-            .description("An int64 property for testing alarms")
+            .description("An int64 property for testing")
             .readOnly().initialValue(3_200_000_000)
-            .warnLow(-3200).info("Rather low").needsAcknowledging(False)
-            .alarmLow(-3_200_000_000).info("Too low").needsAcknowledging(True)
             .commit(),
 
             UINT64_ELEMENT(expected).key("uint64Property")
@@ -144,11 +137,8 @@ class PropertyTest(PythonDevice):
 
             UINT64_ELEMENT(expected).key("uint64PropertyReadOnly")
             .displayedName("Readonly UInt64")
-            .description("A uint64 property for testing alarms")
+            .description("A uint64 property for testing")
             .readOnly().initialValue(3_200_000_000)
-            .warnHigh(3_200_000_001).info("Rather high")
-            .needsAcknowledging(False)
-            .alarmHigh(6_400_000_000).info("Too high").needsAcknowledging(True)
             .commit(),
 
             FLOAT_ELEMENT(expected).key("floatProperty")
@@ -160,12 +150,8 @@ class PropertyTest(PythonDevice):
 
             FLOAT_ELEMENT(expected).key("floatPropertyReadOnly")
             .displayedName("Readonly Float")
-            .description("A float property for testing alarms")
+            .description("A float property for testing")
             .readOnly().initialValue(3.141596)
-            .alarmLow(-(3.141596**2)).info("Too high").needsAcknowledging(True)
-            .warnLow(-2*3.141596).info("Rather high").needsAcknowledging(False)
-            .warnHigh(2*3.141596).info("Rather high").needsAcknowledging(False)
-            .alarmHigh(3.141596**2).info("Too high").needsAcknowledging(True)
             .commit(),
 
             DOUBLE_ELEMENT(expected).key("doubleProperty")
@@ -177,12 +163,8 @@ class PropertyTest(PythonDevice):
 
             DOUBLE_ELEMENT(expected).key("doublePropertyReadOnly")
             .displayedName("Readonly Double")
-            .description("A double property for testing alarms")
+            .description("A double property for testing")
             .readOnly().initialValue(0.)
-            .alarmLow(-100.).info("Too low").needsAcknowledging(True)
-            .warnLow(-10.).info("Rather low").needsAcknowledging(False)
-            .warnHigh(10.).info("Rather high").needsAcknowledging(False)
-            .alarmHigh(100.).info("Too high").needsAcknowledging(True)
             .commit(),
 
             STRING_ELEMENT(expected).key("stringProperty")
@@ -528,10 +510,6 @@ class PropertyTest(PythonDevice):
             .displayedName("Counter read-only")
             .readOnly()
             .initialValue(0)
-            .warnHigh(1_000_000)
-            .info("Rather high").needsAcknowledging(True)
-            .alarmHigh(100_000_000)
-            .info("Too high").needsAcknowledging(False)  # False for tests
             .commit(),
 
             UINT32_ELEMENT(expected).key("node.counter")
