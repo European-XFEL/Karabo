@@ -56,7 +56,7 @@ from karabogui.fonts import get_font_metrics, get_font_size_from_dpi, get_qfont
 from karabogui.graph.common.api import (
     AspectRatio, AxisItem, AxisType, ExportTool, KaraboLegend, KaraboROI,
     KaraboViewBox, MouseMode, MouseTool, ROITool, create_axis_items,
-    create_button, float_to_string, get_allowed_colors, get_default_brush,
+    create_button, float_to_string, get_available_colors, get_default_brush,
     get_default_pen, get_pen_cycler, make_brush, make_pen, rgba_to_hex)
 from karabogui.graph.common.const import DEFAULT_BAR_WIDTH, DEFAULT_PEN_WIDTH
 from karabogui.graph.image.api import (
