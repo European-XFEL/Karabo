@@ -18,15 +18,17 @@ from karabo.bound import (
     TABLE_ELEMENT, VECTOR_INT32_ELEMENT, Hash, PythonDevice, Schema)
 
 
-@KARABO_CLASSINFO("DeviceWithAlarm", "1.0")
-class DeviceWithAlarm(PythonDevice):
-    ALARM_HIGH = 1000.
+@KARABO_CLASSINFO("DeviceWithLimit", "1.0")
+class DeviceWithLimit(PythonDevice):
+    LIMIT_HIGH = 1000.
 
     def expectedParameters(expected):
         (
-            DOUBLE_ELEMENT(expected).key("valueWithAlarm")
-            .readOnly()
-            .alarmHigh(DeviceWithAlarm.ALARM_HIGH).needsAcknowledging(False)
+            DOUBLE_ELEMENT(expected).key("valueWithExc")
+            .assignmentOptional()
+            .defaultValue(0.0)
+            .maxExc(DeviceWithLimit.LIMIT_HIGH)
+            .reconfigurable()
             .commit(),
 
             NODE_ELEMENT(expected).key("node")

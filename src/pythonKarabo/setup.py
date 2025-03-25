@@ -159,7 +159,7 @@ else:
             'CommTestDevice=karabo.integration_tests.device_comm_test.commtestdevice:CommTestDevice',
             'SceneProvidingDevice=karabo.integration_tests.device_provided_scenes_test.scene_providing_device:SceneProvidingDevice',
             'NonSceneProvidingDevice=karabo.integration_tests.device_provided_scenes_test.non_scene_providing_device:NonSceneProvidingDevice',
-            'DeviceWithAlarm=karabo.integration_tests.device_schema_injection_test.device_with_alarm:DeviceWithAlarm',
+            'DeviceWithLimit=karabo.integration_tests.device_schema_injection_test.device_with_limit:DeviceWithLimit',
             'DeviceWithTableElementParam=karabo.integration_tests.device_schema_injection_test.device_with_table_parameter:DeviceWithTableElementParam',
             'DeviceChannelInjection=karabo.integration_tests.device_schema_injection_test.device_channel_injection:DeviceChannelInjection',
             'PPSenderDevice=karabo.integration_tests.pipeline_processing_test.ppsender:PPSenderDevice',

@@ -19,7 +19,7 @@ from karabo.bound import (
     DOUBLE_ELEMENT, INT32_ELEMENT, Configurator, Hash, PythonDevice, Schema)
 
 # import the device classes to trigger their registration in the Configurator
-from .device_with_alarm import DeviceWithAlarm
+from .device_with_limit import DeviceWithLimit
 from .device_with_table_parameter import DeviceWithTableElementParam
 
 
@@ -250,25 +250,27 @@ class Schema_Injection_TestCase(unittest.TestCase):
     def test_schemaWithAttributeUpdate(self):
         """Tests that updateSchema resets attributes in the static schema."""
         device = Configurator(PythonDevice).create(
-            "DeviceWithAlarm", self.deviceCfg)
+            "DeviceWithLimit", self.deviceCfg)
         device.startInitialFunctions()
 
-        # Update the alarmHigh
+        # Update the maxExc
         schema = Schema()
-        alarm_high = 2 * DeviceWithAlarm.ALARM_HIGH
+        max_exc = 2 * DeviceWithLimit.LIMIT_HIGH
         (
-            DOUBLE_ELEMENT(schema).key("valueWithAlarm")
-            .readOnly()
-            .alarmHigh(alarm_high).needsAcknowledging(False)
+            DOUBLE_ELEMENT(schema).key("valueWithExc")
+            .assignmentOptional()
+            .defaultValue(0.0)
+            .reconfigurable()
+            .maxExc(max_exc)
             .commit(),
         )
         device.updateSchema(schema)
         self.assertEqual(
-            device.getFullSchema().getAlarmHigh("valueWithAlarm"),
-            alarm_high)
+            device.getFullSchema().getMaxExc("valueWithExc"),
+            max_exc)
 
         # Test that doing updateSchema with something new resets
-        # the alarmHigh
+        # the maxExc
         schema = Schema()
         (
             INT32_ELEMENT(schema).key("somethingNew")
@@ -279,32 +281,34 @@ class Schema_Injection_TestCase(unittest.TestCase):
 
         device.updateSchema(schema)
         self.assertEqual(
-            device.getFullSchema().getAlarmHigh("valueWithAlarm"),
-            DeviceWithAlarm.ALARM_HIGH)
+            device.getFullSchema().getMaxExc("valueWithExc"),
+            DeviceWithLimit.LIMIT_HIGH)
 
     def test_schemaWithAttributeAppend(self):
         """Tests that appendSchema preserves attributes in the static
         schema."""
         device = Configurator(PythonDevice).create(
-            "DeviceWithAlarm", self.deviceCfg)
+            "DeviceWithLimit", self.deviceCfg)
         device.startInitialFunctions()
 
-        # Update the alarmHigh
+        # Update the maxExc
         schema = Schema()
-        alarm_high = 2 * DeviceWithAlarm.ALARM_HIGH
+        max_exc = 2 * DeviceWithLimit.LIMIT_HIGH
         (
-            DOUBLE_ELEMENT(schema).key("valueWithAlarm")
-            .readOnly()
-            .alarmHigh(alarm_high).needsAcknowledging(False)
+            DOUBLE_ELEMENT(schema).key("valueWithExc")
+            .assignmentOptional()
+            .defaultValue(0.0)
+            .maxExc(max_exc)
+            .reconfigurable()
             .commit(),
         )
         device.updateSchema(schema)
         self.assertEqual(
-            device.getFullSchema().getAlarmHigh("valueWithAlarm"),
-            alarm_high)
+            device.getFullSchema().getMaxExc("valueWithExc"),
+            max_exc)
 
         # Test that doing appendSchema with something new keeps
-        # the alarmHigh
+        # the maxExc
         schema = Schema()
         (
             INT32_ELEMENT(schema).key("somethingNew")
@@ -315,8 +319,8 @@ class Schema_Injection_TestCase(unittest.TestCase):
 
         device.appendSchema(schema)
         self.assertEqual(
-            device.getFullSchema().getAlarmHigh("valueWithAlarm"),
-            alarm_high)
+            device.getFullSchema().getMaxExc("valueWithExc"),
+            max_exc)
 
     def test_ensureGetCopies(self):
         """
@@ -326,7 +330,7 @@ class Schema_Injection_TestCase(unittest.TestCase):
         Similar for getFullSchema()
         """
         device = Configurator(PythonDevice).create(
-            "DeviceWithAlarm", self.deviceCfg)
+            "DeviceWithLimit", self.deviceCfg)
         device.startInitialFunctions()
 
         # VECTOR_ELEMENT
@@ -378,7 +382,7 @@ class Schema_Injection_TestCase(unittest.TestCase):
         Hijack schema test to test PythonDevice.setVectorUpdate(..)
         """
         self.deviceCfg["vector"] = [1, 2, 3]
-        device = Configurator(PythonDevice).create("DeviceWithAlarm",
+        device = Configurator(PythonDevice).create("DeviceWithLimit",
                                                    self.deviceCfg)
         device.startInitialFunctions()
         del self.deviceCfg["vector"]  # clean-up

@@ -484,26 +484,6 @@ void Schema_Test::testGetMinExcMaxExc() {
 }
 
 
-void Schema_Test::testGetAlarmLowAlarmHigh() {
-    CPPUNIT_ASSERT(m_schema.getAlarmLow<long long>("exampleKey5") == -20);
-    CPPUNIT_ASSERT(m_schema.getAlarmHigh<long long>("exampleKey5") == 20);
-}
-
-
-void Schema_Test::testGetWarnLowWarnHigh() {
-    CPPUNIT_ASSERT(m_schema.getWarnLow<long long>("exampleKey5") == -10);
-    CPPUNIT_ASSERT(m_schema.getWarnHigh<long long>("exampleKey5") == 10);
-}
-
-
-void Schema_Test::testHasAlarmWarn() {
-    CPPUNIT_ASSERT(m_schema.hasWarnLow("exampleKey5") == true);
-    CPPUNIT_ASSERT(m_schema.hasWarnHigh("exampleKey5") == true);
-    CPPUNIT_ASSERT(m_schema.hasAlarmLow("exampleKey5") == true);
-    CPPUNIT_ASSERT(m_schema.hasAlarmHigh("exampleKey5") == true);
-}
-
-
 void Schema_Test::testArchivePolicy() {
     Schema sch("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
     OtherSchemaElements::expectedParameters(sch);
@@ -654,16 +634,12 @@ void Schema_Test::testVectorElements() {
     vecDef.push_back(30);
     CPPUNIT_ASSERT(sch.getDefaultValue<vector<int>>("vecInt") == vecDef);
     CPPUNIT_ASSERT(sch.getValueType("vecInt") == Types::VECTOR_INT32);
-    CPPUNIT_ASSERT(sch.getWarnLow<vector<int>>("vecInt") == vector<int>(3, 50));
-    CPPUNIT_ASSERT(sch.getWarnHigh<vector<int>>("vecInt") == vector<int>(3, 100));
     CPPUNIT_ASSERT(sch.isAccessReadOnly("vecInt") == true);
     CPPUNIT_ASSERT(sch.isAssignmentOptional("vecInt") == true);
     CPPUNIT_ASSERT(sch.hasDefaultValue("vecInt") == true);
     CPPUNIT_ASSERT_EQUAL(std::string("Curve"), sch.getDisplayType("vecInt"));
 
     CPPUNIT_ASSERT(sch.getValueType("vecDouble") == Types::VECTOR_DOUBLE);
-    CPPUNIT_ASSERT(sch.getAlarmLow<vector<double>>("vecDouble") == vector<double>(3, -5.5));
-    CPPUNIT_ASSERT(sch.getAlarmHigh<vector<double>>("vecDouble") == vector<double>(3, 7.7));
     CPPUNIT_ASSERT(sch.isAccessReadOnly("vecDouble") == true);
     CPPUNIT_ASSERT(sch.isAssignmentOptional("vecDouble") == true);
     CPPUNIT_ASSERT_EQUAL(std::string("Curve"), sch.getDisplayType("vecDouble"));
@@ -672,11 +648,6 @@ void Schema_Test::testVectorElements() {
     // empty vector
     CPPUNIT_ASSERT(sch.hasDefaultValue("vecDouble") == true);
     CPPUNIT_ASSERT(sch.getDefaultValue<vector<double>>("vecDouble") == vector<double>());
-
-    CPPUNIT_ASSERT(sch.hasAlarmLow("vecDouble") == true);
-    CPPUNIT_ASSERT(sch.hasAlarmHigh("vecDouble") == true);
-    CPPUNIT_ASSERT(sch.hasWarnLow("vecDouble") == false);
-    CPPUNIT_ASSERT(sch.hasWarnHigh("vecDouble") == false);
 
     CPPUNIT_ASSERT(sch.isAccessReconfigurable("vecIntReconfig") == true);
     CPPUNIT_ASSERT(sch.isAssignmentOptional("vecIntReconfig") == true);
@@ -1537,42 +1508,6 @@ void Schema_Test::testOverwriteRestrictionsForOptions() {
         CPPUNIT_ASSERT_EQUAL(range2[1], 1);
         CPPUNIT_ASSERT_EQUAL(range2[2], 2);
     }
-}
-
-
-void Schema_Test::testRuntimeAttributes() {
-    Schema schema;
-    FLOAT_ELEMENT(schema)
-          .key("floatProperty")
-          .minInc(-10.0)
-          .maxInc(10.0)
-          .assignmentOptional()
-          .noDefaultValue()
-          .reconfigurable()
-          .commit();
-
-    CPPUNIT_ASSERT_EQUAL(-10.0f, schema.getMinInc<float>("floatProperty"));
-    CPPUNIT_ASSERT_EQUAL(10.0f, schema.getMaxInc<float>("floatProperty"));
-
-    std::vector<Hash> v;
-    v.push_back(Hash("path", "floatProperty", "attribute", KARABO_SCHEMA_MIN_INC, "value", -20.0));
-    v.push_back(Hash("path", "floatProperty", "attribute", KARABO_SCHEMA_MAX_INC, "value", 100.0));
-    CPPUNIT_ASSERT(schema.applyRuntimeUpdates(v) == true);
-    CPPUNIT_ASSERT_EQUAL(-20.0f, schema.getMinInc<float>("floatProperty"));
-    CPPUNIT_ASSERT_EQUAL(100.0f, schema.getMaxInc<float>("floatProperty"));
-
-    // set integer to float property, still we can set it
-    v.clear();
-    v.push_back(Hash("path", "floatProperty", "attribute", KARABO_SCHEMA_MIN_INC, "value", -20.0));
-    v.push_back(Hash("path", "floatProperty", "attribute", KARABO_SCHEMA_MAX_INC, "value", 1));
-    CPPUNIT_ASSERT(schema.applyRuntimeUpdates(v) == true);
-
-    // we set a maxInc that is way smaller than minInc
-    v.clear();
-    v.push_back(Hash("path", "floatProperty", "attribute", KARABO_SCHEMA_MIN_INC, "value", 100.0));
-    v.push_back(Hash("path", "floatProperty", "attribute", KARABO_SCHEMA_MAX_INC, "value", -20.0));
-    // test is supposed to fail
-    CPPUNIT_ASSERT(schema.applyRuntimeUpdates(v) == true);
 }
 
 

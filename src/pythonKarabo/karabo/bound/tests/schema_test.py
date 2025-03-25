@@ -18,9 +18,9 @@ import unittest
 from karabo.bound import (
     IMAGEDATA_ELEMENT, INT32_ELEMENT, MANDATORY, METER, MICRO, NDARRAY_ELEMENT,
     NODE_ELEMENT, OVERWRITE_ELEMENT, STATE_ELEMENT, AccessLevel, AccessType,
-    AlarmCondition, ArchivePolicy, AssignmentType, Configurator, DaqDataType,
-    DAQPolicy, Hash, Logger, MetricPrefix, NodeType, Schema, State, Types,
-    Unit, Validator, fullyEqual)
+    ArchivePolicy, AssignmentType, Configurator, DaqDataType, DAQPolicy, Hash,
+    Logger, MetricPrefix, NodeType, Schema, State, Types, Unit, Validator,
+    fullyEqual)
 
 from .configuration_example_classes import (
     ArrayContainer, Base, GraphicsRenderer, GraphicsRenderer1,
@@ -547,97 +547,6 @@ class Schema_TestCase(unittest.TestCase):
         except Exception as e:
             self.fail("test_setMinExcMaxExc exception in getMinExc: " + str(e))
 
-    def test_getWarnAlarmLowHigh(self):
-        schema = Configurator(TestStruct1).getSchema("TestStruct1")
-        try:
-            self.assertEqual(schema.getWarnLow("exampleKey5"), -10)
-            self.assertEqual(schema.getWarnLow("exampleKey6"), -5.5)
-        except Exception as e:
-            self.fail(
-                "test_getWarnAlarmLowHigh exception in getWarnLow: " + str(e))
-
-        try:
-            self.assertEqual(schema.getWarnHigh("exampleKey5"), 10)
-            self.assertEqual(schema.getWarnHigh("exampleKey6"), 5.5)
-
-        except Exception as e:
-            self.fail(
-                "test_getWarnAlarmLowHigh exception in getWarnHigh: " + str(e))
-
-        try:
-            self.assertEqual(schema.getAlarmLow("exampleKey5"), -20)
-            self.assertEqual(schema.getAlarmLow("exampleKey6"), -22.1)
-
-        except Exception as e:
-            self.fail(
-                "test_getWarnAlarmLowHigh exception in getAlarmLow: " + str(e))
-
-        try:
-            self.assertEqual(schema.getAlarmHigh("exampleKey5"), 20)
-            self.assertEqual(schema.getAlarmHigh("exampleKey6"), 22.777)
-
-        except Exception as e:
-            self.fail(
-                "test_getWarnAlarmLowHigh exception in getAlarmHigh: " + str(
-                    e))
-
-    def test_getWarnAlarmLowHighAs(self):
-        schema = Configurator(TestStruct1).getSchema("TestStruct1")
-        try:
-            self.assertEqual(schema.getWarnLowAs("exampleKey5", Types.STRING),
-                             "-10")
-            self.assertEqual(schema.getWarnLowAs("exampleKey6", Types.STRING),
-                             "-5.5")
-        except Exception as e:
-            self.fail(
-                "test_getWarnAlarmLowHighAs exception in getWarnLowAs: " + str(
-                    e))
-
-        try:
-            self.assertEqual(schema.getWarnHighAs("exampleKey5", Types.STRING),
-                             "10")
-            self.assertEqual(schema.getWarnHighAs("exampleKey6", Types.STRING),
-                             "5.5")
-        except Exception as e:
-            self.fail(
-                "test_getWarnAlarmLowHighAs exception in "
-                "getWarnHighAs: " + str(e))
-
-        try:
-            self.assertEqual(schema.getAlarmLowAs("exampleKey5", Types.STRING),
-                             "-20")
-            self.assertEqual(schema.getAlarmLowAs("exampleKey6", Types.STRING),
-                             "-22.1")
-        except Exception as e:
-            self.fail(
-                "test_getWarnAlarmLowHighAs exception in "
-                f"getAlarmLowAs: {str(e)}")
-
-        try:
-            self.assertEqual(
-                schema.getAlarmHighAs("exampleKey5", Types.STRING), "20")
-            self.assertEqual(
-                schema.getAlarmHighAs("exampleKey6", Types.STRING), "22.777")
-        except Exception as e:
-            self.fail(
-                "test_getWarnAlarmLowHighAs exception in "
-                f"getAlarmHighAs: {str(e)}")
-
-    def test_hasWarnAlarm(self):
-        try:
-            schema = Configurator(TestStruct1).getSchema("TestStruct1")
-            self.assertTrue(schema.hasWarnLow("exampleKey5"))
-            self.assertTrue(schema.hasWarnHigh("exampleKey5"))
-
-            self.assertTrue(schema.hasWarnLow("exampleKey6"))
-            self.assertTrue(schema.hasWarnHigh("exampleKey6"))
-            self.assertTrue(schema.hasAlarmLow("exampleKey6"))
-            self.assertTrue(schema.hasAlarmHigh("exampleKey6"))
-
-            self.assertFalse(schema.hasAlarmHigh("exampleKey1"))
-        except Exception as e:
-            self.fail("test_hasWarnAlarm exception: " + str(e))
-
     def test_vectorElement(self):
         try:
             schema = Configurator(TestStruct1).getSchema("TestStruct1")
@@ -975,12 +884,6 @@ class Schema_TestCase(unittest.TestCase):
 
         except Exception as e:
             self.fail("test_schemaImageElement group 2: " + str(e))
-
-    def test_alarm_info(self):
-        schema = Configurator(TestStruct1).getSchema("TestStruct1")
-        self.assertEqual(
-            schema.getInfoForAlarm("exampleKey6", AlarmCondition.WARN_LOW),
-            "Some info")
 
     def test_allowed_states(self):
         schema = Configurator(TestStruct1).getSchema("TestStruct1")

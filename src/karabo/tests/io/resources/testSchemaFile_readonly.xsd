@@ -229,10 +229,6 @@
               <a:unitSymbol>m</a:unitSymbol>
               <a:metricPrefixName>milli</a:metricPrefixName>
               <a:metricPrefixSymbol>m</a:metricPrefixSymbol>
-              <a:warnLow>0</a:warnLow>
-              <a:warnHigh>2</a:warnHigh>
-              <a:alarmLow>-2</a:alarmLow>
-              <a:alarmHigh>7</a:alarmHigh>
             </xs:documentation>
           </xs:annotation>
         </xs:element>
