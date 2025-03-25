@@ -169,14 +169,10 @@ namespace karabo {
                 }
 
                 int nodeType = masterNode->getAttribute<int>(KARABO_SCHEMA_NODE_TYPE);
-                const bool hasRowSchema = masterNode->hasAttribute(KARABO_SCHEMA_ROW_SCHEMA);
                 const bool hasClassAttribute = masterNode->hasAttribute(KARABO_SCHEMA_CLASS_ID);
 
                 if (nodeType == Schema::LEAF) {
                     Hash::Node& workNode = working.setNode(userNode); // copies also attributes, i.e. timestamp!
-                    if (hasRowSchema)
-                        workNode.setAttribute(KARABO_SCHEMA_ROW_SCHEMA,
-                                              masterNode->getAttribute<Schema>(KARABO_SCHEMA_ROW_SCHEMA));
                     if (userNode.hasAttribute(KARABO_SCHEMA_CLASS_ID)) {
                         const std::string& classId = userNode.getAttribute<std::string>(KARABO_SCHEMA_CLASS_ID);
                         if (classId == "State") workNode.setAttribute(KARABO_INDICATE_STATE_SET, true);
@@ -405,7 +401,6 @@ namespace karabo {
                 int nodeType = it->getAttribute<int>(KARABO_SCHEMA_NODE_TYPE);
                 bool userHasNode = user.has(key);
                 const bool hasDefault = it->hasAttribute(KARABO_SCHEMA_DEFAULT_VALUE);
-                const bool hasRowSchema = it->hasAttribute(KARABO_SCHEMA_ROW_SCHEMA);
                 const bool hasClassAttribute = it->hasAttribute(KARABO_SCHEMA_CLASS_ID);
 
                 // Remove current node from all provided
@@ -423,9 +418,6 @@ namespace karabo {
                         } else if ((assignment == Schema::OPTIONAL_PARAM || assignment == Schema::INTERNAL_PARAM) &&
                                    (hasDefault && m_injectDefaults)) {
                             Hash::Node& node = working.set(key, it->getAttributeAsAny(KARABO_SCHEMA_DEFAULT_VALUE));
-                            if (hasRowSchema)
-                                node.setAttribute(KARABO_SCHEMA_ROW_SCHEMA,
-                                                  it->getAttribute<Schema>(KARABO_SCHEMA_ROW_SCHEMA));
                             if (hasClassAttribute) {
                                 const std::string& classId = it->getAttribute<std::string>(KARABO_SCHEMA_CLASS_ID);
                                 if (classId == "State") node.setAttribute(KARABO_INDICATE_STATE_SET, true);
@@ -438,9 +430,6 @@ namespace karabo {
                     } else { // Node IS provided
                         Hash::Node& node =
                               working.setNode(user.getNode(key)); // copies also attributes, i.e. timestamp!
-                        if (hasRowSchema)
-                            node.setAttribute(KARABO_SCHEMA_ROW_SCHEMA,
-                                              it->getAttribute<Schema>(KARABO_SCHEMA_ROW_SCHEMA));
                         if (user.hasAttribute(key, KARABO_SCHEMA_CLASS_ID)) {
                             const std::string& classId = user.getAttribute<std::string>(key, KARABO_SCHEMA_CLASS_ID);
                             if (classId == "State") node.setAttribute(KARABO_INDICATE_STATE_SET, true);
