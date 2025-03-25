@@ -39,6 +39,7 @@ class Amqp_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testClientConcurrentSubscripts);
     CPPUNIT_TEST(testClientSameId);
     CPPUNIT_TEST(testClientUnsubscribeAll);
+    CPPUNIT_TEST(testClientTooBigMessage);
     CPPUNIT_TEST(testHashClient);
 
     CPPUNIT_TEST_SUITE_END();
@@ -58,6 +59,7 @@ class Amqp_Test : public CPPUNIT_NS::TestFixture {
     void testClientConcurrentSubscripts();
     void testClientSameId();
     void testClientUnsubscribeAll();
+    void testClientTooBigMessage();
     void testHashClient();
 };
 
