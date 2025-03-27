@@ -38,6 +38,7 @@ async def test_device_config_roundtrip(database):
     config1 = {"deviceId": "device_1", "config": "data_1"}
     config2 = {"deviceId": "device_2", "config": "data_2"}
     config3 = {"deviceId": "device_2", "config": "data_3"}
+    config4 = {"deviceId": "device_1", "config": "data_4"}
     await database.save_configuration("TestConfig", [config1, config2])
     # Overwrite
     await database.save_configuration("TestConfig", [config1, config3])
@@ -65,6 +66,30 @@ async def test_device_config_roundtrip(database):
     assert len(configurations) == 1
     assert configurations[0]["name"] == "TestConfig"
     assert configurations[0]["last_loaded"] != ""
+
+    # 4. try to delete configuration
+    # Add one more for device_id
+    await database.save_configuration("TestConfig1", [config4])
+    with pytest.raises(Exception) as e:
+        await database.delete_configuration("device_1", "No")
+        assert "not available" in e
+    with pytest.raises(Exception) as e:
+        await database.delete_configuration("deviceNOT_1", "TestConfig")
+        assert "not available" in e
+    configurations = await database.list_configurations("device_1")
+    assert len(configurations) == 2
+    await database.delete_configuration("device_1", "TestConfig")
+    configurations = await database.list_configurations("device_1")
+    assert len(configurations) == 1
+    devices = await database.list_devices()
+    assert "device_1" in devices
+    assert "device_2" in devices
+    await database.delete_configuration("device_1", "TestConfig1")
+    # Orphan delete
+    configurations = await database.list_configurations("device_1")
+    assert len(configurations) == 0
+    devices = await database.list_devices()
+    assert "device_1" not in devices
 
 
 @pytest.mark.asyncio
