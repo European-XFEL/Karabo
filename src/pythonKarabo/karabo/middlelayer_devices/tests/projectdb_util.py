@@ -122,7 +122,7 @@ class VerificationProjectManager():
                                       "LOCAL"), timeout=5)
             self.assertTrue(ret.get("success"), ret.get("reason", "no reason"))
             items = ret.get('items')
-            self.assertEqual(len(items), 25)
+            self.assertEqual(len(items), 57)
             scenecnt = 0
             for i in items:
                 if i.get("item_type") == "scene":
@@ -139,7 +139,7 @@ class VerificationProjectManager():
                                  timeout=5)
             self.assertTrue(ret.get("success"), ret.get("reason", "no reason"))
             items = ret.get('items')
-            self.assertEqual(len(items), 25)
+            self.assertEqual(len(items), 57)
             scenecnt = 0
             for i in items:
                 if i.get("item_type") == "scene":

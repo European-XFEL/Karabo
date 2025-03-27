@@ -52,6 +52,83 @@ class DbReader:
 
         return projects
 
+    def get_domain_macros(self, domain: str) -> list[dict[str, any]]:
+        macros = []
+        with self.session_gen() as session:
+            query = (
+                select(Macro).join(Project).join(ProjectDomain)
+                .where(ProjectDomain.name == domain))
+            domain_macros = session.exec(query).all()
+            for macro in domain_macros:
+                macros.append({
+                    "uuid": macro.uuid,
+                    "item_type": "macro",
+                    "simple_name": macro.name
+                })
+        return macros
+
+    def get_domain_scenes(self, domain: str) -> list[dict[str, any]]:
+        scenes = []
+        with self.session_gen() as session:
+            query = (
+                select(Scene).join(Project).join(ProjectDomain)
+                .where(ProjectDomain.name == domain))
+            domain_scenes = session.exec(query).all()
+            for scene in domain_scenes:
+                scenes.append({
+                    "uuid": scene.uuid,
+                    "item_type": "scene",
+                    "simple_name": scene.name
+                })
+        return scenes
+
+    def get_domain_device_servers(self, domain: str) -> list[dict[str, any]]:
+        servers = []
+        with self.session_gen() as session:
+            query = (
+                select(DeviceServer).join(Project).join(ProjectDomain)
+                .where(ProjectDomain.name == domain))
+            device_servers = session.exec(query).all()
+            for server in device_servers:
+                servers.append({
+                    "uuid": server.uuid,
+                    "item_type": "device_server",
+                    "simple_name": server.name
+                })
+        return servers
+
+    def get_domain_device_instances(self, domain: str) -> list[dict[str, any]]:
+        instances = []
+        with self.session_gen() as session:
+            query = (
+                select(DeviceInstance)
+                .join(DeviceServer).join(Project).join(ProjectDomain)
+                .where(ProjectDomain.name == domain))
+            device_instances = session.exec(query).all()
+            for instance in device_instances:
+                instances.append({
+                    "uuid": instance.uuid,
+                    "item_type": "device_instance",
+                    "simple_name": instance.name
+                })
+        return instances
+
+    def get_domain_device_configs(self, domain: str) -> list[dict[str, any]]:
+        configs = []
+        with self.session_gen() as session:
+            query = (
+                select(DeviceConfig)
+                .join(DeviceInstance).join(DeviceServer).join(Project)
+                .join(ProjectDomain).where(ProjectDomain.name == domain))
+            device_configs = session.exec(query).all()
+            for config in device_configs:
+                configs.append({
+                    "uuid": config.uuid,
+                    "item_type": "device_config",
+                    "simple_name": config.name
+                })
+        return configs
+
     def get_subprojects_of_project(self, project: Project) -> list[Project]:
         subprojects = []
         with self.session_gen() as session:
