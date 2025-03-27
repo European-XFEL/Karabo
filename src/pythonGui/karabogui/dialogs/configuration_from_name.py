@@ -18,13 +18,16 @@ from collections import namedtuple
 
 from qtpy import uic
 from qtpy.QtCore import (
-    QAbstractTableModel, QItemSelection, QSortFilterProxyModel, Qt, Slot)
+    QAbstractTableModel, QItemSelection, QPoint, QSortFilterProxyModel, Qt,
+    Slot)
 from qtpy.QtGui import QPalette
-from qtpy.QtWidgets import QDialog, QDialogButtonBox, QHeaderView
+from qtpy.QtWidgets import QDialog, QDialogButtonBox, QHeaderView, QMenu
 
 import karabogui.icons as icons
 from karabo.native import Timestamp
 from karabogui import messagebox
+from karabogui.access import (
+    AccessRole, access_role_allowed, get_access_level_for_role)
 from karabogui.events import (
     KaraboEvent, broadcast_event, register_for_broadcasts,
     unregister_from_broadcasts)
@@ -115,9 +118,12 @@ class ConfigurationFromNameDialog(QDialog):
         header = self.ui_table_widget.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.ResizeToContents)
         header.setStretchLastSection(True)
+        self.ui_table_widget.setContextMenuPolicy(Qt.CustomContextMenu)
         self.ui_table_widget.selectionModel().selectionChanged.connect(
             self._selectionChanged)
         self.ui_table_widget.doubleClicked.connect(self._request_configuration)
+        self.ui_table_widget.customContextMenuRequested.connect(
+            self.onCustomContextMenuRequested)
 
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
         self.ui_filter.textChanged.connect(self._filter_changed)
@@ -170,6 +176,33 @@ class ConfigurationFromNameDialog(QDialog):
 
     # --------------------------------------------------------------------
     # Qt Slots
+
+    @Slot(QPoint)
+    def onCustomContextMenuRequested(self, pos):
+        rows = self.ui_table_widget.selectionModel().selectedRows()
+        if not rows:
+            return
+
+        menu = QMenu(parent=self.ui_table_widget)
+        delete_action = menu.addAction(icons.folderTrash, "Delete")
+        delete_action.triggered.connect(self._request_delete)
+        allowed = access_role_allowed(AccessRole.CONFIGURATION_DELETE)
+        if not allowed:
+            delete_action.setEnabled(False)
+            level = get_access_level_for_role(AccessRole.CONFIGURATION_DELETE)
+            delete_action.setToolTip(
+                f"Need access level {level} to delete configuration.")
+        menu.exec(self.ui_table_widget.viewport().mapToGlobal(pos))
+
+    @Slot()
+    def _request_delete(self):
+        index = self.ui_table_widget.selectionModel().selectedRows()[0]
+        if not index.isValid():
+            return
+        model = index.model()
+        name = model.index(index.row(), NAME_COLUMN).data()
+        get_network().onDeleteConfigurationFromName(
+            self.instance_id, name)
 
     @Slot()
     def _show_device(self):
