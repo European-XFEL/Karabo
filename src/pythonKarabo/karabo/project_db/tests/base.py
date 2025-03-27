@@ -13,12 +13,14 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
+import datetime
 from time import gmtime, strftime, strptime, time
 
 from lxml import etree
 
 from ..bases import DatabaseBase
 from ..const import DATE_FORMAT
+from ..mysql_db.database import MySQLHandle
 from ..util import ProjectDBError
 from .util import _gen_uuid, create_hierarchy
 
@@ -101,20 +103,31 @@ class ProjectDatabaseVerification():
                 self.assertTrue(db.domain_exists("LOCAL_TEST"))
 
             with self.subTest(msg='test_save_item'):
-                xml_rep = """
-                <xml uuid="{uuid}">foo</xml>
-                """.format(uuid=testproject2)
+                # The MySQL back-end doesn't accept project items with no
+                # name or no type - originally this test's xml only had 'uuid'.
+                xml_rep = (
+                    f'<xml uuid="{testproject2}" item_type="device_server" '
+                    'simple_name="xyz">foo</xml>')
 
                 meta = db.save_item('LOCAL', testproject2, xml_rep)
 
-                path = f"{db.root}/LOCAL/{testproject2}_0"
-                self.assertTrue(db.dbhandle.hasDocument(path))
-                decoded = db.dbhandle.getDoc(path).decode('utf-8')
-                doctree = etree.fromstring(decoded)
-                self.assertEqual(doctree.get('uuid'), testproject2)
-                self.assertEqual(doctree.text, 'foo')
-                self.assertTrue('domain' in meta)
-                self.assertTrue('uuid' in meta)
+                try:
+                    path = f"{db.root}/LOCAL/{testproject2}_0"
+                    self.assertTrue(db.dbhandle.hasDocument(path))
+                    decoded = db.dbhandle.getDoc(path).decode('utf-8')
+                    doctree = etree.fromstring(decoded)
+                    self.assertEqual(doctree.get('uuid'), testproject2)
+                    self.assertEqual(doctree.text, 'foo')
+                    self.assertTrue('domain' in meta)
+                    self.assertTrue('uuid' in meta)
+                except NotImplementedError:
+                    # For MySQL, methods like getDoc and hasDocument cannot be
+                    # implemented properly. Use load_item instead.
+                    res = db.load_item("LOCAL", [testproject2])
+                    self.assertEqual(res[0]['uuid'], testproject2)
+                    doctree = etree.fromstring(res[0]['xml'])
+                    self.assertEqual(doctree.get('item_type'), "device_server")
+                    self.assertEqual(doctree.get('simple_name'), "xyz")
 
             with self.subTest(msg='test_save_bad_item'):
                 xml_rep = """
@@ -129,7 +142,11 @@ class ProjectDatabaseVerification():
                 for r in res:
                     itemxml = db._make_xml_if_needed(r["xml"])
                     self.assertEqual(itemxml.tag, 'xml')
-                    self.assertEqual(itemxml.text, 'foo')
+                    # The MySQL back-end does not save the inner "foo" text of
+                    # the original XML as it doesn't map to any item field and
+                    # is ignored. The previous assert for itemxml.text == 'foo'
+                    # has thus been replaced by a UUID check
+                    self.assertTrue(itemxml.attrib['uuid'] in items)
 
             with self.subTest(msg='test_list_items'):
                 create_hierarchy(db)
@@ -139,13 +156,20 @@ class ProjectDatabaseVerification():
                 for i in items:
                     if i["item_type"] == "scene":
                         scenecnt += 1
-                    self.assertTrue(i["is_trashed"] == 'false')
+                    # The contract of "list_items" is to return a
+                    # list of items (dictionaries) where
+                    # each item would have keys "uuid", "item_type"
+                    # and "simple_name" (no mention to "is_trashed")
+                    if "is_trashed" in i.keys():
+                        self.assertTrue(i["is_trashed"] == 'false')
                 self.assertGreaterEqual(scenecnt, 4)
 
             with self.subTest(msg='test_trashed_projects'):
                 create_trashed_project(db)
                 items = db.list_items('LOCAL', ['project'])
-                self.assertEqual(len(items), 2)
+                # Before the assertion was for number of projects being 2, but
+                # for the MySQL not all the save operations are invoked.
+                self.assertTrue(len(items) >= 1)
                 nb_is_trashed = 0
                 for it in items:
                     if it["is_trashed"] == 'true':
@@ -157,45 +181,56 @@ class ProjectDatabaseVerification():
                 for it in items:
                     self.assertTrue(it in ['LOCAL_TEST', 'REPO', 'LOCAL'])
 
-            with self.subTest(msg='test_old_versioned_data'):
-                versioned_uuid = _gen_uuid()
-                xml_rep = """
-                <xml uuid="{uuid}" revision="{revision}" date="{date}"
-                     user="sue">foo</xml>
-                """
-                MAX_REV = 3
-                earlier = time() - 5.0
-                # Save three consecutive versions
-                for i in range(MAX_REV, 0, -1):
-                    # consecutive dates beginning a few seconds ago
-                    date = strftime(DATE_FORMAT, gmtime(earlier + i))
-                    xml = xml_rep.format(uuid=versioned_uuid, revision=i,
-                                         date=date)
-                    path = "{}/{}/{}_{}".format(db.root, 'LOCAL',
-                                                versioned_uuid, i)
-                    # Save directly without engaging save_item()
-                    db.dbhandle.load(xml.encode('utf-8'), path)
+            # Revision support has been deprecated and is not implemented for
+            # the MySQL back-end
+            if type(db.dbhandle) is not MySQLHandle:
+                with self.subTest(msg='test_old_versioned_data'):
+                    versioned_uuid = _gen_uuid()
+                    xml_rep = """
+                    <xml uuid="{uuid}" revision="{revision}" date="{date}"
+                        user="sue">foo</xml>
+                    """
+                    MAX_REV = 3
+                    earlier = time() - 5.0
+                    # Save three consecutive versions
+                    for i in range(MAX_REV, 0, -1):
+                        # consecutive dates beginning a few seconds ago
+                        date = strftime(DATE_FORMAT, gmtime(earlier + i))
+                        xml = xml_rep.format(uuid=versioned_uuid, revision=i,
+                                             date=date)
+                        path = "{}/{}/{}_{}".format(db.root, 'LOCAL',
+                                                    versioned_uuid, i)
+                        # Save directly without engaging save_item()
+                        db.dbhandle.load(xml.encode('utf-8'), path)
 
-                # Read it back, no revision given
-                res = db.load_item('LOCAL', [versioned_uuid])
-                self.assertEqual(len(res), 1)
-                itemxml = db._make_xml_if_needed(res[0]['xml'])
-                self.assertEqual(int(itemxml.get('revision')), MAX_REV)
+                    # Read it back, no revision given
+                    res = db.load_item('LOCAL', [versioned_uuid])
+                    self.assertEqual(len(res), 1)
+                    itemxml = db._make_xml_if_needed(res[0]['xml'])
+                    self.assertEqual(int(itemxml.get('revision')), MAX_REV)
 
-                # Write it back with save_item
-                date = strftime(DATE_FORMAT, gmtime())
-                xml_rep = """
-                <xml uuid="{uuid}" date="{date}" user="sue">foo</xml>
-                """.format(uuid=versioned_uuid, date=date)
-                meta = db.save_item('LOCAL', versioned_uuid, xml_rep)
+                    # Write it back with save_item
+                    date = strftime(DATE_FORMAT, gmtime())
+                    xml_rep = """
+                    <xml uuid="{uuid}" date="{date}" user="sue">foo</xml>
+                    """.format(uuid=versioned_uuid, date=date)
+                    meta = db.save_item('LOCAL', versioned_uuid, xml_rep)
 
-                # Make sure there's a revision of 0 (auto-added)
-                res = db.load_item('LOCAL', [versioned_uuid])
-                itemxml = db._make_xml_if_needed(res[0]['xml'])
-                self.assertEqual(itemxml.get('revision'), '0')
+                    # Make sure there's a revision of 0 (auto-added)
+                    res = db.load_item('LOCAL', [versioned_uuid])
+                    itemxml = db._make_xml_if_needed(res[0]['xml'])
+                    self.assertEqual(itemxml.get('revision'), '0')
 
             with self.subTest(msg='test_named_items'):
-                create_unattached_scenes(db)
+                # In MySQL, an unattached scene doesn't belong to a project and
+                # is not related to any project domain (in ExistDB a domain is
+                # , roughly speaking, the directory where a document is, so one
+                # can say that an unattached scene still belongs to a domain).
+                # For the MySQL case, we use "attached" scenes.
+                if type(db.dbhandle) is MySQLHandle:
+                    create_hierarchy(db, "Scene!")
+                else:
+                    create_unattached_scenes(db)
                 items = db.list_named_items('LOCAL', 'scene', 'Scene!')
                 self.assertEqual(len(items), 4)
                 scenecnt = 0
@@ -231,8 +266,12 @@ class ProjectDatabaseVerification():
 
             with self.subTest(msg='test_save_item'):
                 date = "2011-11-01 09:00:52"
+                # The MySQL back-end doesn't accept project items with no
+                # name or no type - originally this test's xml only had 'uuid'
+                # and 'date'
                 xml_rep = """
-                <xml uuid="{uuid}" date="{date}">foo</xml>
+                <xml uuid="{uuid}" date="{date}" simple_name="a_scene"
+                item_type="scene">foo</xml>
                 """.format(uuid=proj_uuid, date=date)
 
                 success = True
@@ -246,7 +285,15 @@ class ProjectDatabaseVerification():
                 new_date = meta['date']
                 self.assertNotEqual(new_date, date)
                 date_t = strptime(date, DATE_FORMAT)
-                current_date_t = strptime(new_date, DATE_FORMAT)
+                try:
+                    current_date_t = strptime(new_date, DATE_FORMAT)
+                except ValueError:
+                    # The MySQL back-end sends an UTC date in ISO8601 format
+                    # in the metadata returned by save_item.
+                    # Try to parse the date using that format.
+                    current_date_t = (
+                        datetime.datetime.fromisoformat(new_date).timetuple())
+
                 self.assertLess(date_t, current_date_t)
 
                 # Try saving again but using same time stamp
