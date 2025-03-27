@@ -1,7 +1,8 @@
 import os
 import shutil
 import subprocess
-from asyncio import create_subprocess_exec, get_event_loop, sleep, wait_for
+from asyncio import (
+    create_subprocess_exec, ensure_future, get_event_loop, sleep, wait_for)
 from contextlib import suppress
 from typing import Any
 
@@ -11,7 +12,7 @@ class AsyncServerContext:
     WAIT_TIME: int = 10
 
     def __init__(self, serverId: str, args: list[str],
-                 api: str = "middlelayer"):
+                 api: str = "middlelayer", verbose: bool = True):
         assert "/" not in serverId, "Test servers can't have `/` ..."
         if args is None:
             args = []
@@ -23,6 +24,7 @@ class AsyncServerContext:
             api = "python"
         self.serverId: str = serverId
         self.api: str = api
+        self.verbose: bool = verbose
 
     async def is_alive(self) -> bool:
         if self.process is None:
@@ -37,6 +39,21 @@ class AsyncServerContext:
             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         self.process = process
         if process is not None:
+
+            async def print_stdout():
+                while not process.stdout.at_eof():
+                    line = await process.stdout.readline()
+                    print(line.decode("ascii"), end="")
+
+            async def print_stderr():
+                while not process.stderr.at_eof():
+                    line = await process.stderr.readline()
+                    print(line.decode("ascii"), end="")
+
+            if self.verbose:
+                ensure_future(print_stdout())
+                ensure_future(print_stderr())
+
             await sleep(self.STARTUP_TIME)
         alive = await self.is_alive()
         if not alive:
