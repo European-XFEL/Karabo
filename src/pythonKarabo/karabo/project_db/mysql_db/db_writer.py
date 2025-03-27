@@ -61,8 +61,12 @@ class DbWriter:
                 project = Project(
                     uuid=uuid,
                     name=prj.attrib['simple_name'],
-                    description=prj.attrib['description'],
-                    is_trashed=prj.attrib['is_trashed'].lower() == "true",
+                    description=(
+                        prj.attrib['description']
+                        if 'description' in prj.attrib.keys() else ""),
+                    is_trashed=(
+                        prj.attrib['is_trashed'].lower() == "true"
+                        if 'is_trashed' in prj.attrib.keys() else False),
                     date=date,
                     last_modified_user=prj.attrib['user'],
                     project_domain_id=project_domain.id)
@@ -92,11 +96,28 @@ class DbWriter:
             # their relative order. For each child type, the items of that
             # type currently linked to the project must be first unlinked
             # to the project.
-            project_elem = prj.getchildren()[0].getchildren()[0]
-            macros_elem = project_elem.getchildren()[0]
-            scenes_elem = project_elem.getchildren()[1]
-            servers_elem = project_elem.getchildren()[2]
-            subprjs_elem = project_elem.getchildren()[3]
+            project_elem = (
+                prj.getchildren()[0].getchildren()[0]
+                if (len(prj.getchildren()) > 0 and
+                    len(prj.getchildren()[0].getchildren()) > 0)
+                else None)
+            macros_elem = None
+            scenes_elem = None
+            servers_elem = None
+            subprjs_elem = None
+            n_project_children = (
+                len(project_elem.getchildren())
+                if project_elem is not None else 0)
+            for child_index in range(0, n_project_children):
+                match project_elem.getchildren()[child_index].tag.lower():
+                    case "macros":
+                        macros_elem = project_elem.getchildren()[child_index]
+                    case "scenes":
+                        scenes_elem = project_elem.getchildren()[child_index]
+                    case "servers":
+                        servers_elem = project_elem.getchildren()[child_index]
+                    case "subprojects":
+                        subprjs_elem = project_elem.getchildren()[child_index]
 
             query = select(Macro).where(Macro.project_id == project_id)
             curr_macros = session.exec(query).all()
@@ -107,21 +128,22 @@ class DbWriter:
 
             macro_idx = 0
             updated_macros = set()
-            for macro_elem in macros_elem.getchildren():
-                macro_uuid = macro_elem.getchildren()[0].text
-                query = select(Macro).where(Macro.uuid == macro_uuid)
-                macro = session.exec(query).first()
-                if not macro:
-                    logger.error(
-                        f'Macro with uuid "{macro_uuid}" not found in the '
-                        'database. Cannot link the macro to project '
-                        f'"{project.name}" ({project.uuid})')
-                    continue
-                updated_macros.add(macro_uuid)
-                macro.project_id = project_id
-                macro.order = macro_idx
-                session.add(macro)
-                macro_idx += 1
+            if macros_elem is not None:
+                for macro_elem in macros_elem.getchildren():
+                    macro_uuid = macro_elem.getchildren()[0].text
+                    query = select(Macro).where(Macro.uuid == macro_uuid)
+                    macro = session.exec(query).first()
+                    if not macro:
+                        logger.error(
+                            f'Macro with uuid "{macro_uuid}" not found in the '
+                            'database. Cannot link the macro to project '
+                            f'"{project.name}" ({project.uuid})')
+                        continue
+                    updated_macros.add(macro_uuid)
+                    macro.project_id = project_id
+                    macro.order = macro_idx
+                    session.add(macro)
+                    macro_idx += 1
             # Removes any macro that was previously linked to the project, but
             # isn't anymore.
             for curr_macro in curr_macros:
@@ -137,21 +159,29 @@ class DbWriter:
 
             scene_idx = 0
             updated_scenes = set()
-            for scene_elem in scenes_elem.getchildren():
-                scene_uuid = scene_elem.getchildren()[0].text
-                query = select(Scene).where(Scene.uuid == scene_uuid)
-                scene = session.exec(query).first()
-                if not scene:
-                    logger.error(
-                        f'Scene with uuid "{scene_uuid}" not found in the '
-                        'database. Cannot link the scene to project '
-                        f'"{project.name}" ({project.uuid})')
-                    continue
-                updated_scenes.add(scene_uuid)
-                scene.project_id = project_id
-                scene.order = scene_idx
-                session.add(scene)
-                scene_idx += 1
+            if scenes_elem is not None:
+                for scene_elem in scenes_elem.getchildren():
+                    scene_uuid = (
+                        scene_elem.getchildren()[0].text
+                        if len(scene_elem.getchildren()) > 0 else None)
+                    # The legacy unit tests had the scene UUID as an attribute
+                    # of a <xml> tag
+                    if (scene_uuid is None
+                            and "uuid" in scene_elem.attrib.keys()):
+                        scene_uuid = scene_elem.attrib['uuid']
+                    query = select(Scene).where(Scene.uuid == scene_uuid)
+                    scene = session.exec(query).first()
+                    if not scene:
+                        logger.error(
+                            f'Scene with uuid "{scene_uuid}" not found in the '
+                            'database. Cannot link the scene to project '
+                            f'"{project.name}" ({project.uuid})')
+                        continue
+                    updated_scenes.add(scene_uuid)
+                    scene.project_id = project_id
+                    scene.order = scene_idx
+                    session.add(scene)
+                    scene_idx += 1
             # Remove any scene that was previously linked to the project but
             # isn't anymore.
             for curr_scene in curr_scenes:
@@ -168,22 +198,23 @@ class DbWriter:
 
             server_idx = 0
             updated_servers = set()
-            for server_elem in servers_elem.getchildren():
-                server_uuid = server_elem.getchildren()[0].text
-                query = select(DeviceServer).where(
-                    DeviceServer.uuid == server_uuid)
-                server = session.exec(query).first()
-                if not server:
-                    logger.error(
-                        f'Server with uuid "{server_uuid}" not found in the '
-                        'database. Cannot link the server to project'
-                        f'"{project.name}" ({project.uuid})')
-                    continue
-                updated_servers.add(server_uuid)
-                server.project_id = project_id
-                server.order = server_idx
-                session.add(server)
-                server_idx += 1
+            if servers_elem is not None:
+                for server_elem in servers_elem.getchildren():
+                    server_uuid = server_elem.getchildren()[0].text
+                    query = select(DeviceServer).where(
+                        DeviceServer.uuid == server_uuid)
+                    server = session.exec(query).first()
+                    if not server:
+                        logger.error(
+                            f'Server with uuid "{server_uuid}" not found in '
+                            'the database. Cannot link the server to project'
+                            f'"{project.name}" ({project.uuid})')
+                        continue
+                    updated_servers.add(server_uuid)
+                    server.project_id = project_id
+                    server.order = server_idx
+                    session.add(server)
+                    server_idx += 1
             # Removes any device server that was previously linked to the
             # project but is not anymore
             for curr_server in curr_servers:
@@ -218,39 +249,40 @@ class DbWriter:
             subprojects_to_delete = {
                 subproject.subproject_id for subproject in curr_subprojects}
             # Iterate over the subprojects to be saved
-            for subprj_elem in subprjs_elem.getchildren():
-                subprj_uuid = subprj_elem.getchildren()[0].text
-                query = select(Project).where(
-                    Project.uuid == subprj_uuid)
-                subprj = session.exec(query).first()
-                if not subprj:
-                    logger.error(
-                        f'Subproject with uuid "{server_uuid}" not found in '
-                        'the database. Cannot link the subproject to project'
-                        f'"{project.name}" ({project.uuid})')
-                    continue
-                # Search for the subproject among the current projects, and
-                # either add it, update it or leave it in the list of
-                # subproject to be removed
-                if subprj.id in subprojects_to_delete:
-                    # The project was in the DB and should be kept - just
-                    # update it
-                    subprojects_to_delete.remove(subprj.id)
-                    query = select(ProjectSubproject).where(
-                        ProjectSubproject.project_id == project_id,
-                        ProjectSubproject.subproject_id == subprj.id)
-                    prj_subprj = session.exec(query).first()
-                    if prj_subprj:
-                        prj_subprj.order = subproject_idx
-                    session.add(prj_subprj)
-                else:
-                    # The project wasn't in the DB - add it
-                    prj_subprj = ProjectSubproject(
-                        project_id=project_id,
-                        subproject_id=subprj.id,
-                        order=subproject_idx)
-                    session.add(prj_subprj)
-                subproject_idx += 1
+            if subprjs_elem is not None:
+                for subprj_elem in subprjs_elem.getchildren():
+                    subprj_uuid = subprj_elem.getchildren()[0].text
+                    query = select(Project).where(
+                        Project.uuid == subprj_uuid)
+                    subprj = session.exec(query).first()
+                    if not subprj:
+                        logger.error(
+                            f'Subproject with uuid "{server_uuid}" not found '
+                            'in the database. Cannot link the subproject to '
+                            f'project "{project.name}" ({project.uuid})')
+                        continue
+                    # Search for the subproject among the current projects, and
+                    # either add it, update it or leave it in the list of
+                    # subproject to be removed
+                    if subprj.id in subprojects_to_delete:
+                        # The project was in the DB and should be kept - just
+                        # update it
+                        subprojects_to_delete.remove(subprj.id)
+                        query = select(ProjectSubproject).where(
+                            ProjectSubproject.project_id == project_id,
+                            ProjectSubproject.subproject_id == subprj.id)
+                        prj_subprj = session.exec(query).first()
+                        if prj_subprj:
+                            prj_subprj.order = subproject_idx
+                        session.add(prj_subprj)
+                    else:
+                        # The project wasn't in the DB - add it
+                        prj_subprj = ProjectSubproject(
+                            project_id=project_id,
+                            subproject_id=subprj.id,
+                            order=subproject_idx)
+                        session.add(prj_subprj)
+                    subproject_idx += 1
 
             # Remove the subprojects that were in the DB before but shouldn't
             # be there after the save
@@ -439,8 +471,13 @@ class DbWriter:
         server_uuid = server_obj.attrib["uuid"]
         server_name = server_obj.attrib["simple_name"]
         server_user = server_obj.attrib["user"]
-        server_tag = server_obj.getchildren()[0]
-        instance_objs = server_tag.getchildren()
+        server_tag = (
+            server_obj.getchildren()[0]
+            if len(server_obj.getchildren()) > 0 else None)
+        instance_objs = (
+            server_tag.getchildren()
+            if server_tag is not None
+            else [])
 
         server = None
         with self.session_gen() as session:

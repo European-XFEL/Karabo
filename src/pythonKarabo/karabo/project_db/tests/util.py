@@ -24,8 +24,24 @@ def create_device(db):
     sub_uuid = _gen_uuid()
     conf_uuid1 = _gen_uuid()
     conf_uuid2 = _gen_uuid()
+    # The MySQL back-end requires a config referenced by an instance to exist
+    # in the database. So we add the configs before adding the instances that
+    # refer to them.
+    for conf_uuid in [conf_uuid1, conf_uuid2]:
+        xml = (f'<xml uuid="{conf_uuid}" simple_name="{conf_uuid}" '
+               'description="" item_type="device_config" revision="0" '
+               'alias="default">'
+               '<root KRB_Artificial="">'
+               '    <PropertyTestMDL KRB_Type="HASH"/>'
+               '</root>'
+               '</xml>')
+        db.save_item("LOCAL", conf_uuid, xml)
+
+    # The MySQL back-end requires device instances to have a 'class_id' and an
+    # 'active_uuid' attribute
     xml = ('<xml item_type="{atype}" uuid="{uuid}">'
-           '<device_instance active_rev="0" instance_id="{instance_id}">'
+           '<device_instance active_rev="0" class_id="a_class" '
+           'instance_id="{instance_id}" active_uuid="{conf_uuid1}">'
            '<device_config revision="0" uuid="{conf_uuid1}" />'
            '<device_config revision="1" uuid="{conf_uuid2}" />'
            '</device_instance>'
@@ -40,12 +56,13 @@ def create_device(db):
     return sub_uuid, conf_uuid1
 
 
-def create_hierarchy(db):
+def create_hierarchy(db, scene_name=None):
     """
     Create a minimal project hierarchy representative of Karabo entries in
     ExistDB
 
     :param db: a `ProjectDatabase` instance
+    :param scene_name: if defined, the name to be used for the project scenes
     :return: a tuple consisting of:
       - the uuid of the project created
       - a dictionary mapping device ids (key) to their active
@@ -57,7 +74,7 @@ def create_hierarchy(db):
 
         + Project(item_type:='project', uuid, simple_name:='Project')
         |
-        +- 4x Scene(item_type:='scene', uuid, simple_name:=uuid)
+        +- 4x Scene(item_type:='scene', uuid, simple_name:=uuid|scene_name)
         |
         +- 4x Server(item_type:='device_server', uuid, simple_name:=uuid)
            |
@@ -132,13 +149,14 @@ def create_hierarchy(db):
     # create some scenes
     for i in range(4):
         sub_uuid = _gen_uuid()
+        scene_simple_name = scene_name if scene_name is not None else sub_uuid
         xml += ('<xml item_type="{atype}" uuid="{uuid}"'
-                ' simple_name="{name}" />').format(uuid=sub_uuid,
-                                                   atype='scene',
-                                                   name=sub_uuid)
+                ' simple_name="{name}" />').format(
+                    uuid=sub_uuid, atype='scene',
+                    name=scene_simple_name)
 
         scene_xml = (f'<xml item_type="scene" uuid="{sub_uuid}"'
-                     f' simple_name="{sub_uuid}" >'
+                     f' simple_name="{scene_simple_name}" >'
                      f'<svg:svg xmlns:svg="http://www.w3.org/2000/svg" '
                      f'xmlns:krb="http://karabo.eu/scene" height="768" '
                      f'width="1024" krb:uuid="{sub_uuid}" krb:version="2">'

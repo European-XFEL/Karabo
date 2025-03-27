@@ -20,6 +20,7 @@ import os
 
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 from sqlmodel import create_engine
 from sqlmodel.orm.session import Session
 
@@ -36,6 +37,26 @@ def init_db_engine(user: str, password: str, server: str,
             echo=False,
             pool_recycle=DB_POOL_RECYCLE_SECS,
             pool_pre_ping=True)
+
+    session_gen = sessionmaker(
+        autocommit=False,
+        autoflush=False,
+        bind=db_engine,
+        class_=Session,
+        expire_on_commit=False,
+    )
+    return (db_engine, session_gen)
+
+
+def init_test_db_engine() -> tuple[Engine, sessionmaker]:
+    db_engine = create_engine(
+            "sqlite://",  # Use in-memory SQLite database for tests
+            # Being explicit in case SQL debugging is needed - echo False is
+            # already the default.
+            echo=False,
+            # StaticPool has to be used for SQLite in-memory databases; details at:  # noqa
+            # https://docs.sqlalchemy.org/en/14/dialects/sqlite.html#using-a-memory-database-in-multiple-threads   # noqa
+            poolclass=StaticPool)
 
     session_gen = sessionmaker(
         autocommit=False,
