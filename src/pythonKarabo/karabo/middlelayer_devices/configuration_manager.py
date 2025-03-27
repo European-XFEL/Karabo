@@ -299,27 +299,17 @@ class ConfigurationManager(DeviceClientBase):
         return Hash("success", True, "item", item)
 
     @slot
-    async def slotGetLastConfiguration(self, info):
-        """Slot to get a the last configuration
-
-        The info `Hash` must contain `deviceId`."""
-        deviceId = info["deviceId"]
-        item = self.db.get_last_configuration(deviceId)
-        if not item:
-            reason = f"No configuration for device {deviceId} found!"
-            raise KaraboError(reason)
-
-        item = dictToHash(item)
-        config64 = item["config"]
-        item["config"] = decodeXML(config64)
-        return Hash("success", True, "item", item)
-
-    @slot
     async def slotListDevices(self, info: Hash):
         """List deviceIds that are stored in the database
         """
         devices = await self.db.list_devices()
         return Hash("success", True, "item", devices)
+
+    @slot
+    async def slotDeleteConfiguration(self, info: Hash):
+        """Delete a device configuration"""
+        await self.db.delete_configuration(info["deviceId"], info["name"])
+        return Hash("success", True)
 
     @slot
     async def slotSaveConfigurationFromName(self, info):

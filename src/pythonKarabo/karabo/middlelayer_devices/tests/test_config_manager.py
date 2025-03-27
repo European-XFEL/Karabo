@@ -173,8 +173,8 @@ async def test_get_configuration(deviceTest):
 
 @pytest.mark.timeout(20)
 @pytest.mark.asyncio(loop_scope="module")
-async def test_list_configuration(deviceTest):
-    h = Hash("name", "", "deviceId", "ALICE")
+async def test_list_delete_configuration(deviceTest):
+    h = Hash("deviceId", "ALICE")
     r = await call(MANAGER_ID, "slotListConfigurationFromName", h)
     items = r["items"]
     assert isinstance(items, HashList)
@@ -184,6 +184,16 @@ async def test_list_configuration(deviceTest):
     assert item["name"] == "testConfig"
     item = items[1]
     assert item["name"] == "testConfig1"
+
+    h = Hash("deviceId", "ALICE", "name", "testConfig1")
+    r = await call(MANAGER_ID, "slotDeleteConfiguration", h)
+    assert r["success"]
+
+    h = Hash("deviceId", "ALICE")
+    r = await call(MANAGER_ID, "slotListConfigurationFromName", h)
+    items = r["items"]
+    assert isinstance(items, HashList)
+    assert len(items) == 1
 
     h = Hash("name", "", "deviceId", "BOB")
     r = await call(MANAGER_ID, "slotListConfigurationFromName", h)
