@@ -17,19 +17,20 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 #############################################################################
+import numpy as np
 import pytest
 import pytest_asyncio
 
 from karabo.common.services import KARABO_CONFIG_MANAGER as MANAGER_ID
 from karabo.middlelayer import (
-    Device, Double, Hash, HashList, KaraboError, Slot, String, call,
-    connectDevice, getConfigurationFromName, instantiateFromName,
+    Device, Double, Hash, HashByte, HashList, KaraboError, Schema, Slot,
+    String, call, connectDevice, getConfigurationFromName, instantiateFromName,
     listConfigurationFromName, listDevicesWithConfiguration,
     saveConfigurationFromName, slot)
 from karabo.middlelayer.testing import (  # noqa
     AsyncDeviceContext, event_loop_policy)
 
-from ..configuration_manager import ConfigurationManager
+from ..configuration_manager import ConfigurationManager, hashToHash
 
 DB_NAME = "test_karabo_db"
 
@@ -290,3 +291,46 @@ async def test_instantiate_device(deviceTest):
             await call(MANAGER_ID, "slotInstantiateDevice", h)
     finally:
         await serverMock.slotKillDevice()
+
+
+def test_hash_to_hash():
+    h = Hash()
+    h["bool"] = True
+    h["int"] = 4
+    h["string"] = "bla ä < / \\ \"' > ]]> & <![CDATA[ =_! (|}"
+    h["complex"] = complex(1.0, 0.42)
+    h["stringlist"] = ["bla", "blub"]
+    h["chars"] = b"bla"
+    h["emptystringlist"] = []
+    h["char"] = HashByte("c")
+    h["none"] = None
+    h["vector"] = np.arange(7, dtype=np.int64)
+    h["emptyvector"] = np.array([])
+    h["vectorbool"] = np.array([True, False, True])
+    h["hash"] = Hash("a", 3, "b", 7.1)
+    h["hashlist"] = [Hash("a", 3), Hash()]
+    h["emptyhashlist"] = HashList()
+    sh = Hash()
+    sh["a"] = Hash()
+    h["schema"] = Schema("blub", hash=sh)
+
+    # Nest hashes
+    nested = h.deepcopy()
+    assert nested.fullyEqual(h)
+    h["nested"] = nested
+    r = hashToHash(h)
+    assert r.fullyEqual(h)
+
+    # Now with attributes
+    h["bool", "bool"] = False
+    h["int", "float"] = 7.3
+    h["hash", "int"] = 3
+    h["string", "chars"] = b"blub"
+    h["chars", "string"] = "laber &quot; ö \\ \"' ]]> <![CDATA[ (|}"
+    h["vector", "complex"] = complex(1.0, 2.0)
+    r = hashToHash(h)
+    assert not r.fullyEqual(h)
+    attrs = r["vector", ...]
+    assert not attrs  # i.e. empty
+    attrs = r["nested.vector", ...]
+    assert not attrs

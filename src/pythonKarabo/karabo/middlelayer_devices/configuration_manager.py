@@ -41,6 +41,11 @@ FILTER_KEYS = ["name", "timepoint"]
 NAME_REGEX = r"^(?!default$)[A-Za-z0-9_-]{1,30}$"
 
 
+def hashToHash(h: Hash) -> Hash:
+    """Convert a Hash to a Hash without attrs"""
+    return Hash(h.items())
+
+
 def view_item(c: dict) -> dict:
     """Create a view dictionary of the configuration"""
     ret = {k: v for k, v in c.items() if k in FILTER_KEYS}
@@ -182,7 +187,8 @@ class ConfigurationManager(DeviceClientBase):
             self.status = str(e)
             self.lastSuccess = False
         else:
-            # XXX: Sanitize configuration
+            # XXX: Sanitize configuration, for now remove attributes
+            conf = hashToHash(conf)
             configs = {"deviceId": deviceId, "config": encodeXML(conf)}
             items = [configs]
             # Now we save and list again, and we should not expect any errors
