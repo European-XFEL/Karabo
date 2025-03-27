@@ -30,7 +30,7 @@ if __name__ == '__main__':
             'root': ROOT_FOLDER, 'write_to': VERSION_FILE_PATH
         },
         'author': 'Karabo Team',
-        'author_email': 'karabo@xfel.eu',
+        'author_email': 'opensource@xfel.eu',
         'description': 'This is the Karabo GUI',
         'url': 'http://karabo.eu',
         'license': "GPLv3+",

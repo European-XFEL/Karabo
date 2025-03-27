@@ -43,7 +43,7 @@ install_args = {
     'name': 'karabo',
     'use_scm_version': {'root': ROOT_FOLDER, 'write_to': VERSION_FILE_PATH},
     'author': 'Karabo Team',
-    'author_email': 'karabo@xfel.eu',
+    'author_email': 'opensource@xfel.eu',
     'description': 'This is the Python interface of the Karabo control system',
     'url': 'http://karabo.eu',
     'license': "MPL2",
