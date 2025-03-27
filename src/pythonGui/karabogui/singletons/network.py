@@ -456,6 +456,20 @@ class Network(QObject):
         h["replyType"] = "listConfigurationFromName"
         self._write_hash(h)
 
+    def onDeleteConfigurationFromName(self, device_id, name):
+        logger.info("Requesting delete of named configurations for "
+                    f"device <b>{device_id}:{name}</b>")
+        h = Hash("type", "requestGeneric")
+        args = Hash(
+            "name", name,
+            "deviceId", device_id)
+        h["args"] = args
+        h["timeout"] = REQUEST_REPLY_TIMEOUT
+        h["instanceId"] = KARABO_CONFIG_MANAGER
+        h["slot"] = "slotDeleteConfiguration"
+        h["replyType"] = "deleteConfigurationFromName"
+        self._write_hash(h)
+
     def onSaveConfigurationFromName(self, name, deviceIds, update=False):
         logger.info(f"Saving configuration by name {name} for devices "
                     f"<b>{deviceIds}</b>")
