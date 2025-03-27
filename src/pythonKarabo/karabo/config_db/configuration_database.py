@@ -112,6 +112,40 @@ class ConfigurationDatabase:
     def get_session(self):
         return self.db_handle
 
+    async def delete_configuration(self, device_id: str, name: str):
+        """Delete a device configuration by `name` and `deviceId`"""
+        async with self.get_session() as session:
+            stmt = (
+                select(NamedDeviceConfig)
+                .where(
+                    NamedDeviceConfig.device_id == device_id,
+                    NamedDeviceConfig.name == name)
+            )
+            result = await session.execute(stmt)
+            config = result.scalars().first()
+            if not config:
+                raise ConfigurationDBError(
+                    f"Configuration for {device_id} - {name} not available.")
+
+            try:
+                await session.delete(config)
+                # XXX: Check if the parent device has any remaining
+                # configurations
+                stmt = (
+                    select(NamedDeviceInstance)
+                    .where(NamedDeviceInstance.device_id == device_id)
+                    .options(selectinload(NamedDeviceInstance.configurations))
+                )
+                result = await session.execute(stmt)
+                device = result.scalars().first()
+                if device and not device.configurations:
+                    await session.delete(device)
+                await session.commit()
+            except Exception as e:
+                await session.rollback()
+                raise ConfigurationDBError(
+                    f"Failed to delete configuration: {e}")
+
     async def list_devices(self) -> list[str]:
         """Retrieves the set of deviceIds
 
