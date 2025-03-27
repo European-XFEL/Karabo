@@ -145,7 +145,7 @@ async def test_async_server_context():
     config = {"PropertyTestContext": {"classId": "PropertyTestMDL"}}
     init = json.dumps(config)
     server = AsyncServerContext(
-        "testServerContext", [f"init={init}"], api="middlelayer")
+        "testServerContext", [f"init={init}"], verbose=True, api="middlelayer")
     async with server:
         await assert_wait_property(
             "PropertyTestContext", "state", State.NORMAL.value, timeout=10)
