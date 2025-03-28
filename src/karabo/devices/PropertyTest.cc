@@ -595,7 +595,7 @@ namespace karabo {
             SLOT_ELEMENT(expected)
                   .key("writeOutput")
                   .displayedName("Write to Output")
-                  .description("Write once to output channel 'Output'")
+                  .description("Write once to output channels 'Output' (also the one under the Node)")
                   .allowedStates(State::NORMAL)
                   .commit();
 
@@ -622,21 +622,21 @@ namespace karabo {
             SLOT_ELEMENT(expected)
                   .key("startWritingOutput")
                   .displayedName("Start Writing")
-                  .description("Start writing continously to output channel 'Output'")
+                  .description("Start writing continously to both output channels")
                   .allowedStates(State::NORMAL)
                   .commit();
 
             SLOT_ELEMENT(expected)
                   .key("stopWritingOutput")
                   .displayedName("Stop Writing")
-                  .description("Stop writing continously to output channel 'Output'")
+                  .description("Stop writing continously to output channels")
                   .allowedStates(State::STARTED)
                   .commit();
 
             SLOT_ELEMENT(expected)
                   .key("eosOutput")
                   .displayedName("EOS to Output")
-                  .description("Write end-of-stream to output channel 'Output'")
+                  .description("Write end-of-stream to both output channels")
                   .allowedStates(State::NORMAL)
                   .commit();
 
@@ -727,6 +727,13 @@ namespace karabo {
             SLOT_ELEMENT(expected).key("node.increment").displayedName("Increment 'Counter read-only'").commit();
 
             SLOT_ELEMENT(expected).key("node.reset").displayedName("Reset Counter").commit();
+
+            OUTPUT_CHANNEL(expected)
+                  .key("node.output")
+                  .displayedName("Output")
+                  .description("Output under node")
+                  .dataSchema(pipeData)
+                  .commit();
 
             UINT32_ELEMENT(expected)
                   .key("node.counterReadOnly")
@@ -1032,6 +1039,7 @@ namespace karabo {
                                         16));           // unsigned short is 16 bits
 
             writeChannel("output", data);
+            writeChannel("node.output", data);
             set("outputCounter", outputCounter);
         }
 
@@ -1098,6 +1106,7 @@ namespace karabo {
             set("inputCounterAtEos", inputCounter);
             // Forward endOfStream as well
             signalEndOfStream("output");
+            signalEndOfStream("node.output");
         }
 
 
@@ -1107,6 +1116,7 @@ namespace karabo {
 
         void PropertyTest::eosOutput() {
             signalEndOfStream("output");
+            signalEndOfStream("node.output");
         }
 
 
