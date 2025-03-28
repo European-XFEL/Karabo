@@ -307,7 +307,7 @@ namespace karabo {
             // This starts SignalSlotable
             SignalSlotable::start();
 
-            startInitialActions();
+            autostartDevices();
 
             KARABO_LOG_INFO << "Starting Karabo DeviceServer (pid: " << ::getpid() << ") on host: " << m_hostname
                             << ", serverId: " << m_serverId << ", Broker: " << m_connection->getBrokerUrl();
@@ -519,12 +519,6 @@ namespace karabo {
 
             // TODO Remove from here and use the one from run() method
             m_serverIsRunning = false;
-        }
-
-
-        void DeviceServer::errorFoundAction(const std::string& user, const std::string& detail) {
-            KARABO_LOG_ERROR << "[short] " << user;
-            KARABO_LOG_ERROR << "[detailed] " << detail;
         }
 
 
