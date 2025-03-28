@@ -26,7 +26,6 @@
 
 #include <cppunit/TestAssert.h>
 
-#include <boost/thread/pthread/thread_data.hpp>
 #include <karabo/util/NDArray.hh>
 #include <karabo/util/StringTools.hh>
 

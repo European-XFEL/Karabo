@@ -25,8 +25,6 @@
 
 using namespace std;
 
-using boost::placeholders::_1;
-
 USING_KARABO_NAMESPACES
 
 namespace karabo {
@@ -41,7 +39,7 @@ namespace karabo {
 
     SceneProviderTestDevice::SceneProviderTestDevice(const karabo::util::Hash& config) : Device(config) {
         KARABO_INITIAL_FUNCTION(initialize);
-        registerSlot<karabo::util::Hash>(boost::bind(&SceneProviderTestDevice::slotGetScenes, this, _1),
+        registerSlot<karabo::util::Hash>(std::bind(&SceneProviderTestDevice::slotGetScenes, this, placeholders::_1),
                                          "slotGetScenes");
     }
 
