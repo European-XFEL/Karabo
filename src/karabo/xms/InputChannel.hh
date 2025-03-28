@@ -263,7 +263,7 @@ namespace karabo {
 
             /**
              * Returns a map of between  "output channel string" and "output channel info" Hash
-             * outputChannelString (STRING) represented like "instanceId@channelName" or "instanceId:channelName"
+             * outputChannelString (STRING) represented like "instanceId:channelName"
              * outputChannelInfo contains connection parameters or is empty, depending on connection state.
              * This contains all output channels that the InputChannel is configured for, irrespective whether
              * currently connected or not.
