@@ -21,7 +21,8 @@ from zlib import adler32
 
 from ..bin_reader import decodeBinary, decodeBinaryPos
 from ..bin_writer import encodeBinary, writeBinary
-from ..hash import Hash, HashList, Schema
+from ..hash import Hash, HashList
+from ..schema import Schema
 from ..xml_reader import decodeXML, loadFromFile
 from ..xml_writer import encodeXML, saveToFile, writeXML
 

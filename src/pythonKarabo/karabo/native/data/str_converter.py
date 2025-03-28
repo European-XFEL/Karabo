@@ -20,7 +20,8 @@ from json import dumps
 
 import numpy as np
 
-from .hash import HashList, Schema, get_hash_type_from_data
+from .hash import HashList, get_hash_type_from_data
+from .schema import Schema
 from .typenums import HashType
 from .utils import dictToHash, hashToDict
 from .xml_reader import decodeXML

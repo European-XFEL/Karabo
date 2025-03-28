@@ -21,7 +21,7 @@ from karabo.common.const import (
     is_string_type, is_vector_bool_type, is_vector_char_type,
     is_vector_float_type, is_vector_hash_type, is_vector_integer_type,
     is_vector_string_type, is_vector_type)
-from karabo.native import AccessMode, Hash, Schema
+from karabo.native.data import AccessMode, Hash, Schema
 
 __all__ = ['get_default_value', 'get_value_type_numpy',
            'sanitize_table_schema']

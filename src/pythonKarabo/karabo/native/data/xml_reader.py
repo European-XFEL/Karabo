@@ -22,7 +22,8 @@ from xml.sax.saxutils import unescape
 
 import numpy as np
 
-from .hash import Hash, HashList, Schema
+from .hash import Hash, HashList
+from .schema import Schema
 from .typenums import XML_TYPE_TO_HASH_TYPE, HashType
 
 __all__ = ['decodeXML', 'loadFromFile', 'XMLParser']
