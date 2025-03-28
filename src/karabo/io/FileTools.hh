@@ -23,12 +23,13 @@
  */
 
 #include <filesystem>
-#include <karabo/log/Logger.hh>
 #include <ostream>
 
 #include "BinaryFileInput.hh"
 #include "Input.hh"
 #include "Output.hh"
+#include "boost/system/error_code.hpp"
+#include "karabo/log/Logger.hh"
 
 #ifndef KARABO_IO_FILETOOLS_HH
 #define KARABO_IO_FILETOOLS_HH
