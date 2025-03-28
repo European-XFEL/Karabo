@@ -389,7 +389,8 @@ class Descriptor:
                     setattr(self, k, v)
                 else:
                     converted = type(attr.default)(v)
-                    if strict and converted != v:
+                    if strict and (converted != v or isinstance(
+                            converted, Enum) and not isinstance(v, Enum)):
                         raise TypeError(
                             '{} got attribute {} with value "{}" of incorrect '
                             'type {}'.format(self.__class__.__name__, k, v,
@@ -677,8 +678,8 @@ class Type(Descriptor):
 
     All basic Karabo types are described by a Type.
     """
-    unitSymbol = Attribute(Unit.NUMBER)
-    metricPrefixSymbol = Attribute(MetricPrefix.NONE)
+    unitSymbol = Attribute(Unit.NUMBER, dtype=Unit)
+    metricPrefixSymbol = Attribute(MetricPrefix.NONE, dtype=MetricPrefix)
     enum = None
 
     # Note: Require lookup dicts!
