@@ -22,11 +22,13 @@ import time
 import traceback
 import weakref
 from asyncio import (
-    CancelledError, Event, Future, Lock, TimeoutError, current_task,
-    ensure_future, gather, iscoroutinefunction, shield, sleep, wait_for)
+    AbstractEventLoop, CancelledError, Event, Future, Lock, TimeoutError,
+    current_task, ensure_future, gather, iscoroutinefunction, shield, sleep,
+    wait_for)
 from contextlib import AsyncExitStack, asynccontextmanager
 from functools import partial, wraps
 from itertools import count
+from typing import Any, AsyncContextManager, ContextManager, TypeVar
 
 import aiormq
 import numpy
@@ -43,6 +45,8 @@ _BEATS_QSIZE = 12_000
 _CONSUME_QSIZE = 100_000
 _DEFAULT_HOSTS = "amqp://guest:guest@localhost:5672"
 
+T = TypeVar("T")
+
 
 class KaraboWrapper(TaskWrapper):
     """The purpose of this class is to flag external tasks"""
@@ -55,7 +59,7 @@ class KaraboWrapper(TaskWrapper):
 aiormq.base.TaskWrapper = KaraboWrapper
 
 
-def ensure_running(func):
+def ensure_running(func: callable):
     """Ensure a running eventloop for `func`"""
     if iscoroutinefunction(func):
         async def wrapper(self, *args, **kwargs):
@@ -157,7 +161,8 @@ def get_connector(urls: str | None = None, topic: str | None = None):
 
 
 class Broker:
-    def __init__(self, loop, deviceId, classId, broadcast=True):
+    def __init__(self, loop: AbstractEventLoop, deviceId: str, classId: str,
+                 broadcast: bool = True):
         self.domain = loop.topic
         self.loop = loop
         self.connection = None
@@ -246,11 +251,11 @@ class Broker:
         await self.channel.exchange_declare(exchange=exchange,
                                             exchange_type="topic")
 
-    def enter_context(self, context):
+    def enter_context(self, context: ContextManager[T]) -> T:
         """Synchronously enter the exit stack context"""
         return self.exitStack.enter_context(context)
 
-    async def enter_async_context(self, context):
+    async def enter_async_context(self, context: AsyncContextManager[T]) -> T:
         """Asynchronously enter the exit stack context"""
         return await self.exitStack.enter_async_context(context)
 
@@ -263,7 +268,7 @@ class Broker:
             device = weakref.ref(device)
             await self.consume(device())
 
-    def register_slot(self, name, slot):
+    def register_slot(self, name: str, slot: callable):
         """register a slot on the device
 
         :param name: the name of the slot
@@ -290,7 +295,7 @@ class Broker:
         else:
             self.slots[name] = slot
 
-    def updateInstanceInfo(self, info):
+    def updateInstanceInfo(self, info: Hash):
         """update the short information about this instance
 
         the instance info hash contains a very brief summary of the device.
@@ -300,7 +305,7 @@ class Broker:
         self.emit("call", {"*": ["slotInstanceUpdated"]},
                   self.deviceId, self.info)
 
-    def replyException(self, message, exception):
+    def replyException(self, message: Hash, exception: Exception):
         trace = ''.join(traceback.format_exception(
             type(exception), exception, exception.__traceback__))
         self.reply(message, (str(exception), trace), error=True)
@@ -308,7 +313,7 @@ class Broker:
     def emit(self, signal, targets, *args):
         self.call(signal, targets, None, args)
 
-    async def request(self, device, target, *arguments):
+    async def request(self, device: str, target: str, *arguments) -> Hash:
         reply = f"{self.deviceId}-{time.monotonic().hex()[4:-4]}"
         self.call("call", {device: [target]}, reply, arguments)
         future = Future(loop=self.loop)
@@ -316,7 +321,7 @@ class Broker:
         future.add_done_callback(lambda _: self.repliers.pop(reply))
         return (await future)
 
-    def encode_binary_message(self, header, arguments):
+    def encode_binary_message(self, header: Hash, arguments: tuple) -> bytes:
         body = Hash()
         for i, a in enumerate(arguments):
             body[f"a{i + 1}"] = a
@@ -326,16 +331,17 @@ class Broker:
         return encodeBinary(header) + encodeBinary(body)
 
     @ensure_running
-    def send(self, exch, key, header, arguments):
+    def send(self, exch: str, key: str, header: Hash, arguments: tuple):
         msg = self.encode_binary_message(header, arguments)
         ensure_future(self.channel.basic_publish(
             msg, routing_key=key, exchange=exch))
 
-    async def async_send(self, exch, key, header, arguments):
+    async def async_send(self, exch: str, key: str, header: Hash,
+                         arguments: tuple):
         msg = self.encode_binary_message(header, arguments)
         await self.channel.basic_publish(msg, routing_key=key, exchange=exch)
 
-    async def heartbeat(self, interval, info):
+    async def heartbeat(self, interval: float | int, info: Hash):
         header = Hash("signalFunction", "signalHeartbeat")
         header["signalInstanceId"] = self.deviceId
         body = Hash(
@@ -347,7 +353,7 @@ class Broker:
         key = f"{self.deviceId}.signalHeartbeat"
         await self.channel.basic_publish(msg, routing_key=key, exchange=exch)
 
-    async def notify_network(self, info):
+    async def notify_network(self, info: Hash):
         """notify the network that we are alive
 
         we send out an instance new and gone, and the heartbeats in between.
@@ -375,7 +381,8 @@ class Broker:
 
         self.heartbeat_task = ensure_future(heartbeat())
 
-    def build_arguments(self, signal, targets, reply):
+    def build_arguments(self, signal: str, targets: dict[str, list],
+                        reply) -> tuple[str, str, Hash]:
         funcs = "||".join(f"{k}:{','.join(v)}" for k, v in targets.items())
         slotInstanceIds = "||".join(targets)
         p = Hash(
@@ -404,22 +411,25 @@ class Broker:
 
         return name, routing_key, p
 
-    def call(self, signal, targets, reply, arguments):
+    def call(self, signal: str, targets: dict[str, list],
+             reply: None | tuple, arguments: tuple):
         if not targets:
             return
         name, routing_key, p = self.build_arguments(signal, targets, reply)
         self.send(name, routing_key, p, arguments)
 
-    async def async_call(self, signal, targets, reply, arguments):
+    async def async_call(self, signal: str, targets: dict[str, list],
+                         reply: None | tuple, arguments: tuple):
         if not targets:
             return
         name, routing_key, p = self.build_arguments(signal, targets, reply)
         await self.async_send(name, routing_key, p, arguments)
 
-    async def async_emit(self, signal, targets, *arguments):
+    async def async_emit(self, signal: str, targets: dict[str, list],
+                         *arguments):
         await self.async_call(signal, targets, None, arguments)
 
-    def reply(self, message, reply, error=False):
+    def reply(self, message: Hash, reply: tuple, error: bool = False):
         header = message["header"]
         sender = header["signalInstanceId"]
 
@@ -582,7 +592,7 @@ class Broker:
                 await self.heartbeat_task
             self.heartbeat_task = None
 
-    async def stop_tasks(self):
+    async def stop_tasks(self) -> bool:
         """Reimplemented method of `Broker`"""
         await self._on_stop_tasks()
         me = current_task(loop=None)
@@ -684,7 +694,7 @@ class Broker:
         async with self.subscribe_lock:
             self.subscriptions.add((exchange, key))
 
-    def decodeMessage(self, hash):
+    def decodeMessage(self, hash: Hash) -> tuple[dict, list]:
         """Decode a Karabo message
 
         reply messages are dispatched directly.
@@ -722,7 +732,7 @@ class Broker:
         return ({k: v.split(",") for k, v in (s.split(":") for s in slots)},
                 params)
 
-    def get_property(self, message, prop):
+    def get_property(self, message: Hash, prop: str) -> Any | None:
         header = message.get("header")
         return header.get(prop) if header is not None else None
 
