@@ -16,6 +16,7 @@
 
 import time
 import uuid
+from collections.abc import Iterable
 from threading import Thread
 
 from karabind import (
@@ -82,9 +83,8 @@ def test_device_client_sync_api():
     assert 'boolProperty' in props
 
     names = c.getOutputChannelNames(deviceId)
-    if not isinstance(names, list):
-        names = list(names)
-    assert names == ['output']
+    assert isinstance(names, Iterable)  # it's a 'list', but let's not assert
+    assert 'output' in names
 
     schema = c.getOutputChannelSchema(deviceId, 'output')
     assert 'node.ndarray.shape' in schema

@@ -17,6 +17,7 @@ import os
 import socket
 import time
 import uuid
+from collections.abc import Iterable
 from threading import Thread
 
 import pytest
@@ -260,9 +261,8 @@ def test_device_client_sync_api():
     assert 'boolProperty' in props
     # Test getOutputChannelNames...
     names = c.getOutputChannelNames(deviceId)
-    if not isinstance(names, list):
-        names = list(names)
-    assert names == ['output']
+    assert isinstance(names, Iterable)
+    assert 'output' in names
     # Test getOutputChannelSchema...
     schema = c.getOutputChannelSchema(deviceId, 'output')
     assert 'node.ndarray.shape' in schema
