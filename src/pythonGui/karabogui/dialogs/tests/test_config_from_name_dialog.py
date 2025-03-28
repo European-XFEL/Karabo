@@ -16,7 +16,7 @@
 # or FITNESS FOR A PARTICULAR PURPOSE.
 from unittest import main, mock
 
-from qtpy.QtCore import QModelIndex
+from qtpy.QtCore import QModelIndex, Qt
 from qtpy.QtWidgets import QDialog
 
 from karabo.native import Timestamp
@@ -24,7 +24,8 @@ from karabogui.dialogs.api import (
     ConfigurationFromNameDialog, SaveConfigurationDialog)
 from karabogui.events import KaraboEvent
 from karabogui.singletons.mediator import Mediator
-from karabogui.testing import GuiTestCase, singletons, system_hash
+from karabogui.testing import (
+    GuiTestCase, click_button, singletons, system_hash)
 from karabogui.topology.api import SystemTopology
 
 
@@ -90,6 +91,14 @@ class TestConfigurationFromNameDialog(GuiTestCase):
             # Click refresh button
             self.click(dialog.ui_button_refresh)
             network.onListConfigurationFromName.assert_called_with("divvy")
+
+            # ContextMenu
+            click_button(dialog.ui_table_widget, Qt.RightButton)
+
+            # Delete action
+            dialog._request_delete()
+            network.onDeleteConfigurationFromName.assert_called_with(
+                "divvy", "default1")
 
             # Unregister and set successful!
             dialog.done(1)

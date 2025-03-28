@@ -630,12 +630,23 @@ class Manager(QObject):
                          'name': item['name'],
                          'deviceId': deviceId})
 
+    def handle_deleteConfigurationFromName(self, success, request,
+                                           reply, reason=""):
+        deviceId = request['args.deviceId']
+        name = request['args.name']
+        if not success:
+            messagebox.show_error(f"Delete a configuration for {deviceId} "
+                                  f"with name {name} failed!", details=reason)
+            return
+
+        get_network().onListConfigurationFromName(deviceId)
+
     def handle_saveConfigurationFromName(self, success, request,
                                          reply, reason=''):
         deviceId = request['args.deviceIds'][0]
         if not success:
             messagebox.show_error(f"Saving a configuration for {deviceId} "
-                                  f"failed!", details=reason)
+                                  "failed!", details=reason)
             return
 
         if request.get('update', False):
