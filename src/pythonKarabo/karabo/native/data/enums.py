@@ -13,8 +13,7 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
-from enum import Enum, IntEnum, unique
-from functools import total_ordering
+from enum import IntEnum, StrEnum, unique
 
 from karabo.common.api import (
     KARABO_SCHEMA_ACCESS_MODE, KARABO_SCHEMA_ARCHIVE_POLICY,
@@ -26,19 +25,13 @@ __all__ = ['AccessLevel', 'AccessMode', 'ArchivePolicy', 'Assignment',
            'Unit', 'DimensionType', 'EncodingType']
 
 
-@total_ordering
 @unique
-class AccessLevel(Enum):
+class AccessLevel(IntEnum):
     OBSERVER = 0
     USER = 1
     OPERATOR = 2
     EXPERT = 3
     ADMIN = 4
-
-    def __gt__(self, other):
-        if self.__class__ is other.__class__:
-            return self.value > other.value
-        return NotImplemented
 
     @classmethod
     def fromAttributes(cls, attrs):
@@ -53,7 +46,7 @@ class AccessLevel(Enum):
 
 
 @unique
-class AccessMode(Enum):
+class AccessMode(IntEnum):
     UNDEFINED = -1
     INITONLY = 1
     READONLY = 2
@@ -72,7 +65,7 @@ class AccessMode(Enum):
 
 
 @unique
-class ArchivePolicy(Enum):
+class ArchivePolicy(IntEnum):
     EVERY_EVENT = 0
     EVERY_100MS = 1
     EVERY_1S = 2
@@ -95,7 +88,7 @@ class ArchivePolicy(Enum):
 
 
 @unique
-class Assignment(Enum):
+class Assignment(IntEnum):
     OPTIONAL = 0
     MANDATORY = 1
     INTERNAL = 2
@@ -140,7 +133,7 @@ class DaqDataType(IntEnum):
 
 
 @unique
-class MetricPrefix(Enum):
+class MetricPrefix(StrEnum):
     """ This are all the defined prefixes in the SI system """
     YOTTA = "Y"
     ZETTA = "Z"
@@ -177,7 +170,7 @@ class MetricPrefix(Enum):
 
 
 @unique
-class Unit(Enum):
+class Unit(StrEnum):
     """ A fair collections of units from the SI system """
     NUMBER = ""
     COUNT = "#"
