@@ -14,6 +14,7 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 import os
+import platform
 import re
 import socket
 from asyncio import (
@@ -48,6 +49,23 @@ SERVER_WAIT_ONLINE = 5
 IP_REGEX = (r"(?:[0-9]{1,3}\.){3}[0-9]{1,3}"  # IP
             r"(?:\/[0-9]|[1-2][0-9]|3[0-2])?")  # CIDR
 IP_PATTERN = re.compile(IP_REGEX)
+
+# Idle time after which keep-alive mechanism
+# start checking the connection
+TCP_KEEPIDLE = 30
+# Interval between probes keep-alive probes
+TCP_KEEPINTVL = 5
+# Number of ot acknowledged probes after that the
+# connection is considered dead
+TCP_KEEPCNT = 5
+
+
+def set_keep_alive(sock: socket.socket):
+    """Set the tcp keep alive on a socket `sock`"""
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+    sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, TCP_KEEPIDLE)
+    sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, TCP_KEEPINTVL)
+    sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, TCP_KEEPCNT)
 
 
 def get_hostname_from_interface(address_range):
@@ -410,6 +428,8 @@ class NetworkInput(Configurable):
             assert sock.getsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY)
             # Set low delay according to unix manual IPTOS_LOWDELAY 0x10
             sock.setsockopt(socket.SOL_IP, socket.IP_TOS, IPTOS_LOWDELAY)
+            if platform.system() == "Linux":
+                set_keep_alive(sock)
             channel = Channel(reader, writer, channelName=output)
             with closing(channel):
                 # Tell the world we are connected before we start
