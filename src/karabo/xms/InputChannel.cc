@@ -934,7 +934,7 @@ namespace karabo {
                 m_configuredOutputChannels.clear();
                 for (size_t i = 0; i < connectedOutputChannels.size(); ++i) {
                     std::vector<std::string> tmp;
-                    boost::split(tmp, connectedOutputChannels[i], boost::is_any_of("@:"));
+                    boost::split(tmp, connectedOutputChannels[i], boost::is_any_of(":"));
                     if (tmp.size() == 2) {
                         m_configuredOutputChannels[connectedOutputChannels[i]] = Hash();
                     } else {
