@@ -406,10 +406,6 @@ class PythonDevice:
                                   PythonDevice.connectionParams,
                                   self._parameters["heartbeatInterval"], info)
 
-        # Initialize FSM slots if defined
-        if hasattr(self, 'initFsmSlots'):
-            self.initFsmSlots(self._ss)
-
         # Initialize Device slots and instantiate all channels
         self._initDeviceSlots()
         self._inputChannelHandlers = {}  # for re-injected InputChannel
@@ -455,9 +451,9 @@ class PythonDevice:
         # Trigger connection of input channels
         self._ss.connectInputChannels()
 
-        # Am attempt to start initial functions a.k.a second constructor if any
-        # via event loop. If an exception occurs, we will kill it
-        def wrapStartFsm():
+        # An attempt to start initial functions a.k.a second constructor if any
+        # via event loop. If an exception occurs, we will kill the device
+        def wrapInitialFunctions():
             try:
                 self.startInitialFunctions()
             except Exception as e:
@@ -476,7 +472,7 @@ class PythonDevice:
         # (main one and one from our SignalSlotable), so the blocking cannot
         # be resolved and thus both actions time out.
         EventLoop.addThread()
-        EventLoop.post(wrapStartFsm)
+        EventLoop.post(wrapInitialFunctions)
 
         if self.timeServerId:
             self.log.DEBUG("Connecting to time server : \"{}\""
@@ -1136,8 +1132,6 @@ class PythonDevice:
     def updateState(self, newState, propertyUpdates=None, timestamp=None):
         """Update the state property of the device to a new state.
 
-        This should be used for NoFSM devices and should *not* be used if you
-        have an underlying FSM.
         :param newState: the state to set the device to
         :propertyUpdates: a Hash with further properties to update (or None)
         :timestamp: timestamp to be assigned to the update,
@@ -1569,7 +1563,6 @@ class PythonDevice:
             self._ss.call(self.serverid, "slotDeviceGone", self.deviceid)
         try:
             self.preDestruction()
-            self.stopFsm()
         except Exception as e:
             # 'repr(e)' to get both, exception type and text
             self.log.WARN(f"Clean-up failed in slotKillDevice: {repr(e)}")
