@@ -29,6 +29,7 @@
 
 #include <chrono>
 #include <future>
+#include <mutex>
 #include <regex>
 #include <thread>
 
@@ -237,7 +238,7 @@ void InputOutputChannel_Test::testManyToOne() {
 
     // Prepare lambda to send data
     const size_t numData = 200;
-    boost::function<void(unsigned int)> sending = [&outputs, numData](unsigned int outNum) {
+    std::function<void(unsigned int)> sending = [&outputs, numData](unsigned int outNum) {
         for (unsigned int i = 0; i < numData; ++i) {
             outputs[outNum]->write(Hash("uint", i));
             outputs[outNum]->update();
@@ -247,7 +248,7 @@ void InputOutputChannel_Test::testManyToOne() {
 
     // Start to send data from all outputs in parallel (we added enough threads in the beginning!).
     for (unsigned int i = 0; i < numOutputs; ++i) {
-        karabo::net::EventLoop::getIOService().post(boost::bind(sending, i));
+        karabo::net::EventLoop::getIOService().post(std::bind(sending, i));
     }
 
     // Wait for endOfStream arrival
@@ -290,10 +291,10 @@ void InputOutputChannel_Test::testConnectDisconnect() {
     output->initialize(); // needed due to int == 0 argument above
 
     std::vector<karabo::util::Hash> table;
-    boost::mutex handlerDataMutex;
+    std::mutex handlerDataMutex;
     output->registerShowConnectionsHandler(
           [&table, &handlerDataMutex](const std::vector<karabo::util::Hash>& connections) {
-              boost::mutex::scoped_lock lock(handlerDataMutex);
+              std::lock_guard lock(handlerDataMutex);
               table = connections;
           });
 
@@ -308,7 +309,7 @@ void InputOutputChannel_Test::testConnectDisconnect() {
     input->registerConnectionTracker([&trackedStatus, &handlerDataMutex, outputChannelId](
                                            const std::string& outputId, karabo::net::ConnectionStatus status) {
         if (outputId == outputChannelId) {
-            boost::mutex::scoped_lock lock(handlerDataMutex);
+            std::lock_guard lock(handlerDataMutex);
             trackedStatus.push_back(status);
         }
     });
@@ -319,7 +320,7 @@ void InputOutputChannel_Test::testConnectDisconnect() {
     std::this_thread::sleep_for(20ms); // time for call back
     CPPUNIT_ASSERT_EQUAL(0u, calls);
     {
-        boost::mutex::scoped_lock lock(handlerDataMutex);
+        std::lock_guard lock(handlerDataMutex);
         CPPUNIT_ASSERT_EQUAL(0uL, table.size());
     }
 
@@ -376,7 +377,7 @@ void InputOutputChannel_Test::testConnectDisconnect() {
         int trials = 200;
         do {
             std::this_thread::sleep_for(2ms);
-            boost::mutex::scoped_lock lock(handlerDataMutex);
+            std::lock_guard lock(handlerDataMutex);
             if (!table.empty()) {
                 break;
             }
@@ -420,7 +421,7 @@ void InputOutputChannel_Test::testConnectDisconnect() {
         trials = 1000; // failed with 200 in https://git.xfel.eu/Karabo/Framework/-/jobs/131075/raw
         do {
             std::this_thread::sleep_for(2ms);
-            boost::mutex::scoped_lock lock(handlerDataMutex);
+            std::lock_guard lock(handlerDataMutex);
             if (table.empty() && trackedStatus.size() > 2ul) {
                 break;
             }
@@ -505,11 +506,11 @@ void InputOutputChannel_Test::testConcurrentConnect() {
         // Setup connection handlers
         std::promise<karabo::net::ErrorCode> connectPromise1;
         std::future<karabo::net::ErrorCode> connectFuture1 = connectPromise1.get_future();
-        boost::function<void(const karabo::net::ErrorCode&)> connectHandler1 =
+        std::function<void(const karabo::net::ErrorCode&)> connectHandler1 =
               [&connectPromise1](const karabo::net::ErrorCode& ec) { connectPromise1.set_value(ec); };
         std::promise<karabo::net::ErrorCode> connectPromise2;
         std::future<karabo::net::ErrorCode> connectFuture2 = connectPromise2.get_future();
-        boost::function<void(const karabo::net::ErrorCode&)> connectHandler2 =
+        std::function<void(const karabo::net::ErrorCode&)> connectHandler2 =
               [&connectPromise2](const karabo::net::ErrorCode& ec) { connectPromise2.set_value(ec); };
         // Subsequent connect(..): first succeeds, second fails since already connected (less likely) or connecting
         input->connect(outputInfo, connectHandler1);
@@ -535,11 +536,11 @@ void InputOutputChannel_Test::testConcurrentConnect() {
         // Setup more connection handlers
         std::promise<karabo::net::ErrorCode> connectPromise3;
         std::future<karabo::net::ErrorCode> connectFuture3 = connectPromise3.get_future();
-        boost::function<void(const karabo::net::ErrorCode&)> connectHandler3 =
+        std::function<void(const karabo::net::ErrorCode&)> connectHandler3 =
               [&connectPromise3](const karabo::net::ErrorCode& ec) { connectPromise3.set_value(ec); };
         std::promise<karabo::net::ErrorCode> connectPromise4;
         std::future<karabo::net::ErrorCode> connectFuture4 = connectPromise4.get_future();
-        boost::function<void(const karabo::net::ErrorCode&)> connectHandler4 =
+        std::function<void(const karabo::net::ErrorCode&)> connectHandler4 =
               [&connectPromise4](const karabo::net::ErrorCode& ec) { connectPromise4.set_value(ec); };
 
         input->connect(outputInfo, connectHandler3);

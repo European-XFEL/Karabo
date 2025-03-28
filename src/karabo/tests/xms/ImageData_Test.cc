@@ -24,8 +24,6 @@
 
 #include "ImageData_Test.hh"
 
-#include <boost/thread/pthread/thread_data.hpp>
-
 using namespace std;
 using namespace karabo::util;
 using namespace karabo::io;
