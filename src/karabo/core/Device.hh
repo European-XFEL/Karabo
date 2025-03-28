@@ -101,7 +101,7 @@ namespace karabo {
          *        independent in the Device class
          *
          */
-        class BaseDevice : public virtual karabo::xms::SignalSlotable {
+        class BaseDevice : public karabo::xms::SignalSlotable {
            public:
             KARABO_CLASSINFO(BaseDevice, "BaseDevice", "1.0")
             KARABO_CONFIGURATION_BASE_CLASS;

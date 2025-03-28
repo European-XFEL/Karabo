@@ -58,9 +58,6 @@ namespace karabo {
          * The DeviceServer class hosts device instances. It monitors the system
          * for new class plugins appearing and notifies the distributed system
          * of these and their static information.
-         *
-         * The device server uses an ok-error FSM, which knows the ERROR and
-         * NORMAL karabo::util::State states.
          */
         class DeviceServer : public karabo::xms::SignalSlotable {
             bool m_serverIsRunning;
@@ -127,22 +124,10 @@ namespace karabo {
              */
             bool isRunning() const;
 
-            void autostartDevices();
-
-            /**
-             * This function was called before in case of error events in FSM. Now it is a candidate
-             * to be removed since we don't have any references to it in DeviceServer code.
-             * @param user level error message
-             * @param detail level error message
-             */
-            void errorFoundAction(const std::string& user, const std::string& detail);
-
             /**
              * It just launches devices that marked to be started by server automatically.
              */
-            void startInitialActions() {
-                autostartDevices();
-            }
+            void autostartDevices();
 
            private: // Functions
             karabo::util::Hash availablePlugins();
