@@ -33,7 +33,6 @@
 #include <spdlog/sinks/ringbuffer_sink.h>
 #include <spdlog/spdlog.h>
 
-#include <boost/thread.hpp>
 #include <boost/type_index.hpp>
 #include <filesystem>
 #include <memory>

@@ -49,7 +49,7 @@ void Signal_Test::tearDown() {}
 
 
 void Signal_Test::testRegisterSlots() {
-    auto sigSlot = boost::make_shared<karabo::xms::SignalSlotable>("one");
+    auto sigSlot = karabo::xms::SignalSlotable::MakeShared("one");
     // sigSlot->start(); not needed here to start communication
 
     karabo::xms::Signal s(sigSlot.get(), sigSlot->getConnection(), sigSlot->getInstanceId(), "mySignal", //
