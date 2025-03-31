@@ -27,6 +27,8 @@
 #include <chrono>
 #include <thread>
 
+#include "karabo/util/NDArrayElement.hh"
+
 using namespace std::chrono;
 using namespace std;
 

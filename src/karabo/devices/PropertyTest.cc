@@ -23,6 +23,7 @@
 #include "karabo/util/Dims.hh"
 #include "karabo/util/Hash.hh"
 #include "karabo/util/NDArray.hh"
+#include "karabo/util/NDArrayElement.hh"
 #include "karabo/util/Schema.hh"
 #include "karabo/util/State.hh"
 #include "karabo/util/TableElement.hh"

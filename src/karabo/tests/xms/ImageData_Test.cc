@@ -24,6 +24,8 @@
 
 #include "ImageData_Test.hh"
 
+#include "karabo/util/NDArray.hh"
+
 using namespace std;
 using namespace karabo::util;
 using namespace karabo::io;

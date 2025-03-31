@@ -24,7 +24,7 @@
 #include <karabo/util/ChoiceElement.hh>
 #include <karabo/util/Configurator.hh>
 #include <karabo/util/ListElement.hh>
-#include <karabo/util/NDArray.hh>
+#include <karabo/util/NDArrayElement.hh>
 #include <karabo/util/NodeElement.hh>
 #include <karabo/util/OverwriteElement.hh>
 #include <karabo/util/SimpleElement.hh>
