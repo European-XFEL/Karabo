@@ -74,7 +74,7 @@ the `.clang-format` file at the root of the repository.
 The CI linting job (.pre-commit-config.yaml) currently uses `clang-format 17.0.6`.
 Instructions on how to setup a development system based
 on Visual Studio Code can be found at
-[doc/tools/vscode.rst](https://rtd.xfel.eu/docs/karabo/en/latest/tools/vscode.html) in this repository.
+[doc/tools/vscode.rst](https://karabo.pages.xfel.eu/Framework/tools/vscode.html) in this repository.
 
 To detect non-compliances even before pushing to GitLab, developers are
 encouraged to setup the `pre-commit` functionality. To do so, Karabo has to be
