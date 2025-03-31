@@ -21,7 +21,7 @@ from uuid import uuid4
 from karabo.middlelayer import (
     Device, Hash, String, call, connectDevice, slot, updateDevice)
 from karabo.middlelayer.testing import async_tst, sleepUntil
-from karabo.project_db.tests.util import create_hierarchy
+from karabo.project_db.testing.util import create_hierarchy
 
 UUIDS = [str(uuid4()) for i in range(5)]
 

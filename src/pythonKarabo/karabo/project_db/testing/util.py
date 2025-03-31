@@ -198,3 +198,24 @@ def create_hierarchy(db, scene_name=None):
     xml += "</xml>"
     db.save_item("LOCAL", uuid, xml)
     return uuid, device_id_conf_map
+
+
+def create_trashed_project(db, is_trashed=True):
+    uuid = _gen_uuid()
+    xml = (f'<xml item_type="project" uuid="{uuid}"'
+           f' simple_name="{uuid}" is_trashed="{str(is_trashed).lower()}">'
+           '</xml>')
+    db.save_item("LOCAL", uuid, xml)
+    return uuid
+
+
+def create_unattached_scenes(db):
+    # create scenes with the same simple_name
+    # unattached to the project
+    for i in range(4):
+        sub_uuid = _gen_uuid()
+        scene_xml = ('<xml item_type="scene" uuid="{uuid}"'
+                     ' simple_name="Scene!" >中文</xml>'
+                     .format(uuid=sub_uuid))
+
+        db.save_item("LOCAL", sub_uuid, scene_xml)
