@@ -25,7 +25,6 @@
 #define KARABO_UTIL_NDARRAY_HH
 
 #include "ByteSwap.hh"
-#include "CustomNodeElement.hh"
 #include "Dims.hh"
 #include "Exception.hh"
 #include "FromInt.hh"
@@ -39,11 +38,18 @@ namespace karabo {
 
         /**
          * @class NDArray
-         * @brief A class representing multi-dimensional data in Karabo that seaminglessy converts to numpy.NDArray
+         * @brief A class representing multi-dimensional data in Karabo that seaminglessy converts to numpy.ndarray
          *
          * The NDArray class is intended to store any multidimensional data occurring in Karabo. Internally it
          * holds the data in a ByteArray. It is a Hash-derived structure, which means it serializes into a
-         * karabo::util::Hash. Its meta-data is chosen such that it can be seamlessly converted into a numpy.NDArray
+         * karabo::util::Hash. Its meta-data is chosen such that it can be seamlessly converted into a numpy.ndarray
+         *
+         * Internally (i.e. relevant only for serialisation), it holds the following keys:
+         * - "data": a ByteArray
+         * - "shape": a vector<unsigned long long>
+         * - "type": an int matching a Types::ReferenceType value
+         * - "isBigEndian": a bool
+         * (If this changes, it needs to be followed up in the NDArrayDescription helper class of the NDArrayElement.)
          */
         class NDArray : protected Hash {
            public:
@@ -56,9 +62,6 @@ namespace karabo {
                     // Do nothing
                 }
             };
-
-
-            static void expectedParameters(karabo::util::Schema& s);
 
             /**
              * This constructor creates an empty NDArray
@@ -325,46 +328,6 @@ namespace karabo {
             setShape(shape);
             setBigEndian(isBigEndian);
         }
-
-        /**********************************************************************
-         * Declaration NDArrayElement
-         **********************************************************************/
-
-        class NDArrayElement : public karabo::util::CustomNodeElement<NDArrayElement, NDArray> {
-            typedef karabo::util::CustomNodeElement<NDArrayElement, NDArray> ParentType;
-
-           public:
-            NDArrayElement(karabo::util::Schema& s) : ParentType(s) {}
-
-            NDArrayElement& dtype(const karabo::util::Types::ReferenceType type) {
-                return setDefaultValue("type", static_cast<int>(type));
-            }
-
-            NDArrayElement& shape(const std::string& shp) {
-                std::vector<unsigned long long> tmp = karabo::util::fromString<unsigned long long, std::vector>(shp);
-                return shape(tmp);
-            }
-
-            NDArrayElement& shape(const std::vector<unsigned long long>& shp) {
-                return setDefaultValue("shape", shp);
-            }
-
-            NDArrayElement& unit(const UnitType& unit) {
-                return setUnit("data", unit);
-            }
-
-            NDArrayElement& metricPrefix(const MetricPrefixType& metricPrefix) {
-                return setMetricPrefix("data", metricPrefix);
-            }
-
-            void commit() {
-                // As NDArrayElement is only used for channel descriptions, it should always be read only.
-                readOnly();
-                ParentType::commit();
-            }
-        };
-
-        typedef NDArrayElement NDARRAY_ELEMENT;
 
     } // namespace util
 } // namespace karabo

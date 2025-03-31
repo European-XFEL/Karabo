@@ -25,12 +25,14 @@
 #include "ImageData.hh"
 
 #include <climits>
-#include <karabo/util/VectorElement.hh>
 
+#include "karabo/util/NDArray.hh"
+#include "karabo/util/NDArrayElement.hh"
 #include "karabo/util/SimpleElement.hh"
 #include "karabo/util/ToSize.hh"
 #include "karabo/util/Types.hh"
 #include "karabo/util/Units.hh"
+#include "karabo/util/VectorElement.hh"
 
 namespace karabo {
     namespace xms {
