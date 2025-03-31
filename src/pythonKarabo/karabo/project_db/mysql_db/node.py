@@ -16,14 +16,13 @@
 
 import os
 
-from karabo.native import AccessLevel, String, UInt32
-from karabo.project_db.util import DbConnectionNodeBase
+from karabo.native import AccessLevel, Configurable, String, UInt32
 
 from .database import ProjectDatabase
 from .util import get_db_credentials
 
 
-class DbConnectionNode(DbConnectionNodeBase):
+class MySqlNode(Configurable):
     host = String(
         defaultValue=os.getenv("KARABO_PROJECT_DB_HOST", "localhost"),
         displayedName="Database host",

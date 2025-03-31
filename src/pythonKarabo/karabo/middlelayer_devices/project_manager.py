@@ -20,23 +20,41 @@ from lxml import etree
 from karabo.common.scenemodel.api import write_scene
 from karabo.common.states import State
 from karabo.middlelayer import (
-    AccessLevel, AccessMode, Device, Hash, Overwrite, Slot, String, TypeHash,
-    VectorString, dictToHash, slot)
+    AccessLevel, AccessMode, Bool, Configurable, Device, Hash, Node, Overwrite,
+    Slot, String, TypeHash, VectorString, dictToHash, slot)
 from karabo.middlelayer.signalslot import Signal
 from karabo.native import read_project_model
-from karabo.project_db.util import ProjectDBError, get_node, get_project
+from karabo.project_db.exist_db.node import ExistDbNode
+from karabo.project_db.mysql_db.node import MySqlNode
+from karabo.project_db.util import ProjectDBError
+
+
+def get_project():
+    class ProjectNode(Configurable):
+
+        protocol = String(
+            defaultValue="exist_db",
+            options=["exist_db", "mysql_db"],
+            accessMode=AccessMode.INITONLY)
+
+        testMode = Bool(
+            displayedName="Test Mode",
+            defaultValue=False,
+            requiredAccessLevel=AccessLevel.ADMIN)
+
+        locals()["exist_db"] = Node(ExistDbNode)
+        locals()["mysql_db"] = Node(MySqlNode)
+
+    return Node(ProjectNode)
 
 
 class ProjectManager(Device):
-
-    # As long as part of Karabo framework, just inherit __version__ from Device
 
     state = Overwrite(
         defaultValue=State.INIT,
         options=[State.ERROR, State.ON, State.INIT])
 
-    # node containing Database connection details.
-    projectDB = get_node()
+    projectDB = get_project()
 
     domainList = VectorString(
         displayedName="Domain List",
@@ -60,11 +78,18 @@ class ProjectManager(Device):
         otherwise brings the device into ERROR
         """
         try:
-            with get_project(self.projectDB, init_db=True):
-                self.state = State.ON
+            self.get_project_db(init_db=True)
+            self.state = State.ON
         except ProjectDBError as e:
             self.logger.error(f"ProjectDBError : {str(e)}")
             self.state = State.ERROR
+
+    def get_project_db(self, init_db=False):
+        """Internal helper to get the project db"""
+        test_mode = self.projectDB.testMode.value
+        node = self.projectDB.protocol
+        db_node = getattr(self.projectDB, node)
+        return db_node.get_db(test_mode, init_db=init_db)
 
     @Slot(displayedName="Reset", allowedStates=[State.ERROR],
           requiredAccessLevel=AccessLevel.EXPERT)
@@ -135,8 +160,8 @@ class ProjectManager(Device):
         Initialize a DB connection for a user
         :param token: database user token
         """
-        self.user_db_sessions[token] = get_project(self.projectDB)
-        self.logger.debug("Initialized user session")
+        self.user_db_sessions[token] = self.get_project_db()
+        self.logger.info("Initialized user session")
         return Hash("success", True)
 
     @slot

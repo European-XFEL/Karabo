@@ -13,14 +13,13 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
-from karabo.native import AccessLevel, String, UInt32
-from karabo.project_db.util import DbConnectionNodeBase
+from karabo.native import AccessLevel, Configurable, String, UInt32
 
 from .database import ProjectDatabase
 from .util import get_db_credentials
 
 
-class DbConnectionNode(DbConnectionNodeBase):
+class ExistDbNode(Configurable):
     host = String(
         defaultValue="localhost",
         displayedName="Database host",

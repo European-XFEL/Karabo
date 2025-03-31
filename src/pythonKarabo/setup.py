@@ -175,25 +175,7 @@ else:
         'karabo.bound_broken_device_test': [
             'BrokenTestDevice=karabo.bound.tests.brokenBoundDevice:BrokenTestDevice',
         ],
-        'karabo.project_db': [
-            'file_db=karabo.project_db.file_db.node:DbConnectionNode',
-        ],
     }
-    try:
-        import pyexistdb
-        install_args['entry_points']['karabo.project_db'].append(
-            'exist_db=karabo.project_db.exist_db.node:DbConnectionNode'
-        )
-    except ImportError:
-        pass
-
-    try:
-        import pymysql
-        install_args['entry_points']['karabo.project_db'].append(
-            'mysql_db=karabo.project_db.mysql_db.node:DbConnectionNode'
-        )
-    except ImportError:
-        pass
 
 
 if __name__ == '__main__':
