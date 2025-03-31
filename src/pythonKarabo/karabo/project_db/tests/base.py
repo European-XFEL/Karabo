@@ -18,10 +18,9 @@ from time import gmtime, strftime, strptime, time
 
 from lxml import etree
 
-from ..bases import DatabaseBase
 from ..const import DATE_FORMAT
 from ..mysql_db.database import MySQLHandle
-from ..util import ProjectDBError
+from ..util import ProjectDBError, make_xml_if_needed
 from .util import _gen_uuid, create_hierarchy
 
 
@@ -58,23 +57,6 @@ class ProjectDatabaseVerification():
 
     def stop_local_database(self):
         """Should be implemented by the subclass"""
-
-    def test__make_xml_if_needed(self):
-        xml_rep = "<test>foo</test>"
-        ret = DatabaseBase._make_xml_if_needed(xml_rep)
-        self.assertEqual(ret.tag, "test")
-        self.assertEqual(ret.text, "foo")
-
-    def test_malformed_xml_inputs(self):
-        xml_rep = "<test>foo</test><bad|symbols></bad|symbols>"
-        self.assertRaises(ValueError, DatabaseBase._make_xml_if_needed,
-                          xml_rep)
-
-    def test__make_str_if_needed(self):
-        element = etree.Element('test')
-        element.text = 'foo'
-        str_rep = DatabaseBase._make_str_if_needed(element)
-        self.assertEqual(str_rep, "<test>foo</test>\n")
 
     def test_project_interface(self):
         # A bunch of document "names" for the following tests
@@ -140,7 +122,7 @@ class ProjectDatabaseVerification():
                 items = [testproject, testproject2]
                 res = db.load_item('LOCAL', items)
                 for r in res:
-                    itemxml = db._make_xml_if_needed(r["xml"])
+                    itemxml = make_xml_if_needed(r["xml"])
                     self.assertEqual(itemxml.tag, 'xml')
                     # The MySQL back-end does not save the inner "foo" text of
                     # the original XML as it doesn't map to any item field and
@@ -206,7 +188,7 @@ class ProjectDatabaseVerification():
                     # Read it back, no revision given
                     res = db.load_item('LOCAL', [versioned_uuid])
                     self.assertEqual(len(res), 1)
-                    itemxml = db._make_xml_if_needed(res[0]['xml'])
+                    itemxml = make_xml_if_needed(res[0]['xml'])
                     self.assertEqual(int(itemxml.get('revision')), MAX_REV)
 
                     # Write it back with save_item
@@ -218,7 +200,7 @@ class ProjectDatabaseVerification():
 
                     # Make sure there's a revision of 0 (auto-added)
                     res = db.load_item('LOCAL', [versioned_uuid])
-                    itemxml = db._make_xml_if_needed(res[0]['xml'])
+                    itemxml = make_xml_if_needed(res[0]['xml'])
                     self.assertEqual(itemxml.get('revision'), '0')
 
             with self.subTest(msg='test_named_items'):

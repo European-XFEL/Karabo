@@ -17,9 +17,7 @@ from abc import ABC, abstractmethod
 from contextlib import ContextDecorator
 from time import gmtime, strftime
 
-from lxml import etree
-
-from .util import ProjectDBError, to_string
+from .util import ProjectDBError, make_str_if_needed, make_xml_if_needed
 
 DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
 
@@ -129,46 +127,6 @@ class DatabaseBase(ContextDecorator):
 
         if not success:
             raise RuntimeError(f"Failed to create domain at {path}")
-
-    @staticmethod
-    def _make_xml_if_needed(xml_rep):
-        """
-        Returns an etree xml object from xml_rep
-        :param xml_rep: the xml
-        :return: a root node for the xml object
-        :raises: ValueError if the object passed is not of type str or type
-                 etree.ElementBase
-        """
-        if isinstance(xml_rep, etree._Element):
-            return xml_rep
-        if isinstance(xml_rep, bytes):
-            xml_rep = xml_rep.decode('utf-8')
-        if isinstance(xml_rep, str):
-            try:
-                return etree.fromstring(xml_rep)
-            except etree.XMLSyntaxError as e:
-                raise ValueError(
-                    f"XML syntax error encountered while parsing!: {e}")
-
-        raise ValueError(f"Cannot handle type {type(xml_rep)}: {xml_rep}")
-
-    @staticmethod
-    def _make_str_if_needed(xml_rep):
-        """
-        Returns a string representation of xml_rep
-        :param xml_rep: the xml
-        :return: a string representation of xml_rep
-        :raises: ValueError if the object passed is not of type str or type
-                 etree.ElementBase
-        """
-        if isinstance(xml_rep, bytes):
-            xml_rep = xml_rep.decode('utf-8')
-        if isinstance(xml_rep, str):
-            return xml_rep
-        if isinstance(xml_rep, etree._Element):
-            return to_string(xml_rep)
-
-        raise ValueError(f"Cannot handle type {type(xml_rep)}")
 
     def sanitize_database(self, domain):
         """Optional Method
@@ -319,7 +277,7 @@ class DatabaseBase(ContextDecorator):
         # Extract some information
         try:
             # NOTE: The client might send us garbage
-            item_tree = self._make_xml_if_needed(item_xml)
+            item_tree = make_xml_if_needed(item_xml)
         except ValueError:
             msg = f'XML parse error for item "{uuid}"'
             raise ProjectDBError(msg)
@@ -344,7 +302,7 @@ class DatabaseBase(ContextDecorator):
         item_tree.attrib['revision'] = '0'
         item_tree.attrib['alias'] = 'default'
 
-        item_xml = self._make_str_if_needed(item_tree)
+        item_xml = make_str_if_needed(item_tree)
         path = self.path(domain, uuid)
 
         if self.dbhandle.hasDocument(path) and not overwrite:
