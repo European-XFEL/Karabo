@@ -1,7 +1,7 @@
 import pytest
 from lxml import etree
 
-from ..util import make_str_if_needed, make_xml_if_needed
+from karabo.project_db.util import make_str_if_needed, make_xml_if_needed
 
 
 def test_make_xml_if_needed():
