@@ -65,6 +65,6 @@ documentation using
     make html
 
 Or use the documentation available at
-this [link](https://rtd.xfel.eu/docs/karabo/en/latest/)
+this [link](https://karabo.pages.xfel.eu/Framework/index.html)
 
 Thank you for using Karabo!

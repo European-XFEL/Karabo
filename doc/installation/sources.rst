@@ -209,7 +209,7 @@ meaning execute all tests that do not match the given regular expression.
 
 For instructions on how to run the C++ tests from the Visual Studio Code IDE,
 please refer to
-`this section of the related documentation <https://rtd.xfel.eu/docs/karabo/en/latest/tools/vscode.html#run-and-debug-the-framework-tests>`_.
+`this section of the related documentation <https://karabo.pages.xfel.eu/Framework/tools/vscode.html#run-and-debug-the-framework-tests>`_.
 
 
 PythonKarabo (Python)
