@@ -19,7 +19,8 @@ from unittest import TestCase, main
 from ..enums import (
     AccessLevel, AccessMode, ArchivePolicy, Assignment, MetricPrefix, NodeType,
     Unit)
-from ..hash import Hash, Schema
+from ..hash import Hash
+from ..schema import Schema
 
 
 class Tests(TestCase):

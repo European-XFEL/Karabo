@@ -25,9 +25,31 @@ from karabo.common.api import (
     KARABO_SCHEMA_ABSOLUTE_ERROR, KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_INC,
     KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MIN_INC)
 from karabo.common.scenemodel.const import DEFAULT_DECIMALS, DEFAULT_FORMAT
-from karabo.native import Hash, Timestamp, simple_deepcopy
+from karabo.native import Hash, Schema, Timestamp
 
 from . import binding_types as types
+
+
+def simple_deepcopy(value):
+    """A simple and quick deepcopy mechanism for simple data structures
+    """
+    try:
+        # dicts, sets, ndarrays
+        v = value.copy()
+    except TypeError:
+        # Must be schema
+        assert isinstance(value, Schema)
+        cpy = Schema()
+        cpy.copy(value)
+        v = cpy
+    except AttributeError:
+        try:
+            # lists, tuples, strings, unicode
+            v = value[:]
+        except TypeError:
+            # Simple values
+            v = value
+    return v
 
 
 def get_editor_value(property_proxy, default=None):
