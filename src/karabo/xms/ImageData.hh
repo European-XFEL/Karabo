@@ -30,10 +30,12 @@
 #include <karabo/util/CustomNodeElement.hh>
 #include <karabo/util/Dims.hh>
 #include <karabo/util/Hash.hh>
-#include <karabo/util/NDArray.hh>
 #include <karabo/util/Validator.hh>
 
 namespace karabo {
+    namespace util {
+        class NDArray;
+    }
     namespace xms {
 
         namespace Dimension {

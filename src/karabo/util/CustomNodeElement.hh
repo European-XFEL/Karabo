@@ -34,19 +34,34 @@ namespace karabo {
         /**
          * Helper class to construct custom NODE_ELEMENTs for schemas.
          * Usage is best explained by example, say you coded a custom data class
-         * (by inheriting protected Hash) describing it's expected parameters like:
+         * (by inheriting protected Hash) like:
          * @code
          * class MyData : protected Hash {
-         *     static void expectedParameters(const Schema& s) {
-         *         // parameter definition [...]
+         *     MyData(...) {
+         *         setInternal(DataType()));
+         *     }
+         *     void setInternal(const SomeType& data) {
+         *         set("internal", data);
          *     }
          * };
          * @endcode
-         * Then you may generate a NODE_ELEMENT like this:
+         * Then you need a class describing the content of your class
+         * @code
+         * class MyDataDescription {
+         *       public:
+         *         // 2nd arg should match the classId of the class we describe (not of the describing class),
+         *         // so that Schema::getCustomNodeClass(..) returns that one.
+         *         KARABO_CLASSINFO(MyDataDescription, MyData::classInfo().getClassId(), "3.0");
+         *         static void expectedParameters(const Schema& s) {
+         *             // parameter definition [...]
+         *         }
+         * };
+         * @endcode
+         * and you may generate a NODE_ELEMENT like this:
          * @code{.cpp}
-         * class MyDataElement : public CustomNodeElement<MyData> {
-         *
-         *     MyDataElement(karabo::util::Schema& s) : CustomNodeElement<MyData>(s) {
+         * class MyDataElement : public CustomNodeElement<MyDataElement, MyDataDescription> {
+         *     typedef karabo::util::CustomNodeElement<MyDataElement, MyDataDescription> ParentType;
+         *     MyDataElement(karabo::util::Schema& s) : CustomNodeElement<MyDataElement, MyDataDescription>(s) {
          *     }
          *
          *     // If you want to expose parameters for setting defaults do like:
@@ -57,7 +72,9 @@ namespace karabo {
          * typedef MyDataElement MYDATA_ELEMENT;
          * @endcode
          *
-         *
+         * Note that it is possible to integrate the description into the custom data class, i.e. instead of providing
+         * MyDataDescription class, one can add the 'expectedParameters(..)' to 'MyData' and then use directly
+         * `MyData` as second template of the CustomNodeElement.
          *
          */
         template <class Derived, class Described>
