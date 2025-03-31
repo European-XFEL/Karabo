@@ -22,6 +22,7 @@ from time import gmtime, strftime, strptime
 from pyexistdb.exceptions import ExistDBException
 
 from ..bases import DatabaseBase
+from ..util import make_str_if_needed
 from .dbsettings import DbSettings
 from .util import LIST_DOMAINS_QUERY, ProjectDBError, assure_running
 
@@ -157,7 +158,7 @@ class ProjectDatabase(DatabaseBase):
                 res = self.dbhandle.query(query, how_many=req_cnk_size)
                 for r in res.results:
                     results.append({'uuid': r.get('uuid'),
-                                    'xml': self._make_str_if_needed(r)})
+                                    'xml': make_str_if_needed(r)})
             except ExistDBException as e:
                 raise ProjectDBError(e)
 

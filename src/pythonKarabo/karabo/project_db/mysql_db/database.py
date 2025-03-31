@@ -22,7 +22,7 @@ from sqlmodel import SQLModel, select
 from karabo.native import HashList
 
 from ..bases import DatabaseBase, HandleABC
-from ..util import ProjectDBError
+from ..util import ProjectDBError, make_str_if_needed, make_xml_if_needed
 from .db_engine import init_db_engine, init_test_db_engine
 from .db_reader import DbReader
 from .db_writer import DbWriter
@@ -340,7 +340,7 @@ class ProjectDatabase(DatabaseBase):
         # Extract some information
         try:
             # NOTE: The client might send us garbage
-            item_tree = self._make_xml_if_needed(item_xml)
+            item_tree = make_xml_if_needed(item_xml)
         except ValueError:
             msg = f'XML parse error for item "{uuid}"'
             raise ProjectDBError(msg)
@@ -373,7 +373,7 @@ class ProjectDatabase(DatabaseBase):
         item_tree.attrib['revision'] = '0'
         item_tree.attrib['alias'] = 'default'
 
-        item_xml = self._make_str_if_needed(item_tree)
+        item_xml = make_str_if_needed(item_tree)
 
         match item_type:
             case "project":
