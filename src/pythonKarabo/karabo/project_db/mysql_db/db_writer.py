@@ -413,7 +413,7 @@ class DbWriter:
                 instance.name = instance_id
                 instance.class_id = instance_class_id
                 instance.last_modified_user = instance_user
-                instance.date = datetime.datetime.now(datetime.UTC)
+                instance.date = date
                 session.add(instance)
             else:
                 # The device instance must be added to the DB

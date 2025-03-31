@@ -414,7 +414,8 @@ class ProjectDatabase(DatabaseBase):
             msg = f'XML parse error for item "{uuid}"'
             raise ProjectDBError(msg)
 
-        item_type = item_tree.attrib.get('item_type', None)
+        # XXX: Cannot be `None`
+        item_type = item_tree.attrib['item_type']
 
         if 'user' not in item_tree.attrib:
             item_tree.attrib['user'] = 'Karabo User'
