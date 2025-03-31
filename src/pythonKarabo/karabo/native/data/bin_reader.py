@@ -18,7 +18,8 @@ from struct import calcsize, unpack
 
 import numpy as np
 
-from .hash import Hash, HashByte, HashElement, HashList, Schema
+from .hash import Hash, HashByte, HashElement, HashList
+from .schema import Schema
 from .typenums import HashType
 
 __all__ = ['decodeBinary', 'decodeBinaryPos']

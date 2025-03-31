@@ -18,15 +18,15 @@ from collections import OrderedDict
 from collections.abc import Iterable
 from copy import deepcopy
 from enum import Enum
+from typing import Any
 
 import numpy as np
 import tabulate
 
-from .typenums import XML_TYPE_TO_HASH_TYPE, HashType
+from .typenums import HashType
 
 __all__ = ['get_hash_type_from_data', 'Hash', 'HashByte', 'HashElement',
-           'HashList', 'HashMergePolicy', 'is_equal', 'Schema',
-           'simple_deepcopy']
+           'HashList', 'HashMergePolicy', 'is_equal', 'simple_deepcopy']
 
 
 class HashElement:
@@ -395,22 +395,8 @@ class Hash(OrderedDict):
         return ret
 
     def deepcopy(self):
-        """This method retrieves a quick deepcopy of the `Hash` element
-
-        This method bypasses `copy.deepcopy`, assuming we only copy
-        'simple' datastructures.
-        """
-        ret = Hash()
-        # Take a list for protection from threaded access
-        iterable = list(Hash.flat_iterall(self, empty=True))
-        for key, value, attrs in iterable:
-            ret[key] = simple_deepcopy(value)
-            copy_attr = {}
-            for ak, av in attrs.items():
-                copy_attr[ak] = simple_deepcopy(av)
-            ret[key, ...] = copy_attr
-
-        return ret
+        """This method retrieves a deepcopy of the `Hash` element"""
+        return deepcopy(self)
 
     def fullyEqual(self, other):
         """Compare two `Hash` objects and check if they have equal content
@@ -557,61 +543,6 @@ class HashByte(str):
         return f"${ord(self):x}"
 
 
-class Schema:
-    """This represents a Karabo Schema, it encapsulates a schema `hash`
-    and has a `name`.
-    """
-    _hashType = HashType.Schema
-
-    def __init__(self, name=None, *, hash=None):
-        self.name = name
-        if hash is None:
-            self.hash = Hash()
-        else:
-            self.hash = hash
-
-    def copy(self, other):
-        self.hash = Hash()
-        self.hash.merge(other.hash)
-        self.name = other.name
-
-    def keyHasAlias(self, key):
-        return "alias" in self.hash[key, ...]
-
-    def getAliasAsString(self, key):
-        if self.hash.hasAttribute(key, "alias"):
-            return self.hash[key, "alias"]
-
-    def getKeyFromAlias(self, alias):
-        for k in self.hash.paths(intermediate=True):
-            if alias == self.hash[k, ...].get("alias", None):
-                return k
-
-    def __eq__(self, other):
-        if (other.__class__ is self.__class__
-                and other.name == self.name and other.hash == self.hash):
-            return True
-        return False
-
-    def __hash__(self):
-        return id(self)
-
-    def getValueType(self, key):
-        return XML_TYPE_TO_HASH_TYPE[self.hash[key, "valueType"]]
-
-    def filterByTags(self, *args):
-        args = set(args)
-        h = Hash()
-        for k in self.hash.paths(intermediate=True):
-            tags = self.hash[k, ...].get("tags", ())
-            if not args.isdisjoint(tags):
-                h[k] = self.hash[k]
-        return h
-
-    def __repr__(self):
-        return f"Schema('{self.name}', {self.hash})"
-
-
 NUMPY_TO_HASH_TYPE_VECTOR = {
     np.bool_: HashType.VectorBool,
     np.int8: HashType.VectorInt8,
@@ -723,23 +654,13 @@ def is_equal(a, b):
     return all(res) if isinstance(res, Iterable) else res
 
 
-def simple_deepcopy(value):
-    """A simple and quick deepcopy mechanism for simple data structures
-    """
-    try:
-        # dicts, sets, ndarrays
-        v = value.copy()
-    except TypeError:
-        # Must be schema
-        assert isinstance(value, Schema)
-        cpy = Schema()
-        cpy.copy(value)
-        v = cpy
-    except AttributeError:
-        try:
-            # lists, tuples, strings, unicode
-            v = value[:]
-        except TypeError:
-            # Simple values
-            v = value
-    return v
+def simple_deepcopy(value: Any):
+    """Deprecated function to deepcopy simple data structures"""
+    import warnings
+    warnings.warn(
+        "simple_deepcopy() is deprecated and will be removed in a "
+        "future version. Use copy.deepcopy() directly instead.",
+        DeprecationWarning,
+        stacklevel=2
+    )
+    return deepcopy(value)
