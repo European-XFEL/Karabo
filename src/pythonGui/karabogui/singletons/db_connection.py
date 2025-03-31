@@ -340,7 +340,8 @@ class ProjectDatabaseConnection(QObject):
         if uuid not in self._waiting_for_read:
             assert existing is not None
             self._waiting_for_read[uuid] = existing
-            item = Hash('domain', domain, 'uuid', uuid)
+            item_type = get_item_type(existing)
+            item = Hash('domain', domain, 'uuid', uuid, 'item_type', item_type)
             self._read_items_buffer.append(item)
             if len(self._read_items_buffer) >= MAX_BUFFER_ITEMS:
                 self.flush()
