@@ -22,7 +22,7 @@ from time import gmtime, strftime, strptime
 from pyexistdb.exceptions import ExistDBException
 
 from ..bases import DatabaseBase
-from ..util import make_str_if_needed
+from ..util import make_str_if_needed, make_xml_if_needed
 from .dbsettings import DbSettings
 from .util import LIST_DOMAINS_QUERY, ProjectDBError, assure_running
 
@@ -636,4 +636,110 @@ class ProjectDatabase(DatabaseBase):
                         "date": r.attrib["date"],
                         "uuid": r.attrib["uuid"]
                     })
+        return projects
+
+    def save_item(self, domain, uuid, item_xml, overwrite=False):
+        """
+        Saves a item xml file into the domain. It will
+        create a new entry if the item does not exist yet, or create a new
+        version of the item if it does exist. In case of a versioning
+        conflict the update will fail and the most current version of the
+        item file is returned.
+
+        The root node of the xml should contain a `item_type` entry identifying
+        the type of the item as one of the following:
+
+        'projects', 'scenes', 'macros', 'device_configs', 'device_servers'
+
+        If domain does not exist it is created given a user has appropriate
+        access rights.
+
+        :param domain: the domain under which this item is to be stored
+        :param uuid: the item's uuid
+        :param item_xml: the xml containing the item information
+        :param overwrite: defaults to False. If set to True versioning
+                          information is removed prior to database injection,
+                          allowing to overwrite in case of versioning
+                          conflicts.
+
+        :return: (True, dict) if successful, (false, dict) with dict
+                 representing the item's versioning information. In case of
+                 version conflict this will contain the information of the
+                 *newest existing* entry in the database. If saving was
+                 successful (no conflict), it will contain the updated
+                 versioning information after saving the item.
+
+
+        :raises: ProjectDBError on Handle Failure.
+            RuntimeError if item saving failed otherwise.
+            AttributeError if a non-supported type is passed
+        """
+
+        # create domain if necessary
+        if not self.domain_exists(domain):
+            self.add_domain(domain)
+
+        # Extract some information
+        try:
+            # NOTE: The client might send us garbage
+            item_tree = make_xml_if_needed(item_xml)
+        except ValueError:
+            msg = f'XML parse error for item "{uuid}"'
+            raise ProjectDBError(msg)
+
+        if 'user' not in item_tree.attrib:
+            item_tree.attrib['user'] = 'Karabo User'
+        if not item_tree.attrib.get('date'):
+            item_tree.attrib['date'] = strftime(DATE_FORMAT, gmtime())
+        else:
+            modified, reason = self._check_for_modification(
+                domain, uuid, item_tree.attrib['date'])
+            if modified:
+                message = "The <b>{}</b> item <b>{}</b> could not be saved: " \
+                          "{}".format(item_tree.attrib.get('item_type', ''),
+                                      item_tree.attrib.get('simple_name', ''),
+                                      reason)
+                raise ProjectDBError(message)
+            # Update time stamp
+            item_tree.attrib['date'] = strftime(DATE_FORMAT, gmtime())
+
+        # XXX: Add a revision/alias to keep old code from blowing up
+        item_tree.attrib['revision'] = '0'
+        item_tree.attrib['alias'] = 'default'
+
+        item_xml = make_str_if_needed(item_tree)
+        path = self.path(domain, uuid)
+
+        if self.dbhandle.hasDocument(path) and not overwrite:
+            raise ProjectDBError("Versioning conflict. Document exists!")
+        # NOTE: The underlying HTTP code needs bytes here...
+        success = self.dbhandle.load(item_xml.encode('utf8'), path)
+        if not success:
+            raise ProjectDBError("Saving item failed!")
+
+        meta = {}
+        meta['domain'] = domain
+        meta['uuid'] = uuid
+        meta['date'] = item_tree.attrib['date']
+        return meta
+
+    def get_projects_with_conf(self, domain, device_id):
+        """
+        Returns a dict with projects and active configurations from a device
+        name.
+
+        :param domain: DB domain
+        :param device_id: the device to return the information for.
+        :return: a dict:
+            {"project name": configuration uuid,
+             ...}
+        """
+        configs = self.get_configurations_from_device_name(domain,
+                                                           device_id)
+        projects = dict()
+        for config in configs:
+            instance_id = config["instanceid"]
+            for project in self.get_projects_from_device(domain,
+                                                         instance_id):
+                projects[project] = config["configid"]
         return projects

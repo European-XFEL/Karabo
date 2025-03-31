@@ -555,3 +555,24 @@ class ProjectDatabase(DatabaseBase):
             res_items.append(item)
 
         return res_items
+
+    def get_projects_with_conf(self, domain, device_id):
+        """
+        Returns a dict with projects and active configurations from a device
+        name.
+
+        :param domain: DB domain
+        :param device_id: the device to return the information for.
+        :return: a dict:
+            {"project name": configuration uuid,
+             ...}
+        """
+        configs = self.get_configurations_from_device_name(domain,
+                                                           device_id)
+        projects = dict()
+        for config in configs:
+            instance_id = config["instanceid"]
+            for project in self.get_projects_from_device(domain,
+                                                         instance_id):
+                projects[project] = config["configid"]
+        return projects
