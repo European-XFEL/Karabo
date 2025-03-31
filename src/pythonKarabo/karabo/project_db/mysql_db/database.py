@@ -189,55 +189,124 @@ class ProjectDatabase(DatabaseBase):
                 named_items.append(item)
         return named_items
 
+    def _load_project_item(self, uuid: str) -> dict[str, any] | None:
+        item = None
+        project = self.reader.get_project_from_uuid(uuid)
+        if project:
+            subprojects = self.reader.get_subprojects_of_project(project)
+            scenes = self.reader.get_scenes_of_project(project)
+            macros = self.reader.get_macros_of_project(project)
+            servers = self.reader.get_device_servers_of_project(project)
+            self.writer.register_project_load(project)
+            item = {
+                "uuid": uuid,
+                "xml": emit_project_xml(
+                    project, scenes, macros, servers, subprojects)}
+        return item
+
+    def _load_scene_item(self, uuid: str) -> dict[str, any] | None:
+        item = None
+        scene = self.reader.get_scene_from_uuid(uuid)
+        if scene:
+            item = {
+                "uuid": uuid,
+                "xml": emit_scene_xml(scene)}
+        return item
+
+    def _load_macro_item(self, uuid: str) -> dict[str, any] | None:
+        item = None
+        macro = self.reader.get_macro_from_uuid(uuid)
+        if macro:
+            item = {
+                "uuid": uuid,
+                "xml": emit_macro_xml(macro)}
+        return item
+
+    def _load_server_item(self, uuid: str) -> dict[str, any] | None:
+        item = None
+        server = self.reader.get_device_server_from_uuid(uuid)
+        if server:
+            instances = self.reader.get_device_instances_of_server(server)
+            item = {
+                "uuid": uuid,
+                "xml": emit_device_server_xml(server, instances)}
+        return item
+
+    def _load_instance_item(self, uuid: str) -> dict[str, any] | None:
+        item = None
+        instance = self.reader.get_device_instance_from_uuid(uuid)
+        if instance:
+            configs = self.reader.get_device_configs_of_instance(instance)
+            item = {
+                "uuid": uuid,
+                "xml": emit_device_instance_xml(instance, configs)}
+        return item
+
+    def _load_config_item(self, uuid: str) -> dict[str, any] | None:
+        item = None
+        config = self.reader.get_device_config_from_uuid(uuid)
+        if config:
+            item = {
+                "uuid": uuid,
+                "xml": emit_device_config_xml(config)}
+        return item
+
+    def _load_unknown_type(self, item_uuid):
+        item = self._load_project_item(item_uuid)
+        if item is None:
+            item = self._load_scene_item(item_uuid)
+            if item is None:
+                item = self._load_macro_item(item_uuid)
+                if item is None:
+                    item = self._load_server_item(item_uuid)
+                    if item is None:
+                        item = self._load_instance_item(item_uuid)
+                        if item is None:
+                            item = self._load_config_item(
+                                            item_uuid)
+
+        return item
+
     def load_item(self,
-                  domain: str, items_uuids: list[str]) -> list[dict[str, any]]:
+                  domain: str, items_uuids: list[str],
+                  item_type=None) -> list[dict[str, any]]:
+        """
+        Loads a list of item of a specified type from a given domain.
+
+        :param domain: the name of the domain from which the items should be
+                       loaded - not used for SQL databases; legacy from
+                       ExistDB
+        :param item_uuid: a list with the UUIDs of the items to load
+        :param item_type: the type of the items to be loaded
+        :return: A list of dictionaries with keys "uuid" and "xml".
+        :raises: ProjectDBError if an item corresponding to a given
+                 (UUID, type) combination couldn't be found.'
+        """
         loaded_items = []
         for item_uuid in items_uuids:
-            # Retrieve the appropriate model from its UUID
-            project = self.reader.get_project_from_uuid(item_uuid)
-            if project:
-                subprojects = self.reader.get_subprojects_of_project(project)
-                scenes = self.reader.get_scenes_of_project(project)
-                macros = self.reader.get_macros_of_project(project)
-                servers = self.reader.get_device_servers_of_project(project)
-                loaded_items.append({
-                    "uuid": item_uuid,
-                    "xml": emit_project_xml(
-                        project, scenes, macros, servers, subprojects)})
-                self.writer.register_project_load(project)
-                continue
-            scene = self.reader.get_scene_from_uuid(item_uuid)
-            if scene:
-                loaded_items.append({
-                    "uuid": item_uuid,
-                    "xml": emit_scene_xml(scene)})
-                continue
-            macro = self.reader.get_macro_from_uuid(item_uuid)
-            if macro:
-                loaded_items.append({
-                    "uuid": item_uuid,
-                    "xml": emit_macro_xml(macro)})
-                continue
-            server = self.reader.get_device_server_from_uuid(item_uuid)
-            if server:
-                instances = self.reader.get_device_instances_of_server(server)
-                loaded_items.append({
-                    "uuid": item_uuid,
-                    "xml": emit_device_server_xml(server, instances)})
-                continue
-            instance = self.reader.get_device_instance_from_uuid(item_uuid)
-            if instance:
-                configs = self.reader.get_device_configs_of_instance(instance)
-                loaded_items.append({
-                    "uuid": item_uuid,
-                    "xml": emit_device_instance_xml(instance, configs)})
-                continue
-            config = self.reader.get_device_config_from_uuid(item_uuid)
-            if config:
-                loaded_items.append({
-                    "uuid": item_uuid,
-                    "xml": emit_device_config_xml(config)})
-                continue
+            item = None
+            match item_type:
+                case "project":
+                    item = self._load_project_item(item_uuid)
+                case "macro":
+                    item = self._load_macro_item(item_uuid)
+                case "scene":
+                    item = self._load_scene_item(item_uuid)
+                case "device_server":
+                    item = self._load_server_item(item_uuid)
+                case "device_instance":
+                    item = self._load_instance_item(item_uuid)
+                case "device_config":
+                    item = self._load_config_item(item_uuid)
+                case _:
+                    # item_type not known; try exhaustively by UUID
+                    item = self._load_unknown_type(item_uuid)
+            if item is not None:
+                loaded_items.append(item)
+            else:
+                raise ProjectDBError(
+                    f'No item with UUID "{item_uuid}" of type "{item_type}" '
+                    'found in the database. Load incomplete.')
         return loaded_items
 
     def _check_for_modification(self,
@@ -249,8 +318,8 @@ class ProjectDatabase(DatabaseBase):
         :param uuid: the item's uuid
         :param old_date: the item's last modified time stamp
         :param item_type: the type of the item to be checked (e.g. 'project')
-        :return A tuple stating whether the item was modified inbetween and a
-                string describing the reason
+        :return: A tuple stating whether the item was modified inbetween and a
+                 string describing the reason
         """
         current_modified = None
         match item_type:
