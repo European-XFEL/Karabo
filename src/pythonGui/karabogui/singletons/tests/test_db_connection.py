@@ -80,7 +80,8 @@ def test_connection(gui_app, mocker):
         db_conn.flush()
         network.onProjectLoadItems.assert_called_with(
             KARABO_PROJECT_MANAGER,
-            [Hash("domain", domain, "uuid", project_uuid)]
+            [Hash("domain", domain, "uuid", project_uuid,
+                  "item_type", "project")]
         )
 
         data = {"success": True,
