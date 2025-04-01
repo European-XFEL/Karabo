@@ -16,20 +16,39 @@
 # flake8: noqa: E501
 # this file contains xquery code
 import os
+from subprocess import check_call
 from textwrap import dedent
-from time import gmtime, strftime, strptime
+from time import gmtime, sleep, strftime, strptime
 
+from pyexistdb.db import ExistDB
 from pyexistdb.exceptions import ExistDBException
+from urllib3.exceptions import HTTPError
+
+from karabo.project_db.bases import HandleABC
+from karabo.project_db.util import ProjectDBError
 
 from ..bases import DatabaseBase
+from ..const import DATE_FORMAT
 from ..util import make_str_if_needed, make_xml_if_needed
 from .dbsettings import DbSettings
-from .util import LIST_DOMAINS_QUERY, ProjectDBError, assure_running
 
-DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
+# The default password of the docker image:
+# https://git.xfel.eu/ITDM/docker_existdb
+TESTDB_ADMIN_PASSWORD = "change_me_please"
 
 
-class ProjectDatabase(DatabaseBase):
+def get_db_credentials(is_test):
+    # in production the KARABO_PROJECT_DB_USER and KARABO_PROJECT_DB_PASSWORD
+    # should be set to the username and password of the configDB.
+    # Alternatively, the username and password will be defaulted to 'karabo'
+    default_user = 'admin' if is_test else 'karabo'
+    default_pwd = TESTDB_ADMIN_PASSWORD if is_test else 'karabo'
+    user = os.getenv('KARABO_PROJECT_DB_USER', default_user)
+    password = os.getenv('KARABO_PROJECT_DB_PASSWORD', default_pwd)
+    return user, password
+
+
+class ExistDatabase(DatabaseBase):
 
     def __init__(self, user, password, server=None, port=None,
                  test_mode=False, init_db=False):
@@ -76,7 +95,7 @@ class ProjectDatabase(DatabaseBase):
     def onEnter(self):
         return assure_running(self.settings)
 
-    def _check_for_modification(self, domain, uuid, old_date):
+    async def _check_for_modification(self, domain, uuid, old_date):
         """ Check whether the item with of the given `domain` and `uuid` was
         modified
 
@@ -117,7 +136,7 @@ class ProjectDatabase(DatabaseBase):
             reason = "Versioning conflict! Document modified inbetween."
         return modified, reason
 
-    def load_item(self, domain, items):
+    async def load_item(self, domain, items):
         """
         Load an item or items from `domain`
         :param domain: a domain to load from
@@ -164,7 +183,7 @@ class ProjectDatabase(DatabaseBase):
 
         return results
 
-    def list_items(self, domain, item_types=None):
+    async def list_items(self, domain, item_types=None):
         """
         List items in domain which match item_types if given, or all items
         if not given
@@ -226,7 +245,7 @@ class ProjectDatabase(DatabaseBase):
         except ExistDBException as e:
             raise ProjectDBError(e)
 
-    def list_named_items(self, domain, item_type, simple_name):
+    async def list_named_items(self, domain, item_type, simple_name):
         """
         List items in domain which match item_type and simple_name
 
@@ -284,7 +303,7 @@ class ProjectDatabase(DatabaseBase):
         except ExistDBException as e:
             raise ProjectDBError(e)
 
-    def list_domains(self):
+    async def list_domains(self):
         """
         List top level domains in database
         :return:
@@ -410,7 +429,7 @@ class ProjectDatabase(DatabaseBase):
                    config_updates_2=res[4].text))
         print(msg)
 
-    def update_attributes(self, items):
+    async def update_attributes(self, items):
         """ Update attribute for the given ``items``
 
         :param items: list of Hashes containing information on which items
@@ -463,7 +482,7 @@ class ProjectDatabase(DatabaseBase):
                 raise ProjectDBError(f"Failed updating attribute: {e}")
         return res_items
 
-    def get_configurations_from_device_name(self, domain, instance_id):
+    async def get_configurations_from_device_name(self, domain, instance_id):
         """
         Returns a list of configurations for a given device
         :param domain: DB domain
@@ -495,7 +514,7 @@ class ProjectDatabase(DatabaseBase):
                  "instanceid": r.attrib["instanceid"]} for r in
                 res.results[0].getchildren()]
 
-    def get_configurations_from_device_name_part(self, domain, device_id_part):
+    async def get_configurations_from_device_name_part(self, domain, device_id_part):
         """
         Returns a list of configurations for a given device
         :param domain: DB domain
@@ -533,7 +552,7 @@ class ProjectDatabase(DatabaseBase):
                  "device_id": r.attrib["device_id"]} for r in
                 res.results[0].getchildren()]
 
-    def get_projects_from_device(self, domain, uuid):
+    async def get_projects_from_device(self, domain, uuid):
         """
         Returns the projects which contain a device instance with a given uuid
 
@@ -577,7 +596,7 @@ class ProjectDatabase(DatabaseBase):
                          res.results[0].getchildren()}
         return projects
 
-    def get_projects_data_from_device(self, domain, uuid):
+    async def get_projects_data_from_device(self, domain, uuid):
         """
         Returns the projects which contain a device instance with a given uuid
 
@@ -638,7 +657,34 @@ class ProjectDatabase(DatabaseBase):
                     })
         return projects
 
-    def save_item(self, domain, uuid, item_xml, overwrite=False):
+    def domain_exists(self, domain: str):
+        """
+        Checks if a given domain exists.
+        :param domain: the domain to check
+        :return: True if it exists, false otherwise
+        """
+        path = f"{self.root}/{domain}"
+        return self.dbhandle.hasCollection(path)
+
+    def add_domain(self, domain: str):
+        """
+        Adds a domain to the project database. A domain is a top-level
+        collection located directly underneath the self.root collection. When
+        created the following collections will be added to the domain:
+        projects, scenes, macros, configs, device_servers, and resources.
+
+        :param domain: the name of the domain to be created
+        :return:None
+        :raises: ProjectDBError on Handle failure,
+                 or RuntimeError if domain creation failed otherwise
+        """
+        path = f"{self.root}/{domain}"
+        success = self.dbhandle.createCollection(path)
+
+        if not success:
+            raise RuntimeError(f"Failed to create domain at {path}")
+
+    async def save_item(self, domain, uuid, item_xml, overwrite=False):
         """
         Saves a item xml file into the domain. It will
         create a new entry if the item does not exist yet, or create a new
@@ -692,7 +738,7 @@ class ProjectDatabase(DatabaseBase):
         if not item_tree.attrib.get('date'):
             item_tree.attrib['date'] = strftime(DATE_FORMAT, gmtime())
         else:
-            modified, reason = self._check_for_modification(
+            modified, reason = await self._check_for_modification(
                 domain, uuid, item_tree.attrib['date'])
             if modified:
                 message = "The <b>{}</b> item <b>{}</b> could not be saved: " \
@@ -723,7 +769,7 @@ class ProjectDatabase(DatabaseBase):
         meta['date'] = item_tree.attrib['date']
         return meta
 
-    def get_projects_with_conf(self, domain, device_id):
+    async def get_projects_with_conf(self, domain, device_id):
         """
         Returns a dict with projects and active configurations from a device
         name.
@@ -734,12 +780,95 @@ class ProjectDatabase(DatabaseBase):
             {"project name": configuration uuid,
              ...}
         """
-        configs = self.get_configurations_from_device_name(domain,
-                                                           device_id)
+        configs = await self.get_configurations_from_device_name(
+            domain, device_id)
         projects = dict()
         for config in configs:
             instance_id = config["instanceid"]
-            for project in self.get_projects_from_device(domain,
-                                                         instance_id):
+            for project in await self.get_projects_from_device(
+                domain, instance_id):
                 projects[project] = config["configid"]
         return projects
+
+
+LIST_DOMAINS_QUERY = """
+    xquery version "3.0";
+    <collections>{{
+    for $c in xmldb:get-child-collections("{}")
+    return <item>{{$c}}</item>}}
+    </collections>
+    """
+
+
+class ExistDBHandle(ExistDB, HandleABC):
+    """Adapter for HandleABC"""
+
+
+def assure_running(db_settings):
+    """
+    Assures an instance of existDB is running on your **local** host if the
+    KARABO_PROJECT_DB environment variable points to localhost or has not been
+    set. Otherwise tries to contact the remote database to assure that the data
+    base is reachable
+    :param db_settings, a DbSettings object
+    :return: None
+    """
+    karabo_install = os.getenv('KARABO')
+
+    if db_settings.server == 'localhost':
+        # we execute the start script for the database.
+        # If a database is already started, the script will not start a second
+        script_path = os.path.join(karabo_install, 'bin',
+                                   'karabo-startprojectdb')
+        check_call([script_path])
+        # wait until the database is actually up
+        max_timeout = 60
+        wait_between = 5
+        count = 0
+        while True:
+            try:
+                return verify_db(db_settings)
+            except (TimeoutError, HTTPError, ExistDBException) as last_ex:
+                if count > max_timeout//wait_between:
+                    raise TimeoutError("Starting project database timed"
+                                       " out! Last exception: {}"
+                                       .format(last_ex))
+            sleep(wait_between)
+            count += 1
+    else:
+        try:
+            return verify_db(db_settings)
+        except ExistDBException as e:
+            raise ProjectDBError("Could not contact the database server"
+                                 " at {}: {}".format(db_settings.server, e))
+
+
+def init_db(db_settings, dbhandle):
+
+    def init_collection(coll_name):
+        if not dbhandle.hasCollection(coll_name):
+            dbhandle.createCollection(coll_name)
+
+    # test root
+    init_collection(db_settings.root_collection_test)
+    # root
+    init_collection(db_settings.root_collection)
+    try:
+        query = LIST_DOMAINS_QUERY.format(db_settings.root_collection)
+        r = dbhandle.query(query)
+        assert len(r.results[0]) != 0
+    except (ExistDBException, AssertionError):
+        # LOCAL domain
+        init_collection(f"{db_settings.root_collection}/LOCAL")
+
+
+def verify_db(db_settings):
+    dbhandle = ExistDBHandle(db_settings.server_url)
+    if db_settings.init_db:
+        init_db(db_settings, dbhandle)
+    if not dbhandle.hasCollection(db_settings.root_collection):
+        raise ProjectDBError("An eXistDB instance without karabo "
+                             "collections was found running on {}."
+                             .format(db_settings.server))
+    if dbhandle.hasCollection('/system'):
+        return dbhandle

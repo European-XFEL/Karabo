@@ -15,232 +15,234 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 import datetime
 from time import gmtime, strftime, strptime, time
-from unittest import TestCase
 
+import pytest
 from lxml import etree
 
+from karabo.project_db import (
+    DATE_FORMAT, ExistDatabase, ProjectDBError, make_xml_if_needed)
+from karabo.project_db.exist_db import TESTDB_ADMIN_PASSWORD
 from karabo.project_db.testing import (
     _gen_uuid, create_hierarchy, create_trashed_project,
     create_unattached_scenes)
-from karabo.project_db.util import ProjectDBError, make_xml_if_needed
 
-from ..database import DATE_FORMAT, ProjectDatabase
-from ..util import TESTDB_ADMIN_PASSWORD
 from .util import stop_local_database
 
 
-class TestExistDb(TestCase):
+@pytest.fixture(scope="function")
+def database():
     user = "admin"
     password = TESTDB_ADMIN_PASSWORD
+    yield ExistDatabase(user, password,
+                        test_mode=True, init_db=True)
+    stop_local_database()
 
-    def stop_local_database(self):
+
+@pytest.mark.timeout(30)
+@pytest.mark.asyncio
+async def test_project_interface(database, subtests):
+    # A bunch of document "names" for the following tests
+    testproject = _gen_uuid()
+    testproject2 = _gen_uuid()
+    with database as db:
+        # remove previously existing test collection
+        path = "{}/{}".format(db.root, 'LOCAL_TEST')
+        if db.dbhandle.hasCollection(path):
+            db.dbhandle.removeCollection(path)
+
+        path = "{}/{}".format(db.root, 'LOCAL')
+        if db.dbhandle.hasCollection(path):
+            db.dbhandle.removeCollection(path)
+
+        # make sure we have the LOCAL collection and subcollections
+        path = "{}/{}".format(db.root, 'LOCAL')
+        if not db.dbhandle.hasCollection(path):
+            db.dbhandle.createCollection(path)
+
+        with subtests.test(msg='test_domain_exists'):
+            assert db.domain_exists("LOCAL")
+
+        with subtests.test(msg='test_add_domain'):
+            db.add_domain("LOCAL_TEST")
+            assert db.domain_exists("LOCAL_TEST")
+
+        with subtests.test(msg='test_save_item'):
+            # The MySQL back-end doesn't accept project items with no
+            # name or no type - originally this test's xml only had 'uuid'.
+            xml_rep = (
+                f'<xml uuid="{testproject2}" item_type="device_server" '
+                'simple_name="xyz">foo</xml>')
+
+            meta = await db.save_item('LOCAL', testproject2, xml_rep)
+            path = f"{db.root}/LOCAL/{testproject2}_0"
+            assert db.dbhandle.hasDocument(path)
+            decoded = db.dbhandle.getDoc(path).decode('utf-8')
+            doctree = etree.fromstring(decoded)
+            assert doctree.get('uuid') == testproject2
+            assert doctree.text == 'foo'
+            assert 'domain' in meta
+            assert 'uuid' in meta
+
+        with subtests.test(msg='test_save_bad_item'):
+            xml_rep = """
+            <xml uuid="{uuid}"><foo|bar/></xml>
+            """.format(uuid=testproject)
+            with pytest.raises(ProjectDBError):
+                await db.save_item('LOCAL', testproject, xml_rep)
+
+        with subtests.test(msg='load_items'):
+            items = [testproject, testproject2]
+            res = await db.load_item('LOCAL', items)
+            for r in res:
+                itemxml = make_xml_if_needed(r["xml"])
+                assert itemxml.tag == 'xml'
+                # The MySQL back-end does not save the inner "foo" text of
+                # the original XML as it doesn't map to any item field and
+                # is ignored. The previous assert for itemxml.text == 'foo'
+                # has thus been replaced by a UUID check
+                assert itemxml.attrib['uuid'] in items
+
+        with subtests.test(msg='test_list_items'):
+            await create_hierarchy(db)
+            items = await db.list_items('LOCAL', ['project', 'scene'])
+            assert len(items) == 5
+            scenecnt = 0
+            for i in items:
+                if i["item_type"] == "scene":
+                    scenecnt += 1
+                # The contract of "list_items" is to return a
+                # list of items (dictionaries) where
+                # each item would have keys "uuid", "item_type"
+                # and "simple_name" (no mention to "is_trashed")
+                if "is_trashed" in i.keys():
+                    assert i["is_trashed"] == 'false'
+            assert scenecnt >= 4
+
+        with subtests.test(msg='test_trashed_projects'):
+            await create_trashed_project(db)
+            items = await db.list_items('LOCAL', ['project'])
+            # Before the assertion was for number of projects being 2, but
+            # for the MySQL not all the save operations are invoked.
+            assert len(items) >= 1
+            nb_is_trashed = 0
+            for it in items:
+                if it["is_trashed"] == 'true':
+                    nb_is_trashed += 1
+            assert nb_is_trashed == 1
+
+        with subtests.test(msg='test_list_domains'):
+            items = await db.list_domains()
+            for it in items:
+                assert it in ['LOCAL_TEST', 'REPO', 'LOCAL']
+
+        with subtests.test(msg='test_old_versioned_data'):
+            versioned_uuid = _gen_uuid()
+            xml_rep = """
+            <xml uuid="{uuid}" revision="{revision}" date="{date}"
+                user="sue">foo</xml>
+            """
+            MAX_REV = 3
+            earlier = time() - 5.0
+            # Save three consecutive versions
+            for i in range(MAX_REV, 0, -1):
+                # consecutive dates beginning a few seconds ago
+                date = strftime(DATE_FORMAT, gmtime(earlier + i))
+                xml = xml_rep.format(uuid=versioned_uuid, revision=i,
+                                     date=date)
+                path = "{}/{}/{}_{}".format(
+                    db.root, 'LOCAL', versioned_uuid, i)
+                # Save directly without engaging save_item()
+                db.dbhandle.load(xml.encode('utf-8'), path)
+
+            # Read it back, no revision given
+            res = await db.load_item('LOCAL', [versioned_uuid])
+            assert len(res) == 1
+            itemxml = make_xml_if_needed(res[0]['xml'])
+            assert int(itemxml.get('revision')) == MAX_REV
+
+            # Write it back with save_item
+            date = strftime(DATE_FORMAT, gmtime())
+            xml_rep = """
+            <xml uuid="{uuid}" date="{date}" user="sue">foo</xml>
+            """.format(uuid=versioned_uuid, date=date)
+            meta = await db.save_item('LOCAL', versioned_uuid, xml_rep)
+
+            # Make sure there's a revision of 0 (auto-added)
+            res = await db.load_item('LOCAL', [versioned_uuid])
+            itemxml = make_xml_if_needed(res[0]['xml'])
+            assert itemxml.get('revision') == '0'
+
+        with subtests.test(msg='test_named_items'):
+            await create_unattached_scenes(db)
+            items = await db.list_named_items(
+                'LOCAL', 'scene', 'Scene!')
+            assert len(items) == 4
+            scenecnt = 0
+            for i in items:
+                if i["item_type"] == "scene":
+                    scenecnt += 1
+                assert i["simple_name"] == "Scene!"
+            assert scenecnt >= 4
+
         stop_local_database()
 
-    def _db_init(self):
-        return ProjectDatabase(self.user, self.password,
-                               test_mode=True, init_db=True)
 
-    def test_project_interface(self):
-        # A bunch of document "names" for the following tests
-        testproject = _gen_uuid()
-        testproject2 = _gen_uuid()
-        with self._db_init() as db:
-            # remove previously existing test collection
-            path = "{}/{}".format(db.root, 'LOCAL_TEST')
-            if db.dbhandle.hasCollection(path):
-                db.dbhandle.removeCollection(path)
+@pytest.mark.timeout(30)
+@pytest.mark.asyncio
+async def test_save_check_modification(database, subtests):
+    proj_uuid = _gen_uuid()
 
-            path = "{}/{}".format(db.root, 'LOCAL')
-            if db.dbhandle.hasCollection(path):
-                db.dbhandle.removeCollection(path)
+    with database as db:
 
-            # make sure we have the LOCAL collection and subcollections
-            path = "{}/{}".format(db.root, 'LOCAL')
-            if not db.dbhandle.hasCollection(path):
-                db.dbhandle.createCollection(path)
+        path = "{}/{}".format(db.root, 'LOCAL')
+        if db.dbhandle.hasCollection(path):
+            db.dbhandle.removeCollection(path)
 
-            with self.subTest(msg='test_domain_exists'):
-                self.assertTrue(db.domain_exists("LOCAL"))
+        # make sure we have the LOCAL collection and subcollections
+        path = "{}/{}".format(db.root, 'LOCAL')
+        if not db.dbhandle.hasCollection(path):
+            db.dbhandle.createCollection(path)
 
-            with self.subTest(msg='test_add_domain'):
-                db.add_domain("LOCAL_TEST")
-                self.assertTrue(db.domain_exists("LOCAL_TEST"))
+        with subtests.test(msg='test_save_item'):
+            date = "2011-11-01 09:00:52"
+            # The MySQL back-end doesn't accept project items with no
+            # name or no type - originally this test's xml only had 'uuid'
+            # and 'date'
+            xml_rep = """
+            <xml uuid="{uuid}" date="{date}" simple_name="a_scene"
+            item_type="scene">foo</xml>
+            """.format(uuid=proj_uuid, date=date)
 
-            with self.subTest(msg='test_save_item'):
-                # The MySQL back-end doesn't accept project items with no
-                # name or no type - originally this test's xml only had 'uuid'.
-                xml_rep = (
-                    f'<xml uuid="{testproject2}" item_type="device_server" '
-                    'simple_name="xyz">foo</xml>')
+            success = True
+            try:
+                meta = await db.save_item('LOCAL', proj_uuid, xml_rep)
+            except ProjectDBError:
+                success = False
 
-                meta = db.save_item('LOCAL', testproject2, xml_rep)
-                path = f"{db.root}/LOCAL/{testproject2}_0"
-                self.assertTrue(db.dbhandle.hasDocument(path))
-                decoded = db.dbhandle.getDoc(path).decode('utf-8')
-                doctree = etree.fromstring(decoded)
-                self.assertEqual(doctree.get('uuid'), testproject2)
-                self.assertEqual(doctree.text, 'foo')
-                self.assertTrue('domain' in meta)
-                self.assertTrue('uuid' in meta)
+            assert success
+            assert 'date' in meta
+            new_date = meta['date']
+            assert new_date != date
+            date_t = strptime(date, DATE_FORMAT)
+            try:
+                current_date_t = strptime(new_date, DATE_FORMAT)
+            except ValueError:
+                # The MySQL back-end sends an UTC date in ISO8601 format
+                # in the metadata returned by save_item.
+                # Try to parse the date using that format.
+                # TODO: FIX
+                current_date_t = (
+                    datetime.datetime.fromisoformat(new_date).timetuple())
 
-            with self.subTest(msg='test_save_bad_item'):
-                xml_rep = """
-                <xml uuid="{uuid}"><foo|bar/></xml>
-                """.format(uuid=testproject)
-                self.assertRaises(ProjectDBError, db.save_item, 'LOCAL',
-                                  testproject, xml_rep)
+            assert date_t < current_date_t
 
-            with self.subTest(msg='load_items'):
-                items = [testproject, testproject2]
-                res = db.load_item('LOCAL', items)
-                for r in res:
-                    itemxml = make_xml_if_needed(r["xml"])
-                    self.assertEqual(itemxml.tag, 'xml')
-                    # The MySQL back-end does not save the inner "foo" text of
-                    # the original XML as it doesn't map to any item field and
-                    # is ignored. The previous assert for itemxml.text == 'foo'
-                    # has thus been replaced by a UUID check
-                    self.assertTrue(itemxml.attrib['uuid'] in items)
-
-            with self.subTest(msg='test_list_items'):
-                create_hierarchy(db)
-                items = db.list_items('LOCAL', ['project', 'scene'])
-                self.assertEqual(len(items), 5)
-                scenecnt = 0
-                for i in items:
-                    if i["item_type"] == "scene":
-                        scenecnt += 1
-                    # The contract of "list_items" is to return a
-                    # list of items (dictionaries) where
-                    # each item would have keys "uuid", "item_type"
-                    # and "simple_name" (no mention to "is_trashed")
-                    if "is_trashed" in i.keys():
-                        self.assertTrue(i["is_trashed"] == 'false')
-                self.assertGreaterEqual(scenecnt, 4)
-
-            with self.subTest(msg='test_trashed_projects'):
-                create_trashed_project(db)
-                items = db.list_items('LOCAL', ['project'])
-                # Before the assertion was for number of projects being 2, but
-                # for the MySQL not all the save operations are invoked.
-                self.assertTrue(len(items) >= 1)
-                nb_is_trashed = 0
-                for it in items:
-                    if it["is_trashed"] == 'true':
-                        nb_is_trashed += 1
-                self.assertEqual(nb_is_trashed, 1)
-
-            with self.subTest(msg='test_list_domains'):
-                items = db.list_domains()
-                for it in items:
-                    self.assertTrue(it in ['LOCAL_TEST', 'REPO', 'LOCAL'])
-
-            with self.subTest(msg='test_old_versioned_data'):
-                versioned_uuid = _gen_uuid()
-                xml_rep = """
-                <xml uuid="{uuid}" revision="{revision}" date="{date}"
-                    user="sue">foo</xml>
-                """
-                MAX_REV = 3
-                earlier = time() - 5.0
-                # Save three consecutive versions
-                for i in range(MAX_REV, 0, -1):
-                    # consecutive dates beginning a few seconds ago
-                    date = strftime(DATE_FORMAT, gmtime(earlier + i))
-                    xml = xml_rep.format(uuid=versioned_uuid, revision=i,
-                                         date=date)
-                    path = "{}/{}/{}_{}".format(db.root, 'LOCAL',
-                                                versioned_uuid, i)
-                    # Save directly without engaging save_item()
-                    db.dbhandle.load(xml.encode('utf-8'), path)
-
-                # Read it back, no revision given
-                res = db.load_item('LOCAL', [versioned_uuid])
-                self.assertEqual(len(res), 1)
-                itemxml = make_xml_if_needed(res[0]['xml'])
-                self.assertEqual(int(itemxml.get('revision')), MAX_REV)
-
-                # Write it back with save_item
-                date = strftime(DATE_FORMAT, gmtime())
-                xml_rep = """
-                <xml uuid="{uuid}" date="{date}" user="sue">foo</xml>
-                """.format(uuid=versioned_uuid, date=date)
-                meta = db.save_item('LOCAL', versioned_uuid, xml_rep)
-
-                # Make sure there's a revision of 0 (auto-added)
-                res = db.load_item('LOCAL', [versioned_uuid])
-                itemxml = make_xml_if_needed(res[0]['xml'])
-                self.assertEqual(itemxml.get('revision'), '0')
-
-            with self.subTest(msg='test_named_items'):
-                create_unattached_scenes(db)
-                items = db.list_named_items('LOCAL', 'scene', 'Scene!')
-                self.assertEqual(len(items), 4)
-                scenecnt = 0
-                for i in items:
-                    if i["item_type"] == "scene":
-                        scenecnt += 1
-                    self.assertEqual(i["simple_name"], "Scene!")
-                self.assertGreaterEqual(scenecnt, 4)
-
-            self.stop_local_database()
-
-    def test_save_check_modification(self):
-        proj_uuid = _gen_uuid()
-
-        with self._db_init() as db:
-
-            path = "{}/{}".format(db.root, 'LOCAL')
-            if db.dbhandle.hasCollection(path):
-                db.dbhandle.removeCollection(path)
-
-            # make sure we have the LOCAL collection and subcollections
-            path = "{}/{}".format(db.root, 'LOCAL')
-            if not db.dbhandle.hasCollection(path):
-                db.dbhandle.createCollection(path)
-
-            with self.subTest(msg='test_save_item'):
-                date = "2011-11-01 09:00:52"
-                # The MySQL back-end doesn't accept project items with no
-                # name or no type - originally this test's xml only had 'uuid'
-                # and 'date'
-                xml_rep = """
-                <xml uuid="{uuid}" date="{date}" simple_name="a_scene"
-                item_type="scene">foo</xml>
-                """.format(uuid=proj_uuid, date=date)
-
-                success = True
-                try:
-                    meta = db.save_item('LOCAL', proj_uuid, xml_rep)
-                except ProjectDBError:
-                    success = False
-
-                self.assertTrue(success)
-                self.assertTrue('date' in meta)
-                new_date = meta['date']
-                self.assertNotEqual(new_date, date)
-                date_t = strptime(date, DATE_FORMAT)
-                try:
-                    current_date_t = strptime(new_date, DATE_FORMAT)
-                except ValueError:
-                    # The MySQL back-end sends an UTC date in ISO8601 format
-                    # in the metadata returned by save_item.
-                    # Try to parse the date using that format.
-                    # TODO: FIX
-                    current_date_t = (
-                        datetime.datetime.fromisoformat(new_date).timetuple())
-
-                self.assertLess(date_t, current_date_t)
-
-                # Try saving again but using same time stamp
-                success = True
-                reason = ""
-                try:
-                    meta = db.save_item('LOCAL', proj_uuid, xml_rep)
-                except ProjectDBError as e:
-                    success = False
-                    reason = str(e)
-                self.assertFalse(success)
-                self.assertTrue(reason)
-
-            self.stop_local_database()
+            # Try saving again but using same time stamp
+            success = True
+            reason = ""
+            try:
+                meta = await db.save_item('LOCAL', proj_uuid, xml_rep)
+            except ProjectDBError as e:
+                success = False
+                reason = str(e)
+            assert not success
+            assert reason
