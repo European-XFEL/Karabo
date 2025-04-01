@@ -24,9 +24,7 @@ from karabo.middlelayer import (
     Slot, String, TypeHash, VectorString, dictToHash, slot)
 from karabo.middlelayer.signalslot import Signal
 from karabo.native import read_project_model
-from karabo.project_db.exist_db.node import ExistDbNode
-from karabo.project_db.mysql_db.node import MySqlNode
-from karabo.project_db.util import ProjectDBError
+from karabo.project_db import ExistDbNode, MySqlNode, ProjectDBError
 
 
 def get_project():
@@ -108,7 +106,7 @@ class ProjectManager(Device):
         return self.host.value, self.port.value
 
     @slot
-    def slotGetScene(self, params):
+    async def slotGetScene(self, params):
         """Request a scene directly from the database in the correct format
 
         This protocol is in the style of the capability protocol and expects
@@ -138,7 +136,7 @@ class ProjectManager(Device):
         payload.set('name', name)
         with self.user_db_sessions[token] as db_session:
             try:
-                items = db_session.load_item(domain, uuid)
+                items = await db_session.load_item(domain, uuid)
                 for item in items:
                     xml = item['xml']
                     item_type = etree.fromstring(xml).get('item_type')
@@ -179,7 +177,7 @@ class ProjectManager(Device):
         if token not in self.user_db_sessions:
             raise RuntimeError("You need to init a database session first")
 
-    def _save_items(self, token, items):
+    async def _save_items(self, token, items):
         """Internally used method to store items in the project database"""
         savedItems = []
         projectUuids = []
@@ -199,7 +197,8 @@ class ProjectManager(Device):
                 success = True
                 meta = None
                 try:
-                    meta = db_session.save_item(domain, uuid, xml, overwrite)
+                    meta = await db_session.save_item(
+                        domain, uuid, xml, overwrite)
                     meta = dictToHash(meta)
                 except ProjectDBError as e:
                     success = False
@@ -212,7 +211,7 @@ class ProjectManager(Device):
         return savedItems, projectUuids
 
     @slot
-    def slotGenericRequest(self, params):
+    async def slotGenericRequest(self, params):
         """Implements a generic Hash-in/Hash-out interface
 
         :param params: the input Hash.
@@ -233,31 +232,31 @@ class ProjectManager(Device):
             action_type = params["type"]
             token = params["token"]  # session token
             if action_type == "listItems":
-                return self.slotListItems(token,
-                                          params['domain'],
-                                          params.get('item_types', None))
+                return await self.slotListItems(
+                    token, params['domain'],
+                    params.get('item_types', None))
             elif action_type == "loadItems":
-                return self.slotLoadItems(token, params['items'])
+                return await self.slotLoadItems(token, params['items'])
             elif action_type == "listDomains":
-                return self.slotListDomains(token)
+                return await self.slotListDomains(token)
             elif action_type == "updateAttribute":
-                return self.slotUpdateAttribute(token, params['items'])
+                return await self.slotUpdateAttribute(token, params['items'])
             elif action_type == "saveItems":
-                return self.slotSaveItems(token, params['items'],
-                                          params.get('client', None))
+                return await self.slotSaveItems(
+                    token, params['items'], params.get('client', None))
             elif action_type == "beginUserSession":
                 return self.slotBeginUserSession(token)
             elif action_type == "endUserSession":
                 return self.slotEndUserSession(token)
             elif action_type == "listProjectsWithDevice":
-                return self.slotListProjectsWithDevice(params)
+                return await self.slotListProjectsWithDevice(params)
             else:
                 raise NotImplementedError(f"{type} not implemented")
         except Exception as e:
             return Hash("success", False, "reason", f"{type(e)}: {e}")
 
     @slot
-    def slotSaveItems(self, token, items, client=None):
+    async def slotSaveItems(self, token, items, client=None):
         """Save items in project database
 
         :param token: database user token
@@ -279,7 +278,7 @@ class ProjectManager(Device):
         self.logger.debug("Saving items: {}".format([i.get("uuid") for i in
                                                      items]))
         self._checkDbInitialized(token)
-        saved, uuids = self._save_items(token, items)
+        saved, uuids = await self._save_items(token, items)
         if client and uuids:
             self.signalProjectUpdate(Hash("projects", uuids,
                                           "client", client),
@@ -288,7 +287,7 @@ class ProjectManager(Device):
         return Hash('items', saved)
 
     @slot
-    def slotLoadItems(self, token, items):
+    async def slotLoadItems(self, token, items):
         """
         Loads items from the database
 
@@ -318,7 +317,7 @@ class ProjectManager(Device):
             assert len(keys) == len(items), "Incorrect domain given!"
 
             try:
-                items = db_session.load_item(domain, keys)
+                items = await db_session.load_item(domain, keys)
                 for item in items:
                     uuid = item["uuid"]
                     h = Hash("domain", domain,
@@ -341,7 +340,7 @@ class ProjectManager(Device):
                     'reason', exceptionReason)
 
     @slot
-    def slotListItems(self, token, domain, item_types=None):
+    async def slotListItems(self, token, domain, item_types=None):
         """
         List items in domain which match item_types if given, or all items
         if not given
@@ -359,7 +358,7 @@ class ProjectManager(Device):
             success = True
             resHashes = []
             try:
-                res = db_session.list_items(domain, item_types)
+                res = await db_session.list_items(domain, item_types)
                 for r in res:
                     h = Hash('uuid', r['uuid'],
                              'item_type', r['item_type'],
@@ -377,7 +376,7 @@ class ProjectManager(Device):
                     'reason', exceptionReason)
 
     @slot
-    def slotListNamedItems(self, token, domain, item_type, simple_name):
+    async def slotListNamedItems(self, token, domain, item_type, simple_name):
         """
         List items in domain which match item_type and simple_name
 
@@ -395,7 +394,7 @@ class ProjectManager(Device):
             success = True
             resHashes = []
             try:
-                res = db_session.list_named_items(
+                res = await db_session.list_named_items(
                     domain, item_type, simple_name)
                 for r in res:
                     h = Hash('uuid', r['uuid'],
@@ -415,7 +414,7 @@ class ProjectManager(Device):
                     'reason', exceptionReason)
 
     @slot
-    def slotListDomains(self, token):
+    async def slotListDomains(self, token):
         """
         List domains available on this database
 
@@ -429,7 +428,7 @@ class ProjectManager(Device):
             exceptionReason = ""
             res = []
             try:
-                res = db_session.list_domains()
+                res = await db_session.list_domains()
                 if len(self.domainList):
                     res = [domain for domain in res
                            if domain in self.domainList]
@@ -441,7 +440,7 @@ class ProjectManager(Device):
                         'reason', exceptionReason)
 
     @slot
-    def slotListProjectsWithDevice(self, args):
+    async def slotListProjectsWithDevice(self, args):
         """
         List projects in domain which have configurations for a given device.
 
@@ -481,7 +480,8 @@ class ProjectManager(Device):
             success = True
             try:
                 res_prjs = []
-                prjs = db_session.get_projects_with_device(domain, device_id)
+                prjs = await db_session.get_projects_with_device(
+                    domain, device_id)
                 for prj in prjs:
                     res_prjs.append(
                         Hash("name", prj["projectname"],
@@ -496,7 +496,7 @@ class ProjectManager(Device):
                         'reason', exceptionReason)
 
     @slot
-    def slotUpdateAttribute(self, token, items):
+    async def slotUpdateAttribute(self, token, items):
         """
         Update any attribute of given ``items`` in the database
 
@@ -522,7 +522,7 @@ class ProjectManager(Device):
             success = True
             resHashes = []
             try:
-                res = db_session.update_attributes(items)
+                res = await db_session.update_attributes(items)
                 for r in res:
                     h = Hash('domain', r['domain'],
                              'item_type', r['item_type'],
@@ -538,7 +538,7 @@ class ProjectManager(Device):
                         'reason', exceptionReason)
 
     @slot
-    def slotListProjectAndConfForDevice(self, token, domain, deviceId):
+    async def slotListProjectAndConfForDevice(self, token, domain, deviceId):
         self._checkDbInitialized(token)
 
         with self.user_db_sessions[token] as db_session:
@@ -546,7 +546,8 @@ class ProjectManager(Device):
             success = True
             resHashes = []
             try:
-                res = db_session.get_projects_with_conf(domain, deviceId)
+                res = await db_session.get_projects_with_conf(
+                    domain, deviceId)
                 resHashes = [Hash("project_name", k, "active_config_ref", v)
                              for k, v in res.items()]
             except ProjectDBError as e:

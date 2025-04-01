@@ -18,8 +18,13 @@ import os
 
 from karabo.native import AccessLevel, Configurable, String, UInt32
 
-from .database import ProjectDatabase
-from .util import get_db_credentials
+from .sql_database import SQLDatabase
+
+
+def get_db_credentials():
+    user = os.getenv('KARABO_PROJECT_DB_USER', None)
+    password = os.getenv('KARABO_PROJECT_DB_PASSWORD', None)
+    return user, password
 
 
 class MySqlNode(Configurable):
@@ -40,6 +45,6 @@ class MySqlNode(Configurable):
 
     def get_db(self, test_mode=False, init_db=False):
         user, password = get_db_credentials()
-        return ProjectDatabase(
+        return SQLDatabase(
             user, password, server=self.host.value, port=self.port.value,
             db_name=self.dbName.value)

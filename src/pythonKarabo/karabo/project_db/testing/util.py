@@ -20,7 +20,7 @@ def _gen_uuid():
     return str(uuid4())
 
 
-def create_device(db):
+async def create_device(db):
     sub_uuid = _gen_uuid()
     conf_uuid1 = _gen_uuid()
     conf_uuid2 = _gen_uuid()
@@ -35,7 +35,7 @@ def create_device(db):
                '    <PropertyTestMDL KRB_Type="HASH"/>'
                '</root>'
                '</xml>')
-        db.save_item("LOCAL", conf_uuid, xml)
+        await db.save_item("LOCAL", conf_uuid, xml)
 
     # The MySQL back-end requires device instances to have a 'class_id' and an
     # 'active_uuid' attribute
@@ -52,11 +52,11 @@ def create_device(db):
                             conf_uuid2=conf_uuid2
                             )
 
-    db.save_item("LOCAL", sub_uuid, xml)
+    await db.save_item("LOCAL", sub_uuid, xml)
     return sub_uuid, conf_uuid1
 
 
-def create_hierarchy(db, scene_name=None):
+async def create_hierarchy(db, scene_name=None):
     """
     Create a minimal project hierarchy representative of Karabo entries in
     ExistDB
@@ -162,7 +162,7 @@ def create_hierarchy(db, scene_name=None):
                      f'width="1024" krb:uuid="{sub_uuid}" krb:version="2">'
                      '</svg:svg></xml>')
 
-        db.save_item("LOCAL", sub_uuid, scene_xml)
+        await db.save_item("LOCAL", sub_uuid, scene_xml)
 
     xml += "</scenes>"
 
@@ -177,7 +177,7 @@ def create_hierarchy(db, scene_name=None):
                 '</KRB_Item>'.format(uuid=sub_uuid))
         ins_xml = ""
         for j in range(4):
-            dev_uuid, conf_uuid = create_device(db)
+            dev_uuid, conf_uuid = await create_device(db)
             ins_xml += ('<device_instance '
                         'uuid="{uuid}" />'.format(uuid=dev_uuid))
             device_id_conf_map[dev_uuid] = conf_uuid
@@ -191,25 +191,25 @@ def create_hierarchy(db, scene_name=None):
                   .format(uuid=sub_uuid, atype='device_server', name=sub_uuid,
                           instances=ins_xml))
 
-        db.save_item("LOCAL", sub_uuid, ds_xml)
+        await db.save_item("LOCAL", sub_uuid, ds_xml)
     xml += "</servers>"
     xml += "</project>"
     xml += "</root>"
     xml += "</xml>"
-    db.save_item("LOCAL", uuid, xml)
+    await db.save_item("LOCAL", uuid, xml)
     return uuid, device_id_conf_map
 
 
-def create_trashed_project(db, is_trashed=True):
+async def create_trashed_project(db, is_trashed=True):
     uuid = _gen_uuid()
     xml = (f'<xml item_type="project" uuid="{uuid}"'
            f' simple_name="{uuid}" is_trashed="{str(is_trashed).lower()}">'
            '</xml>')
-    db.save_item("LOCAL", uuid, xml)
+    await db.save_item("LOCAL", uuid, xml)
     return uuid
 
 
-def create_unattached_scenes(db):
+async def create_unattached_scenes(db):
     # create scenes with the same simple_name
     # unattached to the project
     for i in range(4):
@@ -218,4 +218,4 @@ def create_unattached_scenes(db):
                      ' simple_name="Scene!" >中文</xml>'
                      .format(uuid=sub_uuid))
 
-        db.save_item("LOCAL", sub_uuid, scene_xml)
+        await db.save_item("LOCAL", sub_uuid, scene_xml)
