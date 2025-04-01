@@ -116,39 +116,8 @@ class DatabaseBase(ContextDecorator):
         :return:
         """
 
-    def domain_exists(self, domain):
-        """
-        Checks if a given domain exists.
-        :param domain: the domain to check
-        :return: True if it exists, false otherwise
-        """
-        path = f"{self.root}/{domain}"
-        return self.dbhandle.hasCollection(path)
-
-    def add_domain(self, domain):
-        """
-        Adds a domain to the project database. A domain is a top-level
-        collection located directly underneath the self.root collection. When
-        created the following collections will be added to the domain:
-        projects, scenes, macros, configs, device_servers, and resources.
-
-        :param domain: the name of the domain to be created
-        :return:None
-        :raises: ProjectDBError on Handle failure,
-                 or RuntimeError if domain creation failed otherwise
-        """
-        path = f"{self.root}/{domain}"
-        success = self.dbhandle.createCollection(path)
-
-        if not success:
-            raise RuntimeError(f"Failed to create domain at {path}")
-
-    def sanitize_database(self, domain):
-        """Optional Method
-
-        Migrates a DB to the latest sane configuration"""
-
-    def get_configurations_from_device_name(self, domain, instance_id):
+    def get_configurations_from_device_name(
+            self, domain: str, instance_id: str):
         """Returns a list of configurations for a given device
 
         To be implemented in the derived class
@@ -163,7 +132,8 @@ class DatabaseBase(ContextDecorator):
         """
         raise NotImplementedError
 
-    def get_configurations_from_device_name_part(self, domain, device_id_part):
+    def get_configurations_from_device_name_part(
+            self, domain: str, device_id_part: str):
         """
         Returns a list of configurations for a given device.
         :param domain: DB domain
@@ -177,7 +147,7 @@ class DatabaseBase(ContextDecorator):
         """
         raise NotImplementedError
 
-    def get_projects_with_conf(self, domain, device_id):
+    async def get_projects_with_conf(self, domain: str, device_id: str):
         """
         Returns a dict with projects and active configurations from a device
         name.
@@ -190,7 +160,7 @@ class DatabaseBase(ContextDecorator):
         """
         raise NotImplementedError
 
-    def get_projects_from_device(self, domain, uuid):
+    async def get_projects_from_device(self, domain: str, uuid: str):
         """
         Returns the projects which contain a device instance with a given uuid
 
@@ -202,8 +172,8 @@ class DatabaseBase(ContextDecorator):
         """
         raise NotImplementedError
 
-    def get_projects_data_from_device(self, domain, uuid):
+    async def get_projects_data_from_device(self, domain, uuid):
         raise NotImplementedError
 
-    def save_item(self, domain, uuid, item_xml, overwrite=False):
+    async def save_item(self, domain, uuid, item_xml, overwrite=False):
         raise NotImplementedError

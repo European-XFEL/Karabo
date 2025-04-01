@@ -15,8 +15,7 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 from karabo.native import AccessLevel, Configurable, String, UInt32
 
-from .database import ProjectDatabase
-from .util import get_db_credentials
+from .exist_database import ExistDatabase, get_db_credentials
 
 
 class ExistDbNode(Configurable):
@@ -34,6 +33,6 @@ class ExistDbNode(Configurable):
 
     def get_db(self, test_mode=False, init_db=False):
         user, password = get_db_credentials(test_mode)
-        return ProjectDatabase(
+        return ExistDatabase(
             user, password, server=self.host.value, port=self.port.value,
             test_mode=test_mode, init_db=init_db)
