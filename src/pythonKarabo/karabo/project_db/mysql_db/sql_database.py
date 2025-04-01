@@ -46,24 +46,23 @@ class MySQLHandle(HandleABC):
 
     # region HandleABC compliance
 
-    def hasCollection(self, path):
+    async def hasCollection(self, path):
         if self._db() is not None:
             path_parts = path.split('/')
             if len(path_parts) > 0:
                 domain = path_parts[-1]
-                return self._db().domain_exists(domain)
-        else:
-            return False
+                return await self._db().domain_exists(domain)
+        return False
 
-    def removeCollection(self, path):
-        raise NotImplementedError
+    async def removeCollection(self, path):
+        """"Abstract interface"""
 
-    def createCollection(self, path):
+    async def createCollection(self, path):
         if self._db() is not None:
             path_parts = path.split('/')
             if len(path_parts) > 0:
                 domain = path_parts[-1]
-                self._db().add_domain(domain)
+                await self._db().add_domain(domain)
 
     def hasDocument(self, path):
         raise NotImplementedError
@@ -80,7 +79,7 @@ class MySQLHandle(HandleABC):
     # end region
 
 
-class ProjectDatabase(DatabaseBase):
+class SQLDatabase(DatabaseBase):
 
     def __init__(self, user: str = "", password: str = "",
                  server: str = "", port: int = -1, db_name: str = "",
@@ -93,15 +92,12 @@ class ProjectDatabase(DatabaseBase):
             (self.db_engine, self.session_gen) = init_test_db_engine()
         self.reader = DbReader(self.session_gen)
         self.writer = DbWriter(self.session_gen)
-        self.metadata_created = False
+        SQLModel.metadata.create_all(self.db_engine, checkfirst=True)
 
     def onEnter(self):
-        if not self.metadata_created:
-            SQLModel.metadata.create_all(self.db_engine, checkfirst=True)
-            self.metadata_created = True
         return MySQLHandle(weakref.ref(self))
 
-    def list_domains(self) -> list[str]:
+    async def list_domains(self) -> list[str]:
         domains = []
         with self.session_gen() as session:
             query = select(ProjectDomain)
@@ -110,19 +106,19 @@ class ProjectDatabase(DatabaseBase):
                 domains.append(domain.name)
         return domains
 
-    def domain_exists(self, domain: str) -> bool:
-        domains = self.list_domains()
+    async def domain_exists(self, domain: str) -> bool:
+        domains = await self.list_domains()
         return domain in domains
 
-    def add_domain(self, domain: str):
-        if self.domain_exists(domain):
+    async def add_domain(self, domain: str):
+        if await self.domain_exists(domain):
             return
         with self.session_gen() as session:
             project_domain = ProjectDomain(name=domain)
             session.add(project_domain)
             session.commit()
 
-    def list_items(
+    async def list_items(
             self, domain: str,
             item_types: list[str] | tuple[str] | None = None) -> list[
                 dict[str, any]]:
@@ -134,7 +130,7 @@ class ProjectDatabase(DatabaseBase):
         :return: a list of dicts where each entry has keys: uuid, item_type
                  and simple_name
         """
-        if not self.domain_exists(domain):
+        if not await self.domain_exists(domain):
             raise ProjectDBError(f'Domain "{domain}" not found')
         if item_types is None:
             item_types = ["project", "macro", "scene", "device_server",
@@ -170,7 +166,7 @@ class ProjectDatabase(DatabaseBase):
                     raise ValueError(f'Unrecognized item_type, "{item}"')
         return result
 
-    def list_named_items(
+    async def list_named_items(
             self, domain: str, item_type: str,
             simple_name: str) -> list[dict[str, any]]:
         """
@@ -182,14 +178,14 @@ class ProjectDatabase(DatabaseBase):
         :return: a list of dicts where each entry has keys: uuid, item_type
                  and simple_name
         """
-        items = self.list_items(domain, [item_type])
+        items = await self.list_items(domain, [item_type])
         named_items = []
         for item in items:
             if item['simple_name'] == simple_name:
                 named_items.append(item)
         return named_items
 
-    def _load_project_item(self, uuid: str) -> dict[str, any] | None:
+    async def _load_project_item(self, uuid: str) -> dict[str, any] | None:
         item = None
         project = self.reader.get_project_from_uuid(uuid)
         if project:
@@ -204,7 +200,7 @@ class ProjectDatabase(DatabaseBase):
                     project, scenes, macros, servers, subprojects)}
         return item
 
-    def _load_scene_item(self, uuid: str) -> dict[str, any] | None:
+    async def _load_scene_item(self, uuid: str) -> dict[str, any] | None:
         item = None
         scene = self.reader.get_scene_from_uuid(uuid)
         if scene:
@@ -213,7 +209,7 @@ class ProjectDatabase(DatabaseBase):
                 "xml": emit_scene_xml(scene)}
         return item
 
-    def _load_macro_item(self, uuid: str) -> dict[str, any] | None:
+    async def _load_macro_item(self, uuid: str) -> dict[str, any] | None:
         item = None
         macro = self.reader.get_macro_from_uuid(uuid)
         if macro:
@@ -222,7 +218,7 @@ class ProjectDatabase(DatabaseBase):
                 "xml": emit_macro_xml(macro)}
         return item
 
-    def _load_server_item(self, uuid: str) -> dict[str, any] | None:
+    async def _load_server_item(self, uuid: str) -> dict[str, any] | None:
         item = None
         server = self.reader.get_device_server_from_uuid(uuid)
         if server:
@@ -232,7 +228,7 @@ class ProjectDatabase(DatabaseBase):
                 "xml": emit_device_server_xml(server, instances)}
         return item
 
-    def _load_instance_item(self, uuid: str) -> dict[str, any] | None:
+    async def _load_instance_item(self, uuid: str) -> dict[str, any] | None:
         item = None
         instance = self.reader.get_device_instance_from_uuid(uuid)
         if instance:
@@ -242,7 +238,7 @@ class ProjectDatabase(DatabaseBase):
                 "xml": emit_device_instance_xml(instance, configs)}
         return item
 
-    def _load_config_item(self, uuid: str) -> dict[str, any] | None:
+    async def _load_config_item(self, uuid: str) -> dict[str, any] | None:
         item = None
         config = self.reader.get_device_config_from_uuid(uuid)
         if config:
@@ -251,25 +247,23 @@ class ProjectDatabase(DatabaseBase):
                 "xml": emit_device_config_xml(config)}
         return item
 
-    def _load_unknown_type(self, item_uuid):
-        item = self._load_project_item(item_uuid)
+    async def _load_unknown_type(self, item_uuid):
+        item = await self._load_project_item(item_uuid)
         if item is None:
-            item = self._load_scene_item(item_uuid)
-            if item is None:
-                item = self._load_macro_item(item_uuid)
-                if item is None:
-                    item = self._load_server_item(item_uuid)
-                    if item is None:
-                        item = self._load_instance_item(item_uuid)
-                        if item is None:
-                            item = self._load_config_item(
-                                            item_uuid)
+            item = await self._load_scene_item(item_uuid)
+        if item is None:
+            item = await self._load_macro_item(item_uuid)
+        if item is None:
+            item = await self._load_server_item(item_uuid)
+        if item is None:
+            item = await self._load_instance_item(item_uuid)
+        if item is None:
+            item = await self._load_config_item(item_uuid)
 
         return item
 
-    def load_item(self,
-                  domain: str, items_uuids: list[str],
-                  item_type=None) -> list[dict[str, any]]:
+    async def load_item(self, domain: str, items_uuids: list[str],
+                        item_type: str | None = None) -> list[dict[str, any]]:
         """
         Loads a list of item of a specified type from a given domain.
 
@@ -287,20 +281,20 @@ class ProjectDatabase(DatabaseBase):
             item = None
             match item_type:
                 case "project":
-                    item = self._load_project_item(item_uuid)
+                    item = await self._load_project_item(item_uuid)
                 case "macro":
-                    item = self._load_macro_item(item_uuid)
+                    item = await self._load_macro_item(item_uuid)
                 case "scene":
-                    item = self._load_scene_item(item_uuid)
+                    item = await self._load_scene_item(item_uuid)
                 case "device_server":
-                    item = self._load_server_item(item_uuid)
+                    item = await self._load_server_item(item_uuid)
                 case "device_instance":
-                    item = self._load_instance_item(item_uuid)
+                    item = await self._load_instance_item(item_uuid)
                 case "device_config":
-                    item = self._load_config_item(item_uuid)
+                    item = await self._load_config_item(item_uuid)
                 case _:
                     # item_type not known; try exhaustively by UUID
-                    item = self._load_unknown_type(item_uuid)
+                    item = await self._load_unknown_type(item_uuid)
             if item is not None:
                 loaded_items.append(item)
             else:
@@ -309,9 +303,8 @@ class ProjectDatabase(DatabaseBase):
                     'found in the database. Load incomplete.')
         return loaded_items
 
-    def _check_for_modification(self,
-                                uuid: str, old_date: str,
-                                item_type: str) -> tuple[bool, str]:
+    async def _check_for_modification(self, uuid: str, old_date: str,
+                                      item_type: str) -> tuple[bool, str]:
         """ Check whether the item with of the given `domain` and `uuid` was
         modified
 
@@ -369,9 +362,8 @@ class ProjectDatabase(DatabaseBase):
 
         return (False, "")
 
-    def save_item(self,
-                  domain: str, uuid: str, item_xml: str,
-                  overwrite: bool = False) -> dict[str, any]:
+    async def save_item(self, domain: str, uuid: str, item_xml: str,
+                        overwrite: bool = False) -> dict[str, any]:
         """
         Saves a item xml file into the database. It will
         create a new entry if the item does not exist yet, or update the item
@@ -404,7 +396,7 @@ class ProjectDatabase(DatabaseBase):
         # project being saved if the domain doesn't exist yet. The add_domain
         # method has the same "ensure domain exists" semantics of its overriden
         # counterpart in DatabaseBase.
-        self.add_domain(domain)
+        await self.add_domain(domain)
 
         # Extract some information
         try:
@@ -424,7 +416,7 @@ class ProjectDatabase(DatabaseBase):
             # timestamp = strftime(DATE_FORMAT, gmtime())
             item_tree.attrib['date'] = timestamp
         else:
-            modified, reason = self._check_for_modification(
+            modified, reason = await self._check_for_modification(
                 uuid, item_tree.attrib['date'], item_type)
             if modified:
                 message = "The <b>{}</b> item <b>{}</b> could not be saved: " \
@@ -470,7 +462,7 @@ class ProjectDatabase(DatabaseBase):
 
         return meta
 
-    def get_configurations_from_device_name_part(
+    async def get_configurations_from_device_name_part(
             self, domain: str, device_id_part: str,
             only_active: bool = False) -> list[dict[str, str]]:
         """
@@ -499,7 +491,7 @@ class ProjectDatabase(DatabaseBase):
                          "device_id": instance.name})
         return results
 
-    def get_configurations_from_device_name(
+    async def get_configurations_from_device_name(
             self, domain: str, instance_id: str) -> list[dict[str, str]]:
         """
         Returns a list of active configurations for a given device_id
@@ -521,7 +513,7 @@ class ProjectDatabase(DatabaseBase):
             })
         return configs
 
-    def get_projects_data_from_device(
+    async def get_projects_data_from_device(
             self, domain: str, uuid: str) -> list[dict[str, any]]:
         """
         Returns the project which contain a device instance with a given uuid
@@ -543,7 +535,7 @@ class ProjectDatabase(DatabaseBase):
                  "uuid": project.uuid}]
         return results
 
-    def get_projects_from_device(
+    async def get_projects_from_device(
             self, domain: str, uuid: str) -> set[str]:
         """
         Returns the projects which contain a device instance with a given uuid
@@ -558,7 +550,7 @@ class ProjectDatabase(DatabaseBase):
             projects.add(project['projectname'])
         return projects
 
-    def update_attributes(self, items: HashList) -> list[dict[str, any]]:
+    async def update_attributes(self, items: HashList) -> list[dict[str, any]]:
         """ Update attribute for the given ``items``
 
         :param items: list of Hashes containing information on which items
@@ -625,7 +617,7 @@ class ProjectDatabase(DatabaseBase):
 
         return res_items
 
-    def get_projects_with_conf(self, domain, device_id):
+    async def get_projects_with_conf(self, domain, device_id):
         """
         Returns a dict with projects and active configurations from a device
         name.
