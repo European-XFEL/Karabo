@@ -1,5 +1,6 @@
 aiormq==3.3.1
 aiosqlite==0.21.0
+aiomysql==0.2.0
 async-timeout==4.0.2
 atomicwrites==1.4.1
 backports-abc==0.5
