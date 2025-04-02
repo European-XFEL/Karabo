@@ -31,9 +31,9 @@ from itertools import chain
 from subprocess import Popen, TimeoutExpired
 
 from karabind import (
-    CHOICE_ELEMENT, INT32_ELEMENT, LIST_ELEMENT, NODE_ELEMENT,
-    OVERWRITE_ELEMENT, STRING_ELEMENT, VECTOR_STRING_ELEMENT, Broker,
-    EventLoop, Hash, Logger, Schema, SignalSlotable, Unit, Validator,
+    CHOICE_ELEMENT, INT32_ELEMENT, NODE_ELEMENT, OVERWRITE_ELEMENT,
+    STRING_ELEMENT, VECTOR_STRING_ELEMENT, Broker, EventLoop, Hash, Logger,
+    Schema, SignalSlotable, Unit, Validator, generateAutoStartHash, jsonToHash,
     saveToFile)
 from karabo.common.api import KARABO_LOGGER_CONTENT_DEFAULT, ServerFlags
 
@@ -102,11 +102,10 @@ class DeviceServer:
             .expertAccess()
             .commit(),
 
-            LIST_ELEMENT(expected).key("autoStart")
+            STRING_ELEMENT(expected).key("init")
             .displayedName("Auto start")
             .description("Auto starts selected devices")
-            .appendNodesOfConfigurationBase(PythonDevice)
-            .assignmentOptional().noDefaultValue()
+            .assignmentOptional().defaultValue("")
             .commit(),
 
             STRING_ELEMENT(expected).key("pluginNamespace")
@@ -180,7 +179,11 @@ class DeviceServer:
             self.hostname = config['hostName']
         else:
             self.hostname = socket.gethostname().partition('.')[0]
-        self.autoStart = config.get("autoStart")
+        self.autoStart = None
+        if config.get("init") != "":
+            asv = generateAutoStartHash(jsonToHash(config.get("init")))
+            self.autoStart = asv['autoStart']
+
         self.deviceClasses = config.get("deviceClasses")
         self.pluginNamespace = config.get("pluginNamespace")
         self.timeServerId = config.get("timeServerId")

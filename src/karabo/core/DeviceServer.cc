@@ -27,7 +27,7 @@
 #include <unistd.h>
 
 // temp change to trigger CI
-
+#include <algorithm>
 #include <boost/algorithm/string.hpp>
 #include <csignal>
 #include <cstdlib>
@@ -45,7 +45,7 @@
 #include "karabo/net/utils.hh"
 #include "karabo/util/ChoiceElement.hh"
 #include "karabo/util/Configurator.hh"
-#include "karabo/util/ListElement.hh"
+#include "karabo/util/JsonToHashParser.hh"
 #include "karabo/util/NodeElement.hh"
 #include "karabo/util/SimpleElement.hh"
 #include "karabo/util/VectorElement.hh"
@@ -66,6 +66,7 @@ namespace karabo {
 
         // template class Runner<DeviceServer>;
 
+        namespace nl = nlohmann;
         using namespace std;
         using namespace karabo::util;
         using namespace karabo::io;
@@ -135,13 +136,12 @@ namespace karabo {
                   .expertAccess()
                   .commit();
 
-            LIST_ELEMENT(expected)
-                  .key("autoStart")
+            STRING_ELEMENT(expected)
+                  .key("init")
                   .displayedName("Auto start")
                   .description("Auto starts selected devices")
-                  .appendNodesOfConfigurationBase<karabo::core::BaseDevice>()
                   .assignmentOptional()
-                  .noDefaultValue()
+                  .defaultValue("")
                   .commit();
 
             BOOL_ELEMENT(expected)
@@ -209,7 +209,15 @@ namespace karabo {
             config.get("deviceClasses", m_deviceClasses);
 
             // Device configurations for those to automatically start
-            if (config.has("autoStart")) config.get("autoStart", m_autoStart);
+            // Runner establishes 'autoStart' property as (json) string (default: "")
+            {
+                std::string json = config.get<std::string>("init");
+                if (!json.empty()) {
+                    Hash cfg = generateAutoStartHash(jsonToHash(json));
+                    // cfg contains 'autoStart' property as VECTOR_HASH type
+                    cfg.get("autoStart", m_autoStart);
+                }
+            }
 
             // What visibility this server should have
             m_visibility = Schema::AccessLevel::OBSERVER;
@@ -228,8 +236,8 @@ namespace karabo {
             // Requires that there is no logging to the broker as we had before 2.17.0.
             loadLogger(config);
 
-            // For a choice element, there is exactly one sub-Hash where the key is the chosen (here: Broker) sub-class.
-            // We have to transfer the instance id and thus copy the relevant part of the (const) config.
+            // For a choice element, there is exactly one sub-Hash where the key is the chosen (here: Broker)
+            // sub-class. We have to transfer the instance id and thus copy the relevant part of the (const) config.
             // (Otherwise we could just pass 'input' to createChoice(..).)
             Hash brokerConfig("connection", config.get<Hash>("connection"));
             Hash& connectionCfg = brokerConfig.get<Hash>("connection").begin()->getValue<Hash>();
@@ -339,9 +347,9 @@ namespace karabo {
                 // Check whether besides to '*', message was also addressed to device directly (theoretically...)
                 if (slotInstanceIds.find(("|" + devId) += "|") == std::string::npos) {
                     if (!tryToCallDirectly(devId, header, body)) {
-                        // Can happen if devId just tries to come up, but has not yet registered for shortcut messaging.
-                        // But this registration happens before the device broadcasts its existence and before that the
-                        // device is not really part of the game, so no harm.
+                        // Can happen if devId just tries to come up, but has not yet registered for shortcut
+                        // messaging. But this registration happens before the device broadcasts its existence and
+                        // before that the device is not really part of the game, so no harm.
                         KARABO_LOG_FRAMEWORK_DEBUG
                               << "Failed to forward broadcast message to local device " << devId
                               << " which likely is just coming up and thus not fully part of the system yet.";
@@ -610,12 +618,13 @@ namespace karabo {
                 {
                     std::lock_guard<std::mutex> lock(m_deviceInstanceMutex);
                     if (m_deviceInstanceMap.find(deviceId) != m_deviceInstanceMap.end()) {
-                        // Note: If you alter this string, adjust also DataLoggerManager::loggerInstantiationHandler(..)
+                        // Note: If you alter this string, adjust also
+                        // DataLoggerManager::loggerInstantiationHandler(..)
                         throw KARABO_LOGIC_EXCEPTION("Device '" + deviceId +
                                                      "' already running/starting on this server.");
                     }
-                    // Keep the device instance - doing this before finalizeInternalInitialization to enable the device
-                    // to kill itself during instantiation (see slotDeviceGone).
+                    // Keep the device instance - doing this before finalizeInternalInitialization to enable the
+                    // device to kill itself during instantiation (see slotDeviceGone).
                     m_deviceInstanceMap[deviceId] = std::make_pair(device, Strand::Pointer());
                     putInMap = true;
                 }
@@ -628,7 +637,8 @@ namespace karabo {
 
                 {
                     std::lock_guard<std::mutex> lock(m_deviceInstanceMutex);
-                    // After finalizeInternalInitialization, the device participates in time information distribution
+                    // After finalizeInternalInitialization, the device participates in time information
+                    // distribution
                     m_deviceInstanceMap[deviceId].second = std::make_shared<Strand>(EventLoop::getIOService());
                 }
 
@@ -645,10 +655,10 @@ namespace karabo {
             } else {
                 // Instantiation failed
                 if (putInMap) { // Otherwise the device is not from this request.
-                    // To be precise, the following unlikely case is not excluded: The device was put in map above, but
-                    // killed itself during its initialization phase and slotStartDevice has been called once more for
-                    // the same deviceId and placed it into the map again before we get here to remove the one that
-                    // killed itself.
+                    // To be precise, the following unlikely case is not excluded: The device was put in map above,
+                    // but killed itself during its initialization phase and slotStartDevice has been called once
+                    // more for the same deviceId and placed it into the map again before we get here to remove the
+                    // one that killed itself.
                     std::lock_guard<std::mutex> lock(m_deviceInstanceMutex);
                     m_deviceInstanceMap.erase(deviceId);
                 }

@@ -1124,7 +1124,7 @@ namespace karabo {
         }
 
         void DataLoggerManager::slotGetLoggerMap() {
-            std::lock_guard<std::mutex> lock(m_loggerMapMutex); // m_loggerMap must not be changed while we process it
+            std::lock_guard<std::mutex> lock(m_loggerMapMutex); // m_loggerMap must not be changed while we process  it
             reply(m_loggerMap);
         }
 
