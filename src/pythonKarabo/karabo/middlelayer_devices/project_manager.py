@@ -76,18 +76,21 @@ class ProjectManager(Device):
         otherwise brings the device into ERROR
         """
         try:
-            self.get_project_db(init_db=True)
+            await self.get_project_db(init_db=True)
             self.state = State.ON
         except ProjectDBError as e:
             self.logger.error(f"ProjectDBError : {str(e)}")
             self.state = State.ERROR
 
-    def get_project_db(self, init_db=False):
+    async def get_project_db(self, init_db=False):
         """Internal helper to get the project db"""
         test_mode = self.projectDB.testMode.value
         node = self.projectDB.protocol
         db_node = getattr(self.projectDB, node)
-        return db_node.get_db(test_mode, init_db=init_db)
+        db = await db_node.get_db(test_mode, init_db=init_db)
+        if init_db:
+            self.logger.info("Project DB initialized ...")
+        return db
 
     @Slot(displayedName="Reset", allowedStates=[State.ERROR],
           requiredAccessLevel=AccessLevel.EXPERT)
@@ -134,7 +137,7 @@ class ProjectManager(Device):
         # ----------------------------------------
         payload = Hash('success', False)
         payload.set('name', name)
-        with self.user_db_sessions[token] as db_session:
+        async with self.user_db_sessions[token] as db_session:
             try:
                 items = await db_session.load_item(domain, uuid)
                 for item in items:
@@ -153,12 +156,13 @@ class ProjectManager(Device):
                     'payload', payload)
 
     @slot
-    def slotBeginUserSession(self, token):
+    async def slotBeginUserSession(self, token):
         """
         Initialize a DB connection for a user
         :param token: database user token
         """
-        self.user_db_sessions[token] = self.get_project_db()
+        session = await self.get_project_db()
+        self.user_db_sessions[token] = session
         self.logger.info("Initialized user session")
         return Hash("success", True)
 
@@ -181,7 +185,7 @@ class ProjectManager(Device):
         """Internally used method to store items in the project database"""
         savedItems = []
         projectUuids = []
-        with self.user_db_sessions[token] as db_session:
+        async with self.user_db_sessions[token] as db_session:
             for item in items:
                 xml = item.get("xml")
                 # Remove XML data to not send it back
@@ -221,39 +225,37 @@ class ProjectManager(Device):
             - the optional fields required by the non-generic slot
             requested.
         """
-        try:
-            msg = "Input must be a Hash"
-            assert isinstance(params, Hash), msg
-            msg = "'type' must be present in the input hash"
-            assert "type" in params, msg
-            msg = "'token' must be present in the input hash"
-            assert "token" in params, msg
+        self.logger.info(f"Generic request: {params.get('type')}")
+        msg = "Input must be a Hash"
+        assert isinstance(params, Hash), msg
+        msg = "'type' must be present in the input hash"
+        assert "type" in params, msg
+        msg = "'token' must be present in the input hash"
+        assert "token" in params, msg
 
-            action_type = params["type"]
-            token = params["token"]  # session token
-            if action_type == "listItems":
-                return await self.slotListItems(
-                    token, params['domain'],
-                    params.get('item_types', None))
-            elif action_type == "loadItems":
-                return await self.slotLoadItems(token, params['items'])
-            elif action_type == "listDomains":
-                return await self.slotListDomains(token)
-            elif action_type == "updateAttribute":
-                return await self.slotUpdateAttribute(token, params['items'])
-            elif action_type == "saveItems":
-                return await self.slotSaveItems(
-                    token, params['items'], params.get('client', None))
-            elif action_type == "beginUserSession":
-                return self.slotBeginUserSession(token)
-            elif action_type == "endUserSession":
-                return self.slotEndUserSession(token)
-            elif action_type == "listProjectsWithDevice":
-                return await self.slotListProjectsWithDevice(params)
-            else:
-                raise NotImplementedError(f"{type} not implemented")
-        except Exception as e:
-            return Hash("success", False, "reason", f"{type(e)}: {e}")
+        action_type = params["type"]
+        token = params["token"]  # session token
+        if action_type == "listItems":
+            return await self.slotListItems(
+                token, params['domain'],
+                params.get('item_types', None))
+        elif action_type == "loadItems":
+            return await self.slotLoadItems(token, params['items'])
+        elif action_type == "listDomains":
+            return await self.slotListDomains(token)
+        elif action_type == "updateAttribute":
+            return await self.slotUpdateAttribute(token, params['items'])
+        elif action_type == "saveItems":
+            return await self.slotSaveItems(
+                token, params['items'], params.get('client', None))
+        elif action_type == "beginUserSession":
+            return await self.slotBeginUserSession(token)
+        elif action_type == "endUserSession":
+            return self.slotEndUserSession(token)
+        elif action_type == "listProjectsWithDevice":
+            return await self.slotListProjectsWithDevice(params)
+        else:
+            raise NotImplementedError(f"{type} not implemented")
 
     @slot
     async def slotSaveItems(self, token, items, client=None):
@@ -309,7 +311,7 @@ class ProjectManager(Device):
         exceptionReason = ""
         success = True
         loadedItems = []
-        with self.user_db_sessions[token] as db_session:
+        async with self.user_db_sessions[token] as db_session:
             # verify that items belong to single domain
             domain = items[0].get("domain")
             keys = [it.get('uuid') for it in items
@@ -353,7 +355,7 @@ class ProjectManager(Device):
         """
         self._checkDbInitialized(token)
 
-        with self.user_db_sessions[token] as db_session:
+        async with self.user_db_sessions[token] as db_session:
             exceptionReason = ""
             success = True
             resHashes = []
@@ -389,7 +391,7 @@ class ProjectManager(Device):
         """
         self._checkDbInitialized(token)
 
-        with self.user_db_sessions[token] as db_session:
+        async with self.user_db_sessions[token] as db_session:
             exceptionReason = ""
             success = True
             resHashes = []
@@ -423,7 +425,7 @@ class ProjectManager(Device):
         """
         self._checkDbInitialized(token)
 
-        with self.user_db_sessions[token] as db_session:
+        async with self.user_db_sessions[token] as db_session:
             success = True
             exceptionReason = ""
             res = []
@@ -475,7 +477,7 @@ class ProjectManager(Device):
 
         self._checkDbInitialized(token)
 
-        with self.user_db_sessions[token] as db_session:
+        async with self.user_db_sessions[token] as db_session:
             exceptionReason = ""
             success = True
             try:
@@ -517,7 +519,7 @@ class ProjectManager(Device):
 
         self._checkDbInitialized(token)
 
-        with self.user_db_sessions[token] as db_session:
+        async with self.user_db_sessions[token] as db_session:
             exceptionReason = ""
             success = True
             resHashes = []
@@ -541,7 +543,7 @@ class ProjectManager(Device):
     async def slotListProjectAndConfForDevice(self, token, domain, deviceId):
         self._checkDbInitialized(token)
 
-        with self.user_db_sessions[token] as db_session:
+        async with self.user_db_sessions[token] as db_session:
             exceptionReason = ""
             success = True
             resHashes = []

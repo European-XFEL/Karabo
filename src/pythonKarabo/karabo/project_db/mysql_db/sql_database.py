@@ -13,9 +13,9 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
-
 import datetime
 import weakref
+from asyncio import gather
 
 from sqlmodel import SQLModel, select
 
@@ -23,7 +23,7 @@ from karabo.native import HashList
 
 from ..bases import DatabaseBase, HandleABC
 from ..util import ProjectDBError, make_str_if_needed, make_xml_if_needed
-from .db_engine import init_db_engine, init_test_db_engine
+from .db_engine import init_async_db_engine, init_test_async_db_engine
 from .db_reader import DbReader
 from .db_writer import DbWriter
 from .models import ProjectDomain
@@ -87,24 +87,29 @@ class SQLDatabase(DatabaseBase):
         super().__init__()
         if not test_mode:
             (self.db_engine, self.session_gen) = (
-                init_db_engine(user, password, server, port, db_name))
+                init_async_db_engine(user, password, server, port, db_name))
         else:
-            (self.db_engine, self.session_gen) = init_test_db_engine()
+            (self.db_engine, self.session_gen) = init_test_async_db_engine()
         self.reader = DbReader(self.session_gen)
         self.writer = DbWriter(self.session_gen)
-        SQLModel.metadata.create_all(self.db_engine, checkfirst=True)
+        self.initialized = False
+
+    async def initialize(self):
+        async with self.db_engine.begin() as conn:
+            await conn.run_sync(SQLModel.metadata.create_all)
+        self.initialized = True
 
     def onEnter(self):
+        if not self.initialized:
+            raise RuntimeError("Database needs to be initialized")
+
         return MySQLHandle(weakref.ref(self))
 
     async def list_domains(self) -> list[str]:
-        domains = []
-        with self.session_gen() as session:
-            query = select(ProjectDomain)
-            prj_domains = session.exec(query).all()
-            for domain in prj_domains:
-                domains.append(domain.name)
-        return domains
+        async with self.session_gen() as session:
+            result = await session.exec(select(ProjectDomain))
+            prj_domains = result.all()
+            return [domain.name for domain in prj_domains]
 
     async def domain_exists(self, domain: str) -> bool:
         domains = await self.list_domains()
@@ -113,10 +118,10 @@ class SQLDatabase(DatabaseBase):
     async def add_domain(self, domain: str):
         if await self.domain_exists(domain):
             return
-        with self.session_gen() as session:
+        async with self.session_gen() as session:
             project_domain = ProjectDomain(name=domain)
             session.add(project_domain)
-            session.commit()
+            await session.commit()
 
     async def list_items(
             self, domain: str,
@@ -139,27 +144,30 @@ class SQLDatabase(DatabaseBase):
         for item in item_types:
             match item.strip().lower():
                 case "project":
-                    projects = self.reader.get_domain_projects(domain)
+                    projects = await self.reader.get_domain_projects(domain)
                     for project in projects:
                         result.append(project)
                 case "macro":
-                    macros = self.reader.get_domain_macros(domain)
+                    macros = await self.reader.get_domain_macros(domain)
                     for macro in macros:
                         result.append(macro)
                 case "scene":
-                    scenes = self.reader.get_domain_scenes(domain)
+                    scenes = await self.reader.get_domain_scenes(domain)
                     for scene in scenes:
                         result.append(scene)
                 case "device_server":
-                    servers = self.reader.get_domain_device_servers(domain)
+                    servers = await self.reader.get_domain_device_servers(
+                        domain)
                     for server in servers:
                         result.append(server)
                 case "device_instance":
-                    instances = self.reader.get_domain_device_instances(domain)
+                    instances = await self.reader.get_domain_device_instances(
+                        domain)
                     for instance in instances:
                         result.append(instance)
                 case "device_config":
-                    configs = self.reader.get_domain_device_configs(domain)
+                    configs = await self.reader.get_domain_device_configs(
+                        domain)
                     for config in configs:
                         result.append(config)
                 case _:
@@ -187,13 +195,13 @@ class SQLDatabase(DatabaseBase):
 
     async def _load_project_item(self, uuid: str) -> dict[str, any] | None:
         item = None
-        project = self.reader.get_project_from_uuid(uuid)
+        project = await self.reader.get_project_from_uuid(uuid)
         if project:
-            subprojects = self.reader.get_subprojects_of_project(project)
-            scenes = self.reader.get_scenes_of_project(project)
-            macros = self.reader.get_macros_of_project(project)
-            servers = self.reader.get_device_servers_of_project(project)
-            self.writer.register_project_load(project)
+            subprojects = await self.reader.get_subprojects_of_project(project)
+            scenes = await self.reader.get_scenes_of_project(project)
+            macros = await self.reader.get_macros_of_project(project)
+            servers = await self.reader.get_device_servers_of_project(project)
+            await self.writer.register_project_load(project)
             item = {
                 "uuid": uuid,
                 "xml": emit_project_xml(
@@ -202,7 +210,7 @@ class SQLDatabase(DatabaseBase):
 
     async def _load_scene_item(self, uuid: str) -> dict[str, any] | None:
         item = None
-        scene = self.reader.get_scene_from_uuid(uuid)
+        scene = await self.reader.get_scene_from_uuid(uuid)
         if scene:
             item = {
                 "uuid": uuid,
@@ -211,7 +219,7 @@ class SQLDatabase(DatabaseBase):
 
     async def _load_macro_item(self, uuid: str) -> dict[str, any] | None:
         item = None
-        macro = self.reader.get_macro_from_uuid(uuid)
+        macro = await self.reader.get_macro_from_uuid(uuid)
         if macro:
             item = {
                 "uuid": uuid,
@@ -220,9 +228,10 @@ class SQLDatabase(DatabaseBase):
 
     async def _load_server_item(self, uuid: str) -> dict[str, any] | None:
         item = None
-        server = self.reader.get_device_server_from_uuid(uuid)
+        server = await self.reader.get_device_server_from_uuid(uuid)
         if server:
-            instances = self.reader.get_device_instances_of_server(server)
+            instances = await self.reader.get_device_instances_of_server(
+                server)
             item = {
                 "uuid": uuid,
                 "xml": emit_device_server_xml(server, instances)}
@@ -230,9 +239,10 @@ class SQLDatabase(DatabaseBase):
 
     async def _load_instance_item(self, uuid: str) -> dict[str, any] | None:
         item = None
-        instance = self.reader.get_device_instance_from_uuid(uuid)
+        instance = await self.reader.get_device_instance_from_uuid(uuid)
         if instance:
-            configs = self.reader.get_device_configs_of_instance(instance)
+            configs = await self.reader.get_device_configs_of_instance(
+                instance)
             item = {
                 "uuid": uuid,
                 "xml": emit_device_instance_xml(instance, configs)}
@@ -240,7 +250,7 @@ class SQLDatabase(DatabaseBase):
 
     async def _load_config_item(self, uuid: str) -> dict[str, any] | None:
         item = None
-        config = self.reader.get_device_config_from_uuid(uuid)
+        config = await self.reader.get_device_config_from_uuid(uuid)
         if config:
             item = {
                 "uuid": uuid,
@@ -276,31 +286,27 @@ class SQLDatabase(DatabaseBase):
         :raises: ProjectDBError if an item corresponding to a given
                  (UUID, type) combination couldn't be found.'
         """
-        loaded_items = []
+        futures = []
         for item_uuid in items_uuids:
-            item = None
             match item_type:
                 case "project":
-                    item = await self._load_project_item(item_uuid)
+                    futures.append(self._load_project_item(item_uuid))
                 case "macro":
-                    item = await self._load_macro_item(item_uuid)
+                    futures.append(self._load_macro_item(item_uuid))
                 case "scene":
-                    item = await self._load_scene_item(item_uuid)
+                    futures.append(self._load_scene_item(item_uuid))
                 case "device_server":
-                    item = await self._load_server_item(item_uuid)
+                    futures.append(self._load_server_item(item_uuid))
                 case "device_instance":
-                    item = await self._load_instance_item(item_uuid)
+                    futures.append(self._load_instance_item(item_uuid))
                 case "device_config":
-                    item = await self._load_config_item(item_uuid)
+                    futures.append(self._load_config_item(item_uuid))
                 case _:
                     # item_type not known; try exhaustively by UUID
-                    item = await self._load_unknown_type(item_uuid)
-            if item is not None:
-                loaded_items.append(item)
-            else:
-                raise ProjectDBError(
-                    f'No item with UUID "{item_uuid}" of type "{item_type}" '
-                    'found in the database. Load incomplete.')
+                    futures.append(self._load_unknown_type(item_uuid))
+
+        # XXX: Item none protection
+        loaded_items = await gather(*futures)
         return loaded_items
 
     async def _check_for_modification(self, uuid: str, old_date: str,
@@ -317,27 +323,28 @@ class SQLDatabase(DatabaseBase):
         current_modified = None
         match item_type:
             case "project":
-                project = self.reader.get_project_from_uuid(uuid)
+                project = await self.reader.get_project_from_uuid(uuid)
                 if project:
                     current_modified = project.date
             case "macro":
-                macro = self.reader.get_macro_from_uuid(uuid)
+                macro = await self.reader.get_macro_from_uuid(uuid)
                 if macro:
                     current_modified = macro.date
             case "scene":
-                scene = self.reader.get_scene_from_uuid(uuid)
+                scene = await self.reader.get_scene_from_uuid(uuid)
                 if scene:
                     current_modified = scene.date
             case "device_server":
-                server = self.reader.get_device_server_from_uuid(uuid)
+                server = await self.reader.get_device_server_from_uuid(uuid)
                 if server:
                     current_modified = server.date
             case "device_instance":
-                instance = self.reader.get_device_instance_from_uuid(uuid)
+                instance = await self.reader.get_device_instance_from_uuid(
+                    uuid)
                 if instance:
                     current_modified = instance.date
             case "device_config":
-                config = self.reader.get_device_config_from_uuid(uuid)
+                config = await self.reader.get_device_config_from_uuid(uuid)
                 if config:
                     current_modified = config.date
 
@@ -439,19 +446,23 @@ class SQLDatabase(DatabaseBase):
 
         match item_type:
             case "project":
-                self.writer.save_project_item(domain, uuid, item_xml,
-                                              timestamp)
+                await self.writer.save_project_item(
+                    domain, uuid, item_xml, timestamp)
             case "macro":
-                self.writer.save_macro_item(uuid, item_xml, timestamp)
+                await self.writer.save_macro_item(
+                    uuid, item_xml, timestamp)
             case "scene":
-                self.writer.save_scene_item(uuid, item_xml, timestamp)
+                await self.writer.save_scene_item(
+                    uuid, item_xml, timestamp)
             case "device_server":
-                self.writer.save_device_server_item(uuid, item_xml, timestamp)
+                await self.writer.save_device_server_item(
+                    uuid, item_xml, timestamp)
             case "device_instance":
-                self.writer.save_device_instance_item(uuid, item_xml,
-                                                      timestamp)
+                await self.writer.save_device_instance_item(
+                    uuid, item_xml, timestamp)
             case "device_config":
-                self.writer.save_device_config_item(uuid, item_xml, timestamp)
+                await self.writer.save_device_config_item(
+                    uuid, item_xml, timestamp)
             case _:
                 raise ProjectDBError(
                     f"Saving of items of type '{item_type}' not supported")
@@ -479,11 +490,12 @@ class SQLDatabase(DatabaseBase):
             ]
         """
         instances_by_name_part = (
-            self.reader.get_domain_device_instances_by_name_part(
+            await self.reader.get_domain_device_instances_by_name_part(
                 domain, device_id_part))
         results = []
         for instance in instances_by_name_part:
-            configs = self.reader.get_device_configs_of_instance(instance)
+            configs = await self.reader.get_device_configs_of_instance(
+                instance)
             for config in configs:
                 if config.is_active or not only_active:
                     results.append(
@@ -524,10 +536,10 @@ class SQLDatabase(DatabaseBase):
         :return: a list containing project names, uuids and last modification
                  date.
         """
-        instance = self.reader.get_device_instance_from_uuid(uuid)
+        instance = await self.reader.get_device_instance_from_uuid(uuid)
         # From the DB structure, a given device instance only belongs to
         # one project
-        project = self.reader.get_device_instance_project(instance)
+        project = await self.reader.get_device_instance_project(instance)
         results = None
         if project:
             results = [
@@ -587,18 +599,21 @@ class SQLDatabase(DatabaseBase):
 
             match item_type:
                 case "project":
-                    model = self.reader.get_project_from_uuid(item_uuid)
+                    model = await self.reader.get_project_from_uuid(
+                        item_uuid)
                 case "device_server":
-                    model = self.reader.get_device_server_from_uuid(item_uuid)
+                    model = await self.reader.get_device_server_from_uuid(
+                        item_uuid)
                 case "device_instance":
-                    model = self.reader.get_device_instance_from_uuid(
+                    model = await self.reader.get_device_instance_from_uuid(
                         item_uuid)
                 case "device_config":
-                    model = self.reader.get_device_config_from_uuid(item_uuid)
+                    model = await self.reader.get_device_config_from_uuid(
+                        item_uuid)
                 case "macro":
-                    model = self.reader.get_macro_from_uuid(item_uuid)
+                    model = await self.reader.get_macro_from_uuid(item_uuid)
                 case "scene":
-                    model = self.reader.get_scene_from_uuid(item_uuid)
+                    model = await self.reader.get_scene_from_uuid(item_uuid)
                 case _:
                     raise ProjectDBError(
                         f"Unsupported item_type, '{item_type}', "

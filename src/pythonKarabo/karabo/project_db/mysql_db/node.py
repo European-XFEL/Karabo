@@ -43,8 +43,10 @@ class MySqlNode(Configurable):
         displayedName="Database name",
         requiredAccessLevel=AccessLevel.EXPERT)
 
-    def get_db(self, test_mode=False, init_db=False):
+    async def get_db(self, test_mode=False, init_db=False):
         user, password = get_db_credentials()
-        return SQLDatabase(
+        db = SQLDatabase(
             user, password, server=self.host.value, port=self.port.value,
             db_name=self.dbName.value)
+        await db.initialize()
+        return db

@@ -31,8 +31,9 @@ class ExistDbNode(Configurable):
         defaultValue=8080,
         requiredAccessLevel=AccessLevel.EXPERT)
 
-    def get_db(self, test_mode=False, init_db=False):
+    async def get_db(self, test_mode=False, init_db=False):
         user, password = get_db_credentials(test_mode)
-        return ExistDatabase(
+        db = ExistDatabase(
             user, password, server=self.host.value, port=self.port.value,
             test_mode=test_mode, init_db=init_db)
+        return db
