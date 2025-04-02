@@ -35,27 +35,29 @@ class DbWriter:
     def __init__(self, session_gen: sessionmaker):
         self.session_gen = session_gen
 
-    def register_project_load(self, project: Project):
-        with self.session_gen() as session:
+    async def register_project_load(self, project: Project):
+        async with self.session_gen() as session:
             project.last_loaded = datetime.datetime.now(datetime.UTC)
             session.add(project)
-            session.commit()
+            await session.commit()
 
-    def save_project_item(self, domain: str, uuid: str, xml: str,
-                          timestamp: str):
+    async def save_project_item(
+            self, domain: str, uuid: str, xml: str, timestamp: str):
         prj = etree.fromstring(xml)
         date = datetime.datetime.fromisoformat(timestamp)
 
         # Save the project attributes
         project_id = None  # the id of the updated or new project
-        with self.session_gen() as session:
+        async with self.session_gen() as session:
             query = select(ProjectDomain).where(ProjectDomain.name == domain)
-            project_domain = session.exec(query).first()
+            result = await session.exec(query)
+            project_domain = result.first()
             # domain is expected to correspond to a valid domain.
             assert project_domain is not None
 
             query = select(Project).where(Project.uuid == uuid)
-            project = session.exec(query).first()
+            result = await session.exec(query)
+            project = result.first()
             if not project:
                 # There's still no record for the project in the DB
                 project = Project(
@@ -74,7 +76,7 @@ class DbWriter:
                 # The commit / refresh sequence is needed for the case of a
                 # new project. A new project only gets its ID after being
                 # stored in the database.
-                session.commit()
+                await session.commit()
                 session.refresh(project)
             else:
                 # There's a record for the project in the DB - update its
@@ -120,7 +122,8 @@ class DbWriter:
                         subprjs_elem = project_elem.getchildren()[child_index]
 
             query = select(Macro).where(Macro.project_id == project_id)
-            curr_macros = session.exec(query).all()
+            result = await session.exec(query)
+            curr_macros = result.all()
             for curr_macro in curr_macros:
                 curr_macro.project_id = None
                 curr_macro.order = 0
@@ -132,7 +135,8 @@ class DbWriter:
                 for macro_elem in macros_elem.getchildren():
                     macro_uuid = macro_elem.getchildren()[0].text
                     query = select(Macro).where(Macro.uuid == macro_uuid)
-                    macro = session.exec(query).first()
+                    result = await session.exec(query)
+                    macro = result.first()
                     if not macro:
                         logger.error(
                             f'Macro with uuid "{macro_uuid}" not found in the '
@@ -151,7 +155,8 @@ class DbWriter:
                     session.delete(curr_macro)
 
             query = select(Scene).where(Scene.project_id == project_id)
-            curr_scenes = session.exec(query).all()
+            result = await session.exec(query)
+            curr_scenes = result.all()
             for curr_scene in curr_scenes:
                 curr_scene.project_id = None
                 curr_scene.order = 0
@@ -170,7 +175,8 @@ class DbWriter:
                             and "uuid" in scene_elem.attrib.keys()):
                         scene_uuid = scene_elem.attrib['uuid']
                     query = select(Scene).where(Scene.uuid == scene_uuid)
-                    scene = session.exec(query).first()
+                    result = await session.exec(query)
+                    scene = result.first()
                     if not scene:
                         logger.error(
                             f'Scene with uuid "{scene_uuid}" not found in the '
@@ -190,7 +196,8 @@ class DbWriter:
 
             query = select(DeviceServer).where(
                 DeviceServer.project_id == project_id)
-            curr_servers = session.exec(query).all()
+            result = await session.exec(query)
+            curr_servers = result.all()
             for curr_server in curr_servers:
                 curr_server.project_id = None
                 curr_server.order = 0
@@ -203,7 +210,8 @@ class DbWriter:
                     server_uuid = server_elem.getchildren()[0].text
                     query = select(DeviceServer).where(
                         DeviceServer.uuid == server_uuid)
-                    server = session.exec(query).first()
+                    result = await session.exec(query)
+                    server = result.first()
                     if not server:
                         logger.error(
                             f'Server with uuid "{server_uuid}" not found in '
@@ -223,17 +231,20 @@ class DbWriter:
                     # be deleted - after deleting those instances configs.
                     query = select(DeviceInstance).where(
                         DeviceInstance.device_server_id == curr_server.id)
-                    instances = session.exec(query).all()
+                    result = await session.exec(query)
+                    instances = result.all()
                     for instance in instances:
                         # Delete the instances configs
                         query = select(DeviceConfig).where(
                             DeviceConfig.device_instance_id == instance.id)
-                        related_configs = session.exec(query).all()
+                        result = await session.exec(query)
+                        related_configs = result.all()
                         for related_config in related_configs:
                             session.delete(related_config)
                         query = select(DeviceInstance).where(
                             DeviceInstance.id == instance.id)
-                        related_instance = session.exec(query).first()
+                        result = await session.exec(query)
+                        related_instance = result.first()
                         if related_instance:
                             session.delete(related_instance)
                     # Now finally the server can go
@@ -241,7 +252,8 @@ class DbWriter:
 
             query = select(ProjectSubproject).where(
                 ProjectSubproject.project_id == project_id)
-            curr_subprojects = session.exec(query).all()
+            result = await session.exec(query)
+            curr_subprojects = result.all()
 
             subproject_idx = 0
             # Initially all the previously saved subproject are to be
@@ -254,7 +266,8 @@ class DbWriter:
                     subprj_uuid = subprj_elem.getchildren()[0].text
                     query = select(Project).where(
                         Project.uuid == subprj_uuid)
-                    subprj = session.exec(query).first()
+                    result = await session.exec(query)
+                    subprj = result.first()
                     if not subprj:
                         logger.error(
                             f'Subproject with uuid "{server_uuid}" not found '
@@ -271,7 +284,8 @@ class DbWriter:
                         query = select(ProjectSubproject).where(
                             ProjectSubproject.project_id == project_id,
                             ProjectSubproject.subproject_id == subprj.id)
-                        prj_subprj = session.exec(query).first()
+                        result = await session.exec(query)
+                        prj_subprj = result.first()
                         if prj_subprj:
                             prj_subprj.order = subproject_idx
                         session.add(prj_subprj)
@@ -290,13 +304,14 @@ class DbWriter:
                 query = select(ProjectSubproject).where(
                     ProjectSubproject.project_id == project_id,
                     ProjectSubproject.subproject_id == subprj_id)
-                subprj_to_delete = session.exec(query).first()
+                result = await session.exec(query)
+                subprj_to_delete = result.first()
                 if subprj_to_delete:
                     session.delete(subprj_to_delete)
 
-            session.commit()
+            await session.commit()
 
-    def save_macro_item(self, uuid: str, xml: str, timestamp: str):
+    async def save_macro_item(self, uuid: str, xml: str, timestamp: str):
         import base64
         macro_obj = etree.fromstring(xml)
         macro_uuid = macro_obj.attrib["uuid"]
@@ -307,9 +322,10 @@ class DbWriter:
 
         date = datetime.datetime.fromisoformat(timestamp)
 
-        with self.session_gen() as session:
+        async with self.session_gen() as session:
             query = select(Macro).where(Macro.uuid == uuid)
-            macro = session.exec(query).first()
+            result = await session.exec(query)
+            macro = result.first()
             if macro:
                 # A macro is being updated
                 macro.name = macro_name
@@ -325,9 +341,9 @@ class DbWriter:
                     last_modified_user=macro_user,
                     body=macro_body)
             session.add(macro)
-            session.commit()
+            await session.commit()
 
-    def save_scene_item(self, uuid: str, xml: str, timestamp: str):
+    async def save_scene_item(self, uuid: str, xml: str, timestamp: str):
         date = datetime.datetime.fromisoformat(timestamp)
         scene_obj = etree.fromstring(xml)
         scene_uuid = scene_obj.attrib["uuid"]
@@ -337,9 +353,10 @@ class DbWriter:
             etree.tostring(scene_obj.getchildren()[0]).decode("UTF-8")
             if len(scene_obj.getchildren()) > 0 else "")
 
-        with self.session_gen() as session:
+        async with self.session_gen() as session:
             query = select(Scene).where(Scene.uuid == uuid)
-            scene = session.exec(query).first()
+            result = await session.exec(query)
+            scene = result.first()
             if scene:
                 # A scene is being updated
                 scene.name = scene_name
@@ -355,9 +372,10 @@ class DbWriter:
                     last_modified_user=scene_user,
                     svg_data=scene_svg_data)
             session.add(scene)
-            session.commit()
+            await session.commit()
 
-    def save_device_config_item(self, uuid: str, xml: str, timestamp: str):
+    async def save_device_config_item(
+            self, uuid: str, xml: str, timestamp: str):
         date = datetime.datetime.fromisoformat(timestamp)
         config_obj = etree.fromstring(xml)
         config_uuid = config_obj.attrib["uuid"]
@@ -368,10 +386,10 @@ class DbWriter:
             etree.tostring(config_obj.getchildren()[0]).decode("UTF-8")
             if len(config_obj.getchildren()) > 0 else "")
 
-        with self.session_gen() as session:
+        async with self.session_gen() as session:
             query = select(DeviceConfig).where(DeviceConfig.uuid == uuid)
-            config = session.exec(query).first()
-
+            result = await session.exec(query)
+            config = result.first()
             if config:
                 # A device config is being updated
                 config.name = config_name
@@ -390,9 +408,10 @@ class DbWriter:
                     date=date)
 
             session.add(config)
-            session.commit()
+            await session.commit()
 
-    def save_device_instance_item(self, uuid: str, xml: str, timestamp: str):
+    async def save_device_instance_item(
+            self, uuid: str, xml: str, timestamp: str):
         date = datetime.datetime.fromisoformat(timestamp)
         instance_obj = etree.fromstring(xml)
         instance_uuid = instance_obj.attrib["uuid"]
@@ -405,9 +424,10 @@ class DbWriter:
 
         # Insert or update the device instance in the DB
         instance = None
-        with self.session_gen() as session:
+        async with self.session_gen() as session:
             query = select(DeviceInstance).where(DeviceInstance.uuid == uuid)
-            instance = session.exec(query).first()
+            result = await session.exec(query)
+            instance = result.first()
             if instance:
                 # Updates the device instance
                 instance.name = instance_id
@@ -424,7 +444,7 @@ class DbWriter:
                     date=date,
                     last_modified_user=instance_user)
                 session.add(instance)
-                session.commit()
+                await session.commit()
                 session.refresh(instance)
 
             # Saves the device configs linked to the device instance that
@@ -432,7 +452,8 @@ class DbWriter:
             # must be unlinked
             query = select(DeviceConfig).where(
                 DeviceConfig.device_instance_id == instance.id)
-            curr_configs = session.exec(query).all()
+            result = await session.exec(query)
+            curr_configs = result.all()
             for curr_config in curr_configs:
                 curr_config.device_instance_id = None
                 curr_config.order = 0
@@ -444,7 +465,8 @@ class DbWriter:
                 config_obj_uuid = config_obj.attrib["uuid"]
                 query = select(DeviceConfig).where(
                     DeviceConfig.uuid == config_obj_uuid)
-                config = session.exec(query).first()
+                result = await session.exec(query)
+                config = result.first()
                 if not config:
                     raise RuntimeError(
                         f'Device config with uuid "{config_obj_uuid}" not '
@@ -463,9 +485,10 @@ class DbWriter:
                 if curr_config.uuid not in updated_configs:
                     session.delete(curr_config)
 
-            session.commit()
+            await session.commit()
 
-    def save_device_server_item(self, uuid: str, xml: str, timestamp: str):
+    async def save_device_server_item(
+            self, uuid: str, xml: str, timestamp: str):
         date = datetime.datetime.fromisoformat(timestamp)
         server_obj = etree.fromstring(xml)
         server_uuid = server_obj.attrib["uuid"]
@@ -480,10 +503,10 @@ class DbWriter:
             else [])
 
         server = None
-        with self.session_gen() as session:
+        async with self.session_gen() as session:
             query = select(DeviceServer).where(DeviceServer.uuid == uuid)
-            server = session.exec(query).first()
-
+            result = await session.exec(query)
+            server = result.first()
             if server:
                 # An existing device server is being saved
                 server.name = server_name
@@ -498,14 +521,15 @@ class DbWriter:
                     date=date,
                     last_modified_user=server_user)
                 session.add(server)
-                session.commit()
+                await session.commit()
                 session.refresh(server)
 
             # Saves the device instances linked to the device server just saved
             # First unlinks all the currently linked device instances.
             query = select(DeviceInstance).where(
                 DeviceInstance.device_server_id == server.id)
-            curr_linked_instances = session.exec(query).all()
+            result = await session.exec(query)
+            curr_linked_instances = result.all()
             for curr_linked_instance in curr_linked_instances:
                 curr_linked_instance.device_server_id = None
                 curr_linked_instance.order = 0
@@ -517,7 +541,8 @@ class DbWriter:
                 instance_obj_uuid = instance_obj.attrib["uuid"]
                 query = select(DeviceInstance).where(
                     DeviceInstance.uuid == instance_obj_uuid)
-                instance = session.exec(query).first()
+                result = await session.exec(query)
+                instance = result.first()
                 if not instance:
                     raise RuntimeError(
                         f'Device instance with uuid "{instance_obj_uuid}" not '
@@ -536,4 +561,4 @@ class DbWriter:
                 if curr_linked_instance.id not in updated_instances:
                     session.delete(curr_linked_instance)
 
-            session.commit()
+            await session.commit()

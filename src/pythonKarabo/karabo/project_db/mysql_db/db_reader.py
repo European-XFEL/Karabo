@@ -15,6 +15,7 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 
 # DB data reading functions
+import datetime
 
 from sqlalchemy.orm import sessionmaker
 from sqlmodel import column, select
@@ -29,13 +30,14 @@ class DbReader:
     def __init__(self, session_gen: sessionmaker):
         self.session_gen = session_gen
 
-    def get_domain_projects(self, domain: str) -> list[dict[str, any]]:
+    async def get_domain_projects(self, domain: str) -> list[dict[str, any]]:
         projects = []
-        with self.session_gen() as session:
+        async with self.session_gen() as session:
             query = select(Project).join(ProjectDomain).where(
                 ProjectDomain.name == domain)
-            domain_projects = session.exec(query).all()
-            for project in domain_projects:
+            domain_projects = await session.exec(query)
+            result = domain_projects.all()
+            for project in result:
                 prj_dict = {
                     "uuid": project.uuid,
                     "item_type": "project",
@@ -52,13 +54,14 @@ class DbReader:
 
         return projects
 
-    def get_domain_macros(self, domain: str) -> list[dict[str, any]]:
+    async def get_domain_macros(self, domain: str) -> list[dict[str, any]]:
         macros = []
-        with self.session_gen() as session:
+        async with self.session_gen() as session:
             query = (
                 select(Macro).join(Project).join(ProjectDomain)
                 .where(ProjectDomain.name == domain))
-            domain_macros = session.exec(query).all()
+            result = await session.exec(query)
+            domain_macros = result.all()
             for macro in domain_macros:
                 macros.append({
                     "uuid": macro.uuid,
@@ -67,13 +70,14 @@ class DbReader:
                 })
         return macros
 
-    def get_domain_scenes(self, domain: str) -> list[dict[str, any]]:
+    async def get_domain_scenes(self, domain: str) -> list[dict[str, any]]:
         scenes = []
-        with self.session_gen() as session:
+        async with self.session_gen() as session:
             query = (
                 select(Scene).join(Project).join(ProjectDomain)
                 .where(ProjectDomain.name == domain))
-            domain_scenes = session.exec(query).all()
+            result = await session.exec(query)
+            domain_scenes = result.all()
             for scene in domain_scenes:
                 scenes.append({
                     "uuid": scene.uuid,
@@ -82,13 +86,15 @@ class DbReader:
                 })
         return scenes
 
-    def get_domain_device_servers(self, domain: str) -> list[dict[str, any]]:
+    async def get_domain_device_servers(
+            self, domain: str) -> list[dict[str, any]]:
         servers = []
-        with self.session_gen() as session:
+        async with self.session_gen() as session:
             query = (
                 select(DeviceServer).join(Project).join(ProjectDomain)
                 .where(ProjectDomain.name == domain))
-            device_servers = session.exec(query).all()
+            result = await session.exec(query)
+            device_servers = result.all()
             for server in device_servers:
                 servers.append({
                     "uuid": server.uuid,
@@ -97,14 +103,16 @@ class DbReader:
                 })
         return servers
 
-    def get_domain_device_instances(self, domain: str) -> list[dict[str, any]]:
+    async def get_domain_device_instances(
+            self, domain: str) -> list[dict[str, any]]:
         instances = []
-        with self.session_gen() as session:
+        async with self.session_gen() as session:
             query = (
                 select(DeviceInstance)
                 .join(DeviceServer).join(Project).join(ProjectDomain)
                 .where(ProjectDomain.name == domain))
-            device_instances = session.exec(query).all()
+            result = await session.exec(query)
+            device_instances = result.all()
             for instance in device_instances:
                 instances.append({
                     "uuid": instance.uuid,
@@ -113,14 +121,16 @@ class DbReader:
                 })
         return instances
 
-    def get_domain_device_configs(self, domain: str) -> list[dict[str, any]]:
+    async def get_domain_device_configs(
+            self, domain: str) -> list[dict[str, any]]:
         configs = []
-        with self.session_gen() as session:
+        async with self.session_gen() as session:
             query = (
                 select(DeviceConfig)
                 .join(DeviceInstance).join(DeviceServer).join(Project)
                 .join(ProjectDomain).where(ProjectDomain.name == domain))
-            device_configs = session.exec(query).all()
+            result = await session.exec(query)
+            device_configs = result.all()
             for config in device_configs:
                 configs.append({
                     "uuid": config.uuid,
@@ -129,119 +139,137 @@ class DbReader:
                 })
         return configs
 
-    def get_subprojects_of_project(self, project: Project) -> list[Project]:
+    async def get_subprojects_of_project(
+            self, project: Project) -> list[Project]:
         subprojects = []
-        with self.session_gen() as session:
+        async with self.session_gen() as session:
             query = select(ProjectSubproject).where(
                 ProjectSubproject.project_id == project.id).order_by(
                     ProjectSubproject.order)
-            subprjs = session.exec(query).all()
+            result = await session.exec(query)
+            subprjs = result.all()
             for subprj in subprjs:
                 query_subprj = select(Project).where(
                     Project.id == subprj.subproject_id)
-                subprj_rec = session.exec(query_subprj).first()
+                result = await session.exec(query_subprj)
+                subprj_rec = result.first()
                 if subprj_rec:
                     subprojects.append(subprj_rec)
         return subprojects
 
-    def get_scenes_of_project(self, project: Project) -> list[Scene]:
+    async def get_scenes_of_project(self, project: Project) -> list[Scene]:
         scenes = []
-        with self.session_gen() as session:
+        async with self.session_gen() as session:
             query = select(Scene).where(
                 Scene.project_id == project.id).order_by(
                     Scene.order)
-            scenes = session.exec(query).all()
+            result = await session.exec(query)
+            scenes = result.all()
         return scenes
 
-    def get_macros_of_project(self, project: Project) -> list[Macro]:
+    async def get_macros_of_project(self, project: Project) -> list[Macro]:
         macros = []
-        with self.session_gen() as session:
+        async with self.session_gen() as session:
             query = select(Macro).where(
                 Macro.project_id == project.id).order_by(
                     Macro.order)
-            macros = session.exec(query).all()
+            result = await session.exec(query)
+            macros = result.all()
         return macros
 
-    def get_device_servers_of_project(self,
-                                      project: Project) -> list[DeviceServer]:
+    async def get_device_servers_of_project(
+            self, project: Project) -> list[DeviceServer]:
         servers = []
-        with self.session_gen() as session:
+        async with self.session_gen() as session:
             query = select(DeviceServer).where(
                 DeviceServer.project_id == project.id).order_by(
                     DeviceServer.order)
-            servers = session.exec(query).all()
+            result = await session.exec(query)
+            servers = result.all()
         return servers
 
-    def get_device_instances_of_server(
+    async def get_device_instances_of_server(
             self, server: DeviceServer) -> list[DeviceInstance]:
         instances = []
-        with self.session_gen() as session:
+        async with self.session_gen() as session:
             query = select(DeviceInstance).where(
                 DeviceInstance.device_server_id == server.id).order_by(
                     DeviceInstance.order)
-            instances = session.exec(query).all()
+            result = await session.exec(query)
+            instances = result.all()
         return instances
 
-    def get_device_configs_of_instance(
+    async def get_device_configs_of_instance(
             self, instance: DeviceInstance) -> list[DeviceConfig]:
         configs = []
-        with self.session_gen() as session:
+        async with self.session_gen() as session:
             query = select(DeviceConfig).where(
                 DeviceConfig.device_instance_id == instance.id).order_by(
                     DeviceConfig.order)
-            configs = session.exec(query).all()
+            result = await session.exec(query)
+            configs = result.all()
         return configs
 
-    def get_project_from_uuid(self, uuid: str) -> Project | None:
+    async def get_project_from_uuid(self, uuid: str) -> Project | None:
         project = None
-        with self.session_gen() as session:
+        async with self.session_gen() as session:
             query = select(Project).where(
                     Project.uuid == uuid)
-            project = session.exec(query).first()
+            result = await session.exec(query)
+            project = result.first()
         return project
 
-    def get_scene_from_uuid(self, uuid: str) -> Scene | None:
+    async def get_scene_from_uuid(self, uuid: str) -> Scene | None:
         scene = None
-        with self.session_gen() as session:
+        async with self.session_gen() as session:
             query = select(Scene).where(Scene.uuid == uuid)
-            scene = session.exec(query).first()
+            result = await session.exec(query)
+            scene = result.first()
         return scene
 
-    def get_macro_from_uuid(self, uuid: str) -> Macro | None:
+    async def get_macro_from_uuid(self, uuid: str) -> Macro | None:
         macro = None
-        with self.session_gen() as session:
+        async with self.session_gen() as session:
             query = select(Macro).where(Macro.uuid == uuid)
-            macro = session.exec(query).first()
+            result = await session.exec(query)
+            macro = result.first()
         return macro
 
-    def get_device_server_from_uuid(self, uuid: str) -> DeviceServer | None:
+    async def get_device_server_from_uuid(
+            self, uuid: str) -> DeviceServer | None:
         server = None
-        with self.session_gen() as session:
+        async with self.session_gen() as session:
             query = select(DeviceServer).where(DeviceServer.uuid == uuid)
-            server = session.exec(query).first()
+            result = await session.exec(query)
+            server = result.first()
         return server
 
-    def get_device_instance_from_uuid(self,
-                                      uuid: str) -> DeviceInstance | None:
+    async def get_device_instance_from_uuid(
+            self, uuid: str) -> DeviceInstance | None:
         instance = None
-        with self.session_gen() as session:
+        async with self.session_gen() as session:
             query = select(DeviceInstance).where(DeviceInstance.uuid == uuid)
-            instance = session.exec(query).first()
+            result = await session.exec(query)
+            instance = result.first()
         return instance
 
-    def get_device_config_from_uuid(self, uuid: str) -> DeviceConfig | None:
+    async def get_device_config_from_uuid(
+            self, uuid: str) -> DeviceConfig | None:
         config = None
-        with self.session_gen() as session:
+        async with self.session_gen() as session:
             query = select(DeviceConfig).where(DeviceConfig.uuid == uuid)
-            config = session.exec(query).first()
+            result = await session.exec(query)
+            config = result.first()
+
         return config
 
-    def get_domain_device_instances_by_name_part(
+    async def get_domain_device_instances_by_name_part(
             self, domain: str, name_part: str) -> list[DeviceInstance]:
-        with self.session_gen() as session:
+        async with self.session_gen() as session:
             query = select(DeviceInstance).filter(
                 column("name").contains(name_part))
-            instances_by_name_part = session.exec(query).all()
+            result = await session.exec(query)
+            instances_by_name_part = result.all()
             # Only keep the instances linked to projects in the domain
             instances_in_domain = []
             for instance in instances_by_name_part:
@@ -254,14 +282,14 @@ class DbReader:
                             instances_in_domain.append(instance)
             return instances_in_domain
 
-    def get_device_instance_project(
+    async def get_device_instance_project(
             self, instance: DeviceInstance) -> Project | None:
-        import datetime
         project = None
-        with self.session_gen() as session:
+        async with self.session_gen() as session:
             query = select(DeviceServer).where(
                 DeviceServer.id == instance.device_server_id)
-            device_server = session.exec(query).first()
+            result = await session.exec(query)
+            device_server = result.first()
             if device_server:
                 project: Project = device_server.project
                 # Add tzinfo to the project dates (naive datetimes stored in
