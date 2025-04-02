@@ -959,7 +959,7 @@ class PythonDevice:
             self._initChannels(topLevel="", schema=schema)
             # ... and those output channels with potential Schema change
             for outToCreate in outChannelsToRecreate:
-                self.log.INFO("updateSchema triggers creation of output "
+                self.log.INFO("appendSchema triggers creation of output "
                               f"channel '{outToCreate}'")
                 self._prepareOutputChannel(outToCreate)
 
