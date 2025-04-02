@@ -26,19 +26,16 @@ from karabo.project_db.testing import (
     _gen_uuid, create_hierarchy, create_trashed_project)
 
 
-@pytest.fixture(scope="function")
-def database():
-    return SQLDatabase(test_mode=True)
-
-
 @pytest.mark.timeout(30)
 @pytest.mark.asyncio
-async def test_project_interface(database, subtests):
+async def test_project_interface(subtests):
     # A bunch of document "names" for the following tests
+    database = SQLDatabase(test_mode=True)
+    await database.initialize()
     testproject = _gen_uuid()
     testproject2 = _gen_uuid()
 
-    with database as db:
+    async with database as db:
         # remove previously existing test collection
         path = "{}/{}".format(db.root, 'LOCAL_TEST')
         if await db.dbhandle.hasCollection(path):
@@ -149,10 +146,12 @@ async def test_project_interface(database, subtests):
 
 @pytest.mark.timeout(30)
 @pytest.mark.asyncio
-async def test_save_check_modification(database, subtests):
-    proj_uuid = _gen_uuid()
+async def test_save_check_modification(subtests):
+    database = SQLDatabase(test_mode=True)
+    await database.initialize()
 
-    with database as db:
+    proj_uuid = _gen_uuid()
+    async with database as db:
         path = "{}/{}".format(db.root, 'LOCAL')
         if await db.dbhandle.hasCollection(path):
             await db.dbhandle.removeCollection(path)

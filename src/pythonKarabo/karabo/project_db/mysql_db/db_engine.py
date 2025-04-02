@@ -18,51 +18,54 @@
 
 import os
 
-from sqlalchemy.engine import Engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine, async_sessionmaker, create_async_engine)
 from sqlalchemy.pool import StaticPool
-from sqlmodel import create_engine
-from sqlmodel.orm.session import Session
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 DB_POOL_RECYCLE_SECS: int = int(os.environ.get(
         "KARABO_PROJECT_DB_POOL_RECYCLE_SECS", 100))
 
 
-def init_db_engine(user: str, password: str, server: str,
-                   port: int, db_name: str) -> tuple[Engine, sessionmaker]:
-    db_engine = create_engine(
-            f"mysql+pymysql://{user}:{password}@{server}:{port}/{db_name}",
-            # Being explicit in case SQL debugging is needed - echo False is
-            # already the default.
-            echo=False,
-            pool_recycle=DB_POOL_RECYCLE_SECS,
-            pool_pre_ping=True)
+def init_async_db_engine(
+    user: str, password: str, server: str,
+    port: int, db_name: str) -> tuple[
+        AsyncEngine, async_sessionmaker[AsyncSession]]:
+    db_url = f"mysql+aiomysql://{user}:{password}@{server}:{port}/{db_name}"
 
-    session_gen = sessionmaker(
-        autocommit=False,
-        autoflush=False,
-        bind=db_engine,
-        class_=Session,
-        expire_on_commit=False,
+    db_engine = create_async_engine(
+        db_url,
+        echo=False,
+        pool_recycle=DB_POOL_RECYCLE_SECS,
+        pool_pre_ping=True,
+        pool_size=20,
+        max_overflow=10,
     )
-    return (db_engine, session_gen)
 
-
-def init_test_db_engine() -> tuple[Engine, sessionmaker]:
-    db_engine = create_engine(
-            "sqlite://",  # Use in-memory SQLite database for tests
-            # Being explicit in case SQL debugging is needed - echo False is
-            # already the default.
-            echo=False,
-            # StaticPool has to be used for SQLite in-memory databases; details at:  # noqa
-            # https://docs.sqlalchemy.org/en/14/dialects/sqlite.html#using-a-memory-database-in-multiple-threads   # noqa
-            poolclass=StaticPool)
-
-    session_gen = sessionmaker(
-        autocommit=False,
-        autoflush=False,
+    session_gen = async_sessionmaker(
         bind=db_engine,
-        class_=Session,
         expire_on_commit=False,
+        class_=AsyncSession,
+        autoflush=False,
+        autocommit=False,
     )
-    return (db_engine, session_gen)
+
+    return db_engine, session_gen
+
+
+def init_test_async_db_engine() -> tuple[
+        AsyncEngine, async_sessionmaker[AsyncSession]]:
+    db_engine = create_async_engine(
+        "sqlite+aiosqlite:///:memory:",
+        echo=False,
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool)
+
+    session_gen = async_sessionmaker(
+        bind=db_engine,
+        expire_on_commit=False,
+        class_=AsyncSession,
+        autoflush=False,
+        autocommit=False)
+
+    return db_engine, session_gen
