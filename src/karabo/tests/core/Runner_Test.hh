@@ -44,8 +44,6 @@ class Runner_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testRunnerFailure2);
     CPPUNIT_TEST(testRunnerFailure3);
     CPPUNIT_TEST(testRunnerFailure4);
-    CPPUNIT_TEST(testRunnerWithInitJsonField);
-    CPPUNIT_TEST(testRunnerFailureWithInitAndAutostart);
     CPPUNIT_TEST_SUITE_END();
 
    public:
@@ -62,8 +60,6 @@ class Runner_Test : public CPPUNIT_NS::TestFixture {
     void testRunnerFailure2();
     void testRunnerFailure3();
     void testRunnerFailure4();
-    void testRunnerWithInitJsonField();
-    void testRunnerFailureWithInitAndAutostart();
 };
 
 #endif /* RUNNER_TEST_HH */

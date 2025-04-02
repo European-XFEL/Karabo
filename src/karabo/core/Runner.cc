@@ -19,7 +19,6 @@
 #include "Runner.hh"
 
 #include <algorithm>
-#include <nlohmann/json.hpp>
 #include <regex>
 #include <string>
 #include <vector>
@@ -30,7 +29,6 @@
 #include "karabo/log/Logger.hh"
 #include "karabo/util/Configurator.hh"
 #include "karabo/util/Hash.hh"
-#include "karabo/util/JsonToHashParser.hh"
 #include "karabo/util/Version.hh"
 
 using namespace karabo::util;
@@ -38,8 +36,6 @@ using namespace karabo::util;
 namespace karabo {
 
     namespace core {
-
-        static Hash initStringToAutoStartHash(const std::string& initString);
 
 
         DeviceServer::Pointer Runner::instantiate(int argc, const char** argv) {
@@ -83,30 +79,7 @@ namespace karabo {
                 return false;
             }
 
-            // Block to handle init keyword in argument list.
-            auto findStringWithPattern = [](auto& stringList, const std::string& pattern) {
-                std::regex regexPattern(pattern);
-                auto it = std::find_if(stringList.begin(), stringList.end(),
-                                       [&](const std::string& s) { return std::regex_search(s, regexPattern); });
-                return std::make_pair((it != stringList.end()), it);
-            };
-
             auto cmdLine = std::vector<std::string>(argv, argv + argc);
-            auto initToken = findStringWithPattern(cmdLine, R"(^\s*init\s*=)");
-            auto autoStartToken = findStringWithPattern(cmdLine, R"(^\s*autoStart\[)");
-
-            if (initToken.first && autoStartToken.first) {
-                throw KARABO_PARAMETER_EXCEPTION(
-                      "CLI Syntax Error: Cannot use autoStart and init keywords at the same time");
-            }
-
-            // This bit does parsing of the init string after which it is
-            // removed from the cmdLine argument stream.
-            if (initToken.first) {
-                configuration.merge(initStringToAutoStartHash(*initToken.second));
-                cmdLine.erase(initToken.second);
-            }
-
             vector<string> args, resolved;
 
             // Fix 'args' to take into account braces (whitespace inside braces!)
@@ -117,6 +90,11 @@ namespace karabo {
                 size_t pos = 0;
                 string a(cmdLine[i]);
 
+                // Special case: init=json-string
+                if (a.substr(0, 5) == "init=") {
+                    configuration.set("init", a.substr(5));
+                    continue;
+                }
                 do {
                     found = a.find_first_of("{}", pos);
                     if (found == std::string::npos) break;
@@ -181,15 +159,6 @@ namespace karabo {
             flatConfiguration.unflatten(configuration);
 
             return true;
-        }
-
-        Hash initStringToAutoStartHash(const std::string& initString) {
-            // precondition is init string is a key=value entry. Hence no
-            // explicit error check
-            auto pos = initString.find("=");
-            auto json = initString.substr(pos + 1);
-
-            return karabo::util::generateAutoStartHash(karabo::util::jsonToHash(json));
         }
 
 

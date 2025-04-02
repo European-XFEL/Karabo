@@ -23,20 +23,16 @@ class Schema_TestCase(unittest.TestCase):
         self.runner = Runner('someServer')
 
     def test_argument_parser(self):
-        cmdLine = ['foo', 'serverId=goo', 'autoStart[0]={a.b=c', 'x={y=12',
-                   'a.c=1}}']
+        cmdLine = ['foo', 'serverId=goo',
+                   'init={"a.b": "c","x": {"y": 12, "a.c": 1}}']
         res, parsed = self.runner.parseCommandLine(cmdLine)
         self.assertTrue(res)
         self.assertTrue(parsed.has("serverId"))
         self.assertEqual(parsed.get("serverId"), "goo")
-        self.assertTrue(parsed.has("autoStart"))
-        autoStart = parsed.get("autoStart")[0]
-        self.assertTrue(autoStart.has("a.b"))
-        self.assertTrue(autoStart.has("x.y"))
-        self.assertTrue(autoStart.has("x.a.c"))
-        self.assertEqual(autoStart.get("a.b"), "c")
-        self.assertEqual(autoStart.get("x.y"), "12")
-        self.assertEqual(autoStart.get("x.a.c"), "1")
+        # 'parsed' is a Hash with 'init'...
+        self.assertTrue(parsed.has("init"))
+        initjson = parsed.get("init")
+        self.assertEqual(initjson, '{"a.b": "c","x": {"y": 12, "a.c": 1}}')
 
     def test_argument_parser_success2(self):
         cmdLine = ['foo', 'serverId=bingo', 'a[0].b=1', 'a[0].c=2',
@@ -78,68 +74,11 @@ init={
 
         res, parsed = self.runner.parseCommandLine(cmdLine)
         self.assertTrue(res)
-        self.assertEqual(parsed.get("autoStart[0].TheClassName.deviceId"),
-                         "deviceId1")
-        self.assertEqual(parsed.get(
-            "autoStart[0].TheClassName.stringProperty"), "")
-        self.assertEqual(parsed.get(
-            "autoStart[0].TheClassName.floatProperty"), 42.1)
-        self.assertEqual(parsed.get(
-            "autoStart[0].TheClassName.node.stringProperty"), "Value1")
-        self.assertEqual(parsed.get(
-            "autoStart[1].TheClassName.deviceId"), "deviceId2")
-        self.assertEqual(parsed.get(
-            "autoStart[1].TheClassName.stringProperty"), "1.2.3:14")
-        self.assertEqual(parsed.get(
-            "autoStart[1].TheClassName.node.stringProperty"), "Value2")
 
-    def test_argument_parser_both_autostart_init(self):
-        init_string = """
-init={
-    "deviceId1": {
-        "classId": "TheClassName",
-        "stringProperty": "Value",
-        "floatProperty": 42,
-        "node": {
-            "stringProperty": "Value"
-        }
-    },
-    "deviceId2": {
-        "classId": "TheClassName",
-        "stringProperty": "Value",
-        "floatProperty": 42,
-        "node": {
-            "stringProperty": "Value"
-        }
-    }
-}
-                  """
-        cmdLine = ['foo', 'serverId=bingo', init_string,
+    def test_argument_parser_autostart(self):
+        # Test that old syntax leads to bail out
+        cmdLine = ['foo', 'serverId=bingo',
                    'autostart[0]='
                    '{DataLoggerManager.serverList=dls1,dls2,dls3,dls4']
         with self.assertRaises(SyntaxError):
             res, parsed = self.runner.parseCommandLine(cmdLine)
-
-    def test_argument_parser_failure1(self):
-        with self.assertRaises(SyntaxError):
-            res, parsed = self.runner.parseCommandLine(
-                ['foo', 'serverId=bar', 'autoStart[0]={a.b=c', 'x={y=12',
-                 'a.c=1}'])
-
-    def test_argument_parser_failure2(self):
-        with self.assertRaises(SyntaxError):
-            res, parsed = self.runner.parseCommandLine(
-                ['foo', 'serverId=bar', 'autoStart[0]={a.b=c', 'x={y=12',
-                 'a.c=1}}}'])
-
-    def test_argument_parser_failure3(self):
-        with self.assertRaises(SyntaxError):
-            res, parsed = self.runner.parseCommandLine(
-                ['foo', 'serverId=bar', 'autoStart[0]=}a.b=c', 'x={y=12',
-                 'a.c=1}}'])
-
-    def test_argument_parser_failure4(self):
-        with self.assertRaises(SyntaxError):
-            res, parsed = self.runner.parseCommandLine(
-                ['foo', 'serverId=bar', 'autoStart[0]={{a.b=c}', 'x={y=12',
-                 'a.c=1}}'])
