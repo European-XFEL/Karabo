@@ -98,6 +98,9 @@ class DatabaseBase(ContextDecorator):
         :return:
         """
 
+    async def initialize(self):
+        """"Initialize the async interface for the database"""
+
     async def __aenter__(self):
         """Obtain a database handle.
 
