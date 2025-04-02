@@ -14,13 +14,12 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 """This tests the communication between bound API and middlelayer API"""
-
+import json
 import os
 import shutil
 import sys
 from asyncio import (
-    TimeoutError, create_subprocess_exec, ensure_future, get_running_loop,
-    wait_for)
+    TimeoutError, create_subprocess_exec, get_running_loop, wait_for)
 from datetime import datetime
 from subprocess import PIPE
 
@@ -37,7 +36,7 @@ from karabo.middlelayer import (
     getDevice, getHistory, isSet, setWait, shutdown, sleep, unit, updateDevice,
     waitUntil, waitUntilNew)
 from karabo.middlelayer.testing import (  # noqa
-    AsyncDeviceContext, event_loop_policy, sleepUntil)
+    AsyncDeviceContext, AsyncServerContext, event_loop_policy, sleepUntil)
 
 
 class Child(Configurable):
@@ -529,58 +528,24 @@ async def test_cross_pipeline(deviceTest):
     await process.wait()
 
 
-@pytest.mark.timeout(90)
+@pytest.mark.timeout(40)
 @pytest.mark.asyncio(loop_scope="module")
 async def test_history(deviceTest):
     before = datetime.now()
-    # Wherever we run this test (by hands or in CI) we should
-    # not depend on the exact location of 'historytest.xml' ...
-    # ... so let's create it on the fly ...
-    xml_path = os.getcwd() + '/historytest.xml'
-    xml = open(xml_path, 'wb')
-    xml.write(b"""\
-<?xml version="1.0"?>
-<DeviceServer>
-<autoStart>
-<KRB_Item>
-    <DataLoggerManager>
-    <!-- Frequent flushing of raw and index files every 1 s: -->
-    <flushInterval KRB_Type="INT32">1</flushInterval>
-    <fileDataLogger>
-        <directory KRB_Type="STRING">karaboHistory</directory>
-    </fileDataLogger>
-    <serverList KRB_Type="VECTOR_STRING">karabo/dataLogger</serverList>
-    </DataLoggerManager>
-</KRB_Item>
-</autoStart>
-<scanPlugins KRB_Type="STRING">false</scanPlugins>
-<serverId KRB_Type="STRING">karabo/dataLogger</serverId>
-<Logger><priority>INFO</priority></Logger>
-</DeviceServer>""")
-    xml.close()
-
-    server = "karabo/dataLogger"  # Also twice in xml text above
-
-    # Use above configuration to start DataLoggerManager ...
-    karabo = os.environ["KARABO"]
-    global process
-    process = await create_subprocess_exec(
-        os.path.join(karabo, "bin", "karabo-cppserver"),
-        xml_path,
-        stdin=PIPE, stderr=PIPE, stdout=PIPE)
-
-    async def print_stdout():
-        while not process.stdout.at_eof():
-            line = await process.stdout.readline()
-            print(line.decode("ascii"), end="")
-
-    ensure_future(print_stdout())
-
-    try:
+    serverId = "karabo_dataLogger"
+    loggermap = os.getcwd() + '/loggermap.xml'
+    config = {"Karabo_DataLoggerManager_0":  # id as required by `getHistory`
+              {"classId": "DataLoggerManager", "flushInterval": 1,
+               "fileDataLogger": {"directory": "karaboHistory"},
+               "loggermap": loggermap, "serverList": [serverId]}}
+    init = json.dumps(config)
+    # Start karabo-cppserver with 'serverId' and init=<json-string>
+    server = AsyncServerContext(serverId, [f"init={init}"], api="cpp")
+    async with server:    # Wherever we run this test (by hands or in CI)
         # Wait until logger is ready for logging our middlelayer device,
         # i.e. published non-empty timestamp of any logged parameter
         with (await getDevice(
-                f"DataLogger-{server}")) as logger:
+                f"DataLogger-{serverId}")) as logger:
             await updateDevice(logger)
             while True:
                 found = False
@@ -591,60 +556,55 @@ async def test_history(deviceTest):
                 if found:
                     break
                 await waitUntilNew(logger.lastUpdatesUtc)
-    finally:
-        os.remove(xml_path)
 
-    # Initiate indexing for selected parameters: "value" and "child.number"
-    after = datetime.now()
+        # Initiate indexing for selected parameters: "value" and "child.number"
+        after = datetime.now()
 
-    # The first history request ever fails - but it triggers the
-    # creation of index files needed later for reading back.
-    # Sometimes this test runs in an environment where these requests
-    # are not the first ones, so cannot assertRaise.
-    try:
-        await getHistory("middlelayerDevice.value",
-                         before.isoformat(), after.isoformat())
-    except KaraboError as e:
-        assert "first history request" in str(e)
-    try:
-        await getHistory("middlelayerDevice.child.number",
-                         before.isoformat(), after.isoformat())
-    except KaraboError as e:
-        assert "first history request" in str(e)
+        # The first history request ever fails - but it triggers the
+        # creation of index files needed later for reading back.
+        # Sometimes this test runs in an environment where these requests
+        # are not the first ones, so cannot assertRaise.
+        try:
+            await getHistory("middlelayerDevice.value",
+                             before.isoformat(), after.isoformat())
+        except KaraboError as e:
+            assert "first history request" in str(e)
+        try:
+            await getHistory("middlelayerDevice.child.number",
+                             before.isoformat(), after.isoformat())
+        except KaraboError as e:
+            assert "first history request" in str(e)
 
-    # Now write data that is logged (and indexed for reading back!)
-    for i in range(5):
-        await setWait("middlelayerDevice", "value", i, "child.number", -i)
+        # Now write data that is logged (and indexed for reading back!)
+        for i in range(5):
+            await setWait("middlelayerDevice", "value", i, "child.number", -i)
 
-    device = await getDevice("middlelayerDevice")
-    assert device.value == 4
+        device = await getDevice("middlelayerDevice")
+        assert device.value == 4
 
-    # Make sure to flush the logger
-    await logger.flush()
+        # Make sure to flush the logger
+        await logger.flush()
 
-    after = datetime.now()
-    str_history = await getHistory(
-        "middlelayerDevice.value", before.isoformat(), after.isoformat())
-    proxy_history = await getHistory(
-        device.value, before.isoformat(), after.isoformat())
+        after = datetime.now()
+        str_history = await getHistory(
+            "middlelayerDevice.value", before.isoformat(), after.isoformat())
+        proxy_history = await getHistory(
+            device.value, before.isoformat(), after.isoformat())
 
-    for hist in str_history, proxy_history:
-        # Sort according to timestamp - order is not guaranteed!
-        # (E.g. if shortcut communication between logged device and
-        #  logger is switched on...)
-        hist.sort(key=lambda x: x[0])
-        assert [v for _, _, v in hist[-5:]] == list(range(5))
+        for hist in str_history, proxy_history:
+            # Sort according to timestamp - order is not guaranteed!
+            # (E.g. if shortcut communication between logged device and
+            #  logger is switched on...)
+            hist.sort(key=lambda x: x[0])
+            assert [v for _, _, v in hist[-5:]] == list(range(5))
 
-    node_history = await getHistory(
-        "middlelayerDevice.child.number", before.isoformat(),
-        after.isoformat())
-    node_proxy_history = await getHistory(
-        device.child.number, before.isoformat(), after.isoformat())
+        node_history = await getHistory(
+            "middlelayerDevice.child.number", before.isoformat(),
+            after.isoformat())
+        node_proxy_history = await getHistory(
+            device.child.number, before.isoformat(), after.isoformat())
 
-    for hist in node_history, node_proxy_history:
-        # Sort needed - see above.
-        hist.sort(key=lambda x: x[0])
-        assert [-v for _, _, v in hist[-5:]] == list(range(5))
-
-    await call(server, "slotKillServer")
-    await process.wait()
+        for hist in node_history, node_proxy_history:
+            # Sort needed - see above.
+            hist.sort(key=lambda x: x[0])
+            assert [-v for _, _, v in hist[-5:]] == list(range(5))

@@ -20,7 +20,7 @@ __date__ = "$May 24, 2013 11:36:55 AM$"
 import os
 import re
 
-from karabind import Hash, generateAutoStartHash, jsonToHash, loadFromFile
+from karabind import Hash, loadFromFile
 
 from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 
@@ -64,23 +64,11 @@ class Runner:
     def parseCommandLine(self, args):
         configuration = Hash()
 
-        # Parse and remove init string from argument stream
         init_pattern = re.compile(r'^\s*init\s*=')
-        autostart_pattern = re.compile(r'^\s*autoStart\[')
-
         has_init_string = any(init_pattern.match(token) for token in args)
-        has_autostart_string = any(autostart_pattern.match(token)
-                                   for token in args)
-
-        if (has_init_string and has_autostart_string):
-            raise SyntaxError('Invalid usage: Both "init" and "autoStart" '
-                              'options cannot be specified together.')
-
         if has_init_string:
             json = removeInitString(args).split('=')[1]
-            configuration.merge(
-                generateAutoStartHash(jsonToHash(json)))
-        ######
+            configuration['init'] = json
 
         firstArg = ""
         if len(args) > 1:
