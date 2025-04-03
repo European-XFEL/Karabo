@@ -61,7 +61,7 @@ async def database():
         _user, _password, test_mode=True, init_db=True)
 
     # Create test data
-    with db_init as db:
+    async with db_init as db:
         path = "{}/{}".format(db.root, 'LOCAL')
         if db.dbhandle.hasCollection(path):
             db.dbhandle.removeCollection(path)
@@ -75,7 +75,7 @@ async def database():
     yield ret
 
     # Cleanup before stop
-    with db_init as db:
+    async with db_init as db:
         path = "{}/{}".format(db.root, 'LOCAL')
         if db.dbhandle.hasCollection(path):
             db.dbhandle.removeCollection(path)
