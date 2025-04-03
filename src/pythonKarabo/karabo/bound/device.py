@@ -628,14 +628,7 @@ class PythonDevice:
                 self._parameters.merge(
                     validated, HashMergePolicy.REPLACE_ATTRIBUTES)
 
-                # Hash containing 'state' or at least one reconfigurable
-                # key should be signalled by 'signalStateChanged'
-                signal = "signalChanged"
-                shrt = self.validatorIntern.hasReconfigurableParameter()
-                if 'state' in validated or (validate and shrt):
-                    signal = "signalStateChanged"
-
-                self._ss.emit(signal, validated, self.deviceid)
+                self._ss.emit("signalChanged", validated, self.deviceid)
 
     def setVectorUpdate(self, key, updates, updateType, timestamp=None):
         """Concurrency safe update of vector property (not for tables)
@@ -1241,8 +1234,6 @@ class PythonDevice:
         # Register intrinsic signals
         # changeHash, instanceId
         self._ss.registerSignal("signalChanged", Hash, str)
-        # changeHash, instanceId
-        self._ss.registerSystemSignal("signalStateChanged", Hash, str)
         # schema, deviceid
         self._ss.registerSystemSignal("signalSchemaUpdated", Schema, str)
 
@@ -1537,10 +1528,7 @@ class PythonDevice:
         with self._stateChangeLock:
             self._parameters += reconfiguration
 
-        if self.validatorExtern.hasReconfigurableParameter():
-            self._ss.emit("signalStateChanged", reconfiguration, self.deviceid)
-        else:
-            self._ss.emit("signalChanged", reconfiguration, self.deviceid)
+        self._ss.emit("signalChanged", reconfiguration, self.deviceid)
 
     def slotGetSchema(self, onlyCurrentState):
         # state lock!
