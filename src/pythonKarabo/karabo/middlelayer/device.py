@@ -162,7 +162,6 @@ class Device(InjectMixin, SignalSlotable):
         requiredAccessLevel=AccessLevel.EXPERT)
 
     signalChanged = Signal(TypeHash(), String())
-    signalStateChanged = Signal(TypeHash(), String())
     signalSchemaUpdated = Signal(TypeSchema(), String())
 
     @property
