@@ -13,68 +13,11 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
-from abc import ABC, abstractmethod
 from contextlib import ContextDecorator
-
-
-class HandleABC(ABC):
-    """Database Handle ABC
-
-    it enforces only the basic "load/save" functionality.
-    Queries are left to implementation in the derived class.
-    """
-    @abstractmethod
-    def hasCollection(self, path):
-        """Abstract method for DbHandle"""
-        return True
-
-    @abstractmethod
-    def removeCollection(self, path):
-        """Abstract method for DbHandle"""
-
-    @abstractmethod
-    def createCollection(self, path):
-        """Abstract method for DbHandle"""
-
-    @abstractmethod
-    def hasDocument(self, path):
-        """Abstract method for DbHandle"""
-        return True
-
-    @abstractmethod
-    def load(self, data, path):
-        """Abstract method for DbHandle"""
-
-    @abstractmethod
-    def getDoc(self, name):
-        """Abstract method for DbHandle"""
-
-    @abstractmethod
-    def getDocument(self, name):
-        """Abstract method for DbHandle"""
 
 
 class DatabaseBase(ContextDecorator):
     root = None
-
-    def __init__(self):
-        self._dbhandle = None
-
-    @property
-    def dbhandle(self):
-        return self._dbhandle
-
-    @dbhandle.setter
-    def dbhandle(self, value):
-        assert isinstance(value, HandleABC)
-        self._dbhandle = value
-
-    def onEnter(self):
-        """ To Be implemented by subclasses
-
-        returns an object subclass of `HandleABC` which is set to the
-        `self.dbhandle` object attribute in the `__aenter__` conte
-        """
 
     def path(self, domain: str, uuid: str):
         # XXX: Add a '_0' suffix to keep old code from wetting its pants
@@ -85,7 +28,6 @@ class DatabaseBase(ContextDecorator):
 
         sanity checks on the database should be implemented in this function
         """
-        self.dbhandle = self.onEnter()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -106,7 +48,6 @@ class DatabaseBase(ContextDecorator):
 
         sanity checks on the database should be implemented in this function
         """
-        self.dbhandle = self.onEnter()
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
