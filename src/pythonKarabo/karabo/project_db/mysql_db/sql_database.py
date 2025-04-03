@@ -56,6 +56,9 @@ class SQLDatabase(DatabaseBase):
             raise RuntimeError("Database needs to be initialized")
         return self
 
+    async def __aexit__(self, exc_type, exc_value, traceback):
+        return await super().__aexit__(exc_type, exc_value, traceback)
+
     async def list_domains(self) -> list[str]:
         async with self.session_gen() as session:
             result = await session.exec(select(ProjectDomain))
@@ -603,4 +606,40 @@ class SQLDatabase(DatabaseBase):
             for project in self.get_projects_from_device(domain,
                                                          instance_id):
                 projects[project] = config["configid"]
+        return projects
+
+    async def get_projects_with_device(
+            self, domain: str, device_id_part: str) -> list[dict[str, any]]:
+        """
+        Returns a list of dictionaries with data about projects that contain
+        active configurations for a given device.
+
+        :param domain: DB domain
+        :param device_id_part: part of name of devices for which project data
+                               must be returned.
+        :return: a list of dicts:
+            [{"projectname": name of project,
+              "date": last modification timestamp for the project,
+              "uuid": uuid of projecti
+              "devices": list of ids of prj devices with the given part}, ...]
+        """
+        configs = await self.get_configurations_from_device_name_part(
+            domain, device_id_part)
+        projects = []
+        for config in configs:
+            device_uuid = config["device_uuid"]
+            device_id = config["device_id"]
+            for prj in await self.get_projects_data_from_device(domain,
+                                                                device_uuid):
+                prj_in_list = next((p for p in projects
+                                    if p["uuid"] == prj["uuid"]), None)
+                if prj_in_list:
+                    # The project is already in the resulting list due to
+                    # another device_id that matched the name part; add the
+                    # device_id to the 'devices' attribute of the project.
+                    prj_in_list["devices"].append(device_id)
+                else:
+                    prj["devices"] = [device_id]
+                    projects.append(prj)
+
         return projects
