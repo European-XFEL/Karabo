@@ -413,13 +413,7 @@ namespace karabo {
             if (!validated.empty()) {
                 m_parameters.merge(validated, karabo::util::Hash::REPLACE_ATTRIBUTES);
 
-                auto signal = "signalChanged"; // less reliable delivery
-                if (validated.has("state") || m_validatorIntern.hasReconfigurableParameter()) {
-                    // If Hash contains state or at least one reconfigurable parameter:
-                    // ==> more reliable delivery.
-                    signal = "signalStateChanged";
-                }
-                emit(signal, validated, getInstanceId());
+                emit("signalChanged", validated, getInstanceId());
             }
         }
 
@@ -447,23 +441,7 @@ namespace karabo {
                 }
                 m_parameters.merge(tmp, Hash::REPLACE_ATTRIBUTES);
 
-                // Find out which signal to use...
-                auto signal = "signalChanged"; // default, less reliable delivery
-                if (tmp.has("state")) {
-                    // if Hash contains 'state' key -> signalStateChanged
-                    signal = "signalStateChanged"; // more reliable delivery
-                } else {
-                    for (const std::string& path : paths) {
-                        if (m_fullSchema.has(path) && m_fullSchema.isAccessReconfigurable(path)) {
-                            // if Hash contains at least one reconfigurable parameter -> signalStateChanged
-                            signal = "signalStateChanged"; // more reliable delivery
-                            break;
-                        }
-                    }
-                }
-
-                // ...and finally emit:
-                emit(signal, tmp, getInstanceId());
+                emit("signalChanged", tmp, getInstanceId());
             }
         }
 
@@ -993,9 +971,7 @@ namespace karabo {
         void Device::initDeviceSlots() {
             using namespace std;
 
-            KARABO_SIGNAL("signalChanged", karabo::util::Hash /*configuration*/, string /*deviceId*/);
-
-            KARABO_SYSTEM_SIGNAL("signalStateChanged", karabo::util::Hash /*configuration*/, string /*deviceId*/);
+            KARABO_SYSTEM_SIGNAL("signalChanged", karabo::util::Hash /*configuration*/, string /*deviceId*/);
 
             KARABO_SYSTEM_SIGNAL("signalSchemaUpdated", karabo::util::Schema /*deviceSchema*/, string /*deviceId*/);
 
@@ -1258,9 +1234,8 @@ namespace karabo {
                 m_parameters.merge(reconfiguration);
             }
             KARABO_LOG_DEBUG << "After user interaction:\n" << reconfiguration;
-            if (m_validatorExtern.hasReconfigurableParameter())
-                emit("signalStateChanged", reconfiguration, getInstanceId());
-            else emit("signalChanged", reconfiguration, getInstanceId());
+
+            emit("signalChanged", reconfiguration, getInstanceId());
         }
 
 

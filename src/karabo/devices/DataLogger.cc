@@ -317,9 +317,8 @@ namespace karabo {
             // Set initial Schema - needed for receiving properly in slotChanged
             data->handleSchemaUpdated(schema, stamp);
 
-            // Now connect concurrently both, signalStateChanged and signalChanged, to the same slot.
-            asyncConnect({SignalSlotConnection(data->m_deviceToBeLogged, "signalStateChanged", "", "slotChanged"),
-                          SignalSlotConnection(data->m_deviceToBeLogged, "signalChanged", "", "slotChanged")},
+            // Now connect signalChanged.
+            asyncConnect(data->m_deviceToBeLogged, "signalChanged", "", "slotChanged",
                          util::bind_weak(&DataLogger::handleConfigConnected, this, data, counter),
                          util::bind_weak(&DataLogger::handleFailure, this, "connecting to configuration updates for",
                                          data, counter));
@@ -364,12 +363,9 @@ namespace karabo {
             asyncDisconnect(deviceId, "signalSchemaUpdated", "", "slotSchemaUpdated",
                             std::bind(genericHandler, false, "signalSchemaUpdated"), // successHandler for schema
                             std::bind(genericHandler, true, "signalSchemaUpdated")); // failureHandler for schema
-            asyncDisconnect(deviceId, "signalStateChanged", "", "slotChanged",
-                            std::bind(genericHandler, false, "signalStateChanged"), // successHandler for stateChanged
-                            std::bind(genericHandler, true, "signalStateChanged")); // failureHandler for...
             asyncDisconnect(deviceId, "signalChanged", "", "slotChanged",
-                            std::bind(genericHandler, false, "signalChanged"), // ... for changed
-                            std::bind(genericHandler, true, "signalChanged")); // ... for changed
+                            std::bind(genericHandler, false, "signalChanged"), // successHandler for signalChanged
+                            std::bind(genericHandler, true, "signalChanged")); // failureHandler for signalChanged
         }
 
 
