@@ -18,7 +18,7 @@
 import datetime
 
 from sqlalchemy.orm import sessionmaker
-from sqlmodel import column, select
+from sqlmodel import select
 
 from .models import (
     DeviceConfig, DeviceInstance, DeviceServer, Macro, Project, ProjectDomain,
@@ -266,32 +266,24 @@ class DbReader:
     async def get_domain_device_instances_by_name_part(
             self, domain: str, name_part: str) -> list[DeviceInstance]:
         async with self.session_gen() as session:
-            query = select(DeviceInstance).filter(
-                column("name").contains(name_part))
+            query = (
+                select(DeviceInstance)
+                .join(DeviceServer).join(Project).join(ProjectDomain)
+                .filter(DeviceInstance.name.like(f'%{name_part}%'))
+                .where(ProjectDomain.name == domain))
             result = await session.exec(query)
             instances_by_name_part = result.all()
-            # Only keep the instances linked to projects in the domain
-            instances_in_domain = []
-            for instance in instances_by_name_part:
-                device_server = instance.device_server
-                if device_server:
-                    project = device_server.project
-                    if project:
-                        project_domain = project.project_domain
-                        if project_domain.name == domain:
-                            instances_in_domain.append(instance)
-            return instances_in_domain
+            return instances_by_name_part
 
     async def get_device_instance_project(
             self, instance: DeviceInstance) -> Project | None:
         project = None
         async with self.session_gen() as session:
-            query = select(DeviceServer).where(
+            query = select(Project).join(DeviceServer).where(
                 DeviceServer.id == instance.device_server_id)
             result = await session.exec(query)
-            device_server = result.first()
-            if device_server:
-                project: Project = device_server.project
+            project = result.first()
+            if project:
                 # Add tzinfo to the project dates (naive datetimes stored in
                 # in the DB)
                 if project.date:
