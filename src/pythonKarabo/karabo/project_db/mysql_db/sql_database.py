@@ -14,14 +14,13 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 import datetime
-import weakref
 from asyncio import gather
 
 from sqlmodel import SQLModel, select
 
 from karabo.native import HashList
 
-from ..bases import DatabaseBase, HandleABC
+from ..bases import DatabaseBase
 from ..util import ProjectDBError, make_str_if_needed, make_xml_if_needed
 from .db_engine import init_async_db_engine, init_test_async_db_engine
 from .db_reader import DbReader
@@ -30,53 +29,6 @@ from .models import ProjectDomain
 from .models_xml import (
     emit_device_config_xml, emit_device_instance_xml, emit_device_server_xml,
     emit_macro_xml, emit_project_xml, emit_scene_xml)
-
-
-# TODO: HandleABC is an "artificial" dependency for the mysql case. Put here
-#       to play along well with the isinstance check performed by DatabaseBase.
-#       To be removed in a future cleanup.
-class MySQLHandle(HandleABC):
-
-    # As for the MySQL back-end domain related operations are not filesystem
-    # operations, but database operations, a weak reference to the
-    # ProjectDatabase must be provided to support domain operations.
-    def __init__(self, db_weak_ref: weakref):
-        super().__init__()
-        self._db = db_weak_ref
-
-    # region HandleABC compliance
-
-    async def hasCollection(self, path):
-        if self._db() is not None:
-            path_parts = path.split('/')
-            if len(path_parts) > 0:
-                domain = path_parts[-1]
-                return await self._db().domain_exists(domain)
-        return False
-
-    async def removeCollection(self, path):
-        """"Abstract interface"""
-
-    async def createCollection(self, path):
-        if self._db() is not None:
-            path_parts = path.split('/')
-            if len(path_parts) > 0:
-                domain = path_parts[-1]
-                await self._db().add_domain(domain)
-
-    def hasDocument(self, path):
-        raise NotImplementedError
-
-    def load(self, data, path):
-        raise NotImplementedError
-
-    def getDoc(self, name):
-        raise NotImplementedError
-
-    def getDocument(self, name):
-        raise NotImplementedError
-
-    # end region
 
 
 class SQLDatabase(DatabaseBase):
@@ -99,11 +51,10 @@ class SQLDatabase(DatabaseBase):
             await conn.run_sync(SQLModel.metadata.create_all)
         self.initialized = True
 
-    def onEnter(self):
+    async def __aenter__(self):
         if not self.initialized:
             raise RuntimeError("Database needs to be initialized")
-
-        return MySQLHandle(weakref.ref(self))
+        return self
 
     async def list_domains(self) -> list[str]:
         async with self.session_gen() as session:

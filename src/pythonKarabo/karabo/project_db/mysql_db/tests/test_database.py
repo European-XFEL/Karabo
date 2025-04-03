@@ -36,23 +36,6 @@ async def test_project_interface(subtests):
     testproject2 = _gen_uuid()
 
     async with database as db:
-        # remove previously existing test collection
-        path = "{}/{}".format(db.root, 'LOCAL_TEST')
-        if await db.dbhandle.hasCollection(path):
-            await db.dbhandle.removeCollection(path)
-
-        path = "{}/{}".format(db.root, 'LOCAL')
-        if await db.dbhandle.hasCollection(path):
-            await db.dbhandle.removeCollection(path)
-
-        # make sure we have the LOCAL collection and subcollections
-        path = "{}/{}".format(db.root, 'LOCAL')
-        if not await db.dbhandle.hasCollection(path):
-            await db.dbhandle.createCollection(path)
-
-        with subtests.test(msg='test_domain_exists'):
-            assert await db.domain_exists("LOCAL")
-
         with subtests.test(msg='test_add_domain'):
             await db.add_domain("LOCAL_TEST")
             assert await db.domain_exists("LOCAL_TEST")
@@ -152,15 +135,6 @@ async def test_save_check_modification(subtests):
 
     proj_uuid = _gen_uuid()
     async with database as db:
-        path = "{}/{}".format(db.root, 'LOCAL')
-        if await db.dbhandle.hasCollection(path):
-            await db.dbhandle.removeCollection(path)
-
-        # make sure we have the LOCAL collection and subcollections
-        path = "{}/{}".format(db.root, 'LOCAL')
-        if not await db.dbhandle.hasCollection(path):
-            await db.dbhandle.createCollection(path)
-
         with subtests.test(msg='test_save_item'):
             date = "2011-11-01 09:00:52"
             # The MySQL back-end doesn't accept project items with no

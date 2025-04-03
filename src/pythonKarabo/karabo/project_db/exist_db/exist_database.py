@@ -24,7 +24,6 @@ from pyexistdb.db import ExistDB
 from pyexistdb.exceptions import ExistDBException
 from urllib3.exceptions import HTTPError
 
-from karabo.project_db.bases import HandleABC
 from karabo.project_db.util import ProjectDBError
 
 from ..bases import DatabaseBase
@@ -88,12 +87,18 @@ class ExistDatabase(DatabaseBase):
             port = os.getenv('KARABO_PROJECT_DB_PORT', 8181)
 
         port = int(port)
+        self.dbhandle = None
         self.settings = DbSettings(user, password, server, port, init_db)
         self.root = (self.settings.root_collection if not test_mode else
                      self.settings.root_collection_test)
 
-    def onEnter(self):
-        return assure_running(self.settings)
+    async def __aenter__(self):
+        self.dbhandle = assure_running(self.settings)
+        return self
+
+    def __enter__(self):
+        self.dbhandle = assure_running(self.settings)
+        return self
 
     async def _check_for_modification(self, domain, uuid, old_date):
         """ Check whether the item with of the given `domain` and `uuid` was
@@ -800,10 +805,6 @@ LIST_DOMAINS_QUERY = """
     """
 
 
-class ExistDBHandle(ExistDB, HandleABC):
-    """Adapter for HandleABC"""
-
-
 def assure_running(db_settings):
     """
     Assures an instance of existDB is running on your **local** host if the
@@ -863,7 +864,7 @@ def init_db(db_settings, dbhandle):
 
 
 def verify_db(db_settings):
-    dbhandle = ExistDBHandle(db_settings.server_url)
+    dbhandle = ExistDB(db_settings.server_url)
     if db_settings.init_db:
         init_db(db_settings, dbhandle)
     if not dbhandle.hasCollection(db_settings.root_collection):
