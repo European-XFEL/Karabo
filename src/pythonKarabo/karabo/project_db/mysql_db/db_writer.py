@@ -77,7 +77,7 @@ class DbWriter:
                 # new project. A new project only gets its ID after being
                 # stored in the database.
                 await session.commit()
-                session.refresh(project)
+                await session.refresh(project)
             else:
                 # There's a record for the project in the DB - update its
                 # attributes from the data in the xml
@@ -445,7 +445,7 @@ class DbWriter:
                     last_modified_user=instance_user)
                 session.add(instance)
                 await session.commit()
-                session.refresh(instance)
+                await session.refresh(instance)
 
             # Saves the device configs linked to the device instance that
             # has been just saved. First the currently linked configs
@@ -522,7 +522,7 @@ class DbWriter:
                     last_modified_user=server_user)
                 session.add(server)
                 await session.commit()
-                session.refresh(server)
+                await session.refresh(server)
 
             # Saves the device instances linked to the device server just saved
             # First unlinks all the currently linked device instances.
