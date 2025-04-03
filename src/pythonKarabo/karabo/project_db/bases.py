@@ -13,54 +13,15 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
-from contextlib import ContextDecorator
+from contextlib import AbstractAsyncContextManager
 
 
-class DatabaseBase(ContextDecorator):
-    root = None
-
-    def path(self, domain: str, uuid: str):
-        # XXX: Add a '_0' suffix to keep old code from wetting its pants
-        return f"{self.root}/{domain}/{uuid}_0"
-
-    def __enter__(self):
-        """Obtain a database handle.
-
-        sanity checks on the database should be implemented in this function
-        """
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """
-        Clean-up action for the ProjectDatabase context. As the database
-        handle doesn't carry any state nothing needs to be done here.
-        :param exc_type:
-        :param exc_val:
-        :param exc_tb:
-        :return:
-        """
+class DatabaseBase(AbstractAsyncContextManager):
 
     async def initialize(self):
         """"Initialize the async interface for the database"""
 
-    async def __aenter__(self):
-        """Obtain a database handle.
-
-        sanity checks on the database should be implemented in this function
-        """
-        return self
-
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        """
-        Clean-up action for the ProjectDatabase context. As the database
-        handle doesn't carry any state nothing needs to be done here.
-        :param exc_type:
-        :param exc_val:
-        :param exc_tb:
-        :return:
-        """
-
-    def get_configurations_from_device_name(
+    async def get_configurations_from_device_name(
             self, domain: str, instance_id: str):
         """Returns a list of configurations for a given device
 
@@ -131,26 +92,7 @@ class DatabaseBase(ContextDecorator):
               "uuid": uuid of projecti
               "devices": list of ids of prj devices with the given part}, ...]
         """
-        configs = await self.get_configurations_from_device_name_part(
-            domain, device_id_part)
-        projects = []
-        for config in configs:
-            device_uuid = config["device_uuid"]
-            device_id = config["device_id"]
-            for prj in await self.get_projects_data_from_device(domain,
-                                                                device_uuid):
-                prj_in_list = next((p for p in projects
-                                    if p["uuid"] == prj["uuid"]), None)
-                if prj_in_list:
-                    # The project is already in the resulting list due to
-                    # another device_id that matched the name part; add the
-                    # device_id to the 'devices' attribute of the project.
-                    prj_in_list["devices"].append(device_id)
-                else:
-                    prj["devices"] = [device_id]
-                    projects.append(prj)
-
-        return projects
+        raise NotImplementedError
 
     async def get_projects_data_from_device(self, domain, uuid):
         raise NotImplementedError
