@@ -1755,7 +1755,6 @@ namespace karabo {
                     typedef SignalSlotable::SignalSlotConnection Connection;
                     const std::vector<Connection> cons{
                           Connection(instanceId, "signalChanged", "", "_slotChanged"),
-                          Connection(instanceId, "signalStateChanged", "", "_slotChanged"),
                           Connection(instanceId, "signalSchemaUpdated", "", "_slotSchemaUpdated")};
                     // One could 'extend' asyncFailureHandler by a wrapper that also disconnects all succeeded
                     // connections (and stop the automatic reconnect of the others). But we let that be done by the
@@ -1763,7 +1762,6 @@ namespace karabo {
                     p->asyncConnect(cons, asyncSuccessHandler, asyncFailureHandler);
                 } else {
                     p->connect(instanceId, "signalChanged", "", "_slotChanged");
-                    p->connect(instanceId, "signalStateChanged", "", "_slotChanged");
                     p->connect(instanceId, "signalSchemaUpdated", "", "_slotSchemaUpdated");
                 }
             } else if (asyncSuccessHandler) {
@@ -2050,9 +2048,6 @@ namespace karabo {
                 p->asyncDisconnect(
                       instanceId, "signalChanged", "", "_slotChanged",
                       bind_weak(&DeviceClient::disconnectHandler, this, "signalChanged", instanceId, cleanAreas));
-                p->asyncDisconnect(
-                      instanceId, "signalStateChanged", "", "_slotChanged",
-                      bind_weak(&DeviceClient::disconnectHandler, this, "signalStateChanged", instanceId, cleanAreas));
                 cleanAreas = {"fullSchema", "activeSchema"};
                 p->asyncDisconnect(
                       instanceId, "signalSchemaUpdated", "", "_slotSchemaUpdated",
@@ -2069,10 +2064,8 @@ namespace karabo {
             for (const std::string& area : toClear) {
                 const std::string fullPath(path + "." + area);
                 if (!eraseFromRuntimeSystemDescription(fullPath)) {
-                    // Happens e.g. for second reply from disconnecting signalState and signalStateChanged
-                    // FIXME: make LOG_TRACE
-                    KARABO_LOG_FRAMEWORK_DEBUG << "Failed to clear " << fullPath << " from system description "
-                                               << "(for signal " << signal << ").";
+                    KARABO_LOG_FRAMEWORK_WARN << "Failed to clear " << fullPath << " from system description "
+                                              << "(for signal " << signal << ").";
                 }
             }
         }

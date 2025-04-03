@@ -66,7 +66,7 @@ Commands
 
 State
 
-- The state is a special property that is published using its own signal (signalStateChanged). This is important to apply different message policies (should never be dropped) in contrast to regular properties.
+- Before Karabo 3, the state is a special property that is published using its own signal (signalStateChanged). This was important to apply different message policies (should never be dropped) in contrast to regular properties.
 - The state property always must be named "state"
 
 

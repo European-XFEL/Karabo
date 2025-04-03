@@ -220,7 +220,7 @@ namespace karabo {
                                        const DeviceData::Pointer& data,
                                        const std::shared_ptr<std::atomic<unsigned int>>& counter);
 
-            /// Helper for connecting to both signalChanged and signalStateChanged
+            /// Helper for connecting to signalChanged
             void handleConfigConnected(const DeviceData::Pointer& data,
                                        const std::shared_ptr<std::atomic<unsigned int>>& counter);
 
