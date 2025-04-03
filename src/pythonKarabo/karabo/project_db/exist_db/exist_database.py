@@ -49,6 +49,12 @@ def get_db_credentials(is_test):
 
 class ExistDatabase(DatabaseBase):
 
+    root = None
+
+    def path(self, domain: str, uuid: str):
+        # XXX: Add a '_0' suffix to keep old code from wetting its pants
+        return f"{self.root}/{domain}/{uuid}_0"
+
     def __init__(self, user, password, server=None, port=None,
                  test_mode=False, init_db=False):
         """
@@ -96,9 +102,8 @@ class ExistDatabase(DatabaseBase):
         self.dbhandle = assure_running(self.settings)
         return self
 
-    def __enter__(self):
-        self.dbhandle = assure_running(self.settings)
-        return self
+    async def __aexit__(self, exc_type, exc_value, traceback):
+        return await super().__aexit__(exc_type, exc_value, traceback)
 
     async def _check_for_modification(self, domain, uuid, old_date):
         """ Check whether the item with of the given `domain` and `uuid` was
@@ -773,6 +778,42 @@ class ExistDatabase(DatabaseBase):
         meta['uuid'] = uuid
         meta['date'] = item_tree.attrib['date']
         return meta
+
+    async def get_projects_with_device(
+            self, domain: str, device_id_part: str) -> list[dict[str, any]]:
+        """
+        Returns a list of dictionaries with data about projects that contain
+        active configurations for a given device.
+
+        :param domain: DB domain
+        :param device_id_part: part of name of devices for which project data
+                               must be returned.
+        :return: a list of dicts:
+            [{"projectname": name of project,
+              "date": last modification timestamp for the project,
+              "uuid": uuid of projecti
+              "devices": list of ids of prj devices with the given part}, ...]
+        """
+        configs = await self.get_configurations_from_device_name_part(
+            domain, device_id_part)
+        projects = []
+        for config in configs:
+            device_uuid = config["device_uuid"]
+            device_id = config["device_id"]
+            for prj in await self.get_projects_data_from_device(domain,
+                                                                device_uuid):
+                prj_in_list = next((p for p in projects
+                                    if p["uuid"] == prj["uuid"]), None)
+                if prj_in_list:
+                    # The project is already in the resulting list due to
+                    # another device_id that matched the name part; add the
+                    # device_id to the 'devices' attribute of the project.
+                    prj_in_list["devices"].append(device_id)
+                else:
+                    prj["devices"] = [device_id]
+                    projects.append(prj)
+
+        return projects
 
     async def get_projects_with_conf(self, domain, device_id):
         """

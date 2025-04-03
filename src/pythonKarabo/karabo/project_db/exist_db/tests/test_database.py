@@ -44,7 +44,7 @@ async def test_project_interface(database, subtests):
     # A bunch of document "names" for the following tests
     testproject = _gen_uuid()
     testproject2 = _gen_uuid()
-    with database as db:
+    async with database as db:
         # remove previously existing test collection
         path = "{}/{}".format(db.root, 'LOCAL_TEST')
         if db.dbhandle.hasCollection(path):
@@ -192,8 +192,7 @@ async def test_project_interface(database, subtests):
 async def test_save_check_modification(database, subtests):
     proj_uuid = _gen_uuid()
 
-    with database as db:
-
+    async with database as db:
         path = "{}/{}".format(db.root, 'LOCAL')
         if db.dbhandle.hasCollection(path):
             db.dbhandle.removeCollection(path)
