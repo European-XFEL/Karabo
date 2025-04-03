@@ -135,7 +135,7 @@ class DatabaseBase(ContextDecorator):
         """
         raise NotImplementedError
 
-    def get_configurations_from_device_name_part(
+    async def get_configurations_from_device_name_part(
             self, domain: str, device_id_part: str):
         """
         Returns a list of configurations for a given device.
