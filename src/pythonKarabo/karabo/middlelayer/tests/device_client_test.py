@@ -103,7 +103,6 @@ async def test_getConfigurationSchemaFromPast(mocker):
         assert info["classId"] == "DataLogReader"
 
 
-@pytest.mark.fail
 @pytest.mark.timeout(40)
 @pytest.mark.asyncio
 async def test_device_client_base():
