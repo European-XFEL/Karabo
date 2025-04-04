@@ -485,7 +485,7 @@ async def test_get_properties_hash(deviceTest):
                             ["integer", "noded.floatProperty"])
     assert h["integer"] == 0
     assert h["noded.floatProperty"] == 15
-    assert len(h.paths()) == 3
+    assert len(h.paths(intermediate=True)) == 3
     assert len(h.paths(intermediate=False)) == 2
 
     # exception for failing properties
