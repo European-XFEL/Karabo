@@ -562,3 +562,10 @@ class DbWriter:
                     session.delete(curr_linked_instance)
 
             await session.commit()
+
+    async def add_domain(self, domain: str):
+        """Add a domain to the project database"""
+        async with self.session_gen() as session:
+            project_domain = ProjectDomain(name=domain)
+            session.add(project_domain)
+            await session.commit()
