@@ -27,7 +27,7 @@ DB_POOL_RECYCLE_SECS: int = int(os.environ.get(
         "KARABO_PROJECT_DB_POOL_RECYCLE_SECS", 100))
 
 
-def init_async_db_engine(
+def create_engine(
     user: str, password: str, server: str,
     port: int, db_name: str) -> tuple[
         AsyncEngine, async_sessionmaker[AsyncSession]]:
@@ -53,7 +53,7 @@ def init_async_db_engine(
     return db_engine, session_gen
 
 
-def init_test_async_db_engine() -> tuple[
+def create_test_engine() -> tuple[
         AsyncEngine, async_sessionmaker[AsyncSession]]:
     db_engine = create_async_engine(
         "sqlite+aiosqlite:///:memory:",
