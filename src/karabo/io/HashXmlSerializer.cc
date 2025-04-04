@@ -26,7 +26,6 @@
 #include "HashXmlSerializer.hh"
 
 #include <boost/algorithm/string.hpp>
-#include <karabo/log/Logger.hh>
 #include <karabo/util/FromLiteral.hh>
 #include <karabo/util/Schema.hh>
 #include <karabo/util/SimpleElement.hh>
@@ -242,9 +241,7 @@ namespace karabo {
             pugi::xml_document doc;
             pugi::xml_parse_result result = doc.load(archive);
             if (!result) {
-                KARABO_LOG_FRAMEWORK_ERROR
-                      << KARABO_IO_EXCEPTION(std::string("Error parsing XML document: ") + result.description());
-                KARABO_LOG_FRAMEWORK_INFO << "Responsible string:\n" << (archive ? archive : "");
+                throw KARABO_IO_EXCEPTION(std::string("Error parsing XML document: ") + result.description());
             }
             object.clear();
             if (!doc) return;
@@ -342,23 +339,18 @@ namespace karabo {
                                 hash.setAttribute(hashPath, attrName, std::move(attrHash.get<Schema>(attrName)));
                                 break;
                             default:
-                                KARABO_LOG_FRAMEWORK_ERROR << "Unsupported type for attribute '" << attrName << "'.\n"
-                                                           << "Supported types are VECTOR_HASH and SCHEMA.";
+                                throw KARABO_IO_EXCEPTION("Unsupported type for non-string-convertible attribute '" +
+                                                          attrName + "'. Expect VECTOR_HASH or SCHEMA.");
                         }
                     } else {
                         // This will only be reached if any change in HashXmlSerializer::extractNonStrConvertibleAttrs
                         // has changed the way it outputs the non string convertible attributes it finds.
-                        // To avoid silent failures, a message is being logged.
-                        KARABO_LOG_FRAMEWORK_ERROR
-                              << "Logic error: HashXmlSerializer::extractNonStrConvertibleAttrs produced a hash with "
-                              << attrHashKeys.size() << "key(s) for an attribute at path '" << hashPath
-                              << "' of the hash "
-                                 "being deserialized.";
+                        throw KARABO_IO_EXCEPTION("Expect exactly one attribute key for path '" + hashPath + "', got " +
+                                                  toString(attrHashKeys.size()));
                     }
                 }
             } else {
-                KARABO_LOG_FRAMEWORK_ERROR << "No path '" << hashPath
-                                           << "' found in the hash. No attribute will be added.";
+                throw KARABO_IO_EXCEPTION("Missing path '" + hashPath + "' needed to add expected attribute.");
             }
         }
 
@@ -369,18 +361,14 @@ namespace karabo {
                 size_t pos = attributeValue.find_first_of(":");
                 Types::ReferenceType type = Types::UNKNOWN;
                 if (pos != attributeValue.npos) {
+                    const std::string typeString(attributeValue.substr(m_prefix.size(), pos - m_prefix.size()));
                     try {
-                        type = Types::from<FromLiteral>(attributeValue.substr(m_prefix.size(), pos - m_prefix.size()));
+                        type = Types::from<FromLiteral>(typeString);
                     } catch (const karabo::util::Exception& e) {
-                        KARABO_LOG_FRAMEWORK_WARN << "Could not understand xml attribute type: \""
-                                                  << attributeValue.substr(m_prefix.size(), pos - m_prefix.size())
-                                                  << "\". Will interprete type as string.";
-                        KARABO_LOG_FRAMEWORK_DEBUG << "Failure details: " << e.detailedMsg();
-                        type = Types::UNKNOWN;
-                        e.clearTrace();
+                        KARABO_RETHROW_AS(KARABO_IO_EXCEPTION("Unknown xml attribute type: " + typeString));
                     }
                     string value = attributeValue.substr(pos + 1);
-                    return std::make_pair(value, type);
+                    return std::make_pair(std::move(value), type);
                 } else {
                     throw KARABO_IO_EXCEPTION("Encountered suspicious attribute type assignment");
                 }
@@ -469,7 +457,7 @@ namespace karabo {
                     }
                 } else {
                     readyForAttrs = false;
-                    KARABO_LOG_FRAMEWORK_WARN << "Failed to prepare attributes for '" << nodeName << "'";
+                    cout << "WARN: Failed to prepare attributes for '" << nodeName << "'";
                 }
                 if (readyForAttrs) {
                     hash.setAttributes(nodeName, std::move(attrs));
