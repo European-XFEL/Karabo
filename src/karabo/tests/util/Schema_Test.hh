@@ -71,7 +71,6 @@ class Schema_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testMerge);
     CPPUNIT_TEST(testTable);
     CPPUNIT_TEST(testTableReadOnly);
-    CPPUNIT_TEST(testList);
     CPPUNIT_TEST(testInvalidNodes);
     CPPUNIT_TEST(testOverwriteRestrictions);
     CPPUNIT_TEST(testOverwriteTags);
@@ -143,7 +142,6 @@ class Schema_Test : public CPPUNIT_NS::TestFixture {
     void testOverwriteElementMinMax();
     void testOverwriteElementMinMaxVector();
     void testMerge();
-    void testList();
     void testInvalidNodes();
     void testOverwriteRestrictions();
     void testOverwriteTags();

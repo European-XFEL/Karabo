@@ -42,7 +42,6 @@ void exportPyUtilSchema(py::module_&);                 // PyUtilSchema.cc
 void exportPyUtilSchemaElement(py::module_&);          // PyUtilSchemaElement.cc (simple & vector)
 void exportPyUtilSchemaNodeElement(py::module_&);      // PyUtilSchemaNodeElement.cc
 void exportPyUtilSchemaChoiceElement(py::module_&);    // PyUtilSchemaChoiceElement.cc
-void exportPyUtilSchemaListElement(py::module_&);      // PyUtilSchemaListElement.cc
 void exportPyUtilSchemaOverwriteElement(py::module_&); // PyUtilSchemaOverwriteElement.cc
 void exportPyUtilSchemaTableElement(py::module_&);     // PyUtilSchemaTableElement.cc
 void exportPyUtilSchemaValidator(py::module_&);        // PyUtilSchemaValidator.cc
@@ -94,7 +93,6 @@ PYBIND11_MODULE(karabind, m) {
     exportPyUtilSchemaElement(m);
     exportPyUtilSchemaNodeElement(m);
     exportPyUtilSchemaChoiceElement(m);
-    exportPyUtilSchemaListElement(m);
     exportPyUtilSchemaOverwriteElement(m);
     exportPyUtilSchemaTableElement(m);
     exportPyUtilSchemaValidator(m);

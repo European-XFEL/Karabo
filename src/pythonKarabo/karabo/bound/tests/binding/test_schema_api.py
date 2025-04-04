@@ -22,9 +22,9 @@ from karabind import (
     STRING_ELEMENT, AccessLevel, AccessType, ArchivePolicy, AssignmentType,
     DaqDataType, DAQPolicy, Hash, Logger, MetricPrefix, NodeType, Schema,
     Types, Unit, Validator, cppGraphicsRenderer1SchemaTest,
-    cppOtherSchemaElementsSchemaOtherSchemaElements, cppShapeSchemaCircle,
-    cppShapeSchemaEditableCircle, cppSomeClassSchemaSomeClassId,
-    cppTestStruct1SchemaMyTest, cppTestStruct1SchemaTestStruct1, fullyEqual)
+    cppShapeSchemaCircle, cppShapeSchemaEditableCircle,
+    cppSomeClassSchemaSomeClassId, cppTestStruct1SchemaMyTest,
+    cppTestStruct1SchemaTestStruct1, fullyEqual)
 from karabo.common.states import State
 
 
@@ -554,18 +554,6 @@ def test_hasgetsetMinMaxSize():
     assert schema.hasMaxSize('exampleKey11')
     assert schema.getMinSize('exampleKey11') == 1
     assert schema.getMaxSize('exampleKey11') == 42
-
-
-def test_hasgetsetMinMax():
-    schema = cppOtherSchemaElementsSchemaOtherSchemaElements()
-    assert schema.hasMin('shapeList') is False
-    assert schema.hasMax('shapeList') is False
-    schema.setMin('shapeList', 1)
-    schema.setMax('shapeList', 5)
-    assert schema.hasMin('shapeList')
-    assert schema.hasMax('shapeList')
-    assert schema.getMin('shapeList') == 1
-    assert schema.getMax('shapeList') == 5
 
 
 def test_vectorElement():

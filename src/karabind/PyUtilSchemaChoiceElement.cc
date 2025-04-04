@@ -56,7 +56,7 @@ void exportPyUtilSchemaChoiceElement(py::module_& m) {
     //////////////////////////////////////////////////////////////////////
     {
         py::class_<ChoiceElement>(m, "CHOICE_ELEMENT")
-              .def(py::init<Schema&>(), py::arg("expected")) KARABO_PYTHON_NODE_CHOICE_LIST(ChoiceElement)
+              .def(py::init<Schema&>(), py::arg("expected")) KARABO_PYTHON_NODE_CHOICE(ChoiceElement)
               .def("assignmentMandatory", &ChoiceElement::assignmentMandatory,
                    py::return_value_policy::reference_internal)
               .def("assignmentOptional", &ChoiceElement::assignmentOptional,

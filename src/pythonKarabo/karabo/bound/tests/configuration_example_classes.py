@@ -18,12 +18,11 @@ from karabo.bound import (
     ALARM_ELEMENT, AMPERE, BOOL_ELEMENT, CENTI, CHOICE_ELEMENT, DOUBLE_ELEMENT,
     EVERY_1S, EVERY_100MS, EVERY_EVENT, FLOAT_ELEMENT, IMAGEDATA_ELEMENT,
     INT32_ELEMENT, INT64_ELEMENT, KARABO_CLASSINFO,
-    KARABO_CONFIGURATION_BASE_CLASS, LIST_ELEMENT, METER, MILLI,
-    NDARRAY_ELEMENT, NO_ARCHIVING, NODE_ELEMENT, OVERWRITE_ELEMENT,
-    SLOT_ELEMENT, STATE_ELEMENT, STRING_ELEMENT, TABLE_ELEMENT, UINT32_ELEMENT,
-    UINT64_ELEMENT, VECTOR_BOOL_ELEMENT, VECTOR_DOUBLE_ELEMENT,
-    VECTOR_INT32_ELEMENT, VECTOR_STRING_ELEMENT, AlarmCondition, Hash,
-    MetricPrefix, Schema, Unit)
+    KARABO_CONFIGURATION_BASE_CLASS, METER, MILLI, NDARRAY_ELEMENT,
+    NO_ARCHIVING, NODE_ELEMENT, OVERWRITE_ELEMENT, SLOT_ELEMENT, STATE_ELEMENT,
+    STRING_ELEMENT, TABLE_ELEMENT, UINT32_ELEMENT, UINT64_ELEMENT,
+    VECTOR_BOOL_ELEMENT, VECTOR_DOUBLE_ELEMENT, VECTOR_INT32_ELEMENT,
+    VECTOR_STRING_ELEMENT, AlarmCondition, Hash, MetricPrefix, Schema, Unit)
 from karabo.common.states import State
 
 
@@ -820,14 +819,6 @@ class GraphicsRenderer2:
             .appendParametersOf(P1)
             .commit(),
 
-            LIST_ELEMENT(expected).key("chars")
-            .displayedName("characters").description("Characters")
-            .tags("LM")
-            .appendNodesOfConfigurationBase(Base)
-            .setSpecialDisplayType("unitTest")
-            .assignmentOptional().defaultValueFromString("P2,P3")
-            .reconfigurable()
-            .commit(),
         )
 
 
@@ -879,27 +870,5 @@ class OtherSchemaElements:
             .minSize(2)
             .maxSize(7)
             .assignmentMandatory()
-            .commit(),
-
-            LIST_ELEMENT(expected)
-            .key("shapeList")
-            .description("A list of shapes")
-            .appendNodesOfConfigurationBase(Shape)
-            .assignmentOptional()
-            .defaultValueFromString("Circle,Rectangle")
-            .commit(),
-
-            # We can also add nodes to the list by hand:
-            NODE_ELEMENT(expected)
-            .key("shapeList.BizarreForm")
-            .description("A funny shape added by hand")
-            .commit(),
-
-            FLOAT_ELEMENT(expected)
-            .key("shapeList.BizarreForm.length")
-            .description("The single length parameter characterizing "
-                         "the bizarre form")
-            .assignmentOptional()
-            .defaultValue(10.)
             .commit(),
         )

@@ -102,15 +102,6 @@ struct MySchema {
               .defaultValue("circle")
               .commit();
 
-        // or: test for LIST element (min/max appears only in 'annotation')
-        //   LIST_ELEMENT(expected).key("shapes")
-        //        .displayedName("shapesAsList")
-        //        .description("Description of List-element shapes")
-        //        .min(2)
-        //        .max(5)
-        //        .assignmentMandatory()
-        //        .commit();
-
         NODE_ELEMENT(expected)
               .key("shapes.circle")
               .tags("shape")

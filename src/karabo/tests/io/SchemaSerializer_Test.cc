@@ -30,7 +30,6 @@
 #include <karabo/io/SchemaBinarySerializer.hh>
 #include <karabo/io/TextFileOutput.hh>
 #include <karabo/util/ChoiceElement.hh>
-#include <karabo/util/ListElement.hh>
 #include <karabo/util/NodeElement.hh>
 #include <karabo/util/SimpleElement.hh>
 #include <karabo/util/VectorElement.hh>
@@ -119,15 +118,6 @@ struct TestSchemaSerializer {
               .assignmentOptional()
               .defaultValue("circle")
               .commit();
-
-        // or: test for LIST element (min/max appears only in 'annotation')
-        //   LIST_ELEMENT(expected).key("shapes")
-        //        .displayedName("shapesAsList")
-        //        .description("Description of List-element shapes")
-        //        .min(2)
-        //        .max(5)
-        //        .assignmentMandatory()
-        //        .commit();
 
         NODE_ELEMENT(expected)
               .key("shapes.circle")

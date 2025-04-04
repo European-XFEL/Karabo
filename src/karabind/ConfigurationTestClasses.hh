@@ -23,7 +23,6 @@
 #include <karabo/util/AlarmConditionElement.hh>
 #include <karabo/util/ChoiceElement.hh>
 #include <karabo/util/Configurator.hh>
-#include <karabo/util/ListElement.hh>
 #include <karabo/util/NDArrayElement.hh>
 #include <karabo/util/NodeElement.hh>
 #include <karabo/util/OverwriteElement.hh>
@@ -737,24 +736,6 @@ namespace configurationTest {
                   .setColumns(rowSchema)
                   .assignmentOptional()
                   .defaultValue(std::vector<Hash>())
-                  .commit();
-
-            LIST_ELEMENT(expected)
-                  .key("shapeList")
-                  .description("A list of shapes")
-                  .appendNodesOfConfigurationBase<Shape>()
-                  .assignmentOptional()
-                  .defaultValueFromString("Circle,Rectangle")
-                  .commit();
-
-            // We can also add nodes to the list by hand:
-            NODE_ELEMENT(expected).key("shapeList.BizarreForm").description("A funny shape added by hand").commit();
-
-            FLOAT_ELEMENT(expected)
-                  .key("shapeList.BizarreForm.length")
-                  .description("The single length parameter characterizing the bizarre form")
-                  .assignmentOptional()
-                  .defaultValue(10.f)
                   .commit();
         }
     };
