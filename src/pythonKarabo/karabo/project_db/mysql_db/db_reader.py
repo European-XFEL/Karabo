@@ -30,6 +30,12 @@ class DbReader:
     def __init__(self, session_gen: sessionmaker):
         self.session_gen = session_gen
 
+    async def list_domains(self):
+        async with self.session_gen() as session:
+            result = await session.exec(select(ProjectDomain))
+            prj_domains = result.all()
+            return [domain.name for domain in prj_domains]
+
     async def get_domain_projects(self, domain: str) -> list[dict[str, any]]:
         projects = []
         async with self.session_gen() as session:

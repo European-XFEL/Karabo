@@ -94,8 +94,13 @@ class DatabaseBase(AbstractAsyncContextManager):
         """
         raise NotImplementedError
 
-    async def get_projects_data_from_device(self, domain, uuid):
+    async def get_projects_data_from_device(self, domain: str, uuid: str):
         raise NotImplementedError
 
-    async def save_item(self, domain, uuid, item_xml, overwrite=False):
+    async def save_item(
+        self, domain: str, uuid: str, item_xml: str,
+            overwrite: bool = False):
+        raise NotImplementedError
+
+    async def load_item(self, domain: str, items: list[dict]):
         raise NotImplementedError
