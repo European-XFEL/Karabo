@@ -28,7 +28,7 @@ from karabo.common.scenemodel.api import (
     DisplayStateColorModel, DisplayTextLogModel, EditableRegexModel,
     ErrorBoolModel, LabelModel, LineEditModel, LineModel, SceneModel,
     StickerModel, TableElementModel, write_scene)
-from karabo.config_db import ConfigurationDatabase, DbHandle
+from karabo.config_db import ConfigurationDatabase
 from karabo.middlelayer import (
     AccessLevel, AccessMode, Assignment, Bool, Configurable, DeviceClientBase,
     Hash, HashList, KaraboError, Overwrite, RegexString, Slot, State, String,
@@ -112,7 +112,7 @@ class ConfigurationManager(DeviceClientBase):
         accessMode=AccessMode.READONLY)
 
     dbName = String(
-        defaultValue="karaboDB",
+        defaultValue="karaboDatabase",
         displayedName="DB Name",
         description="The database name",
         requiredAccessLevel=AccessLevel.OPERATOR,
@@ -250,11 +250,11 @@ class ConfigurationManager(DeviceClientBase):
         """Initialize the configuration database device and create the `DB`"""
         if not isStringSet(self.dbName):
             raise RuntimeError("DbName needs to be configured.")
-        folder = Path(os.environ["KARABO"]) / "var" / "data" / "config_db"
+        folder = Path(os.environ["KARABO"]).joinpath(
+            "var", "data", "config_db")
         path = folder / self.dbName.value
         path.parent.mkdir(parents=True, exist_ok=True)
-        connection = DbHandle(path)
-        self.db = ConfigurationDatabase(connection)
+        self.db = ConfigurationDatabase(path)
         await self.db.assure_existing()
         self.state = State.ON
 
