@@ -14,7 +14,7 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 # flake8: noqa
-from .configuration_database import ConfigurationDatabase, DbHandle
+from .configuration_database import ConfigurationDatabase
 from .utils import (
     ConfigurationDBError, hashFromBase64Bin, hashToBase64Bin,
     schemaFromBase64Bin, schemaToBase64Bin)

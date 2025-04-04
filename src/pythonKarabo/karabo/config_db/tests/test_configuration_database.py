@@ -1,7 +1,7 @@
 import pytest
 import pytest_asyncio
 
-from ..configuration_database import ConfigurationDatabase, DbHandle
+from ..configuration_database import ConfigurationDatabase
 from ..utils import ConfigurationDBError
 
 # Test database URL
@@ -10,8 +10,7 @@ TEST_DB_URL = "configtest"
 
 @pytest_asyncio.fixture(loop_scope="module")
 async def database():
-    db_handle = DbHandle(TEST_DB_URL)
-    config_db = ConfigurationDatabase(db_handle)
+    config_db = ConfigurationDatabase(TEST_DB_URL)
     await config_db.assure_existing()
     yield config_db
     await config_db.delete()
