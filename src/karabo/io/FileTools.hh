@@ -29,7 +29,6 @@
 #include "Input.hh"
 #include "Output.hh"
 #include "boost/system/error_code.hpp"
-#include "karabo/log/Logger.hh"
 
 #ifndef KARABO_IO_FILETOOLS_HH
 #define KARABO_IO_FILETOOLS_HH
@@ -94,9 +93,8 @@ namespace karabo {
                 boost::system::error_code ec;
                 std::filesystem::create_directories(directory, ec);
                 if (ec) {
-                    KARABO_LOG_FRAMEWORK_ERROR_C("karabo::io::saveToFile")
-                          << "Failed to create directories: " << directory << ". code = " << ec.value() << " -- "
-                          << ec.message();
+                    throw KARABO_IO_EXCEPTION("Failed to create directory '" + directory.string() +=
+                                              "': " + ec.message());
                 }
             }
 
