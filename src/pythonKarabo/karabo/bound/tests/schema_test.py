@@ -23,8 +23,8 @@ from karabo.bound import (
     fullyEqual)
 
 from .configuration_example_classes import (
-    ArrayContainer, Base, GraphicsRenderer, GraphicsRenderer1,
-    GraphicsRenderer2, OtherSchemaElements, SomeClass, TestStruct1)
+    ArrayContainer, Base, GraphicsRenderer, GraphicsRenderer1, SomeClass,
+    TestStruct1)
 
 
 class Schema_TestCase(unittest.TestCase):
@@ -626,24 +626,6 @@ class Schema_TestCase(unittest.TestCase):
         assert schema.getSkipValidation("exampleKey16")
         assert schema.getSkipValidation("exampleKey17")
         assert not schema.getSkipValidation("exampleKey18")
-
-    def test_listElement(self):
-        schema = Configurator(GraphicsRenderer2).getSchema(
-            "GraphicsRenderer2")
-        assert schema.getDisplayType("chars") == "unitTest"
-        assert schema.isAccessReconfigurable("chars") is True
-        sch = Configurator(OtherSchemaElements).getSchema(
-            "OtherSchemaElements")
-        assert sch.has("shapeList") is True
-        assert sch.isListOfNodes("shapeList") is True
-        assert sch.isNode("shapeList") is False
-        assert sch.getDefaultValue("shapeList") == ['Circle', 'Rectangle']
-        assert sch.has("shapeList.Circle") is True
-        assert sch.isNode("shapeList.Circle") is True
-        assert sch.has("shapeList.BizarreForm") is True
-        assert sch.isNode("shapeList.BizarreForm") is True
-        assert sch.has("shapeList.BizarreForm.length") is True
-        assert sch.isLeaf("shapeList.BizarreForm.length") is True
 
     def test_getDisplayType(self):
         schema = TestStruct1.getSchema("TestStruct1")

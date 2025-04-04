@@ -31,7 +31,6 @@
 #include <karabo/util/GenericElement.hh>
 #include <karabo/util/HashFilter.hh>
 #include <karabo/util/LeafElement.hh>
-#include <karabo/util/ListElement.hh>
 #include <karabo/util/NDArray.hh>
 #include <karabo/util/NodeElement.hh>
 #include <karabo/util/OverwriteElement.hh>
@@ -313,12 +312,12 @@ class CommonWrap {
 ///
 /// The following macro KARABO_PYTHON_NODE_CHOICE_LIST is used for python binding of
 /// @code
-/// karabo::util::NodeElement, karabo::util::ListElement, karabo::util::ChoiceElement
+/// karabo::util::NodeElement, karabo::util::ChoiceElement
 /// @endcode
 ///
-/// In Python: NODE_ELEMENT, CHOICE_ELEMENT, LIST_ELEMENT
+/// In Python: NODE_ELEMENT, CHOICE_ELEMENT
 ///
-#define KARABO_PYTHON_NODE_CHOICE_LIST(NameElem)                                                                      \
+#define KARABO_PYTHON_NODE_CHOICE(NameElem)                                                                           \
     .def("observerAccess", &NameElem::observerAccess, py::return_value_policy::reference_internal)                    \
           .def("userAccess", &NameElem::userAccess, py::return_value_policy::reference_internal)                      \
           .def("operatorAccess", &NameElem::operatorAccess, py::return_value_policy::reference_internal)              \

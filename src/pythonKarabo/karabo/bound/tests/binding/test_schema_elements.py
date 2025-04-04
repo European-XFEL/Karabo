@@ -22,14 +22,13 @@ from karabo.bound import (
     ALARM_ELEMENT, BOOL_ELEMENT, BYTEARRAY_ELEMENT, CHOICE_ELEMENT,
     DOUBLE_ELEMENT, EVERY_1S, EVERY_100MS, EVERY_EVENT, FLOAT_ELEMENT,
     IMAGEDATA_ELEMENT, INT32_ELEMENT, INT64_ELEMENT, KARABO_CLASSINFO,
-    KARABO_CONFIGURATION_BASE_CLASS, LIST_ELEMENT, METER, MICRO,
-    NDARRAY_ELEMENT, NO_ARCHIVING, NODE_ELEMENT, OVERWRITE_ELEMENT,
-    SLOT_ELEMENT, STATE_ELEMENT, STRING_ELEMENT, TABLE_ELEMENT, UINT32_ELEMENT,
-    UINT64_ELEMENT, VECTOR_BOOL_ELEMENT, VECTOR_DOUBLE_ELEMENT,
-    VECTOR_INT32_ELEMENT, VECTOR_STRING_ELEMENT, VECTOR_UINT32_ELEMENT,
-    AccessLevel, AccessType, ArchivePolicy, AssemblyRules, AssignmentType,
-    Encoding, Hash, MetricPrefix, NodeType, Schema, Types, Unit, cppNDArray,
-    cppNDArrayCopy, fullyEqual)
+    KARABO_CONFIGURATION_BASE_CLASS, METER, MICRO, NDARRAY_ELEMENT,
+    NO_ARCHIVING, NODE_ELEMENT, OVERWRITE_ELEMENT, SLOT_ELEMENT, STATE_ELEMENT,
+    STRING_ELEMENT, TABLE_ELEMENT, UINT32_ELEMENT, UINT64_ELEMENT,
+    VECTOR_BOOL_ELEMENT, VECTOR_DOUBLE_ELEMENT, VECTOR_INT32_ELEMENT,
+    VECTOR_STRING_ELEMENT, VECTOR_UINT32_ELEMENT, AccessLevel, AccessType,
+    ArchivePolicy, AssemblyRules, AssignmentType, Encoding, Hash, MetricPrefix,
+    NodeType, Schema, Types, Unit, cppNDArray, cppNDArrayCopy, fullyEqual)
 from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.states import State
 
@@ -863,30 +862,6 @@ class OtherSchemaElementsX:
             .commit(),
         )
 
-        (
-            LIST_ELEMENT(expected)
-            .key("shapeList")
-            .description("A list of shapes")
-            .appendNodesOfConfigurationBase(ShapeX)
-            .assignmentOptional()
-            .defaultValueFromString("CircleX,RectangleX")
-            .commit(),
-
-            # We can also add nodes to the list by hand:
-            NODE_ELEMENT(expected)
-            .key("shapeList.BizarreForm")
-            .description("A funny shape added by hand")
-            .commit(),
-
-            FLOAT_ELEMENT(expected)
-            .key("shapeList.BizarreForm.length")
-            .description("The single length parameter characterizing "
-                         "the bizarre form")
-            .assignmentOptional()
-            .defaultValue(10.)
-            .commit(),
-        )
-
 
 class SomeClass:
     @staticmethod
@@ -1323,13 +1298,6 @@ def test_setOptions():
     assert options == [20, 5, 11, 13, 25]
 
 
-# def test_displayType():
-#     schema = Schema()
-#     TestStruct1.expectedParameters(schema)
-#     display = schema.getDisplayType("myNode")
-#     assert display == "WidgetNode"
-
-
 def test_getDefaultValue():
     schema = Schema()
     TestStruct1.expectedParameters(schema)
@@ -1492,36 +1460,6 @@ def test_hasgetsetMinMaxSize():
     assert schema.hasMaxSize('exampleKey11') is True
     assert schema.getMinSize('exampleKey11') == 1
     assert schema.getMaxSize('exampleKey11') == 42
-
-
-def test_hasgetsetMinMax():
-    schema = Schema()
-    OtherSchemaElementsX.expectedParameters(schema)
-    assert schema.hasMin('shapeList') is False
-    assert schema.hasMax('shapeList') is False
-    schema.setMin('shapeList', 1)
-    schema.setMax('shapeList', 5)
-    assert schema.hasMin('shapeList') is True
-    assert schema.hasMax('shapeList') is True
-    assert schema.getMin('shapeList') == 1
-    assert schema.getMax('shapeList') == 5
-
-
-def test_listelem():
-    # sch = Configurator(OtherSchemaElementsX).getSchema(
-    #     "OtherSchemaElementsX", AssemblyRules())
-    sch = Schema()
-    OtherSchemaElementsX.expectedParameters(sch)
-    assert sch.has("shapeList") is True
-    assert sch.isListOfNodes("shapeList") is True
-    assert sch.isNode("shapeList") is False
-    assert sch.getDefaultValue("shapeList") == ['CircleX', 'RectangleX']
-    assert sch.has("shapeList.CircleX") is True
-    assert sch.isNode("shapeList.CircleX") is True
-    assert sch.has("shapeList.BizarreForm") is True
-    assert sch.isNode("shapeList.BizarreForm") is True
-    assert sch.has("shapeList.BizarreForm.length") is True
-    assert sch.isLeaf("shapeList.BizarreForm.length") is True
 
 
 def test_vectorElement():

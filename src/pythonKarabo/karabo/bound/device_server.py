@@ -179,6 +179,10 @@ class DeviceServer:
             self.hostname = config['hostName']
         else:
             self.hostname = socket.gethostname().partition('.')[0]
+        # Check if obsolete syntax still used...
+        if config.has('autoStart'):
+            raise KeyError(
+                "'autoStart' syntax not supported anymore, use 'init'")
         self.autoStart = None
         if config.get("init") != "":
             asv = generateAutoStartHash(jsonToHash(config.get("init")))

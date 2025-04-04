@@ -25,7 +25,6 @@
 #include <chrono>
 #include <filesystem>
 
-#include "karabo/util/ListElement.hh"
 #include "karabo/util/NodeElement.hh"
 #include "karabo/util/SimpleElement.hh"
 #include "karabo/util/StringTools.hh"
