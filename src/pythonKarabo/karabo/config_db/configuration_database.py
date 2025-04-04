@@ -25,7 +25,7 @@ from .models import NamedDeviceConfig, NamedDeviceInstance
 from .utils import ConfigurationDBError, datetime_from_string, utc_to_local
 
 
-class DbHandle:
+class ConfigurationDatabase:
     def __init__(self, db_name: str):
         self.db_name = db_name
         self.engine = create_async_engine(
@@ -34,28 +34,13 @@ class DbHandle:
             echo=False,
             pool_pre_ping=True,
             connect_args={"check_same_thread": True})
-        self.session_handle = sessionmaker(
+        self.session = sessionmaker(
             bind=self.engine, class_=AsyncSession,
             expire_on_commit=False)
 
-    async def __aenter__(self):
-        self.session = self.session_handle()
-        return self.session
-
-    async def __aexit__(self, exc_type, exc_value, traceback):
-        await self.session.close()
-
-    async def dispose(self):
-        await self.engine.dispose()
-
-
-class ConfigurationDatabase:
-    def __init__(self, db_handle):
-        self.db_handle = db_handle
-
     @property
     def path(self) -> Path:
-        return Path(self.db_handle.db_name)
+        return Path(self.db_name)
 
     @property
     def dirname(self) -> str | None:
@@ -63,14 +48,14 @@ class ConfigurationDatabase:
 
     async def assure_existing(self):
         """Ensures the database schema is created."""
-        async with self.db_handle.engine.begin() as conn:
+        async with self.engine.begin() as conn:
             await conn.run_sync(SQLModel.metadata.create_all)
 
     async def delete(self):
         """Deletes the database schema and file."""
-        async with self.db_handle.engine.begin() as conn:
+        async with self.engine.begin() as conn:
             await conn.run_sync(SQLModel.metadata.drop_all)
-        await self.db_handle.dispose()
+        await self.engine.dispose()
         if self.path.exists():
             self.path.unlink()
 
@@ -86,7 +71,7 @@ class ConfigurationDatabase:
                         If empty, retrieves all configurations.
         :return: List of configuration dictionaries (can be empty).
         """
-        async with self.get_session() as session:
+        async with self.session() as session:
             stmt = (
                 select(NamedDeviceInstance)
                 .where(NamedDeviceInstance.device_id == device_id)
@@ -109,12 +94,12 @@ class ConfigurationDatabase:
                  "last_loaded": utc_to_local(config.last_loaded)}
                 for config in configurations]
 
-    def get_session(self):
+    def session(self):
         return self.db_handle
 
     async def delete_configuration(self, device_id: str, name: str):
         """Delete a device configuration by `name` and `deviceId`"""
-        async with self.get_session() as session:
+        async with self.session() as session:
             stmt = (
                 select(NamedDeviceConfig)
                 .where(
@@ -151,7 +136,7 @@ class ConfigurationDatabase:
 
         :returns: list of deviceIds records (can be empty).
         """
-        async with self.get_session() as session:
+        async with self.session() as session:
             stmt = select(NamedDeviceInstance.device_id).distinct()
             result = await session.execute(stmt)
             return result.scalars().all()
@@ -163,7 +148,7 @@ class ConfigurationDatabase:
         :param name: The name of the configuration.
         :return: Configuration dictionary (or None if not found).
         """
-        async with self.get_session() as session:
+        async with self.session() as session:
             stmt = (
                 select(NamedDeviceConfig)
                 .where(
@@ -215,7 +200,7 @@ class ConfigurationDatabase:
                 raise ConfigurationDBError(
                     f"Configuration #{index} is missing required keys.")
 
-        async with self.get_session() as session:
+        async with self.session() as session:
             try:
                 timestamp = (datetime_from_string(timestamp) if timestamp
                              is not None else datetime.now(timezone.utc))
