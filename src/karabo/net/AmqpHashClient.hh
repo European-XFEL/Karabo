@@ -30,8 +30,8 @@
 #include "AmqpClient.hh"
 #include "AmqpConnection.hh"
 #include "Strand.hh"
+#include "karabo/data/types/Hash.hh"
 #include "karabo/io/BinarySerializer.hh"
-#include "karabo/util/Hash.hh"
 #include "utils.hh" // for AsyncHandler
 
 namespace karabo::net {
@@ -48,7 +48,7 @@ namespace karabo::net {
         KARABO_CLASSINFO(AmqpHashClient, "AmqpHashClient", "2.0")
 
         // std::function fits better than std::function to assigning bind_weak results to these handlers in AmqpBroker
-        using HashReadHandler = std::function<void(const util::Hash::Pointer&, const util::Hash::Pointer&)>;
+        using HashReadHandler = std::function<void(const data::Hash::Pointer&, const data::Hash::Pointer&)>;
         using ErrorReadHandler = std::function<void(const std::string&)>;
 
         /**
@@ -102,8 +102,8 @@ namespace karabo::net {
          * Hashes are serialised such that AmqpClient::asyncPublish can be use internally.
          *  ==> See docs of that.
          */
-        void asyncPublish(const std::string& exchange, const std::string& routingKey, const util::Hash::Pointer& header,
-                          const util::Hash::Pointer& body, AsyncHandler onPublishDone);
+        void asyncPublish(const std::string& exchange, const std::string& routingKey, const data::Hash::Pointer& header,
+                          const data::Hash::Pointer& body, AsyncHandler onPublishDone);
 
        private:
         /**
@@ -129,7 +129,7 @@ namespace karabo::net {
 
         AmqpClient::Pointer m_rawClient;
 
-        karabo::io::BinarySerializer<util::Hash>::Pointer m_serializer;
+        karabo::io::BinarySerializer<data::Hash>::Pointer m_serializer;
         karabo::net::Strand::Pointer m_deserializeStrand;
         const HashReadHandler m_readHandler;
         const ErrorReadHandler m_errorReadHandler;

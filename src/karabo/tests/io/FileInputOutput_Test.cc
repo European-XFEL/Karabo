@@ -25,13 +25,16 @@
 #include "FileInputOutput_Test.hh"
 
 #include <filesystem>
+#include <karabo/data/schema/NodeElement.hh>
+#include <karabo/data/schema/VectorElement.hh>
+#include <karabo/data/types/Hash.hh>
 #include <karabo/io/FileTools.hh>
-#include <karabo/util.hpp>
 #include <karabo/util/TimeProfiler.hh>
 
 #include "TestPathSetup.hh"
 
 using namespace std;
+using namespace karabo::data;
 using namespace karabo::util;
 using namespace karabo::io;
 
@@ -42,7 +45,7 @@ struct MySchema {
     KARABO_CLASSINFO(MySchema, "TestXsd", "1.0");
 
 
-    static void expectedParameters(karabo::util::Schema& expected) {
+    static void expectedParameters(karabo::data::Schema& expected) {
         STRING_ELEMENT(expected)
               .key("exampleKey1")
               .tags("hardware, poll")
@@ -350,9 +353,9 @@ void FileInputOutput_Test::readTextFile() {
 
     //    clog << "h2 (xml)\n" << h2 << endl;
 
-    CPPUNIT_ASSERT(karabo::util::similar(h1, m_rootedHash));
-    CPPUNIT_ASSERT(karabo::util::similar(h1, h1a));
-    CPPUNIT_ASSERT(karabo::util::similar(h2, m_bigHash));
+    CPPUNIT_ASSERT(karabo::data::similar(h1, m_rootedHash));
+    CPPUNIT_ASSERT(karabo::data::similar(h1, h1a));
+    CPPUNIT_ASSERT(karabo::data::similar(h2, m_bigHash));
 
     // TODO: This has to be fixed (vector<Hash> attributes)
     //    CPPUNIT_ASSERT(h2.getAttribute<int>("a.c", "k5") == 123);
@@ -362,17 +365,17 @@ void FileInputOutput_Test::readTextFile() {
     //        CPPUNIT_ASSERT(refVecBoolAttr[i] == vecBoolAttr[i]);
     //    }
 
-    CPPUNIT_ASSERT(karabo::util::similar(h2, h2a));
+    CPPUNIT_ASSERT(karabo::data::similar(h2, h2a));
 
     // for h3 data types have been not serialized so we cannot use "similar" function
     CPPUNIT_ASSERT(h3.get<string>("a.b.c") == "1");
     CPPUNIT_ASSERT(h3a.get<string>("a.b.c") == "1");
 
-    CPPUNIT_ASSERT(karabo::util::similar(h4, m_withSchemaHash));
-    CPPUNIT_ASSERT(karabo::util::similar(h4, h4a));
+    CPPUNIT_ASSERT(karabo::data::similar(h4, m_withSchemaHash));
+    CPPUNIT_ASSERT(karabo::data::similar(h4, h4a));
 
-    CPPUNIT_ASSERT(karabo::util::similar(h5a, m_rootedHash));
-    CPPUNIT_ASSERT(karabo::util::similar(h6a, m_rootedHash));
+    CPPUNIT_ASSERT(karabo::data::similar(h5a, m_rootedHash));
+    CPPUNIT_ASSERT(karabo::data::similar(h6a, m_rootedHash));
     m_canCleanUp = true;
 }
 
@@ -393,12 +396,12 @@ void FileInputOutput_Test::readTextSchema() {
     Input<Schema>::Pointer in = Input<Schema>::create("TextFile", Hash("filename", resourcePath("testschema.xml")));
     Schema schema1;
     in->read(schema1);
-    CPPUNIT_ASSERT(karabo::util::similar(schema1, m_schema));
+    CPPUNIT_ASSERT(karabo::data::similar(schema1, m_schema));
 
     // Using the FileTools interface
     Schema schema2;
     loadFromFile(schema2, resourcePath("testschema2.xml"));
-    CPPUNIT_ASSERT(karabo::util::similar(schema2, m_schema));
+    CPPUNIT_ASSERT(karabo::data::similar(schema2, m_schema));
 }
 
 
@@ -420,7 +423,7 @@ void FileInputOutput_Test::readSequenceFromTextFile() {
     CPPUNIT_ASSERT(in->size() == 10);
     for (size_t i = 0; i < in->size(); ++i) {
         in->read(h1, i);
-        CPPUNIT_ASSERT(karabo::util::similar(h1, m_rootedHash));
+        CPPUNIT_ASSERT(karabo::data::similar(h1, m_rootedHash));
     }
 }
 
@@ -495,9 +498,9 @@ void FileInputOutput_Test::readBinaryFile() {
 
 
     //    clog << "h2 (binary)\n" << h2 << endl;
-    CPPUNIT_ASSERT(karabo::util::similar(h1, m_rootedHash));
-    CPPUNIT_ASSERT(karabo::util::similar(h1, h1a));
-    CPPUNIT_ASSERT(karabo::util::similar(h2, m_bigHash));
+    CPPUNIT_ASSERT(karabo::data::similar(h1, m_rootedHash));
+    CPPUNIT_ASSERT(karabo::data::similar(h1, h1a));
+    CPPUNIT_ASSERT(karabo::data::similar(h2, m_bigHash));
 
     CPPUNIT_ASSERT(h2.getAttribute<int>("a.c", "k5") == 123);
     vector<bool> vecBoolAttr = h2.getAttribute<vector<bool> >("a.c", "k6");
@@ -505,14 +508,14 @@ void FileInputOutput_Test::readBinaryFile() {
     for (size_t i = 0; i < refVecBoolAttr.size(); ++i) {
         CPPUNIT_ASSERT(refVecBoolAttr[i] == vecBoolAttr[i]);
     }
-    CPPUNIT_ASSERT(karabo::util::similar(h2, h2a));
+    CPPUNIT_ASSERT(karabo::data::similar(h2, h2a));
 
-    CPPUNIT_ASSERT(karabo::util::similar(h3, m_unrootedHash));
-    CPPUNIT_ASSERT(karabo::util::similar(h3, h3a));
+    CPPUNIT_ASSERT(karabo::data::similar(h3, m_unrootedHash));
+    CPPUNIT_ASSERT(karabo::data::similar(h3, h3a));
 
     //    TODO: uncomment when schema serialization is done
-    //    CPPUNIT_ASSERT(karabo::util::similar(h4, m_withSchemaHash));
-    //    CPPUNIT_ASSERT(karabo::util::similar(h4, h4a));
+    //    CPPUNIT_ASSERT(karabo::data::similar(h4, m_withSchemaHash));
+    //    CPPUNIT_ASSERT(karabo::data::similar(h4, h4a));
 }
 
 
@@ -532,12 +535,12 @@ void FileInputOutput_Test::readBinarySchema() {
     Input<Schema>::Pointer in = Input<Schema>::create("BinaryFile", Hash("filename", resourcePath("testschema.bin")));
     Schema schema1;
     in->read(schema1);
-    CPPUNIT_ASSERT(karabo::util::similar(schema1, m_schema));
+    CPPUNIT_ASSERT(karabo::data::similar(schema1, m_schema));
 
     // Using the FileTools interface
     Schema schema2;
     loadFromFile(schema2, resourcePath("testschema2.bin"));
-    CPPUNIT_ASSERT(karabo::util::similar(schema2, m_schema));
+    CPPUNIT_ASSERT(karabo::data::similar(schema2, m_schema));
 }
 
 
@@ -559,6 +562,6 @@ void FileInputOutput_Test::readSequenceFromBinaryFile() {
     CPPUNIT_ASSERT(in->size() == 10);
     for (size_t i = 0; i < in->size(); ++i) {
         in->read(h1, i);
-        CPPUNIT_ASSERT(karabo::util::similar(h1, m_rootedHash));
+        CPPUNIT_ASSERT(karabo::data::similar(h1, m_rootedHash));
     }
 }

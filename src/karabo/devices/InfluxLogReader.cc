@@ -30,8 +30,8 @@
 #include <sstream>
 #include <vector>
 
+#include "karabo/data/types/FromLiteral.hh"
 #include "karabo/net/EventLoop.hh"
-#include "karabo/util/FromLiteral.hh"
 
 // The size of the batch of properties queried at once during slotGetConfigurationFromPast
 constexpr int PROPS_BATCH_SIZE = 20;
@@ -45,6 +45,7 @@ namespace karabo {
 
         using namespace karabo::core;
         using namespace karabo::io;
+        using namespace karabo::data;
         using namespace karabo::util;
         using namespace karabo::net;
         using namespace karabo::xms;
@@ -54,8 +55,8 @@ namespace karabo {
 
 
         PropertyHistoryContext::PropertyHistoryContext(const std::string& deviceId, const std::string& property,
-                                                       const karabo::util::Epochstamp& from,
-                                                       const karabo::util::Epochstamp& to, int maxDataPoints,
+                                                       const karabo::data::Epochstamp& from,
+                                                       const karabo::data::Epochstamp& to, int maxDataPoints,
                                                        const karabo::xms::SignalSlotable::AsyncReply& aReply,
                                                        const karabo::net::InfluxDbClient::Pointer& influxClient)
             : deviceId(deviceId),
@@ -72,13 +73,13 @@ namespace karabo {
         }
 
 
-        PropFromPastInfo::PropFromPastInfo(const std::string& name, const karabo::util::Types::ReferenceType type,
+        PropFromPastInfo::PropFromPastInfo(const std::string& name, const karabo::data::Types::ReferenceType type,
                                            bool infiniteOrNan)
             : name(name), type(type), infiniteOrNan(infiniteOrNan) {}
 
 
         ConfigFromPastContext::ConfigFromPastContext(const std::string& deviceId,
-                                                     const karabo::util::Epochstamp& atTime,
+                                                     const karabo::data::Epochstamp& atTime,
                                                      const karabo::xms::SignalSlotable::AsyncReply& aReply,
                                                      const karabo::net::InfluxDbClient::Pointer& influxClient)
             : deviceId(deviceId),
@@ -94,7 +95,7 @@ namespace karabo {
         const int InfluxLogReader::kMaxHistorySize = 10'000;
         const TimeValue InfluxLogReader::kMaxInfluxDataDelaySecs = 300ull;
 
-        void InfluxLogReader::expectedParameters(karabo::util::Schema& expected) {
+        void InfluxLogReader::expectedParameters(karabo::data::Schema& expected) {
             OVERWRITE_ELEMENT(expected)
                   .key("state")
                   .setNewOptions(State::ON, State::ERROR)
@@ -139,7 +140,7 @@ namespace karabo {
         }
 
 
-        InfluxLogReader::InfluxLogReader(const karabo::util::Hash& cfg)
+        InfluxLogReader::InfluxLogReader(const karabo::data::Hash& cfg)
             : karabo::devices::DataLogReader(cfg),
               m_dbName(cfg.get<std::string>("dbname")),
               m_urlConfigSchema(cfg.get<std::string>("urlConfigSchema")),
@@ -208,8 +209,8 @@ namespace karabo {
 
             if (maxNumData < 0 || maxNumData > m_maxHistorySize) {
                 throw KARABO_PARAMETER_EXCEPTION(
-                      "Requested maximum number of data points ('maxNumData') is " + util::toString(maxNumData) +=
-                      " which surpasses the limit of " + util::toString(m_maxHistorySize) +=
+                      "Requested maximum number of data points ('maxNumData') is " + data::toString(maxNumData) +=
+                      " which surpasses the limit of " + data::toString(m_maxHistorySize) +=
                       ". Property History polling is not designed for Scientific Data Analysis.");
             }
 
@@ -780,7 +781,7 @@ namespace karabo {
                 std::stringstream base64Sch;
                 base64Sch << respValues[colMap["schema"]].get<std::string>();
                 for (int i = 1; i < schemaChunks; i++) {
-                    base64Sch << respValues[colMap["schema_" + karabo::util::toString(i)]].get<std::string>();
+                    base64Sch << respValues[colMap["schema_" + karabo::data::toString(i)]].get<std::string>();
                 }
 
                 encodedSch = base64Sch.str();
@@ -906,7 +907,7 @@ namespace karabo {
 
                 for (std::size_t propIdx = 0; propIdx < nProps; propIdx++) {
                     const std::string& propName = propInfos[propIdx].name;
-                    const karabo::util::Types::ReferenceType& propType = propInfos[propIdx].type;
+                    const karabo::data::Types::ReferenceType& propType = propInfos[propIdx].type;
 
                     try {
                         const auto& value = respObj["results"][propIdx]["series"][0]["values"][0][1];
@@ -1051,9 +1052,9 @@ namespace karabo {
             }
         }
 
-        void InfluxLogReader::addNodeToHash(karabo::util::Hash& hash, const std::string& path,
-                                            const karabo::util::Types::ReferenceType& type, unsigned long long trainId,
-                                            const karabo::util::Epochstamp& epoch, const std::string& valueAsString) {
+        void InfluxLogReader::addNodeToHash(karabo::data::Hash& hash, const std::string& path,
+                                            const karabo::data::Types::ReferenceType& type, unsigned long long trainId,
+                                            const karabo::data::Epochstamp& epoch, const std::string& valueAsString) {
             Hash::Node* node = nullptr;
 
             switch (type) {
@@ -1090,7 +1091,7 @@ namespace karabo {
                     base64Decode(valueAsString, decoded);
                     if (decoded.size() != 1ul) {
                         throw KARABO_PARAMETER_EXCEPTION("Base64 Encoded char of wrong size: " +
-                                                         karabo::util::toString(decoded.size()));
+                                                         karabo::data::toString(decoded.size()));
                     }
                     node = &hash.set(path, static_cast<char>(decoded[0]));
                     break;
@@ -1283,7 +1284,7 @@ namespace karabo {
             return fullyHandled;
         }
 
-        karabo::util::Epochstamp InfluxLogReader::toEpoch(unsigned long long timeFromInflux) const {
+        karabo::data::Epochstamp InfluxLogReader::toEpoch(unsigned long long timeFromInflux) const {
             const unsigned long long timeSec = timeFromInflux / INFLUX_PRECISION_FACTOR;
             const unsigned long long timeFrac = (timeFromInflux % INFLUX_PRECISION_FACTOR) * kFracConversionFactor;
             return Epochstamp(timeSec, timeFrac);

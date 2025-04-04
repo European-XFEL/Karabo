@@ -30,11 +30,12 @@
 #include <filesystem>
 
 #include "PluginLoader.hh"
-#include "SimpleElement.hh"
-#include "VectorElement.hh"
 #include "Version.hh"
+#include "karabo/data/schema/SimpleElement.hh"
+#include "karabo/data/schema/VectorElement.hh"
 
-
+using karabo::data::STRING_ELEMENT;
+using karabo::data::VECTOR_STRING_ELEMENT;
 namespace karabo {
     namespace util {
 
@@ -55,7 +56,7 @@ namespace karabo {
         }
 
 
-        void PluginLoader::expectedParameters(Schema& expected) {
+        void PluginLoader::expectedParameters(karabo::data::Schema& expected) {
             STRING_ELEMENT(expected)
                   .key("pluginDirectory")
                   .displayedName("Plugin Directory")
@@ -75,7 +76,7 @@ namespace karabo {
         }
 
 
-        PluginLoader::PluginLoader(const Hash& input) {
+        PluginLoader::PluginLoader(const karabo::data::Hash& input) {
             m_pluginDirectory = std::filesystem::path(input.get<string>("pluginDirectory"));
             const std::vector<std::string>& pluginsToLoad = input.get<std::vector<std::string> >("pluginsToLoad");
             m_pluginsToLoad.insert(pluginsToLoad.cbegin(), pluginsToLoad.cend());

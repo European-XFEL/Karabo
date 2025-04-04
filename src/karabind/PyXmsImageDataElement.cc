@@ -23,18 +23,18 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include <karabo/util/Dims.hh>
-#include <karabo/util/FromLiteral.hh>
-#include <karabo/util/NDArray.hh>
 #include <karabo/xms/ImageData.hh>
 
 #include "FromNumpy.hh"
 #include "ToNumpy.hh"
 #include "Wrapper.hh"
+#include "karabo/data/types/Dims.hh"
+#include "karabo/data/types/FromLiteral.hh"
+#include "karabo/data/types/NDArray.hh"
 
 
 namespace py = pybind11;
-using namespace karabo::util;
+using namespace karabo::data;
 using namespace karabo::xms;
 using namespace karabind;
 
@@ -134,7 +134,7 @@ void exportPyXmsImageDataElement(py::module_& m) {
         img.def(
               "setDimensions",
               [](ImageData& self, const py::object& o) {
-                  using namespace karabo::util;
+                  using namespace karabo::data;
                   if (py::isinstance<Dims>(o)) {
                       self.setDimensions(o.cast<Dims>());
                   } else if (py::isinstance<py::sequence>(o)) {
@@ -166,7 +166,7 @@ void exportPyXmsImageDataElement(py::module_& m) {
               py::arg("listOfDimTypes"));
 
         img.def("getROIOffsets", [](const ImageData& self) -> py::tuple {
-            using namespace karabo::util;
+            using namespace karabo::data;
             Dims offsets = self.getROIOffsets();
             std::vector<unsigned long long> v = offsets.toVector();
             return py::cast(v);
@@ -175,7 +175,7 @@ void exportPyXmsImageDataElement(py::module_& m) {
         img.def(
               "setROIOffsets",
               [](ImageData& self, const py::object& o) {
-                  using namespace karabo::util;
+                  using namespace karabo::data;
                   if (py::isinstance<Dims>(o)) {
                       self.setROIOffsets(o.cast<Dims>());
                   } else if (py::isinstance<py::sequence>(o)) {
@@ -189,7 +189,7 @@ void exportPyXmsImageDataElement(py::module_& m) {
               py::arg("offsets"));
 
         img.def("getBinning", [](const ImageData& self) -> py::tuple {
-            using namespace karabo::util;
+            using namespace karabo::data;
             Dims binning = self.getBinning();
             std::vector<unsigned long long> v = binning.toVector();
             return py::cast(v);
@@ -198,7 +198,7 @@ void exportPyXmsImageDataElement(py::module_& m) {
         img.def(
               "setBinning",
               [](ImageData& self, const py::object& o) {
-                  using namespace karabo::util;
+                  using namespace karabo::data;
                   if (py::isinstance<Dims>(o)) {
                       self.setBinning(o.cast<Dims>());
                   } else if (py::isinstance<py::sequence>(o)) {

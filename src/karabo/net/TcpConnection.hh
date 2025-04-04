@@ -32,7 +32,7 @@
 #include <string>
 
 #include "Connection.hh"
-#include "karabo/util/Hash.hh"
+#include "karabo/data/types/Hash.hh"
 
 /**
  * The main European XFEL namespace
@@ -66,9 +66,9 @@ namespace karabo {
 
             virtual ~TcpConnection();
 
-            static void expectedParameters(karabo::util::Schema& expected);
+            static void expectedParameters(karabo::data::Schema& expected);
 
-            TcpConnection(const karabo::util::Hash& input);
+            TcpConnection(const karabo::data::Hash& input);
 
             /**
              * Starts the connection
@@ -117,7 +117,7 @@ namespace karabo {
             unsigned int m_sizeofLength;
             bool m_lengthIsTextFlag;
             bool m_manageAsyncData;
-            const karabo::util::Hash m_keepAliveSettings;
+            const karabo::data::Hash m_keepAliveSettings;
         };
     } // namespace net
 } // namespace karabo

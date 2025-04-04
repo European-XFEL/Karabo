@@ -32,10 +32,10 @@
 #include <string>
 
 #include "boost/shared_ptr.hpp"
-#include "karabo/util/StringTools.hh"
+#include "karabo/data/types/StringTools.hh"
 #include "karabo/xms/SignalSlotable.hh"
 
-using namespace karabo::util;
+using namespace karabo::data;
 using namespace karabo::xms;
 
 using std::placeholders::_1;

@@ -27,12 +27,12 @@
 #include <cstdlib>
 #include <karabo/devices/PropertyTest.hh>
 #include <karabo/net/EventLoop.hh>
-#include <karabo/util/SimpleElement.hh>
-#include <karabo/util/StringTools.hh>
-#include <karabo/util/Trainstamp.hh>
 #include <thread>
 
 #include "PropertyTest_Test.hh"
+#include "karabo/data/schema/SimpleElement.hh"
+#include "karabo/data/time/Trainstamp.hh"
+#include "karabo/data/types/StringTools.hh"
 
 using namespace std::chrono;
 using namespace std::literals::chrono_literals;
@@ -45,9 +45,9 @@ USING_KARABO_NAMESPACES
 class PropertyTestWithOnTimeUpdate : public karabo::devices::PropertyTest {
    public:
     KARABO_CLASSINFO(PropertyTestWithOnTimeUpdate, "PropertyTestWithOnTimeUpdate", "2.8")
-    PropertyTestWithOnTimeUpdate(const karabo::util::Hash& cfg) : karabo::devices::PropertyTest(cfg) {}
+    PropertyTestWithOnTimeUpdate(const karabo::data::Hash& cfg) : karabo::devices::PropertyTest(cfg) {}
 
-    static void expectedParameters(karabo::util::Schema& expected) {
+    static void expectedParameters(karabo::data::Schema& expected) {
         UINT64_ELEMENT(expected).key("lastIdOnTimeUpdate").readOnly().initialValue(0ull).commit();
     }
 
@@ -169,14 +169,14 @@ void Timing_Test::testWrongPeriod() {
 
         // Test that ids are subsequent and time stamps are increasing (== is allowed!)
         unsigned long long lastId = ids[0];
-        karabo::util::Epochstamp lastStamp(seconds[0], fractions[0]);
+        karabo::data::Epochstamp lastStamp(seconds[0], fractions[0]);
         for (size_t i = 1; i < ids.size(); ++i) {
             CPPUNIT_ASSERT_EQUAL(lastId + 1ull, ids[i]); // (expected, actual)
 
-            const karabo::util::Epochstamp currentStamp(seconds[i], fractions[i]);
+            const karabo::data::Epochstamp currentStamp(seconds[i], fractions[i]);
             CPPUNIT_ASSERT(currentStamp >= lastStamp);
 
-            const karabo::util::TimeDuration diff = (currentStamp - lastStamp);
+            const karabo::data::TimeDuration diff = (currentStamp - lastStamp);
             KARABO_LOG_FRAMEWORK_DEBUG_C("Timing_Test")
                   << "diff for id: " << ids[i] << " " << static_cast<double>(diff);
 
@@ -196,11 +196,11 @@ void Timing_Test::testWrongPeriod() {
         CPPUNIT_ASSERT(idsTick.size() >= 2);
 
         unsigned long long lastIdTick = idsTick[0];
-        karabo::util::Epochstamp lastStampTick(secondsTick[0], fractionsTick[0]);
+        karabo::data::Epochstamp lastStampTick(secondsTick[0], fractionsTick[0]);
         for (size_t i = 1; i < idsTick.size(); ++i) {
             CPPUNIT_ASSERT_EQUAL(lastIdTick + static_cast<unsigned long long>(tickCountdown), idsTick[i]);
 
-            const karabo::util::Epochstamp currentStamp(secondsTick[i], fractionsTick[i]);
+            const karabo::data::Epochstamp currentStamp(secondsTick[i], fractionsTick[i]);
             CPPUNIT_ASSERT(currentStamp > lastStampTick);
 
             lastIdTick = idsTick[i];

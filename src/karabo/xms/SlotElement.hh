@@ -26,10 +26,10 @@
 #ifndef KARABO_UTIL_SLOTELEMENT_HH
 #define KARABO_UTIL_SLOTELEMENT_HH
 
-#include "karabo/util/Exception.hh"
-#include "karabo/util/GenericElement.hh"
-#include "karabo/util/State.hh"
-#include "karabo/util/ToLiteral.hh"
+#include "karabo/data/schema/GenericElement.hh"
+#include "karabo/data/types/Exception.hh"
+#include "karabo/data/types/State.hh"
+#include "karabo/data/types/ToLiteral.hh"
 // OK to include from 'karabo/log' (for KARABO_LOG_FRAMEWORK_WARN) as long as this file does not move to 'karabo/util':
 #include "karabo/log/Logger.hh"
 
@@ -37,20 +37,20 @@ namespace karabo {
     namespace xms {
 
         template <class Derived>
-        class SlotElementBase : public karabo::util::GenericElement<Derived> {
+        class SlotElementBase : public karabo::data::GenericElement<Derived> {
            protected:
-            karabo::util::Hash m_child;
+            karabo::data::Hash m_child;
 
            public:
-            SlotElementBase(karabo::util::Schema& expected) : karabo::util::GenericElement<Derived>(expected) {
-                this->m_node->template setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, karabo::util::WRITE);
-                this->m_node->template setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, karabo::util::Schema::NODE);
+            SlotElementBase(karabo::data::Schema& expected) : karabo::data::GenericElement<Derived>(expected) {
+                this->m_node->template setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, karabo::data::WRITE);
+                this->m_node->template setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, karabo::data::Schema::NODE);
                 this->m_node->setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, "Slot"); // Reserved displayType for commands
                 this->m_node->setAttribute(KARABO_SCHEMA_CLASS_ID, "Slot");
 
                 // default value of requiredAccessLevel for Slot element: USER
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL,
-                                                         karabo::util::Schema::USER);
+                                                         karabo::data::Schema::USER);
             }
 
             /**
@@ -60,48 +60,48 @@ namespace karabo {
              * @return reference to the Element (to allow method's chaining)
              */
 
-            Derived& allowedStates(const std::vector<karabo::util::State>& value) {
-                const std::string stateString = karabo::util::toString(value);
+            Derived& allowedStates(const std::vector<karabo::data::State>& value) {
+                const std::string stateString = karabo::data::toString(value);
                 this->m_node->setAttribute(KARABO_SCHEMA_ALLOWED_STATES,
-                                           karabo::util::fromString<std::string, std::vector>(stateString, ","));
+                                           karabo::data::fromString<std::string, std::vector>(stateString, ","));
                 return *(static_cast<Derived*>(this));
             }
 
             // overloads for up to six elements
-            Derived& allowedStates(const karabo::util::State& s1) {
-                const karabo::util::State arr[] = {s1};
-                return allowedStates(std::vector<karabo::util::State>(arr, arr + 1));
+            Derived& allowedStates(const karabo::data::State& s1) {
+                const karabo::data::State arr[] = {s1};
+                return allowedStates(std::vector<karabo::data::State>(arr, arr + 1));
             }
 
-            Derived& allowedStates(const karabo::util::State& s1, const karabo::util::State& s2) {
-                const karabo::util::State arr[] = {s1, s2};
-                return allowedStates(std::vector<karabo::util::State>(arr, arr + 2));
+            Derived& allowedStates(const karabo::data::State& s1, const karabo::data::State& s2) {
+                const karabo::data::State arr[] = {s1, s2};
+                return allowedStates(std::vector<karabo::data::State>(arr, arr + 2));
             }
 
-            Derived& allowedStates(const karabo::util::State& s1, const karabo::util::State& s2,
-                                   const karabo::util::State& s3) {
-                const karabo::util::State arr[] = {s1, s2, s3};
-                return allowedStates(std::vector<karabo::util::State>(arr, arr + 3));
+            Derived& allowedStates(const karabo::data::State& s1, const karabo::data::State& s2,
+                                   const karabo::data::State& s3) {
+                const karabo::data::State arr[] = {s1, s2, s3};
+                return allowedStates(std::vector<karabo::data::State>(arr, arr + 3));
             }
 
-            Derived& allowedStates(const karabo::util::State& s1, const karabo::util::State& s2,
-                                   const karabo::util::State& s3, const karabo::util::State& s4) {
-                const karabo::util::State arr[] = {s1, s2, s3, s4};
-                return allowedStates(std::vector<karabo::util::State>(arr, arr + 4));
+            Derived& allowedStates(const karabo::data::State& s1, const karabo::data::State& s2,
+                                   const karabo::data::State& s3, const karabo::data::State& s4) {
+                const karabo::data::State arr[] = {s1, s2, s3, s4};
+                return allowedStates(std::vector<karabo::data::State>(arr, arr + 4));
             }
 
-            Derived& allowedStates(const karabo::util::State& s1, const karabo::util::State& s2,
-                                   const karabo::util::State& s3, const karabo::util::State& s4,
-                                   const karabo::util::State& s5) {
-                const karabo::util::State arr[] = {s1, s2, s3, s4, s5};
-                return allowedStates(std::vector<karabo::util::State>(arr, arr + 5));
+            Derived& allowedStates(const karabo::data::State& s1, const karabo::data::State& s2,
+                                   const karabo::data::State& s3, const karabo::data::State& s4,
+                                   const karabo::data::State& s5) {
+                const karabo::data::State arr[] = {s1, s2, s3, s4, s5};
+                return allowedStates(std::vector<karabo::data::State>(arr, arr + 5));
             }
 
-            Derived& allowedStates(const karabo::util::State& s1, const karabo::util::State& s2,
-                                   const karabo::util::State& s3, const karabo::util::State& s4,
-                                   const karabo::util::State& s5, const karabo::util::State& s6) {
-                const karabo::util::State arr[] = {s1, s2, s3, s4, s5, s6};
-                return allowedStates(std::vector<karabo::util::State>(arr, arr + 6));
+            Derived& allowedStates(const karabo::data::State& s1, const karabo::data::State& s2,
+                                   const karabo::data::State& s3, const karabo::data::State& s4,
+                                   const karabo::data::State& s5, const karabo::data::State& s6) {
+                const karabo::data::State arr[] = {s1, s2, s3, s4, s5, s6};
+                return allowedStates(std::vector<karabo::data::State>(arr, arr + 6));
             }
 
             virtual void beforeAddition() override = 0;
@@ -117,13 +117,13 @@ namespace karabo {
                           << "' contains a '_'. This might lead to unexpected behaviour since the `_` is internally "
                              "used for slots inside a nodes";
                 }
-                return karabo::util::GenericElement<Derived>::key(name);
+                return karabo::data::GenericElement<Derived>::key(name);
             }
         };
 
         class SLOT_ELEMENT : public SlotElementBase<SLOT_ELEMENT> {
            public:
-            SLOT_ELEMENT(karabo::util::Schema& expected) : SlotElementBase<SLOT_ELEMENT>(expected) {}
+            SLOT_ELEMENT(karabo::data::Schema& expected) : SlotElementBase<SLOT_ELEMENT>(expected) {}
 
             void beforeAddition() {
                 this->m_node->setValue(this->m_child);
@@ -133,12 +133,12 @@ namespace karabo {
         template <class A1>
         class SLOT_ELEMENT1 : public SlotElementBase<SLOT_ELEMENT1<A1> > {
            public:
-            SLOT_ELEMENT1(karabo::util::Schema& expected) : SlotElementBase<SLOT_ELEMENT1<A1> >(expected) {
+            SLOT_ELEMENT1(karabo::data::Schema& expected) : SlotElementBase<SLOT_ELEMENT1<A1> >(expected) {
                 this->m_child.set("arg1", 0);
                 this->m_child.setAttribute("arg1", KARABO_SCHEMA_DISPLAYED_NAME, "Argument 1");
-                this->m_child.template setAttribute<int>("arg1", KARABO_SCHEMA_ACCESS_MODE, karabo::util::WRITE);
+                this->m_child.template setAttribute<int>("arg1", KARABO_SCHEMA_ACCESS_MODE, karabo::data::WRITE);
                 this->m_child.template setAttribute<int>("arg1", KARABO_SCHEMA_ASSIGNMENT,
-                                                         karabo::util::Schema::MANDATORY_PARAM);
+                                                         karabo::data::Schema::MANDATORY_PARAM);
             }
 
             SLOT_ELEMENT1& arg1Description(const std::string& desc) {

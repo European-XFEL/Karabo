@@ -31,11 +31,12 @@
 #include <karabo/net/EventLoop.hh>
 #include <karabo/net/InfluxDbClientUtils.hh>
 #include <karabo/util/DataLogUtils.hh>
-#include <karabo/util/Hash.hh>
-#include <karabo/util/Schema.hh>
-#include <karabo/util/StringTools.hh>
 #include <nlohmann/json.hpp>
 #include <sstream>
+
+#include "karabo/data/types/Hash.hh"
+#include "karabo/data/types/Schema.hh"
+#include "karabo/data/types/StringTools.hh"
 
 using namespace std::chrono;
 using namespace std::literals::chrono_literals;
@@ -113,7 +114,7 @@ void DataLogging_Test::testLoggerMapProperty() {
 
     // We make sure all the devices in the system have an entry in the loggerMap table, and
     // that they have the same data logger
-    const auto mapEntries = m_deviceClient->get<std::vector<karabo::util::Hash>>("loggerManager", "loggerMap");
+    const auto mapEntries = m_deviceClient->get<std::vector<karabo::data::Hash>>("loggerManager", "loggerMap");
     CPPUNIT_ASSERT_GREATER(0ULL, static_cast<unsigned long long>(mapEntries.size()));
 
     const auto& data_logger = mapEntries[0].get<std::string>("dataLogger");
@@ -665,7 +666,7 @@ void DataLogging_Test::testInfluxMaxPerDevicePropLogRate() {
                 .receive(badDataAllDevices));
     CPPUNIT_ASSERT_EQUAL(1ul,
                          badDataAllDevices.size()); // 1 is because the bad data is grouped under a single deviceId.
-    CPPUNIT_ASSERT_EQUAL(4ul * rateWinSecs, badDataAllDevices.get<std::vector<karabo::util::Hash>>(m_deviceId).size());
+    CPPUNIT_ASSERT_EQUAL(4ul * rateWinSecs, badDataAllDevices.get<std::vector<karabo::data::Hash>>(m_deviceId).size());
     // Checks that half of the 8Kb strings written have been successfully set as property values.
     history.clear();
     historyParams.set<std::string>("from", before64KbWrite.toIso8601Ext());
@@ -893,35 +894,35 @@ void DataLogging_Test::testNoInfluxServerHandling() {
     testAllInstantiated(false);
 
     // The DataLogger should be in ERROR state.
-    karabo::util::State loggerState = karabo::util::State::UNKNOWN;
+    karabo::data::State loggerState = karabo::data::State::UNKNOWN;
     std::string loggerStatus;
     const std::string& dataLoggerId = karabo::util::DATALOGGER_PREFIX + m_server;
     waitForCondition(
           [this, &loggerState, &loggerStatus, &dataLoggerId]() {
-              loggerState = m_deviceClient->get<karabo::util::State>(dataLoggerId, "state");
+              loggerState = m_deviceClient->get<karabo::data::State>(dataLoggerId, "state");
               loggerStatus = m_deviceClient->get<std::string>(dataLoggerId, "status");
-              return (loggerState == karabo::util::State::ERROR);
+              return (loggerState == karabo::data::State::ERROR);
           },
           KRB_TEST_MAX_TIMEOUT * 1000);
 
     CPPUNIT_ASSERT_MESSAGE("Timeout while waiting for DataLogger '" + dataLoggerId + "' to reach ERROR state.",
-                           loggerState == karabo::util::State::ERROR);
+                           loggerState == karabo::data::State::ERROR);
 
     std::clog << "... Influx logger in ERROR state, as expected, with status '" << loggerStatus << "'" << std::endl;
 
     // The LogReader should be still in ON state - it only goes to error after failing to connect to the Influx
     // instance.
     const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
-    karabo::util::State readerState = karabo::util::State::UNKNOWN;
+    karabo::data::State readerState = karabo::data::State::UNKNOWN;
     waitForCondition(
           [this, &readerState, &dlreader0]() {
-              readerState = m_deviceClient->get<karabo::util::State>(dlreader0, "state");
-              return (readerState == karabo::util::State::ON);
+              readerState = m_deviceClient->get<karabo::data::State>(dlreader0, "state");
+              return (readerState == karabo::data::State::ON);
           },
           KRB_TEST_MAX_TIMEOUT * 1000);
 
     CPPUNIT_ASSERT_MESSAGE("Timeout while waiting for LogReader '" + dlreader0 + "' to reach ON state.",
-                           readerState == karabo::util::State::ON);
+                           readerState == karabo::data::State::ON);
 
     // Any attempt to recover a configuration from Influx should fail when the Influx Server is not
     // available.
@@ -938,7 +939,7 @@ void DataLogging_Test::testNoInfluxServerHandling() {
         m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast", m_deviceId, withNoServer.toIso8601())
               .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
               .receive(conf, schema, cfgAtTime, cfgTime);
-    } catch (const karabo::util::RemoteException& exc) {
+    } catch (const karabo::data::RemoteException& exc) {
         bool condition = (exc.detailedMsg().find("Could not connect to InfluxDb at") != std::string::npos) ||
                          (exc.detailedMsg().find("Reading from InfluxDB failed") != std::string::npos) ||
                          (exc.detailedMsg().find("Connection reset by peer"));
@@ -951,16 +952,16 @@ void DataLogging_Test::testNoInfluxServerHandling() {
     CPPUNIT_ASSERT(remoteExceptionCaught);
 
     // At this point the LogReader will have tried to access Influx and failed. It should now be in ERROR.
-    readerState = karabo::util::State::UNKNOWN;
+    readerState = karabo::data::State::UNKNOWN;
     waitForCondition(
           [this, &readerState, &dlreader0]() {
-              readerState = m_deviceClient->get<karabo::util::State>(dlreader0, "state");
-              return (readerState == karabo::util::State::ERROR);
+              readerState = m_deviceClient->get<karabo::data::State>(dlreader0, "state");
+              return (readerState == karabo::data::State::ERROR);
           },
           KRB_TEST_MAX_TIMEOUT * 1000);
 
     CPPUNIT_ASSERT_MESSAGE("Timeout while waiting for LogReader '" + dlreader0 + "' to reach ERROR state.",
-                           readerState == karabo::util::State::ERROR);
+                           readerState == karabo::data::State::ERROR);
 
     std::clog << "... request failed with RemoteException as expected." << std::endl;
 
@@ -1055,16 +1056,16 @@ void DataLogging_Test::testFailingManager() {
     success = m_deviceClient->instantiate(m_server, "DataLoggerManager", conf, KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
-    karabo::util::State loggerState = karabo::util::State::UNKNOWN;
+    karabo::data::State loggerState = karabo::data::State::UNKNOWN;
     waitForCondition(
           [this, &loggerState, &dataLogManagerId]() {
-              loggerState = m_deviceClient->get<karabo::util::State>(dataLogManagerId, "state");
-              return loggerState == karabo::util::State::ERROR;
+              loggerState = m_deviceClient->get<karabo::data::State>(dataLogManagerId, "state");
+              return loggerState == karabo::data::State::ERROR;
           },
           KRB_TEST_MAX_TIMEOUT * 1000);
 
     const std::string status = m_deviceClient->get<std::string>(dataLogManagerId, "status");
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Missed ERROR state - status: " + status, karabo::util::State::ERROR, loggerState);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Missed ERROR state - status: " + status, karabo::data::State::ERROR, loggerState);
     CPPUNIT_ASSERT_MESSAGE(status,
                            status.find("Failure in initialize(), likely a restart is needed:") != std::string::npos);
     CPPUNIT_ASSERT_MESSAGE(

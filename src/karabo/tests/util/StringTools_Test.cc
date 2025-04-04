@@ -25,13 +25,14 @@
 #include "StringTools_Test.hh"
 
 #include <boost/core/null_deleter.hpp>
-#include <karabo/util/StringTools.hh>
 #include <set>
 #include <unordered_set>
 
+#include "karabo/data/types/StringTools.hh"
+
 CPPUNIT_TEST_SUITE_REGISTRATION(StringTools_Test);
 
-using namespace karabo::util;
+using namespace karabo::data;
 using namespace std;
 
 

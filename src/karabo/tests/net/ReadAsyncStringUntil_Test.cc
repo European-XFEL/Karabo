@@ -58,7 +58,7 @@ struct TestClient {
     KARABO_CLASSINFO(TestClient, "TestClient", "1.0");
 
 
-    TestClient(const karabo::util::Hash& input)
+    TestClient(const karabo::data::Hash& input)
         : m_repetition(5) // we want to read 5 times
           ,
           m_expected(""),
@@ -176,7 +176,7 @@ void ReadAsyncStringUntil_Test::runTest() {
         }
     });
     // Start client ...
-    karabo::util::Hash input("hostname", "localhost", "port", port, "type", "client", "sizeofLength", 0);
+    karabo::data::Hash input("hostname", "localhost", "port", port, "type", "client", "sizeofLength", 0);
     TestClient client(input);
     std::future<std::string> clientFut = client.get_future();
     karabo::net::EventLoop::run();

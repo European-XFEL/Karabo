@@ -27,8 +27,8 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 
-#include <karabo/util/Epochstamp.hh>
-#include <karabo/util/TimeDuration.hh>
+#include "karabo/data/time/Epochstamp.hh"
+#include "karabo/data/time/TimeDuration.hh"
 
 class Epochstamp_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(Epochstamp_Test);
@@ -62,8 +62,8 @@ class Epochstamp_Test : public CPPUNIT_NS::TestFixture {
     void validateToFormattedString(const std::string& pTime, const std::string& format,
                                    const std::string& pTimeDesiredTimeZone, const std::string& expectedStringOutput);
 
-    void toIso8601Precision(const karabo::util::Epochstamp epo, const karabo::util::Epochstamp epo2,
-                            const karabo::util::TIME_UNITS precision, const std::string& precisionDesc,
+    void toIso8601Precision(const karabo::data::Epochstamp epo, const karabo::data::Epochstamp epo2,
+                            const karabo::data::TIME_UNITS precision, const std::string& precisionDesc,
                             const bool isCompactString, const bool writeToClog, const std::string& expectedToIso8601);
 };
 

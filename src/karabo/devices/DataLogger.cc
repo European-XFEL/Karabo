@@ -27,16 +27,16 @@
 #include <filesystem>
 #include <streambuf>
 
+#include "karabo/data/schema/OverwriteElement.hh"
+#include "karabo/data/schema/SimpleElement.hh"
+#include "karabo/data/schema/TableElement.hh"
+#include "karabo/data/schema/VectorElement.hh"
+#include "karabo/data/types/Schema.hh"
 #include "karabo/io/Input.hh"
 #include "karabo/io/TextSerializer.hh"
 #include "karabo/net/EventLoop.hh"
 #include "karabo/net/Strand.hh"
 #include "karabo/util/MetaTools.hh"
-#include "karabo/util/OverwriteElement.hh"
-#include "karabo/util/Schema.hh"
-#include "karabo/util/SimpleElement.hh"
-#include "karabo/util/TableElement.hh"
-#include "karabo/util/VectorElement.hh"
 #include "karabo/xms/SlotElement.hh"
 
 namespace karabo {
@@ -45,6 +45,7 @@ namespace karabo {
         using namespace std::chrono;
         using namespace std::literals::chrono_literals;
         using namespace std;
+        using namespace karabo::data;
         using namespace karabo::util;
         using namespace karabo::io;
         using namespace karabo::xms;
@@ -117,10 +118,10 @@ namespace karabo {
         }
 
 
-        DeviceData::DeviceData(const karabo::util::Hash& input)
+        DeviceData::DeviceData(const karabo::data::Hash& input)
             : m_deviceToBeLogged(input.get<std::string>("deviceToBeLogged")),
               m_initLevel(InitLevel::NONE),
-              m_strand(karabo::util::Configurator<karabo::net::Strand>::create(
+              m_strand(karabo::data::Configurator<karabo::net::Strand>::create(
                     "Strand", Hash("guaranteeToRun", true, "maxInARow", 10u))),
               m_currentSchema(),
               m_user("."),
@@ -138,7 +139,7 @@ namespace karabo {
             : karabo::core::Device(input), m_flushDeadline(karabo::net::EventLoop::getIOService()) {
             // start "flush" actor ...
             input.get("flushInterval", m_flushInterval); // in seconds
-            m_visibility = karabo::util::Schema::ADMIN;
+            m_visibility = karabo::data::Schema::ADMIN;
 
             // Register slots in constructor to ensure existence when sending instanceNew
             KARABO_SLOT(slotChanged, Hash /*changedConfig*/, string /*deviceId*/);
@@ -209,7 +210,7 @@ namespace karabo {
             auto counter = std::make_shared<std::atomic<unsigned int>>(m_perDeviceData.size());
             if (0 == *counter) {
                 // No devices to log, so declare readiness immediately.
-                if (this->get<karabo::util::State>("state") != State::ERROR) {
+                if (this->get<karabo::data::State>("state") != State::ERROR) {
                     // We only go to ON state when there's no ERROR condition
                     // signaled by the DataLogger subclass. InfluxDataLogger, for
                     // instance, uses ERROR state to indicate issues with
@@ -293,13 +294,13 @@ namespace karabo {
                                       << deviceId;
 
             request(deviceId, "slotGetSchema", false)
-                  .receiveAsync<karabo::util::Schema, std::string>(
+                  .receiveAsync<karabo::data::Schema, std::string>(
                         util::bind_weak(&DataLogger::handleSchemaReceived, this, _1, _2, data, counter),
                         util::bind_weak(&DataLogger::handleFailure, this, "receiving schema from", data, counter));
         }
 
 
-        void DataLogger::handleSchemaReceived(const karabo::util::Schema& schema, const std::string& deviceId,
+        void DataLogger::handleSchemaReceived(const karabo::data::Schema& schema, const std::string& deviceId,
                                               const DeviceData::Pointer& data,
                                               const std::shared_ptr<std::atomic<unsigned int>>& counter) {
             // We need to store the received schema and then connect to configuration updates.
@@ -311,7 +312,7 @@ namespace karabo {
         }
 
 
-        void DataLogger::handleSchemaReceived2(const karabo::util::Schema& schema, const karabo::util::Timestamp& stamp,
+        void DataLogger::handleSchemaReceived2(const karabo::data::Schema& schema, const karabo::data::Timestamp& stamp,
                                                const DeviceData::Pointer& data,
                                                const std::shared_ptr<std::atomic<unsigned int>>& counter) {
             // Set initial Schema - needed for receiving properly in slotChanged
@@ -340,7 +341,7 @@ namespace karabo {
         void DataLogger::checkReady(std::atomic<unsigned int>& counter) {
             // Update State once all configured device are connected.
             if (--counter == 0) {
-                if (this->get<karabo::util::State>("state") != State::ERROR) {
+                if (this->get<karabo::data::State>("state") != State::ERROR) {
                     // We only go to ON state when there's no ERROR condition
                     // signaled by the DataLogger subclass. InfluxDataLogger, for
                     // instance, uses ERROR state to indicate issues with
@@ -375,9 +376,9 @@ namespace karabo {
             if (isFailure) {
                 try {
                     throw;
-                } catch (const karabo::util::TimeoutException&) {
+                } catch (const karabo::data::TimeoutException&) {
                     // Silence the expected timeout if disconnect was called since device went offline
-                    karabo::util::Exception::clearTrace();
+                    karabo::data::Exception::clearTrace();
                 } catch (const std::exception& se) {
                     KARABO_LOG_FRAMEWORK_WARN << "Failed to disconnect from " << devId << "." << signal << ": "
                                               << se.what();
@@ -442,7 +443,7 @@ namespace karabo {
         }
 
 
-        void DataLogger::slotChanged(const karabo::util::Hash& configuration, const std::string& deviceId) {
+        void DataLogger::slotChanged(const karabo::data::Hash& configuration, const std::string& deviceId) {
             std::lock_guard<std::mutex> lock(m_perDeviceDataMutex);
             DeviceDataMap::iterator it = m_perDeviceData.find(deviceId);
             if (it != m_perDeviceData.end()) {
@@ -526,11 +527,11 @@ namespace karabo {
         }
 
 
-        void DeviceData::getPathsForConfiguration(const karabo::util::Hash& configuration,
-                                                  const karabo::util::Schema& schema,
+        void DeviceData::getPathsForConfiguration(const karabo::data::Hash& configuration,
+                                                  const karabo::data::Schema& schema,
                                                   std::vector<std::string>& paths) const {
             {
-                using karabo::util::Epochstamp;
+                using karabo::data::Epochstamp;
 
                 // Gets the paths for the leaf nodes in the configuration sorted by their order in the schema.
                 getLeaves(configuration, schema, paths);
@@ -600,7 +601,7 @@ namespace karabo {
                         std::lock_guard<std::mutex> lock(data->m_lastTimestampMutex);
                         updatedAnyStamp |= data->m_updatedLastTimestamp;
                         data->m_updatedLastTimestamp = false;
-                        const karabo::util::Timestamp& ts = data->m_lastDataTimestamp;
+                        const karabo::data::Timestamp& ts = data->m_lastDataTimestamp;
                         Hash h("deviceId", idData.first);
                         // Human readable Epochstamp (except if no updates yet), attributes for machines
                         Hash::Node& node = h.set("lastUpdateUtc", "");
@@ -623,7 +624,7 @@ namespace karabo {
         }
 
 
-        void DataLogger::slotSchemaUpdated(const karabo::util::Schema& schema, const std::string& deviceId) {
+        void DataLogger::slotSchemaUpdated(const karabo::data::Schema& schema, const std::string& deviceId) {
             KARABO_LOG_FRAMEWORK_INFO << "slotSchemaUpdated: Schema for " << deviceId << " arrived...";
 
             std::lock_guard<std::mutex> lock(m_perDeviceDataMutex);

@@ -26,20 +26,21 @@
 #include "HashXmlSerializer.hh"
 
 #include <boost/algorithm/string.hpp>
-#include <karabo/util/FromLiteral.hh>
-#include <karabo/util/Schema.hh>
-#include <karabo/util/SimpleElement.hh>
 
-using namespace karabo::util;
+#include "karabo/data/schema/SimpleElement.hh"
+#include "karabo/data/types/FromLiteral.hh"
+#include "karabo/data/types/Schema.hh"
+
+using namespace karabo::data;
 using namespace std;
 
-KARABO_EXPLICIT_TEMPLATE(karabo::io::TextSerializer<karabo::util::Hash>)
-KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::TextSerializer<karabo::util::Hash>, karabo::io::HashXmlSerializer)
+KARABO_EXPLICIT_TEMPLATE(karabo::io::TextSerializer<karabo::data::Hash>)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::TextSerializer<karabo::data::Hash>, karabo::io::HashXmlSerializer)
 
 namespace karabo {
     namespace io {
 
-        void HashXmlSerializer::expectedParameters(karabo::util::Schema& expected) {
+        void HashXmlSerializer::expectedParameters(karabo::data::Schema& expected) {
             INT32_ELEMENT(expected)
                   .key("indentation")
                   .description(
@@ -237,7 +238,7 @@ namespace karabo {
         }
 
 
-        void HashXmlSerializer::load(karabo::util::Hash& object, const char* archive) {
+        void HashXmlSerializer::load(karabo::data::Hash& object, const char* archive) {
             pugi::xml_document doc;
             pugi::xml_parse_result result = doc.load(archive);
             if (!result) {
@@ -322,8 +323,8 @@ namespace karabo {
         }
 
 
-        void HashXmlSerializer::addNonStrConvertibleAttrs(karabo::util::Hash& hash, const std::string& hashPath,
-                                                          std::vector<karabo::util::Hash>& attrs) const {
+        void HashXmlSerializer::addNonStrConvertibleAttrs(karabo::data::Hash& hash, const std::string& hashPath,
+                                                          std::vector<karabo::data::Hash>& attrs) const {
             if (hash.has(hashPath)) {
                 for (auto& attrHash : attrs) {
                     vector<string> attrHashKeys;
@@ -364,7 +365,7 @@ namespace karabo {
                     const std::string typeString(attributeValue.substr(m_prefix.size(), pos - m_prefix.size()));
                     try {
                         type = Types::from<FromLiteral>(typeString);
-                    } catch (const karabo::util::Exception& e) {
+                    } catch (const karabo::data::Exception&) {
                         KARABO_RETHROW_AS(KARABO_IO_EXCEPTION("Unknown xml attribute type: " + typeString));
                     }
                     string value = attributeValue.substr(pos + 1);
@@ -422,7 +423,7 @@ namespace karabo {
                             } else {
                                 try {
                                     hashNode.setType(Types::from<FromLiteral>(attributeValue));
-                                } catch (const karabo::util::Exception& e) {
+                                } catch (const karabo::data::Exception& e) {
                                     cout << "WARN: Could not understand xml attribute type: \"" << attributeValue
                                          << "\". Will interprete type as string." << endl;
                                     e.clearTrace();
@@ -443,7 +444,7 @@ namespace karabo {
                                 Hash::Node& hashNode = hash.set(nodeName, string());
                                 try {
                                     hashNode.setType(Types::from<FromLiteral>(attributeValue));
-                                } catch (const karabo::util::Exception& e) {
+                                } catch (const karabo::data::Exception& e) {
                                     cout << "WARN: Could not understand xml attribute type: \"" << attributeValue
                                          << "\". Will interprete type as string." << endl;
                                     e.clearTrace();
@@ -470,13 +471,13 @@ namespace karabo {
         }
 
 
-        void HashXmlSerializer::save(const std::vector<karabo::util::Hash>& objects, std::string& archive) {
+        void HashXmlSerializer::save(const std::vector<karabo::data::Hash>& objects, std::string& archive) {
             Hash tmp(m_prefix + "Sequence", objects);
             this->save(tmp, archive);
         }
 
 
-        void HashXmlSerializer::load(std::vector<karabo::util::Hash>& objects, const std::string& archive) {
+        void HashXmlSerializer::load(std::vector<karabo::data::Hash>& objects, const std::string& archive) {
             vector<Hash> tmp(1);
             this->load(tmp[0], archive);
             if (tmp[0].empty()) {

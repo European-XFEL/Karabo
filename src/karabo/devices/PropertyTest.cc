@@ -19,15 +19,15 @@
 
 #include <chrono>
 
+#include "karabo/data/schema/NDArrayElement.hh"
+#include "karabo/data/schema/TableElement.hh"
+#include "karabo/data/schema/VectorElement.hh"
+#include "karabo/data/types/Dims.hh"
+#include "karabo/data/types/Hash.hh"
+#include "karabo/data/types/NDArray.hh"
+#include "karabo/data/types/Schema.hh"
+#include "karabo/data/types/State.hh"
 #include "karabo/net/EventLoop.hh"
-#include "karabo/util/Dims.hh"
-#include "karabo/util/Hash.hh"
-#include "karabo/util/NDArray.hh"
-#include "karabo/util/NDArrayElement.hh"
-#include "karabo/util/Schema.hh"
-#include "karabo/util/State.hh"
-#include "karabo/util/TableElement.hh"
-#include "karabo/util/VectorElement.hh"
 #include "karabo/xms/ImageData.hh"
 #include "karabo/xms/InputChannel.hh"
 
@@ -41,6 +41,7 @@ namespace karabo {
         using namespace std::literals::chrono_literals;
         using namespace std;
         using namespace karabo::core;
+        using namespace karabo::data;
         using namespace karabo::util;
         using namespace karabo::net;
         using namespace karabo::xms;
@@ -48,7 +49,7 @@ namespace karabo {
         const unsigned int defVectorMaxSize = 100;
 
 
-        NestedClass::NestedClass(const karabo::util::Hash& input) {}
+        NestedClass::NestedClass(const karabo::data::Hash& input) {}
 
 
         NestedClass::~NestedClass() {}
@@ -555,7 +556,7 @@ namespace karabo {
                   .key("node")
                   .displayedName("Node for DAQ")
                   .description("An intermediate node needed by DAQ")
-                  .setDaqDataType(karabo::util::TRAIN)
+                  .setDaqDataType(karabo::data::TRAIN)
                   .commit();
 
             INT32_ELEMENT(pipeData)
@@ -604,7 +605,7 @@ namespace karabo {
                   .key("outputFrequency")
                   .displayedName("Output frequency")
                   .description("The target frequency for continously writing to 'Output'")
-                  .unit(util::Unit::HERTZ)
+                  .unit(data::Unit::HERTZ)
                   .maxInc(1000)
                   .minExc(0.f)
                   .assignmentOptional()
@@ -654,8 +655,8 @@ namespace karabo {
                   .assignmentOptional()
                   .defaultValue(0u)
                   .reconfigurable()
-                  .unit(util::Unit::SECOND)
-                  .metricPrefix(util::MetricPrefix::MILLI)
+                  .unit(data::Unit::SECOND)
+                  .metricPrefix(data::MetricPrefix::MILLI)
                   .commit();
 
             INT32_ELEMENT(expected)
@@ -808,7 +809,7 @@ namespace karabo {
 
         PropertyTest::PropertyTest(const Hash& input)
             : Device(input), m_writingOutput(false), m_writingOutputTimer(karabo::net::EventLoop::getIOService()) {
-            m_visibility = karabo::util::Schema::EXPERT;
+            m_visibility = karabo::data::Schema::EXPERT;
             // Signal for test of order between emitted signal and direct slot calls.
             // Note that (using JMS broker) the order is NOT guaranteed for KARABO_SIGNAL since that has
             // lower priority - seen that a slot call overtook few hundred messages triggered by signals!
@@ -991,7 +992,7 @@ namespace karabo {
                   .commit();
 
             this->updateSchema(newSchema);
-            reply(karabo::util::Hash("success", true, "instanceId", getInstanceId()));
+            reply(karabo::data::Hash("success", true, "instanceId", getInstanceId()));
         }
 
         void PropertyTest::preReconfigure(Hash& incomingReconfiguration) {
@@ -1011,15 +1012,15 @@ namespace karabo {
 
 
         void PropertyTest::setAlarm() {
-            const karabo::util::AlarmCondition alarm =
-                  karabo::util::AlarmCondition::fromString(get<std::string>("stringProperty"));
+            const karabo::data::AlarmCondition alarm =
+                  karabo::data::AlarmCondition::fromString(get<std::string>("stringProperty"));
             setAlarmCondition(alarm, true, "Acknowledgment requiring alarm");
         }
 
 
         void PropertyTest::setNoAckAlarm() {
-            const karabo::util::AlarmCondition alarm =
-                  karabo::util::AlarmCondition::fromString(get<std::string>("stringProperty"));
+            const karabo::data::AlarmCondition alarm =
+                  karabo::data::AlarmCondition::fromString(get<std::string>("stringProperty"));
             setAlarmCondition(alarm, false, "No acknowledgment requiring alarm");
         }
 
@@ -1087,7 +1088,7 @@ namespace karabo {
         }
 
 
-        void PropertyTest::onData(const karabo::util::Hash& data, const karabo::xms::InputChannel::MetaData& meta) {
+        void PropertyTest::onData(const karabo::data::Hash& data, const karabo::xms::InputChannel::MetaData& meta) {
             // First sleep to simulate heavy work
             std::this_thread::sleep_for(milliseconds(get<unsigned int>("processingTime")));
 

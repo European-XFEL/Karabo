@@ -24,7 +24,7 @@
 
 #include "BinaryFileInput.hh"
 
-using namespace karabo::util;
+using namespace karabo::data;
 
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Input<Hash>, karabo::io::BinaryFileInput<Hash>)
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Input<Schema>, karabo::io::BinaryFileInput<Schema>)

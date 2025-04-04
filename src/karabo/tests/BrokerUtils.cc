@@ -61,8 +61,8 @@ std::vector<std::string> getBrokersFromEnv(const std::string& protocol) {
 }
 
 
-karabo::util::Hash getBrokersFromEnv() {
-    karabo::util::Hash ret;
+karabo::data::Hash getBrokersFromEnv() {
+    karabo::data::Hash ret;
     char* brokers_env = getenv("KARABO_CI_BROKERS");
     if (!brokers_env) {
         brokers_env = getenv("KARABO_BROKER");

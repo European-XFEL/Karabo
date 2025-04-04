@@ -24,18 +24,20 @@
 
 #include <boost/iostreams/stream.hpp>
 
-#include "DateTimeString.hh"
-#include "StringTools.hh"
+#include "karabo/data/time/DateTimeString.hh"
+#include "karabo/data/types/StringTools.hh"
 
+using karabo::data::TIME_UNITS;
+using karabo::data::toString;
 namespace karabo {
     namespace util {
         namespace nl = nlohmann;
 
 
-        util::Epochstamp stringDoubleToEpochstamp(const std::string& timestampAsDouble) {
+        data::Epochstamp stringDoubleToEpochstamp(const std::string& timestampAsDouble) {
             std::vector<std::string> tparts;
             boost::split(tparts, timestampAsDouble, boost::is_any_of("."));
-            const unsigned long long seconds = util::fromString<unsigned long long>(tparts[0]);
+            const unsigned long long seconds = data::fromString<unsigned long long>(tparts[0]);
             unsigned long long fractions = 0ULL;
             // If by chance we hit a full second without fractions, we have no ".":
             if (tparts.size() >= 2) {
@@ -59,45 +61,45 @@ namespace karabo {
                     fracString.replace(0, firstNonZero, firstNonZero, ' '); // replace by space avoids any re-allocation
                 }
                 // Finally, multiply to convert to ATTOSEC:
-                fractions = util::fromString<unsigned long long>(fracString) * factorToAtto;
+                fractions = data::fromString<unsigned long long>(fracString) * factorToAtto;
             }
 
-            return util::Epochstamp(seconds, fractions);
+            return data::Epochstamp(seconds, fractions);
         }
 
 
-        void getLeaves(const util::Hash& configuration, const util::Schema& schema, std::vector<std::string>& result,
+        void getLeaves(const data::Hash& configuration, const data::Schema& schema, std::vector<std::string>& result,
                        const char separator) {
             if (configuration.empty() || schema.empty()) return;
             getLeaves_r(configuration, schema, result, "", separator, false);
         }
 
 
-        void getLeaves_r(const util::Hash& hash, const util::Schema& schema, std::vector<std::string>& result,
+        void getLeaves_r(const data::Hash& hash, const data::Schema& schema, std::vector<std::string>& result,
                          std::string prefix, const char separator, const bool fullPaths) {
             if (hash.empty()) {
                 return;
             }
 
-            for (util::Hash::const_iterator it = hash.begin(); it != hash.end(); ++it) {
+            for (data::Hash::const_iterator it = hash.begin(); it != hash.end(); ++it) {
                 std::string currentKey = it->getKey();
 
                 if (!prefix.empty()) {
                     char separators[] = {separator, 0};
                     currentKey = prefix + separators + currentKey;
                 }
-                if (it->is<util::Hash>() &&
+                if (it->is<data::Hash>() &&
                     (fullPaths || !it->hasAttribute(KARABO_HASH_CLASS_ID))) { // Recursion, but no hash sub classes
-                    getLeaves_r(it->getValue<util::Hash>(), schema, result, currentKey, separator, fullPaths);
-                } else if (it->is<std::vector<util::Hash>>()) { // Recursion for vector
+                    getLeaves_r(it->getValue<data::Hash>(), schema, result, currentKey, separator, fullPaths);
+                } else if (it->is<std::vector<data::Hash>>()) { // Recursion for vector
                     // if this is a LEAF then don't go to recurse further ... leaf!
                     if (schema.has(currentKey) && schema.isLeaf(currentKey)) {
                         result.push_back(currentKey);
                     } else {
-                        for (size_t i = 0; i < it->getValue<std::vector<util::Hash>>().size(); ++i) {
+                        for (size_t i = 0; i < it->getValue<std::vector<data::Hash>>().size(); ++i) {
                             std::ostringstream os;
                             os << currentKey << "[" << i << "]";
-                            getLeaves_r(it->getValue<std::vector<util::Hash>>().at(i), schema, result, os.str(),
+                            getLeaves_r(it->getValue<std::vector<data::Hash>>().at(i), schema, result, os.str(),
                                         separator, fullPaths);
                         }
                     }
@@ -231,10 +233,10 @@ namespace karabo {
         }
 
 
-        std::string epochAsMicrosecString(const Epochstamp& ep) {
+        std::string epochAsMicrosecString(const data::Epochstamp& ep) {
             std::ostringstream epStr;
-            const std::string fract(
-                  DateTimeString::fractionalSecondToString(TIME_UNITS::MICROSEC, ep.getFractionalSeconds(), true));
+            const std::string fract(data::DateTimeString::fractionalSecondToString(TIME_UNITS::MICROSEC,
+                                                                                   ep.getFractionalSeconds(), true));
             // It is safe to use fract because fractionalSecondToString fills the leading positions with zeros.
             epStr << ep.getSeconds() << fract;
             return epStr.str();

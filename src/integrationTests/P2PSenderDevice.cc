@@ -27,7 +27,7 @@
 #include <chrono>
 #include <thread>
 
-#include "karabo/util/NDArrayElement.hh"
+#include "karabo/data/schema/NDArrayElement.hh"
 
 using namespace std::chrono;
 using namespace std;
@@ -280,13 +280,13 @@ namespace karabo {
         try {
             const int nData = get<unsigned int>("nData");
             const unsigned int delayInMs = get<unsigned int>("delay");
-            NDArray ndarr1(Dims(256, 256, 128), karabo::util::Types::INT64);
+            NDArray ndarr1(Dims(256, 256, 128), karabo::data::Types::INT64);
             for (size_t i = 0; i < 100; ++i) ndarr1.getData<long long>()[i] = 0x0102030405060708;
-            NDArray ndarr2(Dims(256, 256, 128), karabo::util::Types::INT64);
+            NDArray ndarr2(Dims(256, 256, 128), karabo::data::Types::INT64);
             for (size_t i = 0; i < 100; ++i) ndarr2.getData<long long>()[i] = 0x1112131415161718;
-            NDArray ndarr3(Dims(256, 256, 128), karabo::util::Types::INT64);
+            NDArray ndarr3(Dims(256, 256, 128), karabo::data::Types::INT64);
             for (size_t i = 0; i < 100; ++i) ndarr3.getData<long long>()[i] = 0x2122232425262728;
-            NDArray ndarr4(Dims(256, 256, 128), karabo::util::Types::INT64);
+            NDArray ndarr4(Dims(256, 256, 128), karabo::data::Types::INT64);
             for (size_t i = 0; i < 100; ++i) ndarr4.getData<long long>()[i] = 0x3132333435363738;
             Hash data1;
             Hash data2;

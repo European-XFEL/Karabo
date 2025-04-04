@@ -20,10 +20,10 @@
  */
 #include <pybind11/pybind11.h>
 
-#include <karabo/util/DateTimeString.hh>
+#include "karabo/data/time/DateTimeString.hh"
 
 namespace py = pybind11;
-using namespace karabo::util;
+using namespace karabo::data;
 using namespace std;
 
 
@@ -38,7 +38,7 @@ void exportPyUtilDateTimeString(py::module_& m) {
             py::arg("inputDateStr"), py::arg("inputTimeStr"), py::arg("inputFractionSecondStr"),
             py::arg("inputTimeZoneStr"));
 
-    py::implicitly_convertible<std::string const&, karabo::util::DateTimeString>();
+    py::implicitly_convertible<std::string const&, karabo::data::DateTimeString>();
 
     dts.def("getDate", &DateTimeString::getDate);
 

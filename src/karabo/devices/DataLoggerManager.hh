@@ -42,10 +42,10 @@ namespace karabo {
     /**
      * Namespace for package devices
      */
-    namespace util {
+    namespace data {
         // Forward declare
         class Epochstamp;
-    } // namespace util
+    } // namespace data
     namespace devices {
 
         /**
@@ -76,14 +76,14 @@ namespace karabo {
            public:
             KARABO_CLASSINFO(DataLoggerManager, "DataLoggerManager", "karabo-" + karabo::util::Version::getVersion())
 
-            static void expectedParameters(karabo::util::Schema& expected);
+            static void expectedParameters(karabo::data::Schema& expected);
 
-            DataLoggerManager(const karabo::util::Hash& input);
+            DataLoggerManager(const karabo::data::Hash& input);
 
             virtual ~DataLoggerManager();
 
            protected:
-            void preReconfigure(karabo::util::Hash& incomingReconfiguration) override;
+            void preReconfigure(karabo::data::Hash& incomingReconfiguration) override;
 
             void postReconfigure() override;
 
@@ -113,11 +113,11 @@ namespace karabo {
             void printLoggerData() const;
 
             void checkLoggerConfig(bool ok, const std::shared_ptr<std::atomic<size_t>>& counter,
-                                   const karabo::util::Hash& config, const std::string& loggerId);
+                                   const karabo::data::Hash& config, const std::string& loggerId);
 
             void checkLoggerConfigOnStrand(const std::string& errorTxt,
                                            const std::shared_ptr<std::atomic<size_t>>& counter,
-                                           const karabo::util::Hash& config, const std::string& loggerId);
+                                           const karabo::data::Hash& config, const std::string& loggerId);
             /**
              * If deviceId's logging status is fishy, re-add to its logger.
              * Needs to be protected by m_strand.
@@ -129,29 +129,29 @@ namespace karabo {
             void checkDeviceConfig(bool ok, const std::shared_ptr<std::atomic<size_t>>& loggerCounter,
                                    const std::string& loggerId, unsigned int toleranceSec,
                                    const std::shared_ptr<std::atomic<size_t>>& loggedDevCounter,
-                                   karabo::util::Epochstamp lastUpdateLogger, const karabo::util::Hash& config,
+                                   karabo::data::Epochstamp lastUpdateLogger, const karabo::data::Hash& config,
                                    const std::string& deviceId);
 
             void checkDeviceConfigOnStrand(const std::string& errorTxt,
                                            const std::shared_ptr<std::atomic<size_t>>& loggerCounter,
                                            const std::string& loggerId, unsigned int toleranceSec,
                                            const std::shared_ptr<std::atomic<size_t>>& loggedDevCounter,
-                                           karabo::util::Epochstamp lastUpdateLogger, const karabo::util::Hash& config,
+                                           karabo::data::Epochstamp lastUpdateLogger, const karabo::data::Hash& config,
                                            const std::string& deviceId);
 
-            karabo::util::Epochstamp mostRecentEpochstamp(
-                  const karabo::util::Hash& config,
-                  karabo::util::Epochstamp oldStamp = karabo::util::Epochstamp(0ull, 0ull)) const;
+            karabo::data::Epochstamp mostRecentEpochstamp(
+                  const karabo::data::Hash& config,
+                  karabo::data::Epochstamp oldStamp = karabo::data::Epochstamp(0ull, 0ull)) const;
 
-            void instanceNewHandler(const karabo::util::Hash& topologyEntry);
+            void instanceNewHandler(const karabo::data::Hash& topologyEntry);
 
-            void instanceNewOnStrand(const karabo::util::Hash& topologyEntry);
+            void instanceNewOnStrand(const karabo::data::Hash& topologyEntry);
 
             void newDeviceToLog(const std::string& deviceId);
 
             void newLogger(const std::string& loggerId);
 
-            void addDevicesToBeLogged(const std::string& loggerId, karabo::util::Hash& serverData);
+            void addDevicesToBeLogged(const std::string& loggerId, karabo::data::Hash& serverData);
 
             void addDevicesDone(bool ok, const std::string& loggerId,
                                 const std::unordered_set<std::string>& calledDevices,
@@ -167,9 +167,9 @@ namespace karabo {
 
             void loggerInstantiationHandler(bool ok, const std::string& devId, bool isFailure);
 
-            void instanceGoneHandler(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
+            void instanceGoneHandler(const std::string& instanceId, const karabo::data::Hash& instanceInfo);
 
-            void instanceGoneOnStrand(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
+            void instanceGoneOnStrand(const std::string& instanceId, const karabo::data::Hash& instanceInfo);
 
             void goneDeviceToLog(const std::string& deviceId);
 
@@ -220,7 +220,7 @@ namespace karabo {
             }
 
             inline std::string serverIdToReaderId(const std::string& serverId, unsigned int readerNum = 0u) const {
-                return karabo::util::DATALOGREADER_PREFIX + karabo::util::toString(readerNum) + "-" + serverId;
+                return karabo::util::DATALOGREADER_PREFIX + karabo::data::toString(readerNum) + "-" + serverId;
             }
 
             inline std::string readerIdToServerId(const std::string& readerId) const {
@@ -252,7 +252,7 @@ namespace karabo {
              * @param oldList   old configuration for blocked devices/classes
              * @param newList   new configuration for blocked devices/classes
              */
-            void evaluateBlockedOnStrand(const karabo::util::Hash& oldList, const karabo::util::Hash& newList);
+            void evaluateBlockedOnStrand(const karabo::data::Hash& oldList, const karabo::data::Hash& newList);
 
             bool isDeviceBlocked(const std::string& deviceId);
 
@@ -264,14 +264,14 @@ namespace karabo {
              * @brief create a vector of hashes that can be loaded in a table from
              *        the Hash with the mapping device -> logger
              */
-            std::vector<karabo::util::Hash> makeLoggersTable();
+            std::vector<karabo::data::Hash> makeLoggersTable();
 
            private: // Data
             const std::vector<std::string> m_serverList;
             size_t m_serverIndex;
 
             std::mutex m_loggerMapMutex;
-            karabo::util::Hash m_loggerMap;
+            karabo::data::Hash m_loggerMap;
             const std::string m_loggerMapFile;
 
             enum class LoggerState {
@@ -285,9 +285,9 @@ namespace karabo {
             // "devices": all devices that the logger has confirmed to log,
             // "beingAdded": all devices that the logger has been told to log, but which it did not yet confirm,
             // "backlog: all that the logger still has to be told to log
-            karabo::util::Hash m_loggerData; /// 1st level keys: entries in m_serverList, 2nd level: "state", "backlog",
+            karabo::data::Hash m_loggerData; /// 1st level keys: entries in m_serverList, 2nd level: "state", "backlog",
                                              /// "beingAdded" and "devices"
-            karabo::util::Hash m_checkStatus; /// Keep track of all important stuff during check
+            karabo::data::Hash m_checkStatus; /// Keep track of all important stuff during check
             std::unordered_map<std::string, std::set<std::string>> m_knownClasses; /// to be accessed on the strand
             karabo::net::Strand::Pointer m_strand;
 
@@ -296,7 +296,7 @@ namespace karabo {
             std::string m_readerClassId;
 
             std::mutex m_blockedMutex;
-            karabo::util::Hash m_blocked;      /// Hash with 'deviceIds' and 'classIds' entries
+            karabo::data::Hash m_blocked;      /// Hash with 'deviceIds' and 'classIds' entries
             const std::string m_blockListFile; /// File name of blocked devices and/or device classes
         };
     } // namespace devices

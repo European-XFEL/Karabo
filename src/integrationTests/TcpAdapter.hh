@@ -31,9 +31,9 @@
 #include <future>
 #include <thread>
 
+#include "karabo/data/types/Exception.hh"
 #include "karabo/karabo.hpp"
 #include "karabo/net/TcpChannel.hh"
-#include "karabo/util/Exception.hh"
 
 
 /**
@@ -43,14 +43,14 @@ namespace karabo {
 
     class TcpAdapter : public std::enable_shared_from_this<TcpAdapter> {
        public:
-        typedef std::shared_ptr<boost::lockfree::spsc_queue<karabo::util::Hash> > QueuePtr;
+        typedef std::shared_ptr<boost::lockfree::spsc_queue<karabo::data::Hash> > QueuePtr;
 
         /**
          * Constructor for a TcpAdapter, takes a config Hash as parameter
          * @param config: should contain "port" to connect to (unsigned long long)
          * and optionally "debug" (bool).
          */
-        TcpAdapter(const karabo::util::Hash& config);
+        TcpAdapter(const karabo::data::Hash& config);
 
         virtual ~TcpAdapter();
 
@@ -59,7 +59,7 @@ namespace karabo {
          * @param type: type of message
          * @return a vector of Hashes containing the messages.
          */
-        std::vector<karabo::util::Hash> getAllMessages(const std::string& type);
+        std::vector<karabo::data::Hash> getAllMessages(const std::string& type);
 
         /**
          * Clear list of all messages of a given type received by this TcpAdapter
@@ -81,8 +81,8 @@ namespace karabo {
               const std::string& type, size_t nMessages, F&& triggeringFunction = [] {}, size_t timeout = 10000) {
             {
                 std::unique_lock lock(m_queueAccessMutex);
-                m_nextMessageQueues[type] = std::shared_ptr<boost::lockfree::spsc_queue<karabo::util::Hash> >(
-                      new boost::lockfree::spsc_queue<karabo::util::Hash>(nMessages));
+                m_nextMessageQueues[type] = std::shared_ptr<boost::lockfree::spsc_queue<karabo::data::Hash> >(
+                      new boost::lockfree::spsc_queue<karabo::data::Hash>(nMessages));
             }
 
             // call the function which triggers the expected messages
@@ -94,7 +94,7 @@ namespace karabo {
             size_t i = 0;
             do {
                 if (i == maxLoops) {
-                    const std::string msg("Waiting on " + karabo::util::toString(nMessages) + " messages of type '" +
+                    const std::string msg("Waiting on " + karabo::data::toString(nMessages) + " messages of type '" +
                                           type + "' timed out!");
                     throw KARABO_TIMEOUT_EXCEPTION(msg);
                 }
@@ -122,7 +122,7 @@ namespace karabo {
          * @param message: a hash containing the message
          * @param block: if true, block until the onWriteComplete handler has been called
          */
-        void sendMessage(const karabo::util::Hash& message, bool block = true);
+        void sendMessage(const karabo::data::Hash& message, bool block = true);
 
         /**
          * Disconnect adapter
@@ -132,7 +132,7 @@ namespace karabo {
         /**
          * Merge the given argument (default: empty) to the default login message, send it and wait for reply
          */
-        void login(const karabo::util::Hash& extraLoginData = karabo::util::Hash());
+        void login(const karabo::data::Hash& extraLoginData = karabo::data::Hash());
 
         /**
          * Waits for a callback to return true when executed on messages of a specifc type.
@@ -144,25 +144,25 @@ namespace karabo {
          * @param timeoutInMs: timeout in ms.
          */
         std::future_status waitFor(const std::string& type,
-                                   const std::function<bool(const karabo::util::Hash&)>& callback,
+                                   const std::function<bool(const karabo::data::Hash&)>& callback,
                                    unsigned int timeoutInMs);
 
        private:
         void onConnect(const karabo::net::ErrorCode& ec, int timeout, int repetition,
                        const karabo::net::Channel::Pointer& channel);
         void waitHandler(const karabo::net::ErrorCode& ec, int timeout, int repetition);
-        void onRead(const karabo::net::ErrorCode& e, karabo::net::Channel::Pointer channel, karabo::util::Hash& info);
+        void onRead(const karabo::net::ErrorCode& e, karabo::net::Channel::Pointer channel, karabo::data::Hash& info);
         void onError(const karabo::net::ErrorCode& errorCode, karabo::net::Channel::Pointer channel);
         void onWriteComplete(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel, size_t id);
 
 
        private:
         karabo::net::Connection::Pointer m_dataConnection;
-        std::map<std::string, std::vector<karabo::util::Hash> > m_messages;
+        std::map<std::string, std::vector<karabo::data::Hash> > m_messages;
         std::map<std::string, bool> m_messageConditions;
         mutable std::shared_mutex m_messageAccessMutex;
         mutable std::shared_mutex m_queueAccessMutex;
-        mutable std::map<std::string, std::shared_ptr<boost::lockfree::spsc_queue<karabo::util::Hash> > >
+        mutable std::map<std::string, std::shared_ptr<boost::lockfree::spsc_queue<karabo::data::Hash> > >
               m_nextMessageQueues;
         boost::asio::steady_timer m_deadline;
         bool m_debug;
@@ -171,9 +171,9 @@ namespace karabo {
         std::condition_variable m_writeCondition;
         std::atomic_size_t m_writeWaitForId;
         karabo::net::TcpChannel::Pointer m_channel;
-        static const karabo::util::Hash k_defaultLoginData;
+        static const karabo::data::Hash k_defaultLoginData;
         mutable std::shared_mutex m_callbackMutex;
-        std::function<void(const karabo::util::Hash&)> m_callback;
+        std::function<void(const karabo::data::Hash&)> m_callback;
     };
 } // namespace karabo
 

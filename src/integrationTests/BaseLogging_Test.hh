@@ -68,7 +68,7 @@ class BaseLogging_Test : public CPPUNIT_NS::TestFixture {
     void testTable(bool testPastConf = false);
     void testChar(bool testPastConf = true);
 
-    void testLastKnownConfiguration(karabo::util::Epochstamp fileMigratedDataEndsBefore = karabo::util::Epochstamp(),
+    void testLastKnownConfiguration(karabo::data::Epochstamp fileMigratedDataEndsBefore = karabo::data::Epochstamp(),
                                     bool dataWasMigrated = false);
     void testCfgFromPastRestart(bool pastStampStaysPast);
 

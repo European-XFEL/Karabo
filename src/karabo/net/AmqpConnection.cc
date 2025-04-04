@@ -28,8 +28,8 @@
 
 #include "AmqpClient.hh"
 #include "AmqpUtils.hh" // for ConnectionHandler, KARABO_ERROR_CODE_XXX
+#include "karabo/data/types/Exception.hh"
 #include "karabo/log/Logger.hh"
-#include "karabo/util/Exception.hh"
 #include "karabo/util/MetaTools.hh" // for bind_weak
 
 using namespace std::chrono;

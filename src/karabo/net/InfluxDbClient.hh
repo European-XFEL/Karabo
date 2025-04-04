@@ -35,15 +35,15 @@
 #include <unordered_map>
 #include <utility>
 
+#include "karabo/data/time/TimeDuration.hh"
+#include "karabo/data/types/ClassInfo.hh"
 #include "karabo/net/Channel.hh"
 #include "karabo/net/Connection.hh"
 #include "karabo/net/HttpResponse.hh"
-#include "karabo/util/ClassInfo.hh"
 #include "karabo/util/MetaTools.hh"
-#include "karabo/util/TimeDuration.hh"
 
 namespace karabo {
-    namespace util {
+    namespace data {
         class Schema;
     }
     namespace net {
@@ -74,11 +74,11 @@ namespace karabo {
            public:
             KARABO_CLASSINFO(InfluxDbClient, "InfluxDbClient", "2.6")
 
-            InfluxDbClient(const karabo::util::Hash& input);
+            InfluxDbClient(const karabo::data::Hash& input);
 
             virtual ~InfluxDbClient();
 
-            static void expectedParameters(karabo::util::Schema& expected);
+            static void expectedParameters(karabo::data::Schema& expected);
 
             /**
              * Check if connection is lost and try to re-establish connection to InfluxDB server

@@ -30,9 +30,9 @@
 #include <ostream>               //std::ostream
 #include <vector>                //std::vector
 
-#include "karabo/util/ClassInfo.hh" //BufferSet::Pointer
-#include "karabo/util/Exception.hh" //KARABO_LOGIC_EXCEPTION
-#include "karabo/util/Types.hh"     //karabo::util::ByteArray
+#include "karabo/data/types/ClassInfo.hh" //BufferSet::Pointer
+#include "karabo/data/types/Exception.hh" //KARABO_LOGIC_EXCEPTION
+#include "karabo/data/types/Types.hh"     //karabo::data::ByteArray
 
 /**
  * The main European XFEL namespace
@@ -161,7 +161,7 @@ namespace karabo {
             /**
              * Emplace a ByteArray at the back of the BufferSet
              */
-            void emplaceBack(const karabo::util::ByteArray& array, bool writeSize = true);
+            void emplaceBack(const karabo::data::ByteArray& array, bool writeSize = true);
 
             /**
              * Emplace a shared pointer to a vector at the end of the BufferSet
@@ -179,7 +179,7 @@ namespace karabo {
              * Return the current buffer as a ByteArray
              * @return
              */
-            karabo::util::ByteArray currentAsByteArray() const;
+            karabo::data::ByteArray currentAsByteArray() const;
 
             /**
              * Clear the BufferSet

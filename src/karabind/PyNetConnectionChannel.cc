@@ -33,7 +33,7 @@ namespace py = pybind11;
 
 using namespace std;
 using namespace karabo::net;
-using namespace karabo::util;
+using namespace karabo::data;
 using namespace karabind;
 
 

@@ -25,34 +25,34 @@
 
 #include "SchemaBinarySerializer.hh"
 
-using namespace karabo::util;
+using namespace karabo::data;
 using namespace std;
 
-KARABO_EXPLICIT_TEMPLATE(karabo::io::BinarySerializer<karabo::util::Hash>)
+KARABO_EXPLICIT_TEMPLATE(karabo::io::BinarySerializer<karabo::data::Hash>)
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::BinarySerializer<Hash>, karabo::io::HashBinarySerializer);
 
 namespace karabo {
     namespace io {
 
 
-        void HashBinarySerializer::expectedParameters(karabo::util::Schema& expected) {}
+        void HashBinarySerializer::expectedParameters(karabo::data::Schema& expected) {}
 
 
-        HashBinarySerializer::HashBinarySerializer(const karabo::util::Hash& input) {}
+        HashBinarySerializer::HashBinarySerializer(const karabo::data::Hash& input) {}
 
 
-        void HashBinarySerializer::save(const karabo::util::Hash& object, std::vector<char>& buffer) {
+        void HashBinarySerializer::save(const karabo::data::Hash& object, std::vector<char>& buffer) {
             buffer.resize(0);
             writeHash(object, buffer);
         }
 
 
-        void HashBinarySerializer::save2(const karabo::util::Hash& object, std::vector<char>& buffer) {
+        void HashBinarySerializer::save2(const karabo::data::Hash& object, std::vector<char>& buffer) {
             writeHash(object, buffer);
         }
 
 
-        void HashBinarySerializer::save(const karabo::util::Hash& object, BufferSet& buffers) {
+        void HashBinarySerializer::save(const karabo::data::Hash& object, BufferSet& buffers) {
             buffers.clear();
             writeHash(object, buffers);
             buffers.updateSize();
@@ -60,14 +60,14 @@ namespace karabo {
         }
 
 
-        void HashBinarySerializer::writeHash(const karabo::util::Hash& hash, std::vector<char>& buffer) const {
+        void HashBinarySerializer::writeHash(const karabo::data::Hash& hash, std::vector<char>& buffer) const {
             writeSize(buffer, hash.size());
             for (Hash::const_iterator iter = hash.begin(); iter != hash.end(); ++iter) {
                 writeNode(*iter, buffer);
             }
         }
 
-        void HashBinarySerializer::writeHash(const karabo::util::Hash& hash, BufferSet& buffers) const {
+        void HashBinarySerializer::writeHash(const karabo::data::Hash& hash, BufferSet& buffers) const {
             writeSize(buffers.back(), hash.size());
             for (Hash::const_iterator iter = hash.begin(); iter != hash.end(); ++iter) {
                 writeNodeMultiBuffer(*iter, buffers);
@@ -80,7 +80,7 @@ namespace karabo {
         }
 
 
-        void HashBinarySerializer::writeNode(const karabo::util::Hash::Node& element, std::vector<char>& buffer) const {
+        void HashBinarySerializer::writeNode(const karabo::data::Hash::Node& element, std::vector<char>& buffer) const {
             const string& key = element.getKey();
             writeKey(buffer, key);
             if (element.is<Hash>()) {
@@ -114,7 +114,7 @@ namespace karabo {
             }
         }
 
-        void HashBinarySerializer::writeNodeMultiBuffer(const karabo::util::Hash::Node& element,
+        void HashBinarySerializer::writeNodeMultiBuffer(const karabo::data::Hash::Node& element,
                                                         BufferSet& buffers) const {
             const string& key = element.getKey();
             writeKey(buffers.back(), key);
@@ -170,7 +170,7 @@ namespace karabo {
         }
 
 
-        void HashBinarySerializer::writeAttributes(const karabo::util::Hash::Attributes& attributes,
+        void HashBinarySerializer::writeAttributes(const karabo::data::Hash::Attributes& attributes,
                                                    std::vector<char>& buffer) const {
             writeSize(buffer, attributes.size());
             for (Hash::Attributes::const_iterator iter = attributes.begin(); iter != attributes.end(); ++iter) {
@@ -183,7 +183,7 @@ namespace karabo {
         }
 
 
-        void HashBinarySerializer::writeAny(const std::any& value, const karabo::util::Types::ReferenceType type,
+        void HashBinarySerializer::writeAny(const std::any& value, const karabo::data::Types::ReferenceType type,
                                             std::vector<char>& buffer) const {
             switch (Types::category(type)) {
                 case Types::SCHEMA:
@@ -199,7 +199,7 @@ namespace karabo {
             }
         }
 
-        void HashBinarySerializer::writeAny(const std::any& value, const karabo::util::Types::ReferenceType type,
+        void HashBinarySerializer::writeAny(const std::any& value, const karabo::data::Types::ReferenceType type,
                                             BufferSet& buffers) const {
             switch (Types::category(type)) {
                 case Types::SCHEMA:
@@ -417,14 +417,14 @@ namespace karabo {
         }
 
 
-        size_t HashBinarySerializer::load(karabo::util::Hash& object, const char* archive, const size_t nBytes) {
+        size_t HashBinarySerializer::load(karabo::data::Hash& object, const char* archive, const size_t nBytes) {
             std::stringstream is;
             is.rdbuf()->pubsetbuf(const_cast<char*>(archive), nBytes);
             this->readHash(object, is);
             return size_t(is.tellg());
         }
 
-        void HashBinarySerializer::load(karabo::util::Hash& object, const BufferSet& buffers) {
+        void HashBinarySerializer::load(karabo::data::Hash& object, const BufferSet& buffers) {
             buffers.rewind();
             std::stringstream is;
             is.rdbuf()->pubsetbuf(buffers.current().data(), buffers.current().size());
@@ -643,25 +643,25 @@ namespace karabo {
 
 
         template <>
-        karabo::util::CppNone HashBinarySerializer::readSingleValue(std::istream& is) const {
+        karabo::data::CppNone HashBinarySerializer::readSingleValue(std::istream& is) const {
             unsigned size = readSize(is);
             if (size != 0)
                 throw KARABO_IO_EXCEPTION(
                       "Encountered not 'None' data type whilst reading from binary archive: size is " + toString(size) +
                       ", but should be 0");
-            return karabo::util::CppNone();
+            return karabo::data::CppNone();
         }
 
 
         template <>
-        karabo::util::ByteArray HashBinarySerializer::readSingleValue(std::istream& is) const {
+        karabo::data::ByteArray HashBinarySerializer::readSingleValue(std::istream& is) const {
             const size_t size = readSize(is);
             ByteArray result(std::shared_ptr<char>(new char[size], std::default_delete<char[]>()), size);
             is.read(result.first.get(), size);
             return result;
         }
 
-        karabo::util::ByteArray HashBinarySerializer::readByteArrayAsCopy(std::istream& is, size_t size) const {
+        karabo::data::ByteArray HashBinarySerializer::readByteArrayAsCopy(std::istream& is, size_t size) const {
             ByteArray result(std::shared_ptr<char>(new char[size], std::default_delete<char[]>()), size);
             is.read(result.first.get(), size);
             return result;
@@ -877,13 +877,13 @@ namespace karabo {
         }
 
 
-        void HashBinarySerializer::save(const std::vector<karabo::util::Hash>& objects, std::vector<char>& archive) {
+        void HashBinarySerializer::save(const std::vector<karabo::data::Hash>& objects, std::vector<char>& archive) {
             Hash tmp("KRB_Sequence", objects);
             save(tmp, archive);
         }
 
 
-        size_t HashBinarySerializer::load(std::vector<karabo::util::Hash>& objects, const char* archive,
+        size_t HashBinarySerializer::load(std::vector<karabo::data::Hash>& objects, const char* archive,
                                           const size_t nBytes) {
             vector<Hash> tmp(1);
             size_t bytes = load(tmp[0], archive, nBytes);

@@ -28,10 +28,11 @@
 #include <regex>
 #include <sstream>
 
-#include "Exception.hh"
-#include "StringTools.hh"
 #include "VersionMacros.hh" // for KARABO_VERSION
+#include "karabo/data/types/Exception.hh"
+#include "karabo/data/types/StringTools.hh"
 
+using karabo::data::fromString;
 namespace karabo {
 
     namespace util {

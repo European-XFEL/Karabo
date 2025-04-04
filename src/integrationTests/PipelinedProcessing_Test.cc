@@ -57,7 +57,7 @@ void PipelinedProcessing_Test::setUp() {
     auto work = [](std::stop_token stoken) {
         try {
             EventLoop::work();
-        } catch (const karabo::util::TimeoutException& e) {
+        } catch (const karabo::data::TimeoutException& e) {
             // Looks like thread joining fails sometimes...
             std::clog << "Timeout from EventLoop::work(): " << e << std::endl;
         }
@@ -160,16 +160,16 @@ void PipelinedProcessing_Test::testInputConnectionTracking() {
 void PipelinedProcessing_Test::testGetOutputChannelSchema() {
     std::clog << "---\ntestGetOutputChannelSchema\n";
 
-    karabo::util::Hash dataSchema = m_deviceClient->getOutputChannelSchema(m_sender, "output1");
+    karabo::data::Hash dataSchema = m_deviceClient->getOutputChannelSchema(m_sender, "output1");
 
     CPPUNIT_ASSERT(dataSchema.has("dataId"));
-    CPPUNIT_ASSERT(dataSchema.getType("dataId") == karabo::util::Types::INT32);
+    CPPUNIT_ASSERT(dataSchema.getType("dataId") == karabo::data::Types::INT32);
     CPPUNIT_ASSERT(dataSchema.getAttribute<std::string>("dataId", KARABO_SCHEMA_VALUE_TYPE) == "INT32");
     CPPUNIT_ASSERT(dataSchema.has("sha1"));
-    CPPUNIT_ASSERT(dataSchema.getType("sha1") == karabo::util::Types::INT32);
+    CPPUNIT_ASSERT(dataSchema.getType("sha1") == karabo::data::Types::INT32);
     CPPUNIT_ASSERT(dataSchema.getAttribute<std::string>("sha1", KARABO_SCHEMA_VALUE_TYPE) == "STRING");
     CPPUNIT_ASSERT(dataSchema.has("data"));
-    CPPUNIT_ASSERT(dataSchema.getType("data") == karabo::util::Types::INT32);
+    CPPUNIT_ASSERT(dataSchema.getType("data") == karabo::data::Types::INT32);
     CPPUNIT_ASSERT(dataSchema.getAttribute<std::string>("data", KARABO_SCHEMA_VALUE_TYPE) == "VECTOR_INT64");
     CPPUNIT_ASSERT(dataSchema.has("array"));
     CPPUNIT_ASSERT(!dataSchema.hasAttribute(
@@ -193,7 +193,7 @@ void PipelinedProcessing_Test::testPipeWait() {
     const auto testStartTime = high_resolution_clock::now();
 
     // use only one receiver for a group of tests
-    karabo::util::Hash config(m_receiverBaseConfig);
+    karabo::data::Hash config(m_receiverBaseConfig);
     config += Hash("deviceId", m_receiver, "input.onSlowness", "wait");
     instantiateDeviceWithAssert("PipeReceiverDevice", config);
     CPPUNIT_ASSERT_EQUAL(std::string("wait"), m_deviceClient->get<std::string>(m_receiver, "input.onSlowness"));
@@ -221,7 +221,7 @@ void PipelinedProcessing_Test::testSenderOutputChannelConnections(
       size_t tsize, const std::vector<std::string>& receivers1, const std::string& distrib1,
       const std::string& slowness1, const std::string& mloc1, const std::vector<std::string>& receivers2,
       const std::string& distrib2, const std::string& slowness2, const std::string& mloc2) {
-    std::vector<karabo::util::Hash> output1, output2;
+    std::vector<karabo::data::Hash> output1, output2;
 
     // It is impossible to guarantee that the connection is already established and the device properties are updated in
     // the m_deviceClient when this function is called. In a busy system it may be that the first connection attempt
@@ -259,19 +259,19 @@ void PipelinedProcessing_Test::testSenderOutputChannelConnections(
 
 
 void PipelinedProcessing_Test::printSenderOutputChannelConnections(const std::string& name) {
-    std::vector<karabo::util::Hash> output1;
+    std::vector<karabo::data::Hash> output1;
     m_deviceClient->get(m_sender, "output1.connections", output1);
     std::clog << name << " : printSenderOutputChannelConnections output1.connections.size = " << output1.size()
               << std::endl;
-    for (std::vector<karabo::util::Hash>::const_iterator it1 = output1.begin(); it1 != output1.end(); ++it1) {
+    for (std::vector<karabo::data::Hash>::const_iterator it1 = output1.begin(); it1 != output1.end(); ++it1) {
         std::clog << name << " : printSenderOutputChannelConnections output1.connection:\t" << *it1 << std::endl;
     }
 
-    std::vector<karabo::util::Hash> output2;
+    std::vector<karabo::data::Hash> output2;
     m_deviceClient->get(m_sender, "output2.connections", output2);
     std::clog << name << " : printSenderOutputChannelConnections output2.connections.size = " << output2.size()
               << std::endl;
-    for (std::vector<karabo::util::Hash>::const_iterator it2 = output2.begin(); it2 != output2.end(); ++it2) {
+    for (std::vector<karabo::data::Hash>::const_iterator it2 = output2.begin(); it2 != output2.end(); ++it2) {
         std::clog << name << " : printSenderOutputChannelConnections output2.connection:\t" << *it2 << std::endl;
     }
 }
@@ -292,7 +292,7 @@ void PipelinedProcessing_Test::testPipeWait(unsigned int processingTime, unsigne
         const auto startTimepoint = high_resolution_clock::now();
 
         // make sure the sender has stopped sending data
-        CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
+        CPPUNIT_ASSERT(pollDeviceProperty<karabo::data::State>(m_sender, "state", karabo::data::State::NORMAL));
         // Then call its slot
         m_deviceClient->execute(m_sender, "write", m_maxTestTimeOut);
 
@@ -337,7 +337,7 @@ void PipelinedProcessing_Test::testPipeWait(unsigned int processingTime, unsigne
 
 void PipelinedProcessing_Test::testPipeWaitPerf() {
     std::clog << "---\ntestPipeWaitPerf (onSlowness = 'wait', senderDelay = 0, receiverProcessing = 0)\n";
-    karabo::util::Hash config(m_receiverBaseConfig);
+    karabo::data::Hash config(m_receiverBaseConfig);
     config += Hash("deviceId", m_receiver, "input.onSlowness", "wait");
     instantiateDeviceWithAssert("PipeReceiverDevice", config);
     CPPUNIT_ASSERT_EQUAL(std::string("wait"), m_deviceClient->get<std::string>(m_receiver, "input.onSlowness"));
@@ -379,7 +379,7 @@ void PipelinedProcessing_Test::testPipeWaitPerf(unsigned int numOfDataItems) {
     unsigned int nDataExpected = nTotalData0;
 
     // make sure the sender has stopped sending data
-    CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
+    CPPUNIT_ASSERT(pollDeviceProperty<karabo::data::State>(m_sender, "state", karabo::data::State::NORMAL));
     // Then call its slot
     const auto startTimepoint = high_resolution_clock::now();
     m_deviceClient->execute(m_sender, "write", m_maxTestTimeOut);
@@ -418,7 +418,7 @@ void PipelinedProcessing_Test::testPipeDrop() {
 
     const auto testStartTime = high_resolution_clock::now();
 
-    karabo::util::Hash config(m_receiverBaseConfig);
+    karabo::data::Hash config(m_receiverBaseConfig);
     config += Hash("deviceId", m_receiver, "input.onSlowness", "drop");
     instantiateDeviceWithAssert("PipeReceiverDevice", config);
     CPPUNIT_ASSERT_EQUAL(std::string("drop"), m_deviceClient->get<std::string>(m_receiver, "input.onSlowness"));
@@ -454,7 +454,7 @@ void PipelinedProcessing_Test::testPipeDrop(unsigned int processingTime, unsigne
     for (unsigned int nRun = 0; nRun < m_numRunsPerTest; ++nRun) {
         auto startTimepoint = high_resolution_clock::now();
         // make sure the sender has stopped sending data
-        CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
+        CPPUNIT_ASSERT(pollDeviceProperty<karabo::data::State>(m_sender, "state", karabo::data::State::NORMAL));
         m_deviceClient->execute(m_sender, "write", m_maxTestTimeOut);
 
         // test data
@@ -500,7 +500,7 @@ void PipelinedProcessing_Test::testPipeQueue() {
 
     const auto testStartTime = high_resolution_clock::now();
 
-    karabo::util::Hash config(m_receiverBaseConfig);
+    karabo::data::Hash config(m_receiverBaseConfig);
     config += Hash("deviceId", m_receiver, "input", Hash("onSlowness", "queueDrop", "maxQueueLength", 1000u));
     config += Hash("deviceId", m_receiver, "input.dataDistribution", "copy");
     instantiateDeviceWithAssert("PipeReceiverDevice", config);
@@ -543,7 +543,7 @@ void PipelinedProcessing_Test::testPipeQueue(unsigned int processingTime, unsign
         const auto startTimepoint = high_resolution_clock::now();
 
         // make sure the sender has stopped sending data
-        CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
+        CPPUNIT_ASSERT(pollDeviceProperty<karabo::data::State>(m_sender, "state", karabo::data::State::NORMAL));
 
         // Then call its slot again
         m_deviceClient->execute(m_sender, "write", m_maxTestTimeOut);
@@ -551,7 +551,7 @@ void PipelinedProcessing_Test::testPipeQueue(unsigned int processingTime, unsign
         // Makes sure the sender has finished sending the data in this run. We can't rely on 'currentDataId' for
         // this because in situations of high delayTime a pollDeviceProperty polling can return immediately due to
         // an expected value from the previous run.
-        CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
+        CPPUNIT_ASSERT(pollDeviceProperty<karabo::data::State>(m_sender, "state", karabo::data::State::NORMAL));
 
         nDataExpected += m_nDataPerRun;
         if (processingTime > 2 * delayTime) {
@@ -561,7 +561,7 @@ void PipelinedProcessing_Test::testPipeQueue(unsigned int processingTime, unsign
             // data. We assert a maximum ratio of data arrival in this scenario.
             const unsigned int receivedSoFar = m_deviceClient->get<unsigned int>(m_receiver, "nTotalData");
             CPPUNIT_ASSERT_MESSAGE(
-                  karabo::util::toString(receivedSoFar) + " " + karabo::util::toString(nDataExpected),
+                  karabo::data::toString(receivedSoFar) + " " + karabo::data::toString(nDataExpected),
                   2 * (nDataExpected - receivedSoFar) <= m_nDataPerRun * 3); // at max. 2/3 have arrived
         } else if (2 * processingTime < delayTime) {
             // If delayTime is significantly bigger than the processing time, we are bound by the delayTime. This means
@@ -570,7 +570,7 @@ void PipelinedProcessing_Test::testPipeQueue(unsigned int processingTime, unsign
             // We assert that the amount of received data must be at the maximum m_nPots lower than the amount of
             // expected sent data (no bottleneck on the receiver).
             const unsigned int receivedSoFar = m_deviceClient->get<unsigned int>(m_receiver, "nTotalData");
-            CPPUNIT_ASSERT_MESSAGE(karabo::util::toString(receivedSoFar) + " " + karabo::util::toString(nDataExpected),
+            CPPUNIT_ASSERT_MESSAGE(karabo::data::toString(receivedSoFar) + " " + karabo::data::toString(nDataExpected),
                                    nDataExpected - receivedSoFar <= m_nPots);
         }
         // In the end, all should arrive
@@ -642,7 +642,7 @@ void PipelinedProcessing_Test::testPipeQueueAtLimit(unsigned int processingTime,
               << "- processingTime = " << processingTime << " ms, delayTime = " << delayTime << " ms, "
               << "activeQueueLimit = " << activeQueueLimit << "\n";
 
-    karabo::util::Hash config(m_receiverBaseConfig);
+    karabo::data::Hash config(m_receiverBaseConfig);
     config.merge(Hash("deviceId", m_receiver, "input.onSlowness", "queueDrop", "input.dataDistribution", "copy",
                       "input.maxQueueLength", activeQueueLimit));
     instantiateDeviceWithAssert("PipeReceiverDevice", config);
@@ -738,7 +738,7 @@ void PipelinedProcessing_Test::testPipeMinData() {
 
     // start a receiver with "input.onData = false", i.e. call PipeReceiverDevice::onInput while reading data,
     // and "minData > 1"
-    karabo::util::Hash config(m_receiverBaseConfig);
+    karabo::data::Hash config(m_receiverBaseConfig);
     config += Hash("deviceId", m_receiver, "input.onSlowness", "wait", "input.minData", minData);
     instantiateDeviceWithAssert("PipeReceiverDevice", config);
 
@@ -746,12 +746,12 @@ void PipelinedProcessing_Test::testPipeMinData() {
                                        "copy", "drop", "local");
 
     // make sure the sender has stopped sending data
-    CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
+    CPPUNIT_ASSERT(pollDeviceProperty<karabo::data::State>(m_sender, "state", karabo::data::State::NORMAL));
 
     // write data asynchronously
     m_deviceClient->execute(m_sender, "write");
     // make sure the sender has started sending data
-    CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::ACTIVE));
+    CPPUNIT_ASSERT(pollDeviceProperty<karabo::data::State>(m_sender, "state", karabo::data::State::ACTIVE));
 
     // poll until nTotalDataOnEos changes
     CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalDataOnEos", 0, false, m_maxTestTimeOut));
@@ -777,12 +777,12 @@ void PipelinedProcessing_Test::testPipeMinData() {
                                        "copy", "drop", "local");
 
     // make sure the sender has stopped sending data
-    CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
+    CPPUNIT_ASSERT(pollDeviceProperty<karabo::data::State>(m_sender, "state", karabo::data::State::NORMAL));
 
     // write data asynchronously
     m_deviceClient->execute(m_sender, "write");
     // make sure the sender has started sending data
-    CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::ACTIVE));
+    CPPUNIT_ASSERT(pollDeviceProperty<karabo::data::State>(m_sender, "state", karabo::data::State::ACTIVE));
 
     // poll until nTotalDataOnEos changes
     CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalDataOnEos", 0, false, m_maxTestTimeOut));
@@ -822,7 +822,7 @@ void PipelinedProcessing_Test::testPipeTwoPots() {
     m_deviceClient->set(m_sender, "delay", 75u);
 
     // start a receiver whose processingTime is significantly longer than the writing time of the output channel
-    karabo::util::Hash config(m_receiverBaseConfig);
+    karabo::data::Hash config(m_receiverBaseConfig);
     config += Hash("deviceId", m_receiver, "processingTime", 200, "input.onSlowness", "wait");
     instantiateDeviceWithAssert("PipeReceiverDevice", config);
 
@@ -831,7 +831,7 @@ void PipelinedProcessing_Test::testPipeTwoPots() {
 
     for (unsigned int nDataWhenStop = 3; nDataWhenStop < 8; ++nDataWhenStop) {
         // make sure the sender has stopped sending data
-        CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
+        CPPUNIT_ASSERT(pollDeviceProperty<karabo::data::State>(m_sender, "state", karabo::data::State::NORMAL));
 
         // write data asynchronously
         m_deviceClient->execute(m_sender, "write");
@@ -874,10 +874,10 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversWait() {
     instantiateDeviceWithAssert("P2PSenderDevice",
                                 Hash("deviceId", m_sender, "output1", Hash("noInputShared", "wait")));
 
-    karabo::util::Hash config1(m_receiverBaseConfig);
+    karabo::data::Hash config1(m_receiverBaseConfig);
     config1 += Hash("deviceId", m_receiver1, "input.dataDistribution", "shared");
 
-    karabo::util::Hash config2(config1);
+    karabo::data::Hash config2(config1);
     config2.set<std::string>("deviceId", m_receiver2);
 
     instantiateDeviceWithAssert("PipeReceiverDevice", config1);
@@ -925,11 +925,11 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversDrop() {
     killDeviceWithAssert(m_sender);
     instantiateDeviceWithAssert("P2PSenderDevice", Hash("deviceId", m_sender, "output1.noInputShared", "drop"));
 
-    karabo::util::Hash config1(m_receiverBaseConfig);
+    karabo::data::Hash config1(m_receiverBaseConfig);
     // set onSlowness to "wait" - to demonstrate that it does not matter
     config1 += Hash("deviceId", m_receiver1, "input.dataDistribution", "shared", "input.onSlowness", "wait");
 
-    karabo::util::Hash config2(config1);
+    karabo::data::Hash config2(config1);
     config2.set<std::string>("deviceId", m_receiver2);
 
     instantiateDeviceWithAssert("PipeReceiverDevice", config1);
@@ -976,10 +976,10 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversQueue() {
     killDeviceWithAssert(m_sender);
     instantiateDeviceWithAssert("P2PSenderDevice", Hash("deviceId", m_sender, "output1.noInputShared", "queueDrop"));
 
-    karabo::util::Hash config1(m_receiverBaseConfig);
+    karabo::data::Hash config1(m_receiverBaseConfig);
     config1 += Hash("deviceId", m_receiver1, "input.dataDistribution", "shared");
 
-    karabo::util::Hash config2(config1);
+    karabo::data::Hash config2(config1);
     config2.set<std::string>("deviceId", m_receiver2);
 
     instantiateDeviceWithAssert("PipeReceiverDevice", config1);
@@ -1048,7 +1048,7 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceivers(unsigned int processin
     CPPUNIT_ASSERT_EQUAL(nTotalData2, m_deviceClient->get<unsigned int>(m_receiver2, "nTotalDataOnEos"));
     for (unsigned int nRun = 0; nRun < m_numRunsPerTest; ++nRun) {
         // make sure the sender has stopped sending data
-        CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
+        CPPUNIT_ASSERT(pollDeviceProperty<karabo::data::State>(m_sender, "state", karabo::data::State::NORMAL));
         // then call its slot
         m_deviceClient->execute(m_sender, "write", m_maxTestTimeOut);
 
@@ -1153,14 +1153,14 @@ void PipelinedProcessing_Test::testTwoSharedReceiversQueuing(unsigned int proces
         const auto startTimepoint = high_resolution_clock::now();
 
         // make sure the sender has stopped sending data
-        CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
+        CPPUNIT_ASSERT(pollDeviceProperty<karabo::data::State>(m_sender, "state", karabo::data::State::NORMAL));
         // then call its slot again
         m_deviceClient->execute(m_sender, "write", m_maxTestTimeOut);
 
         // Makes sure the sender has finished sending the data in this run. We can't rely on 'currentDataId' for
         // this because in situations of high delayTime a pollDeviceProperty polling can return immediately due to
         // an expected value from the previous run.
-        CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
+        CPPUNIT_ASSERT(pollDeviceProperty<karabo::data::State>(m_sender, "state", karabo::data::State::NORMAL));
 
         nDataExpected += m_nDataPerRun;
 
@@ -1171,12 +1171,12 @@ void PipelinedProcessing_Test::testTwoSharedReceiversQueuing(unsigned int proces
         if (processingTimeHigher) {
             // We assert a maximum ratio of data arrival in this scenario.
             CPPUNIT_ASSERT_MESSAGE(
-                  karabo::util::toString(receivedSoFar) + " " + karabo::util::toString(nDataExpected),
+                  karabo::data::toString(receivedSoFar) + " " + karabo::data::toString(nDataExpected),
                   2 * (nDataExpected - receivedSoFar) <= m_nDataPerRun * 3); // at max. 2/3 have arrived
         } else if (delayTimeHigher) {
             // We assert that the amount of received data must be at the maximum 2*m_nPots lower than the amount of
             // expected sent data (no bottleneck on the receivers).
-            CPPUNIT_ASSERT_MESSAGE(karabo::util::toString(receivedSoFar) + " " + karabo::util::toString(nDataExpected),
+            CPPUNIT_ASSERT_MESSAGE(karabo::data::toString(receivedSoFar) + " " + karabo::data::toString(nDataExpected),
                                    nDataExpected - receivedSoFar <= 2 * m_nPots);
         }
 
@@ -1220,10 +1220,10 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversQueueAtLimit() {
     // Here we test how the output to shared receivers behaves when running into the queue limit
 
     // Use common receiver devices - processing times can be reconfigured
-    karabo::util::Hash config1(m_receiverBaseConfig);
+    karabo::data::Hash config1(m_receiverBaseConfig);
     config1 += Hash("deviceId", m_receiver1, "input.dataDistribution", "shared");
 
-    karabo::util::Hash config2(config1);
+    karabo::data::Hash config2(config1);
     config2.set<std::string>("deviceId", m_receiver2);
 
     instantiateDeviceWithAssert("PipeReceiverDevice", config1);
@@ -1390,10 +1390,10 @@ void PipelinedProcessing_Test::testSharedReceiversSelector() {
     // Check expectations from previous run
     CPPUNIT_ASSERT_EQUAL(std::string("wait"), m_deviceClient->get<std::string>(m_sender, "output1.noInputShared"));
 
-    karabo::util::Hash config1(m_receiverBaseConfig);
+    karabo::data::Hash config1(m_receiverBaseConfig);
     config1 += Hash("deviceId", m_receiver1, "input.dataDistribution", "shared");
 
-    karabo::util::Hash config2(config1);
+    karabo::data::Hash config2(config1);
     config2.set<std::string>("deviceId", m_receiver2);
 
     instantiateDeviceWithAssert("PipeReceiverDevice", config1);
@@ -1430,7 +1430,7 @@ void PipelinedProcessing_Test::testSharedReceiversSelector() {
     m_deviceClient->execute(m_sender, "write", m_maxTestTimeOut);
 
     // Ensure sender is done and then sleep a bit, so any data would have had enough time to travel
-    CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
+    CPPUNIT_ASSERT(pollDeviceProperty<karabo::data::State>(m_sender, "state", karabo::data::State::NORMAL));
     std::this_thread::sleep_for(250ms);
 
     // No further new data has arrived at connected destinations
@@ -1445,7 +1445,7 @@ void PipelinedProcessing_Test::testSharedReceiversSelector() {
     m_deviceClient->execute(m_sender, "write", m_maxTestTimeOut);
 
     // Ensure sender is done and then sleep a bit, so any data would have had enough time to travel
-    CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
+    CPPUNIT_ASSERT(pollDeviceProperty<karabo::data::State>(m_sender, "state", karabo::data::State::NORMAL));
     std::this_thread::sleep_for(250ms);
 
     // Also now: no further new data has arrived at connected destinations
@@ -1506,7 +1506,7 @@ void PipelinedProcessing_Test::testQueueClearOnDisconnectSharedQueue(bool useRou
 
     // Instantiates the receiver with a really high processing time (in order of seconds) so that the sender won't
     // be able to send all the data before the receiver disconnects.
-    karabo::util::Hash config(m_receiverBaseConfig);
+    karabo::data::Hash config(m_receiverBaseConfig);
     config.set("deviceId", m_receiver);
     config.set("input.dataDistribution", "shared");
     config.set("processingTime", 1000);
@@ -1514,7 +1514,7 @@ void PipelinedProcessing_Test::testQueueClearOnDisconnectSharedQueue(bool useRou
     CPPUNIT_ASSERT_EQUAL(std::string("shared"), m_deviceClient->get<std::string>(m_receiver, "input.dataDistribution"));
 
     // Makes sure the sender is not sending any data before starting the test run.
-    CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
+    CPPUNIT_ASSERT(pollDeviceProperty<karabo::data::State>(m_sender, "state", karabo::data::State::NORMAL));
     // Assure that receiver is connected.
     // (Only checking "input.missingConnections" not 100% reliable, see InputChannel::onConnect.)
     testSenderOutputChannelConnections(1ul,                                                //
@@ -1542,10 +1542,10 @@ void PipelinedProcessing_Test::testQueueClearOnDisconnectSharedQueue(bool useRou
 
     // Check that sender has done its part and will not send anything after receiver is re-instantiated.
     // Otherwise it could be that not all data is put into queue and will be flushed as we want to test here.
-    CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
+    CPPUNIT_ASSERT(pollDeviceProperty<karabo::data::State>(m_sender, "state", karabo::data::State::NORMAL));
 
     // Re-instantiates the receiver - this time there's no need to use a high processingTime.
-    karabo::util::Hash configAfterDisc(m_receiverBaseConfig);
+    karabo::data::Hash configAfterDisc(m_receiverBaseConfig);
     configAfterDisc.set("deviceId", m_receiver);
     configAfterDisc.set("input.dataDistribution", "shared");
     configAfterDisc.set("processingTime", 5);
@@ -1579,7 +1579,7 @@ void PipelinedProcessing_Test::testQueueClearOnDisconnectCopyQueue() {
 
     // Instantiates the receiver with a really high processing time (in order of seconds) so that the sender won't
     // be able to send all the data before the receiver disconnects.
-    karabo::util::Hash config(m_receiverBaseConfig);
+    karabo::data::Hash config(m_receiverBaseConfig);
     config.set("deviceId", m_receiver);
     config.set("input.onSlowness", "queueDrop");
     config.set("input.dataDistribution", "copy");
@@ -1590,7 +1590,7 @@ void PipelinedProcessing_Test::testQueueClearOnDisconnectCopyQueue() {
     // check for connection?
 
     // Makes sure the sender is not sending any data before starting the test run.
-    CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
+    CPPUNIT_ASSERT(pollDeviceProperty<karabo::data::State>(m_sender, "state", karabo::data::State::NORMAL));
     // Assure that receiver is connected.
     // (Only checking "input.missingConnections" not 100% reliable, see InputChannel::onConnect.)
     testSenderOutputChannelConnections(1ul,                                                   //
@@ -1619,7 +1619,7 @@ void PipelinedProcessing_Test::testQueueClearOnDisconnectCopyQueue() {
     CPPUNIT_ASSERT(3 * (nDataExpected - receivedBeforeDisc) > m_nDataPerRun * 2);
 
     // Re-instantiates the receiver - this time there's no need to use a high processingTime.
-    karabo::util::Hash configAfterDisc(m_receiverBaseConfig);
+    karabo::data::Hash configAfterDisc(m_receiverBaseConfig);
     configAfterDisc.set("deviceId", m_receiver);
     configAfterDisc.set("input.onSlowness", "queueDrop");
     configAfterDisc.set("input.dataDistribution", "copy");
@@ -1672,7 +1672,7 @@ void PipelinedProcessing_Test::testProfileTransferTimes(bool noShortCut, bool sa
     }
     // Looks like to get "KARABO_NO_PIPELINE_SHORTCUT" active (some caching?),
     // we have to re-instantiate the receiver.
-    karabo::util::Hash config(m_receiverBaseConfig);
+    karabo::data::Hash config(m_receiverBaseConfig);
     config += Hash("deviceId", m_receiver, "input2.onSlowness", "wait");
     instantiateDeviceWithAssert("PipeReceiverDevice", config);
 
@@ -1682,7 +1682,7 @@ void PipelinedProcessing_Test::testProfileTransferTimes(bool noShortCut, bool sa
     m_deviceClient->set(m_sender, "scenario", "profile");
     m_deviceClient->set(m_sender, "safeNDArray", safeNDArray);
     // make sure the sender has stopped sending data
-    CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
+    CPPUNIT_ASSERT(pollDeviceProperty<karabo::data::State>(m_sender, "state", karabo::data::State::NORMAL));
     // Assure that receiver is connected.
     // (Only checking "input.missingConnections" not 100% reliable, see InputChannel::onConnect.)
     const std::string memLoc(noShortCut ? "remote" : "local");                            // memory location
@@ -1732,7 +1732,7 @@ bool PipelinedProcessing_Test::pollDeviceProperty(const std::string& deviceId, c
 
 
 void PipelinedProcessing_Test::instantiateDeviceWithAssert(const std::string& classId,
-                                                           const karabo::util::Hash& configuration) {
+                                                           const karabo::data::Hash& configuration) {
     std::pair<bool, std::string> success =
           m_deviceClient->instantiate(m_server, classId, configuration, m_maxTestTimeOut);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);

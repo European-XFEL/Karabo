@@ -81,7 +81,7 @@ namespace karabo {
     }
 
 
-    TimingTestDevice::TimingTestDevice(const karabo::util::Hash& config) : Device(config), m_started(false) {
+    TimingTestDevice::TimingTestDevice(const karabo::data::Hash& config) : Device(config), m_started(false) {
         KARABO_SLOT(start);
         KARABO_SLOT(stop);
     }

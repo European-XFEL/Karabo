@@ -22,8 +22,8 @@
 
 #include "karabo/core/DeviceClient.hh"
 #include "karabo/core/DeviceServer.hh"
+#include "karabo/data/types/Hash.hh"
 #include "karabo/net/EventLoop.hh"
-#include "karabo/util/Hash.hh"
 #include "karabo/util/PluginLoader.hh"
 
 #define DEVICE_SERVER_ID "testDeviceSrvCpp"
@@ -48,11 +48,11 @@ class KaraboDeviceFixture : public testing::Test {
     // and return the BaseDevice::Pointer for that instance
     karabo::core::BaseDevice::Pointer instantiateAndGetPointer(const std::string& classId,
                                                                const std::string& instanceId,
-                                                               const karabo::util::Hash& devCfg);
+                                                               const karabo::data::Hash& devCfg);
     // create a device server and ask it to instantiate the classID (with the devCfg
     // configuration hash)
     void instantiateWithDeviceServer(const std::string& classId, const std::string& instanceId,
-                                     const karabo::util::Hash& devCfg);
+                                     const karabo::data::Hash& devCfg);
 
     std::jthread m_eventLoopThread;
     karabo::core::DeviceServer::Pointer m_deviceSrv;

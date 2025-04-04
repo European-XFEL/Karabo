@@ -29,11 +29,12 @@
 #include <chrono>
 #include <vector>
 
+#include "karabo/data/time/TimeDuration.hh"
 #include "karabo/net/EventLoop.hh"
 #include "karabo/util/MetaTools.hh"
-#include "karabo/util/TimeDuration.hh"
 
 using namespace std::chrono;
+using namespace karabo::data;
 using namespace karabo::util;
 using namespace karabo::net;
 using namespace std::placeholders;

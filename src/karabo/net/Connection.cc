@@ -25,14 +25,13 @@
 
 #include "Connection.hh"
 
-#include <karabo/util/SimpleElement.hh>
-
 #include "Channel.hh"
+#include "karabo/data/schema/SimpleElement.hh"
 
 namespace karabo {
     namespace net {
 
-        using namespace karabo::util;
+        using namespace karabo::data;
 
 
         void Connection::expectedParameters(Schema& expected) {
@@ -48,7 +47,7 @@ namespace karabo {
         }
 
 
-        Connection::Connection(const karabo::util::Hash& input) {
+        Connection::Connection(const karabo::data::Hash& input) {
             input.get("serializationType", m_serializationType);
         }
 

@@ -28,15 +28,16 @@
 #include <cppunit/extensions/HelperMacros.h>
 
 #include <karabo/log/Logger.hh>
-#include <karabo/util/Configurator.hh>
-#include <karabo/util/NodeElement.hh>
+
+#include "karabo/data/schema/Configurator.hh"
+#include "karabo/data/schema/NodeElement.hh"
 
 class LogSomething {
    public:
     KARABO_CLASSINFO(LogSomething, "LogSomething", "")
 
-    static void expectedParameters(karabo::util::Schema& expected) {
-        using namespace karabo::util;
+    static void expectedParameters(karabo::data::Schema& expected) {
+        using namespace karabo::data;
 
         NODE_ELEMENT(expected)
               .key("Logger")
@@ -46,9 +47,9 @@ class LogSomething {
               .commit();
     }
 
-    LogSomething(const karabo::util::Hash& input) {
+    LogSomething(const karabo::data::Hash& input) {
         using namespace karabo::log;
-        Logger::configure(input.get<karabo::util::Hash>("Logger"));
+        Logger::configure(input.get<karabo::data::Hash>("Logger"));
         Logger::useConsole();
     }
 

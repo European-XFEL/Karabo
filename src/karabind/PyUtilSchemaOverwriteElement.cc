@@ -20,16 +20,15 @@
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
-#include <karabo/util/Exception.hh>
-#include <karabo/util/OverwriteElement.hh>
-
 #include "PyTypes.hh"
 #include "PyUtilSchemaElement.hh"
 #include "Wrapper.hh"
+#include "karabo/data/schema/OverwriteElement.hh"
+#include "karabo/data/types/Exception.hh"
 
 
 namespace py = pybind11;
-using namespace karabo::util;
+using namespace karabo::data;
 using namespace std;
 using namespace karabind;
 
@@ -86,11 +85,11 @@ void exportPyUtilSchemaOverwriteElement(py::module_& m) {
                     const std::string className = value.attr("__class__").attr("__name__").cast<std::string>();
                     if (className == "State") {
                         const std::string state = value.attr("name").cast<std::string>();
-                        return self.setNewDefaultValue(karabo::util::State::fromString(state));
+                        return self.setNewDefaultValue(karabo::data::State::fromString(state));
                     } else if (className == "AlarmCondition") {
                         const std::string condition = value.attr("value").cast<std::string>();
 
-                        return self.setNewDefaultValue(karabo::util::AlarmCondition::fromString(condition));
+                        return self.setNewDefaultValue(karabo::data::AlarmCondition::fromString(condition));
                     } else {
                         std::any any;
                         if (className == "AccessLevel") {
@@ -141,7 +140,7 @@ void exportPyUtilSchemaOverwriteElement(py::module_& m) {
                 [](OverwriteElement& self, const py::object& obj) {
                     try {
                         return self.setNewMinSize(wrapper::toInteger<unsigned int>(obj));
-                    } catch (const karabo::util::CastException& e) {
+                    } catch (const karabo::data::CastException& e) {
                         KARABO_RETHROW_AS(e);
                         return self; // please compiler
                     }
@@ -152,7 +151,7 @@ void exportPyUtilSchemaOverwriteElement(py::module_& m) {
                 [](OverwriteElement& self, const py::object& obj) {
                     try {
                         return self.setNewMaxSize(wrapper::toInteger<unsigned int>(obj));
-                    } catch (const karabo::util::CastException& e) {
+                    } catch (const karabo::data::CastException& e) {
                         KARABO_RETHROW_AS(e);
                         return self; // please compiler
                     }

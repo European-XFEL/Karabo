@@ -17,10 +17,9 @@
  */
 #include "BufferSet.hh"
 
-#include <karabo/util/StringTools.hh>
-
 #include "BinarySerializer.hh"
 #include "boost/core/null_deleter.hpp"
+#include "karabo/data/types/StringTools.hh"
 
 /**
  * The main European XFEL namespace
@@ -93,7 +92,7 @@ namespace karabo {
         }
 
 
-        void BufferSet::emplaceBack(const karabo::util::ByteArray& array, bool writeSize) {
+        void BufferSet::emplaceBack(const karabo::data::ByteArray& array, bool writeSize) {
             if (writeSize) {
                 BufferType& buffer = current();
                 buffer.reserve(buffer.size() + sizeof(unsigned int) + array.second);
@@ -187,7 +186,7 @@ namespace karabo {
         }
 
 
-        karabo::util::ByteArray BufferSet::currentAsByteArray() const {
+        karabo::data::ByteArray BufferSet::currentAsByteArray() const {
             return std::make_pair(std::const_pointer_cast<char>(m_buffers[m_currentBuffer].ptr),
                                   m_buffers[m_currentBuffer].size);
         }
@@ -210,7 +209,7 @@ namespace karabo {
 
 
         std::ostream& operator<<(std::ostream& os, const BufferSet& bs) {
-            using namespace karabo::util;
+            using namespace karabo::data;
             os << "BufferSet content:\n";
             os << "\t\"copyAllData\" flag is\t" << std::boolalpha << bs.m_copyAllData << '\n';
             os << "\tCurrent buffer index is\t" << bs.m_currentBuffer << '\n';

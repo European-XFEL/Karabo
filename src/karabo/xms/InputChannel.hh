@@ -35,12 +35,12 @@
 #include <unordered_map>
 
 #include "Memory.hh"
+#include "karabo/data/schema/NodeElement.hh"
+#include "karabo/data/types/Hash.hh"
 #include "karabo/net/Channel.hh"
 #include "karabo/net/Connection.hh"
 #include "karabo/net/Strand.hh"
 #include "karabo/net/utils.hh"
-#include "karabo/util/Hash.hh"
-#include "karabo/util/NodeElement.hh"
 
 /**
  * The main Karabo namespace
@@ -78,7 +78,7 @@ namespace karabo {
 
             typedef Memory::MetaData MetaData;
             typedef std::function<void(const InputChannel::Pointer&)> InputHandler;
-            typedef std::function<void(const karabo::util::Hash&, const MetaData&)> DataHandler;
+            typedef std::function<void(const karabo::data::Hash&, const MetaData&)> DataHandler;
             using ConnectionTracker = std::function<void(const std::string&, net::ConnectionStatus)>;
 
             /**
@@ -115,7 +115,7 @@ namespace karabo {
 
            private:
             // Maps outputChannelString to the Hash with connection parameters
-            typedef std::map<std::string, karabo::util::Hash> ConfiguredOutputChannels;
+            typedef std::map<std::string, karabo::data::Hash> ConfiguredOutputChannels;
             // Maps outputChannelString to the TCP (connection, channel) pair
             typedef std::map<std::string, std::pair<karabo::net::Connection::Pointer, karabo::net::Channel::Pointer>>
                   OpenConnections;
@@ -168,7 +168,7 @@ namespace karabo {
             int m_delayOnInput;
 
             std::vector<MetaData> m_metaDataList;
-            std::vector<karabo::util::Hash::Pointer> m_dataList;
+            std::vector<karabo::data::Hash::Pointer> m_dataList;
             std::multimap<std::string, unsigned int> m_sourceMap;
             std::multimap<unsigned long long, unsigned int> m_trainIdMap;
             std::map<unsigned int, MetaData> m_reverseMetaDataMap;
@@ -178,13 +178,13 @@ namespace karabo {
              * Necessary method as part of the factory/configuration system
              * @param expected [out] Description of expected parameters for this object (Schema)
              */
-            static void expectedParameters(karabo::util::Schema& expected);
+            static void expectedParameters(karabo::data::Schema& expected);
 
             /**
              * If this object is constructed using the factory/configuration system this method is called
              * @param input Validated (@see expectedParameters) and default-filled configuration
              */
-            InputChannel(const karabo::util::Hash& config);
+            InputChannel(const karabo::data::Hash& config);
 
             virtual ~InputChannel();
 
@@ -197,7 +197,7 @@ namespace karabo {
              *                     and "respondToEndOfStream" is OK and their respective previous configuration is kept,
              *                     if false, an exception is thrown when these keys are missing in config
              */
-            void reconfigure(const karabo::util::Hash& config, bool allowMissing = true);
+            void reconfigure(const karabo::data::Hash& config, bool allowMissing = true);
 
             void setInstanceId(const std::string& instanceId);
 
@@ -269,7 +269,7 @@ namespace karabo {
              * currently connected or not.
              * @return map.
              */
-            std::map<std::string, karabo::util::Hash> getConnectedOutputChannels();
+            std::map<std::string, karabo::data::Hash> getConnectedOutputChannels();
 
             /**
              * Provide a map between the output channels that are configured  and their connection status.
@@ -289,7 +289,7 @@ namespace karabo {
              * @return meta data associated to the data token. Lifetime of the object corresponds to live time of the
              *         InputHandler callback.
              */
-            const MetaData& read(karabo::util::Hash& data, size_t idx = 0);
+            const MetaData& read(karabo::data::Hash& data, size_t idx = 0);
 
             /**
              * Read data from the InputChannel - to be called inside an InputHandler callback
@@ -298,7 +298,7 @@ namespace karabo {
              *            number of available tokens
              * @return the data as a pointer
              */
-            karabo::util::Hash::Pointer read(size_t idx = 0);
+            karabo::data::Hash::Pointer read(size_t idx = 0);
 
             /**
              * Read data and meta data from the InputChannel - to be called inside an InputHandler callback
@@ -308,7 +308,7 @@ namespace karabo {
              * @param source reference that will hold the meta data
              * @return the data as a pointer
              */
-            karabo::util::Hash::Pointer read(size_t idx, MetaData& source);
+            karabo::data::Hash::Pointer read(size_t idx, MetaData& source);
 
             /**
              * Number of data tokens - to be called inside an InputHandler callback
@@ -330,11 +330,11 @@ namespace karabo {
              *                                      process or can share memory
              * @param handler  indicates asynchronously (like via EventLoop::post) the success of the connection request
              */
-            void connect(const karabo::util::Hash& outputChannelInfo,
+            void connect(const karabo::data::Hash& outputChannelInfo,
                          const std::function<void(const karabo::net::ErrorCode&)>& handler =
                                std::function<void(const karabo::net::ErrorCode&)>());
 
-            void disconnect(const karabo::util::Hash& outputChannelInfo);
+            void disconnect(const karabo::data::Hash& outputChannelInfo);
 
             /**
              * Disconnect and clean internals
@@ -344,22 +344,22 @@ namespace karabo {
             void disconnect(const std::string& connectionString);
 
            private:
-            karabo::util::Hash prepareConnectionConfiguration(const karabo::util::Hash& outputChannelInfo) const;
+            karabo::data::Hash prepareConnectionConfiguration(const karabo::data::Hash& outputChannelInfo) const;
 
             static void onConnectWrap(WeakPointer self, karabo::net::ErrorCode error,
                                       karabo::net::Connection::Pointer connection,
-                                      const karabo::util::Hash& outputChannelInfo,
+                                      const karabo::data::Hash& outputChannelInfo,
                                       karabo::net::Channel::Pointer channel, unsigned int connectId,
                                       const std::function<void(const karabo::net::ErrorCode&)>& handler);
 
             void onConnect(karabo::net::ErrorCode error, karabo::net::Connection::Pointer& connection,
-                           const karabo::util::Hash& outputChannelInfo, karabo::net::Channel::Pointer& channel,
+                           const karabo::data::Hash& outputChannelInfo, karabo::net::Channel::Pointer& channel,
                            unsigned int connectId, const std::function<void(const karabo::net::ErrorCode&)>& handler);
 
             void onTcpChannelError(const karabo::net::ErrorCode&, const karabo::net::Channel::Pointer&);
 
             void onTcpChannelRead(const karabo::net::ErrorCode& ec, karabo::net::Channel::WeakPointer channel,
-                                  const karabo::util::Hash& header,
+                                  const karabo::data::Hash& header,
                                   const std::vector<karabo::io::BufferSet::Pointer>& data);
 
             void notifyOutputChannelsForPossibleRead();
@@ -368,7 +368,7 @@ namespace karabo {
 
             bool respondsToEndOfStream();
 
-            void parseOutputChannelConfiguration(const karabo::util::Hash& config);
+            void parseOutputChannelConfiguration(const karabo::data::Hash& config);
 
             void postConnectionTracker(const std::string& outputChannel, karabo::net::ConnectionStatus status);
 
@@ -381,7 +381,7 @@ namespace karabo {
              * @param config kept for backward compatibility
              */
             void updateOutputChannelConfiguration(const std::string& outputChannelString,
-                                                  const karabo::util::Hash& config = karabo::util::Hash());
+                                                  const karabo::data::Hash& config = karabo::data::Hash());
 
             /**
              * Get the current meta data for input data available on this input channel. Validity time of the object
@@ -442,10 +442,10 @@ namespace karabo {
         };
 
         class InputChannelElement {
-            karabo::util::NodeElement m_inputChannel;
+            karabo::data::NodeElement m_inputChannel;
 
            public:
-            InputChannelElement(karabo::util::Schema& s) : m_inputChannel(s) {
+            InputChannelElement(karabo::data::Schema& s) : m_inputChannel(s) {
                 m_inputChannel.appendParametersOf<InputChannel>();
             }
 
@@ -466,7 +466,7 @@ namespace karabo {
 
             [[deprecated(
                   "dataSchema does nothing since Karabo 2.19 and will be removed in the future")]] InputChannelElement&
-            dataSchema(const karabo::util::Schema& schema) {
+            dataSchema(const karabo::data::Schema& schema) {
                 return *this;
             }
 

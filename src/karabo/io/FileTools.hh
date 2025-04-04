@@ -33,7 +33,7 @@
 #ifndef KARABO_IO_FILETOOLS_HH
 #define KARABO_IO_FILETOOLS_HH
 
-#include <karabo/util/karaboDll.hh>
+#include "karabo/data/types/karaboDll.hh"
 
 namespace karabo {
 
@@ -52,11 +52,11 @@ namespace karabo {
          */
         template <class T>
         inline void loadFromFile(T& object, const std::string& filename,
-                                 const karabo::util::Hash& config = karabo::util::Hash()) {
+                                 const karabo::data::Hash& config = karabo::data::Hash()) {
             std::filesystem::path filepath(filename);
             std::string extension = filepath.extension().string().substr(1);
             boost::to_lower(extension);
-            karabo::util::Hash h("filename", filepath.lexically_normal().string());
+            karabo::data::Hash h("filename", filepath.lexically_normal().string());
             h.merge(config);
             if (extension == "h5") {
                 typename Input<T>::Pointer p = Input<T>::create("Hdf5File", h);
@@ -83,7 +83,7 @@ namespace karabo {
          */
         template <class T>
         inline void saveToFile(const T& object, const std::string& filename,
-                               const karabo::util::Hash& config = karabo::util::Hash()) {
+                               const karabo::data::Hash& config = karabo::data::Hash()) {
             std::filesystem::path filepath(filename);
             std::string extension = filepath.extension().string().substr(1);
             std::filesystem::path directory = filepath.parent_path();
@@ -99,7 +99,7 @@ namespace karabo {
             }
 
             boost::to_lower(extension);
-            karabo::util::Hash h("filename", filepath.lexically_normal().string());
+            karabo::data::Hash h("filename", filepath.lexically_normal().string());
             h.merge(config);
 
             if (extension == "h5") {
@@ -142,7 +142,7 @@ namespace karabo {
          */
         template <class T>
         inline std::string getIODataType() {
-            using namespace karabo::util;
+            using namespace karabo::data;
             return T::classInfo().getClassId();
         }
 
@@ -155,19 +155,19 @@ namespace karabo {
 } // namespace karabo
 
 #ifndef __SO__
-extern template void karabo::io::loadFromFile<karabo::util::Hash>(
-      karabo::util::Hash& object, const std::string& filename, const karabo::util::Hash& config = karabo::util::Hash());
-extern template void karabo::io::saveToFile<karabo::util::Hash>(
-      const karabo::util::Hash& object, const std::string& filename,
-      const karabo::util::Hash& config = karabo::util::Hash());
-extern template std::string karabo::io::getIODataType<karabo::util::Hash>();
-extern template void karabo::io::loadFromFile<karabo::util::Schema>(
-      karabo::util::Schema& object, const std::string& filename,
-      const karabo::util::Hash& config = karabo::util::Hash());
-extern template void karabo::io::saveToFile<karabo::util::Schema>(
-      const karabo::util::Schema& object, const std::string& filename,
-      const karabo::util::Hash& config = karabo::util::Hash());
-extern template std::string karabo::io::getIODataType<karabo::util::Schema>();
+extern template void karabo::io::loadFromFile<karabo::data::Hash>(
+      karabo::data::Hash& object, const std::string& filename, const karabo::data::Hash& config = karabo::data::Hash());
+extern template void karabo::io::saveToFile<karabo::data::Hash>(
+      const karabo::data::Hash& object, const std::string& filename,
+      const karabo::data::Hash& config = karabo::data::Hash());
+extern template std::string karabo::io::getIODataType<karabo::data::Hash>();
+extern template void karabo::io::loadFromFile<karabo::data::Schema>(
+      karabo::data::Schema& object, const std::string& filename,
+      const karabo::data::Hash& config = karabo::data::Hash());
+extern template void karabo::io::saveToFile<karabo::data::Schema>(
+      const karabo::data::Schema& object, const std::string& filename,
+      const karabo::data::Hash& config = karabo::data::Hash());
+extern template std::string karabo::io::getIODataType<karabo::data::Schema>();
 #endif
 
 #endif

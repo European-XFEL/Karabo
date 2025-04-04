@@ -34,7 +34,7 @@ namespace karabo {
 
         void UserAuthClient::authorizeOneTimeToken(const std::string& token, const std::string& topic,
                                                    const AuthOneTimeTokenHandler& authHandler) {
-            using karabo::util::Schema;
+            using karabo::data::Schema;
 
             HttpHeaders reqHeaders;
             reqHeaders.set(HttpHeader::user_agent, "Karabo User Auth Client");
@@ -50,7 +50,7 @@ namespace karabo {
                                           .success = false,
                                           .userId = "",
                                           .accessLevel = Schema::OBSERVER,
-                                          .errMsg = karabo::util::toString(resp.result_int()) + " - " +
+                                          .errMsg = karabo::data::toString(resp.result_int()) + " - " +
                                                     std::string(resp.reason().data(), resp.reason().size())});
                                 } else {
                                     try {

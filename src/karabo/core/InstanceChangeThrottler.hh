@@ -26,13 +26,14 @@
 
 #include <boost/asio/steady_timer.hpp>
 #include <functional>
-#include <karabo/util/ClassInfo.hh>
-#include <karabo/util/Hash.hh>
 #include <memory>
 #include <mutex>
 #include <queue>
 #include <string>
 #include <unordered_map>
+
+#include "karabo/data/types/ClassInfo.hh"
+#include "karabo/data/types/Hash.hh"
 
 namespace karabo {
 
@@ -64,7 +65,7 @@ namespace karabo {
            public:
             KARABO_CLASSINFO(InstanceChangeThrottler, "InstanceMessageThrottler", "2.0")
 
-            typedef std::function<void(const karabo::util::Hash&)> InstanceChangeHandler;
+            typedef std::function<void(const karabo::data::Hash&)> InstanceChangeHandler;
 
             enum class InstChangeType { NEW, UPDATE, GONE };
 
@@ -98,7 +99,7 @@ namespace karabo {
              * @param instanceId The id of the instance the new change refers to.
              * @param instanceInfo Information about the instance the new change refers to.
              */
-            void submitInstanceNew(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
+            void submitInstanceNew(const std::string& instanceId, const karabo::data::Hash& instanceInfo);
 
             /**
              * Submits an instance update change for dispatching by the throttler.
@@ -106,7 +107,7 @@ namespace karabo {
              * @param instanceId The id of the instance the update change refers to.
              * @param instanceInfo Information about the instance the update change refers to.
              */
-            void submitInstanceUpdate(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
+            void submitInstanceUpdate(const std::string& instanceId, const karabo::data::Hash& instanceInfo);
 
             /**
              * Submits an instance gone change for dispatching by the throttler.
@@ -114,7 +115,7 @@ namespace karabo {
              * @param instanceId The id of the instance the gone change refers to.
              * @param instanceInfo Information about the instance the gone change refers to.
              */
-            void submitInstanceGone(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
+            void submitInstanceGone(const std::string& instanceId, const karabo::data::Hash& instanceInfo);
 
             /**
              * The interval, in milliseconds, between cycles of the throttler.
@@ -151,7 +152,7 @@ namespace karabo {
              *
              * Description for the Hash format can be found in the class documentation.
              */
-            karabo::util::Hash m_instChanges;
+            karabo::data::Hash m_instChanges;
 
             // Protects against simultaneous accesses to m_instChanges.
             std::mutex m_instChangesMutex;
@@ -177,8 +178,8 @@ namespace karabo {
              * @return a hash whose only key is the instanceId, with the keys/values in instanceInfo as attributes and
              * an empty hash as the only value.
              */
-            karabo::util::Hash instNewUpdateEncoder(const std::string& instanceId,
-                                                    const karabo::util::Hash& instanceInfo) const;
+            karabo::data::Hash instNewUpdateEncoder(const std::string& instanceId,
+                                                    const karabo::data::Hash& instanceInfo) const;
 
             /**
              * Encodes the instanceInfo hash into the format that the Throttler uses internally for changes
@@ -187,8 +188,8 @@ namespace karabo {
              * @param instanceInfo the instanceInfo hash as used by the karabo GUI.
              * @return a hash whose only key is the instanceId and whose only value is the instanceInfo hash.
              */
-            karabo::util::Hash instGoneEncoder(const std::string& instanceId,
-                                               const karabo::util::Hash& instanceInfo) const;
+            karabo::data::Hash instGoneEncoder(const std::string& instanceId,
+                                               const karabo::data::Hash& instanceInfo) const;
 
             /**
              * Adds an instance change to m_instChanges.
@@ -204,7 +205,7 @@ namespace karabo {
              * @param instanceInfo
              */
             void addChange(InstChangeType changeType, const std::string& instanceId,
-                           const karabo::util::Hash& instanceInfo);
+                           const karabo::data::Hash& instanceInfo);
 
             /**
              * Throttler cycle execution. For each cycle, the throttler dispatches the instances changes hash.

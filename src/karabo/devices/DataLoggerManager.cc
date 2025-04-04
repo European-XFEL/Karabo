@@ -81,15 +81,15 @@
 #include <unordered_set>
 #include <vector>
 
+#include "karabo/data/schema/ChoiceElement.hh"
+#include "karabo/data/schema/SimpleElement.hh"
+#include "karabo/data/schema/TableElement.hh"
+#include "karabo/data/schema/VectorElement.hh"
+#include "karabo/data/time/Epochstamp.hh"
+#include "karabo/data/types/StringTools.hh"
 #include "karabo/io/FileTools.hh"
 #include "karabo/net/EventLoop.hh"
-#include "karabo/util/ChoiceElement.hh"
 #include "karabo/util/DataLogUtils.hh"
-#include "karabo/util/Epochstamp.hh"
-#include "karabo/util/SimpleElement.hh"
-#include "karabo/util/StringTools.hh"
-#include "karabo/util/TableElement.hh"
-#include "karabo/util/VectorElement.hh"
 
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device, karabo::devices::DataLoggerManager)
 
@@ -100,6 +100,7 @@ namespace karabo {
 
         using namespace std::chrono;
         using namespace std;
+        using namespace karabo::data;
         using namespace karabo::util;
         using namespace karabo::io;
         using namespace std::placeholders;
@@ -530,7 +531,7 @@ namespace karabo {
               m_loggerClassId("Unsupported"),
               m_blocked(input.get<Hash>("blocklist")),
               m_blockListFile(input.get<string>("blocklistfile")) {
-            m_visibility = karabo::util::Schema::ADMIN;
+            m_visibility = karabo::data::Schema::ADMIN;
             const std::string loggerType = input.get<std::string>("logger");
             if (loggerType == "FileDataLogger") {
                 m_loggerClassId = "FileDataLogger";
@@ -569,7 +570,7 @@ namespace karabo {
         DataLoggerManager::~DataLoggerManager() {}
 
 
-        void DataLoggerManager::preReconfigure(karabo::util::Hash& incomingReconfiguration) {
+        void DataLoggerManager::preReconfigure(karabo::data::Hash& incomingReconfiguration) {
             if (incomingReconfiguration.has("blocklist")) {
                 std::lock_guard<std::mutex> lock(m_blockedMutex);
                 Hash oldList = m_blocked; // save old version
@@ -595,8 +596,8 @@ namespace karabo {
         }
 
 
-        void DataLoggerManager::evaluateBlockedOnStrand(const karabo::util::Hash& oldHash,
-                                                        const karabo::util::Hash& newHash) {
+        void DataLoggerManager::evaluateBlockedOnStrand(const karabo::data::Hash& oldHash,
+                                                        const karabo::data::Hash& newHash) {
             // Previous config: collect all devices without duplicates ...
             auto oldSet = std::set<std::string>();
             {
@@ -694,7 +695,7 @@ namespace karabo {
                 // Start regular topology checks (and update State to ON)
                 m_strand->post(bind_weak(&Self::launchTopologyCheck, this));
 
-            } catch (const karabo::util::Exception& ke) {
+            } catch (const karabo::data::Exception& ke) {
                 exceptTxt = ke.userFriendlyMsg(true);
             } catch (const std::exception& e) {
                 exceptTxt = e.what();
@@ -1073,7 +1074,7 @@ namespace karabo {
         }
 
 
-        karabo::util::Epochstamp DataLoggerManager::mostRecentEpochstamp(const Hash& config,
+        karabo::data::Epochstamp DataLoggerManager::mostRecentEpochstamp(const Hash& config,
                                                                          Epochstamp oldStamp) const {
             for (const Hash::Node& node : config) {
                 if (Epochstamp::hashAttributesContainTimeInformation(node.getAttributes())) {
@@ -1157,12 +1158,12 @@ namespace karabo {
         }
 
 
-        void DataLoggerManager::instanceNewHandler(const karabo::util::Hash& topologyEntry) {
+        void DataLoggerManager::instanceNewHandler(const karabo::data::Hash& topologyEntry) {
             m_strand->post(bind_weak(&DataLoggerManager::instanceNewOnStrand, this, topologyEntry));
         }
 
 
-        void DataLoggerManager::instanceNewOnStrand(const karabo::util::Hash& topologyEntry) {
+        void DataLoggerManager::instanceNewOnStrand(const karabo::data::Hash& topologyEntry) {
             const std::string& type = topologyEntry.begin()->getKey(); // fails if empty...
             // const ref is fine even for temporary std::string
             const std::string& instanceId = (topologyEntry.has(type) && topologyEntry.is<Hash>(type)
@@ -1399,13 +1400,13 @@ namespace karabo {
         }
 
         void DataLoggerManager::instanceGoneHandler(const std::string& instanceId,
-                                                    const karabo::util::Hash& instanceInfo) {
+                                                    const karabo::data::Hash& instanceInfo) {
             m_strand->post(bind_weak(&DataLoggerManager::instanceGoneOnStrand, this, instanceId, instanceInfo));
         }
 
 
         void DataLoggerManager::instanceGoneOnStrand(const std::string& instanceId,
-                                                     const karabo::util::Hash& instanceInfo) {
+                                                     const karabo::data::Hash& instanceInfo) {
             // const ref is fine even for temporary std::string
             const std::string& type = (instanceInfo.has("type") && instanceInfo.is<std::string>("type")
                                              ? instanceInfo.get<std::string>("type")
@@ -1580,7 +1581,7 @@ namespace karabo {
             return (it != ids.end());
         }
 
-        std::vector<karabo::util::Hash> DataLoggerManager::makeLoggersTable() {
+        std::vector<karabo::data::Hash> DataLoggerManager::makeLoggersTable() {
             std::vector<std::string> keys;
             m_loggerMap.getKeys(keys);
 
@@ -1588,7 +1589,7 @@ namespace karabo {
             std::sort(keys.begin(), keys.end(),
                       [](const std::string& x, const std::string& y) { return strcasecmp(x.c_str(), y.c_str()) < 0; });
 
-            std::vector<karabo::util::Hash> table;
+            std::vector<karabo::data::Hash> table;
             table.reserve(m_loggerMap.size());
             const auto prefix_length = std::strlen(DATALOGGER_PREFIX);
             for (const std::string& device : keys) {

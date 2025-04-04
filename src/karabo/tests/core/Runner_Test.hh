@@ -31,7 +31,7 @@
 
 class RunnerDerived : public karabo::core::Runner {
    public:
-    static void parseCmd(int argc, const char** argv, karabo::util::Hash& configuration) {
+    static void parseCmd(int argc, const char** argv, karabo::data::Hash& configuration) {
         karabo::core::Runner::parseCommandLine(argc, argv, configuration);
     }
 };

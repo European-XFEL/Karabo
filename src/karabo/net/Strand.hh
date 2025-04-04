@@ -28,14 +28,14 @@
 #include <mutex>
 #include <queue>
 
-#include "karabo/util/ClassInfo.hh"
-#include "karabo/util/Hash.hh"
+#include "karabo/data/types/ClassInfo.hh"
+#include "karabo/data/types/Hash.hh"
 
 #ifndef KARABO_NET_STRAND_HH
 #define KARABO_NET_STRAND_HH
 
 namespace karabo {
-    namespace util {
+    namespace data {
         class Schema;
     }
     namespace net {
@@ -57,7 +57,7 @@ namespace karabo {
          * NOTE:
          * Do not create a Strand on the stack, but do it on the heap using the Configurator:
          *
-         * auto stack = karabo::util::Configurator<Strand>::create(Hash(...));
+         * auto stack = karabo::data::Configurator<Strand>::create(Hash(...));
          *
          * Otherwise 'enable_shared_from_this' does not work which is needed to guarantee (via usage of
          * karab::util::bind_weak) that an internal Strand method is executed on the event loop when the Strand
@@ -68,12 +68,12 @@ namespace karabo {
            public:
             KARABO_CLASSINFO(Strand, "Strand", "2.1")
 
-            static void expectedParameters(karabo::util::Schema& expected);
+            static void expectedParameters(karabo::data::Schema& expected);
 
             /**
              * Contructor only kept for backward compatibility.
              *
-             * Better use karabo::util::Configurator<Strand>::create("Strand", Hash())
+             * Better use karabo::data::Configurator<Strand>::create("Strand", Hash())
              */
             explicit Strand(boost::asio::io_context& ioContext);
 
@@ -82,12 +82,12 @@ namespace karabo {
              *
              * The boost::asio::io_context of the karabo::net::EventLoop will be used.
              *
-             * Best use this constructor indirectly via karabo::util::Configurator<Strand>::create("Strand", cfg) which
+             * Best use this constructor indirectly via karabo::data::Configurator<Strand>::create("Strand", cfg) which
              * will validate cfg and create the Strand properly on the heap.
              *
              * Keys of cfg are "maxInARow" (unsigned int) and "guaranteeToRun" (bool), see expectedParameters.
              */
-            explicit Strand(const karabo::util::Hash& config);
+            explicit Strand(const karabo::data::Hash& config);
 
             Strand(const Strand& orig) = delete;
 

@@ -49,7 +49,7 @@ namespace karabo {
     }
 
 
-    LockTestDevice::LockTestDevice(const karabo::util::Hash& config) : Device(config) {
+    LockTestDevice::LockTestDevice(const karabo::data::Hash& config) : Device(config) {
         KARABO_SLOT(lockAndWait);
         KARABO_SLOT(lockAndWaitLong);
         KARABO_SLOT(lockAndWaitTimeout);

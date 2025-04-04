@@ -27,7 +27,8 @@
 #include <cppunit/extensions/HelperMacros.h>
 
 #include <karabo/log/Logger.hh>
-#include <karabo/util/Configurator.hh>
+
+#include "karabo/data/schema/Configurator.hh"
 
 class AlarmCondition_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(AlarmCondition_Test);

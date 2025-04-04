@@ -27,8 +27,9 @@
 #include <cppunit/extensions/HelperMacros.h>
 
 #include <karabo/log/Logger.hh>
-#include <karabo/util/Configurator.hh>
-#include <karabo/util/Hash.hh>
+
+#include "karabo/data/schema/Configurator.hh"
+#include "karabo/data/types/Hash.hh"
 
 
 class HashBinarySerializer_Test : public CPPUNIT_NS::TestFixture {
@@ -51,10 +52,10 @@ class HashBinarySerializer_Test : public CPPUNIT_NS::TestFixture {
     void testMaxHashKeyLength();
     void testReadVectorHashPointer();
 
-    void hashContentTest(const karabo::util::Hash& toBeTested, const std::string& whichSerialisation);
+    void hashContentTest(const karabo::data::Hash& toBeTested, const std::string& whichSerialisation);
 
    private:
-    karabo::util::Hash m_hash;
+    karabo::data::Hash m_hash;
 };
 
 #endif /* HASHXMLSERIALIZER_TEST_HH */

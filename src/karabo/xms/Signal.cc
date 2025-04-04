@@ -40,10 +40,10 @@ namespace karabo {
               m_priority(priority),
               m_messageTimeToLive(messageTimeToLive),
               m_topic(signalSlotable->m_topic),
-              m_argsType(typeid(karabo::util::Types::NONE)) {}
+              m_argsType(typeid(karabo::data::Types::NONE)) {}
 
 
-        void Signal::setSlotStrings(const SlotMap& slots, karabo::util::Hash& header) const {
+        void Signal::setSlotStrings(const SlotMap& slots, karabo::data::Hash& header) const {
             std::ostringstream registeredSlotsString;
             std::ostringstream registeredSlotInstanceIdsString;
             if (slots.empty()) {
@@ -98,8 +98,8 @@ namespace karabo {
         }
 
 
-        void Signal::doEmit(const karabo::util::Hash::Pointer& message) {
-            using namespace karabo::util;
+        void Signal::doEmit(const karabo::data::Hash::Pointer& message) {
+            using namespace karabo::data;
             try {
                 SlotMap registeredSlots;
                 {
@@ -144,20 +144,20 @@ namespace karabo {
                     m_channel->write(m_topic, header, message, m_priority, m_messageTimeToLive);
                 }
 
-            } catch (const karabo::util::Exception& e) {
+            } catch (const karabo::data::Exception& e) {
                 KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("Problem sending a signal"))
             }
         }
 
 
-        karabo::util::Hash::Pointer Signal::prepareHeader(const SlotMap& slots) const {
+        karabo::data::Hash::Pointer Signal::prepareHeader(const SlotMap& slots) const {
             if (m_signalInstanceId.empty() && m_signalSlotable) {
                 // Hack to fix empty id if signal created before SignalSlotable::init (which defines the id) was called.
                 // Happens currently (2.10.0) for signals registered in constructors of devices
                 *const_cast<std::string*>(&m_signalInstanceId) = m_signalSlotable->getInstanceId();
             }
 
-            karabo::util::Hash::Pointer header(std::make_shared<karabo::util::Hash>());
+            karabo::data::Hash::Pointer header(std::make_shared<karabo::data::Hash>());
             header->set("signalInstanceId", m_signalInstanceId);
             header->set("signalFunction", m_signalFunction);
             setSlotStrings(slots, *header);

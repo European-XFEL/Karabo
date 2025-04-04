@@ -20,15 +20,14 @@
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
-#include <karabo/util/TableElement.hh>
-
 #include "PyTypes.hh"
 #include "PyUtilSchemaElement.hh"
 #include "Wrapper.hh"
+#include "karabo/data/schema/TableElement.hh"
 
 
 namespace py = pybind11;
-using namespace karabo::util;
+using namespace karabo::data;
 using namespace std;
 using namespace karabind;
 

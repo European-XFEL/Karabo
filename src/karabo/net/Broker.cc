@@ -17,18 +17,18 @@
  */
 #include "karabo/net/Broker.hh"
 
+#include "karabo/data/schema/SimpleElement.hh"
+#include "karabo/data/schema/VectorElement.hh"
 #include "karabo/net/utils.hh"
-#include "karabo/util/SimpleElement.hh"
-#include "karabo/util/VectorElement.hh"
 
-using namespace karabo::util;
+using namespace karabo::data;
 
 
 namespace karabo {
     namespace net {
 
 
-        void Broker::expectedParameters(karabo::util::Schema& s) {
+        void Broker::expectedParameters(karabo::data::Schema& s) {
             VECTOR_STRING_ELEMENT(s)
                   .key("brokers")
                   .displayedName("Brokers")
@@ -60,7 +60,7 @@ namespace karabo {
         }
 
 
-        Broker::Broker(const karabo::util::Hash& config)
+        Broker::Broker(const karabo::data::Hash& config)
             : m_availableBrokerUrls(config.get<std::vector<std::string> >("brokers")),
               m_topic(config.get<std::string>("domain")),
               m_instanceId(config.get<std::string>("instanceId")),
@@ -83,7 +83,7 @@ namespace karabo {
 
         std::vector<std::string> Broker::brokersFromEnv() {
             const char* env = getenv("KARABO_BROKER");
-            return karabo::util::fromString<std::string, std::vector>(
+            return karabo::data::fromString<std::string, std::vector>(
                   env ? env : "amqp://xfel::karabo@exfl-broker-1.desy.de:5672,amqp://guest:guest@localhost:5672");
         }
 
@@ -105,7 +105,7 @@ namespace karabo {
                     type = protocol;
                 } else if (type != protocol) {
                     throw KARABO_LOGIC_EXCEPTION("Inconsistent broker types in " +
-                                                 karabo::util::toString(brokersFromEnv()));
+                                                 karabo::data::toString(brokersFromEnv()));
                 }
             }
             return type;

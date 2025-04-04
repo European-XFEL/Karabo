@@ -32,13 +32,13 @@ namespace karabo {
         struct FileDeviceData : public karabo::devices::DeviceData {
             KARABO_CLASSINFO(FileDeviceData, "FileDataLoggerDeviceData", "2.6")
 
-            FileDeviceData(const karabo::util::Hash& input);
+            FileDeviceData(const karabo::data::Hash& input);
 
             virtual ~FileDeviceData();
 
-            void handleChanged(const karabo::util::Hash& config, const std::string& user) override;
+            void handleChanged(const karabo::data::Hash& config, const std::string& user) override;
 
-            void logValue(const std::string& deviceId, const std::string& path, const karabo::util::Timestamp& ts,
+            void logValue(const std::string& deviceId, const std::string& path, const karabo::data::Timestamp& ts,
                           const std::string& value, const std::string& type, size_t filePosition);
 
             void flushOne();
@@ -62,7 +62,7 @@ namespace karabo {
 
             int incrementLastIndex(const std::string& deviceId);
 
-            void handleSchemaUpdated(const karabo::util::Schema& schema, const karabo::util::Timestamp& stamp) override;
+            void handleSchemaUpdated(const karabo::data::Schema& schema, const karabo::data::Timestamp& stamp) override;
 
             void setupDirectory();
 
@@ -77,7 +77,7 @@ namespace karabo {
             size_t m_propsize;
             std::filesystem::file_time_type m_lasttime;
 
-            karabo::io::TextSerializer<karabo::util::Hash>::Pointer m_serializer;
+            karabo::io::TextSerializer<karabo::data::Hash>::Pointer m_serializer;
         };
 
 
@@ -85,14 +85,14 @@ namespace karabo {
            public:
             KARABO_CLASSINFO(FileDataLogger, "FileDataLogger", "karabo-" + karabo::util::Version::getVersion())
 
-            static void expectedParameters(karabo::util::Schema& expected);
+            static void expectedParameters(karabo::data::Schema& expected);
 
-            FileDataLogger(const karabo::util::Hash& input);
+            FileDataLogger(const karabo::data::Hash& input);
 
             virtual ~FileDataLogger();
 
            private:
-            DeviceData::Pointer createDeviceData(const karabo::util::Hash& config) override;
+            DeviceData::Pointer createDeviceData(const karabo::data::Hash& config) override;
 
             void flushImpl(const std::shared_ptr<SignalSlotable::AsyncReply>& aReplyPtr) override;
         };

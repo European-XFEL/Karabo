@@ -25,14 +25,14 @@
 #include <chrono>
 #include <filesystem>
 
-#include "karabo/util/NodeElement.hh"
-#include "karabo/util/SimpleElement.hh"
-#include "karabo/util/StringTools.hh"
+#include "karabo/data/schema/NodeElement.hh"
+#include "karabo/data/schema/SimpleElement.hh"
+#include "karabo/data/types/StringTools.hh"
 
 
 using namespace std::chrono;
 using namespace std::literals::chrono_literals;
-using namespace karabo::util;
+using namespace karabo::data;
 using namespace std;
 
 
@@ -41,7 +41,7 @@ namespace karabo {
 
         // Static initialization of LogStreamRegistry
         std::shared_ptr<Logger> Logger::m_instance = nullptr;
-        karabo::util::Hash Logger::m_config = karabo::util::Hash();
+        karabo::data::Hash Logger::m_config = karabo::data::Hash();
         std::shared_ptr<spdlog::logger> Logger::m_audit = nullptr;
         std::shared_ptr<spdlog::sinks::ringbuffer_sink_mt> Logger::m_ring = nullptr;
         int Logger::m_sinks = 0;
@@ -280,7 +280,7 @@ namespace karabo {
         }
 
 
-        void Logger::configure(const karabo::util::Hash& config) {
+        void Logger::configure(const karabo::data::Hash& config) {
             bool startFlushThread = false;
             if (!Logger::m_instance) {
                 // 'spdlog' default settings provides default_logger with console sink
@@ -550,7 +550,7 @@ namespace karabo {
             return "OFF";
         }
 
-        std::vector<karabo::util::Hash> Logger::getCachedContent(size_t lim) {
+        std::vector<karabo::data::Hash> Logger::getCachedContent(size_t lim) {
             std::vector<Hash> ret;
             if (!Logger::m_ring) return ret;
             std::vector<std::string> lines = Logger::m_ring->last_formatted(lim);

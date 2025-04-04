@@ -27,8 +27,8 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 
-#include <karabo/util/Hash.hh>
-#include <karabo/util/Schema.hh>
+#include "karabo/data/types/Hash.hh"
+#include "karabo/data/types/Schema.hh"
 
 class FileInputOutput_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(FileInputOutput_Test);
@@ -54,11 +54,11 @@ class FileInputOutput_Test : public CPPUNIT_NS::TestFixture {
     void tearDown();
 
    private:
-    karabo::util::Schema m_schema;
-    karabo::util::Hash m_rootedHash;
-    karabo::util::Hash m_bigHash;
-    karabo::util::Hash m_unrootedHash;
-    karabo::util::Hash m_withSchemaHash;
+    karabo::data::Schema m_schema;
+    karabo::data::Hash m_rootedHash;
+    karabo::data::Hash m_bigHash;
+    karabo::data::Hash m_unrootedHash;
+    karabo::data::Hash m_withSchemaHash;
     bool m_canCleanUp;
 
     void writeTextFile();

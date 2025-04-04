@@ -33,10 +33,10 @@
 #include <karabo/net/AmqpHashClient.hh>
 #include <karabo/net/Broker.hh>
 #include <karabo/net/EventLoop.hh>
-#include <karabo/util/Epochstamp.hh>
-#include <karabo/util/Hash.hh>
+#include <karabo/data/time/Epochstamp.hh>
+#include <karabo/data/types/Hash.hh>
 #include <karabo/util/MetaTools.hh>
-#include <karabo/util/Schema.hh>
+#include <karabo/data/types/Schema.hh>
 #include <map>
 #include <memory>
 #include <unordered_set>
@@ -62,7 +62,7 @@ class BrokerStatistics : public std::enable_shared_from_this<BrokerStatistics> {
     /// Constructor with length of interval to use for averaging.
 
 
-    BrokerStatistics(util::TimeValue intervalSec, const std::vector<std::string>& receiverIds,
+    BrokerStatistics(data::TimeValue intervalSec, const std::vector<std::string>& receiverIds,
                      const std::vector<std::string>& senderIds)
         : m_interval(intervalSec, 0ll),
           m_receivers(receiverIds.begin(), receiverIds.end()),
@@ -72,12 +72,12 @@ class BrokerStatistics : public std::enable_shared_from_this<BrokerStatistics> {
     // virtual ~BrokerStatistics() {} // no need for virtual...
 
     /// Register a message, i.e. increase statistics and possibly print.
-    void registerMessage(const util::Hash::Pointer& header, const util::Hash::Pointer& body);
+    void registerMessage(const data::Hash::Pointer& header, const data::Hash::Pointer& body);
 
    private:
-    void registerPerSignal(const util::Hash::Pointer& header, size_t bodySize);
+    void registerPerSignal(const data::Hash::Pointer& header, size_t bodySize);
 
-    void registerPerSlot(const util::Hash::Pointer& header, size_t bodySize);
+    void registerPerSlot(const data::Hash::Pointer& header, size_t bodySize);
 
     /**
      * Helper checking whether slot is currently among receivers - empty receivers means everything is received
@@ -90,14 +90,14 @@ class BrokerStatistics : public std::enable_shared_from_this<BrokerStatistics> {
 
     void registerLogMessage(size_t bodySize);
 
-    void printStatistics(const util::Epochstamp& timeStamp, float elapsedSeconds) const;
+    void printStatistics(const data::Epochstamp& timeStamp, float elapsedSeconds) const;
 
     /// The keys of StatsMap must either support
     /// ostream& operator<<(ostream&, const KeyType&),
     /// preferably with a width of 59 characters or there must be a specialisation
     /// of BrokerStatistics::printId for IdType=KeyType.
     template <typename StatsMap>
-    Stats printStatistics(const StatsMap& statsMap, const util::Epochstamp& timeStamp, float elapsedSeconds) const;
+    Stats printStatistics(const StatsMap& statsMap, const data::Epochstamp& timeStamp, float elapsedSeconds) const;
 
     /// Helper of printStatistics.
     template <class IdType>
@@ -107,10 +107,10 @@ class BrokerStatistics : public std::enable_shared_from_this<BrokerStatistics> {
     template <class IdType>
     void printId(std::ostream& out, const IdType& id) const;
 
-    const util::TimeDuration m_interval;
+    const data::TimeDuration m_interval;
     const std::unordered_set<std::string> m_receivers;
     const std::unordered_set<std::string> m_senders;
-    util::Epochstamp m_start;
+    data::Epochstamp m_start;
 
     /// mapping SignalId to Stats
     SignalStatsMap m_signalStats;
@@ -158,7 +158,7 @@ void BrokerStatistics::printId(std::ostream& out, const SlotId& id) const {
 ////////////////////////////////////////////////////////////////////////////
 
 
-void BrokerStatistics::registerMessage(const util::Hash::Pointer& header, const util::Hash::Pointer& body) {
+void BrokerStatistics::registerMessage(const data::Hash::Pointer& header, const data::Hash::Pointer& body) {
     try {
         // In the very first call we reset the start time.
         // Otherwise (if the constructor initialises m_start with 'now') starting this
@@ -168,7 +168,7 @@ void BrokerStatistics::registerMessage(const util::Hash::Pointer& header, const 
 
         // Since we told the consumer to skip serialisation, there is just the raw data:
         const size_t bodySize = body->get<std::vector<char>>("raw").size();
-        boost::optional<util::Hash::Node&> targetNode = header->find("target");
+        boost::optional<data::Hash::Node&> targetNode = header->find("target");
         if (targetNode && targetNode->is<std::string>() && targetNode->getValue<std::string>() == "log") {
             this->registerLogMessage(bodySize);
         } else {
@@ -180,12 +180,12 @@ void BrokerStatistics::registerMessage(const util::Hash::Pointer& header, const 
         // Now it might be time to print and reset.
         // Since it is done inside registerMessage, one does not get any printout if
         // the watched topic is silent :-(. But then we do not need monitoring anyway.
-        const util::Epochstamp now;
-        const util::TimeDuration diff = now.elapsed(m_start);
+        const data::Epochstamp now;
+        const data::TimeDuration diff = now.elapsed(m_start);
         if (diff >= m_interval) {
             // Calculating in single float precision should be enough...
             const float elapsedSeconds =
-                  static_cast<float>(diff.getTotalSeconds()) + diff.getFractions(util::MICROSEC) / 1.e6f;
+                  static_cast<float>(diff.getTotalSeconds()) + diff.getFractions(data::MICROSEC) / 1.e6f;
             this->printStatistics(now, elapsedSeconds);
 
             // Reset:
@@ -201,7 +201,7 @@ void BrokerStatistics::registerMessage(const util::Hash::Pointer& header, const 
 ////////////////////////////////////////////////////////////////////////////
 
 
-void BrokerStatistics::registerPerSignal(const util::Hash::Pointer& header, size_t bodySize) {
+void BrokerStatistics::registerPerSignal(const data::Hash::Pointer& header, size_t bodySize) {
     // Get who sent the message:
     const std::string& signalId = header->get<std::string>("signalInstanceId");
     // If special senders requested (i.e. m_senders non-empty), go on only for those
@@ -220,12 +220,12 @@ void BrokerStatistics::registerPerSignal(const util::Hash::Pointer& header, size
 ////////////////////////////////////////////////////////////////////////////
 
 
-void BrokerStatistics::registerPerSlot(const util::Hash::Pointer& header, size_t bodySize) {
+void BrokerStatistics::registerPerSlot(const data::Hash::Pointer& header, size_t bodySize) {
     // Get who receives the message, e.g.:
     // "slotFunctions": |DataLogger-Cam7_Proc:slotChanged||Karabo_GuiServer_0:_slotChanged|
     // Asynchronous replies do not have that key, so we use instead:
     // "slotInstanceIds": |DataLogger-Cam7_Proc||Karabo_GuiServer_0|
-    boost::optional<util::Hash::Node&> funcNode = header->find("slotFunctions");
+    boost::optional<data::Hash::Node&> funcNode = header->find("slotFunctions");
     std::string slots;
     if (funcNode) {
         slots = funcNode->getValue<std::string>();
@@ -284,7 +284,7 @@ void BrokerStatistics::registerLogMessage(size_t bodySize) {
 ////////////////////////////////////////////////////////////////////////////
 
 
-void BrokerStatistics::printStatistics(const util::Epochstamp& timeStamp, float elapsedSeconds) const {
+void BrokerStatistics::printStatistics(const data::Epochstamp& timeStamp, float elapsedSeconds) const {
     std::string when;
     try {
         when = timeStamp.toFormattedString() += " (UTC)";
@@ -314,7 +314,7 @@ void BrokerStatistics::printStatistics(const util::Epochstamp& timeStamp, float 
 
 
 template <typename StatsMap>
-BrokerStatistics::Stats BrokerStatistics::printStatistics(const StatsMap& statsMap, const util::Epochstamp& timeStamp,
+BrokerStatistics::Stats BrokerStatistics::printStatistics(const StatsMap& statsMap, const data::Epochstamp& timeStamp,
                                                           float elapsedSeconds) const {
     // Iterators for looping through map of stats:
     typename StatsMap::const_iterator iter = statsMap.begin();
@@ -374,7 +374,7 @@ std::pair<std::vector<std::string>, std::vector<std::string>> instancesOfServers
 
     if (!serverIn.empty() || !serverOut.empty()) {
         if (sleepSeconds > 10) { // If waiting is long, give a hint when it started
-            std::cout << "\n" << karabo::util::Timestamp().toFormattedString() << " (UTC):";
+            std::cout << "\n" << karabo::data::Timestamp().toFormattedString() << " (UTC):";
         }
         std::cout << "\nGathering topology to identify devices of servers. . " << std::flush;
         // Instead of the gymnastics below, we could add a slot to the server to query it for all their devices...
@@ -402,7 +402,7 @@ std::pair<std::vector<std::string>, std::vector<std::string>> instancesOfServers
             const std::vector<std::string> devices(client->getDevices(serverIn));
             std::cout << "\nFound " << devices.size() << " devices of receiving server " << serverIn;
             if (debug) {
-                std::cout << ": " << util::toString(devices);
+                std::cout << ": " << data::toString(devices);
             } else {
                 std::cout << ".";
             }
@@ -415,7 +415,7 @@ std::pair<std::vector<std::string>, std::vector<std::string>> instancesOfServers
             const std::vector<std::string> devices(client->getDevices(serverOut));
             std::cout << "\nFound " << devices.size() << " devices of sending server " << serverOut;
             if (debug) {
-                std::cout << ": " << util::toString(devices) << std::endl;
+                std::cout << ": " << data::toString(devices) << std::endl;
             } else {
                 std::cout << ".";
             }
@@ -465,23 +465,23 @@ void printHelp(const char* name) {
 
 void startAmqpMonitor(const std::vector<std::string>& brokers, const std::string& domain,
                       const std::vector<std::string>& receivers, std::vector<std::string>& senders,
-                      const util::TimeValue& interval) {
+                      const data::TimeValue& interval) {
     net::AmqpConnection::Pointer connection(std::make_shared<net::AmqpConnection>(brokers));
 
     // std::shared_ptr<BrokerStatistics> stats(std::make_shared<BrokerStatistics>(interval, receivers, senders));
-    // auto binSerializer = io::BinarySerializer<util::Hash>::create("Bin");
+    // auto binSerializer = io::BinarySerializer<data::Hash>::create("Bin");
 
     auto readHandler = [stats{std::make_shared<BrokerStatistics>(interval, receivers, senders)},
-                        binSerializer{io::BinarySerializer<util::Hash>::create("Bin")}](
-                             const util::Hash::Pointer& header, const util::Hash::Pointer& body) {
+                        binSerializer{io::BinarySerializer<data::Hash>::create("Bin")}](
+                             const data::Hash::Pointer& header, const data::Hash::Pointer& body) {
         // `BrokerStatistics' expects the message formatted as a Hash: with 'header' as Hash and 'body' as Hash with the
         // single key 'raw' as vector<char> which is the serialized 'body' value.
         // If the incoming 'body' does not contain a proper 'raw' key, serialize the body part.
-        util::Hash::Pointer finalBody;
+        data::Hash::Pointer finalBody;
         if (body->has("raw") && body->is<std::vector<char>>("raw")) {
             finalBody = body;
         } else {
-            finalBody = std::make_shared<util::Hash>();
+            finalBody = std::make_shared<data::Hash>();
             std::vector<char>& raw = finalBody->bindReference<std::vector<char>>("raw");
             binSerializer->save(body, raw); // body -> raw
         }
@@ -515,10 +515,10 @@ void startAmqpMonitor(const std::vector<std::string>& brokers, const std::string
     std::cout << "\nStart monitoring signal and slot rates of \n   domain        '" << domain << "'\n   on broker     '"
               << connection->getCurrentUrl() << "',\n   ";
     if (!receivers.empty()) {
-        std::cout << "messages to   '" << util::toString(receivers) << "',\n   ";
+        std::cout << "messages to   '" << data::toString(receivers) << "',\n   ";
     }
     if (!senders.empty()) {
-        std::cout << "messages from '" << util::toString(senders) << "',\n   ";
+        std::cout << "messages from '" << data::toString(senders) << "',\n   ";
     }
     std::cout << "interval is    " << interval << " s." << std::endl;
 
@@ -583,7 +583,7 @@ int main(int argc, const char** argv) {
     net::EventLoop::addThread(2);
 
     // Setup option defaults
-    karabo::util::Hash options("period", static_cast<util::TimeValue>(5ull), "--receivers", "", "--senders", "",
+    karabo::data::Hash options("period", static_cast<data::TimeValue>(5ull), "--receivers", "", "--senders", "",
                                "--receiversServer", "", "--sendersServer", "", "--discoveryWait", "0");
     for (int i = 1; i < argc; i += 2) {
         const std::string argv_i(argv[i]);
@@ -602,25 +602,25 @@ int main(int argc, const char** argv) {
         }
     }
     // fromString<bool>(..) understands y, yes, Yes, true, True, 1, n, no, No, false, False, 0 and maybe more...
-    debug = (options.has("--debug") ? util::fromString<bool>(options.get<std::string>("--debug")) : false);
+    debug = (options.has("--debug") ? data::fromString<bool>(options.get<std::string>("--debug")) : false);
 
     const std::string topic(karabo::net::Broker::brokerDomainFromEnv());
-    const util::TimeValue interval = options.get<util::TimeValue>("period");
+    const data::TimeValue interval = options.get<data::TimeValue>("period");
 
     // Unpack configured senders and receivers.
     std::vector<std::string> receivers(
-          karabo::util::fromString<std::string, std::vector>(options.get<std::string>("--receivers")));
+          karabo::data::fromString<std::string, std::vector>(options.get<std::string>("--receivers")));
     std::vector<std::string> senders(
-          karabo::util::fromString<std::string, std::vector>(options.get<std::string>("--senders")));
+          karabo::data::fromString<std::string, std::vector>(options.get<std::string>("--senders")));
     // If full servers are requested, unpack and insert to senders and receivers as well.
     const auto recAndSendFromServers =
           instancesOfServers(options.get<std::string>("--receiversServer"), options.get<std::string>("--sendersServer"),
-                             util::fromString<unsigned int>(options.get<std::string>("--discoveryWait")), debug);
+                             data::fromString<unsigned int>(options.get<std::string>("--discoveryWait")), debug);
     receivers.insert(receivers.end(), recAndSendFromServers.first.begin(), recAndSendFromServers.first.end());
     senders.insert(senders.end(), recAndSendFromServers.second.begin(), recAndSendFromServers.second.end());
 
     // Start Logger, but suppress INFO and DEBUG
-    log::Logger::configure(util::Hash("priority", "WARN"));
+    log::Logger::configure(data::Hash("priority", "WARN"));
     log::Logger::useConsole();
 
     const std::vector<std::string> brokers(net::Broker::brokersFromEnv());

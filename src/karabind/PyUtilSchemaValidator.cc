@@ -20,15 +20,14 @@
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
-#include <karabo/util/Validator.hh>
-
 #include "PyTypes.hh"
 #include "PyUtilSchemaElement.hh"
 #include "Wrapper.hh"
+#include "karabo/data/schema/Validator.hh"
 
 
 namespace py = pybind11;
-using namespace karabo::util;
+using namespace karabo::data;
 using namespace std;
 using namespace karabind;
 
@@ -55,8 +54,8 @@ void exportPyUtilSchemaValidator(py::module_& m) {
                 [](Validator& self, const Schema& schema, const Hash& configuration, const py::object& stamp) {
                     Hash::Pointer validated = Hash::Pointer(new Hash);
                     Timestamp tstamp;
-                    if (!stamp.is_none() && py::isinstance<karabo::util::Timestamp>(stamp)) {
-                        tstamp = stamp.cast<karabo::util::Timestamp>();
+                    if (!stamp.is_none() && py::isinstance<karabo::data::Timestamp>(stamp)) {
+                        tstamp = stamp.cast<karabo::data::Timestamp>();
                     }
 
                     pair<bool, string> result = self.validate(schema, configuration, *validated, tstamp);

@@ -27,8 +27,8 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 
-#include <karabo/util/ClassInfo.hh>
-#include <karabo/util/Schema.hh>
+#include "karabo/data/types/ClassInfo.hh"
+#include "karabo/data/types/Schema.hh"
 
 // Forward
 class Aggregated;
@@ -37,10 +37,10 @@ class Base {
    public:
     KARABO_CLASSINFO(Base, "Base", "");
 
-    static void expectedParameters(karabo::util::Schema& s);
+    static void expectedParameters(karabo::data::Schema& s);
 
-    Base(const karabo::util::Hash& hash);
-    Base(const karabo::util::Hash& hash, int extra);
+    Base(const karabo::data::Hash& hash);
+    Base(const karabo::data::Hash& hash, int extra);
 
     virtual ~Base();
 
@@ -62,9 +62,9 @@ class Aggregated {
    public:
     KARABO_CLASSINFO(Aggregated, "Aggregated", "");
 
-    static void expectedParameters(karabo::util::Schema& s);
+    static void expectedParameters(karabo::data::Schema& s);
 
-    Aggregated(const karabo::util::Hash& hash);
+    Aggregated(const karabo::data::Hash& hash);
 
     Aggregated(const int answer);
 

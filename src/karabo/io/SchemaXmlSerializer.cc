@@ -25,20 +25,19 @@
 
 #include "SchemaXmlSerializer.hh"
 
-#include <karabo/util/Configurator.hh>
-
 #include "HashXmlSerializer.hh"
+#include "karabo/data/schema/Configurator.hh"
 
-using namespace karabo::util;
+using namespace karabo::data;
 using namespace std;
 
-KARABO_EXPLICIT_TEMPLATE(karabo::io::TextSerializer<karabo::util::Schema>)
-KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::TextSerializer<karabo::util::Schema>, karabo::io::SchemaXmlSerializer)
+KARABO_EXPLICIT_TEMPLATE(karabo::io::TextSerializer<karabo::data::Schema>)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::TextSerializer<karabo::data::Schema>, karabo::io::SchemaXmlSerializer)
 
 namespace karabo {
     namespace io {
 
-        void SchemaXmlSerializer::expectedParameters(karabo::util::Schema& expected) {
+        void SchemaXmlSerializer::expectedParameters(karabo::data::Schema& expected) {
             HashXmlSerializer::expectedParameters(expected);
         }
 

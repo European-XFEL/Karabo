@@ -25,9 +25,8 @@
 #ifndef SCHEMABINARYSERIALIZER_HH
 #define SCHEMABINARYSERIALIZER_HH
 
-#include <karabo/util/Schema.hh>
-
 #include "BinarySerializer.hh"
+#include "karabo/data/types/Schema.hh"
 
 namespace karabo {
 
@@ -36,38 +35,38 @@ namespace karabo {
         /**
          * @class SchemaBinarySerializer
          * @brief The SchemaBinarySerializer provides an implementation of BinarySerializer
-         *        for the karabo::util::Schema
+         *        for the karabo::data::Schema
          */
-        class SchemaBinarySerializer : public BinarySerializer<karabo::util::Schema> {
-            BinarySerializer<karabo::util::Hash>::Pointer m_serializer;
+        class SchemaBinarySerializer : public BinarySerializer<karabo::data::Schema> {
+            BinarySerializer<karabo::data::Hash>::Pointer m_serializer;
 
            public:
             KARABO_CLASSINFO(SchemaBinarySerializer, "Bin", "1.0")
 
-            SchemaBinarySerializer(const karabo::util::Hash& hash);
+            SchemaBinarySerializer(const karabo::data::Hash& hash);
             virtual ~SchemaBinarySerializer();
 
-            static void expectedParameters(karabo::util::Schema& expected);
+            static void expectedParameters(karabo::data::Schema& expected);
 
             /**
              * Save a Schema by appending it to a binary archive
              * @param object to save
              * @param archive to append to - no clear() called
              */
-            void save(const karabo::util::Schema& object, std::vector<char>& archive);
+            void save(const karabo::data::Schema& object, std::vector<char>& archive);
 
             /**
              * Save a Schema by appending it to a binary archive
              * @param object to save
              * @param archive to append to - no clear() called
              */
-            void save2(const karabo::util::Schema& object, std::vector<char>& archive);
+            void save2(const karabo::data::Schema& object, std::vector<char>& archive);
 
-            size_t load(karabo::util::Schema& object, const char* archive, const size_t nBytes);
+            size_t load(karabo::data::Schema& object, const char* archive, const size_t nBytes);
         };
     } // namespace io
 } // namespace karabo
 
-KARABO_REGISTER_CONFIGURATION_BASE_CLASS(karabo::io::BinarySerializer<karabo::util::Schema>)
+KARABO_REGISTER_CONFIGURATION_BASE_CLASS(karabo::io::BinarySerializer<karabo::data::Schema>)
 
 #endif /* SCHEMABINARYSERIALIZER_HH */

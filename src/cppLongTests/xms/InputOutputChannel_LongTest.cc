@@ -27,16 +27,16 @@
 #include <chrono>
 #include <future>
 
+#include "karabo/data/schema/Configurator.hh"
+#include "karabo/data/types/Hash.hh"
 #include "karabo/net/EventLoop.hh"
-#include "karabo/util/Configurator.hh"
-#include "karabo/util/Hash.hh"
 #include "karabo/xms/InputChannel.hh"
 #include "karabo/xms/OutputChannel.hh"
 
 using namespace karabo;
 using namespace std::chrono;
-using util::Configurator;
-using util::Hash;
+using data::Configurator;
+using data::Hash;
 using xms::InputChannel;
 using xms::OutputChannel;
 
@@ -259,14 +259,14 @@ void InputOutputChannel_LongTest::testDisconnectWhileSending_impl(const std::str
                 break;
             }
             if (trials < 0) {
-                disreconnectFailure = "Failed to reconnect within 2 s -- " + karabo::util::toString(disconCounter);
+                disreconnectFailure = "Failed to reconnect within 2 s -- " + karabo::data::toString(disconCounter);
                 doGoOn = false;
                 break;
             }
             const karabo::net::ErrorCode ec = connectFuture.get(); // Can get only once...
             if (ec != karabo::net::ErrorCode()) {
                 disreconnectFailure = "Failed reconnection: " + (ec.message() += " -- ") +=
-                      karabo::util::toString(disconCounter);
+                      karabo::data::toString(disconCounter);
                 doGoOn = false;
                 break;
             }

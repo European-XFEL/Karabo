@@ -46,8 +46,8 @@ namespace karabo {
 
         UINT64_ELEMENT(expected)
               .key("period")
-              .unit(karabo::util::Unit::SECOND)
-              .metricPrefix(karabo::util::MetricPrefix::MICRO)
+              .unit(karabo::data::Unit::SECOND)
+              .metricPrefix(karabo::data::MetricPrefix::MICRO)
               .assignmentOptional()
               .defaultValue(100000ull)
               .reconfigurable()
@@ -84,7 +84,7 @@ namespace karabo {
     }
 
 
-    SimulatedTimeServerDevice::SimulatedTimeServerDevice(const karabo::util::Hash& config)
+    SimulatedTimeServerDevice::SimulatedTimeServerDevice(const karabo::data::Hash& config)
         : Device(config),
           m_id(config.get<unsigned long long>("initialId")),
           m_emitCount(0ull),
@@ -115,7 +115,7 @@ namespace karabo {
         if (e) return;
 
         const unsigned long long period = get<unsigned long long>("period");
-        const karabo::util::Epochstamp now;
+        const karabo::data::Epochstamp now;
 
         if (m_tickCountdown == 0) {
             KARABO_LOG_FRAMEWORK_DEBUG << "ticktock emits: " << m_id << " " << m_tickCountdown << " at "

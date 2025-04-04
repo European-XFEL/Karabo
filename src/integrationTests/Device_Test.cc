@@ -25,22 +25,22 @@
 #include <chrono>
 #include <karabo/core/Device.hh>
 #include <karabo/net/EventLoop.hh>
-#include <karabo/util/Epochstamp.hh>
-#include <karabo/util/Exception.hh>
-#include <karabo/util/OverwriteElement.hh>
-#include <karabo/util/Schema.hh>
-#include <karabo/util/SimpleElement.hh>
-#include <karabo/util/State.hh>
-#include <karabo/util/StringTools.hh>
-#include <karabo/util/TableElement.hh>
-#include <karabo/util/TimeDuration.hh>
-#include <karabo/util/Timestamp.hh>
-#include <karabo/util/VectorElement.hh>
 #include <karabo/xms/InputChannel.hh>
 #include <karabo/xms/OutputChannel.hh>
 #include <karabo/xms/SignalSlotable.hh>
 
 #include "CppUnitMacroExtension.hh"
+#include "karabo/data/schema/OverwriteElement.hh"
+#include "karabo/data/schema/SimpleElement.hh"
+#include "karabo/data/schema/TableElement.hh"
+#include "karabo/data/schema/VectorElement.hh"
+#include "karabo/data/time/Epochstamp.hh"
+#include "karabo/data/time/TimeDuration.hh"
+#include "karabo/data/time/Timestamp.hh"
+#include "karabo/data/types/Exception.hh"
+#include "karabo/data/types/Schema.hh"
+#include "karabo/data/types/State.hh"
+#include "karabo/data/types/StringTools.hh"
 
 
 #define KRB_TEST_MAX_TIMEOUT \
@@ -49,21 +49,21 @@
 
 using karabo::core::DeviceClient;
 using karabo::core::DeviceServer;
+using karabo::data::DOUBLE_ELEMENT;
+using karabo::data::Epochstamp;
+using karabo::data::Hash;
+using karabo::data::INT32_ELEMENT;
+using karabo::data::NODE_ELEMENT;
+using karabo::data::OVERWRITE_ELEMENT;
+using karabo::data::Schema;
+using karabo::data::State;
+using karabo::data::STRING_ELEMENT;
+using karabo::data::TABLE_ELEMENT;
+using karabo::data::Timestamp;
+using karabo::data::UINT32_ELEMENT;
+using karabo::data::VECTOR_FLOAT_ELEMENT;
+using karabo::data::VECTOR_STRING_ELEMENT;
 using karabo::net::EventLoop;
-using karabo::util::DOUBLE_ELEMENT;
-using karabo::util::Epochstamp;
-using karabo::util::Hash;
-using karabo::util::INT32_ELEMENT;
-using karabo::util::NODE_ELEMENT;
-using karabo::util::OVERWRITE_ELEMENT;
-using karabo::util::Schema;
-using karabo::util::State;
-using karabo::util::STRING_ELEMENT;
-using karabo::util::TABLE_ELEMENT;
-using karabo::util::Timestamp;
-using karabo::util::UINT32_ELEMENT;
-using karabo::util::VECTOR_FLOAT_ELEMENT;
-using karabo::util::VECTOR_STRING_ELEMENT;
 using karabo::xms::INPUT_CHANNEL;
 using karabo::xms::OUTPUT_CHANNEL;
 using karabo::xms::SignalSlotable;
@@ -79,7 +79,7 @@ class TestDevice : public karabo::core::Device {
     static const int LIMIT_HIGH = 1000.0;
 
 
-    static void expectedParameters(karabo::util::Schema& expected) {
+    static void expectedParameters(karabo::data::Schema& expected) {
         OVERWRITE_ELEMENT(expected).key("state").setNewOptions(State::UNKNOWN, State::NORMAL, State::ERROR).commit();
 
         Schema rowSchema;
@@ -166,7 +166,7 @@ class TestDevice : public karabo::core::Device {
         NODE_ELEMENT(dataSchema)
               .key("data")
               .displayedName("Data")
-              .setDaqDataType(karabo::util::DaqDataType::TRAIN)
+              .setDaqDataType(karabo::data::DaqDataType::TRAIN)
               .commit();
 
         DOUBLE_ELEMENT(dataSchema).key("data.untagged").alias("UNTAGGED").displayedName("Untagged").readOnly().commit();
@@ -189,16 +189,16 @@ class TestDevice : public karabo::core::Device {
     }
 
 
-    TestDevice(const karabo::util::Hash& input) : karabo::core::Device(input) {
+    TestDevice(const karabo::data::Hash& input) : karabo::core::Device(input) {
         // Bind to a slot what now is called from deviceServer:
         KARABO_SLOT(slotTimeTick, unsigned long long /*id*/, unsigned long long /*sec*/, unsigned long long /*frac*/,
                     unsigned long long /*period*/)
 
         KARABO_SLOT(slotIdOfEpochstamp, unsigned long long /*sec*/, unsigned long long /*frac*/)
 
-        KARABO_SLOT(slotAppendSchema, const karabo::util::Schema);
+        KARABO_SLOT(slotAppendSchema, const karabo::data::Schema);
 
-        KARABO_SLOT(slotUpdateSchema, const karabo::util::Schema);
+        KARABO_SLOT(slotUpdateSchema, const karabo::data::Schema);
 
         KARABO_SLOT(slotSet, Hash);
 
@@ -315,7 +315,7 @@ class TestDevice : public karabo::core::Device {
         }
     }
 
-    void onData(const karabo::util::Hash& data, const karabo::xms::InputChannel::MetaData& meta) {
+    void onData(const karabo::data::Hash& data, const karabo::xms::InputChannel::MetaData& meta) {
         int received = -1;
         if (data.has("int")) {
             received = data.get<int>("int");
@@ -344,7 +344,7 @@ class TestDeviceBadInit : public karabo::core::Device {
     KARABO_CLASSINFO(TestDeviceBadInit, "TestDeviceBadInit", "2.9")
 
 
-    static void expectedParameters(karabo::util::Schema& expected) {
+    static void expectedParameters(karabo::data::Schema& expected) {
         OVERWRITE_ELEMENT(expected)
               .key("state")
               .setNewOptions(State::UNKNOWN, State::INIT, State::NORMAL)
@@ -361,7 +361,7 @@ class TestDeviceBadInit : public karabo::core::Device {
     }
 
 
-    TestDeviceBadInit(const karabo::util::Hash& input) : karabo::core::Device(input) {
+    TestDeviceBadInit(const karabo::data::Hash& input) : karabo::core::Device(input) {
         KARABO_INITIAL_FUNCTION(initialize);
     }
 
@@ -464,7 +464,7 @@ void Device_Test::testInstanceInfoServer() {
 
     auto sigSlotA = m_deviceServer;
     const int timeOutInMs = 250;
-    karabo::util::Hash h;
+    karabo::data::Hash h;
 
     CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("testServerDevice", "slotPing", "testServerDevice", 1, true)
                                   .timeout(timeOutInMs)
@@ -785,7 +785,7 @@ void Device_Test::testSchemaInjection() {
     CPPUNIT_ASSERT(freq == 0);
     devFullSchema = m_deviceClient->getDeviceSchema("TestDevice");
     Schema devStaticSchema = m_deviceClient->getClassSchema("testServerDevice", "TestDevice");
-    CPPUNIT_ASSERT(karabo::util::similar(devFullSchema, devStaticSchema));
+    CPPUNIT_ASSERT(karabo::data::similar(devFullSchema, devStaticSchema));
 
     // Checks that appending several times in a row, quickly, sets all values.
     // ----------
@@ -976,7 +976,7 @@ void Device_Test::testChangeSchemaOutputChannel(const std::string& updateSlot) {
         NODE_ELEMENT(dataSchema)
               .key("data")
               .displayedName("Data")
-              .setDaqDataType(karabo::util::DaqDataType::TRAIN)
+              .setDaqDataType(karabo::data::DaqDataType::TRAIN)
               .commit();
 
         VECTOR_FLOAT_ELEMENT(dataSchema)
@@ -1052,7 +1052,7 @@ void Device_Test::testOutputRecreatesOnSchemaChange(const std::string& updateSlo
     //       reference) cannot be called later - it would likely crash.
     std::mutex connectionChangesMutex;
     std::vector<std::vector<std::string>> connectionChanges;
-    auto changedHandler = [&connectionChanges, &connectionChangesMutex, receiverId](const karabo::util::Hash& h,
+    auto changedHandler = [&connectionChanges, &connectionChangesMutex, receiverId](const karabo::data::Hash& h,
                                                                                     const std::string& id) {
         if (id == receiverId && h.has("input.missingConnections")) {
             std::lock_guard<std::mutex> lock(connectionChangesMutex);
@@ -1060,7 +1060,7 @@ void Device_Test::testOutputRecreatesOnSchemaChange(const std::string& updateSlo
         }
     };
     const std::string slotConnectionChanged("slotConnectionChanged_" + updateSlot);
-    m_deviceServer->registerSlot<karabo::util::Hash, std::string>(changedHandler, slotConnectionChanged);
+    m_deviceServer->registerSlot<karabo::data::Hash, std::string>(changedHandler, slotConnectionChanged);
     const bool connected = m_deviceServer->connect(receiverId, "signalChanged", "", slotConnectionChanged);
     CPPUNIT_ASSERT(connected);
 
@@ -1105,9 +1105,9 @@ void Device_Test::testOutputRecreatesOnSchemaChange(const std::string& updateSlo
               KRB_TEST_MAX_TIMEOUT * 1000);
         {
             std::lock_guard<std::mutex> lock(connectionChangesMutex);
-            CPPUNIT_ASSERT_EQUAL_MESSAGE(karabo::util::toString(connectionChanges), triggerReconnect, changed);
+            CPPUNIT_ASSERT_EQUAL_MESSAGE(karabo::data::toString(connectionChanges), triggerReconnect, changed);
             if (triggerReconnect) {
-                CPPUNIT_ASSERT_EQUAL_MESSAGE(karabo::util::toString(connectionChanges), 2ul, connectionChanges.size());
+                CPPUNIT_ASSERT_EQUAL_MESSAGE(karabo::data::toString(connectionChanges), 2ul, connectionChanges.size());
                 CPPUNIT_ASSERT_EQUAL(std::vector<std::string>({senderId + ":output"}), connectionChanges[0]);
                 CPPUNIT_ASSERT_EQUAL(std::vector<std::string>(), connectionChanges[1]);
             }
@@ -1125,8 +1125,8 @@ void Device_Test::testOutputRecreatesOnSchemaChange(const std::string& updateSlo
                   },
                   KRB_TEST_MAX_TIMEOUT * 2000); // Factor two: reconnection cycle is included!
             std::lock_guard<std::mutex> lock(connectionChangesMutex);
-            CPPUNIT_ASSERT_MESSAGE(karabo::util::toString(connectionChanges), changed);
-            CPPUNIT_ASSERT_EQUAL_MESSAGE(karabo::util::toString(connectionChanges), 4ul, connectionChanges.size());
+            CPPUNIT_ASSERT_MESSAGE(karabo::data::toString(connectionChanges), changed);
+            CPPUNIT_ASSERT_EQUAL_MESSAGE(karabo::data::toString(connectionChanges), 4ul, connectionChanges.size());
             CPPUNIT_ASSERT_EQUAL(std::vector<std::string>({senderId + ":output"}), connectionChanges[2]);
             CPPUNIT_ASSERT_EQUAL(std::vector<std::string>(), connectionChanges[3]);
         }
@@ -1404,7 +1404,7 @@ void Device_Test::testGetconfigReconfig() {
     arg.set("paths", std::vector<std::string>(1, "not_a_property"));
     try {
         m_deviceClient->execute1<Hash, Hash>(deviceId, "slotGetConfigurationSlice", timeoutInMs / 1000, arg);
-    } catch (const karabo::util::RemoteException& e) {
+    } catch (const karabo::data::RemoteException& e) {
         exceptionCaught = true;
         const std::string& det = e.details();
         CPPUNIT_ASSERT_MESSAGE(det, det.find("Exception Type....:  Parameter Exception") != std::string::npos);
@@ -1483,7 +1483,7 @@ void Device_Test::testUpdateState() {
     // ... and finally test the desired timestamps:
     //     * state and valueWithExc get the same as given explicitly to updateState
     //     * countStateToggles gets the one mingled into the 'other' Hash
-    const auto atto = karabo::util::ATTOSEC;
+    const auto atto = karabo::data::ATTOSEC;
     const Hash cfg(m_deviceClient->get(deviceId));
     const Epochstamp stampStateNew(Epochstamp::fromHashAttributes(cfg.getAttributes("state")));
     CPPUNIT_ASSERT_MESSAGE(stampStateNew.toIso8601(atto) += " != " + stampState.toIso8601(atto),
@@ -1506,7 +1506,7 @@ void Device_Test::testSet() {
     // Setting a non-existing value throws
     CPPUNIT_ASSERT_THROW(
           m_deviceServer->request(deviceId, "slotSet", Hash("nonExistParam", 0)).timeout(timeoutInMs).receive(),
-          karabo::util::RemoteException);
+          karabo::data::RemoteException);
 
     // Setting a reconfigurable property outside its validation limits throws
     // (and even other valid changes in the same set(..) are ignored).
@@ -1521,7 +1521,7 @@ void Device_Test::testSet() {
                                               "valueOther", 2000))    // would be OK
                                .timeout(timeoutInMs)
                                .receive(),
-                         karabo::util::RemoteException);
+                         karabo::data::RemoteException);
     Hash hash2;
     CPPUNIT_ASSERT_NO_THROW(
           m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(hash2));
@@ -1609,7 +1609,7 @@ void Device_Test::testSetVectorUpdate() {
     CPPUNIT_ASSERT_THROW(m_deviceServer->request(deviceId, "slotUpdateVecString", std::vector<std::string>(), 0)
                                .timeout(timeoutInMs)
                                .receive(),
-                         karabo::util::RemoteException);
+                         karabo::data::RemoteException);
 
     std::clog << "OK." << std::endl;
 }
@@ -1625,7 +1625,7 @@ void Device_Test::testSignal() {
     std::function<void()> slot = [&signalInstanceId, weakServer]() {
         DeviceServer::Pointer ptr(weakServer.lock());
         if (ptr) {
-            const karabo::util::Hash::Pointer header(ptr->getSenderInfo("slotForSignalA")->getHeaderOfSender());
+            const karabo::data::Hash::Pointer header(ptr->getSenderInfo("slotForSignalA")->getHeaderOfSender());
             signalInstanceId = header->get<std::string>("signalInstanceId");
         } else {
             std::clog << "DeviceServer pointer invalid!" << std::endl; // Should be impossible
@@ -1699,12 +1699,12 @@ void Device_Test::testBadInit() {
     //
     devId.back() = '2'; // let's take a new id to avoid delays until the previous device is down
     std::atomic<bool> instanceNewCalled(false);
-    m_deviceClient->registerInstanceNewMonitor([&instanceNewCalled, devId](const karabo::util::Hash& topologyEntry) {
+    m_deviceClient->registerInstanceNewMonitor([&instanceNewCalled, devId](const karabo::data::Hash& topologyEntry) {
         if (topologyEntry.has("device." + devId)) instanceNewCalled = true;
     });
     std::atomic<bool> instanceGoneCalled(false);
     m_deviceClient->registerInstanceGoneMonitor(
-          [&instanceGoneCalled, devId](const std::string& instanceId, const karabo::util::Hash& info) {
+          [&instanceGoneCalled, devId](const std::string& instanceId, const karabo::data::Hash& info) {
               if (devId == instanceId) instanceGoneCalled = true;
           });
     requestor = m_deviceServer
@@ -1721,8 +1721,8 @@ void Device_Test::testBadInit() {
           [&instanceNewCalled, &instanceGoneCalled]() { return (instanceNewCalled && instanceGoneCalled); }, 5000);
     CPPUNIT_ASSERT(newAndGone);
     // Reset handlers that use references to local variables
-    m_deviceClient->registerInstanceNewMonitor([](const karabo::util::Hash&) {});
-    m_deviceClient->registerInstanceGoneMonitor([](const std::string&, const karabo::util::Hash&) {});
+    m_deviceClient->registerInstanceNewMonitor([](const karabo::data::Hash&) {});
+    m_deviceClient->registerInstanceGoneMonitor([](const std::string&, const karabo::data::Hash&) {});
 
     //
     // Case 3: A very long lasting initialization method (as case 1), with a try to shutdown while initialization:
@@ -1764,14 +1764,14 @@ void Device_Test::testBadInit() {
               return (std::find(devs.begin(), devs.end(), devId) == devs.end());
           },
           (delayInSec + 2) * 1000); // Longer than the delay in initialize()
-    const karabo::util::TimeDuration duration(initStartedTime.elapsed());
+    const karabo::data::TimeDuration duration(initStartedTime.elapsed());
     // Verify that device gone
-    using karabo::util::toString;
+    using karabo::data::toString;
     CPPUNIT_ASSERT_MESSAGE(toString(devs), waitOk);
 
     // The initialization (that blocked device going down) should have lasted about delayInSec seconds.
     // We allow for some contingency:
-    const karabo::util::TimeDuration testDuration(delayInSec * 3. / 4., 0ull); // implicit conversions happening....
+    const karabo::data::TimeDuration testDuration(delayInSec * 3. / 4., 0ull); // implicit conversions happening....
     std::stringstream sstr;
     sstr << duration << " " << testDuration;
     CPPUNIT_ASSERT_MESSAGE(sstr.str(), duration > testDuration);

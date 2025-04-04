@@ -34,19 +34,19 @@
 #include <mutex>
 #include <string>
 
+#include "karabo/data/time/Epochstamp.hh"
+#include "karabo/data/time/TimeDuration.hh"
+#include "karabo/data/types/Schema.hh"
 #include "karabo/net/UserAuthClient.hh"
-#include "karabo/util/Epochstamp.hh"
-#include "karabo/util/Schema.hh"
-#include "karabo/util/TimeDuration.hh"
 
 namespace karabo::devices {
 
     // The most priviliged access level to be associated with a session right after the login.
-    inline constexpr karabo::util::Schema::AccessLevel MAX_LOGIN_ACCESS_LEVEL =
-          karabo::util::Schema::AccessLevel::ADMIN;
+    inline constexpr karabo::data::Schema::AccessLevel MAX_LOGIN_ACCESS_LEVEL =
+          karabo::data::Schema::AccessLevel::ADMIN;
 
-    inline constexpr karabo::util::Schema::AccessLevel MAX_TEMPORARY_SESSION_ACCESS_LEVEL =
-          karabo::util::Schema::AccessLevel::ADMIN;
+    inline constexpr karabo::data::Schema::AccessLevel MAX_TEMPORARY_SESSION_ACCESS_LEVEL =
+          karabo::data::Schema::AccessLevel::ADMIN;
 
     inline constexpr unsigned int CHECK_TEMPSESSION_EXPIRATION_INTERVAL_SECS = 5U;
 
@@ -57,7 +57,7 @@ namespace karabo::devices {
         std::string temporarySessionToken;
         // Temporary Session duration in seconds
         unsigned int temporarySessionDurationSecs{5 * 60}; // Default for maxTemporarySessionTime of the GUI Server
-        karabo::util::Epochstamp expiresAt{0ul, 0ul};
+        karabo::data::Epochstamp expiresAt{0ul, 0ul};
     };
 
     // Result of an end temporary session triggered by an external request.
@@ -69,12 +69,12 @@ namespace karabo::devices {
 
     struct ExpiredTemporarySessionInfo {
         std::string expiredToken;
-        karabo::util::Epochstamp expirationTime;
+        karabo::data::Epochstamp expirationTime;
     };
 
     struct EminentExpirationInfo {
         std::string aboutToExpireToken;
-        karabo::util::TimeDuration timeForExpiration;
+        karabo::data::TimeDuration timeForExpiration;
     };
 
     using BeginTemporarySessionHandler = std::function<void(const BeginTemporarySessionResult&)>;
@@ -173,12 +173,12 @@ namespace karabo::devices {
         std::string m_topic;
         karabo::net::UserAuthClient m_authClient;
         unsigned int m_temporarySessionDurationSecs;
-        karabo::util::TimeDuration m_temporarySessionEndNoticeSecs;
+        karabo::data::TimeDuration m_temporarySessionEndNoticeSecs;
         EminentExpirationHandler m_eminentExpirationHandler;
         ExpirationHandler m_expirationHandler;
         boost::asio::steady_timer m_checkExpirationsTimer;
         std::atomic<bool> m_expirationTimerWaiting;
-        std::map<std::string /* temporarySessionToken */, karabo::util::Epochstamp /* expiration time */>
+        std::map<std::string /* temporarySessionToken */, karabo::data::Epochstamp /* expiration time */>
               m_tempSessions;
         std::mutex m_tempSessionsMutex;
     };

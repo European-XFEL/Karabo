@@ -24,7 +24,7 @@
 
 #include "TextFileInput.hh"
 
-KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Input<karabo::util::Hash>, karabo::io::TextFileInput<karabo::util::Hash>)
-KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Input<karabo::util::Schema>,
-                                  karabo::io::TextFileInput<karabo::util::Schema>)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Input<karabo::data::Hash>, karabo::io::TextFileInput<karabo::data::Hash>)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Input<karabo::data::Schema>,
+                                  karabo::io::TextFileInput<karabo::data::Schema>)
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Input<std::vector<char> >, karabo::io::TextFileInput<std::vector<char> >)

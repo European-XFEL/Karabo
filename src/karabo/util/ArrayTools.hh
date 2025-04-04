@@ -26,8 +26,11 @@
 
 #include <vector>
 
-#include "Dims.hh"
-#include "Hash.hh"
+#include "karabo/data/types/Dims.hh"
+#include "karabo/data/types/Hash.hh"
+
+using karabo::data::Dims;
+using karabo::data::Hash;
 
 namespace karabo {
     namespace util {
@@ -40,7 +43,7 @@ namespace karabo {
 
         template <class T>
         inline void getPointerFromHash(const Hash& hash, const std::string& path, T*& value, Dims& dims,
-                                       const char separator = util::Hash::k_defaultSep) {
+                                       const char separator = data::Hash::k_defaultSep) {
             const Hash::Node& node = hash.getNode(path, separator);
             value = node.getValue<T*>();
             const std::vector<unsigned long long>& vec = node.getAttribute<std::vector<unsigned long long> >("dims");

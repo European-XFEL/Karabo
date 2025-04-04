@@ -18,10 +18,10 @@
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 
-#include <karabo/util/Timestamp.hh>
+#include "karabo/data/time/Timestamp.hh"
 
 namespace py = pybind11;
-using namespace karabo::util;
+using namespace karabo::data;
 using namespace std;
 
 
@@ -43,10 +43,10 @@ void exportPyUtilTimestamp(py::module_& m) {
     ts.def_static("hashAttributesContainTimeInformation", &Timestamp::hashAttributesContainTimeInformation,
                   py::arg("attributes"));
 
-    ts.def("toIso8601", &Timestamp::toIso8601, py::arg("precision") = karabo::util::MICROSEC,
+    ts.def("toIso8601", &Timestamp::toIso8601, py::arg("precision") = karabo::data::MICROSEC,
            py::arg("extended") = (bool)(false));
 
-    ts.def("toIso8601Ext", &Timestamp::toIso8601Ext, py::arg("precision") = karabo::util::MICROSEC,
+    ts.def("toIso8601Ext", &Timestamp::toIso8601Ext, py::arg("precision") = karabo::data::MICROSEC,
            py::arg("extended") = (bool)(false));
 
     ts.def("toFormattedStringLocale", &Timestamp::toFormattedStringLocale, py::arg("localeName") = "",

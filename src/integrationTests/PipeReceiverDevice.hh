@@ -45,9 +45,9 @@ namespace karabo {
          * Necessary method as part of the factory/configuration system
          * @param expected Will contain a description of expected parameters for this device
          */
-        static void expectedParameters(karabo::util::Schema& expected);
+        static void expectedParameters(karabo::data::Schema& expected);
 
-        PipeReceiverDevice(const karabo::util::Hash& config);
+        PipeReceiverDevice(const karabo::data::Hash& config);
         virtual ~PipeReceiverDevice() {}
 
        private:
@@ -55,7 +55,7 @@ namespace karabo {
 
         void onInput(const karabo::xms::InputChannel::Pointer& input);
 
-        void onData(const karabo::util::Hash& data, const xms::InputChannel::MetaData& metaData);
+        void onData(const karabo::data::Hash& data, const xms::InputChannel::MetaData& metaData);
         void onInputProfile(const xms::InputChannel::Pointer& input);
         void reset();
 
