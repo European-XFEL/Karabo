@@ -1,7 +1,7 @@
 #ifndef KARABO_UTIL_JSONTOHASHPARSER_HH
 #define KARABO_UTIL_JSONTOHASHPARSER_HH
 
-#include <karabo/util/Hash.hh>
+#include "karabo/data/types/Hash.hh"
 
 namespace karabo {
     namespace util {
@@ -27,7 +27,7 @@ namespace karabo {
          * @throws KARABO_PARAMETER_EXCEPTION if the provided JSON string is invalid or cannot
          * be parsed into a Hash object.
          */
-        karabo::util::Hash jsonToHash(const std::string& j);
+        karabo::data::Hash jsonToHash(const std::string& j);
 
         /**
          * @brief Generates an auto-start configuration Hash based on the provided initialization Hash.
@@ -62,7 +62,7 @@ namespace karabo {
          *
          * @return A Hash object representing the auto-start configuration based on the provided initialization Hash.
          */
-        Hash generateAutoStartHash(const Hash& initHash);
+        karabo::data::Hash generateAutoStartHash(const karabo::data::Hash& initHash);
 
     } // namespace util
 } // namespace karabo

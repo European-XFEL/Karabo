@@ -22,7 +22,7 @@
 
 #include <cppunit/TestAssert.h>
 
-#include "karabo/util/Hash.hh"
+#include "karabo/data/types/Hash.hh"
 #include "karabo/util/PackParameters.hh"
 #include "karabo/xms/Slot.hh"
 
@@ -70,12 +70,12 @@ void Slot_Test::testCallSlot() {
     const MySlot::SlotHandler func = slotLambda;
     slot.registerSlotFunction(func);
 
-    karabo::util::Hash h;
-    pack(h, 1, Foo());                     // packing into h under keys "a1" and "a2"
+    karabo::data::Hash h;
+    karabo::util::pack(h, 1, Foo());       // packing into h under keys "a1" and "a2"
     CPPUNIT_ASSERT_EQUAL(1, Foo::nCopies); // was copied into 'h'
     Foo const* const fooAddressInHash = &(h.get<Foo>("a2"));
 
-    karabo::util::Hash header("userId", "me", "signalInstanceId", "senderId");
+    karabo::data::Hash header("userId", "me", "signalInstanceId", "senderId");
     slot.callRegisteredSlotFunctions(header, h);
 
     CPPUNIT_ASSERT_EQUAL(1, Foo::nCopies); // no further copy
@@ -89,7 +89,7 @@ void Slot_Test::testCallSlot() {
     std::function<void(int, Foo)> func2 = slotLambda;
     fooAddressInFunc = nullptr;
     slot2.registerSlotFunction(func2);
-    slot2.callRegisteredSlotFunctions(karabo::util::Hash(), h); // Do not care about header here
+    slot2.callRegisteredSlotFunctions(karabo::data::Hash(), h); // Do not care about header here
 
     CPPUNIT_ASSERT_GREATER(1, Foo::nCopies);              // In fact I see 3, i.e. two extra copies,
     CPPUNIT_ASSERT(fooAddressInHash != fooAddressInFunc); // and copies lead to a new address.
@@ -101,7 +101,7 @@ void Slot_Test::testCallSlot() {
     Foo::nCopies = 0;
     slot3.registerSlotFunction(slotFunc3);
 
-    slot3.callRegisteredSlotFunctions(karabo::util::Hash(), h); // Do not care about header here, neither
+    slot3.callRegisteredSlotFunctions(karabo::data::Hash(), h); // Do not care about header here, neither
 
     CPPUNIT_ASSERT_EQUAL(1, Foo::nCopies); // Now there is one copy
     CPPUNIT_ASSERT(fooAddressInHash != fooAddressInFunc);

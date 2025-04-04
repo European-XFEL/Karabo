@@ -18,10 +18,10 @@
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 
-#include <karabo/util/TimeDuration.hh>
+#include "karabo/data/time/TimeDuration.hh"
 
 namespace py = pybind11;
-using namespace karabo::util;
+using namespace karabo::data;
 using namespace std;
 
 
@@ -79,7 +79,7 @@ void exportPyUtilTimeDuration(py::module_& m) {
 
     t.def("getDays", &TimeDuration::getDays);
 
-    t.def("getFractions", &TimeDuration::getFractions, py::arg("unit") = karabo::util::NANOSEC);
+    t.def("getFractions", &TimeDuration::getFractions, py::arg("unit") = karabo::data::NANOSEC);
 
     t.def("getHours", &TimeDuration::getHours);
 

@@ -24,11 +24,11 @@
 
 #include "Serializable_Test.h"
 
-#include <karabo/util/Hash.hh>
+#include "karabo/data/types/Hash.hh"
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Serializable_Test);
 
-using namespace karabo::util;
+using namespace karabo::data;
 using namespace std;
 
 

@@ -28,8 +28,8 @@
 
 #include <filesystem>
 
-#include "Configurator.hh"
-#include "Schema.hh"
+#include "karabo/data/schema/Configurator.hh"
+#include "karabo/data/types/Schema.hh"
 
 
 /**
@@ -54,9 +54,9 @@ namespace karabo {
 
             static std::string defaultPluginPath();
 
-            static void expectedParameters(karabo::util::Schema& expected);
+            static void expectedParameters(karabo::data::Schema& expected);
 
-            PluginLoader(const karabo::util::Hash& input);
+            PluginLoader(const karabo::data::Hash& input);
 
             virtual ~PluginLoader(){};
 

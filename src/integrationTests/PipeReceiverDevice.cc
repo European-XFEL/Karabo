@@ -26,30 +26,30 @@
 #include <chrono>
 #include <thread>
 
-#include "karabo/util/Hash.hh"
-#include "karabo/util/NDArray.hh"
-#include "karabo/util/Schema.hh"
-#include "karabo/util/SimpleElement.hh"
-#include "karabo/util/StringTools.hh"
-#include "karabo/util/Units.hh"
-#include "karabo/util/VectorElement.hh"
+#include "karabo/data/schema/SimpleElement.hh"
+#include "karabo/data/schema/VectorElement.hh"
+#include "karabo/data/types/Hash.hh"
+#include "karabo/data/types/NDArray.hh"
+#include "karabo/data/types/Schema.hh"
+#include "karabo/data/types/StringTools.hh"
+#include "karabo/data/types/Units.hh"
 #include "karabo/xms/InputChannel.hh"
 
 namespace karabo {
 
-    using util::BOOL_ELEMENT;
-    using util::FLOAT_ELEMENT;
-    using util::INT32_ELEMENT;
-    using util::NDArray;
-    using util::toString;
-    using util::UINT32_ELEMENT;
-    using util::VECTOR_STRING_ELEMENT;
+    using data::BOOL_ELEMENT;
+    using data::FLOAT_ELEMENT;
+    using data::INT32_ELEMENT;
+    using data::NDArray;
+    using data::toString;
+    using data::UINT32_ELEMENT;
+    using data::VECTOR_STRING_ELEMENT;
     using xms::INPUT_CHANNEL;
 
     KARABO_REGISTER_FOR_CONFIGURATION(core::BaseDevice, core::Device, PipeReceiverDevice)
 
-    void PipeReceiverDevice::expectedParameters(util::Schema& expected) {
-        util::Schema data;
+    void PipeReceiverDevice::expectedParameters(data::Schema& expected) {
+        data::Schema data;
         INT32_ELEMENT(data).key("dataId").readOnly().commit();
 
         INPUT_CHANNEL(expected)
@@ -76,8 +76,8 @@ namespace karabo {
               .description("Simulated processing time")
               .assignmentOptional()
               .defaultValue(0)
-              .unit(util::Unit::SECOND)
-              .metricPrefix(util::MetricPrefix::MILLI)
+              .unit(data::Unit::SECOND)
+              .metricPrefix(data::MetricPrefix::MILLI)
               .reconfigurable()
               .commit();
 
@@ -123,7 +123,7 @@ namespace karabo {
     }
 
 
-    PipeReceiverDevice::PipeReceiverDevice(const karabo::util::Hash& config) : Device(config) {
+    PipeReceiverDevice::PipeReceiverDevice(const karabo::data::Hash& config) : Device(config) {
         KARABO_SLOT0(reset);
         KARABO_INITIAL_FUNCTION(initialization)
     }
@@ -144,7 +144,7 @@ namespace karabo {
     void PipeReceiverDevice::onInput(const xms::InputChannel::Pointer& input) {
         set("dataSources", input->getMetaData()[0].getSource());
         std::vector<std::string> sources;
-        util::Hash data;
+        data::Hash data;
         for (size_t i = 0; i < input->size(); ++i) {
             input->read(data, i); // calls Memory:read, which calls data.clear() before filling it
             sources.push_back(input->indexToMetaData(i).getSource());
@@ -154,7 +154,7 @@ namespace karabo {
     }
 
 
-    void PipeReceiverDevice::onData(const util::Hash& data, const xms::InputChannel::MetaData& metaData) {
+    void PipeReceiverDevice::onData(const data::Hash& data, const xms::InputChannel::MetaData& metaData) {
         set("dataSources", std::vector<std::string>(1, metaData.getSource()));
         set("currentDataId", data.get<int>("dataId"));
         const auto& v = data.get<std::vector<long long>>("data");
@@ -181,7 +181,7 @@ namespace karabo {
 
     void PipeReceiverDevice::onInputProfile(const xms::InputChannel::Pointer& input) {
         using namespace std::chrono;
-        util::Hash data;
+        data::Hash data;
 
         auto microseconds_today = []() -> unsigned long long {
             auto now = system_clock::now();
@@ -193,7 +193,7 @@ namespace karabo {
             unsigned long long transferTime = microseconds_today() - data.get<unsigned long long>("inTime");
             m_transferTimes.push_back(transferTime);
             set("nTotalData", get<unsigned int>("nTotalData") + 1);
-            const karabo::util::NDArray& arr = data.get<karabo::util::NDArray>("array");
+            const karabo::data::NDArray& arr = data.get<karabo::data::NDArray>("array");
             KARABO_LOG_INFO << arr.byteSize();
         }
     }
@@ -211,7 +211,7 @@ namespace karabo {
     void PipeReceiverDevice::reset() {
         m_transferTimes.clear();
 
-        set(karabo::util::Hash("nTotalData", 0u, "nTotalDataOnEos", 0u, "averageTransferTime", 0.f));
+        set(karabo::data::Hash("nTotalData", 0u, "nTotalDataOnEos", 0u, "averageTransferTime", 0.f));
     }
 
 } // namespace karabo

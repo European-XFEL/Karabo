@@ -26,7 +26,7 @@
 #include <unordered_map>
 
 #include "DataLogger.hh"
-#include "karabo/util/Epochstamp.hh"
+#include "karabo/data/time/Epochstamp.hh"
 #include "karabo/util/Version.hh"
 
 namespace karabo {
@@ -63,17 +63,17 @@ namespace karabo {
              */
             struct LoggingRecord {
                 std::size_t sizeChars;
-                karabo::util::Epochstamp epoch;
-                LoggingRecord(std::size_t sz, karabo::util::Epochstamp t) : sizeChars(sz), epoch(t) {}
+                karabo::data::Epochstamp epoch;
+                LoggingRecord(std::size_t sz, karabo::data::Epochstamp t) : sizeChars(sz), epoch(t) {}
             };
 
-            InfluxDeviceData(const karabo::util::Hash& input);
+            InfluxDeviceData(const karabo::data::Hash& input);
             virtual ~InfluxDeviceData();
 
-            void handleChanged(const karabo::util::Hash& config, const std::string& user) override;
+            void handleChanged(const karabo::data::Hash& config, const std::string& user) override;
 
             void logValue(std::stringstream& query, const std::string& deviceId, const std::string& path,
-                          const std::string& value, karabo::util::Types::ReferenceType type, bool isFinite);
+                          const std::string& value, karabo::data::Types::ReferenceType type, bool isFinite);
 
             /**
              * Helper to store logging start event
@@ -81,16 +81,16 @@ namespace karabo {
              * @param configuration full device configuration received when logging starts
              * @param sortedPaths full paths of configuration, sorted by increasing timestamp
              */
-            void login(const karabo::util::Hash& configuration, const std::vector<std::string>& sortedPaths);
+            void login(const karabo::data::Hash& configuration, const std::vector<std::string>& sortedPaths);
 
-            void terminateQuery(std::stringstream& query, const karabo::util::Timestamp& stamp,
+            void terminateQuery(std::stringstream& query, const karabo::data::Timestamp& stamp,
                                 std::vector<RejectedData>& rejectedPathReasons);
 
-            void onCheckSchemaInDb(const karabo::util::Timestamp& stamp, const std::string& schDigest,
+            void onCheckSchemaInDb(const karabo::data::Timestamp& stamp, const std::string& schDigest,
                                    const std::shared_ptr<std::vector<char>>& schemaArchive,
                                    const karabo::net::HttpResponse& o);
 
-            void handleSchemaUpdated(const karabo::util::Schema& schema, const karabo::util::Timestamp& stamp) override;
+            void handleSchemaUpdated(const karabo::data::Schema& schema, const karabo::data::Timestamp& stamp) override;
 
             void stopLogging() override;
 
@@ -105,7 +105,7 @@ namespace karabo {
              * @return The updated value of the property logging rate, in bytes/sec, taking the logging of the
              * value into account.
              */
-            unsigned int newPropLogRate(const std::string& propPath, karabo::util::Epochstamp currentStamp,
+            unsigned int newPropLogRate(const std::string& propPath, karabo::data::Epochstamp currentStamp,
                                         std::size_t currentSize);
 
             /**
@@ -155,7 +155,7 @@ namespace karabo {
             karabo::net::InfluxDbClient::Pointer m_dbClientRead;
             karabo::net::InfluxDbClient::Pointer m_dbClientWrite;
 
-            karabo::io::BinarySerializer<karabo::util::Hash>::Pointer m_serializer;
+            karabo::io::BinarySerializer<karabo::data::Hash>::Pointer m_serializer;
 
             int m_maxTimeAdvance;
             size_t m_maxVectorSize;
@@ -172,8 +172,8 @@ namespace karabo {
             // Logging records for the device schema in the current log rating window.
             std::deque<LoggingRecord> m_schemaLogRecs;
 
-            karabo::util::Timestamp m_loggingStartStamp;
-            karabo::util::TimeDuration m_safeSchemaRetentionDuration;
+            karabo::data::Timestamp m_loggingStartStamp;
+            karabo::data::TimeDuration m_safeSchemaRetentionDuration;
         };
 
 
@@ -183,16 +183,16 @@ namespace karabo {
 
             KARABO_CLASSINFO(InfluxDataLogger, "InfluxDataLogger", "karabo-" + karabo::util::Version::getVersion())
 
-            static void expectedParameters(karabo::util::Schema& expected);
+            static void expectedParameters(karabo::data::Schema& expected);
 
-            InfluxDataLogger(const karabo::util::Hash& input);
+            InfluxDataLogger(const karabo::data::Hash& input);
 
             virtual ~InfluxDataLogger();
 
             void preDestruction() override;
 
            protected:
-            DeviceData::Pointer createDeviceData(const karabo::util::Hash& config) override;
+            DeviceData::Pointer createDeviceData(const karabo::data::Hash& config) override;
 
             void initializeLoggerSpecific() override;
 

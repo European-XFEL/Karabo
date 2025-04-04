@@ -89,7 +89,7 @@ void InstanceChangeThrottler_Test::testThrottleInterval() {
     auto interval = secondBurstStartTime - fistBurstEndTime;
     auto intervalMilli = duration_cast<milliseconds>(interval);
 
-    CPPUNIT_ASSERT_MESSAGE("Spacing between throttler cycles, " + karabo::util::toString(intervalMilli.count()) +
+    CPPUNIT_ASSERT_MESSAGE("Spacing between throttler cycles, " + karabo::data::toString(intervalMilli.count()) +
                                  ", much smaller than expected.",
                            intervalMilli.count() > 190);
 }
@@ -134,7 +134,7 @@ void InstanceChangeThrottler_Test::testUpdateOptimization() {
           karabo::core::InstanceChangeThrottler::createThrottler(instChangeHandler, 200u);
 
     // InstanceInfo that will be the payload for the second update.
-    karabo::util::Hash updatedInstInfo = karabo::util::Hash(m_instInfoServer);
+    karabo::data::Hash updatedInstInfo = karabo::data::Hash(m_instInfoServer);
     updatedInstInfo.set<bool>("UpdatedInfo", true);
 
     // Sends a sequence that should be optimized.
@@ -165,7 +165,7 @@ void InstanceChangeThrottler_Test::testNewUpdateOptimization() {
           karabo::core::InstanceChangeThrottler::createThrottler(instChangeHandler, 200u);
 
     // InstanceInfo that will be the payload for the second update.
-    karabo::util::Hash updatedInstInfo = karabo::util::Hash(m_instInfoServer);
+    karabo::data::Hash updatedInstInfo = karabo::data::Hash(m_instInfoServer);
     updatedInstInfo.set<bool>("UpdatedInfo", true);
 
     // Sends a sequence that should be optimized.
@@ -281,7 +281,7 @@ void InstanceChangeThrottler_Test::testUpdateOptimization2Cycles() {
           karabo::core::InstanceChangeThrottler::createThrottler(instChangeHandler, 200u);
 
     // InstanceInfo that will be the payload for the second update.
-    karabo::util::Hash updatedInstInfo = karabo::util::Hash(m_instInfoDevice);
+    karabo::data::Hash updatedInstInfo = karabo::data::Hash(m_instInfoDevice);
     updatedInstInfo.set<bool>("UpdatedInfo", true);
 
     // Sends a first burst composed of a sequence that should not be optimized - but is
@@ -348,7 +348,7 @@ void InstanceChangeThrottler_Test::testMaxChangesPerCycle() {
           karabo::core::InstanceChangeThrottler::createThrottler(instChangeHandler, 200u, 2u);
 
     // InstanceInfo that will be the payload for the update.
-    karabo::util::Hash updatedInstInfo = karabo::util::Hash(m_instInfoDevice);
+    karabo::data::Hash updatedInstInfo = karabo::data::Hash(m_instInfoDevice);
     updatedInstInfo.set<bool>("UpdatedInfo", true);
 
     // Sends a sequence that reaches the maximum allowed changes per cycle (taking optimizations into account).
@@ -401,7 +401,7 @@ void InstanceChangeThrottler_Test::testBigUpdateSequence() {
     auto startTimePoint = high_resolution_clock::now();
 
     // InstanceInfo that will be the payload for the updates.
-    karabo::util::Hash updatedInstInfo = karabo::util::Hash(m_instInfoDevice);
+    karabo::data::Hash updatedInstInfo = karabo::data::Hash(m_instInfoDevice);
     updatedInstInfo.set<int>("hashCount", -1);
 
     // Sends a sequence with a large number of updates that will spread across more than one cycle - either because
@@ -453,7 +453,7 @@ void InstanceChangeThrottler_Test::testThrottlerLifecycle() {
                                                                  kThrottlerMaxChanges);
 
     // InstanceInfo that will be the payload for the updates.
-    karabo::util::Hash updatedInstInfo = karabo::util::Hash(m_instInfoDevice);
+    karabo::data::Hash updatedInstInfo = karabo::data::Hash(m_instInfoDevice);
     updatedInstInfo.set<int>("hashCount", -1);
 
     // Sends a sequence with a large number of updates.
@@ -496,7 +496,7 @@ void InstanceChangeThrottler_Test::testChangesWithFlushes() {
                                                                  kThrottlerMaxChanges);
 
     // InstanceInfo that will be the payload for the updates.
-    karabo::util::Hash updatedInstInfo = karabo::util::Hash(m_instInfoDevice);
+    karabo::data::Hash updatedInstInfo = karabo::data::Hash(m_instInfoDevice);
     updatedInstInfo.set<int>("hashCount", -1);
 
     // Sends a sequence with a large number of updates.
@@ -522,7 +522,7 @@ void InstanceChangeThrottler_Test::testChangesWithFlushes() {
     // Each flush should cause an immediate burst of the throttler.
     CPPUNIT_ASSERT_MESSAGE(
           std::string("Number of throttler bursts inferior to the minimum expected of ") +
-                karabo::util::toString(kChangesToSubmit / kIntervalBetweenFlushes) + std::string(" bursts."),
+                karabo::data::toString(kChangesToSubmit / kIntervalBetweenFlushes) + std::string(" bursts."),
           m_instChangeObserver.numOfThrottlerBursts() >= static_cast<int>(kChangesToSubmit / kIntervalBetweenFlushes));
 
     m_instChangeObserver.clearInstChanges();
@@ -534,7 +534,7 @@ void InstanceChangeThrottler_Test::testChangesWithFlushes() {
 //<editor-fold desc="Helper methods shared by test cases">
 
 
-void InstanceChangeThrottler_Test::handleInstChange(const karabo::util::Hash& changeInfo) {
+void InstanceChangeThrottler_Test::handleInstChange(const karabo::data::Hash& changeInfo) {
     m_instChangeObserver.addInstChanges(changeInfo);
 }
 
@@ -603,13 +603,13 @@ InstanceChange InstanceChangeObserver::oldestInstChange() const {
 }
 
 void InstanceChangeObserver::addInstChangesOfType(
-      const karabo::util::Hash& srcInstTypeHash, const karabo::core::InstanceChangeThrottler::InstChangeType changeType,
+      const karabo::data::Hash& srcInstTypeHash, const karabo::core::InstanceChangeThrottler::InstChangeType changeType,
       std::vector<InstanceChange>& destChangeVector) {
     std::vector<std::string> instTypesKeys;
     srcInstTypeHash.getKeys(instTypesKeys);
 
     for (auto& instTypeKey : instTypesKeys) {
-        karabo::util::Hash changesEntries = srcInstTypeHash.get<karabo::util::Hash>(instTypeKey);
+        karabo::data::Hash changesEntries = srcInstTypeHash.get<karabo::data::Hash>(instTypeKey);
         std::vector<std::string> entriesKeys;
         changesEntries.getKeys(entriesKeys);
 
@@ -617,12 +617,12 @@ void InstanceChangeObserver::addInstChangesOfType(
             InstanceChange instChange;
             instChange.changeType = changeType;
             instChange.instanceId = instIdKey;
-            karabo::util::Hash leafHash = changesEntries.get<karabo::util::Hash>(instIdKey);
+            karabo::data::Hash leafHash = changesEntries.get<karabo::data::Hash>(instIdKey);
 
             // The instance info payload, when existing, is always transported as attributes; recomposing it.
-            const karabo::util::Hash::Attributes& attrs = changesEntries.getAttributes(instIdKey);
-            karabo::util::Hash instInfo;
-            for (karabo::util::Hash::Attributes::const_iterator attr = attrs.begin(); attr != attrs.end(); ++attr) {
+            const karabo::data::Hash::Attributes& attrs = changesEntries.getAttributes(instIdKey);
+            karabo::data::Hash instInfo;
+            for (karabo::data::Hash::Attributes::const_iterator attr = attrs.begin(); attr != attrs.end(); ++attr) {
                 instInfo.set<std::any>(attr->getKey(), attr->getValueAsAny());
             }
             instChange.instanceInfo = instInfo;
@@ -640,7 +640,7 @@ void InstanceChangeObserver::addInstChangesOfType(
 }
 
 
-void InstanceChangeObserver::addInstChanges(const karabo::util::Hash& changeInfo) {
+void InstanceChangeObserver::addInstChanges(const karabo::data::Hash& changeInfo) {
     std::lock_guard<std::mutex> lock(m_instChangesMutex);
 
     auto yearAgoTimePoint = high_resolution_clock::now() - hours(24 * 365);
@@ -650,11 +650,11 @@ void InstanceChangeObserver::addInstChanges(const karabo::util::Hash& changeInfo
 
     m_numOfThrottlerBursts++;
 
-    addInstChangesOfType(changeInfo.get<karabo::util::Hash>("new"),
+    addInstChangesOfType(changeInfo.get<karabo::data::Hash>("new"),
                          karabo::core::InstanceChangeThrottler::InstChangeType::NEW, m_instNewChanges);
-    addInstChangesOfType(changeInfo.get<karabo::util::Hash>("gone"),
+    addInstChangesOfType(changeInfo.get<karabo::data::Hash>("gone"),
                          karabo::core::InstanceChangeThrottler::InstChangeType::GONE, m_instGoneChanges);
-    addInstChangesOfType(changeInfo.get<karabo::util::Hash>("update"),
+    addInstChangesOfType(changeInfo.get<karabo::data::Hash>("update"),
                          karabo::core::InstanceChangeThrottler::InstChangeType::UPDATE, m_instUpdateChanges);
 }
 

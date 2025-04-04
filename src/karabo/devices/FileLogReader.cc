@@ -33,11 +33,11 @@
 
 #include "DataLogReader.hh"
 #include "karabo/core/Device.hh"
-#include "karabo/util/Configurator.hh"
+#include "karabo/data/schema/Configurator.hh"
+#include "karabo/data/time/Epochstamp.hh"
+#include "karabo/data/time/TimeDuration.hh"
+#include "karabo/data/types/FromLiteral.hh"
 #include "karabo/util/DataLogUtils.hh"
-#include "karabo/util/Epochstamp.hh"
-#include "karabo/util/FromLiteral.hh"
-#include "karabo/util/TimeDuration.hh"
 #include "karabo/util/TimeProfiler.hh"
 #include "karabo/util/Version.hh"
 
@@ -50,6 +50,7 @@ namespace karabo {
     namespace devices {
 
         using namespace std;
+        using namespace karabo::data;
         using namespace karabo::util;
         using namespace karabo::io;
         using json = nlohmann::json;
@@ -492,7 +493,7 @@ namespace karabo {
                     long position = index.m_position;
                     for (int i = index.m_fileindex; i <= lastFileIndex && current <= target; i++) {
                         string filename = get<string>("directory") + "/" + deviceId + "/raw/archive_" +
-                                          karabo::util::toString(i) + ".txt";
+                                          karabo::data::toString(i) + ".txt";
                         ifstream file(filename.c_str());
                         file.seekg(position);
 
@@ -747,7 +748,7 @@ namespace karabo {
 
 
         FileLoggerIndex FileLogReader::findNearestLoggerIndex(const std::string& deviceId,
-                                                              const karabo::util::Epochstamp& target,
+                                                              const karabo::data::Epochstamp& target,
                                                               const bool before) {
             string timestampAsIso8061;
             string timestampAsDouble;
@@ -833,8 +834,8 @@ namespace karabo {
 
         karabo::util::MetaSearchResult FileLogReader::navigateMetaRange(const std::string& deviceId, size_t startnum,
                                                                         size_t tonum, const std::string& path,
-                                                                        const karabo::util::Epochstamp& efrom,
-                                                                        const karabo::util::Epochstamp& eto) {
+                                                                        const karabo::data::Epochstamp& efrom,
+                                                                        const karabo::data::Epochstamp& eto) {
             MetaData::Record record;
             MetaSearchResult result;
 
@@ -1026,10 +1027,10 @@ namespace karabo {
             bool matches = std::regex_search(tail, tailFields, m_indexTailRegex);
             if (matches) {
                 // Assign tail fields.
-                entry.m_train = karabo::util::fromString<unsigned long long>(tailFields[1]);
-                entry.m_position = karabo::util::fromString<long>(tailFields[2]);
+                entry.m_train = karabo::data::fromString<unsigned long long>(tailFields[1]);
+                entry.m_position = karabo::data::fromString<long>(tailFields[2]);
                 entry.m_user = tailFields[3];
-                entry.m_fileindex = karabo::util::fromString<int>(tailFields[4]);
+                entry.m_fileindex = karabo::data::fromString<int>(tailFields[4]);
             } else {
                 throw KARABO_PARAMETER_EXCEPTION("Invalid format in index line tail: \"" + tail + "\".");
             }

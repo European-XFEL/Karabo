@@ -31,8 +31,8 @@
 #include <iostream>
 #include <memory>
 
-#include "karabo/util/Exception.hh"
-#include "karabo/util/StringTools.hh"
+#include "karabo/data/types/Exception.hh"
+#include "karabo/data/types/StringTools.hh"
 
 namespace karabo {
     namespace net {
@@ -70,7 +70,7 @@ namespace karabo {
             m_responseHandler = respHandler;
 
             m_resolver.async_resolve(
-                  host, karabo::util::toString(port),
+                  host, karabo::data::toString(port),
                   boost::beast::bind_front_handler(&HttpRequestRunner::on_resolve, shared_from_this()));
         }
 

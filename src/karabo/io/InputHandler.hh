@@ -25,7 +25,7 @@
 #ifndef KARABO_IO_INPUTHANDLER_HH
 #define KARABO_IO_INPUTHANDLER_HH
 
-#include <karabo/util/Configurator.hh>
+#include "karabo/data/schema/Configurator.hh"
 
 
 namespace karabo {

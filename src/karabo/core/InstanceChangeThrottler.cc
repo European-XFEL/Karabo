@@ -31,6 +31,7 @@
 
 using namespace std::chrono;
 using namespace karabo::util;
+using namespace karabo::data;
 
 namespace karabo {
 

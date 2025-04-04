@@ -49,7 +49,7 @@ namespace karabo {
                 COMPLETE   /// the initial configuration has arrived
             };
 
-            DeviceData(const karabo::util::Hash& input);
+            DeviceData(const karabo::data::Hash& input);
 
             virtual ~DeviceData();
 
@@ -58,15 +58,15 @@ namespace karabo {
              * @param config a Hash with the updates and their timestamps
              * @param the user responsible for this update - if any
              */
-            virtual void handleChanged(const karabo::util::Hash& config, const std::string& user) = 0;
+            virtual void handleChanged(const karabo::data::Hash& config, const std::string& user) = 0;
 
             /**
              * Called when a Schema update arrive for logging
              * @param schema - the new one
              * @param stamp - the timestamp to be assigned for that update
              */
-            virtual void handleSchemaUpdated(const karabo::util::Schema& schema,
-                                             const karabo::util::Timestamp& stamp) = 0;
+            virtual void handleSchemaUpdated(const karabo::data::Schema& schema,
+                                             const karabo::data::Timestamp& stamp) = 0;
 
             /**
              * Retrieves the paths of the leaf nodes in a given configuration. The paths are returned in
@@ -79,7 +79,7 @@ namespace karabo {
              * @note karabo::devices::DataLogReader depends on the configuration items being properly sorted
              * in time to retrieve configuration changes.
              */
-            void getPathsForConfiguration(const karabo::util::Hash& configuration, const karabo::util::Schema& schema,
+            void getPathsForConfiguration(const karabo::data::Hash& configuration, const karabo::data::Schema& schema,
                                           std::vector<std::string>& paths) const;
 
             virtual void stopLogging() {}
@@ -90,13 +90,13 @@ namespace karabo {
 
             karabo::net::Strand::Pointer m_strand;
 
-            karabo::util::Schema m_currentSchema;
+            karabo::data::Schema m_currentSchema;
 
             std::string m_user;
 
             std::mutex m_lastTimestampMutex;
 
-            karabo::util::Timestamp m_lastDataTimestamp;
+            karabo::data::Timestamp m_lastDataTimestamp;
 
             bool m_updatedLastTimestamp;
 
@@ -132,15 +132,15 @@ namespace karabo {
            public:
             KARABO_CLASSINFO(DataLogger, "DataLogger", "2.6")
 
-            static void expectedParameters(karabo::util::Schema& expected);
+            static void expectedParameters(karabo::data::Schema& expected);
 
-            DataLogger(const karabo::util::Hash& input);
+            DataLogger(const karabo::data::Hash& input);
 
             virtual ~DataLogger();
 
             // Functions
            protected:
-            virtual DeviceData::Pointer createDeviceData(const karabo::util::Hash& config) = 0;
+            virtual DeviceData::Pointer createDeviceData(const karabo::data::Hash& config) = 0;
 
             /**
              * Do some actions here that may require asynchronous logic ...
@@ -186,9 +186,9 @@ namespace karabo {
            private:
             void initialize();
 
-            void slotChanged(const karabo::util::Hash& configuration, const std::string& deviceId);
+            void slotChanged(const karabo::data::Hash& configuration, const std::string& deviceId);
 
-            void slotSchemaUpdated(const karabo::util::Schema& schema, const std::string& deviceId);
+            void slotSchemaUpdated(const karabo::data::Schema& schema, const std::string& deviceId);
 
             /**
              * FIXME: Update text
@@ -212,11 +212,11 @@ namespace karabo {
             void handleSchemaConnected(const DeviceData::Pointer& data,
                                        const std::shared_ptr<std::atomic<unsigned int>>& counter);
 
-            void handleSchemaReceived(const karabo::util::Schema& schema, const std::string& deviceId,
+            void handleSchemaReceived(const karabo::data::Schema& schema, const std::string& deviceId,
                                       const DeviceData::Pointer& data,
                                       const std::shared_ptr<std::atomic<unsigned int>>& counter);
 
-            void handleSchemaReceived2(const karabo::util::Schema& schema, const karabo::util::Timestamp& stamp,
+            void handleSchemaReceived2(const karabo::data::Schema& schema, const karabo::data::Timestamp& stamp,
                                        const DeviceData::Pointer& data,
                                        const std::shared_ptr<std::atomic<unsigned int>>& counter);
 

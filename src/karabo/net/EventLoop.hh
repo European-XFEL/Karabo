@@ -34,7 +34,7 @@
 #include <mutex>
 #include <thread>
 
-#include "karabo/util/ClassInfo.hh"
+#include "karabo/data/types/ClassInfo.hh"
 
 namespace karabo {
     namespace net {

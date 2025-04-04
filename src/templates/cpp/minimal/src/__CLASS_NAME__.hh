@@ -16,15 +16,15 @@
 #define __CLASS_NAME_ALL_CAPS___HH
 
 #include "karabo/core/Device.hh"
-#include "karabo/util/Configurator.hh"
-#include "karabo/util/Hash.hh"
-#include "karabo/util/Schema.hh"
+#include "karabo/data/schema/Configurator.hh"
+#include "karabo/data/types/Hash.hh"
+#include "karabo/data/types/Schema.hh"
 #include "version.hh" // provides __PACKAGE_NAME_ALL_CAPS___PACKAGE_VERSION
 
 
 namespace karabo {
 
-    class __CLASS_NAME__ final : public karabo::core::Device<> {
+    class __CLASS_NAME__ final : public karabo::core::Device {
        public:
         // Add reflection information and Karabo framework compatibility to
         // this class.
@@ -36,7 +36,7 @@ namespace karabo {
          * @param expected Will contain a description of expected parameters
          * for a device of this class.
          */
-        static void expectedParameters(karabo::util::Schema& expected);
+        static void expectedParameters(karabo::data::Schema& expected);
 
         /**
          * @brief Constructs a device with the initial configuration given by a
@@ -48,7 +48,7 @@ namespace karabo {
          * Hash object will already have been validated using the resulting
          * schema of the expectedParameters function.
          */
-        explicit __CLASS_NAME__(const karabo::util::Hash& config);
+        explicit __CLASS_NAME__(const karabo::data::Hash& config);
 
         /**
          * @brief Called in case the device gets killed.
@@ -70,7 +70,7 @@ namespace karabo {
          *           will automatically be applied to the current state.
          *
          */
-        virtual void preReconfigure(karabo::util::Hash& incomingReconfiguration) override;
+        virtual void preReconfigure(karabo::data::Hash& incomingReconfiguration) override;
 
         /**
          * @brief Acts as a hook and is called after an reconfiguration request

@@ -32,9 +32,9 @@
 #include <thread>
 #include <tuple>
 
-#include "karabo/util/Hash.hh"
-#include "karabo/util/NDArray.hh"
-#include "karabo/util/Schema.hh"
+#include "karabo/data/types/Hash.hh"
+#include "karabo/data/types/NDArray.hh"
+#include "karabo/data/types/Schema.hh"
 #include "karabo/xms/ImageData.hh"
 #include "karabo/xms/InputChannel.hh"
 #include "karabo/xms/SignalSlotable.hh"
@@ -44,7 +44,7 @@
 CPPUNIT_TEST_SUITE_REGISTRATION(DeviceClient_Test);
 
 using namespace karabo::core;
-using namespace karabo::util;
+using namespace karabo::data;
 using karabo::xms::ImageData;
 using karabo::xms::InputChannel;
 using karabo::xms::SignalSlotable;
@@ -219,7 +219,7 @@ void DeviceClient_Test::testSet() {
     std::clog << "testGet:" << std::flush;
     // CPPUNIT_ASSERT_EQUAL(true, m_deviceClient->get<bool>("TestedDevice", "archive"));
     // Cannot reconfigure non-reconfigurable parameters - here caught already by client
-    CPPUNIT_ASSERT_THROW(m_deviceClient->set("TestedDevice", "archive", false), karabo::util::ParameterException);
+    CPPUNIT_ASSERT_THROW(m_deviceClient->set("TestedDevice", "archive", false), karabo::data::ParameterException);
 
     std::pair<bool, std::string> success = m_deviceClient->killDevice("TestedDevice", KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
@@ -589,7 +589,7 @@ void DeviceClient_Test::testGetSchemaNoWait() {
 
     // Add handler that will be called when schema arrives when triggered by getDeviceSchemaNoWait
     bool schemaReceived = false;
-    auto handler = [&schemaReceived, deviceId](const std::string& id, const karabo::util::Schema& schema) {
+    auto handler = [&schemaReceived, deviceId](const std::string& id, const karabo::data::Schema& schema) {
         if (id == deviceId) schemaReceived = true;
     };
     m_deviceClient->registerSchemaUpdatedMonitor(handler);
@@ -665,7 +665,7 @@ void DeviceClient_Test::testConnectionHandling() {
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     // Device not there, so timeout
-    CPPUNIT_ASSERT_THROW(m_deviceClient->get(devId), karabo::util::TimeoutException);
+    CPPUNIT_ASSERT_THROW(m_deviceClient->get(devId), karabo::data::TimeoutException);
     success = m_deviceClient->instantiate(serverId, "PropertyTest", Hash("deviceId", devId, "int32Property", 64000000),
                                           KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
@@ -685,7 +685,7 @@ void DeviceClient_Test::testConnectionHandling() {
     // "zombie".
     ////////////////////////////////////////////////////////////////////
     bool cfgArrived = false;
-    auto deviceMonitor = [&cfgArrived](const std::string&, const karabo::util::Hash&) { cfgArrived = true; };
+    auto deviceMonitor = [&cfgArrived](const std::string&, const karabo::data::Hash&) { cfgArrived = true; };
     m_deviceClient->registerDeviceMonitor(devId, deviceMonitor);
     // TODO: Waiting should not be needed. For the very likely reason I need it here,
     // see DeviceClient::_slotChanged and DeviceClient::killDevice.
@@ -699,7 +699,7 @@ void DeviceClient_Test::testConnectionHandling() {
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     // Device not there again, so timeout
-    CPPUNIT_ASSERT_THROW(m_deviceClient->get(devId), karabo::util::TimeoutException);
+    CPPUNIT_ASSERT_THROW(m_deviceClient->get(devId), karabo::data::TimeoutException);
 
     // Restart device again with a changed property
     success = m_deviceClient->instantiate(serverId, "PropertyTest", Hash("deviceId", devId, "int32Property", -32000000),

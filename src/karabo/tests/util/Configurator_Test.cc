@@ -24,13 +24,12 @@
 
 #include "Configurator_Test.hh"
 
-#include <karabo/util/Configurator.hh>
+#include "karabo/data/schema/Configurator.hh"
+#include "karabo/data/schema/LeafElement.hh"
+#include "karabo/data/schema/NodeElement.hh"
+#include "karabo/data/schema/SimpleElement.hh"
 
-#include "karabo/util/LeafElement.hh"
-#include "karabo/util/NodeElement.hh"
-#include "karabo/util/SimpleElement.hh"
-
-using namespace karabo::util;
+using namespace karabo::data;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Configurator_Test);
 
@@ -40,16 +39,16 @@ KARABO_REGISTER_FOR_CONFIGURATION_ADDON(int, Base);
 KARABO_REGISTER_FOR_CONFIGURATION(Aggregated);
 
 
-void Base::expectedParameters(karabo::util::Schema& s) {
+void Base::expectedParameters(karabo::data::Schema& s) {
     NODE_ELEMENT(s).key("node").appendParametersOf<Aggregated>().commit();
 }
 
 
-Base::Base(const karabo::util::Hash& hash) {
+Base::Base(const karabo::data::Hash& hash) {
     m_aggregated = Configurator<Aggregated>::createNode("node", hash);
 }
 
-Base::Base(const karabo::util::Hash& hash, int extra) : Base(hash) {
+Base::Base(const karabo::data::Hash& hash, int extra) : Base(hash) {
     m_extra0 = extra;
 }
 
@@ -61,7 +60,7 @@ std::shared_ptr<Aggregated>& Base::getAggregated() {
 }
 
 
-void Aggregated::expectedParameters(karabo::util::Schema& s) {
+void Aggregated::expectedParameters(karabo::data::Schema& s) {
     INT32_ELEMENT(s)
           .key("answer")
           .description("The answer")
@@ -72,7 +71,7 @@ void Aggregated::expectedParameters(karabo::util::Schema& s) {
 }
 
 
-Aggregated::Aggregated(const karabo::util::Hash& hash) : m_answer(hash.get<int>("answer")) {}
+Aggregated::Aggregated(const karabo::data::Hash& hash) : m_answer(hash.get<int>("answer")) {}
 
 
 Aggregated::Aggregated(const int answer) : m_answer(answer) {}
@@ -89,12 +88,12 @@ class Dev1 : public Base {
    public:
     KARABO_CLASSINFO(Dev1, "Dev1", "");
 
-    static void expectedParameters(karabo::util::Schema& s) {
+    static void expectedParameters(karabo::data::Schema& s) {
         INT32_ELEMENT(s).key("memberDev1").assignmentOptional().defaultValue(1).commit();
     }
 
-    Dev1(const karabo::util::Hash& hash) : Base(hash) {}
-    Dev1(const karabo::util::Hash& hash, int extra) : Base(hash), m_extra1(extra) {}
+    Dev1(const karabo::data::Hash& hash) : Base(hash) {}
+    Dev1(const karabo::data::Hash& hash, int extra) : Base(hash), m_extra1(extra) {}
 
     virtual ~Dev1() {}
 
@@ -116,12 +115,12 @@ class Dev2 : public Dev1 {
    public:
     KARABO_CLASSINFO(Dev2, "Dev2", "");
 
-    static void expectedParameters(karabo::util::Schema& s) {
+    static void expectedParameters(karabo::data::Schema& s) {
         INT32_ELEMENT(s).key("memberDev2").assignmentOptional().defaultValue(2).commit();
     }
 
-    Dev2(const karabo::util::Hash& hash) : Dev1(hash) {}
-    Dev2(const karabo::util::Hash& hash, int extra) : Dev1(hash), m_extra2(extra) {}
+    Dev2(const karabo::data::Hash& hash) : Dev1(hash) {}
+    Dev2(const karabo::data::Hash& hash, int extra) : Dev1(hash), m_extra2(extra) {}
 
     virtual ~Dev2() {}
 
@@ -143,12 +142,12 @@ class Dev3 : public Dev2 {
    public:
     KARABO_CLASSINFO(Dev3, "Dev3", "");
 
-    static void expectedParameters(karabo::util::Schema& s) {
+    static void expectedParameters(karabo::data::Schema& s) {
         INT32_ELEMENT(s).key("memberDev3").assignmentOptional().defaultValue(3).commit();
     }
 
-    Dev3(const karabo::util::Hash& hash) : Dev2(hash) {}
-    Dev3(const karabo::util::Hash& hash, int extra) : Dev2(hash), m_extra3(extra) {}
+    Dev3(const karabo::data::Hash& hash) : Dev2(hash) {}
+    Dev3(const karabo::data::Hash& hash, int extra) : Dev2(hash), m_extra3(extra) {}
 
     virtual int getLevel() override {
         return Dev2::getLevel() + 1;
@@ -167,12 +166,12 @@ class Dev4 : public Dev3 {
    public:
     KARABO_CLASSINFO(Dev4, "Dev4", "");
 
-    static void expectedParameters(karabo::util::Schema& s) {
+    static void expectedParameters(karabo::data::Schema& s) {
         INT32_ELEMENT(s).key("memberDev4").assignmentOptional().defaultValue(4).commit();
     }
 
-    Dev4(const karabo::util::Hash& hash) : Dev3(hash) {}
-    Dev4(const karabo::util::Hash& hash, int extra) : Dev3(hash), m_extra4(extra) {}
+    Dev4(const karabo::data::Hash& hash) : Dev3(hash) {}
+    Dev4(const karabo::data::Hash& hash, int extra) : Dev3(hash), m_extra4(extra) {}
 
     virtual int getLevel() override {
         return Dev3::getLevel() + 1;
@@ -192,12 +191,12 @@ class Dev5 : public Dev4 {
    public:
     KARABO_CLASSINFO(Dev5, "Dev5", "");
 
-    static void expectedParameters(karabo::util::Schema& s) {
+    static void expectedParameters(karabo::data::Schema& s) {
         INT32_ELEMENT(s).key("memberDev5").assignmentOptional().defaultValue(5).commit();
     }
 
-    Dev5(const karabo::util::Hash& hash) : Dev4(hash) {}
-    Dev5(const karabo::util::Hash& hash, int extra) : Dev4(hash), m_extra5(extra) {}
+    Dev5(const karabo::data::Hash& hash) : Dev4(hash) {}
+    Dev5(const karabo::data::Hash& hash, int extra) : Dev4(hash), m_extra5(extra) {}
 
     virtual int getLevel() override {
         return Dev4::getLevel() + 1;
@@ -217,12 +216,12 @@ class Dev6 : public Dev5 {
    public:
     KARABO_CLASSINFO(Dev6, "Dev6", "");
 
-    static void expectedParameters(karabo::util::Schema& s) {
+    static void expectedParameters(karabo::data::Schema& s) {
         INT32_ELEMENT(s).key("memberDev6").assignmentOptional().defaultValue(6).commit();
     }
 
-    Dev6(const karabo::util::Hash& hash) : Dev5(hash) {}
-    Dev6(const karabo::util::Hash& hash, int extra) : Dev5(hash), m_extra6(extra) {}
+    Dev6(const karabo::data::Hash& hash) : Dev5(hash) {}
+    Dev6(const karabo::data::Hash& hash, int extra) : Dev5(hash), m_extra6(extra) {}
 
     virtual int getLevel() override {
         return Dev5::getLevel() + 1;

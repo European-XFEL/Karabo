@@ -15,9 +15,8 @@
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
-#include <karabo/util/Configurator.hh>
-#include <karabo/util/Schema.hh>
-
+#include "karabo/data/schema/Configurator.hh"
+#include "karabo/data/types/Schema.hh"
 #include "karabo/io/TextFileInput.hh"
 
-KARABO_EXPLICIT_TEMPLATE(karabo::io::TextFileInput<karabo::util::Schema>)
+KARABO_EXPLICIT_TEMPLATE(karabo::io::TextFileInput<karabo::data::Schema>)

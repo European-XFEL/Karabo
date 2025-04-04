@@ -30,8 +30,8 @@
 #include <functional>
 #include <string>
 
+#include "karabo/data/types/Schema.hh"
 #include "karabo/net/HttpClient.hh"
-#include "karabo/util/Schema.hh"
 
 namespace karabo {
     namespace net {
@@ -46,7 +46,7 @@ namespace karabo {
             // The user associated to the valid token - blank if token is invalid or an error occurred.
             std::string userId;
             // The access level in the topic for the user linked to the token
-            karabo::util::Schema::AccessLevel accessLevel;
+            karabo::data::Schema::AccessLevel accessLevel;
             // An error description for a failed token validation.
             std::string errMsg;
         };

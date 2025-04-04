@@ -21,14 +21,14 @@
  *
  * Created on July 9, 2013, 8:59 AM
  */
-#include <karabo/util/Configurator.hh>
+#include "karabo/data/schema/Configurator.hh"
 // #include "HashBinarySerializer.hh"
 #include "SchemaBinarySerializer.hh"
 
 using namespace std;
-using namespace karabo::util;
+using namespace karabo::data;
 
-KARABO_EXPLICIT_TEMPLATE(karabo::io::BinarySerializer<karabo::util::Schema>)
+KARABO_EXPLICIT_TEMPLATE(karabo::io::BinarySerializer<karabo::data::Schema>)
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::BinarySerializer<Schema>, karabo::io::SchemaBinarySerializer)
 
 namespace karabo {
@@ -42,9 +42,9 @@ namespace karabo {
         SchemaBinarySerializer::~SchemaBinarySerializer() {}
 
 
-        void SchemaBinarySerializer::expectedParameters(karabo::util::Schema& expected) {}
+        void SchemaBinarySerializer::expectedParameters(karabo::data::Schema& expected) {}
 
-        void SchemaBinarySerializer::save(const karabo::util::Schema& object, std::vector<char>& archive) {
+        void SchemaBinarySerializer::save(const karabo::data::Schema& object, std::vector<char>& archive) {
             ostringstream os;
             const string& rootName = object.getRootName();
             const unsigned char size = rootName.size();
@@ -56,11 +56,11 @@ namespace karabo {
             m_serializer->save2(object.getParameterHash(), archive); // save2(..) just appends to 'archive'!
         }
 
-        void SchemaBinarySerializer::save2(const karabo::util::Schema& object, std::vector<char>& archive) {
+        void SchemaBinarySerializer::save2(const karabo::data::Schema& object, std::vector<char>& archive) {
             save(object, archive);
         }
 
-        size_t SchemaBinarySerializer::load(karabo::util::Schema& object, const char* archive, const size_t nBytes) {
+        size_t SchemaBinarySerializer::load(karabo::data::Schema& object, const char* archive, const size_t nBytes) {
             std::stringstream is;
             is.rdbuf()->pubsetbuf(const_cast<char*>(archive), nBytes);
 

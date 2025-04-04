@@ -24,7 +24,7 @@
 
 #include <pybind11/numpy.h>
 
-#include <karabo/util/ToType.hh>
+#include "karabo/data/types/ToType.hh"
 
 namespace py = pybind11;
 

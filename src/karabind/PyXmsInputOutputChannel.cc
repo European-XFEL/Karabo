@@ -37,8 +37,8 @@ namespace karabind {
        public:
         using karabo::xms::OutputChannel::OutputChannel;
 
-        karabo::util::ClassInfo getClassInfo() const override {
-            PYBIND11_OVERRIDE(karabo::util::ClassInfo, karabo::xms::OutputChannel, getClassInfo);
+        karabo::data::ClassInfo getClassInfo() const override {
+            PYBIND11_OVERRIDE(karabo::data::ClassInfo, karabo::xms::OutputChannel, getClassInfo);
         }
     };
 
@@ -47,15 +47,15 @@ namespace karabind {
        public:
         using karabo::xms::InputChannel::InputChannel;
 
-        karabo::util::ClassInfo getClassInfo() const override {
-            PYBIND11_OVERRIDE(karabo::util::ClassInfo, karabo::xms::InputChannel, getClassInfo);
+        karabo::data::ClassInfo getClassInfo() const override {
+            PYBIND11_OVERRIDE(karabo::data::ClassInfo, karabo::xms::InputChannel, getClassInfo);
         }
     };
 
     class ChannelMetaData : public karabo::xms::Memory::MetaData {
        public:
         ChannelMetaData(const py::object& src, const py::object& ts)
-            : karabo::xms::Memory::MetaData(src.cast<std::string>(), ts.cast<karabo::util::Timestamp>()) {}
+            : karabo::xms::Memory::MetaData(src.cast<std::string>(), ts.cast<karabo::data::Timestamp>()) {}
 
         void setSource(const py::object& src) {
             karabo::xms::Memory::MetaData::setSource(src.cast<std::string>());
@@ -66,7 +66,7 @@ namespace karabind {
         }
 
         void setTimestamp(const py::object& ts) {
-            karabo::xms::Memory::MetaData::setTimestamp(ts.cast<karabo::util::Timestamp>());
+            karabo::xms::Memory::MetaData::setTimestamp(ts.cast<karabo::data::Timestamp>());
         }
 
         py::object getTimestamp() {
@@ -75,7 +75,7 @@ namespace karabind {
     };
 } // namespace karabind
 
-using namespace karabo::util;
+using namespace karabo::data;
 using namespace karabo::net;
 using namespace karabo::xms;
 using namespace karabind;
@@ -366,7 +366,7 @@ returned, the data will be dropped.
 
               .def("getConnectedOutputChannels",
                    [](const InputChannel::Pointer& self) -> py::dict {
-                       typedef std::map<std::string, karabo::util::Hash> OutputChannels;
+                       typedef std::map<std::string, karabo::data::Hash> OutputChannels;
                        const OutputChannels& ochannels = self->getConnectedOutputChannels();
                        py::dict d;
                        for (OutputChannels::const_iterator it = ochannels.begin(); it != ochannels.end(); ++it) {
@@ -423,14 +423,14 @@ returned, the data will be dropped.
 
               .def("getMetaData",
                    [](const InputChannel::Pointer& self) {
-                       auto ret = std::vector<karabo::util::Hash>();
+                       auto ret = std::vector<karabo::data::Hash>();
                        {
                            py::gil_scoped_release release;
                            const std::vector<karabo::xms::InputChannel::MetaData>& md = self->getMetaData();
                            for (auto it = md.begin(); it != md.end(); ++it) {
                                // TODO: Properly wrap MetaData object - currently this will be visible in Python
                                // as hash
-                               ret.push_back(*reinterpret_cast<const karabo::util::Hash*>(&*it));
+                               ret.push_back(*reinterpret_cast<const karabo::data::Hash*>(&*it));
                            }
                        }
                        return py::cast(ret);
@@ -473,7 +473,7 @@ returned, the data will be dropped.
     {
         py::class_<InputChannelElement>(m, "INPUT_CHANNEL")
 
-              .def(py::init<karabo::util::Schema&>(), py::arg("expected"))
+              .def(py::init<karabo::data::Schema&>(), py::arg("expected"))
 
               .def("key", &InputChannelElement::key, py::arg("key"), py::return_value_policy::reference_internal)
 

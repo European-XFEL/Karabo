@@ -32,10 +32,10 @@
 #include "karabo/xms/InputChannel.hh"
 
 namespace karabo {
-    namespace util {
+    namespace data {
         class Schema;
         class Hash;
-    } // namespace util
+    } // namespace data
 
     namespace devices {
 
@@ -45,9 +45,9 @@ namespace karabo {
             KARABO_CLASSINFO(NestedClass, "NestedClass", "1.5")
             KARABO_CONFIGURATION_BASE_CLASS
 
-            static void expectedParameters(karabo::util::Schema& expected);
+            static void expectedParameters(karabo::data::Schema& expected);
 
-            NestedClass(const karabo::util::Hash& input);
+            NestedClass(const karabo::data::Hash& input);
 
             virtual ~NestedClass();
         };
@@ -62,16 +62,16 @@ namespace karabo {
            public:
             KARABO_CLASSINFO(PropertyTest, "PropertyTest", "karabo-" + karabo::util::Version::getVersion())
 
-            static void expectedParameters(karabo::util::Schema& expected);
+            static void expectedParameters(karabo::data::Schema& expected);
 
-            PropertyTest(const karabo::util::Hash& config);
+            PropertyTest(const karabo::data::Hash& config);
 
             ~PropertyTest();
 
            private:
             void initialize();
 
-            void preReconfigure(karabo::util::Hash& incomingReconfiguration);
+            void preReconfigure(karabo::data::Hash& incomingReconfiguration);
 
             void setAlarm();
 
@@ -85,7 +85,7 @@ namespace karabo {
 
             void stopWritingOutput();
 
-            void onData(const karabo::util::Hash& data, const karabo::xms::InputChannel::MetaData& meta);
+            void onData(const karabo::data::Hash& data, const karabo::xms::InputChannel::MetaData& meta);
 
             void onEndOfStream(const xms::InputChannel::Pointer& /*unusedInput*/);
 
@@ -103,7 +103,7 @@ namespace karabo {
 
             void slowSlot();
 
-            void logSomething(const karabo::util::Hash& input);
+            void logSomething(const karabo::data::Hash& input);
 
             void useLoggingTestSchema();
 

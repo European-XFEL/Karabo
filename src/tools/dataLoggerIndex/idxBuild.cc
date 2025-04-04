@@ -23,9 +23,9 @@
 #include <iostream>
 #include <karabo/io/TextSerializer.hh>
 #include <karabo/util/DataLogUtils.hh>
-#include <karabo/util/Epochstamp.hh>
-#include <karabo/util/Exception.hh>
-#include <karabo/util/Schema.hh>
+#include "karabo/data/time/Epochstamp.hh"
+#include "karabo/data/types/Exception.hh"
+#include "karabo/data/types/Schema.hh"
 #include <regex>
 #include <sstream>
 #include <vector>
@@ -33,6 +33,7 @@
 namespace bf = std::filesystem;
 using namespace std;
 using namespace karabo::util;
+using namespace karabo::data;
 using namespace karabo::io;
 
 static std::map<string, MetaData::Pointer> idxMap;

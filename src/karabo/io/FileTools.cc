@@ -17,14 +17,14 @@
  */
 #include "FileTools.hh"
 
-template void karabo::io::loadFromFile<karabo::util::Hash>(karabo::util::Hash& object, const std::string& filename,
-                                                           const karabo::util::Hash& config = karabo::util::Hash());
-template void karabo::io::loadFromFile<karabo::util::Schema>(karabo::util::Schema& object, const std::string& filename,
-                                                             const karabo::util::Hash& config = karabo::util::Hash());
-template void karabo::io::saveToFile<karabo::util::Hash>(const karabo::util::Hash& object, const std::string& filename,
-                                                         const karabo::util::Hash& config = karabo::util::Hash());
-template void karabo::io::saveToFile<karabo::util::Schema>(const karabo::util::Schema& object,
+template void karabo::io::loadFromFile<karabo::data::Hash>(karabo::data::Hash& object, const std::string& filename,
+                                                           const karabo::data::Hash& config = karabo::data::Hash());
+template void karabo::io::loadFromFile<karabo::data::Schema>(karabo::data::Schema& object, const std::string& filename,
+                                                             const karabo::data::Hash& config = karabo::data::Hash());
+template void karabo::io::saveToFile<karabo::data::Hash>(const karabo::data::Hash& object, const std::string& filename,
+                                                         const karabo::data::Hash& config = karabo::data::Hash());
+template void karabo::io::saveToFile<karabo::data::Schema>(const karabo::data::Schema& object,
                                                            const std::string& filename,
-                                                           const karabo::util::Hash& config = karabo::util::Hash());
-template std::string karabo::io::getIODataType<karabo::util::Hash>();
-template std::string karabo::io::getIODataType<karabo::util::Schema>();
+                                                           const karabo::data::Hash& config = karabo::data::Hash());
+template std::string karabo::io::getIODataType<karabo::data::Hash>();
+template std::string karabo::io::getIODataType<karabo::data::Schema>();

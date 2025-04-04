@@ -22,19 +22,18 @@
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
-#include <karabo/util/ByteArrayElement.hh>
-#include <karabo/util/ChoiceElement.hh>
-#include <karabo/util/Exception.hh>
-#include <karabo/util/NDArrayElement.hh>
-#include <karabo/util/SimpleElement.hh>
-#include <karabo/util/VectorElement.hh>
-
 #include "PyTypes.hh"
 #include "Wrapper.hh"
+#include "karabo/data/schema/ByteArrayElement.hh"
+#include "karabo/data/schema/ChoiceElement.hh"
+#include "karabo/data/schema/NDArrayElement.hh"
+#include "karabo/data/schema/SimpleElement.hh"
+#include "karabo/data/schema/VectorElement.hh"
+#include "karabo/data/types/Exception.hh"
 
 
 namespace py = pybind11;
-using namespace karabo::util;
+using namespace karabo::data;
 using namespace std;
 using namespace karabind;
 
@@ -119,7 +118,7 @@ void exportPyUtilSchemaElement(py::module_& m) {
                    })
               .def("archivePolicy",
                    [](ReadOnlySpec& self, const py::object& o) -> ReadOnlySpec& {
-                       auto policy = o.cast<karabo::util::Schema::ArchivePolicy>();
+                       auto policy = o.cast<karabo::data::Schema::ArchivePolicy>();
                        return self.archivePolicy(policy);
                    })
               .def("commit", &ReadOnlySpec::commit);
@@ -190,19 +189,19 @@ void exportPyUtilSchemaElement(py::module_& m) {
               .def(py::init<Schema&>(), py::arg("expected"))
               .def(
                     "dtype",
-                    [](karabo::util::NDArrayElement& self, const py::object& otype) {
+                    [](karabo::data::NDArrayElement& self, const py::object& otype) {
                         Types::ReferenceType reftype = wrapper::pyObjectToCppType(otype);
                         return self.dtype(reftype);
                     },
                     py::arg("type"), py::return_value_policy::reference_internal)
               .def(
                     "shape",
-                    [](karabo::util::NDArrayElement& self, const py::object& obj) {
+                    [](karabo::data::NDArrayElement& self, const py::object& obj) {
                         if (py::isinstance<py::str>(obj)) {
                             return self.shape(obj.cast<std::string>());
                         } else if (py::isinstance<py::list>(obj)) {
                             const std::vector<long long> v = obj.cast<std::vector<long long>>();
-                            const std::string shapeStr = karabo::util::toString<long long>(v);
+                            const std::string shapeStr = karabo::data::toString<long long>(v);
                             return self.shape(shapeStr);
                         } else {
                             throw KARABO_PYTHON_EXCEPTION(

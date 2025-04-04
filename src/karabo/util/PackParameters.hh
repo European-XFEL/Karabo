@@ -18,9 +18,10 @@
 #ifndef KARABO_UTIL_PACKPARAMETERS
 #define KARABO_UTIL_PACKPARAMETERS
 
+#include "karabo/data/types/Hash.hh"
 namespace karabo {
+    using data::Hash;
     namespace util {
-        class Hash;
 
 
         // implementation details, users never invoke these directly
@@ -47,7 +48,7 @@ namespace karabo {
 
             template <char C, typename A, typename... Args>
             struct unpack_impl<C, A, Args...> {
-                static auto unpack(const karabo::util::Hash& h)
+                static auto unpack(const karabo::data::Hash& h)
                       -> decltype(std::tuple_cat(std::tie(h.get<A>(std::string())),
                                                  unpack_impl<C + 1, Args...>::unpack(h))) {
                     constexpr const char key[] = {'a', C, '\0', '\0'}; // string has length 4 for better alignment
@@ -57,7 +58,7 @@ namespace karabo {
 
             template <char C, typename A>
             struct unpack_impl<C, A> {
-                static auto unpack(const karabo::util::Hash& h) -> decltype(std::tie(h.get<A>(std::string()))) {
+                static auto unpack(const karabo::data::Hash& h) -> decltype(std::tie(h.get<A>(std::string()))) {
                     constexpr const char key[] = {'a', C, '\0', '\0'}; // string has length 4 for better alignment
                     return std::tie(h.get<A>(key));
                 }
@@ -65,7 +66,7 @@ namespace karabo {
 
             template <char C>
             struct unpack_impl<C> {
-                static std::tuple<> unpack(const karabo::util::Hash& h) {
+                static std::tuple<> unpack(const karabo::data::Hash& h) {
                     return std::tuple<>();
                 }
             };
@@ -100,7 +101,7 @@ namespace karabo {
          * @return std::tuple<Args&...>
          */
         template <typename... Args>
-        auto unpack(const karabo::util::Hash& h) -> decltype(detail::unpack_impl<'1', Args...>::unpack(h)) {
+        auto unpack(const karabo::data::Hash& h) -> decltype(detail::unpack_impl<'1', Args...>::unpack(h)) {
             return detail::unpack_impl<'1', Args...>::unpack(h);
         }
 

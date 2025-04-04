@@ -27,15 +27,15 @@
 #include <algorithm>
 #include <karabo/io/HashBinarySerializer.hh>
 
+#include "karabo/data/types/NDArray.hh"
 #include "karabo/io/BinarySerializer.hh"
 #include "karabo/io/TextSerializer.hh"
-#include "karabo/util/NDArray.hh"
 #include "karabo/util/TimeProfiler.hh"
 
 CPPUNIT_TEST_SUITE_REGISTRATION(HashBinarySerializer_Test);
 
 using namespace karabo::io;
-using namespace karabo::util;
+using namespace karabo::data;
 using std::complex;
 using std::string;
 using std::vector;
@@ -190,7 +190,7 @@ void HashBinarySerializer_Test::testSerialization() {
     diff = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - tick);
     ave = diff.count() / static_cast<double>(ntests);
     KARABO_LOG_FRAMEWORK_DEBUG << " Average de-serialization time: " << ave << " ms";
-    CPPUNIT_ASSERT(karabo::util::similar(hash, m_hash));
+    CPPUNIT_ASSERT(karabo::data::similar(hash, m_hash));
     CPPUNIT_ASSERT_NO_THROW(hashContentTest(hash.get<Hash>("hash"), "std::vector<char>"));
     CPPUNIT_ASSERT_NO_THROW(hashContentTest(*hash.get<Hash::Pointer>("hash_ptr"), "std::vector<char> ptr"));
     CPPUNIT_ASSERT_NO_THROW(hashContentTest(hash.get<Schema>("schema").getParameterHash(), "std::vector<char> Schema"));
@@ -223,7 +223,7 @@ void HashBinarySerializer_Test::testSerialization() {
 
     Hash hashArchive1;
     CPPUNIT_ASSERT_NO_THROW(p->load(hashArchive1, archiveBuf1));
-    CPPUNIT_ASSERT(karabo::util::similar(hashArchive1, m_hash));
+    CPPUNIT_ASSERT(karabo::data::similar(hashArchive1, m_hash));
     CPPUNIT_ASSERT_NO_THROW(hashContentTest(hashArchive1.get<Hash>("hash"), "BufferSet(true)"));
     CPPUNIT_ASSERT_NO_THROW(hashContentTest(*hashArchive1.get<Hash::Pointer>("hash_ptr"), "BufferSet(true) ptr"));
     CPPUNIT_ASSERT_NO_THROW(
@@ -251,7 +251,7 @@ void HashBinarySerializer_Test::testSerialization() {
     CPPUNIT_ASSERT_EQUAL(sizes2.size() - std::count(sizes2.begin(), sizes2.end(), 0u), asioBuf2.size());
 
     CPPUNIT_ASSERT_NO_THROW(p->load(hashArchive2, archiveBuf2));
-    CPPUNIT_ASSERT(karabo::util::similar(hashArchive2, m_hash));
+    CPPUNIT_ASSERT(karabo::data::similar(hashArchive2, m_hash));
     CPPUNIT_ASSERT_NO_THROW(hashContentTest(hashArchive2.get<Hash>("hash"), "BufferSet(false)"));
     CPPUNIT_ASSERT_NO_THROW(hashContentTest(*hashArchive2.get<Hash::Pointer>("hash_ptr"), "BufferSet(false) ptr"));
     CPPUNIT_ASSERT_NO_THROW(
@@ -434,7 +434,7 @@ void HashBinarySerializer_Test::hashContentTest(const Hash& innerHash, const std
 
 void HashBinarySerializer_Test::testSpeedLargeArrays() {
     Hash h;
-    NDArray ndarr(Dims(256, 256, 512), karabo::util::Types::DOUBLE);
+    NDArray ndarr(Dims(256, 256, 512), karabo::data::Types::DOUBLE);
     double* dptr = reinterpret_cast<double*>(ndarr.getDataPtr().get());
     for (size_t i = 0; i != ndarr.size(); ++i) {
         dptr[i] = i % 100;
@@ -505,7 +505,7 @@ void HashBinarySerializer_Test::testSpeedLargeArrays() {
         printDeserializationTime(dur);
     }
 
-    CPPUNIT_ASSERT(karabo::util::similar(h, dh));
+    CPPUNIT_ASSERT(karabo::data::similar(h, dh));
     //////////////////////////////////////////////////
     //////////////////////////////////////////////////
     //////////////////////////////////////////////////
@@ -553,7 +553,7 @@ void HashBinarySerializer_Test::testSpeedLargeArrays() {
             std::clog << (size > 30 ? "..." : "") << std::endl;
         }
 
-        CPPUNIT_ASSERT(karabo::util::similar(h, dh2));
+        CPPUNIT_ASSERT(karabo::data::similar(h, dh2));
         bool all_same = true;
 
         // verify that we do not have any byte shifting in between serialization and deserialization
@@ -619,7 +619,7 @@ void HashBinarySerializer_Test::testSpeedLargeArrays() {
             }
             std::clog << (size > 30 ? "..." : "") << std::endl;
         }
-        CPPUNIT_ASSERT(karabo::util::similar(h, dh3));
+        CPPUNIT_ASSERT(karabo::data::similar(h, dh3));
 
         bool all_same = true;
         // verify that we do not have any byte shifting in between serialization and deserialization
@@ -655,7 +655,7 @@ void HashBinarySerializer_Test::testMaxHashKeyLength() {
 
     key += 'a';
     h.set<char>(key, 'c');
-    CPPUNIT_ASSERT_THROW(p->save(h, archive), karabo::util::IOException);
+    CPPUNIT_ASSERT_THROW(p->save(h, archive), karabo::data::IOException);
 }
 
 void HashBinarySerializer_Test::testReadVectorHashPointer() {

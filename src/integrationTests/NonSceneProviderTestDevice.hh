@@ -40,7 +40,7 @@ namespace karabo {
          * Necessary method as part of the factory/configuration system
          * @param expected Will contain a description of expected parameters for this device
          */
-        static void expectedParameters(karabo::util::Schema& expected);
+        static void expectedParameters(karabo::data::Schema& expected);
 
         /**
          * Constructor providing the initial configuration in form of a Hash object.
@@ -48,7 +48,7 @@ namespace karabo {
          * already be validated using the information of the expectedParameters function.
          * The configuration is provided in a key/value fashion.
          */
-        NonSceneProviderTestDevice(const karabo::util::Hash& config);
+        NonSceneProviderTestDevice(const karabo::data::Hash& config);
 
         /**
          * The destructor will be called in case the device gets killed (i.e. the event-loop returns)

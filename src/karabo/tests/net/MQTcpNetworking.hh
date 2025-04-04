@@ -27,17 +27,17 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 
+#include "karabo/data/schema/Configurator.hh"
 #include "karabo/log/Logger.hh"
 #include "karabo/net/Channel.hh"
 #include "karabo/net/Connection.hh"
-#include "karabo/util/Configurator.hh"
 
 class MQTcpNetworking : public CPPUNIT_NS::TestFixture {
     int m_numberOfMessages;
 
-    karabo::util::Hash m_header;
+    karabo::data::Hash m_header;
 
-    karabo::util::Hash m_data;
+    karabo::data::Hash m_data;
 
     // server
     int m_serverCount;
@@ -73,7 +73,7 @@ class MQTcpNetworking : public CPPUNIT_NS::TestFixture {
     void serverErrorHandler(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel);
 
     void serverReadHashHashHandler(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel,
-                                   karabo::util::Hash& header, karabo::util::Hash& body);
+                                   karabo::data::Hash& header, karabo::data::Hash& body);
 
     void serverPublish(const karabo::net::Channel::Pointer& channel);
 
@@ -86,7 +86,7 @@ class MQTcpNetworking : public CPPUNIT_NS::TestFixture {
     void clientChannelErrorHandler(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel);
 
     void clientReadHashHashHandler(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel,
-                                   karabo::util::Hash& header, karabo::util::Hash& body);
+                                   karabo::data::Hash& header, karabo::data::Hash& body);
 
     void onClientEnd(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel);
 };

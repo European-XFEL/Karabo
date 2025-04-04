@@ -25,9 +25,10 @@
 #include "PropertyTest_Test.hh"
 
 #include <karabo/net/EventLoop.hh>
-#include <karabo/util/Hash.hh>
-#include <karabo/util/Schema.hh>
 #include <sstream>
+
+#include "karabo/data/types/Hash.hh"
+#include "karabo/data/types/Schema.hh"
 
 
 USING_KARABO_NAMESPACES;
@@ -309,7 +310,7 @@ void PropertyTest_Test::testReadOnlyProperties() {
     m_deviceClient->get("testPropertyTest_0", "floatPropertyReadOnly", initialFloatReadOnly);
     CPPUNIT_ASSERT_THROW(
           m_deviceClient->set("testPropertyTest_0", "floatPropertyReadOnly", initialFloatReadOnly + 1.0F),
-          karabo::util::ParameterException);
+          karabo::data::ParameterException);
     float finalFloatReadOnly; // Value after call to property set.
     m_deviceClient->get("testPropertyTest_0", "floatPropertyReadOnly", finalFloatReadOnly);
     CPPUNIT_ASSERT_EQUAL(initialFloatReadOnly, finalFloatReadOnly);
@@ -319,7 +320,7 @@ void PropertyTest_Test::testReadOnlyProperties() {
     m_deviceClient->get("testPropertyTest_0", "doublePropertyReadOnly", initialDoubleReadOnly);
     CPPUNIT_ASSERT_THROW(
           m_deviceClient->set("testPropertyTest_0", "doublePropertyReadOnly", initialDoubleReadOnly + 1.0),
-          karabo::util::ParameterException);
+          karabo::data::ParameterException);
     double finalDoubleReadOnly; // Value after call to property set.
     m_deviceClient->get("testPropertyTest_0", "doublePropertyReadOnly", finalDoubleReadOnly);
     CPPUNIT_ASSERT_EQUAL(initialDoubleReadOnly, finalDoubleReadOnly);
@@ -328,7 +329,7 @@ void PropertyTest_Test::testReadOnlyProperties() {
     unsigned char initialUint8ReadOnly;
     m_deviceClient->get("testPropertyTest_0", "uint8PropertyReadOnly", initialUint8ReadOnly);
     CPPUNIT_ASSERT_THROW(m_deviceClient->set("testPropertyTest_0", "uint8PropertyReadOnly", initialUint8ReadOnly + 1),
-                         karabo::util::ParameterException);
+                         karabo::data::ParameterException);
     unsigned char finalUint8ReadOnly; // Value after call to property set.
     m_deviceClient->get("testPropertyTest_0", "uint8PropertyReadOnly", finalUint8ReadOnly);
     CPPUNIT_ASSERT_EQUAL(initialUint8ReadOnly, finalUint8ReadOnly);
@@ -337,7 +338,7 @@ void PropertyTest_Test::testReadOnlyProperties() {
     signed char initialInt8ReadOnly;
     m_deviceClient->get("testPropertyTest_0", "int8PropertyReadOnly", initialInt8ReadOnly);
     CPPUNIT_ASSERT_THROW(m_deviceClient->set("testPropertyTest_0", "int8PropertyReadOnly", initialInt8ReadOnly + 1),
-                         karabo::util::ParameterException);
+                         karabo::data::ParameterException);
     signed char finalInt8ReadOnly; // Value after call to property set.
     m_deviceClient->get("testPropertyTest_0", "int8PropertyReadOnly", finalInt8ReadOnly);
     CPPUNIT_ASSERT_EQUAL(initialInt8ReadOnly, finalInt8ReadOnly);
@@ -346,7 +347,7 @@ void PropertyTest_Test::testReadOnlyProperties() {
     unsigned short initialUint16ReadOnly;
     m_deviceClient->get("testPropertyTest_0", "uint16PropertyReadOnly", initialUint16ReadOnly);
     CPPUNIT_ASSERT_THROW(m_deviceClient->set("testPropertyTest_0", "uint16PropertyReadOnly", initialUint16ReadOnly + 1),
-                         karabo::util::ParameterException);
+                         karabo::data::ParameterException);
     unsigned short finalUint16ReadOnly; // Value after call to property set.
     m_deviceClient->get("testPropertyTest_0", "uint16PropertyReadOnly", finalUint16ReadOnly);
     CPPUNIT_ASSERT_EQUAL(initialUint16ReadOnly, finalUint16ReadOnly);
@@ -355,7 +356,7 @@ void PropertyTest_Test::testReadOnlyProperties() {
     short initialInt16ReadOnly;
     m_deviceClient->get("testPropertyTest_0", "int16PropertyReadOnly", initialInt16ReadOnly);
     CPPUNIT_ASSERT_THROW(m_deviceClient->set("testPropertyTest_0", "int16PropertyReadOnly", initialInt16ReadOnly + 1),
-                         karabo::util::ParameterException);
+                         karabo::data::ParameterException);
     short finalInt16ReadOnly; // Value after call to property set.
     m_deviceClient->get("testPropertyTest_0", "int16PropertyReadOnly", finalInt16ReadOnly);
     CPPUNIT_ASSERT_EQUAL(initialInt16ReadOnly, finalInt16ReadOnly);
@@ -364,7 +365,7 @@ void PropertyTest_Test::testReadOnlyProperties() {
     unsigned int initialUint32ReadOnly;
     m_deviceClient->get("testPropertyTest_0", "uint32PropertyReadOnly", initialUint32ReadOnly);
     CPPUNIT_ASSERT_THROW(m_deviceClient->set("testPropertyTest_0", "uint32PropertyReadOnly", initialUint32ReadOnly + 2),
-                         karabo::util::ParameterException);
+                         karabo::data::ParameterException);
     unsigned int finalUint32ReadOnly; // Value after call to property set.
     m_deviceClient->get("testPropertyTest_0", "uint32PropertyReadOnly", finalUint32ReadOnly);
     CPPUNIT_ASSERT_EQUAL(initialUint32ReadOnly, finalUint32ReadOnly);
@@ -373,7 +374,7 @@ void PropertyTest_Test::testReadOnlyProperties() {
     int initialInt32ReadOnly;
     m_deviceClient->get("testPropertyTest_0", "int32PropertyReadOnly", initialInt32ReadOnly);
     CPPUNIT_ASSERT_THROW(m_deviceClient->set("testPropertyTest_0", "int32PropertyReadOnly", initialInt32ReadOnly + 2),
-                         karabo::util::ParameterException);
+                         karabo::data::ParameterException);
     int finalInt32ReadOnly; // Value after call to property set.
     m_deviceClient->get("testPropertyTest_0", "int32PropertyReadOnly", finalInt32ReadOnly);
     CPPUNIT_ASSERT_EQUAL(initialInt32ReadOnly, finalInt32ReadOnly);
@@ -382,7 +383,7 @@ void PropertyTest_Test::testReadOnlyProperties() {
     unsigned long long initialUint64ReadOnly;
     m_deviceClient->get("testPropertyTest_0", "uint64PropertyReadOnly", initialUint64ReadOnly);
     CPPUNIT_ASSERT_THROW(m_deviceClient->set("testPropertyTest_0", "uint64PropertyReadOnly", initialUint64ReadOnly + 2),
-                         karabo::util::ParameterException);
+                         karabo::data::ParameterException);
     unsigned long long finalUint64ReadOnly; // Value after call to property set.
     m_deviceClient->get("testPropertyTest_0", "uint64PropertyReadOnly", finalUint64ReadOnly);
     CPPUNIT_ASSERT_EQUAL(initialUint64ReadOnly, finalUint64ReadOnly);
@@ -391,7 +392,7 @@ void PropertyTest_Test::testReadOnlyProperties() {
     long long initialInt64ReadOnly;
     m_deviceClient->get("testPropertyTest_0", "int64PropertyReadOnly", initialInt64ReadOnly);
     CPPUNIT_ASSERT_THROW(m_deviceClient->set("testPropertyTest_0", "int64PropertyReadOnly", initialInt64ReadOnly + 2),
-                         karabo::util::ParameterException);
+                         karabo::data::ParameterException);
     long long finalInt64ReadOnly; // Value after call to property set.
     m_deviceClient->get("testPropertyTest_0", "int64PropertyReadOnly", finalInt64ReadOnly);
     CPPUNIT_ASSERT_EQUAL(initialInt64ReadOnly, finalInt64ReadOnly);
@@ -778,7 +779,7 @@ void PropertyTest_Test::testReadOnlyTableProperties() {
 
     // An attempt to set a read-only property is expected to throw a ParameterException.
     CPPUNIT_ASSERT_THROW(m_deviceClient->set("testPropertyTest_0", "tableReadOnly", value),
-                         karabo::util::ParameterException);
+                         karabo::data::ParameterException);
     value.clear();
 
     std::clog << "Tested read-only table element.. Ok" << std::endl;
@@ -811,14 +812,14 @@ void PropertyTest_Test::testAttributeEditing() {
     CPPUNIT_ASSERT_THROW(caller->request("testPropertyTest_0", "slotReconfigure", toSend)
                                .timeout(1000) // in ms
                                .receive(),
-                         karabo::util::RemoteException);
+                         karabo::data::RemoteException);
 
     // 11 is too long
     vec = std::vector<int>(11, 1);
     CPPUNIT_ASSERT_THROW(caller->request("testPropertyTest_0", "slotReconfigure", toSend)
                                .timeout(1000) // in ms
                                .receive(),
-                         karabo::util::RemoteException);
+                         karabo::data::RemoteException);
 
     std::clog << "Tested attribute editing.. Ok" << std::endl;
 }
@@ -833,11 +834,11 @@ void PropertyTest_Test::testNodedSlots() {
         CPPUNIT_ASSERT_EQUAL(i, counter);
         CPPUNIT_ASSERT_NO_THROW(remoteState =
                                       m_deviceClient->execute1<std::string>("testPropertyTest_0", "node.increment"));
-        CPPUNIT_ASSERT_EQUAL(karabo::util::State::NORMAL.name(), remoteState);
+        CPPUNIT_ASSERT_EQUAL(karabo::data::State::NORMAL.name(), remoteState);
         remoteState.clear();
     }
     CPPUNIT_ASSERT_NO_THROW(remoteState = m_deviceClient->execute1<std::string>("testPropertyTest_0", "node.reset"));
-    CPPUNIT_ASSERT_EQUAL(karabo::util::State::NORMAL.name(), remoteState);
+    CPPUNIT_ASSERT_EQUAL(karabo::data::State::NORMAL.name(), remoteState);
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->get("testPropertyTest_0", "node.counter", counter));
     CPPUNIT_ASSERT_EQUAL(0u, counter);
     std::clog << "Ok" << std::endl;

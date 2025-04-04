@@ -25,20 +25,20 @@
 #include "Hash_Test.hh"
 
 #include <climits>
-#include <karabo/util/Exception.hh>
-#include <karabo/util/Hash.hh>
-#include <karabo/util/NDArray.hh>
 #include <karabo/util/PackParameters.hh>
-#include <karabo/util/Schema.hh>
-#include <karabo/util/SimpleElement.hh>
 #include <stack>
 #include <vector>
 
-#include "karabo/util/ToLiteral.hh"
+#include "karabo/data/schema/SimpleElement.hh"
+#include "karabo/data/types/Exception.hh"
+#include "karabo/data/types/Hash.hh"
+#include "karabo/data/types/NDArray.hh"
+#include "karabo/data/types/Schema.hh"
+#include "karabo/data/types/ToLiteral.hh"
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Hash_Test);
 
-using namespace karabo::util;
+using namespace karabo::data;
 using namespace std;
 
 namespace CppUnit {
@@ -51,7 +51,7 @@ namespace CppUnit {
         }
 
         static std::string toString(const std::vector<T>& p) {
-            return karabo::util::toString(p);
+            return karabo::data::toString(p);
         }
     };
 } // namespace CppUnit
@@ -193,7 +193,7 @@ void Hash_Test::testConstructors() {
         CPPUNIT_ASSERT(h.get<Hash>("F.f.f.f.f").get<int>("x.y.z") == 99);
         CPPUNIT_ASSERT(h.get<int>("F.f.f.f.f.x.y.z") == 99);
         // Internally, Hash-derived classes are stored as Hash
-        CPPUNIT_ASSERT(h.getType("foo.array") == karabo::util::Types::HASH);
+        CPPUNIT_ASSERT(h.getType("foo.array") == karabo::data::Types::HASH);
 
         // Check 'flatten'
         Hash flat;
@@ -208,7 +208,7 @@ void Hash_Test::testConstructors() {
         CPPUNIT_ASSERT(flat.get<std::vector<unsigned long long>>("e.f.g.h", 0)[0] == 5);
         CPPUNIT_ASSERT(flat.get<int>("F.f.f.f.f.x.y.z", 0) == 99);
         // Internally, Hash-derived classes are stored as Hash
-        CPPUNIT_ASSERT(flat.getType("foo.array", 0) == karabo::util::Types::HASH);
+        CPPUNIT_ASSERT(flat.getType("foo.array", 0) == karabo::data::Types::HASH);
 
         Hash tree;
         flat.unflatten(tree);
@@ -223,7 +223,7 @@ void Hash_Test::testConstructors() {
         CPPUNIT_ASSERT(tree.get<Hash>("F.f.f.f.f").get<int>("x.y.z") == 99);
         CPPUNIT_ASSERT(tree.get<int>("F.f.f.f.f.x.y.z") == 99);
         // Internally, Hash-derived classes are stored as Hash
-        CPPUNIT_ASSERT(flat.getType("foo.array", 0) == karabo::util::Types::HASH);
+        CPPUNIT_ASSERT(flat.getType("foo.array", 0) == karabo::data::Types::HASH);
     }
 
     {
@@ -385,14 +385,14 @@ void Hash_Test::testGetSet() {
         CPPUNIT_ASSERT_NO_THROW(h.get<int>("b[1].c"));
 
         // non-existing "normal" path
-        CPPUNIT_ASSERT_THROW(h.get<int>("c"), karabo::util::ParameterException);
+        CPPUNIT_ASSERT_THROW(h.get<int>("c"), karabo::data::ParameterException);
 
         // non-existing index of vector that is last item
         CPPUNIT_ASSERT(h.get<vector<Hash>>("b").size() == 2);
         bool caught2 = false;
         try {
             h.get<Hash>("b[2]");
-        } catch (karabo::util::ParameterException const& e) {
+        } catch (karabo::data::ParameterException const& e) {
             caught2 = true;
         }
         CPPUNIT_ASSERT(caught2 == true);
@@ -401,7 +401,7 @@ void Hash_Test::testGetSet() {
         bool caught3 = false;
         try {
             h.get<int>("b[2].c");
-        } catch (karabo::util::ParameterException const& e) {
+        } catch (karabo::data::ParameterException const& e) {
             caught3 = true;
         }
         CPPUNIT_ASSERT(caught3 == true);
@@ -415,7 +415,7 @@ void Hash_Test::testGetSet() {
         CPPUNIT_ASSERT_NO_THROW(h.set("uint32Prop", -1));
         // After the previous set, the node type becomes Types::INT32 and an
         // attempt to get it as Types::UINT32 will fail.
-        CPPUNIT_ASSERT_THROW(h.get<unsigned int>("uint32Prop"), karabo::util::CastException);
+        CPPUNIT_ASSERT_THROW(h.get<unsigned int>("uint32Prop"), karabo::data::CastException);
         // Hash::getAs, on the other hand, will do the implicit conversion.
         CPPUNIT_ASSERT(h.getAs<unsigned int>("uint32Prop") == UINT32_MAX);
     }
@@ -1080,7 +1080,7 @@ void Hash_Test::testGetAs() {
         // getAs as a container
         Hash h("a", std::vector<unsigned short>({2, 3, 5, 7, 11}));
         const auto result = h.getAs<std::string, std::vector>("a");
-        CPPUNIT_ASSERT_MESSAGE("Result is " + karabo::util::toString(result),
+        CPPUNIT_ASSERT_MESSAGE("Result is " + karabo::data::toString(result),
                                result == std::vector<std::string>({"2", "3", "5", "7", "11"}));
     }
     {
@@ -1092,7 +1092,7 @@ void Hash_Test::testGetAs() {
         // There is some extra treatment of STRING as source in Element::getValueAs<CONT<T>>
         Hash h("a", "5,6, 7 ");
         const auto result = h.getAs<int, std::vector>("a");
-        CPPUNIT_ASSERT_MESSAGE("Result is: " + karabo::util::toString(result), std::vector<int>({5, 6, 7}) == result);
+        CPPUNIT_ASSERT_MESSAGE("Result is: " + karabo::data::toString(result), std::vector<int>({5, 6, 7}) == result);
     }
     {
         // There is some extra treatment of empty string as source for containers
@@ -1994,7 +1994,7 @@ void Hash_Test::testIs() {
     bool caught1 = false;
     try {
         h.is<int>("c");
-    } catch (karabo::util::ParameterException const& e) {
+    } catch (karabo::data::ParameterException const& e) {
         caught1 = true;
     }
     CPPUNIT_ASSERT(caught1 == true);
@@ -2003,7 +2003,7 @@ void Hash_Test::testIs() {
     bool caught2 = false;
     try {
         h.is<Hash>("b[3]");
-    } catch (karabo::util::ParameterException const& e) {
+    } catch (karabo::data::ParameterException const& e) {
         caught2 = true;
     }
     CPPUNIT_ASSERT(caught2 == true);
@@ -2012,7 +2012,7 @@ void Hash_Test::testIs() {
     bool caught3 = false;
     try {
         h.is<int>("b[3].d");
-    } catch (karabo::util::ParameterException const& e) {
+    } catch (karabo::data::ParameterException const& e) {
         caught3 = true;
     }
     CPPUNIT_ASSERT(caught3 == true);
@@ -2021,7 +2021,7 @@ void Hash_Test::testIs() {
     bool caught4 = false;
     try {
         h.is<int>("b[0].a");
-    } catch (karabo::util::ParameterException const& e) {
+    } catch (karabo::data::ParameterException const& e) {
         caught4 = true;
     }
     CPPUNIT_ASSERT(caught4 == true);
@@ -2039,19 +2039,19 @@ namespace helper {
         virtual ~Helper(){};
 
 
-        bool operator()(const karabo::util::Hash::Node& node) {
+        bool operator()(const karabo::data::Hash::Node& node) {
             return eval(node);
         }
 
-        virtual bool eval(const karabo::util::Hash::Node& node) = 0;
+        virtual bool eval(const karabo::data::Hash::Node& node) = 0;
     };
 
-    bool dfs(const karabo::util::Hash& hash, Helper& helper);
-    bool dfs(const std::vector<karabo::util::Hash>& hash, Helper& helper);
-    bool dfs(const karabo::util::Hash::Node& node, Helper& helper);
+    bool dfs(const karabo::data::Hash& hash, Helper& helper);
+    bool dfs(const std::vector<karabo::data::Hash>& hash, Helper& helper);
+    bool dfs(const karabo::data::Hash::Node& node, Helper& helper);
 
 
-    bool dfs(const karabo::util::Hash& hash, Helper& helper) {
+    bool dfs(const karabo::data::Hash& hash, Helper& helper) {
         if (hash.empty()) return false;
 
         for (Hash::const_iterator it = hash.begin(); it != hash.end(); ++it) {
@@ -2061,7 +2061,7 @@ namespace helper {
     }
 
 
-    bool dfs(const std::vector<karabo::util::Hash>& hash, Helper& helper) {
+    bool dfs(const std::vector<karabo::data::Hash>& hash, Helper& helper) {
         if (hash.empty()) return false;
 
         for (size_t i = 0; i < hash.size(); ++i) {
@@ -2071,7 +2071,7 @@ namespace helper {
     }
 
 
-    bool dfs(const karabo::util::Hash::Node& node, Helper& helper) {
+    bool dfs(const karabo::data::Hash::Node& node, Helper& helper) {
         helper(node);
 
         if (node.getType() == Types::HASH) {
@@ -2106,7 +2106,7 @@ namespace helper {
 
 
         template <class Helper>
-        static bool visit__(const karabo::util::Hash& hash, Helper& helper) {
+        static bool visit__(const karabo::data::Hash& hash, Helper& helper) {
             if (hash.empty()) return false;
 
             for (Hash::const_iterator it = hash.begin(); it != hash.end(); ++it) {
@@ -2117,7 +2117,7 @@ namespace helper {
 
 
         template <class Helper>
-        static bool visit__(const std::vector<karabo::util::Hash>& hash, Helper& helper) {
+        static bool visit__(const std::vector<karabo::data::Hash>& hash, Helper& helper) {
             if (hash.empty()) return false;
 
             for (size_t i = 0; i < hash.size(); ++i) {
@@ -2128,7 +2128,7 @@ namespace helper {
 
 
         template <class Helper>
-        static bool visit__(const karabo::util::Hash::Node& node, Helper& helper) {
+        static bool visit__(const karabo::data::Hash::Node& node, Helper& helper) {
             helper(node);
 
             if (node.getType() == Types::HASH) {
@@ -2150,7 +2150,7 @@ class Counter : public helper::Helper {
     Counter() : m_counter(0) {}
 
 
-    bool eval(const karabo::util::Hash::Node& node) {
+    bool eval(const karabo::data::Hash::Node& node) {
         if (node.getType() == Types::VECTOR_HASH) {
             m_counter += node.getValue<std::vector<Hash>>().size();
         } else {
@@ -2174,7 +2174,7 @@ class Concat : public helper::Helper {
     Concat() : m_concat("") {}
 
 
-    bool eval(const karabo::util::Hash::Node& node) {
+    bool eval(const karabo::data::Hash::Node& node) {
         m_concat += node.getKey();
         return true;
     }
@@ -2198,7 +2198,7 @@ class Serializer : public helper::Helper {
     }
 
 
-    void pre(const karabo::util::Hash::Node& node) {
+    void pre(const karabo::data::Hash::Node& node) {
         int& top = indices.top();
         if (top >= 0) {
             fill[indent - 2] = 0;
@@ -2228,7 +2228,7 @@ class Serializer : public helper::Helper {
     }
 
 
-    bool eval(const karabo::util::Hash::Node& node) {
+    bool eval(const karabo::data::Hash::Node& node) {
         Types::ReferenceType type = node.getType();
         switch (type) {
             case Types::HASH:
@@ -2240,7 +2240,7 @@ class Serializer : public helper::Helper {
                 indices.push(0);
                 break;
             case Types::SCHEMA:
-                m_stream << " => " << node.getValue<karabo::util::Schema>();
+                m_stream << " => " << node.getValue<karabo::data::Schema>();
                 break;
             default:
                 if (Types::isPointer(type)) { // TODO Add pointer types
@@ -2254,7 +2254,7 @@ class Serializer : public helper::Helper {
     }
 
 
-    void post(const karabo::util::Hash::Node& node) {
+    void post(const karabo::data::Hash::Node& node) {
         switch (node.getType()) {
             case Types::HASH:
             case Types::VECTOR_HASH:
@@ -2292,7 +2292,7 @@ class Flatten : public helper::Helper {
     ~Flatten(){};
 
 
-    void pre(const karabo::util::Hash::Node& node) {
+    void pre(const karabo::data::Hash::Node& node) {
         ostringstream oss;
         if (prefix.top().empty()) oss << node.getKey();
         else {
@@ -2316,7 +2316,7 @@ class Flatten : public helper::Helper {
     }
 
 
-    bool eval(const karabo::util::Hash::Node& node) {
+    bool eval(const karabo::data::Hash::Node& node) {
         Types::ReferenceType type = node.getType();
         switch (type) {
             case Types::HASH:
@@ -2332,7 +2332,7 @@ class Flatten : public helper::Helper {
     }
 
 
-    void post(const karabo::util::Hash::Node& node) {
+    void post(const karabo::data::Hash::Node& node) {
         switch (node.getType()) {
             case Types::HASH:
             case Types::VECTOR_HASH:
@@ -2368,7 +2368,7 @@ class Paths : public helper::Helper {
     ~Paths(){};
 
 
-    void pre(const karabo::util::Hash::Node& node) {
+    void pre(const karabo::data::Hash::Node& node) {
         ostringstream oss;
         if (prefix.top().empty()) oss << node.getKey();
         else {
@@ -2391,7 +2391,7 @@ class Paths : public helper::Helper {
     }
 
 
-    bool eval(const karabo::util::Hash::Node& node) {
+    bool eval(const karabo::data::Hash::Node& node) {
         Types::ReferenceType type = node.getType();
         switch (type) {
             case Types::HASH:
@@ -2407,7 +2407,7 @@ class Paths : public helper::Helper {
     }
 
 
-    void post(const karabo::util::Hash::Node& node) {
+    void post(const karabo::data::Hash::Node& node) {
         switch (node.getType()) {
             case Types::HASH:
             case Types::VECTOR_HASH:
@@ -2489,13 +2489,14 @@ void Hash_Test::testHelper() {
         // helper::Visitor<Hash, Counter> count;
         // std::clog << "Count 2 : " << count(h1).getResult() << std::endl;
         // std::clog << "Count 3 : " << helper::Visitor<Hash, Counter>()(h1).getResult() << std::endl;
-        // std::clog << "Count H : " << karabo::util::counter(h1) << std::endl;
+        // std::clog << "Count H : " << karabo::data::counter(h1) << std::endl;
         // std::clog << "Count V : " << c2.getResult() << std::endl;
     }
 }
 
 
 void Hash_Test::testPack() {
+    using karabo::util::pack;
     Hash h;
     pack(h);
     CPPUNIT_ASSERT(h.size() == 0);
@@ -2511,7 +2512,7 @@ void Hash_Test::testPack() {
     string s;
     double x;
 
-    unpack(h, s, x);
+    karabo::util::unpack(h, s, x);
     CPPUNIT_ASSERT(s == "bla");
     CPPUNIT_ASSERT(x == 2.5);
 }
@@ -2521,11 +2522,11 @@ void Hash_Test::testCounter() {
     h.set("e", std::vector<NDArray>(3, NDArray(Dims(5, 5))));
     // if counter were not to skip over Hash derived classes the ND-Array internal reference type of type
     // INT32 would be counted leading to a count of 8
-    CPPUNIT_ASSERT(karabo::util::counter(h, karabo::util::Types::INT32) == 4);
+    CPPUNIT_ASSERT(karabo::data::counter(h, karabo::data::Types::INT32) == 4);
     // if counter were not to skip over Hash derived classes the ND-Array internal is big endian of type
     // BOOL would be counted leading to a count of 5
-    CPPUNIT_ASSERT(karabo::util::counter(h, karabo::util::Types::BOOL) == 1);
-    CPPUNIT_ASSERT(karabo::util::counter(h, karabo::util::Types::HASH) == 1);
+    CPPUNIT_ASSERT(karabo::data::counter(h, karabo::data::Types::BOOL) == 1);
+    CPPUNIT_ASSERT(karabo::data::counter(h, karabo::data::Types::HASH) == 1);
 }
 
 

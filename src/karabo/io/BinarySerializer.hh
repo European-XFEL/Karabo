@@ -26,8 +26,9 @@
 #ifndef KARABO_IO_BINARYSERIALIZER_HH
 #define KARABO_IO_BINARYSERIALIZER_HH
 
-#include <karabo/util/Configurator.hh>
 #include <vector>
+
+#include "karabo/data/schema/Configurator.hh"
 
 namespace karabo {
     namespace io {

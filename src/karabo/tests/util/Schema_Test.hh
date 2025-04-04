@@ -26,12 +26,12 @@
 #define SCHEMA_TEST_HH
 #include <cppunit/extensions/HelperMacros.h>
 
+#include <karabo/data/types/Schema.hh>
 #include <karabo/log/Logger.hh>
-#include <karabo/util.hpp>
-#include <karabo/util/Configurator.hh>
 #include <karabo/util/DataLogUtils.hh>
 
 #include "ConfigurationTestClasses.hh"
+#include "karabo/data/schema/Configurator.hh"
 
 class Schema_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(Schema_Test);
@@ -101,7 +101,7 @@ class Schema_Test : public CPPUNIT_NS::TestFixture {
 
 
    private: // members
-    karabo::util::Schema m_schema;
+    karabo::data::Schema m_schema;
 
    private: // functions
     void testBuildUp();

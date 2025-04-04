@@ -18,27 +18,27 @@
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 
-#include <karabo/util/Epochstamp.hh>
-#include <karabo/util/TimeDuration.hh>
+#include "karabo/data/time/Epochstamp.hh"
+#include "karabo/data/time/TimeDuration.hh"
 
 namespace py = pybind11;
-using namespace karabo::util;
+using namespace karabo::data;
 using namespace std;
 
 
 void exportPyUtilEpochstamp(py::module_& m) {
-    py::enum_<karabo::util::TIME_UNITS>(m, "TIME_UNITS")
-          .value("ATTOSEC", karabo::util::ATTOSEC)
-          .value("FEMTOSEC", karabo::util::FEMTOSEC)
-          .value("PICOSEC", karabo::util::PICOSEC)
-          .value("NANOSEC", karabo::util::NANOSEC)
-          .value("MICROSEC", karabo::util::MICROSEC)
-          .value("MILLISEC", karabo::util::MILLISEC)
-          .value("ONESECOND", karabo::util::ONESECOND)
-          .value("SECOND", karabo::util::SECOND)
-          .value("MINUTE", karabo::util::MINUTE)
-          .value("HOUR", karabo::util::HOUR)
-          .value("DAY", karabo::util::DAY)
+    py::enum_<karabo::data::TIME_UNITS>(m, "TIME_UNITS")
+          .value("ATTOSEC", karabo::data::ATTOSEC)
+          .value("FEMTOSEC", karabo::data::FEMTOSEC)
+          .value("PICOSEC", karabo::data::PICOSEC)
+          .value("NANOSEC", karabo::data::NANOSEC)
+          .value("MICROSEC", karabo::data::MICROSEC)
+          .value("MILLISEC", karabo::data::MILLISEC)
+          .value("ONESECOND", karabo::data::ONESECOND)
+          .value("SECOND", karabo::data::SECOND)
+          .value("MINUTE", karabo::data::MINUTE)
+          .value("HOUR", karabo::data::HOUR)
+          .value("DAY", karabo::data::DAY)
           .export_values();
 
     py::class_<Epochstamp> e(m, "Epochstamp");
@@ -82,7 +82,7 @@ void exportPyUtilEpochstamp(py::module_& m) {
 
     e.def("toIso8601", &Epochstamp::toIso8601, py::arg("precision") = MICROSEC, py::arg("extended") = false);
 
-    e.def("toIso8601Ext", &Epochstamp::toIso8601Ext, py::arg("precision") = karabo::util::MICROSEC,
+    e.def("toIso8601Ext", &Epochstamp::toIso8601Ext, py::arg("precision") = karabo::data::MICROSEC,
           py::arg("extended") = (bool)(false));
 
     e.def("toTimestamp", &Epochstamp::toTimestamp);
@@ -102,13 +102,13 @@ void exportPyUtilEpochstamp(py::module_& m) {
     e.def(py::self < py::self);
     e.def(py::self <= py::self);
 
-    // karabo::util::Epochstamp::operator=
+    // karabo::data::Epochstamp::operator=
     e.def("assign", (Epochstamp & (Epochstamp::*)(time_t const&))(&Epochstamp::operator=), py::arg("tm"));
 
-    // karabo::util::Epochstamp::operator=
+    // karabo::data::Epochstamp::operator=
     e.def("assign", (Epochstamp & (Epochstamp::*)(timeval const&))(&Epochstamp::operator=), py::arg("tv"));
 
-    //::karabo::util::Epochstamp::operator=
+    //::karabo::data::Epochstamp::operator=
     e.def("assign", (Epochstamp & (Epochstamp::*)(timespec const&))(&Epochstamp::operator=), py::arg("ts"));
 
     e.def(py::self == py::self);

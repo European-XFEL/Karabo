@@ -25,12 +25,13 @@
 
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device, karabo::devices::DataLogger,
                                   karabo::devices::FileDataLogger)
-KARABO_REGISTER_IN_FACTORY_1(karabo::devices::DeviceData, karabo::devices::FileDeviceData, karabo::util::Hash)
+KARABO_REGISTER_IN_FACTORY_1(karabo::devices::DeviceData, karabo::devices::FileDeviceData, karabo::data::Hash)
 
 namespace karabo {
     namespace devices {
 
         using namespace std;
+        using namespace karabo::data;
         using namespace karabo::util;
         using namespace karabo::io;
         using namespace karabo::xms;
@@ -38,7 +39,7 @@ namespace karabo {
         using namespace std::chrono_literals;
 
 
-        FileDeviceData::FileDeviceData(const karabo::util::Hash& input)
+        FileDeviceData::FileDeviceData(const karabo::data::Hash& input)
             : DeviceData(input),
               m_directory(input.get<std::string>("directory")),
               m_maxFileSize(input.get<int>("maximumFileSize")),
@@ -69,10 +70,10 @@ namespace karabo {
                     // Since the time when logging stops might be of interest as well (for silent devices), we add it to
                     // value field
                     std::lock_guard<std::mutex> lock(m_lastTimestampMutex);
-                    karabo::util::Timestamp& lastTs = m_lastDataTimestamp;
+                    karabo::data::Timestamp& lastTs = m_lastDataTimestamp;
                     m_configStream << lastTs.toIso8601Ext() << "|" << fixed << lastTs.toTimestamp() << "|"
                                    << lastTs.getTrainId() << "|.||"
-                                   << karabo::util::Timestamp().toIso8601Ext() // i.e. 'now' from clock of logger
+                                   << karabo::data::Timestamp().toIso8601Ext() // i.e. 'now' from clock of logger
                                    << "|" << m_user << "|LOGOUT\n";
                     m_configStream.flush();
                     std::ostream::pos_type position = m_configStream.tellp();
@@ -103,7 +104,7 @@ namespace karabo {
         }
 
 
-        void FileDataLogger::expectedParameters(karabo::util::Schema& expected) {
+        void FileDataLogger::expectedParameters(karabo::data::Schema& expected) {
             STRING_ELEMENT(expected)
                   .key("directory")
                   .displayedName("Directory")
@@ -126,19 +127,19 @@ namespace karabo {
         }
 
 
-        DeviceData::Pointer FileDataLogger::createDeviceData(const karabo::util::Hash& cfg) {
+        DeviceData::Pointer FileDataLogger::createDeviceData(const karabo::data::Hash& cfg) {
             Hash config = cfg;
             config.set("directory", get<std::string>("directory"));
             config.set("maximumFileSize", get<int>("maximumFileSize"));
             DeviceData::Pointer devicedata =
-                  Factory<karabo::devices::DeviceData>::create<karabo::util::Hash>("FileDataLoggerDeviceData", config);
+                  Factory<karabo::devices::DeviceData>::create<karabo::data::Hash>("FileDataLoggerDeviceData", config);
             FileDeviceData::Pointer data = std::static_pointer_cast<FileDeviceData>(devicedata);
             data->setupDirectory();
             return devicedata;
         }
 
 
-        FileDataLogger::FileDataLogger(const karabo::util::Hash& input) : DataLogger(input) {}
+        FileDataLogger::FileDataLogger(const karabo::data::Hash& input) : DataLogger(input) {}
 
 
         FileDataLogger::~FileDataLogger() {}
@@ -207,7 +208,7 @@ namespace karabo {
         }
 
 
-        void FileDeviceData::handleChanged(const karabo::util::Hash& configuration, const std::string& user) {
+        void FileDeviceData::handleChanged(const karabo::data::Hash& configuration, const std::string& user) {
             m_user = user; // set under m_strand protection
             const std::string& deviceId = m_deviceToBeLogged;
 
@@ -347,7 +348,7 @@ namespace karabo {
 
 
         void FileDeviceData::logValue(const std::string& deviceId, const std::string& path,
-                                      const karabo::util::Timestamp& ts, const std::string& value,
+                                      const karabo::data::Timestamp& ts, const std::string& value,
                                       const std::string& type, size_t filePosition) {
             m_configStream << ts.toIso8601Ext() << "|" << fixed << ts.toTimestamp() << "|" << ts.getTrainId() << "|"
                            << path << "|" << type << "|" << scientific << value << "|" << m_user;
@@ -479,8 +480,8 @@ namespace karabo {
         }
 
 
-        void FileDeviceData::handleSchemaUpdated(const karabo::util::Schema& schema,
-                                                 const karabo::util::Timestamp& stamp) {
+        void FileDeviceData::handleSchemaUpdated(const karabo::data::Schema& schema,
+                                                 const karabo::data::Timestamp& stamp) {
             const std::string& deviceId = m_deviceToBeLogged;
 
             m_currentSchema = schema;
@@ -495,7 +496,7 @@ namespace karabo {
                 try {
                     serializer->save(schema, archive);
                 } catch (const std::exception& e) {
-                    // Currently (2.7.0rc2), a karabo::util::NotSupportedException is thrown when the first option
+                    // Currently (2.7.0rc2), a karabo::data::NotSupportedException is thrown when the first option
                     // of a string element contains a comma. But whatever exception is thrown, we should go on,
                     // otherwise DataLogger::handleSchemaReceived2 will not connect to signal[State]Changed
                     // and thus configurations are not stored, either.

@@ -24,10 +24,10 @@
 #include <streambuf>
 #include <vector>
 
+#include "karabo/data/time/TimeDuration.hh"
 #include "karabo/io/FileTools.hh"
 #include "karabo/io/Input.hh"
 #include "karabo/util/DataLogUtils.hh"
-#include "karabo/util/TimeDuration.hh"
 #include "karabo/util/Version.hh"
 
 
@@ -35,7 +35,7 @@ namespace karabo {
     namespace devices {
 
         using namespace std;
-        using namespace karabo::util;
+        using namespace karabo::data;
         using namespace karabo::io;
 
 
@@ -61,7 +61,7 @@ namespace karabo {
 
 
         DataLogReader::DataLogReader(const Hash& input) : karabo::core::Device(input) {
-            m_visibility = karabo::util::Schema::ADMIN;
+            m_visibility = karabo::data::Schema::ADMIN;
             KARABO_INITIAL_FUNCTION(initialize)
             KARABO_SLOT(slotGetPropertyHistory, string /*deviceId*/, string /*key*/, Hash /*params*/);
             KARABO_SLOT(slotGetConfigurationFromPast, string /*deviceId*/, string /*timepoint*/);
@@ -74,7 +74,7 @@ namespace karabo {
 
 
         void DataLogReader::slotGetPropertyHistory(const std::string& deviceId, const std::string& property,
-                                                   const karabo::util::Hash& params) {
+                                                   const karabo::data::Hash& params) {
             set("numGetPropertyHistory", get<unsigned int>("numGetPropertyHistory") + 1);
 
             slotGetPropertyHistoryImpl(deviceId, property, params);

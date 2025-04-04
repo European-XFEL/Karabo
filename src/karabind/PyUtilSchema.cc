@@ -21,23 +21,23 @@
 #include <pybind11/stl_bind.h>
 
 #include <iostream>
-#include <karabo/util/AlarmConditions.hh>
-#include <karabo/util/ByteArrayElement.hh>
-#include <karabo/util/ChoiceElement.hh>
-#include <karabo/util/Factory.hh>
-#include <karabo/util/HashFilter.hh>
-#include <karabo/util/LeafElement.hh>
-#include <karabo/util/NodeElement.hh>
-#include <karabo/util/OverwriteElement.hh>
-#include <karabo/util/TableElement.hh>
-#include <karabo/util/Validator.hh>
 
 #include "PyTypes.hh"
 #include "Wrapper.hh"
+#include "karabo/data/schema/ByteArrayElement.hh"
+#include "karabo/data/schema/ChoiceElement.hh"
+#include "karabo/data/schema/Factory.hh"
+#include "karabo/data/schema/LeafElement.hh"
+#include "karabo/data/schema/NodeElement.hh"
+#include "karabo/data/schema/OverwriteElement.hh"
+#include "karabo/data/schema/TableElement.hh"
+#include "karabo/data/schema/Validator.hh"
+#include "karabo/data/types/AlarmConditions.hh"
+#include "karabo/data/types/HashFilter.hh"
 
 
 namespace py = pybind11;
-using namespace karabo::util;
+using namespace karabo::data;
 using namespace std;
 using namespace karabind;
 
@@ -447,8 +447,8 @@ void exportPyUtilSchema(py::module_& m) {
         s.def(
               "getAllowedStates",
               [](const Schema& self, const std::string& path) {
-                  const std::string& allowed = karabo::util::toString(self.getAllowedStates(path));
-                  const vector<string> v = karabo::util::fromString<std::string, std::vector>(allowed);
+                  const std::string& allowed = karabo::data::toString(self.getAllowedStates(path));
+                  const vector<string> v = karabo::data::fromString<std::string, std::vector>(allowed);
                   py::list states;
                   py::module_ ms = py::module_::import("karabo.common.states");
                   for (std::vector<std::string>::const_iterator it = v.begin(); it != v.end(); ++it) {
@@ -825,7 +825,7 @@ void exportPyUtilSchema(py::module_& m) {
               py::arg("path"), py::arg("value"), py::arg("sep") = " ,;");
 
         s.def("setAllowedStates", [](Schema& self, const std::string& path, py::args args) {
-            using namespace karabo::util;
+            using namespace karabo::data;
             py::sequence tstates = (args.size() == 1) ? args[0] : args.cast<py::tuple>();
             std::vector<State> states;
             for (size_t i = 0; i < py::len(tstates); ++i) {

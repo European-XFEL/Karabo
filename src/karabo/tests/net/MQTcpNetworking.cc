@@ -25,9 +25,9 @@
 
 #include <karabo/net/Channel.hh>
 #include <karabo/net/EventLoop.hh>
-#include <karabo/util/Hash.hh>
 
 #include "boost/system/error_code.hpp"
+#include "karabo/data/types/Hash.hh"
 
 using std::placeholders::_1;
 using std::placeholders::_2;
@@ -39,7 +39,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(MQTcpNetworking);
 
 MQTcpNetworking::MQTcpNetworking() : m_numberOfMessages(10000), m_serverCount(0), m_serverPort(0) {
     using namespace std;
-    using namespace karabo::util;
+    using namespace karabo::data;
 
     Hash tmp("a.b.c", 1, "a.b.d", vector<int>(5, 1), "a.b.e", vector<Hash>(2, Hash("a", 1)), "a.d",
              std::complex<double>(1.2, 4.2));
@@ -59,7 +59,7 @@ MQTcpNetworking::~MQTcpNetworking() {}
 
 
 void MQTcpNetworking::createServer() {
-    m_serverConnection = karabo::net::Connection::create(karabo::util::Hash("Tcp.port", 0, "Tcp.type", "server"));
+    m_serverConnection = karabo::net::Connection::create(karabo::data::Hash("Tcp.port", 0, "Tcp.type", "server"));
     KARABO_LOG_FRAMEWORK_DEBUG << "SERVER: connection object created. ";
     m_serverPort = m_serverConnection->startAsync(std::bind(&MQTcpNetworking::serverConnectHandler, this, _1, _2));
     KARABO_LOG_FRAMEWORK_DEBUG << "SERVER: the allocated port is " << m_serverPort;
@@ -91,7 +91,7 @@ void MQTcpNetworking::serverErrorHandler(const karabo::net::ErrorCode& ec,
 
 void MQTcpNetworking::serverReadHashHashHandler(const karabo::net::ErrorCode& ec,
                                                 const karabo::net::Channel::Pointer& channel,
-                                                karabo::util::Hash& header, karabo::util::Hash& body) {
+                                                karabo::data::Hash& header, karabo::data::Hash& body) {
     if (ec) {
         serverErrorHandler(ec, channel);
         return;
@@ -129,7 +129,7 @@ void MQTcpNetworking::serverPublish(const karabo::net::Channel::Pointer& channel
 
 void MQTcpNetworking::testClientServerMethod() {
     m_connection =
-          karabo::net::Connection::create(karabo::util::Hash("Tcp.port", m_serverPort, "Tcp.hostname", "localhost"));
+          karabo::net::Connection::create(karabo::data::Hash("Tcp.port", m_serverPort, "Tcp.hostname", "localhost"));
     m_connection->startAsync(std::bind(&MQTcpNetworking::onClientConnected, this, _1, _2));
 }
 
@@ -163,8 +163,8 @@ void MQTcpNetworking::onClientConnected(const karabo::net::ErrorCode& e, const k
         return;
     }
 
-    karabo::util::Hash header("headline", "*** CLIENT ***");
-    karabo::util::Hash data("START", 50000);
+    karabo::data::Hash header("headline", "*** CLIENT ***");
+    karabo::data::Hash data("START", 50000);
 
     // first sending
     channel->writeAsync(header, data);
@@ -190,7 +190,7 @@ void MQTcpNetworking::clientChannelErrorHandler(const karabo::net::ErrorCode& ec
 
 void MQTcpNetworking::clientReadHashHashHandler(const karabo::net::ErrorCode& e,
                                                 const karabo::net::Channel::Pointer& channel,
-                                                karabo::util::Hash& header, karabo::util::Hash& body) {
+                                                karabo::data::Hash& header, karabo::data::Hash& body) {
     if (e) {
         clientChannelErrorHandler(e, channel);
         return;
@@ -201,8 +201,8 @@ void MQTcpNetworking::clientReadHashHashHandler(const karabo::net::ErrorCode& e,
     if (m_clientCount < m_numberOfMessages) {
         channel->readAsyncHashHash(std::bind(&MQTcpNetworking::clientReadHashHashHandler, this, _1, channel, _2, _3));
     } else {
-        karabo::util::Hash header("headline", "*** CLIENT ***");
-        karabo::util::Hash data("STOP", karabo::util::Hash());
+        karabo::data::Hash header("headline", "*** CLIENT ***");
+        karabo::data::Hash data("STOP", karabo::data::Hash());
         channel->writeAsyncHashHash(
               header, data, std::bind(&MQTcpNetworking::onClientEnd, this, boost::asio::placeholders::error, channel));
     }

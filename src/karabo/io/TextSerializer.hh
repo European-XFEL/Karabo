@@ -26,9 +26,10 @@
 #ifndef KARABO_IO_TEXTSERIALIZER_HH
 #define KARABO_IO_TEXTSERIALIZER_HH
 
-#include <karabo/util/Configurator.hh>
 #include <sstream>
 #include <vector>
+
+#include "karabo/data/schema/Configurator.hh"
 
 namespace karabo {
     namespace io {

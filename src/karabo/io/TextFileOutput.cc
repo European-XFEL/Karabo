@@ -24,9 +24,9 @@
 
 #include "TextFileOutput.hh"
 
-KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Output<karabo::util::Hash>,
-                                  karabo::io::TextFileOutput<karabo::util::Hash>)
-KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Output<karabo::util::Schema>,
-                                  karabo::io::TextFileOutput<karabo::util::Schema>)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Output<karabo::data::Hash>,
+                                  karabo::io::TextFileOutput<karabo::data::Hash>)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Output<karabo::data::Schema>,
+                                  karabo::io::TextFileOutput<karabo::data::Schema>)
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Output<std::vector<char> >,
                                   karabo::io::TextFileOutput<std::vector<char> >)

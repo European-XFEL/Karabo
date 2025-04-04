@@ -22,11 +22,12 @@
 #include <iostream>
 
 #include "karabo/core/Runner.hh"
+#include "karabo/data/types/Exception.hh"
 #include "karabo/log/Logger.hh"
 #include "karabo/net/EventLoop.hh"
-#include "karabo/util/Exception.hh"
 #include "karabo/util/MetaTools.hh"
 
+using namespace karabo::data;
 using namespace karabo::util;
 using namespace karabo::log;
 using namespace karabo::net;

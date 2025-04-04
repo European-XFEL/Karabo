@@ -28,6 +28,7 @@
 
 using namespace std::chrono;
 using namespace std;
+using namespace karabo::data;
 using namespace karabo::util;
 using namespace karabo::core;
 using namespace karabo::net;
@@ -43,7 +44,7 @@ namespace karabo {
     const Hash TcpAdapter::k_defaultLoginData("type", "login", "username", "mrusp", "password", "12345", "version",
                                               karabo::util::Version::getKaraboVersion().getVersion());
 
-    TcpAdapter::TcpAdapter(const karabo::util::Hash& config)
+    TcpAdapter::TcpAdapter(const karabo::data::Hash& config)
         : m_deadline(karabo::net::EventLoop::getIOService()), m_MessageId(0), m_callback() {
         Hash h;
         h.set("port", config.get<unsigned int>("port"));
@@ -92,7 +93,7 @@ namespace karabo {
 
 
     void TcpAdapter::onRead(const karabo::net::ErrorCode& e, karabo::net::Channel::Pointer channel,
-                            karabo::util::Hash& info) {
+                            karabo::data::Hash& info) {
         if (e) {
             onError(e, channel);
             if (channel) channel->close();
@@ -148,7 +149,7 @@ namespace karabo {
     }
 
 
-    void TcpAdapter::login(const karabo::util::Hash& extraLoginData) {
+    void TcpAdapter::login(const karabo::data::Hash& extraLoginData) {
         Hash loginData(k_defaultLoginData);
         loginData.merge(extraLoginData);
 
@@ -179,7 +180,7 @@ namespace karabo {
         return m_channel && m_channel->isOpen();
     };
 
-    void TcpAdapter::sendMessage(const karabo::util::Hash& message, bool block) {
+    void TcpAdapter::sendMessage(const karabo::data::Hash& message, bool block) {
         if (!connected()) return;
         std::unique_lock lock(m_writeConditionMutex);
         m_writeWaitForId = ++m_MessageId;
@@ -212,14 +213,14 @@ namespace karabo {
     }
 
     std::future_status TcpAdapter::waitFor(const std::string& type,
-                                           const std::function<bool(const karabo::util::Hash&)>& callback,
+                                           const std::function<bool(const karabo::data::Hash&)>& callback,
                                            unsigned int timeoutInMs) {
         auto cbPromise = std::make_shared<std::promise<void>>();
         auto cbFuture = cbPromise->get_future();
         {
             std::shared_lock lock(m_callbackMutex);
             // create a lambda function to be attached to the m_callback
-            m_callback = [cbPromise, type, callback](const karabo::util::Hash& newData) {
+            m_callback = [cbPromise, type, callback](const karabo::data::Hash& newData) {
                 if (newData.has("type") && newData.get<std::string>("type") == type) {
                     if (callback(newData)) {
                         cbPromise->set_value();
@@ -232,7 +233,7 @@ namespace karabo {
         // empty the callback
         {
             std::shared_lock lock(m_callbackMutex);
-            m_callback = std::function<void(const karabo::util::Hash&)>();
+            m_callback = std::function<void(const karabo::data::Hash&)>();
         }
         return status;
     }

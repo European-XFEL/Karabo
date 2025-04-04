@@ -52,7 +52,7 @@ class GuiServer_Test : public CPPUNIT_NS::TestFixture {
     void testVersionControl();
     void resetTcpConnection();
     void resetClientConnection();
-    void resetClientConnection(const karabo::util::Hash& loginData);
+    void resetClientConnection(const karabo::data::Hash& loginData);
     void testNotification();
     void testExecuteBeforeLogin();
     void testExecute();
@@ -132,7 +132,7 @@ class GuiServer_Test : public CPPUNIT_NS::TestFixture {
 
     karabo::core::DeviceClient::Pointer m_deviceClient;
     std::shared_ptr<karabo::TcpAdapter> m_tcpAdapter;
-    static const karabo::util::Hash k_defaultLoginData;
+    static const karabo::data::Hash k_defaultLoginData;
 };
 
 #endif /* GUISERVER_TEST_HH */

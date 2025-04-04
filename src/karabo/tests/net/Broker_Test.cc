@@ -26,17 +26,18 @@
 
 #include <karabo/net/EventLoop.hh>
 #include <karabo/tests/BrokerUtils.hh>
-#include <karabo/util/Hash.hh>
-#include <karabo/util/StringTools.hh>
 #include <stack>
 #include <thread>
 #include <tuple>
+
+#include "karabo/data/types/Hash.hh"
+#include "karabo/data/types/StringTools.hh"
 
 
 constexpr uint32_t TEST_EXPIRATION_TIME_IN_SECONDS = 3;
 
 
-using namespace karabo::util;
+using namespace karabo::data;
 using namespace karabo::net;
 using boost::system::error_code;
 

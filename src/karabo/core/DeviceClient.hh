@@ -28,14 +28,15 @@
 #include <karabo/core/InstanceChangeThrottler.hh>
 #include <karabo/core/Lock.hh>
 #include <karabo/util/DataLogUtils.hh>
-#include <karabo/util/Schema.hh>
-#include <karabo/util/Timestamp.hh>
 #include <karabo/xms/SignalSlotable.hh>
 #include <map>
 #include <mutex>
 #include <set>
 #include <string>
 #include <unordered_map>
+
+#include "karabo/data/time/Timestamp.hh"
+#include "karabo/data/types/Schema.hh"
 
 
 #define KARABO_GET_SHARED_FROM_WEAK(sp, wp) \
@@ -68,16 +69,16 @@ namespace karabo {
 
             /// keys are instance IDs, values are a sets of properties that changed
             typedef std::map<std::string, std::set<std::string>> SignalChangedMap;
-            typedef std::function<void(const karabo::util::Hash& /*topologyEntry*/)> InstanceNewHandler;
-            typedef std::function<void(const karabo::util::Hash& /*topologyEntry*/)> InstanceUpdatedHandler;
-            typedef std::function<void(const std::string& /*instanceId*/, const karabo::util::Hash& /*instanceInfo*/)>
+            typedef std::function<void(const karabo::data::Hash& /*topologyEntry*/)> InstanceNewHandler;
+            typedef std::function<void(const karabo::data::Hash& /*topologyEntry*/)> InstanceUpdatedHandler;
+            typedef std::function<void(const std::string& /*instanceId*/, const karabo::data::Hash& /*instanceInfo*/)>
                   InstanceGoneHandler;
-            typedef std::function<void(const std::string& /*deviceId*/, const karabo::util::Schema& /*schema*/)>
+            typedef std::function<void(const std::string& /*deviceId*/, const karabo::data::Schema& /*schema*/)>
                   SchemaUpdatedHandler;
             typedef std::function<void(const std::string& /*serverId*/, const std::string& /*classId*/,
-                                       const karabo::util::Schema& /*schema*/)>
+                                       const karabo::data::Schema& /*schema*/)>
                   ClassSchemaHandler;
-            typedef std::function<void(const karabo::util::Hash& /* devicesChanges */)> DevicesChangedHandler;
+            typedef std::function<void(const karabo::data::Hash& /* devicesChanges */)> DevicesChangedHandler;
 
             static const int CONNECTION_KEEP_ALIVE = 15; // keep in sync with GuiSever_Test.cc!
 
@@ -102,7 +103,7 @@ namespace karabo {
              *         <stateName> => SCHEMA
              *
              */
-            karabo::util::Hash m_runtimeSystemDescription;
+            karabo::data::Hash m_runtimeSystemDescription;
 
             mutable std::mutex m_runtimeSystemDescriptionMutex;
 
@@ -115,7 +116,7 @@ namespace karabo {
             typedef std::map<std::string, int> InstanceUsage;
             InstanceUsage m_instanceUsage;
 
-            karabo::util::Hash m_deviceChangedHandlers;
+            karabo::data::Hash m_deviceChangedHandlers;
 
             /**
              * Handler for all monitored devices configuration updates during last interval.
@@ -123,7 +124,7 @@ namespace karabo {
             DevicesChangedHandler m_devicesChangesHandler;
             std::mutex m_devicesChangesMutex;
 
-            karabo::util::Hash m_propertyChangedHandlers;
+            karabo::data::Hash m_propertyChangedHandlers;
 
             std::mutex m_instanceUsageMutex;
 
@@ -150,7 +151,7 @@ namespace karabo {
 
             std::mutex m_loggerMapMutex;
 
-            util::Hash m_loggerMap;
+            data::Hash m_loggerMap;
 
             bool m_loggerMapCached;
 
@@ -165,7 +166,7 @@ namespace karabo {
             std::set<std::string> m_immortals;
             mutable std::mutex m_immortalsMutex;
 
-            int m_accessLevel = karabo::util::Schema::ADMIN;
+            int m_accessLevel = karabo::data::Schema::ADMIN;
 
             std::string m_dataLoggerManagerId;
             std::string m_configManagerId;
@@ -190,7 +191,7 @@ namespace karabo {
              *                         "configurationManagerId" are supported.
              */
             explicit DeviceClient(const std::string& instanceId = std::string(), bool implicitInit = true,
-                                  const karabo::util::Hash& serviceDeviceIds = karabo::util::Hash());
+                                  const karabo::data::Hash& serviceDeviceIds = karabo::data::Hash());
 
             /**
              * Constructor using instantiated signalSlotable object (shared communication - take care that the
@@ -207,7 +208,7 @@ namespace karabo {
              */
             explicit DeviceClient(const std::shared_ptr<karabo::xms::SignalSlotable>& signalSlotable,
                                   bool implicitInit = true,
-                                  const karabo::util::Hash& serviceDeviceIds = karabo::util::Hash());
+                                  const karabo::data::Hash& serviceDeviceIds = karabo::data::Hash());
 
             /**
              * Constructor aimed at cases where a specific DataLoggerManagerId is required.
@@ -221,7 +222,7 @@ namespace karabo {
              *                         for data logging operations. Currently keys "dataLoggerManagerId" and
              *                         "configurationManagerId" are supported.
              */
-            DeviceClient(const std::string& instanceId, const karabo::util::Hash& serviceDeviceIds);
+            DeviceClient(const std::string& instanceId, const karabo::data::Hash& serviceDeviceIds);
 
             /**
              * Constructor using instantiated signalSlotable object (shared communication - take care that the
@@ -236,7 +237,7 @@ namespace karabo {
              *                         "configurationManagerId" are supported.
              */
             DeviceClient(const std::shared_ptr<karabo::xms::SignalSlotable>& signalSlotable,
-                         const karabo::util::Hash& serviceDeviceIds);
+                         const karabo::data::Hash& serviceDeviceIds);
 
             virtual ~DeviceClient();
 
@@ -312,14 +313,14 @@ namespace karabo {
              * Returns the full information about the current (runtime) distributed system
              * @return a Hash containing the full system description
              */
-            karabo::util::Hash getSystemInformation();
+            karabo::data::Hash getSystemInformation();
 
 
             /**
              * Returns only the topology of the current system (no instance configurations or descriptions)
              * @return Hash containing the topology of the runtime system
              */
-            karabo::util::Hash getSystemTopology();
+            karabo::data::Hash getSystemTopology();
 
             /**
              * Retrieves all servers currently existing in the distributed system
@@ -352,7 +353,7 @@ namespace karabo {
              * @param instanceId Device's instance ID
              * @return full Schema
              */
-            karabo::util::Schema getDeviceSchema(const std::string& instanceId);
+            karabo::data::Schema getDeviceSchema(const std::string& instanceId);
 
 
             /**
@@ -363,7 +364,7 @@ namespace karabo {
              * @param instanceId Device's instance ID
              * @return full Schema
              */
-            karabo::util::Schema getDeviceSchemaNoWait(const std::string& instanceId);
+            karabo::data::Schema getDeviceSchemaNoWait(const std::string& instanceId);
 
             /**
              * Retrieves the currently active Schema (filtered by allowed states and allowed roles)
@@ -371,7 +372,7 @@ namespace karabo {
              * @param instanceId Device's instance ID
              * @return active Schema
              */
-            karabo::util::Schema getActiveSchema(const std::string& instanceId);
+            karabo::data::Schema getActiveSchema(const std::string& instanceId);
 
             /**
              * Retrieves a schema from static context of a loaded Device class plug-in.
@@ -381,7 +382,7 @@ namespace karabo {
              * @param classId name of loaded class on the deviceServer (classId)
              * @return Schema describing parameters available at instantiation time
              */
-            karabo::util::Schema getClassSchema(const std::string& serverId, const std::string& classId);
+            karabo::data::Schema getClassSchema(const std::string& serverId, const std::string& classId);
 
             /**
              * Retrieves a schema from static context of a loaded Device class plug-in.
@@ -391,7 +392,7 @@ namespace karabo {
              * @param classId name of loaded class on the deviceServer (classId)
              * @return an empty schem
              */
-            karabo::util::Schema getClassSchemaNoWait(const std::string& serverId, const std::string& classId);
+            karabo::data::Schema getClassSchemaNoWait(const std::string& serverId, const std::string& classId);
 
             /**
              * Retrieve the properties of a device at deviceId.
@@ -431,7 +432,7 @@ namespace karabo {
              * @param filename
              * @return a Hash containing the configuration
              */
-            karabo::util::Hash loadConfigurationFromFile(const std::string& filename);
+            karabo::data::Hash loadConfigurationFromFile(const std::string& filename);
 
             /**
              * Attempt to instantiate a device of the specified class, on a remote server with a given initial
@@ -455,7 +456,7 @@ namespace karabo {
              * server
              */
             std::pair<bool, std::string> instantiate(const std::string& serverInstanceId, const std::string& classId,
-                                                     const karabo::util::Hash& configuration = karabo::util::Hash(),
+                                                     const karabo::data::Hash& configuration = karabo::data::Hash(),
                                                      int timeoutInSeconds = -1);
 
             /**
@@ -469,7 +470,7 @@ namespace karabo {
              * @return
              */
             std::pair<bool, std::string> instantiate(const std::string& serverInstanceId,
-                                                     const karabo::util::Hash& configuration,
+                                                     const karabo::data::Hash& configuration,
                                                      int timeoutInSeconds = -1);
 
 
@@ -483,8 +484,8 @@ namespace karabo {
              * @param configuration of the device to be instantiated.
              * @return configuration ready to be sent to device server
              */
-            karabo::util::Hash formatConfigToInstantiate(const std::string& classId,
-                                                         const karabo::util::Hash& configuration);
+            karabo::data::Hash formatConfigToInstantiate(const std::string& classId,
+                                                         const karabo::data::Hash& configuration);
 
             /**
              * Instantiate a device on a remote server. In contrast to DeviceClient::instantiate, this function returns
@@ -504,7 +505,7 @@ namespace karabo {
              *
              */
             void instantiateNoWait(const std::string& serverInstanceId, const std::string& classId,
-                                   const karabo::util::Hash& configuration = karabo::util::Hash());
+                                   const karabo::data::Hash& configuration = karabo::data::Hash());
 
             /**
              * Instantiate a device on a remote server. In contrast to DeviceClient::instantiate, this function returns
@@ -515,7 +516,7 @@ namespace karabo {
              * be present.
              * @return
              */
-            void instantiateNoWait(const std::string& serverInstanceId, const karabo::util::Hash& configuration);
+            void instantiateNoWait(const std::string& serverInstanceId, const karabo::data::Hash& configuration);
 
             /**
              * Kill a device in the distributed system and wait until it is actually dead
@@ -559,7 +560,7 @@ namespace karabo {
              * @param instanceId for which to return the configuration of
              * @return a Hash holding the instance configuration
              */
-            karabo::util::Hash get(const std::string& instanceId);
+            karabo::data::Hash get(const std::string& instanceId);
 
             /**
              * Return the configuration Hash of an instance. The configuration
@@ -569,7 +570,7 @@ namespace karabo {
              * @param instanceId for which to return the configuration of
              * @param hash reference to write configuration into
              */
-            void get(const std::string& instanceId, karabo::util::Hash& hash);
+            void get(const std::string& instanceId, karabo::data::Hash& hash);
 
             /**
              * Return the cached configuration if it is still valid, otherwise query an updated version
@@ -577,7 +578,7 @@ namespace karabo {
              * @param deviceId for which to return the configuration of
              * @return a Hash holding the instance configuration
              */
-            karabo::util::Hash getConfigurationNoWait(const std::string& deviceId);
+            karabo::data::Hash getConfigurationNoWait(const std::string& deviceId);
 
             /**
              * Check if an attribute exists for a property on a given instance
@@ -588,7 +589,7 @@ namespace karabo {
              * @return a boolean indicating if the attribute is present
              */
             bool hasAttribute(const std::string& instanceId, const std::string& key, const std::string& attribute,
-                              const char keySep = util::Hash::k_defaultSep);
+                              const char keySep = data::Hash::k_defaultSep);
 
             /**
              * Return a property from a remote instance. The instance configuration
@@ -602,23 +603,23 @@ namespace karabo {
              * @raise TypeException if the templated type does not match the property type.
              */
             template <class T>
-            T get(const std::string& instanceId, const std::string& key, const char keySep = util::Hash::k_defaultSep) {
+            T get(const std::string& instanceId, const std::string& key, const char keySep = data::Hash::k_defaultSep) {
                 try {
-                    const karabo::util::Hash::Attributes attrs =
+                    const karabo::data::Hash::Attributes attrs =
                           getDeviceSchema(instanceId).getParameterHash().getNode(key, keySep).getAttributes();
                     if (attrs.has(KARABO_SCHEMA_LEAF_TYPE)) {
                         const int leafType = attrs.get<int>(KARABO_SCHEMA_LEAF_TYPE);
-                        if (leafType == karabo::util::Schema::STATE) {
-                            if (typeid(T) == typeid(karabo::util::State)) {
-                                return *reinterpret_cast<const T*>(&karabo::util::State::fromString(
+                        if (leafType == karabo::data::Schema::STATE) {
+                            if (typeid(T) == typeid(karabo::data::State)) {
+                                return *reinterpret_cast<const T*>(&karabo::data::State::fromString(
                                       cacheAndGetConfiguration(instanceId).get<std::string>(key, keySep)));
                             }
                             throw KARABO_PARAMETER_EXCEPTION("State element at " + key +
                                                              " may only return state objects");
                         }
-                        if (leafType == karabo::util::Schema::ALARM_CONDITION) {
-                            if (typeid(T) == typeid(karabo::util::AlarmCondition)) {
-                                return *reinterpret_cast<const T*>(&karabo::util::AlarmCondition::fromString(
+                        if (leafType == karabo::data::Schema::ALARM_CONDITION) {
+                            if (typeid(T) == typeid(karabo::data::AlarmCondition)) {
+                                return *reinterpret_cast<const T*>(&karabo::data::AlarmCondition::fromString(
                                       cacheAndGetConfiguration(instanceId).get<std::string>(key, keySep)));
                             }
                             throw KARABO_PARAMETER_EXCEPTION("Alarm condition element at " + key +
@@ -626,7 +627,7 @@ namespace karabo {
                         }
                     }
                     return cacheAndGetConfiguration(instanceId).get<T>(key, keySep);
-                } catch (const karabo::util::Exception& e) {
+                } catch (const karabo::data::Exception& e) {
                     KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Could not fetch parameter \"" + key +
                                                                  "\" from device \"" + instanceId + "\""));
                     return *static_cast<T*>(NULL); // never reached. Keep it to make the compiler happy.
@@ -646,24 +647,24 @@ namespace karabo {
              */
             template <class T>
             void get(const std::string& instanceId, const std::string& key, T& value,
-                     const char keySep = util::Hash::k_defaultSep) {
+                     const char keySep = data::Hash::k_defaultSep) {
                 try {
-                    const karabo::util::Hash::Attributes attrs =
+                    const karabo::data::Hash::Attributes attrs =
                           getDeviceSchema(instanceId).getParameterHash().getNode(key, keySep).getAttributes();
                     if (attrs.has(KARABO_SCHEMA_LEAF_TYPE)) {
                         const int leafType = attrs.get<int>(KARABO_SCHEMA_LEAF_TYPE);
-                        if (leafType == karabo::util::Schema::STATE) {
-                            if (typeid(T) == typeid(karabo::util::State)) {
-                                value = *reinterpret_cast<const T*>(&karabo::util::State::fromString(
+                        if (leafType == karabo::data::Schema::STATE) {
+                            if (typeid(T) == typeid(karabo::data::State)) {
+                                value = *reinterpret_cast<const T*>(&karabo::data::State::fromString(
                                       cacheAndGetConfiguration(instanceId).get<std::string>(key, keySep)));
                                 return;
                             }
                             throw KARABO_PARAMETER_EXCEPTION("State element at " + key +
                                                              " may only return state objects");
                         }
-                        if (leafType == karabo::util::Schema::ALARM_CONDITION) {
-                            if (typeid(T) == typeid(karabo::util::AlarmCondition)) {
-                                value = *reinterpret_cast<const T*>(&karabo::util::AlarmCondition::fromString(
+                        if (leafType == karabo::data::Schema::ALARM_CONDITION) {
+                            if (typeid(T) == typeid(karabo::data::AlarmCondition)) {
+                                value = *reinterpret_cast<const T*>(&karabo::data::AlarmCondition::fromString(
                                       cacheAndGetConfiguration(instanceId).get<std::string>(key, keySep)));
                                 return;
                             }
@@ -672,7 +673,7 @@ namespace karabo {
                         }
                     }
                     return cacheAndGetConfiguration(instanceId).get(key, value, keySep);
-                } catch (const karabo::util::Exception& e) {
+                } catch (const karabo::data::Exception& e) {
                     KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Could not fetch parameter \"" + key +
                                                                  "\" from device \"" + instanceId + "\""));
                 }
@@ -691,10 +692,10 @@ namespace karabo {
              */
             template <class T>
             T getAs(const std::string& instanceId, const std::string& key,
-                    const char keySep = util::Hash::k_defaultSep) {
+                    const char keySep = data::Hash::k_defaultSep) {
                 try {
                     return cacheAndGetConfiguration(instanceId).getAs<T>(key, keySep);
-                } catch (const karabo::util::Exception& e) {
+                } catch (const karabo::data::Exception& e) {
                     KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Could not fetch parameter \"" + key +
                                                                  "\" from device \"" + instanceId + "\""));
                     // Please compiler by adding a (crashing...) return statement that is never reached:
@@ -713,10 +714,10 @@ namespace karabo {
              * @return the current property value on the remote device as std::any type
              */
             std::any getAsAny(const std::string& instanceId, const std::string& key,
-                              const char keySep = util::Hash::k_defaultSep) {
+                              const char keySep = data::Hash::k_defaultSep) {
                 try {
                     return cacheAndGetConfiguration(instanceId).getNode(key, keySep).getValueAsAny();
-                } catch (const karabo::util::Exception& e) {
+                } catch (const karabo::data::Exception& e) {
                     KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Could not fetch parameter \"" + key +
                                                                  "\" from device \"" + instanceId + "\""));
                 }
@@ -739,9 +740,9 @@ namespace karabo {
              *
              * @param deviceId of the device holding the property
              * @param key path to the property on the device
-             * @param from karabo::util::Epochstamp in Iso8601 format signifying the start
+             * @param from karabo::data::Epochstamp in Iso8601 format signifying the start
              *              of the time interval to get the history from
-             * @param to karabo::util::Epochstamp in Iso8601 format signifying the end
+             * @param to karabo::data::Epochstamp in Iso8601 format signifying the end
              *              of the time interval to get the history from. If left empty default
              *              to now
              * @param maxNumData maximum number of data points to retrieve, starting from the
@@ -749,9 +750,9 @@ namespace karabo {
              * @return a vector of Hashes holding the property's history. Each entry consists
              *         of a Hash with a key "v" holding the value of the appropriate type. For
              *         each entry "v" Karabo train and timestamp attributes are set which can
-             *         be retrieved using the karabo::util::Timestamp::fromHashAttributes method.
+             *         be retrieved using the karabo::data::Timestamp::fromHashAttributes method.
              */
-            std::vector<karabo::util::Hash> getFromPast(const std::string& deviceId, const std::string& key,
+            std::vector<karabo::data::Hash> getFromPast(const std::string& deviceId, const std::string& key,
                                                         const std::string& from, std::string to = "",
                                                         int maxNumData = 0);
 
@@ -761,9 +762,9 @@ namespace karabo {
              *
              * @param deviceId of the device holding the property
              * @param key path to the property on the device
-             * @param from karabo::util::Epochstamp in Iso8601 format signifying the start
+             * @param from karabo::data::Epochstamp in Iso8601 format signifying the start
              *              of the time interval to get the history from
-             * @param to karabo::util::Epochstamp in Iso8601 format signifying the end
+             * @param to karabo::data::Epochstamp in Iso8601 format signifying the end
              *              of the time interval to get the history from. If left empty default
              *              to now
              * @param maxNumData maximum number of data points to retrieve, starting from the
@@ -771,9 +772,9 @@ namespace karabo {
              * @return a vector of Hashes holding the property's history. Each entry consists
              *         of a Hash with a key "v" holding the value of the appropriate type. For
              *         each entry "v" Karabo train and timestamp attributes are set which can
-             *         be retrieved using the karabo::util::Timestamp::fromHashAttributes method.
+             *         be retrieved using the karabo::data::Timestamp::fromHashAttributes method.
              */
-            std::vector<karabo::util::Hash> getPropertyHistory(const std::string& deviceId, const std::string& key,
+            std::vector<karabo::data::Hash> getPropertyHistory(const std::string& deviceId, const std::string& key,
                                                                const std::string& from, std::string to = "",
                                                                int maxNumData = 0);
 
@@ -793,7 +794,7 @@ namespace karabo {
              * @param timepoint to return information for. Should be an iso8601 formatted string.
              * @return a pair of the configuration Hash and corresponding device Schema
              */
-            std::pair<karabo::util::Hash, karabo::util::Schema> getConfigurationFromPast(const std::string& deviceId,
+            std::pair<karabo::data::Hash, karabo::data::Schema> getConfigurationFromPast(const std::string& deviceId,
                                                                                          const std::string& timepoint);
 
             /**
@@ -811,7 +812,7 @@ namespace karabo {
              *         is saved for the device under a name that contains the namePart, the "configs" vector will be
              *         empty. Each hash in the "configs" vector contains the keys "name", "timepoint".
              */
-            karabo::util::Hash listConfigurationFromName(const std::string& deviceId, const std::string& namePart = "");
+            karabo::data::Hash listConfigurationFromName(const std::string& deviceId, const std::string& namePart = "");
 
             /**
              * Returns the configuration and schema saved for a device under a given name.
@@ -827,7 +828,7 @@ namespace karabo {
              *         and "schema" when a device configuration with the given name is found or an empty hash in case
              *         of failure or when no device configuration with the given name exists.
              */
-            karabo::util::Hash getConfigurationFromName(const std::string& deviceId, const std::string& name);
+            karabo::data::Hash getConfigurationFromName(const std::string& deviceId, const std::string& name);
 
             /**
              * Returns the most recently saved configuration for a device that has a given priority.
@@ -843,7 +844,7 @@ namespace karabo {
              *         and "schema" when a device configuration with the given priority is found or an empty hash in
              *         case of failure or when no device configuration with the given priority exists.
              */
-            karabo::util::Hash getLastConfiguration(const std::string& deviceId, int priority = 1);
+            karabo::data::Hash getLastConfiguration(const std::string& deviceId, int priority = 1);
 
             /**
              * Saves a collection of current device configurations (and the corresponding schemas) in the
@@ -936,9 +937,9 @@ namespace karabo {
             bool registerPropertyMonitor(
                   const std::string& instanceId, const std::string& key,
                   const std::function<void(const std::string& /*deviceId*/, const std::string& /*key*/,
-                                           const ValueType& /*value*/, const karabo::util::Timestamp& /*timestamp*/)>&
+                                           const ValueType& /*value*/, const karabo::data::Timestamp& /*timestamp*/)>&
                         callbackFunction) {
-                karabo::util::Schema schema = this->getDeviceSchema(instanceId);
+                karabo::data::Schema schema = this->getDeviceSchema(instanceId);
                 if (schema.has(key)) {
                     this->cacheAndGetConfiguration(instanceId);
                     {
@@ -966,10 +967,10 @@ namespace karabo {
             bool registerPropertyMonitor(
                   const std::string& instanceId, const std::string& key,
                   const std::function<void(const std::string& /*deviceId*/, const std::string& /*key*/,
-                                           const ValueType& /*value*/, const karabo::util::Timestamp& /*timestamp*/,
+                                           const ValueType& /*value*/, const karabo::data::Timestamp& /*timestamp*/,
                                            const std::any& /*userData*/)>& callbackFunction,
                   const UserDataType& userData) {
-                karabo::util::Schema schema = this->getDeviceSchema(instanceId);
+                karabo::data::Schema schema = this->getDeviceSchema(instanceId);
                 if (schema.has(key)) {
                     this->cacheAndGetConfiguration(instanceId);
                     {
@@ -1000,7 +1001,7 @@ namespace karabo {
              */
             void registerDeviceMonitor(
                   const std::string& instanceId,
-                  const std::function<void(const std::string&, const karabo::util::Hash&)>& callbackFunction);
+                  const std::function<void(const std::string&, const karabo::data::Hash&)>& callbackFunction);
 
             /**
              * Registers a device to have its configurations changes monitored.
@@ -1043,7 +1044,7 @@ namespace karabo {
              */
             template <class UserDataType>
             void registerDeviceMonitor(const std::string& instanceId,
-                                       const std::function<void(const std::string&, const karabo::util::Hash&,
+                                       const std::function<void(const std::string&, const karabo::data::Hash&,
                                                                 const std::any&)>& callbackFunction,
                                        const UserDataType& userData) {
                 // It would be better to use stayConnected with async handlers as in the non-templated version of
@@ -1070,7 +1071,7 @@ namespace karabo {
              * Container of handlers for InputChannel, to be passed to
              *
              * bool registerChannelMonitor(const std::string& channelName, const InputChannelHandlers& handlers,
-             *                             const karabo::util::Hash& inputChannelCfg = karabo::util::Hash());
+             *                             const karabo::data::Hash& inputChannelCfg = karabo::data::Hash());
              *
              * See documentation of that method for meaning of various handlers.
              */
@@ -1115,7 +1116,7 @@ namespace karabo {
              * @param channelName identifies the channel as a concatenation of the id of its devices, a colon (:) and
              *                    the name of the output channel (e.g. A/COOL/DEVICE:output)
              * @param handlers container for various handlers (handlers can be empty function pointers):
-             *                 - dataHandler std::function<void (const karabo::util::Hash&, const MetaData&)> to be
+             *                 - dataHandler std::function<void (const karabo::data::Hash&, const MetaData&)> to be
              *                               called whenever data arrives
              *                 - inputHandler std::function<void (const InputChannel::Pointer&)> to be called whenever
              *                                data arrives
@@ -1129,7 +1130,7 @@ namespace karabo {
              * @return false if channel is already registered
              */
             bool registerChannelMonitor(const std::string& channelName, const InputChannelHandlers& handlers,
-                                        const karabo::util::Hash& inputChannelCfg = karabo::util::Hash());
+                                        const karabo::data::Hash& inputChannelCfg = karabo::data::Hash());
 
             /**
              * Register handlers to be called whenever the defined output channel receives data or end-of-stream (EOS).
@@ -1138,7 +1139,7 @@ namespace karabo {
              *
              * @param instanceId of the device having the output channel
              * @param channel is name of the output channel
-             * @param dataHandler std::function<void (const karabo::util::Hash&, const MetaData&) to be called
+             * @param dataHandler std::function<void (const karabo::data::Hash&, const MetaData&) to be called
              * whenever data arrives
              * @param inputChannelCfg configures via InputChanel::create(..) - use default except you know what your are
              * doing for the expert:  "connectedOutputChannels" will be overwritten
@@ -1150,7 +1151,7 @@ namespace karabo {
              */
             bool registerChannelMonitor(const std::string& instanceId, const std::string& channel,
                                         const karabo::xms::SignalSlotable::DataHandler& dataHandler,
-                                        const karabo::util::Hash& inputChannelCfg = karabo::util::Hash(),
+                                        const karabo::data::Hash& inputChannelCfg = karabo::data::Hash(),
                                         const karabo::xms::SignalSlotable::InputHandler& eosHandler =
                                               karabo::xms::SignalSlotable::InputHandler(),
                                         const karabo::xms::SignalSlotable::InputHandler& inputHandler =
@@ -1163,7 +1164,7 @@ namespace karabo {
              *
              * @param channelName identifies the channel as a concatenation of the id of its devices, a colon (:) and
              *                     the name of the output channel (e.g. A/COOL/DEVICE:output)
-             * @param dataHandler std::function<void (const karabo::util::Hash&, const MetaData&) to be called
+             * @param dataHandler std::function<void (const karabo::data::Hash&, const MetaData&) to be called
              * whenever data arrives
              * @param inputChannelCfg configures via InputChanel::create(..) - use default except you know what your are
              * doing for the expert:  "connectedOutputChannels" will be overwritten
@@ -1175,7 +1176,7 @@ namespace karabo {
              */
             bool registerChannelMonitor(const std::string& channelName,
                                         const karabo::xms::SignalSlotable::DataHandler& dataHandler,
-                                        const karabo::util::Hash& inputChannelCfg = karabo::util::Hash(),
+                                        const karabo::data::Hash& inputChannelCfg = karabo::data::Hash(),
                                         const karabo::xms::SignalSlotable::InputHandler& eosHandler =
                                               karabo::xms::SignalSlotable::InputHandler(),
                                         const karabo::xms::SignalSlotable::InputHandler& inputHandler =
@@ -1209,8 +1210,8 @@ namespace karabo {
              */
             template <class T>
             void set(const std::string& instanceId, const std::string& key, const T& value, int timeoutInSeconds = -1,
-                     const char keySep = util::Hash::k_defaultSep) {
-                karabo::util::Hash tmp;
+                     const char keySep = data::Hash::k_defaultSep) {
+                karabo::data::Hash tmp;
                 tmp.set(key, value, keySep);
                 set(instanceId, tmp, timeoutInSeconds);
             }
@@ -1225,8 +1226,8 @@ namespace karabo {
              */
             template <class T>
             void setNoWait(const std::string& instanceId, const std::string& key, const T& value,
-                           const char keySep = util::Hash::k_defaultSep) {
-                karabo::util::Hash tmp;
+                           const char keySep = data::Hash::k_defaultSep) {
+                karabo::data::Hash tmp;
                 tmp.set(key, value, keySep);
                 setNoWait(instanceId, tmp);
             }
@@ -1238,7 +1239,7 @@ namespace karabo {
              * set
              * @param timeoutInSeconds maximum timeout until set operation fails, set to -1 to wait forever
              */
-            void set(const std::string& instanceId, const karabo::util::Hash& values, int timeoutInSeconds = -1);
+            void set(const std::string& instanceId, const karabo::data::Hash& values, int timeoutInSeconds = -1);
 
             /**
              * Bulk-set remote properties in the distributed system as a fire-and-forget operation.
@@ -1247,7 +1248,7 @@ namespace karabo {
              * @param values a Hash containing the to be set value in a path structure indicating which properties to
              * set
              */
-            void setNoWait(const std::string& instanceId, const karabo::util::Hash& values);
+            void setNoWait(const std::string& instanceId, const karabo::data::Hash& values);
 
             /**
              * Executes a function on a device (an exposed via its Schema) and immediately returns (fire & forget)
@@ -1396,7 +1397,7 @@ namespace karabo {
              * @param outputChannelName
              * @return a Hash containing the output channel's data schema
              */
-            karabo::util::Hash getOutputChannelSchema(const std::string& deviceId,
+            karabo::data::Hash getOutputChannelSchema(const std::string& deviceId,
                                                       const std::string& outputChannelName);
 
             /**
@@ -1427,40 +1428,40 @@ namespace karabo {
              * @param path   the path created with <i>prepareTopologyPath</i> using instanceId and instanceInfo
              * @param instanceInfo   The instanceInfo Hash received from the broadcast
              */
-            karabo::util::Hash prepareTopologyEntry(const std::string& path,
-                                                    const karabo::util::Hash& instanceInfo) const;
+            karabo::data::Hash prepareTopologyEntry(const std::string& path,
+                                                    const karabo::data::Hash& instanceInfo) const;
 
             std::string prepareTopologyPath(const std::string& instanceId,
-                                            const karabo::util::Hash& instanceInfo) const;
+                                            const karabo::data::Hash& instanceInfo) const;
 
             void removeFromSystemTopology(const std::string& instanceId);
 
             virtual void setupSlots();
 
-            virtual void _slotChanged(const karabo::util::Hash& hash, const std::string& instanceId);
+            virtual void _slotChanged(const karabo::data::Hash& hash, const std::string& instanceId);
 
-            void _slotInstanceNew(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
+            void _slotInstanceNew(const std::string& instanceId, const karabo::data::Hash& instanceInfo);
 
-            void _slotInstanceUpdated(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
+            void _slotInstanceUpdated(const std::string& instanceId, const karabo::data::Hash& instanceInfo);
 
-            void _slotInstanceGone(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
+            void _slotInstanceGone(const std::string& instanceId, const karabo::data::Hash& instanceInfo);
 
-            virtual void _slotSchemaUpdated(const karabo::util::Schema& schema, const std::string& deviceId);
+            virtual void _slotSchemaUpdated(const karabo::data::Schema& schema, const std::string& deviceId);
 
-            virtual void _slotClassSchema(const karabo::util::Schema& schema, const std::string& classId,
+            virtual void _slotClassSchema(const karabo::data::Schema& schema, const std::string& classId,
                                           const std::string& serverId);
 
-            virtual void _slotLoggerMap(const karabo::util::Hash& loggerMap);
+            virtual void _slotLoggerMap(const karabo::data::Hash& loggerMap);
 
             static std::string generateOwnInstanceId();
 
-            karabo::util::Schema cacheAndGetClassSchema(const std::string& serverId, const std::string& classId);
+            karabo::data::Schema cacheAndGetClassSchema(const std::string& serverId, const std::string& classId);
 
-            karabo::util::Schema cacheAndGetDeviceSchema(const std::string& instanceId);
+            karabo::data::Schema cacheAndGetDeviceSchema(const std::string& instanceId);
 
-            karabo::util::Schema cacheAndGetActiveSchema(const std::string& instanceId);
+            karabo::data::Schema cacheAndGetActiveSchema(const std::string& instanceId);
 
-            karabo::util::Hash cacheAndGetConfiguration(const std::string& instanceId);
+            karabo::data::Hash cacheAndGetConfiguration(const std::string& instanceId);
 
             /*
              *  Keep connection to instanceId alive or establish if not there yet.
@@ -1478,19 +1479,19 @@ namespace karabo {
 
             void eraseFromInstanceUsage(const std::string& instanceId);
 
-            virtual void notifyDeviceChangedMonitors(const karabo::util::Hash& hash, const std::string& instanceId);
+            virtual void notifyDeviceChangedMonitors(const karabo::data::Hash& hash, const std::string& instanceId);
 
-            virtual void notifyPropertyChangedMonitors(const karabo::util::Hash& hash, const std::string& instanceId);
+            virtual void notifyPropertyChangedMonitors(const karabo::data::Hash& hash, const std::string& instanceId);
 
-            void castAndCall(const std::string& instanceId, const karabo::util::Hash& registered,
-                             const karabo::util::Hash& current, std::string path = "") const;
+            void castAndCall(const std::string& instanceId, const karabo::data::Hash& registered,
+                             const karabo::data::Hash& current, std::string path = "") const;
 
-            void extractCommands(const karabo::util::Schema& schema, const std::string& parentKey,
+            void extractCommands(const karabo::data::Schema& schema, const std::string& parentKey,
                                  std::vector<std::string>& commands);
 
-            std::vector<std::string> filterProperties(const karabo::util::Schema& schema, const int accessLevel);
+            std::vector<std::string> filterProperties(const karabo::data::Schema& schema, const int accessLevel);
 
-            std::string getInstanceType(const karabo::util::Hash& instanceInfo) const;
+            std::string getInstanceType(const karabo::data::Hash& instanceInfo) const;
 
             virtual void slotMasterPing();
 
@@ -1518,7 +1519,7 @@ namespace karabo {
 
             bool isImmortal(const std::string& deviceId) const;
 
-            void mergeIntoRuntimeSystemDescription(const karabo::util::Hash& entry);
+            void mergeIntoRuntimeSystemDescription(const karabo::data::Hash& entry);
 
             bool existsInRuntimeSystemDescription(const std::string& path) const;
 
@@ -1527,7 +1528,7 @@ namespace karabo {
 
             /// Get section (e.g. "device") from runtime description.
             /// Returns empty Hash if section does not exist.
-            util::Hash getSectionFromRuntimeDescription(const std::string& section) const;
+            data::Hash getSectionFromRuntimeDescription(const std::string& section) const;
 
             /// Find full path of 'instanceId' in m_runtimeSystemDescription,
             /// empty if path does not exist.
@@ -1560,7 +1561,7 @@ namespace karabo {
              *                         "configurationManagerId" are supported. If a supported key is missing, the
              *                         default ID for the service device type is used.
              */
-            void initServiceDeviceIds(const karabo::util::Hash& serviceDeviceIds);
+            void initServiceDeviceIds(const karabo::data::Hash& serviceDeviceIds);
 
             /**
              * Helper for _slotInstanceGone for servers
@@ -1569,7 +1570,7 @@ namespace karabo {
              * pairs of their deviceIds and instanceInfo.
              * Requires protection of m_runtimeSystemDescriptionMutex.
              */
-            std::vector<std::pair<std::string, karabo::util::Hash>> findAndEraseDevicesAsGone(
+            std::vector<std::pair<std::string, karabo::data::Hash>> findAndEraseDevicesAsGone(
                   const std::string& serverId);
 
             /**
@@ -1579,7 +1580,7 @@ namespace karabo {
              * - despite of removal from m_runtimeSystemDescription
              * - and despite of special treatment of devices on the server if instance is a server
              */
-            void treatInstanceAsGone(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
+            void treatInstanceAsGone(const std::string& instanceId, const karabo::data::Hash& instanceInfo);
         };
     } // namespace core
 } // namespace karabo

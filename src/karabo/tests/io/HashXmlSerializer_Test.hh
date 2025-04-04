@@ -54,10 +54,10 @@ class HashXmlSerializer_Test : public CPPUNIT_NS::TestFixture {
     void testLegacyDeserialization();
 
    private:
-    karabo::util::Hash m_rootedHash;
-    karabo::util::Hash m_bigHash;
-    karabo::util::Hash m_unrootedHash;
-    std::vector<karabo::util::Hash> m_vectorOfHashes;
+    karabo::data::Hash m_rootedHash;
+    karabo::data::Hash m_bigHash;
+    karabo::data::Hash m_unrootedHash;
+    std::vector<karabo::data::Hash> m_vectorOfHashes;
 };
 
 #endif /* HASHXMLSERIALIZER_TEST_HH */

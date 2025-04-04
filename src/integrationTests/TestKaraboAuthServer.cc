@@ -26,13 +26,14 @@
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
-#include <karabo/util/Schema.hh>
-#include <karabo/util/StringTools.hh>
 #include <nlohmann/json.hpp>
+
+#include "karabo/data/types/Schema.hh"
+#include "karabo/data/types/StringTools.hh"
 
 namespace nl = nlohmann;
 using namespace std;
-using namespace karabo::util;
+using namespace karabo::data;
 
 namespace beast = boost::beast;   // from <boost/beast.hpp>
 namespace http = beast::http;     // from <boost/beast/http.hpp>

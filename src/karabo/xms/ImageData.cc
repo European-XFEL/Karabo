@@ -26,18 +26,18 @@
 
 #include <climits>
 
-#include "karabo/util/NDArray.hh"
-#include "karabo/util/NDArrayElement.hh"
-#include "karabo/util/SimpleElement.hh"
-#include "karabo/util/ToSize.hh"
-#include "karabo/util/Types.hh"
-#include "karabo/util/Units.hh"
-#include "karabo/util/VectorElement.hh"
+#include "karabo/data/schema/NDArrayElement.hh"
+#include "karabo/data/schema/SimpleElement.hh"
+#include "karabo/data/schema/VectorElement.hh"
+#include "karabo/data/types/NDArray.hh"
+#include "karabo/data/types/ToSize.hh"
+#include "karabo/data/types/Types.hh"
+#include "karabo/data/types/Units.hh"
 
 namespace karabo {
     namespace xms {
 
-        using namespace karabo::util;
+        using namespace karabo::data;
 
 
         bool Encoding::isIndexable(int encoding) {
@@ -66,13 +66,13 @@ namespace karabo {
                 case Encoding::TIFF:
                     return false;
                 default:
-                    throw KARABO_LOGIC_EXCEPTION("Encoding " + karabo::util::toString(encoding) + " invalid.");
+                    throw KARABO_LOGIC_EXCEPTION("Encoding " + karabo::data::toString(encoding) + " invalid.");
                     return false; // pleasing the compiler
             }
         }
 
 
-        void ImageData::expectedParameters(karabo::util::Schema& s) {
+        void ImageData::expectedParameters(karabo::data::Schema& s) {
             NDARRAY_ELEMENT(s)
                   .key("pixels")
                   .displayedName("Pixel Data")
@@ -157,14 +157,14 @@ namespace karabo {
         }
 
 
-        ImageData::ImageData() : ImageData(karabo::util::NDArray(karabo::util::Dims())) {}
+        ImageData::ImageData() : ImageData(karabo::data::NDArray(karabo::data::Dims())) {}
 
 
-        ImageData::ImageData(const karabo::util::NDArray& data, const EncodingType encoding, const int bitsPerPixel)
-            : ImageData(data, karabo::util::Dims(), encoding, bitsPerPixel) {}
+        ImageData::ImageData(const karabo::data::NDArray& data, const EncodingType encoding, const int bitsPerPixel)
+            : ImageData(data, karabo::data::Dims(), encoding, bitsPerPixel) {}
 
 
-        ImageData::ImageData(const karabo::util::NDArray& data, const karabo::util::Dims& dims,
+        ImageData::ImageData(const karabo::data::NDArray& data, const karabo::data::Dims& dims,
                              const EncodingType encoding, const int bitsPerPixel) {
             setData(data);
 
@@ -203,10 +203,10 @@ namespace karabo {
             setBitsPerPixel((bitsPerPixel > 0 ? bitsPerPixel : defaultBitsPerPixel(finalEncoding, data)));
 
             const std::vector<unsigned long long> offsets(dataDims.rank(), 0ull);
-            setROIOffsets(karabo::util::Dims(offsets));
+            setROIOffsets(karabo::data::Dims(offsets));
 
             const std::vector<unsigned long long> binning(dataDims.rank(), 1ull);
-            setBinning(karabo::util::Dims(binning));
+            setBinning(karabo::data::Dims(binning));
 
             setRotation(Rotation::ROT_0);
 
@@ -217,12 +217,12 @@ namespace karabo {
         }
 
 
-        karabo::util::Dims ImageData::getROIOffsets() const {
-            return karabo::util::Dims(get<std::vector<unsigned long long> >("roiOffsets"));
+        karabo::data::Dims ImageData::getROIOffsets() const {
+            return karabo::data::Dims(get<std::vector<unsigned long long> >("roiOffsets"));
         }
 
 
-        void ImageData::setROIOffsets(const karabo::util::Dims& offsets) {
+        void ImageData::setROIOffsets(const karabo::data::Dims& offsets) {
             // Make sure that ROI is within the image
             auto imgSize = get<std::vector<unsigned long long> >("dims");
             auto newOffset = offsets.toVector();
@@ -237,12 +237,12 @@ namespace karabo {
         }
 
 
-        karabo::util::Dims ImageData::getBinning() const {
-            return karabo::util::Dims(get<std::vector<unsigned long long> >("binning"));
+        karabo::data::Dims ImageData::getBinning() const {
+            return karabo::data::Dims(get<std::vector<unsigned long long> >("binning"));
         }
 
 
-        void ImageData::setBinning(const karabo::util::Dims& binning) {
+        void ImageData::setBinning(const karabo::data::Dims& binning) {
             set<std::vector<unsigned long long> >("binning", binning.toVector());
         }
 
@@ -302,12 +302,12 @@ namespace karabo {
         }
 
 
-        karabo::util::Dims ImageData::getDimensions() const {
-            return karabo::util::Dims(get<std::vector<unsigned long long> >("dims"));
+        karabo::data::Dims ImageData::getDimensions() const {
+            return karabo::data::Dims(get<std::vector<unsigned long long> >("dims"));
         }
 
 
-        void ImageData::setDimensions(const karabo::util::Dims& dims) {
+        void ImageData::setDimensions(const karabo::data::Dims& dims) {
             size_t rank = dims.rank();
             if (dims.size() == 0) {
                 // Will use the shape information of underlying NDArray as best guess
@@ -353,18 +353,18 @@ namespace karabo {
         }
 
 
-        karabo::util::NDArray& ImageData::getData() {
-            return get<karabo::util::NDArray>("pixels");
+        karabo::data::NDArray& ImageData::getData() {
+            return get<karabo::data::NDArray>("pixels");
         }
 
 
-        const karabo::util::NDArray& ImageData::getData() const {
-            return get<karabo::util::NDArray>("pixels");
+        const karabo::data::NDArray& ImageData::getData() const {
+            return get<karabo::data::NDArray>("pixels");
         }
 
 
-        void ImageData::setData(const karabo::util::NDArray& array) {
-            set<karabo::util::NDArray>("pixels", array);
+        void ImageData::setData(const karabo::data::NDArray& array) {
+            set<karabo::data::NDArray>("pixels", array);
 
             // We can't set dimensions without setting the encoding
             // First, make sure that the "encoding" key exists...
@@ -397,18 +397,18 @@ namespace karabo {
         }
 
 
-        karabo::util::Types::ReferenceType ImageData::getDataType() const {
-            return static_cast<karabo::util::Types::ReferenceType>(get<int>("pixels.type"));
+        karabo::data::Types::ReferenceType ImageData::getDataType() const {
+            return static_cast<karabo::data::Types::ReferenceType>(get<int>("pixels.type"));
         }
 
 
-        void ImageData::setDataType(const karabo::util::Types::ReferenceType& type) {
+        void ImageData::setDataType(const karabo::data::Types::ReferenceType& type) {
             set("pixels.type", static_cast<int>(type));
         }
 
 
-        int ImageData::defaultBitsPerPixel(int encoding, const karabo::util::NDArray& data) {
-            const size_t numBytes = karabo::util::Types::to<karabo::util::ToSize>(data.getType());
+        int ImageData::defaultBitsPerPixel(int encoding, const karabo::data::NDArray& data) {
+            const size_t numBytes = karabo::data::Types::to<karabo::data::ToSize>(data.getType());
 
             int factor = -1;
             switch (encoding) {

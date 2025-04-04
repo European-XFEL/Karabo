@@ -4,6 +4,8 @@
 #include <optional>
 #include <string>
 
+using karabo::data::Hash;
+
 namespace karabo {
     namespace util {
         static void processJson(const nlohmann::json& j, Hash& result);
@@ -14,7 +16,7 @@ namespace karabo {
         using JsonType = std::optional<nlohmann::json::value_t>;
         static JsonType getArrayType(const nlohmann::json& j);
 
-        karabo::util::Hash jsonToHash(const std::string& j) {
+        karabo::data::Hash jsonToHash(const std::string& j) {
             auto json = nlohmann::json::parse(j);
             auto result = Hash();
             processJson(json, result);

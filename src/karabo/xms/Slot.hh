@@ -25,7 +25,8 @@
 #ifndef KARABO_XMS_SLOT_HH
 #define KARABO_XMS_SLOT_HH
 
-#include "karabo/util/Hash.hh"
+#include "karabo/data/types/Hash.hh"
+#include "karabo/util/MetaTools.hh"
 #include "karabo/util/PackParameters.hh"
 
 /**
@@ -55,7 +56,7 @@ namespace karabo {
 
             /// Return message header that triggered calling this slot
             /// Valid while callRegisteredSlotFunctions is processed.
-            karabo::util::Hash::Pointer getHeaderOfSender() const;
+            karabo::data::Hash::Pointer getHeaderOfSender() const;
 
            protected:
             Slot(const std::string& slotFunction) : m_slotFunction(slotFunction) {}
@@ -66,20 +67,20 @@ namespace karabo {
 
             std::mutex m_registeredSlotFunctionsMutex;
 
-            void extractSenderInformation(const karabo::util::Hash& header);
+            void extractSenderInformation(const karabo::data::Hash& header);
 
             void invalidateSenderInformation();
 
-            void callRegisteredSlotFunctions(const karabo::util::Hash& header, const karabo::util::Hash& body);
+            void callRegisteredSlotFunctions(const karabo::data::Hash& header, const karabo::data::Hash& body);
 
-            virtual void doCallRegisteredSlotFunctions(const karabo::util::Hash& body) = 0;
+            virtual void doCallRegisteredSlotFunctions(const karabo::data::Hash& body) = 0;
 
            private:
             std::string m_instanceIdOfSender;
             std::string m_userIdOfSender;
             std::string m_accessLevelOfSender;
             std::string m_sessionTokenOfSender;
-            karabo::util::Hash::Pointer m_headerOfSender;
+            karabo::data::Hash::Pointer m_headerOfSender;
         };
 
         template <typename Ret, typename... Args>
@@ -100,7 +101,7 @@ namespace karabo {
              * To be called under protection of m_registeredSlotFunctionsMutex
              * @param body a Hash with up to four keys "a1" to "a4" with the expected types behind
              */
-            virtual void doCallRegisteredSlotFunctions(const karabo::util::Hash& body) {
+            virtual void doCallRegisteredSlotFunctions(const karabo::data::Hash& body) {
                 for (const auto& handler : m_slotHandlers) {
                     karabo::util::call(handler, karabo::util::unpack<Args...>(body));
                 }

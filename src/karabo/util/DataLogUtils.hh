@@ -28,10 +28,10 @@
 #include <nlohmann/json.hpp>
 #include <vector>
 
-#include "Epochstamp.hh"
-#include "Hash.hh"
-#include "Schema.hh"
-#include "TimeDuration.hh"
+#include "karabo/data/time/Epochstamp.hh"
+#include "karabo/data/time/TimeDuration.hh"
+#include "karabo/data/types/Hash.hh"
+#include "karabo/data/types/Schema.hh"
 
 
 namespace karabo {
@@ -133,18 +133,18 @@ namespace karabo {
          * Convert an std::string that represents a double of the seconds since Unix epoch
          * to an Epochstamp
          */
-        util::Epochstamp stringDoubleToEpochstamp(const std::string& timestampAsDouble);
+        data::Epochstamp stringDoubleToEpochstamp(const std::string& timestampAsDouble);
 
-        void getLeaves(const karabo::util::Hash& configuration, const karabo::util::Schema& schema,
-                       std::vector<std::string>& result, const char separator = Hash::k_defaultSep);
+        void getLeaves(const karabo::data::Hash& configuration, const karabo::data::Schema& schema,
+                       std::vector<std::string>& result, const char separator = karabo::data::Hash::k_defaultSep);
 
-        void getLeaves_r(const karabo::util::Hash& hash, const karabo::util::Schema& schema,
+        void getLeaves_r(const karabo::data::Hash& hash, const karabo::data::Schema& schema,
                          std::vector<std::string>& result, std::string prefix, const char separator,
                          const bool fullPaths);
 
-        std::string toInfluxDurationUnit(const karabo::util::TIME_UNITS& karaboDurationUnit);
+        std::string toInfluxDurationUnit(const karabo::data::TIME_UNITS& karaboDurationUnit);
 
-        std::string epochAsMicrosecString(const karabo::util::Epochstamp& ep);
+        std::string epochAsMicrosecString(const karabo::data::Epochstamp& ep);
 
         /**
          * Utility function to convert a json object.

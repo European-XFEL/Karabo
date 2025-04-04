@@ -252,7 +252,7 @@ namespace karabo {
             while (!m_threadMap.empty()) {
                 // 100 rounds: overall delay of up to 10 s from this loop plus 0.1 s per loop times stuck thread
                 if (++round > 100) {
-                    using karabo::util::toString; // note that m_threadMap.size() needs mutex
+                    using karabo::data::toString; // note that m_threadMap.size() needs mutex
                     throw KARABO_TIMEOUT_EXCEPTION("Repeated failure to join all threads, " +
                                                          toString(m_threadMap.size()) += " threads left");
                 };
@@ -309,7 +309,7 @@ namespace karabo {
                         std::this_thread::yield();
                     }
                 }
-            } catch (karabo::util::Exception& e) {
+            } catch (karabo::data::Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Exception" << fullMessage << ": " << e;
                 if (!m_catchExceptions.load()) {
                     throw;

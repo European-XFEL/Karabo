@@ -35,7 +35,7 @@
 #include "PythonFactoryMacros.hh"
 #include "Wrapper.hh"
 
-using namespace karabo::util;
+using namespace karabo::data;
 using namespace karabo::io;
 using namespace std;
 namespace py = pybind11;
@@ -68,7 +68,7 @@ namespace karabind {
 
     template <class T>
     struct loadFromFileWrap {
-        static py::object loadWrap(const std::string& fileName, const karabo::util::Hash& config) {
+        static py::object loadWrap(const std::string& fileName, const karabo::data::Hash& config) {
             T t = T();
             {
                 py::gil_scoped_release release;
@@ -153,35 +153,35 @@ void exportPyIoFileTools(py::module_& m) {
     std::string loadFileName = std::string("load") + T::classInfo().getClassName() + "FromFile";
 
     m.def(saveFuncName.c_str(),
-          (void (*)(T const&, std::string const&, karabo::util::Hash const&))(&karabo::io::saveToFile),
-          py::arg("object"), py::arg("filename"), py::arg("config") = karabo::util::Hash());
+          (void (*)(T const&, std::string const&, karabo::data::Hash const&))(&karabo::io::saveToFile),
+          py::arg("object"), py::arg("filename"), py::arg("config") = karabo::data::Hash());
 
     m.def(loadFileName.c_str(), &karabind::loadFromFileWrap<T>::loadWrap, py::arg("filename"),
-          py::arg("config") = karabo::util::Hash());
+          py::arg("config") = karabo::data::Hash());
 }
 
 
 void exportPyIoFileTools1(py::module_& m) {
     m.def("saveToFile", (void (*)(Schema const&, string const&, Hash const&))(&karabo::io::saveToFile),
-          py::arg("object"), py::arg("filename"), py::arg("config") = karabo::util::Hash());
+          py::arg("object"), py::arg("filename"), py::arg("config") = karabo::data::Hash());
 
     m.def("saveToFile", (void (*)(Hash const&, string const&, Hash const&))(&karabo::io::saveToFile), py::arg("object"),
-          py::arg("filename"), py::arg("config") = karabo::util::Hash());
+          py::arg("filename"), py::arg("config") = karabo::data::Hash());
 
     m.def("loadFromFile", &karabind::loadFromFileWrap<Hash>::loadWrap, py::arg("filename"),
-          py::arg("config") = karabo::util::Hash());
+          py::arg("config") = karabo::data::Hash());
 
     m.def("loadFromFile", (void (*)(Hash&, string const&, Hash const&))(&karabo::io::loadFromFile), py::arg("object"),
-          py::arg("filename"), py::arg("config") = karabo::util::Hash());
+          py::arg("filename"), py::arg("config") = karabo::data::Hash());
 
     m.def("loadFromFile", (void (*)(Schema&, string const&, Hash const&))(&karabo::io::loadFromFile), py::arg("object"),
-          py::arg("filename"), py::arg("config") = karabo::util::Hash());
+          py::arg("filename"), py::arg("config") = karabo::data::Hash());
 }
 
 
 template <class T>
 void exportPyIoTextSerializer(py::module_& m) {
-    // exposing karabo::io::TextSerializer<T>, where T :  karabo::util::Hash or karabo::util::Schema
+    // exposing karabo::io::TextSerializer<T>, where T :  karabo::data::Hash or karabo::data::Schema
     typedef karabo::io::TextSerializer<T> SpecificSerializer;
     std::string clsId = "TextSerializer" + T::classInfo().getClassName();
 
@@ -228,14 +228,14 @@ void exportPyIoBinarySerializer(py::module_& m) {
 
 template <class T>
 void exportPyIoInputOutput(py::module_& m) {
-    { // exposing karabo::io::Output<karabo::util::Hash>
+    { // exposing karabo::io::Output<karabo::data::Hash>
         typedef karabo::io::Output<T> SpecificOutput;
         py::class_<SpecificOutput, std::shared_ptr<SpecificOutput>>(
               m, string("Output" + T::classInfo().getClassName()).c_str())
               .def("write", (void(SpecificOutput::*)(T const&))(&SpecificOutput::write), py::arg("data"))
               .def("update", &OutputWrap<T>::update) KARABO_PYTHON_FACTORY_CONFIGURATOR(SpecificOutput);
     }
-    { // exposing karabo::io::Input<karabo::util::Hash>
+    { // exposing karabo::io::Input<karabo::data::Hash>
         typedef karabo::io::Input<T> SpecificInput;
         py::class_<SpecificInput, std::shared_ptr<SpecificInput>>(
               m, string("Input" + T::classInfo().getClassName()).c_str())
@@ -254,14 +254,14 @@ void exportPyIoInputOutput(py::module_& m) {
 
 void exportPyIoFileToolsAll(py::module_& m) {
     exportPyIoFileTools1(m);
-    exportPyIoInputOutput<karabo::util::Hash>(m);
-    exportPyIoInputOutput<karabo::util::Schema>(m);
-    exportPyIoFileTools<karabo::util::Hash>(m);
-    exportPyIoFileTools<karabo::util::Schema>(m);
-    exportPyIoBinarySerializer<karabo::util::Hash>(m);
-    exportPyIoBinarySerializer<karabo::util::Schema>(m);
-    exportPyIoTextSerializer<karabo::util::Hash>(m);
-    exportPyIoTextSerializer<karabo::util::Schema>(m);
+    exportPyIoInputOutput<karabo::data::Hash>(m);
+    exportPyIoInputOutput<karabo::data::Schema>(m);
+    exportPyIoFileTools<karabo::data::Hash>(m);
+    exportPyIoFileTools<karabo::data::Schema>(m);
+    exportPyIoBinarySerializer<karabo::data::Hash>(m);
+    exportPyIoBinarySerializer<karabo::data::Schema>(m);
+    exportPyIoTextSerializer<karabo::data::Hash>(m);
+    exportPyIoTextSerializer<karabo::data::Schema>(m);
 }
 
 // Register all supported IO classes (once per template specialization) ...
@@ -270,22 +270,22 @@ KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Output<Schema>, karabo::io::Binary
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Output<std::vector<char>>,
                                   karabo::io::BinaryFileOutput<std::vector<char>>)
 
-KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Output<karabo::util::Hash>,
-                                  karabo::io::TextFileOutput<karabo::util::Hash>)
-KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Output<karabo::util::Schema>,
-                                  karabo::io::TextFileOutput<karabo::util::Schema>)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Output<karabo::data::Hash>,
+                                  karabo::io::TextFileOutput<karabo::data::Hash>)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Output<karabo::data::Schema>,
+                                  karabo::io::TextFileOutput<karabo::data::Schema>)
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Output<std::vector<char>>, karabo::io::TextFileOutput<std::vector<char>>)
 
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Input<Hash>, karabo::io::BinaryFileInput<Hash>)
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Input<Schema>, karabo::io::BinaryFileInput<Schema>)
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Input<std::vector<char>>, karabo::io::BinaryFileInput<std::vector<char>>)
 
-KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Input<karabo::util::Hash>, karabo::io::TextFileInput<karabo::util::Hash>)
-KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Input<karabo::util::Schema>,
-                                  karabo::io::TextFileInput<karabo::util::Schema>)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Input<karabo::data::Hash>, karabo::io::TextFileInput<karabo::data::Hash>)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Input<karabo::data::Schema>,
+                                  karabo::io::TextFileInput<karabo::data::Schema>)
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Input<std::vector<char>>, karabo::io::TextFileInput<std::vector<char>>)
 
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::BinarySerializer<Hash>, karabo::io::HashBinarySerializer);
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::BinarySerializer<Schema>, karabo::io::SchemaBinarySerializer)
-KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::TextSerializer<karabo::util::Hash>, karabo::io::HashXmlSerializer)
-KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::TextSerializer<karabo::util::Schema>, karabo::io::SchemaXmlSerializer)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::TextSerializer<karabo::data::Hash>, karabo::io::HashXmlSerializer)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::TextSerializer<karabo::data::Schema>, karabo::io::SchemaXmlSerializer)

@@ -35,22 +35,22 @@
 
 #include "DeviceClient.hh"
 #include "Lock.hh"
+#include "karabo/data/schema/AlarmConditionElement.hh"
+#include "karabo/data/schema/OverwriteElement.hh"
+#include "karabo/data/schema/SimpleElement.hh"
+#include "karabo/data/schema/StateElement.hh"
+#include "karabo/data/schema/Validator.hh"
+#include "karabo/data/time/Epochstamp.hh"
+#include "karabo/data/time/Timestamp.hh"
+#include "karabo/data/time/Trainstamp.hh"
+#include "karabo/data/types/Hash.hh"
+#include "karabo/data/types/HashFilter.hh"
+#include "karabo/data/types/State.hh"
 #include "karabo/log/Logger.hh"
 #include "karabo/log/utils.hh"
 #include "karabo/net/EventLoop.hh"
 #include "karabo/net/utils.hh"
-#include "karabo/util/AlarmConditionElement.hh"
-#include "karabo/util/Epochstamp.hh"
-#include "karabo/util/Hash.hh"
-#include "karabo/util/HashFilter.hh"
 #include "karabo/util/MetaTools.hh"
-#include "karabo/util/OverwriteElement.hh"
-#include "karabo/util/SimpleElement.hh"
-#include "karabo/util/State.hh"
-#include "karabo/util/StateElement.hh"
-#include "karabo/util/Timestamp.hh"
-#include "karabo/util/Trainstamp.hh"
-#include "karabo/util/Validator.hh"
 #include "karabo/util/Version.hh"
 #include "karabo/xms/InputChannel.hh"
 #include "karabo/xms/OutputChannel.hh"
@@ -194,8 +194,8 @@ namespace karabo {
          */
         class Device : public BaseDevice {
             /// Validators to validate...
-            karabo::util::Validator m_validatorIntern; /// ...internal updates via 'Device::set'
-            karabo::util::Validator m_validatorExtern; /// ...external updates via 'Device::slotReconfigure'
+            karabo::data::Validator m_validatorIntern; /// ...internal updates via 'Device::set'
+            karabo::data::Validator m_validatorExtern; /// ...external updates via 'Device::slotReconfigure'
 
             std::shared_ptr<DeviceClient> m_deviceClient;
 
@@ -212,13 +212,13 @@ namespace karabo {
             mutable std::mutex m_timeChangeMutex;
 
             mutable std::mutex m_objectStateChangeMutex;
-            karabo::util::Hash m_parameters;
-            karabo::util::Schema m_staticSchema;
-            karabo::util::Schema m_injectedSchema;
-            karabo::util::Schema m_fullSchema;
-            std::map<std::string, karabo::util::Schema> m_stateDependentSchema;
+            karabo::data::Hash m_parameters;
+            karabo::data::Schema m_staticSchema;
+            karabo::data::Schema m_injectedSchema;
+            karabo::data::Schema m_fullSchema;
+            std::map<std::string, karabo::data::Schema> m_stateDependentSchema;
 
-            karabo::util::Epochstamp m_lastBrokerErrorStamp;
+            karabo::data::Epochstamp m_lastBrokerErrorStamp;
 
            protected:
             int m_visibility = 0;
@@ -235,7 +235,7 @@ namespace karabo {
              * @param expected: a Schema to which these parameters will be
              *                  appended.
              */
-            static void expectedParameters(karabo::util::Schema& expected);
+            static void expectedParameters(karabo::data::Schema& expected);
 
             /**
              * Construct a device with a given configuration. The configuration
@@ -251,7 +251,7 @@ namespace karabo {
              *
              * @param configuration
              */
-            Device(const karabo::util::Hash& configuration);
+            Device(const karabo::data::Hash& configuration);
 
             /**
              * The destructor will reset the DeviceClient attached to this device.
@@ -278,9 +278,9 @@ namespace karabo {
                 this->set<ValueType>(key, value, getActualTimestamp());
             }
 
-            void set(const std::string& key, const karabo::util::State& state);
+            void set(const std::string& key, const karabo::data::State& state);
 
-            void set(const std::string& key, const karabo::util::AlarmCondition& condition);
+            void set(const std::string& key, const karabo::data::AlarmCondition& condition);
 
             enum class VectorUpdate {
 
@@ -303,7 +303,7 @@ namespace karabo {
              */
             template <class ItemType>
             void setVectorUpdate(const std::string& key, const std::vector<ItemType>& updates, VectorUpdate updateType,
-                                 const karabo::util::Timestamp& timestamp) {
+                                 const karabo::data::Timestamp& timestamp) {
                 // Get current value and update as requested
                 std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
                 std::vector<ItemType> vec(m_parameters.get<std::vector<ItemType>>(key));
@@ -334,7 +334,7 @@ namespace karabo {
                 }
 
                 // Now publish the new value
-                karabo::util::Hash h;
+                karabo::data::Hash h;
                 std::vector<ItemType>& vecInHash = h.bindReference<std::vector<ItemType>>(key);
                 vecInHash.swap(vec);
                 setNoLock(h, timestamp);
@@ -355,16 +355,16 @@ namespace karabo {
              * @param timestamp The time of the value change
              */
             template <class ValueType>
-            void set(const std::string& key, const ValueType& value, const karabo::util::Timestamp& timestamp) {
-                karabo::util::Hash h(key, value);
+            void set(const std::string& key, const ValueType& value, const karabo::data::Timestamp& timestamp) {
+                karabo::data::Hash h(key, value);
                 this->set(h, timestamp);
             }
 
-            void set(const std::string& key, const karabo::util::State& state,
-                     const karabo::util::Timestamp& timestamp);
+            void set(const std::string& key, const karabo::data::State& state,
+                     const karabo::data::Timestamp& timestamp);
 
-            void set(const std::string& key, const karabo::util::AlarmCondition& condition,
-                     const karabo::util::Timestamp& timestamp);
+            void set(const std::string& key, const karabo::data::AlarmCondition& condition,
+                     const karabo::data::Timestamp& timestamp);
 
             /**
              * Writes a hash to the specified channel. The hash internally must
@@ -382,7 +382,7 @@ namespace karabo {
              * The 'writeChannel(..)' methods and 'signalEndOfStream(..)' must not be called concurrently
              * for the same 'channelName'.
              */
-            void writeChannel(const std::string& channelName, const karabo::util::Hash& data);
+            void writeChannel(const std::string& channelName, const karabo::data::Hash& data);
 
             /**
              * Writes a hash to the specified channel. The hash internally must
@@ -399,8 +399,8 @@ namespace karabo {
              * The 'writeChannel(..)' methods and 'signalEndOfStream(..)' must not be called concurrently
              * for the same 'channelName'.
              */
-            void writeChannel(const std::string& channelName, const karabo::util::Hash& data,
-                              const karabo::util::Timestamp& timestamp, bool safeNDArray = false);
+            void writeChannel(const std::string& channelName, const karabo::data::Hash& data,
+                              const karabo::data::Timestamp& timestamp, bool safeNDArray = false);
 
             /**
              * Signals an end-of-stream event (EOS) on the output channel identified
@@ -432,7 +432,7 @@ namespace karabo {
              * @param hash Hash of updated internal parameters
              *             (must be in current full schema, e.g. since declared in the expectedParameters function)
              */
-            void set(const karabo::util::Hash& hash);
+            void set(const karabo::data::Hash& hash);
 
             /**
              * Updates the state of the device with all key/value pairs given in the hash
@@ -451,13 +451,13 @@ namespace karabo {
              *                  that already have time stamp attributes as tested by
              *                  Timestamp::hashAttributesContainTimeInformation(hash.getAttributes(<path>)))
              */
-            void set(const karabo::util::Hash& hash, const karabo::util::Timestamp& timestamp);
+            void set(const karabo::data::Hash& hash, const karabo::data::Timestamp& timestamp);
 
            private:
             /**
              * Internal method for set(Hash, Timestamp), requiring m_objectStateChangeMutex to be locked
              */
-            void setNoLock(const karabo::util::Hash& hash, const karabo::util::Timestamp& timestamp);
+            void setNoLock(const karabo::data::Hash& hash, const karabo::data::Timestamp& timestamp);
 
            public:
             /**
@@ -482,8 +482,8 @@ namespace karabo {
              */
             template <class ValueType>
             void setNoValidate(const std::string& key, const ValueType& value,
-                               const karabo::util::Timestamp& timestamp) {
-                karabo::util::Hash h(key, value);
+                               const karabo::data::Timestamp& timestamp) {
+                karabo::data::Hash h(key, value);
                 this->setNoValidate(h, timestamp);
             }
 
@@ -495,7 +495,7 @@ namespace karabo {
              * any observers.
              * @param config Hash of updated internal parameters (must be declared in the expectedParameters function)
              */
-            void setNoValidate(const karabo::util::Hash& hash);
+            void setNoValidate(const karabo::data::Hash& hash);
 
             /**
              * Updates the state of the device with all key/value pairs given in the hash.
@@ -506,13 +506,13 @@ namespace karabo {
              * @param config Hash of updated internal parameters (must be declared in the expectedParameters function)
              * @param timestamp optional timestamp to indicate when the set occurred.
              */
-            void setNoValidate(const karabo::util::Hash& hash, const karabo::util::Timestamp& timestamp);
+            void setNoValidate(const karabo::data::Hash& hash, const karabo::data::Timestamp& timestamp);
 
            private:
             /**
              * Internal version of setNoValidate(hash, timestamp) that requires m_objectStateChangeMutex to be locked
              */
-            void setNoValidateNoLock(const karabo::util::Hash& hash, const karabo::util::Timestamp& timestamp);
+            void setNoValidateNoLock(const karabo::data::Hash& hash, const karabo::data::Timestamp& timestamp);
 
            public:
             /**
@@ -525,22 +525,22 @@ namespace karabo {
                 std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
 
                 try {
-                    const karabo::util::Hash::Attributes& attrs =
+                    const karabo::data::Hash::Attributes& attrs =
                           m_fullSchema.getParameterHash().getNode(key).getAttributes();
                     if (attrs.has(KARABO_SCHEMA_LEAF_TYPE)) {
                         const int leafType = attrs.get<int>(KARABO_SCHEMA_LEAF_TYPE);
-                        if (leafType == karabo::util::Schema::STATE) {
-                            if (typeid(T) == typeid(karabo::util::State)) {
+                        if (leafType == karabo::data::Schema::STATE) {
+                            if (typeid(T) == typeid(karabo::data::State)) {
                                 return *reinterpret_cast<const T*>(
-                                      &karabo::util::State::fromString(m_parameters.get<std::string>(key)));
+                                      &karabo::data::State::fromString(m_parameters.get<std::string>(key)));
                             }
                             throw KARABO_PARAMETER_EXCEPTION("State element at " + key +
                                                              " may only return state objects");
                         }
-                        if (leafType == karabo::util::Schema::ALARM_CONDITION) {
-                            if (typeid(T) == typeid(karabo::util::AlarmCondition)) {
+                        if (leafType == karabo::data::Schema::ALARM_CONDITION) {
+                            if (typeid(T) == typeid(karabo::data::AlarmCondition)) {
                                 return *reinterpret_cast<const T*>(
-                                      &karabo::util::AlarmCondition::fromString(m_parameters.get<std::string>(key)));
+                                      &karabo::data::AlarmCondition::fromString(m_parameters.get<std::string>(key)));
                             }
                             throw KARABO_PARAMETER_EXCEPTION("Alarm condition element at " + key +
                                                              " may only return alarm condition objects");
@@ -548,7 +548,7 @@ namespace karabo {
                     }
 
                     return m_parameters.get<T>(key);
-                } catch (const karabo::util::Exception&) {
+                } catch (const karabo::data::Exception&) {
                     KARABO_RETHROW_AS(
                           KARABO_PARAMETER_EXCEPTION(getInstanceId() + " failed to retrieve parameter '" + key + "'"));
                 }
@@ -567,7 +567,7 @@ namespace karabo {
                 std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
                 try {
                     return m_parameters.getAs<T>(key);
-                } catch (const karabo::util::Exception& e) {
+                } catch (const karabo::data::Exception& e) {
                     KARABO_RETHROW_AS(
                           KARABO_PARAMETER_EXCEPTION("Error whilst retrieving parameter (" + key + ") from device"));
                 }
@@ -577,7 +577,7 @@ namespace karabo {
              * Retrieves all expected parameters of this device
              * @return Schema object containing all expected parameters
              */
-            karabo::util::Schema getFullSchema() const;
+            karabo::data::Schema getFullSchema() const;
 
             /**
              * Append a schema to the existing device schema
@@ -588,7 +588,7 @@ namespace karabo {
              * handlers are kept for the recreated InputChannel.
              * @param unused parameter, kept for backward compatibility.
              */
-            void appendSchema(const karabo::util::Schema& schema, const bool /*unused*/ = false);
+            void appendSchema(const karabo::data::Schema& schema, const bool /*unused*/ = false);
 
             /**
              * Replace existing schema descriptions by static (hard coded in expectedParameters) part and
@@ -601,7 +601,7 @@ namespace karabo {
              *                are kept for the recreated InputChannel.
              * @param unused parameter, kept for backward compatibility.
              */
-            void updateSchema(const karabo::util::Schema& schema, const bool /*unused*/ = false);
+            void updateSchema(const karabo::data::Schema& schema, const bool /*unused*/ = false);
 
             /**
              * Converts a device parameter key into its aliased key (must be defined in the expectedParameters function)
@@ -613,7 +613,7 @@ namespace karabo {
                 try {
                     std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
                     return m_fullSchema.getAliasFromKey<AliasType>(key);
-                } catch (const karabo::util::Exception& e) {
+                } catch (const karabo::data::Exception& e) {
                     KARABO_RETHROW_AS(
                           KARABO_PARAMETER_EXCEPTION("Error whilst retrieving alias from parameter (" + key + ")"));
                     return AliasType(); // compiler happiness line - requires that AliasType is default constructable...
@@ -631,9 +631,9 @@ namespace karabo {
                 try {
                     std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
                     return m_fullSchema.getKeyFromAlias(alias);
-                } catch (const karabo::util::Exception& e) {
+                } catch (const karabo::data::Exception& e) {
                     KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Error whilst retrieving parameter from alias (" +
-                                                                 karabo::util::toString(alias) + ")"));
+                                                                 karabo::data::toString(alias) + ")"));
                     return std::string(); // compiler happiness line...
                 }
             }
@@ -662,7 +662,7 @@ namespace karabo {
              * @param key A valid parameter of the device (must be defined in the expectedParameters function)
              * @return The enumerated internal reference type of the value
              */
-            karabo::util::Types::ReferenceType getValueType(const std::string& key) const;
+            karabo::data::Types::ReferenceType getValueType(const std::string& key) const;
 
             /**
              * Retrieves the current configuration.
@@ -671,7 +671,7 @@ namespace karabo {
              * @param tags The tags (separated by comma) the parameter must carry to be retrieved
              * @return A Hash containing the current value of the selected configuration
              */
-            karabo::util::Hash getCurrentConfiguration(const std::string& tags = "") const;
+            karabo::data::Hash getCurrentConfiguration(const std::string& tags = "") const;
 
             /**
              * Retrieves a slice of the current configuration.
@@ -681,7 +681,7 @@ namespace karabo {
              * @return Hash with the current values and attributes (e.g. timestamp) of the selected configuration
              *
              */
-            karabo::util::Hash getCurrentConfigurationSlice(const std::vector<std::string>& paths) const;
+            karabo::data::Hash getCurrentConfigurationSlice(const std::vector<std::string>& paths) const;
 
             /**
              * Return a tag filtered version of the input Hash. Tags are as defined
@@ -690,7 +690,7 @@ namespace karabo {
              * @param tags to filter by
              * @return a filtered version of the input Hash.
              */
-            karabo::util::Hash filterByTags(const karabo::util::Hash& hash, const std::string& tags) const;
+            karabo::data::Hash filterByTags(const karabo::data::Hash& hash, const std::string& tags) const;
 
             /**
              * Return the serverId of the server this device is running on
@@ -705,8 +705,8 @@ namespace karabo {
              * the device.
              * @return
              */
-            const karabo::util::State getState() {
-                return this->get<karabo::util::State>("state");
+            const karabo::data::State getState() {
+                return this->get<karabo::data::State>("state");
             }
 
             /**
@@ -716,8 +716,8 @@ namespace karabo {
              *
              * @param currentState: the state to update to
              */
-            void updateState(const karabo::util::State& currentState) {
-                updateState(currentState, karabo::util::Hash(), getActualTimestamp());
+            void updateState(const karabo::data::State& currentState) {
+                updateState(currentState, karabo::data::Hash(), getActualTimestamp());
             }
 
             /**
@@ -729,7 +729,7 @@ namespace karabo {
              * @param other: a Hash to set other properties in the same state update message,
              *               time stamp attributes to its paths have precedence over the actual timestamp
              */
-            void updateState(const karabo::util::State& currentState, const karabo::util::Hash& other) {
+            void updateState(const karabo::data::State& currentState, const karabo::data::Hash& other) {
                 updateState(currentState, other, getActualTimestamp());
             }
 
@@ -743,8 +743,8 @@ namespace karabo {
              *                   (if the latter do not have specified timestamp attributes)
              *
              */
-            void updateState(const karabo::util::State& currentState, const karabo::util::Timestamp& timestamp) {
-                updateState(currentState, karabo::util::Hash(), timestamp);
+            void updateState(const karabo::data::State& currentState, const karabo::data::Timestamp& timestamp) {
+                updateState(currentState, karabo::data::Hash(), timestamp);
             }
 
             /**
@@ -759,8 +759,8 @@ namespace karabo {
              *                   (if the latter do not have specified timestamp attributes)
              *
              */
-            void updateState(const karabo::util::State& currentState, karabo::util::Hash other,
-                             const karabo::util::Timestamp& timestamp);
+            void updateState(const karabo::data::State& currentState, karabo::data::Hash other,
+                             const karabo::data::Timestamp& timestamp);
 
 
             /**
@@ -821,8 +821,8 @@ namespace karabo {
              * Get the current alarm condition the device is in
              * @return
              */
-            karabo::util::AlarmCondition getAlarmCondition() const {
-                return this->get<karabo::util::AlarmCondition>("alarmCondition");
+            karabo::data::AlarmCondition getAlarmCondition() const {
+                return this->get<karabo::data::AlarmCondition>("alarmCondition");
             }
 
             /**
@@ -831,7 +831,7 @@ namespace karabo {
              * @param needsAcknowledging if this condition will require acknowledgment on the alarm service
              * @param description an optional description of the condition. Consider including remarks on how to resolve
              */
-            void setAlarmCondition(const karabo::util::AlarmCondition& condition, bool needsAcknowledging = false,
+            void setAlarmCondition(const karabo::data::AlarmCondition& condition, bool needsAcknowledging = false,
                                    const std::string& description = std::string());
 
             /**
@@ -840,7 +840,7 @@ namespace karabo {
              * @param sep optional separator to use in the key path
              * @return the alarm condition of the property
              */
-            const karabo::util::AlarmCondition& getAlarmCondition(const std::string& key,
+            const karabo::data::AlarmCondition& getAlarmCondition(const std::string& key,
                                                                   const std::string& sep = ".") const;
 
             void slotTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac,
@@ -862,7 +862,7 @@ namespace karabo {
             void appendSchemaMaxSize(const std::string& path, unsigned int value, bool emitFlag = true);
 
            protected: // Functions and Classes
-            virtual void preReconfigure(karabo::util::Hash& incomingReconfiguration) {}
+            virtual void preReconfigure(karabo::data::Hash& incomingReconfiguration) {}
 
             virtual void postReconfigure() {}
 
@@ -879,8 +879,8 @@ namespace karabo {
              *
              * @return the actual timestamp
              */
-            inline karabo::util::Timestamp getActualTimestamp() const {
-                return getTimestamp(karabo::util::Epochstamp()); // i.e. epochstamp for now
+            inline karabo::data::Timestamp getActualTimestamp() const {
+                return getTimestamp(karabo::data::Epochstamp()); // i.e. epochstamp for now
             }
 
             /**
@@ -891,7 +891,7 @@ namespace karabo {
              * @param epoch for that the time stamp is searched for
              * @return the matching timestamp, consisting of epoch and the corresponding Trainstamp
              */
-            karabo::util::Timestamp getTimestamp(const karabo::util::Epochstamp& epoch) const;
+            karabo::data::Timestamp getTimestamp(const karabo::data::Epochstamp& epoch) const;
 
            private: // Functions
             /**
@@ -928,7 +928,7 @@ namespace karabo {
              *  * @param topLevel: std::string: empty or existing path of full
              *  *                  schema of the device
              *  */
-            void initChannels(const karabo::util::Schema& schema, const std::string& topLevel = "");
+            void initChannels(const karabo::data::Schema& schema, const std::string& topLevel = "");
 
             /**
              * Create OutputChannel for given path and take care to set handlers needed
@@ -971,21 +971,21 @@ namespace karabo {
 
             void slotGetConfiguration();
 
-            void slotGetConfigurationSlice(const karabo::util::Hash& info);
+            void slotGetConfigurationSlice(const karabo::data::Hash& info);
 
             void slotGetSchema(bool onlyCurrentState);
 
-            void slotReconfigure(const karabo::util::Hash& newConfiguration);
+            void slotReconfigure(const karabo::data::Hash& newConfiguration);
 
-            std::pair<bool, std::string> validate(const karabo::util::Hash& unvalidated, karabo::util::Hash& validated);
+            std::pair<bool, std::string> validate(const karabo::data::Hash& unvalidated, karabo::data::Hash& validated);
 
-            void applyReconfiguration(const karabo::util::Hash& reconfiguration);
+            void applyReconfiguration(const karabo::data::Hash& reconfiguration);
 
             void slotKillDevice();
 
-            karabo::util::Schema getStateDependentSchema(const karabo::util::State& state);
+            karabo::data::Schema getStateDependentSchema(const karabo::data::State& state);
 
-            void updateLatencies(const karabo::util::Hash::Pointer& performanceMeasures);
+            void updateLatencies(const karabo::data::Hash::Pointer& performanceMeasures);
 
             void onBrokerError(const std::string& message);
 
@@ -999,7 +999,7 @@ namespace karabo {
             /**
              * Internal method to retrieve time information of this device.
              */
-            karabo::util::Hash getTimeInfo();
+            karabo::data::Hash getTimeInfo();
 
             /**
              * Returns the actual time information of this device.
@@ -1017,8 +1017,8 @@ namespace karabo {
              *   - ``reference`` and its attributes provide the latest
              *     timestamp information received from the timeserver.
              */
-            void slotGetTime(const karabo::util::Hash& /* unused */) {
-                const karabo::util::Hash result(this->getTimeInfo());
+            void slotGetTime(const karabo::data::Hash& /* unused */) {
+                const karabo::data::Hash result(this->getTimeInfo());
                 reply(result);
             }
             /**
@@ -1034,7 +1034,7 @@ namespace karabo {
              *
              * and all keys provided by ``slotGetTime``.
              */
-            void slotGetSystemInfo(const karabo::util::Hash& /* unused */);
+            void slotGetSystemInfo(const karabo::data::Hash& /* unused */);
         };
 
     } // namespace core

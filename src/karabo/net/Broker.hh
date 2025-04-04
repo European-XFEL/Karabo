@@ -26,10 +26,10 @@
 #include <memory>
 #include <vector>
 
+#include "karabo/data/schema/Configurator.hh"
+#include "karabo/data/types/ClassInfo.hh"
+#include "karabo/data/types/Schema.hh"
 #include "karabo/net/utils.hh"
-#include "karabo/util/ClassInfo.hh"
-#include "karabo/util/Configurator.hh"
-#include "karabo/util/Schema.hh"
 
 
 namespace karabo {
@@ -45,8 +45,8 @@ namespace karabo {
                           /// dropped
                 unknown   /// status reported is not specially treated or unknown
             };
-            // TODO: Why not 'const karabo::util::Hash::Pointer&'?
-            using MessageHandler = std::function<void(karabo::util::Hash::Pointer, karabo::util::Hash::Pointer)>;
+            // TODO: Why not 'const karabo::data::Hash::Pointer&'?
+            using MessageHandler = std::function<void(karabo::data::Hash::Pointer, karabo::data::Hash::Pointer)>;
 
             using ErrorNotifier = std::function<void(Error, const std::string& description)>;
         } // namespace consumer
@@ -57,9 +57,9 @@ namespace karabo {
             KARABO_CLASSINFO(Broker, "Broker", "1.0")
             KARABO_CONFIGURATION_BASE_CLASS
 
-            static void expectedParameters(karabo::util::Schema& s);
+            static void expectedParameters(karabo::data::Schema& s);
 
-            Broker(const karabo::util::Hash& configuration);
+            Broker(const karabo::data::Hash& configuration);
 
             virtual ~Broker();
 
@@ -198,8 +198,8 @@ namespace karabo {
              * @param priority
              * @param timeToLive
              */
-            virtual void write(const std::string& topic, const karabo::util::Hash::Pointer& header,
-                               const karabo::util::Hash::Pointer& body, const int priority, const int timeToLive) = 0;
+            virtual void write(const std::string& topic, const karabo::data::Hash::Pointer& header,
+                               const karabo::data::Hash::Pointer& body, const int priority, const int timeToLive) = 0;
 
             /**
              *  Specifies the string of broker URLs from the environment variable KARABO_BROKER.

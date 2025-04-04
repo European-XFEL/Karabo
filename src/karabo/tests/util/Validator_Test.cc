@@ -30,29 +30,29 @@
 
 #include "ConfigurationTestClasses.hh"
 #include "karabo/core/Device.hh"
+#include "karabo/data/schema/AlarmConditionElement.hh"
+#include "karabo/data/schema/NodeElement.hh"
+#include "karabo/data/schema/SimpleElement.hh"
+#include "karabo/data/schema/StateElement.hh"
+#include "karabo/data/schema/TableElement.hh"
+#include "karabo/data/schema/Validator.hh"
+#include "karabo/data/schema/VectorElement.hh"
+#include "karabo/data/types/Hash.hh"
+#include "karabo/data/types/Schema.hh"
+#include "karabo/data/types/StringTools.hh"
 #include "karabo/devices/PropertyTest.hh"
-#include "karabo/util/AlarmConditionElement.hh"
-#include "karabo/util/Hash.hh"
-#include "karabo/util/NodeElement.hh"
-#include "karabo/util/Schema.hh"
-#include "karabo/util/SimpleElement.hh"
-#include "karabo/util/StateElement.hh"
-#include "karabo/util/StringTools.hh"
-#include "karabo/util/TableElement.hh"
-#include "karabo/util/Validator.hh"
-#include "karabo/util/VectorElement.hh"
 #include "karabo/xms/OutputChannel.hh"
 #include "karabo/xms/SlotElement.hh"
 
 using namespace karabo;
-using util::ALARM_ELEMENT;
-using util::INT32_ELEMENT;
-using util::STATE_ELEMENT;
-using util::STRING_ELEMENT;
-using util::TABLE_ELEMENT;
-using util::VECTOR_CHAR_ELEMENT;
-using util::VECTOR_UINT32_ELEMENT;
-using util::VECTOR_UINT8_ELEMENT;
+using data::ALARM_ELEMENT;
+using data::INT32_ELEMENT;
+using data::STATE_ELEMENT;
+using data::STRING_ELEMENT;
+using data::TABLE_ELEMENT;
+using data::VECTOR_CHAR_ELEMENT;
+using data::VECTOR_UINT32_ELEMENT;
+using data::VECTOR_UINT8_ELEMENT;
 using xms::SLOT_ELEMENT;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Validator_Test);
@@ -67,29 +67,29 @@ void Validator_Test::tearDown() {}
 
 
 void Validator_Test::testTableMandatoryColumn() {
-    util::Validator validator;
-    util::Hash validated;
+    data::Validator validator;
+    data::Hash validated;
 
-    util::Schema mandatoryRowSchema;
+    data::Schema mandatoryRowSchema;
     INT32_ELEMENT(mandatoryRowSchema).key("reqInt").assignmentMandatory().commit();
     INT32_ELEMENT(mandatoryRowSchema).key("int").assignmentOptional().defaultValue(2).commit();
 
-    util::Schema mandTblSchema;
+    data::Schema mandTblSchema;
     TABLE_ELEMENT(mandTblSchema).key("mandRowTable").setColumns(mandatoryRowSchema).assignmentMandatory().commit();
 
     // Tests that table schema with mandatory column missing in its default value will throw exception.
-    util::Schema corruptedTblSchema;
+    data::Schema corruptedTblSchema;
     CPPUNIT_ASSERT_THROW(TABLE_ELEMENT(corruptedTblSchema)
                                .key("corruptedTable")
                                .setColumns(mandatoryRowSchema)
                                .assignmentOptional()
-                               .defaultValue({util::Hash("int", 128)})
+                               .defaultValue({data::Hash("int", 128)})
                                .commit(),
-                         karabo::util::ParameterException);
+                         karabo::data::ParameterException);
 
     // Test to reject a table with a missing mandatory column.
     std::pair<bool, std::string> res = validator.validate(
-          mandTblSchema, util::Hash("mandRowTable", std::vector<util::Hash>(1, util::Hash("int", -2))), validated);
+          mandTblSchema, data::Hash("mandRowTable", std::vector<data::Hash>(1, data::Hash("int", -2))), validated);
     CPPUNIT_ASSERT(!res.first);
 
     validated.clear();
@@ -97,94 +97,94 @@ void Validator_Test::testTableMandatoryColumn() {
 
 
 void Validator_Test::testTableOptionalColumn() {
-    util::Schema rowSchema;
+    data::Schema rowSchema;
     INT32_ELEMENT(rowSchema).key("int").assignmentOptional().defaultValue(1).commit();
     STRING_ELEMENT(rowSchema).key("str").assignmentOptional().defaultValue("a string").commit();
 
-    util::Schema schema;
+    data::Schema schema;
     TABLE_ELEMENT(schema)
           .key("table")
           .setColumns(rowSchema)
           .assignmentOptional()
-          .defaultValue(std::vector<util::Hash>())
+          .defaultValue(std::vector<data::Hash>())
           .commit();
 
-    util::Schema nonEmptySchema;
+    data::Schema nonEmptySchema;
     TABLE_ELEMENT(nonEmptySchema)
           .key("nonEmptyTable")
           .setColumns(rowSchema)
           .assignmentOptional()
-          .defaultValue({util::Hash("int", 128, "str", "first row")})
+          .defaultValue({data::Hash("int", 128, "str", "first row")})
           .commit();
 
-    util::Validator validator;
-    util::Hash validated;
+    data::Validator validator;
+    data::Hash validated;
 
     // Test to get default if nothing provided
-    std::pair<bool, std::string> res = validator.validate(schema, util::Hash(), validated);
+    std::pair<bool, std::string> res = validator.validate(schema, data::Hash(), validated);
 
     CPPUNIT_ASSERT(res.first);
     CPPUNIT_ASSERT(validated.has("table"));
-    CPPUNIT_ASSERT(validated.is<std::vector<util::Hash>>("table"));
-    CPPUNIT_ASSERT(validated.get<std::vector<util::Hash>>("table").empty());
+    CPPUNIT_ASSERT(validated.is<std::vector<data::Hash>>("table"));
+    CPPUNIT_ASSERT(validated.get<std::vector<data::Hash>>("table").empty());
 
     validated.clear();
 
     // Test to get non-empty default if nothing is provided.
-    res = validator.validate(nonEmptySchema, util::Hash(), validated);
+    res = validator.validate(nonEmptySchema, data::Hash(), validated);
 
     CPPUNIT_ASSERT(res.first);
     CPPUNIT_ASSERT(validated.has("nonEmptyTable"));
-    CPPUNIT_ASSERT(validated.is<std::vector<util::Hash>>("nonEmptyTable"));
-    CPPUNIT_ASSERT(validated.get<std::vector<util::Hash>>("nonEmptyTable").size() == 1);
-    CPPUNIT_ASSERT_EQUAL(128, validated.get<std::vector<util::Hash>>("nonEmptyTable")[0].get<int>("int"));
+    CPPUNIT_ASSERT(validated.is<std::vector<data::Hash>>("nonEmptyTable"));
+    CPPUNIT_ASSERT(validated.get<std::vector<data::Hash>>("nonEmptyTable").size() == 1);
+    CPPUNIT_ASSERT_EQUAL(128, validated.get<std::vector<data::Hash>>("nonEmptyTable")[0].get<int>("int"));
     CPPUNIT_ASSERT_EQUAL(std::string("first row"),
-                         validated.get<std::vector<util::Hash>>("nonEmptyTable")[0].get<std::string>("str"));
+                         validated.get<std::vector<data::Hash>>("nonEmptyTable")[0].get<std::string>("str"));
 
     validated.clear();
 
     // Test to accept even special case of empty vector<string>:
     // That is what would be received if bound API (try to) send empty vector<Hash>.
-    res = validator.validate(schema, util::Hash("table", std::vector<std::string>()), validated);
+    res = validator.validate(schema, data::Hash("table", std::vector<std::string>()), validated);
 
     CPPUNIT_ASSERT(res.first);
     CPPUNIT_ASSERT(validated.has("table"));
-    CPPUNIT_ASSERT(validated.is<std::vector<util::Hash>>("table"));
-    CPPUNIT_ASSERT(validated.get<std::vector<util::Hash>>("table").empty());
+    CPPUNIT_ASSERT(validated.is<std::vector<data::Hash>>("table"));
+    CPPUNIT_ASSERT(validated.get<std::vector<data::Hash>>("table").empty());
 
     validated.clear();
 
     // Test to accept a table with fitting row.
     res = validator.validate(
-          schema, util::Hash("table", std::vector<util::Hash>(1, util::Hash("int", -2, "str", "testing"))), validated);
+          schema, data::Hash("table", std::vector<data::Hash>(1, data::Hash("int", -2, "str", "testing"))), validated);
 
     CPPUNIT_ASSERT(res.first);
     CPPUNIT_ASSERT(validated.has("table"));
-    CPPUNIT_ASSERT(validated.is<std::vector<util::Hash>>("table"));
-    CPPUNIT_ASSERT_EQUAL(1ul, validated.get<std::vector<util::Hash>>("table").size());
-    CPPUNIT_ASSERT_EQUAL(-2, validated.get<std::vector<util::Hash>>("table")[0].get<int>("int"));
+    CPPUNIT_ASSERT(validated.is<std::vector<data::Hash>>("table"));
+    CPPUNIT_ASSERT_EQUAL(1ul, validated.get<std::vector<data::Hash>>("table").size());
+    CPPUNIT_ASSERT_EQUAL(-2, validated.get<std::vector<data::Hash>>("table")[0].get<int>("int"));
     CPPUNIT_ASSERT_EQUAL(std::string("testing"),
-                         validated.get<std::vector<util::Hash>>("table")[0].get<std::string>("str"));
+                         validated.get<std::vector<data::Hash>>("table")[0].get<std::string>("str"));
 
     validated.clear();
 
     // Test to accept a table with an "initially bad" row - there's a missing column, but the table validation
     // attributes allow injection of missing columns.
-    res = validator.validate(schema, util::Hash("table", std::vector<util::Hash>(1, util::Hash("int", 2))), validated);
+    res = validator.validate(schema, data::Hash("table", std::vector<data::Hash>(1, data::Hash("int", 2))), validated);
     CPPUNIT_ASSERT(res.first);
     // Checks that the missing column has been injected by the validator - see tableValidationAttributes.
     CPPUNIT_ASSERT(validated.has("table"));
-    CPPUNIT_ASSERT(validated.is<std::vector<util::Hash>>("table"));
-    CPPUNIT_ASSERT_EQUAL(1ul, validated.get<std::vector<util::Hash>>("table").size());
-    CPPUNIT_ASSERT(validated.get<std::vector<util::Hash>>("table")[0].has("str"));
+    CPPUNIT_ASSERT(validated.is<std::vector<data::Hash>>("table"));
+    CPPUNIT_ASSERT_EQUAL(1ul, validated.get<std::vector<data::Hash>>("table").size());
+    CPPUNIT_ASSERT(validated.get<std::vector<data::Hash>>("table")[0].has("str"));
     CPPUNIT_ASSERT_EQUAL(std::string("a string"),
-                         validated.get<std::vector<util::Hash>>("table")[0].get<std::string>("str"));
+                         validated.get<std::vector<data::Hash>>("table")[0].get<std::string>("str"));
 
     validated.clear();
 
     // Test to reject a table with a bad row - unknown column name.
     res = validator.validate(
-          schema, util::Hash("table", std::vector<util::Hash>(1, util::Hash("unknownKey", 123, "str", "testing"))),
+          schema, data::Hash("table", std::vector<data::Hash>(1, data::Hash("unknownKey", 123, "str", "testing"))),
           validated);
     CPPUNIT_ASSERT(!res.first);
 
@@ -198,50 +198,50 @@ void Validator_Test::testTableOptionalColumn() {
     //         to int 2; a float 4.6 would be truncated to 4; a value "abc" would become int 0 (the initial default
     //         value for an int).
     res = validator.validate(
-          schema, util::Hash("table", std::vector<util::Hash>(1, util::Hash("int", "2", "str", "testing"))), validated);
+          schema, data::Hash("table", std::vector<data::Hash>(1, data::Hash("int", "2", "str", "testing"))), validated);
     CPPUNIT_ASSERT(res.first);
     // Checks that the string value has been properly converted to an int by the validator.
     CPPUNIT_ASSERT(validated.has("table"));
-    CPPUNIT_ASSERT(validated.is<std::vector<util::Hash>>("table"));
-    CPPUNIT_ASSERT_EQUAL(1ul, validated.get<std::vector<util::Hash>>("table").size());
-    CPPUNIT_ASSERT_EQUAL(2, validated.get<std::vector<util::Hash>>("table")[0].get<int>("int"));
+    CPPUNIT_ASSERT(validated.is<std::vector<data::Hash>>("table"));
+    CPPUNIT_ASSERT_EQUAL(1ul, validated.get<std::vector<data::Hash>>("table").size());
+    CPPUNIT_ASSERT_EQUAL(2, validated.get<std::vector<data::Hash>>("table")[0].get<int>("int"));
 
     validated.clear();
 }
 
 
 void Validator_Test::testTableMinMaxRows() {
-    util::Schema rowSchema;
+    data::Schema rowSchema;
     INT32_ELEMENT(rowSchema).key("int").assignmentOptional().defaultValue(1).commit();
     STRING_ELEMENT(rowSchema).key("str").assignmentOptional().defaultValue("a string").commit();
 
-    util::Schema tblWithMinMaxSchema;
+    data::Schema tblWithMinMaxSchema;
     TABLE_ELEMENT(tblWithMinMaxSchema)
           .key("tblWithMinMax")
           .setColumns(rowSchema)
           .minSize(1)
           .maxSize(1)
           .assignmentOptional()
-          .defaultValue({util::Hash("int", 1, "str", "First Row")})
+          .defaultValue({data::Hash("int", 1, "str", "First Row")})
           .commit();
 
-    util::Validator validator;
-    util::Hash validated;
+    data::Validator validator;
+    data::Hash validated;
 
     // Checks that a table with 1 row is valid. The validator ensures
     // that the table is valid by adding the row of the default table
     // value.
-    std::pair<bool, std::string> res = validator.validate(tblWithMinMaxSchema, util::Hash(), validated);
+    std::pair<bool, std::string> res = validator.validate(tblWithMinMaxSchema, data::Hash(), validated);
     CPPUNIT_ASSERT(res.first);
     CPPUNIT_ASSERT(validated.has("tblWithMinMax"));
-    CPPUNIT_ASSERT(validated.is<std::vector<util::Hash>>("tblWithMinMax"));
-    CPPUNIT_ASSERT_EQUAL(1ul, validated.get<std::vector<util::Hash>>("tblWithMinMax").size());
+    CPPUNIT_ASSERT(validated.is<std::vector<data::Hash>>("tblWithMinMax"));
+    CPPUNIT_ASSERT_EQUAL(1ul, validated.get<std::vector<data::Hash>>("tblWithMinMax").size());
     validated.clear();
 
     // Checks that a table with more than maxSize rows is invalid.
-    std::vector<util::Hash> tblTwoRows{util::Hash("int", 1, "str", "First Row"),
-                                       util::Hash("int", 2, "str", "Second Row")};
-    res = validator.validate(tblWithMinMaxSchema, util::Hash("tblWithMinMax", tblTwoRows), validated);
+    std::vector<data::Hash> tblTwoRows{data::Hash("int", 1, "str", "First Row"),
+                                       data::Hash("int", 2, "str", "Second Row")};
+    res = validator.validate(tblWithMinMaxSchema, data::Hash("tblWithMinMax", tblTwoRows), validated);
     CPPUNIT_ASSERT(!res.first);
     CPPUNIT_ASSERT_MESSAGE("Expected error with 'must have no more than' substring.\nGot: " + res.second,
                            res.second.find("must have no more than") != std::string::npos);
@@ -250,7 +250,7 @@ void Validator_Test::testTableMinMaxRows() {
     // Checks that a table with less than minSize rows is invalid.
     tblWithMinMaxSchema.setMinSize("tblWithMinMax", 2u);
     tblWithMinMaxSchema.setMaxSize("tblWithMinMax", 2u);
-    res = validator.validate(tblWithMinMaxSchema, util::Hash(), validated);
+    res = validator.validate(tblWithMinMaxSchema, data::Hash(), validated);
     CPPUNIT_ASSERT(!res.first);
     CPPUNIT_ASSERT_MESSAGE("Expected error with 'must have at least' substring.\nGot:" + res.second,
                            res.second.find("must have at least") != std::string::npos);
@@ -259,53 +259,53 @@ void Validator_Test::testTableMinMaxRows() {
 
 
 void Validator_Test::testColumnMinMaxAttrs() {
-    util::Schema rowSchema;
+    data::Schema rowSchema;
     INT32_ELEMENT(rowSchema).key("int_1").assignmentOptional().defaultValue(1).minInc(1).maxInc(20).commit();
     INT32_ELEMENT(rowSchema).key("int_2").assignmentOptional().defaultValue(2).minExc(1).maxExc(20).commit();
 
-    util::Schema tblSchema;
+    data::Schema tblSchema;
     TABLE_ELEMENT(tblSchema)
           .key("tbl")
           .setColumns(rowSchema)
           .assignmentOptional()
-          .defaultValue(std::vector<util::Hash>())
+          .defaultValue(std::vector<data::Hash>())
           .commit();
 
-    util::Validator validator;
-    util::Hash validated;
+    data::Validator validator;
+    data::Hash validated;
 
     // Checks that the empty table doesn't violate columns min, max attributes.
-    std::pair<int, std::string> res = validator.validate(tblSchema, util::Hash(), validated);
+    std::pair<int, std::string> res = validator.validate(tblSchema, data::Hash(), validated);
     CPPUNIT_ASSERT(res.first);
     validated.clear();
 
     // Checks that minInc and maxInc are enforced.
-    std::vector<util::Hash> tblRows{
-          util::Hash("int_1", 1, "int_2", 19), // Valid line.
-          util::Hash("int_1", 1, "int_2", 20), // int_2 MaxExc(20) violation.
-          util::Hash("int_1", 1, "int_2", 1),  // int_2 MinExc(1) violation.
-          util::Hash("int_1", 0, "int_2", 19), // int_1 MinInc(1) violation.
-          util::Hash("int_1", 21, "int_2", 19) // int_1 MaxInc(20) violation.
+    std::vector<data::Hash> tblRows{
+          data::Hash("int_1", 1, "int_2", 19), // Valid line.
+          data::Hash("int_1", 1, "int_2", 20), // int_2 MaxExc(20) violation.
+          data::Hash("int_1", 1, "int_2", 1),  // int_2 MinExc(1) violation.
+          data::Hash("int_1", 0, "int_2", 19), // int_1 MinInc(1) violation.
+          data::Hash("int_1", 21, "int_2", 19) // int_1 MaxInc(20) violation.
     };
-    res = validator.validate(tblSchema, util::Hash("tbl", tblRows), validated);
+    res = validator.validate(tblSchema, data::Hash("tbl", tblRows), validated);
     CPPUNIT_ASSERT(!res.first);
     CPPUNIT_ASSERT_MESSAGE("Expected error with 'Value 20 for parameter' substring.\nGot: " + res.second,
                            res.second.find("Value 20 for parameter") != std::string::npos);
     validated.clear();
     tblRows.erase(tblRows.begin() + 1); // Advances to next invalid line
-    res = validator.validate(tblSchema, util::Hash("tbl", tblRows), validated);
+    res = validator.validate(tblSchema, data::Hash("tbl", tblRows), validated);
     CPPUNIT_ASSERT(!res.first);
     CPPUNIT_ASSERT_MESSAGE("Expected error with 'Value 1 for parameter' substring.\nGot: " + res.second,
                            res.second.find("Value 1 for parameter") != std::string::npos);
     validated.clear();
     tblRows.erase(tblRows.begin() + 1); // Advances to next invalid line
-    res = validator.validate(tblSchema, util::Hash("tbl", tblRows), validated);
+    res = validator.validate(tblSchema, data::Hash("tbl", tblRows), validated);
     CPPUNIT_ASSERT(!res.first);
     CPPUNIT_ASSERT_MESSAGE("Expected error with 'Value 0 for parameter' substring.\nGot: " + res.second,
                            res.second.find("Value 0 for parameter") != std::string::npos);
     validated.clear();
     tblRows.erase(tblRows.begin() + 1); // Advances to next invalid line
-    res = validator.validate(tblSchema, util::Hash("tbl", tblRows), validated);
+    res = validator.validate(tblSchema, data::Hash("tbl", tblRows), validated);
     CPPUNIT_ASSERT(!res.first);
     CPPUNIT_ASSERT_MESSAGE("Expected error with 'Value 21 for parameter' substring.\nGot: " + res.second,
                            res.second.find("Value 21 for parameter") != std::string::npos);
@@ -314,13 +314,13 @@ void Validator_Test::testColumnMinMaxAttrs() {
 
 
 void Validator_Test::testVectorCharVectorByteSize() {
+    using data::toString;
     using std::vector;
-    using util::toString;
 
-    util::Validator validator;
-    util::Hash validated;
+    data::Validator validator;
+    data::Hash validated;
 
-    util::Schema vecSchValid;
+    data::Schema vecSchValid;
     VECTOR_CHAR_ELEMENT(vecSchValid)
           .key("MinSizeVectChar")
           .description("VectorChar that respects MinSize")
@@ -328,14 +328,14 @@ void Validator_Test::testVectorCharVectorByteSize() {
           .readOnly()
           .initialValue({'A', 'B'})
           .commit();
-    std::pair<bool, std::string> res = validator.validate(vecSchValid, util::Hash(), validated);
+    std::pair<bool, std::string> res = validator.validate(vecSchValid, data::Hash(), validated);
     // vecSchValid should be valid, res.first == true,  with no error message.
     CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Value of 'MinSizeVectChar' should be equal to provided 'initialValue'.",
                                  toString(vector<char>({'A', 'B'})),
                                  toString(validated.get<vector<char>>("MinSizeVectChar")));
 
-    util::Schema vecSchInvalid;
+    data::Schema vecSchInvalid;
     CPPUNIT_ASSERT_THROW(VECTOR_CHAR_ELEMENT(vecSchInvalid)
                                .key("MinSizeVectChar")
                                .description("VectorChar with less than MinSize elements")
@@ -343,9 +343,9 @@ void Validator_Test::testVectorCharVectorByteSize() {
                                .readOnly()
                                .initialValue({})
                                .commit(),
-                         karabo::util::ParameterException);
+                         karabo::data::ParameterException);
 
-    util::Schema vecByteSchValid;
+    data::Schema vecByteSchValid;
     VECTOR_UINT8_ELEMENT(vecByteSchValid)
           .key("MinSizeVectByte")
           .description("VectorByte that respects MinSize")
@@ -353,14 +353,14 @@ void Validator_Test::testVectorCharVectorByteSize() {
           .readOnly()
           .initialValue({0xFF, 0xA2})
           .commit();
-    res = validator.validate(vecByteSchValid, util::Hash(), validated);
+    res = validator.validate(vecByteSchValid, data::Hash(), validated);
     // vecByteSchValid must be valid, res.first == true, with no error message.
     CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Value of 'MinSizeVectByte' should be equal to provided 'initialValue'.",
                                  toString(vector<unsigned char>({0xFF, 0xA2})),
                                  toString(validated.get<vector<unsigned char>>("MinSizeVectByte")));
 
-    util::Schema vecByteSchInvalid;
+    data::Schema vecByteSchInvalid;
     CPPUNIT_ASSERT_THROW(VECTOR_UINT8_ELEMENT(vecByteSchValid)
                                .key("MaxSizeVectByte")
                                .description("VectorByte that doesn't respect MaxSize")
@@ -369,52 +369,52 @@ void Validator_Test::testVectorCharVectorByteSize() {
                                .readOnly()
                                .initialValue({0xFF, 0xA2, 0x16})
                                .commit(),
-                         karabo::util::ParameterException);
+                         karabo::data::ParameterException);
 }
 
 void Validator_Test::testState() {
-    util::Validator validator;
-    util::Hash validated;
+    data::Validator validator;
+    data::Hash validated;
 
-    util::Schema schema;
-    STATE_ELEMENT(schema).key("goofyState").initialValue(util::State::UNKNOWN).commit();
+    data::Schema schema;
+    STATE_ELEMENT(schema).key("goofyState").initialValue(data::State::UNKNOWN).commit();
 
     // Test to reject a state that is set with a bad state.
-    std::pair<bool, std::string> res = validator.validate(schema, util::Hash("goofyState", "NotAState"), validated);
-    CPPUNIT_ASSERT_MESSAGE(std::string("Validation succeeded unexpectedly :") + util::toString(validated), !res.first);
+    std::pair<bool, std::string> res = validator.validate(schema, data::Hash("goofyState", "NotAState"), validated);
+    CPPUNIT_ASSERT_MESSAGE(std::string("Validation succeeded unexpectedly :") + data::toString(validated), !res.first);
     CPPUNIT_ASSERT_MESSAGE(res.second, res.second.find("is not a valid state string") != std::string::npos);
     validated.clear();
 
     // Test to allow a state that is set with a good state.
-    res = validator.validate(schema, util::Hash("goofyState", "ERROR"), validated);
+    res = validator.validate(schema, data::Hash("goofyState", "ERROR"), validated);
     CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
     // Test the validated hash should have the attribute set.
     CPPUNIT_ASSERT(validated.getAttributes("goofyState").has(KARABO_INDICATE_STATE_SET));
 
     validated.clear();
 
-    STATE_ELEMENT(schema).key("defaultValue").defaultValue(util::State::CHANGING).commit();
-    CPPUNIT_ASSERT_EQUAL(karabo::util::State::CHANGING.name(), schema.getDefaultValue<std::string>("defaultValue"));
+    STATE_ELEMENT(schema).key("defaultValue").defaultValue(data::State::CHANGING).commit();
+    CPPUNIT_ASSERT_EQUAL(karabo::data::State::CHANGING.name(), schema.getDefaultValue<std::string>("defaultValue"));
 }
 
 
 void Validator_Test::testAlarms() {
-    util::Validator validator;
-    util::Hash validated;
+    data::Validator validator;
+    data::Hash validated;
 
-    util::Schema schema;
-    ALARM_ELEMENT(schema).key("goofyAlarm").defaultValue(karabo::util::AlarmCondition::ALARM).commit();
-    CPPUNIT_ASSERT_EQUAL(karabo::util::AlarmCondition::ALARM.asString(),
+    data::Schema schema;
+    ALARM_ELEMENT(schema).key("goofyAlarm").defaultValue(karabo::data::AlarmCondition::ALARM).commit();
+    CPPUNIT_ASSERT_EQUAL(karabo::data::AlarmCondition::ALARM.asString(),
                          schema.getDefaultValue<std::string>("goofyAlarm"));
     // Test to reject a state that is set with a bad alarm string
     std::pair<bool, std::string> res =
-          validator.validate(schema, util::Hash("goofyAlarm", "LondonIsBurningCallTheEngines"), validated);
-    CPPUNIT_ASSERT_MESSAGE(std::string("Validation succeeded unexpectedly :") + util::toString(validated), !res.first);
+          validator.validate(schema, data::Hash("goofyAlarm", "LondonIsBurningCallTheEngines"), validated);
+    CPPUNIT_ASSERT_MESSAGE(std::string("Validation succeeded unexpectedly :") + data::toString(validated), !res.first);
     CPPUNIT_ASSERT_MESSAGE(res.second, res.second.find("is not a valid alarm string") != std::string::npos);
     validated.clear();
 
     // Test to allow a state that is set with a good alarm string
-    res = validator.validate(schema, util::Hash("goofyAlarm", "alarm"), validated);
+    res = validator.validate(schema, data::Hash("goofyAlarm", "alarm"), validated);
     CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
     // Test the validated hash should have the attribute set.
     CPPUNIT_ASSERT(validated.getAttributes("goofyAlarm").has(KARABO_INDICATE_ALARM_SET));
@@ -424,21 +424,21 @@ void Validator_Test::testAlarms() {
 
 
 void Validator_Test::testSlots() {
-    util::Schema s;
+    data::Schema s;
     SLOT_ELEMENT(s).key("slot").commit();
 
     // Slot does not appear in validated config.
-    util::Hash in, out;
-    util::Validator val;
+    data::Hash in, out;
+    data::Validator val;
     std::pair<bool, std::string> res = val.validate(s, in, out);
     CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
-    CPPUNIT_ASSERT_MESSAGE(util::toString(out), out.empty());
+    CPPUNIT_ASSERT_MESSAGE(data::toString(out), out.empty());
 
     // Empty node allowed for slot (for backward compatibility).
-    in.set("slot", util::Hash());
+    in.set("slot", data::Hash());
     res = val.validate(s, in, out);
     CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
-    CPPUNIT_ASSERT_MESSAGE(util::toString(out), out.empty());
+    CPPUNIT_ASSERT_MESSAGE(data::toString(out), out.empty());
 
     // Non-empty node not allowed for slot.
     in.set("slot.a", 1);
@@ -456,8 +456,8 @@ void Validator_Test::testSlots() {
 
 
 void Validator_Test::testLeafAssignmentInternal() {
-    util::Schema schema;
-    util::BOOL_ELEMENT(schema)
+    data::Schema schema;
+    data::BOOL_ELEMENT(schema)
           .key("boolProperty")
           .displayedName("Bool property")
           .description("A bool property")
@@ -466,17 +466,17 @@ void Validator_Test::testLeafAssignmentInternal() {
           .defaultValue(false)
           .commit();
 
-    util::Validator validator;
-    util::Hash validated;
+    data::Validator validator;
+    data::Hash validated;
     // Test default without setting
     std::pair<bool, std::string> res;
-    res = validator.validate(schema, util::Hash(), validated);
+    res = validator.validate(schema, data::Hash(), validated);
     CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
     CPPUNIT_ASSERT(validated.has("boolProperty"));
     CPPUNIT_ASSERT(!validated.get<bool>("boolProperty"));
     // Test to set a parameter with assignment internal
     validated.clear();
-    res = validator.validate(schema, util::Hash("boolProperty", true), validated);
+    res = validator.validate(schema, data::Hash("boolProperty", true), validated);
     CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
     CPPUNIT_ASSERT(validated.has("boolProperty"));
     CPPUNIT_ASSERT(validated.get<bool>("boolProperty"));
@@ -484,10 +484,10 @@ void Validator_Test::testLeafAssignmentInternal() {
 
 
 void Validator_Test::testOutputChannelSchemaRemoval() {
-    util::Schema schema;
-    util::Schema channelSchema;
+    data::Schema schema;
+    data::Schema channelSchema;
 
-    util::BOOL_ELEMENT(channelSchema)
+    data::BOOL_ELEMENT(channelSchema)
           .key("boolProperty")
           .displayedName("Bool property")
           .description("A bool property")
@@ -496,9 +496,9 @@ void Validator_Test::testOutputChannelSchemaRemoval() {
           .defaultValue(false)
           .commit();
 
-    util::NODE_ELEMENT(channelSchema).key("node").commit();
+    data::NODE_ELEMENT(channelSchema).key("node").commit();
 
-    util::BOOL_ELEMENT(channelSchema)
+    data::BOOL_ELEMENT(channelSchema)
           .key("node.boolProperty")
           .displayedName("Bool property")
           .description("A bool property")
@@ -507,7 +507,7 @@ void Validator_Test::testOutputChannelSchemaRemoval() {
           .defaultValue(false)
           .commit();
 
-    util::NODE_ELEMENT(channelSchema).key("emptyNode").commit();
+    data::NODE_ELEMENT(channelSchema).key("emptyNode").commit();
 
     xms::OUTPUT_CHANNEL(schema)
           .key("outputChannel")
@@ -516,35 +516,35 @@ void Validator_Test::testOutputChannelSchemaRemoval() {
           .dataSchema(channelSchema)
           .commit();
 
-    util::Validator validator;
-    util::Hash validated;
+    data::Validator validator;
+    data::Hash validated;
 
-    auto res = validator.validate(schema, util::Hash(), validated);
+    auto res = validator.validate(schema, data::Hash(), validated);
 
     CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
     CPPUNIT_ASSERT(validated.has("outputChannel.schema"));
-    CPPUNIT_ASSERT(validated.get<util::Hash>("outputChannel.schema").empty());
+    CPPUNIT_ASSERT(validated.get<data::Hash>("outputChannel.schema").empty());
 
     // Test to set a parameter with assignment internal
     validated.clear();
-    res = validator.validate(schema, util::Hash("outputChannel.schema.boolProperty", true), validated);
+    res = validator.validate(schema, data::Hash("outputChannel.schema.boolProperty", true), validated);
 
     CPPUNIT_ASSERT_MESSAGE(res.second, !res.first); // fails because configuring schema of
                                                     // outputChannel is not allowed
 
     validated.clear();
-    res = validator.validate(schema, util::Hash("outputChannel.schema.node.boolProperty", true), validated);
+    res = validator.validate(schema, data::Hash("outputChannel.schema.node.boolProperty", true), validated);
 
     CPPUNIT_ASSERT_MESSAGE(res.second, !res.first);
 
     // This accomodates case where user configuration has an empty
     // hash for outputChannel.schema
     validated.clear();
-    res = validator.validate(schema, util::Hash("outputChannel.schema", util::Hash()), validated);
+    res = validator.validate(schema, data::Hash("outputChannel.schema", data::Hash()), validated);
 
     CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
     CPPUNIT_ASSERT(validated.has("outputChannel.schema"));
-    CPPUNIT_ASSERT(validated.get<util::Hash>("outputChannel.schema").empty());
+    CPPUNIT_ASSERT(validated.get<data::Hash>("outputChannel.schema").empty());
 
     // This accomodates special case: presence of outputChannel.schema.A.B.C in
     // configuration schema. FIXME: we should not have to support this case once
@@ -552,33 +552,33 @@ void Validator_Test::testOutputChannelSchemaRemoval() {
     validated.clear();
     res = validator.validate(
           schema,
-          util::Hash("outputChannel.schema.node", util::Hash(), "outputChannel.schema.nonexistent", util::Hash()),
+          data::Hash("outputChannel.schema.node", data::Hash(), "outputChannel.schema.nonexistent", data::Hash()),
           validated);
 
     CPPUNIT_ASSERT_MESSAGE(res.second, res.first); // "special" case exception
     CPPUNIT_ASSERT(validated.has("outputChannel.schema"));
-    CPPUNIT_ASSERT(validated.get<util::Hash>("outputChannel.schema").empty());
+    CPPUNIT_ASSERT(validated.get<data::Hash>("outputChannel.schema").empty());
 
     validated.clear();
     res = validator.validate(
-          schema, util::Hash("outputChannel.schema.node", util::Hash(), "outputChannel.schema.boolProperty", true),
+          schema, data::Hash("outputChannel.schema.node", data::Hash(), "outputChannel.schema.boolProperty", true),
           validated);
 
     CPPUNIT_ASSERT_MESSAGE(res.second, !res.first);
     CPPUNIT_ASSERT(validated.has("outputChannel.schema"));
-    CPPUNIT_ASSERT(validated.get<util::Hash>("outputChannel.schema").empty());
+    CPPUNIT_ASSERT(validated.get<data::Hash>("outputChannel.schema").empty());
 }
 
 
 void Validator_Test::testPropertyTestValidation() {
-    util::Validator::ValidationRules rules;
+    data::Validator::ValidationRules rules;
     // Set validation rules used during reconfiguration...
     rules.allowAdditionalKeys = false;
     rules.allowMissingKeys = true;
     rules.allowUnrootedConfiguration = true;
     rules.injectDefaults = false;
-    util::Validator validator(rules);
-    util::Hash validated;
+    data::Validator validator(rules);
+    data::Hash validated;
 
     using namespace karabo::devices;
 
@@ -591,7 +591,7 @@ void Validator_Test::testPropertyTestValidation() {
     {
         const auto startTimepoint = std::chrono::high_resolution_clock::now();
 
-        auto res = validator.validate(schema, util::Hash("boolProperty", true), validated);
+        auto res = validator.validate(schema, data::Hash("boolProperty", true), validated);
         // Schema for PropertyTest contains reconfigurable parameters...
         CPPUNIT_ASSERT_MESSAGE("Reconfigurable parameters are expected in PropertyTest schema",
                                validator.hasReconfigurableParameter());
@@ -610,7 +610,7 @@ void Validator_Test::testPropertyTestValidation() {
     {
         const auto startTimepoint = std::chrono::high_resolution_clock::now();
 
-        auto res = validator.validate(schema, util::Hash("charProperty", 'B'), validated);
+        auto res = validator.validate(schema, data::Hash("charProperty", 'B'), validated);
 
         const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
         elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
@@ -626,7 +626,7 @@ void Validator_Test::testPropertyTestValidation() {
     {
         const auto startTimepoint = std::chrono::high_resolution_clock::now();
 
-        auto res = validator.validate(schema, util::Hash("int8Property", 34), validated);
+        auto res = validator.validate(schema, data::Hash("int8Property", 34), validated);
 
         const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
         elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
@@ -643,7 +643,7 @@ void Validator_Test::testPropertyTestValidation() {
     {
         const auto startTimepoint = std::chrono::high_resolution_clock::now();
 
-        auto res = validator.validate(schema, util::Hash("uint8Property", 113), validated);
+        auto res = validator.validate(schema, data::Hash("uint8Property", 113), validated);
 
         const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
         elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
@@ -660,7 +660,7 @@ void Validator_Test::testPropertyTestValidation() {
     {
         const auto startTimepoint = std::chrono::high_resolution_clock::now();
 
-        auto res = validator.validate(schema, util::Hash("int16Property", 2300), validated);
+        auto res = validator.validate(schema, data::Hash("int16Property", 2300), validated);
 
         const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
         elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
@@ -677,7 +677,7 @@ void Validator_Test::testPropertyTestValidation() {
     {
         const auto startTimepoint = std::chrono::high_resolution_clock::now();
 
-        auto res = validator.validate(schema, util::Hash("uint16Property", 55555), validated);
+        auto res = validator.validate(schema, data::Hash("uint16Property", 55555), validated);
 
         const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
         elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
@@ -693,7 +693,7 @@ void Validator_Test::testPropertyTestValidation() {
     {
         const auto startTimepoint = std::chrono::high_resolution_clock::now();
 
-        auto res = validator.validate(schema, util::Hash("int32Property", 23000000), validated);
+        auto res = validator.validate(schema, data::Hash("int32Property", 23000000), validated);
 
         const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
         elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
@@ -710,7 +710,7 @@ void Validator_Test::testPropertyTestValidation() {
     {
         const auto startTimepoint = std::chrono::high_resolution_clock::now();
 
-        auto res = validator.validate(schema, util::Hash("int64Property", 3200000000LL), validated);
+        auto res = validator.validate(schema, data::Hash("int64Property", 3200000000LL), validated);
 
         const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
         elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
@@ -726,7 +726,7 @@ void Validator_Test::testPropertyTestValidation() {
     {
         const auto startTimepoint = std::chrono::high_resolution_clock::now();
 
-        auto res = validator.validate(schema, util::Hash("uint64Property", 3200000000ULL), validated);
+        auto res = validator.validate(schema, data::Hash("uint64Property", 3200000000ULL), validated);
 
         const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
         elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
@@ -742,7 +742,7 @@ void Validator_Test::testPropertyTestValidation() {
     {
         const auto startTimepoint = std::chrono::high_resolution_clock::now();
 
-        auto res = validator.validate(schema, util::Hash("floatProperty", 3.45678F), validated);
+        auto res = validator.validate(schema, data::Hash("floatProperty", 3.45678F), validated);
 
         const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
         elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
@@ -759,7 +759,7 @@ void Validator_Test::testPropertyTestValidation() {
     {
         const auto startTimepoint = std::chrono::high_resolution_clock::now();
 
-        auto res = validator.validate(schema, util::Hash("doubleProperty", 5.678901234), validated);
+        auto res = validator.validate(schema, data::Hash("doubleProperty", 5.678901234), validated);
 
         const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
         elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
@@ -775,7 +775,7 @@ void Validator_Test::testPropertyTestValidation() {
     {
         const auto startTimepoint = std::chrono::high_resolution_clock::now();
 
-        auto res = validator.validate(schema, util::Hash("stringProperty", "Some text"), validated);
+        auto res = validator.validate(schema, data::Hash("stringProperty", "Some text"), validated);
 
         const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
         elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
@@ -792,7 +792,7 @@ void Validator_Test::testPropertyTestValidation() {
     {
         const auto startTimepoint = std::chrono::high_resolution_clock::now();
 
-        auto res = validator.validate(schema, util::Hash("vectors.boolProperty", vbool), validated);
+        auto res = validator.validate(schema, data::Hash("vectors.boolProperty", vbool), validated);
 
         const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
         elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
@@ -814,7 +814,7 @@ void Validator_Test::testPropertyTestValidation() {
     {
         const auto startTimepoint = std::chrono::high_resolution_clock::now();
 
-        auto res = validator.validate(schema, util::Hash("vectors.charProperty", vchar), validated);
+        auto res = validator.validate(schema, data::Hash("vectors.charProperty", vchar), validated);
 
         const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
         elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
@@ -836,7 +836,7 @@ void Validator_Test::testPropertyTestValidation() {
     {
         const auto startTimepoint = std::chrono::high_resolution_clock::now();
 
-        auto res = validator.validate(schema, util::Hash("vectors.int8Property", vschar), validated);
+        auto res = validator.validate(schema, data::Hash("vectors.int8Property", vschar), validated);
 
         const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
         elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
@@ -858,7 +858,7 @@ void Validator_Test::testPropertyTestValidation() {
     {
         const auto startTimepoint = std::chrono::high_resolution_clock::now();
 
-        auto res = validator.validate(schema, util::Hash("vectors.uint8Property", vuchar), validated);
+        auto res = validator.validate(schema, data::Hash("vectors.uint8Property", vuchar), validated);
 
         const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
         elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
@@ -880,7 +880,7 @@ void Validator_Test::testPropertyTestValidation() {
     {
         const auto startTimepoint = std::chrono::high_resolution_clock::now();
 
-        auto res = validator.validate(schema, util::Hash("vectors.int16Property", vshort), validated);
+        auto res = validator.validate(schema, data::Hash("vectors.int16Property", vshort), validated);
 
         const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
         elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
@@ -902,7 +902,7 @@ void Validator_Test::testPropertyTestValidation() {
     {
         const auto startTimepoint = std::chrono::high_resolution_clock::now();
 
-        auto res = validator.validate(schema, util::Hash("vectors.uint16Property", vushort), validated);
+        auto res = validator.validate(schema, data::Hash("vectors.uint16Property", vushort), validated);
 
         const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
         elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
@@ -924,7 +924,7 @@ void Validator_Test::testPropertyTestValidation() {
     {
         const auto startTimepoint = std::chrono::high_resolution_clock::now();
 
-        auto res = validator.validate(schema, util::Hash("vectors.int32Property", vint), validated);
+        auto res = validator.validate(schema, data::Hash("vectors.int32Property", vint), validated);
 
         const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
         elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
@@ -946,7 +946,7 @@ void Validator_Test::testPropertyTestValidation() {
     {
         const auto startTimepoint = std::chrono::high_resolution_clock::now();
 
-        auto res = validator.validate(schema, util::Hash("vectors.uint32Property", vuint), validated);
+        auto res = validator.validate(schema, data::Hash("vectors.uint32Property", vuint), validated);
 
         const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
         elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
@@ -977,7 +977,7 @@ void Validator_Test::testPropertyTestValidation() {
     const std::vector<unsigned int> vuintAboveMaxSize{90000041, 90000042, 90000043, 90000044, 90000045, 90000046};
     {
         auto res =
-              validator.validate(schema, util::Hash("vectors.uint32PropertyRestrict", vuintAboveMaxSize), validated);
+              validator.validate(schema, data::Hash("vectors.uint32PropertyRestrict", vuintAboveMaxSize), validated);
 
         CPPUNIT_ASSERT(!res.first);
         CPPUNIT_ASSERT_MESSAGE("Expected error with 'is greater than upper bound' substring.\nGot:" + res.second,
@@ -991,7 +991,7 @@ void Validator_Test::testPropertyTestValidation() {
     };
     {
         auto res =
-              validator.validate(schema, util::Hash("vectors.uint32PropertyRestrict", vuintBelowMinSize), validated);
+              validator.validate(schema, data::Hash("vectors.uint32PropertyRestrict", vuintBelowMinSize), validated);
 
         CPPUNIT_ASSERT(!res.first);
         CPPUNIT_ASSERT_MESSAGE("Expected error with 'is smaller than lower bound' substring.\nGot:" + res.second,
@@ -1006,7 +1006,7 @@ void Validator_Test::testPropertyTestValidation() {
     {
         const auto startTimepoint = std::chrono::high_resolution_clock::now();
 
-        auto res = validator.validate(schema, util::Hash("vectors.int64Property", vlonglong), validated);
+        auto res = validator.validate(schema, data::Hash("vectors.int64Property", vlonglong), validated);
 
         const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
         elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
@@ -1029,7 +1029,7 @@ void Validator_Test::testPropertyTestValidation() {
     {
         const auto startTimepoint = std::chrono::high_resolution_clock::now();
 
-        auto res = validator.validate(schema, util::Hash("vectors.uint64Property", vulonglong), validated);
+        auto res = validator.validate(schema, data::Hash("vectors.uint64Property", vulonglong), validated);
 
         const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
         elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
@@ -1052,7 +1052,7 @@ void Validator_Test::testPropertyTestValidation() {
     {
         const auto startTimepoint = std::chrono::high_resolution_clock::now();
 
-        auto res = validator.validate(schema, util::Hash("vectors.floatProperty", vfloat), validated);
+        auto res = validator.validate(schema, data::Hash("vectors.floatProperty", vfloat), validated);
 
         const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
         elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
@@ -1074,7 +1074,7 @@ void Validator_Test::testPropertyTestValidation() {
     {
         const auto startTimepoint = std::chrono::high_resolution_clock::now();
 
-        auto res = validator.validate(schema, util::Hash("vectors.doubleProperty", vdouble), validated);
+        auto res = validator.validate(schema, data::Hash("vectors.doubleProperty", vdouble), validated);
 
         const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
         elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
@@ -1096,7 +1096,7 @@ void Validator_Test::testPropertyTestValidation() {
     {
         const auto startTimepoint = std::chrono::high_resolution_clock::now();
 
-        auto res = validator.validate(schema, util::Hash("vectors.stringProperty", vstring), validated);
+        auto res = validator.validate(schema, data::Hash("vectors.stringProperty", vstring), validated);
 
         const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
         elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
@@ -1114,14 +1114,14 @@ void Validator_Test::testPropertyTestValidation() {
 
     validated.clear();
 
-    const std::vector<util::Hash> vtable{{util::Hash("e1", "abc", "e2", true, "e3", 12, "e4", 0.9837F, "e5", 1.23456),
-                                          util::Hash("e1", "def", "e2", true, "e3", 13, "e4", 0.3456F, "e5", 2.23456),
-                                          util::Hash("e1", "ghi", "e2", false, "e3", 14, "e4", 0.7891F, "e5", 3.2345),
-                                          util::Hash("e1", "jkl", "e2", false, "e3", 15, "e4", 0.2222F, "e5", 4.2345)}};
+    const std::vector<data::Hash> vtable{{data::Hash("e1", "abc", "e2", true, "e3", 12, "e4", 0.9837F, "e5", 1.23456),
+                                          data::Hash("e1", "def", "e2", true, "e3", 13, "e4", 0.3456F, "e5", 2.23456),
+                                          data::Hash("e1", "ghi", "e2", false, "e3", 14, "e4", 0.7891F, "e5", 3.2345),
+                                          data::Hash("e1", "jkl", "e2", false, "e3", 15, "e4", 0.2222F, "e5", 4.2345)}};
     {
         const auto startTimepoint = std::chrono::high_resolution_clock::now();
 
-        auto res = validator.validate(schema, util::Hash("table", vtable), validated);
+        auto res = validator.validate(schema, data::Hash("table", vtable), validated);
 
         const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
         elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
@@ -1131,7 +1131,7 @@ void Validator_Test::testPropertyTestValidation() {
     CPPUNIT_ASSERT(validated.size() == 1);
     CPPUNIT_ASSERT(validated.has("table"));
     {
-        const std::vector<util::Hash>& v = validated.get<std::vector<util::Hash>>("table");
+        const std::vector<data::Hash>& v = validated.get<std::vector<data::Hash>>("table");
         const size_t size = v.size();
         CPPUNIT_ASSERT(size == 4);
         for (size_t i = 0; i < size; ++i) {
@@ -1139,7 +1139,7 @@ void Validator_Test::testPropertyTestValidation() {
         }
     }
 
-    util::Schema rowSchemaRestrict;
+    data::Schema rowSchemaRestrict;
     INT32_ELEMENT(rowSchemaRestrict)
           .key("par1")
           .assignmentOptional()
@@ -1168,7 +1168,7 @@ void Validator_Test::testPropertyTestValidation() {
           .key("tableRestrict")
           .setColumns(rowSchemaRestrict)
           .assignmentOptional()
-          .defaultValue(std::vector<util::Hash>())
+          .defaultValue(std::vector<data::Hash>())
           .minSize(2)
           .maxSize(3)
           .reconfigurable()
@@ -1177,12 +1177,12 @@ void Validator_Test::testPropertyTestValidation() {
     // Test when the table size above maximum
     validated.clear();
 
-    const std::vector<util::Hash> vAboveMaxSize{
-          {util::Hash("par1", 7, "par2", 10, "par3", "word1"), util::Hash("par1", 8, "par2", 9, "par3", "word1"),
-           util::Hash("par1", 9, "par2", 8, "par3", "word3"), util::Hash("par1", 10, "par2", 7, "par3", "word3")}};
+    const std::vector<data::Hash> vAboveMaxSize{
+          {data::Hash("par1", 7, "par2", 10, "par3", "word1"), data::Hash("par1", 8, "par2", 9, "par3", "word1"),
+           data::Hash("par1", 9, "par2", 8, "par3", "word3"), data::Hash("par1", 10, "par2", 7, "par3", "word3")}};
 
     {
-        auto res = validator.validate(schema, util::Hash("tableRestrict", vAboveMaxSize), validated);
+        auto res = validator.validate(schema, data::Hash("tableRestrict", vAboveMaxSize), validated);
         CPPUNIT_ASSERT(!res.first);
         CPPUNIT_ASSERT_MESSAGE("Expected error with 'must have no more than' substring.\nGot:" + res.second,
                                res.second.find("must have no more than") != std::string::npos);
@@ -1191,9 +1191,9 @@ void Validator_Test::testPropertyTestValidation() {
     // Test when the table size below minimum
     validated.clear();
 
-    const std::vector<util::Hash> vBelowMinSize({util::Hash("par1", 7, "par2", 10, "par3", "word1")});
+    const std::vector<data::Hash> vBelowMinSize({data::Hash("par1", 7, "par2", 10, "par3", "word1")});
     {
-        auto res = validator.validate(schema, util::Hash("tableRestrict", vBelowMinSize), validated);
+        auto res = validator.validate(schema, data::Hash("tableRestrict", vBelowMinSize), validated);
         CPPUNIT_ASSERT(!res.first);
         CPPUNIT_ASSERT_MESSAGE("Expected error with 'must have at least' substring.\nGot:" + res.second,
                                res.second.find("must have at least") != std::string::npos);
@@ -1202,10 +1202,10 @@ void Validator_Test::testPropertyTestValidation() {
     // Test if unknown column
     validated.clear();
 
-    const std::vector<util::Hash> vUnknownPar(
-          {util::Hash("par1", 7, "par2", 8, "par3", "word1"), util::Hash("par1", 8, "par2", 7, "par4", "word1")});
+    const std::vector<data::Hash> vUnknownPar(
+          {data::Hash("par1", 7, "par2", 8, "par3", "word1"), data::Hash("par1", 8, "par2", 7, "par4", "word1")});
     {
-        auto res = validator.validate(schema, util::Hash("tableRestrict", vUnknownPar), validated);
+        auto res = validator.validate(schema, data::Hash("tableRestrict", vUnknownPar), validated);
         CPPUNIT_ASSERT(!res.first);
         CPPUNIT_ASSERT_MESSAGE("Expected error with 'unexpected configuration parameter' substring.\nGot:" + res.second,
                                res.second.find("unexpected configuration parameter") != std::string::npos);
@@ -1214,10 +1214,10 @@ void Validator_Test::testPropertyTestValidation() {
     // Test when the value above maximum
     validated.clear();
 
-    const std::vector<util::Hash> vAboveMaxValue(
-          {util::Hash("par1", 7, "par2", 11, "par3", "word1"), util::Hash("par1", 8, "par2", 7, "par3", "word1")});
+    const std::vector<data::Hash> vAboveMaxValue(
+          {data::Hash("par1", 7, "par2", 11, "par3", "word1"), data::Hash("par1", 8, "par2", 7, "par3", "word1")});
     {
-        auto res = validator.validate(schema, util::Hash("tableRestrict", vAboveMaxValue), validated);
+        auto res = validator.validate(schema, data::Hash("tableRestrict", vAboveMaxValue), validated);
 
         CPPUNIT_ASSERT(!res.first);
         CPPUNIT_ASSERT_MESSAGE("Expected error with 'out of upper bound' substring.\nGot:" + res.second,
@@ -1227,10 +1227,10 @@ void Validator_Test::testPropertyTestValidation() {
     // Test when the value below minimum
     validated.clear();
 
-    const std::vector<util::Hash> vBelowMinValue(
-          {util::Hash("par1", 1, "par2", 7, "par3", "word1"), util::Hash("par1", 8, "par2", 7, "par3", "word1")});
+    const std::vector<data::Hash> vBelowMinValue(
+          {data::Hash("par1", 1, "par2", 7, "par3", "word1"), data::Hash("par1", 8, "par2", 7, "par3", "word1")});
     {
-        auto res = validator.validate(schema, util::Hash("tableRestrict", vBelowMinValue), validated);
+        auto res = validator.validate(schema, data::Hash("tableRestrict", vBelowMinValue), validated);
 
         CPPUNIT_ASSERT(!res.first);
         CPPUNIT_ASSERT_MESSAGE("Expected error with 'out of lower bound' substring.\nGot:" + res.second,
@@ -1240,10 +1240,10 @@ void Validator_Test::testPropertyTestValidation() {
     // Test for wrong option
     validated.clear();
 
-    const std::vector<util::Hash> vUnknownOption(
-          {util::Hash("par1", 4, "par2", 7, "par3", "word5"), util::Hash("par1", 8, "par2", 7, "par3", "word1")});
+    const std::vector<data::Hash> vUnknownOption(
+          {data::Hash("par1", 4, "par2", 7, "par3", "word5"), data::Hash("par1", 8, "par2", 7, "par3", "word1")});
     {
-        auto res = validator.validate(schema, util::Hash("tableRestrict", vUnknownOption), validated);
+        auto res = validator.validate(schema, data::Hash("tableRestrict", vUnknownOption), validated);
 
         CPPUNIT_ASSERT(!res.first);
         CPPUNIT_ASSERT_MESSAGE("Expected error with 'is not one of the valid options' substring.\nGot:" + res.second,
@@ -1254,7 +1254,7 @@ void Validator_Test::testPropertyTestValidation() {
     validated.clear();
 
     {
-        auto res = validator.validate(schema, util::Hash("state", "STARTED"), validated);
+        auto res = validator.validate(schema, data::Hash("state", "STARTED"), validated);
 
         CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
     }
@@ -1267,7 +1267,7 @@ void Validator_Test::testPropertyTestValidation() {
     validated.clear();
 
     {
-        auto res = validator.validate(schema, util::Hash("state", "NOTSTARTED"), validated);
+        auto res = validator.validate(schema, data::Hash("state", "NOTSTARTED"), validated);
 
         CPPUNIT_ASSERT(!res.first);
         CPPUNIT_ASSERT_MESSAGE("Expected error with 'is not a valid state string' substring.\nGot:" + res.second,
@@ -1278,7 +1278,7 @@ void Validator_Test::testPropertyTestValidation() {
     validated.clear();
 
     {
-        auto res = validator.validate(schema, util::Hash("state", "RUNNING"), validated);
+        auto res = validator.validate(schema, data::Hash("state", "RUNNING"), validated);
 
         CPPUNIT_ASSERT(!res.first);
         CPPUNIT_ASSERT_MESSAGE("Expected error with 'is not one of the valid options' substring.\nGot:" + res.second,
@@ -1286,14 +1286,14 @@ void Validator_Test::testPropertyTestValidation() {
     }
 
     // Add ALARM_ELEMENT to the schema
-    ALARM_ELEMENT(schema).key("alarmCond").initialValue(karabo::util::AlarmCondition::WARN).commit();
-    CPPUNIT_ASSERT_EQUAL(karabo::util::AlarmCondition::WARN.asString(),
+    ALARM_ELEMENT(schema).key("alarmCond").initialValue(karabo::data::AlarmCondition::WARN).commit();
+    CPPUNIT_ASSERT_EQUAL(karabo::data::AlarmCondition::WARN.asString(),
                          schema.getDefaultValue<std::string>("alarmCond"));
     // Alarm test: success
     validated.clear();
 
     {
-        auto res = validator.validate(schema, util::Hash("alarmCond", "alarm"), validated);
+        auto res = validator.validate(schema, data::Hash("alarmCond", "alarm"), validated);
 
         CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
     }
@@ -1306,7 +1306,7 @@ void Validator_Test::testPropertyTestValidation() {
     validated.clear();
 
     {
-        auto res = validator.validate(schema, util::Hash("alarmCond", "SomeCrazyReason"), validated);
+        auto res = validator.validate(schema, data::Hash("alarmCond", "SomeCrazyReason"), validated);
         CPPUNIT_ASSERT(!res.first);
         CPPUNIT_ASSERT_MESSAGE("Expected error with 'is not a valid alarm string' substring.\nGot:" + res.second,
                                res.second.find("is not a valid alarm string") != std::string::npos);
@@ -1314,7 +1314,7 @@ void Validator_Test::testPropertyTestValidation() {
 
     // Check minInc, maxInc: out of ... bound
 
-    util::OVERWRITE_ELEMENT(schema)
+    data::OVERWRITE_ELEMENT(schema)
           .key("int16Property")
           .setNewDefaultValue(7)
           .setNewMinInc(5)
@@ -1324,7 +1324,7 @@ void Validator_Test::testPropertyTestValidation() {
     validated.clear();
 
     {
-        auto res = validator.validate(schema, util::Hash("int16Property", 25), validated);
+        auto res = validator.validate(schema, data::Hash("int16Property", 25), validated);
 
         CPPUNIT_ASSERT(!res.first);
         CPPUNIT_ASSERT_MESSAGE("Expected error with 'out of upper bound' substring.\nGot:" + res.second,
@@ -1334,7 +1334,7 @@ void Validator_Test::testPropertyTestValidation() {
     validated.clear();
 
     {
-        auto res = validator.validate(schema, util::Hash("int16Property", 2), validated);
+        auto res = validator.validate(schema, data::Hash("int16Property", 2), validated);
 
         CPPUNIT_ASSERT(!res.first);
         CPPUNIT_ASSERT_MESSAGE("Expected error with 'out of lower bound' substring.\nGot:" + res.second,
@@ -1342,7 +1342,7 @@ void Validator_Test::testPropertyTestValidation() {
     }
 
     // Check minExc, maxExc: out of ... bound
-    util::OVERWRITE_ELEMENT(schema)
+    data::OVERWRITE_ELEMENT(schema)
           .key("int16Property")
           .setNewDefaultValue(7)
           .setNewMinExc(5)
@@ -1352,7 +1352,7 @@ void Validator_Test::testPropertyTestValidation() {
     validated.clear();
 
     {
-        auto res = validator.validate(schema, util::Hash("int16Property", 10), validated);
+        auto res = validator.validate(schema, data::Hash("int16Property", 10), validated);
 
         CPPUNIT_ASSERT(!res.first);
         CPPUNIT_ASSERT_MESSAGE("Expected error with 'out of upper bound' substring.\nGot:" + res.second,
@@ -1362,7 +1362,7 @@ void Validator_Test::testPropertyTestValidation() {
     validated.clear();
 
     {
-        auto res = validator.validate(schema, util::Hash("int16Property", 5), validated);
+        auto res = validator.validate(schema, data::Hash("int16Property", 5), validated);
 
         CPPUNIT_ASSERT(!res.first);
         CPPUNIT_ASSERT_MESSAGE("Expected error with 'out of lower bound' substring.\nGot:" + res.second,

@@ -37,9 +37,9 @@ namespace karabo {
     }
 
 
-    SceneProviderTestDevice::SceneProviderTestDevice(const karabo::util::Hash& config) : Device(config) {
+    SceneProviderTestDevice::SceneProviderTestDevice(const karabo::data::Hash& config) : Device(config) {
         KARABO_INITIAL_FUNCTION(initialize);
-        registerSlot<karabo::util::Hash>(std::bind(&SceneProviderTestDevice::slotGetScenes, this, placeholders::_1),
+        registerSlot<karabo::data::Hash>(std::bind(&SceneProviderTestDevice::slotGetScenes, this, placeholders::_1),
                                          "slotGetScenes");
     }
 
@@ -49,7 +49,7 @@ namespace karabo {
 
     void SceneProviderTestDevice::initialize() {}
 
-    void SceneProviderTestDevice::slotGetScenes(const karabo::util::Hash& args) {
+    void SceneProviderTestDevice::slotGetScenes(const karabo::data::Hash& args) {
         const std::vector<std::string> scenes = args.get<std::vector<std::string> >("scenes");
         const Hash sceneHash = Hash(scenes[0], "encoded(bar scene)");
         reply(sceneHash);

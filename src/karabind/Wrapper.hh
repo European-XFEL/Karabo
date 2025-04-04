@@ -27,16 +27,17 @@
 #include <pybind11/stl.h>
 
 #include <any>
-#include <karabo/util/Hash.hh>
-#include <karabo/util/NDArray.hh>
-#include <karabo/util/ToLiteral.hh>
-#include <karabo/util/Types.hh>
+
+#include "karabo/data/types/Hash.hh"
+#include "karabo/data/types/NDArray.hh"
+#include "karabo/data/types/ToLiteral.hh"
+#include "karabo/data/types/Types.hh"
 
 namespace py = pybind11;
 
 
-PYBIND11_MAKE_OPAQUE(std::vector<karabo::util::Hash>);
-PYBIND11_MAKE_OPAQUE(std::vector<karabo::util::Hash::Pointer>);
+PYBIND11_MAKE_OPAQUE(std::vector<karabo::data::Hash>);
+PYBIND11_MAKE_OPAQUE(std::vector<karabo::data::Hash::Pointer>);
 
 
 namespace karabind {
@@ -48,12 +49,12 @@ namespace karabind {
        private:
         // Array data shared pointer that uses specific deleter if memory allocated in Python
         // or default deleter if allocated in C++
-        karabo::util::NDArray::DataPointer m_dataPtr;
+        karabo::data::NDArray::DataPointer m_dataPtr;
 
        public:
-        explicit ArrayDataPtrBase(const karabo::util::NDArray::DataPointer& dataPtr) : m_dataPtr(dataPtr) {}
+        explicit ArrayDataPtrBase(const karabo::data::NDArray::DataPointer& dataPtr) : m_dataPtr(dataPtr) {}
 
-        karabo::util::NDArray::DataPointer getDataPtr() const {
+        karabo::data::NDArray::DataPointer getDataPtr() const {
             return m_dataPtr;
         }
     };
@@ -92,20 +93,20 @@ namespace karabind {
          * @param sep separator string
          * @return Hash/VectorHash reference to subtree in parent
          */
-        py::object getRef(karabo::util::Hash& self, const std::string& path, const std::string& sep)
+        py::object getRef(karabo::data::Hash& self, const std::string& path, const std::string& sep)
               __attribute__((visibility("default")));
 
-        py::object getAs(const karabo::util::Hash& self, const std::string& path,
-                         const karabo::util::Types::ReferenceType& target, const std::string& separator)
+        py::object getAs(const karabo::data::Hash& self, const std::string& path,
+                         const karabo::data::Types::ReferenceType& target, const std::string& separator)
               __attribute__((visibility("default")));
 
-        py::object get(const karabo::util::Hash& self, const std::string& path, const std::string& separator = ".",
+        py::object get(const karabo::data::Hash& self, const std::string& path, const std::string& separator = ".",
                        const py::object& default_return = py::none()) __attribute__((visibility("default")));
 
-        const karabo::util::Hash& setPyDictAsHash(karabo::util::Hash& self, const py::dict& dictionary, const char sep)
+        const karabo::data::Hash& setPyDictAsHash(karabo::data::Hash& self, const py::dict& dictionary, const char sep)
               __attribute__((visibility("default")));
 
-        void set(karabo::util::Hash& self, const std::string& key, const py::object& o,
+        void set(karabo::data::Hash& self, const std::string& key, const py::object& o,
                  const std::string& separator = ".") __attribute__((visibility("default")));
 
 
@@ -120,10 +121,10 @@ namespace karabind {
         void treatError_already_set(py::error_already_set& e, const py::object& handler, const char* where)
               __attribute__((visibility("default")));
 
-        inline void packPy_r(karabo::util::Hash& hash, char i) {}
+        inline void packPy_r(karabo::data::Hash& hash, char i) {}
 
         template <class Tfirst, class... Trest>
-        inline void packPy_r(karabo::util::Hash& hash, char i, const Tfirst& first, const Trest&... rest) {
+        inline void packPy_r(karabo::data::Hash& hash, char i, const Tfirst& first, const Trest&... rest) {
             char name[4] = "a ";
             name[1] = i;
             // Besides the following line, 'packPy_r' is identical to the C++ version 'karabo::util::pack_r'.
@@ -139,7 +140,7 @@ namespace karabind {
      * @param args Any type and number of arguments to associated to hash keys
      */
     template <class... Ts>
-    inline void packPy(karabo::util::Hash& hash, const Ts&... args) {
+    inline void packPy(karabo::data::Hash& hash, const Ts&... args) {
         detail::packPy_r(hash, '1', args...);
     }
 
@@ -163,51 +164,51 @@ namespace karabind {
         std::vector<std::string> fromPySequenceToVectorString(const py::object& o)
               __attribute__((visibility("default")));
 
-        karabo::util::Types::ReferenceType pyObjectToCppType(const py::object& otype)
+        karabo::data::Types::ReferenceType pyObjectToCppType(const py::object& otype)
               __attribute__((visibility("default")));
 
         py::object castAnyToPy(const std::any& operand) __attribute__((visibility("default")));
 
-        karabo::util::Types::ReferenceType castPyToAny(const py::object& operand, std::any& a)
+        karabo::data::Types::ReferenceType castPyToAny(const py::object& operand, std::any& a)
               __attribute__((visibility("default")));
 
-        karabo::util::ByteArray copyPyToByteArray(const py::object& o) __attribute__((visibility("default")));
+        karabo::data::ByteArray copyPyToByteArray(const py::object& o) __attribute__((visibility("default")));
 
         /**
          * Create py::array from C++ NDArray without data copying
          * No change in data ownership
          */
-        py::object castNDArrayToPy(const karabo::util::NDArray& nda) __attribute__((visibility("default")));
+        py::object castNDArrayToPy(const karabo::data::NDArray& nda) __attribute__((visibility("default")));
 
         /**
          * Create NDArray from python numpy array without data copying
          * No change in data ownership
          */
-        karabo::util::NDArray castPyArrayToND(py::array arr) __attribute__((visibility("default")));
+        karabo::data::NDArray castPyArrayToND(py::array arr) __attribute__((visibility("default")));
 
         /**
          * Create py::array from C++ NDArray with data copying
          * As a result, python is data owner.  This function is not needed
          * since we can use 'castNDArrayToPy' and apply `copy` method in python
          */
-        py::object copyNDArrayToPy(const karabo::util::NDArray& nda) __attribute__((visibility("default")));
+        py::object copyNDArrayToPy(const karabo::data::NDArray& nda) __attribute__((visibility("default")));
 
         /**
          * Create NDArray from python numpy array with data copying
          * As a result, C++ is data owner
          */
-        karabo::util::NDArray copyPyArrayToND(py::array arr) __attribute__((visibility("default")));
+        karabo::data::NDArray copyPyArrayToND(py::array arr) __attribute__((visibility("default")));
 
         namespace detail {
 
-            py::object castElementToPy(const karabo::util::Hash::Attributes::Node& self,
-                                       const karabo::util::Types::ReferenceType& type);
+            py::object castElementToPy(const karabo::data::Hash::Attributes::Node& self,
+                                       const karabo::data::Types::ReferenceType& type);
 
-            py::object castElementToPy(const karabo::util::Hash::Node& self,
-                                       const karabo::util::Types::ReferenceType& type);
+            py::object castElementToPy(const karabo::data::Hash::Node& self,
+                                       const karabo::data::Types::ReferenceType& type);
         } // namespace detail
 
-        void setAttributeAsPy(karabo::util::Hash& self, const std::string& path, const std::string& attr,
+        void setAttributeAsPy(karabo::data::Hash& self, const std::string& path, const std::string& attr,
                               const py::object& o);
 
         template <typename T>
@@ -230,8 +231,8 @@ namespace karabind {
                     const auto& vo = obj.cast<std::vector<py::object>>();
                     py::object list0 = vo[0];
                     if (list0.is_none()) {
-                        std::vector<karabo::util::CppNone> v;
-                        for (py::ssize_t i = 0; i < size; ++i) v.push_back(karabo::util::CppNone());
+                        std::vector<karabo::data::CppNone> v;
+                        for (py::ssize_t i = 0; i < size; ++i) v.push_back(karabo::data::CppNone());
                         return self.alias(v);
                     }
                     if (py::isinstance<py::bool_>(list0)) {
@@ -282,7 +283,7 @@ namespace karabind {
          */
         size_t numArgs(const py::object& o);
 
-        karabo::util::Hash deepCopy_r(const karabo::util::Hash& h);
+        karabo::data::Hash deepCopy_r(const karabo::data::Hash& h);
 
         py::object deepCopyHashLike(const py::object& o);
 

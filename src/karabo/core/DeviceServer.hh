@@ -33,11 +33,11 @@
 #include <vector>
 
 #include "Device.hh"
+#include "karabo/data/schema/Configurator.hh"
+#include "karabo/data/types/State.hh"
 #include "karabo/log/Logger.hh"
 #include "karabo/net/Strand.hh"
-#include "karabo/util/Configurator.hh"
 #include "karabo/util/PluginLoader.hh"
-#include "karabo/util/State.hh"
 #include "karabo/util/Version.hh"
 #include "karabo/xms/SignalSlotable.hh"
 
@@ -61,7 +61,7 @@ namespace karabo {
          */
         class DeviceServer : public karabo::xms::SignalSlotable {
             bool m_serverIsRunning;
-            std::vector<karabo::util::Hash> m_autoStart;
+            std::vector<karabo::data::Hash> m_autoStart;
             std::vector<std::string> m_deviceClasses;
 
             typedef std::unordered_map<std::string, std::pair<BaseDevice::Pointer, karabo::net::Strand::Pointer> >
@@ -94,7 +94,7 @@ namespace karabo {
              * Static properties of the device server
              * @param to inject these properties to
              */
-            static void expectedParameters(karabo::util::Schema&);
+            static void expectedParameters(karabo::data::Schema&);
 
             /**
              * The constructor expects a configuration Hash. The following
@@ -112,7 +112,7 @@ namespace karabo {
              * - nThreads: number of threads to use in this device server
              * @param
              */
-            DeviceServer(const karabo::util::Hash&);
+            DeviceServer(const karabo::data::Hash&);
 
             virtual ~DeviceServer();
 
@@ -130,17 +130,17 @@ namespace karabo {
             void autostartDevices();
 
            private: // Functions
-            karabo::util::Hash availablePlugins();
+            karabo::data::Hash availablePlugins();
 
-            void slotStartDevice(const karabo::util::Hash& configuration);
+            void slotStartDevice(const karabo::data::Hash& configuration);
 
-            void startDevice(const karabo::util::Hash& configuration, const SignalSlotable::AsyncReply& reply);
+            void startDevice(const karabo::data::Hash& configuration, const SignalSlotable::AsyncReply& reply);
 
-            void loadLogger(const karabo::util::Hash& input);
+            void loadLogger(const karabo::data::Hash& input);
 
             void slotKillServer();
 
-            void slotLoggerContent(const karabo::util::Hash& input);
+            void slotLoggerContent(const karabo::data::Hash& input);
 
             void stopDeviceServer();
 
@@ -158,10 +158,10 @@ namespace karabo {
 
             /// Helper to create input passed to instantiate.
             /// Returns a tuple of the deviceId, the classId and the configuration.
-            std::tuple<std::string, std::string, util::Hash> prepareInstantiate(const util::Hash& configuration);
+            std::tuple<std::string, std::string, data::Hash> prepareInstantiate(const data::Hash& configuration);
 
             /// Helper for instantiateDevices - e.g. provides the (async) reply for slotStartDevice.
-            void instantiate(const std::string& deviceId, const std::string& classId, const util::Hash& config,
+            void instantiate(const std::string& deviceId, const std::string& classId, const data::Hash& config,
                              const SignalSlotable::AsyncReply& asyncReply);
 
             void slotLoggerPriority(const std::string& prio);
@@ -186,7 +186,7 @@ namespace karabo {
              */
             void timeTick(const boost::system::error_code ec, unsigned long long newId);
 
-            void onBroadcastMessage(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
+            void onBroadcastMessage(const karabo::data::Hash::Pointer& header, const karabo::data::Hash::Pointer& body);
         };
 
     } // namespace core
