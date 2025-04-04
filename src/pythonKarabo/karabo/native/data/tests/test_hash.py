@@ -566,14 +566,14 @@ def test_paths_and_keys():
              "subelement.node", "subelement"]
     h = create_hash()
     assert h.paths(intermediate=True) == paths
-    # Test the default
-    assert h.paths() == paths
 
     no_intermediate = ["bool", "int", "string", "stringlist", "char", "chars",
                        "vector", "emptyvector", "hash.a", "hash.b",
                        "emptyhashlist", "hashlist", "emptystringlist", "nada",
                        "schema", "element", "subelement.node.subnode"]
     assert h.paths(intermediate=False) == no_intermediate
+    # Test the default
+    assert h.paths() == no_intermediate
 
 
 def test_schema_simple():
