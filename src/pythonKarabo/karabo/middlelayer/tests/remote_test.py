@@ -1052,6 +1052,9 @@ async def test_connectDevice(deviceTest):
         # check the proxy gets collected when not used anymore
         weak = weakref.ref(d)
         del d
+        # XXX: Added, flaky CI
+        import gc
+        gc.collect()
         assert weak() is None
 
 
