@@ -155,11 +155,6 @@ namespace karabo {
         }
 
 
-        bool Schema::isListOfNodes(const std::string& path) const {
-            return m_hash.getAttribute<int>(path, KARABO_SCHEMA_NODE_TYPE) == LIST_OF_NODES;
-        }
-
-
         bool Schema::hasNodeType(const std::string& path) const {
             return m_hash.hasAttribute(path, KARABO_SCHEMA_NODE_TYPE);
         }
@@ -697,7 +692,7 @@ namespace karabo {
         }
 
         //******************************************************
-        //      min/max for number of nodes in ListElement     *                     *
+        //      min/max for number of nodes in TableElement     *                     *
         //******************************************************
 
 
@@ -778,7 +773,7 @@ namespace karabo {
             std::string error;
             if (node.hasAttribute(KARABO_SCHEMA_NODE_TYPE)) {
                 int type = node.getAttribute<int>(KARABO_SCHEMA_NODE_TYPE);
-                if (type == Schema::LEAF || type == Schema::CHOICE_OF_NODES || type == Schema::LIST_OF_NODES) {
+                if (type == Schema::LEAF || type == Schema::CHOICE_OF_NODES) {
                     if (!node.hasAttribute(KARABO_SCHEMA_ASSIGNMENT))
                         error = "Missing assignment, i.e. assignmentMandatory() / assignmentOptional(). ";
                 }
@@ -835,7 +830,6 @@ namespace karabo {
                     case Schema::NODE:
                         return false;
                     case Schema::CHOICE_OF_NODES:
-                    case Schema::LIST_OF_NODES:
                         // Only nodes can be members (i.e. children) of lists and choices:
                         return (node.getAttribute<int>(KARABO_SCHEMA_NODE_TYPE) != Schema::NODE);
                     default: // If getNodeType would return Schema::NodeType and not int, default would not be needed:
@@ -874,8 +868,6 @@ namespace karabo {
                         processingNode(key, stream);
                     } else if (nodeType == Schema::CHOICE_OF_NODES) {
                         processingChoiceOfNodes(key, stream);
-                    } else if (nodeType == Schema::LIST_OF_NODES) {
-                        processingListOfNodes(key, stream);
                     }
                 }
             } else {
@@ -908,8 +900,6 @@ namespace karabo {
                                 processingNode(path, stream);
                             } else if (nodeType == Schema::CHOICE_OF_NODES) {
                                 processingChoiceOfNodes(path, stream);
-                            } else if (nodeType == Schema::LIST_OF_NODES) {
-                                processingListOfNodes(path, stream);
                             }
                         }
                     } else {
@@ -918,16 +908,6 @@ namespace karabo {
                 }
 
                 if (nodeTypeClassId == Schema::CHOICE_OF_NODES) {
-                    vector<string> keys = getKeys(classId);
-
-
-                    for (const string& key : keys) {
-                        string path = classId + "." + key;
-                        processingNode(path, stream);
-                    }
-                }
-
-                if (nodeTypeClassId == Schema::LIST_OF_NODES) {
                     vector<string> keys = getKeys(classId);
 
 
@@ -975,13 +955,6 @@ namespace karabo {
         void Schema::processingChoiceOfNodes(const std::string& key, ostringstream& stream) {
             string showKey = extractKey(key);
             stream << "\n  " << showKey << " (CHOICE_OF_NODES)" << endl;
-            processingStandardAttributes(key, stream);
-        }
-
-
-        void Schema::processingListOfNodes(const std::string& key, ostringstream& stream) {
-            string showKey = extractKey(key);
-            stream << "\n  " << showKey << " (LIST_OF_NODES)" << endl;
             processingStandardAttributes(key, stream);
         }
 
@@ -1035,8 +1008,6 @@ namespace karabo {
                 if (nodeType == Schema::NODE) {
                     r_updateAliasMap(getKeys(newPath), newPath);
                 } else if (nodeType == Schema::CHOICE_OF_NODES) {
-                    r_updateAliasMap(getKeys(newPath), newPath);
-                } else if (nodeType == Schema::LIST_OF_NODES) {
                     r_updateAliasMap(getKeys(newPath), newPath);
                 }
             }
@@ -1141,11 +1112,11 @@ namespace karabo {
                     return false;
                 }
                 // Treat choices of a choice of nodes and entries in list of nodes, i.e. check whether
-                // there is a mother path - if yes, check whether it points to a CHOICE_OF_NODES or LIST_OF_NODES!
+                // there is a mother path - if yes, check whether it points to a CHOICE_OF_NODES!
                 const size_t lastDot = path.rfind(util::Hash::k_defaultSep);
                 if (lastDot != std::string::npos) {
                     const std::string motherPath(path.substr(0, lastDot));
-                    if (isChoiceOfNodes(motherPath) || isListOfNodes(motherPath)) {
+                    if (isChoiceOfNodes(motherPath)) {
                         return false;
                     }
                 }

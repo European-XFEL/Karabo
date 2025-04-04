@@ -18,8 +18,8 @@
 
 from karabo.bound import (
     AMPERE, BOOL_ELEMENT, CHOICE_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT,
-    INT64_ELEMENT, LIST_ELEMENT, METER, MILLI, NODE_ELEMENT, STRING_ELEMENT,
-    UINT32_ELEMENT, AssemblyRules, Hash, HashFilter, Validator)
+    INT64_ELEMENT, METER, MILLI, NODE_ELEMENT, STRING_ELEMENT, UINT32_ELEMENT,
+    AssemblyRules, Hash, HashFilter, Validator)
 from karabo.bound.decorators import (
     KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS)
 from karabo.common.states import State
@@ -243,14 +243,6 @@ class GraphicsRenderer2Y:
             .appendParametersOf(P1Y)
             .commit(),
 
-            LIST_ELEMENT(expected).key("chars")
-            .displayedName("characters").description("Characters")
-            .tags("LM")
-            .appendNodesOfConfigurationBase(BaseY)
-            .setSpecialDisplayType("unitTest")
-            .assignmentOptional().defaultValueFromString("P2Y,P3Y")
-            .reconfigurable()
-            .commit(),
         )
 
 
@@ -276,17 +268,6 @@ def test_hash_filter():
     assert ("letter.d" in result) is False
     assert ("letter.e" in result) is False
     assert ("letter.f" in result) is False
-    assert ("chars" in result) is True
-    assert ("chars[0]" in result) is True
-    assert ("chars[0].P2Y" in result) is True
-    assert ("chars[0].P2Y.x" in result) is True
-    assert ("chars[0].P2Y.y" in result) is False
-    assert ("chars[0].P2Y.z" in result) is True
-    assert ("chars[1]" in result) is True
-    assert ("chars[1].P3Y" in result) is False
-    assert ("chars[1].P3Y.k" in result) is False
-    assert ("chars[1].P3Y.l" in result) is False
-    assert ("chars[1].P3Y.m" in result) is False
 
     result = HashFilter.byTag(schema, config, "JS", ",;")
 
@@ -303,17 +284,6 @@ def test_hash_filter():
     assert ("letter.d" in result) is True
     assert ("letter.e" in result) is False
     assert ("letter.f" in result) is False
-    assert ("chars" in result) is False
-    assert ("chars[0]" in result) is False
-    assert ("chars[0].P2Y" in result) is False
-    assert ("chars[0].P2Y.x" in result) is False
-    assert ("chars[0].P2Y.y" in result) is False
-    assert ("chars[0].P2Y.z" in result) is False
-    assert ("chars[1]" in result) is False
-    assert ("chars[1].P3Y" in result) is False
-    assert ("chars[1].P3Y.k" in result) is False
-    assert ("chars[1].P3Y.l" in result) is False
-    assert ("chars[1].P3Y.m" in result) is False
 
     result = HashFilter.byTag(schema, config, "NC,LM", ",;")
 
@@ -331,17 +301,6 @@ def test_hash_filter():
     assert ("letter.d" in result) is False
     assert ("letter.e" in result) is True
     assert ("letter.f" in result) is True
-    assert ("chars" in result) is True
-    assert ("chars[0]" in result) is True
-    assert ("chars[0].P2Y" in result) is True
-    assert ("chars[0].P2Y.x" in result) is True
-    assert ("chars[0].P2Y.y" in result) is True
-    assert ("chars[0].P2Y.z" in result) is True
-    assert ("chars[1]" in result) is True
-    assert ("chars[1].P3Y" in result) is True
-    assert ("chars[1].P3Y.k" in result) is True
-    assert ("chars[1].P3Y.l" in result) is True
-    assert ("chars[1].P3Y.m" in result) is True
 
     result = HashFilter.byTag(schema, config, "CY", ",;")
 
@@ -359,17 +318,6 @@ def test_hash_filter():
     assert ("letter.d" in result) is True
     assert ("letter.e" in result) is True
     assert ("letter.f" in result) is False
-    assert ("chars" in result) is True
-    assert ("chars[0]" in result) is True
-    assert ("chars[0].P2Y" in result) is True
-    assert ("chars[0].P2Y.x" in result) is False
-    assert ("chars[0].P2Y.y" in result) is True
-    assert ("chars[0].P2Y.z" in result) is True
-    assert ("chars[1]" in result) is True
-    assert ("chars[1].P3Y" in result) is True
-    assert ("chars[1].P3Y.k" in result) is False
-    assert ("chars[1].P3Y.l" in result) is True
-    assert ("chars[1].P3Y.m" in result) is True
 
     result = HashFilter.byTag(schema, config, "BF", ",;")
 
@@ -387,17 +335,6 @@ def test_hash_filter():
     assert ("letter.d" in result) is False
     assert ("letter.e" in result) is False
     assert ("letter.f" in result) is False
-    assert ("chars" in result) is True
-    assert ("chars[0]" in result) is True
-    assert ("chars[0].P2Y" in result) is False
-    assert ("chars[0].P2Y.x" in result) is False
-    assert ("chars[0].P2Y.y" in result) is False
-    assert ("chars[0].P2Y.z" in result) is False
-    assert ("chars[1]" in result) is True
-    assert ("chars[1].P3Y" in result) is True
-    assert ("chars[1].P3Y.k" in result) is False
-    assert ("chars[1].P3Y.l" in result) is False
-    assert ("chars[1].P3Y.m" in result) is True
 
     # no "WP76" tag
     result = HashFilter.byTag(schema, config, "WP76", ",;")
@@ -416,14 +353,3 @@ def test_hash_filter():
     assert ("letter.d" in result) is False
     assert ("letter.e" in result) is False
     assert ("letter.f" in result) is False
-    assert ("chars" in result) is False
-    assert ("chars[0]" in result) is False
-    assert ("chars[0].P2Y" in result) is False
-    assert ("chars[0].P2Y.x" in result) is False
-    assert ("chars[0].P2Y.y" in result) is False
-    assert ("chars[0].P2Y.z" in result) is False
-    assert ("chars[1]" in result) is False
-    assert ("chars[1].P3Y" in result) is False
-    assert ("chars[1].P3Y.k" in result) is False
-    assert ("chars[1].P3Y.l" in result) is False
-    assert ("chars[1].P3Y.m" in result) is False

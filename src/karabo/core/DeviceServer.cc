@@ -210,6 +210,9 @@ namespace karabo {
 
             // Device configurations for those to automatically start
             // Runner establishes 'autoStart' property as (json) string (default: "")
+            if (config.has("autoStart")) {
+                throw KARABO_PARAMETER_EXCEPTION("'autoStart' syntax not supported anymore, use 'init'");
+            }
             {
                 std::string json = config.get<std::string>("init");
                 if (!json.empty()) {

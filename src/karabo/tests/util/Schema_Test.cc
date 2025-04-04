@@ -771,11 +771,6 @@ void Schema_Test::testImageElement() {
     CPPUNIT_ASSERT(!sch.isCustomNode("slotTest"));
     // A TableElement
     CPPUNIT_ASSERT(!sch.isCustomNode("testTable"));
-    // A ListElement
-    CPPUNIT_ASSERT(!sch.isCustomNode("shapeList"));
-    // ... and its entries
-    CPPUNIT_ASSERT(!sch.isCustomNode("shapeList.Circle"));
-    CPPUNIT_ASSERT(!sch.isCustomNode("shapeList.Rectangle"));
     // A String Element
     CPPUNIT_ASSERT(!sch.isCustomNode("filename"));
     // A vector element
@@ -1348,27 +1343,6 @@ void Schema_Test::testMerge() {
 }
 
 
-void Schema_Test::testList() {
-    Schema sch("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
-    OtherSchemaElements::expectedParameters(sch);
-    CPPUNIT_ASSERT(sch.has("shapeList") == true);
-    CPPUNIT_ASSERT(sch.isListOfNodes("shapeList") == true);
-    CPPUNIT_ASSERT(sch.isNode("shapeList") == false);
-    const char* classes[] = {"Circle", "Rectangle"};
-    const std::vector<std::string> defaults(classes, classes + sizeof(classes) / sizeof(classes[0]));
-    CPPUNIT_ASSERT(sch.getDefaultValue<std::vector<std::string>>("shapeList") == defaults);
-
-    CPPUNIT_ASSERT(sch.has("shapeList.Circle"));
-    CPPUNIT_ASSERT(sch.isNode("shapeList.Circle"));
-    CPPUNIT_ASSERT(sch.has("shapeList.EditableCircle"));
-    CPPUNIT_ASSERT(sch.isNode("shapeList.EditableCircle"));
-    CPPUNIT_ASSERT(sch.has("shapeList.EditableCircle.radius"));
-    CPPUNIT_ASSERT(sch.has("shapeList.BizarreForm"));
-    CPPUNIT_ASSERT(sch.isNode("shapeList.BizarreForm"));
-    CPPUNIT_ASSERT(sch.has("shapeList.BizarreForm.length"));
-}
-
-
 void Schema_Test::testInvalidNodes() {
     Schema schema("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
     OtherSchemaElements::expectedParameters(schema);
@@ -1393,24 +1367,8 @@ void Schema_Test::testInvalidNodes() {
                                .commit(),
                          karabo::util::LogicException);
 
-    // No leaves directly under LIST_ELEMENT:
-    CPPUNIT_ASSERT(schema.has("shapeList"));
-    CPPUNIT_ASSERT_THROW(
-          DOUBLE_ELEMENT(schema)
-                .key("shapeList.orphanedLength")
-                .description("Only nodes can be placed under a list element, so this triggers an exception.")
-                .assignmentOptional()
-                .defaultValue(5.)
-                .commit(),
-          karabo::util::LogicException);
-
     // Empty strings are forbidden as keys:
     CPPUNIT_ASSERT_THROW(INT32_ELEMENT(schema).key("").description("Empty key is forbidden"),
-                         karabo::util::ParameterException);
-
-    CPPUNIT_ASSERT_THROW(FLOAT_ELEMENT(schema)
-                               .key("shapeList.BizarreForm.")
-                               .description("Also an empty key at the end of a longer path is invalid"),
                          karabo::util::ParameterException);
 
     // Spaces in keys are forbidden:
@@ -1759,16 +1717,14 @@ void Schema_Test::testGetLeaves() {
     TestStruct1::expectedParameters(schema);
     OtherSchemaElements::expectedParameters(schema);
     Hash h;
-    h.set("shapeList.BizarreForm.length", 20.f);
     h.set("slotTest", Hash());
     h.set("filename", string("here"));
     h.set("testTable", vector<Hash>(3, Hash("a", -1, "b", "this_is a va|id string")));
     vector<string> leaves;
     getLeaves(h, schema, leaves, '.'); // from DataLogUtils
-    CPPUNIT_ASSERT_EQUAL(std::string("shapeList.BizarreForm.length"), leaves[0]);
-    CPPUNIT_ASSERT_EQUAL(std::string("filename"), leaves[1]);
-    CPPUNIT_ASSERT_EQUAL(std::string("testTable"), leaves[2]);
-    CPPUNIT_ASSERT_EQUAL(3ul, leaves.size());
+    CPPUNIT_ASSERT_EQUAL(std::string("filename"), leaves[0]);
+    CPPUNIT_ASSERT_EQUAL(std::string("testTable"), leaves[1]);
+    CPPUNIT_ASSERT_EQUAL(2ul, leaves.size());
 }
 
 

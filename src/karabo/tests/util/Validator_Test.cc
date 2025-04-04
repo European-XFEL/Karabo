@@ -1404,8 +1404,8 @@ void Validator_Test::testPropertyTestValidation() {
         for (int i = 1; i <= 99; ++i) {
             const auto startTimepoint = std::chrono::high_resolution_clock::now();
 
-            // Check LIST_ELEMENT and VECTOR_DOUBLE_ELEMENT processing...
-            auto conf = Hash("shapeList[0].Rectangle.b", float(i));
+            // Check VECTOR_DOUBLE_ELEMENT processing...
+            auto conf = Hash();
             std::vector<double> vdouble{5.55, 4.44, 3.33};
             conf.set("vecDoubleReconfigStr", vdouble);
             auto res = validator.validate(schema, conf, validated);
@@ -1414,9 +1414,7 @@ void Validator_Test::testPropertyTestValidation() {
             elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
 
             CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
-            CPPUNIT_ASSERT(validated.size() == 2);
-            CPPUNIT_ASSERT(validated.has("shapeList[0].Rectangle.b"));
-            CPPUNIT_ASSERT(validated.get<float>("shapeList[0].Rectangle.b") == float(i));
+            CPPUNIT_ASSERT(validated.size() == 1);
             CPPUNIT_ASSERT(validated.has("vecDoubleReconfigStr"));
             const std::vector<double>& vd = validated.get<std::vector<double>>("vecDoubleReconfigStr");
             CPPUNIT_ASSERT(vd[0] == 5.55);

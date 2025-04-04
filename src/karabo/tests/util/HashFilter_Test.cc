@@ -333,16 +333,6 @@ namespace hashfilter {
                   .appendParametersOf<P1>()
                   .commit();
 
-            LIST_ELEMENT(expected)
-                  .key("chars")
-                  .displayedName("characters")
-                  .description("Characters")
-                  .tags("LM")
-                  .appendNodesOfConfigurationBase<Base>()
-                  .assignmentOptional()
-                  .defaultValueFromString("P2,P3")
-                  .commit();
-
             INT32_ELEMENT(expected)
                   .key("number")
                   .displayedName("Number")
@@ -457,17 +447,6 @@ void HashFilter_Test::testFilterByTag() {
         CPPUNIT_ASSERT(result.has("letter.d") == false);
         CPPUNIT_ASSERT(result.has("letter.e") == false);
         CPPUNIT_ASSERT(result.has("letter.f") == false);
-        CPPUNIT_ASSERT(result.has("chars") == true);
-        CPPUNIT_ASSERT(result.has("chars[0]") == true);
-        CPPUNIT_ASSERT(result.has("chars[0].P2") == true);
-        CPPUNIT_ASSERT(result.has("chars[0].P2.x") == true);
-        CPPUNIT_ASSERT(result.has("chars[0].P2.y") == false);
-        CPPUNIT_ASSERT(result.has("chars[0].P2.z") == true);
-        CPPUNIT_ASSERT(result.has("chars[1]") == true);
-        CPPUNIT_ASSERT(result.has("chars[1].P3") == false);
-        CPPUNIT_ASSERT(result.has("chars[1].P3.k") == false);
-        CPPUNIT_ASSERT(result.has("chars[1].P3.l") == false);
-        CPPUNIT_ASSERT(result.has("chars[1].P3.m") == false);
         CPPUNIT_ASSERT(result.has("table") == false);
 
 
@@ -491,17 +470,6 @@ void HashFilter_Test::testFilterByTag() {
         CPPUNIT_ASSERT(result.has("letter.d") == true);
         CPPUNIT_ASSERT(result.has("letter.e") == false);
         CPPUNIT_ASSERT(result.has("letter.f") == false);
-        CPPUNIT_ASSERT(result.has("chars") == false);
-        CPPUNIT_ASSERT(result.has("chars[0]") == false);
-        CPPUNIT_ASSERT(result.has("chars[0].P2") == false);
-        CPPUNIT_ASSERT(result.has("chars[0].P2.x") == false);
-        CPPUNIT_ASSERT(result.has("chars[0].P2.y") == false);
-        CPPUNIT_ASSERT(result.has("chars[0].P2.z") == false);
-        CPPUNIT_ASSERT(result.has("chars[1]") == false);
-        CPPUNIT_ASSERT(result.has("chars[1].P3") == false);
-        CPPUNIT_ASSERT(result.has("chars[1].P3.k") == false);
-        CPPUNIT_ASSERT(result.has("chars[1].P3.l") == false);
-        CPPUNIT_ASSERT(result.has("chars[1].P3.m") == false);
         CPPUNIT_ASSERT(result.has("table") == false);
 
 
@@ -525,17 +493,6 @@ void HashFilter_Test::testFilterByTag() {
         CPPUNIT_ASSERT(result.has("letter.d") == false);
         CPPUNIT_ASSERT(result.has("letter.e") == true);
         CPPUNIT_ASSERT(result.has("letter.f") == true);
-        CPPUNIT_ASSERT(result.has("chars") == true);
-        CPPUNIT_ASSERT(result.has("chars[0]") == true);
-        CPPUNIT_ASSERT(result.has("chars[0].P2") == true);
-        CPPUNIT_ASSERT(result.has("chars[0].P2.x") == true);
-        CPPUNIT_ASSERT(result.has("chars[0].P2.y") == true);
-        CPPUNIT_ASSERT(result.has("chars[0].P2.z") == true);
-        CPPUNIT_ASSERT(result.has("chars[1]") == true);
-        CPPUNIT_ASSERT(result.has("chars[1].P3") == true);
-        CPPUNIT_ASSERT(result.has("chars[1].P3.k") == true);
-        CPPUNIT_ASSERT(result.has("chars[1].P3.l") == true);
-        CPPUNIT_ASSERT(result.has("chars[1].P3.m") == true);
         CPPUNIT_ASSERT(result.has("table") == true);
 
 
@@ -559,17 +516,6 @@ void HashFilter_Test::testFilterByTag() {
         CPPUNIT_ASSERT(result.has("letter.d") == true);
         CPPUNIT_ASSERT(result.has("letter.e") == true);
         CPPUNIT_ASSERT(result.has("letter.f") == false);
-        CPPUNIT_ASSERT(result.has("chars") == true);
-        CPPUNIT_ASSERT(result.has("chars[0]") == true);
-        CPPUNIT_ASSERT(result.has("chars[0].P2") == true);
-        CPPUNIT_ASSERT(result.has("chars[0].P2.x") == false);
-        CPPUNIT_ASSERT(result.has("chars[0].P2.y") == true);
-        CPPUNIT_ASSERT(result.has("chars[0].P2.z") == true);
-        CPPUNIT_ASSERT(result.has("chars[1]") == true);
-        CPPUNIT_ASSERT(result.has("chars[1].P3") == true);
-        CPPUNIT_ASSERT(result.has("chars[1].P3.k") == false);
-        CPPUNIT_ASSERT(result.has("chars[1].P3.l") == true);
-        CPPUNIT_ASSERT(result.has("chars[1].P3.m") == true);
         CPPUNIT_ASSERT(result.has("table") == false);
 
 
@@ -593,17 +539,6 @@ void HashFilter_Test::testFilterByTag() {
         CPPUNIT_ASSERT(result.has("letter.d") == false);
         CPPUNIT_ASSERT(result.has("letter.e") == false);
         CPPUNIT_ASSERT(result.has("letter.f") == false);
-        CPPUNIT_ASSERT(result.has("chars") == true);
-        CPPUNIT_ASSERT(result.has("chars[0]") == true);
-        CPPUNIT_ASSERT(result.has("chars[0].P2") == false);
-        CPPUNIT_ASSERT(result.has("chars[0].P2.x") == false);
-        CPPUNIT_ASSERT(result.has("chars[0].P2.y") == false);
-        CPPUNIT_ASSERT(result.has("chars[0].P2.z") == false);
-        CPPUNIT_ASSERT(result.has("chars[1]") == true);
-        CPPUNIT_ASSERT(result.has("chars[1].P3") == true);
-        CPPUNIT_ASSERT(result.has("chars[1].P3.k") == false);
-        CPPUNIT_ASSERT(result.has("chars[1].P3.l") == false);
-        CPPUNIT_ASSERT(result.has("chars[1].P3.m") == true);
         CPPUNIT_ASSERT(result.has("table") == false);
 
 
@@ -627,17 +562,6 @@ void HashFilter_Test::testFilterByTag() {
         CPPUNIT_ASSERT(result.has("letter.d") == false);
         CPPUNIT_ASSERT(result.has("letter.e") == false);
         CPPUNIT_ASSERT(result.has("letter.f") == false);
-        CPPUNIT_ASSERT(result.has("chars") == false);
-        CPPUNIT_ASSERT(result.has("chars[0]") == false);
-        CPPUNIT_ASSERT(result.has("chars[0].P2") == false);
-        CPPUNIT_ASSERT(result.has("chars[0].P2.x") == false);
-        CPPUNIT_ASSERT(result.has("chars[0].P2.y") == false);
-        CPPUNIT_ASSERT(result.has("chars[0].P2.z") == false);
-        CPPUNIT_ASSERT(result.has("chars[1]") == false);
-        CPPUNIT_ASSERT(result.has("chars[1].P3") == false);
-        CPPUNIT_ASSERT(result.has("chars[1].P3.k") == false);
-        CPPUNIT_ASSERT(result.has("chars[1].P3.l") == false);
-        CPPUNIT_ASSERT(result.has("chars[1].P3.m") == false);
         CPPUNIT_ASSERT(result.has("table") == false);
 
 
@@ -674,17 +598,6 @@ void HashFilter_Test::testFilterByAccessMode() {
         CPPUNIT_ASSERT(result.has("letter.d") == false);
         CPPUNIT_ASSERT(result.has("letter.e") == true);
         CPPUNIT_ASSERT(result.has("letter.f") == true);
-        CPPUNIT_ASSERT(result.has("chars") == true);
-        CPPUNIT_ASSERT(result.has("chars[0]") == true);
-        CPPUNIT_ASSERT(result.has("chars[0].P2") == true);
-        CPPUNIT_ASSERT(result.has("chars[0].P2.x") == true);
-        CPPUNIT_ASSERT(result.has("chars[0].P2.y") == false);
-        CPPUNIT_ASSERT(result.has("chars[0].P2.z") == true);
-        CPPUNIT_ASSERT(result.has("chars[1]") == true);
-        CPPUNIT_ASSERT(result.has("chars[1].P3") == true);
-        CPPUNIT_ASSERT(result.has("chars[1].P3.k") == true);
-        CPPUNIT_ASSERT(result.has("chars[1].P3.l") == false);
-        CPPUNIT_ASSERT(result.has("chars[1].P3.m") == true);
         CPPUNIT_ASSERT(result.has("number") == false);
         CPPUNIT_ASSERT(result.has("state") == false);
         CPPUNIT_ASSERT(result.has("table") == true);
@@ -709,17 +622,6 @@ void HashFilter_Test::testFilterByAccessMode() {
         CPPUNIT_ASSERT(result.has("letter.d") == false);
         CPPUNIT_ASSERT(result.has("letter.e") == false);
         CPPUNIT_ASSERT(result.has("letter.f") == false);
-        CPPUNIT_ASSERT(result.has("chars") == false);
-        CPPUNIT_ASSERT(result.has("chars[0]") == false);
-        CPPUNIT_ASSERT(result.has("chars[0].P2") == false);
-        CPPUNIT_ASSERT(result.has("chars[0].P2.x") == false);
-        CPPUNIT_ASSERT(result.has("chars[0].P2.y") == false);
-        CPPUNIT_ASSERT(result.has("chars[0].P2.z") == false);
-        CPPUNIT_ASSERT(result.has("chars[1]") == false);
-        CPPUNIT_ASSERT(result.has("chars[1].P3") == false);
-        CPPUNIT_ASSERT(result.has("chars[1].P3.k") == false);
-        CPPUNIT_ASSERT(result.has("chars[1].P3.l") == false);
-        CPPUNIT_ASSERT(result.has("chars[1].P3.m") == false);
         CPPUNIT_ASSERT(result.has("number") == true);
         CPPUNIT_ASSERT(result.has("state") == true);
         CPPUNIT_ASSERT(result.has("table") == false);
@@ -745,17 +647,6 @@ void HashFilter_Test::testFilterByAccessMode() {
         CPPUNIT_ASSERT(result.has("letter.d") == true);
         CPPUNIT_ASSERT(result.has("letter.e") == false);
         CPPUNIT_ASSERT(result.has("letter.f") == false);
-        CPPUNIT_ASSERT(result.has("chars") == true);
-        CPPUNIT_ASSERT(result.has("chars[0]") == true);
-        CPPUNIT_ASSERT(result.has("chars[0].P2") == true);
-        CPPUNIT_ASSERT(result.has("chars[0].P2.x") == false);
-        CPPUNIT_ASSERT(result.has("chars[0].P2.y") == true);
-        CPPUNIT_ASSERT(result.has("chars[0].P2.z") == false);
-        CPPUNIT_ASSERT(result.has("chars[1]") == true);
-        CPPUNIT_ASSERT(result.has("chars[1].P3") == true);
-        CPPUNIT_ASSERT(result.has("chars[1].P3.k") == false);
-        CPPUNIT_ASSERT(result.has("chars[1].P3.l") == true);
-        CPPUNIT_ASSERT(result.has("chars[1].P3.m") == false);
         CPPUNIT_ASSERT(result.has("number") == false);
         CPPUNIT_ASSERT(result.has("state") == false);
         CPPUNIT_ASSERT(result.has("table") == false);

@@ -27,7 +27,6 @@
 #include <karabo/util/Factory.hh>
 #include <karabo/util/HashFilter.hh>
 #include <karabo/util/LeafElement.hh>
-#include <karabo/util/ListElement.hh>
 #include <karabo/util/NodeElement.hh>
 #include <karabo/util/OverwriteElement.hh>
 #include <karabo/util/TableElement.hh>
@@ -198,7 +197,6 @@ void exportPyUtilSchema(py::module_& m) {
               .value("LEAF", Schema::LEAF)
               .value("NODE", Schema::NODE)
               .value("CHOICE_OF_NODES", Schema::CHOICE_OF_NODES)
-              .value("LIST_OF_NODES", Schema::LIST_OF_NODES)
               .export_values();
 
         py::enum_<Schema::ArchivePolicy>(m, "ArchivePolicy")
@@ -743,11 +741,6 @@ void exportPyUtilSchema(py::module_& m) {
         s.def(
               "isChoiceOfNodes",
               [](const Schema& self, const std::string& path) -> py::bool_ { return self.isChoiceOfNodes(path); },
-              py::arg("path"));
-
-        s.def(
-              "isListOfNodes",
-              [](const Schema& self, const std::string& path) -> py::bool_ { return self.isListOfNodes(path); },
               py::arg("path"));
 
         s.def(
