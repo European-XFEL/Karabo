@@ -16,16 +16,15 @@
 import datetime
 from asyncio import gather
 
-from sqlmodel import SQLModel, select
+from sqlmodel import SQLModel
 
 from karabo.native import HashList
 
 from ..bases import DatabaseBase
 from ..util import ProjectDBError, make_str_if_needed, make_xml_if_needed
-from .db_engine import init_async_db_engine, init_test_async_db_engine
+from .db_engine import create_engine, create_test_engine
 from .db_reader import DbReader
 from .db_writer import DbWriter
-from .models import ProjectDomain
 from .models_xml import (
     emit_device_config_xml, emit_device_instance_xml, emit_device_server_xml,
     emit_macro_xml, emit_project_xml, emit_scene_xml)
@@ -35,13 +34,13 @@ class SQLDatabase(DatabaseBase):
 
     def __init__(self, user: str = "", password: str = "",
                  server: str = "", port: int = -1, db_name: str = "",
-                 test_mode=False):
+                 test_mode: bool = False):
         super().__init__()
         if not test_mode:
-            (self.db_engine, self.session_gen) = (
-                init_async_db_engine(user, password, server, port, db_name))
+            self.db_engine, self.session_gen = (
+                create_engine(user, password, server, port, db_name))
         else:
-            (self.db_engine, self.session_gen) = init_test_async_db_engine()
+            self.db_engine, self.session_gen = create_test_engine()
         self.reader = DbReader(self.session_gen)
         self.writer = DbWriter(self.session_gen)
         self.initialized = False
@@ -60,10 +59,7 @@ class SQLDatabase(DatabaseBase):
         return await super().__aexit__(exc_type, exc_value, traceback)
 
     async def list_domains(self) -> list[str]:
-        async with self.session_gen() as session:
-            result = await session.exec(select(ProjectDomain))
-            prj_domains = result.all()
-            return [domain.name for domain in prj_domains]
+        return await self.reader.list_domains()
 
     async def domain_exists(self, domain: str) -> bool:
         domains = await self.list_domains()
@@ -72,10 +68,7 @@ class SQLDatabase(DatabaseBase):
     async def add_domain(self, domain: str):
         if await self.domain_exists(domain):
             return
-        async with self.session_gen() as session:
-            project_domain = ProjectDomain(name=domain)
-            session.add(project_domain)
-            await session.commit()
+        await self.writer.add_domain(domain)
 
     async def list_items(
             self, domain: str,
@@ -96,7 +89,7 @@ class SQLDatabase(DatabaseBase):
                           "device_instance", "device_config"]
         result = []
         for item in item_types:
-            match item.strip().lower():
+            match item:
                 case "project":
                     projects = await self.reader.get_domain_projects(domain)
                     for project in projects:
@@ -129,8 +122,8 @@ class SQLDatabase(DatabaseBase):
         return result
 
     async def list_named_items(
-            self, domain: str, item_type: str,
-            simple_name: str) -> list[dict[str, any]]:
+        self, domain: str, item_type: str, simple_name: str
+    ) -> list[dict[str, any]]:
         """
         List items in domain which match item_type and simple_name
 
@@ -141,11 +134,8 @@ class SQLDatabase(DatabaseBase):
                  and simple_name
         """
         items = await self.list_items(domain, [item_type])
-        named_items = []
-        for item in items:
-            if item['simple_name'] == simple_name:
-                named_items.append(item)
-        return named_items
+        return [item for item in items
+                if item.get('simple_name') == simple_name]
 
     async def _load_project_item(self, uuid: str) -> dict[str, any] | None:
         item = None
@@ -211,7 +201,7 @@ class SQLDatabase(DatabaseBase):
                 "xml": emit_device_config_xml(config)}
         return item
 
-    async def _load_unknown_type(self, item_uuid):
+    async def _load_unknown_type(self, item_uuid: str):
         item = await self._load_project_item(item_uuid)
         if item is None:
             item = await self._load_scene_item(item_uuid)
@@ -375,7 +365,6 @@ class SQLDatabase(DatabaseBase):
         if not item_tree.attrib.get('date'):
             timestamp = datetime.datetime.now(datetime.UTC).isoformat(
                 timespec="seconds")
-            # timestamp = strftime(DATE_FORMAT, gmtime())
             item_tree.attrib['date'] = timestamp
         else:
             modified, reason = await self._check_for_modification(
@@ -389,13 +378,14 @@ class SQLDatabase(DatabaseBase):
             # Update time stamp
             timestamp = datetime.datetime.now(datetime.UTC).isoformat(
                 timespec="seconds")
-            # timestamp = strftime(DATE_FORMAT, gmtime())
             item_tree.attrib['date'] = timestamp
 
         # XXX: Add a revision/alias to keep old code from blowing up
+        # Is this needed?
         item_tree.attrib['revision'] = '0'
         item_tree.attrib['alias'] = 'default'
 
+        # And back conversion to string
         item_xml = make_str_if_needed(item_tree)
 
         match item_type:
@@ -421,47 +411,55 @@ class SQLDatabase(DatabaseBase):
                 raise ProjectDBError(
                     f"Saving of items of type '{item_type}' not supported")
 
-        meta = {}
-        meta['domain'] = domain
-        meta['uuid'] = uuid
-        meta['date'] = timestamp
-
+        meta = {"domain": domain, "uuid": uuid, "date": timestamp}
         return meta
 
     async def get_configurations_from_device_name_part(
-            self, domain: str, device_id_part: str,
-            only_active: bool = False) -> list[dict[str, str]]:
+        self, domain: str, device_id_part: str,
+        only_active: bool = False
+    ) -> list[dict[str, str]]:
         """
         Returns a list of configurations for a given device
+
         :param domain: DB domain
         :param device_id_part: part of device name; search is case-insensitive.
         :param only_active: if True only returns the active configurations
+
         :return: a list of dicts:
+
             [{"config_id": uuid of the configuration,
               "device_uuid": device instance uuid in the DB,
               "device_id": device instance id},
               ...
             ]
         """
-        instances_by_name_part = (
-            await self.reader.get_domain_device_instances_by_name_part(
-                domain, device_id_part))
+        instances = await self.reader.get_domain_device_instances_by_name_part(
+            domain, device_id_part
+        )
+
         results = []
-        for instance in instances_by_name_part:
+        for instance in instances:
             configs = await self.reader.get_device_configs_of_instance(
                 instance)
-            for config in configs:
-                if config.is_active or not only_active:
-                    results.append(
-                        {"config_id": config.uuid,
-                         "device_uuid": instance.uuid,
-                         "device_id": instance.name})
+            filtered = [
+                {
+                    "config_id": config.uuid,
+                    "device_uuid": instance.uuid,
+                    "device_id": instance.name
+                }
+                for config in configs
+                if config.is_active or not only_active
+            ]
+            results.extend(filtered)
+
         return results
 
     async def get_configurations_from_device_name(
-            self, domain: str, instance_id: str) -> list[dict[str, str]]:
+        self, domain: str, instance_id: str
+    ) -> list[dict[str, str]]:
         """
         Returns a list of active configurations for a given device_id
+
         :param domain: DB domain
         :param instance_id: instance id of the device
         :return: a list of dicts:
@@ -470,15 +468,14 @@ class SQLDatabase(DatabaseBase):
               ...
             ]
         """
-        configs = []
-        configs_name_part = self.get_configurations_from_device_name_part(
+        configs = await self.get_configurations_from_device_name_part(
             domain, instance_id, only_active=True)
-        for config in configs_name_part:
-            configs.append({
-                "configid": config['config_id'],
-                "instanceid": config['device_uuid']
-            })
-        return configs
+
+        items = [
+            {"configid": config["config_id"],
+             "instanceid": config["device_uuid"]}
+            for config in configs]
+        return items
 
     async def get_projects_data_from_device(
             self, domain: str, uuid: str) -> list[dict[str, any]]:
