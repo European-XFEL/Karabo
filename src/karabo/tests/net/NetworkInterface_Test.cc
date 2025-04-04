@@ -26,7 +26,11 @@
 #include <cppunit/TestAssert.h>
 #include <netinet/in.h>
 
-#include <karabo/net.hpp>
+// #include <karabo/util.hpp>
+//  #include <karabo/net.hpp>
+#include <karabo/net/NetworkInterface.hh>
+
+#include "karabo/data/types/Exception.hh"
 
 using namespace std;
 using namespace karabo::net;
@@ -83,10 +87,10 @@ void NetworkInterface_Test::testConstructor() {
     CPPUNIT_ASSERT_EQUAL(std::string{"127.0.0.1"}, interface->presentationIP());
     CPPUNIT_ASSERT_EQUAL(std::string{"lo"}, interface->name());
 
-    CPPUNIT_ASSERT_THROW(interface.reset(new NetworkInterface{"adkdf;aosidj"}), karabo::util::LogicException);
-    CPPUNIT_ASSERT_THROW(interface.reset(new NetworkInterface{"127.0.0.1"}), karabo::util::LogicException);
-    CPPUNIT_ASSERT_THROW(interface.reset(new NetworkInterface{"lo"}), karabo::util::LogicException);
-    CPPUNIT_ASSERT_THROW(interface.reset(new NetworkInterface{"l?"}), karabo::util::LogicException);
+    CPPUNIT_ASSERT_THROW(interface.reset(new NetworkInterface{"adkdf;aosidj"}), karabo::data::LogicException);
+    CPPUNIT_ASSERT_THROW(interface.reset(new NetworkInterface{"127.0.0.1"}), karabo::data::LogicException);
+    CPPUNIT_ASSERT_THROW(interface.reset(new NetworkInterface{"lo"}), karabo::data::LogicException);
+    CPPUNIT_ASSERT_THROW(interface.reset(new NetworkInterface{"l?"}), karabo::data::LogicException);
 
     std::string ip = findHostInterface();
     if (ip.length() == 0) return;
@@ -101,5 +105,5 @@ void NetworkInterface_Test::testConstructor() {
     CPPUNIT_ASSERT_NO_THROW(interface.reset(new NetworkInterface{copy + ".0/24"}));
     CPPUNIT_ASSERT_EQUAL(ip, interface->presentationIP());
 
-    CPPUNIT_ASSERT_THROW(interface.reset(new NetworkInterface{copy + ".0/8"}), karabo::util::LogicException);
+    CPPUNIT_ASSERT_THROW(interface.reset(new NetworkInterface{copy + ".0/8"}), karabo::data::LogicException);
 }

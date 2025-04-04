@@ -25,21 +25,21 @@
 #include <memory>
 #include <string>
 
+#include "karabo/data/schema/Configurator.hh"
+#include "karabo/data/types/Hash.hh"
+#include "karabo/data/types/StringTools.hh"
 #include "karabo/log/Logger.hh"
 #include "karabo/net/EventLoop.hh"
 #include "karabo/net/HttpResponse.hh"
 #include "karabo/net/InfluxDbClientUtils.hh"
-#include "karabo/util/Configurator.hh"
-#include "karabo/util/Hash.hh"
-#include "karabo/util/StringTools.hh"
 
+using karabo::data::Configurator;
+using karabo::data::Hash;
+using karabo::data::toString;
 using karabo::log::Logger;
 using karabo::net::EventLoop;
 using karabo::net::HttpResponse;
 using karabo::net::InfluxDbClient;
-using karabo::util::Configurator;
-using karabo::util::Hash;
-using karabo::util::toString;
 
 using std::string;
 

@@ -29,13 +29,13 @@
 #include <filesystem>
 #include <fstream>
 #include <iosfwd>
-#include <karabo/util/ChoiceElement.hh>
-#include <karabo/util/Configurator.hh>
-#include <karabo/util/SimpleElement.hh>
 #include <sstream>
 
 #include "Output.hh"
 #include "TextSerializer.hh"
+#include "karabo/data/schema/ChoiceElement.hh"
+#include "karabo/data/schema/Configurator.hh"
+#include "karabo/data/schema/SimpleElement.hh"
 
 
 namespace karabo {
@@ -59,8 +59,8 @@ namespace karabo {
            public:
             KARABO_CLASSINFO(TextFileOutput<T>, "TextFile", "1.0")
 
-            static void expectedParameters(karabo::util::Schema& expected) {
-                using namespace karabo::util;
+            static void expectedParameters(karabo::data::Schema& expected) {
+                using namespace karabo::data;
 
                 STRING_ELEMENT(expected)
                       .key("filename")
@@ -88,7 +88,7 @@ namespace karabo {
                       .commit();
             }
 
-            TextFileOutput(const karabo::util::Hash& config) : Output<T>(config) {
+            TextFileOutput(const karabo::data::Hash& config) : Output<T>(config) {
                 m_filename = config.get<std::string>("filename");
                 config.get("writeMode", m_writeMode);
                 if (config.has("format")) {
@@ -120,7 +120,7 @@ namespace karabo {
 
             void guessAndSetFormat() {
                 using namespace std;
-                using namespace karabo::util;
+                using namespace karabo::data;
 
                 vector<string> keys = TextSerializer<T>::getRegisteredClasses();
                 string extension = m_filename.extension().string().substr(1);

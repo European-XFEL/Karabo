@@ -26,8 +26,7 @@
 #define HASHFILTER_TEST_HH
 #include <cppunit/extensions/HelperMacros.h>
 
-#include <karabo/log/Logger.hh>
-#include <karabo/util/Configurator.hh>
+// #include "karabo/data/types/ClassInfo.hh"
 
 // #define HASHFILTER_HDF5TEST
 
@@ -41,7 +40,7 @@ class HashFilter_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE_END();
 
    public:
-    KARABO_CLASSINFO(HashFilter_Test, "HashFilter_Test", "1.0");
+    // KARABO_CLASSINFO(HashFilter_Test, "HashFilter_Test", "1.0");
 
     HashFilter_Test();
     virtual ~HashFilter_Test();

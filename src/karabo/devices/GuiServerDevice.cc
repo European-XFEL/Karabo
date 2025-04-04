@@ -26,21 +26,23 @@
 #include <filesystem>
 
 #include "karabo/core/InstanceChangeThrottler.hh"
+#include "karabo/data/schema/SimpleElement.hh"
+#include "karabo/data/schema/VectorElement.hh"
+#include "karabo/data/types/Hash.hh"
+#include "karabo/data/types/Schema.hh"
+#include "karabo/data/types/State.hh"
 #include "karabo/log/Logger.hh"
 #include "karabo/net/EventLoop.hh"
 #include "karabo/net/TcpChannel.hh"
 #include "karabo/net/UserAuthClient.hh"
 #include "karabo/util/DataLogUtils.hh"
-#include "karabo/util/Hash.hh"
-#include "karabo/util/Schema.hh"
-#include "karabo/util/SimpleElement.hh"
-#include "karabo/util/State.hh"
-#include "karabo/util/VectorElement.hh"
+#include "karabo/util/MetaTools.hh"
 #include "karabo/util/Version.hh"
 
 using namespace std::chrono;
 using namespace std::literals::chrono_literals;
 using namespace std;
+using namespace karabo::data;
 using namespace karabo::util;
 using namespace karabo::core;
 using namespace karabo::net;
@@ -450,18 +452,18 @@ namespace karabo {
               m_timeout(config.get<int>("timeout")),
               m_authClient(config.get<std::string>("authServer")),
               m_onlyAppModeClients(config.get<bool>("onlyAppModeClients")) {
-            m_visibility = karabo::util::Schema::ADMIN;
+            m_visibility = karabo::data::Schema::ADMIN;
             KARABO_INITIAL_FUNCTION(initialize)
 
             KARABO_SLOT(slotLoggerMap, Hash /*loggerMap*/)
-            KARABO_SLOT(slotProjectUpdate, karabo::util::Hash, std::string);
+            KARABO_SLOT(slotProjectUpdate, karabo::data::Hash, std::string);
             KARABO_SLOT(slotDumpToLog);
-            KARABO_SLOT(slotDumpDebugInfo, karabo::util::Hash);
+            KARABO_SLOT(slotDumpDebugInfo, karabo::data::Hash);
             KARABO_SLOT(slotDisconnectClient, std::string);
-            KARABO_SLOT(slotNotify, karabo::util::Hash);
-            KARABO_SLOT(slotBroadcast, karabo::util::Hash);
-            KARABO_SLOT(requestScene, karabo::util::Hash);
-            KARABO_SLOT(slotGetClientSessions, karabo::util::Hash);
+            KARABO_SLOT(slotNotify, karabo::data::Hash);
+            KARABO_SLOT(slotBroadcast, karabo::data::Hash);
+            KARABO_SLOT(requestScene, karabo::data::Hash);
+            KARABO_SLOT(slotGetClientSessions, karabo::data::Hash);
 
             Hash h;
             h.set("port", config.get<unsigned int>("port"));
@@ -547,7 +549,7 @@ namespace karabo {
 
                 startDeviceInstantiation();
                 startNetworkMonitor();
-                startMonitorConnectionQueues(karabo::util::Hash());
+                startMonitorConnectionQueues(karabo::data::Hash());
 
                 // TODO: remove this once "fast slot reply policy" is enforced
                 const std::vector<std::string>& timingOutClasses =
@@ -573,7 +575,7 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::preReconfigure(karabo::util::Hash& incomingReconfiguration) {
+        void GuiServerDevice::preReconfigure(karabo::data::Hash& incomingReconfiguration) {
             if (incomingReconfiguration.has("ignoreTimeoutClasses")) {
                 const std::vector<std::string>& timingOutClasses =
                       incomingReconfiguration.get<std::vector<std::string>>("ignoreTimeoutClasses");
@@ -591,14 +593,14 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::recalculateTimingOutDevices(const karabo::util::Hash& topologyEntry,
+        void GuiServerDevice::recalculateTimingOutDevices(const karabo::data::Hash& topologyEntry,
                                                           const std::vector<std::string>& timingOutClasses,
                                                           bool clearSet) {
             std::lock_guard<std::mutex> lock(m_timingOutDevicesMutex);
             if (clearSet) m_timingOutDevices.clear();
             if (topologyEntry.has("device")) {
-                const karabo::util::Hash& devices = topologyEntry.get<Hash>("device");
-                for (karabo::util::Hash::const_iterator it = devices.begin(); it != devices.end(); ++it) {
+                const karabo::data::Hash& devices = topologyEntry.get<Hash>("device");
+                for (karabo::data::Hash::const_iterator it = devices.begin(); it != devices.end(); ++it) {
                     if (std::find(timingOutClasses.begin(), timingOutClasses.end(),
                                   it->getAttribute<std::string>("classId")) != timingOutClasses.end()) {
                         m_timingOutDevices.insert(it->getKey());
@@ -796,7 +798,7 @@ namespace karabo {
 
 
         void GuiServerDevice::onWaitForLogin(const karabo::net::ErrorCode& e,
-                                             const karabo::net::Channel::Pointer& channel, karabo::util::Hash& info) {
+                                             const karabo::net::Channel::Pointer& channel, karabo::data::Hash& info) {
             if (e) {
                 channel->close();
                 return;
@@ -851,7 +853,7 @@ namespace karabo {
                     sendLoginErrorAndDisconnect(channel, clientId, clientVersion.getString(), errorMsg);
                     return;
                 } else {
-                    karabo::util::Schema::AccessLevel level{Schema::AccessLevel::OBSERVER};
+                    karabo::data::Schema::AccessLevel level{Schema::AccessLevel::OBSERVER};
                     if (!m_isReadOnly) {
                         Schema::AccessLevel loginAccessLevel = authResult.accessLevel;
                         if (loginAccessLevel > MAX_LOGIN_ACCESS_LEVEL) {
@@ -930,7 +932,7 @@ namespace karabo {
             }
         }
 
-        void GuiServerDevice::onBeginTemporarySession(WeakChannelPointer channel, const karabo::util::Hash& info) {
+        void GuiServerDevice::onBeginTemporarySession(WeakChannelPointer channel, const karabo::data::Hash& info) {
             const karabo::net::Channel::Pointer chan = channel.lock();
             if (!chan) {
                 // Channel not valid anymore.
@@ -989,7 +991,7 @@ namespace karabo {
                 auto it = m_channels.find(chan);
                 if (it != m_channels.end()) {
                     ChannelData& data = it->second;
-                    data.temporarySessionStartTime = karabo::util::Epochstamp();
+                    data.temporarySessionStartTime = karabo::data::Epochstamp();
                     data.temporarySessionToken = result.temporarySessionToken;
                     data.temporarySessionUserId = result.userId;
                     data.levelBeforeTemporarySession = levelBeforeTemporarySession;
@@ -998,7 +1000,7 @@ namespace karabo {
             safeClientWrite(channel, h);
         }
 
-        void GuiServerDevice::onEndTemporarySession(WeakChannelPointer channel, const karabo::util::Hash& info) {
+        void GuiServerDevice::onEndTemporarySession(WeakChannelPointer channel, const karabo::data::Hash& info) {
             const karabo::net::Channel::Pointer chan = channel.lock();
             if (!chan) {
                 // Channel not valid anymore.
@@ -1059,7 +1061,7 @@ namespace karabo {
             return !get<string>("authServer").empty();
         }
 
-        void GuiServerDevice::onLogin(const karabo::net::Channel::Pointer& channel, const karabo::util::Hash& hash) {
+        void GuiServerDevice::onLogin(const karabo::net::Channel::Pointer& channel, const karabo::data::Hash& hash) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onLogin";
 
@@ -1171,7 +1173,7 @@ namespace karabo {
 
 
         void GuiServerDevice::onRead(const karabo::net::ErrorCode& e, WeakChannelPointer channel,
-                                     karabo::util::Hash& info, const bool readOnly) {
+                                     karabo::data::Hash& info, const bool readOnly) {
             if (e) {
                 onError(e, channel);
                 return;
@@ -1271,7 +1273,7 @@ namespace karabo {
                    replyType == "projectEndUserSession";
         }
 
-        bool GuiServerDevice::violatesReadOnly(const std::string& type, const karabo::util::Hash& info) {
+        bool GuiServerDevice::violatesReadOnly(const std::string& type, const karabo::data::Hash& info) {
             KARABO_LOG_FRAMEWORK_DEBUG << "violatesReadOnly " << info;
             if (m_writeCommands.find(type) != m_writeCommands.end()) {
                 return true;
@@ -1311,7 +1313,7 @@ namespace karabo {
             }
         }
 
-        void GuiServerDevice::onGuiError(const karabo::util::Hash& hash) {
+        void GuiServerDevice::onGuiError(const karabo::data::Hash& hash) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onGuiError";
                 Hash::Pointer hdr = std::make_shared<Hash>();
@@ -1336,7 +1338,7 @@ namespace karabo {
 
 
         void GuiServerDevice::setTimeout(karabo::xms::SignalSlotable::Requestor& requestor,
-                                         const karabo::util::Hash& input, const std::string& instanceKey) {
+                                         const karabo::data::Hash& input, const std::string& instanceKey) {
             if (input.has("timeout")) {
                 // TODO: remove `skipExecutionTimeout` once "fast slot reply policy" is enforced
                 if (!(input.has(instanceKey) && skipExecutionTimeout(input.get<std::string>(instanceKey)))) {
@@ -1349,7 +1351,7 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::onReconfigure(WeakChannelPointer channel, const karabo::util::Hash& hash) {
+        void GuiServerDevice::onReconfigure(WeakChannelPointer channel, const karabo::data::Hash& hash) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onReconfigure";
                 const string& deviceId = hash.get<string>("deviceId");
@@ -1386,7 +1388,7 @@ namespace karabo {
                 std::string details;
                 try {
                     throw;
-                } catch (const karabo::util::TimeoutException& te) {
+                } catch (const karabo::data::TimeoutException& te) {
                     // TODO: currently ignoring also naughty classes. Remove this once this is enforced.
                     const bool ignoreTimeout =
                           !input.has("timeout") || skipExecutionTimeout(input.get<std::string>("deviceId"));
@@ -1404,7 +1406,7 @@ namespace karabo {
                         const int timeout = std::max(input.get<int>("timeout"), m_timeout.load());
                         (failTxt += toString(timeout)) += " seconds.";
                     }
-                    karabo::util::Exception::clearTrace();
+                    karabo::data::Exception::clearTrace();
                 } catch (const RemoteException& e) {
                     failTxt = e.userFriendlyMsg(true);
                     details = e.details();
@@ -1425,7 +1427,7 @@ namespace karabo {
             safeClientWrite(channel, h);
         }
 
-        void GuiServerDevice::onExecute(WeakChannelPointer channel, const karabo::util::Hash& hash) {
+        void GuiServerDevice::onExecute(WeakChannelPointer channel, const karabo::data::Hash& hash) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onExecute " << hash;
                 const string& deviceId = hash.get<string>("deviceId");
@@ -1455,7 +1457,7 @@ namespace karabo {
                 std::string details;
                 try {
                     throw;
-                } catch (const karabo::util::TimeoutException&) {
+                } catch (const karabo::data::TimeoutException&) {
                     // TODO: currently ignoring also naughty classes. Remove this once this is enforced.
                     const bool ignoreTimeout =
                           !input.has("timeout") || skipExecutionTimeout(input.get<std::string>("deviceId"));
@@ -1473,7 +1475,7 @@ namespace karabo {
                         const int timeout = std::max(input.get<int>("timeout"), m_timeout.load());
                         (failTxt += toString(timeout)) += " seconds.";
                     }
-                    karabo::util::Exception::clearTrace();
+                    karabo::data::Exception::clearTrace();
                 } catch (const RemoteException& e) {
                     failTxt = e.userFriendlyMsg(true);
                     details = e.details();
@@ -1496,7 +1498,7 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::onInitDevice(WeakChannelPointer channel, const karabo::util::Hash& hash) {
+        void GuiServerDevice::onInitDevice(WeakChannelPointer channel, const karabo::data::Hash& hash) {
             try {
                 const string& serverId = hash.get<string>("serverId");
                 const string& deviceId = hash.get<string>("deviceId");
@@ -1558,7 +1560,7 @@ namespace karabo {
 
 
         void GuiServerDevice::initReply(WeakChannelPointer channel, const string& givenDeviceId,
-                                        const karabo::util::Hash& givenConfig, bool success, const string& message,
+                                        const karabo::data::Hash& givenConfig, bool success, const string& message,
                                         bool isFailureHandler) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Unicasting init reply - " << (isFailureHandler ? "" : "not ")
@@ -1598,7 +1600,7 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::safeClientWrite(const WeakChannelPointer channel, const karabo::util::Hash& message,
+        void GuiServerDevice::safeClientWrite(const WeakChannelPointer channel, const karabo::data::Hash& message,
                                               int prio) {
             karabo::net::Channel::Pointer chan = channel.lock();
             if (chan && chan->isOpen()) {
@@ -1610,7 +1612,7 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::safeAllClientsWrite(const karabo::util::Hash& message, int prio) {
+        void GuiServerDevice::safeAllClientsWrite(const karabo::data::Hash& message, int prio) {
             std::lock_guard<std::mutex> lock(m_channelMutex);
             // Broadcast to all GUIs
             for (ConstChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
@@ -1619,7 +1621,7 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::onGetDeviceConfiguration(WeakChannelPointer channel, const karabo::util::Hash& hash) {
+        void GuiServerDevice::onGetDeviceConfiguration(WeakChannelPointer channel, const karabo::data::Hash& hash) {
             try {
                 const string& deviceId = hash.get<string>("deviceId");
 
@@ -1641,7 +1643,7 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::onKillServer(WeakChannelPointer channel, const karabo::util::Hash& info) {
+        void GuiServerDevice::onKillServer(WeakChannelPointer channel, const karabo::data::Hash& info) {
             try {
                 string serverId = info.get<string>("serverId");
                 logUserAction(channel, "Kill device server '" + serverId + "'");
@@ -1652,7 +1654,7 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::onKillDevice(WeakChannelPointer channel, const karabo::util::Hash& info) {
+        void GuiServerDevice::onKillDevice(WeakChannelPointer channel, const karabo::data::Hash& info) {
             try {
                 string deviceId = info.get<string>("deviceId");
                 KARABO_LOG_FRAMEWORK_DEBUG << "onKillDevice : \"" << deviceId << "\"";
@@ -1664,7 +1666,7 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::onStartMonitoringDevice(WeakChannelPointer channel, const karabo::util::Hash& info) {
+        void GuiServerDevice::onStartMonitoringDevice(WeakChannelPointer channel, const karabo::data::Hash& info) {
             try {
                 const string& deviceId = info.get<string>("deviceId");
 
@@ -1704,7 +1706,7 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::onStopMonitoringDevice(WeakChannelPointer channel, const karabo::util::Hash& info) {
+        void GuiServerDevice::onStopMonitoringDevice(WeakChannelPointer channel, const karabo::data::Hash& info) {
             try {
                 const string& deviceId = info.get<string>("deviceId");
 
@@ -1737,7 +1739,7 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::onGetClassSchema(WeakChannelPointer channel, const karabo::util::Hash& info) {
+        void GuiServerDevice::onGetClassSchema(WeakChannelPointer channel, const karabo::data::Hash& info) {
             try {
                 karabo::net::Channel::Pointer chan = channel.lock();
                 if (!chan) return;
@@ -1780,7 +1782,7 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::onGetDeviceSchema(WeakChannelPointer channel, const karabo::util::Hash& info) {
+        void GuiServerDevice::onGetDeviceSchema(WeakChannelPointer channel, const karabo::data::Hash& info) {
             try {
                 karabo::net::Channel::Pointer chan = channel.lock();
                 const string& deviceId = info.get<string>("deviceId");
@@ -1819,7 +1821,7 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::onGetPropertyHistory(WeakChannelPointer channel, const karabo::util::Hash& info) {
+        void GuiServerDevice::onGetPropertyHistory(WeakChannelPointer channel, const karabo::data::Hash& info) {
             // Before even thinking about changing this method, don't forget
             // that all changes must also be reflected in Python API2's
             // device_client.getHistory.
@@ -1850,7 +1852,7 @@ namespace karabo {
 
         void GuiServerDevice::propertyHistory(WeakChannelPointer channel, bool success, const std::string& deviceId,
                                               const std::string& property,
-                                              const std::vector<karabo::util::Hash>& data) {
+                                              const std::vector<karabo::data::Hash>& data) {
             try {
                 Hash h("type", "propertyHistory", "deviceId", deviceId, "property", property, "data", data, "success",
                        success);
@@ -1891,7 +1893,7 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::onGetConfigurationFromPast(WeakChannelPointer channel, const karabo::util::Hash& info) {
+        void GuiServerDevice::onGetConfigurationFromPast(WeakChannelPointer channel, const karabo::data::Hash& info) {
             try {
                 const string& deviceId = info.get<string>("deviceId");
                 const string& time = info.get<string>("time");
@@ -1927,8 +1929,8 @@ namespace karabo {
 
         void GuiServerDevice::configurationFromPast(WeakChannelPointer channel, const std::string& deviceId,
                                                     const std::string& time, const bool& preview,
-                                                    const karabo::util::Hash& config,
-                                                    const karabo::util::Schema& /*schema*/,
+                                                    const karabo::data::Hash& config,
+                                                    const karabo::data::Schema& /*schema*/,
                                                     const bool configAtTimepoint, const std::string& configTimepoint) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Unicasting configuration from past: " << deviceId << " @ " << time;
@@ -1964,7 +1966,7 @@ namespace karabo {
             std::string details;
             try {
                 throw; // Error handlers are called within a try block, so we can rethrow the caught exception
-            } catch (const karabo::util::TimeoutException&) {
+            } catch (const karabo::data::TimeoutException&) {
                 failureReason = "Request timed out:\nProbably the data logging infrastructure is not available.";
             } catch (const RemoteException& e) {
                 failureReason = e.userFriendlyMsg(true);
@@ -2015,7 +2017,7 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::onSubscribeNetwork(WeakChannelPointer channel, const karabo::util::Hash& info) {
+        void GuiServerDevice::onSubscribeNetwork(WeakChannelPointer channel, const karabo::data::Hash& info) {
             try {
                 const string& channelName = info.get<string>("channelName");
                 const bool subscribe = info.get<bool>("subscribe");
@@ -2082,14 +2084,14 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::onSubscribeLogs(WeakChannelPointer channel, const karabo::util::Hash& info) {
+        void GuiServerDevice::onSubscribeLogs(WeakChannelPointer channel, const karabo::data::Hash& info) {
             Hash h("type", "subscribeLogsReply", "success", true, // Put to false in 2.18.X
                    "reason", "Log subscription not supported anymore since 2.17.0");
             safeClientWrite(channel, h);
         }
 
 
-        void GuiServerDevice::onSetLogPriority(WeakChannelPointer channel, const karabo::util::Hash& info) {
+        void GuiServerDevice::onSetLogPriority(WeakChannelPointer channel, const karabo::data::Hash& info) {
             try {
                 const std::string& priority = info.get<std::string>("priority");
                 const std::string& instanceId = info.get<std::string>("instanceId");
@@ -2137,7 +2139,7 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::onRequestNetwork(WeakChannelPointer channel, const karabo::util::Hash& info) {
+        void GuiServerDevice::onRequestNetwork(WeakChannelPointer channel, const karabo::data::Hash& info) {
             try {
                 const string& channelName = info.get<string>("channelName");
                 KARABO_LOG_FRAMEWORK_DEBUG << "onRequestNetwork for " << channelName;
@@ -2149,7 +2151,7 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::onNetworkData(const std::string& channelName, const karabo::util::Hash& data,
+        void GuiServerDevice::onNetworkData(const std::string& channelName, const karabo::data::Hash& data,
                                             const karabo::xms::InputChannel::MetaData& meta) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onNetworkData ....";
@@ -2193,7 +2195,7 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::instanceNewHandler(const karabo::util::Hash& topologyEntry) {
+        void GuiServerDevice::instanceNewHandler(const karabo::data::Hash& topologyEntry) {
             // topologyEntry is an empty Hash at path <type>.<instanceId> with all the instanceInfo as
             // attributes
             try {
@@ -2230,7 +2232,7 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::instanceChangeHandler(const karabo::util::Hash& instChangeData) {
+        void GuiServerDevice::instanceChangeHandler(const karabo::data::Hash& instChangeData) {
             try {
                 // Sends the instance changes to all the connected GUI clients.
                 Hash h("type", "topologyUpdate", "changes", instChangeData);
@@ -2242,7 +2244,7 @@ namespace karabo {
 
 
         void GuiServerDevice::instanceGoneHandler(const std::string& instanceId,
-                                                  const karabo::util::Hash& /*instInfo*/) {
+                                                  const karabo::data::Hash& /*instInfo*/) {
             try {
                 {
                     std::lock_guard<std::mutex> lock(m_channelMutex);
@@ -2304,7 +2306,7 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::devicesChangedHandler(const karabo::util::Hash& deviceUpdates) {
+        void GuiServerDevice::devicesChangedHandler(const karabo::data::Hash& deviceUpdates) {
             // The keys of 'deviceUpdates' are the deciveIds with updates and the values behind the keys are
             // Hashes with the updated properties.
             try {
@@ -2337,7 +2339,7 @@ namespace karabo {
 
 
         void GuiServerDevice::classSchemaHandler(const std::string& serverId, const std::string& classId,
-                                                 const karabo::util::Schema& classSchema) {
+                                                 const karabo::data::Schema& classSchema) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "classSchemaHandler: serverId: \"" << serverId << "\" - classId :\""
                                            << classId << "\"";
@@ -2372,7 +2374,7 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::schemaUpdatedHandler(const std::string& deviceId, const karabo::util::Schema& schema) {
+        void GuiServerDevice::schemaUpdatedHandler(const std::string& deviceId, const karabo::data::Schema& schema) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Sending schema updated for '" << deviceId << "'";
 
@@ -2482,7 +2484,7 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::slotLoggerMap(const karabo::util::Hash& loggerMap) {
+        void GuiServerDevice::slotLoggerMap(const karabo::data::Hash& loggerMap) {
             std::lock_guard<std::mutex> lock(m_loggerMapMutex);
             m_loggerMap = loggerMap;
         }
@@ -2524,17 +2526,17 @@ namespace karabo {
             // Can be HUGE: full topology and complete cache of monitored devices...
             // Note: This will leave no trace if logging level is WARN or above.
             KARABO_LOG_FRAMEWORK_INFO << "Debug info requested by slotDumpToLog:\n"
-                                      << getDebugInfo(karabo::util::Hash());
+                                      << getDebugInfo(karabo::data::Hash());
         }
 
 
-        void GuiServerDevice::slotDumpDebugInfo(const karabo::util::Hash& info) {
+        void GuiServerDevice::slotDumpDebugInfo(const karabo::data::Hash& info) {
             KARABO_LOG_FRAMEWORK_DEBUG << "slotDumpDebugInfo : info ...\n" << info;
             reply(getDebugInfo(info));
         }
 
 
-        karabo::util::Hash GuiServerDevice::getDebugInfo(const karabo::util::Hash& info) {
+        karabo::data::Hash GuiServerDevice::getDebugInfo(const karabo::data::Hash& info) {
             Hash data;
 
             if (info.empty() || info.has("clients")) {
@@ -2737,7 +2739,7 @@ namespace karabo {
             reply(found);
         }
 
-        void GuiServerDevice::slotNotify(const karabo::util::Hash& info) {
+        void GuiServerDevice::slotNotify(const karabo::data::Hash& info) {
             const std::string& message = info.get<std::string>("message");
             const std::string contentTypeStr("contentType");
             const std::string& type = info.get<std::string>(contentTypeStr);
@@ -2776,7 +2778,7 @@ namespace karabo {
             reply(Hash()); // Hash to comply with generic slot call protocol, i.e. Hash-in, Hash-out.
         }
 
-        void GuiServerDevice::slotBroadcast(const karabo::util::Hash& info) {
+        void GuiServerDevice::slotBroadcast(const karabo::data::Hash& info) {
             Hash result("success", false);
             const std::string clientAddress(info.get<std::string>("clientAddress"));
             const karabo::xms::SignalSlotable::SlotInstancePointer& senderInfo = getSenderInfo("slotBroadcast");
@@ -2803,7 +2805,7 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::requestScene(const karabo::util::Hash& info) {
+        void GuiServerDevice::requestScene(const karabo::data::Hash& info) {
             Hash result("type", "deviceScene", "origin", this->getInstanceId());
             Hash& payload = result.bindReference<Hash>("payload");
             payload.set("success", false);
@@ -2818,7 +2820,7 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::registerPotentialProjectManager(const karabo::util::Hash& topologyEntry) {
+        void GuiServerDevice::registerPotentialProjectManager(const karabo::data::Hash& topologyEntry) {
             std::string type, instanceId;
             typeAndInstanceFromTopology(topologyEntry, type, instanceId);
             if (topologyEntry.get<Hash>(type).begin()->hasAttribute("classId") &&
@@ -2841,7 +2843,7 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::typeAndInstanceFromTopology(const karabo::util::Hash& topologyEntry, std::string& type,
+        void GuiServerDevice::typeAndInstanceFromTopology(const karabo::data::Hash& topologyEntry, std::string& type,
                                                           std::string& instanceId) {
             if (topologyEntry.empty()) return;
 
@@ -2860,7 +2862,7 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::onRequestGeneric(WeakChannelPointer channel, const karabo::util::Hash& info) {
+        void GuiServerDevice::onRequestGeneric(WeakChannelPointer channel, const karabo::data::Hash& info) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Generic request called with:  " << info;
                 const std::string& instanceId = info.get<std::string>("instanceId");
@@ -2872,7 +2874,7 @@ namespace karabo {
                 } else if (slot == "slotSaveLogBook") {
                     std::ostringstream oss;
                     oss << "Saved logbook entry with title '" << args.get<std::string>("title") << "' to ";
-                    const auto& entryDestinations = args.get<std::vector<karabo::util::Hash>>("destinations");
+                    const auto& entryDestinations = args.get<std::vector<karabo::data::Hash>>("destinations");
                     if (entryDestinations.size() >= 1UL) {
                         oss << (entryDestinations.size() == 1UL
                                       ? "the stream '"
@@ -2928,7 +2930,7 @@ namespace karabo {
                 std::string details;
                 try {
                     throw;
-                } catch (const karabo::util::TimeoutException&) {
+                } catch (const karabo::data::TimeoutException&) {
                     failTxt = "Request not answered within ";
                     if (info.has("timeout")) {
                         // Not 100% precise if "timeout" got reconfigured after request was sent...
@@ -2939,11 +2941,11 @@ namespace karabo {
                         failTxt += toString(karabo::xms::SignalSlotable::Requestor::m_defaultAsyncTimeout / 1000.f);
                     }
                     failTxt += " seconds.";
-                    karabo::util::Exception::clearTrace();
-                } catch (const karabo::util::RemoteException& e) {
+                    karabo::data::Exception::clearTrace();
+                } catch (const karabo::data::RemoteException& e) {
                     failTxt = e.userFriendlyMsg(true);
                     details = e.details();
-                } catch (const karabo::util::Exception& e) {
+                } catch (const karabo::data::Exception& e) {
                     failTxt = e.userFriendlyMsg(false);
                     details = e.detailedMsg();
                 } catch (const std::exception& e) {
@@ -2978,7 +2980,7 @@ namespace karabo {
 
             // convert periods to underscores, so that this can be used as a Hash key...
             std::transform(addr.begin(), addr.end(), addr.begin(),
-                           [](char c) { return c == util::Hash::k_defaultSep ? '_' : c; });
+                           [](char c) { return c == data::Hash::k_defaultSep ? '_' : c; });
 
             return addr;
         }

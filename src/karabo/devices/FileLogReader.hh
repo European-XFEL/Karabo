@@ -30,10 +30,10 @@
 #include <string>
 
 #include "DataLogReader.hh"
+#include "karabo/data/types/ClassInfo.hh"
+#include "karabo/data/types/Hash.hh"
+#include "karabo/data/types/Schema.hh"
 #include "karabo/io/TextSerializer.hh"
-#include "karabo/util/ClassInfo.hh"
-#include "karabo/util/Hash.hh"
-#include "karabo/util/Schema.hh"
 #include "karabo/util/Version.hh"
 
 namespace karabo {
@@ -48,7 +48,7 @@ namespace karabo {
          */
         struct FileLoggerIndex {
             std::string m_event;
-            karabo::util::Epochstamp m_epoch;
+            karabo::data::Epochstamp m_epoch;
             unsigned long long m_train;
             long m_position;
             std::string m_user;
@@ -127,15 +127,15 @@ namespace karabo {
            public:
             KARABO_CLASSINFO(FileLogReader, "FileLogReader", "karabo-" + karabo::util::Version::getVersion())
 
-            static void expectedParameters(karabo::util::Schema& expected);
+            static void expectedParameters(karabo::data::Schema& expected);
 
-            FileLogReader(const karabo::util::Hash& input);
+            FileLogReader(const karabo::data::Hash& input);
 
             virtual ~FileLogReader();
 
            protected:
             virtual void slotGetPropertyHistoryImpl(const std::string& deviceId, const std::string& property,
-                                                    const karabo::util::Hash& params) override;
+                                                    const karabo::data::Hash& params) override;
 
             virtual void slotGetConfigurationFromPastImpl(const std::string& deviceId,
                                                           const std::string& timepoint) override;
@@ -148,8 +148,8 @@ namespace karabo {
              * Internal helper:
              * Place 'value' interpreted as 'type' (and with given 'timestamp') into 'hashOut' at 'path'.
              */
-            void readToHash(karabo::util::Hash& hashOut, const std::string& path,
-                            const karabo::util::Timestamp& timestamp, const std::string& type,
+            void readToHash(karabo::data::Hash& hashOut, const std::string& path,
+                            const karabo::data::Timestamp& timestamp, const std::string& type,
                             const std::string& value) const;
 
             /**
@@ -171,14 +171,14 @@ namespace karabo {
             /// Find logger closest index from archive_index.txt file that is before/after (according to 'before')
             /// 'timepoint'. If there is none before (after) but that is asked for, take the one just after (before).
             FileLoggerIndex findNearestLoggerIndex(const std::string& deviceId,
-                                                   const karabo::util::Epochstamp& timepoint, const bool before);
+                                                   const karabo::data::Epochstamp& timepoint, const bool before);
 
             int getFileIndex(const std::string& deviceId);
 
             karabo::util::MetaSearchResult navigateMetaRange(const std::string& deviceId, size_t startnum,
                                                              size_t endnum, const std::string& path,
-                                                             const karabo::util::Epochstamp& from,
-                                                             const karabo::util::Epochstamp& to);
+                                                             const karabo::data::Epochstamp& from,
+                                                             const karabo::data::Epochstamp& to);
 
             /// Find index of that MetaData::Record in 'f' (between indices 'left' and 'right')
             /// that matches the Epochstamp 'stamp'. In case no exact match (within 1 ms) is found,
@@ -201,8 +201,8 @@ namespace karabo {
             static const std::regex m_indexLineRegex;
             static const std::regex m_indexTailRegex;
             std::string m_ltype;
-            karabo::io::TextSerializer<karabo::util::Hash>::Pointer m_serializer;
-            karabo::io::TextSerializer<karabo::util::Schema>::Pointer m_schemaSerializer;
+            karabo::io::TextSerializer<karabo::data::Hash>::Pointer m_serializer;
+            karabo::io::TextSerializer<karabo::data::Schema>::Pointer m_schemaSerializer;
         };
 
     } // namespace devices

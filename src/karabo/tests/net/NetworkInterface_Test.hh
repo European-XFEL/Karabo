@@ -26,8 +26,6 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 
-#include <karabo/util.hpp>
-
 class NetworkInterface_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(NetworkInterface_Test);
 

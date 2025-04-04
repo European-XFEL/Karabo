@@ -29,8 +29,9 @@
 #include <any>
 #include <functional>
 #include <karabo/io/InputHandler.hh>
-#include <karabo/util/Configurator.hh>
-#include <karabo/util/SimpleElement.hh>
+
+#include "karabo/data/schema/Configurator.hh"
+#include "karabo/data/schema/SimpleElement.hh"
 
 namespace karabo {
     namespace io {
@@ -48,11 +49,11 @@ namespace karabo {
             KARABO_CLASSINFO(AbstractInput, "AbstractInput", "1.0")
             KARABO_CONFIGURATION_BASE_CLASS
 
-            static void expectedParameters(karabo::util::Schema& expected) {}
+            static void expectedParameters(karabo::data::Schema& expected) {}
 
             AbstractInput() {}
 
-            AbstractInput(const karabo::util::Hash& configuration) {}
+            AbstractInput(const karabo::data::Hash& configuration) {}
 
             virtual ~AbstractInput() {}
 
@@ -60,7 +61,7 @@ namespace karabo {
              * Reconfigure the input, e.g. to use a different data source
              * @param input
              */
-            virtual void reconfigure(const karabo::util::Hash& input) {}
+            virtual void reconfigure(const karabo::data::Hash& input) {}
 
             /**
              * Register a SignalSlotable instance to this input
@@ -86,10 +87,10 @@ namespace karabo {
             void setInputHandlerType(const std::string& language, const std::string& inputType) {
                 std::string capitalType = boost::algorithm::to_upper_copy(language);
                 if (capitalType == "C++")
-                    m_handler = karabo::util::Factory<InputHandler>::create("CppInputHandler" + inputType,
+                    m_handler = karabo::data::Factory<InputHandler>::create("CppInputHandler" + inputType,
                                                                             shared_from_this());
                 else if (capitalType == "PYTHON")
-                    m_handler = karabo::util::Factory<InputHandler>::create("PythonInputHandler" + inputType,
+                    m_handler = karabo::data::Factory<InputHandler>::create("PythonInputHandler" + inputType,
                                                                             shared_from_this());
                 else
                     throw KARABO_PARAMETER_EXCEPTION(
@@ -138,8 +139,8 @@ namespace karabo {
              * Get the output channels connected to this input
              * @return
              */
-            virtual std::vector<karabo::util::Hash> getConnectedOutputChannels() {
-                return std::vector<karabo::util::Hash>();
+            virtual std::vector<karabo::data::Hash> getConnectedOutputChannels() {
+                return std::vector<karabo::data::Hash>();
                 std::vector<int> v;
             }
 
@@ -147,13 +148,13 @@ namespace karabo {
              * Connect this input to an output channel as specified by its configuration.
              * @param outputChannelInfo
              */
-            virtual void connect(const karabo::util::Hash& outputChannelInfo) {}
+            virtual void connect(const karabo::data::Hash& outputChannelInfo) {}
 
             /**
              * Disconnect the output channel specified by its configuration
              * @param outputChannelInfo
              */
-            virtual void disconnect(const karabo::util::Hash& outputChannelInfo) {}
+            virtual void disconnect(const karabo::data::Hash& outputChannelInfo) {}
 
             /**
              * Should return true if the input can handle more data

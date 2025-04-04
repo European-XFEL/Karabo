@@ -21,8 +21,9 @@
 #include <amqpcpp.h>
 
 #include "AmqpUtils.hh"
+#include "karabo/data/types/Exception.hh"
 #include "karabo/log/Logger.hh"
-#include "karabo/util/Exception.hh"
+#include "karabo/util/MetaTools.hh"
 
 
 using std::placeholders::_1;

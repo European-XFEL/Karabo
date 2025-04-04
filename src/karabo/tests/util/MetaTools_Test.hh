@@ -32,22 +32,23 @@
 #include <functional>
 #include <iostream>
 #include <karabo/net/EventLoop.hh>
-#include <karabo/util/Hash.hh>
 #include <karabo/util/MetaTools.hh>
 #include <memory>
 #include <thread>
 #include <unordered_map>
 
-struct MyPublicHash : public karabo::util::Hash {};
+#include "karabo/data/types/Hash.hh"
 
-struct MyProtectedHash : protected karabo::util::Hash {};
+struct MyPublicHash : public karabo::data::Hash {};
 
-struct MyPrivateHash : private karabo::util::Hash {};
+struct MyProtectedHash : protected karabo::data::Hash {};
+
+struct MyPrivateHash : private karabo::data::Hash {};
 
 struct PointerTest {
     template <class T>
     static bool isSharedPointer() {
-        return isSharedPointer<T>(karabo::util::is_shared_ptr<T>());
+        return isSharedPointer<T>(karabo::data::details::is_shared_ptr<T>());
     }
 
     template <class T>

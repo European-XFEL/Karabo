@@ -23,15 +23,17 @@
 
 #include "AmqpUtils.hh"
 #include "EventLoop.hh"
+#include "karabo/data/types/Hash.hh"
 #include "karabo/log/Logger.hh"
-#include "karabo/util/Hash.hh"
+#include "karabo/util/MetaTools.hh"
 #include "utils.hh"
 
 
-using namespace karabo::util;
+using namespace karabo::data;
 using std::placeholders::_1;
 using std::placeholders::_2;
 
+using karabo::util::bind_weak;
 
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::net::Broker, karabo::net::AmqpBroker)
 
@@ -39,7 +41,7 @@ namespace karabo {
     namespace net {
 
 
-        void AmqpBroker::expectedParameters(karabo::util::Schema& s) {}
+        void AmqpBroker::expectedParameters(karabo::data::Schema& s) {}
 
 
         void AmqpBroker::defaultQueueArgs(AMQP::Table& args) {
@@ -49,7 +51,7 @@ namespace karabo {
         }
 
 
-        AmqpBroker::AmqpBroker(const karabo::util::Hash& config)
+        AmqpBroker::AmqpBroker(const karabo::data::Hash& config)
             : Broker(config),
               m_connection(std::make_shared<AmqpConnection>(m_availableBrokerUrls)),
               m_client(),
@@ -221,8 +223,8 @@ namespace karabo {
         }
 
 
-        void AmqpBroker::write(const std::string& target, const karabo::util::Hash::Pointer& header,
-                               const karabo::util::Hash::Pointer& body, const int /*priority*/,
+        void AmqpBroker::write(const std::string& target, const karabo::data::Hash::Pointer& header,
+                               const karabo::data::Hash::Pointer& body, const int /*priority*/,
                                const int /*timeToLive*/) {
             if (!header) {
                 throw KARABO_PARAMETER_EXCEPTION("AmqpBroker.write: header pointer is null");

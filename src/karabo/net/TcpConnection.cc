@@ -31,14 +31,15 @@
 
 #include "EventLoop.hh"
 #include "TcpChannel.hh"
+#include "karabo/data/schema/NodeElement.hh"
+#include "karabo/data/schema/SimpleElement.hh"
 #include "karabo/log/Logger.hh"
 #include "karabo/util/MetaTools.hh"
-#include "karabo/util/NodeElement.hh"
-#include "karabo/util/SimpleElement.hh"
 #include "utils.hh"
 
 using namespace std;
 using namespace boost::asio;
+using namespace karabo::data;
 using namespace karabo::util;
 
 
@@ -48,7 +49,7 @@ namespace karabo {
     namespace net {
 
 
-        void TcpConnection::expectedParameters(karabo::util::Schema& expected) {
+        void TcpConnection::expectedParameters(karabo::data::Schema& expected) {
             STRING_ELEMENT(expected)
                   .key("type")
                   .displayedName("Connection Type")
@@ -132,7 +133,7 @@ namespace karabo {
                   .displayedName("Tolerated Silence")
                   .description(
                         "Idle time after which keep-alive mechanism start checking the connection (TCP_KEEPIDLE)")
-                  .unit(karabo::util::Unit::SECOND)
+                  .unit(karabo::data::Unit::SECOND)
                   .assignmentOptional()
                   .defaultValue(30) // Linux default is 7200
                   .minInc(5)
@@ -142,7 +143,7 @@ namespace karabo {
                   .key("keepalive.interval")
                   .displayedName("Interval")
                   .description("Interval between probes keep-alive probes (TCP_KEEPINTVL)")
-                  .unit(karabo::util::Unit::SECOND)
+                  .unit(karabo::data::Unit::SECOND)
                   .assignmentOptional()
                   .defaultValue(5) // Linux default is 75
                   .minInc(1)
@@ -153,7 +154,7 @@ namespace karabo {
                   .displayedName("Number of Probes")
                   .description(
                         "Number of ot acknowledged probes after that the connection is considered dead (TCP_KEEPCNT)")
-                  .unit(karabo::util::Unit::COUNT)
+                  .unit(karabo::data::Unit::COUNT)
                   .assignmentOptional()
                   .defaultValue(5) // Linux default is 9
                   .minInc(2)
@@ -161,11 +162,11 @@ namespace karabo {
         }
 
 
-        TcpConnection::TcpConnection(const karabo::util::Hash& input)
+        TcpConnection::TcpConnection(const karabo::data::Hash& input)
             : Connection(input),
               m_resolver(EventLoop::getIOService()),
               m_acceptor(EventLoop::getIOService()),
-              m_keepAliveSettings(input.get<karabo::util::Hash>("keepalive")) {
+              m_keepAliveSettings(input.get<karabo::data::Hash>("keepalive")) {
             string url;
             input.get("url", url);
             if (url.empty()) {
@@ -232,7 +233,7 @@ namespace karabo {
         Channel::Pointer TcpConnection::startClient() {
             Channel::Pointer channel;
             try {
-                ip::tcp::resolver::query query(ip::tcp::v4(), m_hostname, karabo::util::toString(m_port));
+                ip::tcp::resolver::query query(ip::tcp::v4(), m_hostname, karabo::data::toString(m_port));
                 ip::tcp::resolver::iterator endpoint_iterator = m_resolver.resolve(query);
                 channel = this->createChannel();
                 TcpChannel::Pointer tcpChannel = std::static_pointer_cast<TcpChannel>(channel);
@@ -300,7 +301,7 @@ namespace karabo {
 
         void TcpConnection::startClient(const ConnectionHandler& handler) {
             try {
-                ip::tcp::resolver::query query(ip::tcp::v4(), m_hostname, karabo::util::toString(m_port));
+                ip::tcp::resolver::query query(ip::tcp::v4(), m_hostname, karabo::data::toString(m_port));
                 m_resolver.async_resolve(
                       query, bind_weak(&TcpConnection::resolveHandler, this, boost::asio::placeholders::error,
                                        boost::asio::placeholders::iterator, handler));
@@ -327,7 +328,7 @@ namespace karabo {
                     Channel::Pointer c;
                     handler(e, c);
                 }
-            } catch (const karabo::util::Exception& e) {
+            } catch (const karabo::data::Exception& e) {
                 KARABO_RETHROW
             } catch (const std::exception& ex) {
                 KARABO_RETHROW_AS(KARABO_NETWORK_EXCEPTION(

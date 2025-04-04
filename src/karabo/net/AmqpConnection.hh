@@ -38,7 +38,7 @@
 #include <thread>
 #include <vector>
 
-#include "karabo/util/ClassInfo.hh"
+#include "karabo/data/types/ClassInfo.hh"
 #include "utils.hh" // for AsyncHandler
 
 namespace AMQP {

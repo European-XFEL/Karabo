@@ -19,20 +19,21 @@
 #include <pybind11/pybind11.h>
 
 #include <karabo/log/Logger.hh>
-#include <karabo/util/Exception.hh>
 #include <string>
+
+#include "karabo/data/types/Exception.hh"
 
 namespace py = pybind11;
 
 
 void exportPyUtilException(py::module_& m) {
-    // Translate C++ karabo::util::Exception into python RuntimeError exception
+    // Translate C++ karabo::data::Exception into python RuntimeError exception
     py::register_exception_translator([](std::exception_ptr p) {
         try {
             if (p) {
                 std::rethrow_exception(p);
             }
-        } catch (const karabo::util::RemoteException& e) {
+        } catch (const karabo::data::RemoteException& e) {
             // Assemble message from both, friendly message and details with "\nDETAILS:" as separator
             std::string msg(e.type());
             msg += ": ";
@@ -45,12 +46,12 @@ void exportPyUtilException(py::module_& m) {
 
             // Pass C-pointer to Python
             PyErr_SetString(PyExc_RuntimeError, msg.c_str());
-        } catch (const karabo::util::TimeoutException& e) {
+        } catch (const karabo::data::TimeoutException& e) {
             const std::string msg(e.userFriendlyMsg(true)); // Clear stack
 
             // Pass C-pointer to Python
             PyErr_SetString(PyExc_TimeoutError, msg.c_str());
-        } catch (const karabo::util::Exception& e) {
+        } catch (const karabo::data::Exception& e) {
             // Assemble message from type, friendly message and - separated by \nDETAILS:\n" - detailed message.
             std::string msg(e.type());
             msg += ": ";

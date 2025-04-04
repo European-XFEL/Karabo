@@ -25,7 +25,7 @@
 
 #include <karabo/util/DataLogUtils.hh>
 
-#include "karabo/util/Exception.hh"
+#include "karabo/data/types/Exception.hh"
 
 CPPUNIT_TEST_SUITE_REGISTRATION(DataLogUtils_Test);
 
@@ -132,9 +132,9 @@ void DataLogUtils_Test::testInvalidIndexLines() {
                 faillingRegEx = 2;
             }
         }
-        CPPUNIT_ASSERT_MESSAGE("For invalid test #" + karabo::util::toString(invalidTestIdx) +
-                                     " a faillingRegEx value of " + karabo::util::toString(aPair.second) +
-                                     " was expected, but got " + karabo::util::toString(faillingRegEx),
+        CPPUNIT_ASSERT_MESSAGE("For invalid test #" + karabo::data::toString(invalidTestIdx) +
+                                     " a faillingRegEx value of " + karabo::data::toString(aPair.second) +
+                                     " was expected, but got " + karabo::data::toString(faillingRegEx),
                                aPair.second == faillingRegEx);
         invalidTestIdx++;
     }
@@ -257,5 +257,5 @@ void DataLogUtils_Test::testMultipleJSONObjects() {
           "}]}";
 
     CPPUNIT_ASSERT_THROW(karabo::util::jsonResultsToInfluxResultSet(mixed, complexInfluxResult, ""),
-                         karabo::util::NotSupportedException);
+                         karabo::data::NotSupportedException);
 }

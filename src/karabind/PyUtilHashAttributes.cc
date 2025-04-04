@@ -19,21 +19,21 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include <karabo/util/FromLiteral.hh>
-#include <karabo/util/Hash.hh>
-#include <karabo/util/Schema.hh>
 #include <string>
 
 #include "PyTypes.hh"
 #include "Wrapper.hh"
+#include "karabo/data/types/FromLiteral.hh"
+#include "karabo/data/types/Hash.hh"
+#include "karabo/data/types/Schema.hh"
 
 namespace py = pybind11;
 
-using namespace karabo::util;
+using namespace karabo::data;
 
 
 void exportPyUtilHashAttributes(py::module_& m) {
-    using namespace karabo::util;
+    using namespace karabo::data;
     using namespace karabind;
 
     py::class_<Hash::Attributes::Node, std::shared_ptr<Hash::Attributes::Node>> an(m, "HashAttributesNode");
@@ -68,7 +68,7 @@ void exportPyUtilHashAttributes(py::module_& m) {
     an.def(
           "getType",
           [](const Hash::Attributes::Node& node) {
-              using namespace karabo::util;
+              using namespace karabo::data;
               PyTypes::ReferenceType type = static_cast<PyTypes::ReferenceType>(node.getType());
               return py::cast(type);
           },
@@ -91,17 +91,17 @@ void exportPyUtilHashAttributes(py::module_& m) {
 
     a.def(
           "has",
-          [](karabo::util::Hash::Attributes& self, const std::string& key) -> py::bool_ { return self.has(key); },
+          [](karabo::data::Hash::Attributes& self, const std::string& key) -> py::bool_ { return self.has(key); },
           (py::arg("key")), "Returns True if HashAttributes container contains given \"key\"");
 
     a.def(
           "__contains__",
-          [](karabo::util::Hash::Attributes& self, const std::string& key) -> py::bool_ { return self.has(key); },
+          [](karabo::data::Hash::Attributes& self, const std::string& key) -> py::bool_ { return self.has(key); },
           py::arg("key"), "Returns True if HashAttributes container contains given \"key\"");
 
     a.def(
           "isType",
-          [](karabo::util::Hash::Attributes& self, const std::string& key, const py::object& otype) -> py::bool_ {
+          [](karabo::data::Hash::Attributes& self, const std::string& key, const py::object& otype) -> py::bool_ {
               Types::ReferenceType targetType = wrapper::pyObjectToCppType(otype);
               Types::ReferenceType type = self.getNode(key).getType();
               return (type == targetType);
@@ -111,8 +111,8 @@ void exportPyUtilHashAttributes(py::module_& m) {
 
     a.def(
           "getType",
-          [](karabo::util::Hash::Attributes& self, const std::string& key) {
-              using namespace karabo::util;
+          [](karabo::data::Hash::Attributes& self, const std::string& key) {
+              using namespace karabo::data;
               auto node = self.getNode(key);
               PyTypes::ReferenceType type = static_cast<PyTypes::ReferenceType>(node.getType());
               return py::cast(type);
@@ -120,36 +120,36 @@ void exportPyUtilHashAttributes(py::module_& m) {
           py::arg("key"), "Returns ReferenceType for given attribute \"key\"");
 
     a.def(
-          "erase", [](karabo::util::Hash::Attributes& self, const std::string& key) { self.erase(key); },
+          "erase", [](karabo::data::Hash::Attributes& self, const std::string& key) { self.erase(key); },
           py::arg("key"), "Erase \"key\" attribute");
 
     a.def(
-          "__delitem__", [](karabo::util::Hash::Attributes& self, const std::string& key) { self.erase(key); },
+          "__delitem__", [](karabo::data::Hash::Attributes& self, const std::string& key) { self.erase(key); },
           py::arg("key"), "Erase \"key\" attribute");
 
     a.def(
-          "size", [](karabo::util::Hash::Attributes& self) { return self.size(); },
+          "size", [](karabo::data::Hash::Attributes& self) { return self.size(); },
           "Returns number of entries in HashAttributes container");
 
     a.def(
-          "__len__", [](karabo::util::Hash::Attributes& self) { return self.size(); },
+          "__len__", [](karabo::data::Hash::Attributes& self) { return self.size(); },
           "Returns number of entries in HashAttributes container");
 
     a.def(
-          "empty", [](karabo::util::Hash::Attributes& self) { return self.empty(); },
+          "empty", [](karabo::data::Hash::Attributes& self) { return self.empty(); },
           "Returns True if HashAttributes container is empty.");
 
     a.def(
-          "bool", [](karabo::util::Hash::Attributes& self) { return self.size() > 0; },
+          "bool", [](karabo::data::Hash::Attributes& self) { return self.size() > 0; },
           "This function automatically called when HashAttributes object checked in \"if\" expression. \"False\" means "
           "that container is empty.");
 
-    a.def("clear", [](karabo::util::Hash::Attributes& self) { self.clear(); }, "Make HashAttributes container empty.");
+    a.def("clear", [](karabo::data::Hash::Attributes& self) { self.clear(); }, "Make HashAttributes container empty.");
 
     a.def(
           "getNode",
-          [](karabo::util::Hash::Attributes& self, const std::string& key) {
-              using namespace karabo::util;
+          [](karabo::data::Hash::Attributes& self, const std::string& key) {
+              using namespace karabo::data;
               Hash::Attributes::Node& nodeRef = self.getNode(key);
               boost::optional<Hash::Attributes::Node&> node(nodeRef);
               return py::cast(std::shared_ptr<Hash::Attributes::Node>(&(*node), [](const void*) {}));
@@ -158,21 +158,21 @@ void exportPyUtilHashAttributes(py::module_& m) {
 
     a.def(
           "get",
-          [](karabo::util::Hash::Attributes& self, const std::string& key) {
+          [](karabo::data::Hash::Attributes& self, const std::string& key) {
               return wrapper::castAnyToPy(self.getAny(key));
           },
           py::arg("key"), "Returns value for \"key\" attribute.");
 
     a.def(
           "__getitem__",
-          [](karabo::util::Hash::Attributes& self, const std::string& key) {
+          [](karabo::data::Hash::Attributes& self, const std::string& key) {
               return wrapper::castAnyToPy(self.getAny(key));
           },
           py::arg("key"), "Pythonic style for getting value of attribute: x = attrs['abc']");
 
     a.def(
           "getAs",
-          [](karabo::util::Hash::Attributes& self, const std::string& key, const py::object& otype) {
+          [](karabo::data::Hash::Attributes& self, const std::string& key, const py::object& otype) {
               Types::ReferenceType rtype = wrapper::pyObjectToCppType(otype);
               const auto& node = self.getNode(key);
               return wrapper::detail::castElementToPy(node, rtype);
@@ -181,7 +181,7 @@ void exportPyUtilHashAttributes(py::module_& m) {
 
     a.def(
           "set",
-          [](karabo::util::Hash::Attributes& self, const std::string& key, const py::object& value) {
+          [](karabo::data::Hash::Attributes& self, const std::string& key, const py::object& value) {
               std::any a;
               wrapper::castPyToAny(value, a);
               return py::cast(self.set(key, a));
@@ -190,7 +190,7 @@ void exportPyUtilHashAttributes(py::module_& m) {
 
     a.def(
           "__setitem__",
-          [](karabo::util::Hash::Attributes& self, const std::string& key, const py::object& value) {
+          [](karabo::data::Hash::Attributes& self, const std::string& key, const py::object& value) {
               std::any a;
               wrapper::castPyToAny(value, a);
               return py::cast(self.set(key, a));

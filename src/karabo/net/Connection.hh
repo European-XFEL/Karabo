@@ -31,9 +31,9 @@
 #include <boost/system/error_code.hpp>
 #include <string>
 
-#include "karabo/util/Configurator.hh"
-#include "karabo/util/Factory.hh"
-#include "karabo/util/karaboDll.hh"
+#include "karabo/data/schema/Configurator.hh"
+#include "karabo/data/schema/Factory.hh"
+#include "karabo/data/types/karaboDll.hh"
 
 
 /**
@@ -71,9 +71,9 @@ namespace karabo {
 
             virtual ~Connection();
 
-            static void expectedParameters(karabo::util::Schema& expected);
+            static void expectedParameters(karabo::data::Schema& expected);
 
-            Connection(const karabo::util::Hash& input);
+            Connection(const karabo::data::Hash& input);
 
             /**
              * Starts the connection

@@ -42,7 +42,7 @@ void Runner_Test::tearDown() {}
 
 
 void Runner_Test::testRunnerSuccess() {
-    using namespace karabo::util;
+    using namespace karabo::data;
     std::string initval =
           "{\"Karabo_DataLoggerManager_0\": {\"classId\": \"DataLoggerManager\", "
           "\"serverList\": [\"dls1\", \"dls2\", \"dls3\", \"dls4\"], \"param1\": 12, "
@@ -61,7 +61,7 @@ void Runner_Test::testRunnerSuccess() {
 
 
 void Runner_Test::testRunnerSuccess2() {
-    using namespace karabo::util;
+    using namespace karabo::data;
     const char* argv[] = {"AnotherExecutable5", "serverId=bingo", "a[0].b=1", "a[0].c=2", "a[0].e={x=15", "y=88}"};
     const int argc = sizeof(argv) / sizeof(argv[0]);
     Hash configuration;
@@ -76,7 +76,7 @@ void Runner_Test::testRunnerSuccess2() {
 
 
 void Runner_Test::testRunnerFailure1() {
-    using namespace karabo::util;
+    using namespace karabo::data;
     const char* argv[] = {"AnotherExecutable", "serverId=bar", "a={b=1", "c=2", "d=3", "e={x=15", "y=88}"};
     const int argc = sizeof(argv) / sizeof(argv[0]);
     Hash configuration;
@@ -85,7 +85,7 @@ void Runner_Test::testRunnerFailure1() {
 
 
 void Runner_Test::testRunnerFailure2() {
-    using namespace karabo::util;
+    using namespace karabo::data;
     const char* argv[] = {"AnotherExecutable2", "serverId=bar", "a=}b=1", "c=2", "d=3", "e={x=15", "y=88}"};
     const int argc = sizeof(argv) / sizeof(argv[0]);
     Hash configuration;
@@ -94,7 +94,7 @@ void Runner_Test::testRunnerFailure2() {
 
 
 void Runner_Test::testRunnerFailure3() {
-    using namespace karabo::util;
+    using namespace karabo::data;
     const char* argv[] = {"AnotherExecutable3", "serverId=bla", "a={b=1", "c=2", "d=3", "e={x=15", "y=88}}}"};
     const int argc = sizeof(argv) / sizeof(argv[0]);
     Hash configuration;
@@ -103,7 +103,7 @@ void Runner_Test::testRunnerFailure3() {
 
 
 void Runner_Test::testRunnerFailure4() {
-    using namespace karabo::util;
+    using namespace karabo::data;
     const char* argv[] = {"AnotherExecutable4", "serverId=bang", "a={{b=1}", "c=2", "d=3", "e={x=15", "y=88}}"};
     const int argc = sizeof(argv) / sizeof(argv[0]);
     Hash configuration;

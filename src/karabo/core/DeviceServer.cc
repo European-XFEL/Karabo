@@ -37,18 +37,18 @@
 #include <tuple>
 
 #include "Device.hh"
+#include "karabo/data/schema/ChoiceElement.hh"
+#include "karabo/data/schema/Configurator.hh"
+#include "karabo/data/schema/NodeElement.hh"
+#include "karabo/data/schema/SimpleElement.hh"
+#include "karabo/data/schema/VectorElement.hh"
 #include "karabo/log/Logger.hh"
 #include "karabo/log/utils.hh"
 #include "karabo/net/Broker.hh"
 #include "karabo/net/EventLoop.hh"
 #include "karabo/net/Strand.hh"
 #include "karabo/net/utils.hh"
-#include "karabo/util/ChoiceElement.hh"
-#include "karabo/util/Configurator.hh"
 #include "karabo/util/JsonToHashParser.hh"
-#include "karabo/util/NodeElement.hh"
-#include "karabo/util/SimpleElement.hh"
-#include "karabo/util/VectorElement.hh"
 #include "karabo/util/Version.hh"
 
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::DeviceServer)
@@ -68,6 +68,7 @@ namespace karabo {
 
         namespace nl = nlohmann;
         using namespace std;
+        using namespace karabo::data;
         using namespace karabo::util;
         using namespace karabo::io;
         using namespace karabo::log;
@@ -191,7 +192,7 @@ namespace karabo {
                   .commit();
         }
 
-        DeviceServer::DeviceServer(const karabo::util::Hash& config)
+        DeviceServer::DeviceServer(const karabo::data::Hash& config)
             : m_timeId(0ull),
               m_timeSec(0ull),
               m_timeFrac(0ull),
@@ -248,7 +249,7 @@ namespace karabo {
             m_connection = Configurator<Broker>::createChoice("connection", brokerConfig);
             m_connection->connect();
 
-            karabo::util::Hash instanceInfo;
+            karabo::data::Hash instanceInfo;
             instanceInfo.set("type", "server");
             instanceInfo.set("serverId", m_serverId);
             instanceInfo.set("version", karabo::util::Version::getVersion());
@@ -279,7 +280,7 @@ namespace karabo {
 
 
         std::string DeviceServer::generateDefaultServerId() const {
-            return m_hostname + "/" + util::toString(getpid());
+            return m_hostname + "/" + data::toString(getpid());
         }
 
 
@@ -335,8 +336,8 @@ namespace karabo {
         }
 
 
-        void DeviceServer::onBroadcastMessage(const karabo::util::Hash::Pointer& header,
-                                              const karabo::util::Hash::Pointer& body) {
+        void DeviceServer::onBroadcastMessage(const karabo::data::Hash::Pointer& header,
+                                              const karabo::data::Hash::Pointer& body) {
             // const_cast to have ids refer to a const Node...
             boost::optional<const Hash::Node&> ids = const_cast<const Hash*>(header.get())->find("slotInstanceIds");
             if (!ids || !ids->is<std::string>()) {
@@ -388,7 +389,7 @@ namespace karabo {
             }
             bool firstCall = false;
             {
-                karabo::util::Epochstamp epochNow; // before mutex lock since that could add a delay
+                karabo::data::Epochstamp epochNow; // before mutex lock since that could add a delay
                 std::lock_guard<std::mutex> lock(m_timeChangeMutex);
                 m_timeId = id;
                 m_timeSec = sec;
@@ -431,11 +432,11 @@ namespace karabo {
             if (ec) return;
             // Get values of last 'external' update via slotTimeTick.
             unsigned long long id = 0, period = 0;
-            util::Epochstamp stamp(0ull, 0ull);
+            data::Epochstamp stamp(0ull, 0ull);
             {
                 std::lock_guard<std::mutex> lock(m_timeChangeMutex);
                 id = m_timeId;
-                stamp = util::Epochstamp(m_timeSec, m_timeFrac);
+                stamp = data::Epochstamp(m_timeSec, m_timeFrac);
                 period = m_timePeriod;
             }
 
@@ -448,10 +449,10 @@ namespace karabo {
 
             // Calculate how many ids we are away from last external update and adjust stamp
             const unsigned long long delta = newId - id; // newId >= id is fulfilled
-            const util::TimeDuration periodDuration(
+            const data::TimeDuration periodDuration(
                   period / 1000000ull,                       // '/ 10^6': any full seconds part
                   (period % 1000000ull) * 1000000000000ull); // '* 10^12': micro- to attoseconds
-            const util::TimeDuration sinceId(periodDuration * delta);
+            const data::TimeDuration sinceId(periodDuration * delta);
             stamp += sinceId;
 
             // Call hook that indicates next id. In case the internal ticker was too slow, call it for
@@ -487,7 +488,7 @@ namespace karabo {
         }
 
 
-        void DeviceServer::slotLoggerContent(const karabo::util::Hash& input) {
+        void DeviceServer::slotLoggerContent(const karabo::data::Hash& input) {
             unsigned int numberOfLogs = 10u;
             if (input.has("logs")) {
                 auto& element = input.getNode("logs");
@@ -533,7 +534,7 @@ namespace karabo {
         }
 
 
-        void DeviceServer::slotStartDevice(const karabo::util::Hash& configuration) {
+        void DeviceServer::slotStartDevice(const karabo::data::Hash& configuration) {
             // Just register an asynchronous reply and put on the "stack".
             const SignalSlotable::AsyncReply reply(this);
 
@@ -541,9 +542,9 @@ namespace karabo {
         }
 
 
-        void DeviceServer::startDevice(const karabo::util::Hash& configuration,
+        void DeviceServer::startDevice(const karabo::data::Hash& configuration,
                                        const SignalSlotable::AsyncReply& reply) {
-            const std::tuple<std::string, std::string, util::Hash>& idClassIdConfig =
+            const std::tuple<std::string, std::string, data::Hash>& idClassIdConfig =
                   this->prepareInstantiate(configuration);
 
             const std::string& deviceId = std::get<0>(idClassIdConfig);
@@ -554,8 +555,8 @@ namespace karabo {
         }
 
 
-        std::tuple<std::string, std::string, util::Hash> DeviceServer::prepareInstantiate(
-              const karabo::util::Hash& configuration) {
+        std::tuple<std::string, std::string, data::Hash> DeviceServer::prepareInstantiate(
+              const karabo::data::Hash& configuration) {
             if (configuration.has("classId")) {
                 // New style
                 const std::string& classId = configuration.get<string>("classId");
@@ -600,15 +601,15 @@ namespace karabo {
                 // Inject Hostname
                 tmp.set("hostName", m_hostname);
 
-                const std::pair<std::string, util::Hash>& idCfg =
-                      util::confTools::splitIntoClassIdAndConfiguration(modifiedConfig);
+                const std::pair<std::string, data::Hash>& idCfg =
+                      data::confTools::splitIntoClassIdAndConfiguration(modifiedConfig);
                 return std::make_tuple(tmp.get<std::string>("_deviceId_"), idCfg.first, idCfg.second);
             }
         }
 
 
         void DeviceServer::instantiate(const std::string& deviceId, const std::string& classId,
-                                       const util::Hash& config, const xms::SignalSlotable::AsyncReply& asyncReply) {
+                                       const data::Hash& config, const xms::SignalSlotable::AsyncReply& asyncReply) {
             // Each device adds one thread already. But since
             // device->finalizeInternalInitialization() blocks for > 1 s, we temporarily add another thread.
             EventLoop::addThread();
@@ -645,7 +646,7 @@ namespace karabo {
                     m_deviceInstanceMap[deviceId].second = std::make_shared<Strand>(EventLoop::getIOService());
                 }
 
-            } catch (const karabo::util::Exception& e) {
+            } catch (const karabo::data::Exception& e) {
                 errorMsg = e.userFriendlyMsg(false);
                 if (errorMsg.empty()) errorMsg = "Unknown failure"; // Should not happen, but better protect
                 errorDetails = e.detailedMsg();
@@ -685,11 +686,11 @@ namespace karabo {
                     try {
                         auto schema = BaseDevice::getSchema(
                               baseDevice,
-                              Schema::AssemblyRules(karabo::util::READ | karabo::util::WRITE | karabo::util::INIT));
+                              Schema::AssemblyRules(karabo::data::READ | karabo::data::WRITE | karabo::data::INIT));
 
                         // Hash conf{"mustNotify", false, "xsd", schema};
                         // "visibility" is not a parameter and hard-coded default is ...
-                        visibilities.push_back(karabo::util::Schema::OBSERVER);
+                        visibilities.push_back(karabo::data::Schema::OBSERVER);
 
                     } catch (const std::exception& e) {
                         KARABO_LOG_ERROR << "Device \"" << baseDevice
@@ -733,12 +734,12 @@ namespace karabo {
 
 
         std::string DeviceServer::generateDefaultDeviceId(const std::string& classId) {
-            const string index = karabo::util::toString(++m_deviceInstanceCount[classId]);
+            const string index = karabo::data::toString(++m_deviceInstanceCount[classId]);
             // Prepare shortened Device-Server name
             vector<string> tokens;
             string domain = m_serverId;
             boost::split(tokens, m_serverId, boost::is_any_of("_"));
-            if (tokens.back() == karabo::util::toString(getpid())) {
+            if (tokens.back() == karabo::data::toString(getpid())) {
                 domain = tokens.front() + "-" + tokens.back();
             }
             return domain + "_" + classId + "_" + index;

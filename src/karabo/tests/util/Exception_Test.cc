@@ -24,7 +24,7 @@
 
 #include "Exception_Test.hh"
 
-#include "karabo/util/Exception.hh"
+#include "karabo/data/types/Exception.hh"
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Exception_Test);
 
@@ -49,8 +49,8 @@ void doNestedThrow() {
 
 
 void Exception_Test::testMethod() {
-    CPPUNIT_ASSERT_THROW(throw KARABO_LOGIC_EXCEPTION("Some message"), karabo::util::LogicException);
-    CPPUNIT_ASSERT_THROW(throw KARABO_LOGIC_EXCEPTION("Some message"), karabo::util::Exception);
+    CPPUNIT_ASSERT_THROW(throw KARABO_LOGIC_EXCEPTION("Some message"), karabo::data::LogicException);
+    CPPUNIT_ASSERT_THROW(throw KARABO_LOGIC_EXCEPTION("Some message"), karabo::data::Exception);
     try {
         throw KARABO_LOGIC_EXCEPTION("error");
     } catch (const std::exception& e) {
@@ -62,7 +62,7 @@ void Exception_Test::testMethod() {
     // First without propagation:
     try {
         throw KARABO_SIGNALSLOT_EXCEPTION("A nasty problem");
-    } catch (const karabo::util::Exception& e) {
+    } catch (const karabo::data::Exception& e) {
         CPPUNIT_ASSERT_EQUAL(std::string("SignalSlot Exception"), e.type());
         CPPUNIT_ASSERT_EQUAL(std::string("A nasty problem"), e.userFriendlyMsg());
         const std::string details(e.detailedMsg());
@@ -94,7 +94,7 @@ void Exception_Test::testMethod() {
     // Rethrow and tracing
     try {
         doNestedThrow();
-    } catch (const karabo::util::Exception& e) {
+    } catch (const karabo::data::Exception& e) {
         CPPUNIT_ASSERT_EQUAL(std::string("Propagated Exception"), e.type());
         // Outer most rethrow without extra message
         // User friendly message skips message-less exceptions, but otherwise we get a new line for each with an
@@ -198,7 +198,7 @@ void Exception_Test::testMethod() {
 
     try {
         doNestedThrow();
-    } catch (const karabo::util::Exception& e) {
+    } catch (const karabo::data::Exception& e) {
         // Redo exactly the same as for e.detailedMsg(), see above.
         const std::string details = e.what();
         // Detailed message looks e.g. like this:
@@ -295,7 +295,7 @@ void Exception_Test::testMethod() {
     // Rethrow and tracing
     try {
         doNestedThrow();
-    } catch (const karabo::util::Exception& e) {
+    } catch (const karabo::data::Exception& e) {
         CPPUNIT_ASSERT_EQUAL(std::string("Propagated Exception"), e.type());
         // Outer most rethrow without extra message
         // User friendly message skips message-less exceptions, but otherwise we get a new line for each with an
@@ -312,7 +312,7 @@ void Exception_Test::testMethod() {
 void Exception_Test::testDetails() {
     try {
         throw KARABO_PYTHON_EXCEPTION("Some message");
-    } catch (const karabo::util::PythonException& e) {
+    } catch (const karabo::data::PythonException& e) {
         CPPUNIT_ASSERT_EQUAL(std::string("Some message"), e.userFriendlyMsg(true));
         // No second argument given, so no details:
         CPPUNIT_ASSERT_EQUAL(std::string(), e.details());
@@ -322,7 +322,7 @@ void Exception_Test::testDetails() {
 
     try {
         throw KARABO_PYTHON_EXCEPTION2("Some message", "...with details!");
-    } catch (const karabo::util::PythonException& e) {
+    } catch (const karabo::data::PythonException& e) {
         CPPUNIT_ASSERT_EQUAL(std::string("Some message"), e.userFriendlyMsg(false));
         CPPUNIT_ASSERT_EQUAL(std::string("...with details!"), e.details());
         // Now check that both, message and details are in the trace:
@@ -336,8 +336,8 @@ void Exception_Test::testDetails() {
 
 
     try {
-        throw karabo::util::RemoteException("A message", "bob", "Details are usually the trace. Not now...");
-    } catch (const karabo::util::RemoteException& e) {
+        throw karabo::data::RemoteException("A message", "bob", "Details are usually the trace. Not now...");
+    } catch (const karabo::data::RemoteException& e) {
         CPPUNIT_ASSERT_EQUAL(std::string("Remote Exception from bob"), e.type());
         CPPUNIT_ASSERT_EQUAL(std::string("Details are usually the trace. Not now..."), e.details());
         CPPUNIT_ASSERT_EQUAL(std::string("A message"), e.userFriendlyMsg(false));
@@ -352,9 +352,9 @@ void Exception_Test::testDetails() {
 
 
     try {
-        throw karabo::util::IOException("A message", "filename", "function", 42,
+        throw karabo::data::IOException("A message", "filename", "function", 42,
                                         "Details are usually the trace, e.g. from hdf5 code");
-    } catch (const karabo::util::IOException& e) {
+    } catch (const karabo::data::IOException& e) {
         CPPUNIT_ASSERT_EQUAL(std::string("IO Exception"), e.type());
         CPPUNIT_ASSERT_EQUAL(std::string("Details are usually the trace, e.g. from hdf5 code"), e.details());
         CPPUNIT_ASSERT_EQUAL(std::string("A message"), e.userFriendlyMsg(false));
@@ -383,7 +383,7 @@ void Exception_Test::testTraceOrder() {
         } catch (const std::exception&) {
             KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Exception 3"));
         }
-    } catch (const karabo::util::Exception& e) {
+    } catch (const karabo::data::Exception& e) {
         shortMsg = e.userFriendlyMsg(false);
         stackMsg = e.detailedMsg();
     }

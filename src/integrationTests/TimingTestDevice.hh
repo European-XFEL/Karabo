@@ -40,7 +40,7 @@ namespace karabo {
          * Necessary method as part of the factory/configuration system
          * @param expected Will contain a description of expected parameters for this device
          */
-        static void expectedParameters(karabo::util::Schema& expected);
+        static void expectedParameters(karabo::data::Schema& expected);
 
         /**
          * Constructor providing the initial configuration in form of a Hash object.
@@ -48,7 +48,7 @@ namespace karabo {
          * already be validated using the information of the expectedParameters function.
          * The configuration is provided in a key/value fashion.
          */
-        TimingTestDevice(const karabo::util::Hash& config);
+        TimingTestDevice(const karabo::data::Hash& config);
 
         /**
          * The destructor will be called in case the device gets killed (i.e. the event-loop returns)
@@ -65,7 +65,7 @@ namespace karabo {
         virtual void onTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac,
                                 unsigned long long period);
 
-        karabo::util::Epochstamp m_lastTimeStamp;
+        karabo::data::Epochstamp m_lastTimeStamp;
         bool m_started;
         std::vector<unsigned long long> m_ids;
         std::vector<unsigned long long> m_seconds;

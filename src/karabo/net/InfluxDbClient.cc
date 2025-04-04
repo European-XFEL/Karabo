@@ -29,13 +29,13 @@
 #include <sstream>
 #include <thread>
 
+#include "karabo/data/schema/SimpleElement.hh"
+#include "karabo/data/types/Base64.hh"
+#include "karabo/data/types/Hash.hh"
 #include "karabo/io/BinarySerializer.hh"
 #include "karabo/log/Logger.hh"
 #include "karabo/net/EventLoop.hh"
 #include "karabo/net/utils.hh"
-#include "karabo/util/Base64.hh"
-#include "karabo/util/Hash.hh"
-#include "karabo/util/SimpleElement.hh"
 
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::net::InfluxDbClient);
 
@@ -48,13 +48,14 @@ namespace karabo {
 
         using namespace karabo::io;
         using namespace karabo::net;
+        using namespace karabo::data;
         using namespace karabo::util;
 
         std::mutex InfluxDbClient::m_uuidGeneratorMutex;
         boost::uuids::random_generator InfluxDbClient::m_uuidGenerator;
         const unsigned int InfluxDbClient::k_connTimeoutMs = 3500u;
 
-        void InfluxDbClient::expectedParameters(karabo::util::Schema& expected) {
+        void InfluxDbClient::expectedParameters(karabo::data::Schema& expected) {
             STRING_ELEMENT(expected)
                   .key("dbname")
                   .displayedName("Database name")
@@ -116,7 +117,7 @@ namespace karabo {
         }
 
 
-        InfluxDbClient::InfluxDbClient(const karabo::util::Hash& input)
+        InfluxDbClient::InfluxDbClient(const karabo::data::Hash& input)
             : m_url(input.get<std::string>("url")),
               m_dbConnection(),
               m_dbChannel(),
@@ -169,7 +170,7 @@ namespace karabo {
                 std::string credential = m_dbUser + ":" + m_dbPassword;
                 std::string credentials(credential);
                 const unsigned char* pCredentials = reinterpret_cast<const unsigned char*>(credentials.c_str());
-                std::string b64Credent = karabo::util::base64Encode(pCredentials, credentials.length());
+                std::string b64Credent = karabo::data::base64Encode(pCredentials, credentials.length());
                 authHeader = std::string("Authorization: Basic ").append(b64Credent);
             }
             return authHeader;

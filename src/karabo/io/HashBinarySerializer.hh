@@ -36,44 +36,44 @@ namespace karabo {
         /**
          * @class HashBinarySerializer
          * @brief The HashBinarySerializer provides an implementation of BinarySerializer
-         *        for the karabo::util::Hash
+         *        for the karabo::data::Hash
          *
-         * While a karabo::util::Hash can in principle hold arbitrary data types, Hash
-         * serialization is limited to data types known to the karabo::util::Types type
+         * While a karabo::data::Hash can in principle hold arbitrary data types, Hash
+         * serialization is limited to data types known to the karabo::data::Types type
          * system. Hashes containing other data types will lead to exceptions during
          * serialization.
          */
-        class HashBinarySerializer : public BinarySerializer<karabo::util::Hash> {
+        class HashBinarySerializer : public BinarySerializer<karabo::data::Hash> {
            public:
             KARABO_CLASSINFO(HashBinarySerializer, "Bin", "1.0")
 
-            static void expectedParameters(karabo::util::Schema& expected);
+            static void expectedParameters(karabo::data::Schema& expected);
 
-            HashBinarySerializer(const karabo::util::Hash& input);
+            HashBinarySerializer(const karabo::data::Hash& input);
 
             /**
              * Save a Hash to a binary archive
              * @param object to save
              * @param archive to save to - buffer.clear() will be called first
              */
-            virtual void save(const karabo::util::Hash& object, std::vector<char>& buffer);
+            virtual void save(const karabo::data::Hash& object, std::vector<char>& buffer);
 
             /**
              * Save a Hash by appending it to a binary archive
              * @param object to save
              * @param archive to append to - no clear() called
              */
-            virtual void save2(const karabo::util::Hash& object, std::vector<char>& buffer);
+            virtual void save2(const karabo::data::Hash& object, std::vector<char>& buffer);
 
-            virtual void save(const karabo::util::Hash& object, BufferSet& buffers);
+            virtual void save(const karabo::data::Hash& object, BufferSet& buffers);
 
-            virtual size_t load(karabo::util::Hash& object, const char* archive, const size_t nBytes);
+            virtual size_t load(karabo::data::Hash& object, const char* archive, const size_t nBytes);
 
-            virtual void load(karabo::util::Hash& object, const BufferSet& buffers);
+            virtual void load(karabo::data::Hash& object, const BufferSet& buffers);
 
-            void save(const std::vector<karabo::util::Hash>& objects, std::vector<char>& archive);
+            void save(const std::vector<karabo::data::Hash>& objects, std::vector<char>& archive);
 
-            size_t load(std::vector<karabo::util::Hash>& objects, const char* archive, const size_t nBytes);
+            size_t load(std::vector<karabo::data::Hash>& objects, const char* archive, const size_t nBytes);
 
             /**
              * Destructor.
@@ -83,14 +83,14 @@ namespace karabo {
 
            private: // members
            private: // functions
-            void writeHash(const karabo::util::Hash& hash, std::vector<char>& buffer) const;
-            void writeHash(const karabo::util::Hash& hash, BufferSet& buffers) const;
-            void writeNode(const karabo::util::Hash::Node& element, std::vector<char>& buffer) const;
-            void writeNodeMultiBuffer(const karabo::util::Hash::Node& element, BufferSet& buffers) const;
-            void writeAttributes(const karabo::util::Hash::Attributes& attributes, std::vector<char>& buffer) const;
-            void writeAny(const std::any& value, const karabo::util::Types::ReferenceType type,
+            void writeHash(const karabo::data::Hash& hash, std::vector<char>& buffer) const;
+            void writeHash(const karabo::data::Hash& hash, BufferSet& buffers) const;
+            void writeNode(const karabo::data::Hash::Node& element, std::vector<char>& buffer) const;
+            void writeNodeMultiBuffer(const karabo::data::Hash::Node& element, BufferSet& buffers) const;
+            void writeAttributes(const karabo::data::Hash::Attributes& attributes, std::vector<char>& buffer) const;
+            void writeAny(const std::any& value, const karabo::data::Types::ReferenceType type,
                           std::vector<char>& buffer) const;
-            void writeAny(const std::any& value, const karabo::util::Types::ReferenceType type,
+            void writeAny(const std::any& value, const karabo::data::Types::ReferenceType type,
                           BufferSet& buffers) const;
 
             template <typename T>
@@ -112,7 +112,7 @@ namespace karabo {
             }
 
 
-            inline void writeSingleValue(BufferSet& buffers, const karabo::util::ByteArray& value) const {
+            inline void writeSingleValue(BufferSet& buffers, const karabo::data::ByteArray& value) const {
                 buffers.emplaceBack(value);
             }
 
@@ -151,36 +151,36 @@ namespace karabo {
             }
 
             inline void writeSingleValue(std::vector<char>& buffer, const std::any&,
-                                         const karabo::util::Types::ReferenceType type) const;
+                                         const karabo::data::Types::ReferenceType type) const;
 
             inline void writeSingleValue(BufferSet& buffers, const std::any&,
-                                         const karabo::util::Types::ReferenceType type) const;
+                                         const karabo::data::Types::ReferenceType type) const;
 
             inline void writeSequence(std::vector<char>& buffer, const std::any&,
-                                      const karabo::util::Types::ReferenceType type) const;
+                                      const karabo::data::Types::ReferenceType type) const;
 
             inline void writeRawArray(std::vector<char>& buffer, const std::any&,
-                                      const karabo::util::Types::ReferenceType type) const;
+                                      const karabo::data::Types::ReferenceType type) const;
 
             inline void writeKey(std::vector<char>& buffer, const std::string& str) const;
 
-            inline void writeType(std::vector<char>& buffer, const karabo::util::Types::ReferenceType type) const;
+            inline void writeType(std::vector<char>& buffer, const karabo::data::Types::ReferenceType type) const;
 
             inline void writeSize(std::vector<char>& buffer, const unsigned size) const;
 
-            void readHash(karabo::util::Hash& hash, std::istream& is) const;
+            void readHash(karabo::data::Hash& hash, std::istream& is) const;
 
-            void readHash(karabo::util::Hash& hash, std::istream& is, const BufferSet& buffers) const;
+            void readHash(karabo::data::Hash& hash, std::istream& is, const BufferSet& buffers) const;
 
-            void readNode(karabo::util::Hash::Node& element, std::istream& is) const;
+            void readNode(karabo::data::Hash::Node& element, std::istream& is) const;
 
-            void readNode(karabo::util::Hash::Node& element, std::istream& is, const BufferSet& buffers) const;
+            void readNode(karabo::data::Hash::Node& element, std::istream& is, const BufferSet& buffers) const;
 
-            void readAttributes(karabo::util::Hash::Attributes& attributes, std::istream& is) const;
+            void readAttributes(karabo::data::Hash::Attributes& attributes, std::istream& is) const;
 
-            void readAny(std::any& value, const karabo::util::Types::ReferenceType type, std::istream& is) const;
+            void readAny(std::any& value, const karabo::data::Types::ReferenceType type, std::istream& is) const;
 
-            void readAny(std::any& value, const karabo::util::Types::ReferenceType type, std::istream& is,
+            void readAny(std::any& value, const karabo::data::Types::ReferenceType type, std::istream& is,
                          const BufferSet& buffers) const;
 
             inline bool nextBufIfEos(std::istream& is, const BufferSet& buffers) const {
@@ -208,7 +208,7 @@ namespace karabo {
                 return all.tbuffer[0];
             }
 
-            karabo::util::ByteArray readByteArrayAsCopy(std::istream& is, size_t size) const;
+            karabo::data::ByteArray readByteArrayAsCopy(std::istream& is, size_t size) const;
 
 
             template <typename T>
@@ -237,18 +237,18 @@ namespace karabo {
             }
 
             inline void readSingleValue(std::istream& is, std::any& value,
-                                        const karabo::util::Types::ReferenceType type) const;
+                                        const karabo::data::Types::ReferenceType type) const;
             inline void readSingleValue(std::istream& is, std::any& value,
-                                        const karabo::util::Types::ReferenceType type, const BufferSet& buffers) const;
+                                        const karabo::data::Types::ReferenceType type, const BufferSet& buffers) const;
 
-            inline void readSequence(std::istream& is, std::any&, const karabo::util::Types::ReferenceType type) const;
+            inline void readSequence(std::istream& is, std::any&, const karabo::data::Types::ReferenceType type) const;
 
 
             static inline unsigned readSize(std::istream& is);
 
             static inline std::string readKey(std::istream& is);
 
-            inline karabo::util::Types::ReferenceType readType(std::istream& is) const;
+            inline karabo::data::Types::ReferenceType readType(std::istream& is) const;
         };
 
         template <>
@@ -261,18 +261,18 @@ namespace karabo {
         void HashBinarySerializer::writeSingleValue(std::vector<char>& buffer, const std::complex<double>&) const;
 
         template <>
-        void HashBinarySerializer::writeSingleValue(std::vector<char>& buffer, const karabo::util::Schema&) const;
+        void HashBinarySerializer::writeSingleValue(std::vector<char>& buffer, const karabo::data::Schema&) const;
 
         template <>
-        void HashBinarySerializer::writeSingleValue(std::vector<char>& buffer, const karabo::util::Hash&) const;
-
-        template <>
-        void HashBinarySerializer::writeSingleValue(std::vector<char>& buffer,
-                                                    const karabo::util::CppNone& value) const;
+        void HashBinarySerializer::writeSingleValue(std::vector<char>& buffer, const karabo::data::Hash&) const;
 
         template <>
         void HashBinarySerializer::writeSingleValue(std::vector<char>& buffer,
-                                                    const karabo::util::ByteArray& value) const;
+                                                    const karabo::data::CppNone& value) const;
+
+        template <>
+        void HashBinarySerializer::writeSingleValue(std::vector<char>& buffer,
+                                                    const karabo::data::ByteArray& value) const;
 
         template <>
         std::string HashBinarySerializer::readSingleValue(std::istream& is) const;
@@ -284,18 +284,18 @@ namespace karabo {
         std::complex<float> HashBinarySerializer::readSingleValue(std::istream& is) const;
 
         template <>
-        karabo::util::Schema HashBinarySerializer::readSingleValue(std::istream& is) const;
+        karabo::data::Schema HashBinarySerializer::readSingleValue(std::istream& is) const;
 
         template <>
-        karabo::util::Hash HashBinarySerializer::readSingleValue(std::istream& is) const;
+        karabo::data::Hash HashBinarySerializer::readSingleValue(std::istream& is) const;
 
         template <>
-        karabo::util::ByteArray HashBinarySerializer::readSingleValue(std::istream& is) const;
+        karabo::data::ByteArray HashBinarySerializer::readSingleValue(std::istream& is) const;
 
 
     } // namespace io
 } // namespace karabo
 
-KARABO_REGISTER_CONFIGURATION_BASE_CLASS(karabo::io::BinarySerializer<karabo::util::Hash>)
+KARABO_REGISTER_CONFIGURATION_BASE_CLASS(karabo::io::BinarySerializer<karabo::data::Hash>)
 
 #endif

@@ -59,12 +59,12 @@ void BufferSet_Test::testEmplaceAppend() {
     bufferCopy.emplaceBack(std::make_shared<BufferSet::BufferType>(bufferSize, 1));
     // a raw data buffer without writing its size first
     bufferCopy.emplaceBack(
-          karabo::util::ByteArray(std::shared_ptr<char>(new char[bufferSize], std::default_delete<char[]>()),
+          karabo::data::ByteArray(std::shared_ptr<char>(new char[bufferSize], std::default_delete<char[]>()),
                                   bufferSize),
           false);
     // a raw data buffer with writing its size first (as unsigned int)
     bufferCopy.emplaceBack(
-          karabo::util::ByteArray(std::shared_ptr<char>(new char[bufferSize], std::default_delete<char[]>()),
+          karabo::data::ByteArray(std::shared_ptr<char>(new char[bufferSize], std::default_delete<char[]>()),
                                   bufferSize),
           true);
     // another simple vector buffer at the end
@@ -80,12 +80,12 @@ void BufferSet_Test::testEmplaceAppend() {
     bufferNoCopy.emplaceBack(std::make_shared<BufferSet::BufferType>(bufferSize, 1));
     // a raw data buffer without writing its size first
     bufferNoCopy.emplaceBack(
-          karabo::util::ByteArray(std::shared_ptr<char>(new char[bufferSize], std::default_delete<char[]>()),
+          karabo::data::ByteArray(std::shared_ptr<char>(new char[bufferSize], std::default_delete<char[]>()),
                                   bufferSize),
           false);
     // a raw data buffer with writing its size first (as unsigned int)
     bufferNoCopy.emplaceBack(
-          karabo::util::ByteArray(std::shared_ptr<char>(new char[bufferSize], std::default_delete<char[]>()),
+          karabo::data::ByteArray(std::shared_ptr<char>(new char[bufferSize], std::default_delete<char[]>()),
                                   bufferSize),
           true);
     // another simple vector buffer at the end

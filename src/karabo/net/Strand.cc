@@ -28,20 +28,20 @@
 #include <utility> // for std::move
 
 #include "EventLoop.hh"
-#include "karabo/log/Logger.hh" // for KARABO_LOG_FRAMEWORK_XXX
-#include "karabo/util/Hash.hh"
+#include "karabo/data/schema/SimpleElement.hh"
+#include "karabo/data/types/Hash.hh"
+#include "karabo/log/Logger.hh"     // for KARABO_LOG_FRAMEWORK_XXX
 #include "karabo/util/MetaTools.hh" // for bind_weak
-#include "karabo/util/SimpleElement.hh"
 
-using karabo::util::BOOL_ELEMENT;
-using karabo::util::UINT32_ELEMENT;
+using karabo::data::BOOL_ELEMENT;
+using karabo::data::UINT32_ELEMENT;
 
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::net::Strand)
 
 namespace karabo {
     namespace net {
 
-        void Strand::expectedParameters(karabo::util::Schema& expected) {
+        void Strand::expectedParameters(karabo::data::Schema& expected) {
             UINT32_ELEMENT(expected)
                   .key("maxInARow")
                   .description(
@@ -63,11 +63,11 @@ namespace karabo {
 
 
         Strand::Strand(boost::asio::io_context& ioContext)
-            : Strand(karabo::util::Hash("maxInARow", 1u, "guaranteeToRun", false)) {
+            : Strand(karabo::data::Hash("maxInARow", 1u, "guaranteeToRun", false)) {
             setContext(ioContext);
         };
 
-        Strand::Strand(const karabo::util::Hash& cfg)
+        Strand::Strand(const karabo::data::Hash& cfg)
             : m_ioContext(&karabo::net::EventLoop::getIOService()),
               m_tasksRunning(false),
               m_maxInARow(cfg.get<unsigned int>("maxInARow")),

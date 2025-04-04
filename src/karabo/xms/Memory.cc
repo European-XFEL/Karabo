@@ -51,7 +51,7 @@ namespace karabo {
         std::shared_ptr<Memory::SerializerType> Memory::m_serializer;
 
 
-        void Memory::read(karabo::util::Hash& data, const size_t dataIdx, const size_t channelIdx,
+        void Memory::read(karabo::data::Hash& data, const size_t dataIdx, const size_t channelIdx,
                           const size_t chunkIdx) {
             Memory::_ensureSerializer();
 
@@ -69,7 +69,7 @@ namespace karabo {
             return m_cache[channelIdx][chunkIdx];
         }
 
-        void Memory::write(const karabo::util::Hash& data, const size_t channelIdx, const size_t chunkIdx,
+        void Memory::write(const karabo::data::Hash& data, const size_t channelIdx, const size_t chunkIdx,
                            const MetaData& metaData, bool copyAllData) {
             Memory::_ensureSerializer();
 
@@ -185,7 +185,7 @@ namespace karabo {
         }
 
 
-        void Memory::readIntoBuffers(std::vector<karabo::io::BufferSet::Pointer>& buffers, karabo::util::Hash& header,
+        void Memory::readIntoBuffers(std::vector<karabo::io::BufferSet::Pointer>& buffers, karabo::data::Hash& header,
                                      const size_t channelIdx, const size_t chunkIdx) {
             const Data& data = m_cache[channelIdx][chunkIdx];
             for (const auto& bp : data) {
@@ -193,7 +193,7 @@ namespace karabo {
             }
             const MetaDataEntries& metaData = m_metaData[channelIdx][chunkIdx];
             header.clear();
-            header.set("sourceInfo", *reinterpret_cast<const std::vector<karabo::util::Hash>*>(&metaData));
+            header.set("sourceInfo", *reinterpret_cast<const std::vector<karabo::data::Hash>*>(&metaData));
         }
 
         void Memory::assureAllDataIsCopied(const size_t channelIdx, const size_t chunkIdx) {
@@ -219,14 +219,14 @@ namespace karabo {
 
 
         void Memory::writeFromBuffers(const std::vector<karabo::io::BufferSet::Pointer>& buffers,
-                                      const karabo::util::Hash& header, const size_t channelIdx, const size_t chunkIdx,
+                                      const karabo::data::Hash& header, const size_t channelIdx, const size_t chunkIdx,
                                       bool copyAllData) {
             Data& chunkData = m_cache[channelIdx][chunkIdx];
 
-            boost::optional<const karabo::util::Hash::Node&> sourceInfo = header.find("sourceInfo");
+            boost::optional<const karabo::data::Hash::Node&> sourceInfo = header.find("sourceInfo");
             if (sourceInfo) {
                 const MetaDataEntries& newMetaData = *reinterpret_cast<const MetaDataEntries*>(
-                      &sourceInfo->getValue<std::vector<karabo::util::Hash>>());
+                      &sourceInfo->getValue<std::vector<karabo::data::Hash>>());
                 if (buffers.size() != newMetaData.size()) {
                     throw KARABO_LOGIC_EXCEPTION(
                           "Number of data tokens and number of meta data entries must be equal!");

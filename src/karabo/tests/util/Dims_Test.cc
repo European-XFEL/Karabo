@@ -26,9 +26,11 @@
 
 #include <boost/shared_array.hpp>
 #include <karabo/util/ArrayTools.hh>
-#include <karabo/util/Dims.hh>
+
+#include "karabo/data/types/Dims.hh"
 
 
+using namespace karabo::data;
 using namespace karabo::util;
 using namespace std;
 

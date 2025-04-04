@@ -26,7 +26,7 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 
-#include <karabo/util/TimeDuration.hh>
+#include "karabo/data/time/TimeDuration.hh"
 
 class DateTimeString_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(DateTimeString_Test);

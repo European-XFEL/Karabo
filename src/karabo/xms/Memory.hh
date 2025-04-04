@@ -29,7 +29,8 @@
 #include <karabo/io/BinarySerializer.hh>
 #include <karabo/io/BufferSet.hh>
 #include <karabo/log/Logger.hh>
-#include <karabo/util/Factory.hh>
+
+#include "karabo/data/schema/Factory.hh"
 
 namespace karabo {
     namespace xms {
@@ -43,10 +44,10 @@ namespace karabo {
              * @class Memory::MetaData
              * @brief The MetaData class is s class for transporting
              *        meta data related to data tokens on pipelined processing
-             *        interfaces. It derives from karabo::util::Hash for
+             *        interfaces. It derives from karabo::data::Hash for
              *        transparent serialization.
              */
-            class MetaData : protected karabo::util::Hash {
+            class MetaData : protected karabo::data::Hash {
                 // Note that if you extend this class you need to use set/get internally
                 // to assure Hash serializion.
 
@@ -56,7 +57,7 @@ namespace karabo {
                  * @param source an identifier of the data producer
                  * @param timestamp a timestamp relevant for this data token.
                  */
-                MetaData(const std::string& source, const karabo::util::Timestamp& timestamp) {
+                MetaData(const std::string& source, const karabo::data::Timestamp& timestamp) {
                     setSource(source);
                     setTimestamp(timestamp);
                 }
@@ -81,8 +82,8 @@ namespace karabo {
                  * Set the timestamp relevant to this data token
                  * @param timestamp
                  */
-                inline void setTimestamp(const karabo::util::Timestamp& timestamp) {
-                    karabo::util::Hash::Node& h = set("timestamp", true);
+                inline void setTimestamp(const karabo::data::Timestamp& timestamp) {
+                    karabo::data::Hash::Node& h = set("timestamp", true);
                     timestamp.toHashAttributes(h.getAttributes());
                 }
 
@@ -90,8 +91,8 @@ namespace karabo {
                  * Get the timestamp relevant to this data token
                  * @return
                  */
-                inline const karabo::util::Timestamp getTimestamp() const {
-                    return karabo::util::Timestamp::fromHashAttributes(getAttributes("timestamp"));
+                inline const karabo::data::Timestamp getTimestamp() const {
+                    return karabo::data::Timestamp::fromHashAttributes(getAttributes("timestamp"));
                 }
             };
 
@@ -108,7 +109,7 @@ namespace karabo {
             typedef std::vector<std::vector<int>> ChunkStatus;
             typedef std::vector<int> ChannelStatus;
 
-            typedef karabo::io::BinarySerializer<karabo::util::Hash> SerializerType;
+            typedef karabo::io::BinarySerializer<karabo::data::Hash> SerializerType;
 
             static ChunkStatus m_chunkStatus;
             static ChannelStatus m_channelStatus;
@@ -137,7 +138,7 @@ namespace karabo {
              * @param channelIdx
              * @param chunkIdx
              */
-            static void read(karabo::util::Hash& data, const size_t dataIdx, const size_t channelIdx,
+            static void read(karabo::data::Hash& data, const size_t dataIdx, const size_t channelIdx,
                              const size_t chunkIdx);
 
             /**
@@ -163,7 +164,7 @@ namespace karabo {
              * @param copyAllData defines whether all data (incl. NDArray data) is copied into the internal buffer
              * (default: true)
              */
-            static void write(const karabo::util::Hash& data, const size_t channelIdx, const size_t chunkIdx,
+            static void write(const karabo::data::Hash& data, const size_t channelIdx, const size_t chunkIdx,
                               const MetaData& metaData, bool copyAllData = true);
             static void writeChunk(const Data& chunk, const size_t channelIdx, const size_t chunkIdx,
                                    const std::vector<MetaData>& metaData);
@@ -198,10 +199,10 @@ namespace karabo {
             static void assureAllDataIsCopied(const size_t channelIdx, const size_t chunkIdx);
 
             static void readIntoBuffers(std::vector<karabo::io::BufferSet::Pointer>& buffers,
-                                        karabo::util::Hash& header, const size_t channelIdx, const size_t chunkIdx);
+                                        karabo::data::Hash& header, const size_t channelIdx, const size_t chunkIdx);
 
             static void writeFromBuffers(const Data& /*std::vector<karabo::io::BufferSet::Pointer>&*/ buffers,
-                                         const karabo::util::Hash& header, const size_t channelIdx,
+                                         const karabo::data::Hash& header, const size_t channelIdx,
                                          const size_t chunkIdx, bool copyAllData = false);
 
             static size_t size(const size_t channelIdx, const size_t chunkIdx);

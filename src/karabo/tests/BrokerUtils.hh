@@ -15,9 +15,10 @@
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
-#include <karabo/util/Hash.hh>
 #include <string>
 #include <vector>
+
+#include "karabo/data/types/Hash.hh"
 
 // please note that these network address might change in the future
 // or might be not reacheable to outside the European XFEL network
@@ -31,5 +32,5 @@
 
 std::vector<std::string> getBrokersFromEnvVar(const std::string& envVar, const std::string& expectedProtocol);
 std::vector<std::string> getBrokersFromEnv(const std::string& protocol);
-karabo::util::Hash getBrokersFromEnv();
+karabo::data::Hash getBrokersFromEnv();
 std::vector<std::string> getBrokerFromEnv(const std::string& protocol);

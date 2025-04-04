@@ -28,16 +28,17 @@
 #include <exception>
 
 #include "InputChannel.hh"
+#include "karabo/data/schema/SimpleElement.hh"
+#include "karabo/data/schema/TableElement.hh"
+#include "karabo/data/schema/VectorElement.hh"
 #include "karabo/net/EventLoop.hh"
 #include "karabo/net/NetworkInterface.hh"
 #include "karabo/net/TcpChannel.hh"
 #include "karabo/util/MetaTools.hh"
-#include "karabo/util/SimpleElement.hh"
-#include "karabo/util/TableElement.hh"
-#include "karabo/util/VectorElement.hh"
 
 using namespace std::chrono;
 namespace bs = boost::system;
+using namespace karabo::data;
 using namespace karabo::util;
 using namespace karabo::io;
 using namespace karabo::net;
@@ -58,8 +59,8 @@ namespace karabo {
         // initializeServerConnection(), so put 2000 here.
         const int kMaxServerInitializationAttempts = 2000;
 
-        void OutputChannel::expectedParameters(karabo::util::Schema& expected) {
-            using namespace karabo::util;
+        void OutputChannel::expectedParameters(karabo::data::Schema& expected) {
+            using namespace karabo::data;
 
             STRING_ELEMENT(expected)
                   .key("distributionMode")
@@ -185,7 +186,7 @@ namespace karabo {
                   .description("Table of active connections")
                   .setColumns(columns)
                   .readOnly()
-                  .initialValue(std::vector<util::Hash>())
+                  .initialValue(std::vector<data::Hash>())
                   .expertAccess()
                   .commit();
 
@@ -219,9 +220,9 @@ namespace karabo {
         }
 
 
-        OutputChannel::OutputChannel(const karabo::util::Hash& config) : OutputChannel(config, 1) {}
+        OutputChannel::OutputChannel(const karabo::data::Hash& config) : OutputChannel(config, 1) {}
 
-        OutputChannel::OutputChannel(const karabo::util::Hash& config, int autoInit)
+        OutputChannel::OutputChannel(const karabo::data::Hash& config, int autoInit)
             : m_port(0),
               m_showConnectionsHandler([](const std::vector<Hash>&) {}),
               m_showStatisticsHandler(
@@ -318,7 +319,7 @@ namespace karabo {
 
 
         void OutputChannel::initialize() {
-            karabo::util::Hash h("type", "server", "port", m_port);
+            karabo::data::Hash h("type", "server", "port", m_port);
             Connection::Pointer connection = Connection::create("Tcp", h);
             // The following call can throw in case you provide with configuration's Hash the none-zero port number
             // and this port number is already used in the system, for example, by another application.
@@ -347,7 +348,7 @@ namespace karabo {
             return m_instanceId;
         }
 
-        karabo::util::Hash OutputChannel::getInitialConfiguration() const {
+        karabo::data::Hash OutputChannel::getInitialConfiguration() const {
             return Hash("address", m_hostname);
         }
 
@@ -373,8 +374,8 @@ namespace karabo {
         }
 
 
-        karabo::util::Hash OutputChannel::getInformation() const {
-            return karabo::util::Hash("connectionType", "tcp", "hostname", m_hostname, "port", m_port);
+        karabo::data::Hash OutputChannel::getInformation() const {
+            return karabo::data::Hash("connectionType", "tcp", "hostname", m_hostname, "port", m_port);
         }
 
 
@@ -441,7 +442,7 @@ namespace karabo {
 
         void OutputChannel::onTcpChannelRead(const karabo::net::ErrorCode& ec,
                                              const karabo::net::Channel::WeakPointer& weakChannel,
-                                             const karabo::util::Hash& message) {
+                                             const karabo::data::Hash& message) {
             Channel::Pointer channel = weakChannel.lock();
             if (ec || !channel) {
                 onTcpChannelError(ec, channel);
@@ -469,7 +470,7 @@ namespace karabo {
                       (message.has("maxQueueLength") ? message.get<unsigned int>("maxQueueLength")
                                                      : InputChannel::DEFAULT_MAX_QUEUE_LENGTH);
 
-                karabo::util::Hash info;
+                karabo::data::Hash info;
                 info.set("instanceId", instanceId);
                 info.set("memoryLocation", memoryLocation);
                 info.set("tcpChannel", weakChannel);
@@ -866,7 +867,7 @@ namespace karabo {
                     OutputChannel::Pointer self = shared_from_this();
                     m_ioEventHandler(self);
                 }
-            } catch (karabo::util::Exception& e) {
+            } catch (karabo::data::Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "\"triggerIOEvent\" Exception code #" << e.detailedMsg();
                 KARABO_RETHROW;
             } catch (const std::exception& ex) {
@@ -921,8 +922,8 @@ namespace karabo {
             try {
                 m_chunkId = Memory::registerChunk(m_channelId);
                 return true;
-            } catch (const karabo::util::MemoryInitException&) {
-                karabo::util::Exception::clearTrace();
+            } catch (const karabo::data::MemoryInitException&) {
+                karabo::data::Exception::clearTrace();
                 m_chunkId = m_invalidChunkId;
             } catch (const std::exception&) {
                 KARABO_RETHROW;
@@ -1210,7 +1211,7 @@ namespace karabo {
                                            << "' is not among shared inputs";
                 return;
             }
-            karabo::util::Hash& channelInfo = itIdChannelInfo->second;
+            karabo::data::Hash& channelInfo = itIdChannelInfo->second;
             const std::string& instanceId = itIdChannelInfo->first; // channelInfo.get<std::string>("instanceId");
 
             if (hasSharedInput(instanceId)) { // Found
@@ -1253,7 +1254,7 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_ERROR << "Next load balanced input '" << instanceId
                                                << "' does not exist anymore!";
                 } else {
-                    karabo::util::Hash& channelInfo = it->second;
+                    karabo::data::Hash& channelInfo = it->second;
                     toSendImmediately.push_back(&channelInfo);
                 }
             } else { // Not found
@@ -1368,7 +1369,7 @@ namespace karabo {
         void OutputChannel::registerShowConnectionsHandler(const ShowConnectionsHandler& handler) {
             std::lock_guard<std::mutex> lock(m_showConnectionsHandlerMutex);
             if (!handler) {
-                m_showConnectionsHandler = [](const std::vector<karabo::util::Hash>&) {};
+                m_showConnectionsHandler = [](const std::vector<karabo::data::Hash>&) {};
             } else {
                 m_showConnectionsHandler = handler;
             }
@@ -1419,7 +1420,7 @@ namespace karabo {
 
             Channel::Pointer tcpChannel = channelInfo.get<Channel::WeakPointer>("tcpChannel").lock();
             if (tcpChannel && tcpChannel->isOpen()) { // isOpen needed? Would it fail?
-                karabo::util::Hash header;
+                karabo::data::Hash header;
                 if (local) {
                     header.set("channelId", m_channelId);
                     header.set("chunkId", chunkId);
@@ -1467,29 +1468,29 @@ namespace karabo {
 
         std::string OutputChannel::debugId() const {
             // m_channelId is unique per process and not per instance
-            return std::string((("OUTPUT " + util::toString(m_channelId) += " of '") += this->getInstanceIdName()) +=
+            return std::string((("OUTPUT " + data::toString(m_channelId) += " of '") += this->getInstanceIdName()) +=
                                "'");
         }
 
 
-        void OutputChannel::write(const karabo::util::Hash& data, const OutputChannel::MetaData& metaData,
+        void OutputChannel::write(const karabo::data::Hash& data, const OutputChannel::MetaData& metaData,
                                   bool /*unused*/) {
             Memory::write(data, m_channelId, m_chunkId, metaData, false);
         }
 
 
-        void OutputChannel::write(const karabo::util::Hash& data, bool /*unused*/) {
-            OutputChannel::MetaData meta(/*source*/ getInstanceIdName(), /*timestamp*/ karabo::util::Timestamp());
+        void OutputChannel::write(const karabo::data::Hash& data, bool /*unused*/) {
+            OutputChannel::MetaData meta(/*source*/ getInstanceIdName(), /*timestamp*/ karabo::data::Timestamp());
             Memory::write(data, m_channelId, m_chunkId, meta, false);
         }
 
 
-        void OutputChannel::write(const karabo::util::Hash::Pointer& data, const OutputChannel::MetaData& metaData) {
+        void OutputChannel::write(const karabo::data::Hash::Pointer& data, const OutputChannel::MetaData& metaData) {
             write(*data, metaData, false);
         }
 
 
-        void OutputChannel::write(const karabo::util::Hash::Pointer& data) {
+        void OutputChannel::write(const karabo::data::Hash::Pointer& data) {
             write(*data, false);
         }
 

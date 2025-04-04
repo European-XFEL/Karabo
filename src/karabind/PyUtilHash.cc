@@ -25,9 +25,6 @@
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
-#include <karabo/util/FromLiteral.hh>
-#include <karabo/util/Hash.hh>
-#include <karabo/util/Schema.hh>
 #include <karabo/xms/ImageData.hh>
 #include <sstream>
 #include <string>
@@ -35,12 +32,15 @@
 
 #include "PyTypes.hh"
 #include "Wrapper.hh"
+#include "karabo/data/types/FromLiteral.hh"
+#include "karabo/data/types/Hash.hh"
+#include "karabo/data/types/Schema.hh"
 
 
 namespace py = pybind11;
 
 namespace karabo {
-    namespace util {
+    namespace data {
 
         template <>
         Hash::Hash(const std::string& k, const py::object& o) {
@@ -92,35 +92,35 @@ namespace karabo {
             karabind::hashwrap::set(*this, k5, o5);
             karabind::hashwrap::set(*this, k6, o6);
         }
-    } // namespace util
+    } // namespace data
 } // namespace karabo
 
 
 namespace karabind {
 
     struct HashIteratorAccess {
-        py::object operator()(karabo::util::Hash::iterator& it) const {
+        py::object operator()(karabo::data::Hash::iterator& it) const {
             return py::make_tuple(py::cast((*it).getKey()), wrapper::castAnyToPy((*it).getValueAsAny()));
         }
     };
 
 
-    py::iterator make_iterator(karabo::util::Hash::iterator first, karabo::util::Hash::iterator last) {
+    py::iterator make_iterator(karabo::data::Hash::iterator first, karabo::data::Hash::iterator last) {
         return py::detail::make_iterator_impl<HashIteratorAccess, py::return_value_policy::reference_internal,
-                                              karabo::util::Hash::iterator, karabo::util::Hash::iterator, py::object>(
+                                              karabo::data::Hash::iterator, karabo::data::Hash::iterator, py::object>(
               first, last);
     }
 
 } // namespace karabind
 
 
-using namespace karabo::util;
+using namespace karabo::data;
 using namespace std;
 using namespace karabind;
 
 
 void exportPyUtilHash(py::module_& m) {
-    const char cStringSep[] = {karabo::util::Hash::k_defaultSep, '\0'};
+    const char cStringSep[] = {karabo::data::Hash::k_defaultSep, '\0'};
 
     py::enum_<Hash::MergePolicy>(m, "HashMergePolicy",
                                  "This enumeration defines possible options when merging 2 hashes.")
@@ -185,7 +185,7 @@ void exportPyUtilHash(py::module_& m) {
 
     h.def(
           "getKeys",
-          [](const karabo::util::Hash& self, py::list& list) {
+          [](const karabo::data::Hash& self, py::list& list) {
               std::vector<std::string> v{};
               self.getKeys(v);
               for (const auto& i : v) list.append(i);
@@ -724,9 +724,9 @@ void exportPyUtilHash(py::module_& m) {
     h.def(
           "find",
           [](Hash& self, const std::string& path, const std::string& separator) {
-              using namespace karabo::util;
+              using namespace karabo::data;
               boost::optional<Hash::Node&> node = self.find(path, separator.at(0));
-              if (!node) return std::shared_ptr<karabo::util::Hash::Node>();
+              if (!node) return std::shared_ptr<karabo::data::Hash::Node>();
               // Wrapping the pointer to the existing memory location with null deleter
               return std::shared_ptr<Hash::Node>(&node.get(), [](Hash::Node*) {});
           },
@@ -745,9 +745,9 @@ void exportPyUtilHash(py::module_& m) {
 
     h.def(
           "setNode",
-          [](karabo::util::Hash& self, const py::object& node) {
-              if (py::isinstance<const karabo::util::Hash::Node&>(node)) {
-                  return py::cast(self.setNode(node.cast<const karabo::util::Hash::Node&>()));
+          [](karabo::data::Hash& self, const py::object& node) {
+              if (py::isinstance<const karabo::data::Hash::Node&>(node)) {
+                  return py::cast(self.setNode(node.cast<const karabo::data::Hash::Node&>()));
               }
               throw KARABO_PYTHON_EXCEPTION("Failed to extract C++ 'const Hash::Node&' from python object");
           },
@@ -795,7 +795,7 @@ void exportPyUtilHash(py::module_& m) {
 
     h.def(
           "getAttribute",
-          [](karabo::util::Hash& self, const std::string& path, const std::string& attribute,
+          [](karabo::data::Hash& self, const std::string& path, const std::string& attribute,
              const std::string& separator) {
               return wrapper::castAnyToPy(self.getAttributeAsAny(path, attribute, separator.at(0)));
           },
@@ -952,7 +952,7 @@ void exportPyUtilHash(py::module_& m) {
           },
           "memo"_a);
 
-    // These 2 lines provide binding of Hash operators: '==' and '!=' defined in C++ karabo::util::Hash class.
+    // These 2 lines provide binding of Hash operators: '==' and '!=' defined in C++ karabo::data::Hash class.
     // The binding looks the same as in boost python, see the link ...
     // https://www.boost.org/doc/libs/1_51_0/libs/python/doc/v2/operators.html#self_t-spec-ops
 

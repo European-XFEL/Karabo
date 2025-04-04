@@ -35,7 +35,7 @@ namespace karabo {
     void NonSceneProviderTestDevice::expectedParameters(Schema& expected) {}
 
 
-    NonSceneProviderTestDevice::NonSceneProviderTestDevice(const karabo::util::Hash& config) : Device(config) {
+    NonSceneProviderTestDevice::NonSceneProviderTestDevice(const karabo::data::Hash& config) : Device(config) {
         KARABO_INITIAL_FUNCTION(initialize);
     }
 

@@ -24,7 +24,7 @@
 
 #include "BinaryFileOutput.hh"
 
-using namespace karabo::util;
+using namespace karabo::data;
 
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Output<Hash>, karabo::io::BinaryFileOutput<Hash>)
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Output<Schema>, karabo::io::BinaryFileOutput<Schema>)

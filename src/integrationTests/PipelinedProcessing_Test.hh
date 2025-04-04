@@ -198,7 +198,7 @@ class PipelinedProcessing_Test : public CPPUNIT_NS::TestFixture {
                             bool checkForEqual = true, // if false, wait until not equal anymore
                             const int maxTimeout = m_maxTestTimeOut) const;
 
-    void instantiateDeviceWithAssert(const std::string& classId, const karabo::util::Hash& configuration);
+    void instantiateDeviceWithAssert(const std::string& classId, const karabo::data::Hash& configuration);
     void killDeviceWithAssert(const std::string& deviceId);
 
     karabo::core::DeviceServer::Pointer m_deviceServer;
@@ -217,7 +217,7 @@ class PipelinedProcessing_Test : public CPPUNIT_NS::TestFixture {
     const std::vector<std::string> m_senderOutput1 = {"p2pTestSender:output1"}; // sender output channel 1
     const std::vector<std::string> m_senderOutput2 = {"p2pTestSender:output2"}; // sender output channel 2
 
-    const karabo::util::Hash m_receiverBaseConfig{"input.connectedOutputChannels", m_senderOutput1,
+    const karabo::data::Hash m_receiverBaseConfig{"input.connectedOutputChannels", m_senderOutput1,
                                                   "input2.connectedOutputChannels", m_senderOutput2};
 };
 

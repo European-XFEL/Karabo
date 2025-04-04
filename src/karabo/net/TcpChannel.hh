@@ -33,9 +33,9 @@
 #include "Channel.hh"
 #include "Queues.hh"
 #include "TcpConnection.hh"
+#include "karabo/data/types/Hash.hh"
 #include "karabo/io/BinarySerializer.hh"
 #include "karabo/io/TextSerializer.hh"
-#include "karabo/util/Hash.hh"
 
 namespace karabo {
     namespace net {
@@ -62,20 +62,20 @@ namespace karabo {
             const size_t m_sizeofLength;
             const bool m_lengthIsText;
             const bool m_manageAsyncData;
-            karabo::util::Hash m_keepAliveSettings;
+            karabo::data::Hash m_keepAliveSettings;
             mutable std::mutex m_socketMutex;
             boost::asio::ip::tcp::socket m_socket;
             HandlerType m_activeHandler;
             bool m_readHeaderFirst;
             std::any m_readHandler;
-            karabo::io::TextSerializer<karabo::util::Hash>::Pointer m_textSerializer;
-            karabo::io::BinarySerializer<karabo::util::Hash>::Pointer m_binarySerializer;
+            karabo::io::TextSerializer<karabo::data::Hash>::Pointer m_textSerializer;
+            karabo::io::BinarySerializer<karabo::data::Hash>::Pointer m_binarySerializer;
 
             std::vector<char> m_inboundMessagePrefix;
             std::vector<char> m_inboundHeaderPrefix;
             std::shared_ptr<std::vector<char>> m_inboundData;
             std::shared_ptr<std::vector<char>> m_inboundHeader;
-            karabo::util::Hash::Pointer m_inHashHeader;
+            karabo::data::Hash::Pointer m_inHashHeader;
             std::vector<char> m_outboundMessagePrefix;
             std::vector<char> m_outboundHeaderPrefix;
             std::shared_ptr<std::vector<char>> m_outboundData;
@@ -171,7 +171,7 @@ namespace karabo {
              * The hash will be updated accordingly.
              * @return void
              */
-            void read(karabo::util::Hash& data) override;
+            void read(karabo::data::Hash& data) override;
 
             /**
              * Synchronously reads size bytes from socket into data and provides a header.
@@ -179,7 +179,7 @@ namespace karabo {
              * @param data Pre-allocated contiguous block of memory
              * @param size This number of bytes will be copied into data
              */
-            void read(karabo::util::Hash& header, char* data, const size_t& size) override;
+            void read(karabo::data::Hash& header, char* data, const size_t& size) override;
 
             /**
              * This function reads into a header and a vector of chars.
@@ -187,7 +187,7 @@ namespace karabo {
              * @param header Hash object which will be updated to contain header information
              * @param data A vector which will be updated accordingly
              */
-            void read(karabo::util::Hash& header, std::vector<char>& data) override;
+            void read(karabo::data::Hash& header, std::vector<char>& data) override;
 
             /**
              * This function reads into a header and shared pointer of vector of chars.
@@ -195,7 +195,7 @@ namespace karabo {
              * @param header Hash object which will be updated to contain header information
              * @param data A shared pointer of a vector which will be updated accordingly
              */
-            void read(karabo::util::Hash& header, std::shared_ptr<std::vector<char>>& data) override;
+            void read(karabo::data::Hash& header, std::shared_ptr<std::vector<char>>& data) override;
 
             /**
              * This function reads into a header hash and a data hash.
@@ -204,7 +204,7 @@ namespace karabo {
              * @param header Hash object which will be updated to contain header information
              * @param data Hash object which will be updated to contain data information
              */
-            void read(karabo::util::Hash& header, karabo::util::Hash& data) override;
+            void read(karabo::data::Hash& header, karabo::data::Hash& data) override;
 
 
             //**************************************************************/
@@ -265,22 +265,22 @@ namespace karabo {
 
             void write(const char* data, const size_t& size);
 
-            void write(const karabo::util::Hash& header, const char* data, const size_t& size);
+            void write(const karabo::data::Hash& header, const char* data, const size_t& size);
 
-            void write(const karabo::util::Hash& data);
+            void write(const karabo::data::Hash& data);
 
-            void write(const karabo::util::Hash& header, const std::shared_ptr<std::vector<char>>& body);
+            void write(const karabo::data::Hash& header, const std::shared_ptr<std::vector<char>>& body);
 
-            void write(const karabo::util::Hash& header, const karabo::io::BufferSet& body);
+            void write(const karabo::data::Hash& header, const karabo::io::BufferSet& body);
 
-            void write(const karabo::util::Hash& header, const std::vector<karabo::io::BufferSet::Pointer>& body);
+            void write(const karabo::data::Hash& header, const std::vector<karabo::io::BufferSet::Pointer>& body);
 
             void write(const char* header, const size_t& headerSize, const karabo::io::BufferSet& body);
 
             void write(const char* header, const size_t& headerSize,
                        const std::vector<karabo::io::BufferSet::Pointer>& body);
 
-            void write(const karabo::util::Hash& header, const karabo::util::Hash& body);
+            void write(const karabo::data::Hash& header, const karabo::data::Hash& body);
 
             void writeAsyncRaw(const char* data, const size_t& size, const WriteCompleteHandler& handler);
 
@@ -289,23 +289,23 @@ namespace karabo {
             void writeAsyncVectorPointer(const std::shared_ptr<std::vector<char>>& data,
                                          const WriteCompleteHandler& handler);
 
-            void writeAsyncHash(const karabo::util::Hash& data, const WriteCompleteHandler& handler);
+            void writeAsyncHash(const karabo::data::Hash& data, const WriteCompleteHandler& handler);
 
-            void writeAsyncHashRaw(const karabo::util::Hash& header, const char* data, const size_t& size,
+            void writeAsyncHashRaw(const karabo::data::Hash& header, const char* data, const size_t& size,
                                    const WriteCompleteHandler& handler);
 
-            void writeAsyncHashVector(const karabo::util::Hash& header, const std::vector<char>& data,
+            void writeAsyncHashVector(const karabo::data::Hash& header, const std::vector<char>& data,
                                       const WriteCompleteHandler& handler);
 
-            void writeAsyncHashVectorPointer(const karabo::util::Hash& header,
+            void writeAsyncHashVectorPointer(const karabo::data::Hash& header,
                                              const std::shared_ptr<std::vector<char>>& data,
                                              const WriteCompleteHandler& handler) override;
 
-            void writeAsyncHashVectorBufferSetPointer(const karabo::util::Hash& header,
+            void writeAsyncHashVectorBufferSetPointer(const karabo::data::Hash& header,
                                                       const std::vector<karabo::io::BufferSet::Pointer>& body,
                                                       const WriteCompleteHandler& handler) override;
 
-            void writeAsyncHashHash(const karabo::util::Hash& header, const karabo::util::Hash& data,
+            void writeAsyncHashHash(const karabo::data::Hash& header, const karabo::data::Hash& data,
                                     const WriteCompleteHandler& handler) override;
 
             virtual size_t dataQuantityRead();
@@ -320,7 +320,7 @@ namespace karabo {
              * Records the sizes of the write queues in a Hash.
              * Useful for debugging devices with multiple channels open (like the GuiServerDevice...)
              */
-            karabo::util::Hash queueInfo();
+            karabo::data::Hash queueInfo();
 
             /**
              * Address of the remote endpoint
@@ -351,34 +351,34 @@ namespace karabo {
             /**
              *  When copyAllData is false, elements of type NDArray in the hash won't be copied before being sent.
              */
-            void writeAsync(const karabo::util::Hash& data, int prio, bool copyAllData);
+            void writeAsync(const karabo::data::Hash& data, int prio, bool copyAllData);
 
             /**
              *  Writes copies of the header hash and the data array.
              */
-            void writeAsync(const karabo::util::Hash& header, const char* data, const size_t& size, int prio);
+            void writeAsync(const karabo::data::Hash& header, const char* data, const size_t& size, int prio);
 
             /**
              *  Writes copies of the header hash and of the data vector.
              */
-            void writeAsync(const karabo::util::Hash& header, const std::vector<char>& data, int prio);
+            void writeAsync(const karabo::data::Hash& header, const std::vector<char>& data, int prio);
 
             /**
              *  Writes a copy of the header hash. Sends the vector pointed by data, not a copy of it. The data vector
              *  must not be changed after the call to writeAsync.
              */
-            void writeAsync(const karabo::util::Hash& header, const std::shared_ptr<std::vector<char>>& data, int prio);
+            void writeAsync(const karabo::data::Hash& header, const std::shared_ptr<std::vector<char>>& data, int prio);
 
             /**
              *  Writes copies of the header hash and of the data string.
              */
-            void writeAsync(const karabo::util::Hash& header, const std::string& data, int prio);
+            void writeAsync(const karabo::data::Hash& header, const std::string& data, int prio);
 
             /**
              *  When copyAllData is false, elements of type NDArray in the body hash won't be copied before being sent.
              *  copyAllData doesn't influence the handling of the header hash.
              */
-            void writeAsync(const karabo::util::Hash& header, const karabo::util::Hash& data, int prio,
+            void writeAsync(const karabo::data::Hash& header, const karabo::data::Hash& data, int prio,
                             bool copyAllData);
 
             virtual void setAsyncChannelPolicy(int priority, const std::string& policy, const size_t capacity = 0);
@@ -398,13 +398,13 @@ namespace karabo {
              * @param ptr input TcpChannel boost shared pointer
              * @return Hash with 4 key/value pairs
              */
-            static karabo::util::Hash getChannelInfo(const std::shared_ptr<karabo::net::TcpChannel>& ptr);
+            static karabo::data::Hash getChannelInfo(const std::shared_ptr<karabo::net::TcpChannel>& ptr);
 
            private:
             // Private - only for friend TcpConnection::createChannel
             TcpChannel(const TcpConnection::Pointer& connection);
 
-            karabo::util::Hash _getChannelInfo();
+            karabo::data::Hash _getChannelInfo();
 
             void onBytesAvailable(const ErrorCode& error, const size_t length, const ReadRawHandler& handler);
 
@@ -469,15 +469,15 @@ namespace karabo {
                                           const std::shared_ptr<std::vector<char>>& body,
                                           const WriteCompleteHandler& handler);
 
-            void prepareHeaderFromHash(const karabo::util::Hash& hash);
+            void prepareHeaderFromHash(const karabo::data::Hash& hash);
 
-            void prepareHashFromHeader(karabo::util::Hash& hash) const;
+            void prepareHashFromHeader(karabo::data::Hash& hash) const;
 
-            void prepareDataFromHash(const karabo::util::Hash& hash);
+            void prepareDataFromHash(const karabo::data::Hash& hash);
 
-            void prepareDataFromHash(const karabo::util::Hash& hash, std::shared_ptr<std::vector<char>>& dataPtr);
+            void prepareDataFromHash(const karabo::data::Hash& hash, std::shared_ptr<std::vector<char>>& dataPtr);
 
-            void prepareHashFromData(karabo::util::Hash& hash) const;
+            void prepareHashFromData(karabo::data::Hash& hash) const;
 
             /**
              * Creates a buffer set with the given string stored in its sole buffer.
@@ -517,7 +517,7 @@ namespace karabo {
              *        hash in the bufferset (the buffer set will actually become one of the "owners" of the NDArray).
              * @return pBuffSet a shared pointer that will be pointed to the newly created buffer set with the hash.
              */
-            karabo::io::BufferSet::Pointer bufferSetFromHash(const karabo::util::Hash& data, bool copyAllData);
+            karabo::io::BufferSet::Pointer bufferSetFromHash(const karabo::data::Hash& data, bool copyAllData);
 
             using Channel::read;
             using Channel::write;
@@ -541,9 +541,9 @@ namespace karabo {
                                              const std::shared_ptr<std::vector<char>>& body);
 
             // MQ support methods
-            void prepareVectorFromHash(const karabo::util::Hash& hash, std::vector<char>& vec);
+            void prepareVectorFromHash(const karabo::data::Hash& hash, std::vector<char>& vec);
 
-            void prepareHashFromVector(const std::vector<char>& vec, karabo::util::Hash& hash) const;
+            void prepareHashFromVector(const std::vector<char>& vec, karabo::data::Hash& hash) const;
 
             void dispatchWriteAsync(const Message::Pointer& mp, int prio);
 

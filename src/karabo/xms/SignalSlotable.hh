@@ -37,12 +37,12 @@
 #include "OutputChannel.hh"
 #include "Signal.hh"
 #include "Slot.hh"
+#include "karabo/data/schema/Configurator.hh"
+#include "karabo/data/types/Hash.hh"
 #include "karabo/log/Logger.hh"
 #include "karabo/net/Broker.hh"
 #include "karabo/net/Strand.hh"
 #include "karabo/net/utils.hh"
-#include "karabo/util/Configurator.hh"
-#include "karabo/util/Hash.hh"
 #include "karabo/util/MetaTools.hh"
 #include "karabo/util/PackParameters.hh"
 
@@ -85,7 +85,7 @@ namespace karabo {
             typedef std::function<void(const std::string& /*slotFunction*/, const std::string& /*callee*/)>
                   SlotCallGuardHandler;
 
-            typedef std::function<void(const karabo::util::Hash::Pointer& /*performanceMeasures*/)>
+            typedef std::function<void(const karabo::data::Hash::Pointer& /*performanceMeasures*/)>
                   UpdatePerformanceStatisticsHandler;
 
             typedef std::function<void(const std::string& /*message*/)> BrokerErrorHandler;
@@ -135,7 +135,7 @@ namespace karabo {
              */
             SignalSlotable(const std::string& instanceId, const karabo::net::Broker::Pointer& connection,
                            const int heartbeatInterval = 30,
-                           const karabo::util::Hash& instanceInfo = karabo::util::Hash());
+                           const karabo::data::Hash& instanceInfo = karabo::data::Hash());
 
             /**
              * Creates a function SignalSlotable object allowing to configure the broker connection.
@@ -151,9 +151,9 @@ namespace karabo {
              * @param instanceInfo A hash containing any important additional information
              */
             explicit SignalSlotable(const std::string& instanceId,
-                                    const karabo::util::Hash& brokerConfiguration = karabo::util::Hash(),
+                                    const karabo::data::Hash& brokerConfiguration = karabo::data::Hash(),
                                     const int heartbeatInterval = 30,
-                                    const karabo::util::Hash& instanceInfo = karabo::util::Hash());
+                                    const karabo::data::Hash& instanceInfo = karabo::data::Hash());
 
             virtual ~SignalSlotable();
 
@@ -168,7 +168,7 @@ namespace karabo {
              *                          on its own. If false, some other mechanism has to ensure to deliver these.
              */
             void init(const std::string& instanceId, const karabo::net::Broker::Pointer& connection,
-                      const int heartbeatInterval, const karabo::util::Hash& instanceInfo,
+                      const int heartbeatInterval, const karabo::data::Hash& instanceInfo,
                       bool consumeBroadcasts = true);
 
             /**
@@ -195,7 +195,7 @@ namespace karabo {
              */
             bool eraseTrackedInstance(const std::string& instanceId);
 
-            karabo::util::Hash getAvailableInstances(bool /*unused*/ = false);
+            karabo::data::Hash getAvailableInstances(bool /*unused*/ = false);
 
             /**
              * This is a synchronous call with timeout in milliseconds return vector of device signals.
@@ -231,9 +231,9 @@ namespace karabo {
              * @param update: a Hash containing new or updated keys - or keys to remove
              * @param remove: if false (default), merge 'update' to existing instance info, otherwise subtract it
              */
-            void updateInstanceInfo(const karabo::util::Hash& update, bool remove = false);
+            void updateInstanceInfo(const karabo::data::Hash& update, bool remove = false);
 
-            karabo::util::Hash getInstanceInfo() const;
+            karabo::data::Hash getInstanceInfo() const;
 
             void registerSlotCallGuardHandler(const SlotCallGuardHandler& slotCallGuardHandler);
 
@@ -473,7 +473,7 @@ namespace karabo {
              * getInputChannel(channelName)
              */
             virtual InputChannel::Pointer createInputChannel(
-                  const std::string& channelName, const karabo::util::Hash& config,
+                  const std::string& channelName, const karabo::data::Hash& config,
                   const DataHandler& onDataAvailableHandler = DataHandler(),
                   const InputHandler& onInputAvailableHandler = InputHandler(),
                   const InputHandler& onEndOfStreamEventHandler = InputHandler(),
@@ -501,7 +501,7 @@ namespace karabo {
              *        If needed, retrieve again via getOutputChannel(channelName).
              */
             virtual OutputChannel::Pointer createOutputChannel(
-                  const std::string& channelName, const karabo::util::Hash& config,
+                  const std::string& channelName, const karabo::data::Hash& config,
                   const OutputHandler& onOutputPossibleHandler = OutputHandler());
 
             /**
@@ -629,14 +629,14 @@ namespace karabo {
                 /**
                  * If a proper reply cannot be placed, please use this to reply an error
                  * @param message is the short text for the RemoteException
-                 * @param details further details, usually an exception trace (e.g. util::Exception::detailedMsg()),
+                 * @param details further details, usually an exception trace (e.g. data::Exception::detailedMsg()),
                  *                default is empty for backward compatibility reasons
                  */
                 void error(const std::string& message, const std::string& details = std::string()) const;
 
                private:
                 SignalSlotable* const m_signalSlotable; // pointer is const - but may call non-const methods
-                const std::tuple<karabo::util::Hash::Pointer, std::string, bool> m_slotInfo;
+                const std::tuple<karabo::data::Hash::Pointer, std::string, bool> m_slotInfo;
             };
 
             static std::string generateUUID();
@@ -688,18 +688,18 @@ namespace karabo {
                 Requestor& timeout(const int& milliseconds);
 
                protected:
-                void receiveResponse(karabo::util::Hash::Pointer& header, karabo::util::Hash::Pointer& body);
+                void receiveResponse(karabo::data::Hash::Pointer& header, karabo::data::Hash::Pointer& body);
 
-                karabo::util::Hash::Pointer prepareRequestHeader(const std::string& slotInstanceId,
+                karabo::data::Hash::Pointer prepareRequestHeader(const std::string& slotInstanceId,
                                                                  const std::string& slotFunction);
 
-                karabo::util::Hash::Pointer prepareRequestNoWaitHeader(const std::string& requestSlotInstanceId,
+                karabo::data::Hash::Pointer prepareRequestNoWaitHeader(const std::string& requestSlotInstanceId,
                                                                        const std::string& requestSlotFunction,
                                                                        const std::string& replySlotInstanceId,
                                                                        const std::string& replySlotFunction);
 
-                void registerRequest(const std::string& slotInstanceId, const karabo::util::Hash::Pointer& header,
-                                     const karabo::util::Hash::Pointer& body);
+                void registerRequest(const std::string& slotInstanceId, const karabo::data::Hash::Pointer& header,
+                                     const karabo::data::Hash::Pointer& body);
 
                 void sendRequest() const;
 
@@ -711,7 +711,7 @@ namespace karabo {
                  * @returns A pair with a shared pointer to the header hash of the reply in the first position and a
                  * shared pointer to the body in the second.
                  */
-                std::pair<karabo::util::Hash::Pointer, karabo::util::Hash::Pointer> receiveResponseHashes();
+                std::pair<karabo::data::Hash::Pointer, karabo::data::Hash::Pointer> receiveResponseHashes();
 
                 /// Register handler for errors in async requests, e.g. timeout or remote exception
                 void registerErrorHandler(const AsyncErrorHandler& errorHandler);
@@ -722,7 +722,7 @@ namespace karabo {
                  * @param header response header hash from where the value will be extracted
                  * @param result the string that will be assigned the value of the SignalInstanceId path
                  */
-                void getSignalInstanceId(const karabo::util::Hash::Pointer& header, std::string& result);
+                void getSignalInstanceId(const karabo::data::Hash::Pointer& header, std::string& result);
 
                protected:
                 SignalSlotable* m_signalSlotable;
@@ -730,8 +730,8 @@ namespace karabo {
                private:
                 std::string m_replyId;
                 std::string m_slotInstanceId;
-                karabo::util::Hash::Pointer m_header;
-                karabo::util::Hash::Pointer m_body;
+                karabo::data::Hash::Pointer m_header;
+                karabo::data::Hash::Pointer m_body;
                 int m_timeout;
             };
 
@@ -748,7 +748,7 @@ namespace karabo {
 
             std::string m_instanceId;
             mutable std::shared_mutex m_instanceInfoMutex;
-            karabo::util::Hash m_instanceInfo;
+            karabo::data::Hash m_instanceInfo;
             std::string m_username;
 
             typedef std::map<std::string, SignalInstancePointer> SignalInstances;
@@ -794,11 +794,11 @@ namespace karabo {
             static boost::uuids::random_generator m_uuidGenerator;
 
            protected:
-            typedef std::map<std::jthread::id, karabo::util::Hash::Pointer> Replies;
+            typedef std::map<std::jthread::id, karabo::data::Hash::Pointer> Replies;
             Replies m_replies;
             mutable std::mutex m_replyMutex;
 
-            typedef std::pair<karabo::util::Hash::Pointer /*header*/, karabo::util::Hash::Pointer /*body*/> Event;
+            typedef std::pair<karabo::data::Hash::Pointer /*header*/, karabo::data::Hash::Pointer /*body*/> Event;
             typedef std::map<std::string, Event> ReceivedReplies;
             ReceivedReplies m_receivedReplies;
             mutable std::mutex m_receivedRepliesMutex;
@@ -807,7 +807,7 @@ namespace karabo {
             ReceivedRepliesBMC m_receivedRepliesBMC;
             mutable std::mutex m_receivedRepliesBMCMutex;
 
-            karabo::util::Hash m_trackedInstances;
+            karabo::data::Hash m_trackedInstances;
             bool m_trackAllInstances;
             int m_heartbeatInterval;
 
@@ -849,12 +849,12 @@ namespace karabo {
             void consumerErrorNotifier(const std::string& consumer, karabo::net::consumer::Error ec,
                                        const std::string& message);
 
-            void onHeartbeatMessage(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
+            void onHeartbeatMessage(const karabo::data::Hash::Pointer& header, const karabo::data::Hash::Pointer& body);
 
-            void handleReply(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body,
+            void handleReply(const karabo::data::Hash::Pointer& header, const karabo::data::Hash::Pointer& body,
                              long long whenPostedEpochMs);
 
-            void processEvent(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
+            void processEvent(const karabo::data::Hash::Pointer& header, const karabo::data::Hash::Pointer& body);
 
             /**
              * Parses out the instanceId part of signalId or slotId
@@ -866,21 +866,21 @@ namespace karabo {
             std::pair<std::string, std::string> splitIntoInstanceIdAndFunctionName(const std::string& signalOrSlotId,
                                                                                    const char sep = ':') const;
 
-            void registerReply(const karabo::util::Hash::Pointer& reply);
+            void registerReply(const karabo::data::Hash::Pointer& reply);
 
             // Thread-safe, locks m_signalSlotInstancesMutex
             SignalInstancePointer getSignal(const std::string& signalFunction) const;
 
-            karabo::util::Hash::Pointer prepareCallHeader(const std::string& slotInstanceId,
+            karabo::data::Hash::Pointer prepareCallHeader(const std::string& slotInstanceId,
                                                           const std::string& slotFunction) const;
 
-            void doSendMessage(const std::string& instanceId, const karabo::util::Hash::Pointer& header,
-                               const karabo::util::Hash::Pointer& body, int prio, int timeToLive,
+            void doSendMessage(const std::string& instanceId, const karabo::data::Hash::Pointer& header,
+                               const karabo::data::Hash::Pointer& body, int prio, int timeToLive,
                                const std::string& topic = "", bool forceViaBroker = false) const;
 
             // protected since needed in DeviceServer
-            bool tryToCallDirectly(const std::string& slotInstanceId, const karabo::util::Hash::Pointer& header,
-                                   const karabo::util::Hash::Pointer& body) const;
+            bool tryToCallDirectly(const std::string& slotInstanceId, const karabo::data::Hash::Pointer& header,
+                                   const karabo::data::Hash::Pointer& body) const;
 
             /**
              * Register a handler to be called for every received message that is addressed to everybody.
@@ -889,8 +889,8 @@ namespace karabo {
              *
              * @param handler with header and body (as Hash::Pointer) of the message
              */
-            void registerBroadcastHandler(std::function<void(const karabo::util::Hash::Pointer& header,
-                                                             const karabo::util::Hash::Pointer& body)>
+            void registerBroadcastHandler(std::function<void(const karabo::data::Hash::Pointer& header,
+                                                             const karabo::data::Hash::Pointer& body)>
                                                 handler);
 
            private: // Functions
@@ -917,33 +917,33 @@ namespace karabo {
              */
             void ensureInstanceIdIsUnique(const std::string& instanceId);
 
-            void slotInstanceNew(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
+            void slotInstanceNew(const std::string& instanceId, const karabo::data::Hash& instanceInfo);
 
-            void slotInstanceGone(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
+            void slotInstanceGone(const std::string& instanceId, const karabo::data::Hash& instanceInfo);
 
-            void slotInstanceUpdated(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
+            void slotInstanceUpdated(const std::string& instanceId, const karabo::data::Hash& instanceInfo);
 
             void slotPing(const std::string& instanceId, int rand, bool trackPingedInstance);
 
-            void slotPingAnswer(const std::string& instanceId, const karabo::util::Hash& hash);
+            void slotPingAnswer(const std::string& instanceId, const karabo::data::Hash& hash);
 
             // Get the strand for the stated sender - may create it if not yet there.
             karabo::net::Strand::Pointer getUnicastEventStrand(const std::string& signalInstanceId);
 
             void processSingleSlot(const std::string& slotFunction, bool globalCall,
-                                   const std::string& signalInstanceId, const karabo::util::Hash::Pointer& header,
-                                   const karabo::util::Hash::Pointer& body, long long whenPostedEpochMs);
+                                   const std::string& signalInstanceId, const karabo::data::Hash::Pointer& header,
+                                   const karabo::data::Hash::Pointer& body, long long whenPostedEpochMs);
 
-            void replyException(const karabo::util::Hash& header, const std::string& message,
+            void replyException(const karabo::data::Hash& header, const std::string& message,
                                 const std::string& details);
 
-            void sendPotentialReply(const karabo::util::Hash& header, const std::string& slotFunction, bool global);
+            void sendPotentialReply(const karabo::data::Hash& header, const std::string& slotFunction, bool global);
 
             /**
              * Internal method to provide info for AsyncReply object
              * @return tuple of slot header, slot name and whether it is a global slot call
              */
-            std::tuple<karabo::util::Hash::Pointer, std::string, bool> registerAsyncReply();
+            std::tuple<karabo::data::Hash::Pointer, std::string, bool> registerAsyncReply();
 
             void emitHeartbeat(const boost::system::error_code& e);
 
@@ -973,7 +973,7 @@ namespace karabo {
 
             void updatePerformanceStatistics(const boost::system::error_code& e);
 
-            void updateLatencies(const karabo::util::Hash::Pointer& header, long long whenPostedEpochMs);
+            void updateLatencies(const karabo::data::Hash::Pointer& header, long long whenPostedEpochMs);
 
             bool tryToConnectToSignal(const std::string& signalInstanceId, const std::string& signalFunction,
                                       const std::string& slotInstanceId, const std::string& slotFunction);
@@ -1020,34 +1020,34 @@ namespace karabo {
             }
 
             void slotHeartbeat(const std::string& networkId, const int& heartbeatInterval,
-                               const karabo::util::Hash& heartbeatInfo);
+                               const karabo::data::Hash& heartbeatInfo);
 
             void letInstanceSlowlyDieWithoutHeartbeat(const boost::system::error_code& e);
 
-            void decreaseCountdown(std::vector<std::pair<std::string, karabo::util::Hash>>& deadOnes);
+            void decreaseCountdown(std::vector<std::pair<std::string, karabo::data::Hash>>& deadOnes);
 
             // Thread safe
-            void addTrackedInstance(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
+            void addTrackedInstance(const std::string& instanceId, const karabo::data::Hash& instanceInfo);
 
             // Thread safe
             bool hasTrackedInstance(const std::string& instanceId);
 
             // In public section: void eraseTrackedInstance(const std::string& instanceId);
 
-            void updateTrackedInstanceInfo(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
+            void updateTrackedInstanceInfo(const std::string& instanceId, const karabo::data::Hash& instanceInfo);
 
             void slotGetAvailableFunctions(const std::string& type);
 
             void cleanSignals(const std::string& instanceId);
 
             // IO channel related
-            std::pair<bool, karabo::util::Hash> slotGetOutputChannelInformationImpl(const std::string& channelId,
+            std::pair<bool, karabo::data::Hash> slotGetOutputChannelInformationImpl(const std::string& channelId,
                                                                                     const int& processId,
                                                                                     const char* slotName);
             // we need two wrappers, one for legacy
             void slotGetOutputChannelInformation(const std::string& channelId, const int& processId);
             // and one for generic GUI requests
-            void slotGetOutputChannelInformationFromHash(const karabo::util::Hash& hash);
+            void slotGetOutputChannelInformationFromHash(const karabo::data::Hash& hash);
 
             void connectInputToOutputChannel(const InputChannel::Pointer& channel,
                                              const std::string& outputChannelString,
@@ -1067,7 +1067,7 @@ namespace karabo {
             void connectInputChannelHandler(const InputChannel::Pointer& inChannel,
                                             const std::string& outputChannelString,
                                             const std::function<void(bool)>& handler, bool outChannelExists,
-                                            const karabo::util::Hash& outChannelInfo);
+                                            const karabo::data::Hash& outChannelInfo);
 
             // Deprecated since only used in the deprecated connectInputChannel(..)
             void connectInputToOutputChannel_old(const InputChannel::Pointer& channel,
@@ -1076,7 +1076,7 @@ namespace karabo {
             // Deprecated since only used in the logic of the deprecated connectInputChannel(..)
             void connectInputChannelHandler_old(const InputChannel::Pointer& inChannel,
                                                 const std::string& outputChannelString, bool outChannelExists,
-                                                const karabo::util::Hash& outChannelInfo);
+                                                const karabo::data::Hash& outChannelInfo);
 
             // Deprecated since only used in the logic of the deprecated connectInputChannel(..)
             void connectInputChannelErrorHandler_old(const InputChannel::Pointer& inChannel,
@@ -1107,13 +1107,13 @@ namespace karabo {
 
             bool hasReceivedReply(const std::string& replyFromValue) const;
 
-            void popReceivedReply(const std::string& replyFromValue, karabo::util::Hash::Pointer& header,
-                                  karabo::util::Hash::Pointer& body);
+            void popReceivedReply(const std::string& replyFromValue, karabo::data::Hash::Pointer& header,
+                                  karabo::data::Hash::Pointer& body);
 
             void registerSynchronousReply(const std::string& replyId);
 
-            bool timedWaitAndPopReceivedReply(const std::string& replyId, karabo::util::Hash::Pointer& header,
-                                              karabo::util::Hash::Pointer& body, int timeout);
+            bool timedWaitAndPopReceivedReply(const std::string& replyId, karabo::data::Hash::Pointer& header,
+                                              karabo::data::Hash::Pointer& body, int timeout);
             long long getEpochMillis() const;
 
             void slotGetOutputChannelNames();
@@ -1162,7 +1162,7 @@ namespace karabo {
             LatencyStats m_processingLatency; // measurements in milliseconds
             LatencyStats m_eventLoopLatency;  // measurements in milliseconds for
 
-            std::function<void(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body)>
+            std::function<void(const karabo::data::Hash::Pointer& header, const karabo::data::Hash::Pointer& body)>
                   m_broadCastHandler;
         };
 
@@ -1172,9 +1172,9 @@ namespace karabo {
         SignalSlotable::Requestor& SignalSlotable::Requestor::request(const std::string& slotInstanceId,
                                                                       const std::string& slotFunction,
                                                                       const Args&... args) {
-            karabo::util::Hash::Pointer header = prepareRequestHeader(slotInstanceId, slotFunction);
-            auto body = std::make_shared<karabo::util::Hash>();
-            pack(*body, args...);
+            karabo::data::Hash::Pointer header = prepareRequestHeader(slotInstanceId, slotFunction);
+            auto body = std::make_shared<karabo::data::Hash>();
+            karabo::util::pack(*body, args...);
             registerRequest(slotInstanceId, header, body);
             return *this;
         }
@@ -1185,11 +1185,11 @@ namespace karabo {
                                                                             const std::string replySlotInstanceId,
                                                                             const std::string& replySlotFunction,
                                                                             const Args&... args) {
-            karabo::util::Hash::Pointer header = prepareRequestNoWaitHeader(requestSlotInstanceId, requestSlotFunction,
+            karabo::data::Hash::Pointer header = prepareRequestNoWaitHeader(requestSlotInstanceId, requestSlotFunction,
                                                                             replySlotInstanceId, replySlotFunction);
 
-            auto body = std::make_shared<karabo::util::Hash>();
-            pack(*body, args...);
+            auto body = std::make_shared<karabo::data::Hash>();
+            karabo::util::pack(*body, args...);
             m_signalSlotable->doSendMessage(requestSlotInstanceId, header, body, KARABO_SYS_PRIO, KARABO_SYS_TTL);
             return *this;
         }
@@ -1231,8 +1231,8 @@ namespace karabo {
         template <typename... Args>
         void SignalSlotable::Requestor::receive(Args&... args) {
             auto headerBodyPair = receiveResponseHashes();
-            const karabo::util::Hash::Pointer& header = headerBodyPair.first;
-            const karabo::util::Hash::Pointer& body = headerBodyPair.second;
+            const karabo::data::Hash::Pointer& header = headerBodyPair.first;
+            const karabo::data::Hash::Pointer& body = headerBodyPair.second;
             try {
                 karabo::util::unpack(*body, args...); // ParameterException if args is too long
 
@@ -1241,7 +1241,7 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_DEBUG << "Ignoring the last " << nArgs << " arguments of response:\n" << *body;
                 }
 
-            } catch (const karabo::util::CastException&) {
+            } catch (const karabo::data::CastException&) {
                 std::string signalInstanceId("unknown");
                 getSignalInstanceId(header, signalInstanceId);
                 const std::string msg("'" + m_signalSlotable->getInstanceId() +
@@ -1249,7 +1249,7 @@ namespace karabo {
                                       "from '" +
                                       signalInstanceId + "'");
                 KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION(msg));
-            } catch (const karabo::util::Exception& e) {
+            } catch (const karabo::data::Exception& e) {
                 std::string signalInstanceId("unknown");
                 getSignalInstanceId(header, signalInstanceId);
                 const std::string msg("Error while '" + m_signalSlotable->getInstanceId() +
@@ -1264,7 +1264,7 @@ namespace karabo {
         template <typename... Args>
         void SignalSlotable::AsyncReply::operator()(const Args&... args) const {
             // See SignalSlotable::registerAsyncReply() about non-existing header pointer
-            const util::Hash::Pointer& headerPtr = std::get<0>(m_slotInfo);
+            const data::Hash::Pointer& headerPtr = std::get<0>(m_slotInfo);
             if (!headerPtr) return;
 
             // Place reply and send it
@@ -1278,8 +1278,8 @@ namespace karabo {
         void SignalSlotable::emit(const std::string& signalFunction, const Args&... args) const {
             SignalInstancePointer s = getSignal(signalFunction);
             if (s) {
-                auto hash = std::make_shared<karabo::util::Hash>();
-                pack(*hash, args...);
+                auto hash = std::make_shared<karabo::data::Hash>();
+                karabo::util::pack(*hash, args...);
                 s->emit<Args...>(hash);
             }
         }
@@ -1288,9 +1288,9 @@ namespace karabo {
         void SignalSlotable::call(const std::string& instanceId, const std::string& functionName,
                                   const Args&... args) const {
             const std::string& id = (instanceId.empty() ? m_instanceId : instanceId);
-            auto body = std::make_shared<karabo::util::Hash>();
-            pack(*body, args...);
-            karabo::util::Hash::Pointer header = prepareCallHeader(id, functionName);
+            auto body = std::make_shared<karabo::data::Hash>();
+            karabo::util::pack(*body, args...);
+            karabo::data::Hash::Pointer header = prepareCallHeader(id, functionName);
             doSendMessage(id, header, body, KARABO_SYS_PRIO, KARABO_SYS_TTL);
         }
 
@@ -1315,7 +1315,7 @@ namespace karabo {
 
         template <typename... Args>
         void SignalSlotable::reply(const Args&... args) {
-            karabo::util::Hash::Pointer hash = std::make_shared<karabo::util::Hash>();
+            karabo::data::Hash::Pointer hash = std::make_shared<karabo::data::Hash>();
             karabo::util::pack(*hash, args...);
             registerReply(hash);
         }
@@ -1398,7 +1398,7 @@ namespace karabo {
             std::string hostname(boost::asio::ip::host_name());
             std::vector<std::string> tokens;
             boost::split(tokens, hostname, boost::is_any_of("."));
-            return std::string(tokens[0] + "_" + T::classInfo().getClassId() + "_" + karabo::util::toString(getpid()));
+            return std::string(tokens[0] + "_" + T::classInfo().getClassId() + "_" + karabo::data::toString(getpid()));
         }
     } // namespace xms
 } // namespace karabo

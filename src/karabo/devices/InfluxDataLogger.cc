@@ -26,15 +26,15 @@
 #include <nlohmann/json.hpp>
 #include <string_view>
 
+#include "karabo/data/time/TimeDuration.hh"
 #include "karabo/net/InfluxDbClient.hh"
 #include "karabo/util/DataLogUtils.hh"
-#include "karabo/util/TimeDuration.hh"
 
 #define SECONDS_PER_YEAR 365 * 24 * 60 * 60
 
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device, karabo::devices::DataLogger,
                                   karabo::devices::InfluxDataLogger)
-KARABO_REGISTER_IN_FACTORY_1(karabo::devices::DeviceData, karabo::devices::InfluxDeviceData, karabo::util::Hash)
+KARABO_REGISTER_IN_FACTORY_1(karabo::devices::DeviceData, karabo::devices::InfluxDeviceData, karabo::data::Hash)
 
 namespace karabo {
     namespace devices {
@@ -42,17 +42,18 @@ namespace karabo {
         namespace nl = nlohmann;
         using namespace karabo::io;
         using namespace karabo::net;
+        using namespace karabo::data;
         using namespace karabo::util;
         using namespace std::placeholders;
 
 
         const unsigned int InfluxDataLogger::k_httpResponseTimeoutMs = 1500u;
 
-        InfluxDeviceData::InfluxDeviceData(const karabo::util::Hash& input)
+        InfluxDeviceData::InfluxDeviceData(const karabo::data::Hash& input)
             : DeviceData(input),
               m_dbClientRead(input.get<karabo::net::InfluxDbClient::Pointer>("dbClientReadPointer")),
               m_dbClientWrite(input.get<karabo::net::InfluxDbClient::Pointer>("dbClientWritePointer")),
-              m_serializer(karabo::io::BinarySerializer<karabo::util::Hash>::create("Bin")),
+              m_serializer(karabo::io::BinarySerializer<karabo::data::Hash>::create("Bin")),
               m_maxTimeAdvance(input.get<int>("maxTimeAdvance")),
               m_maxVectorSize(input.get<unsigned int>("maxVectorSize")),
               m_maxValueStringSize(input.get<unsigned int>("maxValueStringSize")),
@@ -63,7 +64,7 @@ namespace karabo {
               m_schemaLogRatePeriod(input.get<unsigned int>("schemaLogRatePeriod")),
               m_loggingStartStamp(Epochstamp(0ull, 0ull), 0ull),
               m_safeSchemaRetentionDuration(
-                    TimeDuration{static_cast<karabo::util::TimeValue>(
+                    TimeDuration{static_cast<karabo::data::TimeValue>(
                                        std::round(input.get<double>("safeSchemaRetentionPeriod") * SECONDS_PER_YEAR)),
                                  0ull}) {}
 
@@ -150,7 +151,7 @@ namespace karabo {
         }
 
 
-        void InfluxDeviceData::handleChanged(const karabo::util::Hash& configuration, const std::string& user) {
+        void InfluxDeviceData::handleChanged(const karabo::data::Hash& configuration, const std::string& user) {
             m_dbClientWrite->startDbConnectIfDisconnected();
 
             if (user.empty()) {
@@ -345,7 +346,7 @@ namespace karabo {
         }
 
 
-        void InfluxDeviceData::login(const karabo::util::Hash& configuration,
+        void InfluxDeviceData::login(const karabo::data::Hash& configuration,
                                      const std::vector<std::string>& sortedPaths) {
             // TRICK: 'configuration' is the one requested at the beginning. For devices which have
             // properties with older timestamps than the time of their instantiation (as e.g. read from
@@ -375,7 +376,7 @@ namespace karabo {
 
 
         void InfluxDeviceData::logValue(std::stringstream& query, const std::string& deviceId, const std::string& path,
-                                        const std::string& value, karabo::util::Types::ReferenceType type,
+                                        const std::string& value, karabo::data::Types::ReferenceType type,
                                         bool isFinite) {
             std::string field_value;
             switch (type) {
@@ -476,7 +477,7 @@ namespace karabo {
         }
 
 
-        void InfluxDeviceData::terminateQuery(std::stringstream& query, const karabo::util::Timestamp& stamp,
+        void InfluxDeviceData::terminateQuery(std::stringstream& query, const karabo::data::Timestamp& stamp,
                                               std::vector<RejectedData>& rejectedPathReasons) {
             unsigned long long ts = stamp.toTimestamp() * INFLUX_PRECISION_FACTOR;
             if (!query.str().empty()) {
@@ -502,7 +503,7 @@ namespace karabo {
 
 
         void InfluxDeviceData::logRejectedDatum(const RejectedData& reject) {
-            unsigned long long ts = karabo::util::Timestamp().toTimestamp() * INFLUX_PRECISION_FACTOR;
+            unsigned long long ts = karabo::data::Timestamp().toTimestamp() * INFLUX_PRECISION_FACTOR;
             const auto rejects = std::vector<RejectedData>({reject});
             logRejectedData(rejects, ts);
         }
@@ -547,13 +548,13 @@ namespace karabo {
         }
 
 
-        void InfluxDeviceData::handleSchemaUpdated(const karabo::util::Schema& schema,
-                                                   const karabo::util::Timestamp& stamp) {
+        void InfluxDeviceData::handleSchemaUpdated(const karabo::data::Schema& schema,
+                                                   const karabo::data::Timestamp& stamp) {
             // Before checking client status: enables buffering of property updates in handleChanged:
             m_currentSchema = schema;
 
-            karabo::io::BinarySerializer<karabo::util::Schema>::Pointer serializer =
-                  karabo::io::BinarySerializer<karabo::util::Schema>::create("Bin");
+            karabo::io::BinarySerializer<karabo::data::Schema>::Pointer serializer =
+                  karabo::io::BinarySerializer<karabo::data::Schema>::create("Bin");
             auto archive(std::make_shared<std::vector<char>>());
             // Avoid re-allocations - small devices need around 10'000 bytes, DataLoggerManager almost 20'000
             archive->reserve(20'000);
@@ -581,7 +582,7 @@ namespace karabo {
                   oss.str(), bind_weak(&InfluxDeviceData::onCheckSchemaInDb, this, stamp, schDigest, archive, _1));
         }
 
-        void InfluxDeviceData::onCheckSchemaInDb(const karabo::util::Timestamp& stamp, const std::string& schDigest,
+        void InfluxDeviceData::onCheckSchemaInDb(const karabo::data::Timestamp& stamp, const std::string& schDigest,
                                                  const std::shared_ptr<std::vector<char>>& schemaArchive,
                                                  const HttpResponse& o) {
             // Not running in Strand anymore - take care not to access any potentially changing data members!
@@ -658,12 +659,12 @@ namespace karabo {
                    << schemaDigest.substr(0, 8) << "\",schema_size=" << schemaSize
                    << "i,n_schema_chunks=" << nFullChunks + (lastChunkSize > 0 ? 1 : 0) << "i";
                 for (int i = 0; i < nFullChunks; i++) {
-                    ss << ",schema" << (i > 0 ? "_" + karabo::util::toString(i) : "") << "=\""
+                    ss << ",schema" << (i > 0 ? "_" + karabo::data::toString(i) : "") << "=\""
                        << string_view(base64Schema.data() + (i * m_maxValueStringSize), m_maxValueStringSize) << "\"";
                 }
                 if (lastChunkSize > 0) {
                     // Write the last chunk of the schema.
-                    ss << ",schema" << (nFullChunks > 0 ? "_" + karabo::util::toString(nFullChunks) : "") << "=\""
+                    ss << ",schema" << (nFullChunks > 0 ? "_" + karabo::data::toString(nFullChunks) : "") << "=\""
                        << string_view(base64Schema.data() + (nFullChunks * m_maxValueStringSize), lastChunkSize)
                        << "\"";
                 }
@@ -691,7 +692,7 @@ namespace karabo {
         }
 
 
-        void InfluxDataLogger::expectedParameters(karabo::util::Schema& expected) {
+        void InfluxDataLogger::expectedParameters(karabo::data::Schema& expected) {
             OVERWRITE_ELEMENT(expected)
                   .key("state")
                   .setNewOptions(State::INIT, State::ON, State::ERROR)
@@ -833,7 +834,7 @@ namespace karabo {
         }
 
 
-        InfluxDataLogger::InfluxDataLogger(const karabo::util::Hash& input)
+        InfluxDataLogger::InfluxDataLogger(const karabo::data::Hash& input)
             : DataLogger(input), m_dbName(input.get<std::string>("dbname")) {
             // We have to work in cluster environment where we have 2 nodes and proxy
             // that runs 'telegraf' working as a proxy and load balancer
@@ -919,7 +920,7 @@ namespace karabo {
         }
 
 
-        DeviceData::Pointer InfluxDataLogger::createDeviceData(const karabo::util::Hash& cfg) {
+        DeviceData::Pointer InfluxDataLogger::createDeviceData(const karabo::data::Hash& cfg) {
             Hash config = cfg;
             config.set("dbClientReadPointer", m_clientRead);
             config.set("dbClientWritePointer", m_clientWrite);
@@ -932,7 +933,7 @@ namespace karabo {
             config.set("schemaLogRatePeriod", get<unsigned int>("schemaLogRatePeriod"));
             config.set("safeSchemaRetentionPeriod", get<double>("safeSchemaRetentionPeriod"));
             DeviceData::Pointer deviceData =
-                  Factory<DeviceData>::create<karabo::util::Hash>("InfluxDataLoggerDeviceData", config);
+                  Factory<DeviceData>::create<karabo::data::Hash>("InfluxDataLoggerDeviceData", config);
             return deviceData;
         }
 

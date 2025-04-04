@@ -28,87 +28,11 @@
 #include <functional>
 #include <iostream>
 #include <memory>
-#include <type_traits>
 #include <utility>
 
 
 namespace karabo {
     namespace util {
-
-        class Hash;
-
-        template <class T>
-        struct is_shared_ptr : std::false_type {};
-
-        template <class T>
-        struct is_shared_ptr<std::shared_ptr<T>> : std::true_type {};
-
-        /**
-         * Conditionally cast a type to Hash, if Hash is a base class, but
-         * disallow this for shared pointers of these types. Will result in
-         * a compiler error if this is attempted.
-         *
-         * Any type not derived from Hash is simply returned as is.
-         */
-        template <typename is_hash_base>
-        struct conditional_hash_cast {
-            // Here is for T deriving from Hash or Hash itself,
-            // below is the specialisation for is_hash_base = std::false_type.
-
-            template <typename T>
-            static const Hash& cast(const T& v) {
-                return reinterpret_cast<const Hash&>(v);
-            }
-
-            template <typename T>
-            static Hash&& cast(T&& v) {
-                // Following line works fine in Ubuntu20 (gcc9.3), but does not compile on CentOS7gcc7 and Ubuntu18
-                // (also gcc7) with "invalid cast of an rvalue expression of type ‘karabo::util::NDArray’ to type
-                // ‘karabo::util::Hash&&’" from 'Hash::set(somekey, NDArray(..)) in PropertyTest::writeOutput(..).
-                // return reinterpret_cast<Hash&&> (std::forward<T>(v));
-                T&& vTemp = static_cast<T&&>(std::forward<T>(v));
-                return reinterpret_cast<Hash&&>(vTemp);
-            }
-
-            template <typename T>
-            static Hash& cast(T& v) {
-                return reinterpret_cast<Hash&>(v);
-            }
-
-            static Hash& cast(Hash& v) {
-                return v;
-            }
-
-            static Hash&& cast(Hash&& v) {
-                return std::move(v);
-            }
-
-            static const Hash& cast(const Hash& v) {
-                return v;
-            }
-
-            template <typename T>
-            static const std::shared_ptr<T> cast(const std::shared_ptr<T>& v) {
-                // if the compiler ever reaches this point compilation is to fail on purpose, as
-                // we only support explicit setting of Hash::Pointer to the Hash
-
-                // is_hash_base: will always be std::true_type when dealing
-                // with types derived from Hash, i.e in the context of this
-                // template method evaluation.
-                static_assert(std::is_same<is_hash_base, std::false_type>::value, // this evaluates false
-                              "Inserting derived hash classes as pointers is not supported");
-                return v;
-            }
-        };
-
-
-        template <>
-        struct conditional_hash_cast<std::false_type> {
-            template <typename T>
-            static T&& cast(T&& v) {
-                return std::forward<T>(v);
-            }
-        };
 
         /**
          * Helper functions to compile-time distinguish if a dynamic_cast is needed.

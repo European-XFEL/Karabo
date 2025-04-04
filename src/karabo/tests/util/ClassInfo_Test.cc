@@ -18,7 +18,7 @@
 
 #include "ClassInfo_Test.hh"
 
-#include "karabo/util/ClassInfo.hh"
+#include "karabo/data/types/ClassInfo.hh"
 
 CPPUNIT_TEST_SUITE_REGISTRATION(ClassInfo_Test);
 

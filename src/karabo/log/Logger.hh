@@ -41,27 +41,27 @@
 #include <unordered_set>
 
 #include "LoggerStream.hh"
-#include "karabo/util/Configurator.hh"
-#include "karabo/util/Exception.hh"
-#include "karabo/util/Hash.hh"
-#include "karabo/util/Schema.hh"
+#include "karabo/data/schema/Configurator.hh"
+#include "karabo/data/types/Exception.hh"
+#include "karabo/data/types/Hash.hh"
+#include "karabo/data/types/Schema.hh"
 #include "utils.hh"
 
 #define KARABO_AUDIT_LOGGER "audit_logger"
 
 // Support Hash formatting
 template <>
-struct fmt::formatter<karabo::util::Hash> : fmt::formatter<std::string> {
-    auto format(const karabo::util::Hash& hash, format_context& ctx) const -> decltype(ctx.out()) {
-        return fmt::format_to(ctx.out(), "\n{}", karabo::util::toString(hash));
+struct fmt::formatter<karabo::data::Hash> : fmt::formatter<std::string> {
+    auto format(const karabo::data::Hash& hash, format_context& ctx) const -> decltype(ctx.out()) {
+        return fmt::format_to(ctx.out(), "\n{}", karabo::data::toString(hash));
     }
 };
 
 // Support Schema formatting
 template <>
-struct fmt::formatter<karabo::util::Schema> : fmt::formatter<std::string> {
-    auto format(const karabo::util::Schema& schema, format_context& ctx) const -> decltype(ctx.out()) {
-        return fmt::format_to(ctx.out(), "\n{}", karabo::util::toString(schema));
+struct fmt::formatter<karabo::data::Schema> : fmt::formatter<std::string> {
+    auto format(const karabo::data::Schema& schema, format_context& ctx) const -> decltype(ctx.out()) {
+        return fmt::format_to(ctx.out(), "\n{}", karabo::data::toString(schema));
     }
 };
 
@@ -73,10 +73,10 @@ struct fmt::formatter<std::filesystem::path> : fmt::formatter<std::string> {
     }
 };
 
-// Support karabo::util::Exception formatting
+// Support karabo::data::Exception formatting
 template <>
-struct fmt::formatter<karabo::util::Exception> : fmt::formatter<std::string> {
-    auto format(karabo::util::Exception e, format_context& ctx) const -> decltype(ctx.out()) {
+struct fmt::formatter<karabo::data::Exception> : fmt::formatter<std::string> {
+    auto format(karabo::data::Exception e, format_context& ctx) const -> decltype(ctx.out()) {
         return fmt::format_to(ctx.out(), "{}", e.detailedMsg());
     }
 };
@@ -107,13 +107,13 @@ namespace karabo {
 
             virtual ~Logger() = default;
 
-            static void expectedParameters(karabo::util::Schema& expected);
+            static void expectedParameters(karabo::data::Schema& expected);
 
             /**
              * Static method allowing to configure the three appenders and the default priority level
              * @param config A hash which must follow the Schema described in the expectedParameters method
              */
-            static void configure(const karabo::util::Hash& config);
+            static void configure(const karabo::data::Hash& config);
 
             /**
              * Enables the cache sink for the specified logger.
@@ -160,7 +160,7 @@ namespace karabo {
              */
             template <typename... Args>
             static void trace(const std::string& name, spdlog::format_string_t<Args...> fmt, Args&&... args) {
-                if (!m_instance) Logger::configure(karabo::util::Hash());
+                if (!m_instance) Logger::configure(karabo::data::Hash());
                 if (name == KARABO_AUDIT_LOGGER) {
                     if (!spdlog::get(KARABO_AUDIT_LOGGER)) {
                         throw KARABO_PARAMETER_EXCEPTION(std::string("Do not use reserved logger name: ") +
@@ -185,7 +185,7 @@ namespace karabo {
              */
             template <typename... Args>
             static void debug(const std::string& name, spdlog::format_string_t<Args...> fmt, Args&&... args) {
-                if (!m_instance) Logger::configure(karabo::util::Hash());
+                if (!m_instance) Logger::configure(karabo::data::Hash());
                 if (name == KARABO_AUDIT_LOGGER) {
                     if (!spdlog::get(KARABO_AUDIT_LOGGER)) {
                         throw KARABO_PARAMETER_EXCEPTION(std::string("Do not use reserved logger name: ") +
@@ -209,7 +209,7 @@ namespace karabo {
              */
             template <typename... Args>
             static void info(const std::string& name, spdlog::format_string_t<Args...> fmt, Args&&... args) {
-                if (!m_instance) Logger::configure(karabo::util::Hash());
+                if (!m_instance) Logger::configure(karabo::data::Hash());
                 if (name == KARABO_AUDIT_LOGGER) {
                     if (!spdlog::get(KARABO_AUDIT_LOGGER)) {
                         throw KARABO_PARAMETER_EXCEPTION(std::string("Do not use reserved logger name: ") +
@@ -233,7 +233,7 @@ namespace karabo {
              */
             template <typename... Args>
             static void warn(const std::string& name, spdlog::format_string_t<Args...> fmt, Args&&... args) {
-                if (!m_instance) Logger::configure(karabo::util::Hash());
+                if (!m_instance) Logger::configure(karabo::data::Hash());
                 if (name == KARABO_AUDIT_LOGGER) {
                     if (!spdlog::get(KARABO_AUDIT_LOGGER)) {
                         throw KARABO_PARAMETER_EXCEPTION(std::string("Do not use reserved logger name: ") +
@@ -257,7 +257,7 @@ namespace karabo {
              */
             template <typename... Args>
             static void error(const std::string& name, spdlog::format_string_t<Args...> fmt, Args&&... args) {
-                if (!m_instance) Logger::configure(karabo::util::Hash());
+                if (!m_instance) Logger::configure(karabo::data::Hash());
                 if (name == KARABO_AUDIT_LOGGER) {
                     if (!spdlog::get(KARABO_AUDIT_LOGGER)) {
                         throw KARABO_PARAMETER_EXCEPTION(std::string("Do not use reserved logger name: ") +
@@ -315,7 +315,7 @@ namespace karabo {
             /**
              * Get (log) messages in internal ringbuffer
              */
-            static std::vector<karabo::util::Hash> getCachedContent(size_t lim);
+            static std::vector<karabo::data::Hash> getCachedContent(size_t lim);
 
             static std::shared_ptr<spdlog::logger> getCategory(const std::string& name);
 
@@ -330,7 +330,7 @@ namespace karabo {
            private:
             Logger() = default;
             static std::shared_ptr<Logger> m_instance;
-            static karabo::util::Hash m_config;
+            static karabo::data::Hash m_config;
             static std::shared_ptr<spdlog::logger> m_audit;
             static std::shared_ptr<spdlog::sinks::ringbuffer_sink_mt> m_ring;
             static int m_sinks;

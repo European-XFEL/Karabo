@@ -29,14 +29,14 @@
 #include <karabo/io/HashXmlSerializer.hh>
 #include <vector>
 
+#include "karabo/data/schema/GenericElement.hh"
+#include "karabo/data/schema/SimpleElement.hh"
 #include "karabo/io/BinarySerializer.hh"
-#include "karabo/util/GenericElement.hh"
-#include "karabo/util/SimpleElement.hh"
 
 CPPUNIT_TEST_SUITE_REGISTRATION(HashXmlSerializer_Test);
 
 using namespace karabo::io;
-using namespace karabo::util;
+using namespace karabo::data;
 using std::string;
 using std::vector;
 
@@ -205,7 +205,7 @@ void HashXmlSerializer_Test::testSerialization() {
         KARABO_LOG_FRAMEWORK_DEBUG << "Average de-serialization big Hash: " << time_elapsed_ms << " ms";
 
         Hash& h = vecH[0];
-        CPPUNIT_ASSERT(karabo::util::similar(m_bigHash, h) == true);
+        CPPUNIT_ASSERT(karabo::data::similar(m_bigHash, h) == true);
 
         p->save(h, archive2);
         CPPUNIT_ASSERT(archive1 == archive2);

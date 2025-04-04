@@ -37,7 +37,7 @@ namespace karabind {
 
     // clang-format off
     FromNumpy::FromNumpy() {
-#define _KARABO_HELPER_MACRO(fromType, refType) { fromType, karabo::util::Types::refType }
+#define _KARABO_HELPER_MACRO(fromType, refType) { fromType, karabo::data::Types::refType }
         // clang-format on
         _typeInfoMap = {_KARABO_HELPER_MACRO(py::detail::npy_api::NPY_BOOL_, BOOL),
                         _KARABO_HELPER_MACRO(py::detail::npy_api::NPY_BYTE_, INT8),

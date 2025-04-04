@@ -24,16 +24,21 @@
 
 #include "HashFilter_Test.hh"
 
-#include <karabo/io.hpp>
-#include <karabo/util.hpp>
-#include <karabo/util/State.hh>
+#include "karabo/data/schema/ChoiceElement.hh"
+#include "karabo/data/schema/NodeElement.hh"
+#include "karabo/data/schema/SimpleElement.hh"
+#include "karabo/data/schema/TableElement.hh"
+#include "karabo/data/types/Hash.hh"
+#include "karabo/data/types/HashFilter.hh"
+#include "karabo/data/types/State.hh"
+#include "karabo/log/Logger.hh"
 
 CPPUNIT_TEST_SUITE_REGISTRATION(HashFilter_Test);
 
 
 namespace hashfilter {
 
-    using namespace karabo::util;
+    using namespace karabo::data;
 
 
     struct Base {
@@ -52,7 +57,7 @@ namespace hashfilter {
         KARABO_CLASSINFO(P1, "P1", "1.0");
 
 
-        static void expectedParameters(karabo::util::Schema& expected) {
+        static void expectedParameters(karabo::data::Schema& expected) {
             STRING_ELEMENT(expected)
                   .key("a")
                   .description("a")
@@ -137,7 +142,7 @@ namespace hashfilter {
         KARABO_CLASSINFO(P2, "P2", "1.0");
 
 
-        static void expectedParameters(karabo::util::Schema& expected) {
+        static void expectedParameters(karabo::data::Schema& expected) {
             STRING_ELEMENT(expected)
                   .key("x")
                   .description("x")
@@ -187,7 +192,7 @@ namespace hashfilter {
         KARABO_CLASSINFO(P3, "P3", "1.0");
 
 
-        static void expectedParameters(karabo::util::Schema& expected) {
+        static void expectedParameters(karabo::data::Schema& expected) {
             STRING_ELEMENT(expected)
                   .key("k")
                   .description("k")
@@ -238,7 +243,7 @@ namespace hashfilter {
         KARABO_CONFIGURATION_BASE_CLASS;
 
 
-        static void expectedParameters(karabo::util::Schema& expected) {
+        static void expectedParameters(karabo::data::Schema& expected) {
             BOOL_ELEMENT(expected)
                   .key("antiAlias")
                   .tags("NC")
@@ -383,12 +388,12 @@ namespace hashfilter {
                   .tags("LM") // The tags for the "whole" TableElement CAN work like for other parameters
                   .setColumns(data)
                   .assignmentOptional()
-                  .defaultValue(std::vector<karabo::util::Hash>())
+                  .defaultValue(std::vector<karabo::data::Hash>())
                   .commit();
         }
 
 
-        GraphicsRenderer2(const karabo::util::Hash& input) {}
+        GraphicsRenderer2(const karabo::data::Hash& input) {}
 
 
         virtual ~GraphicsRenderer2() {}
@@ -400,7 +405,6 @@ namespace hashfilter {
 
 using namespace hashfilter;
 using namespace std;
-using namespace karabo::io;
 
 
 KARABO_REGISTER_FOR_CONFIGURATION(Base, P1);
@@ -565,8 +569,8 @@ void HashFilter_Test::testFilterByTag() {
         CPPUNIT_ASSERT(result.has("table") == false);
 
 
-    } catch (const karabo::util::Exception& e) {
-        KARABO_LOG_FRAMEWORK_DEBUG << e;
+    } catch (const karabo::data::Exception& e) {
+        KARABO_LOG_FRAMEWORK_WARN_C("HashFilter_Test") << e;
     }
 }
 
@@ -580,9 +584,9 @@ void HashFilter_Test::testFilterByAccessMode() {
         validator.validate(schema, Hash(), config);
 
         Hash result;
-        HashFilter::byAccessMode(schema, config, result, karabo::util::INIT);
+        HashFilter::byAccessMode(schema, config, result, karabo::data::INIT);
 
-        KARABO_LOG_FRAMEWORK_DEBUG << "\nINIT ...\n" << result;
+        KARABO_LOG_FRAMEWORK_DEBUG_C("HashFilter_Test") << "\nINIT ...\n" << result;
 
         CPPUNIT_ASSERT(result.has("antiAlias") == true);
         CPPUNIT_ASSERT(result.has("color") == false);
@@ -603,9 +607,9 @@ void HashFilter_Test::testFilterByAccessMode() {
         CPPUNIT_ASSERT(result.has("table") == true);
 
         result.clear();
-        HashFilter::byAccessMode(schema, config, result, karabo::util::READ);
+        HashFilter::byAccessMode(schema, config, result, karabo::data::READ);
 
-        KARABO_LOG_FRAMEWORK_DEBUG << "\nREAD ...\n" << result;
+        KARABO_LOG_FRAMEWORK_DEBUG_C("HashFilter_Test") << "\nREAD ...\n" << result;
 
 
         CPPUNIT_ASSERT(result.has("antiAlias") == false);
@@ -628,9 +632,9 @@ void HashFilter_Test::testFilterByAccessMode() {
 
 
         result.clear();
-        HashFilter::byAccessMode(schema, config, result, karabo::util::WRITE);
+        HashFilter::byAccessMode(schema, config, result, karabo::data::WRITE);
 
-        KARABO_LOG_FRAMEWORK_DEBUG << "\nWRITE ...\n" << result;
+        KARABO_LOG_FRAMEWORK_DEBUG_C("HashFilter_Test") << "\nWRITE ...\n" << result;
 
 
         CPPUNIT_ASSERT(result.has("antiAlias") == false);
@@ -651,8 +655,8 @@ void HashFilter_Test::testFilterByAccessMode() {
         CPPUNIT_ASSERT(result.has("state") == false);
         CPPUNIT_ASSERT(result.has("table") == false);
 
-    } catch (const karabo::util::Exception& e) {
-        KARABO_LOG_FRAMEWORK_DEBUG << e;
+    } catch (const karabo::data::Exception& e) {
+        KARABO_LOG_FRAMEWORK_WARN_C("HashFilter_Test") << e;
     }
 }
 
@@ -682,17 +686,14 @@ void HashFilter_Test::testHdf5Filter() {
 
     try {
         Hash h5Config = dataFormat->getConfig();
-        KARABO_LOG_FRAMEWORK_DEBUG << "original\n" << h5Config;
         Schema schema = h5::Format::getSchema("Format");
-        //        KARABO_LOG_FRAMEWORK_DEBUG << "schema: \n" << schema.getParameterHash1();
 
         Hash result;
         HashFilter::byTag(schema, h5Config.get<Hash>("Format"), result, "persistent");
 
-        KARABO_LOG_FRAMEWORK_DEBUG << "permanent: \n" << result;
 
-    } catch (const karabo::util::Exception& e) {
-        KARABO_LOG_FRAMEWORK_DEBUG << e;
+    } catch (const karabo::data::Exception& e) {
+        KARABO_LOG_FRAMEWORK_WARN_C("HashFilter_Test") << e;
     }
 }
 #endif

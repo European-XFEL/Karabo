@@ -26,18 +26,18 @@
 
 #include <cstdlib>
 #include <iostream>
-#include <karabo/util/FromInt.hh>
-#include <karabo/util/FromLiteral.hh>
-#include <karabo/util/FromTypeInfo.hh>
-#include <karabo/util/ToLiteral.hh>
-#include <karabo/util/Types.hh>
 
-#include "karabo/util/ToCppString.hh"
+#include "karabo/data/types/FromInt.hh"
+#include "karabo/data/types/FromLiteral.hh"
+#include "karabo/data/types/FromTypeInfo.hh"
+#include "karabo/data/types/ToCppString.hh"
+#include "karabo/data/types/ToLiteral.hh"
+#include "karabo/data/types/Types.hh"
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Types_Test);
 
 using namespace std;
-using namespace karabo::util;
+using namespace karabo::data;
 
 
 Types_Test::Types_Test() {}

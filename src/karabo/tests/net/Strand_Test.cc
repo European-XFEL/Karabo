@@ -28,19 +28,19 @@
 
 #include "Strand_Test.hh"
 #include "boost/asio/deadline_timer.hpp"
+#include "karabo/data/schema/Configurator.hh"
+#include "karabo/data/time/Epochstamp.hh"
+#include "karabo/data/time/TimeDuration.hh"
 #include "karabo/net/EventLoop.hh"
-#include "karabo/util/Configurator.hh"
-#include "karabo/util/Epochstamp.hh"
-#include "karabo/util/TimeDuration.hh"
 
 using namespace std::chrono;
 using namespace std::literals::chrono_literals;
+using karabo::data::Configurator;
+using karabo::data::Epochstamp;
+using karabo::data::Hash;
+using karabo::data::TimeDuration;
 using karabo::net::EventLoop;
 using karabo::net::Strand;
-using karabo::util::Configurator;
-using karabo::util::Epochstamp;
-using karabo::util::Hash;
-using karabo::util::TimeDuration;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Strand_Test);
 
@@ -111,7 +111,7 @@ void Strand_Test::testSequential() {
     }
 
     CPPUNIT_ASSERT(numTest > 0);
-    CPPUNIT_ASSERT(duration.getTotalSeconds() * 1000ull + duration.getFractions(karabo::util::MILLISEC) // total ms
+    CPPUNIT_ASSERT(duration.getTotalSeconds() * 1000ull + duration.getFractions(karabo::data::MILLISEC) // total ms
                    >= numPosts * sleepTimeMs);
 }
 

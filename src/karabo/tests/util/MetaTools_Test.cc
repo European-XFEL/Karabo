@@ -30,6 +30,7 @@
 
 CPPUNIT_TEST_SUITE_REGISTRATION(MetaTools_Test);
 
+using namespace karabo::data;
 using namespace karabo::util;
 
 using std::placeholders::_1;

@@ -24,9 +24,9 @@
 
 #include "ByteSwap_Test.hh"
 
-#include <karabo/util/ByteSwap.hh>
+#include "karabo/data/types/ByteSwap.hh"
 
-using namespace karabo::util;
+using namespace karabo::data;
 using namespace std;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(ByteSwap_Test);

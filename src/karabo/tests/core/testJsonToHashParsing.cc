@@ -2,7 +2,7 @@
 
 #include <karabo/karabo.hpp>
 
-using karabo::util::Hash;
+using karabo::data::Hash;
 
 
 namespace karabo {

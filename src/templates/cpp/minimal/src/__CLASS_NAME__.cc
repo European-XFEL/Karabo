@@ -14,27 +14,27 @@
 
 #include "__CLASS_NAME__.hh"
 
+#include "karabo/data/schema/NodeElement.hh"
+#include "karabo/data/schema/OverwriteElement.hh"
+#include "karabo/data/schema/SimpleElement.hh"
+#include "karabo/data/schema/TableElement.hh"
+#include "karabo/data/schema/VectorElement.hh"
+#include "karabo/data/types/Exception.hh"
+#include "karabo/data/types/State.hh"
+#include "karabo/data/types/Units.hh"
 #include "karabo/net/EventLoop.hh"
-#include "karabo/util/Exception.hh"
-#include "karabo/util/NodeElement.hh"
-#include "karabo/util/OverwriteElement.hh"
-#include "karabo/util/SimpleElement.hh"
-#include "karabo/util/State.hh"
-#include "karabo/util/TableElement.hh"
-#include "karabo/util/Units.hh"
-#include "karabo/util/VectorElement.hh"
 #include "karabo/xms/SlotElement.hh"
 
 
 namespace karabo {
 
-    KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, __CLASS_NAME__)
+    KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device, __CLASS_NAME__)
 
-    void __CLASS_NAME__::expectedParameters(karabo::util::Schema& expected) {
+    void __CLASS_NAME__::expectedParameters(karabo::data::Schema& expected) {
         // Define device schema here, i.e. properties, slots and Input-/OutputChannels
     }
 
-    __CLASS_NAME__::__CLASS_NAME__(const karabo::util::Hash& config) : karabo::core::Device<>(config) {
+    __CLASS_NAME__::__CLASS_NAME__(const karabo::data::Hash& config) : karabo::core::Device(config) {
         // If the device provides slots (remotely callable methods), add them here.
         // If they should be clickable from the GUI, they have to be added to the schema
         // in expectedParameters in addition.
@@ -47,7 +47,7 @@ namespace karabo {
     __CLASS_NAME__::~__CLASS_NAME__() {}
 
 
-    void __CLASS_NAME__::preReconfigure(karabo::util::Hash& incomingReconfiguration) {}
+    void __CLASS_NAME__::preReconfigure(karabo::data::Hash& incomingReconfiguration) {}
 
 
     void __CLASS_NAME__::postReconfigure() {}
@@ -55,7 +55,7 @@ namespace karabo {
     void __CLASS_NAME__::initialize() {
         // For any InputChannel (e.g. "input") defined in expectedParameters, register
         // a data processing function here. Signature of member function onData should be
-        // void onData(const karabo::util::Hash& data, const karabo::xms::InputChannel::MetaData& meta)
+        // void onData(const karabo::data::Hash& data, const karabo::xms::InputChannel::MetaData& meta)
         // KARABO_ON_DATA("input", onData);
 
         // TODO: add any initialization required after the device has been

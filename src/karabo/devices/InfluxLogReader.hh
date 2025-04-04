@@ -31,16 +31,16 @@
 
 #include "DataLogReader.hh"
 #include "karabo/core/Device.hh"
+#include "karabo/data/time/Epochstamp.hh"
+#include "karabo/data/time/TimeDuration.hh"
+#include "karabo/data/types/ClassInfo.hh"
+#include "karabo/data/types/Hash.hh"
+#include "karabo/data/types/Schema.hh"
+#include "karabo/data/types/Types.hh"
 #include "karabo/io/BinarySerializer.hh"
 #include "karabo/net/HttpResponse.hh"
 #include "karabo/net/InfluxDbClient.hh"
-#include "karabo/util/ClassInfo.hh"
 #include "karabo/util/DataLogUtils.hh"
-#include "karabo/util/Epochstamp.hh"
-#include "karabo/util/Hash.hh"
-#include "karabo/util/Schema.hh"
-#include "karabo/util/TimeDuration.hh"
-#include "karabo/util/Types.hh"
 #include "karabo/util/Version.hh"
 #include "karabo/xms/SignalSlotable.hh"
 
@@ -51,14 +51,14 @@ namespace karabo {
         // Context of an ongoing slotGetPropertyHistory process.
         struct PropertyHistoryContext {
             PropertyHistoryContext(const std::string& deviceId, const std::string& property,
-                                   const karabo::util::Epochstamp& from, const karabo::util::Epochstamp& to,
+                                   const karabo::data::Epochstamp& from, const karabo::data::Epochstamp& to,
                                    int maxDataPoints, const karabo::xms::SignalSlotable::AsyncReply& aReply,
                                    const karabo::net::InfluxDbClient::Pointer& influxClient);
 
             std::string deviceId;
             std::string property;
-            karabo::util::Epochstamp from;
-            karabo::util::Epochstamp to;
+            karabo::data::Epochstamp from;
+            karabo::data::Epochstamp to;
             unsigned int maxDataPoints;
             karabo::xms::SignalSlotable::AsyncReply aReply;
             karabo::net::InfluxDbClient::Pointer influxClient;
@@ -69,28 +69,28 @@ namespace karabo {
 
 
         struct PropFromPastInfo {
-            PropFromPastInfo(const std::string& name, const karabo::util::Types::ReferenceType type,
+            PropFromPastInfo(const std::string& name, const karabo::data::Types::ReferenceType type,
                              bool infiniteOrNan);
 
             std::string name;
-            karabo::util::Types::ReferenceType type;
+            karabo::data::Types::ReferenceType type;
             bool infiniteOrNan;
         };
 
 
         // Context of an ongoing slotGetConfigurationFromPast process.
         struct ConfigFromPastContext {
-            ConfigFromPastContext(const std::string& deviceId, const karabo::util::Epochstamp& atTime,
+            ConfigFromPastContext(const std::string& deviceId, const karabo::data::Epochstamp& atTime,
                                   const karabo::xms::SignalSlotable::AsyncReply& aReply,
                                   const karabo::net::InfluxDbClient::Pointer& influxClient);
 
             std::string deviceId;
-            karabo::util::Epochstamp atTime;
-            karabo::util::Epochstamp configTimePoint;
+            karabo::data::Epochstamp atTime;
+            karabo::data::Epochstamp configTimePoint;
             unsigned long long lastLoginBeforeTime;
             unsigned long long lastLogoutBeforeTime;
-            karabo::util::Schema configSchema;
-            karabo::util::Hash configHash;
+            karabo::data::Schema configSchema;
+            karabo::data::Hash configHash;
             // Log format version: version 1 introduces truncation of property
             // timestamps in the past - those past timestamp are replaced with
             // the timestamp of the start of the current lifetime of the device
@@ -109,15 +109,15 @@ namespace karabo {
            public:
             KARABO_CLASSINFO(InfluxLogReader, "InfluxLogReader", "karabo-" + karabo::util::Version::getVersion())
 
-            static void expectedParameters(karabo::util::Schema& expected);
+            static void expectedParameters(karabo::data::Schema& expected);
 
-            explicit InfluxLogReader(const karabo::util::Hash& cfg);
+            explicit InfluxLogReader(const karabo::data::Hash& cfg);
 
             ~InfluxLogReader();
 
            protected:
             void slotGetPropertyHistoryImpl(const std::string& deviceId, const std::string& property,
-                                            const karabo::util::Hash& params) override;
+                                            const karabo::data::Hash& params) override;
 
             void slotGetConfigurationFromPastImpl(const std::string& deviceId, const std::string& timepoint) override;
 
@@ -222,11 +222,11 @@ namespace karabo {
                               const karabo::net::InfluxDbClient::Pointer& /* influxClient */);
 
             void influxResultSetToVectorHash(const karabo::util::InfluxResultSet& influxResult,
-                                             std::vector<karabo::util::Hash>& vectHash);
+                                             std::vector<karabo::data::Hash>& vectHash);
 
-            void addNodeToHash(karabo::util::Hash& hash, const std::string& path,
-                               const karabo::util::Types::ReferenceType& type, unsigned long long trainId,
-                               const karabo::util::Epochstamp& epoch, const std::string& valueAsString);
+            void addNodeToHash(karabo::data::Hash& hash, const std::string& path,
+                               const karabo::data::Types::ReferenceType& type, unsigned long long trainId,
+                               const karabo::data::Epochstamp& epoch, const std::string& valueAsString);
 
             /**
              * Unescapes a logged string. A logged string has its new lines mangled, then its double slashes
@@ -265,7 +265,7 @@ namespace karabo {
             /**
              * Convert a time point from influx to karabo Epochstamp
              */
-            karabo::util::Epochstamp toEpoch(unsigned long long timeFromInflux) const;
+            karabo::data::Epochstamp toEpoch(unsigned long long timeFromInflux) const;
 
             /**
              * Builds and returns the configuration Hash for instantiating an InfluxDbClient to
@@ -276,7 +276,7 @@ namespace karabo {
              *
              * @returns the configuration Hash for the InfluxDbClient.
              */
-            karabo::util::Hash buildInfluxClientConfig(const std::string& dbUrlForSlot) const;
+            karabo::data::Hash buildInfluxClientConfig(const std::string& dbUrlForSlot) const;
 
             std::string m_dbName;
             std::string m_dbUser;
@@ -284,14 +284,14 @@ namespace karabo {
             std::string m_durationUnit;
             std::string m_urlConfigSchema;
             std::string m_urlPropHistory;
-            karabo::io::BinarySerializer<karabo::util::Hash>::Pointer m_hashSerializer;
-            karabo::io::BinarySerializer<karabo::util::Schema>::Pointer m_schemaSerializer;
+            karabo::io::BinarySerializer<karabo::data::Hash>::Pointer m_hashSerializer;
+            karabo::io::BinarySerializer<karabo::data::Schema>::Pointer m_schemaSerializer;
             int m_maxHistorySize;
 
             static const unsigned long kFracConversionFactor;
             static const int kMaxHistorySize;
             // Maximum delay, in seconds, assumed for data written to Influx to be available for reading.
-            static const karabo::util::TimeValue kMaxInfluxDataDelaySecs;
+            static const karabo::data::TimeValue kMaxInfluxDataDelaySecs;
             const std::unordered_set<std::string> kNumberTypes;
         };
 

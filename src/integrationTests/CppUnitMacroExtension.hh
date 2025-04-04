@@ -29,8 +29,8 @@
 #include <string>
 #include <vector>
 
-#include "karabo/util/Hash.hh"
-#include "karabo/util/StringTools.hh"
+#include "karabo/data/types/Hash.hh"
+#include "karabo/data/types/StringTools.hh"
 
 // Enable CPPUNIT_ASSERT_EQUAL for vectors and special case Hash and vector<Hash>.
 // Special Hash treatment is needed because Hash::operator==(Hash) only compares paths
@@ -39,13 +39,13 @@
 namespace CppUnit {
 
     template <>
-    struct assertion_traits<karabo::util::Hash> {
-        static bool equal(const karabo::util::Hash& a, const karabo::util::Hash& b) {
+    struct assertion_traits<karabo::data::Hash> {
+        static bool equal(const karabo::data::Hash& a, const karabo::data::Hash& b) {
             // Unfortunately, Hash::operator==(const Hash&) just checks similarity...
             return a.fullyEquals(b);
         }
 
-        static std::string toString(const karabo::util::Hash& p) {
+        static std::string toString(const karabo::data::Hash& p) {
             std::ostringstream o;
             o << p << std::endl;
             return o.str();
@@ -55,8 +55,8 @@ namespace CppUnit {
 
 #ifndef NO_VECTOR_HASH_ASSERTION_TRAITS
     template <>
-    struct assertion_traits<std::vector<karabo::util::Hash>> {
-        static bool equal(const std::vector<karabo::util::Hash>& a, const std::vector<karabo::util::Hash>& b) {
+    struct assertion_traits<std::vector<karabo::data::Hash>> {
+        static bool equal(const std::vector<karabo::data::Hash>& a, const std::vector<karabo::data::Hash>& b) {
             if (a.size() != b.size()) {
                 return false;
             }
@@ -68,11 +68,11 @@ namespace CppUnit {
             return true;
         }
 
-        static std::string toString(const std::vector<karabo::util::Hash>& p) {
+        static std::string toString(const std::vector<karabo::data::Hash>& p) {
             std::ostringstream o;
             o << "(\n";
             for (size_t i = 0; i < p.size(); ++i) {
-                o << '[' << i << "]:\n" << karabo::util::toString(p[i]);
+                o << '[' << i << "]:\n" << karabo::data::toString(p[i]);
             }
             o << ")";
             return o.str();
@@ -87,7 +87,7 @@ namespace CppUnit {
         }
 
         static std::string toString(const std::vector<unsigned char>& p) {
-            // Cannot use 'return karabo::util::toString(p)' since that uses base64 encoding
+            // Cannot use 'return karabo::data::toString(p)' since that uses base64 encoding
             std::ostringstream o;
             o << "'";
             for (const unsigned char& e : p) {
@@ -105,7 +105,7 @@ namespace CppUnit {
         }
 
         static std::string toString(const std::vector<T>& p) {
-            return karabo::util::toString(p);
+            return karabo::data::toString(p);
         }
     };
 } // namespace CppUnit

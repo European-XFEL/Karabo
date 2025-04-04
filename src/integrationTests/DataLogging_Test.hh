@@ -108,7 +108,7 @@ class DataLogging_Test : public BaseLogging_Test {
     void testFailingManager();
 
     bool m_dataWasMigrated = false;
-    karabo::util::Epochstamp m_fileMigratedDataEndsBefore;
+    karabo::data::Epochstamp m_fileMigratedDataEndsBefore;
 };
 
 #endif /* DATALOGGING_TEST_HH */

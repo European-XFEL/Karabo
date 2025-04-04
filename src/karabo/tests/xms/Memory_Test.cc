@@ -24,7 +24,7 @@
 
 #include "Memory_Test.hh"
 
-using namespace karabo::util;
+using namespace karabo::data;
 using namespace karabo::xms;
 
 
@@ -53,7 +53,7 @@ void Memory_Test::testSimpleReadAndWrite() {
     Hash readData;
 
     {
-        Memory::write(data, m_channelId, m_chunkId, Memory::MetaData("fooSource", karabo::util::Timestamp()));
+        Memory::write(data, m_channelId, m_chunkId, Memory::MetaData("fooSource", karabo::data::Timestamp()));
         CPPUNIT_ASSERT(Memory::size(m_channelId, m_chunkId) != 0);
 
         Memory::read(readData, 0, m_channelId, m_chunkId);
@@ -69,7 +69,7 @@ void Memory_Test::testModifyAfterWrite() {
     Hash readData;
 
     {
-        Memory::write(writeData, m_channelId, m_chunkId, Memory::MetaData("fooSource", karabo::util::Timestamp()));
+        Memory::write(writeData, m_channelId, m_chunkId, Memory::MetaData("fooSource", karabo::data::Timestamp()));
         writeData.set<int>("a", 9999);
         Memory::read(readData, 0, m_channelId, m_chunkId);
 

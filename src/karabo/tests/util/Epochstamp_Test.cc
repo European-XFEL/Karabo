@@ -24,12 +24,12 @@
 
 #include "Epochstamp_Test.hh"
 
-#include "karabo/util/DateTimeString.hh"
+#include "karabo/data/time/DateTimeString.hh"
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Epochstamp_Test);
 
 using namespace std;
-using namespace karabo::util;
+using namespace karabo::data;
 
 
 Epochstamp_Test::Epochstamp_Test() {}
@@ -56,16 +56,16 @@ void Epochstamp_Test::validateStringConstructor(const std::string& pTime, const 
     }
 
     // Constructor
-    karabo::util::Epochstamp epo;
+    karabo::data::Epochstamp epo;
     if (pTime == "") {
         // Empty constructor
-        epo = karabo::util::Epochstamp();
+        epo = karabo::data::Epochstamp();
     } else {
         // String constructor
-        epo = karabo::util::Epochstamp(pTime);
+        epo = karabo::data::Epochstamp(pTime);
     }
     // Constructor complete
-    karabo::util::Epochstamp epo2 = karabo::util::Epochstamp(expectedSeconds, expectedFractionalSecond);
+    karabo::data::Epochstamp epo2 = karabo::data::Epochstamp(expectedSeconds, expectedFractionalSecond);
 
 
     // Validations
@@ -147,7 +147,7 @@ void Epochstamp_Test::validateStringConstructor(const std::string& pTime, const 
     // toTimestamp Validation
     ostringstream oss;
     oss << epo.getSeconds()
-        << karabo::util::DateTimeString::fractionalSecondToString(MICROSEC, epo.getFractionalSeconds());
+        << karabo::data::DateTimeString::fractionalSecondToString(MICROSEC, epo.getFractionalSeconds());
 
     double expectedTimestamp = boost::lexical_cast<double>(oss.str());
 
@@ -162,8 +162,8 @@ void Epochstamp_Test::validateStringConstructor(const std::string& pTime, const 
 }
 
 
-void Epochstamp_Test::toIso8601Precision(const karabo::util::Epochstamp epo, const karabo::util::Epochstamp epo2,
-                                         const karabo::util::TIME_UNITS precision, const std::string& precisionDesc,
+void Epochstamp_Test::toIso8601Precision(const karabo::data::Epochstamp epo, const karabo::data::Epochstamp epo2,
+                                         const karabo::data::TIME_UNITS precision, const std::string& precisionDesc,
                                          const bool isCompactString, const bool writeToClog,
                                          const std::string& expectedToIso8601) {
     // Concatenate function name plus precision description
@@ -206,18 +206,18 @@ void Epochstamp_Test::testConstructors() {
     int sleepDelay = 1;
 
     // Validate the NULL constructor that use NOW
-    karabo::util::Epochstamp t01 = karabo::util::Epochstamp();
+    karabo::data::Epochstamp t01 = karabo::data::Epochstamp();
     sleep(sleepDelay);
-    karabo::util::Epochstamp t02 = karabo::util::Epochstamp();
+    karabo::data::Epochstamp t02 = karabo::data::Epochstamp();
     CPPUNIT_ASSERT(t01.getSeconds() + sleepDelay == t02.getSeconds());
     CPPUNIT_ASSERT(t01.getFractionalSeconds() != t02.getFractionalSeconds());
     CPPUNIT_ASSERT(t01.getTime() != t02.getTime());
 
     // Validate the seconds + fractionalSeconds constructor
-    karabo::util::Epochstamp t03 = karabo::util::Epochstamp();
+    karabo::data::Epochstamp t03 = karabo::data::Epochstamp();
     const unsigned long long& secs = t03.getSeconds();
     const unsigned long long& fraqs = t03.getFractionalSeconds();
-    karabo::util::Epochstamp t04 = karabo::util::Epochstamp(secs, fraqs);
+    karabo::data::Epochstamp t04 = karabo::data::Epochstamp(secs, fraqs);
 
     CPPUNIT_ASSERT(t03.getSeconds() == t04.getSeconds());
     CPPUNIT_ASSERT(t03.getFractionalSeconds() == t04.getFractionalSeconds());
@@ -225,7 +225,7 @@ void Epochstamp_Test::testConstructors() {
 
     // Validate the "time_t" constructor
     const time_t& tm03 = t03.getTime();
-    karabo::util::Epochstamp t05 = karabo::util::Epochstamp(tm03);
+    karabo::data::Epochstamp t05 = karabo::data::Epochstamp(tm03);
 
     CPPUNIT_ASSERT(t03.getSeconds() == t05.getSeconds());
     CPPUNIT_ASSERT(t04.getSeconds() == t05.getSeconds());
@@ -240,7 +240,7 @@ void Epochstamp_Test::testConstructors() {
     // Necessary this division because tv_nsec has only Nanosecond (10^9) resolution but getFractionalSeconds() returns
     // Attosecond (10^18) resolution
     ts06.tv_nsec = t03.getFractionalSeconds() / 1000000000;
-    karabo::util::Epochstamp t06 = karabo::util::Epochstamp(ts06);
+    karabo::data::Epochstamp t06 = karabo::data::Epochstamp(ts06);
 
     CPPUNIT_ASSERT(t03.getSeconds() == t06.getSeconds());
     CPPUNIT_ASSERT(t04.getSeconds() == t06.getSeconds());
@@ -435,13 +435,13 @@ void Epochstamp_Test::validateToFormattedString(const std::string& pTime, const 
 
 
     // Constructor
-    karabo::util::Epochstamp epo;
+    karabo::data::Epochstamp epo;
     if (pTime == "") {
         // Empty constructor
-        epo = karabo::util::Epochstamp();
+        epo = karabo::data::Epochstamp();
     } else {
         // String constructor
-        epo = karabo::util::Epochstamp(pTime);
+        epo = karabo::data::Epochstamp(pTime);
     }
 
     /**

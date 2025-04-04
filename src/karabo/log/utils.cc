@@ -13,7 +13,7 @@
 #include <vector>
 
 #include "Logger.hh"
-#include "karabo/util/StringTools.hh"
+#include "karabo/data/types/StringTools.hh"
 
 namespace karabo {
     namespace log {

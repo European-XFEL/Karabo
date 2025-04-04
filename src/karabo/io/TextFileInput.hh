@@ -28,12 +28,12 @@
 #include <filesystem>
 #include <fstream>
 #include <iosfwd>
-#include <karabo/util/ChoiceElement.hh>
-#include <karabo/util/Configurator.hh>
 #include <sstream>
 
 #include "Input.hh"
 #include "TextSerializer.hh"
+#include "karabo/data/schema/ChoiceElement.hh"
+#include "karabo/data/schema/Configurator.hh"
 
 /**
  * The main European XFEL namespace
@@ -62,8 +62,8 @@ namespace karabo {
            public:
             KARABO_CLASSINFO(TextFileInput<T>, "TextFile", "1.0");
 
-            static void expectedParameters(karabo::util::Schema& expected) {
-                using namespace karabo::util;
+            static void expectedParameters(karabo::data::Schema& expected) {
+                using namespace karabo::data;
 
                 STRING_ELEMENT(expected)
                       .key("filename")
@@ -82,7 +82,7 @@ namespace karabo {
                       .commit();
             }
 
-            TextFileInput(const karabo::util::Hash& config) : Input<T>(config) {
+            TextFileInput(const karabo::data::Hash& config) : Input<T>(config) {
                 m_filename = config.get<std::string>("filename");
                 if (config.has("format")) {
                     m_serializer = TextSerializer<T>::createChoice("format", config);
@@ -106,7 +106,7 @@ namespace karabo {
            private:
             void guessAndSetFormat() {
                 using namespace std;
-                using namespace karabo::util;
+                using namespace karabo::data;
 
                 vector<string> keys = TextSerializer<T>::getRegisteredClasses();
                 string extension = std::filesystem::path(m_filename).extension().string().substr(1);

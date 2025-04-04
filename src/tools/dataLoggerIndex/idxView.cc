@@ -27,13 +27,14 @@
 #include <filesystem>
 #include <iostream>
 #include <karabo/util/DataLogUtils.hh>
-#include <karabo/util/Epochstamp.hh>
-#include <karabo/util/Exception.hh>
+#include "karabo/data/time/Epochstamp.hh"
+#include "karabo/data/types/Exception.hh"
 
 
 using namespace std;
 namespace bf = std::filesystem;
 namespace bs = boost::system;
+using namespace karabo::data;
 using namespace karabo::util;
 
 /*

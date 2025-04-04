@@ -18,14 +18,13 @@
 
 #include <pybind11/pybind11.h>
 
-#include <karabo/util/State.hh>
-#include <karabo/util/StateElement.hh>
-
 #include "Wrapper.hh"
+#include "karabo/data/schema/StateElement.hh"
+#include "karabo/data/types/State.hh"
 
 
 namespace py = pybind11;
-using namespace karabo::util;
+using namespace karabo::data;
 using namespace std;
 using namespace karabind;
 

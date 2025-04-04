@@ -37,16 +37,16 @@ namespace karabo {
          * Necessary method as part of the factory/configuration system
          * @param expected Will contain a description of expected parameters for this device
          */
-        static void expectedParameters(karabo::util::Schema& expected);
+        static void expectedParameters(karabo::data::Schema& expected);
 
-        P2PSenderDevice(const karabo::util::Hash& input);
+        P2PSenderDevice(const karabo::data::Hash& input);
 
         virtual ~P2PSenderDevice();
 
        private:
         void initialize();
 
-        void preReconfigure(karabo::util::Hash& incomingReconfiguration) override;
+        void preReconfigure(karabo::data::Hash& incomingReconfiguration) override;
 
         std::string selectSharedInput(const std::string& result,
                                       const std::vector<std::string>& connectedSharedInputs) const;

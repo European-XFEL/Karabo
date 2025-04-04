@@ -27,11 +27,12 @@
 
 #include <boost/asio.hpp>
 #include <karabo/net/Broker.hh>
-#include <karabo/util/Factory.hh>
 #include <tuple>
 #include <typeindex>
 #include <typeinfo>
 #include <vector>
+
+#include "karabo/data/schema/Factory.hh"
 
 /**
  * The main Karabo namespace
@@ -75,7 +76,7 @@ namespace karabo {
             virtual ~Signal() {}
 
             /**
-             * Use like setSignature<int, util::Hash, std::string>() to ensure that any emitted signal
+             * Use like setSignature<int, data::Hash, std::string>() to ensure that any emitted signal
              * has to take arguments of these three types in that order.
              */
             template <typename... Args>
@@ -125,7 +126,7 @@ namespace karabo {
              */
 
             template <typename... Args>
-            void emit(const karabo::util::Hash::Pointer& message) {
+            void emit(const karabo::data::Hash::Pointer& message) {
                 doEmit(message);
                 // Remove above line and uncomment this once type issue is solved
                 /*
@@ -147,12 +148,12 @@ namespace karabo {
             void setTopic(const std::string& topic);
 
            protected:
-            void setSlotStrings(const SlotMap& slots, karabo::util::Hash& header) const;
+            void setSlotStrings(const SlotMap& slots, karabo::data::Hash& header) const;
 
-            karabo::util::Hash::Pointer prepareHeader(const SlotMap& slots) const;
+            karabo::data::Hash::Pointer prepareHeader(const SlotMap& slots) const;
 
            private:
-            void doEmit(const karabo::util::Hash::Pointer& message);
+            void doEmit(const karabo::data::Hash::Pointer& message);
 
            protected:
             SignalSlotable* m_signalSlotable;

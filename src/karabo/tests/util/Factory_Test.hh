@@ -26,7 +26,7 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 
-#include <karabo/util/ClassInfo.hh>
+#include "karabo/data/types/ClassInfo.hh"
 
 struct Interface {
     KARABO_CLASSINFO(Interface, "SimpleInterface", "1.0");

@@ -15,9 +15,8 @@
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
-#include <karabo/util/Configurator.hh>
-#include <karabo/util/Hash.hh>
-
+#include "karabo/data/schema/Configurator.hh"
+#include "karabo/data/types/Hash.hh"
 #include "karabo/io/BinaryFileOutput.hh"
 
-KARABO_EXPLICIT_TEMPLATE(karabo::io::BinaryFileOutput<karabo::util::Hash>)
+KARABO_EXPLICIT_TEMPLATE(karabo::io::BinaryFileOutput<karabo::data::Hash>)

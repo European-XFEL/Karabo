@@ -34,6 +34,9 @@
 #include <iostream>
 #include <thread>
 
+#include "karabo/data/types/Dims.hh"
+#include "karabo/data/types/Exception.hh"
+#include "karabo/data/types/NDArray.hh"
 #include "karabo/io/BinarySerializer.hh"
 #include "karabo/io/BufferSet.hh"
 #include "karabo/net/Channel.hh"
@@ -41,9 +44,6 @@
 #include "karabo/net/EventLoop.hh"
 #include "karabo/net/Queues.hh"
 #include "karabo/net/TcpChannel.hh"
-#include "karabo/util/Dims.hh"
-#include "karabo/util/Exception.hh"
-#include "karabo/util/NDArray.hh"
 
 using namespace std::chrono;
 using namespace std::literals::chrono_literals; // 10ms == 10 milliseconds
@@ -53,11 +53,11 @@ using std::placeholders::_1;
 using std::placeholders::_2;
 using std::placeholders::_3;
 
+using karabo::data::Hash;
+using karabo::data::toString;
 using karabo::net::Channel;
 using karabo::net::Connection;
 using karabo::net::EventLoop;
-using karabo::util::Hash;
-using karabo::util::toString;
 
 /**
  * Create client and server that are connected
@@ -108,7 +108,7 @@ struct TcpServer {
     KARABO_CLASSINFO(TcpServer, "TcpServer", "1.0");
 
     TcpServer() : m_count(0), m_port(0) {
-        m_connection = karabo::net::Connection::create(karabo::util::Hash("Tcp.port", 0, "Tcp.type", "server"));
+        m_connection = karabo::net::Connection::create(karabo::data::Hash("Tcp.port", 0, "Tcp.type", "server"));
         m_port = m_connection->startAsync(std::bind(&TcpServer::connectHandler, this, _1, _2));
     }
 
@@ -142,7 +142,7 @@ struct TcpServer {
 
 
     void readHashHashHandler(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel,
-                             karabo::util::Hash& header, karabo::util::Hash& body) {
+                             karabo::data::Hash& header, karabo::data::Hash& body) {
         if (ec) {
             errorHandler(ec, channel);
             return;
@@ -159,7 +159,7 @@ struct TcpServer {
         body.set("a.e", "server data");
 
         if (body.has("a") && body.get<std::string>("a.b") == "?") body.set("a.b", "server reply");
-        else body.set("a.b", "counter " + karabo::util::toString(m_count));
+        else body.set("a.b", "counter " + karabo::data::toString(m_count));
 
 
         channel->writeAsyncHashHash(header, body,
@@ -192,7 +192,7 @@ struct TcpClient {
         : m_count(0),
           m_port(port),
           m_connection(karabo::net::Connection::create(
-                karabo::util::Hash("Tcp.port", m_port, "Tcp.hostname", "sample.example.org"))),
+                karabo::data::Hash("Tcp.port", m_port, "Tcp.hostname", "sample.example.org"))),
           m_deadline(karabo::net::EventLoop::getIOService()) { // timeout repetition channel ec
         m_connection->startAsync(std::bind(&TcpClient::connectHandler, this, _1, 1000, 3, _2));
     }
@@ -213,8 +213,8 @@ struct TcpClient {
             return;
         }
         KARABO_LOG_FRAMEWORK_DEBUG << "\nTcpClient connectHandler";
-        karabo::util::Hash header("headline", "*** CLIENT ***");
-        karabo::util::Hash data("a.b", "?", "a.c", 42.22f, "a.d", 12);
+        karabo::data::Hash header("headline", "*** CLIENT ***");
+        karabo::data::Hash data("a.b", "?", "a.c", 42.22f, "a.d", 12);
 
         // first sending
         channel->writeAsyncHashHash(header, data, std::bind(&TcpClient::writeCompleteHandler, this, channel, 42));
@@ -234,16 +234,16 @@ struct TcpClient {
         timeout *= 2;
         if (repetition == 1)
             m_connection =
-                  karabo::net::Connection::create(karabo::util::Hash("Tcp.port", m_port, "Tcp.hostname", "exflserv04"));
+                  karabo::net::Connection::create(karabo::data::Hash("Tcp.port", m_port, "Tcp.hostname", "exflserv04"));
         if (repetition == 0)
             m_connection =
-                  karabo::net::Connection::create(karabo::util::Hash("Tcp.port", m_port, "Tcp.hostname", "localhost"));
+                  karabo::net::Connection::create(karabo::data::Hash("Tcp.port", m_port, "Tcp.hostname", "localhost"));
         m_connection->startAsync(std::bind(&TcpClient::connectHandler, this, _1, timeout, repetition, _2));
     }
 
 
     void readHashHashHandler(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel,
-                             karabo::util::Hash& header, karabo::util::Hash& body) {
+                             karabo::data::Hash& header, karabo::data::Hash& body) {
         if (ec) {
             errorHandler(ec, channel);
             return;
@@ -303,11 +303,11 @@ struct TcpClient {
 #define CHAR_ARRAY_SIZE 4
 
 struct WriteAsyncTestsParams {
-    const karabo::util::Hash dataHash = karabo::util::Hash("Name", "DataHash", "PiField", 3.14159);
-    const karabo::util::Hash dataHashNDArray =
-          karabo::util::Hash("Data", karabo::util::NDArray(karabo::util::Dims(5000, 6000), 1000u));
+    const karabo::data::Hash dataHash = karabo::data::Hash("Name", "DataHash", "PiField", 3.14159);
+    const karabo::data::Hash dataHashNDArray =
+          karabo::data::Hash("Data", karabo::data::NDArray(karabo::data::Dims(5000, 6000), 1000u));
     const std::string dataString = std::string("Sample of std::string");
-    const karabo::util::Hash headerHash = karabo::util::Hash("Header", "hdr", "NumOfFields", 3, "required", true);
+    const karabo::data::Hash headerHash = karabo::data::Hash("Header", "hdr", "NumOfFields", 3, "required", true);
     const karabo::net::VectorCharPointer vectorCharPointer =
           std::make_shared<std::vector<char>>(std::vector<char>(10, 'A'));
     const std::vector<char> vectorChar = std::vector<char>(20, 'B');
@@ -316,24 +316,24 @@ struct WriteAsyncTestsParams {
     const int writePriority = 4;
 
 
-    bool equalsTestDataHash(const karabo::util::Hash& other) {
+    bool equalsTestDataHash(const karabo::data::Hash& other) {
         return (other == dataHash && other.get<std::string>("Name") == dataHash.get<std::string>("Name") &&
                 other.get<double>("PiField") - dataHash.get<double>("PiField") < 1.e-14);
     }
 
 
-    bool equalsTestHeaderHash(const karabo::util::Hash& other) {
+    bool equalsTestHeaderHash(const karabo::data::Hash& other) {
         return (other == headerHash && other.get<std::string>("Header") == headerHash.get<std::string>("Header") &&
                 other.get<int>("NumOfFields") == headerHash.get<int>("NumOfFields") &&
                 other.get<bool>("required") == headerHash.get<bool>("required"));
     }
 
 
-    bool equalsTestNDArrayHash(const karabo::util::Hash& other) {
+    bool equalsTestNDArrayHash(const karabo::data::Hash& other) {
         return (other.size() == dataHashNDArray.size() &&
-                other.get<karabo::util::NDArray>("Data").getShape() ==
-                      dataHashNDArray.get<karabo::util::NDArray>("Data").getShape() &&
-                other.get<karabo::util::NDArray>("Data").getData<unsigned int>()[0] == 1000u);
+                other.get<karabo::data::NDArray>("Data").getShape() ==
+                      dataHashNDArray.get<karabo::data::NDArray>("Data").getShape() &&
+                other.get<karabo::data::NDArray>("Data").getData<unsigned int>()[0] == 1000u);
     }
 };
 
@@ -351,7 +351,7 @@ struct WriteAsyncSrv {
 
     WriteAsyncSrv(std::function<void(const TestOutcome&, const std::string&, const std::string&)> testReportFn)
         : m_port(0), m_testReportFn(testReportFn) {
-        m_connection = karabo::net::Connection::create(karabo::util::Hash("Tcp.port", 0, "Tcp.type", "server"));
+        m_connection = karabo::net::Connection::create(karabo::data::Hash("Tcp.port", 0, "Tcp.type", "server"));
         m_port = m_connection->startAsync(std::bind(&WriteAsyncSrv::connectHandler, this, _1, _2));
     }
 
@@ -380,7 +380,7 @@ struct WriteAsyncSrv {
 
 
     void readAsyncHashHandlerCopyFalse(const boost::system::error_code& ec,
-                                       const karabo::net::Channel::Pointer& channel, karabo::util::Hash& hash) {
+                                       const karabo::net::Channel::Pointer& channel, karabo::data::Hash& hash) {
         if (ec) {
             KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAsyncSrv error at readAysncHashHandlerCopyFalse: " << ec.value()
                                        << " -- " << ec.message();
@@ -392,8 +392,8 @@ struct WriteAsyncSrv {
         if (!m_params.equalsTestDataHash(hash)) {
             m_testReportFn(TestOutcome::FAILURE,
                            std::string("Hash read differs from hash written:\n") + "Expected:\n" +
-                                 karabo::util::toString(m_params.dataHash) + "\nActual:\n" +
-                                 karabo::util::toString(hash),
+                                 karabo::data::toString(m_params.dataHash) + "\nActual:\n" +
+                                 karabo::data::toString(hash),
                            "#1. readAsyncHashHandlerCopyFalse");
             if (channel) channel->close();
         } else {
@@ -405,7 +405,7 @@ struct WriteAsyncSrv {
 
 
     void readAsyncHashHandlerCopyTrue(const boost::system::error_code& ec, const karabo::net::Channel::Pointer& channel,
-                                      karabo::util::Hash& hash) {
+                                      karabo::data::Hash& hash) {
         if (ec) {
             KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAsyncSrv error at readAysncHashHandlerCopyTrue: " << ec.value()
                                        << " -- " << ec.message();
@@ -417,8 +417,8 @@ struct WriteAsyncSrv {
         if (!m_params.equalsTestDataHash(hash)) {
             m_testReportFn(TestOutcome::FAILURE,
                            std::string("Hash read differs from hash written:\n") + "Expected:\n" +
-                                 karabo::util::toString(m_params.dataHash) + "\nActual:\n" +
-                                 karabo::util::toString(hash),
+                                 karabo::data::toString(m_params.dataHash) + "\nActual:\n" +
+                                 karabo::data::toString(hash),
                            "#2. readAsyncHashHandlerCopyTrue");
             if (channel) channel->close();
         } else {
@@ -455,8 +455,8 @@ struct WriteAsyncSrv {
 
 
     void readAsyncHashHashHandlerCopyFalse(const boost::system::error_code& ec,
-                                           const karabo::net::Channel::Pointer& channel, karabo::util::Hash& header,
-                                           karabo::util::Hash& body) {
+                                           const karabo::net::Channel::Pointer& channel, karabo::data::Hash& header,
+                                           karabo::data::Hash& body) {
         if (ec) {
             KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAsyncSrv error at readAysncHashHashHandlerCopyFalse: " << ec.value()
                                        << " -- " << ec.message();
@@ -468,10 +468,10 @@ struct WriteAsyncSrv {
         if (!m_params.equalsTestHeaderHash(header) || !m_params.equalsTestDataHash(body)) {
             m_testReportFn(TestOutcome::FAILURE,
                            std::string("Hashes read don't match the ones written:\n") + "Expected header:\n" +
-                                 karabo::util::toString(m_params.headerHash) + "\nActual header:\n" +
-                                 karabo::util::toString(header) + "\nExpected body:\n" +
-                                 karabo::util::toString(m_params.dataHash) + "\nActual body:\n" +
-                                 karabo::util::toString(body),
+                                 karabo::data::toString(m_params.headerHash) + "\nActual header:\n" +
+                                 karabo::data::toString(header) + "\nExpected body:\n" +
+                                 karabo::data::toString(m_params.dataHash) + "\nActual body:\n" +
+                                 karabo::data::toString(body),
                            "#4. readAsyncHashHashHandlerCopyFalse");
             if (channel) channel->close();
         } else {
@@ -484,8 +484,8 @@ struct WriteAsyncSrv {
 
 
     void readAsyncHashHashHandlerCopyTrue(const boost::system::error_code& ec,
-                                          const karabo::net::Channel::Pointer& channel, karabo::util::Hash& header,
-                                          karabo::util::Hash& body) {
+                                          const karabo::net::Channel::Pointer& channel, karabo::data::Hash& header,
+                                          karabo::data::Hash& body) {
         if (ec) {
             KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAsyncSrv error at readAysncHashHashHandlerCopyTrue: " << ec.value()
                                        << " -- " << ec.message();
@@ -497,10 +497,10 @@ struct WriteAsyncSrv {
         if (!m_params.equalsTestHeaderHash(header) || !m_params.equalsTestDataHash(body)) {
             m_testReportFn(TestOutcome::FAILURE,
                            std::string("Hashes read don't match the ones written:\n") + "Expected header:\n" +
-                                 karabo::util::toString(m_params.headerHash) + "\nActual header:\n" +
-                                 karabo::util::toString(header) + "\nExpected body:\n" +
-                                 karabo::util::toString(m_params.dataHash) + "\nActual body:\n" +
-                                 karabo::util::toString(body),
+                                 karabo::data::toString(m_params.headerHash) + "\nActual header:\n" +
+                                 karabo::data::toString(header) + "\nExpected body:\n" +
+                                 karabo::data::toString(m_params.dataHash) + "\nActual body:\n" +
+                                 karabo::data::toString(body),
                            "#5. readAsyncHashHashHandlerCopyTrue");
             if (channel) channel->close();
         } else {
@@ -548,9 +548,9 @@ struct WriteAsyncSrv {
         if (*vectorCharPointer != *(m_params.vectorCharPointer)) {
             m_testReportFn(TestOutcome::FAILURE,
                            std::string("Vector read doesn't match the one written.") +
-                                 "Expected vector size:" + karabo::util::toString(m_params.vectorCharPointer->size()) +
+                                 "Expected vector size:" + karabo::data::toString(m_params.vectorCharPointer->size()) +
                                  std::string("\nActual vector size: ") +
-                                 karabo::util::toString(vectorCharPointer->size()) +
+                                 karabo::data::toString(vectorCharPointer->size()) +
                                  std::string("\nExpected first position content: ") + (*m_params.vectorCharPointer)[0] +
                                  std::string("\nActual first position content: ") + (*vectorCharPointer)[0],
                            "#7. readAsyncVectorPointerHandler");
@@ -566,7 +566,7 @@ struct WriteAsyncSrv {
 
     void readAsyncHashVectorPointerHandler(const boost::system::error_code& ec,
                                            const karabo::net::Channel::Pointer& channel,
-                                           const karabo::util::Hash& header,
+                                           const karabo::data::Hash& header,
                                            const karabo::net::VectorCharPointer& data) {
         if (ec) {
             KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAsyncSrv error at readAysncHashVectorPointerHandler: " << ec.value()
@@ -580,13 +580,13 @@ struct WriteAsyncSrv {
         if (!m_params.equalsTestHeaderHash(header) || *data != *(m_params.vectorCharPointer)) {
             m_testReportFn(TestOutcome::FAILURE,
                            std::string("Data read doesn't match the data written:\n") + "Expected header:\n" +
-                                 karabo::util::toString(m_params.headerHash) + "\nActual header:\n" +
-                                 karabo::util::toString(header) + "Expected body vector:" +
-                                 karabo::util::toString(std::vector<char>((*m_params.vectorCharPointer).begin(),
+                                 karabo::data::toString(m_params.headerHash) + "\nActual header:\n" +
+                                 karabo::data::toString(header) + "Expected body vector:" +
+                                 karabo::data::toString(std::vector<char>((*m_params.vectorCharPointer).begin(),
                                                                           (*m_params.vectorCharPointer).end()),
                                                         80) +
                                  "\nActual body vector: " +
-                                 karabo::util::toString(std::vector<char>((*data).begin(), (*data).end()), 80),
+                                 karabo::data::toString(std::vector<char>((*data).begin(), (*data).end()), 80),
                            "#8. readAsyncHashVectorPointerHandler");
         } else {
             std::clog << "[Srv]\t 8.2. Hash header and VectorCharPointer body checked to be OK." << std::endl;
@@ -599,7 +599,7 @@ struct WriteAsyncSrv {
 
     void readAsyncHashNDArrayHandlerCopyFalse(const boost::system::error_code& ec,
                                               const karabo::net::Channel::Pointer& channel,
-                                              const karabo::util::Hash& dataHash) {
+                                              const karabo::data::Hash& dataHash) {
         if (ec) {
             KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAsyncSrv error at readAysncHashNDArrayHandlerCopyFalse: "
                                        << ec.value() << " -- " << ec.message();
@@ -612,11 +612,11 @@ struct WriteAsyncSrv {
             m_testReportFn(
                   TestOutcome::FAILURE,
                   std::string("Hash with NDArray read doesn't match the hash written:\n.") +
-                        "Expected hash size: " + karabo::util::toString(m_params.dataHashNDArray.size()) +
-                        "\nActual hash size: " + karabo::util::toString(dataHash.size()) + "\nExpected NDArray size: " +
-                        karabo::util::toString(m_params.dataHashNDArray.get<karabo::util::NDArray>("Data").size()) +
+                        "Expected hash size: " + karabo::data::toString(m_params.dataHashNDArray.size()) +
+                        "\nActual hash size: " + karabo::data::toString(dataHash.size()) + "\nExpected NDArray size: " +
+                        karabo::data::toString(m_params.dataHashNDArray.get<karabo::data::NDArray>("Data").size()) +
                         "\nActual NDArray size: " +
-                        karabo::util::toString(dataHash.get<karabo::util::NDArray>("Data").size()),
+                        karabo::data::toString(dataHash.get<karabo::data::NDArray>("Data").size()),
                   "#9. readAsyncHashNDArrayHandlerCopyFalse");
         } else {
             std::clog << "[Srv]\t 9.2. Hash with NDArray checked to be OK." << std::endl;
@@ -629,7 +629,7 @@ struct WriteAsyncSrv {
 
     void readAsyncHashNDArrayHandlerCopyTrue(const boost::system::error_code& ec,
                                              const karabo::net::Channel::Pointer& channel,
-                                             const karabo::util::Hash& dataHash) {
+                                             const karabo::data::Hash& dataHash) {
         if (ec) {
             KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAsyncSrv error at readAysncHashNDArrayHandlerCopyTrue: " << ec.value()
                                        << " -- " << ec.message();
@@ -642,11 +642,11 @@ struct WriteAsyncSrv {
             m_testReportFn(
                   TestOutcome::FAILURE,
                   std::string("Hash with NDArray read doesn't match the hash written:\n.") +
-                        "Expected hash size: " + karabo::util::toString(m_params.dataHashNDArray.size()) +
-                        "\nActual hash size: " + karabo::util::toString(dataHash.size()) + "\nExpected NDArray size: " +
-                        karabo::util::toString(m_params.dataHashNDArray.get<karabo::util::NDArray>("Data").size()) +
+                        "Expected hash size: " + karabo::data::toString(m_params.dataHashNDArray.size()) +
+                        "\nActual hash size: " + karabo::data::toString(dataHash.size()) + "\nExpected NDArray size: " +
+                        karabo::data::toString(m_params.dataHashNDArray.get<karabo::data::NDArray>("Data").size()) +
                         "\nActual NDArray size: " +
-                        karabo::util::toString(dataHash.get<karabo::util::NDArray>("Data").size()),
+                        karabo::data::toString(dataHash.get<karabo::data::NDArray>("Data").size()),
                   "#10. readAsyncHashNDArrayHandlerCopyTrue");
         } else {
             std::clog << "[Srv]\t 10.2. Hash with NDArray checked to be OK." << std::endl;
@@ -659,7 +659,7 @@ struct WriteAsyncSrv {
 
     void readAsyncHashCharArrayHandler(const boost::system::error_code& ec,
                                        const karabo::net::Channel::Pointer& channel,
-                                       const karabo::util::Hash& headerHash, const std::vector<char>& dataVect) {
+                                       const karabo::data::Hash& headerHash, const std::vector<char>& dataVect) {
         if (ec) {
             KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAsyncSrv error at readAysncHashCharArrayHandler: " << ec.value()
                                        << " -- " << ec.message();
@@ -672,10 +672,10 @@ struct WriteAsyncSrv {
         if (!m_params.equalsTestHeaderHash(headerHash) || dataVect.size() != m_params.charArraySize) {
             m_testReportFn(TestOutcome::FAILURE,
                            std::string("Data read doesn't match the data written:\n") + "Expected header:\n" +
-                                 karabo::util::toString(m_params.headerHash) + "\nActual header:\n" +
-                                 karabo::util::toString(headerHash) +
-                                 "\nExpected body vector size: " + karabo::util::toString(m_params.charArraySize) +
-                                 "\nActual body vector size: " + karabo::util::toString(dataVect.size()),
+                                 karabo::data::toString(m_params.headerHash) + "\nActual header:\n" +
+                                 karabo::data::toString(headerHash) +
+                                 "\nExpected body vector size: " + karabo::data::toString(m_params.charArraySize) +
+                                 "\nActual body vector size: " + karabo::data::toString(dataVect.size()),
                            "#11. readAysncHashCharArrayHandler");
         } else {
             std::clog << "[Srv]\t 11.2. Header hash and array of char for body matched." << std::endl;
@@ -687,7 +687,7 @@ struct WriteAsyncSrv {
 
 
     void readAsyncHashStringHandler(const boost::system::error_code& ec, const karabo::net::Channel::Pointer& channel,
-                                    const karabo::util::Hash& headerHash, const std::string& dataStr) {
+                                    const karabo::data::Hash& headerHash, const std::string& dataStr) {
         if (ec) {
             KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAsyncSrv error at readAsyncHashStringHandler: " << ec.value()
                                        << " -- " << ec.message();
@@ -700,8 +700,8 @@ struct WriteAsyncSrv {
         if (!m_params.equalsTestHeaderHash(headerHash) || dataStr != m_params.dataString) {
             m_testReportFn(TestOutcome::FAILURE,
                            std::string("Data read doesn't match the data written:\n") + "Expected header:\n" +
-                                 karabo::util::toString(m_params.headerHash) + "\nActual header:\n" +
-                                 karabo::util::toString(headerHash) + "\nExpected body string: " + m_params.dataString +
+                                 karabo::data::toString(m_params.headerHash) + "\nActual header:\n" +
+                                 karabo::data::toString(headerHash) + "\nExpected body string: " + m_params.dataString +
                                  "\nActual body string: " + dataStr,
                            "#12. readAsyncHashStringHandler");
         } else {
@@ -714,7 +714,7 @@ struct WriteAsyncSrv {
 
 
     void readAsyncHashVectorHandler(const boost::system::error_code& ec, const karabo::net::Channel::Pointer& channel,
-                                    const karabo::util::Hash& headerHash, const std::vector<char>& dataVect) {
+                                    const karabo::data::Hash& headerHash, const std::vector<char>& dataVect) {
         if (ec) {
             KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAsyncSrv error at readAsyncHashVectorHandler: " << ec.value()
                                        << " -- " << ec.message();
@@ -728,10 +728,10 @@ struct WriteAsyncSrv {
         if (!m_params.equalsTestHeaderHash(headerHash) || dataVect != m_params.vectorChar) {
             m_testReportFn(TestOutcome::FAILURE,
                            std::string("Data read doesn't match the data written:\n") + "Expected header:\n" +
-                                 karabo::util::toString(m_params.headerHash) + "\nActual header:\n" +
-                                 karabo::util::toString(headerHash) +
-                                 "\nExpected body size: " + karabo::util::toString(m_params.vectorChar.size()) +
-                                 "\nActual body size: " + karabo::util::toString(dataVect.size()),
+                                 karabo::data::toString(m_params.headerHash) + "\nActual header:\n" +
+                                 karabo::data::toString(headerHash) +
+                                 "\nExpected body size: " + karabo::data::toString(m_params.vectorChar.size()) +
+                                 "\nActual body size: " + karabo::data::toString(dataVect.size()),
                            "#13. readAsyncHashVectorHandler");
         } else {
             std::clog << "[Srv]\t 13.2. Header hash and vector of char for body matched." << std::endl;
@@ -755,8 +755,8 @@ struct WriteAsyncSrv {
         if (dataVect != m_params.vectorChar) {
             m_testReportFn(TestOutcome::FAILURE,
                            std::string("Data read doesn't match the data written:\n") +
-                                 "\nExpected vector size: " + karabo::util::toString(m_params.vectorChar.size()) +
-                                 "\nActual vector size: " + karabo::util::toString(dataVect.size()),
+                                 "\nExpected vector size: " + karabo::data::toString(m_params.vectorChar.size()) +
+                                 "\nActual vector size: " + karabo::data::toString(dataVect.size()),
                            "#14. readAsyncVectorHandler");
         } else {
             std::clog << "[Srv]\t 14.2. Vector of char for body matched." << std::endl;
@@ -775,7 +775,7 @@ struct WriteAsyncCli {
                   std::function<void(const TestOutcome&, const std::string&, const std::string&)> testReportFn)
         : m_port(port),
           m_testReportFn(testReportFn),
-          m_connection(karabo::net::Connection::create(karabo::util::Hash("Tcp.port", m_port, "Tcp.hostname", host))) {
+          m_connection(karabo::net::Connection::create(karabo::data::Hash("Tcp.port", m_port, "Tcp.hostname", host))) {
         m_connection->startAsync(std::bind(&WriteAsyncCli::connectHandler, this, _1, _2));
     }
 
@@ -853,7 +853,7 @@ struct WriteAsyncCli {
             std::clog << "[Cli]\t14. sent a vector of char for body." << std::endl;
 
             std::clog << "[Cli] ... all test data sent by the client" << std::endl;
-        } catch (karabo::util::Exception& ke) {
+        } catch (karabo::data::Exception& ke) {
             std::clog << "Error during write sequence by the client: " << ke.what() << std::endl;
             std::clog << "Details: " << std::endl;
             ke.showTrace(std::clog);
@@ -878,7 +878,7 @@ struct WriteAsyncCli {
 TcpNetworking_Test::TcpNetworking_Test() {
     // To switch on logging:
     // #include "karabo/log/Logger.hh"
-    // karabo::log::Logger::configure(karabo::util::Hash("priority", "DEBUG"));
+    // karabo::log::Logger::configure(karabo::data::Hash("priority", "DEBUG"));
     // karabo::log::Logger::useOstream();
 }
 
@@ -892,17 +892,17 @@ void TcpNetworking_Test::setUp() {}
 void TcpNetworking_Test::tearDown() {}
 
 void TcpNetworking_Test::testConfig() {
-    karabo::util::Hash cfg("hostname", "localhost", "port", 12345u); // default is client
-    CPPUNIT_ASSERT_NO_THROW(karabo::net::Connection::create(karabo::util::Hash("Tcp", cfg)));
+    karabo::data::Hash cfg("hostname", "localhost", "port", 12345u); // default is client
+    CPPUNIT_ASSERT_NO_THROW(karabo::net::Connection::create(karabo::data::Hash("Tcp", cfg)));
 
-    karabo::util::Hash cfg2("url", "tcp://localhost:12345"); // default is client
-    CPPUNIT_ASSERT_NO_THROW(karabo::net::Connection::create(karabo::util::Hash("Tcp", cfg2)));
+    karabo::data::Hash cfg2("url", "tcp://localhost:12345"); // default is client
+    CPPUNIT_ASSERT_NO_THROW(karabo::net::Connection::create(karabo::data::Hash("Tcp", cfg2)));
 
-    karabo::util::Hash cfg3("url", "localhost:12345"); // do not forget the protocol
+    karabo::data::Hash cfg3("url", "localhost:12345"); // do not forget the protocol
     bool failed = false;
     try {
-        karabo::net::Connection::create(karabo::util::Hash("Tcp", cfg3));
-    } catch (const karabo::util::NetworkException& e) {
+        karabo::net::Connection::create(karabo::data::Hash("Tcp", cfg3));
+    } catch (const karabo::data::NetworkException& e) {
         CPPUNIT_ASSERT(e.userFriendlyMsg().find("does not start with 'tcp'") != std::string::npos);
         failed = true;
     }
@@ -928,7 +928,7 @@ void TcpNetworking_Test::testClientServer() {
 
 
 void TcpNetworking_Test::testBufferSet() {
-    using namespace karabo::util;
+    using namespace karabo::data;
     using namespace karabo::net;
 
     auto thr = std::jthread(&EventLoop::work);
@@ -992,7 +992,7 @@ void TcpNetworking_Test::testBufferSet() {
     Hash receivedHeader;
     std::vector<karabo::io::BufferSet::Pointer> receivedBuffers;
     auto onRead = [&recvProm, &failureReason, &receivedHeader, &receivedBuffers](
-                        const boost::system::error_code& ec, const karabo::util::Hash& h,
+                        const boost::system::error_code& ec, const karabo::data::Hash& h,
                         const std::vector<karabo::io::BufferSet::Pointer>& bufs) {
         if (ec) {
             failureReason = toString(ec.value()) += " -- " + ec.message();
@@ -1087,7 +1087,7 @@ void TcpNetworking_Test::testBufferSet() {
 
 
 void TcpNetworking_Test::testConsumeBytesAfterReadUntil() {
-    using namespace karabo::util;
+    using namespace karabo::data;
     using namespace karabo::net;
 
     auto thr = std::jthread(&EventLoop::work);
