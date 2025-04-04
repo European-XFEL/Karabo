@@ -29,10 +29,11 @@
 #include <boost/chrono.hpp>
 #include <functional>
 #include <karabo/core/InstanceChangeThrottler.hh>
-#include <karabo/util/Hash.hh>
 #include <mutex>
 #include <string>
 #include <vector>
+
+#include "karabo/data/types/Hash.hh"
 
 
 //<editor-fold desc="Helper types for InstanceChangeThrottler unit tests">
@@ -41,7 +42,7 @@ struct InstanceChange {
     std::chrono::high_resolution_clock::time_point timePoint;
     karabo::core::InstanceChangeThrottler::InstChangeType changeType;
     std::string instanceId;
-    karabo::util::Hash instanceInfo;
+    karabo::data::Hash instanceInfo;
 };
 
 
@@ -58,8 +59,8 @@ class InstanceChangeObserver {
     InstanceChange newestInstChange() const;
     InstanceChange oldestInstChange() const;
     void clearInstChanges();
-    void addInstChanges(const karabo::util::Hash& changeInfo);
-    void addInstChangesOfType(const karabo::util::Hash& srcTypesHash,
+    void addInstChanges(const karabo::data::Hash& changeInfo);
+    void addInstChangesOfType(const karabo::data::Hash& srcTypesHash,
                               const karabo::core::InstanceChangeThrottler::InstChangeType changeType,
                               std::vector<InstanceChange>& destChangeVector);
 
@@ -104,14 +105,14 @@ class InstanceChangeThrottler_Test : public CPPUNIT_NS::TestFixture {
 
    private:
     std::string m_instIdServer;
-    karabo::util::Hash m_instInfoServer;
+    karabo::data::Hash m_instInfoServer;
 
     std::string m_instIdDevice;
-    karabo::util::Hash m_instInfoDevice;
+    karabo::data::Hash m_instInfoDevice;
 
     InstanceChangeObserver m_instChangeObserver;
 
-    void handleInstChange(const karabo::util::Hash& changeInfo);
+    void handleInstChange(const karabo::data::Hash& changeInfo);
 
     /**
      * Test that the "bursts" of event changes received from the throttler are

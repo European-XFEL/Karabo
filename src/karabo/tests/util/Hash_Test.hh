@@ -27,7 +27,7 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 
-#include <karabo/util/SimpleElement.hh>
+#include "karabo/data/schema/SimpleElement.hh"
 
 class Hash_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(Hash_Test);

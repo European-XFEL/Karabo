@@ -26,14 +26,14 @@
 #ifndef KARABO_XMS_IMAGEDATA_HH
 #define KARABO_XMS_IMAGEDATA_HH
 
-#include <karabo/util/ByteSwap.hh>
-#include <karabo/util/CustomNodeElement.hh>
-#include <karabo/util/Dims.hh>
-#include <karabo/util/Hash.hh>
-#include <karabo/util/Validator.hh>
+#include "karabo/data/schema/CustomNodeElement.hh"
+#include "karabo/data/schema/Validator.hh"
+#include "karabo/data/types/ByteSwap.hh"
+#include "karabo/data/types/Dims.hh"
+#include "karabo/data/types/Hash.hh"
 
 namespace karabo {
-    namespace util {
+    namespace data {
         class NDArray;
     }
     namespace xms {
@@ -106,17 +106,17 @@ namespace karabo {
          * @code
          * IMAGEDATA_ELEMENT(data).key("data.image")
          *     .setDimensions(std::string("480,640,3"))
-         *     .setType(util::Types::UINT16)
+         *     .setType(data::Types::UINT16)
          *     .setEncoding(xms::Encoding::RGB)
          *     .commit();
          * @endcode
          *
          */
-        class ImageData : protected karabo::util::Hash {
+        class ImageData : protected karabo::data::Hash {
            public:
             KARABO_CLASSINFO(ImageData, "ImageData", "1.5")
 
-            static void expectedParameters(karabo::util::Schema& s);
+            static void expectedParameters(karabo::data::Schema& s);
 
             /**
              * Constructor of an empty ImageData
@@ -137,7 +137,7 @@ namespace karabo {
              *                     the size in bytes of the type used in the NDArray 'data'. If zero (default) or
              *                     negative, a value matching the NDArray type will be calculated (8, 16, ...).
              */
-            ImageData(const karabo::util::NDArray& data, const EncodingType encoding = Encoding::GRAY,
+            ImageData(const karabo::data::NDArray& data, const EncodingType encoding = Encoding::GRAY,
                       const int bitsPerPixel = 0);
 
             /**
@@ -154,7 +154,7 @@ namespace karabo {
              *                     the size in bytes of the type used in the NDArray 'data'. If zero (default) or
              *                     negative, a value matching the NDArray type will be calculated (8, 16, ...).
              */
-            ImageData(const karabo::util::NDArray& data, const karabo::util::Dims& dims,
+            ImageData(const karabo::data::NDArray& data, const karabo::data::Dims& dims,
                       const EncodingType encoding = Encoding::GRAY, const int bitsPerPixel = 0);
 
             ImageData(const ImageData& other) = default;
@@ -165,31 +165,31 @@ namespace karabo {
              * Get a reference to the underlying image data structure.
              * Interpretation depends on ImageData::getEncoding().
              */
-            karabo::util::NDArray& getData();
+            karabo::data::NDArray& getData();
 
             /**
              * Get a reference to the underlying image data structure.
              * Interpretation depends on ImageData::getEncoding().
              */
-            const karabo::util::NDArray& getData() const;
+            const karabo::data::NDArray& getData() const;
 
             /**
              * Set image data.
              *             * Note that the copy stored inside ImageData will refer to the same memory as the input.
              */
-            void setData(const karabo::util::NDArray& array);
+            void setData(const karabo::data::NDArray& array);
 
-            karabo::util::Types::ReferenceType getDataType() const;
+            karabo::data::Types::ReferenceType getDataType() const;
 
-            void setDataType(const karabo::util::Types::ReferenceType&);
+            void setDataType(const karabo::data::Types::ReferenceType&);
 
-            karabo::util::Dims getROIOffsets() const;
+            karabo::data::Dims getROIOffsets() const;
 
-            void setROIOffsets(const karabo::util::Dims& offsets);
+            void setROIOffsets(const karabo::data::Dims& offsets);
 
-            karabo::util::Dims getBinning() const;
+            karabo::data::Dims getBinning() const;
 
-            void setBinning(const karabo::util::Dims& binning);
+            void setBinning(const karabo::data::Dims& binning);
 
             int getRotation() const;
 
@@ -230,7 +230,7 @@ namespace karabo {
              *
              * @return Dimension object
              */
-            karabo::util::Dims getDimensions() const;
+            karabo::data::Dims getDimensions() const;
 
             /**
              * Say x = fasted changing, y = medium fast and z = slowest changing index
@@ -241,7 +241,7 @@ namespace karabo {
              * For 2D single images, leave away the depth
              * @param dims Dimensionality
              */
-            void setDimensions(const karabo::util::Dims& dims);
+            void setDimensions(const karabo::data::Dims& dims);
 
             const std::vector<int> getDimensionTypes() const;
 
@@ -254,25 +254,25 @@ namespace karabo {
             ImageData copy() const;
 
            private:
-            static int defaultBitsPerPixel(int encoding, const karabo::util::NDArray& data);
+            static int defaultBitsPerPixel(int encoding, const karabo::data::NDArray& data);
         };
 
         /**********************************************************************
          * Declaration ImageDataElement
          **********************************************************************/
 
-        class ImageDataElement : public karabo::util::CustomNodeElement<ImageDataElement, ImageData> {
-            typedef karabo::util::CustomNodeElement<ImageDataElement, ImageData> ParentType;
+        class ImageDataElement : public karabo::data::CustomNodeElement<ImageDataElement, ImageData> {
+            typedef karabo::data::CustomNodeElement<ImageDataElement, ImageData> ParentType;
 
            public:
-            ImageDataElement(karabo::util::Schema& s) : ParentType(s) {}
+            ImageDataElement(karabo::data::Schema& s) : ParentType(s) {}
 
             ImageDataElement& setDimensionScales(const std::string& scales) {
                 return ParentType::setDefaultValue("dimScales", scales);
             }
 
             ImageDataElement& setDimensions(const std::string& dimensions) {
-                return setDimensions(karabo::util::fromString<unsigned long long, std::vector>(dimensions));
+                return setDimensions(karabo::data::fromString<unsigned long long, std::vector>(dimensions));
             }
 
             ImageDataElement& setDimensions(const std::vector<unsigned long long>& dimensions) {
@@ -292,7 +292,7 @@ namespace karabo {
                 return ret;
             }
 
-            ImageDataElement& setType(const karabo::util::Types::ReferenceType type) {
+            ImageDataElement& setType(const karabo::data::Types::ReferenceType type) {
                 return ParentType::setDefaultValue("pixels.type", static_cast<int>(type));
             }
 

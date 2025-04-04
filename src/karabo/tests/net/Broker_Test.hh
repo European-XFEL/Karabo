@@ -28,8 +28,9 @@
 #include <cppunit/extensions/HelperMacros.h>
 
 #include <karabo/net/Broker.hh>
-#include <karabo/util/Hash.hh>
 #include <thread>
+
+#include "karabo/data/types/Hash.hh"
 
 class Broker_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(Broker_Test);
@@ -69,9 +70,9 @@ class Broker_Test : public CPPUNIT_NS::TestFixture {
    private:
     std::string m_domain;
     std::shared_ptr<std::jthread> m_thread;
-    karabo::util::Hash m_config;
+    karabo::data::Hash m_config;
     // using a Karabo Hash to match the insertion order.
-    karabo::util::Hash m_brokersUnderTest;
+    karabo::data::Hash m_brokersUnderTest;
     std::map<std::string, std::string> m_invalidBrokers;
 };
 

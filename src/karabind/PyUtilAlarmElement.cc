@@ -18,14 +18,13 @@
 
 #include <pybind11/pybind11.h>
 
-#include <karabo/util/AlarmConditionElement.hh>
-#include <karabo/util/AlarmConditions.hh>
-
 #include "Wrapper.hh"
+#include "karabo/data/schema/AlarmConditionElement.hh"
+#include "karabo/data/types/AlarmConditions.hh"
 
 
 namespace py = pybind11;
-using namespace karabo::util;
+using namespace karabo::data;
 using namespace std;
 using namespace karabind;
 

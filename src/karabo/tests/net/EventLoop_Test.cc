@@ -28,13 +28,13 @@
 #include <csignal>
 
 #include "EventLoop_Test.hh"
+#include "karabo/data/time/Epochstamp.hh"
+#include "karabo/data/time/TimeDuration.hh"
+#include "karabo/data/types/Exception.hh"
 #include "karabo/log/Logger.hh"
-#include "karabo/util/Epochstamp.hh"
-#include "karabo/util/Exception.hh"
-#include "karabo/util/TimeDuration.hh"
 
 
-using namespace karabo::util;
+using namespace karabo::data;
 using namespace karabo::net;
 using namespace std::chrono;
 using namespace std::literals::chrono_literals;
@@ -218,8 +218,8 @@ void EventLoop_Test::testAddThreadDirectly() {
 }
 
 void EventLoop_Test::testExceptionTrace() {
-    // Test thread safety of karabo::util::Exception's trace here and not in Exception_Test since requires event loop
-    using karabo::util::Exception;
+    // Test thread safety of karabo::data::Exception's trace here and not in Exception_Test since requires event loop
+    using karabo::data::Exception;
 
     std::jthread t(std::bind(&EventLoop::work));
 
@@ -235,7 +235,7 @@ void EventLoop_Test::testExceptionTrace() {
     }
 
     std::function<void(int)> func = [&promises](int n) {
-        const std::string strN(karabo::util::toString(n));
+        const std::string strN(karabo::data::toString(n));
         try {
             try {
                 try {
@@ -280,7 +280,7 @@ void EventLoop_Test::testExceptionTrace() {
 
     // Finally collect that exception traces contain al 'their' messages
     for (int i = 0; i < nParallel; ++i) {
-        std::string numStr(karabo::util::toString(i));
+        std::string numStr(karabo::data::toString(i));
         std::vector<std::string> split = splitByPattern(exceptionTxts[i], "because: ");
         // obsolete:
         // boost::algorithm::split_regex(split, exceptionTxts[i], boost::regex("because: "));

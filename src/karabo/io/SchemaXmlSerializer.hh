@@ -26,9 +26,8 @@
 #ifndef _KARABO_IO_SCHEMA_XML_SERIALIZER_HH
 #define _KARABO_IO_SCHEMA_XML_SERIALIZER_HH
 
-#include <karabo/util/Schema.hh>
-
 #include "TextSerializer.hh"
+#include "karabo/data/types/Schema.hh"
 
 namespace karabo {
 
@@ -37,27 +36,27 @@ namespace karabo {
         /**
          * @class SchemaXmlSerializer
          * @brief The SchemaXmlSerializer provides an implementation of TextSerializer
-         *        for the karabo::util::Hash
+         *        for the karabo::data::Hash
          */
-        class SchemaXmlSerializer : public TextSerializer<karabo::util::Schema> {
-            TextSerializer<karabo::util::Hash>::Pointer m_serializer;
+        class SchemaXmlSerializer : public TextSerializer<karabo::data::Schema> {
+            TextSerializer<karabo::data::Hash>::Pointer m_serializer;
 
            public:
             KARABO_CLASSINFO(SchemaXmlSerializer, "Xml", "1.0")
 
-            static void expectedParameters(karabo::util::Schema& expected);
+            static void expectedParameters(karabo::data::Schema& expected);
 
-            SchemaXmlSerializer(const karabo::util::Hash& hash);
+            SchemaXmlSerializer(const karabo::data::Hash& hash);
 
-            void save(const karabo::util::Schema& object, std::string& archive);
+            void save(const karabo::data::Schema& object, std::string& archive);
 
-            void load(karabo::util::Schema& object, const std::string& archive);
+            void load(karabo::data::Schema& object, const std::string& archive);
 
             virtual ~SchemaXmlSerializer() {}
         };
     } // namespace io
 } // namespace karabo
 
-KARABO_REGISTER_CONFIGURATION_BASE_CLASS(karabo::io::TextSerializer<karabo::util::Schema>)
+KARABO_REGISTER_CONFIGURATION_BASE_CLASS(karabo::io::TextSerializer<karabo::data::Schema>)
 
 #endif

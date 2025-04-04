@@ -33,9 +33,9 @@
 #include <iostream>
 #include <regex>
 
+#include "karabo/data/types/Exception.hh"
+#include "karabo/data/types/StringTools.hh"
 #include "karabo/log/Logger.hh"
-#include "karabo/util/Exception.hh"
-#include "karabo/util/StringTools.hh"
 
 using namespace std;
 using namespace boost;
@@ -64,14 +64,14 @@ void karabo::net::runProtected(std::shared_ptr<boost::asio::io_service> service,
     //  object's thread pool without impacting any other threads in the pool."
 
     const std::string fullMessage(" when running io_service (" + errorMessage + "), continue in " +
-                                        karabo::util::toString(delayInMilliSec) += " ms");
+                                        karabo::data::toString(delayInMilliSec) += " ms");
     while (true) {
         bool caught = true;
         try {
             service->run();
             caught = false; // run exited normally
             break;
-        } catch (karabo::util::Exception& e) {
+        } catch (karabo::data::Exception& e) {
             KARABO_LOG_FRAMEWORK_ERROR_C(category) << "Exception" << fullMessage << ": " << e;
         } catch (std::exception& e) {
             KARABO_LOG_FRAMEWORK_ERROR_C(category) << "Standard exception" << fullMessage << ": " << e.what();

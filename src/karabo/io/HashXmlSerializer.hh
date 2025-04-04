@@ -26,10 +26,10 @@
 #ifndef HASHXMLSERIALIZER_H
 #define HASHXMLSERIALIZER_H
 
-#include <karabo/util/Hash.hh>
 #include <pugixml.hpp>
 
 #include "TextSerializer.hh"
+#include "karabo/data/types/Hash.hh"
 
 namespace karabo {
 
@@ -38,14 +38,14 @@ namespace karabo {
         /**
          * @class HashXmlSerializer
          * @brief The HashXmlSerializer provides an implementation of TextSerializer
-         *        for the karabo::util::Hash
+         *        for the karabo::data::Hash
          *
-         * While a karabo::util::Hash can in principle hold arbitrary data types, Hash
-         * serialization is limited to data types known to the karabo::util::Types type
+         * While a karabo::data::Hash can in principle hold arbitrary data types, Hash
+         * serialization is limited to data types known to the karabo::data::Types type
          * system. Hashes containing other data types will lead to exceptions during
          * serialization.
          */
-        class HashXmlSerializer : public TextSerializer<karabo::util::Hash> {
+        class HashXmlSerializer : public TextSerializer<karabo::data::Hash> {
             std::string m_indentation;
             std::string m_xmlns;
             std::string m_prefix;
@@ -62,28 +62,28 @@ namespace karabo {
            public:
             KARABO_CLASSINFO(HashXmlSerializer, "Xml", "1.0")
 
-            static void expectedParameters(karabo::util::Schema& expected);
+            static void expectedParameters(karabo::data::Schema& expected);
 
-            HashXmlSerializer(const karabo::util::Hash& hash);
+            HashXmlSerializer(const karabo::data::Hash& hash);
 
-            void save(const karabo::util::Hash& object, std::string& archive);
+            void save(const karabo::data::Hash& object, std::string& archive);
 
-            void load(karabo::util::Hash& object, const std::string& archive);
+            void load(karabo::data::Hash& object, const std::string& archive);
 
-            void load(karabo::util::Hash& object, const char* archive);
+            void load(karabo::data::Hash& object, const char* archive);
 
-            void save(const std::vector<karabo::util::Hash>& objects, std::string& archive);
+            void save(const std::vector<karabo::data::Hash>& objects, std::string& archive);
 
-            void load(std::vector<karabo::util::Hash>& objects, const std::string& archive);
+            void load(std::vector<karabo::data::Hash>& objects, const std::string& archive);
 
             virtual ~HashXmlSerializer(){};
 
            private:
-            void createXml(const karabo::util::Hash& object, pugi::xml_node& node) const;
+            void createXml(const karabo::data::Hash& object, pugi::xml_node& node) const;
 
-            void createHash(karabo::util::Hash& object, pugi::xml_node node) const;
+            void createHash(karabo::data::Hash& object, pugi::xml_node node) const;
 
-            void writeAttributes(const karabo::util::Hash::Attributes& attrs, pugi::xml_node& node) const;
+            void writeAttributes(const karabo::data::Hash::Attributes& attrs, pugi::xml_node& node) const;
 
             /**
              * Reads all the hash attributes that are convertible from string from a given xml node.
@@ -92,7 +92,7 @@ namespace karabo {
              * @return true if all the attributes in the xml node have been read; false if there is at least
              * one attribute that is not convertible from string that should still be processed.
              */
-            bool readStrConvertibleAttrs(karabo::util::Hash::Attributes& attrs, const pugi::xml_node& node) const;
+            bool readStrConvertibleAttrs(karabo::data::Hash::Attributes& attrs, const pugi::xml_node& node) const;
 
             /**
              * Extracts all the hash attributes that are non convertible from string from a given xml node.
@@ -104,7 +104,7 @@ namespace karabo {
              * @note: currently there are two types of attributes that are not convertible from string: VECTOR_HASH
              * and SCHEMA.
              */
-            void extractNonStrConvertibleAttrs(std::vector<karabo::util::Hash>& nonStrAttrs,
+            void extractNonStrConvertibleAttrs(std::vector<karabo::data::Hash>& nonStrAttrs,
                                                const pugi::xml_node& node) const;
 
             /**
@@ -116,10 +116,10 @@ namespace karabo {
              *              has a single key that corresponds to the attribute name and whose value is the attribute
              * value. This value will be 'moved away' to the attributes to avoid copies.
              */
-            void addNonStrConvertibleAttrs(karabo::util::Hash& hash, const std::string& hashPath,
-                                           std::vector<karabo::util::Hash>& attrs) const;
+            void addNonStrConvertibleAttrs(karabo::data::Hash& hash, const std::string& hashPath,
+                                           std::vector<karabo::data::Hash>& attrs) const;
 
-            std::pair<std::string, karabo::util::Types::ReferenceType> readXmlAttribute(
+            std::pair<std::string, karabo::data::Types::ReferenceType> readXmlAttribute(
                   const std::string& xmlAttribute) const;
 
             struct CustomWriter : public pugi::xml_writer {
@@ -138,6 +138,6 @@ namespace karabo {
     } // namespace io
 } // namespace karabo
 
-KARABO_REGISTER_CONFIGURATION_BASE_CLASS(karabo::io::TextSerializer<karabo::util::Hash>)
+KARABO_REGISTER_CONFIGURATION_BASE_CLASS(karabo::io::TextSerializer<karabo::data::Hash>)
 
 #endif

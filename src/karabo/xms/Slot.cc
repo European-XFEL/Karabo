@@ -24,7 +24,7 @@
 
 #include "Slot.hh"
 
-using namespace karabo::util;
+using namespace karabo::data;
 
 namespace karabo {
 
@@ -51,12 +51,12 @@ namespace karabo {
         }
 
 
-        karabo::util::Hash::Pointer Slot::getHeaderOfSender() const {
+        karabo::data::Hash::Pointer Slot::getHeaderOfSender() const {
             return m_headerOfSender;
         }
 
 
-        void Slot::extractSenderInformation(const karabo::util::Hash& header) {
+        void Slot::extractSenderInformation(const karabo::data::Hash& header) {
             boost::optional<const Hash::Node&> node = header.find("userId");
             if (node) m_userIdOfSender = node->getValue<std::string>();
             node = header.find("accessLevel");
@@ -66,7 +66,7 @@ namespace karabo {
             node = header.find("sessionToken");
             if (node) m_sessionTokenOfSender = node->getValue<std::string>();
 
-            m_headerOfSender = std::make_shared<karabo::util::Hash>(header);
+            m_headerOfSender = std::make_shared<karabo::data::Hash>(header);
         }
 
 
@@ -91,7 +91,7 @@ namespace karabo {
                 extractSenderInformation(header);
                 doCallRegisteredSlotFunctions(body);
                 invalidateSenderInformation();
-            } catch (const karabo::util::CastException& e) {
+            } catch (const karabo::data::CastException& e) {
                 invalidateSenderInformation();
                 KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("Received incompatible argument(s) for slot \"" +
                                                               m_slotFunction + "\"."));

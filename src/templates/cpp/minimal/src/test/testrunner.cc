@@ -24,14 +24,14 @@ KaraboDeviceFixture::KaraboDeviceFixture() {
 }
 
 void KaraboDeviceFixture::instantiateWithDeviceServer(const std::string& classId, const std::string& instanceId,
-                                                      const karabo::util::Hash& devCfg) {
+                                                      const karabo::data::Hash& devCfg) {
     // Instantiate C++ device server
-    const karabo::util::Hash& pluginConfig = karabo::util::Hash("pluginDirectory", ".");
+    const karabo::data::Hash& pluginConfig = karabo::data::Hash("pluginDirectory", ".");
     karabo::util::PluginLoader::create("PluginLoader", pluginConfig)->update();
 
     // scanPlugins is set to true to scan $KARABO/plugins directory
     // can be set to false if other libraries are not needed for testing
-    karabo::util::Hash config("serverId", DEVICE_SERVER_ID, "scanPlugins", true, "Logger.priority", LOG_PRIORITY);
+    karabo::data::Hash config("serverId", DEVICE_SERVER_ID, "scanPlugins", true, "Logger.priority", LOG_PRIORITY);
     m_deviceSrv = karabo::core::DeviceServer::create("DeviceServer", config);
     m_deviceSrv->finalizeInternalInitialization();
 
@@ -44,12 +44,12 @@ void KaraboDeviceFixture::instantiateWithDeviceServer(const std::string& classId
 
 karabo::core::BaseDevice::Pointer KaraboDeviceFixture::instantiateAndGetPointer(const std::string& classId,
                                                                                 const std::string& instanceId,
-                                                                                const karabo::util::Hash& devCfg) {
+                                                                                const karabo::data::Hash& devCfg) {
     std::string errorMsg;
     karabo::core::BaseDevice::Pointer devPtr;
     // karabo::log::Logger is a singleton and we should reset it to make sure it is configured how we like it.
     karabo::log::Logger::reset();
-    karabo::util::Hash config("priority", LOG_PRIORITY);
+    karabo::data::Hash config("priority", LOG_PRIORITY);
     karabo::log::Logger::configure(config);
     karabo::log::Logger::useOstream();
 
@@ -58,7 +58,7 @@ karabo::core::BaseDevice::Pointer KaraboDeviceFixture::instantiateAndGetPointer(
         devPtr = karabo::core::BaseDevice::create(classId, devCfg);
         // build a broker configuration Hash
         using namespace karabo::net;
-        using namespace karabo::util;
+        using namespace karabo::data;
         const std::string brokerType = Broker::brokerTypeFromEnv();
         Hash valBrokerCfg = Hash(brokerType, Hash(brokerType, Hash("instanceId", instanceId)));
         // connect the device under test to the broker

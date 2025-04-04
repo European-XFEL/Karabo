@@ -27,7 +27,7 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 
-#include <karabo/util.hpp>
+#include <karabo/data/types/NDArray.hh>
 
 class NDArray_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(NDArray_Test);

@@ -20,19 +20,18 @@
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
-#include <karabo/util/ByteArrayElement.hh>
-#include <karabo/util/ChoiceElement.hh>
-#include <karabo/util/Exception.hh>
-#include <karabo/util/SimpleElement.hh>
-#include <karabo/util/VectorElement.hh>
-
 #include "PyTypes.hh"
 #include "PyUtilSchemaElement.hh"
 #include "Wrapper.hh"
+#include "karabo/data/schema/ByteArrayElement.hh"
+#include "karabo/data/schema/ChoiceElement.hh"
+#include "karabo/data/schema/SimpleElement.hh"
+#include "karabo/data/schema/VectorElement.hh"
+#include "karabo/data/types/Exception.hh"
 
 
 namespace py = pybind11;
-using namespace karabo::util;
+using namespace karabo::data;
 using namespace std;
 using namespace karabind;
 

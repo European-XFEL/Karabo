@@ -40,7 +40,7 @@
 #include <string>
 #include <vector>
 
-#include "karabo/util/Exception.hh"
+#include "karabo/data/types/Exception.hh"
 
 namespace {
 

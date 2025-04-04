@@ -29,16 +29,16 @@
 #include <karabo/io/FileTools.hh>
 #include <karabo/io/SchemaBinarySerializer.hh>
 #include <karabo/io/TextFileOutput.hh>
-#include <karabo/util/ChoiceElement.hh>
-#include <karabo/util/NodeElement.hh>
-#include <karabo/util/SimpleElement.hh>
-#include <karabo/util/VectorElement.hh>
 
+#include "karabo/data/schema/ChoiceElement.hh"
+#include "karabo/data/schema/NodeElement.hh"
+#include "karabo/data/schema/SimpleElement.hh"
+#include "karabo/data/schema/VectorElement.hh"
 #include "karabo/io/BinarySerializer.hh"
 #include "karabo/util/TimeProfiler.hh"
 
 using namespace karabo::io;
-using namespace karabo::util;
+using namespace karabo::data;
 using std::vector;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(SchemaSerializer_Test);
@@ -60,7 +60,7 @@ struct TestSchemaSerializer {
     KARABO_CLASSINFO(TestSchemaSerializer, "TestSchemaSerializer", "1.0");
 
 
-    static void expectedParameters(karabo::util::Schema& expected) {
+    static void expectedParameters(karabo::data::Schema& expected) {
         STRING_ELEMENT(expected)
               .key("exampleKey1")
               .tags("hardware, poll")

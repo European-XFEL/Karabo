@@ -29,6 +29,7 @@
 #include <mutex>
 #include <thread>
 
+#include "karabo/data/types/StringTools.hh"
 #include "karabo/log/Logger.hh"
 #include "karabo/net/AmqpClient.hh"
 #include "karabo/net/AmqpConnection.hh"
@@ -38,7 +39,6 @@
 #include "karabo/net/EventLoop.hh"
 #include "karabo/tests/BrokerUtils.hh"
 #include "karabo/tests/WaitUtils.hh"
-#include "karabo/util/StringTools.hh"
 
 using namespace karabo;
 using namespace std::chrono;
@@ -56,7 +56,7 @@ Amqp_Test::Amqp_Test()
     : m_defaultBrokers(getBrokerFromEnv("amqp")), m_timeout(10), m_timeoutMs(10'000) {
     if (false &&                            // remove 'false &&' to switch on logging
         !m_loggingIsSetup.exchange(true)) { // configure logging only once in the process
-        log::Logger::configure(util::Hash("priority", "DEBUG"));
+        log::Logger::configure(data::Hash("priority", "DEBUG"));
         log::Logger::useOstream();
     }
 }
@@ -226,7 +226,7 @@ void Amqp_Test::testConnection() {
             CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futCreateChannel.wait_for(m_timeout));
             const auto channel_msg = futCreateChannel.get();
             if (i < maxNumChannels) {
-                CPPUNIT_ASSERT_MESSAGE("Channel missing: " + util::toString(i), channel_msg.first);
+                CPPUNIT_ASSERT_MESSAGE("Channel missing: " + data::toString(i), channel_msg.first);
                 channels.push_back(channel_msg.first); // keep alive
             } else {
                 CPPUNIT_ASSERT_EQUAL(std::string("Runtime exception creating channel: failed to open channel: "
@@ -442,14 +442,14 @@ void Amqp_Test::testClient() {
     for (size_t i = 0; i < readByBob->size(); ++i) {
         std::string exchange(prefix + "exchange ");
         exchange.back() = (i % 2 == 0 ? '1' : '2'); // Same alternating exchanges as for sending
-        CPPUNIT_ASSERT_EQUAL_MESSAGE("Message " + karabo::util::toString(i), exchange, std::get<1>(readByBob->at(i)));
+        CPPUNIT_ASSERT_EQUAL_MESSAGE("Message " + karabo::data::toString(i), exchange, std::get<1>(readByBob->at(i)));
         std::string routingKey("bob ");
         routingKey.back() = '1' + i; // "bob1", "bob2", "bob3", "bob4"
-        CPPUNIT_ASSERT_EQUAL_MESSAGE("Message " + karabo::util::toString(i), routingKey, std::get<2>(readByBob->at(i)));
+        CPPUNIT_ASSERT_EQUAL_MESSAGE("Message " + karabo::data::toString(i), routingKey, std::get<2>(readByBob->at(i)));
         // Check data content
         const std::shared_ptr<std::vector<char>>& data = std::get<0>(readByBob->at(i));
-        CPPUNIT_ASSERT_EQUAL_MESSAGE("Message " + karabo::util::toString(i), 10ul, data->size());
-        CPPUNIT_ASSERT_EQUAL_MESSAGE("Message " + karabo::util::toString(i), static_cast<char>('a' + i), (*data)[0]);
+        CPPUNIT_ASSERT_EQUAL_MESSAGE("Message " + karabo::data::toString(i), 10ul, data->size());
+        CPPUNIT_ASSERT_EQUAL_MESSAGE("Message " + karabo::data::toString(i), static_cast<char>('a' + i), (*data)[0]);
     }
 
     // Give some time for the fifth message - though it should not come
@@ -492,7 +492,7 @@ void Amqp_Test::testClient() {
     CPPUNIT_ASSERT_EQUAL(1, numReadAlice->load()); // as before
 
     // Cannot set an invalid read handler
-    CPPUNIT_ASSERT_THROW(alice->setReadHandler(net::AmqpClient::ReadHandler()), karabo::util::ParameterException);
+    CPPUNIT_ASSERT_THROW(alice->setReadHandler(net::AmqpClient::ReadHandler()), karabo::data::ParameterException);
 
     //***************************************************************
     // Now test unsubscribing
@@ -645,7 +645,7 @@ void Amqp_Test::testClientConcurrentSubscripts() {
 
     for (size_t i = 0; i < nSubscriptions; ++i) {
         auto& fut = subFutures[i];
-        const std::string iStr("[Un]Subscription " + util::toString(i) += " ");
+        const std::string iStr("[Un]Subscription " + data::toString(i) += " ");
         CPPUNIT_ASSERT_EQUAL_MESSAGE(iStr, std::future_status::ready, fut.wait_for(m_timeout));
         boost::system::error_code ec = fut.get();
         CPPUNIT_ASSERT_EQUAL_MESSAGE(iStr + ec.message(), 0, ec.value());
@@ -757,10 +757,10 @@ void Amqp_Test::testClientSameId() {
     }
     // Block until all confirm subscription
     for (int i = 0; i < numClients; ++i) {
-        CPPUNIT_ASSERT_EQUAL_MESSAGE("Future of client " + karabo::util::toString(i), std::future_status::ready,
+        CPPUNIT_ASSERT_EQUAL_MESSAGE("Future of client " + karabo::data::toString(i), std::future_status::ready,
                                      subFutures[i].wait_for(m_timeout));
         const boost::system::error_code ec = subFutures[i].get();
-        CPPUNIT_ASSERT_EQUAL_MESSAGE((karabo::util::toString(i) += ": ") + ec.message(),
+        CPPUNIT_ASSERT_EQUAL_MESSAGE((karabo::data::toString(i) += ": ") + ec.message(),
                                      static_cast<int>(boost::system::errc::success), ec.value());
     }
 
@@ -843,12 +843,12 @@ void Amqp_Test::testClientUnsubscribeAll() {
         subFutures.push_back(subPromises->back().get_future());
         net::AsyncHandler callback(
               [i, subPromises](const boost::system::error_code ec) { (*subPromises)[i].set_value(ec); });
-        bob->asyncSubscribe(exchange, "forBob_" + util::toString(i), callback);
+        bob->asyncSubscribe(exchange, "forBob_" + data::toString(i), callback);
     }
 
     for (size_t i = 0; i < nSubscriptions; ++i) {
         auto& fut = subFutures[i];
-        const std::string iStr("Subscription " + util::toString(i));
+        const std::string iStr("Subscription " + data::toString(i));
         CPPUNIT_ASSERT_EQUAL_MESSAGE(iStr, std::future_status::ready, fut.wait_for(m_timeout));
         boost::system::error_code ec = fut.get();
         CPPUNIT_ASSERT_EQUAL_MESSAGE(iStr + ec.message(), 0, ec.value());
@@ -856,7 +856,7 @@ void Amqp_Test::testClientUnsubscribeAll() {
 
     // Now send a message (sender is bob himself...) for each subscription
     for (size_t i = 0; i < nSubscriptions; ++i) {
-        bob->asyncPublish(exchange, "forBob_" + util::toString(i), std::make_shared<std::vector<char>>(i, 'i'),
+        bob->asyncPublish(exchange, "forBob_" + data::toString(i), std::make_shared<std::vector<char>>(i, 'i'),
                           [](const boost::system::error_code ec) {});
     }
     // Wait until they all arrived
@@ -876,7 +876,7 @@ void Amqp_Test::testClientUnsubscribeAll() {
     CPPUNIT_ASSERT_EQUAL_MESSAGE(ec.message(), 0, ec.value());
 
     for (size_t i = 0; i < nSubscriptions; ++i) {
-        bob->asyncPublish(exchange, "forBob_" + util::toString(i), std::make_shared<std::vector<char>>(i, 'i'),
+        bob->asyncPublish(exchange, "forBob_" + data::toString(i), std::make_shared<std::vector<char>>(i, 'i'),
                           [](const boost::system::error_code ec) {});
     }
 
@@ -1028,18 +1028,18 @@ void Amqp_Test::testHashClient() {
     const std::string prefix = net::Broker::brokerDomainFromEnv() += ".";
 
     // Create a bob, just for sending
-    net::AmqpHashClient::HashReadHandler bobRead = [](const util::Hash::Pointer&, const util::Hash::Pointer&) {};
+    net::AmqpHashClient::HashReadHandler bobRead = [](const data::Hash::Pointer&, const data::Hash::Pointer&) {};
     net::AmqpHashClient::ErrorReadHandler bobError = [](const std::string&) {};
     net::AmqpHashClient::Pointer bob(
           net::AmqpHashClient::create(connection, prefix + "bob", AMQP::Table(), bobRead, bobError));
 
 
     // Now create alice that subscribes and thus should receive
-    util::Hash::Pointer readHeader = std::make_shared<util::Hash>();
-    util::Hash::Pointer readBody = std::make_shared<util::Hash>();
+    data::Hash::Pointer readHeader = std::make_shared<data::Hash>();
+    data::Hash::Pointer readBody = std::make_shared<data::Hash>();
     auto readMutex = std::make_shared<std::mutex>();
-    net::AmqpHashClient::HashReadHandler aliceRead = [readHeader, readBody, readMutex](const util::Hash::Pointer& h,
-                                                                                       const util::Hash::Pointer& b) {
+    net::AmqpHashClient::HashReadHandler aliceRead = [readHeader, readBody, readMutex](const data::Hash::Pointer& h,
+                                                                                       const data::Hash::Pointer& b) {
         std::scoped_lock lock(*readMutex);
         *readHeader = *h;
         *readBody = *b;
@@ -1063,8 +1063,8 @@ void Amqp_Test::testHashClient() {
                                  aliceSubEc.value());
 
     // Now bob sends a message
-    util::Hash::Pointer sentHeader = std::make_shared<util::Hash>("headerLine", "fromBob");
-    util::Hash::Pointer sentBody = std::make_shared<util::Hash>("a1", "the answer is", "a2", 42);
+    data::Hash::Pointer sentHeader = std::make_shared<data::Hash>("headerLine", "fromBob");
+    data::Hash::Pointer sentBody = std::make_shared<data::Hash>("a1", "the answer is", "a2", 42);
     auto bobPubDone = std::make_shared<std::promise<boost::system::error_code>>();
     auto bobPubFut = bobPubDone->get_future();
     bob->asyncPublish(prefix + "hashExchange", "alice", sentHeader, sentBody,

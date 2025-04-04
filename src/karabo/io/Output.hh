@@ -27,8 +27,8 @@
 #ifndef KARABO_IO_OUTPUT_HH
 #define KARABO_IO_OUTPUT_HH
 
-#include <karabo/util/Configurator.hh>
-#include <karabo/util/SimpleElement.hh>
+#include "karabo/data/schema/Configurator.hh"
+#include "karabo/data/schema/SimpleElement.hh"
 
 namespace karabo {
 
@@ -54,8 +54,8 @@ namespace karabo {
 
             KARABO_CONFIGURATION_BASE_CLASS
 
-            static void expectedParameters(karabo::util::Schema& expected) {
-                using namespace karabo::util;
+            static void expectedParameters(karabo::data::Schema& expected) {
+                using namespace karabo::data;
 
                 BOOL_ELEMENT(expected)
                       .key("enableAppendMode")
@@ -70,7 +70,7 @@ namespace karabo {
                       .commit();
             }
 
-            Output(const karabo::util::Hash& config) {
+            Output(const karabo::data::Hash& config) {
                 config.get<bool>("enableAppendMode", m_appendModeEnabled);
             }
 

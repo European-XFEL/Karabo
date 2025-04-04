@@ -26,8 +26,9 @@
 
 #include <cppunit/TestAssert.h>
 
-#include <karabo/util/Validator.hh>
+#include "karabo/data/schema/Validator.hh"
 using namespace std;
+using namespace karabo::data;
 using namespace karabo::util;
 using namespace configurationTest;
 
@@ -42,7 +43,7 @@ namespace CppUnit {
         }
 
         static std::string toString(const std::vector<T>& p) {
-            return karabo::util::toString(p);
+            return karabo::data::toString(p);
         }
     };
 } // namespace CppUnit
@@ -71,7 +72,7 @@ void Schema_Test::testBuildUp() {
         GraphicsRenderer::Pointer p = GraphicsRenderer::create(
               "GraphicsRenderer", Hash("shapes.Circle.radius", 0.5, "color", "red", "antiAlias", "true"));
 
-    } catch (const karabo::util::Exception& e) {
+    } catch (const karabo::data::Exception& e) {
         KARABO_LOG_FRAMEWORK_DEBUG << e;
         CPPUNIT_FAIL(e.detailedMsg());
     }
@@ -169,7 +170,7 @@ void Schema_Test::setUp() {
     try {
         m_schema = Schema("MyTest", Schema::AssemblyRules(READ | WRITE | INIT));
         TestStruct1::expectedParameters(m_schema);
-    } catch (const karabo::util::Exception& e) {
+    } catch (const karabo::data::Exception& e) {
         std::clog << "Error (Schema_Test::setUp): " << e << std::endl;
     }
 }
@@ -325,9 +326,9 @@ void Schema_Test::testGetOptions() {
     // Hijack test to check exception for invalid (empty) options.
     Schema schema;
     CPPUNIT_ASSERT_THROW(DOUBLE_ELEMENT(schema).key("some").options(std::vector<double>()),
-                         karabo::util::ParameterException);
+                         karabo::data::ParameterException);
 
-    CPPUNIT_ASSERT_THROW(INT32_ELEMENT(schema).key("someOther").options(""), karabo::util::ParameterException);
+    CPPUNIT_ASSERT_THROW(INT32_ELEMENT(schema).key("someOther").options(""), karabo::data::ParameterException);
 }
 
 
@@ -359,7 +360,7 @@ void Schema_Test::testGetDefaultValue() {
 
 
 void Schema_Test::testInvalidDefaultsThrow() {
-    karabo::util::Schema schInvalidDefault;
+    karabo::data::Schema schInvalidDefault;
     CPPUNIT_ASSERT_THROW_MESSAGE("Expected exception adding int element with default smaller than minimum.",
                                  INT32_ELEMENT(schInvalidDefault)
                                        .key("int")
@@ -368,7 +369,7 @@ void Schema_Test::testInvalidDefaultsThrow() {
                                        .minExc(1)
                                        .reconfigurable()
                                        .commit(),
-                                 karabo::util::ParameterException);
+                                 karabo::data::ParameterException);
     CPPUNIT_ASSERT_THROW_MESSAGE("Expected exception adding float element with default smaller than minimum.",
                                  FLOAT_ELEMENT(schInvalidDefault)
                                        .key("float")
@@ -377,7 +378,7 @@ void Schema_Test::testInvalidDefaultsThrow() {
                                        .minInc(1.0f)
                                        .reconfigurable()
                                        .commit(),
-                                 karabo::util::ParameterException);
+                                 karabo::data::ParameterException);
     CPPUNIT_ASSERT_THROW_MESSAGE("Expected exception adding double element with default greater than maximum.",
                                  DOUBLE_ELEMENT(schInvalidDefault)
                                        .key("double")
@@ -386,7 +387,7 @@ void Schema_Test::testInvalidDefaultsThrow() {
                                        .maxExc(1.0)
                                        .reconfigurable()
                                        .commit(),
-                                 karabo::util::ParameterException);
+                                 karabo::data::ParameterException);
     CPPUNIT_ASSERT_THROW_MESSAGE("Expected exception adding uint32 element with default greater than maximum.",
                                  UINT32_ELEMENT(schInvalidDefault)
                                        .key("uint32")
@@ -395,7 +396,7 @@ void Schema_Test::testInvalidDefaultsThrow() {
                                        .maxInc(120u)
                                        .reconfigurable()
                                        .commit(),
-                                 karabo::util::ParameterException);
+                                 karabo::data::ParameterException);
     CPPUNIT_ASSERT_THROW_MESSAGE("Expected exception adding string element with default not among options.",
                                  STRING_ELEMENT(schInvalidDefault)
                                        .key("string")
@@ -404,7 +405,7 @@ void Schema_Test::testInvalidDefaultsThrow() {
                                        .options("OneOption AnotherOption")
                                        .reconfigurable()
                                        .commit(),
-                                 karabo::util::ParameterException);
+                                 karabo::data::ParameterException);
     CPPUNIT_ASSERT_THROW_MESSAGE("Expected exception adding int vector with size smaller than minSize.",
                                  VECTOR_INT32_ELEMENT(schInvalidDefault)
                                        .key("vectorInt")
@@ -413,7 +414,7 @@ void Schema_Test::testInvalidDefaultsThrow() {
                                        .minSize(4)
                                        .reconfigurable()
                                        .commit(),
-                                 karabo::util::ParameterException);
+                                 karabo::data::ParameterException);
     CPPUNIT_ASSERT_THROW_MESSAGE("Expected exception adding bool vector with size greater than maxSize.",
                                  VECTOR_BOOL_ELEMENT(schInvalidDefault)
                                        .key("vectorBool")
@@ -422,7 +423,7 @@ void Schema_Test::testInvalidDefaultsThrow() {
                                        .maxSize(2)
                                        .reconfigurable()
                                        .commit(),
-                                 karabo::util::ParameterException);
+                                 karabo::data::ParameterException);
 }
 
 
@@ -618,9 +619,9 @@ void Schema_Test::testSlotElement() {
     // An underscores should not be allowed in slot keys since they interfere with slots under a node.
     // But currently we cannot exclude them for backward compatibility of some Beckhoff devices.
     //    CPPUNIT_ASSERT_THROW(SLOT_ELEMENT(sch).key("slot_withunderscore"),
-    //                         karabo::util::ParameterException);
+    //                         karabo::data::ParameterException);
     // But this one is forbidden due to interference with GUI client:
-    CPPUNIT_ASSERT_THROW(SLOT_ELEMENT(sch).key("clear_namespace"), karabo::util::ParameterException);
+    CPPUNIT_ASSERT_THROW(SLOT_ELEMENT(sch).key("clear_namespace"), karabo::data::ParameterException);
 }
 
 
@@ -712,11 +713,11 @@ void Schema_Test::testArrayElements() {
     undefShapeVec.push_back(0);
     CPPUNIT_ASSERT(sch.getDefaultValue<std::vector<unsigned long long>>("arrUndefined.shape") == undefShapeVec);
 
-    CPPUNIT_ASSERT_EQUAL(static_cast<int>(karabo::util::Types::BOOL), sch.getDefaultValue<int>("arrBool.type"));
-    CPPUNIT_ASSERT_EQUAL(static_cast<int>(karabo::util::Types::INT8), sch.getDefaultValue<int>("arrInt8.type"));
-    CPPUNIT_ASSERT_EQUAL(static_cast<int>(karabo::util::Types::UINT16), sch.getDefaultValue<int>("arrUInt16.type"));
-    CPPUNIT_ASSERT_EQUAL(static_cast<int>(karabo::util::Types::FLOAT), sch.getDefaultValue<int>("arrFloat.type"));
-    CPPUNIT_ASSERT_EQUAL(static_cast<int>(karabo::util::Types::UNKNOWN), sch.getDefaultValue<int>("arrUndefined.type"));
+    CPPUNIT_ASSERT_EQUAL(static_cast<int>(karabo::data::Types::BOOL), sch.getDefaultValue<int>("arrBool.type"));
+    CPPUNIT_ASSERT_EQUAL(static_cast<int>(karabo::data::Types::INT8), sch.getDefaultValue<int>("arrInt8.type"));
+    CPPUNIT_ASSERT_EQUAL(static_cast<int>(karabo::data::Types::UINT16), sch.getDefaultValue<int>("arrUInt16.type"));
+    CPPUNIT_ASSERT_EQUAL(static_cast<int>(karabo::data::Types::FLOAT), sch.getDefaultValue<int>("arrFloat.type"));
+    CPPUNIT_ASSERT_EQUAL(static_cast<int>(karabo::data::Types::UNKNOWN), sch.getDefaultValue<int>("arrUndefined.type"));
 
     CPPUNIT_ASSERT(sch.isAccessReadOnly("arrBool") == true);
     CPPUNIT_ASSERT(sch.isAccessReadOnly("arrInt8") == true);
@@ -822,13 +823,13 @@ void Schema_Test::testOverwriteElement() {
     // Check that overwrite element does not accept non-existing paths
     {
         Schema schema;
-        CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(schema).key("non_existing_path"), karabo::util::ParameterException);
+        CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(schema).key("non_existing_path"), karabo::data::ParameterException);
     }
 
     // Check that overwrite element complains if key(...) is not called first (too lazy to test all cases...)
     {
         Schema schema;
-        CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(schema).commit(), karabo::util::LogicException);
+        CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(schema).commit(), karabo::data::LogicException);
     }
 
     testOverwriteElementScalarDefault();
@@ -889,10 +890,10 @@ void Schema_Test::testOverwriteElementScalarDefault() {
                                .key("uint16")
                                .setNewDefaultValue(static_cast<unsigned short>(2u))
                                .commit(), // options are 1 and 5
-                         karabo::util::LogicException);
+                         karabo::data::LogicException);
     workSchema = schema; // start clean
     CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema).key("uint16").setNewOptions("1, 2").commit(),
-                         karabo::util::LogicException); // default is 5
+                         karabo::data::LogicException); // default is 5
 
     // int32
     workSchema = schema; // start clean
@@ -900,19 +901,19 @@ void Schema_Test::testOverwriteElementScalarDefault() {
                                .key("int32")
                                .setNewDefaultValue(2) // options are 3 and -5
                                .commit(),
-                         karabo::util::LogicException);
+                         karabo::data::LogicException);
     workSchema = schema; // start clean
     CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema).key("int32").setNewOptions("1, 2").commit(),
-                         karabo::util::LogicException); // default is -5
+                         karabo::data::LogicException); // default is -5
 
     // double
     workSchema = schema; // start clean
     CPPUNIT_ASSERT_THROW(
           OVERWRITE_ELEMENT(workSchema).key("double").setNewDefaultValue(2.1).commit(), // options are 2.2, -3.3 and 0.
-          karabo::util::LogicException);
+          karabo::data::LogicException);
     workSchema = schema; // start clean
     CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema).key("double").setNewOptions("1.1, 2.2").commit(),
-                         karabo::util::LogicException); // default is 0.
+                         karabo::data::LogicException); // default is 0.
 
     // string
     workSchema = schema; // start clean
@@ -920,10 +921,10 @@ void Schema_Test::testOverwriteElementScalarDefault() {
                                .key("string")
                                .setNewDefaultValue("further")
                                .commit(), // options are "default" and "other"
-                         karabo::util::LogicException);
+                         karabo::data::LogicException);
     workSchema = schema; // start clean
     CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema).key("string").setNewOptions("one, another").commit(),
-                         karabo::util::LogicException); // default is "default"
+                         karabo::data::LogicException); // default is "default"
 
     // State
     workSchema = schema; // start clean
@@ -931,13 +932,13 @@ void Schema_Test::testOverwriteElementScalarDefault() {
                                .key("state")
                                .setNewDefaultValue(State::UNKNOWN)
                                .commit(), // options are INIT, ON, CHANGING
-                         karabo::util::LogicException);
+                         karabo::data::LogicException);
     workSchema = schema; // start clean
     CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema)
                                .key("state")
                                .setNewOptions(std::vector<State>{State::ON, State::ACQUIRING})
                                .commit(),
-                         karabo::util::LogicException); // default is INIT
+                         karabo::data::LogicException); // default is INIT
 
     // Check inclusive minimum and maximum: -5 <= x <= 5
     workSchema = schema;
@@ -957,14 +958,14 @@ void Schema_Test::testOverwriteElementScalarDefault() {
                                .key("int64Inc")
                                .setNewDefaultValue(-6LL)
                                .commit(),
-                         karabo::util::ParameterException);
+                         karabo::data::ParameterException);
 
     workSchema = schema;                               // start clean
     CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema) //
                                .key("int64Inc")
                                .setNewDefaultValue(6LL)
                                .commit(),
-                         karabo::util::ParameterException);
+                         karabo::data::ParameterException);
 
     // Check exclusive minimum and maximum: -5 < x < 5
     workSchema = schema;                                  // start clean
@@ -983,14 +984,14 @@ void Schema_Test::testOverwriteElementScalarDefault() {
                                .key("int64Exc")
                                .setNewDefaultValue(-5LL)
                                .commit(),
-                         karabo::util::ParameterException);
+                         karabo::data::ParameterException);
 
     workSchema = schema;                               // start clean
     CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema) //
                                .key("int64Exc")
                                .setNewDefaultValue(5LL)
                                .commit(),
-                         karabo::util::ParameterException);
+                         karabo::data::ParameterException);
 
     // We skip explicit testing of BOOL, CHAR, [U]INT8, INT16, UINT32, [U]INT64, FLOAT
 }
@@ -1120,11 +1121,11 @@ void Schema_Test::testOverwriteElementVectorDefault() {
     workSchema = schema;                                                                                               \
     CPPUNIT_ASSERT_THROW(                                                                                              \
           OVERWRITE_ELEMENT(workSchema).key(NAME).setNewDefaultValue(std::vector<TYPE>(vector_min_size - 1)).commit(), \
-          karabo::util::ParameterException);                                                                           \
+          karabo::data::ParameterException);                                                                           \
     workSchema = schema;                                                                                               \
     CPPUNIT_ASSERT_THROW(                                                                                              \
           OVERWRITE_ELEMENT(workSchema).key(NAME).setNewDefaultValue(std::vector<TYPE>(vector_max_size + 1)).commit(), \
-          karabo::util::ParameterException);                                                                           \
+          karabo::data::ParameterException);                                                                           \
     workSchema = schema;                                                                                               \
     CPPUNIT_ASSERT_NO_THROW(                                                                                           \
           OVERWRITE_ELEMENT(workSchema).key(NAME).setNewDefaultValue(std::vector<TYPE>(vector_min_size)).commit());    \
@@ -1133,10 +1134,10 @@ void Schema_Test::testOverwriteElementVectorDefault() {
           OVERWRITE_ELEMENT(workSchema).key(NAME).setNewDefaultValue(std::vector<TYPE>(vector_max_size)).commit());    \
     workSchema = schema;                                                                                               \
     CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema).key(NAME).setNewMinSize(vector_default_size + 1).commit(),      \
-                         karabo::util::ParameterException);                                                            \
+                         karabo::data::ParameterException);                                                            \
     workSchema = schema;                                                                                               \
     CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema).key(NAME).setNewMaxSize(vector_default_size - 1).commit(),      \
-                         karabo::util::ParameterException)
+                         karabo::data::ParameterException)
 
 
     // See macro definition above. We check boundary cases, one case less
@@ -1170,13 +1171,13 @@ void Schema_Test::testOverwriteElementVectorDefault() {
                                .key("tableElement")
                                .setNewDefaultValue(std::vector<Hash>{table_min_size - 1, row})
                                .commit(),
-                         karabo::util::ParameterException);
+                         karabo::data::ParameterException);
     workSchema = schema;                               // start clean
     CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema) //
                                .key("tableElement")
                                .setNewDefaultValue(std::vector<Hash>{table_max_size + 1, row})
                                .commit(),
-                         karabo::util::ParameterException);
+                         karabo::data::ParameterException);
     workSchema = schema;                                  // start clean
     CPPUNIT_ASSERT_NO_THROW(OVERWRITE_ELEMENT(workSchema) //
                                   .key("tableElement")
@@ -1192,13 +1193,13 @@ void Schema_Test::testOverwriteElementVectorDefault() {
                                .key("tableElement")
                                .setNewMinSize(table_default_size + 1)
                                .commit(),
-                         karabo::util::ParameterException);
+                         karabo::data::ParameterException);
     workSchema = schema;                               // start clean
     CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema) //
                                .key("tableElement")
                                .setNewMaxSize(table_default_size - 1)
                                .commit(),
-                         karabo::util::ParameterException);
+                         karabo::data::ParameterException);
 }
 
 void Schema_Test::testOverwriteElementMinMax() {
@@ -1231,10 +1232,10 @@ void Schema_Test::testOverwriteElementMinMax() {
 #define CHECK_BOUNDARIES(NAME)                                                                                     \
     workSchema = schema;                                                                                           \
     CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema).key(#NAME "Exc").setNewMaxExc(minimum).commit(),            \
-                         karabo::util::ParameterException);                                                        \
+                         karabo::data::ParameterException);                                                        \
     workSchema = schema;                                                                                           \
     CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema).key(#NAME "Exc").setNewMinExc(maximum).commit(),            \
-                         karabo::util::ParameterException);                                                        \
+                         karabo::data::ParameterException);                                                        \
     workSchema = schema;                                                                                           \
     CPPUNIT_ASSERT_NO_THROW(OVERWRITE_ELEMENT(workSchema).key(#NAME "Exc").setNewMaxExc(minimum + 1).commit());    \
     workSchema = schema;                                                                                           \
@@ -1242,10 +1243,10 @@ void Schema_Test::testOverwriteElementMinMax() {
                                                                                                                    \
     workSchema = schema;                                                                                           \
     CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema).key(#NAME "Inc").setNewMaxInc(minimum - 1).commit(),        \
-                         karabo::util::ParameterException);                                                        \
+                         karabo::data::ParameterException);                                                        \
     workSchema = schema;                                                                                           \
     CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema).key(#NAME "Inc").setNewMinInc(maximum + 1).commit(),        \
-                         karabo::util::ParameterException);                                                        \
+                         karabo::data::ParameterException);                                                        \
     workSchema = schema;                                                                                           \
     CPPUNIT_ASSERT_NO_THROW(OVERWRITE_ELEMENT(workSchema).key(#NAME "Inc").setNewMaxInc(minimum).commit());        \
     workSchema = schema;                                                                                           \
@@ -1253,10 +1254,10 @@ void Schema_Test::testOverwriteElementMinMax() {
                                                                                                                    \
     workSchema = schema;                                                                                           \
     CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema).key(#NAME "IncExc").setNewMaxExc(minimum).commit(),         \
-                         karabo::util::ParameterException);                                                        \
+                         karabo::data::ParameterException);                                                        \
     workSchema = schema;                                                                                           \
     CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema).key(#NAME "ExcInc").setNewMinExc(maximum).commit(),         \
-                         karabo::util::ParameterException);                                                        \
+                         karabo::data::ParameterException);                                                        \
     workSchema = schema;                                                                                           \
     CPPUNIT_ASSERT_NO_THROW(OVERWRITE_ELEMENT(workSchema).key(#NAME "IncExc").setNewMaxExc(minimum + 1).commit()); \
     workSchema = schema;                                                                                           \
@@ -1303,10 +1304,10 @@ void Schema_Test::testOverwriteElementMinMaxVector() {
 #define CHECK_BOUNDARIES(NAME)                                                                         \
     workSchema = schema;                                                                               \
     CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema).key(#NAME).setNewMinSize(maximum + 1).commit(), \
-                         karabo::util::ParameterException);                                            \
+                         karabo::data::ParameterException);                                            \
     workSchema = schema;                                                                               \
     CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema).key(#NAME).setNewMaxSize(minimum - 1).commit(), \
-                         karabo::util::ParameterException);                                            \
+                         karabo::data::ParameterException);                                            \
     workSchema = schema;                                                                               \
     CPPUNIT_ASSERT_NO_THROW(OVERWRITE_ELEMENT(workSchema).key(#NAME).setNewMinSize(maximum).commit()); \
     workSchema = schema;                                                                               \
@@ -1356,7 +1357,7 @@ void Schema_Test::testInvalidNodes() {
                 .description("This element's key refers to a parent that is not a node and thus triggers an exception")
                 .readOnly()
                 .commit(),
-          karabo::util::LogicException);
+          karabo::data::LogicException);
 
     // A node should not be created automatically
     CPPUNIT_ASSERT(!schema.has("nonExistingNode"));
@@ -1365,15 +1366,15 @@ void Schema_Test::testInvalidNodes() {
                                .description("This element refers to a non-existing node and thus triggers an exception")
                                .readOnly()
                                .commit(),
-                         karabo::util::LogicException);
+                         karabo::data::LogicException);
 
     // Empty strings are forbidden as keys:
     CPPUNIT_ASSERT_THROW(INT32_ELEMENT(schema).key("").description("Empty key is forbidden"),
-                         karabo::util::ParameterException);
+                         karabo::data::ParameterException);
 
     // Spaces in keys are forbidden:
     CPPUNIT_ASSERT_THROW(INT8_ELEMENT(schema).key("constains space").description("Space inside a key is forbidden"),
-                         karabo::util::ParameterException);
+                         karabo::data::ParameterException);
 }
 
 
@@ -1382,7 +1383,7 @@ void Schema_Test::testOverwriteRestrictions() {
     STATE_ELEMENT(schema).key("state").commit();
 
     CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(schema).key("state").setNewMinInc(100).commit(),
-                         karabo::util::LogicException);
+                         karabo::data::LogicException);
 }
 
 
@@ -1652,7 +1653,7 @@ void Schema_Test::testDaqDataType() {
     }
     {
         CPPUNIT_ASSERT_THROW(schema.setDaqDataType("antiAlias", DaqDataType::TRAINMASTER),
-                             karabo::util::ParameterException);
+                             karabo::data::ParameterException);
     }
 }
 
@@ -1761,25 +1762,25 @@ void Schema_Test::testAllowedActions() {
     CPPUNIT_ASSERT_EQUAL(std::string("otherAction"), arrActions[0]);
 
     // Only (custom) nodes can have allowed actions:
-    CPPUNIT_ASSERT_THROW(s.setAllowedActions("node.int", {"bla", "blue"}), karabo::util::ParameterException);
+    CPPUNIT_ASSERT_THROW(s.setAllowedActions("node.int", {"bla", "blue"}), karabo::data::ParameterException);
 }
 
 
 void Schema_Test::testInvalidReadOnlyThrows() {
-    karabo::util::Schema invalidSchema;
+    karabo::data::Schema invalidSchema;
 
     // assignmentMandatory() and readOnly() contradict each other
     CPPUNIT_ASSERT_THROW(FLOAT_ELEMENT(invalidSchema).key("float").assignmentMandatory().readOnly().commit(),
-                         karabo::util::LogicException);
+                         karabo::data::LogicException);
 
     // The assignmentOptional().defaultValue(1).readOnly() sequence below,
     // if accepted, would reset the element value to 0, overriding the
     // defaultValue setting.
     CPPUNIT_ASSERT_THROW(
           INT32_ELEMENT(invalidSchema).key("int").assignmentOptional().defaultValue(1).readOnly().commit(),
-          karabo::util::LogicException);
+          karabo::data::LogicException);
 
-    karabo::util::Schema validReadOnlySchema;
+    karabo::data::Schema validReadOnlySchema;
 
     CPPUNIT_ASSERT_NO_THROW(INT32_ELEMENT(validReadOnlySchema).key("int").readOnly().initialValue(1).commit());
 }
@@ -1802,13 +1803,13 @@ void Schema_Test::testTable() {
 
 
 void Schema_Test::testTableReadOnly() {
-    karabo::util::Schema rowSchema;
+    karabo::data::Schema rowSchema;
 
     STRING_ELEMENT(rowSchema).key("s").assignmentOptional().noDefaultValue().commit();
 
     BOOL_ELEMENT(rowSchema).key("b").assignmentOptional().noDefaultValue().commit();
 
-    karabo::util::Schema invalidReadOnlySchema;
+    karabo::data::Schema invalidReadOnlySchema;
 
     // assignmentMandatory() and readOnly() contradict each other
     CPPUNIT_ASSERT_THROW(TABLE_ELEMENT(invalidReadOnlySchema)
@@ -1817,7 +1818,7 @@ void Schema_Test::testTableReadOnly() {
                                .assignmentMandatory()
                                .readOnly()
                                .commit(),
-                         karabo::util::LogicException);
+                         karabo::data::LogicException);
 
     // The assignmentOptional().defaultValue(...).readOnly() sequence below,
     // if accepted, would reset the element value to empty vector of hashes,
@@ -1829,9 +1830,9 @@ void Schema_Test::testTableReadOnly() {
                                .defaultValue(std::vector<Hash>(1, Hash("s", "foo", "b", false)))
                                .readOnly()
                                .commit(),
-                         karabo::util::LogicException);
+                         karabo::data::LogicException);
 
-    karabo::util::Schema validReadOnlySchema;
+    karabo::data::Schema validReadOnlySchema;
 
     CPPUNIT_ASSERT_NO_THROW(TABLE_ELEMENT(validReadOnlySchema)
                                   .key("ValidTable")
@@ -1866,14 +1867,14 @@ void Schema_Test::testTableReadOnly() {
     CPPUNIT_ASSERT_EQUAL(true, tableRows[0].get<bool>("b"));
 
     // Tables need their row schema:
-    karabo::util::Schema noColumnsSchema;
+    karabo::data::Schema noColumnsSchema;
     CPPUNIT_ASSERT_THROW(TABLE_ELEMENT(noColumnsSchema).key("tableLackingColumnsSchema").readOnly().commit(),
-                         karabo::util::LogicException);
+                         karabo::data::LogicException);
 }
 
 
 void Schema_Test::testTableColNoDefaultValue() {
-    karabo::util::Schema rowSchema;
+    karabo::data::Schema rowSchema;
     // All the supported column types with no default value.
     BOOL_ELEMENT(rowSchema).key("bool").assignmentOptional().noDefaultValue().reconfigurable().commit();
     DOUBLE_ELEMENT(rowSchema).key("double").assignmentOptional().noDefaultValue().reconfigurable().commit();
@@ -1928,12 +1929,12 @@ void Schema_Test::testTableColNoDefaultValue() {
 
     // Checks that a table with the sanitizable row schema above can
     // be instantiated.
-    karabo::util::Schema tblSchema;
+    karabo::data::Schema tblSchema;
     CPPUNIT_ASSERT_NO_THROW(TABLE_ELEMENT(tblSchema)
                                   .key("tbl")
                                   .setColumns(rowSchema)
                                   .assignmentOptional()
-                                  .defaultValue(vector<karabo::util::Hash>())
+                                  .defaultValue(vector<karabo::data::Hash>())
                                   .reconfigurable()
                                   .commit(););
 
@@ -1994,7 +1995,7 @@ void Schema_Test::testTableColNoDefaultValue() {
     // Checks that a read-only table with no default values for its columns
     // can be instantiated and that the missing default column values are
     // generated by the sanitization process.
-    karabo::util::Schema roTblRowSchema;
+    karabo::data::Schema roTblRowSchema;
     INT32_ELEMENT(roTblRowSchema).key("int").assignmentOptional().noDefaultValue().commit();
     STRING_ELEMENT(roTblRowSchema).key("str").assignmentOptional().noDefaultValue().commit();
     INT32_ELEMENT(roTblRowSchema)
@@ -2007,7 +2008,7 @@ void Schema_Test::testTableColNoDefaultValue() {
           .maxInc(0)
           .maxExc(1)
           .commit();
-    karabo::util::Schema roTblSchema;
+    karabo::data::Schema roTblSchema;
     CPPUNIT_ASSERT_NO_THROW(TABLE_ELEMENT(roTblSchema)
                                   .key("tbl")
                                   .setColumns(roTblRowSchema)
@@ -2028,7 +2029,7 @@ void Schema_Test::testTableColNoDefaultValue() {
     // values throw - the default value that would be synthesized is either
     // outside the default range (single elements) or outside the allowed
     // cardinalities (vector elements).
-    karabo::util::Schema invalidRowSchema;
+    karabo::data::Schema invalidRowSchema;
     INT32_ELEMENT(invalidRowSchema)
           .key("intNoDefault")
           .assignmentOptional()
@@ -2036,7 +2037,7 @@ void Schema_Test::testTableColNoDefaultValue() {
           .minInc(1)
           .reconfigurable()
           .commit();
-    karabo::util::Schema tblInvalidSchema;
+    karabo::data::Schema tblInvalidSchema;
     CPPUNIT_ASSERT_THROW_MESSAGE(
           "Expected exception while creating table with column missing default value and 'minInc' greater than "
           "synthezisable default.",
@@ -2047,8 +2048,8 @@ void Schema_Test::testTableColNoDefaultValue() {
                 .defaultValue(vector<Hash>())
                 .reconfigurable()
                 .commit(),
-          karabo::util::ParameterException);
-    karabo::util::Schema invalidRowSchema2;
+          karabo::data::ParameterException);
+    karabo::data::Schema invalidRowSchema2;
     INT32_ELEMENT(invalidRowSchema2)
           .key("intNoDefault")
           .assignmentOptional()
@@ -2056,7 +2057,7 @@ void Schema_Test::testTableColNoDefaultValue() {
           .maxInc(-1)
           .reconfigurable()
           .commit();
-    karabo::util::Schema tblInvalidSchema2;
+    karabo::data::Schema tblInvalidSchema2;
     CPPUNIT_ASSERT_THROW_MESSAGE(
           "Expected exception while creating table with column missing default value and 'maxInc' lower than "
           "synthezisable default.",
@@ -2067,8 +2068,8 @@ void Schema_Test::testTableColNoDefaultValue() {
                 .defaultValue(vector<Hash>())
                 .reconfigurable()
                 .commit(),
-          karabo::util::ParameterException);
-    karabo::util::Schema invalidRowSchema3;
+          karabo::data::ParameterException);
+    karabo::data::Schema invalidRowSchema3;
     INT32_ELEMENT(invalidRowSchema3)
           .key("intNoDefault")
           .assignmentOptional()
@@ -2076,7 +2077,7 @@ void Schema_Test::testTableColNoDefaultValue() {
           .minExc(0)
           .reconfigurable()
           .commit();
-    karabo::util::Schema tblInvalidSchema3;
+    karabo::data::Schema tblInvalidSchema3;
     CPPUNIT_ASSERT_THROW_MESSAGE(
           "Expected exception while creating table with column missing default value and 'minExc' greater than "
           "synthezisable default.",
@@ -2087,8 +2088,8 @@ void Schema_Test::testTableColNoDefaultValue() {
                 .defaultValue(vector<Hash>())
                 .reconfigurable()
                 .commit(),
-          karabo::util::ParameterException);
-    karabo::util::Schema invalidRowSchema4;
+          karabo::data::ParameterException);
+    karabo::data::Schema invalidRowSchema4;
     INT32_ELEMENT(invalidRowSchema4)
           .key("intNoDefault")
           .assignmentOptional()
@@ -2096,7 +2097,7 @@ void Schema_Test::testTableColNoDefaultValue() {
           .maxExc(0)
           .reconfigurable()
           .commit();
-    karabo::util::Schema tblInvalidSchema4;
+    karabo::data::Schema tblInvalidSchema4;
     CPPUNIT_ASSERT_THROW_MESSAGE(
           "Expected exception while creating table with column missing default value and 'maxExc' lower than "
           "synthezisable default.",
@@ -2107,8 +2108,8 @@ void Schema_Test::testTableColNoDefaultValue() {
                 .defaultValue(vector<Hash>())
                 .reconfigurable()
                 .commit(),
-          karabo::util::ParameterException);
-    karabo::util::Schema invalidRowSchema5;
+          karabo::data::ParameterException);
+    karabo::data::Schema invalidRowSchema5;
     VECTOR_INT32_ELEMENT(invalidRowSchema5)
           .key("vectorIntNoDefault")
           .assignmentOptional()
@@ -2116,7 +2117,7 @@ void Schema_Test::testTableColNoDefaultValue() {
           .minSize(1)
           .reconfigurable()
           .commit();
-    karabo::util::Schema tblInvalidSchema5;
+    karabo::data::Schema tblInvalidSchema5;
     CPPUNIT_ASSERT_THROW_MESSAGE(
           "Expected exception while creating table with column missing default value and 'minSize' greater than size "
           "of synthezisable default.",
@@ -2127,8 +2128,8 @@ void Schema_Test::testTableColNoDefaultValue() {
                 .defaultValue(vector<Hash>())
                 .reconfigurable()
                 .commit(),
-          karabo::util::ParameterException);
-    karabo::util::Schema invalidRowSchema6;
+          karabo::data::ParameterException);
+    karabo::data::Schema invalidRowSchema6;
     INT32_ELEMENT(invalidRowSchema6)
           .key("invalidInt")
           .options("1 2 3 4 5 6 7 8 9") // 0 not in options.
@@ -2136,7 +2137,7 @@ void Schema_Test::testTableColNoDefaultValue() {
           .noDefaultValue()
           .reconfigurable()
           .commit();
-    karabo::util::Schema tblInvalidSchema6;
+    karabo::data::Schema tblInvalidSchema6;
     CPPUNIT_ASSERT_THROW_MESSAGE(
           "Expected exception while creating table with column missing default value and sinthazisable default not in "
           "the 'options' set.",
@@ -2147,7 +2148,7 @@ void Schema_Test::testTableColNoDefaultValue() {
                 .defaultValue(vector<Hash>())
                 .reconfigurable()
                 .commit(),
-          karabo::util::ParameterException);
+          karabo::data::ParameterException);
 }
 
 
@@ -2270,17 +2271,17 @@ void Schema_Test::testTableColUnsupportedType() {
                                        .defaultValue(vector<Hash>())
                                        .reconfigurable()
                                        .commit(),
-                                 karabo::util::ParameterException);
+                                 karabo::data::ParameterException);
 }
 
 
 void Schema_Test::testTableColInitOnly() {
     // Checks that the 'initOnlyInt' column becomes a writable column
     // in the sanitized row schema when the table is reconfigurable.
-    karabo::util::Schema rowSchema;
+    karabo::data::Schema rowSchema;
     INT32_ELEMENT(rowSchema).key("initOnlyInt").assignmentOptional().defaultValue(2).init().commit();
     STRING_ELEMENT(rowSchema).key("str").assignmentOptional().defaultValue("a string...").reconfigurable().commit();
-    karabo::util::Schema tblSchema;
+    karabo::data::Schema tblSchema;
     TABLE_ELEMENT(tblSchema)
           .key("tbl")
           .setColumns(rowSchema)
@@ -2292,28 +2293,28 @@ void Schema_Test::testTableColInitOnly() {
     CPPUNIT_ASSERT(sanitRowSchema.hasAccessMode("initOnlyInt"));
     CPPUNIT_ASSERT_EQUAL_MESSAGE(
           "Init-only columns of reconfigurable tables should have been converted to reconfigurable columns.",
-          static_cast<int>(karabo::util::AccessType::WRITE), sanitRowSchema.getAccessMode("initOnlyInt"));
+          static_cast<int>(karabo::data::AccessType::WRITE), sanitRowSchema.getAccessMode("initOnlyInt"));
 
     // Checks that the 'initOnlyInt' column becomes a read-only column
     // in the sanitized row schema when the table is read-only.
-    karabo::util::Schema rowSchema2;
+    karabo::data::Schema rowSchema2;
     INT32_ELEMENT(rowSchema2).key("initOnlyInt").assignmentOptional().defaultValue(2).init().commit();
     STRING_ELEMENT(rowSchema2).key("str").assignmentOptional().defaultValue("a string...").reconfigurable().commit();
-    karabo::util::Schema ReadOnlyTblSchema;
+    karabo::data::Schema ReadOnlyTblSchema;
     TABLE_ELEMENT(ReadOnlyTblSchema).key("tbl").setColumns(rowSchema2).readOnly().initialValue(vector<Hash>()).commit();
     const Schema& sanitRowSchema2 =
           ReadOnlyTblSchema.getParameterHash().getAttribute<Schema>("tbl", KARABO_SCHEMA_ROW_SCHEMA);
     CPPUNIT_ASSERT(sanitRowSchema2.hasAccessMode("initOnlyInt"));
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Init-only columns of read-only tables should be converted to read-only columns.",
-                                 static_cast<int>(karabo::util::AccessType::READ),
+                                 static_cast<int>(karabo::data::AccessType::READ),
                                  sanitRowSchema2.getAccessMode("initOnlyInt"));
 
     // Checks that the 'initOnlyInt' column becomes a writable column
     // in the sanitized row schema when the table is init-only.
-    karabo::util::Schema rowSchema3;
+    karabo::data::Schema rowSchema3;
     INT32_ELEMENT(rowSchema3).key("initOnlyInt").assignmentOptional().defaultValue(2).init().commit();
     STRING_ELEMENT(rowSchema3).key("str").assignmentOptional().defaultValue("a string...").reconfigurable().commit();
-    karabo::util::Schema initOnlyTblSchema;
+    karabo::data::Schema initOnlyTblSchema;
     TABLE_ELEMENT(initOnlyTblSchema)
           .key("tbl")
           .setColumns(rowSchema)
@@ -2325,16 +2326,16 @@ void Schema_Test::testTableColInitOnly() {
           initOnlyTblSchema.getParameterHash().getAttribute<Schema>("tbl", KARABO_SCHEMA_ROW_SCHEMA);
     CPPUNIT_ASSERT(sanitRowSchema3.hasAccessMode("initOnlyInt"));
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Init-only columns of init-only tables should be converted to reconfigurable columns.",
-                                 static_cast<int>(karabo::util::AccessType::WRITE),
+                                 static_cast<int>(karabo::data::AccessType::WRITE),
                                  sanitRowSchema3.getAccessMode("initOnlyInt"));
 }
 
 
 void Schema_Test::testTableColWrongAccessMode() {
-    karabo::util::Schema rowSchema;
+    karabo::data::Schema rowSchema;
     INT32_ELEMENT(rowSchema).key("int").assignmentOptional().defaultValue(2).reconfigurable().commit();
     STRING_ELEMENT(rowSchema).key("str").assignmentOptional().defaultValue("a string").reconfigurable().commit();
-    karabo::util::Schema ReadOnlyTblSchema;
+    karabo::data::Schema ReadOnlyTblSchema;
     TABLE_ELEMENT(ReadOnlyTblSchema).key("tbl").setColumns(rowSchema).readOnly().initialValue(vector<Hash>()).commit();
     const Schema& sanitRowSchema =
           ReadOnlyTblSchema.getParameterHash().getAttribute<Schema>("tbl", KARABO_SCHEMA_ROW_SCHEMA);
@@ -2344,11 +2345,11 @@ void Schema_Test::testTableColWrongAccessMode() {
     CPPUNIT_ASSERT(sanitRowSchema.hasAccessMode("int"));
     CPPUNIT_ASSERT_EQUAL_MESSAGE(
           "Reconfigurable column 'int' of read-only table 'tbl' should have been converted to read-only.",
-          static_cast<int>(karabo::util::AccessType::READ), sanitRowSchema.getAccessMode("int"));
+          static_cast<int>(karabo::data::AccessType::READ), sanitRowSchema.getAccessMode("int"));
     CPPUNIT_ASSERT(sanitRowSchema.hasAccessMode("str"));
     CPPUNIT_ASSERT_EQUAL_MESSAGE(
           "Reconfigurable column 'str' of read-only table 'tbl' should have been converted to read-only.",
-          static_cast<int>(karabo::util::AccessType::READ), sanitRowSchema.getAccessMode("str"));
+          static_cast<int>(karabo::data::AccessType::READ), sanitRowSchema.getAccessMode("str"));
     // The initialValue method of LeafElement actually sets the "defaultValue"
     // attribute, so we check by asserting that the default value has been
     // preserved by the row schema sanitization process.

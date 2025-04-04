@@ -60,7 +60,7 @@ namespace karabo {
                 // check that lock is empty
                 {
                     try {
-                        karabo::util::Hash hash;
+                        karabo::data::Hash hash;
 
                         p->request(m_deviceId, "slotGetConfiguration").timeout(m_lockQueryTimeout).receive(hash);
 
@@ -70,19 +70,19 @@ namespace karabo {
                             throw KARABO_LOCK_EXCEPTION("Could not acquire lock on " + m_deviceId +
                                                         ", it is locked by " + lockHolder);
                         }
-                    } catch (const karabo::util::ParameterException& e) {
+                    } catch (const karabo::data::ParameterException& e) {
                         KARABO_RETHROW_AS(KARABO_LOCK_EXCEPTION("Could not acquire lock on " + m_deviceId));
                     }
                 }
                 // try setting
 
-                p->request(m_deviceId, "slotReconfigure", karabo::util::Hash("lockedBy", ownInstance))
+                p->request(m_deviceId, "slotReconfigure", karabo::data::Hash("lockedBy", ownInstance))
                       .timeout(m_lockQueryTimeout)
                       .receive();
 
                 // check result
                 {
-                    karabo::util::Hash hash;
+                    karabo::data::Hash hash;
                     p->request(m_deviceId, "slotGetConfiguration").timeout(m_lockQueryTimeout).receive(hash);
                     const std::string& lockHolder = hash.get<std::string>("lockedBy");
                     if (ownInstance != lockHolder) {
@@ -112,7 +112,7 @@ namespace karabo {
             std::shared_ptr<karabo::xms::SignalSlotable> p = m_sigSlot.lock();
             if (p) {
                 const std::string& ownInstance = m_sigSlot.lock()->getInstanceId();
-                karabo::util::Hash hash;
+                karabo::data::Hash hash;
 
                 p->request(m_deviceId, "slotGetConfiguration").timeout(m_lockQueryTimeout).receive(hash);
                 const std::string& lockHolder = hash.get<std::string>("lockedBy");

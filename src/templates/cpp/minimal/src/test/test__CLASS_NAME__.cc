@@ -19,7 +19,7 @@
 #include <utility>
 
 #include "__CLASS_NAME__.hh"
-#include "karabo/util/Hash.hh"
+#include "karabo/data/types/Hash.hh"
 #include "testrunner.hh"
 
 #define TEST_DEVICE_ID "test__CLASS_NAME__"
@@ -43,7 +43,7 @@ class __CLASS_NAME__DefaultCfg : public KaraboDeviceFixture {
          * to the devCfg hash here
          */
 
-        karabo::util::Hash devCfg("deviceId", TEST_DEVICE_ID, "_deviceId_", TEST_DEVICE_ID);
+        karabo::data::Hash devCfg("deviceId", TEST_DEVICE_ID, "_deviceId_", TEST_DEVICE_ID);
 
         /**
          * Instantiate device without device server so the device pointer
@@ -94,7 +94,7 @@ class __CLASS_NAME__DefaultCfg : public KaraboDeviceFixture {
 
 // test only that device instantiates
 TEST_F(__CLASS_NAME__DefaultCfg, testDeviceInstantiation) {
-    karabo::util::Hash result = m_deviceCli->get(TEST_DEVICE_ID);
+    karabo::data::Hash result = m_deviceCli->get(TEST_DEVICE_ID);
     std::string cls = result.get<std::string>("classId");
     std::string clsVer = result.get<std::string>("classVersion");
 

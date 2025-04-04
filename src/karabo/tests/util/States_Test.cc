@@ -24,10 +24,10 @@
 
 #include "States_Test.hh"
 
-#include <karabo/util/State.hh>
-#include <karabo/util/StateSignifier.hh>
+#include "karabo/data/types/State.hh"
+#include "karabo/data/types/StateSignifier.hh"
 
-using namespace karabo::util;
+using namespace karabo::data;
 using namespace std;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(States_Test);

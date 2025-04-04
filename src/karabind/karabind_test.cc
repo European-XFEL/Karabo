@@ -24,13 +24,13 @@
 #include <karabo/core/DeviceServer.hh>
 #include <karabo/io/BinarySerializer.hh>
 #include <karabo/io/TextSerializer.hh>
-#include <karabo/util/Configurator.hh>
-#include <karabo/util/Hash.hh>
-#include <karabo/util/NDArray.hh>
-#include <karabo/util/Schema.hh>
 
 #include "ConfigurationTestClasses.hh"
 #include "Wrapper.hh"
+#include "karabo/data/schema/Configurator.hh"
+#include "karabo/data/types/Hash.hh"
+#include "karabo/data/types/NDArray.hh"
+#include "karabo/data/types/Schema.hh"
 
 
 namespace py = pybind11;
@@ -56,7 +56,7 @@ namespace py = pybind11;
 //     net
 // }
 
-using namespace karabo::util;
+using namespace karabo::data;
 using namespace configurationTest;
 
 static std::map<std::string, std::shared_ptr<karabo::core::DeviceServer>> testServersRegistry;
@@ -117,26 +117,26 @@ void exportPyKarabindTestUtilities(py::module_& m) {
         return karabind::wrapper::copyNDArrayToPy(nda);
     });
     m.def("getTextSerializerHashClass", []() {
-        using namespace karabo::util;
+        using namespace karabo::data;
         std::vector<std::string> v = Configurator<karabo::io::TextSerializer<Hash>>::getRegisteredClasses();
         return py::cast(v);
     });
     m.def("getTextSerializerSchemaClass", []() {
-        using namespace karabo::util;
+        using namespace karabo::data;
         std::vector<std::string> v = Configurator<karabo::io::TextSerializer<Schema>>::getRegisteredClasses();
         return py::cast(v);
     });
     m.def("getBinarySerializerHashClass", []() {
-        using namespace karabo::util;
+        using namespace karabo::data;
         std::vector<std::string> v = Configurator<karabo::io::BinarySerializer<Hash>>::getRegisteredClasses();
         return py::cast(v);
     });
     m.def("getBinarySerializerSchemaClass", []() {
-        using namespace karabo::util;
+        using namespace karabo::data;
         std::vector<std::string> v = Configurator<karabo::io::BinarySerializer<Schema>>::getRegisteredClasses();
         return py::cast(v);
     });
-    m.def("startDeviceServer", [](karabo::util::Hash& config) {
+    m.def("startDeviceServer", [](karabo::data::Hash& config) {
         using namespace karabo::core;
         if (!config.has("serverId")) config.set("serverId", "testDeviceServer");
         if (!config.has("Logger.priority")) config.set("Logger.priority", "FATAL");

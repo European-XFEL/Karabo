@@ -31,12 +31,13 @@
 #include <string>
 #include <vector>
 
+#include "karabo/data/schema/ChoiceElement.hh"
+#include "karabo/data/schema/Validator.hh"
+#include "karabo/data/types/Exception.hh"
+#include "karabo/data/types/Hash.hh"
+#include "karabo/data/types/Schema.hh"
 #include "karabo/net/EventLoop.hh"
 #include "karabo/net/utils.hh"
-#include "karabo/util/ChoiceElement.hh"
-#include "karabo/util/Exception.hh"
-#include "karabo/util/Hash.hh"
-#include "karabo/util/Validator.hh"
 #include "karabo/util/Version.hh"
 
 using namespace std::chrono;
@@ -48,6 +49,7 @@ namespace karabo {
     namespace xms {
 
         using namespace std;
+        using namespace karabo::data;
         using namespace karabo::util;
         using namespace karabo::io;
         using namespace karabo::net;
@@ -70,8 +72,8 @@ namespace karabo {
         std::shared_mutex SignalSlotable::m_sharedInstanceMapMutex;
 
 
-        bool SignalSlotable::tryToCallDirectly(const std::string& instanceId, const karabo::util::Hash::Pointer& header,
-                                               const karabo::util::Hash::Pointer& body) const {
+        bool SignalSlotable::tryToCallDirectly(const std::string& instanceId, const karabo::data::Hash::Pointer& header,
+                                               const karabo::data::Hash::Pointer& body) const {
             // Global calls must go via the broker
             if (instanceId == "*") return false;
             SignalSlotable::Pointer ptr;
@@ -110,39 +112,39 @@ namespace karabo {
             m_signalSlotable->addReceiveAsyncErrorHandles(m_replyId, timer, errorHandler);
         }
 
-        void SignalSlotable::Requestor::getSignalInstanceId(const karabo::util::Hash::Pointer& header,
+        void SignalSlotable::Requestor::getSignalInstanceId(const karabo::data::Hash::Pointer& header,
                                                             std::string& result) {
             if (header && header->has("signalInstanceId") && header->is<std::string>("signalInstanceId")) {
                 header->get("signalInstanceId", result);
             }
         };
 
-        std::pair<karabo::util::Hash::Pointer, karabo::util::Hash::Pointer>
+        std::pair<karabo::data::Hash::Pointer, karabo::data::Hash::Pointer>
         SignalSlotable::Requestor::receiveResponseHashes() {
-            karabo::util::Hash::Pointer header, body;
+            karabo::data::Hash::Pointer header, body;
             try {
                 receiveResponse(header, body); // sends request and blocks until reply arrives or times out
-                const boost::optional<karabo::util::Hash::Node&> errorNode = header->find("error");
+                const boost::optional<karabo::data::Hash::Node&> errorNode = header->find("error");
                 if (errorNode && errorNode->is<bool>() && errorNode->getValue<bool>()) {
                     // Handling an error, so double check that input is as expected, i.e. body has key "a1":
-                    const boost::optional<karabo::util::Hash::Node&> textNode = body->find("a1");
+                    const boost::optional<karabo::data::Hash::Node&> textNode = body->find("a1");
                     const std::string text(textNode && textNode->is<std::string>()
                                                  ? textNode->getValue<std::string>()
                                                  : "Error signaled, but body without string at key \"a1\"");
-                    const boost::optional<karabo::util::Hash::Node&> detailsNode = body->find("a2"); // since 2.14.0
+                    const boost::optional<karabo::data::Hash::Node&> detailsNode = body->find("a2"); // since 2.14.0
                     const std::string details(detailsNode && detailsNode->is<std::string>()
                                                     ? detailsNode->getValue<std::string>()
                                                     : std::string());
-                    throw karabo::util::RemoteException(text, header->get<std::string>("signalInstanceId"), details);
+                    throw karabo::data::RemoteException(text, header->get<std::string>("signalInstanceId"), details);
                 }
 
-            } catch (const karabo::util::TimeoutException&) {
+            } catch (const karabo::data::TimeoutException&) {
                 // rethrow as same type without message: detailedMsg() will show the full trace, userFriendlyMsg() just
                 // one line
                 KARABO_RETHROW_AS(KARABO_TIMEOUT_EXCEPTION(std::string()));
-            } catch (const karabo::util::RemoteException&) {
+            } catch (const karabo::data::RemoteException&) {
                 throw; // Do not change the type, just throw again.
-            } catch (const karabo::util::CastException&) {
+            } catch (const karabo::data::CastException&) {
                 std::string signalInstanceId("unknown");
                 getSignalInstanceId(header, signalInstanceId);
                 const std::string msg("'" + m_signalSlotable->getInstanceId() +
@@ -150,7 +152,7 @@ namespace karabo {
                                       "from '" +
                                       signalInstanceId + "'");
                 KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION(msg));
-            } catch (const karabo::util::Exception& e) {
+            } catch (const karabo::data::Exception& e) {
                 std::string signalInstanceId("unknown");
                 getSignalInstanceId(header, signalInstanceId);
                 const std::string msg("Error while '" + m_signalSlotable->getInstanceId() +
@@ -181,8 +183,8 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::doSendMessage(const std::string& instanceId, const karabo::util::Hash::Pointer& header,
-                                           const karabo::util::Hash::Pointer& body, int prio, int timeToLive,
+        void SignalSlotable::doSendMessage(const std::string& instanceId, const karabo::data::Hash::Pointer& header,
+                                           const karabo::data::Hash::Pointer& body, int prio, int timeToLive,
                                            const std::string& topic, bool forceViaBroker) const {
             // Timestamp added to be able to measure latencies even if broker is by-passed (or non-JMS broker)
             header->set("MQTimestamp", getEpochMillis());
@@ -196,13 +198,13 @@ namespace karabo {
 
 
         void SignalSlotable::registerBroadcastHandler(
-              std::function<void(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body)>
+              std::function<void(const karabo::data::Hash::Pointer& header, const karabo::data::Hash::Pointer& body)>
                     handler) {
             m_broadCastHandler = handler;
         }
 
 
-        karabo::util::Hash::Pointer SignalSlotable::prepareCallHeader(const std::string& slotInstanceId,
+        karabo::data::Hash::Pointer SignalSlotable::prepareCallHeader(const std::string& slotInstanceId,
                                                                       const std::string& slotFunction) const {
             auto header = std::make_shared<Hash>();
             header->set("signalInstanceId", m_instanceId);
@@ -228,9 +230,9 @@ namespace karabo {
         }
 
 
-        karabo::util::Hash::Pointer SignalSlotable::Requestor::prepareRequestHeader(const std::string& slotInstanceId,
+        karabo::data::Hash::Pointer SignalSlotable::Requestor::prepareRequestHeader(const std::string& slotInstanceId,
                                                                                     const std::string& slotFunction) {
-            karabo::util::Hash::Pointer header(new karabo::util::Hash);
+            karabo::data::Hash::Pointer header(new karabo::data::Hash);
             header->set("replyTo", m_replyId);
             header->set("signalInstanceId", m_signalSlotable->getInstanceId());
             header->set("signalFunction", "__request__");
@@ -242,10 +244,10 @@ namespace karabo {
         }
 
 
-        karabo::util::Hash::Pointer SignalSlotable::Requestor::prepareRequestNoWaitHeader(
+        karabo::data::Hash::Pointer SignalSlotable::Requestor::prepareRequestNoWaitHeader(
               const std::string& requestSlotInstanceId, const std::string& requestSlotFunction,
               const std::string& replySlotInstanceId, const std::string& replySlotFunction) {
-            karabo::util::Hash::Pointer header(new karabo::util::Hash);
+            karabo::data::Hash::Pointer header(new karabo::data::Hash);
             // TODO Rename replyInstanceIds and replyFunctions to replyInstanceId and replyFunction
             header->set("replyInstanceIds", "|" + replySlotInstanceId + "|");
             header->set("replyFunctions", "|" + replySlotInstanceId + ":" + replySlotFunction + "|");
@@ -260,8 +262,8 @@ namespace karabo {
 
 
         void SignalSlotable::Requestor::registerRequest(const std::string& slotInstanceId,
-                                                        const karabo::util::Hash::Pointer& header,
-                                                        const karabo::util::Hash::Pointer& body) {
+                                                        const karabo::data::Hash::Pointer& header,
+                                                        const karabo::data::Hash::Pointer& body) {
             m_slotInstanceId = slotInstanceId;
             m_header = header;
             m_body = body;
@@ -277,8 +279,8 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::Requestor::receiveResponse(karabo::util::Hash::Pointer& header,
-                                                        karabo::util::Hash::Pointer& body) {
+        void SignalSlotable::Requestor::receiveResponse(karabo::data::Hash::Pointer& header,
+                                                        karabo::data::Hash::Pointer& body) {
             m_signalSlotable->registerSynchronousReply(m_replyId);
             sendRequest();
             if (!m_signalSlotable->timedWaitAndPopReceivedReply(m_replyId, header, body, m_timeout)) {
@@ -288,7 +290,7 @@ namespace karabo {
         }
 
         std::vector<std::any> SignalSlotable::Requestor::receiveAsVecOfAny() {
-            karabo::util::Hash::Pointer replyBodyPtr = receiveResponseHashes().second;
+            karabo::data::Hash::Pointer replyBodyPtr = receiveResponseHashes().second;
             std::set<std::string> paths;
             std::vector<std::any> replyValues;
             replyValues.reserve(replyBodyPtr->size());
@@ -316,14 +318,14 @@ namespace karabo {
 
 
         SignalSlotable::SignalSlotable(const string& instanceId, const Broker::Pointer& connection,
-                                       const int heartbeatInterval, const karabo::util::Hash& instanceInfo)
+                                       const int heartbeatInterval, const karabo::data::Hash& instanceInfo)
             : SignalSlotable() {
             init(instanceId, connection, heartbeatInterval, instanceInfo);
         }
 
 
-        SignalSlotable::SignalSlotable(const std::string& instanceId, const karabo::util::Hash& brokerConfiguration,
-                                       const int heartbeatInterval, const karabo::util::Hash& instanceInfo)
+        SignalSlotable::SignalSlotable(const std::string& instanceId, const karabo::data::Hash& brokerConfiguration,
+                                       const int heartbeatInterval, const karabo::data::Hash& instanceInfo)
             : SignalSlotable() {
             // Assemble broker configuration, filling up from defaults and given instanceId
             Schema s;
@@ -391,7 +393,7 @@ namespace karabo {
 
 
         void SignalSlotable::init(const std::string& instanceId, const karabo::net::Broker::Pointer& connection,
-                                  const int heartbeatInterval, const karabo::util::Hash& instanceInfo,
+                                  const int heartbeatInterval, const karabo::data::Hash& instanceInfo,
                                   bool consumeBroadcasts) {
             m_instanceId = instanceId;
             m_connection = connection;
@@ -483,7 +485,7 @@ namespace karabo {
                 request(instanceId, "slotPing", instanceId, m_randPing, false)
                       .timeout(msPingTimeoutInIsValidInstanceId)
                       .receive(instanceInfo);
-            } catch (const karabo::util::TimeoutException&) {
+            } catch (const karabo::data::TimeoutException&) {
                 // Receiving this timeout is the expected behavior
                 Exception::clearTrace();
                 return;
@@ -520,8 +522,8 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::handleReply(const karabo::util::Hash::Pointer& header,
-                                         const karabo::util::Hash::Pointer& body, long long whenPostedEpochMs) {
+        void SignalSlotable::handleReply(const karabo::data::Hash::Pointer& header,
+                                         const karabo::data::Hash::Pointer& body, long long whenPostedEpochMs) {
             // Collect performance statistics
             if (m_updatePerformanceStatistics) {
                 updateLatencies(header, whenPostedEpochMs);
@@ -546,20 +548,20 @@ namespace karabo {
             boost::optional<Hash::Node&> errorNode = header->find("error");
             if (errorNode && errorNode->is<bool>() && errorNode->getValue<bool>()) {
                 // Handling an error, so double check that input is as expected, i.e. body has key "a1":
-                const boost::optional<karabo::util::Hash::Node&> textNode = body->find("a1");
+                const boost::optional<karabo::data::Hash::Node&> textNode = body->find("a1");
                 const std::string text(textNode && textNode->is<std::string>()
                                              ? textNode->getValue<std::string>()
                                              : "Error signaled, but body without string at key 'a1'");
-                const boost::optional<karabo::util::Hash::Node&> detailsNode = body->find("a2"); // since Karabo 2.14.0
+                const boost::optional<karabo::data::Hash::Node&> detailsNode = body->find("a2"); // since Karabo 2.14.0
                 const std::string details(detailsNode && detailsNode->is<std::string>()
                                                 ? detailsNode->getValue<std::string>()
                                                 : std::string());
                 if (timerAndHandler.second) {
                     try {
-                        throw karabo::util::RemoteException(text, signalId, details);
+                        throw karabo::data::RemoteException(text, signalId, details);
                     } catch (const std::exception&) {
                         try {
-                            // Handler can do: try {throw;} catch(const karabo::util::RemoteException&) {...;}
+                            // Handler can do: try {throw;} catch(const karabo::data::RemoteException&) {...;}
                             asyncErrorHandlerCalled = true;
                             timerAndHandler.second();
                         } catch (const std::exception& e) {
@@ -622,8 +624,8 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::onHeartbeatMessage(const karabo::util::Hash::Pointer& header,
-                                                const karabo::util::Hash::Pointer& body) {
+        void SignalSlotable::onHeartbeatMessage(const karabo::data::Hash::Pointer& header,
+                                                const karabo::data::Hash::Pointer& body) {
             try {
                 SlotInstancePointer slot = getSlot("slotHeartbeat");
                 if (slot) {
@@ -689,7 +691,7 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::updateLatencies(const karabo::util::Hash::Pointer& header, long long whenPostedEpochMs) {
+        void SignalSlotable::updateLatencies(const karabo::data::Hash::Pointer& header, long long whenPostedEpochMs) {
             boost::optional<Hash::Node&> timestampNode = header->find("MQTimestamp");
             if (timestampNode && timestampNode->is<long long>()) {
                 const long long nowInEpochMillis = getEpochMillis();
@@ -706,8 +708,8 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::processEvent(const karabo::util::Hash::Pointer& header,
-                                          const karabo::util::Hash::Pointer& body) {
+        void SignalSlotable::processEvent(const karabo::data::Hash::Pointer& header,
+                                          const karabo::data::Hash::Pointer& body) {
             try {
                 // If it is a broadcast message and a handler registered for that, call it:
                 if (m_broadCastHandler) {
@@ -775,7 +777,7 @@ namespace karabo {
                     if (!isBroadcast && instanceId != m_instanceId) continue;
 
                     vector<string> slotFunctions =
-                          karabo::util::fromString<string, vector>(instanceSlots.substr(pos + 1));
+                          karabo::data::fromString<string, vector>(instanceSlots.substr(pos + 1));
                     if (slotFunctions.empty()) slotFunctions.push_back(std::string()); // empty slot name, fails later
                     for (const string& slotFunction : slotFunctions) {
                         // Broadcasted calls in their own Strand: massive 'attacks' of instanceNew/Gone etc. should
@@ -810,8 +812,8 @@ namespace karabo {
 
         void SignalSlotable::processSingleSlot(const std::string& slotFunction, bool globalCall,
                                                const std::string& signalInstanceId,
-                                               const karabo::util::Hash::Pointer& header,
-                                               const karabo::util::Hash::Pointer& body, long long whenPostedEpochMs) {
+                                               const karabo::data::Hash::Pointer& header,
+                                               const karabo::data::Hash::Pointer& body, long long whenPostedEpochMs) {
             // Collect performance statistics
             if (m_updatePerformanceStatistics) {
                 updateLatencies(header, whenPostedEpochMs);
@@ -854,7 +856,7 @@ namespace karabo {
                 } else {
                     KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Miss globally called slot " << slotFunction;
                 }
-            } catch (const karabo::util::Exception& e) {
+            } catch (const karabo::data::Exception& e) {
                 const std::string friendlyMsg(e.userFriendlyMsg(false));
                 const std::string details(e.detailedMsg());
                 KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << ": Exception in slot '" << slotFunction << "' called by '"
@@ -869,13 +871,13 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::registerReply(const karabo::util::Hash::Pointer& reply) {
+        void SignalSlotable::registerReply(const karabo::data::Hash::Pointer& reply) {
             std::lock_guard<std::mutex> lock(m_replyMutex);
             m_replies[std::this_thread::get_id()] = reply;
         }
 
 
-        std::tuple<karabo::util::Hash::Pointer, std::string, bool> SignalSlotable::registerAsyncReply() {
+        std::tuple<karabo::data::Hash::Pointer, std::string, bool> SignalSlotable::registerAsyncReply() {
             // Get name of current slot (sometimes referred to as 'slotFunction'):
             std::pair<std::string, bool> slotName_calledGlobally;
             {
@@ -886,7 +888,7 @@ namespace karabo {
                 }
                 // else { // slot is not called via processEvent and thus any reply does not matter!}
             }
-            std::tuple<karabo::util::Hash::Pointer, std::string, bool> result;
+            std::tuple<karabo::data::Hash::Pointer, std::string, bool> result;
             const std::string& slotName = slotName_calledGlobally.first;
             // If no slotName placed, reply does not matter (see above) - we mark this with non-existing header pointer.
             if (!slotName.empty()) {
@@ -894,7 +896,7 @@ namespace karabo {
                                          slotName_calledGlobally.second);
 
                 // Place an invalid reply to avoid a default reply to be sent (see sendPotentialReply):
-                registerReply(karabo::util::Hash::Pointer());
+                registerReply(karabo::data::Hash::Pointer());
             }
 
             return result;
@@ -903,7 +905,7 @@ namespace karabo {
 
         void SignalSlotable::AsyncReply::error(const std::string& message, const std::string& details) const {
             // See SignalSlotable::registerAsyncReply() about non-existing header
-            const util::Hash::Pointer& header = std::get<0>(m_slotInfo);
+            const data::Hash::Pointer& header = std::get<0>(m_slotInfo);
             if (header) {
                 m_signalSlotable->replyException(*header, message, details);
             }
@@ -917,7 +919,7 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::replyException(const karabo::util::Hash& header, const std::string& message,
+        void SignalSlotable::replyException(const karabo::data::Hash& header, const std::string& message,
                                             const std::string& details) {
             if (header.has("replyTo")) {
                 const std::string targetInstanceId = header.get<string>("signalInstanceId");
@@ -937,7 +939,7 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::sendPotentialReply(const karabo::util::Hash& header, const std::string& slotFunction,
+        void SignalSlotable::sendPotentialReply(const karabo::data::Hash& header, const std::string& slotFunction,
                                                 bool global) {
             // We could be requested in two different ways.
             // TODO: Get rid of requestNoWait code path once receiveAsync is everywhere.
@@ -1078,7 +1080,7 @@ namespace karabo {
             // Provides information about pipeline connectivity
             KARABO_SLOT(slotGetOutputChannelInformation, string /*ioChannelId*/, int /*pid*/)
             KARABO_SLOT(slotGetOutputChannelInformationFromHash,
-                        karabo::util::Hash /*hash*/) // wrapper for generic calls, that encapsulate arguments in Hash
+                        karabo::data::Hash /*hash*/) // wrapper for generic calls, that encapsulate arguments in Hash
 
             KARABO_SLOT(slotGetOutputChannelNames)
         }
@@ -1093,7 +1095,7 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::slotInstanceNew(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
+        void SignalSlotable::slotInstanceNew(const std::string& instanceId, const karabo::data::Hash& instanceInfo) {
             // Check if new instance in static map of local instances - if yes, copy to non-static one for usage
             // (Before 'if (instanceId == m_instanceId)' below to shortcut also self-messaging.)
             {
@@ -1127,7 +1129,7 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::slotInstanceGone(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
+        void SignalSlotable::slotInstanceGone(const std::string& instanceId, const karabo::data::Hash& instanceInfo) {
             { // Erase again from shortcut messaging if it took part in that
                 std::lock_guard<std::mutex> lock(m_myInstanceMapMutex);
                 if (m_myInstanceMap.erase(instanceId) > 0) {
@@ -1148,7 +1150,7 @@ namespace karabo {
 
 
         void SignalSlotable::slotInstanceUpdated(const std::string& instanceId,
-                                                 const karabo::util::Hash& instanceInfo) {
+                                                 const karabo::data::Hash& instanceInfo) {
             if (instanceId == m_instanceId) return;
 
             if (m_trackAllInstances) {
@@ -1215,7 +1217,7 @@ namespace karabo {
             Hash instanceInfo;
             try {
                 this->request(instanceId, "slotPing", instanceId, 1, false).timeout(200).receive(instanceInfo);
-            } catch (const karabo::util::TimeoutException&) {
+            } catch (const karabo::data::TimeoutException&) {
                 Exception::clearTrace();
                 return std::make_pair(false, hostname);
             }
@@ -1239,7 +1241,7 @@ namespace karabo {
                     if (rand == m_randPing) {
                         // We are in case 1) and I ask myself. I must not answer, so place an invalid reply to avoid
                         // a default reply to be send (see sendPotentialReply):
-                        registerReply(karabo::util::Hash::Pointer());
+                        registerReply(karabo::data::Hash::Pointer());
                     } else {
                         // m_randPing == 0 (I am up) or >= 2 (I am 'booting')
                         // 1) It is not me, so that guy must not come up: tell him. Note: Two guys coming up
@@ -1261,8 +1263,8 @@ namespace karabo {
             std::vector<string> signals;
             try {
                 request(instanceId, "slotGetAvailableFunctions", "signals").timeout(timeout).receive(signals);
-            } catch (const karabo::util::TimeoutException&) {
-                karabo::util::Exception::clearTrace();
+            } catch (const karabo::data::TimeoutException&) {
+                karabo::data::Exception::clearTrace();
                 cout << "ERROR:  The requested instanceId \"" << instanceId << "\" is currently not available." << endl;
             }
             return signals;
@@ -1273,8 +1275,8 @@ namespace karabo {
             std::vector<string> slots;
             try {
                 request(instanceId, "slotGetAvailableFunctions", "slots").timeout(timeout).receive(slots);
-            } catch (const karabo::util::TimeoutException&) {
-                karabo::util::Exception::clearTrace();
+            } catch (const karabo::data::TimeoutException&) {
+                karabo::data::Exception::clearTrace();
                 cout << "ERROR:  The requested instanceId \"" << instanceId << "\" is currently not available." << endl;
             }
             return slots;
@@ -1322,7 +1324,7 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::slotPingAnswer(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
+        void SignalSlotable::slotPingAnswer(const std::string& instanceId, const karabo::data::Hash& instanceInfo) {
             if (!hasTrackedInstance(instanceId)) {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Got ping answer from instanceId " << instanceId;
                 emit("signalInstanceNew", instanceId, instanceInfo);
@@ -1358,7 +1360,7 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::updateInstanceInfo(const karabo::util::Hash& update, bool remove) {
+        void SignalSlotable::updateInstanceInfo(const karabo::data::Hash& update, bool remove) {
             std::unique_lock<std::shared_mutex> lock(m_instanceInfoMutex);
             if (remove) {
                 m_instanceInfo.subtract(update);
@@ -1369,7 +1371,7 @@ namespace karabo {
         }
 
 
-        karabo::util::Hash SignalSlotable::getInstanceInfo() const {
+        karabo::data::Hash SignalSlotable::getInstanceInfo() const {
             std::shared_lock<std::shared_mutex> lock(m_instanceInfoMutex);
             return m_instanceInfo;
         }
@@ -1478,8 +1480,8 @@ namespace karabo {
                                                       << ":slotSubscribeRemoteSignal\"";
                             return signalExists;
                         }
-                    } catch (const karabo::util::TimeoutException&) {
-                        karabo::util::Exception::clearTrace();
+                    } catch (const karabo::data::TimeoutException&) {
+                        karabo::data::Exception::clearTrace();
                         KARABO_LOG_FRAMEWORK_WARN << m_instanceId << " : Timeout during subscription to signal \""
                                                   << signalInstanceId << ":" << signalFunction
                                                   << "\" while delegating to \"" << slotInstanceId
@@ -1512,8 +1514,8 @@ namespace karabo {
                                                    << "' is not available on remote instance '" << signalInstanceId
                                                    << "'.";
                     }
-                } catch (const karabo::util::TimeoutException&) {
-                    karabo::util::Exception::clearTrace();
+                } catch (const karabo::data::TimeoutException&) {
+                    karabo::data::Exception::clearTrace();
                     signalExists = false;
                     KARABO_LOG_FRAMEWORK_WARN << "Remote instance '" << signalInstanceId << "' did not respond in time"
                                               << " the request to connect to its signal '" << signalFunction << "'.";
@@ -1592,8 +1594,8 @@ namespace karabo {
                                                    << "' is currently not available on remote instance '"
                                                    << slotInstanceId << "'.";
                     }
-                } catch (const karabo::util::TimeoutException&) {
-                    karabo::util::Exception::clearTrace();
+                } catch (const karabo::data::TimeoutException&) {
+                    karabo::data::Exception::clearTrace();
                     slotExists = false;
                     KARABO_LOG_FRAMEWORK_WARN << "Remote instance '" << slotInstanceId << "' did not respond in time"
                                               << " whether it has a slot '" << mangledSlotFunction << "'.";
@@ -1919,7 +1921,7 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::addTrackedInstance(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
+        void SignalSlotable::addTrackedInstance(const std::string& instanceId, const karabo::data::Hash& instanceInfo) {
             const boost::optional<const Hash::Node&> beatsNode = instanceInfo.find("heartbeatInterval");
             if (!beatsNode) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Cannot track '" << instanceId << "' since its instanceInfo lacks the "
@@ -1962,7 +1964,7 @@ namespace karabo {
 
 
         void SignalSlotable::updateTrackedInstanceInfo(const std::string& instanceId,
-                                                       const karabo::util::Hash& instanceInfo) {
+                                                       const karabo::data::Hash& instanceInfo) {
             std::lock_guard<std::mutex> lock(m_trackedInstancesMutex);
             if (m_trackedInstances.has(instanceId)) {
                 Hash& h = m_trackedInstances.get<Hash>(instanceId);
@@ -2032,8 +2034,8 @@ namespace karabo {
                                                   << ":slotUnsubscribeRemoteSignal\"";
                         return disconnected;
                     }
-                } catch (const karabo::util::TimeoutException&) {
-                    karabo::util::Exception::clearTrace();
+                } catch (const karabo::data::TimeoutException&) {
+                    karabo::data::Exception::clearTrace();
                     KARABO_LOG_FRAMEWORK_WARN << m_instanceId << " : Timeout trying to un-subscribe from signal \""
                                               << signalInstanceId << ":" << signalFunction
                                               << "\" while delegating to \"" << slotInstanceId
@@ -2065,8 +2067,8 @@ namespace karabo {
                                                    << slotFunction << "' from remote signal '" << m_instanceId << "."
                                                    << signalFunction << "'.";
                     }
-                } catch (const karabo::util::TimeoutException&) {
-                    karabo::util::Exception::clearTrace();
+                } catch (const karabo::data::TimeoutException&) {
+                    karabo::data::Exception::clearTrace();
                     disconnected = false;
                     KARABO_LOG_FRAMEWORK_WARN << "Remote instance '" << signalInstanceId << "' did not respond in time"
                                               << " the request to disconnect slot '" << slotInstanceId << "."
@@ -2145,7 +2147,7 @@ namespace karabo {
                                 innerSuccessHandler, failureHandler ? failureHandler : [errorMsg]() {
                                     try {
                                         throw;
-                                    } catch (const karabo::util::TimeoutException&) {
+                                    } catch (const karabo::data::TimeoutException&) {
                                         Exception::clearTrace();
                                         KARABO_LOG_FRAMEWORK_WARN << errorMsg << " - timeout";
                                     } catch (const std::exception& e) {
@@ -2303,7 +2305,7 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::decreaseCountdown(std::vector<std::pair<std::string, karabo::util::Hash>>& deadOnes) {
+        void SignalSlotable::decreaseCountdown(std::vector<std::pair<std::string, karabo::data::Hash>>& deadOnes) {
             std::lock_guard<std::mutex> lock(m_trackedInstancesMutex);
 
             for (Hash::iterator it = m_trackedInstances.begin(); it != m_trackedInstances.end(); ++it) {
@@ -2355,7 +2357,7 @@ namespace karabo {
 
 
         InputChannel::Pointer SignalSlotable::createInputChannel(
-              const std::string& channelName, const karabo::util::Hash& config,
+              const std::string& channelName, const karabo::data::Hash& config,
               const DataHandler& onDataAvailableHandler, const InputHandler& onInputAvailableHandler,
               const InputHandler& onEndOfStreamEventHandler, const InputChannel::ConnectionTracker& connectTracker) {
             if (!config.has(channelName))
@@ -2385,7 +2387,7 @@ namespace karabo {
 
 
         OutputChannel::Pointer SignalSlotable::createOutputChannel(const std::string& channelName,
-                                                                   const karabo::util::Hash& config,
+                                                                   const karabo::data::Hash& config,
                                                                    const OutputHandler& onOutputPossibleHandler) {
             if (!config.has(channelName))
                 throw KARABO_PARAMETER_EXCEPTION(
@@ -2582,7 +2584,7 @@ namespace karabo {
                 std::string msg;
                 try {
                     throw;
-                } catch (const karabo::util::TimeoutException&) {
+                } catch (const karabo::data::TimeoutException&) {
                     msg = "timeout";
                 } catch (const std::exception& e) {
                     msg = e.what();
@@ -2613,8 +2615,8 @@ namespace karabo {
             for (InputChannels::const_iterator it = inputChannels.begin(); it != inputChannels.end(); ++it) {
                 const std::string& channelName = it->first;
                 const InputChannel::Pointer& channel = it->second;
-                const std::map<std::string, karabo::util::Hash>& outputChannels = channel->getConnectedOutputChannels();
-                for (std::map<std::string, karabo::util::Hash>::const_iterator ii = outputChannels.begin();
+                const std::map<std::string, karabo::data::Hash>& outputChannels = channel->getConnectedOutputChannels();
+                for (std::map<std::string, karabo::data::Hash>::const_iterator ii = outputChannels.begin();
                      ii != outputChannels.end(); ++ii) {
                     const string& outputChannelString = ii->first;
                     if (instanceId != outputChannelString.substr(0, instanceId.size())) {
@@ -2653,8 +2655,8 @@ namespace karabo {
         void SignalSlotable::connectInputChannel(const InputChannel::Pointer& channel, int trails) {
             // Called from - pcLayer package for DAQ: DataAggregator::connectToDataSources(..) (Nov. 2018)
             // Loop connected outputs
-            const std::map<std::string, karabo::util::Hash>& outputChannels = channel->getConnectedOutputChannels();
-            for (std::map<std::string, karabo::util::Hash>::const_iterator it = outputChannels.begin();
+            const std::map<std::string, karabo::data::Hash>& outputChannels = channel->getConnectedOutputChannels();
+            for (std::map<std::string, karabo::data::Hash>::const_iterator it = outputChannels.begin();
                  it != outputChannels.end(); ++it) {
                 const string& outputChannelString = it->first;
                 connectInputToOutputChannel_old(channel, outputChannelString, trails);
@@ -2665,7 +2667,7 @@ namespace karabo {
         void SignalSlotable::asyncConnectInputChannel(const InputChannel::Pointer& channel,
                                                       const std::function<void(bool)>& handler,
                                                       const std::vector<std::string>& outputChannelsToIgnore) {
-            std::map<std::string, karabo::util::Hash> outputChannels(channel->getConnectedOutputChannels());
+            std::map<std::string, karabo::data::Hash> outputChannels(channel->getConnectedOutputChannels());
             for (const std::string& outputToIgnore : outputChannelsToIgnore) {
                 outputChannels.erase(outputToIgnore);
             }
@@ -2691,7 +2693,7 @@ namespace karabo {
 
             // Loop connected outputs
             unsigned int counter = 0;
-            for (std::map<std::string, karabo::util::Hash>::const_iterator it = outputChannels.begin();
+            for (std::map<std::string, karabo::data::Hash>::const_iterator it = outputChannels.begin();
                  it != outputChannels.end(); ++it, ++counter) {
                 const string& outputChannelString = it->first;
                 auto innerHandler = bind_weak(&SignalSlotable::connectSingleInputHandler, this, status, counter,
@@ -2709,7 +2711,7 @@ namespace karabo {
                 std::string msg;
                 try {
                     throw;
-                } catch (const karabo::util::TimeoutException&) {
+                } catch (const karabo::data::TimeoutException&) {
                     msg = "timeout";
                     Exception::clearTrace();
                 } catch (const std::exception& e) {
@@ -2767,8 +2769,8 @@ namespace karabo {
             KARABO_LOG_FRAMEWORK_DEBUG << "connectInputToOutputChannel  on \"" << m_instanceId
                                        << "\"  : outputChannelString is \"" << outputChannelString << "\"";
 
-            std::map<std::string, karabo::util::Hash> outputChannels = channel->getConnectedOutputChannels();
-            std::map<std::string, karabo::util::Hash>::const_iterator it = outputChannels.find(outputChannelString);
+            std::map<std::string, karabo::data::Hash> outputChannels = channel->getConnectedOutputChannels();
+            std::map<std::string, karabo::data::Hash>::const_iterator it = outputChannels.find(outputChannelString);
             if (it == outputChannels.end()) return;
 
             // it->first => outputChannelString (STRING)
@@ -2789,7 +2791,7 @@ namespace karabo {
                                                       channel, outputChannelString, trials, timeout + 2000);
                 this->request(instanceId, "slotGetOutputChannelInformation", channelId, static_cast<int>(getpid()))
                       .timeout(timeout)
-                      .receiveAsync<bool, karabo::util::Hash>(successHandler, timeoutHandler);
+                      .receiveAsync<bool, karabo::data::Hash>(successHandler, timeoutHandler);
             } else {
                 // Everything is already there!
                 // GF Nov. 2019: But who guarantees that the information is still valid? The other end could have
@@ -2802,7 +2804,7 @@ namespace karabo {
         void SignalSlotable::connectInputChannelHandler_old(const InputChannel::Pointer& inChannel,
                                                             const std::string& outputChannelString,
                                                             bool outChannelExists,
-                                                            const karabo::util::Hash& outChannelInfo) {
+                                                            const karabo::data::Hash& outChannelInfo) {
             if (outChannelExists) {
                 Hash allInfo(outChannelInfo);
                 allInfo.set("outputChannelString", outputChannelString);
@@ -2839,7 +2841,7 @@ namespace karabo {
                                                       inChannel, outputChannelString, trials, nextTimeout + 2000);
                 this->request(instanceId, "slotGetOutputChannelInformation", channelId, static_cast<int>(getpid()))
                       .timeout(nextTimeout)
-                      .receiveAsync<bool, karabo::util::Hash>(successHandler, timeoutHandler);
+                      .receiveAsync<bool, karabo::data::Hash>(successHandler, timeoutHandler);
             } else {
                 KARABO_LOG_FRAMEWORK_ERROR << getInstanceId() << " finally gives up to find instance of channel '"
                                            << outputChannelString
@@ -2854,8 +2856,8 @@ namespace karabo {
             KARABO_LOG_FRAMEWORK_DEBUG << getInstanceId() << ": connectInputToOutputChannel with "
                                        << "outputChannelString '" << outputChannelString << "'";
 
-            const std::map<std::string, karabo::util::Hash> outputChannels = channel->getConnectedOutputChannels();
-            const std::map<std::string, karabo::util::Hash>::const_iterator it =
+            const std::map<std::string, karabo::data::Hash> outputChannels = channel->getConnectedOutputChannels();
+            const std::map<std::string, karabo::data::Hash>::const_iterator it =
                   outputChannels.find(outputChannelString);
             if (it == outputChannels.end()) {
                 const std::string msg("Cannot connect InputChannel to '" + outputChannelString +
@@ -2904,14 +2906,14 @@ namespace karabo {
             };
             this->request(instanceId, "slotGetOutputChannelInformation", channelId, static_cast<int>(getpid()))
                   .timeout(getOutChannelInfoTimeoutMsec)
-                  .receiveAsync<bool, karabo::util::Hash>(successHandler, failureHandler);
+                  .receiveAsync<bool, karabo::data::Hash>(successHandler, failureHandler);
         }
 
 
         void SignalSlotable::connectInputChannelHandler(const InputChannel::Pointer& inChannel,
                                                         const std::string& outputChannelString,
                                                         const std::function<void(bool)>& handler, bool outChannelExists,
-                                                        const karabo::util::Hash& outChannelInfo) {
+                                                        const karabo::data::Hash& outChannelInfo) {
             if (outChannelExists) {
                 Hash allInfo(outChannelInfo);
                 allInfo.set("outputChannelString", outputChannelString);
@@ -2952,12 +2954,12 @@ namespace karabo {
         }
 
 
-        std::pair<bool, karabo::util::Hash> SignalSlotable::slotGetOutputChannelInformationImpl(
+        std::pair<bool, karabo::data::Hash> SignalSlotable::slotGetOutputChannelInformationImpl(
               const std::string& channelId, const int& processId, const char* slotName) {
             std::lock_guard<std::mutex> lock(m_pipelineChannelsMutex);
             OutputChannels::const_iterator it = m_outputChannels.find(channelId);
             if (it != m_outputChannels.end()) {
-                karabo::util::Hash h(it->second->getInformation());
+                karabo::data::Hash h(it->second->getInformation());
                 // Almost always the receiver is remote, i.e. in another process:
                 h.set("memoryLocation", "remote");
                 // But better check whether it is not
@@ -2976,21 +2978,21 @@ namespace karabo {
                 }
                 return std::make_pair(true, h);
             } else {
-                return std::make_pair(false, karabo::util::Hash());
+                return std::make_pair(false, karabo::data::Hash());
             }
         }
 
         void SignalSlotable::slotGetOutputChannelInformation(const std::string& channelId, const int& processId) {
-            const std::pair<bool, karabo::util::Hash>& result =
+            const std::pair<bool, karabo::data::Hash>& result =
                   slotGetOutputChannelInformationImpl(channelId, processId, "slotGetOutputChannelInformation");
             reply(std::get<0>(result), std::get<1>(result));
         }
 
-        void SignalSlotable::slotGetOutputChannelInformationFromHash(const karabo::util::Hash& hash) {
-            const std::pair<bool, karabo::util::Hash>& result =
+        void SignalSlotable::slotGetOutputChannelInformationFromHash(const karabo::data::Hash& hash) {
+            const std::pair<bool, karabo::data::Hash>& result =
                   slotGetOutputChannelInformationImpl(hash.get<std::string>("channelId"), hash.get<int>("processId"),
                                                       "slotGetOutputChannelInformationFromHash");
-            reply(karabo::util::Hash("success", std::get<0>(result), "info", std::get<1>(result)));
+            reply(karabo::data::Hash("success", std::get<0>(result), "info", std::get<1>(result)));
         }
 
 
@@ -3005,8 +3007,8 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::popReceivedReply(const std::string& replyId, karabo::util::Hash::Pointer& header,
-                                              karabo::util::Hash::Pointer& body) {
+        void SignalSlotable::popReceivedReply(const std::string& replyId, karabo::data::Hash::Pointer& header,
+                                              karabo::data::Hash::Pointer& body) {
             std::lock_guard<std::mutex> lock(m_receivedRepliesMutex);
             ReceivedReplies::iterator it = m_receivedReplies.find(replyId);
             if (it != m_receivedReplies.end()) {
@@ -3028,8 +3030,8 @@ namespace karabo {
 
 
         bool SignalSlotable::timedWaitAndPopReceivedReply(const std::string& replyId,
-                                                          karabo::util::Hash::Pointer& header,
-                                                          karabo::util::Hash::Pointer& body, int timeout) {
+                                                          karabo::data::Hash::Pointer& header,
+                                                          karabo::data::Hash::Pointer& body, int timeout) {
             bool result = true;
             std::shared_ptr<BoostMutexCond> bmc;
             {
@@ -3102,7 +3104,7 @@ namespace karabo {
                 } catch (const std::exception&) {
                     Exception::clearTrace();
                     try {
-                        // Now the errorHandler can do try { throw; } catch (catch karabo::util::TimeoutException& e)
+                        // Now the errorHandler can do try { throw; } catch (catch karabo::data::TimeoutException& e)
                         // {...;}
                         errorHandler();
                         return;

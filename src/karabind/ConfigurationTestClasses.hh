@@ -20,31 +20,32 @@
 #define KARABO_UTIL_TEST_EXPECTEDPARAMETERCLASSES_HH
 
 #include <boost/assign/std/vector.hpp> // for 'operator+=()'
-#include <karabo/util/AlarmConditionElement.hh>
-#include <karabo/util/ChoiceElement.hh>
-#include <karabo/util/Configurator.hh>
-#include <karabo/util/NDArrayElement.hh>
-#include <karabo/util/NodeElement.hh>
-#include <karabo/util/OverwriteElement.hh>
-#include <karabo/util/SimpleElement.hh>
-#include <karabo/util/State.hh>
-#include <karabo/util/StateElement.hh>
-#include <karabo/util/TableElement.hh>
-#include <karabo/util/VectorElement.hh>
-#include <karabo/util/karaboDll.hh>
 #include <karabo/xms/ImageData.hh>
 #include <karabo/xms/SlotElement.hh>
 
+#include "karabo/data/schema/AlarmConditionElement.hh"
+#include "karabo/data/schema/ChoiceElement.hh"
+#include "karabo/data/schema/Configurator.hh"
+#include "karabo/data/schema/NDArrayElement.hh"
+#include "karabo/data/schema/NodeElement.hh"
+#include "karabo/data/schema/OverwriteElement.hh"
+#include "karabo/data/schema/SimpleElement.hh"
+#include "karabo/data/schema/StateElement.hh"
+#include "karabo/data/schema/TableElement.hh"
+#include "karabo/data/schema/VectorElement.hh"
+#include "karabo/data/types/State.hh"
+#include "karabo/data/types/karaboDll.hh"
+
 namespace configurationTest {
 
-    using namespace karabo::util;
+    using namespace karabo::data;
     using namespace karabo::xms;
 
     struct Shape {
         KARABO_CLASSINFO(Shape, "Shape", "1.0");
         KARABO_CONFIGURATION_BASE_CLASS;
 
-        static void expectedParameters(karabo::util::Schema& expected) {
+        static void expectedParameters(karabo::data::Schema& expected) {
             BOOL_ELEMENT(expected)
                   .key("shadowEnabled")
                   .description("Shadow enabled")
@@ -76,7 +77,7 @@ namespace configurationTest {
     struct Circle : public Shape {
         KARABO_CLASSINFO(Circle, "Circle", "1.0");
 
-        static void expectedParameters(karabo::util::Schema& expected) {
+        static void expectedParameters(karabo::data::Schema& expected) {
             FLOAT_ELEMENT(expected)
                   .key("radius")
                   .alias(1)
@@ -106,7 +107,7 @@ namespace configurationTest {
             STRING_ELEMENT(expected).key("status").readOnly().commit();
         }
 
-        Circle(const karabo::util::Hash& configuration) : Shape(configuration) {}
+        Circle(const karabo::data::Hash& configuration) : Shape(configuration) {}
 
         virtual ~Circle() {}
 
@@ -122,7 +123,7 @@ namespace configurationTest {
     struct EditableCircle : public Circle {
         KARABO_CLASSINFO(EditableCircle, "EditableCircle", "1.0");
 
-        static void expectedParameters(karabo::util::Schema& expected) {
+        static void expectedParameters(karabo::data::Schema& expected) {
             OVERWRITE_ELEMENT(expected).key("radius").setNowReconfigurable().commit();
 
             OVERWRITE_ELEMENT(expected)
@@ -134,7 +135,7 @@ namespace configurationTest {
             OVERWRITE_ELEMENT(expected).key("status").setNewOptions("a,b,c").setNewDefaultValue("a").commit();
         }
 
-        EditableCircle(const karabo::util::Hash& configuration) : Circle(configuration) {}
+        EditableCircle(const karabo::data::Hash& configuration) : Circle(configuration) {}
 
         virtual ~EditableCircle() {}
 
@@ -150,7 +151,7 @@ namespace configurationTest {
     struct Rectangle : public Shape {
         KARABO_CLASSINFO(Rectangle, "Rectangle", "1.0");
 
-        static void expectedParameters(karabo::util::Schema& expected) {
+        static void expectedParameters(karabo::data::Schema& expected) {
             FLOAT_ELEMENT(expected)
                   .key("a")
                   .alias(1)
@@ -181,7 +182,7 @@ namespace configurationTest {
                   .commit();
         }
 
-        Rectangle(const karabo::util::Hash& configuration) : Shape(configuration) {}
+        Rectangle(const karabo::data::Hash& configuration) : Shape(configuration) {}
 
         virtual ~Rectangle() {}
 
@@ -194,7 +195,7 @@ namespace configurationTest {
         KARABO_CLASSINFO(GraphicsRenderer, "GraphicsRenderer", "1.0")
         KARABO_CONFIGURATION_BASE_CLASS;
 
-        static void expectedParameters(karabo::util::Schema& expected) {
+        static void expectedParameters(karabo::data::Schema& expected) {
             BOOL_ELEMENT(expected)
                   .key("antiAlias")
                   .tags("prop")
@@ -246,7 +247,7 @@ namespace configurationTest {
                   .commit();
         }
 
-        GraphicsRenderer(const karabo::util::Hash& input) {
+        GraphicsRenderer(const karabo::data::Hash& input) {
             // cout << input << endl;
             Shape::Pointer shape = Shape::createChoice("shapes", input);
             assert(input.get<std::string>("version") == "1.4.7");
@@ -261,7 +262,7 @@ namespace configurationTest {
 
         virtual ~GraphicsRenderer1() {}
 
-        static void expectedParameters(karabo::util::Schema& expected) {
+        static void expectedParameters(karabo::data::Schema& expected) {
             BOOL_ELEMENT(expected)
                   .key("antiAlias")
                   .tags("prop")
@@ -341,11 +342,11 @@ namespace configurationTest {
     struct TestStruct1 {
         KARABO_CLASSINFO(TestStruct1, "TestStruct1", "1.0");
 
-        TestStruct1(const karabo::util::Hash& config) {}
+        TestStruct1(const karabo::data::Hash& config) {}
 
         virtual ~TestStruct1() {}
 
-        static void expectedParameters(karabo::util::Schema& expected) {
+        static void expectedParameters(karabo::data::Schema& expected) {
             STRING_ELEMENT(expected)
                   .key("exampleKey1")
                   .tags("hardware, poll")
@@ -604,7 +605,7 @@ namespace configurationTest {
     struct TestStruct2 : public TestStruct1 {
         KARABO_CLASSINFO(TestStruct2, "TestStruct2", "1.0");
 
-        TestStruct2(const karabo::util::Hash& config) : TestStruct1(config) {}
+        TestStruct2(const karabo::data::Hash& config) : TestStruct1(config) {}
 
         static void expectedParameters(Schema& schema) {
             OVERWRITE_ELEMENT(schema).key("exampleKey2").setNewAlias<int>(20).commit();
@@ -618,7 +619,7 @@ namespace configurationTest {
 
         virtual ~OtherSchemaElements() {}
 
-        static void expectedParameters(karabo::util::Schema& expected) {
+        static void expectedParameters(karabo::data::Schema& expected) {
             SLOT_ELEMENT(expected)
                   .key("slotTest")
                   .displayedName("Reset")
@@ -692,16 +693,16 @@ namespace configurationTest {
                   .commit();
 
             const std::vector<unsigned long long> shape32({3, 2});
-            NDARRAY_ELEMENT(expected).key("arrBool").dtype(karabo::util::Types::BOOL).shape(shape32).commit();
+            NDARRAY_ELEMENT(expected).key("arrBool").dtype(karabo::data::Types::BOOL).shape(shape32).commit();
 
-            NDARRAY_ELEMENT(expected).key("arrInt8").dtype(karabo::util::Types::INT8).shape(shape32).commit();
+            NDARRAY_ELEMENT(expected).key("arrInt8").dtype(karabo::data::Types::INT8).shape(shape32).commit();
 
-            NDARRAY_ELEMENT(expected).key("arrUInt16").dtype(karabo::util::Types::UINT16).shape(shape32).commit();
+            NDARRAY_ELEMENT(expected).key("arrUInt16").dtype(karabo::data::Types::UINT16).shape(shape32).commit();
 
-            NDARRAY_ELEMENT(expected).key("arrFloat").dtype(karabo::util::Types::FLOAT).shape(shape32).commit();
+            NDARRAY_ELEMENT(expected).key("arrFloat").dtype(karabo::data::Types::FLOAT).shape(shape32).commit();
 
             // Keep shape as string to also test that
-            NDARRAY_ELEMENT(expected).key("arrDouble").dtype(karabo::util::Types::DOUBLE).shape("3,2,-1").commit();
+            NDARRAY_ELEMENT(expected).key("arrDouble").dtype(karabo::data::Types::DOUBLE).shape("3,2,-1").commit();
 
             NDARRAY_ELEMENT(expected)
                   .key("arrUndefined")
@@ -743,11 +744,11 @@ namespace configurationTest {
     struct SchemaNodeElements {
         KARABO_CLASSINFO(SchemaNodeElements, "SchemaNodeElements", "1.0");
 
-        SchemaNodeElements(const karabo::util::Hash& config) {}
+        SchemaNodeElements(const karabo::data::Hash& config) {}
 
         virtual ~SchemaNodeElements() {}
 
-        static void expectedParameters(karabo::util::Schema& expected) {
+        static void expectedParameters(karabo::data::Schema& expected) {
             NODE_ELEMENT(expected)
                   .key("monitor")
                   .displayedName("Monitor")
@@ -774,11 +775,11 @@ namespace configurationTest {
     struct SchemaNodeInjected {
         KARABO_CLASSINFO(SchemaNodeInjected, "SchemaNodeInjected", "1.0");
 
-        SchemaNodeInjected(const karabo::util::Hash& config) {}
+        SchemaNodeInjected(const karabo::data::Hash& config) {}
 
         virtual ~SchemaNodeInjected() {}
 
-        static void expectedParameters(karabo::util::Schema& expected) {
+        static void expectedParameters(karabo::data::Schema& expected) {
             NODE_ELEMENT(expected)
                   .key("monitor")
                   .displayedName("Monitor new")
@@ -807,11 +808,11 @@ namespace configurationTest {
         KARABO_CLASSINFO(SomeClass, "SomeClassId", "1.0")
         KARABO_CONFIGURATION_BASE_CLASS;
 
-        SomeClass(const karabo::util::Hash& config) {}
+        SomeClass(const karabo::data::Hash& config) {}
 
         virtual ~SomeClass() {}
 
-        static void expectedParameters(karabo::util::Schema& expected) {
+        static void expectedParameters(karabo::data::Schema& expected) {
             INT32_ELEMENT(expected)
                   .key("x")
                   .alias(10)

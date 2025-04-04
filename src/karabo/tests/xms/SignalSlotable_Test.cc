@@ -32,14 +32,14 @@
 
 #include "boost/shared_ptr.hpp"
 #include "boost/thread/mutex.hpp"
+#include "karabo/data/types/Hash.hh"
 #include "karabo/net/EventLoop.hh"
 #include "karabo/tests/BrokerUtils.hh"
-#include "karabo/util/Hash.hh"
 #include "karabo/xms/SignalSlotable.hh"
 
 using namespace std::chrono;
 using namespace std::literals::chrono_literals;
-using namespace karabo::util;
+using namespace karabo::data;
 using namespace karabo::xms;
 
 using std::placeholders::_1;
@@ -63,7 +63,7 @@ class SignalSlotDemo : public karabo::xms::SignalSlotable {
 
         KARABO_SLOT(slotA, std::string);
 
-        KARABO_SLOT(slotB, int, karabo::util::Hash);
+        KARABO_SLOT(slotB, int, karabo::data::Hash);
 
         KARABO_SLOT(slotC, int);
 
@@ -85,13 +85,13 @@ class SignalSlotDemo : public karabo::xms::SignalSlotable {
         } else {
             m_messageCount += 1000; // Invalidate message count will let the test fail!
         }
-        KARABO_SIGNAL("signalB", int, karabo::util::Hash);
+        KARABO_SIGNAL("signalB", int, karabo::data::Hash);
         connect("signalB", "slotB");
-        emit("signalB", 42, karabo::util::Hash("Was.soll.das.bedeuten", "nix"));
+        emit("signalB", 42, karabo::data::Hash("Was.soll.das.bedeuten", "nix"));
     }
 
 
-    void slotB(int someInteger, const karabo::util::Hash& someConfig) {
+    void slotB(int someInteger, const karabo::data::Hash& someConfig) {
         std::lock_guard<std::mutex> lock(m_mutex);
         // Assertions
         m_messageCount++;
@@ -234,7 +234,7 @@ void SignalSlotable_Test::testUniqueInstanceId() {
 
 void SignalSlotable_Test::_testUniqueInstanceId() {
     auto one = std::make_shared<SignalSlotable>("one");
-    auto two = std::make_shared<SignalSlotable>("two", karabo::util::Hash(), 30, karabo::util::Hash("type", "sigslot"));
+    auto two = std::make_shared<SignalSlotable>("two", karabo::data::Hash(), 30, karabo::data::Hash("type", "sigslot"));
     auto one_again = std::make_shared<SignalSlotable>("one");
 
     // Hijack test to check default "type"
@@ -355,16 +355,16 @@ void SignalSlotable_Test::_testReceiveAsyncError() {
     const auto errHandler = [&caughtType]() {
         try {
             throw;
-        } catch (const karabo::util::TimeoutException&) {
-            karabo::util::Exception::clearTrace();
+        } catch (const karabo::data::TimeoutException&) {
+            karabo::data::Exception::clearTrace();
             caughtType = ExceptionType::timeout;
-        } catch (const karabo::util::RemoteException&) {
-            karabo::util::Exception::clearTrace();
+        } catch (const karabo::data::RemoteException&) {
+            karabo::data::Exception::clearTrace();
             caughtType = ExceptionType::remote;
-        } catch (const karabo::util::CastException&) {
-            karabo::util::Exception::clearTrace();
+        } catch (const karabo::data::CastException&) {
+            karabo::data::Exception::clearTrace();
             caughtType = ExceptionType::cast;
-        } catch (const karabo::util::SignalSlotException&) {
+        } catch (const karabo::data::SignalSlotException&) {
             caughtType = ExceptionType::signalslot;
         } catch (const std::exception& e) {
             caughtType = ExceptionType::std;
@@ -399,7 +399,7 @@ void SignalSlotable_Test::_testReceiveAsyncError() {
     waitEqual(ExceptionType::signalslot, caughtType);
     CPPUNIT_ASSERT_EQUAL(int(ExceptionType::signalslot), int(caughtType));
 
-    // Trying to receive more items than come gives karabo::util::SignalSlotException:
+    // Trying to receive more items than come gives karabo::data::SignalSlotException:
     const auto badSuccessHandler2 = [](const std::string& answer, int answer2) {};
     caughtType = ExceptionType::none;
     greeter->request("responder", "slotAnswer", "Hello")
@@ -464,13 +464,13 @@ void SignalSlotable_Test::_testReceiveAsyncNoReply() {
     const auto errHandler = [&errorCode]() {
         try {
             throw;
-        } catch (const karabo::util::SignalSlotException&) {
+        } catch (const karabo::data::SignalSlotException&) {
             errorCode = 4200;
         } catch (...) {
             // Leave some breadcrumbs for the assert statement below
             errorCode = -4200;
         }
-        karabo::util::Exception::clearTrace();
+        karabo::data::Exception::clearTrace();
     };
     // All arguments match, so we expect the normalHandler to be called
     greeter->request("responder", "slotAnswer").receiveAsync(normalHandler, errHandler);
@@ -488,12 +488,12 @@ void SignalSlotable_Test::_testReceiveAsyncNoReply() {
     //
     errorCode = 0;
     handlerCalled = false;
-    const auto wrongArgHandler = [&handlerCalled](const karabo::util::Hash& some) {
+    const auto wrongArgHandler = [&handlerCalled](const karabo::data::Hash& some) {
         // We don't expect this handler to be called since its argument does not match the (empty) reply
         handlerCalled = true;
     };
     // Now wrongArgHandler expects a Hash but slotAnswer placed (automatically) an empty reply
-    greeter->request("responder", "slotAnswer").receiveAsync<karabo::util::Hash>(wrongArgHandler, errHandler);
+    greeter->request("responder", "slotAnswer").receiveAsync<karabo::data::Hash>(wrongArgHandler, errHandler);
 
     // Wait maximum 400 ms for message travel
     trials = 20;
@@ -531,14 +531,14 @@ void SignalSlotable_Test::_testReceiveExceptions() {
     int resultInt;
     CPPUNIT_ASSERT_THROW(
           greeter->request("responder", "slotAnswer", "Hello").timeout(slotCallTimeout).receive(resultInt),
-          karabo::util::CastException);
-    karabo::util::Exception::clearTrace();
-    // Trying to receive more items than come gives karabo::util::SignalSlotException:
+          karabo::data::CastException);
+    karabo::data::Exception::clearTrace();
+    // Trying to receive more items than come gives karabo::data::SignalSlotException:
     std::string answer;
     try {
         greeter->request("responder", "slotAnswer", "Hello").timeout(slotCallTimeout).receive(answer, resultInt);
         throw KARABO_LOGIC_EXCEPTION("Incompatible request did not throw");
-    } catch (const karabo::util::SignalSlotException& e) {
+    } catch (const karabo::data::SignalSlotException& e) {
         const std::string msg(e.detailedMsg());
         CPPUNIT_ASSERT_MESSAGE("Message: " + msg, msg.find("Key 'a2' does not exist") != std::string::npos);
         CPPUNIT_ASSERT_MESSAGE("Message: " + msg,
@@ -547,37 +547,37 @@ void SignalSlotable_Test::_testReceiveExceptions() {
     } catch (const std::exception& e) {
         CPPUNIT_ASSERT_MESSAGE(std::string("Unexpected exception: ") + e.what(), false);
     }
-    karabo::util::Exception::clearTrace();
+    karabo::data::Exception::clearTrace();
     // Too short timeout gives TimeoutException:
     CPPUNIT_ASSERT_THROW(greeter->request("responder", "slotAnswer", "Hello").timeout(1).receive(answer),
-                         karabo::util::TimeoutException);
-    karabo::util::Exception::clearTrace();
+                         karabo::data::TimeoutException);
+    karabo::data::Exception::clearTrace();
     // Wrong argument type to slot
     CPPUNIT_ASSERT_THROW(greeter->request("responder", "slotAnswer", 42).timeout(slotCallTimeout).receive(answer),
-                         karabo::util::RemoteException);
-    karabo::util::Exception::clearTrace();
+                         karabo::data::RemoteException);
+    karabo::data::Exception::clearTrace();
     // Too many arguments to slot seems not to harm - should we make it harm?
     // CPPUNIT_ASSERT_THROW(greeter->request("responder", "slotAnswer", "Hello",
     // 42).timeout(slotCallTimeout).receive(answer),
-    //                     karabo::util::RemoteException);
-    // karabo::util::Exception::clearTrace();
+    //                     karabo::data::RemoteException);
+    // karabo::data::Exception::clearTrace();
     // Too few arguments to slot
     CPPUNIT_ASSERT_THROW(greeter->request("responder", "slotAnswer").timeout(slotCallTimeout).receive(answer),
-                         karabo::util::RemoteException);
-    karabo::util::Exception::clearTrace();
+                         karabo::data::RemoteException);
+    karabo::data::Exception::clearTrace();
     // Non existing slot of existing instanceId
     CPPUNIT_ASSERT_THROW(
           greeter->request("responder", "slot_no_answer", "Hello").timeout(slotCallTimeout).receive(answer),
-          karabo::util::RemoteException);
-    karabo::util::Exception::clearTrace();
+          karabo::data::RemoteException);
+    karabo::data::Exception::clearTrace();
     // Non existing empty slot name of existing instanceId
     CPPUNIT_ASSERT_THROW(greeter->request("responder", "").timeout(slotCallTimeout).receive(answer),
-                         karabo::util::RemoteException);
-    karabo::util::Exception::clearTrace();
+                         karabo::data::RemoteException);
+    karabo::data::Exception::clearTrace();
     // Non-existing receiver instanceId will run into timeout (shortened time to have less test delay)
     CPPUNIT_ASSERT_THROW(greeter->request("responder_not_existing", "slotAnswer", "Hello").timeout(150).receive(answer),
-                         karabo::util::TimeoutException);
-    karabo::util::Exception::clearTrace();
+                         karabo::data::TimeoutException);
+    karabo::data::Exception::clearTrace();
     // Finally no exception:
     CPPUNIT_ASSERT_NO_THROW(
           greeter->request("responder", "slotAnswer", "Hello").timeout(slotCallTimeout).receive(answer));
@@ -634,9 +634,9 @@ void SignalSlotable_Test::_testConnectAsync() {
     auto connectFailedHandler = [&connectFailed, &connectTimeout, &connectFailedMsg]() {
         try {
             throw;
-        } catch (const karabo::util::TimeoutException& e) {
+        } catch (const karabo::data::TimeoutException& e) {
             connectTimeout = true;
-        } catch (const karabo::util::SignalSlotException& e) {
+        } catch (const karabo::data::SignalSlotException& e) {
             connectFailedMsg = e.what();
         } catch (const std::exception& e) {
             connectFailedMsg = e.what();
@@ -795,9 +795,9 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
     auto connectFailedHandler = [&connectFailed, &connectTimeout, &connectFailedMsg]() {
         try {
             throw;
-        } catch (const karabo::util::TimeoutException& e) {
+        } catch (const karabo::data::TimeoutException& e) {
             connectTimeout = true;
-        } catch (const karabo::util::SignalSlotException& e) {
+        } catch (const karabo::data::SignalSlotException& e) {
             connectFailedMsg = e.what();
         } catch (...) { // Avoid that an exception leaks out and crashes the test program.
             connectFailedMsg = "unknown exception";
@@ -937,10 +937,10 @@ void SignalSlotable_Test::_testDisconnectAsync() {
     auto disconnectFailedHandler = [&disconnectFailed, &disconnectTimeout, &disconnectFailedMsg]() {
         try {
             throw;
-        } catch (const karabo::util::TimeoutException& e) {
+        } catch (const karabo::data::TimeoutException& e) {
             disconnectTimeout = true;
             disconnectFailedMsg = e.what();
-        } catch (const karabo::util::SignalSlotException& e) {
+        } catch (const karabo::data::SignalSlotException& e) {
             disconnectFailedMsg = e.what();
         } catch (...) { // Avoid that an exception leaks out and crashes the test program.
             disconnectFailedMsg = "unknown exception";
@@ -1061,7 +1061,7 @@ void SignalSlotable_Test::_testDisconnectConnectAsyncStress() {
         auto disconnectFailedHandler = [&disconnectFailed, &disconnectFailedMsg]() {
             try {
                 throw;
-            } catch (const karabo::util::SignalSlotException& e) {
+            } catch (const karabo::data::SignalSlotException& e) {
                 disconnectFailedMsg = e.what();
             } catch (...) { // Avoid that an exception leaks out and crashes the test program.
                 disconnectFailedMsg = "unknown exception";
@@ -1077,7 +1077,7 @@ void SignalSlotable_Test::_testDisconnectConnectAsyncStress() {
         auto connectFailedHandler = [&connectFailed, &connectFailedMsg]() {
             try {
                 throw;
-            } catch (const karabo::util::SignalSlotException& e) {
+            } catch (const karabo::data::SignalSlotException& e) {
                 connectFailedMsg = e.what();
             } catch (...) { // Avoid that an exception leaks out and crashes the test program.
                 connectFailedMsg = "unknown exception";
@@ -1140,7 +1140,7 @@ void SignalSlotable_Test::_testMethod() {
     int reply = 0;
     try {
         demo->request(instanceId, "slotC", 1).timeout(500).receive(reply);
-    } catch (karabo::util::TimeoutException&) {
+    } catch (karabo::data::TimeoutException&) {
         CPPUNIT_ASSERT_MESSAGE("Timeout request/receive slotC", false);
     }
     CPPUNIT_ASSERT_EQUAL(2, reply);
@@ -1149,7 +1149,7 @@ void SignalSlotable_Test::_testMethod() {
     reply = 0;
     try {
         demo->request("", "slotC", 1).timeout(500).receive(reply);
-    } catch (karabo::util::TimeoutException&) {
+    } catch (karabo::data::TimeoutException&) {
         CPPUNIT_ASSERT_MESSAGE("Timeout request/receive slotC via \"\"", false);
     }
     CPPUNIT_ASSERT_EQUAL(2, reply);
@@ -1169,7 +1169,7 @@ void SignalSlotable_Test::_testMethod() {
     reply = 0;
     try {
         demo->request("", "noded.slot", 1).timeout(500).receive(reply);
-    } catch (karabo::util::TimeoutException&) {
+    } catch (karabo::data::TimeoutException&) {
         CPPUNIT_ASSERT_MESSAGE("Timeout request/receive noded.slot", false);
     }
     CPPUNIT_ASSERT_EQUAL(2, reply);
@@ -1293,7 +1293,7 @@ void SignalSlotable_Test::_testAsyncReply() {
         receivedError = true;
         try {
             throw;
-        } catch (const karabo::util::RemoteException& re) {
+        } catch (const karabo::data::RemoteException& re) {
             remoteError = true;
             errorText = re.what();
         } catch (const std::exception& e) {
@@ -1331,7 +1331,7 @@ void SignalSlotable_Test::_testAsyncReply() {
     // Check also calling synchronously to a slot that answers an error via AsyncReply
     //
     CPPUNIT_ASSERT_THROW(sender->request("slotter", "slotAsyncErrorReply").timeout(slotCallTimeout).receive(),
-                         karabo::util::RemoteException);
+                         karabo::data::RemoteException);
 
     //
     // Now check that we can call a slot with an async reply directly (although the reply does not matter)
@@ -1467,8 +1467,8 @@ void SignalSlotable_Test::_testRegisterSlotTwice() {
 
     // Trying to register a further method with another signature raises an exception:
     auto third = [](int arg) {};
-    CPPUNIT_ASSERT_THROW(instance->registerSlot<int>(third, "slot"), karabo::util::SignalSlotException);
-    karabo::util::Exception::clearTrace();
+    CPPUNIT_ASSERT_THROW(instance->registerSlot<int>(third, "slot"), karabo::data::SignalSlotException);
+    karabo::data::Exception::clearTrace();
 }
 
 
@@ -1478,17 +1478,17 @@ void SignalSlotable_Test::testAsyncConnectInputChannel() {
 
 
 void SignalSlotable_Test::_testAsyncConnectInputChannel() {
-    using karabo::util::Hash;
+    using karabo::data::Hash;
 
     // Setup sender
     auto sender = std::make_shared<SignalSlotable>("sender");
     OutputChannel::Pointer outputChannel = sender->createOutputChannel("output", // default config
-                                                                       Hash("output", karabo::util::Hash()));
+                                                                       Hash("output", karabo::data::Hash()));
     sender->start();
 
     // Setup receiver
     auto receiver = std::make_shared<SignalSlotable>("receiver");
-    karabo::util::Hash inputCfg("connectedOutputChannels", std::vector<std::string>(1, "sender:output"));
+    karabo::data::Hash inputCfg("connectedOutputChannels", std::vector<std::string>(1, "sender:output"));
     InputChannel::Pointer inputChannel = receiver->createInputChannel("input", Hash("input", inputCfg));
     receiver->start();
 

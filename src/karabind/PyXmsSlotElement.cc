@@ -20,14 +20,14 @@
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
-#include <karabo/util/State.hh>
 #include <karabo/xms/SlotElement.hh>
 
 #include "HandlerWrap.hh"
 #include "Wrapper.hh"
+#include "karabo/data/types/State.hh"
 
 namespace py = pybind11;
-using namespace karabo::util;
+using namespace karabo::data;
 using namespace karabo::xms;
 
 namespace karabind {
@@ -67,11 +67,11 @@ void exportPyXmsSlotElement(py::module_& m) {
     sl.def(py::init<Schema&>(), py::arg("expected"));
 
     sl.def("allowedStates", [](py::args args) {
-        std::vector<karabo::util::State> states;
+        std::vector<karabo::data::State> states;
         SLOT_ELEMENT& self = args[0].cast<SLOT_ELEMENT&>();
         for (unsigned int i = 1; i < py::len(args); ++i) {
             const std::string state = args[i].attr("name").cast<std::string>();
-            states.push_back(karabo::util::State::fromString(state));
+            states.push_back(karabo::data::State::fromString(state));
         }
         self.allowedStates(states);
         return args[0];
@@ -104,7 +104,7 @@ void exportPyXmsSlotElement(py::module_& m) {
     { // karabo::xms::SLOT_ELEMENT
         py::class_<SLOT_ELEMENT, SlotElementBase<SLOT_ELEMENT>> elem(m, "SLOT_ELEMENT");
 
-        elem.def(py::init<karabo::util::Schema&>(), py::arg("expected"));
+        elem.def(py::init<karabo::data::Schema&>(), py::arg("expected"));
 
         elem.def("commit", &SLOT_ELEMENT::commit);
 

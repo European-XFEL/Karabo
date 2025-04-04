@@ -24,10 +24,10 @@
 
 #include "ImageData_Test.hh"
 
-#include "karabo/util/NDArray.hh"
+#include "karabo/data/types/NDArray.hh"
 
 using namespace std;
-using namespace karabo::util;
+using namespace karabo::data;
 using namespace karabo::io;
 using namespace karabo::net;
 using namespace karabo::xms;
@@ -206,7 +206,7 @@ void ImageData_Test::testSetAndGetMethods() {
 
         // Test valid and invalid values for offset
         CPPUNIT_ASSERT_NO_THROW(image2.setROIOffsets(offsets_valid));
-        CPPUNIT_ASSERT_THROW(image2.setROIOffsets(offsets_wrong_length), karabo::util::ParameterException);
+        CPPUNIT_ASSERT_THROW(image2.setROIOffsets(offsets_wrong_length), karabo::data::ParameterException);
 
         CPPUNIT_ASSERT_EQUAL(image2.getEncoding(), static_cast<int>(EncodingType::BGRA));
         CPPUNIT_ASSERT_EQUAL(image2.getDataType(), Types::INT16);

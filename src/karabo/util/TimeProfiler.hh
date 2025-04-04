@@ -28,8 +28,8 @@
 #include <stack>
 #include <string>
 
-#include "Hash.hh"
-#include "TimePeriod.hh"
+#include "karabo/data/time/TimePeriod.hh"
+#include "karabo/data/types/Hash.hh"
 
 namespace karabo {
     namespace util {
@@ -41,7 +41,7 @@ namespace karabo {
              * @param name profiler's name
              */
             TimeProfiler(const std::string& name);
-            TimeProfiler(const karabo::util::Hash& hash);
+            TimeProfiler(const karabo::data::Hash& hash);
             virtual ~TimeProfiler();
 
             /**
@@ -89,31 +89,31 @@ namespace karabo {
              * @param periodname period's name
              * @return TimePeriod object
              */
-            const TimePeriod getPeriod(const std::string& periodname) const;
+            const karabo::data::TimePeriod getPeriod(const std::string& periodname) const;
 
             /**
              * Returns the overall profiler period, i.e. from open to close.
              * @return TimePeriod object
              */
-            const TimePeriod getPeriod() const;
+            const karabo::data::TimePeriod getPeriod() const;
 
             /**
              * Return the time period period "periodname" as Hash
              * @param periodname period's name
              * @return Hash object
              */
-            const karabo::util::Hash& getPeriodAsHash(const std::string& periodname) const;
+            const karabo::data::Hash& getPeriodAsHash(const std::string& periodname) const;
 
             /**
              * Returns the overall profiler period.
              * @return Hash object
              */
-            const karabo::util::Hash& getPeriodAsHash() const;
+            const karabo::data::Hash& getPeriodAsHash() const;
 
             /**
              * Serialize the profiler into Hash object.
              */
-            operator karabo::util::Hash();
+            operator karabo::data::Hash();
 
             /**
              * Serialize the profiler into string using specific time format.
@@ -141,13 +141,13 @@ namespace karabo {
 
            private:
             std::string m_name;
-            karabo::util::Hash m_periods;
-            std::stack<karabo::util::Hash*> m_stack;
+            karabo::data::Hash m_periods;
+            std::stack<karabo::data::Hash*> m_stack;
 
-            static void sql(std::ostream& os, const std::string& name, const karabo::util::Hash& period,
+            static void sql(std::ostream& os, const std::string& name, const karabo::data::Hash& period,
                             const int parent_key);
 
-            static void compact(karabo::util::Hash& period);
+            static void compact(karabo::data::Hash& period);
         };
     } // namespace util
 } // namespace karabo

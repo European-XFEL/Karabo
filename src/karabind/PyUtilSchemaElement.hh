@@ -24,25 +24,24 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include <karabo/util/AlarmConditions.hh>
-#include <karabo/util/ByteArrayElement.hh>
-#include <karabo/util/ChoiceElement.hh>
-#include <karabo/util/FromLiteral.hh>
-#include <karabo/util/GenericElement.hh>
-#include <karabo/util/HashFilter.hh>
-#include <karabo/util/LeafElement.hh>
-#include <karabo/util/NDArray.hh>
-#include <karabo/util/NodeElement.hh>
-#include <karabo/util/OverwriteElement.hh>
-#include <karabo/util/SimpleElement.hh>
-#include <karabo/util/State.hh>
-#include <karabo/util/TableElement.hh>
-#include <karabo/util/ToLiteral.hh>
-#include <karabo/util/Validator.hh>
-#include <karabo/util/VectorElement.hh>
-
 #include "PyTypes.hh"
 #include "Wrapper.hh"
+#include "karabo/data/schema/ByteArrayElement.hh"
+#include "karabo/data/schema/ChoiceElement.hh"
+#include "karabo/data/schema/GenericElement.hh"
+#include "karabo/data/schema/LeafElement.hh"
+#include "karabo/data/schema/NodeElement.hh"
+#include "karabo/data/schema/OverwriteElement.hh"
+#include "karabo/data/schema/SimpleElement.hh"
+#include "karabo/data/schema/TableElement.hh"
+#include "karabo/data/schema/Validator.hh"
+#include "karabo/data/schema/VectorElement.hh"
+#include "karabo/data/types/AlarmConditions.hh"
+#include "karabo/data/types/FromLiteral.hh"
+#include "karabo/data/types/HashFilter.hh"
+#include "karabo/data/types/NDArray.hh"
+#include "karabo/data/types/State.hh"
+#include "karabo/data/types/ToLiteral.hh"
 
 
 namespace py = pybind11;
@@ -68,8 +67,8 @@ struct AliasAttributeWrap {
             const std::vector<py::object> vobj = obj.cast<std::vector<py::object>>();
             py::object list0 = vobj[0];
             if (list0.is_none()) {
-                std::vector<karabo::util::CppNone> v;
-                for (py::ssize_t i = 0; i < size; ++i) v.push_back(karabo::util::CppNone());
+                std::vector<karabo::data::CppNone> v;
+                for (py::ssize_t i = 0; i < size; ++i) v.push_back(karabo::data::CppNone());
                 return self.alias(v);
             }
             if (py::isinstance<py::bool_>(list0)) {
@@ -100,8 +99,8 @@ struct AliasAttributeWrap {
 template <class T>
 struct DefaultValueVectorWrap {
     typedef std::vector<T> VType;
-    typedef karabo::util::VectorElement<T> U;
-    typedef karabo::util::DefaultValue<U, VType> DefValueVec;
+    typedef karabo::data::VectorElement<T> U;
+    typedef karabo::data::DefaultValue<U, VType> DefValueVec;
 
     static U& defaultValue(DefValueVec& self, const py::object& obj) {
         if (py::isinstance<py::sequence>(obj)) {
@@ -116,8 +115,8 @@ struct DefaultValueVectorWrap {
 template <class T>
 struct ReadOnlySpecificVectorWrap {
     typedef std::vector<T> VType;
-    typedef karabo::util::VectorElement<T> U;
-    typedef karabo::util::ReadOnlySpecific<U, VType> ReadOnlySpecVec;
+    typedef karabo::data::VectorElement<T> U;
+    typedef karabo::data::ReadOnlySpecific<U, VType> ReadOnlySpecVec;
 
     static ReadOnlySpecVec& initialValue(ReadOnlySpecVec& self, const py::object& obj) {
         if (py::isinstance<py::list>(obj)) {
@@ -154,8 +153,8 @@ struct ReadOnlySpecificVectorWrap {
 #define KARABO_PYTHON_VECTOR_DEFAULT_VALUE(T, e)                                                                  \
     {                                                                                                             \
         typedef std::vector<T> VType;                                                                             \
-        typedef karabo::util::VectorElement<T> U;                                                                 \
-        typedef karabo::util::DefaultValue<U, VType> DefValueVec;                                                 \
+        typedef karabo::data::VectorElement<T> U;                                                                 \
+        typedef karabo::data::DefaultValue<U, VType> DefValueVec;                                                 \
         py::class_<DefValueVec>(m, "DefaultValueVector" #e)                                                       \
               .def("defaultValue", &DefaultValueVectorWrap<T>::defaultValue, py::arg("pyList"),                   \
                    py::return_value_policy::reference_internal)                                                   \
@@ -185,8 +184,8 @@ struct ReadOnlySpecificVectorWrap {
 #define KARABO_PYTHON_VECTOR_READONLYSPECIFIC(T, e)                                                               \
     {                                                                                                             \
         typedef std::vector<T> VType;                                                                             \
-        typedef karabo::util::VectorElement<T> U;                                                                 \
-        typedef karabo::util::ReadOnlySpecific<U, VType> ReadOnlySpecVec;                                         \
+        typedef karabo::data::VectorElement<T> U;                                                                 \
+        typedef karabo::data::ReadOnlySpecific<U, VType> ReadOnlySpecVec;                                         \
         py::class_<ReadOnlySpecVec>(m, "ReadOnlySpecificVector" #e)                                               \
               .def("initialValue", &ReadOnlySpecificVectorWrap<T>::initialValue, py::arg("pyList"),               \
                    py::return_value_policy::reference_internal)                                                   \
@@ -204,10 +203,10 @@ class CommonWrap {
    public:
     static py::object allowedStatesPy(py::args args, const py::kwargs kwargs) {
         T& self = args[0].cast<T&>();
-        std::vector<karabo::util::State> states;
+        std::vector<karabo::data::State> states;
         for (unsigned int i = 1; i < py::len(args); ++i) {
             const std::string state = args[i].attr("name").cast<std::string>();
-            states.push_back(karabo::util::State::fromString(state));
+            states.push_back(karabo::data::State::fromString(state));
         }
         self.allowedStates(states);
         return args[0];
@@ -218,7 +217,7 @@ class CommonWrap {
 /// The following macro KARABO_PYTHON_SIMPLE
 /// is used for python binding of
 /// @code
-/// karabo::util::SimpleElement< EType >
+/// karabo::data::SimpleElement< EType >
 /// @endcode
 /// where EType: int, long long, double.
 /// In Python: INT32_ELEMENT, ..UINT32.., INT64_ELEMENT, ..UINT64..,
@@ -248,7 +247,7 @@ class CommonWrap {
           .def("assignmentOptional", &T::assignmentOptional, py::return_value_policy::reference_internal)        \
           .def("alias", &AliasAttributeWrap<T>::aliasPy, py::return_value_policy::reference_internal)            \
           .def("commit", &T::commit, py::return_value_policy::reference_internal)                                \
-          .def("commit", (T & (T::*)(karabo::util::Schema&))(&T::commit), py::arg("expected"),                   \
+          .def("commit", (T & (T::*)(karabo::data::Schema&))(&T::commit), py::arg("expected"),                   \
                py::return_value_policy::reference_internal)                                                      \
           .def("description", &T::description, py::return_value_policy::reference_internal)                      \
           .def("displayedName", &T::displayedName, py::return_value_policy::reference_internal)                  \
@@ -264,7 +263,7 @@ class CommonWrap {
                py::arg("sep") = " ,;", py::return_value_policy::reference_internal)                              \
           .def("tags", (T & (T::*)(std::vector<std::string> const&))(&T::tags), py::arg("tags"),                 \
                py::return_value_policy::reference_internal)                                                      \
-          .def("daqPolicy", (T & (T::*)(karabo::util::DAQPolicy const&))(&T::daqPolicy), (py::arg("daqPolicy")), \
+          .def("daqPolicy", (T & (T::*)(karabo::data::DAQPolicy const&))(&T::daqPolicy), (py::arg("daqPolicy")), \
                py::return_value_policy::reference_internal)
 
 #define KARABO_PYTHON_OPTIONS_NONVECTOR(T)                                                              \
@@ -288,7 +287,7 @@ class CommonWrap {
 ///
 /// The following macro KARABO_PYTHON_VECTOR is used for python binding of
 /// @code
-/// karabo::util::VectorElement< EType, std::vector >
+/// karabo::data::VectorElement< EType, std::vector >
 /// @endcode
 /// where EType: int, long long, double.
 /// In Python: VECTOR_INT32_ELEMENT, ..UINT32.., VECTOR_INT64_ELEMENT, ..UINT64..,
@@ -304,7 +303,7 @@ class CommonWrap {
         typedef t EType;                                                                                           \
         typedef VectorElement<EType, std::vector> T;                                                               \
         py::class_<T>(m, "VECTOR_" #e "_ELEMENT")                                                                  \
-              .def(py::init<karabo::util::Schema&>()) KARABO_PYTHON_COMMON_ATTRIBUTES(T)                           \
+              .def(py::init<karabo::data::Schema&>()) KARABO_PYTHON_COMMON_ATTRIBUTES(T)                           \
               .def("maxSize", (T & (T::*)(int const&))(&T::maxSize), py::return_value_policy::reference_internal)  \
               .def("minSize", (T & (T::*)(int const&))(&T::minSize), py::return_value_policy::reference_internal); \
     }
@@ -312,7 +311,7 @@ class CommonWrap {
 ///
 /// The following macro KARABO_PYTHON_NODE_CHOICE_LIST is used for python binding of
 /// @code
-/// karabo::util::NodeElement, karabo::util::ChoiceElement
+/// karabo::data::NodeElement, karabo::data::ChoiceElement
 /// @endcode
 ///
 /// In Python: NODE_ELEMENT, CHOICE_ELEMENT

@@ -27,21 +27,22 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
-#include <karabo/util/Epochstamp.hh>
-#include <karabo/util/Hash.hh>
-#include <karabo/util/TimeDuration.hh>
-#include <karabo/util/TimePeriod.hh>
 #include <karabo/util/TimeProfiler.hh>
 #include <limits>
 
-#include "karabo/util/Timestamp.hh"
-#include "karabo/util/Trainstamp.hh"
+#include "karabo/data/time/Epochstamp.hh"
+#include "karabo/data/time/TimeDuration.hh"
+#include "karabo/data/time/TimePeriod.hh"
+#include "karabo/data/time/Timestamp.hh"
+#include "karabo/data/time/Trainstamp.hh"
+#include "karabo/data/types/Hash.hh"
 
 CPPUNIT_TEST_SUITE_REGISTRATION(TimeClasses_Test);
 
 using namespace std;
 using namespace karabo;
 using namespace karabo::util;
+using namespace karabo::data;
 
 #if __GNUC__ < 13
 
@@ -202,14 +203,14 @@ void TimeClasses_Test::testTimeDuration() {
     CPPUNIT_ASSERT(dur1.getTotalMinutes() == 60ull);
     CPPUNIT_ASSERT(dur1.getHours() == 1ull);
     CPPUNIT_ASSERT(dur1.getTotalHours() == 1ull);
-    CPPUNIT_ASSERT(dur1.getFractions(util::ATTOSEC) == fractionsAtto);
-    CPPUNIT_ASSERT(dur1.getFractions(util::FEMTOSEC) == fractionsAtto / 1000ull);
-    CPPUNIT_ASSERT(dur1.getFractions(util::PICOSEC) == fractionsAtto / 1000000ull);
-    CPPUNIT_ASSERT(dur1.getFractions(util::NANOSEC) == fractionsAtto / 1000000000ull);
-    CPPUNIT_ASSERT(dur1.getFractions(util::MICROSEC) == fractionsAtto / 1000000000000ull);
-    CPPUNIT_ASSERT(dur1.getFractions(util::MILLISEC) == fractionsAtto / 1000000000000000ull);
+    CPPUNIT_ASSERT(dur1.getFractions(data::ATTOSEC) == fractionsAtto);
+    CPPUNIT_ASSERT(dur1.getFractions(data::FEMTOSEC) == fractionsAtto / 1000ull);
+    CPPUNIT_ASSERT(dur1.getFractions(data::PICOSEC) == fractionsAtto / 1000000ull);
+    CPPUNIT_ASSERT(dur1.getFractions(data::NANOSEC) == fractionsAtto / 1000000000ull);
+    CPPUNIT_ASSERT(dur1.getFractions(data::MICROSEC) == fractionsAtto / 1000000000000ull);
+    CPPUNIT_ASSERT(dur1.getFractions(data::MILLISEC) == fractionsAtto / 1000000000000000ull);
 
-    const util::Hash hash("seconds", seconds, "fractions", fractionsAtto);
+    const data::Hash hash("seconds", seconds, "fractions", fractionsAtto);
     const TimeDuration dur2(hash);
     CPPUNIT_ASSERT(dur1 - dur2 == durZero);
 
@@ -222,9 +223,9 @@ void TimeClasses_Test::testTimeDuration() {
     CPPUNIT_ASSERT(dur3.getTotalMinutes() == 1624ull);
     CPPUNIT_ASSERT(dur3.getSeconds() == 56ull);
     CPPUNIT_ASSERT(dur3.getTotalSeconds() == 97496ull);
-    CPPUNIT_ASSERT(dur3.getFractions(util::MILLISEC) == 123ull);
-    CPPUNIT_ASSERT(dur3.getFractions(util::NANOSEC) == 123456789ull);
-    CPPUNIT_ASSERT(dur3.getFractions(util::ATTOSEC) == 123456789012345678ull);
+    CPPUNIT_ASSERT(dur3.getFractions(data::MILLISEC) == 123ull);
+    CPPUNIT_ASSERT(dur3.getFractions(data::NANOSEC) == 123456789ull);
+    CPPUNIT_ASSERT(dur3.getFractions(data::ATTOSEC) == 123456789012345678ull);
 
     // Test equal comparisons
     const TimeDuration durA(123ull, 4567890000ull);
@@ -468,7 +469,7 @@ void TimeClasses_Test::testTrainstamp() {
 
     attrs.erase("tid");
     CPPUNIT_ASSERT(!Trainstamp::hashAttributesContainTimeInformation(attrs));
-    CPPUNIT_ASSERT_THROW(Trainstamp::fromHashAttributes(attrs), karabo::util::ParameterException);
+    CPPUNIT_ASSERT_THROW(Trainstamp::fromHashAttributes(attrs), karabo::data::ParameterException);
 
     attrs.set("tid", trainId + 2);
     CPPUNIT_ASSERT(Trainstamp::hashAttributesContainTimeInformation(attrs));
@@ -488,7 +489,7 @@ void TimeClasses_Test::testTrainstamp() {
     // Check that we cannot convert from string attributes to Train Id
     attrs.set("tid", "123454321");
     CPPUNIT_ASSERT(Trainstamp::hashAttributesContainTimeInformation(attrs));
-    CPPUNIT_ASSERT_THROW(Trainstamp::fromHashAttributes(attrs), karabo::util::ParameterException);
+    CPPUNIT_ASSERT_THROW(Trainstamp::fromHashAttributes(attrs), karabo::data::ParameterException);
 
     attrs.erase("tid");
     CPPUNIT_ASSERT(!Trainstamp::hashAttributesContainTimeInformation(attrs));
@@ -506,17 +507,17 @@ void TimeClasses_Test::testTrainstamp() {
 
     // Check that the default method get() for reading from the attributes
     // will fail due to a type mismatch
-    CPPUNIT_ASSERT_THROW(attrs.get("tid", trainId), karabo::util::CastException);
+    CPPUNIT_ASSERT_THROW(attrs.get("tid", trainId), karabo::data::CastException);
 
     // Check that we cannot cast a negative Train Id into an unsigned integer
     tid = -1;
     attrs.set("tid", tid);
-    CPPUNIT_ASSERT_THROW(castToUInt(), karabo::util::CastException);
+    CPPUNIT_ASSERT_THROW(castToUInt(), karabo::data::CastException);
 
     // Check that we cannot cast a large Train Id into an unsigned int
     tid = std::numeric_limits<decltype(trainId)>::max();
     attrs.set("tid", tid);
-    CPPUNIT_ASSERT_THROW(castToUInt(), karabo::util::CastException);
+    CPPUNIT_ASSERT_THROW(castToUInt(), karabo::data::CastException);
 }
 
 
@@ -590,6 +591,6 @@ void TimeClasses_Test::testTimestamp() {
     CPPUNIT_ASSERT_EQUAL(tid, attrs.getNode("tid").getValue<decltype(tid)>());
     CPPUNIT_ASSERT(Timestamp::hashAttributesContainTimeInformation(attrs));
 
-    CPPUNIT_ASSERT_THROW(Trainstamp::fromHashAttributes(attrs), karabo::util::ParameterException);
-    CPPUNIT_ASSERT_THROW(Timestamp::fromHashAttributes(attrs), karabo::util::ParameterException);
+    CPPUNIT_ASSERT_THROW(Trainstamp::fromHashAttributes(attrs), karabo::data::ParameterException);
+    CPPUNIT_ASSERT_THROW(Timestamp::fromHashAttributes(attrs), karabo::data::ParameterException);
 }

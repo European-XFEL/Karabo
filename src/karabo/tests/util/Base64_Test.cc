@@ -25,9 +25,10 @@
 #include "Base64_Test.hh"
 
 #include <cstring>
-#include <karabo/util/Base64.hh>
 
-using namespace karabo::util;
+#include "karabo/data/types/Base64.hh"
+
+using namespace karabo::data;
 using namespace std;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Base64_Test);

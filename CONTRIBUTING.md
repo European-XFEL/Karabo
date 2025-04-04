@@ -138,8 +138,11 @@ unit tests. All private methods should be documented such that another
 adding documentation to existing code directly used or touched during your
 refactoring.
 
+C++ Framework
+==============
+
 C++ Standard
-============
+-------------
 
 Since Karabo 2.20, C++17 usage is supported for framework code.
 Any depending packages should follow and upgrade to C++17 since it cannot be
@@ -173,6 +176,51 @@ Additionally, the following guidelines are suggested:
 
 - We currently do not encourage to use C++11-introduced numerical types, e.g.
   `uint64_t` as the Karabo type system has not been fully prepared for them.
+
+C++ Structure
+--------------
+
+The Karabo C++ framework is provided as a single library with its source
+in the 'src/karabo' directory of this repository.
+Nevertheless, the code is organised in subdirectories.
+The content of the subdirectories is outlined below together with the rules,
+from which other subdirectories a header may be included.
+
+- `karabo/data/types`: Karabo data types (e.g. its data container `Hash`
+  and self-description `Schema`), string tools, and the Karabo exceptions.
+  No includes from other Karabo directories allowed.
+- `karabo/data/time`: Time related classes.
+  No includes from other directories than `karabo/data/types` allowed.
+- `karabo/data/schema`: Tooling to assemble a `Schema` and create objects
+  with configurations after validating them.
+  No includes from other Karabo directories than `karabo/data/types` or
+  `karabo/data/time` allowed.
+- `karabo::log`: Karabo file logging. No includes from other directories than
+  `karabo/data` allowed.
+- `karabo::io`: Serialisation to xml and binary format, file tools.
+  No includes from other directories than `karabo/data` and `karabo/log`
+  allowed.
+  TODO: To be migrated into `karabo/data` - but then should not include `log`!
+- `karabo::net`: Networking code (TCP, broker, influxDB) and the event loop
+  No includes from other directories than `karabo/data`, `karabo/log`, and
+  `karabo/log` allowed.
+- `karabo::util`: Utilities like plugin loading, bind_weak, version, etc.
+  No includes from `karabo/core`, `karabo/devices`, or  `karabo/xms`.
+- `karabo::xms`: Communication (signal, slot, pipeline).
+  No includes from `karabo/core` or `karabo/devices`
+- `karabo::core`: Main objects: device, server, client
+  No includes from `karabo/devices`
+- `karabo::devices`: Devices provided by the framework
+  No include restrictions.
+
+All Karabo code resides in the namespace `karabo` and within that in a
+sub-namespace matching the first subdirectory, i.e. namespaces are e.g.
+`karabo::data` and `karabo::core`, but not `karabo::data::types`.
+If a sub-namespace `details` exists, its content must not be used outside the
+karabo library itself since it can change anytime between releases.
+
+To provide include file protection, each header file should use an
+`#ifndef KARABO_DIR1_[DIR2]_UPPERCASEFILENAME_HH` protection.
 
 
 Python

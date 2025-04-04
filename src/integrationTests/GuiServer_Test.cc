@@ -25,9 +25,9 @@
 #include <cstdlib>
 #include <karabo/devices/GuiServerTemporarySessionManager.hh>
 #include <karabo/net/EventLoop.hh>
-#include <karabo/util/StringTools.hh>
 
 #include "TestKaraboAuthServer.hh"
+#include "karabo/data/types/StringTools.hh"
 
 using namespace std::chrono;
 using namespace std::literals::chrono_literals;
@@ -237,7 +237,7 @@ void GuiServer_Test::resetTcpConnection() {
 }
 
 
-void GuiServer_Test::resetClientConnection(const karabo::util::Hash& loginData) {
+void GuiServer_Test::resetClientConnection(const karabo::data::Hash& loginData) {
     resetTcpConnection();
     karabo::TcpAdapter::QueuePtr messageQ =
           m_tcpAdapter->getNextMessages("systemTopology", 1, [&] { m_tcpAdapter->sendMessage(loginData); });
@@ -665,7 +665,7 @@ void GuiServer_Test::testGetDeviceSchema() {
         messageQ->pop(replyMessage);
         CPPUNIT_ASSERT_EQUAL(std::string("deviceSchema"), replyMessage.get<std::string>("type"));
         CPPUNIT_ASSERT_EQUAL(std::string(TEST_GUI_SERVER_ID), replyMessage.get<std::string>("deviceId"));
-        const Schema& schema = replyMessage.get<karabo::util::Schema>("schema");
+        const Schema& schema = replyMessage.get<karabo::data::Schema>("schema");
         CPPUNIT_ASSERT(!schema.empty());
     }
 
@@ -816,7 +816,7 @@ void GuiServer_Test::testGetClassSchema() {
         CPPUNIT_ASSERT_EQUAL(std::string("classSchema"), replyMessage.get<std::string>("type"));
         CPPUNIT_ASSERT_EQUAL(m_deviceServer->getInstanceId(), replyMessage.get<std::string>("serverId"));
         CPPUNIT_ASSERT_EQUAL(std::string("PropertyTest"), replyMessage.get<std::string>("classId"));
-        const Schema& schema = replyMessage.get<karabo::util::Schema>("schema");
+        const Schema& schema = replyMessage.get<karabo::data::Schema>("schema");
         CPPUNIT_ASSERT(!schema.empty());
     }
 
@@ -839,7 +839,7 @@ void GuiServer_Test::testGetClassSchema() {
         CPPUNIT_ASSERT_EQUAL(std::string("classSchema"), replyMessage.get<std::string>("type"));
         CPPUNIT_ASSERT_EQUAL(m_deviceServer->getInstanceId(), replyMessage.get<std::string>("serverId"));
         CPPUNIT_ASSERT_EQUAL(std::string("NonExistingDeviceClass"), replyMessage.get<std::string>("classId"));
-        const Schema& schema = replyMessage.get<karabo::util::Schema>("schema");
+        const Schema& schema = replyMessage.get<karabo::data::Schema>("schema");
         CPPUNIT_ASSERT(schema.empty());
     }
     std::clog << "OK" << std::endl;
@@ -985,7 +985,7 @@ void GuiServer_Test::testDeviceConfigUpdates() {
         CPPUNIT_ASSERT_THROW(
               m_tcpAdapter->getNextMessages(
                     "deviceConfigurations", 1, [&] { m_tcpAdapter->sendMessage(h); }, nextMessageTimeout),
-              karabo::util::TimeoutException);
+              karabo::data::TimeoutException);
         // Makes sure that the property has been set.
         CPPUNIT_ASSERT_EQUAL(10, m_deviceClient->get<int>("PropTest_1", "int32Property"));
     }
@@ -1176,7 +1176,7 @@ void GuiServer_Test::testDeviceConfigUpdates() {
                                        m_tcpAdapter->sendMessage(h_1);
                                    },
                                    nextMessageTimeout),
-                             karabo::util::TimeoutException);
+                             karabo::data::TimeoutException);
 
         // Makes sure that the properties have been set.
         CPPUNIT_ASSERT_EQUAL(16, m_deviceClient->get<int>("PropTest_1", "int32Property"));
@@ -1788,7 +1788,7 @@ void GuiServer_Test::testTemporarySessionExpiration() {
                                  lastMessage.get<std::string>("aboutToExpireToken"));
     CPPUNIT_ASSERT_MESSAGE("'onBeginTemporarySession' message should have a 'secondsToExpiration' field",
                            lastMessage.has("secondsToExpiration"));
-    const karabo::util::TimeValue secsToExpiration = lastMessage.get<karabo::util::TimeValue>("secondsToExpiration");
+    const karabo::data::TimeValue secsToExpiration = lastMessage.get<karabo::data::TimeValue>("secondsToExpiration");
     CPPUNIT_ASSERT_LESSEQUAL(END_TEMPORARY_SESSION_NOTICE_TIME, static_cast<unsigned int>(secsToExpiration));
 
     // No triggering needed and timeout large enough to guarantee an expiration being received.

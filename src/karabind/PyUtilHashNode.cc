@@ -24,26 +24,26 @@
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
-#include <karabo/util/FromLiteral.hh>
-#include <karabo/util/Hash.hh>
-#include <karabo/util/Schema.hh>
 #include <sstream>
 #include <string>
 
 #include "PyTypes.hh"
 #include "Wrapper.hh"
+#include "karabo/data/types/FromLiteral.hh"
+#include "karabo/data/types/Hash.hh"
+#include "karabo/data/types/Schema.hh"
 
 
 namespace py = pybind11;
 
 
-using namespace karabo::util;
+using namespace karabo::data;
 using namespace std;
 using namespace karabind;
 
 
 void exportPyUtilHashNode(py::module_& m) {
-    typedef std::shared_ptr<karabo::util::Hash::Node> Pointer;
+    typedef std::shared_ptr<karabo::data::Hash::Node> Pointer;
 
     py::class_<Hash::Node, std::shared_ptr<Hash::Node>> n(m, "HashNode");
 
@@ -65,7 +65,7 @@ void exportPyUtilHashNode(py::module_& m) {
     n.def(
           "getValue",
           [](Hash::Node& self) {
-              using namespace karabo::util;
+              using namespace karabo::data;
               std::any& a = self.getValueAsAny();
               // handle Hash differently returning reference to Hash
               if (std::any_cast<Hash>(&a)) {

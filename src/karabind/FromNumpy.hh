@@ -23,10 +23,11 @@
 #ifndef KARABIND_FROMNUMPY_HH
 #define KARABIND_FROMNUMPY_HH
 
-#include <karabo/util/Exception.hh>
-#include <karabo/util/FromType.hh>
 #include <map>
 #include <mutex>
+
+#include "karabo/data/types/Exception.hh"
+#include "karabo/data/types/FromType.hh"
 
 namespace karabind {
 
@@ -34,7 +35,7 @@ namespace karabind {
        public:
         typedef int ArgumentType;
 
-        static karabo::util::Types::ReferenceType from(const ArgumentType& type) {
+        static karabo::data::Types::ReferenceType from(const ArgumentType& type) {
             TypeInfoMap::const_iterator it = FromNumpy::init()._typeInfoMap.find(type);
             if (it == FromNumpy::init()._typeInfoMap.end())
                 throw KARABO_PARAMETER_EXCEPTION("Requested argument type not registered");
@@ -53,7 +54,7 @@ namespace karabind {
 
         static FromNumpy& init();
 
-        typedef std::map<ArgumentType, karabo::util::Types::ReferenceType> TypeInfoMap;
+        typedef std::map<ArgumentType, karabo::data::Types::ReferenceType> TypeInfoMap;
 
         TypeInfoMap _typeInfoMap;
     };

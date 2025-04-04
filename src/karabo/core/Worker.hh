@@ -31,7 +31,7 @@
 #include <queue>
 #include <thread>
 
-#include "karabo/util/Hash.hh"
+#include "karabo/data/types/Hash.hh"
 
 namespace karabo {
     namespace core {
@@ -219,7 +219,7 @@ namespace karabo {
 
             virtual bool stopCondition(const T& t) = 0;
 
-            void setErrorHandler(const std::function<void(const karabo::util::Exception&)>& handler) {
+            void setErrorHandler(const std::function<void(const karabo::data::Exception&)>& handler) {
                 m_error = handler;
             }
 
@@ -280,12 +280,12 @@ namespace karabo {
                             m_callback();
                         }
                     }
-                } catch (const karabo::util::Exception& e) {
+                } catch (const karabo::data::Exception& e) {
                     if (m_error) m_error(e);
                 } catch (...) {
                     // Uncaught exception
                     if (m_error)
-                        m_error(karabo::util::Exception("Exception in worker callback", "Uncaught exception", __FILE__,
+                        m_error(karabo::data::Exception("Exception in worker callback", "Uncaught exception", __FILE__,
                                                         BOOST_CURRENT_FUNCTION, __LINE__));
                 }
                 if (m_running) {
@@ -306,7 +306,7 @@ namespace karabo {
             std::mutex m_mutexRequest;             // mutex of request queue
             std::condition_variable m_condRequest; // condition variable of the request queue
             int m_count;                           // current repetition counter
-            std::function<void(const karabo::util::Exception&)> m_error;
+            std::function<void(const karabo::data::Exception&)> m_error;
             std::function<void()> m_exit; // this callback defined once in constructor
         };
 
@@ -338,22 +338,22 @@ namespace karabo {
             }
         };
 
-        struct QueueWorker : public BaseWorker<karabo::util::Hash::Pointer> {
+        struct QueueWorker : public BaseWorker<karabo::data::Hash::Pointer> {
             KARABO_CLASSINFO(QueueWorker, "QueueWorker", "1.0")
 
             QueueWorker()
-                : BaseWorker<karabo::util::Hash::Pointer>(std::bind(&QueueWorker::onWork, this)),
-                  m_hash(new karabo::util::Hash),
+                : BaseWorker<karabo::data::Hash::Pointer>(std::bind(&QueueWorker::onWork, this)),
+                  m_hash(new karabo::data::Hash),
                   m_callback() {}
 
-            QueueWorker(const std::function<void(const karabo::util::Hash::Pointer&)>& callback)
-                : BaseWorker<karabo::util::Hash::Pointer>(std::bind(&QueueWorker::onWork, this)),
-                  m_hash(new karabo::util::Hash),
+            QueueWorker(const std::function<void(const karabo::data::Hash::Pointer&)>& callback)
+                : BaseWorker<karabo::data::Hash::Pointer>(std::bind(&QueueWorker::onWork, this)),
+                  m_hash(new karabo::data::Hash),
                   m_callback(callback) {}
 
             QueueWorker(const QueueWorker& other)
-                : BaseWorker<karabo::util::Hash::Pointer>(std::bind(&QueueWorker::onWork, this)),
-                  m_hash(new karabo::util::Hash),
+                : BaseWorker<karabo::data::Hash::Pointer>(std::bind(&QueueWorker::onWork, this)),
+                  m_hash(new karabo::data::Hash),
                   m_callback(other.m_callback) {}
 
             QueueWorker& operator=(const QueueWorker& rhs) {
@@ -373,15 +373,15 @@ namespace karabo {
                 m_hash->clear();
             }
 
-            bool stopCondition(const karabo::util::Hash::Pointer& hash) {
+            bool stopCondition(const karabo::data::Hash::Pointer& hash) {
                 if (hash->has("stop")) return true;
                 m_hash = hash;
                 return false;
             }
 
            private:
-            karabo::util::Hash::Pointer m_hash;
-            std::function<void(const karabo::util::Hash::Pointer&)> m_callback;
+            karabo::data::Hash::Pointer m_hash;
+            std::function<void(const karabo::data::Hash::Pointer&)> m_callback;
         };
     } // namespace core
 } // namespace karabo

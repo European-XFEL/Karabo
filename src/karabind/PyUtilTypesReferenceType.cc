@@ -17,17 +17,16 @@
  */
 #include <pybind11/pybind11.h>
 
-#include <karabo/util/FromLiteral.hh>
-#include <karabo/util/Hash.hh>
-#include <karabo/util/Schema.hh>
-
 #include "PyTypes.hh"
+#include "karabo/data/types/FromLiteral.hh"
+#include "karabo/data/types/Hash.hh"
+#include "karabo/data/types/Schema.hh"
 
 
 namespace py = pybind11;
 
 void exportPyUtilTypesReferenceType(py::module_& m) {
-    using namespace karabo::util;
+    using namespace karabo::data;
     using namespace karabind;
 
     // Types

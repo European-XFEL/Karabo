@@ -26,11 +26,11 @@
 
 #include <cppunit/TestAssert.h>
 
-#include <karabo/util/NDArray.hh>
-#include <karabo/util/StringTools.hh>
+#include "karabo/data/types/NDArray.hh"
+#include "karabo/data/types/StringTools.hh"
 
 using namespace std;
-using namespace karabo::util;
+using namespace karabo::data;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(NDArray_Test);
 
@@ -146,7 +146,7 @@ void NDArray_Test::testShapeException() {
     vector<int> data(10, -42);
     const Dims badShape(2, 500);
 
-    { CPPUNIT_ASSERT_THROW(NDArray(&data[0], data.size(), badShape), karabo::util::ParameterException); }
+    { CPPUNIT_ASSERT_THROW(NDArray(&data[0], data.size(), badShape), karabo::data::ParameterException); }
 }
 
 
@@ -158,7 +158,7 @@ void NDArray_Test::testDataTypeException() {
     try {
         // cannot cast int to double
         arr.getData<double>();
-    } catch (const karabo::util::CastException& e) {
+    } catch (const karabo::data::CastException& e) {
         exceptionMsg = e.what();
     } catch (...) {
         exceptionMsg = "not a cast exception";
@@ -175,7 +175,7 @@ void NDArray_Test::testDataTypeException() {
     exceptionMsg.clear();
     try {
         arr.getData<short>();
-    } catch (const karabo::util::CastException& e) {
+    } catch (const karabo::data::CastException& e) {
         exceptionMsg = e.what();
     } catch (...) {
         exceptionMsg = "not a cast exception";

@@ -21,9 +21,9 @@
 
 #include <pybind11/pybind11.h>
 
-#include <karabo/util/ClassInfo.hh>
+#include "karabo/data/types/ClassInfo.hh"
 
-using namespace karabo::util;
+using namespace karabo::data;
 using namespace std;
 namespace py = pybind11;
 

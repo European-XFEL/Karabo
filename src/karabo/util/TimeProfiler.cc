@@ -24,9 +24,14 @@
 
 #include "TimeProfiler.hh"
 
-#include "Hash.hh"
+#include "karabo/data/types/Exception.hh"
+#include "karabo/data/types/Hash.hh"
 
 using namespace std;
+using karabo::data::Epochstamp;
+using karabo::data::Hash;
+using karabo::data::TimePeriod;
+
 namespace karabo {
     namespace util {
 
@@ -36,15 +41,15 @@ namespace karabo {
 
         TimeProfiler::~TimeProfiler() {}
 
-        TimeProfiler::TimeProfiler(const karabo::util::Hash& hash) try
+        TimeProfiler::TimeProfiler(const karabo::data::Hash& hash) try
             : m_name(hash.get<string>("KRB_name")), m_periods(hash) {
-        } catch (Exception& e) {
+        } catch (karabo::data::Exception& e) {
             m_name = "Profiler";
             m_periods = hash;
         }
 
 
-        TimeProfiler::operator karabo::util::Hash() {
+        TimeProfiler::operator karabo::data::Hash() {
             return m_periods;
         }
 
@@ -154,10 +159,10 @@ namespace karabo {
         }
 
 
-        void TimeProfiler::compact(karabo::util::Hash& period) {
+        void TimeProfiler::compact(karabo::data::Hash& period) {
             vector<Hash>& details = period.get<vector<Hash> >("KRB_details");
             if (!details.empty()) {
-                TimeDuration td;
+                karabo::data::TimeDuration td;
                 for (size_t i = 0; i < details.size(); ++i) {
                     // if (details[i].get<string>("KRB_name").empty()) {
                     if (!details[i].has("KRB_name")) {
@@ -229,7 +234,7 @@ namespace karabo {
         }
 
 
-        void TimeProfiler::sql(std::ostream& os, const std::string& name, const karabo::util::Hash& period,
+        void TimeProfiler::sql(std::ostream& os, const std::string& name, const karabo::data::Hash& period,
                                const int parent_key) {
             int current_key = key++;
             os << "\n('" << current_key << "','" << parent_key << "','" << name << "','"

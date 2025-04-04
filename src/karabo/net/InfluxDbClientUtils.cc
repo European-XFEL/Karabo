@@ -24,12 +24,13 @@
 #include "InfluxDbClientUtils.hh"
 
 #include <karabo/net/Broker.hh>
-#include <karabo/util/Configurator.hh>
-#include <karabo/util/Hash.hh>
 #include <string>
 
-using karabo::util::Configurator;
-using karabo::util::Hash;
+#include "karabo/data/schema/Configurator.hh"
+#include "karabo/data/types/Hash.hh"
+
+using karabo::data::Configurator;
+using karabo::data::Hash;
 
 namespace karabo {
     namespace net {
@@ -59,7 +60,7 @@ namespace karabo {
                 dbPassword = "admpasswd";
             }
 
-            karabo::util::Hash dbClientCfg;
+            karabo::data::Hash dbClientCfg;
             dbClientCfg.set("dbname", dbName);
             dbClientCfg.set("url", influxUrlRead);
             dbClientCfg.set("durationUnit", "u");

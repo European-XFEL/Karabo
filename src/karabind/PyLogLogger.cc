@@ -22,7 +22,7 @@
 
 namespace py = pybind11;
 using namespace karabo::log;
-using namespace karabo::util;
+using namespace karabo::data;
 using namespace std;
 
 

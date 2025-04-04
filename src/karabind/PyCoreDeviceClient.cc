@@ -40,7 +40,7 @@ namespace karabind {
             if (!p) {
                 throw KARABO_PARAMETER_EXCEPTION("Broker connection is not valid.");
             }
-            p->updateInstanceInfo(karabo::util::Hash("lang", "bound"));
+            p->updateInstanceInfo(karabo::data::Hash("lang", "bound"));
         }
 
         DeviceClientWrap(std::shared_ptr<karabo::xms::SignalSlotable>& o) : karabo::core::DeviceClient(o) {}
@@ -48,7 +48,7 @@ namespace karabind {
         ~DeviceClientWrap() {}
 
         bool registerPropertyMonitor(const std::string& instanceId, const std::string& key, const py::object& handler) {
-            using namespace karabo::util;
+            using namespace karabo::data;
             Schema schema;
             {
                 py::gil_scoped_release release;
@@ -59,13 +59,13 @@ namespace karabind {
                 py::gil_scoped_release release;
                 cacheAndGetConfiguration(instanceId);
             }
-            karabo::util::Types::ReferenceType valueType = schema.getValueType(key);
+            karabo::data::Types::ReferenceType valueType = schema.getValueType(key);
             switch (valueType) {
 #define KARABO_REGISTER_PROPERTY_MONITOR(KaraboType, CppType)                                  \
     case Types::KaraboType:                                                                    \
         return DeviceClient::registerPropertyMonitor<CppType>(                                 \
               instanceId, key,                                                                 \
-              HandlerWrap<std::string, std::string, CppType, karabo::util::Timestamp>(handler, \
+              HandlerWrap<std::string, std::string, CppType, karabo::data::Timestamp>(handler, \
                                                                                       "property_" #KaraboType))
 
                 KARABO_REGISTER_PROPERTY_MONITOR(BOOL, bool);
@@ -107,7 +107,7 @@ namespace karabind {
                 //     return DeviceClient::registerPropertyMonitor<std::pair<std::shared_ptr<char>, size_t>>(
                 //           instanceId, key,
                 //           HandlerWrap<std::string, std::string, std::pair<std::shared_ptr<char>, size_t>,
-                //                       karabo::util::Timestamp>(handler, "property_BYTE_ARRAY"));
+                //                       karabo::data::Timestamp>(handler, "property_BYTE_ARRAY"));
                 default:
                     KARABO_LOG_FRAMEWORK_WARN << "Unsupported property \"" << key << "\" of type  \""
                                               << Types::to<ToLiteral>(valueType) << "\".  Skip it ...";
@@ -118,12 +118,12 @@ namespace karabind {
         }
 
         void instantiateNoWait(const std::string& serverId, const std::string& classId,
-                               const karabo::util::Hash& config) {
+                               const karabo::data::Hash& config) {
             py::gil_scoped_release release;
             this->karabo::core::DeviceClient::instantiateNoWait(serverId, classId, config);
         }
 
-        void instantiateNoWait(const std::string& serverId, const karabo::util::Hash& config) {
+        void instantiateNoWait(const std::string& serverId, const karabo::data::Hash& config) {
             py::gil_scoped_release release;
             this->karabo::core::DeviceClient::instantiateNoWait(serverId, config);
         }
@@ -180,7 +180,7 @@ namespace karabind {
                 try {
                     return std::make_shared<LockWrap>(
                           std::make_shared<karabo::core::Lock>(m_signalSlotable, deviceId, recursive));
-                } catch (const karabo::util::LockException& e) {
+                } catch (const karabo::data::LockException& e) {
                     if (nTries++ > timeout / waitTime && timeout != -1) {
                         KARABO_RETHROW;
                     }
@@ -194,7 +194,7 @@ namespace karabind {
 
 
 using namespace karabo::xms;
-using namespace karabo::util;
+using namespace karabo::data;
 using namespace karabo::core;
 using namespace karabind;
 using namespace std;

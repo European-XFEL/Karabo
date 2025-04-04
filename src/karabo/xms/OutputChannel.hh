@@ -31,10 +31,10 @@
 #include <vector>
 
 #include "Memory.hh"
+#include "karabo/data/schema/NodeElement.hh"
+#include "karabo/data/types/Hash.hh"
 #include "karabo/net/Channel.hh"
 #include "karabo/net/Connection.hh"
-#include "karabo/util/Hash.hh"
-#include "karabo/util/NodeElement.hh"
 
 
 /**
@@ -44,7 +44,7 @@ namespace karabo {
 
     namespace xms {
 
-        typedef std::function<void(const std::vector<karabo::util::Hash>&)> ShowConnectionsHandler;
+        typedef std::function<void(const std::vector<karabo::data::Hash>&)> ShowConnectionsHandler;
         typedef std::function<void(const std::vector<unsigned long long>&, const std::vector<unsigned long long>&)>
               ShowStatisticsHandler;
 
@@ -71,7 +71,7 @@ namespace karabo {
          *
          * Hash data1;
          * ....
-         * OutputChannel::MetaData meta1("THIS/IS/SOURCE/A/channel1", karabo::util::Timestamp());
+         * OutputChannel::MetaData meta1("THIS/IS/SOURCE/A/channel1", karabo::data::Timestamp());
          * output->write(data1, meta1)
          *
          * Hash data2_10;
@@ -93,7 +93,7 @@ namespace karabo {
          */
         class OutputChannel : public std::enable_shared_from_this<OutputChannel> {
             /*
-             * InputChannelInfo (karabo::util::Hash)
+             * InputChannelInfo (karabo::data::Hash)
              *
              *     instanceId (std::string)
              *     memoryLocation (std::string) [local/remote]
@@ -102,7 +102,7 @@ namespace karabo {
              *     queuedChunks (std::deque<int>)
              *
              */
-            typedef karabo::util::Hash InputChannelInfo;
+            typedef karabo::data::Hash InputChannelInfo;
 
             // With C++14, can use unordered map (since then standard allows to erase items while looping on
             // unordered_map)
@@ -154,7 +154,7 @@ namespace karabo {
             ShowConnectionsHandler m_showConnectionsHandler;
             ShowStatisticsHandler m_showStatisticsHandler;
             SharedInputSelector m_sharedInputSelector; // protected by m_registeredInputsMutex
-            std::vector<karabo::util::Hash> m_connections;
+            std::vector<karabo::data::Hash> m_connections;
             boost::asio::steady_timer m_updateDeadline;
             int m_period;
             int m_addedThreads;
@@ -169,7 +169,7 @@ namespace karabo {
              * Necessary method as part of the factory/configuration system
              * @param expected [out] Description of expected parameters for this object (Schema)
              */
-            static void expectedParameters(karabo::util::Schema& expected);
+            static void expectedParameters(karabo::data::Schema& expected);
 
             /**
              * If this object is constructed using the factory/configuration system this method is called.
@@ -182,7 +182,7 @@ namespace karabo {
              *
              * @param config Validated (@see expectedParameters) and default-filled configuration
              */
-            explicit OutputChannel(const karabo::util::Hash& config);
+            explicit OutputChannel(const karabo::data::Hash& config);
 
             /**
              * Recommended constructor, allowing guaranteed-to-work initialization.
@@ -206,7 +206,7 @@ namespace karabo {
              *                 If autoInit != 0, this constructor behaves as the other constructor and initialize()
              *                 must not be called.
              */
-            OutputChannel(const karabo::util::Hash& config, int autoInit);
+            OutputChannel(const karabo::data::Hash& config, int autoInit);
 
             virtual ~OutputChannel();
 
@@ -231,7 +231,7 @@ namespace karabo {
              * not be updated via `ShowConnectionHandler` and `ShowStatisticsHandler`.
              * Currently only the `address` key is included.
              */
-            karabo::util::Hash getInitialConfiguration() const;
+            karabo::data::Hash getInitialConfiguration() const;
 
             /**
              *  Concatenation of instance id and name
@@ -260,7 +260,7 @@ namespace karabo {
             void registerIOEventHandler(const std::function<void(const OutputChannel::Pointer&)>& ioEventHandler);
 
 
-            karabo::util::Hash getInformation() const;
+            karabo::data::Hash getInformation() const;
 
             /**
              * Writes a Hash containing data to the output channel. Sending to the network happens when update() is
@@ -277,7 +277,7 @@ namespace karabo {
              * All the 'write(..)' methods, '[async]Update[NoWait](..)' and '[async]SignalEndOfStream(..)' must not be
              * called concurrently.
              */
-            void write(const karabo::util::Hash& data, const Memory::MetaData& metaData, bool /*unused*/ = false);
+            void write(const karabo::data::Hash& data, const Memory::MetaData& metaData, bool /*unused*/ = false);
 
             /**
              * Writes a Hash containing data to the output channel. Sending to the network happens when update() is
@@ -295,7 +295,7 @@ namespace karabo {
              * All the 'write(..)' methods, '[async]Update[NoWait](..)' and '[async]SignalEndOfStream(..)' must not be
              * called concurrently.
              */
-            void write(const karabo::util::Hash& data, bool /*unused*/ = false);
+            void write(const karabo::data::Hash& data, bool /*unused*/ = false);
 
             /**
              * Writes a Hash containing data to the output channel. Sending to the network happens when update() is
@@ -311,7 +311,7 @@ namespace karabo {
              * All the 'write(..)' methods, '[async]Update[NoWait](..)' and '[async]SignalEndOfStream(..)' must not be
              * called concurrently.
              */
-            KARABO_DEPRECATED void write(const karabo::util::Hash::Pointer& data, const Memory::MetaData& metaData);
+            KARABO_DEPRECATED void write(const karabo::data::Hash::Pointer& data, const Memory::MetaData& metaData);
 
             /**
              * Writes a Hash containing data to the output channel. Sending to the network happens asynchronously.
@@ -327,7 +327,7 @@ namespace karabo {
              * All the 'write(..)' methods, '[async]Update[NoWait](..)' and '[async]SignalEndOfStream(..)' must not be
              * called concurrently.
              */
-            KARABO_DEPRECATED void write(const karabo::util::Hash::Pointer& data);
+            KARABO_DEPRECATED void write(const karabo::data::Hash::Pointer& data);
 
             /**
              * Update the output channel, i.e. send all data over the wire that was previously written
@@ -456,7 +456,7 @@ namespace karabo {
             void onTcpChannelError(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel);
 
             void onTcpChannelRead(const karabo::net::ErrorCode& ec, const karabo::net::Channel::WeakPointer& channel,
-                                  const karabo::util::Hash& message);
+                                  const karabo::data::Hash& message);
 
             /// Erase instance with 'instanceId' from 'channelContainer' if existing - if same as 'newChannel', do
             /// not close
@@ -546,17 +546,17 @@ namespace karabo {
              *
              * Requires m_registeredInputsMutex to be locked
              */
-            void asyncPrepareCopy(unsigned int chunkId, std::vector<karabo::util::Hash*>& toSendImmediately,
-                                  std::vector<karabo::util::Hash*>& toQueue, std::vector<karabo::util::Hash*>& toBlock);
+            void asyncPrepareCopy(unsigned int chunkId, std::vector<karabo::data::Hash*>& toSendImmediately,
+                                  std::vector<karabo::data::Hash*>& toQueue, std::vector<karabo::data::Hash*>& toBlock);
             /**
              * Figure out how to treat shared inputs, return via (appending to) reference arguments
              *
              * Requires m_registeredInputsMutex to be locked
              *
              */
-            void asyncPrepareDistribute(unsigned int chunkId, std::vector<karabo::util::Hash*>& toSendImmediately,
-                                        std::vector<karabo::util::Hash*>& toQueue,
-                                        std::vector<karabo::util::Hash*>& toBlock, bool& queue, bool& block);
+            void asyncPrepareDistribute(unsigned int chunkId, std::vector<karabo::data::Hash*>& toSendImmediately,
+                                        std::vector<karabo::data::Hash*>& toQueue,
+                                        std::vector<karabo::data::Hash*>& toBlock, bool& queue, bool& block);
             /**
              * Figure out how to send EndOfStream for shared outputs, return via reference arguments
              *
@@ -564,9 +564,9 @@ namespace karabo {
              *
              * @returns whether to queue for shared queue
              */
-            bool asyncPrepareDistributeEos(unsigned int chunkId, std::vector<karabo::util::Hash*>& toSendImmediately,
-                                           std::vector<karabo::util::Hash*>& toQueue,
-                                           std::vector<karabo::util::Hash*>& toBlock);
+            bool asyncPrepareDistributeEos(unsigned int chunkId, std::vector<karabo::data::Hash*>& toSendImmediately,
+                                           std::vector<karabo::data::Hash*>& toQueue,
+                                           std::vector<karabo::data::Hash*>& toBlock);
 
             /**
              * Figure out how to treat shared inputs if sharedInputSelector is registered
@@ -575,9 +575,9 @@ namespace karabo {
              *
              */
             void asyncPrepareDistributeSelected(unsigned int chunkId,
-                                                std::vector<karabo::util::Hash*>& toSendImmediately,
-                                                std::vector<karabo::util::Hash*>& toQueue,
-                                                std::vector<karabo::util::Hash*>& toBlock);
+                                                std::vector<karabo::data::Hash*>& toSendImmediately,
+                                                std::vector<karabo::data::Hash*>& toQueue,
+                                                std::vector<karabo::data::Hash*>& toBlock);
             /**
              * Figure out how to treat shared inputs when load-balancing
              *
@@ -585,9 +585,9 @@ namespace karabo {
              *
              */
             void asyncPrepareDistributeLoadBal(unsigned int chunkId,
-                                               std::vector<karabo::util::Hash*>& toSendImmediately,
-                                               std::vector<karabo::util::Hash*>& toQueue,
-                                               std::vector<karabo::util::Hash*>& toBlock, bool& queue, bool& block);
+                                               std::vector<karabo::data::Hash*>& toSendImmediately,
+                                               std::vector<karabo::data::Hash*>& toQueue,
+                                               std::vector<karabo::data::Hash*>& toBlock, bool& queue, bool& block);
 
             /**
              * Helper that sets the sendOngoing flag to false for given instanceId
@@ -616,11 +616,11 @@ namespace karabo {
         };
 
         class OutputChannelElement {
-            karabo::util::NodeElement m_outputChannel;
-            karabo::util::NodeElement m_dataSchema;
+            karabo::data::NodeElement m_outputChannel;
+            karabo::data::NodeElement m_dataSchema;
 
            public:
-            OutputChannelElement(karabo::util::Schema& s) : m_outputChannel(s), m_dataSchema(s) {
+            OutputChannelElement(karabo::data::Schema& s) : m_outputChannel(s), m_dataSchema(s) {
                 m_outputChannel.appendParametersOf<OutputChannel>();
             }
 
@@ -646,7 +646,7 @@ namespace karabo {
                 return *this;
             }
 
-            OutputChannelElement& dataSchema(const karabo::util::Schema& schema) {
+            OutputChannelElement& dataSchema(const karabo::data::Schema& schema) {
                 m_dataSchema.appendSchema(schema);
                 return *this;
             }

@@ -27,11 +27,11 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 
-#include <karabo/util/Hash.hh>
+#include "karabo/data/types/Hash.hh"
 
-class FancyData : protected karabo::util::Hash {
+class FancyData : protected karabo::data::Hash {
    public:
-    typedef karabo::util::Hash type;
+    typedef karabo::data::Hash type;
 
     KARABO_CLASSINFO(FancyData, "FancyData", "1.0");
 

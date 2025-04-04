@@ -26,11 +26,11 @@
 #include <boost/asio/strand.hpp>
 #include <boost/beast/ssl.hpp>
 
+#include "karabo/data/types/Exception.hh"
+#include "karabo/data/types/StringTools.hh"
 #include "karabo/net/HttpRequestRunner.hh"
 #include "karabo/net/HttpsRequestRunner.hh"
 #include "karabo/net/utils.hh"
-#include "karabo/util/Exception.hh"
-#include "karabo/util/StringTools.hh"
 
 namespace karabo {
     namespace net {
@@ -65,7 +65,7 @@ namespace karabo {
                     if (portStr.empty()) {
                         m_port = (m_ssl ? 443 : 80);
                     } else {
-                        m_port = karabo::util::fromString<unsigned short>(portStr);
+                        m_port = karabo::data::fromString<unsigned short>(portStr);
                         if (m_port == 0) {
                             // As fromString ends up using strtoul, a zero is interpreted as "no valid conversion could
                             // be performed". A port 0 is invalid anyway; the valid range for ports is 1 through 65535.

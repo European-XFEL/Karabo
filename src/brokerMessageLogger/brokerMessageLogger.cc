@@ -32,13 +32,14 @@
 #include <karabo/net/AmqpHashClient.hh>
 #include <karabo/net/Broker.hh>
 #include <karabo/net/EventLoop.hh>
-#include <karabo/util/Hash.hh>
-#include <karabo/util/StringTools.hh>
 #include <karabo/xms/SignalSlotable.hh>
 #include <vector>
 
+#include "karabo/data/types/Hash.hh"
+#include "karabo/data/types/StringTools.hh"
+
 using namespace std;
-using namespace karabo::util;
+using namespace karabo::data;
 using namespace karabo::net;
 using namespace karabo::log;
 using namespace karabo::xms;

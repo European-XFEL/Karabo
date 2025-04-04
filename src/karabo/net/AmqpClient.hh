@@ -36,7 +36,7 @@
 #include <vector>
 
 #include "AmqpConnection.hh"
-#include "karabo/util/Hash.hh"
+#include "karabo/data/types/Hash.hh"
 #include "utils.hh" // for AsyncHandler
 
 namespace AMQP {

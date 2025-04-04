@@ -23,10 +23,13 @@
 
 #include "Factory_Test.hh"
 
-#include <karabo/util/Factory.hh>
 #include <karabo/util/PluginLoader.hh>
 
+#include "karabo/data/schema/Factory.hh"
+
+using namespace karabo::data;
 using namespace karabo::util;
+
 using namespace std;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Factory_Test);

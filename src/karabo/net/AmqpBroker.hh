@@ -100,14 +100,14 @@ namespace karabo {
            public:
             KARABO_CLASSINFO(AmqpBroker, "amqp", "2.0")
 
-            static void expectedParameters(karabo::util::Schema& s);
+            static void expectedParameters(karabo::data::Schema& s);
 
             /**
              * Fill argument with default AMQP message queue creation arguments
              */
             static void defaultQueueArgs(AMQP::Table& args);
 
-            explicit AmqpBroker(const karabo::util::Hash& configuration = karabo::util::Hash());
+            explicit AmqpBroker(const karabo::data::Hash& configuration = karabo::data::Hash());
 
             virtual ~AmqpBroker();
 
@@ -176,16 +176,16 @@ namespace karabo {
              * @param priority unused (needed by JmsBroker)
              * @param timeToLive unused (needed by JmsBroker)
              */
-            void write(const std::string& topic, const karabo::util::Hash::Pointer& header,
-                       const karabo::util::Hash::Pointer& body, const int /*priority*/ = 4,
+            void write(const std::string& topic, const karabo::data::Hash::Pointer& header,
+                       const karabo::data::Hash::Pointer& body, const int /*priority*/ = 4,
                        const int /*timeToLive*/ = 0) override;
 
            private:
             AmqpBroker(const AmqpBroker& o) = delete;
             AmqpBroker(const AmqpBroker& o, const std::string& newInstanceId);
 
-            void amqpReadHandler(const util::Hash::Pointer& header, const util::Hash::Pointer& body);
-            void amqpReadHandlerBeats(const util::Hash::Pointer& header, const util::Hash::Pointer& body);
+            void amqpReadHandler(const data::Hash::Pointer& header, const data::Hash::Pointer& body);
+            void amqpReadHandlerBeats(const data::Hash::Pointer& header, const data::Hash::Pointer& body);
             void amqpErrorNotifier(const std::string& msg);
             void amqpErrorNotifierBeats(const std::string& msg);
 

@@ -35,22 +35,22 @@
 
 #include "DeviceClient.hh"
 #include "Lock.hh"
+#include "karabo/data/schema/AlarmConditionElement.hh"
+#include "karabo/data/schema/OverwriteElement.hh"
+#include "karabo/data/schema/SimpleElement.hh"
+#include "karabo/data/schema/StateElement.hh"
+#include "karabo/data/schema/Validator.hh"
+#include "karabo/data/time/Epochstamp.hh"
+#include "karabo/data/time/Timestamp.hh"
+#include "karabo/data/time/Trainstamp.hh"
+#include "karabo/data/types/Hash.hh"
+#include "karabo/data/types/HashFilter.hh"
+#include "karabo/data/types/State.hh"
 #include "karabo/log/Logger.hh"
 #include "karabo/log/utils.hh"
 #include "karabo/net/EventLoop.hh"
 #include "karabo/net/utils.hh"
-#include "karabo/util/AlarmConditionElement.hh"
-#include "karabo/util/Epochstamp.hh"
-#include "karabo/util/Hash.hh"
-#include "karabo/util/HashFilter.hh"
 #include "karabo/util/MetaTools.hh"
-#include "karabo/util/OverwriteElement.hh"
-#include "karabo/util/SimpleElement.hh"
-#include "karabo/util/State.hh"
-#include "karabo/util/StateElement.hh"
-#include "karabo/util/Timestamp.hh"
-#include "karabo/util/Trainstamp.hh"
-#include "karabo/util/Validator.hh"
 #include "karabo/util/Version.hh"
 #include "karabo/xms/InputChannel.hh"
 #include "karabo/xms/OutputChannel.hh"
@@ -72,8 +72,8 @@ namespace karabo {
         }
 
 
-        void Device::expectedParameters(karabo::util::Schema& expected) {
-            using namespace karabo::util;
+        void Device::expectedParameters(karabo::data::Schema& expected) {
+            using namespace karabo::data;
             using namespace karabo::xms;
 
             STRING_ELEMENT(expected)
@@ -290,7 +290,7 @@ namespace karabo {
         }
 
 
-        Device::Device(const karabo::util::Hash& configuration) : m_lastBrokerErrorStamp(0ull, 0ull) {
+        Device::Device(const karabo::data::Hash& configuration) : m_lastBrokerErrorStamp(0ull, 0ull) {
             // Set serverId
             if (configuration.has("_serverId_")) configuration.get("_serverId_", m_serverId);
             else m_serverId = KARABO_NO_SERVER;
@@ -300,7 +300,7 @@ namespace karabo {
             else m_deviceId = "__none__";
 
             // Default visibility/accessLevel...
-            m_visibility = karabo::util::Schema::OBSERVER;
+            m_visibility = karabo::data::Schema::OBSERVER;
 
             // Make the configuration the initial state of the device
             m_parameters = configuration;
@@ -311,7 +311,7 @@ namespace karabo {
             m_timePeriod = 0; // zero as identifier of initial value used in slotTimeTick
 
             // Setup the validation classes
-            karabo::util::Validator::ValidationRules rules;
+            karabo::data::Validator::ValidationRules rules;
             rules.allowAdditionalKeys = false;
             rules.allowMissingKeys = true;
             rules.allowUnrootedConfiguration = true;
@@ -341,27 +341,27 @@ namespace karabo {
         }
 
 
-        void Device::set(const std::string& key, const karabo::util::State& state) {
+        void Device::set(const std::string& key, const karabo::data::State& state) {
             set(key, state, getActualTimestamp());
         }
 
 
-        void Device::set(const std::string& key, const karabo::util::AlarmCondition& condition) {
+        void Device::set(const std::string& key, const karabo::data::AlarmCondition& condition) {
             set(key, condition, getActualTimestamp());
         }
 
 
-        void Device::set(const std::string& key, const karabo::util::State& state,
-                         const karabo::util::Timestamp& timestamp) {
-            karabo::util::Hash h(key, state.name());
+        void Device::set(const std::string& key, const karabo::data::State& state,
+                         const karabo::data::Timestamp& timestamp) {
+            karabo::data::Hash h(key, state.name());
             h.setAttribute(key, KARABO_INDICATE_STATE_SET, true);
             set(h, timestamp);
         }
 
 
-        void Device::set(const std::string& key, const karabo::util::AlarmCondition& condition,
-                         const karabo::util::Timestamp& timestamp) {
-            karabo::util::Hash h(key, condition.asString());
+        void Device::set(const std::string& key, const karabo::data::AlarmCondition& condition,
+                         const karabo::data::Timestamp& timestamp) {
+            karabo::data::Hash h(key, condition.asString());
             h.setAttribute(key, KARABO_INDICATE_ALARM_SET, true);
             std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
             setNoLock(h, timestamp);
@@ -370,13 +370,13 @@ namespace karabo {
         }
 
 
-        void Device::writeChannel(const std::string& channelName, const karabo::util::Hash& data) {
+        void Device::writeChannel(const std::string& channelName, const karabo::data::Hash& data) {
             this->writeChannel(channelName, data, this->getActualTimestamp());
         }
 
 
-        void Device::writeChannel(const std::string& channelName, const karabo::util::Hash& data,
-                                  const karabo::util::Timestamp& timestamp, bool safeNDArray) {
+        void Device::writeChannel(const std::string& channelName, const karabo::data::Hash& data,
+                                  const karabo::data::Timestamp& timestamp, bool safeNDArray) {
             using namespace karabo::xms;
             OutputChannel::Pointer channel = this->getOutputChannel(channelName);
             // Provide proper meta data information, as well as correct train- and timestamp
@@ -386,19 +386,19 @@ namespace karabo {
         }
 
 
-        void Device::set(const karabo::util::Hash& hash) {
+        void Device::set(const karabo::data::Hash& hash) {
             this->set(hash, getActualTimestamp());
         }
 
 
-        void Device::set(const karabo::util::Hash& hash, const karabo::util::Timestamp& timestamp) {
+        void Device::set(const karabo::data::Hash& hash, const karabo::data::Timestamp& timestamp) {
             std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
             setNoLock(hash, timestamp);
         }
 
 
-        void Device::setNoLock(const karabo::util::Hash& hash, const karabo::util::Timestamp& timestamp) {
-            using namespace karabo::util;
+        void Device::setNoLock(const karabo::data::Hash& hash, const karabo::data::Timestamp& timestamp) {
+            using namespace karabo::data;
             std::pair<bool, std::string> result;
 
             Hash validated;
@@ -411,26 +411,26 @@ namespace karabo {
             }
 
             if (!validated.empty()) {
-                m_parameters.merge(validated, karabo::util::Hash::REPLACE_ATTRIBUTES);
+                m_parameters.merge(validated, karabo::data::Hash::REPLACE_ATTRIBUTES);
 
                 emit("signalChanged", validated, getInstanceId());
             }
         }
 
 
-        void Device::setNoValidate(const karabo::util::Hash& hash) {
+        void Device::setNoValidate(const karabo::data::Hash& hash) {
             this->setNoValidate(hash, getActualTimestamp());
         }
 
 
-        void Device::setNoValidate(const karabo::util::Hash& hash, const karabo::util::Timestamp& timestamp) {
+        void Device::setNoValidate(const karabo::data::Hash& hash, const karabo::data::Timestamp& timestamp) {
             std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
             this->setNoValidateNoLock(hash, timestamp);
         }
 
 
-        void Device::setNoValidateNoLock(const karabo::util::Hash& hash, const karabo::util::Timestamp& timestamp) {
-            using namespace karabo::util;
+        void Device::setNoValidateNoLock(const karabo::data::Hash& hash, const karabo::data::Timestamp& timestamp) {
+            using namespace karabo::data;
             if (!hash.empty()) {
                 Hash tmp(hash);
                 std::vector<std::string> paths;
@@ -446,25 +446,25 @@ namespace karabo {
         }
 
 
-        karabo::util::Schema Device::getFullSchema() const {
+        karabo::data::Schema Device::getFullSchema() const {
             std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
             return m_fullSchema;
         }
 
 
-        void Device::appendSchema(const karabo::util::Schema& schema, const bool /*unused*/) {
+        void Device::appendSchema(const karabo::data::Schema& schema, const bool /*unused*/) {
             KARABO_LOG_DEBUG << "Append Schema requested";
-            const karabo::util::Timestamp stamp(getActualTimestamp());
-            karabo::util::Hash validated;
-            karabo::util::Validator::ValidationRules rules;
+            const karabo::data::Timestamp stamp(getActualTimestamp());
+            karabo::data::Hash validated;
+            karabo::data::Validator::ValidationRules rules;
             rules.allowAdditionalKeys = true;
             rules.allowMissingKeys = true;
             rules.allowUnrootedConfiguration = true;
             rules.injectDefaults = true;
             rules.injectTimestamps = false; // add later when set(validated) is called
-            karabo::util::Validator v(rules);
+            karabo::data::Validator v(rules);
             // Set default values for all parameters in appended Schema
-            v.validate(schema, karabo::util::Hash(), validated);
+            v.validate(schema, karabo::data::Hash(), validated);
             {
                 std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
 
@@ -522,18 +522,18 @@ namespace karabo {
         }
 
 
-        void Device::updateSchema(const karabo::util::Schema& schema, const bool /*unused*/) {
+        void Device::updateSchema(const karabo::data::Schema& schema, const bool /*unused*/) {
             KARABO_LOG_DEBUG << "Update Schema requested";
-            karabo::util::Hash validated;
-            karabo::util::Validator::ValidationRules rules;
+            karabo::data::Hash validated;
+            karabo::data::Validator::ValidationRules rules;
             rules.allowAdditionalKeys = true;
             rules.allowMissingKeys = true;
             rules.allowUnrootedConfiguration = true;
             rules.injectDefaults = true;
             rules.injectTimestamps = false; // Will do later when set(validated,..) is called
-            karabo::util::Validator v(rules);
-            const karabo::util::Timestamp stamp(getActualTimestamp());
-            v.validate(schema, karabo::util::Hash(), validated);
+            karabo::data::Validator v(rules);
+            const karabo::data::Timestamp stamp(getActualTimestamp());
+            v.validate(schema, karabo::data::Hash(), validated);
             {
                 std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
                 // Clear previously injected parameters.
@@ -544,15 +544,15 @@ namespace karabo {
                         m_parameters.erasePath(path);
                         // Now we might have removed 'n.m.l.c' completely although 'n.m' is in static schema:
                         // need to restore (empty) node 'n.m':
-                        size_t pos = path.rfind(util::Hash::k_defaultSep); // Last dot to cut path
+                        size_t pos = path.rfind(data::Hash::k_defaultSep); // Last dot to cut path
                         while (pos != std::string::npos) {
                             const std::string& p =
                                   path.substr(0, pos); // first 'n.m.l', then 'n.m' (without break below then 'n')
                             if (m_staticSchema.has(p) && !m_parameters.has(p)) {
-                                m_parameters.set(p, karabo::util::Hash());
+                                m_parameters.set(p, karabo::data::Hash());
                                 break; // 'n.m' added added back (after 'n.m.l' failed)
                             }
-                            pos = p.rfind(util::Hash::k_defaultSep);
+                            pos = p.rfind(data::Hash::k_defaultSep);
                         }
                     }
                 }
@@ -640,45 +640,45 @@ namespace karabo {
         }
 
 
-        karabo::util::Types::ReferenceType Device::getValueType(const std::string& key) const {
+        karabo::data::Types::ReferenceType Device::getValueType(const std::string& key) const {
             std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
             return m_fullSchema.getValueType(key);
         }
 
 
-        karabo::util::Hash Device::getCurrentConfiguration(const std::string& tags) const {
+        karabo::data::Hash Device::getCurrentConfiguration(const std::string& tags) const {
             std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
             if (tags.empty()) return m_parameters;
-            karabo::util::Hash filtered;
-            karabo::util::HashFilter::byTag(m_fullSchema, m_parameters, filtered, tags);
+            karabo::data::Hash filtered;
+            karabo::data::HashFilter::byTag(m_fullSchema, m_parameters, filtered, tags);
             return filtered;
         }
 
 
-        karabo::util::Hash Device::getCurrentConfigurationSlice(const std::vector<std::string>& paths) const {
-            karabo::util::Hash result;
+        karabo::data::Hash Device::getCurrentConfigurationSlice(const std::vector<std::string>& paths) const {
+            karabo::data::Hash result;
 
             std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
             for (const std::string& path : paths) {
-                const karabo::util::Hash::Node& node = m_parameters.getNode(path);
+                const karabo::data::Hash::Node& node = m_parameters.getNode(path);
                 // Copy value and attributes
-                karabo::util::Hash::Node& newNode = result.set(path, node.getValueAsAny());
+                karabo::data::Hash::Node& newNode = result.set(path, node.getValueAsAny());
                 newNode.setAttributes(node.getAttributes());
             }
             return result;
         }
 
 
-        karabo::util::Hash Device::filterByTags(const karabo::util::Hash& hash, const std::string& tags) const {
-            karabo::util::Hash filtered;
+        karabo::data::Hash Device::filterByTags(const karabo::data::Hash& hash, const std::string& tags) const {
+            karabo::data::Hash filtered;
             std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
-            karabo::util::HashFilter::byTag(m_fullSchema, hash, filtered, tags);
+            karabo::data::HashFilter::byTag(m_fullSchema, hash, filtered, tags);
             return filtered;
         }
 
 
-        void Device::updateState(const karabo::util::State& currentState, karabo::util::Hash other,
-                                 const karabo::util::Timestamp& timestamp) {
+        void Device::updateState(const karabo::data::State& currentState, karabo::data::Hash other,
+                                 const karabo::data::Timestamp& timestamp) {
             try {
                 const std::string& stateName = currentState.name();
                 KARABO_LOG_FRAMEWORK_DEBUG << getInstanceId() << ".updateState: \"" << stateName << "\".";
@@ -686,16 +686,16 @@ namespace karabo {
                     // Set state as string, but add state marker attribute KARABO_INDICATE_STATE_SET
                     other.set("state", stateName).setAttribute(KARABO_INDICATE_STATE_SET, true);
                     // Compare with state enum
-                    if (currentState == karabo::util::State::ERROR) {
-                        updateInstanceInfo(karabo::util::Hash("status", "error"));
-                    } else if (currentState == karabo::util::State::UNKNOWN) {
-                        updateInstanceInfo(karabo::util::Hash("status", "unknown"));
+                    if (currentState == karabo::data::State::ERROR) {
+                        updateInstanceInfo(karabo::data::Hash("status", "error"));
+                    } else if (currentState == karabo::data::State::UNKNOWN) {
+                        updateInstanceInfo(karabo::data::Hash("status", "unknown"));
                     } else {
                         // Reset the error status - protect against non-initialised instanceInfo
-                        const karabo::util::Hash info(getInstanceInfo());
+                        const karabo::data::Hash info(getInstanceInfo());
                         if (!info.has("status") || info.get<std::string>("status") == "error" ||
                             info.get<std::string>("status") == "unknown") {
-                            updateInstanceInfo(karabo::util::Hash("status", "ok"));
+                            updateInstanceInfo(karabo::data::Hash("status", "ok"));
                         }
                     }
                 }
@@ -707,15 +707,15 @@ namespace karabo {
                 // Note that in case of asynchronous slot completion the AsyncReply has to be instructed explicitly.
                 reply(stateName);
 
-            } catch (const karabo::util::Exception& e) {
+            } catch (const karabo::data::Exception& e) {
                 KARABO_RETHROW
             }
         }
 
 
-        void Device::setAlarmCondition(const karabo::util::AlarmCondition& condition, bool needsAcknowledging,
+        void Device::setAlarmCondition(const karabo::data::AlarmCondition& condition, bool needsAcknowledging,
                                        const std::string& description) {
-            using namespace karabo::util;
+            using namespace karabo::data;
 
             const Timestamp timestamp(getActualTimestamp());
             std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
@@ -727,12 +727,12 @@ namespace karabo {
         }
 
 
-        const karabo::util::AlarmCondition& Device::getAlarmCondition(const std::string& key,
+        const karabo::data::AlarmCondition& Device::getAlarmCondition(const std::string& key,
                                                                       const std::string& sep) const {
             std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
             const std::string& propertyCondition =
                   this->m_parameters.template getAttribute<std::string>(key, KARABO_ALARM_ATTR, sep.at(0));
-            return karabo::util::AlarmCondition::fromString(propertyCondition);
+            return karabo::data::AlarmCondition::fromString(propertyCondition);
         }
 
 
@@ -750,7 +750,7 @@ namespace karabo {
 
 
         void Device::appendSchemaMaxSize(const std::string& path, unsigned int value, bool emitFlag) {
-            using karabo::util::OVERWRITE_ELEMENT;
+            using karabo::data::OVERWRITE_ELEMENT;
             std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
             if (!m_fullSchema.has(path)) {
                 throw KARABO_PARAMETER_EXCEPTION("Path \"" + path + "\" not found in the device schema.");
@@ -768,16 +768,16 @@ namespace karabo {
         }
 
 
-        karabo::util::Timestamp Device::getTimestamp(const karabo::util::Epochstamp& epoch) const {
+        karabo::data::Timestamp Device::getTimestamp(const karabo::data::Epochstamp& epoch) const {
             unsigned long long id = 0;
             {
                 std::lock_guard<std::mutex> lock(m_timeChangeMutex);
                 if (m_timePeriod > 0) {
-                    const karabo::util::Epochstamp epochLastReceived(m_timeSec, m_timeFrac);
+                    const karabo::data::Epochstamp epochLastReceived(m_timeSec, m_timeFrac);
                     // duration is always positive, irrespective whether epoch or epochLastReceived is more recent
-                    const karabo::util::TimeDuration duration = epoch.elapsed(epochLastReceived);
+                    const karabo::data::TimeDuration duration = epoch.elapsed(epochLastReceived);
                     const unsigned long long nPeriods =
-                          (duration.getTotalSeconds() * 1000000ull + duration.getFractions(karabo::util::MICROSEC)) /
+                          (duration.getTotalSeconds() * 1000000ull + duration.getFractions(karabo::data::MICROSEC)) /
                           m_timePeriod;
                     if (epochLastReceived <= epoch) {
                         id = m_timeId + nPeriods;
@@ -790,13 +790,13 @@ namespace karabo {
                     }
                 }
             }
-            return karabo::util::Timestamp(epoch, karabo::util::Trainstamp(id));
+            return karabo::data::Timestamp(epoch, karabo::data::Trainstamp(id));
         }
 
 
         void Device::finalizeInternalInitialization(const karabo::net::Broker::Pointer& connection,
                                                     bool consumeBroadcasts, const std::string& timeServerId) {
-            using namespace karabo::util;
+            using namespace karabo::data;
             using namespace karabo::net;
             using namespace std::placeholders;
 
@@ -833,13 +833,13 @@ namespace karabo {
                     m_parameters.set("hostName", net::bareHostName());
                 }
                 // The following lines of code are needed to initially inject timestamps to the parameters
-                karabo::util::Hash validated;
+                karabo::data::Hash validated;
                 std::pair<bool, std::string> result =
                       m_validatorIntern.validate(m_fullSchema, m_parameters, validated, getActualTimestamp());
                 if (result.first == false) {
                     KARABO_LOG_WARN << "Bad parameter setting attempted, validation reports: " << result.second;
                 }
-                m_parameters.merge(validated, karabo::util::Hash::REPLACE_ATTRIBUTES);
+                m_parameters.merge(validated, karabo::data::Hash::REPLACE_ATTRIBUTES);
 
                 // Do this under mutex protection
                 hasAvailableScenes = m_parameters.has("availableScenes");
@@ -850,14 +850,14 @@ namespace karabo {
             }
 
             // Prepare some info further describing this particular instance
-            karabo::util::Hash instanceInfo;
+            karabo::data::Hash instanceInfo;
             instanceInfo.set("type", "device");
             instanceInfo.set("classId", getClassInfo().getClassId());
             instanceInfo.set("serverId", m_serverId);
             instanceInfo.set("visibility", m_visibility);
             instanceInfo.set("host", this->get<std::string>("hostName"));
             std::string status;
-            const karabo::util::State state = this->getState();
+            const karabo::data::State state = this->getState();
             if (state == State::ERROR) {
                 status = "error";
             } else if (state == State::UNKNOWN) {
@@ -956,7 +956,7 @@ namespace karabo {
 
 
         void Device::initSchema() {
-            using namespace karabo::util;
+            using namespace karabo::data;
             const Schema staticSchema = getSchema(m_classId, Schema::AssemblyRules(INIT | WRITE | READ));
             {
                 std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
@@ -971,15 +971,15 @@ namespace karabo {
         void Device::initDeviceSlots() {
             using namespace std;
 
-            KARABO_SYSTEM_SIGNAL("signalChanged", karabo::util::Hash /*configuration*/, string /*deviceId*/);
+            KARABO_SYSTEM_SIGNAL("signalChanged", karabo::data::Hash /*configuration*/, string /*deviceId*/);
 
-            KARABO_SYSTEM_SIGNAL("signalSchemaUpdated", karabo::util::Schema /*deviceSchema*/, string /*deviceId*/);
+            KARABO_SYSTEM_SIGNAL("signalSchemaUpdated", karabo::data::Schema /*deviceSchema*/, string /*deviceId*/);
 
-            KARABO_SLOT(slotReconfigure, karabo::util::Hash /*reconfiguration*/)
+            KARABO_SLOT(slotReconfigure, karabo::data::Hash /*reconfiguration*/)
 
             KARABO_SLOT(slotGetConfiguration)
 
-            KARABO_SLOT(slotGetConfigurationSlice, karabo::util::Hash)
+            KARABO_SLOT(slotGetConfigurationSlice, karabo::data::Hash)
 
             KARABO_SLOT(slotGetSchema, bool /*onlyCurrentState*/);
 
@@ -987,19 +987,19 @@ namespace karabo {
 
             KARABO_SLOT(slotClearLock);
 
-            KARABO_SLOT(slotGetTime, karabo::util::Hash /* UNUSED */);
+            KARABO_SLOT(slotGetTime, karabo::data::Hash /* UNUSED */);
 
-            KARABO_SLOT(slotGetSystemInfo, karabo::util::Hash /* UNUSED */);
+            KARABO_SLOT(slotGetSystemInfo, karabo::data::Hash /* UNUSED */);
         }
 
 
-        void Device::initChannels(const karabo::util::Schema& schema, const std::string& topLevel) {
+        void Device::initChannels(const karabo::data::Schema& schema, const std::string& topLevel) {
             // Keys under topLevel, without leading "topLevel.":
             const std::vector<std::string>& subKeys = schema.getKeys(topLevel);
 
             for (const std::string& subKey : subKeys) {
                 // Assemble full path out of topLevel and subKey
-                const std::string key(topLevel.empty() ? subKey : (topLevel + util::Hash::k_defaultSep) += subKey);
+                const std::string key(topLevel.empty() ? subKey : (topLevel + data::Hash::k_defaultSep) += subKey);
                 if (schema.hasDisplayType(key)) {
                     const std::string& displayType = schema.getDisplayType(key);
                     if (displayType == "OutputChannel") {
@@ -1031,7 +1031,7 @@ namespace karabo {
                 } else {
                     Device::WeakPointer weakThis(std::dynamic_pointer_cast<Device>(shared_from_this()));
                     channel->registerShowConnectionsHandler(
-                          [weakThis, path](const std::vector<karabo::util::Hash>& connections) {
+                          [weakThis, path](const std::vector<karabo::data::Hash>& connections) {
                               Device::Pointer self(weakThis.lock());
                               if (self) self->set(path + ".connections", connections);
                           });
@@ -1039,15 +1039,15 @@ namespace karabo {
                                                                             const std::vector<unsigned long long>& wb) {
                         Device::Pointer self(weakThis.lock());
                         if (self) {
-                            karabo::util::Hash h(path + ".bytesRead", rb, path + ".bytesWritten", wb);
+                            karabo::data::Hash h(path + ".bytesRead", rb, path + ".bytesWritten", wb);
                             self->set(h);
                         }
                     });
-                    karabo::util::Hash update(path, channel->getInitialConfiguration());
+                    karabo::data::Hash update(path, channel->getInitialConfiguration());
                     // do not lock since this method is called under m_objectStateChangeMutex
                     setNoLock(update, getActualTimestamp());
                 }
-            } catch (const karabo::util::NetworkException& e) {
+            } catch (const karabo::data::NetworkException& e) {
                 KARABO_LOG_ERROR << e.detailedMsg();
             }
         }
@@ -1075,7 +1075,7 @@ namespace karabo {
                 // status tracker
                 //       above) cannot interfere since here we already have locked m_objectStateChangeMutex that is
                 //       also required by the setVectorUpdate(..) inside trackInputChannelConnections(...).
-                const util::Hash h(path + ".missingConnections",
+                const data::Hash h(path + ".missingConnections",
                                    m_parameters.get<std::vector<std::string>>(path + ".connectedOutputChannels"));
                 setNoLock(h, getActualTimestamp());
             }
@@ -1100,7 +1100,7 @@ namespace karabo {
 
 
         void Device::slotCallGuard(const std::string& slotName, const std::string& callee) {
-            using namespace karabo::util;
+            using namespace karabo::data;
 
             // Check whether the slot is mentioned in the expectedParameters
             // as the call guard only works on those and will ignore all others
@@ -1146,7 +1146,7 @@ namespace karabo {
 
 
         void Device::ensureSlotIsValidUnderCurrentState(const std::string& slotName) {
-            std::vector<karabo::util::State> allowedStates;
+            std::vector<karabo::data::State> allowedStates;
             {
                 std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
                 if (m_fullSchema.hasAllowedStates(slotName)) {
@@ -1154,7 +1154,7 @@ namespace karabo {
                 }
             }
             if (!allowedStates.empty()) {
-                const karabo::util::State currentState = getState();
+                const karabo::data::State currentState = getState();
                 if (std::find(allowedStates.begin(), allowedStates.end(), currentState) == allowedStates.end()) {
                     std::ostringstream msg;
                     msg << "Command \"" << slotName << "\" is not allowed in current state \"" << currentState.name()
@@ -1171,7 +1171,7 @@ namespace karabo {
         }
 
 
-        void Device::slotGetConfigurationSlice(const karabo::util::Hash& info) {
+        void Device::slotGetConfigurationSlice(const karabo::data::Hash& info) {
             const auto& paths = info.get<std::vector<std::string>>("paths");
             reply(getCurrentConfigurationSlice(paths));
         }
@@ -1179,8 +1179,8 @@ namespace karabo {
 
         void Device::slotGetSchema(bool onlyCurrentState) {
             if (onlyCurrentState) {
-                const karabo::util::State& currentState = getState();
-                const karabo::util::Schema schema(getStateDependentSchema(currentState));
+                const karabo::data::State& currentState = getState();
+                const karabo::data::Schema schema(getStateDependentSchema(currentState));
                 reply(schema, m_deviceId);
             } else {
                 std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
@@ -1189,10 +1189,10 @@ namespace karabo {
         }
 
 
-        void Device::slotReconfigure(const karabo::util::Hash& newConfiguration) {
+        void Device::slotReconfigure(const karabo::data::Hash& newConfiguration) {
             if (newConfiguration.empty()) return;
 
-            karabo::util::Hash validated;
+            karabo::data::Hash validated;
             std::pair<bool, std::string> result = validate(newConfiguration, validated);
 
             if (result.first == true) { // is a valid reconfiguration
@@ -1215,11 +1215,11 @@ namespace karabo {
         }
 
 
-        std::pair<bool, std::string> Device::validate(const karabo::util::Hash& unvalidated,
-                                                      karabo::util::Hash& validated) {
+        std::pair<bool, std::string> Device::validate(const karabo::data::Hash& unvalidated,
+                                                      karabo::data::Hash& validated) {
             // Retrieve the current state of the device instance
-            const karabo::util::State& currentState = getState();
-            const karabo::util::Schema whiteList(getStateDependentSchema(currentState));
+            const karabo::data::State& currentState = getState();
+            const karabo::data::Schema whiteList(getStateDependentSchema(currentState));
             KARABO_LOG_DEBUG << "Incoming (un-validated) reconfiguration:\n" << unvalidated;
             std::pair<bool, std::string> valResult =
                   m_validatorExtern.validate(whiteList, unvalidated, validated, getActualTimestamp());
@@ -1228,7 +1228,7 @@ namespace karabo {
         }
 
 
-        void Device::applyReconfiguration(const karabo::util::Hash& reconfiguration) {
+        void Device::applyReconfiguration(const karabo::data::Hash& reconfiguration) {
             {
                 std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
                 m_parameters.merge(reconfiguration);
@@ -1253,8 +1253,8 @@ namespace karabo {
         }
 
 
-        karabo::util::Schema Device::getStateDependentSchema(const karabo::util::State& state) {
-            using namespace karabo::util;
+        karabo::data::Schema Device::getStateDependentSchema(const karabo::data::State& state) {
+            using namespace karabo::data;
             const std::string& currentState = state.name();
             KARABO_LOG_FRAMEWORK_DEBUG << "call: getStateDependentSchema() for state: " << currentState;
             // Check cache whether a special state-dependent Schema was created before
@@ -1273,12 +1273,12 @@ namespace karabo {
         }
 
 
-        void Device::updateLatencies(const karabo::util::Hash::Pointer& performanceMeasures) {
+        void Device::updateLatencies(const karabo::data::Hash::Pointer& performanceMeasures) {
             if (this->get<bool>("performanceStatistics.enable")) {
                 // Keys and values of 'performanceMeasures' are defined in
                 // SignalSlotable::updatePerformanceStatistics and expectedParameters has to foresee this content
                 // under node "performanceStatistics".
-                this->set(karabo::util::Hash("performanceStatistics", *performanceMeasures));
+                this->set(karabo::data::Hash("performanceStatistics", *performanceMeasures));
             }
         }
 
@@ -1288,8 +1288,8 @@ namespace karabo {
             // up to every second, we can investigate roughly the time of problems via the data logger.
             // Similarly, log to network only every second.
             if (!get<bool>("performanceStatistics.messagingProblems") ||
-                (karabo::util::Epochstamp() - m_lastBrokerErrorStamp).getTotalSeconds() >= 1ull) {
-                set(karabo::util::Hash("performanceStatistics.messagingProblems", true));
+                (karabo::data::Epochstamp() - m_lastBrokerErrorStamp).getTotalSeconds() >= 1ull) {
+                set(karabo::data::Hash("performanceStatistics.messagingProblems", true));
                 m_lastBrokerErrorStamp.now();
                 KARABO_LOG_ERROR << "Broker consumption problem: " << message;
             } else {
@@ -1297,8 +1297,8 @@ namespace karabo {
             }
         }
 
-        karabo::util::Hash Device::getTimeInfo() {
-            using namespace karabo::util;
+        karabo::data::Hash Device::getTimeInfo() {
+            using namespace karabo::data;
             Hash result;
 
             Hash::Node& node = result.set("time", true);
@@ -1320,8 +1320,8 @@ namespace karabo {
         }
 
 
-        void Device::slotGetSystemInfo(const karabo::util::Hash& /* unused */) {
-            using namespace karabo::util;
+        void Device::slotGetSystemInfo(const karabo::data::Hash& /* unused */) {
+            using namespace karabo::data;
             Hash result("timeInfo", this->getTimeInfo());
             result.set("broker", m_connection->getBrokerUrl());
             auto user = getlogin(); // Little caveat: getlogin() is a Linux function

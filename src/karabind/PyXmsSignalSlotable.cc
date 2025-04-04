@@ -38,14 +38,14 @@ namespace karabind {
             std::string details;
             try {
                 throw; // rethrow the exception
-            } catch (const karabo::util::RemoteException& e) {
+            } catch (const karabo::data::RemoteException& e) {
                 details = e.type(); // contains e.g. id of remote side
                 details += ":\n";
                 details += e.details();
                 msg = e.type();
                 msg += ": ";
                 msg += e.userFriendlyMsg(true);
-            } catch (const karabo::util::Exception& e) {
+            } catch (const karabo::data::Exception& e) {
                 // No need to treat TimeoutException separately
                 msg = e.userFriendlyMsg(false);
                 details = e.detailedMsg();
@@ -103,7 +103,7 @@ namespace karabind {
         }
 
        private: // function
-        void doCallRegisteredSlotFunctions(const karabo::util::Hash& body) {
+        void doCallRegisteredSlotFunctions(const karabo::data::Hash& body) {
             py::gil_scoped_acquire gil;
             switch (m_arity) {
                 case 4:
@@ -127,7 +127,7 @@ namespace karabind {
             }
         }
 
-        void callFunction0(const karabo::util::Hash& body) {
+        void callFunction0(const karabo::data::Hash& body) {
             try {
                 (*m_slotFunction)();
             } catch (py::error_already_set& e) {
@@ -135,7 +135,7 @@ namespace karabind {
             }
         }
 
-        void callFunction1(const karabo::util::Hash& body) {
+        void callFunction1(const karabo::data::Hash& body) {
             py::object a1 = getBodyArgument(body, "a1");
             try {
                 (*m_slotFunction)(a1);
@@ -144,7 +144,7 @@ namespace karabind {
             }
         }
 
-        void callFunction2(const karabo::util::Hash& body) {
+        void callFunction2(const karabo::data::Hash& body) {
             py::object a1 = getBodyArgument(body, "a1");
             py::object a2 = getBodyArgument(body, "a2");
             try {
@@ -154,7 +154,7 @@ namespace karabind {
             }
         }
 
-        void callFunction3(const karabo::util::Hash& body) {
+        void callFunction3(const karabo::data::Hash& body) {
             py::object a1 = getBodyArgument(body, "a1");
             py::object a2 = getBodyArgument(body, "a2");
             py::object a3 = getBodyArgument(body, "a3");
@@ -165,7 +165,7 @@ namespace karabind {
             }
         }
 
-        void callFunction4(const karabo::util::Hash& body) {
+        void callFunction4(const karabo::data::Hash& body) {
             py::object a1 = getBodyArgument(body, "a1");
             py::object a2 = getBodyArgument(body, "a2");
             py::object a3 = getBodyArgument(body, "a3");
@@ -179,10 +179,10 @@ namespace karabind {
 
         /// Helper for callFunction<N> to get argument with given key ("a1", ..., or "a4") out of body.
         /// Throws if that key is missing.
-        py::object getBodyArgument(const karabo::util::Hash& body, const char* key) const {
+        py::object getBodyArgument(const karabo::data::Hash& body, const char* key) const {
             // Avoid using HashWrap::get: it returns None if key missing (but we want the exception!).
             // Since get uses internally this getRef with the same const_cast, that is safe here as well
-            return karabind::hashwrap::getRef(const_cast<karabo::util::Hash&>(body), key, ".");
+            return karabind::hashwrap::getRef(const_cast<karabo::data::Hash&>(body), key, ".");
         }
 
         void rethrowPythonException(py::error_already_set& e) {
@@ -208,7 +208,7 @@ namespace karabind {
             RequestorWrap& requestPy(const std::string& slotInstanceId, const std::string& slotFunction,
                                      const Args&... args) {
                 try {
-                    auto body = std::make_shared<karabo::util::Hash>();
+                    auto body = std::make_shared<karabo::data::Hash>();
                     packPy(*body, args...);
                     py::gil_scoped_release release;
                     registerRequest(slotInstanceId, prepareRequestHeader(slotInstanceId, slotFunction), body);
@@ -224,10 +224,10 @@ namespace karabind {
                                            const std::string replySlotInstanceId, const std::string& replySlotFunction,
                                            const Args&... args) {
                 try {
-                    auto body = std::make_shared<karabo::util::Hash>();
+                    auto body = std::make_shared<karabo::data::Hash>();
                     packPy(*body, args...);
                     py::gil_scoped_release release;
-                    karabo::util::Hash::Pointer header = prepareRequestNoWaitHeader(
+                    karabo::data::Hash::Pointer header = prepareRequestNoWaitHeader(
                           requestSlotInstanceId, requestSlotFunction, replySlotInstanceId, replySlotFunction);
                     registerRequest(requestSlotInstanceId, header, body);
                     sendRequest();
@@ -330,7 +330,7 @@ namespace karabind {
             py::tuple waitForReply(const int& milliseconds) {
                 try {
                     timeout(milliseconds);
-                    karabo::util::Hash::Pointer body, header;
+                    karabo::data::Hash::Pointer body, header;
 
                     {
                         py::gil_scoped_release release;
@@ -338,15 +338,15 @@ namespace karabind {
                         // The header key "error" indicates whether an exception was thrown during the remote call
                         if (header->has("error") && header->get<bool>("error")) {
                             // Handling an error, so double check that input is as expected, i.e. body has key "a1":
-                            const boost::optional<karabo::util::Hash::Node&> textNode = body->find("a1");
+                            const boost::optional<karabo::data::Hash::Node&> textNode = body->find("a1");
                             const std::string text(textNode && textNode->is<std::string>()
                                                          ? textNode->getValue<std::string>()
                                                          : "Error signaled, but body without string at key \"a1\"");
-                            const boost::optional<karabo::util::Hash::Node&> detailsNode = body->find("a2");
+                            const boost::optional<karabo::data::Hash::Node&> detailsNode = body->find("a2");
                             const std::string& details =
                                   (detailsNode && detailsNode->is<std::string>() ? detailsNode->getValue<std::string>()
                                                                                  : std::string());
-                            throw karabo::util::RemoteException(text, header->get<std::string>("signalInstanceId"),
+                            throw karabo::data::RemoteException(text, header->get<std::string>("signalInstanceId"),
                                                                 details);
                         }
                     }
@@ -368,12 +368,12 @@ namespace karabind {
                             throw KARABO_SIGNALSLOT_EXCEPTION(
                                   "Too many arguments send as response (max 4 are currently supported");
                     }
-                } catch (const karabo::util::RemoteException&) {
+                } catch (const karabo::data::RemoteException&) {
                     // Just rethrow as is: No further addition to Karabo stack trace, but keeping type and details().
                     throw;
-                } catch (const karabo::util::TimeoutException&) {
+                } catch (const karabo::data::TimeoutException&) {
                     throw; // Rethrow as TimeoutException for proper conversion to Python TimeoutError
-                } catch (const karabo::util::Exception& e) {
+                } catch (const karabo::data::Exception& e) {
                     // No need to add stack trace from detailesMsg() here - code converting this to Python exception
                     // will do so
                     KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("Error while receiving message on instance \"" +
@@ -384,29 +384,29 @@ namespace karabind {
             }
 
            private:
-            py::tuple prepareTuple0(const karabo::util::Hash& body) {
+            py::tuple prepareTuple0(const karabo::data::Hash& body) {
                 return py::make_tuple();
             }
 
-            py::tuple prepareTuple1(const karabo::util::Hash& body) {
+            py::tuple prepareTuple1(const karabo::data::Hash& body) {
                 py::object a1 = wrapper::deepCopyHashLike(hashwrap::get(body, "a1"));
                 return py::make_tuple(a1);
             }
 
-            py::tuple prepareTuple2(const karabo::util::Hash& body) {
+            py::tuple prepareTuple2(const karabo::data::Hash& body) {
                 py::object a1 = wrapper::deepCopyHashLike(hashwrap::get(body, "a1"));
                 py::object a2 = wrapper::deepCopyHashLike(hashwrap::get(body, "a2"));
                 return py::make_tuple(a1, a2);
             }
 
-            py::tuple prepareTuple3(const karabo::util::Hash& body) {
+            py::tuple prepareTuple3(const karabo::data::Hash& body) {
                 py::object a1 = wrapper::deepCopyHashLike(hashwrap::get(body, "a1"));
                 py::object a2 = wrapper::deepCopyHashLike(hashwrap::get(body, "a2"));
                 py::object a3 = wrapper::deepCopyHashLike(hashwrap::get(body, "a3"));
                 return py::make_tuple(a1, a2, a3);
             }
 
-            py::tuple prepareTuple4(const karabo::util::Hash& body) {
+            py::tuple prepareTuple4(const karabo::data::Hash& body) {
                 py::object a1 = wrapper::deepCopyHashLike(hashwrap::get(body, "a1"));
                 py::object a2 = wrapper::deepCopyHashLike(hashwrap::get(body, "a2"));
                 py::object a3 = wrapper::deepCopyHashLike(hashwrap::get(body, "a3"));
@@ -477,16 +477,16 @@ namespace karabind {
 
        public:
         SignalSlotableWrap(const std::string& instanceId = generateInstanceId<SignalSlotable>(),
-                           const karabo::util::Hash& connectionParameters = karabo::util::Hash(),
-                           int heartbeatInterval = 10, const karabo::util::Hash& instanceInfo = karabo::util::Hash())
+                           const karabo::data::Hash& connectionParameters = karabo::data::Hash(),
+                           int heartbeatInterval = 10, const karabo::data::Hash& instanceInfo = karabo::data::Hash())
             : SignalSlotable(instanceId, connectionParameters, heartbeatInterval, instanceInfo) {}
 
         virtual ~SignalSlotableWrap() {}
 
         static std::shared_ptr<SignalSlotableWrap> create(
               const std::string& instanceId = generateInstanceId<SignalSlotable>(),
-              const karabo::util::Hash& connectionParameters = karabo::util::Hash(), int heartbeatInterval = 10,
-              const karabo::util::Hash& instanceInfo = karabo::util::Hash()) {
+              const karabo::data::Hash& connectionParameters = karabo::data::Hash(), int heartbeatInterval = 10,
+              const karabo::data::Hash& instanceInfo = karabo::data::Hash()) {
             return std::shared_ptr<SignalSlotableWrap>(
                   new SignalSlotableWrap(instanceId, connectionParameters, heartbeatInterval, instanceInfo));
         }
@@ -553,7 +553,7 @@ namespace karabind {
         void emitPy(const std::string& signalFunction, const Args&... args) {
             auto s = getSignal(signalFunction);
             if (s) {
-                auto hash = std::make_shared<karabo::util::Hash>();
+                auto hash = std::make_shared<karabo::data::Hash>();
                 packPy(*hash, args...);
                 s->emit<Args...>(hash);
             }
@@ -561,7 +561,7 @@ namespace karabind {
 
         template <typename... Args>
         void callPy(const std::string& instanceId, const std::string& functionName, const Args&... args) const {
-            auto body = std::make_shared<karabo::util::Hash>();
+            auto body = std::make_shared<karabo::data::Hash>();
             packPy(*body, args...);
             const std::string& id = (instanceId.empty() ? m_instanceId : instanceId);
             auto header = prepareCallHeader(id, functionName);
@@ -570,13 +570,13 @@ namespace karabind {
 
         template <typename... Args>
         void replyPy(const Args&... args) {
-            auto reply(std::make_shared<karabo::util::Hash>());
+            auto reply(std::make_shared<karabo::data::Hash>());
             packPy(*reply, args...);
             registerReply(reply);
         }
 
         karabo::xms::InputChannel::Pointer createInputChannelPy(const std::string& channelName,
-                                                                const karabo::util::Hash& config,
+                                                                const karabo::data::Hash& config,
                                                                 const py::object& onDataHandler = py::none(),
                                                                 const py::object& onInputHandler = py::none(),
                                                                 const py::object& onEndOfStreamHandler = py::none(),
@@ -611,7 +611,7 @@ namespace karabind {
 } // namespace karabind
 
 
-using namespace karabo::util;
+using namespace karabo::data;
 using namespace karabo::io;
 using namespace karabo::xms;
 using namespace karabind;
@@ -668,12 +668,12 @@ void exportPyXmsSignalSlotable(py::module_& m) {
     py::class_<SignalSlotableWrap, std::shared_ptr<SignalSlotableWrap>, SignalSlotable>(m, "SignalSlotable")
           .def(py::init<>())
           .def(py::init<const std::string&>())
-          .def(py::init<const std::string&, const karabo::util::Hash&>())
-          .def(py::init<const std::string&, const karabo::util::Hash&, const int>())
-          .def(py::init<const std::string&, const karabo::util::Hash&, const int, const karabo::util::Hash&>())
+          .def(py::init<const std::string&, const karabo::data::Hash&>())
+          .def(py::init<const std::string&, const karabo::data::Hash&, const int>())
+          .def(py::init<const std::string&, const karabo::data::Hash&, const int, const karabo::data::Hash&>())
           .def_static("create", &SignalSlotableWrap::create, py::arg("instanceId"),
-                      py::arg("connectionParameters") = karabo::util::Hash(), py::arg("heartbeatInterval") = 10,
-                      py::arg("instanceInfo") = karabo::util::Hash(),
+                      py::arg("connectionParameters") = karabo::data::Hash(), py::arg("heartbeatInterval") = 10,
+                      py::arg("instanceInfo") = karabo::data::Hash(),
                       "\nUse this factory method to create SignalSlotable object with given 'instanceId', "
                       "'connectionParameters', 'heartbeatInterval' and 'instanceInfo'.\n"
                       "Example:\n\tss = SignalSlotable.create('a')\n")

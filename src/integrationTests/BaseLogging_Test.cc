@@ -32,12 +32,12 @@
 #include <cstdlib>
 #include <filesystem>
 #include <karabo/net/EventLoop.hh>
-#include <karabo/util/Hash.hh>
-#include <karabo/util/Schema.hh>
-#include <karabo/util/StringTools.hh>
 #include <sstream>
 #include <thread>
 
+#include "karabo/data/types/Hash.hh"
+#include "karabo/data/types/Schema.hh"
+#include "karabo/data/types/StringTools.hh"
 #include "karabo/util/DataLogUtils.hh"
 #include "karabo/util/Version.hh"
 
@@ -45,12 +45,12 @@ using namespace std::chrono;
 using namespace std::literals::chrono_literals;
 
 USING_KARABO_NAMESPACES;
-using karabo::util::Epochstamp;
-using karabo::util::INT32_ELEMENT;
-using karabo::util::OVERWRITE_ELEMENT;
-using karabo::util::State;
-using karabo::util::Timestamp;
-using karabo::util::toString;
+using karabo::data::Epochstamp;
+using karabo::data::INT32_ELEMENT;
+using karabo::data::OVERWRITE_ELEMENT;
+using karabo::data::State;
+using karabo::data::Timestamp;
+using karabo::data::toString;
 using karabo::xms::SLOT_ELEMENT;
 using std::string;
 using std::vector;
@@ -74,7 +74,7 @@ class DataLogTestDevice : public karabo::core::Device {
    public:
     KARABO_CLASSINFO(DataLogTestDevice, "DataLogTestDevice", "integrationTests-" + karabo::util::Version::getVersion())
 
-    static void expectedParameters(karabo::util::Schema& expected) {
+    static void expectedParameters(karabo::data::Schema& expected) {
         OVERWRITE_ELEMENT(expected)
               .key("state")
               .setNewOptions(State::INIT, State::ON)
@@ -115,11 +115,11 @@ class DataLogTestDevice : public karabo::core::Device {
         SLOT_ELEMENT(expected).key("slotUpdateSchema").commit();
     }
 
-    DataLogTestDevice(const karabo::util::Hash& input) : karabo::core::Device(input) {
+    DataLogTestDevice(const karabo::data::Hash& input) : karabo::core::Device(input) {
         KARABO_SLOT(slotIncreaseValue);
-        KARABO_SLOT(slotUpdateSchema, const karabo::util::Schema);
+        KARABO_SLOT(slotUpdateSchema, const karabo::data::Schema);
         // NOTE: this is a terrible idea. Never do this in the field.
-        KARABO_SLOT(slotUpdateConfigGeneric, const karabo::util::Hash);
+        KARABO_SLOT(slotUpdateConfigGeneric, const karabo::data::Hash);
         KARABO_INITIAL_FUNCTION(initialize);
     }
 
@@ -157,7 +157,7 @@ class NanTestDevice : public karabo::core::Device {
    public:
     KARABO_CLASSINFO(NanTestDevice, "NanTestDevice", "integrationTests-" + karabo::util::Version::getVersion())
 
-    static void expectedParameters(karabo::util::Schema& expected) {
+    static void expectedParameters(karabo::data::Schema& expected) {
         INT32_ELEMENT(expected).key("int32Property").reconfigurable().assignmentOptional().defaultValue(3).commit();
 
         FLOAT_ELEMENT(expected)
@@ -178,7 +178,7 @@ class NanTestDevice : public karabo::core::Device {
     }
 
 
-    NanTestDevice(const karabo::util::Hash& input) : karabo::core::Device(input) {}
+    NanTestDevice(const karabo::data::Hash& input) : karabo::core::Device(input) {}
 
 
     void preReconfigure(Hash& incomingReconfiguration) {
@@ -199,16 +199,16 @@ KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device
 namespace CppUnit {
 
     template <>
-    struct assertion_traits<std::vector<karabo::util::Hash>> {
-        static bool equal(const std::vector<karabo::util::Hash>& a, const std::vector<karabo::util::Hash>& b) {
-            // using karabo::util::similar() here is not OK. the attributes of the hashes are dropped in one
+    struct assertion_traits<std::vector<karabo::data::Hash>> {
+        static bool equal(const std::vector<karabo::data::Hash>& a, const std::vector<karabo::data::Hash>& b) {
+            // using karabo::data::similar() here is not OK. the attributes of the hashes are dropped in one
             // of the serialization steps
             if (a.size() != b.size()) {
                 return false;
             }
             for (size_t i = 0; i < a.size(); i++) {
-                const karabo::util::Hash& a_i = a[i];
-                const karabo::util::Hash& b_i = b[i];
+                const karabo::data::Hash& a_i = a[i];
+                const karabo::data::Hash& b_i = b[i];
                 if (b_i.size() != a_i.size()) {
                     return false;
                 }
@@ -226,10 +226,10 @@ namespace CppUnit {
         }
 
 
-        static std::string toString(const std::vector<karabo::util::Hash>& p) {
+        static std::string toString(const std::vector<karabo::data::Hash>& p) {
             std::ostringstream o;
             o << "(" << std::endl;
-            for (const karabo::util::Hash& e : p) {
+            for (const karabo::data::Hash& e : p) {
                 o << e << "," << std::endl;
             }
             o << ")";
@@ -271,7 +271,7 @@ void BaseLogging_Test::setUp() {
     auto work = [](std::stop_token stoken) {
         try {
             EventLoop::work();
-        } catch (const karabo::util::TimeoutException& e) {
+        } catch (const karabo::data::TimeoutException& e) {
             // Looks like thread joining fails sometimes...
             std::clog << "Timeout from EventLoop::work(): " << e << std::endl;
         }
@@ -460,7 +460,7 @@ void BaseLogging_Test::testMaxNumDataRange() {
               .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
               .receive(replyDevice, replyProperty, history);
         throw KARABO_LOGIC_EXCEPTION("Wrong arguments to slotGetPropertyHistory did not let it throw");
-    } catch (karabo::util::RemoteException& e) {
+    } catch (karabo::data::RemoteException& e) {
         const std::string& errMsg = e.userFriendlyMsg(true);
         CPPUNIT_ASSERT_MESSAGE(errMsg, errMsg.find(outOfRangeErrMsg1) != std::string::npos);
         CPPUNIT_ASSERT_MESSAGE(errMsg, errMsg.find(outOfRangeErrMsg2) != std::string::npos);
@@ -475,7 +475,7 @@ void BaseLogging_Test::testMaxNumDataRange() {
               .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
               .receive(replyDevice, replyProperty, history);
         throw KARABO_LOGIC_EXCEPTION("Wrong arguments to slotGetPropertyHistory did not let it throw");
-    } catch (karabo::util::RemoteException& e) {
+    } catch (karabo::data::RemoteException& e) {
         const std::string& errMsg = e.userFriendlyMsg(true);
         CPPUNIT_ASSERT(errMsg.find(outOfRangeErrMsg1) != std::string::npos);
         CPPUNIT_ASSERT(errMsg.find(outOfRangeErrMsg2) != std::string::npos);
@@ -548,11 +548,11 @@ void BaseLogging_Test::testMaxNumDataHistory() {
                   .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                   .receive(replyDevice, replyProperty, history);
             return history.size() == static_cast<std::size_t>(maxNumDataFull);
-        } catch (const karabo::util::TimeoutException& e) {
+        } catch (const karabo::data::TimeoutException& e) {
             // Just consume the exception as it is expected while data is not
             // ready.
             return false;
-        } catch (const karabo::util::RemoteException& e) {
+        } catch (const karabo::data::RemoteException& e) {
             // Just consume the exception as it is expected while data is not
             // ready.
             return false;
@@ -565,7 +565,7 @@ void BaseLogging_Test::testMaxNumDataHistory() {
                                  history.size());
     for (int i = 0; i < maxNumDataFull; i++) {
         CPPUNIT_ASSERT_EQUAL_MESSAGE(
-              "Value at history entry #" + karabo::util::toString(i) + " different from expected.", i,
+              "Value at history entry #" + karabo::data::toString(i) + " different from expected.", i,
               history[i].get<int>("v"));
     }
 
@@ -584,11 +584,11 @@ void BaseLogging_Test::testMaxNumDataHistory() {
                   .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                   .receive(replyDevice, replyProperty, history);
             return history.size() >= (maxNumDataSampled / 2ul);
-        } catch (const karabo::util::TimeoutException& e) {
+        } catch (const karabo::data::TimeoutException& e) {
             // Just consume the exception as it is expected while data is not
             // ready.
             return false;
-        } catch (const karabo::util::RemoteException& e) {
+        } catch (const karabo::data::RemoteException& e) {
             // Just consume the exception as it is expected while data is not
             // ready.
             return false;
@@ -610,13 +610,13 @@ void BaseLogging_Test::testMaxNumDataHistory() {
     const int deviationMargin = 8;
     Hash& lastHistoryEntry = history[historySize - 1];
     CPPUNIT_ASSERT_MESSAGE("Value at history entry #0 is outside the expected range: should be between 0 and " +
-                                 karabo::util::toString(deviationMargin) + ", got " +
-                                 karabo::util::toString(history[0].get<int>("v")) + ".",
+                                 karabo::data::toString(deviationMargin) + ", got " +
+                                 karabo::data::toString(history[0].get<int>("v")) + ".",
                            history[0].get<int>("v") >= 0 && history[0].get<int>("v") <= deviationMargin);
     CPPUNIT_ASSERT_MESSAGE(
-          "Value at history entry #" + karabo::util::toString(lastHistoryEntry) +
-                " is outside the expected range: should be between " + karabo::util::toString(40 - deviationMargin) +
-                " and 40, got " + karabo::util::toString(lastHistoryEntry.get<int>("v")) + ".",
+          "Value at history entry #" + karabo::data::toString(lastHistoryEntry) +
+                " is outside the expected range: should be between " + karabo::data::toString(40 - deviationMargin) +
+                " and 40, got " + karabo::data::toString(lastHistoryEntry.get<int>("v")) + ".",
           lastHistoryEntry.get<int>("v") >= 40 - deviationMargin && lastHistoryEntry.get<int>("v") <= 40);
     std::clog << "... OK" << std::endl;
 }
@@ -890,25 +890,25 @@ void BaseLogging_Test::testAllInstantiated(bool waitForLoggerReady) {
         // For the Influx Logger case, this initialization time can be quite long - if the db does not exist
         // yet, the DataLogger must create it before reaching the ON state.
 
-        karabo::util::State loggerState = karabo::util::State::UNKNOWN;
+        karabo::data::State loggerState = karabo::data::State::UNKNOWN;
         const std::string& dataLoggerId = karabo::util::DATALOGGER_PREFIX + m_server;
 
         waitForCondition(
               [this, &loggerState, &dataLoggerId]() {
-                  loggerState = m_deviceClient->get<karabo::util::State>(dataLoggerId, "state");
-                  return loggerState == karabo::util::State::ON;
+                  loggerState = m_deviceClient->get<karabo::data::State>(dataLoggerId, "state");
+                  return loggerState == karabo::data::State::ON;
               },
               60 * KRB_TEST_MAX_TIMEOUT * 1000u, 100u);
 
         CPPUNIT_ASSERT_EQUAL_MESSAGE("Timeout while waiting for DataLogger '" + dataLoggerId + "' to reach ON state.",
-                                     karabo::util::State::ON, loggerState);
+                                     karabo::data::State::ON, loggerState);
     }
 
     std::clog << "Ok" << std::endl;
 }
 
 
-void BaseLogging_Test::testLastKnownConfiguration(karabo::util::Epochstamp fileMigratedDataEndsBefore,
+void BaseLogging_Test::testLastKnownConfiguration(karabo::data::Epochstamp fileMigratedDataEndsBefore,
                                                   bool dataWasMigrated) {
     // Timestamp for test start - used to print test duration at the end.
     Epochstamp testCaseStart;
@@ -949,7 +949,7 @@ void BaseLogging_Test::testLastKnownConfiguration(karabo::util::Epochstamp fileM
 
     std::clog << "\n... Ok (no configuration retrieved)." << std::endl;
 
-    karabo::util::Epochstamp rightBeforeDeviceGone;
+    karabo::data::Epochstamp rightBeforeDeviceGone;
     std::clog << "... right before killing device being logged (at " << rightBeforeDeviceGone.toIso8601() << ") ...";
     // At the rightBeforeDeviceGone timepoint, a last known configuration should be obtained with the last value set
     // in the  previous test cases for the 'int32Property' - even after the device being logged is gone.
@@ -1046,7 +1046,7 @@ void BaseLogging_Test::testLastKnownConfiguration(karabo::util::Epochstamp fileM
                           "\nconfigTimepoint: " + configTimepoint);
     CPPUNIT_ASSERT_EQUAL_MESSAGE(msg, kLastValueSet, conf.get<int>("int32Property"));
     CPPUNIT_ASSERT_EQUAL_MESSAGE(msg, false, configAtTimepoint);
-    karabo::util::Epochstamp configStamp(configTimepoint);
+    karabo::data::Epochstamp configStamp(configTimepoint);
     // if data migration happened the data is younger than the file based logging data
     CPPUNIT_ASSERT_MESSAGE(msg, configStamp > (dataWasMigrated ? fileMigratedDataEndsBefore : beforeAnything));
     CPPUNIT_ASSERT_MESSAGE(msg, configStamp < afterDeviceGone);
@@ -1070,7 +1070,7 @@ void BaseLogging_Test::testLastKnownConfiguration(karabo::util::Epochstamp fileM
 
         CPPUNIT_ASSERT_EQUAL(kLastValueSet, conf.get<int>("int32Property"));
         CPPUNIT_ASSERT_EQUAL(false, configAtTimepoint);
-        karabo::util::Epochstamp configStamp(configTimepoint);
+        karabo::data::Epochstamp configStamp(configTimepoint);
         CPPUNIT_ASSERT(configStamp > beforeAnything);
         // if migration failed or was incompatible we would not get a timestamp matching this condition
         // there wouldn't be any data in the DB before this.
@@ -1081,7 +1081,7 @@ void BaseLogging_Test::testLastKnownConfiguration(karabo::util::Epochstamp fileM
                   << std::endl;
     }
 
-    const karabo::util::TimeDuration testDuration = testCaseStart.elapsed();
+    const karabo::data::TimeDuration testDuration = testCaseStart.elapsed();
 
     const std::streamsize currPrecision{std::clog.precision()};
     std::clog << "(testLastKnownConfiguration took " << std::setprecision(4) << static_cast<double>(testDuration)
@@ -1210,7 +1210,7 @@ void BaseLogging_Test::testCfgFromPastRestart(bool pastConfigStaysPast) {
                                         re.detailedMsg().find(influxLoggerMsg) != std::string::npos));
             } catch (const TimeoutException& te) {
                 // Also timeouts are allowed...
-                karabo::util::Exception::clearTrace();
+                karabo::data::Exception::clearTrace();
             }
             std::this_thread::sleep_for(milliseconds(PAUSE_BEFORE_RETRY_MILLIS));
             nTries--;
@@ -1291,7 +1291,7 @@ void BaseLogging_Test::testCfgFromPastRestart(bool pastConfigStaysPast) {
           toString(failedCycles) + " out of " + toString(numCycles) + " cycles failed!\n" + valueHist.str(), 0,
           failedCycles);
 
-    const karabo::util::TimeDuration testDuration = testCaseStart.elapsed();
+    const karabo::data::TimeDuration testDuration = testCaseStart.elapsed();
 
     const std::streamsize currPrecision{std::clog.precision()};
     std::clog << "(testCfgFromPastRestart took " << std::setprecision(4) << static_cast<double>(testDuration)
@@ -1405,7 +1405,7 @@ void BaseLogging_Test::testUnchangedNoDefaultProperties() {
 
 template <class T>
 void isEqualMessage(const std::string& message, const T& expected, const T& actual,
-                    const std::vector<karabo::util::Hash>& fullHistory) {
+                    const std::vector<karabo::data::Hash>& fullHistory) {
     std::string msg(message);
     if (expected != actual) {
         (msg += ": ") += toString(fullHistory);
@@ -1416,7 +1416,7 @@ void isEqualMessage(const std::string& message, const T& expected, const T& actu
 
 template <>
 void isEqualMessage(const std::string& message, const std::vector<bool>& expected, const std::vector<bool>& actual,
-                    const std::vector<karabo::util::Hash>& fullHistory) {
+                    const std::vector<karabo::data::Hash>& fullHistory) {
     std::string msg(message);
     if (expected != actual) {
         (msg += ": ") += toString(fullHistory);
@@ -1426,7 +1426,7 @@ void isEqualMessage(const std::string& message, const std::vector<bool>& expecte
 
 template <>
 void isEqualMessage(const std::string& message, const float& expected, const float& actual,
-                    const std::vector<karabo::util::Hash>& fullHistory) {
+                    const std::vector<karabo::data::Hash>& fullHistory) {
     std::string msg(message);
     if (expected != actual) {
         (msg += ": ") += toString(fullHistory);
@@ -1493,12 +1493,12 @@ void BaseLogging_Test::testHistory(const std::string& key, const std::function<T
             m_sigSlot->request(dlreader0, "slotGetPropertyHistory", m_deviceId, key, params)
                   .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                   .receive(device, property, history);
-        } catch (const karabo::util::TimeoutException& e) {
-            karabo::util::Exception::clearTrace();
+        } catch (const karabo::data::TimeoutException& e) {
+            karabo::data::Exception::clearTrace();
             exceptionsMsgs.push_back("At check #" + toString(numChecks) + ": " + e.what());
             ++numExceptions;
-        } catch (const karabo::util::RemoteException& e) {
-            karabo::util::Exception::clearTrace();
+        } catch (const karabo::data::RemoteException& e) {
+            karabo::data::Exception::clearTrace();
             exceptionsMsgs.push_back("At check #" + toString(numChecks) + ": " + e.what());
             ++numExceptions;
         }
@@ -1561,11 +1561,11 @@ void BaseLogging_Test::testHistory(const std::string& key, const std::function<T
             m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast", m_deviceId, beforeWrites)
                   .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                   .receive(conf, schema);
-        } catch (const karabo::util::TimeoutException& e) {
+        } catch (const karabo::data::TimeoutException& e) {
             exceptionsMsgs.push_back("At check #" + toString(numChecks) + ": " + e.what());
             ++numExceptions;
             excepted = true;
-        } catch (const karabo::util::RemoteException& e) {
+        } catch (const karabo::data::RemoteException& e) {
             exceptionsMsgs.push_back("At check #" + toString(numChecks) + ": " + e.what());
             ++numExceptions;
             excepted = true;
@@ -1623,11 +1623,11 @@ void BaseLogging_Test::testHistory(const std::string& key, const std::function<T
             m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast", m_deviceId, afterWrites)
                   .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                   .receive(conf, schema);
-        } catch (const karabo::util::TimeoutException& e) {
+        } catch (const karabo::data::TimeoutException& e) {
             exceptionsMsgs.push_back("At check #" + toString(numChecks) + ": " + e.what());
             ++numExceptions;
             excepted = true;
-        } catch (const karabo::util::RemoteException& e) {
+        } catch (const karabo::data::RemoteException& e) {
             exceptionsMsgs.push_back("At check #" + toString(numChecks) + ": " + e.what());
             ++numExceptions;
             excepted = true;
@@ -1698,11 +1698,11 @@ void BaseLogging_Test::testFloat(bool testPastConf) {
 
 
 void BaseLogging_Test::testString(bool testPastConf) {
-    auto lambda = [](int i) -> string { return ((i % 2) ? string() : "(1|2|" + karabo::util::toString(i)) + ")"; };
+    auto lambda = [](int i) -> string { return ((i % 2) ? string() : "(1|2|" + karabo::data::toString(i)) + ")"; };
     testHistory<string>("stringProperty", lambda, testPastConf);
 
     // Also test a string with a new line character
-    auto lambda2 = [](int i) -> string { return "with\nnewline" + karabo::util::toString(i); };
+    auto lambda2 = [](int i) -> string { return "with\nnewline" + karabo::data::toString(i); };
     testHistory<string>("stringProperty", lambda2, testPastConf);
 }
 
@@ -1863,9 +1863,9 @@ void BaseLogging_Test::testVectorUnsignedLongLong(bool testPastConf) {
 void BaseLogging_Test::testTable(bool testPastConf) {
     auto lambda = [](int i) -> vector<Hash> {
         vector<Hash> t = {// For strings, test also pipe '|' (the separator in our text files) and newline '\n'.
-                          Hash("e1", "ab\nc" + karabo::util::toString(i), "e2", ((i % 2) == 0), "e3", 12 * i, "e4",
+                          Hash("e1", "ab\nc" + karabo::data::toString(i), "e2", ((i % 2) == 0), "e3", 12 * i, "e4",
                                0.9837F * i, "e5", 1.2345 * i),
-                          Hash("e1", "xy|z" + karabo::util::toString(i), "e2", ((i % 2) == 1), "e3", 42 * i, "e4",
+                          Hash("e1", "xy|z" + karabo::data::toString(i), "e2", ((i % 2) == 1), "e3", 42 * i, "e4",
                                2.33333F * i, "e5", 7.77777 * i)};
         return t;
     };
@@ -1991,12 +1991,12 @@ void BaseLogging_Test::testNans() {
                 m_sigSlot->request(dlreader0, "slotGetPropertyHistory", deviceId, property_pair.first, params)
                       .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                       .receive(device, property, history);
-            } catch (const karabo::util::TimeoutException& e) {
-                karabo::util::Exception::clearTrace();
+            } catch (const karabo::data::TimeoutException& e) {
+                karabo::data::Exception::clearTrace();
                 exceptionsMsgs.push_back("At check #" + toString(numChecks) + ": " + e.what());
                 ++numExceptions;
-            } catch (const karabo::util::RemoteException& e) {
-                karabo::util::Exception::clearTrace();
+            } catch (const karabo::data::RemoteException& e) {
+                karabo::data::Exception::clearTrace();
                 exceptionsMsgs.push_back("At check #" + toString(numChecks) + ": " + e.what());
                 ++numExceptions;
             }
@@ -2086,7 +2086,7 @@ void BaseLogging_Test::testNans() {
     success = m_deviceClient->killDevice(deviceId);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
-    const karabo::util::TimeDuration testDuration = testCaseStart.elapsed();
+    const karabo::data::TimeDuration testDuration = testCaseStart.elapsed();
 
     const std::streamsize currPrecision{std::clog.precision()};
     std::clog << "(testNans took " << std::setprecision(4) << static_cast<double>(testDuration) << " sec. to execute)"
@@ -2200,12 +2200,12 @@ void BaseLogging_Test::testSchemaEvolution() {
             m_sigSlot->request(dlreader0, "slotGetPropertyHistory", deviceId, "reconfigurableValue", params)
                   .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                   .receive(replyDevice, replyProperty, history);
-        } catch (const karabo::util::TimeoutException& e) {
-            karabo::util::Exception::clearTrace();
+        } catch (const karabo::data::TimeoutException& e) {
+            karabo::data::Exception::clearTrace();
             exceptionsMsgs.push_back("At check #" + toString(numChecks) + ": " + e.what());
             ++numExceptions;
-        } catch (const karabo::util::RemoteException& e) {
-            karabo::util::Exception::clearTrace();
+        } catch (const karabo::data::RemoteException& e) {
+            karabo::data::Exception::clearTrace();
             exceptionsMsgs.push_back("At check #" + toString(numChecks) + ": " + e.what());
             ++numExceptions;
         }

@@ -26,11 +26,11 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 
-#include <karabo/util/Epochstamp.hh>
 #include <memory>
 
 #include "karabo/core/DeviceClient.hh"
 #include "karabo/core/DeviceServer.hh"
+#include "karabo/data/time/Epochstamp.hh"
 #include "karabo/karabo.hpp"
 
 

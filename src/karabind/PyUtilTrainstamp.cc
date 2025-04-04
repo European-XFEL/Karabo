@@ -18,10 +18,10 @@
 
 #include <pybind11/pybind11.h>
 
-#include <karabo/util/Trainstamp.hh>
+#include "karabo/data/time/Trainstamp.hh"
 
 namespace py = pybind11;
-using namespace karabo::util;
+using namespace karabo::data;
 using namespace std;
 
 

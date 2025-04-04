@@ -63,7 +63,7 @@ namespace karabo {
              */
             static DeviceServer::Pointer instantiate(int argc, const char** argv);
 
-            static bool parseCommandLine(int argc, const char** argv, karabo::util::Hash& configuration,
+            static bool parseCommandLine(int argc, const char** argv, karabo::data::Hash& configuration,
                                          bool silent = false);
 
            protected:
@@ -78,7 +78,7 @@ namespace karabo {
 
             static int buildToken(const std::vector<std::string>& args, int start, std::string& token);
 
-            static void readToken(const std::string& token, karabo::util::Hash& config);
+            static void readToken(const std::string& token, karabo::data::Hash& config);
         };
     } // namespace core
 } // namespace karabo

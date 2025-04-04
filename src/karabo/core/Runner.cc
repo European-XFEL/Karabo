@@ -23,15 +23,15 @@
 #include <string>
 #include <vector>
 
+#include "karabo/data/schema/Configurator.hh"
+#include "karabo/data/types/Hash.hh"
 #include "karabo/io/FileTools.hh"
 #include "karabo/io/Input.hh"
 #include "karabo/io/Output.hh"
 #include "karabo/log/Logger.hh"
-#include "karabo/util/Configurator.hh"
-#include "karabo/util/Hash.hh"
 #include "karabo/util/Version.hh"
 
-using namespace karabo::util;
+using namespace karabo::data;
 
 namespace karabo {
 
@@ -42,7 +42,7 @@ namespace karabo {
             const std::string classId("DeviceServer");
 
             try {
-                karabo::util::Hash configuration;
+                karabo::data::Hash configuration;
                 if (parseCommandLine(argc, argv, configuration)) {
                     if (!configuration.empty()) {
                         if (configuration.has(classId)) {
@@ -54,16 +54,16 @@ namespace karabo {
                         return Configurator<DeviceServer>::create(classId);
                     }
                 }
-            } catch (const karabo::util::Exception& e) {
+            } catch (const karabo::data::Exception& e) {
                 KARABO_RETHROW_AS(KARABO_INIT_EXCEPTION("Failed to instantiate DeviceServer."));
             }
             return DeviceServer::Pointer();
         }
 
 
-        bool Runner::parseCommandLine(int argc, const char** argv, karabo::util::Hash& configuration, bool silent) {
+        bool Runner::parseCommandLine(int argc, const char** argv, karabo::data::Hash& configuration, bool silent) {
             using namespace std;
-            using namespace karabo::util;
+            using namespace karabo::data;
             std::string firstArg;
             if (argc > 1) {
                 firstArg = argv[1];
@@ -131,7 +131,7 @@ namespace karabo {
                 parseToken("", resolved[i], tokenList);
             }
 
-            karabo::util::Hash flatConfiguration;
+            karabo::data::Hash flatConfiguration;
             Hash tmp;
             for (size_t i = 0; i < tokenList.size(); ++i) {
                 readToken(tokenList[i], tmp);
@@ -186,7 +186,7 @@ namespace karabo {
         void Runner::parseToken(const std::string& prefix, const std::string& token,
                                 std::vector<std::string>& tokenList) {
             using namespace std;
-            using namespace karabo::util;
+            using namespace karabo::data;
             size_t pos = token.find_first_of("=");
             string key, value;
             if (pos == std::string::npos) {
@@ -232,7 +232,7 @@ namespace karabo {
             // DeviceServer.Logger.appenders[]
 
             using namespace std;
-            using namespace karabo::util;
+            using namespace karabo::data;
 
             int argc = argv.size();
 
@@ -275,7 +275,7 @@ namespace karabo {
             // following arguments if needed to build the valid token
             // Function returns the index of the last consumed argument
 
-            using namespace karabo::util;
+            using namespace karabo::data;
             using namespace std;
 
             token += args[start];
@@ -337,10 +337,10 @@ namespace karabo {
         }
 
 
-        void Runner::readToken(const std::string& token, karabo::util::Hash& config) {
+        void Runner::readToken(const std::string& token, karabo::data::Hash& config) {
             // This function converts token to Hash entry
             // Tokens must be resolved before (see resolveTokens)
-            using namespace karabo::util;
+            using namespace karabo::data;
 
             if (token.empty()) {
                 throw KARABO_PARAMETER_EXCEPTION("Syntax error in command line (empty argument?)\n");
@@ -351,7 +351,7 @@ namespace karabo {
             }
             std::filesystem::path possibleFile(token);
             if (std::filesystem::exists(possibleFile)) {
-                karabo::util::Hash fileConfig;
+                karabo::data::Hash fileConfig;
                 karabo::io::loadFromFile<Hash>(fileConfig, possibleFile.string());
                 fileConfig.flatten(config);
             } else {
