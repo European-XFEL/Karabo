@@ -348,12 +348,12 @@ class Hash(OrderedDict):
         """Erase an item associated with `key` from the Hash"""
         del self[key]
 
-    def paths(self, *, intermediate=True):
+    def paths(self, *, intermediate=False):
         """Returns all root-to-leaves paths
 
         :param intermediate: If `True` include all intermediate path from
                              roots to leafs, i.e. ['a.b.c', 'a.b', 'a']
-                             instead of ['a.b.c']
+                             instead of ['a.b.c'], defaults to `False`.
         """
 
         def full_paths(hsh):
