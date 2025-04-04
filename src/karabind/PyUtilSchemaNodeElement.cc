@@ -23,7 +23,6 @@
 #include <karabo/util/ByteArrayElement.hh>
 #include <karabo/util/ChoiceElement.hh>
 #include <karabo/util/Exception.hh>
-#include <karabo/util/ListElement.hh>
 #include <karabo/util/SimpleElement.hh>
 #include <karabo/util/VectorElement.hh>
 
@@ -44,7 +43,7 @@ void exportPyUtilSchemaNodeElement(py::module_& m) {
     // In Python : NODE_ELEMENT
     //////////////////////////////////////////////////////////////////////
     py::class_<NodeElement>(m, "NODE_ELEMENT")
-          .def(py::init<Schema&>(), py::arg("expected")) KARABO_PYTHON_NODE_CHOICE_LIST(NodeElement)
+          .def(py::init<Schema&>(), py::arg("expected")) KARABO_PYTHON_NODE_CHOICE(NodeElement)
           .def(
                 "appendParametersOf",
                 [](NodeElement& self, const py::object& obj) -> NodeElement& {

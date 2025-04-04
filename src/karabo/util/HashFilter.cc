@@ -61,7 +61,7 @@ namespace karabo {
                     r_byTag(master, *it, result, newPath, tags);
                 }
             } else if (inputNode.is<std::vector<Hash>>()) {
-                // if the tag was found in the vector<HASH> (defined for LIST_ELEMENT) copy complete vector<Hash> and
+                // if the tag was found in the vector<HASH> copy complete vector<Hash> and
                 // return otherwise process the Hash further
                 if (processNode(master, inputNode, result, path, tags) == true) return;
 
@@ -145,7 +145,7 @@ namespace karabo {
                     r_byAccessMode(master, *it, result, newPath, value);
                 }
             } else if (inputNode.is<std::vector<Hash>>()) {
-                // if the tag was found in the vector<HASH> (defined for LIST_ELEMENT) copy complete vector<Hash> and
+                // if the tag was found in the vector<HASH> copy complete vector<Hash> and
                 // return otherwise process the Hash further
                 // if (processNodeForAccessMode(master, inputNode, result, path, value) == true) {
                 // clog << "Copy entire vector<Hash> " << path << endl;

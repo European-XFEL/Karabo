@@ -533,11 +533,10 @@ async def test_cross_pipeline(deviceTest):
 async def test_history(deviceTest):
     before = datetime.now()
     serverId = "karabo_dataLogger"
-    loggermap = os.getcwd() + '/loggermap.xml'
     config = {"Karabo_DataLoggerManager_0":  # id as required by `getHistory`
               {"classId": "DataLoggerManager", "flushInterval": 1,
                "fileDataLogger": {"directory": "karaboHistory"},
-               "loggermap": loggermap, "serverList": [serverId]}}
+               "serverList": [serverId]}}
     init = json.dumps(config)
     # Start karabo-cppserver with 'serverId' and init=<json-string>
     server = AsyncServerContext(serverId, [f"init={init}"], api="cpp")

@@ -21,7 +21,6 @@
 #include <pybind11/stl_bind.h>
 
 #include <karabo/util/Exception.hh>
-#include <karabo/util/ListElement.hh>
 #include <karabo/util/OverwriteElement.hh>
 
 #include "PyTypes.hh"
