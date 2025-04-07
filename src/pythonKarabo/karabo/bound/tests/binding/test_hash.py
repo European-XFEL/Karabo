@@ -374,6 +374,44 @@ def test_getset():
     with pytest.raises(StopIteration):
         next(it)
 
+    # testing middlelayer-like API
+    h = Hash('a.b.c', 21, 'f.g', "some string", 'i', 31.4865)
+    # set attributes
+    h['a.b.c', ...] = {'a': 12, 'b': {'e': "Invalid argument"}}
+    assert h['a.b.c'] == 21
+    assert h['i'] == 31.4865
+    # retrieve attributes. Attributes syntax is 'dict'-like
+    # 'attrs' is a ref to Hash node's attributes
+    attrs = h['a.b.c', ...]
+    assert attrs['a'] == 12
+    assert attrs['b']['e'] == "Invalid argument"
+    assert h['a.b.c', ...]['b']['e'] == "Invalid argument"
+    assert h['a.b.c', 'b']['e'] == "Invalid argument"
+    # update attributes
+    h['a.b.c', ...].update({'w': True, 'b': {'e': "Valid argument"}})
+    h['a.b.c', 'a'] = 13
+    assert attrs['a'] == 13
+    assert attrs['b']['e'] == "Valid argument"
+    assert attrs['w'] is True
+    h['a.b.c', 'w'] = False
+    assert attrs['w'] is False
+    # The 'attr' is a reference
+    attrs['param'] = 'changed'
+    assert h['a.b.c', ...]['param'] == 'changed'
+    # ... or ...
+    assert h['a.b.c', 'param'] == 'changed'
+    # store attribits as a string
+    sattrs = str(attrs)
+    # delete parent Hash
+    del h
+    # check that 'attrs' reference is still alive
+    try:
+        s = str(attrs)
+    except BaseException:
+        s = None
+        del attrs
+    assert s == sattrs
+
 
 def test_getsetVectorHash():
     vh = VectorHash()
