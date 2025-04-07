@@ -1279,8 +1279,8 @@ namespace karabo {
                         onSubscribeNetwork(channel, info);
                     } else if (type == "requestNetwork") {
                         onRequestNetwork(channel, info);
-                    } else if (type == "error") {
-                        onGuiError(info);
+                    } else if (type == "error" || type == "info") {
+                        onGuiInfo(info);
                     } else if (type == "requestGeneric") {
                         onRequestGeneric(channel, info);
                     } else if (type == "subscribeLogs") {
@@ -1356,15 +1356,15 @@ namespace karabo {
             }
         }
 
-        void GuiServerDevice::onGuiError(const karabo::data::Hash& hash) {
+        void GuiServerDevice::onGuiInfo(const karabo::data::Hash& hash) {
             try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "onGuiError";
+                KARABO_LOG_FRAMEWORK_DEBUG << "onGuiInfo";
                 Hash::Pointer hdr = std::make_shared<Hash>();
                 Hash::Pointer body = std::make_shared<Hash>(hash);
                 m_guiDebugProducer->write("karaboGuiDebug", hdr, body, 0, 0);
 
             } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onGuiError(): " << e.what();
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onGuiInfo(): " << e.what();
             }
         }
 
