@@ -322,12 +322,12 @@ namespace karabo {
             bool violatesClientConfiguration(const std::string& type, WeakChannelPointer channel);
 
             /**
-             * an error further specified by hash occurred on a connection to a GUI
-             * client. The GUI-server will attempt to forward the error to the debug
+             * an info further specified by hash occurred on a connection to a GUI
+             * client. The GUI-server will attempt to forward the info to the debug
              * channel of the GUI client.
              * @param hash
              */
-            void onGuiError(const karabo::data::Hash& hash);
+            void onGuiInfo(const karabo::data::Hash& hash);
 
             /**
              * connects a client on to the GUI server on channel. The channel is
@@ -478,7 +478,7 @@ namespace karabo {
              *      getConfigurationFromPast       onGetConfigurationFromPast
              *      subscribeNetwork               onSubscribeNetwork
              *      requestNetwork                 onRequestNetwork
-             *      error                          onGuiError
+             *      info                           onGuiInfo
              *      requestGeneric                 onRequestGeneric
              *      subscribeLogs                  <no action anymore>
              *      setLogPriority                 onSetLogPriority
