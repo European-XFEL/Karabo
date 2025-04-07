@@ -29,7 +29,9 @@
 
 inline std::string resourcePath(const std::string& filename) {
     std::filesystem::path testPath(KARABO_TESTPATH);
-    testPath /= "io/resources";
+    testPath /= "data";
+    testPath /= "io";
+    testPath /= "resources";
     testPath /= filename;
     return testPath.lexically_normal().string();
 }
