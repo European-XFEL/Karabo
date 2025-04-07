@@ -923,7 +923,7 @@ namespace karabo {
 
             void slotInstanceUpdated(const std::string& instanceId, const karabo::data::Hash& instanceInfo);
 
-            void slotPing(const std::string& instanceId, int rand, bool trackPingedInstance);
+            void slotPing(const std::string& instanceId, int rand);
 
             void slotPingAnswer(const std::string& instanceId, const karabo::data::Hash& hash);
 

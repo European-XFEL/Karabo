@@ -261,7 +261,7 @@ class SignalSlotable(Configurable):
         try:
             await wait_for(
                 self.call(self.deviceId, "slotPing", self.deviceId,
-                          self.__randPing, False), timeout=1)
+                          self.__randPing), timeout=1)
             raise KaraboError('deviceId "{}" already in use'.
                               format(self.deviceId))
         except TimeoutError:
@@ -270,7 +270,7 @@ class SignalSlotable(Configurable):
 
     # slotPing _is_ a slot, but not using the official decorator.
     # See the definition of 'inner' below.
-    def slotPing(self, instanceId, rand, track=None):
+    def slotPing(self, instanceId, rand):
         """return our info to show that we are here"""
         if rand:
             if instanceId == self.deviceId and self.__randPing != rand:

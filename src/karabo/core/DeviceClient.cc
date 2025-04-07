@@ -383,7 +383,7 @@ namespace karabo {
                     //   if instance is untracked).
                     if (auto sigSlot = m_signalSlotable.lock()) {
                         const bool wasTracked = sigSlot->eraseTrackedInstance(instanceId);
-                        sigSlot->call(instanceId, "slotPing", sigSlot->getInstanceId(), 0, true);
+                        sigSlot->call(instanceId, "slotPing", sigSlot->getInstanceId(), 0);
                         KARABO_LOG_FRAMEWORK_WARN << getInstanceId() << ": Received instance update from '"
                                                   << instanceId << "' although it is not in runtime description"
                                                   << (wasTracked ? " (but was tracked!)" : "")

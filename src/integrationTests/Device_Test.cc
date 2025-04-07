@@ -466,9 +466,8 @@ void Device_Test::testInstanceInfoServer() {
     const int timeOutInMs = 250;
     karabo::data::Hash h;
 
-    CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("testServerDevice", "slotPing", "testServerDevice", 1, true)
-                                  .timeout(timeOutInMs)
-                                  .receive(h));
+    CPPUNIT_ASSERT_NO_THROW(
+          sigSlotA->request("testServerDevice", "slotPing", "testServerDevice", 1).timeout(timeOutInMs).receive(h));
     CPPUNIT_ASSERT_EQUAL(h.get<std::string>("log"), std::string("FATAL"));
     CPPUNIT_ASSERT(h.get<int>("serverFlags") == 1ul);
 
@@ -476,15 +475,13 @@ void Device_Test::testInstanceInfoServer() {
 
     CPPUNIT_ASSERT_NO_THROW(
           sigSlotA->request("testServerDevice", "slotLoggerPriority", "INFO").timeout(timeOutInMs).receive());
-    CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("testServerDevice", "slotPing", "testServerDevice", 1, true)
-                                  .timeout(timeOutInMs)
-                                  .receive(h));
+    CPPUNIT_ASSERT_NO_THROW(
+          sigSlotA->request("testServerDevice", "slotPing", "testServerDevice", 1).timeout(timeOutInMs).receive(h));
     CPPUNIT_ASSERT_EQUAL(h.get<std::string>("log"), std::string("INFO"));
     CPPUNIT_ASSERT_NO_THROW(
           sigSlotA->request("testServerDevice", "slotLoggerPriority", "FATAL").timeout(timeOutInMs).receive());
-    CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("testServerDevice", "slotPing", "testServerDevice", 1, true)
-                                  .timeout(timeOutInMs)
-                                  .receive(h));
+    CPPUNIT_ASSERT_NO_THROW(
+          sigSlotA->request("testServerDevice", "slotPing", "testServerDevice", 1).timeout(timeOutInMs).receive(h));
     CPPUNIT_ASSERT_EQUAL(h.get<std::string>("log"), std::string("FATAL"));
 
     std::clog << "OK." << std::endl;
@@ -1428,7 +1425,7 @@ void Device_Test::testUpdateState() {
 
     const int timeOutInMs = 1000 * KRB_TEST_MAX_TIMEOUT;
     Hash hash;
-    m_deviceServer->request(deviceId, "slotPing", deviceId, 1, false).timeout(timeOutInMs).receive(hash);
+    m_deviceServer->request(deviceId, "slotPing", deviceId, 1).timeout(timeOutInMs).receive(hash);
     CPPUNIT_ASSERT_EQUAL(std::string("unknown"), hash.get<std::string>("status"));
 
     // Prepare Hash argument to slotToggleState with two different time stamps
@@ -1445,7 +1442,7 @@ void Device_Test::testUpdateState() {
     CPPUNIT_ASSERT_NO_THROW(
           m_deviceServer->request(deviceId, "slotToggleState", msg).timeout(timeOutInMs).receive(reply));
     CPPUNIT_ASSERT_EQUAL(std::string("NORMAL"), reply);
-    m_deviceServer->request(deviceId, "slotPing", deviceId, 1, false).timeout(timeOutInMs).receive(hash);
+    m_deviceServer->request(deviceId, "slotPing", deviceId, 1).timeout(timeOutInMs).receive(hash);
     CPPUNIT_ASSERT_EQUAL(std::string("ok"), hash.get<std::string>("status"));
 
     // ... test that the state was switched,
@@ -1461,7 +1458,7 @@ void Device_Test::testUpdateState() {
     CPPUNIT_ASSERT_NO_THROW(
           m_deviceServer->request(deviceId, "slotToggleState", msg).timeout(timeOutInMs).receive(reply));
     CPPUNIT_ASSERT_EQUAL(std::string("ERROR"), reply);
-    m_deviceServer->request(deviceId, "slotPing", deviceId, 1, false).timeout(timeOutInMs).receive(hash);
+    m_deviceServer->request(deviceId, "slotPing", deviceId, 1).timeout(timeOutInMs).receive(hash);
     CPPUNIT_ASSERT_EQUAL(std::string("error"), hash.get<std::string>("status"));
 
     // ... test that the state was switched,
@@ -1473,7 +1470,7 @@ void Device_Test::testUpdateState() {
     CPPUNIT_ASSERT_NO_THROW(
           m_deviceServer->request(deviceId, "slotToggleState", msg).timeout(timeOutInMs).receive(reply));
     CPPUNIT_ASSERT_EQUAL(std::string("NORMAL"), reply);
-    m_deviceServer->request(deviceId, "slotPing", deviceId, 1, false).timeout(timeOutInMs).receive(hash);
+    m_deviceServer->request(deviceId, "slotPing", deviceId, 1).timeout(timeOutInMs).receive(hash);
     CPPUNIT_ASSERT_EQUAL(std::string("ok"), hash.get<std::string>("status"));
 
     // ... test that the state was switched,

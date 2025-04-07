@@ -159,7 +159,7 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
             self.assertEqual(ret[0], state)
 
             ret = sigSlotInfo.request(deviceId, "slotPing",
-                                      deviceId, 1, False
+                                      deviceId, 1
                                       ).waitForReply(timeOutInMs)
             self.assertEqual(ret[0]["status"], "ok")
 
@@ -168,7 +168,7 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
                                       state).waitForReply(timeOutInMs)
             self.assertEqual(ret[0], state)
             ret = sigSlotInfo.request(deviceId, "slotPing",
-                                      deviceId, 1, False
+                                      deviceId, 1
                                       ).waitForReply(timeOutInMs)
             self.assertEqual(ret[0]["status"], "error")
 
@@ -177,7 +177,7 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
                                       state).waitForReply(timeOutInMs)
             self.assertEqual(ret[0], state)
             ret = sigSlotInfo.request(deviceId, "slotPing",
-                                      deviceId, 1, False
+                                      deviceId, 1
                                       ).waitForReply(timeOutInMs)
             self.assertEqual(ret[0]["status"], "unknown")
 
@@ -186,7 +186,7 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
                                       state).waitForReply(timeOutInMs)
             self.assertEqual(ret[0], state)
             ret = sigSlotInfo.request(deviceId, "slotPing",
-                                      deviceId, 1, False
+                                      deviceId, 1
                                       ).waitForReply(timeOutInMs)
             self.assertEqual(ret[0]["status"], "ok")
 
