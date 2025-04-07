@@ -42,6 +42,9 @@ set(KARABO_ROOT_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../..")
 # unit tests.
 set(TEST_TARGETS
     coreTestRunner
+    dataSchemaTestRunner
+    dataTimeTestRunner
+    dataTypesTestRunner
     ioTestRunner
     logTestRunner
     netTestRunner
@@ -85,6 +88,40 @@ set(coreTestRunner_FILES
     $<TARGET_OBJECTS:TEST_RUNNER>
 )
 
+set(dataSchemaTestRunner_FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/data/schema/ConfigurationTestClasses.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/data/schema/Configurator_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/data/schema/Factory_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/data/schema/Schema_Test.cc  # includes some tests of type::Schema
+    ${CMAKE_CURRENT_SOURCE_DIR}/data/schema/Validator_Test.cc
+    $<TARGET_OBJECTS:TEST_RUNNER_NOLOOP>
+)
+
+set(dataTimeTestRunner_FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/data/time/DateTimeString_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/data/time/Epochstamp_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/data/time/TimeClasses_Test.cc
+    $<TARGET_OBJECTS:TEST_RUNNER_NOLOOP>
+)
+
+set(dataTypesTestRunner_FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/data/types/AlarmCondition_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/data/types/Base64_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/data/types/ByteSwap_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/data/types/ClassInfo_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/data/types/Dims_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/data/types/Exception_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/data/types/HashFilter_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/data/types/Hash_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/data/types/NDArray_Test.cc
+    # Schema is largely tested in ${CMAKE_CURRENT_SOURCE_DIR}/data/schema/Schema_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/data/types/Serializable_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/data/types/States_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/data/types/StringTools_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/data/types/Types_Test.cc
+    $<TARGET_OBJECTS:TEST_RUNNER_NOLOOP>
+)
+
 set(ioTestRunner_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/io/BufferSet_Test.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/io/FileInputOutput_Test.cc
@@ -117,29 +154,8 @@ set(netTestRunner_FILES
 )
 
 set(utilTestRunner_FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/util/AlarmCondition_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/util/Base64_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/util/ByteSwap_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/util/ClassInfo_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/util/ConfigurationTestClasses.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/util/Configurator_Test.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/util/DataLogUtils_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/util/DateTimeString_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/util/Dims_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/util/Epochstamp_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/util/Exception_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/util/Factory_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/util/HashFilter_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/util/Hash_Test.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/util/MetaTools_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/util/NDArray_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/util/Schema_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/util/Serializable_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/util/States_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/util/StringTools_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/util/TimeClasses_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/util/Types_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/util/Validator_Test.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/util/Version_Test.cc
     $<TARGET_OBJECTS:TEST_RUNNER_NOLOOP>
 )
