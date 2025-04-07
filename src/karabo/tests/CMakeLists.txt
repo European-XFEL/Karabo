@@ -45,7 +45,7 @@ set(TEST_TARGETS
     dataSchemaTestRunner
     dataTimeTestRunner
     dataTypesTestRunner
-    ioTestRunner
+    dataIoTestRunner
     logTestRunner
     netTestRunner
     utilTestRunner
@@ -122,12 +122,12 @@ set(dataTypesTestRunner_FILES
     $<TARGET_OBJECTS:TEST_RUNNER_NOLOOP>
 )
 
-set(ioTestRunner_FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/io/BufferSet_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/io/FileInputOutput_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/io/HashBinarySerializer_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/io/HashXmlSerializer_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/io/SchemaSerializer_Test.cc
+set(dataIoTestRunner_FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/data/io/BufferSet_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/data/io/FileInputOutput_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/data/io/HashBinarySerializer_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/data/io/HashXmlSerializer_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/data/io/SchemaSerializer_Test.cc
     $<TARGET_OBJECTS:TEST_RUNNER_NOLOOP>
 )
 
@@ -191,11 +191,11 @@ endforeach()
 # Some io unit tests depend on example data files to succeed
 # Here we copy them to the build directory.
 add_custom_command(
-    TARGET ioTestRunner
+    TARGET dataIoTestRunner
     POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
-    "${CMAKE_CURRENT_SOURCE_DIR}/io/resources"
-    "${CMAKE_CURRENT_BINARY_DIR}/io/resources"
+    "${CMAKE_CURRENT_SOURCE_DIR}/data/io/resources"
+    "${CMAKE_CURRENT_BINARY_DIR}/data/io/resources"
 )
 
 #

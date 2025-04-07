@@ -37,7 +37,6 @@
 #include "karabo/util/TimeProfiler.hh"
 
 using namespace karabo::data;
-using namespace karabo::data;
 using std::vector;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(SchemaSerializer_Test);
