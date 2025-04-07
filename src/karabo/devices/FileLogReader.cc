@@ -52,7 +52,6 @@ namespace karabo {
         using namespace std;
         using namespace karabo::data;
         using namespace karabo::util;
-        using namespace karabo::io;
         using json = nlohmann::json;
 
 

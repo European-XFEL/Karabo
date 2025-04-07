@@ -155,7 +155,7 @@ namespace karabo {
             karabo::net::InfluxDbClient::Pointer m_dbClientRead;
             karabo::net::InfluxDbClient::Pointer m_dbClientWrite;
 
-            karabo::io::BinarySerializer<karabo::data::Hash>::Pointer m_serializer;
+            karabo::data::BinarySerializer<karabo::data::Hash>::Pointer m_serializer;
 
             int m_maxTimeAdvance;
             size_t m_maxVectorSize;

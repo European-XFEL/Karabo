@@ -44,7 +44,6 @@ namespace karabo {
     namespace devices {
 
         using namespace karabo::core;
-        using namespace karabo::io;
         using namespace karabo::data;
         using namespace karabo::util;
         using namespace karabo::net;

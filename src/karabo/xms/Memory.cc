@@ -25,7 +25,7 @@
 
 #include "Memory.hh"
 
-#include "karabo/io/HashBinarySerializer.hh"
+#include "karabo/data/io/HashBinarySerializer.hh"
 
 namespace karabo {
     namespace xms {
@@ -185,7 +185,7 @@ namespace karabo {
         }
 
 
-        void Memory::readIntoBuffers(std::vector<karabo::io::BufferSet::Pointer>& buffers, karabo::data::Hash& header,
+        void Memory::readIntoBuffers(std::vector<karabo::data::BufferSet::Pointer>& buffers, karabo::data::Hash& header,
                                      const size_t channelIdx, const size_t chunkIdx) {
             const Data& data = m_cache[channelIdx][chunkIdx];
             for (const auto& bp : data) {
@@ -218,7 +218,7 @@ namespace karabo {
         }
 
 
-        void Memory::writeFromBuffers(const std::vector<karabo::io::BufferSet::Pointer>& buffers,
+        void Memory::writeFromBuffers(const std::vector<karabo::data::BufferSet::Pointer>& buffers,
                                       const karabo::data::Hash& header, const size_t channelIdx, const size_t chunkIdx,
                                       bool copyAllData) {
             Data& chunkData = m_cache[channelIdx][chunkIdx];

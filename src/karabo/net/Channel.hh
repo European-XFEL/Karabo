@@ -26,11 +26,11 @@
 #define KARABO_NET_CHANNEL_HH
 
 #include <functional>
-#include <karabo/io/BufferSet.hh>
 #include <memory>
 #include <vector>
 
 #include "Connection.hh"
+#include "karabo/data/io/BufferSet.hh"
 #include "karabo/data/schema/Factory.hh"
 
 /**
@@ -60,7 +60,7 @@ namespace karabo {
             typedef std::function<void(const boost::system::error_code&, karabo::data::Hash&)> ReadHashRawHandler;
 
             typedef std::function<void(const boost::system::error_code&,
-                                       const std::vector<karabo::io::BufferSet::Pointer>&)>
+                                       const std::vector<karabo::data::BufferSet::Pointer>&)>
                   ReadVectorBufferSetPointerHandler;
             typedef std::function<void(const boost::system::error_code&, std::vector<char>&)> ReadVectorHandler;
             typedef std::function<void(const boost::system::error_code&, std::string&)> ReadStringHandler;
@@ -83,10 +83,10 @@ namespace karabo {
                                        std::shared_ptr<std::vector<char> >&)>
                   ReadHashVectorPointerHandler;
             typedef std::function<void(const boost::system::error_code&, const karabo::data::Hash&,
-                                       const karabo::io::BufferSet&)>
+                                       const karabo::data::BufferSet&)>
                   ReadHashBufferSetHandler;
             typedef std::function<void(const boost::system::error_code&, const karabo::data::Hash&,
-                                       const std::vector<karabo::io::BufferSet::Pointer>&)>
+                                       const std::vector<karabo::data::BufferSet::Pointer>&)>
                   ReadHashVectorBufferSetPointerHandler;
 
             typedef std::function<void(const boost::system::error_code&)> WriteCompleteHandler;
@@ -365,7 +365,7 @@ namespace karabo {
              * Asynchronously reads data into a hash header and into a vector of BufferSet pointers.
              * All memory management is done by the API.
              * @param handler Call-function of signature:
-             * void (const ErrorCode&, const karabo::data::Hash&, const std::vector<karabo::io::BufferSet::Pointer>&)
+             * void (const ErrorCode&, const karabo::data::Hash&, const std::vector<karabo::data::BufferSet::Pointer>&)
              */
             virtual void readAsyncHashVectorBufferSetPointer(const ReadHashVectorBufferSetPointerHandler& handler) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for " + getClassInfo().getClassName());
@@ -439,7 +439,7 @@ namespace karabo {
              * @param body vector of BufferSet pointers
              */
             virtual void write(const karabo::data::Hash& header,
-                               const std::vector<karabo::io::BufferSet::Pointer>& body) {
+                               const std::vector<karabo::data::BufferSet::Pointer>& body) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for " + getClassInfo().getClassName());
             }
 
@@ -595,7 +595,7 @@ namespace karabo {
              *        std::function which takes const boost::system::error_code& as its only argument.
              */
             virtual void writeAsyncHashVectorBufferSetPointer(const karabo::data::Hash& header,
-                                                              const std::vector<karabo::io::BufferSet::Pointer>& body,
+                                                              const std::vector<karabo::data::BufferSet::Pointer>& body,
                                                               const WriteCompleteHandler& handler) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }

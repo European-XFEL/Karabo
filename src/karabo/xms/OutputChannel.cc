@@ -40,7 +40,7 @@ using namespace std::chrono;
 namespace bs = boost::system;
 using namespace karabo::data;
 using namespace karabo::util;
-using namespace karabo::io;
+using namespace karabo::data;
 using namespace karabo::net;
 using namespace std::string_literals; // For '"abc"s'
 using std::placeholders::_1;
@@ -1429,7 +1429,7 @@ namespace karabo {
                 if (isEos) {
                     header.set("endOfStream", true);
                 }
-                std::vector<karabo::io::BufferSet::Pointer> data;
+                std::vector<karabo::data::BufferSet::Pointer> data;
                 if (!isEos && !local) {
                     Memory::readIntoBuffers(data, header, m_channelId, chunkId); // Note: clears 'header'
                 }

@@ -53,7 +53,7 @@ namespace karabo::net {
         : m_rawClient(std::make_shared<AmqpClient>(std::move(connection), std::move(instanceId), std::move(queueArgs),
                                                    AmqpClient::ReadHandler())), // Cannot use bind_weak in constructor,
                                                                                 // so handler setting must be postponed
-          m_serializer(io::BinarySerializer<data::Hash>::create("Bin")),
+          m_serializer(data::BinarySerializer<data::Hash>::create("Bin")),
           m_deserializeStrand(std::make_shared<Strand>(EventLoop::getIOService())),
           m_readHandler(std::move(readHandler)),
           m_errorReadHandler(std::move(errorReadHandler)) {}

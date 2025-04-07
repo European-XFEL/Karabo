@@ -33,7 +33,6 @@ namespace karabo {
         using namespace std;
         using namespace karabo::data;
         using namespace karabo::util;
-        using namespace karabo::io;
         using namespace karabo::xms;
         using json = nlohmann::json;
         using namespace std::chrono_literals;

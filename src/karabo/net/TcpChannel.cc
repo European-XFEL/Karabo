@@ -33,8 +33,8 @@
 
 #include "Channel.hh"
 #include "EventLoop.hh"
+#include "karabo/data/io/HashBinarySerializer.hh"
 #include "karabo/data/types/Hash.hh"
-#include "karabo/io/HashBinarySerializer.hh"
 
 using std::placeholders::_1;
 using std::placeholders::_2;
@@ -84,9 +84,9 @@ namespace karabo {
             m_queue[0] = Queue::Pointer(new RejectNewestQueue(kDefaultQueueCapacity));
 
             if (connection->m_serializationType == "binary") {
-                m_binarySerializer = karabo::io::BinarySerializer<Hash>::create("Bin");
+                m_binarySerializer = karabo::data::BinarySerializer<Hash>::create("Bin");
             } else {
-                m_textSerializer = karabo::io::TextSerializer<Hash>::create("Xml", Hash("indentation", -1));
+                m_textSerializer = karabo::data::TextSerializer<Hash>::create("Xml", Hash("indentation", -1));
             }
         }
 
@@ -425,25 +425,26 @@ namespace karabo {
 
 
         void TcpChannel::onVectorBufferSetPointerAvailable(const ErrorCode& e, size_t length,
-                                                           const std::vector<karabo::io::BufferSet::Pointer>& buffers,
+                                                           const std::vector<karabo::data::BufferSet::Pointer>& buffers,
                                                            const ReadVectorBufferSetPointerHandler& handler) {
             m_readBytes += length;
 
             if (!e) {
                 handler(e, buffers);
             } else {
-                handler(e, std::vector<karabo::io::BufferSet::Pointer>());
+                handler(e, std::vector<karabo::data::BufferSet::Pointer>());
             }
         }
 
 
-        void TcpChannel::readAsyncVectorBufferSetPointerImpl(const std::vector<karabo::io::BufferSet::Pointer>& buffers,
-                                                             const ReadVectorBufferSetPointerHandler& handler) {
+        void TcpChannel::readAsyncVectorBufferSetPointerImpl(
+              const std::vector<karabo::data::BufferSet::Pointer>& buffers,
+              const ReadVectorBufferSetPointerHandler& handler) {
             m_inboundMessagePrefix.clear();
             m_inboundMessagePrefix.resize(m_sizeofLength);
             std::vector<boost::asio::mutable_buffer> boostBuffers;
             boostBuffers.push_back(buffer(m_inboundMessagePrefix));
-            karabo::io::BufferSet::appendTo(boostBuffers, buffers);
+            karabo::data::BufferSet::appendTo(boostBuffers, buffers);
 
             size_t totalSize = m_inboundMessagePrefix.size();
             for (const auto& p : buffers) totalSize += p->totalSize();
@@ -465,8 +466,8 @@ namespace karabo {
         }
 
 
-        void TcpChannel::onHashVectorBufferSetPointerRead(const boost::system::error_code& e,
-                                                          const std::vector<karabo::io::BufferSet::Pointer>& buffers) {
+        void TcpChannel::onHashVectorBufferSetPointerRead(
+              const boost::system::error_code& e, const std::vector<karabo::data::BufferSet::Pointer>& buffers) {
             Hash::Pointer header = m_inHashHeader;
             m_inHashHeader.reset();
             // Reset handler variables - as in TcpChannel::bytesAvailableHandler
@@ -484,8 +485,8 @@ namespace karabo {
             Hash::Pointer header = m_inHashHeader;
             m_inHashHeader.reset();
             m_activeHandler = TcpChannel::NONE;
-            std::vector<karabo::io::BufferSet::Pointer> buffers;
-            buffers.push_back(karabo::io::BufferSet::Pointer(new karabo::io::BufferSet(false)));
+            std::vector<karabo::data::BufferSet::Pointer> buffers;
+            buffers.push_back(karabo::data::BufferSet::Pointer(new karabo::data::BufferSet(false)));
             if (!e) buffers[0]->emplaceBack(data);
             handler(e, *header, buffers);
         }
@@ -608,7 +609,7 @@ namespace karabo {
                         this->prepareHashFromHeader(*m_inHashHeader);
                         if (m_inHashHeader->has("_bufferSetLayout_")) {
                             // This protocol for karabo 2.2.4 and later : c++ and bound python
-                            std::vector<karabo::io::BufferSet::Pointer> buffers;
+                            std::vector<karabo::data::BufferSet::Pointer> buffers;
 
                             for (const karabo::data::Hash& layout :
                                  m_inHashHeader->get<std::vector<karabo::data::Hash>>("_bufferSetLayout_")) {
@@ -620,7 +621,7 @@ namespace karabo {
                                 if (sizes.size() != types.size()) {
                                     throw KARABO_LOGIC_EXCEPTION("Pipeline Protocol violation!");
                                 }
-                                karabo::io::BufferSet::Pointer buffer(new karabo::io::BufferSet(false));
+                                karabo::data::BufferSet::Pointer buffer(new karabo::data::BufferSet(false));
                                 for (size_t ii = 0; ii < sizes.size(); ii++) buffer->add(sizes[ii], types[ii]);
                                 buffers.push_back(buffer);
                             }
@@ -630,11 +631,11 @@ namespace karabo {
                         } else if (m_inHashHeader->has("byteSizes")) {
                             // This is protocol for middle-layer devices and, in general, for karabo pre-2.2.4
                             const auto& sizes = m_inHashHeader->get<std::vector<unsigned int>>("byteSizes");
-                            std::vector<karabo::io::BufferSet::Pointer> buffers;
+                            std::vector<karabo::data::BufferSet::Pointer> buffers;
 
                             for (size_t ii = 0; ii < sizes.size(); ii++) {
-                                karabo::io::BufferSet::Pointer buffer(new karabo::io::BufferSet(false));
-                                buffer->add(sizes[ii], karabo::io::BufferSet::COPY);
+                                karabo::data::BufferSet::Pointer buffer(new karabo::data::BufferSet(false));
+                                buffer->add(sizes[ii], karabo::data::BufferSet::COPY);
                                 buffers.push_back(buffer);
                             }
                             this->readAsyncVectorBufferSetPointerImpl(
@@ -768,7 +769,7 @@ namespace karabo {
                 case HASH_VECTOR_BUFFERSET_POINTER: {
                     // we will be here only if error code is not "success": "Operation canceled", "End of file"
                     std::any_cast<ReadHashVectorBufferSetPointerHandler>(readHandler)(
-                          e, Hash(), std::vector<karabo::io::BufferSet::Pointer>());
+                          e, Hash(), std::vector<karabo::data::BufferSet::Pointer>());
                     break;
                 }
 
@@ -811,7 +812,7 @@ namespace karabo {
         ///
         /// @return extended header
         static karabo::data::Hash extendHeaderForBufferSets(const karabo::data::Hash& hdr,
-                                                            const std::vector<karabo::io::BufferSet::Pointer>& body) {
+                                                            const std::vector<karabo::data::BufferSet::Pointer>& body) {
             // "byteSizes" and "nData" are kept for pre-karabo 2.2.4 backward compatibility and for middle layer
             if (hdr.has("nData") || hdr.has("byteSizes") || hdr.has("_bufferSetLayout_")) {
                 KARABO_LOG_FRAMEWORK_WARN_C("TcpChannel")
@@ -821,7 +822,7 @@ namespace karabo {
             Hash header(hdr);
 
             std::vector<Hash>& buffersVector = header.bindReference<std::vector<Hash>>("_bufferSetLayout_");
-            for (std::vector<karabo::io::BufferSet::Pointer>::const_iterator it = body.begin(); it != body.end();
+            for (std::vector<karabo::data::BufferSet::Pointer>::const_iterator it = body.begin(); it != body.end();
                  ++it) {
                 buffersVector.push_back(Hash("sizes", (*it)->sizes(), "types", (*it)->types()));
             }
@@ -929,7 +930,8 @@ namespace karabo {
         }
 
 
-        void TcpChannel::write(const karabo::data::Hash& hdr, const std::vector<karabo::io::BufferSet::Pointer>& body) {
+        void TcpChannel::write(const karabo::data::Hash& hdr,
+                               const std::vector<karabo::data::BufferSet::Pointer>& body) {
             const Hash header(extendHeaderForBufferSets(hdr, body));
 
             try {
@@ -955,7 +957,7 @@ namespace karabo {
                 buf.push_back(buffer(m_outboundHeaderPrefix));
                 buf.push_back(buffer(headerBuf));
                 buf.push_back(buffer(m_outboundMessagePrefix));
-                karabo::io::BufferSet::appendTo(buf, body);
+                karabo::data::BufferSet::appendTo(buf, body);
                 std::lock_guard<std::mutex> lock(m_socketMutex);
                 m_writtenBytes += boost::asio::write(m_socket, buf, transfer_all(), error);
                 if (error) {
@@ -1260,7 +1262,7 @@ namespace karabo {
 
 
         void TcpChannel::writeAsyncHashVectorBufferSetPointer(const karabo::data::Hash& hdr,
-                                                              const std::vector<karabo::io::BufferSet::Pointer>& body,
+                                                              const std::vector<karabo::data::BufferSet::Pointer>& body,
                                                               const WriteCompleteHandler& handler) {
             if (m_sizeofLength == 0) {
                 throw KARABO_PARAMETER_EXCEPTION(
@@ -1286,7 +1288,7 @@ namespace karabo {
                 buf.push_back(buffer(m_outboundHeaderPrefix));
                 buf.push_back(buffer(headerBuf->data(), headerSize));
                 buf.push_back(buffer(m_outboundMessagePrefix));
-                karabo::io::BufferSet::appendTo(buf, body);
+                karabo::data::BufferSet::appendTo(buf, body);
 
                 const unsigned int handlerIndex = storeCompleteHandler(handler);
                 boost::asio::async_write(
@@ -1493,7 +1495,7 @@ namespace karabo {
                         buf.push_back(buffer(*hdr));
                     }
 
-                    const karabo::io::BufferSet::Pointer& data = mp->body();
+                    const karabo::data::BufferSet::Pointer& data = mp->body();
                     m_bodySize = data->totalSize();
                     buf.push_back(buffer(&m_bodySize, sizeof(unsigned int)));
                     data->appendTo(buf);
@@ -1531,40 +1533,41 @@ namespace karabo {
         }
 
 
-        karabo::io::BufferSet::Pointer TcpChannel::bufferSetFromPointerToChar(const char* data, size_t size) {
+        karabo::data::BufferSet::Pointer TcpChannel::bufferSetFromPointerToChar(const char* data, size_t size) {
             std::shared_ptr<char> spCharBuff(new char[size], std::default_delete<char[]>());
             std::memcpy(spCharBuff.get(), data, size);
             karabo::data::ByteArray bArray = std::make_pair(spCharBuff, size);
             // BufferSet's copyAllData ctor parameter set to false to prevent yet another copy (besides the one
             // above).
-            karabo::io::BufferSet::Pointer pBuffSet = std::make_shared<karabo::io::BufferSet>(false);
+            karabo::data::BufferSet::Pointer pBuffSet = std::make_shared<karabo::data::BufferSet>(false);
             pBuffSet->emplaceBack(bArray, false);
             return pBuffSet;
         }
 
 
-        karabo::io::BufferSet::Pointer TcpChannel::bufferSetFromString(const std::string& str) {
+        karabo::data::BufferSet::Pointer TcpChannel::bufferSetFromString(const std::string& str) {
             std::shared_ptr<char> spCharBuff(new char[str.size()], std::default_delete<char[]>());
             std::copy(str.begin(), str.end(), spCharBuff.get());
             karabo::data::ByteArray bArray = std::make_pair(spCharBuff, static_cast<size_t>(str.size()));
             // BufferSet's copyAllData ctor parameter set to false to prevent yet another copy (besides the one
             // above).
-            karabo::io::BufferSet::Pointer pBuffSet = std::make_shared<karabo::io::BufferSet>(false);
+            karabo::data::BufferSet::Pointer pBuffSet = std::make_shared<karabo::data::BufferSet>(false);
             pBuffSet->emplaceBack(bArray, false);
             return pBuffSet;
         }
 
 
-        karabo::io::BufferSet::Pointer TcpChannel::bufferSetFromVectorCharPointer(const VectorCharPointer& dataVect) {
+        karabo::data::BufferSet::Pointer TcpChannel::bufferSetFromVectorCharPointer(const VectorCharPointer& dataVect) {
             // BufferSet's copyAllData ctor parameter set to false to prevent copy.
-            karabo::io::BufferSet::Pointer datapBs = std::make_shared<karabo::io::BufferSet>(false);
+            karabo::data::BufferSet::Pointer datapBs = std::make_shared<karabo::data::BufferSet>(false);
             datapBs->emplaceBack(dataVect);
             return datapBs;
         }
 
 
-        karabo::io::BufferSet::Pointer TcpChannel::bufferSetFromHash(const karabo::data::Hash& data, bool copyAllData) {
-            karabo::io::BufferSet::Pointer pBS = std::make_shared<karabo::io::BufferSet>(copyAllData);
+        karabo::data::BufferSet::Pointer TcpChannel::bufferSetFromHash(const karabo::data::Hash& data,
+                                                                       bool copyAllData) {
+            karabo::data::BufferSet::Pointer pBS = std::make_shared<karabo::data::BufferSet>(copyAllData);
 
             if (m_binarySerializer) {
                 m_binarySerializer->save(data, *pBS);
@@ -1593,7 +1596,7 @@ namespace karabo {
 
 
         void TcpChannel::writeAsync(const VectorCharPointer& datap, int prio) {
-            karabo::io::BufferSet::Pointer datapBs = bufferSetFromVectorCharPointer(datap);
+            karabo::data::BufferSet::Pointer datapBs = bufferSetFromVectorCharPointer(datap);
             Message::Pointer mp = std::make_shared<Message>(datapBs);
             dispatchWriteAsync(mp, prio);
         }
@@ -1633,7 +1636,7 @@ namespace karabo {
 
 
         void TcpChannel::writeAsync(const karabo::data::Hash& header, const VectorCharPointer& datap, int prio) {
-            karabo::io::BufferSet::Pointer datapBs = bufferSetFromVectorCharPointer(datap);
+            karabo::data::BufferSet::Pointer datapBs = bufferSetFromVectorCharPointer(datap);
             VectorCharPointer headerp(new std::vector<char>());
             prepareVectorFromHash(header, *headerp);
             Message::Pointer mp = std::make_shared<Message>(datapBs, headerp);

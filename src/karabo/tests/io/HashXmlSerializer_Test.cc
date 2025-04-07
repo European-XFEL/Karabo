@@ -26,16 +26,15 @@
 
 #include <ctime>
 #include <iostream>
-#include <karabo/io/HashXmlSerializer.hh>
 #include <vector>
 
+#include "karabo/data/io/BinarySerializer.hh"
+#include "karabo/data/io/HashXmlSerializer.hh"
 #include "karabo/data/schema/GenericElement.hh"
 #include "karabo/data/schema/SimpleElement.hh"
-#include "karabo/io/BinarySerializer.hh"
 
 CPPUNIT_TEST_SUITE_REGISTRATION(HashXmlSerializer_Test);
 
-using namespace karabo::io;
 using namespace karabo::data;
 using std::string;
 using std::vector;
