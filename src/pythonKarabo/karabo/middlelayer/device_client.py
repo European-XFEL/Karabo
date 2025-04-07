@@ -314,7 +314,7 @@ async def _getLogReaderId(deviceId):
         if loggerId not in instance.loggerMap:
             raise KaraboError('no logger for device "{}"'.
                               format(deviceId))
-    return f"DataLogReader0-{instance.loggerMap[loggerId]}"
+    return f"DataLogReader-{instance.loggerMap[loggerId]}"
 
 
 @synchronize
