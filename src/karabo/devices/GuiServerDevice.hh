@@ -53,7 +53,7 @@ namespace karabo {
          *
          * The GuiServerDevice acts as a mediator between the distributed system and GUI clients,
          * which connect to it through (tcp) channels. The device centrally manages updates from
-         * the distributed system and pushes them to the clients. Conversly, it handles requests
+         * the distributed system and pushes them to the clients. Conversely, it handles requests
          * by clients and passes them on to devices in the distributed system.
          */
         class GuiServerDevice : public karabo::core::Device {
@@ -421,10 +421,21 @@ namespace karabo {
              * @param userId the ID of the user on whose behalf the login is being made.
              * @param cliVersion the version of the GUI client logging in.
              * @param oneTimeToken the one-time token sent by the GUI client logging in.
+             * @param isLoginOverLogin is the token being authorized in the context of a login over an existing user
+             *        session (true) or of a login that is starting a completely new user session?
              * @param authResult the result of the one-time token authorization operation to be handled.
+             *
+             * @note a login over an existing user session has the potentially "desired side-effect" of just
+             *       "refreshing" an existing user session, by updating its start time. This is useful when
+             *       the maximum retention time for a token session is about to expire - the user can be instructed
+             *       to refresh his/her login to keep going on the same GUI Client session. This is the primary
+             *       reason for the GUI Server not caring if the login over login corresponds to a user change or
+             *       not.
+             *
              */
             void onTokenAuthorizeResult(const WeakChannelPointer& channel, const std::string& userId,
                                         const karabo::util::Version& cliVersion, const std::string& oneTimeToken,
+                                        const bool isLoginOverLogin,
                                         const karabo::net::OneTimeTokenAuthorizeResult& authResult);
 
             /**
@@ -552,7 +563,7 @@ namespace karabo {
              *  In the default case, the return Hash is composed as follows::
              *
              *  - success: boolean to indicate if the generic request was successful
-             *  - reason: information on the error if not succesful otherwise empty
+             *  - reason: information on the error if not successful otherwise empty
              *  - type: if specified in the input Hash, the `replyType` is used otherwise `requestGeneric`
              *  - request: the full input Hash information, including `args`
              *  - reply: The reply Hash of the instanceId
@@ -591,7 +602,7 @@ namespace karabo {
              * @param channel the TCP channel connecting to the client that requested the begining of the temporary
              * session.
              * @param info a Hash which is supposed to contain an "temporarySessionToken" whose value is a one-time
-             * token that must be successfuly authorized for the temporary session to be started.
+             * token that must be successfully authorized for the temporary session to be started.
              */
             void onBeginTemporarySession(WeakChannelPointer channel, const karabo::data::Hash& info);
 
@@ -821,7 +832,7 @@ namespace karabo {
              * registers the client connected on ``channel`` to a pipe-lined processing
              * channel identified by ``channelName`` in ``info`` in case ``subscribe``
              * is true. In case the pipe-lined processing channel is already connected
-             * to the gui-server no futher action is taken. Otherwise, a new connection
+             * to the gui-server no further action is taken. Otherwise, a new connection
              * is opened, set to copy and  dropping behaviour in case the gui-server is busy, and
              * with a maximum update frequency as defined by the ``delayOnInput`` property
              * of the gui server. Network data from the pipe-lined processing connection

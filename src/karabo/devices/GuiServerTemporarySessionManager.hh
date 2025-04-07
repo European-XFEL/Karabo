@@ -41,7 +41,7 @@
 
 namespace karabo::devices {
 
-    // The most priviliged access level to be associated with a session right after the login.
+    // The most privileged access level to be associated with a session right after the login.
     inline constexpr karabo::data::Schema::AccessLevel MAX_LOGIN_ACCESS_LEVEL =
           karabo::data::Schema::AccessLevel::ADMIN;
 
@@ -111,7 +111,7 @@ namespace karabo::devices {
                                          EminentExpirationHandler onEminentExpiration, ExpirationHandler onExpiration);
 
         /**
-         * @brief Assynchronously starts a new temporary session for a given one-time temporary session token.
+         * @brief Asynchronously starts a new temporary session for a given one-time temporary session token.
          *
          * @param temporarySessionToken the one-time temporary session token to be authorized and bound to the started
          * temporary session.
@@ -136,7 +136,7 @@ namespace karabo::devices {
          * session request will "fail" with a "token not found" message. It is up to the GUI client to decide what to
          * do in such cases - maybe keep track of an "over the wire" end temporary session request token and ignore any
          * error related to it if an expiration notification is received for that token between the request dispatch and
-         * the arrival of its reponse.
+         * the arrival of its response.
          **/
         EndTemporarySessionResult endTemporarySession(const std::string& temporarySessionToken);
 
@@ -164,7 +164,7 @@ namespace karabo::devices {
                                     const karabo::net::OneTimeTokenAuthorizeResult& authResult);
 
         /**
-         * @brief Schedules the next expiration check if there's any esalation to be checked.
+         * @brief Schedules the next expiration check if there's any escalation to be checked.
          *
          * @note this method must be called with the m_tempSessionsMutex locked.
          */

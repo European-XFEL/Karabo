@@ -146,7 +146,7 @@ void GuiServer_Test::appTestRunner() {
         m_tcpAdapter->disconnect();
     }
 
-    // Shutsdown the GUI Server device and brings it up again as an instance that requires user authentication.
+    // Shuts down the GUI Server device and brings it up again as an instance that requires user authentication.
     success = m_deviceClient->killDevice(TEST_GUI_SERVER_ID, KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
@@ -184,12 +184,15 @@ void GuiServer_Test::appTestRunner() {
     testInvalidTokenOnLogin();
     testValidTokenOnLogin();
 
+    testValidTokenOnInSessionLogin();
+    testInvalidTokenOnInSessionLogin();
+
     testMissingTokenOnBeginTemporarySession();
     testInvalidTokenOnBeginTemporarySession();
     testBeginEndTemporarySession();
     testTemporarySessionExpiration();
 
-    // Shutsdown the GUI Server device and brings it up again as an instance that only accepts
+    // Shuts down the GUI Server device and brings it up again as an instance that only accepts
     // connections from ApplicationMode clients like cinema and theater.
     success = m_deviceClient->killDevice(TEST_GUI_SERVER_ID, KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
@@ -961,8 +964,8 @@ void GuiServer_Test::testDeviceConfigUpdates() {
     const unsigned int propertyUpdateInterval =
           1500u; // A propertyUpdateInterval that is large enough so that the distance
     // between a reference timestamp gathered right after an update interval
-    // "pulse" and the real "pulse" timestamp is at least one order of magnitu-
-    // de smaller than the interval duration - (with 1500 we are allowing that
+    // "pulse" and the real "pulse" timestamp is at least one order of magnitude
+    // smaller than the interval duration - (with 1500 we are allowing that
     // distance to be up to 150 ms, which is quite reasonable even in situations
     // where the running system is under a heavy load).
     m_deviceClient->set<int>(TEST_GUI_SERVER_ID, "propertyUpdateInterval", propertyUpdateInterval);
@@ -1488,7 +1491,7 @@ void GuiServer_Test::testInvalidTokenOnLogin() {
 }
 
 void GuiServer_Test::testValidTokenOnLogin() {
-    std::clog << "testInvalidTokenOnLogin: " << std::flush;
+    std::clog << "testValidTokenOnLogin: " << std::flush;
 
     Hash loginInfo("type", "login", "username", TestKaraboAuthServer::VALID_USER_ID, "oneTimeToken",
                    TestKaraboAuthServer::VALID_TOKEN, "version", "2.20.0");
@@ -1515,6 +1518,79 @@ void GuiServer_Test::testValidTokenOnLogin() {
     std::clog << "OK" << std::endl;
 }
 
+void GuiServer_Test::testValidTokenOnInSessionLogin() {
+    std::clog << "testValidTokenOnInSessionLogin: " << std::flush;
+
+    Hash loginInfo("type", "login", "username", TestKaraboAuthServer::VALID_USER_ID, "oneTimeToken",
+                   TestKaraboAuthServer::VALID_TOKEN, "version", "2.20.0");
+
+    resetTcpConnection();
+
+    Hash lastMessage;
+    karabo::TcpAdapter::QueuePtr messageQ =
+          m_tcpAdapter->getNextMessages("loginInformation", 1, [&] { m_tcpAdapter->sendMessage(loginInfo); });
+    messageQ->pop(lastMessage);
+    int accessLevel = lastMessage.get<int>("accessLevel");
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("AccessLevel differs from expected", TestKaraboAuthServer::VALID_ACCESS_LEVEL,
+                                 accessLevel);
+    string userId = lastMessage.get<std::string>("username");
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("User differs from expected", TestKaraboAuthServer::VALID_USER_ID, userId);
+
+    // Sends another login with the same valid credentials - the GUI Server will reauthorize the same user
+    // successfully - the "side-effect" is that the startTime of the session will be "refreshed" in this case
+    // as the user is the same.
+    messageQ = m_tcpAdapter->getNextMessages("loginInformation", 1, [&] { m_tcpAdapter->sendMessage(loginInfo); });
+    messageQ->pop(lastMessage);
+    accessLevel = lastMessage.get<int>("accessLevel");
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("AccessLevel differs from expected", TestKaraboAuthServer::VALID_ACCESS_LEVEL,
+                                 accessLevel);
+    userId = lastMessage.get<std::string>("username");
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("User differs from expected", TestKaraboAuthServer::VALID_USER_ID, userId);
+
+    std::clog << "OK" << std::endl;
+};
+
+void GuiServer_Test::testInvalidTokenOnInSessionLogin() {
+    std::clog << "testInvalidTokenOnInSessionLogin: " << std::flush;
+
+    Hash loginInfo("type", "login", "username", TestKaraboAuthServer::VALID_USER_ID, "oneTimeToken",
+                   TestKaraboAuthServer::VALID_TOKEN, "version", "2.20.0");
+
+    Hash invalidLoginInfo("type", "login", "username", TestKaraboAuthServer::VALID_USER_ID, "oneTimeToken", "abcd",
+                          "version", "2.20.0");
+
+    resetTcpConnection();
+
+    Hash lastMessage;
+    karabo::TcpAdapter::QueuePtr messageQ =
+          m_tcpAdapter->getNextMessages("loginInformation", 1, [&] { m_tcpAdapter->sendMessage(loginInfo); });
+    messageQ->pop(lastMessage);
+    int accessLevel = lastMessage.get<int>("accessLevel");
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("AccessLevel differs from expected", TestKaraboAuthServer::VALID_ACCESS_LEVEL,
+                                 accessLevel);
+    string userId = lastMessage.get<std::string>("username");
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("User differs from expected", TestKaraboAuthServer::VALID_USER_ID, userId);
+
+    // Sends another login with the an invalid token - the GUI Server will reject the user change.
+    const string expectedErrorMsg = "Error validating token: " + TestKaraboAuthServer::INVALID_TOKEN_MSG;
+    messageQ = m_tcpAdapter->getNextMessages("notification", 1, [&] { m_tcpAdapter->sendMessage(invalidLoginInfo); });
+    messageQ->pop(lastMessage);
+    const std::string& message = lastMessage.get<std::string>("message");
+    CPPUNIT_ASSERT_MESSAGE("Expected notification message '" + expectedErrorMsg + "'. Got '" + message + "'",
+                           message == expectedErrorMsg);
+
+    // Checks that the previous session is still active with the expected one-time token
+    auto clientSessionsHash = m_deviceClient->execute1<Hash>(
+          TEST_GUI_SERVER_ID, "slotGetClientSessions", EXECUTE_SLOT_TIMEOUT, Hash(CLIENT_SESSIONS_OPTION_KEY, false));
+    auto clientSessions = clientSessionsHash.get<std::vector<Hash>>("clientSessions");
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Number of client connections differs from expected", 1U,
+                                 static_cast<unsigned>(clientSessions.size()));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Session token differs from expected", TestKaraboAuthServer::VALID_TOKEN,
+                                 clientSessions[0].get<std::string>("sessionToken"));
+
+    std::clog << "OK" << std::endl;
+};
+
 void GuiServer_Test::testMissingTokenOnBeginTemporarySession() {
     std::clog << "testMissingTokenOnBeginTemporarySession: " << std::flush;
 
@@ -1538,7 +1614,7 @@ void GuiServer_Test::testMissingTokenOnBeginTemporarySession() {
     messageQ->pop(lastMessage);
     bool success = lastMessage.get<bool>("success");
     const std::string& reason = lastMessage.get<std::string>("reason");
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("beginTemporarySession request succeeded unexpectedely", false, success);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("beginTemporarySession request succeeded unexpectedly", false, success);
     CPPUNIT_ASSERT_MESSAGE("Error reason differs from the expected. Received error reason: '" + reason + "'",
                            reason.find("Required \"temporarySessionToken\" field missing") != std::string::npos);
 
@@ -1578,7 +1654,7 @@ void GuiServer_Test::testInvalidTokenOnBeginTemporarySession() {
     messageQ->pop(lastMessage);
     bool success = lastMessage.get<bool>("success");
     const std::string& reason = lastMessage.get<std::string>("reason");
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("beginTemporarySession request succeeded unexpectedely", false, success);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("beginTemporarySession request succeeded unexpectedly", false, success);
     CPPUNIT_ASSERT_EQUAL_MESSAGE("beginTemporarySession failure reason", TestKaraboAuthServer::INVALID_TOKEN_MSG,
                                  reason);
 
@@ -1623,6 +1699,7 @@ void GuiServer_Test::testBeginEndTemporarySession() {
     messageQ->pop(lastMessage);
     CPPUNIT_ASSERT_MESSAGE("'accessLevel' missing in loginInformation sent by the GUI Server",
                            lastMessage.has("accessLevel"));
+
     // Retrieves information about existing client sessions. There should be one
     // session with no temporary session on top.
     clientSessionsHash = m_deviceClient->execute1<Hash>(TEST_GUI_SERVER_ID, "slotGetClientSessions",
@@ -1648,6 +1725,7 @@ void GuiServer_Test::testBeginEndTemporarySession() {
     clientSessions = clientSessionsHash.get<std::vector<Hash>>("clientSessions");
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Number of client connections differs from expected", 0U,
                                  static_cast<unsigned>(clientSessions.size()));
+
     // Request a temporary session begining with a valid token.
     messageQ = m_tcpAdapter->getNextMessages("onBeginTemporarySession", 1,
                                              [&] { m_tcpAdapter->sendMessage(beginTempSessionInfo); });
@@ -1664,6 +1742,7 @@ void GuiServer_Test::testBeginEndTemporarySession() {
                            lastMessage.has("username"));
     const std::string& userId = lastMessage.get<std::string>("username");
     CPPUNIT_ASSERT_EQUAL_MESSAGE("User differs from expected", TestKaraboAuthServer::VALID_USER_ID, userId);
+
     // Retrieves information about existing client sessions. There should be one
     // session with a temporary session on top. The sessionToken and the
     // sessionStartTime should match what was retrieved before starting the
@@ -1695,6 +1774,7 @@ void GuiServer_Test::testBeginEndTemporarySession() {
                                  static_cast<unsigned>(clientSessions.size()));
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Temporary Session Token differs from expected", temporarySessionToken,
                                  clientSessions[0].get<std::string>("temporarySessionToken"));
+
     // Request a begin temporary session with a valid token - should be rejected since we are already in a temporary
     // session
     messageQ = m_tcpAdapter->getNextMessages("onBeginTemporarySession", 1,
@@ -1705,6 +1785,18 @@ void GuiServer_Test::testBeginEndTemporarySession() {
     CPPUNIT_ASSERT_EQUAL_MESSAGE("beginTemporarySession request didn't fail as expected", false, success);
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Reason for failed temporary session over temporary session",
                                  std::string{"There's already an active temporary session."}, reason);
+
+    // Request a login (over an existing login session) while a temporary session is active - login must be
+    // rejected because of the active temporary session.
+    const string expectedErrorMsg =
+          "There's an active temporary session. Please terminate it before trying to "
+          "login again.";
+    messageQ = m_tcpAdapter->getNextMessages("notification", 1, [&] { m_tcpAdapter->sendMessage(loginInfo); });
+    messageQ->pop(lastMessage);
+    const std::string& message = lastMessage.get<std::string>("message");
+    CPPUNIT_ASSERT_MESSAGE("Expected notification message '" + expectedErrorMsg + "'. Got '" + message + "'",
+                           message == expectedErrorMsg);
+
     // Request an end of temporary session
     messageQ = m_tcpAdapter->getNextMessages("onEndTemporarySession", 1,
                                              [&] { m_tcpAdapter->sendMessage(endTempSessionInfo); });

@@ -76,23 +76,35 @@ class GuiServer_Test : public CPPUNIT_NS::TestFixture {
     /**
      * @brief Checks that a "login" message with no "oneTimeToken" is refused by a GUI Server configured to require
      * authentication and an error notification is returned to the GUI Client.
-     *
      */
     void testMissingTokenOnLogin();
 
     /**
      * @brief Checks that when a "login" message with an invalid "oneTimeToken" is received by the GUI Server, it
      * returns a corresponding error notification to the GUI Client.
-     *
      */
     void testInvalidTokenOnLogin();
 
     /**
      * @brief Checks that when a "login" message with a valid "oneTimeToken" is received by the GUI Server, it returns
      * the resolved user's access level for the server's topic to the client.
-     *
      */
     void testValidTokenOnLogin();
+
+    /**
+     * @brief Checks that a "login" message with a valid "oneTimeToken" received by the GUI Server through a
+     * channel that already has an authenticated session, is interpreted as a request to change the session
+     * user (or "refresh" the session for the current user). The GUI Server should return the resolved new
+     * (or refreshed) user's access level for the server's topic to the client.
+     */
+    void testValidTokenOnInSessionLogin();
+
+    /**
+     * @brief Checks that a "login" message with an invalid "oneTimeToken" received by the GUI Server
+     * through a channel that already has an authenticated session, is rejected with the corresponding
+     * error notification being returned to the GUI Client.
+     */
+    void testInvalidTokenOnInSessionLogin();
 
     /**
      * @brief Checks that a "beginTemporarySession" message with no "oneTimeToken" is refused by a GUI Server configured
@@ -110,7 +122,8 @@ class GuiServer_Test : public CPPUNIT_NS::TestFixture {
 
     /**
      * @brief Checks that the "normal" login > beginTemporarySession > endTemporarySession sequence works. Also checks
-     * that attempts of double temporary sessions and endTemporarySession requests are rejected.
+     * that attempts of more than one temporary session, user change with an active temporary session and duplicated
+     * endTemporarySession requests are rejected.
      */
     void testBeginEndTemporarySession();
 
