@@ -60,7 +60,7 @@ void SceneProvider_Test::setUp() {
     // Start central event-loop
     m_eventLoopThread = std::jthread([](std::stop_token stoken) { karabo::net::EventLoop::work(); });
     // Create and start server
-    Hash config("serverId", "testServerSceneProvider", "scanPlugins", false, "Logger.priority", "FATAL");
+    Hash config("serverId", "testServerSceneProvider", "Logger.priority", "FATAL");
     m_deviceServer = DeviceServer::create("DeviceServer", config);
     m_deviceServer->finalizeInternalInitialization();
     // Create client

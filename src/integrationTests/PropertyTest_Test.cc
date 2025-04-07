@@ -52,7 +52,7 @@ void PropertyTest_Test::setUp() {
     // Create and start server
     // FATAL log level since testAttributeEditing() triggers ERRORs on purpose which
     // might mislead someone checking the log output (e.g. when hunting some other problem).
-    Hash config("serverId", "propertyTestServer_0", "scanPlugins", false, "Logger.priority", "FATAL");
+    Hash config("serverId", "propertyTestServer_0", "Logger.priority", "FATAL");
     m_deviceServer = DeviceServer::create("DeviceServer", config);
     m_deviceServer->finalizeInternalInitialization();
     // Create client

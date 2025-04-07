@@ -74,7 +74,7 @@ void GuiServer_Test::setUp() {
     // Start central event-loop
     m_eventLoopThread = std::jthread([](std::stop_token stoken) { karabo::net::EventLoop::work(); });
     // Create and start server, but don't scan plugins
-    Hash config("serverId", "testGuiVersionServer", "scanPlugins", false, "Logger.priority", LOG_LEVEL);
+    Hash config("serverId", "testGuiVersionServer", "Logger.priority", LOG_LEVEL);
     m_deviceServer = DeviceServer::create("DeviceServer", config);
     m_deviceServer->finalizeInternalInitialization();
     // Create client

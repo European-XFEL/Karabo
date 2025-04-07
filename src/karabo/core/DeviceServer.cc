@@ -98,15 +98,6 @@ namespace karabo {
                   .init()
                   .commit();
 
-            // clang-format off
-            std::vector<int> visibilityOptions = {
-                Schema::AccessLevel::OBSERVER,
-                Schema::AccessLevel::USER,
-                Schema::AccessLevel::OPERATOR,
-                Schema::AccessLevel::EXPERT,
-                Schema::AccessLevel::ADMIN};
-            // clang-format on
-
             CHOICE_ELEMENT(expected)
                   .key("connection")
                   .displayedName("Connection")
@@ -139,18 +130,9 @@ namespace karabo {
             STRING_ELEMENT(expected)
                   .key("init")
                   .displayedName("Auto start")
-                  .description("Auto starts selected devices")
+                  .description("Auto starts selected devices (json syntax)")
                   .assignmentOptional()
                   .defaultValue("")
-                  .commit();
-
-            BOOL_ELEMENT(expected)
-                  .key("scanPlugins")
-                  .displayedName("Unused")
-                  .description("Unused since Karabo 2.19.0, plugins are only scanned once when starting.")
-                  .expertAccess()
-                  .assignmentOptional()
-                  .defaultValue(true)
                   .commit();
 
             STRING_ELEMENT(expected)

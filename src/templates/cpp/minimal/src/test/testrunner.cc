@@ -31,7 +31,7 @@ void KaraboDeviceFixture::instantiateWithDeviceServer(const std::string& classId
 
     // scanPlugins is set to true to scan $KARABO/plugins directory
     // can be set to false if other libraries are not needed for testing
-    karabo::data::Hash config("serverId", DEVICE_SERVER_ID, "scanPlugins", true, "Logger.priority", LOG_PRIORITY);
+    karabo::data::Hash config("serverId", DEVICE_SERVER_ID, true, "Logger.priority", LOG_PRIORITY);
     m_deviceSrv = karabo::core::DeviceServer::create("DeviceServer", config);
     m_deviceSrv->finalizeInternalInitialization();
 
