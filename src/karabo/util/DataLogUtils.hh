@@ -42,7 +42,7 @@ namespace karabo {
 
         char const* const DATALOGMANAGER_ID = "Karabo_DataLoggerManager_0";
         char const* const DATALOGGER_PREFIX = "DataLogger-";
-        char const* const DATALOGREADER_PREFIX = "DataLogReader";
+        char const* const DATALOGREADER_PREFIX = "DataLogReader-";
         //    ts=timestamp
         //    tsAsIso8601 : numbers, dot and uppercase letters (timezone)
         //    tsAsDouble  : numbers and a dot (positive double)
@@ -79,8 +79,6 @@ namespace karabo {
         //    fileIndex   : numbers (positive integer)
         //                                             trainId       position user            fileIndex
         char const* const DATALOG_INDEX_TAIL_REGEX = "^([0-9]+)[\\s]+([0-9]+)[\\s]+([a-z0-9_\\.]*)[\\s]+([0-9]+)$";
-
-        unsigned int const DATALOGREADERS_PER_SERVER = 2;
 
         // replacement for '\n' in data logger files
         char const* const DATALOG_NEWLINE_MANGLE = ".KRB_NEWLINE.";
