@@ -482,7 +482,7 @@ namespace karabo {
             // Note: To process the reply may require the thread added to the event loop in SignalSlotable constructor
             Hash instanceInfo;
             try {
-                request(instanceId, "slotPing", instanceId, m_randPing, false)
+                request(instanceId, "slotPing", instanceId, m_randPing)
                       .timeout(msPingTimeoutInIsValidInstanceId)
                       .receive(instanceInfo);
             } catch (const karabo::data::TimeoutException&) {
@@ -1045,7 +1045,7 @@ namespace karabo {
             KARABO_SYSTEM_SIGNAL("signalInstanceUpdated", string, Hash);
 
             // Global ping listener
-            KARABO_SLOT(slotPing, string /*callersInstanceId*/, int /*replyIfSame*/, bool /*unused*/)
+            KARABO_SLOT(slotPing, string /*callersInstanceId*/, int /*replyIfSame*/)
 
             // Global instance new notification
             KARABO_SLOT(slotInstanceNew, string /*instanceId*/, Hash /*instanceInfo*/)
@@ -1198,8 +1198,7 @@ namespace karabo {
                 std::lock_guard<std::mutex> lock(m_trackedInstancesMutex);
                 m_trackedInstances.clear();
             }
-            // Note: 3rd argument of slotPing is ignored, kept for backward compatibility
-            call("*", "slotPing", m_instanceId, 0, true);
+            call("*", "slotPing", m_instanceId, 0);
             // The function slotPingAnswer will be called by all instances available now
             // Lets wait a fair amount of time - huaaah this is bad isn't it :-(
             // Since we block here for a long time, add a thread to ensure that all slotPingAnswer can be processed.
@@ -1216,7 +1215,7 @@ namespace karabo {
             string hostname;
             Hash instanceInfo;
             try {
-                this->request(instanceId, "slotPing", instanceId, 1, false).timeout(200).receive(instanceInfo);
+                this->request(instanceId, "slotPing", instanceId, 1).timeout(200).receive(instanceInfo);
             } catch (const karabo::data::TimeoutException&) {
                 Exception::clearTrace();
                 return std::make_pair(false, hostname);
@@ -1226,7 +1225,7 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::slotPing(const std::string& instanceId, int rand, bool /*unused*/) {
+        void SignalSlotable::slotPing(const std::string& instanceId, int rand) {
             // The value of 'rand' distinguishes between different use cases of slotPing:
             // - 0: call slotPingAnswer of 'instanceId', indicating we are part of the topology
             //      (but do not do that if still in the booting phase as indicated by a non-zero m_randPing)
@@ -1344,9 +1343,9 @@ namespace karabo {
                     // Resurrected after not sending heartbeats anymore, or heartbeat arrived before
                     // slotPingAnswer/instanceNew.
 
-                    // Post-2.17.X versions may not send full instanceInfo with the heartbeat:
+                    // Post-2.17.X versions do not send full instanceInfo with the heartbeat:
                     // Ping the resurrected instance which will call back on slotPingAnswer that cares about tracking
-                    call(instanceId, "slotPing", m_instanceId, 0, /*unused*/ true);
+                    call(instanceId, "slotPing", m_instanceId, 0);
                 } else {
                     // Merge the potentially partial instanceInfo and re-set the countdown
                     addTrackedInstance(instanceId, heartbeatInfo);

@@ -63,9 +63,8 @@ async def getInstanceInfo(device):
     if isinstance(device, ProxyBase):
         device = device._deviceId
     rand_ping = 1
-    track = True  # Not used, kept for backward compatibility
     return await get_instance().call(device, "slotPing", device,
-                                     rand_ping, track)
+                                     rand_ping)
 
 
 @synchronize
