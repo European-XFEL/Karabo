@@ -332,7 +332,7 @@ def test_device_client_async_api():
 
     # Start device server (suppress plugins scan) ...
     serverId = f'cppServer/{uuid.uuid4()}'
-    config = Hash("serverId", serverId, "scanPlugins", False)
+    config = Hash("serverId", serverId)
     startDeviceServer(config)
     # Create DeviceClient ...
     clientId = str(uuid.uuid4())

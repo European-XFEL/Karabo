@@ -78,13 +78,13 @@ void Timing_Test::setUp() {
     // Create and start server
     {
         // No need to connect the server hosting the time server device to any time server...
-        Hash config("serverId", "testServerTiming", "scanPlugins", false, "Logger.priority", "FATAL");
+        Hash config("serverId", "testServerTiming", "Logger.priority", "FATAL");
         m_deviceServer = DeviceServer::create("DeviceServer", config);
         m_deviceServer->finalizeInternalInitialization();
     }
     {
-        Hash config("serverId", "testServerTimingClient", "scanPlugins", false, "Logger.priority", "FATAL",
-                    "timeServerId", "Karabo_TimeServer");
+        Hash config("serverId", "testServerTimingClient", "Logger.priority", "FATAL", "timeServerId",
+                    "Karabo_TimeServer");
         m_deviceServer2 = DeviceServer::create("DeviceServer", config);
         m_deviceServer2->finalizeInternalInitialization();
     }
