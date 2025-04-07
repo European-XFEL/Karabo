@@ -140,7 +140,6 @@ void exportPyKarabindTestUtilities(py::module_& m) {
         using namespace karabo::core;
         if (!config.has("serverId")) config.set("serverId", "testDeviceServer");
         if (!config.has("Logger.priority")) config.set("Logger.priority", "FATAL");
-        if (!config.has("scanPlugins")) config.set("scanPlugins", false);
         auto deviceServer = DeviceServer::create("DeviceServer", config);
         deviceServer->finalizeInternalInitialization();
         testServersRegistry[config.get<std::string>("serverId")] = deviceServer;

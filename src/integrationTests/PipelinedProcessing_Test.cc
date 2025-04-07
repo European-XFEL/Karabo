@@ -65,7 +65,7 @@ void PipelinedProcessing_Test::setUp() {
     m_eventLoopThread = std::jthread(work);
 
     // Create and start server
-    Hash config("serverId", m_server, "scanPlugins", false, "Logger.priority", "ERROR");
+    Hash config("serverId", m_server, "Logger.priority", "ERROR");
     m_deviceServer = DeviceServer::create("DeviceServer", config);
     m_deviceServer->finalizeInternalInitialization();
 
