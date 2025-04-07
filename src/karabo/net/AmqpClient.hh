@@ -93,7 +93,7 @@ namespace karabo::net {
         /**
          * (Re-)set the read handler that will be called for all received messages
          *
-         * @param readHandler A valid read function (karabo::util::ParameterException if not valid)
+         * @param readHandler A valid read function (karabo::data::ParameterException if not valid)
          */
         void setReadHandler(ReadHandler readHandler);
 

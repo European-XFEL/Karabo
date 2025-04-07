@@ -26,10 +26,10 @@
 #ifndef KARABO_XMS_MEMORY_HH
 #define KARABO_XMS_MEMORY_HH
 
-#include <karabo/io/BinarySerializer.hh>
-#include <karabo/io/BufferSet.hh>
 #include <karabo/log/Logger.hh>
 
+#include "karabo/data/io/BinarySerializer.hh"
+#include "karabo/data/io/BufferSet.hh"
 #include "karabo/data/schema/Factory.hh"
 
 namespace karabo {
@@ -96,7 +96,7 @@ namespace karabo {
                 }
             };
 
-            typedef karabo::io::BufferSet DataType;
+            typedef karabo::data::BufferSet DataType;
             typedef std::shared_ptr<DataType> DataPointer;
             typedef std::vector<DataPointer> Data;
             typedef std::vector<Data> Chunks;
@@ -109,7 +109,7 @@ namespace karabo {
             typedef std::vector<std::vector<int>> ChunkStatus;
             typedef std::vector<int> ChannelStatus;
 
-            typedef karabo::io::BinarySerializer<karabo::data::Hash> SerializerType;
+            typedef karabo::data::BinarySerializer<karabo::data::Hash> SerializerType;
 
             static ChunkStatus m_chunkStatus;
             static ChannelStatus m_channelStatus;
@@ -198,10 +198,10 @@ namespace karabo {
              */
             static void assureAllDataIsCopied(const size_t channelIdx, const size_t chunkIdx);
 
-            static void readIntoBuffers(std::vector<karabo::io::BufferSet::Pointer>& buffers,
+            static void readIntoBuffers(std::vector<karabo::data::BufferSet::Pointer>& buffers,
                                         karabo::data::Hash& header, const size_t channelIdx, const size_t chunkIdx);
 
-            static void writeFromBuffers(const Data& /*std::vector<karabo::io::BufferSet::Pointer>&*/ buffers,
+            static void writeFromBuffers(const Data& /*std::vector<karabo::data::BufferSet::Pointer>&*/ buffers,
                                          const karabo::data::Hash& header, const size_t channelIdx,
                                          const size_t chunkIdx, bool copyAllData = false);
 

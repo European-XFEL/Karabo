@@ -23,11 +23,11 @@
 #include <string>
 #include <vector>
 
+#include "karabo/data/io/FileTools.hh"
+#include "karabo/data/io/Input.hh"
+#include "karabo/data/io/Output.hh"
 #include "karabo/data/schema/Configurator.hh"
 #include "karabo/data/types/Hash.hh"
-#include "karabo/io/FileTools.hh"
-#include "karabo/io/Input.hh"
-#include "karabo/io/Output.hh"
 #include "karabo/log/Logger.hh"
 #include "karabo/util/Version.hh"
 
@@ -352,7 +352,7 @@ namespace karabo {
             std::filesystem::path possibleFile(token);
             if (std::filesystem::exists(possibleFile)) {
                 karabo::data::Hash fileConfig;
-                karabo::io::loadFromFile<Hash>(fileConfig, possibleFile.string());
+                karabo::data::loadFromFile<Hash>(fileConfig, possibleFile.string());
                 fileConfig.flatten(config);
             } else {
                 size_t pos = token.find_first_of("=");

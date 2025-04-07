@@ -142,7 +142,7 @@ namespace karabo {
 
             karabo::net::Connection::Pointer m_dataConnection;
 
-            karabo::io::BinarySerializer<karabo::data::Hash>::Pointer m_serializer;
+            karabo::data::BinarySerializer<karabo::data::Hash>::Pointer m_serializer;
             std::map<karabo::net::Channel::Pointer, ChannelData> m_channels;
             std::queue<DeviceInstantiation> m_pendingDeviceInstantiations;
 

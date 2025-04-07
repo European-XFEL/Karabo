@@ -22,11 +22,11 @@
 
 #include <karabo/core/Device.hh>
 #include <karabo/core/DeviceServer.hh>
-#include <karabo/io/BinarySerializer.hh>
-#include <karabo/io/TextSerializer.hh>
 
 #include "ConfigurationTestClasses.hh"
 #include "Wrapper.hh"
+#include "karabo/data/io/BinarySerializer.hh"
+#include "karabo/data/io/TextSerializer.hh"
 #include "karabo/data/schema/Configurator.hh"
 #include "karabo/data/types/Hash.hh"
 #include "karabo/data/types/NDArray.hh"
@@ -118,22 +118,22 @@ void exportPyKarabindTestUtilities(py::module_& m) {
     });
     m.def("getTextSerializerHashClass", []() {
         using namespace karabo::data;
-        std::vector<std::string> v = Configurator<karabo::io::TextSerializer<Hash>>::getRegisteredClasses();
+        std::vector<std::string> v = Configurator<karabo::data::TextSerializer<Hash>>::getRegisteredClasses();
         return py::cast(v);
     });
     m.def("getTextSerializerSchemaClass", []() {
         using namespace karabo::data;
-        std::vector<std::string> v = Configurator<karabo::io::TextSerializer<Schema>>::getRegisteredClasses();
+        std::vector<std::string> v = Configurator<karabo::data::TextSerializer<Schema>>::getRegisteredClasses();
         return py::cast(v);
     });
     m.def("getBinarySerializerHashClass", []() {
         using namespace karabo::data;
-        std::vector<std::string> v = Configurator<karabo::io::BinarySerializer<Hash>>::getRegisteredClasses();
+        std::vector<std::string> v = Configurator<karabo::data::BinarySerializer<Hash>>::getRegisteredClasses();
         return py::cast(v);
     });
     m.def("getBinarySerializerSchemaClass", []() {
         using namespace karabo::data;
-        std::vector<std::string> v = Configurator<karabo::io::BinarySerializer<Schema>>::getRegisteredClasses();
+        std::vector<std::string> v = Configurator<karabo::data::BinarySerializer<Schema>>::getRegisteredClasses();
         return py::cast(v);
     });
     m.def("startDeviceServer", [](karabo::data::Hash& config) {

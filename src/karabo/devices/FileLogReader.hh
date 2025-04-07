@@ -30,10 +30,10 @@
 #include <string>
 
 #include "DataLogReader.hh"
+#include "karabo/data/io/TextSerializer.hh"
 #include "karabo/data/types/ClassInfo.hh"
 #include "karabo/data/types/Hash.hh"
 #include "karabo/data/types/Schema.hh"
-#include "karabo/io/TextSerializer.hh"
 #include "karabo/util/Version.hh"
 
 namespace karabo {
@@ -201,8 +201,8 @@ namespace karabo {
             static const std::regex m_indexLineRegex;
             static const std::regex m_indexTailRegex;
             std::string m_ltype;
-            karabo::io::TextSerializer<karabo::data::Hash>::Pointer m_serializer;
-            karabo::io::TextSerializer<karabo::data::Schema>::Pointer m_schemaSerializer;
+            karabo::data::TextSerializer<karabo::data::Hash>::Pointer m_serializer;
+            karabo::data::TextSerializer<karabo::data::Schema>::Pointer m_schemaSerializer;
         };
 
     } // namespace devices

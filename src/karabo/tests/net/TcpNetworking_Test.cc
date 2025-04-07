@@ -34,11 +34,11 @@
 #include <iostream>
 #include <thread>
 
+#include "karabo/data/io/BinarySerializer.hh"
+#include "karabo/data/io/BufferSet.hh"
 #include "karabo/data/types/Dims.hh"
 #include "karabo/data/types/Exception.hh"
 #include "karabo/data/types/NDArray.hh"
-#include "karabo/io/BinarySerializer.hh"
-#include "karabo/io/BufferSet.hh"
 #include "karabo/net/Channel.hh"
 #include "karabo/net/Connection.hh"
 #include "karabo/net/EventLoop.hh"
@@ -974,9 +974,9 @@ void TcpNetworking_Test::testBufferSet() {
     for (int i = 0; i < numNDarray; ++i) {
         data1.set(toString(i), NDArray(Dims(1ull), i));
     }
-    auto serializer = karabo::io::BinarySerializer<Hash>::create("Bin");
-    auto buffers = std::vector<karabo::io::BufferSet::Pointer>( // vector of two BufferSets
-          {std::make_shared<karabo::io::BufferSet>(), std::make_shared<karabo::io::BufferSet>()});
+    auto serializer = karabo::data::BinarySerializer<Hash>::create("Bin");
+    auto buffers = std::vector<karabo::data::BufferSet::Pointer>( // vector of two BufferSets
+          {std::make_shared<karabo::data::BufferSet>(), std::make_shared<karabo::data::BufferSet>()});
     serializer->save(data1, *(buffers[0])); // save into first BufferSet
     // Add a second BufferSet with normally big NDArray
     const Hash data2("vec", std::vector<short>(100, 7), // vector of length 100 shorts
@@ -990,10 +990,10 @@ void TcpNetworking_Test::testBufferSet() {
     auto recvFut = recvProm->get_future();
     std::string failureReason;
     Hash receivedHeader;
-    std::vector<karabo::io::BufferSet::Pointer> receivedBuffers;
+    std::vector<karabo::data::BufferSet::Pointer> receivedBuffers;
     auto onRead = [&recvProm, &failureReason, &receivedHeader, &receivedBuffers](
                         const boost::system::error_code& ec, const karabo::data::Hash& h,
-                        const std::vector<karabo::io::BufferSet::Pointer>& bufs) {
+                        const std::vector<karabo::data::BufferSet::Pointer>& bufs) {
         if (ec) {
             failureReason = toString(ec.value()) += " -- " + ec.message();
             recvProm->set_value(false);

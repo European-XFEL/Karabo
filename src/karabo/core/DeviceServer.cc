@@ -70,7 +70,6 @@ namespace karabo {
         using namespace std;
         using namespace karabo::data;
         using namespace karabo::util;
-        using namespace karabo::io;
         using namespace karabo::log;
         using namespace karabo::net;
         using namespace karabo::xms;

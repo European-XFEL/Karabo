@@ -25,16 +25,15 @@
 #include "HashBinarySerializer_Test.hh"
 
 #include <algorithm>
-#include <karabo/io/HashBinarySerializer.hh>
 
+#include "karabo/data/io/BinarySerializer.hh"
+#include "karabo/data/io/HashBinarySerializer.hh"
+#include "karabo/data/io/TextSerializer.hh"
 #include "karabo/data/types/NDArray.hh"
-#include "karabo/io/BinarySerializer.hh"
-#include "karabo/io/TextSerializer.hh"
 #include "karabo/util/TimeProfiler.hh"
 
 CPPUNIT_TEST_SUITE_REGISTRATION(HashBinarySerializer_Test);
 
-using namespace karabo::io;
 using namespace karabo::data;
 using std::complex;
 using std::string;
@@ -211,7 +210,7 @@ void HashBinarySerializer_Test::testSerialization() {
 
     // return; // till here OK
     // Now content test with BufferSet - allCopy
-    karabo::io::BufferSet archiveBuf1(true); // allCopy
+    karabo::data::BufferSet archiveBuf1(true); // allCopy
     CPPUNIT_ASSERT_NO_THROW(p->save(m_hash, archiveBuf1));
 
     // Check that it can be converted to boost buffers - and that there is one asio buffer per non-empty BufferSet
@@ -239,7 +238,7 @@ void HashBinarySerializer_Test::testSerialization() {
           hashContentTest(*(vecHashPtr1[0]), "BufferSet(true) vector<Hash::Pointer>[0]")); // skip others...
 
     // Now content test with BufferSet - skip some copies
-    karabo::io::BufferSet archiveBuf2(false); // avoid copy if possible
+    karabo::data::BufferSet archiveBuf2(false); // avoid copy if possible
     Hash hashArchive2;
     CPPUNIT_ASSERT_NO_THROW(p->save(m_hash, archiveBuf2));
 
@@ -511,7 +510,7 @@ void HashBinarySerializer_Test::testSpeedLargeArrays() {
     //////////////////////////////////////////////////
     {
         std::clog << "\nBufferSet copy ...\n";
-        karabo::io::BufferSet archive3(true);
+        karabo::data::BufferSet archive3(true);
         tick = std::chrono::steady_clock::now();
 
         for (int i = 0; i < numTries; ++i) {
@@ -578,7 +577,7 @@ void HashBinarySerializer_Test::testSpeedLargeArrays() {
     {
         std::clog << "\n--- BufferSet no copy...\n";
         numTries = 1000; // This is so fast that we can afford much more tries to get a nice average.
-        karabo::io::BufferSet archive3(false);
+        karabo::data::BufferSet archive3(false);
         tick = std::chrono::steady_clock::now();
 
         for (int i = 0; i < numTries; ++i) {
