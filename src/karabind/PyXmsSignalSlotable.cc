@@ -612,7 +612,6 @@ namespace karabind {
 
 
 using namespace karabo::data;
-using namespace karabo::io;
 using namespace karabo::xms;
 using namespace karabind;
 using namespace std;

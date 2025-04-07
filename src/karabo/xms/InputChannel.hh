@@ -360,7 +360,7 @@ namespace karabo {
 
             void onTcpChannelRead(const karabo::net::ErrorCode& ec, karabo::net::Channel::WeakPointer channel,
                                   const karabo::data::Hash& header,
-                                  const std::vector<karabo::io::BufferSet::Pointer>& data);
+                                  const std::vector<karabo::data::BufferSet::Pointer>& data);
 
             void notifyOutputChannelsForPossibleRead();
 

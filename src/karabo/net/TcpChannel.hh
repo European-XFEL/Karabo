@@ -33,9 +33,9 @@
 #include "Channel.hh"
 #include "Queues.hh"
 #include "TcpConnection.hh"
+#include "karabo/data/io/BinarySerializer.hh"
+#include "karabo/data/io/TextSerializer.hh"
 #include "karabo/data/types/Hash.hh"
-#include "karabo/io/BinarySerializer.hh"
-#include "karabo/io/TextSerializer.hh"
 
 namespace karabo {
     namespace net {
@@ -68,8 +68,8 @@ namespace karabo {
             HandlerType m_activeHandler;
             bool m_readHeaderFirst;
             std::any m_readHandler;
-            karabo::io::TextSerializer<karabo::data::Hash>::Pointer m_textSerializer;
-            karabo::io::BinarySerializer<karabo::data::Hash>::Pointer m_binarySerializer;
+            karabo::data::TextSerializer<karabo::data::Hash>::Pointer m_textSerializer;
+            karabo::data::BinarySerializer<karabo::data::Hash>::Pointer m_binarySerializer;
 
             std::vector<char> m_inboundMessagePrefix;
             std::vector<char> m_inboundHeaderPrefix;
@@ -271,14 +271,14 @@ namespace karabo {
 
             void write(const karabo::data::Hash& header, const std::shared_ptr<std::vector<char>>& body);
 
-            void write(const karabo::data::Hash& header, const karabo::io::BufferSet& body);
+            void write(const karabo::data::Hash& header, const karabo::data::BufferSet& body);
 
-            void write(const karabo::data::Hash& header, const std::vector<karabo::io::BufferSet::Pointer>& body);
+            void write(const karabo::data::Hash& header, const std::vector<karabo::data::BufferSet::Pointer>& body);
 
-            void write(const char* header, const size_t& headerSize, const karabo::io::BufferSet& body);
+            void write(const char* header, const size_t& headerSize, const karabo::data::BufferSet& body);
 
             void write(const char* header, const size_t& headerSize,
-                       const std::vector<karabo::io::BufferSet::Pointer>& body);
+                       const std::vector<karabo::data::BufferSet::Pointer>& body);
 
             void write(const karabo::data::Hash& header, const karabo::data::Hash& body);
 
@@ -302,7 +302,7 @@ namespace karabo {
                                              const WriteCompleteHandler& handler) override;
 
             void writeAsyncHashVectorBufferSetPointer(const karabo::data::Hash& header,
-                                                      const std::vector<karabo::io::BufferSet::Pointer>& body,
+                                                      const std::vector<karabo::data::BufferSet::Pointer>& body,
                                                       const WriteCompleteHandler& handler) override;
 
             void writeAsyncHashHash(const karabo::data::Hash& header, const karabo::data::Hash& data,
@@ -431,17 +431,17 @@ namespace karabo {
              * @param handler to be called
              */
             void onVectorBufferSetPointerAvailable(const ErrorCode& error, size_t length,
-                                                   const std::vector<karabo::io::BufferSet::Pointer>& buffers,
+                                                   const std::vector<karabo::data::BufferSet::Pointer>& buffers,
                                                    const ReadVectorBufferSetPointerHandler& handler);
 
             void onHashVectorBufferSetPointerRead(const boost::system::error_code& e,
-                                                  const std::vector<karabo::io::BufferSet::Pointer>& buffers);
+                                                  const std::vector<karabo::data::BufferSet::Pointer>& buffers);
 
             void onHashVectorBufferSetPointerVectorPointerRead(const boost::system::error_code& e,
                                                                const std::shared_ptr<std::vector<char>>& vecptr,
                                                                const ReadHashVectorBufferSetPointerHandler& handler);
 
-            void readAsyncVectorBufferSetPointerImpl(const std::vector<karabo::io::BufferSet::Pointer>& buffers,
+            void readAsyncVectorBufferSetPointerImpl(const std::vector<karabo::data::BufferSet::Pointer>& buffers,
                                                      const ReadVectorBufferSetPointerHandler& handler);
 
             void readAsyncVectorPointerImpl(const ReadVectorPointerHandler& handler);
@@ -487,7 +487,7 @@ namespace karabo {
              *
              * @note actually places a copy of the string into the buffer set.
              */
-            karabo::io::BufferSet::Pointer bufferSetFromString(const std::string& str);
+            karabo::data::BufferSet::Pointer bufferSetFromString(const std::string& str);
 
             /**
              * Creates a buffer set with contents of a given buffer of chars stored
@@ -498,7 +498,7 @@ namespace karabo {
              *
              * @note actually places a copy of the contents of the input buffer into the buffer set.
              */
-            karabo::io::BufferSet::Pointer bufferSetFromPointerToChar(const char* data, size_t size);
+            karabo::data::BufferSet::Pointer bufferSetFromPointerToChar(const char* data, size_t size);
 
             /**
              * Creates a buffer set with characters in a given vector of chars stored
@@ -507,7 +507,7 @@ namespace karabo {
              * @param data a pointer to the vector of chars to be stored in the buffer set.
              * @return shared_ptr to the buffer set with the character in the vector stored.
              */
-            karabo::io::BufferSet::Pointer bufferSetFromVectorCharPointer(const VectorCharPointer& dataVect);
+            karabo::data::BufferSet::Pointer bufferSetFromVectorCharPointer(const VectorCharPointer& dataVect);
 
             /**
              * Creates a buffer set with a given hash stored in its sole buffer.
@@ -517,7 +517,7 @@ namespace karabo {
              *        hash in the bufferset (the buffer set will actually become one of the "owners" of the NDArray).
              * @return pBuffSet a shared pointer that will be pointed to the newly created buffer set with the hash.
              */
-            karabo::io::BufferSet::Pointer bufferSetFromHash(const karabo::data::Hash& data, bool copyAllData);
+            karabo::data::BufferSet::Pointer bufferSetFromHash(const karabo::data::Hash& data, bool copyAllData);
 
             using Channel::read;
             using Channel::write;

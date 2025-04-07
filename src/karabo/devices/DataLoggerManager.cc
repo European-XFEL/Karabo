@@ -81,13 +81,13 @@
 #include <unordered_set>
 #include <vector>
 
+#include "karabo/data/io/FileTools.hh"
 #include "karabo/data/schema/ChoiceElement.hh"
 #include "karabo/data/schema/SimpleElement.hh"
 #include "karabo/data/schema/TableElement.hh"
 #include "karabo/data/schema/VectorElement.hh"
 #include "karabo/data/time/Epochstamp.hh"
 #include "karabo/data/types/StringTools.hh"
-#include "karabo/io/FileTools.hh"
 #include "karabo/net/EventLoop.hh"
 #include "karabo/util/DataLogUtils.hh"
 
@@ -102,7 +102,6 @@ namespace karabo {
         using namespace std;
         using namespace karabo::data;
         using namespace karabo::util;
-        using namespace karabo::io;
         using namespace std::placeholders;
         using karabo::xms::SLOT_ELEMENT;
 
@@ -542,7 +541,7 @@ namespace karabo {
             }
             m_loggerMap.clear();
             if (std::filesystem::exists(m_loggerMapFile)) {
-                karabo::io::loadFromFile(m_loggerMap, m_loggerMapFile);
+                karabo::data::loadFromFile(m_loggerMap, m_loggerMapFile);
             }
 
             KARABO_SYSTEM_SIGNAL("signalLoggerMap", Hash /*loggerMap*/);
@@ -551,7 +550,7 @@ namespace karabo {
 
             if (std::filesystem::exists(m_blockListFile)) {
                 Hash blocked;
-                karabo::io::loadFromFile(blocked, m_blockListFile);
+                karabo::data::loadFromFile(blocked, m_blockListFile);
                 if (blocked.has("deviceIds")) {
                     auto& ids = blocked.get<std::vector<std::string>>("deviceIds");
                     trim_vector_elements(ids);
@@ -592,7 +591,7 @@ namespace karabo {
 
         void DataLoggerManager::postReconfigure() {
             std::lock_guard<std::mutex> lock(m_blockedMutex);
-            karabo::io::saveToFile(m_blocked, m_blockListFile);
+            karabo::data::saveToFile(m_blocked, m_blockListFile);
         }
 
 
@@ -1152,7 +1151,7 @@ namespace karabo {
                 // Logger map changed, so publish - online and as backup
                 set("loggerMap", makeLoggersTable());
                 emit<Hash>("signalLoggerMap", m_loggerMap);
-                karabo::io::saveToFile(m_loggerMap, m_loggerMapFile);
+                karabo::data::saveToFile(m_loggerMap, m_loggerMapFile);
             }
             return serverId;
         }

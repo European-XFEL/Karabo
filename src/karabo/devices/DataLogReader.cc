@@ -24,9 +24,9 @@
 #include <streambuf>
 #include <vector>
 
+#include "karabo/data/io/FileTools.hh"
+#include "karabo/data/io/Input.hh"
 #include "karabo/data/time/TimeDuration.hh"
-#include "karabo/io/FileTools.hh"
-#include "karabo/io/Input.hh"
 #include "karabo/util/DataLogUtils.hh"
 #include "karabo/util/Version.hh"
 
@@ -36,7 +36,6 @@ namespace karabo {
 
         using namespace std;
         using namespace karabo::data;
-        using namespace karabo::io;
 
 
         void DataLogReader::expectedParameters(Schema& expected) {

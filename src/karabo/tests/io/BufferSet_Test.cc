@@ -27,9 +27,9 @@
 #include <boost/asio/buffer.hpp>
 #include <boost/smart_ptr/make_shared_array.hpp>
 
-#include "karabo/io/BufferSet.hh"
+#include "karabo/data/io/BufferSet.hh"
 
-using karabo::io::BufferSet;
+using karabo::data::BufferSet;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(BufferSet_Test);
 

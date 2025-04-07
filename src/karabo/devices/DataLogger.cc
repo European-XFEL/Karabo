@@ -27,13 +27,13 @@
 #include <filesystem>
 #include <streambuf>
 
+#include "karabo/data/io/Input.hh"
+#include "karabo/data/io/TextSerializer.hh"
 #include "karabo/data/schema/OverwriteElement.hh"
 #include "karabo/data/schema/SimpleElement.hh"
 #include "karabo/data/schema/TableElement.hh"
 #include "karabo/data/schema/VectorElement.hh"
 #include "karabo/data/types/Schema.hh"
-#include "karabo/io/Input.hh"
-#include "karabo/io/TextSerializer.hh"
 #include "karabo/net/EventLoop.hh"
 #include "karabo/net/Strand.hh"
 #include "karabo/util/MetaTools.hh"
@@ -47,7 +47,6 @@ namespace karabo {
         using namespace std;
         using namespace karabo::data;
         using namespace karabo::util;
-        using namespace karabo::io;
         using namespace karabo::xms;
         using namespace std::placeholders;
 

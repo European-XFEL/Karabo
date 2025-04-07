@@ -28,15 +28,14 @@
 #include <karabo/data/schema/NodeElement.hh>
 #include <karabo/data/schema/VectorElement.hh>
 #include <karabo/data/types/Hash.hh>
-#include <karabo/io/FileTools.hh>
 #include <karabo/util/TimeProfiler.hh>
 
 #include "TestPathSetup.hh"
+#include "karabo/data/io/FileTools.hh"
 
 using namespace std;
 using namespace karabo::data;
 using namespace karabo::util;
-using namespace karabo::io;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(FileInputOutput_Test);
 

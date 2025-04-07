@@ -25,19 +25,18 @@
 
 #include "SchemaSerializer_Test.hh"
 
-#include <karabo/io/BinaryFileOutput.hh>
-#include <karabo/io/FileTools.hh>
-#include <karabo/io/SchemaBinarySerializer.hh>
-#include <karabo/io/TextFileOutput.hh>
-
+#include "karabo/data/io/BinaryFileOutput.hh"
+#include "karabo/data/io/BinarySerializer.hh"
+#include "karabo/data/io/FileTools.hh"
+#include "karabo/data/io/SchemaBinarySerializer.hh"
+#include "karabo/data/io/TextFileOutput.hh"
 #include "karabo/data/schema/ChoiceElement.hh"
 #include "karabo/data/schema/NodeElement.hh"
 #include "karabo/data/schema/SimpleElement.hh"
 #include "karabo/data/schema/VectorElement.hh"
-#include "karabo/io/BinarySerializer.hh"
 #include "karabo/util/TimeProfiler.hh"
 
-using namespace karabo::io;
+using namespace karabo::data;
 using namespace karabo::data;
 using std::vector;
 

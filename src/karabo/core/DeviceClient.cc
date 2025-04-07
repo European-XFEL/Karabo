@@ -28,10 +28,10 @@
 #include <mutex>
 
 #include "Device.hh"
+#include "karabo/data/io/FileTools.hh"
 #include "karabo/data/types/FromLiteral.hh"
 #include "karabo/data/types/NDArray.hh"
 #include "karabo/data/types/Schema.hh"
-#include "karabo/io/FileTools.hh"
 #include "karabo/log/Logger.hh"
 #include "karabo/net/EventLoop.hh"
 #include "karabo/net/utils.hh"
@@ -960,7 +960,7 @@ namespace karabo {
 
         Hash DeviceClient::loadConfigurationFromFile(const std::string& filename) {
             Hash configuration;
-            karabo::io::loadFromFile(configuration, filename);
+            karabo::data::loadFromFile(configuration, filename);
             return configuration;
         }
 
