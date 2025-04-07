@@ -838,7 +838,7 @@ namespace karabo {
 
         void GuiServerDevice::onTokenAuthorizeResult(const WeakChannelPointer& weakChannel, const std::string& clientId,
                                                      const karabo::util::Version& clientVersion,
-                                                     const std::string& oneTimeToken,
+                                                     const std::string& oneTimeToken, const bool isLoginOverLogin,
                                                      const karabo::net::OneTimeTokenAuthorizeResult& authResult) {
             karabo::net::Channel::Pointer channel = weakChannel.lock();
             if (channel) {
@@ -849,7 +849,14 @@ namespace karabo {
                 if (!authResult.success) {
                     const string errorMsg = "Error validating token: " + authResult.errMsg;
                     KARABO_LOG_FRAMEWORK_ERROR << errorMsg;
-                    sendLoginErrorAndDisconnect(channel, clientId, clientVersion.getString(), errorMsg);
+                    const Hash h("type", "notification", "message", errorMsg);
+                    safeClientWrite(weakChannel, h);
+                    if (!isLoginOverLogin) {
+                        // If the authorization failed for a login that is not on top of an existing login
+                        // session, disconnect the client.
+                        karabo::net::EventLoop::post(bind_weak(&GuiServerDevice::deferredDisconnect, this, weakChannel),
+                                                     500);
+                    }
                     return;
                 } else {
                     karabo::data::Schema::AccessLevel level{Schema::AccessLevel::OBSERVER};
@@ -871,10 +878,22 @@ namespace karabo {
                     h.set("readOnly", readOnly);
                     safeClientWrite(channel, h);
 
-                    sendSystemTopology(weakChannel);
-
-                    channel->readAsyncHash(
-                          bind_weak(&karabo::devices::GuiServerDevice::onRead, this, _1, weakChannel, _2, readOnly));
+                    if (!isLoginOverLogin) {
+                        // For logins that are not on top of an existing login
+                        // session, send the system topology.
+                        sendSystemTopology(weakChannel);
+                        // For logins over an existing login session there's
+                        // already a loop consuming messages sent by connected
+                        // GUI clients that is kept by the onRead method, so
+                        // this loop should not be triggered from here. On the
+                        // other hand, "fresh" login messages are read by a
+                        // temporary consuming loop kept by the onWaitForLogin
+                        // method, which stops right after the login message is
+                        // read. For the "fresh" login messages, the loop kept
+                        // by the onRead message must be triggered from here.
+                        channel->readAsyncHash(bind_weak(&karabo::devices::GuiServerDevice::onRead, this, _1,
+                                                         weakChannel, _2, readOnly));
+                    }
                 }
             }
         }
@@ -1101,8 +1120,6 @@ namespace karabo {
 
                 if (userAuthActive) {
                     // GUI Server is in authenticated mode
-                    // TODO: replace minAuthClientVersion with minClientVersion bumped to 2.20.0 right after 2.21 (or
-                    //       later) is released.
                     const std::string minAuthClientVersion = "2.20.0";
                     if (clientVersion < Version(minAuthClientVersion)) {
                         const string errorMsg =
@@ -1112,19 +1129,40 @@ namespace karabo {
                         return;
                     }
                     if (hash.has("oneTimeToken")) {
-                        // A one time token was sent - has to validate and authorize it.
+                        // A one time token was sent - has to validate and authorize it, but before we must check if
+                        // we are dealing with a login over an active login session: if that is the case, there must
+                        // be no active temporary session on top of the active login session.
+                        bool isLoginOverLogin =
+                              false; // Is this a "non-fresh" login? We need to know because a "non-fresh"
+                                     // login only notifies in case of a failed authorization, while a
+                                     // "fresh" login also disconnects the client.
+                        {
+                            std::lock_guard<std::mutex> lock(m_channelMutex);
+                            auto it = m_channels.find(channel);
+                            if (it != m_channels.end()) {
+                                isLoginOverLogin = true;
+                                if (!it->second.temporarySessionToken.empty()) {
+                                    const string errorMsg =
+                                          "There's an active temporary session. Please terminate it before trying to "
+                                          "login again.";
+                                    const Hash h("type", "notification", "message", errorMsg);
+                                    safeClientWrite(weakChannel, h);
+                                    return;
+                                }
+                            }
+                        }
                         const std::string oneTimeToken = hash.get<string>("oneTimeToken");
                         m_authClient.authorizeOneTimeToken(
                               oneTimeToken, m_topic,
                               bind_weak(&karabo::devices::GuiServerDevice::onTokenAuthorizeResult, this, weakChannel,
-                                        clientId, clientVersion, oneTimeToken, _1));
+                                        clientId, clientVersion, oneTimeToken, isLoginOverLogin, _1));
                         KARABO_LOG_FRAMEWORK_INFO << "Authenticated login request from client_id: " << clientId
                                                   << " (version " << cliVersion
                                                   << "). oneTimeToken to be authorized: " << oneTimeToken;
                         // The GUI client at this point will keep waiting for the authorization result or an error.
-                        // As the client is not supposed to send any other message to the GUI Server in the meantime,
-                        // we return without triggering the next read for the channel. This triggering will be done
-                        // by onTokenAuthorizeResult.
+                        // As the client is not supposed to send any other message to the GUI Server in the
+                        // meantime, we return without triggering the next read for the channel. This triggering
+                        // will be done by onTokenAuthorizeResult.
                         return;
                     } else {
                         // For versions of the GUI Client prior to 2.20.0 a login message with no OneTimeToken is
@@ -1139,8 +1177,8 @@ namespace karabo {
                                   << "(version " << cliVersion << ").";
                             return;
                         }
-                        // From version 2.20.0 of the GUI Client, a login message with no OneTimeToken is interpreted as
-                        // a request for a read-only session by an authenticated GUI Server.
+                        // From version 2.20.0 of the GUI Client, a login message with no OneTimeToken is
+                        // interpreted as a request for a read-only session by an authenticated GUI Server.
                         readOnly = true;
                         registerConnect(clientVersion, channel, clientId);
                         // Sends a message reporting a login for a read-only session
@@ -1157,6 +1195,7 @@ namespace karabo {
                 else {
                     // No authentication involved
                     registerConnect(clientVersion, channel, clientUserId);
+                    // TODO only send topology if it is not a login over login
                     sendSystemTopology(weakChannel);
                     KARABO_LOG_FRAMEWORK_INFO << "Login request from client_id: " << clientId << " (version "
                                               << cliVersion << ") with no authentication.";
@@ -1195,6 +1234,11 @@ namespace karabo {
                               "' is not allowed on this GUI client version. Please upgrade your GUI client");
                         const Hash h("type", "notification", "message", message);
                         safeClientWrite(channel, h);
+                    } else if (type == "login") {
+                        const Channel::Pointer chan = channel.lock();
+                        if (chan && chan->isOpen()) {
+                            onLogin(chan, info);
+                        }
                     } else if (type == "beginTemporarySession") {
                         if (!readOnly) {
                             // A temporary session can only be started from a non-readOnly session
@@ -2306,7 +2350,7 @@ namespace karabo {
 
 
         void GuiServerDevice::devicesChangedHandler(const karabo::data::Hash& deviceUpdates) {
-            // The keys of 'deviceUpdates' are the deciveIds with updates and the values behind the keys are
+            // The keys of 'deviceUpdates' are the deviceIds with updates and the values behind the keys are
             // Hashes with the updated properties.
             try {
                 std::lock_guard<std::mutex> lock(m_channelMutex);
@@ -2613,7 +2657,7 @@ namespace karabo {
                                 status = "CONNECTING";
                                 break;
                             case ConnectionStatus::DISCONNECTING:
-                                status = "DICONNECTING";
+                                status = "DISCONNECTING";
                                 // no default: - compiler complains about missing ConnectionStatus values
                         }
                     }
