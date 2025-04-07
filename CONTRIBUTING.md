@@ -183,34 +183,34 @@ C++ Structure
 The Karabo C++ framework is provided as a single library with its source
 in the 'src/karabo' directory of this repository.
 Nevertheless, the code is organised in subdirectories.
-The content of the subdirectories is outlined below together with the rules,
-from which other subdirectories a header may be included.
+The content of the subdirectories is outlined below along with their
+include restrictions.
 
 - `karabo/data/types`: Karabo data types (e.g. its data container `Hash`
   and self-description `Schema`), string tools, and the Karabo exceptions.
   No includes from other Karabo directories allowed.
 - `karabo/data/time`: Time related classes.
-  No includes from other directories than `karabo/data/types` allowed.
+  No includes from other Karabo directories than `karabo/data/types` allowed.
 - `karabo/data/schema`: Tooling to assemble a `Schema` and create objects
   with configurations after validating them.
   No includes from other Karabo directories than `karabo/data/types` or
   `karabo/data/time` allowed.
-- `karabo::log`: Karabo file logging. No includes from other directories than
-  `karabo/data` allowed.
+- `karabo::log`: Karabo file logging. No includes from other Karabo directories
+  than `karabo/data` allowed.
 - `karabo::io`: Serialisation to xml and binary format, file tools.
-  No includes from other directories than `karabo/data` and `karabo/log`
+  No includes from other Karabo directories than `karabo/data` and `karabo/log`
   allowed.
   TODO: To be migrated into `karabo/data` - but then should not include `log`!
 - `karabo::net`: Networking code (TCP, broker, influxDB) and the event loop
-  No includes from other directories than `karabo/data`, `karabo/log`, and
-  `karabo/log` allowed.
+  No includes from other Karabo directories than `karabo/data`, `karabo/log`,
+  and `karabo/log` allowed.
 - `karabo::util`: Utilities like plugin loading, bind_weak, version, etc.
   No includes from `karabo/core`, `karabo/devices`, or  `karabo/xms`.
 - `karabo::xms`: Communication (signal, slot, pipeline).
-  No includes from `karabo/core` or `karabo/devices`
+  No includes from `karabo/core` or `karabo/devices`.
 - `karabo::core`: Main objects: device, server, client
-  No includes from `karabo/devices`
-- `karabo::devices`: Devices provided by the framework
+  No includes from `karabo/devices`.
+- `karabo::devices`: Devices provided by the framework.
   No include restrictions.
 
 All Karabo code resides in the namespace `karabo` and within that in a
