@@ -459,8 +459,8 @@ class DeviceServer:
                 prevLauncher = self.deviceInstanceMap[deviceid]
                 if prevLauncher.child.poll() is None:
                     # Process still up. Check Karabo communication by ping:
-                    request = self.ss.request(deviceid, "slotPing",
-                                              deviceid, 1, False)
+                    request = self.ss.request(deviceid, "slotPing", deviceid,
+                                              1)
                     try:
                         # Too lazy to use async techniques for this corner case
                         request.waitForReply(3000)  # in milliseconds
