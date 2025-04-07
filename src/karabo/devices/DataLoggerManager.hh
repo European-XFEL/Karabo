@@ -219,23 +219,23 @@ namespace karabo {
                 }
             }
 
-            inline std::string serverIdToReaderId(const std::string& serverId, unsigned int readerNum = 0u) const {
-                return karabo::util::DATALOGREADER_PREFIX + karabo::data::toString(readerNum) + "-" + serverId;
+            inline std::string serverIdToReaderId(const std::string& serverId) const {
+                return karabo::util::DATALOGREADER_PREFIX + serverId;
             }
 
             inline std::string readerIdToServerId(const std::string& readerId) const {
+                // Just remove the prefix - but be prepared for loggers not started by this manager
+                // and thus not following the naming convention.
                 const size_t posPrefix = readerId.find(karabo::util::DATALOGREADER_PREFIX);
-                const size_t posLastHifen = readerId.rfind("-");
-                if (posPrefix == 0ul && posLastHifen != std::string::npos && posLastHifen < readerId.size() - 1) {
-                    // We have a properly formatted readerId.
-                    return readerId.substr(posLastHifen + 1);
+                if (posPrefix == 0ul) {
+                    return readerId.substr(strlen(karabo::util::DATALOGGER_PREFIX));
                 } else {
                     // wrong or even no prefix
                     return std::string();
                 }
             }
 
-            void instantiateReaders(const std::string& serverId);
+            void instantiateReader(const std::string& serverId);
 
             /**
              * This device may not be locked

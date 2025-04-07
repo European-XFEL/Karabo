@@ -290,7 +290,7 @@ void DataLogging_Test::testInfluxMaxSchemaLogRate() {
     const unsigned int afterFlushWait = 1'000u;
 
     const std::string loggerId = karabo::util::DATALOGGER_PREFIX + m_server;
-    const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
+    const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + m_server;
     const std::string deviceId(getDeviceIdPrefix() + "SchemaLogRateDevice");
 
     // defValueSuffix guarantees uniqueness of the schema - the test doesn't
@@ -460,7 +460,7 @@ void DataLogging_Test::testInfluxMaxStringLength() {
     const std::string aboveLimitStr(maxStringLength * 2, 'A');
 
     const std::string loggerId = karabo::util::DATALOGGER_PREFIX + m_server;
-    const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
+    const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + m_server;
     // A device exclusive for this test case is used to guarantee that its
     // schema will be partitioned into multiple chunks. The default schema for
     // the PropertyTest device has around 78 Kb and for this test the
@@ -574,7 +574,7 @@ void DataLogging_Test::testInfluxMaxPerDevicePropLogRate() {
                                                  // during the write bursts of the tests.
 
     const std::string loggerId = karabo::util::DATALOGGER_PREFIX + m_server;
-    const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
+    const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + m_server;
 
     const std::string str32Kb(32768ul, 'A');
     const std::string str8Kb(8192ul, 'B');
@@ -746,7 +746,7 @@ void DataLogging_Test::testInfluxSafeSchemaRetentionPeriod() {
     std::clog << "Testing that schemas older than safeSchemaRetentionPeriod are preserved ..." << std::endl;
 
     const std::string loggerId = karabo::util::DATALOGGER_PREFIX + m_server;
-    const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
+    const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + m_server;
     const std::string propTestDevice = m_deviceId + "__SCHEMA_RETENTION_PERIOD";
 
     const unsigned int afterFlushWait = 500u;
@@ -912,7 +912,7 @@ void DataLogging_Test::testNoInfluxServerHandling() {
 
     // The LogReader should be still in ON state - it only goes to error after failing to connect to the Influx
     // instance.
-    const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
+    const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + m_server;
     karabo::data::State readerState = karabo::data::State::UNKNOWN;
     waitForCondition(
           [this, &readerState, &dlreader0]() {
@@ -984,7 +984,7 @@ void DataLogging_Test::testInfluxPropHistoryAveraging() {
               << std::flush;
 
     const std::string loggerId = karabo::util::DATALOGGER_PREFIX + m_server;
-    const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
+    const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + m_server;
     const int maxPropHistorySize = 40;
     const int numWrites = maxPropHistorySize + 20;
 

@@ -1092,34 +1092,29 @@ namespace karabo {
         }
 
 
-        void DataLoggerManager::instantiateReaders(const std::string& serverId) {
-            // For now we continue to instantiate all DATALOGREADERS_PER_SERVER log reader instances per server.
-            // But that is only since clients running in releases before 2.17.0 assume their existence.
-            // Once no pre-2.17.0 clients are supported anymore, switch to a single reader per server.
-            for (unsigned int i = 0; i < DATALOGREADERS_PER_SERVER; ++i) {
-                const std::string readerId = serverIdToReaderId(serverId, i);
-                if (!remote().exists(readerId).first) {
-                    Hash hash;
-                    Hash config;
-                    if (m_loggerClassId == "FileDataLogger") {
-                        hash.set("classId", "FileLogReader");
-                        hash.set("deviceId", readerId);
-                        config.set("directory", get<string>("fileDataLogger.directory"));
-                    } else if (m_loggerClassId == "InfluxDataLogger") {
-                        hash.set("classId", "InfluxLogReader");
-                        hash.set("deviceId", readerId);
-                        config.set("urlConfigSchema", get<string>("influxDataLogger.urlRead"));
-                        // Schema description assumes that InfluxLogReader treats empty value of "urlReadPropHistory"
-                        config.set("urlPropHistory", get<string>("influxDataLogger.urlReadPropHistory"));
-                        config.set("dbname", get<string>("influxDataLogger.dbname"));
-                    }
-                    hash.set("configuration", config);
-                    const std::string& xLogReader = hash.get<std::string>("classId");
-                    KARABO_LOG_FRAMEWORK_INFO << "Trying to instantiate '" << readerId << "' of type '" << xLogReader
-                                              << "' on server '" << serverId << "'";
-
-                    remote().instantiateNoWait(serverId, hash);
+        void DataLoggerManager::instantiateReader(const std::string& serverId) {
+            const std::string readerId = serverIdToReaderId(serverId);
+            if (!remote().exists(readerId).first) {
+                Hash hash;
+                Hash config;
+                if (m_loggerClassId == "FileDataLogger") {
+                    hash.set("classId", "FileLogReader");
+                    hash.set("deviceId", readerId);
+                    config.set("directory", get<string>("fileDataLogger.directory"));
+                } else if (m_loggerClassId == "InfluxDataLogger") {
+                    hash.set("classId", "InfluxLogReader");
+                    hash.set("deviceId", readerId);
+                    config.set("urlConfigSchema", get<string>("influxDataLogger.urlRead"));
+                    // Schema description assumes that InfluxLogReader treats empty value of "urlReadPropHistory"
+                    config.set("urlPropHistory", get<string>("influxDataLogger.urlReadPropHistory"));
+                    config.set("dbname", get<string>("influxDataLogger.dbname"));
                 }
+                hash.set("configuration", config);
+                const std::string& xLogReader = hash.get<std::string>("classId");
+                KARABO_LOG_FRAMEWORK_INFO << "Trying to instantiate '" << readerId << "' of type '" << xLogReader
+                                          << "' on server '" << serverId << "'";
+
+                remote().instantiateNoWait(serverId, hash);
             }
         }
 
@@ -1317,7 +1312,7 @@ namespace karabo {
 
         void DataLoggerManager::newLoggerServer(const std::string& serverId) {
             instantiateLogger(serverId);
-            instantiateReaders(serverId);
+            instantiateReader(serverId);
         }
 
         void DataLoggerManager::instantiateLogger(const std::string& serverId) {
@@ -1514,9 +1509,7 @@ namespace karabo {
 
         void DataLoggerManager::goneReader(const std::string& readerId) {
             const std::string serverId = readerIdToServerId(readerId);
-            // instantiateReaders is smart enough to handle already instantiated readers (currently there's more than
-            // one LogReader instance per device server).
-            instantiateReaders(serverId);
+            instantiateReader(serverId);
         }
 
 

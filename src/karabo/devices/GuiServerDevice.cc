@@ -2041,7 +2041,7 @@ namespace karabo {
             const string loggerId = DATALOGGER_PREFIX + deviceId;
             std::lock_guard<std::mutex> lock(m_loggerMapMutex);
             if (m_loggerMap.has(loggerId)) {
-                return DATALOGREADER_PREFIX + ("0-" + m_loggerMap.get<string>(loggerId));
+                return DATALOGREADER_PREFIX + m_loggerMap.get<string>(loggerId);
             } else {
                 std::ostringstream str;
                 str << "Cannot determine DataLogReaderId for '" << deviceId << "'. ";

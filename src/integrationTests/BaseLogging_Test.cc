@@ -437,12 +437,12 @@ std::pair<bool, std::string> BaseLogging_Test::startDataLoggerManager(
 void BaseLogging_Test::testMaxNumDataRange() {
     std::clog << "Check if InfluxLogReader is validating range for 'maxNumData' for slot 'getPropertyHistory' ... ";
 
-    const std::string dlReader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
-    waitUntilLogged(dlReader0, "testMaxNumDataRange");
+    const std::string dlReader = karabo::util::DATALOGREADER_PREFIX + m_server;
+    waitUntilLogged(dlReader, "testMaxNumDataRange");
     const std::string outOfRangeErrMsg1("Requested maximum number of data points ('maxNumData') is");
     const std::string outOfRangeErrMsg2("which surpasses the limit of");
 
-    const int readerMaxHistSize = m_deviceClient->get<int>(dlReader0, "maxHistorySize");
+    const int readerMaxHistSize = m_deviceClient->get<int>(dlReader, "maxHistorySize");
 
     Epochstamp refEpoch;
 
@@ -456,7 +456,7 @@ void BaseLogging_Test::testMaxNumDataRange() {
 
     // Values past InfluxLogReader::maxHistorySize must be rejected.
     try {
-        m_sigSlot->request(dlReader0, "slotGetPropertyHistory", dlReader0, "url", params)
+        m_sigSlot->request(dlReader, "slotGetPropertyHistory", dlReader, "url", params)
               .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
               .receive(replyDevice, replyProperty, history);
         throw KARABO_LOGIC_EXCEPTION("Wrong arguments to slotGetPropertyHistory did not let it throw");
@@ -471,7 +471,7 @@ void BaseLogging_Test::testMaxNumDataRange() {
     // Negative values must be rejected.
     params.set<int>("maxNumData", -1);
     try {
-        m_sigSlot->request(dlReader0, "slotGetPropertyHistory", dlReader0, "url", params)
+        m_sigSlot->request(dlReader, "slotGetPropertyHistory", dlReader, "url", params)
               .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
               .receive(replyDevice, replyProperty, history);
         throw KARABO_LOGIC_EXCEPTION("Wrong arguments to slotGetPropertyHistory did not let it throw");
@@ -485,13 +485,13 @@ void BaseLogging_Test::testMaxNumDataRange() {
 
     // 0 must be accepted - it as if InfluxLogReader::maxHistorySize has been used.
     params.set<int>("maxNumData", 0);
-    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(dlReader0, "slotGetPropertyHistory", dlReader0, "url", params)
+    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(dlReader, "slotGetPropertyHistory", dlReader, "url", params)
                                   .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                                   .receive(replyDevice, replyProperty, history));
 
     // InfluxLogReader::maxHistorySize must be accepted.
     params.set<int>("maxNumData", readerMaxHistSize);
-    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(dlReader0, "slotGetPropertyHistory", dlReader0, "url", params)
+    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(dlReader, "slotGetPropertyHistory", dlReader, "url", params)
                                   .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                                   .receive(replyDevice, replyProperty, history));
 
@@ -538,13 +538,13 @@ void BaseLogging_Test::testMaxNumDataHistory() {
     vector<Hash> history;
     std::string replyDevice;
     std::string replyProperty;
-    const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
+    const std::string dlReader = karabo::util::DATALOGREADER_PREFIX + m_server;
 
     // History retrieval may take more than one attempt.
-    auto historyChecker = [this, maxNumDataFull, &deviceId, &dlreader0, &params, &replyDevice, &replyProperty,
+    auto historyChecker = [this, maxNumDataFull, &deviceId, &dlReader, &params, &replyDevice, &replyProperty,
                            &history]() {
         try {
-            m_sigSlot->request(dlreader0, "slotGetPropertyHistory", deviceId, "int32Property", params)
+            m_sigSlot->request(dlReader, "slotGetPropertyHistory", deviceId, "int32Property", params)
                   .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                   .receive(replyDevice, replyProperty, history);
             return history.size() == static_cast<std::size_t>(maxNumDataFull);
@@ -577,10 +577,10 @@ void BaseLogging_Test::testMaxNumDataHistory() {
     history.clear();
 
     // Sample history retrieval may take more than one attempt.
-    auto sampleHistoryChecker = [this, maxNumDataSampled, &deviceId, &dlreader0, &params, &replyDevice, &replyProperty,
+    auto sampleHistoryChecker = [this, maxNumDataSampled, &deviceId, &dlReader, &params, &replyDevice, &replyProperty,
                                  &history]() {
         try {
-            m_sigSlot->request(dlreader0, "slotGetPropertyHistory", deviceId, "int32Property", params)
+            m_sigSlot->request(dlReader, "slotGetPropertyHistory", deviceId, "int32Property", params)
                   .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                   .receive(replyDevice, replyProperty, history);
             return history.size() >= (maxNumDataSampled / 2ul);
@@ -632,7 +632,7 @@ void BaseLogging_Test::testDropBadData() {
 
     waitUntilLogged(deviceId, "testDropBadData");
 
-    const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
+    const std::string dlReader = karabo::util::DATALOGREADER_PREFIX + m_server;
     unsigned int numCycles = 5;
     Epochstamp before;
     const Epochstamp inAlmostAFortnite = before + TimeDuration(13, 0, 0, 0, 0);
@@ -682,7 +682,7 @@ void BaseLogging_Test::testDropBadData() {
             std::this_thread::sleep_for(50ms);
             maxTime -= 50;
             CPPUNIT_ASSERT_NO_THROW(
-                  m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast", deviceId, inAFortnite.toIso8601())
+                  m_sigSlot->request(dlReader, "slotGetConfigurationFromPast", deviceId, inAFortnite.toIso8601())
                         .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                         .receive(cfg, schema, configAtTimepoint, configTimepoint));
         } while (!cfg.has("value") && maxTime >= 0);
@@ -729,7 +729,7 @@ void BaseLogging_Test::testDropBadData() {
         maxTime -= 100;
         CPPUNIT_ASSERT_NO_THROW(
               m_sigSlot
-                    ->request(dlreader0, "slotGetBadData", before.toIso8601Ext(), whenFlushed.toIso8601Ext())
+                    ->request(dlReader, "slotGetBadData", before.toIso8601Ext(), whenFlushed.toIso8601Ext())
                     //(inAFortnite + TimeDuration(1, 0, 0, 0, 0)).toIso8601Ext())
                     .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                     .receive(badDataAllDevices));
@@ -816,7 +816,7 @@ void BaseLogging_Test::testDropBadData() {
     Schema dummySchema;
     std::string dummyConfigTimepoint;
     CPPUNIT_ASSERT_NO_THROW(
-          m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast", deviceId, Timestamp().toIso8601())
+          m_sigSlot->request(dlReader, "slotGetConfigurationFromPast", deviceId, Timestamp().toIso8601())
                 .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                 .receive(cfg, dummySchema, configAtTimepoint, dummyConfigTimepoint));
     CPPUNIT_ASSERT(configAtTimepoint);
@@ -830,7 +830,7 @@ void BaseLogging_Test::testDropBadData() {
 
     // Now test that slotGetBadData correctly returns nothing for a decent period (here: future)
     CPPUNIT_ASSERT_NO_THROW(m_sigSlot
-                                  ->request(dlreader0, "slotGetBadData", inAFortnite.toIso8601Ext(),
+                                  ->request(dlReader, "slotGetBadData", inAFortnite.toIso8601Ext(),
                                             (inAFortnite + TimeDuration(1, 0, 0, 0, 0)).toIso8601Ext())
                                   .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                                   .receive(badDataAllDevices));
@@ -842,9 +842,8 @@ void BaseLogging_Test::testDropBadData() {
 void BaseLogging_Test::testAllInstantiated(bool waitForLoggerReady) {
     std::clog << "Testing logger and readers instantiations ... " << std::flush;
 
-    const vector<string> devices({karabo::util::DATALOGGER_PREFIX + m_server,
-                                  karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server),
-                                  karabo::util::DATALOGREADER_PREFIX + ("1-" + m_server)});
+    const vector<string> devices(
+          {karabo::util::DATALOGGER_PREFIX + m_server, karabo::util::DATALOGREADER_PREFIX + m_server});
 
     bool succeeded = waitForCondition(
           [this, &devices]() {
@@ -920,7 +919,7 @@ void BaseLogging_Test::testLastKnownConfiguration(karabo::data::Epochstamp fileM
 
     std::clog << "Testing last known configuration at specific timepoints ..." << std::endl;
 
-    const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
+    const std::string dlReader = karabo::util::DATALOGREADER_PREFIX + m_server;
 
     Schema schema;
     Hash conf;
@@ -931,7 +930,7 @@ void BaseLogging_Test::testLastKnownConfiguration(karabo::data::Epochstamp fileM
     // At the beforeAnything timepoint no known configuration existed, so an exception is expected.
     bool remoteExcept = false;
     try {
-        m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast", m_deviceId, beforeAnything.toIso8601())
+        m_sigSlot->request(dlReader, "slotGetConfigurationFromPast", m_deviceId, beforeAnything.toIso8601())
               .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
               .receive(conf, schema, configAtTimepoint, configTimepoint);
     } catch (const RemoteException& re) {
@@ -954,7 +953,7 @@ void BaseLogging_Test::testLastKnownConfiguration(karabo::data::Epochstamp fileM
     // At the rightBeforeDeviceGone timepoint, a last known configuration should be obtained with the last value set
     // in the  previous test cases for the 'int32Property' - even after the device being logged is gone.
     CPPUNIT_ASSERT_NO_THROW(
-          m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast", m_deviceId, rightBeforeDeviceGone.toIso8601())
+          m_sigSlot->request(dlReader, "slotGetConfigurationFromPast", m_deviceId, rightBeforeDeviceGone.toIso8601())
                 .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                 .receive(conf, schema, configAtTimepoint, configTimepoint));
 
@@ -1036,7 +1035,7 @@ void BaseLogging_Test::testLastKnownConfiguration(karabo::data::Epochstamp fileM
         // At the afterDeviceGone timepoint, a last known configuration should be obtained with the last value set
         // in the previous test cases for the 'int32Property' - even after the device being logged is gone.
         CPPUNIT_ASSERT_NO_THROW(
-              m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast", m_deviceId, afterDeviceGone.toIso8601())
+              m_sigSlot->request(dlReader, "slotGetConfigurationFromPast", m_deviceId, afterDeviceGone.toIso8601())
                     .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                     .receive(conf, schema, configAtTimepoint, configTimepoint));
         ++numChecks;
@@ -1063,7 +1062,7 @@ void BaseLogging_Test::testLastKnownConfiguration(karabo::data::Epochstamp fileM
         // At the afterDeviceGone timepoint, a last known configuration should be obtained with the last value set
         // in the previous test cases for the 'int32Property' - even after the device being logged is gone.
         CPPUNIT_ASSERT_NO_THROW(m_sigSlot
-                                      ->request(dlreader0, "slotGetConfigurationFromPast", m_deviceId,
+                                      ->request(dlReader, "slotGetConfigurationFromPast", m_deviceId,
                                                 fileMigratedDataEndsBefore.toIso8601())
                                       .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                                       .receive(conf, schema, configAtTimepoint, configTimepoint));
@@ -1171,7 +1170,7 @@ void BaseLogging_Test::testCfgFromPastRestart(bool pastConfigStaysPast) {
     std::this_thread::sleep_for(250ms);
 
     // Now check that for all stored stamps, the stamps gathered for the reader are correct
-    const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
+    const std::string dlReader = karabo::util::DATALOGREADER_PREFIX + m_server;
     int failedCycles = 0;
     for (unsigned int i = 0; i < numCycles; ++i) {
         // Time stamp after increasing value
@@ -1192,7 +1191,7 @@ void BaseLogging_Test::testCfgFromPastRestart(bool pastConfigStaysPast) {
         while (nTries > 0 && (conf.empty() || static_cast<int>(i + 1) != conf.get<int>("value"))) {
             try {
                 nChecks++;
-                m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast", deviceId, stampAfter.toIso8601())
+                m_sigSlot->request(dlReader, "slotGetConfigurationFromPast", deviceId, stampAfter.toIso8601())
                       .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                       .receive(conf, schema);
             } catch (const RemoteException& re) {
@@ -1277,7 +1276,7 @@ void BaseLogging_Test::testCfgFromPastRestart(bool pastConfigStaysPast) {
         params.set("maxNumData", static_cast<int>(numCycles * 2));
         vector<Hash> history;
         std::string histDevice, histProperty;
-        CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(dlreader0, "slotGetPropertyHistory", deviceId, "value", params)
+        CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(dlReader, "slotGetPropertyHistory", deviceId, "value", params)
                                       .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                                       .receive(histDevice, histProperty, history));
         for (const Hash& histEntry : history) {
@@ -1306,7 +1305,7 @@ void BaseLogging_Test::testUnchangedNoDefaultProperties() {
     clog << "Testing past config retrieval of properties with no default value ..." << flush;
 
     const string noDefaultProp = "Int32NoDefault";
-    const string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
+    const string dlReader = karabo::util::DATALOGREADER_PREFIX + m_server;
 
     // Start test device and take care that the logger is ready for it
     // Use platform-dependent name for the device: concurrent tests in CI
@@ -1344,7 +1343,7 @@ void BaseLogging_Test::testUnchangedNoDefaultProperties() {
     int nTries = NUM_RETRY;
     while (!conf.has(noDefaultProp) && nTries > 0) {
         try {
-            m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast", deviceId, afterPropSet)
+            m_sigSlot->request(dlReader, "slotGetConfigurationFromPast", deviceId, afterPropSet)
                   .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                   .receive(conf, schema, configAtTimepoint, configTimepoint);
         } catch (const RemoteException& e) {
@@ -1389,7 +1388,7 @@ void BaseLogging_Test::testUnchangedNoDefaultProperties() {
     // Assert that getConfigurationFromPast for a timepoint after the second
     // instantiation of the PropertyTest device does not have the no default
     // value property.
-    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast", deviceId, afterDeviceReinst)
+    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(dlReader, "slotGetConfigurationFromPast", deviceId, afterDeviceReinst)
                                   .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                                   .receive(conf, schema, configAtTimepoint, configTimepoint));
     CPPUNIT_ASSERT_MESSAGE("Property '" + noDefaultProp + "' should not be in retrieved configuration.",
@@ -1437,7 +1436,7 @@ void isEqualMessage(const std::string& message, const float& expected, const flo
 
 template <class T>
 void BaseLogging_Test::testHistory(const std::string& key, const std::function<T(int)>& f, const bool testConf) {
-    const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
+    const std::string dlReader = karabo::util::DATALOGREADER_PREFIX + m_server;
     const int max_set = 100;
     std::clog << "Testing Property History retrieval for '" << key << "'... " << std::flush;
 
@@ -1479,7 +1478,7 @@ void BaseLogging_Test::testHistory(const std::string& key, const std::function<T
     // the history retrieval might take more than one try, it could have to index the files (or wait
     // for the records to be available for reading in the Influx case).
 
-    const unsigned int numGetPropHist = m_deviceClient->get<unsigned int>(dlreader0, "numGetPropertyHistory");
+    const unsigned int numGetPropHist = m_deviceClient->get<unsigned int>(dlReader, "numGetPropertyHistory");
     std::vector<std::string> exceptionsMsgs;
 
     int nTries = NUM_RETRY;
@@ -1490,7 +1489,7 @@ void BaseLogging_Test::testHistory(const std::string& key, const std::function<T
             numChecks++;
             // TODO: use the deviceClient to retrieve the property history
             // history = m_deviceClient->getPropertyHistory(m_deviceId, key, before, after, max_set * 2);
-            m_sigSlot->request(dlreader0, "slotGetPropertyHistory", m_deviceId, key, params)
+            m_sigSlot->request(dlReader, "slotGetPropertyHistory", m_deviceId, key, params)
                   .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                   .receive(device, property, history);
         } catch (const karabo::data::TimeoutException& e) {
@@ -1515,7 +1514,7 @@ void BaseLogging_Test::testHistory(const std::string& key, const std::function<T
           static_cast<size_t>(max_set), history.size());
 
     CPPUNIT_ASSERT_EQUAL(numGetPropHist + numChecks,
-                         m_deviceClient->get<unsigned int>(dlreader0, "numGetPropertyHistory"));
+                         m_deviceClient->get<unsigned int>(dlReader, "numGetPropertyHistory"));
 
     for (int i = 0; i < max_set; i++) {
         // checking values and timestamps
@@ -1541,7 +1540,7 @@ void BaseLogging_Test::testHistory(const std::string& key, const std::function<T
                                   .timeout(FLUSH_REQUEST_TIMEOUT_MILLIS)
                                   .receive());
 
-    const unsigned int numGetCfgFromPast = m_deviceClient->get<unsigned int>(dlreader0, "numGetConfigurationFromPast");
+    const unsigned int numGetCfgFromPast = m_deviceClient->get<unsigned int>(dlReader, "numGetConfigurationFromPast");
     nTries = NUM_RETRY;
     numExceptions = 0;
     numChecks = 0;
@@ -1558,7 +1557,7 @@ void BaseLogging_Test::testHistory(const std::string& key, const std::function<T
         bool excepted = false;
         try {
             numChecks++;
-            m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast", m_deviceId, beforeWrites)
+            m_sigSlot->request(dlReader, "slotGetConfigurationFromPast", m_deviceId, beforeWrites)
                   .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                   .receive(conf, schema);
         } catch (const karabo::data::TimeoutException& e) {
@@ -1582,7 +1581,7 @@ void BaseLogging_Test::testHistory(const std::string& key, const std::function<T
                                  boost::algorithm::join(exceptionsMsgs, "\n"),
                            conf.size() > 0);
     CPPUNIT_ASSERT_EQUAL(numGetCfgFromPast + numChecks,
-                         m_deviceClient->get<unsigned int>(dlreader0, "numGetConfigurationFromPast"));
+                         m_deviceClient->get<unsigned int>(dlReader, "numGetConfigurationFromPast"));
 
     // One needs to check only the content here, therefore only the leaves are examined
     std::vector<std::string> leaves;
@@ -1620,7 +1619,7 @@ void BaseLogging_Test::testHistory(const std::string& key, const std::function<T
             // auto pair = m_deviceClient->getConfigurationFromPast(m_deviceId, before);
             // conf = pair.first
             numChecks++;
-            m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast", m_deviceId, afterWrites)
+            m_sigSlot->request(dlReader, "slotGetConfigurationFromPast", m_deviceId, afterWrites)
                   .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                   .receive(conf, schema);
         } catch (const karabo::data::TimeoutException& e) {
@@ -1891,7 +1890,7 @@ void BaseLogging_Test::testNans() {
 
     waitUntilLogged(deviceId, "testNans");
 
-    const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
+    const std::string dlReader = karabo::util::DATALOGREADER_PREFIX + m_server;
     const size_t max_set = 100ul;
     const size_t full_return_size = max_set + 1ul;
     std::clog << "Testing NaN and infinity are treated by Loggers " << std::flush;
@@ -1913,7 +1912,7 @@ void BaseLogging_Test::testNans() {
     for (const std::string& property : std::vector<std::string>({"int32Property", "floatProperty", "doubleProperty"})) {
         const Hash params("from", beforeWrites, "to", Epochstamp().toIso8601(), "maxNumData",
                           static_cast<int>(max_set * 2));
-        m_sigSlot->call(dlreader0, "slotGetPropertyHistory", deviceId, property, params); // fire-and-forget...
+        m_sigSlot->call(dlReader, "slotGetPropertyHistory", deviceId, property, params); // fire-and-forget...
     }
 
     // Collect stamps for when each bad floating point has been set (once) - to later test
@@ -1988,7 +1987,7 @@ void BaseLogging_Test::testNans() {
                 numChecks++;
                 // TODO: use the deviceClient to retrieve the property history
                 // history = m_deviceClient->getPropertyHistory(deviceId, key, before, after, max_set * 2);
-                m_sigSlot->request(dlreader0, "slotGetPropertyHistory", deviceId, property_pair.first, params)
+                m_sigSlot->request(dlReader, "slotGetPropertyHistory", deviceId, property_pair.first, params)
                       .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                       .receive(device, property, history);
             } catch (const karabo::data::TimeoutException& e) {
@@ -2061,7 +2060,7 @@ void BaseLogging_Test::testNans() {
         bool configAtTimepoint = false;
         std::string configTimepoint;
         CPPUNIT_ASSERT_NO_THROW(
-              m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast", deviceId, vec_es_afterWrites[i].toIso8601())
+              m_sigSlot->request(dlReader, "slotGetConfigurationFromPast", deviceId, vec_es_afterWrites[i].toIso8601())
                     .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                     .receive(conf, schema, configAtTimepoint, configTimepoint));
 
@@ -2185,7 +2184,7 @@ void BaseLogging_Test::testSchemaEvolution() {
     std::string replyDevice;
     std::string replyProperty;
 
-    const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
+    const std::string dlReader = karabo::util::DATALOGREADER_PREFIX + m_server;
 
     // the history retrieval might take more than one try, it could have to index the files (or wait
     // for the records to be available for reading in the Influx case).
@@ -2197,7 +2196,7 @@ void BaseLogging_Test::testSchemaEvolution() {
     while (nTries >= 0 && history.size() != 6) {
         try {
             numChecks++;
-            m_sigSlot->request(dlreader0, "slotGetPropertyHistory", deviceId, "reconfigurableValue", params)
+            m_sigSlot->request(dlReader, "slotGetPropertyHistory", deviceId, "reconfigurableValue", params)
                   .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                   .receive(replyDevice, replyProperty, history);
         } catch (const karabo::data::TimeoutException& e) {
