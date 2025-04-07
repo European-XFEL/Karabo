@@ -195,23 +195,24 @@ include restrictions.
   with configurations after validating them.
   No includes from other Karabo directories than `karabo/data/types` or
   `karabo/data/time` allowed.
-- `karabo::log`: Karabo file logging. No includes from other Karabo directories
+- `karabo/data/io`: Serialisation to xml and binary format, file tools.
+  No includes from other Karabo directories than `karabo/data` allowed.
+- `karabo/log`: Karabo file logging. No includes from other Karabo directories
   than `karabo/data` allowed.
-- `karabo::io`: Serialisation to xml and binary format, file tools.
-  No includes from other Karabo directories than `karabo/data` and `karabo/log`
-  allowed.
-  TODO: To be migrated into `karabo/data` - but then should not include `log`!
-- `karabo::net`: Networking code (TCP, broker, influxDB) and the event loop
-  No includes from other Karabo directories than `karabo/data`, `karabo/log`,
-  and `karabo/log` allowed.
-- `karabo::util`: Utilities like plugin loading, bind_weak, version, etc.
+- `karabo/net`: Networking code (TCP, broker, influxDB) and the event loop.
+  No includes from other Karabo directories than `karabo/data` and
+  `karabo/log` allowed.
+- `karabo/util`: Utilities like plugin loading, `bind_weak`, version, etc.
   No includes from `karabo/core`, `karabo/devices`, or  `karabo/xms`.
-- `karabo::xms`: Communication (signal, slot, pipeline).
+- `karabo/xms`: Communication (signal, slot, pipeline).
   No includes from `karabo/core` or `karabo/devices`.
-- `karabo::core`: Main objects: device, server, client
+- `karabo/core`: Main objects: device, server, client.
   No includes from `karabo/devices`.
-- `karabo::devices`: Devices provided by the framework.
+- `karabo/devices`: Devices provided by the framework.
   No include restrictions.
+- `karabo/tests`: Unit tests with one subdirectory for each of the above
+  mentioned directories. Contributors are encouraged to obeye the same
+  include restrictions for tests as for the tested source code directories.
 
 All Karabo code resides in the namespace `karabo` and within that in a
 sub-namespace matching the first subdirectory, i.e. namespaces are e.g.
