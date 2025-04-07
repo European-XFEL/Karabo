@@ -30,8 +30,8 @@
 #include "AmqpClient.hh"
 #include "AmqpConnection.hh"
 #include "Strand.hh"
+#include "karabo/data/io/BinarySerializer.hh"
 #include "karabo/data/types/Hash.hh"
-#include "karabo/io/BinarySerializer.hh"
 #include "utils.hh" // for AsyncHandler
 
 namespace karabo::net {
@@ -129,7 +129,7 @@ namespace karabo::net {
 
         AmqpClient::Pointer m_rawClient;
 
-        karabo::io::BinarySerializer<data::Hash>::Pointer m_serializer;
+        karabo::data::BinarySerializer<data::Hash>::Pointer m_serializer;
         karabo::net::Strand::Pointer m_deserializeStrand;
         const HashReadHandler m_readHandler;
         const ErrorReadHandler m_errorReadHandler;

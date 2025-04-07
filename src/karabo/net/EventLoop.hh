@@ -93,7 +93,7 @@ namespace karabo {
              *  Must not be called in parallel to itself or to run().
 
              * If one or more tasks are in deadlock and thus their threads cannot be joined at
-             * the end, a karabo::util::TimeoutException is thrown.
+             * the end, a karabo::data::TimeoutException is thrown.
              */
             static void work();
 
@@ -103,7 +103,7 @@ namespace karabo {
              *  Must not be called in parallel to itself or to work().
              *
              * If one or more tasks are in deadlock and thus their threads cannot be joined at
-             * the end, a karabo::util::TimeoutException is thrown.
+             * the end, a karabo::data::TimeoutException is thrown.
              */
             static void run();
 
@@ -168,7 +168,7 @@ namespace karabo {
             /**
              * Clears the thread pool and joins the threads
              *
-             * If joining fails repeatedly, throws karabo::util::TimeoutException.
+             * If joining fails repeatedly, throws karabo::data::TimeoutException.
              */
             void clearThreadPool();
 

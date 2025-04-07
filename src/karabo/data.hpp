@@ -19,6 +19,7 @@
 #ifndef KARABO_DATA_HPP
 #define KARABO_DATA_HPP
 
+#include "data/io.hpp"
 #include "data/schema.hpp"
 #include "data/time.hpp"
 #include "data/types.hpp"

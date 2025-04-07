@@ -24,13 +24,13 @@
 
 #include "Logger_Test.hh"
 
-#include <karabo/io/Input.hh>
 #include <karabo/log/Logger.hh>
+
+#include "karabo/data/io/Input.hh"
 
 using namespace std;
 using namespace karabo::log;
 using namespace karabo::data;
-using namespace karabo::io;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Logger_Test);
 

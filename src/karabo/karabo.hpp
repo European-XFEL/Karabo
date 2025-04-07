@@ -27,7 +27,6 @@
 
 #include "karabo/core.hpp"
 #include "karabo/data.hpp"
-#include "karabo/io.hpp"
 #include "karabo/log.hpp"
 #include "karabo/net.hpp"
 #include "karabo/util.hpp"
@@ -36,7 +35,6 @@
 #define USING_KARABO_NAMESPACES   \
     using namespace karabo::data; \
     using namespace karabo::util; \
-    using namespace karabo::io;   \
     using namespace karabo::net;  \
     using namespace karabo::log;  \
     using namespace karabo::xms;  \

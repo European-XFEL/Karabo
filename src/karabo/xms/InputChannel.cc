@@ -36,7 +36,7 @@
 
 using namespace std::chrono;
 using namespace karabo::data;
-using namespace karabo::io;
+using namespace karabo::data;
 using namespace karabo::net;
 
 using std::string;
@@ -594,7 +594,7 @@ namespace karabo {
 
         void InputChannel::onTcpChannelRead(const karabo::net::ErrorCode& ec, karabo::net::Channel::WeakPointer channel,
                                             const karabo::data::Hash& header,
-                                            const std::vector<karabo::io::BufferSet::Pointer>& data) {
+                                            const std::vector<karabo::data::BufferSet::Pointer>& data) {
             net::Channel::Pointer channelPtr = channel.lock();
             if (ec || !channelPtr) {
                 onTcpChannelError(ec, channelPtr);

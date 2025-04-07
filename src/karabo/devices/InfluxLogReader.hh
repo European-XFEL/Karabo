@@ -31,13 +31,13 @@
 
 #include "DataLogReader.hh"
 #include "karabo/core/Device.hh"
+#include "karabo/data/io/BinarySerializer.hh"
 #include "karabo/data/time/Epochstamp.hh"
 #include "karabo/data/time/TimeDuration.hh"
 #include "karabo/data/types/ClassInfo.hh"
 #include "karabo/data/types/Hash.hh"
 #include "karabo/data/types/Schema.hh"
 #include "karabo/data/types/Types.hh"
-#include "karabo/io/BinarySerializer.hh"
 #include "karabo/net/HttpResponse.hh"
 #include "karabo/net/InfluxDbClient.hh"
 #include "karabo/util/DataLogUtils.hh"
@@ -284,8 +284,8 @@ namespace karabo {
             std::string m_durationUnit;
             std::string m_urlConfigSchema;
             std::string m_urlPropHistory;
-            karabo::io::BinarySerializer<karabo::data::Hash>::Pointer m_hashSerializer;
-            karabo::io::BinarySerializer<karabo::data::Schema>::Pointer m_schemaSerializer;
+            karabo::data::BinarySerializer<karabo::data::Hash>::Pointer m_hashSerializer;
+            karabo::data::BinarySerializer<karabo::data::Schema>::Pointer m_schemaSerializer;
             int m_maxHistorySize;
 
             static const unsigned long kFracConversionFactor;

@@ -22,7 +22,7 @@
 #include <filesystem>
 
 #include "DataLogger.hh"
-#include "karabo/io/TextSerializer.hh"
+#include "karabo/data/io/TextSerializer.hh"
 #include "karabo/util/Version.hh"
 
 namespace karabo {
@@ -77,7 +77,7 @@ namespace karabo {
             size_t m_propsize;
             std::filesystem::file_time_type m_lasttime;
 
-            karabo::io::TextSerializer<karabo::data::Hash>::Pointer m_serializer;
+            karabo::data::TextSerializer<karabo::data::Hash>::Pointer m_serializer;
         };
 
 

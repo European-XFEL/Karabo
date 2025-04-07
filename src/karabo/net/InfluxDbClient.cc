@@ -29,10 +29,10 @@
 #include <sstream>
 #include <thread>
 
+#include "karabo/data/io/BinarySerializer.hh"
 #include "karabo/data/schema/SimpleElement.hh"
 #include "karabo/data/types/Base64.hh"
 #include "karabo/data/types/Hash.hh"
-#include "karabo/io/BinarySerializer.hh"
 #include "karabo/log/Logger.hh"
 #include "karabo/net/EventLoop.hh"
 #include "karabo/net/utils.hh"
@@ -46,7 +46,6 @@ namespace karabo {
 
     namespace net {
 
-        using namespace karabo::io;
         using namespace karabo::net;
         using namespace karabo::data;
         using namespace karabo::util;

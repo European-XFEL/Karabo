@@ -469,10 +469,10 @@ void startAmqpMonitor(const std::vector<std::string>& brokers, const std::string
     net::AmqpConnection::Pointer connection(std::make_shared<net::AmqpConnection>(brokers));
 
     // std::shared_ptr<BrokerStatistics> stats(std::make_shared<BrokerStatistics>(interval, receivers, senders));
-    // auto binSerializer = io::BinarySerializer<data::Hash>::create("Bin");
+    // auto binSerializer = data::BinarySerializer<data::Hash>::create("Bin");
 
     auto readHandler = [stats{std::make_shared<BrokerStatistics>(interval, receivers, senders)},
-                        binSerializer{io::BinarySerializer<data::Hash>::create("Bin")}](
+                        binSerializer{data::BinarySerializer<data::Hash>::create("Bin")}](
                              const data::Hash::Pointer& header, const data::Hash::Pointer& body) {
         // `BrokerStatistics' expects the message formatted as a Hash: with 'header' as Hash and 'body' as Hash with the
         // single key 'raw' as vector<char> which is the serialized 'body' value.

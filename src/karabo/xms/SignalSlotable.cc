@@ -51,7 +51,7 @@ namespace karabo {
         using namespace std;
         using namespace karabo::data;
         using namespace karabo::util;
-        using namespace karabo::io;
+        using namespace karabo::data;
         using namespace karabo::net;
 
         static Hash getHeartbeatInfo(const Hash& instanceInfo);
@@ -589,7 +589,7 @@ namespace karabo {
             } catch (const std::exception& e) {
                 if (timerAndHandler.second) {
                     try {
-                        // Handler can do: try {throw;} catch(const karabo::util::CastException&) {...;} catch (..){
+                        // Handler can do: try {throw;} catch(const karabo::data::CastException&) {...;} catch (..){
                         timerAndHandler.second();
                     } catch (const std::exception& e) {
                         KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << ": Exception when handling reply from '"

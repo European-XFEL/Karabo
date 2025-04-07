@@ -665,7 +665,7 @@ void HashFilter_Test::testFilterByAccessMode() {
 
 
 void HashFilter_Test::testHdf5Filter() {
-    using namespace karabo::io;
+    using namespace karabo::data;
 
     Hash data("instrument.a", 10, "instrument.b", 2.4, "c", "Hello World");
     vector<unsigned short> vec(100, 0);

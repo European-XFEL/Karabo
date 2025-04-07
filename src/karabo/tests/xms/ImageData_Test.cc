@@ -28,7 +28,7 @@
 
 using namespace std;
 using namespace karabo::data;
-using namespace karabo::io;
+using namespace karabo::data;
 using namespace karabo::net;
 using namespace karabo::xms;
 

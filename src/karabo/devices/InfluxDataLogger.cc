@@ -40,7 +40,6 @@ namespace karabo {
     namespace devices {
 
         namespace nl = nlohmann;
-        using namespace karabo::io;
         using namespace karabo::net;
         using namespace karabo::data;
         using namespace karabo::util;
@@ -53,7 +52,7 @@ namespace karabo {
             : DeviceData(input),
               m_dbClientRead(input.get<karabo::net::InfluxDbClient::Pointer>("dbClientReadPointer")),
               m_dbClientWrite(input.get<karabo::net::InfluxDbClient::Pointer>("dbClientWritePointer")),
-              m_serializer(karabo::io::BinarySerializer<karabo::data::Hash>::create("Bin")),
+              m_serializer(karabo::data::BinarySerializer<karabo::data::Hash>::create("Bin")),
               m_maxTimeAdvance(input.get<int>("maxTimeAdvance")),
               m_maxVectorSize(input.get<unsigned int>("maxVectorSize")),
               m_maxValueStringSize(input.get<unsigned int>("maxValueStringSize")),
@@ -553,8 +552,8 @@ namespace karabo {
             // Before checking client status: enables buffering of property updates in handleChanged:
             m_currentSchema = schema;
 
-            karabo::io::BinarySerializer<karabo::data::Schema>::Pointer serializer =
-                  karabo::io::BinarySerializer<karabo::data::Schema>::create("Bin");
+            karabo::data::BinarySerializer<karabo::data::Schema>::Pointer serializer =
+                  karabo::data::BinarySerializer<karabo::data::Schema>::create("Bin");
             auto archive(std::make_shared<std::vector<char>>());
             // Avoid re-allocations - small devices need around 10'000 bytes, DataLoggerManager almost 20'000
             archive->reserve(20'000);
