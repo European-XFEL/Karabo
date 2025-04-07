@@ -101,15 +101,11 @@ namespace karabo {
              * configuration options are supported:
              *
              * - serverId: a string giving the server's id
-             * - autostart: a vector of Hashes containing configurations for device that are to be automatically started
-             * by the server
-             * - scanPlugins: a boolean indicating if this server should scan for additional plugins
-             * - visibility: an integer indicating device server visibility in the distributed system
-             * - debugMode: a boolean indicating if the server should run in debugMode
+             * - init: a json string containing configurations for device that are to be automatically started by
+             *         the server
              * - connection: a Hash containing the connection information for a karabo::net::Broker
              * - pluginDirectory: a path to the plugin directory for this device server
              * - heartbeatInterval: interval in seconds at which this server sends heartbeats to the distributed system
-             * - nThreads: number of threads to use in this device server
              * @param
              */
             DeviceServer(const karabo::data::Hash&);
