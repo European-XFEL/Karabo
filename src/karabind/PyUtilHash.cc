@@ -111,6 +111,22 @@ namespace karabind {
               first, last);
     }
 
+    struct HashIteratorAccessAll {
+        py::object operator()(karabo::data::Hash::iterator& it) const {
+            const std::string& k = it->getKey();
+            py::object v = wrapper::castAnyToPy(it->getValueAsAny());
+            const karabo::data::Hash::Attributes a = it->getAttributes();
+            return py::make_tuple(py::cast(k), v, py::cast(a));
+        }
+    };
+
+
+    py::iterator make_iterator_all(karabo::data::Hash::iterator first, karabo::data::Hash::iterator last) {
+        return py::detail::make_iterator_impl<HashIteratorAccessAll, py::return_value_policy::reference_internal,
+                                              karabo::data::Hash::iterator, karabo::data::Hash::iterator, py::object>(
+              first, last);
+    }
+
 } // namespace karabind
 
 
@@ -167,6 +183,10 @@ void exportPyUtilHash(py::module_& m) {
           },
           py::arg("ndarray"), py::return_value_policy::reference_internal, py::keep_alive<0, 1>());
 
+    h.def(
+          "_getref_attrs_", [](const Hash& self, Hash::Attributes* attrs) { return py::cast(attrs); }, py::arg("ref"),
+          py::return_value_policy::reference_internal, py::keep_alive<0, 1>());
+
     h.def("clear", &Hash::clear, "h.clear() makes empty the content of current Hash object 'h' (in place).\n");
 
     h.def("empty", &Hash::empty, "h.empty() -> True if 'h' is empty otherwise False.\n");
@@ -182,6 +202,29 @@ void exportPyUtilHash(py::module_& m) {
                 py::keep_alive<0, 1>());
 
     h.def("items", [](Hash& self) { return std::unique_ptr<ItemView>(new ItemView{self}); }, py::keep_alive<0, 1>());
+
+    struct ItemViewAll {
+        Hash& map;
+    };
+
+    py::class_<ItemViewAll>(h, "ItemViewAll")
+          .def("__len__", [](ItemView& v) { v.map.size(); })
+          .def(
+                "__iter__", [](ItemViewAll& v) { return make_iterator_all(v.map.begin(), v.map.end()); },
+                py::keep_alive<0, 1>());
+
+    h.def(
+          "iterall", [](Hash& self) { return std::unique_ptr<ItemViewAll>(new ItemViewAll{self}); },
+          py::keep_alive<0, 1>());
+
+    h.def_static(
+          "flat_iterall",
+          [](Hash& self) {
+              Hash flat;
+              Hash::flatten(self, flat);
+              return py::cast(flat).attr("iterall")();
+          },
+          py::keep_alive<0, 1>());
 
     h.def(
           "getKeys",
@@ -346,21 +389,45 @@ void exportPyUtilHash(py::module_& m) {
 
     h.def(
           "__setitem__",
-          [](Hash& self, const std::string& key, const py::object& o, const std::string& sep) {
-              karabind::hashwrap::set(self, key, o, sep);
+          [](Hash& self, const py::object& item, const py::object& value) {
+              if (py::isinstance<py::tuple>(item)) {
+                  py::tuple tup = item.cast<py::tuple>();
+                  if (py::len(tup) != 2) throw py::cast_error("Invalid size");
+                  auto key = tup[0].cast<std::string>();
+                  Hash::Node& node = self.getNode(key, '.');
+                  if (py::isinstance<py::ellipsis>(tup[1])) {
+                      Hash::Attributes attrs;
+                      wrapper::castPyToHashAttributes(value, attrs);
+                      node.setAttributes(attrs);
+                  } else if (py::isinstance<py::str>(tup[1])) {
+                      auto attr = tup[1].cast<std::string>();
+                      std::any anyval;
+                      wrapper::castPyToAny(value, anyval);
+                      self.setAttribute(key, attr, anyval);
+                  } else {
+                      throw py::cast_error("Invalid second index in tuple: only string or ellipsis allowed");
+                  }
+              } else if (py::isinstance<py::str>(item)) {
+                  auto key = item.cast<std::string>();
+                  karabind::hashwrap::set(self, key, value, ".");
+              } else {
+                  throw py::cast_error("Invalid index type: string or tuple expected");
+              }
           },
-          py::arg("path"), py::arg("value"), py::arg("sep") = cStringSep,
+          py::arg("path_or_tuple"), py::arg("value_or_dict"),
           R"pbdoc(
-            h[path] = value <==> h.set(path, value)
-            Use this setting of the new path/value item if the default separator fits.
+              h[path] = value <==> h.set(path, value)
+              Use this setting of the new path/value item if the default separator fits.
 
-            Example:
-                h = Hash()
-                h['a.b.c'] = 1
-                h.set('x/y/z', 2, \"/\")
-                h['u/v/w'] = 3
-                print(h)
-          )pbdoc");
+              Example:
+                  h = Hash()
+                  h['a.b.c'] = 1
+                  h['a.b.c', ...] = {'a':1, 'b':2}  # define attributes (REPLACE policy)
+                  h['a.b.c', ...].update({'c':3})   # update attributes (MERGE policy)
+                  h.set('x/y/z', 2, \"/\")
+                  h['u/v/w'] = 3
+                  print(h)
+            )pbdoc");
 
     h.def(
           "setAs",
@@ -408,15 +475,38 @@ void exportPyUtilHash(py::module_& m) {
 
     h.def(
           "__getitem__",
-          [](Hash& self, const std::string& path, const std::string& sep) { return hashwrap::getRef(self, path, sep); },
-          py::arg("iterator"), py::arg("sep") = cStringSep, py::return_value_policy::reference_internal,
+          [](Hash& self, py::object item) {
+              if (py::isinstance<py::tuple>(item)) {
+                  py::tuple tup = item.cast<py::tuple>();
+                  if (py::len(tup) != 2) throw py::cast_error("Invalid size");
+                  auto path = tup[0].cast<std::string>();
+                  if (py::isinstance<py::ellipsis>(tup[1])) { // return ref to all attributes
+                      return hashwrap::getRefAttributes(self, path, ".");
+                  } else { // return specific attribute value
+                      auto attr = tup[1].cast<std::string>();
+                      return wrapper::castAnyToPy(self.getAttributeAsAny(path, attr));
+                  }
+              } else if (py::isinstance<py::str>(item)) {
+                  // return ref to value
+                  auto path = item.cast<std::string>();
+                  return hashwrap::getRef(self, path, ".");
+              } else {
+                  throw py::cast_error("Invalid index type: a string or tuple expected");
+              }
+          },
+          py::arg("key"), py::return_value_policy::reference_internal,
           R"pbdoc(
             Use this form of getting the 'value' using the 'path' if you need the default separator.
 
             Example:
                 h = Hash('a.b.c', 1)
+                # set attributes as dict for 'c' key
+                h['a.b.c', ...] = {'attr1': 12, 'attr2': {'msg': 'Invalid arg'}}
                 print(h['a.b.c'])
+                # get one attribute...
+                print(h['a.b.c', 'attr1'])
                 g = h['a.b']         # reference (no counter)
+                attrs = h['a.b.c', ...]  # get reference to attributes
                 del(h)
                 print(g)             # SEGFAULT, only del(g) is allowed
           )pbdoc");
@@ -961,13 +1051,25 @@ void exportPyUtilHash(py::module_& m) {
 
     h.def("__str__", [](const Hash& self) {
         std::ostringstream oss;
-        oss << self;
+        oss << "<";
+        try {
+            karabind::wrapper::hashToStream(oss, self, 0);
+        } catch (...) {
+            KARABO_RETHROW;
+        }
+        oss << ">";
         return oss.str();
     });
 
     h.def("__repr__", [](const Hash& self) {
         std::ostringstream oss;
-        oss << self;
+        oss << "<";
+        try {
+            karabind::wrapper::hashToStream(oss, self, 0);
+        } catch (...) {
+            KARABO_RETHROW;
+        }
+        oss << ">";
         return oss.str();
     });
 

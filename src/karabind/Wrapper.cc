@@ -76,6 +76,13 @@ namespace karabind {
             return wrapper::castAnyToPy(node.getValueAsAny());
         }
 
+        py::object getRefAttributes(karabo::data::Hash& self, const std::string& path, const std::string& sep) {
+            using namespace karabo::data;
+            Hash::Node& node = self.getNode(path, sep.at(0));
+            auto hp = std::shared_ptr<Hash::Attributes>(&node.getAttributes(), [](const Hash::Attributes*) {});
+            return py::cast(self).attr("_getref_attrs_")(hp);
+        }
+
         py::object getAs(const karabo::data::Hash& self, const std::string& path,
                          const karabo::data::Types::ReferenceType& target, const std::string& separator) {
             const karabo::data::Hash::Node& node = self.getNode(path, separator.at(0));
@@ -722,6 +729,30 @@ namespace karabind {
         }
 
 
+        void setPyDictAsHashAttributes(karabo::data::Hash::Attributes& self, const py::dict& odict, const char sep) {
+            for (auto item : odict) {
+                const py::object& obj = py::reinterpret_borrow<py::object>(item.second);
+                if (py::isinstance<py::dict>(obj)) {
+                    const auto& dictobj = obj.cast<py::dict>();
+                    karabo::data::Hash h;
+                    hashwrap::setPyDictAsHash(h, dictobj, sep);
+                    self.set(item.first.cast<std::string>(), h);
+                } else {
+                    std::any anyval;
+                    wrapper::castPyToAny(obj, anyval);
+                    self.set(item.first.cast<std::string>(), anyval);
+                }
+            }
+        }
+
+
+        void castPyToHashAttributes(const py::object& o, karabo::data::Hash::Attributes& attrs) {
+            if (py::isinstance<py::dict>(o)) {
+                wrapper::setPyDictAsHashAttributes(attrs, o, '.');
+            }
+        }
+
+
         py::object castNDArrayToPy(const karabo::data::NDArray& ndarray) {
             using namespace karabo::data;
             const Types::ReferenceType krbRefType = ndarray.getType();
@@ -999,6 +1030,96 @@ namespace karabind {
             }
         }
 
+
+        void attrToStream(std::ostream& os, const karabo::data::Hash& attrs) {
+            using namespace karabo::data;
+            for (Hash::const_iterator ait = attrs.begin(); ait != attrs.end(); ++ait) {
+                if (ait != attrs.begin()) os << ", ";
+                os << "'" << ait->getKey() << "': ";
+                auto atype = ait->getType();
+                if (atype == Types::HASH) {
+                    os << "{";
+                    attrToStream(os, ait->getValue<Hash>());
+                    os << "}";
+                } else {
+                    if (atype == Types::STRING) os << "'";
+                    os << ait->getValueAs<std::string>();
+                    if (atype == Types::STRING) os << "'";
+                }
+            }
+        }
+
+
+        void hashToStream(std::ostream& os, const karabo::data::Hash& hash, int depth) {
+            using namespace karabo::data;
+            const std::string fill(depth * 4, ' ');
+
+            for (Hash::const_iterator hit = hash.begin(); hit != hash.end(); ++hit) {
+                os << fill << hit->getKey();
+
+                os << "{";
+                const Hash::Attributes& attrs = hit->getAttributes();
+                if (attrs.size() > 0) {
+                    for (Hash::Attributes::const_iterator ait = attrs.begin(); ait != attrs.end(); ++ait) {
+                        if (ait != attrs.begin()) os << ", ";
+                        auto atype = ait->getType();
+                        os << "'" << ait->getKey() << "': ";
+                        if (atype == Types::HASH) {
+                            os << "{";
+                            attrToStream(os, ait->getValue<Hash>());
+                            os << "}";
+                        } else {
+                            if (atype == Types::STRING) os << "'";
+                            os << ait->getValueAs<std::string>();
+                            if (atype == Types::STRING) os << "'";
+                        }
+                    }
+                }
+                os << "}";
+
+                Types::ReferenceType type = hit->getType();
+                if (type == Types::HASH) {
+                    const Hash& hh = hit->getValue<Hash>();
+                    if (hh.empty()) {
+                        os << ": <> => HASH\n";
+                    } else {
+                        os << std::endl;
+                        hashToStream(os, hh, depth + 1);
+                    }
+                } else if (type == Types::HASH_POINTER) {
+                    const Hash::Pointer& hh = hit->getValue<Hash::Pointer>();
+                    if (hh->empty()) {
+                        os << ": <> => HASH_POINTER\n";
+                    } else {
+                        os << std::endl;
+                        hashToStream(os, *hh, depth + 1);
+                    }
+                } else if (type == Types::VECTOR_HASH) {
+                    const std::vector<Hash>& hashes = hit->getValue<std::vector<Hash>>();
+                    os << std::endl;
+                    for (size_t i = 0; i < hashes.size(); ++i) {
+                        os << fill << "  [" << i << "]" << std::endl;
+                        hashToStream(os, hashes[i], depth + 1);
+                    }
+                } else if (type == Types::VECTOR_HASH_POINTER) {
+                    const std::vector<Hash::Pointer>& hashes = hit->getValue<std::vector<Hash::Pointer>>();
+                    os << "  (Pointer)" << std::endl;
+                    for (size_t i = 0; i < hashes.size(); ++i) {
+                        os << fill << "  [" << i << "]" << std::endl;
+                        hashToStream(os, *(hashes[i]), depth + 1);
+                    }
+                } else if (type == Types::SCHEMA) {
+                    // Avoid dependence of Hash on Schema:
+                    os << ": <...> => " /* << hit->getValue<Schema>() */ << Types::to<ToLiteral>(type) << std::endl;
+                } else if (Types::isPointer(type)) { // TODO Add pointer types
+                    os << ": xxx => " << Types::to<ToLiteral>(type) << std::endl;
+                } else if (type == Types::UNKNOWN) {
+                    os << ": " << hit->type().name() << " => " << Types::to<ToLiteral>(type) << std::endl;
+                } else {
+                    os << ": " << hit->getValueAsShortString(100) << " => " << Types::to<ToLiteral>(type) << std::endl;
+                }
+            }
+        }
     } // namespace wrapper
 
 

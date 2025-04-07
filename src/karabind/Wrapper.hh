@@ -96,6 +96,9 @@ namespace karabind {
         py::object getRef(karabo::data::Hash& self, const std::string& path, const std::string& sep)
               __attribute__((visibility("default")));
 
+        py::object getRefAttributes(karabo::data::Hash& self, const std::string& path, const std::string& sep)
+              __attribute__((visibility("default")));
+
         py::object getAs(const karabo::data::Hash& self, const std::string& path,
                          const karabo::data::Types::ReferenceType& target, const std::string& separator)
               __attribute__((visibility("default")));
@@ -127,7 +130,7 @@ namespace karabind {
         inline void packPy_r(karabo::data::Hash& hash, char i, const Tfirst& first, const Trest&... rest) {
             char name[4] = "a ";
             name[1] = i;
-            // Besides the following line, 'packPy_r' is identical to the C++ version 'karabo::util::pack_r'.
+            // Besides the following line, 'packPy_r' is identical to the C++ version 'karabo::data::pack_r'.
             hashwrap::set(hash, name, first);
             detail::packPy_r(hash, i + 1, rest...);
         }
@@ -174,6 +177,12 @@ namespace karabind {
 
         karabo::data::ByteArray copyPyToByteArray(const py::object& o) __attribute__((visibility("default")));
 
+        void castPyToHashAttributes(const py::object& o, karabo::data::Hash::Attributes& attrs)
+              __attribute__((visibility("default")));
+
+        void setPyDictAsHashAttributes(karabo::data::Hash::Attributes& self, const py::dict& dictionary,
+                                       const char sep);
+
         /**
          * Create py::array from C++ NDArray without data copying
          * No change in data ownership
@@ -198,6 +207,10 @@ namespace karabind {
          * As a result, C++ is data owner
          */
         karabo::data::NDArray copyPyArrayToND(py::array arr) __attribute__((visibility("default")));
+
+        void attrToStream(std::ostream& os, const karabo::data::Hash& attrs);
+
+        void hashToStream(std::ostream& os, const karabo::data::Hash& hash, int depth);
 
         namespace detail {
 
