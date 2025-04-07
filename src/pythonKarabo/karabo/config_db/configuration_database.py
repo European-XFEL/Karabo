@@ -17,9 +17,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from sqlalchemy import insert, select, update
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import selectinload, sessionmaker
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlalchemy.orm import selectinload
 from sqlmodel import SQLModel
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from .models import NamedDeviceConfig, NamedDeviceInstance
 from .utils import ConfigurationDBError, datetime_from_string, utc_to_local
@@ -30,11 +31,10 @@ class ConfigurationDatabase:
         self.db_name = db_name
         self.engine = create_async_engine(
             f"sqlite+aiosqlite:///{self.db_name}",
-            # True for debugging SQL queries
             echo=False,
             pool_pre_ping=True,
             connect_args={"check_same_thread": True})
-        self.session = sessionmaker(
+        self.session = async_sessionmaker(
             bind=self.engine, class_=AsyncSession,
             expire_on_commit=False)
 
@@ -78,7 +78,7 @@ class ConfigurationDatabase:
                 # Orm query
                 .options(selectinload(NamedDeviceInstance.configurations)))
 
-            result = await session.execute(stmt)
+            result = await session.exec(stmt)
             device = result.scalars().first()
             if not device:
                 return []
@@ -106,7 +106,7 @@ class ConfigurationDatabase:
                     NamedDeviceConfig.device_id == device_id,
                     NamedDeviceConfig.name == name)
             )
-            result = await session.execute(stmt)
+            result = await session.exec(stmt)
             config = result.scalars().first()
             if not config:
                 raise ConfigurationDBError(
@@ -121,7 +121,7 @@ class ConfigurationDatabase:
                     .where(NamedDeviceInstance.device_id == device_id)
                     .options(selectinload(NamedDeviceInstance.configurations))
                 )
-                result = await session.execute(stmt)
+                result = await session.exec(stmt)
                 device = result.scalars().first()
                 if device and not device.configurations:
                     await session.delete(device)
@@ -138,7 +138,7 @@ class ConfigurationDatabase:
         """
         async with self.session() as session:
             stmt = select(NamedDeviceInstance.device_id).distinct()
-            result = await session.execute(stmt)
+            result = await session.exec(stmt)
             return result.scalars().all()
 
     async def get_configuration(self, device_id: str, name: str) -> dict:
@@ -158,7 +158,7 @@ class ConfigurationDatabase:
                 # Lock for update
                 .with_for_update()
             )
-            result = await session.execute(stmt)
+            result = await session.exec(stmt)
             config = result.scalars().first()
             if not config:
                 return {}
@@ -169,7 +169,7 @@ class ConfigurationDatabase:
                 .values(last_loaded=datetime.now(timezone.utc))
             )
 
-            await session.execute(update_stmt)
+            await session.exec(update_stmt)
             await session.commit()
 
             return {
@@ -209,7 +209,7 @@ class ConfigurationDatabase:
                     device_id = config["deviceId"]
                     stmt_device = select(NamedDeviceInstance).where(
                         NamedDeviceInstance.device_id == device_id)
-                    device = (await session.execute(
+                    device = (await session.exec(
                         stmt_device)).scalars().first()
                     if not device:
                         session.add(NamedDeviceInstance(device_id=device_id))
@@ -222,7 +222,7 @@ class ConfigurationDatabase:
                             timestamp=timestamp,
                             config_data=config["config"]
                         ).prefix_with("OR REPLACE"))
-                    await session.execute(stmt_config)
+                    await session.exec(stmt_config)
                 await session.commit()
             except Exception as e:
                 await session.rollback()
