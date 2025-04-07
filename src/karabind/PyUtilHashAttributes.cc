@@ -83,7 +83,7 @@ void exportPyUtilHashAttributes(py::module_& m) {
           py::arg("type"), "Set type for value kept in current node");
 
 
-    py::class_<Hash::Attributes> a(
+    py::class_<Hash::Attributes, std::shared_ptr<Hash::Attributes>> a(
           m, "HashAttributes",
           "The HashAttributes class is a heterogeneous container with string key and \"any object\" value\n"
           "that preserves insertion order, i.e. it is behaving like an ordered map");
@@ -157,6 +157,11 @@ void exportPyUtilHashAttributes(py::module_& m) {
           py::arg("key"), "Returns HashAttributesNode object associated with \"key\" attribute.");
 
     a.def(
+          "update",
+          [](Hash::Attributes& self, const py::object& other) { wrapper::castPyToHashAttributes(other, self); },
+          py::arg("dict_or_hash"));
+
+    a.def(
           "get",
           [](karabo::data::Hash::Attributes& self, const std::string& key) {
               return wrapper::castAnyToPy(self.getAny(key));
@@ -200,4 +205,46 @@ void exportPyUtilHashAttributes(py::module_& m) {
     a.def(
           "__iter__", [](Hash::Attributes& self) { return py::make_iterator(self.begin(), self.end()); },
           py::keep_alive<0, 1>());
+
+    a.def("__str__", [](karabo::data::Hash::Attributes& attrs) {
+        std::ostringstream os;
+        os << '{';
+        for (Hash::Attributes::const_iterator ait = attrs.begin(); ait != attrs.end(); ++ait) {
+            if (ait != attrs.begin()) os << ", ";
+            auto atype = ait->getType();
+            os << "'" << ait->getKey() << "': ";
+            if (atype == Types::HASH) {
+                os << "{";
+                wrapper::attrToStream(os, ait->getValue<Hash>());
+                os << "}";
+            } else {
+                if (atype == Types::STRING) os << "'";
+                os << ait->getValueAs<std::string>();
+                if (atype == Types::STRING) os << "'";
+            }
+        }
+        os << '}';
+        return os.str();
+    });
+
+    a.def("__repr__", [](karabo::data::Hash::Attributes& attrs) {
+        std::ostringstream os;
+        os << '{';
+        for (Hash::Attributes::const_iterator ait = attrs.begin(); ait != attrs.end(); ++ait) {
+            if (ait != attrs.begin()) os << ", ";
+            auto atype = ait->getType();
+            os << "'" << ait->getKey() << "': ";
+            if (atype == Types::HASH) {
+                os << "{";
+                wrapper::attrToStream(os, ait->getValue<Hash>());
+                os << "}";
+            } else {
+                if (atype == Types::STRING) os << "'";
+                os << ait->getValueAs<std::string>();
+                if (atype == Types::STRING) os << "'";
+            }
+        }
+        os << '}';
+        return os.str();
+    });
 }
