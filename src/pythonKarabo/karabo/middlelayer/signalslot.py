@@ -297,7 +297,7 @@ class SignalSlotable(Configurable):
     del inner
 
     @slot
-    def slotHeartbeat(self, networkId, heartbeatInterval, info):
+    def slotHeartbeat(self, networkId, info):
         pass
 
     @slot
