@@ -48,7 +48,40 @@ def test_temporarySessionDialog(gui_app, mocker):
     args_dict = json.loads(args)
     assert args_dict["access_code"] == int(access_code)
     assert not args_dict["remember_login"]
+    assert args_dict["client_hostname"] == hostname
 
+
+def test_switch_user(gui_app, mocker):
+    dialog = TemporarySessionDialog()
+    assert not dialog.ok_button.isEnabled()
+    access_code = "123456"
+    hostname = "karabo.xfel.eu"
+    for i, cell in enumerate(dialog.edit_access_code.cells, start=1):
+        cell.setText(str(i))
+    mocker.patch("karabogui.dialogs.reactive_login_dialog.CLIENT_HOST",
+                 new=hostname)
+    dialog.access_manager = mocker.Mock()
+    dialog.combo_mode.setCurrentIndex(1)
+    dialog.remember_login.setChecked(True)
+    dialog._login_authenticated()
+    assert dialog.access_manager.post.call_count == 1
+    call_args, _ = dialog.access_manager.post.call_args
+    network_req, args = call_args
+    assert isinstance(network_req, QNetworkRequest)
+    args_dict = json.loads(args)
+    assert args_dict["access_code"] == int(access_code)
+    assert args_dict["remember_login"]
+    assert args_dict["client_hostname"] == hostname
+
+    dialog.remember_login.setChecked(False)
+    dialog._login_authenticated()
+    assert dialog.access_manager.post.call_count == 2
+    call_args, _ = dialog.access_manager.post.call_args
+    network_req, args = call_args
+    assert isinstance(network_req, QNetworkRequest)
+    args_dict = json.loads(args)
+    assert args_dict["access_code"] == int(access_code)
+    assert not args_dict["remember_login"]
     assert args_dict["client_hostname"] == hostname
 
 
