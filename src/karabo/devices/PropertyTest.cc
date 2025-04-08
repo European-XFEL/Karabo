@@ -813,7 +813,7 @@ namespace karabo {
             // Signal for test of order between emitted signal and direct slot calls.
             // Note that (using JMS broker) the order is NOT guaranteed for KARABO_SIGNAL since that has
             // lower priority - seen that a slot call overtook few hundred messages triggered by signals!
-            KARABO_SYSTEM_SIGNAL("signalCount", int); // KARABO_SYSTEM_SIGNAL guaranties order with slot calls...
+            KARABO_SIGNAL("signalCount", int); // KARABO_SIGNAL guaranties order with slot calls...
 
             KARABO_INITIAL_FUNCTION(initialize);
             KARABO_SLOT(setAlarm);

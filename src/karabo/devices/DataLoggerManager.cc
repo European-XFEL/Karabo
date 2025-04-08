@@ -544,7 +544,7 @@ namespace karabo {
                 karabo::data::loadFromFile(m_loggerMap, m_loggerMapFile);
             }
 
-            KARABO_SYSTEM_SIGNAL("signalLoggerMap", Hash /*loggerMap*/);
+            KARABO_SIGNAL("signalLoggerMap", Hash /*loggerMap*/);
             KARABO_SLOT(slotGetLoggerMap);
             KARABO_SLOT(topologyCheck_slotForceCheck);
 
