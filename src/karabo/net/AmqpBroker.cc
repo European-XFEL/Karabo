@@ -224,8 +224,7 @@ namespace karabo {
 
 
         void AmqpBroker::write(const std::string& target, const karabo::data::Hash::Pointer& header,
-                               const karabo::data::Hash::Pointer& body, const int /*priority*/,
-                               const int /*timeToLive*/) {
+                               const karabo::data::Hash::Pointer& body) {
             if (!header) {
                 throw KARABO_PARAMETER_EXCEPTION("AmqpBroker.write: header pointer is null");
             }

@@ -525,13 +525,6 @@ namespace karabind {
         }
 
         template <typename... Args>
-        void registerSystemSignalPy(const std::string& funcName, const Args&... args) {
-            // Arguments are ignored, but required to partially deduce the signature of the signal in Python:
-            // All args will always be py::object, but at least the number of arguments defines the signal signature
-            registerSystemSignal<Args...>(funcName);
-        }
-
-        template <typename... Args>
         SignalSlotableWrap::RequestorWrap requestPy(std::string instanceId, const std::string& functionName,
                                                     const Args&... args) {
             if (instanceId.empty()) instanceId = m_instanceId;
@@ -565,7 +558,7 @@ namespace karabind {
             packPy(*body, args...);
             const std::string& id = (instanceId.empty() ? m_instanceId : instanceId);
             auto header = prepareCallHeader(id, functionName);
-            doSendMessage(id, header, body, KARABO_SYS_PRIO, KARABO_SYS_TTL);
+            doSendMessage(id, header, body);
         }
 
         template <typename... Args>
@@ -752,16 +745,6 @@ void exportPyXmsSignalSlotable(py::module_& m) {
           .def("registerSignal", &SignalSlotableWrap::registerSignalPy<py::object, py::object, py::object>,
                py::arg("signalFunction"), py::arg("a1"), py::arg("a2"), py::arg("a3"))
           .def("registerSignal", &SignalSlotableWrap::registerSignalPy<py::object, py::object, py::object, py::object>,
-               py::arg("signalFunction"), py::arg("a1"), py::arg("a2"), py::arg("a3"), py::arg("a4"))
-          .def("registerSystemSignal", &SignalSlotableWrap::registerSystemSignalPy<>, py::arg("signalFunction"))
-          .def("registerSystemSignal", &SignalSlotableWrap::registerSystemSignalPy<py::object>,
-               py::arg("signalFunction"), py::arg("a1"))
-          .def("registerSystemSignal", &SignalSlotableWrap::registerSystemSignalPy<py::object, py::object>,
-               py::arg("signalFunction"), py::arg("a1"), py::arg("a2"))
-          .def("registerSystemSignal", &SignalSlotableWrap::registerSystemSignalPy<py::object, py::object, py::object>,
-               py::arg("signalFunction"), py::arg("a1"), py::arg("a2"), py::arg("a3"))
-          .def("registerSystemSignal",
-               &SignalSlotableWrap::registerSystemSignalPy<py::object, py::object, py::object, py::object>,
                py::arg("signalFunction"), py::arg("a1"), py::arg("a2"), py::arg("a3"), py::arg("a4"))
           .def("emit", &SignalSlotableWrap::emitPy<>, py::arg("signalFunction"))
           .def("emit", &SignalSlotableWrap::emitPy<py::object>, py::arg("signalFunction"), py::arg("a1"))

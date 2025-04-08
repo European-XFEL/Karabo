@@ -199,7 +199,7 @@ namespace karabo {
              * @param timeToLive
              */
             virtual void write(const std::string& topic, const karabo::data::Hash::Pointer& header,
-                               const karabo::data::Hash::Pointer& body, const int priority, const int timeToLive) = 0;
+                               const karabo::data::Hash::Pointer& body) = 0;
 
             /**
              *  Specifies the string of broker URLs from the environment variable KARABO_BROKER.

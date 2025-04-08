@@ -173,12 +173,9 @@ namespace karabo {
              *              the "domain" with the suffix "_beats", or "karaboGuiDebug"
              * @param header of the message - must contain
              * @param body of the message
-             * @param priority unused (needed by JmsBroker)
-             * @param timeToLive unused (needed by JmsBroker)
              */
             void write(const std::string& topic, const karabo::data::Hash::Pointer& header,
-                       const karabo::data::Hash::Pointer& body, const int /*priority*/ = 4,
-                       const int /*timeToLive*/ = 0) override;
+                       const karabo::data::Hash::Pointer& body) override;
 
            private:
             AmqpBroker(const AmqpBroker& o) = delete;

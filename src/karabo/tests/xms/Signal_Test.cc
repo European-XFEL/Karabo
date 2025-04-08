@@ -52,8 +52,7 @@ void Signal_Test::testRegisterSlots() {
     auto sigSlot = karabo::xms::SignalSlotable::MakeShared("one");
     // sigSlot->start(); not needed here to start communication
 
-    karabo::xms::Signal s(sigSlot.get(), sigSlot->getConnection(), sigSlot->getInstanceId(), "mySignal", //
-                          10, 10000); // irrelevant priority and time to live
+    karabo::xms::Signal s(sigSlot.get(), sigSlot->getConnection(), sigSlot->getInstanceId(), "mySignal");
 
     //  test register
     CPPUNIT_ASSERT(s.registerSlot("otherId", "slotA"));

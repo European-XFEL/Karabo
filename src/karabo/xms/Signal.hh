@@ -44,22 +44,6 @@ namespace karabo {
      */
     namespace xms {
 
-        // Reasoning for 2 minutes lifetime used below:
-        // Under test conditions, we can read small messages at about 2 kHz speed.
-        // If, for whatever reasons, this reading is blocked completely, the local openmqc queue accumulates
-        // 240,000 messages within these 2 minutes (if messages cannot be dropped). But this also adds to the
-        // broker backlog, since the broker is awaiting acknowledgement. This is already a quarter of the normal
-        // maximum broker backlog we allow at XFEL. If this maximum is reached, communication is practically dead.
-        // So we should stop increasing this backlog by starting to drop messages as expired.
-
-        // priority and lifetime of messages that cannot be dropped - except if they expire (after 2 minutes)
-#define KARABO_SYS_PRIO 4
-#define KARABO_SYS_TTL 120000
-
-        // priority and lifetime of messages that can be dropped and, after 2 minutes, expire
-#define KARABO_PUB_PRIO 3
-#define KARABO_PUB_TTL 120000
-
         // Forward SignalSlotable
         class SignalSlotable;
 
@@ -70,8 +54,7 @@ namespace karabo {
             KARABO_CLASSINFO(Signal, "Signal", "1.0")
 
             Signal(const SignalSlotable* signalSlotable, const karabo::net::Broker::Pointer& channel,
-                   const std::string& signalInstanceId, const std::string& signalFunction, const int priority,
-                   const int messageTimeToLive);
+                   const std::string& signalInstanceId, const std::string& signalFunction);
 
             virtual ~Signal() {}
 
@@ -162,8 +145,6 @@ namespace karabo {
             const std::string m_signalFunction;
             std::mutex m_registeredSlotsMutex;
             SlotMap m_registeredSlots;
-            int m_priority;
-            int m_messageTimeToLive;
             std::string m_topic;
 
            private:
