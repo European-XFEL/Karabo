@@ -1023,6 +1023,7 @@ namespace karabo {
             // The heartbeat signal goes through a different topic, so we cannot use the normal registerSignal.
             Signal::Pointer heartbeatSignal =
                   std::make_shared<Signal>(this, m_connection, m_instanceId, "signalHeartbeat");
+            heartbeatSignal->setSignature<string, Hash>();
             heartbeatSignal->setTopic(m_topic + beatsTopicSuffix);
             {
                 std::lock_guard<std::mutex> lock(m_signalSlotInstancesMutex);
@@ -1030,7 +1031,7 @@ namespace karabo {
             }
 
             // Listener for heartbeats
-            KARABO_SLOT(slotHeartbeat, string /*instanceId*/, int /*heartbeatIntervalInSec*/, Hash /*heartbeatInfo*/)
+            KARABO_SLOT(slotHeartbeat, string /*instanceId*/, Hash /*heartbeatInfo*/)
 
             KARABO_SIGNAL("signalInstanceNew", string, Hash);
 
@@ -1164,7 +1165,7 @@ namespace karabo {
             if (e) return;
             try {
                 std::shared_lock<std::shared_mutex> lock(m_instanceInfoMutex);
-                emit("signalHeartbeat", getInstanceId(), m_heartbeatInterval, getHeartbeatInfo(m_instanceInfo));
+                emit("signalHeartbeat", getInstanceId(), getHeartbeatInfo(m_instanceInfo));
             } catch (std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << getInstanceId() << ": emitHeartbeat triggered an exception: " << e.what();
             }
@@ -1328,8 +1329,7 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::slotHeartbeat(const std::string& instanceId, const int& heartbeatInterval,
-                                           const Hash& heartbeatInfo) {
+        void SignalSlotable::slotHeartbeat(const std::string& instanceId, const Hash& heartbeatInfo) {
             if (m_trackAllInstances) {
                 if (!hasTrackedInstance(instanceId)) {
                     KARABO_LOG_FRAMEWORK_INFO << "Tracking instances, but received heart beat from unknown '"
