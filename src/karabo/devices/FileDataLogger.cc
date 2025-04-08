@@ -23,8 +23,7 @@
 #include <nlohmann/json.hpp>
 
 
-KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device, karabo::devices::DataLogger,
-                                  karabo::devices::FileDataLogger)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::Device, karabo::devices::DataLogger, karabo::devices::FileDataLogger)
 KARABO_REGISTER_IN_FACTORY_1(karabo::devices::DeviceData, karabo::devices::FileDeviceData, karabo::data::Hash)
 
 namespace karabo {

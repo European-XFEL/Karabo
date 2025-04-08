@@ -33,7 +33,7 @@ USING_KARABO_NAMESPACES
 namespace karabo {
 
 
-    KARABO_REGISTER_FOR_CONFIGURATION(BaseDevice, Device, SimulatedTimeServerDevice)
+    KARABO_REGISTER_FOR_CONFIGURATION(Device, SimulatedTimeServerDevice)
 
     void SimulatedTimeServerDevice::expectedParameters(Schema& expected) {
         UINT64_ELEMENT(expected)

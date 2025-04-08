@@ -32,7 +32,7 @@
 #include "karabo/xms/InputChannel.hh"
 
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::devices::NestedClass)
-KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device, karabo::devices::PropertyTest)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::Device, karabo::devices::PropertyTest)
 
 namespace karabo {
     namespace devices {

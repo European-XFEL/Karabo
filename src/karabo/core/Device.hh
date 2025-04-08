@@ -93,91 +93,6 @@ namespace karabo {
             // SOME_OTHER_INTERFACE = (1u << 6),
         };
 
-
-        /**
-         * @class BaseDevice
-         * @brief The BaseDevice class provides for methods which are template
-         *        independent in the Device class
-         *
-         */
-        class BaseDevice : public karabo::xms::SignalSlotable {
-           public:
-            KARABO_CLASSINFO(BaseDevice, "BaseDevice", "1.0")
-            KARABO_CONFIGURATION_BASE_CLASS;
-
-            virtual ~BaseDevice();
-
-            /**
-             * This method is called to finalize initialization of a device. It is needed to allow user
-             * code to hook in after the base device constructor, but before the device is fully initialized.
-             *
-             * It will typically be called by the DeviceServer.
-             * The call is blocking and afterwards communication should happen only via slot calls.
-             *
-             * @param connection The broker connection for the device.
-             * @param consumeBroadcasts If true, listen directly to broadcast messages (addressed to '*'), as usually
-             * expected. Whoever sets this to false has to ensure that broadcast messages reach the Device in some other
-             * way, otherwise the device will not work correctly.
-             * @param timeServerId The id of the time server to be used by the device - usually set by the DeviceServer.
-             */
-            virtual void finalizeInternalInitialization(const karabo::net::Broker::Pointer& connection,
-                                                        bool consumeBroadcasts, const std::string& timeServerId) = 0;
-
-            // public since called by DeviceServer
-            /**
-             * A slot called by the device server if the external time ticks update to synchronize
-             * this device with the timing system.
-             *
-             * @param id: current train id
-             * @param sec: current system seconds
-             * @param frac: current fractional seconds
-             * @param period: interval between subsequent ids in microseconds
-             */
-            virtual void slotTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac,
-                                      unsigned long long period) = 0;
-
-            // public since called by DeviceServer
-            /**
-             * If the device receives time-server updates via slotTimeTick, this hook will be called for every id
-             * in sequential order. The time stamps (sec + frac) of subsequent ids might be identical - though they
-             * are usually spaced by period.
-             * Can be overwritten in derived classes.
-             *
-             * @param id: train id
-             * @param sec: unix seconds
-             * @param frac: fractional seconds (i.e. attoseconds)
-             * @param period: interval between ids in microseconds
-             */
-            virtual void onTimeUpdate(unsigned long long id, unsigned long long sec, unsigned long long frac,
-                                      unsigned long long period) {}
-
-            void registerInitialFunction(const std::function<void()>& func) {
-                m_initialFunc.push_back(func);
-            }
-
-#define KARABO_INITIAL_FUNCTION(function) this->registerInitialFunction(std::bind(&Self::function, this));
-
-           protected:
-            // protected since called in Device::slotTimeTick
-            /**
-             * A hook which is called if the device receives external time-server update, i.e. if slotTimeTick on the
-             * device server is called.
-             * Can be overwritten by derived classes.
-             *
-             * @param id: train id
-             * @param sec: unix seconds
-             * @param frac: fractional seconds (i.e. attoseconds)
-             * @param period: interval between ids in microseconds
-             */
-            virtual void onTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac,
-                                    unsigned long long period) {}
-
-            void startInitialFunctions();
-
-           private:
-            std::vector<std::function<void()>> m_initialFunc;
-        };
-
         /**
          * @class Device
          * @brief all Karabo devices derive from this class
@@ -192,7 +107,8 @@ namespace karabo {
          * These parameters describe a devices Schema, which in turn describes
          * the possible configurations of the device.
          */
-        class Device : public BaseDevice {
+        class Device : public karabo::xms::SignalSlotable {
+            std::vector<std::function<void()>> m_initialFunc;
             /// Validators to validate...
             karabo::data::Validator m_validatorIntern; /// ...internal updates via 'Device::set'
             karabo::data::Validator m_validatorExtern; /// ...external updates via 'Device::slotReconfigure'
@@ -226,6 +142,7 @@ namespace karabo {
            public:
             // Derived classes shall use "<packageName>-<repositoryVersion>" as their version
             KARABO_CLASSINFO(Device, "Device", karabo::util::Version::getVersion())
+            KARABO_CONFIGURATION_BASE_CLASS;
 
             /**
              * The expected parameter section of the Device class, known at
@@ -257,6 +174,31 @@ namespace karabo {
              * The destructor will reset the DeviceClient attached to this device.
              */
             virtual ~Device();
+
+            /**
+             * Register a function to be called after construction
+             *
+             * Can be called by each class of an inheritance chain.
+             * Functions will be called in order of registration.
+             */
+            void registerInitialFunction(const std::function<void()>& func) {
+                m_initialFunc.push_back(func);
+            }
+
+#define KARABO_INITIAL_FUNCTION(function) this->registerInitialFunction(std::bind(&Self::function, this));
+
+            /**
+             * This method is called to finalize initialization of a device. It is needed to allow user
+             * code to hook in after the base device constructor, but before the device is fully initialized.
+             *
+             * @param connection The broker connection for the device.
+             * @param consumeBroadcasts If false, do not listen directly to broadcast messages (addressed to '*').
+             *                          Whoever sets this to false has to ensure that broadcast messages reach the
+             *                          Device in some other way, otherwise the device will not work correctly.
+             * @param timeServerId The id of the time server to be used by the device - usually set by the DeviceServer.
+             */
+            void finalizeInternalInitialization(const karabo::net::Broker::Pointer& connection, bool consumeBroadcasts,
+                                                const std::string& timeServerId);
 
             /**
              * This function allows to communicate to other (remote) devices.
@@ -843,8 +785,45 @@ namespace karabo {
             const karabo::data::AlarmCondition& getAlarmCondition(const std::string& key,
                                                                   const std::string& sep = ".") const;
 
+            /**
+             * A slot called by the device server if the external time ticks update to synchronize
+             * this device with the timing system.
+             *
+             * @param id: current train id
+             * @param sec: current system seconds
+             * @param frac: current fractional seconds
+             * @param period: interval between subsequent ids in microseconds
+             */
             void slotTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac,
                               unsigned long long period);
+
+            // protected since called in Device::slotTimeTick
+            /**
+             * A hook which is called if the device receives external time-server update, i.e. if slotTimeTick on the
+             * device server is called.
+             * Can be overwritten by derived classes.
+             *
+             * @param id: train id
+             * @param sec: unix seconds
+             * @param frac: fractional seconds (i.e. attoseconds)
+             * @param period: interval between ids in microseconds
+             */
+            virtual void onTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac,
+                                    unsigned long long period) {}
+
+            /**
+             * If the device receives time-server updates via slotTimeTick, this hook will be called for every id
+             * in sequential order. The time stamps (sec + frac) of subsequent ids might be identical - though they
+             * are usually spaced by period.
+             * Can be overwritten in derived classes.
+             *
+             * @param id: train id
+             * @param sec: unix seconds
+             * @param frac: fractional seconds (i.e. attoseconds)
+             * @param period: interval between ids in microseconds
+             */
+            virtual void onTimeUpdate(unsigned long long id, unsigned long long sec, unsigned long long frac,
+                                      unsigned long long period) {}
 
             /**
              * Append Schema to change/set maximum size information for path - if paths does not exist, throw exception
@@ -894,21 +873,7 @@ namespace karabo {
             karabo::data::Timestamp getTimestamp(const karabo::data::Epochstamp& epoch) const;
 
            private: // Functions
-            /**
-             * This function will typically be called by the DeviceServer.
-             * The call is blocking and afterwards communication should happen only via slot calls.
-             *
-             * @param connection The broker connection for the device.
-             * @param consumeBroadcasts If false, do not listen directly to broadcast messages (addressed to '*').
-             *                          Whoever sets this to false has to ensure that broadcast messages reach the
-             *                          Device in some other way.
-             *  @param timeServerId The id of the time server to be used by the device - usually set by the
-             *                      DeviceServer.
-             */
-            void finalizeInternalInitialization(const karabo::net::Broker::Pointer& connection, bool consumeBroadcasts,
-                                                const std::string& timeServerId);
-
-            void wrapStartFsm();
+            void wrapRegisteredInit();
 
             void initClassId() {
                 m_classId = getClassInfo().getClassId();
