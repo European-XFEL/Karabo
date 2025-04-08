@@ -181,7 +181,7 @@ void Broker_Test::_testPublishSubscribe() {
 
     for (int i = 0; i < maxLoop; ++i) {
         hdr->set("count", i + 1);
-        CPPUNIT_ASSERT_NO_THROW(bob->write(m_domain, hdr, body, 4, 0));
+        CPPUNIT_ASSERT_NO_THROW(bob->write(m_domain, hdr, body));
     }
 
     // Wait on future ...
@@ -254,7 +254,7 @@ void Broker_Test::_testPublishSubscribeAsync() {
 
         for (int i = 0; i < maxLoop; ++i) {
             data->set<int>("c", i + 1);
-            CPPUNIT_ASSERT_NO_THROW(bob->write(bob->getDomain(), header, data, 4, 0));
+            CPPUNIT_ASSERT_NO_THROW(bob->write(bob->getDomain(), header, data));
         }
     });
 
@@ -382,7 +382,7 @@ void Broker_Test::_testReadingHeartbeats() {
         for (int i = 0; i < maxLoop; ++i) {
             // Bob sends heartbeat
             data->set<int>("c", i + 1);
-            CPPUNIT_ASSERT_NO_THROW(bob->write(m_domain + "_beats", header, data, 0, 0));
+            CPPUNIT_ASSERT_NO_THROW(bob->write(m_domain + "_beats", header, data));
         }
 
         Hash::Pointer h2 = std::make_shared<Hash>("signalInstanceId", "bob", "signalFunction", "signalFromBob",
@@ -390,7 +390,7 @@ void Broker_Test::_testReadingHeartbeats() {
         Hash::Pointer d2 = std::make_shared<Hash>("c", 1);
 
         // Trigger the end of the test
-        CPPUNIT_ASSERT_NO_THROW(bob->write(m_domain, h2, d2, 4, 0));
+        CPPUNIT_ASSERT_NO_THROW(bob->write(m_domain, h2, d2));
     });
 
     // Wait on future ... when Alice reads all maxLoop messages or failure happens...
@@ -486,15 +486,15 @@ void Broker_Test::_testReadingGlobalCalls(const std::vector<std::string>& broker
                                       "slotInstanceIds", "|*|", "slotFunctions",
                                       "|*:aSlot|"); //
     auto bodyGlobal = std::make_shared<Hash>("msgToAll", "A global message");
-    sender->write(m_domain, hdr, bodyGlobal, 4, 0);
+    sender->write(m_domain, hdr, bodyGlobal);
 
     // Prepare and send specific messages
     hdr->erase("slotFunctions"); // Specific slot calls do not need their slot for routing, ...
     hdr->set("slotInstanceIds", "|" + listenGlobal->getInstanceId() + "|"); // ... but a specific instanceId
     auto bodyNonGlobal = std::make_shared<Hash>("msg", "A specific message");
-    sender->write(m_domain, hdr, bodyNonGlobal, 4, 0);
+    sender->write(m_domain, hdr, bodyNonGlobal);
     hdr->set("slotInstanceIds", "|" + notListenGlobal->getInstanceId() + "|");
-    sender->write(m_domain, hdr, bodyNonGlobal, 4, 0);
+    sender->write(m_domain, hdr, bodyNonGlobal);
 
     // Assert that both messages arrived at listenGlobal
     const std::string msg = futGlobal1.get();
@@ -583,7 +583,7 @@ void Broker_Test::_testProducerRestartConsumerContinues() {
 
         for (int i = 1; i <= 16; ++i) {
             data->set("c", i);
-            CPPUNIT_ASSERT_NO_THROW(bob->write(m_domain, header, data, 4, 0));
+            CPPUNIT_ASSERT_NO_THROW(bob->write(m_domain, header, data));
         }
 
         CPPUNIT_ASSERT_NO_THROW(bob->disconnect());
@@ -599,11 +599,11 @@ void Broker_Test::_testProducerRestartConsumerContinues() {
 
         for (int i = 1; i <= 20; ++i) {
             data->set("c", -i);
-            CPPUNIT_ASSERT_NO_THROW(bob->write(m_domain, header, data, 4, 0));
+            CPPUNIT_ASSERT_NO_THROW(bob->write(m_domain, header, data));
         }
 
         Hash::Pointer stop(new Hash("stop", Hash()));
-        CPPUNIT_ASSERT_NO_THROW(bob->write(m_domain, header, stop, 4, 0));
+        CPPUNIT_ASSERT_NO_THROW(bob->write(m_domain, header, stop));
         CPPUNIT_ASSERT_NO_THROW(bob->disconnect());
     });
 
@@ -685,7 +685,7 @@ void Broker_Test::_testProducerContinuesConsumerRestart() {
 
     for (int i = 1; i <= maxLoop1; ++i) {
         data->set("c", i);
-        CPPUNIT_ASSERT_NO_THROW(bob->write(m_domain, header, data, 4, 0));
+        CPPUNIT_ASSERT_NO_THROW(bob->write(m_domain, header, data));
     }
 
     // Alice waits here for end of step1
@@ -733,7 +733,7 @@ void Broker_Test::_testProducerContinuesConsumerRestart() {
     // send negative numbers ...
     for (int i = 1; i <= maxLoop2; ++i) {
         data->set("c", -i);
-        CPPUNIT_ASSERT_NO_THROW(bob->write(m_domain, header, data, 4, 0));
+        CPPUNIT_ASSERT_NO_THROW(bob->write(m_domain, header, data));
     }
 
     auto r2 = f2.get();

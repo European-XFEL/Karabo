@@ -1235,7 +1235,7 @@ class PythonDevice:
         # changeHash, instanceId
         self._ss.registerSignal("signalChanged", Hash, str)
         # schema, deviceid
-        self._ss.registerSystemSignal("signalSchemaUpdated", Schema, str)
+        self._ss.registerSignal("signalSchemaUpdated", Schema, str)
 
         # Register intrinsic slots
         self._ss.registerSlot(self.slotReconfigure)
