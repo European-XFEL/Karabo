@@ -545,6 +545,9 @@ class ReactiveLoginDialog(QDialog):
         self._update_dialog_state()
 
 
+TEMPORARY_INDEX = 0
+
+
 class TemporarySessionDialog(QDialog):
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
@@ -557,21 +560,25 @@ class TemporarySessionDialog(QDialog):
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
         self.ok_button.setEnabled(False)
 
+        self.combo_mode.currentIndexChanged.connect(self._switch_temporary)
         self.edit_access_code = AccessCodeWidget(parent)
         self.access_widget_layout.addWidget(self.edit_access_code)
         self.edit_access_code.valueChanged.connect(self._update_button)
-
         self.authenticate_button.clicked.connect(self.open_login_webpage)
 
         self.access_manager = QNetworkAccessManager()
         self.access_manager.finished.connect(self.onAuthReply)
-
         self._auth_url = krb_access.AUTHENTICATION_SERVER
 
         user = get_config()["username"]
         access_level = krb_access.GLOBAL_ACCESS_LEVEL.name
         text = ACCESS_LEVEL_INFO.format(user=user, access_level=access_level)
         self.info_label.setText(text)
+        self.remember_login.setVisible(False)
+
+    @Slot(int)
+    def _switch_temporary(self, index):
+        self.remember_login.setVisible(bool(index))
 
     @Slot()
     def open_login_webpage(self):
@@ -593,10 +600,15 @@ class TemporarySessionDialog(QDialog):
         self.ok_button.setEnabled(enable)
 
     def _login_authenticated(self):
+        if self.combo_mode.currentIndex() == TEMPORARY_INDEX:
+            remember_login = False
+        else:
+            remember_login = self.remember_login.isChecked()
+
         info = json.dumps({
             "access_code": int(self.edit_access_code.get_access_code()),
             "client_hostname": CLIENT_HOST,
-            "remember_login": False
+            "remember_login": remember_login,
         })
         info = bytearray(info.encode("utf-8"))
         url = f"{self._auth_url}user_tokens"
@@ -607,23 +619,36 @@ class TemporarySessionDialog(QDialog):
 
     @Slot(QNetworkReply)
     def onAuthReply(self, reply: QNetworkReply):
-
         error = reply.error()
-
         bytes_string = reply.readAll()
         reply_body = str(bytes_string, "utf-8")
         auth_result = json.loads(reply_body)
         if error == QNetworkReply.NoError and auth_result["success"]:
             krb_access.ONE_TIME_TOKEN = auth_result["once_token"]
-            highest_access_level = krb_access.HIGHEST_ACCESS_LEVEL.name
-            krb_access_level = krb_access.ACCESS_LEVEL_MAP.get(
-                highest_access_level.lower(), 2)
-            username = get_config()["username"]
-            get_network().beginTemporarySession(
-                username=username,
-                temporarySessionToken=auth_result["once_token"],
-                levelBeforeTemporarySession=krb_access_level,
-            )
+            # Temporary Session
+            if self.combo_mode.currentIndex() == TEMPORARY_INDEX:
+                highest_access_level = krb_access.HIGHEST_ACCESS_LEVEL.name
+                krb_access_level = krb_access.ACCESS_LEVEL_MAP.get(
+                    highest_access_level.lower(), 2)
+                username = get_config()["username"]
+                get_network().beginTemporarySession(
+                    username=username,
+                    temporarySessionToken=auth_result["once_token"],
+                    levelBeforeTemporarySession=krb_access_level,
+                )
+            else:
+                refresh_token = auth_result.get("refresh_token")
+                if refresh_token is not None:
+                    refresh_token_user = auth_result.get("username")
+                    get_config()["refresh_token"] = refresh_token
+                    get_config()["refresh_token_user"] = refresh_token_user
+                else:
+                    # In case we haven't received a refresh token, we are not
+                    # remembering and thus have to erase tokens.
+                    del get_config()["refresh_token"]
+                    del get_config()["refresh_token_user"]
+                get_network().onLogin()
+
             super().accept()
         else:
             error = auth_result.get("error_msg")

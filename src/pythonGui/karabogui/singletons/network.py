@@ -589,7 +589,7 @@ class Network(QObject):
         # Inform the GUI to change correspondingly the allowed
         # level-downgrade
         broadcast_event(KaraboEvent.LoginUserChanged, {})
-        self._send_login_information()
+        self.onLogin()
         self._empty_request_queue()
 
     # ------------------------------------------------------------------------
@@ -628,7 +628,7 @@ class Network(QObject):
         diff = Timestamp().toTimestamp() - received_timestamp
         self.signalNetworkPerformance.emit(diff, self._show_proc_delay)
 
-    def _send_login_information(self):
+    def onLogin(self):
         login_info = Hash("type", "login")
         # username to transport ClientID is deprecated - remove it after a
         # couple of new versions of the GUI Server.
