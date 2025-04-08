@@ -39,7 +39,7 @@ USING_KARABO_NAMESPACES;
 namespace karabo {
 
 
-    KARABO_REGISTER_FOR_CONFIGURATION(BaseDevice, Device, P2PSenderDevice)
+    KARABO_REGISTER_FOR_CONFIGURATION(Device, P2PSenderDevice)
 
     void P2PSenderDevice::expectedParameters(Schema& expected) {
         OVERWRITE_ELEMENT(expected)

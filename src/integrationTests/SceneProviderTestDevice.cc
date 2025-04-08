@@ -30,7 +30,7 @@ USING_KARABO_NAMESPACES
 namespace karabo {
 
 
-    KARABO_REGISTER_FOR_CONFIGURATION(BaseDevice, Device, SceneProviderTestDevice)
+    KARABO_REGISTER_FOR_CONFIGURATION(Device, SceneProviderTestDevice)
 
     void SceneProviderTestDevice::expectedParameters(Schema& expected) {
         VECTOR_STRING_ELEMENT(expected).key("availableScenes").readOnly().initialValue(std::vector<string>()).commit();

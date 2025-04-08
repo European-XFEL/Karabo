@@ -28,7 +28,7 @@
 
 namespace karabo {
 
-    KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device, __CLASS_NAME__)
+    KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::Device, __CLASS_NAME__)
 
     void __CLASS_NAME__::expectedParameters(karabo::data::Schema& expected) {
         // Define device schema here, i.e. properties, slots and Input-/OutputChannels

@@ -587,7 +587,7 @@ void Validator_Test::testPropertyTestValidation() {
     // No schema was provided for validator ...
     CPPUNIT_ASSERT(!validator.hasReconfigurableParameter());
 
-    auto schema = core::BaseDevice::getSchema("PropertyTest");
+    auto schema = core::Device::getSchema("PropertyTest");
     {
         const auto startTimepoint = std::chrono::high_resolution_clock::now();
 

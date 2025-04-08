@@ -31,7 +31,7 @@ void KaraboDeviceFixture::instantiateWithDeviceServer(const std::string& classId
 
     // scanPlugins is set to true to scan $KARABO/plugins directory
     // can be set to false if other libraries are not needed for testing
-    karabo::data::Hash config("serverId", DEVICE_SERVER_ID, true, "Logger.priority", LOG_PRIORITY);
+    karabo::data::Hash config("serverId", DEVICE_SERVER_ID, "Logger.priority", LOG_PRIORITY);
     m_deviceSrv = karabo::core::DeviceServer::create("DeviceServer", config);
     m_deviceSrv->finalizeInternalInitialization();
 
@@ -42,11 +42,11 @@ void KaraboDeviceFixture::instantiateWithDeviceServer(const std::string& classId
     ASSERT_TRUE(success.first) << "Failure instantiating '" << instanceId << "':\n" << success.second;
 }
 
-karabo::core::BaseDevice::Pointer KaraboDeviceFixture::instantiateAndGetPointer(const std::string& classId,
-                                                                                const std::string& instanceId,
-                                                                                const karabo::data::Hash& devCfg) {
+karabo::core::Device::Pointer KaraboDeviceFixture::instantiateAndGetPointer(const std::string& classId,
+                                                                            const std::string& instanceId,
+                                                                            const karabo::data::Hash& devCfg) {
     std::string errorMsg;
-    karabo::core::BaseDevice::Pointer devPtr;
+    karabo::core::Device::Pointer devPtr;
     // karabo::log::Logger is a singleton and we should reset it to make sure it is configured how we like it.
     karabo::log::Logger::reset();
     karabo::data::Hash config("priority", LOG_PRIORITY);
@@ -55,7 +55,7 @@ karabo::core::BaseDevice::Pointer KaraboDeviceFixture::instantiateAndGetPointer(
 
     try {
         // instantiate the device under test
-        devPtr = karabo::core::BaseDevice::create(classId, devCfg);
+        devPtr = karabo::core::Device::create(classId, devCfg);
         // build a broker configuration Hash
         using namespace karabo::net;
         using namespace karabo::data;

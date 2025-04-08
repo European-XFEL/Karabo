@@ -63,15 +63,6 @@ namespace karabo {
     namespace core {
 
 
-        BaseDevice::~BaseDevice() {}
-
-
-        void BaseDevice::startInitialFunctions() {
-            // Call second constructors in the same order as first constructors were called
-            for (size_t i = 0; i < m_initialFunc.size(); ++i) m_initialFunc[i]();
-        }
-
-
         void Device::expectedParameters(karabo::data::Schema& expected) {
             using namespace karabo::data;
             using namespace karabo::xms;
@@ -932,18 +923,18 @@ namespace karabo {
             // Connect input channels - requires SignalSlotable to be started
             this->connectInputChannels(boost::system::error_code());
 
-            // Start the state machine (call initialization methods in case of noFsm)
+            // Call device registered initialisation routines.
             // Do that on the event loop since any blocking should not influence the success of the instantiation
             // procedure, i.e. the device server slot that starts the device should reply immediately, irrespective
-            // of what startFsm() does. We wrap the call to startFsm() to treat exceptions.
-            net::EventLoop::getIOService().post(util::bind_weak(&Device::wrapStartFsm, this));
+            // of what initialisation does. We wrap the call to treat exceptions.
+            net::EventLoop::getIOService().post(util::bind_weak(&Device::wrapRegisteredInit, this));
         }
 
 
-        void Device::wrapStartFsm() {
+        void Device::wrapRegisteredInit() {
             try {
-                this->startInitialFunctions(); // (This function must be inherited from the templated base class
-                                               // (it's a concept!)
+                // Call second constructors in the same order as first constructors were called
+                for (size_t i = 0; i < m_initialFunc.size(); ++i) m_initialFunc[i]();
             } catch (const std::exception& e) {
                 const std::string exceptionTxt(e.what());
                 KARABO_LOG_ERROR << "The instance with deviceId " << this->getInstanceId()

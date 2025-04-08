@@ -334,7 +334,7 @@ class TestDevice : public karabo::core::Device {
     }
 };
 
-KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device, TestDevice)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::Device, TestDevice)
 
 
 // =================================================================================
@@ -389,7 +389,7 @@ class TestDeviceBadInit : public karabo::core::Device {
     }
 };
 
-KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device, TestDeviceBadInit)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::Device, TestDeviceBadInit)
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Device_Test);
 

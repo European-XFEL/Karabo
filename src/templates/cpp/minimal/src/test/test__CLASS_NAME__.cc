@@ -60,9 +60,9 @@ class __CLASS_NAME__DefaultCfg : public KaraboDeviceFixture {
          *   - onTimeUpdate will never get called
          */
         // instantiate the device to be tested
-        // karabo::core::BaseDevice::Pointer baseDevice;
+        // karabo::core::Device::Pointer baseDevice;
         // baseDevice = instantiateAndGetPointer("__CLASS_NAME__", TEST_DEVICE_ID, devCfg);
-        // cast the BaseDevice::Pointer to the derived class Pointer
+        // cast the Device::Pointer to the derived class Pointer
         // deviceUnderTest = std::dynamic_pointer_cast<karabo::__CLASS_NAME__>(baseDevice);
 
         /**

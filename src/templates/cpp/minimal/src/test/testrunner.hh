@@ -45,10 +45,9 @@ class KaraboDeviceFixture : public testing::Test {
     ~KaraboDeviceFixture();
 
     // instantiate an instance of the classID (with the devCfg configuration hash)
-    // and return the BaseDevice::Pointer for that instance
-    karabo::core::BaseDevice::Pointer instantiateAndGetPointer(const std::string& classId,
-                                                               const std::string& instanceId,
-                                                               const karabo::data::Hash& devCfg);
+    // and return the Device::Pointer for that instance
+    karabo::core::Device::Pointer instantiateAndGetPointer(const std::string& classId, const std::string& instanceId,
+                                                           const karabo::data::Hash& devCfg);
     // create a device server and ask it to instantiate the classID (with the devCfg
     // configuration hash)
     void instantiateWithDeviceServer(const std::string& classId, const std::string& instanceId,

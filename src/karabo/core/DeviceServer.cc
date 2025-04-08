@@ -123,7 +123,7 @@ namespace karabo {
                   .displayedName("Device Classes")
                   .description("The devices classes the server will manage")
                   .assignmentOptional()
-                  .defaultValue(BaseDevice::getRegisteredClasses())
+                  .defaultValue(Device::getRegisteredClasses())
                   .expertAccess()
                   .commit();
 
@@ -455,9 +455,8 @@ namespace karabo {
                 std::lock_guard<std::mutex> lock(m_deviceInstanceMutex);
                 for (auto& kv : m_deviceInstanceMap) {
                     if (kv.second.second) { // otherwise not yet fully initialized
-                        kv.second.second->post(bind_weak(&BaseDevice::onTimeUpdate, kv.second.first.get(),
-                                                         m_timeIdLastTick, stamp.getSeconds(),
-                                                         stamp.getFractionalSeconds(), period));
+                        kv.second.second->post(bind_weak(&Device::onTimeUpdate, kv.second.first.get(), m_timeIdLastTick,
+                                                         stamp.getSeconds(), stamp.getFractionalSeconds(), period));
                     }
                 }
             }
@@ -598,7 +597,7 @@ namespace karabo {
             std::string errorMsg;
             std::string errorDetails;
             try {
-                BaseDevice::Pointer device = BaseDevice::create(classId, config);
+                Device::Pointer device = Device::create(classId, config);
 
                 {
                     std::lock_guard<std::mutex> lock(m_deviceInstanceMutex);
@@ -660,13 +659,13 @@ namespace karabo {
             vector<string> deviceClasses;
             vector<int> visibilities;
 
-            const std::vector<std::string>& base_devices = Configurator<BaseDevice>::getRegisteredClasses();
-            for (const std::string& baseDevice : base_devices) {
-                if (std::find(m_deviceClasses.begin(), m_deviceClasses.end(), baseDevice) != m_deviceClasses.end()) {
-                    deviceClasses.push_back(baseDevice);
+            const std::vector<std::string>& registeredClasses = Configurator<Device>::getRegisteredClasses();
+            for (const std::string& deviceClass : registeredClasses) {
+                if (std::find(m_deviceClasses.begin(), m_deviceClasses.end(), deviceClass) != m_deviceClasses.end()) {
+                    deviceClasses.push_back(deviceClass);
                     try {
-                        auto schema = BaseDevice::getSchema(
-                              baseDevice,
+                        auto schema = Device::getSchema(
+                              deviceClass,
                               Schema::AssemblyRules(karabo::data::READ | karabo::data::WRITE | karabo::data::INIT));
 
                         // Hash conf{"mustNotify", false, "xsd", schema};
@@ -674,7 +673,7 @@ namespace karabo {
                         visibilities.push_back(karabo::data::Schema::OBSERVER);
 
                     } catch (const std::exception& e) {
-                        KARABO_LOG_ERROR << "Device \"" << baseDevice
+                        KARABO_LOG_ERROR << "Device \"" << deviceClass
                                          << "\" is ignored because of Schema building failure : " << e.what();
                         // Remove the last added element, since adding its visibility failed
                         deviceClasses.pop_back();
@@ -709,7 +708,7 @@ namespace karabo {
 
 
         void DeviceServer::slotGetClassSchema(const std::string& classId) {
-            Schema schema = BaseDevice::getSchema(classId);
+            Schema schema = Device::getSchema(classId);
             reply(schema, classId, this->getInstanceId());
         }
 
