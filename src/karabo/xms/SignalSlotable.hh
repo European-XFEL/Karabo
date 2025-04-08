@@ -434,9 +434,6 @@ namespace karabo {
             template <typename... Args>
             void registerSignal(const std::string& funcName);
 
-            template <typename... Args>
-            void registerSystemSignal(const std::string& funcName);
-
             /**
              * Register a new slot function for a slot. A new slot is generated
              * if so necessary. It is checked that the signature of the new
@@ -644,7 +641,7 @@ namespace karabo {
            protected:
             class Requestor {
                public:
-                static const int m_defaultAsyncTimeout = 2 * KARABO_SYS_TTL;
+                static const int m_defaultAsyncTimeout = 240'000; // 4 minutes
 
                 typedef SignalSlotable::AsyncErrorHandler AsyncErrorHandler;
 
@@ -875,8 +872,8 @@ namespace karabo {
                                                           const std::string& slotFunction) const;
 
             void doSendMessage(const std::string& instanceId, const karabo::data::Hash::Pointer& header,
-                               const karabo::data::Hash::Pointer& body, int prio, int timeToLive,
-                               const std::string& topic = "", bool forceViaBroker = false) const;
+                               const karabo::data::Hash::Pointer& body, const std::string& topic = "",
+                               bool forceViaBroker = false) const;
 
             // protected since needed in DeviceServer
             bool tryToCallDirectly(const std::string& slotInstanceId, const karabo::data::Hash::Pointer& header,
@@ -895,17 +892,14 @@ namespace karabo {
 
            private: // Functions
             /**
-             * Helper for register(System)Signal: If signalFunction is not yet known, creates a signal corresponding
+             * Helper for registerSignal: If signalFunction is not yet known, creates a signal corresponding
              * to the template argument signature and adds it to the internal container.
              * Otherwise an empty pointer is returned.
              * @param signalFunction
-             * @param priority is passed further to the Signal
-             * @param messageTimeToLive is passed further to the Signal
              * @return pointer to new Signal or empty pointer
              */
             template <typename... Args>
-            SignalInstancePointer addSignalIfNew(const std::string& signalFunction, int priority = KARABO_SYS_PRIO,
-                                                 int messageTimeToLive = KARABO_SYS_TTL);
+            SignalInstancePointer addSignalIfNew(const std::string& signalFunction);
 
             /**
              * If instanceId has invalid characters, throws SignalSlotException.
@@ -1190,7 +1184,7 @@ namespace karabo {
 
             auto body = std::make_shared<karabo::data::Hash>();
             karabo::util::pack(*body, args...);
-            m_signalSlotable->doSendMessage(requestSlotInstanceId, header, body, KARABO_SYS_PRIO, KARABO_SYS_TTL);
+            m_signalSlotable->doSendMessage(requestSlotInstanceId, header, body);
             return *this;
         }
 
@@ -1291,7 +1285,7 @@ namespace karabo {
             auto body = std::make_shared<karabo::data::Hash>();
             karabo::util::pack(*body, args...);
             karabo::data::Hash::Pointer header = prepareCallHeader(id, functionName);
-            doSendMessage(id, header, body, KARABO_SYS_PRIO, KARABO_SYS_TTL);
+            doSendMessage(id, header, body);
         }
 
         template <typename... Args>
@@ -1322,11 +1316,6 @@ namespace karabo {
 
         template <typename... Args>
         void SignalSlotable::registerSignal(const std::string& funcName) {
-            addSignalIfNew<Args...>(funcName, KARABO_PUB_PRIO, KARABO_PUB_TTL);
-        }
-
-        template <typename... Args>
-        void SignalSlotable::registerSystemSignal(const std::string& funcName) {
             addSignalIfNew<Args...>(funcName);
         }
 
@@ -1378,14 +1367,12 @@ namespace karabo {
         }
 
         template <typename... Args>
-        SignalSlotable::SignalInstancePointer SignalSlotable::addSignalIfNew(const std::string& signalFunction,
-                                                                             int priority, int messageTimeToLive) {
+        SignalSlotable::SignalInstancePointer SignalSlotable::addSignalIfNew(const std::string& signalFunction) {
             SignalInstancePointer s;
             {
                 std::lock_guard<std::mutex> lock(m_signalSlotInstancesMutex);
                 if (m_signalInstances.find(signalFunction) == m_signalInstances.end()) {
-                    s = std::make_shared<Signal>(this, m_connection, m_instanceId, signalFunction, priority,
-                                                 messageTimeToLive);
+                    s = std::make_shared<Signal>(this, m_connection, m_instanceId, signalFunction);
                     s->setSignature<Args...>();
                     m_signalInstances[signalFunction] = s;
                 }
@@ -1408,13 +1395,6 @@ namespace karabo {
 #define KARABO_SIGNAL2(signalName, a1, a2) this->template registerSignal<a1, a2>(signalName);
 #define KARABO_SIGNAL3(signalName, a1, a2, a3) this->template registerSignal<a1, a2, a3>(signalName);
 #define KARABO_SIGNAL4(signalName, a1, a2, a3, a4) this->template registerSignal<a1, a2, a3, a4>(signalName);
-
-#define KARABO_SYSTEM_SIGNAL0(signalName) this->registerSystemSignal(signalName);
-#define KARABO_SYSTEM_SIGNAL1(signalName, a1) this->template registerSystemSignal<a1>(signalName);
-#define KARABO_SYSTEM_SIGNAL2(signalName, a1, a2) this->template registerSystemSignal<a1, a2>(signalName);
-#define KARABO_SYSTEM_SIGNAL3(signalName, a1, a2, a3) this->template registerSystemSignal<a1, a2, a3>(signalName);
-#define KARABO_SYSTEM_SIGNAL4(signalName, a1, a2, a3, a4) \
-    this->template registerSystemSignal<a1, a2, a3, a4>(signalName);
 
 #define KARABO_SLOT0(slotName) this->registerSlot(std::bind(&Self::slotName, this), #slotName);
 #define KARABO_SLOT1(slotName, a1) \
@@ -1442,17 +1422,11 @@ namespace karabo {
                                      karabo::util::bind_weak(&Self::funcName, this, std::placeholders::_1));
 
 #define _KARABO_SIGNAL_N(x0, x1, x2, x3, x4, x5, FUNC, ...) FUNC
-#define _KARABO_SYSTEM_SIGNAL_N(x0, x1, x2, x3, x4, x5, FUNC, ...) FUNC
 #define _KARABO_SLOT_N(x0, x1, x2, x3, x4, x5, FUNC, ...) FUNC
 
 #define KARABO_SIGNAL(...)                                                                      \
     _KARABO_SIGNAL_N(, ##__VA_ARGS__, KARABO_SIGNAL4(__VA_ARGS__), KARABO_SIGNAL3(__VA_ARGS__), \
                      KARABO_SIGNAL2(__VA_ARGS__), KARABO_SIGNAL1(__VA_ARGS__), KARABO_SIGNAL0(__VA_ARGS__))
-
-#define KARABO_SYSTEM_SIGNAL(...)                                                                                    \
-    _KARABO_SYSTEM_SIGNAL_N(, ##__VA_ARGS__, KARABO_SYSTEM_SIGNAL4(__VA_ARGS__), KARABO_SYSTEM_SIGNAL3(__VA_ARGS__), \
-                            KARABO_SYSTEM_SIGNAL2(__VA_ARGS__), KARABO_SYSTEM_SIGNAL1(__VA_ARGS__),                  \
-                            KARABO_SYSTEM_SIGNAL0(__VA_ARGS__))
 
 #define KARABO_SLOT(...)                                                                                             \
     _KARABO_SLOT_N(, ##__VA_ARGS__, KARABO_SLOT4(__VA_ARGS__), KARABO_SLOT3(__VA_ARGS__), KARABO_SLOT2(__VA_ARGS__), \

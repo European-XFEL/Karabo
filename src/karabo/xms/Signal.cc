@@ -31,14 +31,11 @@ namespace karabo {
 
 
         Signal::Signal(const SignalSlotable* signalSlotable, const karabo::net::Broker::Pointer& channel,
-                       const std::string& signalInstanceId, const std::string& signalFunction, const int priority,
-                       const int messageTimeToLive)
+                       const std::string& signalInstanceId, const std::string& signalFunction)
             : m_signalSlotable(const_cast<SignalSlotable*>(signalSlotable)),
               m_channel(channel),
               m_signalInstanceId(signalInstanceId),
               m_signalFunction(signalFunction),
-              m_priority(priority),
-              m_messageTimeToLive(messageTimeToLive),
               m_topic(signalSlotable->m_topic),
               m_argsType(typeid(karabo::data::Types::NONE)) {}
 
@@ -115,7 +112,7 @@ namespace karabo {
                 if (registeredSlots.empty()) {
                     // Heartbeats are an exception, must always be sent
                     if (m_signalFunction == "signalHeartbeat") {
-                        m_channel->write(m_topic, header, message, m_priority, m_messageTimeToLive);
+                        m_channel->write(m_topic, header, message);
                         return;
                     } else {
                         // Do not even produce traffic on the way to the broker, as no one cares for this message
@@ -141,7 +138,7 @@ namespace karabo {
                         //       likely still used in the short-cut processing triggered above!
                         header = prepareHeader(registeredSlots);
                     }
-                    m_channel->write(m_topic, header, message, m_priority, m_messageTimeToLive);
+                    m_channel->write(m_topic, header, message);
                 }
 
             } catch (const karabo::data::Exception& e) {

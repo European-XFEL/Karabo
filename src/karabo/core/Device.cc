@@ -962,9 +962,9 @@ namespace karabo {
         void Device::initDeviceSlots() {
             using namespace std;
 
-            KARABO_SYSTEM_SIGNAL("signalChanged", karabo::data::Hash /*configuration*/, string /*deviceId*/);
+            KARABO_SIGNAL("signalChanged", karabo::data::Hash /*configuration*/, string /*deviceId*/);
 
-            KARABO_SYSTEM_SIGNAL("signalSchemaUpdated", karabo::data::Schema /*deviceSchema*/, string /*deviceId*/);
+            KARABO_SIGNAL("signalSchemaUpdated", karabo::data::Schema /*deviceSchema*/, string /*deviceId*/);
 
             KARABO_SLOT(slotReconfigure, karabo::data::Hash /*reconfiguration*/)
 

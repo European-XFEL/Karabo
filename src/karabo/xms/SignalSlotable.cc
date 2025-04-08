@@ -184,16 +184,16 @@ namespace karabo {
 
 
         void SignalSlotable::doSendMessage(const std::string& instanceId, const karabo::data::Hash::Pointer& header,
-                                           const karabo::data::Hash::Pointer& body, int prio, int timeToLive,
-                                           const std::string& topic, bool forceViaBroker) const {
-            // Timestamp added to be able to measure latencies even if broker is by-passed (or non-JMS broker)
+                                           const karabo::data::Hash::Pointer& body, const std::string& topic,
+                                           bool forceViaBroker) const {
+            // Timestamp added to be able to measure latencies
             header->set("MQTimestamp", getEpochMillis());
             if (!forceViaBroker) {
                 if (tryToCallDirectly(instanceId, header, body)) return;
             }
 
-            const std::string& t = topic.empty() ? m_topic : topic;
-            m_connection->write(t, header, body, prio, timeToLive);
+            const std::string& t = (topic.empty() ? m_topic : topic);
+            m_connection->write(t, header, body);
         }
 
 
@@ -272,7 +272,7 @@ namespace karabo {
 
         void SignalSlotable::Requestor::sendRequest() const {
             try {
-                m_signalSlotable->doSendMessage(m_slotInstanceId, m_header, m_body, KARABO_SYS_PRIO, KARABO_SYS_TTL);
+                m_signalSlotable->doSendMessage(m_slotInstanceId, m_header, m_body);
             } catch (...) {
                 KARABO_RETHROW_AS(KARABO_NETWORK_EXCEPTION("Problems sending request"));
             }
@@ -931,7 +931,7 @@ namespace karabo {
                 replyHeader->set("slotInstanceIds", "|" + targetInstanceId + "|");
 
                 Hash::Pointer replyBody = std::make_shared<Hash>("a1", message, "a2", details);
-                doSendMessage(targetInstanceId, replyHeader, replyBody, KARABO_SYS_PRIO, KARABO_SYS_TTL);
+                doSendMessage(targetInstanceId, replyHeader, replyBody);
             }
             // else {
             // TODO: care about header.has("replyInstanceIds") (i.e. requestNoWait) as well!
@@ -1015,20 +1015,14 @@ namespace karabo {
             // Our answer to slotPing may interest someone remote trying to come up with our instanceId,
             // so we must not bypass the broker.
             const bool viaBroker = (slotFunction == "slotPing");
-            doSendMessage(targetInstanceId, replyHeader, replyBody, KARABO_SYS_PRIO, KARABO_SYS_TTL, m_topic,
-                          viaBroker);
+            doSendMessage(targetInstanceId, replyHeader, replyBody, m_topic, viaBroker);
         }
 
 
         void SignalSlotable::registerDefaultSignalsAndSlots() {
             // The heartbeat signal goes through a different topic, so we cannot use the normal registerSignal.
-            // Use dropable KARABO_PUB_PRIO since
-            // - loss of a single heartbeat should not harm (see letInstanceSlowlyDieWithoutHeartbeat),
-            // - a device sending heartbeats like crazy can compromise all heartbeat listeners (because they cannot
-            // digest
-            //   quickly enough) - even worse, non-dropable heartbeats would create broker backlog in the beats topic
-            Signal::Pointer heartbeatSignal = std::make_shared<Signal>(
-                  this, m_connection, m_instanceId, "signalHeartbeat", KARABO_PUB_PRIO, KARABO_SYS_TTL);
+            Signal::Pointer heartbeatSignal =
+                  std::make_shared<Signal>(this, m_connection, m_instanceId, "signalHeartbeat");
             heartbeatSignal->setTopic(m_topic + beatsTopicSuffix);
             {
                 std::lock_guard<std::mutex> lock(m_signalSlotInstancesMutex);
@@ -1038,11 +1032,11 @@ namespace karabo {
             // Listener for heartbeats
             KARABO_SLOT(slotHeartbeat, string /*instanceId*/, int /*heartbeatIntervalInSec*/, Hash /*heartbeatInfo*/)
 
-            KARABO_SYSTEM_SIGNAL("signalInstanceNew", string, Hash);
+            KARABO_SIGNAL("signalInstanceNew", string, Hash);
 
-            KARABO_SYSTEM_SIGNAL("signalInstanceGone", string, Hash);
+            KARABO_SIGNAL("signalInstanceGone", string, Hash);
 
-            KARABO_SYSTEM_SIGNAL("signalInstanceUpdated", string, Hash);
+            KARABO_SIGNAL("signalInstanceUpdated", string, Hash);
 
             // Global ping listener
             KARABO_SLOT(slotPing, string /*callersInstanceId*/, int /*replyIfSame*/)

@@ -1361,7 +1361,7 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onGuiInfo";
                 Hash::Pointer hdr = std::make_shared<Hash>();
                 Hash::Pointer body = std::make_shared<Hash>(hash);
-                m_guiDebugProducer->write("karaboGuiDebug", hdr, body, 0, 0);
+                m_guiDebugProducer->write("karaboGuiDebug", hdr, body);
 
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onGuiInfo(): " << e.what();
@@ -1954,8 +1954,7 @@ namespace karabo {
                 // precisely: its datalogger) was started the last time before the point in time that you
                 // requested and all the parameter updates in between these two time points.
                 request(readerId, "slotGetConfigurationFromPast", deviceId, time)
-                      .timeout(120000) // 2 minutes - if we do not specify it will be 2*KARABO_SYS_TTL, i.e. 4
-                                       // minutes
+                      .timeout(120000) // 2 minutes - default is SignalSlotable::m_defaultAsyncTimeout = 240'000
                       .receiveAsync<Hash, Schema, bool, std::string>(handler, failureHandler);
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onGetConfigurationFromPast(): " << e.what();

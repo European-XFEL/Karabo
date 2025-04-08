@@ -90,8 +90,8 @@ namespace karabo {
           m_emitCount(0ull),
           m_timeTickerTimer(karabo::net::EventLoop::getIOService()) {
         KARABO_INITIAL_FUNCTION(initialize);
-        KARABO_SYSTEM_SIGNAL("signalTimeTick", unsigned long long /*id */, unsigned long long /* sec */,
-                             unsigned long long /* frac */, unsigned long long /* period */);
+        KARABO_SIGNAL("signalTimeTick", unsigned long long /*id */, unsigned long long /* sec */,
+                      unsigned long long /* frac */, unsigned long long /* period */);
         KARABO_SLOT(resetId);
     }
 
