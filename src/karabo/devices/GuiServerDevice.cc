@@ -50,7 +50,7 @@ using namespace karabo::xms;
 using namespace std::placeholders;
 
 
-KARABO_REGISTER_FOR_CONFIGURATION(BaseDevice, Device, karabo::devices::GuiServerDevice)
+KARABO_REGISTER_FOR_CONFIGURATION(Device, karabo::devices::GuiServerDevice)
 
 namespace {
     std::string getOverviewScene(const std::string& instanceId) {

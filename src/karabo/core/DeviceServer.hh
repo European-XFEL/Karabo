@@ -64,7 +64,7 @@ namespace karabo {
             std::vector<karabo::data::Hash> m_autoStart;
             std::vector<std::string> m_deviceClasses;
 
-            typedef std::unordered_map<std::string, std::pair<BaseDevice::Pointer, karabo::net::Strand::Pointer> >
+            typedef std::unordered_map<std::string, std::pair<Device::Pointer, karabo::net::Strand::Pointer> >
                   DeviceInstanceMap;
             DeviceInstanceMap m_deviceInstanceMap;
             std::mutex m_deviceInstanceMutex;
