@@ -341,13 +341,12 @@ class Broker:
         msg = self.encode_binary_message(header, arguments)
         await self.channel.basic_publish(msg, routing_key=key, exchange=exch)
 
-    async def heartbeat(self, interval: float | int, info: Hash):
+    async def heartbeat(self, info: Hash):
         header = Hash("signalFunction", "signalHeartbeat")
         header["signalInstanceId"] = self.deviceId
         body = Hash(
             "a1", self.deviceId,
-            "a2", interval,
-            "a3", info)
+            "a2", info)
         msg = encodeBinary(header) + encodeBinary(body)
         exch = f"{self.domain}.signals"
         key = f"{self.deviceId}.signalHeartbeat"
@@ -372,7 +371,7 @@ class Broker:
             try:
                 while True:
                     await sleep(interval)
-                    await self.heartbeat(interval, heartbeat_info)
+                    await self.heartbeat(heartbeat_info)
             except CancelledError:
                 pass
             finally:
@@ -665,9 +664,9 @@ class Broker:
                 _, pos = decodeBinaryPos(message)
                 hsh = decodeBinary(message[pos:])
             except BaseException:
-                self.logger.exception("Malformed message")
+                self.logger.exception("Malformed heartbeat message")
             else:
-                instance_id, info = hsh["a1"], hsh["a3"]
+                instance_id, info = hsh["a1"], hsh["a2"]
                 await d.updateHeartBeat(instance_id, info)
 
     async def consume_beats(self, device):

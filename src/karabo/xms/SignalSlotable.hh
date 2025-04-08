@@ -1013,8 +1013,7 @@ namespace karabo {
                 return f.substr(0, f.find_first_of('-')) + "|";
             }
 
-            void slotHeartbeat(const std::string& networkId, const int& heartbeatInterval,
-                               const karabo::data::Hash& heartbeatInfo);
+            void slotHeartbeat(const std::string& networkId, const karabo::data::Hash& heartbeatInfo);
 
             void letInstanceSlowlyDieWithoutHeartbeat(const boost::system::error_code& e);
 
