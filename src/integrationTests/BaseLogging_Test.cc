@@ -148,7 +148,7 @@ class DataLogTestDevice : public karabo::core::Device {
         updateSchema(sch);
     }
 };
-KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device, DataLogTestDevice)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::Device, DataLogTestDevice)
 
 
 // A device with float and double properties without limits to be able to set inf and nan.
@@ -188,7 +188,7 @@ class NanTestDevice : public karabo::core::Device {
     }
 };
 
-KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device, NanTestDevice)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::Device, NanTestDevice)
 
 
 // Very special vector<Hash> treatment for CppUnit, ignoring differences in attributes.

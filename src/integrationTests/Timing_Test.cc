@@ -57,8 +57,7 @@ class PropertyTestWithOnTimeUpdate : public karabo::devices::PropertyTest {
     }
 };
 
-KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device, karabo::devices::PropertyTest,
-                                  PropertyTestWithOnTimeUpdate)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::Device, karabo::devices::PropertyTest, PropertyTestWithOnTimeUpdate)
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Timing_Test);
 

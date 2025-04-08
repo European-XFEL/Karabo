@@ -30,7 +30,7 @@ USING_KARABO_NAMESPACES
 namespace karabo {
 
 
-    KARABO_REGISTER_FOR_CONFIGURATION(BaseDevice, Device, NonSceneProviderTestDevice)
+    KARABO_REGISTER_FOR_CONFIGURATION(Device, NonSceneProviderTestDevice)
 
     void NonSceneProviderTestDevice::expectedParameters(Schema& expected) {}
 

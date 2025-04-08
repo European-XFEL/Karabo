@@ -91,7 +91,7 @@
 #include "karabo/net/EventLoop.hh"
 #include "karabo/util/DataLogUtils.hh"
 
-KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device, karabo::devices::DataLoggerManager)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::Device, karabo::devices::DataLoggerManager)
 
 using std::placeholders::_1;
 using std::placeholders::_2;

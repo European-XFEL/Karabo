@@ -38,7 +38,7 @@ USING_KARABO_NAMESPACES
 namespace karabo {
 
 
-    KARABO_REGISTER_FOR_CONFIGURATION(BaseDevice, Device, LockTestDevice)
+    KARABO_REGISTER_FOR_CONFIGURATION(Device, LockTestDevice)
 
     void LockTestDevice::expectedParameters(Schema& expected) {
         STRING_ELEMENT(expected).key("controlledDevice").assignmentOptional().defaultValue("").commit();

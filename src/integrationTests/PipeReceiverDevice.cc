@@ -46,7 +46,7 @@ namespace karabo {
     using data::VECTOR_STRING_ELEMENT;
     using xms::INPUT_CHANNEL;
 
-    KARABO_REGISTER_FOR_CONFIGURATION(core::BaseDevice, core::Device, PipeReceiverDevice)
+    KARABO_REGISTER_FOR_CONFIGURATION(core::Device, PipeReceiverDevice)
 
     void PipeReceiverDevice::expectedParameters(data::Schema& expected) {
         data::Schema data;
