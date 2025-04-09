@@ -451,7 +451,6 @@ namespace karabo {
               m_timeout(config.get<int>("timeout")),
               m_authClient(config.get<std::string>("authServer")),
               m_onlyAppModeClients(config.get<bool>("onlyAppModeClients")) {
-            m_visibility = karabo::data::Schema::ADMIN;
             KARABO_INITIAL_FUNCTION(initialize)
 
             KARABO_SLOT(slotLoggerMap, Hash /*loggerMap*/)

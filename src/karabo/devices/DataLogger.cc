@@ -138,7 +138,6 @@ namespace karabo {
             : karabo::core::Device(input), m_flushDeadline(karabo::net::EventLoop::getIOService()) {
             // start "flush" actor ...
             input.get("flushInterval", m_flushInterval); // in seconds
-            m_visibility = karabo::data::Schema::ADMIN;
 
             // Register slots in constructor to ensure existence when sending instanceNew
             KARABO_SLOT(slotChanged, Hash /*changedConfig*/, string /*deviceId*/);

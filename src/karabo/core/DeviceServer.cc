@@ -204,9 +204,6 @@ namespace karabo {
                 }
             }
 
-            // What visibility this server should have
-            m_visibility = Schema::AccessLevel::OBSERVER;
-
             // What is the TimeServer ID
             config.get("timeServerId", m_timeServerId);
 
@@ -239,7 +236,6 @@ namespace karabo {
             auto user = getlogin();
             instanceInfo.set("user", (user ? user : "none"));
             instanceInfo.set("lang", "cpp");
-            instanceInfo.set("visibility", m_visibility);
             instanceInfo.set("log", config.get<std::string>("Logger.priority"));
 
             int flags = 0;
@@ -657,7 +653,6 @@ namespace karabo {
 
         Hash DeviceServer::availablePlugins() {
             vector<string> deviceClasses;
-            vector<int> visibilities;
 
             const std::vector<std::string>& registeredClasses = Configurator<Device>::getRegisteredClasses();
             for (const std::string& deviceClass : registeredClasses) {
@@ -667,20 +662,14 @@ namespace karabo {
                         auto schema = Device::getSchema(
                               deviceClass,
                               Schema::AssemblyRules(karabo::data::READ | karabo::data::WRITE | karabo::data::INIT));
-
-                        // Hash conf{"mustNotify", false, "xsd", schema};
-                        // "visibility" is not a parameter and hard-coded default is ...
-                        visibilities.push_back(karabo::data::Schema::OBSERVER);
-
                     } catch (const std::exception& e) {
                         KARABO_LOG_ERROR << "Device \"" << deviceClass
                                          << "\" is ignored because of Schema building failure : " << e.what();
-                        // Remove the last added element, since adding its visibility failed
                         deviceClasses.pop_back();
                     }
                 }
             }
-            return Hash{"deviceClasses", deviceClasses, "visibilities", visibilities};
+            return Hash{"deviceClasses", deviceClasses};
         }
 
 

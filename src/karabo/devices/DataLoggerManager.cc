@@ -530,7 +530,6 @@ namespace karabo {
               m_loggerClassId("Unsupported"),
               m_blocked(input.get<Hash>("blocklist")),
               m_blockListFile(input.get<string>("blocklistfile")) {
-            m_visibility = karabo::data::Schema::ADMIN;
             const std::string loggerType = input.get<std::string>("logger");
             if (loggerType == "FileDataLogger") {
                 m_loggerClassId = "FileDataLogger";
