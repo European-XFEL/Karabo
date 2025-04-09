@@ -39,9 +39,9 @@ CPPUNIT_TEST_SUITE_REGISTRATION(InstanceChangeThrottler_Test);
 
 InstanceChangeThrottler_Test::InstanceChangeThrottler_Test()
     : m_instIdServer("someServer/id"),
-      m_instInfoServer("type", "server", "version", "d9c9d93", "heartbeatInterval", 10, "visibility", 4),
+      m_instInfoServer("type", "server", "version", "d9c9d93", "heartbeatInterval", 10),
       m_instIdDevice("ONE/NINE/DEVICE"),
-      m_instInfoDevice("type", "device", "version", "d9c9d94", "heartbeatInterval", 20, "visibility", 4) {}
+      m_instInfoDevice("type", "device", "version", "d9c9d94", "heartbeatInterval", 20) {}
 
 
 InstanceChangeThrottler_Test::~InstanceChangeThrottler_Test() {}

@@ -93,7 +93,6 @@ namespace karabo {
             Hash instanceInfo;
             instanceInfo.set("type", "client");
             instanceInfo.set("lang", "cpp");
-            instanceInfo.set("visibility", 4);
             instanceInfo.set("host", net::bareHostName());
             instanceInfo.set("status", "ok");
 
@@ -613,10 +612,6 @@ namespace karabo {
                 deviceServers.reserve(tmp.size());
                 karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
                 for (Hash::const_map_iterator it = tmp.mbegin(); it != tmp.mend(); ++it) {
-                    if (it->second.hasAttribute("visibility")) {
-                        // TODO Implement access level
-                        if (getAccessLevel(it->second.getKey()) < it->second.getAttribute<int>("visibility")) continue;
-                    }
                     deviceServers.push_back(it->second.getKey());
                 }
                 return deviceServers;
@@ -658,10 +653,6 @@ namespace karabo {
                 vector<string> devices;
                 devices.reserve(tmp.size());
                 for (Hash::const_map_iterator it = tmp.mbegin(); it != tmp.mend(); ++it) {
-                    if (it->second.hasAttribute("visibility")) {
-                        // TODO Re-implement access level
-                        if (getAccessLevel(it->second.getKey()) < it->second.getAttribute<int>("visibility")) continue;
-                    }
                     devices.push_back(it->second.getKey());
                 }
                 return devices;
@@ -683,11 +674,6 @@ namespace karabo {
                 devices.reserve(tmp.size());
                 for (Hash::const_map_iterator it = tmp.mbegin(); it != tmp.mend(); ++it) {
                     if (it->second.getAttribute<string>("serverId") == deviceServer) {
-                        if (it->second.hasAttribute("visibility")) {
-                            // TODO re-implement access level
-                            if (getAccessLevel(it->second.getKey()) < it->second.getAttribute<int>("visibility"))
-                                continue;
-                        }
                         devices.push_back(it->second.getKey());
                     }
                 }

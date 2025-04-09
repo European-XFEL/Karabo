@@ -38,8 +38,8 @@ configuration file using the text file based backend is presented below:
    cd $KARABO/var/data
    exec envdir $KARABO/var/environment karabo-cppserver serverId=karabo/dataLoggerManager \
    'deviceClasses=DataLoggerManager' \
-   'autoStart[0]={DataLoggerManager.serverList=karabo/dataLogger}' \
-   'visibility=4' 'Logger.priority=INFO' 2>&1
+   '{"Karabo_DataLoggerManager_0" : {"classId": "DataLoggerManager", "serverList": "karabo/dataLogger"}}' \
+   'Logger.priority=INFO' 2>&1
 
 
 An example of a run configuration file using the InfluxDB based backend:
@@ -52,9 +52,8 @@ An example of a run configuration file using the InfluxDB based backend:
    cd $KARABO/var/data
    exec envdir $KARABO/var/environment karabo-cppserver serverId=karabo/dataLoggerManager \
    'deviceClasses=DataLoggerManager' \
-   autoStart[0]={DataLoggerManager.serverList=karabo/dataLogger, \
-   DataLoggerManager.logger.InfluxDataLogger={ urlRead='tcp://localhost:8086' urlWrite='tcp://localhost:8086' maxBatchPoints=200 }} \
-   'visibility=4' 'Logger.priority=INFO' 2>&1
+   'init={"Karabo_DataLoggerManager_0" : {"classId": "DataLoggerManager", "logger": "InfluxDataLogger", "influxDataLogger": {"urlRead": "tcp://localhost:8086", "urlWrite": "tcp://localhost:8086"}}}' \
+   'Logger.priority=INFO' 2>&1
 
 A default Karabo installation comes configured to use the text file based archiving backend.
 
