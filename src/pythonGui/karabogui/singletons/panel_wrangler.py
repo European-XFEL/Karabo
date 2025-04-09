@@ -35,7 +35,7 @@ from karabogui.panels.api import (
     ConfigurationPanel, MacroPanel, ScenePanel, WidgetControllerPanel)
 from karabogui.programs.utils import close_app
 from karabogui.singletons.api import get_config, get_db_conn, get_project_model
-from karabogui.util import move_to_cursor, process_qt_events
+from karabogui.util import move_to_cursor, process_qt_events, send_info
 from karabogui.wizards import TipsTricksWizard
 
 
@@ -372,6 +372,7 @@ class PanelWrangler(QObject):
         editable = access_role_allowed(AccessRole.MACRO_EDIT)
         panel.ui_editor.setReadOnly(not editable)
         self._show_project_item_panel(model, panel)
+        send_info(type="open_macro", uuid=model.uuid, name=model.simple_name)
 
     def _open_scene(self, model, target_window, attached=True):
         if model is None:
@@ -396,6 +397,8 @@ class PanelWrangler(QObject):
         panel.ac_design_mode.setVisible(attached and editable)
         self._show_project_item_panel(model, panel, attached)
 
+        send_info(type="open_scene", uuid=model.uuid,
+                  name=model.simple_name, attached=attached)
         if self.main_window is None:
             return panel
 

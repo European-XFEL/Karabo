@@ -32,18 +32,17 @@ from karabogui.background import create_background_timer
 from karabogui.controllers.api import populate_controller_registry
 from karabogui.fonts import FONT_FILENAMES, get_font_size_from_dpi
 from karabogui.singletons.api import (
-    get_config, get_manager, get_network, get_panel_wrangler)
-from karabogui.util import process_qt_events
+    get_config, get_manager, get_panel_wrangler)
+from karabogui.util import process_qt_events, send_info
 
 
 def excepthook(exc_type, value, traceback):
     print_exception(exc_type, value, traceback)
     text = "".join(format_exception(exc_type, value, traceback))
     try:
-        network = get_network()
-        network.onError(text)
+        send_info(type="error", traceback=text)
     except Exception:
-        print("could not send exception to network")
+        print("Could not send exception to network")
 
 
 def create_gui_app(args):

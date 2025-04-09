@@ -22,6 +22,7 @@ from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 from tempfile import mkstemp
+from typing import Any
 from uuid import uuid4
 from xml.sax.saxutils import escape
 
@@ -38,8 +39,15 @@ from karabogui import const, icons, messagebox
 from karabogui.binding.api import (
     DeviceClassProxy, DeviceProxy, extract_configuration)
 from karabogui.events import KaraboEvent, broadcast_event
-from karabogui.singletons.api import get_config, get_db_conn
+from karabogui.singletons.api import get_config, get_db_conn, get_network
 from karabogui.singletons.util import get_error_message
+
+
+def send_info(**info: Any):
+    """A convenience wrapper to send an info to the guiserver"""
+    assert "type" in info, "Need to specify a `type`"
+    network = get_network()
+    network.onInfo(Hash(info))
 
 
 class MouseWheelEventBlocker(QObject):
