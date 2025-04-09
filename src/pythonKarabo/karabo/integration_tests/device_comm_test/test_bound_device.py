@@ -399,7 +399,7 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
         with self.subTest(msg="Test slotReconfigure"):
             # Non-reconfigurables cannot be modified:
             request = sigSlotA.request("testComm1", "slotReconfigure",
-                                       Hash("visibility", False))
+                                       Hash("nonReconfigurableProp", 1))
             with self.assertRaises(RuntimeError):
                 request.waitForReply(instTimeoutMs)
 

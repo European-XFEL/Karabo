@@ -809,7 +809,6 @@ namespace karabo {
 
         PropertyTest::PropertyTest(const Hash& input)
             : Device(input), m_writingOutput(false), m_writingOutputTimer(karabo::net::EventLoop::getIOService()) {
-            m_visibility = karabo::data::Schema::EXPERT;
             // Signal for test of order between emitted signal and direct slot calls.
             // Note that (using JMS broker) the order is NOT guaranteed for KARABO_SIGNAL since that has
             // lower priority - seen that a slot call overtook few hundred messages triggered by signals!

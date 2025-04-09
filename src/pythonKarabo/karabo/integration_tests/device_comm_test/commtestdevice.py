@@ -14,8 +14,9 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 from karabo.bound import (
-    KARABO_CLASSINFO, SLOT_ELEMENT, STRING_ELEMENT, VECTOR_INT32_ELEMENT,
-    Epochstamp, Hash, PythonDevice, State, Timestamp, launchPythonDevice)
+    INT32_ELEMENT, KARABO_CLASSINFO, SLOT_ELEMENT, STRING_ELEMENT,
+    VECTOR_INT32_ELEMENT, Epochstamp, Hash, PythonDevice, State, Timestamp,
+    launchPythonDevice)
 
 
 @KARABO_CLASSINFO("CommTestDevice", "2.0")
@@ -34,13 +35,11 @@ class CommTestDevice(PythonDevice):
             .assignmentMandatory()
             .commit(),
             STRING_ELEMENT(expected).key("someString")
-            # As reconfigurable() it will be sent with priority 4
-            # (like commands and replies) and thus order is guaranteed by JMS
-            # (as readOnly() [that is sent in C++/bound with priority 3]
-            #  it failed e.g. in
-            #  https://git.xfel.eu/Karabo/Framework/-/jobs/183917)
             .assignmentOptional().defaultValue("")
             .reconfigurable()
+            .commit(),
+            INT32_ELEMENT(expected).key("nonReconfigurableProp")
+            .assignmentOptional().defaultValue(0)
             .commit(),
             VECTOR_INT32_ELEMENT(expected).key("vectorInt32")
             .reconfigurable()
