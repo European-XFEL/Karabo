@@ -565,8 +565,11 @@ class Network(QObject):
         h = Hash("type", "requestNetwork", "channelName", name)
         self._write_hash(h)
 
-    def onError(self, error):
-        h = Hash("type", "error", "traceback", error)
+    def onInfo(self, info: Hash):
+        # XXX: Change `type` to `info` in Karabo 3
+        assert isinstance(info, Hash)
+        h = Hash("type", "error", "info", info,
+                 "clientId", const.KARABO_CLIENT_ID)
         self._write_hash(h)
 
     def onSetLogPriority(self, instanceId, priority):

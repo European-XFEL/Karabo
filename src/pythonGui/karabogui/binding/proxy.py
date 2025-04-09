@@ -21,6 +21,7 @@ from traits.api import (
     Property, String, WeakRef, on_trait_change)
 
 from karabo.common import const
+from karabo.native import Hash
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.singletons.api import get_network, get_topology
 
@@ -403,9 +404,14 @@ class PropertyProxy(HasStrictTraits):
             if t_node:
                 # ignore timeouts if the root_proxy is a macro.
                 ignore_timeouts = t_node.attributes.get('type') == 'macro'
-            get_network().onExecute(self.root_proxy.device_id,
-                                    self.path,
-                                    ignore_timeouts)
+            network = get_network()
+            network.onExecute(self.root_proxy.device_id,
+                              self.path, ignore_timeouts)
+
+            info = Hash("type", "execute",
+                        "instanceId", self.root_proxy.device_id,
+                        "slot", self.path)
+            network.onInfo(info)
 
     def get_device_value(self):
         """Return the value stored in the device configuration, rather

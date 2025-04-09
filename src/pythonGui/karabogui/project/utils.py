@@ -39,7 +39,7 @@ from karabogui.singletons.api import (
     get_config, get_db_conn, get_network, get_project_model, get_topology)
 from karabogui.topology.util import get_macro_servers
 from karabogui.util import (
-    create_list_string, move_to_cursor, version_compatible)
+    create_list_string, move_to_cursor, send_info, version_compatible)
 
 
 def add_device_to_server(server, class_id='', parent=None):
@@ -231,6 +231,8 @@ def load_project(is_subproject=False, parent=None):
             if not is_subproject:
                 broadcast_event(KaraboEvent.ProjectName,
                                 {"simple_name": dialog.simple_name})
+                send_info(type="open_project", uuid=model.uuid,
+                          domain=domain, simple_name=dialog.simple_name)
             return model
     return None
 
@@ -259,6 +261,10 @@ def load_project_with_device(parent=None):
             # Project name will be updated
             broadcast_event(KaraboEvent.ProjectName,
                             {"simple_name": dialog.simple_name})
+
+            send_info(type="open_project_with_device", uuid=model.uuid,
+                      domain=domain,
+                      simple_name=dialog.simple_name)
             return model
     return None
 
