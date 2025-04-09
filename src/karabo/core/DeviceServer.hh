@@ -69,7 +69,6 @@ namespace karabo {
             DeviceInstanceMap m_deviceInstanceMap;
             std::mutex m_deviceInstanceMutex;
             std::map<std::string, unsigned int> m_deviceInstanceCount;
-            int m_visibility;
 
             karabo::net::Broker::Pointer m_connection;
 

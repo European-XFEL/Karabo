@@ -806,7 +806,7 @@ namespace karabo {
             if (node.hasAttribute(KARABO_SCHEMA_ALLOWED_STATES) && !m_currentState.empty()) {
                 const vector<string>& allowedStates = node.getAttribute<vector<string> >(KARABO_SCHEMA_ALLOWED_STATES);
                 return (std::find(allowedStates.begin(), allowedStates.end(), m_currentState) != allowedStates.end());
-            } else { // If no states are assigned, access/visibility is always possible
+            } else { // If no states are assigned, access is always possible
                 return true;
             }
         }

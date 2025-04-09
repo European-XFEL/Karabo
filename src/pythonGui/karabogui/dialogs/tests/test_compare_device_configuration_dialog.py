@@ -2,7 +2,6 @@ from copy import deepcopy
 
 import pytest
 
-from karabo.native import AccessLevel
 from karabogui.binding.api import (
     DeviceProxy, ProxyStatus, apply_default_configuration, build_binding)
 from karabogui.dialogs.compare_device_configurations import (
@@ -35,8 +34,6 @@ def test_selector_dialog(gui_app):
     h["device.davyy"] = None
     h["device.davyy", ...] = {
         "host": "BIG_IRON",
-        "archive": True,
-        "visibility": AccessLevel.OBSERVER,
         "type": "device",
         "capabilities": 0,
         "serverId": "otherserver",
