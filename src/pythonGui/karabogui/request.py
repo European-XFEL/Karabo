@@ -103,6 +103,10 @@ def send_property_changes(proxies):
         device_proxy = topology.get_device(device_id)
         manager.expect_properties(device_proxy, properties)
         network.onReconfigure(device_id, config)
+        # and more information
+        info = Hash("type", "reconfigure", "instanceId", device_id,
+                    "configuration", config)
+        network.onInfo(info)
 
 
 def onConfigurationUpdate(proxy, handler=None, request=False, remove=True):
