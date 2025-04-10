@@ -32,7 +32,7 @@ async def create_device(db):
                'description="" item_type="device_config" revision="0" '
                'alias="default">'
                '<root KRB_Artificial="">'
-               '    <PropertyTestMDL KRB_Type="HASH"/>'
+               '    <PropertyTest KRB_Type="HASH"/>'
                '</root>'
                '</xml>')
         await db.save_item("LOCAL", conf_uuid, xml)

@@ -142,7 +142,7 @@ async def test_loop_instance():
 @pytest.mark.timeout(30)
 @pytest.mark.asyncio
 async def test_async_server_context():
-    config = {"PropertyTestContext": {"classId": "PropertyTestMDL"}}
+    config = {"PropertyTestContext": {"classId": "PropertyTest"}}
     init = json.dumps(config)
     server = AsyncServerContext(
         "testServerContext", [f"init={init}"], verbose=True, api="middlelayer")
