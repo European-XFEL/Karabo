@@ -19,11 +19,11 @@ from karabo.middlelayer import (
     KaraboError, get_property, getDevice, setWait, updateDevice)
 from karabo.middlelayer.tests.eventloop import DeviceTest, async_tst
 
-from ..property_test import PropertyTestMDL
+from ..property_test import PropertyTest
 
 conf = {
-    "classId": "PropertyTestMDL",
-    "_deviceId_": "Test_PropertyTestMDL"
+    "classId": "PropertyTest",
+    "_deviceId_": "Test_PropertyTest"
 }
 
 
@@ -31,7 +31,7 @@ class Tests(DeviceTest):
     @classmethod
     @contextmanager
     def lifetimeManager(cls):
-        cls.dev = PropertyTestMDL(conf)
+        cls.dev = PropertyTest(conf)
         with cls.deviceManager(lead=cls.dev):
             yield
 
@@ -47,7 +47,7 @@ class Tests(DeviceTest):
                      "floatProperty", "doubleProperty",
                      "node.counter"]
 
-            with (await getDevice("Test_PropertyTestMDL")) as d:
+            with (await getDevice("Test_PropertyTest")) as d:
                 await updateDevice(d)
                 for i, prop in enumerate(props, 10):
                     self.assertNotEqual(get_property(d, prop), i)
@@ -56,7 +56,7 @@ class Tests(DeviceTest):
                     self.assertEqual(get_property(d, prop + "ReadOnly"), i)
 
         with self.subTest(msg="Test alarm slots"):
-            with (await getDevice("Test_PropertyTestMDL")) as d:
+            with (await getDevice("Test_PropertyTest")) as d:
                 await updateDevice(d)
                 # invalid alarm condition in stringProperty
                 await setWait(d, "stringProperty", "")
@@ -73,7 +73,7 @@ class Tests(DeviceTest):
                     await d.setNoAckAlarm()
 
         with self.subTest(msg="Test noded slots"):
-            with (await getDevice("Test_PropertyTestMDL")) as d:
+            with (await getDevice("Test_PropertyTest")) as d:
                 await updateDevice(d)
                 await d.node.reset()
                 self.assertEqual(d.node.counterReadOnly, 0)

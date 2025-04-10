@@ -62,8 +62,8 @@ class TestDeviceClientComm(BoundDeviceTestCase):
 
         server_mdl = 'MdlDeviceServer0'
         devId = "propTestDeviceMdl"
-        self.start_server("mdl", server_mdl, ["PropertyTestMDL"])
-        self.instantiate_device(server_mdl, classId="PropertyTestMDL",
+        self.start_server("mdl", server_mdl, ["PropertyTest"])
+        self.instantiate_device(server_mdl, classId="PropertyTest",
                                 deviceId=devId)
 
         schema = self.dc.getDeviceSchema(devId)

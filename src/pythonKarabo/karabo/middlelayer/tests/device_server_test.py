@@ -86,7 +86,7 @@ async def test_device_server_no_plugins():
 async def test_device_server_instantiate_plugins():
     serverId = f"testMDLServer-{uuid.uuid4()}"
 
-    configuration = {"deviceClasses": ["PropertyTestMDL"],
+    configuration = {"deviceClasses": ["PropertyTest"],
                      "timeServerId": "KaraboTimeServer",
                      "serverFlags": ["Development"]}
     server = create_device_server(serverId, config=configuration)
@@ -94,21 +94,21 @@ async def test_device_server_instantiate_plugins():
     try:
         server.is_server = True
         await server.startInstance(broadcast=True)
-        assert server.deviceClasses == ["PropertyTestMDL"]
+        assert server.deviceClasses == ["PropertyTest"]
 
         assert len(server.deviceInstanceMap.keys()) == 0
         # Test instantiate a device
         deviceId = f"test-mdlfake-{uuid.uuid4()}"
-        await server.startDevice("PropertyTestMDL", deviceId,
+        await server.startDevice("PropertyTest", deviceId,
                                  Hash())
         assert len(server.deviceInstanceMap.keys()) == 1
         classes = server.getClasses()
-        assert classes == ["PropertyTestMDL"]
+        assert classes == ["PropertyTest"]
 
         schema, classId, serv_id = server.slotGetClassSchema(
-            "PropertyTestMDL")
+            "PropertyTest")
         assert serv_id == serverId
-        assert classId == "PropertyTestMDL"
+        assert classId == "PropertyTest"
         assert isinstance(schema, Schema)
 
         info = await getInstanceInfo(serverId)
@@ -137,7 +137,7 @@ async def test_device_server_instantiate_plugins():
                           Hash("logs", 20))
         assert isinstance(logs["content"], list)
 
-        schema = await getClassSchema(serverId, "PropertyTestMDL")
+        schema = await getClassSchema(serverId, "PropertyTest")
         assert schema is not None
         assert isinstance(schema, Schema)
     finally:
@@ -151,11 +151,11 @@ async def test_device_server_autostart():
     deviceId_2 = f"test-prop-{uuid.uuid4()}"
     serverId = f"testMDLServer-{uuid.uuid4()}"
 
-    init = {deviceId_1: {"classId": "PropertyTestMDL"},
-            deviceId_2: {"classId": "PropertyTestMDL"}}
+    init = {deviceId_1: {"classId": "PropertyTest"},
+            deviceId_2: {"classId": "PropertyTest"}}
     init = json.dumps(init)
 
-    configuration = {"deviceClasses": ["PropertyTestMDL"],
+    configuration = {"deviceClasses": ["PropertyTest"],
                      "timeServerId": "KaraboTimeServer"}
     server = create_device_server(serverId, config=configuration)
     assert server is not None
@@ -165,17 +165,17 @@ async def test_device_server_autostart():
         await server.startInstance(broadcast=True)
         # Wait until a device has been registered in this server
         await waitUntil(lambda: len(server.deviceInstanceMap) == 2)
-        assert server.deviceClasses == ["PropertyTestMDL"]
+        assert server.deviceClasses == ["PropertyTest"]
         assert len(server.deviceInstanceMap.keys()) == 2
         assert deviceId_1 in server.deviceInstanceMap
         assert deviceId_2 in server.deviceInstanceMap
         classes = server.getClasses()
-        assert classes == ["PropertyTestMDL"]
+        assert classes == ["PropertyTest"]
         device = server.deviceInstanceMap[deviceId_1]
         assert server == device.device_server
         local = device.getLocalDevice(deviceId_2)
         assert local is not None
-        assert local.classId == "PropertyTestMDL"
+        assert local.classId == "PropertyTest"
         local = device.getLocalDevice("Notthere")
         assert local is None
     finally:
@@ -216,14 +216,14 @@ async def test_device_server_start_faulty():
 async def test_device_server_concurrence():
     try:
         serverId = create_instanceId()
-        configuration = {"deviceClasses": ["PropertyTestMDL"]}
+        configuration = {"deviceClasses": ["PropertyTest"]}
         server = create_device_server(serverId, config=configuration)
         await server.startInstance()
         await waitUntil(lambda: server.is_initialized)
         deviceId = create_instanceId()
         assert len(server.deviceInstanceMap) == 0
         for _ in range(2):
-            instantiateNoWait(serverId, "PropertyTestMDL", deviceId)
+            instantiateNoWait(serverId, "PropertyTest", deviceId)
         # Only a single device made it
         await sleepUntil(lambda: len(server.deviceInstanceMap) > 0,
                          timeout=10)

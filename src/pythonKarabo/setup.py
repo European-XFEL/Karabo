@@ -87,7 +87,7 @@ elif SUBMODULE == 'MDL':
             'ikarabo=karabo.interactive.ikarabo:main',
         ],
         'karabo.middlelayer_device': [
-            'PropertyTestMDL=karabo.middlelayer_devices.property_test:PropertyTestMDL',
+            'PropertyTest=karabo.middlelayer_devices.property_test:PropertyTest',
         ],
     }
 else:
@@ -142,7 +142,7 @@ else:
             'PropertyTest=karabo.bound_devices.property_test:PropertyTest',
         ],
         'karabo.middlelayer_device': [
-            'PropertyTestMDL=karabo.middlelayer_devices.property_test:PropertyTestMDL',
+            'PropertyTest=karabo.middlelayer_devices.property_test:PropertyTest',
             'ProjectManager=karabo.middlelayer_devices.project_manager:ProjectManager',
             'ConfigurationManager=karabo.middlelayer_devices.configuration_manager:ConfigurationManager',
             'DaemonManager=karabo.middlelayer_devices.daemon_manager:DaemonManager',
