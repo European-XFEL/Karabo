@@ -578,7 +578,7 @@ def test_configuration_panel_info(gui_app):
         # Make sure the extracted default conversion is minimal
         # It should include properties with default values,
         # options, or node types
-        with access_level(AccessLevel.ADMIN):
+        with access_level(AccessLevel.EXPERT):
             config = create_configurator_info(panel)
 
         assert isinstance(config, Hash)

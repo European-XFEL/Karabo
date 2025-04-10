@@ -132,7 +132,7 @@ def test_editable_widget_container(gui_app):
     assert container.add_proxies([proxy])
     assert len(controller.proxies) == 3
     assert container.toolTip() == (
-        "AccessLevel: USER - Access: True\n\nTestDevice.base, "
+        "AccessLevel: OPERATOR - Access: True\n\nTestDevice.base, "
         "TestDevice.rotary, TestDevice.linear")
     network = Mock()
     manager = Mock()

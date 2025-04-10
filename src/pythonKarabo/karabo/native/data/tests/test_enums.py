@@ -7,8 +7,8 @@ def test_access_level():
     assert AccessLevel.OPERATOR < AccessLevel.EXPERT
     assert AccessLevel.OPERATOR > AccessLevel.OBSERVER
     assert AccessLevel.OBSERVER < AccessLevel.OPERATOR
-    assert AccessLevel.EXPERT == 3
-    assert AccessLevel.EXPERT.value == 3
+    assert AccessLevel.EXPERT == 2
+    assert AccessLevel.EXPERT.value == 2
     assert AccessLevel.EXPERT != 5
 
 

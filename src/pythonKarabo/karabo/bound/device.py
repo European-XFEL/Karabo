@@ -85,7 +85,7 @@ class PythonDevice:
             .assignmentOptional()
             .defaultValue(20)  # smaller than C++ device: own process!
             .minInc(10)  # avoid too much traffic
-            .adminAccess()
+            .expertAccess()
             .commit(),
 
             STRING_ELEMENT(expected).key("_serverId_")
@@ -179,7 +179,7 @@ class PythonDevice:
             STRING_ELEMENT(expected).key("lastCommand")
             .displayedName("Last command")
             .description("The last slot called.")
-            .adminAccess()
+            .expertAccess()
             .readOnly().initialValue("")
             .commit(),
 

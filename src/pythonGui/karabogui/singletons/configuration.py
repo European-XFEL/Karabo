@@ -189,7 +189,7 @@ class Configuration(QObject):
     # ----------------------------------------------
     # Project db interface
 
-    db_token = Item(default="admin", group=PROJECT)
+    db_token = Item(default="expert", group=PROJECT)
     domain = Item(default="CAS_INTERNAL", q_set=True, group=PROJECT)
     # The most recently used domain in a successful `Load Project with
     # Device` operation

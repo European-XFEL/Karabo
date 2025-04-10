@@ -268,10 +268,8 @@ namespace karabo {
             enum AccessLevel {
 
                 OBSERVER = 0,
-                USER,
                 OPERATOR,
-                EXPERT,
-                ADMIN
+                EXPERT
             };
 
 

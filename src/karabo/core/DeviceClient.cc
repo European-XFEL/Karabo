@@ -2154,10 +2154,10 @@ namespace karabo {
         bool DeviceClient::login(const std::string& username, const std::string& password,
                                  const std::string& provider) {
             // TODO: Dirty hack for now, proper authentication later
-            if (username == "user") m_accessLevel = karabo::data::Schema::AccessLevel::USER;
+            if (username == "user") m_accessLevel = karabo::data::Schema::AccessLevel::OPERATOR;
             if (username == "operator") m_accessLevel = karabo::data::Schema::AccessLevel::OPERATOR;
             if (username == "expert") m_accessLevel = karabo::data::Schema::AccessLevel::EXPERT;
-            if (username == "admin") m_accessLevel = karabo::data::Schema::AccessLevel::ADMIN;
+            if (username == "admin") m_accessLevel = karabo::data::Schema::AccessLevel::EXPERT;
             if (username == "god") m_accessLevel = 100;
             return true;
         }

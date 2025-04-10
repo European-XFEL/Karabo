@@ -96,12 +96,12 @@ def test_getsetExpertLevel():
     try:
         schema = cppSomeClassSchemaSomeClassId()
         assert schema.getRequiredAccessLevel('x') == AccessLevel.EXPERT
-        assert schema.getRequiredAccessLevel('y') == AccessLevel.USER
+        assert schema.getRequiredAccessLevel('y') == AccessLevel.OPERATOR
         assert schema.getRequiredAccessLevel('a') == AccessLevel.OBSERVER
 
-        schema.setRequiredAccessLevel('x', AccessLevel.ADMIN)
+        schema.setRequiredAccessLevel('x', AccessLevel.EXPERT)
         schema.setRequiredAccessLevel('y', AccessLevel.OPERATOR)
-        assert schema.getRequiredAccessLevel('x') == AccessLevel.ADMIN
+        assert schema.getRequiredAccessLevel('x') == AccessLevel.EXPERT
         assert schema.getRequiredAccessLevel('y') == AccessLevel.OPERATOR
     except Exception as e:
         pytest.fail(e, pytrace=True)
@@ -109,19 +109,19 @@ def test_getsetExpertLevel():
     try:
         schema = cppTestStruct1SchemaTestStruct1()
         assert schema.getRequiredAccessLevel('exampleKey1') == \
-            AccessLevel.USER
+            AccessLevel.OPERATOR
         assert schema.getRequiredAccessLevel('exampleKey2') == \
             AccessLevel.OPERATOR
         assert schema.getRequiredAccessLevel('exampleKey3') == \
             AccessLevel.EXPERT
         assert schema.getRequiredAccessLevel('exampleKey4') == \
-            AccessLevel.ADMIN
+            AccessLevel.EXPERT
         # default for readOnly
         assert schema.getRequiredAccessLevel('exampleKey5') == \
             AccessLevel.OBSERVER
         # default for reconfigurable
         assert schema.getRequiredAccessLevel('exampleKey10') == \
-            AccessLevel.USER
+            AccessLevel.OPERATOR
         # observerAccess in reconfigurable
         assert schema.getRequiredAccessLevel('exampleKey11') == \
             AccessLevel.OBSERVER

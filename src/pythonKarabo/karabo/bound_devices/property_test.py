@@ -416,7 +416,7 @@ class PropertyTest(PythonDevice):
             .maxInc(1000)
             .minExc(0.0)
             .assignmentOptional().defaultValue(1.0)
-            .adminAccess()
+            .expertAccess()
             .reconfigurable()
             .commit(),
 
@@ -461,7 +461,7 @@ class PropertyTest(PythonDevice):
             .reconfigurable()
             .unit(Unit.SECOND)
             .metricPrefix(MetricPrefix.MILLI)
-            .adminAccess()
+            .expertAccess()
             .commit(),
 
             INT32_ELEMENT(expected).key("currentInputId")

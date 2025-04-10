@@ -583,7 +583,7 @@ class Network(QObject):
         else:
             default = AccessLevel(
                 krb_access.ACCESS_LEVEL_MAP.get(self.access_level,
-                                                AccessLevel.ADMIN))
+                                                AccessLevel.EXPERT))
 
         krb_access.GLOBAL_ACCESS_LEVEL = default
         # Inform the GUI to change correspondingly the allowed
