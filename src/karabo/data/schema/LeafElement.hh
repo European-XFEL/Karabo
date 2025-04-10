@@ -375,15 +375,6 @@ namespace karabo {
             }
 
             /**
-             * The <b>userAccess</b> method serves for setting up the <i>required access level</i> attribute to be USER.
-             * @return reference to the Element (to allow method's chaining)
-             */
-            ReadOnlySpecific& userAccess() {
-                m_genericElement->userAccess();
-                return *this;
-            }
-
-            /**
              * The <b>operatorAccess</b> method serves for setting up the <i>required access level</i> attribute to be
              * OPERATOR.
              * @return reference to the Element (to allow method's chaining)
@@ -400,16 +391,6 @@ namespace karabo {
              */
             ReadOnlySpecific& expertAccess() {
                 m_genericElement->expertAccess();
-                return *this;
-            }
-
-            /**
-             * The <b>adminAccess</b> method serves for setting up the <i>required access level</i> attribute to be
-             * ADMIN.
-             * @return reference to the Element (to allow method's chaining)
-             */
-            ReadOnlySpecific& adminAccess() {
-                m_genericElement->adminAccess();
                 return *this;
             }
 

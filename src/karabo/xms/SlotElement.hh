@@ -48,9 +48,9 @@ namespace karabo {
                 this->m_node->setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, "Slot"); // Reserved displayType for commands
                 this->m_node->setAttribute(KARABO_SCHEMA_CLASS_ID, "Slot");
 
-                // default value of requiredAccessLevel for Slot element: USER
+                // default value of requiredAccessLevel for Slot element: OPERATOR
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL,
-                                                         karabo::data::Schema::USER);
+                                                         karabo::data::Schema::OPERATOR);
             }
 
             /**

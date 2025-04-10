@@ -214,7 +214,7 @@ class ConfigurationManager(DeviceClientBase):
         defaultValue=30,
         description="The limit of configurations allowed in a single save "
                     "configuration call",
-        requiredAccessLevel=AccessLevel.ADMIN,
+        requiredAccessLevel=AccessLevel.EXPERT,
         accessMode=AccessMode.READONLY)
 
     def _get_server_attributes(self, deviceId: str) -> tuple[str, str]:

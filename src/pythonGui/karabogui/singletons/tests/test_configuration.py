@@ -45,9 +45,9 @@ def test_configuration_namespace():
     config['broker_topic'] = 'FXE'
     config['device_domain'] = 'CAS_INTERNAL'
     config['domain'] = 'CAS_INTERNAL'
-    config['db_token'] = 'admin'
+    config['db_token'] = 'expert'
     assert len(config) == 20
-    assert config['db_token'] == 'admin'
+    assert config['db_token'] == 'expert'
     assert config['device_domain'] == 'CAS_INTERNAL'
     assert config['domain'] == 'CAS_INTERNAL'
 

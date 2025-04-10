@@ -28,7 +28,7 @@ def test_mainwindow(gui_app, mocker, subtests):
     manager = mocker.Mock()
     mediator = mocker.Mock()
     krb_access = mocker.patch.object(mainwindow, "krb_access")
-    krb_access.HIGHEST_ACCESS_LEVEL = AccessLevel.ADMIN
+    krb_access.HIGHEST_ACCESS_LEVEL = AccessLevel.EXPERT
     krb_access.GLOBAL_ACCESS_LEVEL = AccessLevel.EXPERT
     with singletons(network=network, manager=manager, mediator=mediator):
         logger = mocker.patch("karabogui.logger._logger")
@@ -101,7 +101,7 @@ def test_mainwindow(gui_app, mocker, subtests):
 
     with subtests.test("Test Access Level"):
         krb_access = mocker.patch.object(mainwindow, "krb_access")
-        krb_access.HIGHEST_ACCESS_LEVEL = AccessLevel.ADMIN
+        krb_access.HIGHEST_ACCESS_LEVEL = AccessLevel.EXPERT
         krb_access.GLOBAL_ACCESS_LEVEL = AccessLevel.EXPERT
         access_menu = mw.tbAccessLevel.menu()
         access_levels = [act.text() for act in access_menu.actions()]
@@ -111,11 +111,11 @@ def test_mainwindow(gui_app, mocker, subtests):
         krb_access.is_authenticated.return_value = True
         mw.onUpdateAccessLevel()
         assert access_levels == [
-            'Admin', 'Expert', 'Operator', 'User', 'Observer']
+            'Expert', 'Operator', 'Observer']
 
         # For Access-level login, access level up to
         # 'access.HIGHEST_ACCESS_LEVEL' is exposed
         krb_access.is_authenticated.return_value = False
         mw.onUpdateAccessLevel()
         access_levels = [act.text() for act in access_menu.actions()]
-        assert access_levels == ['Expert', 'Operator', 'User', 'Observer']
+        assert access_levels == ['Expert', 'Operator', 'Observer']

@@ -201,11 +201,9 @@ void exportPyUtilSchemaOverwriteElement(py::module_& m) {
                 py::return_value_policy::reference_internal)
           .def("setNowObserverAccess", &OverwriteElement::setNowObserverAccess,
                py::return_value_policy::reference_internal)
-          .def("setNowUserAccess", &OverwriteElement::setNowUserAccess, py::return_value_policy::reference_internal)
           .def("setNowOperatorAccess", &OverwriteElement::setNowOperatorAccess,
                py::return_value_policy::reference_internal)
           .def("setNowExpertAccess", &OverwriteElement::setNowExpertAccess, py::return_value_policy::reference_internal)
-          .def("setNowAdminAccess", &OverwriteElement::setNowAdminAccess, py::return_value_policy::reference_internal)
           .def("setNewUnit", &OverwriteElement::setNewUnit, py::arg("value"),
                py::return_value_policy::reference_internal)
           .def("setNewMetricPrefix", &OverwriteElement::setNewMetricPrefix, py::arg("value"),

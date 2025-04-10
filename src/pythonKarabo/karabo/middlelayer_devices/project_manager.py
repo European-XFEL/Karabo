@@ -38,7 +38,7 @@ def get_project():
         testMode = Bool(
             displayedName="Test Mode",
             defaultValue=False,
-            requiredAccessLevel=AccessLevel.ADMIN)
+            requiredAccessLevel=AccessLevel.EXPERT)
 
         locals()["exist_db"] = Node(ExistDbNode)
         locals()["mysql_db"] = Node(MySqlNode)

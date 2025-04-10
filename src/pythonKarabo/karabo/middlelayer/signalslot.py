@@ -191,7 +191,7 @@ class SignalSlotable(Configurable):
         assignment=Assignment.OPTIONAL, defaultValue=120,
         accessMode=AccessMode.INITONLY,
         minInc=10,
-        requiredAccessLevel=AccessLevel.ADMIN,
+        requiredAccessLevel=AccessLevel.EXPERT,
     )
 
     _ss = None

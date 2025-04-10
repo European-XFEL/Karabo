@@ -115,7 +115,7 @@ namespace karabo {
                   .assignmentOptional()
                   .defaultValue(10)
                   .minInc(10) // avoid too much traffic
-                  .adminAccess()
+                  .expertAccess()
                   .commit();
 
             VECTOR_STRING_ELEMENT(expected)

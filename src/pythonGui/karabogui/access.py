@@ -20,10 +20,8 @@ from enum import Enum
 from karabo.native import AccessLevel
 
 ACCESS_LEVELS = OrderedDict()
-ACCESS_LEVELS['Admin'] = AccessLevel.ADMIN
 ACCESS_LEVELS['Expert'] = AccessLevel.EXPERT
 ACCESS_LEVELS['Operator'] = AccessLevel.OPERATOR
-ACCESS_LEVELS['User'] = AccessLevel.USER
 ACCESS_LEVELS['Observer'] = AccessLevel.OBSERVER
 
 USERNAMES = [level.lower() for level in ACCESS_LEVELS.keys()]
@@ -41,10 +39,8 @@ TEMPORARY_SESSION_WARNING = False
 
 ACCESS_LEVEL_MAP = {
     "observer": 0,
-    "user": 1,
-    "operator": 2,
-    "expert": 3,
-    "admin": 4,
+    "operator": 1,
+    "expert": 2,
     "god": 5}
 
 

@@ -102,10 +102,8 @@ void exportPyUtilSchemaTableElement(py::module_& m) {
         py::class_<TableElement>(m, "TABLE_ELEMENT")
               .def(py::init<Schema&>(), py::arg("expected"))
               .def("observerAccess", &TableElement::observerAccess, py::return_value_policy::reference_internal)
-              .def("userAccess", &TableElement::userAccess, py::return_value_policy::reference_internal)
               .def("operatorAccess", &TableElement::operatorAccess, py::return_value_policy::reference_internal)
               .def("expertAccess", &TableElement::expertAccess, py::return_value_policy::reference_internal)
-              .def("adminAccess", &TableElement::adminAccess, py::return_value_policy::reference_internal)
               .def(
                     "allowedStates",
                     [](TableElement& self, py::args args) -> TableElement& {

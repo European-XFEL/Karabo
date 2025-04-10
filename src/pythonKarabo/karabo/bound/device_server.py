@@ -91,7 +91,7 @@ class DeviceServer:
             .description("The heartbeat interval")
             .assignmentOptional().defaultValue(10)
             .minInc(10)  # avoid too much traffic
-            .adminAccess()
+            .expertAccess()
             .commit(),
 
             VECTOR_STRING_ELEMENT(expected).key("deviceClasses")

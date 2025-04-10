@@ -417,7 +417,7 @@ class Descriptor:
         if requiredAccessLevel is None:
             if self.accessMode in (AccessMode.RECONFIGURABLE,
                                    AccessMode.INITONLY):
-                self.requiredAccessLevel = AccessLevel.USER
+                self.requiredAccessLevel = AccessLevel.OPERATOR
             else:
                 self.requiredAccessLevel = AccessLevel.OBSERVER
         else:
@@ -587,7 +587,7 @@ class Slot(Descriptor):
                 # add some important code here
     '''
     method = None
-    requiredAccessLevel = Attribute(AccessLevel.USER, dtype=AccessLevel)
+    requiredAccessLevel = Attribute(AccessLevel.OPERATOR, dtype=AccessLevel)
 
     def toSchemaAndAttrs(self, device, state):
         h, attrs = super().toSchemaAndAttrs(device, state)

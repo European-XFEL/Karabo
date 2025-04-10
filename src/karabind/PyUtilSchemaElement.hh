@@ -237,10 +237,8 @@ class CommonWrap {
 
 #define KARABO_PYTHON_COMMON_ATTRIBUTES(T)                                                                       \
     .def("observerAccess", &T::observerAccess, py::return_value_policy::reference_internal)                      \
-          .def("userAccess", &T::userAccess, py::return_value_policy::reference_internal)                        \
           .def("operatorAccess", &T::operatorAccess, py::return_value_policy::reference_internal)                \
           .def("expertAccess", &T::expertAccess, py::return_value_policy::reference_internal)                    \
-          .def("adminAccess", &T::adminAccess, py::return_value_policy::reference_internal)                      \
           .def("allowedStates", &CommonWrap<T>::allowedStatesPy, py::return_value_policy::reference_internal)    \
           .def("assignmentInternal", &T::assignmentInternal, py::return_value_policy::reference_internal)        \
           .def("assignmentMandatory", &T::assignmentMandatory, py::return_value_policy::reference_internal)      \
@@ -318,10 +316,8 @@ class CommonWrap {
 ///
 #define KARABO_PYTHON_NODE_CHOICE(NameElem)                                                                           \
     .def("observerAccess", &NameElem::observerAccess, py::return_value_policy::reference_internal)                    \
-          .def("userAccess", &NameElem::userAccess, py::return_value_policy::reference_internal)                      \
           .def("operatorAccess", &NameElem::operatorAccess, py::return_value_policy::reference_internal)              \
           .def("expertAccess", &NameElem::expertAccess, py::return_value_policy::reference_internal)                  \
-          .def("adminAccess", &NameElem::adminAccess, py::return_value_policy::reference_internal)                    \
           .def("key", &NameElem::key, py::return_value_policy::reference_internal)                                    \
           .def("description", &NameElem::description, py::return_value_policy::reference_internal)                    \
           .def("displayedName", &NameElem::displayedName, py::return_value_policy::reference_internal)                \
