@@ -50,7 +50,7 @@ class AccessSlottedDevice(Configurable):
     state = String(defaultValue=State.INIT)
 
     @Slot(allowedStates=[State.INIT],
-          displayedName="Call ME", requiredAccessLevel=AccessLevel.ADMIN)
+          displayedName="Call ME", requiredAccessLevel=AccessLevel.EXPERT)
     def callme(self):
         pass
 
@@ -106,7 +106,7 @@ def test_command_controller_access_level():
         assert not controller._actions[0].action.isEnabled()
         assert not controller._actions[1].action.isEnabled()
 
-    with access_level(AccessLevel.ADMIN):
+    with access_level(AccessLevel.EXPERT):
         controller.setEnabled(None)
         assert controller._actions[0].action.isEnabled()
         # Wrong state, correct access level

@@ -75,12 +75,12 @@ namespace karabo {
             if (!this->m_node->hasAttribute(KARABO_SCHEMA_ACCESS_MODE)) this->init(); // This is the default
 
             if (!this->m_node->hasAttribute(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL)) {
-                // for init, reconfigurable elements - set default value of requiredAccessLevel to USER
+                // for init, reconfigurable elements - set default value of requiredAccessLevel to OPERATOR
                 if (!this->m_node->hasAttribute(KARABO_SCHEMA_ACCESS_MODE) ||              // init element
                     this->m_node->getAttribute<int>(KARABO_SCHEMA_ACCESS_MODE) == INIT ||  // init element
                     this->m_node->getAttribute<int>(KARABO_SCHEMA_ACCESS_MODE) == WRITE) { // reconfigurable element
 
-                    this->userAccess();
+                    this->operatorAccess();
 
                 } else { // else set default value of requiredAccessLevel to OBSERVER
                     this->observerAccess();

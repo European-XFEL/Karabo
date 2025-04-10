@@ -202,17 +202,6 @@ namespace karabo {
             }
 
             /**
-             * The <b>userAccess</b> method serves for setting up the <i>required access level</i> attribute to be USER.
-             * @return reference to the Element (to allow method's chaining)
-             */
-            Derived& userAccess() {
-                using namespace karabo::data;
-                OVERWRITE_ELEMENT(m_schema).key(m_key).setNowUserAccess().commit();
-
-                return *(static_cast<Derived*>(this));
-            }
-
-            /**
              * The <b>operatorAccess</b> method serves for setting up the <i>required access level</i> attribute to be
              * OPERATOR.
              * @return reference to the Element (to allow method's chaining)
@@ -232,18 +221,6 @@ namespace karabo {
             Derived& expertAccess() {
                 using namespace karabo::data;
                 OVERWRITE_ELEMENT(m_schema).key(m_key).setNowExpertAccess().commit();
-
-                return *(static_cast<Derived*>(this));
-            }
-
-            /**
-             * The <b>adminAccess</b> method serves for setting up the <i>required access level</i> attribute to be
-             * ADMIN.
-             * @return reference to the Element (to allow method's chaining)
-             */
-            Derived& adminAccess() {
-                using namespace karabo::data;
-                OVERWRITE_ELEMENT(m_schema).key(m_key).setNowAdminAccess().commit();
 
                 return *(static_cast<Derived*>(this));
             }

@@ -180,10 +180,8 @@ void exportPyUtilSchema(py::module_& m) {
 
         py::enum_<Schema::AccessLevel>(m, "AccessLevel")
               .value("OBSERVER", Schema::OBSERVER)
-              .value("USER", Schema::USER)
               .value("OPERATOR", Schema::OPERATOR)
               .value("EXPERT", Schema::EXPERT)
-              .value("ADMIN", Schema::ADMIN)
               .export_values();
 
         py::enum_<Schema::LeafType>(m, "LeafType")

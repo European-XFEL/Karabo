@@ -188,7 +188,7 @@ QPushButton#skip_authentication_button:hover{border: none;
 
 
 class ReactiveLoginDialog(QDialog):
-    def __init__(self, access_level="admin", hostname="", port="",
+    def __init__(self, access_level="expert", hostname="", port="",
                  gui_servers=None, parent=None):
         super().__init__(parent)
         filepath = get_dialog_ui("reactive_login_dialog.ui")
@@ -244,7 +244,7 @@ class ReactiveLoginDialog(QDialog):
         self.edit_port.setValidator(QIntValidator(1, 65535, parent=self))
         self.edit_port.textEdited.connect(self.on_port_changed)
 
-        for level in ["admin", "expert", "operator", "user", "observer"]:
+        for level in ["expert", "operator", "observer"]:
             self.combo_access_level.addItem(level)
         access = self.combo_access_level.findText(access_level)
         self.combo_access_level.setCurrentIndex(access)

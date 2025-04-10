@@ -1314,7 +1314,7 @@ class Tests(TestCase):
         self.assertEqual(a.s.__doc__, "this is a comment")
         self.assertEqual(a.c.__doc__, "another comment")
         self.assertIs(A.s.requiredAccessLevel, AccessLevel.EXPERT)
-        self.assertIs(A.c.requiredAccessLevel, AccessLevel.USER)
+        self.assertIs(A.c.requiredAccessLevel, AccessLevel.OPERATOR)
         self.assertEqual(a.s(), 7)
         self.assertEqual(run_coro(a.c()), 8)
         self.assertIs(a.s.descriptor, A.s)

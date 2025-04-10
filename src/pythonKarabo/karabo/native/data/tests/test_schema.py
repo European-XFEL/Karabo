@@ -36,7 +36,7 @@ class Tests(TestCase):
         h["a", "defaultValue"] = 22.5
         h["a", "metricPrefixSymbol"] = "m"
         h["a", "accessMode"] = AccessMode.RECONFIGURABLE.value
-        h["a", "requiredAccessLevel"] = AccessLevel.USER.value
+        h["a", "requiredAccessLevel"] = AccessLevel.OPERATOR.value
         h["a", "assignment"] = Assignment.INTERNAL.value
         h["a", "archivePolicy"] = ArchivePolicy.EVERY_EVENT.value
         h["a", "alias"] = "Karabo"
@@ -145,7 +145,7 @@ class Tests(TestCase):
     def test_helpers(self):
         attrs = self.schema.hash["a", ...]
         self.assertEqual(
-            AccessLevel.USER, AccessLevel.fromAttributes(attrs))
+            AccessLevel.OPERATOR, AccessLevel.fromAttributes(attrs))
         self.assertEqual(
             AccessMode.RECONFIGURABLE, AccessMode.fromAttributes(attrs))
         self.assertEqual(

@@ -43,10 +43,10 @@ namespace karabo::devices {
 
     // The most privileged access level to be associated with a session right after the login.
     inline constexpr karabo::data::Schema::AccessLevel MAX_LOGIN_ACCESS_LEVEL =
-          karabo::data::Schema::AccessLevel::ADMIN;
+          karabo::data::Schema::AccessLevel::EXPERT;
 
     inline constexpr karabo::data::Schema::AccessLevel MAX_TEMPORARY_SESSION_ACCESS_LEVEL =
-          karabo::data::Schema::AccessLevel::ADMIN;
+          karabo::data::Schema::AccessLevel::EXPERT;
 
     inline constexpr unsigned int CHECK_TEMPSESSION_EXPIRATION_INTERVAL_SECS = 5U;
 

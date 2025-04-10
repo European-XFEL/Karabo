@@ -148,7 +148,7 @@ namespace configurationTest {
                   .metricPrefix(MetricPrefix::MILLI)
                   .assignmentOptional()
                   .defaultValue(10)
-                  .adminAccess()
+                  .expertAccess()
                   .init()
                   .commit();
 
@@ -340,7 +340,7 @@ namespace configurationTest {
                   .options("Radio,Air Condition,Navigation", ",")
                   .assignmentOptional()
                   .defaultValue("Navigation")
-                  .userAccess()
+                  .operatorAccess()
                   .reconfigurable()
                   .commit();
 
@@ -382,7 +382,7 @@ namespace configurationTest {
                   .displayedName("Example key 4")
                   .description("Example key 4 description")
                   .options("1.11     -2.22 5.55")
-                  .adminAccess()
+                  .expertAccess()
                   .assignmentInternal()
                   .noDefaultValue()
                   .commit();
@@ -395,7 +395,7 @@ namespace configurationTest {
                   .description("Example of ByteArray for writing")
                   .assignmentOptional()
                   .defaultValueFromString("")
-                  .adminAccess()
+                  .expertAccess()
                   .commit();
 
             BYTEARRAY_ELEMENT(expected)
@@ -404,7 +404,7 @@ namespace configurationTest {
                   .tags("software")
                   .displayedName("Example read array")
                   .description("Example of ByteArray for reading")
-                  .userAccess()
+                  .operatorAccess()
                   .readOnly()
                   .commit();
 

@@ -105,10 +105,10 @@ class TestConfiguratorProjectDevice(GuiTestCase):
 
         bar_index = self.model.index(2, 0)
         assert bar_index.data() == "bar"
-        text = "Key: bar - AccessLevel: USER - Access Allowed: True"
+        text = "Key: bar - AccessLevel: OPERATOR - Access Allowed: True"
         assert bar_index.data(role=Qt.ToolTipRole) == text
         bar_index = self.model.index(2, 2)
-        text = "Key: bar - AccessLevel: USER - Access Allowed: True"
+        text = "Key: bar - AccessLevel: OPERATOR - Access Allowed: True"
         assert bar_index.data(role=Qt.ToolTipRole) == text
 
         proxy = self.model.property_proxy("bar")

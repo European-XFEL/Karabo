@@ -92,14 +92,10 @@ void exportPyXmsSlotElement(py::module_& m) {
     sl.def("observerAccess", &SlotElementBase<SLOT_ELEMENT>::observerAccess,
            py::return_value_policy::reference_internal);
 
-    sl.def("userAccess", &SlotElementBase<SLOT_ELEMENT>::userAccess, py::return_value_policy::reference_internal);
-
     sl.def("operatorAccess", &SlotElementBase<SLOT_ELEMENT>::operatorAccess,
            py::return_value_policy::reference_internal);
 
     sl.def("expertAccess", &SlotElementBase<SLOT_ELEMENT>::expertAccess, py::return_value_policy::reference_internal);
-
-    sl.def("adminAccess", &SlotElementBase<SLOT_ELEMENT>::adminAccess, py::return_value_policy::reference_internal);
 
     { // karabo::xms::SLOT_ELEMENT
         py::class_<SLOT_ELEMENT, SlotElementBase<SLOT_ELEMENT>> elem(m, "SLOT_ELEMENT");

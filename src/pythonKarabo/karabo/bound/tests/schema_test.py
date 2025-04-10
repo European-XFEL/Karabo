@@ -107,14 +107,14 @@ class Schema_TestCase(unittest.TestCase):
             self.assertEqual(schema.getRequiredAccessLevel('x'),
                              AccessLevel.EXPERT)
             self.assertEqual(schema.getRequiredAccessLevel('y'),
-                             AccessLevel.USER)
+                             AccessLevel.OPERATOR)
             self.assertEqual(schema.getRequiredAccessLevel('a'),
                              AccessLevel.OBSERVER)
 
-            schema.setRequiredAccessLevel('x', AccessLevel.ADMIN)
+            schema.setRequiredAccessLevel('x', AccessLevel.EXPERT)
             schema.setRequiredAccessLevel('y', AccessLevel.OPERATOR)
             self.assertEqual(schema.getRequiredAccessLevel('x'),
-                             AccessLevel.ADMIN)
+                             AccessLevel.EXPERT)
             self.assertEqual(schema.getRequiredAccessLevel('y'),
                              AccessLevel.OPERATOR)
         except Exception as e:
@@ -123,19 +123,19 @@ class Schema_TestCase(unittest.TestCase):
         try:
             schema = Configurator(TestStruct1).getSchema("TestStruct1")
             self.assertEqual(schema.getRequiredAccessLevel('exampleKey1'),
-                             AccessLevel.USER)
+                             AccessLevel.OPERATOR)
             self.assertEqual(schema.getRequiredAccessLevel('exampleKey2'),
                              AccessLevel.OPERATOR)
             self.assertEqual(schema.getRequiredAccessLevel('exampleKey3'),
                              AccessLevel.EXPERT)
             self.assertEqual(schema.getRequiredAccessLevel('exampleKey4'),
-                             AccessLevel.ADMIN)
+                             AccessLevel.EXPERT)
             # default for readOnly
             self.assertEqual(schema.getRequiredAccessLevel('exampleKey5'),
                              AccessLevel.OBSERVER)
             # default for reconfigurable
             self.assertEqual(schema.getRequiredAccessLevel('exampleKey10'),
-                             AccessLevel.USER)
+                             AccessLevel.OPERATOR)
             # observerAccess in reconfigurable
             self.assertEqual(schema.getRequiredAccessLevel('exampleKey11'),
                              AccessLevel.OBSERVER)

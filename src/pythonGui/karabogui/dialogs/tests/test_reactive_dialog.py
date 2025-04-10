@@ -21,13 +21,13 @@ def test_access_level(gui_app):
 
         # Non-authenticated login type, access level from the dialog.
         dialog.login_type = LoginType.ACCESS_LEVEL
-        assert dialog.combo_access_level.currentText() == "admin"
-        assert dialog.access_level == "admin"
+        assert dialog.combo_access_level.currentText() == "expert"
+        assert dialog.access_level == "expert"
 
         # For authenticated login type, access level from configuration.
-        configuration["access_level"] = "user"
+        configuration["access_level"] = "operator"
         dialog.login_type = LoginType.REFRESH_TOKEN
-        assert dialog.access_level == "user"
+        assert dialog.access_level == "operator"
 
 
 def test_temporarySessionDialog(gui_app, mocker):

@@ -114,10 +114,8 @@ namespace karabo {
                 Restriction stateOptions;
                 Restriction allowedStates;
                 Restriction observerAccess;
-                Restriction userAccess;
                 Restriction operatorAccess;
                 Restriction expertAccess;
-                Restriction adminAccess;
                 Restriction skipValidation;
                 Restriction unit;
                 Restriction metricPrefix;
@@ -175,10 +173,8 @@ namespace karabo {
                       ,
                       allowedStates("allowedStates", m_rest, false),
                       observerAccess("observerAccess", m_rest, false),
-                      userAccess("userAccess", m_rest, false),
                       operatorAccess("operatorAccess", m_rest, false),
                       expertAccess("expertAccess", m_rest, false),
-                      adminAccess("adminAccess", m_rest, false),
                       skipValidation("skipValidation", m_rest, false),
                       unit("unit", m_rest, false),
                       metricPrefix("metricPrefix", m_rest, false),
@@ -491,12 +487,6 @@ namespace karabo {
             OverwriteElement& setNowObserverAccess();
 
             /**
-             * Set the element to now have user access
-             * @return
-             */
-            OverwriteElement& setNowUserAccess();
-
-            /**
              * Set the element to now have operator access
              * @return
              */
@@ -507,12 +497,6 @@ namespace karabo {
              * @return
              */
             OverwriteElement& setNowExpertAccess();
-
-            /**
-             * Set the element to now have admin access
-             * @return
-             */
-            OverwriteElement& setNowAdminAccess();
 
             /**
              * Set a new unit to use for values of this element

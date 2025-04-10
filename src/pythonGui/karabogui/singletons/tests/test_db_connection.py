@@ -191,7 +191,7 @@ def test_connection(gui_app, mocker):
                 "name", "scene",
                 "uuid", scene_uuid,
                 "domain", "New",
-                "db_token", "admin"), token=token)
+                "db_token", "expert"), token=token)
 
 
 if __name__ == "__main__":

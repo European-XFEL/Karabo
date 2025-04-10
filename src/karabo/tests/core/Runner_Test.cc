@@ -50,7 +50,7 @@ void Runner_Test::testRunnerSuccess() {
 
     std::string initStr = std::string("init=") + initval;
     char const* argv[] = {"SomeExecutable", "serverId=foo", initStr.c_str(), "Logger.priority=DEBUG"};
-    int argc = 5;
+    int argc = sizeof(argv) / sizeof(argv[0]);
     Hash configuration;
     CPPUNIT_ASSERT_NO_THROW(RunnerDerived::parseCmd(argc, argv, configuration));
     CPPUNIT_ASSERT(configuration.get<std::string>("serverId") == "foo");

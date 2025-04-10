@@ -635,7 +635,7 @@ def test_handle_login_information(mocker):
     with singletons(network=network, mediator=mediator):
         manager = Manager()
         manager.handle_loginInformation(
-            accessLevel=AccessLevel.ADMIN.value, username="karabo")
+            accessLevel=AccessLevel.EXPERT.value, username="karabo")
         broad.assert_called_with(KaraboEvent.LoginUserChanged, {})
         broad.reset_mock()
         # Try again downgrade
@@ -657,10 +657,10 @@ def test_handle_login_information(mocker):
         broad.reset_mock()
 
         manager.handle_loginInformation(
-            accessLevel=AccessLevel.ADMIN.value, username="karabo")
+            accessLevel=AccessLevel.EXPERT.value, username="karabo")
         broad.assert_called_with(KaraboEvent.LoginUserChanged, {})
         broad.reset_mock()
-        assert krb_access.HIGHEST_ACCESS_LEVEL == AccessLevel.ADMIN
+        assert krb_access.HIGHEST_ACCESS_LEVEL == AccessLevel.EXPERT
 
 
 def test_handle_property_history(gui_app, mocker):
@@ -923,13 +923,15 @@ def test_handle_onBeginTemporarySession(mocker):
             "karabogui.singletons.manager.broadcast_event")
         manager.handle_onBeginTemporarySession(success=False)
         assert broadcast.call_count == 0
-        info = {"success": True, "accessLevel": 4}
+        info = {"success": True, "accessLevel": 1}
         manager.handle_onBeginTemporarySession(**info)
-        assert broadcast.call_count == 2
-        first_call, second_call = broadcast.call_args_list
+        assert broadcast.call_count == 3
+        first_call, second_call, third_call = broadcast.call_args_list
         args, _ = first_call
-        assert args == (KaraboEvent.LoginUserChanged, {})
+        assert args == (KaraboEvent.AccessLevelChanged, {})
         args, _ = second_call
+        assert args == (KaraboEvent.LoginUserChanged, {})
+        args, _ = third_call
         assert args == (KaraboEvent.TemporarySession, {})
 
 
@@ -940,7 +942,7 @@ def test_handle_onEndTemporarySession(mocker):
         broadcast = mocker.patch(
             "karabogui.singletons.manager.broadcast_event")
 
-        manager.handle_onEndTemporarySession(levelBeforeTemporarySession=3,
+        manager.handle_onEndTemporarySession(levelBeforeTemporarySession=2,
                                              loggedUserId="karabo")
         assert broadcast.call_count == 3
         first_call, second_call, third_call = broadcast.call_args_list
@@ -960,13 +962,11 @@ def test_handle_onTemporarySessionExpired(mocker):
             "karabogui.singletons.manager.broadcast_event")
         manager.handle_onTemporarySessionExpired(
             levelBeforeTemporarySession=2)
-        assert broadcast.call_count == 3
-        first_call, second_call, third_call = broadcast.call_args_list
+        assert broadcast.call_count == 2
+        first_call, second_call = broadcast.call_args_list
         args, _ = first_call
-        assert args == (KaraboEvent.AccessLevelChanged, {})
-        args, _ = second_call
         assert args == (KaraboEvent.LoginUserChanged, {})
-        args, _ = third_call
+        args, _ = second_call
         assert args == (KaraboEvent.TemporarySession, {})
 
 
@@ -984,20 +984,20 @@ def test_temp_session(mocker):
     network = mocker.Mock()
     with singletons(network=network):
         manager = Manager()
-        login_info = {"username": "abcd", "accessLevel": 3}
+        login_info = {"username": "abcd", "accessLevel": 2}
         mocker.patch("karabogui.singletons.manager.broadcast_event")
         manager.handle_loginInformation(**login_info)
 
-        assert krb_access.GLOBAL_ACCESS_LEVEL == AccessLevel(3)
-        assert krb_access.HIGHEST_ACCESS_LEVEL == AccessLevel(3)
+        assert krb_access.GLOBAL_ACCESS_LEVEL == AccessLevel(2)
+        assert krb_access.HIGHEST_ACCESS_LEVEL == AccessLevel(2)
         assert krb_access.TEMPORARY_SESSION_USER is None
 
         begin_session_info = {
-            "username": "karabo", "accessLevel": 4, "success": True}
+            "username": "karabo", "accessLevel": 1, "success": True}
         manager.handle_onBeginTemporarySession(**begin_session_info)
 
-        assert krb_access.GLOBAL_ACCESS_LEVEL == AccessLevel(4)
-        assert krb_access.HIGHEST_ACCESS_LEVEL == AccessLevel(4)
+        assert krb_access.GLOBAL_ACCESS_LEVEL == AccessLevel(1)
+        assert krb_access.HIGHEST_ACCESS_LEVEL == AccessLevel(1)
         assert krb_access.TEMPORARY_SESSION_USER == "karabo"
 
         end_session_info = {"levelBeforeTemporarySession": 2}

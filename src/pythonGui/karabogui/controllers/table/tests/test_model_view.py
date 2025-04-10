@@ -827,7 +827,7 @@ def test_filter_table_model_view_table_controller_state(gui_app):
     set_proxy_value(proxy, "state", "ON")
     assert controller.widget.isEnabled()
 
-    with access_level(AccessLevel.USER):
+    with access_level(AccessLevel.OBSERVER):
         set_proxy_value(proxy, "state", "ON")
         assert not controller.widget.isEnabled()
 

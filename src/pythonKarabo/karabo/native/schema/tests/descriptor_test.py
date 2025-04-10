@@ -872,8 +872,8 @@ class Tests(TestCase):
         self.assertIsNone(d.defaultValue)
         self.assertIs(d.accessMode, AccessMode.RECONFIGURABLE)
         self.assertIs(d.assignment, Assignment.OPTIONAL)
-        # A reconfigurable parameter has at least `USER` access level
-        self.assertIs(d.requiredAccessLevel, AccessLevel.USER)
+        # A reconfigurable parameter has at least `OPERATOR` access level
+        self.assertIs(d.requiredAccessLevel, AccessLevel.OPERATOR)
         self.assertIsNone(d.displayType)
         self.assertIs(d.unitSymbol, Unit.NUMBER)
         self.assertIs(d.metricPrefixSymbol, MetricPrefix.NONE)
@@ -897,7 +897,7 @@ class Tests(TestCase):
         self.assertIs(attributes['assignment'],
                       Assignment.OPTIONAL)
         self.assertIs(attributes['requiredAccessLevel'],
-                      AccessLevel.USER)
+                      AccessLevel.OPERATOR)
         self.assertIs(attributes['unitSymbol'], Unit.NUMBER)
         self.assertIs(attributes['metricPrefixSymbol'], MetricPrefix.NONE)
 
@@ -1008,7 +1008,7 @@ class Tests(TestCase):
 
     def test_attributes_nonstrict(self):
         d = Double(
-            strict=False, whatever=4, requiredAccessLevel=3,
+            strict=False, whatever=4, requiredAccessLevel=2,
             unitSymbol="m", metricPrefixSymbol="m")
 
         self.assertFalse(hasattr(d, "whatever"))
@@ -1115,7 +1115,7 @@ class Tests(TestCase):
 
         # Integers can have Enums and defaultValue of Enums, although
         # their defaultValue dtype is integer
-        visiblity = Int32(defaultValue=AccessLevel.ADMIN, enum=AccessLevel,
+        visiblity = Int32(defaultValue=AccessLevel.EXPERT, enum=AccessLevel,
                           options=[level for level in AccessLevel])
         self.assertIsNotNone(visiblity)
 
@@ -1128,7 +1128,7 @@ class Tests(TestCase):
             d = Int16(defaultValue=2, requiredAccessLevel=2)
 
         # In non strict case we convert
-        d = Int16(strict=False, defaultValue=2, requiredAccessLevel=2)
+        d = Int16(strict=False, defaultValue=2, requiredAccessLevel=1)
         self.assertEqual(d.requiredAccessLevel, AccessLevel.OPERATOR)
 
         d = Int16(strict=False, defaultValue=2, archivePolicy=2)

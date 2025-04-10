@@ -84,8 +84,8 @@ async def test_overwrite_inject():
         unitSymbol=Unit.SECOND, metricPrefixSymbol=MetricPrefix.MEGA,
         tags={"naughty"}, options=[6, 4])
 
-    mandy.__class__.numberEnum = Overwrite(defaultValue=AccessLevel.ADMIN,
-                                           options=[AccessLevel.ADMIN])
+    mandy.__class__.numberEnum = Overwrite(defaultValue=AccessLevel.EXPERT,
+                                           options=[AccessLevel.EXPERT])
 
     mandy.__class__.randyMandy = Overwrite(
         displayedName="NoMandy", allowedStates=[State.ON]
@@ -109,8 +109,8 @@ async def test_overwrite_inject():
     assert mandy.number.descriptor.units == unit.megasecond
     assert Mandy.number.options == [8, 9, 10]
     assert mandy.number.descriptor.options == [6, 4]
-    assert mandy.numberEnum.descriptor.options == [AccessLevel.ADMIN]
-    assert mandy.numberEnum.descriptor.defaultValue == AccessLevel.ADMIN
+    assert mandy.numberEnum.descriptor.options == [AccessLevel.EXPERT]
+    assert mandy.numberEnum.descriptor.defaultValue == AccessLevel.EXPERT
     assert mandy.randyMandy.descriptor.displayedName == "NoMandy"
     assert mandy.randyMandy.descriptor.allowedStates == {State.ON}
     assert setter_before_inject == setter_after_inject

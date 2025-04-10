@@ -166,7 +166,7 @@ namespace karabo {
             std::set<std::string> m_immortals;
             mutable std::mutex m_immortalsMutex;
 
-            int m_accessLevel = karabo::data::Schema::ADMIN;
+            int m_accessLevel = karabo::data::Schema::EXPERT;
 
             std::string m_dataLoggerManagerId;
             std::string m_configManagerId;
