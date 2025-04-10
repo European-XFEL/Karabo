@@ -607,8 +607,6 @@ class TestCrossPipelining(BoundDeviceTestCase):
         """Start server of given api and number"""
 
         klasses = ["PropertyTest"]
-        if api == "mdl":
-            klasses[0] += "MDL"
         server_id = self.serverId(api, server_num)
         self.start_server(api, server_id, klasses, **kwargs)
 
@@ -617,8 +615,6 @@ class TestCrossPipelining(BoundDeviceTestCase):
         Start device with id and config on server defined by api and number
         """
         klass = "PropertyTest"
-        if api == "mdl":
-            klass += "MDL"
         cfg.set("deviceId", dev_id)
 
         ok, msg = self.dc.instantiate(self.serverId(api, server_num),
@@ -632,8 +628,6 @@ class TestCrossPipelining(BoundDeviceTestCase):
         Start device with id and config on server defined by api and number
         """
         klass = "PropertyTest"
-        if api == "mdl":
-            klass += "MDL"
         cfg.set("deviceId", dev_id)
 
         self.dc.instantiateNoWait(self.serverId(api, server_num),
