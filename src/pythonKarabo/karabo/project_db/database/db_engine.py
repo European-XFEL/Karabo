@@ -20,14 +20,13 @@ import os
 
 from sqlalchemy.ext.asyncio import (
     AsyncEngine, async_sessionmaker, create_async_engine)
-from sqlalchemy.pool import StaticPool
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 DB_POOL_RECYCLE_SECS: int = int(os.environ.get(
         "KARABO_PROJECT_DB_POOL_RECYCLE_SECS", 100))
 
 
-def create_engine(
+def create_remote_engine(
     user: str, password: str, server: str,
     port: int, db_name: str) -> tuple[
         AsyncEngine, async_sessionmaker[AsyncSession]]:
@@ -53,13 +52,14 @@ def create_engine(
     return db_engine, session_gen
 
 
-def create_test_engine() -> tuple[
+def create_local_engine(db_name: str) -> tuple[
         AsyncEngine, async_sessionmaker[AsyncSession]]:
+
     db_engine = create_async_engine(
-        "sqlite+aiosqlite:///:memory:",
+        f"sqlite+aiosqlite:///{db_name}",
         echo=False,
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool)
+        pool_pre_ping=True,
+        connect_args={"check_same_thread": False})
 
     session_gen = async_sessionmaker(
         bind=db_engine,

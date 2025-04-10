@@ -15,6 +15,7 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 
 import os
+from pathlib import Path
 
 from karabo.native import AccessLevel, Configurable, String, UInt32
 
@@ -27,7 +28,7 @@ def get_db_credentials():
     return user, password
 
 
-class MySqlNode(Configurable):
+class RemoteNode(Configurable):
     host = String(
         defaultValue=os.getenv("KARABO_PROJECT_DB_HOST", "localhost"),
         displayedName="Database host",
@@ -48,5 +49,23 @@ class MySqlNode(Configurable):
         db = SQLDatabase(
             user, password, server=self.host.value, port=self.port.value,
             db_name=self.dbName.value)
+        await db.initialize()
+        return db
+
+
+class LocalNode(Configurable):
+
+    dbName = String(
+        defaultValue=os.getenv("KARABO_PROJECT_DB_DBNAME", "projectDB.db"),
+        displayedName="Database name",
+        description="The filename placed in var/project_db/",
+        requiredAccessLevel=AccessLevel.EXPERT)
+
+    async def get_db(self, test_mode=False, init_db=False):
+        folder = Path(os.environ["KARABO"]).joinpath(
+            "var", "data", "project_db")
+        path = folder / self.dbName.value
+        path.parent.mkdir(parents=True, exist_ok=True)
+        db = SQLDatabase(db_name=path, local=True)
         await db.initialize()
         return db

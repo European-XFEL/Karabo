@@ -24,7 +24,8 @@ from karabo.middlelayer import (
     Slot, String, TypeHash, VectorString, dictToHash, slot)
 from karabo.middlelayer.signalslot import Signal
 from karabo.native import read_project_model
-from karabo.project_db import ExistDbNode, MySqlNode, ProjectDBError
+from karabo.project_db import (
+    ExistDbNode, LocalNode, ProjectDBError, RemoteNode)
 
 
 def get_project():
@@ -32,7 +33,7 @@ def get_project():
 
         protocol = String(
             defaultValue="exist_db",
-            options=["exist_db", "mysql_db"],
+            options=["exist_db", "remote", "local"],
             accessMode=AccessMode.INITONLY)
 
         testMode = Bool(
@@ -41,7 +42,8 @@ def get_project():
             requiredAccessLevel=AccessLevel.EXPERT)
 
         locals()["exist_db"] = Node(ExistDbNode)
-        locals()["mysql_db"] = Node(MySqlNode)
+        locals()["remote"] = Node(RemoteNode)
+        locals()["local"] = Node(LocalNode)
 
     return Node(ProjectNode)
 
