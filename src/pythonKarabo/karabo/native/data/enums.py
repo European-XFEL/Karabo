@@ -28,10 +28,8 @@ __all__ = ['AccessLevel', 'AccessMode', 'ArchivePolicy', 'Assignment',
 @unique
 class AccessLevel(IntEnum):
     OBSERVER = 0
-    USER = 1
-    OPERATOR = 2
-    EXPERT = 3
-    ADMIN = 4
+    OPERATOR = 1
+    EXPERT = 2
 
     @classmethod
     def fromAttributes(cls, attrs):

@@ -303,7 +303,7 @@ class TestStruct1:
             .options("Radio,Air Condition,Navigation", ",")
             .assignmentOptional().defaultValue("Navigation")
             .reconfigurable()
-            .userAccess()
+            .operatorAccess()
             .commit(),
 
             INT32_ELEMENT(expected).key("exampleKey2")
@@ -340,7 +340,7 @@ class TestStruct1:
             .options("1.11     -2.22 5.55")
             .minExc(-2.22).maxExc(5.55)
             .assignmentInternal().noDefaultValue()
-            .adminAccess()
+            .expertAccess()
             .commit(),
 
             INT64_ELEMENT(expected).key("exampleKey5")

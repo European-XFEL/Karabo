@@ -243,13 +243,6 @@ namespace karabo {
             return *this;
         }
 
-        OverwriteElement& OverwriteElement::setNowUserAccess() {
-            if (!m_node) throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
-            checkIfRestrictionApplies(m_restrictions.userAccess);
-            m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::USER);
-            return *this;
-        }
-
         OverwriteElement& OverwriteElement::setNowOperatorAccess() {
             if (!m_node) throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
             checkIfRestrictionApplies(m_restrictions.operatorAccess);
@@ -261,13 +254,6 @@ namespace karabo {
             if (!m_node) throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
             checkIfRestrictionApplies(m_restrictions.expertAccess);
             m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::EXPERT);
-            return *this;
-        }
-
-        OverwriteElement& OverwriteElement::setNowAdminAccess() {
-            if (!m_node) throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
-            checkIfRestrictionApplies(m_restrictions.adminAccess);
-            m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::ADMIN);
             return *this;
         }
 

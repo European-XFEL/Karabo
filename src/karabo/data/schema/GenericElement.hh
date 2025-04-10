@@ -161,15 +161,6 @@ namespace karabo {
             }
 
             /**
-             * The <b>userAccess</b> method serves for setting up the <i>required access level</i> attribute to be USER.
-             * @return reference to the Element (to allow method's chaining)
-             */
-            Derived& userAccess() {
-                m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::USER);
-                return *(static_cast<Derived*>(this));
-            }
-
-            /**
              * The <b>operatorAccess</b> method serves for setting up the <i>required access level</i> attribute to be
              * OPERATOR.
              * @return reference to the Element (to allow method's chaining)
@@ -186,16 +177,6 @@ namespace karabo {
              */
             Derived& expertAccess() {
                 m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::EXPERT);
-                return *(static_cast<Derived*>(this));
-            }
-
-            /**
-             * The <b>adminAccess</b> method serves for setting up the <i>required access level</i> attribute to be
-             * ADMIN.
-             * @return reference to the Element (to allow method's chaining)
-             */
-            Derived& adminAccess() {
-                m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::ADMIN);
                 return *(static_cast<Derived*>(this));
             }
 

@@ -134,7 +134,7 @@ class EditableCircleX(CircleX):
             .setNewDescription("The new alarm description")
             .setNewAssignmentOptional()
             .setNewDefaultValue(AlarmCondition.WARN_LOW)
-            .setNowUserAccess()
+            .setNowOperatorAccess()
             .commit(),
 
             OVERWRITE_ELEMENT(expected).key("alarmA")
@@ -161,7 +161,7 @@ class RectangleX(ShapeX):
             .metricPrefix(MetricPrefix.MILLI)
             .assignmentOptional()
             .defaultValue(50)
-            .adminAccess()
+            .expertAccess()
             .init()
             .commit(),
 
@@ -191,7 +191,7 @@ class EditableRectangleX(RectangleX):
             .setNewAssignmentInternal()
             .setNewMinExc(30)
             .setNewMaxInc(60)
-            .setNowAdminAccess()
+            .setNowExpertAccess()
             .commit(),
 
             OVERWRITE_ELEMENT(expected).key("b")
@@ -299,7 +299,7 @@ class TestStruct1:
             .options("Radio,Air Condition,Navigation", ",")
             .assignmentOptional()
             .defaultValue("Navigation")
-            .userAccess()
+            .operatorAccess()
             .reconfigurable()
             .commit(),
 
@@ -341,7 +341,7 @@ class TestStruct1:
             .displayedName("Example key 4")
             .description("Example key 4 description")
             .options("1.11     -2.22 5.55")
-            .adminAccess()
+            .expertAccess()
             .minExc(-2.22)
             .maxExc(5.55)
             .assignmentInternal()
@@ -357,7 +357,7 @@ class TestStruct1:
             .tags("software")
             .displayedName("Example read array")
             .description("Example of ByteArray for reading")
-            .userAccess()
+            .operatorAccess()
             .readOnly()
             .initialValue(bytes('abcdef привет 012345', 'u8'))
             .commit(),
@@ -365,7 +365,7 @@ class TestStruct1:
             BYTEARRAY_ELEMENT(expected)
             .key("rarray1")
             .displayedName("ReadArrayStr")
-            .adminAccess()
+            .expertAccess()
             .readOnly()
             .initialValue('hello world')
             .commit(),
@@ -568,7 +568,7 @@ class TestStruct1:
             .displayedName("Reset")
             .description("Test slot element")
             .allowedStates(State.STARTED, State.STOPPED, State.NORMAL)
-            .userAccess()
+            .operatorAccess()
             .commit(),
 
             SLOT_ELEMENT(expected)
@@ -593,7 +593,7 @@ class TestStruct1:
             .alias("aliasStop")
             .displayedName("Stop")
             .allowedStates(State.STARTED, State.STOPPED, State.NORMAL)
-            .adminAccess()
+            .expertAccess()
             .commit(),
 
             CHOICE_ELEMENT(expected)
@@ -812,7 +812,7 @@ class OtherSchemaElementsX:
             .setColumns(rowSchema)
             .assignmentOptional()
             .defaultValue([])
-            .adminAccess()
+            .expertAccess()
             .commit(),
 
             TABLE_ELEMENT(expected)
@@ -842,7 +842,7 @@ class OtherSchemaElementsX:
             .description("Test table with assignmentInternal")
             .setColumns(rowSchema)
             .reconfigurable()
-            .userAccess()
+            .operatorAccess()
             .assignmentInternal()
             .noDefaultValue()
             .commit(),
@@ -853,7 +853,7 @@ class OtherSchemaElementsX:
             .tags("exp,hard,soft")
             .setColumns(rowSchema)
             .allowedStates(State.STARTED, State.STOPPED)
-            .userAccess()
+            .operatorAccess()
             .readOnly()
             .initialValue([Hash("a", 22, "b", "foo22", "c", 1.234),
                            Hash("a", 33, "b", "foo33", "c", 2.345),
@@ -940,7 +940,7 @@ class SomeClass:
             .setDimensions("300, 200")
             .setType(Types.UINT32)
             .setEncoding("RGBA")
-            .userAccess()
+            .operatorAccess()
             .commit(),
 
             IMAGEDATA_ELEMENT(expected)
@@ -957,7 +957,7 @@ class SomeClass:
             .key("myImageElement")
             .setDimensions("500, 800")
             .setDimensionScales("Dimscales")
-            .adminAccess()
+            .expertAccess()
             .commit(),
         )
 
@@ -985,7 +985,7 @@ def test_buildUp():
     assert schema.hasMinInc("radius") is False
     assert schema.getMinExc("radius") == 0
     assert schema.getMaxExc("radius") == 100
-    assert schema.getRequiredAccessLevel("radius") == AccessLevel.USER
+    assert schema.getRequiredAccessLevel("radius") == AccessLevel.OPERATOR
 
     schema = Schema()
     EditableCircleX.expectedParameters(schema)
@@ -1013,7 +1013,7 @@ def test_buildUp():
     assert schema.getMaxExc("radius") == 120
     assert schema.getRequiredAccessLevel("radius") == AccessLevel.EXPERT
     assert schema.getDescription("alarm") == "The new alarm description"
-    assert schema.getRequiredAccessLevel("alarm") == AccessLevel.USER
+    assert schema.getRequiredAccessLevel("alarm") == AccessLevel.OPERATOR
 
     allowedStates = schema.getOptions("status")
     assert allowedStates == ['a', 'b', 'c']
@@ -1028,7 +1028,7 @@ def test_buildUp():
     assert schema.isAssignmentMandatory("a") is False
     assert schema.isAccessReadOnly("a") is False
     assert schema.isAccessReadOnly("b") is True
-    assert schema.getRequiredAccessLevel("a") == AccessLevel.ADMIN
+    assert schema.getRequiredAccessLevel("a") == AccessLevel.EXPERT
     assert schema.getRequiredAccessLevel("b") == AccessLevel.OPERATOR
 
     schema = Schema()
@@ -1071,27 +1071,27 @@ def test_getsetAccessLevel():
     sch = Schema()
     SomeClass.expectedParameters(sch)
     assert sch.getRequiredAccessLevel('x') == AccessLevel.EXPERT
-    assert sch.getRequiredAccessLevel('y') == AccessLevel.USER
+    assert sch.getRequiredAccessLevel('y') == AccessLevel.OPERATOR
     assert sch.getRequiredAccessLevel('a') == AccessLevel.OBSERVER
 
-    sch.setRequiredAccessLevel('x', AccessLevel.ADMIN)
+    sch.setRequiredAccessLevel('x', AccessLevel.EXPERT)
     sch.setRequiredAccessLevel('y', AccessLevel.OPERATOR)
-    assert sch.getRequiredAccessLevel('x') == AccessLevel.ADMIN
+    assert sch.getRequiredAccessLevel('x') == AccessLevel.EXPERT
     assert sch.getRequiredAccessLevel('y') == AccessLevel.OPERATOR
 
     sch = Schema()
     TestStruct1.expectedParameters(sch)
-    assert sch.getRequiredAccessLevel('exampleKey1') == AccessLevel.USER
+    assert sch.getRequiredAccessLevel('exampleKey1') == AccessLevel.OPERATOR
     assert sch.getRequiredAccessLevel('exampleKey2') == AccessLevel.OPERATOR
     assert sch.getRequiredAccessLevel('exampleKey3') == AccessLevel.EXPERT
-    assert sch.getRequiredAccessLevel('exampleKey4') == AccessLevel.ADMIN
+    assert sch.getRequiredAccessLevel('exampleKey4') == AccessLevel.EXPERT
     # default for readOnly
     assert sch.getRequiredAccessLevel('exampleKey5') == AccessLevel.OBSERVER
     # default for reconfigurable
-    assert sch.getRequiredAccessLevel('exampleKey10') == AccessLevel.USER
+    assert sch.getRequiredAccessLevel('exampleKey10') == AccessLevel.OPERATOR
     # observerAccess in reconfigurable
     assert sch.getRequiredAccessLevel('exampleKey11') == AccessLevel.OBSERVER
-    assert sch.getRequiredAccessLevel('rarray') == AccessLevel.USER
+    assert sch.getRequiredAccessLevel('rarray') == AccessLevel.OPERATOR
 
 
 def test_isNode():
@@ -1646,7 +1646,7 @@ def test_table_elements():
     assert sch.hasDefaultValue("testTableEmptyDefault") is True
     assert sch.isAccessInitOnly("testTableEmptyDefault") is True
     assert (sch.getRequiredAccessLevel("testTableEmptyDefault") ==
-            AccessLevel.ADMIN)
+            AccessLevel.EXPERT)
 
     assert sch.has("testTableNoDefault") is True
     assert (sch.getAliasFromKey("testTableNoDefault") ==
@@ -1675,7 +1675,7 @@ def test_table_elements():
     assert sch.isAssignmentMandatory("tableInternal") is False
     assert sch.isAccessReconfigurable("tableInternal") is True
     assert sch.hasDefaultValue("tableInternal") is False
-    assert sch.getRequiredAccessLevel("tableInternal") == AccessLevel.USER
+    assert sch.getRequiredAccessLevel("tableInternal") == AccessLevel.OPERATOR
 
     assert sch.has("tableReadOnly") is True
     assert sch.getAliasFromKey("tableReadOnly") == "aliasForTableReadOnly"
@@ -1686,7 +1686,7 @@ def test_table_elements():
     assert sch.hasAllowedStates("tableReadOnly") is True
     assert (sch.getAllowedStates("tableReadOnly") ==
             [State.STARTED, State.STOPPED])
-    assert sch.getRequiredAccessLevel("tableReadOnly") == AccessLevel.USER
+    assert sch.getRequiredAccessLevel("tableReadOnly") == AccessLevel.OPERATOR
     assert sch.hasArchivePolicy("tableReadOnly") is True
     assert sch.getArchivePolicy("tableReadOnly") == ArchivePolicy.EVERY_EVENT
 
@@ -1711,7 +1711,8 @@ def test_imagedata_element():
                           'defaultValue') == Encoding.GRAY
 
     assert sch.has("imageSetEncoding") is True
-    assert sch.getRequiredAccessLevel("imageSetEncoding") == AccessLevel.USER
+    assert sch.getRequiredAccessLevel("imageSetEncoding") == \
+        AccessLevel.OPERATOR
     assert h.getAttribute('imageSetEncoding.dims',
                           'defaultValue') == [300, 200]
     assert h.getAttribute('imageSetEncoding.encoding',
@@ -1726,7 +1727,7 @@ def test_imagedata_element():
                           'defaultValue') == [500, 800]
     assert h.getAttribute("myImageElement.dimScales",
                           'defaultValue') == "Dimscales"
-    assert sch.getRequiredAccessLevel("myImageElement") == AccessLevel.ADMIN
+    assert sch.getRequiredAccessLevel("myImageElement") == AccessLevel.EXPERT
 
 
 def test_slot_element():
@@ -1740,7 +1741,7 @@ def test_slot_element():
     assert sch.getDescription("slotTest") == "Test slot element"
     assert sch.getAllowedStates("slotTest") == [
         State.STARTED, State.STOPPED, State.NORMAL]
-    assert sch.getRequiredAccessLevel("slotTest") == AccessLevel.USER
+    assert sch.getRequiredAccessLevel("slotTest") == AccessLevel.OPERATOR
     assert sch.has("slotClean") is True
     assert sch.getAliasFromKey("slotClean") == "aliasClean"
     assert sch.isCommand("slotClean") is True
@@ -1756,7 +1757,7 @@ def test_slot_element():
     assert sch.getAliasFromKey("slotStop") == "aliasStop"
     assert sch.isCommand("slotStop") is True
     assert sch.getDisplayedName("slotStop") == "Stop"
-    assert sch.getRequiredAccessLevel("slotStop") == AccessLevel.ADMIN
+    assert sch.getRequiredAccessLevel("slotStop") == AccessLevel.EXPERT
 
 
 def test_allowed_actions():

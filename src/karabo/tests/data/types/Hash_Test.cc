@@ -989,6 +989,10 @@ void Hash_Test::testGetAs() {
         CPPUNIT_ASSERT(g.getAttributeAs<string>("Z.a.b.c", "a") == "1");
         CPPUNIT_ASSERT(g.getAttributeAs<int>("Z.a.b.c", "a") == 1);
         CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, g.getAttributeAs<double>("Z.a.b.c", "a"), 0.00001);
+        h.set("a.b", "cardinal");
+        h.setAttribute("a.b", "Q", 1.8e-06);
+        CPPUNIT_ASSERT(h.getAttribute<double>("a.b", "Q") == 1.8e-06);
+        CPPUNIT_ASSERT(h.getAttributeAs<int>("a.b", "Q") == 0);
     }
 
     {

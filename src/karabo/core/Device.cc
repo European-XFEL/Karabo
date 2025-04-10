@@ -71,7 +71,7 @@ namespace karabo {
                   .key("_deviceId_")
                   .displayedName("_DeviceID_")
                   .description("Do not set this property, it will be set by the device-server")
-                  .adminAccess()
+                  .expertAccess()
                   .assignmentInternal()
                   .noDefaultValue()
                   .init()
@@ -91,14 +91,14 @@ namespace karabo {
                   .assignmentOptional()
                   .defaultValue(120)
                   .minInc(10) // avoid too much traffic - 10 is minimum of server as well
-                  .adminAccess()
+                  .expertAccess()
                   .commit();
 
             STRING_ELEMENT(expected)
                   .key("_serverId_")
                   .displayedName("_ServerID_")
                   .description("Do not set this property, it will be set by the device-server")
-                  .adminAccess()
+                  .expertAccess()
                   .assignmentInternal()
                   .noDefaultValue()
                   .init()
@@ -203,7 +203,7 @@ namespace karabo {
                   .key("lastCommand")
                   .displayedName("Last command")
                   .description("The last slot called.")
-                  .adminAccess()
+                  .expertAccess()
                   .readOnly()
                   .initialValue("")
                   .commit();

@@ -255,13 +255,9 @@ void exportPyXmsImageDataElement(py::module_& m) {
 
         el.def("observerAccess", &ImageDataElement::observerAccess, py::return_value_policy::reference_internal);
 
-        el.def("userAccess", &ImageDataElement::userAccess, py::return_value_policy::reference_internal);
-
         el.def("operatorAccess", &ImageDataElement::operatorAccess, py::return_value_policy::reference_internal);
 
         el.def("expertAccess", &ImageDataElement::expertAccess, py::return_value_policy::reference_internal);
-
-        el.def("adminAccess", &ImageDataElement::adminAccess, py::return_value_policy::reference_internal);
 
         el.def("skipValidation", &ImageDataElement::skipValidation, py::return_value_policy::reference_internal);
 

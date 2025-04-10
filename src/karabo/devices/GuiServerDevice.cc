@@ -358,7 +358,7 @@ namespace karabo {
                   .assignmentOptional()
                   .defaultValue("2.16.0")
                   .reconfigurable()
-                  .adminAccess()
+                  .expertAccess()
                   .commit();
 
             BOOL_ELEMENT(expected)
@@ -370,7 +370,7 @@ namespace karabo {
                   .assignmentOptional()
                   .defaultValue(false)
                   .init()
-                  .adminAccess()
+                  .expertAccess()
                   .commit();
 
             BOOL_ELEMENT(expected)
@@ -383,7 +383,7 @@ namespace karabo {
                   .assignmentOptional()
                   .defaultValue(false)
                   .init()
-                  .adminAccess()
+                  .expertAccess()
                   .commit();
 
             STRING_ELEMENT(expected)
@@ -393,7 +393,7 @@ namespace karabo {
                   .assignmentOptional()
                   .defaultValue(karabo::util::DATALOGMANAGER_ID)
                   .reconfigurable()
-                  .adminAccess()
+                  .expertAccess()
                   .commit();
 
             VECTOR_STRING_ELEMENT(expected)
@@ -405,7 +405,7 @@ namespace karabo {
                   .assignmentOptional()
                   .defaultValue(std::vector<std::string>())
                   .reconfigurable()
-                  .adminAccess()
+                  .expertAccess()
                   .commit();
 
             INT32_ELEMENT(expected)
@@ -417,7 +417,7 @@ namespace karabo {
                   .assignmentOptional()
                   .defaultValue(5)
                   .reconfigurable()
-                  .adminAccess()
+                  .expertAccess()
                   .commit();
 
             VECTOR_STRING_ELEMENT(expected)

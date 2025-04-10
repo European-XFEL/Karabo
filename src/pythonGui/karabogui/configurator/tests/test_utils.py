@@ -78,11 +78,11 @@ def test_get_child_names():
     schema = Object.getClassSchema()
     proxy = get_class_property_proxy(schema, 'integer')
 
-    property_names = get_child_names(proxy, AccessLevel.ADMIN)
+    property_names = get_child_names(proxy, AccessLevel.EXPERT)
     # Attributes are empty for this proxy
     assert property_names == []
 
-    device_names = get_child_names(proxy.root_proxy, AccessLevel.ADMIN)
+    device_names = get_child_names(proxy.root_proxy, AccessLevel.EXPERT)
     assert device_names == ['string', 'integer', 'nodeMandatory',
                             'nodeNormal', 'nodeOfNode']
 

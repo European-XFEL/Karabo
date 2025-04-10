@@ -83,7 +83,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
 
     def setMode(self, expert: bool):
         """Set the mode of this ConfigurationTreeModel"""
-        self.mode_level = (AccessLevel.ADMIN if expert
+        self.mode_level = (AccessLevel.EXPERT if expert
                            else AccessLevel.OPERATOR)
 
     @property
