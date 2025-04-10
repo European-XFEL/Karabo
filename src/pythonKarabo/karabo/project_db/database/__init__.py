@@ -14,5 +14,5 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 # flake8: noqa
-from .node import MySqlNode
+from .node import LocalNode, RemoteNode
 from .sql_database import SQLDatabase
