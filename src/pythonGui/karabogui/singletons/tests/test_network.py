@@ -142,10 +142,11 @@ def test_socket_connect_login_protocol(mocker, subtests, gui_app):
             assert receiver.last_hash["channelName"] == \
                    f"{output_device}:output"
 
-            network.onError("This is an error")
+            text = "This is an error"
+            network.onInfo(Hash("traceback", text, "type", "error"))
             _trigger_message_parse()
             assert receiver.last_hash["type"] == "error"
-            assert receiver.last_hash["traceback"] == "This is an error"
+            assert receiver.last_hash["info"]["traceback"] == text
 
         with subtests.test(msg="Test Network Project Interface"):
             project_manager = "KaraboProjectDB"
