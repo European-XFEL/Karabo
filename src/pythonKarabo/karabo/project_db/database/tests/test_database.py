@@ -18,6 +18,7 @@ import datetime
 from time import strptime
 
 import pytest
+import pytest_asyncio
 from lxml import etree
 
 from karabo.project_db import (
@@ -26,12 +27,18 @@ from karabo.project_db.testing import (
     _gen_uuid, create_hierarchy, create_trashed_project)
 
 
-@pytest.mark.timeout(30)
-@pytest.mark.asyncio
-async def test_project_interface(subtests):
-    # A bunch of document "names" for the following tests
-    database = SQLDatabase(test_mode=True)
+@pytest_asyncio.fixture(loop_scope="module")
+async def database():
+    database = SQLDatabase(local=True)
     await database.initialize()
+    yield database
+    await database.delete()
+
+
+@pytest.mark.timeout(60)
+@pytest.mark.asyncio
+async def test_project_interface(database, subtests):
+    # A bunch of document "names" for the following tests
     testproject = _gen_uuid()
     testproject2 = _gen_uuid()
 
@@ -127,12 +134,9 @@ async def test_project_interface(subtests):
             assert scenecnt >= 4
 
 
-@pytest.mark.timeout(30)
+@pytest.mark.timeout(60)
 @pytest.mark.asyncio
-async def test_save_check_modification(subtests):
-    database = SQLDatabase(test_mode=True)
-    await database.initialize()
-
+async def test_save_check_modification(database, subtests):
     proj_uuid = _gen_uuid()
     async with database as db:
         with subtests.test(msg='test_save_item'):
