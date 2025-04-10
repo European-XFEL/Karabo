@@ -15,6 +15,7 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 import datetime
 from asyncio import gather
+from pathlib import Path
 
 from sqlmodel import SQLModel
 
@@ -22,7 +23,7 @@ from karabo.native import HashList
 
 from ..bases import DatabaseBase
 from ..util import ProjectDBError, make_str_if_needed, make_xml_if_needed
-from .db_engine import create_engine, create_test_engine
+from .db_engine import create_local_engine, create_remote_engine
 from .db_reader import DbReader
 from .db_writer import DbWriter
 from .models_xml import (
@@ -33,22 +34,34 @@ from .models_xml import (
 class SQLDatabase(DatabaseBase):
 
     def __init__(self, user: str = "", password: str = "",
-                 server: str = "", port: int = -1, db_name: str = "",
-                 test_mode: bool = False):
+                 server: str = "", port: int = -1, db_name: str = "local.db",
+                 local: bool = False):
         super().__init__()
-        if not test_mode:
-            self.db_engine, self.session_gen = (
-                create_engine(user, password, server, port, db_name))
+        if local:
+            self.db_engine, self.session_gen = create_local_engine(db_name)
         else:
-            self.db_engine, self.session_gen = create_test_engine()
+            self.db_engine, self.session_gen = (
+                create_remote_engine(user, password, server, port, db_name))
+        self.dbName = db_name
         self.reader = DbReader(self.session_gen)
         self.writer = DbWriter(self.session_gen)
         self.initialized = False
+        self.local = local
 
     async def initialize(self):
         async with self.db_engine.begin() as conn:
             await conn.run_sync(SQLModel.metadata.create_all)
         self.initialized = True
+
+    async def delete(self):
+        """Deletes the database schema and file."""
+        async with self.db_engine.begin() as conn:
+            await conn.run_sync(SQLModel.metadata.drop_all)
+        await self.db_engine.dispose()
+        if self.local:
+            path = Path(self.dbName)
+            if path.is_file():
+                path.unlink()
 
     async def __aenter__(self):
         if not self.initialized:

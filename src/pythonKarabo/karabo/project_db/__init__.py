@@ -15,6 +15,6 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 # flake8: noqa
 from .const import DATE_FORMAT
+from .database import LocalNode, RemoteNode, SQLDatabase
 from .exist_db import ExistDatabase, ExistDbNode
-from .mysql_db import MySqlNode, SQLDatabase
 from .util import ProjectDBError, make_str_if_needed, make_xml_if_needed
