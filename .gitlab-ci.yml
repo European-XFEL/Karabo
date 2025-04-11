@@ -626,12 +626,7 @@ internal_mirror_publish:
         # addresses. Since the commits affected by this are all long in the past, a static definition
         # of the mapping suffices.
     
-        git-filter-repo --email-callback 'import yaml;
-        f=open("../contriboptouts/karabo-svn-fixer.yaml");
-        mapping=yaml.safe_load(f);
-        f.close();
-        user, _ = email.decode().split("@");
-        return mapping.get(user, email.decode()).encode()'
+        git-filter-repo --email-callback 'import yaml; f=open("../contriboptouts/karabo-svn-fixer.yaml"); mapping=yaml.safe_load(f); f.close(); user, _ = email.decode().split("@"); return mapping.get(user, email.decode()).encode()'
     
         # we filter mails now
         git-filter-repo --mailmap ../contriboptouts/karabo-mailmap
