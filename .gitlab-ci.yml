@@ -580,52 +580,75 @@ internal_mirror_publish:
     # Retrieves the mail and name mappings for authors that have chosen to keep their data hidden in the
     # commit history of the public repository.
     - git clone https://gitlab-ci-token:$CI_JOB_TOKEN@git.xfel.eu/Karabo/contriboptouts.git
-    # Retrieves the master branch and the tags of the Karabo Framework repository.
-    - git clone https://gitlab-ci-token:$CI_JOB_TOKEN@git.xfel.eu/Karabo/Framework.git --branch master --single-branch FrameworkHead
-    - cd FrameworkHead
-    # To be on the safe side and prevent any push to the origin, remove it from the list of remotes (this is what git-filter-repo does).
-    - git remote rm origin
-    # Renames master branch to main and pushes main and tags to the internal mirror.
-    # The KARABO_FRAMEWORK_MIRROR_TOKEN must be an environment variable defined in the Framework Gitlab project whose
-    # value is a project access token generated for the FrameworkMirror Gitlab project.
-    - git remote add internal_mirror https://oauth2:$KARABO_FRAMEWORK_MIRROR_TOKEN@git.xfel.eu/Karabo/FrameworkMirror.git
-    # Move the master branch to main (keep history)
-    - git branch -m main
-    - git push --mirror internal_mirror
-    # Removes the local copy of the Karabo Framework repository - all the filtering will happen on the internal mirror.
-    - cd ..
-    - rm -rf FrameworkHead
-    # The removal of files above 100 Mb (GitHub imposed limit) and the obfuscation of opts out must be performed over the just
-    # updated internal mirror to avoid any conflicts during the push.
-    - git clone https://oauth2:$KARABO_FRAMEWORK_MIRROR_TOKEN@git.xfel.eu/Karabo/FrameworkMirror.git
-    - cd FrameworkMirror
-    - git-filter-repo --invert-paths --path src/environment.in/KARABO_BROKER
-    - git-filter-repo --strip-blobs-bigger-than 100M
-    # in the conversion from SVN to git, email addresses were not correctly preserved,
-    # rather we have, username@some-uuid-token. Here we map known users to correct email
-    # addresses. Since the commits affected by this are all long in the past, a static definition
-    # of the mapping suffices.
     - |
-      git-filter-repo --email-callback 'import yaml;
-      f=open("../contriboptouts/karabo-svn-fixer.yaml");
-      mapping=yaml.safe_load(f);
-      f.close();
-      user, _ = email.decode().split("@");
-      return mapping.get(user, email.decode()).encode()'
-    # we filter mails now
-    - git-filter-repo --mailmap ../contriboptouts/karabo-mailmap
-    # As git-filter-repo for safety reasons removes the "origin" remote, we set again the new remote,
-    # "internal_mirror" (a remote with the same name had been defined a few steps back, but for another local).
-    # Details about how git-filter-repo works (the removal of the origin remote is the third step) can be
-    # found at https://htmlpreview.github.io/?https://github.com/newren/git-filter-repo/blob/docs/html/git-filter-repo.html#INTERNALS.
-    - git remote add internal_mirror https://oauth2:$KARABO_FRAMEWORK_MIRROR_TOKEN@git.xfel.eu/Karabo/FrameworkMirror.git
-    # Note: the push below requires the FrameworkMirror repository to be set to allow force push to its main branch (by default not allowed)
-    - git push -u internal_mirror main --force --prune
-    # Note: the forced push of the tags below is needed because 'git-filter-repo' changes the commits SHAs of the repo
-    # and updates the tags to refer to the new commit identifiers. If the tags are not pushed they will still refer
-    # to the old commit idenfitifiers in the mirror.
-    - git push internal_mirror --tags --force
+      for MIRROR_SPEC in ${BRANCHES_TO_MIRROR//,/ }
+      do
+        # define our source and target branches
+        # Check if MIRROR_SPEC contains ":"
+        if [[ "$MIRROR_SPEC" == *":"* ]]; then
+            # Split MIRROR_SPEC into BRANCH_TO_MIRROR and BRANCH_TO_MIRROR_TARGET
+            BRANCH_TO_MIRROR="${MIRROR_SPEC%%:*}"
+            BRANCH_TO_MIRROR_TARGET="${MIRROR_SPEC##*:}"
+        else
+            # If no ":", both variables are set to MIRROR_SPEC
+            BRANCH_TO_MIRROR="$MIRROR_SPEC"
+            BRANCH_TO_MIRROR_TARGET="$MIRROR_SPEC"
+        fi
 
+        # Retrieves the master branch and the tags of the Karabo Framework repository.
+        git clone https://gitlab-ci-token:$CI_JOB_TOKEN@git.xfel.eu/Karabo/Framework.git --branch $BRANCH_TO_MIRROR --single-branch FrameworkHead
+        cd FrameworkHead
+        
+        # To be on the safe side and prevent any push to the origin, remove it from the list of remotes (this is what git-filter-repo does).
+        git remote rm origin
+        # Renames master branch to main and pushes main and tags to the internal mirror.
+        # The KARABO_FRAMEWORK_MIRROR_TOKEN must be an environment variable defined in the Framework Gitlab project whose
+        # value is a project access token generated for the FrameworkMirror Gitlab project.
+        git remote add internal_mirror https://oauth2:$KARABO_FRAMEWORK_MIRROR_TOKEN@git.xfel.eu/Karabo/FrameworkMirror.git
+    
+        # the next steps need to loop over branches we would like to keep mirrored
+        # Move the master branch to main (keep history)
+        git branch -m $BRANCH_TO_MIRROR_TARGET
+        git push --mirror internal_mirror
+        # Removes the local copy of the Karabo Framework repository - all the filtering will happen on the internal mirror.
+        cd ..
+        rm -rf FrameworkHead
+    
+        # The removal of files above 100 Mb (GitHub imposed limit) and the obfuscation of opts out must be performed over the just
+        # updated internal mirror to avoid any conflicts during the push.
+        git clone https://oauth2:$KARABO_FRAMEWORK_MIRROR_TOKEN@git.xfel.eu/Karabo/FrameworkMirror.git
+        cd FrameworkMirror
+        git-filter-repo --invert-paths --path src/environment.in/KARABO_BROKER
+        git-filter-repo --strip-blobs-bigger-than 100M
+    
+        # in the conversion from SVN to git, email addresses were not correctly preserved,
+        # rather we have, username@some-uuid-token. Here we map known users to correct email
+        # addresses. Since the commits affected by this are all long in the past, a static definition
+        # of the mapping suffices.
+    
+        git-filter-repo --email-callback 'import yaml;
+        f=open("../contriboptouts/karabo-svn-fixer.yaml");
+        mapping=yaml.safe_load(f);
+        f.close();
+        user, _ = email.decode().split("@");
+        return mapping.get(user, email.decode()).encode()'
+    
+        # we filter mails now
+        git-filter-repo --mailmap ../contriboptouts/karabo-mailmap
+    
+        # As git-filter-repo for safety reasons removes the "origin" remote, we set again the new remote,
+        # "internal_mirror" (a remote with the same name had been defined a few steps back, but for another local).
+        # Details about how git-filter-repo works (the removal of the origin remote is the third step) can be
+        # found at https://htmlpreview.github.io/?https://github.com/newren/git-filter-repo/blob/docs/html/git-filter-repo.html#INTERNALS.
+        git remote add internal_mirror https://oauth2:$KARABO_FRAMEWORK_MIRROR_TOKEN@git.xfel.eu/Karabo/FrameworkMirror.git
+        # Note: the push below requires the FrameworkMirror repository to be set to allow force push to its main branch (by default not allowed)
+        git push -u internal_mirror $BRANCH_TO_MIRROR_TARGET --force --prune
+        # Note: the forced push of the tags below is needed because 'git-filter-repo' changes the commits SHAs of the repo
+        # and updates the tags to refer to the new commit identifiers. If the tags are not pushed they will still refer
+        # to the old commit idenfitifiers in the mirror.
+        git push internal_mirror --tags --force
+      done
+  
 pages:
   stage: docs
   image: python:3.12
