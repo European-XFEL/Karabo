@@ -495,10 +495,7 @@ class Manager(QObject):
 
         # Tell the GUI about various devices or servers that are alive
         for instance_id, class_id, _ in new_devices:
-            if class_id == 'ProjectManager':
-                broadcast_event(KaraboEvent.ProjectDBConnect,
-                                {'device': instance_id})
-            elif class_id == 'DaemonManager':
+            if class_id == 'DaemonManager':
                 broadcast_event(KaraboEvent.ShowDaemonService,
                                 {'instanceId': instance_id})
 
