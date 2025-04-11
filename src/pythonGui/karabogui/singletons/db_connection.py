@@ -75,8 +75,6 @@ class ProjectDatabaseConnection(QObject):
         event_map = {
             KaraboEvent.ProjectItemsLoaded: self._event_items_loaded,
             KaraboEvent.ProjectItemsSaved: self._event_items_saved,
-            KaraboEvent.NetworkConnectStatus: self._event_network,
-            KaraboEvent.ProjectDBConnect: self._event_db_connect
         }
         register_for_broadcasts(event_map)
 
@@ -106,18 +104,6 @@ class ProjectDatabaseConnection(QObject):
         items = data.get('items', [])
         self._items_saved(items, success)
 
-    def _event_network(self, data):
-        self._have_logged_in = False
-
-    def _event_db_connect(self, data):
-        # NOTE: The ProjectDB came online after we have logged into the
-        # GUI server. Hence we have to reestablish our connection to
-        # the project database.
-        instance_id = data.get('device', '')
-        if instance_id == self.project_manager:
-            self._have_logged_in = False
-            self._ensure_login()
-
     # -------------------------------------------------------------------
     # User interface
 
@@ -136,9 +122,6 @@ class ProjectDatabaseConnection(QObject):
     def get_available_domains(self):
         """ Find out which domains are available
         """
-        # XXX: Please don't keep this here!
-        self._ensure_login()
-
         # Fire and "forget". An event will be broadcast with the reply
         self.network.onListProjectDomains(self.project_manager)
         # Call locally as well
@@ -147,9 +130,6 @@ class ProjectDatabaseConnection(QObject):
     def get_available_project_data(self, domain, obj_type):
         """ Find out what's available
         """
-        # XXX: Please don't keep this here!
-        self._ensure_login()
-
         if self._ignore_cache:
             # Fire and "forget". An event will be broadcast with the reply
             self.network.onProjectListItems(self.project_manager, domain,
@@ -163,16 +143,12 @@ class ProjectDatabaseConnection(QObject):
         """ Find projects which contain configurations for a given device.
             Don't use the local cache.
         """
-        self._ensure_login()
-
         self.network.onProjectListProjectsWithDevice(
             self.project_manager, domain, device_id)
 
     def retrieve(self, domain, uuid, existing=None):
         """Read an object from the database.
         """
-        # XXX: Please don't keep this here!
-        self._ensure_login()
 
         data = None
         if not self._ignore_cache:
@@ -185,16 +161,11 @@ class ProjectDatabaseConnection(QObject):
     def store(self, domain, uuid, obj):
         """Write an object to the database
         """
-        # XXX: Please don't keep this here!
-        self._ensure_login()
         self._push_writing(domain, uuid, obj)
 
     def update_attribute(self, domain, item_type, uuid, attr_name, attr_value):
         """ Update any attribute of the of the object
         """
-        # XXX: Please don't keep this here!
-        self._ensure_login()
-
         item = Hash('domain', domain, 'item_type', item_type, 'uuid', uuid,
                     'attr_name', attr_name, 'attr_value', attr_value)
         # XXX: TODO send project items
@@ -240,8 +211,7 @@ class ProjectDatabaseConnection(QObject):
             "slot_name": "slotGetScene",
             "target_window": target_window,
             "uuid": uuid,
-            "domain": config['domain'],
-            "db_token": config['db_token']}
+            "domain": config['domain']}
         if position is not None:
             data["position"] = position
 
@@ -309,11 +279,6 @@ class ProjectDatabaseConnection(QObject):
             domain_data = data.setdefault(item['domain'], {})
             domain_data[item['uuid']] = item['xml']
         return MemCacheWrapper(data, self)
-
-    def _ensure_login(self):
-        if not self._have_logged_in:
-            self.network.onProjectBeginSession(self.project_manager)
-            self._have_logged_in = True
 
     def _broadcast_is_processing(self, previous_processing, *,
                                  bail=False, loading_failed=False):
