@@ -640,9 +640,10 @@ internal_mirror_publish:
         git push -u internal_mirror $BRANCH_TO_MIRROR_TARGET --force --prune
         # Note: the forced push of the tags below is needed because 'git-filter-repo' changes the commits SHAs of the repo
         # and updates the tags to refer to the new commit identifiers. If the tags are not pushed they will still refer
-        # to the old commit idenfitifiers in the mirror.
-        git push internal_mirror --tags --force
+        
       done
+      # to the old commit idenfitifiers in the mirror.
+      git push internal_mirror --tags --force
   
 pages:
   stage: docs
