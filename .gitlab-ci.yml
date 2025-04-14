@@ -626,7 +626,7 @@ internal_mirror_publish:
     # to the old commit idenfitifiers in the mirror.
     - git push internal_mirror --tags --force
 
-  
+
 pages:
   stage: docs
   image: python:3.12
