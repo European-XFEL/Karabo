@@ -470,11 +470,6 @@ class Manager(QObject):
         broadcast_event(KaraboEvent.SystemTopologyUpdate,
                         {'devices': devices, 'servers': servers})
 
-        for instance_id, class_id, _ in devices:
-            if class_id == 'DaemonManager':
-                broadcast_event(KaraboEvent.ShowDaemonService,
-                                {'instanceId': instance_id})
-
     def handle_systemVersion(self, **info):
         """Handle the version number reply from the GUI server"""
         pass
@@ -482,22 +477,11 @@ class Manager(QObject):
     def handle_topologyUpdate(self, changes):
         devices, servers = self._topology.topology_update(changes)
 
-        gone_instanceIds = []
-        for instance_id, class_id, _ in devices:
-            if class_id == 'DaemonManager':
-                broadcast_event(KaraboEvent.RemoveDaemonService,
-                                {'instanceId': instance_id})
-            gone_instanceIds.append(instance_id)
+        gone_instanceIds = [instance_id for instance_id, _, _ in devices]
 
         # Update topology interested listeners!
         new_devices, new_servers = _extract_topology_devices(
             changes['new'])
-
-        # Tell the GUI about various devices or servers that are alive
-        for instance_id, class_id, _ in new_devices:
-            if class_id == 'DaemonManager':
-                broadcast_event(KaraboEvent.ShowDaemonService,
-                                {'instanceId': instance_id})
 
         devices.extend(new_devices)
         servers.extend(new_servers)
