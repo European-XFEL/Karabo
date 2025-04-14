@@ -129,7 +129,7 @@ async def test_project_manager(deviceTest, subtests):
 
     with subtests.test(msg="Test list items"):
         ret = await wait_for(call("projManTest",
-                                  "slotListItems", 'admin',
+                                  "slotListItems",
                                   "LOCAL"), timeout=5)
         assert ret.get("success")
         assert ret.get("reason", "no reason") == ""
@@ -143,7 +143,6 @@ async def test_project_manager(deviceTest, subtests):
 
     with subtests.test(msg="Test generic interface"):
         arg = Hash("type", "listItems",
-                   "token", "admin",
                    "domain", "LOCAL")
         ret = await wait_for(call(
             "projManTest", "slotGenericRequest", arg), timeout=5)
@@ -183,7 +182,7 @@ async def test_project_manager(deviceTest, subtests):
         item["domain"] = "LOCAL"
         items = [item, ]
         ret = await wait_for(call(
-            "projManTest", "slotSaveItems", 'admin', items, "client-587"),
+            "projManTest", "slotSaveItems", items, "client-587"),
                              timeout=5)
         items = ret.get("items")
         item = items[0]
@@ -201,7 +200,7 @@ async def test_project_manager(deviceTest, subtests):
         # in the project hierarchy created by create_hierarchy
         # there should be only one project and is called "Project"
         ret = await wait_for(call(
-            "projManTest", "slotListNamedItems", 'admin', "LOCAL",
+            "projManTest", "slotListNamedItems", "LOCAL",
             "project", "Project"), timeout=5)
         items = ret.get('items')
         assert len(items) == 1
@@ -210,7 +209,6 @@ async def test_project_manager(deviceTest, subtests):
         for device_id, conf_id in device_id_conf_map.items():
             ret = await wait_for(call("projManTest",
                                       "slotListProjectAndConfForDevice",
-                                      'admin',
                                       "LOCAL",
                                       device_id,
                                       ), timeout=5)
