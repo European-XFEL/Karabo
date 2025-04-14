@@ -43,7 +43,7 @@ def test_connection(gui_app, mocker):
         assert len(mediator._listeners.keys()) == 0
         db_conn = ProjectDatabaseConnection()
         # db connection registers handlers in the mediator
-        assert len(mediator._listeners.keys()) == 4
+        assert len(mediator._listeners.keys()) == 2
         assert db_conn.default_domain == domain
 
         # 1. Get the available domains
@@ -158,26 +158,6 @@ def test_connection(gui_app, mocker):
                                           "attr_name", "trashed",
                                           "attr_value", True)])
 
-        # 9. Topology events, disconnect and come back with device
-        network.reset_mock()
-        assert db_conn._have_logged_in is True
-
-        data = {"status": False}
-        broadcast_event(KaraboEvent.NetworkConnectStatus, data)
-        process_qt_events(timeout=10)
-        assert db_conn._have_logged_in is False
-
-        data = {"status": True}
-        broadcast_event(KaraboEvent.NetworkConnectStatus, data)
-        process_qt_events(timeout=10)
-        assert db_conn._have_logged_in is False
-
-        data = {"device": KARABO_PROJECT_MANAGER}
-        broadcast_event(KaraboEvent.ProjectDBConnect, data)
-        process_qt_events(timeout=10)
-        network.onProjectBeginSession.assert_called_once()
-        assert db_conn._have_logged_in is True
-
         # 9. Configuration
         db_conn.default_domain = "New"
         assert config["domain"] == "New"
@@ -190,8 +170,7 @@ def test_connection(gui_app, mocker):
             Hash(
                 "name", "scene",
                 "uuid", scene_uuid,
-                "domain", "New",
-                "db_token", "expert"), token=token)
+                "domain", "New"), token=token)
 
 
 if __name__ == "__main__":
