@@ -24,7 +24,6 @@ from qtpy.QtCore import QSize
 from qtpy.QtWidgets import QDialog, QVBoxLayout, QWidget
 
 from karabo.common.project.api import ProjectModel
-from karabo.common.services import KARABO_PROJECT_MANAGER
 from karabogui import icons
 from karabogui.access import AccessRole, access_role_allowed
 from karabogui.actions import KaraboAction, build_qaction
@@ -38,8 +37,8 @@ from karabogui.project.utils import (
     reload_project, save_object, show_modified_project_message,
     show_reload_scene_project_message)
 from karabogui.project.view import ProjectView
-from karabogui.singletons.api import get_db_conn, get_topology
-from karabogui.util import get_spin_widget, version_compatible
+from karabogui.singletons.api import get_db_conn
+from karabogui.util import get_spin_widget
 from karabogui.widgets.toolbar import ToolBar
 
 from .base import BasePanelWidget
@@ -64,7 +63,6 @@ class ProjectPanel(BasePanelWidget):
             KaraboEvent.ProjectFilterUpdated: self._event_filter_updated,
             KaraboEvent.AccessLevelChanged: self._event_access_level,
             KaraboEvent.LoginUserChanged: self._event_access_level,
-            KaraboEvent.SystemTopologyUpdate: self._event_system_topology,
             KaraboEvent.ShowProjectDevice: self._event_show_project_device,
             KaraboEvent.ShowProjectModel: self._event_select_project_model,
         }
@@ -144,10 +142,6 @@ class ProjectPanel(BasePanelWidget):
             q_ac.triggered.connect(partial(k_action.triggered,
                                            tree_view))
             self._toolbar_actions.append(q_ac)
-        # The load_with_device action availability depends on the version
-        # of the Project Manager available in the topology - that's the reason
-        # for the special handling.
-        self.load_with_device_action = self._toolbar_actions[2]
 
         toolbar = ToolBar(parent=self)
         for ac in self._toolbar_actions:
@@ -194,19 +188,6 @@ class ProjectPanel(BasePanelWidget):
         if not status:
             self.sbar.reset(status)
 
-    def _event_system_topology(self, data):
-        """The load with device action will be visible when the Project
-           Manager device in the topology is version 2.12 or newer.
-        """
-        visible = False
-        path = f"device.{KARABO_PROJECT_MANAGER}"
-        attributes = get_topology().get_attributes(path)
-        if attributes is not None:
-            version = attributes.get("karaboVersion", "0.0.0")
-            visible = version_compatible(version, 2, 12)
-        self._manager_version = visible
-        self.load_with_device_action.setVisible(visible)
-
     def _event_show_project_device(self, data):
         """Event to show a project device """
         model = self.tree_view.model()
@@ -226,10 +207,6 @@ class ProjectPanel(BasePanelWidget):
     def _set_toolbar_visible(self, enable):
         for qaction in self._toolbar_actions:
             qaction.setVisible(enable)
-        # Note: Workaround to synchronize load with device action. Removed in
-        # 2.13.
-        enable = enable and self._manager_version
-        self.load_with_device_action.setVisible(enable)
 
     def _visible_partial_toolbar(self):
         """ Project loading failed, restrict options
