@@ -19,14 +19,17 @@
 # or FITNESS FOR A PARTICULAR PURPOSE.
 #############################################################################
 
+from qtpy.QtCore import Slot
 from qtpy.QtWidgets import QPushButton, QVBoxLayout, QWidget
 
 from karabo.common.api import (
     KARABO_DAEMON_MANAGER, KARABO_SCHEMA_DEFAULT_SCENE)
+from karabogui import messagebox
 from karabogui.events import KaraboEvent, register_for_broadcasts
 from karabogui.navigation.system_view import SystemTreeView
 from karabogui.request import get_scene_from_server
 from karabogui.singletons.api import get_config
+from karabogui.topology.api import is_device_online
 
 from .base import BasePanelWidget
 from .tool_widget import SearchBar
@@ -38,8 +41,6 @@ class TopologyPanel(BasePanelWidget):
         event_map = {
             KaraboEvent.NetworkConnectStatus: self._event_network,
             KaraboEvent.AccessLevelChanged: self._event_access_level,
-            KaraboEvent.RemoveDaemonService: self._event_remove_daemon,
-            KaraboEvent.ShowDaemonService: self._event_show_daemon,
             KaraboEvent.ShowDevice: self._event_show_device
         }
         register_for_broadcasts(event_map)
@@ -54,7 +55,7 @@ class TopologyPanel(BasePanelWidget):
         self.sbar = SearchBar(parent=widget)
         self.daemon_button = QPushButton("Service Manager", parent=widget)
         self.daemon_button.clicked.connect(self._retrieve_service_scene)
-        self.daemon_button.setVisible(False)
+        self.daemon_button.setVisible(True)
         self.sbar.setView(self.tree_view)
 
         main_layout.addWidget(self.sbar)
@@ -80,16 +81,6 @@ class TopologyPanel(BasePanelWidget):
             self.daemon_button.setVisible(status)
             self.close_popup_widget()
 
-    def _event_show_daemon(self, data):
-        instance_id = data.get('instanceId')
-        if instance_id == KARABO_DAEMON_MANAGER:
-            self.daemon_button.setVisible(True)
-
-    def _event_remove_daemon(self, data):
-        instance_id = data.get('instanceId')
-        if instance_id == KARABO_DAEMON_MANAGER:
-            self.daemon_button.setVisible(False)
-
     def _event_show_device(self, data):
         if data.get('showTopology'):
             self.panel_container.switch_to_panel(self)
@@ -101,6 +92,12 @@ class TopologyPanel(BasePanelWidget):
         if widget is not None:
             widget.close()
 
+    @Slot()
     def _retrieve_service_scene(self):
         instance_id = KARABO_DAEMON_MANAGER
+        if not is_device_online(instance_id):
+            messagebox.show_error(
+                "The `KaraboDaemonManager` device is not online.",
+                parent=self)
+            return
         get_scene_from_server(instance_id, KARABO_SCHEMA_DEFAULT_SCENE)
