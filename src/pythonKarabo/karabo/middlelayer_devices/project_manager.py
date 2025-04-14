@@ -67,7 +67,7 @@ class ProjectManager(Device):
 
     def __init__(self, configuration):
         super().__init__(configuration)
-        self.user_db_sessions = {}
+        self.db_handle = None
 
     async def onInitialization(self):
         """
@@ -78,7 +78,8 @@ class ProjectManager(Device):
         otherwise brings the device into ERROR
         """
         try:
-            await self.get_project_db(init_db=True)
+            self.db_handle = await self.get_project_db(
+                init_db=True)
             self.state = State.ON
         except ProjectDBError as e:
             self.logger.error(f"ProjectDBError : {str(e)}")
@@ -120,7 +121,6 @@ class ProjectManager(Device):
             name: Name of scene --optional
             domain: Domain to look for the scene item
             uuid: UUID of the scene item
-            db_token: db token of the running instance
 
         :param params: A `Hash` containing the method parameters
         """
@@ -128,18 +128,14 @@ class ProjectManager(Device):
 
         name = params.get('name', default='')
         # Note: Token used for Karabo >=2.13
-        token = params.get('db_token') or params.get('token')
         domain = params.get('domain')
         uuid = [params.get('uuid')]
-
-        # Check if we are already initialized!
-        self._checkDbInitialized(token)
 
         # Start filling the payload Hash
         # ----------------------------------------
         payload = Hash('success', False)
         payload.set('name', name)
-        async with self.user_db_sessions[token] as db_session:
+        async with self.db_handle as db_session:
             try:
                 items = await db_session.load_item(domain, uuid)
                 for item in items:
@@ -158,36 +154,26 @@ class ProjectManager(Device):
                     'payload', payload)
 
     @slot
-    async def slotBeginUserSession(self, token):
+    async def slotBeginUserSession(self, token: str):
         """
         Initialize a DB connection for a user
         :param token: database user token
         """
-        session = await self.get_project_db()
-        self.user_db_sessions[token] = session
-        self.logger.info("Initialized user session")
         return Hash("success", True)
 
     @slot
-    def slotEndUserSession(self, token):
+    def slotEndUserSession(self, token: str):
         """
         End a user session
         :param token: database user token
         """
-        del self.user_db_sessions[token]
-
-        self.logger.debug("Ended user session")
         return Hash("success", True)
 
-    def _checkDbInitialized(self, token):
-        if token not in self.user_db_sessions:
-            raise RuntimeError("You need to init a database session first")
-
-    async def _save_items(self, token, items):
+    async def _save_items(self, items):
         """Internally used method to store items in the project database"""
         savedItems = []
         projectUuids = []
-        async with self.user_db_sessions[token] as db_session:
+        async with self.db_handle as db_session:
             for item in items:
                 xml = item.get("xml")
                 # Remove XML data to not send it back
@@ -222,7 +208,6 @@ class ProjectManager(Device):
 
         :param params: the input Hash.
             it must contain:
-            - a `dbtoken` string matching an open session
             - a `type` string matching a non-generic slot name
             - the optional fields required by the non-generic slot
             requested.
@@ -232,38 +217,34 @@ class ProjectManager(Device):
         assert isinstance(params, Hash), msg
         msg = "'type' must be present in the input hash"
         assert "type" in params, msg
-        msg = "'token' must be present in the input hash"
-        assert "token" in params, msg
 
         action_type = params["type"]
-        token = params["token"]  # session token
         if action_type == "listItems":
             return await self.slotListItems(
-                token, params['domain'],
+                params['domain'],
                 params.get('item_types', None))
         elif action_type == "loadItems":
-            return await self.slotLoadItems(token, params['items'])
+            return await self.slotLoadItems(params['items'])
         elif action_type == "listDomains":
-            return await self.slotListDomains(token)
+            return await self.slotListDomains()
         elif action_type == "updateAttribute":
-            return await self.slotUpdateAttribute(token, params['items'])
+            return await self.slotUpdateAttribute(params['items'])
         elif action_type == "saveItems":
             return await self.slotSaveItems(
-                token, params['items'], params.get('client', None))
+                params['items'], params.get('client', None))
         elif action_type == "beginUserSession":
-            return await self.slotBeginUserSession(token)
+            return await self.slotBeginUserSession(None)
         elif action_type == "endUserSession":
-            return self.slotEndUserSession(token)
+            return self.slotEndUserSession(None)
         elif action_type == "listProjectsWithDevice":
             return await self.slotListProjectsWithDevice(params)
         else:
             raise NotImplementedError(f"{type} not implemented")
 
     @slot
-    async def slotSaveItems(self, token, items, client=None):
+    async def slotSaveItems(self, items, client=None):
         """Save items in project database
 
-        :param token: database user token
         :param items: items to be save. Should be a list(Hash) object were each
             entry is of the form:
 
@@ -281,8 +262,7 @@ class ProjectManager(Device):
 
         self.logger.debug("Saving items: {}".format([i.get("uuid") for i in
                                                      items]))
-        self._checkDbInitialized(token)
-        saved, uuids = await self._save_items(token, items)
+        saved, uuids = await self._save_items(items)
         if client and uuids:
             self.signalProjectUpdate(Hash("projects", uuids,
                                           "client", client),
@@ -291,11 +271,10 @@ class ProjectManager(Device):
         return Hash('items', saved)
 
     @slot
-    async def slotLoadItems(self, token, items):
+    async def slotLoadItems(self, items):
         """
         Loads items from the database
 
-        :param token: database user token
         :param items: list of Hashes containing information on which items
             to load. Each list entry should be a Hash containing
             - uuid: the uuid of the item
@@ -308,12 +287,10 @@ class ProjectManager(Device):
         self.logger.debug("Loading items: {}"
                           .format([i.get("uuid") for i in items]))
 
-        self._checkDbInitialized(token)
-
         exceptionReason = ""
         success = True
         loadedItems = []
-        async with self.user_db_sessions[token] as db_session:
+        async with self.db_handle as db_session:
             # verify that items belong to single domain
             domain = items[0].get("domain")
             keys = [it.get('uuid') for it in items
@@ -344,20 +321,17 @@ class ProjectManager(Device):
                     'reason', exceptionReason)
 
     @slot
-    async def slotListItems(self, token, domain, item_types=None):
+    async def slotListItems(self, domain, item_types=None):
         """
         List items in domain which match item_types if given, or all items
         if not given
 
-        :param token: database user token
         :param domain: domain to list items from
         :param item_types: list or tuple of item_types to list
         :return: a list of Hashes where each entry has keys: uuid, item_type
             and simple_name
         """
-        self._checkDbInitialized(token)
-
-        async with self.user_db_sessions[token] as db_session:
+        async with self.db_handle as db_session:
             exceptionReason = ""
             success = True
             resHashes = []
@@ -380,20 +354,17 @@ class ProjectManager(Device):
                     'reason', exceptionReason)
 
     @slot
-    async def slotListNamedItems(self, token, domain, item_type, simple_name):
+    async def slotListNamedItems(self, domain, item_type, simple_name):
         """
         List items in domain which match item_type and simple_name
 
-        :param token: database user token
         :param domain: domain to list items from
         :param item_type: item_type to match
         :param simple_name: simple_name to match
         :return: a list of Hashes where each entry has keys: uuid, date,
             item_type and simple_name sorted by date
         """
-        self._checkDbInitialized(token)
-
-        async with self.user_db_sessions[token] as db_session:
+        async with self.db_handle as db_session:
             exceptionReason = ""
             success = True
             resHashes = []
@@ -418,16 +389,13 @@ class ProjectManager(Device):
                     'reason', exceptionReason)
 
     @slot
-    async def slotListDomains(self, token):
+    async def slotListDomains(self):
         """
         List domains available on this database
 
-        :param token: database user token
         :return:
         """
-        self._checkDbInitialized(token)
-
-        async with self.user_db_sessions[token] as db_session:
+        async with self.db_handle as db_session:
             success = True
             exceptionReason = ""
             res = []
@@ -448,9 +416,9 @@ class ProjectManager(Device):
         """
         List projects in domain which have configurations for a given device.
 
-        :param args: a hash that must contain the keys "token", "domain" and
-            "device_id" with the following meanings: "token" is the
-            database user token, "domain" is the domain to list
+        :param args: a hash that must contain the keys , "domain" and
+            "device_id" with the following meanings:
+            "domain" is the domain to list
             projects from and "device_id" is the part that must be
             contained in the ids of the devices with configurations
             stored in the projects to be listed.
@@ -468,18 +436,15 @@ class ProjectManager(Device):
             (True) and a string key "reason", that will contain an error
             description when the slot execution fails.
         """
-        for k in ["token", "domain", "device_id"]:
+        for k in ["domain", "device_id"]:
             if not args.has(k):
                 return Hash('success', False,
                             'reason', f'Key "{k}" missing in "args" hash.')
 
-        token = args["token"]
         domain = args["domain"]
         device_id = args["device_id"]
 
-        self._checkDbInitialized(token)
-
-        async with self.user_db_sessions[token] as db_session:
+        async with self.db_handle as db_session:
             exceptionReason = ""
             success = True
             try:
@@ -500,11 +465,10 @@ class ProjectManager(Device):
                         'reason', exceptionReason)
 
     @slot
-    async def slotUpdateAttribute(self, token, items):
+    async def slotUpdateAttribute(self, items):
         """
         Update any attribute of given ``items`` in the database
 
-        :param token: database user token
         :param items: list of Hashes containing information on which items
                       to update. Each list entry should be a Hash containing
 
@@ -518,10 +482,7 @@ class ProjectManager(Device):
         :return: a list of Hashes where each entry has keys: domain, item_type,
                  uuid, attr_name, attr_value
         """
-
-        self._checkDbInitialized(token)
-
-        async with self.user_db_sessions[token] as db_session:
+        async with self.db_handle as db_session:
             exceptionReason = ""
             success = True
             resHashes = []
@@ -542,10 +503,8 @@ class ProjectManager(Device):
                         'reason', exceptionReason)
 
     @slot
-    async def slotListProjectAndConfForDevice(self, token, domain, deviceId):
-        self._checkDbInitialized(token)
-
-        async with self.user_db_sessions[token] as db_session:
+    async def slotListProjectAndConfForDevice(self, domain, deviceId):
+        async with self.db_handle as db_session:
             exceptionReason = ""
             success = True
             resHashes = []
