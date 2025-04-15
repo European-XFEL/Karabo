@@ -213,7 +213,7 @@ class NoEventLoop(AbstractEventLoop):
 
     @property
     def loop(self):
-        return self._instance._ss.loop
+        return self._instance._sigslot.loop
 
     def create_task(self, coro, instance=None, name=None, context=None):
         """Create a task on the main event loop with this instance"""
@@ -285,8 +285,8 @@ class EventLoop(SelectorEventLoop):
         try:
             if instance is None:
                 instance = get_event_loop().instance()
-            instance._ss.tasks.add(task)
-            task.add_done_callback(instance._ss.tasks.remove)
+            instance._sigslot.tasks.add(task)
+            task.add_done_callback(instance._sigslot.tasks.remove)
             task.instance = weakref.ref(instance)
         except (AttributeError, TypeError):
             # create_task has been called from outside a Karabo context

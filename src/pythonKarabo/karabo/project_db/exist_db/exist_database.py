@@ -832,7 +832,7 @@ class ExistDatabase(DatabaseBase):
         for config in configs:
             instance_id = config["instanceid"]
             for project in await self.get_projects_from_device(
-                domain, instance_id):
+                    domain, instance_id):
                 projects[project] = config["configid"]
         return projects
 

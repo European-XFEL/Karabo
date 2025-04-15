@@ -92,7 +92,7 @@ class BoundOrderTestDevice(PythonDevice):
 
         # self.registerInitialFunction(self.initialization)
 
-        self._ss.registerSignal("signalCount", int)  # 32 bit??
+        self._sigslot.registerSignal("signalCount", int)  # 32 bit??
 
         self.KARABO_SLOT(self.orderTest_slotStart)
         self.KARABO_SLOT(self.slotCount)  # not in schema

@@ -449,7 +449,7 @@ class DeviceClientProxyFactory(ProxyFactory):
             if self._sethash:
                 # reconfigure the proxy and empty the bulk hash
                 sethash, self._sethash = self._sethash, Hash()
-                await self._device._ss.request(
+                await self._device._sigslot.request(
                     self._deviceId, "slotReconfigure", sethash)
 
         def _notify_gone(self):
@@ -468,11 +468,11 @@ class DeviceClientProxyFactory(ProxyFactory):
             # know about any connection, so we have to re-establish all
             # connections that we think we have
             if self._schemaUpdateConnected:
-                await self._device._ss.async_connect(
+                await self._device._sigslot.async_connect(
                     self._deviceId, "signalSchemaUpdated",
                     self._device.slotSchemaUpdated)
             if self._used > 0:
-                await self._device._ss.async_connect(
+                await self._device._sigslot.async_connect(
                     self._deviceId, "signalChanged",
                     self._device.slotChanged)
             schema, _ = await self._device.call(
@@ -524,8 +524,8 @@ class DeviceClientProxyFactory(ProxyFactory):
         def __enter__(self):
             self._used += 1
             if self._used == 1:
-                self._device._ss.connect(self._deviceId, "signalChanged",
-                                         self._device.slotChanged)
+                self._device._sigslot.connect(self._deviceId, "signalChanged",
+                                              self._device.slotChanged)
             return self
 
         def __exit__(self, exc_type, exc_value, traceback):
@@ -535,14 +535,14 @@ class DeviceClientProxyFactory(ProxyFactory):
                 # Make sure to protect against multiple disconnect calls
                 self._used -= 1
                 if self._used == 0:
-                    self._device._ss.disconnect(self._deviceId,
-                                                "signalChanged",
-                                                self._device.slotChanged)
+                    self._device._sigslot.disconnect(self._deviceId,
+                                                     "signalChanged",
+                                                     self._device.slotChanged)
 
         async def __aenter__(self):
             self._used += 1
             if self._used == 1:
-                await self._device._ss.async_connect(
+                await self._device._sigslot.async_connect(
                     self._deviceId, "signalChanged", self._device.slotChanged)
             return self
 
@@ -553,20 +553,20 @@ class DeviceClientProxyFactory(ProxyFactory):
                 # Make sure to protect against multiple disconnect calls
                 self._used -= 1
                 if self._used == 0:
-                    await self._device._ss.async_disconnect(
+                    await self._device._sigslot.async_disconnect(
                         self._deviceId, "signalChanged",
                         self._device.slotChanged)
 
         def _disconnectSchemaUpdated(self):
             if self._schemaUpdateConnected:
-                self._device._ss.disconnect(
+                self._device._sigslot.disconnect(
                     self._deviceId, "signalSchemaUpdated",
                     self._device.slotSchemaUpdated)
             self._schemaUpdateConnected = False
 
         async def _async_disconnectSchemaUpdated(self):
             if self._schemaUpdateConnected:
-                await self._device._ss.async_disconnect(
+                await self._device._sigslot.async_disconnect(
                     self._deviceId, ["signalSchemaUpdated"],
                     self._device.slotSchemaUpdated)
             self._schemaUpdateConnected = False

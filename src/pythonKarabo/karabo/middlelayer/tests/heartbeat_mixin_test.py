@@ -175,7 +175,7 @@ async def test_spin_heartbeats(mixin, mocker):
     devices = topology["device"]
     assert len(devices) == 5
     topo_mock = mocker.patch(TARGET)
-    mixin._ss = mocker.AsyncMock()
+    mixin._sigslot = mocker.AsyncMock()
 
     for _ in range(10):
         await mixin._track_action()
@@ -196,7 +196,7 @@ async def test_spin_heartbeats(mixin, mocker):
     topo_mock = mocker.patch(TARGET)
     info = Hash("heartbeatInterval", 20, "type",
                 "device", "serverId", "karabo_test_1")
-    mixin._ss.request.return_value = info
+    mixin._sigslot.request.return_value = info
     await mixin.updateHeartBeat("alice", info)
     _, kwargs = topo_mock.call_args
     new = kwargs["new"]

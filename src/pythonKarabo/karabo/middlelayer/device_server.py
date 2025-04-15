@@ -147,9 +147,9 @@ class MiddleLayerDeviceServer(HeartBeatMixin, SignalSlotable):
         await self.scanPluginsOnce()
         await super()._run(**kwargs)
         if isSet(self.timeServerId):
-            await self._ss.async_connect(self.timeServerId, "signalTimeTick",
-                                         self.slotTimeTick)
-        self._ss.enter_context(self.log.setBroker(self._ss))
+            await self._sigslot.async_connect(
+                self.timeServerId, "signalTimeTick", self.slotTimeTick)
+        self._sigslot.enter_context(self.log.setBroker(self._sigslot))
         self.logger = self.log.logger
         self.logger.info(
             f"Starting Karabo {karaboVersion} DeviceServer "
@@ -451,7 +451,7 @@ class MiddleLayerDeviceServer(HeartBeatMixin, SignalSlotable):
         return True, deviceId
 
     async def slotKillServer(self, message=None):
-        instanceId = (self._ss.get_property(message, "signalInstanceId")
+        instanceId = (self._sigslot.get_property(message, "signalInstanceId")
                       if message is not None else "OS signal")
         self.logger.info("Received request to shutdown server "
                          f"from {instanceId}.")
@@ -495,8 +495,9 @@ class MiddleLayerDeviceServer(HeartBeatMixin, SignalSlotable):
         await super().slotInstanceNew(instanceId, info)
         if (info.get("classId") == "TimeServer" and
                 instanceId == self.timeServerId):
-            await self._ss.async_connect(self.timeServerId, "signalTimeTick",
-                                         self.slotTimeTick)
+            await self._sigslot.async_connect(
+                self.timeServerId, "signalTimeTick",
+                self.slotTimeTick)
         # Forward the broadcast to the device instances!
         await gather(*[dev.slotInstanceNew(instanceId, info)
                        for dev in self.deviceInstanceMap.values()])

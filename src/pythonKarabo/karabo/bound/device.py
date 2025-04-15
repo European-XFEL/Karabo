@@ -402,9 +402,9 @@ class PythonDevice:
         self.log = Logger.getCategory(self.deviceid)
 
         # Instantiate SignalSlotable object
-        self._ss = SignalSlotable(self.deviceid,
-                                  PythonDevice.connectionParams,
-                                  self._parameters["heartbeatInterval"], info)
+        self._sigslot = SignalSlotable(
+            self.deviceid, PythonDevice.connectionParams,
+            self._parameters["heartbeatInterval"], info)
 
         # Initialize Device slots and instantiate all channels
         self._initDeviceSlots()
@@ -413,12 +413,13 @@ class PythonDevice:
         self.initChannels()
 
         # Register guard for slot calls
-        self._ss.registerSlotCallGuardHandler(self.slotCallGuard)
+        self._sigslot.registerSlotCallGuardHandler(self.slotCallGuard)
 
         # Register updateLatencies handler
-        self._ss.registerPerformanceStatisticsHandler(self.updateLatencies)
+        self._sigslot.registerPerformanceStatisticsHandler(
+            self.updateLatencies)
 
-        self._ss.registerBrokerErrorHandler(self.onBrokerError)
+        self._sigslot.registerBrokerErrorHandler(self.onBrokerError)
 
         # Initial functions one can register
         self._func = []
@@ -438,18 +439,18 @@ class PythonDevice:
         # Communication (incl. system registration) starts and thus parallelism
         # This is done here and not yet in __init__ to be sure that inheriting
         # devices can register in their __init__ after super(..).__init__(..)
-        self._ss.start()  # Can raise e.g. for invalid instanceId
+        self._sigslot.start()  # Can raise e.g. for invalid instanceId
 
         pid = self["pid"]
         self.log.INFO("'{0.classid}' with deviceId '{0.deviceid}' got started "
                       "on server '{0.serverid}', pid '{1}'.".format(self, pid))
 
         # Inform server that we are up - fire-and-forget is sufficient.
-        self._ss.call(
+        self._sigslot.call(
             self.serverid, "slotDeviceUp", self.deviceid, True, "success")
 
         # Trigger connection of input channels
-        self._ss.connectInputChannels()
+        self._sigslot.connectInputChannels()
 
         # An attempt to start initial functions a.k.a second constructor if any
         # via event loop. If an exception occurs, we will kill the device
@@ -460,7 +461,7 @@ class PythonDevice:
                 msg = f"{repr(e)} in initialisation"
                 self.log.ERROR(msg)
                 self.set("status", msg)
-                self._ss.call("", "slotKillDevice")
+                self._sigslot.call("", "slotKillDevice")
 
         # As long as the below connect(..) to the time server is not turned
         # into a non-blocking asyncConnect(..), we better add a thread here:
@@ -478,13 +479,13 @@ class PythonDevice:
             self.log.DEBUG("Connecting to time server : \"{}\""
                            .format(self.timeServerId))
             # TODO 2: Better use asyncConnect!
-            self._ss.connect(self.timeServerId, "signalTimeTick",
-                             "", "slotTimeTick")
+            self._sigslot.connect(self.timeServerId, "signalTimeTick",
+                                  "", "slotTimeTick")
 
     @property
     def signalSlotable(self):
         """Get SignalSlotable object embedded in PythonDevice instance."""
-        return self._ss
+        return self._sigslot
 
     def loadLogger(self):
         """Load the distributed logger
@@ -525,7 +526,7 @@ class PythonDevice:
         """
         if self._client is None:
             # SignalSlotable object for reuse
-            self._client = DeviceClient(self._ss)
+            self._client = DeviceClient(self._sigslot)
         return self._client
 
     def set(self, *args, **kwargs):
@@ -628,7 +629,7 @@ class PythonDevice:
                 self._parameters.merge(
                     validated, HashMergePolicy.REPLACE_ATTRIBUTES)
 
-                self._ss.emit("signalChanged", validated, self.deviceid)
+                self._sigslot.emit("signalChanged", validated, self.deviceid)
 
     def setVectorUpdate(self, key, updates, updateType, timestamp=None):
         """Concurrency safe update of vector property (not for tables)
@@ -676,7 +677,8 @@ class PythonDevice:
         """
         nMessages = info.get("logs", default=KARABO_LOGGER_CONTENT_DEFAULT)
         content = Logger.getCachedContent(nMessages)
-        self._ss.reply(Hash("deviceId", self.deviceid, "content", content))
+        self._sigslot.reply(
+            Hash("deviceId", self.deviceid, "content", content))
 
     def __setitem__(self, key, value):
         """Alternative to `self.set`: `self[key] = value`
@@ -713,7 +715,7 @@ class PythonDevice:
         must not be called concurrently.
         """
 
-        channel = self._ss.getOutputChannel(channelName)
+        channel = self._sigslot.getOutputChannel(channelName)
         sourceName = f"{self.getInstanceId()}:{channelName}"
         if not timestamp:
             timestamp = self.getActualTimestamp()
@@ -730,7 +732,7 @@ class PythonDevice:
         The methods 'writeChannel(..)' and 'signalEndOfStream(..)'
         must not be called concurrently.
         """
-        self._ss.getOutputChannel(channelName).signalEndOfStream()
+        self._sigslot.getOutputChannel(channelName).signalEndOfStream()
 
     def get(self, key):
         """Return a property of this device
@@ -831,7 +833,7 @@ class PythonDevice:
                                     if not self._fullSchema.isNode(p)]
 
             # Erase previously present injected InputChannels
-            for inChannel in self._ss.getInputChannelNames():
+            for inChannel in self._sigslot.getInputChannelNames():
                 if self._staticSchema.has(inChannel):
                     # Do not touch static one
                     # (even if re-injected to change properties).
@@ -839,13 +841,13 @@ class PythonDevice:
                 if self._injectedSchema.has(inChannel):
                     self.log.INFO("updateSchema: Remove input channel '"
                                   f"{inChannel}'")
-                    self._ss.removeInputChannel(inChannel)
+                    self._sigslot.removeInputChannel(inChannel)
                     if not schema.has(inChannel):
                         # not re-injected - clear handler back-up
                         del self._inputChannelHandlers[inChannel]
             # Treat injected OutputChannels
             outChannelsToRecreate = set()
-            for outChannel in self._ss.getOutputChannelNames():
+            for outChannel in self._sigslot.getOutputChannelNames():
                 if self._injectedSchema.has(outChannel):
                     if self._staticSchema.has(outChannel):
                         # Channel changes its schema back to its default
@@ -854,7 +856,7 @@ class PythonDevice:
                         # Previously injected channel has to be removed
                         self.log.INFO("updateSchema: Remove output channel '"
                                       f"{outChannel}'")
-                        self._ss.removeOutputChannel(outChannel)
+                        self._sigslot.removeOutputChannel(outChannel)
                 if (self._staticSchema.has(outChannel)
                     and schema.has(outChannel)
                     and (not schema.hasClassId(outChannel)
@@ -868,8 +870,8 @@ class PythonDevice:
             self._fullSchema += self._injectedSchema
 
             # notify the distributed system...
-            self._ss.emit("signalSchemaUpdated",
-                          self._fullSchema, self.deviceid)
+            self._sigslot.emit("signalSchemaUpdated",
+                               self._fullSchema, self.deviceid)
 
             # Keep new leaves only. This hash is then set, to avoid re-sending
             # updates with the same value.
@@ -921,7 +923,7 @@ class PythonDevice:
         with self._stateChangeLock:
             # Take care of OutputChannels schema changes
             outChannelsToRecreate = set()
-            for path in self._ss.getOutputChannelNames():
+            for path in self._sigslot.getOutputChannelNames():
                 if (self._fullSchema.has(path) and schema.has(path)
                     and (not schema.hasClassId(path) or
                          schema.getClassId(path) != "OutputChannel")):
@@ -939,8 +941,8 @@ class PythonDevice:
             self._fullSchema += self._injectedSchema
 
             # notify the distributed system...
-            self._ss.emit("signalSchemaUpdated", self._fullSchema,
-                          self.deviceid)
+            self._sigslot.emit("signalSchemaUpdated", self._fullSchema,
+                               self.deviceid)
 
             # Keep new leaves only. This hash is then set, to avoid re-sending
             # updates with the same value.
@@ -991,8 +993,8 @@ class PythonDevice:
                  .setNewMaxSize(value).commit(),)
 
             if emitFlag:
-                self._ss.emit("signalSchemaUpdated",
-                              self._fullSchema, self.deviceid)
+                self._sigslot.emit("signalSchemaUpdated",
+                                   self._fullSchema, self.deviceid)
 
     def getAliasFromKey(self, key, aliasReferenceType):
         """
@@ -1092,7 +1094,7 @@ class PythonDevice:
     def getAvailableInstances(self):
         """Return available instances in the distributed system"""
 
-        return self._ss.getAvailableInstances()
+        return self._sigslot.getAvailableInstances()
 
     def preReconfigure(self, incomingReconfiguration):
         """
@@ -1150,7 +1152,7 @@ class PythonDevice:
                     newStatus = "unknown"
                 else:
                     statuses = ("error", "unknown")
-                    if self._ss.getInstanceInfo()["status"] in statuses:
+                    if self._sigslot.getInstanceInfo()["status"] in statuses:
                         newStatus = "ok"
 
             if propertyUpdates:
@@ -1158,9 +1160,9 @@ class PythonDevice:
 
         # Send potential instanceInfo update without state change lock
         if newStatus:
-            self._ss.updateInstanceInfo(Hash("status", newStatus))
+            self._sigslot.updateInstanceInfo(Hash("status", newStatus))
         # place new state as default reply to interested event initiators
-        self._ss.reply(stateName)
+        self._sigslot.reply(stateName)
 
     def noStateTransition(self, currentState, currentEvent):
         """
@@ -1222,34 +1224,34 @@ class PythonDevice:
 
         if slotName is None:
             if numArgs is None:
-                self._ss.registerSlot(slot)
+                self._sigslot.registerSlot(slot)
             else:
-                self._ss.registerSlot(slot, numArgs=numArgs)
+                self._sigslot.registerSlot(slot, numArgs=numArgs)
         elif numArgs is None:
-            self._ss.registerSlot(slot, slotName)
+            self._sigslot.registerSlot(slot, slotName)
         else:
-            self._ss.registerSlot(slot, slotName, numArgs)
+            self._sigslot.registerSlot(slot, slotName, numArgs)
 
     def _initDeviceSlots(self):
         # Register intrinsic signals
         # changeHash, instanceId
-        self._ss.registerSignal("signalChanged", Hash, str)
+        self._sigslot.registerSignal("signalChanged", Hash, str)
         # schema, deviceid
-        self._ss.registerSignal("signalSchemaUpdated", Schema, str)
+        self._sigslot.registerSignal("signalSchemaUpdated", Schema, str)
 
         # Register intrinsic slots
-        self._ss.registerSlot(self.slotReconfigure)
-        self._ss.registerSlot(self.slotGetConfiguration)
-        self._ss.registerSlot(self.slotGetConfigurationSlice)
-        self._ss.registerSlot(self.slotGetSchema)
-        self._ss.registerSlot(self.slotKillDevice)
+        self._sigslot.registerSlot(self.slotReconfigure)
+        self._sigslot.registerSlot(self.slotGetConfiguration)
+        self._sigslot.registerSlot(self.slotGetConfigurationSlice)
+        self._sigslot.registerSlot(self.slotGetSchema)
+        self._sigslot.registerSlot(self.slotKillDevice)
         # Timeserver related slots
-        self._ss.registerSlot(self.slotTimeTick)
-        self._ss.registerSlot(self.slotGetTime)
+        self._sigslot.registerSlot(self.slotTimeTick)
+        self._sigslot.registerSlot(self.slotGetTime)
 
-        self._ss.registerSlot(self.slotLoggerPriority)
-        self._ss.registerSlot(self.slotLoggerContent)
-        self._ss.registerSlot(self.slotClearLock)
+        self._sigslot.registerSlot(self.slotLoggerPriority)
+        self._sigslot.registerSlot(self.slotLoggerContent)
+        self._sigslot.registerSlot(self.slotClearLock)
 
     def initChannels(self, topLevel="", schema=None):
         """
@@ -1293,7 +1295,7 @@ class PythonDevice:
         Needs _stateChangeLock protection
         """
         self.log.INFO(f"Creating output channel '{path}'")
-        outputChannel = self._ss.createOutputChannel(
+        outputChannel = self._sigslot.createOutputChannel(
             path, self._parameters)
         if not outputChannel:
             self.log.ERROR(f"Failed to create output channel "
@@ -1339,8 +1341,8 @@ class PythonDevice:
             self.setVectorUpdate(path + ".missingConnections",
                                  [name], updateType)
 
-        self._ss.createInputChannel(path, self._parameters, handlers[0],
-                                    handlers[1], handlers[2], tracker)
+        self._sigslot.createInputChannel(path, self._parameters, handlers[0],
+                                         handlers[1], handlers[2], tracker)
         h = Hash(path + ".missingConnections",
                  self._parameters.get(path + ".connectedOutputChannels"))
         self._setNoStateLock(h)
@@ -1359,7 +1361,7 @@ class PythonDevice:
         """
         self._inputChannelHandlers.setdefault(channelName, [None] * 3)
         self._inputChannelHandlers[channelName][0] = handlerPerData
-        self._ss.registerDataHandler(channelName, handlerPerData)
+        self._sigslot.registerDataHandler(channelName, handlerPerData)
 
     def KARABO_ON_INPUT(self, channelName, handlerPerInput):
         """Registers an input handler function
@@ -1376,7 +1378,7 @@ class PythonDevice:
         """
         self._inputChannelHandlers.setdefault(channelName, [None] * 3)
         self._inputChannelHandlers[channelName][1] = handlerPerInput
-        self._ss.registerInputHandler(channelName, handlerPerInput)
+        self._sigslot.registerInputHandler(channelName, handlerPerInput)
 
     def KARABO_ON_EOS(self, channelName, handler):
         """Registers an end-of-stream handler
@@ -1393,19 +1395,19 @@ class PythonDevice:
         """
         self._inputChannelHandlers.setdefault(channelName, [None] * 3)
         self._inputChannelHandlers[channelName][2] = handler
-        self._ss.registerEndOfStreamHandler(channelName, handler)
+        self._sigslot.registerEndOfStreamHandler(channelName, handler)
 
     def execute(self, command, *args):
         if len(args) == 0:
-            self._ss.call("", command)
+            self._sigslot.call("", command)
         elif len(args) == 1:
-            self._ss.call("", command, args[0])
+            self._sigslot.call("", command, args[0])
         elif len(args) == 2:
-            self._ss.call("", command, args[0], args[1])
+            self._sigslot.call("", command, args[0], args[1])
         elif len(args) == 3:
-            self._ss.call("", command, args[0], args[1], args[2])
+            self._sigslot.call("", command, args[0], args[1], args[2])
         elif len(args) == 4:
-            self._ss.call("", command, args[0], args[1], args[2], args[3])
+            self._sigslot.call("", command, args[0], args[1], args[2], args[3])
         else:
             raise AttributeError(
                 "Number of command parameters should not exceed 4")
@@ -1498,12 +1500,12 @@ class PythonDevice:
 
     def slotGetConfiguration(self):
         with self._stateChangeLock:
-            self._ss.reply(self._parameters, self.deviceid)
+            self._sigslot.reply(self._parameters, self.deviceid)
 
     def slotGetConfigurationSlice(self, info):
         paths = info.get("paths")
         cfgSlice = self.getCurrentConfigurationSlice(paths)
-        self._ss.reply(cfgSlice)
+        self._sigslot.reply(cfgSlice)
 
     def slotReconfigure(self, newConfiguration):
         if newConfiguration.empty():
@@ -1528,27 +1530,27 @@ class PythonDevice:
         with self._stateChangeLock:
             self._parameters += reconfiguration
 
-        self._ss.emit("signalChanged", reconfiguration, self.deviceid)
+        self._sigslot.emit("signalChanged", reconfiguration, self.deviceid)
 
     def slotGetSchema(self, onlyCurrentState):
         # state lock!
         if onlyCurrentState:
             currentState = self["state"]
             schema = self._getStateDependentSchema(currentState)
-            self._ss.reply(schema, self.deviceid)
+            self._sigslot.reply(schema, self.deviceid)
         else:
             with self._stateChangeLock:
-                self._ss.reply(self._fullSchema, self.deviceid)
+                self._sigslot.reply(self._fullSchema, self.deviceid)
 
     def slotKillDevice(self):
-        senderid = self._ss.getSenderInfo(
+        senderid = self._sigslot.getSenderInfo(
             "slotKillDevice").getInstanceIdOfSender()
         if senderid == self.serverid and self.serverid != "__none__":
             self.log.INFO("Device is going down as instructed by server")
         else:
             self.log.INFO("Device is going down as instructed by \"{}\""
                           .format(senderid))
-            self._ss.call(self.serverid, "slotDeviceGone", self.deviceid)
+            self._sigslot.call(self.serverid, "slotDeviceGone", self.deviceid)
         try:
             self.preDestruction()
         except Exception as e:
@@ -1557,9 +1559,9 @@ class PythonDevice:
         finally:
             # TODO:
             # Remove this hack if known how to get rid of the object cleanly
-            # (slotInstanceGone will be called in _ss destructor again...).
-            self._ss.call("*", "slotInstanceGone", self.deviceid,
-                          self._ss.getInstanceInfo())
+            # (slotInstanceGone will be called in _sigslot destructor again)
+            self._sigslot.call("*", "slotInstanceGone", self.deviceid,
+                               self._sigslot.getInstanceInfo())
 
             # This will trigger the central event-loop to finish
             os.kill(os.getpid(), signal.SIGTERM)
@@ -1640,10 +1642,10 @@ class PythonDevice:
             return self._stateDependentSchema[state]
 
     def getInstanceId(self):
-        return self._ss.getInstanceId()
+        return self._sigslot.getInstanceId()
 
     def registerSlot(self, slotFunc):
-        self._ss.registerSlot(slotFunc)
+        self._sigslot.registerSlot(slotFunc)
 
     def updateLatencies(self, performanceMeasures):
         if self.get("performanceStatistics.enable"):
@@ -1714,7 +1716,7 @@ class PythonDevice:
         :param signalName:name of the signal to be registered
         :param args: signature of the signal, e.g. `str, Hash, str`
         """
-        self._ss.registerSignal(signalName, *args)
+        self._sigslot.registerSignal(signalName, *args)
 
     def connect(self, signalInstance, signalName, slotInstance, slotName):
         """Connect a signal with a slot
@@ -1725,8 +1727,8 @@ class PythonDevice:
         :param slotName: name of the slot to be executed upon signal reception
         :return whether connection could be established
         """
-        return self._ss.connect(signalInstance, signalName,
-                                slotInstance, slotName)
+        return self._sigslot.connect(signalInstance, signalName,
+                                     slotInstance, slotName)
 
     def reply(self, *args):
         """Place the reply of a slot being called
@@ -1736,7 +1738,7 @@ class PythonDevice:
 
         :param args: list of arguments to reply, maximum length is 4
         """
-        self._ss.reply(*args)
+        self._sigslot.reply(*args)
 
     def emit(self, signalName, *args):
         """Emit a signal to the remote system
@@ -1744,7 +1746,7 @@ class PythonDevice:
         :param signalName: name of the signal.
         :param args: list of arguments signal is emitted with. Maximum 4
         """
-        self._ss.emit(signalName, *args)
+        self._sigslot.emit(signalName, *args)
 
     def call(self, instanceId, slotName, *args):
         """Call a remote slot with arguments
@@ -1753,7 +1755,7 @@ class PythonDevice:
         :param slotName: name of the slot to call on instanceId
         :param args: list of arguments to call slot with, maximum length is 4
         """
-        self._ss.call(instanceId, slotName, *args)
+        self._sigslot.call(instanceId, slotName, *args)
 
     def request(self, instanceId, slotName, *args):
         """Request a reply from a remote slot
@@ -1763,7 +1765,7 @@ class PythonDevice:
         :param args: list of arguments to call slot with, maximum length is 4
         :return: a `SignalSlotable.Requestor` object handling the reply
         """
-        return self._ss.request(instanceId, slotName, *args)
+        return self._sigslot.request(instanceId, slotName, *args)
 
     def requestNoWait(self, instanceId, slotName, replyInstance,
                       replySlotName, *args):
@@ -1777,8 +1779,8 @@ class PythonDevice:
         :param args: list of arguments to call slot with, maximum length is 4
         :return: a `SignalSlotable.Requestor` object handling the reply
         """
-        return self._ss.requestNoWait(instanceId, slotName, replyInstance,
-                                      replySlotName, *args)
+        return self._sigslot.requestNoWait(instanceId, slotName, replyInstance,
+                                           replySlotName, *args)
 
     # Added for backward compatibility when fullSchema => _fullSchema
     @property

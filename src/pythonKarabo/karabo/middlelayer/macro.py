@@ -50,7 +50,7 @@ def run_macro(cls: "Macro", call: str, config: dict | None = None):
     else:
         bareHostName = socket.gethostname().partition('.')[0]
         config["_deviceId_"] = "{}_{}_{}".format(
-              cls.__name__, bareHostName, os.getpid())
+            cls.__name__, bareHostName, os.getpid())
 
     loop = EventLoop()
     set_event_loop(loop)
@@ -147,7 +147,7 @@ class MacroSlot(Slot):
                 device = configurable.get_root()
                 device.state = self.activeState
                 device.currentSlot = name
-                loop = device._ss.loop
+                loop = device._sigslot.loop
                 background_slot(loop, configurable, device)
 
         return super().__call__(wrapper)
@@ -243,7 +243,7 @@ def _wrapslot(slot, name, abstract_passive, abstract_active):
             try:
                 return themethod(device)
             except CancelledError:
-                loop = device._ss.loop
+                loop = device._sigslot.loop
                 coro = suppress_exception(loop.run_coroutine_or_thread(
                     device.onCancelled, slot))
                 loop.create_task(coro, instance=device)

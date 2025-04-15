@@ -41,8 +41,8 @@ class ConsumerDevice(Device):
 
     @slot
     async def connectProject(self, instance):
-        await self._ss.async_connect(instance, "signalProjectUpdate",
-                                     self.slotProject)
+        await self._sigslot.async_connect(instance, "signalProjectUpdate",
+                                          self.slotProject)
         return True
 
     @slot
@@ -183,7 +183,7 @@ async def test_project_manager(deviceTest, subtests):
         items = [item, ]
         ret = await wait_for(call(
             "projManTest", "slotSaveItems", items, "client-587"),
-                             timeout=5)
+            timeout=5)
         items = ret.get("items")
         item = items[0]
         assert item.get('entry.uuid') == uuid

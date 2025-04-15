@@ -46,7 +46,7 @@ def _log_exception(func, device, message):
     # Use properties directly ...
     default = ('Exception in slot "%s" of device "%s" called by "%s"',
                func.__qualname__, device.deviceId,
-               device._ss.get_property(message, 'signalInstanceId'))
+               device._sigslot.get_property(message, 'signalInstanceId'))
     logmessage = getattr(exception, "logmessage", default)
     level = getattr(exception, "loglevel", logging.ERROR)
     logger.log(level, *logmessage, exc_info=True)
@@ -57,13 +57,13 @@ def slot(f, passMessage=False):
     if not is_coro:
         def wrapper(func, device, name, message, args):
             try:
-                device._ss.reply(message, func(*args))
+                device._sigslot.reply(message, func(*args))
             except BaseException as e:
-                device._ss.replyException(message, e)
+                device._sigslot.replyException(message, e)
                 _log_exception(func, device, message)
     else:
         def wrapper(func, device, name, message, args):
-            broker = device._ss
+            broker = device._sigslot
 
             async def inner():
                 try:
@@ -93,19 +93,20 @@ class BoundSignal:
         self.args = signal.args
 
     async def connect(self, target, slot):
-        if not self.device._ss.needSubscribe:
+        if not self.device._sigslot.needSubscribe:
             self.make_connected(target, slot)
             return
-        await self.device._ss.request(target, 'slotConnectRemoteSignal',
-                                      self.device.deviceId, self.name,
-                                      target, slot)
+        await self.device._sigslot.request(
+            target, 'slotConnectRemoteSignal',
+            self.device.deviceId, self.name, target, slot)
 
     async def disconnect(self, target, slot):
-        if not self.device._ss.needSubscribe:
+        if not self.device._sigslot.needSubscribe:
             return self.make_disconnected(target, slot)
-        await self.device._ss.request(target, 'slotDisconnectRemoteSignal',
-                                      self.device.deviceId, self.name,
-                                      target, slot)
+        await self.device._sigslot.request(
+            target, 'slotDisconnectRemoteSignal',
+            self.device.deviceId, self.name,
+            target, slot)
 
     def make_connected(self, target, slot):
         self.connected.setdefault(target, set()).add(slot)
@@ -123,7 +124,7 @@ class BoundSignal:
 
     def __call__(self, *args):
         args = [d.cast(v) for d, v in zip(self.args, args)]
-        self.device._ss.emit(self.name, self.connected, *args)
+        self.device._sigslot.emit(self.name, self.connected, *args)
 
 
 def get_device_node_initializers(instance):
@@ -194,7 +195,7 @@ class SignalSlotable(Configurable):
         requiredAccessLevel=AccessLevel.EXPERT,
     )
 
-    _ss = None
+    _sigslot = None
 
     def __init__(self, configuration):
         self._sethash = {"ignore": "this"}
@@ -221,7 +222,7 @@ class SignalSlotable(Configurable):
 
         This property has been added with Karabo 2.14.
         """
-        return self._ss is not None and self.__initialized
+        return self._sigslot is not None and self.__initialized
 
     @property
     def device_server(self):
@@ -242,8 +243,8 @@ class SignalSlotable(Configurable):
         """
         if loop is None:
             loop = get_event_loop()
-        self._ss = loop.getBroker(self.deviceId, type(self).__name__,
-                                  broadcast)
+        self._sigslot = loop.getBroker(self.deviceId, type(self).__name__,
+                                       broadcast)
         self._sethash = {}
         return loop.create_task(self._run(server=server), instance=self)
 
@@ -274,16 +275,16 @@ class SignalSlotable(Configurable):
         """return our info to show that we are here"""
         if rand:
             if instanceId == self.deviceId and self.__randPing != rand:
-                return self._ss.info
+                return self._sigslot.info
         elif self.__randPing == 0:
-            self._ss.emit("call", {instanceId: ["slotPingAnswer"]},
-                          self.deviceId, self._ss.info)
+            self._sigslot.emit("call", {instanceId: ["slotPingAnswer"]},
+                               self.deviceId, self._sigslot.info)
 
     def inner(func, device, name, message, args):
         ret = func(*args)
         # In contrast to normal slots, let slotPing not send an empty reply.
         if ret is not None:
-            device._ss.reply(message, ret)
+            device._sigslot.reply(message, ret)
 
         # Server implementation. If the device is a server it will ask
         # the children if they want to respond
@@ -291,7 +292,7 @@ class SignalSlotable(Configurable):
             for dev in device.deviceInstanceMap.values():
                 ret = dev.slotPing(*args)
                 if ret is not None:
-                    dev._ss.reply(message, ret)
+                    dev._sigslot.reply(message, ret)
 
     slotPing.slot = inner
     del inner
@@ -356,12 +357,12 @@ class SignalSlotable(Configurable):
             desc = getattr(self.__class__, k, None)
             # internal slots
             if callable(value) and hasattr(value, "slot"):
-                self._ss.register_slot(k, value)
+                self._sigslot.register_slot(k, value)
             # public slots
             elif isinstance(desc, Descriptor):
                 for name, slot in desc.allDescriptors():
                     if isinstance(slot, Slot):
-                        self._ss.register_slot(name, slot)
+                        self._sigslot.register_slot(name, slot)
 
     async def _run(self, server=None, **kwargs):
         try:
@@ -370,11 +371,11 @@ class SignalSlotable(Configurable):
                 # add deviceId to the instance map of the server
                 server.addChild(self.deviceId, self)
                 self.__deviceServer = server
-            await self._ss.ensure_connection()
+            await self._sigslot.ensure_connection()
             self._register_slots()
-            ensure_future(self._ss.main(self))
+            ensure_future(self._sigslot.main(self))
             await self._assert_name_unique()
-            await self._ss.notify_network(self._initInfo())
+            await self._sigslot.notify_network(self._initInfo())
             await super()._run(**kwargs)
             await wait_for(get_event_loop().run_coroutine_or_thread(
                 self.preInitialization), timeout=5)
@@ -422,8 +423,9 @@ class SignalSlotable(Configurable):
                   are gone.
         """
         if self.__initialized:
-            instanceId = (self._ss.get_property(message, "signalInstanceId")
-                          if message is not None else "OS signal")
+            instanceId = (
+                self._sigslot.get_property(message, "signalInstanceId")
+                if message is not None else "OS signal")
             self.logger.info("Received request to shutdown SignalSlotable"
                              f" from {instanceId}.")
             self.__initialized = False
@@ -444,9 +446,9 @@ class SignalSlotable(Configurable):
         for timer in list(self._timers):
             timer.destroy()
 
-        if self._ss is not None:
+        if self._sigslot is not None:
             # Returns success
-            return await self._ss.stop_tasks()
+            return await self._sigslot.stop_tasks()
 
         # No tasks are running
         return True
@@ -454,9 +456,9 @@ class SignalSlotable(Configurable):
     slotKillDevice = slot(slotKillDevice, passMessage=True)
 
     def __del__(self):
-        if self._ss is not None and self._ss.loop.is_running():
-            self._ss.loop.call_soon_threadsafe(
-                self._ss.loop.create_task, self.slotKillDevice())
+        if self._sigslot is not None and self._sigslot.loop.is_running():
+            self._sigslot.loop.call_soon_threadsafe(
+                self._sigslot.loop.create_task, self.slotKillDevice())
 
     def create_instance_task(self, coro):
         """Wrap a coroutine into a task and attach it to the instance"""
@@ -466,10 +468,10 @@ class SignalSlotable(Configurable):
         return loop.create_task(coro, instance=self)
 
     async def call(self, device, target, *args):
-        return (await self._ss.request(device, target, *args))
+        return (await self._sigslot.request(device, target, *args))
 
     def callNoWait(self, device, target, *args):
-        self._ss.emit("call", {device: [target]}, *args)
+        self._sigslot.emit("call", {device: [target]}, *args)
 
     def stopEventLoop(self):
         """Method called by the device server to stop the event loop
@@ -483,7 +485,7 @@ class SignalSlotable(Configurable):
         slot = getattr(self, slotName, None)
         if slot is None:
             return
-        await self._ss.async_connect(sigId, sigName, slot)
+        await self._sigslot.async_connect(sigId, sigName, slot)
 
     @slot
     async def slotDisconnectRemoteSignal(self, sigId, sigName, slotId,
@@ -493,7 +495,7 @@ class SignalSlotable(Configurable):
         slot = getattr(self, slotName, None)
         if slot is None:
             return
-        await self._ss.async_disconnect(sigId, sigName, slot)
+        await self._sigslot.async_disconnect(sigId, sigName, slot)
 
     @slot
     def slotConnectToSignal(self, signal, target, slot):
@@ -526,7 +528,7 @@ class SignalSlotable(Configurable):
         return False
 
     def updateInstanceInfo(self, info):
-        self._ss.updateInstanceInfo(info)
+        self._sigslot.updateInstanceInfo(info)
 
     def update(self):
         """Update via sending a bulk hash on the network
@@ -547,8 +549,8 @@ class SignalSlotable(Configurable):
 
     def setChildValue(self, key, value, desc):
         self._sethash[key] = value, desc
-        if self._ss is not None:
-            self._ss.loop.call_soon_threadsafe(self.update)
+        if self._sigslot is not None:
+            self._sigslot.loop.call_soon_threadsafe(self.update)
 
     @slot
     def slotChanged(self, configuration, deviceId):

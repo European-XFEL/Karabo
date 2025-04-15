@@ -77,9 +77,9 @@ class DeviceTest(TestCase):
         """This context manager is run around the test class"""
         cls.lead = Mock()
         cls.lead.deviceId = f"test-mdl-{uuid.uuid4()}"
-        cls.lead._ss = Mock()
-        cls.lead._ss.loop = cls.loop
-        cls.lead._ss.tasks = set()
+        cls.lead._sigslot = Mock()
+        cls.lead._sigslot.loop = cls.loop
+        cls.lead._sigslot.tasks = set()
         yield
 
     @classmethod

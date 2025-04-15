@@ -212,7 +212,7 @@ class Tests(TestCase):
 
         self._assert_binary_ufunc(ufunc, A, B, expected, debug=debug,
                                   msg=f"in QuantityValue part of "
-                                      f"'{ufunc.__name__}', {msg}")
+                                  f"'{ufunc.__name__}', {msg}")
 
         # Now the same for descriptor-based objects
         dA = self.descriptors_from_QV(A)
@@ -222,7 +222,7 @@ class Tests(TestCase):
             dB = B
         self._assert_binary_ufunc(ufunc, dA, dB, expected, debug=debug,
                                   msg=f"in descriptor-based part of "
-                                      f"'{ufunc.__name__}', {msg}")
+                                  f"'{ufunc.__name__}', {msg}")
 
     def _assert_unary_ufunc(self, ufunc, A, expected, msg, debug):
         """
@@ -257,13 +257,13 @@ class Tests(TestCase):
         """
         self._assert_unary_ufunc(ufunc, A, expected, debug=debug,
                                  msg=f"in QuantityValue part of "
-                                     f"'{ufunc.__name__}({A})', {msg}")
+                                 f"'{ufunc.__name__}({A})', {msg}")
 
         # Now the same for descriptor-based objects
         dA = self.descriptors_from_QV(A)
         self._assert_unary_ufunc(ufunc, dA, expected, debug=debug,
                                  msg=f"in descriptor-based part of "
-                                     f"'{ufunc.__name__}', {msg}")
+                                 f"'{ufunc.__name__}', {msg}")
 
     """
     ** Math operations **

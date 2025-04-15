@@ -145,7 +145,7 @@ class TestCrossConfigManager(BoundDeviceTestCase):
             config_name_2, [self.PROP_TEST_DEVICE_ID])
         self.assertTrue(
             ok, f"Save configuration for device '{self.PROP_TEST_DEVICE_ID}' "
-                f"failed: '{msg}'")
+            f"failed: '{msg}'")
         config_name_3 = 'PropertyTestConfigIII'
         ok, msg = self.dc.saveConfigurationFromName(
             config_name_3, [self.PROP_TEST_DEVICE_ID])
