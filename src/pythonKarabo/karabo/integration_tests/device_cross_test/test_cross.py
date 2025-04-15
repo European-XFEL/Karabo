@@ -184,8 +184,8 @@ async def test_cross(deviceTest):
             "middlelayerDevice": "middlelayerDevice",
             "input.connectedOutputChannels":
                 ["middlelayerDevice:output", "middlelayerDevice:rawOutput"]
-                }
         }
+    }
     init = json.dumps(config)
     server = AsyncServerContext(
         serverId, [f"init={init}", "pluginNamespace=karabo.bound_device_test"],
@@ -451,8 +451,8 @@ async def test_cross_pipeline(deviceTest):
             "imageInput.onSlowness": "wait",
             "imagePath": "data.image",
             "ndarrayPath": "data.array",
-            }
         }
+    }
     init = json.dumps(config)
     server = AsyncServerContext(
         serverId, [f"init={init}", "pluginNamespace=karabo.bound_device_test"],
@@ -472,7 +472,7 @@ async def test_cross_pipeline(deviceTest):
             try:
                 await wait_for(
                     waitUntil(
-                        lambda: bound_proxy.imageInput.missingConnections == []), # noqa
+                        lambda: bound_proxy.imageInput.missingConnections == []),  # noqa
                     timeout=15)
             except TimeoutError:
                 assert False, "bound proxy did not connect in time"

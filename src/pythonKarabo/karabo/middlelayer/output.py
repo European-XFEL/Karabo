@@ -30,7 +30,7 @@ class KaraboStream:
     def write(self, data):
         try:
             instance = get_event_loop().instance()
-            instance._ss.loop.call_soon_threadsafe(
+            instance._sigslot.loop.call_soon_threadsafe(
                 instance.printToConsole, data)
         except BaseException:
             self.base.write(data)

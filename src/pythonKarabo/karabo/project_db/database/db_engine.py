@@ -23,7 +23,7 @@ from sqlalchemy.ext.asyncio import (
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 DB_POOL_RECYCLE_SECS: int = int(os.environ.get(
-        "KARABO_PROJECT_DB_POOL_RECYCLE_SECS", 100))
+    "KARABO_PROJECT_DB_POOL_RECYCLE_SECS", 100))
 
 
 def create_remote_engine(

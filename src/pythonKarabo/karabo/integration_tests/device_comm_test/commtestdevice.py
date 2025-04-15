@@ -104,7 +104,7 @@ class CommTestDevice(PythonDevice):
     def slotRequestArgsAsync(self):
         # Same as slotRequestArgs, but using AsyncReply instead of
         # blocking by use of synchronous request
-        aReply = self._ss.createAsyncReply()
+        aReply = self._sigslot.createAsyncReply()
 
         def replyer(a1, a2):
             self.set("someString", a2)
