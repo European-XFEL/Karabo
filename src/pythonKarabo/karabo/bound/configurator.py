@@ -113,13 +113,10 @@ class Configurator:
         # clist contains list of classes in inheritance order
         schema = Schema(classid, rules)
         for theClass in clist:
-            try:
-                if hasattr(theClass, "expectedParameters"):
-                    # fill schema in order from base to derived
-                    theClass.expectedParameters(schema)
-            except AttributeError as e:
-                print("Exception while adding expected parameters for class"
-                      " %r: %r" % (theClass.__name__, e))
+            if hasattr(theClass, "expectedParameters"):
+                # fill schema in order from base to derived
+                theClass.expectedParameters(schema)
+
         return schema
 
     def create(self, *args):
