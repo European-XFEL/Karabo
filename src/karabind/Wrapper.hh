@@ -96,6 +96,8 @@ namespace karabind {
         py::object getRef(karabo::data::Hash& self, const std::string& path, const std::string& sep)
               __attribute__((visibility("default")));
 
+        py::object getRefAttributesByNode(karabo::data::Hash::Node& self) __attribute__((visibility("default")));
+
         py::object getRefAttributes(karabo::data::Hash& self, const std::string& path, const std::string& sep)
               __attribute__((visibility("default")));
 

@@ -113,10 +113,11 @@ namespace karabind {
 
     struct HashIteratorAccessAll {
         py::object operator()(karabo::data::Hash::iterator& it) const {
-            const std::string& k = it->getKey();
+            using namespace karabo::data;
+            py::object k = py::cast(it->getKey());
             py::object v = wrapper::castAnyToPy(it->getValueAsAny());
-            const karabo::data::Hash::Attributes a = it->getAttributes();
-            return py::make_tuple(py::cast(k), v, py::cast(a));
+            py::object a = hashwrap::getRefAttributesByNode(*it);
+            return py::make_tuple(k, v, a);
         }
     };
 
