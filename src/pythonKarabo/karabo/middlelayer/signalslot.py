@@ -197,6 +197,11 @@ class SignalSlotable(Configurable):
 
     _sigslot = None
 
+    @property
+    def signalSlotable(self):
+        """Public method to get the signal slotable"""
+        return self._sigslot
+
     def __init__(self, configuration):
         self._sethash = {"ignore": "this"}
         self.is_server = False

@@ -196,7 +196,7 @@ class PPSenderDevice(PythonDevice):
             ndarr = np.zeros((256, 256, 512), np.double)
             data = Hash()
             copyAllData = self.get("copyAllData")
-            channel = self._sigslot.getOutputChannel("output2")
+            channel = self.signalSlotable.getOutputChannel("output2")
             meta = ChannelMetaData("p2pTestSender:output1", Timestamp())
 
             for iData in range(nData):
@@ -222,7 +222,7 @@ class PPSenderDevice(PythonDevice):
         try:
             nData = self.get("nData")
             delayInMs = self.get("delay")
-            channel = self._sigslot.getOutputChannel("node.output3")
+            channel = self.signalSlotable.getOutputChannel("node.output3")
             data = Hash()
             for i in range(nData):
                 data.set("dataId", i)
