@@ -17,7 +17,8 @@
 import os
 from pathlib import Path
 
-from karabo.native import AccessLevel, Configurable, String, UInt32
+from karabo.native import (
+    AccessLevel, AccessMode, Bool, Configurable, String, UInt32)
 
 from .sql_database import SQLDatabase
 
@@ -44,11 +45,19 @@ class RemoteNode(Configurable):
         displayedName="Database name",
         requiredAccessLevel=AccessLevel.EXPERT)
 
+    removeOrphans = Bool(
+        displayedName="Remove Orphan Records",
+        description=(
+            "Should orphan records be removed on project save (True) or "
+            "later by a cleaning batch job?"),
+        defaultValue=False,
+        accessMode=AccessMode.READONLY)
+
     async def get_db(self, test_mode=False, init_db=False):
         user, password = get_db_credentials()
         db = SQLDatabase(
             user, password, server=self.host.value, port=self.port.value,
-            db_name=self.dbName.value)
+            db_name=self.dbName.value, remove_orphans=self.removeOrphans.value)
         await db.initialize()
         return db
 
@@ -61,11 +70,20 @@ class LocalNode(Configurable):
         description="The filename placed in var/project_db/",
         requiredAccessLevel=AccessLevel.EXPERT)
 
+    removeOrphans = Bool(
+        displayedName="Remove Orphan Records",
+        description=(
+            "Should orphan records be removed on project save (True) or "
+            "later by a cleaning batch job?"),
+        defaultValue=False,
+        accessMode=AccessMode.READONLY)
+
     async def get_db(self, test_mode=False, init_db=False):
         folder = Path(os.environ["KARABO"]).joinpath(
             "var", "data", "project_db")
         path = folder / self.dbName.value
         path.parent.mkdir(parents=True, exist_ok=True)
-        db = SQLDatabase(db_name=path, local=True)
+        db = SQLDatabase(db_name=path, local=True,
+                         remove_orphans=self.removeOrphans.value)
         await db.initialize()
         return db
