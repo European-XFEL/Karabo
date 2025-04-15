@@ -143,7 +143,7 @@ class Hash(OrderedDict):
                     except (ValueError, TypeError):
                         hash_type = "Unknown"
                     yield (tabular * n + f"{key}{attrs!r}: "
-                                         f"{value!r} => {hash_type}\n")
+                           f"{value!r} => {hash_type}\n")
 
         return f"<\n{''.join(_pretty_generator(self))}>"
 

@@ -20,4 +20,4 @@ from karabo.bound import KARABO_CLASSINFO, PythonDevice
 class StuckLoggerDevice(PythonDevice):
     def slotLoggerContent(self, info):
         # bad behaviour. Implement a device that will never reply
-        self._ss.createAsyncReply()
+        self._sigslot.createAsyncReply()

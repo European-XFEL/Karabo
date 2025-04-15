@@ -247,7 +247,7 @@ class Device(InjectMixin, SignalSlotable):
         return info
 
     async def _run(self, **kwargs):
-        self._ss.enter_context(self.log.setBroker(self._ss))
+        self._sigslot.enter_context(self.log.setBroker(self._sigslot))
         await super()._run(**kwargs)
         # Logging mechanism will add the deviceId to the log message
         self.logger.info("Device is up and running.")
@@ -295,16 +295,16 @@ class Device(InjectMixin, SignalSlotable):
         """Return the actual system information of this device"""
         info = self.__get_time_info()
         h = Hash("timeInfo", info)
-        h["broker"] = str(self._ss.connection.url)
+        h["broker"] = str(self._sigslot.connection.url)
         h["user"] = getpass.getuser()
         return h
 
     def _checkLocked(self, message):
         """return an error message if device is locked or None if not"""
         lock_clear = ("slotClearLock"
-                      in self._ss.get_property(message, "slotFunctions"))
+                      in self._sigslot.get_property(message, "slotFunctions"))
         if (self.lockedBy and self.lockedBy !=
-                self._ss.get_property(message, "signalInstanceId") and
+                self._sigslot.get_property(message, "signalInstanceId") and
                 not lock_clear):
             return f'Device locked by "{self.lockedBy}"'
         return None
@@ -314,7 +314,7 @@ class Device(InjectMixin, SignalSlotable):
         msg = self._checkLocked(message)
         if msg is not None:
             raise KaraboError(msg)
-        caller = self._ss.get_property(message, "signalInstanceId")
+        caller = self._sigslot.get_property(message, "signalInstanceId")
         try:
             await super().slotReconfigure(reconfiguration)
         finally:
@@ -408,7 +408,7 @@ class DeviceClientBase(Device):
 
     async def _run(self, **kwargs):
         await super()._run(**kwargs)
-        await self._ss.async_emit(
+        await self._sigslot.async_emit(
             "call", {"*": ["slotPing"]}, self.deviceId, 0)
         # We are collecting all the instanceInfo's and wait for their arrival
         # before the device comes online.

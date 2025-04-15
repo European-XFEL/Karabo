@@ -626,7 +626,7 @@ class Slot(Descriptor):
     def slot(self, func, device, name, message, args):
         msg = device._checkLocked(message)
         if msg is not None:
-            device._ss.reply(message, msg, error=True)
+            device._sigslot.reply(message, msg, error=True)
             return
 
         func = device
@@ -635,7 +635,7 @@ class Slot(Descriptor):
 
         async def wrapper():
             try:
-                sigslot = device._ss
+                sigslot = device._sigslot
                 if len(args):
                     raise KaraboError(
                         f"Command Slot `{name}` does not take "

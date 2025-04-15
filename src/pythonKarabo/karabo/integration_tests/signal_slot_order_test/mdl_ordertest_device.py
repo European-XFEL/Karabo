@@ -88,7 +88,8 @@ class MdlOrderTestDevice(Device):
                 self.call(other, "slotReconfigure", updates),
                 timeout=2)
             await wait_for(
-                self._ss.async_connect(other, ["signalCount"], self.slotCount),
+                self._sigslot.async_connect(
+                    other, ["signalCount"], self.slotCount),
                 timeout=2)
         except Exception as e:
             self.log.WARN(f"Failed to start order test: {repr(e)}")

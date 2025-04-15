@@ -90,11 +90,11 @@ async def waitUntilNew(*props):
     futures = []
     for prop in props:
         if isinstance(prop, ProxyBase):
-            future = OneShotQueue(loop=prop._device._ss.loop)
+            future = OneShotQueue(loop=prop._device._sigslot.loop)
             prop._queues[None].add(future)
         else:
             proxy = prop._parent
-            future = OneShotQueue(loop=proxy._device._ss.loop)
+            future = OneShotQueue(loop=proxy._device._sigslot.loop)
             proxy._queues[prop.descriptor.longkey].add(future)
         futures.append(future)
     await firstCompleted(*futures)
@@ -719,7 +719,7 @@ async def _getDevice(deviceId, sync, initialize,
                     if proxy is not None:
                         await proxy.delete_proxy()
 
-            await instance._ss.enter_async_context(killer())
+            await instance._sigslot.enter_async_context(killer())
         finally:
             del futures[deviceId]
 
@@ -734,7 +734,7 @@ async def _getDevice(deviceId, sync, initialize,
         @asynccontextmanager
         async def connectSchemaUpdated():
             nonlocal closure_proxy
-            await closure_proxy._device._ss.async_connect(
+            await closure_proxy._device._sigslot.async_connect(
                 closure_proxy._deviceId, "signalSchemaUpdated",
                 closure_proxy._device.slotSchemaUpdated)
             closure_proxy._schemaUpdateConnected = True
@@ -746,7 +746,7 @@ async def _getDevice(deviceId, sync, initialize,
                 if closure_proxy is not None:
                     await closure_proxy._async_disconnectSchemaUpdated()
 
-        await instance._ss.enter_async_context(connectSchemaUpdated())
+        await instance._sigslot.enter_async_context(connectSchemaUpdated())
         if initialize:
             await proxy.initialize_proxy()
         await proxy.update_proxy()
@@ -979,7 +979,7 @@ def instantiateNoWait(serverId, classId, deviceId="", configuration=None,
     configuration.update(kwargs)
     h = Hash("classId", classId, "deviceId", deviceId,
              "configuration", configuration)
-    get_instance()._ss.emit("call", {serverId: ["slotStartDevice"]}, h)
+    get_instance()._sigslot.emit("call", {serverId: ["slotStartDevice"]}, h)
 
 
 @synchronize
@@ -999,7 +999,7 @@ def shutdownNoWait(device):
     not waiting version of :func:`shutdown`"""
     if isinstance(device, ProxyBase):
         device = device._deviceId
-    get_instance()._ss.emit("call", {device: ["slotKillDevice"]})
+    get_instance()._sigslot.emit("call", {device: ["slotKillDevice"]})
 
 
 @synchronize
@@ -1055,7 +1055,7 @@ def setNoWait(device, *args, **kwargs):
         else:
             h[k] = v
 
-    get_instance()._ss.emit("call", {device: ["slotReconfigure"]}, h)
+    get_instance()._sigslot.emit("call", {device: ["slotReconfigure"]}, h)
 
 
 def executeNoWait(device, slot):
@@ -1074,7 +1074,7 @@ def executeNoWait(device, slot):
     this is not desired, use executeNoWait."""
     if isinstance(device, ProxyBase):
         device = device._deviceId
-    get_instance()._ss.emit("call", {device: [slot]})
+    get_instance()._sigslot.emit("call", {device: [slot]})
 
 
 @synchronize
