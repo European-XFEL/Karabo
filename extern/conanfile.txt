@@ -5,7 +5,7 @@
 # cached versions
 
 # exact
-amqp-cpp/4.3.16
+amqp-cpp/4.3.26
 libev/4.33
 bzip2/1.0.8
 daemontools-encore/1.11-karabo3@karabo/py312
