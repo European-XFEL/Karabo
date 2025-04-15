@@ -318,8 +318,8 @@ async def test_two_calls_concurrent(deviceTest):
         await waitWhile(lambda: d.state == State.ACQUIRING)
         assert myDevice.counter == 1
         # Concurrent slot calls, one will return due to state block
-        myDevice._ss.emit("call", {"MyDevice": ["increaseCounter",
-                                                "increaseCounter"]})
+        myDevice._sigslot.emit("call", {"MyDevice": ["increaseCounter",
+                                                     "increaseCounter"]})
         await waitUntil(lambda: d.state != State.ON)
         await waitWhile(lambda: d.state == State.ACQUIRING)
         assert myDevice.counter == 2
@@ -376,16 +376,16 @@ def test_slot_verification(deviceTest):
 @run_test
 async def test_instance_info(deviceTest):
     device = deviceTest["myDevice"]
-    assert device._ss.info["status"] == "ok"
+    assert device._sigslot.info["status"] == "ok"
     await device.setState(State.ERROR)
     await sleep(0)
-    assert device._ss.info["status"] == "error"
+    assert device._sigslot.info["status"] == "error"
     await device.setState(State.UNKNOWN)
     await sleep(0)
-    assert device._ss.info["status"] == "unknown"
+    assert device._sigslot.info["status"] == "unknown"
     await device.setState(State.ON)
     await sleep(0)
-    assert device._ss.info["status"] == "ok"
+    assert device._sigslot.info["status"] == "ok"
 
 
 @pytest.mark.timeout(30)

@@ -244,7 +244,7 @@ class AsyncTimer:
                 if weak is not None:
                     weak.destroy()
 
-        instance._ss.enter_context(destroyer())
+        instance._sigslot.enter_context(destroyer())
 
     def start(self):
         """Start the async timer

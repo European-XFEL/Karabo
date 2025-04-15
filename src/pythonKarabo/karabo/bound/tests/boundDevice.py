@@ -303,7 +303,7 @@ class TestDevice(PythonDevice):
         self.writeChannel("output2", node)
 
     def sendMultipleHashes(self):
-        channel = self._ss.getOutputChannel("output1")
+        channel = self._sigslot.getOutputChannel("output1")
 
         for i in range(10):
             sourceName = f"{self.getInstanceId()}:output{i}"

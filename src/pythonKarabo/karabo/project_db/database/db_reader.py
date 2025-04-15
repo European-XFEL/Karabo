@@ -220,7 +220,7 @@ class DbReader:
         project = None
         async with self.session_gen() as session:
             query = select(Project).where(
-                    Project.uuid == uuid)
+                Project.uuid == uuid)
             result = await session.exec(query)
             project = result.first()
         return project
