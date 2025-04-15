@@ -35,7 +35,7 @@ class SQLDatabase(DatabaseBase):
 
     def __init__(self, user: str = "", password: str = "",
                  server: str = "", port: int = -1, db_name: str = "local.db",
-                 local: bool = False):
+                 local: bool = False, remove_orphans: bool = False):
         super().__init__()
         if local:
             self.db_engine, self.session_gen = create_local_engine(db_name)
@@ -44,7 +44,7 @@ class SQLDatabase(DatabaseBase):
                 create_remote_engine(user, password, server, port, db_name))
         self.dbName = db_name
         self.reader = DbReader(self.session_gen)
-        self.writer = DbWriter(self.session_gen)
+        self.writer = DbWriter(self.session_gen, remove_orphans)
         self.initialized = False
         self.local = local
 

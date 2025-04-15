@@ -32,8 +32,9 @@ logger = logging.getLogger(__file__)
 
 class DbWriter:
 
-    def __init__(self, session_gen: sessionmaker):
+    def __init__(self, session_gen: sessionmaker, remove_orphans=False):
         self.session_gen = session_gen
+        self.remove_orphans = remove_orphans
 
     async def register_project_load(self, project: Project):
         async with self.session_gen() as session:
@@ -149,10 +150,11 @@ class DbWriter:
                     session.add(macro)
                     macro_idx += 1
             # Removes any macro that was previously linked to the project, but
-            # isn't anymore.
-            for curr_macro in curr_macros:
-                if curr_macro.uuid not in updated_macros:
-                    session.delete(curr_macro)
+            # isn't anymore (depending on the remove_orphans option)
+            if self.remove_orphans:
+                for curr_macro in curr_macros:
+                    if curr_macro.uuid not in updated_macros:
+                        session.delete(curr_macro)
 
             query = select(Scene).where(Scene.project_id == project_id)
             result = await session.exec(query)
@@ -189,10 +191,11 @@ class DbWriter:
                     session.add(scene)
                     scene_idx += 1
             # Remove any scene that was previously linked to the project but
-            # isn't anymore.
-            for curr_scene in curr_scenes:
-                if curr_scene.uuid not in updated_scenes:
-                    session.delete(curr_scene)
+            # isn't anymore (depending on the remove_orphans option)
+            if self.remove_orphans:
+                for curr_scene in curr_scenes:
+                    if curr_scene.uuid not in updated_scenes:
+                        session.delete(curr_scene)
 
             query = select(DeviceServer).where(
                 DeviceServer.project_id == project_id)
@@ -224,31 +227,33 @@ class DbWriter:
                     session.add(server)
                     server_idx += 1
             # Removes any device server that was previously linked to the
-            # project but is not anymore
-            for curr_server in curr_servers:
-                if curr_server.uuid not in updated_servers:
-                    # Before deleting the server, its device instances must
-                    # be deleted - after deleting those instances configs.
-                    query = select(DeviceInstance).where(
-                        DeviceInstance.device_server_id == curr_server.id)
-                    result = await session.exec(query)
-                    instances = result.all()
-                    for instance in instances:
-                        # Delete the instances configs
-                        query = select(DeviceConfig).where(
-                            DeviceConfig.device_instance_id == instance.id)
-                        result = await session.exec(query)
-                        related_configs = result.all()
-                        for related_config in related_configs:
-                            session.delete(related_config)
+            # project but is not anymore (depending on the remove_orphans
+            # option)
+            if self.remove_orphans:
+                for curr_server in curr_servers:
+                    if curr_server.uuid not in updated_servers:
+                        # Before deleting the server, its device instances must
+                        # be deleted - after deleting those instances configs.
                         query = select(DeviceInstance).where(
-                            DeviceInstance.id == instance.id)
+                            DeviceInstance.device_server_id == curr_server.id)
                         result = await session.exec(query)
-                        related_instance = result.first()
-                        if related_instance:
-                            session.delete(related_instance)
-                    # Now finally the server can go
-                    session.delete(curr_server)
+                        instances = result.all()
+                        for instance in instances:
+                            # Delete the instances configs
+                            query = select(DeviceConfig).where(
+                                DeviceConfig.device_instance_id == instance.id)
+                            result = await session.exec(query)
+                            related_configs = result.all()
+                            for related_config in related_configs:
+                                session.delete(related_config)
+                            query = select(DeviceInstance).where(
+                                DeviceInstance.id == instance.id)
+                            result = await session.exec(query)
+                            related_instance = result.first()
+                            if related_instance:
+                                session.delete(related_instance)
+                        # Now finally the server can go
+                        session.delete(curr_server)
 
             query = select(ProjectSubproject).where(
                 ProjectSubproject.project_id == project_id)
@@ -258,6 +263,11 @@ class DbWriter:
             subproject_idx = 0
             # Initially all the previously saved subproject are to be
             # potentially removed
+            # Note: subprojects are only a reference to projects, not real
+            #       entities stored in the database like scenes and macros.
+            #       There's no need to handle remove_orphans for them as they
+            #       are updated on single save_item roundtrip between the
+            #       GUI Client and the Project Manager
             subprojects_to_delete = {
                 subproject.subproject_id for subproject in curr_subprojects}
             # Iterate over the subprojects to be saved
@@ -480,10 +490,12 @@ class DbWriter:
                 updated_configs.add(config_obj_uuid)
 
             # Removes all configs that were linked to the instance in the
-            # database, but that aren't anymore.
-            for curr_config in curr_configs:
-                if curr_config.uuid not in updated_configs:
-                    session.delete(curr_config)
+            # database, but that aren't anymore (depending on the
+            # remove_orphans option)
+            if self.remove_orphans:
+                for curr_config in curr_configs:
+                    if curr_config.uuid not in updated_configs:
+                        session.delete(curr_config)
 
             await session.commit()
 
@@ -556,10 +568,12 @@ class DbWriter:
 
             # Removes any instance that is not linked to the device server
             # anymore - all the curr_linked_instances whose ids are not in
-            # the updated_instances set
-            for curr_linked_instance in curr_linked_instances:
-                if curr_linked_instance.id not in updated_instances:
-                    session.delete(curr_linked_instance)
+            # the updated_instances set (depending on the remove_orphans
+            # option)
+            if self.remove_orphans:
+                for curr_linked_instance in curr_linked_instances:
+                    if curr_linked_instance.id not in updated_instances:
+                        session.delete(curr_linked_instance)
 
             await session.commit()
 
