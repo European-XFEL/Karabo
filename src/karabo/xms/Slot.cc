@@ -92,15 +92,16 @@ namespace karabo {
                 doCallRegisteredSlotFunctions(body);
                 invalidateSenderInformation();
             } catch (const karabo::data::CastException& e) {
+                const std::string senderId = m_instanceIdOfSender;
                 invalidateSenderInformation();
-                KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("Received incompatible argument(s) for slot \"" +
-                                                              m_slotFunction + "\"."));
+                KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("Received incompatible argument(s) for slot '" +
+                                                              m_slotFunction +
+                                                              (senderId.empty() ? "'" : "' from " + senderId)));
             } catch (const std::exception& e) {
+                const std::string senderId = m_instanceIdOfSender;
                 invalidateSenderInformation();
-                KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("Error in slot \"" + m_slotFunction + "\""));
-            } catch (...) {
-                invalidateSenderInformation();
-                KARABO_RETHROW;
+                KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("Error in slot '" + m_slotFunction +
+                                                              (senderId.empty() ? "'" : "' from " + senderId)));
             }
         }
     } // namespace xms
