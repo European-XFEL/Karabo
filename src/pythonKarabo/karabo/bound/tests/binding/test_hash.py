@@ -412,6 +412,23 @@ def test_getset():
         del attrs
     assert s == sattrs
 
+    # add new attribute via looping with 'iterall'
+    h = Hash('a', 1, 'b', 2, 'c', 3, 'd', 4)
+    h['a', ...] = {'a': 12}
+    h['b', ...] = {'b': 22}
+    h['c', ...] = {'c': 32}
+    h['d', ...] = {'d': 42}
+    for k, _, a in h.iterall():
+        a['w'] = 3.1415956
+    assert h['a', 'a'] == 12
+    assert h['a', 'w'] == 3.1415956
+    assert h['b', 'b'] == 22
+    assert h['b', 'w'] == 3.1415956
+    assert h['c', 'c'] == 32
+    assert h['c', 'w'] == 3.1415956
+    assert h['d', 'd'] == 42
+    assert h['d', 'w'] == 3.1415956
+
 
 def test_getsetVectorHash():
     vh = VectorHash()
