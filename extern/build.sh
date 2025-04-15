@@ -10,7 +10,6 @@ source "$scriptDir/../set_lsb_release_info.sh"
 # Important constants
 
 CONAN_RECIPE_CHANNEL=py312
-LOG4CPP_VERSION=1.1.3
 DAEMONTOOLS_VERSION=1.11-karabo3
 NSS_VERSION=3.93
 

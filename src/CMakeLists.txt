@@ -164,7 +164,7 @@ if (BUILD_UNIT_TESTING OR BUILD_INTEGRATION_TESTING OR BUILD_LONG_RUN_TESTING)
             BASE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
             LCOV_ARGS --no-external --quiet
             EXCLUDE "/usr/*" "*/boost/*" "*/mqtt/*" "*/cppunit/*" "*/nlohmann/*"
-                    "*/krb_log4cpp/*" "*/tests/*" "*/include/python*"
+                    "*/tests/*" "*/include/python*"
                     "*/include/numpy/*" "${CMAKE_CURRENT_SOURCE_DIR}/tools/*"
                     "${CMAKE_CURRENT_SOURCE_DIR}/deviceServer/*"
                     "${CMAKE_CURRENT_SOURCE_DIR}/brokerMessageLogger/*"
