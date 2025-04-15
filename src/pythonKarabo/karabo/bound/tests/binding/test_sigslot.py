@@ -532,7 +532,7 @@ def test_sigslot_request(eventLoopFixt):
     # detailsMsg contains C++ and Python traces.
     # print(f'\n*** errorMsg "{errorMsg}"\n*** detailsMsg "{detailsMsg}"')
     msgWhoFailed = "Remote Exception from bob"
-    msgSlotFailure = 'Error in slot "slotError"'
+    msgSlotFailure = "Error in slot 'slotError' from alice"
     msgRuntimeError = "What's the universe and the rest?"
 
     assert msgWhoFailed in errorMsg
@@ -563,7 +563,7 @@ def test_sigslot_request(eventLoopFixt):
     assert handled is True
     assert 43 == called
     # msgWhoFailed = "Remote Exception from bob" as before
-    msgSlotFailure = 'Error in slot "slotErrorCpp"'
+    msgSlotFailure = "Error in slot 'slotErrorCpp' from alice"
     msgKeyFailure = "Key 'non_existing_key' does not exist"
     assert msgWhoFailed in errorMsg
     assert msgSlotFailure in errorMsg
@@ -718,7 +718,7 @@ def test_sigslot_request(eventLoopFixt):
     assert len(exceptStrs) == 2, exceptStrs
     (friendlyMsg, details) = exceptStrs
     msgWhoFailed = "Remote Exception from bob"
-    msgSlotFailure = 'Error in slot "slotError"'
+    msgSlotFailure = "Error in slot 'slotError' from alice"
     msgRuntimeError = ("RuntimeError: "
                        "What's the universe and the rest?")
     assert msgWhoFailed in friendlyMsg
@@ -746,7 +746,7 @@ def test_sigslot_request(eventLoopFixt):
     assert len(exceptStrs) == 2, exceptStrs
     (friendlyMsg, details) = exceptStrs
     msgWhoFailed = "Remote Exception from bob"
-    msgSlotFailure = 'Error in slot "slotErrorCpp"'
+    msgSlotFailure = "Error in slot 'slotErrorCpp' from alice"
     msgKeyFailure = "Key 'non_existing_key' does not exist"
     assert msgWhoFailed in friendlyMsg
     assert msgSlotFailure in friendlyMsg
