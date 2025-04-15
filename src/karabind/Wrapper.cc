@@ -76,6 +76,12 @@ namespace karabind {
             return wrapper::castAnyToPy(node.getValueAsAny());
         }
 
+        py::object getRefAttributesByNode(karabo::data::Hash::Node& self) {
+            using namespace karabo::data;
+            auto hp = std::shared_ptr<Hash::Attributes>(&self.getAttributes(), [](const Hash::Attributes*) {});
+            return py::cast(self).attr("_getref_attrs_by_node_")(hp);
+        }
+
         py::object getRefAttributes(karabo::data::Hash& self, const std::string& path, const std::string& sep) {
             using namespace karabo::data;
             Hash::Node& node = self.getNode(path, sep.at(0));

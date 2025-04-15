@@ -51,6 +51,10 @@ void exportPyUtilHashNode(py::module_& m) {
 
     n.def("__str__", [](const Hash::Node& self) { return py::cast(self.getKey()); });
 
+    n.def(
+          "_getref_attrs_by_node_", [](Hash::Node& self, Hash::Attributes* attrs) { return py::cast(attrs); },
+          py::arg("ref"), py::return_value_policy::reference_internal, py::keep_alive<0, 1>());
+
     n.def("getKey", [](const Hash::Node& self) { return py::cast(self.getKey()); }, "Returns the key of current node.");
 
     n.def(
