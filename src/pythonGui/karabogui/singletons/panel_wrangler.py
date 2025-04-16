@@ -81,7 +81,7 @@ class PanelWrangler(QObject):
             KaraboEvent.CreateMainWindow: self._event_mainwindow,
             KaraboEvent.RaiseEditor: self._event_raise_editor,
             KaraboEvent.AccessLevelChanged: self._event_access_level,
-            KaraboEvent.TemporarySession: self._event_temporary_session,
+            KaraboEvent.NetworkSession: self._event_network_session,
         }
         register_for_broadcasts(event_map)
 
@@ -216,7 +216,7 @@ class PanelWrangler(QObject):
             self._close_unattached_panels()
             if self.main_window is not None:
                 icon, tooltip = get_temporary_button_data()
-                self.main_window.setTemporaryButton(icon, tooltip)
+                self.main_window.setSessionButton(icon, tooltip)
 
     def _event_mainwindow(self, data):
         self._create_main_window()
@@ -237,17 +237,17 @@ class PanelWrangler(QObject):
             elif isinstance(panel, MacroPanel):
                 panel.setReadOnly(not macro_editable)
 
-    def _event_temporary_session(self, data):
+    def _event_network_session(self, data):
         """Update the Temporary Session button in main window and all
         scene panels, when the Temporary session state changes"""
         icon, tooltip = get_temporary_button_data()
         if self.main_window is not None:
-            self.main_window.setTemporaryButton(icon, tooltip)
+            self.main_window.setSessionButton(icon, tooltip)
         for panel in self._project_item_panels.values():
             if isinstance(panel, ScenePanel):
-                panel.setTemporaryButton(icon, tooltip)
+                panel.setSessionButton(icon, tooltip)
         for panel in self._unattached_scene_panels.values():
-            panel.setTemporaryButton(icon, tooltip)
+            panel.setSessionButton(icon, tooltip)
 
     # -------------------------------------------------------------------
     # private interface
@@ -389,7 +389,7 @@ class PanelWrangler(QObject):
             if enabled:
                 # Sync the button state with current Temporary session state.
                 icon, tooltip = get_temporary_button_data()
-                panel.setTemporaryButton(icon, tooltip)
+                panel.setSessionButton(icon, tooltip)
 
         # XXX: Only attached and access level dependent scene panels are
         # allowed to have design mode!

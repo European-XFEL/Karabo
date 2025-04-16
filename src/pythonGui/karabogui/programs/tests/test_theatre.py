@@ -60,6 +60,7 @@ def test_theatre_normal(gui_app, mocker):
         topology.initialize(system_hash())
         process_qt_events(timeout=1000)
         scene.assert_called_with("divvy", "scene")
+    network.deleteLater()
 
 
 def test_theatre_timeout(gui_app, mocker):
@@ -88,6 +89,7 @@ def test_theatre_timeout(gui_app, mocker):
         process_qt_events(timeout=1000)
         scene.assert_not_called()
         mbox.show_warning.assert_called_once()
+    network.deleteLater()
 
 
 def test_missing_device(gui_app, mocker):
