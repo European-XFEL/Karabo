@@ -56,8 +56,6 @@ def numpy_from_number(number, default=np.object_):
         HashType.VectorUInt64: np.uint64,
         HashType.VectorFloat: np.float32,
         HashType.VectorDouble: np.float64,
-        HashType.VectorComplexFloat: np.complex64,
-        HashType.VectorComplexDouble: np.complex128,
 
         HashType.Bool: np.bool_,
         HashType.Int8: np.int8,
@@ -70,8 +68,6 @@ def numpy_from_number(number, default=np.object_):
         HashType.UInt64: np.uint64,
         HashType.Float: np.float32,
         HashType.Double: np.float64,
-        HashType.ComplexFloat: np.complex64,
-        HashType.ComplexDouble: np.complex128,
     }
     try:
         h_type = HashType(number)

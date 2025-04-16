@@ -18,19 +18,17 @@ import numpy as np
 
 from karabo.common.states import State
 from karabo.native import (
-    AccessLevel, AccessMode, Assignment, Bool, ByteArray, Char, ComplexDouble,
-    ComplexFloat, Configurable, Double, Float, Int8, Int16, Int32, Int64, Node,
-    Slot, String, TypeHash, TypeSchema, UInt8, UInt16, UInt32, UInt64, Unit,
-    VectorBool, VectorChar, VectorComplexDouble, VectorComplexFloat,
+    AccessLevel, AccessMode, Assignment, Bool, ByteArray, Char, Configurable,
+    Double, Float, Int8, Int16, Int32, Int64, Node, Slot, String, TypeHash,
+    TypeSchema, UInt8, UInt16, UInt32, UInt64, Unit, VectorBool, VectorChar,
     VectorDouble, VectorFloat, VectorHash, VectorInt8, VectorInt16,
     VectorInt32, VectorInt64, VectorString, VectorUInt8, VectorUInt16,
     VectorUInt32, VectorUInt64)
 from karabogui.binding.api import (
-    BoolBinding, ByteArrayBinding, CharBinding, ComplexBinding, FloatBinding,
-    HashBinding, Int8Binding, Int16Binding, Int32Binding, Int64Binding,
-    NodeBinding, SchemaBinding, SlotBinding, StringBinding, Uint8Binding,
-    Uint16Binding, Uint32Binding, Uint64Binding, VectorBoolBinding,
-    VectorCharBinding, VectorComplexDoubleBinding, VectorComplexFloatBinding,
+    BoolBinding, ByteArrayBinding, CharBinding, FloatBinding, HashBinding,
+    Int8Binding, Int16Binding, Int32Binding, Int64Binding, NodeBinding,
+    SchemaBinding, SlotBinding, StringBinding, Uint8Binding, Uint16Binding,
+    Uint32Binding, Uint64Binding, VectorBoolBinding, VectorCharBinding,
     VectorDoubleBinding, VectorFloatBinding, VectorHashBinding,
     VectorInt8Binding, VectorInt16Binding, VectorInt32Binding,
     VectorInt64Binding, VectorStringBinding, VectorUint8Binding,
@@ -127,14 +125,12 @@ class RowSchema(Configurable):
 
 
 ALL_PROPERTIES_MAP = {
-    'a': BoolBinding, 'b': CharBinding, 'c': ComplexBinding,
-    'd': ComplexBinding, 'e': FloatBinding, 'f': FloatBinding,
+    'a': BoolBinding, 'b': CharBinding, 'e': FloatBinding, 'f': FloatBinding,
     'g': HashBinding, 'h': Int16Binding, 'i': Int32Binding,
     'j': Int64Binding, 'k': Int8Binding, 'll': SchemaBinding,
     'm': StringBinding, 'n': Uint16Binding, 'o': Uint32Binding,
     'p': Uint64Binding, 'q': Uint8Binding, 'r': VectorBoolBinding,
-    's': VectorCharBinding, 't': VectorComplexDoubleBinding,
-    'u': VectorComplexFloatBinding, 'v': VectorDoubleBinding,
+    's': VectorCharBinding, 'v': VectorDoubleBinding,
     'w': VectorFloatBinding, 'x': VectorHashBinding,
     'y': VectorInt16Binding, 'z': VectorInt32Binding,
     'a1': VectorInt64Binding, 'b1': VectorInt8Binding,
@@ -148,17 +144,14 @@ ALL_PROPERTIES_MAP = {
 class AllProperties(Configurable):
     """A `Configurable` with every type of property
     """
-    a = Bool(defaultValue=True)
+    a = Bool(defaultValue=True, requiredAccessLevel=AccessLevel.EXPERT)
     b = Char(defaultValue='c')
-    c = ComplexDouble(requiredAccessLevel=AccessLevel.EXPERT)
-    d = ComplexFloat(accessMode=AccessMode.READONLY,
-                     assignment=Assignment.INTERNAL)
     e = Double(unitSymbol=Unit.METER)
     f = Float()
     g = TypeHash()
     h = Int16()
-    i = Int32()
-    j = Int64()
+    i = Int32(accessMode=AccessMode.READONLY, assignment=Assignment.INTERNAL)
+    j = Int64(unitSymbol=Unit.METER)
     k = Int8()
     ll = TypeSchema()
     m = String(options=['foo', 'bar', 'baz', 'qux'])
@@ -168,8 +161,6 @@ class AllProperties(Configurable):
     q = UInt8()
     r = VectorBool()
     s = VectorChar()
-    t = VectorComplexDouble()
-    u = VectorComplexFloat()
     v = VectorDouble()
     w = VectorFloat()
     x = VectorHash(rows=RowSchema)

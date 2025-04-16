@@ -557,12 +557,11 @@ def test_configuration_panel_info(gui_app):
 
     assert binding.value.a.value is Undefined
     assert binding.value.b.value is Undefined
-    assert binding.value.c.value is Undefined
 
     apply_default_configuration(binding)
     assert binding.value.a.value
     assert binding.value.b.value == "c"
-    assert binding.value.c.value is Undefined
+    assert binding.value.f.value is Undefined
 
     mediator = Mediator()
     with singletons(mediator=mediator):
@@ -598,8 +597,8 @@ def test_configuration_panel_info(gui_app):
         assert "m" in config
         assert config["m"] == "<undefined>"
 
-        assert "c" in config
-        assert config["c"] == "<undefined>"
+        assert "f" in config
+        assert config["f"] == "<undefined>"
 
 
 def test_configuration_from_past(gui_app, mocker):

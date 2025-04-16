@@ -81,10 +81,6 @@ def string_from_bool(data):
     return '1' if data else '0'
 
 
-def string_from_complex(data):
-    return f"({data.real},{data.imag})"
-
-
 _STRING_CONVERTER = {
     HashType.Bool: string_from_bool,
     HashType.Char: string_from_simple,
@@ -98,8 +94,6 @@ _STRING_CONVERTER = {
     HashType.UInt64: string_from_simple,
     HashType.Float: string_from_simple,
     HashType.Double: string_from_simple,
-    HashType.ComplexFloat: string_from_complex,
-    HashType.ComplexDouble: string_from_complex,
 
     HashType.VectorBool: string_from_vector_bool,
     HashType.VectorChar: string_from_vector_char,
@@ -113,8 +107,6 @@ _STRING_CONVERTER = {
     HashType.VectorUInt64: string_from_numpy_vector,
     HashType.VectorFloat: string_from_numpy_vector,
     HashType.VectorDouble: string_from_numpy_vector,
-    HashType.VectorComplexFloat: string_from_numpy_vector,
-    HashType.VectorComplexDouble: string_from_numpy_vector,
 
     HashType.Hash: string_from_hash,
     HashType.VectorHash: string_from_vector_hash,
@@ -160,10 +152,6 @@ def none_from_string(s):
 
 def number_from_string(s, numpy=None):
     return numpy(s)
-
-
-def complex_from_string(s):
-    return complex(*[float(n) for n in s[1:-1].split(',')])
 
 
 def vector_char_from_string(s):
@@ -218,8 +206,6 @@ _HASHTYPE_CONVERTER = {
     HashType.UInt64: partial(number_from_string, numpy=np.uint64),
     HashType.Float: partial(number_from_string, numpy=np.float32),
     HashType.Double: partial(number_from_string, numpy=np.float64),
-    HashType.ComplexFloat: complex_from_string,
-    HashType.ComplexDouble: complex_from_string,
 
     HashType.VectorBool: partial(numpy_vector_from_string, numpy=np.bool_),
     HashType.VectorChar: vector_char_from_string,
@@ -233,10 +219,6 @@ _HASHTYPE_CONVERTER = {
     HashType.VectorUInt64: partial(numpy_vector_from_string, numpy=np.uint64),
     HashType.VectorFloat: partial(numpy_vector_from_string, numpy=np.float32),
     HashType.VectorDouble: partial(numpy_vector_from_string, numpy=np.float64),
-    HashType.VectorComplexFloat: partial(numpy_vector_from_string,
-                                         numpy=np.complex64),
-    HashType.VectorComplexDouble: partial(numpy_vector_from_string,
-                                          numpy=np.complex128),
 
     HashType.Hash: hash_from_string,
     HashType.VectorHash: vector_hash_from_string,
