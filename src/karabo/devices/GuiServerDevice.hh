@@ -33,10 +33,9 @@
 #include "karabo/core/Device.hh"
 #include "karabo/data/time/Epochstamp.hh"
 #include "karabo/data/types/Schema.hh"
-#include "karabo/devices/GuiServerTemporarySessionManager.hh"
+#include "karabo/devices/GuiServerAuthSessionManager.hh"
 #include "karabo/net/Broker.hh"
 #include "karabo/net/Connection.hh"
-#include "karabo/net/UserAuthClient.hh"
 #include "karabo/util/Version.hh"
 #include "karabo/xms/InputChannel.hh"
 
@@ -75,7 +74,7 @@ namespace karabo {
                 std::string userId;
                 // The one-time token for an authenticated GUI Client session -
                 // used for logging locally - the log files must, for privacy
-                // reasons not contain any userId associated to execution of
+                // reasons, not contain any userId associated with execution of
                 // operations.
                 std::string oneTimeToken;
                 // Timestamp for the start of the GUI Client session.
@@ -184,10 +183,11 @@ namespace karabo {
 
             std::atomic<int> m_timeout; // might overwrite timeout from client if client is smaller
 
-            karabo::net::UserAuthClient m_authClient;
-            // The temporary session manager has to be built after the GuiServer is fully constructed - it binds to a
-            // method of the GuiServer.
-            std::shared_ptr<GuiServerTemporarySessionManager> m_tempSessionManager;
+            // The session managers have to be built after the GuiServer is fully constructed - they bind to
+            // methods of the GuiServer.
+            std::shared_ptr<GuiServerAuthSessionManager> m_authSessionManager;
+            std::shared_ptr<GuiServerAuthSessionManager> m_tempSessionManager;
+
 
             const bool m_onlyAppModeClients;
 
@@ -213,6 +213,8 @@ namespace karabo {
              * device server logs.
              */
             void initUsersActionsLog();
+
+            void initializeAuthSessionSupport();
 
             /**
              * @brief Adds an entry with a given text to the user actions log.
@@ -438,9 +440,33 @@ namespace karabo {
                                         const bool isLoginOverLogin,
                                         const karabo::net::OneTimeTokenAuthorizeResult& authResult);
 
+
             /**
-             * @brief Handles a temporary session expired event communicated by the internal instance of the
-             * GuiServerTemporarySessionManager.
+             * @brief Handles a session expired event communicated by an internal instance of
+             * GuiServerSessionManager.
+             *
+             * The expiration is handled by sending a message of type "onSessionExpired" to the client
+             * associated with the expired token. The message carries a Hash with paths "expiredToken" and
+             * "expirationTime".
+             *
+             * @param info data about the expired session.
+             */
+            void onSessionExpiration(const ExpiredSessionInfo& info);
+
+            /**
+             * @brief Handles a "session about to expire" event.
+             *
+             * The eminent session end is handled by sending a message of type "onEndSessionNotice"
+             * to the client associated with the about to expire token. The message carries a Hash with paths
+             * "toExpireToken" and "secondsToExpiration".
+             *
+             * @param info data about the session about to expire.
+             */
+            void onEndSessionNotice(const EminentExpirationInfo& info);
+
+            /**
+             * @brief Handles a temporary session expired event communicated by an internal instance of
+             * GuiServerSessionManager.
              *
              * The expiration is handled by sending a message of type "onTemporarySessionExpired" to the client
              * associated with the expired token. The message carries a Hash with paths "expiredToken" and
@@ -448,7 +474,7 @@ namespace karabo {
              *
              * @param info data about the expired temporary session.
              */
-            void onTemporarySessionExpiration(const ExpiredTemporarySessionInfo& info);
+            void onTemporarySessionExpiration(const ExpiredSessionInfo& info);
 
 
             /**
@@ -607,6 +633,27 @@ namespace karabo {
             void onBeginTemporarySession(WeakChannelPointer channel, const karabo::data::Hash& info);
 
             /**
+             * @brief Handles the result of an "login" request sent by a connected client.
+             *
+             * @param channel the TCP channel connecting to the client that requested the session
+             * @param clientId an identification of the GUI Client that originated the login request
+             * @param clientVersion the version of the GUI client logging in.
+             * @param isLoginOverLogin is the token being authorized in the context of a login over an existing user
+             *        session (true) or of a login that is starting a completely new user session?
+             * @param result the result of the begin session operation that will be communicated back to the client.
+             *
+             * @note a login over an existing user session has the potentially "desired side-effect" of just
+             *       "refreshing" an existing user session, by updating its start time. This is useful when
+             *       the maximum retention time for a token session is about to expire - the user can be instructed
+             *       to refresh his/her login to keep going on the same GUI Client connection. This is the primary
+             *       reason for the GUI Server not caring if the login over login corresponds to a user change or
+             *       not.
+             */
+            void onBeginSessionResult(const WeakChannelPointer& channel, const std::string& clientId,
+                                      const karabo::util::Version& clientVersion, const bool isLoginOverLogin,
+                                      const karabo::devices::BeginSessionResult& result);
+
+            /**
              * @brief Handles the result of an "beginTemporarySession" request sent by a connected client.
              *
              * @param channel the TCP channel connecting to the client that requested the temporary session that will be
@@ -618,7 +665,7 @@ namespace karabo {
              */
             void onBeginTemporarySessionResult(WeakChannelPointer channel,
                                                karabo::data::Schema::AccessLevel levelBeforeTemporarySession,
-                                               const BeginTemporarySessionResult& result);
+                                               const BeginSessionResult& result);
 
             /**
              * @brief Handles a message of type "endTemporarySession" by ending the current temporary session (if
