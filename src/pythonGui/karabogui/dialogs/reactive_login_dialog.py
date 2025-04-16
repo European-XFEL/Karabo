@@ -546,6 +546,7 @@ class ReactiveLoginDialog(QDialog):
 
 
 TEMPORARY_INDEX = 0
+PERMANENT_INDEX = 1
 
 
 class TemporarySessionDialog(QDialog):
@@ -557,10 +558,14 @@ class TemporarySessionDialog(QDialog):
         if parent is None:
             self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
 
+        self.remember_login.setVisible(False)
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
         self.ok_button.setEnabled(False)
-
         self.combo_mode.currentIndexChanged.connect(self._switch_temporary)
+        if krb_access.is_end_of_session():
+            self.combo_mode.setCurrentIndex(PERMANENT_INDEX)
+            self.combo_mode.setEnabled(False)
+
         self.edit_access_code = AccessCodeWidget(parent)
         self.access_widget_layout.addWidget(self.edit_access_code)
         self.edit_access_code.valueChanged.connect(self._update_button)
@@ -574,7 +579,6 @@ class TemporarySessionDialog(QDialog):
         access_level = krb_access.GLOBAL_ACCESS_LEVEL.name
         text = ACCESS_LEVEL_INFO.format(user=user, access_level=access_level)
         self.info_label.setText(text)
-        self.remember_login.setVisible(False)
 
     @Slot(int)
     def _switch_temporary(self, index):

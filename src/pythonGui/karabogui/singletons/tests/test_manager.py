@@ -932,7 +932,7 @@ def test_handle_onBeginTemporarySession(mocker):
         args, _ = second_call
         assert args == (KaraboEvent.LoginUserChanged, {})
         args, _ = third_call
-        assert args == (KaraboEvent.TemporarySession, {})
+        assert args == (KaraboEvent.NetworkSession, {})
 
 
 def test_handle_onEndTemporarySession(mocker):
@@ -951,7 +951,7 @@ def test_handle_onEndTemporarySession(mocker):
         args, _ = second_call
         assert args == (KaraboEvent.LoginUserChanged, {})
         args, _ = third_call
-        assert args == (KaraboEvent.TemporarySession, {})
+        assert args == (KaraboEvent.NetworkSession, {})
 
 
 def test_handle_onTemporarySessionExpired(mocker):
@@ -967,7 +967,7 @@ def test_handle_onTemporarySessionExpired(mocker):
         args, _ = first_call
         assert args == (KaraboEvent.LoginUserChanged, {})
         args, _ = second_call
-        assert args == (KaraboEvent.TemporarySession, {})
+        assert args == (KaraboEvent.NetworkSession, {})
 
 
 def test_handle_onEndTemporarySessionNotice(mocker):
