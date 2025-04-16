@@ -133,6 +133,13 @@ class GuiServer_Test : public CPPUNIT_NS::TestFixture {
     void testTemporarySessionExpiration();
 
     /**
+     * @brief Checks that a user-authenticated login session expires, after
+     * giving a notice of its eminent expiration and that between the notice
+     * and the expiration no temporary session can be started.
+     */
+    void testSessionExpiration();
+
+    /**
      * @brief Checks that a GUI Server that only accepts Application Mode clients refuses
      * logins from standard GUI Clients.
      */

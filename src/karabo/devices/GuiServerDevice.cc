@@ -34,7 +34,6 @@
 #include "karabo/log/Logger.hh"
 #include "karabo/net/EventLoop.hh"
 #include "karabo/net/TcpChannel.hh"
-#include "karabo/net/UserAuthClient.hh"
 #include "karabo/util/DataLogUtils.hh"
 #include "karabo/util/MetaTools.hh"
 #include "karabo/util/Version.hh"
@@ -178,13 +177,40 @@ namespace karabo {
                   .commit();
 
             UINT32_ELEMENT(expected)
+                  .key("maxSessionDuration")
+                  .displayedName("Maximum duration of an user-authenticated session")
+                  .description(
+                        "The duration of a login session started with an user authentication.\n"
+                        "The end of the section may be delayed by up to " +
+                        toString(CHECK_SESSION_EXPIRATION_INTERVAL_SECS) + " seconds.")
+                  .assignmentOptional()
+                  .defaultValue(14 * 24 * 60 * 60) // 14 days
+                  .maxInc(14 * 24 * 60 * 60)
+                  .unit(Unit::SECOND)
+                  .init()
+                  .commit();
+
+            UINT32_ELEMENT(expected)
+                  .key("endSessionNoticeTime")
+                  .displayedName("End of Session Notice Time")
+                  .description(
+                        "How much time in advance shall a GUI client be warned about the end of a login session.\n"
+                        "May be delayed by up to " +
+                        toString(CHECK_SESSION_EXPIRATION_INTERVAL_SECS) + " seconds.")
+                  .assignmentOptional()
+                  .defaultValue(24 * 60 * 60) // 24 hours
+                  .unit(Unit::SECOND)
+                  .init()
+                  .commit();
+
+            UINT32_ELEMENT(expected)
                   .key("maxTemporarySessionTime")
                   .displayedName("Max. Temporary Session Time")
                   .description("Maximum duration of a temporary session.\nMay be delayed by up to " +
-                               toString(CHECK_TEMPSESSION_EXPIRATION_INTERVAL_SECS) + " seconds.")
+                               toString(CHECK_SESSION_EXPIRATION_INTERVAL_SECS) + " seconds.")
                   .assignmentOptional()
                   .defaultValue(60 * 60) // 1 hour
-                  .minInc(2 * CHECK_TEMPSESSION_EXPIRATION_INTERVAL_SECS)
+                  .minInc(2 * CHECK_SESSION_EXPIRATION_INTERVAL_SECS)
                   .maxInc(10 * 60 * 60) // 10 hours
                   .unit(Unit::SECOND)
                   .init()
@@ -196,7 +222,7 @@ namespace karabo {
                   .description(
                         "How much time in advance shall a GUI client be warned about the end of a temporary session.\n"
                         "May be delayed by up to " +
-                        toString(CHECK_TEMPSESSION_EXPIRATION_INTERVAL_SECS) + " seconds.")
+                        toString(CHECK_SESSION_EXPIRATION_INTERVAL_SECS) + " seconds.")
                   .assignmentOptional()
                   .defaultValue(5 * 60)
                   .unit(Unit::SECOND)
@@ -449,7 +475,6 @@ namespace karabo {
               m_readyNetworkConnections(),
               m_isReadOnly(config.get<bool>("isReadOnly")),
               m_timeout(config.get<int>("timeout")),
-              m_authClient(config.get<std::string>("authServer")),
               m_onlyAppModeClients(config.get<bool>("onlyAppModeClients")) {
             KARABO_INITIAL_FUNCTION(initialize)
 
@@ -474,6 +499,71 @@ namespace karabo {
 
         GuiServerDevice::~GuiServerDevice() {
             if (m_dataConnection) m_dataConnection->stop();
+        }
+
+        void GuiServerDevice::initializeAuthSessionSupport() {
+            auto endSessionNoticeTime = get<unsigned int>("endSessionNoticeTime");
+            auto maxTemporarySessionTime = get<unsigned int>("maxTemporarySessionTime");
+            auto endTemporarySessionNoticeTime = get<unsigned int>("endTemporarySessionNoticeTime");
+            auto sessionDurationSecs = get<unsigned int>("maxSessionDuration");
+
+            if (endSessionNoticeTime < CHECK_SESSION_EXPIRATION_INTERVAL_SECS) {
+                // At least one checking interval should elapse between the notice of end of session
+                // and the expiration of the session.
+                endSessionNoticeTime = CHECK_SESSION_EXPIRATION_INTERVAL_SECS;
+                KARABO_LOG_FRAMEWORK_INFO << "endSessionNoticeTime must be at least "
+                                          << CHECK_SESSION_EXPIRATION_INTERVAL_SECS
+                                          << " secs (the interval between session expiration checks). "
+                                          << "Adjusted endSessionNoticeTime to " << endSessionNoticeTime << " secs.";
+                set("endSessionNoticeTime", endSessionNoticeTime);
+            }
+            if (maxTemporarySessionTime > endSessionNoticeTime) {
+                // The maximum duration of a temporary session cannot be longer than the notice time for the
+                // expiration of the underlying session. As by design, temporary sessions cannot be started while
+                // the underlying session is already in its expiration notice period, this constraint on the
+                // maximum duration of a temporary session guarantees that no started temporary session can
+                // outlive it's underlying session. Equally important, all the events of notice of expiration
+                // and of expiration for both the temporary and the underlying sessions will have their
+                // place within the timeline of the underlying session, in the expected order.
+                maxTemporarySessionTime = endSessionNoticeTime - CHECK_SESSION_EXPIRATION_INTERVAL_SECS;
+                KARABO_LOG_FRAMEWORK_INFO << "maxTemporarySessionTime cannot be longer than endSessionNoticeTime ("
+                                          << endSessionNoticeTime << " secs). Adjusted maxTemporarySessionTime to "
+                                          << maxTemporarySessionTime << " secs.";
+                set("maxTemporarySessionTime", maxTemporarySessionTime);
+            }
+
+            if (endTemporarySessionNoticeTime < CHECK_SESSION_EXPIRATION_INTERVAL_SECS) {
+                // At least one checking interval should elapse between the notice of end of session
+                // and the expiration of the session.
+                endTemporarySessionNoticeTime = CHECK_SESSION_EXPIRATION_INTERVAL_SECS;
+                KARABO_LOG_FRAMEWORK_INFO
+                      << "endTemporarySessionNoticeTime must be at least " << CHECK_SESSION_EXPIRATION_INTERVAL_SECS
+                      << " secs (the interval between temporary session expiration checks). "
+                      << "Adjusted endTemporarySessionNoticeTime to " << endTemporarySessionNoticeTime << " secs.";
+                set("endTemporarySessionNoticeTime", endTemporarySessionNoticeTime);
+            } else if (endTemporarySessionNoticeTime > maxTemporarySessionTime) {
+                // The notice of end of session should occur at a point in time after the start
+                // of the session - at least within the interval between the start of the session and
+                // the first check for expiration
+                endTemporarySessionNoticeTime = maxTemporarySessionTime - CHECK_SESSION_EXPIRATION_INTERVAL_SECS;
+                KARABO_LOG_FRAMEWORK_INFO
+                      << "endTemporarySessionNoticeTime is too big. The notice of temporary session end would be "
+                         "before the start of the session. Adjusted the endTemporarySessionNoticeTime to "
+                      << endTemporarySessionNoticeTime << " secs, resulting in a notice emission "
+                      << maxTemporarySessionTime - endTemporarySessionNoticeTime
+                      << " secs after the start of the temporary session.";
+                set("endTemporarySessionNoticeTime", endTemporarySessionNoticeTime);
+            }
+
+            m_authSessionManager = std::make_shared<GuiServerAuthSessionManager>(
+                  m_topic, get<std::string>("authServer"), sessionDurationSecs, endSessionNoticeTime,
+                  bind_weak(&GuiServerDevice::onEndSessionNotice, this, _1),
+                  bind_weak(&GuiServerDevice::onSessionExpiration, this, _1));
+
+            m_tempSessionManager = std::make_shared<GuiServerAuthSessionManager>(
+                  m_topic, get<std::string>("authServer"), maxTemporarySessionTime, endTemporarySessionNoticeTime,
+                  bind_weak(&GuiServerDevice::onEndTemporarySessionNotice, this, _1),
+                  bind_weak(&GuiServerDevice::onTemporarySessionExpiration, this, _1));
         }
 
 
@@ -509,37 +599,9 @@ namespace karabo {
                 // Note that instanceNew(..) will be called for all instances already in the game.
                 remote().enableInstanceTracking();
 
-                auto maxTemporarySessionTime = get<unsigned int>("maxTemporarySessionTime");
-                auto endTemporarySessionNoticeTime = get<unsigned int>("endTemporarySessionNoticeTime");
-                if (endTemporarySessionNoticeTime < CHECK_TEMPSESSION_EXPIRATION_INTERVAL_SECS) {
-                    // At least one checking interval should elapse between the notice of end of session
-                    // and the expiration of the session.
-                    endTemporarySessionNoticeTime = CHECK_TEMPSESSION_EXPIRATION_INTERVAL_SECS;
-                    KARABO_LOG_FRAMEWORK_INFO << "endTemporarySessionNoticeTime must be at least "
-                                              << CHECK_TEMPSESSION_EXPIRATION_INTERVAL_SECS
-                                              << " secs (the interval between temporary session expiration checks). "
-                                              << "Adjusted endTemporarySessionNoticeTime to "
-                                              << endTemporarySessionNoticeTime << " secs.";
-                    set("endTemporarySessionNoticeTime", endTemporarySessionNoticeTime);
-                } else if (endTemporarySessionNoticeTime > maxTemporarySessionTime) {
-                    // The notice of end of session should occur at a point in time after the start
-                    // of the session - at least within the interval between the start of the session and
-                    // the first check for expiration
-                    endTemporarySessionNoticeTime =
-                          maxTemporarySessionTime - CHECK_TEMPSESSION_EXPIRATION_INTERVAL_SECS;
-                    KARABO_LOG_FRAMEWORK_INFO
-                          << "endTemporarySessionNoticeTime is too big. The notice of temporary session end would be "
-                             "before the start of the session. Adjusted the endTemporarySessionNoticeTime to "
-                          << endTemporarySessionNoticeTime << " secs, resulting in a notice emission "
-                          << maxTemporarySessionTime - endTemporarySessionNoticeTime
-                          << " secs after the start of the temporary session.";
-                    set("endTemporarySessionNoticeTime", endTemporarySessionNoticeTime);
+                if (isUserAuthActive()) {
+                    initializeAuthSessionSupport();
                 }
-
-                m_tempSessionManager = std::make_shared<GuiServerTemporarySessionManager>(
-                      m_topic, get<std::string>("authServer"), maxTemporarySessionTime, endTemporarySessionNoticeTime,
-                      bind_weak(&GuiServerDevice::onEndTemporarySessionNotice, this, _1),
-                      bind_weak(&GuiServerDevice::onTemporarySessionExpiration, this, _1));
 
                 m_dataConnection->startAsync(bind_weak(&karabo::devices::GuiServerDevice::onConnect, this, _1, _2));
 
@@ -835,18 +897,19 @@ namespace karabo {
             karabo::net::EventLoop::post(bind_weak(&GuiServerDevice::deferredDisconnect, this, weakChannel), 500);
         }
 
-        void GuiServerDevice::onTokenAuthorizeResult(const WeakChannelPointer& weakChannel, const std::string& clientId,
-                                                     const karabo::util::Version& clientVersion,
-                                                     const std::string& oneTimeToken, const bool isLoginOverLogin,
-                                                     const karabo::net::OneTimeTokenAuthorizeResult& authResult) {
+        void GuiServerDevice::onBeginSessionResult(const WeakChannelPointer& weakChannel, const std::string& clientId,
+                                                   const karabo::util::Version& clientVersion,
+                                                   const bool isLoginOverLogin,
+                                                   const karabo::devices::BeginSessionResult& beginSessionResult) {
             karabo::net::Channel::Pointer channel = weakChannel.lock();
             if (channel) {
-                KARABO_LOG_FRAMEWORK_DEBUG << "One-time token validation results:\nSuccess: " << authResult.success
-                                           << "\nUserId: " << authResult.userId
-                                           << "\nAccess Level: " << authResult.accessLevel
-                                           << "\nErrMsg: " << authResult.errMsg;
-                if (!authResult.success) {
-                    const string errorMsg = "Error validating token: " + authResult.errMsg;
+                KARABO_LOG_FRAMEWORK_DEBUG
+                      << "One-time token validation results:\nSuccess: " << beginSessionResult.success
+                      << "\nUserId: " << beginSessionResult.userId
+                      << "\nAccess Level: " << beginSessionResult.accessLevel
+                      << "\nErrMsg: " << beginSessionResult.errMsg;
+                if (!beginSessionResult.success) {
+                    const string errorMsg = "Error validating token: " + beginSessionResult.errMsg;
                     KARABO_LOG_FRAMEWORK_ERROR << errorMsg;
                     const Hash h("type", "notification", "message", errorMsg);
                     safeClientWrite(weakChannel, h);
@@ -860,20 +923,20 @@ namespace karabo {
                 } else {
                     karabo::data::Schema::AccessLevel level{Schema::AccessLevel::OBSERVER};
                     if (!m_isReadOnly) {
-                        Schema::AccessLevel loginAccessLevel = authResult.accessLevel;
+                        Schema::AccessLevel loginAccessLevel = beginSessionResult.accessLevel;
                         if (loginAccessLevel > MAX_LOGIN_ACCESS_LEVEL) {
                             loginAccessLevel = MAX_LOGIN_ACCESS_LEVEL;
                         }
                         level = loginAccessLevel;
                     }
-                    registerConnect(clientVersion, channel, authResult.userId, oneTimeToken);
+                    registerConnect(clientVersion, channel, beginSessionResult.userId, beginSessionResult.sessionToken);
 
                     // A session whose user is an OBSERVER is considered a read-only session.
                     const bool readOnly = (level == Schema::AccessLevel::OBSERVER);
 
                     Hash h("type", "loginInformation");
                     h.set("accessLevel", static_cast<int>(level));
-                    h.set("username", authResult.userId);
+                    h.set("username", beginSessionResult.userId);
                     h.set("readOnly", readOnly);
                     safeClientWrite(channel, h);
 
@@ -897,7 +960,68 @@ namespace karabo {
             }
         }
 
-        void GuiServerDevice::onTemporarySessionExpiration(const ExpiredTemporarySessionInfo& info) {
+        void GuiServerDevice::onSessionExpiration(const ExpiredSessionInfo& info) {
+            // Retrieve the channel associated with the expired token by searching channel data
+            const std::string& expiredToken = info.expiredToken;
+            std::string loggedUserId;
+            Channel::Pointer chanForExpiration;
+            {
+                std::lock_guard<std::mutex> lock(m_channelMutex);
+                for (auto& [channel, channelData] : m_channels) {
+                    if (channelData.oneTimeToken == expiredToken) {
+                        chanForExpiration = channel;
+                        loggedUserId = channelData.userId;
+                        channelData.sessionStartTime = Epochstamp(0ULL, 0ULL);
+                        channelData.oneTimeToken = "";
+                        channelData.userId = "";
+                        break;
+                    }
+                }
+            }
+            if (chanForExpiration) {
+                // Sends a message about the session expiration to the associated client
+                Hash h("type", "onSessionExpired", "expiredToken", info.expiredToken, "expirationTime",
+                       info.expirationTime.toIso8601Ext(), "loggedUserId", loggedUserId);
+
+                const WeakChannelPointer weakExpiredChannel = WeakChannelPointer(chanForExpiration);
+
+                safeClientWrite(weakExpiredChannel, h);
+                KARABO_LOG_FRAMEWORK_DEBUG << "Sent 'onSessionExpired' for session with token '" << info.expiredToken
+                                           << "': expired at: " << info.expirationTime.toIso8601Ext() << "\n";
+
+                karabo::net::EventLoop::post(bind_weak(&GuiServerDevice::deferredDisconnect, this, weakExpiredChannel),
+                                             1'000);
+            }
+        }
+
+        void GuiServerDevice::onEndSessionNotice(const EminentExpirationInfo& info) {
+            // Retrieve the channel associated with the token to expire by searching channel data
+            const std::string& token = info.aboutToExpireToken;
+            Channel::Pointer chanForExpiration;
+            {
+                std::lock_guard<std::mutex> lock(m_channelMutex);
+                for (auto& [channel, channelData] : m_channels) {
+                    if (channelData.oneTimeToken == token) {
+                        chanForExpiration = channel;
+                        break;
+                    }
+                }
+            }
+            if (chanForExpiration) {
+                // Sends a message about the eminent temporary session expiration to the associated client
+                Hash h("type", "onEndSessionNotice", "aboutToExpireToken", info.aboutToExpireToken,
+                       "secondsToExpiration", info.timeForExpiration.getTotalSeconds());
+
+                safeClientWrite(WeakChannelPointer(chanForExpiration), h);
+
+                KARABO_LOG_FRAMEWORK_DEBUG
+                      << "Sent 'onEndSessionNotice' for token '" << info.aboutToExpireToken
+                      << "': remaining time to expiration: " << info.timeForExpiration.getTotalSeconds()
+                      << " second(s)\n";
+            }
+        }
+
+        void GuiServerDevice::onTemporarySessionExpiration(const ExpiredSessionInfo& info) {
             // Retrieve the channel associated with the expired token by searching channel data
             const std::string& expiredToken = info.expiredToken;
             Schema::AccessLevel levelBeforeTemporarySession{Schema::AccessLevel::OBSERVER};
@@ -909,6 +1033,9 @@ namespace karabo {
                     if (channelData.temporarySessionToken == expiredToken) {
                         chanForExpiration = channel;
                         levelBeforeTemporarySession = channelData.levelBeforeTemporarySession;
+                        // TODO: Check if the userId of the underlying session is to be returned or the
+                        //       one of the temporary session. channelData.temporarySessionUserId seems to be the more
+                        //       reasonable value to return
                         loggedUserId = channelData.userId;
                         channelData.temporarySessionStartTime = Epochstamp(0ULL, 0ULL);
                         channelData.temporarySessionToken = "";
@@ -971,8 +1098,15 @@ namespace karabo {
             } else {
                 std::lock_guard<std::mutex> lock(m_channelMutex);
                 auto it = m_channels.find(chan);
-                if (it != m_channels.end() && !it->second.temporarySessionToken.empty()) {
-                    errorMsg = "There's already an active temporary session.";
+                if (it != m_channels.end()) {
+                    if (!it->second.temporarySessionToken.empty()) {
+                        errorMsg = "There's already an active temporary session.";
+                    }
+                    if (m_authSessionManager->isSessionExpiring(it->second.oneTimeToken)) {
+                        errorMsg =
+                              "Refusing to put a temporary session on top of a login that expires soon. First "
+                              "re-login.";
+                    }
                 }
             }
             if (!errorMsg.empty()) {
@@ -986,30 +1120,31 @@ namespace karabo {
             const std::string temporarySessionToken = info.get<std::string>("temporarySessionToken");
             const Schema::AccessLevel levelBeforeTemporarySession =
                   static_cast<Schema::AccessLevel>(info.get<int>("levelBeforeTemporarySession"));
-            m_tempSessionManager->beginTemporarySession(
-                  temporarySessionToken, bind_weak(&GuiServerDevice::onBeginTemporarySessionResult, this, channel,
-                                                   levelBeforeTemporarySession, _1));
+            m_tempSessionManager->beginSession(temporarySessionToken,
+                                               bind_weak(&GuiServerDevice::onBeginTemporarySessionResult, this, channel,
+                                                         levelBeforeTemporarySession, _1));
         }
+
 
         void GuiServerDevice::onBeginTemporarySessionResult(WeakChannelPointer channel,
                                                             Schema::AccessLevel levelBeforeTemporarySession,
-                                                            const BeginTemporarySessionResult& result) {
+                                                            const BeginSessionResult& result) {
             const karabo::net::Channel::Pointer chan = channel.lock();
             if (!chan) {
                 // Channel is no longer valid
                 return;
             }
             const Hash h("type", "onBeginTemporarySession", "success", result.success, "reason", result.errMsg,
-                         "temporarySessionToken", result.temporarySessionToken, "temporarySessionDurationSecs",
-                         result.temporarySessionDurationSecs, "accessLevel", static_cast<int>(result.accessLevel),
-                         "username", result.userId);
+                         "temporarySessionToken", result.sessionToken, "temporarySessionDurationSecs",
+                         result.sessionDurationSecs, "accessLevel", static_cast<int>(result.accessLevel), "username",
+                         result.userId);
             if (result.success) {
                 std::lock_guard<std::mutex> lock(m_channelMutex);
                 auto it = m_channels.find(chan);
                 if (it != m_channels.end()) {
                     ChannelData& data = it->second;
                     data.temporarySessionStartTime = karabo::data::Epochstamp();
-                    data.temporarySessionToken = result.temporarySessionToken;
+                    data.temporarySessionToken = result.sessionToken;
                     data.temporarySessionUserId = result.userId;
                     data.levelBeforeTemporarySession = levelBeforeTemporarySession;
                 }
@@ -1039,7 +1174,8 @@ namespace karabo {
                         errorMsg = "There's no active temporary session associated with the requesting client.";
                     } else if (chanTemporarySessionToken != temporarySessionToken) {
                         errorMsg =
-                              "The temporary session token associated with the session doesn't match the one provided "
+                              "The temporary session token associated with the session doesn't match the one "
+                              "provided "
                               "in the endTemporarySession request!";
                     }
                 }
@@ -1051,13 +1187,14 @@ namespace karabo {
                                            << "): " + errorMsg;
                 return;
             }
-            EndTemporarySessionResult result = m_tempSessionManager->endTemporarySession(temporarySessionToken);
+            EndSessionResult result = m_tempSessionManager->endSession(temporarySessionToken);
             Hash h("type", "onEndTemporarySession", "success", result.success, "reason", result.errMsg,
-                   "temporarySessionToken", result.temporarySessionToken);
+                   "temporarySessionToken", result.sessionToken);
             {
                 // Even if the endTemporarySession didn't return a success - meaning it didn't find the
                 // temporarySessionToken in its internal data (see note on
-                // GuiServerTemporarySessionManager::endTemporarySession doc comments), we must clear the channel data.
+                // GuiServerTemporarySessionManager::endTemporarySession doc comments), we must clear the channel
+                // data.
                 std::lock_guard<std::mutex> lock(m_channelMutex);
                 auto it = m_channels.find(chan);
                 if (it != m_channels.end()) {
@@ -1083,14 +1220,9 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onLogin";
 
                 // Check valid login.
-                const Version clientVersion(hash.get<string>("version"));
+                const Version clientVersion(hash.has("version") ? hash.get<string>("version") : "0.0.0");
                 const bool userAuthActive = isUserAuthActive();
-                // Before version 2.16 of the Framework, the  GUI client sends the clientId (clientHostname-clientPID)
-                // under the "username" key. Since version 2.16, that key name is being deprecated in favor or the
-                // "clientId" key. For backward compatibility, both keys will be kept during the deprecation period.
-                const string clientId = hash.has("clientId")
-                                              ? hash.get<string>("clientId")
-                                              : (hash.has("username") ? hash.get<string>("username") : "");
+                const string clientId(hash.has("clientId") ? hash.get<string>("clientId") : "");
                 const string cliVersion = clientVersion.getString();
 
                 if (clientVersion < Version(get<std::string>("minClientVersion"))) {
@@ -1105,8 +1237,8 @@ namespace karabo {
                     // The GUI Server is configured to only accept ApplicationMode clients (e.g. cinema and
                     // theater), but the client is a full blown GUI Client.
                     const string errorMsg =
-                          "This GUI Server is configured to refuse connections from the standard Karabo GUI Client. "
-                          "Please connect to another GUI Server in the topic.";
+                          "This GUI Server is configured to refuse connections from the standard Karabo GUI "
+                          "Client. Please connect to another GUI Server in the topic.";
                     sendLoginErrorAndDisconnect(channel, clientId, cliVersion, errorMsg);
                     return;
                 }
@@ -1142,8 +1274,8 @@ namespace karabo {
                                 isLoginOverLogin = true;
                                 if (!it->second.temporarySessionToken.empty()) {
                                     const string errorMsg =
-                                          "There's an active temporary session. Please terminate it before trying to "
-                                          "login again.";
+                                          "There's an active temporary session. Please terminate it before trying "
+                                          "to login again.";
                                     const Hash h("type", "notification", "message", errorMsg);
                                     safeClientWrite(weakChannel, h);
                                     return;
@@ -1151,31 +1283,18 @@ namespace karabo {
                             }
                         }
                         const std::string oneTimeToken = hash.get<string>("oneTimeToken");
-                        m_authClient.authorizeOneTimeToken(
-                              oneTimeToken, m_topic,
-                              bind_weak(&karabo::devices::GuiServerDevice::onTokenAuthorizeResult, this, weakChannel,
-                                        clientId, clientVersion, oneTimeToken, isLoginOverLogin, _1));
+                        m_authSessionManager->beginSession(
+                              oneTimeToken, bind_weak(&karabo::devices::GuiServerDevice::onBeginSessionResult, this,
+                                                      weakChannel, clientId, clientVersion, isLoginOverLogin, _1));
                         KARABO_LOG_FRAMEWORK_INFO << "Authenticated login request from client_id: " << clientId
                                                   << " (version " << cliVersion
                                                   << "). oneTimeToken to be authorized: " << oneTimeToken;
                         // The GUI client at this point will keep waiting for the authorization result or an error.
                         // As the client is not supposed to send any other message to the GUI Server in the
                         // meantime, we return without triggering the next read for the channel. This triggering
-                        // will be done by onTokenAuthorizeResult.
+                        // will be done by onBeginSessionResult.
                         return;
                     } else {
-                        // For versions of the GUI Client prior to 2.20.0 a login message with no OneTimeToken is
-                        // considered an error by an authenticated GUI Server.
-                        if (clientVersion < Version("2.20.0")) {
-                            const string message = "GUI server at '" + get<string>("hostName") + ":" +
-                                                   toString(get<unsigned int>("port")) +
-                                                   "' requires authenticated logins.";
-                            sendLoginErrorAndDisconnect(channel, clientId, cliVersion, message);
-                            KARABO_LOG_FRAMEWORK_INFO
-                                  << "Rejected login with missing oneTimeToken from client_id: " << clientId
-                                  << "(version " << cliVersion << ").";
-                            return;
-                        }
                         // From version 2.20.0 of the GUI Client, a login message with no OneTimeToken is
                         // interpreted as a request for a read-only session by an authenticated GUI Server.
                         readOnly = true;
@@ -1194,7 +1313,6 @@ namespace karabo {
                 else {
                     // No authentication involved
                     registerConnect(clientVersion, channel, clientUserId);
-                    // TODO only send topology if it is not a login over login
                     sendSystemTopology(weakChannel);
                     KARABO_LOG_FRAMEWORK_INFO << "Login request from client_id: " << clientId << " (version "
                                               << cliVersion << ") with no authentication.";
@@ -1234,9 +1352,19 @@ namespace karabo {
                         const Hash h("type", "notification", "message", message);
                         safeClientWrite(channel, h);
                     } else if (type == "login") {
-                        const Channel::Pointer chan = channel.lock();
-                        if (chan && chan->isOpen()) {
-                            onLogin(chan, info);
+                        if (isUserAuthActive()) {
+                            // Login over an existing session is only supported by
+                            // user-authenticating GUI Servers. Non-authenticating
+                            // servers only handle "login" messages in the message
+                            // consumption loop of GuiServerDevice::onWaitForLogin.
+                            const Channel::Pointer chan = channel.lock();
+                            if (chan && chan->isOpen()) {
+                                onLogin(chan, info);
+                            }
+                        } else {
+                            KARABO_LOG_FRAMEWORK_WARN << "Login over login request wrongly sent to a "
+                                                         "non-authenticating GUI Server. Login details:"
+                                                      << info;
                         }
                     } else if (type == "beginTemporarySession") {
                         if (!readOnly) {
@@ -1953,7 +2081,7 @@ namespace karabo {
                 // precisely: its datalogger) was started the last time before the point in time that you
                 // requested and all the parameter updates in between these two time points.
                 request(readerId, "slotGetConfigurationFromPast", deviceId, time)
-                      .timeout(120000) // 2 minutes - default is SignalSlotable::m_defaultAsyncTimeout = 240'000
+                      .timeout(120'000) // 2 minutes - default is SignalSlotable::m_defaultAsyncTimeout = 240'000
                       .receiveAsync<Hash, Schema, bool, std::string>(handler, failureHandler);
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onGetConfigurationFromPast(): " << e.what();
@@ -2072,7 +2200,8 @@ namespace karabo {
                     const bool inserted = channelSet.insert(channel).second;
                     if (!inserted) {
                         // When not cleaning m_networkConnections in instanceGoneHandler, this happens when a GUI
-                        // client has a scene open while the device is down and then restarts: Client will call this.
+                        // client has a scene open while the device is down and then restarts: Client will call
+                        // this.
                         KARABO_LOG_FRAMEWORK_INFO << "A GUI client wants to subscribe a second time to output channel: "
                                                   << channelName;
                     }
@@ -2458,6 +2587,18 @@ namespace karabo {
                     std::lock_guard<std::mutex> lock(m_channelMutex);
                     ChannelIterator it = m_channels.find(chan);
                     if (it != m_channels.end()) {
+                        const std::string& sessionToken = it->second.oneTimeToken;
+                        if (!sessionToken.empty()) {
+                            // There was a user session associated with the disconnected channel - must end it.
+                            const auto& result = m_authSessionManager->endSession(sessionToken);
+                            if (!result.success) {
+                                KARABO_LOG_FRAMEWORK_ERROR << "Error ending user session with token '" << sessionToken
+                                                           << "' upon channel disconnection. Session had started at '"
+                                                           << it->second.sessionStartTime.toIso8601()
+                                                           << "' for a client with version '"
+                                                           << it->second.clientVersion.getString() << "'";
+                            }
+                        }
                         it->first->close(); // This closes socket and unregisters channel from connection
                         devIdsToUnregister.swap(it->second.visibleInstances); // copy to the empty set
                         m_channels.erase(it);                                 // Remove channel as such
@@ -2621,7 +2762,7 @@ namespace karabo {
                                           data.get<std::vector<bool>>(clientAddr + ".pipelineConnectionsReadiness");
                                     pipelinesReady.push_back(m_readyNetworkConnections[channelName][channel]);
                                 } else {
-                                    // Veeery unlikely, but can happen in case a new client has connected AND
+                                    // Very unlikely, but can happen in case a new client has connected AND
                                     // subscribed to a pipeline between creation of 'clientAddr +
                                     // ".pipelineConnections"' structure above and this call here.
                                     KARABO_LOG_FRAMEWORK_INFO << "Client '" << clientAddr << "' among network "
