@@ -23,7 +23,7 @@
 
 #include <chrono>
 #include <cstdlib>
-#include <karabo/devices/GuiServerTemporarySessionManager.hh>
+#include <karabo/devices/GuiServerAuthSessionManager.hh>
 #include <karabo/net/EventLoop.hh>
 
 #include "TestKaraboAuthServer.hh"
@@ -42,9 +42,12 @@ using namespace std;
 #define TEST_GUI_SERVER_ID "testGuiServerDevice"
 
 // Maximum temporary session duration time to be used in the tests (in seconds)
-#define MAX_TEMPORARY_SESSION_TIME karabo::devices::CHECK_TEMPSESSION_EXPIRATION_INTERVAL_SECS * 2U
+#define MAX_TEMPORARY_SESSION_TIME karabo::devices::CHECK_SESSION_EXPIRATION_INTERVAL_SECS * 2U
 // Value to be used in the test for the "endTemporarySessionNoticeTime" property of the GUI Server
-#define END_TEMPORARY_SESSION_NOTICE_TIME karabo::devices::CHECK_TEMPSESSION_EXPIRATION_INTERVAL_SECS - 1U
+#define END_TEMPORARY_SESSION_NOTICE_TIME karabo::devices::CHECK_SESSION_EXPIRATION_INTERVAL_SECS - 1U
+
+#define MAX_SESSION_TIME karabo::devices::CHECK_SESSION_EXPIRATION_INTERVAL_SECS * 3U
+#define END_SESSION_NOTICE_TIME karabo::devices::CHECK_SESSION_EXPIRATION_INTERVAL_SECS * 2U
 
 USING_KARABO_NAMESPACES
 
@@ -157,21 +160,21 @@ void GuiServer_Test::appTestRunner() {
     TestKaraboAuthServer tstAuthServer(authServerAddr, authServerPort);
     std::jthread srvRunner = std::jthread([&tstAuthServer](std::stop_token stoken) { tstAuthServer.run(); });
 
-    // Instantiates a GUI Server in Authenticated mode with a maximum temporary session time of 15 seconds for
-    // the purposes of the integrated tests.
     // clang-format off
-    success_n = m_deviceClient->instantiate(
+    success = m_deviceClient->instantiate(
           "testGuiVersionServer", "GuiServerDevice",
           Hash("deviceId", TEST_GUI_SERVER_ID,
                "port", 44450,
                "minClientVersion", "2.20.0",
                "authServer", "http://" + authServerAddr + ":" + toString(authServerPort),
                "timeout", 0,
+               "maxSessionDuration", MAX_SESSION_TIME,
+               "endSessionNoticeTime", END_SESSION_NOTICE_TIME,
                "maxTemporarySessionTime", MAX_TEMPORARY_SESSION_TIME,
                "endTemporarySessionNoticeTime", END_TEMPORARY_SESSION_NOTICE_TIME),
           KRB_TEST_MAX_TIMEOUT);
     // clang-format on
-    CPPUNIT_ASSERT_MESSAGE(success_n.second, success_n.first);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
     bool serverOn = waitForCondition(
           [this]() {
               auto state = m_deviceClient->get<State>(TEST_GUI_SERVER_ID, "state");
@@ -192,13 +195,15 @@ void GuiServer_Test::appTestRunner() {
     testBeginEndTemporarySession();
     testTemporarySessionExpiration();
 
+    testSessionExpiration();
+
     // Shuts down the GUI Server device and brings it up again as an instance that only accepts
     // connections from ApplicationMode clients like cinema and theater.
     success = m_deviceClient->killDevice(TEST_GUI_SERVER_ID, KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     // clang-format off
-    success_n = m_deviceClient->instantiate(
+    success = m_deviceClient->instantiate(
           "testGuiVersionServer", "GuiServerDevice",
           Hash("deviceId", TEST_GUI_SERVER_ID,
                "port", 44450,
@@ -206,7 +211,7 @@ void GuiServer_Test::appTestRunner() {
                "onlyAppModeClients", true),
           KRB_TEST_MAX_TIMEOUT);
     // clang-format on
-    CPPUNIT_ASSERT_MESSAGE(success_n.second, success_n.first);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     testOnlyAppModeClients();
 
@@ -258,7 +263,7 @@ void GuiServer_Test::resetClientConnection() {
 
 void GuiServer_Test::testVersionControl() {
     std::clog << "\ntestVersionControl: " << std::flush;
-    Hash loginInfo("type", "login", "username", "mrusp", "password", "12345", "version", "100.1.0");
+    Hash loginInfo("type", "login", "clientId", "mrusp", "password", "12345", "version", "100.1.0");
     // description , client version, server version, should connect
     typedef std::tuple<std::string, std::string, std::string, bool> TestData;
     std::vector<TestData> tests;
@@ -526,7 +531,7 @@ void GuiServer_Test::testRequestFailOldVersion() {
     m_deviceClient->set<std::string>(TEST_GUI_SERVER_ID, "minClientVersion", "2.9.1");
     std::clog << "testRequestFailOldVersion: " << std::flush;
     // connect again
-    resetClientConnection(Hash("type", "login", "username", "mrusp", "password", "12345", "version", "2.9.1"));
+    resetClientConnection(Hash("type", "login", "clientId", "mrusp", "password", "12345", "version", "2.9.1"));
 
     // check if we are connected
     CPPUNIT_ASSERT(m_tcpAdapter->connected());
@@ -891,12 +896,12 @@ void GuiServer_Test::testReconfigure() {
         // First part of fail message is fixed, followed by details that contain the
         // remote exception trace. Details of the trace do not matter here.
         const std::string& reason = replyMessage.get<std::string>("reason");
-        const char* part1Delim =
-              "Error in slot \"slotReconfigure\"\n"
-              "  because: Encountered unexpected configuration parameter: \"whatever\"\n"
-              "Details:\n";
+        std::string part1Delim("Error in slot 'slotReconfigure' from ");
+        part1Delim.append(TEST_GUI_SERVER_ID)
+              .append("\n  because: Encountered unexpected configuration parameter: \"whatever\"\nDetails:\n");
         CPPUNIT_ASSERT_EQUAL_MESSAGE(reason, 0ul, reason.find(part1Delim));
-        CPPUNIT_ASSERT_MESSAGE(reason, reason.find("1. Exception =====>", strlen(part1Delim)) != std::string::npos);
+        CPPUNIT_ASSERT_MESSAGE(reason,
+                               reason.find("1. Exception =====>", strlen(part1Delim.c_str())) != std::string::npos);
     }
 
     //
@@ -1473,8 +1478,8 @@ void GuiServer_Test::testInvalidTokenOnLogin() {
 
     Hash lastMessage;
     const string expectedMsg = "Error validating token: " + TestKaraboAuthServer::INVALID_TOKEN_MSG;
-    karabo::TcpAdapter::QueuePtr messageQ =
-          m_tcpAdapter->getNextMessages("notification", 1, [&] { m_tcpAdapter->sendMessage(loginInfo); });
+    karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages(
+          "notification", 1, [this, &loginInfo] { m_tcpAdapter->sendMessage(loginInfo); });
     messageQ->pop(lastMessage);
     const std::string& message = lastMessage.get<std::string>("message");
     CPPUNIT_ASSERT_MESSAGE("Expected notification message '" + expectedMsg + "'. Got '" + message + "'",
@@ -1499,8 +1504,8 @@ void GuiServer_Test::testValidTokenOnLogin() {
     resetTcpConnection();
 
     Hash lastMessage;
-    karabo::TcpAdapter::QueuePtr messageQ =
-          m_tcpAdapter->getNextMessages("loginInformation", 1, [&] { m_tcpAdapter->sendMessage(loginInfo); });
+    karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages(
+          "loginInformation", 1, [this, &loginInfo] { m_tcpAdapter->sendMessage(loginInfo); });
     messageQ->pop(lastMessage);
     const int accessLevel = lastMessage.get<int>("accessLevel");
     CPPUNIT_ASSERT_EQUAL_MESSAGE("AccessLevel differs from expected", TestKaraboAuthServer::VALID_ACCESS_LEVEL,
@@ -1527,8 +1532,8 @@ void GuiServer_Test::testValidTokenOnInSessionLogin() {
     resetTcpConnection();
 
     Hash lastMessage;
-    karabo::TcpAdapter::QueuePtr messageQ =
-          m_tcpAdapter->getNextMessages("loginInformation", 1, [&] { m_tcpAdapter->sendMessage(loginInfo); });
+    karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages(
+          "loginInformation", 1, [this, &loginInfo] { m_tcpAdapter->sendMessage(loginInfo); });
     messageQ->pop(lastMessage);
     int accessLevel = lastMessage.get<int>("accessLevel");
     CPPUNIT_ASSERT_EQUAL_MESSAGE("AccessLevel differs from expected", TestKaraboAuthServer::VALID_ACCESS_LEVEL,
@@ -1539,7 +1544,8 @@ void GuiServer_Test::testValidTokenOnInSessionLogin() {
     // Sends another login with the same valid credentials - the GUI Server will reauthorize the same user
     // successfully - the "side-effect" is that the startTime of the session will be "refreshed" in this case
     // as the user is the same.
-    messageQ = m_tcpAdapter->getNextMessages("loginInformation", 1, [&] { m_tcpAdapter->sendMessage(loginInfo); });
+    messageQ = m_tcpAdapter->getNextMessages("loginInformation", 1,
+                                             [this, &loginInfo] { m_tcpAdapter->sendMessage(loginInfo); });
     messageQ->pop(lastMessage);
     accessLevel = lastMessage.get<int>("accessLevel");
     CPPUNIT_ASSERT_EQUAL_MESSAGE("AccessLevel differs from expected", TestKaraboAuthServer::VALID_ACCESS_LEVEL,
@@ -1562,8 +1568,8 @@ void GuiServer_Test::testInvalidTokenOnInSessionLogin() {
     resetTcpConnection();
 
     Hash lastMessage;
-    karabo::TcpAdapter::QueuePtr messageQ =
-          m_tcpAdapter->getNextMessages("loginInformation", 1, [&] { m_tcpAdapter->sendMessage(loginInfo); });
+    karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages(
+          "loginInformation", 1, [this, &loginInfo] { m_tcpAdapter->sendMessage(loginInfo); });
     messageQ->pop(lastMessage);
     int accessLevel = lastMessage.get<int>("accessLevel");
     CPPUNIT_ASSERT_EQUAL_MESSAGE("AccessLevel differs from expected", TestKaraboAuthServer::VALID_ACCESS_LEVEL,
@@ -1573,7 +1579,8 @@ void GuiServer_Test::testInvalidTokenOnInSessionLogin() {
 
     // Sends another login with the an invalid token - the GUI Server will reject the user change.
     const string expectedErrorMsg = "Error validating token: " + TestKaraboAuthServer::INVALID_TOKEN_MSG;
-    messageQ = m_tcpAdapter->getNextMessages("notification", 1, [&] { m_tcpAdapter->sendMessage(invalidLoginInfo); });
+    messageQ = m_tcpAdapter->getNextMessages(
+          "notification", 1, [this, &invalidLoginInfo] { m_tcpAdapter->sendMessage(invalidLoginInfo); });
     messageQ->pop(lastMessage);
     const std::string& message = lastMessage.get<std::string>("message");
     CPPUNIT_ASSERT_MESSAGE("Expected notification message '" + expectedErrorMsg + "'. Got '" + message + "'",
@@ -1603,14 +1610,15 @@ void GuiServer_Test::testMissingTokenOnBeginTemporarySession() {
 
     // Performs an authenticated login successfully - temporary sessions are only available from that point on.
     Hash lastMessage;
-    karabo::TcpAdapter::QueuePtr messageQ =
-          m_tcpAdapter->getNextMessages("loginInformation", 1, [&] { m_tcpAdapter->sendMessage(loginInfo); });
+    karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages(
+          "loginInformation", 1, [this, &loginInfo] { m_tcpAdapter->sendMessage(loginInfo); });
     messageQ->pop(lastMessage);
     CPPUNIT_ASSERT_MESSAGE("'accessLevel' missing in loginInformation sent by the GUI Server",
                            lastMessage.has("accessLevel"));
     // Attempt at begining a temporary session without the required token
-    messageQ = m_tcpAdapter->getNextMessages("onBeginTemporarySession", 1,
-                                             [&] { m_tcpAdapter->sendMessage(beginTempSessionInfo); });
+    messageQ = m_tcpAdapter->getNextMessages("onBeginTemporarySession", 1, [this, &beginTempSessionInfo] {
+        m_tcpAdapter->sendMessage(beginTempSessionInfo);
+    });
     messageQ->pop(lastMessage);
     bool success = lastMessage.get<bool>("success");
     const std::string& reason = lastMessage.get<std::string>("reason");
@@ -1643,14 +1651,15 @@ void GuiServer_Test::testInvalidTokenOnBeginTemporarySession() {
 
     // Performs an authenticated login successfully - temporary sessions are only available from that point on.
     Hash lastMessage;
-    karabo::TcpAdapter::QueuePtr messageQ =
-          m_tcpAdapter->getNextMessages("loginInformation", 1, [&] { m_tcpAdapter->sendMessage(loginInfo); });
+    karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages(
+          "loginInformation", 1, [this, &loginInfo] { m_tcpAdapter->sendMessage(loginInfo); });
     messageQ->pop(lastMessage);
     CPPUNIT_ASSERT_MESSAGE("'accessLevel' missing in loginInformation sent by the GUI Server",
                            lastMessage.has("accessLevel"));
     // Attempts at an beginTemporarySession with an invalid token
-    messageQ = m_tcpAdapter->getNextMessages("onBeginTemporarySession", 1,
-                                             [&] { m_tcpAdapter->sendMessage(beginTempSessionInfo); });
+    messageQ = m_tcpAdapter->getNextMessages("onBeginTemporarySession", 1, [this, &beginTempSessionInfo] {
+        m_tcpAdapter->sendMessage(beginTempSessionInfo);
+    });
     messageQ->pop(lastMessage);
     bool success = lastMessage.get<bool>("success");
     const std::string& reason = lastMessage.get<std::string>("reason");
@@ -1694,8 +1703,8 @@ void GuiServer_Test::testBeginEndTemporarySession() {
 
     // Performs an authenticated login successfully - temporary sessions are only available from that point on.
     Hash lastMessage;
-    karabo::TcpAdapter::QueuePtr messageQ =
-          m_tcpAdapter->getNextMessages("loginInformation", 1, [&] { m_tcpAdapter->sendMessage(loginInfo); });
+    karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages(
+          "loginInformation", 1, [this, &loginInfo] { m_tcpAdapter->sendMessage(loginInfo); });
     messageQ->pop(lastMessage);
     CPPUNIT_ASSERT_MESSAGE("'accessLevel' missing in loginInformation sent by the GUI Server",
                            lastMessage.has("accessLevel"));
@@ -1727,8 +1736,9 @@ void GuiServer_Test::testBeginEndTemporarySession() {
                                  static_cast<unsigned>(clientSessions.size()));
 
     // Request a temporary session begining with a valid token.
-    messageQ = m_tcpAdapter->getNextMessages("onBeginTemporarySession", 1,
-                                             [&] { m_tcpAdapter->sendMessage(beginTempSessionInfo); });
+    messageQ = m_tcpAdapter->getNextMessages("onBeginTemporarySession", 1, [this, &beginTempSessionInfo] {
+        m_tcpAdapter->sendMessage(beginTempSessionInfo);
+    });
     messageQ->pop(lastMessage);
     bool success = lastMessage.get<bool>("success");
     std::string reason = lastMessage.get<std::string>("reason");
@@ -1777,8 +1787,9 @@ void GuiServer_Test::testBeginEndTemporarySession() {
 
     // Request a begin temporary session with a valid token - should be rejected since we are already in a temporary
     // session
-    messageQ = m_tcpAdapter->getNextMessages("onBeginTemporarySession", 1,
-                                             [&] { m_tcpAdapter->sendMessage(beginTempSessionInfo); });
+    messageQ = m_tcpAdapter->getNextMessages("onBeginTemporarySession", 1, [this, &beginTempSessionInfo] {
+        m_tcpAdapter->sendMessage(beginTempSessionInfo);
+    });
     messageQ->pop(lastMessage);
     success = lastMessage.get<bool>("success");
     reason = lastMessage.get<std::string>("reason");
@@ -1791,15 +1802,16 @@ void GuiServer_Test::testBeginEndTemporarySession() {
     const string expectedErrorMsg =
           "There's an active temporary session. Please terminate it before trying to "
           "login again.";
-    messageQ = m_tcpAdapter->getNextMessages("notification", 1, [&] { m_tcpAdapter->sendMessage(loginInfo); });
+    messageQ = m_tcpAdapter->getNextMessages("notification", 1,
+                                             [this, &loginInfo] { m_tcpAdapter->sendMessage(loginInfo); });
     messageQ->pop(lastMessage);
     const std::string& message = lastMessage.get<std::string>("message");
     CPPUNIT_ASSERT_MESSAGE("Expected notification message '" + expectedErrorMsg + "'. Got '" + message + "'",
                            message == expectedErrorMsg);
 
     // Request an end of temporary session
-    messageQ = m_tcpAdapter->getNextMessages("onEndTemporarySession", 1,
-                                             [&] { m_tcpAdapter->sendMessage(endTempSessionInfo); });
+    messageQ = m_tcpAdapter->getNextMessages(
+          "onEndTemporarySession", 1, [this, &endTempSessionInfo] { m_tcpAdapter->sendMessage(endTempSessionInfo); });
     messageQ->pop(lastMessage);
     success = lastMessage.get<bool>("success");
     CPPUNIT_ASSERT_EQUAL_MESSAGE("endTemporarySession request failed", true, success);
@@ -1810,8 +1822,8 @@ void GuiServer_Test::testBeginEndTemporarySession() {
     std::string loggedUserId = lastMessage.get<std::string>("loggedUserId");
     CPPUNIT_ASSERT_EQUAL_MESSAGE("loggedUserId", TestKaraboAuthServer::VALID_USER_ID, loggedUserId);
     // Request endTemporarySession again - should fail as there is no active temporary session
-    messageQ = m_tcpAdapter->getNextMessages("onEndTemporarySession", 1,
-                                             [&] { m_tcpAdapter->sendMessage(endTempSessionInfo); });
+    messageQ = m_tcpAdapter->getNextMessages(
+          "onEndTemporarySession", 1, [this, &endTempSessionInfo] { m_tcpAdapter->sendMessage(endTempSessionInfo); });
     messageQ->pop(lastMessage);
     success = lastMessage.get<bool>("success");
     reason = lastMessage.get<std::string>("reason");
@@ -1832,6 +1844,71 @@ void GuiServer_Test::testBeginEndTemporarySession() {
     std::clog << "OK" << std::endl;
 }
 
+void GuiServer_Test::testSessionExpiration() {
+    std::clog << "testSessionExpiration: " << std::flush;
+
+    Hash loginInfo("type", "login", "clientId", "desk010", "oneTimeToken", TestKaraboAuthServer::VALID_TOKEN, "version",
+                   "2.20.0");
+
+    Hash beginTempSessionInfo("type", "beginTemporarySession", "temporarySessionToken",
+                              TestKaraboAuthServer::VALID_TOKEN, "version", "2.20.0", "levelBeforeTemporarySession",
+                              static_cast<int>(Schema::AccessLevel::OPERATOR));
+
+    resetTcpConnection();
+
+    // Performs an authenticated login successfully
+    Hash lastMessage;
+    karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages(
+          "loginInformation", 1, [this, &loginInfo] { m_tcpAdapter->sendMessage(loginInfo); });
+    messageQ->pop(lastMessage);
+    CPPUNIT_ASSERT_MESSAGE("'accessLevel' missing in loginInformation sent by the GUI Server",
+                           lastMessage.has("accessLevel"));
+
+    // No triggering needed and timeout large enough to guarantee reception of an eminent expiration notice.
+    // Note: depends on the current GUI server to be configured with a short session time and even shorter
+    //       expiration notice time.
+    const size_t lifetimePlusCheckInterval =
+          1'000ul * (MAX_SESSION_TIME + karabo::devices::CHECK_SESSION_EXPIRATION_INTERVAL_SECS);
+
+    messageQ = m_tcpAdapter->getNextMessages("onEndSessionNotice", 1ul, [] {}, lifetimePlusCheckInterval);
+    messageQ->pop(lastMessage);
+    CPPUNIT_ASSERT_MESSAGE("'onEndSessionNotice' message should have an 'aboutToExpireToken' field",
+                           lastMessage.has("aboutToExpireToken"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Unexpected about to expire token value", TestKaraboAuthServer::VALID_TOKEN,
+                                 lastMessage.get<std::string>("aboutToExpireToken"));
+    CPPUNIT_ASSERT_MESSAGE("'onEndSessionNotice' message should have a 'secondsToExpiration' field",
+                           lastMessage.has("secondsToExpiration"));
+    const karabo::data::TimeValue secsToExpiration = lastMessage.get<karabo::data::TimeValue>("secondsToExpiration");
+    CPPUNIT_ASSERT_LESSEQUAL(END_SESSION_NOTICE_TIME, static_cast<unsigned int>(secsToExpiration));
+
+    // Between the end of session notice and its expiration, an attempt to start a temporary session must fail
+    messageQ = m_tcpAdapter->getNextMessages("onBeginTemporarySession", 1, [this, &beginTempSessionInfo] {
+        m_tcpAdapter->sendMessage(beginTempSessionInfo);
+    });
+    messageQ->pop(lastMessage);
+    bool success = lastMessage.get<bool>("success");
+    std::string reason = lastMessage.get<std::string>("reason");
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("beginTemporarySession succeeded while expected to fail", false, success);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(
+          "Unexpected value for field 'reason'",
+          std::string{"Refusing to put a temporary session on top of a login that expires soon. First re-login."},
+          reason);
+    // No triggering needed and timeout large enough to guarantee an expiration being received.
+    messageQ = m_tcpAdapter->getNextMessages("onSessionExpired", 1ul, [] {}, lifetimePlusCheckInterval);
+    messageQ->pop(lastMessage);
+    CPPUNIT_ASSERT_MESSAGE("'onSessionExpired' message should have an 'expiredToken' field",
+                           lastMessage.has("expiredToken"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Unexpected expired token value", TestKaraboAuthServer::VALID_TOKEN,
+                                 lastMessage.get<std::string>("expiredToken"));
+    CPPUNIT_ASSERT_MESSAGE("'onSessionExpired' message should have an 'expirationTime' field",
+                           lastMessage.has("expirationTime"));
+    Epochstamp expiredAt = Epochstamp(lastMessage.get<std::string>("expirationTime"));
+    Epochstamp currentTime;
+    CPPUNIT_ASSERT_GREATER(expiredAt, currentTime);
+
+    std::clog << "OK" << std::endl;
+}
+
 void GuiServer_Test::testTemporarySessionExpiration() {
     std::clog << "testTemporarySessionExpiration: " << std::flush;
 
@@ -1846,8 +1923,8 @@ void GuiServer_Test::testTemporarySessionExpiration() {
 
     // Performs an authenticated login successfully - temporary sessions are only available from that point on.
     Hash lastMessage;
-    karabo::TcpAdapter::QueuePtr messageQ =
-          m_tcpAdapter->getNextMessages("loginInformation", 1, [&] { m_tcpAdapter->sendMessage(loginInfo); });
+    karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages(
+          "loginInformation", 1, [this, &loginInfo] { m_tcpAdapter->sendMessage(loginInfo); });
     messageQ->pop(lastMessage);
     CPPUNIT_ASSERT_MESSAGE("'accessLevel' missing in loginInformation sent by the GUI Server",
                            lastMessage.has("accessLevel"));
@@ -1855,8 +1932,9 @@ void GuiServer_Test::testTemporarySessionExpiration() {
     // message (should be successful) immediately after, an "onEndTemporarySessionNotice" after the first check
     // cycle of the GuiServerTemporarySessionManager and an "onTemporarySessionExpired" after the second check
     // cycle.
-    messageQ = m_tcpAdapter->getNextMessages("onBeginTemporarySession", 1,
-                                             [&] { m_tcpAdapter->sendMessage(beginTempSessionInfo); });
+    messageQ = m_tcpAdapter->getNextMessages("onBeginTemporarySession", 1, [this, &beginTempSessionInfo] {
+        m_tcpAdapter->sendMessage(beginTempSessionInfo);
+    });
     messageQ->pop(lastMessage);
     bool success = lastMessage.get<bool>("success");
     std::string reason = lastMessage.get<std::string>("reason");
@@ -1871,14 +1949,14 @@ void GuiServer_Test::testTemporarySessionExpiration() {
 
     // No triggering needed and timeout large enough to guarantee reception of an eminent expiration notice.
     const size_t lifetimePlusCheckInterval =
-          1'000ul * (MAX_TEMPORARY_SESSION_TIME + karabo::devices::CHECK_TEMPSESSION_EXPIRATION_INTERVAL_SECS);
+          1'000ul * (MAX_TEMPORARY_SESSION_TIME + karabo::devices::CHECK_SESSION_EXPIRATION_INTERVAL_SECS);
     messageQ = m_tcpAdapter->getNextMessages("onEndTemporarySessionNotice", 1ul, [] {}, lifetimePlusCheckInterval);
     messageQ->pop(lastMessage);
     CPPUNIT_ASSERT_MESSAGE("'onEndTemporarySessionNotice' message should have an 'aboutToExpireToken' field",
                            lastMessage.has("aboutToExpireToken"));
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Unexpected about to expire token value", TestKaraboAuthServer::VALID_TOKEN,
                                  lastMessage.get<std::string>("aboutToExpireToken"));
-    CPPUNIT_ASSERT_MESSAGE("'onBeginTemporarySession' message should have a 'secondsToExpiration' field",
+    CPPUNIT_ASSERT_MESSAGE("'onEndTemporarySessionNotice' message should have a 'secondsToExpiration' field",
                            lastMessage.has("secondsToExpiration"));
     const karabo::data::TimeValue secsToExpiration = lastMessage.get<karabo::data::TimeValue>("secondsToExpiration");
     CPPUNIT_ASSERT_LESSEQUAL(END_TEMPORARY_SESSION_NOTICE_TIME, static_cast<unsigned int>(secsToExpiration));
@@ -1948,7 +2026,7 @@ void GuiServer_Test::testOnlyAppModeClients() {
     // Checks that a login from an applicationMode client is accepted by a GUI Server set to only accept
     // applicationMode clients. A successful login (no auth in this case) is followed by the GUI Server
     // sending the system topology to the client.
-    Hash loginInfoAppMode("type", "login", "username", "alice", "applicationMode", true, "version", "2.20.0");
+    Hash loginInfoAppMode("type", "login", "clientId", "alice", "applicationMode", true, "version", "2.20.0");
     CPPUNIT_ASSERT_NO_THROW(messageQ = m_tcpAdapter->getNextMessages(
                                   "systemTopology", 1, [&] { m_tcpAdapter->sendMessage(loginInfoAppMode); }));
 
