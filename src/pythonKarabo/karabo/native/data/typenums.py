@@ -44,10 +44,6 @@ class HashType(Enum):
     VectorFloat = 21
     Double = 22
     VectorDouble = 23
-    ComplexFloat = 24
-    VectorComplexFloat = 25
-    ComplexDouble = 26
-    VectorComplexDouble = 27
     String = 28
     VectorString = 29
     Hash = 30
@@ -82,10 +78,6 @@ HASH_TYPE_TO_XML_TYPE = {
     HashType.VectorFloat: 'VECTOR_FLOAT',
     HashType.Double: 'DOUBLE',
     HashType.VectorDouble: 'VECTOR_DOUBLE',
-    HashType.ComplexFloat: 'COMPLEX_FLOAT',
-    HashType.VectorComplexFloat: 'VECTOR_COMPLEX_FLOAT',
-    HashType.ComplexDouble: 'COMPLEX_DOUBLE',
-    HashType.VectorComplexDouble: 'VECTOR_COMPLEX_DOUBLE',
     HashType.String: 'STRING',
     HashType.VectorString: 'VECTOR_STRING',
     HashType.Hash: 'HASH',

@@ -742,10 +742,6 @@ def test_default_value():
     value = get_default_value(binding, force=True)
     assert value == bytearray([])
 
-    binding = types.ComplexBinding()
-    value = get_default_value(binding, force=True)
-    assert value == 0.0
-
 
 def test_default_value_minimum():
     """Test the default value generation of a binding"""

@@ -156,7 +156,6 @@ class Hash_TestCase(unittest.TestCase):
         h["bool"] = True
         h["int"] = 4
         h["string"] = "bla ä < / \\ \"' > ]]> & <![CDATA[ =_! (|}"
-        h["complex"] = complex(1.0, 0.42)
         h["stringlist"] = ["bla", "blub"]
         h["chars"] = b"bla"
         h["emptystringlist"] = []
@@ -180,7 +179,6 @@ class Hash_TestCase(unittest.TestCase):
             h.setAttribute("string", "chars", b"blub")
             h.setAttribute("chars", "string",
                            "laber &quot; ö \\ \"' ]]> <![CDATA[ (|}")
-            h.setAttribute("vector", "complex", complex(1.0, 2.0))
             # Bound way for building a similar schema to the one build for
             # MDL below
             sch = BoundSchema('blub')
@@ -204,7 +202,6 @@ class Hash_TestCase(unittest.TestCase):
             h["hash", "int"] = 3
             h["string", "chars"] = b"blub"
             h["chars", "string"] = "laber &quot; ö \\ \"' ]]> <![CDATA[ (|}"
-            h["vector", "complex"] = complex(1.0, 2.0)
             # MDL specific: constructing a schema from its underlying Hash.
             sh = Hash()
             sh["a"] = Hash()
@@ -226,7 +223,7 @@ class Hash_TestCase(unittest.TestCase):
 
         This method is simple enough that it works for both C++ and
         Python-only hashes."""
-        keys = ["bool", "int", "string", "complex", "stringlist", "chars",
+        keys = ["bool", "int", "string", "stringlist", "chars",
                 "emptystringlist", "char", "none", "vector", "emptyvector",
                 "vectorbool", "hash", "hashlist", "emptyhashlist", "schema"]
         self.assertEqual(list(h.keys()), keys)
@@ -235,7 +232,6 @@ class Hash_TestCase(unittest.TestCase):
         self.assertEqual(h["string"],
                          "bla ä < / \\ \"' > ]]> & <![CDATA[ =_! (|}")
         self.assertTrue(isinstance(h["string"], str))
-        self.assertEqual(h["complex"], complex(1.0, 0.42))
         self.assertIs(h["none"], None)
         self.assertEqual(h["stringlist"], ["bla", "blub"])
         self.assertEqual(h["chars"], b"bla")
@@ -266,7 +262,6 @@ class Hash_TestCase(unittest.TestCase):
         self.assertTrue(isinstance(h["string", "chars"], bytes))
         self.assertEqual(h["chars", "string"],
                          "laber &quot; ö \\ \"' ]]> <![CDATA[ (|}")
-        self.assertEqual(h["vector", "complex"], complex(1.0, 2.0))
         self.assertTrue(isinstance(h["chars", "string"], str))
 
         self.assertEqual(h["schema"].name, "blub")
@@ -287,7 +282,7 @@ class Hash_TestCase(unittest.TestCase):
     def test_binary(self):
         s = encodeBinary(self.create_hash())
         self.check_hash(decodeBinary(s))
-        self.assertEqual(adler32(s), 3448598433)
+        self.assertEqual(adler32(s), 379085425)
 
     def test_bin_roundtrip(self):
         """Tests compatibility between the Binary Serializers for MDL and Bound
@@ -387,7 +382,7 @@ class Hash_TestCase(unittest.TestCase):
     def test_paths(self):
         h = self.create_hash()
         paths = h.paths(intermediate=False)
-        self.assertEqual(len(paths), 17, paths)
+        self.assertEqual(len(paths), 16, paths)
         self.assertIn('bool', paths)
         self.assertIn('hash.a', paths)
         self.assertNotIn('hash', paths)
@@ -397,7 +392,7 @@ class Hash_TestCase(unittest.TestCase):
         self.assertNotIn('schema.blub', paths)
 
         all_paths = h.paths(intermediate=True)
-        self.assertEqual(len(all_paths), 18, paths)
+        self.assertEqual(len(all_paths), 17, paths)
         self.assertIn('hash', all_paths)
 
 

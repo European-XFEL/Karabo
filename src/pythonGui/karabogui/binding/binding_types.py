@@ -16,9 +16,9 @@
 # or FITNESS FOR A PARTICULAR PURPOSE.
 import numpy as np
 from traits.api import (
-    Array, CArray, Complex, Dict, Either, Enum, Event, HasStrictTraits,
-    Instance, List, Property, String, Trait, TraitError, TraitHandler,
-    Undefined, cached_property)
+    Array, CArray, Dict, Either, Enum, Event, HasStrictTraits, Instance, List,
+    Property, String, Trait, TraitError, TraitHandler, Undefined,
+    cached_property)
 
 from karabo.common import const
 from karabo.common.states import State
@@ -277,10 +277,6 @@ class CharBinding(BaseBinding):
     value = String(maxlen=1)
 
 
-class ComplexBinding(BaseBinding):
-    value = Complex
-
-
 class FloatBinding(BaseBinding):
     value = Float
     options = CArray
@@ -496,14 +492,6 @@ class _ByteHandler(TraitHandler):
 
 class VectorCharBinding(VectorBinding):
     value = Trait(_ByteHandler())
-
-
-class VectorComplexDoubleBinding(VectorNumberBinding):
-    value = Array(dtype='complex128', shape=(None,))
-
-
-class VectorComplexFloatBinding(VectorNumberBinding):
-    value = Array(dtype='complex64', shape=(None,))
 
 
 class VectorDoubleBinding(VectorNumberBinding):

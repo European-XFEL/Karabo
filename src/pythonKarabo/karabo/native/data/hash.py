@@ -555,8 +555,6 @@ NUMPY_TO_HASH_TYPE_VECTOR = {
     np.uint64: HashType.VectorUInt64,
     np.float32: HashType.VectorFloat,
     np.float64: HashType.VectorDouble,
-    np.complex64: HashType.VectorComplexFloat,
-    np.complex128: HashType.VectorComplexDouble,
 }
 
 NUMPY_TO_HASH_TYPE_SIMPLE = {
@@ -571,8 +569,6 @@ NUMPY_TO_HASH_TYPE_SIMPLE = {
     np.uint64: HashType.UInt64,
     np.float32: HashType.Float,
     np.float64: HashType.Double,
-    np.complex64: HashType.ComplexFloat,
-    np.complex128: HashType.ComplexDouble,
 }
 
 
@@ -594,8 +590,6 @@ def _get_hash_type_by_class(data):
         return HashType.Int32
     elif isinstance(data, numbers.Real):
         return HashType.Double
-    elif isinstance(data, numbers.Complex):
-        return HashType.ComplexDouble
     elif isinstance(data, bytes):
         return HashType.VectorChar
     elif isinstance(data, str):

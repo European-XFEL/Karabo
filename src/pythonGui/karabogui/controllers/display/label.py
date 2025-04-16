@@ -25,13 +25,11 @@ from karabo.common.scenemodel.api import (
     DisplayAlarmFloatModel, DisplayAlarmIntegerModel, DisplayFloatModel,
     DisplayLabelModel)
 from karabogui.binding.api import (
-    CharBinding, ComplexBinding, FloatBinding, IntBinding, StringBinding,
-    get_dtype_format)
+    CharBinding, FloatBinding, IntBinding, StringBinding, get_dtype_format)
 from karabogui.controllers.api import (
     AlarmMixin, BaseLabelController, FormatMixin, register_binding_controller)
 
-BINDING_TYPES = (StringBinding, CharBinding, ComplexBinding, IntBinding,
-                 FloatBinding)
+BINDING_TYPES = (StringBinding, CharBinding, IntBinding, FloatBinding)
 
 
 @register_binding_controller(ui_name="Value Field",
@@ -46,7 +44,7 @@ class DisplayLabel(BaseLabelController):
 
 @register_binding_controller(ui_name="Float Field",
                              klassname="DisplayFloat",
-                             binding_type=(FloatBinding, ComplexBinding),
+                             binding_type=FloatBinding,
                              priority=10)
 class DisplayFloat(FormatMixin, BaseLabelController):
     model = Instance(DisplayFloatModel, args=())
@@ -54,7 +52,7 @@ class DisplayFloat(FormatMixin, BaseLabelController):
 
 @register_binding_controller(ui_name="Alarm Float Field",
                              klassname="DisplayAlarmFloat",
-                             binding_type=(FloatBinding, ComplexBinding),
+                             binding_type=FloatBinding,
                              priority=0)
 class DisplayAlarmFloat(AlarmMixin, FormatMixin, BaseLabelController):
     model = Instance(DisplayAlarmFloatModel, args=())

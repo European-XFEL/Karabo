@@ -22,9 +22,9 @@ from traits.api import TraitError
 from karabo.common import const
 from karabo.native import Hash, HashList, has_changes
 from karabogui.binding.binding_types import (
-    BindingRoot, BoolBinding, ByteArrayBinding, CharBinding, ComplexBinding,
-    FloatBinding, IntBinding, NodeBinding, SlotBinding, StringBinding,
-    VectorBinding, VectorDoubleBinding, VectorFloatBinding, VectorHashBinding,
+    BindingRoot, BoolBinding, ByteArrayBinding, CharBinding, FloatBinding,
+    IntBinding, NodeBinding, SlotBinding, StringBinding, VectorBinding,
+    VectorDoubleBinding, VectorFloatBinding, VectorHashBinding,
     VectorNumberBinding, VectorStringBinding)
 from karabogui.binding.util import get_numpy_binding, realign_hash
 
@@ -226,8 +226,6 @@ def get_default_value(binding, force=False):
         elif isinstance(binding, VectorBinding):
             # All vectors including table!
             return _get_vector_default(binding)
-        elif isinstance(binding, ComplexBinding):
-            return 0.0
         elif isinstance(binding, BoolBinding):
             return False
         elif isinstance(binding, ByteArrayBinding):

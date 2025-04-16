@@ -80,7 +80,7 @@ def get_min_max(binding):
     INT_TYPES = (types.Int8Binding, types.Int16Binding, types.Int32Binding,
                  types.Int64Binding, types.Uint8Binding, types.Uint16Binding,
                  types.Uint32Binding, types.Uint64Binding)
-    FLOAT_TYPES = (types.FloatBinding, types.ComplexBinding)
+    FLOAT_TYPES = (types.FloatBinding, )
 
     if isinstance(binding, (INT_TYPES, FLOAT_TYPES)):
         return binding.getMinMax()
@@ -105,7 +105,6 @@ def get_numpy_binding(binding):
         types.Int64Binding: np.int64,
         types.Uint64Binding: np.uint64,
         types.FloatBinding: np.float64,
-        types.ComplexBinding: np.complex128,
         types.VectorInt8Binding: np.int8,
         types.VectorUint8Binding: np.uint8,
         types.VectorInt16Binding: np.int16,
@@ -116,8 +115,6 @@ def get_numpy_binding(binding):
         types.VectorUint64Binding: np.uint64,
         types.VectorFloatBinding: np.float32,
         types.VectorDoubleBinding: np.float64,
-        types.VectorComplexFloatBinding: np.complex64,
-        types.VectorComplexDoubleBinding: np.complex128
     }
     return to_numpy_dtype.get(type(binding), None)
 
@@ -142,8 +139,7 @@ def get_native_min_max(binding):
         info = np.iinfo(numpy)
         return info.min, info.max
 
-    elif isinstance(binding, (types.FloatBinding, types.VectorFloatBinding,
-                              types.VectorComplexDoubleBinding)):
+    elif isinstance(binding, (types.FloatBinding, types.VectorFloatBinding)):
         numpy = get_numpy_binding(binding)
         info = np.finfo(numpy)
         return info.min, info.max

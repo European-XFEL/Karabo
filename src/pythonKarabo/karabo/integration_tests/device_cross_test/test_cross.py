@@ -440,6 +440,7 @@ async def test_cross(deviceTest):
 @pytest.mark.timeout(90)
 @pytest.mark.asyncio(loop_scope="module")
 async def test_cross_pipeline(deviceTest):
+    """Send data from middlelayer and receive from bound"""
 
     serverId = "karabo_cross_bound_2"
     config = {
@@ -463,11 +464,6 @@ async def test_cross_pipeline(deviceTest):
         # it takes typically 2 s for the bound device to start
         bound_proxy = await getDevice("boundDevice2")
         mdl_proxy = await getDevice("middlelayerDevice")
-
-        ###################################################
-        # Send data from middlelayer and receive from bound
-        ###################################################
-
         with bound_proxy:
             try:
                 await wait_for(

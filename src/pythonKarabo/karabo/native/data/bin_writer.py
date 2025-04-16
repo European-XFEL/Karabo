@@ -101,10 +101,6 @@ def yield_binary_bool(data):
     yield b'\1' if data else b'\0'
 
 
-def yield_binary_complex(data, fmt=None):
-    yield pack(fmt, data.real, data.imag)
-
-
 def yield_binary_vector_hash(data):
     yield packI(len(data))
     for d in data:
@@ -140,8 +136,6 @@ __WRITER_MAP = {k.value: v for k, v in {
     HashType.UInt64: binary_simple_factory('Q'),
     HashType.Float: binary_simple_factory('f'),
     HashType.Double: binary_simple_factory('d'),
-    HashType.ComplexFloat: partial(yield_binary_complex, fmt='ff'),
-    HashType.ComplexDouble: partial(yield_binary_complex, fmt='dd'),
 
     HashType.VectorBool: partial(yield_binary_numpy_vector, numpy=np.bool_),
     HashType.VectorChar: yield_binary_vector_char,
@@ -156,10 +150,6 @@ __WRITER_MAP = {k.value: v for k, v in {
     HashType.VectorFloat: partial(yield_binary_numpy_vector, numpy=np.float32),
     HashType.VectorDouble: partial(yield_binary_numpy_vector,
                                    numpy=np.float64),
-    HashType.VectorComplexFloat: partial(yield_binary_numpy_vector,
-                                         numpy=np.complex64),
-    HashType.VectorComplexDouble: partial(yield_binary_numpy_vector,
-                                          numpy=np.complex128),
 
     HashType.String: yield_binary_string,
     HashType.VectorString: yield_binary_vector_string,

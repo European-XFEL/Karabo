@@ -26,15 +26,15 @@ from karabo.common.api import KARABO_CLASS_ID_ALARM, KARABO_CLASS_ID_STATE
 from karabo.common.states import State
 from karabo.native import (
     AccessLevel, AccessMode, ArchivePolicy, Assignment, Attribute, Bool,
-    ByteArray, Char, ComplexFloat, Configurable, Double, Float, Hash, HashList,
-    Image, ImageData, Int8, Int16, Int32, Int64, KaraboError, LeafType,
-    MetricPrefix, NDArray, NoneValue, NumpyVector, QuantityValue, RegexString,
-    Schema, Slot, String, TableValue, Timestamp, Type, TypeHash, TypeNone,
-    TypeSchema, UInt8, UInt16, UInt32, UInt64, Unit, VectorBool, VectorChar,
-    VectorComplexFloat, VectorDouble, VectorFloat, VectorHash, VectorInt8,
-    VectorInt16, VectorInt32, VectorInt64, VectorRegexString, VectorString,
-    VectorUInt8, VectorUInt16, VectorUInt32, VectorUInt64, decodeBinary,
-    encodeBinary, get_descriptor_from_data, unit_registry as unit)
+    ByteArray, Char, Configurable, Double, Float, Hash, HashList, Image,
+    ImageData, Int8, Int16, Int32, Int64, KaraboError, LeafType, MetricPrefix,
+    NDArray, NoneValue, NumpyVector, QuantityValue, RegexString, Schema, Slot,
+    String, TableValue, Timestamp, Type, TypeHash, TypeNone, TypeSchema, UInt8,
+    UInt16, UInt32, UInt64, Unit, VectorBool, VectorChar, VectorDouble,
+    VectorFloat, VectorHash, VectorInt8, VectorInt16, VectorInt32, VectorInt64,
+    VectorRegexString, VectorString, VectorUInt8, VectorUInt16, VectorUInt32,
+    VectorUInt64, decodeBinary, encodeBinary, get_descriptor_from_data,
+    unit_registry as unit)
 
 
 class ArrayTestDevice(Configurable):
@@ -353,49 +353,6 @@ class Tests(TestCase):
         v = d.toKaraboValue(v)
         self.assertAlmostEqual(v[1].magnitude, 3e-6)
 
-    def test_complex(self):
-        d = ComplexFloat()
-        v = d.toKaraboValue(3 + 4j)
-        self.assertEqual(v, 3 + 4j)
-        self.check_general(d, v)
-
-        d = ComplexFloat(unitSymbol=Unit.METER,
-                         metricPrefixSymbol=MetricPrefix.MILLI)
-
-        v = d.toKaraboValue(5 + 3j)
-        with self.assertRaises(DimensionalityError):
-            v = d.toKaraboValue((5 + 3j) * unit.m / unit.m)
-        v = d.toKaraboValue(5 + 3j, strict=False)
-        self.assertEqual(v.real, QuantityValue("5 mm"))
-        self.assertEqual(v.imag, QuantityValue("3 mm"))
-        v = d.toKaraboValue("5 m")
-        self.assertEqual(v.magnitude, 5000)
-        self.check_general(d, v)
-        v = d.toKaraboValue("3.71125 m")
-        self.assertEqual(v.magnitude, 3711.25)
-
-    def test_vector_complex(self):
-        d = VectorComplexFloat()
-        v = d.toKaraboValue([1 + 2j, 2 + 3j, 3])
-        self.check_general(d, v)
-        self.assertEqual(v[1], 2 + 3j)
-
-        d = VectorComplexFloat(unitSymbol=Unit.METER,
-                               metricPrefixSymbol=MetricPrefix.MILLI)
-        v = d.toKaraboValue([2 + 3j, 3 + 4j, 4])
-        with self.assertRaises(DimensionalityError):
-            v = d.toKaraboValue([2 + 3j, 3 + 4j, 4] * unit.m / unit.m)
-        v = d.toKaraboValue([2 + 3j, 3 + 4j, 4], strict=False)
-        self.assertEqual(v[1].real, QuantityValue("3 mm"))
-        self.assertEqual(v[1].imag, QuantityValue("4 mm"))
-        self.assertNotEqual(v[2], 4)
-        self.check_general(d, v)
-
-        d = VectorComplexFloat(unitSymbol=Unit.METER,
-                               metricPrefixSymbol=MetricPrefix.KILO)
-        v = d.toKaraboValue(v)
-        self.assertAlmostEqual(v[1].magnitude, 3e-6 + 4e-6j)
-
     def test_size_vector(self):
         d = VectorString(minSize=2)
         # violate still non-string setting
@@ -405,16 +362,6 @@ class Tests(TestCase):
             v = d.toKaraboValue(['miau'])
         v = d.toKaraboValue(['wuff', 'scratch'])
         self.assertEqual(v, ['wuff', 'scratch'])
-
-        d = VectorComplexFloat(minSize=2)
-        v = d.toKaraboValue([2 + 3j, 3 + 4j, 4])
-        self.assertAlmostEqual(v[1].magnitude, 3 + 4j)
-        # ValueError or TypeError depending on numpy version
-        # ValueError for numpy >~ 1.16
-        with self.assertRaises(Exception):
-            v = d.toKaraboValue(['miau'])
-        with self.assertRaises(ValueError):
-            v = d.toKaraboValue([3 + 4j])
 
         d = VectorInt32(minSize=2, maxSize=3)
         v = d.toKaraboValue([2, 3, 4])
@@ -441,20 +388,20 @@ class Tests(TestCase):
             v = d.toKaraboValue([False, True, False, True])
 
     def test_ndarray(self):
-        d = NDArray(dtype=ComplexFloat, shape=(2, 3))
+        d = NDArray(dtype=Float, shape=(2, 3))
         v = d.toKaraboValue([[1, 2], [3, 4]])
         self.assertEqual(v[0, 1], 2)
-        self.assertEqual(v.dtype, np.dtype("c8"))
+        self.assertEqual(v.dtype, np.dtype("float32"))
         h, attrs = d.toDataAndAttrs(v)
         self.assertIn("__classId", attrs)
         self.assertEqual(attrs["__classId"], "NDArray")
         h = decodeBinary(encodeBinary(h))
-        self.assertEqual(h["type"], 24)
+        self.assertEqual(h["type"], 20)
         self.assertNotIn("__classId", h["type", ...])
         self.assertFalse(h["isBigEndian"])
         self.assertNotIn("__classId", h["isBigEndian", ...])
         self.assertEqual(h["shape"][1], 2)
-        self.assertEqual(len(h["data"]), 32)
+        self.assertEqual(len(h["data"]), 16)
 
         d = NDArray(dtype=">i2", shape=(0, 3))
         v = d.toKaraboValue(v.real)
