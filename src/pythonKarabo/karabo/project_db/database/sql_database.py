@@ -589,9 +589,9 @@ class SQLDatabase(DatabaseBase):
                     "found in the database")
 
             setattr(model, item['attr_name'], attr_value)
-            with self.session_gen() as session:
+            async with self.session_gen() as session:
                 session.add(model)
-                session.commit()
+                await session.commit()
 
             res_items.append(item)
 
