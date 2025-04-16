@@ -22,12 +22,11 @@ from qtpy.QtGui import QValidator
 from traits.api import TraitError
 
 from karabogui.binding.api import (
-    VectorBoolBinding, VectorComplexDoubleBinding, VectorComplexFloatBinding,
-    VectorDoubleBinding, VectorFloatBinding, VectorInt8Binding,
-    VectorInt16Binding, VectorInt32Binding, VectorInt64Binding,
-    VectorStringBinding, VectorUint8Binding, VectorUint16Binding,
-    VectorUint32Binding, VectorUint64Binding, convert_string, get_min_max,
-    get_min_max_size)
+    VectorBoolBinding, VectorDoubleBinding, VectorFloatBinding,
+    VectorInt8Binding, VectorInt16Binding, VectorInt32Binding,
+    VectorInt64Binding, VectorStringBinding, VectorUint8Binding,
+    VectorUint16Binding, VectorUint32Binding, VectorUint64Binding,
+    convert_string, get_min_max, get_min_max_size)
 
 BOOL_REGEX = r"(0|1|[T]rue|[F]alse)"
 INT_REGEX = r"^[-+]?\d+$"
@@ -49,8 +48,6 @@ _CAST_MAP = {
 
 _REGEX = {
     VectorBoolBinding: BOOL_REGEX,
-    VectorComplexDoubleBinding: DOUBLE_REGEX,  # XXX
-    VectorComplexFloatBinding: DOUBLE_REGEX,  # XXX
     VectorDoubleBinding: DOUBLE_REGEX,
     VectorFloatBinding: DOUBLE_REGEX,
     VectorInt8Binding: INT_REGEX,
@@ -66,8 +63,6 @@ _REGEX = {
 
 _INTERMEDIATE = {
     VectorBoolBinding: ("T", "t", "r", "u", "F", "a", "l", "s", ","),
-    VectorComplexDoubleBinding: ("+", "-", "j", ","),  # X
-    VectorComplexFloatBinding: ("+", "-", "j", ","),  # X
     VectorDoubleBinding: ("+", "-", ",", "e"),
     VectorFloatBinding: ("+", "-", ",", ".", "e"),
     VectorInt8Binding: ("+", "-", ","),

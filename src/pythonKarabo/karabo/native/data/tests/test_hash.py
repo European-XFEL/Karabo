@@ -116,7 +116,6 @@ def check_hash(h, special=True):
     assert isinstance(h["string", "chars"], bytes)
 
     assert h["chars", "string"] == "laber"
-    assert h["vector", "complex"] == 1.0 + 1.0j
     assert isinstance(h["chars", "string"], str)
     assert h["schema"].name == "blub"
     sh = h["schema"].hash
@@ -278,7 +277,6 @@ def create_hash():
 
     h["string", "chars"] = b"blub"
     h["chars", "string"] = "laber"
-    h["vector", "complex"] = 1.0 + 1.0j
 
     h["vector", "int8"] = np.arange(8, dtype=np.int8)
     h["vector", "int16"] = np.arange(16, dtype=np.int16)

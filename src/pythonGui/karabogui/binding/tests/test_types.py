@@ -19,12 +19,11 @@ from pytest import raises as assert_raises
 
 from karabo.native import AccessLevel, AccessMode, Assignment, Hash
 from karabogui.binding.api import (
-    BindingNamespace, BoolBinding, ByteArrayBinding, CharBinding,
-    ComplexBinding, FloatBinding, HashBinding, Int8Binding, Int16Binding,
-    Int32Binding, Int64Binding, NDArrayBinding, NodeBinding, NoneBinding,
-    SchemaBinding, SlotBinding, StringBinding, Uint8Binding, Uint16Binding,
-    Uint32Binding, Uint64Binding, VectorBoolBinding, VectorCharBinding,
-    VectorComplexDoubleBinding, VectorComplexFloatBinding, VectorDoubleBinding,
+    BindingNamespace, BoolBinding, ByteArrayBinding, CharBinding, FloatBinding,
+    HashBinding, Int8Binding, Int16Binding, Int32Binding, Int64Binding,
+    NDArrayBinding, NodeBinding, NoneBinding, SchemaBinding, SlotBinding,
+    StringBinding, Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding,
+    VectorBoolBinding, VectorCharBinding, VectorDoubleBinding,
     VectorFloatBinding, VectorHashBinding, VectorInt8Binding,
     VectorInt16Binding, VectorInt32Binding, VectorInt64Binding,
     VectorNoneBinding, VectorStringBinding, VectorUint8Binding,
@@ -32,15 +31,15 @@ from karabogui.binding.api import (
 
 ALL_BINDINGS = (
     BoolBinding, ByteArrayBinding, CharBinding,
-    ComplexBinding, FloatBinding, HashBinding, Int8Binding, Int16Binding,
+    FloatBinding, HashBinding, Int8Binding, Int16Binding,
     Int32Binding, Int64Binding, NDArrayBinding, NodeBinding, NoneBinding,
     SchemaBinding, SlotBinding, StringBinding, Uint8Binding, Uint16Binding,
     Uint32Binding, Uint64Binding, VectorBoolBinding, VectorCharBinding,
-    VectorComplexDoubleBinding, VectorComplexFloatBinding, VectorDoubleBinding,
-    VectorFloatBinding, VectorHashBinding, VectorInt8Binding,
-    VectorInt16Binding, VectorInt32Binding, VectorInt64Binding,
-    VectorNoneBinding, VectorStringBinding, VectorUint8Binding,
-    VectorUint16Binding, VectorUint32Binding, VectorUint64Binding
+    VectorDoubleBinding, VectorFloatBinding, VectorHashBinding,
+    VectorInt8Binding, VectorInt16Binding, VectorInt32Binding,
+    VectorInt64Binding, VectorNoneBinding, VectorStringBinding,
+    VectorUint8Binding, VectorUint16Binding, VectorUint32Binding,
+    VectorUint64Binding
 )
 
 
