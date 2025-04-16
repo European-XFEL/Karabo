@@ -104,10 +104,6 @@ def yield_xml_bool(data):
     yield escape('1' if data else '0')
 
 
-def yield_xml_complex(data):
-    yield escape(f"({data.real},{data.imag})")
-
-
 __WRITER_MAP = {
     HashType.Bool: yield_xml_bool,
     HashType.Char: yield_xml_simple,
@@ -121,8 +117,6 @@ __WRITER_MAP = {
     HashType.UInt64: yield_xml_simple,
     HashType.Float: yield_xml_simple,
     HashType.Double: yield_xml_simple,
-    HashType.ComplexFloat: yield_xml_complex,
-    HashType.ComplexDouble: yield_xml_complex,
 
     HashType.VectorBool: yield_xml_vector_bool,
     HashType.VectorChar: yield_xml_vector_char,
@@ -136,8 +130,6 @@ __WRITER_MAP = {
     HashType.VectorUInt64: yield_xml_numpy_vector,
     HashType.VectorFloat: yield_xml_numpy_vector,
     HashType.VectorDouble: yield_xml_numpy_vector,
-    HashType.VectorComplexFloat: yield_xml_numpy_vector,
-    HashType.VectorComplexDouble: yield_xml_numpy_vector,
 
     HashType.String: yield_xml_simple,
     HashType.VectorString: yield_xml_list,

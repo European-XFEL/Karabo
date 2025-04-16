@@ -147,13 +147,11 @@ def test_default_values():
 
     assert binding.value.a.value is Undefined
     assert binding.value.b.value is Undefined
-    assert binding.value.c.value is Undefined
 
     apply_default_configuration(binding)
 
     assert binding.value.a.value
     assert binding.value.b.value == 'c'
-    assert binding.value.c.value is Undefined
 
     # Make sure the extracted default conversion is minimal
     # It should include properties with default values, options, or node types
@@ -317,14 +315,13 @@ def test_property_attributes():
     schema = get_all_props_schema()
     binding = build_binding(schema)
 
-    assert binding.value.c.requiredAccessLevel is AccessLevel.EXPERT
-    assert binding.value.d.accessMode is AccessMode.READONLY
-    assert binding.value.d.assignment is Assignment.INTERNAL
-    assert binding.value.e.unit_label == 'm'
+    assert binding.value.i.accessMode is AccessMode.READONLY
+    assert binding.value.i.assignment is Assignment.INTERNAL
+    assert binding.value.j.unit_label == 'm'
 
     assert binding.value.a.accessMode is AccessMode.RECONFIGURABLE
     assert binding.value.a.assignment is Assignment.OPTIONAL
-    assert binding.value.a.requiredAccessLevel is AccessLevel.OPERATOR
+    assert binding.value.a.requiredAccessLevel is AccessLevel.EXPERT
 
     assert binding.value.m.options == ['foo', 'bar', 'baz', 'qux']
 

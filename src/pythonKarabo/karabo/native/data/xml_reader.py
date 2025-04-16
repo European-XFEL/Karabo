@@ -174,10 +174,6 @@ def decodeXML(data):
         return ret
 
 
-def read_xml_complex(data):
-    return complex(*[float(n) for n in data[1:-1].split(',')])
-
-
 def read_xml_bool(data):
     return bool(int(data))
 
@@ -240,8 +236,6 @@ __READER_MAP = {
     HashType.UInt64: partial(read_xml_numpy, numpy=np.uint64),
     HashType.Float: partial(read_xml_numpy, numpy=np.float32),
     HashType.Double: partial(read_xml_numpy, numpy=np.float64),
-    HashType.ComplexFloat: read_xml_complex,
-    HashType.ComplexDouble: read_xml_complex,
 
     HashType.VectorBool: partial(read_xml_numpy_vector, numpy=np.bool_),
     HashType.VectorChar: read_xml_vector_char,
@@ -255,10 +249,6 @@ __READER_MAP = {
     HashType.VectorUInt64: partial(read_xml_numpy_vector, numpy=np.uint64),
     HashType.VectorFloat: partial(read_xml_numpy_vector, numpy=np.float32),
     HashType.VectorDouble: partial(read_xml_numpy_vector, numpy=np.float64),
-    HashType.VectorComplexFloat: partial(read_xml_numpy_vector,
-                                         numpy=np.complex64),
-    HashType.VectorComplexDouble: partial(read_xml_numpy_vector,
-                                          numpy=np.complex128),
 
     HashType.String: read_xml_string,
     HashType.VectorString: read_xml_vector_string,

@@ -170,8 +170,6 @@ __READER_MAP = {
     HashType.UInt64: partial(read_binary_numpy, numpy=np.uint64),
     HashType.Float: partial(read_binary_numpy, numpy=np.float32),
     HashType.Double: partial(read_binary_numpy, numpy=np.float64),
-    HashType.ComplexFloat: partial(read_binary_numpy, numpy=np.complex64),
-    HashType.ComplexDouble: partial(read_binary_numpy, numpy=np.complex128),
 
     HashType.VectorBool: partial(read_binary_numpy_vector, numpy=np.bool_),
     HashType.VectorChar: read_binary_vector_char,
@@ -185,10 +183,6 @@ __READER_MAP = {
     HashType.VectorUInt64: partial(read_binary_numpy_vector, numpy=np.uint64),
     HashType.VectorFloat: partial(read_binary_numpy_vector, numpy=np.float32),
     HashType.VectorDouble: partial(read_binary_numpy_vector, numpy=np.float64),
-    HashType.VectorComplexFloat: partial(read_binary_numpy_vector,
-                                         numpy=np.complex64),
-    HashType.VectorComplexDouble: partial(read_binary_numpy_vector,
-                                          numpy=np.complex128),
 
     HashType.String: read_binary_string,
     HashType.VectorString: read_binary_string_list,

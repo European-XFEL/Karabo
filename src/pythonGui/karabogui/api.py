@@ -18,22 +18,21 @@
 from karabogui import icons, messagebox
 from karabogui.binding.api import (
     REFERENCE_TYPENUM_TO_DTYPE, BaseBinding, BindingNamespace, BindingRoot,
-    BoolBinding, ByteArrayBinding, CharBinding, ComplexBinding, FloatBinding,
-    HashBinding, ImageBinding, Int8Binding, Int16Binding, Int32Binding,
-    Int64Binding, IntBinding, NDArrayBinding, NodeBinding, NoneBinding,
+    BoolBinding, ByteArrayBinding, CharBinding, FloatBinding, HashBinding,
+    ImageBinding, Int8Binding, Int16Binding, Int32Binding, Int64Binding,
+    IntBinding, NDArrayBinding, NodeBinding, NoneBinding,
     PipelineOutputBinding, SchemaBinding, SignedIntBinding, SlotBinding,
     StringBinding, TableBinding, Uint8Binding, Uint16Binding, Uint32Binding,
     Uint64Binding, UnsignedIntBinding, VectorBinding, VectorBoolBinding,
-    VectorCharBinding, VectorComplexDoubleBinding, VectorComplexFloatBinding,
-    VectorDoubleBinding, VectorFloatBinding, VectorHashBinding,
-    VectorInt8Binding, VectorInt16Binding, VectorInt32Binding,
-    VectorInt64Binding, VectorNoneBinding, VectorNumberBinding,
-    VectorStringBinding, VectorUint8Binding, VectorUint16Binding,
-    VectorUint32Binding, VectorUint64Binding, WidgetNodeBinding, build_binding,
-    convert_string, get_binding_array_value, get_binding_value,
-    get_default_value, get_editor_value, get_min_max, get_min_max_size,
-    get_native_min_max, has_min_max_attributes, is_signed_vector_integer,
-    is_unsigned_vector_integer, is_vector_integer)
+    VectorCharBinding, VectorDoubleBinding, VectorFloatBinding,
+    VectorHashBinding, VectorInt8Binding, VectorInt16Binding,
+    VectorInt32Binding, VectorInt64Binding, VectorNoneBinding,
+    VectorNumberBinding, VectorStringBinding, VectorUint8Binding,
+    VectorUint16Binding, VectorUint32Binding, VectorUint64Binding,
+    WidgetNodeBinding, build_binding, convert_string, get_binding_array_value,
+    get_binding_value, get_default_value, get_editor_value, get_min_max,
+    get_min_max_size, get_native_min_max, has_min_max_attributes,
+    is_signed_vector_integer, is_unsigned_vector_integer, is_vector_integer)
 from karabogui.binding.proxy import DeviceProxy, PropertyProxy
 from karabogui.const import WIDGET_MIN_HEIGHT
 from karabogui.controllers.api import (

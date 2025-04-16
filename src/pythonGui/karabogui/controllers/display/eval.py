@@ -23,8 +23,7 @@ from traits.api import Callable, Dict, Instance, Str, Tuple
 from karabo.common.scenemodel.api import EvaluatorModel
 from karabogui import messagebox
 from karabogui.binding.api import (
-    CharBinding, ComplexBinding, FloatBinding, IntBinding, StringBinding,
-    get_binding_value)
+    CharBinding, FloatBinding, IntBinding, StringBinding, get_binding_value)
 from karabogui.const import WIDGET_MIN_HEIGHT
 from karabogui.controllers.api import (
     BaseBindingController, add_unit_label, register_binding_controller)
@@ -33,8 +32,7 @@ from karabogui.fonts import get_font_size_from_dpi
 from karabogui.indicators import ALL_OK_COLOR
 from karabogui.util import generateObjectName
 
-BINDING_TYPES = (CharBinding, ComplexBinding, FloatBinding, StringBinding,
-                 IntBinding)
+BINDING_TYPES = (CharBinding, FloatBinding, StringBinding, IntBinding)
 
 
 @register_binding_controller(ui_name='Evaluate Expression',
