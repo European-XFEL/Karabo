@@ -431,7 +431,7 @@ class MainWindow(QMainWindow):
         if checked_action is not None:
             checked_action.setChecked(True)
 
-    def setTemporaryButton(self, icon: QIcon, tooltip: str) -> None:
+    def setSessionButton(self, icon: QIcon, tooltip: str) -> None:
         """Set the icon and tooltip for the Temporary Session button"""
         self.tbTempSession.setToolTip(tooltip)
         self.tbTempSession.setIcon(icon)

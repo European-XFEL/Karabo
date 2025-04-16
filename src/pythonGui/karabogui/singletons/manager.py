@@ -407,6 +407,11 @@ class Manager(QObject):
         else:
             access = AccessLevel(info["accessLevel"])
 
+        # Reset the notice of session
+        if krb_access.SESSION_END_NOTICE:
+            krb_access.SESSION_END_NOTICE = False
+            broadcast_event(KaraboEvent.NetworkSession, {})
+
         krb_access.HIGHEST_ACCESS_LEVEL = access
         if krb_access.GLOBAL_ACCESS_LEVEL != access:
             krb_access.GLOBAL_ACCESS_LEVEL = access
@@ -428,7 +433,7 @@ class Manager(QObject):
                 broadcast_event(KaraboEvent.AccessLevelChanged, {})
 
             broadcast_event(KaraboEvent.LoginUserChanged, {})
-            broadcast_event(KaraboEvent.TemporarySession, {})
+            broadcast_event(KaraboEvent.NetworkSession, {})
 
     def handle_onEndTemporarySession(self, **info):
         """Handle the response from gui server on end temporary session
@@ -438,6 +443,15 @@ class Manager(QObject):
     def handle_onTemporarySessionExpired(self, **info):
         """Handle the temporary session expired message from gui server """
         self._end_temporary_session(info)
+
+    def handle_onEndSessionNotice(self, **info):
+        """Handle the session notice message from gui server """
+        krb_access.SESSION_END_NOTICE = True
+        broadcast_event(KaraboEvent.NetworkSession, {})
+
+    def handle_onSessionExpired(self, **info):
+        """Handle the session expired message from gui server """
+        broadcast_event(KaraboEvent.NetworkSession, {})
 
     def _end_temporary_session(self, info):
         level_before = info.get("levelBeforeTemporarySession")
@@ -453,12 +467,12 @@ class Manager(QObject):
 
         krb_access.TEMPORARY_SESSION_USER = None
         broadcast_event(KaraboEvent.LoginUserChanged, {})
-        broadcast_event(KaraboEvent.TemporarySession, {})
+        broadcast_event(KaraboEvent.NetworkSession, {})
 
     def handle_onEndTemporarySessionNotice(self, **info):
         """Broadcast before the temporary session ends"""
         krb_access.TEMPORARY_SESSION_WARNING = True
-        broadcast_event(KaraboEvent.TemporarySession, {})
+        broadcast_event(KaraboEvent.NetworkSession, {})
 
     @show_wait_cursor
     def handle_systemTopology(self, systemTopology):

@@ -52,6 +52,7 @@ def test_temporarySessionDialog(gui_app, mocker):
 
 
 def test_switch_user(gui_app, mocker):
+    krb_access.SESSION_END_NOTICE = True
     dialog = TemporarySessionDialog()
     assert not dialog.ok_button.isEnabled()
     access_code = "123456"
@@ -61,7 +62,7 @@ def test_switch_user(gui_app, mocker):
     mocker.patch("karabogui.dialogs.reactive_login_dialog.CLIENT_HOST",
                  new=hostname)
     dialog.access_manager = mocker.Mock()
-    dialog.combo_mode.setCurrentIndex(1)
+    assert dialog.combo_mode.currentIndex() == 1
     dialog.remember_login.setChecked(True)
     dialog._login_authenticated()
     assert dialog.access_manager.post.call_count == 1
@@ -83,6 +84,7 @@ def test_switch_user(gui_app, mocker):
     assert args_dict["access_code"] == int(access_code)
     assert not args_dict["remember_login"]
     assert args_dict["client_hostname"] == hostname
+    krb_access.SESSION_END_NOTICE = False
 
 
 def test_connect_button(gui_app):
