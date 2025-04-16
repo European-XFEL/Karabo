@@ -36,6 +36,8 @@ AUTHENTICATION_SERVER = None
 
 TEMPORARY_SESSION_USER = None
 TEMPORARY_SESSION_WARNING = False
+SESSION_END_NOTICE = False
+
 
 ACCESS_LEVEL_MAP = {
     "observer": 0,
@@ -78,6 +80,10 @@ def is_authenticated():
     return ONE_TIME_TOKEN is not None
 
 
+def is_end_of_session():
+    return SESSION_END_NOTICE is True
+
+
 def is_temporary_session() -> bool:
     """Check if session is temporary"""
     return TEMPORARY_SESSION_USER is not None
@@ -85,10 +91,12 @@ def is_temporary_session() -> bool:
 
 def reset_login():
     """Reset the global login information"""
-    global ONE_TIME_TOKEN, TEMPORARY_SESSION_WARNING, TEMPORARY_SESSION_USER
+    global ONE_TIME_TOKEN, TEMPORARY_SESSION_WARNING
+    global TEMPORARY_SESSION_USER, SESSION_END_NOTICE
     ONE_TIME_TOKEN = None
     TEMPORARY_SESSION_USER = None
     TEMPORARY_SESSION_WARNING = False
+    SESSION_END_NOTICE = False
 
 
 def get_access_level_for_role(role: AccessRole) -> str:
