@@ -40,7 +40,7 @@ using std::placeholders::_2;
 namespace karabo {
 
 
-    const Hash TcpAdapter::k_defaultLoginData("type", "login", "username", "mrusp", "password", "12345", "version",
+    const Hash TcpAdapter::k_defaultLoginData("type", "login", "clientId", "mrusp", "password", "12345", "version",
                                               karabo::util::Version::getKaraboVersion().getVersion());
 
     TcpAdapter::TcpAdapter(const karabo::data::Hash& config)
