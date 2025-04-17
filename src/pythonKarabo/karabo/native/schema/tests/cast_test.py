@@ -103,17 +103,6 @@ class Tests(TestCase):
         with self.assertRaises(ValueError):
             d.cast(-55)
 
-    def test_complex(self):
-        d = hashmod.ComplexFloat()
-        self.assertEqual(d.cast(3+7j), 3+7j)
-        self.assertEqual(d.cast(3), 3)
-        self.assertEqual(d.cast(3+7j).dtype, "complex64")
-
-        d = hashmod.ComplexDouble()
-        self.assertEqual(d.cast(3+7j), 3+7j)
-        self.assertEqual(d.cast(3), 3)
-        self.assertEqual(d.cast(3+7j).dtype, "complex128")
-
     def test_vector(self):
         d = hashmod.VectorUInt8()
         v = d.cast([1, 2, 3])
@@ -135,13 +124,6 @@ class Tests(TestCase):
         self.assertEqual(v.dtype, "float64")
         self.assertEqual(v.shape, (3,))
         self.assertTrue((v == [1, 0.5, 3]).all())
-
-        d = hashmod.VectorComplexDouble()
-        v = d.cast([1, 0.5, 3+7j])
-        self.assertEqual(v.ndim, 1)
-        self.assertEqual(v.dtype, "complex128")
-        self.assertEqual(v.shape, (3,))
-        self.assertTrue((v == [1, 0.5, 3+7j]).all())
 
     def test_bool(self):
         d = hashmod.Bool()
