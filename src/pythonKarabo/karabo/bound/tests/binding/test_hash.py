@@ -429,6 +429,44 @@ def test_getset():
     assert h['d', 'd'] == 42
     assert h['d', 'w'] == 3.1415956
 
+    # test 'HashAttributes'
+    h = Hash('a.b.c', 21, 'f.g', "some string", 'i', 31.4865)
+    # assign Hash attributes (lhs) the py dict (rhs) ...
+    h['a.b.c', ...] = {'a': 12, 'b': {'e': "Invalid argument"}}
+
+    g = Hash('x.y.z', 99)
+    # assign attributes (python dict)
+    g['x.y.z', ...] = {'x': 55, 'b': {'w': True}}
+    # define the attributes ref (not a copy!)
+    gattrs = g['x.y.z', ...]
+    gattrs['x'] = 77
+    assert g['x.y.z', 'x'] == 77
+    assert g['x.y.z', ...]['x'] == 77
+    assert gattrs['x'] == 77
+    assert gattrs['b']['w'] is True
+
+    # "merge"
+    g['x.y.z', ...].update(h['a.b.c', ...])
+
+    assert g['x.y.z', 'x'] == 77
+    assert gattrs['x'] == 77
+    assert gattrs['b']['e'] == "Invalid argument"
+    assert 'w' not in gattrs['b']
+    assert gattrs['a'] == 12
+
+    # "replace" : 'g' attributes are the same as in 'h'
+    # assign attributes (HashAttributes -> C++ Hash::Attributes)
+    g['x.y.z', ...] = h['a.b.c', ...]
+
+    # gattrs still points to the same object as g['x.y.z', ...]
+    assert 'x' not in gattrs
+    assert 'x' not in g['x.y.z', ...]
+    assert gattrs['a'] == 12
+    assert gattrs['b']['e'] == "Invalid argument"
+
+    del gattrs
+    del g
+
 
 def test_getsetVectorHash():
     vh = VectorHash()

@@ -398,7 +398,7 @@ void exportPyUtilHash(py::module_& m) {
                   Hash::Node& node = self.getNode(key, '.');
                   if (py::isinstance<py::ellipsis>(tup[1])) {
                       Hash::Attributes attrs;
-                      wrapper::castPyToHashAttributes(value, attrs);
+                      wrapper::castPyToHashAttributes(value, attrs, Hash::REPLACE_ATTRIBUTES);
                       node.setAttributes(attrs);
                   } else if (py::isinstance<py::str>(tup[1])) {
                       auto attr = tup[1].cast<std::string>();
