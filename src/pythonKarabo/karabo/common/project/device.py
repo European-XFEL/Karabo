@@ -58,10 +58,8 @@ class DeviceInstanceModel(BaseProjectObjectModel):
         """When ``class_id`` changes, make sure the configurations are
         compatible.
         """
-        configs = [
-            cnf for cnf in self.configs if cnf.class_id == self.class_id
-        ]
-        self.configs = configs
+        for config_model in self.configs:
+            config_model.class_id = self.class_id
 
     def _configs_changed(self, name, old, new):
         """Traits notification handler for list assignment"""
@@ -88,21 +86,11 @@ class DeviceInstanceModel(BaseProjectObjectModel):
                 self._update_active_uuid, "uuid", remove=True
             )
 
-        rejects = []
         for config_model in added:
-            # Reject incompatible configurations
-            if self.class_id and config_model.class_id != self.class_id:
-                rejects.append(config_model)
+            if self.class_id:
+                config_model.class_id = self.class_id
             # Add listeners for ``uuid`` change event
             config_model.on_trait_change(self._update_active_uuid, "uuid")
-        if rejects:
-            # Remove the incompatible configurations!
-            # This is recursive, but in each call `added` will be empty
-            for config_model in rejects:
-                self.configs.remove(config_model)
-
-            # Wait until we've made ourself consistent before raising
-            raise ValueError("Incompatible configuration(s) added to device!")
 
     def _update_active_uuid(self, obj, name, old, new):
         """Whenever the UUID of a ``DeviceConfigurationModel`` is changed
