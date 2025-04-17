@@ -158,7 +158,9 @@ void exportPyUtilHashAttributes(py::module_& m) {
 
     a.def(
           "update",
-          [](Hash::Attributes& self, const py::object& other) { wrapper::castPyToHashAttributes(other, self); },
+          [](Hash::Attributes& self, const py::object& other) {
+              wrapper::castPyToHashAttributes(other, self, Hash::MERGE_ATTRIBUTES);
+          },
           py::arg("dict_or_hash"));
 
     a.def(

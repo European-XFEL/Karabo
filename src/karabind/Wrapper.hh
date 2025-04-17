@@ -179,8 +179,8 @@ namespace karabind {
 
         karabo::data::ByteArray copyPyToByteArray(const py::object& o) __attribute__((visibility("default")));
 
-        void castPyToHashAttributes(const py::object& o, karabo::data::Hash::Attributes& attrs)
-              __attribute__((visibility("default")));
+        void castPyToHashAttributes(const py::object& o, karabo::data::Hash::Attributes& attrs,
+                                    karabo::data::Hash::MergePolicy policy) __attribute__((visibility("default")));
 
         void setPyDictAsHashAttributes(karabo::data::Hash::Attributes& self, const py::dict& dictionary,
                                        const char sep);
