@@ -752,9 +752,29 @@ namespace karabind {
         }
 
 
-        void castPyToHashAttributes(const py::object& o, karabo::data::Hash::Attributes& attrs) {
+        void mergeAttributesToHashAttributes(karabo::data::Hash::Attributes& target,
+                                             const karabo::data::Hash::Attributes& src) {
+            using namespace karabo::data;
+            if (target.empty()) {
+                target = src;
+                return;
+            }
+            for (Hash::Attributes::const_iterator it = src.begin(); it != src.end(); ++it) {
+                target.set(it->getKey(), it->getValueAsAny());
+            }
+        }
+
+        void castPyToHashAttributes(const py::object& o, karabo::data::Hash::Attributes& attrs,
+                                    karabo::data::Hash::MergePolicy policy) {
+            using namespace karabo::data;
             if (py::isinstance<py::dict>(o)) {
                 wrapper::setPyDictAsHashAttributes(attrs, o, '.');
+            } else if (py::isinstance<Hash::Attributes>(o)) {
+                if (policy == Hash::REPLACE_ATTRIBUTES) {
+                    attrs = o.cast<Hash::Attributes>();
+                } else if (policy == Hash::MERGE_ATTRIBUTES) {
+                    mergeAttributesToHashAttributes(attrs, o.cast<Hash::Attributes>());
+                }
             }
         }
 
