@@ -6,7 +6,7 @@ from qtpy.QtNetwork import QNetworkReply, QNetworkRequest
 
 from karabogui import access as krb_access
 from karabogui.dialogs.reactive_login_dialog import (
-    AccessCodeWidget, LoginType, ReactiveLoginDialog, TemporarySessionDialog)
+    AccessCodeWidget, LoginType, ReactiveLoginDialog, UserSessionDialog)
 from karabogui.singletons.configuration import Configuration
 from karabogui.testing.utils import click_button, keySequence, singletons
 
@@ -31,7 +31,7 @@ def test_access_level(gui_app):
 
 
 def test_temporarySessionDialog(gui_app, mocker):
-    dialog = TemporarySessionDialog()
+    dialog = UserSessionDialog()
     assert not dialog.ok_button.isEnabled()
     access_code = "123456"
     hostname = "karabo.xfel.eu"
@@ -53,7 +53,7 @@ def test_temporarySessionDialog(gui_app, mocker):
 
 def test_switch_user(gui_app, mocker):
     krb_access.SESSION_END_NOTICE = True
-    dialog = TemporarySessionDialog()
+    dialog = UserSessionDialog()
     assert not dialog.ok_button.isEnabled()
     access_code = "123456"
     hostname = "karabo.xfel.eu"

@@ -31,7 +31,7 @@ from qtpy.QtWidgets import (
 import karabogui.access as krb_access
 from karabo.common.scenemodel.api import write_scene
 from karabogui import icons
-from karabogui.dialogs.api import ResizeSceneDialog, TemporarySessionDialog
+from karabogui.dialogs.api import ResizeSceneDialog, UserSessionDialog
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.indicators import get_topic_color
 from karabogui.sceneview.api import SceneView
@@ -180,7 +180,7 @@ class ScenePanel(BasePanelWidget):
         if not krb_access.is_authenticated():
             return
 
-        dialog = TemporarySessionDialog(parent=self)
+        dialog = UserSessionDialog(parent=self)
         dialog.show()
 
     def setTemporaryButtonVisible(self, enable: bool) -> None:
