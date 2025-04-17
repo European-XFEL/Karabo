@@ -518,20 +518,31 @@ class DeviceInstanceController(BaseProjectGroupController):
 
             # We might create a new project device here when renaming!
             device.instance_id = dialog.instance_id
+
+            project_dev = self.project_device
+            new_class = device.class_id != dialog.class_id
             # Look for existing DeviceConfigurationModel
             conf_model = device.select_config(dialog.active_uuid)
-            if conf_model is not None:
-                device.active_config_ref = dialog.active_uuid
-                conf_model.class_id = dialog.class_id
-                conf_model.description = dialog.description
-                # When renaming, we have to apply the config hash!
-                if renamed:
-                    project_dev = self.project_device
-                    proxy = project_dev.proxy
-                    config_hash = conf_model.configuration
-                    project_dev.set_project_config_hash(config_hash)
-                    broadcast_event(KaraboEvent.UpdateDeviceConfigurator,
-                                    {"proxy": proxy, "refresh": True})
+            assert conf_model is not None, "Missing configuration"
+            conf_model.class_id = dialog.class_id
+
+            if new_class:
+                class_id = dialog.class_id
+                # Can only happen for offline project device
+                assert not project_dev.online
+                # Set device model to take care of all configurations
+                device.class_id = class_id
+                # And now the project device
+                project_dev.change_class(class_id)
+
+            device.active_config_ref = dialog.active_uuid
+            # When renaming, we have to apply the config hash!
+            if renamed or new_class:
+                proxy = project_dev.proxy
+                config_hash = conf_model.configuration
+                project_dev.set_project_config_hash(config_hash)
+                broadcast_event(KaraboEvent.UpdateDeviceConfigurator,
+                                {"proxy": proxy, "refresh": True})
 
     def _about_device(self, parent=None):
         device = self.model

@@ -164,16 +164,19 @@ class TestServer(TestCase):
             uuid=UUIDS[0],
         )
 
-        with self.assertRaises(ValueError):
-            inst.configs.append(dev1)
-        assert len(inst.configs) == 1
+        inst.configs.append(dev1)
+        # Device changes the classId
+        assert dev1.class_id == "BazClass"
+        assert len(inst.configs) == 2
 
         inst.class_id = "QuxClass"
-        assert len(inst.configs) == 0
-        assert inst.active_config_ref == ""
+        assert len(inst.configs) == 2
+        assert inst.configs[0].class_id == "QuxClass"
+        assert inst.configs[1].class_id == "QuxClass"
+        assert inst.active_config_ref == dev0.uuid
 
-        inst.configs.append(dev1)
-        assert len(inst.configs) == 1
+        inst.configs.remove(dev0)
+        assert inst.active_config_ref == ""
 
     def test_child_finding(self):
         conf = DeviceConfigurationModel(class_id="BazClass", uuid=UUIDS[2])

@@ -706,7 +706,6 @@ class ConfigurationPanel(BasePanelWidget):
         """
         if self._showing_proxy is None:
             return
-
         if compare_proxy_essential(proxy, self._showing_proxy) or refresh:
             # - If current showing device proxy matches the updated one,
             #   refresh the view.
