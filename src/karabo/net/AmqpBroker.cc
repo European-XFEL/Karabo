@@ -45,7 +45,7 @@ namespace karabo {
 
 
         void AmqpBroker::defaultQueueArgs(AMQP::Table& args) {
-            args.set("x-max-length", 100'000)     // Queue limit
+            args.set("x-max-length", 10'000)      // Queue limit
                   .set("x-overflow", "drop-head") // drop oldest if limit reached
                   .set("x-message-ttl", 120'000); // message time-to-live in ms
         }
@@ -464,7 +464,7 @@ namespace karabo {
             AMQP::Table queueArgs;
             defaultQueueArgs(queueArgs);
             // overwrite queue limit to be shorter
-            queueArgs.set("x-max-length", 12'000);
+            queueArgs.set("x-max-length", 10'000);
             std::ostringstream osstr;
             osstr << m_topic << "." << m_instanceId << ":beats";
             m_heartbeatClient = AmqpHashClient::create(m_connection, osstr.str(), queueArgs,
