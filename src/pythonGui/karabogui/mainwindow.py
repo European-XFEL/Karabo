@@ -39,8 +39,7 @@ from karabogui.access import ACCESS_LEVELS, AccessRole
 from karabogui.background import background
 from karabogui.dialogs.api import (
     AboutDialog, ClientTopologyDialog, ConfigurationDialog, DataViewDialog,
-    DevelopmentTopologyDialog, GuiSessionInfo, TemporarySessionDialog,
-    UpdateDialog)
+    DevelopmentTopologyDialog, GuiSessionInfo, UpdateDialog, UserSessionDialog)
 from karabogui.events import (
     KaraboEvent, broadcast_event, register_for_broadcasts)
 from karabogui.indicators import get_processing_color
@@ -778,7 +777,7 @@ class MainWindow(QMainWindow):
     def _begin_temporary_session(self):
         if not krb_access.is_authenticated():
             return
-        TemporarySessionDialog(parent=self).show()
+        UserSessionDialog(parent=self).show()
 
     # --------------------------------------
     # Qt slots
