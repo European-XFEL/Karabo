@@ -48,9 +48,7 @@ class DeviceHandleDialog(QDialog):
         uic.loadUi(get_dialog_ui('device_handle.ui'), self)
         validator = InputValidator(parent=self)
         self.leTitle.setValidator(validator)
-        self._initUI(server_id, model, add_config, class_id, is_online)
 
-    def _initUI(self, server_id, model, add_config, class_id, is_online):
         # Get available plugins from systemTopology
         for cls_id in self._get_available_plugins(server_id):
             self.cbClass.addItem(cls_id)
@@ -66,7 +64,7 @@ class DeviceHandleDialog(QDialog):
             # We do not allow to modify 'default' configuration!
             self.cbConfig.setEnabled(False)
 
-            # If we already know the class, select it and disable editing.
+            # If we already know the class, select it. It is offline
             if class_id != '':
                 self._update_plugin_widget(class_id)
                 self.cbClass.setEnabled(False)
@@ -84,6 +82,8 @@ class DeviceHandleDialog(QDialog):
                 self.leTitle.setEnabled(False)
                 if active_dev_conf is not None:
                     self._update_plugin_widget(active_dev_conf.class_id)
+                self.cbClass.setEnabled(False)
+
             else:
                 title = 'Edit device configuration'
                 self._init_config_widgets(model)
@@ -93,13 +93,15 @@ class DeviceHandleDialog(QDialog):
                     index = self.cbConfig.findText(active_dev_conf.simple_name)
                     self.cbConfig.setCurrentIndex(index)
 
-            self.cbClass.setEnabled(False)
+                self.cbClass.setEnabled(not is_online)
+
             self.leTitle.setText(model.instance_id)
 
         self.setWindowTitle(title)
         self.leTitle.textChanged.connect(self._update_button_box)
         self.cbConfig.currentIndexChanged.connect(self._update_button_box)
         self.cbConfig.editTextChanged.connect(self._update_button_box)
+        self.cbClass.currentIndexChanged.connect(self._update_button_box)
         self._update_button_box()
 
     def _init_config_widgets(self, dev_inst_model):
@@ -134,7 +136,6 @@ class DeviceHandleDialog(QDialog):
                                  should be displayed.
         """
         self._update_plugin_widget(dev_config_model.class_id)
-        self.teDescription.setPlainText(dev_config_model.description)
 
     def _update_plugin_widget(self, class_id):
         index = self.cbClass.findText(class_id)
@@ -175,4 +176,4 @@ class DeviceHandleDialog(QDialog):
 
     @property
     def description(self):
-        return self.teDescription.toPlainText()
+        return ""
