@@ -155,6 +155,9 @@ class ProjectDeviceInstance(HasStrictTraits):
 
         self._init_object_state(device_id, server_id, class_id)
 
+    def change_class(self, class_id):
+        self._init_object_state(self.device_id, self.server_id, class_id)
+
     def set_project_config_hash(self, config):
         """Forcibly set the offline configuration Hash of the device.
         """
