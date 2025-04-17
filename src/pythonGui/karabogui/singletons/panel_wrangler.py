@@ -28,7 +28,7 @@ from karabogui.access import AccessRole, access_role_allowed, is_authenticated
 from karabogui.controllers.util import load_extensions
 from karabogui.events import (
     KaraboEvent, broadcast_event, register_for_broadcasts)
-from karabogui.indicators import get_temporary_button_data
+from karabogui.indicators import get_user_session_button_data
 from karabogui.logger import get_logger
 from karabogui.mainwindow import CONFIGURATOR_TITLE, MainWindow, PanelAreaEnum
 from karabogui.panels.api import (
@@ -81,7 +81,7 @@ class PanelWrangler(QObject):
             KaraboEvent.CreateMainWindow: self._event_mainwindow,
             KaraboEvent.RaiseEditor: self._event_raise_editor,
             KaraboEvent.AccessLevelChanged: self._event_access_level,
-            KaraboEvent.NetworkSession: self._event_network_session,
+            KaraboEvent.UserSession: self._event_user_session,
         }
         register_for_broadcasts(event_map)
 
@@ -215,7 +215,7 @@ class PanelWrangler(QObject):
             # Close panels not associated with projects
             self._close_unattached_panels()
             if self.main_window is not None:
-                icon, tooltip = get_temporary_button_data()
+                icon, tooltip = get_user_session_button_data()
                 self.main_window.setSessionButton(icon, tooltip)
 
     def _event_mainwindow(self, data):
@@ -237,10 +237,10 @@ class PanelWrangler(QObject):
             elif isinstance(panel, MacroPanel):
                 panel.setReadOnly(not macro_editable)
 
-    def _event_network_session(self, data):
-        """Update the Temporary Session button in main window and all
+    def _event_user_session(self, data):
+        """Update the User Session button in main window and all
         scene panels, when the Temporary session state changes"""
-        icon, tooltip = get_temporary_button_data()
+        icon, tooltip = get_user_session_button_data()
         if self.main_window is not None:
             self.main_window.setSessionButton(icon, tooltip)
         for panel in self._project_item_panels.values():
@@ -388,7 +388,7 @@ class PanelWrangler(QObject):
             panel.setTemporaryButtonVisible(enabled)
             if enabled:
                 # Sync the button state with current Temporary session state.
-                icon, tooltip = get_temporary_button_data()
+                icon, tooltip = get_user_session_button_data()
                 panel.setSessionButton(icon, tooltip)
 
         # XXX: Only attached and access level dependent scene panels are
