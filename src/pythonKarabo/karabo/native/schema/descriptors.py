@@ -39,16 +39,16 @@ from .basetypes import (
 from .utils import get_default_value, sanitize_table_schema
 
 __all__ = [
-    'Attribute', 'Bool', 'ByteArray', 'Char', 'ComplexFloat',
-    'ComplexDouble', 'Descriptor', 'Double', 'Enumable', 'Float',
+    'Attribute', 'Bool', 'ByteArray', 'Char',
+    'Descriptor', 'Double', 'Enumable', 'Float',
     'get_descriptor_from_data', 'get_instance_parent', 'Integer', 'Int8',
     'Int16', 'Int32', 'Int64', 'NumpyVector', 'Number', 'RegexString',
     'Simple', 'Slot', 'String', 'Type', 'TypeHash', 'TypeNone', 'TypeSchema',
     'UInt8', 'UInt16', 'UInt32', 'UInt64', 'Vector', 'VectorString',
     'VectorFloat', 'VectorBool', 'VectorChar', 'VectorDouble',
-    'VectorRegexString', 'VectorComplexFloat', 'VectorComplexDouble',
-    'VectorHash', 'VectorInt8', 'VectorUInt8', 'VectorInt16', 'VectorUInt16',
-    'VectorInt32', 'VectorUInt32', 'VectorInt64', 'VectorUInt64']
+    'VectorRegexString', 'VectorHash', 'VectorInt8', 'VectorUInt8',
+    'VectorInt16', 'VectorUInt16', 'VectorInt32', 'VectorUInt32',
+    'VectorInt64', 'VectorUInt64']
 
 
 def get_instance_parent(instance):
@@ -967,8 +967,6 @@ def _create_numpy_floating(name, number, numpy):
 
 Float = _create_numpy_floating("Float", 20, np.float32)
 Double = _create_numpy_floating("Double", 22, np.float64)
-ComplexFloat = _create_numpy_floating("ComplexFloat", 24, np.complex64)
-ComplexDouble = _create_numpy_floating("ComplexDouble", 26, np.complex128)
 
 # Hide implemenation
 del _create_numpy_floating
@@ -1021,10 +1019,6 @@ VectorFloat = _create_numpy_vector(
     "VectorFloat", 21, np.float32, Float)
 VectorDouble = _create_numpy_vector(
     "VectorDouble", 23, np.float64, Double)
-VectorComplexFloat = _create_numpy_vector(
-    "VectorComplexFloat", 25, np.complex64, ComplexFloat)
-VectorComplexDouble = _create_numpy_vector(
-    "VectorComplexDouble", 27, np.complex128, ComplexDouble)
 
 del _create_numpy_vector
 
@@ -1292,8 +1286,6 @@ def get_descriptor_from_data(data):
             return Int32
         elif isinstance(data, numbers.Real):
             return Double
-        elif isinstance(data, numbers.Complex):
-            return ComplexDouble
         elif isinstance(data, bytes):
             return VectorChar
         elif isinstance(data, str):
