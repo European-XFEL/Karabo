@@ -41,8 +41,7 @@ from .utils import check_broker_scheme, suppress
 
 _OVERFLOW_POLICY = "drop-head"  # Drop oldest messages
 _TIME_TO_LIVE = 120_000  # 120 seconds expiry time [ms]
-_BEATS_QSIZE = 12_000
-_CONSUME_QSIZE = 100_000
+_QUEUE_SIZE = 10_000
 _DEFAULT_HOSTS = "amqp://guest:guest@localhost:5672"
 
 T = TypeVar("T")
@@ -218,7 +217,7 @@ class Broker:
                 publisher_confirms=False)
 
         arguments = {
-            "x-max-length": _CONSUME_QSIZE,
+            "x-max-length": _QUEUE_SIZE,
             "x-overflow": _OVERFLOW_POLICY,
             "x-message-ttl": _TIME_TO_LIVE}
         declare_ok = await self.channel.queue_declare(
@@ -674,7 +673,7 @@ class Broker:
         device = weakref.ref(device)
         name = f"{self.brokerId}:beats"
         arguments = {
-            "x-max-length": _BEATS_QSIZE,
+            "x-max-length": _QUEUE_SIZE,
             "x-overflow": _OVERFLOW_POLICY,
             "x-message-ttl": _TIME_TO_LIVE}
         declare_ok = await self.channel.queue_declare(
