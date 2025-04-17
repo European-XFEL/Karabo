@@ -1,6 +1,7 @@
 import os
 import shutil
 import subprocess
+from threading import Thread
 from time import sleep, time
 
 from karabo.bound import DeviceClient
@@ -14,7 +15,8 @@ class ServerContext:
 
     def __init__(self, serverId: str, args: list[str] = None,
                  api: str = "bound",
-                 client: DeviceClient | None = None):
+                 client: DeviceClient | None = None,
+                 verbose: bool = True):
         # We take care that we can delete logs later
         assert "/" not in serverId, "Test servers can't have `/` ..."
         if args is None:
@@ -30,6 +32,7 @@ class ServerContext:
         if client is None:
             client = DeviceClient(create_instanceId())
         self.client = client
+        self.verbose: bool = verbose
 
     def is_alive(self) -> bool:
         if self.process is None:
@@ -37,11 +40,31 @@ class ServerContext:
         return self.process.poll() is None
 
     def __enter__(self) -> 'ServerContext':
-        self.process = subprocess.Popen(
+        process = subprocess.Popen(
             [f"karabo-{self.api}server", *self.args],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE)
-        if self.process is not None:
+        if process is not None:
+
+            def print_stdout():
+                while True:
+                    line = process.stdout.readline()
+                    if not line:
+                        break
+                    print(line.decode("ascii"), end="")
+
+            def print_stderr():
+                while True:
+                    line = process.stderr.readline()
+                    if not line:
+                        break
+                    print(line.decode("ascii"), end="")
+
+            if self.verbose:
+                Thread(target=print_stdout, daemon=True).start()
+                Thread(target=print_stderr, daemon=True).start()
+
+            self.process = process
             sleep(self.PROCESS_TIME)
         alive = self.is_alive()
         if not alive:
