@@ -15,7 +15,6 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 import asyncio
 import inspect
-import string
 from types import MethodType
 from unittest import TestCase, main
 from zlib import adler32
@@ -26,12 +25,11 @@ from pint import DimensionalityError
 
 from karabo.common.states import State
 from karabo.native import (
-    AccessLevel, AccessMode, ArchivePolicy, Assignment, Bool, ComplexDouble,
-    ComplexFloat, Configurable, DaqDataType, Double, Float, Hash, Image,
-    ImageData, Int8, Int16, Int32, Int64, KaraboError, MetricPrefix, Node,
-    Overwrite, QuantityValue, RegexString, Slot, String, Timestamp, TypeHash,
-    TypeSchema, UInt8, UInt16, UInt32, UInt64, Unit, VectorBool, VectorChar,
-    VectorComplexDouble, VectorComplexFloat, VectorDouble, VectorFloat,
+    AccessLevel, AccessMode, ArchivePolicy, Assignment, Bool, Configurable,
+    DaqDataType, Double, Float, Hash, Image, ImageData, Int8, Int16, Int32,
+    Int64, KaraboError, MetricPrefix, Node, Overwrite, QuantityValue,
+    RegexString, Slot, String, Timestamp, TypeHash, TypeSchema, UInt8, UInt16,
+    UInt32, UInt64, Unit, VectorBool, VectorChar, VectorDouble, VectorFloat,
     VectorHash, VectorInt8, VectorInt16, VectorInt32, VectorInt64,
     VectorRegexString, VectorString, VectorUInt8, VectorUInt16, VectorUInt32,
     VectorUInt64, decodeBinary, encodeBinary, isSet, unit_registry as unit)
@@ -63,10 +61,6 @@ class FullSchema(Configurable):
     s = VectorUInt64()
     t = Double()
     u = VectorDouble()
-    v = ComplexFloat()
-    w = VectorComplexFloat()
-    x = ComplexDouble()
-    y = VectorComplexDouble()
     z = String()
     az = VectorString()
     aa = VectorBool()
@@ -244,6 +238,7 @@ class Tests(TestCase):
                 rows=RowSchema,
                 assignment=Assignment.MANDATORY,
                 unitSymbol=Unit.METER)
+
         with pytest.raises(KaraboError):
             C()
 
@@ -450,6 +445,7 @@ class Tests(TestCase):
                     self.value = value * 2
                 else:
                     self.value = value
+
             node = Node(B)
 
         # 1. Test the basic node setting
@@ -1023,10 +1019,6 @@ class Tests(TestCase):
                 minSize=2,
                 maxSize=4)
 
-            complexVector = VectorComplexFloat(
-                defaultValue=[2 + 3j, 3 + 4j, 4],
-                maxSize=4)
-
         a = A()
         self.assertEqual(a.stringVector.descriptor.minSize, 2)
         self.assertEqual(a.floatVector.descriptor.minSize, 2)
@@ -1039,7 +1031,6 @@ class Tests(TestCase):
         self.assertEqual(a.doubleVector.descriptor.maxSize, 4)
         self.assertEqual(a.intVector.descriptor.minSize, 2)
         self.assertEqual(a.intVector.descriptor.maxSize, 4)
-        self.assertEqual(a.complexVector.descriptor.maxSize, 4)
 
         with self.assertRaises(ValueError):
             a.stringVector = ['miau']
@@ -1087,14 +1078,6 @@ class Tests(TestCase):
         a.intVector = [17, 5]
         self.assertEqual(a.intVector.value[0], 17)
         self.assertEqual(a.intVector.value[1], 5)
-
-        a.complexVector = [2 + 3j]
-        self.assertEqual(a.complexVector.value[0], 2 + 3j)
-        with self.assertRaises(ValueError):
-            a.complexVector = [2 + 3j, 3 + 4j, 4, 17 + 4j, 1]
-        a.complexVector = [5 + 3j, 3 + 4j]
-        self.assertEqual(a.complexVector.value[0], 5 + 3j)
-        self.assertEqual(a.complexVector.value[1], 3 + 4j)
 
         # Test initialization
 
@@ -1334,6 +1317,7 @@ class Tests(TestCase):
 
     def test_assignment_internal(self):
         """Test that we can have no defaults with assignment internal"""
+
         class A(Configurable):
             a = Bool(assignment=Assignment.INTERNAL)
             b = Float(assignment=Assignment.INTERNAL)
@@ -1438,6 +1422,7 @@ class Tests(TestCase):
                 defaultValue=["remote:output", "remote1:output"],
                 maxSize=1,
                 regex=r"^[A-Za-z0-9_-]{1,60}(:)[A-Za-z0-9_-]{1,60}$")
+
         with self.assertRaises(ValueError):
             E()
 
@@ -1514,10 +1499,6 @@ class Tests(TestCase):
         self.assertEqual(shash["s", "valueType"], "VECTOR_UINT64")
         self.assertEqual(shash["t", "valueType"], "DOUBLE")
         self.assertEqual(shash["u", "valueType"], "VECTOR_DOUBLE")
-        self.assertEqual(shash["v", "valueType"], "COMPLEX_FLOAT")
-        self.assertEqual(shash["w", "valueType"], "VECTOR_COMPLEX_FLOAT")
-        self.assertEqual(shash["x", "valueType"], "COMPLEX_DOUBLE")
-        self.assertEqual(shash["y", "valueType"], "VECTOR_COMPLEX_DOUBLE")
         self.assertEqual(shash["z", "valueType"], "STRING")
         self.assertEqual(shash["az", "valueType"], "VECTOR_STRING")
         self.assertEqual(shash["aa", "valueType"], "VECTOR_BOOL")
@@ -1526,10 +1507,6 @@ class Tests(TestCase):
         self.assertEqual(shash["ad", "valueType"], "VECTOR_HASH")
 
     def test_archivePolicy(self):
-
-        keys = ['aa', 'az', 'ab', 'ac', 'ad']
-        for c in string.ascii_lowercase:
-            keys.append(c)
 
         class NoArchive(FullSchema):
             a = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
@@ -1553,16 +1530,14 @@ class Tests(TestCase):
             s = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
             t = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
             u = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
-            v = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
-            w = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
-            x = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
-            y = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
             z = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
             az = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
             aa = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
             ab = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
             ac = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
             ad = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
+
+        keys = dir(NoArchive())
 
         a = FullSchema()
         b = NoArchive()
