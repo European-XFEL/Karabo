@@ -36,6 +36,8 @@ from qtpy.QtWidgets import (
 from karabo.native import decodeBinary
 from karabogui import access as krb_access
 from karabogui.const import CLIENT_HOST
+from karabogui.events import (
+    KaraboEvent, register_for_broadcasts, unregister_from_broadcasts)
 from karabogui.singletons.api import get_config, get_network
 from karabogui.util import SignalBlocker
 
@@ -549,7 +551,7 @@ TEMPORARY_INDEX = 0
 PERMANENT_INDEX = 1
 
 
-class TemporarySessionDialog(QDialog):
+class UserSessionDialog(QDialog):
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         self.setModal(False)
@@ -579,6 +581,25 @@ class TemporarySessionDialog(QDialog):
         access_level = krb_access.GLOBAL_ACCESS_LEVEL.name
         text = ACCESS_LEVEL_INFO.format(user=user, access_level=access_level)
         self.info_label.setText(text)
+
+        self.event_map = {
+            KaraboEvent.NetworkConnectStatus: self._event_network,
+            KaraboEvent.UserSession: self._event_user_session
+
+        }
+        register_for_broadcasts(self.event_map)
+
+    def done(self, result):
+        """Stop listening for broadcast events"""
+        unregister_from_broadcasts(self.event_map)
+        super().done(result)
+
+    def _event_network(self, data):
+        if not data.get("status"):
+            self.close()
+
+    def _event_user_session(self, data):
+        self.close()
 
     @Slot(int)
     def _switch_temporary(self, index):
