@@ -424,7 +424,7 @@ namespace karabo {
         }
 
 
-        void Logger::useAuditFile(const std::string& name, bool inheritSinks) {
+        void Logger::useAuditFile(const std::string& name) {
             if (!m_instance) configure(Hash());
             if (name.empty()) {
                 throw KARABO_PARAMETER_EXCEPTION("Audit file logger name should not be empty!");

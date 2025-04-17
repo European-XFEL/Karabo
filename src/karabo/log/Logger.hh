@@ -143,7 +143,7 @@ namespace karabo {
              *
              * @param name The logger name for audit type messages
              */
-            static void useAuditFile(const std::string& name = KARABO_AUDIT_LOGGER, bool inheritSinks = true);
+            static void useAuditFile(const std::string& name = KARABO_AUDIT_LOGGER);
 
             /**
              * Resets all sinks from all loggers and destroy the cache.
