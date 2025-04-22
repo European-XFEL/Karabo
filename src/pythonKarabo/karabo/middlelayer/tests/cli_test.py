@@ -17,7 +17,8 @@ import gc
 import time
 import weakref
 from asyncio import (
-    ensure_future, get_event_loop, set_event_loop, sleep, wait_for)
+    ensure_future, get_event_loop, new_event_loop, set_event_loop, sleep,
+    wait_for)
 from contextlib import closing
 from itertools import count
 
@@ -101,11 +102,16 @@ def sleepSync(condition, timeout=1):
             break
 
 
-@pytest.mark.skip
 @pytest.mark.timeout(30)
 def test_delete():
+    # Set a loop in the main thread for testing
+    loop = new_event_loop()
+    set_event_loop(loop)
+
     thread = EventThread()
     thread.start()
+
+    gc_time = 0.05
     try:
         remote = Remote()
         remote.count()
@@ -113,9 +119,9 @@ def test_delete():
         r = weakref.ref(remote)
         Remote.destructed = False
         del remote
-        time.sleep(0.05)
+        time.sleep(gc_time)
         gc.collect()
-        time.sleep(0.05)
+        time.sleep(gc_time)
         assert r() is None
         sleepSync(lambda: Remote.destructed)
         assert Remote.destructed
