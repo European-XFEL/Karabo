@@ -62,7 +62,6 @@ from .device_client import DeviceClient
 from .device_server import DeviceServer, Launcher
 from .plugin_loader import PluginLoader
 from .runner import Runner
-from .server_entry_point import runSingleDeviceServer
 from .worker import QueueWorker, Worker
 
 # For comptibility with old karathon bindings, take care that e.g.
