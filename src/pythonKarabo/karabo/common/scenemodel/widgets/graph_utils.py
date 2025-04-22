@@ -96,7 +96,7 @@ def read_base_karabo_image_model(element):
     traits["roi_tool"] = int(element.get(NS_KARABO + "roi_tool", 0))
     traits["roi_items"] = read_roi_info(element)
     traits["aspect_ratio"] = int(element.get(NS_KARABO + "aspect_ratio", 1))
-
+    traits["color_levels"] = read_color_levels(element)
     show_scale = element.get(NS_KARABO + "show_scale", "1")
     traits["show_scale"] = bool(int(show_scale))
 
@@ -111,7 +111,7 @@ def write_base_karabo_image_model(model, element):
     element.set(NS_KARABO + "aux_plots", str(model.aux_plots))
     element.set(NS_KARABO + "roi_tool", str(model.roi_tool))
     element.set(NS_KARABO + "aspect_ratio", str(model.aspect_ratio))
-
+    write_color_levels(model, element)
     show_scale = str(int(model.show_scale))
     element.set(NS_KARABO + "show_scale", show_scale)
 
@@ -224,10 +224,10 @@ def read_range_set(element):
         name: float(element.get(NS_KARABO + name, "0.0")) for name in RANGE_SET
     }
     traits["x_autorange"] = (
-        element.get(NS_KARABO + "x_autorange", "true").lower() == "true"
+            element.get(NS_KARABO + "x_autorange", "true").lower() == "true"
     )
     traits["y_autorange"] = (
-        element.get(NS_KARABO + "y_autorange", "true").lower() == "true"
+            element.get(NS_KARABO + "y_autorange", "true").lower() == "true"
     )
     return traits
 
@@ -361,3 +361,17 @@ def _read_options(element):
     if plot_type == PlotType.Curve:
         traits["pen_color"] = element.get("pen_color")
         return CurveOptions(**traits)
+
+
+def write_color_levels(model, element):
+    color_levels = ",".join(str(x) for x in model.color_levels)
+    element.set(NS_KARABO + "color_levels", color_levels)
+
+
+def read_color_levels(element):
+    """Read gracefully color levels for the image graphs"""
+    try:
+        levels = element.get(NS_KARABO + "color_levels", "")
+        return [float(x) for x in levels.split(",")] if levels else []
+    except Exception:
+        return []
