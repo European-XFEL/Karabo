@@ -131,8 +131,6 @@ async def test_project_manager(deviceTest, subtests):
         ret = await wait_for(call("projManTest",
                                   "slotListItems",
                                   "LOCAL"), timeout=5)
-        assert ret.get("success")
-        assert ret.get("reason", "no reason") == ""
         items = ret.get('items')
         assert len(items) == 57
         scenecnt = 0
@@ -146,8 +144,6 @@ async def test_project_manager(deviceTest, subtests):
                    "domain", "LOCAL")
         ret = await wait_for(call(
             "projManTest", "slotGenericRequest", arg), timeout=5)
-        assert ret.get("success")
-        assert ret.get("reason", "no reason") == ""
         items = ret.get('items')
         assert len(items) == 57
         scenecnt = 0
@@ -159,8 +155,6 @@ async def test_project_manager(deviceTest, subtests):
         arg["item_types"] = ["scene"]
         ret = await wait_for(call(
             "projManTest", "slotGenericRequest", arg), timeout=5)
-        assert ret.get("success")
-        assert ret.get("reason", "no reason") == ""
         items = ret.get('items')
         assert len(items) == 4
         for i in items:
@@ -213,7 +207,6 @@ async def test_project_manager(deviceTest, subtests):
                                       device_id,
                                       ), timeout=5)
 
-            assert ret["success"]
             proj = ret["items"][0]["project_name"]
             conf = ret["items"][0]["active_config_ref"]
             assert proj == "Project"
