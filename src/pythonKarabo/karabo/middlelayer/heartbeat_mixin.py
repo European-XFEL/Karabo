@@ -54,7 +54,7 @@ class HeartBeatMixin(Configurable):
     async def _run(self, **kwargs):
         await super()._run(**kwargs)
         if self.track:
-            self._sigslot.emit("call", {"*": ["slotPing"]}, self.serverId, 0)
+            self._sigslot.emit("call", {"*": ["slotDiscover"]}, self.serverId)
             # Before we actually start ticking, we wait a few seconds for all
             # slotInstanceInfos to arrive
             await sleep(SLOT_PING_SLEEP)
@@ -62,7 +62,7 @@ class HeartBeatMixin(Configurable):
             ensure_future(self._track_heartbeats())
 
     @slot
-    def slotPingAnswer(self, instanceId, info):
+    def slotDiscoverAnswer(self, instanceId, info):
         self._update_instance_info(instanceId, info)
 
     @slot
@@ -94,7 +94,7 @@ class HeartBeatMixin(Configurable):
         if instanceId not in self.systemTopology[instance_type]:
             # Resurrection, refresh instanceInfo directly
             info = await self._sigslot.request(
-                instanceId, "slotPing", instanceId, 1)
+                instanceId, "slotPing", 1)
             await self._topology_changed(new=[(instanceId, info)], gone=[])
             await self._add_instance(instanceId, info)
         else:

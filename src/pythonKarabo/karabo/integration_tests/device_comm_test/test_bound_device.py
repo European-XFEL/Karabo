@@ -158,8 +158,7 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
                                       state).waitForReply(timeOutInMs)
             self.assertEqual(ret[0], state)
 
-            ret = sigSlotInfo.request(deviceId, "slotPing",
-                                      deviceId, 1
+            ret = sigSlotInfo.request(deviceId, "slotPing", 1
                                       ).waitForReply(timeOutInMs)
             self.assertEqual(ret[0]["status"], "ok")
 
@@ -167,8 +166,7 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
             ret = sigSlotInfo.request(deviceId, "slotRequestStateUpdate",
                                       state).waitForReply(timeOutInMs)
             self.assertEqual(ret[0], state)
-            ret = sigSlotInfo.request(deviceId, "slotPing",
-                                      deviceId, 1
+            ret = sigSlotInfo.request(deviceId, "slotPing", 1
                                       ).waitForReply(timeOutInMs)
             self.assertEqual(ret[0]["status"], "error")
 
@@ -176,8 +174,7 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
             ret = sigSlotInfo.request(deviceId, "slotRequestStateUpdate",
                                       state).waitForReply(timeOutInMs)
             self.assertEqual(ret[0], state)
-            ret = sigSlotInfo.request(deviceId, "slotPing",
-                                      deviceId, 1
+            ret = sigSlotInfo.request(deviceId, "slotPing", 1
                                       ).waitForReply(timeOutInMs)
             self.assertEqual(ret[0]["status"], "unknown")
 
@@ -185,8 +182,7 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
             ret = sigSlotInfo.request(deviceId, "slotRequestStateUpdate",
                                       state).waitForReply(timeOutInMs)
             self.assertEqual(ret[0], state)
-            ret = sigSlotInfo.request(deviceId, "slotPing",
-                                      deviceId, 1
+            ret = sigSlotInfo.request(deviceId, "slotPing", 1
                                       ).waitForReply(timeOutInMs)
             self.assertEqual(ret[0]["status"], "ok")
 

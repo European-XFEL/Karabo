@@ -102,22 +102,22 @@ class TestDeviceServer(BoundDeviceTestCase):
             self.assertTrue(missing_msg_found)
 
         with self.subTest(msg="test logger priority roundtrip"):
-            (h,) = sigSlot.request(serverId, "slotPing", serverId,
-                                   1).waitForReply(self._max_timeoutMs)
+            (h,) = sigSlot.request(serverId, "slotPing", 1
+                                   ).waitForReply(self._max_timeoutMs)
             self.assertEqual(h["log"], "INFO")
             sigSlot.request(serverId, "slotLoggerPriority",
                             "ERROR").waitForReply(self._max_timeoutMs)
-            (h,) = sigSlot.request(serverId, "slotPing", serverId,
-                                   1).waitForReply(self._max_timeoutMs)
+            (h,) = sigSlot.request(serverId, "slotPing", 1,
+                                   ).waitForReply(self._max_timeoutMs)
             self.assertEqual(h["log"], "ERROR")
             sigSlot.request(serverId, "slotLoggerPriority",
                             "INFO").waitForReply(self._max_timeoutMs)
-            (h,) = sigSlot.request(serverId, "slotPing", serverId,
-                                   1).waitForReply(self._max_timeoutMs)
+            (h,) = sigSlot.request(serverId, "slotPing", 1
+                                   ).waitForReply(self._max_timeoutMs)
             self.assertEqual(h["log"], "INFO")
 
         with self.subTest("Test serverFlags"):
-            req = sigSlot.request(serverId, "slotPing", serverId, 1)
+            req = sigSlot.request(serverId, "slotPing", 1)
             (h, ) = req.waitForReply(self._max_timeoutMs)
             self.assertEqual(1, h["serverFlags"])
 

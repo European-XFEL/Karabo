@@ -82,7 +82,7 @@ class AsyncServerContext:
         while True:
             try:
                 await wait_for(instance.call(
-                    self.serverId, "slotPing", self.serverId, 1),
+                    self.serverId, "slotPing", 1),
                     timeout=0.2)
                 break
             except TimeoutError:
