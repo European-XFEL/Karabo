@@ -125,7 +125,8 @@ def test_toolbar_apply(gui_app, image_graph_setup):
             assert roi_item.name == name
             assert roi_item.coords == coords
 
-    apply_action = controller.widget.actions()[1]
+    apply_action = controller.widget.actions()[2]
+    assert apply_action.text() == "Set ROI and Aux"
 
     # Save to model
     apply_action.triggered.emit(True)
@@ -246,3 +247,35 @@ def test_undock_image(image_graph_setup, mocker):
     menu = controller.widget.plotItem.vb.menu
     assert len(menu.actions()) == 1
     assert menu.actions()[0].text() == "View all"
+
+
+def test_save_color_levels(gui_app, image_graph_setup):
+    controller, output_proxy, img_proxy = image_graph_setup
+    image_hash = get_image_hash()
+    apply_configuration(image_hash, output_proxy.binding)
+
+    # When no levels saved.
+    model = controller.model
+    assert model.color_levels == []
+
+    # Change the levels value.
+    widget = controller.widget
+    levels = [10, 45]
+    widget.plotItem.set_image_levels(levels)
+    assert model.color_levels == []
+
+    save_action = controller.widget.actions()[1]
+    assert save_action.text() == "Save Color Levels"
+    save_action.triggered.emit(True)
+    gui_app.processEvents()
+
+    model = controller.model
+    assert model.color_levels == [10, 45]
+
+    # Set auto-levels
+    widget.plotItem.set_image_levels(None)
+    save_action.triggered.emit(True)
+    gui_app.processEvents()
+
+    model = controller.model
+    assert model.color_levels == []

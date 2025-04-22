@@ -26,8 +26,9 @@ from karabo.common.scenemodel.registry import (
     register_scene_reader, register_scene_writer)
 
 from .graph_utils import (
-    BaseROIData, read_base_karabo_image_model, read_basic_label, read_roi_info,
-    write_base_karabo_image_model, write_basic_label, write_roi_info)
+    BaseROIData, read_base_karabo_image_model, read_basic_label,
+    read_color_levels, read_roi_info, write_base_karabo_image_model,
+    write_basic_label, write_color_levels, write_roi_info)
 
 
 class KaraboImageModel(BaseWidgetObjectData):
@@ -51,6 +52,7 @@ class KaraboImageModel(BaseWidgetObjectData):
 
     show_scale = Bool(True)
     aspect_ratio = Int(1)
+    color_levels = List(float)
 
 
 class ImageGraphModel(KaraboImageModel):
@@ -76,6 +78,7 @@ class VectorRollGraphModel(BaseWidgetObjectData):
     y_units = String("pixels")
     # Extras
     maxlen = Int(100)
+    color_levels = List(float)
 
 
 class WebCamGraphModel(BaseWidgetObjectData):
@@ -125,7 +128,8 @@ def _vector_roll_graph_reader(element):
     traits["roi_items"] = read_roi_info(element)
     traits.update(read_basic_label(element))
     traits["maxlen"] = int(element.get(NS_KARABO + "maxlen", 100))
-
+    color_levels = read_color_levels(element)
+    traits["color_levels"] = color_levels
     return VectorRollGraphModel(**traits)
 
 
@@ -140,6 +144,7 @@ def _vector_roll_graph_writer(model, parent):
     write_basic_label(model, element)
     write_roi_info(model, element)
     element.set(NS_KARABO + "maxlen", str(model.maxlen))
+    write_color_levels(model, element)
 
     return element
 
