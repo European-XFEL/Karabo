@@ -409,7 +409,7 @@ class DeviceClientBase(Device):
     async def _run(self, **kwargs):
         await super()._run(**kwargs)
         await self._sigslot.async_emit(
-            "call", {"*": ["slotPing"]}, self.deviceId, 0)
+            "call", {"*": ["slotDiscover"]}, self.deviceId)
         # We are collecting all the instanceInfo's and wait for their arrival
         # before the device comes online.
         # Some clients, such as ikarabo, don't want to wait this additional
@@ -435,7 +435,7 @@ class DeviceClientBase(Device):
         return super().slotInstanceGone(instanceId, info)
 
     @slot
-    def slotPingAnswer(self, deviceId: str, info: Hash):
+    def slotDiscoverAnswer(self, deviceId: str, info: Hash):
         self.updateSystemTopology(deviceId, info)
 
     def removeServerChildren(self, instanceId, info):
