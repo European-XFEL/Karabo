@@ -348,10 +348,8 @@ namespace karabo {
 
 
         SignalSlotable::~SignalSlotable() {
-            // Last chance to deregister from static map, but should already be done...
-            this->deregisterFromShortcutMessaging();
-
             if (!m_randPing) {
+                deregisterFromShortcutMessaging(); // registered after setting m_rand = 0
                 stopTrackingSystem();
                 stopEmittingHearbeats();
 
@@ -436,7 +434,7 @@ namespace karabo {
             ensureInstanceIdIsUnique(m_instanceId);
             KARABO_LOG_FRAMEWORK_INFO << "Instance starts up in topic '" << getTopic() << "' as '" << m_instanceId
                                       << "' - Karabo " << karabo::util::Version::getVersion();
-            m_randPing = 0; // Allows to answer on slotPing with argument rand = 0.
+            m_randPing = 0; // Allows to answer on slotDiscover.
             registerForShortcutMessaging();
             startPerformanceMonitor();
             {
@@ -477,12 +475,12 @@ namespace karabo {
                                                       "' is already online in this process (localhost)");
                 }
             }
-            // Ping any guy with my id. If there is one, he will answer, if not, we timeout.
+            // Ping any instance with my id. If there is one, it will answer, if not, we timeout.
             // slotPing takes care that I do not answer myself before timeout...
             // Note: To process the reply may require the thread added to the event loop in SignalSlotable constructor
             Hash instanceInfo;
             try {
-                request(instanceId, "slotPing", instanceId, m_randPing)
+                request(instanceId, "slotPing", m_randPing)
                       .timeout(msPingTimeoutInIsValidInstanceId)
                       .receive(instanceInfo);
             } catch (const karabo::data::TimeoutException&) {
@@ -1039,9 +1037,6 @@ namespace karabo {
 
             KARABO_SIGNAL("signalInstanceUpdated", string, Hash);
 
-            // Global ping listener
-            KARABO_SLOT(slotPing, string /*callersInstanceId*/, int /*replyIfSame*/)
-
             // Global instance new notification
             KARABO_SLOT(slotInstanceNew, string /*instanceId*/, Hash /*instanceInfo*/)
 
@@ -1051,8 +1046,14 @@ namespace karabo {
             // Global slot instance updated
             KARABO_SLOT(slotInstanceUpdated, string /*instanceId*/, Hash /*instanceInfo*/)
 
-            // Listener for ping answers
-            KARABO_SLOT(slotPingAnswer, string /*instanceId*/, Hash /*instanceInfo*/)
+            // Listener for other instances' ping
+            KARABO_SLOT(slotPing, int /*replyIfSame*/)
+
+            // Listener for topology discovery
+            KARABO_SLOT(slotDiscover, string /*requestorId*/)
+
+            // Listener for answers to discovery
+            KARABO_SLOT(slotDiscoverAnswer, string /*instanceId*/, Hash /*instanceInfo*/)
 
             // Connects signal to slot from signal instance side
             KARABO_SLOT(slotConnectToSignal, string /*signalFunction*/, string /*slotInstanceId*/,
@@ -1193,10 +1194,10 @@ namespace karabo {
                 std::lock_guard<std::mutex> lock(m_trackedInstancesMutex);
                 m_trackedInstances.clear();
             }
-            call("*", "slotPing", m_instanceId, 0);
-            // The function slotPingAnswer will be called by all instances available now
+            call("*", "slotDiscover", m_instanceId);
+            // The function slotDiscoverAnswer will be called by all instances available now
             // Lets wait a fair amount of time - huaaah this is bad isn't it :-(
-            // Since we block here for a long time, add a thread to ensure that all slotPingAnswer can be processed.
+            // Since we block here for a long time, add a thread to ensure that all slotDiscoverAnswer can be processed.
             EventLoop::addThread();
             std::this_thread::sleep_for(2000ms);
             EventLoop::removeThread();
@@ -1210,7 +1211,7 @@ namespace karabo {
             string hostname;
             Hash instanceInfo;
             try {
-                this->request(instanceId, "slotPing", instanceId, 1).timeout(200).receive(instanceInfo);
+                this->request(instanceId, "slotPing", 1).timeout(200).receive(instanceInfo);
             } catch (const karabo::data::TimeoutException&) {
                 Exception::clearTrace();
                 return std::make_pair(false, hostname);
@@ -1220,38 +1221,29 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::slotPing(const std::string& instanceId, int rand) {
-            // The value of 'rand' distinguishes between different use cases of slotPing:
-            // - 0: call slotPingAnswer of 'instanceId', indicating we are part of the topology
-            //      (but do not do that if still in the booting phase as indicated by a non-zero m_randPing)
-            // - 1: (and instanceId matches my id), simply reply back my instanceInfo
-            // - else: rand is the m_randPing of the instance that is booting and calls me with its instanceId.
-            //         If that id is identical to mine, I either ask myself (m_randPing == rand) and just ignore this
-            //         slot call or reply my existence so the caller knows it must not come up.
-            if (rand != 0) {
-                // case 1) Called by an instance that is coming up: rand is his m_randPing before it gets 'valid',
-                // case 2) or by SignalSlotable::exists: rand is 1
-                if (instanceId == m_instanceId) {
-                    if (rand == m_randPing) {
-                        // We are in case 1) and I ask myself. I must not answer, so place an invalid reply to avoid
-                        // a default reply to be send (see sendPotentialReply):
-                        registerReply(karabo::data::Hash::Pointer());
-                    } else {
-                        // m_randPing == 0 (I am up) or >= 2 (I am 'booting')
-                        // 1) It is not me, so that guy must not come up: tell him. Note: Two guys coming up
-                        //    at the same time with the same id might both fail here.
-                        // 2) I just reply my existence.
-                        std::shared_lock<std::shared_mutex> lock(m_instanceInfoMutex);
-                        reply(m_instanceInfo);
-                    }
-                }
-            } else if (!m_randPing) {
-                // I should only answer, if my name got accepted which is indicated by a value of m_randPing==0
+        void SignalSlotable::slotPing(int rand) {
+            if (m_randPing == 0 || rand != m_randPing) {
+                // I am fully up (m_randPing == 0) or I get a ping from another (rand != m_randPing) instance:
+                // I reply my existence, providing my instance info.
+                // NOTE: m_randPing of a booting instance is always > 1, i.e. rand == 1 will always get this reply.
                 std::shared_lock<std::shared_mutex> lock(m_instanceInfoMutex);
-                call(instanceId, "slotPingAnswer", m_instanceId, m_instanceInfo);
+                reply(m_instanceInfo);
+            } else {
+                // I am not yet fully up (0 != m_randPing) and the foreign rand(Ping) is the same as mine.
+                // So I ping myself and must not answer.
+                // Therefore, place an invalid reply to avoid a default reply to be sent (see sendPotentialReply):
+                registerReply(karabo::data::Hash::Pointer());
             }
         }
 
+        void SignalSlotable::slotDiscover(const std::string& requestorId) {
+            // Only if m_randPing was set to zero, we are a full member of the topology with a valid instanceId.
+            // So we answer the discovery request only then.
+            if (0 == m_randPing) {
+                std::shared_lock<std::shared_mutex> lock(m_instanceInfoMutex);
+                call(requestorId, "slotDiscoverAnswer", m_instanceId, m_instanceInfo);
+            }
+        }
 
         std::vector<string> SignalSlotable::getAvailableSignals(const std::string& instanceId, int timeout) {
             std::vector<string> signals;
@@ -1308,7 +1300,8 @@ namespace karabo {
                     // Filter out service slots // TODO finally update to last set of those
                     if (function == "slotConnectToSignal" || function == "slotDisconnectFromSignal" ||
                         function == "slotGetAvailableFunctions" || function == "slotHasSlot" ||
-                        function == "slotHeartbeat" || function == "slotPing" || function == "slotPingAnswer") {
+                        function == "slotHeartbeat" || function == "slotPing" || function == "slotDiscover" ||
+                        function == "slotDiscoverAnswer") {
                         continue;
                     }
                     functions.push_back(it->first);
@@ -1318,7 +1311,7 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::slotPingAnswer(const std::string& instanceId, const karabo::data::Hash& instanceInfo) {
+        void SignalSlotable::slotDiscoverAnswer(const std::string& instanceId, const karabo::data::Hash& instanceInfo) {
             if (!hasTrackedInstance(instanceId)) {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Got ping answer from instanceId " << instanceId;
                 emit("signalInstanceNew", instanceId, instanceInfo);
@@ -1335,11 +1328,11 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_INFO << "Tracking instances, but received heart beat from unknown '"
                                               << instanceId << "'";
                     // Resurrected after not sending heartbeats anymore, or heartbeat arrived before
-                    // slotPingAnswer/instanceNew.
+                    // slotDiscoverAnswer/instanceNew.
 
-                    // Post-2.17.X versions do not send full instanceInfo with the heartbeat:
-                    // Ping the resurrected instance which will call back on slotPingAnswer that cares about tracking
-                    call(instanceId, "slotPing", m_instanceId, 0);
+                    // HeartbeatInfo is a partial instanceInfo only, so discover the resurrected instance which
+                    // then will call our slotDiscoverAnswer (that cares about tracking) with the full instanceInfo.
+                    call(instanceId, "slotDiscover", m_instanceId);
                 } else {
                     // Merge the potentially partial instanceInfo and re-set the countdown
                     addTrackedInstance(instanceId, heartbeatInfo);

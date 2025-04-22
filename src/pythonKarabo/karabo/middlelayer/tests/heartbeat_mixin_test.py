@@ -48,9 +48,9 @@ def mixin():
     """The fixture creates a mixin and fills it with servers and devices"""
     mixin = HeartBeatMixin()
     for server, info in _SERVER_INSTANCES.items():
-        mixin.slotPingAnswer(server, info)
+        mixin.slotDiscoverAnswer(server, info)
     for device, info in _DEVICE_INSTANCES.items():
-        mixin.slotPingAnswer(device, info)
+        mixin.slotDiscoverAnswer(device, info)
     yield mixin
 
 

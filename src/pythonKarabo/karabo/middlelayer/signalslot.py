@@ -266,7 +266,7 @@ class SignalSlotable(Configurable):
         self.__randPing = random.randint(2, 0x7fffffff)
         try:
             await wait_for(
-                self.call(self.deviceId, "slotPing", self.deviceId,
+                self.call(self.deviceId, "slotPing",
                           self.__randPing), timeout=1)
             raise KaraboError('deviceId "{}" already in use'.
                               format(self.deviceId))
@@ -275,32 +275,43 @@ class SignalSlotable(Configurable):
         self.__randPing = 0
 
     # slotPing _is_ a slot, but not using the official decorator.
-    # See the definition of 'inner' below.
-    def slotPing(self, instanceId, rand):
+    # See the definition of 'inner_ping' below.
+    def slotPing(self, rand):
         """return our info to show that we are here"""
-        if rand:
-            if instanceId == self.deviceId and self.__randPing != rand:
-                return self._sigslot.info
-        elif self.__randPing == 0:
-            self._sigslot.emit("call", {instanceId: ["slotPingAnswer"]},
-                               self.deviceId, self._sigslot.info)
+        if self.__randPing == 0 or self.__randPing != rand:
+            # I am fully up (__randPing == 0) or I get a ping from another
+            # (rand != __randPing) instance:
+            # I reply my existence, providing my instance info.
+            # NOTE: __randPing of a booting instance is always > 1,
+            #       i.e. rand == 1 will always get this reply.
 
-    def inner(func, device, name, message, args):
+            return self._sigslot.info
+
+    def inner_ping(func, device, name, message, args):
         ret = func(*args)
         # In contrast to normal slots, let slotPing not send an empty reply.
         if ret is not None:
             device._sigslot.reply(message, ret)
 
-        # Server implementation. If the device is a server it will ask
-        # the children if they want to respond
-        if device.is_server:
-            for dev in device.deviceInstanceMap.values():
-                ret = dev.slotPing(*args)
-                if ret is not None:
-                    dev._sigslot.reply(message, ret)
+    slotPing.slot = inner_ping
+    del inner_ping
 
-    slotPing.slot = inner
-    del inner
+    # Also slotDiscver _is_ a slot, but not using the official decorator.
+    # See the definition of 'inner_discover' below.
+    def slotDiscover(self, requestorId):
+        if self.__randPing == 0:
+            self._sigslot.emit("call", {requestorId: ["slotDiscoverAnswer"]},
+                               self.deviceId, self._sigslot.info)
+
+    def inner_discover(func, device, name, message, args):
+        func(*args)
+        if device.is_server:
+            # The has to forward this broadcast to its devices:
+            for dev in device.deviceInstanceMap.values():
+                dev.slotDiscover(*args)
+
+    slotDiscover.slot = inner_discover
+    del inner_discover
 
     @slot
     def slotHeartbeat(self, networkId, info):
