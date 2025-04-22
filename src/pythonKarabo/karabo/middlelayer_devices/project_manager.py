@@ -171,8 +171,8 @@ class ProjectManager(Device):
 
     async def _save_items(self, items):
         """Internally used method to store items in the project database"""
-        savedItems = []
-        projectUuids = []
+        saved_items = []
+        project_uuids = []
         async with self.db_handle as db_session:
             for item in items:
                 xml = item.get("xml")
@@ -182,15 +182,15 @@ class ProjectManager(Device):
                 # XXX: be backward compatible (<2.8.0)!
                 item_type = item.get("item_type", "unknown")
                 if item_type == "project":
-                    projectUuids.append(uuid)
-                overwrite = item.get("overwrite")
+                    project_uuids.append(uuid)
                 domain = item.get("domain")
                 exceptionReason = ""
                 success = True
                 meta = None
+                # All items have their individual success bool
                 try:
                     meta = await db_session.save_item(
-                        domain, uuid, xml, overwrite)
+                        domain, uuid, xml, True)
                     meta = dictToHash(meta)
                 except ProjectDBError as e:
                     success = False
@@ -198,9 +198,9 @@ class ProjectManager(Device):
                 item.set("success", success)
                 item.set("reason", exceptionReason)
                 item.set("entry", meta)
-                savedItems.append(item)
+                saved_items.append(item)
 
-        return savedItems, projectUuids
+        return saved_items, project_uuids
 
     @slot
     async def slotGenericRequest(self, params):
@@ -286,9 +286,6 @@ class ProjectManager(Device):
         """
         self.logger.debug("Loading items: {}"
                           .format([i.get("uuid") for i in items]))
-
-        exceptionReason = ""
-        success = True
         loadedItems = []
         async with self.db_handle as db_session:
             # verify that items belong to single domain
@@ -297,28 +294,21 @@ class ProjectManager(Device):
                     if it.get('domain') == domain]
             assert len(keys) == len(items), "Incorrect domain given!"
 
-            try:
-                items = await db_session.load_item(domain, keys)
-                for item in items:
-                    uuid = item["uuid"]
-                    h = Hash("domain", domain,
-                             "uuid", uuid,
-                             "xml", item["xml"])
-                    loadedItems.append(h)
-                    # Remove from the list of requested keys
-                    keys.remove(uuid)
+            items = await db_session.load_item(domain, keys)
+            for item in items:
+                uuid = item["uuid"]
+                h = Hash("domain", domain,
+                         "uuid", uuid,
+                         "xml", item["xml"])
+                loadedItems.append(h)
+                # Remove from the list of requested keys
+                keys.remove(uuid)
 
-                # Any keys left were not in the database
-                if len(keys) > 0:
-                    success = False
-                    exceptionReason = f'Items "{keys}" not found!'
-            except ProjectDBError as e:
-                exceptionReason = str(e)
-                success = False
+            # Any keys left were not in the database
+            if len(keys) > 0:
+                raise ProjectDBError(f'Items "{keys}" not found!')
 
-        return Hash('items', loadedItems,
-                    'success', success,
-                    'reason', exceptionReason)
+        return Hash('items', loadedItems)
 
     @slot
     async def slotListItems(self, domain, item_types=None):
@@ -332,26 +322,18 @@ class ProjectManager(Device):
             and simple_name
         """
         async with self.db_handle as db_session:
-            exceptionReason = ""
-            success = True
             resHashes = []
-            try:
-                res = await db_session.list_items(domain, item_types)
-                for r in res:
-                    h = Hash('uuid', r['uuid'],
-                             'item_type', r['item_type'],
-                             'simple_name', r['simple_name'],
-                             'is_trashed', r['is_trashed'],
-                             'date', r['date'],
-                             'user', r['user'])
-                    h.set('description', r['description'])
-                    resHashes.append(h)
-            except ProjectDBError as e:
-                exceptionReason = str(e)
-                success = False
-        return Hash('items', resHashes,
-                    'success', success,
-                    'reason', exceptionReason)
+            res = await db_session.list_items(domain, item_types)
+            for r in res:
+                h = Hash('uuid', r['uuid'],
+                         'item_type', r['item_type'],
+                         'simple_name', r['simple_name'],
+                         'is_trashed', r['is_trashed'],
+                         'date', r['date'],
+                         'user', r['user'])
+                h.set('description', r['description'])
+                resHashes.append(h)
+        return Hash('items', resHashes)
 
     @slot
     async def slotListNamedItems(self, domain, item_type, simple_name):
@@ -365,28 +347,20 @@ class ProjectManager(Device):
             item_type and simple_name sorted by date
         """
         async with self.db_handle as db_session:
-            exceptionReason = ""
-            success = True
             resHashes = []
-            try:
-                res = await db_session.list_named_items(
-                    domain, item_type, simple_name)
-                for r in res:
-                    h = Hash('uuid', r['uuid'],
-                             'item_type', r['item_type'],
-                             'simple_name', r['simple_name'],
-                             'is_trashed', r['is_trashed'],
-                             'date', r['date'],
-                             'user', r['user'])
-                    h.set('description', r['description'])
-                    resHashes.append(h)
-                resHashes.sort(key=lambda x: x['date'])
-            except ProjectDBError as e:
-                exceptionReason = str(e)
-                success = False
-        return Hash('items', resHashes,
-                    'success', success,
-                    'reason', exceptionReason)
+            res = await db_session.list_named_items(
+                domain, item_type, simple_name)
+            for r in res:
+                h = Hash('uuid', r['uuid'],
+                         'item_type', r['item_type'],
+                         'simple_name', r['simple_name'],
+                         'is_trashed', r['is_trashed'],
+                         'date', r['date'],
+                         'user', r['user'])
+                h.set('description', r['description'])
+                resHashes.append(h)
+            resHashes.sort(key=lambda x: x['date'])
+        return Hash('items', resHashes)
 
     @slot
     async def slotListDomains(self):
@@ -396,20 +370,13 @@ class ProjectManager(Device):
         :return:
         """
         async with self.db_handle as db_session:
-            success = True
-            exceptionReason = ""
             res = []
-            try:
-                res = await db_session.list_domains()
-                if len(self.domainList):
-                    res = [domain for domain in res
-                           if domain in self.domainList]
-            except Exception as e:
-                exceptionReason = str(e)
-                success = False
-            return Hash('success', success,
-                        'domains', res,
-                        'reason', exceptionReason)
+            res = await db_session.list_domains()
+            if len(self.domainList):
+                res = [domain for domain in res
+                       if domain in self.domainList]
+
+            return Hash('domains', res)
 
     @slot
     async def slotListProjectsWithDevice(self, args):
@@ -445,24 +412,16 @@ class ProjectManager(Device):
         device_id = args["device_id"]
 
         async with self.db_handle as db_session:
-            exceptionReason = ""
-            success = True
-            try:
-                res_prjs = []
-                prjs = await db_session.get_projects_with_device(
-                    domain, device_id)
-                for prj in prjs:
-                    res_prjs.append(
-                        Hash("name", prj["projectname"],
-                             "uuid", prj["uuid"],
-                             "last_modified", prj["date"],
-                             "devices", prj["devices"]))
-            except ProjectDBError as e:
-                exceptionReason = str(e)
-                success = False
-            return Hash('projects', res_prjs,
-                        'success', success,
-                        'reason', exceptionReason)
+            res_prjs = []
+            prjs = await db_session.get_projects_with_device(
+                domain, device_id)
+            for prj in prjs:
+                res_prjs.append(
+                    Hash("name", prj["projectname"],
+                         "uuid", prj["uuid"],
+                         "last_modified", prj["date"],
+                         "devices", prj["devices"]))
+            return Hash('projects', res_prjs)
 
     @slot
     async def slotUpdateAttribute(self, items):
@@ -483,39 +442,24 @@ class ProjectManager(Device):
                  uuid, attr_name, attr_value
         """
         async with self.db_handle as db_session:
-            exceptionReason = ""
-            success = True
             resHashes = []
-            try:
-                res = await db_session.update_attributes(items)
-                for r in res:
-                    h = Hash('domain', r['domain'],
-                             'item_type', r['item_type'],
-                             'uuid', r['uuid'],
-                             'attr_name', r['attr_name'],
-                             'attr_value', r['attr_value'])
-                    resHashes.append(h)
-            except ProjectDBError as e:
-                exceptionReason = str(e)
-                success = False
-            return Hash('items', resHashes,
-                        'success', success,
-                        'reason', exceptionReason)
+            res = await db_session.update_attributes(items)
+            for r in res:
+                h = Hash('domain', r['domain'],
+                         'item_type', r['item_type'],
+                         'uuid', r['uuid'],
+                         'attr_name', r['attr_name'],
+                         'attr_value', r['attr_value'])
+                resHashes.append(h)
+
+            return Hash('items', resHashes)
 
     @slot
     async def slotListProjectAndConfForDevice(self, domain, deviceId):
         async with self.db_handle as db_session:
-            exceptionReason = ""
-            success = True
             resHashes = []
-            try:
-                res = await db_session.get_projects_with_conf(
-                    domain, deviceId)
-                resHashes = [Hash("project_name", k, "active_config_ref", v)
-                             for k, v in res.items()]
-            except ProjectDBError as e:
-                exceptionReason = str(e)
-                success = False
-            return Hash('items', resHashes,
-                        'success', success,
-                        'reason', exceptionReason)
+            res = await db_session.get_projects_with_conf(
+                domain, deviceId)
+            resHashes = [Hash("project_name", k, "active_config_ref", v)
+                         for k, v in res.items()]
+            return Hash('items', resHashes)
