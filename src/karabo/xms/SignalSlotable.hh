@@ -917,9 +917,11 @@ namespace karabo {
 
             void slotInstanceUpdated(const std::string& instanceId, const karabo::data::Hash& instanceInfo);
 
-            void slotPing(const std::string& instanceId, int rand);
+            void slotPing(int rand);
 
-            void slotPingAnswer(const std::string& instanceId, const karabo::data::Hash& hash);
+            void slotDiscover(const std::string& requestorId);
+
+            void slotDiscoverAnswer(const std::string& instanceId, const karabo::data::Hash& hash);
 
             // Get the strand for the stated sender - may create it if not yet there.
             karabo::net::Strand::Pointer getUnicastEventStrand(const std::string& signalInstanceId);
