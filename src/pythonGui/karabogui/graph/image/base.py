@@ -91,6 +91,7 @@ class KaraboImageView(QWidget):
         self._colormap_action = None
         self._apply_action = None
         self._scale_legend = None
+        self._save_levels_action = None
 
         self.configuration = {}
 
@@ -162,6 +163,14 @@ class KaraboImageView(QWidget):
             self.image_layout.ci.layout.setColumnStretchFactor(2, 1)
 
             self.add_colormap_action()
+
+            if self._save_levels_action is None:
+                self._save_levels_action = QAction(self)
+                self._save_levels_action.setIcon(icons.apply)
+                self._save_levels_action.setIconText("Save Color Levels")
+                self._save_levels_action.triggered.connect(
+                    self._save_color_levels)
+                self.addAction(self._save_levels_action)
 
         return self._colorbar
 
@@ -420,6 +429,12 @@ class KaraboImageView(QWidget):
             if toolset is not None and aux_plots_class is not None:
                 toolset.check(aux_plots_class)
 
+        # Restore color levels if available (None, [])
+        color_levels = configuration.get('color_levels')
+        if not color_levels:
+            color_levels = None
+        self.plotItem.set_image_levels(color_levels)
+
     def deactivate_roi(self):
         """Deactivate the region of interest"""
         if self.roi is not None:
@@ -462,7 +477,7 @@ class KaraboImageView(QWidget):
         if self._picker is not None:
             self._picker.update()
 
-        if self._aux_plots is not None:
+        if self._aux_plots is not None and self._colorbar is not None:
             levels = levels if levels is not None else self._colorbar.levels
             self._aux_plots.set_config(plot=AuxPlots.Histogram, levels=levels)
 
@@ -566,6 +581,15 @@ class KaraboImageView(QWidget):
     @Slot()
     def _set_axes_to_aux(self):
         self._aux_plots.set_axes(*self.plotItem.transformed_axes)
+
+    @Slot()
+    def _save_color_levels(self):
+        image_item = self.plotItem.imageItem
+        levels = []
+        if not image_item.auto_levels:
+            levels = image_item.levels.tolist()
+        config = {"color_levels": levels}
+        self.stateChanged.emit(config)
 
     # -----------------------------------------------------------------------
     # ROI methods

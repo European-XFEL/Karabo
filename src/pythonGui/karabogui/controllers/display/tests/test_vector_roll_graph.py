@@ -104,7 +104,7 @@ def test_vector_roll_graph_image_stack_configuration(vector_roll_graph_setup,
     mocker.patch.object(QGraphicsTextItem, "setHtml")
     controller.create(None)
 
-    action = controller.widget.actions()[3]
+    action = controller.widget.actions()[4]
     assert action.text() == "Image Size"
 
     dsym = "karabogui.controllers.display.vector_roll_graph.QInputDialog"

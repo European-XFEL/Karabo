@@ -80,6 +80,7 @@ def test_image_graph_model():
     traits["y_units"] = "nm"
     traits["show_scale"] = False
     traits["undock"] = True
+    traits["color_levels"] = []
 
     model = api.ImageGraphModel(**traits)
     read_model = single_model_round_trip(model)
@@ -98,8 +99,15 @@ def test_image_graph_model():
     assert read_model.y_units == "nm"
     assert read_model.show_scale is False
     assert read_model.undock is False
+    assert read_model.color_levels == []
 
     # Assert ROI data
     for orig, read in zip(model.roi_items, read_model.roi_items):
         for trait in orig.copyable_trait_names():
             assert getattr(orig, trait) == getattr(read, trait)
+
+    # test more level data
+    traits["color_levels"] = [1, 2.1]
+    model = api.ImageGraphModel(**traits)
+    read_model = single_model_round_trip(model)
+    assert read_model.color_levels == [1.0, 2.1]
