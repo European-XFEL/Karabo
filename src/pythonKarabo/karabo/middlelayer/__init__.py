@@ -61,9 +61,9 @@ from .device_client import (
     findServers, get_utc_string, getClasses, getClassSchema, getClients,
     getConfiguration, getConfigurationFromName, getConfigurationFromPast,
     getDescriptors, getDevice, getDevices, getHistory, getInstanceInfo,
-    getProperties, getSchema, getSchemaFromPast, getServers, getSystemInfo,
-    getTimeInfo, getTopology, instantiate, instantiateFromName,
-    instantiateNoWait, isAlive, listConfigurationFromName,
+    getOutputChannelInfo, getProperties, getSchema, getSchemaFromPast,
+    getServers, getSystemInfo, getTimeInfo, getTopology, instantiate,
+    instantiateFromName, instantiateNoWait, isAlive, listConfigurationFromName,
     listDevicesWithConfiguration, lock, saveConfigurationFromName, setNoWait,
     setWait, shutdown, shutdownNoWait, updateDevice, waitUntil, waitUntilNew,
     waitWhile)
