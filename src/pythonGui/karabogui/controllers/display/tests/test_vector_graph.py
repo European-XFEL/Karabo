@@ -173,20 +173,27 @@ def test_action_names(vector_graph_setup):
     assert controller.model.y_grid is True
 
     action = controller.widget.actions()[2]
+    assert action.text() == "Log X"
+    action.trigger()
+    assert controller.model.x_log is True
+    action.trigger()
+    assert controller.model.x_log is False
+
+    action = controller.widget.actions()[3]
     assert action.text() == "Log Y"
     action.trigger()
     assert controller.model.y_log is True
     action.trigger()
     assert controller.model.y_log is False
 
-    action = controller.widget.actions()[3]
+    action = controller.widget.actions()[4]
     assert action.text() == "Invert X"
     action.trigger()
     assert controller.model.x_invert is True
     action.trigger()
     assert controller.model.x_invert is False
 
-    action = controller.widget.actions()[4]
+    action = controller.widget.actions()[5]
     assert action.text() == "Invert Y"
     action.trigger()
     assert controller.model.y_invert is True
