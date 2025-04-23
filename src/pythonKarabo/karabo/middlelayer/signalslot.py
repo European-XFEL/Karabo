@@ -322,27 +322,19 @@ class SignalSlotable(Configurable):
         print('received stopTracking...', args)
 
     @slot
-    def slotGetOutputChannelInformationFromHash(self, info):
-        """This is the hash implementation of the output channel information"""
+    def slotGetOutputChannelInformation(self, info: Hash):
         channelId = info['channelId']
-        success, info = self.slotGetOutputChannelInformation(
-            channelId, None)
-
-        return Hash('success', success, 'info', info)
-
-    @slot
-    def slotGetOutputChannelInformation(self, ioChannelId, processId):
         try:
-            ch = get_property(self, ioChannelId)
+            ch = get_property(self, channelId)
         except AttributeError:
             ch = None
         if isinstance(ch, NetworkOutput) and ch.is_serving():
             ret = ch.getInformation("{}:{}".format(
-                self.deviceId, ioChannelId))
+                self.deviceId, channelId))
             ret["memoryLocation"] = "remote"
-            return True, ret
-        else:
-            return False, Hash()
+            return Hash("success", True, "info", ret)
+
+        return Hash("success", False, "info", Hash())
 
     @slot
     def slotGetOutputChannelNames(self):
