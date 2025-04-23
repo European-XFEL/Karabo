@@ -80,7 +80,7 @@ def test_vector_scatter_graph_pointsize(vector_scatter_setup, mocker):
     controller = DisplayVectorScatterGraph(proxy=proxy,
                                            model=VectorScatterGraphModel())
     controller.create(None)
-    action = controller.widget.actions()[9]
+    action = controller.widget.actions()[10]
     assert action.text() == "Point Size"
 
     dsym = ("karabogui.controllers.display."
