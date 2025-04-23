@@ -393,41 +393,18 @@ async def test_instance_info(deviceTest):
 async def test_output_information(deviceTest):
     device = deviceTest["myDevice"]
     # Second argument processId is not used in MDL
-    success, data = device.slotGetOutputChannelInformation(
-        "output", None)
-    assert success
+    h = device.slotGetOutputChannelInformation(
+        Hash("channelId", "output"))
+    assert h["success"]
+    data = h["info"]
     assert data["connectionType"] == "tcp"
     assert data["memoryLocation"] == "remote"
     assert isinstance(data["port"], np.uint32)
 
-    success, data = device.slotGetOutputChannelInformation(
-        "doesNotExist", None)
-    assert not success
-    assert data == Hash()
-
-
-@pytest.mark.timeout(30)
-@run_test
-async def test_output_information_hash_version(deviceTest):
-    # tests the version that the GUI can generically call
-    device = deviceTest["myDevice"]
-    info = Hash("channelId", "output")
-    h = device.slotGetOutputChannelInformationFromHash(info)
-    success, data = h["success"], h["info"]
-    assert success
-    assert data["connectionType"] == "tcp"
-    assert data["memoryLocation"] == "remote"
-    assert isinstance(data["port"], np.uint32)
-
-    info = Hash("channelId", "doesNotExist")
-    h = device.slotGetOutputChannelInformationFromHash(info)
-    success, data = h["success"], h["info"]
-    assert not success
-    assert data == Hash()
-
-    info = Hash("NoChannelId", "NotImportant")
-    with pytest.raises(KeyError):
-        device.slotGetOutputChannelInformationFromHash(info)
+    h = device.slotGetOutputChannelInformation(
+        Hash("channelId", "doesNotExist"))
+    assert not h["success"]
+    assert h["info"] == Hash()
 
 
 @pytest.mark.timeout(30)

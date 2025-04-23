@@ -668,17 +668,17 @@ async def test_zero_sockets_output_close(deviceTest):
     assert alice.output.server.sockets is not None
     assert len(alice.output.active_channels) > 0
     assert alice.output.alive
-    success, h = alice.slotGetOutputChannelInformation(
-        "output", None)
-    assert success
-    assert not h.empty()
+    h = alice.slotGetOutputChannelInformation(
+        Hash("channelId", "output"))
+    assert h["success"]
+    assert not h["info"].empty()
     await alice.output.close()
     assert alice.output.server is None
     assert not alice.output.alive
-    success, h = alice.slotGetOutputChannelInformation(
-        "output", None)
-    assert not success
-    assert h.empty()
+    h = alice.slotGetOutputChannelInformation(
+        Hash("channelId", "output"))
+    assert not h["success"]
+    assert h["info"].empty()
     assert len(alice.output.active_channels) == 0
 
     # Closing multiple times does not hurt

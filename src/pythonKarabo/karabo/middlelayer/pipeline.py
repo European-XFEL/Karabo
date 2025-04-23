@@ -13,7 +13,6 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
-import os
 import platform
 import re
 import socket
@@ -398,9 +397,11 @@ class NetworkInput(Configurable):
             logger = root.logger
             logger.info(f"Trying to connect to channel {output}")
             instance, name = output.split(":")
-            # success, configuration
-            ok, info = await root._call_once_alive(
-                instance, "slotGetOutputChannelInformation", name, os.getpid())
+            h = await root._call_once_alive(
+                instance, "slotGetOutputChannelInformation",
+                Hash("channelId", name))
+            ok = h["success"]
+            info = h["info"]
             if not ok:
                 logger.info(
                     f"Connecting to channel that was not there {output}")
