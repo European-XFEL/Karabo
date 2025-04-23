@@ -76,7 +76,7 @@ def test_deque(mocker, scatter_graph_setup):
     controller, x, _ = scatter_graph_setup
     controller = DisplayScatterGraph(proxy=x, model=ScatterGraphModel())
     controller.create(None)
-    action = controller.widget.actions()[9]
+    action = controller.widget.actions()[10]
     assert action.text() == "Queue Size"
 
     path = "karabogui.controllers.display.scatter_graph.QInputDialog.getInt"
@@ -91,7 +91,7 @@ def test_pointsize(mocker, scatter_graph_setup):
     controller, x, _ = scatter_graph_setup
     controller = DisplayScatterGraph(proxy=x, model=ScatterGraphModel())
     controller.create(None)
-    action = controller.widget.actions()[10]
+    action = controller.widget.actions()[11]
     assert action.text() == "Point Size"
 
     path = "karabogui.controllers.display.scatter_graph.QInputDialog.getDouble"
