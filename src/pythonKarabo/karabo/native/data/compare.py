@@ -22,8 +22,6 @@ from .hash import Hash, is_equal
 FLOAT_TOLERANCE = 1e-7
 ZERO_FLOAT_TOLERANCE = 1e-9
 
-__all__ = ["has_changes"]
-
 
 def has_changes(old_value, new_value):
     """Compare old/new values to determine if there is a real difference

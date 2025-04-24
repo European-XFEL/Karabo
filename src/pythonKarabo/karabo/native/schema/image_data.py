@@ -34,9 +34,6 @@ def convert_dtype(dtype):
     return Type.strs[dstr].number
 
 
-__all__ = ['Image']
-
-
 class ImageNode(Configurable):
     pixels = NDArray(
         displayedName="Pixels",

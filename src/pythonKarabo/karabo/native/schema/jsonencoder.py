@@ -20,8 +20,6 @@ from numpy import ndarray
 
 from karabo.native.data import Hash
 
-__all__ = ["KaraboJSONEncoder"]
-
 
 class KaraboJSONEncoder(json.JSONEncoder):
     """Encode Karabo values for JSON
