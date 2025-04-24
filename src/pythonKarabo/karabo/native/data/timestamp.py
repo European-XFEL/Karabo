@@ -26,8 +26,6 @@ MINUTE_IN_SECONDS = 60
 HOUR_IN_SECONDS = MINUTE_IN_SECONDS * 60
 DAY_IN_SECONDS = HOUR_IN_SECONDS * 24
 
-__all__ = ['Timestamp', 'minutesAgo', 'daysAgo', 'hoursAgo']
-
 
 @total_ordering
 class Timestamp:

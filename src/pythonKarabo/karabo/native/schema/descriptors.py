@@ -38,18 +38,6 @@ from .basetypes import (
     TableValue, VectorCharValue, VectorStringValue, isSet)
 from .utils import get_default_value, sanitize_table_schema
 
-__all__ = [
-    'Attribute', 'Bool', 'ByteArray', 'Char',
-    'Descriptor', 'Double', 'Enumable', 'Float',
-    'get_descriptor_from_data', 'get_instance_parent', 'Integer', 'Int8',
-    'Int16', 'Int32', 'Int64', 'NumpyVector', 'Number', 'RegexString',
-    'Simple', 'Slot', 'String', 'Type', 'TypeHash', 'TypeNone', 'TypeSchema',
-    'UInt8', 'UInt16', 'UInt32', 'UInt64', 'Vector', 'VectorString',
-    'VectorFloat', 'VectorBool', 'VectorChar', 'VectorDouble',
-    'VectorRegexString', 'VectorHash', 'VectorInt8', 'VectorUInt8',
-    'VectorInt16', 'VectorUInt16', 'VectorInt32', 'VectorUInt32',
-    'VectorInt64', 'VectorUInt64']
-
 
 def get_instance_parent(instance):
     """Find the parent of the instance"""

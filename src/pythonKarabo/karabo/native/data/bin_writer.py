@@ -21,8 +21,6 @@ import numpy as np
 from .hash import _get_hash_num_from_data
 from .typenums import HashType
 
-__all__ = ['encodeBinary', 'writeBinary']
-
 packI = Struct('I').pack
 packB = Struct('B').pack
 

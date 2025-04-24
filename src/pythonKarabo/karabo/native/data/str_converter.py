@@ -27,8 +27,6 @@ from .utils import dictToHash, hashToDict
 from .xml_reader import decodeXML
 from .xml_writer import yield_xml_hash
 
-__all__ = ['hashtype_from_string', 'string_from_hashtype']
-
 
 def string_from_hashtype(data):
     """Convert a given hashtype `data` to a string

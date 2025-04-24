@@ -26,8 +26,6 @@ from karabo.native.time_mixin import get_timestamp
 from .basetypes import KaraboValue, NoneValue, isSet
 from .descriptors import Descriptor, Integer, Slot
 
-__all__ = ['Configurable', 'Node', 'Overwrite']
-
 
 def _get_setters(instance, hsh, only_changes=False, strict=True):
     """Get the list of tuples of decriptor, instance and value
