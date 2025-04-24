@@ -81,18 +81,13 @@ def ensure_running(func: callable):
 
 class Connector:
 
-    def __init__(self, urls: str | None = None, topic: str | None = None):
+    def __init__(self):
         self._connection = None
-        if urls is None:
-            urls = os.environ.get(
-                "KARABO_BROKER", _DEFAULT_HOSTS).split(",")
-        else:
-            urls = urls.split(",")
+        urls = os.environ.get(
+            "KARABO_BROKER", _DEFAULT_HOSTS).split(",")
         self.urls = urls
         check_broker_scheme(urls)
-        if topic is not None:
-            self.topic = topic
-        elif "KARABO_BROKER_TOPIC" in os.environ:
+        if "KARABO_BROKER_TOPIC" in os.environ:
             self.topic = os.environ["KARABO_BROKER_TOPIC"]
         else:
             self.topic = getpass.getuser()
@@ -100,6 +95,25 @@ class Connector:
             raise RuntimeError(f"Topic ('{self.topic}') must not end with "
                                "'_beats'")
         self._lock = None
+
+    def set_parameters(
+            self, urls: str | None = None, topic: str | None = None):
+        """Set the parameters for the singleton after it has been created
+
+        This is only valid if the connection is not established.
+        """
+        if self.is_connected:
+            raise RuntimeError("Cannot change parameter when connected.")
+        if urls is not None:
+            urls = urls.split(",")
+            self.urls = urls
+            check_broker_scheme(urls)
+        if topic is not None:
+            self.topic = topic
+
+        if self.topic.endswith("_beats"):
+            raise RuntimeError(f"Topic ('{self.topic}') must not end with "
+                               "'_beats'")
 
     @property
     def is_connected(self):
@@ -148,13 +162,12 @@ class Connector:
 _CONNECTOR = None
 
 
-def get_connector(urls: str | None = None, topic: str | None = None):
-    """The `Connector` singleton. Can be initialized with `urls` and `topic`
-    """
+def get_connector():
+    """The `Connector` singleton."""
     global _CONNECTOR
     if _CONNECTOR is not None:
         return _CONNECTOR
-    connector = Connector(urls, topic)
+    connector = Connector()
     _CONNECTOR = connector
     return connector
 
