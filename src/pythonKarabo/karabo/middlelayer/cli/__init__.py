@@ -23,9 +23,9 @@ from karabo.middlelayer.device_client import (
     disconnectDevice, execute, executeNoWait, findDevices, findServers,
     getClasses, getClients, getConfiguration, getConfigurationFromName,
     getConfigurationFromPast, getDevices, getHistory, getInstanceInfo,
-    getProperties, getSchema, getSchemaFromPast, getServers, getSystemInfo,
-    getTimeInfo, getTopology, instantiate, instantiateFromName,
-    instantiateNoWait, isAlive, listConfigurationFromName,
+    getOutputChannelInfo, getProperties, getSchema, getSchemaFromPast,
+    getServers, getSystemInfo, getTimeInfo, getTopology, instantiate,
+    instantiateFromName, instantiateNoWait, isAlive, listConfigurationFromName,
     listDevicesWithConfiguration, printHistory, saveConfigurationFromName,
     setNoWait, setWait, shutdown, shutdownNoWait, updateDevice, waitUntil,
     waitUntilNew, waitWhile)
