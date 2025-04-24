@@ -75,10 +75,9 @@ def create_symbols():
     """Lazily create all symbols for the global namespace of a Scintilla
     editor
     """
-    from karabo.native import data, schema
-
+    import karabo.native as native
     native_symbols = [f"karabo.middlelayer.{symbol}"
-                      for symbol in data.__all__ + schema.__all__]
+                      for symbol in dir(native) if not symbol.startswith("__")]
 
     mdl_symbols = [f"karabo.middlelayer.{symbol}" for symbol in _MIDDLELAYER]
 

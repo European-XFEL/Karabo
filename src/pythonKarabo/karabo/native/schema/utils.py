@@ -23,9 +23,6 @@ from karabo.common.const import (
     is_vector_string_type, is_vector_type)
 from karabo.native.data import AccessMode, Hash, Schema
 
-__all__ = ['get_default_value', 'get_value_type_numpy',
-           'sanitize_table_schema']
-
 
 def get_default_value(descriptor, force=False):
     """Return the default value for a descriptor

@@ -26,13 +26,11 @@ from .hash import Hash, HashList
 from .schema import Schema
 from .typenums import XML_TYPE_TO_HASH_TYPE, HashType
 
-__all__ = ['decodeXML', 'loadFromFile', 'XMLParser']
-
-
 # XML is parsed using a SAX parser. This SAX parser sends all the parsed
 # elements into a generator, which are the following functions whose names
 # start with "parse". They yield "Start" if they expect the start
 # of an element, or "Chars" if they expect a string to be read.
+
 
 def parseHash():
     ret = Hash()

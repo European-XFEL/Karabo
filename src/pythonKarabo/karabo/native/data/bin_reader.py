@@ -22,8 +22,6 @@ from .hash import Hash, HashByte, HashElement, HashList
 from .schema import Schema
 from .typenums import HashType
 
-__all__ = ['decodeBinary', 'decodeBinaryPos']
-
 
 class BinaryParser:
     def __init__(self):
