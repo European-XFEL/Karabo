@@ -96,9 +96,6 @@ class Connector:
             self.topic = os.environ["KARABO_BROKER_TOPIC"]
         else:
             self.topic = getpass.getuser()
-        if self.topic.endswith("_beats"):
-            raise RuntimeError(f"Topic ('{self.topic}') must not end with "
-                               "'_beats'")
         self._lock = None
 
     @property
@@ -341,14 +338,18 @@ class Broker:
         await self.channel.basic_publish(msg, routing_key=key, exchange=exch)
 
     async def heartbeat(self, info: Hash):
-        header = Hash("signalFunction", "signalHeartbeat")
+        header = Hash("signalFunction", "__call__")
         header["signalInstanceId"] = self.deviceId
+        # Add timestamp (epoch in ms) when message is sent
+        header["MQTimestamp"] = numpy.int64(time.time() * 1000)
+        # C++ header adds * 'slotInstanceIds' => |*| STRING
+        #                 * 'slotFunctions'   => |*:slotHeartbeat| STRING
         body = Hash(
             "a1", self.deviceId,
             "a2", info)
         msg = encodeBinary(header) + encodeBinary(body)
-        exch = f"{self.domain}.signals"
-        key = f"{self.deviceId}.signalHeartbeat"
+        exch = f"{self.domain}.global_slots"
+        key = f"{self.deviceId}.slotHeartbeat"
         await self.channel.basic_publish(msg, routing_key=key, exchange=exch)
 
     async def notify_network(self, info: Hash):
@@ -685,8 +686,8 @@ class Broker:
         self.heartbeat_consumer_tag = consume_ok.consumer_tag
 
         # Binding and book-keeping!
-        exchange = f"{self.domain}.signals"
-        key = "*.signalHeartbeat"
+        exchange = f"{self.domain}.global_slots"
+        key = "*.slotHeartbeat"
         await self.channel.queue_bind(self.heartbeat_queue, exchange,
                                       routing_key=key)
         async with self.subscribe_lock:

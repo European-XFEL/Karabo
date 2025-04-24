@@ -238,12 +238,7 @@ namespace karabo {
             std::string routingkey = "";
             bool useHeartbeatClient = false;
 
-            if (target == m_topic + "_beats") {
-                exchange = m_topic + ".signals";
-                routingkey = m_instanceId + ".signalHeartbeat";
-                // Use m_heartbeatClient if exists ...
-                useHeartbeatClient = true;
-            } else if (target == "karaboGuiDebug") {
+            if (target == "karaboGuiDebug") {
                 exchange = m_topic + ".karaboGuiDebug";
             } else if (target == m_topic) {
                 if (!header->has("signalFunction")) {
@@ -274,6 +269,12 @@ namespace karabo {
                     // 'slotFunctions' => |*:slotInstanceNew| STRING
                     exchange = m_topic + ".global_slots";
 
+                    auto slotFunctionsNode = header->find("slotFunctions");
+                    if (slotFunctionsNode && slotFunctionsNode->getValue<std::string>() == "|*:slotHeartbeat|") {
+                        routingkey = signalInstanceId + ".slotHeartbeat";
+                        // Use m_heartbeatClient if exists ...
+                        useHeartbeatClient = true;
+                    }
                 } else if (signalFunction == "__request__" ||
                            signalFunction == "__requestNoWait__"
                            // ************************** request **************************
@@ -472,8 +473,8 @@ namespace karabo {
                                                        bind_weak(&AmqpBroker::amqpErrorNotifierBeats, this, _1));
 
             // Subscribe client to (all) heartbeats
-            const std::string exchange(m_topic + ".signals");
-            const std::string bindingKey("*.signalHeartbeat");
+            const std::string exchange(m_topic + ".global_slots");
+            const std::string bindingKey("*.slotHeartbeat");
             std::promise<boost::system::error_code> subDone;
             auto subFut = subDone.get_future();
             m_heartbeatClient->asyncSubscribe(

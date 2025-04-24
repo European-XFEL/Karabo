@@ -284,17 +284,16 @@ void Broker_Test::testReadingHeartbeats() {
 
 void Broker_Test::_testReadingHeartbeats() {
     //    'signalInstanceId' => bob STRING
-    //    'signalFunction' => signalHeartbeat STRING
-    //    'slotInstanceIds' => __none__ STRING
-    //    'slotFunctions' => __none__ STRING
+    //    'signalFunction' => __call__ STRING
+    //    'slotInstanceIds' => |*| STRING
+    //    'slotFunctions' => |*:slotHeartbeat| STRING
     //    'hostName' => exflpcx21502.desy.de STRING
     //    'userName' =>  STRING
     //
     //    'a1' => bob STRING
-    //    'a2' => 1 INT32
-    //    'a3' +
+    //    'a2' +
     //      'type' => device STRING
-    //      'classId' => MqttBroker STRING
+    //      'classId' => AmqpBroker STRING
     //      'serverId' => __none__ STRING
     //      'host' => exflpcx21502 STRING
     //      'status' => ok STRING
@@ -325,9 +324,9 @@ void Broker_Test::_testReadingHeartbeats() {
     alice->startReading(
           [prom](Hash::Pointer h, Hash::Pointer data) {
               try {
-                  CPPUNIT_ASSERT(h->get<std::string>("signalInstanceId") == "bob");
-                  CPPUNIT_ASSERT(h->get<std::string>("signalFunction") == "signalFromBob");
-                  CPPUNIT_ASSERT(data->get<int>("c") == 1);
+                  CPPUNIT_ASSERT_EQUAL(std::string("bob"), h->get<std::string>("signalInstanceId"));
+                  CPPUNIT_ASSERT_EQUAL(std::string("signalFromBob"), h->get<std::string>("signalFunction"));
+                  CPPUNIT_ASSERT_EQUAL(1, data->get<int>("c"));
               } catch (const std::exception& e) {
                   std::clog << __FILE__ << ":" << __LINE__ << " " << e.what() << std::endl;
                   prom->set_value(false);
@@ -340,11 +339,13 @@ void Broker_Test::_testReadingHeartbeats() {
     alice->startReadingHeartbeats(
           [promBeats, maxLoop, &counter](Hash::Pointer h, Hash::Pointer d) {
               try {
-                  CPPUNIT_ASSERT(h->get<std::string>("signalFunction") == "signalHeartbeat");
-                  CPPUNIT_ASSERT(h->get<std::string>("signalInstanceId") == "bob");
+                  CPPUNIT_ASSERT_EQUAL(std::string("__call__"), h->get<std::string>("signalFunction"));
+                  CPPUNIT_ASSERT_EQUAL(std::string("bob"), h->get<std::string>("signalInstanceId"));
                   CPPUNIT_ASSERT(d->has("a1"));
                   CPPUNIT_ASSERT(d->has("a2"));
-                  CPPUNIT_ASSERT(d->has("a3"));
+                  CPPUNIT_ASSERT(!d->has("a3"));
+                  CPPUNIT_ASSERT(d->has("a2.c"));
+                  CPPUNIT_ASSERT_EQUAL(counter, d->get<int>("a2.c"));
                   if (++counter == maxLoop) promBeats->set_value(true);
               } catch (const std::exception& e) {
                   std::clog << __FILE__ << ":" << __LINE__ << " " << e.what() << std::endl;
@@ -372,17 +373,17 @@ void Broker_Test::_testReadingHeartbeats() {
         CPPUNIT_ASSERT(bob->getInstanceId() == "bob");
         CPPUNIT_ASSERT(bob->getDomain() == alice->getDomain());
 
-        Hash::Pointer header = std::make_shared<Hash>("signalInstanceId", "bob", "signalFunction", "signalHeartbeat",
-                                                      "slotInstanceIds", "__none__", "slotFunctions", "__none__");
+        Hash::Pointer header = std::make_shared<Hash>("signalInstanceId", "bob", "signalFunction", "__call__",
+                                                      "slotInstanceIds", "|*|", "slotFunctions", "|*:slotHeartbeat|");
 
         Hash::Pointer data = std::make_shared<Hash>(
-              "a1", std::string("bob"), "a2", 1, "a3",
-              Hash("type", "device", "classId", "Broker", "serverId", "__none__", "visibilty", 4, "lang", "cpp"));
+              "a1", std::string("bob"), "a2",
+              Hash("type", "device", "classId", "Broker", "serverId", "__none__", "lang", "cpp"));
 
         for (int i = 0; i < maxLoop; ++i) {
             // Bob sends heartbeat
-            data->set<int>("c", i + 1);
-            CPPUNIT_ASSERT_NO_THROW(bob->write(m_domain + "_beats", header, data));
+            data->set<int>("a2.c", i);
+            CPPUNIT_ASSERT_NO_THROW(bob->write(m_domain, header, data));
         }
 
         Hash::Pointer h2 = std::make_shared<Hash>("signalInstanceId", "bob", "signalFunction", "signalFromBob",
@@ -394,8 +395,12 @@ void Broker_Test::_testReadingHeartbeats() {
     });
 
     // Wait on future ... when Alice reads all maxLoop messages or failure happens...
+
+    const std::chrono::seconds timeout(10);
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futBeats.wait_for(timeout));
     const bool resultBeats = futBeats.get();
     CPPUNIT_ASSERT(resultBeats);
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, fut.wait_for(timeout));
     const bool result = fut.get();
     CPPUNIT_ASSERT(result);
     t.join(); // join  ... otherwise terminate() called
