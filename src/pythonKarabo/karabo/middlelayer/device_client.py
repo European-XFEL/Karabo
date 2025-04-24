@@ -67,6 +67,28 @@ async def getInstanceInfo(device):
 
 
 @synchronize
+async def getOutputChannelInfo(device, output: str) -> Hash:
+    """
+    Get the `info` Hash of an output channel of a device.
+
+    Args:
+        device: The device to query.
+        output (str): The name or identifier of the output channel.
+
+    Returns:
+        Hash: A Hash with the following keys:
+            - success (bool): Indicates if the output channel exists.
+            - info (Hash): Detailed information about the output channel.
+    """
+    if isinstance(device, ProxyBase):
+        device = device._deviceId
+
+    return await get_instance().call(
+        device, "slotGetOutputChannelInformation",
+        Hash("channelId", output))
+
+
+@synchronize
 async def waitUntilNew(*props):
     """Wait until new futures provide a result
 

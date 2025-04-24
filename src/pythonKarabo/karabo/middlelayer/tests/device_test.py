@@ -22,8 +22,8 @@ import pytest_asyncio
 from karabo import __version__ as karaboVersion
 from karabo.common.states import State
 from karabo.middlelayer import (
-    AccessMode, KaraboError, background, getDevice, setWait, sleep as mdlsleep,
-    waitUntil, waitWhile)
+    AccessMode, KaraboError, background, getDevice, getOutputChannelInfo,
+    setWait, sleep as mdlsleep, waitUntil, waitWhile)
 from karabo.middlelayer.device import Device
 from karabo.middlelayer.device_client import (
     call, get_instance, getProperties, getSchema)
@@ -400,6 +400,13 @@ async def test_output_information(deviceTest):
     assert data["connectionType"] == "tcp"
     assert data["memoryLocation"] == "remote"
     assert isinstance(data["port"], np.uint32)
+
+    info = await getOutputChannelInfo(device.deviceId, "output")
+    info = info["info"]
+    assert info["connectionType"] == "tcp"
+    assert info["memoryLocation"] == "remote"
+    assert isinstance(info["port"], np.uint32)
+    assert info["port"] == data["port"]
 
     h = device.slotGetOutputChannelInformation(
         Hash("channelId", "doesNotExist"))
