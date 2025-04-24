@@ -210,7 +210,6 @@ namespace karabo {
             header->set("signalFunction", "__call__");
             header->set("slotInstanceIds", "|" + slotInstanceId + "|");
             header->set("slotFunctions", "|" + slotInstanceId + ":" + slotFunction + "|");
-            header->set("hostName", boost::asio::ip::host_name());
             header->set("userName", m_username);
             return header;
         }
@@ -237,7 +236,6 @@ namespace karabo {
             header->set("signalFunction", "__request__");
             header->set("slotInstanceIds", "|" + slotInstanceId + "|");
             header->set("slotFunctions", "|" + slotInstanceId + ":" + slotFunction + "|");
-            header->set("hostName", boost::asio::ip::host_name());
             header->set("userName", m_signalSlotable->getUserName());
             return header;
         }
@@ -254,7 +252,6 @@ namespace karabo {
             header->set("signalFunction", "__requestNoWait__");
             header->set("slotInstanceIds", "|" + requestSlotInstanceId + "|");
             header->set("slotFunctions", "|" + requestSlotInstanceId + ":" + requestSlotFunction + "|");
-            header->set("hostName", boost::asio::ip::host_name());
             header->set("userName", m_signalSlotable->getUserName());
             return header;
         }
@@ -2728,6 +2725,7 @@ namespace karabo {
             }
         }
 
+        // where is this used?
         void SignalSlotable::connectInputToOutputChannel_old(const InputChannel::Pointer& channel,
                                                              const std::string& outputChannelString, int trials) {
             KARABO_LOG_FRAMEWORK_DEBUG << "connectInputToOutputChannel  on \"" << m_instanceId
@@ -2868,7 +2866,8 @@ namespace karabo {
                 }
             };
             this->request(instanceId, "slotGetOutputChannelInformation",
-                          Hash("channelId", channelId, "processId", static_cast<int>(getpid())))
+                          Hash("channelId", channelId, "processId", static_cast<int>(getpid()), "hostname",
+                               boost::asio::ip::host_name()))
                   .timeout(getOutChannelInfoTimeoutMsec)
                   .receiveAsync<karabo::data::Hash>(successHandler, failureHandler);
         }
@@ -2922,8 +2921,9 @@ namespace karabo {
 
         void SignalSlotable::slotGetOutputChannelInformation(const karabo::data::Hash& hash) {
             const std::string& channelId = hash.get<std::string>("channelId");
-            // The MDL DeviceClient doesn't provide this processId information in the hash
+            // The MDL DeviceClient doesn't provide this processId or hostname information in the hash
             const int processId = (hash.has("processId") ? hash.get<int>("processId") : -1);
+            const std::string hostname = (hash.has("hostname") ? hash.get<std::string>("hostname") : std::string());
 
             std::lock_guard<std::mutex> lock(m_pipelineChannelsMutex);
             OutputChannels::const_iterator it = m_outputChannels.find(channelId);
@@ -2937,9 +2937,7 @@ namespace karabo {
                     // The host name should be given as slot argument. But for now let's stay backward compatible...
                     const SlotInstancePointer slot(getSlot("slotGetOutputChannelInformation"));
                     if (slot) {
-                        const Hash::Pointer header(slot->getHeaderOfSender());
-                        if (header && header->has("hostName") &&
-                            header->get<std::string>("hostName") == boost::asio::ip::host_name()) {
+                        if (!hostname.empty() && hostname == boost::asio::ip::host_name()) {
                             // Same pid on same host means same process:
                             h.set("memoryLocation", "local");
                         }
