@@ -507,14 +507,18 @@ namespace karabo {
                 auto name = l->name();
                 if (category.empty()) {
                     l->set_level(lvl);
-                    // for (auto& s : l->sinks()) s->set_level(lvl);
+                    for (auto& s : l->sinks()) {
+                        s->set_level(lvl);
+                    }
                 } else if (name.empty()) {
                     return;
                 } else {
                     size_t pos = name.find(category);
                     if (pos != 0) return;
                     l->set_level(lvl);
-                    // for (auto& s : l->sinks()) s->set_level(lvl);
+                    for (auto& s : l->sinks()) {
+                        s->set_level(lvl);
+                    }
                 }
             });
         }
