@@ -17,7 +17,6 @@ import getpass
 import inspect
 import logging
 import os
-import socket
 import time
 import traceback
 import weakref
@@ -197,7 +196,6 @@ class Broker:
         self.exit_event = Event()
         self.heartbeat_task = None
         self.subscribe_lock = Lock()
-        self.hostname = socket.gethostname()
         # Flag to indicate when a channel is about to be closed
         self.shutdown_channel = False
 
@@ -401,7 +399,6 @@ class Broker:
             "signalFunction", signal,
             "slotInstanceIds", f"|{slotInstanceIds}|",
             "slotFunctions", f"|{funcs}|",
-            "hostname", self.hostname,
             "classId", self.classId)
         if reply is not None:
             p.setElement("replyTo", reply, {})
