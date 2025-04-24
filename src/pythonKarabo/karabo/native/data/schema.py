@@ -1,8 +1,6 @@
 from .hash import Hash
 from .typenums import XML_TYPE_TO_HASH_TYPE, HashType
 
-__all__ = ['Schema']
-
 
 class Schema:
     """This represents a Karabo Schema, it encapsulates a schema `hash`

@@ -22,8 +22,6 @@ from .basetypes import NoneValue, QuantityValue
 from .configurable import Configurable
 from .descriptors import Bool, ByteArray, Int32, Simple, Type, VectorUInt64
 
-__all__ = ['NDArray']
-
 
 class ArraySchema(Configurable):
     data = ByteArray(

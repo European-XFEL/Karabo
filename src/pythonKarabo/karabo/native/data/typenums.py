@@ -15,8 +15,6 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 from enum import Enum
 
-__all__ = ['HashType', 'HASH_TYPE_TO_XML_TYPE', 'XML_TYPE_TO_HASH_TYPE']
-
 
 class HashType(Enum):
     """ This enumeration matches types defined in the Karabo code base."""
