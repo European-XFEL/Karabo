@@ -1063,8 +1063,7 @@ namespace karabo {
             KARABO_SLOT(slotGetAvailableFunctions, string /*functionType*/)
 
             // Provides information about pipeline connectivity
-            KARABO_SLOT(slotGetOutputChannelInformation, string /*ioChannelId*/, int /*pid*/)
-            KARABO_SLOT(slotGetOutputChannelInformationFromHash,
+            KARABO_SLOT(slotGetOutputChannelInformation,
                         karabo::data::Hash /*hash*/) // wrapper for generic calls, that encapsulate arguments in Hash
 
             KARABO_SLOT(slotGetOutputChannelNames)
@@ -2729,7 +2728,6 @@ namespace karabo {
             }
         }
 
-
         void SignalSlotable::connectInputToOutputChannel_old(const InputChannel::Pointer& channel,
                                                              const std::string& outputChannelString, int trials) {
             KARABO_LOG_FRAMEWORK_DEBUG << "connectInputToOutputChannel  on \"" << m_instanceId
@@ -2765,7 +2763,6 @@ namespace karabo {
                 channel->connect(it->second); // asynchronous
             }
         }
-
 
         void SignalSlotable::connectInputChannelHandler_old(const InputChannel::Pointer& inChannel,
                                                             const std::string& outputChannelString,
@@ -2849,7 +2846,7 @@ namespace karabo {
             const std::string& instanceId = v[0];
             const std::string& channelId = (v.size() >= 2 ? v[1] : "");
             auto successHandler = util::bind_weak(&SignalSlotable::connectInputChannelHandler, this, channel,
-                                                  outputChannelString, handler, _1, _2);
+                                                  outputChannelString, handler, _1);
             const std::string myInstanceId(getInstanceId()); // prepare to capture in lambda without capture of 'this'
             auto failureHandler = [outputChannelString, handler, myInstanceId]() {
                 try {
@@ -2870,16 +2867,19 @@ namespace karabo {
                     }
                 }
             };
-            this->request(instanceId, "slotGetOutputChannelInformation", channelId, static_cast<int>(getpid()))
+            this->request(instanceId, "slotGetOutputChannelInformation",
+                          Hash("channelId", channelId, "processId", static_cast<int>(getpid())))
                   .timeout(getOutChannelInfoTimeoutMsec)
-                  .receiveAsync<bool, karabo::data::Hash>(successHandler, failureHandler);
+                  .receiveAsync<karabo::data::Hash>(successHandler, failureHandler);
         }
 
 
         void SignalSlotable::connectInputChannelHandler(const InputChannel::Pointer& inChannel,
                                                         const std::string& outputChannelString,
-                                                        const std::function<void(bool)>& handler, bool outChannelExists,
-                                                        const karabo::data::Hash& outChannelInfo) {
+                                                        const std::function<void(bool)>& handler,
+                                                        const karabo::data::Hash& outputChannelInfo) {
+            const bool outChannelExists = outputChannelInfo.get<bool>("success");
+            const karabo::data::Hash& outChannelInfo = outputChannelInfo.get<karabo::data::Hash>("info");
             if (outChannelExists) {
                 Hash allInfo(outChannelInfo);
                 allInfo.set("outputChannelString", outputChannelString);
@@ -2920,8 +2920,11 @@ namespace karabo {
         }
 
 
-        std::pair<bool, karabo::data::Hash> SignalSlotable::slotGetOutputChannelInformationImpl(
-              const std::string& channelId, const int& processId, const char* slotName) {
+        void SignalSlotable::slotGetOutputChannelInformation(const karabo::data::Hash& hash) {
+            const std::string& channelId = hash.get<std::string>("channelId");
+            // The MDL DeviceClient doesn't provide this processId information in the hash
+            const int processId = (hash.has("processId") ? hash.get<int>("processId") : -1);
+
             std::lock_guard<std::mutex> lock(m_pipelineChannelsMutex);
             OutputChannels::const_iterator it = m_outputChannels.find(channelId);
             if (it != m_outputChannels.end()) {
@@ -2932,7 +2935,7 @@ namespace karabo {
                 if (processId == static_cast<int>(getpid()) && !std::getenv("KARABO_NO_PIPELINE_SHORTCUT")) {
                     // HACK/workaround:
                     // The host name should be given as slot argument. But for now let's stay backward compatible...
-                    const SlotInstancePointer slot(getSlot(slotName));
+                    const SlotInstancePointer slot(getSlot("slotGetOutputChannelInformation"));
                     if (slot) {
                         const Hash::Pointer header(slot->getHeaderOfSender());
                         if (header && header->has("hostName") &&
@@ -2942,23 +2945,10 @@ namespace karabo {
                         }
                     }
                 }
-                return std::make_pair(true, h);
+                reply(karabo::data::Hash("success", true, "info", h));
             } else {
-                return std::make_pair(false, karabo::data::Hash());
+                reply(karabo::data::Hash("success", false, "info", karabo::data::Hash()));
             }
-        }
-
-        void SignalSlotable::slotGetOutputChannelInformation(const std::string& channelId, const int& processId) {
-            const std::pair<bool, karabo::data::Hash>& result =
-                  slotGetOutputChannelInformationImpl(channelId, processId, "slotGetOutputChannelInformation");
-            reply(std::get<0>(result), std::get<1>(result));
-        }
-
-        void SignalSlotable::slotGetOutputChannelInformationFromHash(const karabo::data::Hash& hash) {
-            const std::pair<bool, karabo::data::Hash>& result =
-                  slotGetOutputChannelInformationImpl(hash.get<std::string>("channelId"), hash.get<int>("processId"),
-                                                      "slotGetOutputChannelInformationFromHash");
-            reply(karabo::data::Hash("success", std::get<0>(result), "info", std::get<1>(result)));
         }
 
 
