@@ -71,7 +71,7 @@ async def test_topology_add(mixin):
     topology = mixin.systemTopology
     assert topology["macro"] == Hash()
     instanceId = "macro_1"
-    info = Hash("type", "macro", "heartBeatInterval",
+    info = Hash("type", "macro", "heartbeatInterval",
                 0.1, "serverId", "__none__")
     await mixin._add_instance(instanceId, info)
     assert len(topology["macro"]) == 1
@@ -83,7 +83,7 @@ async def test_topology_add_unknown(mixin):
     """Test heartbeat mixin add unknown instance"""
     topology = mixin.systemTopology
     instanceId = "outlawdevice"
-    info = Hash("type", "notknown", "heartBeatInterval",
+    info = Hash("type", "notknown", "heartbeatInterval",
                 0.1, "serverId", "__none__")
     await mixin._add_instance(instanceId, info)
     assert len(topology["notknown"]) == 1
@@ -103,7 +103,7 @@ async def test_topology_server_already_online(mixin, mocker):
     # Server goes online that has a few devices, all devices
     # are removed
     instanceId = "karabo_test_1"
-    info = Hash("type", "server", "heartBeatInterval", 0.1)
+    info = Hash("type", "server", "heartbeatInterval", 0.1)
     await mixin._add_instance(instanceId, info)
     assert len(topology["device"]) == 0
     assert topo_mock.called
@@ -125,7 +125,7 @@ async def test_topology_server_already_online(mixin, mocker):
     topo_mock = mocker.patch(TARGET)
     # Server goes online that has NO CHILDREN
     instanceId = "karabo_test_2"
-    info = Hash("type", "server", "heartBeatInterval", 0.1)
+    info = Hash("type", "server", "heartbeatInterval", 0.1)
     await mixin._add_instance(instanceId, info)
     assert len(topology["device"]) == 0
     assert not topo_mock.called
@@ -142,7 +142,7 @@ async def test_topology_server_goes_offline(mixin):
 
     assert "karabo_test_1" in servers
     instanceId = "karabo_test_1"
-    info = Hash("type", "server", "heartBeatInterval", 0.1)
+    info = Hash("type", "server", "heartbeatInterval", 0.1)
     # Server goes offline that has a few devices, all devices
     # are removed
     mixin._remove_instance(instanceId, info)
@@ -157,7 +157,7 @@ async def test_device_goes_online(mixin, mocker):
     """Test heartbeat mixin with device going online"""
     topology = mixin.systemTopology
     instanceId = "eleanor"
-    info = Hash("type", "device", "heartBeatInterval", 0.1)
+    info = Hash("type", "device", "heartbeatInterval", 0.1)
 
     topo_mock = mocker.patch(TARGET)
     assert len(topology["device"]) == 5

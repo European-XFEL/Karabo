@@ -58,7 +58,6 @@ namespace karabo {
 
         /// Milliseconds of timeout when asking for validity of my id at startup:
         const int msPingTimeoutInIsValidInstanceId = 1000;
-        const char* beatsTopicSuffix = "_beats";
 
         const int channelReconnectIntervalSec = 6; // seconds  - significantly longer than getOutChannelInfoTimeoutMsec
         const int getOutChannelInfoTimeoutMsec = 3000; // milliseconds - this plus time of few other async actions in
@@ -351,7 +350,7 @@ namespace karabo {
             if (!m_randPing) {
                 deregisterFromShortcutMessaging(); // registered after setting m_rand = 0
                 stopTrackingSystem();
-                stopEmittingHearbeats();
+                m_heartbeatTimer.cancel();
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "Instance \"" << m_instanceId << "\" shuts cleanly down";
                 std::shared_lock<std::shared_mutex> lock(m_instanceInfoMutex);
@@ -442,7 +441,7 @@ namespace karabo {
                 call("*", "slotInstanceNew", m_instanceId, m_instanceInfo);
             }
             // Start emitting heartbeats
-            delayedEmitHeartbeat(m_heartbeatInterval);
+            delayedSendHeartbeat(m_heartbeatInterval);
         }
 
 
@@ -1018,16 +1017,6 @@ namespace karabo {
 
 
         void SignalSlotable::registerDefaultSignalsAndSlots() {
-            // The heartbeat signal goes through a different topic, so we cannot use the normal registerSignal.
-            Signal::Pointer heartbeatSignal =
-                  std::make_shared<Signal>(this, m_connection, m_instanceId, "signalHeartbeat");
-            heartbeatSignal->setSignature<string, Hash>();
-            heartbeatSignal->setTopic(m_topic + beatsTopicSuffix);
-            {
-                std::lock_guard<std::mutex> lock(m_signalSlotInstancesMutex);
-                m_signalInstances["signalHeartbeat"] = heartbeatSignal;
-            }
-
             // Listener for heartbeats
             KARABO_SLOT(slotHeartbeat, string /*instanceId*/, Hash /*heartbeatInfo*/)
 
@@ -1162,29 +1151,28 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::emitHeartbeat(const boost::system::error_code& e) {
+        void SignalSlotable::sendHeartbeat(const boost::system::error_code& e) {
             if (e) return;
             try {
-                std::shared_lock<std::shared_mutex> lock(m_instanceInfoMutex);
-                emit("signalHeartbeat", getInstanceId(), getHeartbeatInfo(m_instanceInfo));
+                Hash heartBeatInfo;
+                {
+                    std::shared_lock<std::shared_mutex> lock(m_instanceInfoMutex);
+                    heartBeatInfo = getHeartbeatInfo(m_instanceInfo);
+                }
+                call("*", "slotHeartbeat", getInstanceId(), heartBeatInfo);
             } catch (std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << getInstanceId() << ": emitHeartbeat triggered an exception: " << e.what();
+                KARABO_LOG_FRAMEWORK_ERROR << getInstanceId() << ": sendHeartbeat triggered an exception: " << e.what();
             }
-            delayedEmitHeartbeat(m_heartbeatInterval);
+            delayedSendHeartbeat(m_heartbeatInterval);
         }
 
 
-        void SignalSlotable::delayedEmitHeartbeat(int delayInSeconds) {
+        void SignalSlotable::delayedSendHeartbeat(int delayInSeconds) {
             // Protect against any bad interval that causes spinning:
             delayInSeconds = (delayInSeconds ? std::abs(delayInSeconds) : 10);
             m_heartbeatTimer.expires_after(seconds(delayInSeconds));
             m_heartbeatTimer.async_wait(
-                  bind_weak(&karabo::xms::SignalSlotable::emitHeartbeat, this, boost::asio::placeholders::error));
-        }
-
-
-        void SignalSlotable::stopEmittingHearbeats() {
-            m_heartbeatTimer.cancel();
+                  bind_weak(&karabo::xms::SignalSlotable::sendHeartbeat, this, boost::asio::placeholders::error));
         }
 
 
@@ -2032,12 +2020,7 @@ namespace karabo {
 
             if (signalInstanceId == m_instanceId) { // Local signal requested
 
-                if (signalFunction == "signalHeartbeat") {
-                    // Never disconnect from heartbeats - why?
-                    disconnected = true;
-                } else {
-                    disconnected = tryToUnregisterSlot(signalFunction, slotInstanceId, slotFunction);
-                }
+                disconnected = tryToUnregisterSlot(signalFunction, slotInstanceId, slotFunction);
                 if (!disconnected) {
                     KARABO_LOG_FRAMEWORK_DEBUG << "Could not disconnect slot '" << slotInstanceId << "." << slotFunction
                                                << "' from local signal '" << m_instanceId << "." << signalFunction
@@ -2177,10 +2160,7 @@ namespace karabo {
         void SignalSlotable::slotDisconnectFromSignal(const std::string& signalFunction,
                                                       const std::string& slotInstanceId,
                                                       const std::string& slotFunction) {
-            if (signalFunction == "signalHeartbeat") {
-                // Never disconnect from heartbeats - why?
-                reply(true);
-            } else if (tryToUnregisterSlot(signalFunction, slotInstanceId, slotFunction)) {
+            if (tryToUnregisterSlot(signalFunction, slotInstanceId, slotFunction)) {
                 reply(true);
             } else {
                 reply(false);
@@ -3067,12 +3047,6 @@ namespace karabo {
                 m_topic = karabo::net::Broker::brokerDomainFromEnv();
             } else {
                 m_topic = topic;
-            }
-
-            // Exclude what is reserved for heart beats
-            if (boost::algorithm::ends_with(m_topic, beatsTopicSuffix)) {
-                throw KARABO_SIGNALSLOT_EXCEPTION(
-                      ("Topic ('" + (m_topic + "') must not end with '") += beatsTopicSuffix) += "'");
             }
         }
 

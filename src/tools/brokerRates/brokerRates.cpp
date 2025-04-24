@@ -544,7 +544,8 @@ void startAmqpMonitor(const std::vector<std::string>& brokers, const std::string
               {domain + ".karaboGuiDebug", ""}, // always empty routing key
               {domain + ".signals", "*.*"},     // any INSTANCE, any SIGNAL
               {domain + ".slots", "#"},         // any INSTANCE ID ('*' may work as well)
-              {domain + ".global_slots", ""}    // always empty routing key
+              {domain + ".global_slots", ""},   // always empty routing key for traditional broadcasts
+              {domain + ".global_slots", "*.*"} // any INSTANCE, any broadcast slot (so far only slotHeartbeat)
         };
         for (const auto& a : defaultTable) {
             futures.push_back(subscribe(client, a[0], a[1]));

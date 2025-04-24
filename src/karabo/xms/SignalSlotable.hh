@@ -839,9 +839,7 @@ namespace karabo {
             std::string m_topic;
 
            protected: // Functions
-            void delayedEmitHeartbeat(int delayInSeconds);
-
-            void stopEmittingHearbeats();
+            void delayedSendHeartbeat(int delayInSeconds);
 
             void consumerErrorNotifier(const std::string& consumer, karabo::net::consumer::Error ec,
                                        const std::string& message);
@@ -941,7 +939,7 @@ namespace karabo {
              */
             std::tuple<karabo::data::Hash::Pointer, std::string, bool> registerAsyncReply();
 
-            void emitHeartbeat(const boost::system::error_code& e);
+            void sendHeartbeat(const boost::system::error_code& e);
 
             void registerDefaultSignalsAndSlots();
 

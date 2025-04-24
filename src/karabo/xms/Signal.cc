@@ -110,14 +110,8 @@ namespace karabo {
 
                 // Not connected to any slot
                 if (registeredSlots.empty()) {
-                    // Heartbeats are an exception, must always be sent
-                    if (m_signalFunction == "signalHeartbeat") {
-                        m_channel->write(m_topic, header, message);
-                        return;
-                    } else {
-                        // Do not even produce traffic on the way to the broker, as no one cares for this message
-                        return;
-                    }
+                    // Do not even produce traffic on the way to the broker, as no one cares for this message
+                    return;
                 }
 
                 // Try all registered slots whether we could send in-process
