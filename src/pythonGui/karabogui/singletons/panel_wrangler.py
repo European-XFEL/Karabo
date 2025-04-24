@@ -236,6 +236,8 @@ class PanelWrangler(QObject):
                 panel.toggleAlwaysVisibleToolbar(apply_scene_edit)
             elif isinstance(panel, MacroPanel):
                 panel.setReadOnly(not macro_editable)
+        for panel in self._unattached_scene_panels.values():
+            panel.toggleAlwaysVisibleToolbar(apply_scene_edit)
 
     def _event_user_session(self, data):
         """Update the User Session button in main window and all
@@ -394,7 +396,15 @@ class PanelWrangler(QObject):
         # XXX: Only attached and access level dependent scene panels are
         # allowed to have design mode!
         editable = access_role_allowed(AccessRole.SCENE_EDIT)
-        panel.ac_design_mode.setVisible(attached and editable)
+        if not attached:
+            panel.setUnattached(editable)
+        else:
+            panel.setReadOnly(editable)
+
+        # The apply scene edit is global setting
+        apply_scene_edit = access_role_allowed(AccessRole.APPLY_SCENE_EDIT)
+        panel.toggleAlwaysVisibleToolbar(apply_scene_edit)
+
         self._show_project_item_panel(model, panel, attached)
 
         send_info(type="open_scene", uuid=model.uuid,
