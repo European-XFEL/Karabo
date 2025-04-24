@@ -1034,13 +1034,7 @@ namespace karabo {
             void cleanSignals(const std::string& instanceId);
 
             // IO channel related
-            std::pair<bool, karabo::data::Hash> slotGetOutputChannelInformationImpl(const std::string& channelId,
-                                                                                    const int& processId,
-                                                                                    const char* slotName);
-            // we need two wrappers, one for legacy
-            void slotGetOutputChannelInformation(const std::string& channelId, const int& processId);
-            // and one for generic GUI requests
-            void slotGetOutputChannelInformationFromHash(const karabo::data::Hash& hash);
+            void slotGetOutputChannelInformation(const karabo::data::Hash& hash);
 
             void connectInputToOutputChannel(const InputChannel::Pointer& channel,
                                              const std::string& outputChannelString,
@@ -1059,8 +1053,8 @@ namespace karabo {
 
             void connectInputChannelHandler(const InputChannel::Pointer& inChannel,
                                             const std::string& outputChannelString,
-                                            const std::function<void(bool)>& handler, bool outChannelExists,
-                                            const karabo::data::Hash& outChannelInfo);
+                                            const std::function<void(bool)>& handler,
+                                            const karabo::data::Hash& outputChannelInfo);
 
             // Deprecated since only used in the deprecated connectInputChannel(..)
             void connectInputToOutputChannel_old(const InputChannel::Pointer& channel,
