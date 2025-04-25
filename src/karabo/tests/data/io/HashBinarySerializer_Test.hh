@@ -38,6 +38,7 @@ class HashBinarySerializer_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testSpeedLargeArrays);
     CPPUNIT_TEST(testMaxHashKeyLength);
     CPPUNIT_TEST(testReadVectorHashPointer);
+    CPPUNIT_TEST(testSpecialSeparator);
     CPPUNIT_TEST_SUITE_END();
 
    public:
@@ -51,6 +52,7 @@ class HashBinarySerializer_Test : public CPPUNIT_NS::TestFixture {
     void testSpeedLargeArrays();
     void testMaxHashKeyLength();
     void testReadVectorHashPointer();
+    void testSpecialSeparator();
 
     void hashContentTest(const karabo::data::Hash& toBeTested, const std::string& whichSerialisation);
 
