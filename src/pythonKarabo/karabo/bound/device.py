@@ -480,7 +480,7 @@ class PythonDevice:
                            .format(self.timeServerId))
             # TODO 2: Better use asyncConnect!
             self._sigslot.connect(self.timeServerId, "signalTimeTick",
-                                  "", "slotTimeTick")
+                                  "slotTimeTick")
 
     @property
     def signalSlotable(self):
@@ -1718,17 +1718,15 @@ class PythonDevice:
         """
         self._sigslot.registerSignal(signalName, *args)
 
-    def connect(self, signalInstance, signalName, slotInstance, slotName):
-        """Connect a signal with a slot
+    def connect(self, signalInstance, signalName, slotName):
+        """Connect a signal with one of our slots
 
         :param signalInstance: instance the signal is on, use "" for local
         :param signalName: name of the signal to connect
-        :param slotInstance: instance the slot is on, use "" for local
         :param slotName: name of the slot to be executed upon signal reception
         :return whether connection could be established
         """
-        return self._sigslot.connect(signalInstance, signalName,
-                                     slotInstance, slotName)
+        return self._sigslot.connect(signalInstance, signalName, slotName)
 
     def reply(self, *args):
         """Place the reply of a slot being called

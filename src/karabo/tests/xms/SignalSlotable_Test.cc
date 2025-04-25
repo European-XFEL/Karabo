@@ -86,7 +86,7 @@ class SignalSlotDemo : public karabo::xms::SignalSlotable {
             m_messageCount += 1000; // Invalidate message count will let the test fail!
         }
         KARABO_SIGNAL("signalB", int, karabo::data::Hash);
-        connect("signalB", "slotB");
+        connect("", "signalB", "slotB");
         emit("signalB", 42, karabo::data::Hash("Was.soll.das.bedeuten", "nix"));
     }
 
@@ -780,7 +780,11 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
 
     // Clean up established connections (synchronously)
     for (const SignalSlotConnection& con : connections) {
-        CPPUNIT_ASSERT(signalerA->disconnect(con.signalInstanceId, con.signal, con.slotInstanceId, con.slot));
+        if (con.slotInstanceId == "signalB_slotA") {
+            CPPUNIT_ASSERT(signalerB->disconnect(con.signalInstanceId, con.signal, con.slot));
+        } else {
+            CPPUNIT_ASSERT(signalerA->disconnect(con.signalInstanceId, con.signal, con.slot));
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -826,7 +830,11 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
     // Clean up established connections (synchronously)
     for (const SignalSlotConnection& con : connections) {
         // Do not test return value - the correct connections should be connected, but maybe not yet...
-        signalerA->disconnect(con.signalInstanceId, con.signal, con.slotInstanceId, con.slot);
+        if (con.slotInstanceId == "signalB_slotA") {
+            signalerB->disconnect(con.signalInstanceId, con.signal, con.slot);
+        } else {
+            signalerA->disconnect(con.signalInstanceId, con.signal, con.slot);
+        }
     }
     ///////////////////////////////////////////////////////////////////////////
     // Test failureHandler again - now non-existing slot gives same exception type, but other message
@@ -854,7 +862,11 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
     // Clean up established connections (synchronously)
     for (const SignalSlotConnection& con : connections) {
         // Do not test return value - the correct connections should be connected, but maybe not yet...
-        signalerA->disconnect(con.signalInstanceId, con.signal, con.slotInstanceId, con.slot);
+        if (con.slotInstanceId == "signalB_slotA") {
+            signalerB->disconnect(con.signalInstanceId, con.signal, con.slot);
+        } else {
+            signalerA->disconnect(con.signalInstanceId, con.signal, con.slot);
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -880,7 +892,11 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
     // Clean up established connections (synchronously)
     for (const SignalSlotConnection& con : connections) {
         // Do not test return value - the correct connections should be connected, but maybe not yet...
-        signalerA->disconnect(con.signalInstanceId, con.signal, con.slotInstanceId, con.slot);
+        if (con.slotInstanceId == "signalB_slotA") {
+            signalerB->disconnect(con.signalInstanceId, con.signal, con.slot);
+        } else {
+            signalerA->disconnect(con.signalInstanceId, con.signal, con.slot);
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -924,7 +940,7 @@ void SignalSlotable_Test::_testDisconnectAsync() {
 
     ///////////////////////////////////////////////////////////////////////////
     // First test successful asyncDisconnect
-    CPPUNIT_ASSERT(signaler->connect("signalInstance", "signal", "slotInstance", "slot"));
+    CPPUNIT_ASSERT(slotter->connect("signalInstance", "signal", "slot"));
 
     // Give signal some time to travel - but it won't, since disconnected!
     std::this_thread::sleep_for(200ms);
@@ -1045,7 +1061,7 @@ void SignalSlotable_Test::_testDisconnectConnectAsyncStress() {
     slotter->start();
 
     // Start connected
-    CPPUNIT_ASSERT(signaler->connect("signalInstance", "signal", "slotInstance", "slot"));
+    CPPUNIT_ASSERT(slotter->connect("signalInstance", "signal", "slot"));
 
     for (int i = 0; i < 100; ++i) {
         // Alternate who calls connect/disconnect:
@@ -1133,7 +1149,7 @@ void SignalSlotable_Test::_testMethod() {
     auto demo = std::make_shared<SignalSlotDemo>(instanceId, "dummy");
     demo->start();
 
-    demo->connect("signalA", "slotA");
+    demo->connect("", "signalA", "slotA");
 
     demo->emit("signalA", "Hello World!");
 
@@ -1350,12 +1366,12 @@ void SignalSlotable_Test::_testAsyncReply() {
 }
 
 
-void SignalSlotable_Test::testAutoConnectSignal() {
-    _loopFunction(__FUNCTION__, [this] { this->_testAutoConnectSignal(); });
+void SignalSlotable_Test::testAutoConnect() {
+    _loopFunction(__FUNCTION__, [this] { this->_testAutoConnect(); });
 }
 
 
-void SignalSlotable_Test::_testAutoConnectSignal() {
+void SignalSlotable_Test::_testAutoConnect() {
     // Give a unique name to exclude interference with other tests
     const std::string instanceId("SignalSlotDemoAutoConnectSignal");
     const std::string instanceId2(instanceId + "2");
@@ -1363,7 +1379,7 @@ void SignalSlotable_Test::_testAutoConnectSignal() {
     demo->start();
 
     // Connect the other's signal to my slot - although the other is not yet there!
-    demo->connect(instanceId2, "signalA", "", "slotA");
+    demo->connect(instanceId2, "signalA", "slotA");
     demo->emit("signalA", "Hello World!");
     // Allow for some travel time - although nothing should travel...
     waitDemoOk(demo, 0, 6);         // 6 trials: slightly more than 100 ms sleep
@@ -1389,49 +1405,6 @@ void SignalSlotable_Test::_testAutoConnectSignal() {
     } while (!demo->wasOk(2) && ++count < 10);
 
     CPPUNIT_ASSERT(demo->wasOk(2));
-}
-
-
-void SignalSlotable_Test::testAutoConnectSlot() {
-    _loopFunction(__FUNCTION__, [this] { this->_testAutoConnectSlot(); });
-}
-
-
-void SignalSlotable_Test::_testAutoConnectSlot() {
-    // Same as testAutoConnectSignal, but the other way round:
-    // slot instance comes into game after connect was called.
-    const std::string instanceId("SignalSlotDemoAutoConnectSlot");
-    const std::string instanceId2(instanceId + "2");
-    auto demo = std::make_shared<SignalSlotDemo>(instanceId, instanceId2);
-    demo->start();
-
-
-    // Connect the other's slot to my signal - although the other is not yet there!
-    demo->connect("", "signalA", instanceId2, "slotA");
-    demo->emit("signalA", "Hello World 2!");
-    // Allow for some travel time - although nothing should travel...
-    waitDemoOk(demo, 0, 6);         // 6 trials: slightly more than 100 ms sleep
-    CPPUNIT_ASSERT(demo->wasOk(0)); // demo is not interested in its own signals
-
-
-    auto demo2 = std::make_shared<SignalSlotDemo>(instanceId2, instanceId);
-    demo2->start();
-
-    int count = 0;
-    do {
-        if (count == 0) {
-            // Give demo some time to auto-connect now that demo2 is there (failed with 100 in a CI at least once):
-            std::this_thread::sleep_for(10ms);
-        } else {
-            std::clog << "\t\tEmit again signalA, count is " << count << std::endl;
-        }
-
-        demo->emit("signalA", "Hello World 2!");
-        // Time for all signaling (although it is all short-cutting the broker):
-        // -> slotA (of other instance) -> connect slotB to signalB -> signalB -> slotB
-        waitDemoOk(demo2, 2, 8); // 8: about 500 ms max waiting
-    } while (!demo2->wasOk(2) && ++count < 10);
-    CPPUNIT_ASSERT(demo2->wasOk(2));
 }
 
 
