@@ -65,9 +65,9 @@ class CommTestDevice(PythonDevice):
         self.registerSlot(self.slotIdOfEpochstamp)
 
         self.registerSignal("callSlotWithArgs", str, Hash)
-        self.connect("", "callSlotWithArgs", "", "slotWithArguments")
+        self.connect("", "callSlotWithArgs", "slotWithArguments")
         self.registerSignal("callSlotWithoutArgs")
-        self.connect("", "callSlotWithoutArgs", "", "slotWithoutArguments")
+        self.connect("", "callSlotWithoutArgs", "slotWithoutArguments")
 
         self.registerInitialFunction(self.initialize)
 

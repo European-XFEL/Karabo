@@ -210,9 +210,9 @@ namespace karabo {
             p->registerSlot<Hash>(bind_weak(&karabo::core::DeviceClient::_slotLoggerMap, this, _1), "_slotLoggerMap");
 
             // No advantage from asyncConnect since connecting to one's own signal is just a call chain:
-            p->connect("", "signalInstanceNew", "", "_slotInstanceNew");
-            p->connect("", "signalInstanceGone", "", "_slotInstanceGone");
-            p->connect("", "signalInstanceUpdated", "", "_slotInstanceUpdated");
+            p->connect("", "signalInstanceNew", "_slotInstanceNew");
+            p->connect("", "signalInstanceGone", "_slotInstanceGone");
+            p->connect("", "signalInstanceUpdated", "_slotInstanceUpdated");
         }
 
 
@@ -1211,7 +1211,7 @@ namespace karabo {
                 return false;
             } else if (toggle) {
                 // connect and request a first time
-                if (p->connect(m_dataLoggerManagerId, "signalLoggerMap", "", "_slotLoggerMap")) {
+                if (p->connect(m_dataLoggerManagerId, "signalLoggerMap", "_slotLoggerMap")) {
                     // If we cannot connect, request makes no sense
                     Hash loggerMap;
                     try {
@@ -1234,7 +1234,7 @@ namespace karabo {
             } else {
                 m_loggerMapCached = false;
                 // disconnect and clear (since otherwise possibly wrong info)
-                if (!p->disconnect(m_dataLoggerManagerId, "signalLoggerMap", "", "_slotLoggerMap")) {
+                if (!p->disconnect(m_dataLoggerManagerId, "signalLoggerMap", "_slotLoggerMap")) {
                     KARABO_LOG_FRAMEWORK_WARN << "Failed to disconnect _slotLoggerMap";
                     return false;
                 }
@@ -1748,8 +1748,8 @@ namespace karabo {
                     // usual ageing.
                     p->asyncConnect(cons, asyncSuccessHandler, asyncFailureHandler);
                 } else {
-                    p->connect(instanceId, "signalChanged", "", "_slotChanged");
-                    p->connect(instanceId, "signalSchemaUpdated", "", "_slotSchemaUpdated");
+                    p->connect(instanceId, "signalChanged", "_slotChanged");
+                    p->connect(instanceId, "signalSchemaUpdated", "_slotSchemaUpdated");
                 }
             } else if (asyncSuccessHandler) {
                 // No new connection needed, but asyncSuccessHandler should be called nevertheless.

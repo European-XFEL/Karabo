@@ -698,18 +698,16 @@ void exportPyXmsSignalSlotable(py::module_& m) {
           .def(
                 "connect",
                 [](SignalSlotable& self, const std::string& signalInstanceId, const std::string& signalFunction,
-                   const std::string& slotInstanceId, const std::string& slotFunction) {
+                   const std::string& slotFunction) {
                     py::gil_scoped_release release;
-                    return self.connect(signalInstanceId, signalFunction, slotInstanceId, slotFunction);
+                    return self.connect(signalInstanceId, signalFunction, slotFunction);
                 },
-                py::arg("signalInstanceId"), py::arg("signalFunction"), py::arg("slotInstanceId"),
-                py::arg("slotFunction"),
-                "\nUse this method to connect \"signalFunction\" issued by \"signalInstanceId\" with \"slotFunction\" "
-                "belonging to \"slotInstanceId\""
-                "\n\nExample:\n\nIf we have to communicate with remote client registered as instance \"b\" and slot "
-                "\"onMoin\" ...\n\n\t"
-                "ss = SignalSlotable(\"a\")\n\tss.connect(\"\", \"moin\", \"b\", \"onMoin\")\n\tss.emit(\"moin\", "
-                "12)\n")
+                py::arg("signalInstanceId"), py::arg("signalFunction"), py::arg("slotFunction"),
+                "\nUse this method to connect \"signalFunction\" issued by \"signalInstanceId\" with our "
+                "\"slotFunction\" "
+                "\n\nExample:\n\nIf we need to be informed on slot \"onMoin\" if remote instance \"b\" emits "
+                "signal \"moin\" ...\n\n\t"
+                "ss = SignalSlotable(\"a\")\n\tss.connect(\"b\", \"moin\", \"onMoin\")\n")
           .def(
                 "getAvailableInstances",
                 [](SignalSlotable& self, bool activateTracking) {
@@ -729,7 +727,7 @@ void exportPyXmsSignalSlotable(py::module_& m) {
                 },
                 py::arg("instanceId"))
           .def("disconnect", &SignalSlotable::disconnect, py::arg("signalInstanceId"), py::arg("signalFunction"),
-               py::arg("slotInstanceId"), py::arg("slotFunction"))
+               py::arg("slotFunction"))
           .def("getInstanceId", &SignalSlotable::getInstanceId, py::return_value_policy::reference_internal)
           .def("registerSlot", (&SignalSlotableWrap::registerSlotPy), py::arg("slotFunction"),
                py::arg("slotName") = std::string(), py::arg("numArgs") = -1,
@@ -861,14 +859,17 @@ void exportPyXmsSignalSlotable(py::module_& m) {
                 py::arg("channelName"), py::arg("handler") = py::none())
           .def(
                 "exists",
-                [](SignalSlotable& self, const std::string& instanceId) -> py::tuple {
-                    std::pair<bool, std::string> result;
-                    {
-                        py::gil_scoped_release release;
-                        result = self.exists(instanceId);
-                    }
-                    return py::make_tuple(result.first, py::cast(result.second));
-                },
+                [](SignalSlotable& self, const std::string& instanceId) -> py::
+                                                                              tuple {
+                                                                                  std::pair<bool, std::string> result;
+                                                                                  {
+                                                                                      py::gil_scoped_release release;
+                                                                                      result = self.exists(instanceId);
+                                                                                  }
+                                                                                  return py::make_tuple(
+                                                                                        result.first,
+                                                                                        py::cast(result.second));
+                                                                              },
                 py::arg("instanceId"))
           .def("getConnection", &SignalSlotable::getConnection)
           .def("getTopic", &SignalSlotable::getTopic, py::return_value_policy::reference_internal);

@@ -258,9 +258,8 @@ namespace karabo {
             const SlotInstancePointer& getSenderInfo(const std::string& slotFunction);
 
             /**
-             * This function tries to establish synchronously a connection between a signal
-             * and a slot, identified both by their respective instance IDs and
-             * signatures.
+             * This function tries to connect a remote signal to one of our slots.
+             *
              * Moreover, this SignalSlotable obeys (throughout its full lifetime
              * or until "disconnect" is called with the same arguments) the
              * responsibility  to keep this connection alive, i.e. to reconnect
@@ -269,26 +268,11 @@ namespace karabo {
              *
              * @param signalInstanceId is the instance ID of the signal (if empty use this instance)
              * @param signalSignature is the signature of the signal
-             * @param slotInstanceId is the instance ID of the slot (if empty use this instance)
              * @param slotSignature is the signature of the slot
              * @return whether connection is already successfully established
              */
             bool connect(const std::string& signalInstanceId, const std::string& signalSignature,
-                         const std::string& slotInstanceId, const std::string& slotSignature);
-
-            /**
-             * This function tries to establish a connection between a signal
-             * and a slot as "connect" with four arguments does, so see there
-             * for more details.
-             * If signal or slot instance IDs are not specified, they are
-             * interpreted as local and automatically assigned a "self"
-             * instanceId
-             *
-             * @param signal <signalInstanceId>:<signalSignature>
-             * @param slot <slotInstanceId>:<slotSignature>
-             * @return whether connection is already succesfully established
-             */
-            bool connect(const std::string& signal, const std::string& slot);
+                         const std::string& slotSignature);
 
             /// An AsyncErrorHandler takes no argument, but it will be called such that it can rethrow and then catch
             /// exceptions. The caught exception indicates the failure reason, e.g.:
@@ -347,21 +331,19 @@ namespace karabo {
                               const std::function<void()>& successHandler = std::function<void()>(),
                               const AsyncErrorHandler& failureHandler = AsyncErrorHandler(), int timeout = 0);
             /**
-             * Disconnects a slot from a signal, identified both by their
-             * respective instance IDs and signatures.
-             * In case the connection was established by this instance, also
-             * erase it from the list of connections that have to re-established
-             * in case signal or slot instances come back after a shutdown.
+             * Disconnects a slot from a signal.
+             *
+             * Also erase it from the list of connections that have to re-established
+             * in case signal instance comes back after a shutdown.
              *
              * @param signalInstanceId is the instance ID of the signal (if empty use this instance)
              * @param signalSignature is the signature of the signal
-             * @param slotInstanceId is the instance ID of the slot (if empty use this instance)
              * @param slotSignature is the signature of the slot
              * @return whether connection is successfully stopped, e.g.
              *         false if there was no such connection or if remote signal instance ID did not confirm in time
              */
             bool disconnect(const std::string& signalInstanceId, const std::string& signalFunction,
-                            const std::string& slotInstanceId, const std::string& slotFunction);
+                            const std::string& slotFunction);
 
             /**
              * This function tries to disconnect a previously established connection between
@@ -858,9 +840,6 @@ namespace karabo {
              */
             std::string fetchInstanceId(const std::string& signalOrSlotId) const;
 
-            std::pair<std::string, std::string> splitIntoInstanceIdAndFunctionName(const std::string& signalOrSlotId,
-                                                                                   const char sep = ':') const;
-
             void registerReply(const karabo::data::Hash::Pointer& reply);
 
             // Thread-safe, locks m_signalSlotInstancesMutex
@@ -970,7 +949,7 @@ namespace karabo {
             void updateLatencies(const karabo::data::Hash::Pointer& header, long long whenPostedEpochMs);
 
             bool tryToConnectToSignal(const std::string& signalInstanceId, const std::string& signalFunction,
-                                      const std::string& slotInstanceId, const std::string& slotFunction);
+                                      const std::string& slotFunction);
 
             SlotInstancePointer findSlot(const std::string& funcName);
 
@@ -1003,7 +982,7 @@ namespace karabo {
             bool removeStoredConnection(const std::string& signalInstanceId, const std::string& signalFunction,
                                         const std::string& slotInstanceId, const std::string& slotFunction);
             bool tryToDisconnectFromSignal(const std::string& signalInstanceId, const std::string& signalFunction,
-                                           const std::string& slotInstanceId, const std::string& slotFunction);
+                                           const std::string& slotFunction);
 
             void slotDisconnectFromSignal(const std::string& signalFunction, const std::string& slotInstanceId,
                                           const std::string& slotFunction);
