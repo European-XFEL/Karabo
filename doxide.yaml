@@ -1,0 +1,6 @@
+title: Karabo C++ API
+description: The Karabo C++ API Reference
+output: public_docs/cppapi
+files:
+  - "src/karabo/**/*.hh"
+  - "src/karabo/**/*.hpp"
