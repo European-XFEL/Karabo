@@ -27,17 +27,19 @@ build:
    os: ubuntu-24.04
    tools:
       python: "3.12"
+   apt_packages:
+    - cmake
+    - libyaml-dev 
+    - libicu-dev
+    - git
    jobs:
      pre_install:
-       - cd /tmp
-       - git clone https://github.com/lawmurray/doxide --recurse-submodules
-       - cd doxide
-       - ls
-       - pwd
-       - cmake .
-       - cmake --build .
-       - cmake --install .
-       - cd $READTHEDOCS_REPOSITORY_PATH
+       - |
+         git clone https://github.com/lawmurray/doxide --recurse-submodules
+         cd doxide
+         cmake .
+         cmake --build .
+         cmake --install .
        - python3 -m venv /venv
        - . /venv/bin/activate
        - pip install mkdocs-material mkdocs-section-index mkdocs-literate-nav 
