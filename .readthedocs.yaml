@@ -34,12 +34,13 @@ build:
     - git
    jobs:
      pre_install:
+       - cd /tmp
        - git clone https://github.com/lawmurray/doxide --recurse-submodules
        - cd doxide
        - cmake .
        - cmake --build .
        - cmake --install .
-       - cd ..
+       - cd $READTHEDOCS_REPOSITORY_PATH
        - python3 -m venv /venv
        - . /venv/bin/activate
        - pip install mkdocs-material mkdocs-section-index mkdocs-literate-nav 
