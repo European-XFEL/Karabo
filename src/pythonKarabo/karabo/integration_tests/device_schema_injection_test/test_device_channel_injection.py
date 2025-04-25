@@ -288,7 +288,7 @@ class Channel_Injection_TestCase(BoundDeviceTestCase):
         slotConnectionChanged.__name__ += updateSlot  # used by registerSlot
         self.sigSlot.registerSlot(slotConnectionChanged)
         connected = self.sigSlot.connect(receiver_id, "signalChanged",
-                                         "", slotConnectionChanged.__name__)
+                                         slotConnectionChanged.__name__)
         self.assertTrue(connected)
 
         # Create several schema injections that should trigger output channel
@@ -371,7 +371,7 @@ class Channel_Injection_TestCase(BoundDeviceTestCase):
 
         # Clean up
         self.sigSlot.disconnect(receiver_id, "signalChanged",
-                                "", slotConnectionChanged.__name__)
+                                slotConnectionChanged.__name__)
         # Cannot remove slotConnectionChanged...
         ok, msg = self.dc.killDevice(receiver_id, max_timeout)
         self.assertTrue(ok, msg)

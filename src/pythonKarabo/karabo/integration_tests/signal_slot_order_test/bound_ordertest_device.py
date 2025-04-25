@@ -110,7 +110,7 @@ class BoundOrderTestDevice(PythonDevice):
             try:
                 req = self.request(other, "slotReconfigure", updates)
                 req.waitForReply(5000)
-                if not self.connect(other, "signalCount", "", "slotCount"):
+                if not self.connect(other, "signalCount", "slotCount"):
                     raise RuntimeError("Failed to connect to 'signalCount' of "
                                        f"'{other}'")
             except Exception as e:  # noqa  # otherwise complains about unused e
