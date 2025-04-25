@@ -1055,7 +1055,7 @@ void Device_Test::testOutputRecreatesOnSchemaChange(const std::string& updateSlo
     };
     const std::string slotConnectionChanged("slotConnectionChanged_" + updateSlot);
     m_deviceServer->registerSlot<karabo::data::Hash, std::string>(changedHandler, slotConnectionChanged);
-    const bool connected = m_deviceServer->connect(receiverId, "signalChanged", "", slotConnectionChanged);
+    const bool connected = m_deviceServer->connect(receiverId, "signalChanged", slotConnectionChanged);
     CPPUNIT_ASSERT(connected);
 
     // Create several schema injections that should trigger output channel reconnection (or not).
@@ -1130,7 +1130,7 @@ void Device_Test::testOutputRecreatesOnSchemaChange(const std::string& updateSlo
     }
 
     // Clean up
-    m_deviceServer->disconnect(receiverId, "signalChanged", "", slotConnectionChanged);
+    m_deviceServer->disconnect(receiverId, "signalChanged", slotConnectionChanged);
     // Cannot remove slotConnectionChanged...
     success = m_deviceClient->killDevice(receiverId, KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
@@ -1626,7 +1626,7 @@ void Device_Test::testSignal() {
         }
     };
     m_deviceServer->registerSlot(slot, "slotForSignalA");
-    CPPUNIT_ASSERT(m_deviceServer->connect("TestDevice", "signalA", "", "slotForSignalA"));
+    CPPUNIT_ASSERT(m_deviceServer->connect("TestDevice", "signalA", "slotForSignalA"));
     // If request returns, we can be sure that the signal has been received.
     // That order would be undefined if instead of 'm_deviceServer->request' we would use
     // 'm_deviceClient->execute' since signal is emitted to m_deviceServer.
@@ -1635,7 +1635,7 @@ void Device_Test::testSignal() {
     CPPUNIT_ASSERT_EQUAL(std::string("TestDevice"), signalInstanceId);
 
     // Clean up
-    m_deviceServer->disconnect("TestDevice", "signalA", "", "slotForSignalA");
+    m_deviceServer->disconnect("TestDevice", "signalA", "slotForSignalA");
     // m_deviceServer->removeSlot("slotForSignalA"); private, but who cares here...
 }
 

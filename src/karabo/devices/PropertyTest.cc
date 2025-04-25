@@ -1203,7 +1203,7 @@ namespace karabo {
             // But that is hard to write (and to read) and considered overdoing here.
             try {
                 request(other, "slotReconfigure", updates).timeout(2000).receive();
-                if (!connect(other, "signalCount", "", "slotCount")) {
+                if (!connect(other, "signalCount", "slotCount")) {
                     throw KARABO_INIT_EXCEPTION("Failed to connect as needed for order test");
                 }
             } catch (const std::exception& e) {
