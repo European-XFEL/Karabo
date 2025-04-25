@@ -638,6 +638,18 @@ pages:
     - cd doc
     - pip install --upgrade -r requirements.txt
     - sphinx-build -b html . ../public
+    - cd ..
+    # public docs build
+    - echo 'deb http://download.indii.org/deb bookworm main' | tee /etc/apt/sources.list.d/indii.org.list
+    - curl -fsSL https://download.indii.org/deb/Release.key | gpg --dearmor | tee /etc/apt/trusted.gpg.d/indii.org.gpg > /dev/null
+    - apt update
+    - apt install doxide
+    - pip install mkdocs mkdocs-material mkdocs-section-index mkdocs-literate-nav 
+    - pip install mkdocstrings-python
+    - doxide build
+    - mkdocs build -d public_html
+    - mv public_html public/public
   artifacts:
     paths:
       - public
+

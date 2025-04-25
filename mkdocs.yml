@@ -1,0 +1,61 @@
+site_name: Karabo
+site_description: The Karabo SCADA Framework
+site_url: https://karabo.readthedocs.io/en/latest/
+repo_url: https://www.github.com/European-XFEL/Karabo
+copyright: European XFEL GmbH
+docs_dir: public_docs
+
+theme:
+  name: material
+  logo: images/logo.png
+  palette:
+    scheme: preference
+    language: en
+  features:
+    - announce.dismiss
+    - content.tabs.link
+    - navigation.indexes # section index pages
+    # - navigation.expand  # expand sections on left sidebar by default
+    - navigation.top # back to top button
+    - navigation.tracking
+    - navigation.instant
+    - navigation.tabs
+    - navigation.section
+    - search.highlight
+    - search.share
+    - search.suggest
+    - toc.follow
+    - toc.integrate
+  font:
+    text: Roboto
+    code: Roboto Mono
+
+markdown_extensions:
+  - admonition
+  - pymdownx.superfences
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+
+nav:
+  - index.md
+  - Installation: installation.md
+  - Developing Devices: development.md
+  - Concepts: concepts.md
+  - Communication Patterns: communication.md
+  - Karathon API Reference: karathon.md
+  - Bound API Reference: bound.md
+  - C++ API Reference: cpp.md
+
+plugins:
+- search
+- mkdocstrings:
+    handlers:
+      python:
+        paths:
+          - src/pythonKarabo
+          
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/European-XFEL
