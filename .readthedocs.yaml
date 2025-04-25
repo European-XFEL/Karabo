@@ -37,6 +37,8 @@ build:
        - cd /tmp
        - git clone https://github.com/lawmurray/doxide --recurse-submodules
        - cd doxide
+       - ls
+       - pwd
        - cmake .
        - cmake --build .
        - cmake --install .
