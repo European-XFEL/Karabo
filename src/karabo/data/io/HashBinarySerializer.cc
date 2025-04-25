@@ -31,6 +31,25 @@ using namespace std;
 KARABO_EXPLICIT_TEMPLATE(karabo::data::BinarySerializer<karabo::data::Hash>)
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::data::BinarySerializer<Hash>, karabo::data::HashBinarySerializer);
 
+namespace {
+    /**
+     * Find a character not in 'key', so suitable to be used as separator in Hash::set(key, ..., separator)
+     * if there should be no nesting.
+     */
+    char findSeparator(const std::string& key) {
+        char separator = Hash::k_defaultSep;
+        while (key.find(separator) != std::string::npos) {
+            // Separator in key (which is not a nested path!)? Try another one!
+            if (++separator == Hash::k_defaultSep) {
+                // We cycled through all possible char values
+                throw KARABO_IO_EXCEPTION("Key contains all characters - how that?"); // Maybe via flattening?
+            }
+        }
+        return separator;
+    }
+} // namespace
+
+
 namespace karabo {
     namespace data {
 
@@ -436,7 +455,9 @@ namespace karabo {
             unsigned size = readSize(is);
             for (unsigned i = 0; i < size; ++i) {
                 std::string name = readKey(is);
-                Hash::Node& node = hash.set(name, true); // The boolean is a dummy to allow working on references later
+                const char separator = findSeparator(name);
+                Hash::Node& node =
+                      hash.set(name, true, separator); // The boolean is a dummy to allow working on references later
                 readNode(node, is);
             }
         }
@@ -446,7 +467,9 @@ namespace karabo {
             for (unsigned i = 0; i < size; ++i) {
                 nextBufIfEos(is, buffers);
                 std::string name = readKey(is);
-                Hash::Node& node = hash.set(name, true); // The boolean is a dummy to allow working on references later
+                const char separator = findSeparator(name);
+                Hash::Node& node =
+                      hash.set(name, true, separator); // The boolean is a dummy to allow working on references later
                 readNode(node, is, buffers);
             }
         }
@@ -528,6 +551,7 @@ namespace karabo {
                 Types::ReferenceType type = readType(is);
                 std::any value;
                 readAny(value, type, is);
+                // Note: Attribute keys can well contain dots, there is no nesting, so no need to use findSeparator(..).
                 attributes.set(name, std::move(value));
             }
         }

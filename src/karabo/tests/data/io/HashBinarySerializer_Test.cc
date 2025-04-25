@@ -715,3 +715,36 @@ void HashBinarySerializer_Test::testReadVectorHashPointer() {
         CPPUNIT_ASSERT_EQUAL(2, vec[1]->get<int>("b"));
     }
 }
+
+void HashBinarySerializer_Test::testSpecialSeparator() {
+    BinarySerializer<Hash>::Pointer p = BinarySerializer<Hash>::create("Bin");
+
+    // Create Hash where one key contains the default seperator
+    Hash h("a", 1, "b.c", 2);
+    const char separator = '\0';
+    CPPUNIT_ASSERT(separator != Hash::k_defaultSep);
+    h.set("e.f", 3, separator); // "e.f" will be a first level key, not a path
+
+    {
+        // Serialize to and deserialze from vector<char> archive
+        std::vector<char> archive;
+        CPPUNIT_ASSERT_NO_THROW(p->save(h, archive));
+        Hash deserializedHash;
+        CPPUNIT_ASSERT_NO_THROW(p->load(deserializedHash, archive));
+
+        std::ostringstream str;
+        str << "Before serialisation: " << h << "After deserialisation:" << deserializedHash;
+        CPPUNIT_ASSERT_MESSAGE(str.str(), h.fullyEquals(deserializedHash));
+    }
+    {
+        // Serialize to and deserialze from BufferSet archive
+        BufferSet bufferArchive;
+        CPPUNIT_ASSERT_NO_THROW(p->save(h, bufferArchive));
+        Hash deserializedHash;
+        CPPUNIT_ASSERT_NO_THROW(p->load(deserializedHash, bufferArchive));
+
+        std::ostringstream str;
+        str << "Before serialisation: " << h << "After deserialisation:" << deserializedHash;
+        CPPUNIT_ASSERT_MESSAGE(str.str(), h.fullyEquals(deserializedHash));
+    }
+}
