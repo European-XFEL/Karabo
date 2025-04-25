@@ -42,6 +42,7 @@ build:
          cmake --install . --prefix $READTHEDOCS_REPOSITORY_PATH
        - pip install mkdocs-material mkdocs-section-index mkdocs-literate-nav 
        - pip install mkdocstrings-python
+       - $READTHEDOCS_REPOSITORY_PATH/bin/doxide build
 
 # we only build the public documentation
 mkdocs:
