@@ -8,6 +8,7 @@ see our [contributing guidelines](CONTRIBUTING.md) before reporting an issue.
 
 This work is multi-licensed under Mozilla Public License 2.0 (Core) and GPL
 3.0 (pythonGui).
+
 The applicable license depends on the location of a file in the repository tree.
 The MPL2.0 license applies for all files except those located in src/pythonGui
 and subtrees therein. Accordingly, the GPLv3.0 license applies to any files
@@ -38,6 +39,36 @@ The GUI application is available under:
 > Ubuntu 20.04/22.04 LTS
 > Windows 7/10
 > MacOSX
+
+# Installation
+
+Karabo is available on (PyPi)[https://pypi.org/project/karabo/]. You can
+install a full standalone version using
+
+```
+pip install 'karabo[full]'
+```
+
+or only Python runtimes for the middlelayer (Karathon) API:
+
+
+```
+pip install 'karabo[karathon]'
+```
+
+Development of Python devices against such installations is straight-forward,
+assuming you add the correct entry-points to your device's `pyproject.toml`.
+If you intend to develop C++ devices, please use the self-consistent 
+build described below.
+
+## GUI
+
+The GUI should be installed separately (and into a separate environment):
+
+```
+pip install 'karabo.gui'
+```
+
 
 # Building
 
