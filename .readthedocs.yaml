@@ -24,13 +24,17 @@ version: 2
 
 # Set the OS, Python version and other tools you might need
 build:
-   os: ubuntu-22.04
+   os: ubuntu-24.04
    tools:
       python: "3.12"
-   apt_packages:
-      - doxide
    jobs:
      pre_install:
+       - echo 'deb http://download.indii.org/deb noble main' | tee /etc/apt/sources.list.d/indii.org.list
+       - curl -fsSL https://download.indii.org/deb/Release.key | gpg --dearmor | tee /etc/apt/trusted.gpg.d/indii.org.gpg > /dev/null
+       - apt update
+       - apt install doxide
+       - python3 -m venv /venv
+       - . /venv/bin/activate
        - pip install mkdocs-material mkdocs-section-index mkdocs-literate-nav 
        - pip install mkdocstrings-python
 
