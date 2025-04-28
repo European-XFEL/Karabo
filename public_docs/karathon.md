@@ -29,7 +29,7 @@ Core functionality for interacting with devices via _proxies_.
 
 ## Accessing Remote Devices Directly
 
-A low-overhead API for short-lived interactions (no proxy). Note: state 
+A low-overhead API for short-lived interactions (no proxy). Note: state
 inspection still requires proxies for efficiency.
 
 ::: karabo.middlelayer.setWait
@@ -54,7 +54,7 @@ Instantiate or shut down devices remotely, with optional fire‑and‑forget.
 
 ## Inspecting Device Servers
 
-Discover running devices and servers from the command line or within 
+Discover running devices and servers from the command line or within
 `DeviceClientBase`.
 
 ::: karabo.middlelayer.findDevices
