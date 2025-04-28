@@ -227,14 +227,7 @@ class MacroPanel(BasePanelWidget):
 
     @Slot()
     def on_run(self):
-        allowed = krb_access.access_role_allowed(
-            krb_access.AccessRole.SERVICE_EDIT)
-        if not allowed:
-            msg = (f"The current access level "
-                   f"'{krb_access.GLOBAL_ACCESS_LEVEL}' "
-                   f"is not sufficient to run the macro! Please contact a "
-                   f"controls expert.")
-            messagebox.show_information(msg, parent=self)
+        if not self.has_access_level():
             return
 
         instance_id = self.model.instance_id
@@ -264,6 +257,9 @@ class MacroPanel(BasePanelWidget):
         Show a dialog with MacroServers with "Development" serverflag and
         run the Macro on the selected macro server.
         """
+        if not self.has_access_level():
+            return
+
         topology = get_topology()
         servers = []
 
@@ -315,3 +311,17 @@ class MacroPanel(BasePanelWidget):
 
     def __repr__(self):
         return f"<MacroPanel macro={self.model.simple_name}>"
+
+    def has_access_level(self):
+        role = krb_access.AccessRole.SERVICE_EDIT
+        allowed = krb_access.access_role_allowed(role)
+        if not allowed:
+            required = krb_access.get_access_level_for_role(role)
+            msg = ("The current access level "
+                   f"'{krb_access.GLOBAL_ACCESS_LEVEL.name}' "
+                   "is not sufficient to run the macro! Access level "
+                   f"{required} is required.")
+            messagebox.show_information(msg, parent=self)
+            return False
+
+        return True
