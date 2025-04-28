@@ -449,13 +449,14 @@ class Manager(QObject):
         get_logger().critical(
             "End of session received, please reauthenticate. "
             f"You have {info['secondsToExpiration']} seconds left before "
-            "being logged out")
+            "being logged out.")
         krb_access.SESSION_END_NOTICE = True
         broadcast_event(KaraboEvent.UserSession, {})
 
     def handle_onSessionExpired(self, **info):
         """Handle the session expired message from gui server """
         broadcast_event(KaraboEvent.UserSession, {})
+        messagebox.show_warning("Session has been terminated by GUI server.")
 
     def _end_temporary_session(self, info):
         level_before = info.get("levelBeforeTemporarySession")
