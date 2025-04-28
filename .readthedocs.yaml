@@ -29,7 +29,7 @@ build:
       python: "3.12"
    apt_packages:
     - cmake
-    - libyaml-dev 
+    - libyaml-dev
     - libicu-dev
     - git
    jobs:
@@ -40,7 +40,7 @@ build:
          cmake .
          cmake --build .
          cmake --install . --prefix $READTHEDOCS_REPOSITORY_PATH
-       - pip install mkdocs-material mkdocs-section-index mkdocs-literate-nav 
+       - pip install mkdocs-material mkdocs-section-index mkdocs-literate-nav
        - pip install mkdocstrings-python
        - $READTHEDOCS_REPOSITORY_PATH/bin/doxide build
 

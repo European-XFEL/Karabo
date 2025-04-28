@@ -3,6 +3,7 @@ exclude: |
       ^build/|
       ^extern/|
       ^doc/|
+      ^public_docs/|
       ^src/service.in/|
       ^src/environment.in/|
       ^src/karabind/stubs|

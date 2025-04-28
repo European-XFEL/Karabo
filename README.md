@@ -58,7 +58,7 @@ pip install 'karabo[karathon]'
 
 Development of Python devices against such installations is straight-forward,
 assuming you add the correct entry-points to your device's `pyproject.toml`.
-If you intend to develop C++ devices, please use the self-consistent 
+If you intend to develop C++ devices, please use the self-consistent
 build described below.
 
 ## GUI

@@ -4,23 +4,23 @@
 
 In Karabo, the core concept is the **device**. Karabo comprises multiple
 devices running across a network, where each device is an instance of an
-object‑oriented class that implements the device interface and logic.  
+object‑oriented class that implements the device interface and logic.
 Each device provides exactly one logical, encapsulated service
 (1 device = 1 service).
 
 ### What a Device Can Represent
 
-- **I/O channel**  
-  e.g. a digital output for switching something on or off  
-- **Equipment**  
-  e.g. a motor or a pump  
-- **Controller**  
-  e.g. a pump controller driving multiple pumps  
-- **Composite component**  
-  e.g. a slit formed by two motors  
-- **Software algorithm**  
-  e.g. image processing  
-- **Service connection**  
+- **I/O channel**
+  e.g. a digital output for switching something on or off
+- **Equipment**
+  e.g. a motor or a pump
+- **Controller**
+  e.g. a pump controller driving multiple pumps
+- **Composite component**
+  e.g. a slit formed by two motors
+- **Software algorithm**
+  e.g. image processing
+- **Service connection**
   e.g. data archive reader, calibration database adapter
 
 Devices hide all implementation details of the underlying service and expose
@@ -34,11 +34,11 @@ Each device must have a **unique** instance ID. Karabo disallows starting a
 second device with an existing ID anywhere in its managed topology.
 
 - IDs must be non‑empty strings.
-- Allowed characters:  
-  - Uppercase and lowercase English letters (A–Z, a–z)  
-  - Digits (0–9)  
+- Allowed characters:
+  - Uppercase and lowercase English letters (A–Z, a–z)
+  - Digits (0–9)
   - Special characters: `_`, `/`, `-`
-- **Preferred format**:  
+- **Preferred format**:
   ```text
   <domain>/<type>/<member>
   ```
@@ -301,7 +301,7 @@ class HardwarePollingDevice(PythonDevice):
 
     def pollingFunction(self):
         # do something useful
-        value = ... 
+        value = ...
         self.set("polledValue", value)
 ```
 

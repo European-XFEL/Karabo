@@ -644,7 +644,7 @@ pages:
     - curl -fsSL https://download.indii.org/deb/Release.key | gpg --dearmor | tee /etc/apt/trusted.gpg.d/indii.org.gpg > /dev/null
     - apt update
     - apt install doxide
-    - pip install mkdocs mkdocs-material mkdocs-section-index mkdocs-literate-nav 
+    - pip install mkdocs mkdocs-material mkdocs-section-index mkdocs-literate-nav
     - pip install mkdocstrings-python
     - doxide build
     - mkdocs build -d public_html
@@ -652,4 +652,3 @@ pages:
   artifacts:
     paths:
       - public
-
