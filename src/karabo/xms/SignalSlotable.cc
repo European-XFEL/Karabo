@@ -2075,7 +2075,7 @@ namespace karabo {
                         success(true);
                     }
                 };
-                m_connection->subscribeToRemoteSignalAsync(signalInstanceId, signalFunction, onComplete);
+                m_connection->unsubscribeFromRemoteSignalAsync(signalInstanceId, signalFunction, onComplete);
             } else {
                 auto requestorRemote =
                       request(slotInstanceId, "slotUnsubscribeRemoteSignal", signalInstanceId, signalFunction);
