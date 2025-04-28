@@ -14,17 +14,17 @@ pip install karabo[full]
 ```
 
 This will install a complete setup, including all essential service devices.
-Note that this requires, compiled code to be installed. This will be done for 
-wheels on supported architectures, and a source compilate will be attempted 
+Note that this requires, compiled code to be installed. This will be done for
+wheels on supported architectures, and a source compilate will be attempted
 otherwise.
 
-If that fails, we recommend you follow the instructions at 
-https://github.com/European-XFEL/Karabo which will result in a self-consistent 
+If that fails, we recommend you follow the instructions at
+https://github.com/European-XFEL/Karabo which will result in a self-consistent
 environment,  including a Python interpreter, with
 similar functionality to a `karabo[full]` installation.
 
-If you require the GUI, you will need to install it separately into a different 
-Pythonenvironment, as it does not require it's dependencies to align outside 
+If you require the GUI, you will need to install it separately into a different
+Pythonenvironment, as it does not require it's dependencies to align outside
 those of `karabo.native`:
 
 ```bash
@@ -37,7 +37,7 @@ After installation you should initialize the environment with either
 karabo-activate --init-to PATH --standalone
 ```
 
-for a standalone system, or 
+for a standalone system, or
 
 
 ```bash
@@ -73,13 +73,13 @@ First, run
 karabo-activate --init-to $PATH --standalone
 ```
 
-Then run 
+Then run
 
 ```bash
 podman-compose -f $PATH/var/containers/compose.yaml up
 ```
 
-or (`docker-compose ...`). This will start containerized version of the services a full 
+or (`docker-compose ...`). This will start containerized version of the services a full
 Karabo installation requires:
 
 - A RabbitMQ broker (user: xfel, pw: karabo)
@@ -97,7 +97,7 @@ Finally, run
 $PATH/activate
 ```
 
-followed by 
+followed by
 
 ```bash
 karabo-start
@@ -105,7 +105,7 @@ karabo-start
 
 # Device Development
 
-These packages are not intended to facilitate development of devices for Karabo's C++ API. Please 
+These packages are not intended to facilitate development of devices for Karabo's C++ API. Please
 create a self-consistent development environment using the instructions at https://github.com/European-XFEL/Karabo.
 
 Development of devices against these packages using the Bound and Karathon Python APIs should be trivially
