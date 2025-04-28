@@ -561,8 +561,8 @@ def _run_macro(macro_model, serverId, parent):
     report = validate_macro(macro_model.code)
     if report:
         fails = create_list_string(report)
-        html = (f"Please check the macro validation report and rename "
-                f"function names or remove forbidden imports:{fails}")
+        html = ("Please check the macro validation report and rename "
+                f"function names or remove forbidden imports: {fails}")
         messagebox.show_error(html, title="The Macro cannot be started",
                               parent=parent)
         return
