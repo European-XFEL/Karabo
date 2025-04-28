@@ -54,7 +54,7 @@ plugins:
       python:
         paths:
           - src/pythonKarabo
-          
+
 extra:
   social:
     - icon: fontawesome/brands/github
