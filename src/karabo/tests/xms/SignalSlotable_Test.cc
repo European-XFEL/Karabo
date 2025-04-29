@@ -854,7 +854,7 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
 
     CPPUNIT_ASSERT(connectFailed);
     CPPUNIT_ASSERT(!connected);
-    CPPUNIT_ASSERT(connectTimeout);
+    CPPUNIT_ASSERT_MESSAGE(connectFailedMsg, connectTimeout);
     CPPUNIT_ASSERT_MESSAGE("Full message: " + connectFailedMsg, connectFailedMsg.empty());
 
     // Clean up established connections (synchronously)
