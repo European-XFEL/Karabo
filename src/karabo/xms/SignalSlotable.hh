@@ -753,11 +753,6 @@ namespace karabo {
                   m_currentSlots; // unordered? needs std::hash<std::jthread::id>...
             mutable std::mutex m_currentSlotsMutex;
 
-            // which one succeeded, successHandler, errorHandler
-            typedef std::tuple<std::vector<bool>, std::function<void()>, std::function<void()>> MultiAsyncConnectInfo;
-            std::unordered_map<std::string, MultiAsyncConnectInfo> m_currentMultiAsyncConnects;
-            std::mutex m_currentMultiAsyncConnectsMutex;
-
             static std::mutex m_uuidGeneratorMutex;
             static boost::uuids::random_generator m_uuidGenerator;
 
@@ -1090,14 +1085,14 @@ namespace karabo {
 
             /// Helper that calls 'handler' such that it can do
             ///
-            ///  try { throw; } catch (const SignalSlotException &e) { <action>}
+            ///  try { throw; } catch (const SomeException &e) { <action>}
             ///
-            /// @param message text given to the SignalSlotException
-            static void callErrorHandler(const AsyncErrorHandler& handler, const std::string& message);
-
-            void multiAsyncConnectSuccessHandler(const std::string& uuid, size_t requestNum);
-
-            void multiAsyncConnectFailureHandler(const std::string& uuid);
+            /// @param handler the error handler to call
+            /// @param message text given to the exception thrown
+            /// @param timeout if true, 'SomeException' will be TimeoutException,
+            ///                otherwise (default) SignalSlotException
+            static void callErrorHandler(const AsyncErrorHandler& handler, const std::string& message,
+                                         bool timeout = false);
 
            private: // Members
             // Performance statistics
