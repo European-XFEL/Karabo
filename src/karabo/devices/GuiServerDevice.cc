@@ -592,7 +592,7 @@ namespace karabo {
 
                 // If someone manages to bind_weak(&karabo::devices::GuiServerDevice::requestNoWait<>, this, ...),
                 // we would not need loggerMapConnectedHandler...
-                asyncConnect(get<std::string>("dataLogManagerId"), "signalLoggerMap", "", "slotLoggerMap",
+                asyncConnect(get<std::string>("dataLogManagerId"), "signalLoggerMap", "slotLoggerMap",
                              bind_weak(&karabo::devices::GuiServerDevice::loggerMapConnectedHandler, this));
 
                 // Switch on instance tracking - which is blocking a while.
@@ -3008,7 +3008,7 @@ namespace karabo {
             if (topologyEntry.get<Hash>(type).begin()->hasAttribute("classId") &&
                 topologyEntry.get<Hash>(type).begin()->getAttribute<std::string>("classId") == "ProjectManager") {
                 std::unique_lock lk(m_projectManagerMutex);
-                asyncConnect(instanceId, "signalProjectUpdate", "", "slotProjectUpdate");
+                asyncConnect(instanceId, "signalProjectUpdate", "slotProjectUpdate");
                 m_projectManagers.insert(instanceId);
             }
         }

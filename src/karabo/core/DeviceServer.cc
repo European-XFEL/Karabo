@@ -306,7 +306,7 @@ namespace karabo {
             if (!m_timeServerId.empty()) {
                 KARABO_LOG_FRAMEWORK_DEBUG << m_serverId << ": Connecting to time server \"" << m_timeServerId << "\"";
                 const std::string timeServerId(m_timeServerId); // copy to avoid catching this
-                asyncConnect(m_timeServerId, "signalTimeTick", "", "slotTimeTick", [timeServerId]() {
+                asyncConnect(m_timeServerId, "signalTimeTick", "slotTimeTick", [timeServerId]() {
                     KARABO_LOG_FRAMEWORK_INFO << "Successfully connected to time server '" << timeServerId << "'";
                 });
             }
