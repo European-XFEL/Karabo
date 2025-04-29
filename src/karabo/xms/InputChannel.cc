@@ -327,6 +327,8 @@ namespace karabo {
                 } else {
                     auto openConnIt = m_openConnections.find(outputChannelString);
                     if (openConnIt != m_openConnections.end()) {
+                        // Failure of https://git.xfel.eu/Karabo/Framework/-/jobs/865769
+                        // maybe due to this?
                         const karabo::net::Channel::Pointer& channel = openConnIt->second.second;
                         // I see this happening also for channels that claim isOpen() where it is probably correct.
                         // But we know it is unreliable. So better try to connect as we were told.

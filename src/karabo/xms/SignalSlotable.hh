@@ -107,15 +107,14 @@ namespace karabo {
             /// A structure to keep information of a signal-slot connection
             struct SignalSlotConnection {
                 SignalSlotConnection(const std::string& signalInstanceId, const std::string& signal,
-                                     const std::string& slotInstanceId, const std::string& slot)
-                    : signalInstanceId(signalInstanceId), signal(signal), slotInstanceId(slotInstanceId), slot(slot) {}
+                                     const std::string& slot)
+                    : signalInstanceId(signalInstanceId), signal(signal), slot(slot) {}
 
                 // needed to put into std::set:
                 bool operator<(const SignalSlotConnection& other) const;
 
                 std::string signalInstanceId;
                 std::string signal;
-                std::string slotInstanceId;
                 std::string slot;
             };
 
@@ -258,13 +257,11 @@ namespace karabo {
             const SlotInstancePointer& getSenderInfo(const std::string& slotFunction);
 
             /**
-             * This function tries to connect a remote signal to one of our slots.
+             * Synchronously connect a (usually remote) signal to one of our slots.
              *
-             * Moreover, this SignalSlotable obeys (throughout its full lifetime
-             * or until "disconnect" is called with the same arguments) the
-             * responsibility  to keep this connection alive, i.e. to reconnect
-             * if either signal or slot instance come back after they have
-             * shutdown or if they come up the first time.
+             * Moreover, if the signal instance is not online or shuts down, the
+             * connection will be (re-)established when it gets online (again),
+             * except if "[async]disconnect" is called with the same arguments.
              *
              * @param signalInstanceId is the instance ID of the signal (if empty use this instance)
              * @param signalSignature is the signature of the signal
@@ -287,19 +284,15 @@ namespace karabo {
             typedef std::function<void()> AsyncErrorHandler;
 
             /**
-             * This function tries to establish asynchronously a connection between a signal
-             * and a slot, identified both by their respective instance IDs and
-             * signatures.
-             * Moreover, this SignalSlotable obeys (throughout its full lifetime
-             * or until "disconnect" is called with the same arguments) the
-             * responsibility  to keep this connection alive, i.e. to reconnect
-             * if either signal or slot instance come back after they have
-             * shutdown or if they come up the first time.
+             * Asynchronously connect a (usually remote) signal to one of our slots.
+             *
+             * Moreover, if the signal instance is not online or shuts down, the
+             * connection will be (re-)established when it gets online (again),
+             * except if "[async]disconnect" is called with the same arguments.
              *
              * @param signalInstanceId is the instance ID of the signal (if empty use this instance)
              * @param signalSignature is the signature of the signal
-             * @param slotInstanceId is the instance ID of the slot (if empty use this instance)
-             * @param slotSignature is the signature of the slot
+             * @param slotSignature is the signature of our slot
              * @param successHandler is called when connection is established (maybe be empty [=default])
              * @param failureHandler is called when connection could not be established, in the same way as an
              *                            Requestor::AsyncErrorHandler - if Signal or Slot do not exist, the exception
@@ -308,20 +301,20 @@ namespace karabo {
              *                            default timeout
              */
             void asyncConnect(const std::string& signalInstanceId, const std::string& signalSignature,
-                              const std::string& slotInstanceId, const std::string& slotSignature,
+                              const std::string& slotSignature,
                               const std::function<void()>& successHandler = std::function<void()>(),
                               const AsyncErrorHandler& failureHandler = AsyncErrorHandler(), int timeout = 0);
 
             /**
-             * This function tries to establish asynchronously a connection between several signals and slots.
+             * This function tries to establish asynchronously connections between several signals and slots.
              *
              * One of the two handlers will be called exactly once.
              * The failureHandler will be called if any signal slot connection failed, no matter whether other
              * connections succeeded or not.
              *
              * @param signalSlotConnections e.g. vector<SignalSlotConnection>{SignalSlotConnection("sigInst", "signal",
-             * "slotInst", "slot"), ...}
-             * @param successHandler is called when all connections are established (maybe be empty [=default])
+             *                              "slot"), ...} (if empty => treated as success)
+             * @param successHandler is called when all connections are established (may be empty [=default])
              * @param failureHandler is called when any of the connections could not be established, no matter whether
              *                            the others failed or not, in the same way as a Requestor::AsyncErrorHandler.
              * @param timeout in milliseconds for internal async requests - non-positive (default) means the very long
@@ -331,9 +324,9 @@ namespace karabo {
                               const std::function<void()>& successHandler = std::function<void()>(),
                               const AsyncErrorHandler& failureHandler = AsyncErrorHandler(), int timeout = 0);
             /**
-             * Disconnects a slot from a signal.
+             * Synchronously disconnects a slot from a signal.
              *
-             * Also erase it from the list of connections that have to re-established
+             * Also erase it from the list of connections that have to be re-established
              * in case signal instance comes back after a shutdown.
              *
              * @param signalInstanceId is the instance ID of the signal (if empty use this instance)
@@ -346,16 +339,13 @@ namespace karabo {
                             const std::string& slotFunction);
 
             /**
-             * This function tries to disconnect a previously established connection between
-             * a signal and a slot. These two are identified both by their respective
-             * instance IDs and signatures.
-             * In case the connection was established by this instance, the function also
-             * erases it from the list of connections that have to be re-established
-             * in case signal or slot instances come back after a shutdown.
+             * Asynchronoulsy Disconnects a slot from a signal.
+             *
+             * Also erase it from the list of connections that have to be re-established
+             * in case signal instance comes back after a shutdown.
              *
              * @param signalInstanceId is the instance ID of the signal (if empty use this instance)
              * @param signalSignature is the signature of the signal
-             * @param slotInstanceId is the instance ID of the slot (if empty use this instance)
              * @param slotSignature is the signature of the slot
              * @param successHandler is called when connection is successfully stopped (maybe be empty [=default])
              * @param failureHandler is called when the disconnection failed (maybe be empty [=default])
@@ -363,7 +353,7 @@ namespace karabo {
              *                default timeout
              */
             void asyncDisconnect(const std::string& signalInstanceId, const std::string& signalFunction,
-                                 const std::string& slotInstanceId, const std::string& slotFunction,
+                                 const std::string& slotSignature,
                                  const std::function<void()>& successHandler = std::function<void()>(),
                                  const AsyncErrorHandler& failureHandler = AsyncErrorHandler(), int timeout = 0);
             /**
@@ -743,9 +733,8 @@ namespace karabo {
             // TODO Split into two mutexes
             mutable std::mutex m_signalSlotInstancesMutex;
 
-            // key is instanceId of signal or slot
-            typedef std::map<std::string, std::set<SignalSlotConnection>> SignalSlotConnections;
-            SignalSlotConnections m_signalSlotConnections; // keep track of established connections
+            // Keep track of established connections: key is instanceId of signal
+            std::map<std::string, std::set<SignalSlotConnection>> m_signalSlotConnections;
             std::mutex m_signalSlotConnectionsMutex;
 
             karabo::net::Broker::Pointer m_connection;
@@ -978,9 +967,9 @@ namespace karabo {
             void slotHasSlot(const std::string& unmangledSlotFunction);
 
             void storeConnection(const std::string& signalInstanceId, const std::string& signalFunction,
-                                 const std::string& slotInstanceId, const std::string& slotFunction);
+                                 const std::string& slotFunction);
             bool removeStoredConnection(const std::string& signalInstanceId, const std::string& signalFunction,
-                                        const std::string& slotInstanceId, const std::string& slotFunction);
+                                        const std::string& slotFunction);
             bool tryToDisconnectFromSignal(const std::string& signalInstanceId, const std::string& signalFunction,
                                            const std::string& slotFunction);
 
