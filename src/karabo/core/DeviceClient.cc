@@ -1741,8 +1741,8 @@ namespace karabo {
                 if (asyncSuccessHandler || asyncFailureHandler) { // async request
                     typedef SignalSlotable::SignalSlotConnection Connection;
                     const std::vector<Connection> cons{
-                          Connection(instanceId, "signalChanged", "", "_slotChanged"),
-                          Connection(instanceId, "signalSchemaUpdated", "", "_slotSchemaUpdated")};
+                          Connection(instanceId, "signalChanged", "_slotChanged"),
+                          Connection(instanceId, "signalSchemaUpdated", "_slotSchemaUpdated")};
                     // One could 'extend' asyncFailureHandler by a wrapper that also disconnects all succeeded
                     // connections (and stop the automatic reconnect of the others). But we let that be done by the
                     // usual ageing.
@@ -2033,11 +2033,11 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Prepare disconnection from '" << instanceId << "'.";
                 std::vector<std::string> cleanAreas(1, "configuration");
                 p->asyncDisconnect(
-                      instanceId, "signalChanged", "", "_slotChanged",
+                      instanceId, "signalChanged", "_slotChanged",
                       bind_weak(&DeviceClient::disconnectHandler, this, "signalChanged", instanceId, cleanAreas));
                 cleanAreas = {"fullSchema", "activeSchema"};
                 p->asyncDisconnect(
-                      instanceId, "signalSchemaUpdated", "", "_slotSchemaUpdated",
+                      instanceId, "signalSchemaUpdated", "_slotSchemaUpdated",
                       bind_weak(&DeviceClient::disconnectHandler, this, "signalSchemaUpdated", instanceId, cleanAreas));
             } else { // How happen?
                 KARABO_LOG_FRAMEWORK_ERROR << "SignalSlotable invalid, cannot disconnect " << instanceId;

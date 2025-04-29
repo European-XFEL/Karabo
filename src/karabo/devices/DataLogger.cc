@@ -240,7 +240,7 @@ namespace karabo {
             // Connect to schema updates and afterwards request Schema (in other order we might miss an update).
             data->m_initLevel = DeviceData::InitLevel::STARTED;
             KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << ": Connecting to " << deviceId << ".signalSchemaUpdated";
-            asyncConnect(deviceId, "signalSchemaUpdated", "", "slotSchemaUpdated",
+            asyncConnect(deviceId, "signalSchemaUpdated", "slotSchemaUpdated",
                          util::bind_weak(&DataLogger::handleSchemaConnected, this, data, counter),
                          util::bind_weak(&DataLogger::handleFailure, this, "connecting to schema for", data, counter));
             // Final steps until DataLogger is properly initialised for this device are treated in a chain of async
@@ -317,7 +317,7 @@ namespace karabo {
             data->handleSchemaUpdated(schema, stamp);
 
             // Now connect signalChanged.
-            asyncConnect(data->m_deviceToBeLogged, "signalChanged", "", "slotChanged",
+            asyncConnect(data->m_deviceToBeLogged, "signalChanged", "slotChanged",
                          util::bind_weak(&DataLogger::handleConfigConnected, this, data, counter),
                          util::bind_weak(&DataLogger::handleFailure, this, "connecting to configuration updates for",
                                          data, counter));
@@ -359,10 +359,10 @@ namespace karabo {
             auto genericHandler = bind_weak(&DataLogger::disconnectHandler, this, _1, deviceId, _2, disconnectCounter);
 
             // Use the very long default timeout for the disconnection:
-            asyncDisconnect(deviceId, "signalSchemaUpdated", "", "slotSchemaUpdated",
+            asyncDisconnect(deviceId, "signalSchemaUpdated", "slotSchemaUpdated",
                             std::bind(genericHandler, false, "signalSchemaUpdated"), // successHandler for schema
                             std::bind(genericHandler, true, "signalSchemaUpdated")); // failureHandler for schema
-            asyncDisconnect(deviceId, "signalChanged", "", "slotChanged",
+            asyncDisconnect(deviceId, "signalChanged", "slotChanged",
                             std::bind(genericHandler, false, "signalChanged"), // successHandler for signalChanged
                             std::bind(genericHandler, true, "signalChanged")); // failureHandler for signalChanged
         }

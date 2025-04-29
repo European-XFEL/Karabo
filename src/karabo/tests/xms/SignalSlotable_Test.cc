@@ -244,8 +244,8 @@ void SignalSlotable_Test::_testUniqueInstanceId() {
     CPPUNIT_ASSERT_EQUAL(std::string("sigslot"), instanceInfo.get<std::string>("type"));
     // Done with instanceInfo "type"
 
-    one->start();
-    two->start();
+    CPPUNIT_ASSERT_NO_THROW(one->start());
+    CPPUNIT_ASSERT_NO_THROW(two->start());
     CPPUNIT_ASSERT_THROW(one_again->start(), SignalSlotException);
 }
 
@@ -608,7 +608,7 @@ void SignalSlotable_Test::_testConnectAsync() {
     // First test successful connectAsync
     bool connected = false;
     auto connectedHandler = [&connected]() { connected = true; };
-    signaler->asyncConnect("signalInstance", "signal", "slotInstance", "slot", connectedHandler);
+    slotter->asyncConnect("signalInstance", "signal", "slot", connectedHandler);
     // Give some time to connect
     for (int i = 0; i < numWaitIterations; ++i) {
         if (connected) break;
@@ -646,8 +646,7 @@ void SignalSlotable_Test::_testConnectAsync() {
         connectFailed = true; // set after connectTimeout and connectFailedMsg since loop checks this
     };
     auto dummyHandler = []() {};
-    signaler->asyncConnect("signalInstance", "NOT_A_signal", "slotInstance", "slot", dummyHandler,
-                           connectFailedHandler);
+    slotter->asyncConnect("signalInstance", "NOT_A_signal", "slot", dummyHandler, connectFailedHandler);
 
     // Give some time to find out that signal is not there
     for (int i = 0; i < numWaitIterations; ++i) {
@@ -666,8 +665,7 @@ void SignalSlotable_Test::_testConnectAsync() {
     connectFailed = false;
     connectTimeout = false;
     connectFailedMsg = "";
-    signaler->asyncConnect("signalInstance", "signal", "slotInstance", "NOT_A_slot", dummyHandler,
-                           connectFailedHandler);
+    slotter->asyncConnect("signalInstance", "signal", "NOT_A_slot", dummyHandler, connectFailedHandler);
 
     // Give some time to find out that slot is not there.
     for (int i = 0; i < numWaitIterations; ++i) {
@@ -677,33 +675,16 @@ void SignalSlotable_Test::_testConnectAsync() {
     CPPUNIT_ASSERT(connectFailed);
     CPPUNIT_ASSERT(!connectTimeout);
     CPPUNIT_ASSERT_MESSAGE("Full message: " + connectFailedMsg,
-                           connectFailedMsg.find("slotInstance has no slot 'NOT_A_slot'.") != std::string::npos);
+                           connectFailedMsg.find("no slot 'NOT_A_slot'.") != std::string::npos);
 
     ///////////////////////////////////////////////////////////////////////////
     // Another test for failureHandler - non-existing signalInstanceId gives TimeoutException
     connectFailed = false;
     connectTimeout = false;
     connectFailedMsg = "";
-    signaler->asyncConnect("NOT_A_signalInstance", "signal", "slotInstance", "slot", dummyHandler, connectFailedHandler,
-                           50); // Timeout allows 25 ms per message travel
+    slotter->asyncConnect("NOT_A_signalInstance", "signal", "slot", dummyHandler, connectFailedHandler,
+                          50); // Timeout allows 25 ms per message travel
     // The first request will succeed, the second (to "NOT_A_sig...") not.
-    // But in a busy system even the timeout handle may be stuck, so wait.
-    for (int i = 0; i < numWaitIterations; ++i) {
-        if (connectFailed) break;
-        std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
-    };
-    CPPUNIT_ASSERT(connectFailed);
-    CPPUNIT_ASSERT(connectTimeout);
-    CPPUNIT_ASSERT_MESSAGE("Message: " + connectFailedMsg, connectFailedMsg.empty());
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Final test for failureHandler - non-existing slotInstanceId gives again TimeoutException
-    connectFailed = false;
-    connectTimeout = false;
-    connectFailedMsg = "";
-    signaler->asyncConnect("signalInstance", "signal", "NOT_A_slotInstance", "slot", dummyHandler, connectFailedHandler,
-                           50); // Timeout allows 25 ms per message travel
-    // The first request (to "NOT_A_slot...") will fail.
     // But in a busy system even the timeout handle may be stuck, so wait.
     for (int i = 0; i < numWaitIterations; ++i) {
         if (connectFailed) break;
@@ -721,29 +702,29 @@ void SignalSlotable_Test::testConnectAsyncMulti() {
 
 
 void SignalSlotable_Test::_testConnectAsyncMulti() {
-    // One instance with and signalA and slotB...
-    auto signalerA = std::make_shared<SignalSlotable>("signalA_slotB");
-    signalerA->registerSignal<int>("signalA");
-    bool slotCalledB = false;
-    int inSlotB = -10;
-    auto slotFuncB = [&slotCalledB, &inSlotB](int i) {
-        inSlotB += i;
-        slotCalledB = true;
-    };
-    signalerA->registerSlot<int>(slotFuncB, "slotB");
-    signalerA->start();
+    // One instance with two signals
+    auto signaler = std::make_shared<SignalSlotable>("signaler");
+    signaler->registerSignal<int>("signalA");
+    signaler->registerSignal<int>("signalB");
+    signaler->start();
 
-    // .. and one with and signalB and slotA...
-    auto signalerB = std::make_shared<SignalSlotable>("signalB_slotA");
-    signalerB->registerSignal<int>("signalB");
+    // .. and one with two slots
+    auto slotter = std::make_shared<SignalSlotable>("slotter");
     bool slotCalledA = false;
     int inSlotA = -10;
     auto slotFuncA = [&slotCalledA, &inSlotA](int i) {
         inSlotA += i;
         slotCalledA = true;
     };
-    signalerB->registerSlot<int>(slotFuncA, "slotA");
-    signalerB->start();
+    slotter->registerSlot<int>(slotFuncA, "slotA");
+    bool slotCalledB = false;
+    int inSlotB = -10;
+    auto slotFuncB = [&slotCalledB, &inSlotB](int i) {
+        inSlotB += i;
+        slotCalledB = true;
+    };
+    slotter->registerSlot<int>(slotFuncB, "slotB");
+    slotter->start();
 
     ///////////////////////////////////////////////////////////////////////////
     // First test successful connectAsync
@@ -753,10 +734,9 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
     auto failureHandler = [&connectFailed]() { connectFailed = true; };
     // Cross connect the instances
     typedef SignalSlotable::SignalSlotConnection SignalSlotConnection;
-    const std::vector<SignalSlotConnection> connections{
-          SignalSlotConnection("signalA_slotB", "signalA", "signalB_slotA", "slotA"),
-          SignalSlotConnection("signalB_slotA", "signalB", "signalA_slotB", "slotB")};
-    signalerA->asyncConnect(connections, connectedHandler, failureHandler);
+    const std::vector<SignalSlotConnection> connections{SignalSlotConnection("signaler", "signalA", "slotA"),
+                                                        SignalSlotConnection("signaler", "signalB", "slotB")};
+    slotter->asyncConnect(connections, connectedHandler, failureHandler);
     // Give some time to connect
     for (int i = 0; i < numWaitIterations; ++i) {
         if (connected) break;
@@ -765,8 +745,8 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
     CPPUNIT_ASSERT(connected);
     CPPUNIT_ASSERT(!connectFailed);
 
-    signalerA->emit("signalA", 52);
-    signalerB->emit("signalB", -32);
+    signaler->emit("signalA", 52);
+    signaler->emit("signalB", -32);
 
     // Give signal some time to travel
     for (int i = 0; i < numWaitIterations; ++i) {
@@ -780,11 +760,7 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
 
     // Clean up established connections (synchronously)
     for (const SignalSlotConnection& con : connections) {
-        if (con.slotInstanceId == "signalB_slotA") {
-            CPPUNIT_ASSERT(signalerB->disconnect(con.signalInstanceId, con.signal, con.slot));
-        } else {
-            CPPUNIT_ASSERT(signalerA->disconnect(con.signalInstanceId, con.signal, con.slot));
-        }
+        CPPUNIT_ASSERT(slotter->disconnect(con.signalInstanceId, con.signal, con.slot));
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -810,9 +786,9 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
     };
 
     std::vector<SignalSlotConnection> badConnections(connections);
-    badConnections.push_back(SignalSlotConnection("signalA_slotB", "NOT_A_signal", "signalB_slotA", "slotA"));
+    badConnections.push_back(SignalSlotConnection("signaler", "NOT_A_signal", "slotA"));
 
-    signalerA->asyncConnect(badConnections, connectedHandler, connectFailedHandler);
+    slotter->asyncConnect(badConnections, connectedHandler, connectFailedHandler);
 
     // Give some time to find out that signal is not there
     for (int i = 0; i < numWaitIterations; ++i) {
@@ -825,16 +801,12 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
     // connectFailedMsg is the full, formatted exception info ("Exception =====> {\n ... \n Message....")
     // check that the original message is part of it
     CPPUNIT_ASSERT_MESSAGE("Full message: " + connectFailedMsg,
-                           connectFailedMsg.find("signalA_slotB has no signal 'NOT_A_signal'.") != std::string::npos);
+                           connectFailedMsg.find("signaler has no signal 'NOT_A_signal'.") != std::string::npos);
 
     // Clean up established connections (synchronously)
     for (const SignalSlotConnection& con : connections) {
         // Do not test return value - the correct connections should be connected, but maybe not yet...
-        if (con.slotInstanceId == "signalB_slotA") {
-            signalerB->disconnect(con.signalInstanceId, con.signal, con.slot);
-        } else {
-            signalerA->disconnect(con.signalInstanceId, con.signal, con.slot);
-        }
+        slotter->disconnect(con.signalInstanceId, con.signal, con.slot);
     }
     ///////////////////////////////////////////////////////////////////////////
     // Test failureHandler again - now non-existing slot gives same exception type, but other message
@@ -843,8 +815,8 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
     connectTimeout = false;
     connectFailedMsg = "";
     // replace bad connection by another bad one...
-    badConnections.back() = SignalSlotConnection("signalA_slotB", "signalA", "signalB_slotA", "NOT_A_slot");
-    signalerA->asyncConnect(badConnections, connectedHandler, connectFailedHandler);
+    badConnections.back() = SignalSlotConnection("signaler", "signalA", "NOT_A_slot");
+    slotter->asyncConnect(badConnections, connectedHandler, connectFailedHandler);
 
     // Give some time to find out that slot is not there
     for (int i = 0; i < numWaitIterations; ++i) {
@@ -857,16 +829,12 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
     // connectFailedMsg is the full, formatted exception info ("Exception =====> {\n ... \n Message....")
     // check that the original message is part of it
     CPPUNIT_ASSERT_MESSAGE("Full message: " + connectFailedMsg,
-                           connectFailedMsg.find("signalB_slotA has no slot 'NOT_A_slot'.") != std::string::npos);
+                           connectFailedMsg.find("no slot 'NOT_A_slot'.") != std::string::npos);
 
     // Clean up established connections (synchronously)
     for (const SignalSlotConnection& con : connections) {
         // Do not test return value - the correct connections should be connected, but maybe not yet...
-        if (con.slotInstanceId == "signalB_slotA") {
-            signalerB->disconnect(con.signalInstanceId, con.signal, con.slot);
-        } else {
-            signalerA->disconnect(con.signalInstanceId, con.signal, con.slot);
-        }
+        slotter->disconnect(con.signalInstanceId, con.signal, con.slot);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -876,10 +844,10 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
     connectTimeout = false;
     connectFailedMsg = "";
     // replace bad connection by another bad one...
-    badConnections.back() = SignalSlotConnection("NOT_A_signalInstance", "signalA", "signalB_slotA", "slotA");
+    badConnections.back() = SignalSlotConnection("NOT_A_signalInstance", "signalA", "slotA");
 
     // Timeout of 50 allows 25 ms per message travel (without setting this, we would have to wait for ages)
-    signalerA->asyncConnect(badConnections, connectedHandler, connectFailedHandler, 50);
+    slotter->asyncConnect(badConnections, connectedHandler, connectFailedHandler, 50);
 
     // The first request will succeed, the second (to "NOT_A_sig...") not - so wait 4 * 25 ms plus margin to be sure
     std::this_thread::sleep_for(105ms);
@@ -892,33 +860,8 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
     // Clean up established connections (synchronously)
     for (const SignalSlotConnection& con : connections) {
         // Do not test return value - the correct connections should be connected, but maybe not yet...
-        if (con.slotInstanceId == "signalB_slotA") {
-            signalerB->disconnect(con.signalInstanceId, con.signal, con.slot);
-        } else {
-            signalerA->disconnect(con.signalInstanceId, con.signal, con.slot);
-        }
+        slotter->disconnect(con.signalInstanceId, con.signal, con.slot);
     }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Final test for failureHandler - non-existing slotInstanceId gives again TimeoutException
-    connected = false;
-    connectFailed = false;
-    connectTimeout = false;
-    connectFailedMsg = "";
-    // replace bad connection by another bad one...
-    badConnections.back() = SignalSlotConnection("signalA_slotB", "signalA", "NOT_A_slotInstance", "slotA");
-    // Timeout of 50 allows 25 ms per message travel
-    signalerA->asyncConnect(badConnections, connectedHandler, connectFailedHandler, 50);
-    // The first request (to "NOT_A_slot...") will fail, but one nevers knows how the timeout handler is stuck
-    for (int i = 0; i < numWaitIterations; ++i) {
-        if (connectFailed) break;
-        std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
-    };
-
-    CPPUNIT_ASSERT(connectFailed);
-    CPPUNIT_ASSERT(!connected);
-    CPPUNIT_ASSERT(connectTimeout);
-    CPPUNIT_ASSERT_MESSAGE("Full message: " + connectFailedMsg, connectFailedMsg.empty());
 }
 
 
@@ -963,8 +906,7 @@ void SignalSlotable_Test::_testDisconnectAsync() {
         }
         disconnectFailed = true; // set after disconnectTimeout and disconnectFailedMsg since loop checks this
     };
-    signaler->asyncDisconnect("signalInstance", "signal", "slotInstance", "slot", disconnectSuccessHandler,
-                              disconnectFailedHandler);
+    slotter->asyncDisconnect("signalInstance", "signal", "slot", disconnectSuccessHandler, disconnectFailedHandler);
     // Give disconnection call some time to travel
     for (int i = 0; i < numWaitIterations; ++i) {
         if (disconnectSuccess || disconnectFailed) break;
@@ -984,8 +926,7 @@ void SignalSlotable_Test::_testDisconnectAsync() {
     disconnectFailed = false;
     disconnectTimeout = false;
     disconnectFailedMsg.clear();
-    signaler->asyncDisconnect("signalInstance", "signal", "slotInstance", "slot", disconnectSuccessHandler,
-                              disconnectFailedHandler);
+    slotter->asyncDisconnect("signalInstance", "signal", "slot", disconnectSuccessHandler, disconnectFailedHandler);
     // Give some time to find out that signal is not there
     for (int i = 0; i < numWaitIterations; ++i) {
         if (disconnectSuccess || disconnectFailed) break;
@@ -1005,8 +946,8 @@ void SignalSlotable_Test::_testDisconnectAsync() {
     disconnectFailed = false;
     disconnectTimeout = false;
     disconnectFailedMsg.clear();
-    signaler->asyncDisconnect("signalInstance", "NOT_A_signal", "slotInstance", "slot", disconnectSuccessHandler,
-                              disconnectFailedHandler);
+    slotter->asyncDisconnect("signalInstance", "NOT_A_signal", "slot", disconnectSuccessHandler,
+                             disconnectFailedHandler);
     // Give some time to find out that signal is not there
     for (int i = 0; i < numWaitIterations; ++i) {
         if (disconnectSuccess || disconnectFailed) break;
@@ -1026,8 +967,8 @@ void SignalSlotable_Test::_testDisconnectAsync() {
     disconnectFailed = false;
     disconnectTimeout = false;
     disconnectFailedMsg.clear();
-    signaler->asyncDisconnect("NOT_A_signalInstance", "signal", "slotInstance", "slot", disconnectSuccessHandler,
-                              disconnectFailedHandler, 150); // timeout of 150 ms
+    slotter->asyncDisconnect("NOT_A_signalInstance", "signal", "slot", disconnectSuccessHandler,
+                             disconnectFailedHandler, 150); // timeout of 150 ms
     // Give some time to find out that signal is not there
     for (int i = 0; i < numWaitIterations; ++i) {
         if (disconnectSuccess || disconnectFailed) break;
@@ -1064,11 +1005,6 @@ void SignalSlotable_Test::_testDisconnectConnectAsyncStress() {
     CPPUNIT_ASSERT(slotter->connect("signalInstance", "signal", "slot"));
 
     for (int i = 0; i < 100; ++i) {
-        // Alternate who calls connect/disconnect:
-        // Internal code path may differ for "slotInstance" being caller or not
-        const bool signalerConnected = (i % 2 == 0);
-        SignalSlotable::Pointer& connectorSigSlot = (signalerConnected ? signaler : slotter);
-
         // Disconnect handlers
         bool disconnectSuccess = false;
         auto disconnectSuccessHandler = [&disconnectSuccess]() { disconnectSuccess = true; };
@@ -1102,10 +1038,8 @@ void SignalSlotable_Test::_testDisconnectConnectAsyncStress() {
         };
 
         // Now call both immediately after each other to run into critical situations
-        connectorSigSlot->asyncDisconnect("signalInstance", "signal", "slotInstance", "slot", disconnectSuccessHandler,
-                                          disconnectFailedHandler);
-        connectorSigSlot->asyncConnect("signalInstance", "signal", "slotInstance", "slot", connectSuccessHandler,
-                                       connectFailedHandler);
+        slotter->asyncDisconnect("signalInstance", "signal", "slot", disconnectSuccessHandler, disconnectFailedHandler);
+        slotter->asyncConnect("signalInstance", "signal", "slot", connectSuccessHandler, connectFailedHandler);
         for (int i = 0; i < numWaitIterations; ++i) {
             if ((disconnectSuccess || disconnectFailed) && (connectSuccess || connectFailed)) break;
             std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
@@ -1123,7 +1057,7 @@ void SignalSlotable_Test::_testDisconnectConnectAsyncStress() {
             std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
         };
         std::stringstream msg;
-        msg << "Loop " << i << ", i.e. " << (signalerConnected ? "signaler" : "slotter") << " connected";
+        msg << "Loop " << i;
         if (!*slotCalled) {
             // Debugging: If a second emit cures this, there is "only" some delayed connection (still weird...),
             //            otherwise we can be sure we are not properly subscribed.
