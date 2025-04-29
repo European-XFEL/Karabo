@@ -1620,7 +1620,8 @@ namespace karabo {
             storeConnection(signalInstanceId, signalSignature, slotSignature);
 
             if (!hasSlot(slotSignature)) {
-                EventLoop::post(std::bind(callErrorHandler, failureHandler, "Have no slot '" + slotSignature + "'."));
+                EventLoop::post(
+                      std::bind(callErrorHandler, failureHandler, "Have no slot '" + slotSignature + "'.", false));
                 return;
             }
 
@@ -1677,10 +1678,14 @@ namespace karabo {
 
 
         void SignalSlotable::callErrorHandler(const SignalSlotable::AsyncErrorHandler& handler,
-                                              const std::string& message) {
+                                              const std::string& message, bool timeout) {
             if (handler) {
                 try {
-                    throw KARABO_SIGNALSLOT_EXCEPTION(message);
+                    if (timeout) {
+                        throw KARABO_TIMEOUT_EXCEPTION(message);
+                    } else {
+                        throw KARABO_SIGNALSLOT_EXCEPTION(message);
+                    }
                 } catch (const std::exception&) {
                     Exception::clearTrace();
                     // handler can now do 'try { throw; } catch (const SignalSlotException& e) { ... }'
@@ -1706,101 +1711,50 @@ namespace karabo {
                 return;
             }
 
-            // Store book keeping structure
-            const std::string uuid(generateUUID());
-            {
-                std::lock_guard<std::mutex> lock(m_currentMultiAsyncConnectsMutex);
-                m_currentMultiAsyncConnects[uuid] = std::make_tuple(vector<bool>(signalSlotConnections.size(), false),
-                                                                    successHandler, failureHandler);
-            }
+            auto singleConnectDone =
+                  [doneFlags{std::make_shared<std::vector<bool>>(signalSlotConnections.size(), false)},
+                   commonFailMsgs{std::make_shared<std::string>()}, timeoutFlag{std::make_shared<bool>(false)},
+                   mutex{std::make_shared<std::mutex>()}, successHandler, failureHandler](size_t i, bool succeeded) {
+                      // Protect access to data behind pointer "members" of the lambda which are shared between
+                      // its individual "instances" created by std::bind below.
+                      std::lock_guard<std::mutex> lock(*mutex);
+
+                      if (!succeeded) {
+                          std::ostringstream oss;
+                          oss << (commonFailMsgs->empty() ? "" : "\n") << "Connection " << i << " failed: ";
+                          try {
+                              throw; // We are called within a 'catch' block and can rethrow
+                          } catch (const karabo::data::TimeoutException& e) {
+                              oss << e.userFriendlyMsg();
+                              *timeoutFlag = true;
+                          } catch (const karabo::data::Exception& e) {
+                              oss << e.userFriendlyMsg();
+                          } catch (const std::exception& e) {
+                              oss << e.what();
+                          }
+                          // Keep track of failure info
+                          commonFailMsgs->append(oss.str());
+                      }
+
+                      (*doneFlags)[i] = true;
+                      for (bool flag : *doneFlags) {
+                          if (!flag) return; // Still at least one to go
+                      }
+
+                      // This is the last connection that reported its success
+                      if (commonFailMsgs->empty()) {
+                          if (successHandler) successHandler();
+                      } else {
+                          // Any timeout has precedence
+                          callErrorHandler(failureHandler, *commonFailMsgs, *timeoutFlag);
+                      }
+                  };
 
             // Send individual requests
             for (size_t i = 0; i < signalSlotConnections.size(); ++i) {
                 const SignalSlotConnection& con = signalSlotConnections[i];
-                asyncConnect(con.signalInstanceId, con.signal, con.slot,
-                             bind_weak(&SignalSlotable::multiAsyncConnectSuccessHandler, this, uuid, i),
-                             bind_weak(&SignalSlotable::multiAsyncConnectFailureHandler, this, uuid), timeout);
-            }
-        }
-
-
-        void SignalSlotable::multiAsyncConnectSuccessHandler(const std::string& uuid, size_t requestNum) {
-            // Find corresponding info
-            std::lock_guard<std::mutex> lock(m_currentMultiAsyncConnectsMutex);
-            auto infoIter = m_currentMultiAsyncConnects.find(uuid);
-            if (infoIter == m_currentMultiAsyncConnects.end()) {
-                KARABO_LOG_FRAMEWORK_DEBUG << getInstanceId() << "::multiAsyncConnectSuccessHandler(" << uuid << ", "
-                                           << requestNum
-                                           << "): Cannot find corresponding info - probably another requestNum failed.";
-                return;
-            }
-            MultiAsyncConnectInfo& info = infoIter->second;
-
-            // Mark that 'requestNum' succeeded
-            vector<bool>& doneFlags = std::get<0>(info);
-            if (requestNum < doneFlags.size()) {
-                doneFlags[requestNum] = true;
-            } else {
-                KARABO_LOG_FRAMEWORK_ERROR << getInstanceId() << "::multiAsyncConnectSuccessHandler: RequestNum "
-                                           << requestNum << " out of range (max. is " << doneFlags.size() - 1 << ").";
-            }
-
-            // Check whether now all requests have succeeded
-            bool allSucceeded = true;
-            for (bool success : doneFlags) {
-                if (!success) allSucceeded = false;
-            }
-
-            // If all succeeded, call handler and clean up
-            if (allSucceeded) {
-                // Better post the success handler to release lock...
-                const auto& successHandler = std::get<1>(info);
-                if (successHandler) EventLoop::post(successHandler);
-                m_currentMultiAsyncConnects.erase(infoIter);
-            }
-        }
-
-
-        void SignalSlotable::multiAsyncConnectFailureHandler(const std::string& uuid) {
-            std::function<void()> failureHandler;
-
-            {
-                // Find corresponding info
-                std::lock_guard<std::mutex> lock(m_currentMultiAsyncConnectsMutex);
-                auto infoIter = m_currentMultiAsyncConnects.find(uuid);
-                if (infoIter == m_currentMultiAsyncConnects.end()) {
-                    KARABO_LOG_FRAMEWORK_DEBUG
-                          << getInstanceId() << "::multiAsyncConnectFailureHandler(" << uuid
-                          << "): Cannot find corresponding info - probably already another requestNum failed.";
-                    return;
-                }
-                MultiAsyncConnectInfo& info = infoIter->second;
-
-                //  Clean up after copying failure handler (to release lock)
-                failureHandler = std::get<2>(info);
-                m_currentMultiAsyncConnects.erase(infoIter);
-            }
-
-            try {
-                // Re-throw exception in which's context we are called
-                // (to be able to do so, we cannot just post the failureHandler to the event loop):
-                throw;
-            } catch (const std::exception& e) {
-                if (failureHandler) {
-                    try {
-                        // handler can now do 'try { throw; } catch (const XxxxException& e) { ... }'
-                        failureHandler();
-                        Exception::clearTrace(); // since we do not 'print' e
-                    } catch (const std::exception& eHandler) {
-                        KARABO_LOG_FRAMEWORK_ERROR << getInstanceId()
-                                                   << "::multiAsyncConnectFailureHandler: One request "
-                                                   << "failed since: " << e.what()
-                                                   << " and failure handler threw exception: " << eHandler.what();
-                    }
-                } else {
-                    KARABO_LOG_FRAMEWORK_ERROR << getInstanceId() << "::multiAsyncConnectFailureHandler: One request "
-                                               << "failed since: " << e.what();
-                }
+                asyncConnect(con.signalInstanceId, con.signal, con.slot, std::bind(singleConnectDone, i, true),
+                             std::bind(singleConnectDone, i, false), timeout);
             }
         }
 
