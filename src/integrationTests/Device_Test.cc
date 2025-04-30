@@ -1477,7 +1477,7 @@ void Device_Test::testUpdateState() {
     // ... and finally test the desired timestamps:
     //     * state and valueWithExc get the same as given explicitly to updateState
     //     * countStateToggles gets the one mingled into the 'other' Hash
-    const auto atto = karabo::data::ATTOSEC;
+    const auto atto = karabo::data::TIME_UNITS::ATTOSEC;
     const Hash cfg(m_deviceClient->get(deviceId));
     const Epochstamp stampStateNew(Epochstamp::fromHashAttributes(cfg.getAttributes("state")));
     CPPUNIT_ASSERT_MESSAGE(stampStateNew.toIso8601(atto) += " != " + stampState.toIso8601(atto),

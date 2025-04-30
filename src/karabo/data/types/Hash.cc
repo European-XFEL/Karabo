@@ -1021,7 +1021,9 @@ namespace karabo {
                         }
                     } else {
                         if (Types::category(ele.getType()) == Types::SEQUENCE) {
-                            if (type == (ele.getType() - 1)) {
+                            int eleType = static_cast<int>(ele.getType());
+                            int typeInt = static_cast<int>(type);
+                            if (typeInt == (eleType - 1)) {
                                 partial_count += counter(ele);
                             }
                         }

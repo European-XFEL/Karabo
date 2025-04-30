@@ -30,7 +30,7 @@ namespace karabo {
             // if no initial value is set the state will be unknown
             m_node->setAttribute(KARABO_SCHEMA_DEFAULT_VALUE, State::UNKNOWN.name());
             // set the default DAQ policy
-            m_node->setAttribute<int>(KARABO_SCHEMA_DAQ_POLICY, expected.getDefaultDAQPolicy());
+            m_node->setAttribute<int>(KARABO_SCHEMA_DAQ_POLICY, static_cast<int>(expected.getDefaultDAQPolicy()));
         }
 
 
@@ -112,18 +112,18 @@ namespace karabo {
 
 
         StateElement& StateElement::daqPolicy(const DAQPolicy& policy) {
-            m_node->setAttribute<int>(KARABO_SCHEMA_DAQ_POLICY, policy);
+            m_node->setAttribute<int>(KARABO_SCHEMA_DAQ_POLICY, static_cast<int>(policy));
             return *this;
         }
 
 
         void StateElement::beforeAddition() {
-            m_node->setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::LEAF);
-            m_node->setAttribute<int>(KARABO_SCHEMA_LEAF_TYPE, Schema::STATE);
+            m_node->setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, static_cast<int>(Schema::LEAF));
+            m_node->setAttribute<int>(KARABO_SCHEMA_LEAF_TYPE, static_cast<int>(Schema::STATE));
             m_node->setAttribute<std::string>(KARABO_SCHEMA_VALUE_TYPE, ToLiteral::to<Types::STRING>());
             m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ);
-            m_node->setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::OPTIONAL_PARAM);
-            m_node->setAttribute<int>(KARABO_SCHEMA_ARCHIVE_POLICY, Schema::EVERY_EVENT);
+            m_node->setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, static_cast<int>(Schema::OPTIONAL_PARAM));
+            m_node->setAttribute<int>(KARABO_SCHEMA_ARCHIVE_POLICY, static_cast<int>(Schema::EVERY_EVENT));
             m_node->setAttribute<std::string>(KARABO_SCHEMA_CLASS_ID, "State");
             m_node->setAttribute<std::string>(KARABO_SCHEMA_DISPLAY_TYPE, "State");
 

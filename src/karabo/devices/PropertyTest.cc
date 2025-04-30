@@ -556,7 +556,7 @@ namespace karabo {
                   .key("node")
                   .displayedName("Node for DAQ")
                   .description("An intermediate node needed by DAQ")
-                  .setDaqDataType(karabo::data::TRAIN)
+                  .setDaqDataType(karabo::data::DaqDataType::TRAIN)
                   .commit();
 
             INT32_ELEMENT(pipeData)

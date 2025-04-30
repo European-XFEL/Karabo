@@ -1026,70 +1026,73 @@ void DateTimeString_Test::isValidateFractionalSecondToString(const unsigned long
 
     // ATTOSEC
     if (writeToClog)
-        std::clog << "fractionalSecondToString(karabo::data::ATTOSEC, " << fractionalSeconds << ") => '"
-                  << dts.fractionalSecondToString(karabo::data::ATTOSEC, fractionalSeconds) << "' == '"
+        std::clog << "fractionalSecondToString(karabo::data::TIME_UNITS::ATTOSEC, " << fractionalSeconds << ") => '"
+                  << dts.fractionalSecondToString(karabo::data::TIME_UNITS::ATTOSEC, fractionalSeconds) << "' == '"
                   << expectedFractionalSeconds << "'" << std::endl;
-    CPPUNIT_ASSERT(dts.fractionalSecondToString(karabo::data::ATTOSEC, fractionalSeconds) == expectedFractionalSeconds);
+    CPPUNIT_ASSERT(dts.fractionalSecondToString(karabo::data::TIME_UNITS::ATTOSEC, fractionalSeconds) ==
+                   expectedFractionalSeconds);
 
     // FEMTOSEC
     expectedFractionalSeconds = expectedFractionalSeconds.substr(0, expectedFractionalSeconds.size() - 3);
     if (writeToClog)
-        std::clog << "fractionalSecondToString(karabo::data::FEMTOSEC, " << fractionalSeconds << ") => '"
-                  << dts.fractionalSecondToString(karabo::data::FEMTOSEC, fractionalSeconds) << "' == '"
+        std::clog << "fractionalSecondToString(karabo::data::TIME_UNITS::FEMTOSEC, " << fractionalSeconds << ") => '"
+                  << dts.fractionalSecondToString(karabo::data::TIME_UNITS::FEMTOSEC, fractionalSeconds) << "' == '"
                   << expectedFractionalSeconds << "'" << std::endl;
-    CPPUNIT_ASSERT(dts.fractionalSecondToString(karabo::data::FEMTOSEC, fractionalSeconds) ==
+    CPPUNIT_ASSERT(dts.fractionalSecondToString(karabo::data::TIME_UNITS::FEMTOSEC, fractionalSeconds) ==
                    expectedFractionalSeconds);
 
     // PICOSEC
     expectedFractionalSeconds = expectedFractionalSeconds.substr(0, expectedFractionalSeconds.size() - 3);
     if (writeToClog)
-        std::clog << "fractionalSecondToString(karabo::data::PICOSEC, " << fractionalSeconds << ") => '"
-                  << dts.fractionalSecondToString(karabo::data::PICOSEC, fractionalSeconds) << "' == '"
+        std::clog << "fractionalSecondToString(karabo::data::TIME_UNITS::PICOSEC, " << fractionalSeconds << ") => '"
+                  << dts.fractionalSecondToString(karabo::data::TIME_UNITS::PICOSEC, fractionalSeconds) << "' == '"
                   << expectedFractionalSeconds << "'" << std::endl;
-    CPPUNIT_ASSERT(dts.fractionalSecondToString(karabo::data::PICOSEC, fractionalSeconds) == expectedFractionalSeconds);
+    CPPUNIT_ASSERT(dts.fractionalSecondToString(karabo::data::TIME_UNITS::PICOSEC, fractionalSeconds) ==
+                   expectedFractionalSeconds);
 
     // NANOSEC
     expectedFractionalSeconds = expectedFractionalSeconds.substr(0, expectedFractionalSeconds.size() - 3);
     if (writeToClog)
-        std::clog << "fractionalSecondToString(karabo::data::NANOSEC, " << fractionalSeconds << ") => '"
-                  << dts.fractionalSecondToString(karabo::data::NANOSEC, fractionalSeconds) << "' == '"
+        std::clog << "fractionalSecondToString(karabo::data::TIME_UNITS::NANOSEC, " << fractionalSeconds << ") => '"
+                  << dts.fractionalSecondToString(karabo::data::TIME_UNITS::NANOSEC, fractionalSeconds) << "' == '"
                   << expectedFractionalSeconds << "'" << std::endl;
-    CPPUNIT_ASSERT(dts.fractionalSecondToString(karabo::data::NANOSEC, fractionalSeconds) == expectedFractionalSeconds);
+    CPPUNIT_ASSERT(dts.fractionalSecondToString(karabo::data::TIME_UNITS::NANOSEC, fractionalSeconds) ==
+                   expectedFractionalSeconds);
 
     // MICROSEC
     expectedFractionalSeconds = expectedFractionalSeconds.substr(0, expectedFractionalSeconds.size() - 3);
     if (writeToClog)
-        std::clog << "fractionalSecondToString(karabo::data::MICROSEC, " << fractionalSeconds << ") => '"
-                  << dts.fractionalSecondToString(karabo::data::MICROSEC, fractionalSeconds) << "' == '"
+        std::clog << "fractionalSecondToString(karabo::data::TIME_UNITS::MICROSEC, " << fractionalSeconds << ") => '"
+                  << dts.fractionalSecondToString(karabo::data::TIME_UNITS::MICROSEC, fractionalSeconds) << "' == '"
                   << expectedFractionalSeconds << "'" << std::endl;
-    CPPUNIT_ASSERT(dts.fractionalSecondToString(karabo::data::MICROSEC, fractionalSeconds) ==
+    CPPUNIT_ASSERT(dts.fractionalSecondToString(karabo::data::TIME_UNITS::MICROSEC, fractionalSeconds) ==
                    expectedFractionalSeconds);
 
     // MILLISEC
     expectedFractionalSeconds = expectedFractionalSeconds.substr(0, expectedFractionalSeconds.size() - 3);
     if (writeToClog)
-        std::clog << "fractionalSecondToString(karabo::data::MILLISEC, " << fractionalSeconds << ") => '"
-                  << dts.fractionalSecondToString(karabo::data::MILLISEC, fractionalSeconds) << "' == '"
+        std::clog << "fractionalSecondToString(karabo::data::TIME_UNITS::MILLISEC, " << fractionalSeconds << ") => '"
+                  << dts.fractionalSecondToString(karabo::data::TIME_UNITS::MILLISEC, fractionalSeconds) << "' == '"
                   << expectedFractionalSeconds << "'" << std::endl;
-    CPPUNIT_ASSERT(dts.fractionalSecondToString(karabo::data::MILLISEC, fractionalSeconds) ==
+    CPPUNIT_ASSERT(dts.fractionalSecondToString(karabo::data::TIME_UNITS::MILLISEC, fractionalSeconds) ==
                    expectedFractionalSeconds);
 
     // ONESECOND
     expectedFractionalSeconds = expectedFractionalSeconds.substr(0, expectedFractionalSeconds.size() - 3) + "0";
     if (writeToClog)
-        std::clog << "fractionalSecondToString(karabo::data::ONESECOND, " << fractionalSeconds << ") => '"
-                  << dts.fractionalSecondToString(karabo::data::ONESECOND, fractionalSeconds) << "' == '"
+        std::clog << "fractionalSecondToString(karabo::data::TIME_UNITS::ONESECOND, " << fractionalSeconds << ") => '"
+                  << dts.fractionalSecondToString(karabo::data::TIME_UNITS::ONESECOND, fractionalSeconds) << "' == '"
                   << expectedFractionalSeconds << "'" << std::endl;
-    CPPUNIT_ASSERT(dts.fractionalSecondToString(karabo::data::ONESECOND, fractionalSeconds) ==
+    CPPUNIT_ASSERT(dts.fractionalSecondToString(karabo::data::TIME_UNITS::ONESECOND, fractionalSeconds) ==
                    expectedFractionalSeconds);
 
     // NOFRACTION
     expectedFractionalSeconds = "";
     if (writeToClog)
-        std::clog << "fractionalSecondToString(karabo::data::NOFRACTION, " << fractionalSeconds << ") => '"
-                  << dts.fractionalSecondToString(karabo::data::NOFRACTION, fractionalSeconds) << "' == '"
+        std::clog << "fractionalSecondToString(karabo::data::TIME_UNITS::NOFRACTION, " << fractionalSeconds << ") => '"
+                  << dts.fractionalSecondToString(karabo::data::TIME_UNITS::NOFRACTION, fractionalSeconds) << "' == '"
                   << expectedFractionalSeconds << "'" << std::endl;
-    CPPUNIT_ASSERT(dts.fractionalSecondToString(karabo::data::NOFRACTION, fractionalSeconds) ==
+    CPPUNIT_ASSERT(dts.fractionalSecondToString(karabo::data::TIME_UNITS::NOFRACTION, fractionalSeconds) ==
                    expectedFractionalSeconds);
 
     return;

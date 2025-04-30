@@ -99,41 +99,41 @@ void Schema_Test::testPaths() {
 
 void Schema_Test::testGetRequiredAccessLevel() {
     Schema schema = GraphicsRenderer::getSchema("GraphicsRenderer");
-    CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes") == Schema::EXPERT);
+    CPPUNIT_ASSERT(Schema::AccessLevel(schema.getRequiredAccessLevel("shapes")) == Schema::EXPERT);
     // all sub-elements of Node-element 'shapes' will have EXPERT level:
-    CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes.Circle.shadowEnabled") == Schema::EXPERT);
-    CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes.Circle") == Schema::EXPERT);
-    CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes.Rectangle.b") == Schema::EXPERT);
+    CPPUNIT_ASSERT(Schema::AccessLevel(schema.getRequiredAccessLevel("shapes.Circle.shadowEnabled")) == Schema::EXPERT);
+    CPPUNIT_ASSERT(Schema::AccessLevel(schema.getRequiredAccessLevel("shapes.Circle")) == Schema::EXPERT);
+    CPPUNIT_ASSERT(Schema::AccessLevel(schema.getRequiredAccessLevel("shapes.Rectangle.b")) == Schema::EXPERT);
 
     // but sub-element 'shapes.Rectangle.a' with higher level will keep its EXPERT level
-    CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes.Rectangle.a") == Schema::EXPERT);
+    CPPUNIT_ASSERT(Schema::AccessLevel(schema.getRequiredAccessLevel("shapes.Rectangle.a")) == Schema::EXPERT);
 
-    CPPUNIT_ASSERT(schema.getRequiredAccessLevel("antiAlias") == Schema::EXPERT);
-    CPPUNIT_ASSERT(schema.getRequiredAccessLevel("color") == Schema::OPERATOR);
+    CPPUNIT_ASSERT(Schema::AccessLevel(schema.getRequiredAccessLevel("antiAlias")) == Schema::EXPERT);
+    CPPUNIT_ASSERT(Schema::AccessLevel(schema.getRequiredAccessLevel("color")) == Schema::OPERATOR);
 
     // check requiredAccesLevel set on leaves-elements in expectedParameters
-    CPPUNIT_ASSERT(m_schema.getRequiredAccessLevel("exampleKey1") == Schema::OPERATOR);
-    CPPUNIT_ASSERT(m_schema.getRequiredAccessLevel("exampleKey2") == Schema::OPERATOR);
-    CPPUNIT_ASSERT(m_schema.getRequiredAccessLevel("exampleKey3") == Schema::EXPERT);
-    CPPUNIT_ASSERT(m_schema.getRequiredAccessLevel("exampleKey4") == Schema::EXPERT);
+    CPPUNIT_ASSERT(Schema::AccessLevel(m_schema.getRequiredAccessLevel("exampleKey1")) == Schema::OPERATOR);
+    CPPUNIT_ASSERT(Schema::AccessLevel(m_schema.getRequiredAccessLevel("exampleKey2")) == Schema::OPERATOR);
+    CPPUNIT_ASSERT(Schema::AccessLevel(m_schema.getRequiredAccessLevel("exampleKey3")) == Schema::EXPERT);
+    CPPUNIT_ASSERT(Schema::AccessLevel(m_schema.getRequiredAccessLevel("exampleKey4")) == Schema::EXPERT);
 
     // default for readOnly element - OBSERVER
-    CPPUNIT_ASSERT(m_schema.getRequiredAccessLevel("exampleKey5") == Schema::OBSERVER);
+    CPPUNIT_ASSERT(Schema::AccessLevel(m_schema.getRequiredAccessLevel("exampleKey5")) == Schema::OBSERVER);
 
     // default for reconfigurable element - OPERATOR
-    CPPUNIT_ASSERT(m_schema.getRequiredAccessLevel("sampleKey") == Schema::OPERATOR);
+    CPPUNIT_ASSERT(Schema::AccessLevel(m_schema.getRequiredAccessLevel("sampleKey")) == Schema::OPERATOR);
 
     Schema ose("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
     OtherSchemaElements::expectedParameters(ose);
 
     // check default requiredAccessLevel by elements : slot, vector, image
-    CPPUNIT_ASSERT(ose.getRequiredAccessLevel("slotTest") == Schema::OPERATOR);       // SLOT
-    CPPUNIT_ASSERT(ose.getRequiredAccessLevel("filename") == Schema::OPERATOR);       // reconfigurable PATH
-    CPPUNIT_ASSERT(ose.getRequiredAccessLevel("testfile") == Schema::OBSERVER);       // readOnly STRING
-    CPPUNIT_ASSERT(ose.getRequiredAccessLevel("vecIntReconfig") == Schema::OPERATOR); // reconfigurable VECTOR_INT32
-    CPPUNIT_ASSERT(ose.getRequiredAccessLevel("vecInt") == Schema::OBSERVER);         // readOnly VECTOR_INT32
-    CPPUNIT_ASSERT(ose.getRequiredAccessLevel("vecBool") == Schema::OPERATOR);        // init VECTOR_BOOL
-    CPPUNIT_ASSERT(ose.getRequiredAccessLevel("image") == Schema::OBSERVER);          // IMAGE
+    CPPUNIT_ASSERT(Schema::AccessLevel(ose.getRequiredAccessLevel("slotTest")) == Schema::OPERATOR); // SLOT
+    CPPUNIT_ASSERT(Schema::AccessLevel(ose.getRequiredAccessLevel("filename")) == Schema::OPERATOR);
+    CPPUNIT_ASSERT(Schema::AccessLevel(ose.getRequiredAccessLevel("testfile")) == Schema::OBSERVER); // readOnly STRING
+    CPPUNIT_ASSERT(Schema::AccessLevel(ose.getRequiredAccessLevel("vecIntReconfig")) == Schema::OPERATOR);
+    CPPUNIT_ASSERT(Schema::AccessLevel(ose.getRequiredAccessLevel("vecInt")) == Schema::OBSERVER);
+    CPPUNIT_ASSERT(Schema::AccessLevel(ose.getRequiredAccessLevel("vecBool")) == Schema::OPERATOR); // init VECTOR_BOOL
+    CPPUNIT_ASSERT(Schema::AccessLevel(ose.getRequiredAccessLevel("image")) == Schema::OBSERVER);   // IMAGE
 }
 
 
@@ -141,28 +141,27 @@ void Schema_Test::testSetRequiredAccessLevel() {
     Schema sch("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
     OtherSchemaElements::expectedParameters(sch);
 
-    CPPUNIT_ASSERT(sch.getRequiredAccessLevel("image") == Schema::OBSERVER); // IMAGE (default level OBSERVER)
+    CPPUNIT_ASSERT(Schema::AccessLevel(sch.getRequiredAccessLevel("image")) == Schema::OBSERVER);
     sch.setRequiredAccessLevel("image", Schema::EXPERT);
-    CPPUNIT_ASSERT(sch.getRequiredAccessLevel("image") == Schema::EXPERT); // IMAGE (changed by 'set' to EXPERT)
+    CPPUNIT_ASSERT(Schema::AccessLevel(sch.getRequiredAccessLevel("image")) == Schema::EXPERT);
 
     Schema schema = GraphicsRenderer::getSchema("GraphicsRenderer");
-    CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes") == Schema::EXPERT);
+    CPPUNIT_ASSERT(Schema::AccessLevel(schema.getRequiredAccessLevel("shapes")) == Schema::EXPERT);
     // all sub-elements of Node-element 'shapes' will have EXPERT level:
-    CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes.Circle.shadowEnabled") == Schema::EXPERT);
-    CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes.Circle") == Schema::EXPERT);
-    CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes.Rectangle.a") == Schema::EXPERT);
-    CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes.Rectangle.b") == Schema::EXPERT);
+    CPPUNIT_ASSERT(Schema::AccessLevel(schema.getRequiredAccessLevel("shapes.Circle.shadowEnabled")) == Schema::EXPERT);
+    CPPUNIT_ASSERT(Schema::AccessLevel(schema.getRequiredAccessLevel("shapes.Circle")) == Schema::EXPERT);
+    CPPUNIT_ASSERT(Schema::AccessLevel(schema.getRequiredAccessLevel("shapes.Rectangle.a")) == Schema::EXPERT);
+    CPPUNIT_ASSERT(Schema::AccessLevel(schema.getRequiredAccessLevel("shapes.Rectangle.b")) == Schema::EXPERT);
 
 
     // set top-Node to lower level 'Observer' and check that sub-elements keep previous higher level
     schema.setRequiredAccessLevel("shapes", Schema::OBSERVER);
-    CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes") == Schema::OBSERVER);
-    CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes.Circle.shadowEnabled") ==
-                   Schema::OPERATOR); // default level for init-elem is 'user'
-    CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes.Circle") == Schema::OBSERVER);
-    CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes.Rectangle.a") == Schema::EXPERT);
-    CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes.Rectangle.b") ==
-                   Schema::OPERATOR); // default level for init-elem is 'user'
+    CPPUNIT_ASSERT(Schema::AccessLevel(schema.getRequiredAccessLevel("shapes")) == Schema::OBSERVER);
+    CPPUNIT_ASSERT(Schema::AccessLevel(schema.getRequiredAccessLevel("shapes.Circle.shadowEnabled")) ==
+                   Schema::OPERATOR);
+    CPPUNIT_ASSERT(Schema::AccessLevel(schema.getRequiredAccessLevel("shapes.Circle")) == Schema::OBSERVER);
+    CPPUNIT_ASSERT(Schema::AccessLevel(schema.getRequiredAccessLevel("shapes.Rectangle.a")) == Schema::EXPERT);
+    CPPUNIT_ASSERT(Schema::AccessLevel(schema.getRequiredAccessLevel("shapes.Rectangle.b")) == Schema::OPERATOR);
 }
 
 
@@ -197,7 +196,7 @@ void Schema_Test::testGetTags() {
 
 
 void Schema_Test::testGetNodeType() {
-    int nodeType = m_schema.getNodeType("exampleKey1");
+    Schema::NodeType nodeType = m_schema.getNodeType("exampleKey1");
     CPPUNIT_ASSERT(nodeType == Schema::LEAF);
 
     CPPUNIT_ASSERT(m_schema.getNodeType("exampleKey5") == Schema::LEAF);
@@ -297,7 +296,7 @@ void Schema_Test::testGetAccessMode() {
 
 
 void Schema_Test::testGetAssignment() {
-    int assignment = m_schema.getAssignment("exampleKey1");
+    Schema::AssignmentType assignment = m_schema.getAssignment("exampleKey1");
     CPPUNIT_ASSERT(assignment == Schema::OPTIONAL_PARAM);
 
     CPPUNIT_ASSERT(m_schema.getAssignment("exampleKey2") == Schema::OPTIONAL_PARAM);
@@ -746,7 +745,7 @@ void Schema_Test::testPathElement() {
     CPPUNIT_ASSERT(sch.hasDefaultValue("filename") == true);
     CPPUNIT_ASSERT(sch.getDefaultValue<string>("filename") == "karabo.log");
     CPPUNIT_ASSERT(sch.isAccessReconfigurable("filename") == true);
-    CPPUNIT_ASSERT(sch.getAssignment("filename") == Schema::OPTIONAL_PARAM);
+    CPPUNIT_ASSERT(sch.getAssignment("filename") == Schema::AssignmentType::OPTIONAL_PARAM);
 
 
     CPPUNIT_ASSERT(sch.isAccessReadOnly("testfile") == true);
@@ -1330,11 +1329,12 @@ void Schema_Test::testOverwriteElementMinMaxVector() {
 
 
 void Schema_Test::testMerge() {
-    Schema schema =
-          Configurator<SchemaNodeElements>::getSchema("SchemaNodeElements", Schema::AssemblyRules(READ | WRITE | INIT));
+    Schema schema = Configurator<SchemaNodeElements>::getSchema(
+          "SchemaNodeElements", Schema::AssemblyRules(AccessType::READ | AccessType::WRITE | AccessType::INIT));
     CPPUNIT_ASSERT(schema.getDefaultValue<unsigned int>("monitor.count") == 777);
 
-    Schema schema2("SchemaNodeElements", Schema::AssemblyRules(READ | WRITE | INIT));
+    Schema schema2("SchemaNodeElements",
+                   Schema::AssemblyRules(AccessType::READ | AccessType::WRITE | AccessType::INIT));
     SchemaNodeInjected::expectedParameters(schema2);
     CPPUNIT_ASSERT(schema2.getDefaultValue<float>("monitor.stats.d1") == 3.1415f);
 
@@ -1345,7 +1345,8 @@ void Schema_Test::testMerge() {
 
 
 void Schema_Test::testInvalidNodes() {
-    Schema schema("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
+    Schema schema("OtherSchemaElements",
+                  Schema::AssemblyRules(AccessType::READ | AccessType::WRITE | AccessType::INIT));
     OtherSchemaElements::expectedParameters(schema);
 
     // Placing an element under a leaf is not allowed
@@ -1525,7 +1526,7 @@ void Schema_Test::testSubSchema() {
 
     // Now testing 'by rules':
     {
-        Schema::AssemblyRules rules(READ | WRITE | INIT); // i.e. everything
+        Schema::AssemblyRules rules(AccessType::READ | AccessType::WRITE | AccessType::INIT); // i.e. everything
         const Schema sub = schema.subSchemaByRules(rules);
         // Everything is in:
         std::vector<std::string> finalPaths;
@@ -1534,7 +1535,8 @@ void Schema_Test::testSubSchema() {
     }
 
     {
-        Schema::AssemblyRules rules(READ | WRITE | INIT, "ON"); // i.e. required state ON or non-defined
+        Schema::AssemblyRules rules(AccessType::READ | AccessType::WRITE | AccessType::INIT,
+                                    "ON"); // i.e. required state ON or non-defined
         const Schema sub = schema.subSchemaByRules(rules);
         CPPUNIT_ASSERT(!sub.has("color"));
 
@@ -1557,7 +1559,7 @@ void Schema_Test::testSubSchema() {
     }
 
     {
-        Schema::AssemblyRules rules(READ | WRITE | INIT, "", Schema::OPERATOR);
+        Schema::AssemblyRules rules(AccessType::READ | AccessType::WRITE | AccessType::INIT, "", int(Schema::OPERATOR));
         const Schema sub = schema.subSchemaByRules(rules);
         CPPUNIT_ASSERT(!sub.has("antiAlias"));
 
@@ -1568,14 +1570,14 @@ void Schema_Test::testSubSchema() {
     }
 
     {
-        Schema::AssemblyRules rules(READ);
+        Schema::AssemblyRules rules(AccessType::READ);
         const Schema sub = schema.subSchemaByRules(rules);
         // Nothing is readOnly...
         CPPUNIT_ASSERT(sub.empty());
     }
 
     {
-        Schema::AssemblyRules rules(INIT | READ);
+        Schema::AssemblyRules rules(AccessType::INIT | AccessType::READ);
         const Schema sub = schema.subSchemaByRules(rules);
         CPPUNIT_ASSERT(sub.has("antiAlias"));
         CPPUNIT_ASSERT(sub.has("shapes.rectangle.b"));
@@ -1615,9 +1617,9 @@ void Schema_Test::testSubSchema() {
         CPPUNIT_ASSERT(sub.isAccessReconfigurable("color"));
 
         CPPUNIT_ASSERT_EQUAL(std::string("circle"), sub.getDefaultValue<std::string>("shapes"));
-        CPPUNIT_ASSERT_EQUAL(static_cast<int>(Unit::METER), sub.getUnit("shapes.circle.radius"));
+        CPPUNIT_ASSERT_EQUAL(Unit::METER, sub.getUnit("shapes.circle.radius"));
         CPPUNIT_ASSERT_EQUAL(std::string("m"), sub.getUnitSymbol("shapes.circle.radius"));
-        CPPUNIT_ASSERT_EQUAL(static_cast<int>(MetricPrefix::MILLI), sub.getMetricPrefix("shapes.circle.radius"));
+        CPPUNIT_ASSERT_EQUAL(MetricPrefix::MILLI, sub.getMetricPrefix("shapes.circle.radius"));
         CPPUNIT_ASSERT_EQUAL(std::string("m"), sub.getMetricPrefixSymbol("shapes.circle.radius"));
         CPPUNIT_ASSERT_EQUAL(0.f, sub.getMinExc<float>("shapes.circle.radius"));
         CPPUNIT_ASSERT_EQUAL(100.f, sub.getMaxExc<float>("shapes.circle.radius"));
@@ -1787,7 +1789,7 @@ void Schema_Test::testInvalidReadOnlyThrows() {
 
 
 void Schema_Test::testTable() {
-    Schema sch("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
+    Schema sch("OtherSchemaElements", Schema::AssemblyRules(AccessType::READ | AccessType::WRITE | AccessType::INIT));
     OtherSchemaElements::expectedParameters(sch);
     CPPUNIT_ASSERT(sch.isLeaf("testTable") == true);
     CPPUNIT_ASSERT(sch.getParameterHash().hasAttribute("testTable", "rowSchema") == true);
@@ -1846,7 +1848,7 @@ void Schema_Test::testTableReadOnly() {
     CPPUNIT_ASSERT_EQUAL(1ul, specifiedDefault.size());
     CPPUNIT_ASSERT_MESSAGE(toString(specifiedDefault[0]), specifiedDefault[0].fullyEquals(Hash("s", "bar", "b", true)));
     CPPUNIT_ASSERT(validReadOnlySchema.hasArchivePolicy("ValidTable"));
-    CPPUNIT_ASSERT_EQUAL(static_cast<int>(Schema::NO_ARCHIVING), validReadOnlySchema.getArchivePolicy("ValidTable"));
+    CPPUNIT_ASSERT_EQUAL(Schema::NO_ARCHIVING, validReadOnlySchema.getArchivePolicy("ValidTable"));
 
     // Verify implicit default for readOnly (empty table) in schema:
     CPPUNIT_ASSERT_NO_THROW(

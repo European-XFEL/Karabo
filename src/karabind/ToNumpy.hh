@@ -34,7 +34,7 @@ namespace karabind {
        public:
         typedef int ReturnType;
 
-        template <int RefType>
+        template <karabo::data::Types::ReferenceType RefType>
         static ReturnType to() {
             throw KARABO_NOT_IMPLEMENTED_EXCEPTION("Conversion to required type not implemented");
         }

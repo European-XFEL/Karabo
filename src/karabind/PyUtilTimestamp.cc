@@ -43,10 +43,10 @@ void exportPyUtilTimestamp(py::module_& m) {
     ts.def_static("hashAttributesContainTimeInformation", &Timestamp::hashAttributesContainTimeInformation,
                   py::arg("attributes"));
 
-    ts.def("toIso8601", &Timestamp::toIso8601, py::arg("precision") = karabo::data::MICROSEC,
+    ts.def("toIso8601", &Timestamp::toIso8601, py::arg("precision") = TIME_UNITS::MICROSEC,
            py::arg("extended") = (bool)(false));
 
-    ts.def("toIso8601Ext", &Timestamp::toIso8601Ext, py::arg("precision") = karabo::data::MICROSEC,
+    ts.def("toIso8601Ext", &Timestamp::toIso8601Ext, py::arg("precision") = TIME_UNITS::MICROSEC,
            py::arg("extended") = (bool)(false));
 
     ts.def("toFormattedStringLocale", &Timestamp::toFormattedStringLocale, py::arg("localeName") = "",

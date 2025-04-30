@@ -186,8 +186,8 @@ void EventLoop_Test::testPost() {
         CPPUNIT_ASSERT_EQUAL(std::future_status::ready, future.wait_for(milliseconds(2000)));
         const TimeDuration period = before.elapsed();
         CPPUNIT_ASSERT(future.get());
-        CPPUNIT_ASSERT_EQUAL(0ull, period.getTotalSeconds());               // less than a full second
-        CPPUNIT_ASSERT_GREATEREQUAL(100ull, period.getFractions(MILLISEC)); // at least 100 milliseconds
+        CPPUNIT_ASSERT_EQUAL(0ull, period.getTotalSeconds());                           // less than a full second
+        CPPUNIT_ASSERT_GREATEREQUAL(100ull, period.getFractions(TIME_UNITS::MILLISEC)); // at least 100 milliseconds
     }
 }
 

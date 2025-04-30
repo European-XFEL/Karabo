@@ -55,7 +55,8 @@ namespace karabo {
                 m_readOnlySpecific.setElement(static_cast<Derived*>(this));
 
                 // set the default DAQ policy
-                this->m_node->template setAttribute<int>(KARABO_SCHEMA_DAQ_POLICY, expected.getDefaultDAQPolicy());
+                this->m_node->template setAttribute<int>(KARABO_SCHEMA_DAQ_POLICY,
+                                                         static_cast<int>(expected.getDefaultDAQPolicy()));
             }
 
             /**
@@ -63,8 +64,8 @@ namespace karabo {
              * @param unitName The name describing units
              * @return reference to the Element (to allow method's chaining)
              */
-            Derived& unit(const UnitType& unit) {
-                this->m_node->template setAttribute<int>(KARABO_SCHEMA_UNIT_ENUM, unit);
+            Derived& unit(const Unit& unit) {
+                this->m_node->template setAttribute<int>(KARABO_SCHEMA_UNIT_ENUM, static_cast<int>(unit));
                 std::pair<std::string, std::string> names = karabo::data::getUnit(unit);
                 this->m_node->setAttribute(KARABO_SCHEMA_UNIT_NAME, names.first);
                 this->m_node->setAttribute(KARABO_SCHEMA_UNIT_SYMBOL, names.second);
@@ -76,8 +77,9 @@ namespace karabo {
              * @param metricPrefix The metric prefix
              * @return reference to the Element (to allow method's chaining)
              */
-            Derived& metricPrefix(const MetricPrefixType& metricPrefix) {
-                this->m_node->template setAttribute<int>(KARABO_SCHEMA_METRIC_PREFIX_ENUM, metricPrefix);
+            Derived& metricPrefix(const MetricPrefix& metricPrefix) {
+                this->m_node->template setAttribute<int>(KARABO_SCHEMA_METRIC_PREFIX_ENUM,
+                                                         static_cast<int>(metricPrefix));
                 std::pair<std::string, std::string> names = karabo::data::getMetricPrefix(metricPrefix);
                 this->m_node->setAttribute(KARABO_SCHEMA_METRIC_PREFIX_NAME, names.first);
                 this->m_node->setAttribute(KARABO_SCHEMA_METRIC_PREFIX_SYMBOL, names.second);
@@ -207,7 +209,8 @@ namespace karabo {
              */
             virtual ReadOnlySpecific<Derived, ValueType>& readOnly() {
                 if (this->m_node->hasAttribute(KARABO_SCHEMA_ASSIGNMENT)) {
-                    const int assignment = this->m_node->template getAttribute<int>(KARABO_SCHEMA_ASSIGNMENT);
+                    const Schema::AssignmentType assignment =
+                          Schema::AssignmentType(this->m_node->template getAttribute<int>(KARABO_SCHEMA_ASSIGNMENT));
                     if (assignment == Schema::MANDATORY_PARAM) {
                         std::string msg("Error in element '");
                         msg.append(this->m_node->getKey())
@@ -235,7 +238,7 @@ namespace karabo {
              * @return reference to the Element (to allow method's chaining)
              */
             virtual Derived& daqPolicy(const DAQPolicy& policy) {
-                this->m_node->template setAttribute<int>(KARABO_SCHEMA_DAQ_POLICY, policy);
+                this->m_node->template setAttribute<int>(KARABO_SCHEMA_DAQ_POLICY, static_cast<int>(policy));
                 return *(static_cast<Derived*>(this));
             }
         };

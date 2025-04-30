@@ -38,62 +38,51 @@ namespace karabo {
     }
     namespace xms {
 
-        namespace Dimension {
+        enum class DimensionType {
 
-            enum DimensionType {
+            UNDEFINED = 0,
+            STACK = -1,
+            DATA = 1,
+        };
 
-                UNDEFINED = 0,
-                STACK = -1,
-                DATA = 1,
-            };
-        }
+        enum class Rotation {
 
-        typedef Dimension::DimensionType DimensionType;
+            UNDEFINED = -1,
+            ROT_0 = 0,
+            ROT_90 = 90,
+            ROT_180 = 180,
+            ROT_270 = 270,
+        };
 
-        namespace Encoding {
+        enum class Encoding {
 
-            enum EncodingType {
+            UNDEFINED = -1,
+            GRAY,
+            RGB,
+            RGBA,
+            BGR,
+            BGRA,
+            CMYK,
+            YUV,
+            BAYER,
+            JPEG,
+            PNG,
+            BMP,
+            TIFF,
+            BAYER_RG,
+            BAYER_BG,
+            BAYER_GR,
+            BAYER_GB,
+            YUV444,
+            YUV422_YUYV,
+            YUV422_UYVY,
+        };
 
-                UNDEFINED = -1,
-                GRAY,
-                RGB,
-                RGBA,
-                BGR,
-                BGRA,
-                CMYK,
-                YUV,
-                BAYER,
-                JPEG,
-                PNG,
-                BMP,
-                TIFF,
-                BAYER_RG,
-                BAYER_BG,
-                BAYER_GR,
-                BAYER_GB,
-                YUV444,
-                YUV422_YUYV,
-                YUV422_UYVY,
-            };
+        namespace encoding {
+
             /// True if encoding is such that one can index the underlying array
-            bool isIndexable(int encoding);
-        } // namespace Encoding
-
-        typedef Encoding::EncodingType EncodingType;
-
-        namespace Rotation {
-
-            enum RotationType {
-
-                UNDEFINED = -1,
-                ROT_0 = 0,
-                ROT_90 = 90,
-                ROT_180 = 180,
-                ROT_270 = 270,
-            };
-        }
-
-        typedef Rotation::RotationType RotationType;
+            bool isIndexable(Encoding e);
+        } // namespace encoding
 
 
         /**
@@ -137,7 +126,7 @@ namespace karabo {
              *                     the size in bytes of the type used in the NDArray 'data'. If zero (default) or
              *                     negative, a value matching the NDArray type will be calculated (8, 16, ...).
              */
-            ImageData(const karabo::data::NDArray& data, const EncodingType encoding = Encoding::GRAY,
+            ImageData(const karabo::data::NDArray& data, const Encoding enc = Encoding::GRAY,
                       const int bitsPerPixel = 0);
 
             /**
@@ -155,7 +144,7 @@ namespace karabo {
              *                     negative, a value matching the NDArray type will be calculated (8, 16, ...).
              */
             ImageData(const karabo::data::NDArray& data, const karabo::data::Dims& dims,
-                      const EncodingType encoding = Encoding::GRAY, const int bitsPerPixel = 0);
+                      const Encoding encoding = Encoding::GRAY, const int bitsPerPixel = 0);
 
             ImageData(const ImageData& other) = default;
 
@@ -191,9 +180,9 @@ namespace karabo {
 
             void setBinning(const karabo::data::Dims& binning);
 
-            int getRotation() const;
+            Rotation getRotation() const;
 
-            void setRotation(const RotationType rotation);
+            void setRotation(const Rotation rotation);
 
             bool getFlipX() const;
             bool getFlipY() const;
@@ -214,15 +203,15 @@ namespace karabo {
              */
             void setBitsPerPixel(const int bitsPerPixel);
 
-            int getEncoding() const;
+            Encoding getEncoding() const;
 
-            void setEncoding(const int encoding);
+            void setEncoding(const Encoding enc);
 
             /**
              * Returns true if the image data can be directly indexed.
              */
             bool isIndexable() const {
-                return Encoding::isIndexable(getEncoding());
+                return encoding::isIndexable(getEncoding());
             }
 
             /**
@@ -243,9 +232,9 @@ namespace karabo {
              */
             void setDimensions(const karabo::data::Dims& dims);
 
-            const std::vector<int> getDimensionTypes() const;
+            const std::vector<DimensionType> getDimensionTypes() const;
 
-            void setDimensionTypes(const std::vector<int>& dimTypes);
+            void setDimensionTypes(const std::vector<DimensionType>& dimTypes);
 
             const std::string& getDimensionScales() const;
 
@@ -254,7 +243,7 @@ namespace karabo {
             ImageData copy() const;
 
            private:
-            static int defaultBitsPerPixel(int encoding, const karabo::data::NDArray& data);
+            static int defaultBitsPerPixel(Encoding enc, const karabo::data::NDArray& data);
         };
 
         /**********************************************************************
@@ -296,8 +285,8 @@ namespace karabo {
                 return ParentType::setDefaultValue("pixels.type", static_cast<int>(type));
             }
 
-            ImageDataElement& setEncoding(const EncodingType& encoding) {
-                return ParentType::setDefaultValue("encoding", (int)encoding);
+            ImageDataElement& setEncoding(const Encoding& enc) {
+                return ParentType::setDefaultValue("encoding", static_cast<int>(enc));
             }
 
             void commit() {

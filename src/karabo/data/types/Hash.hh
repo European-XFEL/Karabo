@@ -1162,6 +1162,7 @@ namespace karabo {
             if (!visitor(node)) return false;
 
             switch (node.getType()) {
+#if __GNUC__ >= 12
                 case Types::HASH:
                     return node.getValue<Hash>().visit(visitor);
                     break;
@@ -1171,6 +1172,17 @@ namespace karabo {
                         if (!vect[i].visit(visitor)) return false;
                     }
                 } break;
+#else
+                case Types::ReferenceType::HASH:
+                    return node.getValue<Hash>().visit(visitor);
+                    break;
+                case Types::ReferenceType::VECTOR_HASH: {
+                    std::vector<karabo::data::Hash>& vect = node.getValue<std::vector<Hash> >();
+                    for (size_t i = 0, size = vect.size(); i < size; ++i) {
+                        if (!vect[i].visit(visitor)) return false;
+                    }
+                } break;
+#endif
                 default:
                     break;
             }
@@ -1199,6 +1211,7 @@ namespace karabo {
             bool res = visitor(node);
 
             switch (node.getType()) {
+#if __GNUC__ >= 12
                 case Types::HASH:
                     res = node.getValue<Hash>().visit2(visitor);
                     break;
@@ -1208,6 +1221,17 @@ namespace karabo {
                         if (!(res = vect[i].visit2(visitor))) break;
                     }
                 } break;
+#else
+                case Types::ReferenceType::HASH:
+                    res = node.getValue<Hash>().visit2(visitor);
+                    break;
+                case Types::ReferenceType::VECTOR_HASH: {
+                    std::vector<karabo::data::Hash>& vect = node.getValue<std::vector<Hash> >();
+                    for (size_t i = 0, size = vect.size(); i < size; ++i) {
+                        if (!(res = vect[i].visit2(visitor))) break;
+                    }
+                } break;
+#endif
                 default:
                     break;
             }

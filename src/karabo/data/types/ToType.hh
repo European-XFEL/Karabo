@@ -57,9 +57,15 @@ namespace karabo {
                 return Impl::template to<RefType>();
             }
 
-#define _KARABO_HELPER_MACRO(ReferenceType) \
-    case Types::ReferenceType:              \
-        return Impl::template to<Types::ReferenceType>();
+#if __GNUC__ >= 12
+#define _KARABO_HELPER_MACRO(rtype) \
+    case Types::rtype:              \
+        return Impl::template to<Types::rtype>();
+#else
+#define _KARABO_HELPER_MACRO(rtype)   \
+    case Types::ReferenceType::rtype: \
+        return Impl::template to<Types::ReferenceType::rtype>();
+#endif
 
             static ReturnType to(const Types::ReferenceType& type) {
                 switch (type) {
@@ -119,8 +125,8 @@ namespace karabo {
                     _KARABO_HELPER_MACRO(BYTE_ARRAY)
 
                     default:
-                        throw KARABO_NOT_IMPLEMENTED_EXCEPTION("Requested datatype (" + std::to_string(type) +=
-                                                               ") not known");
+                        throw KARABO_NOT_IMPLEMENTED_EXCEPTION(
+                              "Requested datatype (" + std::to_string(static_cast<int>(type)) += ") not known");
                 }
             }
 #undef _KARABO_HELPER_MACRO

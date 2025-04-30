@@ -149,6 +149,7 @@ namespace karabo {
                 PTR_STRING
             };
 
+
             /**
              * Convert one type representation to another, e.g.
              *
@@ -199,7 +200,7 @@ namespace karabo {
                 return this_type_is_not_supported_by_purpose(var);
             }
 
-            static ReferenceType category(int type) {
+            static ReferenceType category(Types::ReferenceType type) {
                 switch (type) {
                     case Types::CHAR:
                     case Types::INT8:
@@ -218,7 +219,7 @@ namespace karabo {
                     case Types::COMPLEX_DOUBLE:
                     case Types::BYTE_ARRAY:
                     case Types::NONE:
-                        return SIMPLE;
+                        return Types::SIMPLE;
                     case Types::VECTOR_STRING:
                     case Types::VECTOR_CHAR:
                     case Types::VECTOR_INT8:
@@ -273,11 +274,7 @@ namespace karabo {
              * @param type
              * @return
              */
-            static bool isPointer(int type) {
-                //                if(type >= Types::PTR_BOOL && type <= Types::PTR_STRING) return true;
-                //                return false;
-
-
+            static bool isPointer(Types::ReferenceType type) {
                 switch (type) {
                     case Types::PTR_STRING:
                     case Types::PTR_CHAR:
@@ -305,7 +302,7 @@ namespace karabo {
              * @param type
              * @return
              */
-            static bool isVector(int type) {
+            static bool isVector(Types::ReferenceType type) {
                 switch (type) {
                     case Types::VECTOR_STRING:
                     case Types::VECTOR_CHAR:
@@ -335,7 +332,7 @@ namespace karabo {
              * @param type
              * @return
              */
-            static bool isNumericPod(int type) {
+            static bool isNumericPod(Types::ReferenceType type) {
                 switch (type) {
                     case Types::BOOL:
                     case Types::INT8:
@@ -359,7 +356,7 @@ namespace karabo {
              * @param type
              * @return
              */
-            static bool isSimple(int type) {
+            static bool isSimple(Types::ReferenceType type) {
                 switch (type) {
                     case Types::CHAR:
                     case Types::INT8:

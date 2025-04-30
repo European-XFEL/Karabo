@@ -137,7 +137,8 @@ namespace karabo {
 
             virtual ReadOnlySpecific<TableElement, std::vector<Hash>>& readOnly() {
                 if (this->m_node->hasAttribute(KARABO_SCHEMA_ASSIGNMENT)) {
-                    const int assignment = this->m_node->template getAttribute<int>(KARABO_SCHEMA_ASSIGNMENT);
+                    const auto assignment =
+                          Schema::AssignmentType(this->m_node->template getAttribute<int>(KARABO_SCHEMA_ASSIGNMENT));
                     if (assignment == Schema::MANDATORY_PARAM) {
                         std::string msg("Error in element '");
                         msg.append(this->m_node->getKey())
@@ -155,7 +156,8 @@ namespace karabo {
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ);
                 // Set the assignment and defaults here, as the API would look strange to assign something to a
                 // read-only
-                this->m_node->template setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::OPTIONAL_PARAM);
+                this->m_node->template setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT,
+                                                         static_cast<int>(Schema::OPTIONAL_PARAM));
                 this->m_node->setAttribute(KARABO_SCHEMA_DEFAULT_VALUE, std::vector<Hash>());
                 return m_readOnlySpecific;
             }
@@ -217,7 +219,7 @@ namespace karabo {
              * @return reference to the Element (to allow method's chaining)
              */
             virtual TableElement& assignmentMandatory() {
-                this->m_node->setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::MANDATORY_PARAM);
+                this->m_node->setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, static_cast<int>(Schema::MANDATORY_PARAM));
                 return *this;
             }
 
@@ -240,7 +242,7 @@ namespace karabo {
              * @endcode
              */
             virtual TableDefaultValue<TableElement>& assignmentOptional() {
-                this->m_node->setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::OPTIONAL_PARAM);
+                this->m_node->setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, static_cast<int>(Schema::OPTIONAL_PARAM));
                 return m_defaultValue;
             }
 
@@ -252,7 +254,7 @@ namespace karabo {
              * @return reference to DefaultValue (to allow method's chaining)
              */
             virtual TableDefaultValue<TableElement>& assignmentInternal() {
-                this->m_node->setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::INTERNAL_PARAM);
+                this->m_node->setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, static_cast<int>(Schema::INTERNAL_PARAM));
                 return m_defaultValue;
             }
 

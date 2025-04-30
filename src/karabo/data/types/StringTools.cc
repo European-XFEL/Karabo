@@ -36,7 +36,7 @@ namespace karabo {
 
         static std::string typeNameFromTypeInfo(const std::type_info& typeInf) {
             std::string typeName = Types::convert<FromTypeInfo, ToCppString>(typeInf);
-            if (Types::from<FromTypeInfo>(typeInf) == Types::ReferenceType::UNKNOWN) {
+            if (Types::from<FromTypeInfo>(typeInf) == Types::UNKNOWN) {
                 // type_info::name() is implementation dependent - but is at least a hint
                 ((typeName += " (std::type_info: ") += typeInf.name()) += ")";
             }
