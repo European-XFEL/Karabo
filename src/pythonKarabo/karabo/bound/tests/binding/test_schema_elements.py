@@ -1701,14 +1701,14 @@ def test_imagedata_element():
             "ImageData element: setDimensions")
     assert h.getAttribute('imageSetDims.dims', 'defaultValue') == [110, 210]
     assert h.getAttribute('imageSetDims.encoding',
-                          'defaultValue') == Encoding.GRAY
+                          'defaultValue') == Encoding.GRAY.value
     assert sch.getRequiredAccessLevel("imageSetDims") == AccessLevel.OPERATOR
 
     assert sch.has("imageSetType") is True
     assert sch.getRequiredAccessLevel("imageSetType") == AccessLevel.OBSERVER
     assert h.getAttribute('imageSetType.dims', 'defaultValue') == [110, 210]
     assert h.getAttribute('imageSetType.encoding',
-                          'defaultValue') == Encoding.GRAY
+                          'defaultValue') == Encoding.GRAY.value
 
     assert sch.has("imageSetEncoding") is True
     assert sch.getRequiredAccessLevel("imageSetEncoding") == \
@@ -1716,7 +1716,7 @@ def test_imagedata_element():
     assert h.getAttribute('imageSetEncoding.dims',
                           'defaultValue') == [300, 200]
     assert h.getAttribute('imageSetEncoding.encoding',
-                          'defaultValue') == Encoding.RGBA
+                          'defaultValue') == Encoding.RGBA.value
 
     assert sch.has("imageSetGeometry") is True
     assert sch.getRequiredAccessLevel("imageSetGeometry") == \

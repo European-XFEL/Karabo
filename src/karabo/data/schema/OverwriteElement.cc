@@ -257,20 +257,20 @@ namespace karabo {
             return *this;
         }
 
-        OverwriteElement& OverwriteElement::setNewUnit(const UnitType& unit) {
+        OverwriteElement& OverwriteElement::setNewUnit(const Unit& unit) {
             if (!m_node) throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
             checkIfRestrictionApplies(m_restrictions.unit);
-            m_node->setAttribute<int>(KARABO_SCHEMA_UNIT_ENUM, unit);
+            m_node->setAttribute<int>(KARABO_SCHEMA_UNIT_ENUM, static_cast<int>(unit));
             std::pair<std::string, std::string> names = karabo::data::getUnit(unit);
             m_node->setAttribute(KARABO_SCHEMA_UNIT_NAME, names.first);
             m_node->setAttribute(KARABO_SCHEMA_UNIT_SYMBOL, names.second);
             return *this;
         }
 
-        OverwriteElement& OverwriteElement::setNewMetricPrefix(const MetricPrefixType& metricPrefix) {
+        OverwriteElement& OverwriteElement::setNewMetricPrefix(const MetricPrefix& metricPrefix) {
             if (!m_node) throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
             checkIfRestrictionApplies(m_restrictions.metricPrefix);
-            m_node->setAttribute<int>(KARABO_SCHEMA_METRIC_PREFIX_ENUM, metricPrefix);
+            m_node->setAttribute<int>(KARABO_SCHEMA_METRIC_PREFIX_ENUM, static_cast<int>(metricPrefix));
             std::pair<std::string, std::string> names = karabo::data::getMetricPrefix(metricPrefix);
             m_node->setAttribute(KARABO_SCHEMA_METRIC_PREFIX_NAME, names.first);
             m_node->setAttribute(KARABO_SCHEMA_METRIC_PREFIX_SYMBOL, names.second);
@@ -308,19 +308,19 @@ namespace karabo {
             // Checks consistency of default value and options (caveat: not only for things changed...)
             if (m_schema->hasOptions(m_path) && m_schema->hasDefaultValue(m_path)) {
                 switch (m_schema->getValueType(m_path)) {
-                    CASE_CHECK_DEFAULT_IN_OPTIONS(Types::ReferenceType::BOOL, bool);
-                    CASE_CHECK_DEFAULT_IN_OPTIONS(Types::ReferenceType::CHAR, char);
-                    CASE_CHECK_DEFAULT_IN_OPTIONS(Types::ReferenceType::INT8, signed char);
-                    CASE_CHECK_DEFAULT_IN_OPTIONS(Types::ReferenceType::INT16, short);
-                    CASE_CHECK_DEFAULT_IN_OPTIONS(Types::ReferenceType::INT32, int);
-                    CASE_CHECK_DEFAULT_IN_OPTIONS(Types::ReferenceType::INT64, long long);
-                    CASE_CHECK_DEFAULT_IN_OPTIONS(Types::ReferenceType::UINT8, unsigned char);
-                    CASE_CHECK_DEFAULT_IN_OPTIONS(Types::ReferenceType::UINT16, unsigned short);
-                    CASE_CHECK_DEFAULT_IN_OPTIONS(Types::ReferenceType::UINT32, unsigned int);
-                    CASE_CHECK_DEFAULT_IN_OPTIONS(Types::ReferenceType::UINT64, unsigned long long);
-                    CASE_CHECK_DEFAULT_IN_OPTIONS(Types::ReferenceType::FLOAT, float);
-                    CASE_CHECK_DEFAULT_IN_OPTIONS(Types::ReferenceType::DOUBLE, double);
-                    CASE_CHECK_DEFAULT_IN_OPTIONS(Types::ReferenceType::STRING,
+                    CASE_CHECK_DEFAULT_IN_OPTIONS(Types::BOOL, bool);
+                    CASE_CHECK_DEFAULT_IN_OPTIONS(Types::CHAR, char);
+                    CASE_CHECK_DEFAULT_IN_OPTIONS(Types::INT8, signed char);
+                    CASE_CHECK_DEFAULT_IN_OPTIONS(Types::INT16, short);
+                    CASE_CHECK_DEFAULT_IN_OPTIONS(Types::INT32, int);
+                    CASE_CHECK_DEFAULT_IN_OPTIONS(Types::INT64, long long);
+                    CASE_CHECK_DEFAULT_IN_OPTIONS(Types::UINT8, unsigned char);
+                    CASE_CHECK_DEFAULT_IN_OPTIONS(Types::UINT16, unsigned short);
+                    CASE_CHECK_DEFAULT_IN_OPTIONS(Types::UINT32, unsigned int);
+                    CASE_CHECK_DEFAULT_IN_OPTIONS(Types::UINT64, unsigned long long);
+                    CASE_CHECK_DEFAULT_IN_OPTIONS(Types::FLOAT, float);
+                    CASE_CHECK_DEFAULT_IN_OPTIONS(Types::DOUBLE, double);
+                    CASE_CHECK_DEFAULT_IN_OPTIONS(Types::STRING,
                                                   std::string); // Covers also StateElement
                     default:
                         break; // no options for other types like vectors, etc.
@@ -331,82 +331,82 @@ namespace karabo {
 
         void OverwriteElement::checkBoundaries() {
             switch (m_schema->getValueType(m_path)) {
-                case Types::ReferenceType::CHAR:
+                case Types::CHAR:
                     checkTypedBoundaries<char>();
                     break;
-                case Types::ReferenceType::INT8:
+                case Types::INT8:
                     checkTypedBoundaries<signed char>();
                     break;
-                case Types::ReferenceType::INT16:
+                case Types::INT16:
                     checkTypedBoundaries<short>();
                     break;
-                case Types::ReferenceType::INT32:
+                case Types::INT32:
                     checkTypedBoundaries<int>();
                     break;
-                case Types::ReferenceType::INT64:
+                case Types::INT64:
                     checkTypedBoundaries<long long>();
                     break;
-                case Types::ReferenceType::UINT8:
+                case Types::UINT8:
                     checkTypedBoundaries<unsigned char>();
                     break;
-                case Types::ReferenceType::UINT16:
+                case Types::UINT16:
                     checkTypedBoundaries<unsigned short>();
                     break;
-                case Types::ReferenceType::UINT32:
+                case Types::UINT32:
                     checkTypedBoundaries<unsigned int>();
                     break;
-                case Types::ReferenceType::UINT64:
+                case Types::UINT64:
                     checkTypedBoundaries<unsigned long long>();
                     break;
-                case Types::ReferenceType::FLOAT:
+                case Types::FLOAT:
                     checkTypedBoundaries<float>();
                     break;
-                case Types::ReferenceType::DOUBLE:
+                case Types::DOUBLE:
                     checkTypedBoundaries<double>();
                     break;
 
                     // Vector types
 
-                case Types::ReferenceType::VECTOR_BOOL:
+                case Types::VECTOR_BOOL:
                     checkVectorBoundaries<bool>();
                     break;
-                case Types::ReferenceType::VECTOR_CHAR:
+                case Types::VECTOR_CHAR:
                     checkVectorBoundaries<char>();
                     break;
-                case Types::ReferenceType::VECTOR_INT8:
+                case Types::VECTOR_INT8:
                     checkVectorBoundaries<signed char>();
                     break;
-                case Types::ReferenceType::VECTOR_UINT8:
+                case Types::VECTOR_UINT8:
                     checkVectorBoundaries<unsigned char>();
                     break;
-                case Types::ReferenceType::VECTOR_INT16:
+                case Types::VECTOR_INT16:
                     checkVectorBoundaries<short int>();
                     break;
-                case Types::ReferenceType::VECTOR_UINT16:
+                case Types::VECTOR_UINT16:
                     checkVectorBoundaries<unsigned short int>();
                     break;
-                case Types::ReferenceType::VECTOR_INT32:
+                case Types::VECTOR_INT32:
                     checkVectorBoundaries<int>();
                     break;
-                case Types::ReferenceType::VECTOR_UINT32:
+                case Types::VECTOR_UINT32:
                     checkVectorBoundaries<unsigned int>();
                     break;
-                case Types::ReferenceType::VECTOR_INT64:
+                case Types::VECTOR_INT64:
                     checkVectorBoundaries<long long int>();
                     break;
-                case Types::ReferenceType::VECTOR_UINT64:
+                case Types::VECTOR_UINT64:
                     checkVectorBoundaries<unsigned long long int>();
                     break;
-                case Types::ReferenceType::VECTOR_FLOAT:
+                case Types::VECTOR_FLOAT:
                     checkVectorBoundaries<float>();
                     break;
-                case Types::ReferenceType::VECTOR_DOUBLE:
+                case Types::VECTOR_DOUBLE:
                     checkVectorBoundaries<double>();
                     break;
-                case Types::ReferenceType::VECTOR_STRING:
+                case Types::VECTOR_STRING:
                     checkVectorBoundaries<std::string>();
                     break;
-                case Types::ReferenceType::VECTOR_HASH:
+                case Types::VECTOR_HASH:
                     checkVectorBoundaries<Hash>();
                     break;
                 default:

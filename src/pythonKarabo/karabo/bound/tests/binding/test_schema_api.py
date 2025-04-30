@@ -95,6 +95,7 @@ def test_setTags():
 def test_getsetExpertLevel():
     try:
         schema = cppSomeClassSchemaSomeClassId()
+        # getRequiredAccessLevel return access level as int
         assert schema.getRequiredAccessLevel('x') == AccessLevel.EXPERT
         assert schema.getRequiredAccessLevel('y') == AccessLevel.OPERATOR
         assert schema.getRequiredAccessLevel('a') == AccessLevel.OBSERVER

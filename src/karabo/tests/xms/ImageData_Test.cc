@@ -136,8 +136,8 @@ void ImageData_Test::testSetAndGetMethods() {
     Dims dims(200, 100); // height, width
     Dims offsets(10, 50);
     Dims binning(3, 8);
-    int tmp[] = {Dimension::DATA, Dimension::STACK};
-    std::vector<int> dimTypes(tmp, tmp + 2);
+    DimensionType tmp[] = {DimensionType::DATA, DimensionType::STACK};
+    std::vector<DimensionType> dimTypes(tmp, tmp + 2);
     std::vector<unsigned char> someData(dims.size(), 2); // i.e. type UINT8
 
     {
@@ -158,7 +158,7 @@ void ImageData_Test::testSetAndGetMethods() {
         Dims imageDims(image.getDimensions());
         Dims imageOffsets(image.getROIOffsets());
         Dims imageBinning(image.getBinning());
-        std::vector<int> imageDimTypes = image.getDimensionTypes();
+        std::vector<DimensionType> imageDimTypes = image.getDimensionTypes();
 
         CPPUNIT_ASSERT(imageDims.rank() == 2);
         CPPUNIT_ASSERT(imageDims.x1() == 200);
@@ -178,8 +178,8 @@ void ImageData_Test::testSetAndGetMethods() {
         CPPUNIT_ASSERT_EQUAL(image.getFlipY(), false);
 
         CPPUNIT_ASSERT(imageDimTypes.size() == 2);
-        CPPUNIT_ASSERT(imageDimTypes[0] == Dimension::DATA);
-        CPPUNIT_ASSERT(imageDimTypes[1] == Dimension::STACK);
+        CPPUNIT_ASSERT(imageDimTypes[0] == DimensionType::DATA);
+        CPPUNIT_ASSERT(imageDimTypes[1] == DimensionType::STACK);
 
         CPPUNIT_ASSERT_EQUAL(8, image.getBitsPerPixel()); // as determined for UINT8
         image.setBitsPerPixel(5);
@@ -200,7 +200,7 @@ void ImageData_Test::testSetAndGetMethods() {
         Dims offsets_wrong_length(10, 50); // Wrong Length
 
         // If the encoding was manually set, setData() should not change it
-        image2.setEncoding(EncodingType::BGRA);
+        image2.setEncoding(Encoding::BGRA);
         // Fill the image (this automatically sets a few parameters)
         image2.setData(arr_v2);
 
@@ -208,7 +208,7 @@ void ImageData_Test::testSetAndGetMethods() {
         CPPUNIT_ASSERT_NO_THROW(image2.setROIOffsets(offsets_valid));
         CPPUNIT_ASSERT_THROW(image2.setROIOffsets(offsets_wrong_length), karabo::data::ParameterException);
 
-        CPPUNIT_ASSERT_EQUAL(image2.getEncoding(), static_cast<int>(EncodingType::BGRA));
+        CPPUNIT_ASSERT_EQUAL(image2.getEncoding(), Encoding::BGRA);
         CPPUNIT_ASSERT_EQUAL(image2.getDataType(), Types::INT16);
         CPPUNIT_ASSERT_EQUAL(image2.getBitsPerPixel(), 64);
 
@@ -225,7 +225,7 @@ void ImageData_Test::testImageDataElement() {
           .key("ide")
           .setDimensions("480,640,3")
           .setType(Types::INT16)
-          .setEncoding(EncodingType::RGB)
+          .setEncoding(Encoding::RGB)
           .commit();
 
     {
@@ -243,7 +243,7 @@ void ImageData_Test::testImageDataElement() {
                        std::vector<unsigned long long>({480, 640, 3}));
 
         // Testing datatypes
-        CPPUNIT_ASSERT_EQUAL(static_cast<int>(EncodingType::RGB), sch.getDefaultValueAs<int>("ide.encoding"));
+        CPPUNIT_ASSERT_EQUAL(static_cast<int>(Encoding::RGB), sch.getDefaultValueAs<int>("ide.encoding"));
         CPPUNIT_ASSERT_EQUAL(static_cast<int>(Types::INT16), sch.getDefaultValueAs<int>("ide.pixels.type"));
     }
 

@@ -225,7 +225,7 @@ namespace karabo {
                 default:
                     std::ostringstream errMsg;
                     errMsg << "There's no InfluxDb duration corresponding to Karabo's TIME_UNITS '"
-                           << karaboDurationUnit << "'.";
+                           << int(karaboDurationUnit) << "'.";
                     throw KARABO_PARAMETER_EXCEPTION(errMsg.str());
             }
 

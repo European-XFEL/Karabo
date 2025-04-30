@@ -467,7 +467,8 @@ namespace karabo {
                     const karabo::data::Hash::Attributes& attrs =
                           m_fullSchema.getParameterHash().getNode(key).getAttributes();
                     if (attrs.has(KARABO_SCHEMA_LEAF_TYPE)) {
-                        const int leafType = attrs.get<int>(KARABO_SCHEMA_LEAF_TYPE);
+                        const auto leafType =
+                              static_cast<karabo::data::Schema::LeafType>(attrs.get<int>(KARABO_SCHEMA_LEAF_TYPE));
                         if (leafType == karabo::data::Schema::STATE) {
                             if (typeid(T) == typeid(karabo::data::State)) {
                                 return *reinterpret_cast<const T*>(

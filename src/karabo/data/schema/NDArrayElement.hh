@@ -64,11 +64,11 @@ namespace karabo {
                 return setDefaultValue("shape", shp);
             }
 
-            NDArrayElement& unit(const UnitType& unit) {
+            NDArrayElement& unit(const Unit& unit) {
                 return setUnit("data", unit);
             }
 
-            NDArrayElement& metricPrefix(const MetricPrefixType& metricPrefix) {
+            NDArrayElement& metricPrefix(const MetricPrefix& metricPrefix) {
                 return setMetricPrefix("data", metricPrefix);
             }
 

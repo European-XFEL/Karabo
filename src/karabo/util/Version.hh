@@ -39,7 +39,8 @@ namespace karabo {
          */
         class Version {
            private:
-            enum PostfixType { ALPHA = -3, BETA = -2, RC = -1, NONE = 0, POST = 1 };
+            enum class PostfixType { ALPHA = -3, BETA = -2, RC = -1, NONE = 0, POST = 1 };
+            using enum PostfixType;
 
             std::string m_versionString;
 

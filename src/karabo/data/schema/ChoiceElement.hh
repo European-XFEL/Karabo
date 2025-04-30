@@ -167,7 +167,6 @@ namespace karabo {
                 if (!this->m_node->hasAttribute(KARABO_SCHEMA_ACCESS_MODE))
                     this->m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, WRITE);
                 this->m_node->setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::CHOICE_OF_NODES);
-
                 // finally protect setting options etc to choice element via overwrite
                 OverwriteElement::Restrictions restrictions;
 

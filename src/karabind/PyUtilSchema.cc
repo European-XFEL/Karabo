@@ -76,7 +76,7 @@ void exportPyUtilSchema(py::module_& m) {
           .value("SAVE", DAQPolicy::SAVE);
 
     {
-        py::enum_<MetricPrefixType>(m, "MetricPrefix")
+        py::enum_<MetricPrefix>(m, "MetricPrefix")
               .value("YOTTA", MetricPrefix::YOTTA)
               .value("ZETTA", MetricPrefix::ZETTA)
               .value("EXA", MetricPrefix::EXA)
@@ -100,7 +100,7 @@ void exportPyUtilSchema(py::module_& m) {
               .value("YOCTO", MetricPrefix::YOCTO)
               .export_values();
 
-        py::enum_<UnitType>(m, "Unit")
+        py::enum_<Unit>(m, "Unit")
               .value("NUMBER", Unit::NUMBER)
               .value("COUNT", Unit::COUNT)
               .value("METER", Unit::METER)
@@ -252,19 +252,21 @@ void exportPyUtilSchema(py::module_& m) {
         //********* 'get'-methods *********************
         s.def(
               "getRequiredAccessLevel",
-              [](const Schema& self, const std::string& path) -> py::int_ { return self.getRequiredAccessLevel(path); },
+              [](const Schema& self, const std::string& path) {
+                  return py::cast(Schema::AccessLevel(self.getRequiredAccessLevel(path)));
+              },
               py::arg("path"));
 
         s.def("getParameterHash", [](const Schema& self) { return py::cast(self.getParameterHash()); });
 
         s.def("getAccessMode",
-              [](const Schema& self, const std::string& path) -> py::int_ { return self.getAccessMode(path); });
+              [](const Schema& self, const std::string& path) { return py::cast(self.getAccessMode(path)); });
 
         s.def("getAssemblyRules", [](const Schema& self) { return py::cast(self.getAssemblyRules()); });
 
         s.def(
               "getAssignment",
-              [](const Schema& self, const std::string& path) -> py::int_ { return self.getAssignment(path); },
+              [](const Schema& self, const std::string& path) { return py::cast(self.getAssignment(path)); },
               py::arg("path"));
 
         s.def(
@@ -293,7 +295,7 @@ void exportPyUtilSchema(py::module_& m) {
               py::arg("path"), py::return_value_policy::reference_internal);
 
         s.def(
-              "getUnit", [](const Schema& self, const std::string& path) -> py::int_ { return self.getUnit(path); },
+              "getUnit", [](const Schema& self, const std::string& path) { return py::cast(self.getUnit(path)); },
               py::arg("path"));
 
         s.def(
@@ -308,7 +310,7 @@ void exportPyUtilSchema(py::module_& m) {
 
         s.def(
               "getMetricPrefix",
-              [](const Schema& self, const std::string& path) -> py::int_ { return self.getMetricPrefix(path); },
+              [](const Schema& self, const std::string& path) { return py::cast(self.getMetricPrefix(path)); },
               py::arg("path"));
 
         s.def(
@@ -335,9 +337,7 @@ void exportPyUtilSchema(py::module_& m) {
 
         s.def(
               "getNodeType",
-              [](const Schema& self, const std::string& path) {
-                  return py::cast(static_cast<Schema::NodeType>(self.getNodeType(path)));
-              },
+              [](const Schema& self, const std::string& path) { return py::cast(self.getNodeType(path)); },
               py::arg("path"));
 
         s.def(
@@ -492,10 +492,8 @@ void exportPyUtilSchema(py::module_& m) {
             return h.attr("getAttribute")(path, KARABO_SCHEMA_MAX_SIZE);
         });
 
-        s.def("getArchivePolicy", [](const Schema& self, const py::object& path) {
-            py::object h = py::cast(self).attr("getParameterHash")();
-            return h.attr("getAttribute")(path, KARABO_SCHEMA_ARCHIVE_POLICY);
-        });
+        s.def("getArchivePolicy",
+              [](const Schema& self, const std::string& path) { return py::cast(self.getArchivePolicy(path)); });
 
         s.def("getWarnLow", [](const Schema& self, const py::object& path) {
             py::object h = py::cast(self).attr("getParameterHash")();
@@ -850,13 +848,12 @@ void exportPyUtilSchema(py::module_& m) {
               py::arg("path"), py::arg("value"));
 
         s.def(
-              "setUnit",
-              [](Schema& self, const std::string& path, const UnitType& value) { self.setUnit(path, value); },
+              "setUnit", [](Schema& self, const std::string& path, const Unit& value) { self.setUnit(path, value); },
               py::arg("path"), py::arg("value"));
 
         s.def(
               "setMetricPrefix",
-              [](Schema& self, const std::string& path, const MetricPrefixType& value) {
+              [](Schema& self, const std::string& path, const MetricPrefix& value) {
                   self.setMetricPrefix(path, value);
               },
               py::arg("path"), py::arg("value"));
@@ -963,12 +960,13 @@ void exportPyUtilSchema(py::module_& m) {
               py::arg("path"), py::arg("policy"));
 
         s.def(
-              "getDAQPolicy", [](const Schema& self, const std::string& path) { return self.getDAQPolicy(path); },
+              "getDAQPolicy",
+              [](const Schema& self, const std::string& path) { return py::cast(self.getDAQPolicy(path)); },
               py::arg("path"));
 
         s.def(
               "hasDAQPolicy",
-              [](const Schema& self, const std::string& path) -> py::bool_ { return self.getDAQPolicy(path); },
+              [](const Schema& self, const std::string& path) -> py::bool_ { return self.hasDAQPolicy(path); },
               py::arg("path"));
 
         s.def(

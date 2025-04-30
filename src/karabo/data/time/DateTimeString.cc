@@ -295,7 +295,7 @@ namespace karabo {
         const std::string DateTimeString::fractionalSecondToString(const TIME_UNITS precision,
                                                                    const unsigned long long fractionalSeconds,
                                                                    bool skipDot) {
-            if (precision == NOFRACTION) return "";
+            if (precision == TIME_UNITS::NOFRACTION) return "";
 
             std::ostringstream oss;
 

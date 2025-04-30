@@ -127,7 +127,7 @@ namespace karabo {
             }
 
             NodeElement& setDaqDataType(const DaqDataType& dataType) {
-                this->m_node->setAttribute<int>(KARABO_SCHEMA_DAQ_DATA_TYPE, dataType);
+                this->m_node->setAttribute<int>(KARABO_SCHEMA_DAQ_DATA_TYPE, static_cast<int>(dataType));
                 return *this;
             }
 

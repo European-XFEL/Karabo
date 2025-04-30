@@ -295,7 +295,7 @@ namespace karabind {
         }
 
         static const ReferenceType category(int type) {
-            return from(karabo::data::Types::category(type));
+            return from(karabo::data::Types::category(karabo::data::Types::ReferenceType(type)));
         }
     };
 

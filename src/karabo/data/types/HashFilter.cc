@@ -67,7 +67,7 @@ namespace karabo {
 
                 // Check if the path is pointing to the LEAF node ... for example, TableElement
                 // Leaves should not be inspected inside: considered to be "atomic"
-                if (master.getAttribute<int>(path, KARABO_SCHEMA_NODE_TYPE) == Schema::LEAF) return;
+                if (master.getAttribute<int>(path, KARABO_SCHEMA_NODE_TYPE) == static_cast<int>(Schema::LEAF)) return;
 
                 // For vector<Hash> the following policy is implemented
                 // The size of the vector is preserved unless all Hashes in the vector are empty
@@ -153,7 +153,7 @@ namespace karabo {
                 //}
 
                 // Check if the path is pointing to the LEAF node ... for example, TableElement
-                if (master.getAttribute<int>(path, KARABO_SCHEMA_NODE_TYPE) == Schema::LEAF) {
+                if (master.getAttribute<int>(path, KARABO_SCHEMA_NODE_TYPE) == static_cast<int>(Schema::LEAF)) {
                     processNodeForAccessMode(master, inputNode, result, path, value);
                     return;
                 }
@@ -198,7 +198,7 @@ namespace karabo {
                                                   const std::string& path, const AccessType& value) {
             if (master.hasAttribute(path, KARABO_SCHEMA_ACCESS_MODE)) {
                 int t = master.getAttribute<int>(path, KARABO_SCHEMA_ACCESS_MODE);
-                bool rc = (t & int(value)) == int(value);
+                bool rc = (t & static_cast<int>(value)) == static_cast<int>(value);
                 if (rc) {
                     result.set(path, inputNode);
                     result.setAttributes(path, inputNode.getAttributes());

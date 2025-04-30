@@ -168,7 +168,7 @@ namespace karabo {
                     continue;
                 }
 
-                int nodeType = masterNode->getAttribute<int>(KARABO_SCHEMA_NODE_TYPE);
+                auto nodeType = Schema::NodeType(masterNode->getAttribute<int>(KARABO_SCHEMA_NODE_TYPE));
                 const bool hasClassAttribute = masterNode->hasAttribute(KARABO_SCHEMA_CLASS_ID);
 
                 if (nodeType == Schema::LEAF) {
@@ -303,7 +303,7 @@ namespace karabo {
                 if (scope.empty()) currentScope = key;
                 else currentScope = scope + "." + key;
 
-                int nodeType = it->getAttribute<int>(KARABO_SCHEMA_NODE_TYPE);
+                auto nodeType = static_cast<Schema::NodeType>(it->getAttribute<int>(KARABO_SCHEMA_NODE_TYPE));
                 bool userHasNode = user.has(key);
                 const bool hasDefault = it->hasAttribute(KARABO_SCHEMA_DEFAULT_VALUE);
                 const bool hasClassAttribute = it->hasAttribute(KARABO_SCHEMA_CLASS_ID);
@@ -312,10 +312,10 @@ namespace karabo {
                 if (userHasNode) keys.erase(key);
 
                 if (nodeType == Schema::LEAF) {
-                    int assignment = it->getAttribute<int>(KARABO_SCHEMA_ASSIGNMENT);
+                    auto assignment = Schema::AssignmentType(it->getAttribute<int>(KARABO_SCHEMA_ASSIGNMENT));
 
                     if (!userHasNode) { // Node IS NOT provided
-                        if (assignment == Schema::MANDATORY_PARAM) {
+                        if (assignment == Schema::AssignmentType::MANDATORY_PARAM) {
                             if (!m_allowMissingKeys) {
                                 report << "Missing mandatory parameter: \"" << currentScope << "\"" << endl;
                                 return;
@@ -408,7 +408,7 @@ namespace karabo {
                         }
                     }
                 } else if (nodeType == Schema::CHOICE_OF_NODES) {
-                    int assignment = it->getAttribute<int>(KARABO_SCHEMA_ASSIGNMENT);
+                    auto assignment = Schema::AssignmentType(it->getAttribute<int>(KARABO_SCHEMA_ASSIGNMENT));
 
                     if (!userHasNode) {
                         if (assignment == Schema::MANDATORY_PARAM) {
@@ -416,7 +416,8 @@ namespace karabo {
                                 report << "Missing (choice-)parameter: \"" << currentScope << "\"" << endl;
                                 return;
                             }
-                        } else if (assignment == Schema::OPTIONAL_PARAM && hasDefault && m_injectDefaults) {
+                        } else if (assignment == Schema::AssignmentType::OPTIONAL_PARAM && hasDefault &&
+                                   m_injectDefaults) {
                             std::string optionName = it->getAttribute<string>(KARABO_SCHEMA_DEFAULT_VALUE);
                             Hash::Node& workNode = working.set(key, Hash(optionName, Hash())); // Inject empty choice
                             r_validate(it->getValue<Hash>().get<Hash>(optionName), Hash(),
@@ -551,7 +552,7 @@ namespace karabo {
                 }
             }
             if (masterNode.hasAttribute(KARABO_SCHEMA_LEAF_TYPE)) {
-                const int leafType = masterNode.getAttribute<int>(KARABO_SCHEMA_LEAF_TYPE);
+                const auto leafType = Schema::LeafType(masterNode.getAttribute<int>(KARABO_SCHEMA_LEAF_TYPE));
                 if (leafType == karabo::data::Schema::STATE) {
                     // this node is a state, we will validate the string against the allowed states
                     const std::string& value = workNode.getValue<std::string>();
