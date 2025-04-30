@@ -635,7 +635,7 @@ namespace karabo {
 
                             for (size_t ii = 0; ii < sizes.size(); ii++) {
                                 karabo::data::BufferSet::Pointer buffer(new karabo::data::BufferSet(false));
-                                buffer->add(sizes[ii], karabo::data::BufferSet::COPY);
+                                buffer->add(sizes[ii], static_cast<int>(karabo::data::BufferSet::COPY));
                                 buffers.push_back(buffer);
                             }
                             this->readAsyncVectorBufferSetPointerImpl(

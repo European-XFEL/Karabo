@@ -141,17 +141,17 @@ namespace karabo {
 
 
         bool Schema::isLeaf(const std::string& path) const {
-            return m_hash.getAttribute<int>(path, KARABO_SCHEMA_NODE_TYPE) == LEAF;
+            return NodeType(m_hash.getAttribute<int>(path, KARABO_SCHEMA_NODE_TYPE)) == LEAF;
         }
 
 
         bool Schema::isNode(const std::string& path) const {
-            return m_hash.getAttribute<int>(path, KARABO_SCHEMA_NODE_TYPE) == NODE;
+            return NodeType(m_hash.getAttribute<int>(path, KARABO_SCHEMA_NODE_TYPE)) == NODE;
         }
 
 
         bool Schema::isChoiceOfNodes(const std::string& path) const {
-            return m_hash.getAttribute<int>(path, KARABO_SCHEMA_NODE_TYPE) == CHOICE_OF_NODES;
+            return NodeType(m_hash.getAttribute<int>(path, KARABO_SCHEMA_NODE_TYPE)) == CHOICE_OF_NODES;
         }
 
 
@@ -160,8 +160,8 @@ namespace karabo {
         }
 
 
-        int Schema::getNodeType(const std::string& path) const {
-            return m_hash.getAttribute<int>(path, KARABO_SCHEMA_NODE_TYPE);
+        Schema::NodeType Schema::getNodeType(const std::string& path) const {
+            return NodeType(m_hash.getAttribute<int>(path, KARABO_SCHEMA_NODE_TYPE));
         }
 
 
@@ -275,7 +275,7 @@ namespace karabo {
 
 
         void Schema::setAssignment(const std::string& path, const Schema::AssignmentType& value) {
-            m_hash.setAttribute<int>(path, KARABO_SCHEMA_ASSIGNMENT, value);
+            m_hash.setAttribute<int>(path, KARABO_SCHEMA_ASSIGNMENT, static_cast<int>(value));
         }
 
 
@@ -285,22 +285,22 @@ namespace karabo {
 
 
         bool Schema::isAssignmentMandatory(const std::string& path) const {
-            return m_hash.getAttribute<int>(path, KARABO_SCHEMA_ASSIGNMENT) == Schema::MANDATORY_PARAM;
+            return Schema::AssignmentType(m_hash.getAttribute<int>(path, KARABO_SCHEMA_ASSIGNMENT)) == MANDATORY_PARAM;
         }
 
 
         bool Schema::isAssignmentOptional(const std::string& path) const {
-            return m_hash.getAttribute<int>(path, KARABO_SCHEMA_ASSIGNMENT) == Schema::OPTIONAL_PARAM;
+            return Schema::AssignmentType(m_hash.getAttribute<int>(path, KARABO_SCHEMA_ASSIGNMENT)) == OPTIONAL_PARAM;
         }
 
 
         bool Schema::isAssignmentInternal(const std::string& path) const {
-            return m_hash.getAttribute<int>(path, KARABO_SCHEMA_ASSIGNMENT) == Schema::INTERNAL_PARAM;
+            return Schema::AssignmentType(m_hash.getAttribute<int>(path, KARABO_SCHEMA_ASSIGNMENT)) == INTERNAL_PARAM;
         }
 
 
-        const int Schema::getAssignment(const std::string& path) const {
-            return m_hash.getAttribute<int>(path, KARABO_SCHEMA_ASSIGNMENT);
+        const Schema::AssignmentType Schema::getAssignment(const std::string& path) const {
+            return Schema::AssignmentType(m_hash.getAttribute<int>(path, KARABO_SCHEMA_ASSIGNMENT));
         }
 
         //**********************************************
@@ -504,7 +504,7 @@ namespace karabo {
 
 
         void Schema::setRequiredAccessLevel(const std::string& path, const Schema::AccessLevel& value) {
-            m_hash.setAttribute<int>(path, KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, value);
+            m_hash.setAttribute<int>(path, KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, static_cast<int>(value));
         }
 
 
@@ -513,7 +513,7 @@ namespace karabo {
             boost::split(tokens, path, boost::is_any_of("."));
 
             std::string partialPath;
-            int highestLevel = Schema::OBSERVER;
+            int highestLevel = static_cast<int>(Schema::OBSERVER);
 
 
             for (const std::string& token : tokens) {
@@ -533,8 +533,8 @@ namespace karabo {
         //**********************************************
 
 
-        void Schema::setUnit(const std::string& path, const UnitType& value) {
-            m_hash.setAttribute<int>(path, KARABO_SCHEMA_UNIT_ENUM, value);
+        void Schema::setUnit(const std::string& path, const Unit& value) {
+            m_hash.setAttribute<int>(path, KARABO_SCHEMA_UNIT_ENUM, static_cast<int>(value));
             pair<string, string> names = karabo::data::getUnit(value);
             m_hash.setAttribute(path, KARABO_SCHEMA_UNIT_NAME, names.first);
             m_hash.setAttribute(path, KARABO_SCHEMA_UNIT_SYMBOL, names.second);
@@ -546,8 +546,8 @@ namespace karabo {
         }
 
 
-        const int Schema::getUnit(const std::string& path) const {
-            return m_hash.getAttribute<int>(path, KARABO_SCHEMA_UNIT_ENUM);
+        const Unit Schema::getUnit(const std::string& path) const {
+            return Unit(m_hash.getAttribute<int>(path, KARABO_SCHEMA_UNIT_ENUM));
         }
 
 
@@ -566,8 +566,8 @@ namespace karabo {
         //**********************************************
 
 
-        void Schema::setMetricPrefix(const std::string& path, const MetricPrefixType& value) {
-            m_hash.setAttribute<int>(path, KARABO_SCHEMA_METRIC_PREFIX_ENUM, value);
+        void Schema::setMetricPrefix(const std::string& path, const MetricPrefix& value) {
+            m_hash.setAttribute<int>(path, KARABO_SCHEMA_METRIC_PREFIX_ENUM, static_cast<int>(value));
             pair<string, string> names = karabo::data::getMetricPrefix(value);
             m_hash.setAttribute(path, KARABO_SCHEMA_METRIC_PREFIX_NAME, names.first);
             m_hash.setAttribute(path, KARABO_SCHEMA_METRIC_PREFIX_SYMBOL, names.second);
@@ -579,8 +579,8 @@ namespace karabo {
         }
 
 
-        const int Schema::getMetricPrefix(const std::string& path) const {
-            return m_hash.getAttribute<int>(path, KARABO_SCHEMA_METRIC_PREFIX_ENUM);
+        const MetricPrefix Schema::getMetricPrefix(const std::string& path) const {
+            return MetricPrefix(m_hash.getAttribute<int>(path, KARABO_SCHEMA_METRIC_PREFIX_ENUM));
         }
 
 
@@ -677,8 +677,8 @@ namespace karabo {
         //**********************************************
 
 
-        void Schema::setArchivePolicy(const std::string& path, const ArchivePolicy& value) {
-            m_hash.setAttribute<int>(path, KARABO_SCHEMA_ARCHIVE_POLICY, value);
+        void Schema::setArchivePolicy(const std::string& path, const Schema::ArchivePolicy& value) {
+            m_hash.setAttribute<int>(path, KARABO_SCHEMA_ARCHIVE_POLICY, static_cast<int>(value));
         }
 
 
@@ -687,8 +687,8 @@ namespace karabo {
         }
 
 
-        const int& Schema::getArchivePolicy(const std::string& path) const {
-            return m_hash.getAttribute<int>(path, KARABO_SCHEMA_ARCHIVE_POLICY);
+        const Schema::ArchivePolicy Schema::getArchivePolicy(const std::string& path) const {
+            return Schema::ArchivePolicy(m_hash.getAttribute<int>(path, KARABO_SCHEMA_ARCHIVE_POLICY));
         }
 
         //******************************************************
@@ -772,8 +772,8 @@ namespace karabo {
         void Schema::ensureParameterDescriptionIsComplete(Hash::Node& node) const {
             std::string error;
             if (node.hasAttribute(KARABO_SCHEMA_NODE_TYPE)) {
-                int type = node.getAttribute<int>(KARABO_SCHEMA_NODE_TYPE);
-                if (type == Schema::LEAF || type == Schema::CHOICE_OF_NODES) {
+                auto type = NodeType(node.getAttribute<int>(KARABO_SCHEMA_NODE_TYPE));
+                if (type == LEAF || type == CHOICE_OF_NODES) {
                     if (!node.hasAttribute(KARABO_SCHEMA_ASSIGNMENT))
                         error = "Missing assignment, i.e. assignmentMandatory() / assignmentOptional(). ";
                 }
@@ -789,7 +789,7 @@ namespace karabo {
 
 
         bool Schema::isAllowedInCurrentAccessMode(const Hash::Node& node) const {
-            return (m_currentAccessMode & node.getAttribute<int>(KARABO_SCHEMA_ACCESS_MODE));
+            return (static_cast<int>(m_currentAccessMode) & node.getAttribute<int>(KARABO_SCHEMA_ACCESS_MODE));
         }
 
 
@@ -825,16 +825,16 @@ namespace karabo {
                 return true;
             } else {
                 switch (this->getNodeType(parentKey)) {
-                    case Schema::LEAF: // leaves cannot be parents
+                    case LEAF: // leaves cannot be parents
                         return true;
-                    case Schema::NODE:
+                    case NODE:
                         return false;
-                    case Schema::CHOICE_OF_NODES:
+                    case CHOICE_OF_NODES:
                         // Only nodes can be members (i.e. children) of lists and choices:
-                        return (node.getAttribute<int>(KARABO_SCHEMA_NODE_TYPE) != Schema::NODE);
+                        return (NodeType(node.getAttribute<int>(KARABO_SCHEMA_NODE_TYPE)) != NODE);
                     default: // If getNodeType would return Schema::NodeType and not int, default would not be needed:
                         throw KARABO_LOGIC_EXCEPTION("getNodeType returns unknown value '" +
-                                                           data::toString(this->getNodeType(parentKey)) +=
+                                                           data::toString(int(this->getNodeType(parentKey))) +=
                                                      "' for key '" + parentKey + "'");
                         return true;
                 }
@@ -862,11 +862,11 @@ namespace karabo {
                     } catch (...) {
                         nodeType = -1;
                     }
-                    if (nodeType == Schema::LEAF) {
+                    if (nodeType == LEAF) {
                         processingLeaf(key, stream);
-                    } else if (nodeType == Schema::NODE) {
+                    } else if (nodeType == NODE) {
                         processingNode(key, stream);
-                    } else if (nodeType == Schema::CHOICE_OF_NODES) {
+                    } else if (nodeType == CHOICE_OF_NODES) {
                         processingChoiceOfNodes(key, stream);
                     }
                 }
@@ -878,27 +878,27 @@ namespace karabo {
                     nodeTypeClassId = -1;
                 }
 
-                if (nodeTypeClassId == Schema::LEAF) {
+                if (nodeTypeClassId == LEAF) {
                     processingLeaf(classId, stream);
                 }
 
-                if (nodeTypeClassId == Schema::NODE) {
+                if (nodeTypeClassId == NODE) {
                     vector<string> keys = getKeys(classId);
                     if (!keys.empty()) {
                         for (const string& key : keys) {
                             string path = classId + "." + key;
-                            int nodeType = -1;
+                            int nodeType;
                             try {
                                 nodeType = getNodeType(path);
                             } catch (...) {
                                 nodeType = -1;
                             }
 
-                            if (nodeType == Schema::LEAF) {
+                            if (nodeType == LEAF) {
                                 processingLeaf(path, stream);
-                            } else if (nodeType == Schema::NODE) {
+                            } else if (nodeType == NODE) {
                                 processingNode(path, stream);
-                            } else if (nodeType == Schema::CHOICE_OF_NODES) {
+                            } else if (nodeType == CHOICE_OF_NODES) {
                                 processingChoiceOfNodes(path, stream);
                             }
                         }
@@ -907,7 +907,7 @@ namespace karabo {
                     }
                 }
 
-                if (nodeTypeClassId == Schema::CHOICE_OF_NODES) {
+                if (nodeTypeClassId == CHOICE_OF_NODES) {
                     vector<string> keys = getKeys(classId);
 
 
@@ -1005,9 +1005,9 @@ namespace karabo {
                     nodeType = -1;
                 }
 
-                if (nodeType == Schema::NODE) {
+                if (nodeType == NODE) {
                     r_updateAliasMap(getKeys(newPath), newPath);
-                } else if (nodeType == Schema::CHOICE_OF_NODES) {
+                } else if (nodeType == CHOICE_OF_NODES) {
                     r_updateAliasMap(getKeys(newPath), newPath);
                 }
             }
@@ -1074,7 +1074,7 @@ namespace karabo {
                 Hash resultHash;
                 // Note: 1) Merge policy does not matter since resultHash is empty.
                 //       2) paths.empty() indicates to ignore this selection and take all!
-                resultHash.merge(getParameterHash(), Hash::REPLACE_ATTRIBUTES, paths);
+                resultHash.merge(getParameterHash(), Hash::MergePolicy::REPLACE_ATTRIBUTES, paths);
                 result.setParameterHash(std::move(resultHash));
             }
 
@@ -1088,7 +1088,7 @@ namespace karabo {
                 throw KARABO_PARAMETER_EXCEPTION("DAQ data types may only be set for node elements. Element at " +
                                                  path + " is not a node element!");
             }
-            m_hash.setAttribute<int>(path, KARABO_SCHEMA_DAQ_DATA_TYPE, dataType);
+            m_hash.setAttribute<int>(path, KARABO_SCHEMA_DAQ_DATA_TYPE, static_cast<int>(dataType));
         }
 
         DaqDataType Schema::getDaqDataType(const std::string& path) const {
@@ -1162,7 +1162,7 @@ namespace karabo {
 
 
         void Schema::setDAQPolicy(const std::string& path, const DAQPolicy& value) {
-            m_hash.setAttribute<int>(path, KARABO_SCHEMA_DAQ_POLICY, value);
+            m_hash.setAttribute<int>(path, KARABO_SCHEMA_DAQ_POLICY, static_cast<int>(value));
         }
 
 
@@ -1172,7 +1172,7 @@ namespace karabo {
 
         DAQPolicy Schema::getDAQPolicy(const std::string& path) const {
             const int policyInt = m_hash.getAttribute<int>(path, KARABO_SCHEMA_DAQ_POLICY);
-            switch (policyInt) {
+            switch (DAQPolicy(policyInt)) {
                 case DAQPolicy::UNSPECIFIED:
                     return DAQPolicy::UNSPECIFIED;
                 case DAQPolicy::OMIT:

@@ -54,6 +54,8 @@ namespace karabo {
             unsigned long long m_fractionalSeconds;
 
            public:
+            using enum TIME_UNITS;
+
             /**
              * The default constructor creates a timestamps using the current time
              */
@@ -309,13 +311,13 @@ namespace karabo {
 
         inline Epochstamp& Epochstamp::operator=(const timeval& tv) {
             m_seconds = tv.tv_sec;
-            m_fractionalSeconds = tv.tv_usec * MICROSEC;
+            m_fractionalSeconds = tv.tv_usec * static_cast<int>(MICROSEC);
             return *this;
         }
 
         inline Epochstamp& Epochstamp::operator=(const timespec& ts) {
             m_seconds = ts.tv_sec;
-            m_fractionalSeconds = static_cast<unsigned long long>(ts.tv_nsec) * NANOSEC;
+            m_fractionalSeconds = static_cast<unsigned long long>(ts.tv_nsec) * static_cast<int>(NANOSEC);
             return *this;
         }
 

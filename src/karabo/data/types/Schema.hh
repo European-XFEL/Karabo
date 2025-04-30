@@ -73,7 +73,7 @@ namespace karabo {
             return __a = __a & __b;
         }
 
-        enum DaqDataType {
+        enum class DaqDataType {
             PULSE = 0,
             TRAIN = 1,
             PULSEMASTER = 10,
@@ -83,7 +83,7 @@ namespace karabo {
         /**
          * An enum specifying the DAQ storage policy
          */
-        enum DAQPolicy {
+        enum class DAQPolicy {
             UNSPECIFIED = -1,
             OMIT = 0,
             SAVE = 1,
@@ -265,12 +265,7 @@ namespace karabo {
             /**
              * An enum specifying the access-level needed to view or alter elements.
              */
-            enum AccessLevel {
-
-                OBSERVER = 0,
-                OPERATOR,
-                EXPERT
-            };
+            enum AccessLevel { OBSERVER = 0, OPERATOR, EXPERT };
 
 
            public:
@@ -435,7 +430,7 @@ namespace karabo {
              * @param path
              * @return a value mapping to the Schema::NodeType enum
              */
-            int getNodeType(const std::string& path) const;
+            NodeType getNodeType(const std::string& path) const;
 
             //**********************************************
             //                Value Type                  *
@@ -657,7 +652,7 @@ namespace karabo {
              * @param path
              * @return
              */
-            const int getAssignment(const std::string& path) const;
+            const AssignmentType getAssignment(const std::string& path) const;
 
             //**********************************************
             //               Skip Validation               *
@@ -900,7 +895,7 @@ namespace karabo {
              * @param path
              * @param value
              */
-            void setUnit(const std::string& path, const UnitType& value);
+            void setUnit(const std::string& path, const Unit& value);
 
             /**
              * Check if the element identified by path has an unit set
@@ -913,9 +908,9 @@ namespace karabo {
              * Get the unit set for the element identified by path. Check if the
              * element has an unit set first using Schema::hasUnit()
              * @param path
-             * @return maps to a karabo::data::UnitType enum
+             * @return maps to a karabo::data::Unit enum
              */
-            const int getUnit(const std::string& path) const;
+            const Unit getUnit(const std::string& path) const;
 
             /**
              * Get the unit name for the element identified by path. Check if the
@@ -942,7 +937,7 @@ namespace karabo {
              * @param path
              * @param value
              */
-            void setMetricPrefix(const std::string& path, const MetricPrefixType& value);
+            void setMetricPrefix(const std::string& path, const MetricPrefix& value);
 
             /**
              * Check if the element identified by path has an metric prefix set
@@ -955,9 +950,9 @@ namespace karabo {
              * Get the metric prefix set for the element identified by path. Check if the
              * element has an metric prefix set first using Schema::hasMetricPrefix()
              * @param path
-             * @return maps to a karabo::data::UnitType enum
+             * @return maps to a karabo::data::Unit enum
              */
-            const int getMetricPrefix(const std::string& path) const;
+            const MetricPrefix getMetricPrefix(const std::string& path) const;
 
             /**
              * Get the metric prefix name for the element identified by path. Check if the
@@ -1239,7 +1234,7 @@ namespace karabo {
              * @param path
              * @return maps to the Schema::ArchivePolicy enum
              */
-            const int& getArchivePolicy(const std::string& path) const;
+            const ArchivePolicy getArchivePolicy(const std::string& path) const;
 
             //******************************************************
             //      min/max for number of nodes in ListElement     *

@@ -166,7 +166,7 @@ namespace karabo {
             std::set<std::string> m_immortals;
             mutable std::mutex m_immortalsMutex;
 
-            int m_accessLevel = karabo::data::Schema::EXPERT;
+            karabo::data::Schema::AccessLevel m_accessLevel = karabo::data::Schema::EXPERT;
 
             std::string m_dataLoggerManagerId;
             std::string m_configManagerId;
@@ -608,7 +608,8 @@ namespace karabo {
                     const karabo::data::Hash::Attributes attrs =
                           getDeviceSchema(instanceId).getParameterHash().getNode(key, keySep).getAttributes();
                     if (attrs.has(KARABO_SCHEMA_LEAF_TYPE)) {
-                        const int leafType = attrs.get<int>(KARABO_SCHEMA_LEAF_TYPE);
+                        const auto leafType =
+                              static_cast<karabo::data::Schema::LeafType>(attrs.get<int>(KARABO_SCHEMA_LEAF_TYPE));
                         if (leafType == karabo::data::Schema::STATE) {
                             if (typeid(T) == typeid(karabo::data::State)) {
                                 return *reinterpret_cast<const T*>(&karabo::data::State::fromString(
@@ -652,7 +653,8 @@ namespace karabo {
                     const karabo::data::Hash::Attributes attrs =
                           getDeviceSchema(instanceId).getParameterHash().getNode(key, keySep).getAttributes();
                     if (attrs.has(KARABO_SCHEMA_LEAF_TYPE)) {
-                        const int leafType = attrs.get<int>(KARABO_SCHEMA_LEAF_TYPE);
+                        const auto leafType =
+                              static_cast<karabo::data::Schema::LeafType>(attrs.get<int>(KARABO_SCHEMA_LEAF_TYPE));
                         if (leafType == karabo::data::Schema::STATE) {
                             if (typeid(T) == typeid(karabo::data::State)) {
                                 value = *reinterpret_cast<const T*>(&karabo::data::State::fromString(

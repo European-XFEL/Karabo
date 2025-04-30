@@ -35,9 +35,7 @@
 namespace karabo {
     namespace data {
 
-        enum TIME_UNITS {
-
-
+        enum class TIME_UNITS {
             // Fractions == the number of zeros after 1
             ATTOSEC = 0, // Atto-second is the smallest time unit = highest resolution for time values.
             FEMTOSEC = 3 + ATTOSEC,
@@ -67,6 +65,8 @@ namespace karabo {
 
         class TimeDuration {
            public:
+            using enum TIME_UNITS;
+
             /**
              * Default constructor creates an empty time duration
              */

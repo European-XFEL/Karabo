@@ -43,7 +43,7 @@ namespace karabo {
                   .key("numGetPropertyHistory")
                   .displayedName("N(get history)")
                   .description("Number of calls to slotGetPropertyHistory")
-                  .unit(UnitType::COUNT)
+                  .unit(Unit::COUNT)
                   .readOnly()
                   .initialValue(0u)
                   .commit();
@@ -52,7 +52,7 @@ namespace karabo {
                   .key("numGetConfigurationFromPast")
                   .displayedName("N(get config)")
                   .description("Number of calls to slotGetConfigurationFromPast")
-                  .unit(UnitType::COUNT)
+                  .unit(Unit::COUNT)
                   .readOnly()
                   .initialValue(0u)
                   .commit();

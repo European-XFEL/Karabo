@@ -49,8 +49,8 @@ namespace karabo {
 
 
         void TableElement::beforeAddition() {
-            this->m_node->setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::LEAF);
-            this->m_node->setAttribute<int>(KARABO_SCHEMA_LEAF_TYPE, karabo::data::Schema::PROPERTY);
+            this->m_node->setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, static_cast<int>(Schema::LEAF));
+            this->m_node->setAttribute<int>(KARABO_SCHEMA_LEAF_TYPE, static_cast<int>(Schema::PROPERTY));
             this->m_node->setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, "Table");
             this->m_node->setAttribute(KARABO_SCHEMA_VALUE_TYPE, "VECTOR_HASH");
             if (m_nodeSchema.empty()) {

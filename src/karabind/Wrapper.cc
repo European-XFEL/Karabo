@@ -470,7 +470,7 @@ namespace karabind {
                             break;
                         default:
                             // Should never come here!
-                            throw KARABO_PYTHON_EXCEPTION("Unsupported int type " + toString(type));
+                            throw KARABO_PYTHON_EXCEPTION("Unsupported int type " + karabo::data::toString(type));
                     }
                 }
                 return type;
@@ -571,7 +571,7 @@ namespace karabind {
                     return karabo::data::Types::VECTOR_UINT64;
                 } else {
                     // Should never come here!
-                    throw KARABO_PYTHON_EXCEPTION("Unsupported int type " + toString(broadestType));
+                    throw KARABO_PYTHON_EXCEPTION("Unsupported int type " + karabo::data::toString(broadestType));
                 }
             }
             if (py::isinstance<py::float_>(list0)) {
@@ -644,7 +644,7 @@ namespace karabind {
                             break;
                         default:
                             // Should never come here!
-                            throw KARABO_PYTHON_EXCEPTION("Unsupported int type " + toString(type));
+                            throw KARABO_PYTHON_EXCEPTION("Unsupported int type " + karabo::data::toString(type));
                     }
                 }
             } else if (py::isinstance<py::float_>(o)) {
@@ -710,7 +710,7 @@ namespace karabind {
                         self.setAttribute(path, attr, lo.cast<std::vector<unsigned long long>>());
                     } else {
                         // Should never come here!
-                        throw KARABO_PYTHON_EXCEPTION("Unsupported int type " + toString(broadestType));
+                        throw KARABO_PYTHON_EXCEPTION("Unsupported int type " + karabo::data::toString(broadestType));
                     }
                 } else if (py::isinstance<py::float_>(list0)) {
                     self.setAttribute(path, attr, lo.cast<std::vector<double>>());

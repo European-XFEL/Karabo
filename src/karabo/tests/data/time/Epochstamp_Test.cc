@@ -85,61 +85,65 @@ void Epochstamp_Test::validateStringConstructor(const std::string& pTime, const 
         if (isCompactString == true) {
             // Validate "UNIVERSAL" compact ISO8601 format
             if (writeToClog)
-                std::clog << "[Compact] toIso8601(ATTOSEC) => " << expectedToIso8601 << " == " << epo.toIso8601(ATTOSEC)
-                          << " == " << epo2.toIso8601(ATTOSEC) << std::endl;
-            CPPUNIT_ASSERT(expectedToIso8601 == epo.toIso8601(ATTOSEC));
-            CPPUNIT_ASSERT(expectedToIso8601 == epo2.toIso8601(ATTOSEC));
+                std::clog << "[Compact] toIso8601(ATTOSEC) => " << expectedToIso8601
+                          << " == " << epo.toIso8601(TIME_UNITS::ATTOSEC)
+                          << " == " << epo2.toIso8601(TIME_UNITS::ATTOSEC) << std::endl;
+            CPPUNIT_ASSERT(expectedToIso8601 == epo.toIso8601(TIME_UNITS::ATTOSEC));
+            CPPUNIT_ASSERT(expectedToIso8601 == epo2.toIso8601(TIME_UNITS::ATTOSEC));
             //
             if (writeToClog)
                 std::clog << "[Compact] toIso8601Ext(ATTOSEC) => " << expectedToIso8601Ext
-                          << " == " << epo.toIso8601Ext(ATTOSEC) << " == " << epo2.toIso8601Ext(ATTOSEC) << std::endl;
-            CPPUNIT_ASSERT(expectedToIso8601Ext == epo.toIso8601Ext(ATTOSEC));
-            CPPUNIT_ASSERT(expectedToIso8601Ext == epo2.toIso8601Ext(ATTOSEC));
+                          << " == " << epo.toIso8601Ext(TIME_UNITS::ATTOSEC)
+                          << " == " << epo2.toIso8601Ext(TIME_UNITS::ATTOSEC) << std::endl;
+            CPPUNIT_ASSERT(expectedToIso8601Ext == epo.toIso8601Ext(TIME_UNITS::ATTOSEC));
+            CPPUNIT_ASSERT(expectedToIso8601Ext == epo2.toIso8601Ext(TIME_UNITS::ATTOSEC));
         } else {
             // Validate "UNIVERSAL" extended ISO8601 format
             if (writeToClog)
-                std::clog << "[Extended] toIso8601(ATTOSEC) => " << expectedToIso8601
-                          << " == " << epo.toIso8601(ATTOSEC) << " == " << epo2.toIso8601(ATTOSEC) << std::endl;
-            CPPUNIT_ASSERT(expectedToIso8601 == epo.toIso8601(ATTOSEC, true));
-            CPPUNIT_ASSERT(expectedToIso8601 == epo2.toIso8601(ATTOSEC, true));
+                std::clog << "[Extended] toIso8601(TIME_UNITS::ATTOSEC) => " << expectedToIso8601
+                          << " == " << epo.toIso8601(TIME_UNITS::ATTOSEC)
+                          << " == " << epo2.toIso8601(TIME_UNITS::ATTOSEC) << std::endl;
+            CPPUNIT_ASSERT(expectedToIso8601 == epo.toIso8601(TIME_UNITS::ATTOSEC, true));
+            CPPUNIT_ASSERT(expectedToIso8601 == epo2.toIso8601(TIME_UNITS::ATTOSEC, true));
             //
             if (writeToClog)
-                std::clog << "[Extended] toIso8601Ext(ATTOSEC) => " << expectedToIso8601Ext
-                          << " == " << epo.toIso8601Ext(ATTOSEC) << " == " << epo2.toIso8601Ext(ATTOSEC) << std::endl;
-            CPPUNIT_ASSERT(expectedToIso8601Ext == epo.toIso8601Ext(ATTOSEC, true));
-            CPPUNIT_ASSERT(expectedToIso8601Ext == epo2.toIso8601Ext(ATTOSEC, true));
+                std::clog << "[Extended] toIso8601Ext(TIME_UNITS::ATTOSEC) => " << expectedToIso8601Ext
+                          << " == " << epo.toIso8601Ext(TIME_UNITS::ATTOSEC)
+                          << " == " << epo2.toIso8601Ext(TIME_UNITS::ATTOSEC) << std::endl;
+            CPPUNIT_ASSERT(expectedToIso8601Ext == epo.toIso8601Ext(TIME_UNITS::ATTOSEC, true));
+            CPPUNIT_ASSERT(expectedToIso8601Ext == epo2.toIso8601Ext(TIME_UNITS::ATTOSEC, true));
         }
 
         // (i.e. expectedToIso8601 => 20121225T132536.789333123456789123)
         // ATTOSEC
-        toIso8601Precision(epo, epo2, ATTOSEC, "ATTOSEC", isCompactString, writeToClog, expectedToIso8601);
+        toIso8601Precision(epo, epo2, TIME_UNITS::ATTOSEC, "ATTOSEC", isCompactString, writeToClog, expectedToIso8601);
 
         // FEMTOSEC
-        toIso8601Precision(epo, epo2, FEMTOSEC, "FEMTOSEC", isCompactString, writeToClog,
+        toIso8601Precision(epo, epo2, TIME_UNITS::FEMTOSEC, "FEMTOSEC", isCompactString, writeToClog,
                            expectedToIso8601.substr(0, expectedToIso8601.size() - 3));
 
         // PICOSEC
-        toIso8601Precision(epo, epo2, PICOSEC, "PICOSEC", isCompactString, writeToClog,
+        toIso8601Precision(epo, epo2, TIME_UNITS::PICOSEC, "PICOSEC", isCompactString, writeToClog,
                            expectedToIso8601.substr(0, expectedToIso8601.size() - 6));
 
         // NANOSEC
-        toIso8601Precision(epo, epo2, NANOSEC, "NANOSEC", isCompactString, writeToClog,
+        toIso8601Precision(epo, epo2, TIME_UNITS::NANOSEC, "NANOSEC", isCompactString, writeToClog,
                            expectedToIso8601.substr(0, expectedToIso8601.size() - 9));
 
         // MICROSEC
-        toIso8601Precision(epo, epo2, MICROSEC, "MICROSEC", isCompactString, writeToClog,
+        toIso8601Precision(epo, epo2, TIME_UNITS::MICROSEC, "MICROSEC", isCompactString, writeToClog,
                            expectedToIso8601.substr(0, expectedToIso8601.size() - 12));
 
         // MILLISEC
-        toIso8601Precision(epo, epo2, MILLISEC, "MILLISEC", isCompactString, writeToClog,
+        toIso8601Precision(epo, epo2, TIME_UNITS::MILLISEC, "MILLISEC", isCompactString, writeToClog,
                            expectedToIso8601.substr(0, expectedToIso8601.size() - 15));
 
         // ONESECOND
-        toIso8601Precision(epo, epo2, ONESECOND, "ONESECOND", isCompactString, writeToClog,
+        toIso8601Precision(epo, epo2, TIME_UNITS::ONESECOND, "ONESECOND", isCompactString, writeToClog,
                            expectedToIso8601.substr(0, expectedToIso8601.size() - 18) + "0");
 
         // NOFRACTION
-        toIso8601Precision(epo, epo2, NOFRACTION, "NOFRACTION", isCompactString, writeToClog,
+        toIso8601Precision(epo, epo2, TIME_UNITS::NOFRACTION, "NOFRACTION", isCompactString, writeToClog,
                            expectedToIso8601.substr(0, expectedToIso8601.size() - 19));
     }
 
@@ -147,7 +151,7 @@ void Epochstamp_Test::validateStringConstructor(const std::string& pTime, const 
     // toTimestamp Validation
     ostringstream oss;
     oss << epo.getSeconds()
-        << karabo::data::DateTimeString::fractionalSecondToString(MICROSEC, epo.getFractionalSeconds());
+        << karabo::data::DateTimeString::fractionalSecondToString(TIME_UNITS::MICROSEC, epo.getFractionalSeconds());
 
     double expectedTimestamp = boost::lexical_cast<double>(oss.str());
 
@@ -360,7 +364,7 @@ void Epochstamp_Test::testOperators() {
     CPPUNIT_ASSERT(diff92_2 == diff92);
     const TimeDuration diff92_d = e9 - e2;
     CPPUNIT_ASSERT(diff92_d.getTotalSeconds() == 8ull);
-    CPPUNIT_ASSERT(diff92_d.getFractions(ATTOSEC) == point7secInAtto);
+    CPPUNIT_ASSERT(diff92_d.getFractions(TIME_UNITS::ATTOSEC) == point7secInAtto);
     // TimeDuration is always positive (it's a duration, not a diff!), i.e. e2 - e9 == e9 - e2:
     CPPUNIT_ASSERT(e2 - e9 == diff92_d);
 
@@ -372,7 +376,7 @@ void Epochstamp_Test::testOperators() {
     CPPUNIT_ASSERT(diff24_2 == diff24);
     const TimeDuration diff24_d = e2 - e4;
     CPPUNIT_ASSERT(diff24_d.getTotalSeconds() == 2ull);
-    CPPUNIT_ASSERT(diff24_d.getFractions(ATTOSEC) == point8secInAtto);
+    CPPUNIT_ASSERT(diff24_d.getFractions(TIME_UNITS::ATTOSEC) == point8secInAtto);
     // See above about positiveness of TimeDuration...
     CPPUNIT_ASSERT(e4 - e2 == diff24_d);
 

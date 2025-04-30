@@ -17,7 +17,8 @@ import weakref
 
 import numpy as np
 
-from karabo.bound import Encoding, Hash, ImageData, Rotation, Types
+from karabo.bound import (
+    DimensionType, Encoding, Hash, ImageData, Rotation, Types)
 from karabo.testing.utils import compare_ndarray_data_ptrs
 
 
@@ -27,7 +28,8 @@ def test_imagedata_from_ndarray():
     assert np.all(imageData.getData() == arr)
 
     assert imageData.getBitsPerPixel() == 16
-    assert imageData.getDimensionTypes() == (0, 0)
+    assert imageData.getDimensionTypes() == (DimensionType.UNDEFINED,
+                                             DimensionType.UNDEFINED,)
     assert imageData.getDimensions() == (100, 200)
     assert imageData.getEncoding() == Encoding.GRAY
     assert imageData.isIndexable()
@@ -56,7 +58,9 @@ def test_imagedata_from_ndarray():
     assert np.all(imageData.getData() == arr)
     assert compare_ndarray_data_ptrs(imageData.getData(), arr)
 
-    assert imageData.getDimensionTypes() == (0, 0, 0)
+    assert imageData.getDimensionTypes() == (DimensionType.UNDEFINED,
+                                             DimensionType.UNDEFINED,
+                                             DimensionType.UNDEFINED,)
     assert imageData.getDimensions() == (100, 200, 3)
     assert imageData.getEncoding() == Encoding.RGB
     assert imageData.getROIOffsets() == (0, 0, 0)
@@ -67,7 +71,9 @@ def test_imagedata_from_ndarray():
     assert np.all(imageData.getData() == arr)
     assert compare_ndarray_data_ptrs(imageData.getData(), arr)
 
-    assert imageData.getDimensionTypes() == (0, 0, 0)
+    assert imageData.getDimensionTypes() == (DimensionType.UNDEFINED,
+                                             DimensionType.UNDEFINED,
+                                             DimensionType.UNDEFINED,)
     assert imageData.getDimensions() == (100, 200, 4)
     assert imageData.getEncoding() == Encoding.RGBA
     assert imageData.getROIOffsets() == (0, 0, 0)
@@ -78,7 +84,9 @@ def test_imagedata_from_ndarray():
     assert np.all(imageData.getData() == arr)
     assert compare_ndarray_data_ptrs(imageData.getData(), arr)
 
-    assert imageData.getDimensionTypes() == (0, 0, 0)
+    assert imageData.getDimensionTypes() == (DimensionType.UNDEFINED,
+                                             DimensionType.UNDEFINED,
+                                             DimensionType.UNDEFINED,)
     assert imageData.getDimensions() == (100, 200, 11)
     assert imageData.getEncoding() == Encoding.GRAY
     assert imageData.getROIOffsets() == (0, 0, 0)
@@ -155,7 +163,8 @@ def test_imagedata_set_and_get():
 
     imageData.setData(a)  # Also set dataType, shape, dimensions and encoding
 
-    imageData.setDimensionTypes((0, 1))
+    imageData.setDimensionTypes((DimensionType.UNDEFINED,
+                                 DimensionType.DATA))
     imageData.setEncoding(Encoding.GRAY)
     imageData.setROIOffsets((20, 10))  # y, x
     imageData.setBinning((8, 3))
@@ -171,7 +180,9 @@ def test_imagedata_set_and_get():
     imageData.setDimensions((200, 100))
 
     assert np.all(imageData.getData() == a.reshape(200, 100))
-    assert imageData.getDimensionTypes() == (0, 1)
+    assert imageData.getDimensionTypes() == (DimensionType.UNDEFINED,
+                                             DimensionType.DATA)
+    print(f'\n\ndimtype = {imageData.getDimensionTypes()}')
     assert imageData.getDimensions() == (200, 100)
     assert imageData.getEncoding() == Encoding.GRAY
     assert imageData.getROIOffsets() == (20, 10)

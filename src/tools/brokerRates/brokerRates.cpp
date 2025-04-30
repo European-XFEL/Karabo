@@ -28,15 +28,15 @@
 #include <iosfwd>
 #include <iostream>
 #include <karabo/core/DeviceClient.hh>
+#include <karabo/data/time/Epochstamp.hh>
+#include <karabo/data/types/Hash.hh>
+#include <karabo/data/types/Schema.hh>
 #include <karabo/log/Logger.hh>
 #include <karabo/net/AmqpConnection.hh>
 #include <karabo/net/AmqpHashClient.hh>
 #include <karabo/net/Broker.hh>
 #include <karabo/net/EventLoop.hh>
-#include <karabo/data/time/Epochstamp.hh>
-#include <karabo/data/types/Hash.hh>
 #include <karabo/util/MetaTools.hh>
-#include <karabo/data/types/Schema.hh>
 #include <map>
 #include <memory>
 #include <unordered_set>
@@ -185,7 +185,7 @@ void BrokerStatistics::registerMessage(const data::Hash::Pointer& header, const 
         if (diff >= m_interval) {
             // Calculating in single float precision should be enough...
             const float elapsedSeconds =
-                  static_cast<float>(diff.getTotalSeconds()) + diff.getFractions(data::MICROSEC) / 1.e6f;
+                  static_cast<float>(diff.getTotalSeconds()) + diff.getFractions(data::TIME_UNITS::MICROSEC) / 1.e6f;
             this->printStatistics(now, elapsedSeconds);
 
             // Reset:

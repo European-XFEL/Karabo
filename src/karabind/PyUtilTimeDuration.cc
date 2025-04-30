@@ -79,7 +79,7 @@ void exportPyUtilTimeDuration(py::module_& m) {
 
     t.def("getDays", &TimeDuration::getDays);
 
-    t.def("getFractions", &TimeDuration::getFractions, py::arg("unit") = karabo::data::NANOSEC);
+    t.def("getFractions", &TimeDuration::getFractions, py::arg("unit") = TIME_UNITS::NANOSEC);
 
     t.def("getHours", &TimeDuration::getHours);
 
