@@ -503,14 +503,14 @@ namespace karabo {
              * @param unit
              * @return
              */
-            OverwriteElement& setNewUnit(const UnitType& unit);
+            OverwriteElement& setNewUnit(const Unit& unit);
 
             /**
              * Set a new metric prefix to use for values of this element
              * @param unit
              * @return
              */
-            OverwriteElement& setNewMetricPrefix(const MetricPrefixType& metricPrefix);
+            OverwriteElement& setNewMetricPrefix(const MetricPrefix& metricPrefix);
 
             /**
              * Adds new restrictions to the element by merging with existing restrictions

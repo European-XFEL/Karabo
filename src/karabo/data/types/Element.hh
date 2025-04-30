@@ -777,15 +777,15 @@ namespace karabo {
             Types::ReferenceType srcType = this->getType();
             Types::ReferenceType tgtType = Types::from<ValueType>();
 
-            if (srcType == Types::UNKNOWN) {
+            if (srcType == Types::ReferenceType::UNKNOWN) {
                 throw KARABO_CAST_EXCEPTION("Unknown source type for key: \"" + m_key +
                                             "\". Cowardly refusing to cast to " + Types::to<ToLiteral>(tgtType));
             }
 
             try {
                 // Avoid extra copy if source is already string:
-                const std::string& value =
-                      (srcType == Types::STRING ? this->getValue<std::string>() : this->getValueAsString());
+                const std::string& value = (srcType == Types::ReferenceType::STRING ? this->getValue<std::string>()
+                                                                                    : this->getValueAsString());
                 return ValueType(karabo::data::fromString<ValueType>(value));
             } catch (...) {
                 KARABO_RETHROW_AS(
@@ -802,14 +802,23 @@ namespace karabo {
             Types::ReferenceType tgtType = Types::from<Cont<T> >();
 
             if (tgtType == srcType) return this->getValue<Cont<T> >();
+#if __GNUC__ >= 12
             if (srcType == Types::UNKNOWN)
+#else
+            if (srcType == Types::ReferenceType::UNKNOWN)
+#endif
                 throw KARABO_CAST_EXCEPTION("Unknown source type for key: \"" + m_key +
                                             "\". Cowardly refusing to cast.");
 
             try {
                 // Avoid extra copy if source is already string:
+#if __GNUC__ >= 12
                 const std::string& value =
                       (srcType == Types::STRING ? this->getValue<std::string>() : this->getValueAsString());
+#else
+                const std::string& value = (srcType == Types::ReferenceType::STRING ? this->getValue<std::string>()
+                                                                                    : this->getValueAsString());
+#endif
 
                 if (value.empty()) return Cont<T>();
 
@@ -984,6 +993,7 @@ namespace karabo {
             if (templatize(tgtType, processor)) return;
             try {
                 switch (tgtType) {
+#if __GNUC__ >= 12
                     case Types::NONE:
                         m_value = getValueAs<CppNone>();
                         break;
@@ -993,6 +1003,17 @@ namespace karabo {
                     case Types::BYTE_ARRAY:
                         m_value = this->getValueAs<karabo::data::ByteArray>();
                         break;
+#else
+                    case Types::ReferenceType::NONE:
+                        m_value = getValueAs<CppNone>();
+                        break;
+                    case Types::ReferenceType::VECTOR_NONE:
+                        m_value = getValueAs<CppNone, std::vector>();
+                        break;
+                    case Types::ReferenceType::BYTE_ARRAY:
+                        m_value = this->getValueAs<karabo::data::ByteArray>();
+                        break;
+#endif
                     default:
                         throw KARABO_CAST_EXCEPTION("Casting of '" + Types::to<ToCppString>(srcType) +=
                                                     "' to '" + Types::to<ToCppString>(tgtType) += "' is not supported");
@@ -1025,6 +1046,7 @@ namespace karabo {
                 return result;
             }
             switch (type) {
+#if __GNUC__ >= 12
                 case Types::HASH:
                     return karabo::data::toString(getValue<Hash>());
                 case Types::VECTOR_HASH:
@@ -1041,6 +1063,24 @@ namespace karabo {
                     const unsigned char* data = reinterpret_cast<unsigned char*>(array.first.get());
                     return karabo::data::base64Encode(data, array.second);
                 }
+#else
+                case Types::ReferenceType::HASH:
+                    return karabo::data::toString(getValue<Hash>());
+                case Types::ReferenceType::VECTOR_HASH:
+                    return karabo::data::toString(getValue<std::vector<Hash> >());
+                case Types::ReferenceType::NONE:
+                    return karabo::data::toString(getValue<CppNone>());
+                case Types::ReferenceType::VECTOR_NONE:
+                    return karabo::data::toString(getValue<std::vector<CppNone> >());
+                case Types::ReferenceType::SCHEMA:
+                    // Keep Hash stuff independent of schema stuff:
+                    return "<a schema>"; // karabo::data::toString(getValue<Schema>());
+                case Types::ReferenceType::BYTE_ARRAY: {
+                    const karabo::data::ByteArray& array = getValue<karabo::data::ByteArray>();
+                    const unsigned char* data = reinterpret_cast<unsigned char*>(array.first.get());
+                    return karabo::data::base64Encode(data, array.second);
+                }
+#endif
                 default:
                     throw KARABO_CAST_EXCEPTION("Could not convert value of key \"" + m_key + "\" to string");
             }

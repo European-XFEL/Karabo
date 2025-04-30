@@ -28,6 +28,7 @@
 
 #include "karabo/data/schema/GenericElement.hh"
 #include "karabo/data/types/Exception.hh"
+#include "karabo/data/types/Schema.hh"
 #include "karabo/data/types/State.hh"
 #include "karabo/data/types/ToLiteral.hh"
 // OK to include from 'karabo/log' (for KARABO_LOG_FRAMEWORK_WARN) as long as this file does not move to 'karabo/util':
@@ -43,14 +44,25 @@ namespace karabo {
 
            public:
             SlotElementBase(karabo::data::Schema& expected) : karabo::data::GenericElement<Derived>(expected) {
-                this->m_node->template setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, karabo::data::WRITE);
-                this->m_node->template setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, karabo::data::Schema::NODE);
+                using namespace karabo::data;
+                this->m_node->template setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, WRITE);
+#if __GNUC__ >= 12
+                this->m_node->template setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, static_cast<int>(Schema::NODE));
+#else
+                constexpr int schemaNode = static_cast<int>(Schema::NODE);
+                this->m_node->template setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, schemaNode);
+#endif
                 this->m_node->setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, "Slot"); // Reserved displayType for commands
                 this->m_node->setAttribute(KARABO_SCHEMA_CLASS_ID, "Slot");
 
                 // default value of requiredAccessLevel for Slot element: OPERATOR
+#if __GNUC__ >= 12
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL,
-                                                         karabo::data::Schema::OPERATOR);
+                                                         static_cast<int>(Schema::OPERATOR));
+#else
+                constexpr int schemaOperator = static_cast<int>(Schema::OPERATOR);
+                this->m_node->template setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, schemaOperator);
+#endif
             }
 
             /**
@@ -137,8 +149,13 @@ namespace karabo {
                 this->m_child.set("arg1", 0);
                 this->m_child.setAttribute("arg1", KARABO_SCHEMA_DISPLAYED_NAME, "Argument 1");
                 this->m_child.template setAttribute<int>("arg1", KARABO_SCHEMA_ACCESS_MODE, karabo::data::WRITE);
+#if __GNUC__ >= 12
                 this->m_child.template setAttribute<int>("arg1", KARABO_SCHEMA_ASSIGNMENT,
-                                                         karabo::data::Schema::MANDATORY_PARAM);
+                                                         static_cast<int>(karabo::data::Schema::MANDATORY_PARAM));
+#else
+                constexpr int schemaMandatory = static_cast<int>(karabo::data::Schema::MANDATORY_PARAM);
+                this->m_child.template setAttribute<int>("arg1", KARABO_SCHEMA_ASSIGNMENT, schemaMandatory);
+#endif
             }
 
             SLOT_ELEMENT1& arg1Description(const std::string& desc) {

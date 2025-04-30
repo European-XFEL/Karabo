@@ -170,7 +170,7 @@ namespace karabo {
              */
             template <typename T>
             const T* getData() const {
-                if (get<int>("type") == Types::from<T>()) {
+                if (get<int>("type") == int(Types::from<T>())) {
                     return reinterpret_cast<T*>(get<ByteArray>("data").first.get());
                 } else {
                     const int fromType = get<int>("type");
@@ -183,7 +183,7 @@ namespace karabo {
                     }
                     // For unsupported types T, Types::from<T>() does not even compile and we always get a valid
                     // toTypeStr
-                    const Types::ReferenceType toType = Types::from<T>();
+                    const int toType = static_cast<int>(Types::from<T>());
                     const std::string toTypeStr = Types::convert<FromInt, ToLiteral>(toType);
                     throw KARABO_CAST_EXCEPTION(
                           "NDArray::getData(): Failed to cast "

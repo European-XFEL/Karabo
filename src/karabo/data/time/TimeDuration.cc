@@ -49,7 +49,9 @@ namespace karabo {
 
         TimeDuration::TimeDuration(const int days, const int hours, const int minutes, const TimeValue seconds,
                                    const TimeValue fractions)
-            : m_Seconds(days * DAY + hours * HOUR + minutes * MINUTE + seconds), m_Fractions(fractions) {
+            : m_Seconds(days * static_cast<int>(DAY) + hours * static_cast<int>(HOUR) +
+                        minutes * static_cast<int>(MINUTE) + seconds),
+              m_Fractions(fractions) {
             sanitize(m_Seconds, m_Fractions);
         }
 
@@ -67,7 +69,8 @@ namespace karabo {
 
         TimeDuration& TimeDuration::set(const int days, const int hours, const int minutes, const TimeValue seconds,
                                         const TimeValue fractions) {
-            m_Seconds = days * DAY + hours * HOUR + minutes * MINUTE + seconds;
+            m_Seconds = days * static_cast<int>(DAY) + hours * static_cast<int>(HOUR) +
+                        minutes * static_cast<int>(MINUTE) + seconds;
             m_Fractions = fractions;
             sanitize(m_Seconds, m_Fractions);
             return *this;
@@ -81,7 +84,9 @@ namespace karabo {
 
         TimeDuration& TimeDuration::add(const int days, const int hours, const int minutes, const TimeValue seconds,
                                         const TimeValue fractions) {
-            return (*this) += TimeDuration(days * DAY + hours * HOUR + minutes * MINUTE + seconds, fractions);
+            return (*this) += TimeDuration(days * static_cast<int>(DAY) + hours * static_cast<int>(HOUR) +
+                                                 minutes * static_cast<int>(MINUTE) + seconds,
+                                           fractions);
         }
 
 
@@ -99,7 +104,8 @@ namespace karabo {
 
         TimeDuration& TimeDuration::sub(const int days, const int hours, const int minutes, const TimeValue seconds,
                                         const TimeValue fractions) {
-            m_Seconds -= days * DAY + hours * HOUR + minutes * MINUTE + seconds;
+            m_Seconds = days * static_cast<int>(DAY) + hours * static_cast<int>(HOUR) +
+                        minutes * static_cast<int>(MINUTE) + seconds;
             if (m_Fractions < fractions) {
                 m_Fractions = (m_oneSecondInAtto - fractions) + m_Fractions;
                 --m_Seconds;
@@ -116,27 +122,27 @@ namespace karabo {
 
 
         uint64_t TimeDuration::getDays() const {
-            return m_Seconds / DAY;
+            return m_Seconds / static_cast<int>(DAY);
         }
 
 
         uint64_t TimeDuration::getHours() const {
-            return (m_Seconds / HOUR) % 24;
+            return (m_Seconds / static_cast<int>(HOUR)) % 24;
         }
 
 
         TimeValue TimeDuration::getTotalHours() const {
-            return m_Seconds / HOUR;
+            return m_Seconds / static_cast<int>(HOUR);
         }
 
 
         uint64_t TimeDuration::getMinutes() const {
-            return (m_Seconds / MINUTE) % 60;
+            return (m_Seconds / static_cast<int>(MINUTE)) % 60;
         }
 
 
         TimeValue TimeDuration::getTotalMinutes() const {
-            return m_Seconds / MINUTE;
+            return m_Seconds / static_cast<int>(MINUTE);
         }
 
 
@@ -151,7 +157,7 @@ namespace karabo {
 
 
         TimeValue TimeDuration::getFractions(const TIME_UNITS unit) const {
-            int zeros = int(unit);
+            int zeros = static_cast<int>(unit);
             unsigned long long multiplier = 1ULL;
             while (zeros-- > 0) multiplier *= 10ULL;
             return m_Fractions / multiplier; // unsigned long long dividing

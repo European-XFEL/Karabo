@@ -33,7 +33,7 @@ namespace karabo {
 
         // clang-format off
         FromInt::FromInt() {
-            #define _KARABO_HELPER_MACRO(type) { Types::type, Types::type }
+            #define _KARABO_HELPER_MACRO(type) { static_cast<int>(Types::type), Types::type }
             // clang-format on
             _typeInfoMap = {_KARABO_HELPER_MACRO(BOOL),
                             _KARABO_HELPER_MACRO(VECTOR_BOOL),

@@ -906,7 +906,7 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG
                       << "One-time token validation results:\nSuccess: " << beginSessionResult.success
                       << "\nUserId: " << beginSessionResult.userId
-                      << "\nAccess Level: " << beginSessionResult.accessLevel
+                      << "\nAccess Level: " << int(beginSessionResult.accessLevel)
                       << "\nErrMsg: " << beginSessionResult.errMsg;
                 if (!beginSessionResult.success) {
                     const string errorMsg = "Error validating token: " + beginSessionResult.errMsg;

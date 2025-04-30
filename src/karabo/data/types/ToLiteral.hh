@@ -36,7 +36,7 @@ namespace karabo {
            public:
             typedef std::string ReturnType;
 
-            template <int RefType>
+            template <Types::ReferenceType RefType>
             static ReturnType to() {
                 throw KARABO_NOT_IMPLEMENTED_EXCEPTION("Conversion to required type not implemented");
             }

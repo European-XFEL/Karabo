@@ -289,7 +289,7 @@ namespace karabo {
              * @param unit
              * @return
              */
-            Derived& setUnit(const std::string& subKey, const UnitType& unit) {
+            Derived& setUnit(const std::string& subKey, const Unit& unit) {
                 m_schema.setUnit(m_key + "." + subKey, unit);
                 return *(static_cast<Derived*>(this));
             }
@@ -300,7 +300,7 @@ namespace karabo {
              * @param metricPrefix
              * @return
              */
-            Derived& setMetricPrefix(const std::string& subKey, const MetricPrefixType& metricPrefix) {
+            Derived& setMetricPrefix(const std::string& subKey, const MetricPrefix& metricPrefix) {
                 m_schema.setMetricPrefix(m_key + "." + subKey, metricPrefix);
                 return *(static_cast<Derived*>(this));
             }

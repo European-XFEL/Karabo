@@ -203,12 +203,12 @@ void TimeClasses_Test::testTimeDuration() {
     CPPUNIT_ASSERT(dur1.getTotalMinutes() == 60ull);
     CPPUNIT_ASSERT(dur1.getHours() == 1ull);
     CPPUNIT_ASSERT(dur1.getTotalHours() == 1ull);
-    CPPUNIT_ASSERT(dur1.getFractions(data::ATTOSEC) == fractionsAtto);
-    CPPUNIT_ASSERT(dur1.getFractions(data::FEMTOSEC) == fractionsAtto / 1000ull);
-    CPPUNIT_ASSERT(dur1.getFractions(data::PICOSEC) == fractionsAtto / 1000000ull);
-    CPPUNIT_ASSERT(dur1.getFractions(data::NANOSEC) == fractionsAtto / 1000000000ull);
-    CPPUNIT_ASSERT(dur1.getFractions(data::MICROSEC) == fractionsAtto / 1000000000000ull);
-    CPPUNIT_ASSERT(dur1.getFractions(data::MILLISEC) == fractionsAtto / 1000000000000000ull);
+    CPPUNIT_ASSERT(dur1.getFractions(data::TIME_UNITS::ATTOSEC) == fractionsAtto);
+    CPPUNIT_ASSERT(dur1.getFractions(data::TIME_UNITS::FEMTOSEC) == fractionsAtto / 1000ull);
+    CPPUNIT_ASSERT(dur1.getFractions(data::TIME_UNITS::PICOSEC) == fractionsAtto / 1000000ull);
+    CPPUNIT_ASSERT(dur1.getFractions(data::TIME_UNITS::NANOSEC) == fractionsAtto / 1000000000ull);
+    CPPUNIT_ASSERT(dur1.getFractions(data::TIME_UNITS::MICROSEC) == fractionsAtto / 1000000000000ull);
+    CPPUNIT_ASSERT(dur1.getFractions(data::TIME_UNITS::MILLISEC) == fractionsAtto / 1000000000000000ull);
 
     const data::Hash hash("seconds", seconds, "fractions", fractionsAtto);
     const TimeDuration dur2(hash);
@@ -223,9 +223,9 @@ void TimeClasses_Test::testTimeDuration() {
     CPPUNIT_ASSERT(dur3.getTotalMinutes() == 1624ull);
     CPPUNIT_ASSERT(dur3.getSeconds() == 56ull);
     CPPUNIT_ASSERT(dur3.getTotalSeconds() == 97496ull);
-    CPPUNIT_ASSERT(dur3.getFractions(data::MILLISEC) == 123ull);
-    CPPUNIT_ASSERT(dur3.getFractions(data::NANOSEC) == 123456789ull);
-    CPPUNIT_ASSERT(dur3.getFractions(data::ATTOSEC) == 123456789012345678ull);
+    CPPUNIT_ASSERT(dur3.getFractions(data::TIME_UNITS::MILLISEC) == 123ull);
+    CPPUNIT_ASSERT(dur3.getFractions(data::TIME_UNITS::NANOSEC) == 123456789ull);
+    CPPUNIT_ASSERT(dur3.getFractions(data::TIME_UNITS::ATTOSEC) == 123456789012345678ull);
 
     // Test equal comparisons
     const TimeDuration durA(123ull, 4567890000ull);

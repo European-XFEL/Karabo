@@ -201,7 +201,7 @@ namespace karabo {
              * @return String started with a "." (dot) (except skipDot is true) and followed by the fractional second
              * till the desired precision
              */
-            static const std::string fractionalSecondToString(const TIME_UNITS precision = MICROSEC,
+            static const std::string fractionalSecondToString(const TIME_UNITS precision = TIME_UNITS::MICROSEC,
                                                               const unsigned long long fractionalSeconds = 0,
                                                               bool skipDot = false);
 

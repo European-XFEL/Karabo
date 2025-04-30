@@ -34,40 +34,34 @@ namespace karabo {
 
     namespace data {
 
-        namespace MetricPrefix {
+        enum class MetricPrefix {
 
-            enum MetricPrefixType {
-
-
-                YOTTA,
-                ZETTA,
-                EXA,
-                PETA,
-                TERA,
-                GIGA,
-                MEGA,
-                KILO,
-                HECTO,
-                DECA,
-                NONE,
-                DECI,
-                CENTI,
-                MILLI,
-                MICRO,
-                NANO,
-                PICO,
-                FEMTO,
-                ATTO,
-                ZEPTO,
-                YOCTO
-            };
-        }
-
-        typedef MetricPrefix::MetricPrefixType MetricPrefixType;
+            YOTTA,
+            ZETTA,
+            EXA,
+            PETA,
+            TERA,
+            GIGA,
+            MEGA,
+            KILO,
+            HECTO,
+            DECA,
+            NONE,
+            DECI,
+            CENTI,
+            MILLI,
+            MICRO,
+            NANO,
+            PICO,
+            FEMTO,
+            ATTO,
+            ZEPTO,
+            YOCTO
+        };
 
         // Compile time conversion
 
-        template <int MetricEnum>
+        template <MetricPrefix MetricEnum>
         inline std::pair<std::string, std::string> getMetricPrefix() {
             throw KARABO_PARAMETER_EXCEPTION("");
         }
@@ -109,10 +103,10 @@ namespace karabo {
 #undef _KARABO_HELPER_MACRO
 
         // Runtime conversion
-        inline std::pair<std::string, std::string> getMetricPrefix(const MetricPrefixType metricPrefix) {
-#define _KARABO_HELPER_MACRO(MetricEnum) \
-    case MetricPrefix::MetricEnum:       \
-        return getMetricPrefix<MetricPrefix::MetricEnum>();
+        inline std::pair<std::string, std::string> getMetricPrefix(const MetricPrefix metricPrefix) {
+#define _KARABO_HELPER_MACRO(enumerator) \
+    case MetricPrefix::enumerator:       \
+        return getMetricPrefix<MetricPrefix::enumerator>();
             switch (metricPrefix) {
                 _KARABO_HELPER_MACRO(YOTTA)
                 _KARABO_HELPER_MACRO(ZETTA)
@@ -141,75 +135,69 @@ namespace karabo {
 #undef _KARABO_HELPER_MACRO
         }
 
-        namespace Unit {
+        enum class Unit {
 
-            enum UnitType {
-
-
-                NUMBER,
-                COUNT,
-                METER,
-                GRAM,
-                SECOND,
-                AMPERE,
-                KELVIN,
-                MOLE,
-                CANDELA,
-                HERTZ,
-                RADIAN,
-                DEGREE,
-                STERADIAN,
-                NEWTON,
-                PASCAL,
-                JOULE,
-                ELECTRONVOLT,
-                WATT,
-                COULOMB,
-                VOLT,
-                FARAD,
-                OHM,
-                SIEMENS,
-                WEBER,
-                TESLA,
-                HENRY,
-                DEGREE_CELSIUS,
-                LUMEN,
-                LUX,
-                BECQUEREL,
-                GRAY,
-                SIEVERT,
-                KATAL,
-                MINUTE,
-                HOUR,
-                DAY,
-                YEAR,
-                BAR,
-                PIXEL,
-                BYTE,
-                BIT,
-                METER_PER_SECOND,
-                VOLT_PER_SECOND,
-                AMPERE_PER_SECOND,
-                PERCENT,
-                NOT_ASSIGNED
-            };
-        }
-
-        typedef Unit::UnitType UnitType;
+            NUMBER,
+            COUNT,
+            METER,
+            GRAM,
+            SECOND,
+            AMPERE,
+            KELVIN,
+            MOLE,
+            CANDELA,
+            HERTZ,
+            RADIAN,
+            DEGREE,
+            STERADIAN,
+            NEWTON,
+            PASCAL,
+            JOULE,
+            ELECTRONVOLT,
+            WATT,
+            COULOMB,
+            VOLT,
+            FARAD,
+            OHM,
+            SIEMENS,
+            WEBER,
+            TESLA,
+            HENRY,
+            DEGREE_CELSIUS,
+            LUMEN,
+            LUX,
+            BECQUEREL,
+            GRAY,
+            SIEVERT,
+            KATAL,
+            MINUTE,
+            HOUR,
+            DAY,
+            YEAR,
+            BAR,
+            PIXEL,
+            BYTE,
+            BIT,
+            METER_PER_SECOND,
+            VOLT_PER_SECOND,
+            AMPERE_PER_SECOND,
+            PERCENT,
+            NOT_ASSIGNED
+        };
 
         // Compile time conversion
 
-        template <int UnitEnum>
+        template <Unit UnitEnum>
         inline std::pair<std::string, std::string> getUnit() {
             throw KARABO_PARAMETER_EXCEPTION("");
         }
 
-#define _KARABO_HELPER_MACRO(unitEnum, symbol)                             \
-    template <>                                                            \
-    inline std::pair<std::string, std::string> getUnit<Unit::unitEnum>() { \
-        std::string name(#unitEnum);                                       \
-        boost::to_lower(name);                                             \
-        return std::make_pair(name, symbol);                               \
+#define _KARABO_HELPER_MACRO(enumerator, symbol)                             \
+    template <>                                                              \
+    inline std::pair<std::string, std::string> getUnit<Unit::enumerator>() { \
+        std::string name(#enumerator);                                       \
+        boost::to_lower(name);                                               \
+        return std::make_pair(name, symbol);                                 \
     }
 
         _KARABO_HELPER_MACRO(NUMBER, "")
@@ -262,10 +250,10 @@ namespace karabo {
 #undef _KARABO_HELPER_MACRO
 
         // Runtime conversion
-        inline std::pair<std::string, std::string> getUnit(const UnitType unit) {
-#define _KARABO_HELPER_MACRO(UnitEnum) \
-    case Unit::UnitEnum:               \
-        return getUnit<Unit::UnitEnum>();
+        inline std::pair<std::string, std::string> getUnit(const Unit unit) {
+#define _KARABO_HELPER_MACRO(enumerator) \
+    case Unit::enumerator:               \
+        return getUnit<Unit::enumerator>();
             switch (unit) {
                 _KARABO_HELPER_MACRO(NUMBER)
                 _KARABO_HELPER_MACRO(COUNT)

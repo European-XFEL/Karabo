@@ -764,9 +764,9 @@ namespace karabo {
                     const karabo::data::Epochstamp epochLastReceived(m_timeSec, m_timeFrac);
                     // duration is always positive, irrespective whether epoch or epochLastReceived is more recent
                     const karabo::data::TimeDuration duration = epoch.elapsed(epochLastReceived);
-                    const unsigned long long nPeriods =
-                          (duration.getTotalSeconds() * 1000000ull + duration.getFractions(karabo::data::MICROSEC)) /
-                          m_timePeriod;
+                    const unsigned long long nPeriods = (duration.getTotalSeconds() * 1000000ull +
+                                                         duration.getFractions(karabo::data::TIME_UNITS::MICROSEC)) /
+                                                        m_timePeriod;
                     if (epochLastReceived <= epoch) {
                         id = m_timeId + nPeriods;
                     } else if (m_timeId >= nPeriods + 1ull) { // sanity check

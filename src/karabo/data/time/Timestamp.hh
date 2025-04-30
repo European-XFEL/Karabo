@@ -40,6 +40,8 @@ namespace karabo {
             Trainstamp m_trainstamp;
 
            public:
+            using enum TIME_UNITS;
+
             Timestamp();
 
             Timestamp(const Epochstamp& e, const Trainstamp& t);

@@ -41,7 +41,7 @@ using namespace karabind;
 
 void exportPyXmsImageDataElement(py::module_& m) {
     {
-        py::enum_<Encoding::EncodingType>(m, "Encoding")
+        py::enum_<Encoding>(m, "Encoding")
               .value("UNDEFINED", Encoding::UNDEFINED)
               .value("GRAY", Encoding::GRAY)
               .value("RGB", Encoding::RGB)
@@ -66,7 +66,7 @@ void exportPyXmsImageDataElement(py::module_& m) {
     }
 
     {
-        py::enum_<Rotation::RotationType>(m, "Rotation")
+        py::enum_<Rotation>(m, "Rotation")
               .value("UNDEFINED", Rotation::UNDEFINED)
               .value("ROT_0", Rotation::ROT_0)
               .value("ROT_90", Rotation::ROT_90)
@@ -76,7 +76,7 @@ void exportPyXmsImageDataElement(py::module_& m) {
     }
 
     {
-        py::enum_<Dimension::DimensionType>(m, "DimensionType")
+        py::enum_<DimensionType>(m, "DimensionType")
               .value("UNDEFINED", DimensionType::UNDEFINED)
               .value("STACK", DimensionType::STACK)
               .value("DATA", DimensionType::DATA);
@@ -88,7 +88,7 @@ void exportPyXmsImageDataElement(py::module_& m) {
         img.def(py::init<>());
 
         // Custom constructors: https://pybind11.readthedocs.io/en/stable/advanced/classes.html#custom-constructors
-        img.def(py::init([](const py::array& arr, const Dims& dimensions, const EncodingType encoding,
+        img.def(py::init([](const py::array& arr, const Dims& dimensions, const Encoding encoding,
                             const int bitsPerPixel) {
                     return std::make_shared<ImageData>(wrapper::castPyArrayToND(arr), dimensions, encoding,
                                                        bitsPerPixel);
@@ -97,7 +97,7 @@ void exportPyXmsImageDataElement(py::module_& m) {
                 py::arg("bitsPerPixel") = 0);
 
         // Dimensions are deduced from ndarray
-        img.def(py::init([](const py::array& arr, const EncodingType encoding, const int bitsPerPixel) {
+        img.def(py::init([](const py::array& arr, const Encoding encoding, const int bitsPerPixel) {
                     return std::make_shared<ImageData>(wrapper::castPyArrayToND(arr), encoding, bitsPerPixel);
                 }),
                 py::arg("array"), py::arg("encoding") = Encoding::UNDEFINED, py::arg("bitsPerPixel") = 0);
@@ -151,17 +151,18 @@ void exportPyXmsImageDataElement(py::module_& m) {
               py::arg("dims"));
 
         img.def("getDimensionTypes", [](const ImageData& self) -> py::tuple {
-            std::vector<int> v = self.getDimensionTypes();
+            std::vector<DimensionType> v = self.getDimensionTypes();
             return py::cast(v);
         });
 
         img.def(
               "setDimensionTypes",
               [](ImageData& self, const py::sequence& o) {
-                  py::ssize_t size = py::len(o);
-                  std::vector<int> dimTypes(size);
-                  for (int i = 0; i < size; i++) dimTypes[i] = o[i].cast<int>();
-                  self.setDimensionTypes(dimTypes);
+                  self.setDimensionTypes(o.cast<std::vector<DimensionType>>());
+                  //   py::ssize_t size = py::len(o);
+                  //   std::vector<int> dimTypes(size);
+                  //   for (int i = 0; i < size; i++) dimTypes[i] = o[i].cast<int>();
+                  //   self.setDimensionTypes(dimTypes);
               },
               py::arg("listOfDimTypes"));
 
@@ -227,7 +228,7 @@ void exportPyXmsImageDataElement(py::module_& m) {
 
         img.def("setBitsPerPixel", &ImageData::setBitsPerPixel, py::arg("bitsPerPixel"));
 
-        img.def("getEncoding", [](const ImageData& self) { return py::cast(EncodingType(self.getEncoding())); });
+        img.def("getEncoding", [](const ImageData& self) { return py::cast(Encoding(self.getEncoding())); });
 
         img.def("setEncoding", &ImageData::setEncoding, py::arg("encoding"));
 
@@ -304,37 +305,37 @@ void exportPyXmsImageDataElement(py::module_& m) {
               "setEncoding",
               [](ImageDataElement& self, const py::object& o) {
                   using namespace karabo::xms;
-                  EncodingType encType = EncodingType::UNDEFINED;
+                  Encoding encType = Encoding::UNDEFINED;
                   // If image encoding type is given as string
                   if (py::isinstance<py::str>(o)) {
                       // Create look-up table to translate string -
-                      //      keys to EncodingType
-                      std::map<std::string, EncodingType> encLuT;
-                      encLuT["UNDEFINED"] = EncodingType::UNDEFINED;
-                      encLuT["GRAY"] = EncodingType::GRAY;
-                      encLuT["RGB"] = EncodingType::RGB;
-                      encLuT["RGBA"] = EncodingType::RGBA;
-                      encLuT["BGR"] = EncodingType::BGR;
-                      encLuT["BGRA"] = EncodingType::BGRA;
-                      encLuT["CMYK"] = EncodingType::CMYK;
-                      encLuT["YUV"] = EncodingType::YUV;
+                      //      keys to Encoding
+                      std::map<std::string, Encoding> encLuT;
+                      encLuT["UNDEFINED"] = Encoding::UNDEFINED;
+                      encLuT["GRAY"] = Encoding::GRAY;
+                      encLuT["RGB"] = Encoding::RGB;
+                      encLuT["RGBA"] = Encoding::RGBA;
+                      encLuT["BGR"] = Encoding::BGR;
+                      encLuT["BGRA"] = Encoding::BGRA;
+                      encLuT["CMYK"] = Encoding::CMYK;
+                      encLuT["YUV"] = Encoding::YUV;
                       encLuT["YUV444"] = Encoding::YUV444;
                       encLuT["YUV422_YUYV"] = Encoding::YUV422_YUYV;
                       encLuT["YUV422_UYVY"] = Encoding::YUV422_UYVY;
-                      encLuT["BAYER"] = EncodingType::BAYER;
-                      encLuT["BAYER_RG"] = EncodingType::BAYER_RG;
-                      encLuT["BAYER_BG"] = EncodingType::BAYER_BG;
-                      encLuT["BAYER_GR"] = EncodingType::BAYER_GR;
-                      encLuT["BAYER_GB"] = EncodingType::BAYER_GB;
-                      encLuT["JPEG"] = EncodingType::JPEG;
-                      encLuT["PNG"] = EncodingType::PNG;
-                      encLuT["BMP"] = EncodingType::BMP;
-                      encLuT["TIFF"] = EncodingType::TIFF;
+                      encLuT["BAYER"] = Encoding::BAYER;
+                      encLuT["BAYER_RG"] = Encoding::BAYER_RG;
+                      encLuT["BAYER_BG"] = Encoding::BAYER_BG;
+                      encLuT["BAYER_GR"] = Encoding::BAYER_GR;
+                      encLuT["BAYER_GB"] = Encoding::BAYER_GB;
+                      encLuT["JPEG"] = Encoding::JPEG;
+                      encLuT["PNG"] = Encoding::PNG;
+                      encLuT["BMP"] = Encoding::BMP;
+                      encLuT["TIFF"] = Encoding::TIFF;
                       // Look up the supplied key in the LUT
                       encType = encLuT[o.cast<std::string>()];
                       // If data type was given as integer
-                  } else if (py::isinstance<EncodingType>(o)) {
-                      encType = o.cast<EncodingType>();
+                  } else if (py::isinstance<Encoding>(o)) {
+                      encType = o.cast<Encoding>();
                   } else {
                       throw KARABO_PYTHON_EXCEPTION(
                             "Python type of setEncoding() of ImageDataElement must be an unsigned integer or string");

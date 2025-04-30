@@ -42,7 +42,8 @@ def test_imagedata_buildUp():
     # Dimension scales do not set
     assert img.getDimensionScales() == ''
     # check dimension types ...
-    assert img.getDimensionTypes() == (0, 0)
+    assert img.getDimensionTypes() == (DimensionType.UNDEFINED,
+                                       DimensionType.UNDEFINED,)
     # check deduced dimensions ...
     assert img.getDimensions() == (3, 2)
     # check deduced encoding ...
@@ -54,7 +55,7 @@ def test_imagedata_buildUp():
     # Get ROI offesets ...
     assert img.getROIOffsets() == (0, 0)
     # No rotation ... (0 grad)
-    assert img.getRotation() == 0
+    assert img.getRotation() == Rotation.ROT_0
     # check type ...
     assert img.getType() == 16
     # is indexable?

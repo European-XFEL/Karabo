@@ -111,7 +111,8 @@ void Strand_Test::testSequential() {
     }
 
     CPPUNIT_ASSERT(numTest > 0);
-    CPPUNIT_ASSERT(duration.getTotalSeconds() * 1000ull + duration.getFractions(karabo::data::MILLISEC) // total ms
+    CPPUNIT_ASSERT(duration.getTotalSeconds() * 1000ull +
+                         duration.getFractions(karabo::data::TIME_UNITS::MILLISEC) // total ms
                    >= numPosts * sleepTimeMs);
 }
 
