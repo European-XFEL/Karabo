@@ -165,6 +165,8 @@ namespace karabo {
 
             void instantiateLogger(const std::string& serverId);
 
+            void loggerInstantiationHandler(bool ok, const std::string& devId, bool isFailure);
+
             void instanceGoneHandler(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
             void instanceGoneOnStrand(const std::string& instanceId, const karabo::util::Hash& instanceInfo);

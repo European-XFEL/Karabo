@@ -29,6 +29,8 @@
  *   o and those "devices" that the logger has acknowledged to take care of.
  * * All actions that work on this state are sequentialised by using a strand to be sure about the state.
  * * Once a server is discovered, the logger is instantiated.
+ *   o Special treatment is needed for cases where instantiation fails since device is already online because no
+ *     instanceNew comes. (Can happen if logger is re-discovered after loss of heartbeats.)
  * * Once a logger is discovered, it is told to log all devices that are found to be logged by it and have been
  *   discovered before
  * * Once a device to be logged is discovered (this could even be a logger), it is checked which logger server is
@@ -39,8 +41,6 @@
  * * If a logger goes down, it is restarted (well, we try - if also the server is down, restart will fail)
  *   before all logged "devices" and those "beingAdded" are put into "backlog".
  * * If a logger server goes down, "devices" and those "beingAdded" are put into "backlog" as well.
- *   o There is currently (2.6.0) no defined order of device gone and server gone - it depends whether a server went
- *     down cleanly or its death was discovered by lack of heartbeats (to be fixed in the DeviceClient).
  * * The case that
  *   o the loggers and the manager work fine,
  *   o but then the manager is shutdown
@@ -93,6 +93,8 @@
 
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, karabo::devices::DataLoggerManager)
 
+using boost::placeholders::_1;
+using boost::placeholders::_2;
 namespace karabo {
     namespace devices {
 
@@ -1324,11 +1326,23 @@ namespace karabo {
             // Get data for this server to access backlog and state
             Hash& data = m_loggerData.get<Hash>(serverId);
 
-            if (data.get<LoggerState>("state") == LoggerState::OFFLINE) {
-                // If state is RUNNING, likely since logger discovered before server when manager starts into a running
-                // system. Our try to instantiate below will then fail - but no problem!
-                data.set("state", LoggerState::INSTANTIATING);
+            std::string logMsg;
+            const auto previousState = data.get<LoggerState>("state");
+            switch (previousState) {
+                case LoggerState::OFFLINE:
+                    break;                       // Most expected state
+                case LoggerState::INSTANTIATING: // Not so clear when this happens
+                                                 // No 'break;'
+                case LoggerState::RUNNING:
+                    // Likely since logger discovered before its server when manager starts into a running
+                    // system. Our try to instantiate below will then fail since logger is already running!
+                    // Or lack of heartbeats lets the server be seen dead and we first get the 'gone' of the device
+                    // that the client injected. Instantiation timeout since server dead.
+                    logMsg += ". Note: State before was ";
+                    logMsg += (previousState == LoggerState::RUNNING ? "RUNNING" : "INSTANTIATING");
+                    // 'default:' not needed
             }
+            data.set("state", LoggerState::INSTANTIATING);
 
             // Instantiate logger, but do not yet specify "devicesToBeLogged":
             // Having one channel only to transport this info (slotAddDevicesToBeLogged) simplifies logic.
@@ -1342,10 +1356,46 @@ namespace karabo {
             const Hash hash("classId", m_loggerClassId, "deviceId", loggerId, "configuration", config);
 
             KARABO_LOG_FRAMEWORK_INFO << "Trying to instantiate '" << loggerId << "' of type '" << m_loggerClassId
-                                      << "' on server '" << serverId << "'";
-            remote().instantiateNoWait(serverId, hash);
+                                      << "' on server '" << serverId << "'" << logMsg;
+            auto success = bind_weak(&DataLoggerManager::loggerInstantiationHandler, this, _1, _2, false);
+            auto failure = bind_weak(&DataLoggerManager::loggerInstantiationHandler, this, false, loggerId, true);
+            request(serverId, "slotStartDevice", hash).receiveAsync<bool, string>(success, failure);
         }
 
+        void DataLoggerManager::loggerInstantiationHandler(bool ok, const std::string& devId, bool isFailure) {
+            if (isFailure) { // Called as failure handler ==> can throw to figure out which exception we have.
+                try {
+                    throw;
+                } catch (const RemoteException& e) {
+                    const std::string details(e.detailedMsg());
+                    if (details.find("already running/starting on this server") ==
+                              std::string::npos ||                                       // from DeviceServer.cc
+                        details.find("Another instance with ID") == std::string::npos) { // from SignalSlotable.cc
+                        // Instantiating failed since already there! Treat as new.
+                        m_strand->post(bind_weak(&DataLoggerManager::newLogger, this, devId));
+                    } else {
+                        KARABO_LOG_FRAMEWORK_ERROR << "Unexpected failure to instantiate '" << devId
+                                                   << "', will try again: " << details;
+                        m_strand->post(
+                              bind_weak(&DataLoggerManager::instantiateLogger, this, loggerIdToServerId(devId)));
+                    }
+                } catch (const TimeoutException&) {
+                    // Server unreachable - the instanceNew of its restart will get (or maybe already got) us going
+                    Exception::clearTrace();
+                    KARABO_LOG_FRAMEWORK_WARN << "Instantiating " << devId << " timed out";
+                } catch (const std::exception& e) { // How to get here?
+                    KARABO_LOG_FRAMEWORK_ERROR << "Unknown failure to instantiate '" << devId
+                                               << "' (will try again): " << e.what();
+                    m_strand->post(bind_weak(&DataLoggerManager::instantiateLogger, this, loggerIdToServerId(devId)));
+                }
+            } else if (!ok) { // Should never happen - C++ server never returns that!
+                KARABO_LOG_FRAMEWORK_ERROR << "Unexpected failure to instantiate (will try again): " << devId;
+                m_strand->post(bind_weak(&DataLoggerManager::instantiateLogger, this, loggerIdToServerId(devId)));
+            } else {
+                // Properly instantiated - instanceNew will trigger (or has already triggered) further action
+                KARABO_LOG_FRAMEWORK_INFO << "Sucessfully instantiated " << devId;
+            }
+        }
 
         void DataLoggerManager::instanceGoneHandler(const std::string& instanceId,
                                                     const karabo::util::Hash& instanceInfo) {
@@ -1485,9 +1535,10 @@ namespace karabo {
                                               << m_loggerClassId << ".";
                     break;
                 case LoggerState::RUNNING:
-                    // Looks like a non-graceful shutdown of the server that is detected by lack of heartbeats where
-                    // the DeviceClient currently (Karabo 2.6.0) often sends the "gone" signal for the server before
-                    // the one of the DataLogger.
+                    // We could come here if instanceGone of a server was detected by lack of heartbeats AND if the
+                    // DeviecClient injects the instanceGone of the devices after the instanceGone of the server.
+                    // That happened since at least 2.6.0, but should be fixed in 2.20.0.
+                    // So: We should never come here!
                     KARABO_LOG_FRAMEWORK_WARN << "Server '" << serverId << "' gone while " << m_loggerClassId
                                               << " still alive.";
                     // Also then we have to move "devices"/"beingAdded" to "backlog".
