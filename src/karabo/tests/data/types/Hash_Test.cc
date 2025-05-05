@@ -1006,9 +1006,9 @@ void Hash_Test::testGetAs() {
         CPPUNIT_ASSERT(h.getAs<string>("a") == "R");
     }
     {
-        // Assumes vector to contain binary data and does a base64 encode
+        // Assumes vector to contain printable (ASCII) characters
         Hash h("a", std::vector<unsigned char>(3, '4'));
-        CPPUNIT_ASSERT(h.getAs<string>("a") == "NDQ0");
+        CPPUNIT_ASSERT_EQUAL(std::string("52,52,52"), h.getAs<string>("a"));
     }
     {
         // Assumes vector to contain binary data and does a base64 encode

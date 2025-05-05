@@ -348,9 +348,14 @@ class DlRaw2Influx():
             ktype = "VECTOR_STRING"
             value = f'"{value}"'
         elif ktype == "VECTOR_UINT8":
-            binary = base64.b64decode(value)
-            vec = [str(v) for v in struct.unpack('B'*len(binary), binary)]
-            value = '"{}"'.format(",".join(vec))
+            if "," not in value and len(value) > 3:
+                # Karabo 2 base64 encoded VECTOR_UINT8, we decode here
+                binary = base64.b64decode(value)
+                vec = [str(v) for v in struct.unpack('B'*len(binary), binary)]
+                value = '"{}"'.format(",".join(vec))
+            else:
+                # Not encoded, needs quotation marks as other VECTOR_
+                value = f'"{value}"'
         elif ktype == "BYTE_ARRAY" or ktype.startswith("VECTOR_"):
             value = f'"{value}"'
         elif ktype == "CHAR":
