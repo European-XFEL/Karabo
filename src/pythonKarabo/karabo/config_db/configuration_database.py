@@ -193,7 +193,6 @@ class ConfigurationDatabase:
         if len(name) >= 80:
             text = "Please provide a name with less than 80 characters."
             raise ConfigurationDBError(text)
-
         required_keys = ["deviceId", "config"]
         for index, config in enumerate(configs):
             if not all(key in config for key in required_keys):

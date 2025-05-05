@@ -16,5 +16,5 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 # This file is part of the initial configuration of Karabo
 cd $KARABO/var/data
-CONFIG_DB=karaboDB
+CONFIG_DB=karaboDB3
 exec envdir $KARABO/var/environment karabo-middlelayerserver serverId=karabo/configServer 'deviceClasses=ConfigurationManager' init='{"KaraboConfigurationManager":{"classId":"ConfigurationManager", "dbName": "'$CONFIG_DB'"}}' 'log.level=INFO' 2>&1

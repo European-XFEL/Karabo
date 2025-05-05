@@ -107,7 +107,8 @@ else:
             'static/*.js',
             'static/*.html',
             'static/favicon.ico',
-            'templates/*.html'],
+            'templates/*.html',
+            'tests/karaboDB'],
         'karabo.testing': ['resources/*.*'],
         'karabo.influx_db.tests': ['sample_data/PropertyTestDevice/raw/*.txt'],
     }
@@ -121,6 +122,7 @@ else:
             'karabo-cli=karabo.interactive.ideviceclient:main',
             'ikarabo=karabo.interactive.ikarabo:main',
             'convert-karabo-device=karabo.interactive.convert_device_project:main',
+            'migrate-configdb=karabo.interactive.convert_config_db:main',
             'karabo-scene2cpp=karabo.interactive.scene2cpp:main',
             'karabo-scene2py=karabo.interactive.scene2python:main',
             'karabo-start=karabo.interactive.startkarabo:startkarabo',
