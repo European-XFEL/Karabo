@@ -32,7 +32,6 @@ namespace karabo {
     namespace data {
 
 
-        // Base64 Index Table
         const std::string b64_char = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 

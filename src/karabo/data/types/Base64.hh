@@ -29,6 +29,9 @@
 namespace karabo {
     namespace data {
 
+        // Base64 Index Table - contains all characters appearing in encoded strings (besides the padding symbol '=')
+        extern const std::string b64_char;
+
         /**
          * Base64 encode bytes
          * @param bytes_to_encode
