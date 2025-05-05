@@ -121,6 +121,51 @@ void StringTools_Test::testFromString() {
         CPPUNIT_ASSERT_EQUAL(static_cast<short>(32767), aVector[2]);
     }
 
+    // Vector unsigned char has a special implementation for backward compatibility
+    // (base64 encoding applied before Karabo 3)
+    {
+        std::vector<unsigned char> aVector = fromString<unsigned char, std::vector>("13", ",");
+        CPPUNIT_ASSERT_EQUAL(1ul, aVector.size());
+        CPPUNIT_ASSERT(13u == aVector[0]);
+
+        // Corner case: empty string and thus vector
+        aVector = fromString<unsigned char, std::vector>("", ",");
+        CPPUNIT_ASSERT_EQUAL(0ul, aVector.size());
+
+        // Corner case: longest string without separator
+        aVector = fromString<unsigned char, std::vector>("222", ",");
+        CPPUNIT_ASSERT_EQUAL(1ul, aVector.size());
+        CPPUNIT_ASSERT(222u == aVector[0]);
+
+        // Corner case: longest string with a separator
+        aVector = fromString<unsigned char, std::vector>("1,8", ",");
+        CPPUNIT_ASSERT_EQUAL(2ul, aVector.size());
+        CPPUNIT_ASSERT(1u == aVector[0]);
+        CPPUNIT_ASSERT(8u == aVector[1]);
+
+        // All values smaller than max signed (!) char
+        CPPUNIT_ASSERT_NO_THROW((aVector = fromString<unsigned char, std::vector>("1, 127", ",")));
+        CPPUNIT_ASSERT_EQUAL(2ul, aVector.size());
+        CPPUNIT_ASSERT(1u == aVector[0]);
+        CPPUNIT_ASSERT(127u == aVector[1]);
+
+        // Now also bigger ones
+        CPPUNIT_ASSERT_NO_THROW((aVector = fromString<unsigned char, std::vector>("0, 200, 255", ",")));
+        CPPUNIT_ASSERT_EQUAL(3ul, aVector.size());
+        CPPUNIT_ASSERT(0u == aVector[0]);
+        CPPUNIT_ASSERT(200u == aVector[1]);
+        CPPUNIT_ASSERT(255u == aVector[2]);
+
+        // An old, base64 encoded string (from before Karabo 3)
+        aVector = fromString<unsigned char, std::vector>("KSorLC0u", ",");
+        CPPUNIT_ASSERT_EQUAL(6ul, aVector.size());
+        CPPUNIT_ASSERT_EQUAL(static_cast<unsigned char>(41), aVector[0]);
+        CPPUNIT_ASSERT_EQUAL(static_cast<unsigned char>(42), aVector[1]);
+        CPPUNIT_ASSERT_EQUAL(static_cast<unsigned char>(43), aVector[2]);
+        CPPUNIT_ASSERT_EQUAL(static_cast<unsigned char>(44), aVector[3]);
+        CPPUNIT_ASSERT_EQUAL(static_cast<unsigned char>(45), aVector[4]);
+        CPPUNIT_ASSERT_EQUAL(static_cast<unsigned char>(46), aVector[5]);
+    }
     // Vector int has a template specialisation
     {
         std::vector<int> aVector = fromString<int, std::vector>("77", ",");

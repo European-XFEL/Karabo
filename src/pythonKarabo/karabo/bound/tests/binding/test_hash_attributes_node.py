@@ -57,8 +57,10 @@ def test_hashAttributesNode_getValueAs():
     assert n1.getValueAs(Types.COMPLEX_DOUBLE) == (10+0j)
     assert n1.getValueAs(Types.STRING) == '10'
     assert n1.getValueAs("STRING") == '10'
-    assert (
-        n2.getValueAs("VECTOR_INT8") == bytearray(b'\x01\x00'))
+    # Raises an exception:
+    # assert n2.getValueAs("VECTOR_CHAR") == bytearray(b'\x01\x00')
+    assert n2.getValueAs("VECTOR_INT8") == [1, 0]
+    assert n2.getValueAs("VECTOR_UINT8") == [1, 0]
     assert n2.getValueAs("VECTOR_INT16") == [1, 0]
     assert n2.getValueAs("VECTOR_UINT16") == [1, 0]
     assert n2.getValueAs("VECTOR_INT32") == [1, 0]
@@ -201,22 +203,21 @@ def test_hashAttributesNode_getValueAs():
     n1.setValue('3_000_000_000')
     assert n1.getValue() == '3_000_000_000'
 
-    # Base64 encoding
     # 'setType' VECTOR_INT8
-    # h.setAttribute("a.b.c", "attr1", 10)
-    # attrs = h.getAttributes("a.b.c")
-    # n1 = attrs.getNode("attr1")
-    # n1.setType("VECTOR_INT8")
-    # assert n1.getType() == Types.VECTOR_INT8
-    # assert n1.getValue() == [10]
+    h.setAttribute("a.b.c", "attr1", 10)
+    attrs = h.getAttributes("a.b.c")
+    n1 = attrs.getNode("attr1")
+    n1.setType("VECTOR_INT8")
+    assert n1.getType() == Types.VECTOR_INT8
+    assert n1.getValue() == [10]
 
     # 'setType' VECTOR_UINT8
-    # h.setAttribute("a.b.c", "attr1", 10)
-    # attrs = h.getAttributes("a.b.c")
-    # n1 = attrs.getNode("attr1")
-    # n1.setType("VECTOR_UINT8")
-    # assert n1.getType() == Types.VECTOR_UINT8
-    # assert n1.getValue() == [10]
+    h.setAttribute("a.b.c", "attr1", 10)
+    attrs = h.getAttributes("a.b.c")
+    n1 = attrs.getNode("attr1")
+    n1.setType("VECTOR_UINT8")
+    assert n1.getType() == Types.VECTOR_UINT8
+    assert n1.getValue() == [10]
 
     # 'setType' VECTOR_INT16
     h.setAttribute("a.b.c", "attr1", 10)
