@@ -112,7 +112,7 @@ class ConfigurationManager(DeviceClientBase):
         accessMode=AccessMode.READONLY)
 
     dbName = String(
-        defaultValue="karaboDatabase",
+        defaultValue="karaboDB3",
         displayedName="DB Name",
         description="The database name",
         requiredAccessLevel=AccessLevel.OPERATOR,
