@@ -199,14 +199,10 @@ namespace karabind {
                 const auto& v = self.getValueAs<char, std::vector>();                           \
                 return py::bytearray(v.data(), v.size());                                       \
             }                                                                                   \
-            case Types::VECTOR_INT8: {                                                          \
-                const auto& v = self.getValueAs<signed char, std::vector>();                    \
-                return py::bytearray(reinterpret_cast<const char*>(v.data()), v.size());        \
-            }                                                                                   \
-            case Types::VECTOR_UINT8: {                                                         \
-                const auto& v = self.getValueAs<unsigned char, std::vector>();                  \
-                return py::bytearray(reinterpret_cast<const char*>(v.data()), v.size());        \
-            }                                                                                   \
+            case Types::VECTOR_INT8:                                                            \
+                return py::cast(self.getValueAs<signed char, std::vector>());                   \
+            case Types::VECTOR_UINT8:                                                           \
+                return py::cast(self.getValueAs<unsigned char, std::vector>());                 \
             case Types::VECTOR_INT16:                                                           \
                 return py::cast(self.getValueAs<short, std::vector>());                         \
             case Types::VECTOR_UINT16:                                                          \
@@ -229,6 +225,10 @@ namespace karabind {
                 return py::cast(self.getValueAs<std::complex<double>, std::vector>());          \
             case Types::VECTOR_STRING:                                                          \
                 return py::cast(self.getValueAs<std::string, std::vector>());                   \
+            case Types::BYTE_ARRAY: {                                                           \
+                const auto& v = self.getValueAs<ByteArray>();                                   \
+                return py::bytearray(reinterpret_cast<const char*>(v.first.get()), v.second);   \
+            }                                                                                   \
             default:                                                                            \
                 break;                                                                          \
         }                                                                                       \

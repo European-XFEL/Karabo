@@ -277,19 +277,11 @@ namespace karabo {
             return s.str();
         }
 
-        inline std::string toString(const std::vector<unsigned char>& value) {
-            // GF, April 2018:
-            // unsigned char maps to the Karabo type UINT8 which is supposed to represent
-            // (unsigned...) numbers, in contrast to char (Karabo type CHAR) which is used
-            // for raw data
-            // ==> I doubt the correctness of this specialisation of
-            //     toString(const std::vector<unsigned char>& value),
-            //     but I do not dare to remove it, creating probably unexpected side effects.
-            //
-            // See the open merge request 1523 which seems to properly handle that.
-            return karabo::data::base64Encode(&value[0], value.size());
-        }
-
+        /**
+         * Convert vector<char> to string
+         *
+         * As this is raw data, it is base64 encoded
+         */
         inline std::string toString(const std::vector<char>& value) {
             return karabo::data::base64Encode(reinterpret_cast<const unsigned char*>(&value[0]), value.size());
         }
@@ -310,12 +302,6 @@ namespace karabo {
                 s << "," << toString(ptr[i]);
             }
             return s.str();
-        }
-
-        inline std::string toString(const std::pair<const unsigned char*, size_t>& value) {
-            if (value.second == 0) return "";
-            // See comment above at std::string toString(const std::vector<unsigned char>& value)
-            return karabo::data::base64Encode(value.first, value.second);
         }
 
         inline std::string toString(const std::pair<const char*, size_t>& value) {
@@ -544,23 +530,10 @@ namespace karabo {
         }
 
         /**
-         * Vectors of unsigned char elements can be constructed directly from strings where character of the
-         * string represents a byte of the vector. The second argument should be set to ""
-         * @param value
-         * @param
-         * @return
-         */
-        template <>
-        inline std::vector<unsigned char> fromString(const std::string& value, const std::string&) {
-            std::vector<unsigned char> tmp;
-            karabo::data::base64Decode(value, tmp);
-            return tmp;
-        }
-
-        /**
          * XXX: This function is working around the surprising behavior of fromstring<unsigned char>(value, sep) seen
          above. The long-term solution should be to remove the base64 encoding/decoding in toString/fromString. However,
          we need to discover which code is expecting that behavior before making such a change.
+         NOTE: Karabo 3 should have fixed that issue - probably except for T=char
 
            In the meantime, we can use this simple version for schema options parsing.
          */
@@ -578,10 +551,13 @@ namespace karabo {
         }
 
         /**
-         * Vectors of char elements can be constructed directly from strings where character of the
-         * string represents a byte of the vector. The second argument should be set to ""
-         * @param value
-         * @param
+         * Convert a string to vector<char>
+         *
+         * Since vector<char> is raw data, conversion to string does base64 encoding
+         * which is reverted in this function.
+         *
+         * @param value the (base64 encoded) string to be converted
+         * @param second argument is ignored
          * @return
          */
         template <>
@@ -590,6 +566,50 @@ namespace karabo {
             std::vector<unsigned char>* casted = reinterpret_cast<std::vector<unsigned char>*>(&tmp);
             karabo::data::base64Decode(value, *casted);
             return tmp;
+        }
+
+        /**
+         * Convert a string to vector<unsigned char>
+         *
+         * Since before Karabo 3 vector<unsigned char> was erroneously base64 encoded,
+         * a simple detection of such strings is done and then base64 decoding applied.
+         *
+         * @param value the string to be converted, i.e. numbers separated by 'sep'
+         * @param sep a string containing any character separating two numbers
+         * @return
+         */
+        template <>
+        inline std::vector<unsigned char> fromString(const std::string& value, const std::string& sep) {
+            std::vector<unsigned char> result;
+            if (value.find_first_of(sep, 1) == std::string::npos && value.size() > 3ul) {
+                if (sep.find_first_of(data::b64_char) != std::string::npos) {
+                    throw KARABO_CAST_EXCEPTION("Separator (" + sep + ") contains a base64 encoding character");
+                }
+                // Old, data, i.e. vector<unsigned char> stringified by Karabo 2
+                // since no 'sep' in it and longer than 3 characters, the max amount of digits of single unsigned char
+                karabo::data::base64Decode(value, result);
+            } else {
+                try {
+                    // Avoiding copy of data by re-interpret.
+                    // Does not work for values in string larger than the signed char max (std::bad_cast)
+                    std::vector<signed char> tmp = fromString<signed char, std::vector>(value, sep);
+                    std::vector<unsigned char>& castedTmp = *reinterpret_cast<std::vector<unsigned char>*>(&tmp);
+                    result.swap(castedTmp);
+                } catch (const karabo::data::PropagatedException& e) {
+                    if (e.userFriendlyMsg(false).find("bad numeric conversion") == std::string::npos) {
+                        // If a propagated exception, we expect it to be caused by a bad lexical cast
+                        KARABO_RETHROW_MSG("Expected an std::bad_cast to be the reason, but is " +
+                                           e.userFriendlyMsg(false));
+                    }
+                    // Let's go via an inefficient copy:
+                    std::vector<unsigned short> tmp = fromString<unsigned short, std::vector>(value, sep);
+                    result.reserve(tmp.size());
+                    for (unsigned short shortVal : tmp) {
+                        result.push_back(static_cast<unsigned char>(shortVal));
+                    }
+                }
+            }
+            return result;
         }
 
         //

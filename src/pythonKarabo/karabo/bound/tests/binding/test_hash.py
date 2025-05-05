@@ -551,7 +551,10 @@ def test_getAs():
 
     assert h.getAs("a", Types.STRING) == "1"
     assert h.getAs("a", Types.VECTOR_BOOL) == [True]
-    assert h.getAs("a", Types.VECTOR_INT8) == bytearray(b'\x01')
+    # Gives bytearray(b'\xd4'):
+    # assert h.getAs("a", Types.VECTOR_CHAR) == bytearray(b'\x01')
+    assert h.getAs("a", Types.VECTOR_INT8) == [1]
+    assert h.getAs("a", Types.VECTOR_UINT8) == [1]
     assert h.getAs("a", Types.VECTOR_INT16) == [1]
     assert h.getAs("a", Types.VECTOR_UINT16) == [1]
     assert h.getAs("a", Types.VECTOR_INT32) == [1]
@@ -574,7 +577,11 @@ def test_getAttributeAs():
     assert h.getAttributeAs("a", "a", Types.INT32) == 1
     assert h.getAttributeAs("a", "a", Types.DOUBLE) == 1.0
     assert h.getAttributeAs("a", "a", Types.VECTOR_BOOL) == [True]
-    assert h.getAttributeAs("a", "a", Types.VECTOR_INT8) == bytearray(b'\x01')
+    # Gives bytearray(b'\xd4')
+    # assert
+    #    h.getAttributeAs("a", "a", Types.VECTOR_CHAR) == bytearray(b'\x01')
+    assert h.getAttributeAs("a", "a", Types.VECTOR_INT8) == [1]
+    assert h.getAttributeAs("a", "a", Types.VECTOR_UINT8) == [1]
     assert h.getAttributeAs("a", "a", Types.VECTOR_INT32) == [1]
     assert h.getAttributeAs("a", "a", Types.VECTOR_DOUBLE) == [1.0]
     assert h.getAttributeAs("a", "a", Types.VECTOR_COMPLEX_FLOAT) == [(1 + 0j)]
