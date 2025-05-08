@@ -155,19 +155,19 @@ namespace karabo {
 } // namespace karabo
 
 #ifndef __SO__
-extern template void karabo::io::loadFromFile<karabo::data::Hash>(
+extern template void karabo::data::loadFromFile<karabo::data::Hash>(
       karabo::data::Hash& object, const std::string& filename, const karabo::data::Hash& config = karabo::data::Hash());
-extern template void karabo::io::saveToFile<karabo::data::Hash>(
+extern template void karabo::data::saveToFile<karabo::data::Hash>(
       const karabo::data::Hash& object, const std::string& filename,
       const karabo::data::Hash& config = karabo::data::Hash());
-extern template std::string karabo::io::getIODataType<karabo::data::Hash>();
-extern template void karabo::io::loadFromFile<karabo::data::Schema>(
+extern template std::string karabo::data::getIODataType<karabo::data::Hash>();
+extern template void karabo::data::loadFromFile<karabo::data::Schema>(
       karabo::data::Schema& object, const std::string& filename,
       const karabo::data::Hash& config = karabo::data::Hash());
-extern template void karabo::io::saveToFile<karabo::data::Schema>(
+extern template void karabo::data::saveToFile<karabo::data::Schema>(
       const karabo::data::Schema& object, const std::string& filename,
       const karabo::data::Hash& config = karabo::data::Hash());
-extern template std::string karabo::io::getIODataType<karabo::data::Schema>();
+extern template std::string karabo::data::getIODataType<karabo::data::Schema>();
 #endif
 
 #endif
