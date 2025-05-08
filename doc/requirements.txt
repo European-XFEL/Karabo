@@ -1,6 +1,7 @@
 sphinx
 sphinx-rtd-theme
 readthedocs-sphinx-ext
+snowballstemmer==2.2.0
 git+https://git.xfel.eu/xfel-rtd/rtd-conf.git
 slumber
 numpy
