@@ -551,9 +551,9 @@ namespace karabo {
                     }
                 }
             }
-            if (masterNode.hasAttribute(KARABO_SCHEMA_LEAF_TYPE)) {
-                const auto leafType = Schema::LeafType(masterNode.getAttribute<int>(KARABO_SCHEMA_LEAF_TYPE));
-                if (leafType == karabo::data::Schema::STATE) {
+            if (masterNode.hasAttribute(KARABO_SCHEMA_CLASS_ID)) {
+                const std::string& classId = masterNode.getAttribute<std::string>(KARABO_SCHEMA_CLASS_ID);
+                if (classId == "State") {
                     // this node is a state, we will validate the string against the allowed states
                     const std::string& value = workNode.getValue<std::string>();
                     try {
@@ -573,7 +573,7 @@ namespace karabo {
                            << endl;
                 }
 
-                if (leafType == karabo::data::Schema::ALARM_CONDITION) {
+                if (classId == "AlarmCondition") {
                     // this node is an alarm condition, we will validate the string against the allowed alarm strings
                     const std::string& value = workNode.getValue<std::string>();
                     try {

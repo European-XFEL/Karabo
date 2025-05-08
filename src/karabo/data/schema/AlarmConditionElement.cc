@@ -42,7 +42,6 @@ namespace karabo {
 
         void AlarmConditionElement::beforeAddition() {
             m_node->setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::LEAF);
-            m_node->setAttribute<int>(KARABO_SCHEMA_LEAF_TYPE, Schema::ALARM_CONDITION);
             m_node->setAttribute<std::string>(KARABO_SCHEMA_VALUE_TYPE, ToLiteral::to<Types::STRING>());
             m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ);
             m_node->setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::OPTIONAL_PARAM);

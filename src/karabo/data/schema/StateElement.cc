@@ -119,7 +119,6 @@ namespace karabo {
 
         void StateElement::beforeAddition() {
             m_node->setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, static_cast<int>(Schema::LEAF));
-            m_node->setAttribute<int>(KARABO_SCHEMA_LEAF_TYPE, static_cast<int>(Schema::STATE));
             m_node->setAttribute<std::string>(KARABO_SCHEMA_VALUE_TYPE, ToLiteral::to<Types::STRING>());
             m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ);
             m_node->setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, static_cast<int>(Schema::OPTIONAL_PARAM));
