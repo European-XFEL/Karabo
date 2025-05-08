@@ -45,8 +45,7 @@ namespace karabo {
             : m_currentAccessMode(rules.m_accessMode),
               m_currentState(rules.m_state),
               m_currentAccessLevel(rules.m_accessLevel),
-              m_rootName(classId),
-              m_defaultDAQPolicy(DAQPolicy::UNSPECIFIED) {}
+              m_rootName(classId) {}
 
 
         void Schema::setRootName(const std::string& rootName) {
@@ -1155,42 +1154,5 @@ namespace karabo {
             return m_hash.getAttribute<std::vector<std::string> >(path, KARABO_SCHEMA_ALLOWED_ACTIONS);
         }
 
-
-        //**********************************************
-        //               DAQPolicy                     *
-        //**********************************************
-
-
-        void Schema::setDAQPolicy(const std::string& path, const DAQPolicy& value) {
-            m_hash.setAttribute<int>(path, KARABO_SCHEMA_DAQ_POLICY, static_cast<int>(value));
-        }
-
-
-        bool Schema::hasDAQPolicy(const std::string& path) const {
-            return m_hash.hasAttribute(path, KARABO_SCHEMA_DAQ_POLICY);
-        }
-
-        DAQPolicy Schema::getDAQPolicy(const std::string& path) const {
-            const int policyInt = m_hash.getAttribute<int>(path, KARABO_SCHEMA_DAQ_POLICY);
-            switch (DAQPolicy(policyInt)) {
-                case DAQPolicy::UNSPECIFIED:
-                    return DAQPolicy::UNSPECIFIED;
-                case DAQPolicy::OMIT:
-                    return DAQPolicy::OMIT;
-                case DAQPolicy::SAVE:
-                    return DAQPolicy::SAVE;
-                default:
-                    throw KARABO_PARAMETER_EXCEPTION("Unknown DaqPolicy " + toString(policyInt));
-                    return DAQPolicy::UNSPECIFIED; // please the compiler
-            }
-        }
-
-        void Schema::setDefaultDAQPolicy(const DAQPolicy& policy) {
-            m_defaultDAQPolicy = policy;
-        }
-
-        DAQPolicy Schema::getDefaultDAQPolicy() const {
-            return m_defaultDAQPolicy;
-        }
     } // namespace data
 } // namespace karabo

@@ -18,13 +18,12 @@ import pytest
 
 from karabind import (
     AMPERE, IMAGEDATA_ELEMENT, INT32_ELEMENT, MANDATORY, METER, MICRO, MILLI,
-    NDARRAY_ELEMENT, NODE_ELEMENT, OVERWRITE_ELEMENT, STATE_ELEMENT,
-    STRING_ELEMENT, AccessLevel, AccessType, ArchivePolicy, AssignmentType,
-    DaqDataType, DAQPolicy, Hash, Logger, MetricPrefix, NodeType, Schema,
-    Types, Unit, Validator, cppGraphicsRenderer1SchemaTest,
-    cppShapeSchemaCircle, cppShapeSchemaEditableCircle,
-    cppSomeClassSchemaSomeClassId, cppTestStruct1SchemaMyTest,
-    cppTestStruct1SchemaTestStruct1, fullyEqual)
+    NDARRAY_ELEMENT, NODE_ELEMENT, OVERWRITE_ELEMENT, STRING_ELEMENT,
+    AccessLevel, AccessType, ArchivePolicy, AssignmentType, DaqDataType, Hash,
+    Logger, MetricPrefix, NodeType, Schema, Types, Unit, Validator,
+    cppGraphicsRenderer1SchemaTest, cppShapeSchemaCircle,
+    cppShapeSchemaEditableCircle, cppSomeClassSchemaSomeClassId,
+    cppTestStruct1SchemaMyTest, cppTestStruct1SchemaTestStruct1, fullyEqual)
 from karabo.common.states import State
 
 
@@ -954,29 +953,6 @@ def test_daq_data_type():
     schema.setDaqDataType("trainData", DaqDataType.TRAIN)
     assert schema.hasDaqDataType("trainData")
     assert schema.getDaqDataType("trainData") == DaqDataType.TRAIN
-
-
-def test_state_element():
-    schema = Schema()
-    (
-        STATE_ELEMENT(schema)
-        .key("state1")
-        .commit(),
-
-        STATE_ELEMENT(schema)
-        .key("state2")
-        .daqPolicy(DAQPolicy.SAVE)
-        .commit(),
-
-        STATE_ELEMENT(schema)
-        .key("state3")
-        .daqPolicy(DAQPolicy.OMIT)
-        .commit()
-    )
-
-    assert schema.getDAQPolicy("state1") == DAQPolicy.UNSPECIFIED
-    assert schema.getDAQPolicy("state2"), DAQPolicy.SAVE
-    assert schema.getDAQPolicy("state3"), DAQPolicy.OMIT
 
 
 def test_table_element():

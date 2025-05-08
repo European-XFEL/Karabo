@@ -68,8 +68,6 @@ void exportPyUtilStateElement(py::module_& m) {
           },
           py::return_value_policy::reference_internal);
 
-    se.def("daqPolicy", &StateElement::daqPolicy, py::return_value_policy::reference_internal);
-
     auto initialValue = [](StateElement& self, const py::object& value) {
         const std::string className = value.attr("__class__").attr("__name__").cast<std::string>();
         if (className != "State") throw KARABO_PYTHON_EXCEPTION("defaultValue expects parameter of type State.");

@@ -23,7 +23,7 @@ run/servers/*/lastConfiguration.xml
 run/servers/*/plugins
 run/servers/dataLoggerManagerServer/loggermap.xml
 run/servers/projectServer/projects/
-src/karabo/tests/io/resources/*
+src/karabo/tests/data/io/resources/*
 src/karabo/util/VersionMacros.hh
 src/pythonKarabo/build/
 src/pythonKarabo/dist/
