@@ -118,7 +118,8 @@ namespace karabind {
             }
         }
 
-       protected: // not private - needed by HandlerWrapExtra, HandlerWrapAny<N> and InputChannelWrap::DataHandlerWrap
+       protected:
+        // not private, needed by HandlerWrapExtra[2], HandlerWrapAny<N> and InputChannelWrap::DataHandlerWrap
         std::shared_ptr<py::object> m_handler;
         char const* const m_where;
     };
@@ -157,6 +158,43 @@ namespace karabind {
         // https://stackoverflow.com/questions/4010281/accessing-protected-members-of-superclass-in-c-with-templates):
         using HandlerWrap<FirstArg, Args...>::m_handler;
         using HandlerWrap<FirstArg, Args...>::m_where;
+    };
+
+    /**
+     * Specialisation of HandlerWrap that stores two extra C++ object and
+     * passes them as first and second argument to the Python handler, before the others.
+     *
+     * The arguments are converted to pybind11::object before passed to the Python handler.
+     */
+    template <typename ExtraArg1, typename ExtraArg2, typename... Args>
+    class HandlerWrapExtra2 : public HandlerWrap<Args...> {
+       public:
+        HandlerWrapExtra2(const py::object& handler, char const* const where, const ExtraArg1& extra1,
+                          const ExtraArg2& extra2)
+            : HandlerWrap<Args...>(handler, where), m_extraArg1(extra1), m_extraArg2(extra2) {}
+
+        void operator()(Args... args) const {
+            py::gil_scoped_acquire gil;
+            try {
+                if (*m_handler) {
+                    // Call handler with individually unpacked arguments, but put the extra ones first:
+                    (*m_handler)(py::cast(m_extraArg1), py::cast(m_extraArg2), py::cast(std::forward<Args>(args))...);
+                }
+            } catch (py::error_already_set& e) {
+                detail::treatError_already_set(e, *m_handler, m_where);
+            } catch (...) {
+                KARABO_RETHROW
+            }
+        }
+
+       private:
+        ExtraArg1 m_extraArg1;
+        ExtraArg2 m_extraArg2;
+        // Make (non-private) base class members available. Needed since 'C++ doesn’t consider superclass templates for
+        // name resolution' (see
+        // https://stackoverflow.com/questions/4010281/accessing-protected-members-of-superclass-in-c-with-templates):
+        using HandlerWrap<Args...>::m_handler;
+        using HandlerWrap<Args...>::m_where;
     };
 
     /**

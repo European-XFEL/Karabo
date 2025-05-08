@@ -599,6 +599,24 @@ namespace karabind {
 
             return this->createInputChannel(channelName, config, dataHandler, inputHandler, eosHandler, tracker);
         }
+
+        void asyncConnectPy(const std::string& signalInstanceId, const std::string& signalSignature,
+                            const std::string& slotSignature, const py::object& callback) {
+            HandlerWrapExtra2<std::string, std::string> successHandler(callback, "asyncConnectSuccess", std::string(),
+                                                                       std::string());
+            ErrorHandlerWrap failureHandler(callback, "asyncConnectFailure");
+
+            this->asyncConnect(signalInstanceId, signalSignature, slotSignature, successHandler, failureHandler);
+        }
+
+        void asyncDisconnectPy(const std::string& signalInstanceId, const std::string& signalSignature,
+                               const std::string& slotSignature, const py::object& callback) {
+            HandlerWrapExtra2<std::string, std::string> successHandler(callback, "asyncDisconnectSuccess",
+                                                                       std::string(), std::string());
+            ErrorHandlerWrap failureHandler(callback, "asyncDisconnectFailure");
+
+            this->asyncDisconnect(signalInstanceId, signalSignature, slotSignature, successHandler, failureHandler);
+        }
     };
 
 } // namespace karabind
@@ -708,6 +726,12 @@ void exportPyXmsSignalSlotable(py::module_& m) {
                 "\n\nExample:\n\nIf we need to be informed on slot \"onMoin\" if remote instance \"b\" emits "
                 "signal \"moin\" ...\n\n\t"
                 "ss = SignalSlotable(\"a\")\n\tss.connect(\"b\", \"moin\", \"onMoin\")\n")
+          .def("asyncConnect", (&SignalSlotableWrap::asyncConnectPy), py::arg("signalInstanceId"),
+               py::arg("signalSignature"), py::arg("slotFunction"), py::arg("callback"),
+               "Asynchronously connect 'signalSignature' on instance 'signalInstanceId' to\n"
+               "own slot 'slotFunction', 'callback' must be callable with two string arguments.\n"
+               "If connection succeeded, first argument is empty string.\nOtherwise "
+               "first argument states the failure reason and the second argument gives details, e.g. a trace")
           .def(
                 "getAvailableInstances",
                 [](SignalSlotable& self, bool activateTracking) {
@@ -728,6 +752,12 @@ void exportPyXmsSignalSlotable(py::module_& m) {
                 py::arg("instanceId"))
           .def("disconnect", &SignalSlotable::disconnect, py::arg("signalInstanceId"), py::arg("signalFunction"),
                py::arg("slotFunction"))
+          .def("asyncDisconnect", (&SignalSlotableWrap::asyncDisconnectPy), py::arg("signalInstanceId"),
+               py::arg("signalSignature"), py::arg("slotFunction"), py::arg("callback"),
+               "Asynchronously disconnect own slot 'slotFunction' from 'signalSignature' on\n"
+               "instance 'signalInstanceId' , 'callback' must be callable with two string arguments.\n"
+               "If disconnection succeeded, first argument is empty string.\nOtherwise "
+               "first argument states the failure reason and the second argument gives details, e.g. a trace")
           .def("getInstanceId", &SignalSlotable::getInstanceId, py::return_value_policy::reference_internal)
           .def("registerSlot", (&SignalSlotableWrap::registerSlotPy), py::arg("slotFunction"),
                py::arg("slotName") = std::string(), py::arg("numArgs") = -1,
