@@ -800,7 +800,7 @@ namespace karabo {
          */
         template <class E, class T = std::char_traits<E>, class Sub1 = std::allocator<E>>
 
-        class Widen : public std::unary_function<const std::string&, std::basic_string<E, T, Sub1>> {
+        class Widen {
             std::locale loc_;
             const std::ctype<E>* pCType_;
 
