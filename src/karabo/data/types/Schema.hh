@@ -102,7 +102,6 @@ namespace karabo {
          */
         class KARABO_DECLSPEC Schema {
 #define KARABO_SCHEMA_NODE_TYPE "nodeType"
-#define KARABO_SCHEMA_LEAF_TYPE "leafType"
 #define KARABO_SCHEMA_VALUE_TYPE "valueType"
 #define KARABO_SCHEMA_CLASS_ID "classId"
 
@@ -223,17 +222,6 @@ namespace karabo {
                 LEAF,
                 NODE,
                 CHOICE_OF_NODES
-            };
-
-            /**
-             * An enum specifying the type of Leaf-like elements
-             */
-            enum LeafType {
-
-                PROPERTY,
-                COMMAND,
-                STATE,
-                ALARM_CONDITION
             };
 
             /**

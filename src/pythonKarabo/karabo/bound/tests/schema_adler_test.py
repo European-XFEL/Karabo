@@ -42,4 +42,4 @@ def test_schema(eventLoop: eventLoop):
         schema = ser.save(schema)
         text = ("The generated schema changed. If this "
                 "is desired, change the checksum in the code.")
-        assert adler32(schema) == 2708299605, text
+        assert adler32(schema) == 901770096, text

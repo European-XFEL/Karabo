@@ -184,13 +184,6 @@ void exportPyUtilSchema(py::module_& m) {
               .value("EXPERT", Schema::EXPERT)
               .export_values();
 
-        py::enum_<Schema::LeafType>(m, "LeafType")
-              .value("PROPERTY", Schema::PROPERTY)
-              .value("COMMAND", Schema::COMMAND)
-              .value("STATE", Schema::STATE)
-              .value("ALARM_CONDITION", Schema::ALARM_CONDITION)
-              .export_values();
-
         py::enum_<Schema::NodeType>(m, "NodeType")
               .value("LEAF", Schema::LEAF)
               .value("NODE", Schema::NODE)

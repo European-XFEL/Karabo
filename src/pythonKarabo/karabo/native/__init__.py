@@ -19,7 +19,7 @@ from .data.bin_writer import encodeBinary, writeBinary
 from .data.compare import has_changes
 from .data.enums import (
     AccessLevel, AccessMode, ArchivePolicy, Assignment, DaqDataType,
-    DimensionType, EncodingType, LeafType, MetricPrefix, NodeType, Unit)
+    DimensionType, EncodingType, MetricPrefix, NodeType, Unit)
 from .data.hash import (
     Hash, HashByte, HashElement, HashList, HashMergePolicy,
     get_hash_type_from_data, is_equal, simple_deepcopy)
