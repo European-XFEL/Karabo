@@ -171,12 +171,9 @@ namespace karabo {
             void beforeAddition() {
 #if __GNUC__ >= 13
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, static_cast<int>(Schema::LEAF));
-                this->m_node->template setAttribute<int>(KARABO_SCHEMA_LEAF_TYPE, static_cast<int>(Schema::PROPERTY));
 #else
                 constexpr int schemaLeaf = static_cast<int>(Schema::LEAF);
-                constexpr int schemaProp = static_cast<int>(Schema::PROPERTY);
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, schemaLeaf);
-                this->m_node->template setAttribute<int>(KARABO_SCHEMA_LEAF_TYPE, schemaProp);
 #endif
                 this->m_node->template setAttribute(KARABO_SCHEMA_VALUE_TYPE,
                                                     Types::to<ToLiteral>(Types::from<ValueType>()));

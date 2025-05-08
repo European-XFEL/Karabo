@@ -466,10 +466,9 @@ namespace karabo {
                 try {
                     const karabo::data::Hash::Attributes& attrs =
                           m_fullSchema.getParameterHash().getNode(key).getAttributes();
-                    if (attrs.has(KARABO_SCHEMA_LEAF_TYPE)) {
-                        const auto leafType =
-                              static_cast<karabo::data::Schema::LeafType>(attrs.get<int>(KARABO_SCHEMA_LEAF_TYPE));
-                        if (leafType == karabo::data::Schema::STATE) {
+                    if (attrs.has(KARABO_SCHEMA_CLASS_ID)) {
+                        const std::string& classId = attrs.get<std::string>(KARABO_SCHEMA_CLASS_ID);
+                        if (classId == "State") {
                             if (typeid(T) == typeid(karabo::data::State)) {
                                 return *reinterpret_cast<const T*>(
                                       &karabo::data::State::fromString(m_parameters.get<std::string>(key)));
@@ -477,7 +476,7 @@ namespace karabo {
                             throw KARABO_PARAMETER_EXCEPTION("State element at " + key +
                                                              " may only return state objects");
                         }
-                        if (leafType == karabo::data::Schema::ALARM_CONDITION) {
+                        if (classId == "AlarmCondition") {
                             if (typeid(T) == typeid(karabo::data::AlarmCondition)) {
                                 return *reinterpret_cast<const T*>(
                                       &karabo::data::AlarmCondition::fromString(m_parameters.get<std::string>(key)));

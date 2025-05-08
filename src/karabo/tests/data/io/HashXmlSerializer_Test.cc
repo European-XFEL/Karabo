@@ -256,7 +256,7 @@ void HashXmlSerializer_Test::testLegacyDeserialization() {
           "STRING&#10;'e2' alarmCondition=&quot;none&quot; =&gt; 0 BOOL&#10;'e3' alarmCondition=&quot;none&quot; =&gt; "
           "42 INT32&#10;'e4' alarmCondition=&quot;none&quot; =&gt; 2.33333 FLOAT&#10;'e5' "
           "alarmCondition=&quot;none&quot; =&gt; 7.77777 DOUBLE&#10;\" "
-          "accessMode=\"KRB_INT32:4\" nodeType=\"KRB_INT32:0\" leafType=\"KRB_INT32:0\" "
+          "accessMode=\"KRB_INT32:4\" nodeType=\"KRB_INT32:0\" "
           "displayType=\"KRB_STRING:Table\" valueType=\"KRB_STRING:VECTOR_HASH\" "
           "rowSchema=\"KRB_SCHEMA:Schema Object\" requiredAccessLevel=\"KRB_INT32:1\" "
           "overwriteRestrictions=\"KRB_VECTOR_BOOL:0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0\" "
@@ -279,7 +279,6 @@ void HashXmlSerializer_Test::testLegacyDeserialization() {
 
     CPPUNIT_ASSERT_EQUAL(4, attrs.get<int>("accessMode"));
     CPPUNIT_ASSERT_EQUAL(0, attrs.get<int>("nodeType"));
-    CPPUNIT_ASSERT_EQUAL(0, attrs.get<int>("leafType"));
     CPPUNIT_ASSERT_EQUAL(std::string("Table"), attrs.get<std::string>("displayType"));
     CPPUNIT_ASSERT_EQUAL(std::string("VECTOR_HASH"), attrs.get<std::string>("valueType"));
 
