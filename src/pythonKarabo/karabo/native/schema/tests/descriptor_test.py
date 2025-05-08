@@ -27,11 +27,11 @@ from karabo.common.states import State
 from karabo.native import (
     AccessLevel, AccessMode, ArchivePolicy, Assignment, Attribute, Bool,
     ByteArray, Char, Configurable, Double, Float, Hash, HashList, Image,
-    ImageData, Int8, Int16, Int32, Int64, KaraboError, LeafType, MetricPrefix,
-    NDArray, NoneValue, NumpyVector, QuantityValue, RegexString, Schema, Slot,
-    String, TableValue, Timestamp, Type, TypeHash, TypeNone, TypeSchema, UInt8,
-    UInt16, UInt32, UInt64, Unit, VectorBool, VectorChar, VectorDouble,
-    VectorFloat, VectorHash, VectorInt8, VectorInt16, VectorInt32, VectorInt64,
+    ImageData, Int8, Int16, Int32, Int64, KaraboError, MetricPrefix, NDArray,
+    NoneValue, NumpyVector, QuantityValue, RegexString, Schema, Slot, String,
+    TableValue, Timestamp, Type, TypeHash, TypeNone, TypeSchema, UInt8, UInt16,
+    UInt32, UInt64, Unit, VectorBool, VectorChar, VectorDouble, VectorFloat,
+    VectorHash, VectorInt8, VectorInt16, VectorInt32, VectorInt64,
     VectorRegexString, VectorString, VectorUInt8, VectorUInt16, VectorUInt32,
     VectorUInt64, decodeBinary, encodeBinary, get_descriptor_from_data,
     unit_registry as unit)
@@ -989,11 +989,9 @@ class Tests(TestCase):
 
         # Check for state
         _, attrs = state.toSchemaAndAttrs(None, None)
-        self.assertEqual(attrs["leafType"], LeafType.State)
         self.assertEqual(attrs["classId"], KARABO_CLASS_ID_STATE)
         # Check for Alarms
         _, attrs = alarm.toSchemaAndAttrs(None, None)
-        self.assertEqual(attrs["leafType"], LeafType.AlarmCondition)
         self.assertEqual(attrs["classId"], KARABO_CLASS_ID_ALARM)
 
     def _min_max_desc(self, d, min_, max_):

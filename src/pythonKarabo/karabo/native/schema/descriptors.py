@@ -30,8 +30,7 @@ from karabo.common.states import State
 from karabo.native import KaraboError
 from karabo.native.data import (
     AccessLevel, AccessMode, ArchivePolicy, Assignment, Hash, HashByte,
-    HashList, LeafType, MetricPrefix, NodeType, Schema, Unit,
-    hashtype_from_string)
+    HashList, MetricPrefix, NodeType, Schema, Unit, hashtype_from_string)
 
 from .basetypes import (
     BoolValue, EnumValue, KaraboValue, NoneValue, QuantityValue, StringValue,
@@ -153,10 +152,6 @@ class Enumable:
         schema, attrs = super().toSchemaAndAttrs(device, state)
         if self.enum is not None:
             attrs["classId"] = self.enum.__name__
-            if self.enum is State:
-                attrs["leafType"] = LeafType.State.value
-            elif self.enum is AlarmCondition:
-                attrs["leafType"] = LeafType.AlarmCondition.value
             if self.options is None:
                 attrs["options"] = [val.value
                                     for val in self.enum.__members__.values()]

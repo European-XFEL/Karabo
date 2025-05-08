@@ -111,14 +111,6 @@ class NodeType(IntEnum):
 
 
 @unique
-class LeafType(IntEnum):
-    Property = 0
-    Command = 1
-    State = 2
-    AlarmCondition = 3
-
-
-@unique
 class DaqDataType(IntEnum):
     PULSE = 0
     TRAIN = 1

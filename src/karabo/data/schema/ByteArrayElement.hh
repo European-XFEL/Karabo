@@ -36,7 +36,6 @@ namespace karabo {
            protected:
             void beforeAddition() {
                 m_node->template setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::LEAF);
-                m_node->template setAttribute<int>(KARABO_SCHEMA_LEAF_TYPE, Schema::PROPERTY);
                 m_node->setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, "ByteArray");
                 m_node->setAttribute(KARABO_SCHEMA_VALUE_TYPE, Types::to<ToLiteral>(Types::from<ByteArray>()));
 
