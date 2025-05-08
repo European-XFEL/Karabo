@@ -919,3 +919,119 @@ def test_sigslot_asyncreply(eventLoopFixt):
     assert msgWhoFailed in detailsMsg
     assert details in detailsMsg
     del req
+
+
+def test_sigslot_asyncConnect(eventLoopFixt):
+    signaler = SignalSlotable("signalInstance")
+    signaler.registerSignal("signal", int)
+    signaler.registerSignal("not_connected_signal", str)
+    signaler.start()
+
+    slotter = SignalSlotable("slotInstance")
+
+    slotCalled = False
+    inSlot = -10
+
+    def slotFunc(i):
+        nonlocal slotCalled, inSlot
+        inSlot += i
+        slotCalled = True
+
+    slotter.registerSlot(slotFunc, "slot")
+    slotter.start()
+
+    # First test successful connectAsync
+    failureMsg = None
+    failureDetails = None
+
+    def connectCallback(failMsg, failDetails):
+        nonlocal failureMsg, failureDetails
+        failureMsg = failMsg
+        failureDetails = failDetails
+
+    slotter.asyncConnect("signalInstance", "signal", "slot", connectCallback)
+
+    def wait_for_callback():
+        max_count = 2000
+        while failureMsg is None and failureDetails is None and max_count > 0:
+            time.sleep(0.005)
+            max_count -= 1
+
+    wait_for_callback()
+
+    assert failureMsg is not None  # callback called
+    assert failureMsg == ""        # connect succeeded
+
+    signaler.emit("signal", 52)
+
+    def wait_for_slotCalled(max_count=2000):
+        count = max_count
+        while not slotCalled and count > 0:
+            time.sleep(0.005)
+            count -= 1
+
+    wait_for_slotCalled()
+
+    assert slotCalled
+    assert 42 == inSlot
+
+    ##################################################
+    # Test failure handling
+
+    # Non-existing signal gives failure - but in Karabo 3 only since
+    # signalInstance is in same process, otherwise just subscribes to broker
+    failureMsg = failureDetails = None
+
+    slotter.asyncConnect("signalInstance", "NOT_A_signal", "slot",
+                         connectCallback)
+    wait_for_callback()
+
+    assert failureMsg is not None  # callback called
+    assert "no signal 'NOT_A_signal'" in failureMsg
+    # Details contain the same, but also C++ exception etails
+    assert "no signal 'NOT_A_signal'" in failureDetails
+    assert "Exception Type....:  SignalSlot Exception" in failureDetails
+
+    # Non-existing slot gives failure
+    failureMsg = failureDetails = None
+
+    slotter.asyncConnect("signalInstance", "signal", "NOT_A_slot",
+                         connectCallback)
+    wait_for_callback()
+
+    assert failureMsg is not None  # callback called
+    assert "no slot 'NOT_A_slot'" in failureMsg
+    # Details contain the same, but also C++ exception etails
+    assert "no slot 'NOT_A_slot'" in failureDetails
+    assert "Exception Type....:  SignalSlot Exception" in failureDetails
+
+    #################################################################
+    # Now asyncronously disconnect
+    failureMsg = failureDetails = None
+
+    slotter.asyncDisconnect("signalInstance", "signal", "slot",
+                            connectCallback)
+    wait_for_callback()
+
+    assert failureMsg is not None  # callback called
+    assert failureMsg == ""        # successfully disconnected
+
+    slotCalled = False
+    signaler.emit("signal", 77)
+
+    # wait only a bit (10 means 50 ms) for something not coming
+    wait_for_slotCalled(10)
+    assert not slotCalled
+
+    #################################################################
+    # Finally a failing asyncDisconnect
+    failureMsg = failureDetails = None
+
+    slotter.asyncDisconnect("signalInstance", "signal", "not_a_slot",
+                            connectCallback)
+    wait_for_callback()
+
+    assert failureMsg is not None  # callback called
+    assert "was not connected" in failureMsg
+    assert "was not connected" in failureDetails
+    assert "Exception Type....:  SignalSlot Exception" in failureDetails
