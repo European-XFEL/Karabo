@@ -17,10 +17,9 @@ import unittest
 
 from karabo.bound import (
     IMAGEDATA_ELEMENT, INT32_ELEMENT, MANDATORY, METER, MICRO, NDARRAY_ELEMENT,
-    NODE_ELEMENT, OVERWRITE_ELEMENT, STATE_ELEMENT, AccessLevel, AccessType,
-    ArchivePolicy, AssignmentType, Configurator, DaqDataType, DAQPolicy, Hash,
-    Logger, MetricPrefix, NodeType, Schema, State, Types, Unit, Validator,
-    fullyEqual)
+    NODE_ELEMENT, OVERWRITE_ELEMENT, AccessLevel, AccessType, ArchivePolicy,
+    AssignmentType, Configurator, DaqDataType, Hash, Logger, MetricPrefix,
+    NodeType, Schema, State, Types, Unit, Validator, fullyEqual)
 
 from .configuration_example_classes import (
     ArrayContainer, Base, GraphicsRenderer, GraphicsRenderer1, SomeClass,
@@ -889,28 +888,6 @@ class Schema_TestCase(unittest.TestCase):
         schema.setDaqDataType("trainData", DaqDataType.TRAIN)
         self.assertEqual(schema.hasDaqDataType("trainData"), True)
         self.assertEqual(schema.getDaqDataType("trainData"), DaqDataType.TRAIN)
-
-    def test_state_element(self):
-        schema = Schema()
-        (
-            STATE_ELEMENT(schema)
-            .key("state1")
-            .commit(),
-
-            STATE_ELEMENT(schema)
-            .key("state2")
-            .daqPolicy(DAQPolicy.SAVE)
-            .commit(),
-
-            STATE_ELEMENT(schema)
-            .key("state3")
-            .daqPolicy(DAQPolicy.OMIT)
-            .commit()
-        )
-
-        self.assertEqual(schema.getDAQPolicy("state1"), DAQPolicy.UNSPECIFIED)
-        self.assertEqual(schema.getDAQPolicy("state2"), DAQPolicy.SAVE)
-        self.assertEqual(schema.getDAQPolicy("state3"), DAQPolicy.OMIT)
 
     def test_table_element(self):
         schema = TestStruct1.getSchema("TestStruct1")

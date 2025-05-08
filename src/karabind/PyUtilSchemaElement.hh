@@ -235,33 +235,31 @@ class CommonWrap {
                     KARABO_PYTHON_NUMERIC_ATTRIBUTES(T);                                                      \
     }
 
-#define KARABO_PYTHON_COMMON_ATTRIBUTES(T)                                                                       \
-    .def("observerAccess", &T::observerAccess, py::return_value_policy::reference_internal)                      \
-          .def("operatorAccess", &T::operatorAccess, py::return_value_policy::reference_internal)                \
-          .def("expertAccess", &T::expertAccess, py::return_value_policy::reference_internal)                    \
-          .def("allowedStates", &CommonWrap<T>::allowedStatesPy, py::return_value_policy::reference_internal)    \
-          .def("assignmentInternal", &T::assignmentInternal, py::return_value_policy::reference_internal)        \
-          .def("assignmentMandatory", &T::assignmentMandatory, py::return_value_policy::reference_internal)      \
-          .def("assignmentOptional", &T::assignmentOptional, py::return_value_policy::reference_internal)        \
-          .def("alias", &AliasAttributeWrap<T>::aliasPy, py::return_value_policy::reference_internal)            \
-          .def("commit", &T::commit, py::return_value_policy::reference_internal)                                \
-          .def("commit", (T & (T::*)(karabo::data::Schema&))(&T::commit), py::arg("expected"),                   \
-               py::return_value_policy::reference_internal)                                                      \
-          .def("description", &T::description, py::return_value_policy::reference_internal)                      \
-          .def("displayedName", &T::displayedName, py::return_value_policy::reference_internal)                  \
-          .def("unit", &T::unit, py::return_value_policy::reference_internal)                                    \
-          .def("metricPrefix", &T::metricPrefix, py::return_value_policy::reference_internal)                    \
-          .def("init", &T::init, py::return_value_policy::reference_internal)                                    \
-          .def("key", &T::key, py::return_value_policy::reference_internal)                                      \
-          .def("setSpecialDisplayType", (T & (T::*)(std::string const&))(&T::setSpecialDisplayType),             \
-               py::arg("displayType"), py::return_value_policy::reference_internal)                              \
-          .def("readOnly", &T::readOnly, py::return_value_policy::reference_internal)                            \
-          .def("reconfigurable", &T::reconfigurable, py::return_value_policy::reference_internal)                \
-          .def("tags", (T & (T::*)(std::string const&, std::string const&))(&T::tags), py::arg("tags"),          \
-               py::arg("sep") = " ,;", py::return_value_policy::reference_internal)                              \
-          .def("tags", (T & (T::*)(std::vector<std::string> const&))(&T::tags), py::arg("tags"),                 \
-               py::return_value_policy::reference_internal)                                                      \
-          .def("daqPolicy", (T & (T::*)(karabo::data::DAQPolicy const&))(&T::daqPolicy), (py::arg("daqPolicy")), \
+#define KARABO_PYTHON_COMMON_ATTRIBUTES(T)                                                                    \
+    .def("observerAccess", &T::observerAccess, py::return_value_policy::reference_internal)                   \
+          .def("operatorAccess", &T::operatorAccess, py::return_value_policy::reference_internal)             \
+          .def("expertAccess", &T::expertAccess, py::return_value_policy::reference_internal)                 \
+          .def("allowedStates", &CommonWrap<T>::allowedStatesPy, py::return_value_policy::reference_internal) \
+          .def("assignmentInternal", &T::assignmentInternal, py::return_value_policy::reference_internal)     \
+          .def("assignmentMandatory", &T::assignmentMandatory, py::return_value_policy::reference_internal)   \
+          .def("assignmentOptional", &T::assignmentOptional, py::return_value_policy::reference_internal)     \
+          .def("alias", &AliasAttributeWrap<T>::aliasPy, py::return_value_policy::reference_internal)         \
+          .def("commit", &T::commit, py::return_value_policy::reference_internal)                             \
+          .def("commit", (T & (T::*)(karabo::data::Schema&))(&T::commit), py::arg("expected"),                \
+               py::return_value_policy::reference_internal)                                                   \
+          .def("description", &T::description, py::return_value_policy::reference_internal)                   \
+          .def("displayedName", &T::displayedName, py::return_value_policy::reference_internal)               \
+          .def("unit", &T::unit, py::return_value_policy::reference_internal)                                 \
+          .def("metricPrefix", &T::metricPrefix, py::return_value_policy::reference_internal)                 \
+          .def("init", &T::init, py::return_value_policy::reference_internal)                                 \
+          .def("key", &T::key, py::return_value_policy::reference_internal)                                   \
+          .def("setSpecialDisplayType", (T & (T::*)(std::string const&))(&T::setSpecialDisplayType),          \
+               py::arg("displayType"), py::return_value_policy::reference_internal)                           \
+          .def("readOnly", &T::readOnly, py::return_value_policy::reference_internal)                         \
+          .def("reconfigurable", &T::reconfigurable, py::return_value_policy::reference_internal)             \
+          .def("tags", (T & (T::*)(std::string const&, std::string const&))(&T::tags), py::arg("tags"),       \
+               py::arg("sep") = " ,;", py::return_value_policy::reference_internal)                           \
+          .def("tags", (T & (T::*)(std::vector<std::string> const&))(&T::tags), py::arg("tags"),              \
                py::return_value_policy::reference_internal)
 
 #define KARABO_PYTHON_OPTIONS_NONVECTOR(T)                                                              \

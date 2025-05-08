@@ -79,7 +79,6 @@ class Schema_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testStateAndAlarmSets);
     CPPUNIT_TEST(testSubSchema);
     CPPUNIT_TEST(testDaqDataType);
-    CPPUNIT_TEST(testDaqPolicy);
     CPPUNIT_TEST(testNodeDisplayType);
     CPPUNIT_TEST(testGetLeaves);
     CPPUNIT_TEST(testAlarmStateElement);
@@ -150,7 +149,6 @@ class Schema_Test : public CPPUNIT_NS::TestFixture {
     void testStateAndAlarmSets();
     void testSubSchema();
     void testDaqDataType();
-    void testDaqPolicy();
     void testNodeDisplayType();
     void testGetLeaves();
     void testAlarmStateElement();

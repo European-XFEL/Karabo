@@ -81,15 +81,6 @@ namespace karabo {
         };
 
         /**
-         * An enum specifying the DAQ storage policy
-         */
-        enum class DAQPolicy {
-            UNSPECIFIED = -1,
-            OMIT = 0,
-            SAVE = 1,
-        };
-
-        /**
          * The Schema class correlates to the Hash class like an XML Schema document correlates to an XML document.
          * The Schema object is a description of type of Hash objects, expressed in terms of constraints
          * on the structure and content of Hash objects of that type. Because generally the Hash object is
@@ -155,8 +146,6 @@ namespace karabo {
 
 #define KARABO_SCHEMA_DAQ_DATA_TYPE "daqDataType"
 
-#define KARABO_SCHEMA_DAQ_POLICY "daqPolicy"
-
 #define KARABO_SCHEMA_DISPLAY_TYPE_BIN "bin"
 #define KARABO_SCHEMA_DISPLAY_TYPE_OCT "oct"
 #define KARABO_SCHEMA_DISPLAY_TYPE_HEX "hex"
@@ -193,8 +182,6 @@ namespace karabo {
 
             // Indices
             std::map<std::string, std::string> m_aliasToKey;
-
-            DAQPolicy m_defaultDAQPolicy;
 
            public:
             KARABO_CLASSINFO(Schema, "Schema", "1.0")
@@ -1376,46 +1363,6 @@ namespace karabo {
              * @return specified allowed actions
              */
             const std::vector<std::string>& getAllowedActions(const std::string& path) const;
-
-            //**********************************************
-            //               daqPolicy                     *
-            //**********************************************
-
-            /**
-             * Set the DAQ policy for the element identified by path
-             * @param path
-             * @param value
-             */
-            void setDAQPolicy(const std::string& path, const DAQPolicy& value);
-
-            /**
-             * Check if the element identified by path has an DAQ policy set
-             * @param path
-             * @return
-             */
-            bool hasDAQPolicy(const std::string& path) const;
-
-            /**
-             * Get the DAQ policy for the element identified by path.
-             * @param path
-             * @return maps to the Schema::DAQPolicy enum
-             */
-            DAQPolicy getDAQPolicy(const std::string& path) const;
-
-            /**
-             * Set the default DAQ policy to use if not specified per element.
-             * Needs to be called at the very beginning of the expected parameter
-             * section.
-             *
-             * @param policy
-             */
-            void setDefaultDAQPolicy(const DAQPolicy& value);
-
-            /**
-             * Get the default DAQ policy to use if not specified per element
-             */
-            DAQPolicy getDefaultDAQPolicy() const;
-
 
            private: // functions
             void addElement(Hash::Node& node);
