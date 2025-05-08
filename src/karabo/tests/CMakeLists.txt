@@ -30,23 +30,95 @@ include("../../cmake/cxx-options.cmake")
 include("../../cmake/karabo-lib-target-name.cmake")
 
 find_package(cppunit REQUIRED)
+find_package(pugixml REQUIRED)
+find_package(spdlog REQUIRED)
 
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/testresults)
 
-# Some unit tests, more specifically io/H5File_test.cc, include header files
-# using paths relative to the root level of the source tree. To support those
-# without modifying any test source file, that directory is added in here.
-set(KARABO_ROOT_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../..")
+# Unit tests that don't link to libkarabo.so
 
-# Unit tests - under current directory, which is the root of the
-# unit tests.
+# Framework object file sets used by the statically linked unit tests
+file(GLOB karaboLog_FILES CONFIGURE_DEPENDS
+     "${CMAKE_CURRENT_SOURCE_DIR}/../log/*.cc")
+
+file(GLOB karaboUtil_FILES CONFIGURE_DEPENDS
+     "${CMAKE_CURRENT_SOURCE_DIR}/../util/*.cc")
+
+file(GLOB dataTypes_FILES CONFIGURE_DEPENDS
+     "${CMAKE_CURRENT_SOURCE_DIR}/../data/types/*.cc")
+
+file(GLOB dataSchema_FILES CONFIGURE_DEPENDS
+     "${CMAKE_CURRENT_SOURCE_DIR}/../data/schema/*.cc")
+
+file(GLOB dataTime_FILES CONFIGURE_DEPENDS
+     "${CMAKE_CURRENT_SOURCE_DIR}/../data/time/*.cc")
+
+file(GLOB dataIo_FILES CONFIGURE_DEPENDS
+     "${CMAKE_CURRENT_SOURCE_DIR}/../data/io/*.cc")
+
+# NOTE: The dataSchema tests depend on some types from karabo::xms due to a
+# reference to karabo::xms::ImageData from Schema_Test::testImageElement and a
+# reference to karabo::xms::OutputChannel from
+# Validator_Test::testOutputChannelSchemaRemoval.
+# For now, dataSchemaTestRunner is kept linking to libkarabo.so.
+
+# Runner object file set for the statically linked unit tests
+add_library(TEST_RUNNER_NOLOOP OBJECT ${CMAKE_CURRENT_SOURCE_DIR}/testRunnerNoLoop.cc)
+target_link_libraries(
+    TEST_RUNNER_NOLOOP
+    cppunit::cppunit
+)
+
+file(GLOB dataTypesTestRunner_FILES CONFIGURE_DEPENDS
+     "${CMAKE_CURRENT_SOURCE_DIR}/data/types/*.cc")
+list(APPEND dataTypesTestRunner_FILES $<TARGET_OBJECTS:TEST_RUNNER_NOLOOP>)
+
+add_executable(dataTypesTestRunner ${dataTypes_FILES} ${dataSchema_FILES} ${dataTime_FILES} ${karaboLog_FILES} ${dataTypesTestRunner_FILES})
+target_compile_options(dataTypesTestRunner PRIVATE -DKARABO_TESTPATH=\"${CMAKE_CURRENT_SOURCE_DIR}/\")
+target_link_libraries(dataTypesTestRunner spdlog::spdlog cppunit::cppunit)
+target_include_directories(dataTypesTestRunner PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../..")
+add_test(NAME dataTypesTestRunner COMMAND dataTypesTestRunner testresults/dataTypeTestRunner.xml)
+
+file(GLOB dataTimeTestRunner_FILES CMAKE_CONFIGURE_DEPENDS
+     "${CMAKE_CURRENT_SOURCE_DIR}/data/time/*.cc")
+list(APPEND dataTimeTestRunner_FILES $<TARGET_OBJECTS:TEST_RUNNER_NOLOOP>)
+
+add_executable(dataTimeTestRunner ${dataTime_FILES} ${dataTypes_FILES} ${dataSchema_FILES} ${karaboUtil_FILES} ${karaboLog_FILES} ${dataTimeTestRunner_FILES})
+target_compile_options(dataTimeTestRunner PRIVATE -DKARABO_TESTPATH=\"${CMAKE_CURRENT_SOURCE_DIR}/\")
+target_link_libraries(dataTimeTestRunner spdlog::spdlog cppunit::cppunit)
+target_include_directories(dataTimeTestRunner PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../..")
+add_test(NAME dataTimeTestRunner COMMAND dataTimeTestRunner testresults/dataTimeTestRunner.xml)
+
+file(GLOB dataIoTestRunner_FILES CMAKE_CONFIGURE_DEPENDS
+     "${CMAKE_CURRENT_SOURCE_DIR}/data/io/*.cc")
+list(APPEND dataIoTestRunner_FILES $<TARGET_OBJECTS:TEST_RUNNER_NOLOOP>)
+
+add_executable(dataIoTestRunner ${dataIo_FILES} ${dataTypes_FILES} ${dataSchema_FILES} ${dataTime_FILES} ${karaboUtil_FILES} ${karaboLog_FILES} ${dataIoTestRunner_FILES})
+target_compile_options(dataIoTestRunner PRIVATE -DKARABO_TESTPATH=\"${CMAKE_CURRENT_SOURCE_DIR}/\")
+# NOTE: defining _SO__ even though we are statically linking to Karabo is a "hack" to avoid using extern template declarations
+#       for the specializations for Hash and Schema of both the Binary and Text serializers. When extern template declarations are
+#       used, the specializations won't make into the resulting object files and a linker error with undefined references to the
+#       specializations will happen.
+target_compile_definitions(dataIoTestRunner PRIVATE __SO__)
+target_link_libraries(dataIoTestRunner spdlog::spdlog pugixml::pugixml cppunit::cppunit)
+target_include_directories(dataIoTestRunner PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../..")
+add_test(NAME dataIoTestRunner COMMAND dataIoTestRunner testresults/dataIoTestRunner.xml)
+
+file(GLOB logTestRunner_FILES CMAKE_CONFIGURE_DEPENDS
+     "${CMAKE_CURRENT_SOURCE_DIR}/log/*.cc")
+list(APPEND logTestRunner_FILES $<TARGET_OBJECTS:TEST_RUNNER_NOLOOP>)
+
+add_executable(logTestRunner ${karaboLog_FILES} ${dataTypes_FILES} ${dataSchema_FILES} ${dataTime_FILES} ${logTestRunner_FILES})
+target_compile_options(logTestRunner PRIVATE -DKARABO_TESTPATH=\"${CMAKE_CURRENT_SOURCE_DIR}/\")
+target_link_libraries(logTestRunner spdlog::spdlog cppunit::cppunit)
+target_include_directories(logTestRunner PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../..")
+add_test(NAME logTestRunner COMMAND logTestRunner testresults/logTestRunner.xml)
+
+
+# Unit tests that link to libkarabo.so
 set(TEST_TARGETS
     coreTestRunner
     dataSchemaTestRunner
-    dataTimeTestRunner
-    dataTypesTestRunner
-    dataIoTestRunner
-    logTestRunner
     netTestRunner
     utilTestRunner
     xmsTestRunner
@@ -62,20 +134,12 @@ target_link_libraries(
 add_library(WAIT_UTILS OBJECT ${CMAKE_CURRENT_SOURCE_DIR}/WaitUtils.cc)
 target_link_libraries(
     WAIT_UTILS
-    ${KARABO_LIB_TARGET_NAME}
     cppunit::cppunit
 )
 
 add_library(TEST_RUNNER OBJECT ${CMAKE_CURRENT_SOURCE_DIR}/testRunner.cc)
 target_link_libraries(
     TEST_RUNNER
-    ${KARABO_LIB_TARGET_NAME}
-    cppunit::cppunit
-)
-
-add_library(TEST_RUNNER_NOLOOP OBJECT ${CMAKE_CURRENT_SOURCE_DIR}/testRunnerNoLoop.cc)
-target_link_libraries(
-    TEST_RUNNER_NOLOOP
     ${KARABO_LIB_TARGET_NAME}
     cppunit::cppunit
 )
@@ -88,53 +152,9 @@ set(coreTestRunner_FILES
     $<TARGET_OBJECTS:TEST_RUNNER>
 )
 
-set(dataSchemaTestRunner_FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/data/schema/ConfigurationTestClasses.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/data/schema/Configurator_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/data/schema/Factory_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/data/schema/Schema_Test.cc  # includes some tests of type::Schema
-    ${CMAKE_CURRENT_SOURCE_DIR}/data/schema/Validator_Test.cc
-    $<TARGET_OBJECTS:TEST_RUNNER_NOLOOP>
-)
-
-set(dataTimeTestRunner_FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/data/time/DateTimeString_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/data/time/Epochstamp_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/data/time/TimeClasses_Test.cc
-    $<TARGET_OBJECTS:TEST_RUNNER_NOLOOP>
-)
-
-set(dataTypesTestRunner_FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/data/types/AlarmCondition_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/data/types/Base64_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/data/types/ByteSwap_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/data/types/ClassInfo_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/data/types/Dims_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/data/types/Exception_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/data/types/HashFilter_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/data/types/Hash_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/data/types/NDArray_Test.cc
-    # Schema is largely tested in ${CMAKE_CURRENT_SOURCE_DIR}/data/schema/Schema_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/data/types/Serializable_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/data/types/States_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/data/types/StringTools_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/data/types/Types_Test.cc
-    $<TARGET_OBJECTS:TEST_RUNNER_NOLOOP>
-)
-
-set(dataIoTestRunner_FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/data/io/BufferSet_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/data/io/FileInputOutput_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/data/io/HashBinarySerializer_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/data/io/HashXmlSerializer_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/data/io/SchemaSerializer_Test.cc
-    $<TARGET_OBJECTS:TEST_RUNNER_NOLOOP>
-)
-
-set(logTestRunner_FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/log/Logger_Test.cc
-    $<TARGET_OBJECTS:TEST_RUNNER_NOLOOP>
-)
+file(GLOB dataSchemaTestRunner_FILES CONFIGURE_DEPENDS
+     "${CMAKE_CURRENT_SOURCE_DIR}/data/schema/*.cc")
+list(APPEND dataSchemaTestRunner_FILES $<TARGET_OBJECTS:TEST_RUNNER_NOLOOP>)
 
 set(netTestRunner_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/net/Amqp_Test.cc
