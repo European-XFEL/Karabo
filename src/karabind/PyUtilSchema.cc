@@ -70,11 +70,6 @@ void exportPyUtilSchema(py::module_& m) {
           .value("PULSEMASTER", DaqDataType::PULSEMASTER)
           .value("TRAINMASTER", DaqDataType::TRAINMASTER);
 
-    py::enum_<DAQPolicy>(m, "DAQPolicy")
-          .value("UNSPECIFIED", DAQPolicy::UNSPECIFIED)
-          .value("OMIT", DAQPolicy::OMIT)
-          .value("SAVE", DAQPolicy::SAVE);
-
     {
         py::enum_<MetricPrefix>(m, "MetricPrefix")
               .value("YOTTA", MetricPrefix::YOTTA)
@@ -946,25 +941,6 @@ void exportPyUtilSchema(py::module_& m) {
               "hasDaqDataType",
               [](const Schema& self, const std::string& path) -> py::bool_ { return self.hasDaqDataType(path); },
               py::arg("path"));
-
-        s.def(
-              "setDAQPolicy",
-              [](Schema& self, const std::string& path, const DAQPolicy& policy) { self.setDAQPolicy(path, policy); },
-              py::arg("path"), py::arg("policy"));
-
-        s.def(
-              "getDAQPolicy",
-              [](const Schema& self, const std::string& path) { return py::cast(self.getDAQPolicy(path)); },
-              py::arg("path"));
-
-        s.def(
-              "hasDAQPolicy",
-              [](const Schema& self, const std::string& path) -> py::bool_ { return self.hasDAQPolicy(path); },
-              py::arg("path"));
-
-        s.def(
-              "setDefaultDAQPolicy", [](Schema& self, const DAQPolicy& value) { self.setDefaultDAQPolicy(value); },
-              py::arg("policy"));
 
         s.def(
               "isCustomNode",
