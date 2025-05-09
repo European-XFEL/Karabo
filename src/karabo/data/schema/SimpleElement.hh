@@ -194,7 +194,6 @@ namespace karabo {
 
                 checkMinExcMaxExc();
                 checkMinIncMaxInc();
-                checkWarnAndAlarm();
                 checkDefaultValue();
             }
 
@@ -227,35 +226,6 @@ namespace karabo {
                     }
                 }
             }
-
-            // only makes sense for simple element, as we cannot know how to evaluated for vectors etc
-
-            void checkWarnAndAlarm() {
-                using namespace karabo::data;
-                this->checkAttributeOrder(AlarmCondition::WARN_LOW, AlarmCondition::WARN_HIGH);
-                this->checkAttributeOrder(AlarmCondition::WARN_LOW, AlarmCondition::ALARM_HIGH);
-                this->checkAttributeOrder(AlarmCondition::ALARM_LOW, AlarmCondition::ALARM_HIGH);
-                this->checkAttributeOrder(AlarmCondition::ALARM_LOW, AlarmCondition::WARN_LOW);
-                this->checkAttributeOrder(AlarmCondition::ALARM_LOW, AlarmCondition::WARN_HIGH);
-                this->checkAttributeOrder(AlarmCondition::WARN_HIGH, AlarmCondition::ALARM_HIGH);
-            }
-
-            void checkAttributeOrder(const karabo::data::AlarmCondition& condLow,
-                                     const karabo::data::AlarmCondition& condHigh) {
-                const std::string& attributeLow = condLow.asString();
-                const std::string& attributeHigh = condHigh.asString();
-                if (this->m_node->hasAttribute(attributeLow) && this->m_node->hasAttribute(attributeHigh)) {
-                    const ValueType& min = this->m_node->template getAttribute<ValueType>(attributeLow);
-                    const ValueType& max = this->m_node->template getAttribute<ValueType>(attributeHigh);
-                    if (min > max) {
-                        std::ostringstream msg;
-                        msg << attributeLow << " value (" << min << ") is greater than " << attributeHigh << "(" << max
-                            << ") on parameter \"" << this->m_node->getKey() << "\"";
-                        throw KARABO_PARAMETER_EXCEPTION(msg.str());
-                    }
-                }
-            }
-
 
             // If a default value is defined, check that it is within limits and
             // is among the valid options; throw an exception otherwise.

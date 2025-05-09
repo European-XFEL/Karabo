@@ -33,24 +33,8 @@
 
 #define KARABO_ALARM_NONE "none"
 #define KARABO_WARN "warn"
-#define KARABO_WARN_LOW "warnLow"
-#define KARABO_WARN_HIGH "warnHigh"
-
 #define KARABO_ALARM "alarm"
-#define KARABO_ALARM_LOW "alarmLow"
-#define KARABO_ALARM_HIGH "alarmHigh"
-
-
-#define KARABO_WARN_VARIANCE_LOW "warnVarianceLow"
-#define KARABO_WARN_VARIANCE_HIGH "warnVarianceHigh"
-
-#define KARABO_ALARM_VARIANCE_LOW "alarmVarianceLow"
-#define KARABO_ALARM_VARIANCE_HIGH "alarmVarianceHigh"
-
 #define KARABO_INTERLOCK "interlock"
-
-#define KARABO_ALARM_ACK "alarmNeedsAck"
-#define KARABO_ALARM_INFO "alarmInfo"
 
 #define KARABO_INDICATE_ALARM_SET "indicateAlarm"
 
@@ -65,15 +49,7 @@ namespace karabo {
            public:
             static const AlarmCondition NONE;
             static const AlarmCondition WARN;
-            static const AlarmCondition WARN_LOW;
-            static const AlarmCondition WARN_HIGH;
-            static const AlarmCondition WARN_VARIANCE_LOW;
-            static const AlarmCondition WARN_VARIANCE_HIGH;
             static const AlarmCondition ALARM;
-            static const AlarmCondition ALARM_LOW;
-            static const AlarmCondition ALARM_HIGH;
-            static const AlarmCondition ALARM_VARIANCE_LOW;
-            static const AlarmCondition ALARM_VARIANCE_HIGH;
             static const AlarmCondition INTERLOCK;
 
 

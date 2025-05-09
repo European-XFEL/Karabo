@@ -54,9 +54,6 @@ void AlarmCondition_Test::tearDown() {}
 void AlarmCondition_Test::testOperators() {
     CPPUNIT_ASSERT(karabo::data::AlarmCondition::WARN == karabo::data::AlarmCondition::WARN);
     CPPUNIT_ASSERT(!(karabo::data::AlarmCondition::WARN != karabo::data::AlarmCondition::WARN));
-
-    CPPUNIT_ASSERT(!(karabo::data::AlarmCondition::WARN == karabo::data::AlarmCondition::WARN_LOW));
-    CPPUNIT_ASSERT(karabo::data::AlarmCondition::WARN != karabo::data::AlarmCondition::WARN_LOW);
 }
 
 void AlarmCondition_Test::testStringAssignmentRoundTrip() {
@@ -73,7 +70,7 @@ void AlarmCondition_Test::testSignificanceEvaluation() {
     CPPUNIT_ASSERT(ms.isSameCriticality(karabo::data::AlarmCondition::NONE));
 
     v.push_back(karabo::data::AlarmCondition::WARN);
-    v.push_back(karabo::data::AlarmCondition::ALARM_HIGH);
+    v.push_back(karabo::data::AlarmCondition::ALARM);
     v.push_back(karabo::data::AlarmCondition::INTERLOCK);
     ms = karabo::data::AlarmCondition::returnMostSignificant(v);
     CPPUNIT_ASSERT(ms.isSameCriticality(karabo::data::AlarmCondition::INTERLOCK));
