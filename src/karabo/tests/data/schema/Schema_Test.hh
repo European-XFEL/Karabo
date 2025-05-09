@@ -82,7 +82,6 @@ class Schema_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testNodeDisplayType);
     CPPUNIT_TEST(testGetLeaves);
     CPPUNIT_TEST(testAlarmStateElement);
-    CPPUNIT_TEST(testAllowedActions);
     CPPUNIT_TEST(testInvalidReadOnlyThrows);
     CPPUNIT_TEST(testTableColNoDefaultValue);
     CPPUNIT_TEST(testTableColInitOnly);
@@ -152,7 +151,6 @@ class Schema_Test : public CPPUNIT_NS::TestFixture {
     void testNodeDisplayType();
     void testGetLeaves();
     void testAlarmStateElement();
-    void testAllowedActions();
     /**
      * @brief Checks that a schema element that uses the definition sequence
      * "...assignmentOptional().defaultValue(value).readOnly()" throws an

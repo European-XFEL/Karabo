@@ -347,21 +347,6 @@ void exportPyXmsImageDataElement(py::module_& m) {
               "a string (all capitals) or Encoding enum.\nExample:\n\t"
               "IMAGEDATA_ELEMENT(s)\n\t\t.key('data.image')\n\t\t.setEncoding('RGB')\n\t\t.commit()");
 
-        el.def(
-              "setAllowedActions",
-              [](ImageDataElement& self, const py::object& actions) -> ImageDataElement& {
-                  // Accept any Python sequence of strings...
-                  self.setAllowedActions(wrapper::fromPySequenceToVectorString(actions));
-                  return self;
-              },
-              py::arg("actions"), py::return_value_policy::reference_internal, R"pbdoc(
-                Specify one or more actions that are allowed on this node.
-                If a Karabo device specifies allowed actions for a node,
-                that means that it offers a specific slot interface to operate
-                on this node. Which allowed actions require which interface
-                is defined elsewhere.
-              )pbdoc");
-
         py::implicitly_convertible<Schema&, ImageDataElement>();
     }
 }
