@@ -226,17 +226,6 @@ namespace karabo {
             }
 
             /**
-             * Skip this element during validation of configuration against a Schema
-             * @return
-             */
-            Derived& skipValidation() {
-                using namespace karabo::data;
-                OVERWRITE_ELEMENT(m_schema).key(m_key).setNowSkipValidation().commit();
-
-                return *(static_cast<Derived*>(this));
-            }
-
-            /**
              * Set the default value for a subkey of the CustomNodeElement
              * @param subKey
              * @param defaultValue

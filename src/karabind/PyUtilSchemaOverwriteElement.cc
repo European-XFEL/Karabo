@@ -76,9 +76,6 @@ void exportPyUtilSchemaOverwriteElement(py::module_& m) {
           .def("setNowReconfigurable", &OverwriteElement::setNowReconfigurable,
                py::return_value_policy::reference_internal)
           .def("setNowReadOnly", &OverwriteElement::setNowReadOnly, py::return_value_policy::reference_internal)
-          .def("setNowValidate", &OverwriteElement::setNowValidate, py::return_value_policy::reference_internal)
-          .def("setNowSkipValidation", &OverwriteElement::setNowSkipValidation,
-               py::return_value_policy::reference_internal)
           .def(
                 "setNewDefaultValue",
                 [](OverwriteElement& self, const py::object& value) {

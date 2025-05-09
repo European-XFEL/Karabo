@@ -162,11 +162,6 @@ namespace karabo {
                     report << "Encountered unexpected configuration parameter: \"" << currentScope << "\"" << endl;
                     return;
                 }
-                if (masterNode->hasAttribute(KARABO_SCHEMA_SKIP_VALIDATION) &&
-                    masterNode->getAttribute<bool>(KARABO_SCHEMA_SKIP_VALIDATION)) {
-                    // Skip validation of this node and its children, if requested.
-                    continue;
-                }
 
                 auto nodeType = Schema::NodeType(masterNode->getAttribute<int>(KARABO_SCHEMA_NODE_TYPE));
                 const bool hasClassAttribute = masterNode->hasAttribute(KARABO_SCHEMA_CLASS_ID);
@@ -291,12 +286,6 @@ namespace karabo {
 
             // Iterate master
             for (Hash::const_iterator it = master.begin(); it != master.end(); ++it) {
-                if (it->hasAttribute(KARABO_SCHEMA_SKIP_VALIDATION) &&
-                    it->getAttribute<bool>(KARABO_SCHEMA_SKIP_VALIDATION)) {
-                    // Skip validation of this node and its children, if requested.
-                    continue;
-                }
-
                 const string& key = it->getKey();
 
                 string currentScope;

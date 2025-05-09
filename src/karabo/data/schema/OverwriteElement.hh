@@ -116,7 +116,6 @@ namespace karabo {
                 Restriction observerAccess;
                 Restriction operatorAccess;
                 Restriction expertAccess;
-                Restriction skipValidation;
                 Restriction unit;
                 Restriction metricPrefix;
                 Restriction overwriteRestrictions;
@@ -175,7 +174,6 @@ namespace karabo {
                       observerAccess("observerAccess", m_rest, false),
                       operatorAccess("operatorAccess", m_rest, false),
                       expertAccess("expertAccess", m_rest, false),
-                      skipValidation("skipValidation", m_rest, false),
                       unit("unit", m_rest, false),
                       metricPrefix("metricPrefix", m_rest, false),
                       overwriteRestrictions("overWriteRestrictions", m_rest, false) {}
@@ -286,18 +284,6 @@ namespace karabo {
              * @return
              */
             OverwriteElement& setNowReadOnly();
-
-            /**
-             * Set to now needing validation
-             * @return
-             */
-            OverwriteElement& setNowValidate();
-
-            /**
-             * Set to now needing skipping validation for this element
-             * @return
-             */
-            OverwriteElement& setNowSkipValidation();
 
             /**
              * Set a new default value for this element
