@@ -133,7 +133,7 @@ class EditableCircleX(CircleX):
             OVERWRITE_ELEMENT(expected).key("alarm")
             .setNewDescription("The new alarm description")
             .setNewAssignmentOptional()
-            .setNewDefaultValue(AlarmCondition.WARN_LOW)
+            .setNewDefaultValue(AlarmCondition.WARN)
             .setNowOperatorAccess()
             .commit(),
 
@@ -996,7 +996,7 @@ def test_buildUp():
     assert schema.getDefaultValue("stateE") == 'ERROR'
     assert schema.getDefaultValue("alarmW") == 'warn'
     assert schema.getDefaultValue("alarmA") == 'alarm'
-    assert schema.getDefaultValue("alarm") == 'warnLow'
+    assert schema.getDefaultValue("alarm") == 'warn'
     assert schema.getDisplayedName("radius") == "New Radius"
     assert schema.getAliasFromKey("radius") == 21
     assert schema.getAliasAsString("radius") == "21"

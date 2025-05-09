@@ -110,15 +110,7 @@ namespace karabo {
 
             KRB_ALARM_INSERT(NONE)
             KRB_ALARM_INSERT(WARN)
-            KRB_ALARM_INSERT(WARN_HIGH)
-            KRB_ALARM_INSERT(WARN_LOW)
-            KRB_ALARM_INSERT(WARN_VARIANCE_HIGH)
-            KRB_ALARM_INSERT(WARN_VARIANCE_LOW)
             KRB_ALARM_INSERT(ALARM)
-            KRB_ALARM_INSERT(ALARM_LOW)
-            KRB_ALARM_INSERT(ALARM_HIGH)
-            KRB_ALARM_INSERT(ALARM_VARIANCE_LOW)
-            KRB_ALARM_INSERT(ALARM_VARIANCE_HIGH)
             KRB_ALARM_INSERT(INTERLOCK)
 
 #undef KRB_ALARM_INSERT
@@ -133,15 +125,7 @@ namespace karabo {
 
         const AlarmCondition AlarmCondition::NONE(KARABO_ALARM_NONE, 0);
         const AlarmCondition AlarmCondition::WARN(KARABO_WARN, 1);
-        const AlarmCondition AlarmCondition::WARN_LOW(KARABO_WARN_LOW, WARN);
-        const AlarmCondition AlarmCondition::WARN_HIGH(KARABO_WARN_HIGH, WARN);
-        const AlarmCondition AlarmCondition::WARN_VARIANCE_LOW(KARABO_WARN_VARIANCE_LOW, WARN);
-        const AlarmCondition AlarmCondition::WARN_VARIANCE_HIGH(KARABO_WARN_VARIANCE_HIGH, WARN);
         const AlarmCondition AlarmCondition::ALARM(KARABO_ALARM, 2);
-        const AlarmCondition AlarmCondition::ALARM_LOW(KARABO_ALARM_LOW, ALARM);
-        const AlarmCondition AlarmCondition::ALARM_HIGH(KARABO_ALARM_HIGH, ALARM);
-        const AlarmCondition AlarmCondition::ALARM_VARIANCE_LOW(KARABO_ALARM_VARIANCE_LOW, ALARM);
-        const AlarmCondition AlarmCondition::ALARM_VARIANCE_HIGH(KARABO_ALARM_VARIANCE_HIGH, ALARM);
         const AlarmCondition AlarmCondition::INTERLOCK(KARABO_INTERLOCK, 3);
         // interlock is assumed to always be the highest conditions and knowledge of this is used in
         // returnMostSignificant
