@@ -95,20 +95,6 @@ namespace karabo {
             return *this;
         }
 
-        OverwriteElement& OverwriteElement::setNowValidate() {
-            if (!m_node) throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
-            checkIfRestrictionApplies(m_restrictions.skipValidation);
-            m_node->setAttribute<bool>(KARABO_SCHEMA_SKIP_VALIDATION, false);
-            return *this;
-        }
-
-        OverwriteElement& OverwriteElement::setNowSkipValidation() {
-            if (!m_node) throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
-            checkIfRestrictionApplies(m_restrictions.skipValidation);
-            m_node->setAttribute<bool>(KARABO_SCHEMA_SKIP_VALIDATION, true);
-            return *this;
-        }
-
         OverwriteElement& OverwriteElement::setNewOptions(const std::string& opts, const std::string& sep) {
             return setNewOptions(opts, true, sep);
         }

@@ -367,25 +367,6 @@ namespace karabo {
             return m_hash.getAttributeAs<string>(path, KARABO_SCHEMA_ALIAS);
         }
 
-
-        //**********************************************
-        //               Skip Validation               *
-        //**********************************************
-
-
-        void Schema::setSkipValidation(const std::string& path, const bool value) {
-            m_hash.setAttribute(path, KARABO_SCHEMA_SKIP_VALIDATION, value);
-        }
-
-
-        bool Schema::getSkipValidation(const std::string& path) {
-            if (m_hash.hasAttribute(path, KARABO_SCHEMA_SKIP_VALIDATION)) {
-                return m_hash.getAttributeAs<bool>(path, KARABO_SCHEMA_SKIP_VALIDATION);
-            }
-            return false;
-        }
-
-
         //**********************************************
         //                  Options             *
         //**********************************************

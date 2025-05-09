@@ -622,10 +622,6 @@ class Schema_TestCase(unittest.TestCase):
         assert schema.isAccessReadOnly("exampleKey17")
         assert schema.isAccessReadOnly("exampleKey18")
 
-        assert schema.getSkipValidation("exampleKey16")
-        assert schema.getSkipValidation("exampleKey17")
-        assert not schema.getSkipValidation("exampleKey18")
-
     def test_getDisplayType(self):
         schema = TestStruct1.getSchema("TestStruct1")
         self.assertEqual(schema.getDisplayType("exampleBitsKey1"), "bin")

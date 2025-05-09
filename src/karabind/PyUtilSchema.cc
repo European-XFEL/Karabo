@@ -258,11 +258,6 @@ void exportPyUtilSchema(py::module_& m) {
               py::arg("path"));
 
         s.def(
-              "getSkipValidation",
-              [](Schema& self, const std::string& path) -> py::bool_ { return self.getSkipValidation(path); },
-              py::arg("path"));
-
-        s.def(
               "getDescription",
               [](const Schema& self, const std::string& path) -> py::str { return self.getDescription(path); },
               py::arg("path"), py::return_value_policy::reference_internal);
@@ -723,11 +718,6 @@ void exportPyUtilSchema(py::module_& m) {
               [](Schema& self, const std::string& path, const Schema::AssignmentType& value) {
                   self.setAssignment(path, value);
               },
-              py::arg("path"), py::arg("value"));
-
-        s.def(
-              "setSkipValidation",
-              [](Schema& self, const std::string& path, bool value) { self.setSkipValidation(path, value); },
               py::arg("path"), py::arg("value"));
 
         s.def(
