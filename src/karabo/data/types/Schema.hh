@@ -107,7 +107,6 @@ namespace karabo {
 #define KARABO_SCHEMA_ASSIGNMENT "assignment"
 #define KARABO_SCHEMA_TAGS "tags"
 #define KARABO_SCHEMA_ROW_SCHEMA "rowSchema"
-#define KARABO_SCHEMA_SKIP_VALIDATION "skipValidation"
 
 #define KARABO_SCHEMA_OPTIONS "options"
 #define KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL "requiredAccessLevel"
@@ -620,24 +619,6 @@ namespace karabo {
              * @return
              */
             const AssignmentType getAssignment(const std::string& path) const;
-
-            //**********************************************
-            //               Skip Validation               *
-            //**********************************************
-
-            /**
-             * Set the element identified by path to skip validation
-             * @param path
-             * @param value
-             */
-            void setSkipValidation(const std::string& path, const bool value);
-
-            /**
-             * Check if the element identified by path is set to skip validation
-             * @param path
-             * @return
-             */
-            bool getSkipValidation(const std::string& path);
 
             //**********************************************
             //                  Options                    *

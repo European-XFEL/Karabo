@@ -114,7 +114,6 @@ class EditableCircleX(CircleX):
             .setNewMetricPrefix(MetricPrefix.KILO)
             .setNewMinInc(12)
             .setNewMaxExc(120)
-            .setNowValidate()
             .setNewAllowedStates(State.NORMAL)
             .setNowExpertAccess()
             .commit(),
@@ -139,7 +138,6 @@ class EditableCircleX(CircleX):
 
             OVERWRITE_ELEMENT(expected).key("alarmA")
             .setNowObserverAccess()
-            .setNowSkipValidation()
             .commit(),
 
         )
