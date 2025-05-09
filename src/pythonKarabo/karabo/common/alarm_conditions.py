@@ -27,15 +27,7 @@ class AlarmCondition(Enum):
 
     NONE = "none"
     WARN = "warn"
-    WARN_LOW = "warnLow"
-    WARN_HIGH = "warnHigh"
-    WARN_VARIANCE_LOW = "warnVarianceLow"
-    WARN_VARIANCE_HIGH = "warnVarianceHigh"
     ALARM = "alarm"
-    ALARM_LOW = "alarmLow"
-    ALARM_HIGH = "alarmHigh"
-    ALARM_VARIANCE_LOW = "alarmVarianceLow"
-    ALARM_VARIANCE_HIGH = "alarmVarianceHigh"
     INTERLOCK = "interlock"
 
     @staticmethod

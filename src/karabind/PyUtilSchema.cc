@@ -483,59 +483,6 @@ void exportPyUtilSchema(py::module_& m) {
         s.def("getArchivePolicy",
               [](const Schema& self, const std::string& path) { return py::cast(self.getArchivePolicy(path)); });
 
-        s.def("getWarnLow", [](const Schema& self, const py::object& path) {
-            py::object h = py::cast(self).attr("getParameterHash")();
-            return h.attr("getAttribute")(path, AlarmCondition::WARN_LOW.asString());
-        });
-
-        s.def("getWarnHigh", [](const Schema& self, const py::object& path) {
-            py::object h = py::cast(self).attr("getParameterHash")();
-            return h.attr("getAttribute")(path, AlarmCondition::WARN_HIGH.asString());
-        });
-
-        s.def("getAlarmLow", [](const Schema& self, const py::object& path) {
-            py::object h = py::cast(self).attr("getParameterHash")();
-            return h.attr("getAttribute")(path, AlarmCondition::ALARM_LOW.asString());
-        });
-
-        s.def("getAlarmHigh", [](const Schema& self, const py::object& path) {
-            py::object h = py::cast(self).attr("getParameterHash")();
-            return h.attr("getAttribute")(path, AlarmCondition::ALARM_HIGH.asString());
-        });
-
-        s.def(
-              "getWarnLowAs",
-              [](const Schema& self, const py::object& path, const py::object& otype) {
-                  py::object h = py::cast(self).attr("getParameterHash")();
-                  return h.attr("getAttributeAs")(path, AlarmCondition::WARN_LOW.asString(), otype);
-              },
-              py::arg("path"), py::arg("pytype"));
-
-        s.def(
-              "getWarnHighAs",
-              [](const Schema& self, const py::object& path, const py::object& otype) {
-                  py::object h = py::cast(self).attr("getParameterHash")();
-                  return h.attr("getAttributeAs")(path, AlarmCondition::WARN_HIGH.asString(), otype);
-              },
-              py::arg("path"), py::arg("pytype"));
-
-        s.def(
-              "getAlarmLowAs",
-              [](const Schema& self, const py::object& path, const py::object& otype) {
-                  py::object h = py::cast(self).attr("getParameterHash")();
-                  return h.attr("getAttributeAs")(path, AlarmCondition::ALARM_LOW.asString(), otype);
-              },
-              py::arg("path"), py::arg("pytype"));
-
-        s.def(
-              "getAlarmHighAs",
-              [](const Schema& self, const py::object& path, const py::object& otype) {
-                  py::object h = py::cast(self).attr("getParameterHash")();
-                  return h.attr("getAttributeAs")(path, AlarmCondition::ALARM_HIGH.asString(), otype);
-              },
-              py::arg("path"), py::arg("pytype"));
-
-
         //********* 'has'-methods ****************
 
         s.def(
