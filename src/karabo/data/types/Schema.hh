@@ -134,9 +134,6 @@ namespace karabo {
 
 #define KARABO_SCHEMA_ARCHIVE_POLICY "archivePolicy"
 
-#define KARABO_SCHEMA_MIN "min"
-#define KARABO_SCHEMA_MAX "max"
-
 #define KARABO_SCHEMA_OVERWRITE "overwrite"
 
 #define KARABO_RUNTIME_SCHEMA_UPDATE "runtimeSchemaUpdates"
@@ -1205,52 +1202,6 @@ namespace karabo {
              * @return maps to the Schema::ArchivePolicy enum
              */
             const ArchivePolicy getArchivePolicy(const std::string& path) const;
-
-            //******************************************************
-            //      min/max for number of nodes in ListElement     *
-            //******************************************************
-
-            /**
-             * Set the minimum number of nodes needed in a list element
-             * @param path
-             * @param value
-             */
-            void setMin(const std::string& path, const int& value);
-
-            /**
-             * Check if the element identified by path has a minimum number of Nodes set
-             * @param path
-             * @return
-             */
-            bool hasMin(const std::string& path) const;
-
-            /**
-             * Get the minimum number of nodes needed for the element identified by path
-             * @param path
-             * @return
-             */
-            const int& getMin(const std::string& path) const;
-
-            /**
-             * Set the maximum number of nodes needed in a list element
-             * @param path
-             * @param value
-             */
-            void setMax(const std::string& path, const int& value);
-
-            /**
-             * Check if the element identified by path has a maximum number of Nodes set
-             * @param path
-             * @return
-             */
-            bool hasMax(const std::string& path) const;
-
-            /**
-             * Set the maximum number of nodes needed in a list element
-             * @param path
-             * @param value
-             */
-            const int& getMax(const std::string& path) const;
 
             // TODO: check if this is needed. There seems to be no implementation
             template <class T>
