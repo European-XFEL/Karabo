@@ -460,16 +460,6 @@ void exportPyUtilSchema(py::module_& m) {
               },
               py::arg("path"), py::arg("pytype"));
 
-        s.def("getMin", [](const Schema& self, const py::object& path) {
-            py::object h = py::cast(self).attr("getParameterHash")();
-            return h.attr("getAttribute")(path, KARABO_SCHEMA_MIN);
-        });
-
-        s.def("getMax", [](const Schema& self, const py::object& path) {
-            py::object h = py::cast(self).attr("getParameterHash")();
-            return h.attr("getAttribute")(path, KARABO_SCHEMA_MAX);
-        });
-
         s.def("getMinSize", [](const Schema& self, const py::object& path) {
             py::object h = py::cast(self).attr("getParameterHash")();
             return h.attr("getAttribute")(path, KARABO_SCHEMA_MIN_SIZE);
@@ -615,14 +605,6 @@ void exportPyUtilSchema(py::module_& m) {
         s.def(
               "hasDescription",
               [](const Schema& self, const std::string& path) -> py::bool_ { return self.hasDescription(path); },
-              py::arg("path"));
-
-        s.def(
-              "hasMin", [](const Schema& self, const std::string& path) -> py::bool_ { return self.hasMin(path); },
-              py::arg("path"));
-
-        s.def(
-              "hasMax", [](const Schema& self, const std::string& path) -> py::bool_ { return self.hasMax(path); },
               py::arg("path"));
 
         s.def(
@@ -840,14 +822,6 @@ void exportPyUtilSchema(py::module_& m) {
               [](Schema& self, const std::string& path, const Schema::ArchivePolicy& value) {
                   self.setArchivePolicy(path, value);
               },
-              py::arg("path"), py::arg("value"));
-
-        s.def(
-              "setMin", [](Schema& self, const std::string& path, const int& value) { self.setMin(path, value); },
-              py::arg("path"), py::arg("value"));
-
-        s.def(
-              "setMax", [](Schema& self, const std::string& path, const int& value) { self.setMax(path, value); },
               py::arg("path"), py::arg("value"));
 
         s.def(
