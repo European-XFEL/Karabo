@@ -260,8 +260,6 @@ void exportPyXmsImageDataElement(py::module_& m) {
 
         el.def("expertAccess", &ImageDataElement::expertAccess, py::return_value_policy::reference_internal);
 
-        el.def("skipValidation", &ImageDataElement::skipValidation, py::return_value_policy::reference_internal);
-
         el.def("commit", &ImageDataElement::commit, py::return_value_policy::reference_internal);
 
         el.def("setDimensionScales", &ImageDataElement::setDimensionScales, py::arg("scales"));

@@ -723,16 +723,12 @@ class ArrayContainer(Base):
             .shape([2, 3])
             .unit(Unit.DEGREE_CELSIUS)
             .metricPrefix(MetricPrefix.CENTI)
-            .skipValidation()
             .commit(),
 
             NDARRAY_ELEMENT(expected).key("exampleKey17")
             .dtype("UINT32")
             .shape([2, 5, 0])
-            .skipValidation()
             .commit(),
-            # NOTE: validation is skipped for NDArray even when not explicitly
-            # asked for. However, this will change in the future.
             NDARRAY_ELEMENT(expected).key("exampleKey18")
             .dtype("FLOAT")
             .shape("3,2,1")

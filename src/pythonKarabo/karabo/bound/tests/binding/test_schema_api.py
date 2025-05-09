@@ -614,16 +614,13 @@ def test_ndarrayElement():
         .shape([2, 3])
         .unit(Unit.DEGREE_CELSIUS)
         .metricPrefix(MetricPrefix.CENTI)
-        .skipValidation()
         .commit(),
 
         NDARRAY_ELEMENT(schema).key("example17")
         .dtype("UINT32")
         .shape([2, 5, 0])
-        .skipValidation()
         .commit(),
-        # NOTE: validation is skipped for NDArray even when not explicitly
-        # asked for. However, this will change in the future.
+
         NDARRAY_ELEMENT(schema).key("example18")
         .dtype("FLOAT")
         .shape("3,2,1")
@@ -639,9 +636,6 @@ def test_ndarrayElement():
     assert schema.isAccessReadOnly("example16")
     assert schema.isAccessReadOnly("example17")
     assert schema.isAccessReadOnly("example18")
-    assert schema.getSkipValidation("example16")
-    assert schema.getSkipValidation("example17")
-    assert not schema.getSkipValidation("example18")
 
 
 # def test_listElement():

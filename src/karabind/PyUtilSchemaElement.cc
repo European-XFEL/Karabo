@@ -220,7 +220,6 @@ void exportPyUtilSchemaElement(py::module_& m) {
               .def("key", &NDArrayElement::key, py::return_value_policy::reference_internal)
               .def("readOnly", &NDArrayElement::readOnly, py::return_value_policy::reference_internal)
               .def("reconfigurable", &NDArrayElement::reconfigurable, py::return_value_policy::reference_internal)
-              .def("skipValidation", &NDArrayElement::skipValidation, py::return_value_policy::reference_internal)
               .def("commit", &NDArrayElement::commit, py::return_value_policy::reference_internal);
     }
 }
