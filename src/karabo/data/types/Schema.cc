@@ -690,41 +690,6 @@ namespace karabo {
             return Schema::ArchivePolicy(m_hash.getAttribute<int>(path, KARABO_SCHEMA_ARCHIVE_POLICY));
         }
 
-        //******************************************************
-        //      min/max for number of nodes in TableElement     *                     *
-        //******************************************************
-
-
-        void Schema::setMin(const std::string& path, const int& value) {
-            m_hash.setAttribute(path, KARABO_SCHEMA_MIN, value);
-        }
-
-
-        bool Schema::hasMin(const std::string& path) const {
-            return m_hash.hasAttribute(path, KARABO_SCHEMA_MIN);
-        }
-
-
-        const int& Schema::getMin(const std::string& path) const {
-            return m_hash.getAttribute<int>(path, KARABO_SCHEMA_MIN);
-        }
-
-
-        void Schema::setMax(const std::string& path, const int& value) {
-            m_hash.setAttribute(path, KARABO_SCHEMA_MAX, value);
-        }
-
-
-        bool Schema::hasMax(const std::string& path) const {
-            return m_hash.hasAttribute(path, KARABO_SCHEMA_MAX);
-        }
-
-
-        const int& Schema::getMax(const std::string& path) const {
-            return m_hash.getAttribute<int>(path, KARABO_SCHEMA_MAX);
-        }
-
-
         void Schema::addElement(Hash::Node& node) {
             // TODO It seems the condition below can never be true
             // TODO If so, get rid of this code entirely

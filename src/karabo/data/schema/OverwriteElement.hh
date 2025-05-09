@@ -375,36 +375,6 @@ namespace karabo {
             }
 
             /**
-             * Set a new minimum restriction for values set to the element
-             * @param value
-             * @return
-             */
-            template <class ValueType>
-            OverwriteElement& setNewMin(const ValueType& value) {
-                if (!m_node) {
-                    throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
-                }
-                checkIfRestrictionApplies(m_restrictions.min);
-                m_node->setAttribute(KARABO_SCHEMA_MIN, value);
-                return *this;
-            }
-
-            /**
-             * Set a new maximum restriction for values set to the element
-             * @param value
-             * @return
-             */
-            template <class ValueType>
-            OverwriteElement& setNewMax(const ValueType& value) {
-                if (!m_node) {
-                    throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
-                }
-                checkIfRestrictionApplies(m_restrictions.max);
-                m_node->setAttribute(KARABO_SCHEMA_MAX, value);
-                return *this;
-            }
-
-            /**
              * Set a new minimum size restriction for values set to the element
              * @param value
              * @return
