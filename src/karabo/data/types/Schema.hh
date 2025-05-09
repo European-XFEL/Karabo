@@ -158,8 +158,6 @@ namespace karabo {
 #define KARABO_SCHEMA_DISPLAY_TYPE_INPUT_CHANNEL "InputChannel"
 #define KARABO_SCHEMA_DISPLAY_TYPE_STATE "State"
 
-#define KARABO_SCHEMA_ALLOWED_ACTIONS "allowedActions"
-
             // Grant friendship to the GenericElement
             // GenericElement is the base class for all schema build-up helper classes
             // It will use the private addElement function
@@ -1331,35 +1329,6 @@ namespace karabo {
              * @param path of custom node element
              */
             const std::string& getCustomNodeClass(const std::string& path) const;
-
-            //**********************************************
-            //            allowed actions                  *
-            //**********************************************
-
-            /**
-             * Specify one or more actions that are allowed on the element.
-             *
-             * If a Karabo device specifies allowed actions, that means that it offers a specific slot
-             * interface to operate on this element.
-             * Which allowed actions require which interface will be defined elsewhere.
-             * @param path to element
-             * @param actions vector of strings of allowed actions
-             */
-            void setAllowedActions(const std::string& path, const std::vector<std::string>& actions);
-
-            /**
-             * Check if given element has allowed actions.
-             * @param path to element
-             */
-            bool hasAllowedActions(const std::string& path) const;
-
-            /**
-             * Get allowed actions of given element if available.
-             * Pre-requisite: hasAllowedActions(path) has to return true.
-             * @param path to element
-             * @return specified allowed actions
-             */
-            const std::vector<std::string>& getAllowedActions(const std::string& path) const;
 
            private: // functions
             void addElement(Hash::Node& node);

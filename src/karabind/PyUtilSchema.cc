@@ -899,28 +899,6 @@ void exportPyUtilSchema(py::module_& m) {
               [](const Schema& self, const std::string& path) -> py::str { return self.getCustomNodeClass(path); },
               py::arg("path"), py::return_value_policy::reference);
 
-        s.def(
-              "hasAllowedActions",
-              [](const Schema& self, const std::string& path) -> py::bool_ { return self.hasAllowedActions(path); },
-              py::arg("path"), "Check if element given by argument has allowed actions.");
-
-        s.def(
-              "getAllowedActions",
-              [](const Schema& self, const std::string& path) { return self.getAllowedActions(path); }, py::arg("path"),
-              "Return allowed actions of element given by argument.");
-
-        s.def(
-              "setAllowedActions",
-              [](Schema& self, const std::string& path, const py::object& actions) {
-                  self.setAllowedActions(path, wrapper::fromPySequenceToVectorString(actions));
-              },
-              py::arg("path"), py::arg("actions"), R"pbdoc(
-                    Specify one or more actions that are allowed on the element.
-                    If a Karabo device specifies allowed actions, that means that it offers
-                    a specific slot interface to operate on this element.
-                    Which allowed actions require which interface is defined elsewhere.
-              )pbdoc");
-
     } // end Schema
 
 

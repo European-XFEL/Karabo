@@ -1760,57 +1760,6 @@ def test_slot_element():
     assert sch.getRequiredAccessLevel("slotStop") == AccessLevel.EXPERT
 
 
-def test_allowed_actions():
-    s = Schema()
-    (
-        NODE_ELEMENT(s).key("node")
-        .setAllowedActions(("action1", "action2"))  # tuple
-        .commit(),
-
-        INT32_ELEMENT(s).key("node.int")
-        .assignmentMandatory()
-        .commit(),
-
-        NDARRAY_ELEMENT(s).key("node.arr")
-        .setAllowedActions(["otherAction"])  # list
-        .commit(),
-
-        IMAGEDATA_ELEMENT(s).key("image")
-        .setAllowedActions("")  # str - each char is taken, here none
-        .commit(),
-    )
-
-    assert s.hasAllowedActions("node") is True
-    assert s.hasAllowedActions("node.int") is False
-    actions = s.getAllowedActions("node")
-    assert len(actions) == 2
-    assert actions[0] == "action1"
-    assert actions[1] == "action2"
-
-    assert s.hasAllowedActions("node.arr") is True
-    actions = s.getAllowedActions("node.arr")
-    assert len(actions) == 1
-    assert actions[0] == "otherAction"
-
-    assert s.hasAllowedActions("image") is True
-    actions = s.getAllowedActions("image")
-    assert len(actions) == 0
-
-    # Check setAllowedActions from Schema
-    # and validate that also keys of a dict are taken:
-    s.setAllowedActions("node",
-                        {"actA": 1, "actB": 2, "actC": "who care"})
-    actions = s.getAllowedActions("node")
-    assert len(actions) == 3
-    assert actions[0] == "actA"
-    assert actions[1] == "actB"
-    assert actions[2] == "actC"
-
-    # Only (custom) nodes can have allowed actions:
-    with pytest.raises(RuntimeError):
-        s.setAllowedActions("node.int", ["bla", "blue"])
-
-
 def test_cpp_ndarray():
     # Build numpy arrays on C++ side and convert them to the python objects
     # using commented binding code below  (see "karabind_test.cc")

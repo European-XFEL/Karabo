@@ -220,19 +220,6 @@ void exportPyUtilSchemaElement(py::module_& m) {
               .def("key", &NDArrayElement::key, py::return_value_policy::reference_internal)
               .def("readOnly", &NDArrayElement::readOnly, py::return_value_policy::reference_internal)
               .def("reconfigurable", &NDArrayElement::reconfigurable, py::return_value_policy::reference_internal)
-              .def(
-                    "setAllowedActions",
-                    [](NDArrayElement& self, const py::object& actions) -> NDArrayElement& {
-                        self.setAllowedActions(wrapper::fromPySequenceToVectorString(actions));
-                        return self;
-                    },
-                    py::arg("actions"), py::return_value_policy::reference_internal, R"pbdoc(
-                        Specify one or more actions that are allowed on this node.
-                        If a Karabo device specifies allowed actions for a node,
-                        that means that it offers a specific slot interface to operate
-                        on this node. Which allowed actions require which interface
-                        is defined elsewhere
-                    )pbdoc")
               .def("skipValidation", &NDArrayElement::skipValidation, py::return_value_policy::reference_internal)
               .def("commit", &NDArrayElement::commit, py::return_value_policy::reference_internal);
     }
