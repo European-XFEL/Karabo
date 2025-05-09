@@ -16,10 +16,10 @@
 import unittest
 
 from karabo.bound import (
-    IMAGEDATA_ELEMENT, INT32_ELEMENT, MANDATORY, METER, MICRO, NDARRAY_ELEMENT,
-    NODE_ELEMENT, OVERWRITE_ELEMENT, AccessLevel, AccessType, ArchivePolicy,
-    AssignmentType, Configurator, DaqDataType, Hash, Logger, MetricPrefix,
-    NodeType, Schema, State, Types, Unit, Validator, fullyEqual)
+    IMAGEDATA_ELEMENT, INT32_ELEMENT, MANDATORY, METER, MICRO, NODE_ELEMENT,
+    OVERWRITE_ELEMENT, AccessLevel, AccessType, ArchivePolicy, AssignmentType,
+    Configurator, DaqDataType, Hash, Logger, MetricPrefix, NodeType, Schema,
+    State, Types, Unit, Validator, fullyEqual)
 
 from .configuration_example_classes import (
     ArrayContainer, Base, GraphicsRenderer, GraphicsRenderer1, SomeClass,
@@ -973,56 +973,6 @@ class Schema_TestCase(unittest.TestCase):
                 .setNewTags((1, 2))
                 .commit()
             )
-
-    def test_allowed_actions(self):
-        s = Schema()
-        (
-            NODE_ELEMENT(s).key("node")
-            .setAllowedActions(("action1", "action2"))  # tuple
-            .commit(),
-
-            INT32_ELEMENT(s).key("node.int")
-            .assignmentMandatory()
-            .commit(),
-
-            NDARRAY_ELEMENT(s).key("node.arr")
-            .setAllowedActions(["otherAction"])  # list
-            .commit(),
-
-            IMAGEDATA_ELEMENT(s).key("image")
-            .setAllowedActions("")  # str - each character is taken, here none
-            .commit()
-        )
-
-        self.assertTrue(s.hasAllowedActions("node"))
-        self.assertFalse(s.hasAllowedActions("node.int"))
-        actions = s.getAllowedActions("node")
-        self.assertEqual(len(actions), 2)
-        self.assertEqual(actions[0], "action1")
-        self.assertEqual(actions[1], "action2")
-
-        self.assertTrue(s.hasAllowedActions("node.arr"))
-        actions = s.getAllowedActions("node.arr")
-        self.assertEqual(len(actions), 1)
-        self.assertEqual(actions[0], "otherAction")
-
-        self.assertTrue(s.hasAllowedActions("image"))
-        actions = s.getAllowedActions("image")
-        self.assertEqual(len(actions), 0)
-
-        # Check setAllowedActions from Schema
-        # and validate that also keys of a dict are taken:
-        s.setAllowedActions("node",
-                            {"actA": 1, "actB": 2, "actC": "who care"})
-        actions = s.getAllowedActions("node")
-        self.assertEqual(len(actions), 3)
-        self.assertEqual(actions[0], "actA")
-        self.assertEqual(actions[1], "actB")
-        self.assertEqual(actions[2], "actC")
-
-        # Only (custom) nodes can have allowed actions:
-        with self.assertRaises(RuntimeError):
-            s.setAllowedActions("node.int", ["bla", "blue"])
 
 
 if __name__ == '__main__':

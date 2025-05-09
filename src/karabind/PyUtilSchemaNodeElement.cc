@@ -112,21 +112,7 @@ void exportPyUtilSchemaNodeElement(py::module_& m) {
                     self.setSpecialDisplayType(displayType);
                     return self;
                 },
-                py::arg("displayType"), py::return_value_policy::reference_internal)
-          .def(
-                "setAllowedActions",
-                [](NodeElement& self, const py::object& actions) -> NodeElement& {
-                    // Accept any Python sequence (list, tuple, set, etc) that provides strings
-                    self.setAllowedActions(wrapper::fromPySequenceToVectorString(actions));
-                    return self;
-                },
-                py::arg("actions"), py::return_value_policy::reference_internal, R"pbdoc(
-                    Specify one or more actions that are allowed on this node.
-                    If a Karabo device specifies allowed actions for a node,
-                    that means that it offers a specific slot interface to operate
-                    on this node. Which allowed actions require which interface
-                    is defined elsewhere
-                )pbdoc");
+                py::arg("displayType"), py::return_value_policy::reference_internal);
 
     // TODO: evaluate if implicitly_convertible should be applied
     // py::implicitly_convertible<Schema&, NodeElement>();

@@ -1704,29 +1704,6 @@ void Schema_Test::testAlarmStateElement() {
 }
 
 
-void Schema_Test::testAllowedActions() {
-    Schema s;
-    NODE_ELEMENT(s).key("node").setAllowedActions({"action1", "action2"}).commit();
-    INT32_ELEMENT(s).key("node.int").assignmentMandatory().commit();
-    NDARRAY_ELEMENT(s).key("arr").setAllowedActions({"otherAction"}).commit();
-
-    CPPUNIT_ASSERT(s.hasAllowedActions("node"));
-    CPPUNIT_ASSERT(!s.hasAllowedActions("node.int"));
-    const auto& actions = s.getAllowedActions("node");
-    CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(2u), actions.size());
-    CPPUNIT_ASSERT_EQUAL(std::string("action1"), actions[0]);
-    CPPUNIT_ASSERT_EQUAL(std::string("action2"), actions[1]);
-
-    CPPUNIT_ASSERT(s.hasAllowedActions("arr"));
-    const auto& arrActions = s.getAllowedActions("arr");
-    CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(1u), arrActions.size());
-    CPPUNIT_ASSERT_EQUAL(std::string("otherAction"), arrActions[0]);
-
-    // Only (custom) nodes can have allowed actions:
-    CPPUNIT_ASSERT_THROW(s.setAllowedActions("node.int", {"bla", "blue"}), karabo::data::ParameterException);
-}
-
-
 void Schema_Test::testInvalidReadOnlyThrows() {
     karabo::data::Schema invalidSchema;
 

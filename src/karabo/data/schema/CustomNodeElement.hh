@@ -226,20 +226,6 @@ namespace karabo {
             }
 
             /**
-             * Specify one or more actions that are allowed on this node.
-             *
-             * If a Karabo device specifies allowed actions for a node, that means that it offers a specific slot
-             * interface to operate on this node.
-             * Which allowed actions require which interface will be defined elsewhere.
-             * @return reference to the Element (to allow method's chaining)
-             */
-            Derived& setAllowedActions(const std::vector<std::string>& actions) {
-                m_schema.setAllowedActions(m_key, actions);
-                return *(static_cast<Derived*>(this));
-            }
-
-
-            /**
              * Skip this element during validation of configuration against a Schema
              * @return
              */
