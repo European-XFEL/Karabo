@@ -32,8 +32,8 @@
 
 #include "Input.hh"
 #include "TextSerializer.hh"
-#include "karabo/data/schema/ChoiceElement.hh"
 #include "karabo/data/schema/Configurator.hh"
+#include "karabo/data/schema/NodeElement.hh"
 
 /**
  * The main European XFEL namespace
@@ -72,20 +72,26 @@ namespace karabo {
                       .assignmentMandatory()
                       .commit();
 
-                CHOICE_ELEMENT(expected)
+                STRING_ELEMENT(expected)
                       .key("format")
                       .displayedName("Format")
                       .description("Select the format which should be used to interprete the data")
-                      .appendNodesOfConfigurationBase<TextSerializer<T> >()
+                      .options("Xml")
                       .assignmentOptional()
                       .noDefaultValue()
+                      .commit();
+
+                NODE_ELEMENT(expected)
+                      .key("Xml")
+                      .appendParametersOfConfigurableClass<TextSerializer<T>>("Xml")
                       .commit();
             }
 
             TextFileInput(const karabo::data::Hash& config) : Input<T>(config) {
                 m_filename = config.get<std::string>("filename");
                 if (config.has("format")) {
-                    m_serializer = TextSerializer<T>::createChoice("format", config);
+                    const std::string& selected = config.get<std::string>("format");
+                    m_serializer = TextSerializer<T>::create(selected, config.get<Hash>(selected));
                 } else {
                     guessAndSetFormat();
                 }

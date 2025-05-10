@@ -30,7 +30,6 @@
 #include "karabo/data/io/FileTools.hh"
 #include "karabo/data/io/SchemaBinarySerializer.hh"
 #include "karabo/data/io/TextFileOutput.hh"
-#include "karabo/data/schema/ChoiceElement.hh"
 #include "karabo/data/schema/NodeElement.hh"
 #include "karabo/data/schema/SimpleElement.hh"
 #include "karabo/data/schema/VectorElement.hh"
@@ -108,8 +107,8 @@ struct TestSchemaSerializer {
               .description("Example key INTERNAL")
               .assignmentInternal();
 
-        // test for CHOICE element
-        CHOICE_ELEMENT(expected)
+        // test for top NODE element (former CHOICE_ELEMENT)
+        STRING_ELEMENT(expected)
               .key("shapes")
               .displayedName("shapesAsChoice")
               .description("Description of Choice-element shapes")
@@ -118,14 +117,14 @@ struct TestSchemaSerializer {
               .commit();
 
         NODE_ELEMENT(expected)
-              .key("shapes.circle")
+              .key("circle")
               .tags("shape")
               .displayedName("Circle")
               .description("Description of circle")
               .commit();
 
         INT32_ELEMENT(expected)
-              .key("shapes.circle.radius")
+              .key("circle.radius")
               .tags("shape")
               .displayedName("radius")
               .description("Radius of circle")
@@ -136,7 +135,7 @@ struct TestSchemaSerializer {
               .commit();
 
         INT32_ELEMENT(expected)
-              .key("shapes.circle.color")
+              .key("circle.color")
               .tags("shape")
               .displayedName("color")
               .description("Color of circle")
@@ -147,14 +146,14 @@ struct TestSchemaSerializer {
               .commit();
 
         NODE_ELEMENT(expected)
-              .key("shapes.circle.newnode")
+              .key("circle.newnode")
               .tags("shape")
               .displayedName("NewNodeOfCircle")
               .description("Description of NEW NODE of circle")
               .commit();
 
         INT32_ELEMENT(expected)
-              .key("shapes.circle.newnode.mynewint")
+              .key("circle.newnode.mynewint")
               .tags("shape")
               .displayedName("MyNewInt")
               .description("Descr of shapes circle newnode MyNewInt")
@@ -163,14 +162,14 @@ struct TestSchemaSerializer {
               .commit();
 
         NODE_ELEMENT(expected)
-              .key("shapes.rectangle")
+              .key("rectangle")
               .tags("shape")
               .displayedName("rectangle")
               .description("Description of rectangle")
               .commit();
 
         DOUBLE_ELEMENT(expected)
-              .key("shapes.rectangle.square")
+              .key("rectangle.square")
               .tags("shape")
               .displayedName("square")
               .description("Description of square of rectangle")

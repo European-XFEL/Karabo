@@ -53,15 +53,16 @@ class Schema_TestCase(unittest.TestCase):
         try:
             schema = Schema("test")
             GraphicsRenderer1.expectedParameters(schema)
-            self.assertTrue(schema.isAccessInitOnly("shapes.circle.radius"))
-            self.assertTrue(schema.isLeaf("shapes.circle.radius"))
+            self.assertTrue(schema.isAccessInitOnly("circle.radius"))
+            self.assertTrue(schema.isLeaf("circle.radius"))
         except Exception as e:
             self.fail("test_buildUp exception group 2: " + str(e))
 
         try:
             instance = GraphicsRenderer.create("GraphicsRenderer",
-                                               Hash("shapes.Circle.radius",
-                                                    0.5, "color", "red",
+                                               Hash("shapes", "Circle",
+                                                    "Circle.radius", 0.5,
+                                                    "color", "red",
                                                     "antiAlias", "true"))
             self.assertIsNotNone(instance)
         except Exception as e:

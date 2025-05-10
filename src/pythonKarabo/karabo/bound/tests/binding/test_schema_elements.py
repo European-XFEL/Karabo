@@ -19,16 +19,16 @@ import numpy as np
 import pytest
 
 from karabo.bound import (
-    ALARM_ELEMENT, BOOL_ELEMENT, BYTEARRAY_ELEMENT, CHOICE_ELEMENT,
-    DOUBLE_ELEMENT, EVERY_1S, EVERY_100MS, EVERY_EVENT, FLOAT_ELEMENT,
-    IMAGEDATA_ELEMENT, INT32_ELEMENT, INT64_ELEMENT, KARABO_CLASSINFO,
-    KARABO_CONFIGURATION_BASE_CLASS, METER, MICRO, NDARRAY_ELEMENT,
-    NO_ARCHIVING, NODE_ELEMENT, OVERWRITE_ELEMENT, SLOT_ELEMENT, STATE_ELEMENT,
-    STRING_ELEMENT, TABLE_ELEMENT, UINT32_ELEMENT, UINT64_ELEMENT,
-    VECTOR_BOOL_ELEMENT, VECTOR_DOUBLE_ELEMENT, VECTOR_INT32_ELEMENT,
-    VECTOR_STRING_ELEMENT, VECTOR_UINT32_ELEMENT, AccessLevel, AccessType,
-    ArchivePolicy, AssemblyRules, AssignmentType, Encoding, Hash, MetricPrefix,
-    NodeType, Schema, Types, Unit, cppNDArray, cppNDArrayCopy, fullyEqual)
+    ALARM_ELEMENT, BOOL_ELEMENT, BYTEARRAY_ELEMENT, DOUBLE_ELEMENT, EVERY_1S,
+    EVERY_100MS, EVERY_EVENT, FLOAT_ELEMENT, IMAGEDATA_ELEMENT, INT32_ELEMENT,
+    INT64_ELEMENT, KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS, METER,
+    MICRO, NDARRAY_ELEMENT, NO_ARCHIVING, NODE_ELEMENT, OVERWRITE_ELEMENT,
+    SLOT_ELEMENT, STATE_ELEMENT, STRING_ELEMENT, TABLE_ELEMENT, UINT32_ELEMENT,
+    UINT64_ELEMENT, VECTOR_BOOL_ELEMENT, VECTOR_DOUBLE_ELEMENT,
+    VECTOR_INT32_ELEMENT, VECTOR_STRING_ELEMENT, VECTOR_UINT32_ELEMENT,
+    AccessLevel, AccessType, ArchivePolicy, AssemblyRules, AssignmentType,
+    Encoding, Hash, MetricPrefix, NodeType, Schema, Types, Unit, cppNDArray,
+    cppNDArrayCopy, fullyEqual)
 from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.states import State
 
@@ -236,14 +236,14 @@ class GraphicsRendererX1:
             .reconfigurable()
             .commit(),
 
-            CHOICE_ELEMENT(expected)
+            STRING_ELEMENT(expected)
             .key("shapes")
             .assignmentOptional()
             .defaultValue("circle")
             .commit(),
 
             NODE_ELEMENT(expected)
-            .key("shapes.circle")
+            .key("circle")
             .tags("shape")
             .displayedName("Circle")
             .description("A circle")
@@ -251,14 +251,14 @@ class GraphicsRendererX1:
             .commit(),
 
             NODE_ELEMENT(expected)
-            .key("shapes.rectangle")
+            .key("rectangle")
             .tags("shape")
             .displayedName("Rectangle")
             .description("A rectangle")
             .commit(),
 
             FLOAT_ELEMENT(expected)
-            .key("shapes.rectangle.b")
+            .key("rectangle.b")
             .description("Rectangle side - b")
             .displayedName("Side B")
             .tags("b")
@@ -268,7 +268,7 @@ class GraphicsRendererX1:
             .commit(),
 
             FLOAT_ELEMENT(expected)
-            .key("shapes.rectangle.c")
+            .key("rectangle.c")
             .description("Rectangle side - c")
             .displayedName("Side C")
             .assignmentOptional()
@@ -594,38 +594,48 @@ class TestStruct1:
             .expertAccess()
             .commit(),
 
-            CHOICE_ELEMENT(expected)
+            STRING_ELEMENT(expected)
             .key("testChoice1")
             .displayedName("1. Select CircleX or RectangleX")
-            .appendAsNode(CircleX, "CircleX")
-            .appendAsNode(RectangleX, "RectangleX")
-            .assignmentOptional().defaultValueFromString("RectangleX")
+            .options("CircleX, RectangleX")
+            .assignmentOptional().defaultValue("RectangleX")
             .reconfigurable()
             .commit(),
 
-            CHOICE_ELEMENT(expected)
+            STRING_ELEMENT(expected)
             .key("testChoice2")
             .displayedName("2. Choose from menu")
-            .appendNodesOfConfigurationBase(ShapeX)
+            .options("CircleX, RectangleX")
             .assignmentOptional().noDefaultValue()
             .reconfigurable()
             .commit(),
 
-            CHOICE_ELEMENT(expected)
+            STRING_ELEMENT(expected)
             .key("testChoice3")
             .displayedName("3. Choose from menu")
-            .appendNodesOfConfigurationBase(ShapeX)
+            .options("CircleX, RectangleX")
             .assignmentMandatory()
             .init()
             .commit(),
 
-            CHOICE_ELEMENT(expected)
+            STRING_ELEMENT(expected)
             .key("testChoice4")
             .displayedName("4. 3Choose from menu")
-            .appendNodesOfConfigurationBase(ShapeX)
+            .options("CircleX, RectangleX")
             .assignmentOptional().defaultValue("CircleX")
             .reconfigurable()
             .commit(),
+
+            NODE_ELEMENT(expected)
+            .key("CircleX")
+            .appendParametersOfConfigurableClass(ShapeX, "CircleX")
+            .commit(),
+
+            NODE_ELEMENT(expected)
+            .key("RectangleX")
+            .appendParametersOfConfigurableClass(ShapeX, "RectangleX")
+            .commit(),
+
         )
 
         row = Schema()
@@ -1031,8 +1041,8 @@ def test_buildUp():
 
     schema = Schema()
     GraphicsRendererX1.expectedParameters(schema)
-    assert schema.isAccessInitOnly("shapes.circle.radius") is True
-    assert schema.isLeaf("shapes.circle.radius") is True
+    assert schema.isAccessInitOnly("circle.radius") is True
+    assert schema.isLeaf("circle.radius") is True
 
 
 def test_getRootName():
@@ -1096,8 +1106,8 @@ def test_isNode():
     schema = Schema("test")
     GraphicsRendererX1.expectedParameters(schema)
     assert schema.getRootName() == "test"
-    assert schema.isNode("shapes.circle") is True
-    assert schema.isNode("shapes.rectangle") is True
+    assert schema.isNode("circle") is True
+    assert schema.isNode("rectangle") is True
     assert schema.isNode("shapes") is False
 
 
@@ -1109,9 +1119,9 @@ def test_getNodeType():
     assert schema.getNodeType("exampleKey5") == NodeType.LEAF
     schema = Schema()
     GraphicsRendererX1.expectedParameters(schema)
-    assert schema.getNodeType("shapes") == NodeType.CHOICE_OF_NODES
-    assert schema.getNodeType("shapes.circle") == NodeType.NODE
-    assert schema.getNodeType("shapes.rectangle") == NodeType.NODE
+    assert schema.getNodeType("shapes") == NodeType.LEAF
+    assert schema.getNodeType("circle") == NodeType.NODE
+    assert schema.getNodeType("rectangle") == NodeType.NODE
 
 
 def test_getValueType():
@@ -1583,20 +1593,18 @@ def test_choice_element():
     assert s.hasDefaultValue("testChoice1") is True
     assert s.getDefaultValue("testChoice1") == "RectangleX"
     assert s.isAccessReconfigurable("testChoice1") is True
-    assert s.has("testChoice1.CircleX") is True
-    assert s.has("testChoice1.CircleX.radius") is True
-    assert s.has("testChoice1.RectangleX") is True
-    assert s.has("testChoice1.RectangleX.a") is True
-    assert s.has("testChoice1.RectangleX.b") is True
+
+    assert s.has("CircleX") is True
+    assert s.has("CircleX.radius") is True
+    assert s.has("RectangleX") is True
+    assert s.has("RectangleX.a") is True
+    assert s.has("RectangleX.b") is True
+
     # ------ Optional, noDefaultValue
     assert s.has("testChoice2") is True
     assert s.isAssignmentOptional("testChoice2") is True
     assert s.hasDefaultValue("testChoice2") is False
     assert s.isAccessReconfigurable("testChoice2") is True
-    assert s.has("testChoice2.CircleX") is True
-    assert s.has("testChoice2.RectangleX") is True
-    assert s.has("testChoice2.RectangleX.a") is True
-    assert s.has("testChoice2.RectangleX.b") is True
     # ------ Mandatory
     assert s.has("testChoice3") is True
     assert s.isAssignmentOptional("testChoice3") is False
@@ -1604,21 +1612,12 @@ def test_choice_element():
     assert s.hasDefaultValue("testChoice3") is False
     assert s.isAccessReconfigurable("testChoice3") is False
     assert s.isAccessInitOnly("testChoice3") is True
-    assert s.has("testChoice3.CircleX") is True
-    assert s.has("testChoice3.RectangleX") is True
-    assert s.has("testChoice3.RectangleX.a") is True
-    assert s.has("testChoice3.RectangleX.b") is True
     # ------ Optional, defaultValue
     assert s.has("testChoice4") is True
     assert s.isAssignmentOptional("testChoice4") is True
     assert s.hasDefaultValue("testChoice4") is True
     assert s.getDefaultValue("testChoice4") == "CircleX"
     assert s.isAccessReconfigurable("testChoice4") is True
-    assert s.has("testChoice4.CircleX") is True
-    assert s.has("testChoice1.CircleX.radius") is True
-    assert s.has("testChoice4.RectangleX") is True
-    assert s.has("testChoice4.RectangleX.a") is True
-    assert s.has("testChoice4.RectangleX.b") is True
 
 
 def test_table_elements():

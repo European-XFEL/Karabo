@@ -47,8 +47,8 @@ def KARABO_CONFIGURATION_BASE_CLASS(theClass):
     """
     This decorator should be placed just before "KARABO_CLASSINFO" decorator.
     It registers the class as the base configurable class and adds the
-    following classmethods: "create", "createNode", "createChoice",
-    "createList", "getSchema" and "getRegisteredClasses". It has no parameters.
+    following classmethods: "create", "createNode", "getSchema" and
+    "getRegisteredClasses". It has no parameters.
     Example:
             @KARABO_CONFIGURATION_BASE_CLASS
             @KARABO_CLASSINFO("Shape","1.0")
@@ -100,29 +100,6 @@ def KARABO_CONFIGURATION_BASE_CLASS(theClass):
 
         createNode = classmethod(createNode)
         theClass.createNode = createNode
-
-        def createChoice(cls, choice, config):
-            """
-            The helper classmethod to create the instance using "choiceName"
-            and input "configuration".
-            """
-            return Configurator(cls.__base_classid__).createChoice(choice,
-                                                                   config)
-
-        createChoice = classmethod(createChoice)
-        theClass.createChoice = createChoice
-
-        def createList(cls, listname, configuration):
-            """
-            The helper method to create the list of instances using "listName"
-            as a key to the list of configs in input "configuration".
-            The configurations will be validated.
-            """
-            return Configurator(cls.__base_classid__).createList(listname,
-                                                                 configuration)
-
-        createList = classmethod(createList)
-        theClass.createList = createList
 
         def getSchema(cls, classid, rules=None):
             """
