@@ -405,48 +405,6 @@ namespace karabo {
             }
 
             /**
-             * Create object from a choice of factorized classes as defined by choiceName from input configuration
-             * @param choiceName
-             * @param input
-             * @param validate
-             * @return
-             */
-            inline static typename BaseClass::Pointer createChoice(const std::string& choiceName,
-                                                                   const karabo::data::Hash& input,
-                                                                   const bool validate = true) {
-                if (input.has(choiceName)) {
-                    return create(input.get<Hash>(choiceName), validate);
-                } else {
-                    throw KARABO_INIT_EXCEPTION("Given choiceName \"" + choiceName +
-                                                "\" is not part of input configuration");
-                }
-            }
-
-            /**
-             * Create a list of factorized classes as defined by input configuration. Classes need to be of the same
-             * Base class
-             * @param choiceName
-             * @param input
-             * @param validate
-             * @return
-             */
-            inline static std::vector<typename BaseClass::Pointer> createList(const std::string& listName,
-                                                                              const karabo::data::Hash& input,
-                                                                              const bool validate = true) {
-                if (input.has(listName)) {
-                    const std::vector<Hash>& tmp = input.get<std::vector<Hash>>(listName);
-                    std::vector<typename BaseClass::Pointer> instances(tmp.size());
-                    for (size_t i = 0; i < tmp.size(); ++i) {
-                        instances[i] = create(tmp[i], validate);
-                    }
-                    return instances;
-                } else {
-                    throw KARABO_INIT_EXCEPTION("Given listName \"" + listName +
-                                                "\" is not part of input configuration");
-                }
-            }
-
-            /**
              * Return a vector of classIds registered in this Configurator
              * @return
              */
@@ -694,40 +652,30 @@ namespace karabo {
 
 #define KARABO_EXPLICIT_TEMPLATE(className) template class className;
 
-#define KARABO_CONFIGURATION_BASE_CLASS                                                                                \
-    static std::shared_ptr<Self> create(const karabo::data::Hash& configuration, const bool validate = true) {         \
-        return karabo::data::Configurator<Self>::create(configuration, validate);                                      \
-    }                                                                                                                  \
-                                                                                                                       \
-    static std::shared_ptr<Self> create(const std::string& classId,                                                    \
-                                        const karabo::data::Hash& configuration = karabo::data::Hash(),                \
-                                        const bool validate = true) {                                                  \
-        return karabo::data::Configurator<Self>::create(classId, configuration, validate);                             \
-    }                                                                                                                  \
-                                                                                                                       \
-    static std::shared_ptr<Self> createNode(const std::string& nodeName, const std::string& classId,                   \
-                                            const karabo::data::Hash& input, const bool validate = true) {             \
-        return karabo::data::Configurator<Self>::createNode(nodeName, classId, input, validate);                       \
-    }                                                                                                                  \
-                                                                                                                       \
-    static std::shared_ptr<Self> createChoice(const std::string& choiceName, const karabo::data::Hash& input,          \
-                                              const bool validate = true) {                                            \
-        return karabo::data::Configurator<Self>::createChoice(choiceName, input, validate);                            \
-    }                                                                                                                  \
-                                                                                                                       \
-    static std::vector<std::shared_ptr<Self>> createList(const std::string& listName, const karabo::data::Hash& input, \
-                                                         const bool validate = true) {                                 \
-        return karabo::data::Configurator<Self>::createList(listName, input, validate);                                \
-    }                                                                                                                  \
-                                                                                                                       \
-    static karabo::data::Schema getSchema(                                                                             \
-          const std::string& classId,                                                                                  \
-          const karabo::data::Schema::AssemblyRules& rules = karabo::data::Schema::AssemblyRules()) {                  \
-        return karabo::data::Configurator<Self>::getSchema(classId, rules);                                            \
-    }                                                                                                                  \
-                                                                                                                       \
-    static std::vector<std::string> getRegisteredClasses() {                                                           \
-        return karabo::data::Configurator<Self>::getRegisteredClasses();                                               \
+#define KARABO_CONFIGURATION_BASE_CLASS                                                                        \
+    static std::shared_ptr<Self> create(const karabo::data::Hash& configuration, const bool validate = true) { \
+        return karabo::data::Configurator<Self>::create(configuration, validate);                              \
+    }                                                                                                          \
+                                                                                                               \
+    static std::shared_ptr<Self> create(const std::string& classId,                                            \
+                                        const karabo::data::Hash& configuration = karabo::data::Hash(),        \
+                                        const bool validate = true) {                                          \
+        return karabo::data::Configurator<Self>::create(classId, configuration, validate);                     \
+    }                                                                                                          \
+                                                                                                               \
+    static std::shared_ptr<Self> createNode(const std::string& nodeName, const std::string& classId,           \
+                                            const karabo::data::Hash& input, const bool validate = true) {     \
+        return karabo::data::Configurator<Self>::createNode(nodeName, classId, input, validate);               \
+    }                                                                                                          \
+                                                                                                               \
+    static karabo::data::Schema getSchema(                                                                     \
+          const std::string& classId,                                                                          \
+          const karabo::data::Schema::AssemblyRules& rules = karabo::data::Schema::AssemblyRules()) {          \
+        return karabo::data::Configurator<Self>::getSchema(classId, rules);                                    \
+    }                                                                                                          \
+                                                                                                               \
+    static std::vector<std::string> getRegisteredClasses() {                                                   \
+        return karabo::data::Configurator<Self>::getRegisteredClasses();                                       \
     }
 
 #define KARABO_CONFIGURATION_BASE_CLASS_ADDON(A1)                                                            \

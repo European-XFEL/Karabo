@@ -31,9 +31,9 @@ from itertools import chain
 from subprocess import Popen, TimeoutExpired
 
 from karabind import (
-    CHOICE_ELEMENT, INT32_ELEMENT, NODE_ELEMENT, OVERWRITE_ELEMENT,
-    STRING_ELEMENT, VECTOR_STRING_ELEMENT, Broker, EventLoop, Hash, Logger,
-    Schema, SignalSlotable, Unit, Validator, generateAutoStartHash, jsonToHash,
+    INT32_ELEMENT, NODE_ELEMENT, OVERWRITE_ELEMENT, STRING_ELEMENT,
+    VECTOR_STRING_ELEMENT, Broker, EventLoop, Hash, Logger, Schema,
+    SignalSlotable, Unit, Validator, generateAutoStartHash, jsonToHash,
     saveToFile)
 from karabo.common.api import KARABO_LOGGER_CONTENT_DEFAULT, ServerFlags
 
@@ -75,15 +75,6 @@ class DeviceServer:
             .assignmentOptional().noDefaultValue()
             .expertAccess()
             .init()
-            .commit(),
-
-            CHOICE_ELEMENT(expected).key("connection")
-            .displayedName("Connection")
-            .description("The connection to the communication layer of the"
-                         " distributed system")
-            .appendNodesOfConfigurationBase(Broker)
-            .assignmentOptional().defaultValue(Broker.brokerTypeFromEnv())
-            .expertAccess()
             .commit(),
 
             INT32_ELEMENT(expected).key("heartbeatInterval")
@@ -197,7 +188,8 @@ class DeviceServer:
         else:
             self.serverid = self._generateDefaultServerId()
 
-        self.connectionParameters = copy.copy(config['connection'])
+        self.connectionParameters = Hash(Broker.brokerTypeFromEnv(),
+                                         Hash("instanceId", self.serverid))
         self.loggerParameters = None  # assemble in loadLogger
         self.pid = os.getpid()
         self.seqnum = 0

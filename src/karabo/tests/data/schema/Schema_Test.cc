@@ -66,11 +66,11 @@ void Schema_Test::testBuildUp() {
         {
             Schema schema("test");
             GraphicsRenderer1::expectedParameters(schema);
-            CPPUNIT_ASSERT(schema.isAccessInitOnly("shapes.circle.radius") == true);
-            CPPUNIT_ASSERT(schema.isLeaf("shapes.circle.radius") == true);
+            CPPUNIT_ASSERT(schema.isAccessInitOnly("circle.radius") == true);
+            CPPUNIT_ASSERT(schema.isLeaf("circle.radius") == true);
         }
         GraphicsRenderer::Pointer p = GraphicsRenderer::create(
-              "GraphicsRenderer", Hash("shapes.Circle.radius", 0.5, "color", "red", "antiAlias", "true"));
+              "GraphicsRenderer", Hash("Circle.radius", 0.5, "color", "red", "antiAlias", "true"));
 
     } catch (const karabo::data::Exception& e) {
         KARABO_LOG_FRAMEWORK_DEBUG << e;
@@ -87,13 +87,15 @@ void Schema_Test::testPaths() {
     CPPUNIT_ASSERT(paths[0] == "antiAlias");
     CPPUNIT_ASSERT(paths[1] == "color");
     CPPUNIT_ASSERT(paths[2] == "bold");
-    CPPUNIT_ASSERT(paths[3] == "shapes.Circle.shadowEnabled");
-    CPPUNIT_ASSERT(paths[4] == "shapes.Circle.radius");
-    CPPUNIT_ASSERT(paths[5] == "shapes.EditableCircle.shadowEnabled");
-    CPPUNIT_ASSERT(paths[6] == "shapes.EditableCircle.radius");
-    CPPUNIT_ASSERT(paths[7] == "shapes.Rectangle.shadowEnabled");
-    CPPUNIT_ASSERT(paths[8] == "shapes.Rectangle.a");
-    CPPUNIT_ASSERT(paths[9] == "shapes.Rectangle.b");
+    CPPUNIT_ASSERT(paths[3] == "shapes");
+    CPPUNIT_ASSERT(paths[4] == "Circle.shadowEnabled");
+    CPPUNIT_ASSERT(paths[5] == "Circle.radius");
+    CPPUNIT_ASSERT(paths[6] == "EditableCircle.shadowEnabled");
+    CPPUNIT_ASSERT(paths[7] == "EditableCircle.radius");
+    CPPUNIT_ASSERT(paths[8] == "Rectangle.shadowEnabled");
+    CPPUNIT_ASSERT(paths[9] == "Rectangle.a");
+    CPPUNIT_ASSERT(paths[10] == "Rectangle.b");
+    CPPUNIT_ASSERT(paths[11] == "version");
 }
 
 
@@ -101,12 +103,12 @@ void Schema_Test::testGetRequiredAccessLevel() {
     Schema schema = GraphicsRenderer::getSchema("GraphicsRenderer");
     CPPUNIT_ASSERT(Schema::AccessLevel(schema.getRequiredAccessLevel("shapes")) == Schema::EXPERT);
     // all sub-elements of Node-element 'shapes' will have EXPERT level:
-    CPPUNIT_ASSERT(Schema::AccessLevel(schema.getRequiredAccessLevel("shapes.Circle.shadowEnabled")) == Schema::EXPERT);
-    CPPUNIT_ASSERT(Schema::AccessLevel(schema.getRequiredAccessLevel("shapes.Circle")) == Schema::EXPERT);
-    CPPUNIT_ASSERT(Schema::AccessLevel(schema.getRequiredAccessLevel("shapes.Rectangle.b")) == Schema::EXPERT);
+    CPPUNIT_ASSERT(Schema::AccessLevel(schema.getRequiredAccessLevel("Circle.shadowEnabled")) == Schema::EXPERT);
+    CPPUNIT_ASSERT(Schema::AccessLevel(schema.getRequiredAccessLevel("Circle")) == Schema::EXPERT);
+    CPPUNIT_ASSERT(Schema::AccessLevel(schema.getRequiredAccessLevel("Rectangle.b")) == Schema::EXPERT);
 
-    // but sub-element 'shapes.Rectangle.a' with higher level will keep its EXPERT level
-    CPPUNIT_ASSERT(Schema::AccessLevel(schema.getRequiredAccessLevel("shapes.Rectangle.a")) == Schema::EXPERT);
+    // but sub-element 'Rectangle.a' with higher level will keep its EXPERT level
+    CPPUNIT_ASSERT(Schema::AccessLevel(schema.getRequiredAccessLevel("Rectangle.a")) == Schema::EXPERT);
 
     CPPUNIT_ASSERT(Schema::AccessLevel(schema.getRequiredAccessLevel("antiAlias")) == Schema::EXPERT);
     CPPUNIT_ASSERT(Schema::AccessLevel(schema.getRequiredAccessLevel("color")) == Schema::OPERATOR);
@@ -148,20 +150,19 @@ void Schema_Test::testSetRequiredAccessLevel() {
     Schema schema = GraphicsRenderer::getSchema("GraphicsRenderer");
     CPPUNIT_ASSERT(Schema::AccessLevel(schema.getRequiredAccessLevel("shapes")) == Schema::EXPERT);
     // all sub-elements of Node-element 'shapes' will have EXPERT level:
-    CPPUNIT_ASSERT(Schema::AccessLevel(schema.getRequiredAccessLevel("shapes.Circle.shadowEnabled")) == Schema::EXPERT);
-    CPPUNIT_ASSERT(Schema::AccessLevel(schema.getRequiredAccessLevel("shapes.Circle")) == Schema::EXPERT);
-    CPPUNIT_ASSERT(Schema::AccessLevel(schema.getRequiredAccessLevel("shapes.Rectangle.a")) == Schema::EXPERT);
-    CPPUNIT_ASSERT(Schema::AccessLevel(schema.getRequiredAccessLevel("shapes.Rectangle.b")) == Schema::EXPERT);
+    CPPUNIT_ASSERT(Schema::AccessLevel(schema.getRequiredAccessLevel("Circle.shadowEnabled")) == Schema::EXPERT);
+    CPPUNIT_ASSERT(Schema::AccessLevel(schema.getRequiredAccessLevel("Circle")) == Schema::EXPERT);
+    CPPUNIT_ASSERT(Schema::AccessLevel(schema.getRequiredAccessLevel("Rectangle.a")) == Schema::EXPERT);
+    CPPUNIT_ASSERT(Schema::AccessLevel(schema.getRequiredAccessLevel("Rectangle.b")) == Schema::EXPERT);
 
 
     // set top-Node to lower level 'Observer' and check that sub-elements keep previous higher level
     schema.setRequiredAccessLevel("shapes", Schema::OBSERVER);
     CPPUNIT_ASSERT(Schema::AccessLevel(schema.getRequiredAccessLevel("shapes")) == Schema::OBSERVER);
-    CPPUNIT_ASSERT(Schema::AccessLevel(schema.getRequiredAccessLevel("shapes.Circle.shadowEnabled")) ==
-                   Schema::OPERATOR);
-    CPPUNIT_ASSERT(Schema::AccessLevel(schema.getRequiredAccessLevel("shapes.Circle")) == Schema::OBSERVER);
-    CPPUNIT_ASSERT(Schema::AccessLevel(schema.getRequiredAccessLevel("shapes.Rectangle.a")) == Schema::EXPERT);
-    CPPUNIT_ASSERT(Schema::AccessLevel(schema.getRequiredAccessLevel("shapes.Rectangle.b")) == Schema::OPERATOR);
+    CPPUNIT_ASSERT(Schema::AccessLevel(schema.getRequiredAccessLevel("Circle.shadowEnabled")) == Schema::EXPERT);
+    CPPUNIT_ASSERT(Schema::AccessLevel(schema.getRequiredAccessLevel("Circle")) == Schema::EXPERT);
+    CPPUNIT_ASSERT(Schema::AccessLevel(schema.getRequiredAccessLevel("Rectangle.a")) == Schema::EXPERT);
+    CPPUNIT_ASSERT(Schema::AccessLevel(schema.getRequiredAccessLevel("Rectangle.b")) == Schema::EXPERT);
 }
 
 
@@ -781,8 +782,8 @@ void Schema_Test::testImageElement() {
     // A ChoiceOfNodes
     CPPUNIT_ASSERT(!schemaWithChoice.isCustomNode("shapes"));
     // ... and its choices
-    CPPUNIT_ASSERT(!schemaWithChoice.isCustomNode("shapes.circle"));
-    CPPUNIT_ASSERT(!schemaWithChoice.isCustomNode("shapes.rectangle"));
+    CPPUNIT_ASSERT(schemaWithChoice.isCustomNode("circle"));
+    CPPUNIT_ASSERT(!schemaWithChoice.isCustomNode("rectangle"));
     // An ordinary node
     CPPUNIT_ASSERT(!schemaWithChoice.isCustomNode("triangle"));
     // A StringElement
@@ -803,10 +804,10 @@ void Schema_Test::testHelpFunction() {
 
     schema.help();
     schema.help("shapes");
-    schema.help("shapes.circle");
-    schema.help("shapes.circle.radius");
-    schema.help("shapes.rectangle");
-    schema.help("shapes.rectangle.b");
+    schema.help("circle");
+    schema.help("circle.radius");
+    schema.help("rectangle");
+    schema.help("rectangle.b");
     schema.help("triangle");
      */
 }
@@ -1506,9 +1507,9 @@ void Schema_Test::testSubSchema() {
     Schema schema("test");
     GraphicsRenderer1::expectedParameters(schema);
     const int alias = 1;
-    OVERWRITE_ELEMENT(schema).key("shapes.rectangle.c").setNewAlias(alias).commit();
+    OVERWRITE_ELEMENT(schema).key("rectangle.c").setNewAlias(alias).commit();
     {
-        Schema sub = schema.subSchema("shapes.rectangle");
+        Schema sub = schema.subSchema("rectangle");
         CPPUNIT_ASSERT(sub.has("b"));
         CPPUNIT_ASSERT(sub.has("c"));
         CPPUNIT_ASSERT(sub.keyHasAlias("c"));
@@ -1518,7 +1519,7 @@ void Schema_Test::testSubSchema() {
         CPPUNIT_ASSERT_EQUAL(std::string(), sub.getRootName()); // we have another hierarchy level, not match anymore
     }
     {
-        Schema sub = schema.subSchema("shapes.rectangle", "b"); // filter for tag "b"
+        Schema sub = schema.subSchema("rectangle", "b"); // filter for tag "b"
         CPPUNIT_ASSERT(sub.has("b"));
         CPPUNIT_ASSERT(!sub.has("c"));
         CPPUNIT_ASSERT(!sub.aliasHasKey(alias));
@@ -1531,7 +1532,7 @@ void Schema_Test::testSubSchema() {
         // Everything is in:
         std::vector<std::string> finalPaths;
         sub.getParameterHash().getPaths(finalPaths);
-        CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(7), finalPaths.size());
+        CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(8), finalPaths.size());
     }
 
     {
@@ -1543,7 +1544,7 @@ void Schema_Test::testSubSchema() {
         // But all else since only "color" is reconfigurable for state OFF
         std::vector<std::string> finalPaths;
         sub.getParameterHash().getPaths(finalPaths);
-        CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(6), finalPaths.size());
+        CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(7), finalPaths.size());
 
         // Check rules are preserved
         const Schema::AssemblyRules subRules = sub.getAssemblyRules();
@@ -1551,10 +1552,10 @@ void Schema_Test::testSubSchema() {
         CPPUNIT_ASSERT_EQUAL(rules.m_accessMode, subRules.m_accessMode);
         CPPUNIT_ASSERT_EQUAL(rules.m_state, subRules.m_state);
         // ...and alias as well
-        CPPUNIT_ASSERT(sub.keyHasAlias("shapes.rectangle.c"));
+        CPPUNIT_ASSERT(sub.keyHasAlias("rectangle.c"));
         CPPUNIT_ASSERT(sub.aliasHasKey(alias));
-        CPPUNIT_ASSERT_EQUAL(std::string("shapes.rectangle.c"), sub.getKeyFromAlias(alias));
-        CPPUNIT_ASSERT_EQUAL(alias, sub.getAliasFromKey<int>("shapes.rectangle.c"));
+        CPPUNIT_ASSERT_EQUAL(std::string("rectangle.c"), sub.getKeyFromAlias(alias));
+        CPPUNIT_ASSERT_EQUAL(alias, sub.getAliasFromKey<int>("rectangle.c"));
         CPPUNIT_ASSERT_EQUAL(schema.getRootName(), sub.getRootName());
     }
 
@@ -1566,7 +1567,7 @@ void Schema_Test::testSubSchema() {
         // But all else is left since "antiAlias" is the only expert access level (defaults are user or observer)
         std::vector<std::string> finalPaths;
         sub.getParameterHash().getPaths(finalPaths);
-        CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(6), finalPaths.size());
+        CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(7), finalPaths.size());
     }
 
     {
@@ -1580,31 +1581,30 @@ void Schema_Test::testSubSchema() {
         Schema::AssemblyRules rules(AccessType::INIT | AccessType::READ);
         const Schema sub = schema.subSchemaByRules(rules);
         CPPUNIT_ASSERT(sub.has("antiAlias"));
-        CPPUNIT_ASSERT(sub.has("shapes.rectangle.b"));
-        CPPUNIT_ASSERT(sub.has("shapes.rectangle.c"));
-        CPPUNIT_ASSERT(sub.has("shapes.circle.radius"));
+        CPPUNIT_ASSERT(sub.has("rectangle.b"));
+        CPPUNIT_ASSERT(sub.has("rectangle.c"));
+        CPPUNIT_ASSERT(sub.has("circle.radius"));
 
         // All else is WRITE (i.e. reconfigurable))
         std::vector<std::string> finalPaths;
         sub.getParameterHash().getPaths(finalPaths);
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(sub), static_cast<size_t>(4), finalPaths.size());
+        CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(sub), static_cast<size_t>(5), finalPaths.size());
     }
 
     // Test subSchemaByPaths
     {
         // Extend the schema to test options
         OVERWRITE_ELEMENT(schema).key("color").setNewOptions({"red", "yellow", "blue"}).commit();
-        const Schema sub = schema.subSchemaByPaths({"color",                // first level, but endpoint
-                                                    "shapes.circle",        // a node among choices
-                                                    "shapes.rectangle.c"}); // end point within a choice
+        const Schema sub = schema.subSchemaByPaths({"color",         // first level, but endpoint
+                                                    "circle",        // a node among choices
+                                                    "rectangle.c"}); // end point within a choice
         // Check that all the paths (and no more) are there
         CPPUNIT_ASSERT(sub.has("color"));
-        CPPUNIT_ASSERT(sub.has("shapes"));
-        CPPUNIT_ASSERT(sub.has("shapes.circle"));
-        CPPUNIT_ASSERT(sub.has("shapes.circle.radius"));
-        CPPUNIT_ASSERT(sub.has("shapes.rectangle"));
-        CPPUNIT_ASSERT(!sub.has("shapes.rectangle.b"));
-        CPPUNIT_ASSERT(sub.has("shapes.rectangle.c"));
+        CPPUNIT_ASSERT(sub.has("circle"));
+        CPPUNIT_ASSERT(sub.has("circle.radius"));
+        CPPUNIT_ASSERT(sub.has("rectangle"));
+        CPPUNIT_ASSERT(!sub.has("rectangle.b"));
+        CPPUNIT_ASSERT(sub.has("rectangle.c"));
         CPPUNIT_ASSERT_EQUAL(3ul, sub.getPaths().size());
         CPPUNIT_ASSERT_GREATER(3ul, schema.getPaths().size());
 
@@ -1616,19 +1616,18 @@ void Schema_Test::testSubSchema() {
         CPPUNIT_ASSERT(sub.isAssignmentOptional("color"));
         CPPUNIT_ASSERT(sub.isAccessReconfigurable("color"));
 
-        CPPUNIT_ASSERT_EQUAL(std::string("circle"), sub.getDefaultValue<std::string>("shapes"));
-        CPPUNIT_ASSERT_EQUAL(Unit::METER, sub.getUnit("shapes.circle.radius"));
-        CPPUNIT_ASSERT_EQUAL(std::string("m"), sub.getUnitSymbol("shapes.circle.radius"));
-        CPPUNIT_ASSERT_EQUAL(MetricPrefix::MILLI, sub.getMetricPrefix("shapes.circle.radius"));
-        CPPUNIT_ASSERT_EQUAL(std::string("m"), sub.getMetricPrefixSymbol("shapes.circle.radius"));
-        CPPUNIT_ASSERT_EQUAL(0.f, sub.getMinExc<float>("shapes.circle.radius"));
-        CPPUNIT_ASSERT_EQUAL(100.f, sub.getMaxExc<float>("shapes.circle.radius"));
+        CPPUNIT_ASSERT_EQUAL(Unit::METER, sub.getUnit("circle.radius"));
+        CPPUNIT_ASSERT_EQUAL(std::string("m"), sub.getUnitSymbol("circle.radius"));
+        CPPUNIT_ASSERT_EQUAL(MetricPrefix::MILLI, sub.getMetricPrefix("circle.radius"));
+        CPPUNIT_ASSERT_EQUAL(std::string("m"), sub.getMetricPrefixSymbol("circle.radius"));
+        CPPUNIT_ASSERT_EQUAL(0.f, sub.getMinExc<float>("circle.radius"));
+        CPPUNIT_ASSERT_EQUAL(100.f, sub.getMaxExc<float>("circle.radius"));
 
         // Test alias and root name
-        CPPUNIT_ASSERT(sub.keyHasAlias("shapes.rectangle.c"));
+        CPPUNIT_ASSERT(sub.keyHasAlias("rectangle.c"));
         CPPUNIT_ASSERT(sub.aliasHasKey(alias));
-        CPPUNIT_ASSERT_EQUAL(std::string("shapes.rectangle.c"), sub.getKeyFromAlias(alias));
-        CPPUNIT_ASSERT_EQUAL(alias, sub.getAliasFromKey<int>("shapes.rectangle.c"));
+        CPPUNIT_ASSERT_EQUAL(std::string("rectangle.c"), sub.getKeyFromAlias(alias));
+        CPPUNIT_ASSERT_EQUAL(alias, sub.getAliasFromKey<int>("rectangle.c"));
         CPPUNIT_ASSERT_EQUAL(schema.getRootName(), sub.getRootName());
     }
 }

@@ -17,9 +17,9 @@
 # and open the template in the editor.
 
 from karabo.bound import (
-    AMPERE, BOOL_ELEMENT, CHOICE_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT,
-    INT64_ELEMENT, METER, MILLI, NODE_ELEMENT, STRING_ELEMENT, UINT32_ELEMENT,
-    AssemblyRules, Hash, HashFilter, Validator)
+    AMPERE, BOOL_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT, INT64_ELEMENT, METER,
+    MILLI, NODE_ELEMENT, STRING_ELEMENT, UINT32_ELEMENT, AssemblyRules, Hash,
+    HashFilter, Validator)
 from karabo.bound.decorators import (
     KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS)
 from karabo.common.states import State
@@ -196,17 +196,17 @@ class GraphicsRenderer2Y:
             .reconfigurable()
             .commit(),
 
-            CHOICE_ELEMENT(expected).key("shapes")
+            STRING_ELEMENT(expected).key("shapes")
             .tags("DB")
             .assignmentOptional().defaultValue("rectangle")
             .commit(),
 
-            NODE_ELEMENT(expected).key("shapes.circle")
+            NODE_ELEMENT(expected).key("circle")
             .tags("JS")
             .displayedName("Circle").description("A circle")
             .commit(),
 
-            FLOAT_ELEMENT(expected).key("shapes.circle.radius")
+            FLOAT_ELEMENT(expected).key("circle.radius")
             .description("The radius of the circle")
             .displayedName("Radius")
             .tags("NC,KW")
@@ -214,25 +214,25 @@ class GraphicsRenderer2Y:
             .assignmentOptional().defaultValue(10)
             .init().commit(),
 
-            NODE_ELEMENT(expected).key("shapes.rectangle")
+            NODE_ELEMENT(expected).key("rectangle")
             .tags("BH, KW , CY")
             .displayedName("Rectangle").description("A rectangle")
             .commit(),
 
-            FLOAT_ELEMENT(expected).key("shapes.rectangle.b")
+            FLOAT_ELEMENT(expected).key("rectangle.b")
             .tags("JS")
             .description("Rectangle side - b").displayedName("Side B")
             .assignmentOptional().defaultValue(10)
             .init().commit(),
 
-            FLOAT_ELEMENT(expected).key("shapes.rectangle.c")
+            FLOAT_ELEMENT(expected).key("rectangle.c")
             .tags("LM,JS")
             .description("Rectangle side - c").displayedName("Side C")
             .assignmentOptional().defaultValue(10)
             .init()
             .commit(),
 
-            NODE_ELEMENT(expected).key("shapes.triangle")
+            NODE_ELEMENT(expected).key("triangle")
             .displayedName("triangle")
             .description("A triangle (Node element containing no "
                          "other elements)")
@@ -257,10 +257,10 @@ def test_hash_filter():
     assert ("antiAlias" in result) is False
     assert ("color" in result) is True
     assert ("bold" in result) is False
-    assert ("shapes" in result) is True
-    assert ("shapes.rectangle" in result) is True
-    assert ("shapes.rectangle.b" in result) is True
-    assert ("shapes.rectangle.c" in result) is True
+    assert ("shapes" in result) is False
+    assert ("rectangle" in result) is True
+    assert ("rectangle.b" in result) is True
+    assert ("rectangle.c" in result) is True
     assert ("letter" in result) is True
     assert ("letter.a" in result) is True
     assert ("letter.b" in result) is True
@@ -273,10 +273,10 @@ def test_hash_filter():
 
     assert ("antiAlias" in result) is False
     assert ("bold" in result) is False
-    assert ("shapes" in result) is True
-    assert ("shapes.rectangle" in result) is True
-    assert ("shapes.rectangle.b" in result) is True
-    assert ("shapes.rectangle.c" in result) is True
+    assert ("shapes" in result) is False
+    assert ("rectangle" in result) is True
+    assert ("rectangle.b" in result) is True
+    assert ("rectangle.c" in result) is True
     assert ("letter" in result) is True
     assert ("letter.a" in result) is True
     assert ("letter.b" in result) is False
@@ -290,10 +290,10 @@ def test_hash_filter():
     assert ("antiAlias" in result) is True
     assert ("color" in result) is False
     assert ("bold" in result) is True
-    assert ("shapes" in result) is True
-    assert ("shapes.rectangle" in result) is True
-    assert ("shapes.rectangle.b" in result) is False
-    assert ("shapes.rectangle.c" in result) is True
+    assert ("shapes" in result) is False
+    assert ("rectangle" in result) is True
+    assert ("rectangle.b" in result) is False
+    assert ("rectangle.c" in result) is True
     assert ("letter" in result) is True
     assert ("letter.a" in result) is True
     assert ("letter.b" in result) is False
@@ -307,10 +307,10 @@ def test_hash_filter():
     assert ("antiAlias" in result) is False
     assert ("color" in result) is False
     assert ("bold" in result) is False
-    assert ("shapes" in result) is True
-    assert ("shapes.rectangle" in result) is True
-    assert ("shapes.rectangle.b" in result) is True
-    assert ("shapes.rectangle.c" in result) is True
+    assert ("shapes" in result) is False
+    assert ("rectangle" in result) is True
+    assert ("rectangle.b" in result) is True
+    assert ("rectangle.c" in result) is True
     assert ("letter" in result) is True
     assert ("letter.a" in result) is True
     assert ("letter.b" in result) is True
@@ -325,9 +325,9 @@ def test_hash_filter():
     assert ("color" in result) is False
     assert ("bold" in result) is False
     assert ("shapes" in result) is False
-    assert ("shapes.rectangle" in result) is False
-    assert ("shapes.rectangle.b" in result) is False
-    assert ("shapes.rectangle.c" in result) is False
+    assert ("rectangle" in result) is False
+    assert ("rectangle.b" in result) is False
+    assert ("rectangle.c" in result) is False
     assert ("letter" in result) is False
     assert ("letter.a" in result) is False
     assert ("letter.b" in result) is False
@@ -343,9 +343,9 @@ def test_hash_filter():
     assert ("color" in result) is False
     assert ("bold" in result) is False
     assert ("shapes" in result) is False
-    assert ("shapes.rectangle" in result) is False
-    assert ("shapes.rectangle.b" in result) is False
-    assert ("shapes.rectangle.c" in result) is False
+    assert ("rectangle" in result) is False
+    assert ("rectangle.b" in result) is False
+    assert ("rectangle.c" in result) is False
     assert ("letter" in result) is False
     assert ("letter.a" in result) is False
     assert ("letter.b" in result) is False

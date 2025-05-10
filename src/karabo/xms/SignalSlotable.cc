@@ -31,7 +31,7 @@
 #include <string>
 #include <vector>
 
-#include "karabo/data/schema/ChoiceElement.hh"
+#include "karabo/data/schema/SimpleElement.hh"
 #include "karabo/data/schema/Validator.hh"
 #include "karabo/data/types/Exception.hh"
 #include "karabo/data/types/Hash.hh"
@@ -343,22 +343,9 @@ namespace karabo {
         SignalSlotable::SignalSlotable(const std::string& instanceId, const karabo::data::Hash& brokerConfiguration,
                                        const int heartbeatInterval, const karabo::data::Hash& instanceInfo)
             : SignalSlotable() {
-            // Assemble broker configuration, filling up from defaults and given instanceId
-            Schema s;
-            CHOICE_ELEMENT(s)
-                  .key("con")
-                  .appendNodesOfConfigurationBase<karabo::net::Broker>()
-                  .assignmentOptional()
-                  .defaultValue(karabo::net::Broker::brokerTypeFromEnv())
-                  .commit();
-            Validator validator;
-            Hash valBrokerCfg;
-            validator.validate(s, brokerConfiguration, valBrokerCfg);
-            Hash& brokerCfg = valBrokerCfg.get<Hash>("con").begin()->getValue<Hash>();
-            brokerCfg.set("instanceId", instanceId);
-
             // Create Broker and call init(..)
-            Broker::Pointer connection = Configurator<Broker>::createChoice("con", valBrokerCfg);
+            Broker::Pointer connection =
+                  Configurator<Broker>::create(Broker::brokerTypeFromEnv(), Hash("instanceId", instanceId));
             init(instanceId, connection, heartbeatInterval, instanceInfo);
         }
 

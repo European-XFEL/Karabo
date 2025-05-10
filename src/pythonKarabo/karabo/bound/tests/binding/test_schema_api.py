@@ -50,8 +50,8 @@ def test_buildUp():
 
     try:
         schema = cppGraphicsRenderer1SchemaTest()
-        assert schema.isAccessInitOnly("shapes.circle.radius")
-        assert schema.isLeaf("shapes.circle.radius")
+        assert schema.isAccessInitOnly("circle.radius")
+        assert schema.isLeaf("circle.radius")
     except Exception as e:
         pytest.fail(e, pytrace=True)
 
@@ -132,8 +132,8 @@ def test_getsetExpertLevel():
 def test_isNode():
     schema = cppGraphicsRenderer1SchemaTest()
     assert schema.getRootName() == "test"
-    assert schema.isNode("shapes.circle")
-    assert schema.isNode("shapes.rectangle")
+    assert schema.isNode("circle")
+    assert schema.isNode("rectangle")
     assert not schema.isNode("shapes")
 
 
@@ -144,9 +144,9 @@ def test_getNodeType():
         assert nodeType == NodeType.LEAF
         assert schema.getNodeType("exampleKey5") == NodeType.LEAF
         schema = cppGraphicsRenderer1SchemaTest()
-        assert schema.getNodeType("shapes") == NodeType.CHOICE_OF_NODES
-        assert schema.getNodeType("shapes.circle") == NodeType.NODE
-        assert schema.getNodeType("shapes.rectangle") == NodeType.NODE
+        assert schema.getNodeType("shapes") == NodeType.LEAF
+        assert schema.getNodeType("circle") == NodeType.NODE
+        assert schema.getNodeType("rectangle") == NodeType.NODE
     except Exception as e:
         pytest.fail(e, pytrace=True)
 
