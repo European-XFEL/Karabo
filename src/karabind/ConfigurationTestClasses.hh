@@ -24,7 +24,6 @@
 #include <karabo/xms/SlotElement.hh>
 
 #include "karabo/data/schema/AlarmConditionElement.hh"
-#include "karabo/data/schema/ChoiceElement.hh"
 #include "karabo/data/schema/Configurator.hh"
 #include "karabo/data/schema/NDArrayElement.hh"
 #include "karabo/data/schema/NodeElement.hh"
@@ -228,14 +227,32 @@ namespace configurationTest {
                   .reconfigurable()
                   .commit();
 
-            CHOICE_ELEMENT(expected)
+            STRING_ELEMENT(expected)
                   .key("shapes")
                   .description("Some shapes")
                   .displayedName("Shapes")
-                  .appendNodesOfConfigurationBase<Shape>()
+                  .options("Circle, EditableCircle, Rectangle")
                   .assignmentOptional()
                   .defaultValue("Rectangle")
                   .expertAccess()
+                  .commit();
+
+            NODE_ELEMENT(expected)
+
+                  .key("Circle")
+                  .appendParametersOfConfigurableClass<Shape>("Circle")
+                  .commit();
+
+            NODE_ELEMENT(expected)
+
+                  .key("EditableCircle")
+                  .appendParametersOfConfigurableClass<Shape>("EditableCircle")
+                  .commit();
+
+            NODE_ELEMENT(expected)
+
+                  .key("Rectangle")
+                  .appendParametersOfConfigurableClass<Shape>("Rectangle")
                   .commit();
 
             STRING_ELEMENT(expected)
@@ -249,7 +266,8 @@ namespace configurationTest {
 
         GraphicsRenderer(const karabo::data::Hash& input) {
             // cout << input << endl;
-            Shape::Pointer shape = Shape::createChoice("shapes", input);
+            std::string selected = input.get<std::string>("shapes");
+            Shape::Pointer shape = Shape::create(selected, input.get<Hash>(selected));
             assert(input.get<std::string>("version") == "1.4.7");
             if (input.has("shapes.Circle")) assert(shape->draw() == "Circle");
         }
@@ -295,10 +313,10 @@ namespace configurationTest {
                   .reconfigurable()
                   .commit();
 
-            CHOICE_ELEMENT(expected).key("shapes").assignmentOptional().defaultValue("circle").commit();
+            STRING_ELEMENT(expected).key("shapes").assignmentOptional().defaultValue("circle").commit();
 
             NODE_ELEMENT(expected)
-                  .key("shapes.circle")
+                  .key("circle")
                   .tags("shape")
                   .displayedName("Circle")
                   .description("A circle")
@@ -306,14 +324,14 @@ namespace configurationTest {
                   .commit();
 
             NODE_ELEMENT(expected)
-                  .key("shapes.rectangle")
+                  .key("rectangle")
                   .tags("shape")
                   .displayedName("Rectangle")
                   .description("A rectangle")
                   .commit();
 
             FLOAT_ELEMENT(expected)
-                  .key("shapes.rectangle.b")
+                  .key("rectangle.b")
                   .description("Rectangle side - b")
                   .displayedName("Side B")
                   .tags("b")
@@ -323,7 +341,7 @@ namespace configurationTest {
                   .commit();
 
             FLOAT_ELEMENT(expected)
-                  .key("shapes.rectangle.c")
+                  .key("rectangle.c")
                   .description("Rectangle side - c")
                   .displayedName("Side C")
                   .assignmentOptional()

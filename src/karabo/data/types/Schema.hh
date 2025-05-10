@@ -198,8 +198,7 @@ namespace karabo {
             enum NodeType {
 
                 LEAF,
-                NODE,
-                CHOICE_OF_NODES
+                NODE
             };
 
             /**
@@ -374,13 +373,6 @@ namespace karabo {
              * @return
              */
             bool isNode(const std::string& path) const;
-
-            /**
-             * Check if the element at path is of Choice-of-Nodes type
-             * @param path
-             * @return
-             */
-            bool isChoiceOfNodes(const std::string& path) const;
 
             /**
              * Check if the element at path has one of the node element types
@@ -1282,8 +1274,6 @@ namespace karabo {
             void processingLeaf(const std::string& key, std::ostringstream& stream);
 
             void processingNode(const std::string& key, std::ostringstream& stream);
-
-            void processingChoiceOfNodes(const std::string& key, std::ostringstream& stream);
 
             void processingStandardAttributes(const std::string& key, std::ostringstream& stream);
 

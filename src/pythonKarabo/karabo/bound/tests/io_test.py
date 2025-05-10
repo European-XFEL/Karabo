@@ -34,13 +34,14 @@ class Io_TestCase(unittest.TestCase):
         try:
             out = OutputSchema.create("TextFile",
                                       Hash("filename", "/tmp/testschema.xml",
-                                           "format.Xml.indentation", 3))
+                                           "format", "Xml",
+                                           "Xml.indentation", 3))
             self.assertIsNotNone(out)
             out.write(self.schema)
             del out
 
             saveToFile(self.schema, "/tmp/testschema2.xml",
-                       Hash("format.Xml.indentation", 3))
+                       Hash("format", "Xml", "Xml.indentation", 3))
         except Exception as e:
             self.fail("test_io_write_xml_schema exception group: " + str(e))
 

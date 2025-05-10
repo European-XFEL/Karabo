@@ -71,7 +71,7 @@ class Serializer_TestCase(unittest.TestCase):
     def test_io_write_read_hash(self):
         try:
             config = Hash("filename", "/tmp/test_io_writeread_hash.xml",
-                          "format.Xml.indentation", -1)
+                          "format", "Xml", "Xml.indentation", -1)
             out = OutputHash.create("TextFile", config)
             hash = Hash('a.b.c', 1, 'x.y.z', [1, 2, 3, 4, 5, 6, 7])
             out.write(hash)
@@ -88,7 +88,8 @@ class Serializer_TestCase(unittest.TestCase):
     def test_io_savetofile_loadfromfile(self):
         try:
             h = Hash("a", 10, "b", "Hallo World")
-            saveToFile(h, "/tmp/MyFile.xml", Hash("format.Xml.indentation", 3))
+            saveToFile(h, "/tmp/MyFile.xml", Hash("format", "Xml",
+                                                  "Xml.indentation", 3))
 
             h2 = Hash()
             loadFromFile(h2, "/tmp/MyFile.xml")
@@ -101,7 +102,8 @@ class Serializer_TestCase(unittest.TestCase):
 
         try:
             h = Hash("a", 10, "b", "Hallo World")
-            saveToFile(h, "/tmp/MyFile.xml", Hash("format.Xml.indentation", 1))
+            saveToFile(h, "/tmp/MyFile.xml", Hash("format", "Xml",
+                                                  "Xml.indentation", 1))
 
             h2 = loadFromFile("/tmp/MyFile.xml")
             self.assertEqual(h2['a'], 10)

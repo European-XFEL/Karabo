@@ -33,8 +33,8 @@
 
 #include "BinarySerializer.hh"
 #include "Output.hh"
-#include "karabo/data/schema/ChoiceElement.hh"
 #include "karabo/data/schema/Configurator.hh"
+#include "karabo/data/schema/NodeElement.hh"
 #include "karabo/data/schema/SimpleElement.hh"
 
 namespace karabo {
@@ -77,13 +77,18 @@ namespace karabo {
                       .defaultValue(std::string("truncate"))
                       .commit();
 
-                CHOICE_ELEMENT(expected)
+                STRING_ELEMENT(expected)
                       .key("format")
                       .displayedName("Format")
                       .description("Select the format which should be used to interprete the data")
-                      .appendNodesOfConfigurationBase<BinarySerializer<T> >()
+                      .options("Bin")
                       .assignmentOptional()
                       .noDefaultValue()
+                      .commit();
+
+                NODE_ELEMENT(expected)
+                      .key("Bin")
+                      .appendParametersOfConfigurableClass<BinarySerializer<T>>("Bin")
                       .commit();
             }
 
@@ -91,7 +96,8 @@ namespace karabo {
                 : Output<T>(config), m_filename(config.get<std::string>("filename")) {
                 config.get("writeMode", m_writeMode);
                 if (config.has("format")) {
-                    m_serializer = BinarySerializer<T>::createChoice("format", config);
+                    const std::string& selected = config.get<std::string>("format");
+                    m_serializer = BinarySerializer<T>::create(selected, config.get<Hash>(selected));
                 } else {
                     guessAndSetFormat();
                 }
