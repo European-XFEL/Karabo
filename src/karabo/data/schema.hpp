@@ -20,7 +20,6 @@
 #define KARABO_DATA_SCHEMA_HPP
 
 #include "schema/AlarmConditionElement.hh"
-#include "schema/ChoiceElement.hh"
 #include "schema/Configurator.hh"
 #include "schema/Factory.hh"
 #include "schema/NDArrayElement.hh"

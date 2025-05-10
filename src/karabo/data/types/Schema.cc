@@ -149,11 +149,6 @@ namespace karabo {
         }
 
 
-        bool Schema::isChoiceOfNodes(const std::string& path) const {
-            return NodeType(m_hash.getAttribute<int>(path, KARABO_SCHEMA_NODE_TYPE)) == CHOICE_OF_NODES;
-        }
-
-
         bool Schema::hasNodeType(const std::string& path) const {
             return m_hash.hasAttribute(path, KARABO_SCHEMA_NODE_TYPE);
         }
@@ -718,7 +713,7 @@ namespace karabo {
             std::string error;
             if (node.hasAttribute(KARABO_SCHEMA_NODE_TYPE)) {
                 auto type = NodeType(node.getAttribute<int>(KARABO_SCHEMA_NODE_TYPE));
-                if (type == LEAF || type == CHOICE_OF_NODES) {
+                if (type == LEAF) {
                     if (!node.hasAttribute(KARABO_SCHEMA_ASSIGNMENT))
                         error = "Missing assignment, i.e. assignmentMandatory() / assignmentOptional(). ";
                 }
@@ -774,9 +769,6 @@ namespace karabo {
                         return true;
                     case NODE:
                         return false;
-                    case CHOICE_OF_NODES:
-                        // Only nodes can be members (i.e. children) of lists and choices:
-                        return (NodeType(node.getAttribute<int>(KARABO_SCHEMA_NODE_TYPE)) != NODE);
                     default: // If getNodeType would return Schema::NodeType and not int, default would not be needed:
                         throw KARABO_LOGIC_EXCEPTION("getNodeType returns unknown value '" +
                                                            data::toString(int(this->getNodeType(parentKey))) +=
@@ -811,8 +803,6 @@ namespace karabo {
                         processingLeaf(key, stream);
                     } else if (nodeType == NODE) {
                         processingNode(key, stream);
-                    } else if (nodeType == CHOICE_OF_NODES) {
-                        processingChoiceOfNodes(key, stream);
                     }
                 }
             } else {
@@ -843,22 +833,10 @@ namespace karabo {
                                 processingLeaf(path, stream);
                             } else if (nodeType == NODE) {
                                 processingNode(path, stream);
-                            } else if (nodeType == CHOICE_OF_NODES) {
-                                processingChoiceOfNodes(path, stream);
                             }
                         }
                     } else {
                         processingNode(classId, stream);
-                    }
-                }
-
-                if (nodeTypeClassId == CHOICE_OF_NODES) {
-                    vector<string> keys = getKeys(classId);
-
-
-                    for (const string& key : keys) {
-                        string path = classId + "." + key;
-                        processingNode(path, stream);
                     }
                 }
             }
@@ -894,13 +872,6 @@ namespace karabo {
 
 
             if (hasDescription(key)) stream << "     Description    : " << getDescription(key) << endl;
-        }
-
-
-        void Schema::processingChoiceOfNodes(const std::string& key, ostringstream& stream) {
-            string showKey = extractKey(key);
-            stream << "\n  " << showKey << " (CHOICE_OF_NODES)" << endl;
-            processingStandardAttributes(key, stream);
         }
 
 
@@ -951,8 +922,6 @@ namespace karabo {
                 }
 
                 if (nodeType == NODE) {
-                    r_updateAliasMap(getKeys(newPath), newPath);
-                } else if (nodeType == CHOICE_OF_NODES) {
                     r_updateAliasMap(getKeys(newPath), newPath);
                 }
             }
@@ -1055,15 +1024,6 @@ namespace karabo {
                 const std::string& schemaClass = attrs.get<std::string>(KARABO_SCHEMA_CLASS_ID);
                 if (schemaClass == "Slot") {
                     return false;
-                }
-                // Treat choices of a choice of nodes and entries in list of nodes, i.e. check whether
-                // there is a mother path - if yes, check whether it points to a CHOICE_OF_NODES!
-                const size_t lastDot = path.rfind(data::Hash::k_defaultSep);
-                if (lastDot != std::string::npos) {
-                    const std::string motherPath(path.substr(0, lastDot));
-                    if (isChoiceOfNodes(motherPath)) {
-                        return false;
-                    }
                 }
                 // HACK end
                 return true;

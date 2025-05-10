@@ -1380,16 +1380,16 @@ void Validator_Test::testPropertyTestValidation() {
         for (int i = 1; i <= 99; ++i) {
             const auto startTimepoint = std::chrono::high_resolution_clock::now();
 
-            // Check CHOICE_ELEMENT and BOOL_ELEMENT processing ...
-            auto res = validator.validate(schema, Hash("shapes.Circle.radius", float(i), "bold", true), validated);
+            // Check top NODE_ELEMENT and BOOL_ELEMENT processing ...
+            auto res = validator.validate(schema, Hash("Circle.radius", float(i), "bold", true), validated);
 
             const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
             elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
 
             CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
             CPPUNIT_ASSERT(validated.size() == 2);
-            CPPUNIT_ASSERT(validated.has("shapes.Circle.radius"));
-            CPPUNIT_ASSERT(validated.get<float>("shapes.Circle.radius") == float(i));
+            CPPUNIT_ASSERT(validated.has("Circle.radius"));
+            CPPUNIT_ASSERT(validated.get<float>("Circle.radius") == float(i));
             CPPUNIT_ASSERT(validated.has("bold"));
             CPPUNIT_ASSERT(validated.get<bool>("bold"));
         }

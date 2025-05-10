@@ -15,14 +15,14 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 
 from karabo.bound import (
-    ALARM_ELEMENT, AMPERE, BOOL_ELEMENT, CENTI, CHOICE_ELEMENT, DOUBLE_ELEMENT,
-    EVERY_1S, EVERY_100MS, EVERY_EVENT, FLOAT_ELEMENT, IMAGEDATA_ELEMENT,
-    INT32_ELEMENT, INT64_ELEMENT, KARABO_CLASSINFO,
-    KARABO_CONFIGURATION_BASE_CLASS, METER, MILLI, NDARRAY_ELEMENT,
-    NO_ARCHIVING, NODE_ELEMENT, OVERWRITE_ELEMENT, SLOT_ELEMENT, STATE_ELEMENT,
-    STRING_ELEMENT, TABLE_ELEMENT, UINT32_ELEMENT, UINT64_ELEMENT,
-    VECTOR_BOOL_ELEMENT, VECTOR_DOUBLE_ELEMENT, VECTOR_INT32_ELEMENT,
-    VECTOR_STRING_ELEMENT, AlarmCondition, Hash, MetricPrefix, Schema, Unit)
+    ALARM_ELEMENT, AMPERE, BOOL_ELEMENT, CENTI, DOUBLE_ELEMENT, EVERY_1S,
+    EVERY_100MS, EVERY_EVENT, FLOAT_ELEMENT, IMAGEDATA_ELEMENT, INT32_ELEMENT,
+    INT64_ELEMENT, KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS, METER,
+    MILLI, NDARRAY_ELEMENT, NO_ARCHIVING, NODE_ELEMENT, OVERWRITE_ELEMENT,
+    SLOT_ELEMENT, STATE_ELEMENT, STRING_ELEMENT, TABLE_ELEMENT, UINT32_ELEMENT,
+    UINT64_ELEMENT, VECTOR_BOOL_ELEMENT, VECTOR_DOUBLE_ELEMENT,
+    VECTOR_INT32_ELEMENT, VECTOR_STRING_ELEMENT, AlarmCondition, Hash,
+    MetricPrefix, Schema, Unit)
 from karabo.common.states import State
 
 
@@ -178,8 +178,9 @@ class Rectangle(Shape):
 @KARABO_CLASSINFO("GraphicsRenderer", "1.0")
 class GraphicsRenderer:
     def __init__(self, input):
-        shape = Shape.createChoice("shapes", input)
-        if "shapes.Circle" in input:
+        selected = input["shapes"]
+        shape = Shape.create(selected, input[selected])
+        if "Circle" in input:
             assert shape.draw() == "Circle"
 
     @staticmethod
@@ -211,11 +212,26 @@ class GraphicsRenderer:
             .reconfigurable()
             .commit(),
 
-            CHOICE_ELEMENT(expected).key("shapes")
+            STRING_ELEMENT(expected).key("shapes")
             .description("Some shapes")
             .displayedName("Shapes")
-            .appendNodesOfConfigurationBase(Shape)
+            .options("Circle, EditableCircle, Rectangle")
             .assignmentOptional().defaultValue("Rectangle")
+            .commit(),
+
+            NODE_ELEMENT(expected)
+            .key("Circle")
+            .appendParametersOfConfigurableClass(Shape, "Circle")
+            .commit(),
+
+            NODE_ELEMENT(expected)
+            .key("EditableCircle")
+            .appendParametersOfConfigurableClass(Shape, "EditableCircle")
+            .commit(),
+
+            NODE_ELEMENT(expected)
+            .key("Rectangle")
+            .appendParametersOfConfigurableClass(Shape, "Rectangle")
             .commit(),
         )
 
@@ -251,31 +267,31 @@ class GraphicsRenderer1:
             .reconfigurable()
             .commit(),
 
-            CHOICE_ELEMENT(expected).key("shapes")
+            STRING_ELEMENT(expected).key("shapes")
             .assignmentOptional().defaultValue("circle")
             .commit(),
 
-            NODE_ELEMENT(expected).key("shapes.circle")
+            NODE_ELEMENT(expected).key("circle")
             .tags("shape")
             .displayedName("Circle")
             .description("A circle")
             .appendParametersOf(Circle)
             .commit(),
 
-            NODE_ELEMENT(expected).key("shapes.rectangle")
+            NODE_ELEMENT(expected).key("rectangle")
             .tags("shape")
             .displayedName("Rectangle")
             .description("A rectangle")
             .commit(),
 
-            DOUBLE_ELEMENT(expected).key("shapes.rectangle.b")
+            DOUBLE_ELEMENT(expected).key("rectangle.b")
             .description("Rectangle side - b")
             .displayedName("Side B")
             .assignmentOptional().defaultValue(10)
             .init()
             .commit(),
 
-            DOUBLE_ELEMENT(expected).key("shapes.rectangle.c")
+            DOUBLE_ELEMENT(expected).key("rectangle.c")
             .description("Rectangle side - c")
             .displayedName("Side C")
             .assignmentOptional().defaultValue(10)
@@ -768,17 +784,17 @@ class GraphicsRenderer2:
             .reconfigurable()
             .commit(),
 
-            CHOICE_ELEMENT(expected).key("shapes")
+            STRING_ELEMENT(expected).key("shapes")
             .tags("DB")
             .assignmentOptional().defaultValue("rectangle")
             .commit(),
 
-            NODE_ELEMENT(expected).key("shapes.circle")
+            NODE_ELEMENT(expected).key("circle")
             .tags("JS")
             .displayedName("Circle").description("A circle")
             .commit(),
 
-            FLOAT_ELEMENT(expected).key("shapes.circle.radius")
+            FLOAT_ELEMENT(expected).key("circle.radius")
             .description("The radius of the circle")
             .displayedName("Radius")
             .tags("NC,KW")
@@ -786,25 +802,25 @@ class GraphicsRenderer2:
             .assignmentOptional().defaultValue(10)
             .init().commit(),
 
-            NODE_ELEMENT(expected).key("shapes.rectangle")
+            NODE_ELEMENT(expected).key("rectangle")
             .tags("BH, KW , CY")
             .displayedName("Rectangle").description("A rectangle")
             .commit(),
 
-            FLOAT_ELEMENT(expected).key("shapes.rectangle.b")
+            FLOAT_ELEMENT(expected).key("rectangle.b")
             .tags("JS")
             .description("Rectangle side - b").displayedName("Side B")
             .assignmentOptional().defaultValue(10)
             .init().commit(),
 
-            FLOAT_ELEMENT(expected).key("shapes.rectangle.c")
+            FLOAT_ELEMENT(expected).key("rectangle.c")
             .tags("LM,JS")
             .description("Rectangle side - c").displayedName("Side C")
             .assignmentOptional().defaultValue(10)
             .init()
             .commit(),
 
-            NODE_ELEMENT(expected).key("shapes.triangle")
+            NODE_ELEMENT(expected).key("triangle")
             .displayedName("triangle")
             .description("A triangle (Node element containing no "
                          "other elements)")

@@ -24,7 +24,7 @@
 #include "PyUtilSchemaElement.hh"
 #include "Wrapper.hh"
 #include "karabo/data/schema/ByteArrayElement.hh"
-#include "karabo/data/schema/ChoiceElement.hh"
+#include "karabo/data/schema/NodeElement.hh"
 #include "karabo/data/schema/SimpleElement.hh"
 #include "karabo/data/schema/VectorElement.hh"
 #include "karabo/data/types/Exception.hh"

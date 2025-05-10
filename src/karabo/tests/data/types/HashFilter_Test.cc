@@ -24,7 +24,6 @@
 
 #include "HashFilter_Test.hh"
 
-#include "karabo/data/schema/ChoiceElement.hh"
 #include "karabo/data/schema/NodeElement.hh"
 #include "karabo/data/schema/SimpleElement.hh"
 #include "karabo/data/schema/TableElement.hh"
@@ -275,17 +274,18 @@ namespace hashfilter {
                   .reconfigurable()
                   .commit();
 
-            CHOICE_ELEMENT(expected).key("shapes").tags("DB").assignmentOptional().defaultValue("rectangle").commit();
+            STRING_ELEMENT(expected)
 
-            NODE_ELEMENT(expected)
-                  .key("shapes.circle")
-                  .tags("JS")
-                  .displayedName("Circle")
-                  .description("A circle")
+                  .key("shapes")
+                  .tags("DB")
+                  .assignmentOptional()
+                  .defaultValue("rectangle")
                   .commit();
 
+            NODE_ELEMENT(expected).key("circle").tags("JS").displayedName("Circle").description("A circle").commit();
+
             FLOAT_ELEMENT(expected)
-                  .key("shapes.circle.radius")
+                  .key("circle.radius")
                   .description("The radius of the circle")
                   .displayedName("Radius")
                   .tags("NC,KW")
@@ -299,14 +299,14 @@ namespace hashfilter {
                   .commit();
 
             NODE_ELEMENT(expected)
-                  .key("shapes.rectangle")
+                  .key("rectangle")
                   .tags("BH, KW , CY")
                   .displayedName("Rectangle")
                   .description("A rectangle")
                   .commit();
 
             FLOAT_ELEMENT(expected)
-                  .key("shapes.rectangle.b")
+                  .key("rectangle.b")
                   .tags("JS")
                   .description("Rectangle side - b")
                   .displayedName("Side B")
@@ -316,7 +316,7 @@ namespace hashfilter {
                   .commit();
 
             FLOAT_ELEMENT(expected)
-                  .key("shapes.rectangle.c")
+                  .key("rectangle.c")
                   .tags("LM,JS")
                   .description("Rectangle side - c")
                   .displayedName("Side C")
@@ -326,7 +326,7 @@ namespace hashfilter {
                   .commit();
 
             NODE_ELEMENT(expected)
-                  .key("shapes.triangle")
+                  .key("triangle")
                   .displayedName("triangle")
                   .description("A triangle (Node element containing no other elements)")
                   .commit();

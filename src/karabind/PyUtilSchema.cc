@@ -25,7 +25,6 @@
 #include "PyTypes.hh"
 #include "Wrapper.hh"
 #include "karabo/data/schema/ByteArrayElement.hh"
-#include "karabo/data/schema/ChoiceElement.hh"
 #include "karabo/data/schema/Factory.hh"
 #include "karabo/data/schema/LeafElement.hh"
 #include "karabo/data/schema/NodeElement.hh"
@@ -182,7 +181,6 @@ void exportPyUtilSchema(py::module_& m) {
         py::enum_<Schema::NodeType>(m, "NodeType")
               .value("LEAF", Schema::LEAF)
               .value("NODE", Schema::NODE)
-              .value("CHOICE_OF_NODES", Schema::CHOICE_OF_NODES)
               .export_values();
 
         py::enum_<Schema::ArchivePolicy>(m, "ArchivePolicy")
@@ -644,11 +642,6 @@ void exportPyUtilSchema(py::module_& m) {
         s.def(
               "isAssignmentOptional",
               [](const Schema& self, const std::string& path) -> py::bool_ { return self.isAssignmentOptional(path); },
-              py::arg("path"));
-
-        s.def(
-              "isChoiceOfNodes",
-              [](const Schema& self, const std::string& path) -> py::bool_ { return self.isChoiceOfNodes(path); },
               py::arg("path"));
 
         s.def(

@@ -37,7 +37,6 @@
 #include <tuple>
 
 #include "Device.hh"
-#include "karabo/data/schema/ChoiceElement.hh"
 #include "karabo/data/schema/Configurator.hh"
 #include "karabo/data/schema/NodeElement.hh"
 #include "karabo/data/schema/SimpleElement.hh"
@@ -96,16 +95,6 @@ namespace karabo {
                   .noDefaultValue()
                   .expertAccess()
                   .init()
-                  .commit();
-
-            CHOICE_ELEMENT(expected)
-                  .key("connection")
-                  .displayedName("Connection")
-                  .description("The connection to the communication layer of the distributed system")
-                  .appendNodesOfConfigurationBase<karabo::net::Broker>()
-                  .assignmentOptional()
-                  .defaultValue(karabo::net::Broker::brokerTypeFromEnv())
-                  .expertAccess()
                   .commit();
 
             INT32_ELEMENT(expected)
@@ -218,13 +207,9 @@ namespace karabo {
             // Requires that there is no logging to the broker as we had before 2.17.0.
             loadLogger(config);
 
-            // For a choice element, there is exactly one sub-Hash where the key is the chosen (here: Broker)
-            // sub-class. We have to transfer the instance id and thus copy the relevant part of the (const) config.
-            // (Otherwise we could just pass 'input' to createChoice(..).)
-            Hash brokerConfig("connection", config.get<Hash>("connection"));
-            Hash& connectionCfg = brokerConfig.get<Hash>("connection").begin()->getValue<Hash>();
-            connectionCfg.set("instanceId", m_serverId);
-            m_connection = Configurator<Broker>::createChoice("connection", brokerConfig);
+            // Build up broker configuration based on environment and add instanceId...
+            m_connection = Configurator<Broker>::create(karabo::net::Broker::brokerTypeFromEnv(),
+                                                        Hash("instanceId", m_serverId));
             m_connection->connect();
 
             karabo::data::Hash instanceInfo;

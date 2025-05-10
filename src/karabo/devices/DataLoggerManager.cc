@@ -82,7 +82,7 @@
 #include <vector>
 
 #include "karabo/data/io/FileTools.hh"
-#include "karabo/data/schema/ChoiceElement.hh"
+#include "karabo/data/schema/NodeElement.hh"
 #include "karabo/data/schema/SimpleElement.hh"
 #include "karabo/data/schema/TableElement.hh"
 #include "karabo/data/schema/VectorElement.hh"

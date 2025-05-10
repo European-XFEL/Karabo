@@ -60,9 +60,8 @@ karabo::core::Device::Pointer KaraboDeviceFixture::instantiateAndGetPointer(cons
         using namespace karabo::net;
         using namespace karabo::data;
         const std::string brokerType = Broker::brokerTypeFromEnv();
-        Hash valBrokerCfg = Hash(brokerType, Hash(brokerType, Hash("instanceId", instanceId)));
         // connect the device under test to the broker
-        Broker::Pointer connection = Broker::createChoice(brokerType, valBrokerCfg);
+        Broker::Pointer connection = Broker::create(brokerType, Hash("instanceId", instanceId));
         devPtr->finalizeInternalInitialization(
               connection,
               true, // no server feeds the device with broadcasts, so it has to listen itself

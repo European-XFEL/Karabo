@@ -214,33 +214,6 @@ class Configurator:
         raise AttributeError('Given nodeName "{}" is not part of input'
                              ' configuration'.format(nodename))
 
-    def createChoice(self, choicename, configuration, validation=True):
-        """
-        The helper method to create the instance of class derived from base
-        class given to constructor using "choiceName" and
-        input "configuration".  The last argument is a flag to determine if
-        the input configuration should be validated.
-        """
-
-        return self.create(configuration[choicename], validation)
-
-    def createList(self, listname, input, validation=True):
-        """
-        The helper method to create the list of instances of classes derived
-        from base class given to constructor using "listName"
-        used as a key to the list and "input" configuration.  The last argument
-        is a flag to determine if the input configuration
-        should be validated.
-        """
-
-        if listname not in input:
-            raise AttributeError('Given list name "{}" is not a part of input'
-                                 ' configuration'.format(listname))
-        instances = []
-        for hash in input[listname]:
-            instances.append(self.create(hash, validation))
-        return instances
-
     def getRegisteredClasses(self):
         """
         Returns list of "classid"'s for all registered classes derived from

@@ -96,7 +96,7 @@ struct MySchema {
               .assignmentInternal();
 
         // test for CHOICE element
-        CHOICE_ELEMENT(expected)
+        STRING_ELEMENT(expected)
               .key("shapes")
               .displayedName("shapesAsChoice")
               .description("Description of Choice-element shapes")
@@ -105,14 +105,14 @@ struct MySchema {
               .commit();
 
         NODE_ELEMENT(expected)
-              .key("shapes.circle")
+              .key("circle")
               .tags("shape")
               .displayedName("Circle")
               .description("Description of circle")
               .commit();
 
         INT32_ELEMENT(expected)
-              .key("shapes.circle.radius")
+              .key("circle.radius")
               .tags("shape")
               .displayedName("radius")
               .description("Radius of circle")
@@ -123,7 +123,7 @@ struct MySchema {
               .commit();
 
         INT32_ELEMENT(expected)
-              .key("shapes.circle.color")
+              .key("circle.color")
               .tags("shape")
               .displayedName("color")
               .description("Color of circle")
@@ -134,14 +134,14 @@ struct MySchema {
               .commit();
 
         NODE_ELEMENT(expected)
-              .key("shapes.circle.newnode")
+              .key("circle.newnode")
               .tags("shape")
               .displayedName("NewNodeOfCircle")
               .description("Description of NEW NODE of circle")
               .commit();
 
         INT32_ELEMENT(expected)
-              .key("shapes.circle.newnode.mynewint")
+              .key("circle.newnode.mynewint")
               .tags("shape")
               .displayedName("MyNewInt")
               .description("Descr of shapes circle newnode MyNewInt")
@@ -150,14 +150,14 @@ struct MySchema {
               .commit();
 
         NODE_ELEMENT(expected)
-              .key("shapes.rectangle")
+              .key("rectangle")
               .tags("shape")
               .displayedName("rectangle")
               .description("Description of rectangle")
               .commit();
 
         DOUBLE_ELEMENT(expected)
-              .key("shapes.rectangle.square")
+              .key("rectangle.square")
               .tags("shape")
               .displayedName("square")
               .description("Description of square of rectangle")
@@ -274,30 +274,31 @@ void FileInputOutput_Test::writeTextFile() {
     out->write(m_rootedHash);
 
     p.startPeriod("bigHash");
-    out = Output<Hash>::create("TextFile", Hash("filename", resourcePath("file2.xml"), "format.Xml.indentation", -1));
+    out = Output<Hash>::create("TextFile",
+                               Hash("filename", resourcePath("file2.xml"), "format", "Xml", "Xml.indentation", -1));
     out->write(m_bigHash);
     p.stopPeriod("bigHash"); // p.stopPeriod();
     p.close();
     if (false) clog << "writing big Hash (text) took " << p.getPeriod("bigHash").getDuration() << " [s]" << endl;
 
-    out = Output<Hash>::create("TextFile", Hash("filename", resourcePath("file3.xml"), "format.Xml.indentation", 0,
-                                                "format.Xml.writeDataTypes", false));
+    out = Output<Hash>::create("TextFile", Hash("filename", resourcePath("file3.xml"), "format", "Xml",
+                                                "Xml.indentation", 0, "Xml.writeDataTypes", false));
     out->write(m_unrootedHash);
 
-    out = Output<Hash>::create("TextFile", Hash("filename", resourcePath("file4.xml"), "format.Xml.indentation", 0,
-                                                "format.Xml.writeDataTypes", true));
+    out = Output<Hash>::create("TextFile", Hash("filename", resourcePath("file4.xml"), "format", "Xml",
+                                                "Xml.indentation", 0, "Xml.writeDataTypes", true));
     out->write(m_withSchemaHash);
 
     // Using the FileTools interface
     saveToFile(m_rootedHash, resourcePath("file1a.xml"));
 
-    saveToFile(m_bigHash, resourcePath("file2a.xml"), Hash("format.Xml.indentation", -1));
+    saveToFile(m_bigHash, resourcePath("file2a.xml"), Hash("format", "Xml", "Xml.indentation", -1));
 
     saveToFile(m_unrootedHash, resourcePath("file3a.xml"),
-               Hash("format.Xml.indentation", 0, "format.Xml.writeDataTypes", false));
+               Hash("format", "Xml", "Xml.indentation", 0, "Xml.writeDataTypes", false));
 
     saveToFile(m_withSchemaHash, resourcePath("file4a.xml"),
-               Hash("format.Xml.indentation", 0, "format.Xml.writeDataTypes", true));
+               Hash("format", "Xml", "Xml.indentation", 0, "Xml.writeDataTypes", true));
 
     // Check different folder levels
     if (std::filesystem::exists(resourcePath("folder/"))) {
@@ -382,7 +383,7 @@ void FileInputOutput_Test::readTextFile() {
 void FileInputOutput_Test::writeTextSchema() {
     // Using the Factory interface
     Output<Schema>::Pointer out = Output<Schema>::create(
-          "TextFile", Hash("filename", resourcePath("testschema.xml"), "format.Xml.indentation", 3));
+          "TextFile", Hash("filename", resourcePath("testschema.xml"), "format", "Xml", "Xml.indentation", 3));
     out->write(m_schema);
 
     // Using the FileTools interface
