@@ -15,10 +15,10 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 
 from karabo.bound import (
-    ALARM_ELEMENT, AMPERE, BOOL_ELEMENT, CENTI, DOUBLE_ELEMENT, EVERY_1S,
-    EVERY_100MS, EVERY_EVENT, FLOAT_ELEMENT, IMAGEDATA_ELEMENT, INT32_ELEMENT,
-    INT64_ELEMENT, KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS, METER,
-    MILLI, NDARRAY_ELEMENT, NO_ARCHIVING, NODE_ELEMENT, OVERWRITE_ELEMENT,
+    ALARM_ELEMENT, AMPERE, BOOL_ELEMENT, CENTI, DOUBLE_ELEMENT, EVERY_EVENT,
+    FLOAT_ELEMENT, IMAGEDATA_ELEMENT, INT32_ELEMENT, INT64_ELEMENT,
+    KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS, METER, MILLI,
+    NDARRAY_ELEMENT, NO_ARCHIVING, NODE_ELEMENT, OVERWRITE_ELEMENT,
     SLOT_ELEMENT, STATE_ELEMENT, STRING_ELEMENT, TABLE_ELEMENT, UINT32_ELEMENT,
     UINT64_ELEMENT, VECTOR_BOOL_ELEMENT, VECTOR_DOUBLE_ELEMENT,
     VECTOR_INT32_ELEMENT, VECTOR_STRING_ELEMENT, AlarmCondition, Hash,
@@ -378,14 +378,12 @@ class TestStruct1:
             .displayedName("Example key 6")
             .description("Example key 6 description")
             .readOnly().initialValue(1.11)
-            .archivePolicy(EVERY_100MS)
             .commit(),
 
             VECTOR_INT32_ELEMENT(expected).key("exampleKey7")
             .displayedName("Example key 7")
             .allowedStates(State.STARTED, State.NORMAL)
             .readOnly().initialValue([1, 2, 3])
-            .archivePolicy(EVERY_1S)
             .commit(),
 
             VECTOR_INT32_ELEMENT(expected).key("exampleKey7b")
@@ -567,7 +565,7 @@ class SomeClass:
 
             DOUBLE_ELEMENT(expected).key("a")
             .readOnly().initialValue(1.11)
-            .archivePolicy(EVERY_100MS)
+            .archivePolicy(NO_ARCHIVING)
             .commit(),
 
             VECTOR_INT32_ELEMENT(expected).key("somelist")

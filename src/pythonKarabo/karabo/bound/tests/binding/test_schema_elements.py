@@ -19,8 +19,8 @@ import numpy as np
 import pytest
 
 from karabo.bound import (
-    ALARM_ELEMENT, BOOL_ELEMENT, BYTEARRAY_ELEMENT, DOUBLE_ELEMENT, EVERY_1S,
-    EVERY_100MS, EVERY_EVENT, FLOAT_ELEMENT, IMAGEDATA_ELEMENT, INT32_ELEMENT,
+    ALARM_ELEMENT, BOOL_ELEMENT, BYTEARRAY_ELEMENT, DOUBLE_ELEMENT,
+    EVERY_EVENT, FLOAT_ELEMENT, IMAGEDATA_ELEMENT, INT32_ELEMENT,
     INT64_ELEMENT, KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS, METER,
     MICRO, NDARRAY_ELEMENT, NO_ARCHIVING, NODE_ELEMENT, OVERWRITE_ELEMENT,
     SLOT_ELEMENT, STATE_ELEMENT, STRING_ELEMENT, TABLE_ELEMENT, UINT32_ELEMENT,
@@ -402,7 +402,6 @@ class TestStruct1:
             .description("Example key 6 description")
             .readOnly()
             .initialValue(1.11)
-            .archivePolicy(EVERY_100MS)
             .commit(),
 
             VECTOR_INT32_ELEMENT(expected)
@@ -411,14 +410,12 @@ class TestStruct1:
             .allowedStates(State.STARTED, State.NORMAL)
             .readOnly()
             .initialValue([1, 2, 3])
-            .archivePolicy(EVERY_1S)
             .commit(),
 
             VECTOR_UINT32_ELEMENT(expected)
             .key("exampleKey7b")
             .readOnly()
             .initialValue([11, 22, 33])
-            .archivePolicy(EVERY_1S)
             .commit(),
 
             VECTOR_DOUBLE_ELEMENT(expected)
@@ -433,13 +430,11 @@ class TestStruct1:
             .setSpecialDisplayType("TestDisplayType")
             .readOnly()
             .initialValue(["Hallo", "World"])
-            .archivePolicy(EVERY_1S)
             .commit(),
 
             VECTOR_INT32_ELEMENT(expected)
             .key("vectInt")
             .readOnly()
-            .archivePolicy(EVERY_1S)
             .commit(),
 
             VECTOR_INT32_ELEMENT(expected)
@@ -551,7 +546,6 @@ class TestStruct1:
             STRING_ELEMENT(expected)
             .key("testPath2")
             .readOnly()
-            .archivePolicy(EVERY_1S)
             .commit(),
 
             STRING_ELEMENT(expected)
@@ -651,7 +645,6 @@ class TestStruct1:
             .setColumns(row)
             .readOnly()
             .initialValue([Hash("int", 2)])
-            .archivePolicy(EVERY_1S)
             .commit(),
 
             TABLE_ELEMENT(expected)
@@ -659,7 +652,6 @@ class TestStruct1:
             .setColumns(row)
             .readOnly()
             .defaultValue([Hash("int", 3)])
-            .archivePolicy(EVERY_1S)
             .commit(),
         )
 
@@ -912,7 +904,6 @@ class SomeClass:
             .key("a")
             .readOnly()
             .initialValue(1.11)
-            .archivePolicy(EVERY_100MS)
             .commit(),
 
             VECTOR_INT32_ELEMENT(expected)
