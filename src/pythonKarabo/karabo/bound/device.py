@@ -802,7 +802,7 @@ class PythonDevice:
         :param schema: to be merged with the static schema
         """
         rules = ValidatorValidationRules()
-        rules.allowAdditionalKeys = True
+        rules.allowAdditionalKeys = False
         rules.allowMissingKeys = True
         rules.allowUnrootedConfiguration = True
         rules.injectDefaults = True
@@ -910,7 +910,7 @@ class PythonDevice:
         :param schema: to append to current full schema
         """
         rules = ValidatorValidationRules()
-        rules.allowAdditionalKeys = True
+        rules.allowAdditionalKeys = False
         rules.allowMissingKeys = True
         rules.allowUnrootedConfiguration = True
         rules.injectDefaults = True
