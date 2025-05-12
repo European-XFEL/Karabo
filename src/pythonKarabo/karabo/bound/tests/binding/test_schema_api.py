@@ -688,18 +688,14 @@ def test_isProperty():
 def test_hasArchivePolicy():
     schema = cppTestStruct1SchemaTestStruct1()
     assert schema.hasArchivePolicy("exampleKey5") is False
-    assert schema.hasArchivePolicy("exampleKey6")
-    assert schema.hasArchivePolicy("exampleKey7")
+    assert not schema.hasArchivePolicy("exampleKey6")
+    assert not schema.hasArchivePolicy("exampleKey7")
     assert schema.hasArchivePolicy("exampleKey8")
 
 
 def test_getArchivePolicy():
     try:
         schema = cppTestStruct1SchemaTestStruct1()
-        assert schema.getArchivePolicy("exampleKey6") == \
-            ArchivePolicy.EVERY_100MS
-        assert schema.getArchivePolicy("exampleKey7") == \
-            ArchivePolicy.EVERY_1S
         assert schema.getArchivePolicy("exampleKey8") == \
             ArchivePolicy.NO_ARCHIVING
     except Exception as e:
@@ -707,13 +703,12 @@ def test_getArchivePolicy():
 
 
 def test_setArchivePolicy():
-    try:
-        schema = cppSomeClassSchemaSomeClassId()
-        assert schema.getArchivePolicy("a") == ArchivePolicy.EVERY_100MS
-        schema.setArchivePolicy('a', ArchivePolicy.EVERY_10MIN)
-        assert schema.getArchivePolicy("a") == ArchivePolicy.EVERY_10MIN
-    except Exception as e:
-        pytest.fail(e, pytrace=True)
+    schema = cppSomeClassSchemaSomeClassId()
+    assert not schema.hasArchivePolicy("a")
+    schema.setArchivePolicy('a', ArchivePolicy.EVERY_EVENT)
+    assert schema.getArchivePolicy("a") == ArchivePolicy.EVERY_EVENT
+    schema.setArchivePolicy('a', ArchivePolicy.NO_ARCHIVING)
+    assert schema.getArchivePolicy("a") == ArchivePolicy.NO_ARCHIVING
 
 
 def test_perKeyFunctionality():

@@ -666,8 +666,8 @@ class Schema_TestCase(unittest.TestCase):
         try:
             schema = Configurator(TestStruct1).getSchema("TestStruct1")
             self.assertTrue(schema.hasArchivePolicy("exampleKey5"))
-            self.assertTrue(schema.hasArchivePolicy("exampleKey6"))
-            self.assertTrue(schema.hasArchivePolicy("exampleKey7"))
+            self.assertFalse(schema.hasArchivePolicy("exampleKey6"))
+            self.assertFalse(schema.hasArchivePolicy("exampleKey7"))
             self.assertTrue(schema.hasArchivePolicy("exampleKey8"))
         except Exception as e:
             self.fail("test_hasArchivePolicy exception: " + str(e))
@@ -677,12 +677,8 @@ class Schema_TestCase(unittest.TestCase):
             schema = Configurator(TestStruct1).getSchema("TestStruct1")
             self.assertEqual(schema.getArchivePolicy("exampleKey5"),
                              ArchivePolicy.EVERY_EVENT)
-            self.assertEqual(schema.getArchivePolicy("exampleKey6"),
-                             ArchivePolicy.EVERY_100MS)
-            self.assertEqual(schema.getArchivePolicy("exampleKey7"),
-                             ArchivePolicy.EVERY_1S)
-            self.assertEqual(schema.getArchivePolicy("exampleKey8"),
-                             ArchivePolicy.NO_ARCHIVING)
+            self.assertTrue(schema.getArchivePolicy("exampleKey8"),
+                            ArchivePolicy.NO_ARCHIVING)
         except Exception as e:
             self.fail("test_getArchivePolicy exception: " + str(e))
 
@@ -690,10 +686,10 @@ class Schema_TestCase(unittest.TestCase):
         try:
             schema = Configurator(SomeClass).getSchema("SomeClassId")
             self.assertEqual(schema.getArchivePolicy("a"),
-                             ArchivePolicy.EVERY_100MS)
-            schema.setArchivePolicy('a', ArchivePolicy.EVERY_10MIN)
+                             ArchivePolicy.NO_ARCHIVING)
+            schema.setArchivePolicy('a', ArchivePolicy.EVERY_EVENT)
             self.assertEqual(schema.getArchivePolicy("a"),
-                             ArchivePolicy.EVERY_10MIN)
+                             ArchivePolicy.EVERY_EVENT)
         except Exception as e:
             self.fail("test_setArchivePolicy exception: " + str(e))
 

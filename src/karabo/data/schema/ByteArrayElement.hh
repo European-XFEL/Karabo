@@ -41,8 +41,6 @@ namespace karabo {
 
                 m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ);
                 m_node->setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::OPTIONAL_PARAM);
-                m_node->setAttribute<int>(KARABO_SCHEMA_ARCHIVE_POLICY, Schema::EVERY_EVENT);
-
                 const Unit unit = Unit::NOT_ASSIGNED;
                 std::pair<std::string, std::string> names = getUnit(unit);
                 m_node->template setAttribute<int>(KARABO_SCHEMA_UNIT_ENUM, static_cast<int>(unit));

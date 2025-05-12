@@ -1556,9 +1556,9 @@ class Tests(TestCase):
             self.assertEqual(prop_b.descriptor.archivePolicy,
                              ArchivePolicy.NO_ARCHIVING, key)
 
-        i = Int32(archivePolicy=2)
+        i = Int32(archivePolicy=ArchivePolicy.NO_ARCHIVING)
         self.assertEqual(i.archivePolicy,
-                         ArchivePolicy.EVERY_1S)
+                         ArchivePolicy.NO_ARCHIVING)
         with self.assertRaises(ValueError):
             Int32(archivePolicy=42)
 

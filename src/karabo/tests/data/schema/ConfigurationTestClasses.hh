@@ -550,7 +550,6 @@ namespace configurationTest {
                   .key("testfile")
                   .readOnly()
                   .defaultValue("initFile") // (now) for readOnly it's the same as initialValue
-                  .archivePolicy(Schema::EVERY_10MIN)
                   .commit();
 
             using std::vector;
@@ -559,12 +558,7 @@ namespace configurationTest {
             vector<int> vecWarnL(3, 50);
             vector<int> vecWarnH(3, 100);
 
-            VECTOR_INT32_ELEMENT(expected)
-                  .key("vecInt")
-                  .readOnly()
-                  .initialValue(vecInit)
-                  .archivePolicy(Schema::EVERY_EVENT)
-                  .commit();
+            VECTOR_INT32_ELEMENT(expected).key("vecInt").readOnly().initialValue(vecInit).commit();
 
             vector<double> vecAlarmL(3, -5.5);
             vector<double> vecAlarmH(3, 7.7);
