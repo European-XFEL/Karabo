@@ -18,185 +18,192 @@
 # Signal and Slot for the case of both instances on different processes:
 # connect(..), disconnect(..), asyncConnect(..) and asyncDisconnect(..)
 
-from karabo.bound import Hash, SignalSlotable
-from karabo.bound.testing import BoundDeviceTestCase
+import json
+from time import sleep
 
-instTimeout = 30
-instTimeoutMs = instTimeout * 1000
+import pytest
+
+from karabo.bound import SignalSlotable
+from karabo.bound.testing import ServerContext, eventLoop, sleepUntil
 
 timeout = 5
 timeoutMs = timeout * 1000
 
+SERVER_ID = "sigSlotConnectServer"
+SYNC_SLOTTESTER = "sigSlotConnectTester"
+ASYNC_SLOTTESTER = "sigSlotAsyncConnectTester"
 
-class TestSigSlotSignalConnect(BoundDeviceTestCase):
 
-    def test_connect(self):
-        """
-        Test SignalSlotable.connect and disconnect between instances
-        in different processes.
-        (Even tests this for C++ where all tests run in a single process!)
-        """
-        # Create server to instantiate device that can emit a signal
-        SERVER_ID = "sigSlotConnectServer"
-        self.start_server("bound", SERVER_ID, ["SignalDevice"],
-                          namespace="karabo.bound_device_test")
-        # Instantiate device that can emit a signal
-        deviceId = "sigSlotConnectTester"
-        cfg = Hash("classId", "SignalDevice",
-                   "deviceId", deviceId,
-                   "configuration", Hash())
-        ok, msg = self.dc.instantiate(SERVER_ID, cfg, instTimeout)
-        self.assertTrue(ok, msg)
+@pytest.fixture(scope="module")
+def connectTest(eventLoop: eventLoop):
+    config = {
+        SYNC_SLOTTESTER: {
+            "classId": "SignalDevice",
+        },
+        ASYNC_SLOTTESTER: {
+            "classId": "SignalDevice",
+        }
+    }
+    init = json.dumps(config)
+    server = ServerContext(
+        SERVER_ID, [f"init={init}",
+                    "pluginNamespace=karabo.bound_device_test"],
+        api="python")
+    with server:
+        remote = server.remote()
+        sleepUntil(lambda: SYNC_SLOTTESTER in remote.getDevices(), timeout=10)
+        yield server
 
-        # Create an instance with a slot that it can connect to the signal
-        slotter = SignalSlotable("slotInstance_sync")
 
-        slotCalled = False
-        inSlot = None
+def test_connect(connectTest):
+    """
+    Test SignalSlotable.connect and disconnect between instances
+    in different processes.
+    (Even tests this for C++ where all tests run in a single process!)
+    """
+    # Create an instance with a slot that it can connect to the signal
+    slotter = SignalSlotable("slotInstance_sync")
+    slotCalled = False
+    inSlot = None
 
-        def slotFunc(i):
-            nonlocal slotCalled, inSlot
-            inSlot = i
-            slotCalled = True
+    def slotFunc(i):
+        nonlocal slotCalled, inSlot
+        inSlot = i
+        slotCalled = True
 
-        slotter.registerSlot(slotFunc, "slot")
-        slotter.start()
+    slotter.registerSlot(slotFunc, "slot")
+    slotter.start()
 
-        # First test successful connect
-        connected = slotter.connect(deviceId, "signal", "slot")
-        self.assertTrue(connected)
+    # First test successful connect
+    connected = slotter.connect(SYNC_SLOTTESTER, "signal", "slot")
+    assert connected
 
-        slotter.request(deviceId, "slotEmitSignal", 42).waitForReply(timeoutMs)
+    slotter.request(
+        SYNC_SLOTTESTER, "slotEmitSignal", 42).waitForReply(timeoutMs)
 
-        self.waitUntilTrue(lambda: slotCalled, timeout)
+    sleepUntil(lambda: slotCalled, timeout=timeout)
 
-        self.assertTrue(slotCalled)
-        self.assertEqual(42, inSlot)
+    assert slotCalled
+    assert 42 == inSlot
 
-        ##################################################
-        # Test handling of failures: non-existing slot
-        connected = slotter.connect(deviceId, "signal", "NOT_A_slot")
-        self.assertFalse(connected)
+    ##################################################
+    # Test handling of failures: non-existing slot
+    connected = slotter.connect(
+        SYNC_SLOTTESTER, "signal", "NOT_A_slot")
+    assert not connected
 
-        #################################################################
-        # Now disconnect
-        disconnected = slotter.disconnect(deviceId, "signal", "slot")
-        self.assertTrue(disconnected)
+    #################################################################
+    # Now disconnect
+    disconnected = slotter.disconnect(
+        SYNC_SLOTTESTER, "signal", "slot")
+    assert disconnected
 
-        slotCalled = False
-        slotter.request(deviceId, "slotEmitSignal", 77).waitForReply(timeoutMs)
+    slotCalled = False
+    slotter.request(SYNC_SLOTTESTER,
+                    "slotEmitSignal", 77).waitForReply(timeoutMs)
 
-        # wait only a bit (0.1 seconds) for something not coming
-        self.waitUntilTrue(lambda: slotCalled, 0.1)
-        self.assertFalse(slotCalled)
+    # wait only a bit (0.1 seconds) for something not coming
+    sleep(0.1)
+    assert not slotCalled
 
-        #################################################################
-        # Finally a failing disconnect
-        disconnected = slotter.disconnect(deviceId, "signal", "not_a_slot")
-        self.assertFalse(disconnected)
+    #################################################################
+    # Finally a failing disconnect
+    disconnected = slotter.disconnect(
+        SYNC_SLOTTESTER, "signal", "not_a_slot")
+    assert not disconnected
 
-    def test_asyncConnect(self):
-        """
-        Test SignalSlotable.asyncConnect and asyncDisconnect between instances
-        in different processes.
-        (Even tests this for C++ where all tests run in a single process!)
-        Very similar to 'test_sigslot_asyncConnect' from
-        karabo/bound/tests/binding/test_sigslot.py,
-        but that tests in-process short-cut.
-        """
-        # Create server and instantiate device that can emit a signal
-        SERVER_ID = "sigSlotAsyncConnectServer"
-        deviceId = "sigSlotAsyncConnectTester"
-        self.start_server("bound", SERVER_ID, ["SignalDevice"],
-                          namespace="karabo.bound_device_test")
 
-        cfg = Hash("classId", "SignalDevice",
-                   "deviceId", deviceId,
-                   "configuration", Hash())
-        ok, msg = self.dc.instantiate(SERVER_ID, cfg, instTimeout)
-        self.assertTrue(ok, msg)
+def test_asyncConnect(connectTest):
+    """
+    Test SignalSlotable.asyncConnect and asyncDisconnect
+    between instances in different processes.
+    (Even tests this for C++ where all tests run in a single process!)
+    Very similar to 'test_sigslot_asyncConnect' from
+    karabo/bound/tests/binding/test_sigslot.py,
+    but that tests in-process short-cut.
+    """
+    # Create an instance with a slot that it can connect to the signal
+    slotter = SignalSlotable("slotInstance_async")
 
-        # Create an instance with a slot that it can connect to the signal
-        slotter = SignalSlotable("slotInstance_async")
+    slotCalled = False
+    inSlot = None
 
-        slotCalled = False
-        inSlot = None
+    def slotFunc(i):
+        nonlocal slotCalled, inSlot
+        inSlot = i
+        slotCalled = True
 
-        def slotFunc(i):
-            nonlocal slotCalled, inSlot
-            inSlot = i
-            slotCalled = True
+    slotter.registerSlot(slotFunc, "slot")
+    slotter.start()
 
-        slotter.registerSlot(slotFunc, "slot")
-        slotter.start()
+    # First test successful connectAsync
+    failureMsg = None
+    failureDetails = None
 
-        # First test successful connectAsync
-        failureMsg = None
-        failureDetails = None
+    def connectCallback(failMsg, failDetails):
+        nonlocal failureMsg, failureDetails
+        failureMsg = failMsg
+        failureDetails = failDetails
 
-        def connectCallback(failMsg, failDetails):
-            nonlocal failureMsg, failureDetails
-            failureMsg = failMsg
-            failureDetails = failDetails
+    slotter.asyncConnect(
+        ASYNC_SLOTTESTER, "signal", "slot", connectCallback)
+    sleepUntil(lambda: failureDetails is not None, timeout)
 
-        slotter.asyncConnect(deviceId, "signal", "slot", connectCallback)
-        self.waitUntilTrue(lambda: failureDetails is not None, timeout)
+    assert failureMsg is not None  # callback called
+    assert failureMsg == ""  # connect succeeded
 
-        self.assertIsNotNone(failureMsg)  # callback called
-        self.assertEqual(failureMsg, "")  # connect succeeded
+    slotter.request(
+        ASYNC_SLOTTESTER, "slotEmitSignal", 42).waitForReply(timeoutMs)
 
-        slotter.request(deviceId, "slotEmitSignal", 42).waitForReply(timeoutMs)
+    sleepUntil(lambda: slotCalled, timeout)
 
-        self.waitUntilTrue(lambda: slotCalled, timeout)
+    assert slotCalled
+    assert 42 == inSlot
 
-        self.assertTrue(slotCalled)
-        self.assertEqual(42, inSlot)
+    ##################################################
+    # Test handling of failures
 
-        ##################################################
-        # Test handling of failures
+    # Non-existing slot gives failure
+    failureMsg = failureDetails = None
 
-        # Non-existing slot gives failure
-        failureMsg = failureDetails = None
+    slotter.asyncConnect(ASYNC_SLOTTESTER, "signal", "NOT_A_slot",
+                         connectCallback)
+    sleepUntil(lambda: failureDetails is not None, timeout)
 
-        slotter.asyncConnect(deviceId, "signal", "NOT_A_slot",
-                             connectCallback)
-        self.waitUntilTrue(lambda: failureDetails is not None, timeout)
+    assert failureMsg is not None  # callback called
+    assert "no slot 'NOT_A_slot'" in failureMsg
+    # Details contain the same, but also C++ exception etails
+    assert "no slot 'NOT_A_slot'" in failureDetails
+    assert "Exception Type....:  SignalSlot Exception" in failureDetails
 
-        self.assertIsNotNone(failureMsg)  # callback called
-        self.assertIn("no slot 'NOT_A_slot'", failureMsg)
-        # Details contain the same, but also C++ exception etails
-        self.assertIn("no slot 'NOT_A_slot'", failureDetails)
-        self.assertIn("Exception Type....:  SignalSlot Exception",
-                      failureDetails)
+    #################################################################
+    # Now asyncronously disconnect
+    failureMsg = failureDetails = None
 
-        #################################################################
-        # Now asyncronously disconnect
-        failureMsg = failureDetails = None
+    slotter.asyncDisconnect(ASYNC_SLOTTESTER, "signal", "slot",
+                            connectCallback)
+    sleepUntil(lambda: failureDetails is not None, timeout)
 
-        slotter.asyncDisconnect(deviceId, "signal", "slot",
-                                connectCallback)
-        self.waitUntilTrue(lambda: failureDetails is not None, timeout)
+    assert failureMsg is not None  # callback called
+    assert failureMsg == ""  # successfully disconnected
 
-        self.assertIsNotNone(failureMsg)  # callback called
-        self.assertEqual(failureMsg, "")  # successfully disconnected
+    slotCalled = False
+    slotter.request(
+        ASYNC_SLOTTESTER, "slotEmitSignal", 77).waitForReply(timeoutMs)
 
-        slotCalled = False
-        slotter.request(deviceId, "slotEmitSignal", 77).waitForReply(timeoutMs)
+    # wait only a bit (0.1 seconds) for something not coming
+    sleep(0.1)
+    assert not slotCalled
 
-        # wait only a bit (0.1 seconds) for something not coming
-        self.waitUntilTrue(lambda: slotCalled, 0.1)
-        self.assertFalse(slotCalled)
+    #################################################################
+    # Finally a failing asyncDisconnect
+    failureMsg = failureDetails = None
 
-        #################################################################
-        # Finally a failing asyncDisconnect
-        failureMsg = failureDetails = None
+    slotter.asyncDisconnect(ASYNC_SLOTTESTER, "signal", "not_a_slot",
+                            connectCallback)
+    sleepUntil(lambda: failureDetails is not None, timeout)
 
-        slotter.asyncDisconnect(deviceId, "signal", "not_a_slot",
-                                connectCallback)
-        self.waitUntilTrue(lambda: failureDetails is not None, timeout)
-
-        self.assertIsNotNone(failureMsg)  # callback called
-        self.assertIn("was not connected", failureMsg)
-        self.assertIn("was not connected", failureDetails)
-        self.assertIn("Exception Type....:  SignalSlot Exception",
-                      failureDetails)
+    assert failureMsg is not None  # callback called
+    assert "was not connected" in failureMsg
+    assert "was not connected" in failureDetails
+    assert "Exception Type....:  SignalSlot Exception" in failureDetails
