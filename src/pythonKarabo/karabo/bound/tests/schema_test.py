@@ -677,8 +677,8 @@ class Schema_TestCase(unittest.TestCase):
             schema = Configurator(TestStruct1).getSchema("TestStruct1")
             self.assertEqual(schema.getArchivePolicy("exampleKey5"),
                              ArchivePolicy.EVERY_EVENT)
-            self.assertTrue(schema.getArchivePolicy("exampleKey8"),
-                            ArchivePolicy.NO_ARCHIVING)
+            self.assertEqual(schema.getArchivePolicy("exampleKey8"),
+                             ArchivePolicy.NO_ARCHIVING)
         except Exception as e:
             self.fail("test_getArchivePolicy exception: " + str(e))
 
