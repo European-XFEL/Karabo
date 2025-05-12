@@ -20,15 +20,14 @@ import pytest
 
 from karabo.bound import (
     ALARM_ELEMENT, BOOL_ELEMENT, BYTEARRAY_ELEMENT, DOUBLE_ELEMENT,
-    EVERY_EVENT, FLOAT_ELEMENT, IMAGEDATA_ELEMENT, INT32_ELEMENT,
-    INT64_ELEMENT, KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS, METER,
-    MICRO, NDARRAY_ELEMENT, NO_ARCHIVING, NODE_ELEMENT, OVERWRITE_ELEMENT,
-    SLOT_ELEMENT, STATE_ELEMENT, STRING_ELEMENT, TABLE_ELEMENT, UINT32_ELEMENT,
-    UINT64_ELEMENT, VECTOR_BOOL_ELEMENT, VECTOR_DOUBLE_ELEMENT,
-    VECTOR_INT32_ELEMENT, VECTOR_STRING_ELEMENT, VECTOR_UINT32_ELEMENT,
-    AccessLevel, AccessType, ArchivePolicy, AssemblyRules, AssignmentType,
-    Encoding, Hash, MetricPrefix, NodeType, Schema, Types, Unit, cppNDArray,
-    cppNDArrayCopy, fullyEqual)
+    FLOAT_ELEMENT, IMAGEDATA_ELEMENT, INT32_ELEMENT, INT64_ELEMENT,
+    KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS, NDARRAY_ELEMENT,
+    NODE_ELEMENT, OVERWRITE_ELEMENT, SLOT_ELEMENT, STATE_ELEMENT,
+    STRING_ELEMENT, TABLE_ELEMENT, UINT32_ELEMENT, UINT64_ELEMENT,
+    VECTOR_BOOL_ELEMENT, VECTOR_DOUBLE_ELEMENT, VECTOR_INT32_ELEMENT,
+    VECTOR_STRING_ELEMENT, VECTOR_UINT32_ELEMENT, AccessLevel, AccessType,
+    ArchivePolicy, AssemblyRules, Assignment, Encoding, Hash, MetricPrefix,
+    NodeType, Schema, Types, Unit, cppNDArray, cppNDArrayCopy, fullyEqual)
 from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.states import State
 
@@ -422,7 +421,7 @@ class TestStruct1:
             .key("exampleKey8")
             .readOnly()
             .initialValue([1.1, 2.2, 3.3])
-            .archivePolicy(NO_ARCHIVING)
+            .archivePolicy(ArchivePolicy.NO_ARCHIVING)
             .commit(),
 
             VECTOR_STRING_ELEMENT(expected)
@@ -858,7 +857,7 @@ class OtherSchemaElementsX:
             .initialValue([Hash("a", 22, "b", "foo22", "c", 1.234),
                            Hash("a", 33, "b", "foo33", "c", 2.345),
                            Hash("a", 44, "b", "foo44", "c", 3.456)])
-            .archivePolicy(EVERY_EVENT)
+            .archivePolicy(ArchivePolicy.EVERY_EVENT)
             .commit(),
         )
 
@@ -1222,16 +1221,16 @@ def test_getAccessMode():
 def test_getAssignment():
     schema = Schema()
     TestStruct1.expectedParameters(schema)
-    assert schema.getAssignment("exampleKey1") == AssignmentType.OPTIONAL
-    assert schema.getAssignment("exampleKey2") == AssignmentType.OPTIONAL
-    assert schema.getAssignment("exampleKey3") == AssignmentType.MANDATORY
-    assert schema.getAssignment("exampleKey4") == AssignmentType.INTERNAL
-    assert schema.getAssignment("exampleKey5") == AssignmentType.OPTIONAL
-    assert schema.getAssignment("exampleKey8") == AssignmentType.OPTIONAL
-    assert schema.getAssignment("exampleKey10") == AssignmentType.OPTIONAL
-    assert schema.getAssignment("testPath") == AssignmentType.OPTIONAL
-    assert schema.getAssignment("testPath2") == AssignmentType.OPTIONAL
-    assert schema.getAssignment("testPath3") == AssignmentType.MANDATORY
+    assert schema.getAssignment("exampleKey1") == Assignment.OPTIONAL
+    assert schema.getAssignment("exampleKey2") == Assignment.OPTIONAL
+    assert schema.getAssignment("exampleKey3") == Assignment.MANDATORY
+    assert schema.getAssignment("exampleKey4") == Assignment.INTERNAL
+    assert schema.getAssignment("exampleKey5") == Assignment.OPTIONAL
+    assert schema.getAssignment("exampleKey8") == Assignment.OPTIONAL
+    assert schema.getAssignment("exampleKey10") == Assignment.OPTIONAL
+    assert schema.getAssignment("testPath") == Assignment.OPTIONAL
+    assert schema.getAssignment("testPath2") == Assignment.OPTIONAL
+    assert schema.getAssignment("testPath3") == Assignment.MANDATORY
 
 
 def test_setAssignment():
@@ -1240,11 +1239,11 @@ def test_setAssignment():
     assert schema.hasAssignment('x') is True
     assert schema.isAssignmentOptional('x') is True
     assert schema.isAssignmentMandatory('x') is False
-    assert schema.getAssignment('x') == AssignmentType.OPTIONAL
-    schema.setAssignment('x', AssignmentType.MANDATORY)
+    assert schema.getAssignment('x') == Assignment.OPTIONAL
+    schema.setAssignment('x', Assignment.MANDATORY)
     assert schema.isAssignmentOptional('x') is False
     assert schema.isAssignmentMandatory('x') is True
-    assert schema.getAssignment('x') == AssignmentType.MANDATORY
+    assert schema.getAssignment('x') == Assignment.MANDATORY
 
 
 def test_getDescription():
@@ -1366,8 +1365,8 @@ def test_setUnit():
     schema = Schema()
     SomeClass.expectedParameters(schema)
     assert schema.getUnit("x") == Unit.AMPERE
-    schema.setUnit('x', METER)
-    assert schema.getUnit("x") == METER
+    schema.setUnit('x', Unit.METER)
+    assert schema.getUnit("x") == Unit.METER
     assert schema.getUnit("x") == Unit.METER
     assert schema.getUnitName("x") == "meter"
     assert schema.getUnitSymbol("x") == "m"
@@ -1386,7 +1385,7 @@ def test_setMetricPrefix():
     SomeClass.expectedParameters(schema)
     assert schema.getMetricPrefix("x") == MetricPrefix.MILLI
     schema.setMetricPrefix("x", MetricPrefix.MICRO)
-    assert schema.getMetricPrefix("x") == MICRO
+    assert schema.getMetricPrefix("x") == MetricPrefix.MICRO
     assert schema.getMetricPrefixName("x") == "micro"
     assert schema.getMetricPrefixSymbol("x") == "u"
 
