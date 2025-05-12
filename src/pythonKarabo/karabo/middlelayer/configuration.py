@@ -19,13 +19,6 @@ from karabo.common.api import (
 from karabo.native import (
     AccessMode, Assignment, Hash, NodeType, Schema, is_equal)
 
-# Broken path accumulated in the history of karabo ...
-# Choice of Nodes connection and Beckhoff properties that will throw!
-
-BROKEN_PATHS = {
-    "_connection_",
-}
-
 
 def sanitize_init_configuration(schema, config):
     """Sanitize a configuration to be used as INIT configuration
@@ -38,7 +31,7 @@ def sanitize_init_configuration(schema, config):
     """
     assert isinstance(schema, Schema)
 
-    config = extract_configuration(schema, config, init=True)
+    config = extract_configuration(schema, config)
 
     readonly_paths = [pth for pth, _, _ in Hash.flat_iterall(config)
                       if schema.hash[pth, KARABO_SCHEMA_ACCESS_MODE] ==
@@ -70,7 +63,7 @@ def sanitize_write_configuration(schema, config):
     return config
 
 
-def extract_configuration(schema, config, init=False):
+def extract_configuration(schema, config):
     """Extract a configuration with a reference schema from a config `Hash`
 
     :param schema: The schema for filtering
@@ -83,9 +76,6 @@ def extract_configuration(schema, config, init=False):
         - Does not contain Slots
         - Does not have obsolete paths, e.g. key has to be in schema
         - The configuration won't have `None` values
-        - Attribute Options is taken into account
-        - Init takes into account ChoiceOfNodes
-        - Special Types: ListOfNodes, ChoiceOfNodes are omitted on runtime
     """
     assert isinstance(schema, Schema)
 
@@ -95,14 +85,9 @@ def extract_configuration(schema, config, init=False):
             subkey = base + key
             is_slot = attrs.get(KARABO_SCHEMA_CLASS_ID, "") == "Slot"
             is_node = attrs["nodeType"] == NodeType.Node.value
-            is_choice = attrs["nodeType"] == NodeType.ChoiceOfNodes.value
-            is_special = attrs["nodeType"] in [NodeType.ListOfNodes.value,
-                                               NodeType.ChoiceOfNodes.value]
             if is_node and not is_slot:
                 yield from _iter_schema(value, base=subkey)
-            elif init and is_choice:
-                yield subkey, attrs
-            elif not is_slot and not is_special:
+            elif not is_slot:
                 yield subkey, attrs
 
     retval = Hash()
@@ -118,11 +103,6 @@ def extract_configuration(schema, config, init=False):
         if options is not None and value not in options:
             continue
         retval[key] = value
-
-    # XXX: This for general backward compatibility ...
-    for key in BROKEN_PATHS:
-        if key in retval:
-            retval.erase(key)
 
     return retval
 
