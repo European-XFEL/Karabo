@@ -285,6 +285,12 @@ class TestCurveItem(_BasePlotTest):
         assert label.text == "new_legend"
         plot.opts["pen"].color().name() == "#ff7f00"
 
+        # When data points are shown, very they are updated too.
+        self.widget._show_symbols = True
+        self.widget.apply_curve_options(options)
+        assert plot.opts["symbolPen"].color().name() == "#ff7f00"
+        assert plot.opts["symbolBrush"].color().name() == "#ff7f00"
+
         # The other curve should have no change.
         assert legend.getLabel(self._plot) is None
         assert self._plot.opts["pen"].color().name() == plot_1_color

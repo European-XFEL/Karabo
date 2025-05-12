@@ -421,6 +421,9 @@ class KaraboPlotView(QWidget):
             pen_color = curve_opts.get("pen_color")
             pen = mkPen(pen_color)
             curve_opts["pen"] = pen
+            if self._show_symbols:
+                curve_opts["symbolBrush"] = mkBrush(pen.color())
+                curve_opts["symbolPen"] = pen
             opts = plot_item.opts
             opts.update(curve_opts)
 
