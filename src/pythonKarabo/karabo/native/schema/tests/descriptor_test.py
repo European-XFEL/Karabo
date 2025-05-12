@@ -1076,8 +1076,9 @@ class Tests(TestCase):
         d = Int16(strict=False, defaultValue=2, requiredAccessLevel=1)
         self.assertEqual(d.requiredAccessLevel, AccessLevel.OPERATOR)
 
-        d = Int16(strict=False, defaultValue=2, archivePolicy=2)
-        self.assertEqual(d.archivePolicy, ArchivePolicy.EVERY_1S)
+        d = Int16(strict=False, defaultValue=2,
+                  archivePolicy=ArchivePolicy.EVERY_EVENT)
+        self.assertEqual(d.archivePolicy, ArchivePolicy.EVERY_EVENT)
 
     def test_descriptor_from_data(self):
         data = [
