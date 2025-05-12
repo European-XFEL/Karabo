@@ -445,7 +445,7 @@ namespace karabo {
             const karabo::data::Timestamp stamp(getActualTimestamp());
             karabo::data::Hash validated;
             karabo::data::Validator::ValidationRules rules;
-            rules.allowAdditionalKeys = true;
+            rules.allowAdditionalKeys = false;
             rules.allowMissingKeys = true;
             rules.allowUnrootedConfiguration = true;
             rules.injectDefaults = true;
@@ -514,7 +514,7 @@ namespace karabo {
             KARABO_LOG_DEBUG << "Update Schema requested";
             karabo::data::Hash validated;
             karabo::data::Validator::ValidationRules rules;
-            rules.allowAdditionalKeys = true;
+            rules.allowAdditionalKeys = false;
             rules.allowMissingKeys = true;
             rules.allowUnrootedConfiguration = true;
             rules.injectDefaults = true;
