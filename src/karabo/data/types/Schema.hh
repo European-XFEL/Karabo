@@ -218,12 +218,6 @@ namespace karabo {
             enum ArchivePolicy {
 
                 EVERY_EVENT,
-                EVERY_100MS,
-                EVERY_1S,
-                EVERY_5S,
-                EVERY_10S,
-                EVERY_1MIN,
-                EVERY_10MIN,
                 NO_ARCHIVING
             };
 

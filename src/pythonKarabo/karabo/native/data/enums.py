@@ -61,13 +61,7 @@ class AccessMode(IntEnum):
 @unique
 class ArchivePolicy(IntEnum):
     EVERY_EVENT = 0
-    EVERY_100MS = 1
-    EVERY_1S = 2
-    EVERY_5S = 3
-    EVERY_10S = 4
-    EVERY_1MIN = 5
-    EVERY_10MIN = 6
-    NO_ARCHIVING = 7
+    NO_ARCHIVING = 1
 
     @classmethod
     def fromAttributes(cls, attrs):

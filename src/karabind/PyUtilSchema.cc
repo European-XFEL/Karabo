@@ -185,12 +185,6 @@ void exportPyUtilSchema(py::module_& m) {
 
         py::enum_<Schema::ArchivePolicy>(m, "ArchivePolicy")
               .value("EVERY_EVENT", Schema::EVERY_EVENT)
-              .value("EVERY_100MS", Schema::EVERY_100MS)
-              .value("EVERY_1S", Schema::EVERY_1S)
-              .value("EVERY_5S", Schema::EVERY_5S)
-              .value("EVERY_10S", Schema::EVERY_10S)
-              .value("EVERY_1MIN", Schema::EVERY_1MIN)
-              .value("EVERY_10MIN", Schema::EVERY_10MIN)
               .value("NO_ARCHIVING", Schema::NO_ARCHIVING)
               .export_values();
 
