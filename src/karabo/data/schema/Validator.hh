@@ -104,7 +104,7 @@ namespace karabo {
                 ValidationRules()
                     : injectDefaults(true),
                       allowUnrootedConfiguration(true),
-                      allowAdditionalKeys(true),
+                      allowAdditionalKeys(false),
                       allowMissingKeys(true),
                       injectTimestamps(true),
                       forceInjectedTimestamp(false) {}
