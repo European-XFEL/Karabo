@@ -103,8 +103,6 @@ class Assignment(IntEnum):
 class NodeType(IntEnum):
     Leaf = 0
     Node = 1
-    ChoiceOfNodes = 2
-    ListOfNodes = 3
 
     def __str__(self):
         return str(self.value)

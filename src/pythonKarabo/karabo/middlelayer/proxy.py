@@ -144,8 +144,6 @@ class ProxyBase(_ProxyBase):
     def configurationAsHash(self):
         """Extract a configuration in a Hash from the proxy
 
-        NOTE: Unsupported types -> `ChoiceOfNodes`, `ListOfNodes`
-
         Some values of a `ListOfNodes` appear in the configuration, but are not
         available on the proxy (for now).
         """
@@ -156,7 +154,7 @@ class ProxyBase(_ProxyBase):
             for key in proxy._allattrs:
                 descr = getattr(type(proxy), key, None)
                 if descr is None:
-                    # Unsupported types, ListOfNodes, ChoiceOfNodes
+                    # Unsupported types
                     continue
                 if isinstance(descr, ProxySlotBase):
                     # Slots don't appear in Configuration
