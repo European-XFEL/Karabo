@@ -248,20 +248,20 @@ class PythonDevice:
             .commit(),
 
             # Logging config:
-            # Expose only the non-appender specific part (only 'priority' now).
+            # Expose only the non-appender specific part (only 'level' now).
             # Would like to use NODE_ELEMENT(..)...appendParametersOf(Logger)
             # and then remove again "ostream", "file" and "cache" from
-            # expected["Logger"], but Schema.getParameterHash() returns a copy.
-            NODE_ELEMENT(expected).key("Logger")
+            # expected["log"], but Schema.getParameterHash() returns a copy.
+            NODE_ELEMENT(expected).key("log")
             .description("Logging settings")
             .displayedName("Logger")
             .expertAccess()
             .commit(),
 
-            # Keep in sync with 'priority' in C++ Logger::expectedParameters
-            STRING_ELEMENT(expected).key("Logger.priority")
-            .displayedName("Priority")
-            .description("The default log priority")
+            # Keep in sync with 'level' in C++ Logger::expectedParameters
+            STRING_ELEMENT(expected).key("log.level")
+            .displayedName("Level")
+            .description("The default log level")
             .options("DEBUG INFO WARN ERROR FATAL")
             .assignmentOptional().defaultValue("INFO")
             .commit(),
@@ -490,14 +490,14 @@ class PythonDevice:
     def loadLogger(self):
         """Load the distributed logger
 
-        Uses config in self._parameters["Logger"] and PythonDevice._loggerCfg
+        Uses config in self._parameters["log"] and PythonDevice._loggerCfg
         """
         # Take cfg as passed from server and merge device specific settings
         if PythonDevice._loggerCfg is None:  # for now if started from MDL
-            config = self._parameters["Logger"]
+            config = self._parameters["log"]
         else:
             config = copy.copy(PythonDevice._loggerCfg)
-            config.merge(self._parameters["Logger"])
+            config.merge(self._parameters["log"])
 
         # Cure the file name of file logger: own dir inside server's log dir:
         if 'file.filename' in config:
@@ -1581,10 +1581,10 @@ class PythonDevice:
 
     def slotLoggerPriority(self, newprio):
         oldprio = Logger.getPriority()
-        self.set("Logger.priority", newprio)
+        self.set("log.level", newprio)
         Logger.setPriority(newprio)
         self.log.INFO(
-            f"Logger Priority changed : {oldprio} ==> {newprio}")
+            f"Logger Level changed : {oldprio} ==> {newprio}")
 
     def getActualTimestamp(self):
         """Returns the actual timestamp.

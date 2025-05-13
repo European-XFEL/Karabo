@@ -54,7 +54,7 @@ void Logger_Test::test1() {
     // We are chatty in this test
     // But the idea is to only see OKs and never ERROR
     // There is no ASSERT unfortunately, so this test needs visual inspection
-    Hash config("priority", "DEBUG");
+    Hash config("level", "DEBUG");
     Logger::configure(config);
     LoggerStream("", spdlog::level::debug) << "ERROR";
 
@@ -120,7 +120,7 @@ void Logger_Test::test1() {
 
 void Logger_Test::test2() {
     Logger::reset();
-    Hash config("priority", "INFO");
+    Hash config("level", "INFO");
     Logger::configure(config);
     Logger::useConsole();
     Logger::useFile("a1");
@@ -141,7 +141,7 @@ void Logger_Test::test2() {
 
 void Logger_Test::testInClassLogging() {
     Logger::reset();
-    Hash config("Logger.priority", "WARN");
+    Hash config("log.level", "WARN");
     auto p = Configurator<LogSomething>::create("LogSomething", config);
     p->doSomeLogging();
 }
@@ -157,7 +157,7 @@ void Logger_Test::testLastMessages() {
 
     // set up the Logger
     const unsigned int maxMsgs = 20;
-    Hash config("priority", "INFO", "cache.maxNumMessages", maxMsgs);
+    Hash config("level", "INFO", "cache.maxNumMessages", maxMsgs);
     Logger::configure(config);
     Logger::useCache();
 

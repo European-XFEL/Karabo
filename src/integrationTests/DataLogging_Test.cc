@@ -45,11 +45,11 @@ USING_KARABO_NAMESPACES;
 CPPUNIT_TEST_SUITE_REGISTRATION(DataLogging_Test);
 
 void DataLogging_Test::fileAllTestRunner() {
-    // Run the tests for the text file based DataLogger with FATAL logger priority
+    // Run the tests for the text file based DataLogger with FATAL logger level
     // to prevent temporary errors for indexes not yet available from polluting
     // the device server log.
     CPPUNIT_ASSERT_NO_THROW_MESSAGE(
-          "Failed to set logger priority of device server '" + m_server + "' to 'FATAL'",
+          "Failed to set logger level of device server '" + m_server + "' to 'FATAL'",
           m_deviceClient->execute(m_server, "slotLoggerPriority", KRB_TEST_MAX_TIMEOUT, "FATAL"));
 
     std::pair<bool, std::string> success =
@@ -880,7 +880,7 @@ void DataLogging_Test::testNoInfluxServerHandling() {
     // Temporarily set the logging level to FATAL to avoid spamming the logs of the device server (and the
     // test output) with connection errors.
     CPPUNIT_ASSERT_NO_THROW_MESSAGE(
-          "Error setting the logger priority level to 'FATAL'",
+          "Error setting the logger level to 'FATAL'",
           m_deviceClient->execute(m_server, "slotLoggerPriority", KRB_TEST_MAX_TIMEOUT, "FATAL"));
 
     std::pair<bool, std::string> success =
@@ -970,9 +970,9 @@ void DataLogging_Test::testNoInfluxServerHandling() {
     // Influx (or Telegraf) server, it is safe to conclude that the Influx Logger doesn't get compromissed by a
     // server not available condition - the host of the Influx logger is the same process that runs this test.
 
-    // Restore the logger priority of the device server that hosts the logger to the WARN level
+    // Restore the logger level of the device server that hosts the logger to the WARN level
     CPPUNIT_ASSERT_NO_THROW_MESSAGE(
-          "Error setting the logger priority level back to 'WARN'",
+          "Error setting the logger level level back to 'WARN'",
           m_deviceClient->execute(m_server, "slotLoggerPriority", KRB_TEST_MAX_TIMEOUT, DEFAULT_TEST_LOG_PRIORITY));
 
     std::clog << "OK" << std::endl;

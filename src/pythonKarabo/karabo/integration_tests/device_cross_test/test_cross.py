@@ -180,7 +180,7 @@ async def test_cross(deviceTest):
     serverId = "karabo_cross_bound"
     config = {
         "boundDevice": {
-            "classId": "TestDevice", "Logger.priority": "FATAL",
+            "classId": "TestDevice", "log.level": "FATAL",
             "middlelayerDevice": "middlelayerDevice",
             "input.connectedOutputChannels":
                 ["middlelayerDevice:output", "middlelayerDevice:rawOutput"]
@@ -445,7 +445,7 @@ async def test_cross_pipeline(deviceTest):
     serverId = "karabo_cross_bound_2"
     config = {
         "boundDevice2": {
-            "classId": "TestDevice", "Logger.priority": "FATAL",
+            "classId": "TestDevice", "log.level": "FATAL",
             "middlelayerDevice": "middlelayerDevice",
             "imageInput.connectedOutputChannels":
                 ["middlelayerDevice:imageOutput"],
