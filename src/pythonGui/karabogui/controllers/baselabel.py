@@ -17,8 +17,6 @@
 from qtpy.QtWidgets import QAction, QDialog, QFrame, QLabel
 from traits.api import Instance, String, Tuple, Undefined
 
-from karabo.common.api import (
-    KARABO_ALARM_HIGH, KARABO_ALARM_LOW, KARABO_WARN_HIGH, KARABO_WARN_LOW)
 from karabo.common.scenemodel.api import build_model_config
 from karabogui.binding.api import (
     FloatBinding, get_binding_format, get_binding_value)
@@ -179,17 +177,6 @@ class AlarmMixin:
         widget.addAction(alarm_action)
 
         return widget
-
-    @classmethod
-    def initialize_model(cls, proxy, model):
-        """Initialize the formatting from the binding of the proxy"""
-        super().initialize_model(proxy, model)
-        attributes = proxy.binding.attributes
-        traits = {}
-        for key in [KARABO_ALARM_LOW, KARABO_WARN_LOW,
-                    KARABO_WARN_HIGH, KARABO_ALARM_HIGH]:
-            traits[key] = attributes.get(key, Undefined)
-        model.trait_set(**traits)
 
     def value_update_proxy(self, proxy, value):
         model = self.model
