@@ -15,14 +15,13 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 
 from karabo.bound import (
-    ALARM_ELEMENT, AMPERE, BOOL_ELEMENT, CENTI, DOUBLE_ELEMENT, EVERY_EVENT,
-    FLOAT_ELEMENT, IMAGEDATA_ELEMENT, INT32_ELEMENT, INT64_ELEMENT,
-    KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS, METER, MILLI,
-    NDARRAY_ELEMENT, NO_ARCHIVING, NODE_ELEMENT, OVERWRITE_ELEMENT,
-    SLOT_ELEMENT, STATE_ELEMENT, STRING_ELEMENT, TABLE_ELEMENT, UINT32_ELEMENT,
-    UINT64_ELEMENT, VECTOR_BOOL_ELEMENT, VECTOR_DOUBLE_ELEMENT,
-    VECTOR_INT32_ELEMENT, VECTOR_STRING_ELEMENT, AlarmCondition, Hash,
-    MetricPrefix, Schema, Unit)
+    ALARM_ELEMENT, BOOL_ELEMENT, DOUBLE_ELEMENT, FLOAT_ELEMENT,
+    IMAGEDATA_ELEMENT, INT32_ELEMENT, INT64_ELEMENT, KARABO_CLASSINFO,
+    KARABO_CONFIGURATION_BASE_CLASS, NDARRAY_ELEMENT, NODE_ELEMENT,
+    OVERWRITE_ELEMENT, SLOT_ELEMENT, STATE_ELEMENT, STRING_ELEMENT,
+    TABLE_ELEMENT, UINT32_ELEMENT, UINT64_ELEMENT, VECTOR_BOOL_ELEMENT,
+    VECTOR_DOUBLE_ELEMENT, VECTOR_INT32_ELEMENT, VECTOR_STRING_ELEMENT,
+    AlarmCondition, ArchivePolicy, Hash, MetricPrefix, Schema, Unit)
 from karabo.common.states import State
 
 
@@ -62,8 +61,8 @@ class Circle(Shape):
             .description("The radius of the circle")
             .displayedName("Radius")
             .minExc(0).maxExc(100)
-            .unit(METER)
-            .metricPrefix(MILLI)
+            .unit(Unit.METER)
+            .metricPrefix(MetricPrefix.MILLI)
             .assignmentOptional().defaultValue(10)
             .init()
             .commit(),
@@ -329,8 +328,8 @@ class TestStruct1:
             .description("Example key 2 description")
             .options("5, 25, 10")
             .minInc(5).maxInc(25)
-            .unit(METER)
-            .metricPrefix(MILLI)
+            .unit(Unit.METER)
+            .metricPrefix(MetricPrefix.MILLI)
             .assignmentOptional().defaultValue(10)
             .init()
             .operatorAccess()
@@ -366,7 +365,7 @@ class TestStruct1:
             .description("Example key 5 description")
             .setSpecialDisplayType("Int64DisplayType")
             .readOnly().initialValue(1442244)
-            .archivePolicy(EVERY_EVENT)
+            .archivePolicy(ArchivePolicy.EVERY_EVENT)
             .commit(),
 
             INT64_ELEMENT(expected).key("exampleKey5b")
@@ -392,7 +391,7 @@ class TestStruct1:
 
             VECTOR_DOUBLE_ELEMENT(expected).key("exampleKey8")
             .readOnly().initialValue([1.1, 2.2, 3.3])
-            .archivePolicy(NO_ARCHIVING)
+            .archivePolicy(ArchivePolicy.NO_ARCHIVING)
             .commit(),
 
             VECTOR_STRING_ELEMENT(expected).key("exampleKey9")
@@ -547,7 +546,8 @@ class SomeClass:
             .displayedName("Xkey")
             .description("Example of X key description")
             .options("5, 25, 10")
-            .minInc(5).maxInc(25).unit(AMPERE).metricPrefix(MILLI)
+            .minInc(5).maxInc(25).unit(Unit.AMPERE).metricPrefix(
+                MetricPrefix.MILLI)
             .assignmentOptional().defaultValue(5)
             .init()
             .expertAccess()
@@ -558,14 +558,15 @@ class SomeClass:
             .displayedName("Ykey")
             .description("Example of Y key description")
             .options("5, 25, 10")
-            .minExc(0).maxExc(29).unit(METER).metricPrefix(CENTI)
+            .minExc(0).maxExc(29).unit(Unit.METER).metricPrefix(
+                MetricPrefix.CENTI)
             .assignmentOptional().defaultValue(10)
             .init()
             .commit(),
 
             DOUBLE_ELEMENT(expected).key("a")
             .readOnly().initialValue(1.11)
-            .archivePolicy(NO_ARCHIVING)
+            .archivePolicy(ArchivePolicy.NO_ARCHIVING)
             .commit(),
 
             VECTOR_INT32_ELEMENT(expected).key("somelist")
@@ -619,7 +620,8 @@ class P1(Base):
             .displayedName("Example key 2")
             .description("Example key 2 description")
             .options("5, 25, 10")
-            .minInc(5).maxInc(25).unit(METER).metricPrefix(MILLI)
+            .minInc(5).maxInc(25).unit(Unit.METER).metricPrefix(
+                MetricPrefix.MILLI)
             .assignmentOptional().defaultValue(5)
             .init()
             .commit(),
@@ -682,7 +684,8 @@ class P2(Base):
             .displayedName("Example key 2")
             .description("Example key 2 description")
             .options("5, 25, 10")
-            .minInc(5).maxInc(25).unit(AMPERE).metricPrefix(MILLI)
+            .minInc(5).maxInc(25).unit(Unit.AMPERE).metricPrefix(
+                MetricPrefix.MILLI)
             .assignmentOptional().defaultValue(10)
             .init()
             .commit(),
@@ -716,7 +719,8 @@ class P3(Base):
             .displayedName("Example key 2")
             .description("Example key 2 description")
             .options("5, 25, 10")
-            .minInc(5).maxInc(25).unit(METER).metricPrefix(MILLI)
+            .minInc(5).maxInc(25).unit(Unit.METER).metricPrefix(
+                MetricPrefix.MILLI)
             .assignmentOptional().defaultValue(25)
             .init()
             .commit(),
@@ -796,7 +800,8 @@ class GraphicsRenderer2:
             .description("The radius of the circle")
             .displayedName("Radius")
             .tags("NC,KW")
-            .minExc(0).maxExc(100).unit(METER).metricPrefix(MILLI)
+            .minExc(0).maxExc(100).unit(Unit.METER).metricPrefix(
+                MetricPrefix.MILLI)
             .assignmentOptional().defaultValue(10)
             .init().commit(),
 

@@ -16,10 +16,10 @@
 import unittest
 
 from karabo.bound import (
-    IMAGEDATA_ELEMENT, INT32_ELEMENT, MANDATORY, METER, MICRO, NODE_ELEMENT,
-    OVERWRITE_ELEMENT, AccessLevel, AccessType, ArchivePolicy, AssignmentType,
-    Configurator, DaqDataType, Hash, Logger, MetricPrefix, NodeType, Schema,
-    State, Types, Unit, Validator, fullyEqual)
+    IMAGEDATA_ELEMENT, INT32_ELEMENT, NODE_ELEMENT, OVERWRITE_ELEMENT,
+    AccessLevel, AccessType, ArchivePolicy, Assignment, Configurator,
+    DaqDataType, Hash, Logger, MetricPrefix, NodeType, Schema, State, Types,
+    Unit, Validator, fullyEqual)
 
 from .configuration_example_classes import (
     ArrayContainer, Base, GraphicsRenderer, GraphicsRenderer1, SomeClass,
@@ -281,25 +281,25 @@ class Schema_TestCase(unittest.TestCase):
         try:
             schema = TestStruct1.getSchema("TestStruct1")
             self.assertEqual(schema.getAssignment("exampleKey1"),
-                             AssignmentType.OPTIONAL)
+                             Assignment.OPTIONAL)
             self.assertEqual(schema.getAssignment("exampleKey2"),
-                             AssignmentType.OPTIONAL)
+                             Assignment.OPTIONAL)
             self.assertEqual(schema.getAssignment("exampleKey3"),
-                             AssignmentType.MANDATORY)
+                             Assignment.MANDATORY)
             self.assertEqual(schema.getAssignment("exampleKey4"),
-                             AssignmentType.INTERNAL)
+                             Assignment.INTERNAL)
             self.assertEqual(schema.getAssignment("exampleKey5"),
-                             AssignmentType.OPTIONAL)
+                             Assignment.OPTIONAL)
             self.assertEqual(schema.getAssignment("exampleKey8"),
-                             AssignmentType.OPTIONAL)
+                             Assignment.OPTIONAL)
             self.assertEqual(schema.getAssignment("exampleKey10"),
-                             AssignmentType.OPTIONAL)
+                             Assignment.OPTIONAL)
             self.assertEqual(schema.getAssignment("testPath"),
-                             AssignmentType.OPTIONAL)
+                             Assignment.OPTIONAL)
             self.assertEqual(schema.getAssignment("testPath2"),
-                             AssignmentType.OPTIONAL)
+                             Assignment.OPTIONAL)
             self.assertEqual(schema.getAssignment("testPath3"),
-                             AssignmentType.MANDATORY)
+                             Assignment.MANDATORY)
         except Exception as e:
             self.fail("test_getAssignment exception: " + str(e))
 
@@ -310,11 +310,11 @@ class Schema_TestCase(unittest.TestCase):
             self.assertTrue(schema.isAssignmentOptional('x'))
             self.assertFalse(schema.isAssignmentMandatory('x'))
             self.assertEqual(schema.getAssignment('x'),
-                             AssignmentType.OPTIONAL)
-            schema.setAssignment('x', AssignmentType.MANDATORY)
+                             Assignment.OPTIONAL)
+            schema.setAssignment('x', Assignment.MANDATORY)
             self.assertFalse(schema.isAssignmentOptional('x'))
             self.assertTrue(schema.isAssignmentMandatory('x'))
-            self.assertEqual(schema.getAssignment('x'), MANDATORY)
+            self.assertEqual(schema.getAssignment('x'), Assignment.MANDATORY)
         except Exception as e:
             self.fail("test_setAssignment exception: " + str(e))
 
@@ -445,8 +445,8 @@ class Schema_TestCase(unittest.TestCase):
         try:
             schema = Configurator(SomeClass).getSchema("SomeClassId")
             self.assertEqual(schema.getUnit("x"), Unit.AMPERE)
-            schema.setUnit('x', METER)
-            self.assertEqual(schema.getUnit("x"), METER)
+            schema.setUnit('x', Unit.METER)
+            self.assertEqual(schema.getUnit("x"), Unit.METER)
             self.assertEqual(schema.getUnit("x"), Unit.METER)
             self.assertEqual(schema.getUnitName("x"), "meter")
             self.assertEqual(schema.getUnitSymbol("x"), "m")
@@ -469,7 +469,7 @@ class Schema_TestCase(unittest.TestCase):
             schema = Configurator(SomeClass).getSchema("SomeClassId")
             self.assertEqual(schema.getMetricPrefix("x"), MetricPrefix.MILLI)
             schema.setMetricPrefix("x", MetricPrefix.MICRO)
-            self.assertEqual(schema.getMetricPrefix("x"), MICRO)
+            self.assertEqual(schema.getMetricPrefix("x"), MetricPrefix.MICRO)
             self.assertEqual(schema.getMetricPrefixName("x"), "micro")
             self.assertEqual(schema.getMetricPrefixSymbol("x"), "u")
         except Exception as e:

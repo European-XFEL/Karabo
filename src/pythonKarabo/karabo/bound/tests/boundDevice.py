@@ -20,12 +20,12 @@ API cross test
 import numpy
 
 from karabo.bound import (
-    AMPERE, BOOL_ELEMENT, DOUBLE_ELEMENT, IMAGEDATA_ELEMENT, INPUT_CHANNEL,
-    INT32_ELEMENT, KARABO_CLASSINFO, KILO, METER, MILLI, NDARRAY_ELEMENT,
-    NODE_ELEMENT, OUTPUT_CHANNEL, SLOT_ELEMENT, STRING_ELEMENT, TABLE_ELEMENT,
+    BOOL_ELEMENT, DOUBLE_ELEMENT, IMAGEDATA_ELEMENT, INPUT_CHANNEL,
+    INT32_ELEMENT, KARABO_CLASSINFO, NDARRAY_ELEMENT, NODE_ELEMENT,
+    OUTPUT_CHANNEL, SLOT_ELEMENT, STRING_ELEMENT, TABLE_ELEMENT,
     VECTOR_STRING_ELEMENT, AlarmCondition, ChannelMetaData, Encoding,
-    Epochstamp, Hash, ImageData, PythonDevice, Schema, State, Timestamp,
-    Trainstamp, Types)
+    Epochstamp, Hash, ImageData, MetricPrefix, PythonDevice, Schema, State,
+    Timestamp, Trainstamp, Types, Unit)
 
 
 @KARABO_CLASSINFO("TestDevice", "1.5")
@@ -35,8 +35,8 @@ class TestDevice(PythonDevice):
         tableSchema = Schema()
         (
             DOUBLE_ELEMENT(tableSchema).key("d")
-            .unit(METER)
-            .metricPrefix(KILO)
+            .unit(Unit.METER)
+            .metricPrefix(MetricPrefix.KILO)
             .assignmentOptional()
             .defaultValue(0.0)
             .commit(),
@@ -66,8 +66,8 @@ class TestDevice(PythonDevice):
             # data mismatching the schema and an normal channel
             # does not fail in case of mismatching schema.
             DOUBLE_ELEMENT(pipeSchema).key("d")
-            .unit(METER)
-            .metricPrefix(KILO)
+            .unit(Unit.METER)
+            .metricPrefix(MetricPrefix.KILO)
             .assignmentOptional()
             .noDefaultValue()
             .commit(),
@@ -85,8 +85,8 @@ class TestDevice(PythonDevice):
             .tags("bla,blub")
             .description("a's description")
             .allowedStates(State.INIT, State.UNKNOWN)
-            .unit(AMPERE)
-            .metricPrefix(MILLI)
+            .unit(Unit.AMPERE)
+            .metricPrefix(MetricPrefix.MILLI)
             .expertAccess()
             .assignmentOptional()
             .defaultValue(22.5)
@@ -111,8 +111,8 @@ class TestDevice(PythonDevice):
             .commit(),
 
             DOUBLE_ELEMENT(expected).key("node.b")
-            .unit(METER)
-            .metricPrefix(KILO)
+            .unit(Unit.METER)
+            .metricPrefix(MetricPrefix.KILO)
             .options("33,44,55,100")
             .assignmentOptional()
             .defaultValue(33)
@@ -159,8 +159,8 @@ class TestDevice(PythonDevice):
 
             NDARRAY_ELEMENT(expected).key("ndarray")
             .shape("3,2")
-            .unit(METER)
-            .metricPrefix(KILO)
+            .unit(Unit.METER)
+            .metricPrefix(MetricPrefix.KILO)
             .dtype("FLOAT")
             .commit(),
 
