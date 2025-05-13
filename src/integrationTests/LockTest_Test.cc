@@ -47,7 +47,7 @@ void LockTest_Test::setUp() {
     // Start central event-loop
     m_eventLoopThread = std::jthread([](std::stop_token stoken) { EventLoop::work(); });
     // Create and start server
-    Hash config("serverId", "testServerLock", "Logger.priority", "FATAL");
+    Hash config("serverId", "testServerLock", "log.level", "FATAL");
     m_deviceServer = DeviceServer::create("DeviceServer", config);
     m_deviceServer->finalizeInternalInitialization();
     // Create client

@@ -408,7 +408,7 @@ void Device_Test::setUp() {
     m_eventLoopThread = std::jthread([](std::stop_token stoken) { karabo::net::EventLoop::work(); });
     // Create and start server
     {
-        Hash config("serverId", "testServerDevice", "Logger.priority", "FATAL", "serverFlags",
+        Hash config("serverId", "testServerDevice", "log.level", "FATAL", "serverFlags",
                     std::vector<std::string>{"Development"});
         m_deviceServer = DeviceServer::create("DeviceServer", config);
         m_deviceServer->finalizeInternalInitialization();

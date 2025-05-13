@@ -74,7 +74,7 @@ void DeviceClient_Test::setUp() {
     // setenv("KARABO_BROKER", "tcp://localhost:7777", true);
     // Event loop is started in coreTestRunner.cc's main()
 
-    const Hash config("serverId", "testServerDeviceClient", "Logger.priority", "FATAL");
+    const Hash config("serverId", "testServerDeviceClient", "log.level", "FATAL");
     m_deviceServer = DeviceServer::create("DeviceServer", config);
     m_deviceServer->finalizeInternalInitialization();
 
@@ -244,7 +244,7 @@ void DeviceClient_Test::testProperServerSignalsSent() {
         instance_update_called->exchange(true);
     });
 
-    const Hash config("serverId", "device_server-plugin_tests", "Logger.priority", "FATAL");
+    const Hash config("serverId", "device_server-plugin_tests", "log.level", "FATAL");
     auto server = DeviceServer::create("DeviceServer", config);
     server->finalizeInternalInitialization();
 

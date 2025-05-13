@@ -93,7 +93,7 @@ def test_device_client_sync_api():
 
     # Configure and start device server ...
     logLevel = "FATAL"
-    config = Hash("serverId", serverId, "Logger.priority", logLevel)
+    config = Hash("serverId", serverId, "log.level", logLevel)
 
     # Test getServers...
     startDeviceServer(config)

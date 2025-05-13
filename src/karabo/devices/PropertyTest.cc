@@ -1170,7 +1170,7 @@ namespace karabo {
 
         void PropertyTest::logSomething(const Hash& input) {
             const std::string message = (input.has("message")) ? input.get<std::string>("message") : "message missing";
-            const std::string priority = (input.has("priority")) ? input.get<std::string>("priority") : "DEBUG";
+            const std::string priority = (input.has("level")) ? input.get<std::string>("level") : "DEBUG";
             if (priority == "ERROR") {
                 KARABO_LOG_ERROR << message;
             } else if (priority == "WARN") {
@@ -1180,7 +1180,7 @@ namespace karabo {
             } else if (priority == "DEBUG") {
                 KARABO_LOG_DEBUG << message;
             } else {
-                KARABO_LOG_ERROR << "Unknown priority: " << message;
+                KARABO_LOG_ERROR << "Unknown priority/level: " << message;
             }
             // need to reply a Hash
             reply(Hash("success", true));

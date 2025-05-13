@@ -115,13 +115,13 @@ class DeviceServer:
             .expertAccess()
             .commit(),
 
-            NODE_ELEMENT(expected).key("Logger")
+            NODE_ELEMENT(expected).key("log")
             .description("Logging settings")
             .displayedName("Logger")
             .appendParametersOf(Logger)
             .commit(),
 
-            OVERWRITE_ELEMENT(expected).key("Logger.file.filename")
+            OVERWRITE_ELEMENT(expected).key("log.file.filename")
             # Will be assembled programmatically from environment and serverId
             .setNewAssignmentInternal()
             .commit(),
@@ -204,7 +204,7 @@ class DeviceServer:
         info["version"] = self.__class__.__version__
         info["host"] = self.hostname
         info["lang"] = "bound"
-        info["log"] = config.get("Logger.priority")
+        info["log"] = config.get("log.level")
 
         self.serverFlags = config.get("serverFlags")
         serverFlags = 0
@@ -255,7 +255,7 @@ class DeviceServer:
         return self.hostname + "_Server_" + str(os.getpid())
 
     def loadLogger(self, inputCfg):
-        self.loggerParameters = copy.copy(inputCfg["Logger"])
+        self.loggerParameters = copy.copy(inputCfg["log"])
         # The file logger filename is completely specified here.
         path = os.path.join(os.environ['KARABO'], "var", "log", self.serverid)
         if not os.path.isdir(path):
@@ -384,9 +384,9 @@ class DeviceServer:
         # Inject HostName
         config['hostName'] = self.hostname
 
-        # If not explicitely specified, let device inherit logger priority
-        if not config.has("Logger.priority"):
-            config["Logger.priority"] = self.loggerParameters["priority"]
+        # If not explicitely specified, let device inherit logger level
+        if not config.has("log.level"):
+            config["log.level"] = self.loggerParameters["level"]
 
         # Before starting device process, validate config
         schema = Configurator(PythonDevice).getSchema(classid)
@@ -581,18 +581,18 @@ class DeviceServer:
             self.ss.reply(Schema(), classid, self.serverid)
 
     def slotLoggerPriority(self, newprio):
-        # In contrast to C++, the new priority will not be "forwarded" to
+        # In contrast to C++, the new level will not be "forwarded" to
         # existing devices. Python devices have their own slotLoggerPriority
-        # which allows priority setting device by device.
-        # But future device instantiations should inherit their priority from
+        # which allows level setting device by device.
+        # But future device instantiations should inherit their level from
         # the current value of the server:
         oldprio = Logger.getPriority()
         Logger.setPriority(newprio)
         self.log.INFO(
-            f"Logger Priority changed : {oldprio} ==> {newprio}")
-        # Also devices started in future get the new priority by default:
-        self.loggerParameters["priority"] = newprio
-        # Merge the new log priority into the instanceInfo
+            f"log Level changed : {oldprio} ==> {newprio}")
+        # Also devices started in future get the new level by default:
+        self.loggerParameters["level"] = newprio
+        # Merge the new log level into the instanceInfo
         self.ss.updateInstanceInfo(Hash("log", newprio))
 
     def slotLoggerContent(self, info):

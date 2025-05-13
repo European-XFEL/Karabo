@@ -8,7 +8,7 @@ def test_server_context(eventLoop: eventLoop):
     config = {"PropTestA": {"classId": "PropertyTest"}}
     initA = json.dumps(config)
     serverA = ServerContext("testServerA",
-                            ["Logger.priority=DEBUG", f"init={initA}"])
+                            ["log.level=DEBUG", f"init={initA}"])
     with serverA:
         remote = serverA.remote()
         sleepUntil(lambda: "PropTestA" in remote.getDevices(), timeout=10)
@@ -23,7 +23,7 @@ def test_server_context(eventLoop: eventLoop):
         initB = json.dumps(config)
 
         serverB = ServerContext("testServerB",
-                                ["Logger.priority=DEBUG", f"init={initB}"],
+                                ["log.level=DEBUG", f"init={initB}"],
                                 client=remote)
         with serverB:
             sleepUntil(lambda: "PropTestB" in remote.getDevices(), timeout=10)

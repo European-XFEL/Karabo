@@ -31,7 +31,7 @@ void KaraboDeviceFixture::instantiateWithDeviceServer(const std::string& classId
 
     // scanPlugins is set to true to scan $KARABO/plugins directory
     // can be set to false if other libraries are not needed for testing
-    karabo::data::Hash config("serverId", DEVICE_SERVER_ID, "Logger.priority", LOG_PRIORITY);
+    karabo::data::Hash config("serverId", DEVICE_SERVER_ID, "log.level", LOG_PRIORITY);
     m_deviceSrv = karabo::core::DeviceServer::create("DeviceServer", config);
     m_deviceSrv->finalizeInternalInitialization();
 
@@ -49,7 +49,7 @@ karabo::core::Device::Pointer KaraboDeviceFixture::instantiateAndGetPointer(cons
     karabo::core::Device::Pointer devPtr;
     // karabo::log::Logger is a singleton and we should reset it to make sure it is configured how we like it.
     karabo::log::Logger::reset();
-    karabo::data::Hash config("priority", LOG_PRIORITY);
+    karabo::data::Hash config("level", LOG_PRIORITY);
     karabo::log::Logger::configure(config);
     karabo::log::Logger::useOstream();
 
