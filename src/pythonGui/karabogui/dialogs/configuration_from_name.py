@@ -154,6 +154,7 @@ class ConfigurationFromNameDialog(QDialog):
         else:
             self.ui_status.setText("")
         model.set_internal_data(items)
+        self._check_button_state()
 
     def _event_network(self, data):
         if not data.get("status"):
