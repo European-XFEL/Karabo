@@ -49,13 +49,13 @@ void Runner_Test::testRunnerSuccess() {
           "\"param2\": 99}}";
 
     std::string initStr = std::string("init=") + initval;
-    char const* argv[] = {"SomeExecutable", "serverId=foo", initStr.c_str(), "Logger.priority=DEBUG"};
+    char const* argv[] = {"SomeExecutable", "serverId=foo", initStr.c_str(), "log.level=DEBUG"};
     int argc = sizeof(argv) / sizeof(argv[0]);
     Hash configuration;
     CPPUNIT_ASSERT_NO_THROW(RunnerDerived::parseCmd(argc, argv, configuration));
     CPPUNIT_ASSERT(configuration.get<std::string>("serverId") == "foo");
     CPPUNIT_ASSERT(configuration.get<std::string>("init") == initval);
-    CPPUNIT_ASSERT(configuration.get<std::string>("Logger.priority") == "DEBUG");
+    CPPUNIT_ASSERT(configuration.get<std::string>("log.level") == "DEBUG");
 }
 
 

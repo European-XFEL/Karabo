@@ -279,7 +279,7 @@ void BaseLogging_Test::setUp() {
     m_eventLoopThread = std::jthread(work);
 
     // Create and start server
-    Hash config("serverId", m_server, "Logger.priority", DEFAULT_TEST_LOG_PRIORITY);
+    Hash config("serverId", m_server, "log.level", DEFAULT_TEST_LOG_PRIORITY);
     m_deviceServer = DeviceServer::create("DeviceServer", config);
     m_deviceServer->finalizeInternalInitialization();
 

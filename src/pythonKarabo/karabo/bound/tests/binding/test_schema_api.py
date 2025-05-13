@@ -821,7 +821,7 @@ def test_merge():
 
 
 def test_logger():
-    config = Hash("priority", "DEBUG")
+    config = Hash("level", "DEBUG")
     Logger.configure(config)
     root = Logger.getCategory()
     a1 = Logger.getCategory("a1")

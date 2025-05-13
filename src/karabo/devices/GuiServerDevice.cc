@@ -2263,7 +2263,7 @@ namespace karabo {
 
         void GuiServerDevice::onSetLogPriority(WeakChannelPointer channel, const karabo::data::Hash& info) {
             try {
-                const std::string& priority = info.get<std::string>("priority");
+                const std::string& priority = info.get<std::string>("level");
                 const std::string& instanceId = info.get<std::string>("instanceId");
                 KARABO_LOG_FRAMEWORK_DEBUG << "onSetLogPriority : '" << instanceId << "' to '" << priority << "'";
 

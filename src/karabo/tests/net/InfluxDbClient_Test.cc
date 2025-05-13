@@ -47,7 +47,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(InfluxDbClient_Test);
 
 void InfluxDbClient_Test::setUp() {
     // Output messages logged during the test to the test output.
-    Hash config("priority", "INFO");
+    Hash config("level", "INFO");
     Logger::configure(config);
     Logger::useOstream();
 

@@ -770,7 +770,7 @@ class Schema_TestCase(unittest.TestCase):
             self.fail("test_merge exception: " + str(e))
 
     def test_logger(self):
-        config = Hash("priority", "DEBUG")
+        config = Hash("level", "DEBUG")
         Logger.configure(config)
         root = Logger.getCategory()
         a1 = Logger.getCategory("a1")

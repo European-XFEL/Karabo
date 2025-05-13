@@ -32,7 +32,7 @@ class TestDeviceProvidedScenes(BoundDeviceTestCase):
     def test_in_sequence(self):
         # Complete setup - do not do it in setup to ensure that even in case of
         # exceptions 'tearDown' is called and stops Python processes.
-        config = Hash("Logger.priority", "ERROR",
+        config = Hash("log.level", "ERROR",
                       "deviceId", "testSceneProvider")
 
         classConfig = Hash("classId", "SceneProvidingDevice",
@@ -42,7 +42,7 @@ class TestDeviceProvidedScenes(BoundDeviceTestCase):
         ok, msg = self.dc.instantiate(SERVER_ID, classConfig, 30)
         self.assertTrue(ok, msg)
 
-        config2 = Hash("Logger.priority", "ERROR",
+        config2 = Hash("log.level", "ERROR",
                        "deviceId", "testNoSceneProvider")
 
         classConfig2 = Hash("classId", "NonSceneProvidingDevice",
