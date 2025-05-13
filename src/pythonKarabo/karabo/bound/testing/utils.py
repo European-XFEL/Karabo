@@ -111,11 +111,11 @@ class BoundDeviceTestCase(TestCase):
         if api == "bound":
             if namespace is not None:
                 server_args = [f"pluginNamespace={namespace}"] + server_args
-            server_args.append(f"Logger.priority={logLevel}")
+            server_args.append(f"log.level={logLevel}")
             serverProcess = start_bound_server(
                 server_id, server_args, plugin_dir=plugin_dir)
         elif api == "cpp":
-            server_args.append(f"Logger.priority={logLevel}")
+            server_args.append(f"log.level={logLevel}")
             serverProcess = start_cpp_server(
                 server_id, server_args, plugin_dir=plugin_dir)
         elif api == "mdl":

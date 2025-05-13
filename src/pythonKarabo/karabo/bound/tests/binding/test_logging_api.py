@@ -22,7 +22,7 @@ def test_logging_config_rules():
     # We are chatty in this test
     # But the idea is to only see OKs and never ERROR
     # There is no ASSERT unfortunately, so this test needs visual inspection
-    config = Hash("priority", "DEBUG")
+    config = Hash("level", "DEBUG")
     Logger.configure(config)
     Logger.logDebug("ERROR")
 
@@ -69,7 +69,7 @@ def test_logging_config_rules():
 
 def test_logging_config_more():
     Logger.reset()
-    config = Hash("priority", "INFO")
+    config = Hash("level", "INFO")
     Logger.configure(config)
     Logger.useOstream()
     Logger.useFile("a1", False)  # do not inherit appenders from parents
@@ -90,7 +90,7 @@ def test_logging_last_message():
 
     # Setup the Logger
     maxmsgs = 20
-    config = Hash("priority", "INFO", "cache.maxNumMessages", maxmsgs)
+    config = Hash("level", "INFO", "cache.maxNumMessages", maxmsgs)
     Logger.configure(config)
     Logger.useCache()
 

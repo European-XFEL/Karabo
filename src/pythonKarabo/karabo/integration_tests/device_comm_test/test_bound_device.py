@@ -109,7 +109,7 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
                    "configuration", Hash())
         ok, msg = self.dc.instantiate(SERVER_ID, cfg, instTimeout)
         self.assertTrue(ok, msg)
-        res = self.dc.get(deviceId, "Logger.priority")
+        res = self.dc.get(deviceId, "log.level")
         self.assertEqual(res, serverLogLevel)
 
         ok, msg = self.dc.killDevice(deviceId, instTimeout)
@@ -119,10 +119,10 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
         # Specify device log level explicitely (non-default value)
         cfg = Hash("classId", "PropertyTest",
                    "deviceId", deviceId,
-                   "configuration", Hash("Logger.priority", "WARN"))
+                   "configuration", Hash("log.level", "WARN"))
         ok, msg = self.dc.instantiate(SERVER_ID, cfg, instTimeout)
         self.assertTrue(ok, msg)
-        res = self.dc.get(deviceId, "Logger.priority")
+        res = self.dc.get(deviceId, "log.level")
         self.assertEqual(res, "WARN")
         ok, msg = self.dc.killDevice(deviceId, instTimeout)
         self.assertTrue(ok, "Problem killing device '{}': {}.".format(deviceId,

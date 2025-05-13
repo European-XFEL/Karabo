@@ -110,7 +110,7 @@ namespace karabo {
             static void expectedParameters(karabo::data::Schema& expected);
 
             /**
-             * Static method allowing to configure the three appenders and the default priority level
+             * Static method allowing to configure the three appenders and the default level
              * @param config A hash which must follow the Schema described in the expectedParameters method
              */
             static void configure(const karabo::data::Hash& config);
@@ -298,14 +298,14 @@ namespace karabo {
             }
 
             /**
-             * Allows to set the priority (level) filter for specified logger or globally (empty 'logger')
-             * @param priority TRACE,DEBUG,INFO,WARN,ERROR,CRITICAL
+             * Allows to set the level filter for specified logger or globally (empty 'logger')
+             * @param level TRACE,DEBUG,INFO,WARN,ERROR,CRITICAL
              * @param logger The category to apply the filter to (empty string reflects default logger)
              */
-            static void setPriority(const std::string& priority, const std::string& logger = "");
+            static void setPriority(const std::string& level, const std::string& logger = "");
 
             /**
-             * Retrieve the currently enabled priority level for the given logger name or global level
+             * Retrieve the currently enabled level for the given logger name or global level
              * @param logger The logger name (empty string reflects default logger)
              */
             static const std::string getPriority(const std::string& logger = "");

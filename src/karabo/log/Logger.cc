@@ -50,11 +50,11 @@ namespace karabo {
 
 
         void Logger::expectedParameters(Schema& s) {
-            // Take care to keep this priority in sync with "Logger.priority" of the Python karabo/bound/device.py
+            // Take care to keep this level in sync with "Logger.level" of the Python karabo/bound/device.py
             STRING_ELEMENT(s)
-                  .key("priority")
-                  .displayedName("Priority")
-                  .description("The default log priority")
+                  .key("level")
+                  .displayedName("Level")
+                  .description("The default log level")
                   .options("DEBUG INFO WARN ERROR FATAL")
                   .assignmentOptional()
                   .defaultValue("INFO")
@@ -91,7 +91,7 @@ namespace karabo {
                   .key("console.threshold")
                   .description(
                         "The Logger will not log messages with a level lower than defined here.\
-                                  Use Priority::NOTSET to disable threshold checking.")
+                                  Use Level::NOTSET to disable threshold checking.")
                   .displayedName("Threshold")
                   .options({"NOTSET", "DEBUG", "INFO", "WARN", "ERROR"})
                   .assignmentOptional()
@@ -121,7 +121,7 @@ namespace karabo {
                   .key("ostream.threshold")
                   .description(
                         "The Logger will not log messages with a level lower than defined here.\
-                                  Use Priority::NOTSET to disable threshold checking.")
+                                  Use Level::NOTSET to disable threshold checking.")
                   .displayedName("Threshold")
                   .options({"NOTSET", "DEBUG", "INFO", "WARN", "ERROR"})
                   .assignmentOptional()
@@ -166,8 +166,8 @@ namespace karabo {
             STRING_ELEMENT(s)
                   .key("file.threshold")
                   .description(
-                        "The sink will not appended log message with a priority lower than the threshold.\
-                                  Use Priority::NOTSET or OFF to disable threshold checking.")
+                        "The sink will not appended log message with a level lower than the threshold.\
+                                  Use Level::NOTSET or OFF to disable threshold checking.")
                   .displayedName("Threshold")
                   .options({"NOTSET", "DEBUG", "INFO", "WARN", "ERROR"})
                   .assignmentOptional()
@@ -206,7 +206,7 @@ namespace karabo {
                   .key("cache.threshold")
                   .description(
                         "The Logger will not log messages with a level lower than defined here.\
-                                  Use Priority::NOTSET to disable threshold checking.")
+                                  Use Level::NOTSET to disable threshold checking.")
                   .displayedName("Threshold")
                   .options({"NOTSET", "DEBUG", "INFO", "WARN", "ERROR"})
                   .assignmentOptional()
@@ -270,8 +270,8 @@ namespace karabo {
             STRING_ELEMENT(s)
                   .key("audit.threshold")
                   .description(
-                        "The sink will not appended log message with a priority lower than the threshold.\
-                                  Use Priority::NOTSET or OFF to disable threshold checking.")
+                        "The sink will not appended log message with a level lower than the threshold.\
+                                  Use Level::NOTSET or OFF to disable threshold checking.")
                   .displayedName("Threshold")
                   .options({"NOTSET", "DEBUG", "INFO", "WARN", "ERROR"})
                   .assignmentOptional()
@@ -326,7 +326,7 @@ namespace karabo {
                 sink = std::make_shared<spdlog::sinks::stderr_color_sink_mt>();
             }
             sink->set_pattern(m_config.get<std::string>("console.pattern"));
-            auto val = m_config.get<std::string>("priority");
+            auto val = m_config.get<std::string>("level");
             toLower(val);
             sink->set_level(spdlog::level::from_str(val));
             return sink;
@@ -341,7 +341,7 @@ namespace karabo {
                 sink = std::make_shared<spdlog::sinks::stderr_color_sink_mt>();
             }
             sink->set_pattern(m_config.get<std::string>("ostream.pattern"));
-            auto val = m_config.get<std::string>("priority");
+            auto val = m_config.get<std::string>("level");
             toLower(val);
             sink->set_level(spdlog::level::from_str(val));
             return sink;
@@ -353,7 +353,7 @@ namespace karabo {
                   m_config.get<std::string>("file.filename"), m_config.get<unsigned int>("file.maxFileSize"),
                   m_config.get<unsigned int>("file.maxBackupIndex"));
             sink->set_pattern(m_config.get<std::string>("file.pattern"));
-            auto val = m_config.get<std::string>("priority");
+            auto val = m_config.get<std::string>("level");
             toLower(val);
             sink->set_level(spdlog::level::from_str(val));
             return sink;
@@ -364,7 +364,7 @@ namespace karabo {
             auto sink = std::make_shared<spdlog::sinks::ringbuffer_sink_mt>(
                   m_config.get<unsigned int>("cache.maxNumMessages"));
             sink->set_pattern(m_config.get<std::string>("cache.pattern"));
-            auto val = m_config.get<std::string>("priority");
+            auto val = m_config.get<std::string>("level");
             toLower(val);
             sink->set_level(spdlog::level::from_str(val));
             Logger::m_ring = sink;
@@ -381,7 +381,7 @@ namespace karabo {
             if (!logger) logger = details::getLogger(name);
             if (!inheritSinks) logger->sinks().clear();
             logger->sinks().push_back(sink);
-            setPriority(m_config.get<std::string>("priority"), name);
+            setPriority(m_config.get<std::string>("level"), name);
         }
 
         // for backward compatibility
@@ -394,7 +394,7 @@ namespace karabo {
             if (!logger) logger = details::getLogger(name);
             if (!inheritSinks) logger->sinks().clear();
             logger->sinks().push_back(sink);
-            setPriority(m_config.get<std::string>("priority"), name);
+            setPriority(m_config.get<std::string>("level"), name);
         }
 
 
@@ -407,7 +407,7 @@ namespace karabo {
             if (!logger) logger = details::getLogger(name);
             if (!inheritSinks) logger->sinks().clear();
             logger->sinks().push_back(sink);
-            setPriority(m_config.get<std::string>("priority"), name);
+            setPriority(m_config.get<std::string>("level"), name);
         }
 
 
@@ -420,7 +420,7 @@ namespace karabo {
             if (!logger) logger = details::getLogger(name);
             if (!inheritSinks) logger->sinks().clear();
             logger->sinks().push_back(sink);
-            setPriority(m_config.get<std::string>("priority"), name);
+            setPriority(m_config.get<std::string>("level"), name);
         }
 
 
@@ -447,7 +447,7 @@ namespace karabo {
             auto val = m_config.get<std::string>("audit.threshold");
             toLower(val);
             log->set_level(spdlog::level::from_str(val));
-            setPriority(m_config.get<std::string>("priority"), name);
+            setPriority(m_config.get<std::string>("level"), name);
             m_audit = log;
         }
 
@@ -498,11 +498,11 @@ namespace karabo {
         }
 
 
-        void Logger::setPriority(const std::string& priority, const std::string& category) {
-            std::string prio = priority;
+        void Logger::setPriority(const std::string& level, const std::string& category) {
+            std::string prio = level;
             toLower(prio);                            // update 'prio' in place
             auto lvl = spdlog::level::from_str(prio); // convert to level::level_enum
-            // apply new priority to all known loggers
+            // apply new level to all known loggers
             spdlog::apply_all([&](std::shared_ptr<spdlog::logger> l) {
                 auto name = l->name();
                 if (category.empty()) {

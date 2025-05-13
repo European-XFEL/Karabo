@@ -25,8 +25,8 @@ from karabo.bound import (
     ChannelMetaData, ConnectionStatus, EventLoop, Hash, InputChannel, Logger,
     OutputChannel, SignalSlotable, Timestamp, Types, VectorHash)
 
-config = Hash("priority", "FATAL")
-# config = Hash("priority", "DEBUG")
+config = Hash("level", "FATAL")
+# config = Hash("level", "DEBUG")
 Logger.configure(config)
 Logger.useConsole()
 

@@ -40,7 +40,7 @@ class LogSomething {
         using namespace karabo::data;
 
         NODE_ELEMENT(expected)
-              .key("Logger")
+              .key("log")
               .displayedName("Logger")
               .description("Logger configuration")
               .appendParametersOf<karabo::log::Logger>()
@@ -49,7 +49,7 @@ class LogSomething {
 
     LogSomething(const karabo::data::Hash& input) {
         using namespace karabo::log;
-        Logger::configure(input.get<karabo::data::Hash>("Logger"));
+        Logger::configure(input.get<karabo::data::Hash>("log"));
         Logger::useConsole();
     }
 
