@@ -69,11 +69,11 @@ export LATEST_PRERELEASE_TAG=latest_prerelease_build
 export NIGHTLY_TAG=Nightly
 
 export KARABO_BROKER_TOPIC="gitlab_ci_$CI_JOB_ID"
-export KARABO_PROJECT_DB=existdb_host
+export KARABO_PROJECT_DB=existdbhost
 export KARABO_PROJECT_DB_PORT=8080
-export KARABO_TEST_PROJECT_DB=existdb_host
+export KARABO_TEST_PROJECT_DB=existdbhost
 export KARABO_TEST_PROJECT_DB_PORT=8080
-export KARABO_TEST_INFLUXDB_HOST=influxdb_host
+export KARABO_TEST_INFLUXDB_HOST=influxdbhost
 export KARABO_TEST_INFLUXDB_PORT=8086
 export KARABO_TEST_INFLUXDB_DB=$INFLUXDB_DB
 
