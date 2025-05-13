@@ -19,14 +19,11 @@ from qtpy.QtCore import Slot
 from qtpy.QtWidgets import QDialog
 from traits.api import TraitError, Undefined
 
-from karabo.common.api import (
-    KARABO_ALARM_HIGH, KARABO_ALARM_LOW, KARABO_WARN_HIGH, KARABO_WARN_LOW)
 from karabogui.controllers.validators import SimpleValidator
 
 from .utils import get_dialog_ui
 
-_ALARM_KEYS = [KARABO_ALARM_LOW, KARABO_WARN_LOW,
-               KARABO_WARN_HIGH, KARABO_ALARM_HIGH]
+_ALARM_KEYS = ["alarmLow", "warnLow", "warnHigh", "alarmHigh"]
 
 LABEL_NOTE = ("Note: In order to deactivate an alarm setting, please leave "
               "the edit field empty.")
