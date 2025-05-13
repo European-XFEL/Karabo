@@ -17,9 +17,9 @@
 # and open the template in the editor.
 
 from karabo.bound import (
-    AMPERE, BOOL_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT, INT64_ELEMENT, METER,
-    MILLI, NODE_ELEMENT, STRING_ELEMENT, UINT32_ELEMENT, AssemblyRules, Hash,
-    HashFilter, Validator)
+    BOOL_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT, INT64_ELEMENT, NODE_ELEMENT,
+    STRING_ELEMENT, UINT32_ELEMENT, AssemblyRules, Hash, HashFilter,
+    MetricPrefix, Unit, Validator)
 from karabo.bound.decorators import (
     KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS)
 from karabo.common.states import State
@@ -60,7 +60,8 @@ class P1Y(BaseY):
             .displayedName("Example key 2")
             .description("Example key 2 description")
             .options("5, 25, 10")
-            .minInc(5).maxInc(25).unit(METER).metricPrefix(MILLI)
+            .minInc(5).maxInc(25).unit(Unit.METER).metricPrefix(
+                MetricPrefix.MILLI)
             .assignmentOptional().defaultValue(5)
             .init()
             .commit(),
@@ -123,7 +124,8 @@ class P2Y(BaseY):
             .displayedName("Example key 2")
             .description("Example key 2 description")
             .options("5, 25, 10")
-            .minInc(5).maxInc(25).unit(AMPERE).metricPrefix(MILLI)
+            .minInc(5).maxInc(25).unit(Unit.AMPERE).metricPrefix(
+                MetricPrefix.MILLI)
             .assignmentOptional().defaultValue(10)
             .init()
             .commit(),
@@ -157,7 +159,8 @@ class P3Y(BaseY):
             .displayedName("Example key 2")
             .description("Example key 2 description")
             .options("5, 25, 10")
-            .minInc(5).maxInc(25).unit(METER).metricPrefix(MILLI)
+            .minInc(5).maxInc(25).unit(Unit.METER).metricPrefix(
+                MetricPrefix.MILLI)
             .assignmentOptional().defaultValue(25)
             .init()
             .commit(),
@@ -210,7 +213,8 @@ class GraphicsRenderer2Y:
             .description("The radius of the circle")
             .displayedName("Radius")
             .tags("NC,KW")
-            .minExc(0).maxExc(100).unit(METER).metricPrefix(MILLI)
+            .minExc(0).maxExc(100).unit(Unit.METER).metricPrefix(
+                MetricPrefix.MILLI)
             .assignmentOptional().defaultValue(10)
             .init().commit(),
 
