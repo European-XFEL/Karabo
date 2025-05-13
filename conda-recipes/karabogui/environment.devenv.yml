@@ -40,7 +40,7 @@ dependencies:
   - pip>=23.3.*
   # GUI
   - qtpy=2.4.1
-  - pyqtgraph=0.13.3
+  - pyqtgraph=0.13.7
   - qt-main=5.15.*
   - pyqt=5.15.9
   - qscintilla2=2.14.0
