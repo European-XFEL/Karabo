@@ -54,7 +54,11 @@ variables:
 .build_template: &setup_build_env
   cache: !reference [.build_cache, cache_rw]
   tags:
-    - KaraboFramework
+    # k8s is a tag attached to a pre-production Kubernetes cluster
+    - k8s
+    # if this cluster were to fail, revert to the previous runner uncommenting:
+    # - KaraboFramework
+    # XXX: remove these comments once the cluster is production-ready
   image: europeanxfel/karabo-ci:$ARCH_TAG
   before_script:
     # peek inside cache
@@ -96,9 +100,9 @@ variables:
 .services_template: &services_template
   services:
     - name: europeanxfel/existdb:2.2
-      alias: existdb_host
+      alias: existdbhost
     - name: influxdb:1.8.0
-      alias: influxdb_host
+      alias: influxdbhost
   variables:
     INFLUXDB_DB: "InfluxLogTest"
     INFLUXDB_HTTP_AUTH_ENABLED: "true"
@@ -111,7 +115,10 @@ variables:
   image: europeanxfel/karabo-ci:miniforge-3-002
   cache: !reference [.build_cache, cache_rw]
   tags:
-    - KaraboFramework
+    # k8s is a tag attached to a pre-production Kubernetes cluster
+    - k8s
+    # if this cluster were to fail, revert to the previous runner uncommenting:
+    # - KaraboFramework
 
 .release_build: &release-build
   stage: build
@@ -359,6 +366,11 @@ variables:
 pre-commit-check:
   stage: lint
   image: python:3.12
+  tags:
+    # k8s is a tag attached to a pre-production Kubernetes cluster
+    - k8s
+    # if this cluster were to fail, revert to the previous runner uncommenting:
+    # - KaraboFramework
   before_script:
     - find /cache || true
   script:
