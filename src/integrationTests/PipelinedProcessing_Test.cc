@@ -1391,7 +1391,7 @@ void PipelinedProcessing_Test::testSharedReceiversSelector() {
     CPPUNIT_ASSERT_EQUAL(std::string("wait"), m_deviceClient->get<std::string>(m_sender, "output1.noInputShared"));
 
     karabo::data::Hash config1(m_receiverBaseConfig);
-    config1 += Hash("deviceId", m_receiver1, "input.dataDistribution", "shared");
+    config1 += Hash("deviceId", m_receiver1, "input", Hash("dataDistribution", "shared", "onSlowness", "wait"));
 
     karabo::data::Hash config2(config1);
     config2.set<std::string>("deviceId", m_receiver2);
@@ -1400,7 +1400,7 @@ void PipelinedProcessing_Test::testSharedReceiversSelector() {
     instantiateDeviceWithAssert("PipeReceiverDevice", config2);
 
     // Ensure that connected
-    testSenderOutputChannelConnections(2UL, {m_receiver1 + ":input", m_receiver2 + ":input"}, "shared", "drop", "local",
+    testSenderOutputChannelConnections(2UL, {m_receiver1 + ":input", m_receiver2 + ":input"}, "shared", "wait", "local",
                                        {m_receiver1 + ":input2", m_receiver2 + ":input2"}, "copy", "drop", "local");
 
     // ==========================================================
