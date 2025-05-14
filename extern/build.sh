@@ -132,6 +132,19 @@ install_python() {
         # Details at https://git.xfel.eu/Karabo/Framework/-/merge_requests/8551#note_467905
         export POSIXSHMEM_LIBS="-lrt"
     fi
+
+    # Make sure that the new URL for Conan Center remote is used. The previous one, center.conan.io,
+    # stopped receiving updates since November, 4th, 2024.
+    # Full details at:
+    # https://blog.conan.io/2024/09/30/Conan-Center-will-stop-receiving-updates-for-Conan-1.html
+    # NOTE: The conditional update of the Conan Center remote in the next lines can be removed if
+    #       all installations are guaranteed to be using at least conan 2.9.2
+    conan_center_url=$(conan remote list | grep "conancenter" | awk '{print $2}')
+    # If the URL is outdated, update it
+    if [[ "$conan_center_url" == "https://center.conan.io" ]]; then
+        safeRunCommandQuiet "conan remote update conancenter --url https://center2.conan.io"
+    fi
+
     safeRunCommandQuiet "conan install conanfile-bootstrap.txt $folder_opts $build_opts $profile_opts"
 
     # ensure that python can always find its libpython.so
