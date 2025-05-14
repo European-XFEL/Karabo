@@ -32,7 +32,7 @@ from karabo.middlelayer.eventloop import NoEventLoop, global_sync
 from karabo.middlelayer.ikarabo import (
     DeviceClient, connectDevice, start_device_client)
 from karabo.middlelayer.macro import EventThread, Macro, RemoteDevice
-from karabo.middlelayer.testing import assertLogs, setEventLoop, sleepUntil
+from karabo.middlelayer.testing import setEventLoop, sleepUntil
 from karabo.native import Int32 as Int, KaraboError, Slot
 
 
@@ -137,7 +137,7 @@ def test_main():
 
 
 @pytest.mark.timeout(30)
-def test_remote_timeout():
+def test_remote_timeout(caplog):
     """Test that remote devices can timeout and send logs"""
     thread = None
     try:
@@ -146,9 +146,9 @@ def test_remote_timeout():
         assert not global_sync()
         thread = start_device_client()
         assert global_sync()
-        with assertLogs("NoRemote"):
+        with caplog.at_level("INFO", logger="NoRemote"):
             NoRemote(_deviceId_="NoRemote")
-
+            assert len(caplog.records)
     finally:
         if thread is not None:
             thread.stop()
@@ -255,15 +255,12 @@ def test_topology():
 
 
 @pytest.mark.timeout(30)
-def test_ikarabo():
+def test_ikarabo(caplog):
     thread = None
     try:
-        with assertLogs(level="WARNING"):
+        with caplog.at_level("WARNING"):
             thread = start_device_client()
-    except AssertionError:
-        pass
-    else:
-        assert False, "no log should be generated!"
+            assert caplog.text == "", "no log should be generated!"
     finally:
         if thread is not None:
             thread.stop()

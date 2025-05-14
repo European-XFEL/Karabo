@@ -13,7 +13,6 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
-import logging
 import time
 from asyncio import (
     CancelledError, Future, TimeoutError, ensure_future, get_event_loop)
@@ -25,7 +24,7 @@ from karabo.middlelayer import (
     MetricPrefix, QuantityValue, Unit, allCompleted, background,
     firstCompleted, firstException, gather, sleep, synchronous, unit)
 from karabo.middlelayer.synchronization import FutureDict
-from karabo.middlelayer.testing import assertLogs, run_test
+from karabo.middlelayer.testing import run_test
 
 global called
 called = False
@@ -83,52 +82,52 @@ def func_sleep():
 
 @pytest.mark.timeout(30)
 @run_test
-async def test_coro_coro_raise(loopTest):
+async def test_coro_coro_raise(loopTest, caplog):
     deviceId = get_device()
-    with assertLogs(deviceId, level=logging.ERROR) as log, \
+    with caplog.at_level("ERROR", logger=deviceId), \
             pytest.raises(RuntimeError):
         await background(coro, False)
-    assert log.records[0].exc_info[0] is RuntimeError
+    assert caplog.records[0].exc_info[0] is RuntimeError
 
 
 @pytest.mark.timeout(30)
 @run_test
-async def test_coro_coro_direct_raise(loopTest):
+async def test_coro_coro_direct_raise(loopTest, caplog):
     deviceId = get_device()
-    with assertLogs(deviceId, level=logging.ERROR) as log, \
+    with caplog.at_level("ERROR", logger=deviceId), \
             pytest.raises(RuntimeError):
         await background(coro(False))
-    assert log.records[0].exc_info[0] is RuntimeError
+    assert caplog.records[0].exc_info[0] is RuntimeError
 
 
 @pytest.mark.timeout(30)
 @run_test
-async def test_coro_func_raise(loopTest):
+async def test_coro_func_raise(loopTest, caplog):
     deviceId = get_device()
-    with assertLogs(deviceId, level=logging.ERROR) as log, \
+    with caplog.at_level("ERROR", logger=deviceId), \
             pytest.raises(RuntimeError):
         await background(func, False)
-    assert log.records[0].exc_info[0] is RuntimeError
+    assert caplog.records[0].exc_info[0] is RuntimeError
 
 
 @pytest.mark.timeout(30)
 @run_test
-def test_func_coro_raise(loopTest):
+def test_func_coro_raise(loopTest, caplog):
     deviceId = get_device()
-    with assertLogs(deviceId, level=logging.ERROR) as log, \
+    with caplog.at_level("ERROR", logger=deviceId), \
             pytest.raises(RuntimeError):
         background(coro, False).wait()
-    assert log.records[0].exc_info[0] is RuntimeError
+    assert caplog.records[0].exc_info[0] is RuntimeError
 
 
 @pytest.mark.timeout(30)
 @run_test
-def test_func_func_raise(loopTest):
+def test_func_func_raise(loopTest, caplog):
     deviceId = get_device()
-    with assertLogs(deviceId, level=logging.ERROR) as log, \
+    with caplog.at_level("ERROR", logger=deviceId), \
             pytest.raises(RuntimeError):
         background(func, False).wait()
-    assert log.records[0].exc_info[0] is RuntimeError
+    assert caplog.records[0].exc_info[0] is RuntimeError
 
 
 @pytest.mark.timeout(30)

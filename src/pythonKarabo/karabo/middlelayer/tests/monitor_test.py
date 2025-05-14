@@ -21,8 +21,7 @@ import pytest_asyncio
 
 from karabo.middlelayer.device import Device
 from karabo.middlelayer.macro import Macro, Monitor, RemoteDevice
-from karabo.middlelayer.testing import (
-    AsyncDeviceContext, assertLogs, run_test, sleepUntil)
+from karabo.middlelayer.testing import AsyncDeviceContext, run_test, sleepUntil
 from karabo.native import Int32 as Int, Slot
 
 
@@ -107,10 +106,11 @@ def test_count(deviceTest):
 
 @pytest.mark.timeout(30)
 @run_test
-def test_error(deviceTest):
+def test_error(deviceTest, caplog):
     local = deviceTest["local"]
-    with assertLogs("local", "ERROR"):
+    with caplog.at_level("ERROR", logger="local"):
         local.error()
+    assert len(caplog.records)
 
 
 @pytest.mark.timeout(30)
