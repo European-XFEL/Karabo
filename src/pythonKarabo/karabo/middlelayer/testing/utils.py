@@ -87,50 +87,6 @@ class _CapturingHandler(logging.Handler):
         self.watcher.output.append(msg)
 
 
-@contextmanager
-def assertLogs(logger_name=None, level=None):
-    """A context manager used to implement assertLogs().
-
-    :param logger_name: defaults to `None` (root)
-    :param level: The logging level, defaults to `None` -> INFO
-    """
-    try:
-        if isinstance(logger_name, logging.Logger):
-            logger = logger_name
-        else:
-            logger = logging.getLogger(logger_name)
-
-        if level:
-            level = logging._nameToLevel.get(level, level)
-        else:
-            level = logging.INFO
-
-        # Store old
-        old_handlers = logger.handlers[:]
-        old_level = logger.level
-        old_propagate = logger.propagate
-        # Attach new
-        LOGGING_FORMAT = "%(levelname)s:%(name)s:%(message)s"
-        formatter = logging.Formatter(LOGGING_FORMAT)
-        handler = _CapturingHandler()
-        handler.setFormatter(formatter)
-        watcher = handler.watcher
-        logger.handlers = [handler]
-        logger.setLevel(level)
-        logger.propagate = False
-
-        yield handler.watcher
-    finally:
-        logger.handlers = old_handlers
-        logger.propagate = old_propagate
-        logger.setLevel(old_level)
-
-        if len(watcher.records) == 0:
-            raise AssertionError(
-                "no logs of level {} or higher triggered on {}"
-                .format(logging.getLevelName(level), logger.name))
-
-
 @synchronize_notimeout
 async def sleepUntil(condition, timeout=None):
     """Sleep until some condition is valid

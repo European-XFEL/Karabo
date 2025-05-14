@@ -19,7 +19,6 @@ import time
 import pytest
 
 from karabo.common.states import State
-from karabo.middlelayer.testing import assertLogs
 from karabo.middlelayer.unitutil import (
     StateSignifier, maximum, minimum, removeQuantity)
 from karabo.middlelayer.utils import (
@@ -413,12 +412,13 @@ async def test_countdown():
 
 
 @pytest.mark.timeout(30)
-def test_suppress(utilsTest):
+def test_suppress(utilsTest, caplog):
     loop = asyncio.get_event_loop()
     instanceId = loop.instance().deviceId
-    with assertLogs(instanceId, "ERROR"):
+    with caplog.at_level("ERROR", logger=instanceId):
         with suppress(RuntimeError):
             raise RuntimeError("Error")
+        assert caplog.records
 
 
 def test_check_broker_scheme():

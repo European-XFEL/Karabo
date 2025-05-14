@@ -34,8 +34,7 @@ from karabo.middlelayer import (
     lock, setNoWait, setWait, slot, unit, updateDevice, waitUntil,
     waitUntilNew)
 from karabo.middlelayer.logger import CacheLog
-from karabo.middlelayer.testing import (
-    AsyncDeviceContext, assertLogs, run_test, sleepUntil)
+from karabo.middlelayer.testing import AsyncDeviceContext, run_test, sleepUntil
 
 FIXED_TIMESTAMP = Timestamp("2009-04-20T10:32:22 UTC")
 
@@ -757,7 +756,7 @@ async def test_error_value(deviceTest):
 
 @pytest.mark.timeout(30)
 @run_test
-async def test_disallow(deviceTest):
+async def test_disallow(deviceTest, caplog):
     """test that values cannot be set if in wrong state"""
     remote = deviceTest["remote"]
     assert remote.state == State.UNKNOWN
@@ -765,19 +764,21 @@ async def test_disallow(deviceTest):
         d.value = 7
         await waitUntil(lambda: d.value == 7)
         # disallowed_int is normally not allowed
-        with assertLogs("remote", "WARNING") as log:
+        with caplog.at_level("WARNING", logger="remote"):
             # no error here as we need to wait for network round-trip
             d.disallowed_int = 333
             await sleep(0.5)
+            assert len(caplog.records) == 1
         with pytest.raises(KaraboError):
             # this raises the error from above
             d.value = 8
-        with assertLogs("remote", "WARNING") as log, \
+        with caplog.at_level("WARNING", logger="remote"), \
                 pytest.raises(KaraboError):
             d.disallowed_int = 333
             await d.allow()
-        assert len(log.records) == 1
-        assert log.records[0].levelname == "WARNING"
+            assert caplog.records
+        assert len(caplog.records) == 2
+        assert caplog.records[-1].levelname == "WARNING"
         assert d.value == 7
 
         # d.allow() sets d.value to 777 and is changing state such that
@@ -786,11 +787,11 @@ async def test_disallow(deviceTest):
         assert d.value == 777
         d.value = 4
         # ... but it cannot be called itself anymore ...
-        with assertLogs("remote", "WARN") as logs, \
+        with caplog.at_level("WARNING", logger="remote"), \
                 pytest.raises(KaraboError):
             await d.allow()
-        assert len(logs.records) == 1
-        assert logs.records[0].levelname == "WARNING"
+        assert len(caplog.records) == 3
+        assert caplog.records[-1].levelname == "WARNING"
         assert d.value == 4
         # ... but disallowed_int sets this back ...
         d.disallowed_int = 444
@@ -849,7 +850,7 @@ async def test_log(deviceTest):
 
 @pytest.mark.timeout(30)
 @run_test
-async def test_earlylog(deviceTest):
+async def test_earlylog(deviceTest, caplog):
     class A(Device):
         @Int32()
         def logint(self, value):
@@ -858,12 +859,12 @@ async def test_earlylog(deviceTest):
         async def onInitialization(self):
             self.logger.info("some test log message")
 
-    with assertLogs("testearlylog", "INFO") as cm:
+    with caplog.at_level("INFO", logger="testearlylog"):
         a = A({"_deviceId_": "testearlylog"})
-    assert cm.records[0].msg == "log the int"
-    with assertLogs("testearlylog", "INFO") as cm:
+    assert caplog.records[0].msg == "log the int"
+    with caplog.at_level("INFO", logger="testearlylog"):
         await a.startInstance()
-    assert cm.records[0].msg, "some test log message"
+    assert caplog.records[-1].msg, "some test log message"
     await a.slotKillDevice()
 
 
@@ -911,16 +912,17 @@ async def test_nested(deviceTest):
 
 @pytest.mark.timeout(30)
 @run_test
-async def test_error(deviceTest):
+async def test_error(deviceTest, caplog):
     """test error reporting and calling of error methods"""
     remote = deviceTest["remote"]
     local = deviceTest["local"]
 
     remote.done = False
-    with assertLogs("local", "ERROR"):
+    with caplog.at_level("ERROR", logger="local"):
         with (await getDevice("local")) as d:
             with pytest.raises(KaraboError):
                 await d.error()
+        assert len(caplog.records)
 
     assert remote.done
     remote.done = False
@@ -935,18 +937,18 @@ async def test_error(deviceTest):
 
 @pytest.mark.timeout(30)
 @run_test
-async def test_error_in_error(deviceTest):
+async def test_error_in_error(deviceTest, caplog):
     """test what happens if an error happens in an error method"""
     remote = deviceTest["remote"]
     local = deviceTest["local"]
     remote.done = False
 
-    with assertLogs("local", "ERROR") as logs:
+    with caplog.at_level("ERROR", logger="local"):
         with (await getDevice("local")) as d:
             with pytest.raises(KaraboError):
                 await d.error_in_error()
 
-    assert logs.records[-1].msg == "error in error handler"
+    assert caplog.records[-1].msg == "error in error handler"
     assert not remote.done
     assert local.exc_slot is Local.error_in_error
     assert "On purpose" in local.traceback_str
@@ -960,18 +962,19 @@ async def test_error_in_error(deviceTest):
 
 @pytest.mark.timeout(30)
 @run_test
-async def test_task_error(deviceTest):
+async def test_task_error(deviceTest, caplog):
     """test that errors of created tasks are properly reported"""
     remote = deviceTest["remote"]
     remote.done = False
     local = deviceTest["local"]
-    with assertLogs("local", "ERROR"):
+    with caplog.at_level("ERROR", logger="local"):
         with (await getDevice("local")) as loc, \
                 (await getDevice("remote")) as rem:
             await loc.task_error()
             assert not rem.done
             await waitUntil(lambda: rem.done)
             assert rem.done
+        assert len(caplog.records) == 1
 
     assert local.exc_slot is None
     assert isinstance(local.exception, RuntimeError)
