@@ -55,9 +55,9 @@ variables:
   cache: !reference [.build_cache, cache_rw]
   tags:
     # k8s is a tag attached to a pre-production Kubernetes cluster
-    - k8s
+    # - k8s
     # if this cluster were to fail, revert to the previous runner uncommenting:
-    # - KaraboFramework
+    - KaraboFramework
     # XXX: remove these comments once the cluster is production-ready
   image: europeanxfel/karabo-ci:$ARCH_TAG
   before_script:
@@ -116,9 +116,9 @@ variables:
   cache: !reference [.build_cache, cache_rw]
   tags:
     # k8s is a tag attached to a pre-production Kubernetes cluster
-    - k8s
+    # - k8s
     # if this cluster were to fail, revert to the previous runner uncommenting:
-    # - KaraboFramework
+    - KaraboFramework
 
 .release_build: &release-build
   stage: build
@@ -368,9 +368,9 @@ pre-commit-check:
   image: python:3.12
   tags:
     # k8s is a tag attached to a pre-production Kubernetes cluster
-    - k8s
+    # - k8s
     # if this cluster were to fail, revert to the previous runner uncommenting:
-    # - KaraboFramework
+    - KaraboFramework
   before_script:
     - find /cache || true
   script:
