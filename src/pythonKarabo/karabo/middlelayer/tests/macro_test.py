@@ -33,8 +33,7 @@ from karabo.middlelayer.output import KaraboStream
 from karabo.middlelayer.pipeline import OutputChannel, PipelineContext
 from karabo.middlelayer.signalslot import slot
 from karabo.middlelayer.synchronization import background, sleep
-from karabo.middlelayer.testing import (
-    AsyncDeviceContext, assertLogs, run_test, sleepUntil)
+from karabo.middlelayer.testing import AsyncDeviceContext, run_test, sleepUntil
 from karabo.native import (
     AccessMode, Configurable, Hash, Int32 as Int, KaraboError, Node, Slot)
 
@@ -449,13 +448,14 @@ async def test_macro_slotter_async(deviceTest):
 
 @pytest.mark.timeout(30)
 @run_test
-async def test_macro_slotter_error(deviceTest):
+async def test_macro_slotter_error(deviceTest, caplog):
     """test that errors are properly logged and error functions called"""
     localMacro = deviceTest["localMacro"]
-    with assertLogs("localMacroSlot", "ERROR"), \
+    with caplog.at_level("ERROR", logger="localMacroSlot"), \
             (await getDevice("localMacroSlot")) as d:
         await d.error()
         await sleep(TIMEOUT_LOGS)
+        assert len(caplog.records)
 
     assert localMacro.exc_slot is LocalMacroSlot.error
     assert isinstance(localMacro.exception, RuntimeError)
@@ -467,14 +467,14 @@ async def test_macro_slotter_error(deviceTest):
 
 @pytest.mark.timeout(30)
 @run_test
-async def test_macro_slotter_error_in_error(deviceTest):
+async def test_macro_slotter_error_in_error(deviceTest, caplog):
     """test errors in error handlers are logged in a macro slot"""
     localMacro = deviceTest["localMacro"]
-    with assertLogs("localMacroSlot", "ERROR") as logs, \
+    with caplog.at_level("ERROR", logger="localMacroSlot"), \
             (await getDevice("localMacroSlot")) as d:
         await d.error_in_error()
         await sleep(TIMEOUT_LOGS)
-    assert logs.records[-1].msg == "error in error handler"
+    assert caplog.records[-1].msg == "error in error handler"
     assert localMacro.exc_slot == LocalMacroSlot.error_in_error
     assert isinstance(localMacro.exception, RuntimeError)
     assert localMacro.traceback is not None
@@ -843,13 +843,13 @@ def test_queue(deviceTest):
 
 @pytest.mark.timeout(30)
 @run_test
-async def test_error(deviceTest):
+async def test_error(deviceTest, caplog):
     """test that errors are properly logged and error functions called"""
     local = deviceTest["local"]
     remote = deviceTest["remote"]
     remote.done = False
 
-    with assertLogs("local", "ERROR"), \
+    with caplog.at_level("ERROR", logger="local"), \
             (await getDevice("local")) as d, \
             pytest.raises(KaraboError):
         await d.error()
@@ -864,18 +864,18 @@ async def test_error(deviceTest):
 
 @pytest.mark.timeout(30)
 @run_test
-async def test_error_in_error(deviceTest):
+async def test_error_in_error(deviceTest, caplog):
     """test that errors in error handlers are properly logged"""
     local = deviceTest["local"]
     remote = deviceTest["remote"]
 
     remote.done = False
-    with assertLogs("local", "ERROR") as logs, \
+    with caplog.at_level("ERROR", logger="local"), \
             (await getDevice("local")) as d, \
             pytest.raises(KaraboError):
         await d.error_in_error()
     assert not remote.done
-    assert logs.records[-1].msg == "error in error handler"
+    assert caplog.records[-1].msg == "error in error handler"
     assert local.exc_slot is Local.error_in_error
     assert isinstance(local.exception, RuntimeError)
     local.traceback.tb_lasti  # check whether that is a traceback
