@@ -1032,6 +1032,6 @@ def test_sigslot_asyncConnect(eventLoopFixt):
     wait_for_callback()
 
     assert failureMsg is not None  # callback called
-    assert "was not connected" in failureMsg
-    assert "was not connected" in failureDetails
+    assert "no slot 'not_a_slot'" in failureMsg
+    assert "no slot 'not_a_slot'" in failureDetails
     assert "Exception Type....:  SignalSlot Exception" in failureDetails
