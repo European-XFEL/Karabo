@@ -35,6 +35,8 @@ from karabo.middlelayer import (
 from karabo.middlelayer.testing import (  # noqa
     AsyncDeviceContext, AsyncServerContext, event_loop_policy, sleepUntil)
 
+# FIXME: Remove this line that only intends to trigger integration tests
+
 
 class Child(Configurable):
     number = Int32()

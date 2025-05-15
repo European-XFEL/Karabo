@@ -188,6 +188,7 @@ class Broker:
         self.tasks = set()
         # AMQP specific bookkeeping ...
         self.subscriptions = set()  # registered tuple: exchange, routing key
+        self._slots_for_signals = {}  # {signalInstance : {signal : [slot]}}
         self.channel = None  # channel for communication
         self.queue = None  # main queue
         self.consumer_tag = None  # tag returned by consume method
@@ -391,15 +392,18 @@ class Broker:
 
         self.heartbeat_task = ensure_future(heartbeat())
 
-    def build_arguments(self, signal: str, targets: dict[str, list],
+    def build_arguments(self, signal: str, targets: dict[str, list] | None,
                         reply) -> tuple[str, str, Hash]:
-        funcs = "||".join(f"{k}:{','.join(v)}" for k, v in targets.items())
-        slotInstanceIds = "||".join(targets)
-        p = Hash(
-            "signalFunction", signal,
-            "slotInstanceIds", f"|{slotInstanceIds}|",
-            "slotFunctions", f"|{funcs}|",
-            "classId", self.classId)
+        p = Hash("signalFunction", signal, "classId", self.classId)
+        if targets is not None:
+            funcs = "||".join(f"{k}:{','.join(v)}" for k, v in targets.items())
+            slotInstanceIds = "||".join(targets)
+            p["slotInstanceIds"] = f"|{slotInstanceIds}|"
+            p["slotFunctions"] = f"|{funcs}|"
+        else:  # A signal does not know about its recipients
+            p["slotInstanceIds"] = "__none__"
+            p["slotFunctions"] = "__none__"
+
         if reply is not None:
             p.setElement("replyTo", reply, {})
 
@@ -413,24 +417,21 @@ class Broker:
                 routing_key = ""
             else:
                 name = f"{self.domain}.slots"
+                # Assumes 'slotInstanceIds' to be a single id
                 routing_key = slotInstanceIds
-        else:
+        else:  # It is a signal
             name = f"{self.domain}.signals"
             routing_key = f"{self.deviceId}.{signal}"
 
         return name, routing_key, p
 
-    def call(self, signal: str, targets: dict[str, list],
+    def call(self, signal: str, targets: dict[str, list] | None,
              reply: None | tuple, arguments: tuple):
-        if not targets:
-            return
         name, routing_key, p = self.build_arguments(signal, targets, reply)
         self.send(name, routing_key, p, arguments)
 
     async def async_call(self, signal: str, targets: dict[str, list],
                          reply: None | tuple, arguments: tuple):
-        if not targets:
-            return
         name, routing_key, p = self.build_arguments(signal, targets, reply)
         await self.async_send(name, routing_key, p, arguments)
 
@@ -468,9 +469,8 @@ class Broker:
 
     def connect(self, deviceId, signal, slot):
         """This is way of establishing 'karabo signalslot' connection with
-        a signal.  In AMQP case this is just creating a task that will
-        call `async_connect` that, in turn, may take time because communication
-        with RabbitMQ broker is involved.
+        a signal.  This is just creating a task that will call `async_connect`
+        that may take time because communication with broker is involved.
         """
         self.loop.call_soon_threadsafe(
             self.loop.create_task, self.async_connect(deviceId, signal, slot))
@@ -480,7 +480,7 @@ class Broker:
         remote signal.  In AMQP case this is two steps procedure:
         1. subscription to the topic with topic name built from signal info
         2. sending to the signal side the slot registration message
-        NOTE: Optimization: we can connect many signals to the same alot
+        NOTE: Optimization: we can connect many signals to the same slot
         at once
         """
         if isinstance(signal, (list, tuple)):
@@ -493,17 +493,16 @@ class Broker:
         futures = [sleep(0)]
         async with self.subscribe_lock:
             for s in signals:
+                # Store which slot to call when signal message arrives
+                dev_signals = self._slots_for_signals.setdefault(deviceId, {})
+                dev_signals.setdefault(s, set()).add(slot.__name__)
+                # Subscribe on broker
                 key = f"{deviceId}.{s}"
                 subscription = (exchange, key)
                 if subscription not in self.subscriptions:
                     futures.append(self.channel.queue_bind(
                         queue=self.queue, exchange=exchange, routing_key=key))
                     self.subscriptions.add(subscription)
-
-                futures.append(
-                    self.async_emit(
-                        "call", {deviceId: ["slotConnectToSignal"]},
-                        s, slot.__self__.deviceId, slot.__name__))
 
         await gather(*futures, return_exceptions=True)
 
@@ -525,6 +524,15 @@ class Broker:
             futures = [sleep(0)]
             async with self.subscribe_lock:
                 for s in signals:
+                    # Clean storage of slots to call when signal msg arrives
+                    device_signals = self._slots_for_signals.get(deviceId, {})
+                    subscribed_slots = device_signals.get(s, set())
+                    subscribed_slots.discard(slot)
+                    if not subscribed_slots:
+                        device_signals.pop(s, None)
+                        if not device_signals:
+                            self._slots_for_signals.pop(deviceId, None)
+                    # Remove subscription from broker
                     key = f"{deviceId}.{s}"
                     subscription = (exchange, key)
                     if subscription in self.subscriptions:
@@ -533,9 +541,7 @@ class Broker:
                         futures.append(self.channel.queue_unbind(
                             queue=self.queue, exchange=exchange,
                             routing_key=key))
-                    futures.append(self.async_emit(
-                        "call", {deviceId: ["slotDisconnectFromSignal"]},
-                        s, slot.__self__.deviceId, slot.__name__))
+
             await gather(*futures, return_exceptions=True)
         except BaseException:
             self.logger.warning(
@@ -654,6 +660,7 @@ class Broker:
     async def on_message(self, device, message):
         d = device()
         if d is not None:
+            # 'message' knows routing_key and exchange (str or None)
             await self.handleMessage(message.body, d)
 
     async def consume(self, device):
@@ -722,24 +729,47 @@ class Broker:
 
         replyFrom = header.get("replyFrom")
         if replyFrom is not None:
-            f = self.repliers.get(replyFrom)
-            if f is not None and not f.done():
-                if header.get("error", False):
-                    exceptTxt = params[0]
-                    if len(params) >= 2 and params[1]:
-                        exceptTxt += "\nDETAILS: " + params[1]
-                    f.set_exception(KaraboError(exceptTxt))
-                else:
-                    if len(params) == 1:
-                        params = params[0]
-                    else:
-                        params = tuple(params)
-                    f.set_result(params)
-            return {}, None
+            return self._decodeReply(replyFrom, header, params)
 
-        slots = (header["slotFunctions"][1:-1]).split("||")
+        slotFunctions = header["slotFunctions"]
+        signalFunction = header.get("signalFunction")
+        if (signalFunction and not signalFunction.startswith("__")
+                and slotFunctions == "__none__"):
+            # A signal - get slots to call from our book-keeping
+            instanceId = header.get("signalInstanceId")
+            slots = self._slots_for(instanceId, signalFunction)
+            return ({self.deviceId: slots}, params)
+
+        slots = (slotFunctions[1:-1]).split("||")
         return ({k: v.split(",") for k, v in (s.split(":") for s in slots)},
                 params)
+
+    def _slots_for(self, instanceId, signal):
+        signals = self._slots_for_signals.get(instanceId)
+        if signals:
+            slots = signals.get(signal)
+            if slots:
+                return slots
+
+        self.logger.warning("Failed to find slot for signal message from "
+                            f"{instanceId}.{signal}")
+        return []
+
+    def _decodeReply(self, replyFrom, header, params):
+        f = self.repliers.get(replyFrom)
+        if f is not None and not f.done():
+            if header.get("error", False):
+                exceptTxt = params[0]
+                if len(params) >= 2 and params[1]:
+                    exceptTxt += "\nDETAILS: " + params[1]
+                f.set_exception(KaraboError(exceptTxt))
+            else:
+                if len(params) == 1:
+                    params = params[0]
+                else:
+                    params = tuple(params)
+                f.set_result(params)
+        return {}, None
 
     def get_property(self, message: Hash, prop: str) -> Any | None:
         header = message.get("header")

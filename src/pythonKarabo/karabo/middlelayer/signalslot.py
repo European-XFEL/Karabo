@@ -89,42 +89,11 @@ class BoundSignal:
     def __init__(self, device, name, signal):
         self.device = device
         self.name = name
-        self.connected = {}
         self.args = signal.args
-
-    async def connect(self, target, slot):
-        if not self.device._sigslot.needSubscribe:
-            self.make_connected(target, slot)
-            return
-        await self.device._sigslot.request(
-            target, 'slotConnectRemoteSignal',
-            self.device.deviceId, self.name, target, slot)
-
-    async def disconnect(self, target, slot):
-        if not self.device._sigslot.needSubscribe:
-            return self.make_disconnected(target, slot)
-        await self.device._sigslot.request(
-            target, 'slotDisconnectRemoteSignal',
-            self.device.deviceId, self.name,
-            target, slot)
-
-    def make_connected(self, target, slot):
-        self.connected.setdefault(target, set()).add(slot)
-
-    def make_disconnected(self, target, slot):
-        s = self.connected.get(target, None)
-        if s is None:
-            return False
-        else:
-            result = slot in s
-            s.discard(slot)
-            if not s:
-                del self.connected[target]
-            return result
 
     def __call__(self, *args):
         args = [d.cast(v) for d, v in zip(self.args, args)]
-        self.device._sigslot.emit(self.name, self.connected, *args)
+        self.device._sigslot.emit(self.name, None, *args)
 
 
 def get_device_node_initializers(instance):
@@ -487,19 +456,14 @@ class SignalSlotable(Configurable):
         get_event_loop().stop()
 
     @slot
-    async def slotConnectRemoteSignal(self, sigId, sigName, slotId, slotName):
-        if self.deviceId != slotId:
-            return
+    async def slotConnectRemoteSignal(self, sigId, sigName, slotName):
         slot = getattr(self, slotName, None)
         if slot is None:
             return
         await self._sigslot.async_connect(sigId, sigName, slot)
 
     @slot
-    async def slotDisconnectRemoteSignal(self, sigId, sigName, slotId,
-                                         slotName):
-        if self.deviceId != slotId:
-            return
+    async def slotDisconnectRemoteSignal(self, sigId, sigName, slotName):
         slot = getattr(self, slotName, None)
         if slot is None:
             return

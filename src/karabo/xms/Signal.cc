@@ -105,35 +105,26 @@ namespace karabo {
                 }
                 Hash::Pointer header = prepareHeader(registeredSlots);
 
-                // Two ways to emit: 1) In-process 2) Broker
-                // TODO Improve the code here, to be a bit more disentangled and speedy
-
-                // Not connected to any slot
-                if (registeredSlots.empty()) {
-                    // Do not even produce traffic on the way to the broker, as no one cares for this message
-                    return;
-                }
+                // Two communication paths:
+                // - Those that registered are local instances and should be addressed via in-process shortcut
+                // - Then we send to broker - usually someone is subscribed.
 
                 // Try all registered slots whether we could send in-process
-                const size_t fullNumRegisteredSlots = registeredSlots.size();
-                for (auto it = registeredSlots.cbegin(); it != registeredSlots.cend();) {
-                    if (m_signalSlotable->tryToCallDirectly(it->first, header, message)) {
-                        registeredSlots.erase(it++);
-                    } else {
-                        ++it;
+                for (auto it = registeredSlots.cbegin(); it != registeredSlots.cend(); ++it) {
+                    if (!m_signalSlotable->tryToCallDirectly(it->first, header, message)) {
+                        KARABO_LOGGING_WARN("A registered slot instance is not avilable for direct call (anymore?): ",
+                                            it->first);
                     }
                 }
 
-                // publish leftovers via broker
-                if (registeredSlots.size() > 0) {
-                    if (registeredSlots.size() != fullNumRegisteredSlots) {
-                        // A smaller list of destinations is left, so recreate header to avoid duplicated messages
-                        // Note: Do not do 'setSlotStrings(registeredSlots, *header);' since original header is
-                        //       likely still used in the short-cut processing triggered above!
-                        header = prepareHeader(registeredSlots);
-                    }
-                    m_channel->write(m_topic, header, message);
+                // publish via broker
+                if (!registeredSlots.empty()) {
+                    // Create new header without local recipients.
+                    // Be aware also that original header is likely still used in the short-cut processing triggered
+                    // above!
+                    header = prepareHeader(SlotMap());
                 }
+                m_channel->write(m_topic, header, message);
 
             } catch (const karabo::data::Exception& e) {
                 KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("Problem sending a signal"))
