@@ -26,7 +26,7 @@ patchelf/0.13
 pugixml/1.10
 
 # minor-any
-boost/1.85.0
+boost/1.86.0
 cppunit/1.15.1
 libjpeg/9e
 libtiff/4.3.0
