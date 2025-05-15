@@ -302,13 +302,13 @@ namespace karabo {
              * @param level TRACE,DEBUG,INFO,WARN,ERROR,CRITICAL
              * @param logger The category to apply the filter to (empty string reflects default logger)
              */
-            static void setPriority(const std::string& level, const std::string& logger = "");
+            static void setLevel(const std::string& level, const std::string& logger = "");
 
             /**
              * Retrieve the currently enabled level for the given logger name or global level
              * @param logger The logger name (empty string reflects default logger)
              */
-            static const std::string getPriority(const std::string& logger = "");
+            static const std::string getLevel(const std::string& logger = "");
 
             static void setPattern(const std::string& pattern, const std::string& logger = "");
 

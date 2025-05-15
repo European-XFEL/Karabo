@@ -473,11 +473,11 @@ void Device_Test::testInstanceInfoServer() {
     CPPUNIT_ASSERT(h.get<std::string>("user") != "");
 
     CPPUNIT_ASSERT_NO_THROW(
-          sigSlotA->request("testServerDevice", "slotLoggerPriority", "INFO").timeout(timeOutInMs).receive());
+          sigSlotA->request("testServerDevice", "slotLoggerLevel", "INFO").timeout(timeOutInMs).receive());
     CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("testServerDevice", "slotPing", 1).timeout(timeOutInMs).receive(h));
     CPPUNIT_ASSERT_EQUAL(h.get<std::string>("log"), std::string("INFO"));
     CPPUNIT_ASSERT_NO_THROW(
-          sigSlotA->request("testServerDevice", "slotLoggerPriority", "FATAL").timeout(timeOutInMs).receive());
+          sigSlotA->request("testServerDevice", "slotLoggerLevel", "FATAL").timeout(timeOutInMs).receive());
     CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("testServerDevice", "slotPing", 1).timeout(timeOutInMs).receive(h));
     CPPUNIT_ASSERT_EQUAL(h.get<std::string>("log"), std::string("FATAL"));
 

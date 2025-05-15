@@ -267,16 +267,16 @@ class Manager(QObject):
                     "client disconnect.")
             self._request_handlers.clear()
 
-    def handle_setLogPriorityReply(self, **info):
+    def handle_setLogLevelReply(self, **info):
         """Handle the log priority reconfiguration reply of the server"""
         if not info.get("success", True):
             reason = info.get("reason")
             error, details = get_reason_parts(reason)
             input_info = info["input"]
             instanceId = input_info["instanceId"]
-            priority = input_info["priority"]
+            level = input_info["level"]
             log_text = (f"Log level reconfiguration of <b>{instanceId}</b>"
-                        f" with priority <b>{priority}</b> failed.<br>"
+                        f" with priority <b>{level}</b> failed.<br>"
                         f"The reason is:<br><i>{error}</i>")
             get_logger().error(log_text)
             messagebox.show_error(log_text, details=details)

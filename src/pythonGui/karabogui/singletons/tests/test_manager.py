@@ -522,13 +522,13 @@ def test_handle_set_log_reply(gui_app, mocker):
     mb = mocker.patch(target)
     h = Hash("success", True)
     h["input"] = Hash("instanceId", "swerver",
-                      "priority", "DEBUG")
-    manager.handle_setLogPriorityReply(**h)
+                      "level", "DEBUG")
+    manager.handle_setLogLevelReply(**h)
     mb.assert_not_called()
     h = Hash("success", False, "reason", "")
     h["input"] = Hash("instanceId", "swerver",
-                      "priority", "DEBUG")
-    manager.handle_setLogPriorityReply(**h)
+                      "level", "DEBUG")
+    manager.handle_setLogLevelReply(**h)
     mb.assert_called_once()
 
 

@@ -121,12 +121,12 @@ class SystemTreeView(QTreeView):
         self.mServerItem = QMenu(self)
         self.mServerItem.setToolTipsVisible(True)
 
-        text = "Set logger priority"
-        self.acLoggerPriority = QAction(icons.edit, text, self)
-        self.acLoggerPriority.setStatusTip(text)
-        self.acLoggerPriority.setToolTip(text)
-        self.acLoggerPriority.triggered.connect(self.onLoggerPriority)
-        self.mServerItem.addAction(self.acLoggerPriority)
+        text = "Set logger level"
+        self.acLoggerLevel = QAction(icons.edit, text, self)
+        self.acLoggerLevel.setStatusTip(text)
+        self.acLoggerLevel.setToolTip(text)
+        self.acLoggerLevel.triggered.connect(self.onLoggerLevel)
+        self.mServerItem.addAction(self.acLoggerLevel)
 
         text = "Shutdown server"
         self.acKillServer = QAction(icons.delete, text, self)
@@ -354,7 +354,7 @@ class SystemTreeView(QTreeView):
         call_device_slot(handler, instanceId, 'slotGetTime')
 
     @Slot()
-    def onLoggerPriority(self):
+    def onLoggerLevel(self):
         info = self.indexInfo()
         levels = ["DEBUG", "INFO", "WARN", "ERROR"]
         index = levels.index(info.get("log"))
@@ -363,7 +363,7 @@ class SystemTreeView(QTreeView):
         if ok:
             serverId = info.get('serverId')
             network = get_network()
-            network.onSetLogPriority(serverId, level)
+            network.onSetLogLevel(serverId, level)
 
     @Slot()
     def onKillInstance(self):
@@ -405,9 +405,9 @@ class SystemTreeView(QTreeView):
             self.mHostItem.exec(QCursor.pos())
         elif node_type is NavigationItemTypes.SERVER:
             self.acKillServer.setEnabled(allow_service_edit)
-            self.acLoggerPriority.setEnabled(allow_service_edit)
+            self.acLoggerLevel.setEnabled(allow_service_edit)
             _set_tooltip(self.acKillServer, allow_service_edit)
-            _set_tooltip(self.acLoggerPriority, allow_service_edit)
+            _set_tooltip(self.acLoggerLevel, allow_service_edit)
             self.acAbout.setVisible(True)
             self.acTimeInformation.setVisible(False)
             self.mServerItem.exec(QCursor.pos())

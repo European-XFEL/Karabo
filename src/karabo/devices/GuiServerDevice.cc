@@ -1412,8 +1412,8 @@ namespace karabo {
                         onRequestGeneric(channel, info);
                     } else if (type == "subscribeLogs") {
                         onSubscribeLogs(channel, info);
-                    } else if (type == "setLogPriority") {
-                        onSetLogPriority(channel, info);
+                    } else if (type == "setLogLevel") {
+                        onSetLogLevel(channel, info);
                     } else {
                         // Inform the client that he is using a non compatible protocol
                         const std::string message("The gui server with version " + get<string>("classVersion") +
@@ -2261,15 +2261,15 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::onSetLogPriority(WeakChannelPointer channel, const karabo::data::Hash& info) {
+        void GuiServerDevice::onSetLogLevel(WeakChannelPointer channel, const karabo::data::Hash& info) {
             try {
-                const std::string& priority = info.get<std::string>("level");
+                const std::string& level = info.get<std::string>("level");
                 const std::string& instanceId = info.get<std::string>("instanceId");
-                KARABO_LOG_FRAMEWORK_DEBUG << "onSetLogPriority : '" << instanceId << "' to '" << priority << "'";
+                KARABO_LOG_FRAMEWORK_DEBUG << "onSetLogLevel : '" << instanceId << "' to '" << level << "'";
 
-                logUserAction(channel, "Set log priority of '" + instanceId + "' to '" + priority + "'");
+                logUserAction(channel, "Set log level of '" + instanceId + "' to '" + level + "'");
 
-                auto requestor = request(instanceId, "slotLoggerPriority", priority);
+                auto requestor = request(instanceId, "slotLoggerLevel", level);
                 auto successHandler = bind_weak(&GuiServerDevice::forwardSetLogReply, this, true, channel, info);
                 auto failureHandler = bind_weak(&GuiServerDevice::forwardSetLogReply, this, false, channel, info);
                 requestor.receiveAsync(successHandler, failureHandler);
@@ -2280,7 +2280,7 @@ namespace karabo {
 
 
         void GuiServerDevice::forwardSetLogReply(bool success, WeakChannelPointer channel, const Hash& input) {
-            Hash h("type", "setLogPriorityReply", "success", success, "input", input);
+            Hash h("type", "setLogLevelReply", "success", success, "input", input);
             if (!success) {
                 // Failure, so can get access to exception causing it:
                 std::string reason;

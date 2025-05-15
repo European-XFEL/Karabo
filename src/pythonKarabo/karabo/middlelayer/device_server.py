@@ -395,7 +395,7 @@ class MiddleLayerDeviceServer(HeartBeatMixin, SignalSlotable):
         return h
 
     @slot
-    def slotLoggerPriority(self, level: str):
+    def slotLoggerLevel(self, level: str):
         """Set the logger priority of the server and all children"""
         self.log.level = level
         for device in self.deviceInstanceMap.values():
