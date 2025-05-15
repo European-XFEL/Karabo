@@ -274,7 +274,7 @@ class DeviceServer:
         self.ss.registerSlot(self.slotDeviceUp)
         self.ss.registerSlot(self.slotDeviceGone)
         self.ss.registerSlot(self.slotGetClassSchema)
-        self.ss.registerSlot(self.slotLoggerPriority)
+        self.ss.registerSlot(self.slotLoggerLevel)
         self.ss.registerSlot(self.slotLoggerContent)
 
     def scanPlugins(self, pluginNamespace):
@@ -580,20 +580,20 @@ class DeviceServer:
             self.log.WARN(f"Replied empty schema due to : {str(e)}")
             self.ss.reply(Schema(), classid, self.serverid)
 
-    def slotLoggerPriority(self, newprio):
+    def slotLoggerLevel(self, newlevel):
         # In contrast to C++, the new level will not be "forwarded" to
-        # existing devices. Python devices have their own slotLoggerPriority
+        # existing devices. Python devices have their own slotLoggerLevel
         # which allows level setting device by device.
         # But future device instantiations should inherit their level from
         # the current value of the server:
-        oldprio = Logger.getPriority()
-        Logger.setPriority(newprio)
+        oldprio = Logger.getLevel()
+        Logger.setLevel(newlevel)
         self.log.INFO(
-            f"log Level changed : {oldprio} ==> {newprio}")
+            f"log Level changed : {oldprio} ==> {newlevel}")
         # Also devices started in future get the new level by default:
-        self.loggerParameters["level"] = newprio
+        self.loggerParameters["level"] = newlevel
         # Merge the new log level into the instanceInfo
-        self.ss.updateInstanceInfo(Hash("log", newprio))
+        self.ss.updateInstanceInfo(Hash("log", newlevel))
 
     def slotLoggerContent(self, info):
         """Slot call to receive logger content from the CacheLogger

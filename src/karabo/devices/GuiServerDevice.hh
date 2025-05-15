@@ -518,7 +518,7 @@ namespace karabo {
              *      info                           onGuiInfo
              *      requestGeneric                 onRequestGeneric
              *      subscribeLogs                  <no action anymore>
-             *      setLogPriority                 onSetLogPriority
+             *      setLogPriority                 onSetLogLevel
              *      beginTemporarySession          onBeginTemporarySession
              *      endTemporarySession            onEndTemporarySession
              *      =============================  =========================
@@ -912,10 +912,10 @@ namespace karabo {
              * @param channel
              * @param info
              */
-            void onSetLogPriority(WeakChannelPointer channel, const karabo::data::Hash& info);
+            void onSetLogLevel(WeakChannelPointer channel, const karabo::data::Hash& info);
 
             /**
-             * Callback helper for ``onSetLogPriority``
+             * Callback helper for ``onSetLogLevel``
              *
              * @param success whether call succeeded
              * @param channel who requested the call

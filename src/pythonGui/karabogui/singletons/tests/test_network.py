@@ -326,11 +326,11 @@ def test_socket_connect_login_protocol(mocker, subtests, gui_app):
             assert receiver.last_hash["timeout"] == 5
 
         with subtests.test(msg="Log messages"):
-            network.onSetLogPriority("swerver", "ERROR")
+            network.onSetLogLevel("swerver", "ERROR")
             _trigger_message_parse()
-            assert receiver.last_hash["type"] == "setLogPriority"
+            assert receiver.last_hash["type"] == "setLogLevel"
             assert receiver.last_hash["instanceId"] == "swerver"
-            assert receiver.last_hash["priority"] == "ERROR"
+            assert receiver.last_hash["level"] == "ERROR"
 
         mbox = mocker.patch('karabogui.singletons.network.QMessageBox')
         dia = mocker.patch('karabogui.singletons.network.ReactiveLoginDialog')
