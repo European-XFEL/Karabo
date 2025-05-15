@@ -572,9 +572,9 @@ class Network(QObject):
                  "clientId", const.KARABO_CLIENT_ID)
         self._write_hash(h)
 
-    def onSetLogPriority(self, instanceId, priority):
-        h = Hash("type", "setLogPriority", "instanceId", instanceId,
-                 "priority", priority)
+    def onSetLogLevel(self, instanceId, level):
+        h = Hash("type", "setLogLevel", "instanceId", instanceId,
+                 "level", level)
         self._write_hash(h)
 
     # ------------------------------------------------------------------------

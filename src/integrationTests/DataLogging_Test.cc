@@ -50,7 +50,7 @@ void DataLogging_Test::fileAllTestRunner() {
     // the device server log.
     CPPUNIT_ASSERT_NO_THROW_MESSAGE(
           "Failed to set logger level of device server '" + m_server + "' to 'FATAL'",
-          m_deviceClient->execute(m_server, "slotLoggerPriority", KRB_TEST_MAX_TIMEOUT, "FATAL"));
+          m_deviceClient->execute(m_server, "slotLoggerLevel", KRB_TEST_MAX_TIMEOUT, "FATAL"));
 
     std::pair<bool, std::string> success =
           m_deviceClient->instantiate(m_server, "PropertyTest", Hash("deviceId", m_deviceId), KRB_TEST_MAX_TIMEOUT);
@@ -881,7 +881,7 @@ void DataLogging_Test::testNoInfluxServerHandling() {
     // test output) with connection errors.
     CPPUNIT_ASSERT_NO_THROW_MESSAGE(
           "Error setting the logger level to 'FATAL'",
-          m_deviceClient->execute(m_server, "slotLoggerPriority", KRB_TEST_MAX_TIMEOUT, "FATAL"));
+          m_deviceClient->execute(m_server, "slotLoggerLevel", KRB_TEST_MAX_TIMEOUT, "FATAL"));
 
     std::pair<bool, std::string> success =
           m_deviceClient->instantiate(m_server, "PropertyTest", Hash("deviceId", m_deviceId), KRB_TEST_MAX_TIMEOUT);
@@ -973,7 +973,7 @@ void DataLogging_Test::testNoInfluxServerHandling() {
     // Restore the logger level of the device server that hosts the logger to the WARN level
     CPPUNIT_ASSERT_NO_THROW_MESSAGE(
           "Error setting the logger level level back to 'WARN'",
-          m_deviceClient->execute(m_server, "slotLoggerPriority", KRB_TEST_MAX_TIMEOUT, DEFAULT_TEST_LOG_PRIORITY));
+          m_deviceClient->execute(m_server, "slotLoggerLevel", KRB_TEST_MAX_TIMEOUT, DEFAULT_TEST_LOG_PRIORITY));
 
     std::clog << "OK" << std::endl;
 }

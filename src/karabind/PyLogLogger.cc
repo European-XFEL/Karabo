@@ -96,8 +96,8 @@ void exportPyLogLogger(py::module_& m) {
                     "logError",
                     [](const std::string& message, const std::string& logger) { Logger::error(logger, "{}", message); },
                     py::arg("message"), py::arg("logger") = "")
-              .def_static("setPriority", &Logger::setPriority, py::arg("priority"), py::arg("logger") = "")
-              .def_static("getPriority", &Logger::getPriority, py::arg("logger") = "")
+              .def_static("setLevel", &Logger::setLevel, py::arg("priority"), py::arg("logger") = "")
+              .def_static("getLevel", &Logger::getLevel, py::arg("logger") = "")
               .def_static("getCategory", &Logger::getCategory, py::arg("logger") = "");
     }
 }

@@ -159,7 +159,7 @@ namespace karabo {
             void instantiate(const std::string& deviceId, const std::string& classId, const data::Hash& config,
                              const SignalSlotable::AsyncReply& asyncReply);
 
-            void slotLoggerPriority(const std::string& prio);
+            void slotLoggerLevel(const std::string& prio);
 
             /**
              * A slot called by the time-server to synchronize this device with the timing system.

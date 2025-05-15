@@ -335,7 +335,7 @@ namespace karabo {
             KARABO_SLOT(slotKillServer)
             KARABO_SLOT(slotDeviceGone, string /*deviceId*/)
             KARABO_SLOT(slotGetClassSchema, string /*classId*/)
-            KARABO_SLOT(slotLoggerPriority, string /*level*/)
+            KARABO_SLOT(slotLoggerLevel, string /*level*/)
             KARABO_SLOT(slotTimeTick, unsigned long long /*id */, unsigned long long /* sec */,
                         unsigned long long /* frac */, unsigned long long /* period */);
             KARABO_SLOT(slotLoggerContent, Hash);
@@ -700,9 +700,9 @@ namespace karabo {
         }
 
 
-        void DeviceServer::slotLoggerPriority(const std::string& newprio) {
-            std::string oldprio = Logger::getPriority();
-            Logger::setPriority(newprio);
+        void DeviceServer::slotLoggerLevel(const std::string& newprio) {
+            std::string oldprio = Logger::getLevel();
+            Logger::setLevel(newprio);
             KARABO_LOG_INFO << "Logger Level changed : " << oldprio << " ==> " << newprio;
             this->updateInstanceInfo(Hash("log", newprio));
         }
