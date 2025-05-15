@@ -100,7 +100,7 @@ void Logger_Test::test1() {
     LoggerStream("a1", spdlog::level::info) << "OK";
     LoggerStream("a1.a2", spdlog::level::info) << "OK";
 
-    Logger::setPriority("INFO");
+    Logger::setLevel("INFO");
     Logger::debug("", "{}", "ERROR");
     Logger::debug("a1", "{}", "ERROR");
     Logger::debug("a1.a2", "{}", "ERROR");
@@ -108,7 +108,7 @@ void Logger_Test::test1() {
     Logger::info("a1", "{}", "OK");
     Logger::info("a1.a2", "{}", "OK");
 
-    Logger::setPriority("WARN");
+    Logger::setLevel("WARN");
     Logger::debug("", "{}", "ERROR");
     Logger::debug("a1", "{}", "ERROR");
     Logger::debug("a1.a2", "{}", "ERROR");

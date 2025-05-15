@@ -303,7 +303,7 @@ namespace karabo {
             m_audit = nullptr;
             if (startFlushThread) {
                 setPattern(m_config.get<std::string>("pattern"));
-                setPriority("OFF");
+                setLevel("OFF");
                 spdlog::flush_every(3s);
                 startFlushThread = false;
             }
@@ -381,7 +381,7 @@ namespace karabo {
             if (!logger) logger = details::getLogger(name);
             if (!inheritSinks) logger->sinks().clear();
             logger->sinks().push_back(sink);
-            setPriority(m_config.get<std::string>("level"), name);
+            setLevel(m_config.get<std::string>("level"), name);
         }
 
         // for backward compatibility
@@ -394,7 +394,7 @@ namespace karabo {
             if (!logger) logger = details::getLogger(name);
             if (!inheritSinks) logger->sinks().clear();
             logger->sinks().push_back(sink);
-            setPriority(m_config.get<std::string>("level"), name);
+            setLevel(m_config.get<std::string>("level"), name);
         }
 
 
@@ -407,7 +407,7 @@ namespace karabo {
             if (!logger) logger = details::getLogger(name);
             if (!inheritSinks) logger->sinks().clear();
             logger->sinks().push_back(sink);
-            setPriority(m_config.get<std::string>("level"), name);
+            setLevel(m_config.get<std::string>("level"), name);
         }
 
 
@@ -420,7 +420,7 @@ namespace karabo {
             if (!logger) logger = details::getLogger(name);
             if (!inheritSinks) logger->sinks().clear();
             logger->sinks().push_back(sink);
-            setPriority(m_config.get<std::string>("level"), name);
+            setLevel(m_config.get<std::string>("level"), name);
         }
 
 
@@ -447,7 +447,7 @@ namespace karabo {
             auto val = m_config.get<std::string>("audit.threshold");
             toLower(val);
             log->set_level(spdlog::level::from_str(val));
-            setPriority(m_config.get<std::string>("level"), name);
+            setLevel(m_config.get<std::string>("level"), name);
             m_audit = log;
         }
 
@@ -498,7 +498,7 @@ namespace karabo {
         }
 
 
-        void Logger::setPriority(const std::string& level, const std::string& category) {
+        void Logger::setLevel(const std::string& level, const std::string& category) {
             std::string prio = level;
             toLower(prio);                            // update 'prio' in place
             auto lvl = spdlog::level::from_str(prio); // convert to level::level_enum
@@ -524,7 +524,7 @@ namespace karabo {
         }
 
 
-        const std::string Logger::getPriority(const std::string& name) {
+        const std::string Logger::getLevel(const std::string& name) {
             using namespace spdlog;
             level::level_enum prio = level::off;
             if (name.empty()) {
@@ -613,7 +613,7 @@ namespace karabo {
                 // restore default logger
                 Logger::create_new_default();
             }
-            setPriority("OFF");
+            setLevel("OFF");
             if (m_config.has("pattern")) setPattern(m_config.get<std::string>("pattern"));
             else setPattern("%Y:%m:%dT%H:%M:%S.%e [%^%l%$] %n : %v");
         }

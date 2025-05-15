@@ -189,8 +189,8 @@ class TestCase(GuiTestCase):
             path = "karabogui.navigation.system_view.QInputDialog"
             with mock.patch(path) as dia:
                 dia.getItem.return_value = "DEBUG", True
-                self.view.onLoggerPriority()
-                network.onSetLogPriority.assert_called_with("swerver", "DEBUG")
+                self.view.onLoggerLevel()
+                network.onSetLogLevel.assert_called_with("swerver", "DEBUG")
 
     def test_context_menu_device_view(self):
         selection_tracker = mock.Mock()

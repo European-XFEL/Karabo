@@ -50,7 +50,7 @@ def test_logging_config_rules():
     Logger.logInfo("OK", "a1")
     Logger.logInfo("OK", "a1.a2")
 
-    Logger.setPriority("INFO")
+    Logger.setLevel("INFO")
     Logger.logDebug("ERROR")
     Logger.logDebug("ERROR", "a1")
     Logger.logDebug("ERROR", "a1.a2")
@@ -58,7 +58,7 @@ def test_logging_config_rules():
     Logger.logInfo("OK", "a1")
     Logger.logInfo("OK", "a1.a2")
 
-    Logger.setPriority("WARN")
+    Logger.setLevel("WARN")
     Logger.logDebug("ERROR")
     Logger.logDebug("ERROR", "a1")
     Logger.logDebug("ERROR", "a1.a2")

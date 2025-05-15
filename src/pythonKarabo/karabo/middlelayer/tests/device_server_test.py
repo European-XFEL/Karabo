@@ -121,7 +121,7 @@ async def test_device_server_instantiate_plugins():
         device = list(server.deviceInstanceMap.values())[0]
         assert device.log.level == "INFO"
         # Change log level
-        server.slotLoggerPriority("ERROR")
+        server.slotLoggerLevel("ERROR")
         assert server.log.level == "ERROR"
         assert device.log.level == "ERROR"
         # Provide user

@@ -105,12 +105,12 @@ class TestDeviceServer(BoundDeviceTestCase):
             (h,) = sigSlot.request(serverId, "slotPing", 1
                                    ).waitForReply(self._max_timeoutMs)
             self.assertEqual(h["log"], "INFO")
-            sigSlot.request(serverId, "slotLoggerPriority",
+            sigSlot.request(serverId, "slotLoggerLevel",
                             "ERROR").waitForReply(self._max_timeoutMs)
             (h,) = sigSlot.request(serverId, "slotPing", 1,
                                    ).waitForReply(self._max_timeoutMs)
             self.assertEqual(h["log"], "ERROR")
-            sigSlot.request(serverId, "slotLoggerPriority",
+            sigSlot.request(serverId, "slotLoggerLevel",
                             "INFO").waitForReply(self._max_timeoutMs)
             (h,) = sigSlot.request(serverId, "slotPing", 1
                                    ).waitForReply(self._max_timeoutMs)

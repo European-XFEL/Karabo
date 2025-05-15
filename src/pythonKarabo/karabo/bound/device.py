@@ -1249,7 +1249,7 @@ class PythonDevice:
         self._sigslot.registerSlot(self.slotTimeTick)
         self._sigslot.registerSlot(self.slotGetTime)
 
-        self._sigslot.registerSlot(self.slotLoggerPriority)
+        self._sigslot.registerSlot(self.slotLoggerLevel)
         self._sigslot.registerSlot(self.slotLoggerContent)
         self._sigslot.registerSlot(self.slotClearLock)
 
@@ -1579,12 +1579,12 @@ class PythonDevice:
             self._timePeriod = period
         self.onTimeUpdate(id, sec, frac, period)
 
-    def slotLoggerPriority(self, newprio):
-        oldprio = Logger.getPriority()
-        self.set("log.level", newprio)
-        Logger.setPriority(newprio)
+    def slotLoggerLevel(self, newlevel):
+        oldprio = Logger.setLevel()
+        self.set("log.level", newlevel)
+        Logger.setLevel(newlevel)
         self.log.INFO(
-            f"Logger Level changed : {oldprio} ==> {newprio}")
+            f"Logger Level changed : {oldprio} ==> {newlevel}")
 
     def getActualTimestamp(self):
         """Returns the actual timestamp.
