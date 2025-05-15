@@ -18,5 +18,4 @@
 cd $KARABO/var/data
 # deviceId "Karabo_DataLoggerManager_0" required by ikarabo and default gui server settings
 exec envdir $KARABO/var/environment karabo-cppserver serverId=karabo/dataLoggerManager 'deviceClasses=DataLoggerManager' \
-init='{"Karabo_DataLoggerManager_0": {"classId": "DataLoggerManager", "serverList": "karabo/dataLogger"}}' \
-'Logger.priority=INFO' 2>&1
+init='{"Karabo_DataLoggerManager_0": {"classId": "DataLoggerManager", "serverList": "karabo/dataLogger"}}' 2>&1
