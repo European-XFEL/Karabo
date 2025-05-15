@@ -14,7 +14,7 @@ compiler.cppstd=17
 
 [tool_requires]
 cmake/3.29.7
-b2/4.10.1
+b2/5.3.2
 
 [conf]
 tools.system.package_manager:mode=check
