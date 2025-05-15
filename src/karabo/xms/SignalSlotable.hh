@@ -297,13 +297,11 @@ namespace karabo {
              * @param failureHandler is called when connection could not be established, in the same way as an
              *                            Requestor::AsyncErrorHandler - if Signal or Slot do not exist, the exception
              *                            is a SignalSlotException
-             * @param timeout in milliseconds for internal async requests - non-positive (default) means the very long
-             *                            default timeout
              */
             void asyncConnect(const std::string& signalInstanceId, const std::string& signalSignature,
                               const std::string& slotSignature,
                               const std::function<void()>& successHandler = std::function<void()>(),
-                              const AsyncErrorHandler& failureHandler = AsyncErrorHandler(), int timeout = 0);
+                              const AsyncErrorHandler& failureHandler = AsyncErrorHandler());
 
             /**
              * This function tries to establish asynchronously connections between several signals and slots.
@@ -317,12 +315,10 @@ namespace karabo {
              * @param successHandler is called when all connections are established (may be empty [=default])
              * @param failureHandler is called when any of the connections could not be established, no matter whether
              *                            the others failed or not, in the same way as a Requestor::AsyncErrorHandler.
-             * @param timeout in milliseconds for internal async requests - non-positive (default) means the very long
-             *                            default timeout
              */
             void asyncConnect(const std::vector<SignalSlotConnection>& signalSlotConnections,
                               const std::function<void()>& successHandler = std::function<void()>(),
-                              const AsyncErrorHandler& failureHandler = AsyncErrorHandler(), int timeout = 0);
+                              const AsyncErrorHandler& failureHandler = AsyncErrorHandler());
             /**
              * Synchronously disconnects a slot from a signal.
              *
@@ -349,13 +345,11 @@ namespace karabo {
              * @param slotSignature is the signature of the slot
              * @param successHandler is called when connection is successfully stopped (maybe be empty [=default])
              * @param failureHandler is called when the disconnection failed (maybe be empty [=default])
-             * @param timeout in milliseconds for internal async requests - non-positive (default) means the very long
-             *                default timeout
              */
             void asyncDisconnect(const std::string& signalInstanceId, const std::string& signalFunction,
                                  const std::string& slotSignature,
                                  const std::function<void()>& successHandler = std::function<void()>(),
-                                 const AsyncErrorHandler& failureHandler = AsyncErrorHandler(), int timeout = 0);
+                                 const AsyncErrorHandler& failureHandler = AsyncErrorHandler());
             /**
              * Emits a signal, i.e. publishes the given payload
              * Emitting a signal is a fire-and-forget activity. The function returns immediately.
@@ -920,6 +914,11 @@ namespace karabo {
             /// Deregister myself from short-cut messaging.
             void deregisterFromShortcutMessaging();
 
+            /**
+             * Access to other signal slotable if in same process
+             */
+            SignalSlotable::Pointer getInstanceForShortcut(const std::string& instanceId) const;
+
             void startTrackingSystem();
 
             void stopTrackingSystem();
@@ -953,11 +952,6 @@ namespace karabo {
             /// Slot to un-subscribe from remote signal
             void slotUnsubscribeRemoteSignal(const std::string& signalInstanceId, const std::string& signalFunction);
 
-            /// True if instance with ID 'slotInstanceId' has slot 'slotFunction'.
-            /// Internally uses "slotHasSlot" for remote instances, but shortcuts if ID is the own one.
-            /// Always true if 'slotInstanceId == "*"' (i.e. global slot).
-            bool instanceHasSlot(const std::string& slotInstanceId, const std::string& unmangledSlotFunction);
-
             /// Slot to tell whether instance has a slot of given name.
             void slotHasSlot(const std::string& unmangledSlotFunction);
 
@@ -965,8 +959,6 @@ namespace karabo {
                                  const std::string& slotFunction);
             bool removeStoredConnection(const std::string& signalInstanceId, const std::string& signalFunction,
                                         const std::string& slotFunction);
-            bool tryToDisconnectFromSignal(const std::string& signalInstanceId, const std::string& signalFunction,
-                                           const std::string& slotFunction);
 
             void slotDisconnectFromSignal(const std::string& signalFunction, const std::string& slotInstanceId,
                                           const std::string& slotFunction);
@@ -1089,10 +1081,10 @@ namespace karabo {
             ///
             /// @param handler the error handler to call
             /// @param message text given to the exception thrown
-            /// @param timeout if true, 'SomeException' will be TimeoutException,
+            /// @param isTimeout if true, 'SomeException' will be TimeoutException,
             ///                otherwise (default) SignalSlotException
             static void callErrorHandler(const AsyncErrorHandler& handler, const std::string& message,
-                                         bool timeout = false);
+                                         bool isTimeout = false);
 
            private: // Members
             // Performance statistics
