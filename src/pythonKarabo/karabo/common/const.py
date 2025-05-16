@@ -53,6 +53,8 @@ KARABO_SCHEMA_REGEX = "regex"
 KARABO_CLASS_ID_STATE = "State"
 KARABO_CLASS_ID_ALARM = "AlarmCondition"
 
+KARABO_HASH_CLASS_ID = "__classId"
+
 # The default scene name to be used
 KARABO_SCHEMA_DEFAULT_SCENE = "scene"
 
