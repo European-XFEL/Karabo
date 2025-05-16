@@ -24,7 +24,8 @@ def test_schema_attributes_def():
         "KARABO_SCHEMA_DEFAULT_SCENE",
         "KARABO_LOGGER_CONTENT_DEFAULT",
         "KARABO_CLASS_ID_STATE",
-        "KARABO_CLASS_ID_ALARM"
+        "KARABO_CLASS_ID_ALARM",
+        "KARABO_HASH_CLASS_ID",
     )
 
     all_symbols = dir(constmod)

@@ -15,6 +15,7 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 import numpy
 
+from karabo.common.api import KARABO_HASH_CLASS_ID
 from karabo.native.data import (
     AccessMode, DaqDataType, EncodingType, Hash, NodeType, Unit,
     dtype_from_number)
@@ -265,15 +266,12 @@ class Image(Type):
         pixels.setElement("shape", data.shape, attrs)
         pixels.setElement("data", data.value.data, attrs)
 
-        # set the `__classId` attribute to allow the C++ API to decode the
-        # `pixels` Hash as an NDArray object.
-        # XXX: This is a code duplication of NDArray.toDataAndAttrs
-        array_attrs = {"__classId": "NDArray"}
+        # Mark this as a Custom Hash Type element `NDArray`
+        array_attrs = {KARABO_HASH_CLASS_ID: "NDArray"}
         array_attrs.update(**attrs)
         h.setElement("pixels", pixels, array_attrs)
 
-        # set the `__classId` attribute to allow the C++ API to decode this
-        # Hash node into an ImageData Object.
-        image_attrs = {"__classId": "ImageData"}
+        # Mark this as a Custom Hash Type element `ImageData`
+        image_attrs = {KARABO_HASH_CLASS_ID: "ImageData"}
         image_attrs.update(**attrs)
         return h, image_attrs
