@@ -101,7 +101,8 @@ class ConfigurationFromNameDialog(QDialog):
 
         self.event_map = {
             KaraboEvent.ListConfigurationUpdated: self._event_list_updated,
-            KaraboEvent.NetworkConnectStatus: self._event_network
+            KaraboEvent.NetworkConnectStatus: self._event_network,
+            KaraboEvent.AccessLevelChanged: self._event_access_level,
         }
         register_for_broadcasts(self.event_map)
 
@@ -139,6 +140,9 @@ class ConfigurationFromNameDialog(QDialog):
         # Show device option!
         self.ui_show_device.clicked.connect(self._show_device)
 
+        self.ui_button_delete.setIcon(icons.delete)
+        self.ui_button_delete.clicked.connect(self._request_delete)
+
         # Request fresh at startup!
         get_network().onListConfigurationFromName(device_id=self.instance_id)
 
@@ -160,6 +164,13 @@ class ConfigurationFromNameDialog(QDialog):
         if not data.get("status"):
             self.close()
 
+    def _event_access_level(self, data):
+        """Update the enabled status of Delete button on access level
+        changes"""
+        allow_deletion = access_role_allowed(AccessRole.CONFIGURATION_DELETE)
+        enable = allow_deletion and self._check_existing()
+        self.ui_button_delete.setEnabled(enable)
+
     def done(self, result):
         """Stop listening for broadcast events"""
         unregister_from_broadcasts(self.event_map)
@@ -174,6 +185,9 @@ class ConfigurationFromNameDialog(QDialog):
     def _check_button_state(self):
         enable = self._check_existing()
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enable)
+        enable = enable and access_role_allowed(
+            AccessRole.CONFIGURATION_DELETE)
+        self.ui_button_delete.setEnabled(enable)
 
     # --------------------------------------------------------------------
     # Qt Slots
@@ -185,7 +199,7 @@ class ConfigurationFromNameDialog(QDialog):
             return
 
         menu = QMenu(parent=self.ui_table_widget)
-        delete_action = menu.addAction(icons.folderTrash, "Delete")
+        delete_action = menu.addAction(icons.delete, "Delete")
         delete_action.triggered.connect(self._request_delete)
         allowed = access_role_allowed(AccessRole.CONFIGURATION_DELETE)
         if not allowed:

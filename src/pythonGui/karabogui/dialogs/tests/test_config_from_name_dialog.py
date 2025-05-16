@@ -19,13 +19,13 @@ from unittest import main, mock
 from qtpy.QtCore import QModelIndex, Qt
 from qtpy.QtWidgets import QDialog
 
-from karabo.native import Timestamp
+from karabo.native import AccessLevel, Timestamp
 from karabogui.dialogs.api import (
     ConfigurationFromNameDialog, SaveConfigurationDialog)
 from karabogui.events import KaraboEvent
 from karabogui.singletons.mediator import Mediator
 from karabogui.testing import (
-    GuiTestCase, click_button, singletons, system_hash)
+    GuiTestCase, access_level, click_button, singletons, system_hash)
 from karabogui.topology.api import SystemTopology
 
 
@@ -134,6 +134,20 @@ class TestConfigurationFromNameDialog(GuiTestCase):
 
             # Network event should be there and closes
             dialog._event_network({"status": False})
+
+    def test_delete_configuration(self):
+        network = mock.Mock()
+        with singletons(network=network), access_level(AccessLevel.EXPERT):
+            dialog = ConfigurationFromNameDialog(instance_id="divvy")
+            self.assertEqual(dialog.ui_button_delete.isEnabled(), False)
+            event = {"items": get_config_items(), "deviceId": "divvy"}
+            dialog._event_list_updated(event)
+
+            dialog.ui_table_widget.selectRow(0)
+            self.assertEqual(dialog.ui_button_delete.isEnabled(), True)
+            click_button(dialog.ui_button_delete)
+            network.onDeleteConfigurationFromName.assert_called_with(
+                "divvy", "default0")
 
 
 if __name__ == "__main__":
