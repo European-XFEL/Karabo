@@ -15,6 +15,7 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 import numpy
 
+from karabo.common.api import KARABO_HASH_CLASS_ID
 from karabo.native.data import (
     AccessMode, Hash, NodeType, dtype_from_number, numpy_from_number)
 
@@ -153,8 +154,7 @@ class NDArray(Type):
                      attrs)
         h.setElement("data", data.value.data, attrs)
 
-        # set the `__classId` attribute to allow the C++ API to decode the
-        # `h` Hash as an NDArray object.
-        array_attrs = {"__classId": "NDArray"}
+        # Mark this as a Hash Type element
+        array_attrs = {KARABO_HASH_CLASS_ID: "NDArray"}
         array_attrs.update(**attrs)
         return h, array_attrs
