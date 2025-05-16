@@ -1410,8 +1410,6 @@ namespace karabo {
                         onGuiInfo(info);
                     } else if (type == "requestGeneric") {
                         onRequestGeneric(channel, info);
-                    } else if (type == "subscribeLogs") {
-                        onSubscribeLogs(channel, info);
                     } else if (type == "setLogLevel") {
                         onSetLogLevel(channel, info);
                     } else {
@@ -2254,13 +2252,6 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::onSubscribeLogs(WeakChannelPointer channel, const karabo::data::Hash& info) {
-            Hash h("type", "subscribeLogsReply", "success", true, // Put to false in 2.18.X
-                   "reason", "Log subscription not supported anymore since 2.17.0");
-            safeClientWrite(channel, h);
-        }
-
-
         void GuiServerDevice::onSetLogLevel(WeakChannelPointer channel, const karabo::data::Hash& info) {
             try {
                 const std::string& level = info.get<std::string>("level");
@@ -2274,7 +2265,7 @@ namespace karabo {
                 auto failureHandler = bind_weak(&GuiServerDevice::forwardSetLogReply, this, false, channel, info);
                 requestor.receiveAsync(successHandler, failureHandler);
             } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onSubscribeLogs(): " << e.what();
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onSetLogLevel(): " << e.what();
             }
         }
 

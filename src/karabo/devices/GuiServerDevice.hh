@@ -517,8 +517,7 @@ namespace karabo {
              *      requestNetwork                 onRequestNetwork
              *      info                           onGuiInfo
              *      requestGeneric                 onRequestGeneric
-             *      subscribeLogs                  <no action anymore>
-             *      setLogPriority                 onSetLogLevel
+             *      setLogLevel                    onSetLogLevel
              *      beginTemporarySession          onBeginTemporarySession
              *      endTemporarySession            onEndTemporarySession
              *      =============================  =========================
@@ -896,14 +895,6 @@ namespace karabo {
              * @param info
              */
             void onSubscribeNetwork(WeakChannelPointer channel, const karabo::data::Hash& info);
-
-            /**
-             * Kept to reply back that log subscription not supported anymore after 2.16.X
-             *
-             * @param channel
-             * @param info
-             */
-            void onSubscribeLogs(WeakChannelPointer channel, const karabo::data::Hash& info);
 
             /**
              * sets the Log priority on a server. The ``info`` hash should contain a ``priority``
