@@ -250,7 +250,7 @@ class PythonDevice:
             # Logging config:
             # Expose only the non-appender specific part (only 'level' now).
             # Would like to use NODE_ELEMENT(..)...appendParametersOf(Logger)
-            # and then remove again "ostream", "file" and "cache" from
+            # and then remove again "console", "file" and "cache" from
             # expected["log"], but Schema.getParameterHash() returns a copy.
             NODE_ELEMENT(expected).key("log")
             .description("Logging settings")
@@ -513,7 +513,7 @@ class PythonDevice:
 
         # finally configure the logger
         Logger.configure(config)
-        Logger.useOstream()
+        Logger.useConsole()
         Logger.useFile()
         Logger.useCache()
 

@@ -52,7 +52,7 @@ SignalSlotable_LongTest::~SignalSlotable_LongTest() {}
 
 void SignalSlotable_LongTest::setUp() {
     // Logger::configure(Hash("priority", "ERROR"));
-    // Logger::useOstream();
+    // Logger::useConsole();
     //  Event loop is started in xmsLongTestRunner.cc's main()
 }
 

@@ -57,7 +57,7 @@ Amqp_Test::Amqp_Test()
     if (false &&                            // remove 'false &&' to switch on logging
         !m_loggingIsSetup.exchange(true)) { // configure logging only once in the process
         log::Logger::configure(data::Hash("priority", "DEBUG"));
-        log::Logger::useOstream();
+        log::Logger::useConsole();
     }
 }
 

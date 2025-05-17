@@ -205,7 +205,7 @@ SignalSlotable_Test::~SignalSlotable_Test() {
 
 void SignalSlotable_Test::setUp() {
     // Logger::configure(Hash("priority", "ERROR"));
-    // Logger::useOstream();
+    // Logger::useConsole();
     //  Event loop is started in xmsTestRunner.cc's main()
     //  Store broker environment variable
 }

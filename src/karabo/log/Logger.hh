@@ -128,11 +128,6 @@ namespace karabo {
             static void useConsole(const std::string& name = "", bool inheritSinks = true);
 
             /**
-             * Enables console sink (backward compatibility)
-             */
-            static void useOstream(const std::string name = "", bool inheritSinks = true);
-
-            /**
              * Enables the rotating file sink for the specified logger.
              * @param name The logger name on which the sink should work (empty string reflects default logger)
              */
@@ -322,7 +317,6 @@ namespace karabo {
            private:
             static std::shared_ptr<spdlog::logger> create_new_default();
             static std::shared_ptr<spdlog::sinks::sink> _useConsole();
-            static std::shared_ptr<spdlog::sinks::sink> _useOstream(); // for backward compat
             static std::shared_ptr<spdlog::sinks::sink> _useCache();
             static std::shared_ptr<spdlog::sinks::sink> _useFile();
             static void applyRotationRulesFor(const std::filesystem::path& fname, std::size_t maxFiles);

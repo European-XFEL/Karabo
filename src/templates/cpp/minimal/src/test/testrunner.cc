@@ -51,7 +51,7 @@ karabo::core::Device::Pointer KaraboDeviceFixture::instantiateAndGetPointer(cons
     karabo::log::Logger::reset();
     karabo::data::Hash config("level", LOG_PRIORITY);
     karabo::log::Logger::configure(config);
-    karabo::log::Logger::useOstream();
+    karabo::log::Logger::useConsole();
 
     try {
         // instantiate the device under test

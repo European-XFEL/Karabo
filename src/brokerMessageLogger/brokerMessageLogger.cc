@@ -178,7 +178,7 @@ int main(int argc, char** argv) {
 
         // Start Logger
         Logger::configure(Hash("priority", "ERROR"));
-        Logger::useOstream();
+        Logger::useConsole();
 
         const std::string brkType = Broker::brokerTypeFrom(brokerUrls);
         cout << "# Trying to connect to broker '" << toString(brokerUrls) << "'...\n" << endl;

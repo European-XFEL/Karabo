@@ -36,7 +36,7 @@ Slot_Test::~Slot_Test() {}
 
 void Slot_Test::setUp() {
     // Logger::configure(Hash("priority", "ERROR"));
-    // Logger::useOstream();
+    // Logger::useConsole();
     //  Event loop is started in xmsTestRunner.cc's main()
 }
 
