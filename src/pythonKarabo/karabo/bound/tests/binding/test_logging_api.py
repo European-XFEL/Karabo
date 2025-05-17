@@ -26,7 +26,7 @@ def test_logging_config_rules():
     Logger.configure(config)
     Logger.logDebug("ERROR")
 
-    Logger.useOstream()
+    Logger.useConsole()
     Logger.logDebug("OK")
     Logger.logDebug("OK", "a1")
     Logger.logDebug("OK", "a1.a2")
@@ -42,7 +42,7 @@ def test_logging_config_rules():
     Logger.logInfo("ERROR", "a1")
     Logger.logInfo("ERROR", "a1.a2")
 
-    Logger.useOstream("a1")
+    Logger.useConsole("a1")
     Logger.logDebug("ERROR")
     Logger.logDebug("OK", "a1")
     Logger.logDebug("OK", "a1.a2")
@@ -71,7 +71,7 @@ def test_logging_config_more():
     Logger.reset()
     config = Hash("level", "INFO")
     Logger.configure(config)
-    Logger.useOstream()
+    Logger.useConsole()
     Logger.useFile("a1", False)  # do not inherit appenders from parents
     Logger.logDebug("ERROR")
     Logger.logDebug("ERROR", "a1")

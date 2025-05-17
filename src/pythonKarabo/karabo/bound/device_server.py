@@ -264,7 +264,7 @@ class DeviceServer:
         self.loggerParameters.set('file.filename', path)
 
         Logger.configure(self.loggerParameters)
-        Logger.useOstream()
+        Logger.useConsole()
         Logger.useFile()
         Logger.useCache()
 
@@ -410,7 +410,7 @@ class DeviceServer:
         config['timeServerId'] = self.timeServerId
 
         # Also add config for Logger appenders
-        for appender in ["ostream", "file", "cache"]:
+        for appender in ["console", "file", "cache"]:
             config["_logger_." + appender] = self.loggerParameters[appender]
 
         reply = self.ss.createAsyncReply()
