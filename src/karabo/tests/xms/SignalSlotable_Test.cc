@@ -313,8 +313,8 @@ void SignalSlotable_Test::_testReceiveAsync() {
     waitEqual(receivedIgnoringReplyValue, true);
     // Sleep > 200 ms (the timeout used) so that any wrong call to error handler due to timeout would have happened
     std::this_thread::sleep_for(210ms);
-    CPPUNIT_ASSERT_EQUAL(calledErrorHandler, false);
-    CPPUNIT_ASSERT_EQUAL(receivedIgnoringReplyValue, true);
+    CPPUNIT_ASSERT_EQUAL(calledErrorHandler, true);
+    CPPUNIT_ASSERT_EQUAL(receivedIgnoringReplyValue, false);
 }
 
 
@@ -410,12 +410,13 @@ void SignalSlotable_Test::_testReceiveAsyncError() {
 
     // Trying to receive less reply values than come is OK. See testReceiveAsync.
 
-    //    // Too many arguments to slot seems not to harm - should we make it harm?
-    //    caughtType = ExceptionType::none;
-    //    greeter->request("responder", "slotAnswer", "Hello", 42).timeout(200)
-    //            .receiveAsync<std::string>(successHandler, errHandler);
-    //    waitEqual(ExceptionType::remote, caughtType);
-    //    CPPUNIT_ASSERT_EQUAL(int(ExceptionType::remote), int(caughtType));
+    // Too many arguments to slot seems not to harm - should we make it harm?
+    caughtType = ExceptionType::none;
+    greeter->request("responder", "slotAnswer", "Hello", 42)
+          .timeout(200)
+          .receiveAsync<std::string>(successHandler, errHandler);
+    waitEqual(ExceptionType::remote, caughtType);
+    CPPUNIT_ASSERT_EQUAL(int(ExceptionType::remote), int(caughtType));
 
     // Too few arguments to slot
     caughtType = ExceptionType::none;
@@ -958,7 +959,7 @@ void SignalSlotable_Test::_testDisconnectConnectAsyncStress() {
     // Capture ptr by value instead pure bool b reference since we potentially have two slot calls, but the first
     // arriving one will end the test.
     auto slotCalled = std::make_shared<bool>(false);
-    auto slotFunc = [slotCalled]() { *slotCalled = true; };
+    std::function<void(const int&)> slotFunc = [slotCalled](const int&) { *slotCalled = true; };
     slotter->registerSlot(slotFunc, "slot");
     slotter->start();
 
