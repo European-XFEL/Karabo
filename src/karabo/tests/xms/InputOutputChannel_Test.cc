@@ -146,7 +146,7 @@ void InputOutputChannel_Test::testManyToOne() {
     //    karabo::log::Logger::configure(Hash("priority", "DEBUG",
     //                                        // enable timestamps, with ms precision
     //                                        "ostream.pattern", "%d{%F %H:%M:%S,%l} %p  %c  : %m%n"));
-    //    karabo::log::Logger::useOstream();
+    //    karabo::log::Logger::useConsole();
 
     const unsigned int numOutputs = 6;
     ThreadAdder extraThreads(numOutputs);
@@ -283,7 +283,7 @@ void InputOutputChannel_Test::testConnectDisconnect() {
     //    karabo::log::Logger::configure(Hash("priority", "DEBUG",
     //                                        // enable timestamps, with ms precision
     //                                        "ostream.pattern", "%d{%F %H:%M:%S,%l} %p  %c  : %m%n"));
-    //    karabo::log::Logger::useOstream();
+    //    karabo::log::Logger::useConsole();
 
     // Setup output channel
     OutputChannel::Pointer output = Configurator<OutputChannel>::create("OutputChannel", Hash(), 0);
@@ -482,7 +482,7 @@ void InputOutputChannel_Test::testConcurrentConnect() {
     //    karabo::log::Logger::configure(Hash("priority", "DEBUG",
     //                                        // enable timestamps, with ms precision
     //                                        "ostream.pattern", "%d{%F %H:%M:%S,%l} %p  %c  : %m%n"));
-    //    karabo::log::Logger::useOstream();
+    //    karabo::log::Logger::useConsole();
 
     int counter = 100;
     while (--counter >= 0) { // repeat test since it depends on timing!
@@ -721,7 +721,7 @@ void InputOutputChannel_Test::testWriteUpdateFlags() {
     //    karabo::log::Logger::configure(Hash("priority", "DEBUG",
     //                                        // enable timestamps, with ms precision
     //                                        "ostream.pattern", "%d{%F %H:%M:%S,%l} %p  %c  : %m%n"));
-    //    karabo::log::Logger::useOstream();
+    //    karabo::log::Logger::useConsole();
 
     for (const std::string& dataDistribution : {"copy"s, "shared"s}) {
         for (const std::string& onSlowness : {"wait"s, "queueDrop"s}) {

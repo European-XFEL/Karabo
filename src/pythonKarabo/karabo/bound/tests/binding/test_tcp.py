@@ -27,7 +27,7 @@ lock = threading.Lock()
 # For debugging to get exceptions printed that are caugth by C++ event loop:
 # from karabo.bound import Logger
 # Logger.configure()
-# Logger.useOstream()
+# Logger.useConsole()
 
 
 @pytest.fixture(scope="module")

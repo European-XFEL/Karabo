@@ -43,7 +43,7 @@ using std::vector;
 HashBinarySerializer_Test::HashBinarySerializer_Test() {
     // Uncomment for output, e.g. serialisaton speed measurements
     // karabo::log::Logger::configure(Hash("priority", "DEBUG"));
-    // karabo::log::Logger::useOstream();
+    // karabo::log::Logger::useConsole();
 }
 
 

@@ -49,7 +49,7 @@ void InfluxDbClient_Test::setUp() {
     // Output messages logged during the test to the test output.
     Hash config("level", "INFO");
     Logger::configure(config);
-    Logger::useOstream();
+    Logger::useConsole();
 
     m_eventLoopThread = std::jthread([](std::stop_token stoken) { EventLoop::work(); });
 

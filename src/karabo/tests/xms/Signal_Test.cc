@@ -39,7 +39,7 @@ Signal_Test::~Signal_Test() {}
 
 void Signal_Test::setUp() {
     // Logger::configure(Hash("priority", "ERROR"));
-    // Logger::useOstream();
+    // Logger::useConsole();
     //  Event loop is started in xmsTestRunner.cc's main()
     //  Store broker environment variable
 }

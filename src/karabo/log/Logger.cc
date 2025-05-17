@@ -98,36 +98,6 @@ namespace karabo {
                   .defaultValue("NOTSET")
                   .commit();
 
-            NODE_ELEMENT(s).key("ostream").commit();
-
-            STRING_ELEMENT(s)
-                  .key("ostream.output")
-                  .description("Output Stream")
-                  .displayedName("OutputStream")
-                  .options(std::vector<std::string>({"STDERR", "STDOUT"}))
-                  .assignmentOptional()
-                  .defaultValue("STDERR")
-                  .commit();
-
-            STRING_ELEMENT(s)
-                  .key("ostream.pattern")
-                  .description("Formatting pattern for the logstream")
-                  .displayedName("Pattern")
-                  .assignmentOptional()
-                  .defaultValue("%Y-%m-%d %H:%M:%S.%e [%^%l%$] %n : %v")
-                  .commit();
-
-            STRING_ELEMENT(s)
-                  .key("ostream.threshold")
-                  .description(
-                        "The Logger will not log messages with a level lower than defined here.\
-                                  Use Level::NOTSET to disable threshold checking.")
-                  .displayedName("Threshold")
-                  .options({"NOTSET", "DEBUG", "INFO", "WARN", "ERROR"})
-                  .assignmentOptional()
-                  .defaultValue("NOTSET")
-                  .commit();
-
             NODE_ELEMENT(s).key("file").commit();
 
             STRING_ELEMENT(s)
@@ -284,7 +254,7 @@ namespace karabo {
             bool startFlushThread = false;
             if (!Logger::m_instance) {
                 // 'spdlog' default settings provides default_logger with console sink
-                // In karabo console (ostream) sink should be activated by useConsole(useOstream)
+                // In karabo console (ostream) sink should be activated by useConsole
                 spdlog::default_logger()->sinks().clear();
                 Logger::m_instance = std::shared_ptr<Logger>(new Logger);
                 startFlushThread = true;
@@ -333,21 +303,6 @@ namespace karabo {
         }
 
 
-        std::shared_ptr<spdlog::sinks::sink> Logger::_useOstream() {
-            std::shared_ptr<spdlog::sinks::sink> sink = nullptr;
-            if (m_config.get<std::string>("ostream.output") == "STDOUT") {
-                sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-            } else {
-                sink = std::make_shared<spdlog::sinks::stderr_color_sink_mt>();
-            }
-            sink->set_pattern(m_config.get<std::string>("ostream.pattern"));
-            auto val = m_config.get<std::string>("level");
-            toLower(val);
-            sink->set_level(spdlog::level::from_str(val));
-            return sink;
-        }
-
-
         std::shared_ptr<spdlog::sinks::sink> Logger::_useFile() {
             auto sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
                   m_config.get<std::string>("file.filename"), m_config.get<unsigned int>("file.maxFileSize"),
@@ -375,19 +330,6 @@ namespace karabo {
         void Logger::useConsole(const std::string& name, bool inheritSinks) {
             if (!m_instance) configure(Hash());
             auto sink = _useConsole();
-            std::shared_ptr<spdlog::logger> logger = nullptr;
-            if (name.empty()) logger = spdlog::default_logger();
-            else logger = spdlog::get(name);
-            if (!logger) logger = details::getLogger(name);
-            if (!inheritSinks) logger->sinks().clear();
-            logger->sinks().push_back(sink);
-            setLevel(m_config.get<std::string>("level"), name);
-        }
-
-        // for backward compatibility
-        void Logger::useOstream(const std::string name, bool inheritSinks) {
-            if (!m_instance) configure(Hash());
-            auto sink = _useOstream();
             std::shared_ptr<spdlog::logger> logger = nullptr;
             if (name.empty()) logger = spdlog::default_logger();
             else logger = spdlog::get(name);
