@@ -105,4 +105,13 @@ void Slot_Test::testCallSlot() {
 
     CPPUNIT_ASSERT_EQUAL(1, Foo::nCopies); // Now there is one copy
     CPPUNIT_ASSERT(fooAddressInHash != fooAddressInFunc);
+
+    // Wrong number of arguments
+    h.clear();
+    karabo::util::pack(h, 1); // keys "a1"
+    CPPUNIT_ASSERT_THROW(slot3.callRegisteredSlotFunctions(karabo::data::Hash(), h), karabo::data::SignalSlotException);
+    karabo::util::pack(h, 1, Foo(), 3.141596); // keys "a1", "a2" and "a3"
+    CPPUNIT_ASSERT_THROW(slot3.callRegisteredSlotFunctions(karabo::data::Hash(), h), karabo::data::SignalSlotException);
+    h.clear(); // no arguments
+    CPPUNIT_ASSERT_THROW(slot3.callRegisteredSlotFunctions(h, h), karabo::data::SignalSlotException);
 }

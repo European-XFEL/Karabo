@@ -88,11 +88,12 @@ def test_sigslot_register_function(eventLoopFixt):
     req = sigSlot.request("", "funcVarArgs")
     (nArg, ) = req.waitForReply(timeout)
     assert nArg == 0
-    # TODO: Do we want to guarantee this 'feature' of ignored
-    #       extra arguments? It's in underlying C++ code.
+    # NOTE: We require STRICT match for number of arguments.
+    #       It's in underlying C++ code as well.
     req = sigSlot.request("", "funcVarArgs", 1)
-    (nArg, ) = req.waitForReply(timeout)
-    assert nArg == 0  # i.e. input argument ignored!
+    with pytest.raises(RuntimeError) as excinfo:
+        req.waitForReply(timeout)
+        assert "mismatched number of args" in str(excinfo.value)
 
     # We can register '*args' function with fixed number
     # (Also test that '_' can be requested as '.' is needed
@@ -178,11 +179,12 @@ def test_sigslot_register_method(eventLoopFixt):
     req = sigSlot.request("", "slotVarArgs")
     (nArg, ) = req.waitForReply(timeout)
     assert nArg == 0
-    # TODO: Do we want to guarantee this 'feature' of ignored
-    #       extra arguments? It's in underlying C++ code.
+    # NOTE: We require STRICT match for number of arguments.
+    #       It's in underlying C++ code as well.
     req = sigSlot.request("", "slotVarArgs", "extra_arg")
-    (nArg, ) = req.waitForReply(timeout)
-    assert nArg == 0  # i.e. input argument ignored!
+    with pytest.raises(RuntimeError) as excinfo:
+        req.waitForReply(timeout)
+        assert "mismatched number of args" in str(excinfo.value)
 
     # We can register '*args' function with fixed number
     sigSlot.registerSlot(sigSlot.slotVarArgs, "slotVarArgs1", 2)
