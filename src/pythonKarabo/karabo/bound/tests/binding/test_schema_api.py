@@ -828,7 +828,7 @@ def test_logger():
     a1_a2 = Logger.getCategory("a1.a2")
     root.DEBUG("ERROR")
 
-    Logger.useOstream()
+    Logger.useConsole()
     root.DEBUG("ok")
     a1.DEBUG("ok")
     a1_a2.DEBUG("ok")

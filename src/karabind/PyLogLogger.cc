@@ -75,7 +75,6 @@ void exportPyLogLogger(py::module_& m) {
               .def_static("expectedParameters", &Logger::expectedParameters, py::arg("schema"))
               .def_static("configure", &Logger::configure, py::arg("config") = Hash())
               .def_static("useConsole", &Logger::useConsole, py::arg("logger") = "", py::arg("inheritSinks") = true)
-              .def_static("useOstream", &Logger::useOstream, py::arg("logger") = "", py::arg("inheritSinks") = true)
               .def_static("useFile", &Logger::useFile, py::arg("logger") = "", py::arg("inheritSinks") = true)
               .def_static("useCache", &Logger::useCache, py::arg("logger") = "", py::arg("inheritSinks") = true)
               .def_static("getCachedContent", &Logger::getCachedContent, py::arg("nmessages") = 0)

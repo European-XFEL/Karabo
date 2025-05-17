@@ -879,7 +879,7 @@ TcpNetworking_Test::TcpNetworking_Test() {
     // To switch on logging:
     // #include "karabo/log/Logger.hh"
     // karabo::log::Logger::configure(karabo::data::Hash("priority", "DEBUG"));
-    // karabo::log::Logger::useOstream();
+    // karabo::log::Logger::useConsole();
 }
 
 
