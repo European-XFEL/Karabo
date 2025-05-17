@@ -102,6 +102,13 @@ namespace karabo {
              * @param body a Hash with up to four keys "a1" to "a4" with the expected types behind
              */
             virtual void doCallRegisteredSlotFunctions(const karabo::data::Hash& body) {
+                constexpr size_t arity = sizeof...(Args);
+                size_t nargs = body.size();
+                if (arity != nargs) {
+                    std::ostringstream oss;
+                    oss << "Slot called with mismatched number of args: expected=" << arity << ", actual=" << nargs;
+                    throw KARABO_SIGNALSLOT_EXCEPTION(oss.str());
+                }
                 for (const auto& handler : m_slotHandlers) {
                     karabo::util::call(handler, karabo::util::unpack<Args...>(body));
                 }
