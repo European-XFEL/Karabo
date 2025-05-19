@@ -129,7 +129,7 @@
         <property name="minimumSize">
          <size>
           <width>0</width>
-          <height>40</height>
+          <height>0</height>
          </size>
         </property>
         <property name="toolTip">
@@ -145,6 +145,11 @@
       </item>
       <item row="4" column="4">
        <widget class="QComboBox" name="combo_mode">
+        <property name="toolTip">
+         <string>'Temporary Session' ends after a fixed duration(configured in the guiserver).
+'Switch User' remains logged in the session.
+'Remember me' remembers the user accross the sessions.</string>
+        </property>
         <item>
          <property name="text">
           <string>Temporary Session</string>
@@ -155,6 +160,13 @@
           <string>Switch User</string>
          </property>
         </item>
+       </widget>
+      </item>
+      <item row="4" column="3">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>Session type:</string>
+        </property>
        </widget>
       </item>
      </layout>
