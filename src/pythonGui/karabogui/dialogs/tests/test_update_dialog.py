@@ -18,7 +18,9 @@ import json
 from os import path as op
 
 from karabogui.dialogs import update_dialog
-from karabogui.dialogs.update_dialog import UNDEFINED_VERSION, UpdateDialog
+from karabogui.dialogs.update_dialog import (
+    _PKG_NAME, UNDEFINED_VERSION, UpdateDialog, UpdateNoticeDialog,
+    get_index_list, get_pkg_version)
 
 _PKG = "GUIExtensions"
 
@@ -57,3 +59,17 @@ def test_dialog_index_parsing(gui_app, mocker):
     mocker.patch("requests.get", return_value=MockReturn(package))
     packages = update_dialog.get_index_list()
     assert packages.get(_PKG) == "0.0.1"
+
+
+def test_dialog(gui_app):
+    dialog = UpdateNoticeDialog()
+    current_version = get_pkg_version(_PKG_NAME)
+    latest_version = get_index_list().get(_PKG_NAME, "0.0.0")
+
+    expected = (
+        f"A newer version of {_PKG_NAME} available: <b>{latest_version}"
+        f"</b>.<br>Current version is <b>{current_version}</b>.<br> "
+        f"<br>Would you like to install using the Update Dialog? <br> "
+        f"<br> You can also update using the command-line utility: "
+        f"<br><i>karabo-update-extensions -l </i>")
+    assert dialog.info_label.text() == expected
