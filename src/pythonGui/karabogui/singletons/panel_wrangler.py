@@ -26,6 +26,8 @@ from karabo.common.scenemodel.api import SceneModel, SceneTargetWindow
 from karabogui import icons
 from karabogui.access import AccessRole, access_role_allowed, is_authenticated
 from karabogui.controllers.util import load_extensions
+from karabogui.dialogs.update_dialog import (
+    UpdateNoticeDialog, is_package_updated)
 from karabogui.events import (
     KaraboEvent, broadcast_event, register_for_broadcasts)
 from karabogui.indicators import get_user_session_button_data
@@ -37,6 +39,8 @@ from karabogui.programs.utils import close_app
 from karabogui.singletons.api import get_config, get_db_conn, get_project_model
 from karabogui.util import move_to_cursor, process_qt_events, send_info
 from karabogui.wizards import TipsTricksWizard
+
+GUI_EXTENSIONS = "GUIExtensions"
 
 
 class PanelWrangler(QObject):
@@ -350,6 +354,11 @@ class PanelWrangler(QObject):
         process_qt_events(timeout=1000)
         self.main_window.activateWindow()
         process_qt_events(timeout=1000)
+
+        check_updates = get_config()['check_updates']
+        if check_updates and is_package_updated(GUI_EXTENSIONS):
+            dialog = UpdateNoticeDialog(parent=self.main_window)
+            dialog.exec()
 
         show_wizard = get_config()['wizard']
         if show_wizard:
