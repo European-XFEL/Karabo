@@ -56,9 +56,9 @@ class TestAppConfDialog(GuiTestCase):
             # Check a boolean
             group_index = model.index(4, 0)
             assert group_index.data() == "user"
-            index = model.index(8, 0, group_index)
+            index = model.index(9, 0, group_index)
             assert index.data() == "wizard"
-            index_value = model.index(8, 1, group_index)
+            index_value = model.index(9, 1, group_index)
             flag = model.flags(index_value)
             assert int(flag) == 49
             assert flag & Qt.ItemIsEnabled == Qt.ItemIsEnabled

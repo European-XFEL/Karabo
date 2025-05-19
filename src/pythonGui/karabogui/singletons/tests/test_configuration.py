@@ -46,7 +46,7 @@ def test_configuration_namespace():
     config['device_domain'] = 'CAS_INTERNAL'
     config['domain'] = 'CAS_INTERNAL'
     config['db_token'] = 'expert'
-    assert len(config) == 20
+    assert len(config) == 21
     assert config['db_token'] == 'expert'
     assert config['device_domain'] == 'CAS_INTERNAL'
     assert config['domain'] == 'CAS_INTERNAL'
@@ -54,6 +54,7 @@ def test_configuration_namespace():
     keys = [
         'access_level',
         'broker_topic',
+        'check_updates',
         'data_dir',
         'db_token',
         'development',
@@ -94,7 +95,7 @@ def test_default_value():
         if item.dtype is not None:
             counter += 1
             assert item.default is not None
-    assert counter == 5
+    assert counter == 6
 
 
 def test_set_bool_value(mocker):
@@ -133,7 +134,7 @@ def test_configuration_groups_info():
     groups = config.groups()
     assert len(groups) == 5
     user_group = [item.name for item in groups[USER]]
-    assert len(user_group) == 9
+    assert len(user_group) == 10
     assert 'wizard' in user_group
     assert 'main_geometry' in user_group
     assert 'highDPI' in user_group
