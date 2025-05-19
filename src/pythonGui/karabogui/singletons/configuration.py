@@ -176,6 +176,8 @@ class Configuration(QObject):
 
     wizard = Item(default=True, q_set=True, group=USER, editable=True,
                   dtype=bool)
+    check_updates = Item(default=True, q_set=True, group=USER, editable=True,
+                         dtype=bool)
     highDPI = Item(default=True, q_set=True, group=USER, editable=False,
                    dtype=bool)
     main_geometry = Item(q_set=True, group=USER)
