@@ -555,7 +555,7 @@ class UserSessionDialog(QDialog):
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         self.setModal(False)
-        filepath = get_dialog_ui("temp_session_dialog.ui")
+        filepath = get_dialog_ui("user_session_dialog.ui")
         uic.loadUi(filepath, self)
         if parent is None:
             self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
