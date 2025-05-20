@@ -1473,25 +1473,14 @@ namespace karabo {
         }
 
 
-        void OutputChannel::write(const karabo::data::Hash& data, const OutputChannel::MetaData& metaData,
-                                  bool /*unused*/) {
+        void OutputChannel::write(const karabo::data::Hash& data, const OutputChannel::MetaData& metaData) {
             Memory::write(data, m_channelId, m_chunkId, metaData, false);
         }
 
 
-        void OutputChannel::write(const karabo::data::Hash& data, bool /*unused*/) {
+        void OutputChannel::write(const karabo::data::Hash& data) {
             OutputChannel::MetaData meta(/*source*/ getInstanceIdName(), /*timestamp*/ karabo::data::Timestamp());
             Memory::write(data, m_channelId, m_chunkId, meta, false);
-        }
-
-
-        void OutputChannel::write(const karabo::data::Hash::Pointer& data, const OutputChannel::MetaData& metaData) {
-            write(*data, metaData, false);
-        }
-
-
-        void OutputChannel::write(const karabo::data::Hash::Pointer& data) {
-            write(*data, false);
         }
 
 
