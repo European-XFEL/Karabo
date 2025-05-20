@@ -49,9 +49,6 @@ namespace karabo {
                 case Encoding::RGBA:
                 case Encoding::BGR:
                 case Encoding::BGRA:
-                case Encoding::CMYK:
-                case Encoding::YUV:
-                case Encoding::BAYER:
                 case Encoding::YUV444:
                 case Encoding::YUV422_YUYV:
                 case Encoding::YUV422_UYVY:
@@ -61,9 +58,6 @@ namespace karabo {
                 case Encoding::BAYER_GB:
                     return true;
                 case Encoding::JPEG:
-                case Encoding::PNG:
-                case Encoding::BMP:
-                case Encoding::TIFF:
                     return false;
                 default:
                     throw KARABO_LOGIC_EXCEPTION("Encoding " + karabo::data::toString(int(enc)) + " invalid.");
@@ -421,17 +415,18 @@ namespace karabo {
                 case Encoding::GRAY:
                     factor = 1;
                     break;
-                case Encoding::BAYER:
+                case Encoding::BAYER_RG:
+                case Encoding::BAYER_BG:
+                case Encoding::BAYER_GR:
+                case Encoding::BAYER_GB:
                     return numBytes * 8; // Plain 8 in http://www.ni.com/white-paper/3903/en/, independent of CHAR_BIT!
                 case Encoding::RGB:
                 case Encoding::BGR:
-                case Encoding::YUV:
                     // NDArray's Dims.x3 should be 3
                     factor = 3;
                     break;
                 case Encoding::RGBA:
                 case Encoding::BGRA:
-                case Encoding::CMYK:
                     // NDArray's Dims.x3 should be 4
                     factor = 4;
                     break;
