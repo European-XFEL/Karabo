@@ -158,7 +158,7 @@ def test_detector_graph_basics(detectorGraphTest):
 
 def test_detector_graph_yuv_image(detectorGraphTest):
     controller, output_proxy = detectorGraphTest
-    image_hash = get_image_hash(dimZ=3, encoding=EncodingType.YUV)
+    image_hash = get_image_hash(dimZ=3, encoding=EncodingType.YUV444)
     apply_configuration(image_hash, output_proxy.binding)
 
     image_node = controller._image_node

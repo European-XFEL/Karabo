@@ -24,6 +24,8 @@ from karabogui.graph.common.api import Axes
 # Special image dimensions
 YUV422 = 2
 YUV444 = 3
+YUV_TYPES = {EncodingType.YUV444, EncodingType.YUV422_YUYV,
+             EncodingType.YUV422_UYVY}
 
 
 class KaraboImageNode(HasStrictTraits):
@@ -91,9 +93,8 @@ class KaraboImageNode(HasStrictTraits):
     def is_valid(self):
         if self._data is None or self.dim_x < 1 or self.dim_y < 1:
             return False
-
         # Handle YUV encoding type
-        if self.encoding == EncodingType.YUV:
+        if self.encoding in YUV_TYPES:
             if self.dim_z == YUV422:
                 # input image is (u1, y1, v1, y2, u2, y3, v2, y4, ...)
                 # only display "luma" (Y') component in the GUI
