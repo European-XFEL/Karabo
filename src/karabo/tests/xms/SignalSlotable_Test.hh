@@ -42,6 +42,7 @@ class SignalSlotable_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testReceiveAsyncError);
     CPPUNIT_TEST(testReceiveAsyncNoReply);
     CPPUNIT_TEST(testReceiveExceptions);
+    CPPUNIT_TEST(testNoWait);
     CPPUNIT_TEST(testMethod);
     CPPUNIT_TEST(testConnectAsync);
     CPPUNIT_TEST(testConnectAsyncMulti);
@@ -70,6 +71,7 @@ class SignalSlotable_Test : public CPPUNIT_NS::TestFixture {
     void testReceiveAsyncError();
     void testReceiveAsyncNoReply();
     void testReceiveExceptions();
+    void testNoWait();
     void testMethod();
     void testConnectAsync();
     void testConnectAsyncMulti();
@@ -86,6 +88,7 @@ class SignalSlotable_Test : public CPPUNIT_NS::TestFixture {
     void _testReceiveAsyncError();
     void _testReceiveAsyncNoReply();
     void _testReceiveExceptions();
+    void _testNoWait();
     void _testMethod();
     void _testConnectAsync();
     void _testConnectAsyncMulti();
