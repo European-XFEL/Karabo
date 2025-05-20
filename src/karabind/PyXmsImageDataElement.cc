@@ -48,13 +48,7 @@ void exportPyXmsImageDataElement(py::module_& m) {
               .value("RGBA", Encoding::RGBA)
               .value("BGR", Encoding::BGR)
               .value("BGRA", Encoding::BGRA)
-              .value("CMYK", Encoding::CMYK)
-              .value("YUV", Encoding::YUV)
-              .value("BAYER", Encoding::BAYER)
               .value("JPEG", Encoding::JPEG)
-              .value("PNG", Encoding::PNG)
-              .value("BMP", Encoding::BMP)
-              .value("TIFF", Encoding::TIFF)
               .value("YUV444", Encoding::YUV444)
               .value("YUV422_YUYV", Encoding::YUV422_YUYV)
               .value("YUV422_UYVY", Encoding::YUV422_UYVY)
@@ -315,20 +309,14 @@ void exportPyXmsImageDataElement(py::module_& m) {
                       encLuT["RGBA"] = Encoding::RGBA;
                       encLuT["BGR"] = Encoding::BGR;
                       encLuT["BGRA"] = Encoding::BGRA;
-                      encLuT["CMYK"] = Encoding::CMYK;
-                      encLuT["YUV"] = Encoding::YUV;
                       encLuT["YUV444"] = Encoding::YUV444;
                       encLuT["YUV422_YUYV"] = Encoding::YUV422_YUYV;
                       encLuT["YUV422_UYVY"] = Encoding::YUV422_UYVY;
-                      encLuT["BAYER"] = Encoding::BAYER;
                       encLuT["BAYER_RG"] = Encoding::BAYER_RG;
                       encLuT["BAYER_BG"] = Encoding::BAYER_BG;
                       encLuT["BAYER_GR"] = Encoding::BAYER_GR;
                       encLuT["BAYER_GB"] = Encoding::BAYER_GB;
                       encLuT["JPEG"] = Encoding::JPEG;
-                      encLuT["PNG"] = Encoding::PNG;
-                      encLuT["BMP"] = Encoding::BMP;
-                      encLuT["TIFF"] = Encoding::TIFF;
                       // Look up the supplied key in the LUT
                       encType = encLuT[o.cast<std::string>()];
                       // If data type was given as integer
