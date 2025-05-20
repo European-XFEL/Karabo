@@ -277,7 +277,7 @@ namespace karabo {
              * All the 'write(..)' methods, '[async]Update[NoWait](..)' and '[async]SignalEndOfStream(..)' must not be
              * called concurrently.
              */
-            void write(const karabo::data::Hash& data, const Memory::MetaData& metaData, bool /*unused*/ = false);
+            void write(const karabo::data::Hash& data, const Memory::MetaData& metaData);
 
             /**
              * Writes a Hash containing data to the output channel. Sending to the network happens when update() is
@@ -295,39 +295,7 @@ namespace karabo {
              * All the 'write(..)' methods, '[async]Update[NoWait](..)' and '[async]SignalEndOfStream(..)' must not be
              * called concurrently.
              */
-            void write(const karabo::data::Hash& data, bool /*unused*/ = false);
-
-            /**
-             * Writes a Hash containing data to the output channel. Sending to the network happens when update() is
-             * called.
-             * @param data shared pointer to input Hash object
-             * @param metaData a MetaData object containing meta data for this data token.
-             *
-             * Note: Any NDArray/ImageData inside data must stay untouched at least until update() or the callback of
-             *       asyncUpdate(cb) has been called. See also the documentation of the safeNDArray flag of the
-             *       update()/asyncUpdate() methods.
-             *
-             * Thread safety:
-             * All the 'write(..)' methods, '[async]Update[NoWait](..)' and '[async]SignalEndOfStream(..)' must not be
-             * called concurrently.
-             */
-            KARABO_DEPRECATED void write(const karabo::data::Hash::Pointer& data, const Memory::MetaData& metaData);
-
-            /**
-             * Writes a Hash containing data to the output channel. Sending to the network happens asynchronously.
-             * Metadata is initialized to default values. Namely the sending devices device id and the output channel's
-             * name are used as data source.
-             * @param data shared pointer to input Hash object
-             *
-             * Note: Any NDArray/ImageData inside data must stay untouched at least until update() or the callback of
-             *       asyncUpdate(cb) has been called. See also the documentation of the safeNDArray flag of the
-             *       update()/asyncUpdate() methods.
-             *
-             * Thread safety:
-             * All the 'write(..)' methods, '[async]Update[NoWait](..)' and '[async]SignalEndOfStream(..)' must not be
-             * called concurrently.
-             */
-            KARABO_DEPRECATED void write(const karabo::data::Hash::Pointer& data);
+            void write(const karabo::data::Hash& data);
 
             /**
              * Update the output channel, i.e. send all data over the wire that was previously written
