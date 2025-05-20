@@ -469,10 +469,8 @@ void GuiServer_Test::testExecute() {
         CPPUNIT_ASSERT_EQUAL(std::string("executeReply"), replyMessage.get<std::string>("type"));
         CPPUNIT_ASSERT_MESSAGE(toString(replyMessage.get<Hash>("input")),
                                h.fullyEquals(replyMessage.get<Hash>("input")));
-        // FIXME: The commented asserts are those that we want, temporarily are more tolerant
-        // CPPUNIT_ASSERT(replyMessage.get<bool>("success"));
-        // CPPUNIT_ASSERT(!replyMessage.has("reason"));
-        CPPUNIT_ASSERT(!replyMessage.get<bool>("success"));
+        CPPUNIT_ASSERT(replyMessage.get<bool>("success"));
+        CPPUNIT_ASSERT(!replyMessage.has("reason"));
     }
 
     //
@@ -772,18 +770,8 @@ void GuiServer_Test::testSlowSlots() {
         messageQ->pop(replyMessage);
         CPPUNIT_ASSERT_EQUAL(std::string("executeReply"), replyMessage.get<std::string>("type"));
         std::string message = (replyMessage.has("reason")) ? replyMessage.get<std::string>("reason") : "NO REASON";
-        // FIXME: After MR !9136 (strict check number of args for slot calls) the assert that follows fail on CI.
-        // Comment for now ...
-        // CPPUNIT_ASSERT_MESSAGE(message, replyMessage.get<bool>("success"));
-        // CPPUNIT_ASSERT(!replyMessage.has("reason"));
-        if (!replyMessage.get<bool>("success")) {
-            // Sometimes replyMessage contains value = false for "success" because of slot call mismatch
-            size_t found = message.find("mismatched number of args");
-            if (found == std::string::npos) {
-                // Report error only if it is not "mismatched number of args"
-                CPPUNIT_ASSERT_MESSAGE(message, replyMessage.get<bool>("success"));
-            }
-        }
+        CPPUNIT_ASSERT_MESSAGE(message, replyMessage.get<bool>("success"));
+        CPPUNIT_ASSERT(!replyMessage.has("reason"));
     }
     //
     // Test that the server will handle timeout after  resetting the "timeout" property.
