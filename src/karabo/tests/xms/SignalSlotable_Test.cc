@@ -264,7 +264,7 @@ void SignalSlotable_Test::_testValidInstanceId() {
     // Now check that bad character lead to exceptions:
     // No dot '.' since id often used as key in Hash.
     // A space ' ' causes problem in xml serialisation.
-    // The ':' (and historically the '@') separates instanceId and pipeline channel name.
+    // The ':' (and before Karabo 3 the '@') separates instanceId and pipeline channel name.
     // LF '\n' and CR '\r' caused trouble (now fixed) with AMQP queue names.
     // Tab '\t' is also non-sense.
     const char badCharacters[] = ". :@\n\r\t";
@@ -584,6 +584,41 @@ void SignalSlotable_Test::_testReceiveExceptions() {
           greeter->request("responder", "slotAnswer", "Hello").timeout(slotCallTimeout).receive(answer));
 }
 
+void SignalSlotable_Test::testNoWait() {
+    _loopFunction(__FUNCTION__, [this] { this->_testNoWait(); });
+}
+
+
+void SignalSlotable_Test::_testNoWait() {
+    auto greeter = std::make_shared<SignalSlotable>("greeter");
+    auto responder = std::make_shared<SignalSlotable>("responder");
+
+    responder->registerSlot<int>([&responder](int value) { responder->reply(value * 2); }, "slotA");
+
+    auto promReceived = std::make_shared<std::promise<int>>();
+    auto futReceived = promReceived->get_future();
+    greeter->registerSlot<int>([promReceived](int value) { promReceived->set_value(value); }, "slotReplyOfA");
+
+    greeter->start();
+    responder->start();
+
+    greeter->requestNoWait("responder", "slotA", "greeter", "slotReplyOfA", 21);
+
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futReceived.wait_for(milliseconds(slotCallTimeout)));
+    CPPUNIT_ASSERT_EQUAL(42, futReceived.get());
+
+    // Now test also that reply goes to a third party. (Do we really want to support that?)
+    auto thirdParty = std::make_shared<SignalSlotable>("thirdParty");
+    auto promReceived3rd = std::make_shared<std::promise<int>>();
+    auto futReceived3rd = promReceived3rd->get_future();
+    thirdParty->registerSlot<int>([promReceived3rd](int value) { promReceived3rd->set_value(value); }, "slotReplyOfA");
+    thirdParty->start();
+
+    greeter->requestNoWait("responder", "slotA", "thirdParty", "slotReplyOfA", 22);
+
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futReceived3rd.wait_for(milliseconds(slotCallTimeout)));
+    CPPUNIT_ASSERT_EQUAL(44, futReceived3rd.get());
+}
 
 void SignalSlotable_Test::testConnectAsync() {
     _loopFunction(__FUNCTION__, [this] { this->_testConnectAsync(); });
