@@ -79,7 +79,7 @@ namespace karabo {
         }
 
 
-        void Slot::callRegisteredSlotFunctions(const Hash& header, const Hash& body) {
+        void Slot::callRegisteredSlotFunctions(const Hash& header, const Hash& body, bool checkNumArgs) {
             try {
                 // Mutex lock prevents that the same slot of a SignalSlotable can be called concurrently.
                 // SignalSlotable takes care that messages are sequentially processed per sender
@@ -89,7 +89,7 @@ namespace karabo {
                 // safe in another way - and the protection not to add function while being called as well.
                 std::lock_guard<std::mutex> lock(m_registeredSlotFunctionsMutex);
                 extractSenderInformation(header);
-                doCallRegisteredSlotFunctions(body);
+                doCallRegisteredSlotFunctions(body, checkNumArgs);
                 invalidateSenderInformation();
             } catch (const karabo::data::CastException& e) {
                 const std::string senderId = m_instanceIdOfSender;
