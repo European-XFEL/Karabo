@@ -156,12 +156,12 @@ void exportPyXmsInputOutputChannel(py::module_& m) {
 
               .def(
                     "write",
-                    [](const OutputChannel::Pointer& self, const Hash& data, const ChannelMetaData& meta,
-                       bool copyAll) { self->write(data, meta, copyAll); },
-                    py::arg("data"), py::arg("meta"), py::arg("copyAllData") = false,
+                    [](const OutputChannel::Pointer& self, const Hash& data, const ChannelMetaData& meta) {
+                        self->write(data, meta);
+                    },
+                    py::arg("data"), py::arg("meta"),
                     "data - a Hash with the data to write\n"
                     "meta - ChannelMetaData\n"
-                    "copyAllData - unused\n\n"
                     "Note 1: Any NDArray/ImageData inside data must stay untouched at least\n"
                     "        until update() has been called. See also the documentation of the\n"
                     "        safeNDArray flag of the update() method.\n"
