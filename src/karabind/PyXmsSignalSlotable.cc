@@ -103,10 +103,10 @@ namespace karabind {
         }
 
        private: // function
-        void doCallRegisteredSlotFunctions(const karabo::data::Hash& body) {
+        void doCallRegisteredSlotFunctions(const karabo::data::Hash& body, bool checkNumArgs) {
             size_t nargs = body.size();
             py::gil_scoped_acquire gil;
-            if (m_arity != nargs) {
+            if (checkNumArgs && m_arity != nargs) {
                 std::ostringstream oss;
                 oss << "Slot called with mismatched number of args: expected=" << m_arity << ", actual=" << nargs;
                 throw KARABO_SIGNALSLOT_EXCEPTION(oss.str());

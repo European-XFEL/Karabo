@@ -71,9 +71,10 @@ namespace karabo {
 
             void invalidateSenderInformation();
 
-            void callRegisteredSlotFunctions(const karabo::data::Hash& header, const karabo::data::Hash& body);
+            void callRegisteredSlotFunctions(const karabo::data::Hash& header, const karabo::data::Hash& body,
+                                             bool checkNumArgs = true);
 
-            virtual void doCallRegisteredSlotFunctions(const karabo::data::Hash& body) = 0;
+            virtual void doCallRegisteredSlotFunctions(const karabo::data::Hash& body, bool checkNumArgs) = 0;
 
            private:
             std::string m_instanceIdOfSender;
@@ -101,10 +102,10 @@ namespace karabo {
              * To be called under protection of m_registeredSlotFunctionsMutex
              * @param body a Hash with up to four keys "a1" to "a4" with the expected types behind
              */
-            virtual void doCallRegisteredSlotFunctions(const karabo::data::Hash& body) {
+            virtual void doCallRegisteredSlotFunctions(const karabo::data::Hash& body, bool checkNumArgs) {
                 constexpr size_t arity = sizeof...(Args);
                 size_t nargs = body.size();
-                if (arity != nargs) {
+                if (checkNumArgs && arity != nargs) {
                     std::ostringstream oss;
                     oss << "Slot called with mismatched number of args: expected=" << arity << ", actual=" << nargs;
                     throw KARABO_SIGNALSLOT_EXCEPTION(oss.str());

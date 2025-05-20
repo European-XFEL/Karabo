@@ -580,7 +580,8 @@ namespace karabo {
             SlotInstancePointer slot = getSlot(replyId);
             try {
                 if (!asyncErrorHandlerCalled && slot) {
-                    slot->callRegisteredSlotFunctions(*header, *body);
+                    // Do not check (false) arity-nargs equality for reply slots
+                    slot->callRegisteredSlotFunctions(*header, *body, false);
                 }
             } catch (const std::exception& e) {
                 if (timerAndHandler.second) {
