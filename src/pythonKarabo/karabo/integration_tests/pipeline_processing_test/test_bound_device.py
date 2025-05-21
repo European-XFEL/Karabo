@@ -196,7 +196,6 @@ class TestPipelineProcessing(BoundDeviceTestCase):
               "is {:0.2f} milliseconds"
         print(msg.format(transferTime))
         self.dc.execute(receiver, "reset", self.KRB_TEST_MAX_TIMEOUT)
-        self.dc.set("p2pTestSender", "copyAllData", False)
         self.dc.execute("p2pTestSender", "write", self.KRB_TEST_MAX_TIMEOUT)
 
         self.assertTrue(self.waitUntilEqual(receiver, "nTotalData",
