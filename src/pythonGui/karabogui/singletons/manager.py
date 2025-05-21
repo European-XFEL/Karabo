@@ -676,18 +676,10 @@ class Manager(QObject):
 
     def handle_projectListProjectsWithDevice(self, success, request,
                                              reply, reason=""):
-        error_details = None
         if not success:
-            # An error occurred at the GUI Server level
-            # (or exception in Project Manager)
-            error_details = reason
-        elif not reply['success']:
-            # An error occurred at the Project Manager level
-            error_details = reply['reason']
-        if error_details is not None:
             broadcast_event(
                 KaraboEvent.ProjectFindWithDevice,
-                {'projects': [], 'error': error_details})
+                {'projects': [], 'error': reason})
         else:
             projects = reply.get('projects', [])
             broadcast_event(
