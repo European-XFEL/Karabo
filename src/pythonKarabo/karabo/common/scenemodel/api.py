@@ -48,7 +48,7 @@ from .widgets.graph_plots import (
     AlarmGraphModel, BasePlotModel, MultiCurveGraphModel, NDArrayGraphModel,
     ScatterGraphModel, StateGraphModel, TrendGraphModel, VectorBarGraphModel,
     VectorFillGraphModel, VectorGraphModel, VectorHistGraphModel,
-    VectorScatterGraphModel, VectorXYGraphModel, XYVectorModel)
+    VectorScatterGraphModel, VectorXYGraphModel)
 from .widgets.graph_utils import (
     BaseROIData, CrossROIData, PlotType, RectROIData, build_graph_config,
     build_model_config, read_axes_set, read_base_karabo_image_model,
