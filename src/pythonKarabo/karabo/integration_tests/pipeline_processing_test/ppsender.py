@@ -20,11 +20,11 @@ from time import sleep
 import numpy as np
 
 from karabo.bound import (
-    BOOL_ELEMENT, INT32_ELEMENT, KARABO_CLASSINFO, NDARRAY_ELEMENT,
-    NODE_ELEMENT, OUTPUT_CHANNEL, OVERWRITE_ELEMENT, SLOT_ELEMENT,
-    STRING_ELEMENT, UINT32_ELEMENT, UINT64_ELEMENT, VECTOR_INT64_ELEMENT,
-    ChannelMetaData, Hash, MetricPrefix, PythonDevice, Schema, State,
-    Timestamp, Types, Unit, launchPythonDevice)
+    INT32_ELEMENT, KARABO_CLASSINFO, NDARRAY_ELEMENT, NODE_ELEMENT,
+    OUTPUT_CHANNEL, OVERWRITE_ELEMENT, SLOT_ELEMENT, STRING_ELEMENT,
+    UINT32_ELEMENT, UINT64_ELEMENT, VECTOR_INT64_ELEMENT, ChannelMetaData,
+    Hash, MetricPrefix, PythonDevice, Schema, State, Timestamp, Types, Unit,
+    launchPythonDevice)
 
 
 @KARABO_CLASSINFO("PPSenderDevice", "2.2.4")
@@ -106,10 +106,6 @@ class PPSenderDevice(PythonDevice):
             STRING_ELEMENT(expected).key("scenario")
             .options("test,profile,multiSource")
             .assignmentOptional().defaultValue("test")
-            .reconfigurable()
-            .commit(),
-            BOOL_ELEMENT(expected).key("copyAllData")
-            .assignmentOptional().defaultValue(True)
             .reconfigurable()
             .commit(),
         )
@@ -195,7 +191,6 @@ class PPSenderDevice(PythonDevice):
             delayInMs = self.get("delay")
             ndarr = np.zeros((256, 256, 512), np.double)
             data = Hash()
-            copyAllData = self.get("copyAllData")
             channel = self.signalSlotable.getOutputChannel("output2")
             meta = ChannelMetaData("p2pTestSender:output1", Timestamp())
 
@@ -203,7 +198,7 @@ class PPSenderDevice(PythonDevice):
                 data.set("array", ndarr)
                 data.set("inTime", datetime.now().timestamp())
 
-                channel.write(data, meta=meta, copyAllData=copyAllData)
+                channel.write(data, meta=meta)
                 channel.update()
                 self.set("currentDataId", iData)
 
