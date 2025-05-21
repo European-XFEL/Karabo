@@ -13,14 +13,14 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
-KARABO_ALARM_SERVICE = "Karabo_AlarmService"
+KARABO_LOGGER_MANAGER = "KaraboDataLoggerManager"
 KARABO_CONFIG_MANAGER = "KaraboConfigurationManager"
 KARABO_DAEMON_MANAGER = "KaraboDaemonManager"
 KARABO_PROJECT_MANAGER = "KaraboProjectDB"
 KARABO_LOGBOOK_MANAGER = "KaraboLogBook"
 
 CORE_DEVICES_NAMES = (
-    KARABO_ALARM_SERVICE,
+    KARABO_LOGGER_MANAGER,
     KARABO_CONFIG_MANAGER,
     KARABO_DAEMON_MANAGER,
     KARABO_PROJECT_MANAGER,
