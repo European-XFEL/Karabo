@@ -24,6 +24,7 @@ import numpy as np
 import pytest
 import pytest_asyncio
 
+from karabo.common.api import KARABO_LOGGER_MANAGER
 from karabo.common.enums import Capabilities, Interfaces
 from karabo.middlelayer import (
     AccessLevel, AlarmCondition, Assignment, Configurable, DaqDataType,
@@ -519,7 +520,7 @@ async def test_cross_pipeline(deviceTest):
 async def test_history(deviceTest):
     before = datetime.now()
     serverId = "karabo_dataLogger"
-    config = {"Karabo_DataLoggerManager_0":  # id as required by `getHistory`
+    config = {KARABO_LOGGER_MANAGER:  # id as required by `getHistory`
               {"classId": "DataLoggerManager", "flushInterval": 1,
                "fileDataLogger": {"directory": "karaboHistory"},
                "serverList": [serverId]}}

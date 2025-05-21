@@ -16,6 +16,6 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 # This file is part of the initial configuration of Karabo
 cd $KARABO/var/data
-# deviceId "Karabo_DataLoggerManager_0" required by ikarabo and default gui server settings
+# deviceId "KaraboDataLoggerManager" required by ikarabo and default gui server settings
 exec envdir $KARABO/var/environment karabo-cppserver serverId=karabo/dataLoggerManager 'deviceClasses=DataLoggerManager' \
-init='{"Karabo_DataLoggerManager_0": {"classId": "DataLoggerManager", "serverList": "karabo/dataLogger"}}' 2>&1
+init='{"KaraboDataLoggerManager": {"classId": "DataLoggerManager", "serverList": "karabo/dataLogger"}}' 2>&1

@@ -40,7 +40,7 @@ namespace karabo {
         char const* const INFLUX_DURATION_UNIT = "u";         // Duration unit used for Influx (microsecs)
         unsigned int const INFLUX_PRECISION_FACTOR = 1000000; // Precision factor for time used in Influx
 
-        char const* const DATALOGMANAGER_ID = "Karabo_DataLoggerManager_0";
+        char const* const DATALOGMANAGER_ID = "KaraboDataLoggerManager";
         char const* const DATALOGGER_PREFIX = "DataLogger-";
         char const* const DATALOGREADER_PREFIX = "DataLogReader-";
         //    ts=timestamp
