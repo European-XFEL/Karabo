@@ -13,7 +13,6 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
-import warnings
 from xml.etree.ElementTree import SubElement
 
 from traits.api import Bool, Float, Instance, Int, List, String
@@ -101,15 +100,6 @@ class VectorXYGraphModel(BasePlotModel):
 
     x_grid = Bool(True)
     y_grid = Bool(True)
-
-
-class XYVectorModel(VectorXYGraphModel):
-    """a legacy model"""
-
-    def __init__(self, **traits):
-        super().__init__(**traits)
-        msg = f"{type(self)} is deprecate, use VectorXYGraphModel"
-        warnings.warn(msg, DeprecationWarning)
 
 
 class VectorBarGraphModel(BasePlotModel):
@@ -221,7 +211,6 @@ def _vector_xy_graph_reader(element):
     return VectorXYGraphModel(**traits)
 
 
-@register_scene_writer(XYVectorModel)
 @register_scene_writer(VectorXYGraphModel)
 def _vector_xy_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
