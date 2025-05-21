@@ -3,7 +3,7 @@ include(default)
 [settings]
 build_type=Release
 compiler.libcxx=libstdc++11
-compiler.cppstd=17
+compiler.cppstd=20
 
 # [env]
 # cpython/*:LDFLAGS="-Wl,--disable-new-dtags,-rpath,\$$ORIGIN/../lib,-z,origin"
@@ -13,7 +13,7 @@ compiler.cppstd=17
 # ncurses/*:CXX=g++
 
 [tool_requires]
-cmake/3.29.7
+cmake/4.0.1
 b2/5.3.2
 
 [conf]
