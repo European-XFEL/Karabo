@@ -211,8 +211,7 @@ Available flags:
   --quiet      - suppress commands' stdout on success
 
 Note: "Clean" cleans all Karabo code (src folder)
-      "Clean-All" additionally cleans all external dependencies (conan build cache)
-                  WARNING: this clears the conan cache of the current user
+      "Clean-All" additionally cleans all external dependencies.
       "CodeCoverage" builds the Karabo framework with CodeCoverage configuration,
                      but also implicitly runs the unit and integration tests
                      and produces code coverage reports. The CodeCoverage configuration
