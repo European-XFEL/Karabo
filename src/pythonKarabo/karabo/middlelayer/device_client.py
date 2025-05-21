@@ -33,7 +33,7 @@ from weakref import ref
 import dateutil.parser
 import dateutil.tz
 
-from karabo.common.services import KARABO_CONFIG_MANAGER
+from karabo.common.services import KARABO_CONFIG_MANAGER, KARABO_LOGGER_MANAGER
 from karabo.native import (
     Hash, KaraboError, KaraboValue, Schema, Timestamp, isStringSet)
 
@@ -331,7 +331,7 @@ async def _getLogReaderId(deviceId):
     loggerMap = getattr(instance, "loggerMap", None)
     if loggerMap is None or loggerId not in loggerMap:
         instance.loggerMap = await instance.call(
-            "Karabo_DataLoggerManager_0", "slotGetLoggerMap")
+            KARABO_LOGGER_MANAGER, "slotGetLoggerMap")
         if loggerId not in instance.loggerMap:
             raise KaraboError('no logger for device "{}"'.
                               format(deviceId))

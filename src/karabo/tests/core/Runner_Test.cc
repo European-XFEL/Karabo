@@ -44,7 +44,7 @@ void Runner_Test::tearDown() {}
 void Runner_Test::testRunnerSuccess() {
     using namespace karabo::data;
     std::string initval =
-          "{\"Karabo_DataLoggerManager_0\": {\"classId\": \"DataLoggerManager\", "
+          "{\"KaraboDataLoggerManager\": {\"classId\": \"DataLoggerManager\", "
           "\"serverList\": [\"dls1\", \"dls2\", \"dls3\", \"dls4\"], \"param1\": 12, "
           "\"param2\": 99}}";
 
