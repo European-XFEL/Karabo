@@ -72,10 +72,10 @@ variables:
       if type "pipx" > /dev/null; then
           # use pipx when available; needed for Ubuntu since 23.04; details at:
           # https://askubuntu.com/questions/1465218/pip-error-on-ubuntu-externally-managed-environment-%C3%97-this-environment-is-extern
-          pipx install --global conan==2.5.0
+          pipx install --global conan==2.16.1
       else
           python3 -m pip install --upgrade pip
-          python3 -m pip install conan==2.5.0
+          python3 -m pip install conan==2.16.1
       fi
     # do CI build
     - source set_lsb_release_info.sh

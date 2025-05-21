@@ -91,19 +91,6 @@ safeRunCommandQuiet() {
     exec 3>&1
 }
 
-add_conan_mirrors() {
-    # Setup mirrors for conan to look for
-    for mirror in "${!CONAN_MIRRORS[@]}"; do
-        mirror_url="${CONAN_MIRRORS[$mirror]}"
-        if conan remote list | grep -q "$mirror_url"; then
-            echo "Remote $mirror is already added."
-        else
-            echo "Adding remote $mirror with URL $mirror_url"
-            safeRunCommandQuiet conan remote add "$mirror" "$mirror_url"
-        fi
-    done
-}
-
 install_python() {
     pushd $scriptDir
 
@@ -112,7 +99,6 @@ install_python() {
     # create default build profile
     safeRunCommandQuiet "conan profile detect --force"
 
-    add_conan_mirrors
     # configure prefix paths
     local folder_opts="--deployer=karabo_deployer --deployer-folder=$INSTALL_PREFIX --output-folder=$INSTALL_PREFIX/conan_toolchain"
     # build python if not found in conan cache
@@ -145,6 +131,12 @@ install_python() {
         safeRunCommandQuiet "conan remote update conancenter --url https://center2.conan.io"
     fi
 
+    # Some dependencies, like libpng specify minimum required versions of cmake to be older than
+    # "3.5" - starting with cmake "4.X", the minimum cmake version must be at least "3.5".
+    # Details at https://cmake.org/cmake/help/v4.0/release/4.0.html#id14
+    # Setting the environment variable below allows passing the cmake check.
+    export CMAKE_POLICY_VERSION_MINIMUM="3.5"
+
     safeRunCommandQuiet "conan install conanfile-bootstrap.txt $folder_opts $build_opts $profile_opts"
 
     # ensure that python can always find its libpython.so
@@ -172,7 +164,6 @@ install_from_deps() {
     # create default build profile
     safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan profile detect --force"
 
-        add_conan_mirrors
         # export local conan recipes (for packages where no public recipe exists
         # we keep custom conan recipes in extern/resources/<pkg_name>)
         safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan export ./resources/daemontools/conanfile.py --name daemontools-encore --version $DAEMONTOOLS_VERSION --user karabo --channel $CONAN_RECIPE_CHANNEL"

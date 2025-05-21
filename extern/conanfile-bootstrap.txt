@@ -1,6 +1,6 @@
 [requires]
 cpython/3.12.2
-cmake/3.29.7
+cmake/4.0.1
 expat/2.6.2
 openssl/1.1.1w
 patchelf/0.13
