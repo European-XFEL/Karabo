@@ -57,7 +57,7 @@ from .module import create_module
 from .sanity_check import has_sub_imports
 from .savable import BaseSavableModel, set_initialized_flag, set_modified_flag
 from .services import (
-    KARABO_ALARM_SERVICE, KARABO_CONFIG_MANAGER, KARABO_DAEMON_MANAGER,
-    KARABO_LOGBOOK_MANAGER, KARABO_PROJECT_MANAGER)
+    KARABO_CONFIG_MANAGER, KARABO_DAEMON_MANAGER, KARABO_LOGBOOK_MANAGER,
+    KARABO_LOGGER_MANAGER, KARABO_PROJECT_MANAGER)
 from .states import State, StateSignifier
 from .utils import WeakMethodRef, walk_traits_object
