@@ -46,6 +46,7 @@ from .utils import get_dialog_ui
 TIMER_DELAY = 500  # ms
 TOKEN_CHECK_TIME = 3000  # 3s
 REQUEST_HEADER = "application/json"
+CONNECTION_CHECK_TIME = 5000  # 5s
 
 USER_INFO = """<p>You are logged in as '<span style=" font-weight:600;">
 {username}</span>'. Click 'Connect' to continue or</p><p>'Switch User' to
@@ -230,6 +231,11 @@ class ReactiveLoginDialog(QDialog):
         self._timer.setSingleShot(True)
         self._timer.timeout.connect(self.connectToServer)
 
+        self._connection_check_timer = QTimer(self)
+        self._connection_check_timer.setInterval(CONNECTION_CHECK_TIME)
+        self._connection_check_timer.timeout.connect(self._connect_to_server)
+        self._connection_check_timer.start()
+
         self._token_check_timer = QTimer(parent=self)
         self._token_check_timer.timeout.connect(self._look_for_token)
 
@@ -336,6 +342,12 @@ class ReactiveLoginDialog(QDialog):
 
     @Slot()
     def connectToServer(self):
+        """Connect to the server and update the dialog."""
+        self._connect_to_server()
+        self._update_dialog_state()
+
+    @Slot()
+    def _connect_to_server(self):
         """Connect to the server"""
         if self._tcp_socket.state() != QTcpSocket.UnconnectedState:
             self._tcp_socket.abort()
@@ -350,7 +362,6 @@ class ReactiveLoginDialog(QDialog):
         self.login_type = LoginType.UNKNOWN
         self._tcp_socket.connectToHost(self._queried_host,
                                        int(self._queried_port))
-        self._update_dialog_state()
 
     @Slot()
     def onReadServerData(self):
