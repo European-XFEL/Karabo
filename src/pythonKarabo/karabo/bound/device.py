@@ -1690,23 +1690,6 @@ class PythonDevice:
                     key, "alarmCondition", separator)
                 return AlarmCondition.fromString(condition)
 
-    def hasRollingStatistics(self, key):
-        with self._stateChangeLock:
-            return self._fullSchema.hasRollingStatistics(key)
-
-    def getRollingStatistics(self, key):
-        with self._stateChangeLock:
-            # TODO
-            # I fear we have to copy here, since 'getRollingStatistics is
-            # defined as 'bp::return_internal_reference<>()' in PyUtilSChema.cc
-            return self.validatorIntern.getRollingStatistics(key)
-
-    @staticmethod
-    def loadConfiguration(cfgFile):
-        cfg = loadFromFile(cfgFile)
-        os.remove(cfgFile)
-        return cfg
-
     # the following functions expose parts of SignalSlotable to the public
     # device interface.
 
@@ -1807,7 +1790,8 @@ def launchPythonDevice():
     # NOTE: The first argument is '-c'
     _, modname, classid, cfgFile = tuple(sys.argv)
 
-    config = PythonDevice.loadConfiguration(cfgFile)
+    config = loadFromFile(cfgFile)
+    os.remove(cfgFile)
     if '_connection_' in config:
         # Inject broker connection parameters into PythonDevice class, so
         # all possible instances share the same broker configuration
