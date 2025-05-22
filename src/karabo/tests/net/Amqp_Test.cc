@@ -258,6 +258,8 @@ void Amqp_Test::testConnection() {
         connection->dispatch([movedOnProm]() { movedOnProm->set_value(); });
         movedOnFut.wait();
 
+        // Rarely, direct check of use_count gave 2. Give other threads the chance to finish
+        waitForCondition([&connection]() { return connection.use_count() == 1l; }, m_timeoutMs);
         CPPUNIT_ASSERT_EQUAL(1l, connection.use_count());
         CPPUNIT_ASSERT_NO_THROW(connection.reset());
         CPPUNIT_ASSERT_EQUAL(std::future_status::ready, connFut.wait_for(m_timeout));
