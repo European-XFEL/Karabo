@@ -1000,7 +1000,7 @@ def instantiateNoWait(serverId, classId, deviceId="", configuration=None,
     configuration.update(kwargs)
     h = Hash("classId", classId, "deviceId", deviceId,
              "configuration", configuration)
-    get_instance()._sigslot.emit("call", {serverId: ["slotStartDevice"]}, h)
+    get_instance().callNoWait(serverId, "slotStartDevice", h)
 
 
 @synchronize
@@ -1020,7 +1020,7 @@ def shutdownNoWait(device):
     not waiting version of :func:`shutdown`"""
     if isinstance(device, ProxyBase):
         device = device._deviceId
-    get_instance()._sigslot.emit("call", {device: ["slotKillDevice"]})
+    get_instance().callNoWait(device, "slotKillDevice")
 
 
 @synchronize
@@ -1076,7 +1076,7 @@ def setNoWait(device, *args, **kwargs):
         else:
             h[k] = v
 
-    get_instance()._sigslot.emit("call", {device: ["slotReconfigure"]}, h)
+    get_instance().callNoWait(device, "slotReconfigure", h)
 
 
 def executeNoWait(device, slot):
@@ -1095,7 +1095,7 @@ def executeNoWait(device, slot):
     this is not desired, use executeNoWait."""
     if isinstance(device, ProxyBase):
         device = device._deviceId
-    get_instance()._sigslot.emit("call", {device: [slot]})
+    get_instance().callNoWait(device, slot)
 
 
 @synchronize

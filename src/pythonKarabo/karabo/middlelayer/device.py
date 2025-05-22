@@ -301,6 +301,7 @@ class Device(InjectMixin, SignalSlotable):
 
     def _checkLocked(self, message):
         """return an error message if device is locked or None if not"""
+        # See hack in Broker.decodeMessage about "slotFunctions" in header
         lock_clear = ("slotClearLock"
                       in self._sigslot.get_property(message, "slotFunctions"))
         if (self.lockedBy and self.lockedBy !=
@@ -408,8 +409,8 @@ class DeviceClientBase(Device):
 
     async def _run(self, **kwargs):
         await super()._run(**kwargs)
-        await self._sigslot.async_emit(
-            "call", {"*": ["slotDiscover"]}, self.deviceId)
+        await self._sigslot.async_call_slot("*", "slotDiscover",
+                                            None, self.deviceId)
         # We are collecting all the instanceInfo's and wait for their arrival
         # before the device comes online.
         # Some clients, such as ikarabo, don't want to wait this additional

@@ -29,72 +29,57 @@
 
 #include <amqpcpp/table.h>
 
+#include <map>
+#include <set>
+
 #include "AmqpHashClient.hh"
 #include "Broker.hh"
 #include "Strand.hh"
-
+#include "karabo/data/types/Hash.hh"
 
 namespace karabo {
-    namespace util {
-        class Hash;
+    namespace data {
         class Schema;
-    } // namespace util
+    }
     namespace net {
 
 
         class AmqpBroker : public Broker {
             /**
-             * AmqpBroker operates currently with the following set of ...
              *
-             *  Signals are sent to the exchange ...
+             * AmqpBroker works as follows on top of AmqpHashClient
+             *
+             *
+             *  Signals are sent with
              *  -------
              *  exchange    = <domain>.signals
-             *  routing_key = <signalInstanceId>.<signalName>   <-- selector
-             *  queue       = <m_instanceId>              <-- common queue
-             *
-             *  the signals are emitted to the exchange bound via routing_key to the queue.
-             *  The slotInstanceIds should subscribe to the AMQP::topic type exchange
-             *  with the 'routing_key' and queue = <slotInstanceId>
+             *  routing_key = <senderInstanceId>.<signalName>   <-- selector
              *
              *
-             * Special case of above signals... signalHeartbeat ...
-             * ------------                     ----------------
-             *  exchange    = <domain>.signals
-             *  routing_key = <signalInstanceId>.signalHeartbeat
-             *  queue       = <m_instanceId>
-             *
-             *  Calls, commands, requests, replies are sent to
+             *  One-to-one slot calls (including replies) are sent with
              *  ----------------------------------
              *  exchange    = <domain>.slots
-             *  routing_key = <slotInstanceId>
-             *  queue       = <m_instanceId>              <-- common queue
-             *
-             *  all requests/calls/replies to the device send to this exchange
-             *  The further message dispatching to slots is provided by using info in message header.
+             *  routing_key = <receiverInstanceId>.<slotToCall>
              *
              *
-             *  Broadcast messages should be sent to ...
+             *  Broadcast messages are sent with
              *  ------------------
              *  exchange    = <domain>.global_slots
-             *  routing_key = ""
-             *  queue       = <m_instanceId>
+             *  routing_key = <senderInstanceId>.<slotToCall>
              *
-             *  there is a way of implementing "broadcast" messages like in
-             *  JmsBroker.  In JMS it was enough to use "|*|" in header's slotInstanceIds.  In AMQP we have to
-             *  be subscribed to such exchange (to receive broadcast messages).  Known global slots:
-             *     slotInstanceNew      -- to announce the new device in Karabo network
-             *     slotInstanceUpdated  -- to announce the device info to be updated
-             *     slotInstanceGone     -- to announce device death,
-             *     slotPing             -- to trigger sending their status by all devices received such message
+             * Note that only a limited list of broadcast slot are supported.
              *
-             *  GUI debug
-             *  ---------
-             *  exchange    = <domain>.karaboGuiDebug
-             *  routing_key = ""
-             *  queue       = <as gui debug listener defines>
              *
-             *   GUI debugging channel
+             * All messages are received on the read handler passed to the constructor.
+             * The first argument of the read handler is the slot to call.
+             * For 1-to-1 and broadcast messages that is the "slotToCall" of the routing key,
+             * i.e. the "slot" argument of the respective 'send*' method.
+             * For signals, the slot is defined when subscribing to the signal.
              *
+             * Broadcast messages are only received if they are not deselected before starting to read
+             * via setConsumeBroadcasts(false).
+             * The slotHeartbeat is even more special, it is only received if startReadingHeartbeats()
+             * is called.
              */
 
            public:
@@ -125,24 +110,30 @@ namespace karabo {
                 return getClassInfo().getClassId();
             }
 
-            boost::system::error_code subscribeToRemoteSignal(const std::string& signalInstanceId,
+            boost::system::error_code subscribeToRemoteSignal(const std::string& slot,
+                                                              const std::string& signalInstanceId,
                                                               const std::string& signalFunction) override;
 
-            boost::system::error_code unsubscribeFromRemoteSignal(const std::string& signalInstanceId,
+            boost::system::error_code unsubscribeFromRemoteSignal(const std::string& slot,
+                                                                  const std::string& signalInstanceId,
                                                                   const std::string& signalFunction) override;
 
-            void subscribeToRemoteSignalAsync(const std::string& signalInstanceId, const std::string& signalFunction,
+            void subscribeToRemoteSignalAsync(const std::string& slot, const std::string& signalInstanceId,
+                                              const std::string& signalFunction,
                                               const AsyncHandler& completionHandler) override;
 
-            void unsubscribeFromRemoteSignalAsync(const std::string& signalInstanceId,
+            void unsubscribeFromRemoteSignalAsync(const std::string& slot, const std::string& signalInstanceId,
                                                   const std::string& signalFunction,
                                                   const AsyncHandler& completionHandler) override;
 
             /**
-             * AMQP subscription:
-             * subscribe to the following exchanges...
-             *   "m_domain.slots" with routingKey m_instanceId
-             *   "m_domain.global_slots"
+             * Start reading messages from the broker
+             *
+             * By default, AmqpBroker subscribes to 1-to-1 slots for this instance
+             * (exchange "<domain>.slots", routing key "<instanceId>.*") and the normal broadcast slots
+             * (exchange "<domain>.global_slots", routing key "<instanceId>.<global_slot>"), i.e.
+             * not for slotHeartbeat.
+             * If setConsumeBroadcasts(false) was called before, the subscription to the broadcast slots is skipped.
              *
              * @param handler       - success handler
              * @param errorNotifier - error handler
@@ -153,38 +144,57 @@ namespace karabo {
             void stopReading() override;
 
             /**
-             * Heartbeat is used for tracking instances (tracking all instances or no tracking at all)
+             * Subscribe to heart beat broadcast messages
              *
-             * AMQP subscription
-             * Subscribe to the exchange "m_domain.signals" with the
-             * routing key: "*.signalHeartbeat"  heartbeats of all known connections
+             * Broadcast messages to "slotHeartbeat" will now be read
+             * (exchange "<domain>.global_slots", routing key "*.slotHeartbeat").
              *
-             * @param handler       - success handler
-             * @param errorNotifier - error handler
+             * Must be called after startReading, heartbeats are fed to the same handler.
              */
-            void startReadingHeartbeats(
-                  const consumer::MessageHandler& handler,
-                  const consumer::ErrorNotifier& errorNotifier = consumer::ErrorNotifier()) override;
+            void startReadingHeartbeats() override;
 
             /**
-             * Write message to broker, blocks until written
+             * Send a signal message
              *
-             * @param topic Either the "domain" as passed to the Broker base class,
-             *              the "domain" with the suffix "_beats", or "karaboGuiDebug"
-             * @param header of the message - must contain
-             * @param body of the message
+             * @param signal the signal
+             * @param header message header
+             * @param body message body
              */
-            void write(const std::string& topic, const karabo::data::Hash::Pointer& header,
-                       const karabo::data::Hash::Pointer& body) override;
+            void sendSignal(const std::string& signal, const karabo::data::Hash::Pointer& header,
+                            const karabo::data::Hash::Pointer& body) override;
+
+            /**
+             * Send a broadcast message
+             *
+             * @param slot the broadcast slot
+             * @param header message header
+             * @param body message body
+             */
+            void sendBroadcast(const std::string& slot, const karabo::data::Hash::Pointer& header,
+                               const karabo::data::Hash::Pointer& body) override;
+
+            /**
+             * Send a 1-to-1 message
+             *
+             * @param receiverId the instance id of the addressee
+             * @param slot the addressee's slot to call
+             * @param header message header
+             * @param body message body
+             */
+            void sendOneToOne(const std::string& receiverId, const std::string& slot,
+                              const karabo::data::Hash::Pointer& header,
+                              const karabo::data::Hash::Pointer& body) override;
 
            private:
             AmqpBroker(const AmqpBroker& o) = delete;
             AmqpBroker(const AmqpBroker& o, const std::string& newInstanceId);
 
-            void amqpReadHandler(const data::Hash::Pointer& header, const data::Hash::Pointer& body);
-            void amqpReadHandlerBeats(const data::Hash::Pointer& header, const data::Hash::Pointer& body);
+            void amqpReadHandler(const data::Hash::Pointer& header, const data::Hash::Pointer& body,
+                                 const std::string& exchange, const std::string& key);
             void amqpErrorNotifier(const std::string& msg);
-            void amqpErrorNotifierBeats(const std::string& msg);
+
+            void publish(const std::string& exchange, const std::string& routingKey,
+                         const karabo::data::Hash::Pointer& header, const karabo::data::Hash::Pointer& body);
 
             karabo::net::AmqpConnection::Pointer m_connection;
 
@@ -193,10 +203,14 @@ namespace karabo {
             karabo::net::consumer::MessageHandler m_readHandler;
             karabo::net::consumer::ErrorNotifier m_errorNotifier;
 
-            karabo::net::AmqpHashClient::Pointer m_heartbeatClient;
-            karabo::net::Strand::Pointer m_handlerStrandBeats;
-            karabo::net::consumer::MessageHandler m_readHandlerBeats;
-            karabo::net::consumer::ErrorNotifier m_errorNotifierBeats;
+
+            /// Key is routing key of a signal (<instanceId>.<signalName>),
+            /// value is set of slot names subscribed
+            /// Concurrency protection by ensuring that touched only within m_handlerStrand
+            std::map<std::string, std::set<std::string>> m_slotsForSignals;
+
+            const std::string m_slotExchange;
+            const std::string m_globalSlotExchange;
         };
 
     } // namespace net

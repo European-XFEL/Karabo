@@ -121,18 +121,7 @@ namespace karabo {
                  */
             }
 
-            /**
-             * This function allows to use a specific topic to which all messages are emitted
-             * If the setter is not called, the topic of SignalSlotable will be used
-             * NOTE: The idea is to keep a door open for a later change where each emit will use a topic
-             * identical to the signal name. In that case the setter can just be removed.
-             * @param topic The topic name
-             */
-            void setTopic(const std::string& topic);
-
            protected:
-            void setSlotStrings(const SlotMap& slots, karabo::data::Hash& header) const;
-
             karabo::data::Hash::Pointer prepareHeader(const SlotMap& slots) const;
 
            private:
@@ -145,7 +134,6 @@ namespace karabo {
             const std::string m_signalFunction;
             std::mutex m_registeredSlotsMutex;
             SlotMap m_registeredSlots;
-            std::string m_topic;
 
            private:
             std::type_index m_argsType;

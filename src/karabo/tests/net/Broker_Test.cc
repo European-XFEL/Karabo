@@ -48,7 +48,8 @@ Broker_Test::Broker_Test()
       m_thread(),
       m_config(),
       m_brokersUnderTest(getBrokersFromEnv()),
-      m_invalidBrokers({{"amqp", INVALID_AMQP}}) {}
+      m_invalidBrokers({{"amqp", INVALID_AMQP}}),
+      m_timeout(10) {}
 
 Broker_Test::~Broker_Test() {}
 
@@ -154,16 +155,19 @@ void Broker_Test::_testPublishSubscribe() {
     auto fut = prom->get_future();
 
     constexpr int maxLoop = 10;
+    auto slotToCall = std::make_shared<std::string>();
 
     // Ensure the subscriber is receiving messages
     alice->startReading(
-          [prom, &maxLoop](Hash::Pointer h, Hash::Pointer data) {
+          [prom, &maxLoop, slotToCall](const std::string& slot, bool /*isBroadcast*/, Hash::Pointer h,
+                                       Hash::Pointer data) {
+              *slotToCall = slot;
               int loop = h->get<int>("count");
               if (loop >= maxLoop) prom->set_value(true);
           },
           [prom](consumer::Error err, const std::string& msg) { prom->set_value(false); });
 
-    error_code ec = alice->subscribeToRemoteSignal("bob", "signalFromBob");
+    error_code ec = alice->subscribeToRemoteSignal("aliceSlot", "bob", "signalFromBob");
     CPPUNIT_ASSERT(!ec);
 
     // Clone a producer "Bob" which uses the same broker settings...
@@ -175,20 +179,21 @@ void Broker_Test::_testPublishSubscribe() {
     CPPUNIT_ASSERT(bob->getBrokerUrl() == alice->getBrokerUrl());
     CPPUNIT_ASSERT(bob->getDomain() == alice->getDomain());
 
-    auto hdr = std::make_shared<Hash>("signalInstanceId", "bob", "signalFunction", "signalFromBob", "slotInstanceIds",
-                                      "|alice|", "slotFunctions", "|alice:aliceSlot");
+    auto hdr = std::make_shared<Hash>("signalInstanceId", "bob");
     auto body = std::make_shared<Hash>("a.b.c", 42);
 
     for (int i = 0; i < maxLoop; ++i) {
         hdr->set("count", i + 1);
-        CPPUNIT_ASSERT_NO_THROW(bob->write(m_domain, hdr, body));
+        CPPUNIT_ASSERT_NO_THROW(bob->sendSignal("signalFromBob", hdr, body));
     }
 
     // Wait on future ...
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, fut.wait_for(m_timeout));
     bool result = fut.get();
     CPPUNIT_ASSERT(result);
+    CPPUNIT_ASSERT_EQUAL(std::string("aliceSlot"), *slotToCall);
 
-    ec = alice->unsubscribeFromRemoteSignal("bob", "signalFromBob");
+    ec = alice->unsubscribeFromRemoteSignal("aliceSlot", "bob", "signalFromBob");
     CPPUNIT_ASSERT(!ec);
     CPPUNIT_ASSERT_NO_THROW(alice->stopReading());
     CPPUNIT_ASSERT_NO_THROW(bob->disconnect());
@@ -215,12 +220,15 @@ void Broker_Test::_testPublishSubscribeAsync() {
 
     auto prom = std::make_shared<std::promise<bool>>();
     auto fut = prom->get_future();
+    auto slotToCall = std::make_shared<std::string>();
 
     constexpr int maxLoop = 10;
 
     // Ensure the subscriber is receiving messages
     alice->startReading(
-          [prom, &maxLoop](Hash::Pointer h, Hash::Pointer data) {
+          [prom, &maxLoop, slotToCall](const std::string& slot, bool /*isBroadcast*/, Hash::Pointer h,
+                                       Hash::Pointer data) {
+              *slotToCall = slot;
               int loop = data->get<int>("c");
               if (loop >= maxLoop) prom->set_value(true);
           },
@@ -229,8 +237,9 @@ void Broker_Test::_testPublishSubscribeAsync() {
     {
         auto p = std::make_shared<std::promise<boost::system::error_code>>();
         auto f = p->get_future();
-        alice->subscribeToRemoteSignalAsync("bob", "signalFromBob",
+        alice->subscribeToRemoteSignalAsync("aliceSlot", "bob", "signalFromBob",
                                             [p](const boost::system::error_code& ec) { p->set_value(ec); });
+        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, f.wait_for(m_timeout));
         auto ec = f.get();
         CPPUNIT_ASSERT(!ec);
     }
@@ -246,28 +255,29 @@ void Broker_Test::_testPublishSubscribeAsync() {
         CPPUNIT_ASSERT(bob->getInstanceId() == "bob");
         CPPUNIT_ASSERT(bob->getDomain() == alice->getDomain());
 
-        Hash::Pointer header =
-              std::make_shared<Hash>("signalInstanceId", "bob", "signalFunction", "signalFromBob", "slotInstanceIds",
-                                     "|alice|", "slotFunctions", "|alice:aliceSlot|");
+        Hash::Pointer header = std::make_shared<Hash>("signalInstanceId", "bob");
 
         Hash::Pointer data = std::make_shared<Hash>("a", std::string("free text"), "b", 3.1415F);
 
         for (int i = 0; i < maxLoop; ++i) {
             data->set<int>("c", i + 1);
-            CPPUNIT_ASSERT_NO_THROW(bob->write(bob->getDomain(), header, data));
+            CPPUNIT_ASSERT_NO_THROW(bob->sendSignal("signalFromBob", header, data));
         }
     });
 
     // Wait on future ... when Alice reads all maxLoop messages or failure happens...
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, fut.wait_for(m_timeout));
     bool result = fut.get();
     CPPUNIT_ASSERT(result);
     t.join(); // join thread ... otherwise application is terminated
+    CPPUNIT_ASSERT_EQUAL(std::string("aliceSlot"), *slotToCall);
 
     {
         auto p = std::make_shared<std::promise<boost::system::error_code>>();
         auto f = p->get_future();
-        alice->unsubscribeFromRemoteSignalAsync("bob", "signalFromBob",
+        alice->unsubscribeFromRemoteSignalAsync("aliceSlot", "bob", "signalFromBob",
                                                 [p](const boost::system::error_code& ec) { p->set_value(ec); });
+        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, f.wait_for(m_timeout));
         auto ec = f.get();
         CPPUNIT_ASSERT(!ec);
     }
@@ -283,25 +293,6 @@ void Broker_Test::testReadingHeartbeats() {
 
 
 void Broker_Test::_testReadingHeartbeats() {
-    //    'signalInstanceId' => bob STRING
-    //    'signalFunction' => __call__ STRING
-    //    'slotInstanceIds' => |*| STRING
-    //    'slotFunctions' => |*:slotHeartbeat| STRING
-    //    'hostName' => exflpcx21502.desy.de STRING
-    //    'userName' =>  STRING
-    //
-    //    'a1' => bob STRING
-    //    'a2' +
-    //      'type' => device STRING
-    //      'classId' => AmqpBroker STRING
-    //      'serverId' => __none__ STRING
-    //      'host' => exflpcx21502 STRING
-    //      'status' => ok STRING
-    //      'archive' => 0 BOOL
-    //      'capabilities' => 0 UINT32
-    //      'heartbeatInterval' => 1 INT32
-    //      'karaboVersion' => 2.11.0a10-48-g71844e8ab-dirty STRING
-
     std::string classId = m_config.begin()->getKey();
     m_config.set(classId + ".instanceId", "alice");
 
@@ -319,62 +310,62 @@ void Broker_Test::_testReadingHeartbeats() {
     auto futBeats = promBeats->get_future();
 
     constexpr int maxLoop = 10;
-    int counter = 0;
+    int counterBeats = 0;
     // Ensure the subscriber is receiving messages
     alice->startReading(
-          [prom](Hash::Pointer h, Hash::Pointer data) {
-              try {
-                  CPPUNIT_ASSERT_EQUAL(std::string("bob"), h->get<std::string>("signalInstanceId"));
-                  CPPUNIT_ASSERT_EQUAL(std::string("signalFromBob"), h->get<std::string>("signalFunction"));
-                  CPPUNIT_ASSERT_EQUAL(1, data->get<int>("c"));
-              } catch (const std::exception& e) {
-                  std::clog << __FILE__ << ":" << __LINE__ << " " << e.what() << std::endl;
+          [prom, promBeats, maxLoop, &counterBeats](const std::string& slot, bool isBroadcast, Hash::Pointer h,
+                                                    Hash::Pointer data) {
+              if (slot == "slotAlice") {
+                  try {
+                      CPPUNIT_ASSERT_EQUAL(std::string("bob"), h->get<std::string>("signalInstanceId"));
+                      CPPUNIT_ASSERT_EQUAL(1, data->get<int>("c"));
+                      CPPUNIT_ASSERT(!isBroadcast);
+                  } catch (const std::exception& e) {
+                      std::clog << __FILE__ << ":" << __LINE__ << " " << e.what() << std::endl;
+                      prom->set_value(false);
+                      return;
+                  }
+                  prom->set_value(true);
+              } else if (slot == "slotHeartbeat") {
+                  try {
+                      Hash::Pointer d(data);
+                      CPPUNIT_ASSERT_EQUAL(std::string("bob"), h->get<std::string>("signalInstanceId"));
+                      CPPUNIT_ASSERT(d->has("a1"));
+                      CPPUNIT_ASSERT(d->has("a2"));
+                      CPPUNIT_ASSERT(!d->has("a3"));
+                      CPPUNIT_ASSERT(d->has("a2.c"));
+                      CPPUNIT_ASSERT_EQUAL(counterBeats, d->get<int>("a2.c"));
+                      CPPUNIT_ASSERT(isBroadcast);
+                      if (++counterBeats == maxLoop) promBeats->set_value(true);
+                  } catch (const std::exception& e) {
+                      std::clog << __FILE__ << ":" << __LINE__ << " " << e.what() << std::endl;
+                      promBeats->set_value(false);
+                  }
+              } else {
+                  std::clog << "Unknown slot received: " << slot << std::endl;
                   prom->set_value(false);
-                  return;
-              }
-              prom->set_value(true);
-          },
-          [prom](consumer::Error err, const std::string& msg) { prom->set_value(false); });
-
-    alice->startReadingHeartbeats(
-          [promBeats, maxLoop, &counter](Hash::Pointer h, Hash::Pointer d) {
-              try {
-                  CPPUNIT_ASSERT_EQUAL(std::string("__call__"), h->get<std::string>("signalFunction"));
-                  CPPUNIT_ASSERT_EQUAL(std::string("bob"), h->get<std::string>("signalInstanceId"));
-                  CPPUNIT_ASSERT(d->has("a1"));
-                  CPPUNIT_ASSERT(d->has("a2"));
-                  CPPUNIT_ASSERT(!d->has("a3"));
-                  CPPUNIT_ASSERT(d->has("a2.c"));
-                  CPPUNIT_ASSERT_EQUAL(counter, d->get<int>("a2.c"));
-                  if (++counter == maxLoop) promBeats->set_value(true);
-              } catch (const std::exception& e) {
-                  std::clog << __FILE__ << ":" << __LINE__ << " " << e.what() << std::endl;
                   promBeats->set_value(false);
               }
           },
-          [promBeats](karabo::net::consumer::Error ec, const std::string& message) {
-              std::clog << "Heartbeat error: " << message << std::endl;
-              promBeats->set_value(false);
-          });
+          [prom](consumer::Error err, const std::string& msg) { prom->set_value(false); });
+
+    alice->startReadingHeartbeats();
 
     {
-        boost::system::error_code ec = alice->subscribeToRemoteSignal("bob", "signalFromBob");
+        boost::system::error_code ec = alice->subscribeToRemoteSignal("slotAlice", "bob", "signalFromBob");
         CPPUNIT_ASSERT(!ec);
     }
 
     auto bob = alice->clone("bob");
 
     auto t = std::jthread([this, maxLoop, classId, alice, bob]() {
-        using namespace std::chrono_literals;
-
         CPPUNIT_ASSERT_NO_THROW(bob->connect());
         CPPUNIT_ASSERT(bob->isConnected());
         CPPUNIT_ASSERT(bob->getBrokerType() == classId);
         CPPUNIT_ASSERT(bob->getInstanceId() == "bob");
         CPPUNIT_ASSERT(bob->getDomain() == alice->getDomain());
 
-        Hash::Pointer header = std::make_shared<Hash>("signalInstanceId", "bob", "signalFunction", "__call__",
-                                                      "slotInstanceIds", "|*|", "slotFunctions", "|*:slotHeartbeat|");
+        Hash::Pointer header = std::make_shared<Hash>("signalInstanceId", "bob");
 
         Hash::Pointer data = std::make_shared<Hash>(
               "a1", std::string("bob"), "a2",
@@ -383,24 +374,22 @@ void Broker_Test::_testReadingHeartbeats() {
         for (int i = 0; i < maxLoop; ++i) {
             // Bob sends heartbeat
             data->set<int>("a2.c", i);
-            CPPUNIT_ASSERT_NO_THROW(bob->write(m_domain, header, data));
+            CPPUNIT_ASSERT_NO_THROW(bob->sendBroadcast("slotHeartbeat", header, data));
         }
 
-        Hash::Pointer h2 = std::make_shared<Hash>("signalInstanceId", "bob", "signalFunction", "signalFromBob",
-                                                  "slotInstanceIds", "|alice|", "slotFunctions", "|alice:someSlot");
+        Hash::Pointer h2 = std::make_shared<Hash>("signalInstanceId", "bob");
         Hash::Pointer d2 = std::make_shared<Hash>("c", 1);
 
         // Trigger the end of the test
-        CPPUNIT_ASSERT_NO_THROW(bob->write(m_domain, h2, d2));
+        CPPUNIT_ASSERT_NO_THROW(bob->sendSignal("signalFromBob", h2, d2));
     });
 
     // Wait on future ... when Alice reads all maxLoop messages or failure happens...
 
-    const std::chrono::seconds timeout(10);
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futBeats.wait_for(timeout));
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futBeats.wait_for(m_timeout));
     const bool resultBeats = futBeats.get();
     CPPUNIT_ASSERT(resultBeats);
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, fut.wait_for(timeout));
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, fut.wait_for(m_timeout));
     const bool result = fut.get();
     CPPUNIT_ASSERT(result);
     t.join(); // join  ... otherwise terminate() called
@@ -443,10 +432,11 @@ void Broker_Test::_testReadingGlobalCalls(const std::vector<std::string>& broker
     auto promNonGlobal1 = std::make_shared<std::promise<std::string>>();
     auto futNonGlobal1 = promNonGlobal1->get_future();
 
-    auto readHandlerBoth1 = [promGlobal1, promNonGlobal1](Hash::Pointer hdr, Hash::Pointer body) {
-        if (body->has("msg") && body->is<std::string>("msg")) {
+    auto readHandlerBoth1 = [promGlobal1, promNonGlobal1](const std::string& slot, bool isBroadcast, Hash::Pointer hdr,
+                                                          Hash::Pointer body) {
+        if (body->has("msg") && body->is<std::string>("msg") && !isBroadcast) {
             promNonGlobal1->set_value(body->get<std::string>("msg"));
-        } else if (body->has("msgToAll") && body->is<std::string>("msgToAll")) {
+        } else if (body->has("msgToAll") && body->is<std::string>("msgToAll") && isBroadcast) {
             promGlobal1->set_value(body->get<std::string>("msgToAll"));
         } else {
             // unexpected - "invalidate" both
@@ -465,10 +455,11 @@ void Broker_Test::_testReadingGlobalCalls(const std::vector<std::string>& broker
     auto promNonGlobal2 = std::make_shared<std::promise<std::string>>();
     auto futNonGlobal2 = promNonGlobal2->get_future();
 
-    auto readHandlerBoth2 = [promGlobal2, promNonGlobal2](Hash::Pointer hdr, Hash::Pointer body) {
-        if (body->has("msg") && body->is<std::string>("msg")) {
+    auto readHandlerBoth2 = [promGlobal2, promNonGlobal2](const std::string& slot, bool isBroadcast, Hash::Pointer hdr,
+                                                          Hash::Pointer body) {
+        if (body->has("msg") && body->is<std::string>("msg") && !isBroadcast) {
             promNonGlobal2->set_value(body->get<std::string>("msg"));
-        } else if (body->has("msgToAll") && body->is<std::string>("msgToAll")) {
+        } else if (body->has("msgToAll") && body->is<std::string>("msgToAll") && isBroadcast) {
             promGlobal2->set_value(body->get<std::string>("msgToAll"));
         } else {
             // unexpected - "invalidate" both
@@ -478,6 +469,7 @@ void Broker_Test::_testReadingGlobalCalls(const std::vector<std::string>& broker
     };
     auto errorHandlerBoth2 = [promGlobal2, promNonGlobal2](consumer::Error err, const std::string& msg) {
         // unexpected - "invalidate" both
+
         promGlobal2->set_value(msg);
         promNonGlobal2->set_value(msg);
     };
@@ -487,32 +479,30 @@ void Broker_Test::_testReadingGlobalCalls(const std::vector<std::string>& broker
     notListenGlobal->startReading(readHandlerBoth2, errorHandlerBoth2);
 
     // Prepare and send global message
-    auto hdr = std::make_shared<Hash>("signalInstanceId", sender->getInstanceId(), "signalFunction", "__call__",
-                                      "slotInstanceIds", "|*|", "slotFunctions",
-                                      "|*:aSlot|"); //
+    auto hdr = std::make_shared<Hash>("signalInstanceId", sender->getInstanceId());
     auto bodyGlobal = std::make_shared<Hash>("msgToAll", "A global message");
-    sender->write(m_domain, hdr, bodyGlobal);
+    sender->sendBroadcast("slotInstanceNew", hdr, bodyGlobal); // Note: not all slots can be broadcasted
 
-    // Prepare and send specific messages
-    hdr->erase("slotFunctions"); // Specific slot calls do not need their slot for routing, ...
-    hdr->set("slotInstanceIds", "|" + listenGlobal->getInstanceId() + "|"); // ... but a specific instanceId
+    // Send specific messages
     auto bodyNonGlobal = std::make_shared<Hash>("msg", "A specific message");
-    sender->write(m_domain, hdr, bodyNonGlobal);
-    hdr->set("slotInstanceIds", "|" + notListenGlobal->getInstanceId() + "|");
-    sender->write(m_domain, hdr, bodyNonGlobal);
+    sender->sendOneToOne(listenGlobal->getInstanceId(), "simpleSlot", hdr, bodyNonGlobal);
+    sender->sendOneToOne(notListenGlobal->getInstanceId(), "simpleSlot", hdr, bodyNonGlobal);
 
     // Assert that both messages arrived at listenGlobal
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futGlobal1.wait_for(m_timeout));
     const std::string msg = futGlobal1.get();
     CPPUNIT_ASSERT_EQUAL(std::string("A global message"), msg);
 
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futNonGlobal1.wait_for(m_timeout));
     const std::string msg2 = futNonGlobal1.get();
     CPPUNIT_ASSERT_EQUAL(std::string("A specific message"), msg2);
 
     // At listNonGlobal, only the non-global message arrives
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futNonGlobal2.wait_for(m_timeout));
     const std::string msg3 = futNonGlobal2.get();
     CPPUNIT_ASSERT_EQUAL(std::string("A specific message"), msg3);
 
-    auto status = futGlobal2.wait_for(std::chrono::milliseconds(50));
+    auto status = futGlobal2.wait_for(std::chrono::milliseconds(100));
     CPPUNIT_ASSERT_EQUAL(std::future_status::timeout, status);
 
     std::clog << "OK." << std::endl;
@@ -544,7 +534,8 @@ void Broker_Test::_testProducerRestartConsumerContinues() {
         std::clog << "Alice: Error ==> " << int(err) << " -- " << desc << std::endl;
         prom->set_value(false);
     };
-    auto parseMessage = [prom, &bottle1, &bottle2, &bottle3](Hash::Pointer h, Hash::Pointer d) {
+    auto parseMessage = [prom, &bottle1, &bottle2, &bottle3](const std::string& slot, bool /*isBroadcast*/,
+                                                             Hash::Pointer h, Hash::Pointer d) {
         try {
             if (d->has("stop")) {
                 prom->set_value(true);
@@ -568,7 +559,7 @@ void Broker_Test::_testProducerRestartConsumerContinues() {
 
     boost::system::error_code ec;
     alice->startReading(parseMessage, errorMessage);
-    ec = alice->subscribeToRemoteSignal("bob", "signalFromBob");
+    ec = alice->subscribeToRemoteSignal("aliceSlot", "bob", "signalFromBob");
     CPPUNIT_ASSERT(!ec);
 
     auto t = std::jthread([this]() {
@@ -580,15 +571,13 @@ void Broker_Test::_testProducerRestartConsumerContinues() {
         CPPUNIT_ASSERT_NO_THROW(bob->connect());
         CPPUNIT_ASSERT(bob->isConnected());
 
-        Hash::Pointer header = std::make_shared<Hash>("signalInstanceId", "bob", "signalFunction", "signalFromBob");
-        header->set("slotInstanceIds", "|alice|");
-        header->set("slotFunctions", "|alice:aliceSlot|");
+        Hash::Pointer header = std::make_shared<Hash>("signalInstanceId", "bob");
 
         Hash::Pointer data = std::make_shared<Hash>("fill", "bottle1");
 
         for (int i = 1; i <= 16; ++i) {
             data->set("c", i);
-            CPPUNIT_ASSERT_NO_THROW(bob->write(m_domain, header, data));
+            CPPUNIT_ASSERT_NO_THROW(bob->sendOneToOne("alice", "aliceSlot", header, data));
         }
 
         CPPUNIT_ASSERT_NO_THROW(bob->disconnect());
@@ -604,20 +593,21 @@ void Broker_Test::_testProducerRestartConsumerContinues() {
 
         for (int i = 1; i <= 20; ++i) {
             data->set("c", -i);
-            CPPUNIT_ASSERT_NO_THROW(bob->write(m_domain, header, data));
+            CPPUNIT_ASSERT_NO_THROW(bob->sendOneToOne("alice", "aliceSlot", header, data));
         }
 
         Hash::Pointer stop(new Hash("stop", Hash()));
-        CPPUNIT_ASSERT_NO_THROW(bob->write(m_domain, header, stop));
+        CPPUNIT_ASSERT_NO_THROW(bob->sendOneToOne("alice", "aliceSlot", header, stop));
         CPPUNIT_ASSERT_NO_THROW(bob->disconnect());
     });
 
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, fut.wait_for(m_timeout));
     bool result = fut.get(); // wait until bottles are filled
     CPPUNIT_ASSERT(result);
 
     t.join();
 
-    ec = alice->unsubscribeFromRemoteSignal("bob", "signalBob");
+    ec = alice->unsubscribeFromRemoteSignal("aliceSlot", "bob", "signalBob");
     CPPUNIT_ASSERT(!ec);
 
     CPPUNIT_ASSERT_NO_THROW(alice->disconnect());
@@ -655,9 +645,7 @@ void Broker_Test::_testProducerContinuesConsumerRestart() {
     CPPUNIT_ASSERT_NO_THROW(bob->connect());
     CPPUNIT_ASSERT(bob->isConnected());
 
-    Hash::Pointer header = std::make_shared<Hash>("signalInstanceId", "bob", "signalFunction", "signalBob");
-    header->set("slotInstanceIds", "|alice|");
-    header->set("slotFunctions", "|alice:aliceSlot|");
+    Hash::Pointer header = std::make_shared<Hash>("signalInstanceId", "bob");
     Hash::Pointer data = std::make_shared<Hash>(); // data container
 
     Broker::Pointer alice;
@@ -676,7 +664,8 @@ void Broker_Test::_testProducerContinuesConsumerRestart() {
 
     constexpr int maxLoop1 = 6;
     int loopCount1 = maxLoop1;
-    auto parse1 = [p1, &bottle, &loopCount1](Hash::Pointer h, Hash::Pointer d) {
+    auto parse1 = [p1, &bottle, &loopCount1](const std::string& slot, bool /*isBroadcast*/, Hash::Pointer h,
+                                             Hash::Pointer d) {
         int n = d->get<int>("c");
         bottle.push_back(n);
         if (--loopCount1 == 0) p1->set_value(true);
@@ -685,15 +674,16 @@ void Broker_Test::_testProducerContinuesConsumerRestart() {
     // Alice is preparing to receive messages ...
     alice->startReading(parse1, error1);
     // This subscription will use callbacks from startReading...
-    ec = alice->subscribeToRemoteSignal("bob", "signalBob");
+    ec = alice->subscribeToRemoteSignal("aliceSlot", "bob", "signalBob");
     CPPUNIT_ASSERT(!ec);
 
     for (int i = 1; i <= maxLoop1; ++i) {
         data->set("c", i);
-        CPPUNIT_ASSERT_NO_THROW(bob->write(m_domain, header, data));
+        CPPUNIT_ASSERT_NO_THROW(bob->sendSignal("signalBob", header, data));
     }
 
     // Alice waits here for end of step1
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, f1.wait_for(m_timeout));
     bool r1 = f1.get();
     CPPUNIT_ASSERT(r1);
     CPPUNIT_ASSERT(loopCount1 == 0);
@@ -701,7 +691,9 @@ void Broker_Test::_testProducerContinuesConsumerRestart() {
     CPPUNIT_ASSERT(int(bottle.size()) == maxLoop1);
     for (int i = 1; i <= int(bottle.size()); ++i) CPPUNIT_ASSERT(i == bottle[i - 1]);
 
-    ec = alice->unsubscribeFromRemoteSignal("bob", "signalBob");
+    ec = alice->unsubscribeFromRemoteSignal("aliceSlot", "bob", "signalBob");
+
+    // FIXME: Need test that now a "signalBob" fron "bob" does not arrice at alice in "aliceSlot" anymore?
     CPPUNIT_ASSERT(!ec);
     alice->stopReading();
 
@@ -723,7 +715,8 @@ void Broker_Test::_testProducerContinuesConsumerRestart() {
 
     constexpr int maxLoop2 = 20;
     int loopCount2 = maxLoop2;
-    auto parse2 = [p2, &bottle, &loopCount2](Hash::Pointer h, Hash::Pointer d) {
+    auto parse2 = [p2, &bottle, &loopCount2](const std::string& slot, bool /*isBroadcast*/, Hash::Pointer h,
+                                             Hash::Pointer d) {
         int n = d->get<int>("c");
         bottle.push_back(n); // fill the "bottle"
         if (--loopCount2 == 0) p2->set_value(true);
@@ -731,20 +724,21 @@ void Broker_Test::_testProducerContinuesConsumerRestart() {
 
 
     alice->startReading(parse2, error2);
-    ec = alice->subscribeToRemoteSignal("bob", "signalBob");
+    ec = alice->subscribeToRemoteSignal("aliceSlot", "bob", "signalBob");
     CPPUNIT_ASSERT(!ec);
 
     // Bob continues ...
     // send negative numbers ...
     for (int i = 1; i <= maxLoop2; ++i) {
         data->set("c", -i);
-        CPPUNIT_ASSERT_NO_THROW(bob->write(m_domain, header, data));
+        CPPUNIT_ASSERT_NO_THROW(bob->sendSignal("signalBob", header, data));
     }
 
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, f2.wait_for(m_timeout));
     auto r2 = f2.get();
     CPPUNIT_ASSERT(r2);
 
-    ec = alice->unsubscribeFromRemoteSignal("bob", "signalBob");
+    ec = alice->unsubscribeFromRemoteSignal("aliceSlot", "bob", "signalBob");
     CPPUNIT_ASSERT(!ec);
     alice->stopReading();
 

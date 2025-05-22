@@ -47,12 +47,15 @@ namespace karabo::net {
        public:
         KARABO_CLASSINFO(AmqpHashClient, "AmqpHashClient", "2.0")
 
-        // std::function fits better than std::function to assigning bind_weak results to these handlers in AmqpBroker
-        using HashReadHandler = std::function<void(const data::Hash::Pointer&, const data::Hash::Pointer&)>;
+        using HashReadHandler = std::function<void(const data::Hash::Pointer&, const data::Hash::Pointer&,
+                                                   const std::string&, const std::string&)>;
         using ErrorReadHandler = std::function<void(const std::string&)>;
 
         /**
          * Create client with message interface based on two Hashes (header and body).
+         *
+         * The read and error handlers are both called in a strand on the Karabo event loop.
+         * If other code must run in same strand, one can post it there using the post(..) method.
          *
          * @param connection the connection, all internal data access will run in its io context
          * @param instanceId the client id - will usually be the name of the queue that will be subscribed
@@ -99,7 +102,7 @@ namespace karabo::net {
         /**
          * Asynchronously publish data from header and body
          *
-         * Hashes are serialised such that AmqpClient::asyncPublish can be use internally.
+         * Hashes are serialised such that AmqpClient::asyncPublish can be used internally.
          *  ==> See docs of that.
          */
         void asyncPublish(const std::string& exchange, const std::string& routingKey, const data::Hash::Pointer& header,
@@ -121,8 +124,7 @@ namespace karabo::net {
                     const std::string& routingKey);
 
         /**
-         * Deserializes 'data' input into Hash for header and body, adds exchange and key to the header and calls
-         * handler passed to constructor
+         * Deserializes 'data' input into Hash for header and body and calls handlers passed to constructor
          */
         void deserialize(const std::shared_ptr<std::vector<char>>& data, const std::string& exchange,
                          const std::string& routingKey);

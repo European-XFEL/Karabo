@@ -93,7 +93,7 @@ class BoundSignal:
 
     def __call__(self, *args):
         args = [d.cast(v) for d, v in zip(self.args, args)]
-        self.device._sigslot.emit(self.name, None, *args)
+        self.device._sigslot.emit_signal(self.name, *args)
 
 
 def get_device_node_initializers(instance):
@@ -269,13 +269,13 @@ class SignalSlotable(Configurable):
     # See the definition of 'inner_discover' below.
     def slotDiscover(self, requestorId):
         if self.__randPing == 0:
-            self._sigslot.emit("call", {requestorId: ["slotDiscoverAnswer"]},
-                               self.deviceId, self._sigslot.info)
+            self.callNoWait(requestorId, "slotDiscoverAnswer",
+                            self.deviceId, self._sigslot.info)
 
     def inner_discover(func, device, name, message, args):
         func(*args)
         if device.is_server:
-            # The has to forward this broadcast to its devices:
+            # The server has to forward this broadcast to its devices:
             for dev in device.deviceInstanceMap.values():
                 dev.slotDiscover(*args)
 
@@ -448,48 +448,12 @@ class SignalSlotable(Configurable):
         return (await self._sigslot.request(device, target, *args))
 
     def callNoWait(self, device, target, *args):
-        self._sigslot.emit("call", {device: [target]}, *args)
+        self._sigslot.call_slot(device, target, None, *args)
 
     def stopEventLoop(self):
         """Method called by the device server to stop the event loop
         """
         get_event_loop().stop()
-
-    @slot
-    async def slotConnectRemoteSignal(self, sigId, sigName, slotName):
-        slot = getattr(self, slotName, None)
-        if slot is None:
-            return
-        await self._sigslot.async_connect(sigId, sigName, slot)
-
-    @slot
-    async def slotDisconnectRemoteSignal(self, sigId, sigName, slotName):
-        slot = getattr(self, slotName, None)
-        if slot is None:
-            return
-        await self._sigslot.async_disconnect(sigId, sigName, slot)
-
-    @slot
-    def slotConnectToSignal(self, signal, target, slot):
-        """This helper slot is used to finalize the signalslot connection
-        procedure, namely, registration 'slot' on signal side
-        """
-        signalObj = getattr(self, signal, None)
-        if signalObj is None:
-            return False
-        signalObj.make_connected(target, slot)
-        return True
-
-    @slot
-    def slotDisconnectFromSignal(self, signal, target, slot):
-        """This helper slot is used to finalize the signalslot disconnection
-        procedure, namely, de-registration 'slot' on signal side
-        """
-        signalObj = getattr(self, signal, None)
-        if signalObj is None:
-            return False
-        else:
-            return signalObj.make_disconnected(target, slot)
 
     @slot
     def slotHasSlot(self, slot):

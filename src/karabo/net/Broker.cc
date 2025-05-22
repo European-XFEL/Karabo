@@ -27,6 +27,8 @@ using namespace karabo::data;
 namespace karabo {
     namespace net {
 
+        const std::vector<std::string> Broker::m_broadcastSlots{"slotInstanceNew", "slotInstanceUpdated",
+                                                                "slotInstanceGone", "slotDiscover"};
 
         void Broker::expectedParameters(karabo::data::Schema& s) {
             VECTOR_STRING_ELEMENT(s)

@@ -160,8 +160,6 @@ namespace karabo {
             std::map<std::string, std::map<WeakChannelPointer, bool, WeakChannelPointerCompare>>
                   m_readyNetworkConnections;
 
-            karabo::net::Broker::Pointer m_guiDebugProducer;
-
             typedef std::map<karabo::net::Channel::Pointer, ChannelData>::const_iterator ConstChannelIterator;
             typedef std::map<karabo::net::Channel::Pointer, ChannelData>::iterator ChannelIterator;
 
