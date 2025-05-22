@@ -1028,7 +1028,8 @@ void Amqp_Test::testHashClient() {
     const std::string prefix = net::Broker::brokerDomainFromEnv() += ".";
 
     // Create a bob, just for sending
-    net::AmqpHashClient::HashReadHandler bobRead = [](const data::Hash::Pointer&, const data::Hash::Pointer&) {};
+    net::AmqpHashClient::HashReadHandler bobRead = [](const data::Hash::Pointer&, const data::Hash::Pointer&,
+                                                      const std::string&, const std::string&) {};
     net::AmqpHashClient::ErrorReadHandler bobError = [](const std::string&) {};
     net::AmqpHashClient::Pointer bob(
           net::AmqpHashClient::create(connection, prefix + "bob", AMQP::Table(), bobRead, bobError));
@@ -1037,12 +1038,17 @@ void Amqp_Test::testHashClient() {
     // Now create alice that subscribes and thus should receive
     data::Hash::Pointer readHeader = std::make_shared<data::Hash>();
     data::Hash::Pointer readBody = std::make_shared<data::Hash>();
+    auto readExchange = std::make_shared<std::string>();
+    auto readKey = std::make_shared<std::string>();
     auto readMutex = std::make_shared<std::mutex>();
-    net::AmqpHashClient::HashReadHandler aliceRead = [readHeader, readBody, readMutex](const data::Hash::Pointer& h,
-                                                                                       const data::Hash::Pointer& b) {
+    net::AmqpHashClient::HashReadHandler aliceRead = [readHeader, readBody, readExchange, readKey, readMutex](
+                                                           const data::Hash::Pointer& h, const data::Hash::Pointer& b,
+                                                           const std::string& exchange, const std::string& key) {
         std::scoped_lock lock(*readMutex);
         *readHeader = *h;
         *readBody = *b;
+        *readExchange = exchange;
+        *readKey = key;
     };
     auto readErrorNumber = std::make_shared<std::atomic<int>>(0);
     auto readErrorString = std::make_shared<std::string>();
@@ -1080,15 +1086,12 @@ void Amqp_Test::testHashClient() {
     }
     CPPUNIT_ASSERT(readHeader);
     CPPUNIT_ASSERT(readBody);
+    CPPUNIT_ASSERT_EQUAL(prefix + "hashExchange", *readExchange);
+    CPPUNIT_ASSERT_EQUAL(std::string("alice"), *readKey);
 
     CPPUNIT_ASSERT(readHeader->has("headerLine"));
     CPPUNIT_ASSERT_EQUAL(std::string("fromBob"), readHeader->get<std::string>("headerLine"));
-    CPPUNIT_ASSERT_EQUAL(3ul, readHeader->size());
-    // Exchange and routingkey added by AmqpHashClient
-    CPPUNIT_ASSERT(readHeader->has("exchange"));
-    CPPUNIT_ASSERT(readHeader->has("routingkey"));
-    CPPUNIT_ASSERT_EQUAL(prefix + "hashExchange", readHeader->get<std::string>("exchange"));
-    CPPUNIT_ASSERT_EQUAL(std::string("alice"), readHeader->get<std::string>("routingkey"));
+    CPPUNIT_ASSERT_EQUAL(1ul, readHeader->size());
 
     CPPUNIT_ASSERT_EQUAL(2ul, readBody->size());
     CPPUNIT_ASSERT_EQUAL(std::string("the answer is"), readBody->get<std::string>("a1"));

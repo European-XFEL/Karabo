@@ -330,7 +330,7 @@ namespace karabo {
             data->m_initLevel = DeviceData::InitLevel::CONNECTED;
             KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << ": Requesting " << deviceId
                                       << ".slotGetConfiguration (no wait)";
-            requestNoWait(deviceId, "slotGetConfiguration", "", "slotChanged");
+            requestNoWait(deviceId, "slotGetConfiguration", "slotChanged");
 
             if (counter) checkReady(*counter);
         }

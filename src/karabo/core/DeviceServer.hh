@@ -181,7 +181,8 @@ namespace karabo {
              */
             void timeTick(const boost::system::error_code ec, unsigned long long newId);
 
-            void onBroadcastMessage(const karabo::data::Hash::Pointer& header, const karabo::data::Hash::Pointer& body);
+            void onBroadcastMessage(const std::string& slot, const karabo::data::Hash::Pointer& header,
+                                    const karabo::data::Hash::Pointer& body);
         };
 
     } // namespace core

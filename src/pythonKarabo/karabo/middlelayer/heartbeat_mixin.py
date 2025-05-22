@@ -54,7 +54,7 @@ class HeartBeatMixin(Configurable):
     async def _run(self, **kwargs):
         await super()._run(**kwargs)
         if self.track:
-            self._sigslot.emit("call", {"*": ["slotDiscover"]}, self.serverId)
+            self.callNoWait("*", "slotDiscover", self.serverId)
             # Before we actually start ticking, we wait a few seconds for all
             # slotInstanceInfos to arrive
             await sleep(SLOT_PING_SLEEP)

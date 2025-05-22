@@ -319,7 +319,7 @@ namespace karabo {
                     // The corresponding 'connect' is done by SignalSlotable's automatic reconnect feature.
                     // Even this request might not be needed since the logger manager emits the corresponding signal.
                     // But we cannot be 100% sure that our 'connect' has been registered in time.
-                    p->requestNoWait(m_dataLoggerManagerId, "slotGetLoggerMap", "", "_slotLoggerMap");
+                    p->requestNoWait(m_dataLoggerManagerId, "slotGetLoggerMap", "_slotLoggerMap");
                 }
             }
         }
@@ -745,7 +745,7 @@ namespace karabo {
             // copy.
             auto successHandler = [weakSigSlotPtr, instanceId]() {
                 karabo::xms::SignalSlotable::Pointer p = weakSigSlotPtr.lock();
-                if (p) p->requestNoWait(instanceId, "slotGetSchema", "", "_slotSchemaUpdated", false);
+                if (p) p->requestNoWait(instanceId, "slotGetSchema", "_slotSchemaUpdated", false);
             };
             auto failureHandler = [instanceId]() {
                 std::string msg;
@@ -855,7 +855,7 @@ namespace karabo {
             }
             // Not found, request and cache it
             // Request schema
-            m_signalSlotable.lock()->requestNoWait(serverId, "slotGetClassSchema", "", "_slotClassSchema", classId);
+            m_signalSlotable.lock()->requestNoWait(serverId, "slotGetClassSchema", "_slotClassSchema", classId);
             return Schema();
         }
 
@@ -1186,7 +1186,7 @@ namespace karabo {
             // Capturing member variable would capture a bare 'this' - which we want to avoid and thus capture a copy.
             auto successHandler = [weakSigSlotPtr, deviceId]() {
                 karabo::xms::SignalSlotable::Pointer p = weakSigSlotPtr.lock();
-                if (p) p->requestNoWait(deviceId, "slotGetConfiguration", "", "_slotChanged");
+                if (p) p->requestNoWait(deviceId, "slotGetConfiguration", "_slotChanged");
             };
             auto failureHandler = [deviceId]() {
                 try {
@@ -1546,8 +1546,8 @@ namespace karabo {
                 karabo::xms::SignalSlotable::Pointer p = weakSigSlotPtr.lock();
                 if (p) {
                     KARABO_LOG_FRAMEWORK_DEBUG << "connected to '" << deviceId << "'";
-                    p->requestNoWait(deviceId, "slotGetSchema", "", "_slotSchemaUpdated", false);
-                    p->requestNoWait(deviceId, "slotGetConfiguration", "", "_slotChanged");
+                    p->requestNoWait(deviceId, "slotGetSchema", "_slotSchemaUpdated", false);
+                    p->requestNoWait(deviceId, "slotGetConfiguration", "_slotChanged");
                 }
             };
             auto failureHandler = [deviceId]() { KARABO_LOG_FRAMEWORK_WARN << "failed to connect to " << deviceId; };
