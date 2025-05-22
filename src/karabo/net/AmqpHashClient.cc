@@ -88,8 +88,6 @@ namespace karabo::net {
         data::Hash::Pointer body(std::make_shared<data::Hash>());
         try {
             const size_t bytes = m_serializer->load(*header, data->data(), data->size());
-            header->set("exchange", exchange);
-            header->set("routingkey", routingKey);
 
             // TODO:
             // The old client had a m_skipFlag here to potentially avoid deserialisation of 'body'.
@@ -106,6 +104,6 @@ namespace karabo::net {
             return;
         }
         // Deserialization succeeded, so call handler
-        m_readHandler(header, body);
+        m_readHandler(header, body, exchange, routingKey);
     }
 } // namespace karabo::net

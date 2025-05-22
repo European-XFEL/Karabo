@@ -277,7 +277,7 @@ namespace karabo {
         void DeviceServer::finalizeInternalInitialization() {
             // Do before calling start() since not thread safe,
             // std::bind is safe since handler is only called directly from SignalSlotable code of 'this'.
-            registerBroadcastHandler(std::bind(&DeviceServer::onBroadcastMessage, this, _1, _2));
+            registerBroadcastHandler(std::bind(&DeviceServer::onBroadcastMessage, this, _1, _2, _3));
             // This starts SignalSlotable
             SignalSlotable::start();
 
@@ -298,28 +298,19 @@ namespace karabo {
         }
 
 
-        void DeviceServer::onBroadcastMessage(const karabo::data::Hash::Pointer& header,
+        void DeviceServer::onBroadcastMessage(const std::string& slot, const karabo::data::Hash::Pointer& header,
                                               const karabo::data::Hash::Pointer& body) {
-            // const_cast to have ids refer to a const Node...
-            boost::optional<const Hash::Node&> ids = const_cast<const Hash*>(header.get())->find("slotInstanceIds");
-            if (!ids || !ids->is<std::string>()) {
-                return;
-            }
-            // Message header is properly formed, so forward to all devices
-            const std::string& slotInstanceIds = ids->getValue<std::string>();
+            // Forward message to all devices
             std::lock_guard<std::mutex> lock(m_deviceInstanceMutex);
             for (const auto& deviceId_ptr : m_deviceInstanceMap) {
                 const std::string& devId = deviceId_ptr.first;
-                // Check whether besides to '*', message was also addressed to device directly (theoretically...)
-                if (slotInstanceIds.find(("|" + devId) += "|") == std::string::npos) {
-                    if (!tryToCallDirectly(devId, header, body)) {
-                        // Can happen if devId just tries to come up, but has not yet registered for shortcut
-                        // messaging. But this registration happens before the device broadcasts its existence and
-                        // before that the device is not really part of the game, so no harm.
-                        KARABO_LOG_FRAMEWORK_DEBUG
-                              << "Failed to forward broadcast message to local device " << devId
-                              << " which likely is just coming up and thus not fully part of the system yet.";
-                    }
+                if (!tryToCallDirectly(devId, slot, header, body)) {
+                    // Can happen if devId just tries to come up, but has not yet registered for shortcut
+                    // messaging. But this registration happens before the device broadcasts its existence and
+                    // before that the device is not really part of the game, so no harm.
+                    KARABO_LOG_FRAMEWORK_DEBUG
+                          << "Failed to forward broadcast message to local device " << devId
+                          << " which likely is just coming up and thus not fully part of the system yet.";
                 }
             }
         }

@@ -795,7 +795,7 @@ def test_sigslot_requestNoWait(eventLoopFixt):
     greeter.start()
     responder.start()
 
-    greeter.requestNoWait("responder", "slotA", "greeter", "slotReplyOfA", 21)
+    greeter.requestNoWait("responder", "slotA", "slotReplyOfA", 21)
 
     def wait_for_replyCalled():
         max_count = 2000
@@ -807,28 +807,6 @@ def test_sigslot_requestNoWait(eventLoopFixt):
 
     assert replyCalled is True
     assert repliedValue == 42
-
-    # Now test also that reply goes to a third party.
-    # (Do we really want to support that?)
-    thirdParty = SignalSlotable("thirdParty")
-
-    replyCalled = repliedValue = repliedValue3rd = None
-
-    def slotReplyOfA3rd(replyValue):
-        nonlocal replyCalled, repliedValue3rd
-        repliedValue3rd = replyValue
-        replyCalled = True
-
-    thirdParty.registerSlot(slotReplyOfA3rd)
-    thirdParty.start()
-
-    greeter.requestNoWait("responder", "slotA",
-                          "thirdParty", "slotReplyOfA3rd", 22)
-    wait_for_replyCalled()
-
-    assert replyCalled is True
-    assert repliedValue is None  # slot of "greeter" is untouched!
-    assert repliedValue3rd == 44
 
 
 def test_sigslot_asyncreply(eventLoopFixt):

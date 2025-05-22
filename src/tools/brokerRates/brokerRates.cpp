@@ -473,7 +473,8 @@ void startAmqpMonitor(const std::vector<std::string>& brokers, const std::string
 
     auto readHandler = [stats{std::make_shared<BrokerStatistics>(interval, receivers, senders)},
                         binSerializer{data::BinarySerializer<data::Hash>::create("Bin")}](
-                             const data::Hash::Pointer& header, const data::Hash::Pointer& body) {
+                             const data::Hash::Pointer& header, const data::Hash::Pointer& body,
+                             const std::string& exchange, const std::string& routingKey) {
         // `BrokerStatistics' expects the message formatted as a Hash: with 'header' as Hash and 'body' as Hash with the
         // single key 'raw' as vector<char> which is the serialized 'body' value.
         // If the incoming 'body' does not contain a proper 'raw' key, serialize the body part.
@@ -485,6 +486,7 @@ void startAmqpMonitor(const std::vector<std::string>& brokers, const std::string
             std::vector<char>& raw = finalBody->bindReference<std::vector<char>>("raw");
             binSerializer->save(body, raw); // body -> raw
         }
+        // FIXME: Adjust to new routing
         stats->registerMessage(header, finalBody);
     };
 
@@ -540,27 +542,25 @@ void startAmqpMonitor(const std::vector<std::string>& brokers, const std::string
     std::vector<std::future<boost::system::error_code>> futures;
     if (receivers.empty() && senders.empty()) {
         // Bind to all possible messages ...
-        const std::vector<std::array<std::string, 2>>& defaultTable = {
-              {domain + ".karaboGuiDebug", ""}, // always empty routing key
-              {domain + ".signals", "*.*"},     // any INSTANCE, any SIGNAL
-              {domain + ".slots", "#"},         // any INSTANCE ID ('*' may work as well)
-              {domain + ".global_slots", ""},   // always empty routing key for traditional broadcasts
-              {domain + ".global_slots", "*.*"} // any INSTANCE, any broadcast slot (so far only slotHeartbeat)
+        const std::vector<std::array<std::string, 2>> defaultTable = {
+              {domain + ".signals", "#"},     // any INSTANCE, any SIGNAL
+              {domain + ".slots", "#"},       // any INSTANCE, any direct slot call
+              {domain + ".global_slots", "#"} // any INSTANCE, any broadcast slot
         };
         for (const auto& a : defaultTable) {
             futures.push_back(subscribe(client, a[0], a[1]));
         }
     } else {
         if (!receivers.empty()) {
-            futures.push_back(subscribe(client, domain + ".global_slots", std::string()));
+            futures.push_back(subscribe(client, domain + ".global_slots", "#"));
         }
         for (const auto& recId : receivers) {
             // FIXME: We miss any signals that 'recId' subscribed to
-            futures.push_back(subscribe(client, domain + ".slots", recId));
+            futures.push_back(subscribe(client, domain + ".slots", recId + ".#"));
         }
         for (const auto& sendId : senders) {
             // FIXME: We miss any direct slot calls/replies/global_slot calls originating from sendId
-            futures.push_back(subscribe(client, domain + ".signals", sendId + ".*"));
+            futures.push_back(subscribe(client, domain + ".signals", sendId + ".#"));
         }
     }
     for (auto& fut : futures) {

@@ -61,8 +61,10 @@ void printHelp(const char* execName) {
     cout << "                        e.g. signals:*.signalChanged,global_slots:,slots:INSTANCE/1\"" << endl << endl;
 }
 
-void readHandler(const Hash::Pointer& header, const Hash::Pointer& body) {
-    cout << *header << endl;
+void readHandler(const Hash::Pointer& header, const Hash::Pointer& body, const std::string& exchange,
+                 const std::string& routingKey) {
+    cout << "Message to exchange '" << exchange << "' with routingKey '" << routingKey << "':\n\n";
+    cout << *header << "\n";
     cout << *body << endl;
     cout << "-----------------------------------------------------------------------" << endl << endl;
 }
@@ -118,11 +120,9 @@ void logAmqp(const std::vector<std::string>& brokerUrls, const std::string& doma
     if (selector.empty()) {
         // Bind to all possible messages ...
         const std::vector<std::array<std::string, 2>>& defaultTable = {
-              {domain + ".karaboGuiDebug", ""}, // always empty routing key
-              {domain + ".signals", "*.*"},     // any INSTANCE, any SIGNAL
-              {domain + ".slots", "#"},         // any INSTANCE ID ('*' may work as well)
-              {domain + ".global_slots", ""},   // always empty routing key for traditional broadcasts
-              {domain + ".global_slots", "*.*"} // any INSTANCE, any broadcast slot (so far only slotHeartbeat)
+              {domain + ".signals", "#"},     // any INSTANCE, any SIGNAL
+              {domain + ".slots", "#"},       // any INSTANCE, any direct slot call
+              {domain + ".global_slots", "#"} // any INSTANCE, any broadcast slot
         };
         for (const auto& a : defaultTable) {
             futures.push_back(subscribe(client, a[0], a[1]));
@@ -177,7 +177,7 @@ int main(int argc, char** argv) {
         if (options.has("-s")) options.get("-s", selector);
 
         // Start Logger
-        Logger::configure(Hash("priority", "ERROR"));
+        Logger::configure(Hash("level", "ERROR"));
         Logger::useConsole();
 
         const std::string brkType = Broker::brokerTypeFrom(brokerUrls);

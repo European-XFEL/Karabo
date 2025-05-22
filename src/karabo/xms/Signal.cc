@@ -36,38 +36,7 @@ namespace karabo {
               m_channel(channel),
               m_signalInstanceId(signalInstanceId),
               m_signalFunction(signalFunction),
-              m_topic(signalSlotable->m_topic),
               m_argsType(typeid(karabo::data::Types::NONE)) {}
-
-
-        void Signal::setSlotStrings(const SlotMap& slots, karabo::data::Hash& header) const {
-            std::ostringstream registeredSlotsString;
-            std::ostringstream registeredSlotInstanceIdsString;
-            if (slots.empty()) {
-                registeredSlotsString << "__none__";
-                registeredSlotInstanceIdsString << "__none__";
-            } else {
-                for (auto it = slots.cbegin(); it != slots.cend(); ++it) {
-                    registeredSlotInstanceIdsString << '|' << it->first << '|';
-                    registeredSlotsString << '|' << it->first << ':';
-                    // it->second is a set<string> - optimize here compared to simple '<< toString(it->second)'
-                    bool first = true;
-                    for (const std::string& slot : it->second) {
-                        if (first) {
-                            first = false;
-                        } else {
-                            registeredSlotsString << ',';
-                        }
-                        registeredSlotsString << slot;
-                    } // end optimization
-                    registeredSlotsString << '|';
-                }
-            }
-            // To avoid a copy of the (temporary!) string returned by ostringstream::str(), use bindReference and assign
-            // (Hash::set has no rvalue reference argument overload, but string has move assignment...)
-            header.bindReference<std::string>("slotInstanceIds") = registeredSlotInstanceIdsString.str();
-            header.bindReference<std::string>("slotFunctions") = registeredSlotsString.str();
-        }
 
 
         bool Signal::registerSlot(const std::string& slotInstanceId, const std::string& slotFunction) {
@@ -111,20 +80,17 @@ namespace karabo {
 
                 // Try all registered slots whether we could send in-process
                 for (auto it = registeredSlots.cbegin(); it != registeredSlots.cend(); ++it) {
-                    if (!m_signalSlotable->tryToCallDirectly(it->first, header, message)) {
-                        KARABO_LOGGING_WARN("A registered slot instance is not avilable for direct call (anymore?): ",
-                                            it->first);
+                    for (const std::string& slot : it->second) {
+                        const std::string& devId = it->first;
+                        if (!m_signalSlotable->tryToCallDirectly(devId, slot, header, message)) {
+                            KARABO_LOGGING_WARN(
+                                  "A registered slot instance is not available for direct call (anymore?): ", devId);
+                        }
                     }
                 }
 
                 // publish via broker
-                if (!registeredSlots.empty()) {
-                    // Create new header without local recipients.
-                    // Be aware also that original header is likely still used in the short-cut processing triggered
-                    // above!
-                    header = prepareHeader(SlotMap());
-                }
-                m_channel->write(m_topic, header, message);
+                m_channel->sendSignal(m_signalFunction, header, message);
 
             } catch (const karabo::data::Exception& e) {
                 KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("Problem sending a signal"))
@@ -141,19 +107,10 @@ namespace karabo {
 
             karabo::data::Hash::Pointer header(std::make_shared<karabo::data::Hash>());
             header->set("signalInstanceId", m_signalInstanceId);
-            header->set("signalFunction", m_signalFunction);
-            setSlotStrings(slots, *header);
-            header->set("hostName", boost::asio::ip::host_name());
-            header->set("userName", m_signalSlotable->getUserName());
-            // Timestamp added to be able to measure latencies even if broker is by-passed (or non-JMS)
             // Needed here since Signal is by-passing m_signalSlotable->doSendMessage(..).
             header->set("MQTimestamp", m_signalSlotable->getEpochMillis());
             return header;
         }
 
-
-        void Signal::setTopic(const std::string& topic) {
-            m_topic = topic;
-        }
     } // namespace xms
 } // namespace karabo

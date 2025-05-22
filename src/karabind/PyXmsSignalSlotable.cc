@@ -217,7 +217,7 @@ namespace karabind {
                     auto body = std::make_shared<karabo::data::Hash>();
                     packPy(*body, args...);
                     py::gil_scoped_release release;
-                    registerRequest(slotInstanceId, prepareRequestHeader(slotInstanceId, slotFunction), body);
+                    registerRequest(slotInstanceId, slotFunction, prepareRequestHeader(), body);
                 } catch (...) {
                     KARABO_RETHROW
                 }
@@ -226,16 +226,14 @@ namespace karabind {
 
             template <typename... Args>
             RequestorWrap& requestNoWaitPy(const std::string& requestSlotInstanceId,
-                                           const std::string& requestSlotFunction,
-                                           const std::string replySlotInstanceId, const std::string& replySlotFunction,
+                                           const std::string& requestSlotFunction, const std::string& replySlotFunction,
                                            const Args&... args) {
                 try {
                     auto body = std::make_shared<karabo::data::Hash>();
                     packPy(*body, args...);
                     py::gil_scoped_release release;
-                    karabo::data::Hash::Pointer header = prepareRequestNoWaitHeader(
-                          requestSlotInstanceId, requestSlotFunction, replySlotInstanceId, replySlotFunction);
-                    registerRequest(requestSlotInstanceId, header, body);
+                    karabo::data::Hash::Pointer header = prepareRequestNoWaitHeader(replySlotFunction);
+                    registerRequest(requestSlotInstanceId, requestSlotFunction, header, body);
                     sendRequest();
                 } catch (...) {
                     KARABO_RETHROW
@@ -540,12 +538,10 @@ namespace karabind {
         template <typename... Args>
         SignalSlotableWrap::RequestorWrap requestNoWaitPy(std::string requestSlotInstanceId,
                                                           const std::string& requestSlotFunction,
-                                                          std::string replySlotInstanceId,
                                                           const std::string& replySlotFunction, const Args&... args) {
             if (requestSlotInstanceId.empty()) requestSlotInstanceId = m_instanceId;
-            if (replySlotInstanceId.empty()) replySlotInstanceId = m_instanceId;
-            return SignalSlotableWrap::RequestorWrap(this).requestNoWaitPy(
-                  requestSlotInstanceId, requestSlotFunction, replySlotInstanceId, replySlotFunction, args...);
+            return SignalSlotableWrap::RequestorWrap(this).requestNoWaitPy(requestSlotInstanceId, requestSlotFunction,
+                                                                           replySlotFunction, args...);
         }
 
         template <typename... Args>
@@ -563,8 +559,8 @@ namespace karabind {
             auto body = std::make_shared<karabo::data::Hash>();
             packPy(*body, args...);
             const std::string& id = (instanceId.empty() ? m_instanceId : instanceId);
-            auto header = prepareCallHeader(id, functionName);
-            doSendMessage(id, header, body);
+            auto header = prepareCallHeader(id);
+            doSendMessage(id, functionName, header, body);
         }
 
         template <typename... Args>
@@ -808,18 +804,18 @@ void exportPyXmsSignalSlotable(py::module_& m) {
                py::arg("instanceId"), py::arg("slotName"), py::arg("a1"), py::arg("a2"), py::arg("a3"), py::arg("a4"))
 
           .def("requestNoWait", &SignalSlotableWrap::requestNoWaitPy<>, py::arg("requestInstanceId"),
-               py::arg("requestSlotName"), py::arg("replyInstanceId"), py::arg("replySlotName"))
+               py::arg("requestSlotName"), py::arg("replySlotName"))
           .def("requestNoWait", &SignalSlotableWrap::requestNoWaitPy<py::object>, py::arg("requestInstanceId"),
-               py::arg("requestSlotName"), py::arg("replyInstanceId"), py::arg("replySlotName"), py::arg("a1"))
+               py::arg("requestSlotName"), py::arg("replySlotName"), py::arg("a1"))
           .def("requestNoWait", &SignalSlotableWrap::requestNoWaitPy<py::object, py::object>,
-               py::arg("requestInstanceId"), py::arg("requestSlotName"), py::arg("replyInstanceId"),
-               py::arg("replySlotName"), py::arg("a1"), py::arg("a2"))
+               py::arg("requestInstanceId"), py::arg("requestSlotName"), py::arg("replySlotName"), py::arg("a1"),
+               py::arg("a2"))
           .def("requestNoWait", &SignalSlotableWrap::requestNoWaitPy<py::object, py::object, py::object>,
-               py::arg("requestInstanceId"), py::arg("requestSlotName"), py::arg("replyInstanceId"),
-               py::arg("replySlotName"), py::arg("a1"), py::arg("a2"), py::arg("a3"))
+               py::arg("requestInstanceId"), py::arg("requestSlotName"), py::arg("replySlotName"), py::arg("a1"),
+               py::arg("a2"), py::arg("a3"))
           .def("requestNoWait", &SignalSlotableWrap::requestNoWaitPy<py::object, py::object, py::object, py::object>,
-               py::arg("requestInstanceId"), py::arg("requestSlotName"), py::arg("replyInstanceId"),
-               py::arg("replySlotName"), py::arg("a1"), py::arg("a2"), py::arg("a3"), py::arg("a4"))
+               py::arg("requestInstanceId"), py::arg("requestSlotName"), py::arg("replySlotName"), py::arg("a1"),
+               py::arg("a2"), py::arg("a3"), py::arg("a4"))
           .def("reply", &SignalSlotableWrap::replyPy<>)
           .def("reply", &SignalSlotableWrap::replyPy<py::object>, py::arg("a1"))
           .def("reply", &SignalSlotableWrap::replyPy<py::object, py::object>, py::arg("a1"), py::arg("a2"))
