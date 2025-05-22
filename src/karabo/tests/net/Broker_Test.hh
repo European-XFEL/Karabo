@@ -74,6 +74,7 @@ class Broker_Test : public CPPUNIT_NS::TestFixture {
     // using a Karabo Hash to match the insertion order.
     karabo::data::Hash m_brokersUnderTest;
     std::map<std::string, std::string> m_invalidBrokers;
+    const std::chrono::seconds m_timeout;
 };
 
 #endif /* BROKER_TEST_HH */

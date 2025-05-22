@@ -602,22 +602,10 @@ void SignalSlotable_Test::_testNoWait() {
     greeter->start();
     responder->start();
 
-    greeter->requestNoWait("responder", "slotA", "greeter", "slotReplyOfA", 21);
+    greeter->requestNoWait("responder", "slotA", "slotReplyOfA", 21);
 
     CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futReceived.wait_for(milliseconds(slotCallTimeout)));
     CPPUNIT_ASSERT_EQUAL(42, futReceived.get());
-
-    // Now test also that reply goes to a third party. (Do we really want to support that?)
-    auto thirdParty = std::make_shared<SignalSlotable>("thirdParty");
-    auto promReceived3rd = std::make_shared<std::promise<int>>();
-    auto futReceived3rd = promReceived3rd->get_future();
-    thirdParty->registerSlot<int>([promReceived3rd](int value) { promReceived3rd->set_value(value); }, "slotReplyOfA");
-    thirdParty->start();
-
-    greeter->requestNoWait("responder", "slotA", "thirdParty", "slotReplyOfA", 22);
-
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futReceived3rd.wait_for(milliseconds(slotCallTimeout)));
-    CPPUNIT_ASSERT_EQUAL(44, futReceived3rd.get());
 }
 
 void SignalSlotable_Test::testConnectAsync() {

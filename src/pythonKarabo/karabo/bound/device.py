@@ -1748,19 +1748,16 @@ class PythonDevice:
         """
         return self._sigslot.request(instanceId, slotName, *args)
 
-    def requestNoWait(self, instanceId, slotName, replyInstance,
-                      replySlotName, *args):
-        """Request a reply from a remote slot
+    def requestNoWait(self, instanceId, slotName, replySlotName, *args):
+        """Request a reply from a remote slot to one local slot
 
         :param instanceId: instance of the remote device to request from
         :param slotName: name of the slot to request from on instanceId
-        :param replyInstance: instance on which to handle reply, use "" for
-                              local device.
-        :param replySlotName: slot to call with reply on replyInstance
+        :param replySlotName: a slot to call with reply on
         :param args: list of arguments to call slot with, maximum length is 4
         :return: a `SignalSlotable.Requestor` object handling the reply
         """
-        return self._sigslot.requestNoWait(instanceId, slotName, replyInstance,
+        return self._sigslot.requestNoWait(instanceId, slotName,
                                            replySlotName, *args)
 
     # Added for backward compatibility when fullSchema => _fullSchema

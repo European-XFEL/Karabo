@@ -1056,8 +1056,8 @@ namespace karabo {
                     m_deviceChangedHandlers.set(instanceId + "._function", callbackFunction);
                     m_deviceChangedHandlers.set(instanceId + "._userData", userData);
                 }
-                m_signalSlotable.lock()->requestNoWait(instanceId, "slotGetSchema", "", "_slotSchemaUpdated", false);
-                m_signalSlotable.lock()->requestNoWait(instanceId, "slotGetConfiguration", "", "_slotChanged");
+                m_signalSlotable.lock()->requestNoWait(instanceId, "slotGetSchema", "_slotSchemaUpdated", false);
+                m_signalSlotable.lock()->requestNoWait(instanceId, "slotGetConfiguration", "_slotChanged");
                 immortalize(instanceId);
             }
 

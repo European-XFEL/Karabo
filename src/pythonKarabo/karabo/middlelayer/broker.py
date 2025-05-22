@@ -42,6 +42,8 @@ _OVERFLOW_POLICY = "drop-head"  # Drop oldest messages
 _TIME_TO_LIVE = 120_000  # 120 seconds expiry time [ms]
 _QUEUE_SIZE = 10_000
 _DEFAULT_HOSTS = "amqp://guest:guest@localhost:5672"
+_BROADCAST_SLOTS = ["slotInstanceNew", "slotInstanceUpdated",
+                    "slotInstanceGone", "slotDiscover"]
 
 T = TypeVar("T")
 
@@ -215,7 +217,7 @@ class Broker:
         self.brokerId = f"{self.domain}.{self.deviceId}"
         try:
             await self.channel.queue_declare(self.brokerId, passive=True)
-            # If no exception raised the the queue name exists already ...
+            # If no exception raised the queue name exists already ...
             # To continue  just use generated queue name...
             timestamp = hex(int(time.monotonic() * 1000000000))[2:]
             self.brokerId = f"{self.domain}.{self.deviceId}:{timestamp}"
@@ -237,7 +239,7 @@ class Broker:
         exchange = f"{self.domain}.slots"
         await self.channel.exchange_declare(exchange=exchange,
                                             exchange_type="topic")
-        key = self.deviceId
+        key = self.deviceId + ".#"  # slots under node have >1 dots
         await self.channel.queue_bind(self.queue, exchange, routing_key=key)
         async with self.subscribe_lock:
             self.subscriptions.add((exchange, key))
@@ -249,12 +251,15 @@ class Broker:
         # Only if interested, we subscribe to broadcasts messages,
         # but still declare the exchange to publish
         if self.broadcast:
-            key = ""
-            await self.channel.queue_bind(self.queue, exchange,
-                                          routing_key=key)
-            async with self.subscribe_lock:
-                self.subscriptions.add((exchange, key))
+            for slot in _BROADCAST_SLOTS:
+                # TODO: Could optimize with gather
+                key = "*." + slot
+                await self.channel.queue_bind(self.queue, exchange,
+                                              routing_key=key)
+                async with self.subscribe_lock:
+                    self.subscriptions.add((exchange, key))
 
+        # Similarly, declare exchange for signals for publishing
         exchange = f"{self.domain}.signals"
         await self.channel.exchange_declare(exchange=exchange,
                                             exchange_type="topic")
@@ -310,20 +315,18 @@ class Broker:
         It is regularly published, and even lives longer than a device,
         as it is published with the message that the device died."""
         self.info.merge(info)
-        self.emit("call", {"*": ["slotInstanceUpdated"]},
-                  self.deviceId, self.info)
+        self.call_slot("*", "slotInstanceUpdated",  None,
+                       self.deviceId, self.info)
 
     def replyException(self, message: Hash, exception: Exception):
         trace = ''.join(traceback.format_exception(
             type(exception), exception, exception.__traceback__))
         self.reply(message, (str(exception), trace), error=True)
 
-    def emit(self, signal, targets, *args):
-        self.call(signal, targets, None, args)
-
     async def request(self, device: str, target: str, *arguments) -> Hash:
         reply = f"{self.deviceId}-{time.monotonic().hex()[4:-4]}"
-        self.call("call", {device: [target]}, reply, arguments)
+        extra_header = Hash("replyTo", reply)
+        self.call_slot(device, target, extra_header, *arguments)
         future = Future(loop=self.loop)
         self.repliers[reply] = future
         future.add_done_callback(lambda _: self.repliers.pop(reply))
@@ -349,21 +352,6 @@ class Broker:
         msg = self.encode_binary_message(header, arguments)
         await self.channel.basic_publish(msg, routing_key=key, exchange=exch)
 
-    async def heartbeat(self, info: Hash):
-        header = Hash("signalFunction", "__call__")
-        header["signalInstanceId"] = self.deviceId
-        # Add timestamp (epoch in ms) when message is sent
-        header["MQTimestamp"] = numpy.int64(time.time() * 1000)
-        # C++ header adds * 'slotInstanceIds' => |*| STRING
-        #                 * 'slotFunctions'   => |*:slotHeartbeat| STRING
-        body = Hash(
-            "a1", self.deviceId,
-            "a2", info)
-        msg = encodeBinary(header) + encodeBinary(body)
-        exch = f"{self.domain}.global_slots"
-        key = f"{self.deviceId}.slotHeartbeat"
-        await self.channel.basic_publish(msg, routing_key=key, exchange=exch)
-
     async def notify_network(self, info: Hash):
         """notify the network that we are alive
 
@@ -376,68 +364,58 @@ class Broker:
         interval = self.info["heartbeatInterval"]
         heartbeat_info = Hash("type", info["type"],
                               "heartbeatInterval", interval)
-        await self.async_emit("call", {"*": ["slotInstanceNew"]},
-                              self.deviceId, self.info)
+        await self.async_call_slot("*", "slotInstanceNew", None,
+                                   self.deviceId, info)
 
         async def heartbeat():
             try:
                 while True:
                     await sleep(interval)
-                    await self.heartbeat(heartbeat_info)
+                    await self.async_call_slot("*", "slotHeartbeat", None,
+                                               self.deviceId, heartbeat_info)
             except CancelledError:
                 pass
             finally:
-                await self.async_emit("call", {"*": ["slotInstanceGone"]},
-                                      self.deviceId, self.info)
+                await self.async_call_slot("*", "slotInstanceGone", None,
+                                           self.deviceId, self.info)
 
         self.heartbeat_task = ensure_future(heartbeat())
 
-    def build_arguments(self, signal: str, targets: dict[str, list] | None,
-                        reply) -> tuple[str, str, Hash]:
-        p = Hash("signalFunction", signal, "classId", self.classId)
-        if targets is not None:
-            funcs = "||".join(f"{k}:{','.join(v)}" for k, v in targets.items())
-            slotInstanceIds = "||".join(targets)
-            p["slotInstanceIds"] = f"|{slotInstanceIds}|"
-            p["slotFunctions"] = f"|{funcs}|"
-        else:  # A signal does not know about its recipients
-            p["slotInstanceIds"] = "__none__"
-            p["slotFunctions"] = "__none__"
+    def emit_signal(self, signal_name: str, *args):
+        exchange = f"{self.domain}.signals"
+        routing_key = f"{self.deviceId}.{signal_name}"
+        # header = self._base_header()
+        self.send(exchange, routing_key, Hash(), args)
 
-        if reply is not None:
-            p.setElement("replyTo", reply, {})
+    def _prepare_call_slot(self, target: str, slot: str,
+                           extra_header: Hash | None):
+        if extra_header is None:
+            header = Hash()
+        else:
+            header = extra_header
 
-        # AMQP specific follows ...
-        if signal in {"__replyNoWait__", "__reply__"}:
-            name = f"{self.domain}.slots"
-            routing_key = slotInstanceIds
-        elif signal == "call":
-            if slotInstanceIds == "*":
-                name = f"{self.domain}.global_slots"
-                routing_key = ""
-            else:
-                name = f"{self.domain}.slots"
-                # Assumes 'slotInstanceIds' to be a single id
-                routing_key = slotInstanceIds
-        else:  # It is a signal
-            name = f"{self.domain}.signals"
-            routing_key = f"{self.deviceId}.{signal}"
+        if target == "*":
+            if slot not in _BROADCAST_SLOTS and slot != "slotHeartbeat":
+                raise RuntimeError(f"Slot {slot} cannot be broadcasted")
+            exchange = f"{self.domain}.global_slots"
+            routing_key = f"{self.deviceId}.{slot}"
+        else:
+            exchange = f"{self.domain}.slots"
+            routing_key = f"{target}.{slot}"
 
-        return name, routing_key, p
+        return exchange, routing_key, header
 
-    def call(self, signal: str, targets: dict[str, list] | None,
-             reply: None | tuple, arguments: tuple):
-        name, routing_key, p = self.build_arguments(signal, targets, reply)
-        self.send(name, routing_key, p, arguments)
+    def call_slot(self, target: str, slot: str,
+                  extra_header: Hash | None, *args):
+        prep = self._prepare_call_slot(target, slot, extra_header)
+        exchange, routing_key, header = prep
+        self.send(exchange, routing_key, header, args)
 
-    async def async_call(self, signal: str, targets: dict[str, list],
-                         reply: None | tuple, arguments: tuple):
-        name, routing_key, p = self.build_arguments(signal, targets, reply)
-        await self.async_send(name, routing_key, p, arguments)
-
-    async def async_emit(self, signal: str, targets: dict[str, list],
-                         *arguments):
-        await self.async_call(signal, targets, None, arguments)
+    async def async_call_slot(self, target: str, slot: str,
+                              extra_header: Hash | None, *args):
+        prep = self._prepare_call_slot(target, slot, extra_header)
+        exchange, routing_key, header = prep
+        await self.async_send(exchange, routing_key, header, args)
 
     def reply(self, message: Hash, reply: tuple, error: bool = False):
         header = message["header"]
@@ -446,26 +424,13 @@ class Broker:
         if not isinstance(reply, tuple):
             reply = reply,
 
+        header_out = Hash("error", error)
         if replyTo := header.get("replyTo"):
-            p = Hash(
-                "replyFrom", replyTo,
-                "signalFunction", "__reply__",
-                "slotInstanceIds", f"|{sender}|",
-                "error", error)
-            name = f"{self.domain}.slots"
-            routing_key = sender
-            self.send(name, routing_key, p, reply)
+            header_out["replyFrom"] = replyTo
+            self.call_slot(sender, replyTo, header_out, *reply)
 
-        if replyId := header.get("replyInstanceIds"):
-            p = Hash(
-                "signalFunction", "__replyNoWait__",
-                "slotInstanceIds", replyId,
-                "slotFunctions", header["replyFunctions"],
-                "error", error)
-            dest = replyId.strip("|")
-            name = f"{self.domain}.slots"
-            routing_key = dest
-            self.send(name, routing_key, p, reply)
+        elif replySlot := header.get("replyFunction"):
+            self.call_slot(sender, replySlot, header_out, *reply)
 
     def connect(self, deviceId, signal, slot):
         """This is way of establishing 'karabo signalslot' connection with
@@ -557,7 +522,7 @@ class Broker:
             self.subscriptions = set()
         await gather(*futures, return_exceptions=True)
 
-    async def handleMessage(self, message, device):
+    async def handleMessage(self, exchange, routing_key, message, device):
         """Decode message from binary blob
         has valid information to do so...  Otherwise
         simply call handle the message as usual...
@@ -571,17 +536,12 @@ class Broker:
             return
 
         try:
-            slots, params = self.decodeMessage(decoded)
+            slots, params = self.decodeMessage(exchange, routing_key, decoded)
         except BaseException:
             self.logger.exception("Malformed message")
             return
         try:
-            callSlots = [(self.slots[s], s)
-                         for s in slots.get(self.deviceId, [])]
-            if self.broadcast:
-                callSlots.extend(
-                    [(self.slots[s], s)
-                     for s in slots.get("*", []) if s in self.slots])
+            callSlots = [(self.slots[s], s) for s in slots]
         except KeyError as e:
             text = f"Slot does not exist: {e}"
             self.logger.error(text)
@@ -660,8 +620,9 @@ class Broker:
     async def on_message(self, device, message):
         d = device()
         if d is not None:
-            # 'message' knows routing_key and exchange (str or None)
-            await self.handleMessage(message.body, d)
+            exchange = message.delivery.exchange
+            key = message.delivery.routing_key
+            await self.handleMessage(exchange, key, message.body, d)
 
     async def consume(self, device):
         device = weakref.ref(device)
@@ -688,6 +649,8 @@ class Broker:
 
     async def consume_beats(self, device):
         """Heartbeat method for the device server"""
+        # In contrast to C++, MDL has its own channel and queue
+        # for reading heartbeats
         device = weakref.ref(device)
         name = f"{self.brokerId}:beats"
         arguments = {
@@ -710,7 +673,8 @@ class Broker:
         async with self.subscribe_lock:
             self.subscriptions.add((exchange, key))
 
-    def decodeMessage(self, hash: Hash) -> tuple[dict, list]:
+    def decodeMessage(self, exchange: str, routing_key: str,
+                      hash: Hash) -> tuple[list, list]:
         """Decode a Karabo message
 
         reply messages are dispatched directly.
@@ -731,18 +695,22 @@ class Broker:
         if replyFrom is not None:
             return self._decodeReply(replyFrom, header, params)
 
-        slotFunctions = header["slotFunctions"]
-        signalFunction = header.get("signalFunction")
-        if (signalFunction and not signalFunction.startswith("__")
-                and slotFunctions == "__none__"):
+        if exchange.endswith("slots"):  # .slots or .global_slots
+            slot = routing_key.split(".", 1)
+            if len(slot) != 2:
+                msg = f"Malformed routing_key: {routing_key}"
+                raise RuntimeError(msg)
+            slots = [slot[1]]
+            # HACK for device.py: Device._checkLocked(..) needs slot in header
+            header["slotFunctions"] = slot
+            # HACK end
+        else:
             # A signal - get slots to call from our book-keeping
-            instanceId = header.get("signalInstanceId")
-            slots = self._slots_for(instanceId, signalFunction)
-            return ({self.deviceId: slots}, params)
+            # and routing_key
+            instanceId, signal = routing_key.split(".", 1)
+            slots = self._slots_for(instanceId, signal)
 
-        slots = (slotFunctions[1:-1]).split("||")
-        return ({k: v.split(",") for k, v in (s.split(":") for s in slots)},
-                params)
+        return (slots, params)
 
     def _slots_for(self, instanceId, signal):
         signals = self._slots_for_signals.get(instanceId)
@@ -769,7 +737,7 @@ class Broker:
                 else:
                     params = tuple(params)
                 f.set_result(params)
-        return {}, None
+        return [], None
 
     def get_property(self, message: Hash, prop: str) -> Any | None:
         header = message.get("header")

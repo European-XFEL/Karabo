@@ -478,6 +478,8 @@ namespace karabo {
               m_onlyAppModeClients(config.get<bool>("onlyAppModeClients")) {
             KARABO_INITIAL_FUNCTION(initialize)
 
+            KARABO_SIGNAL("signalGuiDebug", Hash);
+
             KARABO_SLOT(slotLoggerMap, Hash /*loggerMap*/)
             KARABO_SLOT(slotProjectUpdate, karabo::data::Hash, std::string);
             KARABO_SLOT(slotDumpToLog);
@@ -605,8 +607,6 @@ namespace karabo {
 
                 m_dataConnection->startAsync(bind_weak(&karabo::devices::GuiServerDevice::onConnect, this, _1, _2));
 
-                m_guiDebugProducer = getConnection();
-
                 startDeviceInstantiation();
                 startNetworkMonitor();
                 startMonitorConnectionQueues(karabo::data::Hash());
@@ -719,7 +719,7 @@ namespace karabo {
         }
 
         void GuiServerDevice::loggerMapConnectedHandler() {
-            requestNoWait(get<std::string>("dataLogManagerId"), "slotGetLoggerMap", "", "slotLoggerMap");
+            requestNoWait(get<std::string>("dataLogManagerId"), "slotGetLoggerMap", "slotLoggerMap");
         }
 
 
@@ -1484,9 +1484,7 @@ namespace karabo {
         void GuiServerDevice::onGuiInfo(const karabo::data::Hash& hash) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onGuiInfo";
-                Hash::Pointer hdr = std::make_shared<Hash>();
-                Hash::Pointer body = std::make_shared<Hash>(hash);
-                m_guiDebugProducer->write("karaboGuiDebug", hdr, body);
+                emit("signalGuiDebug", hash);
 
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onGuiInfo(): " << e.what();
@@ -2383,7 +2381,7 @@ namespace karabo {
                         // Even this request might not be needed since the logger manager emits the
                         // corresponding signal. But we cannot be 100% sure that our 'connect' has been
                         // registered in time.
-                        requestNoWait(get<std::string>("dataLogManagerId"), "slotGetLoggerMap", "", "slotLoggerMap");
+                        requestNoWait(get<std::string>("dataLogManagerId"), "slotGetLoggerMap", "slotLoggerMap");
                     }
                     registerPotentialProjectManager(topologyEntry);
                 }

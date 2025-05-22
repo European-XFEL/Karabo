@@ -318,8 +318,8 @@ async def test_two_calls_concurrent(deviceTest):
         await waitWhile(lambda: d.state == State.ACQUIRING)
         assert myDevice.counter == 1
         # Concurrent slot calls, one will return due to state block
-        myDevice._sigslot.emit("call", {"MyDevice": ["increaseCounter",
-                                                     "increaseCounter"]})
+        myDevice.callNoWait("MyDevice", "increaseCounter")
+        myDevice.callNoWait("MyDevice", "increaseCounter")
         await waitUntil(lambda: d.state != State.ON)
         await waitWhile(lambda: d.state == State.ACQUIRING)
         assert myDevice.counter == 2

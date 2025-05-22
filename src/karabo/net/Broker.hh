@@ -28,6 +28,7 @@
 
 #include "karabo/data/schema/Configurator.hh"
 #include "karabo/data/types/ClassInfo.hh"
+#include "karabo/data/types/Hash.hh"
 #include "karabo/data/types/Schema.hh"
 #include "karabo/net/utils.hh"
 
@@ -46,7 +47,9 @@ namespace karabo {
                 unknown   /// status reported is not specially treated or unknown
             };
             // TODO: Why not 'const karabo::data::Hash::Pointer&'?
-            using MessageHandler = std::function<void(karabo::data::Hash::Pointer, karabo::data::Hash::Pointer)>;
+            using MessageHandler = // slot, isBroadcast, header, body
+                  std::function<void(const std::string&, bool, karabo::data::Hash::Pointer,
+                                     karabo::data::Hash::Pointer)>;
 
             using ErrorNotifier = std::function<void(Error, const std::string& description)>;
         } // namespace consumer
@@ -130,38 +133,44 @@ namespace karabo {
             /**
              * Establish logical signal-slot connection between 2 devices that
              * is required by used protocol for registration
+             * @param slot that should be called for messages from the given signal
              * @param signalInstanceId device instance ID of a signal
              * @param signalFunction   signal name
              */
-            virtual boost::system::error_code subscribeToRemoteSignal(const std::string& signalInstanceId,
+            virtual boost::system::error_code subscribeToRemoteSignal(const std::string& slot,
+                                                                      const std::string& signalInstanceId,
                                                                       const std::string& signalFunction) = 0;
 
             /**
              * Close logical signal-slot connection.  De-registration in broker
              * specific API.
+             * @param slot that should have been called for messages from the given signal
              * @param signalInstanceId
              * @param signalFunction
              */
-            virtual boost::system::error_code unsubscribeFromRemoteSignal(const std::string& signalInstanceId,
+            virtual boost::system::error_code unsubscribeFromRemoteSignal(const std::string& slot,
+                                                                          const std::string& signalInstanceId,
                                                                           const std::string& signalFunction) = 0;
 
             /**
              * Establish signal-slot connection asynchronously
+             * @param slot that should be called for messages from the given signal
              * @param signalInstanceId
              * @param signalFunction
              * @param completionHandler this callback is called when complete
              */
-            virtual void subscribeToRemoteSignalAsync(const std::string& signalInstanceId,
+            virtual void subscribeToRemoteSignalAsync(const std::string& slot, const std::string& signalInstanceId,
                                                       const std::string& signalFunction,
                                                       const AsyncHandler& completionHandler) = 0;
 
             /**
              * Unsubscribe from (remote) signal asynchronously
+             * @param slot that should have been called for messages fromn the given signal
              * @param signalInstanceId
              * @param signalFunction
              * @param completionHandler
              */
-            virtual void unsubscribeFromRemoteSignalAsync(const std::string& signalInstanceId,
+            virtual void unsubscribeFromRemoteSignalAsync(const std::string& slot, const std::string& signalInstanceId,
                                                           const std::string& signalFunction,
                                                           const AsyncHandler& completionHandler) = 0;
 
@@ -179,27 +188,43 @@ namespace karabo {
             virtual void stopReading() = 0;
 
             /**
-             * Set up handlers for processing heartbeat messages arriving via special path.
-             *
              * Heartbeat is used for tracking instances (tracking all instances or no tracking at all)
              *
-             * @param handler       - read message handler
-             * @param errorNotifier - error handler
+             * Must be called after startReading, heartbeats are fed to the same handler
              */
-            virtual void startReadingHeartbeats(const consumer::MessageHandler& handler,
-                                                const consumer::ErrorNotifier& errorNotifier) = 0;
+            virtual void startReadingHeartbeats() = 0;
 
             /**
-             * Send message to broker
+             * Send a signal message
              *
-             * @param topic
-             * @param header
-             * @param body
-             * @param priority
-             * @param timeToLive
+             * @param signal the signal
+             * @param header message header
+             * @param body message body
              */
-            virtual void write(const std::string& topic, const karabo::data::Hash::Pointer& header,
-                               const karabo::data::Hash::Pointer& body) = 0;
+            virtual void sendSignal(const std::string& signal, const karabo::data::Hash::Pointer& header,
+                                    const karabo::data::Hash::Pointer& body) = 0;
+
+            /**
+             * Send a broadcast message
+             *
+             * @param slot the slot to call
+             * @param header message header
+             * @param body message body
+             */
+            virtual void sendBroadcast(const std::string& slot, const karabo::data::Hash::Pointer& header,
+                                       const karabo::data::Hash::Pointer& body) = 0;
+
+            /**
+             * Send a 1-to-1 message
+             *
+             * @param receiverId the instance id of the addressee
+             * @param slot the addressee's slot to call
+             * @param header message header
+             * @param body message body
+             */
+            virtual void sendOneToOne(const std::string& receiverId, const std::string& slot,
+                                      const karabo::data::Hash::Pointer& header,
+                                      const karabo::data::Hash::Pointer& body) = 0;
 
             /**
              *  Specifies the string of broker URLs from the environment variable KARABO_BROKER.
@@ -223,7 +248,7 @@ namespace karabo {
 
 
             /**
-             * Specify broker domain (i.e. topic for JmsBroker) from environment variables.
+             * Specify broker domain (topic) from environment variables.
              *
              * First source is KARABO_BROKER_TOPIC, as a fall back the environment variables
              * LOGNAME, USER, LNAME and USERNAME are checked in that order.
@@ -238,6 +263,8 @@ namespace karabo {
             const std::string m_topic;
             std::string m_instanceId;
             bool m_consumeBroadcasts;
+            static const std::vector<std::string>
+                  m_broadcastSlots; // Accepted broadcast slots (besides "slotHeartbeat" )
             consumer::MessageHandler m_messageHandler;
             consumer::ErrorNotifier m_errorNotifier;
         };
