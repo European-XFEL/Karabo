@@ -240,7 +240,7 @@ namespace karabo {
 
         void HashXmlSerializer::load(karabo::data::Hash& object, const char* archive) {
             pugi::xml_document doc;
-            pugi::xml_parse_result result = doc.load(archive);
+            pugi::xml_parse_result result = doc.load_string(archive);
             if (!result) {
                 throw KARABO_IO_EXCEPTION(std::string("Error parsing XML document: ") + result.description());
             }
