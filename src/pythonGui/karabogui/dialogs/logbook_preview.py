@@ -22,7 +22,7 @@ from qtpy.QtGui import QColor, QIcon, QPainter, QPixmap
 from qtpy.QtWidgets import (
     QAction, QActionGroup, QCheckBox, QColorDialog, QComboBox, QDialog,
     QDialogButtonBox, QGraphicsPixmapItem, QGraphicsScene, QGridLayout, QLabel,
-    QLineEdit, QSizePolicy, QTableWidgetItem, QToolButton, QWidget)
+    QLineEdit, QSizePolicy, QTableWidgetItem, QToolButton, QToolTip, QWidget)
 
 from karabo.common.scenemodel.api import create_base64image
 from karabo.native import Hash, HashList
@@ -55,6 +55,10 @@ QCheckBox {
 LOGBOOK_IMAGE = "Image"
 LOGBOOK_DATA = "Data"
 
+DESTINATION_TYPE_HINT = """<b>Active Proposals.</b><br>
+<i>Ready Proposals</i>.<br>
+Operational Logbooks."""
+
 
 class DestinationWidget(QWidget):
     """A container  with widgets to select the Stream and Topic of the
@@ -82,7 +86,15 @@ class DestinationWidget(QWidget):
         stream_label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         topic_label = QLabel("Topic")
         topic_label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+
+        info_button = QToolButton()
+        info_button.setIcon(icons.info)
+        info_button.setToolTip(DESTINATION_TYPE_HINT)
+        info_button.clicked.connect(self._show_info_popup)
+        info_button.setStyleSheet("QToolButton{border:none}")
+
         layout.addWidget(stream_label, 0, 0)
+        layout.addWidget(info_button, 0, 2)
         layout.addWidget(self.combo_stream, 0, 1)
         layout.addWidget(topic_label, 1, 0)
         layout.addWidget(self.combo_topic, 1, 1)
@@ -105,13 +117,26 @@ class DestinationWidget(QWidget):
         for index, proposal in enumerate(data):
             name = proposal.get("name")
             destination = proposal.get("destination")
+            status = proposal.get("beamlineStatus")
             self._topics[name] = proposal.get("topics")
             self.combo_stream.addItem(name)
             self.combo_stream.setItemData(index, destination)
+            font = self.combo_stream.font()
+            if status == "Active":
+                font.setBold(True)
+            if status == "Ready":
+                font.setItalic(True)
+            self.combo_stream.setItemData(index, font, Qt.FontRole)
 
     def select_destination(self, stream: str, topic: str):
         self.combo_stream.setCurrentText(stream)
         self.combo_topic.setCurrentText(topic)
+
+    @Slot()
+    def _show_info_popup(self):
+        button = self.sender()
+        QToolTip.showText(button.mapToGlobal(button.rect().topLeft()),
+                          button.toolTip(), button)
 
     @Slot(str)
     def _update_topics(self, text):
