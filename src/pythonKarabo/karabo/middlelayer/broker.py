@@ -649,8 +649,7 @@ class Broker:
 
     async def consume_beats(self, device):
         """Heartbeat method for the device server"""
-        # In contrast to C++, MDL has its own channel and queue
-        # for reading heartbeats
+        # In contrast to C++, MDL has its own queue for reading heartbeats
         device = weakref.ref(device)
         name = f"{self.brokerId}:beats"
         arguments = {

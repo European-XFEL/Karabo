@@ -56,9 +56,8 @@ namespace karabo {
             /**
              * Called when configuration updates arrive for logging
              * @param config a Hash with the updates and their timestamps
-             * @param the user responsible for this update - if any
              */
-            virtual void handleChanged(const karabo::data::Hash& config, const std::string& user) = 0;
+            virtual void handleChanged(const karabo::data::Hash& config) = 0;
 
             /**
              * Called when a Schema update arrive for logging
@@ -91,8 +90,6 @@ namespace karabo {
             karabo::net::Strand::Pointer m_strand;
 
             karabo::data::Schema m_currentSchema;
-
-            std::string m_user;
 
             std::mutex m_lastTimestampMutex;
 

@@ -598,7 +598,7 @@ namespace karabo {
 
                private:
                 SignalSlotable* const m_signalSlotable; // pointer is const - but may call non-const methods
-                const std::tuple<karabo::data::Hash::Pointer, std::string, bool> m_slotInfo;
+                const std::tuple<karabo::data::Hash::ConstPointer, std::string, bool> m_slotInfo;
             };
 
             static std::string generateUUID();
@@ -890,7 +890,7 @@ namespace karabo {
              * Internal method to provide info for AsyncReply object
              * @return tuple of slot header, slot name and whether it is a global slot call
              */
-            std::tuple<karabo::data::Hash::Pointer, std::string, bool> registerAsyncReply();
+            std::tuple<karabo::data::Hash::ConstPointer, std::string, bool> registerAsyncReply();
 
             void sendHeartbeat(const boost::system::error_code& e);
 
@@ -1188,7 +1188,7 @@ namespace karabo {
         template <typename... Args>
         void SignalSlotable::AsyncReply::operator()(const Args&... args) const {
             // See SignalSlotable::registerAsyncReply() about non-existing header pointer
-            const data::Hash::Pointer& headerPtr = std::get<0>(m_slotInfo);
+            const data::Hash::ConstPointer& headerPtr = std::get<0>(m_slotInfo);
             if (!headerPtr) return;
 
             // Place reply and send it
