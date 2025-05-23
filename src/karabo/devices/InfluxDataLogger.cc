@@ -84,7 +84,7 @@ namespace karabo {
                 // But we store the local time of the logger as well.
                 std::lock_guard<std::mutex> lock(m_lastTimestampMutex);
                 const unsigned long long ts = m_lastDataTimestamp.toTimestamp() * INFLUX_PRECISION_FACTOR;
-                ss << deviceId << "__EVENTS,type=\"-LOG\" karabo_user=\"" << m_user << "\",logger_time=\""
+                ss << deviceId << "__EVENTS,type=\"-LOG\" karabo_user=\".\",logger_time=\""
                    << Epochstamp().toIso8601Ext() << "\" " << ts << "\n";
             }
             m_dbClientWrite->enqueueQuery(ss.str());
@@ -149,14 +149,9 @@ namespace karabo {
         }
 
 
-        void InfluxDeviceData::handleChanged(const karabo::data::Hash& configuration, const std::string& user) {
+        void InfluxDeviceData::handleChanged(const karabo::data::Hash& configuration) {
             m_dbClientWrite->startDbConnectIfDisconnected();
 
-            if (user.empty()) {
-                m_user = ".";
-            } else {
-                m_user = user; // set under m_strand protection
-            }
             const std::string& deviceId = m_deviceToBeLogged;
 
             // store the local unix timestamp to compare the time difference w.r.t. incoming data.
@@ -353,7 +348,8 @@ namespace karabo {
             m_loggingStartStamp = Timestamp::fromHashAttributes(attrsOfPathWithMostRecentStamp);
             const unsigned long long ts = m_loggingStartStamp.toTimestamp() * INFLUX_PRECISION_FACTOR;
             std::stringstream ss;
-            ss << m_deviceToBeLogged << "__EVENTS,type=\"+LOG\" karabo_user=\"" << m_user << "\",logger_time=\""
+            // user is (was) always just "."...
+            ss << m_deviceToBeLogged << "__EVENTS,type=\"+LOG\" karabo_user=\".\",logger_time=\""
                << Epochstamp().toIso8601Ext() << "\",format=1i";  // Older data (where timestamps were not ensured to
                                                                   // be not older than 'ts') has no format specified.
             auto deviceIdNode = configuration.find("_deviceId_"); // _deviceId_ as in DataLogger::slotChanged
@@ -467,8 +463,8 @@ namespace karabo {
                     return;
             }
 
-            if (query.str().empty()) {
-                query << deviceId << ",karabo_user=\"" << m_user << "\" " << field_value;
+            if (query.str().empty()) { // user is and was always "."
+                query << deviceId << ",karabo_user=\".\" " << field_value;
             } else {
                 query << "," << field_value;
             }
