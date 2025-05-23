@@ -70,7 +70,7 @@ namespace karabo {
             InfluxDeviceData(const karabo::data::Hash& input);
             virtual ~InfluxDeviceData();
 
-            void handleChanged(const karabo::data::Hash& config, const std::string& user) override;
+            void handleChanged(const karabo::data::Hash& config) override;
 
             void logValue(std::stringstream& query, const std::string& deviceId, const std::string& path,
                           const std::string& value, karabo::data::Types::ReferenceType type, bool isFinite);

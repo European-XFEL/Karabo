@@ -36,45 +36,21 @@ namespace karabo {
         }
 
 
-        const std::string& Slot::getAccessLevelOfSender() const {
-            return m_accessLevelOfSender;
-        }
-
-
-        const std::string& Slot::getUserIdOfSender() const {
-            return m_userIdOfSender;
-        }
-
-
-        const std::string& Slot::getSessionTokenOfSender() const {
-            return m_sessionTokenOfSender;
-        }
-
-
-        karabo::data::Hash::Pointer Slot::getHeaderOfSender() const {
+        karabo::data::Hash::ConstPointer Slot::getHeaderOfSender() const {
             return m_headerOfSender;
         }
 
 
         void Slot::extractSenderInformation(const karabo::data::Hash& header) {
-            boost::optional<const Hash::Node&> node = header.find("userId");
-            if (node) m_userIdOfSender = node->getValue<std::string>();
-            node = header.find("accessLevel");
-            if (node) m_accessLevelOfSender = node->getValue<std::string>();
-            node = header.find("signalInstanceId");
+            boost::optional<const Hash::Node&> node = header.find("signalInstanceId");
             if (node) m_instanceIdOfSender = node->getValue<std::string>();
-            node = header.find("sessionToken");
-            if (node) m_sessionTokenOfSender = node->getValue<std::string>();
 
-            m_headerOfSender = std::make_shared<karabo::data::Hash>(header);
+            m_headerOfSender = std::make_shared<const karabo::data::Hash>(header);
         }
 
 
         void Slot::invalidateSenderInformation() {
-            m_userIdOfSender = "";
-            m_accessLevelOfSender = "";
-            m_instanceIdOfSender = "";
-            m_sessionTokenOfSender = "";
+            m_instanceIdOfSender.clear();
             m_headerOfSender.reset();
         }
 

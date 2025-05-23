@@ -48,15 +48,9 @@ namespace karabo {
            public:
             const std::string& getInstanceIdOfSender() const;
 
-            const std::string& getUserIdOfSender() const;
-
-            const std::string& getAccessLevelOfSender() const;
-
-            const std::string& getSessionTokenOfSender() const;
-
             /// Return message header that triggered calling this slot
             /// Valid while callRegisteredSlotFunctions is processed.
-            karabo::data::Hash::Pointer getHeaderOfSender() const;
+            karabo::data::Hash::ConstPointer getHeaderOfSender() const;
 
            protected:
             Slot(const std::string& slotFunction) : m_slotFunction(slotFunction) {}
@@ -78,10 +72,7 @@ namespace karabo {
 
            private:
             std::string m_instanceIdOfSender;
-            std::string m_userIdOfSender;
-            std::string m_accessLevelOfSender;
-            std::string m_sessionTokenOfSender;
-            karabo::data::Hash::Pointer m_headerOfSender;
+            karabo::data::Hash::ConstPointer m_headerOfSender;
         };
 
         template <typename Ret, typename... Args>

@@ -801,7 +801,7 @@ namespace karabo {
         }
 
 
-        std::tuple<karabo::data::Hash::Pointer, std::string, bool> SignalSlotable::registerAsyncReply() {
+        std::tuple<karabo::data::Hash::ConstPointer, std::string, bool> SignalSlotable::registerAsyncReply() {
             // Get name of current slot (sometimes referred to as 'slotFunction'):
             std::pair<std::string, bool> slotName_calledGlobally;
             {
@@ -812,7 +812,7 @@ namespace karabo {
                 }
                 // else { // slot is not called via processEvent and thus any reply does not matter!}
             }
-            std::tuple<karabo::data::Hash::Pointer, std::string, bool> result;
+            std::tuple<karabo::data::Hash::ConstPointer, std::string, bool> result;
             const std::string& slotName = slotName_calledGlobally.first;
             // If no slotName placed, reply does not matter (see above) - we mark this with non-existing header pointer.
             if (!slotName.empty()) {
@@ -829,7 +829,7 @@ namespace karabo {
 
         void SignalSlotable::AsyncReply::error(const std::string& message, const std::string& details) const {
             // See SignalSlotable::registerAsyncReply() about non-existing header
-            const data::Hash::Pointer& header = std::get<0>(m_slotInfo);
+            const data::Hash::ConstPointer& header = std::get<0>(m_slotInfo);
             if (header) {
                 m_signalSlotable->replyException(*header, message, details);
             }

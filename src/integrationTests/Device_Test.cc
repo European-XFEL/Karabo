@@ -1619,7 +1619,7 @@ void Device_Test::testSignal() {
     std::function<void()> slot = [&signalInstanceId, weakServer]() {
         DeviceServer::Pointer ptr(weakServer.lock());
         if (ptr) {
-            const karabo::data::Hash::Pointer header(ptr->getSenderInfo("slotForSignalA")->getHeaderOfSender());
+            const karabo::data::Hash::ConstPointer header(ptr->getSenderInfo("slotForSignalA")->getHeaderOfSender());
             signalInstanceId = header->get<std::string>("signalInstanceId");
         } else {
             std::clog << "DeviceServer pointer invalid!" << std::endl; // Should be impossible

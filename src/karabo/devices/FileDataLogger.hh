@@ -36,7 +36,7 @@ namespace karabo {
 
             virtual ~FileDeviceData();
 
-            void handleChanged(const karabo::data::Hash& config, const std::string& user) override;
+            void handleChanged(const karabo::data::Hash& config) override;
 
             void logValue(const std::string& deviceId, const std::string& path, const karabo::data::Timestamp& ts,
                           const std::string& value, const std::string& type, size_t filePosition);
