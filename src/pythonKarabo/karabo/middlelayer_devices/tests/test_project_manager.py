@@ -132,7 +132,7 @@ async def test_project_manager(deviceTest, subtests):
                                   "slotListItems",
                                   "LOCAL"), timeout=5)
         items = ret.get('items')
-        assert len(items) == 57
+        assert len(items) == 61
         scenecnt = 0
         for i in items:
             if i.get("item_type") == "scene":
@@ -145,7 +145,7 @@ async def test_project_manager(deviceTest, subtests):
         ret = await wait_for(call(
             "projManTest", "slotGenericRequest", arg), timeout=5)
         items = ret.get('items')
-        assert len(items) == 57
+        assert len(items) == 61
         scenecnt = 0
         for i in items:
             if i.get("item_type") == "scene":
