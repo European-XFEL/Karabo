@@ -123,7 +123,6 @@ namespace karabo {
               m_strand(karabo::data::Configurator<karabo::net::Strand>::create(
                     "Strand", Hash("guaranteeToRun", true, "maxInARow", 10u))),
               m_currentSchema(),
-              m_user("."),
               m_lastTimestampMutex(),
               m_lastDataTimestamp(Epochstamp(0ull, 0ull), Trainstamp()),
               m_updatedLastTimestamp(false),
@@ -476,11 +475,9 @@ namespace karabo {
                     } while (modulo /= 10u); // integer division will end at zero
                     return;
                 }
-                // UserId only available in real slot call, before posting to event loop:
-                const std::string& user = getSenderInfo("slotChanged")->getUserIdOfSender();
                 // See DataLogger::slotSchemaUpdated for  a consideration about using std::bind with 'data' instead
                 // of bind_weak with bare pointer
-                data->m_strand->post(std::bind(&DeviceData::handleChanged, data, configuration, user));
+                data->m_strand->post(std::bind(&DeviceData::handleChanged, data, configuration));
             } else {
                 // Throttled logging, see above.
                 const unsigned int numLogs = ++m_nonTreatedSlotChanged[deviceId]; // prefix increment

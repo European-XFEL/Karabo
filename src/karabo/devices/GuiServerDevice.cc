@@ -2892,13 +2892,9 @@ namespace karabo {
             if (found) {
                 const karabo::xms::SignalSlotable::SlotInstancePointer& senderInfo =
                       getSenderInfo("slotDisconnectClient");
-                const std::string& user = senderInfo->getUserIdOfSender();
                 const std::string& senderId = senderInfo->getInstanceIdOfSender();
                 std::ostringstream ostr;
                 ostr << "Instance '" << senderId << "' ";
-                if (!user.empty()) { // Once we send this information it might be useful to log...
-                    ostr << " (user '" << user << "') ";
-                }
                 ostr << "enforced GUI server to disconnect.";
                 KARABO_LOG_FRAMEWORK_INFO << client << ": " << ostr.str();
                 safeClientWrite(channel, Hash("type", "notification", "message", ostr.str()));
@@ -2953,11 +2949,9 @@ namespace karabo {
             Hash result("success", false);
             const std::string clientAddress(info.get<std::string>("clientAddress"));
             const karabo::xms::SignalSlotable::SlotInstancePointer& senderInfo = getSenderInfo("slotBroadcast");
-            const std::string& user = senderInfo->getUserIdOfSender();
             const std::string& senderId = senderInfo->getInstanceIdOfSender();
             // This slot is potentially dangerous. For traceability, we log here the requestor.
-            KARABO_LOG_FRAMEWORK_INFO << "Received broadcast request from : '" << senderId << "', user: " << user
-                                      << ", content :" << info;
+            KARABO_LOG_FRAMEWORK_INFO << "Received broadcast request from : '" << senderId << ", content :" << info;
             if (clientAddress.empty()) {
                 safeAllClientsWrite(info.get<Hash>("message"));
                 result.set("success", true);

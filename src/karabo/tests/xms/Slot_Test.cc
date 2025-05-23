@@ -61,10 +61,9 @@ void Slot_Test::testCallSlot() {
     MySlot slot("slot");
 
     const Foo* fooAddressInFunc = nullptr;
-    std::string user, sender;
-    auto slotLambda = [&slot, &fooAddressInFunc, &user, &sender](const int& i, const Foo& foo) {
+    std::string sender;
+    auto slotLambda = [&slot, &fooAddressInFunc, &sender](const int& i, const Foo& foo) {
         fooAddressInFunc = &foo;
-        user = slot.getUserIdOfSender();
         sender = slot.getInstanceIdOfSender();
     };
     const MySlot::SlotHandler func = slotLambda;
@@ -75,13 +74,12 @@ void Slot_Test::testCallSlot() {
     CPPUNIT_ASSERT_EQUAL(1, Foo::nCopies); // was copied into 'h'
     Foo const* const fooAddressInHash = &(h.get<Foo>("a2"));
 
-    karabo::data::Hash header("userId", "me", "signalInstanceId", "senderId");
+    karabo::data::Hash header("signalInstanceId", "senderId");
     slot.callRegisteredSlotFunctions(header, h);
 
     CPPUNIT_ASSERT_EQUAL(1, Foo::nCopies); // no further copy
     CPPUNIT_ASSERT_EQUAL(fooAddressInHash, fooAddressInFunc);
 
-    CPPUNIT_ASSERT_EQUAL(std::string("me"), user);
     CPPUNIT_ASSERT_EQUAL(std::string("senderId"), sender);
 
     // Using an intermediate std::function with args by value, there are copies:

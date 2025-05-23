@@ -72,7 +72,7 @@ namespace karabo {
                     m_configStream << lastTs.toIso8601Ext() << "|" << fixed << lastTs.toTimestamp() << "|"
                                    << lastTs.getTrainId() << "|.||"
                                    << karabo::data::Timestamp().toIso8601Ext() // i.e. 'now' from clock of logger
-                                   << "|" << m_user << "|LOGOUT\n";
+                                   << "||LOGOUT\n";
                     m_configStream.flush();
                     std::ostream::pos_type position = m_configStream.tellp();
                     m_configStream.close();
@@ -81,8 +81,7 @@ namespace karabo {
                         ofstream contentStream(contentPath.c_str(), ios::app);
                         // Again use timestamp from device to ensure consistency for searching in archive_index.txt
                         contentStream << "-LOG " << lastTs.toIso8601Ext() << " " << fixed << lastTs.toTimestamp() << " "
-                                      << lastTs.getTrainId() << " " << position << " "
-                                      << (m_user.empty() ? "." : m_user) << " " << m_lastIndex << "\n";
+                                      << lastTs.getTrainId() << " " << position << " . " << m_lastIndex << "\n";
                         contentStream.close();
                     } else {
                         KARABO_LOG_FRAMEWORK_ERROR
@@ -206,8 +205,7 @@ namespace karabo {
         }
 
 
-        void FileDeviceData::handleChanged(const karabo::data::Hash& configuration, const std::string& user) {
-            m_user = user; // set under m_strand protection
+        void FileDeviceData::handleChanged(const karabo::data::Hash& configuration) {
             const std::string& deviceId = m_deviceToBeLogged;
 
             const bool newPropToIndex = this->updatePropsToIndex();
@@ -310,8 +308,7 @@ namespace karabo {
                         contentStream << "=NEW ";
                     }
                     contentStream << t.toIso8601Ext() << " " << fixed << t.toTimestamp() << " " << t.getTrainId() << " "
-                                  << newFilePlusPosition.second << " " << (m_user.empty() ? "." : m_user) << " "
-                                  << m_lastIndex << "\n";
+                                  << newFilePlusPosition.second << " . " << m_lastIndex << "\n";
                     contentStream.close();
                 }
             }
@@ -349,7 +346,7 @@ namespace karabo {
                                       const karabo::data::Timestamp& ts, const std::string& value,
                                       const std::string& type, size_t filePosition) {
             m_configStream << ts.toIso8601Ext() << "|" << fixed << ts.toTimestamp() << "|" << ts.getTrainId() << "|"
-                           << path << "|" << type << "|" << scientific << value << "|" << m_user;
+                           << path << "|" << type << "|" << scientific << value << "|";
             if (m_pendingLogin) m_configStream << "|LOGIN\n";
             else m_configStream << "|VALID\n";
 
