@@ -238,6 +238,8 @@ class ProjectManager(Device):
             return self.slotEndUserSession(None)
         elif action_type == "listProjectsWithDevice":
             return await self.slotListProjectsWithDevice(params)
+        elif action_type == "listProjectsWithMacro":
+            return await self.slotListProjectsWithMacro(params)
         else:
             raise NotImplementedError(f"{type} not implemented")
 
@@ -412,16 +414,51 @@ class ProjectManager(Device):
         device_id = args["device_id"]
 
         async with self.db_handle as db_session:
-            res_prjs = []
+            result_projects = []
             prjs = await db_session.get_projects_with_device(
                 domain, device_id)
             for prj in prjs:
-                res_prjs.append(
+                result_projects.append(
                     Hash("name", prj["projectname"],
                          "uuid", prj["uuid"],
                          "last_modified", prj["date"],
                          "devices", prj["devices"]))
-            return Hash('projects', res_prjs)
+            return Hash('projects', result_projects)
+
+    @slot
+    async def slotListProjectsWithMacro(self, args):
+        """
+        List projects in domain which have macros.
+
+        :param args: a hash that must contain the keys
+            "name" with the following meanings:
+            "domain" is the domain to list
+
+        :return: a Hash with key, "projects", with a list of Hashes for its
+            value. Each Hash in the list has four keys:
+                - "uuid",
+                - "name",
+                - "last_modified"
+                -  "macros"
+        """
+        for k in ["domain", "name"]:
+            if not args.has(k):
+                return Hash('success', False,
+                            'reason', f'Key "{k}" missing in "args" hash.')
+
+        domain = args["domain"]
+        name = args["name"]
+        async with self.db_handle as db_session:
+            result_projects = []
+            projects = await db_session.get_projects_with_macro(
+                domain, name)
+            for project in projects:
+                result_projects.append(
+                    Hash("name", project["projectname"],
+                         "uuid", project["uuid"],
+                         "last_modified", project["date"],
+                         "macros", project["macros"]))
+            return Hash('projects', result_projects)
 
     @slot
     async def slotUpdateAttribute(self, items):

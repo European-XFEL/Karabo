@@ -76,6 +76,8 @@ async def create_hierarchy(db, scene_name=None):
         |
         +- 4x Scene(item_type:='scene', uuid, simple_name:=uuid|scene_name)
         |
+        +- 4x Macro(item_type:='macro', uuid, simple_name:=uuid|macro)
+        |
         +- 4x Server(item_type:='device_server', uuid, simple_name:=uuid)
            |
            +- 4x Device(item_type:='device_instance', uuid)
@@ -134,7 +136,8 @@ async def create_hierarchy(db, scene_name=None):
     `instance_id`s as keys and the `uuid` of the `revision:="0"`
     configurations for each of the 4x4 devices created.
 
-    In total thus 1 Project + 4 x Scene + 4 x Device Server x 4 x Device = 21
+    In total thus 1 Project + 4 x Macro + 4 x Scene + 4 x Device Server
+    x 4 x Device = 25
     objects are created in the database.
 
     """
@@ -165,6 +168,23 @@ async def create_hierarchy(db, scene_name=None):
         await db.save_item("LOCAL", sub_uuid, scene_xml)
 
     xml += "</scenes>"
+
+    xml += "<macros>"
+    for i in range(4):
+        sub_uuid = _gen_uuid()
+        xml += ('<KRB_Item>'
+                f'<uuid>{sub_uuid}</uuid>'
+                '</KRB_Item>')
+
+        atype = "macro"
+        name = f"macroname-{i}"
+        encoded = "ZnJvbSBrYXJhYm8ubWlkZGxlbGF5ZXIgaW1wb3J0IE1hY3Jv"
+        macro_body = f'<macro>{encoded}</macro>'
+        macro_xml = (f'<xml uuid="{sub_uuid}" simple_name="{name}" '
+                     f'description="" item_type="{atype}" >{macro_body}</xml>')
+        await db.save_item("LOCAL", sub_uuid, macro_xml)
+
+    xml += "</macros>"
 
     # create some device_servers
     xml += "<servers>"
