@@ -49,7 +49,7 @@ from .device_client import DeviceClient
 from .device_server import DeviceServer, Launcher
 from .plugin_loader import PluginLoader
 from .runner import Runner
-from .worker import QueueWorker, Worker
+from .worker import Worker
 
 # For comptibility with old karathon bindings, take care that e.g.
 # str(Types.INT32) is 'INT32' and not 'Types.INT32'

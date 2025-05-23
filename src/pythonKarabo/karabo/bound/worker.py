@@ -13,79 +13,65 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
+
 import threading
 import traceback
-from collections import deque
+from collections.abc import Callable
+from typing import Self
 
 
 class Worker(threading.Thread):
-
-    def __init__(self, callback=None, timeout=-1, repetition=-1, daemon=True):
+    def __init__(self,
+                 callback: Callable[[], None] | None = None,
+                 single_shot: bool = False,
+                 timeout: int | float = 1000,
+                 daemon: bool = True) -> None:
         """Constructs the Worker thread, that is by default a daemon thread.
 
-           Please note that daemon threads may not release resources
-           properly when stopped abruptly.
+        Please note that daemon threads may not release resources
+        properly when stopped abruptly.
+
+        Note: `timeout` is in milliseconds.
         """
-        threading.Thread.__init__(self, daemon=daemon)
+        super().__init__(daemon=daemon)
+        self.callback: Callable[[], None] | None = callback
+        self.single_shot: bool = single_shot
+        self.running: bool = False
+        self.aborted: bool = False
+        self.suspended: bool = False
+        self.cv: threading.Condition = threading.Condition()
+        if not timeout > 0:
+            raise RuntimeError("Timeout needs to large zero.")
+        self.timeout: int | float = timeout
+
+    def set(self, callback: Callable[[], None],
+            timeout: int | float = 1000) -> None:
         self.callback = callback
-        self.onError = None
-        self.onExit = None
-        self.timeout = timeout
-        self.repetition = repetition
-        self.running = False
-        self.aborted = False
-        self.suspended = False
-        self.counter = -1
-        self.cv = threading.Condition()  # cv = condition variable
-        self.dq = deque()
-
-    def set(self, callback, timeout=-1, repetition=-1):
-        self.callback = callback
-        self.timeout = timeout
-        self.repetition = repetition
-
-    def setTimeout(self, timeout=-1):
+        if not timeout > 0:
+            raise RuntimeError("Timeout needs to large zero.")
         self.timeout = timeout
 
-    def setRepetition(self, repetition=-1):
-        self.repetition = repetition
+    def setSingleShot(self, single_shot: bool) -> None:
+        self.single_shot = single_shot
 
-    def setErrorHandler(self, handler):
-        self.onError = handler
-        return self
+    def setTimeout(self, timeout: int | float = 1000) -> None:
+        if not timeout > 0:
+            raise RuntimeError("Timeout needs to large zero.")
+        self.timeout = timeout
 
-    def setExitHandler(self, handler):
-        self.onExit = handler
-        return self
-
-    def is_running(self):
+    def is_running(self) -> bool:
         return self.running
 
-    def push(self, o):
-        if self.running:
-            with self.cv:
-                self.dq.append(o)
-                self.cv.notify()
-
-    def isRepetitionCounterExpired(self):
-        return self.counter == 0
-
-    def run(self):
+    def run(self) -> None:
         self.running = True
         self.aborted = False
         self.suspended = False
-        self.counter = self.repetition
         try:
-            if not callable(self.callback):
-                raise ValueError("No callback is registered in Worker")
+            assert self.callback is not None, "Callback cannot be None"
             while not self.aborted:
-                t = None
-                if self.counter == 0:
-                    if callable(self.onExit):
-                        self.onExit()
-                    break
                 if not self.running:
                     break
+
                 if self.suspended:
                     with self.cv:
                         while self.suspended:
@@ -93,57 +79,35 @@ class Worker(threading.Thread):
                         if self.aborted or not self.running:
                             break
                     continue
-                if self.timeout < 0:
-                    with self.cv:
-                        while len(self.dq) == 0:
-                            self.cv.wait()
-                        if not self.suspended:
-                            t = self.dq.popleft()
-                elif self.timeout > 0:
-                    with self.cv:
-                        if len(self.dq) == 0:
-                            # self.timeout in milliseconds
-                            self.cv.wait(float(self.timeout) / 1000)
-                        if len(self.dq) != 0 and not self.suspended:
-                            t = self.dq.popleft()
-                else:
-                    with self.cv:
-                        if len(self.dq) != 0 and not self.suspended:
-                            t = self.dq.popleft()
+
+                with self.cv:
+                    self.cv.wait(self.timeout / 1000.0)
+
                 if self.suspended:
                     continue
-                if t is not None:
-                    if self.stopCondition(t):
-                        if callable(self.onExit):
-                            self.onExit()
-                        break
-                if self.counter > 0:
-                    self.counter -= 1
-                if self.running:
-                    self.callback()
-        except Exception:
-            if callable(self.onError):
-                self.onError(traceback.format_exc())
-            else:
-                traceback.print_exc()
 
-        if self.running:
+                if self.running and self.callback:
+                    self.callback()
+                    if self.single_shot:
+                        break
+        except Exception:
+            traceback.print_exc()
+        finally:
             self.running = False
 
-    def stopCondition(self, obj):
-        return False
-
-    def start(self):
+    def start(self) -> Self:
         if not self.running:
             self.suspended = False
             super().start()
+
         if self.suspended:
             with self.cv:
                 self.suspended = False
                 self.cv.notify()
+
         return self
 
-    def stop(self):
+    def stop(self) -> Self:
         if self.running:
             with self.cv:
                 self.running = False
@@ -151,38 +115,17 @@ class Worker(threading.Thread):
                 self.cv.notify()
         return self
 
-    def abort(self):
+    def abort(self) -> Self:
         self.aborted = True
         self.running = False
         if self.suspended:
             with self.cv:
                 self.suspended = False
                 self.cv.notify()
-        if len(self.dq) != 0:
-            with self.cv:
-                self.dq.clear()
         return self
 
-    def pause(self):
+    def pause(self) -> None:
         if not self.suspended:
             with self.cv:
                 self.suspended = True
                 self.cv.notify()
-
-
-class QueueWorker(Worker):
-
-    def __init__(self, callback):
-        super().__init__(self.onWork)
-        self.handler = callback
-        self.msg = None
-
-    def onWork(self):
-        self.handler(self.msg)
-        self.msg = None
-
-    def stopCondition(self, msg):
-        if "stop" in msg:
-            return True
-        self.msg = msg
-        return False
