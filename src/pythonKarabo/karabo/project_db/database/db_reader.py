@@ -225,6 +225,20 @@ class DbReader:
             project = result.first()
         return project
 
+    async def get_project_from_id(self, id: int) -> Project | None:
+        project = None
+        async with self.session_gen() as session:
+            query = select(Project).where(
+                Project.id == id)
+            result = await session.exec(query)
+            project = result.first()
+            if project.date:
+                project.date.replace(tzinfo=datetime.UTC)
+            if project.last_loaded:
+                project.last_loaded = project.last_loaded.replace(
+                    tzinfo=datetime.UTC)
+        return project
+
     async def get_scene_from_uuid(self, uuid: str) -> Scene | None:
         scene = None
         async with self.session_gen() as session:
@@ -280,6 +294,20 @@ class DbReader:
             result = await session.exec(query)
             instances_by_name_part = result.all()
             return instances_by_name_part
+
+    async def get_domain_macro_instances_by_name_part(
+            self, domain: str, name_part: str) -> list[Project]:
+        """Find macros in a domain which contain a macro name part"""
+        async with self.session_gen() as session:
+            query = (
+                select(Macro)
+                .join(Project).join(ProjectDomain)
+                .filter(Macro.name.ilike(f'%{name_part}%'))
+                .where(ProjectDomain.name == domain)
+            )
+            result = await session.exec(query)
+            macros = result.all()
+            return macros
 
     async def get_device_instance_project(
             self, instance: DeviceInstance) -> Project | None:
