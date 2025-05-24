@@ -197,6 +197,9 @@ class Unit(StrEnum):
     PERCENT = "%"
     NOT_ASSIGNED = "N_A"
 
+    # Karabo 3
+    REVOLUTIONS_PER_MINUTE = "rpm"
+
     @classmethod
     def fromAttributes(cls, attrs):
         """returns an Unit from schema attributes
