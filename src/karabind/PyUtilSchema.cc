@@ -141,6 +141,7 @@ void exportPyUtilSchema(py::module_& m) {
               .value("AMPERE_PER_SECOND", Unit::AMPERE_PER_SECOND)
               .value("PERCENT", Unit::PERCENT)
               .value("NOT_ASSIGNED", Unit::NOT_ASSIGNED)
+              .value("REVOLUTIONS_PER_MINUTE", Unit::REVOLUTIONS_PER_MINUTE)
               .export_values();
     }
 
