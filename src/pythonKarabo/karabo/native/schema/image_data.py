@@ -22,8 +22,7 @@ from karabo.native.data import (
 
 from .basetypes import ImageData, NoneValue
 from .configurable import Configurable
-from .descriptors import (
-    Bool, Int32, Simple, String, Type, VectorInt32, VectorUInt64)
+from .descriptors import Bool, Int32, Simple, Type, VectorUInt64
 from .ndarray import NDArray
 
 
@@ -46,17 +45,6 @@ class ImageNode(Configurable):
         description="The length of the array reflects total dimensionality "
                     "and each element the extension in this dimension",
         maxSize=8,
-        accessMode=AccessMode.READONLY)
-
-    dimTypes = VectorInt32(
-        displayedName="Dimension Types",
-        description="Any dimension should have an enumerated type",
-        maxSize=8,
-        accessMode=AccessMode.READONLY)
-
-    dimScales = String(
-        displayedName="Dimension Scales",
-        description="",
         accessMode=AccessMode.READONLY)
 
     encoding = Int32(
@@ -170,8 +158,6 @@ class Image(Type):
 
         # Set the attribute defaultValues!
         schema["dims", "defaultValue"] = self.dims
-        schema["dimTypes", "defaultValue"] = self.dimTypes
-        schema["dimScales", "defaultValue"] = self.dimScales
         schema["encoding", "defaultValue"] = self.encoding
         schema["bitsPerPixel", "defaultValue"] = self.bitsPerPixel
         schema["roiOffsets", "defaultValue"] = self.roiOffsets
@@ -184,7 +170,6 @@ class Image(Type):
         maxSize = numpy.uint32(len(self.shape))
         schema["pixels.shape", "maxSize"] = maxSize
         schema["dims", "maxSize"] = maxSize
-        schema["dimTypes", "maxSize"] = maxSize
         schema["roiOffsets", "maxSize"] = maxSize
         schema["binning", "maxSize"] = maxSize
 
@@ -204,8 +189,6 @@ class Image(Type):
                                   dtype=dtype)
             ar.shape = pixels["shape"]
             return ImageData(value=ar,
-                             dimTypes=self.dimTypes,
-                             dimScales=self.dimScales,
                              encoding=self.encoding,
                              bitsPerPixel=self.bitsPerPixel,
                              roiOffsets=self.roiOffsets,
@@ -225,8 +208,6 @@ class Image(Type):
         # If only an array was provided, we set our predefined values
         if not isinstance(data, ImageData):
             data = ImageData(value=data,
-                             dimTypes=self.dimTypes,
-                             dimScales=self.dimScales,
                              encoding=self.encoding,
                              bitsPerPixel=self.bitsPerPixel,
                              roiOffsets=self.roiOffsets,
@@ -249,8 +230,6 @@ class Image(Type):
         # Set the attributes of the image data!
         h = Hash()
         h.setElement("dims", data.dims, attrs)
-        h.setElement("dimTypes", data.dimTypes, attrs)
-        h.setElement("dimScales", data.dimScales, attrs)
         h.setElement("encoding", data.encoding, attrs)
         h.setElement("roiOffsets", data.roiOffsets, attrs)
         h.setElement("binning", data.binning, attrs)

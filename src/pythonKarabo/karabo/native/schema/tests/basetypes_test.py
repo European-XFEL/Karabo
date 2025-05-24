@@ -752,8 +752,6 @@ class Tests(TestCase):
         self.assertEqual(image.rotation, 0)
         self.assertEqual(image.rotation.dtype, numpy.int32)
 
-        self.assertEqual(image.dimScales, "")
-        arrayEqual(image.dimTypes, numpy.array([], dtype=numpy.int32))
         arrayEqual(image.roiOffsets, numpy.array([0, 0], dtype=numpy.uint64))
         self.assertEqual(image.roiOffsets.dtype, numpy.uint64)
         self.assertEqual(image.bitsPerPixel, 32)
@@ -785,8 +783,6 @@ class Tests(TestCase):
         self.assertEqual(image.rotation, 0)
         self.assertEqual(image.rotation.dtype, numpy.int32)
 
-        self.assertEqual(image.dimScales, "")
-        arrayEqual(image.dimTypes, numpy.array([], dtype=numpy.int32))
         arrayEqual(image.roiOffsets, numpy.array([0, 0, 0],
                                                  dtype=numpy.uint64))
         self.assertEqual(image.roiOffsets.dtype, numpy.uint64)

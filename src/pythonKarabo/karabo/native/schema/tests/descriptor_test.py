@@ -469,9 +469,6 @@ class Tests(TestCase):
                    np.array([2, 2], dtype=np.uint64))
         arrayEqual(schema["dims", "defaultValue"],
                    np.array([2, 2], dtype=np.uint64))
-        arrayEqual(schema["dimTypes", "defaultValue"],
-                   np.array([], dtype=np.int32))
-        self.assertEqual(schema["dimScales", "defaultValue"], "")
         self.assertEqual(schema["encoding", "defaultValue"], 0)
         self.assertEqual(schema["bitsPerPixel", "defaultValue"], 8)
         arrayEqual(schema["roiOffsets", "defaultValue"],
@@ -485,7 +482,6 @@ class Tests(TestCase):
         maxSize = 2
         self.assertEqual(schema["pixels.shape", "maxSize"], maxSize)
         self.assertEqual(schema["dims", "maxSize"], maxSize)
-        self.assertEqual(schema["dimTypes", "maxSize"], maxSize)
         self.assertEqual(schema["roiOffsets", "maxSize"], maxSize)
         self.assertEqual(schema["binning", "maxSize"], maxSize)
 
@@ -500,10 +496,6 @@ class Tests(TestCase):
                    np.array([2, 3, 4], dtype=np.uint64))
         arrayEqual(schema["dims", "defaultValue"],
                    np.array([2, 3, 4], dtype=np.uint64))
-
-        arrayEqual(schema["dimTypes", "defaultValue"],
-                   np.array([], dtype=np.int32))
-        self.assertEqual(schema["dimScales", "defaultValue"], "")
         self.assertEqual(schema["encoding", "defaultValue"], 2)
         self.assertEqual(schema["bitsPerPixel", "defaultValue"], 32)
         arrayEqual(schema["roiOffsets", "defaultValue"],
@@ -517,7 +509,6 @@ class Tests(TestCase):
         maxSize = 3
         self.assertEqual(schema["pixels.shape", "maxSize"], maxSize)
         self.assertEqual(schema["dims", "maxSize"], maxSize)
-        self.assertEqual(schema["dimTypes", "maxSize"], maxSize)
         self.assertEqual(schema["roiOffsets", "maxSize"], maxSize)
         self.assertEqual(schema["binning", "maxSize"], maxSize)
 
