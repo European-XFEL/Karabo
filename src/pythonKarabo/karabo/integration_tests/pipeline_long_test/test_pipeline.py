@@ -23,8 +23,7 @@ from karabo.middlelayer import (
     AccessLevel, AccessMode, Assignment, Bool, Configurable, Device,
     InputChannel, Int32, OutputChannel, Slot, State, UInt32, background, sleep,
     slot)
-from karabo.middlelayer.testing import (  # noqa
-    AsyncDeviceContext, event_loop_policy, sleepUntil)
+from karabo.middlelayer.testing import AsyncDeviceContext, sleepUntil
 
 
 def get_channel_node(displayed_name=""):

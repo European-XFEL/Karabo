@@ -33,8 +33,8 @@ from karabo.middlelayer import (
     String, UInt32, Unit, VectorDouble, background, call, getDevice,
     getHistory, isSet, setWait, shutdown, sleep, unit, updateDevice, waitUntil,
     waitUntilNew)
-from karabo.middlelayer.testing import (  # noqa
-    AsyncDeviceContext, AsyncServerContext, event_loop_policy, sleepUntil)
+from karabo.middlelayer.testing import (
+    AsyncDeviceContext, AsyncServerContext, sleepUntil)
 
 # FIXME: Remove this line that only intends to trigger integration tests
 
