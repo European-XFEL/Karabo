@@ -462,24 +462,12 @@ class DeviceClientProxyFactory(ProxyFactory):
             self._onChanged(h)
 
         async def _notify_new(self):
-            # probably we are talking to a brand-new device, which does not
-            # know about any connection, so we have to re-establish all
-            # connections that we think we have
-            if self._schemaUpdateConnected:
-                await self._device._sigslot.async_connect(
-                    self._deviceId, "signalSchemaUpdated",
-                    self._device.slotSchemaUpdated)
-            if self._used > 0:
-                await self._device._sigslot.async_connect(
-                    self._deviceId, "signalChanged",
-                    self._device.slotChanged)
+            """The underlying device comes back online"""
             schema, _ = await self._device.call(
                 self._deviceId, "slotGetSchema", False)
             DeviceClientProxyFactory.updateSchema(self, schema)
-
             # get configuration
             await self.update_proxy()
-
             if not self._alive:
                 self._alive = True
 
