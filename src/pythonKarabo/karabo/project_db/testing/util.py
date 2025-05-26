@@ -113,7 +113,7 @@ async def create_hierarchy(
     for _ in range(4):
         server_uuid = generate_uuid()
         project_xml += f'<KRB_Item><uuid>{server_uuid}</uuid></KRB_Item>'
-
+        server_name = f"karabocpp-{server_uuid}"
         devices_xml = ""
         for _ in range(4):
             deviceId, dev_uuid, config_uuid = await create_device(db)
@@ -122,7 +122,7 @@ async def create_hierarchy(
 
         server_xml = (
             f'<xml item_type="device_server" uuid="{server_uuid}" '
-            f'simple_name="{server_uuid}">'
+            f'simple_name="{server_name}">'
             f'<device_server>{devices_xml}</device_server></xml>'
         )
 

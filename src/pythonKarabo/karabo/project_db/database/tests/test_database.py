@@ -113,9 +113,9 @@ async def test_project_interface(database, subtests):
             assert "projectname" in project
             assert "date" in project
             assert "uuid" in project
-            assert "macros" in project
+            assert "items" in project
             assert project["projectname"] == "Project"
-            assert project["macros"] == [
+            assert project["items"] == [
                 "macroname-0", "macroname-1",
                 "macroname-2", "macroname-3"]
 
@@ -128,11 +128,23 @@ async def test_project_interface(database, subtests):
 
             items = await db.get_projects_with_device("LOCAL", "Karabo")
             assert len(items) == 1
-            assert len(items[0]["devices"]) == 32
+            assert len(items[0]["items"]) == 32
 
             items = await db.get_projects_with_device("LOCAL", "kArabo")
             assert len(items) == 1
-            assert len(items[0]["devices"]) == 32
+            assert len(items[0]["items"]) == 32
+
+        with subtests.test(msg='test_find_server'):
+            items = await db.get_projects_with_server("LOCAL", "nosrv")
+            assert len(items) == 0
+
+            items = await db.get_projects_with_server("LOCAL", "karabo")
+            assert len(items) == 1
+            assert len(items[0]["items"]) == 4
+
+            items = await db.get_projects_with_server("LOCAL", "kaRaboCpp")
+            assert len(items) == 1
+            assert len(items[0]["items"]) == 4
 
         with subtests.test(msg='test_trashed_projects'):
             await create_trashed_project(db)

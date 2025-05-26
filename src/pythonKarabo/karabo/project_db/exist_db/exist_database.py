@@ -805,12 +805,9 @@ class ExistDatabase(DatabaseBase):
                 prj_in_list = next((p for p in projects
                                     if p["uuid"] == prj["uuid"]), None)
                 if prj_in_list:
-                    # The project is already in the resulting list due to
-                    # another device_id that matched the name part; add the
-                    # device_id to the 'devices' attribute of the project.
-                    prj_in_list["devices"].append(device_id)
+                    prj_in_list["items"].append(device_id)
                 else:
-                    prj["devices"] = [device_id]
+                    prj["items"] = [device_id]
                     projects.append(prj)
 
         return projects
