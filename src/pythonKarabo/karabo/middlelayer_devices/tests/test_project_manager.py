@@ -206,7 +206,6 @@ async def test_project_manager(deviceTest, subtests):
                                       "LOCAL",
                                       device_id,
                                       ), timeout=5)
-
             proj = ret["items"][0]["project_name"]
             conf = ret["items"][0]["active_config_ref"]
             assert proj == "Project"

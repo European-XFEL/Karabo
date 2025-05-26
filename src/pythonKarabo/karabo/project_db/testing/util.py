@@ -39,17 +39,18 @@ async def create_device(db):
         await db.save_item("LOCAL", config_uuid, config_xml)
 
     device_uuid = generate_uuid()
+    instance_id = f"device-karabo-{device_uuid}"
     device_xml = (
         f'<xml item_type="device_instance" uuid="{device_uuid}">'
         '<device_instance active_rev="0" class_id="a_class" '
-        f'instance_id="{device_uuid}" active_uuid="{config_uuids[0]}">'
+        f'instance_id="{instance_id}" active_uuid="{config_uuids[0]}">'
         f'<device_config revision="0" uuid="{config_uuids[0]}" />'
         f'<device_config revision="1" uuid="{config_uuids[1]}" />'
         '</device_instance>'
         '</xml>')
 
     await db.save_item("LOCAL", device_uuid, device_xml)
-    return device_uuid, config_uuids[0]
+    return instance_id, device_uuid, config_uuids[0]
 
 
 async def create_hierarchy(
@@ -115,9 +116,9 @@ async def create_hierarchy(
 
         devices_xml = ""
         for _ in range(4):
-            dev_uuid, config_uuid = await create_device(db)
+            deviceId, dev_uuid, config_uuid = await create_device(db)
             devices_xml += f'<device_instance uuid="{dev_uuid}" />'
-            device_config_map[dev_uuid] = config_uuid
+            device_config_map[deviceId] = config_uuid
 
         server_xml = (
             f'<xml item_type="device_server" uuid="{server_uuid}" '

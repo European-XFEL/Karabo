@@ -368,12 +368,10 @@ class ProjectManager(Device):
         :return:
         """
         async with self.db_handle as db_session:
-            res = []
             res = await db_session.list_domains()
             if len(self.domainList):
                 res = [domain for domain in res
                        if domain in self.domainList]
-
             return Hash('domains', res)
 
     @slot
