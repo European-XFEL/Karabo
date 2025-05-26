@@ -27,6 +27,7 @@ from karabo.common.scenemodel.api import (
 from karabogui.dialogs.api import ReplaceDialog
 from karabogui.sceneview.bases import BaseSceneAction
 from karabogui.sceneview.utils import add_offset, calc_relative_pos
+from karabogui.util import move_to_cursor
 
 MIME_TYPE = 'image/svg+xml'
 GRID_INC = 10
@@ -211,11 +212,13 @@ class SceneDeleteAction(BaseSceneAction):
         if len(selection_model) == 0:
             return
 
-        result = QMessageBox.question(None, "Really delete?",
-                                      "Do you really "
-                                      "want to delete the items?",
-                                      QMessageBox.Yes | QMessageBox.No)
-        if result == QMessageBox.No:
+        dialog = QMessageBox(
+            QMessageBox.Question, "Really delete?", "Do you really "
+            "want to delete the items?", QMessageBox.Yes | QMessageBox.No,
+            parent=scene_view)
+        move_to_cursor(dialog)
+
+        if dialog.exec() == QMessageBox.No:
             return
 
         for o in selection_model:
