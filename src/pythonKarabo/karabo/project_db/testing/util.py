@@ -13,229 +13,143 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
+
 from uuid import uuid4
 
+MACRO_BODY = '<macro>ZnJvbSBrYXJhYm8ubWlkZGxlbGF5ZXIgaW1wb3J0IE1hY3Jv</macro>'
 
-def _gen_uuid():
+
+def generate_uuid() -> str:
     return str(uuid4())
 
 
 async def create_device(db):
-    sub_uuid = _gen_uuid()
-    conf_uuid1 = _gen_uuid()
-    conf_uuid2 = _gen_uuid()
-    # The MySQL back-end requires a config referenced by an instance to exist
-    # in the database. So we add the configs before adding the instances that
-    # refer to them.
-    for conf_uuid in [conf_uuid1, conf_uuid2]:
-        xml = (f'<xml uuid="{conf_uuid}" simple_name="{conf_uuid}" '
-               'description="" item_type="device_config" revision="0" '
-               'alias="default">'
-               '<root KRB_Artificial="">'
-               '    <PropertyTest KRB_Type="HASH"/>'
-               '</root>'
-               '</xml>')
-        await db.save_item("LOCAL", conf_uuid, xml)
+    """Create a device instance with two configurations."""
+    config_uuids = [generate_uuid(), generate_uuid()]
 
-    # The MySQL back-end requires device instances to have a 'class_id' and an
-    # 'active_uuid' attribute
-    xml = ('<xml item_type="{atype}" uuid="{uuid}">'
-           '<device_instance active_rev="0" class_id="a_class" '
-           'instance_id="{instance_id}" active_uuid="{conf_uuid1}">'
-           '<device_config revision="0" uuid="{conf_uuid1}" />'
-           '<device_config revision="1" uuid="{conf_uuid2}" />'
-           '</device_instance>'
-           '</xml>').format(uuid=sub_uuid,
-                            atype='device_instance',
-                            instance_id=sub_uuid,
-                            conf_uuid1=conf_uuid1,
-                            conf_uuid2=conf_uuid2
-                            )
+    for config_uuid in config_uuids:
+        config_xml = (
+            f'<xml uuid="{config_uuid}" simple_name="{config_uuid}" '
+            'description="" item_type="device_config" '
+            'revision="0" alias="default">'
+            '<root KRB_Artificial="">'
+            '<PropertyTest KRB_Type="HASH"/>'
+            '</root>'
+            '</xml>')
+        await db.save_item("LOCAL", config_uuid, config_xml)
 
-    await db.save_item("LOCAL", sub_uuid, xml)
-    return sub_uuid, conf_uuid1
+    device_uuid = generate_uuid()
+    device_xml = (
+        f'<xml item_type="device_instance" uuid="{device_uuid}">'
+        '<device_instance active_rev="0" class_id="a_class" '
+        f'instance_id="{device_uuid}" active_uuid="{config_uuids[0]}">'
+        f'<device_config revision="0" uuid="{config_uuids[0]}" />'
+        f'<device_config revision="1" uuid="{config_uuids[1]}" />'
+        '</device_instance>'
+        '</xml>')
+
+    await db.save_item("LOCAL", device_uuid, device_xml)
+    return device_uuid, config_uuids[0]
 
 
-async def create_hierarchy(db, scene_name=None):
-    """
-    Create a minimal project hierarchy representative of Karabo entries in
-    ExistDB
+async def create_hierarchy(
+        db, scene_name: str | None = None) -> tuple[str, dict]:
+    """Create a project with scenes, macros, servers, and devices.
 
-    :param db: a `ProjectDatabase` instance
-    :param scene_name: if defined, the name to be used for the project scenes
-    :return: a tuple consisting of:
-      - the uuid of the project created
-      - a dictionary mapping device ids (key) to their active
-         configuration's uuid (value)
-
-    The following entities are created in hierarchical order, with attributes
-    mentioned in parentheses. The simple_name is frequently set to the uuid,
-    and uuids are randomly generated at each call::
-
-        + Project(item_type:='project', uuid, simple_name:='Project')
-        |
-        +- 4x Scene(item_type:='scene', uuid, simple_name:=uuid|scene_name)
-        |
-        +- 4x Macro(item_type:='macro', uuid, simple_name:=uuid|macro)
-        |
-        +- 4x Server(item_type:='device_server', uuid, simple_name:=uuid)
-           |
-           +- 4x Device(item_type:='device_instance', uuid)
-              |
-              2x Device Config(revision=0|1, uuid)
-
-    The Project XML has the format::
-
-        <xml item_type="Project", uuid="...", simple_name="Project">
-            <root>
-                <project>
-                    <scenes>
-                        ...
-                    </scenes>
-                    <servers>
-                        ...
-                    </servers>
-                </project>
-            </root>
-        </xml>
-
-    Each scene in the project XML has a minimal XML of the form::
-
-        <xml item_type="scene", uuid="...", simple_name="..." />
-
-    For each scene a top-level entry is created::
-
-        <xml item_type="scene" uuid="..."' simple_name="..." >
-            中文
-        </xml>'
-
-    Each server entry in the project XML has a minimal XML of the form::
-
-        <KRB_Item>
-            <uuid>uuid</uuid>
-        </KRB_Item>
-
-    For each server a top-level entry is created::
-
-        <xml item_type="device_server" uuid="..."' simple_name="..." >
-            <device_server>
-                  <device_instance uuid="..." />
-            </device_server>
-        </xml>
-
-    Here the uuid in each device_instance refer to device XMLs of the form::
-
-        <xml item_type="device_instance uuid="...">
-            <device_instance active_rev="0" instance_id="...">
-                <device_config revision="0" uuid="..." />
-                <device_config revision="1" uuid="..." />
-            </device_instance>
-        </xml>
-
-    The mapping dict return as the second tuple element contains the
+    The dict return as the second tuple element contains the
     `instance_id`s as keys and the `uuid` of the `revision:="0"`
     configurations for each of the 4x4 devices created.
 
-    In total thus 1 Project + 4 x Macro + 4 x Scene + 4 x Device Server
-    x 4 x Device = 25
-    objects are created in the database.
+    In total:
+        - 1 Project
+        - 4 x Macro
+        - 4 x Scene
+        - 4 x Device Server with 4 devices each
+
+    25 objects are created in the database.
 
     """
-    uuid = _gen_uuid()
-    xml = ('<xml item_type="{atype}" uuid="{uuid}" '
-           'simple_name="{name}">').format(uuid=uuid, atype='project',
-                                           name='Project')
-    xml += "<root>"
-    xml += "<project>"
-    xml += "<scenes>"
+    project_uuid = generate_uuid()
+    project_xml = (
+        f'<xml item_type="project" uuid="{project_uuid}" '
+        'simple_name="Project"><root><project><scenes>')
+    # Scenes
+    for _ in range(4):
+        scene_uuid = generate_uuid()
+        name = scene_name or scene_uuid
 
-    # create some scenes
+        project_xml += (
+            f'<xml item_type="scene" uuid="{scene_uuid}" '
+            f'simple_name="{name}" />')
+
+        scene_xml = (
+            f'<xml item_type="scene" uuid="{scene_uuid}" simple_name="{name}">'
+            '<svg:svg xmlns:svg="http://www.w3.org/2000/svg" '
+            'xmlns:krb="http://karabo.eu/scene" height="768" width="1024" '
+            f'krb:uuid="{scene_uuid}" krb:version="2">'
+            '</svg:svg></xml>')
+        await db.save_item("LOCAL", scene_uuid, scene_xml)
+
+    project_xml += '</scenes>'
+
+    # Macros
+    project_xml += '<macros>'
     for i in range(4):
-        sub_uuid = _gen_uuid()
-        scene_simple_name = scene_name if scene_name is not None else sub_uuid
-        xml += ('<xml item_type="{atype}" uuid="{uuid}"'
-                ' simple_name="{name}" />').format(
-                    uuid=sub_uuid, atype='scene',
-                    name=scene_simple_name)
+        macro_uuid = generate_uuid()
+        project_xml += f'<KRB_Item><uuid>{macro_uuid}</uuid></KRB_Item>'
 
-        scene_xml = (f'<xml item_type="scene" uuid="{sub_uuid}"'
-                     f' simple_name="{scene_simple_name}" >'
-                     f'<svg:svg xmlns:svg="http://www.w3.org/2000/svg" '
-                     f'xmlns:krb="http://karabo.eu/scene" height="768" '
-                     f'width="1024" krb:uuid="{sub_uuid}" krb:version="2">'
-                     '</svg:svg></xml>')
+        macro_name = f"macroname-{i}"
+        macro_xml = (
+            f'<xml uuid="{macro_uuid}" simple_name="{macro_name}" '
+            f'description="" item_type="macro">{MACRO_BODY}</xml>')
+        await db.save_item("LOCAL", macro_uuid, macro_xml)
 
-        await db.save_item("LOCAL", sub_uuid, scene_xml)
+    project_xml += '</macros>'
 
-    xml += "</scenes>"
+    # Device Servers
+    project_xml += '<servers>'
+    device_config_map = {}
+    for _ in range(4):
+        server_uuid = generate_uuid()
+        project_xml += f'<KRB_Item><uuid>{server_uuid}</uuid></KRB_Item>'
 
-    xml += "<macros>"
-    for i in range(4):
-        sub_uuid = _gen_uuid()
-        xml += ('<KRB_Item>'
-                f'<uuid>{sub_uuid}</uuid>'
-                '</KRB_Item>')
+        devices_xml = ""
+        for _ in range(4):
+            dev_uuid, config_uuid = await create_device(db)
+            devices_xml += f'<device_instance uuid="{dev_uuid}" />'
+            device_config_map[dev_uuid] = config_uuid
 
-        atype = "macro"
-        name = f"macroname-{i}"
-        encoded = "ZnJvbSBrYXJhYm8ubWlkZGxlbGF5ZXIgaW1wb3J0IE1hY3Jv"
-        macro_body = f'<macro>{encoded}</macro>'
-        macro_xml = (f'<xml uuid="{sub_uuid}" simple_name="{name}" '
-                     f'description="" item_type="{atype}" >{macro_body}</xml>')
-        await db.save_item("LOCAL", sub_uuid, macro_xml)
+        server_xml = (
+            f'<xml item_type="device_server" uuid="{server_uuid}" '
+            f'simple_name="{server_uuid}">'
+            f'<device_server>{devices_xml}</device_server></xml>'
+        )
 
-    xml += "</macros>"
+        await db.save_item("LOCAL", server_uuid, server_xml)
 
-    # create some device_servers
-    xml += "<servers>"
-    device_id_conf_map = {}
-    for i in range(4):
-        sub_uuid = _gen_uuid()
+    project_xml += '</servers></project></root></xml>'
+    await db.save_item("LOCAL", project_uuid, project_xml)
 
-        xml += ('<KRB_Item>'
-                '<uuid>{uuid}</uuid>'
-                '</KRB_Item>'.format(uuid=sub_uuid))
-        ins_xml = ""
-        for j in range(4):
-            dev_uuid, conf_uuid = await create_device(db)
-            ins_xml += ('<device_instance '
-                        'uuid="{uuid}" />'.format(uuid=dev_uuid))
-            device_id_conf_map[dev_uuid] = conf_uuid
-
-        ds_xml = ('<xml item_type="{atype}" uuid="{uuid}"'
-                  ' simple_name="{name}" >'
-                  '<device_server>'
-                  '{instances}'
-                  '</device_server>'
-                  '</xml>'
-                  .format(uuid=sub_uuid, atype='device_server', name=sub_uuid,
-                          instances=ins_xml))
-
-        await db.save_item("LOCAL", sub_uuid, ds_xml)
-    xml += "</servers>"
-    xml += "</project>"
-    xml += "</root>"
-    xml += "</xml>"
-    await db.save_item("LOCAL", uuid, xml)
-    return uuid, device_id_conf_map
+    return project_uuid, device_config_map
 
 
 async def create_trashed_project(db, is_trashed=True):
-    uuid = _gen_uuid()
-    xml = (f'<xml item_type="project" uuid="{uuid}"'
-           f' simple_name="{uuid}" is_trashed="{str(is_trashed).lower()}">'
-           '</xml>')
-    await db.save_item("LOCAL", uuid, xml)
-    return uuid
+    """Create a trashed project entry."""
+    project_uuid = generate_uuid()
+    trashed_str = str(is_trashed).lower()
+    xml = (
+        f'<xml item_type="project" uuid="{project_uuid}" '
+        f'simple_name="{project_uuid}" is_trashed="{trashed_str}"></xml>')
+
+    await db.save_item("LOCAL", project_uuid, xml)
+    return project_uuid
 
 
 async def create_unattached_scenes(db):
-    # create scenes with the same simple_name
-    # unattached to the project
-    for i in range(4):
-        sub_uuid = _gen_uuid()
-        scene_xml = ('<xml item_type="scene" uuid="{uuid}"'
-                     ' simple_name="Scene!" >中文</xml>'
-                     .format(uuid=sub_uuid))
-
-        await db.save_item("LOCAL", sub_uuid, scene_xml)
+    """Create scenes unattached to project, sharing the same simple_name."""
+    for _ in range(4):
+        scene_uuid = generate_uuid()
+        scene_xml = (
+            f'<xml item_type="scene" uuid="{scene_uuid}" '
+            'simple_name="Scene!" >中文</xml>')
+        await db.save_item("LOCAL", scene_uuid, scene_xml)
