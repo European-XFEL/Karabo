@@ -178,6 +178,16 @@ class DbReader:
         )
         return await self._execute_all(query)
 
+    async def get_domain_server_instances_by_name_part(
+            self, domain: str, name_part: str):
+        query = (
+            select(DeviceServer)
+            .join(Project).join(ProjectDomain)
+            .where(ProjectDomain.name == domain)
+            .filter(DeviceServer.name.ilike(f'%{name_part}%'))
+        )
+        return await self._execute_all(query)
+
     async def get_domain_macro_instances_by_name_part(
             self, domain: str, name_part: str):
         query = (
