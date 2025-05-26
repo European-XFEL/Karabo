@@ -292,10 +292,9 @@ def test_device_client_sync_api():
     for i in range(6, 8):
         c.execute(deviceId, 'node.increment', 5)
 
-    # XXX: TODO this times out
-    # lck = c.lock(deviceId, recursive=False, timeout=timeoutSec)
-    # assert lck.valid()
-    # lck.unlock()
+    lck = c.lock(deviceId, recursive=False, timeout=timeoutSec)
+    assert lck.valid()
+    lck.unlock()
 
     # Test instanceGoneMonitor
     instanceGoneArg1 = instanceGoneArg2 = None
