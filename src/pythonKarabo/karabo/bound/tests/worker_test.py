@@ -21,7 +21,7 @@ import pytest
 from karabo.bound import Worker
 
 
-def test_worker_throw():
+def test_worker_config():
     worker = Worker(timeout=2000)
     worker.start()
     time.sleep(0.1)
@@ -32,11 +32,16 @@ def test_worker_throw():
     with pytest.raises(RuntimeError):
         worker.start()
 
+    # test order of arguments
+    worker = Worker(None, 2000, 1)
+    assert worker.timeout == 2000
+    assert worker.single_shot
+
 
 def test_worker_basic():
     worker = Worker(timeout=2000)
     worker.setTimeout(100)
-    assert worker.is_running
+    assert not worker.is_running()
     assert worker.timeout == 100
 
     counter = 0
@@ -45,10 +50,11 @@ def test_worker_basic():
         nonlocal counter
         counter += 1
 
-    assert worker.is_running
+    assert not worker.is_running()
     worker.set(callback=increase, timeout=50)
     assert worker.timeout == 50
     worker.start()
+    assert worker.is_running()
     while counter < 5:
         time.sleep(0.01)
     assert counter == 5
@@ -61,17 +67,25 @@ def test_worker_basic():
         time.sleep(0.01)
     worker.stop()
     assert counter == 10
+    assert not worker.is_running()
+
+    # Can't set while running
+    worker = Worker()
+    worker.set(callback=increase, timeout=50)
+    worker.start()
+    with pytest.raises(RuntimeError):
+        worker.set(callback=increase, timeout=50)
+    worker.stop()
 
 
 def test_worker_singleshot():
-
     counter = 0
 
     def increase():
         nonlocal counter
         counter += 1
 
-    worker = Worker(increase, timeout=100, single_shot=True)
+    worker = Worker(increase, 100, single_shot=True)
     assert worker.timeout == 100
     worker.start()
     time.sleep(0.03)
