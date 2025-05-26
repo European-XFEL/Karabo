@@ -449,7 +449,6 @@ class SQLDatabase(DatabaseBase):
         instances = await self.reader.get_domain_device_instances_by_name_part(
             domain, device_id_part
         )
-
         results = []
         for instance in instances:
             configs = await self.reader.get_device_configs_of_instance(
@@ -630,29 +629,32 @@ class SQLDatabase(DatabaseBase):
         :return: a list of dicts:
             [{"projectname": name of project,
               "date": last modification timestamp for the project,
-              "uuid": uuid of projecti
-              "devices": list of ids of prj devices with the given part}, ...]
+              "uuid": uuid of project,
+              "devices": list of ids of prj devices with the given part},
+            ...]
         """
         configs = await self.get_configurations_from_device_name_part(
             domain, device_id_part)
-        projects = []
+
+        projects = {}
         for config in configs:
             device_uuid = config["device_uuid"]
             device_id = config["device_id"]
-            for prj in await self.get_projects_data_from_device(domain,
-                                                                device_uuid):
-                prj_in_list = next((p for p in projects
-                                    if p["uuid"] == prj["uuid"]), None)
-                if prj_in_list:
-                    # The project is already in the resulting list due to
-                    # another device_id that matched the name part; add the
-                    # device_id to the 'devices' attribute of the project.
-                    prj_in_list["devices"].append(device_id)
-                else:
-                    prj["devices"] = [device_id]
-                    projects.append(prj)
+            for project in await self.get_projects_data_from_device(
+                    domain, device_uuid):
+                project_uuid = project["uuid"]
+                if project_uuid not in projects:
+                    project_data = {
+                        "projectname": project["projectname"],
+                        # Already time mangled before
+                        "date": project["date"],
+                        "uuid": project_uuid,
+                        "devices": []}
+                    projects[project_uuid] = project_data
 
-        return projects
+                projects[project_uuid]["devices"].append(device_id)
+
+        return list(projects.values())
 
     async def get_projects_with_macro(
             self, domain: str, name_part: str) -> list[dict[str, any]]:
@@ -673,22 +675,20 @@ class SQLDatabase(DatabaseBase):
         """
         macros = await self.reader.get_domain_macro_instances_by_name_part(
             domain, name_part)
-        existing_projects = {}
         projects = {}
 
         for macro in macros:
             project_id = macro.project_id
             macro_name = macro.name
-            if project_id not in existing_projects:
+            if project_id not in projects:
                 project = await self.reader.get_project_from_id(project_id)
                 project_data = {
                     "projectname": project.name,
                     "date": project.date.strftime("%Y-%m-%d %H:%M:%S"),
                     "uuid": project.uuid,
                     "macros": []}
-                existing_projects[project_id] = project_data
-                projects[project.uuid] = project_data
+                projects[project_id] = project_data
 
-            existing_projects[project_id]["macros"].append(macro_name)
+            projects[project_id]["macros"].append(macro_name)
 
         return list(projects.values())
