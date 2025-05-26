@@ -954,7 +954,6 @@ class SomeClass:
             IMAGEDATA_ELEMENT(expected)
             .key("myImageElement")
             .setDimensions("500, 800")
-            .setDimensionScales("Dimscales")
             .expertAccess()
             .commit(),
         )
@@ -1712,8 +1711,6 @@ def test_imagedata_element():
     assert sch.has("myImageElement") is True
     assert h.getAttribute("myImageElement.dims",
                           'defaultValue') == [500, 800]
-    assert h.getAttribute("myImageElement.dimScales",
-                          'defaultValue') == "Dimscales"
     assert sch.getRequiredAccessLevel("myImageElement") == AccessLevel.EXPERT
 
 

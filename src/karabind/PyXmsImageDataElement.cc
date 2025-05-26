@@ -70,13 +70,6 @@ void exportPyXmsImageDataElement(py::module_& m) {
     }
 
     {
-        py::enum_<DimensionType>(m, "DimensionType")
-              .value("UNDEFINED", DimensionType::UNDEFINED)
-              .value("STACK", DimensionType::STACK)
-              .value("DATA", DimensionType::DATA);
-    }
-
-    {
         py::class_<ImageData, std::shared_ptr<ImageData>> img(m, "ImageData");
 
         img.def(py::init<>());
@@ -143,22 +136,6 @@ void exportPyXmsImageDataElement(py::module_& m) {
                   }
               },
               py::arg("dims"));
-
-        img.def("getDimensionTypes", [](const ImageData& self) -> py::tuple {
-            std::vector<DimensionType> v = self.getDimensionTypes();
-            return py::cast(v);
-        });
-
-        img.def(
-              "setDimensionTypes",
-              [](ImageData& self, const py::sequence& o) {
-                  self.setDimensionTypes(o.cast<std::vector<DimensionType>>());
-                  //   py::ssize_t size = py::len(o);
-                  //   std::vector<int> dimTypes(size);
-                  //   for (int i = 0; i < size; i++) dimTypes[i] = o[i].cast<int>();
-                  //   self.setDimensionTypes(dimTypes);
-              },
-              py::arg("listOfDimTypes"));
 
         img.def("getROIOffsets", [](const ImageData& self) -> py::tuple {
             using namespace karabo::data;
@@ -227,10 +204,6 @@ void exportPyXmsImageDataElement(py::module_& m) {
         img.def("setEncoding", &ImageData::setEncoding, py::arg("encoding"));
 
         img.def("isIndexable", &ImageData::isIndexable);
-
-        img.def("getDimensionScales", &ImageData::getDimensionScales);
-
-        img.def("setDimensionScales", &ImageData::setDimensionScales, py::arg("scales"));
     }
     {
         py::class_<ImageDataElement> el(m, "IMAGEDATA_ELEMENT");
@@ -255,8 +228,6 @@ void exportPyXmsImageDataElement(py::module_& m) {
         el.def("expertAccess", &ImageDataElement::expertAccess, py::return_value_policy::reference_internal);
 
         el.def("commit", &ImageDataElement::commit, py::return_value_policy::reference_internal);
-
-        el.def("setDimensionScales", &ImageDataElement::setDimensionScales, py::arg("scales"));
 
         el.def(
               "setDimensions",

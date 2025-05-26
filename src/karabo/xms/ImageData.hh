@@ -38,13 +38,6 @@ namespace karabo {
     }
     namespace xms {
 
-        enum class DimensionType {
-
-            UNDEFINED = 0,
-            STACK = -1,
-            DATA = 1,
-        };
-
         enum class Rotation {
 
             UNDEFINED = -1,
@@ -226,14 +219,6 @@ namespace karabo {
              */
             void setDimensions(const karabo::data::Dims& dims);
 
-            const std::vector<DimensionType> getDimensionTypes() const;
-
-            void setDimensionTypes(const std::vector<DimensionType>& dimTypes);
-
-            const std::string& getDimensionScales() const;
-
-            void setDimensionScales(const std::string& scales);
-
             ImageData copy() const;
 
            private:
@@ -250,10 +235,6 @@ namespace karabo {
            public:
             ImageDataElement(karabo::data::Schema& s) : ParentType(s) {}
 
-            ImageDataElement& setDimensionScales(const std::string& scales) {
-                return ParentType::setDefaultValue("dimScales", scales);
-            }
-
             ImageDataElement& setDimensions(const std::string& dimensions) {
                 return setDimensions(karabo::data::fromString<unsigned long long, std::vector>(dimensions));
             }
@@ -269,7 +250,6 @@ namespace karabo {
                 // Setting maximum number of dimensions for all vectors for the DAQ
                 ret.setMaxSize("dims", dimensions.size());
                 ret.setMaxSize("pixels.shape", dimensions.size());
-                ret.setMaxSize("dimTypes", dimensions.size());
                 ret.setMaxSize("roiOffsets", dimensions.size());
                 ret.setMaxSize("binning", dimensions.size());
                 return ret;
