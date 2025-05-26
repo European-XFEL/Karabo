@@ -15,8 +15,7 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 from karabo.bound import (
     INT32_ELEMENT, KARABO_CLASSINFO, SLOT_ELEMENT, STRING_ELEMENT,
-    VECTOR_INT32_ELEMENT, Epochstamp, Hash, PythonDevice, State, Timestamp,
-    launchPythonDevice)
+    VECTOR_INT32_ELEMENT, Epochstamp, Hash, PythonDevice, State, Timestamp)
 
 
 @KARABO_CLASSINFO("CommTestDevice", "2.0")
@@ -128,8 +127,3 @@ class CommTestDevice(PythonDevice):
         stamp = self.getTimestamp(epoch)
 
         self.reply(stamp.getTrainId())
-
-
-# This entry used by device server
-if __name__ == "__main__":
-    launchPythonDevice()
