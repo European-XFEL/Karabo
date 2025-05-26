@@ -397,8 +397,6 @@ class ImageData(KaraboValue):
     :param encoding: The encoding of the image, e.g. EncodingType.GRAY (enum)
     :param rotation: The rotation of the image, either 0, 90, 180 or 270
     :param roiOffsets: The roiOffset, e.g. [0, 0]
-    :param dimScales: Description of the dim scales
-    :param dimTypes: The dimension types
     :param bitsPerPixel: The bits per pixel
     :param flipX: Image horizontal flip, either `True` or `False`
     :param flipY: Image vertical flip, either `True` or `False`
@@ -407,14 +405,12 @@ class ImageData(KaraboValue):
     :type encoding: integer with dtype int32
     :type rotation: integer with dtype int32
     :type roiOffsets: array with dtype uint64
-    :type dimScales: str
-    :type dimTypes: array with dtype int32
     :type flipX: bool
     :type flipY: bool
     """
 
     def __init__(self, value, *args, binning=None, encoding=None,
-                 rotation=None, roiOffsets=None, dimScales=None, dimTypes=None,
+                 rotation=None, roiOffsets=None,
                  bitsPerPixel=None, flipX=False, flipY=False, **kwargs):
         super().__init__(value, *args, **kwargs)
         self.value = value
@@ -444,10 +440,6 @@ class ImageData(KaraboValue):
             encoding = encoding.value
 
         self.encoding = numpy.int32(encoding)
-
-        self.dimScales = dimScales if dimScales else ""
-        dimTypes = [] if dimTypes is None else dimTypes
-        self.dimTypes = numpy.array(dimTypes, dtype=numpy.int32)
         binning = [1] * len(dims) if binning is None else binning
         self.binning = numpy.array(binning, dtype=numpy.uint64)
         roiOffsets = [0] * len(dims) if roiOffsets is None else roiOffsets
@@ -475,8 +467,6 @@ class ImageData(KaraboValue):
             'dtype': self.dtype,
             'shape': self.shape,
             'encoding': self.encoding,
-            'dimScales': self.dimScales,
-            'dimTypes': self.dimTypes,
             'dims': self.dims,
             'binning': self.binning,
             'roiOffsets': self.roiOffsets,
