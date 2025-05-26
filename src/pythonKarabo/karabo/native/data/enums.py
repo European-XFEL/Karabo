@@ -213,15 +213,6 @@ class Unit(StrEnum):
 
 
 @unique
-class DimensionType(IntEnum):
-    """Dimension type used for image data
-    """
-    UNDEFINED = 0
-    STACK = -1
-    DATA = 1
-
-
-@unique
 class EncodingType(IntEnum):
     """Encoding type used for image data
     """
