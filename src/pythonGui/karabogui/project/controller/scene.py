@@ -157,7 +157,7 @@ class SceneController(BaseProjectController):
 
             # Only use copyable traits
             scene.copy_traits(new_scene, traits=['width', 'height',
-                                                 'children', 'description'])
+                                                 'children'])
 
             def visitor(model):
                 if isinstance(model, BaseSavableModel):

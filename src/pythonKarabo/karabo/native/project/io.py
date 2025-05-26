@@ -140,7 +140,6 @@ def _db_metadata_reader(metadata):
     attrs = {
         'uuid': metadata['uuid'],
         'simple_name': metadata.get('simple_name', ''),
-        'description': metadata.get('description', ''),
         'date': metadata.get('date', ''),
     }
     return attrs
@@ -284,7 +283,6 @@ def _model_db_metadata(model):
     attrs = {}
     attrs['uuid'] = model.uuid
     attrs['simple_name'] = model.simple_name
-    attrs['description'] = model.description
     attrs['date'] = model.date
 
     if isinstance(model, ProjectModel):

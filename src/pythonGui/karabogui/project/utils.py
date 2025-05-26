@@ -79,7 +79,6 @@ def add_device_to_server(server, class_id='', parent=None):
         config_model = DeviceConfigurationModel(
             class_id=dialog.class_id, configuration=Hash(),
             simple_name=dialog.configuration_name,
-            description=dialog.description
         )
         # Set initialized and modified last
         config_model.initialized = config_model.modified = True
