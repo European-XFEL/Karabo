@@ -565,7 +565,7 @@ class DeviceClientProxyFactory(ProxyFactory):
         async def _async_disconnectSchemaUpdated(self):
             if self._schemaUpdateConnected:
                 await self._device._sigslot.async_disconnect(
-                    self._deviceId, ["signalSchemaUpdated"],
+                    self._deviceId, "signalSchemaUpdated",
                     self._device.slotSchemaUpdated)
             self._schemaUpdateConnected = False
 
