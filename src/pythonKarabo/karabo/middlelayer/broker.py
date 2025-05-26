@@ -21,9 +21,9 @@ import time
 import traceback
 import weakref
 from asyncio import (
-    AbstractEventLoop, CancelledError, Event, Future, Lock, TimeoutError,
-    current_task, ensure_future, gather, iscoroutinefunction, shield, sleep,
-    wait_for)
+    AbstractEventLoop, CancelledError, Event, Future, Lock, current_task,
+    ensure_future, gather, iscoroutinefunction, shield, sleep, wait_for)
+from collections.abc import Callable
 from contextlib import AsyncExitStack, asynccontextmanager
 from functools import partial, wraps
 from itertools import count
@@ -59,7 +59,7 @@ class KaraboWrapper(TaskWrapper):
 aiormq.base.TaskWrapper = KaraboWrapper
 
 
-def ensure_running(func: callable):
+def ensure_running(func: Callable):
     """Ensure a running eventloop for `func`"""
     if iscoroutinefunction(func):
         async def wrapper(self, *args, **kwargs):
@@ -163,11 +163,9 @@ _CONNECTOR = None
 def get_connector():
     """The `Connector` singleton."""
     global _CONNECTOR
-    if _CONNECTOR is not None:
-        return _CONNECTOR
-    connector = Connector()
-    _CONNECTOR = connector
-    return connector
+    if _CONNECTOR is None:
+        _CONNECTOR = Connector()
+    return _CONNECTOR
 
 
 class Broker:
@@ -251,13 +249,16 @@ class Broker:
         # Only if interested, we subscribe to broadcasts messages,
         # but still declare the exchange to publish
         if self.broadcast:
-            for slot in _BROADCAST_SLOTS:
-                # TODO: Could optimize with gather
-                key = "*." + slot
-                await self.channel.queue_bind(self.queue, exchange,
-                                              routing_key=key)
-                async with self.subscribe_lock:
+            async with self.subscribe_lock:
+                futures = []
+                for slot in _BROADCAST_SLOTS:
+                    key = "*." + slot
+                    futures.append(self.channel.queue_bind(
+                        self.queue, exchange, routing_key=key))
                     self.subscriptions.add((exchange, key))
+
+            # Default can throw!
+            await gather(*futures)
 
         # Similarly, declare exchange for signals for publishing
         exchange = f"{self.domain}.signals"
@@ -281,7 +282,7 @@ class Broker:
             device = weakref.ref(device)
             await self.consume(device())
 
-    def register_slot(self, name: str, slot: callable):
+    def register_slot(self, name: str, slot: Callable):
         """register a slot on the device
 
         :param name: the name of the slot
@@ -335,10 +336,10 @@ class Broker:
     def encode_binary_message(self, header: Hash, arguments: tuple) -> bytes:
         body = Hash()
         for i, a in enumerate(arguments):
-            body[f"a{i + 1}"] = a
+            body.setElement(f"a{i + 1}", a, {})
         # Add timestamp (epoch in ms) when message is sent
-        header["MQTimestamp"] = numpy.int64(time.time() * 1000)
-        header["signalInstanceId"] = self.deviceId
+        header.setElement("MQTimestamp", numpy.int64(time.time() * 1000), {})
+        header.setElement("signalInstanceId", self.deviceId, {})
         return encodeBinary(header) + encodeBinary(body)
 
     @ensure_running
@@ -384,7 +385,6 @@ class Broker:
     def emit_signal(self, signal_name: str, *args):
         exchange = f"{self.domain}.signals"
         routing_key = f"{self.deviceId}.{signal_name}"
-        # header = self._base_header()
         self.send(exchange, routing_key, Hash(), args)
 
     def _prepare_call_slot(self, target: str, slot: str,
@@ -432,85 +432,61 @@ class Broker:
         elif replySlot := header.get("replyFunction"):
             self.call_slot(sender, replySlot, header_out, *reply)
 
-    def connect(self, deviceId, signal, slot):
-        """This is way of establishing 'karabo signalslot' connection with
-        a signal.  This is just creating a task that will call `async_connect`
-        that may take time because communication with broker is involved.
-        """
+    def connect(self, deviceId: str, signal: str, slot: Callable):
+        """Synchronously connect to `signal` of remote device `device`"""
         self.loop.call_soon_threadsafe(
             self.loop.create_task, self.async_connect(deviceId, signal, slot))
 
-    async def async_connect(self, deviceId, signal, slot):
-        """This is way of establishing karabo connection between local slot and
-        remote signal.  In AMQP case this is two steps procedure:
-        1. subscription to the topic with topic name built from signal info
-        2. sending to the signal side the slot registration message
-        NOTE: Optimization: we can connect many signals to the same slot
-        at once
-        """
-        if isinstance(signal, (list, tuple)):
-            signals = list(signal)
-        else:
-            signals = [signal]
-
+    async def async_connect(self, deviceId: str, signal: str, slot: Callable):
+        """Asynchronously connect to `signal` of remote device `device`"""
         exchange = f"{self.domain}.signals"
 
         futures = [sleep(0)]
         async with self.subscribe_lock:
-            for s in signals:
-                # Store which slot to call when signal message arrives
-                dev_signals = self._slots_for_signals.setdefault(deviceId, {})
-                dev_signals.setdefault(s, set()).add(slot.__name__)
-                # Subscribe on broker
-                key = f"{deviceId}.{s}"
-                subscription = (exchange, key)
-                if subscription not in self.subscriptions:
-                    futures.append(self.channel.queue_bind(
-                        queue=self.queue, exchange=exchange, routing_key=key))
-                    self.subscriptions.add(subscription)
+            # Store which slot to call when signal message arrives
+            device_signals = self._slots_for_signals.setdefault(deviceId, {})
+            device_signals.setdefault(signal, set()).add(slot.__name__)
+            # Subscribe on broker
+            key = f"{deviceId}.{signal}"
+            subscription = (exchange, key)
+            if subscription not in self.subscriptions:
+                futures.append(self.channel.queue_bind(
+                    queue=self.queue, exchange=exchange, routing_key=key))
+                self.subscriptions.add(subscription)
 
         await gather(*futures, return_exceptions=True)
 
     @ensure_running
-    def disconnect(self, devId, signal, slot):
+    def disconnect(self, deviceId: str, signal: str, slot: Callable):
         self.loop.call_soon_threadsafe(
-            self.loop.create_task, self.async_disconnect(devId, signal, slot))
+            self.loop.create_task, self.async_disconnect(
+                deviceId, signal, slot))
 
     @ensure_running
-    async def async_disconnect(self, deviceId, signal, slot):
-        signals = []
-        if isinstance(signal, (list, tuple)):
-            signals = list(signal)
-        else:
-            signals = [signal]
+    async def async_disconnect(
+            self, deviceId: str, signal: str, slot: Callable):
 
         exchange = f"{self.domain}.signals"
-        try:
-            futures = [sleep(0)]
-            async with self.subscribe_lock:
-                for s in signals:
-                    # Clean storage of slots to call when signal msg arrives
-                    device_signals = self._slots_for_signals.get(deviceId, {})
-                    subscribed_slots = device_signals.get(s, set())
-                    subscribed_slots.discard(slot)
-                    if not subscribed_slots:
-                        device_signals.pop(s, None)
-                        if not device_signals:
-                            self._slots_for_signals.pop(deviceId, None)
-                    # Remove subscription from broker
-                    key = f"{deviceId}.{s}"
-                    subscription = (exchange, key)
-                    if subscription in self.subscriptions:
-                        self.subscriptions.remove(subscription)
+        futures = [sleep(0)]
+        async with self.subscribe_lock:
+            # Clean storage of slots to call when signal msg arrives
+            device_signals = self._slots_for_signals.get(deviceId, {})
+            subscribed_slots = device_signals.get(signal, set())
+            subscribed_slots.discard(slot)
+            if not subscribed_slots:
+                device_signals.pop(signal, None)
+                if not device_signals:
+                    self._slots_for_signals.pop(deviceId, None)
+            # Remove subscription from broker
+            key = f"{deviceId}.{signal}"
+            subscription = (exchange, key)
+            if subscription in self.subscriptions:
+                self.subscriptions.remove(subscription)
+                futures.append(self.channel.queue_unbind(
+                    queue=self.queue, exchange=exchange,
+                    routing_key=key))
 
-                        futures.append(self.channel.queue_unbind(
-                            queue=self.queue, exchange=exchange,
-                            routing_key=key))
-
-            await gather(*futures, return_exceptions=True)
-        except BaseException:
-            self.logger.warning(
-                f"Fail to disconnect from signals: {signals}")
+        await gather(*futures, return_exceptions=True)
 
     async def async_unsubscribe_all(self):
         futures = [sleep(0)]
@@ -522,21 +498,21 @@ class Broker:
             self.subscriptions = set()
         await gather(*futures, return_exceptions=True)
 
-    async def handleMessage(self, exchange, routing_key, message, device):
-        """Decode message from binary blob
-        has valid information to do so...  Otherwise
-        simply call handle the message as usual...
-        """
+    async def handle_message(self, device, message):
+        """Decode message from a Rabbit MQ Message"""
+        message_body = message.body
         try:
-            header, pos = decodeBinaryPos(message)
-            body = decodeBinary(message[pos:])
+            header, pos = decodeBinaryPos(message_body)
+            body = decodeBinary(message_body[pos:])
             decoded = Hash("header", header, "body", body)
         except BaseException:
             self.logger.exception("Malformed message")
             return
 
+        exchange = message.delivery.exchange
+        key = message.delivery.routing_key
         try:
-            slots, params = self.decodeMessage(exchange, routing_key, decoded)
+            slots, params = self.decode_message(exchange, key, decoded)
         except BaseException:
             self.logger.exception("Malformed message")
             return
@@ -620,9 +596,7 @@ class Broker:
     async def on_message(self, device, message):
         d = device()
         if d is not None:
-            exchange = message.delivery.exchange
-            key = message.delivery.routing_key
-            await self.handleMessage(exchange, key, message.body, d)
+            await self.handle_message(d, message)
 
     async def consume(self, device):
         device = weakref.ref(device)
@@ -637,10 +611,10 @@ class Broker:
     async def on_heartbeat(self, device, message):
         d = device()
         if d is not None:
-            message = message.body
+            message_body = message.body
             try:
-                _, pos = decodeBinaryPos(message)
-                hsh = decodeBinary(message[pos:])
+                _, pos = decodeBinaryPos(message_body)
+                hsh = decodeBinary(message_body[pos:])
             except BaseException:
                 self.logger.exception("Malformed heartbeat message")
             else:
@@ -672,8 +646,8 @@ class Broker:
         async with self.subscribe_lock:
             self.subscriptions.add((exchange, key))
 
-    def decodeMessage(self, exchange: str, routing_key: str,
-                      hash: Hash) -> tuple[list, list]:
+    def decode_message(self, exchange: str, routing_key: str,
+                       hash: Hash) -> tuple[list, list]:
         """Decode a Karabo message
 
         reply messages are dispatched directly.
@@ -692,7 +666,7 @@ class Broker:
 
         replyFrom = header.get("replyFrom")
         if replyFrom is not None:
-            return self._decodeReply(replyFrom, header, params)
+            return self._decode_reply(replyFrom, header, params)
 
         if exchange.endswith("slots"):  # .slots or .global_slots
             slot = routing_key.split(".", 1)
@@ -700,9 +674,8 @@ class Broker:
                 msg = f"Malformed routing_key: {routing_key}"
                 raise RuntimeError(msg)
             slots = [slot[1]]
-            # HACK for device.py: Device._checkLocked(..) needs slot in header
+            # XXX: for device.py: Device._checkLocked(..) needs slot in header
             header["slotFunctions"] = slot
-            # HACK end
         else:
             # A signal - get slots to call from our book-keeping
             # and routing_key
@@ -712,17 +685,15 @@ class Broker:
         return (slots, params)
 
     def _slots_for(self, instanceId, signal):
-        signals = self._slots_for_signals.get(instanceId)
-        if signals:
-            slots = signals.get(signal)
-            if slots:
-                return slots
+        slots = self._slots_for_signals.get(instanceId, {}).get(signal)
+        if slots:
+            return slots
 
         self.logger.warning("Failed to find slot for signal message from "
                             f"{instanceId}.{signal}")
         return []
 
-    def _decodeReply(self, replyFrom, header, params):
+    def _decode_reply(self, replyFrom: str, header: Hash, params: list):
         f = self.repliers.get(replyFrom)
         if f is not None and not f.done():
             if header.get("error", False):
@@ -739,8 +710,8 @@ class Broker:
         return [], None
 
     def get_property(self, message: Hash, prop: str) -> Any | None:
-        header = message.get("header")
-        return header.get(prop) if header is not None else None
+        """Get a property from the message header"""
+        return message["header"].get(prop)
 
     async def ensure_connection(self):
         if self.connection is None:
