@@ -13,7 +13,7 @@
 #############################################################################
 import pytest
 
-from karabo.middlelayer.testing import AsyncDeviceContext, event_loop
+from karabo.middlelayer.testing import AsyncDeviceContext
 
 from ..__CLASS_NAME__ import __CLASS_NAME__
 
@@ -25,8 +25,8 @@ _DEVICE_CONFIG = {
 
 
 @pytest.mark.timeout(30)
-@pytest.mark.asyncio
-async def test_device(event_loop: event_loop):
+@pytest.mark.asyncio(loop_scope="module")
+async def test_device():
     device = __CLASS_NAME__(_DEVICE_CONFIG)
     async with AsyncDeviceContext(device=device) as ctx:
         assert ctx.instances["device"] is device
