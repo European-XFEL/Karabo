@@ -23,8 +23,8 @@ from karabo.project_db import (
     DATE_FORMAT, ExistDatabase, ProjectDBError, make_xml_if_needed)
 from karabo.project_db.exist_db import TESTDB_ADMIN_PASSWORD
 from karabo.project_db.testing import (
-    _gen_uuid, create_hierarchy, create_trashed_project,
-    create_unattached_scenes)
+    create_hierarchy, create_trashed_project, create_unattached_scenes,
+    generate_uuid)
 
 from .util import stop_local_database
 
@@ -42,8 +42,8 @@ def database():
 @pytest.mark.asyncio
 async def test_project_interface(database, subtests):
     # A bunch of document "names" for the following tests
-    testproject = _gen_uuid()
-    testproject2 = _gen_uuid()
+    testproject = generate_uuid()
+    testproject2 = generate_uuid()
     async with database as db:
         # remove previously existing test collection
         path = "{}/{}".format(db.root, 'LOCAL_TEST')
@@ -136,7 +136,7 @@ async def test_project_interface(database, subtests):
                 assert it in ['LOCAL_TEST', 'REPO', 'LOCAL']
 
         with subtests.test(msg='test_old_versioned_data'):
-            versioned_uuid = _gen_uuid()
+            versioned_uuid = generate_uuid()
             xml_rep = """
             <xml uuid="{uuid}" revision="{revision}" date="{date}"
                 user="sue">foo</xml>
@@ -190,7 +190,7 @@ async def test_project_interface(database, subtests):
 @pytest.mark.timeout(30)
 @pytest.mark.asyncio
 async def test_save_check_modification(database, subtests):
-    proj_uuid = _gen_uuid()
+    proj_uuid = generate_uuid()
 
     async with database as db:
         path = "{}/{}".format(db.root, 'LOCAL')

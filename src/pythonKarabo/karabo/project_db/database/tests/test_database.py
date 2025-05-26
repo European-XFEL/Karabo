@@ -25,7 +25,7 @@ from karabo.native import Hash, HashList
 from karabo.project_db import (
     DATE_FORMAT, ProjectDBError, SQLDatabase, make_xml_if_needed)
 from karabo.project_db.testing import (
-    _gen_uuid, create_hierarchy, create_trashed_project)
+    create_hierarchy, create_trashed_project, generate_uuid)
 
 
 @pytest_asyncio.fixture(loop_scope="module")
@@ -40,8 +40,8 @@ async def database():
 @pytest.mark.asyncio
 async def test_project_interface(database, subtests):
     # A bunch of document "names" for the following tests
-    testproject = _gen_uuid()
-    testproject2 = _gen_uuid()
+    testproject = generate_uuid()
+    testproject2 = generate_uuid()
 
     async with database as db:
         with subtests.test(msg='test_add_domain'):
@@ -175,7 +175,7 @@ async def test_project_interface(database, subtests):
 @pytest.mark.timeout(60)
 @pytest.mark.asyncio
 async def test_save_check_modification(database, subtests):
-    proj_uuid = _gen_uuid()
+    proj_uuid = generate_uuid()
     async with database as db:
         with subtests.test(msg='test_save_item'):
             date = "2011-11-01 09:00:52"
