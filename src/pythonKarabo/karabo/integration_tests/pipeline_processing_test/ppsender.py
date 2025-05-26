@@ -23,8 +23,7 @@ from karabo.bound import (
     INT32_ELEMENT, KARABO_CLASSINFO, NDARRAY_ELEMENT, NODE_ELEMENT,
     OUTPUT_CHANNEL, OVERWRITE_ELEMENT, SLOT_ELEMENT, STRING_ELEMENT,
     UINT32_ELEMENT, UINT64_ELEMENT, VECTOR_INT64_ELEMENT, ChannelMetaData,
-    Hash, MetricPrefix, PythonDevice, Schema, State, Timestamp, Types, Unit,
-    launchPythonDevice)
+    Hash, MetricPrefix, PythonDevice, Schema, State, Timestamp, Types, Unit)
 
 
 @KARABO_CLASSINFO("PPSenderDevice", "2.2.4")
@@ -241,8 +240,3 @@ class PPSenderDevice(PythonDevice):
 
         self.signalEndOfStream("node.output3")
         self.updateState(State.NORMAL)
-
-
-# This entry used by device server
-if __name__ == "__main__":
-    launchPythonDevice()
