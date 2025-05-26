@@ -174,7 +174,7 @@ class DbReader:
             select(DeviceInstance)
             .join(DeviceServer).join(Project).join(ProjectDomain)
             .where(ProjectDomain.name == domain)
-            .filter(DeviceInstance.name.like(f'%{name_part}%'))
+            .filter(DeviceInstance.name.ilike(f'%{name_part}%'))
         )
         return await self._execute_all(query)
 
