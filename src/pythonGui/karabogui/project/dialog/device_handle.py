@@ -173,7 +173,3 @@ class DeviceHandleDialog(QDialog):
     @property
     def configuration_name(self):
         return self.cbConfig.currentText()
-
-    @property
-    def description(self):
-        return ""

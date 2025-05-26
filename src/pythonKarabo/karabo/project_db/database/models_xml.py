@@ -36,11 +36,10 @@ def _wrap_vector_hash(tag, items):
     return f'<{tag} KRB_Type="VECTOR_HASH">{"".join(items)}</{tag}>'
 
 
-def _wrap_xml(uuid, name, item_type, user, date='', description='', extra=''):
+def _wrap_xml(uuid, name, item_type, date='', extra=''):
     return (
         f'<xml {_XML_NS} uuid="{uuid}" simple_name="{name}" '
-        f'description="{description}" date="{date}" '
-        f'item_type="{item_type}" user="{user}" '
+        f'date="{date}" item_type="{item_type}" '
         f'{_REVISION_ALIAS}>{extra}</xml>'
     )
 
@@ -69,9 +68,9 @@ def emit_project_xml(project: Project,
 
     return (
         f'<xml {_XML_NS} uuid="{project.uuid}" simple_name="{project.name}" '
-        f'description="{project.description}" date="{date}" '
+        f'date="{date}" '
         f'is_trashed="{trashed}" item_type="project" '
-        f'user="{project.last_modified_user}" {_REVISION_ALIAS}>'
+        f'{_REVISION_ALIAS}>'
         f'{content}'
         '</xml>'
     )
@@ -82,7 +81,6 @@ def emit_scene_xml(scene: Scene) -> str:
         uuid=scene.uuid,
         name=scene.name,
         item_type="scene",
-        user=scene.last_modified_user,
         date=_format_date(scene.date),
         extra=scene.svg_data
     )
@@ -95,7 +93,6 @@ def emit_macro_xml(macro: Macro) -> str:
         uuid=macro.uuid,
         name=macro.name,
         item_type="macro",
-        user=macro.last_modified_user,
         date=_format_date(macro.date),
         extra=macro_body
     )
@@ -113,7 +110,6 @@ def emit_device_server_xml(server: DeviceServer,
         uuid=server.uuid,
         name=server.name,
         item_type="device_server",
-        user=server.last_modified_user,
         date=_format_date(server.date),
         extra=content
     )
@@ -140,7 +136,6 @@ def emit_device_instance_xml(instance: DeviceInstance,
         uuid=instance.uuid,
         name=instance.name,
         item_type="device_instance",
-        user=instance.last_modified_user,
         date=_format_date(instance.date),
         extra=instance_block
     )
@@ -151,8 +146,6 @@ def emit_device_config_xml(config: DeviceConfig) -> str:
         uuid=config.uuid,
         name=config.name,
         item_type="device_config",
-        user=config.last_modified_user,
         date=_format_date(config.date),
-        description=config.description,
         extra=config.config_data
     )

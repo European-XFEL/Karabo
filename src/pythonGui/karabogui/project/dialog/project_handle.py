@@ -41,17 +41,14 @@ from .utils import get_dialog_ui
 SIMPLE_NAME = 'simple_name'
 LAST_MODIFIED = 'last_modified'
 UUID = 'uuid'
-DESCRIPTION = 'description'
 
 PROJECT_DATA = OrderedDict()
 PROJECT_DATA[SIMPLE_NAME] = 'Name'
 PROJECT_DATA[LAST_MODIFIED] = 'Last Modified'
 PROJECT_DATA[UUID] = 'UUID'
-PROJECT_DATA[DESCRIPTION] = 'Description'
 
 ProjectEntry = namedtuple('ProjectEntry', [key for key in PROJECT_DATA.keys()])
 
-# A header selection will be without the description
 HEADER = ['Name', 'Last Modified', 'UUID']
 
 
@@ -425,7 +422,6 @@ class TableModel(QAbstractTableModel):
                      - 'is_trashed' - Flag if project is marked as trashed
                      - 'user' - The user who created the project
                      - 'date' - The date the project was last modified
-                     - 'description' - The description of the project
 
         Note: The `user` information is not used.
         """
@@ -441,7 +437,6 @@ class TableModel(QAbstractTableModel):
                     simple_name=it.get('simple_name'),
                     last_modified=utc_to_local(it.get('date')),
                     uuid=(it.get('uuid'), is_trashed),
-                    description=it.get('description', ''),
                 )
                 self.entries.append(entry)
         finally:
@@ -481,10 +476,6 @@ class TableModel(QAbstractTableModel):
                 uuid, _ = entry[column]
                 return uuid
             return entry[column]
-        elif role == Qt.ToolTipRole:
-            description = entry[get_column_index(DESCRIPTION)]
-            description = description or "No description provided ..."
-            return description
         elif role == Qt.UserRole:
             return entry[column]
         return None
