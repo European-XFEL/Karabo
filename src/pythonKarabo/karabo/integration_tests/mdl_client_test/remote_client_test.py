@@ -18,7 +18,6 @@ import json
 import pytest
 
 from karabo.middlelayer import DeviceClientBase, State
-from karabo.middlelayer.testing import event_loop_policy  # noqa
 from karabo.middlelayer.testing import AsyncServerContext, assert_wait_property
 
 
