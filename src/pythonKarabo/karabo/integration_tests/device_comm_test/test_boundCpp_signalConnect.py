@@ -23,7 +23,7 @@ from time import sleep
 
 import pytest
 
-from karabo.bound import SignalSlotable
+from karabo.bound import Hash, SignalSlotable
 from karabo.bound.testing import ServerContext, eventLoop, sleepUntil
 
 timeout = 5
@@ -51,7 +51,9 @@ def connectTest(eventLoop: eventLoop):
         api="python")
     with server:
         remote = server.remote()
-        sleepUntil(lambda: SYNC_SLOTTESTER in remote.getDevices(), timeout=10)
+        sleepUntil(lambda: (SYNC_SLOTTESTER in remote.getDevices()
+                            and ASYNC_SLOTTESTER in remote.getDevices()),
+                   timeout=10)
         yield server
 
 
@@ -207,3 +209,99 @@ def test_asyncConnect(connectTest):
     assert "no slot 'not_a_slot'" in failureMsg
     assert "no slot 'not_a_slot'" in failureDetails
     assert "Exception Type....:  SignalSlot Exception" in failureDetails
+
+
+def test_autoConnect_sync(connectTest):
+    """
+    Test automatic (re-)connect (after synchronous connect)
+    (Even tests this for C++ where all tests run in a single process!)
+    """
+    # Note: We do not need the devices that are already started by connectTest
+
+    # Create an instance with a slot that it can connect to the signal
+    slotter = SignalSlotable("slotInstance_syncReconnect")
+    slotCalled = False
+    inSlot = None
+
+    def slotFunc(i):
+        nonlocal slotCalled, inSlot
+        inSlot = i
+        slotCalled = True
+
+    slotter.registerSlot(slotFunc, "slot")
+    slotter.start()
+
+    otherId = "sigSlotReconnectTester_sync"
+
+    # Other still offline - but subscription on broker succeeds
+    connected = slotter.connect(otherId, "signal", "slot")
+    assert connected
+
+    # Now start the other
+    cfg = Hash("classId", "SignalDevice", "deviceId", otherId,
+               "configuration", Hash())
+    slotter.request(SERVER_ID, "slotStartDevice", cfg).waitForReply(timeoutMs)
+
+    # Now test that we receive other's emitted signal
+    slotter.request(
+        otherId, "slotEmitSignal", 42).waitForReply(timeoutMs)
+
+    sleepUntil(lambda: slotCalled, timeout=timeout)
+
+    assert slotCalled
+    assert 42 == inSlot
+
+    slotter.request(otherId, "slotKillDevice").waitForReply(timeoutMs)
+
+
+def test_autoConnect_async(connectTest):
+    """
+    Test automatic (re-)connect (after asynchronous connect)
+    (Even tests this for C++ where all tests run in a single process!)
+    """
+    # Note: We do not need the devices that are already started by connectTest
+
+    # Create an instance with a slot that it can connect to the signal
+    slotter = SignalSlotable("slotInstance_asyncReconnect")
+    slotCalled = False
+    inSlot = None
+
+    def slotFunc(i):
+        nonlocal slotCalled, inSlot
+        inSlot = i
+        slotCalled = True
+
+    slotter.registerSlot(slotFunc, "slot")
+    slotter.start()
+
+    otherId = "sigSlotReconnectTester_async"
+
+    # Other still offline - but subscription on broker succeeds
+    failureMsg = None
+
+    def connectCallback(failMsg, failDetails):
+        nonlocal failureMsg
+        failureMsg = failMsg
+
+    slotter.asyncConnect(
+        otherId, "signal", "slot", connectCallback)
+    sleepUntil(lambda: failureMsg is not None, timeout)
+
+    assert failureMsg is not None  # callback called
+    assert failureMsg == ""  # connect succeeded
+
+    # Now start the other
+    cfg = Hash("classId", "SignalDevice", "deviceId", otherId,
+               "configuration", Hash())
+    slotter.request(SERVER_ID, "slotStartDevice", cfg).waitForReply(timeoutMs)
+
+    # Now test that we receive other's emitted signal
+    slotter.request(
+        otherId, "slotEmitSignal", 42).waitForReply(timeoutMs)
+
+    sleepUntil(lambda: slotCalled, timeout=timeout)
+
+    assert slotCalled
+    assert 42 == inSlot
+
+    slotter.request(otherId, "slotKillDevice").waitForReply(timeoutMs)
