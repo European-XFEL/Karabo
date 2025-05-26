@@ -23,8 +23,8 @@ from typing import Self
 class Worker(threading.Thread):
     def __init__(self,
                  callback: Callable[[], None] | None = None,
-                 single_shot: bool = False,
                  timeout: int | float = 1000,
+                 single_shot: bool = False,
                  daemon: bool = True) -> None:
         """Constructs the Worker thread, that is by default a daemon thread.
 
@@ -41,14 +41,16 @@ class Worker(threading.Thread):
         self.suspended: bool = False
         self.cv: threading.Condition = threading.Condition()
         if not timeout > 0:
-            raise RuntimeError("Timeout needs to large zero.")
+            raise RuntimeError("Timeout needs to be larger than zero.")
         self.timeout: int | float = timeout
 
     def set(self, callback: Callable[[], None],
             timeout: int | float = 1000) -> None:
+        if self.is_running():
+            raise RuntimeError("Cannot change parameters while running.")
         self.callback = callback
         if not timeout > 0:
-            raise RuntimeError("Timeout needs to large zero.")
+            raise RuntimeError("Timeout needs to be larger than zero.")
         self.timeout = timeout
 
     def setSingleShot(self, single_shot: bool) -> None:
@@ -56,7 +58,7 @@ class Worker(threading.Thread):
 
     def setTimeout(self, timeout: int | float = 1000) -> None:
         if not timeout > 0:
-            raise RuntimeError("Timeout needs to large zero.")
+            raise RuntimeError("Timeout needs to be larger than zero.")
         self.timeout = timeout
 
     def is_running(self) -> bool:
