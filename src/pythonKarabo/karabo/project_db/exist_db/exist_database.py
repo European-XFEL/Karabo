@@ -519,7 +519,6 @@ class ExistDatabase(DatabaseBase):
         query = query.format(path=path, instance_id=instance_id)
 
         res = self.dbhandle.query(query)
-
         return [{"configid": r.attrib["configid"],
                  "instanceid": r.attrib["instanceid"]} for r in
                 res.results[0].getchildren()]
@@ -796,6 +795,7 @@ class ExistDatabase(DatabaseBase):
         """
         configs = await self.get_configurations_from_device_name_part(
             domain, device_id_part)
+
         projects = []
         for config in configs:
             device_uuid = config["device_uuid"]

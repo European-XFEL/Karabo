@@ -85,7 +85,7 @@ async def test_project_interface(database, subtests):
                 # has thus been replaced by a UUID check
                 assert itemxml.attrib['uuid'] in items
 
-        with subtests.test(msg='test_list_items and find macro'):
+        with subtests.test(msg='test_list_items'):
             await create_hierarchy(db)
             items = await db.list_items('LOCAL', ['project', 'scene'])
             assert len(items) == 5
@@ -101,9 +101,9 @@ async def test_project_interface(database, subtests):
                     assert i["is_trashed"] == 'false'
             assert scenecnt >= 4
 
+        with subtests.test(msg='test_find_macro'):
             items = await db.list_items('LOCAL', ['macro'])
             assert len(items) == 4
-            print(items)
             items = await db.get_projects_with_macro("NOTTHERE", "macro")
             assert not items
 
@@ -121,6 +121,18 @@ async def test_project_interface(database, subtests):
 
             items = await db.get_projects_with_macro("LOCAL", "mAcRo")
             assert len(items) == 1
+
+        with subtests.test(msg='test_find_device'):
+            items = await db.get_projects_with_device("LOCAL", "nodevice")
+            assert len(items) == 0
+
+            items = await db.get_projects_with_device("LOCAL", "Karabo")
+            assert len(items) == 1
+            assert len(items[0]["devices"]) == 32
+
+            items = await db.get_projects_with_device("LOCAL", "kArabo")
+            assert len(items) == 1
+            assert len(items[0]["devices"]) == 32
 
         with subtests.test(msg='test_trashed_projects'):
             await create_trashed_project(db)
