@@ -13,7 +13,7 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
-from karabo.bound import KARABO_CLASSINFO, PythonDevice, launchPythonDevice
+from karabo.bound import KARABO_CLASSINFO, PythonDevice
 from karabo.common.states import State
 
 
@@ -26,8 +26,3 @@ class NonSceneProvidingDevice(PythonDevice):
 
     def initialize(self):
         self.updateState(State.NORMAL)
-
-
-# This entry used by device server
-if __name__ == "__main__":
-    launchPythonDevice()

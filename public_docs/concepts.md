@@ -269,7 +269,7 @@ cases, new values are made available by `set`‑ting the corresponding property
 ```python
 from karabo.bound.worker import Worker
 from karabo.bound.decorators import KARABO_CLASSINFO
-from karabo.bound.device import PythonDevice, launchPythonDevice
+from karabo.bound.device import PythonDevice
 from ._version import version as deviceVersion
 
 @KARABO_CLASSINFO("HardwarePollingDevice", deviceVersion)
