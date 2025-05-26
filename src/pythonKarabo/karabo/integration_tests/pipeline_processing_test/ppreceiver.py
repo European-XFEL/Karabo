@@ -23,7 +23,7 @@ from karabo.bound import (
     BOOL_ELEMENT, FLOAT_ELEMENT, INPUT_CHANNEL, INT32_ELEMENT,
     KARABO_CLASSINFO, NODE_ELEMENT, UINT32_ELEMENT, VECTOR_BOOL_ELEMENT,
     VECTOR_STRING_ELEMENT, VECTOR_UINT32_ELEMENT, MetricPrefix, PythonDevice,
-    Schema, State, Unit, launchPythonDevice)
+    Schema, State, Unit)
 
 
 @KARABO_CLASSINFO("PPReceiverDevice", "2.2.4")
@@ -192,8 +192,3 @@ class PPReceiverDevice(PythonDevice):
 
     def reset(self):
         self.transferTimes = []
-
-
-# This entry used by device server
-if __name__ == "__main__":
-    launchPythonDevice()

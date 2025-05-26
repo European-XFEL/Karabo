@@ -690,7 +690,7 @@ class Launcher:
 
     def start(self):
         args = [sys.executable, "-c"]
-        args.append("from karabo.bound import launchPythonDevice;"
+        args.append("from karabo.bound.device import launchPythonDevice;"
                     "launchPythonDevice()")
         args.extend(self.args)
 

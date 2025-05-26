@@ -44,7 +44,7 @@ from ..common.alarm_conditions import AlarmCondition
 from ..common.states import State, StateSignifier
 from .configurator import Configurator
 from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
-from .device import PythonDevice, launchPythonDevice
+from .device import PythonDevice
 from .device_client import DeviceClient
 from .device_server import DeviceServer, Launcher
 from .plugin_loader import PluginLoader
