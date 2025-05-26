@@ -80,9 +80,6 @@ void ImageData_Test::testConstructor() {
         CPPUNIT_ASSERT_EQUAL(image.getFlipY(), false);
 
         CPPUNIT_ASSERT_EQUAL(32, image.getBitsPerPixel());
-
-        CPPUNIT_ASSERT_EQUAL(std::string(), image.getDimensionScales());
-        CPPUNIT_ASSERT_EQUAL((size_t)2u, image.getDimensionTypes().size());
     }
     {
         Dims dims(200, 100, 3);
@@ -119,8 +116,6 @@ void ImageData_Test::testConstructor() {
         ImageData image;
         CPPUNIT_ASSERT_NO_THROW(image.getBitsPerPixel());
         CPPUNIT_ASSERT_NO_THROW(image.getData());
-        CPPUNIT_ASSERT_NO_THROW(image.getDimensionScales());
-        CPPUNIT_ASSERT_NO_THROW(image.getDimensionTypes());
         CPPUNIT_ASSERT_NO_THROW(image.getDimensions());
         CPPUNIT_ASSERT_NO_THROW(image.getEncoding());
         CPPUNIT_ASSERT_NO_THROW(image.getROIOffsets());
@@ -136,8 +131,6 @@ void ImageData_Test::testSetAndGetMethods() {
     Dims dims(200, 100); // height, width
     Dims offsets(10, 50);
     Dims binning(3, 8);
-    DimensionType tmp[] = {DimensionType::DATA, DimensionType::STACK};
-    std::vector<DimensionType> dimTypes(tmp, tmp + 2);
     std::vector<unsigned char> someData(dims.size(), 2); // i.e. type UINT8
 
     {
@@ -152,13 +145,11 @@ void ImageData_Test::testSetAndGetMethods() {
         // false/true flip is tested in bound
         image.setFlipX(true);
         image.setFlipY(false);
-        image.setDimensionTypes(dimTypes);
 
         // Get
         Dims imageDims(image.getDimensions());
         Dims imageOffsets(image.getROIOffsets());
         Dims imageBinning(image.getBinning());
-        std::vector<DimensionType> imageDimTypes = image.getDimensionTypes();
 
         CPPUNIT_ASSERT(imageDims.rank() == 2);
         CPPUNIT_ASSERT(imageDims.x1() == 200);
@@ -176,11 +167,6 @@ void ImageData_Test::testSetAndGetMethods() {
 
         CPPUNIT_ASSERT_EQUAL(image.getFlipX(), true);
         CPPUNIT_ASSERT_EQUAL(image.getFlipY(), false);
-
-        CPPUNIT_ASSERT(imageDimTypes.size() == 2);
-        CPPUNIT_ASSERT(imageDimTypes[0] == DimensionType::DATA);
-        CPPUNIT_ASSERT(imageDimTypes[1] == DimensionType::STACK);
-
         CPPUNIT_ASSERT_EQUAL(8, image.getBitsPerPixel()); // as determined for UINT8
         image.setBitsPerPixel(5);
         CPPUNIT_ASSERT_EQUAL(5, image.getBitsPerPixel());
@@ -232,7 +218,6 @@ void ImageData_Test::testImageDataElement() {
         // Testing max size
         CPPUNIT_ASSERT_EQUAL(3u, sch.getMaxSize("ide.pixels.shape"));
         CPPUNIT_ASSERT_EQUAL(3u, sch.getMaxSize("ide.dims"));
-        CPPUNIT_ASSERT_EQUAL(3u, sch.getMaxSize("ide.dimTypes"));
         CPPUNIT_ASSERT_EQUAL(3u, sch.getMaxSize("ide.roiOffsets"));
         CPPUNIT_ASSERT_EQUAL(3u, sch.getMaxSize("ide.binning"));
 

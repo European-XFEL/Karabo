@@ -83,15 +83,6 @@ namespace karabo {
                   .readOnly()
                   .commit();
 
-            VECTOR_INT32_ELEMENT(s)
-                  .key("dimTypes")
-                  .displayedName("Dimension Types")
-                  .description("Any dimension should have an enumerated type")
-                  .readOnly()
-                  .commit();
-
-            STRING_ELEMENT(s).key("dimScales").displayedName("Dimension Scales").description("").readOnly().commit();
-
             INT32_ELEMENT(s)
                   .key("encoding")
                   .displayedName("Encoding")
@@ -207,8 +198,6 @@ namespace karabo {
 
             setFlipX(false);
             setFlipY(false);
-
-            setDimensionScales(std::string());
         }
 
 
@@ -303,12 +292,10 @@ namespace karabo {
 
 
         void ImageData::setDimensions(const karabo::data::Dims& dims) {
-            size_t rank = dims.rank();
             if (dims.size() == 0) {
                 // Will use the shape information of underlying NDArray as best guess
                 std::vector<unsigned long long> shape = get<NDArray>("pixels").getShape().toVector();
                 set("dims", shape);
-                rank = shape.size();
             } else {
                 if (has("encoding")) {
                     if (encoding::isIndexable(getEncoding())) {
@@ -321,37 +308,7 @@ namespace karabo {
                 }
                 set<std::vector<unsigned long long>>("dims", dims.toVector());
             }
-            // In case the dimensionTypes were not yet set, inject a default here
-            if (!has("dimTypes")) {
-                setDimensionTypes(std::vector<DimensionType>(rank, DimensionType::UNDEFINED));
-            }
         }
-
-
-        const std::vector<DimensionType> ImageData::getDimensionTypes() const {
-            const auto& vint = get<std::vector<int>>("dimTypes");
-            std::vector<DimensionType> v(vint.size());
-            for (size_t i = 0; i < vint.size(); ++i) v[i] = static_cast<DimensionType>(vint[i]);
-            return v;
-        }
-
-
-        void ImageData::setDimensionTypes(const std::vector<DimensionType>& dimTypes) {
-            std::vector<int> vint(dimTypes.size());
-            for (size_t i = 0; i < dimTypes.size(); ++i) vint[i] = static_cast<int>(dimTypes[i]);
-            set<std::vector<int>>("dimTypes", vint);
-        }
-
-
-        const std::string& ImageData::getDimensionScales() const {
-            return get<std::string>("dimScales");
-        }
-
-
-        void ImageData::setDimensionScales(const std::string& scales) {
-            set("dimScales", scales);
-        }
-
 
         karabo::data::NDArray& ImageData::getData() {
             return get<karabo::data::NDArray>("pixels");

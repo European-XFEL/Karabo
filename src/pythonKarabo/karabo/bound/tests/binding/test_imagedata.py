@@ -16,8 +16,7 @@
 
 import numpy as np
 
-from karabo.bound import (
-    DimensionType, Dims, Encoding, Hash, ImageData, Rotation, Types)
+from karabo.bound import Dims, Encoding, Hash, ImageData, Rotation, Types
 from karabo.testing.utils import compare_ndarray_data_ptrs
 
 
@@ -39,11 +38,6 @@ def test_imagedata_buildUp():
     assert img.getBinning() == (1, 1)
     # check deduced bits per pixel ...
     assert img.getBitsPerPixel() == 64
-    # Dimension scales do not set
-    assert img.getDimensionScales() == ''
-    # check dimension types ...
-    assert img.getDimensionTypes() == (DimensionType.UNDEFINED,
-                                       DimensionType.UNDEFINED,)
     # check deduced dimensions ...
     assert img.getDimensions() == (3, 2)
     # check deduced encoding ...
@@ -149,15 +143,6 @@ def test_imagedata_buildUp():
     assert img.getDimensions() == (100, 200)
     img.setDimensions([200, 100])
     assert img.getDimensions() == (200, 100)
-
-    # getDimensionTypes/setDimensionTypes
-    img.setDimensionTypes((DimensionType.STACK, DimensionType.STACK))
-    assert img.getDimensionTypes() == (DimensionType.STACK,
-                                       DimensionType.STACK)
-
-    # getDimensionScales/setDimesionScales
-    img.setDimensionScales("Power, kw per hour")
-    assert img.getDimensionScales() == "Power, kw per hour"
 
     # getROIOffsets/setROIOffsets
     assert img.getROIOffsets() == (0,)
