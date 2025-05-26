@@ -39,13 +39,9 @@ class Project(SQLModel, table=True):
     # on a Relational Database).
     uuid: str = Field(max_length=64, nullable=False, unique=True)
     name: str = Field(max_length=128, nullable=False)
-    description: str | None = Field(default=None, nullable=True)
     is_trashed: bool = Field(default=False)
 
     date: datetime.datetime | None = Field(default=None, nullable=True)
-
-    last_modified_user: str | None = Field(default=None, max_length=64,
-                                           nullable=True)
 
     last_loaded: datetime.datetime | None = Field(default=None, nullable=True)
 
@@ -93,8 +89,6 @@ class DeviceServer(SQLModel, table=True):
     uuid: str = Field(max_length=64, nullable=False, unique=True)
 
     date: datetime.datetime | None = Field(default=None, nullable=True)
-    last_modified_user: str | None = Field(default=None, max_length=64,
-                                           nullable=True)
 
     project_id: int = Field(foreign_key="Project.id", nullable=True)
     project: Project = Relationship(back_populates="device_servers")
@@ -124,8 +118,6 @@ class DeviceInstance(SQLModel, table=True):
                                   nullable=True)
 
     date: datetime.datetime | None = Field(default=None, nullable=True)
-    last_modified_user: str | None = Field(default=None, max_length=64,
-                                           nullable=True)
 
     device_server: DeviceServer = Relationship(
         back_populates="device_instances")
@@ -143,11 +135,8 @@ class DeviceConfig(SQLModel, table=True):
     name: str = Field(max_length=128, nullable=False)
     # Max size for configuration data is 4Mb
     config_data: str = Field(sa_column=Column(Text(4_194_304), nullable=False))
-    description: str | None = Field(default=None, nullable=True)
 
     date: datetime.datetime | None = Field(default=None, nullable=True)
-    last_modified_user: str | None = Field(default=None, max_length=64,
-                                           nullable=True)
 
     device_instance_id: int = Field(foreign_key="DeviceInstance.id",
                                     nullable=True)
@@ -172,8 +161,6 @@ class Scene(SQLModel, table=True):
     svg_data: str = Field(sa_column=Column(Text(4_194_304), nullable=False))
 
     date: datetime.datetime | None = Field(default=None, nullable=True)
-    last_modified_user: str | None = Field(default=None, max_length=64,
-                                           nullable=True)
 
     project_id: int = Field(foreign_key="Project.id", nullable=True)
     project: Project = Relationship(back_populates="scenes")
@@ -192,8 +179,6 @@ class Macro(SQLModel, table=True):
     body: str = Field(sa_column=Column(Text(4_194_304), nullable=False))
 
     date: datetime.datetime | None = Field(default=None, nullable=True)
-    last_modified_user: str | None = Field(default=None, max_length=64,
-                                           nullable=True)
 
     project_id: int = Field(foreign_key="Project.id", nullable=True)
     project: Project = Relationship(back_populates="macros")

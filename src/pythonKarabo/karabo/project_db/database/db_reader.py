@@ -67,8 +67,6 @@ class DbReader:
             #       with the constants 'true' and 'false' (all lower)
             "is_trashed": "true" if p.is_trashed else "false",
             "date": str(p.date) if p.date else '',
-            "user": p.last_modified_user,
-            "description": p.description
         } for p in result]
 
     async def _get_named_items(self, domain: str, model, item_type: str):

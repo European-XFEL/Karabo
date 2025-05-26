@@ -324,18 +324,16 @@ class ProjectManager(Device):
             and simple_name
         """
         async with self.db_handle as db_session:
-            resHashes = []
+            hl = []
             res = await db_session.list_items(domain, item_types)
             for r in res:
                 h = Hash('uuid', r['uuid'],
                          'item_type', r['item_type'],
                          'simple_name', r['simple_name'],
                          'is_trashed', r['is_trashed'],
-                         'date', r['date'],
-                         'user', r['user'])
-                h.set('description', r['description'])
-                resHashes.append(h)
-        return Hash('items', resHashes)
+                         'date', r['date'])
+                hl.append(h)
+        return Hash('items', hl)
 
     @slot
     async def slotListNamedItems(self, domain, item_type, simple_name):
@@ -349,7 +347,7 @@ class ProjectManager(Device):
             item_type and simple_name sorted by date
         """
         async with self.db_handle as db_session:
-            resHashes = []
+            hl = []
             res = await db_session.list_named_items(
                 domain, item_type, simple_name)
             for r in res:
@@ -357,12 +355,10 @@ class ProjectManager(Device):
                          'item_type', r['item_type'],
                          'simple_name', r['simple_name'],
                          'is_trashed', r['is_trashed'],
-                         'date', r['date'],
-                         'user', r['user'])
-                h.set('description', r['description'])
-                resHashes.append(h)
-            resHashes.sort(key=lambda x: x['date'])
-        return Hash('items', resHashes)
+                         'date', r['date'])
+                hl.append(h)
+            hl.sort(key=lambda x: x['date'])
+        return Hash('items', hl)
 
     @slot
     async def slotListDomains(self):
@@ -479,7 +475,7 @@ class ProjectManager(Device):
                  uuid, attr_name, attr_value
         """
         async with self.db_handle as db_session:
-            resHashes = []
+            hl = []
             res = await db_session.update_attributes(items)
             for r in res:
                 h = Hash('domain', r['domain'],
@@ -487,16 +483,16 @@ class ProjectManager(Device):
                          'uuid', r['uuid'],
                          'attr_name', r['attr_name'],
                          'attr_value', r['attr_value'])
-                resHashes.append(h)
+                hl.append(h)
 
-            return Hash('items', resHashes)
+            return Hash('items', hl)
 
     @slot
     async def slotListProjectAndConfForDevice(self, domain, deviceId):
         async with self.db_handle as db_session:
-            resHashes = []
+            hl = []
             res = await db_session.get_projects_with_conf(
                 domain, deviceId)
-            resHashes = [Hash("project_name", k, "active_config_ref", v)
-                         for k, v in res.items()]
-            return Hash('items', resHashes)
+            hl = [Hash("project_name", k, "active_config_ref", v)
+                  for k, v in res.items()]
+            return Hash('items', hl)
