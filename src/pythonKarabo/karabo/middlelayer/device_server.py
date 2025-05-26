@@ -493,11 +493,6 @@ class MiddleLayerDeviceServer(HeartBeatMixin, SignalSlotable):
     @slot
     async def slotInstanceNew(self, instanceId, info):
         await super().slotInstanceNew(instanceId, info)
-        if (info.get("classId") == "TimeServer" and
-                instanceId == self.timeServerId):
-            await self._sigslot.async_connect(
-                self.timeServerId, "signalTimeTick",
-                self.slotTimeTick)
         # Forward the broadcast to the device instances!
         await gather(*[dev.slotInstanceNew(instanceId, info)
                        for dev in self.deviceInstanceMap.values()])
