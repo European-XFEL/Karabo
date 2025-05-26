@@ -61,17 +61,12 @@ class DbWriter:
             project = result.first()
             if not project:
                 # There's still no record for the project in the DB
+                trashed = prj.attrib.get('is_trashed', '').lower() == "true"
                 project = Project(
                     uuid=uuid,
                     name=prj.attrib['simple_name'],
-                    description=(
-                        prj.attrib['description']
-                        if 'description' in prj.attrib.keys() else ""),
-                    is_trashed=(
-                        prj.attrib['is_trashed'].lower() == "true"
-                        if 'is_trashed' in prj.attrib.keys() else False),
+                    is_trashed=trashed,
                     date=date,
-                    last_modified_user=prj.attrib['user'],
                     project_domain_id=project_domain.id)
                 session.add(project)
                 # The commit / refresh sequence is needed for the case of a
@@ -83,13 +78,11 @@ class DbWriter:
                 # There's a record for the project in the DB - update its
                 # attributes from the data in the xml
                 project.name = prj.attrib['simple_name']
-                project.description = prj.attrib['description']
                 # SQLmodel converts 'true' and 'false' strings to boolean
                 # values successfuly on init, but not on an assignment - this
                 # is the reason for the expression with the comparison to lower
                 project.is_trashed = prj.attrib['is_trashed'].lower() == "true"
                 project.date = date
-                project.last_modified_user = prj.attrib['user']
                 project.project_domain_id = project_domain.id
                 session.add(project)
 
@@ -326,7 +319,6 @@ class DbWriter:
         macro_obj = etree.fromstring(xml)
         macro_uuid = macro_obj.attrib["uuid"]
         macro_name = macro_obj.attrib["simple_name"]
-        macro_user = macro_obj.attrib["user"]
         # In MySQL the macro bodies are not Base64 encoded
         macro_body = base64.b64decode(macro_obj.getchildren()[0].text)
 
@@ -340,7 +332,6 @@ class DbWriter:
                 # A macro is being updated
                 macro.name = macro_name
                 macro.date = date
-                macro.last_modified_user = macro_user
                 macro.body = macro_body
             else:
                 # The macro is new
@@ -348,7 +339,6 @@ class DbWriter:
                     uuid=macro_uuid,
                     name=macro_name,
                     date=date,
-                    last_modified_user=macro_user,
                     body=macro_body)
             session.add(macro)
             await session.commit()
@@ -358,7 +348,6 @@ class DbWriter:
         scene_obj = etree.fromstring(xml)
         scene_uuid = scene_obj.attrib["uuid"]
         scene_name = scene_obj.attrib["simple_name"]
-        scene_user = scene_obj.attrib["user"]
         scene_svg_data = (
             etree.tostring(scene_obj.getchildren()[0]).decode("UTF-8")
             if len(scene_obj.getchildren()) > 0 else "")
@@ -371,7 +360,6 @@ class DbWriter:
                 # A scene is being updated
                 scene.name = scene_name
                 scene.date = date
-                scene.last_modified_user = scene_user
                 scene.svg_data = scene_svg_data
             else:
                 # The scene is new
@@ -379,7 +367,6 @@ class DbWriter:
                     uuid=scene_uuid,
                     name=scene_name,
                     date=date,
-                    last_modified_user=scene_user,
                     svg_data=scene_svg_data)
             session.add(scene)
             await session.commit()
@@ -390,8 +377,6 @@ class DbWriter:
         config_obj = etree.fromstring(xml)
         config_uuid = config_obj.attrib["uuid"]
         config_name = config_obj.attrib["simple_name"]
-        config_description = config_obj.attrib["description"]
-        config_user = config_obj.attrib["user"]
         config_data = (
             etree.tostring(config_obj.getchildren()[0]).decode("UTF-8")
             if len(config_obj.getchildren()) > 0 else "")
@@ -403,9 +388,7 @@ class DbWriter:
             if config:
                 # A device config is being updated
                 config.name = config_name
-                config.description = config_description
                 config.config_data = config_data
-                config.last_modified_user = config_user
                 config.date = date
             else:
                 # A new device config
@@ -413,8 +396,6 @@ class DbWriter:
                     uuid=config_uuid,
                     name=config_name,
                     config_data=config_data,
-                    description=config_description,
-                    last_modified_user=config_user,
                     date=date)
 
             session.add(config)
@@ -425,7 +406,6 @@ class DbWriter:
         date = datetime.datetime.fromisoformat(timestamp)
         instance_obj = etree.fromstring(xml)
         instance_uuid = instance_obj.attrib["uuid"]
-        instance_user = instance_obj.attrib["user"]
         instance_tag = instance_obj.getchildren()[0]
         instance_id = instance_tag.attrib['instance_id']
         instance_class_id = instance_tag.attrib['class_id']
@@ -442,7 +422,6 @@ class DbWriter:
                 # Updates the device instance
                 instance.name = instance_id
                 instance.class_id = instance_class_id
-                instance.last_modified_user = instance_user
                 instance.date = date
                 session.add(instance)
             else:
@@ -451,8 +430,7 @@ class DbWriter:
                     uuid=instance_uuid,
                     name=instance_id,
                     class_id=instance_class_id,
-                    date=date,
-                    last_modified_user=instance_user)
+                    date=date)
                 session.add(instance)
                 await session.commit()
                 await session.refresh(instance)
@@ -505,7 +483,6 @@ class DbWriter:
         server_obj = etree.fromstring(xml)
         server_uuid = server_obj.attrib["uuid"]
         server_name = server_obj.attrib["simple_name"]
-        server_user = server_obj.attrib["user"]
         server_tag = (
             server_obj.getchildren()[0]
             if len(server_obj.getchildren()) > 0 else None)
@@ -522,7 +499,6 @@ class DbWriter:
             if server:
                 # An existing device server is being saved
                 server.name = server_name
-                server.last_modified_user = server_user
                 server.date = date
                 session.add(server)
             else:
@@ -530,8 +506,7 @@ class DbWriter:
                 server = DeviceServer(
                     uuid=server_uuid,
                     name=server_name,
-                    date=date,
-                    last_modified_user=server_user)
+                    date=date)
                 session.add(server)
                 await session.commit()
                 await session.refresh(server)

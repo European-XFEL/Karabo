@@ -32,9 +32,6 @@ class BaseProjectObjectModel(BaseSavableModel):
     # A simple, human-readable name. Doesn't need to be unique
     simple_name = String
 
-    # A description for this object
-    description = String
-
     # Version and unique id
     uuid = String
 
