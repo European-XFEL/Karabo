@@ -1256,12 +1256,27 @@ namespace karabo {
                 }
                 asyncReply.error(errMsg.str());
 
-                if (httpResponse.code == 503) {
-                    // A 503 reply from the InfluxDbClient (or even one originated from Influx
+                if (httpResponse.code >= 500) {
+                    // A 50X reply from the InfluxDbClient (or even one originated from Influx
                     // and propagated by the InfluxDbClient) can be interpreted as server not
-                    // available and should put the log reader in ERROR state (if not already).
+                    // available or in an invalid state and should put the log reader in ERROR
+                    // state (if not already).
                     if (currentState != State::ERROR) {
                         updateState(State::ERROR, Hash("status", "Influx server not available"));
+                    }
+                } else if (httpResponse.code >= 400) {
+                    // Any error greater than 400 would raise suspincion on the client, but the InfluxLogReader
+                    // is considered a "trusted client", and most probably the real cause is that we are not
+                    // dealing with an Influx server but some other sort of HTTP server. We interpret that as
+                    // an Influx server unavailability, but also log an error (for situations like InfluxLogReader
+                    // under development or unexpected incompatibility between the versions of the comissioned
+                    // and currently deployed Influx Server).
+                    if (currentState != State::ERROR) {
+                        const std::string errMsg =
+                              "Possible non-Influx server reached for reading. Please examine the logs of"
+                              "the Karabo device server that hosts this InfluxLogReader instance for more details.";
+                        updateState(State::ERROR, Hash("status", errMsg));
+                        KARABO_LOG_FRAMEWORK_ERROR << errMsg << "\nHttpResponse:\n" << httpResponse;
                     }
                 } else {
                     // Any other status code means the server was responsive. The log reader should

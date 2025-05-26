@@ -963,7 +963,7 @@ void DataLogging_Test::testNoInfluxServerHandling() {
     CPPUNIT_ASSERT_MESSAGE("Timeout while waiting for LogReader '" + dlreader0 + "' to reach ERROR state.",
                            readerState == karabo::data::State::ERROR);
 
-    std::clog << "... request failed with RemoteException as expected." << std::endl;
+    std::clog << "... request to retrieve past configuration failed with RemoteException as expected." << std::endl;
 
     // By simply starting the devices related to Influx logging, some logging writing activity takes place.
     // If this point of the test is reached with invalid urls configured for both reading and writing to the
