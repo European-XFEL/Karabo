@@ -13,397 +13,264 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
-import unittest
+import pytest
 
 from karabo.bound import (
     DOUBLE_ELEMENT, INT32_ELEMENT, Configurator, Hash, PythonDevice, Schema)
 
-# import the device classes to trigger their registration in the Configurator
 from .device_with_limit import DeviceWithLimit
 from .device_with_table_parameter import DeviceWithTableElementParam
 
 
-class Schema_Injection_TestCase(unittest.TestCase):
-    deviceCfg = Hash('log.level', "FATAL")
+@pytest.fixture(scope="function")
+def device_cfg():
+    return Hash('log.level', "FATAL")
 
-    def test_schemaInjection(self):
-        device = Configurator(PythonDevice).create(
-            "PythonDevice", self.deviceCfg)
-        device.startInitialFunctions()
 
-        # Test appendSchema appends
+def test_schema_injection(device_cfg):
+    device = Configurator(PythonDevice).create("PythonDevice", device_cfg)
+    device.startInitialFunctions()
+
+    schema = Schema()
+    INT32_ELEMENT(schema).key(
+        "injectedInt32").assignmentOptional().defaultValue(
+        1).reconfigurable().commit()
+    device.appendSchema(schema)
+
+    assert device.get("injectedInt32") == 1
+    device.set("injectedInt32", 5)
+    assert device.get("injectedInt32") == 5
+
+    with pytest.raises(RuntimeError):
+        device.set("unknownProperty", 42)
+    assert "unknownProperty" not in device.getCurrentConfiguration().getPaths()
+
+    schema = Schema()
+    INT32_ELEMENT(schema).key(
+        "injectedInt32").assignmentOptional().defaultValue(
+        2).reconfigurable().minInc(1).commit()
+    device.appendSchema(schema)
+    assert device.get("injectedInt32") == 5
+    assert device.getFullSchema().getMinInc("injectedInt32") == 1
+
+    schema = Schema()
+    INT32_ELEMENT(schema).key(
+        "injectedInt32").assignmentOptional().defaultValue(
+        3).reconfigurable().minInc(2).maxInc(10).commit()
+    device.updateSchema(schema)
+    assert device.get("injectedInt32") == 5
+    assert device.getFullSchema().getMinInc("injectedInt32") == 2
+    assert device.getFullSchema().getMaxInc("injectedInt32") == 10
+
+    schema = Schema()
+    INT32_ELEMENT(schema).key(
+        "somethingElse").assignmentOptional().defaultValue(
+        4).reconfigurable().commit()
+    device.updateSchema(schema)
+    config = device.getCurrentConfiguration()
+    assert "injectedInt32" not in config.getPaths()
+    assert "somethingElse" in config.getPaths()
+
+    device.set("somethingElse", 42)
+    schema = Schema()
+    INT32_ELEMENT(schema).key(
+        "somethingElse").assignmentOptional().defaultValue(
+        5).reconfigurable().commit()
+    device.updateSchema(schema)
+
+    schema = Schema()
+    INT32_ELEMENT(schema).key("somethingElse").readOnly().commit()
+    device.updateSchema(schema)
+
+    schema = Schema()
+    INT32_ELEMENT(schema).key(
+        "somethingElse").assignmentOptional().defaultValue(5).minInc(
+        3).reconfigurable().commit()
+    device.updateSchema(schema)
+    assert device.get("somethingElse") == 42
+
+    schema = Schema()
+    device.updateSchema(schema)
+    assert "somethingElse" not in device.getCurrentConfiguration().getPaths()
+    assert "somethingElse" not in device.getFullSchema().getPaths()
+    assert device.getFullSchema().getPaths() == PythonDevice.getSchema(
+        device.classid).getPaths()
+
+    schema = Schema()
+    INT32_ELEMENT(schema).key(
+        "somethingElse").assignmentOptional().defaultValue(
+        5).reconfigurable().commit()
+    device.appendSchema(schema)
+    device.set("somethingElse", 42)
+
+    schema = Schema()
+    INT32_ELEMENT(schema).key("somethingElse").readOnly().commit()
+    device.appendSchema(schema)
+
+    schema = Schema()
+    INT32_ELEMENT(schema).key(
+        "somethingElse").assignmentOptional().defaultValue(5).minInc(
+        3).reconfigurable().commit()
+    device.appendSchema(schema)
+    assert device.get("somethingElse") == 42
+
+    for idx in range(10):
         schema = Schema()
-        (
-            INT32_ELEMENT(schema).key("injectedInt32")
-            .assignmentOptional().defaultValue(1)
-            .reconfigurable()
-            .commit()
-        )
-
-        device.appendSchema(schema)
-        self.assertEqual(device.get("injectedInt32"), 1)  # the default
-        device.set("injectedInt32", 5)
-        self.assertEqual(device.get("injectedInt32"), 5)
-
-        # Test validation exception to raise while attempting to set property
-        # not defined in the schema, for example "unknownProperty" ...
-        with self.assertRaises(RuntimeError):
-            # attempt to set "unknownProperty"
-            device.set("unknownProperty", 42)
-        currentConfig = device.getCurrentConfiguration()
-        self.assertNotIn("unknownProperty", currentConfig.getPaths())
-
-        # Test that injecting a new attribute keeps the set value
-        schema = Schema()
-        (
-            INT32_ELEMENT(schema).key("injectedInt32")
-            .assignmentOptional().defaultValue(2)
-            .reconfigurable().minInc(1)
-            .commit()
-        )
-
-        device.appendSchema(schema)
-        self.assertEqual(device.get("injectedInt32"), 5)  # not the new default
-        self.assertEqual(device.getFullSchema().getMinInc("injectedInt32"), 1)
-
-        # Test that doing updateSchema keeps previously set value
-        schema = Schema()
-        (
-            INT32_ELEMENT(schema).key("injectedInt32")
-            .assignmentOptional().defaultValue(3)
-            .reconfigurable().minInc(2).maxInc(10)
-            .commit()
-        )
-
-        device.updateSchema(schema)
-        self.assertEqual(device.get("injectedInt32"), 5)
-        self.assertEqual(device.getFullSchema().getMinInc("injectedInt32"), 2)
-        self.assertEqual(device.getFullSchema().getMaxInc("injectedInt32"), 10)
-
-        # Test that doing updateSchema with something else loses
-        # injectedInt32.
-        schema = Schema()
-        (
-            INT32_ELEMENT(schema).key("somethingElse")
-            .assignmentOptional().defaultValue(4)
-            .reconfigurable()
-            .commit()
-        )
-
-        device.updateSchema(schema)
-        currentParams = device.getCurrentConfiguration()
-        self.assertNotIn("injectedInt32", currentParams.getPaths())
-        self.assertIn("somethingElse", currentParams.getPaths())
-
-        # Test that updateSchema a parameter three times keeps the original
-        # value This is to ensure that the schema parsing check is correct
-        device.set("somethingElse", 42)
-        schema = Schema()
-        (
-            INT32_ELEMENT(schema).key("somethingElse")
-            .assignmentOptional().defaultValue(5)
-            .reconfigurable()
-            .commit()
-        )
-        device.updateSchema(schema)
-
-        schema = Schema()
-        (
-            INT32_ELEMENT(schema).key("somethingElse")
-            .readOnly()
-            .commit()
-        )
-        device.updateSchema(schema)
-
-        schema = Schema()
-        (
-            INT32_ELEMENT(schema).key("somethingElse")
-            .assignmentOptional().defaultValue(5)
-            .minInc(3)
-            .reconfigurable()
-            .commit()
-        )
-        device.updateSchema(schema)
-        self.assertEqual(device.get("somethingElse"), 42)
-
-        # Test that doing updateSchema with an empty schema reset the
-        # device to its base schema
-        schema = Schema()
-        device.updateSchema(schema)
-
-        self.assertNotIn("somethingElse",
-                         device.getCurrentConfiguration().getPaths())
-        # We are back at static Schema without "somethingElse"
-        self.assertNotIn("somethingElse",
-                         device.getFullSchema().getPaths())
-        self.assertEqual(device.getFullSchema().getPaths(),
-                         PythonDevice.getSchema(device.classid).getPaths())
-
-        # Test that appendSchema parameter three times keeps the original
-        # value This is to ensure that the schema parsing check is correct
-        schema = Schema()
-        (
-            INT32_ELEMENT(schema).key("somethingElse")
-            .assignmentOptional().defaultValue(5)
-            .reconfigurable()
-            .commit()
-        )
-        device.appendSchema(schema)
-        device.set("somethingElse", 42)
-
-        schema = Schema()
-        (
-            INT32_ELEMENT(schema).key("somethingElse")
-            .readOnly()
-            .commit()
-        )
+        INT32_ELEMENT(schema).key(
+            f"property{idx}").assignmentOptional().defaultValue(
+            idx).reconfigurable().commit()
         device.appendSchema(schema)
 
-        schema = Schema()
-        (
-            INT32_ELEMENT(schema).key("somethingElse")
-            .assignmentOptional().defaultValue(5)
-            .minInc(3)
-            .reconfigurable()
-            .commit()
-        )
-        device.appendSchema(schema)
-        self.assertEqual(device.get("somethingElse"), 42)
+    for idx in range(10):
+        key = f"property{idx}"
+        assert key in device.getCurrentConfiguration().getPaths()
+        assert key in device.getFullSchema().getPaths()
+        assert device.get(key) == idx
 
-        # Test that appending several times in a row, quickly, set all values
-        for idx in range(10):
-            schema = Schema()
-            (
-                INT32_ELEMENT(schema).key(f"property{idx}")
-                .assignmentOptional().defaultValue(idx)
-                .reconfigurable()
-                .commit()
-            )
-            device.appendSchema(schema)
 
-        for idx in range(10):
-            key = f"property{idx}"
-            self.assertIn(key, device.getCurrentConfiguration().getPaths())
-            self.assertIn(key, device.getFullSchema().getPaths())
-            self.assertEqual(idx, device.get(key))
+def test_schema_with_table_element_update(device_cfg):
+    device = Configurator(PythonDevice).create("DeviceWithTableElementParam",
+                                               device_cfg)
+    assert isinstance(device, DeviceWithTableElementParam)
+    device.startInitialFunctions()
 
-    def test_schemaWithTableElementUpdate(self):
-        """Tests that updateSchema preserves TABLE_ELEMENTs in the
-        static schema."""
-        device = Configurator(PythonDevice).create(
-            "DeviceWithTableElementParam", self.deviceCfg)
+    assert "deviceTable" in device.getSchema(
+        "DeviceWithTableElementParam").getPaths()
 
-        assert isinstance(device, DeviceWithTableElementParam)
-        device.startInitialFunctions()
+    schema = Schema()
+    INT32_ELEMENT(schema).key(
+        "somethingNew").assignmentOptional().defaultValue(
+        4).reconfigurable().commit()
+    device.updateSchema(schema)
 
-        self.assertIn(
-            "deviceTable",
-            device.getSchema("DeviceWithTableElementParam").getPaths())
+    assert "deviceTable" in device.getSchema(
+        "DeviceWithTableElementParam").getPaths()
+    table = device.get("deviceTable")
+    assert len(table) == 2
 
-        # Test that doing updateSchema with something new keeps
-        # the table element parameter.
-        schema = Schema()
-        (
-            INT32_ELEMENT(schema).key("somethingNew")
-            .assignmentOptional().defaultValue(4)
-            .reconfigurable()
-            .commit()
-        )
 
-        device.updateSchema(schema)
+def test_schema_with_table_element_append(device_cfg):
+    device = Configurator(PythonDevice).create("DeviceWithTableElementParam",
+                                               device_cfg)
+    device.startInitialFunctions()
 
-        self.assertIn(
-            "deviceTable",
-            device.getSchema("DeviceWithTableElementParam").getPaths())
-        table = device.get("deviceTable")
-        self.assertTrue(len(table) == 2)
+    assert "deviceTable" in device.getSchema(
+        "DeviceWithTableElementParam").getPaths()
 
-    def test_schemaWithTableElementAppend(self):
-        """Tests that appendSchema preserves TABLE_ELEMENTs
-        in the static schema."""
-        device = Configurator(PythonDevice).create(
-            "DeviceWithTableElementParam", self.deviceCfg)
-        device.startInitialFunctions()
+    schema = Schema()
+    INT32_ELEMENT(schema).key(
+        "somethingNew").assignmentOptional().defaultValue(
+        4).reconfigurable().commit()
+    device.appendSchema(schema)
 
-        self.assertIn(
-            "deviceTable",
-            device.getSchema("DeviceWithTableElementParam").getPaths())
+    assert "deviceTable" in device.getSchema(
+        "DeviceWithTableElementParam").getPaths()
+    table = device.get("deviceTable")
+    assert len(table) == 2
 
-        # Test that doing updateSchema with something new keeps
-        # the table element parameter.
-        schema = Schema()
-        (
-            INT32_ELEMENT(schema).key("somethingNew")
-            .assignmentOptional().defaultValue(4)
-            .reconfigurable()
-            .commit()
-        )
 
-        device.appendSchema(schema)
+def test_schema_with_attribute_update(device_cfg):
+    device = Configurator(PythonDevice).create("DeviceWithLimit", device_cfg)
+    device.startInitialFunctions()
 
-        self.assertIn(
-            "deviceTable",
-            device.getSchema("DeviceWithTableElementParam").getPaths())
-        table = device.get("deviceTable")
-        self.assertTrue(len(table) == 2)
+    schema = Schema()
+    max_exc = 2 * DeviceWithLimit.LIMIT_HIGH
+    DOUBLE_ELEMENT(schema).key(
+        "valueWithExc").assignmentOptional().defaultValue(
+        0.0).reconfigurable().maxExc(max_exc).commit()
+    device.updateSchema(schema)
+    assert device.getFullSchema().getMaxExc("valueWithExc") == max_exc
 
-    def test_schemaWithAttributeUpdate(self):
-        """Tests that updateSchema resets attributes in the static schema."""
-        device = Configurator(PythonDevice).create(
-            "DeviceWithLimit", self.deviceCfg)
-        device.startInitialFunctions()
+    schema = Schema()
+    INT32_ELEMENT(schema).key(
+        "somethingNew").assignmentOptional().defaultValue(
+        4).reconfigurable().commit()
+    device.updateSchema(schema)
 
-        # Update the maxExc
-        schema = Schema()
-        max_exc = 2 * DeviceWithLimit.LIMIT_HIGH
-        (
-            DOUBLE_ELEMENT(schema).key("valueWithExc")
-            .assignmentOptional()
-            .defaultValue(0.0)
-            .reconfigurable()
-            .maxExc(max_exc)
-            .commit(),
-        )
-        device.updateSchema(schema)
-        self.assertEqual(
-            device.getFullSchema().getMaxExc("valueWithExc"),
-            max_exc)
+    assert device.getFullSchema().getMaxExc(
+        "valueWithExc") == DeviceWithLimit.LIMIT_HIGH
 
-        # Test that doing updateSchema with something new resets
-        # the maxExc
-        schema = Schema()
-        (
-            INT32_ELEMENT(schema).key("somethingNew")
-            .assignmentOptional().defaultValue(4)
-            .reconfigurable()
-            .commit()
-        )
 
-        device.updateSchema(schema)
-        self.assertEqual(
-            device.getFullSchema().getMaxExc("valueWithExc"),
-            DeviceWithLimit.LIMIT_HIGH)
+def test_schema_with_attribute_append(device_cfg):
+    device = Configurator(PythonDevice).create("DeviceWithLimit", device_cfg)
+    device.startInitialFunctions()
 
-    def test_schemaWithAttributeAppend(self):
-        """Tests that appendSchema preserves attributes in the static
-        schema."""
-        device = Configurator(PythonDevice).create(
-            "DeviceWithLimit", self.deviceCfg)
-        device.startInitialFunctions()
+    schema = Schema()
+    max_exc = 2 * DeviceWithLimit.LIMIT_HIGH
+    DOUBLE_ELEMENT(schema).key(
+        "valueWithExc").assignmentOptional().defaultValue(0.0).maxExc(
+        max_exc).reconfigurable().commit()
+    device.updateSchema(schema)
+    assert device.getFullSchema().getMaxExc("valueWithExc") == max_exc
 
-        # Update the maxExc
-        schema = Schema()
-        max_exc = 2 * DeviceWithLimit.LIMIT_HIGH
-        (
-            DOUBLE_ELEMENT(schema).key("valueWithExc")
-            .assignmentOptional()
-            .defaultValue(0.0)
-            .maxExc(max_exc)
-            .reconfigurable()
-            .commit(),
-        )
-        device.updateSchema(schema)
-        self.assertEqual(
-            device.getFullSchema().getMaxExc("valueWithExc"),
-            max_exc)
+    schema = Schema()
+    INT32_ELEMENT(schema).key(
+        "somethingNew").assignmentOptional().defaultValue(
+        4).reconfigurable().commit()
+    device.appendSchema(schema)
+    assert device.getFullSchema().getMaxExc("valueWithExc") == max_exc
 
-        # Test that doing appendSchema with something new keeps
-        # the maxExc
-        schema = Schema()
-        (
-            INT32_ELEMENT(schema).key("somethingNew")
-            .assignmentOptional().defaultValue(4)
-            .reconfigurable()
-            .commit()
-        )
 
-        device.appendSchema(schema)
-        self.assertEqual(
-            device.getFullSchema().getMaxExc("valueWithExc"),
-            max_exc)
+def test_ensure_get_copies(device_cfg):
+    device = Configurator(PythonDevice).create("DeviceWithLimit", device_cfg)
+    device.startInitialFunctions()
 
-    def test_ensureGetCopies(self):
-        """
-        Hijack schema test to verify that PythonDevice.get(..) does not return
-        anything that can be used to change PythonDevice._parameters
-        (since that would need lock protection).
-        Similar for getFullSchema()
-        """
-        device = Configurator(PythonDevice).create(
-            "DeviceWithLimit", self.deviceCfg)
-        device.startInitialFunctions()
+    vec = device.get("vector")
+    assert vec == [0]
+    vec[0] = 1
+    assert vec == [1]
+    assert device.get("vector")[0] == 0
 
-        # VECTOR_ELEMENT
-        vec = device.get("vector")
-        self.assertEqual(vec, [0])  # default just contains 0
-        vec[0] = 1
-        self.assertEqual(vec, [1])
-        self.assertEqual(device.get("vector")[0], 0)
+    node = device.get("node")
+    assert node["number"] == 0
+    node["number"] = 100
+    assert node["number"] == 100
+    assert device.get("node.number") == 0
 
-        # Get a full NODE_ELEMENT
-        node = device.get("node")
-        self.assertEqual(node["number"], 0)
-        # Set something in node - should not affect device value
-        node["number"] = 100
-        self.assertEqual(node["number"], 100)
-        self.assertEqual(device.get("node.number"), 0)
+    table = device.get("table")
+    assert len(table) == 2
+    assert table[0]["int32"] == 1
+    assert table[1]["int32"] == 2
 
-        # TABLE_ELEMENT
-        table = device.get("table")
-        self.assertEqual(len(table), 2)  # default
-        self.assertEqual(table[0]["int32"], 1)  # default
-        self.assertEqual(table[1]["int32"], 2)  # default
-        # test setting value inside row
-        table[1]["int32"] = 3
-        self.assertEqual(table[1]["int32"], 3)
-        self.assertEqual(device.get("table")[1]["int32"], 2)
-        # test replacing a row
-        table[0] = Hash("int32", -1)
-        self.assertEqual(table[0]["int32"], -1)
-        self.assertEqual(device.get("table")[0]["int32"], 1)
-        # test appending a row
-        table.append(Hash("int32", 99))
-        self.assertEqual(len(table), 3)
-        self.assertEqual(len(device.get("table")), 2)
+    table[1]["int32"] = 3
+    assert table[1]["int32"] == 3
+    assert device.get("table")[1]["int32"] == 2
 
-        # Go on testing that getFullSchema() returns a copy
-        schema = device.getFullSchema()
-        (
-            INT32_ELEMENT(schema).key("aNewKeyNotExisting")
-            .assignmentOptional().defaultValue(1)
-            .commit(),
-        )
-        self.assertTrue(schema.has("aNewKeyNotExisting"))
-        # So schema was changed, but device's schema not:
-        self.assertFalse(device.getFullSchema().has("aNewKeyNotExisting"))
+    table[0] = Hash("int32", -1)
+    assert table[0]["int32"] == -1
+    assert device.get("table")[0]["int32"] == 1
 
-    def test_setVectorUpdate(self):
-        """
-        Hijack schema test to test PythonDevice.setVectorUpdate(..)
-        """
-        self.deviceCfg["vector"] = [1, 2, 3]
-        device = Configurator(PythonDevice).create("DeviceWithLimit",
-                                                   self.deviceCfg)
-        device.startInitialFunctions()
-        del self.deviceCfg["vector"]  # clean-up
+    table.append(Hash("int32", 99))
+    assert len(table) == 3
+    assert len(device.get("table")) == 2
 
-        # Testing sequence copied from C++ Device_Test::testSetVectorUpdate
-        # (therefore forced to start with [1, 2, 3])...
-        self.assertEqual(device.get("vector"), [1, 2, 3])
+    schema = device.getFullSchema()
+    INT32_ELEMENT(schema).key(
+        "aNewKeyNotExisting").assignmentOptional().defaultValue(1).commit()
+    assert schema.has("aNewKeyNotExisting")
+    assert not device.getFullSchema().has("aNewKeyNotExisting")
 
-        t = device.getActualTimestamp()
-        device.setVectorUpdate("vector", [3, 3, 1], "add", t)
-        self.assertEqual(device.get("vector"), [1, 2, 3, 3, 3, 1])
 
-        device.setVectorUpdate("vector", [1, 7], "addIfNotIn", t)
-        self.assertEqual(device.get("vector"), [1, 2, 3, 3, 3, 1, 7])
+def test_set_vector_update(device_cfg):
+    device_cfg["vector"] = [1, 2, 3]
+    device = Configurator(PythonDevice).create("DeviceWithLimit", device_cfg)
+    device.startInitialFunctions()
+    del device_cfg["vector"]
 
-        # Also try with default timestamp:
-        device.setVectorUpdate("vector", [3, 1, -99], "removeOne")
-        self.assertEqual(device.get("vector"), [2, 3, 3, 1, 7])
+    assert device.get("vector") == [1, 2, 3]
 
-        device.setVectorUpdate("vector", [2, -99, 3], "removeAll")
-        self.assertEqual(device.get("vector"), [1, 7])
+    t = device.getActualTimestamp()
+    device.setVectorUpdate("vector", [3, 3, 1], "add", t)
+    assert device.get("vector") == [1, 2, 3, 3, 3, 1]
 
-        with self.assertRaises(ValueError):
-            device.setVectorUpdate("vector", [0], "typo", t)
+    device.setVectorUpdate("vector", [1, 7], "addIfNotIn", t)
+    assert device.get("vector") == [1, 2, 3, 3, 3, 1, 7]
+
+    device.setVectorUpdate("vector", [3, 1, -99], "removeOne")
+    assert device.get("vector") == [2, 3, 3, 1, 7]
+
+    device.setVectorUpdate("vector", [2, -99, 3], "removeAll")
+    assert device.get("vector") == [1, 7]
+
+    with pytest.raises(ValueError):
+        device.setVectorUpdate("vector", [0], "typo", t)
