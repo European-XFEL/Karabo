@@ -33,7 +33,7 @@ from karabogui.logger import get_logger
 from karabogui.project.dialog.project_handle import NewProjectDialog
 from karabogui.project.restore import add_restore, get_restore_data
 from karabogui.project.utils import (
-    load_project, load_project_with_device, maybe_save_modified_project,
+    load_project, load_project_with_item, maybe_save_modified_project,
     reload_project, save_object, show_modified_project_message,
     show_reload_scene_project_message)
 from karabogui.project.view import ProjectView
@@ -108,11 +108,11 @@ class ProjectPanel(BasePanelWidget):
             triggered=_project_load_handler,
             name="load"
         )
-        load_with_device = KaraboAction(
-            icon=icons.filein, text="Find and &Load Project with Device",
-            tooltip="Find and Load Project with Device",
+        load_with_item = KaraboAction(
+            icon=icons.filein, text="Find and &Load Project with Item Names",
+            tooltip="Find and Load Project with Item Names",
             triggered=_project_with_device_load_handler,
-            name="load_with_device"
+            name="load_with_item"
         )
         save = KaraboAction(
             icon=icons.save, text="&Save Project",
@@ -134,7 +134,7 @@ class ProjectPanel(BasePanelWidget):
             name="declare"
         )
 
-        for k_action in (new, load, load_with_device, save, reload, trash):
+        for k_action in (new, load, load_with_item, save, reload, trash):
             q_ac = build_qaction(k_action, self)
             q_ac.setEnabled(True)
             q_ac.setVisible(False)
@@ -255,7 +255,7 @@ def _project_with_device_load_handler(project_view):
     if not maybe_save_modified_project(root_model, parent=project_view):
         return
 
-    project = load_project_with_device(parent=project_view)
+    project = load_project_with_item(parent=project_view)
     if project is not None:
         item_model.root_model = project
 

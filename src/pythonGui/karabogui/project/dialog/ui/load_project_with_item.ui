@@ -23,7 +23,7 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <widget class="QLabel" name="lbl_domain">
+      <widget class="QLabel" name="label_domain">
        <property name="minimumSize">
         <size>
          <width>62</width>
@@ -34,12 +34,12 @@
         <string>Do&amp;main</string>
        </property>
        <property name="buddy">
-        <cstring>cmb_domain</cstring>
+        <cstring>combo_domain</cstring>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QComboBox" name="cmb_domain">
+      <widget class="QComboBox" name="combo_domain">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
          <horstretch>1</horstretch>
@@ -53,7 +53,7 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
-      <widget class="QLabel" name="lbl_device_id">
+      <widget class="QLabel" name="label_item_id">
        <property name="minimumSize">
         <size>
          <width>62</width>
@@ -61,15 +61,15 @@
         </size>
        </property>
        <property name="text">
-        <string>&amp;Device</string>
+        <string>&amp;Item</string>
        </property>
        <property name="buddy">
-        <cstring>txt_device_id</cstring>
+        <cstring>text_device_id</cstring>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="txt_device_id">
+      <widget class="QLineEdit" name="text_device_id">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
          <horstretch>1</horstretch>
@@ -79,9 +79,28 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="btn_find_projects">
+      <widget class="QComboBox" name="combo_item_type">
+       <item>
+        <property name="text">
+         <string>Device</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Macro</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Server</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="button_find_projects">
        <property name="text">
-        <string>&amp;Find Projects with Device</string>
+        <string>&amp;Find Projects</string>
        </property>
       </widget>
      </item>
@@ -97,12 +116,12 @@
       </widget>
      </item>
      <item>
-      <widget class="QTableWidget" name="tbl_projects"/>
+      <widget class="QTableWidget" name="table_projects"/>
      </item>
      <item>
       <layout class="QHBoxLayout" name="bottom_horizontal_layout">
        <item>
-        <widget class="QLabel" name="lbl_status">
+        <widget class="QLabel" name="label_status">
          <property name="enabled">
           <bool>true</bool>
          </property>
@@ -113,7 +132,7 @@
           </sizepolicy>
          </property>
          <property name="text">
-          <string>Projects with Device</string>
+          <string>Projects with Items</string>
          </property>
         </widget>
        </item>
