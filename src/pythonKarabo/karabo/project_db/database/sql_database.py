@@ -649,10 +649,47 @@ class SQLDatabase(DatabaseBase):
                         # Already time mangled before
                         "date": project["date"],
                         "uuid": project_uuid,
-                        "devices": []}
+                        "items": []}
                     projects[project_uuid] = project_data
 
-                projects[project_uuid]["devices"].append(device_id)
+                projects[project_uuid]["items"].append(device_id)
+
+        return list(projects.values())
+
+    async def get_projects_with_server(
+            self, domain: str, name_part: str) -> list[dict[str, any]]:
+        """
+        Returns a list of dictionaries with data about projects that
+        contain macros.
+
+        :param domain: DB domain
+        :param name_part: part of name of macro for which project data
+                          must be returned.
+        :return: a list of dicts:
+            [
+            {"projectname": name of project,
+             "date": last modification timestamp for the project,
+             "uuid": uuid of project
+             "items": list of ids of prj servers with the given part},
+             ...]
+        """
+        items = await self.reader.get_domain_server_instances_by_name_part(
+            domain, name_part)
+        projects = {}
+
+        for item in items:
+            project_id = item.project_id
+            name = item.name
+            if project_id not in projects:
+                project = await self.reader.get_project_from_id(project_id)
+                project_data = {
+                    "projectname": project.name,
+                    "date": project.date.strftime("%Y-%m-%d %H:%M:%S"),
+                    "uuid": project.uuid,
+                    "items": []}
+                projects[project_id] = project_data
+
+            projects[project_id]["items"].append(name)
 
         return list(projects.values())
 
@@ -673,22 +710,22 @@ class SQLDatabase(DatabaseBase):
              "macros": list of ids of prj devices with the given part},
              ...]
         """
-        macros = await self.reader.get_domain_macro_instances_by_name_part(
+        items = await self.reader.get_domain_macro_instances_by_name_part(
             domain, name_part)
         projects = {}
 
-        for macro in macros:
-            project_id = macro.project_id
-            macro_name = macro.name
+        for item in items:
+            project_id = item.project_id
+            name = item.name
             if project_id not in projects:
                 project = await self.reader.get_project_from_id(project_id)
                 project_data = {
                     "projectname": project.name,
                     "date": project.date.strftime("%Y-%m-%d %H:%M:%S"),
                     "uuid": project.uuid,
-                    "macros": []}
+                    "items": []}
                 projects[project_id] = project_data
 
-            projects[project_id]["macros"].append(macro_name)
+            projects[project_id]["items"].append(name)
 
         return list(projects.values())
