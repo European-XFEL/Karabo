@@ -20,8 +20,8 @@ from lxml import etree
 from karabo.common.scenemodel.api import write_scene
 from karabo.common.states import State
 from karabo.middlelayer import (
-    AccessLevel, AccessMode, Bool, Configurable, Device, Hash, Node, Overwrite,
-    Slot, String, TypeHash, VectorString, dictToHash, slot)
+    AccessLevel, AccessMode, Bool, Configurable, Device, Hash, HashList, Node,
+    Overwrite, Slot, String, TypeHash, VectorString, dictToHash, slot)
 from karabo.middlelayer.signalslot import Signal
 from karabo.native import read_project_model
 from karabo.project_db import (
@@ -240,8 +240,10 @@ class ProjectManager(Device):
             return await self.slotListProjectsWithDevice(params)
         elif action_type == "listProjectsWithMacro":
             return await self.slotListProjectsWithMacro(params)
-        else:
-            raise NotImplementedError(f"{type} not implemented")
+        elif action_type == "listProjectsWithServer":
+            return await self.slotListProjectsWithServer(params)
+
+        raise NotImplementedError(f"{type} not implemented")
 
     @slot
     async def slotSaveItems(self, items, client=None):
@@ -374,50 +376,37 @@ class ProjectManager(Device):
                        if domain in self.domainList]
             return Hash('domains', res)
 
+    async def _slot_list_projects(self, call: str, domain: str, name: str):
+        """Generic slot logic for fetching and formatting projects."""
+        async with self.db_handle as db_session:
+            method = getattr(db_session, call)
+            projects = await method(domain, name)
+            result = HashList(
+                [Hash("name", p["projectname"],
+                      "uuid", p["uuid"],
+                      "last_modified", p["date"],
+                      "items", p["items"])
+                 for p in projects])
+        return Hash("projects", result)
+
     @slot
     async def slotListProjectsWithDevice(self, args):
         """
         List projects in domain which have configurations for a given device.
 
         :param args: a hash that must contain the keys , "domain" and
-            "device_id" with the following meanings:
+            "name" with the following meanings:
             "domain" is the domain to list
-            projects from and "device_id" is the part that must be
-            contained in the ids of the devices with configurations
-            stored in the projects to be listed.
 
         :return: a Hash with key, "projects", with a list of Hashes for its
-            value. Each Hash in the list has four keys: "uuid",
-            "name", "last_modified" and "devices". "uuid" is the unique id
-            of the project in the project database, "name" is the project
-            name, "last_modified" is the UTC imestamp of the projects's
-            most recent modification in "%Y-%m-%d %H:%M:%S" format and
-            "devices" is a list of the device ids in the project that
-            match the given device_id part passed to the slot.
-            The returned Hash also has a boolean key "success" that
-            indicates whether the slot execution has been successful
-            (True) and a string key "reason", that will contain an error
-            description when the slot execution fails.
+            value. Each Hash in the list has four keys:
+                - "uuid",
+                - "name",
+                - "last_modified"
+                - "items"
         """
-        for k in ["domain", "device_id"]:
-            if not args.has(k):
-                return Hash('success', False,
-                            'reason', f'Key "{k}" missing in "args" hash.')
-
-        domain = args["domain"]
-        device_id = args["device_id"]
-
-        async with self.db_handle as db_session:
-            result_projects = []
-            prjs = await db_session.get_projects_with_device(
-                domain, device_id)
-            for prj in prjs:
-                result_projects.append(
-                    Hash("name", prj["projectname"],
-                         "uuid", prj["uuid"],
-                         "last_modified", prj["date"],
-                         "devices", prj["devices"]))
-            return Hash('projects', result_projects)
+        return await self._slot_list_projects(
+            "get_projects_with_device", args["domain"], args["name"])
 
     @slot
     async def slotListProjectsWithMacro(self, args):
@@ -433,26 +422,29 @@ class ProjectManager(Device):
                 - "uuid",
                 - "name",
                 - "last_modified"
-                -  "macros"
+                - "items"
         """
-        for k in ["domain", "name"]:
-            if not args.has(k):
-                return Hash('success', False,
-                            'reason', f'Key "{k}" missing in "args" hash.')
+        return await self._slot_list_projects(
+            "get_projects_with_macro", args["domain"], args["name"])
 
-        domain = args["domain"]
-        name = args["name"]
-        async with self.db_handle as db_session:
-            result_projects = []
-            projects = await db_session.get_projects_with_macro(
-                domain, name)
-            for project in projects:
-                result_projects.append(
-                    Hash("name", project["projectname"],
-                         "uuid", project["uuid"],
-                         "last_modified", project["date"],
-                         "macros", project["macros"]))
-            return Hash('projects', result_projects)
+    @slot
+    async def slotListProjectsWithServer(self, args):
+        """
+        List projects in domain which have server.
+
+        :param args: a hash that must contain the keys
+            "name" with the following meanings:
+            "domain" is the domain to list
+
+        :return: a Hash with key, "projects", with a list of Hashes for its
+            value. Each Hash in the list has four keys:
+                - "uuid",
+                - "name",
+                - "last_modified"
+                - "items"
+        """
+        return await self._slot_list_projects(
+            "get_projects_with_server", args["domain"], args["name"])
 
     @slot
     async def slotUpdateAttribute(self, items):
