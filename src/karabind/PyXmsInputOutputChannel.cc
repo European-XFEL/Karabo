@@ -137,16 +137,6 @@ void exportPyXmsInputOutputChannel(py::module_& m) {
 
               .def("getInitialConfiguration", &OutputChannel::getInitialConfiguration)
 
-              .def("registerIOEventHandler",
-                   [](const OutputChannel::Pointer& self, const py::object& handler) {
-                       if (handler.is_none()) {
-                           self->registerIOEventHandler(std::function<void(const OutputChannel::Pointer&)>());
-                       } else {
-                           using Wrap = HandlerWrap<OutputChannel::Pointer>;
-                           self->registerIOEventHandler(Wrap(handler, "IOEvent"));
-                       }
-                   })
-
               .def("getInformation", &OutputChannel::getInformation)
 
               .def("hasRegisteredCopyInputChannel", &OutputChannel::hasRegisteredCopyInputChannel, py::arg("inputId"))

@@ -108,9 +108,6 @@ namespace karabo {
             // unordered_map)
             typedef std::map<std::string, InputChannelInfo> InputChannels; // input channel id is key
 
-            // Callback on available input
-            std::function<void(const std::shared_ptr<OutputChannel>&)> m_ioEventHandler;
-
             std::string m_instanceId;
             std::string m_channelName;
 
@@ -256,9 +253,6 @@ namespace karabo {
              * @return bool whether InputChannel of specified type is connected
              */
             bool hasRegisteredSharedInputChannel(const std::string& instanceId) const;
-
-            void registerIOEventHandler(const std::function<void(const OutputChannel::Pointer&)>& ioEventHandler);
-
 
             karabo::data::Hash getInformation() const;
 
@@ -436,8 +430,6 @@ namespace karabo {
             void updateNetworkStatistics(const boost::system::error_code& e);
 
             void onInputAvailable(const std::string& instanceId);
-
-            void triggerIOEvent();
 
             void onInputGone(const karabo::net::Channel::Pointer& channel, const karabo::net::ErrorCode& error);
 
