@@ -31,7 +31,7 @@ import pint
 import tabulate
 
 from karabo.native.data import (
-    EncodingType, Hash, HashList, HashType, MetricPrefix, Unit)
+    Encoding, Hash, HashList, HashType, MetricPrefix, Unit)
 
 from ..weak import Weak
 
@@ -394,7 +394,7 @@ class ImageData(KaraboValue):
     Every attribute can be provided as well on initialization of the object.
 
     :param binning: The binning of the image, e.g. [0, 0]
-    :param encoding: The encoding of the image, e.g. EncodingType.GRAY (enum)
+    :param encoding: The encoding of the image, e.g. Encoding.GRAY (enum)
     :param rotation: The rotation of the image, either 0, 90, 180 or 270
     :param roiOffsets: The roiOffset, e.g. [0, 0]
     :param bitsPerPixel: The bits per pixel
@@ -423,18 +423,18 @@ class ImageData(KaraboValue):
         # NOTE: If the encoding is not provided, try to guess it!
         if encoding is None:
             if len(dims) == 2:
-                encoding = EncodingType.GRAY
+                encoding = Encoding.GRAY
             elif len(dims) == 3:
                 if dims[2] == 1:
-                    encoding = EncodingType.GRAY
+                    encoding = Encoding.GRAY
                 elif dims[2] == 3:
-                    encoding = EncodingType.RGB
+                    encoding = Encoding.RGB
                 elif dims[2] == 4:
-                    encoding = EncodingType.RGBA
+                    encoding = Encoding.RGBA
                 else:
-                    encoding = EncodingType.UNDEFINED
+                    encoding = Encoding.UNDEFINED
             else:
-                encoding = EncodingType.UNDEFINED
+                encoding = Encoding.UNDEFINED
 
         if isinstance(encoding, Enum):
             encoding = encoding.value

@@ -29,7 +29,7 @@ from karabo.common.states import State
 from karabo.native import (
     AccessLevel, AccessMode, ArchivePolicy, Assignment, Attribute, Bool,
     BoolValue, ByteArray, Char, Configurable, DaqDataType, Descriptor, Double,
-    EncodingType, Enumable, EnumValue, Float, Hash, HashByte, HashElement,
+    Encoding, Enumable, EnumValue, Float, Hash, HashByte, HashElement,
     HashList, HashMergePolicy, HashType, Image, ImageData, Int8, Int16, Int32,
     Int64, Integer, KaraboError, KaraboJSONEncoder, KaraboValue, MetricPrefix,
     NDArray, Node, NodeType, NoneValue, Number, NumpyVector, OldProject,

@@ -18,8 +18,8 @@ from .data.bin_reader import decodeBinary, decodeBinaryPos
 from .data.bin_writer import encodeBinary, writeBinary
 from .data.compare import has_changes
 from .data.enums import (
-    AccessLevel, AccessMode, ArchivePolicy, Assignment, DaqDataType,
-    EncodingType, MetricPrefix, NodeType, Unit)
+    AccessLevel, AccessMode, ArchivePolicy, Assignment, DaqDataType, Encoding,
+    MetricPrefix, NodeType, Unit)
 from .data.hash import (
     Hash, HashByte, HashElement, HashList, HashMergePolicy,
     get_hash_type_from_data, is_equal, simple_deepcopy)

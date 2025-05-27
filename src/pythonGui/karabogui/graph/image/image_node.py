@@ -16,7 +16,7 @@
 # or FITNESS FOR A PARTICULAR PURPOSE.
 from traits.api import Any, ArrayOrNone, Enum, HasStrictTraits, Int
 
-from karabo.native import EncodingType
+from karabo.native import Encoding
 from karabogui.controllers.arrays import (
     DIMENSIONS, get_dimensions_and_encoding, get_image_data, get_jpeg_data)
 from karabogui.graph.common.api import Axes
@@ -24,15 +24,15 @@ from karabogui.graph.common.api import Axes
 # Special image dimensions
 YUV422 = 2
 YUV444 = 3
-YUV_TYPES = {EncodingType.YUV444, EncodingType.YUV422_YUYV,
-             EncodingType.YUV422_UYVY}
+YUV_TYPES = {Encoding.YUV444, Encoding.YUV422_YUYV,
+             Encoding.YUV422_UYVY}
 
 
 class KaraboImageNode(HasStrictTraits):
     dim_x = Int
     dim_y = Int
     dim_z = Int
-    encoding = Enum(*EncodingType)
+    encoding = Enum(*Encoding)
     stack_axis = Any
 
     # Internal traits
@@ -45,7 +45,7 @@ class KaraboImageNode(HasStrictTraits):
         self.dim_y = dim_y if dim_y is not None else 0
         self.dim_z = dim_z if dim_z is not None else 0
         self.encoding = encoding
-        if encoding == EncodingType.JPEG:
+        if encoding == Encoding.JPEG:
             self._data = get_jpeg_data(image_node, self.dim_z)
         else:
             self._data = get_image_data(image_node,
@@ -60,7 +60,7 @@ class KaraboImageNode(HasStrictTraits):
         # Get data depending on the image schema and encoding
         if self.stack_axis is not None:
             return self.get_slice(self.stack_axis, cell=0)
-        elif self.encoding == EncodingType.GRAY:
+        elif self.encoding == Encoding.GRAY:
             return self.get_slice(DIMENSIONS['Z'], cell=0)
         else:
             return self._data
@@ -100,13 +100,13 @@ class KaraboImageNode(HasStrictTraits):
                 # only display "luma" (Y') component in the GUI
                 self._data = self._data[:, :, 1]
                 self.dim_z = 0
-                self.encoding = EncodingType.GRAY
+                self.encoding = Encoding.GRAY
             elif self.dim_z == YUV444:
                 # input image is (u1, y1, v1, u2, y2, v2, ...)
                 # only display "luma" (Y') component in the GUI
                 self._data = self._data[:, :, 1]
                 self.dim_z = 0
-                self.encoding = EncodingType.GRAY
+                self.encoding = Encoding.GRAY
             else:
                 return False
 

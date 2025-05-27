@@ -20,7 +20,7 @@
 #############################################################################
 import numpy as np
 
-from karabo.native import EncodingType
+from karabo.native import Encoding
 from karabogui.binding.api import (
     REFERENCE_TYPENUM_TO_DTYPE, get_binding_array_value)
 
@@ -111,20 +111,20 @@ def get_dimensions_and_encoding(image_node):
         # Shape
         dimX = image_node.dims.value[DIMENSIONS['X']]
         dimY = image_node.dims.value[DIMENSIONS['Y']]
-        if encoding == EncodingType.UNDEFINED:
-            encoding = EncodingType.GRAY  # assume it's gray
+        if encoding == Encoding.UNDEFINED:
+            encoding = Encoding.GRAY  # assume it's gray
     elif len(image_node.dims.value) == 3:
         # Shape
         dimX = image_node.dims.value[DIMENSIONS['X']]
         dimY = image_node.dims.value[DIMENSIONS['Y']]
         dimZ = image_node.dims.value[DIMENSIONS['Z']]
-        if encoding == EncodingType.UNDEFINED:
+        if encoding == Encoding.UNDEFINED:
             if dimZ == 3:
-                encoding = EncodingType.RGB  # assume it's RGB
+                encoding = Encoding.RGB  # assume it's RGB
             elif dimZ == 4:
-                encoding = EncodingType.RGBA  # assume it's RGBA
+                encoding = Encoding.RGBA  # assume it's RGBA
             else:
-                encoding = EncodingType.GRAY  # assume it's a stack of GRAY
+                encoding = Encoding.GRAY  # assume it's a stack of GRAY
 
     return dimX, dimY, dimZ, encoding
 
