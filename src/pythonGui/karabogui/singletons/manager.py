@@ -674,16 +674,16 @@ class Manager(QObject):
         broadcast_event(KaraboEvent.ProjectItemsList,
                         {'items': reply.get('items', [])})
 
-    def handle_projectListProjectsWithDevice(self, success, request,
-                                             reply, reason=""):
+    def handle_projectListProjectsWithItem(self, success, request,
+                                           reply, reason=""):
         if not success:
             broadcast_event(
-                KaraboEvent.ProjectFindWithDevice,
+                KaraboEvent.ProjectFindWithItem,
                 {'projects': [], 'error': reason})
         else:
             projects = reply.get('projects', [])
             broadcast_event(
-                KaraboEvent.ProjectFindWithDevice, {
+                KaraboEvent.ProjectFindWithItem, {
                     'projects': projects, 'error': None})
 
     def handle_projectListProjectManagers(self, reply):
