@@ -14,155 +14,154 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 from copy import deepcopy
-from unittest import TestCase, main
+
+import pytest
 
 from ..enums import (
     AccessLevel, AccessMode, ArchivePolicy, Assignment, MetricPrefix, NodeType,
     Unit)
-from ..hash import Hash
+from ..hash import Hash, is_equal
 from ..schema import Schema
 
 
-class Tests(TestCase):
-    def setUp(self):
-        h = Hash("node", Hash("b", None), "a", None,
-                 "c", None, "d", None, "e", None)
+@pytest.fixture
+def schema():
+    h = Hash("node", Hash("b", None), "a", None,
+             "c", None, "d", None, "e", None)
 
-        h["a", "nodeType"] = NodeType.Leaf.value
-        h["a", "valueType"] = "INT32"
-        h["a", "description"] = "a's description"
-        h["a", "allowedStates"] = ["INIT", "UNKNOWN"]
-        h["a", "unitSymbol"] = "A"
-        h["a", "defaultValue"] = 22.5
-        h["a", "metricPrefixSymbol"] = "m"
-        h["a", "accessMode"] = AccessMode.RECONFIGURABLE.value
-        h["a", "requiredAccessLevel"] = AccessLevel.OPERATOR.value
-        h["a", "assignment"] = Assignment.INTERNAL.value
-        h["a", "archivePolicy"] = ArchivePolicy.EVERY_EVENT.value
-        h["a", "alias"] = "Karabo"
-        h["node", "nodeType"] = NodeType.Node.value
-        h["node.b", "nodeType"] = NodeType.Leaf.value
-        h["node.b", "valueType"] = "STRING"
-        h["node.b", "description"] = "b's description"
-        h["node.b", "allowedStates"] = ["CHANGING", "UNKNOWN"]
-        h["node.b", "unitSymbol"] = "A"
-        h["node.b", "defaultValue"] = 22.5
-        h["node.b", "tags"] = ["mpod"]
-        h["c", "nodeType"] = NodeType.Leaf.value
-        h["c", "valueType"] = "INT32"
-        h["c", "description"] = "c's description"
-        h["c", "allowedStates"] = ["INIT", "UNKNOWN"]
-        h["c", "unitSymbol"] = "A"
-        h["c", "defaultValue"] = 17.5
-        h["c", "tags"] = ["mpod"]
-        h["d", "nodeType"] = NodeType.Leaf.value
-        h["d", "valueType"] = "INT32"
-        h["d", "description"] = "d's description"
-        h["d", "allowedStates"] = ["INIT", "UNKNOWN"]
-        h["d", "unitSymbol"] = "A"
-        h["d", "defaultValue"] = 27.5
-        h["d", "tags"] = ["mpod", "plc"]
+    h["a", "nodeType"] = NodeType.Leaf.value
+    h["a", "valueType"] = "INT32"
+    h["a", "description"] = "a's description"
+    h["a", "allowedStates"] = ["INIT", "UNKNOWN"]
+    h["a", "unitSymbol"] = "A"
+    h["a", "defaultValue"] = 22.5
+    h["a", "metricPrefixSymbol"] = "m"
+    h["a", "accessMode"] = AccessMode.RECONFIGURABLE.value
+    h["a", "requiredAccessLevel"] = AccessLevel.OPERATOR.value
+    h["a", "assignment"] = Assignment.INTERNAL.value
+    h["a", "archivePolicy"] = ArchivePolicy.EVERY_EVENT.value
+    h["a", "alias"] = "Karabo"
+    h["node", "nodeType"] = NodeType.Node.value
+    h["node.b", "nodeType"] = NodeType.Leaf.value
+    h["node.b", "valueType"] = "STRING"
+    h["node.b", "description"] = "b's description"
+    h["node.b", "allowedStates"] = ["CHANGING", "UNKNOWN"]
+    h["node.b", "unitSymbol"] = "A"
+    h["node.b", "defaultValue"] = 22.5
+    h["node.b", "tags"] = ["mpod"]
+    h["c", "nodeType"] = NodeType.Leaf.value
+    h["c", "valueType"] = "INT32"
+    h["c", "description"] = "c's description"
+    h["c", "allowedStates"] = ["INIT", "UNKNOWN"]
+    h["c", "unitSymbol"] = "A"
+    h["c", "defaultValue"] = 17.5
+    h["c", "tags"] = ["mpod"]
+    h["d", "nodeType"] = NodeType.Leaf.value
+    h["d", "valueType"] = "INT32"
+    h["d", "description"] = "d's description"
+    h["d", "allowedStates"] = ["INIT", "UNKNOWN"]
+    h["d", "unitSymbol"] = "A"
+    h["d", "defaultValue"] = 27.5
+    h["d", "tags"] = ["mpod", "plc"]
 
-        h["e", "nodeType"] = NodeType.Leaf.value
-        h["e", "valueType"] = "VECTOR_STRING"
-        h["e", "description"] = "e's description"
-        h["e", "unitSymbol"] = ""
-        h["e", "defaultValue"] = ["One", "Two", "Three"]
+    h["e", "nodeType"] = NodeType.Leaf.value
+    h["e", "valueType"] = "VECTOR_STRING"
+    h["e", "description"] = "e's description"
+    h["e", "unitSymbol"] = ""
+    h["e", "defaultValue"] = ["One", "Two", "Three"]
 
-        self.schema = Schema("XFEL", hash=h)
-
-    def test_getKeyFromAlias(self):
-        key = self.schema.getKeyFromAlias("Karabo")
-        self.assertEqual(key, "a")
-
-    def test_keyHasAlias(self):
-        a = self.schema.keyHasAlias("a")
-        self.assertTrue(a)
-        b = self.schema.keyHasAlias("node.b")
-        self.assertFalse(b)
-
-    def test_getAliasAsString(self):
-        alias = self.schema.getAliasAsString("a")
-        self.assertEqual(alias, "Karabo")
-
-    def test_filterByTags_1(self):
-        h = self.schema.filterByTags("plc")
-        path = h.paths()
-        self.assertIn("d", path)
-
-    def test_filterByTags_2(self):
-        h = self.schema.filterByTags("mpod")
-        path = h.paths()
-        self.assertIn("node.b", path)
-        self.assertIn("c", path)
-        self.assertIn("d", path)
-
-    def test_schema_equal(self):
-        h = self.schema.hash
-        self.assertTrue(h.fullyEqual(self.schema.hash))
-        # Test schema value modification
-        s = h.deepcopy()
-        self.assertTrue(h.fullyEqual(s))
-        s.erase("d")
-        self.assertFalse(h.fullyEqual(s))
-        self.assertFalse(s.fullyEqual(h))
-
-        s = h.deepcopy()
-        self.assertTrue(h.fullyEqual(s))
-        s["e", "defaultValue"] = ["Three"]
-        self.assertFalse(h.fullyEqual(s))
-
-        # Test schema attr modification
-        s = h.deepcopy()
-        self.assertTrue(h.fullyEqual(s))
-        s["d", "tags"] = ["mpod"]
-        self.assertFalse(h.fullyEqual(s))
-
-        deep = deepcopy(h)
-        # Python deepcopy is working
-        self.assertNotEqual(deep["node.b", ...], {})
-        self.assertNotEqual(h["node.b", ...], {})
-        self.assertTrue(h.fullyEqual(deep))
-
-        # Hash quick deepcopy test
-        mutable = [1, 2, 3, 4]
-        h["mutable"] = mutable
-        s = h.deepcopy()
-        deep = deepcopy(h)
-        self.assertTrue(h.fullyEqual(s))
-        self.assertEqual(h["mutable"], mutable)
-        self.assertEqual(s["mutable"], mutable)
-        self.assertEqual(deep["mutable"], mutable)
-        mutable.append(6)
-        self.assertEqual(h["mutable"], mutable)
-        self.assertNotEqual(s["mutable"], mutable)
-        self.assertNotEqual(deep["mutable"], mutable)
-        self.assertTrue(h["mutable"] is mutable)
-        self.assertFalse(s["mutable"] is mutable)
-        self.assertFalse(deep["mutable"] is mutable)
-        self.assertTrue(deep.fullyEqual(s))
-
-    def test_helpers(self):
-        attrs = self.schema.hash["a", ...]
-        self.assertEqual(
-            AccessLevel.OPERATOR, AccessLevel.fromAttributes(attrs))
-        self.assertEqual(
-            AccessMode.RECONFIGURABLE, AccessMode.fromAttributes(attrs))
-        self.assertEqual(
-            ArchivePolicy.EVERY_EVENT, ArchivePolicy.fromAttributes(attrs))
-        self.assertEqual(
-            Assignment.INTERNAL, Assignment.fromAttributes(attrs))
-        self.assertEqual(
-            MetricPrefix.MILLI, MetricPrefix.fromAttributes(attrs))
-        self.assertEqual(
-            Unit.AMPERE, Unit.fromAttributes(attrs))
-        attrs = self.schema.hash["c", ...]
-        self.assertIsNone(AccessLevel.fromAttributes(attrs))
-        self.assertIsNone(AccessMode.fromAttributes(attrs))
-        self.assertIsNone(ArchivePolicy.fromAttributes(attrs))
-        self.assertIsNone(Assignment.fromAttributes(attrs))
-        self.assertIsNone(MetricPrefix.fromAttributes(attrs))
+    return Schema("XFEL", hash=h)
 
 
-if __name__ == "__main__":
-    main()
+def test_getKeyFromAlias(schema):
+    key = schema.getKeyFromAlias("Karabo")
+    assert key == "a"
+
+
+def test_keyHasAlias(schema):
+    assert schema.keyHasAlias("a") is True
+    assert schema.keyHasAlias("node.b") is False
+
+
+def test_getAliasAsString(schema):
+    alias = schema.getAliasAsString("a")
+    assert alias == "Karabo"
+
+
+def test_filterByTags(schema):
+    h = schema.filterByTags("plc")
+    path = h.paths()
+    assert "d" in path
+
+    h = schema.filterByTags("mpod")
+    path = h.paths()
+    assert "node.b" in path
+    assert "c" in path
+    assert "d" in path
+
+
+def test_schema_equal(schema):
+    h = schema.hash
+    assert h.fullyEqual(schema.hash)
+
+    s = h.deepcopy()
+    assert h.fullyEqual(s)
+    s.erase("d")
+    assert not h.fullyEqual(s)
+    assert not s.fullyEqual(h)
+
+    s = h.deepcopy()
+    assert h.fullyEqual(s)
+    s["e", "defaultValue"] = ["Three"]
+    assert not h.fullyEqual(s)
+
+    s = h.deepcopy()
+    assert h.fullyEqual(s)
+    s["d", "tags"] = ["mpod"]
+    assert not h.fullyEqual(s)
+
+    deep = deepcopy(h)
+    assert deep["node.b", ...] != {}
+    assert h["node.b", ...] != {}
+    assert h.fullyEqual(deep)
+
+    mutable = [1, 2, 3, 4]
+    h["mutable"] = mutable
+    s = h.deepcopy()
+    deep = deepcopy(h)
+    assert h.fullyEqual(s)
+    assert h["mutable"] == mutable
+    assert s["mutable"] == mutable
+    assert deep["mutable"] == mutable
+    mutable.append(6)
+    assert h["mutable"] == mutable
+    assert s["mutable"] != mutable
+    assert deep["mutable"] != mutable
+    assert h["mutable"] is mutable
+    assert s["mutable"] is not mutable
+    assert deep["mutable"] is not mutable
+    assert deep.fullyEqual(s)
+
+    h = Hash("value", "None")
+    assert is_equal(Schema(name="foo", hash=h), Schema(name="foo", hash=h))
+    assert not is_equal(Schema(name="bar", hash=h), Schema(name="foo", hash=h))
+    assert not is_equal(Schema(name="foo", hash=h),
+                        Schema(name="foo", hash=Hash()))
+    assert is_equal(Schema(name="test", hash=h), Schema(name="test", hash=h))
+
+
+def test_helpers(schema):
+    attrs = schema.hash["a", ...]
+    assert AccessLevel.fromAttributes(attrs) == AccessLevel.OPERATOR
+    assert AccessMode.fromAttributes(attrs) == AccessMode.RECONFIGURABLE
+    assert ArchivePolicy.fromAttributes(attrs) == ArchivePolicy.EVERY_EVENT
+    assert Assignment.fromAttributes(attrs) == Assignment.INTERNAL
+    assert MetricPrefix.fromAttributes(attrs) == MetricPrefix.MILLI
+    assert Unit.fromAttributes(attrs) == Unit.AMPERE
+
+    attrs = schema.hash["c", ...]
+    assert AccessLevel.fromAttributes(attrs) is None
+    assert AccessMode.fromAttributes(attrs) is None
+    assert ArchivePolicy.fromAttributes(attrs) is None
+    assert Assignment.fromAttributes(attrs) is None
+    assert MetricPrefix.fromAttributes(attrs) is None

@@ -489,12 +489,6 @@ def test_is_equal():
     assert not is_equal(np.array([1, 2, 3, 8, 1]), None)
 
     h = Hash("value", "None")
-    assert is_equal(Schema(name="foo", hash=h), Schema(name="foo", hash=h))
-    assert not is_equal(Schema(name="bar", hash=h), Schema(name="foo", hash=h))
-    assert not is_equal(Schema(name="foo", hash=h),
-                        Schema(name="foo", hash=Hash()))
-    assert is_equal(Schema(name="test", hash=h), Schema(name="test", hash=h))
-
     hh = Hash("value", "None", "position", 1,
               "schema", Schema(name="foo", hash=h))
     assert is_equal(hh, hh)
