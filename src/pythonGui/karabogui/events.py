@@ -48,7 +48,7 @@ class KaraboEvent(Enum):
     ProjectName = "Update main window project name"
     ProjectDBConnect = "Reestablish connection to project db"
     ProjectDomainsList = "Project domains list"
-    ProjectAttributeUpdated = "Project attribute updated"
+    ProjectTrashed = "Project Trashed"
     ProjectFilterUpdated = "Project filter updated"
     ProjectItemsList = "Project items list"
     ProjectItemsLoaded = "Project items loaded"

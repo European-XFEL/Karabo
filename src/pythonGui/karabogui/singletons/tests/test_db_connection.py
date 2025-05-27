@@ -148,15 +148,12 @@ def test_connection(gui_app, mocker):
         mb.show_error.assert_called_with("Conflict")
 
         # 8. Update project attribute
-        db_conn.update_attribute(domain, "project", project_uuid,
-                                 "trashed", True)
+        db_conn.update_trashed(domain, "project", project_uuid, True)
 
-        network.onProjectUpdateAttribute.assert_called_with(
-            KARABO_PROJECT_MANAGER, [Hash("domain", domain,
-                                          "item_type", "project",
-                                          "uuid", project_uuid,
-                                          "attr_name", "trashed",
-                                          "attr_value", True)])
+        item = Hash('domain', domain, 'uuid', project_uuid, 'value', True,
+                    'item_type', "project")
+        network.onProjectUpdateTrashed.assert_called_with(
+            KARABO_PROJECT_MANAGER, items=item)
 
         # 9. Configuration
         db_conn.default_domain = "New"
