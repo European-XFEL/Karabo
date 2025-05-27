@@ -19,8 +19,6 @@ from pathlib import Path
 
 from sqlmodel import SQLModel
 
-from karabo.native import HashList
-
 from ..bases import DatabaseBase
 from ..util import ProjectDBError, make_str_if_needed, make_xml_if_needed
 from .db_engine import create_local_engine, create_remote_engine
@@ -526,75 +524,31 @@ class SQLDatabase(DatabaseBase):
             projects.add(project['projectname'])
         return projects
 
-    async def update_attributes(self, items: HashList) -> list[dict[str, any]]:
-        """ Update attribute for the given ``items``
-
-        :param items: list of Hashes containing information on which items
-                      to update. Each list entry should be a Hash containing
-
-                      - domain: domain the item resides at
-                      - uuid: the uuid of the item
-                      - item_type: indicate type of item which attribute should
-                                   be changed
-                      - attr_name: name of attribute which should be changed
-                      - attr_value: value of attribute which should be changed
-
-        :return: a list of dicts where each entry has keys: domain, uuid,
-                 item_type, attr_name, attr_value
+    async def update_trashed(self, **info) -> None:
+        """ Update trashed attribute for project
 
         :raises: ProjectDBError on failure
         """
+        item_uuid = info['uuid']
+        item_type = info['item_type']
+        assert item_type == "project", "Only projects can be trashed"
+        value = info["value"]
+        if value == "true":
+            value = True
+        elif value == "false":
+            value = False
 
-        res_items = []
-        for item in items:
-            model: SQLModel | None = None
-            item_uuid = item['uuid']
-            item_type = item['item_type']
-            attr_value = item['attr_value']
-            # NOTE: The GUI client sends a bool as either "true" or "false"
-            #       which are not accepted as valid values for a bool field
-            #       by SQLModel (actually by SQLAlchemy). So those special
-            #       cases are handled manually.
-            if attr_value == "true":
-                attr_value = True
-            elif attr_value == "false":
-                attr_value = False
+        model = await self.reader.get_project_from_uuid(
+            item_uuid)
+        if model is None:
+            raise ProjectDBError(
+                f"No item of type '{item_type}' with UUID '{item_uuid}' "
+                "found in the database")
 
-            match item_type:
-                case "project":
-                    model = await self.reader.get_project_from_uuid(
-                        item_uuid)
-                case "device_server":
-                    model = await self.reader.get_device_server_from_uuid(
-                        item_uuid)
-                case "device_instance":
-                    model = await self.reader.get_device_instance_from_uuid(
-                        item_uuid)
-                case "device_config":
-                    model = await self.reader.get_device_config_from_uuid(
-                        item_uuid)
-                case "macro":
-                    model = await self.reader.get_macro_from_uuid(item_uuid)
-                case "scene":
-                    model = await self.reader.get_scene_from_uuid(item_uuid)
-                case _:
-                    raise ProjectDBError(
-                        f"Unsupported item_type, '{item_type}', "
-                        "for operation 'update_attributes'")
-
-            if model is None:
-                raise ProjectDBError(
-                    f"No item of type '{item_type}' with UUID '{item_uuid}' "
-                    "found in the database")
-
-            setattr(model, item['attr_name'], attr_value)
-            async with self.session_gen() as session:
-                session.add(model)
-                await session.commit()
-
-            res_items.append(item)
-
-        return res_items
+        model.is_trashed = value
+        async with self.session_gen() as session:
+            session.add(model)
+            await session.commit()
 
     async def get_projects_with_conf(self, domain, device_id):
         """

@@ -21,7 +21,7 @@ import pytest
 import pytest_asyncio
 from lxml import etree
 
-from karabo.native import Hash, HashList
+from karabo.native import Hash
 from karabo.project_db import (
     DATE_FORMAT, ProjectDBError, SQLDatabase, make_xml_if_needed)
 from karabo.project_db.testing import (
@@ -164,11 +164,10 @@ async def test_project_interface(database, subtests):
 
             # untrash
             h = Hash("uuid", uuid_proj,
+                     "domain", "LOCAL",
                      "item_type", item_type,
-                     "attr_name", "is_trashed",
-                     "attr_value", False)
-            hl = HashList([h])
-            await db.update_attributes(hl)
+                     "value", False)
+            await db.update_trashed(**h)
             items = await db.list_items('LOCAL', ['project'])
             nb_is_trashed = len([it for it in items
                                  if it["is_trashed"] == "true"])

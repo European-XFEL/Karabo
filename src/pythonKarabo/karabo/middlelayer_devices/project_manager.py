@@ -227,8 +227,8 @@ class ProjectManager(Device):
             return await self.slotLoadItems(params['items'])
         elif action_type == "listDomains":
             return await self.slotListDomains()
-        elif action_type == "updateAttribute":
-            return await self.slotUpdateAttribute(params['items'])
+        elif action_type == "updateTrashed":
+            return await self.slotUpdateTrashed(params)
         elif action_type == "saveItems":
             return await self.slotSaveItems(
                 params['items'], params.get('client', None))
@@ -447,35 +447,16 @@ class ProjectManager(Device):
             "get_projects_with_server", args["domain"], args["name"])
 
     @slot
-    async def slotUpdateAttribute(self, items):
+    async def slotUpdateTrashed(self, info) -> Hash:
         """
-        Update any attribute of given ``items`` in the database
-
-        :param items: list of Hashes containing information on which items
-                      to update. Each list entry should be a Hash containing
-
-                      - domain: domain the item resides at
-                      - uuid: the uuid of the item
-                      - item_type: indicate type of item which attribute should
-                                   be changed
-                      - attr_name: name of attribute which should be changed
-                      - attr_value: value of attribute which should be changed
-
-        :return: a list of Hashes where each entry has keys: domain, item_type,
-                 uuid, attr_name, attr_value
+        :returns: Hash with domain
         """
+        item = info["items"]
         async with self.db_handle as db_session:
-            hl = []
-            res = await db_session.update_attributes(items)
-            for r in res:
-                h = Hash('domain', r['domain'],
-                         'item_type', r['item_type'],
-                         'uuid', r['uuid'],
-                         'attr_name', r['attr_name'],
-                         'attr_value', r['attr_value'])
-                hl.append(h)
+            domain = item["domain"]
+            await db_session.update_trashed(**item)
 
-            return Hash('items', hl)
+        return Hash("domain", domain)
 
     @slot
     async def slotListProjectAndConfForDevice(self, domain, deviceId):
