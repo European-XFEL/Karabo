@@ -94,7 +94,6 @@ def test_pipeline_many_to_one():
     for i in range(n_threads):
         chanid = f'output{i}'
         out = OutputChannel.create(outputInstanceIdPre + str(i), chanid, oconf)
-        out.registerIOEventHandler(None)  # See test_pipeline_handlers
         outputs.append(out)
         outputIds.append(out.getInstanceId() + ':' + chanid)
 
@@ -220,10 +219,7 @@ def test_pipeline_connect_disconnect():
     sso = SignalSlotable("outputChannel" + str(uuid.uuid4()))
     sso.start()
 
-    def onOutputHandler(chan):
-        pass
-
-    out = sso.createOutputChannel("output", Hash("output"), onOutputHandler)
+    out = sso.createOutputChannel("output", Hash("output"))
     table = []
 
     # ConnectionsHandler
@@ -603,10 +599,7 @@ def test_pipeline_input_channel():
     sso = SignalSlotable("outputChannel" + str(uuid.uuid4()))
     sso.start()
 
-    def onOutputHandler(chan):
-        pass
-
-    out = sso.createOutputChannel("output", Hash("output"), onOutputHandler)
+    out = sso.createOutputChannel("output", Hash("output"))
 
     # Set up InputChannel
     ssi = SignalSlotable("inputChannel" + str(uuid.uuid4()))
@@ -687,32 +680,19 @@ def test_pipeline_handlers():
     # Test handlers that can be registered to input and output channels and
     # are not treated in other tests
 
-    # 1)
-    # onOutputHandler of output channel ('None' tested in ..._many_to_one)
+    # 1) Create output and input channels
     output = OutputChannel.create("output", "out", Hash())
     initCfg = output.getInitialConfiguration()
     # Since we have "default" as "hostname" property, channel address is
     # resolved to hostname
     assert initCfg["address"] == socket.gethostname()
-    outputIdInOutputHandler = None
-
-    def onOutputHandler(chan):
-        nonlocal outputIdInOutputHandler
-        outputIdInOutputHandler = chan.getInstanceId()
-
-    output.registerIOEventHandler(onOutputHandler)
 
     # Need connected input channel to get IO event to be handled
     inputChannel = createConnectedInput(InputChannel, "input", "in",
                                         Hash("onSlowness", "wait"), output)
 
-    output.write(Hash("data", "some"), ChannelMetaData("source", Timestamp()))
-    output.update()
-
-    assert outputIdInOutputHandler == output.getInstanceId()
-
     # 2)
-    # Now specify input handler, but 'None' as data and eos handlers
+    # Specify input handler, but 'None' as data and eos handlers
     # (vice versa tested in test_many_to_one)
     inputHandlerCalled = False
 
