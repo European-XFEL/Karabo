@@ -829,15 +829,10 @@ void exportPyXmsSignalSlotable(py::module_& m) {
                "either reply or report an error since no automatic reply will happen.")
           .def(
                 "createOutputChannel",
-                [](SignalSlotable& self, const std::string& channelName, const Hash& config,
-                   const py::object& onOutput) {
-                    SignalSlotable::OutputHandler out = SignalSlotable::OutputHandler();
-                    if (onOutput != py::none()) {
-                        out = HandlerWrap<const karabo::xms::OutputChannel::Pointer&>(onOutput, "IOEvent");
-                    }
-                    return self.createOutputChannel(channelName, config, out);
+                [](SignalSlotable& self, const std::string& channelName, const Hash& config) {
+                    return self.createOutputChannel(channelName, config);
                 },
-                py::arg("channelName"), py::arg("configuration"), py::arg("handler") = py::none())
+                py::arg("channelName"), py::arg("configuration"))
           .def("createInputChannel", &SignalSlotableWrap::createInputChannelPy, py::arg("channelName"),
                py::arg("configuration"), py::arg("onData") = py::none(), py::arg("onInput") = py::none(),
                py::arg("onEndOfStream") = py::none(), py::arg("connectionTracker") = py::none())
