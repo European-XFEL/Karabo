@@ -1898,8 +1898,7 @@ namespace karabo {
 
 
         OutputChannel::Pointer SignalSlotable::createOutputChannel(const std::string& channelName,
-                                                                   const karabo::data::Hash& config,
-                                                                   const OutputHandler& onOutputPossibleHandler) {
+                                                                   const karabo::data::Hash& config) {
             if (!config.has(channelName))
                 throw KARABO_PARAMETER_EXCEPTION(
                       "The provided configuration must contain the channel name as key in the configuration");
@@ -1910,9 +1909,6 @@ namespace karabo {
             channel->setInstanceIdAndName(m_instanceId, channelName);
             channel->initialize();
 
-            if (onOutputPossibleHandler) {
-                channel->registerIOEventHandler(onOutputPossibleHandler);
-            }
             {
                 std::lock_guard<std::mutex> lock(m_pipelineChannelsMutex);
                 OutputChannel::Pointer& previous = m_outputChannels[channelName];

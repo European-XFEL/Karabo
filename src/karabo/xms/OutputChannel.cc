@@ -368,12 +368,6 @@ namespace karabo {
         }
 
 
-        void OutputChannel::registerIOEventHandler(
-              const std::function<void(const OutputChannel::Pointer&)>& ioEventHandler) {
-            m_ioEventHandler = ioEventHandler;
-        }
-
-
         karabo::data::Hash OutputChannel::getInformation() const {
             return karabo::data::Hash("connectionType", "tcp", "hostname", m_hostname, "port", m_port);
         }
@@ -703,10 +697,8 @@ namespace karabo {
                     return;
                 }
                 pushShareNext(instanceId);
-                lock.unlock(); // before calling registered handler in triggerIOEvent
                 KARABO_LOG_FRAMEWORK_TRACE << this->debugId() << " New (shared) input on instance " << instanceId
                                            << " available for writing ";
-                this->triggerIOEvent(); // now could also come for EOS...
                 return;
             }
 
@@ -738,10 +730,8 @@ namespace karabo {
                     return;
                 }
                 pushCopyNext(instanceId);
-                lock.unlock(); // One never knows what handlers are registered for io event...
                 KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " New (copied) input on instance " << instanceId
                                            << " available for writing ";
-                this->triggerIOEvent();
                 return;
             }
             KARABO_LOG_FRAMEWORK_WARN << this->debugId() << " An input channel (" << instanceId
@@ -857,23 +847,6 @@ namespace karabo {
                 }
             }
             updateConnectionTable();
-        }
-
-
-        void OutputChannel::triggerIOEvent() {
-            using namespace karabo::net;
-            try {
-                if (m_ioEventHandler) {
-                    OutputChannel::Pointer self = shared_from_this();
-                    m_ioEventHandler(self);
-                }
-            } catch (karabo::data::Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "\"triggerIOEvent\" Exception code #" << e.detailedMsg();
-                KARABO_RETHROW;
-            } catch (const std::exception& ex) {
-                KARABO_LOG_FRAMEWORK_ERROR << "\"triggerIOEvent\" exception -- " << ex.what();
-                // throw KARABO_SYSTEM_EXCEPTION(string("\"triggerIOEvent\" exception -- ") + ex.what());
-            }
         }
 
 

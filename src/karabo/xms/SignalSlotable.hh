@@ -94,8 +94,6 @@ namespace karabo {
 
             typedef InputChannel::InputHandler InputHandler;
 
-            typedef std::function<void(const OutputChannel::Pointer&)> OutputHandler;
-
             typedef std::shared_ptr<karabo::xms::Slot> SlotInstancePointer;
 
             typedef std::shared_ptr<karabo::xms::Signal> SignalInstancePointer;
@@ -458,13 +456,11 @@ namespace karabo {
              * @param channelName the name for the channel
              * @param config must have a Hash at key channelName - that is passed (after removeal of the "schema" key)
              *                                                     to Configurator<OutputChannel>::create
-             * @param onOutputPossibleHandler ?
              * @return pointer to created channel - do not store anywhere!
              *        If needed, retrieve again via getOutputChannel(channelName).
              */
-            virtual OutputChannel::Pointer createOutputChannel(
-                  const std::string& channelName, const karabo::data::Hash& config,
-                  const OutputHandler& onOutputPossibleHandler = OutputHandler());
+            virtual OutputChannel::Pointer createOutputChannel(const std::string& channelName,
+                                                               const karabo::data::Hash& config);
 
             /**
              * Remove the OutputChannel created via createOutputChannel
