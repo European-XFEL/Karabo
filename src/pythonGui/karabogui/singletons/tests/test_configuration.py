@@ -43,12 +43,10 @@ class MockSettings:
 def test_configuration_namespace():
     config = Configuration()
     config['broker_topic'] = 'FXE'
-    config['device_domain'] = 'CAS_INTERNAL'
     config['domain'] = 'CAS_INTERNAL'
     config['db_token'] = 'expert'
-    assert len(config) == 21
+    assert len(config) == 20
     assert config['db_token'] == 'expert'
-    assert config['device_domain'] == 'CAS_INTERNAL'
     assert config['domain'] == 'CAS_INTERNAL'
 
     keys = [
@@ -58,7 +56,6 @@ def test_configuration_namespace():
         'data_dir',
         'db_token',
         'development',
-        'device_domain',
         'domain',
         'gui_servers',
         'highDPI',
@@ -147,10 +144,9 @@ def test_configuration_groups_info():
     assert 'username' in network_group
     assert 'gui_servers' in network_group
     project_group = [item.name for item in groups[PROJECT]]
-    assert len(project_group) == 3
+    assert len(project_group) == 2
     assert 'db_token' in project_group
     assert 'domain' in project_group
-    assert 'device_domain' in project_group
     dir_group = [item.name for item in groups[DIRECTORIES]]
     assert len(dir_group) == 1
     assert 'data_dir' in dir_group

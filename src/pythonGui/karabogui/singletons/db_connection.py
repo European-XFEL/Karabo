@@ -141,10 +141,21 @@ class ProjectDatabaseConnection(QObject):
 
     def get_projects_with_device(self, domain, device_id):
         """ Find projects which contain configurations for a given device.
-            Don't use the local cache.
         """
         self.network.onProjectListProjectsWithDevice(
             self.project_manager, domain, device_id)
+
+    def get_projects_with_macro(self, domain: str, macro_id: str):
+        """ Find projects which contain configurations for a given device.
+        """
+        self.network.onProjectListProjectsWithMacro(
+            self.project_manager, domain, macro_id)
+
+    def get_projects_with_server(self, domain: str, server_id: str):
+        """ Find projects which contain configurations for a given server.
+        """
+        self.network.onProjectListProjectsWithServer(
+            self.project_manager, domain, server_id)
 
     def retrieve(self, domain, uuid, existing=None):
         """Read an object from the database.

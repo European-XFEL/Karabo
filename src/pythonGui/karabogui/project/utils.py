@@ -236,20 +236,20 @@ def load_project(is_subproject=False, parent=None):
     return None
 
 
-def load_project_with_device(parent=None):
+def load_project_with_item(parent=None):
     """Load a project with a device specified by the user from the project
     database.
     """
-    from karabogui.project.dialog.load_project_with_device import (
-        LoadProjectWithDeviceDialog)
-    device_domain = get_config()["device_domain"]
-    dialog = LoadProjectWithDeviceDialog(
-        initial_domain=device_domain, parent=parent)
+    from karabogui.project.dialog.load_project_with_item import (
+        LoadProjectWithDialog)
+    domain = get_config()["domain"]
+    dialog = LoadProjectWithDialog(
+        domain=domain, parent=parent)
     result = dialog.exec()
     if result == QDialog.Accepted:
         domain = dialog.selected_domain()
         uuid = dialog.selected_project_id()
-        get_config()["device_domain"] = domain
+        get_config()["domain"] = domain
         if domain is not None and uuid is not None:
             db_conn = get_db_conn()
             model = ProjectModel(uuid=uuid)

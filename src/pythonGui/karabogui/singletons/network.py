@@ -524,8 +524,20 @@ class Network(QObject):
     def onProjectListProjectsWithDevice(self, project_manager,
                                         domain, device_id):
         self._request_project_message(
-            "listProjectsWithDevice", "projectListProjectsWithDevice",
-            timeout=120, device_id=device_id, domain=domain)
+            "listProjectsWithDevice", "projectListProjectsWithItem",
+            timeout=120, name=device_id, domain=domain)
+
+    def onProjectListProjectsWithMacro(self, project_manager,
+                                       domain, macro_id):
+        self._request_project_message(
+            "listProjectsWithMacro", "projectListProjectsWithItem",
+            timeout=120, name=macro_id, domain=domain)
+
+    def onProjectListProjectsWithServer(self, project_manager,
+                                        domain, server_id):
+        self._request_project_message(
+            "listProjectsWithServer", "projectListProjectsWithItem",
+            timeout=120, name=server_id, domain=domain)
 
     def onProjectLoadItems(self, project_manager, items):
         self._request_project_message(
