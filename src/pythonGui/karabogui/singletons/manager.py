@@ -51,11 +51,6 @@ def project_db_handler(fall_through=False):
             if not success:
                 error, details = get_reason_parts(reason)
                 messagebox.show_error(error, details=details)
-            elif not reply.get("success", True):
-                success = False
-                reason = reply.get("reason")
-                error, details = get_reason_parts(reason)
-                messagebox.show_error(error, details=details)
             if fall_through or success:
                 return handler(self, success, request, reply, reason=reason)
 
@@ -700,10 +695,15 @@ class Manager(QObject):
         broadcast_event(KaraboEvent.ProjectItemsSaved, data)
 
     @project_db_handler()
-    def handle_projectUpdateAttribute(self, success, request, reply,
-                                      reason=""):
-        data = {'items': reply['items']}
-        broadcast_event(KaraboEvent.ProjectAttributeUpdated, data)
+    def handle_projectUpdateTrashed(self, success, request, reply,
+                                    reason=""):
+        if not success:
+            reason, details = get_reason_parts(reason)
+            messagebox.show_error(reason, details=details)
+            return
+
+        data = {"domain": reply["domain"]}
+        broadcast_event(KaraboEvent.ProjectTrashed, data)
 
     def handle_projectUpdate(self, **info):
         """Handle the project update signal from the project manager

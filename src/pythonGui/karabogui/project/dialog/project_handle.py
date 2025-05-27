@@ -128,7 +128,7 @@ class LoadProjectDialog(QDialog):
         self.event_map = {
             KaraboEvent.ProjectItemsList: self._event_item_list,
             KaraboEvent.ProjectDomainsList: self._event_domain_list,
-            KaraboEvent.ProjectAttributeUpdated: self._event_attribute
+            KaraboEvent.ProjectTrashed: self._event_trashed
         }
         register_for_broadcasts(self.event_map)
 
@@ -148,17 +148,9 @@ class LoadProjectDialog(QDialog):
     def _event_domain_list(self, data):
         self._domains_updated(data.get('items', []))
 
-    def _event_attribute(self, data):
-        items = data.get('items', [])
-        for it in items:
-            if (it.get('attr_name') != 'is_trashed'
-                    and it.get('item_type') != 'project'):
-                continue
-            if not it.get('success', True):
-                messagebox.show_error(it['reason'], parent=self)
-                break
-            domain = it.get('domain')
-            self.on_cbDomain_currentIndexChanged(domain)
+    def _event_trashed(self, data):
+        domain = data.get('domain', "")
+        self.on_cbDomain_currentIndexChanged(domain)
 
     # -----------------------------------------------------------------------
 
@@ -291,8 +283,8 @@ class LoadProjectDialog(QDialog):
         """
         if show_trash_project_message(current_is_trashed, parent=self):
             db_conn = get_db_conn()
-            db_conn.update_attribute(domain, 'project', uuid, 'is_trashed',
-                                     str(not current_is_trashed).lower())
+            db_conn.update_trashed(domain, 'project', uuid, 'is_trashed',
+                                   current_is_trashed)
             # NOTE: The view update is happening asynchronously. Once we get
             # a reply from the GUI server, we request a new view
 

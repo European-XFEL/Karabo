@@ -351,9 +351,8 @@ class ProjectView(QTreeView):
         if msg_box.exec() == QMessageBox.Yes:
             project.is_trashed = not project.is_trashed
             db_conn = get_db_conn()
-            db_conn.update_attribute(db_conn.default_domain, 'project',
-                                     project.uuid, 'is_trashed',
-                                     str(project.is_trashed).lower())
+            db_conn.update_trashed(db_conn.default_domain, 'project',
+                                   project.uuid, project.is_trashed)
             # We directly save on attribute update!
             save_object(project)
 

@@ -187,7 +187,7 @@ def test_socket_connect_login_protocol(mocker, subtests, gui_app):
             assert receiver.last_hash["args.items"] == items
             assert receiver.last_hash["args.client"] is not None
 
-            network.onProjectUpdateAttribute(project_manager, items)
+            network.onProjectUpdateTrashed(project_manager, items)
             _trigger_message_parse()
             assert receiver.last_hash["type"] == "requestGeneric"
             assert receiver.last_hash["instanceId"] == project_manager
