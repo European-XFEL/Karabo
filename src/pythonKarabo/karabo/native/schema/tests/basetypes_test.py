@@ -22,8 +22,8 @@ import numpy
 import pint
 
 from karabo.native import (
-    BoolValue, EncodingType, EnumValue, Float, Hash, HashList, ImageData,
-    Int32, KaraboValue, MetricPrefix, NoneValue, QuantityValue, StringValue,
+    BoolValue, Encoding, EnumValue, Float, Hash, HashList, ImageData, Int32,
+    KaraboValue, MetricPrefix, NoneValue, QuantityValue, StringValue,
     TableValue, Timestamp, Unit, VectorCharValue, VectorFloat,
     VectorStringValue, encodeBinary, isSet, isStringSet, unit_registry as unit,
     wrap)
@@ -758,7 +758,7 @@ class Tests(TestCase):
 
         image = ImageData(numpy.zeros(shape=(1000, 1000, 2),
                                       dtype=numpy.uint64),
-                          encoding=EncodingType.RGB,
+                          encoding=Encoding.RGB,
                           flipX=True)
 
         arrayEqual(image.value, numpy.zeros(shape=(1000, 1000, 2),
@@ -776,7 +776,7 @@ class Tests(TestCase):
         arrayEqual(image.binning, numpy.array([1, 1, 1], dtype=numpy.uint64))
         self.assertEqual(image.binning.dtype, numpy.uint64)
 
-        self.assertEqual(image.encoding, EncodingType.RGB.value)
+        self.assertEqual(image.encoding, Encoding.RGB.value)
         self.assertEqual(image.encoding.dtype, numpy.int32)
         self.assertEqual(image.flipX, True)
         self.assertEqual(image.flipY, False)

@@ -21,7 +21,7 @@ from qtpy.QtWidgets import QGraphicsTextItem
 
 from karabo.common.scenemodel.api import (
     CrossROIData, ImageGraphModel, RectROIData)
-from karabo.native import EncodingType
+from karabo.native import Encoding
 from karabogui.binding.builder import build_binding
 from karabogui.binding.config import apply_configuration
 from karabogui.binding.proxy import DeviceProxy, PropertyProxy
@@ -195,7 +195,7 @@ def test_value_update(image_graph_setup):
     _assert_gray_features(controller, enabled=True)
 
     # Test update with dim=3, encoding=RGB
-    image_hash = get_image_hash(dimZ=3, encoding=EncodingType.RGB,
+    image_hash = get_image_hash(dimZ=3, encoding=Encoding.RGB,
                                 stack_axis=False)
     apply_configuration(image_hash, output_proxy.binding)
     _assert_gray_features(controller, enabled=False)
