@@ -369,15 +369,15 @@ def test_init_device_badschema(mocker):
 
 
 def test_project_db_handler(mocker):
-    bad_result = Hash('success', False, 'value', 1, 'reason', 'error_msg')
-    good_result = Hash('success', True, 'value', 1)
+    bad_result = Hash('value', 1, 'reason', 'error_msg')
+    good_result = Hash('value', 1)
     target = 'karabogui.singletons.manager.messagebox'
     msg_box = mocker.patch(target)
     # this creates a function wrapped by the handler that returns
     # the input data
     request = Hash()
     handler = make_project_db_handler(False)
-    handler('placeholder', True, request, bad_result, reason="")
+    handler('placeholder', False, request, bad_result, reason="error_msg")
     # error shown in case of bad result
     msg_box.show_error.assert_called_with('error_msg', details=None)
 
@@ -464,13 +464,13 @@ def test_handle_project_list_domains(gui_app, mocker):
 
 def test_handle_project_load_items(gui_app, mocker):
     manager = Manager()
-    h = Hash('success', False, 'items', ['load_me'], 'reason', 'U SUCK')
+    h = Hash('items', ['load_me'], 'reason', 'we failed')
 
     broadcast = 'karabogui.singletons.manager.broadcast_event'
     messagebox = 'karabogui.singletons.manager.messagebox'
     broadcast_event = mocker.patch(broadcast)
     mocker.patch(messagebox)
-    manager.handle_projectLoadItems(True, Hash(), h)
+    manager.handle_projectLoadItems(False, Hash(), h)
     broadcast_event.assert_called_with(
         KaraboEvent.ProjectItemsLoaded,
         {'success': False, 'items': ['load_me']}
@@ -490,16 +490,16 @@ def test_handle_project_save_items(gui_app, mocker):
     )
 
 
-def test_handle_project_update_attribute(gui_app, mocker):
+def test_handle_project_update_trashed(gui_app, mocker):
     manager = Manager()
-    h = Hash('success', True, 'items', ['new_stuff'])
+    h = Hash('domain', "CONTROLS")
 
     target = 'karabogui.singletons.manager.broadcast_event'
     broadcast_event = mocker.patch(target)
-    manager.handle_projectUpdateAttribute(True, Hash(), h)
+    manager.handle_projectUpdateTrashed(True, Hash(), h)
     broadcast_event.assert_called_with(
-        KaraboEvent.ProjectAttributeUpdated,
-        {'items': ['new_stuff']}
+        KaraboEvent.ProjectTrashed,
+        {'domain': 'CONTROLS'}
     )
 
 

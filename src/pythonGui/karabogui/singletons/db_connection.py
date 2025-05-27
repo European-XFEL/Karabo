@@ -174,13 +174,13 @@ class ProjectDatabaseConnection(QObject):
         """
         self._push_writing(domain, uuid, obj)
 
-    def update_attribute(self, domain, item_type, uuid, attr_name, attr_value):
+    def update_trashed(self, domain, item_type, uuid, attr_value):
         """ Update any attribute of the of the object
         """
-        item = Hash('domain', domain, 'item_type', item_type, 'uuid', uuid,
-                    'attr_name', attr_name, 'attr_value', attr_value)
-        # XXX: TODO send project items
-        self.network.onProjectUpdateAttribute(self.project_manager, [item])
+        assert item_type == "project"
+        item = Hash('domain', domain, 'uuid', uuid, 'value', attr_value,
+                    'item_type', item_type)
+        self.network.onProjectUpdateTrashed(self.project_manager, items=item)
 
     @property
     def default_domain(self):
