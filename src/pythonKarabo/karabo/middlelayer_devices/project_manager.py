@@ -140,27 +140,20 @@ class ProjectManager(Device):
         self.logger.debug('Requesting scene directly from database!')
 
         name = params.get('name', default='')
-        # Note: Token used for Karabo >=2.13
         domain = params.get('domain')
         uuid = [params.get('uuid')]
 
-        # Start filling the payload Hash
-        # ----------------------------------------
         payload = Hash('success', False)
         payload.set('name', name)
         async with self.db_handle as db_session:
-            try:
-                items = await db_session.load_item(domain, uuid)
-                for item in items:
-                    xml = item['xml']
-                    item_type = etree.fromstring(xml).get('item_type')
-                    if item_type == 'scene':
-                        scene = read_project_model(StringIO(xml))
-                        payload.set('data', write_scene(scene))
-                        payload.set('success', True)
-            except ProjectDBError as e:
-                self.logger.debug('ProjectDBError in directly loading '
-                                  'database scene: {}'.format(e))
+            items = await db_session.load_item(domain, uuid)
+            for item in items:
+                xml = item['xml']
+                item_type = etree.fromstring(xml).get('item_type')
+                if item_type == 'scene':
+                    scene = read_project_model(StringIO(xml))
+                    payload.set('data', write_scene(scene))
+                    payload.set('success', True)
 
         return Hash('type', 'deviceScene',
                     'origin', self.deviceId,
@@ -188,16 +181,17 @@ class ProjectManager(Device):
         project_uuids = []
         async with self.db_handle as db_session:
             for item in items:
-                xml = item.get("xml")
+                xml = item["xml"]
                 # Remove XML data to not send it back
                 item['xml'] = ''
-                uuid = item.get("uuid")
+                uuid = item["uuid"]
                 # XXX: be backward compatible (<2.8.0)!
                 item_type = item.get("item_type", "unknown")
                 if item_type == "project":
                     project_uuids.append(uuid)
-                domain = item.get("domain")
-                exceptionReason = ""
+
+                domain = item["domain"]
+                reason = ""
                 success = True
                 meta = None
                 # All items have their individual success bool
@@ -207,9 +201,9 @@ class ProjectManager(Device):
                     meta = dictToHash(meta)
                 except ProjectDBError as e:
                     success = False
-                    exceptionReason = str(e)
+                    reason = str(e)
                 item.set("success", success)
-                item.set("reason", exceptionReason)
+                item.set("reason", reason)
                 item.set("entry", meta)
                 saved_items.append(item)
 
@@ -304,12 +298,12 @@ class ProjectManager(Device):
         """
         self.logger.debug("Loading items: {}"
                           .format([i.get("uuid") for i in items]))
-        loadedItems = []
+        loaded_items = []
         async with self.db_handle as db_session:
             # verify that items belong to single domain
-            domain = items[0].get("domain")
-            keys = [it.get('uuid') for it in items
-                    if it.get('domain') == domain]
+            domain = items[0]["domain"]
+            keys = [it['uuid'] for it in items
+                    if it['domain'] == domain]
             assert len(keys) == len(items), "Incorrect domain given!"
 
             items = await db_session.load_item(domain, keys)
@@ -318,7 +312,7 @@ class ProjectManager(Device):
                 h = Hash("domain", domain,
                          "uuid", uuid,
                          "xml", item["xml"])
-                loadedItems.append(h)
+                loaded_items.append(h)
                 # Remove from the list of requested keys
                 keys.remove(uuid)
 
@@ -326,7 +320,7 @@ class ProjectManager(Device):
             if len(keys) > 0:
                 raise ProjectDBError(f'Items "{keys}" not found!')
 
-        return Hash('items', loadedItems)
+        return Hash('items', loaded_items)
 
     @slot
     async def slotListItems(self, domain: str, item_types: list | None = None):
@@ -371,11 +365,13 @@ class ProjectManager(Device):
             res = await db_session.list_named_items(
                 domain, item_type, simple_name)
             for r in res:
+                item_type = r['item_type']
                 h = Hash('uuid', r['uuid'],
-                         'item_type', r['item_type'],
+                         'item_type', item_type,
                          'simple_name', r['simple_name'],
-                         'is_trashed', r['is_trashed'],
                          'date', r['date'])
+                if item_type == PROJECT_DB_TYPE_PROJECT:
+                    h['is_trashed'] = r['is_trashed']
                 hl.append(h)
             hl.sort(key=lambda x: x['date'])
         return Hash('items', hl)
