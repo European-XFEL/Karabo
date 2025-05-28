@@ -17,8 +17,7 @@ import numpy
 
 from karabo.common.api import KARABO_HASH_CLASS_ID
 from karabo.native.data import (
-    AccessMode, DaqDataType, EncodingType, Hash, NodeType, Unit,
-    dtype_from_number)
+    AccessMode, DaqDataType, Encoding, Hash, NodeType, Unit, dtype_from_number)
 
 from .basetypes import ImageData, NoneValue
 from .configurable import Configurable
@@ -116,7 +115,7 @@ class Image(Type):
             displayedName="Image"
             shape=(2600, 2000),
             dtype=UInt8,
-            encoding=EncodingType.GRAY)
+            encoding=Encoding.GRAY)
 
     The `dtype` can be provided with a simple Karabo descriptor or the numpy
     dtype, e.g. numpy.uint8.
@@ -126,7 +125,7 @@ class Image(Type):
     defaultValue = Hash()
 
     def __init__(self, data=None, dtype=None, shape=None,
-                 encoding=EncodingType.GRAY, daqDataType=DaqDataType.TRAIN,
+                 encoding=Encoding.GRAY, daqDataType=DaqDataType.TRAIN,
                  **kwargs):
         if dtype is not None and shape is not None:
             if isinstance(dtype, type) and issubclass(dtype, Simple):
