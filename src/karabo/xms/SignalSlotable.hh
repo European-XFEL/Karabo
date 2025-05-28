@@ -456,11 +456,14 @@ namespace karabo {
              * @param channelName the name for the channel
              * @param config must have a Hash at key channelName - that is passed (after removeal of the "schema" key)
              *                                                     to Configurator<OutputChannel>::create
+             * @param dataSchema if not (as the default) empty, data written to is validated against this (at least
+             * once)
              * @return pointer to created channel - do not store anywhere!
              *        If needed, retrieve again via getOutputChannel(channelName).
              */
-            virtual OutputChannel::Pointer createOutputChannel(const std::string& channelName,
-                                                               const karabo::data::Hash& config);
+            virtual OutputChannel::Pointer createOutputChannel(
+                  const std::string& channelName, const karabo::data::Hash& config,
+                  const karabo::data::Schema& dataSchema = karabo::data::Schema());
 
             /**
              * Remove the OutputChannel created via createOutputChannel

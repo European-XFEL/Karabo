@@ -829,10 +829,10 @@ void exportPyXmsSignalSlotable(py::module_& m) {
                "either reply or report an error since no automatic reply will happen.")
           .def(
                 "createOutputChannel",
-                [](SignalSlotable& self, const std::string& channelName, const Hash& config) {
-                    return self.createOutputChannel(channelName, config);
+                [](SignalSlotable& self, const std::string& channelName, const Hash& config, const Schema& dataSchema) {
+                    return self.createOutputChannel(channelName, config, dataSchema);
                 },
-                py::arg("channelName"), py::arg("configuration"))
+                py::arg("channelName"), py::arg("configuration"), py::arg("dataSchema") = Schema())
           .def("createInputChannel", &SignalSlotableWrap::createInputChannelPy, py::arg("channelName"),
                py::arg("configuration"), py::arg("onData") = py::none(), py::arg("onInput") = py::none(),
                py::arg("onEndOfStream") = py::none(), py::arg("connectionTracker") = py::none())

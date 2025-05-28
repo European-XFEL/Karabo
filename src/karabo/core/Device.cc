@@ -1010,7 +1010,8 @@ namespace karabo {
         void Device::prepareOutputChannel(const std::string& path) {
             KARABO_LOG_FRAMEWORK_INFO << "'" << this->getInstanceId() << "' creates output channel '" << path << "'";
             try {
-                karabo::xms::OutputChannel::Pointer channel = createOutputChannel(path, m_parameters);
+                karabo::xms::OutputChannel::Pointer channel =
+                      createOutputChannel(path, m_parameters, m_fullSchema.subSchema(path + ".schema"));
                 if (!channel) {
                     KARABO_LOG_FRAMEWORK_ERROR << "*** 'createOutputChannel' for channel name '" << path
                                                << "' failed to create output channel";
