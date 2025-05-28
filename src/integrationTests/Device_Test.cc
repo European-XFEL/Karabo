@@ -433,6 +433,7 @@ void Device_Test::appTestRunner() {
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     // Now all possible individual tests.
+    testLockClearLock();
     testInstanceInfoServer();
     testGetTimestampSystemInfo();
     testSchemaInjection();
@@ -458,6 +459,21 @@ void Device_Test::appTestRunner() {
     m_deviceClient->killDeviceNoWait("TestDevice");
     testBadInit();
 }
+
+
+void Device_Test::testLockClearLock() {
+    std::clog << "\nTesting lock and slotClearLock of device: " << std::flush;
+    const std::string deviceId("TestDevice");
+    const Hash cfg(m_deviceClient->get(deviceId));
+    m_deviceClient->set("TestDevice", "lockedBy", "Anything");
+    CPPUNIT_ASSERT_THROW(m_deviceClient->set("TestDevice", "lockedBy", "Change"), karabo::data::RemoteException);
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(deviceId, "slotClearLock"));
+    m_deviceClient->set("TestDevice", "lockedBy", m_deviceClient->getInstanceId());
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->set("TestDevice", "lockedBy", ""));
+
+    std::clog << "OK." << std::endl;
+};
+
 
 void Device_Test::testInstanceInfoServer() {
     std::clog << "\nTesting instanceInfo and configuration round trip for deviceServer " << std::flush;

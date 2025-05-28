@@ -22,7 +22,6 @@
 #include <memory>
 
 #include "HandlerWrap.hh"
-#include "PyCoreLockWrap.hh"
 #include "Wrapper.hh"
 
 
@@ -164,31 +163,6 @@ namespace karabind {
             py::gil_scoped_release release;
             this->karabo::core::DeviceClient::killServerNoWait(serverId);
         }
-
-        std::shared_ptr<LockWrap> lockPy(const std::string& deviceId, bool recursive, int timeout) {
-            // non waiting request for lock
-
-            if (timeout == 0) {
-                return std::make_shared<LockWrap>(
-                      std::make_shared<karabo::core::Lock>(m_signalSlotable, deviceId, recursive));
-            }
-
-            // timeout was given
-            const int waitTime = 1; // second
-            int nTries = 0;
-            while (true) {
-                try {
-                    return std::make_shared<LockWrap>(
-                          std::make_shared<karabo::core::Lock>(m_signalSlotable, deviceId, recursive));
-                } catch (const karabo::data::LockException& e) {
-                    if (nTries++ > timeout / waitTime && timeout != -1) {
-                        KARABO_RETHROW;
-                    }
-                    // otherwise pass through and try again
-                    std::this_thread::sleep_for(std::chrono::seconds(waitTime));
-                }
-            }
-        }
     };
 } // namespace karabind
 
@@ -212,10 +186,6 @@ void exportPyCoreDeviceClient(py::module_& m) {
           .def(py::init<std::shared_ptr<SignalSlotable>&>())
 
           .def("getInstanceId", &DeviceClientWrap::getInstanceId)
-
-          .def("login", &DeviceClientWrap::login)
-
-          .def("logout", &DeviceClientWrap::logout)
 
           .def("setInternalTimeout", &DeviceClientWrap::setInternalTimeout, py::arg("internalTimeout"))
 
@@ -859,8 +829,5 @@ void exportPyCoreDeviceClient(py::module_& m) {
                     }
                     return py::cast(std::move(names));
                 },
-                py::arg("deviceId"))
-
-          .def("lock", &DeviceClientWrap::lockPy, py::arg("deviceId"), py::arg("recursive") = false,
-               py::arg("timeout") = -1);
+                py::arg("deviceId"));
 }

@@ -34,7 +34,6 @@
 #include <unordered_set>
 
 #include "DeviceClient.hh"
-#include "Lock.hh"
 #include "karabo/data/schema/AlarmConditionElement.hh"
 #include "karabo/data/schema/OverwriteElement.hh"
 #include "karabo/data/schema/SimpleElement.hh"

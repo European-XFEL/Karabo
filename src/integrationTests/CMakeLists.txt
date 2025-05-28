@@ -50,7 +50,6 @@ target_link_libraries(
 set(INTEGRATION_TEST_TARGETS
     dataLoggingIntegrTestRunner
     deviceIntegrTestRunner
-    deviceLockingIntegrTestRunner
     guiServerIntegrTestRunner
     pipelinedProcessingIntegrTestRunner
     propertyTestIntegrTestRunner
@@ -70,11 +69,6 @@ set(deviceIntegrTestRunner_FILES
     $<TARGET_OBJECTS:INTEGRATION_RUNNER>
 )
 
-set(deviceLockingIntegrTestRunner_FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/LockTestDevice.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/LockTest_Test.cc
-    $<TARGET_OBJECTS:INTEGRATION_RUNNER>
-)
 
 set(guiServerIntegrTestRunner_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/GuiServer_Test.cc
