@@ -57,7 +57,6 @@ void exportPyXmsInputOutputChannel(py::module_&); // PyXmsInputOutputChannel.cc
 
 // core
 void exportPyCoreDeviceClient(py::module_&); // PyCoreDeviceClient.cc
-void exportPyCoreLock(py::module_&);         // PyCoreLockWrap.cc
 
 // log
 void exportPyLogLogger(py::module_&); // PyLogLogger.cc
@@ -107,7 +106,6 @@ PYBIND11_MODULE(karabind, m) {
 
     // core
     exportPyCoreDeviceClient(m);
-    exportPyCoreLock(m);
 
     // log
     exportPyLogLogger(m);

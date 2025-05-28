@@ -904,7 +904,7 @@ namespace karabo {
         std::vector<std::string> DeviceClient::getCurrentlySettableProperties(const std::string& deviceId) {
             KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN(vector<string>());
             Schema schema = cacheAndGetActiveSchema(deviceId);
-            int accessLevel = getAccessLevel(deviceId);
+            int accessLevel = karabo::data::Schema::EXPERT;
             return filterProperties(schema, accessLevel);
         }
 
@@ -912,7 +912,7 @@ namespace karabo {
         std::vector<std::string> DeviceClient::getProperties(const std::string& deviceId) {
             KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN(vector<string>());
             Schema schema = cacheAndGetDeviceSchema(deviceId);
-            int accessLevel = getAccessLevel(deviceId);
+            int accessLevel = karabo::data::Schema::EXPERT;
             return filterProperties(schema, accessLevel);
         }
 
@@ -921,7 +921,7 @@ namespace karabo {
                                                                   const std::string& classId) {
             KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN(vector<string>());
             Schema schema = cacheAndGetClassSchema(serverId, classId);
-            int accessLevel = getAccessLevel(classId);
+            int accessLevel = karabo::data::Schema::EXPERT;
             return filterProperties(schema, accessLevel);
         }
 
@@ -2151,23 +2151,6 @@ namespace karabo {
         }
 
 
-        bool DeviceClient::login(const std::string& username, const std::string& password,
-                                 const std::string& provider) {
-            // TODO: Dirty hack for now, proper authentication later
-            if (username == "user") m_accessLevel = karabo::data::Schema::OPERATOR;
-            if (username == "operator") m_accessLevel = karabo::data::Schema::OPERATOR;
-            if (username == "expert") m_accessLevel = karabo::data::Schema::EXPERT;
-            if (username == "admin") m_accessLevel = karabo::data::Schema::EXPERT;
-            return true;
-        }
-
-
-        bool DeviceClient::logout() {
-            // TODO: Dirty hack for now, proper authentication later
-            return true;
-        }
-
-
         std::string DeviceClient::getInstanceType(const karabo::data::Hash& instanceInfo) const {
             boost::optional<const Hash::Node&> node = instanceInfo.find("type");
             string type("unknown");
@@ -2187,32 +2170,6 @@ namespace karabo {
             const Schema& schema = cacheAndGetDeviceSchema(deviceId);
             const Hash& schemaHash = schema.getParameterHash();
             return schemaHash.get<Hash>(outputChannelName + ".schema");
-        }
-
-
-        karabo::core::Lock DeviceClient::lock(const std::string& deviceId, bool recursive, int timeout) {
-            // non waiting request for lock
-            if (timeout == 0) return karabo::core::Lock(m_signalSlotable, deviceId, recursive);
-
-            // timeout was given
-            const int waitTime = 1; // second
-            int nTries = 0;
-            while (true) {
-                try {
-                    return karabo::core::Lock(m_signalSlotable, deviceId, recursive);
-                } catch (const karabo::data::LockException& e) {
-                    if (nTries++ > timeout / waitTime && timeout != -1) {
-                        KARABO_RETHROW;
-                    }
-                    // otherwise pass through and try again
-                    std::this_thread::sleep_for(seconds(waitTime));
-                }
-            }
-        }
-
-
-        int DeviceClient::getAccessLevel(const std::string& deviceId) {
-            return m_accessLevel;
         }
 
 
