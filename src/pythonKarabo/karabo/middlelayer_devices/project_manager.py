@@ -17,6 +17,10 @@ from io import StringIO
 
 from lxml import etree
 
+from karabo.common.project.api import (
+    PROJECT_DB_TYPE_DEVICE_CONFIG, PROJECT_DB_TYPE_DEVICE_INSTANCE,
+    PROJECT_DB_TYPE_DEVICE_SERVER, PROJECT_DB_TYPE_MACRO,
+    PROJECT_DB_TYPE_PROJECT, PROJECT_DB_TYPE_SCENE)
 from karabo.common.scenemodel.api import write_scene
 from karabo.common.states import State
 from karabo.middlelayer import (
@@ -26,6 +30,15 @@ from karabo.middlelayer.signalslot import Signal
 from karabo.native import read_project_model
 from karabo.project_db import (
     ExistDbNode, LocalNode, ProjectDBError, RemoteNode)
+
+_ITEM_TYPES = (
+    PROJECT_DB_TYPE_DEVICE_CONFIG,
+    PROJECT_DB_TYPE_DEVICE_INSTANCE,
+    PROJECT_DB_TYPE_DEVICE_SERVER,
+    PROJECT_DB_TYPE_MACRO,
+    PROJECT_DB_TYPE_PROJECT,
+    PROJECT_DB_TYPE_SCENE
+)
 
 
 def get_project():
@@ -242,7 +255,8 @@ class ProjectManager(Device):
             return await self.slotListProjectsWithMacro(params)
         elif action_type == "listProjectsWithServer":
             return await self.slotListProjectsWithServer(params)
-
+        elif action_type == "listDomainWithDevices":
+            return await self.listDomainWithDevices(params)
         raise NotImplementedError(f"{type} not implemented")
 
     @slot
@@ -315,7 +329,7 @@ class ProjectManager(Device):
         return Hash('items', loadedItems)
 
     @slot
-    async def slotListItems(self, domain, item_types=None):
+    async def slotListItems(self, domain: str, item_types: list | None = None):
         """
         List items in domain which match item_types if given, or all items
         if not given
@@ -325,15 +339,19 @@ class ProjectManager(Device):
         :return: a list of Hashes where each entry has keys: uuid, item_type
             and simple_name
         """
+        if item_types is None:
+            item_types = _ITEM_TYPES
         async with self.db_handle as db_session:
             hl = []
             res = await db_session.list_items(domain, item_types)
             for r in res:
+                item_type = r['item_type']
                 h = Hash('uuid', r['uuid'],
-                         'item_type', r['item_type'],
+                         'item_type', item_type,
                          'simple_name', r['simple_name'],
-                         'is_trashed', r['is_trashed'],
                          'date', r['date'])
+                if item_type == PROJECT_DB_TYPE_PROJECT:
+                    h["is_trashed"] = r["is_trashed"]
                 hl.append(h)
         return Hash('items', hl)
 
@@ -363,6 +381,16 @@ class ProjectManager(Device):
         return Hash('items', hl)
 
     @slot
+    async def listDomainWithDevices(self, info: Hash):
+        """List devices available in a domain"""
+        domain = info["domain"]
+        async with self.db_handle as db_session:
+            res = HashList()
+            topology = await db_session.get_devices_from_domain(domain)
+            res = HashList([Hash(device) for device in topology])
+            return Hash('items', res)
+
+    @slot
     async def slotListDomains(self):
         """
         List domains available on this database
@@ -382,15 +410,15 @@ class ProjectManager(Device):
             method = getattr(db_session, call)
             projects = await method(domain, name)
             result = HashList(
-                [Hash("name", p["projectname"],
+                [Hash("project_name", p["project_name"],
                       "uuid", p["uuid"],
                       "last_modified", p["date"],
                       "items", p["items"])
                  for p in projects])
-        return Hash("projects", result)
+        return Hash("items", result)
 
     @slot
-    async def slotListProjectsWithDevice(self, args):
+    async def slotListProjectsWithDevice(self, args: Hash):
         """
         List projects in domain which have configurations for a given device.
 
@@ -401,7 +429,7 @@ class ProjectManager(Device):
         :return: a Hash with key, "projects", with a list of Hashes for its
             value. Each Hash in the list has four keys:
                 - "uuid",
-                - "name",
+                - "project_name",
                 - "last_modified"
                 - "items"
         """
@@ -409,7 +437,7 @@ class ProjectManager(Device):
             "get_projects_with_device", args["domain"], args["name"])
 
     @slot
-    async def slotListProjectsWithMacro(self, args):
+    async def slotListProjectsWithMacro(self, args: Hash):
         """
         List projects in domain which have macros.
 
@@ -420,7 +448,7 @@ class ProjectManager(Device):
         :return: a Hash with key, "projects", with a list of Hashes for its
             value. Each Hash in the list has four keys:
                 - "uuid",
-                - "name",
+                - "project_name",
                 - "last_modified"
                 - "items"
         """
@@ -428,7 +456,7 @@ class ProjectManager(Device):
             "get_projects_with_macro", args["domain"], args["name"])
 
     @slot
-    async def slotListProjectsWithServer(self, args):
+    async def slotListProjectsWithServer(self, args: Hash):
         """
         List projects in domain which have server.
 
@@ -439,7 +467,7 @@ class ProjectManager(Device):
         :return: a Hash with key, "projects", with a list of Hashes for its
             value. Each Hash in the list has four keys:
                 - "uuid",
-                - "name",
+                - "project_name",
                 - "last_modified"
                 - "items"
         """

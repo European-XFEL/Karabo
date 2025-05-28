@@ -72,6 +72,9 @@ class SQLDatabase(DatabaseBase):
     async def list_domains(self) -> list[str]:
         return await self.reader.list_domains()
 
+    async def get_devices_from_domain(self, domain: str) -> list[dict]:
+        return await self.reader.get_devices_from_domain(domain)
+
     async def domain_exists(self, domain: str) -> bool:
         domains = await self.list_domains()
         return domain in domains
@@ -504,7 +507,7 @@ class SQLDatabase(DatabaseBase):
         results = None
         if project:
             results = [
-                {"projectname": project.name,
+                {"project_name": project.name,
                  "date": project.date.strftime("%Y-%m-%d %H:%M:%S"),
                  "uuid": project.uuid}]
         return results
@@ -519,9 +522,9 @@ class SQLDatabase(DatabaseBase):
         :return: a set containing project names
         """
         projects = set()
-        projects_datum = self.get_projects_data_from_device(domain, uuid)
+        projects_datum = await self.get_projects_data_from_device(domain, uuid)
         for project in projects_datum:
-            projects.add(project['projectname'])
+            projects.add(project['project_name'])
         return projects
 
     async def update_trashed(self, **info) -> None:
@@ -561,13 +564,14 @@ class SQLDatabase(DatabaseBase):
             {"project name": configuration uuid,
              ...}
         """
-        configs = self.get_configurations_from_device_name(domain,
-                                                           device_id)
+        configs = await self.get_configurations_from_device_name(
+            domain, device_id)
         projects = dict()
         for config in configs:
             instance_id = config["instanceid"]
-            for project in self.get_projects_from_device(domain,
-                                                         instance_id):
+            project_names = await self.get_projects_from_device(
+                domain, instance_id)
+            for project in project_names:
                 projects[project] = config["configid"]
         return projects
 
@@ -581,7 +585,7 @@ class SQLDatabase(DatabaseBase):
         :param device_id_part: part of name of devices for which project data
                                must be returned.
         :return: a list of dicts:
-            [{"projectname": name of project,
+            [{"project_name": name of project,
               "date": last modification timestamp for the project,
               "uuid": uuid of project,
               "devices": list of ids of prj devices with the given part},
@@ -599,7 +603,7 @@ class SQLDatabase(DatabaseBase):
                 project_uuid = project["uuid"]
                 if project_uuid not in projects:
                     project_data = {
-                        "projectname": project["projectname"],
+                        "project_name": project["project_name"],
                         # Already time mangled before
                         "date": project["date"],
                         "uuid": project_uuid,
@@ -621,7 +625,7 @@ class SQLDatabase(DatabaseBase):
                           must be returned.
         :return: a list of dicts:
             [
-            {"projectname": name of project,
+            {"project_name": name of project,
              "date": last modification timestamp for the project,
              "uuid": uuid of project
              "items": list of ids of prj servers with the given part},
@@ -637,7 +641,7 @@ class SQLDatabase(DatabaseBase):
             if project_id not in projects:
                 project = await self.reader.get_project_from_id(project_id)
                 project_data = {
-                    "projectname": project.name,
+                    "project_name": project.name,
                     "date": project.date.strftime("%Y-%m-%d %H:%M:%S"),
                     "uuid": project.uuid,
                     "items": []}
@@ -658,7 +662,7 @@ class SQLDatabase(DatabaseBase):
                           must be returned.
         :return: a list of dicts:
             [
-            {"projectname": name of project,
+            {"project_name": name of project,
              "date": last modification timestamp for the project,
              "uuid": uuid of project
              "macros": list of ids of prj devices with the given part},
@@ -674,7 +678,7 @@ class SQLDatabase(DatabaseBase):
             if project_id not in projects:
                 project = await self.reader.get_project_from_id(project_id)
                 project_data = {
-                    "projectname": project.name,
+                    "project_name": project.name,
                     "date": project.date.strftime("%Y-%m-%d %H:%M:%S"),
                     "uuid": project.uuid,
                     "items": []}
