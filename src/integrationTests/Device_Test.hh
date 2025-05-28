@@ -51,6 +51,7 @@ class Device_Test : public CPPUNIT_NS::TestFixture {
     void testGetTimestampSystemInfo();
     void testSchemaInjection();
     void testGetconfigReconfig();
+    void testLockClearLock();
     void testUpdateState();
     void testSet();
     void testSetVectorUpdate();
