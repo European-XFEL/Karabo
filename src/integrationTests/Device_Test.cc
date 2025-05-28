@@ -179,6 +179,8 @@ class TestDevice : public karabo::core::Device {
               .readOnly()
               .commit();
 
+        INT32_ELEMENT(dataSchema).key("int").readOnly().commit();
+
         OUTPUT_CHANNEL(expected).key("output").dataSchema(dataSchema).commit();
 
         // Schema less input channel...

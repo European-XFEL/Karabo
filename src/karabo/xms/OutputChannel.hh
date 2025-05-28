@@ -110,6 +110,9 @@ namespace karabo {
 
             std::string m_instanceId;
             std::string m_channelName;
+            karabo::data::Schema m_dataSchema;
+            bool m_dataSchemaValidated;
+            const bool m_validateAlways;
 
             // Server related
             std::string m_hostname;
@@ -171,7 +174,7 @@ namespace karabo {
             /**
              * If this object is constructed using the factory/configuration system this method is called.
              *
-             * The initialize() method must not be called if constructed this way.
+             * The initialize(..) method must not be called if constructed this way.
              *
              * Deprecated:
              * Tcp server initialization is triggered, but there is no control when and whether it succeeded.
@@ -185,11 +188,11 @@ namespace karabo {
              * Recommended constructor, allowing guaranteed-to-work initialization.
              *
              * The recommended way to call it is via the Configurator and with autoInit == 0,
-             * followed by calling initialize():
+             * followed by calling initialize(..):
              *
              * Hash config(<here state non-default config parameters>);
              * OutputChannel::Pointer output = Configurator<OutputChannel>::create("OutputChannel", cfg, 0);
-             * output->initialize();
+             * output->initialize(Schema());
              *
              * Caveat: Make sure you do not pass a 'bool' instead of an 'int' as argument to create(..) since then the
              *         other constructor is chosen and the value of the 'bool' determines whether to validate cfg or
@@ -197,10 +200,10 @@ namespace karabo {
              *
              * @param config Validated (@see expectedParameters) and default-filled configuration
              * @param autoInit If set to 0 (strongly recommended), the constructor does not yet try to initiate the
-             *                 TCP server initialization and the initialize() method has to be called as
+             *                 TCP server initialization and the initialize(..) method has to be called as
              *                 "second constructor". The advantage is that the initialization cannot fail on busy
              *                 systems and one has control when the server is available for remote connections.
-             *                 If autoInit != 0, this constructor behaves as the other constructor and initialize()
+             *                 If autoInit != 0, this constructor behaves as the other constructor and initialize(..)
              *                 must not be called.
              */
             OutputChannel(const karabo::data::Hash& config, int autoInit);
@@ -214,8 +217,10 @@ namespace karabo {
              *
              * May throw a karabo::util::NetworkException, e.g. if a non-zero port was defined in the input
              * configuration and that is not available since used by something else.
+             *
+             * @param dataSchema if not empty, validate data written to this channel (at least once)
              */
-            void initialize();
+            void initialize(const karabo::data::Schema& dataSchema = karabo::data::Schema());
 
             void setInstanceIdAndName(const std::string& instanceId, const std::string& name);
 
