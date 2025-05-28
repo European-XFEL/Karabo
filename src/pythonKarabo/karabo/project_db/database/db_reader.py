@@ -16,12 +16,14 @@
 
 import datetime
 
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import selectinload, sessionmaker
 from sqlmodel import select
 
 from .models import (
     DeviceConfig, DeviceInstance, DeviceServer, Macro, Project, ProjectDomain,
     ProjectSubproject, Scene)
+
+ISO8601_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
 def set_project_timezone(project: Project):
@@ -32,6 +34,17 @@ def set_project_timezone(project: Project):
     if project.last_loaded:
         project.last_loaded = project.last_loaded.replace(
             tzinfo=datetime.UTC)
+
+
+def utc_to_local(timestamp: datetime.datetime | None) -> str:
+    """Format a datetime object to a local str representation
+
+    XXX: This is borrowed from config_db and should move to common.
+    """
+    if timestamp is None:
+        return ""
+    return timestamp.replace(
+        tzinfo=datetime.UTC).astimezone().strftime(ISO8601_FORMAT)
 
 
 class DbReader:
@@ -66,8 +79,34 @@ class DbReader:
             # NOTE: The GUI Client compares the is_trashed value
             #       with the constants 'true' and 'false' (all lower)
             "is_trashed": "true" if p.is_trashed else "false",
-            "date": str(p.date) if p.date else '',
+            "date": utc_to_local(p.date),
         } for p in result]
+
+    async def get_devices_from_domain(
+            self, domain: str) -> list[dict[str, any]]:
+        instances = []
+        async with self.session_gen() as session:
+            query = (
+                select(DeviceInstance)
+                .join(DeviceServer)
+                .join(Project)
+                .join(ProjectDomain)
+                .where(ProjectDomain.name == domain)
+                .options(selectinload(DeviceInstance.device_server)
+                         .selectinload(DeviceServer.project))
+            )
+            result = await session.exec(query)
+            device_instances = result.all()
+            for instance in device_instances:
+                project = instance.device_server.project
+                instances.append({
+                    "device_uuid": instance.uuid,
+                    "device_name": instance.name,
+                    "project_uuid": project.uuid,
+                    "project_name": project.name
+                })
+
+        return instances
 
     async def _get_named_items(self, domain: str, model, item_type: str):
         query = (
@@ -76,7 +115,8 @@ class DbReader:
             .where(ProjectDomain.name == domain)
         )
         items = await self._execute_all(query)
-        return [{"uuid": i.uuid, "item_type": item_type, "simple_name": i.name}
+        return [{"uuid": i.uuid, "item_type": item_type,
+                 "simple_name": i.name, "date": utc_to_local(i.date)}
                 for i in items]
 
     async def get_domain_macros(self, domain):
@@ -86,16 +126,38 @@ class DbReader:
         return await self._get_named_items(domain, Scene, "scene")
 
     async def get_domain_device_servers(self, domain):
-        return await self._get_named_items(
-            domain, DeviceServer, "device_server")
+        query = (
+            select(DeviceServer)
+            .join(Project).join(ProjectDomain)
+            .where(ProjectDomain.name == domain)
+        )
+        items = await self._execute_all(query)
+        return [{"uuid": i.uuid, "item_type": "device_server",
+                 "simple_name": i.name, "date": utc_to_local(i.date)}
+                for i in items]
 
     async def get_domain_device_instances(self, domain):
-        return await self._get_named_items(
-            domain, DeviceInstance, "device_instance")
+        query = (
+            select(DeviceInstance)
+            .join(DeviceServer).join(Project).join(ProjectDomain)
+            .where(ProjectDomain.name == domain)
+        )
+        items = await self._execute_all(query)
+        return [{"uuid": i.uuid, "item_type": "device_instance",
+                 "simple_name": i.name, "date": utc_to_local(i.date)}
+                for i in items]
 
     async def get_domain_device_configs(self, domain):
-        return await self._get_named_items(
-            domain, DeviceConfig, "device_config")
+        query = (
+            select(DeviceConfig)
+            .join(DeviceInstance).join(DeviceServer).join(Project)
+            .join(ProjectDomain)
+            .where(ProjectDomain.name == domain)
+        )
+        items = await self._execute_all(query)
+        return [{"uuid": i.uuid, "item_type": "device_config",
+                 "simple_name": i.name, "date": utc_to_local(i.date)}
+                for i in items]
 
     async def get_subprojects_of_project(self, project: Project):
         links = await self._execute_all(

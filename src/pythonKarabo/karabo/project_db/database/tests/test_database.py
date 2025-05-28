@@ -113,11 +113,11 @@ async def test_project_interface(database, subtests):
             items = await db.get_projects_with_macro("LOCAL", "macro")
             assert len(items) == 1
             project = items[0]
-            assert "projectname" in project
+            assert "project_name" in project
             assert "date" in project
             assert "uuid" in project
             assert "items" in project
-            assert project["projectname"] == "Project"
+            assert project["project_name"] == "Project"
             assert project["items"] == [
                 "macroname-0", "macroname-1",
                 "macroname-2", "macroname-3"]
@@ -196,6 +196,11 @@ async def test_project_interface(database, subtests):
                     scenecnt += 1
                 assert i["simple_name"] == "Scene!"
             assert scenecnt >= 4
+
+        with subtests.test(msg='devices_from_domain'):
+            await create_hierarchy(db, "Scene!")
+            items = await db.get_devices_from_domain('LOCAL')
+            assert len(items) == 48
 
 
 @pytest.mark.timeout(60)
