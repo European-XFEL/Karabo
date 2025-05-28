@@ -44,7 +44,7 @@ class LoadProjectWithDialog(QDialog):
         self.setWindowTitle("Find and Load Project")
         self.domain = domain
         self.text_device_id.setPlaceholderText(
-            f"Enter DeviceID part (at least {MIN_DEVICE_ID_SIZE} "
+            f"Enter name part (at least {MIN_DEVICE_ID_SIZE} "
             "characters)")
         self.button_box.button(QDialogButtonBox.Ok).setText("Load")
         flags = Qt.WindowCloseButtonHint
@@ -148,7 +148,7 @@ class LoadProjectWithDialog(QDialog):
             messagebox.show_error("Find projects failed!",
                                   details=data["error"])
         else:
-            self.populate_projects_table(data["projects"])
+            self.populate_projects_table(data["items"])
             self.update_dialog_state()
 
     # -----------------------------------------------------------------------
@@ -231,7 +231,7 @@ class LoadProjectWithDialog(QDialog):
         self.table_projects.setUpdatesEnabled(False)
         self.table_projects.setRowCount(len(data))
         for row, rec in enumerate(data):
-            project_name = QTableWidgetItem(rec["name"])
+            project_name = QTableWidgetItem(rec["project_name"])
             project_name.setData(Qt.UserRole, rec["uuid"])
             self.table_projects.setItem(row, 0, project_name)
             self.table_projects.setItem(

@@ -676,10 +676,10 @@ class Manager(QObject):
                 KaraboEvent.ProjectFindWithItem,
                 {'projects': [], 'error': reason})
         else:
-            projects = reply.get('projects', [])
+            projects = reply.get('items', [])
             broadcast_event(
                 KaraboEvent.ProjectFindWithItem, {
-                    'projects': projects, 'error': None})
+                    'items': projects, 'error': None})
 
     def handle_projectListProjectManagers(self, reply):
         pass
