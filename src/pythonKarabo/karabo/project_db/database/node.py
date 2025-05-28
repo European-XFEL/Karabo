@@ -17,8 +17,7 @@
 import os
 from pathlib import Path
 
-from karabo.native import (
-    AccessLevel, AccessMode, Bool, Configurable, String, UInt32)
+from karabo.native import AccessMode, Bool, Configurable, String, UInt32
 
 from .sql_database import SQLDatabase
 
@@ -32,18 +31,15 @@ def get_db_credentials():
 class RemoteNode(Configurable):
     host = String(
         defaultValue=os.getenv("KARABO_PROJECT_DB_HOST", "localhost"),
-        displayedName="Database host",
-        requiredAccessLevel=AccessLevel.EXPERT)
+        displayedName="Database host")
 
     port = UInt32(
         displayedName="Port",
-        defaultValue=int(os.getenv("KARABO_PROJECT_DB_PORT", "3306")),
-        requiredAccessLevel=AccessLevel.EXPERT)
+        defaultValue=int(os.getenv("KARABO_PROJECT_DB_PORT", "3306")))
 
     dbName = String(
         defaultValue=os.getenv("KARABO_PROJECT_DB_DBNAME", "projectDB"),
-        displayedName="Database name",
-        requiredAccessLevel=AccessLevel.EXPERT)
+        displayedName="Database name")
 
     removeOrphans = Bool(
         displayedName="Remove Orphan Records",
@@ -67,8 +63,7 @@ class LocalNode(Configurable):
     dbName = String(
         defaultValue=os.getenv("KARABO_PROJECT_DB_DBNAME", "projectDB.db"),
         displayedName="Database name",
-        description="The filename placed in var/project_db/",
-        requiredAccessLevel=AccessLevel.EXPERT)
+        description="The filename placed in var/project_db/")
 
     removeOrphans = Bool(
         displayedName="Remove Orphan Records",

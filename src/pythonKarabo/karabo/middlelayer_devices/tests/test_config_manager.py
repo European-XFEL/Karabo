@@ -27,8 +27,7 @@ from karabo.middlelayer import (
     String, call, connectDevice, getConfigurationFromName, instantiateFromName,
     listConfigurationFromName, listDevicesWithConfiguration,
     saveConfigurationFromName, slot)
-from karabo.middlelayer.testing import (  # noqa
-    AsyncDeviceContext, event_loop_policy)
+from karabo.middlelayer.testing import AsyncDeviceContext
 
 from ..configuration_manager import ConfigurationManager, hashToHash
 
