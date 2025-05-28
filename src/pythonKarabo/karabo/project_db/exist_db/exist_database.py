@@ -572,14 +572,14 @@ class ExistDatabase(DatabaseBase):
         return <items>{{
         for $doc in collection($path)/xml//servers[KRB_Item/uuid=$iid]
         let $projectname := $doc/../../../@simple_name
-        return <item projectname="{{$projectname}}"/>
+        return <item project_name="{{$projectname}}"/>
         }}</items>
         """
         projects = set()
         for server in servers:
             queryf = query.format(path=path, instance=server["serverid"])
             res = self.dbhandle.query(queryf)
-            projects |= {r.attrib["projectname"] for r in
+            projects |= {r.attrib["project_name"] for r in
                          res.results[0].getchildren()}
         return projects
 
@@ -624,7 +624,7 @@ class ExistDatabase(DatabaseBase):
         let $projectname := $doc/../../../@simple_name
         let $date := functx:if-absent($doc/../../../@date, '')
         let $uuid := $doc/../../../@uuid
-        return <item projectname="{{$projectname}}"
+        return <item project_name="{{$projectname}}"
                      date="{{$date}}"
                      uuid="{{$uuid}}" />
         }}</items>
@@ -634,11 +634,11 @@ class ExistDatabase(DatabaseBase):
             queryf = query.format(path=path, instance=server["serverid"])
             res = self.dbhandle.query(queryf)
             for r in res.results[0].getchildren():
-                if r.attrib["projectname"] and r.attrib["uuid"]:
+                if r.attrib["project_name"] and r.attrib["uuid"]:
                     # Project data is valid; cases of projects with empty
                     # names have been found during tests.
                     projects.append({
-                        "projectname": r.attrib["projectname"],
+                        "project_name": r.attrib["project_name"],
                         "date": r.attrib["date"],
                         "uuid": r.attrib["uuid"]
                     })
@@ -766,7 +766,7 @@ class ExistDatabase(DatabaseBase):
         :param device_id_part: part of name of devices for which project data
                                must be returned.
         :return: a list of dicts:
-            [{"projectname": name of project,
+            [{"project_name": name of project,
               "date": last modification timestamp for the project,
               "uuid": uuid of projecti
               "devices": list of ids of prj devices with the given part}, ...]
