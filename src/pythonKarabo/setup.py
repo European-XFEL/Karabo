@@ -152,6 +152,7 @@ else:
         'karabo.middlelayer_device_test': [
             'MiddlelayerDevice=karabo.integration_tests.device_cross_test.test_cross:MiddlelayerDevice',
             'MdlOrderTestDevice=karabo.integration_tests.signal_slot_order_test.mdl_ordertest_device:MdlOrderTestDevice',
+            'SimpleTopology=karabo.integration_tests.mdl_client_test.device_simple:SimpleTopology',
         ],
         'karabo.macro_device': [
             'MetaMacro=karabo.middlelayer.metamacro:MetaMacro'
