@@ -19,7 +19,6 @@
 #
 
 import datetime
-import getpass
 import re
 import time
 
@@ -284,33 +283,6 @@ class DeviceClient:
         self.__client = cpp_client
 
         self.values = dict()
-
-    def login(self, username, passwordFile=None, provider="LOCAL"):
-        """Logs the the given user into the Karabo installation.
-
-        After successful login all user-specifc access rights are established
-        and the auto-completion (in interactive mode) adapts accordingly.
-
-        Args:
-        :param username: The username (currently you may use observer,
-                                operator, expert, admin)
-        :param passwordFile: Optionally provide a plain text file with
-                                containing the password
-        :param provider: Optionally choose the authorization provider
-                        (LOCAL or KERBEROS)
-        :returns Boolean value whether login was successful.
-        """
-        password = None
-        if passwordFile is None:
-            password = getpass.getpass()
-        else:
-            with open('passwordFile') as file:
-                password = file.readline()
-        return self.__client.login(username, password, provider)
-
-    def logout(self):
-        """Logs the current user out."""
-        return self.__client.logout()
 
     def instantiate(self, serverId, classId, deviceId, config=Hash(),
                     timeout=None):
@@ -727,6 +699,3 @@ class DeviceClient:
             date = date.astimezone(pytz.utc)
         print(date.isoformat())
         return date.isoformat()
-
-    def lock(self, deviceId, recursive=False):
-        return self.__client.lock(deviceId, recursive)

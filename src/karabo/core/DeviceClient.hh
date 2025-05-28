@@ -26,7 +26,6 @@
 #include <atomic>
 #include <boost/asio.hpp>
 #include <karabo/core/InstanceChangeThrottler.hh>
-#include <karabo/core/Lock.hh>
 #include <karabo/util/DataLogUtils.hh>
 #include <karabo/xms/SignalSlotable.hh>
 #include <map>
@@ -166,8 +165,6 @@ namespace karabo {
             std::set<std::string> m_immortals;
             mutable std::mutex m_immortalsMutex;
 
-            karabo::data::Schema::AccessLevel m_accessLevel = karabo::data::Schema::EXPERT;
-
             std::string m_dataLoggerManagerId;
             std::string m_configManagerId;
 
@@ -255,10 +252,6 @@ namespace karabo {
                 karabo::xms::SignalSlotable::Pointer ptr(m_signalSlotable); // throws if nothing behind weak_ptr
                 return ptr->getInstanceId();
             }
-
-            bool login(const std::string& username, const std::string& password, const std::string& provider = "LOCAL");
-
-            bool logout();
 
             /**
              * Sets the internal timeout for any request/response like communications
@@ -1407,17 +1400,6 @@ namespace karabo {
              */
             std::vector<std::string> getOutputChannelNames(const std::string& deviceId);
 
-            /**
-             * Request locking of device at deviceId. Throws a karabo::util::LockException in case the lock cannot be
-             * acquired in the given timeout
-             * @param deviceId: the device to be locked
-             * @param recursive: if true, recursive locks on this device are allowed
-             * @param timeout: timeout during which we try to acquire the lock. Set to -1 to wait try indefinitely, 0 to
-             * only try once, otherwise give integer seconds to wait.
-             * @return a Lock object, holding the lock to deviceId.
-             */
-            karabo::core::Lock lock(const std::string& deviceId, bool recursive = false, int timeout = -1);
-
            protected: // functions
             void initTopology();
 
@@ -1546,8 +1528,6 @@ namespace karabo {
             bool connectNeeded(const std::string& instanceId);
 
             void connectAndRequest(const std::string& deviceId);
-
-            int getAccessLevel(const std::string& deviceId);
 
             void completeInitialization(int countdown);
 
