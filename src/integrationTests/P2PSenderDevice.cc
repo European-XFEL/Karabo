@@ -73,6 +73,8 @@ namespace karabo {
 
         NDARRAY_ELEMENT(data).key("array").dtype(Types::DOUBLE).shape("100,200,0").commit();
 
+        NDARRAY_ELEMENT(data).key("emptyArray").dtype(Types::INT16).shape("10,20").commit();
+
         OUTPUT_CHANNEL(expected).key("output1").displayedName("Output1").dataSchema(data).commit();
 
         Schema data2;
@@ -236,7 +238,7 @@ namespace karabo {
         try {
             const int nData = get<unsigned int>("nData");
             const unsigned int delayInMs = get<unsigned int>("delay");
-            const int noData[] = {}; // Also test an empty NDArray:
+            const short noData[] = {}; // Also test an empty NDArray:
             Hash data("data", std::vector<long long>(dataSize), "emptyArray",
                       NDArray(noData, sizeof(noData) / sizeof(noData[0])));
             auto& vec = data.get<std::vector<long long> >("data");
