@@ -17,7 +17,7 @@
 import pytest
 from qtpy.QtWidgets import QGraphicsTextItem
 
-from karabo.native import EncodingType
+from karabo.native import Encoding
 from karabogui.binding.builder import build_binding
 from karabogui.binding.config import apply_configuration
 from karabogui.binding.proxy import DeviceProxy, PropertyProxy
@@ -158,11 +158,11 @@ def test_detector_graph_basics(detectorGraphTest):
 
 def test_detector_graph_yuv_image(detectorGraphTest):
     controller, output_proxy = detectorGraphTest
-    image_hash = get_image_hash(dimZ=3, encoding=EncodingType.YUV444)
+    image_hash = get_image_hash(dimZ=3, encoding=Encoding.YUV444)
     apply_configuration(image_hash, output_proxy.binding)
 
     image_node = controller._image_node
-    assert image_node.encoding is EncodingType.GRAY
+    assert image_node.encoding is Encoding.GRAY
     assert image_node.dim_x == 40
     assert image_node.dim_y == 30
     assert image_node.dim_z == 0

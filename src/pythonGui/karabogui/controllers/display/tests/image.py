@@ -15,7 +15,7 @@
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
 from karabo.native import (
-    Bool, ByteArray, Configurable, EncodingType, Hash, Int8, Node, VectorInt8,
+    Bool, ByteArray, Configurable, Encoding, Hash, Int8, Node, VectorInt8,
     VectorInt16)
 
 # Reverse map of controllers.images.
@@ -98,7 +98,7 @@ dimX = 40
 dimY = 30
 
 
-def get_image_hash(val=0, dimZ=None, *, encoding=EncodingType.GRAY,
+def get_image_hash(val=0, dimZ=None, *, encoding=Encoding.GRAY,
                    stack_axis=True, update=True):
     npix = dimX * dimY
     dims_val = [dimY, dimX]

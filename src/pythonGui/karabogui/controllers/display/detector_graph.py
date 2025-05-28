@@ -21,7 +21,7 @@ from traits.api import Enum, Instance, Int, WeakRef
 
 from karabo.common.scenemodel.api import (
     DetectorGraphModel, build_graph_config, restore_graph_config)
-from karabo.native import EncodingType, Timestamp
+from karabo.native import Encoding, Timestamp
 from karabogui.binding.api import ImageBinding
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
@@ -203,7 +203,7 @@ class DisplayDetectorGraph(BaseBindingController):
         # Hide the slider when there's no multiple images
         self._frame_slider.setVisible(self._image_node.dim_z != 0)
 
-        if self._image_node.encoding == EncodingType.GRAY:
+        if self._image_node.encoding == Encoding.GRAY:
             slider_max = self._image_node.get_axis_dimension(self._axis)
             self._set_slider_max(slider_max)
 

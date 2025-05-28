@@ -19,7 +19,7 @@ from traits.api import Bool, Instance, WeakRef
 
 from karabo.common.scenemodel.api import (
     ImageGraphModel, build_graph_config, restore_graph_config)
-from karabo.native import EncodingType, Timestamp
+from karabo.native import Encoding, Timestamp
 from karabogui import icons
 from karabogui.binding.api import ImageBinding
 from karabogui.controllers.api import (
@@ -110,7 +110,7 @@ class DisplayImageGraph(BaseBindingController):
         array = self._image_node.get_data()
 
         # Enable/disable some widget features depending on the encoding
-        self.grayscale = (self._image_node.encoding == EncodingType.GRAY
+        self.grayscale = (self._image_node.encoding == Encoding.GRAY
                           and array.ndim == 2)
 
         self._plot.setData(array)

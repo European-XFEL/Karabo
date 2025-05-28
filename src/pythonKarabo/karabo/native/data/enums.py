@@ -213,7 +213,7 @@ class Unit(StrEnum):
 
 
 @unique
-class EncodingType(IntEnum):
+class Encoding(IntEnum):
     """Encoding type used for image data
     """
     UNDEFINED = -1
