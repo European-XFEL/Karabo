@@ -51,9 +51,12 @@ async def test_project_interface(database, subtests):
         with subtests.test(msg='test_save_item'):
             # The MySQL back-end doesn't accept project items with no
             # name or no type - originally this test's xml only had 'uuid'.
+            # The '&' in the project name tests if the XML is being properly
+            # escaped by the backend while loading items.
+            NAME = "xy & z"
             xml_rep = (
                 f'<xml uuid="{testproject2}" item_type="device_server" '
-                'simple_name="xyz">foo</xml>')
+                f'simple_name="{NAME.replace("&", "&amp;")}">foo</xml>')
 
             await db.save_item('LOCAL', testproject2, xml_rep)
 
@@ -63,7 +66,7 @@ async def test_project_interface(database, subtests):
             assert res[0]['uuid'] == testproject2
             doctree = etree.fromstring(res[0]['xml'])
             assert doctree.get('item_type') == "device_server"
-            assert doctree.get('simple_name') == "xyz"
+            assert doctree.get('simple_name') == NAME
 
         with subtests.test(msg='test_save_bad_item'):
             xml_rep = """
