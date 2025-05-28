@@ -36,6 +36,7 @@ class InputOutputChannel_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testConcurrentConnect);
     CPPUNIT_TEST(testInputHandler);
     CPPUNIT_TEST(testOutputPreparation);
+    CPPUNIT_TEST(testSchemaValidation);
     CPPUNIT_TEST(testConnectHandler);
     CPPUNIT_TEST(testWriteUpdateFlags);
     CPPUNIT_TEST(testAsyncUpdate1a);
@@ -65,6 +66,7 @@ class InputOutputChannel_Test : public CPPUNIT_NS::TestFixture {
     void testConcurrentConnect();
     void testInputHandler();
     void testOutputPreparation();
+    void testSchemaValidation();
     void testConnectHandler();
     void testWriteUpdateFlags();
     void testAsyncUpdate1a();

@@ -200,6 +200,15 @@ namespace karabo {
                   .expertAccess()
                   .commit();
 
+            STRING_ELEMENT(expected)
+                  .key("validateSchema")
+                  .displayedName("Validate schema")
+                  .description("How often per data stream should write(..) validata data against a given schema")
+                  .assignmentOptional()
+                  .defaultValue("once")
+                  .options({std::string("once"), std::string("always")})
+                  .commit();
+
             VECTOR_UINT64_ELEMENT(expected)
                   .key("bytesRead")
                   .displayedName("Read bytes")
@@ -223,7 +232,9 @@ namespace karabo {
         OutputChannel::OutputChannel(const karabo::data::Hash& config) : OutputChannel(config, 1) {}
 
         OutputChannel::OutputChannel(const karabo::data::Hash& config, int autoInit)
-            : m_port(0),
+            : m_dataSchemaValidated(false),
+              m_validateAlways(config.get<std::string>("validateSchema") == "always"),
+              m_port(0),
               m_showConnectionsHandler([](const std::vector<Hash>&) {}),
               m_showStatisticsHandler(
                     [](const std::vector<unsigned long long>&, const std::vector<unsigned long long>&) {}),
@@ -314,11 +325,12 @@ namespace karabo {
             }
             // HACK ends
 
-            initialize();
+            initialize(karabo::data::Schema());
         }
 
 
-        void OutputChannel::initialize() {
+        void OutputChannel::initialize(const karabo::data::Schema& dataSchema) {
+            m_dataSchema = dataSchema;
             karabo::data::Hash h("type", "server", "port", m_port);
             Connection::Pointer connection = Connection::create("Tcp", h);
             // The following call can throw in case you provide with configuration's Hash the none-zero port number
@@ -1317,6 +1329,7 @@ namespace karabo {
 
 
         void OutputChannel::asyncSignalEndOfStream(std::function<void()>&& readyForNextHandler) {
+            m_dataSchemaValidated = false; // Reset and thus validate next stream
             // If there is still some data in the pipe, put it out
             if (Memory::size(m_channelId, m_chunkId) > 0) {
                 // Lambda for what to do when data is out
@@ -1447,13 +1460,31 @@ namespace karabo {
 
 
         void OutputChannel::write(const karabo::data::Hash& data, const OutputChannel::MetaData& metaData) {
-            Memory::write(data, m_channelId, m_chunkId, metaData, false);
+            if (!m_dataSchema.empty() && (!m_dataSchemaValidated || m_validateAlways)) {
+                karabo::data::Validator::ValidationRules rules;
+                rules.allowAdditionalKeys = false;
+                rules.allowMissingKeys = false;
+                rules.allowUnrootedConfiguration = true;
+                rules.injectDefaults = false;
+                rules.injectTimestamps = false;
+                karabo::data::Validator val(rules);
+
+                karabo::data::Hash validated;
+                const std::pair<bool, std::string> res = val.validate(m_dataSchema, data, validated);
+                if (!res.first) {
+                    throw KARABO_PARAMETER_EXCEPTION("Data/schema mismatch: " + res.second);
+                }
+                m_dataSchemaValidated = true; // after successfull validation
+                Memory::write(validated, m_channelId, m_chunkId, metaData, false);
+            } else {
+                Memory::write(data, m_channelId, m_chunkId, metaData, false);
+            }
         }
 
 
         void OutputChannel::write(const karabo::data::Hash& data) {
             OutputChannel::MetaData meta(/*source*/ getInstanceIdName(), /*timestamp*/ karabo::data::Timestamp());
-            Memory::write(data, m_channelId, m_chunkId, meta, false);
+            write(data, meta);
         }
 
 

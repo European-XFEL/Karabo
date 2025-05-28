@@ -32,7 +32,6 @@
 #include "karabo/data/types/AlarmConditions.hh"
 #include "karabo/data/types/FromLiteral.hh"
 #include "karabo/data/types/Hash.hh"
-#include "karabo/data/types/NDArray.hh"
 #include "karabo/data/types/Schema.hh"
 #include "karabo/data/types/State.hh"
 #include "karabo/data/types/StringTools.hh"

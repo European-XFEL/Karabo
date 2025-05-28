@@ -170,8 +170,8 @@ namespace karabo {
              * During validation the following input is checked to fulfill the following characteristics
              *
              *  - all elements as defined by the Schema are present, if the validation rules do not allow for default
-             * injection missing keys. In the first case validation of a missing element only passes if a default value
-             * for the element has been defined in the schema
+             * injection of missing keys. In the first case validation of a missing element only passes if a default
+             * value for the element has been defined in the schema
              *
              *  - no elements in addition to those defined by the Schema are present, if the rules define that no
              * additional keys are allowed

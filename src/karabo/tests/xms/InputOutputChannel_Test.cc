@@ -35,6 +35,7 @@
 
 #include "karabo/data/schema/Configurator.hh"
 #include "karabo/data/schema/SimpleElement.hh"
+#include "karabo/data/schema/VectorElement.hh"
 #include "karabo/data/types/Hash.hh"
 #include "karabo/data/types/NDArray.hh"
 #include "karabo/data/types/Schema.hh"
@@ -52,6 +53,8 @@ using data::Configurator;
 using data::Hash;
 using data::INT32_ELEMENT;
 using data::Schema;
+using data::STRING_ELEMENT;
+using data::VECTOR_INT32_ELEMENT;
 using xms::InputChannel;
 using xms::OUTPUT_CHANNEL_ELEMENT;
 using xms::OutputChannel;
@@ -672,6 +675,66 @@ void InputOutputChannel_Test::testOutputPreparation() {
         output->initialize();
         const std::string address = output->getInitialConfiguration().get<std::string>("address");
         CPPUNIT_ASSERT_EQUAL(address, expectedAddress);
+    }
+}
+
+void InputOutputChannel_Test::testSchemaValidation() {
+    // A schema to validate against
+    Schema schema;
+    VECTOR_INT32_ELEMENT(schema).key("v_int32").maxSize(10).readOnly().commit();
+    STRING_ELEMENT(schema).key("str").readOnly().commit();
+
+    const std::vector<int> vec(5, 1);
+    // Default: Validate once until end of stream
+    {
+        // Setup output channel
+        OutputChannel::Pointer output = Configurator<OutputChannel>::create("OutputChannel", Hash(), 0);
+        output->setInstanceIdAndName("outputChannel", "output");
+        output->initialize(schema);
+
+        // Test extra key
+        CPPUNIT_ASSERT_THROW(output->write(Hash("v_int32", vec, "str", "some", "tooMuch", 0)),
+                             karabo::data::ParameterException);
+
+        // // Test missing key -- FIXME: readOnly keys are allowed to be missing!
+        // CPPUNIT_ASSERT_THROW(output->write(Hash("v_int32", vec)), karabo::data::ParameterException);
+
+        // Test wrong, non-castable type - NOTE: '"str", 42' would work since validator casts 42 to std:string("42")
+        // CPPUNIT_ASSERT_THROW(output->write(Hash("v_int32", vec, "str", 42)), karabo::data::ParameterException);
+        CPPUNIT_ASSERT_THROW(output->write(Hash("v_int32", vec, "str", std::vector<Schema>(1))),
+                             karabo::data::Exception);
+
+        // Test too long vector
+        const std::vector<int> longVec(50, 1); // max size is 10
+        CPPUNIT_ASSERT_THROW(output->write(Hash("v_int32", longVec, "str", "some", "tooMuch", 0)),
+                             karabo::data::ParameterException);
+
+        // Now once proper data - after that even bad data is accepted (by default)
+        CPPUNIT_ASSERT_NO_THROW(output->write(Hash("v_int32", vec, "str", "some")));
+        CPPUNIT_ASSERT_NO_THROW(output->write(Hash("v_int32", vec, "str", "some", "tooMuch", 1)));
+
+        // For a new "stream", the first data is validated again
+        output->signalEndOfStream();
+        // Bad data throws
+        CPPUNIT_ASSERT_THROW(output->write(Hash("v_int32", vec, "str", "some", "tooMuch", 0)),
+                             karabo::data::ParameterException);
+        // First good data validates successfully
+        CPPUNIT_ASSERT_NO_THROW(output->write(Hash("v_int32", vec, "str", "some")));
+        // Then no further validation happens
+        CPPUNIT_ASSERT_NO_THROW(output->write(Hash("v_int32", vec, "str", "some", "tooMuch", 0)));
+    }
+
+    // Validate always
+    {
+        OutputChannel::Pointer output =
+              Configurator<OutputChannel>::create("OutputChannel", Hash("validateSchema", "always"), 0);
+        output->setInstanceIdAndName("outputChannel", "output");
+        output->initialize(schema);
+
+        // Now, with alidate "always", bad data is discovered even if once good data was written
+        CPPUNIT_ASSERT_NO_THROW(output->write(Hash("v_int32", vec, "str", "some")));
+        CPPUNIT_ASSERT_THROW(output->write(Hash("v_int32", vec, "str", "some", "tooMuch", 0)),
+                             karabo::data::ParameterException);
     }
 }
 
