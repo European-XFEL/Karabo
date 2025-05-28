@@ -67,14 +67,14 @@ def resolve_project(package):
     """Resolve full gitlab project name.
 
     mainly due to the European XFEL git repository structure.
-    If no `/` is present, the `/karaboDevices/` path is prepended.
+    If no `/` is present, the `/karaboDevices3/` path is prepended.
     """
     if package.startswith("/"):
         return package
     elif '/' in package:
         return f"/{package}"
     else:
-        return f"/karaboDevices/{package}"
+        return f"/karaboDevices3/{package}"
 
 
 def parse_commandline():
@@ -133,7 +133,7 @@ def parse_commandline():
                             type=str,
                             help='The name of the device package. '
                                  'if this device package does not '
-                                 'include a `/` the `/karaboDevices/` '
+                                 'include a `/` the `/karaboDevices3/` '
                                  'sub-path will be prepended for '
                                  'backwards compatibility. '
                                  'Note: this name might not be '
@@ -239,7 +239,7 @@ def parse_commandline():
     parser.add_argument('-r', '--repo',
                         type=str,
                         default='http://exflctrl01.desy.de/karabo/'
-                                'karaboDevices/',
+                                'karaboDevices3/',
                         help='URL to the binary repository')
 
     parser.add_argument('-j', '--jobs',
@@ -298,7 +298,7 @@ def new(args):
         # 'git init --initial-branch=main' and skip the 'checkout -b' step
         run_cmd('git init')
         run_cmd('git checkout -b main')
-        run_cmd('git remote add origin {}/karaboDevices/{}.git'
+        run_cmd('git remote add origin {}/karaboDevices3/{}.git'
                 .format(args.git, args.device))
         run_cmd('git add .')
         run_cmd('git commit -m "Initial commit"')
