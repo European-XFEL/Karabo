@@ -18,6 +18,7 @@
 
 import base64
 import datetime
+from xml.sax.saxutils import escape
 
 from .models import (
     DeviceConfig, DeviceInstance, DeviceServer, Macro, Project, Scene)
@@ -32,16 +33,19 @@ def _format_date(d):
     return d.replace(tzinfo=datetime.UTC) if d else ''
 
 
+def _safe_xml_str(raw_value: str) -> str:
+    return escape(raw_value, {'"': "&quot;", "'": "&apos;"})
+
+
 def _wrap_vector_hash(tag, items):
     return f'<{tag} KRB_Type="VECTOR_HASH">{"".join(items)}</{tag}>'
 
 
-def _wrap_xml(uuid, name, item_type, date='', extra=''):
+def _wrap_xml(uuid: str, name: str, item_type: str, date='', extra=''):
     return (
-        f'<xml {_XML_NS} uuid="{uuid}" simple_name="{name}" '
+        f'<xml {_XML_NS} uuid="{uuid}" simple_name="{_safe_xml_str(name)}" '
         f'date="{date}" item_type="{item_type}" '
-        f'{_REVISION_ALIAS}>{extra}</xml>'
-    )
+        f'{_REVISION_ALIAS}>{extra}</xml>')
 
 
 def emit_project_xml(project: Project,
@@ -67,8 +71,8 @@ def emit_project_xml(project: Project,
     )
 
     return (
-        f'<xml {_XML_NS} uuid="{project.uuid}" simple_name="{project.name}" '
-        f'date="{date}" '
+        f'<xml {_XML_NS} uuid="{project.uuid}" '
+        f'simple_name="{_safe_xml_str(project.name)}" date="{date}" '
         f'is_trashed="{trashed}" item_type="project" '
         f'{_REVISION_ALIAS}>'
         f'{content}'
@@ -104,7 +108,7 @@ def emit_device_server_xml(server: DeviceServer,
         f'<device_instance uuid="{di.uuid}" revision="0"/>'
         for di in device_instances
     )
-    content = (f'<device_server server_id="{server.name}" '
+    content = (f'<device_server server_id="{_safe_xml_str(server.name)}" '
                f'host="">{di_tags}</device_server>')
     return _wrap_xml(
         uuid=server.uuid,
@@ -128,7 +132,7 @@ def emit_device_instance_xml(instance: DeviceInstance,
     )
     instance_block = (
         f'<device_instance class_id="{instance.class_id}" '
-        f'instance_id="{instance.name}" '
+        f'instance_id="{_safe_xml_str(instance.name)}" '
         f'active_uuid="{active_uuid}" active_rev="0">'
         f'{config_tags}</device_instance>'
     )
