@@ -904,16 +904,14 @@ namespace karabo {
         std::vector<std::string> DeviceClient::getCurrentlySettableProperties(const std::string& deviceId) {
             KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN(vector<string>());
             Schema schema = cacheAndGetActiveSchema(deviceId);
-            int accessLevel = karabo::data::Schema::EXPERT;
-            return filterProperties(schema, accessLevel);
+            return schema.getPaths();
         }
 
 
         std::vector<std::string> DeviceClient::getProperties(const std::string& deviceId) {
             KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN(vector<string>());
             Schema schema = cacheAndGetDeviceSchema(deviceId);
-            int accessLevel = karabo::data::Schema::EXPERT;
-            return filterProperties(schema, accessLevel);
+            return schema.getPaths();
         }
 
 
@@ -921,8 +919,7 @@ namespace karabo {
                                                                   const std::string& classId) {
             KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN(vector<string>());
             Schema schema = cacheAndGetClassSchema(serverId, classId);
-            int accessLevel = karabo::data::Schema::EXPERT;
-            return filterProperties(schema, accessLevel);
+            return schema.getPaths();
         }
 
 
