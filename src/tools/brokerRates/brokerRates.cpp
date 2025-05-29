@@ -208,7 +208,9 @@ void BrokerStatistics::registerPerSignal(const data::Hash::Pointer& header, size
     if (!m_senders.empty() && m_senders.find(signalId) == m_senders.end()) {
         return;
     }
-    const std::string& signalFunc = header->get<std::string>("signalFunction");
+
+    // header->get<std::string>("signalFunction")
+    const std::string& signalFunc = "__signalFunction__";
 
     // Find signal ID in map and increase statistics.
     const SignalId key(signalId, signalFunc);
@@ -621,7 +623,7 @@ int main(int argc, const char** argv) {
     senders.insert(senders.end(), recAndSendFromServers.second.begin(), recAndSendFromServers.second.end());
 
     // Start Logger, but suppress INFO and DEBUG
-    log::Logger::configure(data::Hash("priority", "WARN"));
+    log::Logger::configure(data::Hash("level", "WARN"));
     log::Logger::useConsole();
 
     const std::vector<std::string> brokers(net::Broker::brokersFromEnv());
