@@ -235,7 +235,7 @@ class LoadProjectWithDialog(QDialog):
             project_name.setData(Qt.UserRole, rec["uuid"])
             self.table_projects.setItem(row, 0, project_name)
             self.table_projects.setItem(
-                row, 1, QTableWidgetItem(utc_to_local(rec["last_modified"])))
+                row, 1, QTableWidgetItem(utc_to_local(rec["date"])))
             items = rec.get("items", [])
             items = ", ".join(sorted(items))
             table_item = QTableWidgetItem(items)

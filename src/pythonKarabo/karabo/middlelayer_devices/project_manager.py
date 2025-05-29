@@ -412,7 +412,7 @@ class ProjectManager(Device):
             result = HashList(
                 [Hash("project_name", p["project_name"],
                       "uuid", p["uuid"],
-                      "last_modified", p["date"],
+                      "date", p["date"],
                       "items", p["items"])
                  for p in projects])
         return Hash("items", result)
@@ -430,7 +430,7 @@ class ProjectManager(Device):
             value. Each Hash in the list has four keys:
                 - "uuid",
                 - "project_name",
-                - "last_modified"
+                - "date"
                 - "items"
         """
         return await self._slot_list_projects(
@@ -449,7 +449,7 @@ class ProjectManager(Device):
             value. Each Hash in the list has four keys:
                 - "uuid",
                 - "project_name",
-                - "last_modified"
+                - "date"
                 - "items"
         """
         return await self._slot_list_projects(
@@ -468,7 +468,7 @@ class ProjectManager(Device):
             value. Each Hash in the list has four keys:
                 - "uuid",
                 - "project_name",
-                - "last_modified"
+                - "date"
                 - "items"
         """
         return await self._slot_list_projects(
