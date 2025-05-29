@@ -772,23 +772,23 @@ class Schema_TestCase(unittest.TestCase):
     def test_logger(self):
         config = Hash("level", "DEBUG")
         Logger.configure(config)
-        root = Logger.getCategory()
-        a1 = Logger.getCategory("a1")
-        a1_a2 = Logger.getCategory("a1.a2")
-        root.DEBUG("ERROR")
+        root = Logger.getLogger()
+        a1 = Logger.getLogger("a1")
+        a1_a2 = Logger.getLogger("a1.a2")
+        root.debug("ERROR")
 
         Logger.useConsole()
-        root.DEBUG("ok")
-        a1.DEBUG("ok")
-        a1_a2.DEBUG("ok")
+        root.debug("ok")
+        a1.debug("ok")
+        a1_a2.debug("ok")
         root.INFO("ok")
         a1.INFO("ok")
         a1_a2.INFO("ok")
 
         Logger.reset()
-        root.DEBUG("ERROR")
-        a1.DEBUG("ERROR")
-        a1_a2.DEBUG("ERROR")
+        root.debug("ERROR")
+        a1.debug("ERROR")
+        a1_a2.debug("ERROR")
 
     def test_helpFunction(self):
         pass
