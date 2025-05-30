@@ -30,8 +30,8 @@ from signal import SIGTERM
 from karabo import __version__ as karaboVersion
 from karabo.common.api import KARABO_LOGGER_CONTENT_DEFAULT, ServerFlags
 from karabo.native import (
-    AccessLevel, AccessMode, Assignment, Descriptor, Hash, KaraboError, Node,
-    String, TimeMixin, VectorString, get_timestamp, isSet)
+    AccessLevel, AccessMode, Assignment, Bool, Descriptor, Hash, KaraboError,
+    Node, String, TimeMixin, VectorString, get_timestamp, isSet)
 
 from .configuration import validate_init_configuration
 from .eventloop import EventLoop
@@ -90,6 +90,11 @@ class MiddleLayerDeviceServer(HeartBeatMixin, SignalSlotable):
 
     init = String(
         description=INIT_DESCRIPTION,
+        assignment=Assignment.INTERNAL,
+        accessMode=AccessMode.INITONLY)
+
+    broadcast = Bool(
+        defaultValue=True,
         assignment=Assignment.INTERNAL,
         accessMode=AccessMode.INITONLY)
 
@@ -174,7 +179,7 @@ class MiddleLayerDeviceServer(HeartBeatMixin, SignalSlotable):
         except BaseException as e:
             e.logmessage = ('Could not start device "%s" of class "%s"',
                             deviceId, classId)
-            raise
+            raise KaraboError from e
 
     def parse(self, hash):
         classId = hash['classId']
@@ -289,6 +294,7 @@ class MiddleLayerDeviceServer(HeartBeatMixin, SignalSlotable):
         params = Hash({k: get(k).fromstring(v) for k, v in params.items()})
         # Servers have 20 seconds heartbeat interval
         params["heartbeatInterval"] = 20
+
         server = cls(params)
         if server:
             server._device_initializer = _device_initializer
@@ -305,7 +311,7 @@ class MiddleLayerDeviceServer(HeartBeatMixin, SignalSlotable):
             server.is_server = True
             try:
                 loop.run_until_complete(
-                    server.startInstance(broadcast=True))
+                    server.startInstance(broadcast=server.broadcast.value))
             except BaseException:
                 # ServerId is already in use for KaraboError
                 # User might cancel even with Interrupt and a
