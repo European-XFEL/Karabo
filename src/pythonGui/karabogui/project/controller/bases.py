@@ -209,6 +209,7 @@ class BaseProjectGroupController(BaseProjectController):
             with self._qt_model.removal_context(controller):
                 self.children.remove(controller)
             self.child_destroy(controller)
+
         # Synchronize the GUI with the Traits model
         additions = [self.child_create(model=model, parent=self,
                                        _qt_model=self._qt_model)

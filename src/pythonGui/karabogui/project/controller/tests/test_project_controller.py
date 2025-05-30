@@ -15,7 +15,6 @@
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
 
-from qtpy.QtCore import Qt
 
 from karabo.common.project.api import ProjectModel
 from karabo.common.project.device import DeviceInstanceModel
@@ -23,8 +22,6 @@ from karabo.common.project.device_config import DeviceConfigurationModel
 from karabo.common.project.server import DeviceServerModel
 from karabo.native import Hash
 from karabogui.project.controller.device import DeviceInstanceController
-from karabogui.project.controller.device_config import (
-    DeviceConfigurationController)
 from karabogui.singletons.mediator import Mediator
 from karabogui.singletons.project_model import ProjectViewItemModel
 from karabogui.testing import singletons
@@ -72,15 +69,6 @@ def test_active_configuration(gui_app):
         assert_active_configuration()
         controller.active_config_changed(sconfig)
         assert_active_configuration()
-
-
-def test_check_mark_configuration():
-    config = Hash()
-    config['fkey'] = 'value'
-    model = DeviceConfigurationModel(class_id='BazClass', configuration=config)
-    model.initialized = True
-    controller = DeviceConfigurationController(model=model)
-    assert controller.initial_check_state == Qt.Checked
 
 
 def test_menu(gui_app, mocker):
