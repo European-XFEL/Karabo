@@ -34,8 +34,6 @@ from karabogui.indicators import get_instance_info_icon
 from karabogui.project.controller.build import (
     create_project_controller, destroy_project_controller)
 from karabogui.project.controller.device import DeviceInstanceController
-from karabogui.project.controller.device_config import (
-    DeviceConfigurationController)
 from karabogui.project.utils import show_no_configuration
 from karabogui.singletons.api import get_topology
 from karabogui.util import create_table_string
@@ -288,15 +286,8 @@ class ProjectViewItemModel(QAbstractItemModel):
         # All items have these properties
         flags = Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled
         controller = index.internalPointer()
-        if isinstance(controller, DeviceConfigurationController):
+        if isinstance(controller, DeviceInstanceController):
             flags |= Qt.ItemNeverHasChildren
-            # We only allow the configurations to be checked for offline
-            # devices!
-            parent_index = index.parent()
-            parent_controller = parent_index.internalPointer()
-            if (parent_controller is not None
-                    and not parent_controller.project_device.online):
-                flags |= Qt.ItemIsUserCheckable
 
         return flags
 
@@ -351,14 +342,6 @@ class ProjectViewItemModel(QAbstractItemModel):
             controller = index.internalPointer()
             if controller is None:
                 return False
-            if isinstance(controller, DeviceConfigurationController):
-                config_model = controller.model
-                parent_index = index.parent()
-                parent_controller = parent_index.internalPointer()
-                if value != Qt.Checked:
-                    return False
-                # Only interested in checked to set new active config
-                parent_controller.active_config_changed(config_model)
 
         # Value was successfully updated
         return True
@@ -431,4 +414,5 @@ class ProjectViewItemModel(QAbstractItemModel):
 
         if parent_controller is None:
             return 0
+
         return parent_controller.rows()

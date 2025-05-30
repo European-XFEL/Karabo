@@ -21,7 +21,6 @@
 from functools import partial
 from io import StringIO
 
-from qtpy.QtCore import Qt
 from qtpy.QtGui import QCursor
 from qtpy.QtWidgets import QAction, QDialog, QMenu, QMessageBox
 from traits.api import Instance, Property, on_trait_change
@@ -31,7 +30,7 @@ from karabo.common.api import Capabilities
 from karabo.common.project.api import (
     DeviceConfigurationModel, DeviceInstanceModel, DeviceServerModel,
     find_parent_object)
-from karabo.native import Hash, read_project_model, write_project_model
+from karabo.native import read_project_model, write_project_model
 from karabogui import messagebox
 from karabogui.access import (
     AccessRole, access_role_allowed, get_access_level_for_role)
@@ -44,17 +43,18 @@ from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.indicators import get_project_device_status_icon
 from karabogui.itemtypes import ProjectItemTypes
 from karabogui.logger import get_logger
+from karabogui.project.dialog.device_configuration import (
+    DeviceConfigurationDialog)
 from karabogui.project.dialog.device_handle import DeviceHandleDialog
 from karabogui.project.dialog.object_handle import ObjectDuplicateDialog
-from karabogui.project.utils import (
-    check_device_config_exists, check_device_instance_exists)
+from karabogui.project.utils import check_device_instance_exists
 from karabogui.request import (
     get_macro_from_server, get_scene_from_server, retrieve_default_scene)
 from karabogui.singletons.api import get_config, get_manager, get_topology
 from karabogui.topology.api import ProjectDeviceInstance
 from karabogui.util import move_to_cursor
 
-from .bases import BaseProjectGroupController, ProjectControllerUiData
+from .bases import BaseProjectController, ProjectControllerUiData
 from .server import DeviceServerController
 
 ACCESS_LEVEL_TOOLTIP = "Requires minimum '{}' access level"
@@ -64,7 +64,7 @@ DEVICE_OFFLINE_TOOLTIP = "Device is offline"
 INCORRECT_STATE_TOOLTIP = "Device is not in correct State"
 
 
-class DeviceInstanceController(BaseProjectGroupController):
+class DeviceInstanceController(BaseProjectController):
     """ A wrapper for DeviceInstanceModel objects
     """
     # Redefine model with the correct type
@@ -319,8 +319,6 @@ class DeviceInstanceController(BaseProjectGroupController):
         assert device.initialized, "DeviceInstanceModel must be initialized!"
         assert config.initialized, "Device config must be initialized!"
 
-        self._update_check_state()
-
         return get_topology().get_project_device(
             device.instance_id, device.server_id, device.class_id,
             None if config is None else config.configuration)
@@ -358,8 +356,6 @@ class DeviceInstanceController(BaseProjectGroupController):
         if config is not None:
             self.project_device.set_project_config_hash(config.configuration)
 
-        self._update_check_state()
-
     @on_trait_change('project_device:save_project')
     def _active_config_changed_in_configurator(self):
         """Called whenever project device's offline configuration is changed
@@ -380,18 +376,6 @@ class DeviceInstanceController(BaseProjectGroupController):
     @on_trait_change("project_device:instance_status")
     def instance_status_change(self, status):
         self._update_instance_status(self.ui_data)
-
-    def _update_check_state(self):
-        """Update the Qt.CheckState of the ``DeviceConfigurationController``
-        children
-        """
-        if not self.model.initialized:
-            return
-        active_config = self.active_config
-        for child in self.children:
-            check_state = (Qt.Checked if active_config is child.model
-                           else Qt.Unchecked)
-            child.ui_data.check_state = check_state
 
     # ----------------------------------------------------------------------
     # Util methods
@@ -444,13 +428,12 @@ class DeviceInstanceController(BaseProjectGroupController):
         """ Create sub menu for parent menu and return it
         """
         config_menu = QMenu('Configuration', parent_menu)
-        add_action = QAction('Add device configuration', config_menu)
-        add_action.triggered.connect(partial(self._add_configuration,
-                                             project_controller,
-                                             parent=parent_menu.parent()))
-        add_action.setEnabled(allowed)
-
-        config_menu.addAction(add_action)
+        show_action = QAction('Show configuration', config_menu)
+        show_action.triggered.connect(partial(self._show_configuration,
+                                              parent=parent_menu.parent()))
+        config_menu.addAction(show_action)
+        device = self.project_device
+        disabled = device.status in NO_CONFIG_STATUSES or device.online
         for dev_conf in self.model.configs:
             conf_action = QAction(dev_conf.simple_name, config_menu)
             conf_action.setCheckable(True)
@@ -459,10 +442,7 @@ class DeviceInstanceController(BaseProjectGroupController):
             is_active = self.model.active_config_ref == dev_conf.uuid
             conf_action.setChecked(is_active)
             config_menu.addAction(conf_action)
-
-        prj_dev = self.project_device
-        if prj_dev.status in NO_CONFIG_STATUSES or prj_dev.online:
-            config_menu.setEnabled(False)
+            conf_action.setEnabled(allowed and not disabled)
 
         return config_menu
 
@@ -589,29 +569,26 @@ class DeviceInstanceController(BaseProjectGroupController):
             devices.insert(new_index, device)
             server_model.devices.extend(devices)
 
-    def _add_configuration(self, project_controller, parent=None):
-        device = self.model
-        server_model = find_parent_object(device, project_controller.model,
-                                          DeviceServerModel)
-        dialog = DeviceHandleDialog(server_id=server_model.server_id,
-                                    model=device, add_config=True,
-                                    parent=parent)
-        move_to_cursor(dialog)
-        result = dialog.exec()
-        if result == QDialog.Accepted:
-            # Check for existing device configuration
-            if check_device_config_exists(device.instance_id,
-                                          dialog.configuration_name):
-                return
+    def _show_configuration(self, parent=None):
+        project_device = self.project_device
+        config_model = self.active_config
+        if config_model is None:
+            return
 
-            config_model = DeviceConfigurationModel(
-                class_id=dialog.class_id, configuration=Hash(),
-                simple_name=dialog.configuration_name,
-            )
-            # Set initialized and modified last
-            config_model.initialized = config_model.modified = True
-            device.configs.append(config_model)
-            device.active_config_ref = config_model.uuid
+        configuration = config_model.configuration
+        dialog = DeviceConfigurationDialog(
+            name=config_model.simple_name, configuration=configuration,
+            project_device=project_device, parent=parent)
+        move_to_cursor(dialog)
+        if dialog.exec() == QDialog.Accepted:
+            self.active_config.configuration = dialog.configuration
+            project_device.set_project_config_hash(dialog.configuration)
+            proxy = project_device.proxy
+            if proxy.online:
+                return
+            # Show the device configuration if online and already showing
+            broadcast_event(KaraboEvent.UpdateDeviceConfigurator,
+                            {'proxy': proxy})
 
     def _duplicate_device(self, project_controller, parent=None):
         """ Duplicate the active device configuration of the model
