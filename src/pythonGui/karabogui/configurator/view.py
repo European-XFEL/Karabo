@@ -44,7 +44,6 @@ from karabogui.binding.api import (
     BaseBinding, DeviceProxy, PropertyProxy, VectorHashBinding)
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.generic_scenes import get_property_proxy_model
-from karabogui.indicators import ALARM_HIGH, ALARM_LOW, WARN_HIGH, WARN_LOW
 from karabogui.widgets.popup import PopupWidget
 
 from .edit_delegate import EditDelegate
@@ -259,10 +258,13 @@ class ConfigurationTreeView(QTreeView):
             info['Tags'] = ", ".join(attributes.get(KARABO_SCHEMA_TAGS))
         if binding.timestamp is not None:
             info['Timestamp'] = binding.timestamp.toLocal()
-            info['Timing Id'] = binding.timestamp.tid
+            info['Time Id'] = binding.timestamp.tid
         displayType = binding.displayType
-        if displayType and displayType.startswith('bin|'):
-            info['Bits'] = displayType[4:]
+        if displayType:
+            if displayType.startswith('bin|'):
+                info['Bits'] = displayType[4:]
+            else:
+                info["displayType"] = displayType
         if isinstance(obj.root_proxy, DeviceProxy):
             info['Value on device'] = get_proxy_value(index, obj)
 
@@ -275,8 +277,6 @@ class ConfigurationTreeView(QTreeView):
 
         # Other additional attributes
         additional_attrs = [
-            ('Warn low', WARN_LOW), ('Warn high', WARN_HIGH),
-            ('Alarm low', ALARM_LOW), ('Alarm high', ALARM_HIGH),
             (KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MIN_EXC),
             (KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_EXC),
             (KARABO_SCHEMA_MIN_INC, KARABO_SCHEMA_MIN_INC),
@@ -287,7 +287,9 @@ class ConfigurationTreeView(QTreeView):
 
         for label, attr_name in additional_attrs:
             attr = attributes.get(attr_name)
-            info[label] = 'n/a' if attr is None else attr
+            if attr is None:
+                continue
+            info[label] = attr
 
         return info
 
