@@ -18,13 +18,10 @@
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
 #############################################################################
-from qtpy.QtCore import Qt
-
 from karabogui.project.topo_listener import SystemTopologyListener
 from karabogui.singletons.api import get_topology
 
 from .device import DeviceInstanceController
-from .device_config import DeviceConfigurationController
 from .macro import MacroController, MacroInstanceController
 from .project import ProjectController
 from .project_groups import ProjectSubgroupController
@@ -84,20 +81,7 @@ def create_device_instance_controller(model=None, parent=None, _qt_model=None):
     ``destroy_device_instance_controller``
     """
     controller = DeviceInstanceController(
-        model=model, parent=parent, _qt_model=_qt_model,
-        child_create=DeviceConfigurationController,
-        child_destroy=lambda x: None
-    )
-    model.on_trait_change(controller.items_assigned, 'configs')
-    model.on_trait_change(controller.items_mutated, 'configs_items')
-    active_config_ref = model.active_config_ref
-    for conf in model.configs:
-        check_state = (Qt.Checked if active_config_ref == conf.uuid
-                       else Qt.Unchecked)
-        child = controller.child_create(model=conf, parent=controller,
-                                        _qt_model=_qt_model,
-                                        initial_check_state=check_state)
-        controller.children.append(child)
+        model=model, parent=parent, _qt_model=_qt_model)
 
     return controller
 
@@ -107,10 +91,6 @@ def destroy_device_instance_controller(controller):
     removing all previously added Traits notification handlers.
     """
     model = controller.model
-    model.on_trait_change(controller.items_assigned, 'configs', remove=True)
-    model.on_trait_change(controller.items_mutated, 'configs_items',
-                          remove=True)
-
     # Remove project device references
     get_topology().delete_project_device(model.instance_id)
     controller.project_device = None
