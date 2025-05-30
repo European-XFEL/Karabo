@@ -14,7 +14,6 @@
 # The Karabo Gui is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
-from collections import OrderedDict
 from unittest import main, mock
 
 from qtpy.QtCore import QItemSelectionModel, QPoint, Qt
@@ -254,21 +253,17 @@ class TestConfiguratorDevice(GuiTestCase):
             self.view._show_popup_widget(self.model.index(0, 0), event_pos)
             widget.assert_called_once()
             widget().setInfo.assert_called_with(
-                OrderedDict([('Property', 'State'), ('Key', 'state'),
-                             ('Value Type', 'String'),
-                             ('Default Value', 'UNKNOWN'),
-                             ('AccessMode', 'READONLY'),
-                             ('AccessLevel', 'OBSERVER'),
-                             ('Assignment', 'OPTIONAL'),
-                             ('Value on device', 'ON'),
-                             ('metricPrefixSymbol', ''), ('unitSymbol', ''),
-                             ('Warn low', 'n/a'), ('Warn high', 'n/a'),
-                             ('Alarm low', 'n/a'), ('Alarm high', 'n/a'),
-                             ('minExc', 'n/a'), ('maxExc', 'n/a'),
-                             ('minInc', 'n/a'), ('maxInc', 'n/a'),
-                             ('minSize', 'n/a'), ('maxSize', 'n/a'),
-                             ('ArchivePolicy', 'n/a'),
-                             ]))
+                dict([('Property', 'State'), ('Key', 'state'),
+                      ('Value Type', 'String'),
+                      ('Default Value', 'UNKNOWN'),
+                      ('AccessMode', 'READONLY'),
+                      ('AccessLevel', 'OBSERVER'),
+                      ('Assignment', 'OPTIONAL'),
+                      ('Value on device', 'ON'),
+                      ('displayType', "State"),
+                      ('metricPrefixSymbol', ''),
+                      ('unitSymbol', ''),
+                      ]))
             assert self.view.popup_widget is not None
 
     def test_modeltester_qt(self):
