@@ -25,6 +25,8 @@ from qtpy.QtWidgets import QPushButton, QTextEdit, QVBoxLayout, QWidget
 from karabo.native import Hash, create_html_hash
 from karabogui.util import create_table_string
 
+_PADDING = 5
+
 
 class PopupWidget(QWidget):
     def __init__(self, can_freeze: bool = False, parent: QWidget = None):
@@ -89,7 +91,7 @@ class PopupWidget(QWidget):
             html_string = create_table_string(info)
 
         self._ui_info.setHtml(html_string)
-        self._ui_info.fitHeightToContent(height)
+        self._ui_info.fitHeightToContent(height + _PADDING)
         # Restore scrolling position to prevent irritating scrolling up while
         # updating the popup dialog with further information on an expected
         # parameter

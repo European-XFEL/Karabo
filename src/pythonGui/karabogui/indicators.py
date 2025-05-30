@@ -247,15 +247,7 @@ PROPERTY_ALARM_COLOR_MAP = {
     "interlock": PROPERTY_INTERLOCK_COLOR}
 
 WARN_GLOBAL = "warn"
-WARN_LOW = "warnLow"
-WARN_HIGH = "warnHigh"
-WARN_VARIANCE_LOW = "warnVarianceLow"
-WARN_VARIANCE_HIGH = "warnVarianceHigh"
 ALARM_GLOBAL = "alarm"
-ALARM_LOW = "alarmLow"
-ALARM_HIGH = "alarmHigh"
-ALARM_VARIANCE_LOW = "alarmVarianceLow"
-ALARM_VARIANCE_HIGH = "alarmVarianceHigh"
 INTERLOCK = "interlock"
 ALARM_NONE = "none"
 
@@ -273,15 +265,7 @@ def get_alarm_svg(alarm_type):
     ALARM_SVG = {
         ALARM_NONE: svg_none,
         WARN_GLOBAL: svg_warn,
-        WARN_LOW: svg_warn,
-        WARN_HIGH: svg_warn,
-        WARN_VARIANCE_LOW: svg_warn,
-        WARN_VARIANCE_HIGH: svg_warn,
         ALARM_GLOBAL: svg_alarm,
-        ALARM_LOW: svg_alarm,
-        ALARM_HIGH: svg_alarm,
-        ALARM_VARIANCE_LOW: svg_alarm,
-        ALARM_VARIANCE_HIGH: svg_alarm,
         INTERLOCK: svg_interlock,
     }
 
