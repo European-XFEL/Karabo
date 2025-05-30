@@ -561,6 +561,17 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>combo_hostname</tabstop>
+  <tabstop>edit_port</tabstop>
+  <tabstop>authenticate_button</tabstop>
+  <tabstop>remember_login</tabstop>
+  <tabstop>skip_authentication_button</tabstop>
+  <tabstop>connect_button</tabstop>
+  <tabstop>cancel_button</tabstop>
+  <tabstop>switch_button</tabstop>
+  <tabstop>combo_access_level</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>
