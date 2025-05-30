@@ -25,7 +25,7 @@ from karabo.middlelayer.device_client import (
     call, getClassSchema, getInstanceInfo, instantiateNoWait, waitUntil)
 from karabo.middlelayer.testing import (
     create_device_server, create_instanceId, sleepUntil)
-from karabo.native import Hash, Schema, Timestamp
+from karabo.native import Hash, KaraboError, Schema, Timestamp
 
 SHUTDOWN_TIME = 1
 
@@ -203,10 +203,11 @@ async def test_device_server_start_faulty():
         # Device is not there in server map
         assert deviceId not in server.deviceInstanceMap
 
-        # TODO: Find a way to propagate exception
-        # with pytest.raises(KaraboError):
-        #    fut = [server.slotStartDevice(hsh) for _ in range(2)]
-        #     await gather(*fut)
+        # This is concurrent instantiation, which fails because
+        # of exclusive queue use in broker setup.
+        with pytest.raises(KaraboError):
+            fut = [server.slotStartDevice(hsh) for _ in range(2)]
+            await gather(*fut)
     finally:
         await finalize_server(server)
 

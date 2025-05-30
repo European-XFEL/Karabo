@@ -17,7 +17,7 @@ import json
 
 import pytest
 
-from karabo.middlelayer import DeviceClientBase, State
+from karabo.middlelayer import DeviceClientBase, Hash, State, call, instantiate
 from karabo.middlelayer.testing import AsyncServerContext, assert_wait_property
 
 
@@ -50,3 +50,31 @@ async def test_discovery():
         devices = list(dc.systemTopology["device"].keys())
         assert clientId in devices
         assert deviceId in devices
+
+
+@pytest.mark.timeout(30)
+@pytest.mark.asyncio
+async def test_broadcast():
+    config = {"alice": {"classId": "SimpleTopology"}}
+    init = json.dumps(config)
+    server = AsyncServerContext(
+        "testBroad", [f"init={init}", "broadcast=1",
+                      "pluginNamespace=karabo.middlelayer_device_test"],
+        verbose=True, api="middlelayer")
+    async with server:
+        await assert_wait_property(
+            "alice", "state", State.ON.value, timeout=10)
+        await instantiate("testBroad", "SimpleTopology", "bob")
+        topo = await call("alice", "getTopology", Hash())
+        assert "bob" in topo["device"]
+
+    server = AsyncServerContext(
+        "testBroad", [f"init={init}", "broadcast=0",
+                      "pluginNamespace=karabo.middlelayer_device_test"],
+        verbose=True, api="middlelayer")
+    async with server:
+        await assert_wait_property(
+            "alice", "state", State.ON.value, timeout=10)
+        await instantiate("testBroad", "SimpleTopology", "bob")
+        topo = await call("alice", "getTopology", Hash())
+        assert "bob" not in topo["device"]
