@@ -66,6 +66,13 @@ async def test_device_config_roundtrip(database):
     assert configurations[0]["name"] == "TestConfig"
     assert configurations[0]["last_loaded"] != ""
 
+    # 3. Get a config and check last loaded again, with `new`
+    new = {"deviceId": "device_1", "config": "new"}
+    await database.save_configuration("TestConfig", [new])
+    result = await database.get_configuration("device_1", "TestConfig")
+    assert result is not None
+    assert result["config"] == "new"
+
     # 4. try to delete configuration
     # Add one more for device_id
     await database.save_configuration("TestConfig1", [config4])
