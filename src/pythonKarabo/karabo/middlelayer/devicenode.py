@@ -13,7 +13,6 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
-import warnings
 
 from karabo.native import (
     AccessMode, Assignment, Attribute, KaraboError, String, StringValue,
@@ -52,14 +51,6 @@ class DeviceNode(String):
     accessMode = Attribute(AccessMode.INITONLY, dtype=AccessMode)
     assignment = Attribute(Assignment.MANDATORY, dtype=Assignment)
     displayType = Attribute("deviceNode", dtype=str)
-
-    def __init__(self, timeout=None, **kwargs):
-        # timeout for backward compatiblity
-        super().__init__(**kwargs)
-        if timeout is not None:
-            warnings.warn(
-                "The `timeout` argument for a `DeviceNode` "
-                "has been deprecated.", UserWarning, stacklevel=2)
 
     def toDataAndAttrs(self, value):
         if not isinstance(value, str):
