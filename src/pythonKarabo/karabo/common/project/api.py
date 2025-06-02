@@ -17,9 +17,10 @@
 from .bases import BaseProjectObjectModel
 from .cache import MemCacheWrapper, ProjectDBCache, get_user_cache
 from .const import (
-    PROJECT_DB_TYPE_DEVICE_CONFIG, PROJECT_DB_TYPE_DEVICE_INSTANCE,
-    PROJECT_DB_TYPE_DEVICE_SERVER, PROJECT_DB_TYPE_MACRO,
-    PROJECT_DB_TYPE_PROJECT, PROJECT_DB_TYPE_SCENE, PROJECT_OBJECT_CATEGORIES)
+    PROJECT_DB_SCHEMA, PROJECT_DB_TYPE_DEVICE_CONFIG,
+    PROJECT_DB_TYPE_DEVICE_INSTANCE, PROJECT_DB_TYPE_DEVICE_SERVER,
+    PROJECT_DB_TYPE_MACRO, PROJECT_DB_TYPE_PROJECT, PROJECT_DB_TYPE_SCENE,
+    PROJECT_OBJECT_CATEGORIES)
 from .device import DeviceInstanceModel, read_device, write_device
 from .device_config import DeviceConfigurationModel
 from .lazy import read_lazy_object

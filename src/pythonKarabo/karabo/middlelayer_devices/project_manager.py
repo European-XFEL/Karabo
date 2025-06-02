@@ -18,9 +18,9 @@ from io import StringIO
 from lxml import etree
 
 from karabo.common.project.api import (
-    PROJECT_DB_TYPE_DEVICE_CONFIG, PROJECT_DB_TYPE_DEVICE_INSTANCE,
-    PROJECT_DB_TYPE_DEVICE_SERVER, PROJECT_DB_TYPE_MACRO,
-    PROJECT_DB_TYPE_PROJECT, PROJECT_DB_TYPE_SCENE)
+    PROJECT_DB_SCHEMA, PROJECT_DB_TYPE_DEVICE_CONFIG,
+    PROJECT_DB_TYPE_DEVICE_INSTANCE, PROJECT_DB_TYPE_DEVICE_SERVER,
+    PROJECT_DB_TYPE_MACRO, PROJECT_DB_TYPE_PROJECT, PROJECT_DB_TYPE_SCENE)
 from karabo.common.scenemodel.api import write_scene
 from karabo.common.states import State
 from karabo.middlelayer import (
@@ -39,6 +39,8 @@ _ITEM_TYPES = (
     PROJECT_DB_TYPE_PROJECT,
     PROJECT_DB_TYPE_SCENE
 )
+
+_UNKNOWN_CLIENT = "__none__"
 
 
 def get_project():
@@ -237,12 +239,7 @@ class ProjectManager(Device):
         elif action_type == "updateTrashed":
             return await self.slotUpdateTrashed(params)
         elif action_type == "saveItems":
-            return await self.slotSaveItems(
-                params['items'], params.get('client', None))
-        elif action_type == "beginUserSession":
-            return await self.slotBeginUserSession(None)
-        elif action_type == "endUserSession":
-            return self.slotEndUserSession(None)
+            return await self.slotSaveItems(params)
         elif action_type == "listProjectsWithDevice":
             return await self.slotListProjectsWithDevice(params)
         elif action_type == "listProjectsWithMacro":
@@ -254,31 +251,39 @@ class ProjectManager(Device):
         raise NotImplementedError(f"{type} not implemented")
 
     @slot
-    async def slotSaveItems(self, items, client=None):
+    async def slotSaveItems(self, params: Hash):
         """Save items in project database
 
-        :param items: items to be save. Should be a list(Hash) object were each
-            entry is of the form:
+        :param params: Hash with
 
-            - xml: xml of item
-            - uuid: uuid of item
-            - overwrite: behavior in case of conflict
-            - domain: to write to
-        :param client: the client information (string) if provided
+            items: list(Hash) object were each entry is of the form:
+                - xml: xml of item
+                - uuid: uuid of item
+                - domain: to write to
+            client: the client information (string) if provided
+            schema_version: the project db schema_version
 
         :raises: `ProjectDBError` in case of database (connection) problems
             `TypeError` in case an no type information or an unknown type
             is found in the root element.
             `RuntimeError` if no database if connected.
         """
+        items = params["items"]
+        self.logger.debug(
+            "Saving items: {}".format([i.get("uuid") for i in items]))
+        client = params.get("client", _UNKNOWN_CLIENT)
 
-        self.logger.debug("Saving items: {}".format([i.get("uuid") for i in
-                                                     items]))
+        schema_version = params.get("schema_version", 1)
+        if not schema_version == PROJECT_DB_SCHEMA:
+            text = ("Cannot store into project database "
+                    f"with db schema {PROJECT_DB_SCHEMA}.")
+            raise ProjectDBError(text)
+
         saved, uuids = await self._save_items(items)
-        if client and uuids:
-            self.signalProjectUpdate(Hash("projects", uuids,
-                                          "client", client),
-                                     self.deviceId)
+        if uuids:
+            self.signalProjectUpdate(
+                Hash("projects", uuids, "client", client),
+                self.deviceId)
 
         return Hash('items', saved)
 
