@@ -254,7 +254,7 @@ def get_spin_widget(*, icon, scaled_size=QSize(), parent=None):
     return spin_widget
 
 
-def utc_to_local(utc_str, format='%Y-%m-%d %H:%M:%S'):
+def utc_to_local(utc_str: str, format='%Y-%m-%d %H:%M:%S') -> str:
     """Convert given `utc_str` in a given `format` to the local time string
     """
     if not utc_str:

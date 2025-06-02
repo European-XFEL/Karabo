@@ -32,38 +32,33 @@ from karabogui import messagebox
 from karabogui.events import (
     KaraboEvent, register_for_broadcasts, unregister_from_broadcasts)
 from karabogui.logger import get_logger
-from karabogui.project.utils import show_trash_project_message
 from karabogui.singletons.api import get_config, get_db_conn
 from karabogui.util import InputValidator, SignalBlocker, utc_to_local
 
 from .utils import get_dialog_ui
 
-SIMPLE_NAME = 'simple_name'
-LAST_MODIFIED = 'last_modified'
-UUID = 'uuid'
+SIMPLE_NAME = "simple_name"
+LAST_MODIFIED = "last_modified"
+UUID = "uuid"
 
 PROJECT_DATA = OrderedDict()
-PROJECT_DATA[SIMPLE_NAME] = 'Name'
-PROJECT_DATA[LAST_MODIFIED] = 'Last Modified'
-PROJECT_DATA[UUID] = 'UUID'
+PROJECT_DATA[SIMPLE_NAME] = "Name"
+PROJECT_DATA[LAST_MODIFIED] = "Last Modified"
+PROJECT_DATA[UUID] = "UUID"
 
-ProjectEntry = namedtuple('ProjectEntry', [key for key in PROJECT_DATA.keys()])
-
-HEADER = ['Name', 'Last Modified', 'UUID']
+ProjectEntry = namedtuple("ProjectEntry", list(PROJECT_DATA))
+HEADER = list(PROJECT_DATA.values())
 
 
 def get_column_index(project_data_key):
-    """ Return ``index`` position in ``PROJECT_DATA`` OrderedDict for the given
-    ``project_data_key``.
-
-    If the ``project_data_key`` is not found, ``None`` is returned."""
+    """Return `index` in ``PROJECT_DATA`` for `project_data_key`"""
     return list(PROJECT_DATA.keys()).index(project_data_key)
 
 
 class LoadProjectDialog(QDialog):
     def __init__(self, is_subproject=False, parent=None):
         super().__init__(parent)
-        uic.loadUi(get_dialog_ui('project_handle.ui'), self)
+        uic.loadUi(get_dialog_ui("project_handle.ui"), self)
         # set proper window flags
         self.setWindowFlags(self.windowFlags() | Qt.WindowCloseButtonHint)
 
@@ -73,14 +68,14 @@ class LoadProjectDialog(QDialog):
         self.load_from_group = QButtonGroup(self)
         self.load_from_group.addButton(self.rbFromRemote)
         self.load_from_group.addButton(self.rbFromCache)
-        self.load_from_group.buttonClicked.connect(self._openFromChanged)
+        self.load_from_group.buttonClicked.connect(self._open_from_changed)
 
         if is_subproject:
-            title = 'Load Sub Project'
+            title = "Load Sub Project"
         else:
-            title = 'Load Master Project'
+            title = "Load Master Project"
         self.setWindowTitle(title)
-        self.buttonBox.button(QDialogButtonBox.Ok).setText('Load')
+        self.buttonBox.button(QDialogButtonBox.Ok).setText("Load")
 
         self.model = QSortFilterProxyModel(parent=self)
         # Set up the filter model!
@@ -112,7 +107,7 @@ class LoadProjectDialog(QDialog):
         if is_subproject:
             default_domain = db_conn.default_domain
         else:
-            topic = get_config()['broker_topic']
+            topic = get_config()["broker_topic"]
             default_domain = (topic if topic in domains
                               else db_conn.default_domain)
         self.default_domain = default_domain
@@ -139,17 +134,17 @@ class LoadProjectDialog(QDialog):
     # Karabo Events
 
     def _event_item_list(self, data):
-        items = data.get('items', [])
+        items = data.get("items", [])
         self.model.sourceModel().add_project_manager_data(items)
         # NOTE: Resize all columns until qtpy
         self.twProjects.resizeColumnsToContents()
         self._titleChanged(self.leTitle.text())
 
     def _event_domain_list(self, data):
-        self._domains_updated(data.get('items', []))
+        self._domains_updated(data.get("items", []))
 
     def _event_trashed(self, data):
-        domain = data.get('domain', "")
+        domain = data.get("domain", "")
         self.on_cbDomain_currentIndexChanged(domain)
 
     # -----------------------------------------------------------------------
@@ -170,11 +165,11 @@ class LoadProjectDialog(QDialog):
         # Select default domain
         index = self.cbDomain.findText(self.default_domain)
         if len(domains) > 0 and index == -1:
-            msg = ('The default project domain <b>{}</b><br>does not exist in '
-                   'the current project database.').format(self.default_domain)
+            msg = ("The default project domain <b>{}</b><br>does not exist in "
+                   "the current project database.").format(self.default_domain)
             # NOTE: If this dialog is not modal, it can block the list of
             # domains arriving from the GUI server!
-            messagebox.show_warning(msg, title='Default domain does not exist',
+            messagebox.show_warning(msg, title="Default domain does not exist",
                                     parent=self)
         with SignalBlocker(self.cbDomain):
             self.cbDomain.setCurrentIndex(index if index > -1 else 0)
@@ -272,25 +267,8 @@ class LoadProjectDialog(QDialog):
         self._check_button_state()
         self.update_view()
 
-    @Slot(str, str, bool)
-    def _update_is_trashed(self, domain, uuid, current_is_trashed):
-        """ Change ``is_trashed`` attribute of project with given ``uuid``
-
-        NOTE: ``current_is_trashed`` is the current value of the selected
-        project which should be toggled here
-
-        XXX: Is this still being used?
-        """
-        if show_trash_project_message(current_is_trashed, parent=self):
-            db_conn = get_db_conn()
-            db_conn.update_trashed(domain, 'project', uuid, 'is_trashed',
-                                   current_is_trashed)
-            # NOTE: The view update is happening asynchronously. Once we get
-            # a reply from the GUI server, we request a new view
-
     @Slot(QAbstractButton)
-    def _openFromChanged(self, button):
-        # Update view
+    def _open_from_changed(self, button):
         self.update_view()
 
 
@@ -298,7 +276,7 @@ class NewProjectDialog(QDialog):
     def __init__(self, model=None, is_rename=False, default=False,
                  parent=None):
         super().__init__(parent)
-        uic.loadUi(get_dialog_ui('project_new.ui'), self)
+        uic.loadUi(get_dialog_ui("project_new.ui"), self)
         self.setModal(False)
 
         validator = InputValidator()
@@ -309,7 +287,7 @@ class NewProjectDialog(QDialog):
         if default:
             default_domain = db_conn.default_domain
         else:
-            topic = get_config()['broker_topic']
+            topic = get_config()["broker_topic"]
             default_domain = (topic if topic in domains
                               else db_conn.default_domain)
         self.default_domain = default_domain
@@ -319,18 +297,18 @@ class NewProjectDialog(QDialog):
         self.cbDomain.setEnabled(not default)
 
         if model is None:
-            title = 'New project'
+            title = "New project"
         else:
             if is_rename:
-                title = 'Rename project'
+                title = "Rename project"
                 text = model.simple_name
                 # Hide domain related widgets
                 self.laDomain.hide()
                 self.cbDomain.hide()
                 self.adjustSize()
             else:
-                title = 'Create a copy of this project...'
-                text = f'{model.simple_name}_copy'
+                title = "Create a copy of this project..."
+                text = f"{model.simple_name}_copy"
             self.leTitle.setText(text)
         self.setWindowTitle(title)
         self.leTitle.setFocus()
@@ -356,7 +334,7 @@ class NewProjectDialog(QDialog):
     # Karabo Events
 
     def _event_item_list(self, data):
-        self._fill_domain_combo_box(data.get('items', []))
+        self._fill_domain_combo_box(data.get("items", []))
 
     # -----------------------------------------------------------------------
 
@@ -401,7 +379,7 @@ class TableModel(QAbstractTableModel):
         """
         self.db_conn.ignore_local_cache = ignore_cache
         project_data = self.db_conn.get_available_project_data(domain,
-                                                               'project')
+                                                               "project")
         self.add_project_manager_data(project_data)
 
     def add_project_manager_data(self, data):
@@ -410,9 +388,7 @@ class TableModel(QAbstractTableModel):
         :param data: A `HashList` with the keys per entry:
                      - 'uuid' - The unique ID of the Project
                      - 'simple_name' - The name for displaying
-                     - 'item_type' - Should be project in that case
                      - 'is_trashed' - Flag if project is marked as trashed
-                     - 'user' - The user who created the project
                      - 'date' - The date the project was last modified
 
         Note: The `user` information is not used.
@@ -422,14 +398,13 @@ class TableModel(QAbstractTableModel):
         try:
             self.entries = []
             for it in data:
-                is_trashed = (it.get('is_trashed') == 'true')
+                is_trashed = it.get("is_trashed")
                 if is_trashed != self.show_trashed:
                     continue
                 entry = ProjectEntry(
-                    simple_name=it.get('simple_name'),
-                    last_modified=utc_to_local(it.get('date')),
-                    uuid=(it.get('uuid'), is_trashed),
-                )
+                    simple_name=it.get("simple_name"),
+                    last_modified=utc_to_local(it.get("date")),
+                    uuid=(it.get("uuid"), is_trashed))
                 self.entries.append(entry)
         finally:
             self.endResetModel()
@@ -438,18 +413,6 @@ class TableModel(QAbstractTableModel):
         column = int(get_config()["project_sort_column"])
         order = int(get_config()["project_sort_order"])
         self.sort(column, order)
-
-    def projectIndex(self, simple_name):
-        """Return the `QModelIndex` which ``simple_name`` exists in the current
-        model
-
-        :return: A ``QModelIndex`` which was found, otherwise a ``NoneType``
-        returned
-        """
-        if simple_name:
-            for index, entry in enumerate(self.entries):
-                if entry.simple_name.startswith(simple_name):
-                    return self.index(index, get_column_index(SIMPLE_NAME))
 
     def rowCount(self, parent=None):
         return len(self.entries)
