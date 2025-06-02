@@ -102,8 +102,8 @@ def emit_macro_xml(macro: Macro) -> str:
     )
 
 
-def emit_device_server_xml(server: DeviceServer,
-                           device_instances: list[DeviceInstance]) -> str:
+def emit_server_xml(server: DeviceServer,
+                    device_instances: list[DeviceInstance]) -> str:
     di_tags = ''.join(
         f'<device_instance uuid="{di.uuid}" revision="0"/>'
         for di in device_instances
@@ -119,8 +119,8 @@ def emit_device_server_xml(server: DeviceServer,
     )
 
 
-def emit_device_instance_xml(instance: DeviceInstance,
-                             configs: list[DeviceConfig]) -> str:
+def emit_device_xml(instance: DeviceInstance,
+                    configs: list[DeviceConfig]) -> str:
     fallback_uuid = configs[0].uuid if configs else ''
     active_uuid = next((c.uuid for c in configs if c.is_active),
                        fallback_uuid)
@@ -145,7 +145,7 @@ def emit_device_instance_xml(instance: DeviceInstance,
     )
 
 
-def emit_device_config_xml(config: DeviceConfig) -> str:
+def emit_config_xml(config: DeviceConfig) -> str:
     return _wrap_xml(
         uuid=config.uuid,
         name=config.name,
