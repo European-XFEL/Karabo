@@ -49,24 +49,38 @@ async def test_project_interface(database, subtests):
             assert await db.domain_exists("LOCAL_TEST")
 
         with subtests.test(msg='test_save_item'):
-            # The MySQL back-end doesn't accept project items with no
-            # name or no type - originally this test's xml only had 'uuid'.
+            from xml.sax.saxutils import escape
+
             # The '&' in the project name tests if the XML is being properly
-            # escaped by the backend while loading items.
+            # escaped by the ProjectDB backend while loading items. We escape
+            # the invalid XML before saving because that is what a well behaved
+            # client of the backend would do. A check for the backend behavior
+            # in ill behaved client scenarios is done a few lines below in this
+            # subtest.
             NAME = "xy & z"
             xml_rep = (
                 f'<xml uuid="{testproject2}" item_type="device_server" '
-                f'simple_name="{NAME.replace("&", "&amp;")}">foo</xml>')
+                f'simple_name="{escape(NAME)}">foo</xml>')
 
             await db.save_item('LOCAL', testproject2, xml_rep)
 
-            # For MySQL, methods like getDoc and hasDocument cannot be
-            # implemented properly. Use load_item instead.
             res = await db.load_item("LOCAL", [testproject2])
             assert res[0]['uuid'] == testproject2
             doctree = etree.fromstring(res[0]['xml'])
             assert doctree.get('item_type') == "device_server"
             assert doctree.get('simple_name') == NAME
+
+            # An attempt to save an item with an invalid name must be rejected
+            # An unescaped '&' in the project name at save time yields an
+            # invalid XML attribute value and must thus be rejected.
+            # The responsability of the ProjectDB backend is to reject invalid
+            # item XMLs, not to fix them.
+            invalid_xml_rep = (
+                f'<xml uuid="{testproject2}" item_type="device_server" '
+                f'simple_name="{NAME}">foo</xml>')
+            with pytest.raises(ProjectDBError) as error:
+                await db.save_item('LOCAL', testproject2, invalid_xml_rep)
+            assert str(error).find('XML parse error') >= 0
 
         with subtests.test(msg='test_save_bad_item'):
             xml_rep = """

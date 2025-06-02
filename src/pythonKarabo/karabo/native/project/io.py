@@ -15,6 +15,7 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 import base64
 from io import StringIO
+from xml.sax.saxutils import escape
 
 from lxml import etree
 
@@ -282,7 +283,7 @@ def _model_db_metadata(model):
     """
     attrs = {}
     attrs['uuid'] = model.uuid
-    attrs['simple_name'] = model.simple_name
+    attrs['simple_name'] = escape(model.simple_name)
     attrs['date'] = model.date
 
     if isinstance(model, ProjectModel):
