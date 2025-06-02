@@ -13,20 +13,29 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
+import base64
 import datetime
+import logging
 from asyncio import gather
+from collections.abc import Awaitable, Callable
 from pathlib import Path
 
-from sqlmodel import SQLModel
+from lxml import etree
+from sqlalchemy.orm import selectinload
+from sqlmodel import SQLModel, select
 
 from ..bases import DatabaseBase
 from ..util import ProjectDBError, make_str_if_needed, make_xml_if_needed
 from .db_engine import create_local_engine, create_remote_engine
-from .db_reader import DbReader
-from .db_writer import DbWriter
+from .models import (
+    DeviceConfig, DeviceInstance, DeviceServer, Macro, Project, ProjectDomain,
+    ProjectSubproject, Scene)
 from .models_xml import (
-    emit_device_config_xml, emit_device_instance_xml, emit_device_server_xml,
-    emit_macro_xml, emit_project_xml, emit_scene_xml)
+    emit_config_xml, emit_device_xml, emit_macro_xml, emit_project_xml,
+    emit_scene_xml, emit_server_xml)
+from .utils import utc_to_local
+
+logger = logging.getLogger(__file__)
 
 
 class SQLDatabase(DatabaseBase):
@@ -41,10 +50,9 @@ class SQLDatabase(DatabaseBase):
             self.db_engine, self.session_gen = (
                 create_remote_engine(user, password, server, port, db_name))
         self.dbName = db_name
-        self.reader = DbReader(self.session_gen)
-        self.writer = DbWriter(self.session_gen, remove_orphans)
         self.initialized = False
         self.local = local
+        self.remove_orphans = remove_orphans
 
     async def initialize(self):
         async with self.db_engine.begin() as conn:
@@ -69,70 +77,42 @@ class SQLDatabase(DatabaseBase):
     async def __aexit__(self, exc_type, exc_value, traceback):
         return await super().__aexit__(exc_type, exc_value, traceback)
 
-    async def list_domains(self) -> list[str]:
-        return await self.reader.list_domains()
-
-    async def get_devices_from_domain(self, domain: str) -> list[dict]:
-        return await self.reader.get_devices_from_domain(domain)
-
     async def domain_exists(self, domain: str) -> bool:
         domains = await self.list_domains()
         return domain in domains
 
-    async def add_domain(self, domain: str):
-        if await self.domain_exists(domain):
-            return
-        await self.writer.add_domain(domain)
-
     async def list_items(
-            self, domain: str,
-            item_types: list[str] | tuple[str] | None = None) -> list[
-                dict[str, any]]:
+        self, domain: str, item_types: list[str] | tuple[str] | None = None
+            ) -> list[dict[str, any]]:
         """
         List items in domain which match item_types if given, or all items
-        if not given
+        if not given.
         :param domain: domain to list items from
         :param item_types: list or tuple of item_types to list
-        :return: a list of dicts where each entry has keys: uuid, item_type
-                 and simple_name
+        :return: list of dicts with keys: uuid, item_type, simple_name
         """
         if not await self.domain_exists(domain):
             raise ProjectDBError(f'Domain "{domain}" not found')
+
         if item_types is None:
-            item_types = ["project", "macro", "scene", "device_server",
-                          "device_instance", "device_config"]
-        result = []
-        for item in item_types:
-            match item:
-                case "project":
-                    projects = await self.reader.get_domain_projects(domain)
-                    for project in projects:
-                        result.append(project)
-                case "macro":
-                    macros = await self.reader.get_domain_macros(domain)
-                    for macro in macros:
-                        result.append(macro)
-                case "scene":
-                    scenes = await self.reader.get_domain_scenes(domain)
-                    for scene in scenes:
-                        result.append(scene)
-                case "device_server":
-                    servers = await self.reader.get_domain_device_servers(
-                        domain)
-                    for server in servers:
-                        result.append(server)
-                case "device_instance":
-                    instances = await self.reader.get_domain_device_instances(
-                        domain)
-                    for instance in instances:
-                        result.append(instance)
-                case "device_config":
-                    configs = await self.reader.get_domain_device_configs(
-                        domain)
-                    for config in configs:
-                        result.append(config)
-                case _:
-                    raise ValueError(f'Unrecognized item_type, "{item}"')
+            item_types = [
+                "project", "macro", "scene",
+                "device_server", "device_instance", "device_config"
+            ]
+
+        reader_map: dict[str, Callable[[str], Awaitable[list]]] = {
+            "project": self._get_domain_projects,
+            "macro": self._get_domain_macros,
+            "scene": self._get_domain_scenes,
+            "device_server": self._get_domain_device_servers,
+            "device_instance": self._get_domain_device_instances,
+            "device_config": self._get_domain_device_configs,
+        }
+        tasks = [reader_map[item_type](domain) for item_type in item_types]
+        results = await gather(*tasks)
+
+        # Flatten results into a single list
+        result = [item for group in results for item in group]
         return result
 
     async def list_named_items(
@@ -151,181 +131,201 @@ class SQLDatabase(DatabaseBase):
         return [item for item in items
                 if item.get('simple_name') == simple_name]
 
-    async def _load_project_item(self, uuid: str) -> dict[str, any] | None:
+    async def list_domains(self):
+        return [d.name for d in await self._execute_all(select(ProjectDomain))]
+
+    async def get_devices_from_domain(
+            self, domain: str) -> list[dict[str, any]]:
+        instances = []
+        async with self.session_gen() as session:
+            query = (
+                select(DeviceInstance)
+                .join(DeviceServer)
+                .join(Project)
+                .join(ProjectDomain)
+                .where(ProjectDomain.name == domain)
+                .options(selectinload(DeviceInstance.device_server)
+                         .selectinload(DeviceServer.project))
+            )
+            result = await session.exec(query)
+            device_instances = result.all()
+            for instance in device_instances:
+                project = instance.device_server.project
+                instances.append({
+                    "device_uuid": instance.uuid,
+                    "device_name": instance.name,
+                    "project_uuid": project.uuid,
+                    "project_name": project.name
+                })
+
+        return instances
+
+    async def _emit_project_item(self, uuid: str) -> dict[str, any] | None:
+        """Internal emitter method to load a project item"""
         item = None
-        project = await self.reader.get_project_from_uuid(uuid)
+        project = await self.get_project_from_uuid(uuid)
         if project:
-            subprojects = await self.reader.get_subprojects_of_project(project)
-            scenes = await self.reader.get_scenes_of_project(project)
-            macros = await self.reader.get_macros_of_project(project)
-            servers = await self.reader.get_device_servers_of_project(project)
-            await self.writer.register_project_load(project)
+            subprojects = await self._get_subprojects_of_project(project)
+            scenes = await self._get_scenes_of_project(project)
+            macros = await self._get_macros_of_project(project)
+            servers = await self._get_servers_of_project(project)
+            await self._register_project_load(project)
             item = {
                 "uuid": uuid,
                 "xml": emit_project_xml(
                     project, scenes, macros, servers, subprojects)}
         return item
 
-    async def _load_scene_item(self, uuid: str) -> dict[str, any] | None:
+    async def _emit_scene_item(self, uuid: str) -> dict[str, any] | None:
         item = None
-        scene = await self.reader.get_scene_from_uuid(uuid)
+        scene = await self.get_scene_from_uuid(uuid)
         if scene:
             item = {
                 "uuid": uuid,
                 "xml": emit_scene_xml(scene)}
         return item
 
-    async def _load_macro_item(self, uuid: str) -> dict[str, any] | None:
-        item = None
-        macro = await self.reader.get_macro_from_uuid(uuid)
-        if macro:
-            item = {
-                "uuid": uuid,
+    async def _emit_macro_item(self, uuid: str) -> dict[str, any] | None:
+        macro = await self.get_macro_from_uuid(uuid)
+        if not macro:
+            return
+        item = {"uuid": uuid,
                 "xml": emit_macro_xml(macro)}
         return item
 
-    async def _load_server_item(self, uuid: str) -> dict[str, any] | None:
-        item = None
-        server = await self.reader.get_device_server_from_uuid(uuid)
-        if server:
-            instances = await self.reader.get_device_instances_of_server(
-                server)
-            item = {
-                "uuid": uuid,
-                "xml": emit_device_server_xml(server, instances)}
+    async def _emit_server_item(self, uuid: str) -> dict[str, any] | None:
+        server = await self._get_server_from_uuid(uuid)
+        if not server:
+            return
+        instances = await self._get_devices_of_server(server)
+        item = {"uuid": uuid,
+                "xml": emit_server_xml(server, instances)}
         return item
 
-    async def _load_instance_item(self, uuid: str) -> dict[str, any] | None:
-        item = None
-        instance = await self.reader.get_device_instance_from_uuid(uuid)
-        if instance:
-            configs = await self.reader.get_device_configs_of_instance(
-                instance)
-            item = {
-                "uuid": uuid,
-                "xml": emit_device_instance_xml(instance, configs)}
+    async def _emit_device_item(self, uuid: str) -> dict[str, any] | None:
+        instance = await self._get_device_from_uuid(uuid)
+        if not instance:
+            return
+        configs = await self._get_configs_of_device(instance)
+        item = {"uuid": uuid,
+                "xml": emit_device_xml(instance, configs)}
         return item
 
-    async def _load_config_item(self, uuid: str) -> dict[str, any] | None:
-        item = None
-        config = await self.reader.get_device_config_from_uuid(uuid)
-        if config:
-            item = {
-                "uuid": uuid,
-                "xml": emit_device_config_xml(config)}
+    async def _emit_config_item(self, uuid: str) -> dict[str, any] | None:
+        config = await self._get_config_from_uuid(uuid)
+        if not config:
+            return
+        item = {"uuid": uuid,
+                "xml": emit_config_xml(config)}
         return item
 
-    async def _load_unknown_type(self, item_uuid: str):
-        item = await self._load_project_item(item_uuid)
+    async def _emit_unknown(self, item_uuid: str):
+        item = await self._emit_project_item(item_uuid)
         if item is None:
-            item = await self._load_scene_item(item_uuid)
+            item = await self._emit_scene_item(item_uuid)
         if item is None:
-            item = await self._load_macro_item(item_uuid)
+            item = await self._emit_macro_item(item_uuid)
         if item is None:
-            item = await self._load_server_item(item_uuid)
+            item = await self._emit_server_item(item_uuid)
         if item is None:
-            item = await self._load_instance_item(item_uuid)
+            item = await self._emit_device_item(item_uuid)
         if item is None:
-            item = await self._load_config_item(item_uuid)
-
+            item = await self._emit_config_item(item_uuid)
+        if item is None:
+            raise ProjectDBError(
+                f"Item with uuid {item_uuid} not found.")
         return item
 
-    async def load_item(self, domain: str, items_uuids: list[str],
-                        item_type: str | None = None) -> list[dict[str, any]]:
+    async def load_item(
+        self, domain: str, items_uuids: list[str],
+            item_type: str | None = None) -> list[dict[str, any]]:
         """
-        Loads a list of item of a specified type from a given domain.
+        Loads a list of items of a specified type from a given domain.
 
-        :param domain: the name of the domain from which the items should be
-                       loaded - not used for SQL databases; legacy from
-                       ExistDB
-        :param item_uuid: a list with the UUIDs of the items to load
-        :param item_type: the type of the items to be loaded
-        :return: A list of dictionaries with keys "uuid" and "xml".
-        :raises: ProjectDBError if an item corresponding to a given
-                 (UUID, type) combination couldn't be found.'
+        :param domain: domain name (not used for SQL; legacy from ExistDB)
+        :param items_uuids: list of UUIDs to load
+        :param item_type: optional type of the items to be loaded
+        :return: List of dicts with keys "uuid" and "xml"
+        :raises: ProjectDBError if any item can't be found
         """
-        futures = []
-        for item_uuid in items_uuids:
-            match item_type:
-                case "project":
-                    futures.append(self._load_project_item(item_uuid))
-                case "macro":
-                    futures.append(self._load_macro_item(item_uuid))
-                case "scene":
-                    futures.append(self._load_scene_item(item_uuid))
-                case "device_server":
-                    futures.append(self._load_server_item(item_uuid))
-                case "device_instance":
-                    futures.append(self._load_instance_item(item_uuid))
-                case "device_config":
-                    futures.append(self._load_config_item(item_uuid))
-                case _:
-                    # item_type not known; try exhaustively by UUID
-                    futures.append(self._load_unknown_type(item_uuid))
+        reader_map: dict[str, Callable[[str], Awaitable[dict[str, any]]]] = {
+            "project": self._emit_project_item,
+            "macro": self._emit_macro_item,
+            "scene": self._emit_scene_item,
+            "device_server": self._emit_server_item,
+            "device_instance": self._emit_device_item,
+            "device_config": self._emit_config_item,
+        }
+        if item_type is not None:
+            loader_func = reader_map.get(item_type, None)
+            if loader_func is None:
+                raise ProjectDBError(f'Unrecognized item_type "{item_type}"')
+            futures = [loader_func(uuid) for uuid in items_uuids]
+        else:
+            # Try to resolve each UUID using exhaustive strategy
+            futures = [self._emit_unknown(uuid) for uuid in items_uuids]
 
-        # XXX: Item none protection
         loaded_items = await gather(*futures)
         return loaded_items
 
-    async def _check_for_modification(self, uuid: str, old_date: str,
+    async def _check_for_modification(self, uuid: str, client_date: str,
                                       item_type: str) -> tuple[bool, str]:
         """ Check whether the item with of the given `domain` and `uuid` was
         modified
 
         :param uuid: the item's uuid
-        :param old_date: the item's last modified time stamp
+        :param client_date: the item's last modified time stamp
         :param item_type: the type of the item to be checked (e.g. 'project')
         :return: A tuple stating whether the item was modified inbetween and a
                  string describing the reason
         """
-        current_modified = None
+        last_modified = None
         match item_type:
             case "project":
-                project = await self.reader.get_project_from_uuid(uuid)
+                project = await self.get_project_from_uuid(uuid)
                 if project:
-                    current_modified = project.date
+                    last_modified = project.date
             case "macro":
-                macro = await self.reader.get_macro_from_uuid(uuid)
+                macro = await self.get_macro_from_uuid(uuid)
                 if macro:
-                    current_modified = macro.date
+                    last_modified = macro.date
             case "scene":
-                scene = await self.reader.get_scene_from_uuid(uuid)
+                scene = await self.get_scene_from_uuid(uuid)
                 if scene:
-                    current_modified = scene.date
+                    last_modified = scene.date
             case "device_server":
-                server = await self.reader.get_device_server_from_uuid(uuid)
+                server = await self._get_server_from_uuid(uuid)
                 if server:
-                    current_modified = server.date
+                    last_modified = server.date
             case "device_instance":
-                instance = await self.reader.get_device_instance_from_uuid(
+                instance = await self._get_device_from_uuid(
                     uuid)
                 if instance:
-                    current_modified = instance.date
+                    last_modified = instance.date
             case "device_config":
-                config = await self.reader.get_device_config_from_uuid(uuid)
+                config = await self._get_config_from_uuid(uuid)
                 if config:
-                    current_modified = config.date
+                    last_modified = config.date
 
-        if current_modified:
-            old_date_date = datetime.datetime.fromisoformat(old_date)
-            # Make sure old_date_date has timezone information
-            if old_date_date.tzinfo is None:
-                old_date_date = old_date_date.replace(tzinfo=datetime.UTC)
-            # current_modified was read from the DB as a naive datetime, but we
+        if last_modified:
+            client_modified = datetime.datetime.fromisoformat(client_date)
+            # Make sure `client_modified` has timezone information
+            if client_modified.tzinfo is None:
+                client_modified = client_modified.replace(tzinfo=datetime.UTC)
+            # `last_modified`` was read from the DB as a naive datetime, but we
             # know it is in UTC. Add the timezone information so it can be
-            # compared to the non-naive obtained from old_date.
-            current_modified = current_modified.replace(
-                tzinfo=datetime.UTC)
-            if old_date_date < current_modified:
+            # compared to the non-naive obtained from client_date.
+            last_modified = last_modified.replace(tzinfo=datetime.UTC)
+            if client_modified < last_modified:
                 # The data has been changed in the database between the
-                # old_date that the GUI client sent and the current time.
+                # client_date that the GUI client sent and the current time.
                 return (True,
                         f'Item of type "{item_type}" with uuid "{uuid}" '
-                        f'has been modified in the DB ({current_modified}) '
+                        f'has been modified in the DB ({last_modified}) '
                         'after its last retrieval by the client '
-                        f'({old_date_date}).')
+                        f'({client_modified}).')
 
-        return (False, "")
+        return False, ""
 
     async def save_item(self, domain: str, uuid: str, item_xml: str,
                         overwrite: bool = False) -> dict[str, any]:
@@ -404,22 +404,22 @@ class SQLDatabase(DatabaseBase):
 
         match item_type:
             case "project":
-                await self.writer.save_project_item(
+                await self._save_project_item(
                     domain, uuid, item_xml, timestamp)
             case "macro":
-                await self.writer.save_macro_item(
+                await self._save_macro_item(
                     uuid, item_xml, timestamp)
             case "scene":
-                await self.writer.save_scene_item(
+                await self._save_scene_item(
                     uuid, item_xml, timestamp)
             case "device_server":
-                await self.writer.save_device_server_item(
+                await self._save_device_server_item(
                     uuid, item_xml, timestamp)
             case "device_instance":
-                await self.writer.save_device_instance_item(
+                await self._save_device_instance_item(
                     uuid, item_xml, timestamp)
             case "device_config":
-                await self.writer.save_device_config_item(
+                await self._save_device_config_item(
                     uuid, item_xml, timestamp)
             case _:
                 raise ProjectDBError(
@@ -428,7 +428,7 @@ class SQLDatabase(DatabaseBase):
         meta = {"domain": domain, "uuid": uuid, "date": timestamp}
         return meta
 
-    async def get_configurations_from_device_name_part(
+    async def _get_configuration_from_device_part(
         self, domain: str, device_id_part: str,
         only_active: bool = False
     ) -> list[dict[str, str]]:
@@ -447,27 +447,22 @@ class SQLDatabase(DatabaseBase):
               ...
             ]
         """
-        instances = await self.reader.get_domain_device_instances_by_name_part(
+        instances = await self._get_domain_devices_by_name_part(
             domain, device_id_part
         )
         results = []
         for instance in instances:
-            configs = await self.reader.get_device_configs_of_instance(
-                instance)
-            filtered = [
-                {
-                    "config_id": config.uuid,
-                    "device_uuid": instance.uuid,
-                    "device_id": instance.name
-                }
-                for config in configs
-                if config.is_active or not only_active
-            ]
+            configs = await self._get_configs_of_device(instance)
+            filtered = [{"config_id": config.uuid,
+                         "device_uuid": instance.uuid,
+                         "device_id": instance.name}
+                        for config in configs
+                        if config.is_active or not only_active]
             results.extend(filtered)
 
         return results
 
-    async def get_configurations_from_device_name(
+    async def _get_configurations_from_device_name(
         self, domain: str, instance_id: str
     ) -> list[dict[str, str]]:
         """
@@ -481,17 +476,16 @@ class SQLDatabase(DatabaseBase):
               ...
             ]
         """
-        configs = await self.get_configurations_from_device_name_part(
+        configs = await self._get_configuration_from_device_part(
             domain, instance_id, only_active=True)
 
-        items = [
-            {"configid": config["config_id"],
-             "instanceid": config["device_uuid"]}
-            for config in configs]
+        items = [{"configid": config["config_id"],
+                  "instanceid": config["device_uuid"]}
+                 for config in configs]
         return items
 
-    async def get_projects_data_from_device(
-            self, domain: str, uuid: str) -> list[dict[str, any]]:
+    async def _get_project_from_device_uuid(
+            self, domain: str, uuid: str) -> Project:
         """
         Returns the project which contain a device instance with a given uuid
 
@@ -500,31 +494,12 @@ class SQLDatabase(DatabaseBase):
         :return: a list containing project names, uuids and last modification
                  date.
         """
-        instance = await self.reader.get_device_instance_from_uuid(uuid)
+        instance = await self._get_device_from_uuid(uuid)
         # From the DB structure, a given device instance only belongs to
         # one project
-        project = await self.reader.get_device_instance_project(instance)
-        results = None
-        if project:
-            results = [
-                {"project_name": project.name,
-                 "date": project.date.strftime("%Y-%m-%d %H:%M:%S"),
-                 "uuid": project.uuid}]
-        return results
-
-    async def get_projects_from_device(
-            self, domain: str, uuid: str) -> set[str]:
-        """
-        Returns the projects which contain a device instance with a given uuid
-
-        :param domain: DB domain
-        :param uuid: the uuid of the device instance from the database
-        :return: a set containing project names
-        """
-        projects = set()
-        projects_datum = await self.get_projects_data_from_device(domain, uuid)
-        for project in projects_datum:
-            projects.add(project['project_name'])
+        projects = await self._execute_first(
+            select(Project).join(DeviceServer).where(
+                DeviceServer.id == instance.device_server_id))
         return projects
 
     async def update_trashed(self, **info) -> None:
@@ -541,7 +516,7 @@ class SQLDatabase(DatabaseBase):
         elif value == "false":
             value = False
 
-        model = await self.reader.get_project_from_uuid(
+        model = await self.get_project_from_uuid(
             item_uuid)
         if model is None:
             raise ProjectDBError(
@@ -564,15 +539,14 @@ class SQLDatabase(DatabaseBase):
             {"project name": configuration uuid,
              ...}
         """
-        configs = await self.get_configurations_from_device_name(
+        configs = await self._get_configurations_from_device_name(
             domain, device_id)
         projects = dict()
         for config in configs:
             instance_id = config["instanceid"]
-            project_names = await self.get_projects_from_device(
+            project = await self._get_project_from_device_uuid(
                 domain, instance_id)
-            for project in project_names:
-                projects[project] = config["configid"]
+            projects[project.name] = config["configid"]
         return projects
 
     async def get_projects_with_device(
@@ -591,26 +565,26 @@ class SQLDatabase(DatabaseBase):
               "devices": list of ids of prj devices with the given part},
             ...]
         """
-        configs = await self.get_configurations_from_device_name_part(
+        configs = await self._get_configuration_from_device_part(
             domain, device_id_part)
 
         projects = {}
         for config in configs:
             device_uuid = config["device_uuid"]
             device_id = config["device_id"]
-            for project in await self.get_projects_data_from_device(
-                    domain, device_uuid):
-                project_uuid = project["uuid"]
-                if project_uuid not in projects:
-                    project_data = {
-                        "project_name": project["project_name"],
-                        # Already time mangled before
-                        "date": project["date"],
-                        "uuid": project_uuid,
-                        "items": []}
-                    projects[project_uuid] = project_data
+            project = await self._get_project_from_device_uuid(
+                domain, device_uuid)
 
-                projects[project_uuid]["items"].append(device_id)
+            project_uuid = project.uuid
+            if project_uuid not in projects:
+                project_data = {
+                    "project_name": project.name,
+                    "date": utc_to_local(project.date),
+                    "uuid": project_uuid,
+                    "items": []}
+                projects[project_uuid] = project_data
+
+            projects[project_uuid]["items"].append(device_id)
 
         return list(projects.values())
 
@@ -631,7 +605,7 @@ class SQLDatabase(DatabaseBase):
              "items": list of ids of prj servers with the given part},
              ...]
         """
-        items = await self.reader.get_domain_server_instances_by_name_part(
+        items = await self._get_domain_servers_by_name_part(
             domain, name_part)
         projects = {}
 
@@ -639,10 +613,10 @@ class SQLDatabase(DatabaseBase):
             project_id = item.project_id
             name = item.name
             if project_id not in projects:
-                project = await self.reader.get_project_from_id(project_id)
+                project = await self._get_project_from_id(project_id)
                 project_data = {
                     "project_name": project.name,
-                    "date": project.date.strftime("%Y-%m-%d %H:%M:%S"),
+                    "date": utc_to_local(project.date),
                     "uuid": project.uuid,
                     "items": []}
                 projects[project_id] = project_data
@@ -668,7 +642,7 @@ class SQLDatabase(DatabaseBase):
              "macros": list of ids of prj devices with the given part},
              ...]
         """
-        items = await self.reader.get_domain_macro_instances_by_name_part(
+        items = await self._get_domain_macros_by_name_part(
             domain, name_part)
         projects = {}
 
@@ -676,10 +650,10 @@ class SQLDatabase(DatabaseBase):
             project_id = item.project_id
             name = item.name
             if project_id not in projects:
-                project = await self.reader.get_project_from_id(project_id)
+                project = await self._get_project_from_id(project_id)
                 project_data = {
                     "project_name": project.name,
-                    "date": project.date.strftime("%Y-%m-%d %H:%M:%S"),
+                    "date": utc_to_local(project.date),
                     "uuid": project.uuid,
                     "items": []}
                 projects[project_id] = project_data
@@ -687,3 +661,719 @@ class SQLDatabase(DatabaseBase):
             projects[project_id]["items"].append(name)
 
         return list(projects.values())
+
+    # READER
+    # -------------------------------------------------------------------
+
+    async def _execute_all(self, base_query, order_by=None):
+        if order_by is not None:
+            base_query = base_query.order_by(order_by)
+        async with self.session_gen() as session:
+            result = await session.exec(base_query)
+            return result.all()
+
+    async def _execute_first(self, base_query, order_by=None):
+        if order_by is not None:
+            base_query = base_query.order_by(order_by)
+        async with self.session_gen() as session:
+            result = await session.exec(base_query)
+            return result.first()
+
+    # --------------------- DOMAIN -------------------------------
+
+    async def _get_domain_projects(self, domain: str):
+        query = select(Project).join(ProjectDomain).where(
+            ProjectDomain.name == domain)
+        result = await self._execute_all(query)
+        return [{
+            "uuid": p.uuid,
+            "item_type": "project",
+            "simple_name": p.name,
+            # NOTE: The GUI Client compares the is_trashed value
+            #       with the constants 'true' and 'false' (all lower)
+            "is_trashed": "true" if p.is_trashed else "false",
+            "date": utc_to_local(p.date),
+        } for p in result]
+
+    async def _get_domain_macros(self, domain):
+        query = (
+            select(Macro)
+            .join(Project).join(ProjectDomain)
+            .where(ProjectDomain.name == domain))
+        items = await self._execute_all(query)
+        return [{"uuid": i.uuid, "item_type": "macro",
+                 "simple_name": i.name, "date": utc_to_local(i.date)}
+                for i in items]
+
+    async def _get_domain_scenes(self, domain: str):
+        query = (
+            select(Scene)
+            .join(Project).join(ProjectDomain)
+            .where(ProjectDomain.name == domain))
+        items = await self._execute_all(query)
+        return [{"uuid": i.uuid, "item_type": "scene",
+                 "simple_name": i.name, "date": utc_to_local(i.date)}
+                for i in items]
+
+    async def _get_domain_device_servers(self, domain: str):
+        query = (
+            select(DeviceServer)
+            .join(Project).join(ProjectDomain)
+            .where(ProjectDomain.name == domain))
+        items = await self._execute_all(query)
+        return [{"uuid": i.uuid, "item_type": "device_server",
+                 "simple_name": i.name, "date": utc_to_local(i.date)}
+                for i in items]
+
+    async def _get_domain_device_instances(self, domain):
+        query = (
+            select(DeviceInstance)
+            .join(DeviceServer).join(Project).join(ProjectDomain)
+            .where(ProjectDomain.name == domain))
+        items = await self._execute_all(query)
+        return [{"uuid": i.uuid, "item_type": "device_instance",
+                 "simple_name": i.name, "date": utc_to_local(i.date)}
+                for i in items]
+
+    async def _get_domain_device_configs(self, domain: str):
+        query = (
+            select(DeviceConfig)
+            .join(DeviceInstance).join(DeviceServer).join(Project)
+            .join(ProjectDomain)
+            .where(ProjectDomain.name == domain))
+        items = await self._execute_all(query)
+        return [{"uuid": i.uuid, "item_type": "device_config",
+                 "simple_name": i.name, "date": utc_to_local(i.date)}
+                for i in items]
+
+    async def _get_subprojects_of_project(self, project: Project):
+        links = await self._execute_all(
+            select(ProjectSubproject).where(
+                ProjectSubproject.project_id == project.id),
+            order_by=ProjectSubproject.order)
+        subprojects = []
+        for link in links:
+            sub = await self._execute_first(select(Project).where(
+                Project.id == link.subproject_id))
+            if sub:
+                subprojects.append(sub)
+        return subprojects
+
+    async def _get_scenes_of_project(self, project):
+        return await self._execute_all(
+            select(Scene).where(Scene.project_id == project.id),
+            order_by=Scene.order)
+
+    async def _get_macros_of_project(self, project):
+        return await self._execute_all(
+            select(Macro).where(Macro.project_id == project.id),
+            order_by=Macro.order)
+
+    async def _get_servers_of_project(self, project):
+        return await self._execute_all(
+            select(DeviceServer).where(DeviceServer.project_id == project.id),
+            order_by=DeviceServer.order)
+
+    async def _get_devices_of_server(self, server):
+        return await self._execute_all(
+            select(DeviceInstance).where(
+                DeviceInstance.device_server_id == server.id),
+            order_by=DeviceInstance.order)
+
+    async def _get_configs_of_device(self, instance):
+        return await self._execute_all(
+            select(DeviceConfig).where(
+                DeviceConfig.device_instance_id == instance.id),
+            order_by=DeviceConfig.order)
+
+    async def _get_project_from_id(self, id: int):
+        project = await self._execute_first(
+            select(Project).where(Project.id == id))
+        return project
+
+    # -------------------------- UUID --------------------------
+
+    async def get_project_from_uuid(self, uuid):
+        project = await self._execute_first(
+            select(Project).where(Project.uuid == uuid))
+        return project
+
+    async def get_scene_from_uuid(self, uuid):
+        return await self._execute_first(
+            select(Scene).where(Scene.uuid == uuid))
+
+    async def get_macro_from_uuid(self, uuid):
+        return await self._execute_first(
+            select(Macro).where(Macro.uuid == uuid))
+
+    async def _get_server_from_uuid(self, uuid):
+        return await self._execute_first(
+            select(DeviceServer).where(DeviceServer.uuid == uuid))
+
+    async def _get_device_from_uuid(self, uuid):
+        return await self._execute_first(
+            select(DeviceInstance).where(DeviceInstance.uuid == uuid))
+
+    async def _get_config_from_uuid(self, uuid):
+        return await self._execute_first(
+            select(DeviceConfig).where(DeviceConfig.uuid == uuid))
+
+    # ------------------------ NAME PART ------------------------
+
+    async def _get_domain_devices_by_name_part(
+            self, domain: str, name_part: str):
+        query = (
+            select(DeviceInstance)
+            .join(DeviceServer).join(Project).join(ProjectDomain)
+            .where(ProjectDomain.name == domain)
+            .filter(DeviceInstance.name.ilike(f'%{name_part}%'))
+        )
+        return await self._execute_all(query)
+
+    async def _get_domain_servers_by_name_part(
+            self, domain: str, name_part: str):
+        query = (
+            select(DeviceServer)
+            .join(Project).join(ProjectDomain)
+            .where(ProjectDomain.name == domain)
+            .filter(DeviceServer.name.ilike(f'%{name_part}%'))
+        )
+        return await self._execute_all(query)
+
+    async def _get_domain_macros_by_name_part(
+            self, domain: str, name_part: str):
+        query = (
+            select(Macro)
+            .join(Project).join(ProjectDomain)
+            .where(ProjectDomain.name == domain)
+            .filter(Macro.name.ilike(f'%{name_part}%')))
+        return await self._execute_all(query)
+
+    # ------------------------------------------------------------------------
+    # WRITE IMPLEMENTATION
+
+    async def _register_project_load(self, project: Project):
+        async with self.session_gen() as session:
+            project.last_loaded = datetime.datetime.now(datetime.UTC)
+            session.add(project)
+            await session.commit()
+
+    async def _save_project_item(
+            self, domain: str, uuid: str, xml: str, timestamp: str):
+        prj = etree.fromstring(xml)
+        date = datetime.datetime.fromisoformat(timestamp)
+
+        # Save the project attributes
+        project_id = None  # the id of the updated or new project
+        async with self.session_gen() as session:
+            query = select(ProjectDomain).where(ProjectDomain.name == domain)
+            result = await session.exec(query)
+            project_domain = result.first()
+            # domain is expected to correspond to a valid domain.
+            assert project_domain is not None
+
+            query = select(Project).where(Project.uuid == uuid)
+            result = await session.exec(query)
+            project = result.first()
+            if not project:
+                # There's still no record for the project in the DB
+                trashed = prj.attrib.get('is_trashed', '').lower() == "true"
+                project = Project(
+                    uuid=uuid,
+                    name=prj.attrib['simple_name'],
+                    is_trashed=trashed,
+                    date=date,
+                    project_domain_id=project_domain.id)
+                session.add(project)
+                # The commit / refresh sequence is needed for the case of a
+                # new project. A new project only gets its ID after being
+                # stored in the database.
+                await session.commit()
+                await session.refresh(project)
+            else:
+                # There's a record for the project in the DB - update its
+                # attributes from the data in the xml
+                project.name = prj.attrib['simple_name']
+                # SQLmodel converts 'true' and 'false' strings to boolean
+                # values successfuly on init, but not on an assignment - this
+                # is the reason for the expression with the comparison to lower
+                project.is_trashed = prj.attrib['is_trashed'].lower() == "true"
+                project.date = date
+                project.project_domain_id = project_domain.id
+                session.add(project)
+
+            project_id = project.id
+
+            # Save the children references to the project and
+            # their relative order. For each child type, the items of that
+            # type currently linked to the project must be first unlinked
+            # to the project.
+            project_elem = (
+                prj.getchildren()[0].getchildren()[0]
+                if (len(prj.getchildren()) > 0 and
+                    len(prj.getchildren()[0].getchildren()) > 0)
+                else None)
+            macros_elem = None
+            scenes_elem = None
+            servers_elem = None
+            subprojects_elem = None
+            n_project_children = (
+                len(project_elem.getchildren())
+                if project_elem is not None else 0)
+            for child_index in range(0, n_project_children):
+                match project_elem.getchildren()[child_index].tag.lower():
+                    case "macros":
+                        macros_elem = project_elem.getchildren()[child_index]
+                    case "scenes":
+                        scenes_elem = project_elem.getchildren()[child_index]
+                    case "servers":
+                        servers_elem = project_elem.getchildren()[child_index]
+                    case "subprojects":
+                        subprojects_elem = project_elem.getchildren()[
+                            child_index]
+
+            query = select(Macro).where(Macro.project_id == project_id)
+            result = await session.exec(query)
+            curr_macros = result.all()
+            for curr_macro in curr_macros:
+                curr_macro.project_id = None
+                curr_macro.order = 0
+                session.add(curr_macro)
+
+            macro_idx = 0
+            updated_macros = set()
+            if macros_elem is not None:
+                for macro_elem in macros_elem.getchildren():
+                    macro_uuid = macro_elem.getchildren()[0].text
+                    query = select(Macro).where(Macro.uuid == macro_uuid)
+                    result = await session.exec(query)
+                    macro = result.first()
+                    if not macro:
+                        logger.error(
+                            f'Macro with uuid "{macro_uuid}" not found in the '
+                            'database. Cannot link the macro to project '
+                            f'"{project.name}" ({project.uuid})')
+                        continue
+                    updated_macros.add(macro_uuid)
+                    macro.project_id = project_id
+                    macro.order = macro_idx
+                    session.add(macro)
+                    macro_idx += 1
+            # Removes any macro that was previously linked to the project, but
+            # isn't anymore (depending on the remove_orphans option)
+            if self.remove_orphans:
+                for curr_macro in curr_macros:
+                    if curr_macro.uuid not in updated_macros:
+                        session.delete(curr_macro)
+
+            query = select(Scene).where(Scene.project_id == project_id)
+            result = await session.exec(query)
+            current_scenes = result.all()
+            for current_scene in current_scenes:
+                current_scene.project_id = None
+                current_scene.order = 0
+                session.add(current_scene)
+
+            scene_index = 0
+            updated_scenes = set()
+            if scenes_elem is not None:
+                for scene_elem in scenes_elem.getchildren():
+                    scene_uuid = (
+                        scene_elem.getchildren()[0].text
+                        if len(scene_elem.getchildren()) > 0 else None)
+                    # The legacy unit tests had the scene UUID as an attribute
+                    # of a <xml> tag
+                    if (scene_uuid is None
+                            and "uuid" in scene_elem.attrib.keys()):
+                        scene_uuid = scene_elem.attrib['uuid']
+                    query = select(Scene).where(Scene.uuid == scene_uuid)
+                    result = await session.exec(query)
+                    scene = result.first()
+                    if not scene:
+                        logger.error(
+                            f'Scene with uuid "{scene_uuid}" not found in the '
+                            'database. Cannot link the scene to project '
+                            f'"{project.name}" ({project.uuid})')
+                        continue
+                    updated_scenes.add(scene_uuid)
+                    scene.project_id = project_id
+                    scene.order = scene_index
+                    session.add(scene)
+                    scene_index += 1
+            # Remove any scene that was previously linked to the project but
+            # isn't anymore (depending on the remove_orphans option)
+            if self.remove_orphans:
+                for current_scene in current_scenes:
+                    if current_scene.uuid not in updated_scenes:
+                        session.delete(current_scene)
+
+            query = select(DeviceServer).where(
+                DeviceServer.project_id == project_id)
+            result = await session.exec(query)
+            curr_servers = result.all()
+            for curr_server in curr_servers:
+                curr_server.project_id = None
+                curr_server.order = 0
+                session.add(curr_server)
+
+            server_index = 0
+            updated_servers = set()
+            if servers_elem is not None:
+                for server_elem in servers_elem.getchildren():
+                    server_uuid = server_elem.getchildren()[0].text
+                    query = select(DeviceServer).where(
+                        DeviceServer.uuid == server_uuid)
+                    result = await session.exec(query)
+                    server = result.first()
+                    if not server:
+                        logger.error(
+                            f'Server with uuid "{server_uuid}" not found in '
+                            'the database. Cannot link the server to project'
+                            f'"{project.name}" ({project.uuid})')
+                        continue
+                    updated_servers.add(server_uuid)
+                    server.project_id = project_id
+                    server.order = server_index
+                    session.add(server)
+                    server_index += 1
+            # Removes any device server that was previously linked to the
+            # project but is not anymore (depending on the remove_orphans
+            # option)
+            if self.remove_orphans:
+                for curr_server in curr_servers:
+                    if curr_server.uuid not in updated_servers:
+                        # Before deleting the server, its device instances must
+                        # be deleted - after deleting those instances configs.
+                        query = select(DeviceInstance).where(
+                            DeviceInstance.device_server_id == curr_server.id)
+                        result = await session.exec(query)
+                        instances = result.all()
+                        for instance in instances:
+                            # Delete the instances configs
+                            query = select(DeviceConfig).where(
+                                DeviceConfig.device_instance_id == instance.id)
+                            result = await session.exec(query)
+                            related_configs = result.all()
+                            for related_config in related_configs:
+                                session.delete(related_config)
+                            query = select(DeviceInstance).where(
+                                DeviceInstance.id == instance.id)
+                            result = await session.exec(query)
+                            related_instance = result.first()
+                            if related_instance:
+                                session.delete(related_instance)
+                        # Now finally the server can go
+                        session.delete(curr_server)
+
+            query = select(ProjectSubproject).where(
+                ProjectSubproject.project_id == project_id)
+            result = await session.exec(query)
+            current_subprojects = result.all()
+
+            subproject_index = 0
+            # Initially all the previously saved subproject are to be
+            # potentially removed
+            # Note: subprojects are only a reference to projects, not real
+            #       entities stored in the database like scenes and macros.
+            #       There's no need to handle remove_orphans for them as they
+            #       are updated on single save_item roundtrip between the
+            #       GUI Client and the Project Manager
+            subprojects_to_delete = {
+                subproject.subproject_id for subproject
+                in current_subprojects}
+            # Iterate over the subprojects to be saved
+            if subprojects_elem is not None:
+                for sub_elem in subprojects_elem.getchildren():
+                    subproject_uuid = sub_elem.getchildren()[0].text
+                    query = select(Project).where(
+                        Project.uuid == subproject_uuid)
+                    result = await session.exec(query)
+                    subproject = result.first()
+                    if not subproject:
+                        logger.error(
+                            f'Subproject with uuid "{server_uuid}" not found '
+                            'in the database. Cannot link the subproject to '
+                            f'project "{project.name}" ({project.uuid})')
+                        continue
+                    # Search for the subproject among the current projects, and
+                    # either add it, update it or leave it in the list of
+                    # subproject to be removed
+                    if subproject.id in subprojects_to_delete:
+                        # The project was in the DB and should be kept - just
+                        # update it
+                        subprojects_to_delete.remove(subproject.id)
+                        query = select(ProjectSubproject).where(
+                            ProjectSubproject.project_id == project_id,
+                            ProjectSubproject.subproject_id == subproject.id)
+                        result = await session.exec(query)
+                        project_subproject = result.first()
+                        if project_subproject:
+                            project_subproject.order = subproject_index
+                        session.add(project_subproject)
+                    else:
+                        # The project wasn't in the DB - add it
+                        project_subproject = ProjectSubproject(
+                            project_id=project_id,
+                            subproject_id=subproject.id,
+                            order=subproject_index)
+                        session.add(project_subproject)
+                    subproject_index += 1
+
+            # Remove the subprojects that were in the DB before but shouldn't
+            # be there after the save
+            for subproject_id in subprojects_to_delete:
+                query = select(ProjectSubproject).where(
+                    ProjectSubproject.project_id == project_id,
+                    ProjectSubproject.subproject_id == subproject_id)
+                result = await session.exec(query)
+                subprojects_to_delete = result.first()
+                if subprojects_to_delete:
+                    session.delete(subprojects_to_delete)
+
+            await session.commit()
+
+    async def _save_macro_item(self, uuid: str, xml: str, timestamp: str):
+        macro_obj = etree.fromstring(xml)
+        macro_uuid = macro_obj.attrib["uuid"]
+        macro_name = macro_obj.attrib["simple_name"]
+        # In MySQL the macro bodies are not Base64 encoded
+        macro_body = base64.b64decode(macro_obj.getchildren()[0].text)
+
+        date = datetime.datetime.fromisoformat(timestamp)
+
+        async with self.session_gen() as session:
+            query = select(Macro).where(Macro.uuid == uuid)
+            result = await session.exec(query)
+            macro = result.first()
+            if macro:
+                # A macro is being updated
+                macro.name = macro_name
+                macro.date = date
+                macro.body = macro_body
+            else:
+                # The macro is new
+                macro = Macro(
+                    uuid=macro_uuid,
+                    name=macro_name,
+                    date=date,
+                    body=macro_body)
+            session.add(macro)
+            await session.commit()
+
+    async def _save_scene_item(self, uuid: str, xml: str, timestamp: str):
+        date = datetime.datetime.fromisoformat(timestamp)
+        scene_obj = etree.fromstring(xml)
+        scene_uuid = scene_obj.attrib["uuid"]
+        scene_name = scene_obj.attrib["simple_name"]
+        scene_svg_data = (
+            etree.tostring(scene_obj.getchildren()[0]).decode("UTF-8")
+            if len(scene_obj.getchildren()) > 0 else "")
+
+        async with self.session_gen() as session:
+            query = select(Scene).where(Scene.uuid == uuid)
+            result = await session.exec(query)
+            scene = result.first()
+            if scene:
+                # A scene is being updated
+                scene.name = scene_name
+                scene.date = date
+                scene.svg_data = scene_svg_data
+            else:
+                # The scene is new
+                scene = Scene(
+                    uuid=scene_uuid,
+                    name=scene_name,
+                    date=date,
+                    svg_data=scene_svg_data)
+            session.add(scene)
+            await session.commit()
+
+    async def _save_device_config_item(
+            self, uuid: str, xml: str, timestamp: str):
+        date = datetime.datetime.fromisoformat(timestamp)
+        config_obj = etree.fromstring(xml)
+        config_uuid = config_obj.attrib["uuid"]
+        config_name = config_obj.attrib["simple_name"]
+        config_data = (
+            etree.tostring(config_obj.getchildren()[0]).decode("UTF-8")
+            if len(config_obj.getchildren()) > 0 else "")
+
+        async with self.session_gen() as session:
+            query = select(DeviceConfig).where(DeviceConfig.uuid == uuid)
+            result = await session.exec(query)
+            config = result.first()
+            if config:
+                # A device config is being updated
+                config.name = config_name
+                config.config_data = config_data
+                config.date = date
+            else:
+                # A new device config
+                config = DeviceConfig(
+                    uuid=config_uuid,
+                    name=config_name,
+                    config_data=config_data,
+                    date=date)
+
+            session.add(config)
+            await session.commit()
+
+    async def _save_device_instance_item(
+            self, uuid: str, xml: str, timestamp: str):
+        date = datetime.datetime.fromisoformat(timestamp)
+        instance_obj = etree.fromstring(xml)
+        instance_uuid = instance_obj.attrib["uuid"]
+        instance_tag = instance_obj.getchildren()[0]
+        instance_id = instance_tag.attrib['instance_id']
+        instance_class_id = instance_tag.attrib['class_id']
+        instance_active_uuid = instance_tag.attrib['active_uuid']
+        config_objs = instance_tag.getchildren()
+
+        # Insert or update the device instance in the DB
+        instance = None
+        async with self.session_gen() as session:
+            query = select(DeviceInstance).where(DeviceInstance.uuid == uuid)
+            result = await session.exec(query)
+            instance = result.first()
+            if instance:
+                # Updates the device instance
+                instance.name = instance_id
+                instance.class_id = instance_class_id
+                instance.date = date
+                session.add(instance)
+            else:
+                # The device instance must be added to the DB
+                instance = DeviceInstance(
+                    uuid=instance_uuid,
+                    name=instance_id,
+                    class_id=instance_class_id,
+                    date=date)
+                session.add(instance)
+                await session.commit()
+                await session.refresh(instance)
+
+            # Saves the device configs linked to the device instance that
+            # has been just saved. First the currently linked configs
+            # must be unlinked
+            query = select(DeviceConfig).where(
+                DeviceConfig.device_instance_id == instance.id)
+            result = await session.exec(query)
+            curr_configs = result.all()
+            for curr_config in curr_configs:
+                curr_config.device_instance_id = None
+                curr_config.order = 0
+                session.add(curr_config)
+
+            config_idx = 0
+            updated_configs = set()
+            for config_obj in config_objs:
+                config_obj_uuid = config_obj.attrib["uuid"]
+                query = select(DeviceConfig).where(
+                    DeviceConfig.uuid == config_obj_uuid)
+                result = await session.exec(query)
+                config = result.first()
+                if not config:
+                    raise RuntimeError(
+                        f'Device config with uuid "{config_obj_uuid}" not '
+                        "found in the database. Cannot link the config to "
+                        f'instance "{instance.name}" ({instance.uuid})')
+                config.device_instance_id = instance.id
+                config.order = config_idx
+                config.is_active = (instance_active_uuid == config_obj_uuid)
+                config_idx += 1
+                session.add(config)
+                updated_configs.add(config_obj_uuid)
+
+            # Removes all configs that were linked to the instance in the
+            # database, but that aren't anymore (depending on the
+            # remove_orphans option)
+            if self.remove_orphans:
+                for curr_config in curr_configs:
+                    if curr_config.uuid not in updated_configs:
+                        session.delete(curr_config)
+
+            await session.commit()
+
+    async def _save_device_server_item(
+            self, uuid: str, xml: str, timestamp: str):
+        date = datetime.datetime.fromisoformat(timestamp)
+        server_obj = etree.fromstring(xml)
+        server_uuid = server_obj.attrib["uuid"]
+        server_name = server_obj.attrib["simple_name"]
+        server_tag = (
+            server_obj.getchildren()[0]
+            if len(server_obj.getchildren()) > 0 else None)
+        instance_objs = (
+            server_tag.getchildren()
+            if server_tag is not None
+            else [])
+
+        server = None
+        async with self.session_gen() as session:
+            query = select(DeviceServer).where(DeviceServer.uuid == uuid)
+            result = await session.exec(query)
+            server = result.first()
+            if server:
+                # An existing device server is being saved
+                server.name = server_name
+                server.date = date
+                session.add(server)
+            else:
+                # A new device server is being saved
+                server = DeviceServer(
+                    uuid=server_uuid,
+                    name=server_name,
+                    date=date)
+                session.add(server)
+                await session.commit()
+                await session.refresh(server)
+
+            # Saves the device instances linked to the device server just saved
+            # First unlinks all the currently linked device instances.
+            query = select(DeviceInstance).where(
+                DeviceInstance.device_server_id == server.id)
+            result = await session.exec(query)
+            curr_linked_instances = result.all()
+            for curr_linked_instance in curr_linked_instances:
+                curr_linked_instance.device_server_id = None
+                curr_linked_instance.order = 0
+                session.add(curr_linked_instance)
+
+            instance_idx = 0
+            updated_instances = set()
+            for instance_obj in instance_objs:
+                instance_obj_uuid = instance_obj.attrib["uuid"]
+                query = select(DeviceInstance).where(
+                    DeviceInstance.uuid == instance_obj_uuid)
+                result = await session.exec(query)
+                instance = result.first()
+                if not instance:
+                    raise RuntimeError(
+                        f'Device instance with uuid "{instance_obj_uuid}" not '
+                        "found in the database. Cannot link the instance to "
+                        f'server "{server.name}" ({server.uuid})')
+                updated_instances.add(instance.id)
+                instance.device_server_id = server.id
+                instance.order = instance_idx
+                instance_idx += 1
+                session.add(instance)
+
+            # Removes any instance that is not linked to the device server
+            # anymore - all the curr_linked_instances whose ids are not in
+            # the updated_instances set (depending on the remove_orphans
+            # option)
+            if self.remove_orphans:
+                for curr_linked_instance in curr_linked_instances:
+                    if curr_linked_instance.id not in updated_instances:
+                        session.delete(curr_linked_instance)
+
+            await session.commit()
+
+    async def add_domain(self, domain: str):
+        if await self.domain_exists(domain):
+            return
+        """Add a domain to the project database"""
+        async with self.session_gen() as session:
+            project_domain = ProjectDomain(name=domain)
+            session.add(project_domain)
+            await session.commit()

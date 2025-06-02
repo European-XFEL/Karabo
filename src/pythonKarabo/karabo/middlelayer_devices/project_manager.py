@@ -381,7 +381,6 @@ class ProjectManager(Device):
         """List devices available in a domain"""
         domain = info["domain"]
         async with self.db_handle as db_session:
-            res = HashList()
             topology = await db_session.get_devices_from_domain(domain)
             res = HashList([Hash(device) for device in topology])
             return Hash('items', res)
