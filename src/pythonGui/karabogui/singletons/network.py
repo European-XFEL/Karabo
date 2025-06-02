@@ -25,6 +25,7 @@ from qtpy.QtWidgets import QDialog, QMessageBox, qApp
 import karabogui.access as krb_access
 from karabo.common.api import (
     KARABO_CONFIG_MANAGER, KARABO_LOGBOOK_MANAGER, KARABO_PROJECT_MANAGER)
+from karabo.common.project.api import PROJECT_DB_SCHEMA
 from karabo.native import (
     AccessLevel, Hash, Timestamp, decodeBinary, dictToHash, encodeBinary)
 from karabogui import background, const
@@ -546,7 +547,8 @@ class Network(QObject):
     def onProjectSaveItems(self, project_manager, items):
         self._request_project_message(
             "saveItems", "projectSaveItems", timeout=30,
-            client=const.KARABO_CLIENT_ID, items=items)
+            client=const.KARABO_CLIENT_ID, items=items,
+            schema_version=PROJECT_DB_SCHEMA)
 
     def onProjectUpdateTrashed(self, project_manager, items):
         self._request_project_message("updateTrashed",
