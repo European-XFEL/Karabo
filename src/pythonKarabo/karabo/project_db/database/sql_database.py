@@ -931,7 +931,7 @@ class SQLDatabase(DatabaseBase):
                 curr_macro.order = 0
                 session.add(curr_macro)
 
-            macro_idx = 0
+            macro_index = 0
             updated_macros = set()
             if macros_elem is not None:
                 for macro_elem in macros_elem.getchildren():
@@ -947,15 +947,15 @@ class SQLDatabase(DatabaseBase):
                         continue
                     updated_macros.add(macro_uuid)
                     macro.project_id = project_id
-                    macro.order = macro_idx
+                    macro.order = macro_index
                     session.add(macro)
-                    macro_idx += 1
+                    macro_index += 1
             # Removes any macro that was previously linked to the project, but
             # isn't anymore (depending on the remove_orphans option)
             if self.remove_orphans:
                 for curr_macro in curr_macros:
                     if curr_macro.uuid not in updated_macros:
-                        session.delete(curr_macro)
+                        await session.delete(curr_macro)
 
             query = select(Scene).where(Scene.project_id == project_id)
             result = await session.exec(query)
@@ -996,7 +996,7 @@ class SQLDatabase(DatabaseBase):
             if self.remove_orphans:
                 for current_scene in current_scenes:
                     if current_scene.uuid not in updated_scenes:
-                        session.delete(current_scene)
+                        await session.delete(current_scene)
 
             query = select(DeviceServer).where(
                 DeviceServer.project_id == project_id)
@@ -1046,15 +1046,15 @@ class SQLDatabase(DatabaseBase):
                             result = await session.exec(query)
                             related_configs = result.all()
                             for related_config in related_configs:
-                                session.delete(related_config)
+                                await session.delete(related_config)
                             query = select(DeviceInstance).where(
                                 DeviceInstance.id == instance.id)
                             result = await session.exec(query)
                             related_instance = result.first()
                             if related_instance:
-                                session.delete(related_instance)
+                                await session.delete(related_instance)
                         # Now finally the server can go
-                        session.delete(curr_server)
+                        await session.delete(curr_server)
 
             query = select(ProjectSubproject).where(
                 ProjectSubproject.project_id == project_id)
@@ -1117,9 +1117,9 @@ class SQLDatabase(DatabaseBase):
                     ProjectSubproject.project_id == project_id,
                     ProjectSubproject.subproject_id == subproject_id)
                 result = await session.exec(query)
-                subprojects_to_delete = result.first()
-                if subprojects_to_delete:
-                    session.delete(subprojects_to_delete)
+                to_delete = result.first()
+                if to_delete:
+                    await session.delete(to_delete)
 
             await session.commit()
 
@@ -1255,7 +1255,7 @@ class SQLDatabase(DatabaseBase):
                 curr_config.order = 0
                 session.add(curr_config)
 
-            config_idx = 0
+            config_index = 0
             updated_configs = set()
             for config_obj in config_objs:
                 config_obj_uuid = config_obj.attrib["uuid"]
@@ -1269,9 +1269,9 @@ class SQLDatabase(DatabaseBase):
                         "found in the database. Cannot link the config to "
                         f'instance "{instance.name}" ({instance.uuid})')
                 config.device_instance_id = instance.id
-                config.order = config_idx
+                config.order = config_index
                 config.is_active = (instance_active_uuid == config_obj_uuid)
-                config_idx += 1
+                config_index += 1
                 session.add(config)
                 updated_configs.add(config_obj_uuid)
 
@@ -1281,7 +1281,7 @@ class SQLDatabase(DatabaseBase):
             if self.remove_orphans:
                 for curr_config in curr_configs:
                     if curr_config.uuid not in updated_configs:
-                        session.delete(curr_config)
+                        await session.delete(curr_config)
 
             await session.commit()
 
@@ -1330,7 +1330,7 @@ class SQLDatabase(DatabaseBase):
                 curr_linked_instance.order = 0
                 session.add(curr_linked_instance)
 
-            instance_idx = 0
+            instance_index = 0
             updated_instances = set()
             for instance_obj in instance_objs:
                 instance_obj_uuid = instance_obj.attrib["uuid"]
@@ -1345,8 +1345,8 @@ class SQLDatabase(DatabaseBase):
                         f'server "{server.name}" ({server.uuid})')
                 updated_instances.add(instance.id)
                 instance.device_server_id = server.id
-                instance.order = instance_idx
-                instance_idx += 1
+                instance.order = instance_index
+                instance_index += 1
                 session.add(instance)
 
             # Removes any instance that is not linked to the device server
@@ -1356,7 +1356,7 @@ class SQLDatabase(DatabaseBase):
             if self.remove_orphans:
                 for curr_linked_instance in curr_linked_instances:
                     if curr_linked_instance.id not in updated_instances:
-                        session.delete(curr_linked_instance)
+                        await session.delete(curr_linked_instance)
 
             await session.commit()
 
