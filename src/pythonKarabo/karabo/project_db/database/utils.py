@@ -12,3 +12,8 @@ def utc_to_local(timestamp: datetime.datetime | None) -> str:
         return ""
     return timestamp.replace(
         tzinfo=datetime.UTC).astimezone().strftime(ISO8601_FORMAT)
+
+
+def get_trashed(value: str | None) -> bool:
+    """The trashed boolean in XML attributes is stored as string"""
+    return False if value is None else value.lower() == "true"
