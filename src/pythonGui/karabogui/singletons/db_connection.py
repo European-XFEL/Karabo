@@ -174,7 +174,8 @@ class ProjectDatabaseConnection(QObject):
         """
         self._push_writing(domain, uuid, obj)
 
-    def update_trashed(self, domain, item_type, uuid, attr_value):
+    def update_trashed(self, domain: str, item_type: str, uuid: str,
+                       attr_value: bool):
         """ Update any attribute of the of the object
         """
         assert item_type == "project"
