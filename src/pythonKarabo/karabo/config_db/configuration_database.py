@@ -16,10 +16,9 @@
 from datetime import datetime, timezone
 from pathlib import Path
 
-from sqlalchemy import insert, select, update
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.orm import selectinload
-from sqlmodel import SQLModel
+from sqlmodel import SQLModel, insert, select, update
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from .models import NamedDeviceConfig, NamedDeviceInstance
@@ -79,7 +78,7 @@ class ConfigurationDatabase:
                 .options(selectinload(NamedDeviceInstance.configurations)))
 
             result = await session.exec(stmt)
-            device = result.scalars().first()
+            device = result.first()
             if not device:
                 return []
 
@@ -107,7 +106,7 @@ class ConfigurationDatabase:
                     NamedDeviceConfig.name == name)
             )
             result = await session.exec(stmt)
-            config = result.scalars().first()
+            config = result.first()
             if not config:
                 raise ConfigurationDBError(
                     f"Configuration for {device_id} - {name} not available.")
@@ -122,7 +121,7 @@ class ConfigurationDatabase:
                     .options(selectinload(NamedDeviceInstance.configurations))
                 )
                 result = await session.exec(stmt)
-                device = result.scalars().first()
+                device = result.first()
                 if device and not device.configurations:
                     await session.delete(device)
                 await session.commit()
@@ -139,7 +138,7 @@ class ConfigurationDatabase:
         async with self.session() as session:
             stmt = select(NamedDeviceInstance.device_id).distinct()
             result = await session.exec(stmt)
-            return result.scalars().all()
+            return result.all()
 
     async def get_configuration(self, device_id: str, name: str) -> dict:
         """Retrieve a device configuration with name and update `last_loaded`
@@ -159,7 +158,7 @@ class ConfigurationDatabase:
                 .with_for_update()
             )
             result = await session.exec(stmt)
-            config = result.scalars().first()
+            config = result.first()
             if not config:
                 return {}
 
@@ -209,7 +208,7 @@ class ConfigurationDatabase:
                     stmt_device = select(NamedDeviceInstance).where(
                         NamedDeviceInstance.device_id == device_id)
                     device = (await session.exec(
-                        stmt_device)).scalars().first()
+                        stmt_device)).first()
                     if not device:
                         session.add(NamedDeviceInstance(device_id=device_id))
 
