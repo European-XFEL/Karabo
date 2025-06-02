@@ -39,29 +39,60 @@ void exportPyLogLogger(py::module_& m) {
     }
 
     { // spdlog::logger
-
         py::class_<spdlog::logger, std::shared_ptr<spdlog::logger>>(m, "Category")
-
               .def_static("getInstance", &spdlog::get, py::arg("name"), py::return_value_policy::reference_internal)
               .def("getName", &spdlog::logger::name)
+
+              .def(
+                    "debug",
+                    [](std::shared_ptr<spdlog::logger>& self, const std::string& message) {
+                        self->debug("{}", message);
+                    },
+                    py::arg("message"))
+
+              .def(
+                    "info",
+                    [](std::shared_ptr<spdlog::logger>& self, const std::string& message) {
+                        self->info("{}", message);
+                    },
+                    py::arg("message"))
+
+              .def(
+                    "warning",
+                    [](std::shared_ptr<spdlog::logger>& self, const std::string& message) {
+                        self->warn("{}", message);
+                    },
+                    py::arg("message"))
+
+              .def(
+                    "error",
+                    [](std::shared_ptr<spdlog::logger>& self, const std::string& message) {
+                        self->error("{}", message);
+                    },
+                    py::arg("message"))
+
+              // Optional legacy UPPERCASE bindings
               .def(
                     "DEBUG",
                     [](std::shared_ptr<spdlog::logger>& self, const std::string& message) {
                         self->debug("{}", message);
                     },
                     py::arg("message"))
+
               .def(
                     "INFO",
                     [](std::shared_ptr<spdlog::logger>& self, const std::string& message) {
                         self->info("{}", message);
                     },
                     py::arg("message"))
+
               .def(
                     "WARN",
                     [](std::shared_ptr<spdlog::logger>& self, const std::string& message) {
                         self->warn("{}", message);
                     },
                     py::arg("message"))
+
               .def(
                     "ERROR",
                     [](std::shared_ptr<spdlog::logger>& self, const std::string& message) {
@@ -97,6 +128,6 @@ void exportPyLogLogger(py::module_& m) {
                     py::arg("message"), py::arg("logger") = "")
               .def_static("setLevel", &Logger::setLevel, py::arg("priority"), py::arg("logger") = "")
               .def_static("getLevel", &Logger::getLevel, py::arg("logger") = "")
-              .def_static("getCategory", &Logger::getCategory, py::arg("logger") = "");
+              .def_static("getLogger", &Logger::getCategory, py::arg("logger") = "");
     }
 }

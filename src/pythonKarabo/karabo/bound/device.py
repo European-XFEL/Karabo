@@ -267,7 +267,12 @@ class PythonDevice:
             .commit(),
         )
 
-    log = None  # make always available, at least as None
+    logger = None  # make always available, at least as None
+
+    @property
+    def log(self):
+        """The legacy property for the logger instance"""
+        return self.logger
 
     def __init__(self, configuration: Hash | None):
         """The initialization method of a device
@@ -399,7 +404,7 @@ class PythonDevice:
         # Setup device logger (needs self._parameters) before SignalSlotable
         # to log e.g. broker setup (i.e. logging must not log to broker).
         self.loadLogger()
-        self.log = Logger.getCategory(self.deviceid)
+        self.logger = Logger.getLogger(self.deviceid)
 
         # Instantiate SignalSlotable object
         self._sigslot = SignalSlotable(
@@ -442,8 +447,9 @@ class PythonDevice:
         self._sigslot.start()  # Can raise e.g. for invalid instanceId
 
         pid = self["pid"]
-        self.log.INFO("'{0.classid}' with deviceId '{0.deviceid}' got started "
-                      "on server '{0.serverid}', pid '{1}'.".format(self, pid))
+        self.logger.info(
+            "'{0.classid}' with deviceId '{0.deviceid}' got started "
+            "on server '{0.serverid}', pid '{1}'.".format(self, pid))
 
         # Inform server that we are up - fire-and-forget is sufficient.
         self._sigslot.call(
@@ -459,7 +465,7 @@ class PythonDevice:
                 self.startInitialFunctions()
             except Exception as e:
                 msg = f"{repr(e)} in initialisation"
-                self.log.ERROR(msg)
+                self.logger.error(msg)
                 self.set("status", msg)
                 self._sigslot.call("", "slotKillDevice")
 
@@ -476,8 +482,8 @@ class PythonDevice:
         EventLoop.post(wrapInitialFunctions)
 
         if self.timeServerId:
-            self.log.DEBUG("Connecting to time server : \"{}\""
-                           .format(self.timeServerId))
+            self.logger.debug("Connecting to time server : \"{}\""
+                              .format(self.timeServerId))
             # TODO 2: Better use asyncConnect!
             self._sigslot.connect(self.timeServerId, "signalTimeTick",
                                   "slotTimeTick")
@@ -839,8 +845,8 @@ class PythonDevice:
                     # (even if re-injected to change properties).
                     continue
                 if self._injectedSchema.has(inChannel):
-                    self.log.INFO("updateSchema: Remove input channel '"
-                                  f"{inChannel}'")
+                    self.logger.info("updateSchema: Remove input channel '"
+                                     f"{inChannel}'")
                     self._sigslot.removeInputChannel(inChannel)
                     if not schema.has(inChannel):
                         # not re-injected - clear handler back-up
@@ -854,8 +860,9 @@ class PythonDevice:
                         outChannelsToRecreate.add(outChannel)
                     else:
                         # Previously injected channel has to be removed
-                        self.log.INFO("updateSchema: Remove output channel '"
-                                      f"{outChannel}'")
+                        self.logger.info(
+                            "updateSchema: Remove output channel '"
+                            f"{outChannel}'")
                         self._sigslot.removeOutputChannel(outChannel)
                 if (self._staticSchema.has(outChannel)
                         and schema.has(outChannel)
@@ -883,11 +890,11 @@ class PythonDevice:
             self._initChannels(topLevel="", schema=self._injectedSchema)
             # ... and those with potential Schema change
             for outToCreate in outChannelsToRecreate:
-                self.log.INFO("updateSchema triggers creation of output "
-                              f"channel '{outToCreate}'")
+                self.logger.info("updateSchema triggers creation of output "
+                                 f"channel '{outToCreate}'")
                 self._prepareOutputChannel(outToCreate)
 
-        self.log.INFO("Schema updated")
+        self.logger.info("Schema updated")
 
     def appendSchema(self, schema):
         """Append to the existing device schema
@@ -953,11 +960,11 @@ class PythonDevice:
             self._initChannels(topLevel="", schema=schema)
             # ... and those output channels with potential Schema change
             for outToCreate in outChannelsToRecreate:
-                self.log.INFO("appendSchema triggers creation of output "
-                              f"channel '{outToCreate}'")
+                self.logger.info("appendSchema triggers creation of output "
+                                 f"channel '{outToCreate}'")
                 self._prepareOutputChannel(outToCreate)
 
-        self.log.INFO("Schema appended")
+        self.logger.info("Schema appended")
 
     def appendSchemaMaxSize(self, path, value, emitFlag=True):
         """
@@ -1134,7 +1141,7 @@ class PythonDevice:
         """
         assert isinstance(newState, State)
         stateName = newState.name
-        self.log.DEBUG(f"updateState: {stateName}")
+        self.logger.debug(f"updateState: {stateName}")
         if propertyUpdates is None:
             propertyUpdates = Hash()
         if timestamp is None:
@@ -1169,9 +1176,10 @@ class PythonDevice:
         in the current context. Usually, this means you have an error in your
         state machine.
         """
-        self.log.WARN("Device \"{}\" being in state '{}' does not allow the"
-                      " transition for event '{}'."
-                      .format(self.deviceid, currentState, currentEvent))
+        self.logger.warning(
+            "Device \"{}\" being in state '{}' does not allow the"
+            " transition for event '{}'."
+            .format(self.deviceid, currentState, currentEvent))
 
     def onTimeUpdate(self, id, sec, frac, period):
         """Called when an update from the time server is received
@@ -1279,13 +1287,13 @@ class PythonDevice:
                 elif classId == "InputChannel":
                     self._prepareInputChannel(key)
                 else:
-                    self.log.DEBUG("Not creating in-/output channel for '"
-                                   + key + "' since it's a '"
-                                   + classId + "'")
+                    self.logger.debug("Not creating in-/output channel for '"
+                                      + key + "' since it's a '"
+                                      + classId + "'")
             elif schema.isNode(key):
                 # Recursively go down the tree for channels within nodes
-                self.log.DEBUG("Looking for input/output channels " +
-                               "under node '" + key + "'")
+                self.logger.debug("Looking for input/output channels " +
+                                  "under node '" + key + "'")
                 self._initChannels(key, schema)
 
     def _prepareOutputChannel(self, path):
@@ -1293,12 +1301,12 @@ class PythonDevice:
         Internal method to create an OutputChannel for given path.
         Needs _stateChangeLock protection
         """
-        self.log.INFO(f"Creating output channel '{path}'")
+        self.logger.info(f"Creating output channel '{path}'")
         outputChannel = self._sigslot.createOutputChannel(
             path, self._parameters)
         if not outputChannel:
-            self.log.ERROR(f"Failed to create output channel "
-                           f"'{path}'")
+            self.logger.error(f"Failed to create output channel "
+                              f"'{path}'")
         else:
             def connectionsHandler(table):
                 with self._stateChangeLock:
@@ -1327,7 +1335,7 @@ class PythonDevice:
         Internal method to create an InputChannel for given path.
         Needs _stateChangeLock protection
         """
-        self.log.INFO(f"Creating input channel '{path}'")
+        self.logger.info(f"Creating input channel '{path}'")
         handlers = self._inputChannelHandlers.get(path, [None] * 3)
 
         def tracker(name, status):
@@ -1492,7 +1500,7 @@ class PythonDevice:
         lockHolder = self["lockedBy"]
         if lockHolder:
             msg = "{} is locked by {} and called by {}"
-            self.log.DEBUG(msg.format(self.deviceid, lockHolder, callee))
+            self.logger.debug(msg.format(self.deviceid, lockHolder, callee))
             if callee != "unknown" and callee != lockHolder:
                 msg = "Command {} is not allowed as device is locked by {}"
                 raise RuntimeError(msg.format(slotName, lockHolder))
@@ -1545,16 +1553,17 @@ class PythonDevice:
         senderid = self._sigslot.getSenderInfo(
             "slotKillDevice").getInstanceIdOfSender()
         if senderid == self.serverid and self.serverid != "__none__":
-            self.log.INFO("Device is going down as instructed by server")
+            self.logger.info("Device is going down as instructed by server")
         else:
-            self.log.INFO("Device is going down as instructed by \"{}\""
-                          .format(senderid))
+            self.logger.info("Device is going down as instructed by \"{}\""
+                             .format(senderid))
             self._sigslot.call(self.serverid, "slotDeviceGone", self.deviceid)
         try:
             self.preDestruction()
         except Exception as e:
             # 'repr(e)' to get both, exception type and text
-            self.log.WARN(f"Clean-up failed in slotKillDevice: {repr(e)}")
+            self.logger.warning(
+                f"Clean-up failed in slotKillDevice: {repr(e)}")
         finally:
             # TODO:
             # Remove this hack if known how to get rid of the object cleanly
@@ -1578,12 +1587,12 @@ class PythonDevice:
             self._timePeriod = period
         self.onTimeUpdate(id, sec, frac, period)
 
-    def slotLoggerLevel(self, newlevel):
-        oldprio = Logger.setLevel()
-        self.set("log.level", newlevel)
-        Logger.setLevel(newlevel)
-        self.log.INFO(
-            f"Logger Level changed : {oldprio} ==> {newlevel}")
+    def slotLoggerLevel(self, new_level):
+        old_level = Logger.setLevel()
+        self.set("log.level", new_level)
+        Logger.setLevel(new_level)
+        self.logger.info(
+            f"Logger Level changed : {old_level} ==> {new_level}")
 
     def getActualTimestamp(self):
         """Returns the actual timestamp.
@@ -1623,13 +1632,14 @@ class PythonDevice:
                     resultId = self._timeId + nPeriods
                 elif self._timeId >= nPeriods + 1:  # sanity check
                     resultId = self._timeId - nPeriods - 1
-                elif self.log:  # if 'log' is not yet initialised
-                    self.log.WARN("Bad input: (train)Id zero since epoch = {};"
-                                  " from time server: epoch = {}, id = {},"
-                                  " period = {} mus"
-                                  .format(epoch.toIso8601(),
-                                          epochLastReceived.toIso8601(),
-                                          self._timeId, self._timePeriod))
+                elif self.logger:  # if 'log' is not yet initialised
+                    self.logger.warning(
+                        "Bad input: (train)Id zero since epoch = {};"
+                        " from time server: epoch = {}, id = {},"
+                        " period = {} mus"
+                        .format(epoch.toIso8601(),
+                                epochLastReceived.toIso8601(),
+                                self._timeId, self._timePeriod))
         return Timestamp(epoch, Trainstamp(resultId))
 
     def _getStateDependentSchema(self, state):
@@ -1655,7 +1665,7 @@ class PythonDevice:
             self.set(Hash("performanceStatistics", performanceMeasures))
 
     def onBrokerError(self, message):
-        self.log.ERROR(f"Broker consumption problem: {message}")
+        self.logger.error(f"Broker consumption problem: {message}")
         # Trigger alarm, but not always a new one (system is busy anyway).
         # By setting messagingProblems up to every second, we can investigate
         # roughly the time of problems via the data logger.

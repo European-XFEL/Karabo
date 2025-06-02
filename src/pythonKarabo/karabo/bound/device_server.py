@@ -160,7 +160,7 @@ class DeviceServer:
             raise ValueError(
                 "Input configuration for constructor should be Hash, not None")
         super().__init__()
-        self.ss = self.log = None
+        self.ss = self.logger = None
         self.availableDevices = dict()
         self.deviceInstanceMap = dict()
         self._startingDevices = dict()  # needs protection by lock below
@@ -197,7 +197,7 @@ class DeviceServer:
         # Start the logging system before the scanning of plugins, so any
         # error during plugin loading can be logged.
         self.loadLogger(config)
-        self.log = Logger.getCategory(self.serverid)
+        self.logger = Logger.getLogger(self.serverid)
 
         info = Hash("type", "server")
         info["serverId"] = self.serverid
@@ -239,15 +239,15 @@ class DeviceServer:
         self.ss.start()
 
         # Now we can log the postponed logging messages - could have been
-        # done directly after assigning self.log, but prefer to do after
+        # done directly after assigning self.logger, but prefer to do after
         # instanceNew triggered by self.ss.start():
         for level, message in scanLogs:
-            getattr(self.log, level)(message)
+            getattr(self.logger, level)(message)
 
         msg = "DeviceServer starts on host '{0.hostname}' " \
               "with pid {0.pid}, broker: {1}"
-        self.log.INFO(msg.format(self,
-                                 self.ss.getConnection().getBrokerUrl()))
+        self.logger.info(msg.format(self,
+                                    self.ss.getConnection().getBrokerUrl()))
 
         self.doAutoStart()
 
@@ -282,7 +282,7 @@ class DeviceServer:
 
         Returns Hash with keys "deviceClasses" and "visibilities" to be merged
         into instance info and a list of log messages to be send.
-        Inside the list there are tuples of two string: log level (e.g. "INFO")
+        Inside the list there are tuples of two string: log level (e.g. "info")
         and message.
         Also fills self.availableDevices dictionary.
         """
@@ -301,7 +301,7 @@ class DeviceServer:
                     schema = Configurator(PythonDevice).getSchema(classid)
                     self.availableDevices[classid] = {"module": ep.name,
                                                       "schema": schema}
-                    logs.append(("INFO",
+                    logs.append(("info",
                                  'Successfully loaded plugin: "{}"'.format(
                                      ep.name)))
                 # A generic handler is used here due to the different kind
@@ -309,7 +309,7 @@ class DeviceServer:
                 # for the just loaded plugin.
                 except Exception as e:
                     m = "Failure while building schema for class {}, base " \
-                        "class {} and bases {} : {}"\
+                        "class {} and bases {} : {}" \
                         .format(classid, deviceClass.__base_classid__,
                                 deviceClass.__bases_classid__, repr(e))
                     # repr(e) also includes type
@@ -376,9 +376,9 @@ class DeviceServer:
         else:
             config['_deviceId_'] = input_config['deviceId']
 
-        self.log.INFO("Trying to start a '{}' with device id '{}'"
-                      "...".format(classid, config['_deviceId_']))
-        self.log.DEBUG(
+        self.logger.info("Trying to start a '{}' with device id '{}'"
+                         "...".format(classid, config['_deviceId_']))
+        self.logger.debug(
             f"with the following configuration:\n{input_config}")
 
         # Inject HostName
@@ -394,7 +394,8 @@ class DeviceServer:
         (ok, msg, _) = validator.validate(schema, config)
         if not ok:
             msg = msg.strip()  # cut-off trailing newline...
-            self.log.WARN(f"Failed to start '{config['_deviceId_']}': {msg}")
+            self.logger.warning(
+                f"Failed to start '{config['_deviceId_']}': {msg}")
             self.ss.reply(ok, msg)
             return
 
@@ -420,7 +421,7 @@ class DeviceServer:
         except Exception as e:
             msg = f"Device of class '{classid}' could not be started: {e}"
             details = traceback.format_exc()
-            self.log.WARN(f"{msg}:\nFailure details:\n{details}")
+            self.logger.warning(f"{msg}:\nFailure details:\n{details}")
             # Cannot call AsyncReply object directly in slot, so post:
             EventLoop.post(lambda: reply.error(msg, details))
 
@@ -457,9 +458,9 @@ class DeviceServer:
                         request.waitForReply(3000)  # in milliseconds
                     except TimeoutError:
                         # Indeed dead Karabo-wise:
-                        self.log.WARN("Kill previous incarnation of "
-                                      f"'{deviceid}' since reply to "
-                                      "ping timed out.")
+                        self.logger.warning("Kill previous incarnation of "
+                                            f"'{deviceid}' since reply to "
+                                            "ping timed out.")
                         prevLauncher.kill()
                     except Exception as e:
                         # Unexpected exception - give up
@@ -499,15 +500,15 @@ class DeviceServer:
         for devId, reply in failed:
             msg = (f"Timeout of instantiation: {devId} did not confirm it is "
                    f"up within {self.instantiationTimeout} seconds")
-            self.log.WARN(msg)
+            self.logger.warning(msg)
             reply(False, msg)
 
         if somethingLeft:
             EventLoop.post(self._checkStartingDevices, 0.5)
 
     def slotKillServer(self):
-        if self.log:
-            self.log.INFO("Received kill signal")
+        if self.logger:
+            self.logger.info("Received kill signal")
         else:  # might get killed by signal handler before setting up logging
             print("Received kill signal")
         with self.deviceInstanceMapLock:
@@ -522,18 +523,18 @@ class DeviceServer:
                     try:
                         launcher.join()
                     except TimeoutExpired:
-                        self.log.WARN("Timeout on server shutdown while"
-                                      " stopping the process for '{}'"
-                                      "... SIGKILL".format(deviceid))
+                        self.logger.warning("Timeout on server shutdown while"
+                                            " stopping the process for '{}'"
+                                            "... SIGKILL".format(deviceid))
                         launcher.kill()
             self.deviceInstanceMap = {}
         try:
             self.ss.reply(self.serverid)
         except Exception as e:
-            if self.log:  # see above
+            if self.logger:  # see above
                 msg = ("Did not notify distributed system of server shutdown:"
                        "\n {}").format(e)
-                self.log.ERROR(msg)
+                self.logger.error(msg)
         finally:
             self.stopDeviceServer()
 
@@ -551,12 +552,13 @@ class DeviceServer:
                        f" Reason: {reason}")
                 asyncReply(success, msg)
         else:
-            self.log.WARN(f"Unexpected slotDeviceUp for {instanceId}")
+            self.logger.warning(f"Unexpected slotDeviceUp for {instanceId}")
             # No need to inform caller about failure via raising an exception
 
     def slotDeviceGone(self, instanceId):
-        self.log.INFO("Device '{0}' notifies '{1.serverid}' about its future"
-                      " death.".format(instanceId, self))
+        self.logger.info(
+            "Device '{0}' notifies '{1.serverid}' about its future"
+            " death.".format(instanceId, self))
         with self.deviceInstanceMapLock:
             if instanceId in self.deviceInstanceMap:
                 launcher = self.deviceInstanceMap[instanceId]
@@ -564,20 +566,20 @@ class DeviceServer:
                     try:
                         launcher.join()
                     except TimeoutExpired:
-                        self.log.WARN("Timeout on device shutdown while"
-                                      " stopping the process for '{}'"
-                                      "... SIGKILL".format(instanceId))
+                        self.logger.warning("Timeout on device shutdown while"
+                                            " stopping the process for '{}'"
+                                            "... SIGKILL".format(instanceId))
                         launcher.kill()
                 del self.deviceInstanceMap[instanceId]
-            self.log.INFO("Device '{}' removed from server."
-                          .format(instanceId))
+            self.logger.info("Device '{}' removed from server."
+                             .format(instanceId))
 
     def slotGetClassSchema(self, classid):
         try:
             schema = Configurator(PythonDevice).getSchema(classid)
             self.ss.reply(schema, classid, self.serverid)
         except AttributeError as e:
-            self.log.WARN(f"Replied empty schema due to : {str(e)}")
+            self.logger.warning(f"Replied empty schema due to : {str(e)}")
             self.ss.reply(Schema(), classid, self.serverid)
 
     def slotLoggerLevel(self, newlevel):
@@ -588,7 +590,7 @@ class DeviceServer:
         # the current value of the server:
         oldprio = Logger.getLevel()
         Logger.setLevel(newlevel)
-        self.log.INFO(
+        self.logger.info(
             f"log Level changed : {oldprio} ==> {newlevel}")
         # Also devices started in future get the new level by default:
         self.loggerParameters["level"] = newlevel
@@ -637,7 +639,7 @@ class DeviceServer:
             def on_error(s, msg, details):
                 msg = (f"Missing Logger Content from '{s.deviceId}' : "
                        f"{msg} - DETAILS {details}")
-                self.log.WARN(msg)
+                self.logger.warning(msg)
                 log_map.pop(s.deviceId, None)
                 s.done()
 
