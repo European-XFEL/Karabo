@@ -22,7 +22,7 @@ import pytest
 import pytest_asyncio
 
 from karabo.middlelayer import (
-    Device, Hash, String, call, connectDevice, slot, updateDevice)
+    Device, Hash, KaraboError, String, call, connectDevice, slot, updateDevice)
 from karabo.middlelayer.testing import AsyncDeviceContext, sleepUntil
 from karabo.middlelayer_devices.project_manager import ProjectManager
 from karabo.project_db.database import SQLDatabase
@@ -221,9 +221,19 @@ async def test_project_manager(db_fixture, subtests):
         item["item_type"] = "project"
         item["domain"] = "LOCAL"
         items = [item]
+        h = Hash("items", items, "client",  "client-587")
+
+        with pytest.raises(KaraboError):
+            ret = await wait_for(call(
+                "projManTest", "slotSaveItems", h), timeout=5)
+        for fmt in [1, 3, 4]:
+            h["schema_version"] = fmt
+            with pytest.raises(KaraboError):
+                ret = await wait_for(call(
+                    "projManTest", "slotSaveItems", h), timeout=5)
+        h["schema_version"] = 2
         ret = await wait_for(call(
-            "projManTest", "slotSaveItems", items, "client-587"),
-            timeout=5)
+                "projManTest", "slotSaveItems", h), timeout=5)
         items = ret.get("items")
         item = items[0]
         assert item.get('entry.uuid') == uuid
