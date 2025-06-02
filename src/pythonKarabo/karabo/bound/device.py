@@ -34,7 +34,7 @@ from karabo import __version__ as karaboVersion
 from karabo.common.api import (
     KARABO_CLASS_ID_ALARM, KARABO_CLASS_ID_STATE,
     KARABO_LOGGER_CONTENT_DEFAULT, AlarmCondition, Capabilities, Interfaces,
-    State, karabo_deprecated)
+    State)
 
 from .configurator import Configurator
 from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
@@ -858,11 +858,10 @@ class PythonDevice:
                                       f"{outChannel}'")
                         self._sigslot.removeOutputChannel(outChannel)
                 if (self._staticSchema.has(outChannel)
-                    and schema.has(outChannel)
-                    and (not schema.hasClassId(outChannel)
-                         or schema.getClassId(outChannel)
-                         != "OutputChannel"
-                         )):
+                        and schema.has(outChannel)
+                        and (not schema.hasClassId(outChannel)
+                             or schema.getClassId(outChannel)
+                             != "OutputChannel")):
                     outChannelsToRecreate.add(outChannel)
 
             self._injectedSchema.copy(schema)
@@ -925,8 +924,8 @@ class PythonDevice:
             outChannelsToRecreate = set()
             for path in self._sigslot.getOutputChannelNames():
                 if (self._fullSchema.has(path) and schema.has(path)
-                    and (not schema.hasClassId(path) or
-                         schema.getClassId(path) != "OutputChannel")):
+                        and (not schema.hasClassId(path) or
+                             schema.getClassId(path) != "OutputChannel")):
                     # maybe output schema change without using OUTPUT_CHANNEL
                     outChannelsToRecreate.add(path)
                 # elif schema.getClassId(path) == "OutputChannel":
@@ -1431,7 +1430,7 @@ class PythonDevice:
                         currentState = State(self._parameters["state"])
                         if currentState not in allowedStates:
                             msg = "Command \"{}\" is not allowed in current " \
-                                  "state \"{}\" of device \"{}\""\
+                                  "state \"{}\" of device \"{}\"" \
                                 .format(slotName, currentState.name,
                                         self.deviceid)
                             raise RuntimeError(msg)
@@ -1665,7 +1664,7 @@ class PythonDevice:
             self["performanceStatistics.messagingProblems"] = True
             self.lastBrokerErrorStamp = time.time()
 
-    def setAlarmCondition(self, condition, **deprecated):
+    def setAlarmCondition(self, condition):
         """Set the global alarm condition
 
         :param condition: condition to set
@@ -1759,26 +1758,6 @@ class PythonDevice:
         """
         return self._sigslot.requestNoWait(instanceId, slotName,
                                            replySlotName, *args)
-
-    # Added for backward compatibility when fullSchema => _fullSchema
-    @property
-    @karabo_deprecated
-    def fullSchema(self):
-        """
-        DEPRECATED - use getFullSchema()
-        """
-        return self.getFullSchema()
-
-    # Added for backward compatibility when parameters => _parameters
-    @property
-    @karabo_deprecated
-    def parameters(self):
-        """
-        DEPRECATED
-        * for full config use getCurrentConfiguration()
-        * maybe what you want is just some key, then use get(some_key)
-        """
-        return self.getCurrentConfiguration()
 
 
 def launchPythonDevice():
