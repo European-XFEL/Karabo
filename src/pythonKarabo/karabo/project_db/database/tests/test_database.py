@@ -101,7 +101,7 @@ async def test_project_interface(database, subtests):
                 # each item would have keys "uuid", "item_type"
                 # and "simple_name" (no mention to "is_trashed")
                 if "is_trashed" in i.keys():
-                    assert i["is_trashed"] == 'false'
+                    assert i["is_trashed"] is False
             assert scenecnt >= 4
 
         with subtests.test(msg='test_find_macro'):
@@ -158,7 +158,7 @@ async def test_project_interface(database, subtests):
             nb_is_trashed = 0
             uuid_proj = None
             for it in items:
-                if it["is_trashed"] == 'true':
+                if it["is_trashed"] is True:
                     nb_is_trashed += 1
                     uuid_proj = it["uuid"]
                     item_type = it["item_type"]
@@ -173,7 +173,7 @@ async def test_project_interface(database, subtests):
             await db.update_trashed(**h)
             items = await db.list_items('LOCAL', ['project'])
             nb_is_trashed = len([it for it in items
-                                 if it["is_trashed"] == "true"])
+                                 if it["is_trashed"]])
             assert nb_is_trashed == 0
 
         with subtests.test(msg='test_list_domains'):
