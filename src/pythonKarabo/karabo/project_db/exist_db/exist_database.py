@@ -47,6 +47,10 @@ def get_db_credentials(is_test):
     return user, password
 
 
+def convert_trashed(ele):
+    return ele.lower() == "true"
+
+
 class ExistDatabase(DatabaseBase):
 
     root = None
@@ -247,7 +251,7 @@ class ExistDatabase(DatabaseBase):
             return [{'uuid': r.attrib['uuid'],
                      'item_type': r.attrib['item_type'],
                      'simple_name': r.attrib['simple_name'],
-                     'is_trashed': r.attrib['is_trashed'],
+                     'is_trashed': convert_trashed(r.attrib['is_trashed']),
                      'user': r.attrib['user'],
                      'date': r.attrib['date'],
                      'description': r.attrib['description']}
@@ -305,7 +309,7 @@ class ExistDatabase(DatabaseBase):
             return [{'uuid': r.attrib['uuid'],
                      'item_type': r.attrib['item_type'],
                      'simple_name': r.attrib['simple_name'],
-                     'is_trashed': r.attrib['is_trashed'],
+                     'is_trashed': convert_trashed(r.attrib['is_trashed']),
                      'user': r.attrib['user'],
                      'date': r.attrib['date'],
                      'description': r.attrib['description']}

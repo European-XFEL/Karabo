@@ -33,7 +33,7 @@ from .models import (
 from .models_xml import (
     emit_config_xml, emit_device_xml, emit_macro_xml, emit_project_xml,
     emit_scene_xml, emit_server_xml)
-from .utils import utc_to_local
+from .utils import get_trashed, utc_to_local
 
 logger = logging.getLogger(__file__)
 
@@ -373,9 +373,6 @@ class SQLDatabase(DatabaseBase):
 
         # XXX: Cannot be `None`
         item_type = item_tree.attrib['item_type']
-
-        if 'user' not in item_tree.attrib:
-            item_tree.attrib['user'] = 'Karabo User'
         if not item_tree.attrib.get('date'):
             timestamp = datetime.datetime.now(datetime.UTC).isoformat(
                 timespec="seconds")
@@ -384,10 +381,10 @@ class SQLDatabase(DatabaseBase):
             modified, reason = await self._check_for_modification(
                 uuid, item_tree.attrib['date'], item_type)
             if modified:
-                message = "The <b>{}</b> item <b>{}</b> could not be saved: " \
-                          "{}".format(item_tree.attrib.get('item_type', ''),
-                                      item_tree.attrib.get('simple_name', ''),
-                                      reason)
+                simple_name = item_tree.attrib.get('simple_name', '')
+                message = (
+                    f"The <b>{item_type}</b> item <b>{simple_name}</b> "
+                    f"could not be saved: {reason}")
                 raise ProjectDBError(message)
             # Update time stamp
             timestamp = datetime.datetime.now(datetime.UTC).isoformat(
@@ -429,14 +426,14 @@ class SQLDatabase(DatabaseBase):
         return meta
 
     async def _get_configuration_from_device_part(
-        self, domain: str, device_id_part: str,
+        self, domain: str, name_part: str,
         only_active: bool = False
     ) -> list[dict[str, str]]:
         """
         Returns a list of configurations for a given device
 
         :param domain: DB domain
-        :param device_id_part: part of device name; search is case-insensitive.
+        :param name_part: part of device name; search is case-insensitive.
         :param only_active: if True only returns the active configurations
 
         :return: a list of dicts:
@@ -448,7 +445,7 @@ class SQLDatabase(DatabaseBase):
             ]
         """
         instances = await self._get_domain_devices_by_name_part(
-            domain, device_id_part
+            domain, name_part
         )
         results = []
         for instance in instances:
@@ -511,10 +508,7 @@ class SQLDatabase(DatabaseBase):
         item_type = info['item_type']
         assert item_type == "project", "Only projects can be trashed"
         value = info["value"]
-        if value == "true":
-            value = True
-        elif value == "false":
-            value = False
+        assert isinstance(value, bool)
 
         model = await self.get_project_from_uuid(
             item_uuid)
@@ -550,13 +544,13 @@ class SQLDatabase(DatabaseBase):
         return projects
 
     async def get_projects_with_device(
-            self, domain: str, device_id_part: str) -> list[dict[str, any]]:
+            self, domain: str, name_part: str) -> list[dict[str, any]]:
         """
         Returns a list of dictionaries with data about projects that contain
         active configurations for a given device.
 
         :param domain: DB domain
-        :param device_id_part: part of name of devices for which project data
+        :param name_part: part of name of devices for which project data
                                must be returned.
         :return: a list of dicts:
             [{"project_name": name of project,
@@ -566,7 +560,7 @@ class SQLDatabase(DatabaseBase):
             ...]
         """
         configs = await self._get_configuration_from_device_part(
-            domain, device_id_part)
+            domain, name_part)
 
         projects = {}
         for config in configs:
@@ -689,9 +683,7 @@ class SQLDatabase(DatabaseBase):
             "uuid": p.uuid,
             "item_type": "project",
             "simple_name": p.name,
-            # NOTE: The GUI Client compares the is_trashed value
-            #       with the constants 'true' and 'false' (all lower)
-            "is_trashed": "true" if p.is_trashed else "false",
+            "is_trashed": p.is_trashed,
             "date": utc_to_local(p.date),
         } for p in result]
 
@@ -875,12 +867,14 @@ class SQLDatabase(DatabaseBase):
             query = select(Project).where(Project.uuid == uuid)
             result = await session.exec(query)
             project = result.first()
+
+            attrs = prj.attrib
             if not project:
                 # There's still no record for the project in the DB
-                trashed = prj.attrib.get('is_trashed', '').lower() == "true"
+                trashed = get_trashed(attrs.get('is_trashed'))
                 project = Project(
                     uuid=uuid,
-                    name=prj.attrib['simple_name'],
+                    name=attrs['simple_name'],
                     is_trashed=trashed,
                     date=date,
                     project_domain_id=project_domain.id)
@@ -893,11 +887,8 @@ class SQLDatabase(DatabaseBase):
             else:
                 # There's a record for the project in the DB - update its
                 # attributes from the data in the xml
-                project.name = prj.attrib['simple_name']
-                # SQLmodel converts 'true' and 'false' strings to boolean
-                # values successfuly on init, but not on an assignment - this
-                # is the reason for the expression with the comparison to lower
-                project.is_trashed = prj.attrib['is_trashed'].lower() == "true"
+                project.name = attrs['simple_name']
+                project.is_trashed = get_trashed(attrs['is_trashed'])
                 project.date = date
                 project.project_domain_id = project_domain.id
                 session.add(project)
