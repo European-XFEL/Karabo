@@ -25,3 +25,4 @@ PROJECT_DB_TYPE_MACRO = "macro"
 PROJECT_DB_TYPE_PROJECT = "project"
 PROJECT_DB_TYPE_SCENE = "scene"
 PROJECT_OBJECT_CATEGORIES = ("macros", "scenes", "servers", "subprojects")
+PROJECT_DB_SCHEMA = 2
