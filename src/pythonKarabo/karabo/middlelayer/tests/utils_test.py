@@ -412,8 +412,9 @@ async def test_countdown():
 
 
 @pytest.mark.timeout(30)
-def test_suppress(utilsTest, caplog):
-    loop = asyncio.get_event_loop()
+@pytest.mark.asyncio
+async def test_suppress(utilsTest, caplog):
+    loop = asyncio.get_running_loop()
     instanceId = loop.instance().deviceId
     with caplog.at_level("ERROR", logger=instanceId):
         with suppress(RuntimeError):

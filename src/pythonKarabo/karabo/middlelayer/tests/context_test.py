@@ -15,7 +15,7 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 import json
 import uuid
-from asyncio import ensure_future, get_event_loop, sleep
+from asyncio import ensure_future, get_running_loop, sleep
 
 import pytest
 import pytest_asyncio
@@ -52,7 +52,7 @@ class JP(Figure):
 
 
 @pytest.mark.timeout(30)
-@pytest.mark.asyncio
+@run_test
 async def test_device_context():
     deviceId = f"test-mdl-{uuid.uuid4()}"
     device = WW({"_deviceId_": deviceId})
@@ -79,7 +79,7 @@ async def test_device_context():
 
 
 @pytest.mark.timeout(30)
-@pytest.mark.asyncio
+@run_test
 async def test_server_context():
     serverId = f"testserver-mdl-{uuid.uuid4()}"
     server = create_device_server(serverId, [WW])
@@ -89,15 +89,14 @@ async def test_server_context():
         assert "WW" in server_instance.plugins
 
 
-@pytest_asyncio.fixture(scope="function", loop_scope="module")
-@pytest.mark.asyncio
+@pytest_asyncio.fixture(loop_scope="module")
 async def deviceTest():
     ww = WW({"_deviceId_": f"test-ww-{uuid.uuid4()}"})
     jp = JP({"_deviceId_": f"test-jp-{uuid.uuid4()}"})
-    get_event_loop().lead = ww
+    get_running_loop().lead = ww
     async with AsyncDeviceContext(jp=jp, ww=ww) as ctx:
         yield ctx
-    get_event_loop().lead = None
+    get_running_loop().lead = None
 
 
 @pytest.mark.timeout(30)
@@ -105,15 +104,15 @@ async def deviceTest():
 async def test_loop_lead(deviceTest):
     wwId = deviceTest["ww"].deviceId
     jp = deviceTest["jp"]
-    assert get_event_loop().lead is deviceTest["ww"]
-    assert get_event_loop().instance() is deviceTest["ww"]
+    assert get_running_loop().lead is deviceTest["ww"]
+    assert get_running_loop().instance() is deviceTest["ww"]
     async with getDevice(jp.deviceId) as proxy:
         with await lock(proxy):
             assert jp.lockedBy == wwId
 
 
 @pytest.mark.timeout(30)
-@pytest.mark.asyncio
+@run_test
 async def test_loop_instance():
     ww = WW({"_deviceId_": f"test-ww-{uuid.uuid4()}"})
     async with AsyncDeviceContext(ww=ww):
@@ -140,7 +139,7 @@ async def test_loop_instance():
 
 
 @pytest.mark.timeout(30)
-@pytest.mark.asyncio
+@run_test
 async def test_async_server_context():
     config = {"PropertyTestContext": {"classId": "PropertyTest"}}
     init = json.dumps(config)
