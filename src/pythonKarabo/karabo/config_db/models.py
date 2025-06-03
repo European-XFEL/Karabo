@@ -8,6 +8,8 @@ class NamedDeviceInstance(SQLModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     device_id: str = Field(unique=True, index=True)
+    class_id: str = Field(max_length=128, nullable=False)
+    server_id: str = Field(max_length=128, nullable=False)
 
     # One-to-many relationship with NamedDeviceConfig
     configurations: list["NamedDeviceConfig"] = Relationship(
