@@ -35,23 +35,23 @@ namespace karabo {
          * This class expresses a time point and holds it in form of one unsigned 64bit value.
          * The value is the European XFEL trainId which clocks in regular interval (initially 10Hz)
          */
-        class Trainstamp {
-            unsigned long long m_trainId;
+        class TimeId {
+            unsigned long long m_timeId;
 
            public:
             /**
              * Default constructor creates invalid trainId (=0)
              */
-            Trainstamp();
+            TimeId();
 
 
             /**
              * Constructor from trainId
              */
-            Trainstamp(const unsigned long long trainId);
+            TimeId(const unsigned long long trainId);
 
-            inline const unsigned long long& getTrainId() const {
-                return m_trainId;
+            inline const unsigned long long& getTid() const {
+                return m_timeId;
             }
 
             static bool hashAttributesContainTimeInformation(const Hash::Attributes& attributes);
@@ -63,7 +63,7 @@ namespace karabo {
              * @param attributes Hash attributes
              * @return TrainStamp object
              */
-            static Trainstamp fromHashAttributes(const Hash::Attributes& attributes);
+            static TimeId fromHashAttributes(const Hash::Attributes& attributes);
 
             /**
              * Formats as Hash attributes
@@ -72,16 +72,16 @@ namespace karabo {
             void toHashAttributes(Hash::Attributes& attributes) const;
 
 
-            virtual ~Trainstamp();
+            virtual ~TimeId();
 
-            friend bool operator==(const Trainstamp& lhs, const Trainstamp& rhs);
+            friend bool operator==(const TimeId& lhs, const TimeId& rhs);
 
-            friend bool operator!=(const Trainstamp& lhs, const Trainstamp& rhs);
+            friend bool operator!=(const TimeId& lhs, const TimeId& rhs);
 
            private:
         };
 
-        std::ostream& operator<<(std::ostream&, const Trainstamp& trainstamp);
+        std::ostream& operator<<(std::ostream&, const TimeId& trainstamp);
 
     } // namespace data
 } // namespace karabo

@@ -1090,7 +1090,7 @@ the femtosecond range.
 
     Returns the fractional seconds of this timestamp
 
-.. function:: getTrainId()
+.. function:: getTid()
 
     Returns the train id for this timestamp
 

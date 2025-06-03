@@ -40,8 +40,8 @@
 #include "karabo/data/schema/StateElement.hh"
 #include "karabo/data/schema/Validator.hh"
 #include "karabo/data/time/Epochstamp.hh"
+#include "karabo/data/time/TimeId.hh"
 #include "karabo/data/time/Timestamp.hh"
-#include "karabo/data/time/Trainstamp.hh"
 #include "karabo/data/types/Hash.hh"
 #include "karabo/data/types/HashFilter.hh"
 #include "karabo/data/types/State.hh"
@@ -848,7 +848,7 @@ namespace karabo {
             }
 
             /**
-             * Returns the actual timestamp. The Trainstamp part of Timestamp is extrapolated from the last values
+             * Returns the actual timestamp. The TimeId part of Timestamp is extrapolated from the last values
              * received via slotTimeTick (or zero if no time ticks received yet).
              * To receive time ticks, the server of the device has to be connected to a time server.
              *
@@ -859,12 +859,11 @@ namespace karabo {
             }
 
             /**
-             * Returns the Timestamp for given Epochstamp. The Trainstamp part of Timestamp is extrapolated forward or
-             * backward from the last values received via slotTimeTick
-             * (or zero if no time ticks received yet).
-             * To receive time ticks, the server of the device has to be connected to a time server.
+             * Returns the Timestamp for given Epochstamp. The TimeId part of Timestamp is extrapolated
+             * forward or backward from the last values received via slotTimeTick (or zero if no time ticks received
+             * yet). To receive time ticks, the server of the device has to be connected to a time server.
              * @param epoch for that the time stamp is searched for
-             * @return the matching timestamp, consisting of epoch and the corresponding Trainstamp
+             * @return the matching timestamp, consisting of epoch and the corresponding TimeId
              */
             karabo::data::Timestamp getTimestamp(const karabo::data::Epochstamp& epoch) const;
 

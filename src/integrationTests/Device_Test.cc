@@ -229,7 +229,7 @@ class TestDevice : public karabo::core::Device {
 
     void slotIdOfEpochstamp(unsigned long long sec, unsigned long long frac) {
         const Timestamp stamp(getTimestamp(Epochstamp(sec, frac)));
-        reply(stamp.getTrainId());
+        reply(stamp.getTid());
     }
 
 
@@ -532,7 +532,7 @@ void Device_Test::testGetTimestampSystemInfo() {
     CPPUNIT_ASSERT(timeHash.has("time"));
     CPPUNIT_ASSERT(timeHash.get<bool>("time"));
     const Timestamp stamp(Timestamp::fromHashAttributes(timeHash.getAttributes("time")));
-    CPPUNIT_ASSERT_EQUAL(0ull, stamp.getTrainId());
+    CPPUNIT_ASSERT_EQUAL(0ull, stamp.getTid());
     CPPUNIT_ASSERT(stamp.getEpochstamp() > now);
     CPPUNIT_ASSERT(timeHash.has("reference"));
     CPPUNIT_ASSERT(timeHash.get<bool>("reference"));
@@ -555,8 +555,8 @@ void Device_Test::testGetTimestampSystemInfo() {
           sigSlotA->request("TestDevice", "slotGetTime", Hash()).timeout(timeOutInMs).receive(timeHash));
     const Timestamp stamp2(Timestamp::fromHashAttributes(timeHash.getAttributes("time")));
     const Timestamp refStamp(Timestamp::fromHashAttributes(timeHash.getAttributes("reference")));
-    CPPUNIT_ASSERT_GREATEREQUAL(startId, stamp2.getTrainId());
-    CPPUNIT_ASSERT_EQUAL(startId, refStamp.getTrainId());
+    CPPUNIT_ASSERT_GREATEREQUAL(startId, stamp2.getTid());
+    CPPUNIT_ASSERT_EQUAL(startId, refStamp.getTid());
     CPPUNIT_ASSERT_EQUAL(seconds, refStamp.getSeconds());
     CPPUNIT_ASSERT_EQUAL(fracAttoSecs, refStamp.getFractionalSeconds());
 
@@ -1373,7 +1373,7 @@ void Device_Test::testGetconfigReconfig() {
     const Epochstamp pastEpochstamp(
           enableTimestamp.getSeconds() - 3ull * 3600ull, // 3 hours back: no CET/CEST vs UTC confusion
           enableTimestamp.getFractionalSeconds());
-    const Timestamp pastTimestamp(pastEpochstamp, enableTimestamp.getTrainstamp());
+    const Timestamp pastTimestamp(pastEpochstamp, enableTimestamp.getTimeId());
     Hash hToSet;
     Hash::Attributes& attrs = hToSet.set("performanceStatistics.enable", false).getAttributes();
     pastTimestamp.toHashAttributes(attrs);

@@ -16,16 +16,16 @@
 
 from karabo.bound import (
     INPUT_CHANNEL, INT32_ELEMENT, OUTPUT_CHANNEL, ChannelMetaData, Epochstamp,
-    Schema, Timestamp, Trainstamp)
+    Schema, TimeId, Timestamp)
 
 
 def test_metadata_general_functionality():
     es = Epochstamp(1356441936, 789333123456789123)
-    ts = Timestamp(es, Trainstamp(987654321))
+    ts = Timestamp(es, TimeId(987654321))
     meta = ChannelMetaData('abc', ts)
 
     assert meta.getSource() == 'abc'
-    assert meta.getTimestamp().getTrainId() == 987654321
+    assert meta.getTimestamp().getTid() == 987654321
     assert meta.getTimestamp().getSeconds() == 1356441936
     assert meta.getTimestamp().getFractionalSeconds() == 789333123456789123
     assert meta.getTimestamp().toFormattedString() == ts.toFormattedString()
@@ -38,7 +38,7 @@ def test_metadata_general_functionality():
 
     ts1 = Timestamp()
     meta.setTimestamp(ts1)
-    assert meta.getTimestamp().getTrainId() == 0
+    assert meta.getTimestamp().getTid() == 0
     assert meta.getTimestamp().toFormattedString() != ts.toFormattedString()
     assert meta.getTimestamp().toFormattedString() == ts1.toFormattedString()
 

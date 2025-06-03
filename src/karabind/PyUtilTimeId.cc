@@ -18,29 +18,29 @@
 
 #include <pybind11/pybind11.h>
 
-#include "karabo/data/time/Trainstamp.hh"
+#include "karabo/data/time/TimeId.hh"
 
 namespace py = pybind11;
 using namespace karabo::data;
 using namespace std;
 
 
-void exportPyUtilTrainstamp(py::module_& m) {
-    py::class_<Trainstamp> t(m, "Trainstamp");
+void exportPyUtilTimeId(py::module_& m) {
+    py::class_<TimeId> t(m, "TimeId");
 
     t.def(py::init<>());
 
     t.def(py::init<const unsigned long long>(), py::arg("trainId"));
 
-    t.def("getTrainId", (unsigned long long const& (Trainstamp::*)() const) & Trainstamp::getTrainId,
+    t.def("getTid", (unsigned long long const& (TimeId::*)() const) & TimeId::getTid,
           py::return_value_policy::reference);
 
-    t.def_static("hashAttributesContainTimeInformation", &Trainstamp::hashAttributesContainTimeInformation,
+    t.def_static("hashAttributesContainTimeInformation", &TimeId::hashAttributesContainTimeInformation,
                  py::arg("attributes"));
 
-    t.def_static("fromHashAttributes", (Trainstamp(*)(Hash::Attributes const)) & Trainstamp::fromHashAttributes,
+    t.def_static("fromHashAttributes", (TimeId(*)(Hash::Attributes const)) & TimeId::fromHashAttributes,
                  py::arg("attributes"));
 
-    t.def("toHashAttributes", (void(Trainstamp::*)(Hash::Attributes&) const) & Trainstamp::toHashAttributes,
+    t.def("toHashAttributes", (void(TimeId::*)(Hash::Attributes&) const) & TimeId::toHashAttributes,
           py::arg("attributes"));
 }

@@ -22,8 +22,8 @@
 #include "time/DateTimeString.hh"
 #include "time/Epochstamp.hh"
 #include "time/TimeDuration.hh"
+#include "time/TimeId.hh"
 #include "time/TimePeriod.hh"
 #include "time/Timestamp.hh"
-#include "time/Trainstamp.hh"
 
 #endif
