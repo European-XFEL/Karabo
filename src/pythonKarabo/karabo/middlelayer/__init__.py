@@ -52,7 +52,8 @@ from karabo.native import (
 # Middlelayer api
 from .broker import get_connector
 from .configuration import (
-    config_changes, sanitize_init_configuration, sanitize_write_configuration)
+    config_changes, extract_init_configuration, sanitize_init_configuration,
+    sanitize_write_configuration)
 from .device import Device, DeviceClientBase
 from .device_client import (
     Queue, call, callNoWait, compareConfigurationsFromPast,
