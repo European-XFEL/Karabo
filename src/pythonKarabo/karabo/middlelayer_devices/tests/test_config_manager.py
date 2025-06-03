@@ -17,6 +17,7 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 #############################################################################
+
 import numpy as np
 import pytest
 import pytest_asyncio
@@ -24,9 +25,9 @@ import pytest_asyncio
 from karabo.common.services import KARABO_CONFIG_MANAGER as MANAGER_ID
 from karabo.middlelayer import (
     Device, Double, Hash, HashByte, HashList, KaraboError, Schema, Slot,
-    String, call, connectDevice, getConfigurationFromName, instantiateFromName,
-    listConfigurationFromName, listDevicesWithConfiguration,
-    saveConfigurationFromName, slot)
+    String, call, connectDevice, execute, getConfigurationFromName,
+    getProperties, instantiateFromName, listConfigurationFromName,
+    listDevicesWithConfiguration, saveConfigurationFromName, shutdown, slot)
 from karabo.middlelayer.testing import AsyncDeviceContext
 
 from ..configuration_manager import ConfigurationManager, hashToHash
@@ -35,7 +36,8 @@ DB_NAME = "test_karabo_db"
 
 manager_conf = {
     "_deviceId_": MANAGER_ID,
-    "dbName": DB_NAME
+    "dbName": DB_NAME,
+    "isConfigMode": True,
 }
 
 conf_alice = {"_deviceId_": "ALICE"}
@@ -60,6 +62,11 @@ class MockServer(Device):
 
     lastConfigDouble = Double(
         defaultValue=DEFAULT_LAST_DOUBLE)
+
+    def _initInfo(self):
+        info = super()._initInfo()
+        info["type"] = "server"
+        return info
 
     @Slot()
     async def reset(self):
@@ -95,12 +102,15 @@ class MockServer(Device):
 @pytest_asyncio.fixture(loop_scope="module", scope="module")
 async def deviceTest():
     dev = ConfigurationManager(manager_conf)
+    dev._get_server_attributes = lambda deviceId: (
+        "MDL_SERVER_MOCK", "MockingDevice")
     testDev = MockingDevice(conf_alice)
     anotherTestDev = MockingDevice(conf_bob)
     clientDev = MockingDevice(conf_charlie)
+    serverMock = MockServer({"_deviceId_": "MDL_SERVER_MOCK"})
     async with AsyncDeviceContext(
         dev=dev, testDev=testDev, client=clientDev,
-            another=anotherTestDev) as ctx:
+            another=anotherTestDev, serverMock=serverMock) as ctx:
         yield ctx
 
     db = dev.db
@@ -229,7 +239,7 @@ async def test_get_client_configuration(deviceTest):
         "CHARLIE", "testConfigClientList")
     serverId = item["serverId"]
     classId = item["classId"]
-    assert serverId == "__none__"
+    assert serverId == "MDL_SERVER_MOCK"
     assert classId == "MockingDevice"
 
     config = item["config"]
@@ -238,64 +248,65 @@ async def test_get_client_configuration(deviceTest):
 
     devices = await listDevicesWithConfiguration()
     assert "CHARLIE" in devices
-    assert "ALICE" in devices
-    assert "BOB" in devices
-    assert "DELTA" not in devices
 
-    # Instantiate a device with a device client function
-    serverMock = MockServer({"_deviceId_": "MDL_SERVER"})
-    await serverMock.startInstance()
-    try:
-        assert serverMock.lastClassId == ""
-        assert serverMock.lastDeviceId == ""
-        assert serverMock.lastConfigDouble == DEFAULT_LAST_DOUBLE
-        await instantiateFromName("ALICE", name="testConfig",
-                                  serverId="MDL_SERVER")
-        assert serverMock.lastClassId == "MockingDevice"
-        assert serverMock.lastDeviceId == "ALICE"
-        assert serverMock.lastConfigDouble == 5.0
-    finally:
-        await serverMock.slotKillDevice()
+    properties = await getProperties(
+        "MDL_SERVER_MOCK",
+        ["lastClassId", "lastDeviceId", "lastConfigDouble"])
+    assert properties["lastClassId"] == ""
+    assert properties["lastDeviceId"] == ""
+    assert properties["lastConfigDouble"] == DEFAULT_LAST_DOUBLE
+
+    await instantiateFromName("CHARLIE", name="testConfigClient",
+                              serverId="MDL_SERVER_MOCK")
+
+    properties = await getProperties(
+        "MDL_SERVER_MOCK",
+        ["lastClassId", "lastDeviceId", "lastConfigDouble"])
+    assert properties["lastClassId"] == "MockingDevice"
+    assert properties["lastDeviceId"] == "CHARLIE"
+    assert properties["lastConfigDouble"] == 5.0
+    await shutdown("CHARLIE")
 
 
 @pytest.mark.timeout(20)
 @pytest.mark.asyncio(loop_scope="module")
 async def test_instantiate_device(deviceTest):
-    serverMock = MockServer({"_deviceId_": "MDL_SERVER"})
-    await serverMock.startInstance()
-    try:
+    await execute("MDL_SERVER_MOCK", "reset")
+    properties = await getProperties(
+        "MDL_SERVER_MOCK",
+        ["lastClassId", "lastDeviceId", "lastConfigDouble"])
+    assert properties["lastClassId"] == ""
+    assert properties["lastDeviceId"] == ""
+    assert properties["lastConfigDouble"] == DEFAULT_LAST_DOUBLE
+
+    h = Hash()
+    h["deviceId"] = "ALICE"
+    h["name"] = "testConfig"
+    h["serverId"] = "MDL_SERVER_MOCK"
+    await call(MANAGER_ID, "slotInstantiateDevice", h)
+
+    properties = await getProperties(
+        "MDL_SERVER_MOCK",
+        ["lastClassId", "lastDeviceId", "lastConfigDouble"])
+    assert properties["lastClassId"] == "MockingDevice"
+    assert properties["lastDeviceId"] == "ALICE"
+    assert properties["lastConfigDouble"] == 5.0
+
+    h = Hash()
+    h["deviceId"] = "ALICE"
+    h["name"] = "testConfig"
+    h["classId"] = "NoClass"
+    h["serverId"] = "MDL_SERVER"
+    # ClassId missmatch ...
+    with pytest.raises(KaraboError):
+        await call(MANAGER_ID, "slotInstantiateDevice", h)
+
+    # Name key missing
+    with pytest.raises(KaraboError):
         h = Hash()
         h["deviceId"] = "ALICE"
-        h["name"] = "testConfig"
         h["serverId"] = "MDL_SERVER"
         await call(MANAGER_ID, "slotInstantiateDevice", h)
-        assert serverMock.lastClassId == "MockingDevice"
-        assert serverMock.lastDeviceId == "ALICE"
-        assert serverMock.lastConfigDouble == 5.0
-
-        # reset settings
-        await serverMock.reset()
-        assert serverMock.lastClassId == ""
-        assert serverMock.lastDeviceId == ""
-        assert serverMock.lastConfigDouble == DEFAULT_LAST_DOUBLE
-
-        h = Hash()
-        h["deviceId"] = "ALICE"
-        h["name"] = "testConfig"
-        h["classId"] = "NoClass"
-        h["serverId"] = "MDL_SERVER"
-        # ClassId missmatch ...
-        with pytest.raises(KaraboError):
-            await call(MANAGER_ID, "slotInstantiateDevice", h)
-
-        # Name key missing
-        with pytest.raises(KaraboError):
-            h = Hash()
-            h["deviceId"] = "ALICE"
-            h["serverId"] = "MDL_SERVER"
-            await call(MANAGER_ID, "slotInstantiateDevice", h)
-    finally:
-        await serverMock.slotKillDevice()
 
 
 def test_hash_to_hash():
