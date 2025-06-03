@@ -84,7 +84,8 @@ namespace karabo {
                         const std::string& devId = it->first;
                         if (!m_signalSlotable->tryToCallDirectly(devId, slot, header, message)) {
                             KARABO_LOGGING_WARN(
-                                  "A registered slot instance is not available for direct call (anymore?): ", devId);
+                                  "A registered slot instance is not available for direct call (anymore?): '{}.{}'",
+                                  devId, slot);
                         }
                     }
                 }

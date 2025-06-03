@@ -1472,7 +1472,13 @@ namespace karabo {
                 karabo::data::Hash validated;
                 const std::pair<bool, std::string> res = val.validate(m_dataSchema, data, validated);
                 if (!res.first) {
+                    KARABO_LOGGING_ERROR("write(..) failed when validating data paths '{}' vs schema paths '{}': {}",
+                                         toString(data.getPaths()), toString(m_dataSchema.getPaths()), res.second);
                     throw KARABO_PARAMETER_EXCEPTION("Data/schema mismatch: " + res.second);
+                }
+                if (!m_dataSchemaValidated) { // Not for every write if m_validateAlways
+                    KARABO_LOGGING_INFO("write(..) validated data paths '{}' vs schema paths '{}'",
+                                        toString(data.getPaths()), toString(m_dataSchema.getPaths()));
                 }
                 m_dataSchemaValidated = true; // after successfull validation
                 Memory::write(validated, m_channelId, m_chunkId, metaData, false);
