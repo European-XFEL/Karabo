@@ -19,7 +19,7 @@ from pathlib import Path
 
 import pytest
 
-from karabo.bound import Hash, Logger
+from karabo.bound import AccessType, Hash, Logger
 from karabo.bound.testing import ServerContext, eventLoop, sleepUntil
 
 Logger.configure(Hash())
@@ -84,12 +84,19 @@ def test_save_get_config(configTest):
     config = ret["config"]
     assert config["name"] == config_name
 
-    # XXX: Config Attributes for Tables have a rowSchema, hence
-    # cannot use fullyEqual at the moment
-    for node in dev_config:
-        value = node.getValue()
-        key = node.getKey()
-        assert config["config"][key] == value
+    # XXX: How to make sure to get all paths
+    schema = dc.getDeviceSchema(TEST_DEVICE_ID)
+    for key in dev_config.keys():
+        value = dev_config[key]
+        is_node = schema.isNode(key)
+        if is_node:
+            continue
+        is_internal = (schema.hasAssignment(key)
+                       and schema.isAssignmentInternal(key))
+        mode = schema.getAccessMode(key)
+        if not is_internal and mode in (AccessType.WRITE, AccessType.INIT):
+            config_value = config["config"][key]
+            assert config_value == value
 
     # config_name was used for the successful save case. Always overwrite!
     ret = dc.saveConfigurationFromName(config_name, [TEST_DEVICE_ID])
