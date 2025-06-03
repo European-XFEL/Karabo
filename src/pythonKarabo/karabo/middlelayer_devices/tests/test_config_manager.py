@@ -225,8 +225,14 @@ async def test_get_client_configuration(deviceTest):
     for i in range(len(clist)):
         assert config_list[i]["name"] == clist[i]
 
-    config = await getConfigurationFromName(
+    item = await getConfigurationFromName(
         "CHARLIE", "testConfigClientList")
+    serverId = item["serverId"]
+    classId = item["classId"]
+    assert serverId == "__none__"
+    assert classId == "MockingDevice"
+
+    config = item["config"]
     value = config["value"]
     assert value == 5.0
 

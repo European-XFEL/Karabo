@@ -347,9 +347,12 @@ class ConfigurationManager(DeviceClientBase):
             # serverId, classId = self._get_server_attributes(device_id)
             # schema = await getClassSchema(serverId, classId)
             config = await getConfiguration(device_id)
+            serverId = config["serverId"]
+            classId = config["classId"]
             # XXX: Sanitization of configuration
-            config64 = encodeXML(config)
-            config_dict = {"deviceId": device_id, "config": config64}
+            config = encodeXML(config)
+            config_dict = {"deviceId": device_id, "config": config,
+                           "classId": classId, "serverId": serverId}
             return config_dict
 
         futures = [fetch_config(device_id) for device_id in deviceIds]
@@ -393,12 +396,12 @@ class ConfigurationManager(DeviceClientBase):
             raise KaraboError(f"The configuration for {deviceId} was "
                               f"recorded for classId {classId}. The "
                               f"input classId {classId} does not match!")
-        # If we did not provide the classId, we take it from the configuration!
+        # If we did not provide the classId, we take it from the item!
         if classId is None:
-            classId = config["classId"]
-        # If we did not provide a serverId, we take it from the config
+            classId = item["classId"]
+        # If we did not provide a serverId, we take it from the item
         if serverId is None:
-            serverId = config["serverId"]
+            serverId = item["serverId"]
 
         # Get the class schema for this device!
         schema = self._class_schemas[serverId].get(classId, None)

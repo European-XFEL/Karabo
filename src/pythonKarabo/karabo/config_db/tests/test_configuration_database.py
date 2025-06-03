@@ -34,9 +34,11 @@ async def test_device_config_roundtrip(database):
     # 1. Saving configurations with overwrite
     devices = await database.list_devices()
     assert devices == []
-    config1 = {"deviceId": "device_1", "config": "data_1"}
+    config1 = {"deviceId": "device_1", "config": "data_1",
+               "classId": "testclassId"}
     config2 = {"deviceId": "device_2", "config": "data_2"}
-    config3 = {"deviceId": "device_2", "config": "data_3"}
+    config3 = {"deviceId": "device_2", "config": "data_3",
+               "serverId": "testserver"}
     config4 = {"deviceId": "device_1", "config": "data_4"}
     await database.save_configuration("TestConfig", [config1, config2])
     # Overwrite
@@ -61,10 +63,18 @@ async def test_device_config_roundtrip(database):
     result = await database.get_configuration("device_1", "TestConfig")
     assert result is not None
     assert result["config"] == "data_1"
+    assert result["classId"] == "testclassId"
+    result = await database.get_configuration("device_2", "TestConfig")
+    assert result is not None
+    assert result["config"] == "data_3"
+    assert result["serverId"] == "testserver"
+
     configurations = await database.list_configurations("device_1")
     assert len(configurations) == 1
     assert configurations[0]["name"] == "TestConfig"
     assert configurations[0]["last_loaded"] != ""
+    assert configurations[0]["classId"] == "testclassId"
+    assert configurations[0]["serverId"] == "__none__"
 
     # 3. Get a config and check last loaded again, with `new`
     new = {"deviceId": "device_1", "config": "new"}
