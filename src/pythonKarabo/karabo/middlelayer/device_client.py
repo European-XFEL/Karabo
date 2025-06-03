@@ -499,7 +499,11 @@ async def getConfigurationFromName(device, name):
 
         getConfigurationFromName(device, "run2012")
 
-    :returns: A karabo configuration hash of the device saved under the `name`.
+    :returns: A karabo hash with keys
+        - `name`
+        - `classId`
+        - `serverId`
+        - `config`
     """
     if isinstance(device, ProxyBase):
         device = device._deviceId
@@ -507,9 +511,7 @@ async def getConfigurationFromName(device, name):
     slot = "slotGetConfigurationFromName"
     h = Hash("deviceId", device, "name", name)
     reply = await instance.call(KARABO_CONFIG_MANAGER, slot, h)
-    config = reply["item.config"]
-
-    return config
+    return reply["item"]
 
 
 @synchronize

@@ -24,6 +24,8 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from .models import NamedDeviceConfig, NamedDeviceInstance
 from .utils import ConfigurationDBError, datetime_from_string, utc_to_local
 
+_UNDEFINED = "__none__"
+
 
 class ConfigurationDatabase:
     def __init__(self, db_name: str):
@@ -89,6 +91,8 @@ class ConfigurationDatabase:
 
             return [
                 {"name": config.name,
+                 "serverId": device.server_id,
+                 "classId": device.class_id,
                  "timepoint": utc_to_local(config.timestamp),
                  "last_loaded": utc_to_local(config.last_loaded)}
                 for config in configurations]
@@ -147,26 +151,25 @@ class ConfigurationDatabase:
         :param name: The name of the configuration.
         :return: Configuration dictionary (or None if not found).
         """
+        stmt = (
+            select(NamedDeviceConfig, NamedDeviceInstance)
+            .join(
+                NamedDeviceInstance,
+                NamedDeviceConfig.device_id == NamedDeviceInstance.device_id)
+            .where(NamedDeviceConfig.device_id == device_id,
+                   NamedDeviceConfig.name == name).with_for_update())
         async with self.session() as session:
-            stmt = (
-                select(NamedDeviceConfig)
-                .where(
-                    NamedDeviceConfig.device_id == device_id,
-                    NamedDeviceConfig.name == name
-                )
-                # Lock for update
-                .with_for_update()
-            )
             result = await session.exec(stmt)
-            config = result.first()
-            if not config:
-                return {}
-
+            row = result.first()
+            if not row:
+                text = (f"Configuration for device {device_id} "
+                        f"with {name} not found.")
+                raise ConfigurationDBError(text)
+            config, device = row
             update_stmt = (
                 update(NamedDeviceConfig)
                 .where(NamedDeviceConfig.id == config.id)
-                .values(last_loaded=datetime.now(timezone.utc))
-            )
+                .values(last_loaded=datetime.now(timezone.utc)))
 
             await session.exec(update_stmt)
             await session.commit()
@@ -174,6 +177,8 @@ class ConfigurationDatabase:
             return {
                 "name": name,
                 "deviceId": device_id,
+                "classId": device.class_id,
+                "serverId": device.server_id,
                 "timestamp": utc_to_local(config.timestamp),
                 "config": config.config_data}
 
@@ -206,12 +211,23 @@ class ConfigurationDatabase:
                 for config in configs:
                     device_id = config["deviceId"]
                     stmt_device = select(NamedDeviceInstance).where(
-                        NamedDeviceInstance.device_id == device_id)
+                        NamedDeviceInstance.device_id == device_id
+                        ).with_for_update()
                     device = (await session.exec(
                         stmt_device)).first()
+                    class_id = config.get("classId", _UNDEFINED)
+                    server_id = config.get("serverId", _UNDEFINED)
                     if not device:
-                        session.add(NamedDeviceInstance(device_id=device_id))
-
+                        session.add(NamedDeviceInstance(
+                            device_id=device_id,
+                            class_id=class_id,
+                            server_id=server_id))
+                    else:
+                        update_stmt = (
+                            update(NamedDeviceInstance)
+                            .where(NamedDeviceInstance.device_id == device_id)
+                            .values(class_id=class_id, server_id=server_id))
+                        await session.exec(update_stmt)
                     stmt_config = (
                         insert(NamedDeviceConfig)
                         .values(

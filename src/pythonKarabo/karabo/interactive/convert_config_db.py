@@ -86,11 +86,17 @@ async def run(filename: Path | None = None):
         config = hashFromBase64Bin(row[1])
         config_set_id = row[2]
         deviceId = row[3]
+        serverId = config["serverId"]
+        classId = config["classId"]
         # schema_id = row[4]
         timepoint = row[5]
         config_name = configset_map.get(config_set_id)
         assert config_name is not None
-        config_data = [{"deviceId": deviceId, "config": encodeXML(config)}]
+        config_data = [
+            {"deviceId": deviceId, "config": encodeXML(config),
+             "serverId": serverId,
+             "classId": classId}
+        ]
         text = (f"Saving ... Device: {deviceId}, "
                 f"Config Name: {config_name}, "
                 f"Timestamp: {timepoint}")
