@@ -34,7 +34,7 @@ class TestDevice(PythonDevice):
     def expectedParameters(expected):
         tableSchema = Schema()
         (
-            DOUBLE_ELEMENT(tableSchema).key("d")
+            DOUBLE_ELEMENT(tableSchema).key("e")
             .unit(Unit.METER)
             .metricPrefix(MetricPrefix.KILO)
             .assignmentOptional()
@@ -65,7 +65,7 @@ class TestDevice(PythonDevice):
             # it is to prove that a raw channel input can manage
             # data mismatching the schema and an normal channel
             # does not fail in case of mismatching schema.
-            DOUBLE_ELEMENT(pipeSchema).key("d")
+            DOUBLE_ELEMENT(pipeSchema).key("e")
             .unit(Unit.METER)
             .metricPrefix(MetricPrefix.KILO)
             .assignmentOptional()
@@ -153,7 +153,7 @@ class TestDevice(PythonDevice):
             .displayedName("bla")
             .setNodeSchema(tableSchema)
             .assignmentOptional()
-            .defaultValue([Hash("d", 5, "s", "hallo")])
+            .defaultValue([Hash("e", 5, "s", "hallo")])
             .reconfigurable()
             .commit(),
 
