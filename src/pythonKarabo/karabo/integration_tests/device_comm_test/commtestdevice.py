@@ -126,4 +126,4 @@ class CommTestDevice(PythonDevice):
         epoch = Epochstamp(sec, frac)
         stamp = self.getTimestamp(epoch)
 
-        self.reply(stamp.getTrainId())
+        self.reply(stamp.getTid())

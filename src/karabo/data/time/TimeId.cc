@@ -16,33 +16,32 @@
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
 /*
- * File:   TrainStamp.cc
- * Author: WP76
+ * File:   TimeId.cc
  *
  * Created on June 19, 2013, 3:22 PM
  */
 
-#include "Trainstamp.hh"
+#include "TimeId.hh"
 
 namespace karabo {
     namespace data {
 
 
-        Trainstamp::Trainstamp() : m_trainId(0) {}
+        TimeId::TimeId() : m_timeId(0) {}
 
 
-        Trainstamp::Trainstamp(const unsigned long long trainId) : m_trainId(trainId) {}
+        TimeId::TimeId(const unsigned long long trainId) : m_timeId(trainId) {}
 
 
-        Trainstamp::~Trainstamp() {}
+        TimeId::~TimeId() {}
 
 
-        bool Trainstamp::hashAttributesContainTimeInformation(const Hash::Attributes& attributes) {
+        bool TimeId::hashAttributesContainTimeInformation(const Hash::Attributes& attributes) {
             return attributes.has("tid");
         }
 
 
-        Trainstamp Trainstamp::fromHashAttributes(const Hash::Attributes& attributes) {
+        TimeId TimeId::fromHashAttributes(const Hash::Attributes& attributes) {
             unsigned long long tid;
 
             try {
@@ -54,25 +53,25 @@ namespace karabo {
                 KARABO_RETHROW_AS(
                       KARABO_PARAMETER_EXCEPTION("Provided attributes do not contain proper trainId information"));
             }
-            return Trainstamp(tid);
+            return TimeId(tid);
         }
 
 
-        void Trainstamp::toHashAttributes(Hash::Attributes& attributes) const {
-            attributes.set("tid", m_trainId);
+        void TimeId::toHashAttributes(Hash::Attributes& attributes) const {
+            attributes.set("tid", m_timeId);
         }
 
-        std::ostream& operator<<(std::ostream& out, const Trainstamp& trainstamp) {
-            out << trainstamp.getTrainId();
+        std::ostream& operator<<(std::ostream& out, const TimeId& trainstamp) {
+            out << trainstamp.getTid();
             return out;
         }
 
-        bool operator==(const Trainstamp& lhs, const Trainstamp& rhs) {
-            return lhs.m_trainId == rhs.m_trainId;
+        bool operator==(const TimeId& lhs, const TimeId& rhs) {
+            return lhs.m_timeId == rhs.m_timeId;
         }
 
-        bool operator!=(const Trainstamp& lhs, const Trainstamp& rhs) {
-            return lhs.m_trainId != rhs.m_trainId;
+        bool operator!=(const TimeId& lhs, const TimeId& rhs) {
+            return lhs.m_timeId != rhs.m_timeId;
         }
 
     } // namespace data

@@ -37,7 +37,7 @@ class TimeClasses_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testTimePeriod);
     CPPUNIT_TEST(testTimeDuration);
     CPPUNIT_TEST(testTimeProfiler);
-    CPPUNIT_TEST(testTrainstamp);
+    CPPUNIT_TEST(testTimeId);
     CPPUNIT_TEST(testTimestamp);
     CPPUNIT_TEST_SUITE_END();
 
@@ -55,7 +55,7 @@ class TimeClasses_Test : public CPPUNIT_NS::TestFixture {
     void testTimePeriod();
     void testTimeDuration();
     void testTimeProfiler();
-    void testTrainstamp();
+    void testTimeId();
     void testTimestamp();
 };
 

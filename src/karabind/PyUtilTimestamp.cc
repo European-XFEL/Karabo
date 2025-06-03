@@ -30,13 +30,13 @@ void exportPyUtilTimestamp(py::module_& m) {
 
     ts.def(py::init<>());
 
-    ts.def(py::init<Epochstamp const&, Trainstamp const&>(), py::arg("e"), py::arg("t"));
+    ts.def(py::init<Epochstamp const&, TimeId const&>(), py::arg("e"), py::arg("t"));
 
     ts.def("getSeconds", &Timestamp::getSeconds);
 
     ts.def("getFractionalSeconds", &Timestamp::getFractionalSeconds);
 
-    ts.def("getTrainId", &Timestamp::getTrainId);
+    ts.def("getTid", &Timestamp::getTid);
 
     ts.def_static("fromHashAttributes", &Timestamp::fromHashAttributes, py::arg("attributes"));
 

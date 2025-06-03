@@ -22,7 +22,7 @@ import unittest
 
 from karabo.bound import (
     ATTOSEC, FEMTOSEC, MICROSEC, MILLISEC, NANOSEC, PICOSEC, Epochstamp, Hash,
-    TimeDuration, Timestamp, Trainstamp, Types)
+    TimeDuration, TimeId, Timestamp, Types)
 
 
 class Timestamp_TestCase(unittest.TestCase):
@@ -80,7 +80,7 @@ class Timestamp_TestCase(unittest.TestCase):
                 f" constructor: {str(e)}")
 
         try:
-            ts01 = Timestamp(es01, Trainstamp())
+            ts01 = Timestamp(es01, TimeId())
 
             #####
             # Function toFormattedStringLocale and toFormattedString only
@@ -279,7 +279,7 @@ class Timestamp_TestCase(unittest.TestCase):
 
             tm = Timestamp.fromHashAttributes(attrs)
 
-            self.assertEqual(tm.getTrainId(), 22)
+            self.assertEqual(tm.getTid(), 22)
             self.assertEqual(tm.getSeconds(), 1234)
             self.assertEqual(tm.getFractionalSeconds(), 5678)
         except Exception as e:
@@ -298,7 +298,7 @@ class Timestamp_TestCase(unittest.TestCase):
                 Timestamp.hashAttributesContainTimeInformation(attrs), True)
             tm = Timestamp.fromHashAttributes(attrs)
 
-            self.assertEqual(tm.getTrainId(), 2 ** 40)
+            self.assertEqual(tm.getTid(), 2 ** 40)
             self.assertEqual(tm.getSeconds(), 1234)
             self.assertEqual(tm.getFractionalSeconds(), 5678)
         except Exception as e:
@@ -322,7 +322,7 @@ class Timestamp_TestCase(unittest.TestCase):
                 Timestamp.hashAttributesContainTimeInformation(attrs), True)
             tm = Timestamp.fromHashAttributes(attrs)
 
-            self.assertEqual(tm.getTrainId(), 2 ** 40)
+            self.assertEqual(tm.getTid(), 2 ** 40)
             self.assertEqual(tm.getSeconds(), 2 ** 41)
             self.assertEqual(tm.getFractionalSeconds(), 2 ** 42)
         except Exception as e:
@@ -345,7 +345,7 @@ class Timestamp_TestCase(unittest.TestCase):
                 Timestamp.hashAttributesContainTimeInformation(attrs), True)
             tm = Timestamp.fromHashAttributes(attrs)
 
-            self.assertEqual(tm.getTrainId(), 2 ** 31)
+            self.assertEqual(tm.getTid(), 2 ** 31)
             self.assertEqual(tm.getSeconds(), 2)
             self.assertEqual(tm.getFractionalSeconds(), 3)
         except Exception as e:
@@ -375,7 +375,7 @@ class Timestamp_TestCase(unittest.TestCase):
 
             h.setAttribute("timestamp", "tid", 1)
             tm = Timestamp.fromHashAttributes(h.getAttributes("timestamp"))
-            self.assertEqual(tm.getTrainId(), 1)
+            self.assertEqual(tm.getTid(), 1)
             self.assertEqual(tm.getSeconds(), 123)
             self.assertEqual(tm.getFractionalSeconds(), 456)
 

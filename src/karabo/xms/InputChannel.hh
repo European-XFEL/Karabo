@@ -67,7 +67,7 @@ namespace karabo {
          *           Hash h;
          *           const InputChannel::MetaData& meta = input->read(i);
          *           std::cout<<"Source: <<meta.getSource()<<std::endl;
-         *           std::cout<<"TrainId: <<meta.getTimestamp().getTrainId()<<std::endl;
+         *           std::cout<<"TrainId: <<meta.getTimestamp().getTid()<<std::endl;
          *      }
          * }
          * @endcode

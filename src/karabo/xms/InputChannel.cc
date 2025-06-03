@@ -725,7 +725,7 @@ namespace karabo {
                     continue;
                 }
                 m_sourceMap.emplace(it->getSource(), i);
-                m_trainIdMap.emplace(it->getTimestamp().getTrainId(), i);
+                m_trainIdMap.emplace(it->getTimestamp().getTid(), i);
                 m_reverseMetaDataMap.emplace(i, *it);
                 ++i;
                 ++it;

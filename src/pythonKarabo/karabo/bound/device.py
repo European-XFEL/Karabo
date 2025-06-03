@@ -27,8 +27,8 @@ from karabind import (
     NODE_ELEMENT, OVERWRITE_ELEMENT, SLOT_ELEMENT, STATE_ELEMENT,
     STRING_ELEMENT, UINT32_ELEMENT, WRITE, AccessType, AssemblyRules, Broker,
     ChannelMetaData, ConnectionStatus, Epochstamp, EventLoop, Hash, HashFilter,
-    HashMergePolicy, Logger, MetricPrefix, Schema, SignalSlotable, Timestamp,
-    Trainstamp, Unit, Validator, ValidatorValidationRules, VectorHash,
+    HashMergePolicy, Logger, MetricPrefix, Schema, SignalSlotable, TimeId,
+    Timestamp, Unit, Validator, ValidatorValidationRules, VectorHash,
     loadFromFile)
 from karabo import __version__ as karaboVersion
 from karabo.common.api import (
@@ -1489,7 +1489,7 @@ class PythonDevice:
 
         with self._timeLock:
             epoch = Epochstamp(self._timeSec, self._timeFrac)
-            train = Trainstamp(self._timeId)
+            train = TimeId(self._timeId)
             stamp = Timestamp(epoch, train)
 
         attrs = result.getAttributes("reference")
@@ -1598,10 +1598,11 @@ class PythonDevice:
     def getActualTimestamp(self):
         """Returns the actual timestamp.
 
-        The Trainstamp part of Timestamp is extrapolated from the last values
-        received via slotTimeTick (or zero if no time ticks received, i.e.
-        timeServerId is empty). To receive time ticks, the server of the device
-        has to be connected to a time server.
+        The TimeId part of Timestamp is extrapolated from the
+        last values received via slotTimeTick (or zero if no time ticks
+        received, i.e. timeServerId is empty).
+        To receive time ticks, the server of the device has to be connected
+        to a time server.
 
         :return: the actual timestamp
         """
@@ -1610,14 +1611,15 @@ class PythonDevice:
     def getTimestamp(self, epoch):
         """Returns the Timestamp for given Epochstamp.
 
-        The Trainstamp part of Timestamp is extrapolated forward or backward
-        from the last values received via slotTimeTick (or zero if no time
-        ticks received yet). To receive time ticks, the server of the device
-        has to be connected to a time server.
+        The TimeId part of Timestamp is extrapolated forward or
+        backward from the last values received via slotTimeTick (or zero
+        if no time ticks received yet).
+        To receive time ticks, the server of the device has to be connected
+        to a time server.
 
         :param epoch: Epochstamp for that the time stamp is searched for
         :return: the matching Timestamp, consisting of epoch and the
-                 corresponding Trainstamp
+                 corresponding TimeId
         """
         resultId = 0
         with self._timeLock:
@@ -1641,7 +1643,7 @@ class PythonDevice:
                         .format(epoch.toIso8601(),
                                 epochLastReceived.toIso8601(),
                                 self._timeId, self._timePeriod))
-        return Timestamp(epoch, Trainstamp(resultId))
+        return Timestamp(epoch, TimeId(resultId))
 
     def _getStateDependentSchema(self, state):
         with self._stateChangeLock:

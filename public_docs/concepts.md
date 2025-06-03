@@ -596,7 +596,7 @@ Conversion utilities:
 - `toFormattedString(format="%Y-%b-%d %H:%M:%S", localTimeZone="Z")`
 - `getSeconds()` → UNIX seconds
 - `getFractionalSeconds()`
-- `getTrainId()`
+- `getTid()`
 
 ## The Karabo Schema
 
