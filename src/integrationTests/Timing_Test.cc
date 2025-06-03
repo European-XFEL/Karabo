@@ -31,7 +31,7 @@
 
 #include "PropertyTest_Test.hh"
 #include "karabo/data/schema/SimpleElement.hh"
-#include "karabo/data/time/Trainstamp.hh"
+#include "karabo/data/time/TimeId.hh"
 #include "karabo/data/types/StringTools.hh"
 
 using namespace std::chrono;
@@ -251,16 +251,16 @@ void Timing_Test::testIdReset() {
     CPPUNIT_ASSERT_GREATEREQUAL(initialId, lastIdOnTimeUpdate);
 
     // Get stamp - the newly set values have more recent stamps than the one from device initialisation
-    const Trainstamp stampDevId = Trainstamp::fromHashAttributes(cfg.getAttributes("deviceId"));
-    const Trainstamp stampInt32 = Trainstamp::fromHashAttributes(cfg.getAttributes("int32Property"));
-    const Trainstamp stampInt32ReadOnly = Trainstamp::fromHashAttributes(cfg.getAttributes("int32PropertyReadOnly"));
+    const TimeId stampDevId = TimeId::fromHashAttributes(cfg.getAttributes("deviceId"));
+    const TimeId stampInt32 = TimeId::fromHashAttributes(cfg.getAttributes("int32Property"));
+    const TimeId stampInt32ReadOnly = TimeId::fromHashAttributes(cfg.getAttributes("int32PropertyReadOnly"));
 
-    CPPUNIT_ASSERT_MESSAGE("devId train " + toString(stampDevId.getTrainId()) += ", initialId " + toString(initialId),
-                           stampDevId.getTrainId() == 0ull // if time stamp assigned before connected to time server
-                                 || initialId < stampDevId.getTrainId()); // else
+    CPPUNIT_ASSERT_MESSAGE("devId train " + toString(stampDevId.getTid()) += ", initialId " + toString(initialId),
+                           stampDevId.getTid() == 0ull // if time stamp assigned before connected to time server
+                                 || initialId < stampDevId.getTid()); // else
     // ASSERT_GREATER asserts that 2nd is greater than 1st
-    CPPUNIT_ASSERT_GREATER(stampDevId.getTrainId(), stampInt32.getTrainId());
-    CPPUNIT_ASSERT_GREATER(stampDevId.getTrainId(), stampInt32ReadOnly.getTrainId());
+    CPPUNIT_ASSERT_GREATER(stampDevId.getTid(), stampInt32.getTid());
+    CPPUNIT_ASSERT_GREATER(stampDevId.getTid(), stampInt32ReadOnly.getTid());
 
     // Start ticking from 1 again
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(timeServerId, "resetId"));
@@ -278,10 +278,10 @@ void Timing_Test::testIdReset() {
     CPPUNIT_ASSERT_GREATER(initialId, cfg.get<unsigned long long>("lastIdOnTimeUpdate"));
 
     // Now get stamps again - the newer ones are now smaller than the old ones!
-    const Trainstamp stampInt32_2 = Trainstamp::fromHashAttributes(cfg.getAttributes("int32Property"));
-    const Trainstamp stampInt32ReadOnly_2 = Trainstamp::fromHashAttributes(cfg.getAttributes("int32PropertyReadOnly"));
+    const TimeId stampInt32_2 = TimeId::fromHashAttributes(cfg.getAttributes("int32Property"));
+    const TimeId stampInt32ReadOnly_2 = TimeId::fromHashAttributes(cfg.getAttributes("int32PropertyReadOnly"));
 
     // ASSERT_GREATER asserts that 2nd is greater than 1st
-    CPPUNIT_ASSERT_GREATER(stampInt32_2.getTrainId(), stampInt32.getTrainId());
-    CPPUNIT_ASSERT_GREATER(stampInt32ReadOnly_2.getTrainId(), stampInt32ReadOnly.getTrainId());
+    CPPUNIT_ASSERT_GREATER(stampInt32_2.getTid(), stampInt32.getTid());
+    CPPUNIT_ASSERT_GREATER(stampInt32ReadOnly_2.getTid(), stampInt32ReadOnly.getTid());
 }

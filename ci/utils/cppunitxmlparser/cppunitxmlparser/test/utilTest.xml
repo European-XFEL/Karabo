@@ -442,7 +442,7 @@
       <Name>TimeClasses_Test::testTimeProfiler</Name>
     </Test>
     <Test id="143">
-      <Name>TimeClasses_Test::testTrainstamp</Name>
+      <Name>TimeClasses_Test::testTimeId</Name>
     </Test>
     <Test id="144">
       <Name>TimeClasses_Test::testTimestamp</Name>

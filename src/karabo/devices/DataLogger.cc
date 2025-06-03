@@ -124,7 +124,7 @@ namespace karabo {
                     "Strand", Hash("guaranteeToRun", true, "maxInARow", 10u))),
               m_currentSchema(),
               m_lastTimestampMutex(),
-              m_lastDataTimestamp(Epochstamp(0ull, 0ull), Trainstamp()),
+              m_lastDataTimestamp(Epochstamp(0ull, 0ull), TimeId()),
               m_updatedLastTimestamp(false),
               m_pendingLogin(true),
               m_onDataBeforeComplete(0u) {}

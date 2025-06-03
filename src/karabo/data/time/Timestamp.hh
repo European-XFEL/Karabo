@@ -26,25 +26,25 @@
 #define KARABO_DATA_TIME_TIMESTAMP_HH
 
 #include "Epochstamp.hh"
-#include "Trainstamp.hh"
+#include "TimeId.hh"
 
 
 namespace karabo {
     namespace data {
 
         /**
-         * This class expresses a time point and holds it in form of an Epochstamp and Trainstamp
+         * This class expresses a time point and holds it in form of an Epochstamp and TimeId
          */
         class Timestamp {
             Epochstamp m_epochstamp;
-            Trainstamp m_trainstamp;
+            TimeId m_timeId;
 
            public:
             using enum TIME_UNITS;
 
             Timestamp();
 
-            Timestamp(const Epochstamp& e, const Trainstamp& t);
+            Timestamp(const Epochstamp& e, const TimeId& t);
 
             /**
              * Return Epochstamp part of the timestamp
@@ -55,11 +55,11 @@ namespace karabo {
             }
 
             /**
-             * Return Trainstamp part of the timestamp
+             * Return TimeId part of the timestamp
              * @return
              */
-            inline const Trainstamp& getTrainstamp() const {
-                return m_trainstamp;
+            inline const TimeId& getTimeId() const {
+                return m_timeId;
             }
 
             /**
@@ -82,8 +82,8 @@ namespace karabo {
              * Return the train id entry of the timestamp
              * @return
              */
-            inline const unsigned long long& getTrainId() const {
-                return m_trainstamp.getTrainId();
+            inline const unsigned long long& getTid() const {
+                return m_timeId.getTid();
             }
 
             static bool hashAttributesContainTimeInformation(const Hash::Attributes& attributes);
@@ -162,14 +162,14 @@ namespace karabo {
             virtual ~Timestamp();
 
             /**
-             * Compare if the Epochstamp and Trainstamp of this Timestamp are the same as those of other
+             * Compare if the Epochstamp and TimeId of this Timestamp are the same as those of other
              * @param other
              * @return
              */
             friend bool operator==(const Timestamp& lhs, const Timestamp& rhs);
 
             /**
-             * Compare if the Epochstamp and/or Trainstamp of this Timestamp are not the same of other
+             * Compare if the Epochstamp and/or TimeId of this Timestamp are not the same of other
              * @param other
              * @return
              */

@@ -19,17 +19,17 @@
 
 import unittest
 
-from karabo.bound import ChannelMetaData, Epochstamp, Timestamp, Trainstamp
+from karabo.bound import ChannelMetaData, Epochstamp, TimeId, Timestamp
 
 
 class Metadata_TestCase(unittest.TestCase):
     def test_metadata_general_functionality(self):
         es = Epochstamp(1356441936, 789333123456789123)
-        ts = Timestamp(es, Trainstamp(987654321))
+        ts = Timestamp(es, TimeId(987654321))
         meta = ChannelMetaData('abc', ts)
 
         self.assertTrue(meta.getSource() == 'abc')
-        self.assertTrue(meta.getTimestamp().getTrainId() == 987654321)
+        self.assertTrue(meta.getTimestamp().getTid() == 987654321)
         self.assertTrue(meta.getTimestamp().getSeconds() == 1356441936)
         self.assertTrue(
             meta.getTimestamp().getFractionalSeconds() == 789333123456789123)
@@ -44,7 +44,7 @@ class Metadata_TestCase(unittest.TestCase):
 
         ts1 = Timestamp()
         meta.setTimestamp(ts1)
-        self.assertTrue(meta.getTimestamp().getTrainId() == 0)
+        self.assertTrue(meta.getTimestamp().getTid() == 0)
         self.assertFalse(
             meta.getTimestamp().toFormattedString() == ts.toFormattedString())
         self.assertTrue(

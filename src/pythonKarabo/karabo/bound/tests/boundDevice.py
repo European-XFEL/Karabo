@@ -25,7 +25,7 @@ from karabo.bound import (
     OUTPUT_CHANNEL, SLOT_ELEMENT, STRING_ELEMENT, TABLE_ELEMENT,
     VECTOR_STRING_ELEMENT, AlarmCondition, ChannelMetaData, Encoding,
     Epochstamp, Hash, ImageData, MetricPrefix, PythonDevice, Schema, State,
-    Timestamp, Trainstamp, Types, Unit)
+    TimeId, Timestamp, Types, Unit)
 
 
 @KARABO_CLASSINFO("TestDevice", "1.5")
@@ -239,9 +239,9 @@ class TestDevice(PythonDevice):
         self.remote().get(mdlDevice)
 
     def setA(self):
-        ts = Timestamp(Epochstamp("20090901T135522"), Trainstamp(0))
+        ts = Timestamp(Epochstamp("20090901T135522"), TimeId(0))
         self.set("a", 22.7, ts)
-        ts = Timestamp(Epochstamp("20160617T135522"), Trainstamp(0))
+        ts = Timestamp(Epochstamp("20160617T135522"), TimeId(0))
         self.set("node.b", 100, ts)
         self.set("ndarray", numpy.array([[1, 2, 3], [4, 5, 6]]))
 

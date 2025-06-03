@@ -650,7 +650,7 @@ void BaseLogging_Test::testDropBadData() {
 
     for (unsigned int i = 0; i < numCycles; ++i) {
         Hash update("value", 10000 + i);
-        const Timestamp muchLater(inAlmostAFortnite, Trainstamp());
+        const Timestamp muchLater(inAlmostAFortnite, TimeId());
         muchLater.toHashAttributes(update.getAttributes("value"));
         // Call slotUpdateConfigGeneric from m_deviceClient so that m_deviceClient->get is in sync for sure
         CPPUNIT_ASSERT_NO_THROW(
@@ -710,7 +710,7 @@ void BaseLogging_Test::testDropBadData() {
     Timestamp vectorUpdateTime2;
     vectorUpdateTime2.toHashAttributes(updates.getAttributes("vector")); // Overwrite with new stamp
     Hash::Node& valueNode = updates.set("value", 42);
-    Timestamp(inAlmostAFortnite, Trainstamp()).toHashAttributes(valueNode.getAttributes());
+    Timestamp(inAlmostAFortnite, TimeId()).toHashAttributes(valueNode.getAttributes());
     updates.set("oldValue", -42); // no timestamp from here, will get injected automatically in device
     CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(deviceId, "slotUpdateConfigGeneric", updates)
                                   .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
