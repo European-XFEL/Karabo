@@ -147,8 +147,8 @@ class DeviceServer:
             print('INTERRUPT : You pressed Ctrl-C!')
         else:
             print('INTERRUPT : You terminated me!')
-        if self.ss is not None:
-            # Better do not go via self.ss.call("", "slotKillServer"),
+        if self._sigslot is not None:
+            # Better do not go via self._sigslot.call("", "slotKillServer"),
             # otherwise it will run later in another thread.
             self.slotKillServer()
         else:
@@ -160,7 +160,7 @@ class DeviceServer:
             raise ValueError(
                 "Input configuration for constructor should be Hash, not None")
         super().__init__()
-        self.ss = self.logger = None
+        self._sigslot = self.logger = None
         self.availableDevices = dict()
         self.deviceInstanceMap = dict()
         self._startingDevices = dict()  # needs protection by lock below
@@ -223,31 +223,32 @@ class DeviceServer:
         signal.signal(signal.SIGTERM, self.signal_handler)
 
         # Be aware: If signal handling is triggered before __init__ has
-        # finished, self.ss might be set to None, causing problems below,
+        # finished, self._sigslot might be set to None, causing problems below,
         # e.g. "'NoneType' object has no attribute 'getConnection'".
         # In worst case, SignalSlotable is constructed, but not yet assigned
-        # to self.ss when the signal handler wants to reset it to None.
+        # to self._sigslot when the signal handler wants to reset it to None.
         # But the process stops nevertheless due to the EventLoop.stop().
 
-        self.ss = SignalSlotable(self.serverid, self.connectionParameters,
-                                 config["heartbeatInterval"], info)
+        self._sigslot = SignalSlotable(
+            self.serverid, self.connectionParameters,
+            config["heartbeatInterval"], info)
 
-        # Register before self.ss.start(), i.e before sending instanceNew:
+        # Register before sigslot.start(), i.e before sending instanceNew:
         self._registerAndConnectSignalsAndSlots()
 
         # Start SignalSlotable object - multithreading begins
-        self.ss.start()
+        self._sigslot.start()
 
         # Now we can log the postponed logging messages - could have been
         # done directly after assigning self.logger, but prefer to do after
-        # instanceNew triggered by self.ss.start():
+        # instanceNew triggered by self._sigslot.start():
         for level, message in scanLogs:
             getattr(self.logger, level)(message)
 
         msg = "DeviceServer starts on host '{0.hostname}' " \
               "with pid {0.pid}, broker: {1}"
-        self.logger.info(msg.format(self,
-                                    self.ss.getConnection().getBrokerUrl()))
+        self.logger.info(msg.format(
+            self, self._sigslot.getConnection().getBrokerUrl()))
 
         self.doAutoStart()
 
@@ -269,13 +270,13 @@ class DeviceServer:
         Logger.useCache()
 
     def _registerAndConnectSignalsAndSlots(self):
-        self.ss.registerSlot(self.slotStartDevice)
-        self.ss.registerSlot(self.slotKillServer)
-        self.ss.registerSlot(self.slotDeviceUp)
-        self.ss.registerSlot(self.slotDeviceGone)
-        self.ss.registerSlot(self.slotGetClassSchema)
-        self.ss.registerSlot(self.slotLoggerLevel)
-        self.ss.registerSlot(self.slotLoggerContent)
+        self._sigslot.registerSlot(self.slotStartDevice)
+        self._sigslot.registerSlot(self.slotKillServer)
+        self._sigslot.registerSlot(self.slotDeviceUp)
+        self._sigslot.registerSlot(self.slotDeviceGone)
+        self._sigslot.registerSlot(self.slotGetClassSchema)
+        self._sigslot.registerSlot(self.slotLoggerLevel)
+        self._sigslot.registerSlot(self.slotLoggerContent)
 
     def scanPlugins(self, pluginNamespace):
         """Scan for available device classes
@@ -344,8 +345,8 @@ class DeviceServer:
         #       is called.
         #
         # Take over SignalSlotable to avoid new references in other threads:
-        localSigSlot = self.ss
-        self.ss = None
+        localSigSlot = self._sigslot
+        self._sigslot = None
         refCount = sys.getrefcount(localSigSlot)
         if refCount > 2:
             # count of 2: localSigSlot and the one internal to getrefcount
@@ -396,7 +397,7 @@ class DeviceServer:
             msg = msg.strip()  # cut-off trailing newline...
             self.logger.warning(
                 f"Failed to start '{config['_deviceId_']}': {msg}")
-            self.ss.reply(ok, msg)
+            self._sigslot.reply(ok, msg)
             return
 
         # Now few config manipulation intentionally AFTER 'validate':
@@ -414,7 +415,7 @@ class DeviceServer:
         for appender in ["console", "file", "cache"]:
             config["_logger_." + appender] = self.loggerParameters[appender]
 
-        reply = self.ss.createAsyncReply()
+        reply = self._sigslot.createAsyncReply()
 
         try:
             self._launchDevice(config, classid, reply)
@@ -452,7 +453,7 @@ class DeviceServer:
                 prevLauncher = self.deviceInstanceMap[deviceid]
                 if prevLauncher.child.poll() is None:
                     # Process still up. Check Karabo communication by ping:
-                    request = self.ss.request(deviceid, "slotPing", 1)
+                    request = self._sigslot.request(deviceid, "slotPing", 1)
                     try:
                         # Too lazy to use async techniques for this corner case
                         request.waitForReply(3000)  # in milliseconds
@@ -517,7 +518,7 @@ class DeviceServer:
             # Loop twice: First to quickly tell all devices to go down and then
             #             to wait until they are indeed down (or need killing)
             for deviceid in self.deviceInstanceMap:
-                self.ss.call(deviceid, "slotKillDevice")
+                self._sigslot.call(deviceid, "slotKillDevice")
             for deviceid, launcher in self.deviceInstanceMap.items():
                 if launcher:
                     try:
@@ -529,7 +530,7 @@ class DeviceServer:
                         launcher.kill()
             self.deviceInstanceMap = {}
         try:
-            self.ss.reply(self.serverid)
+            self._sigslot.reply(self.serverid)
         except Exception as e:
             if self.logger:  # see above
                 msg = ("Did not notify distributed system of server shutdown:"
@@ -577,10 +578,10 @@ class DeviceServer:
     def slotGetClassSchema(self, classid):
         try:
             schema = Configurator(PythonDevice).getSchema(classid)
-            self.ss.reply(schema, classid, self.serverid)
+            self._sigslot.reply(schema, classid, self.serverid)
         except AttributeError as e:
             self.logger.warning(f"Replied empty schema due to : {str(e)}")
-            self.ss.reply(Schema(), classid, self.serverid)
+            self._sigslot.reply(Schema(), classid, self.serverid)
 
     def slotLoggerLevel(self, newlevel):
         # In contrast to C++, the new level will not be "forwarded" to
@@ -595,7 +596,7 @@ class DeviceServer:
         # Also devices started in future get the new level by default:
         self.loggerParameters["level"] = newlevel
         # Merge the new log level into the instanceInfo
-        self.ss.updateInstanceInfo(Hash("log", newlevel))
+        self._sigslot.updateInstanceInfo(Hash("log", newlevel))
 
     def slotLoggerContent(self, info):
         """Slot call to receive logger content from the CacheLogger
@@ -613,14 +614,16 @@ class DeviceServer:
             log_map = dict.fromkeys(self.deviceInstanceMap)
 
         if not log_map:  # no devices => direct reply instead of an async one
-            nMessages = info.get("logs", default=KARABO_LOGGER_CONTENT_DEFAULT)
+            nMessages = info.get(
+                "logs", default=KARABO_LOGGER_CONTENT_DEFAULT)
             content = Logger.getCachedContent(nMessages)
-            self.ss.reply(Hash("serverId", self.serverid, "content", content))
+            self._sigslot.reply(
+                Hash("serverId", self.serverid, "content", content))
             return
 
         replyLock = threading.Lock()
 
-        areply = self.ss.createAsyncReply()
+        areply = self._sigslot.createAsyncReply()
         # copy because the info object will be cleaned up after
         # this function has returned
         info = copy.copy(info)
@@ -652,7 +655,7 @@ class DeviceServer:
 
         for deviceId in log_map.keys():
             # request the content from the devices in the server.
-            req = self.ss.request(deviceId, "slotLoggerContent", info)
+            req = self._sigslot.request(deviceId, "slotLoggerContent", info)
             h = Handler(deviceId)
             req.receiveAsync(h.on_reply, h.on_error, timeoutMs=5000)
 
