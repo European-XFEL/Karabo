@@ -119,6 +119,14 @@ class ConfigurationManager(DeviceClientBase):
         assignment=Assignment.MANDATORY,
         accessMode=AccessMode.INITONLY)
 
+    isConfigMode = Bool(
+        defaultValue=True,
+        description=("Set to `True` for real configuration mode. "
+                     "Only value changes from default and class "
+                     "schema are stored"),
+        accessMode=AccessMode.INITONLY,
+        requiredAccessLevel=AccessLevel.OPERATOR)
+
     @slot
     def requestScene(self, params: Hash):
         """Fulfill a scene request from another device."""
@@ -172,12 +180,12 @@ class ConfigurationManager(DeviceClientBase):
         deviceId = self.deviceName.value
         config_name = self.configurationName.value
         try:
-            # Get the schema and the configuration first!
-            # serverId, classId = self._get_server_attributes(deviceId)
-            # class_schema, _ = await wait_for(
-            #    getClassSchema(serverId, classId), timeout=DEVICE_TIMEOUT)
+            serverId, classId = self._get_server_attributes(deviceId)
             conf = await wait_for(
                 getConfiguration(deviceId), timeout=DEVICE_TIMEOUT)
+            if self.isConfigMode:
+                class_schema = await self.get_schema(serverId, classId)
+                conf = sanitize_init_configuration(class_schema, conf)
         except (CancelledError, TimeoutError):
             self.status = (f"Failure: Saving configuration for {deviceId} "
                            f"failed. The device is not online.")
@@ -187,9 +195,9 @@ class ConfigurationManager(DeviceClientBase):
             self.status = str(e)
             self.lastSuccess = False
         else:
-            # XXX: Sanitize configuration, for now remove attributes
             conf = hashToHash(conf)
-            configs = {"deviceId": deviceId, "config": encodeXML(conf)}
+            configs = {"deviceId": deviceId, "config": encodeXML(conf),
+                       "serverId": serverId, "classId": classId}
             items = [configs]
             # Now we save and list again, and we should not expect any errors
             try:
@@ -242,6 +250,7 @@ class ConfigurationManager(DeviceClientBase):
         self.db = None
         regex = self.configurationName.descriptor.regex
         self.name_pattern = re.compile(regex)
+        self._schema_futures = {}
 
         # Dictionary of serverId: {classId: schema}
         self._class_schemas = defaultdict(dict)
@@ -258,7 +267,6 @@ class ConfigurationManager(DeviceClientBase):
         await self.db.assure_existing()
         self.state = State.ON
 
-        self._schema_futures = {}
         # If we have a device name already we can retrieve a list!
         if self.deviceName:
             background(self._list_configurations())
@@ -344,15 +352,17 @@ class ConfigurationManager(DeviceClientBase):
 
         async def fetch_config(device_id):
             """Poll a single device for server and classId"""
-            # serverId, classId = self._get_server_attributes(device_id)
-            # schema = await getClassSchema(serverId, classId)
             config = await getConfiguration(device_id)
-            serverId = config["serverId"]
-            classId = config["classId"]
-            # XXX: Sanitization of configuration
+            serverId, classId = self._get_server_attributes(device_id)
+            if self.isConfigMode:
+                schema = await self.get_schema(serverId, classId)
+                config = sanitize_init_configuration(schema, config)
+
             config = encodeXML(config)
-            config_dict = {"deviceId": device_id, "config": config,
-                           "classId": classId, "serverId": serverId}
+            config_dict = {"deviceId": device_id,
+                           "config": config,
+                           "classId": classId,
+                           "serverId": serverId}
             return config_dict
 
         futures = [fetch_config(device_id) for device_id in deviceIds]
@@ -366,6 +376,38 @@ class ConfigurationManager(DeviceClientBase):
 
         return Hash("success", True)
 
+    async def get_schema(self, serverId: str, classId: str):
+        # Get the class schema for this device!
+        schema = self._class_schemas[serverId].get(classId, None)
+        if schema is not None:
+            return schema
+        # No schema there, check if we are already looking for it!
+        future = self._schema_futures.get((serverId, classId), None)
+        if future is not None:
+            # Let it throw here in case of failure
+            await future
+            schema = future.result()
+            return schema
+        else:
+            future = Future()
+            self._schema_futures[(serverId, classId)] = future
+            try:
+                schema = await wait_for(
+                    getClassSchema(serverId, classId),
+                    timeout=DEVICE_TIMEOUT)
+            except (CancelledError, TimeoutError) as e:
+                future.set_exception(e)
+            except Exception as e:
+                # In case we experience an unknown error, notify!
+                future.set_exception(e)
+            else:
+                future.set_result(schema)
+                # Got a new schema, cache it!
+                self._class_schemas[serverId][classId] = schema
+            finally:
+                self._schema_futures.pop((serverId, classId), None)
+                return future.result()
+
     @slot
     async def slotInstantiateDevice(self, info):
         """Slot to instantiate a device via the configuration manager
@@ -374,14 +416,10 @@ class ConfigurationManager(DeviceClientBase):
 
         - deviceId: The mandatory parameter
         - name: Mandatory parameter
-        - classId: Optional parameter for validation
         - serverId: Optional parameter
         """
         deviceId = info["deviceId"]
         name = info["name"]
-        # Note: classId and serverId can be optional
-        # classId is taken for validation!
-        classId = info.get("classId", None)
         serverId = info.get("serverId", None)
 
         item = await self.db.get_configuration(deviceId, name)
@@ -391,52 +429,12 @@ class ConfigurationManager(DeviceClientBase):
             raise KaraboError(reason)
 
         config = decodeXML(item["config"])
-        # If the classId was provided we can validate!
-        if classId is not None and classId != config["classId"]:
-            raise KaraboError(f"The configuration for {deviceId} was "
-                              f"recorded for classId {classId}. The "
-                              f"input classId {classId} does not match!")
-        # If we did not provide the classId, we take it from the item!
-        if classId is None:
-            classId = item["classId"]
+        classId = item["classId"]
         # If we did not provide a serverId, we take it from the item
         if serverId is None:
             serverId = item["serverId"]
 
-        # Get the class schema for this device!
-        schema = self._class_schemas[serverId].get(classId, None)
-        if schema is None:
-            # No schema there, check if we are already looking for it!
-            future = self._schema_futures.get((serverId, classId), None)
-            if future is not None:
-                # Let it throw here in case of failure
-                await future
-                schema = future.result()
-            else:
-                future = Future()
-                self._schema_futures[(serverId, classId)] = future
-                try:
-                    schema = await wait_for(
-                        getClassSchema(serverId, classId),
-                        timeout=DEVICE_TIMEOUT)
-                except (CancelledError, TimeoutError) as e:
-                    future.set_exception(e)
-                    raise KaraboError(
-                        f"server {serverId} is not available to start "
-                        f"device with deviceId {deviceId} ... Could not "
-                        f"retrieve the schema!")
-                except Exception as e:
-                    # In case we experience an unknown error, notify!
-                    future.set_exception(e)
-                    raise KaraboError(
-                        f"Exception occured when starting device with "
-                        f"deviceId {deviceId} on {serverId}: {e}")
-                else:
-                    future.set_result(schema)
-                    # Got a new schema, cache it!
-                    self._class_schemas[serverId][classId] = schema
-                finally:
-                    self._schema_futures.pop((serverId, classId), None)
+        schema = await self.get_schema(serverId, classId)
 
         config = sanitize_init_configuration(schema, config)
         h = Hash()
