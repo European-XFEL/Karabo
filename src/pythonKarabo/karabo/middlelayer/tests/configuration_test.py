@@ -16,8 +16,8 @@
 from copy import deepcopy
 
 from karabo.middlelayer.configuration import (
-    config_changes, sanitize_init_configuration, sanitize_write_configuration,
-    validate_init_configuration)
+    config_changes, extract_init_configuration, sanitize_init_configuration,
+    sanitize_write_configuration, validate_init_configuration)
 from karabo.middlelayer.macro import MacroSlot
 from karabo.native import (
     AccessMode, Assignment, Configurable, Double, Hash, Int32, Node, Schema,
@@ -181,6 +181,34 @@ def test_sanitize_init_configuration():
     assert "move" not in sanitized
     assert "moveMacro" not in config
     assert "moveMacro" not in sanitized
+
+
+def test_extract_init_configuration():
+    obj = Object()
+    config = obj.configurationAsHash()
+    schema = Object.getClassSchema()
+    assert isinstance(schema, Schema)
+    # Make a deepcopy for testing!
+    extracted = extract_init_configuration(schema, deepcopy(config))
+    assert config is not None
+    assert extracted is not None
+    # No changes from default
+    assert len(extracted) == 0
+
+    # modify
+    config = obj.configurationAsHash()
+    config["double"] = 0.1
+    config["integer"] = 20  # default
+    config["internalInteger"] = 2
+    config["initOnlyDouble"] = 55.1
+    config["nested.double"] = 31.2
+    extracted = extract_init_configuration(schema, deepcopy(config))
+    assert len(extracted) == 3
+    assert "double" in extracted
+    assert "internalInteger" not in extracted
+    assert "integer" not in extracted
+    assert "initOnlyDouble" in extracted
+    assert "nested.double" in extracted
 
 
 def test_config_changes():

@@ -66,9 +66,11 @@ def test_save_get_config(configTest):
     rations.
     """
     dc = configTest.remote()
+    # Put changes from default
+    dc.set(TEST_DEVICE_ID, Hash("int32Property", 20))
+
     # Gets the current device configuration for later checking
     dev_config = dc.get(TEST_DEVICE_ID)
-
     config_name = "PropertyTestConfigI"
     ok, msg = dc.saveConfigurationFromName(config_name, [TEST_DEVICE_ID])
 
@@ -81,9 +83,11 @@ def test_save_get_config(configTest):
             f"'{TEST_DEVICE_ID}: '{ret['reason']}")
     assert ret["success"], text
 
+    # XXX: Must be item
     config = ret["config"]
     assert config["name"] == config_name
 
+    configuration = config["config"]
     # XXX: How to make sure to get all paths
     schema = dc.getDeviceSchema(TEST_DEVICE_ID)
     for key in dev_config.keys():
@@ -91,11 +95,16 @@ def test_save_get_config(configTest):
         is_node = schema.isNode(key)
         if is_node:
             continue
+        if schema.hasDefaultValue(key):
+            default = schema.getDefaultValue(key)
+            if default == dev_config[key]:
+                assert key not in configuration
+                continue
         is_internal = (schema.hasAssignment(key)
                        and schema.isAssignmentInternal(key))
         mode = schema.getAccessMode(key)
         if not is_internal and mode in (AccessType.WRITE, AccessType.INIT):
-            config_value = config["config"][key]
+            config_value = configuration[key]
             assert config_value == value
 
     # config_name was used for the successful save case. Always overwrite!

@@ -27,7 +27,8 @@ from karabo.middlelayer import (
     Device, Double, Hash, HashByte, HashList, KaraboError, Schema, Slot,
     String, call, connectDevice, execute, getConfigurationFromName,
     getProperties, instantiateFromName, listConfigurationFromName,
-    listDevicesWithConfiguration, saveConfigurationFromName, shutdown, slot)
+    listDevicesWithConfiguration, saveConfigurationFromName, setWait, shutdown,
+    slot)
 from karabo.middlelayer.testing import AsyncDeviceContext
 
 from ..configuration_manager import ConfigurationManager, hashToHash
@@ -50,7 +51,7 @@ class MockingDevice(Device):
         defaultValue=5.0)
 
 
-DEFAULT_LAST_DOUBLE = -1.0
+UNDEFINED_LAST_DOUBLE = -1.0
 
 
 class MockServer(Device):
@@ -61,7 +62,7 @@ class MockServer(Device):
         defaultValue="")
 
     lastConfigDouble = Double(
-        defaultValue=DEFAULT_LAST_DOUBLE)
+        defaultValue=UNDEFINED_LAST_DOUBLE)
 
     def _initInfo(self):
         info = super()._initInfo()
@@ -71,7 +72,7 @@ class MockServer(Device):
     @Slot()
     async def reset(self):
         self.lastClassId = ""
-        self.lastConfigDouble = DEFAULT_LAST_DOUBLE
+        self.lastConfigDouble = UNDEFINED_LAST_DOUBLE
         self.lastDeviceId = ""
 
     @slot
@@ -88,7 +89,8 @@ class MockServer(Device):
 
         self.lastDeviceId = deviceId
         self.lastClassId = classId
-        self.lastConfigDouble = config.get('value', DEFAULT_LAST_DOUBLE)
+        self.lastConfigDouble = config.get(
+            'value', UNDEFINED_LAST_DOUBLE)
 
         return True, self.deviceId
 
@@ -125,6 +127,7 @@ async def test_configuration_save(deviceTest):
     h = Hash("name", config_name, "deviceIds", ["ALICE"])
     r = await call(MANAGER_ID, "slotSaveConfigurationFromName", h)
     assert r["success"]
+    await setWait("ALICE", value=10)
     config_name = "testConfig1"
     h = Hash("name", config_name, "deviceIds", ["ALICE",
                                                 "BOB"])
@@ -177,8 +180,18 @@ async def test_get_configuration(deviceTest):
     name = item["name"]
     assert name == config_name
     config = item["config"]
-    value = config["value"]
-    assert value == 5.0
+    assert "value" not in config
+
+    # has been stored in previous test
+    config_name = "testConfig1"
+    h = Hash("name", config_name, "deviceId", "ALICE")
+    r = await call(MANAGER_ID, "slotGetConfigurationFromName", h)
+    item = r["item"]
+    name = item["name"]
+    assert name == config_name
+    config = item["config"]
+    assert "value" in config
+    assert config["value"] == 10.0
 
 
 @pytest.mark.timeout(20)
@@ -218,6 +231,7 @@ async def test_list_delete_configuration(deviceTest):
 async def test_get_client_configuration(deviceTest):
     """Test the functions that can be used from ikarabo"""
     # Device client functions
+    await setWait("CHARLIE", value=25.0)
     await saveConfigurationFromName(
         "CHARLIE", name="testConfigClient")
     await saveConfigurationFromName(
@@ -244,7 +258,7 @@ async def test_get_client_configuration(deviceTest):
 
     config = item["config"]
     value = config["value"]
-    assert value == 5.0
+    assert value == 25.0
 
     devices = await listDevicesWithConfiguration()
     assert "CHARLIE" in devices
@@ -254,7 +268,7 @@ async def test_get_client_configuration(deviceTest):
         ["lastClassId", "lastDeviceId", "lastConfigDouble"])
     assert properties["lastClassId"] == ""
     assert properties["lastDeviceId"] == ""
-    assert properties["lastConfigDouble"] == DEFAULT_LAST_DOUBLE
+    assert properties["lastConfigDouble"] == UNDEFINED_LAST_DOUBLE
 
     await instantiateFromName("CHARLIE", name="testConfigClient",
                               serverId="MDL_SERVER_MOCK")
@@ -264,7 +278,7 @@ async def test_get_client_configuration(deviceTest):
         ["lastClassId", "lastDeviceId", "lastConfigDouble"])
     assert properties["lastClassId"] == "MockingDevice"
     assert properties["lastDeviceId"] == "CHARLIE"
-    assert properties["lastConfigDouble"] == 5.0
+    assert properties["lastConfigDouble"] == 25.0
     await shutdown("CHARLIE")
 
 
@@ -277,7 +291,7 @@ async def test_instantiate_device(deviceTest):
         ["lastClassId", "lastDeviceId", "lastConfigDouble"])
     assert properties["lastClassId"] == ""
     assert properties["lastDeviceId"] == ""
-    assert properties["lastConfigDouble"] == DEFAULT_LAST_DOUBLE
+    assert properties["lastConfigDouble"] == UNDEFINED_LAST_DOUBLE
 
     h = Hash()
     h["deviceId"] = "ALICE"
@@ -290,7 +304,7 @@ async def test_instantiate_device(deviceTest):
         ["lastClassId", "lastDeviceId", "lastConfigDouble"])
     assert properties["lastClassId"] == "MockingDevice"
     assert properties["lastDeviceId"] == "ALICE"
-    assert properties["lastConfigDouble"] == 5.0
+    assert properties["lastConfigDouble"] == -1.0
 
     h = Hash()
     h["deviceId"] = "ALICE"

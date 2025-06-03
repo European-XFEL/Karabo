@@ -33,8 +33,8 @@ from karabo.middlelayer import (
     AccessLevel, AccessMode, Assignment, Bool, Configurable, DeviceClientBase,
     Hash, HashList, KaraboError, Overwrite, RegexString, Slot, State, String,
     Timestamp, UInt32, VectorHash, VectorString, background, decodeXML,
-    dictToHash, encodeXML, getClassSchema, getConfiguration, isStringSet,
-    sanitize_init_configuration, slot)
+    dictToHash, encodeXML, extract_init_configuration, getClassSchema,
+    getConfiguration, isStringSet, sanitize_init_configuration, slot)
 
 DEVICE_TIMEOUT = 3
 FILTER_KEYS = ["name", "timepoint"]
@@ -185,7 +185,9 @@ class ConfigurationManager(DeviceClientBase):
                 getConfiguration(deviceId), timeout=DEVICE_TIMEOUT)
             if self.isConfigMode:
                 class_schema = await self.get_schema(serverId, classId)
-                conf = sanitize_init_configuration(class_schema, conf)
+                conf = extract_init_configuration(class_schema, conf)
+            else:
+                conf = hashToHash(conf)
         except (CancelledError, TimeoutError):
             self.status = (f"Failure: Saving configuration for {deviceId} "
                            f"failed. The device is not online.")
@@ -195,7 +197,6 @@ class ConfigurationManager(DeviceClientBase):
             self.status = str(e)
             self.lastSuccess = False
         else:
-            conf = hashToHash(conf)
             configs = {"deviceId": deviceId, "config": encodeXML(conf),
                        "serverId": serverId, "classId": classId}
             items = [configs]
@@ -227,11 +228,13 @@ class ConfigurationManager(DeviceClientBase):
 
     def _get_server_attributes(self, deviceId: str) -> tuple[str, str]:
         """Return the attributes `classId` and `serverId` of a device"""
-        attrs = self.systemTopology[f"device.{deviceId}", ...]
-        classId = attrs["classId"]
-        serverId = attrs["serverId"]
-
-        return serverId, classId
+        try:
+            attrs = self.systemTopology[f"device.{deviceId}", ...]
+            classId = attrs["classId"]
+            serverId = attrs["serverId"]
+            return serverId, classId
+        except KeyError:
+            raise RuntimeError(f"Device {deviceId} is not online.")
 
     @slot
     async def slotInstanceNew(self, instanceId, info):
@@ -356,8 +359,9 @@ class ConfigurationManager(DeviceClientBase):
             serverId, classId = self._get_server_attributes(device_id)
             if self.isConfigMode:
                 schema = await self.get_schema(serverId, classId)
-                config = sanitize_init_configuration(schema, config)
-
+                config = extract_init_configuration(schema, config)
+            else:
+                config = hashToHash(config)
             config = encodeXML(config)
             config_dict = {"deviceId": device_id,
                            "config": config,
@@ -436,12 +440,20 @@ class ConfigurationManager(DeviceClientBase):
 
         schema = await self.get_schema(serverId, classId)
 
-        config = sanitize_init_configuration(schema, config)
+        # XXX: In principle not required, safety measure to
+        # remove further obsolete and readonly keys after storage
+        # in case device changed over time
+        cleaned_config = sanitize_init_configuration(schema, config)
+        if not cleaned_config.fullyEqual(config):
+            self.logger.info(
+                f"Configuration {name} for device {deviceId} "
+                f"with {classId} not fully equal")
+
         h = Hash()
         h["deviceId"] = deviceId
         h["classId"] = classId
         h["serverId"] = serverId
-        h["configuration"] = config
+        h["configuration"] = cleaned_config
 
         success, msg = await self.call(serverId, "slotStartDevice", h)
         if not success:

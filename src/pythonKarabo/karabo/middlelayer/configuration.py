@@ -13,14 +13,31 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
+from collections.abc import Callable
+
 from karabo.common.api import (
     KARABO_SCHEMA_ACCESS_MODE, KARABO_SCHEMA_ASSIGNMENT,
-    KARABO_SCHEMA_CLASS_ID, KARABO_SCHEMA_OPTIONS)
+    KARABO_SCHEMA_CLASS_ID, KARABO_SCHEMA_DEFAULT_VALUE, KARABO_SCHEMA_OPTIONS)
 from karabo.native import (
-    AccessMode, Assignment, Hash, NodeType, Schema, is_equal)
+    AccessMode, Assignment, Hash, NodeType, Schema, has_changes, is_equal)
 
 
-def sanitize_init_configuration(schema, config):
+def is_init(attrs: dict) -> bool:
+    """Check if the passed attributes are related to an init property"""
+    mode = attrs[KARABO_SCHEMA_ACCESS_MODE] in {
+        AccessMode.RECONFIGURABLE, AccessMode.INITONLY}
+
+    internal = attrs[KARABO_SCHEMA_ASSIGNMENT] == Assignment.INTERNAL
+    return mode and not internal
+
+
+def is_writable(attrs: dict) -> bool:
+    """Check if the passed attributes are related to a writable property"""
+    mode = attrs[KARABO_SCHEMA_ACCESS_MODE] == AccessMode.RECONFIGURABLE
+    return mode
+
+
+def sanitize_init_configuration(schema: Schema, config: Hash) -> Hash:
     """Sanitize a configuration to be used as INIT configuration
 
     - Remove all readOnly configuration that are not in the schema!
@@ -29,49 +46,27 @@ def sanitize_init_configuration(schema, config):
     :param schema: The `Schema` object of the device
     :param config: The configuration `Hash`
     """
-    assert isinstance(schema, Schema)
-
-    config = extract_configuration(schema, config)
-
-    readonly_paths = [pth for pth, _, _ in Hash.flat_iterall(config)
-                      if schema.hash[pth, KARABO_SCHEMA_ACCESS_MODE] ==
-                      AccessMode.READONLY.value
-                      or schema.hash[pth, KARABO_SCHEMA_ASSIGNMENT] ==
-                      Assignment.INTERNAL.value]
-    for key in readonly_paths:
-        config.erase(key)
-
-    return config
+    return _extract_configuration(schema, config, False, is_init)
 
 
-def sanitize_write_configuration(schema, config):
+def sanitize_write_configuration(schema: Schema, config: Hash) -> Hash:
     """Sanitize a configuration to be applied as runtime configuration
 
     :param schema: state dependent runtime schema
     :param config: configuration hash
     """
-    assert isinstance(schema, Schema)
-
-    config = extract_configuration(schema, config)
-
-    readonly_paths = [pth for pth, _, _ in Hash.flat_iterall(config)
-                      if schema.hash[pth, KARABO_SCHEMA_ACCESS_MODE] in
-                      [AccessMode.READONLY.value, AccessMode.INITONLY.value]]
-    for key in readonly_paths:
-        config.erase(key)
-
-    return config
+    return _extract_configuration(schema, config, False, is_writable)
 
 
-def extract_configuration(schema, config):
+def _extract_configuration(
+        schema: Schema, config: Hash, only_changes: bool,
+        condition: Callable):
     """Extract a configuration with a reference schema from a config `Hash`
 
     :param schema: The schema for filtering
     :param config: The configuration to be used
-    :param init: Declare if this configuration is used for initialization
 
     Note: For runtime use, the schema should be the state dependent schema
-
     Note: Returns a configuration Hash, that:
         - Does not contain Slots
         - Does not have obsolete paths, e.g. key has to be in schema
@@ -79,24 +74,28 @@ def extract_configuration(schema, config):
     """
     assert isinstance(schema, Schema)
 
-    def _iter_schema(schema_hash, base=''):
+    def _iter_schema(schema_hash: Hash, base: str, condition: Callable):
         base = base + '.' if base else ''
         for key, value, attrs in schema_hash.iterall():
             subkey = base + key
             is_slot = attrs.get(KARABO_SCHEMA_CLASS_ID, "") == "Slot"
             is_node = attrs["nodeType"] == NodeType.Node.value
             if is_node and not is_slot:
-                yield from _iter_schema(value, base=subkey)
-            elif not is_slot:
+                yield from _iter_schema(
+                    value, base=subkey, condition=condition)
+            elif not is_slot and condition(attrs):
                 yield subkey, attrs
 
     retval = Hash()
-
-    for key, attrs in _iter_schema(schema.hash):
+    for key, attrs in _iter_schema(schema.hash, "", condition):
         value = config.get(key, None)
         # If the key is not in the config, we continue
         if value is None:
             continue
+        if only_changes:
+            default = attrs.get(KARABO_SCHEMA_DEFAULT_VALUE, None)
+            if default is not None and not has_changes(default, value):
+                continue
         # Check if we have options and act accordingly, yes
         # some fancy schema evolution can always appear
         options = attrs.get(KARABO_SCHEMA_OPTIONS, None)
@@ -105,6 +104,17 @@ def extract_configuration(schema, config):
         retval[key] = value
 
     return retval
+
+
+def extract_init_configuration(schema: Schema, config: Hash) -> Hash:
+    """Extract a project compatible init only configuration
+
+    - Provides only changes from defaults
+
+    :param schema: The `ClassSchema` object of the device
+    :param config: The configuration `Hash`
+    """
+    return _extract_configuration(schema, config, True, is_init)
 
 
 def config_changes(a, b):
