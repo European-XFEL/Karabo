@@ -70,7 +70,7 @@ namespace karabo {
                     std::lock_guard<std::mutex> lock(m_lastTimestampMutex);
                     karabo::data::Timestamp& lastTs = m_lastDataTimestamp;
                     m_configStream << lastTs.toIso8601Ext() << "|" << fixed << lastTs.toTimestamp() << "|"
-                                   << lastTs.getTrainId() << "|.||"
+                                   << lastTs.getTid() << "|.||"
                                    << karabo::data::Timestamp().toIso8601Ext() // i.e. 'now' from clock of logger
                                    << "||LOGOUT\n";
                     m_configStream.flush();
@@ -81,7 +81,7 @@ namespace karabo {
                         ofstream contentStream(contentPath.c_str(), ios::app);
                         // Again use timestamp from device to ensure consistency for searching in archive_index.txt
                         contentStream << "-LOG " << lastTs.toIso8601Ext() << " " << fixed << lastTs.toTimestamp() << " "
-                                      << lastTs.getTrainId() << " " << position << " . " << m_lastIndex << "\n";
+                                      << lastTs.getTid() << " " << position << " . " << m_lastIndex << "\n";
                         contentStream.close();
                     } else {
                         KARABO_LOG_FRAMEWORK_ERROR
@@ -307,7 +307,7 @@ namespace karabo {
                     } else {
                         contentStream << "=NEW ";
                     }
-                    contentStream << t.toIso8601Ext() << " " << fixed << t.toTimestamp() << " " << t.getTrainId() << " "
+                    contentStream << t.toIso8601Ext() << " " << fixed << t.toTimestamp() << " " << t.getTid() << " "
                                   << newFilePlusPosition.second << " . " << m_lastIndex << "\n";
                     contentStream.close();
                 }
@@ -345,8 +345,8 @@ namespace karabo {
         void FileDeviceData::logValue(const std::string& deviceId, const std::string& path,
                                       const karabo::data::Timestamp& ts, const std::string& value,
                                       const std::string& type, size_t filePosition) {
-            m_configStream << ts.toIso8601Ext() << "|" << fixed << ts.toTimestamp() << "|" << ts.getTrainId() << "|"
-                           << path << "|" << type << "|" << scientific << value << "|";
+            m_configStream << ts.toIso8601Ext() << "|" << fixed << ts.toTimestamp() << "|" << ts.getTid() << "|" << path
+                           << "|" << type << "|" << scientific << value << "|";
             if (m_pendingLogin) m_configStream << "|LOGIN\n";
             else m_configStream << "|VALID\n";
 
@@ -370,7 +370,7 @@ namespace karabo {
             int runNum = 0x0F0B1B2B;
 
             mdp->record.epochstamp = ts.toTimestamp();
-            mdp->record.trainId = ts.getTrainId();
+            mdp->record.trainId = ts.getTid();
             mdp->record.positionInRaw = filePosition;
             mdp->record.extent1 = (expNum & 0xFFFFFF);
             mdp->record.extent2 = (runNum & 0xFFFFFF);
@@ -499,7 +499,7 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_ERROR << "Failed to serialise Schema of " << deviceId
                                                << ", store incomplete XML: " << e.what();
                 }
-                fileout << stamp.getSeconds() << " " << stamp.getFractionalSeconds() << " " << stamp.getTrainId() << " "
+                fileout << stamp.getSeconds() << " " << stamp.getFractionalSeconds() << " " << stamp.getTid() << " "
                         << archive << "\n";
                 fileout.close();
             } else {

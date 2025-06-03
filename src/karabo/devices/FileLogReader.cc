@@ -373,8 +373,7 @@ namespace karabo {
                                     }
                                     const Epochstamp epochstamp(stringDoubleToEpochstamp(tokens[2]));
                                     // tokens[3] is trainId
-                                    const Timestamp tst(epochstamp,
-                                                        Trainstamp(fromString<unsigned long long>(tokens[3])));
+                                    const Timestamp tst(epochstamp, TimeId(fromString<unsigned long long>(tokens[3])));
 
                                     if (result.size() == 1) {
                                         // Special case: there's already one history record and it may have a timepoint

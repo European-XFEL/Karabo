@@ -18,7 +18,7 @@ from time import sleep
 
 from karabo import __version__ as karaboVersion
 from karabo.bound import (
-    Epochstamp, Hash, SignalSlotable, Timestamp, Trainstamp, fullyEqual)
+    Epochstamp, Hash, SignalSlotable, TimeId, Timestamp, fullyEqual)
 from karabo.bound.testing import BoundDeviceTestCase
 
 instTimeout = 30
@@ -405,7 +405,7 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
             attrs = cfg.getAttributes("someString")
             tsBefore = Timestamp.fromHashAttributes(attrs)
             epochPast = Epochstamp(tsBefore.getSeconds() - 3 * 3600, 0)
-            tsPast = Timestamp(epochPast, Trainstamp(tsBefore.getTrainId()))
+            tsPast = Timestamp(epochPast, TimeId(tsBefore.getTid()))
             arg = Hash("someString", "reconfiguredWithStamp")
             tsPast.toHashAttributes(arg.getAttributes("someString"))
             epochBeforeSet = Epochstamp()

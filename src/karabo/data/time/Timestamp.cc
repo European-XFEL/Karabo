@@ -28,10 +28,10 @@ namespace karabo {
     namespace data {
 
 
-        Timestamp::Timestamp() : m_epochstamp(Epochstamp()), m_trainstamp(Trainstamp()) {}
+        Timestamp::Timestamp() : m_epochstamp(Epochstamp()), m_timeId(TimeId()) {}
 
 
-        Timestamp::Timestamp(const Epochstamp& e, const Trainstamp& t) : m_epochstamp(e), m_trainstamp(t) {}
+        Timestamp::Timestamp(const Epochstamp& e, const TimeId& t) : m_epochstamp(e), m_timeId(t) {}
 
 
         Timestamp::~Timestamp() {}
@@ -39,12 +39,12 @@ namespace karabo {
 
         bool Timestamp::hashAttributesContainTimeInformation(const Hash::Attributes& attributes) {
             return (Epochstamp::hashAttributesContainTimeInformation(attributes) &&
-                    Trainstamp::hashAttributesContainTimeInformation(attributes));
+                    TimeId::hashAttributesContainTimeInformation(attributes));
         }
 
 
         Timestamp Timestamp::fromHashAttributes(const Hash::Attributes& attributes) {
-            return Timestamp(Epochstamp::fromHashAttributes(attributes), Trainstamp::fromHashAttributes(attributes));
+            return Timestamp(Epochstamp::fromHashAttributes(attributes), TimeId::fromHashAttributes(attributes));
         }
 
 
@@ -76,22 +76,22 @@ namespace karabo {
 
         void Timestamp::toHashAttributes(Hash::Attributes& attributes) const {
             m_epochstamp.toHashAttributes(attributes);
-            m_trainstamp.toHashAttributes(attributes);
+            m_timeId.toHashAttributes(attributes);
         }
 
 
         bool operator==(const Timestamp& lhs, const Timestamp& rhs) {
-            return (lhs.m_epochstamp == rhs.m_epochstamp && lhs.m_trainstamp == rhs.m_trainstamp);
+            return (lhs.m_epochstamp == rhs.m_epochstamp && lhs.m_timeId == rhs.m_timeId);
         }
 
 
         bool operator!=(const Timestamp& lhs, const Timestamp& rhs) {
-            return (lhs.m_epochstamp != rhs.m_epochstamp || lhs.m_trainstamp != rhs.m_trainstamp);
+            return (lhs.m_epochstamp != rhs.m_epochstamp || lhs.m_timeId != rhs.m_timeId);
         }
 
 
         std::ostream& operator<<(std::ostream& out, const Timestamp& timestamp) {
-            out << "Epoch: " << timestamp.getEpochstamp() << " Train ID: " << timestamp.getTrainstamp();
+            out << "Epoch: " << timestamp.getEpochstamp() << " Train ID: " << timestamp.getTimeId();
             return out;
         }
     } // namespace data

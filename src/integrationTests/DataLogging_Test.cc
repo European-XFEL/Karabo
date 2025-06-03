@@ -599,7 +599,7 @@ void DataLogging_Test::testInfluxMaxPerDevicePropLogRate() {
     for (unsigned int i = 0; i < 4 * rateWinSecs; i++) {
         Hash updateProp = Hash("stringProperty", str8Kb);
         Epochstamp updateEpoch(before32KbWrite + TimeDuration(0, (i + 1) * millisecInAtto));
-        Timestamp updateTime(updateEpoch, Trainstamp());
+        Timestamp updateTime(updateEpoch, TimeId());
         updateTime.toHashAttributes(updateProp.getAttributes("stringProperty"));
         CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(m_deviceId, "slotUpdateConfigGeneric", updateProp)
                                       .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
@@ -646,7 +646,7 @@ void DataLogging_Test::testInfluxMaxPerDevicePropLogRate() {
     for (unsigned int i = 0; i < 8 * rateWinSecs; i++) {
         Hash updateProps = Hash("stringProperty", str8Kb, "int32Property", 10);
         Epochstamp updateEpoch(before64KbWrite + TimeDuration(0, (i + 1) * millisecInAtto));
-        Timestamp updateTime(updateEpoch, Trainstamp());
+        Timestamp updateTime(updateEpoch, TimeId());
         updateTime.toHashAttributes(updateProps.getAttributes("stringProperty"));
         updateTime.toHashAttributes(updateProps.getAttributes("int32Property"));
         CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(m_deviceId, "slotUpdateConfigGeneric", updateProps)
@@ -709,7 +709,7 @@ void DataLogging_Test::testInfluxMaxPerDevicePropLogRate() {
     Epochstamp beforeSingle32KbWrite(after64KbWrite + TimeDuration(1 * rateWinSecs, 4 * millisecInAtto));
     Hash updateStr32Kb("stringProperty", str32Kb);
     Epochstamp updateEpoch(beforeSingle32KbWrite + TimeDuration(0, 6 * millisecInAtto));
-    Timestamp updateTime(updateEpoch, Trainstamp());
+    Timestamp updateTime(updateEpoch, TimeId());
     updateTime.toHashAttributes(updateStr32Kb.getAttributes("stringProperty"));
     CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(m_deviceId, "slotUpdateConfigGeneric", updateStr32Kb)
                                   .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)

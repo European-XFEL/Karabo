@@ -40,8 +40,8 @@
 #include "karabo/data/schema/StateElement.hh"
 #include "karabo/data/schema/Validator.hh"
 #include "karabo/data/time/Epochstamp.hh"
+#include "karabo/data/time/TimeId.hh"
 #include "karabo/data/time/Timestamp.hh"
-#include "karabo/data/time/Trainstamp.hh"
 #include "karabo/data/types/Hash.hh"
 #include "karabo/data/types/HashFilter.hh"
 #include "karabo/data/types/State.hh"
@@ -777,7 +777,7 @@ namespace karabo {
                     }
                 }
             }
-            return karabo::data::Timestamp(epoch, karabo::data::Trainstamp(id));
+            return karabo::data::Timestamp(epoch, karabo::data::TimeId(id));
         }
 
 
@@ -1299,7 +1299,7 @@ namespace karabo {
             {
                 std::lock_guard<std::mutex> lock(m_timeChangeMutex);
                 const Epochstamp epoch(m_timeSec, m_timeFrac);
-                const Trainstamp train(m_timeId);
+                const TimeId train(m_timeId);
                 const Timestamp stamp(epoch, train);
                 stamp.toHashAttributes(attrs);
             }

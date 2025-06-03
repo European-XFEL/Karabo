@@ -162,7 +162,7 @@ namespace karabo {
             std::vector<std::string> paths;
             getPathsForConfiguration(configuration, m_currentSchema, paths);
             std::stringstream query;
-            Timestamp lineTimestamp(Epochstamp(0ull, 0ull), Trainstamp(0ull));
+            Timestamp lineTimestamp(Epochstamp(0ull, 0ull), TimeId(0ull));
 
             for (size_t i = 0; i < paths.size(); ++i) {
                 const std::string& path = paths[i];
@@ -477,7 +477,7 @@ namespace karabo {
             if (!query.str().empty()) {
                 // There's data to be output to Influx.
 
-                const unsigned long long tid = stamp.getTrainId();
+                const unsigned long long tid = stamp.getTid();
                 // influxDB integers are signed 64 bits. here we check that the we are within such limits
                 // Assuming a trainId rate of 10 Hz this limit will be surpassed in about 29 billion years
                 if (0 < tid && tid <= static_cast<unsigned long long>(std::numeric_limits<long long>::max())) {
