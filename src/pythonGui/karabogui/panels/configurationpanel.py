@@ -123,8 +123,9 @@ class ConfigurationPanel(BasePanelWidget):
         configuration = data['configuration']
         name = data['name']
         preview = data['preview']
-        self._apply_configuration_from_name(deviceId, configuration, name,
-                                            preview)
+        classId = data['classId']
+        self._apply_configuration_from_name(
+            deviceId, classId, configuration, name, preview)
 
     def _event_network(self, data):
         connected = data['status']
@@ -307,14 +308,13 @@ class ConfigurationPanel(BasePanelWidget):
     # -----------------------------------------------------------------------
     # private methods
 
-    def _check_configuration(self, deviceId, config):
+    def _check_configuration(self, deviceId, classId):
         proxy = self._showing_proxy
         if proxy is None:
             return False
 
         binding = proxy.binding
         # The check we can provide is to check the deviceId and classId
-        classId = config.get('classId', None)
         if classId is None:
             # XXX: We might still get an invalid configuration without classId
             messagebox.show_error("A configuration without classId arrived "
@@ -339,9 +339,10 @@ class ConfigurationPanel(BasePanelWidget):
 
         return True
 
-    def _apply_configuration_from_name(self, deviceId, config, name, preview):
-        """Apply the retrieved configuration from getConfigurationFromPast"""
-        validated = self._check_configuration(deviceId, config)
+    def _apply_configuration_from_name(
+            self, deviceId, classId, config, name, preview):
+        """Apply the retrieved configuration from getConfigurationFromName"""
+        validated = self._check_configuration(deviceId, classId)
         if not validated:
             return
 
@@ -362,7 +363,8 @@ class ConfigurationPanel(BasePanelWidget):
     def _apply_configuration_from_past(self, deviceId, config, req_time,
                                        config_time, match, preview):
         """Apply the retrieved configuration from getConfigurationFromPast"""
-        validated = self._check_configuration(deviceId, config)
+        classId = config.get("classId")
+        validated = self._check_configuration(deviceId, classId)
         if not validated:
             return
 
