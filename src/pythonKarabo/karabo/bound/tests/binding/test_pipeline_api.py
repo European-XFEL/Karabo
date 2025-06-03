@@ -20,10 +20,13 @@ import threading
 import time
 import uuid
 
+import pytest
+
 # Enable logs for debugging - does not matter which bindings are used:
 from karabo.bound import (
-    ChannelMetaData, ConnectionStatus, EventLoop, Hash, InputChannel, Logger,
-    OutputChannel, SignalSlotable, Timestamp, Types, VectorHash)
+    STRING_ELEMENT, VECTOR_INT32_ELEMENT, ChannelMetaData, ConnectionStatus,
+    EventLoop, Hash, InputChannel, Logger, OutputChannel, Schema,
+    SignalSlotable, Timestamp, Types, VectorHash)
 
 config = Hash("level", "FATAL")
 # config = Hash("level", "DEBUG")
@@ -718,4 +721,49 @@ def test_pipeline_handlers():
 
     EventLoop.stop()
     time.sleep(.2)
+    t.join()
+
+
+def test_schema_validation():
+
+    # A schema to validate against
+    schema = Schema()
+    VECTOR_INT32_ELEMENT(schema).key("v_int32").maxSize(10).readOnly().commit()
+    STRING_ELEMENT(schema).key("str").readOnly().commit()
+
+    # Validate only defaults to test binding, the rest is tested in C++
+    output = OutputChannel.create("output", "out", Hash(), schema)
+    meta = ChannelMetaData(output.getInstanceIdName(), Timestamp())
+    vec = [1, 3, 4, 5]
+
+    # Test extra key
+    with pytest.raises(RuntimeError):
+        output.write(Hash("v_int32", vec, "str", "some", "tooMuch", 0), meta)
+
+    # Matching data
+    output.write(Hash("v_int32", vec, "str", "some"), meta)
+
+    ##########################################################################
+    # Test creation of channel from SignalSlotable (which needs event loop)
+    t = threading.Thread(target=EventLoop.work)
+    t.start()
+    assert t.is_alive() is True
+
+    sigSlot = SignalSlotable("ForOutputChannelSchemaVal")
+    sigSlot.start()
+    cfg = Hash("output.validateSchema", "always")
+    output = sigSlot.createOutputChannel("output", cfg, schema)
+
+    with pytest.raises(RuntimeError):
+        output.write(Hash("v_int32", vec, "str", "some", "tooMuch", 0), meta)
+
+    # Matching data
+    output.write(Hash("v_int32", vec, "str", "some"), meta)
+
+    # Always validate, also after one matching data item
+    with pytest.raises(RuntimeError):
+        output.write(Hash("v_int32", vec, "str", "some", "tooMuch", 0), meta)
+
+    EventLoop.stop()
+    # time.sleep(.2)
     t.join()

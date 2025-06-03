@@ -1302,8 +1302,9 @@ class PythonDevice:
         Needs _stateChangeLock protection
         """
         self.logger.info(f"Creating output channel '{path}'")
+        dataSchema = self._fullSchema.subSchema(path + ".schema")
         outputChannel = self._sigslot.createOutputChannel(
-            path, self._parameters)
+            path, self._parameters, dataSchema)
         if not outputChannel:
             self.logger.error(f"Failed to create output channel "
                               f"'{path}'")

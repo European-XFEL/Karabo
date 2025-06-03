@@ -290,14 +290,15 @@ returned, the data will be dropped.
 
               .def_static(
                     "create",
-                    [](const std::string& instanceId, const std::string& channelName, const Hash& config) {
+                    [](const std::string& instanceId, const std::string& channelName, const Hash& config,
+                       const Schema& dataSchema) {
                         OutputChannel::Pointer channel =
                               Configurator<OutputChannel>::create("OutputChannel", config, 0);
                         channel->setInstanceIdAndName(instanceId, channelName);
-                        channel->initialize();
+                        channel->initialize(dataSchema);
                         return py::cast(channel);
                     },
-                    py::arg("instanceId"), py::arg("channelName"), py::arg("config"));
+                    py::arg("instanceId"), py::arg("channelName"), py::arg("config"), py::arg("dataSchema") = Schema());
     }
 
     {

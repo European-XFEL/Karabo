@@ -254,7 +254,7 @@ async def test_cross(deviceTest):
         assert a_desc.tags == {"bla", "blub"}
 
         assert len(proxy.table) == 1
-        assert proxy.table[0]["d"] == 5 * unit.kilometer
+        assert proxy.table[0]["e"] == 5 * unit.kilometer
 
         with proxy:
             assert proxy.maxSizeSchema == 0
@@ -312,7 +312,7 @@ async def test_cross(deviceTest):
             assert len(proxy.table) == 1
             await waitUntilNew(proxy.table)
             assert len(proxy.table) == 2
-            assert proxy.table[1]["d"] == 7 * unit.kilometer
+            assert proxy.table[1]["e"] == 7 * unit.kilometer
             assert proxy.table[0]["s"] == "african"
 
             await proxy.injectSchema()
@@ -367,7 +367,8 @@ async def test_cross(deviceTest):
         await sleepUntil(lambda: device.rawchannelcount == 1)
         assert device.channelcount == 1
         assert device.rawchannelcount == 1
-        assert not isSet(device.channeldata.d)
+        assert isSet(device.channeldata.e)
+        assert device.channeldata.e.value == 5
         assert device.channeldata.s == "hallo"
         assert device.channelmeta.source == "boundDevice:output1"
         assert device.channelmeta.timestamp
