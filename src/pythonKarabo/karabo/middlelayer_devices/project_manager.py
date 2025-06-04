@@ -31,14 +31,14 @@ from karabo.native import read_project_model
 from karabo.project_db import (
     ExistDbNode, LocalNode, ProjectDBError, RemoteNode)
 
-_ITEM_TYPES = (
+_ITEM_TYPES = [
     PROJECT_DB_TYPE_DEVICE_CONFIG,
     PROJECT_DB_TYPE_DEVICE_INSTANCE,
     PROJECT_DB_TYPE_DEVICE_SERVER,
     PROJECT_DB_TYPE_MACRO,
     PROJECT_DB_TYPE_PROJECT,
     PROJECT_DB_TYPE_SCENE
-)
+]
 
 _UNKNOWN_CLIENT = "__none__"
 
@@ -127,7 +127,7 @@ class ProjectManager(Device):
         return self.host.value, self.port.value
 
     @slot
-    async def slotGetScene(self, params):
+    async def slotGetScene(self, info):
         """Request a scene directly from the database in the correct format
 
         This protocol is in the style of the capability protocol and expects
@@ -137,13 +137,13 @@ class ProjectManager(Device):
             domain: Domain to look for the scene item
             uuid: UUID of the scene item
 
-        :param params: A `Hash` containing the method parameters
+        :param info: A `Hash` containing the method parameters
         """
         self.logger.debug('Requesting scene directly from database!')
 
-        name = params.get('name', default='')
-        domain = params.get('domain')
-        uuid = [params.get('uuid')]
+        name = info.get('name', default='')
+        domain = info.get('domain')
+        uuid = [info.get('uuid')]
 
         payload = Hash('success', False)
         payload.set('name', name)
@@ -160,22 +160,6 @@ class ProjectManager(Device):
         return Hash('type', 'deviceScene',
                     'origin', self.deviceId,
                     'payload', payload)
-
-    @slot
-    async def slotBeginUserSession(self, token: str):
-        """
-        Initialize a DB connection for a user
-        :param token: database user token
-        """
-        return Hash("success", True)
-
-    @slot
-    def slotEndUserSession(self, token: str):
-        """
-        End a user session
-        :param token: database user token
-        """
-        return Hash("success", True)
 
     async def _save_items(self, items):
         """Internally used method to store items in the project database"""
@@ -212,49 +196,47 @@ class ProjectManager(Device):
         return saved_items, project_uuids
 
     @slot
-    async def slotGenericRequest(self, params):
+    async def slotGenericRequest(self, info):
         """Implements a generic Hash-in/Hash-out interface
 
-        :param params: the input Hash.
+        :param info: the input Hash.
             it must contain:
             - a `type` string matching a non-generic slot name
             - the optional fields required by the non-generic slot
             requested.
         """
-        self.logger.info(f"Generic request: {params.get('type')}")
+        self.logger.info(f"Generic request: {info.get('type')}")
         msg = "Input must be a Hash"
-        assert isinstance(params, Hash), msg
+        assert isinstance(info, Hash), msg
         msg = "'type' must be present in the input hash"
-        assert "type" in params, msg
+        assert "type" in info, msg
 
-        action_type = params["type"]
+        action_type = info["type"]
         if action_type == "listItems":
-            return await self.slotListItems(
-                params['domain'],
-                params.get('item_types', None))
+            return await self.slotListItems(info)
         elif action_type == "loadItems":
-            return await self.slotLoadItems(params['items'])
+            return await self.slotLoadItems(info)
         elif action_type == "listDomains":
             return await self.slotListDomains()
         elif action_type == "updateTrashed":
-            return await self.slotUpdateTrashed(params)
+            return await self.slotUpdateTrashed(info)
         elif action_type == "saveItems":
-            return await self.slotSaveItems(params)
+            return await self.slotSaveItems(info)
         elif action_type == "listProjectsWithDevice":
-            return await self.slotListProjectsWithDevice(params)
+            return await self.slotListProjectsWithDevice(info)
         elif action_type == "listProjectsWithMacro":
-            return await self.slotListProjectsWithMacro(params)
+            return await self.slotListProjectsWithMacro(info)
         elif action_type == "listProjectsWithServer":
-            return await self.slotListProjectsWithServer(params)
+            return await self.slotListProjectsWithServer(info)
         elif action_type == "listDomainWithDevices":
-            return await self.listDomainWithDevices(params)
+            return await self.listDomainWithDevices(info)
         raise NotImplementedError(f"{type} not implemented")
 
     @slot
-    async def slotSaveItems(self, params: Hash):
+    async def slotSaveItems(self, info: Hash):
         """Save items in project database
 
-        :param params: Hash with
+        :param info: Hash with
 
             items: list(Hash) object were each entry is of the form:
                 - xml: xml of item
@@ -268,12 +250,12 @@ class ProjectManager(Device):
             is found in the root element.
             `RuntimeError` if no database if connected.
         """
-        items = params["items"]
+        items = info["items"]
         self.logger.debug(
             "Saving items: {}".format([i.get("uuid") for i in items]))
-        client = params.get("client", _UNKNOWN_CLIENT)
+        client = info.get("client", _UNKNOWN_CLIENT)
 
-        schema_version = params.get("schema_version", 1)
+        schema_version = info.get("schema_version", 1)
         if not schema_version == PROJECT_DB_SCHEMA:
             text = ("Cannot store into project database "
                     f"with db schema {PROJECT_DB_SCHEMA}.")
@@ -288,19 +270,21 @@ class ProjectManager(Device):
         return Hash('items', saved)
 
     @slot
-    async def slotLoadItems(self, items):
-        """
-        Loads items from the database
+    async def slotLoadItems(self, info: Hash):
+        """Loads items from the database
 
-        :param items: list of Hashes containing information on which items
-            to load. Each list entry should be a Hash containing
-            - uuid: the uuid of the item
-            - domain: domain to load item from
+        :param info: The input Hash with keys
+
+            - `items` list of Hashes containing information on which items
+                      to load. Each list entry should be a Hash containing
+                      - uuid: the uuid of the item
+                      - domain: domain to load item from
 
         :return: a Hash where the keys are the item uuids and values are the
             item XML. If the load failed the value for this uuid is set
             to False
         """
+        items = info['items']
         self.logger.debug("Loading items: {}"
                           .format([i.get("uuid") for i in items]))
         loaded_items = []
@@ -328,18 +312,21 @@ class ProjectManager(Device):
         return Hash('items', loaded_items)
 
     @slot
-    async def slotListItems(self, domain: str, item_types: list | None = None):
-        """
-        List items in domain which match item_types if given, or all items
+    async def slotListItems(self, info: Hash):
+        """List items in domain which match item_types if given, or all items
         if not given
 
-        :param domain: domain to list items from
-        :param item_types: list or tuple of item_types to list
-        :return: a list of Hashes where each entry has keys: uuid, item_type
-            and simple_name
+        :param info: The input Hash with keys
+                       - domain: domain to list items from
+                       - item_types: optional list of item_types
+
+        :return: Hash with keys:
+
+                items: list of Hashes where each entry has keys: uuid,
+                       item_type and simple_name
         """
-        if item_types is None:
-            item_types = _ITEM_TYPES
+        domain = info['domain']
+        item_types = info.get('item_types', _ITEM_TYPES)
         async with self.db_handle as db_session:
             hl = []
             res = await db_session.list_items(domain, item_types)
@@ -355,16 +342,23 @@ class ProjectManager(Device):
         return Hash('items', hl)
 
     @slot
-    async def slotListNamedItems(self, domain, item_type, simple_name):
+    async def slotListNamedItems(self, info: Hash):
         """
         List items in domain which match item_type and simple_name
 
-        :param domain: domain to list items from
-        :param item_type: item_type to match
-        :param simple_name: simple_name to match
-        :return: a list of Hashes where each entry has keys: uuid, date,
-            item_type and simple_name sorted by date
+        :param info: Input Hash with keys:
+                    - domain: domain to list items from
+                    - item_type: item_type to match
+                    - simple_name: simple_name to match
+
+        :return: Hash with keys:
+
+                items: a list of Hashes where each entry has keys: uuid, date,
+                       item_type and simple_name sorted by date
         """
+        domain = info["domain"]
+        item_type = info["item_type"]
+        simple_name = info["simple_name"]
         async with self.db_handle as db_session:
             hl = []
             res = await db_session.list_named_items(
@@ -418,11 +412,11 @@ class ProjectManager(Device):
         return Hash("items", result)
 
     @slot
-    async def slotListProjectsWithDevice(self, args: Hash):
+    async def slotListProjectsWithDevice(self, info: Hash):
         """
         List projects in domain which have configurations for a given device.
 
-        :param args: a hash that must contain the keys , "domain" and
+        :param info: a hash that must contain the keys , "domain" and
             "name" with the following meanings:
             "domain" is the domain to list
 
@@ -434,10 +428,10 @@ class ProjectManager(Device):
                 - "items"
         """
         return await self._slot_list_projects(
-            "get_projects_with_device", args["domain"], args["name"])
+            "get_projects_with_device", info["domain"], info["name"])
 
     @slot
-    async def slotListProjectsWithMacro(self, args: Hash):
+    async def slotListProjectsWithMacro(self, info: Hash):
         """
         List projects in domain which have macros.
 
@@ -453,10 +447,10 @@ class ProjectManager(Device):
                 - "items"
         """
         return await self._slot_list_projects(
-            "get_projects_with_macro", args["domain"], args["name"])
+            "get_projects_with_macro", info["domain"], info["name"])
 
     @slot
-    async def slotListProjectsWithServer(self, args: Hash):
+    async def slotListProjectsWithServer(self, info: Hash):
         """
         List projects in domain which have server.
 
@@ -472,10 +466,10 @@ class ProjectManager(Device):
                 - "items"
         """
         return await self._slot_list_projects(
-            "get_projects_with_server", args["domain"], args["name"])
+            "get_projects_with_server", info["domain"], info["name"])
 
     @slot
-    async def slotUpdateTrashed(self, info) -> Hash:
+    async def slotUpdateTrashed(self, info: Hash) -> Hash:
         """
         :returns: Hash with domain
         """
@@ -487,11 +481,14 @@ class ProjectManager(Device):
         return Hash("domain", domain)
 
     @slot
-    async def slotListProjectAndConfForDevice(self, domain, deviceId):
+    async def slotListProjectsWithDeviceConfigurations(
+            self, info: Hash) -> Hash:
+        domain = info["domain"]
+        deviceId = info["deviceId"]
         async with self.db_handle as db_session:
             hl = []
             res = await db_session.get_projects_with_conf(
                 domain, deviceId)
-            hl = [Hash("project_name", k, "active_config_ref", v)
+            hl = [Hash("project_name", k, "config_uuid", v)
                   for k, v in res.items()]
             return Hash('items', hl)
