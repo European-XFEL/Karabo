@@ -37,8 +37,8 @@ from karabogui.access import (
 from karabogui.binding.api import (
     NO_CLASS_STATUSES, NO_CONFIG_STATUSES, ONLINE_CONFIG_STATUSES)
 from karabogui.dialogs.api import (
-    ConfigComparisonDialog, ConfigurationFromNameDialog,
-    ConfigurationFromPastDialog, DeviceCapabilityDialog)
+    ConfigComparisonDialog, ConfigurationFromPastDialog,
+    DeviceCapabilityDialog, InitConfigurationDialog)
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.indicators import get_project_device_status_icon
 from karabogui.itemtypes import ProjectItemTypes
@@ -682,7 +682,7 @@ class DeviceInstanceController(BaseProjectController):
     def _get_configuration_from_name(self, parent=None):
         """Request a configuration from name from configuration manager"""
         device_id = self.model.instance_id
-        dialog = ConfigurationFromNameDialog(
+        dialog = InitConfigurationDialog(
             instance_id=device_id, parent=parent)
         dialog.move(QCursor.pos())
         dialog.show()

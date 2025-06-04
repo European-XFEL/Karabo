@@ -135,7 +135,7 @@ class TestCase(GuiTestCase):
             widget.assert_called_once()
 
         conf_widget = "karabogui.navigation.system_view." \
-                      "ConfigurationFromNameDialog"
+                      "InitConfigurationDialog"
         with mock.patch(conf_widget) as widget:
             self.view.onGetConfigurationFromName()
             widget.assert_called_once()
