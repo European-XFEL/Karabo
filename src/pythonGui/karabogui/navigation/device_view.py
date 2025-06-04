@@ -28,8 +28,8 @@ from karabo.common.api import Capabilities
 from karabogui import icons
 from karabogui.access import AccessRole, access_role_allowed
 from karabogui.dialogs.api import (
-    ConfigurationFromNameDialog, ConfigurationFromPastDialog,
-    DeviceCapabilityDialog)
+    ConfigurationFromPastDialog, DeviceCapabilityDialog,
+    InitConfigurationDialog)
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.itemtypes import NavigationItemTypes
 from karabogui.request import get_scene_from_server
@@ -220,8 +220,8 @@ class DeviceTreeView(QTreeView):
     def onGetConfigurationFromName(self):
         info = self.indexInfo()
         device_id = info.get('deviceId')
-        dialog = ConfigurationFromNameDialog(instance_id=device_id,
-                                             parent=self)
+        dialog = InitConfigurationDialog(instance_id=device_id,
+                                         parent=self)
         dialog.move(QCursor.pos())
         dialog.show()
         dialog.raise_()

@@ -21,8 +21,6 @@ from .client_topology import ClientTopologyDialog
 from .compare_device_configurations import DeviceSelectorDialog
 from .configuration import ConfigurationDialog
 from .configuration_comparison import ConfigComparisonDialog
-from .configuration_from_name import (
-    ConfigurationFromNameDialog, SaveConfigurationDialog)
 from .configuration_from_past import ConfigurationFromPastDialog
 from .configuration_preview import ConfigPreviewDialog
 from .data_view_dialog import DataViewDialog
@@ -33,6 +31,8 @@ from .font_dialog import FontDialog
 from .format_fmt import FormatFmtDialog
 from .format_label import FormatLabelDialog
 from .guisessioninfo import GuiSessionInfo
+from .init_configuration import (
+    InitConfigurationDialog, SaveConfigurationDialog)
 from .listedit import ListEditDialog
 from .log_dialog import LogDialog
 from .messagebox import KaraboMessageBox

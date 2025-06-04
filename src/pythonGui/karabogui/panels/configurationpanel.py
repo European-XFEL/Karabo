@@ -71,7 +71,7 @@ class ConfigurationPanel(BasePanelWidget):
             KaraboEvent.ClearConfigurator: self._event_clear_configurator,
             KaraboEvent.LoadConfiguration: self._event_load_configuration,
             KaraboEvent.ShowConfigurationFromPast: self._event_config_past,
-            KaraboEvent.ShowConfigurationFromName: self._event_config_name,
+            KaraboEvent.ShowInitConfiguration: self._event_config_name,
             KaraboEvent.NetworkConnectStatus: self._event_network,
             KaraboEvent.AccessLevelChanged: self._event_access_level,
             KaraboEvent.LoginUserChanged: self._event_access_level,

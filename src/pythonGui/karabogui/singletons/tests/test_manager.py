@@ -806,7 +806,7 @@ def test_handle_configurationFromPast(gui_app, mocker):
         details=None)
 
 
-def test_handle_listConfigurationFromName(gui_app, mocker):
+def test_handle_listInitConfigurations(gui_app, mocker):
     target = 'karabogui.singletons.manager.broadcast_event'
     broadcast_event = mocker.patch(target)
     manager = Manager()
@@ -818,7 +818,7 @@ def test_handle_listConfigurationFromName(gui_app, mocker):
         "request", Hash("args", args),
         "reason", "")
 
-    manager.handle_listConfigurationFromName(**info)
+    manager.handle_listInitConfigurations(**info)
     broadcast_event.assert_called_with(
         KaraboEvent.ListConfigurationUpdated,
         {'items': items, 'deviceId': 'XFEL/CAM/1'})
@@ -827,13 +827,13 @@ def test_handle_listConfigurationFromName(gui_app, mocker):
     mbox = mocker.patch(target)
     manager = Manager()
     info["success"] = False
-    manager.handle_listConfigurationFromName(**info)
+    manager.handle_listInitConfigurations(**info)
     mbox.show_error.assert_called_with(
         'Requesting a list of configurations for XFEL/CAM/1 failed!',
         details='')
 
 
-def test_handle_getConfigurationFromName(gui_app, mocker):
+def test_handle_getInitConfiguration(gui_app, mocker):
     target = 'karabogui.singletons.manager.broadcast_event'
     broadcast_event = mocker.patch(target)
     manager = Manager()
@@ -848,9 +848,9 @@ def test_handle_getConfigurationFromName(gui_app, mocker):
         "request", Hash("args", args, "preview", False),
         "reason", "")
 
-    manager.handle_getConfigurationFromName(**info)
+    manager.handle_getInitConfiguration(**info)
     broadcast_event.assert_called_with(
-        KaraboEvent.ShowConfigurationFromName,
+        KaraboEvent.ShowInitConfiguration,
         {'configuration': Hash("state", "ON"), 'preview': False,
          'classId': 'FooClass',
          'name': 'devName', 'deviceId': 'XFEL/CAM/1'})
@@ -859,12 +859,12 @@ def test_handle_getConfigurationFromName(gui_app, mocker):
     mbox = mocker.patch(target)
     manager = Manager()
     info["success"] = False
-    manager.handle_getConfigurationFromName(**info)
+    manager.handle_getInitConfiguration(**info)
     mbox.show_error.assert_called_with(
         'Requesting a configuration for XFEL/CAM/1 failed!', details='')
 
 
-def test_handle_saveConfigurationFromName(gui_app, mocker):
+def test_handle_saveInitConfiguration(gui_app, mocker):
     network = mocker.Mock()
     with singletons(network=network):
         manager = Manager()
@@ -878,15 +878,15 @@ def test_handle_saveConfigurationFromName(gui_app, mocker):
             "request", Hash("args", args, "preview", False,
                             "update", True),
             "reason", "")
-        manager.handle_saveConfigurationFromName(**info)
-        network.onListConfigurationFromName.assert_called_with(
+        manager.handle_saveInitConfiguration(**info)
+        network.onListInitConfigurations.assert_called_with(
             'XFEL/CAM/1')
 
     target = 'karabogui.singletons.manager.messagebox'
     mbox = mocker.patch(target)
     manager = Manager()
     info["success"] = False
-    manager.handle_saveConfigurationFromName(**info)
+    manager.handle_saveInitConfiguration(**info)
     mbox.show_error.assert_called_with(
         'Saving a configuration for XFEL/CAM/1 failed!', details='')
 
