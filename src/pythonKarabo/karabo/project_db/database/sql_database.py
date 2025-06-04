@@ -81,7 +81,7 @@ class SQLDatabase(DatabaseBase):
         return domain in domains
 
     async def list_items(
-        self, domain: str, item_types: list[str] | tuple[str] | None = None
+        self, domain: str, item_types: list[str] | None = None
             ) -> list[dict[str, any]]:
         """
         List items in domain which match item_types if given, or all items

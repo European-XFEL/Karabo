@@ -31,6 +31,7 @@ from karabo.project_db.exist_db import (
 from karabo.project_db.testing import create_hierarchy
 
 UUIDS = [str(uuid4()) for i in range(5)]
+_PROJECT_DB_TEST = "projManTest"
 
 
 class ConsumerDevice(Device):
@@ -84,9 +85,9 @@ async def exist_database():
         path = "{}/{}".format(db.root, 'LOCAL')
         if not db.dbhandle.hasCollection(path):
             db.dbhandle.createCollection(path)
-        _, device_id_conf_map = await create_hierarchy(db)
-    db_init.device_id_conf_map = device_id_conf_map
-    ret = {"session": db_init, "device_id_conf_map": device_id_conf_map}
+        _, device_config_uuid_map = await create_hierarchy(db)
+    ret = {"session": db_init,
+           "device_config_uuid_map": device_config_uuid_map}
     yield ret
 
     # Cleanup before stop
@@ -115,7 +116,7 @@ async def exist_database():
 
 @pytest_asyncio.fixture(loop_scope="module")
 async def exist_db_testcase(exist_database):
-    conf = Hash("_deviceId_", "projManTest")
+    conf = Hash("_deviceId_", _PROJECT_DB_TEST)
     conf["projectDB"] = _EXIST_DB_LOCAL
     local = ProjectManager(conf)
     consume = ConsumerDevice({"_deviceId_": "consumeTest"})
@@ -134,16 +135,16 @@ async def sql_database():
     await db_init.initialize()
     # Create test data
     async with db_init as db:
-        _, device_id_conf_map = await create_hierarchy(db)
-    db_init.device_id_conf_map = device_id_conf_map
-    ret = {"session": db_init, "device_id_conf_map": device_id_conf_map}
+        _, device_config_uuid_map = await create_hierarchy(db)
+    ret = {"session": db_init,
+           "device_config_uuid_map": device_config_uuid_map}
     yield ret
     await db_init.delete()
 
 
 @pytest_asyncio.fixture(loop_scope="module")
 async def sql_database_testcase(sql_database):
-    conf = Hash("_deviceId_", "projManTest")
+    conf = Hash("_deviceId_", _PROJECT_DB_TEST)
     conf["projectDB"] = _LOCAL_DB
     local = ProjectManager(conf)
     consume = ConsumerDevice({"_deviceId_": "consumeTest"})
@@ -167,15 +168,12 @@ async def test_project_manager(db_fixture, subtests):
     # we allow for sleeps in the integration tests as some messaging
     # is async.
     # Additionally, we borrow the SignalSlotable of the device server
-    device_id_conf_map = db_fixture["device_id_conf_map"]
-    with subtests.test(msg="Test initializing user session"):
-        ret = await wait_for(call("projManTest", "slotBeginUserSession",
-                                  "admin"), timeout=5)
-        assert ret["success"]
+    device_config_uuid_map = db_fixture["device_config_uuid_map"]
 
     with subtests.test(msg="Test list items"):
         ret = await wait_for(call(
-            "projManTest", "slotListItems", "LOCAL"), timeout=5)
+            _PROJECT_DB_TEST, "slotListItems",
+            Hash("domain", "LOCAL")), timeout=5)
         items = ret.get('items')
         assert len(items) == 61
         scenecnt = 0
@@ -188,7 +186,7 @@ async def test_project_manager(db_fixture, subtests):
         arg = Hash("type", "listItems",
                    "domain", "LOCAL")
         ret = await wait_for(call(
-            "projManTest", "slotGenericRequest", arg), timeout=5)
+            _PROJECT_DB_TEST, "slotGenericRequest", arg), timeout=5)
         items = ret.get('items')
         assert len(items) == 61
         scenecnt = 0
@@ -199,7 +197,7 @@ async def test_project_manager(db_fixture, subtests):
         # add optional argument. Gets only scenes
         arg["item_types"] = ["scene"]
         ret = await wait_for(call(
-            "projManTest", "slotGenericRequest", arg), timeout=5)
+            _PROJECT_DB_TEST, "slotGenericRequest", arg), timeout=5)
         items = ret.get('items')
         assert len(items) == 4
         for i in items:
@@ -207,7 +205,7 @@ async def test_project_manager(db_fixture, subtests):
 
     with subtests.test(msg="Test saving data"):
         ret = await wait_for(call(
-            "consumeTest", "connectProject", "projManTest"), timeout=5)
+            "consumeTest", "connectProject", _PROJECT_DB_TEST), timeout=5)
         assert ret
         proxy = await connectDevice("consumeTest")
         uuid = str(uuid4())
@@ -225,15 +223,15 @@ async def test_project_manager(db_fixture, subtests):
 
         with pytest.raises(KaraboError):
             ret = await wait_for(call(
-                "projManTest", "slotSaveItems", h), timeout=5)
+                _PROJECT_DB_TEST, "slotSaveItems", h), timeout=5)
         for fmt in [1, 3, 4]:
             h["schema_version"] = fmt
             with pytest.raises(KaraboError):
                 ret = await wait_for(call(
-                    "projManTest", "slotSaveItems", h), timeout=5)
+                    _PROJECT_DB_TEST, "slotSaveItems", h), timeout=5)
         h["schema_version"] = 2
         ret = await wait_for(call(
-                "projManTest", "slotSaveItems", h), timeout=5)
+                _PROJECT_DB_TEST, "slotSaveItems", h), timeout=5)
         items = ret.get("items")
         item = items[0]
         assert item.get('entry.uuid') == uuid
@@ -241,17 +239,18 @@ async def test_project_manager(db_fixture, subtests):
 
         await updateDevice(proxy)
         await sleepUntil(
-            lambda: proxy.projectManagerUpdate == "projManTest",
+            lambda: proxy.projectManagerUpdate == _PROJECT_DB_TEST,
             timeout=3)
-        assert proxy.projectManagerUpdate == "projManTest"
+        assert proxy.projectManagerUpdate == _PROJECT_DB_TEST
         assert proxy.client == "client-587"
 
     with subtests.test(msg="Test named list items"):
         # in the project hierarchy created by create_hierarchy
         # there should be only one project and is called "Project"
+        h = Hash("domain", "LOCAL", "item_type", "project",
+                 "simple_name", "Project")
         ret = await wait_for(call(
-            "projManTest", "slotListNamedItems", "LOCAL",
-            "project", "Project"), timeout=5)
+            _PROJECT_DB_TEST, "slotListNamedItems", h), timeout=5)
         items = ret.get('items')
         assert len(items) == 1
 
@@ -259,25 +258,26 @@ async def test_project_manager(db_fixture, subtests):
         # in the project hierarchy created by create_hierarchy
         # there should be only one project and is called "Project"
         ret = await wait_for(call(
-            "projManTest", "slotListProjectsWithDevice",
+            _PROJECT_DB_TEST, "slotListProjectsWithDevice",
             Hash("domain", "LOCAL", "name", "karabo")), timeout=5)
         items = ret.get('items')
         assert len(items) == 1
         assert items[0]["project_name"] == "Project"
 
         ret = await wait_for(call(
-            "projManTest", "slotListProjectsWithDevice",
+            _PROJECT_DB_TEST, "slotListProjectsWithDevice",
             Hash("domain", "LOCAL", "name", "NOTHEREAVAILABLE")),
                              timeout=5)
         items = ret.get('items')
         assert len(items) == 0
 
     with subtests.test(msg="Test get projects and configurations"):
-        for device_id, conf_id in device_id_conf_map.items():
+        for device_id, config_uuid in device_config_uuid_map.items():
             ret = await wait_for(call(
-                "projManTest", "slotListProjectAndConfForDevice",
-                "LOCAL", device_id), timeout=5)
+                _PROJECT_DB_TEST, "slotListProjectsWithDeviceConfigurations",
+                Hash("domain", "LOCAL", "deviceId", device_id)), timeout=5)
+            assert list(ret["items"][0]) == ["project_name", "config_uuid"]
             proj = ret["items"][0]["project_name"]
-            conf = ret["items"][0]["active_config_ref"]
+            conf = ret["items"][0]["config_uuid"]
             assert proj == "Project"
-            assert conf_id == conf
+            assert config_uuid == conf
