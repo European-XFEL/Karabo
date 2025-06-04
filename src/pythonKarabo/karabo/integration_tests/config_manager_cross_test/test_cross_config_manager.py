@@ -72,13 +72,13 @@ def test_save_get_config(configTest):
     # Gets the current device configuration for later checking
     dev_config = dc.get(TEST_DEVICE_ID)
     config_name = "PropertyTestConfigI"
-    ok, msg = dc.saveConfigurationFromName(config_name, [TEST_DEVICE_ID])
+    ok, msg = dc.saveInitConfiguration(config_name, [TEST_DEVICE_ID])
 
     text = (
         f"Save configuration for '{TEST_DEVICE_ID}' " f"failed: '{msg}'")
     assert ok, text
 
-    ret = dc.getConfigurationFromName(TEST_DEVICE_ID, config_name)
+    ret = dc.getInitConfiguration(TEST_DEVICE_ID, config_name)
     text = (f"Get configuration named '{config_name}' failed for device "
             f"'{TEST_DEVICE_ID}: '{ret['reason']}")
     assert ret["success"], text
@@ -108,7 +108,7 @@ def test_save_get_config(configTest):
             assert config_value == value
 
     # config_name was used for the successful save case. Always overwrite!
-    ret = dc.saveConfigurationFromName(config_name, [TEST_DEVICE_ID])
+    ret = dc.saveInitConfiguration(config_name, [TEST_DEVICE_ID])
     assert ret[0]
 
 
@@ -122,16 +122,16 @@ def test_save_list_config(configTest):
     """
     dc = configTest.remote()
     config_name_2 = "PropertyTestConfigII"
-    ok, msg = dc.saveConfigurationFromName(config_name_2, [TEST_DEVICE_ID])
+    ok, msg = dc.saveInitConfiguration(config_name_2, [TEST_DEVICE_ID])
     text = f"Save configuration for '{TEST_DEVICE_ID}' " f"failed: '{msg}'"
     assert ok, text
 
     config_name_3 = "PropertyTestConfigIII"
-    ok, msg = dc.saveConfigurationFromName(config_name_3, [TEST_DEVICE_ID])
+    ok, msg = dc.saveInitConfiguration(config_name_3, [TEST_DEVICE_ID])
     text = f"Save configuration for '{TEST_DEVICE_ID}' " f"failed: '{msg}'"
     assert ok, text
 
-    ret = dc.listConfigurationFromName(TEST_DEVICE_ID, config_name_2)
+    ret = dc.listInitConfigurations(TEST_DEVICE_ID, config_name_2)
 
     text = (f"List configuration containting '{config_name_2}' failed "
             f"for device '{TEST_DEVICE_ID}': {ret['reason']}")
@@ -141,8 +141,8 @@ def test_save_list_config(configTest):
     config = ret["configs"][0]
     assert config["name"] == config_name_2
 
-    # NOTE: listConfigurationFromName doesn't return the full details of
-    #       each configuration. In particular, it does not returns the
+    # NOTE: listInitConfigurations doesn't return the full details of
+    #       each configuration. In particular, it does not return the
     #       config itself
     config = ret["configs"][1]
     assert config["name"] == config_name_3
@@ -153,13 +153,13 @@ def test_save_list_config(configTest):
     # NOTE: an attempt to reuse ret in here caused the test to
     #       crash immediately. Debugging the crash showed that it
     #       happened in the interop layer built with Boost::Python.
-    ret = dc.listConfigurationFromName(TEST_DEVICE_ID, "")
+    ret = dc.listInitConfigurations(TEST_DEVICE_ID, "")
     text = (f"List configuration with empty name part failed for device "
             f"'{TEST_DEVICE_ID}': {ret['reason']}")
     assert ret["success"], text
     assert len(ret["configs"]) == 3
 
     # An unused name part returns an empty list.
-    ret = dc.listConfigurationFromName(TEST_DEVICE_ID, "An unused config name")
+    ret = dc.listInitConfigurations(TEST_DEVICE_ID, "An unused config name")
     assert ret["success"]
     assert len(ret["configs"]) == 0

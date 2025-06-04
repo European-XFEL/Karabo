@@ -805,7 +805,7 @@ namespace karabo {
              *         is saved for the device under a name that contains the namePart, the "configs" vector will be
              *         empty. Each hash in the "configs" vector contains the keys "name", "timepoint".
              */
-            karabo::data::Hash listConfigurationFromName(const std::string& deviceId, const std::string& namePart = "");
+            karabo::data::Hash listInitConfigurations(const std::string& deviceId, const std::string& namePart = "");
 
             /**
              * Returns the configuration and schema saved for a device under a given name.
@@ -821,23 +821,8 @@ namespace karabo {
              *         and "schema" when a device configuration with the given name is found or an empty hash in case
              *         of failure or when no device configuration with the given name exists.
              */
-            karabo::data::Hash getConfigurationFromName(const std::string& deviceId, const std::string& name);
+            karabo::data::Hash getInitConfiguration(const std::string& deviceId, const std::string& name);
 
-            /**
-             * Returns the most recently saved configuration for a device that has a given priority.
-             *
-             * @param deviceId of the device whose named configuration and schema should be returned.
-             * @param priority of the device configuration and schema to be returned.
-             * @return a hash with the operation execution status and the device configuration and schema in
-             *         case of success. For the operation execution status, the returned hash has the keys
-             *         "success" with a boolean value that indicates whether the the operation was successful and
-             *         a key "reason" with a string value that will contain the reason for failure or will
-             *         be empty in the case of success. The returned hash will also have a key "config" whose value
-             *         will be a hash with the keys "name", "timepoint", "description", "priority", "user", "config"
-             *         and "schema" when a device configuration with the given priority is found or an empty hash in
-             *         case of failure or when no device configuration with the given priority exists.
-             */
-            karabo::data::Hash getLastConfiguration(const std::string& deviceId, int priority = 1);
 
             /**
              * Saves a collection of current device configurations (and the corresponding schemas) in the
@@ -849,8 +834,8 @@ namespace karabo {
              *         a reason failture description (empty in case of success) in the second position.
              *
              */
-            std::pair<bool, std::string> saveConfigurationFromName(const std::string& name,
-                                                                   const std::vector<std::string>& deviceIds);
+            std::pair<bool, std::string> saveInitConfiguration(const std::string& name,
+                                                               const std::vector<std::string>& deviceIds);
 
             /**
              * Register a throttled callback handler to be triggered when a new device instance appears, updates its
