@@ -42,7 +42,7 @@ class SQLDatabase(DatabaseBase):
 
     def __init__(self, user: str = "", password: str = "",
                  server: str = "", port: int = -1, db_name: str = "local.db",
-                 local: bool = False, remove_orphans: bool = False):
+                 local: bool = False):
         super().__init__()
         if local:
             self.db_engine, self.session_gen = create_local_engine(db_name)
@@ -52,7 +52,6 @@ class SQLDatabase(DatabaseBase):
         self.dbName = db_name
         self.initialized = False
         self.local = local
-        self.remove_orphans = remove_orphans
 
     async def initialize(self):
         async with self.db_engine.begin() as conn:
@@ -163,12 +162,14 @@ class SQLDatabase(DatabaseBase):
     async def _emit_project_item(self, uuid: str) -> dict[str, any] | None:
         """Internal emitter method to load a project item"""
         item = None
-        project = await self.get_project_from_uuid(uuid)
+        project = await self._get_project_from_uuid(uuid)
         if project:
-            subprojects = await self._get_subprojects_of_project(project)
-            scenes = await self._get_scenes_of_project(project)
-            macros = await self._get_macros_of_project(project)
-            servers = await self._get_servers_of_project(project)
+            subprojects, scenes, macros, servers = await gather(
+                self._get_subprojects_of_project(project),
+                self._get_scenes_of_project(project),
+                self._get_macros_of_project(project),
+                self._get_servers_of_project(project)
+            )
             await self._register_project_load(project)
             item = {
                 "uuid": uuid,
@@ -178,7 +179,7 @@ class SQLDatabase(DatabaseBase):
 
     async def _emit_scene_item(self, uuid: str) -> dict[str, any] | None:
         item = None
-        scene = await self.get_scene_from_uuid(uuid)
+        scene = await self._get_scene_from_uuid(uuid)
         if scene:
             item = {
                 "uuid": uuid,
@@ -186,7 +187,7 @@ class SQLDatabase(DatabaseBase):
         return item
 
     async def _emit_macro_item(self, uuid: str) -> dict[str, any] | None:
-        macro = await self.get_macro_from_uuid(uuid)
+        macro = await self._get_macro_from_uuid(uuid)
         if not macro:
             return
         item = {"uuid": uuid,
@@ -282,15 +283,15 @@ class SQLDatabase(DatabaseBase):
         last_modified = None
         match item_type:
             case "project":
-                project = await self.get_project_from_uuid(uuid)
+                project = await self._get_project_from_uuid(uuid)
                 if project:
                     last_modified = project.date
             case "macro":
-                macro = await self.get_macro_from_uuid(uuid)
+                macro = await self._get_macro_from_uuid(uuid)
                 if macro:
                     last_modified = macro.date
             case "scene":
-                scene = await self.get_scene_from_uuid(uuid)
+                scene = await self._get_scene_from_uuid(uuid)
                 if scene:
                     last_modified = scene.date
             case "device_server":
@@ -510,7 +511,7 @@ class SQLDatabase(DatabaseBase):
         value = info["value"]
         assert isinstance(value, bool)
 
-        model = await self.get_project_from_uuid(
+        model = await self._get_project_from_uuid(
             item_uuid)
         if model is None:
             raise ProjectDBError(
@@ -656,8 +657,7 @@ class SQLDatabase(DatabaseBase):
 
         return list(projects.values())
 
-    # READER
-    # -------------------------------------------------------------------
+    # region Reader
 
     async def _execute_all(self, base_query, order_by=None):
         if order_by is not None:
@@ -673,7 +673,8 @@ class SQLDatabase(DatabaseBase):
             result = await session.exec(base_query)
             return result.first()
 
-    # --------------------- DOMAIN -------------------------------
+    # endregion
+    # region Domain
 
     async def _get_domain_projects(self, domain: str):
         query = select(Project).join(ProjectDomain).where(
@@ -738,17 +739,19 @@ class SQLDatabase(DatabaseBase):
                  "simple_name": i.name, "date": utc_to_local(i.date)}
                 for i in items]
 
+    # endregion
+
     async def _get_subprojects_of_project(self, project: Project):
         links = await self._execute_all(
             select(ProjectSubproject).where(
                 ProjectSubproject.project_id == project.id),
             order_by=ProjectSubproject.order)
         subprojects = []
-        for link in links:
-            sub = await self._execute_first(select(Project).where(
-                Project.id == link.subproject_id))
-            if sub:
-                subprojects.append(sub)
+        futures = [self._execute_first(select(Project).where(
+                   Project.id == link.subproject_id)) for link in links]
+        if futures:
+            subprojects = await gather(*futures)
+            subprojects = [sub for sub in subprojects if sub]
         return subprojects
 
     async def _get_scenes_of_project(self, project):
@@ -783,18 +786,18 @@ class SQLDatabase(DatabaseBase):
             select(Project).where(Project.id == id))
         return project
 
-    # -------------------------- UUID --------------------------
+    # region UUID
 
-    async def get_project_from_uuid(self, uuid):
+    async def _get_project_from_uuid(self, uuid):
         project = await self._execute_first(
             select(Project).where(Project.uuid == uuid))
         return project
 
-    async def get_scene_from_uuid(self, uuid):
+    async def _get_scene_from_uuid(self, uuid):
         return await self._execute_first(
             select(Scene).where(Scene.uuid == uuid))
 
-    async def get_macro_from_uuid(self, uuid):
+    async def _get_macro_from_uuid(self, uuid):
         return await self._execute_first(
             select(Macro).where(Macro.uuid == uuid))
 
@@ -810,7 +813,9 @@ class SQLDatabase(DatabaseBase):
         return await self._execute_first(
             select(DeviceConfig).where(DeviceConfig.uuid == uuid))
 
-    # ------------------------ NAME PART ------------------------
+    # endregion
+
+    # region namepart
 
     async def _get_domain_devices_by_name_part(
             self, domain: str, name_part: str):
@@ -841,8 +846,9 @@ class SQLDatabase(DatabaseBase):
             .filter(Macro.name.ilike(f'%{name_part}%')))
         return await self._execute_all(query)
 
-    # ------------------------------------------------------------------------
-    # WRITE IMPLEMENTATION
+    # endregion
+
+    # region Writer
 
     async def _register_project_load(self, project: Project):
         async with self.session_gen() as session:
@@ -950,12 +956,6 @@ class SQLDatabase(DatabaseBase):
                     macro.order = macro_index
                     session.add(macro)
                     macro_index += 1
-            # Removes any macro that was previously linked to the project, but
-            # isn't anymore (depending on the remove_orphans option)
-            if self.remove_orphans:
-                for curr_macro in curr_macros:
-                    if curr_macro.uuid not in updated_macros:
-                        await session.delete(curr_macro)
 
             query = select(Scene).where(Scene.project_id == project_id)
             result = await session.exec(query)
@@ -991,12 +991,6 @@ class SQLDatabase(DatabaseBase):
                     scene.order = scene_index
                     session.add(scene)
                     scene_index += 1
-            # Remove any scene that was previously linked to the project but
-            # isn't anymore (depending on the remove_orphans option)
-            if self.remove_orphans:
-                for current_scene in current_scenes:
-                    if current_scene.uuid not in updated_scenes:
-                        await session.delete(current_scene)
 
             query = select(DeviceServer).where(
                 DeviceServer.project_id == project_id)
@@ -1027,34 +1021,6 @@ class SQLDatabase(DatabaseBase):
                     server.order = server_index
                     session.add(server)
                     server_index += 1
-            # Removes any device server that was previously linked to the
-            # project but is not anymore (depending on the remove_orphans
-            # option)
-            if self.remove_orphans:
-                for curr_server in curr_servers:
-                    if curr_server.uuid not in updated_servers:
-                        # Before deleting the server, its device instances must
-                        # be deleted - after deleting those instances configs.
-                        query = select(DeviceInstance).where(
-                            DeviceInstance.device_server_id == curr_server.id)
-                        result = await session.exec(query)
-                        instances = result.all()
-                        for instance in instances:
-                            # Delete the instances configs
-                            query = select(DeviceConfig).where(
-                                DeviceConfig.device_instance_id == instance.id)
-                            result = await session.exec(query)
-                            related_configs = result.all()
-                            for related_config in related_configs:
-                                await session.delete(related_config)
-                            query = select(DeviceInstance).where(
-                                DeviceInstance.id == instance.id)
-                            result = await session.exec(query)
-                            related_instance = result.first()
-                            if related_instance:
-                                await session.delete(related_instance)
-                        # Now finally the server can go
-                        await session.delete(curr_server)
 
             query = select(ProjectSubproject).where(
                 ProjectSubproject.project_id == project_id)
@@ -1066,9 +1032,6 @@ class SQLDatabase(DatabaseBase):
             # potentially removed
             # Note: subprojects are only a reference to projects, not real
             #       entities stored in the database like scenes and macros.
-            #       There's no need to handle remove_orphans for them as they
-            #       are updated on single save_item roundtrip between the
-            #       GUI Client and the Project Manager
             subprojects_to_delete = {
                 subproject.subproject_id for subproject
                 in current_subprojects}
@@ -1275,14 +1238,6 @@ class SQLDatabase(DatabaseBase):
                 session.add(config)
                 updated_configs.add(config_obj_uuid)
 
-            # Removes all configs that were linked to the instance in the
-            # database, but that aren't anymore (depending on the
-            # remove_orphans option)
-            if self.remove_orphans:
-                for curr_config in curr_configs:
-                    if curr_config.uuid not in updated_configs:
-                        await session.delete(curr_config)
-
             await session.commit()
 
     async def _save_device_server_item(
@@ -1348,15 +1303,6 @@ class SQLDatabase(DatabaseBase):
                 instance.order = instance_index
                 instance_index += 1
                 session.add(instance)
-
-            # Removes any instance that is not linked to the device server
-            # anymore - all the curr_linked_instances whose ids are not in
-            # the updated_instances set (depending on the remove_orphans
-            # option)
-            if self.remove_orphans:
-                for curr_linked_instance in curr_linked_instances:
-                    if curr_linked_instance.id not in updated_instances:
-                        await session.delete(curr_linked_instance)
 
             await session.commit()
 
