@@ -483,17 +483,17 @@ void exportPyCoreDeviceClient(py::module_& m) {
                 py::arg("deviceId"), py::arg("timePoint"))
 
           .def(
-                "listConfigurationFromName",
+                "listInitConfigurations",
                 [](const DeviceClientWrap::Pointer& self, const std::string& deviceId, const std::string& namePart) {
                     Hash result;
                     {
                         py::gil_scoped_release release;
-                        result = self->listConfigurationFromName(deviceId, namePart);
+                        result = self->listInitConfigurations(deviceId, namePart);
                     }
                     return py::cast(std::move(result));
                 },
                 py::arg("deviceId"), py::arg("namePart") = "",
-                "listConfigurationFromName(deviceId, namePart): Returns the device configurations saved under "
+                "listInitConfigurations(deviceId, namePart): Returns the device configurations saved under "
                 "names "
                 "that "
                 "contain a given name part.\n"
@@ -505,17 +505,17 @@ void exportPyCoreDeviceClient(py::module_& m) {
                 "configuration.")
 
           .def(
-                "getConfigurationFromName",
+                "getInitConfiguration",
                 [](const DeviceClientWrap::Pointer& self, const std::string& deviceId, const std::string& name) {
                     Hash result;
                     {
                         py::gil_scoped_release release;
-                        result = self->getConfigurationFromName(deviceId, name);
+                        result = self->getInitConfiguration(deviceId, name);
                     }
                     return py::cast(std::move(result));
                 },
                 py::arg("deviceId"), py::arg("name"),
-                "getConfigurationFromName(deviceId, name): Returns the device configuration saved under a given "
+                "getInitConfiguration(deviceId, name): Returns the device configuration saved under a given "
                 "name.\n"
                 "May return an empty result if there's no configuration stored for the device under the given "
                 "name.\n"
@@ -525,18 +525,18 @@ void exportPyCoreDeviceClient(py::module_& m) {
                 "\"config\" a hash with data about the named device configuration.")
 
           .def(
-                "saveConfigurationFromName",
+                "saveInitConfiguration",
                 [](const DeviceClientWrap::Pointer& self, const std::string& name, const py::object& deviceIds) {
                     std::vector<std::string> devices = wrapper::fromPySequenceToVectorString(deviceIds);
                     std::pair<bool, std::string> p;
                     {
                         py::gil_scoped_release release;
-                        p = self->saveConfigurationFromName(name, devices);
+                        p = self->saveInitConfiguration(name, devices);
                     }
                     return py::make_tuple(p.first, p.second);
                 },
                 py::arg("name"), py::arg("deviceIds"),
-                "saveConfigurationFromName(name, deviceIds):\n"
+                "saveInitConfiguration(name, deviceIds):\n"
                 "Saves the current device configurations (and the corresponding schemas) for a list of "
                 "deviceIds\nin the Configuration Database under a common name.\nThe function return is a pair (tuple) "
                 "with a boolean value indicating the "

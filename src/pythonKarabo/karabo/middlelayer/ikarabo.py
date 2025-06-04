@@ -157,10 +157,10 @@ def start_ikarabo():
     ip.set_hook("complete_command", device_completer,
                 re_key=".*((get|connect)Device|execute(NoWait)?|"
                        "set(No)?Wait|shutdown(NoWait)?|(get|print)History|"
-                       "(getConfiguration|saveConfiguration)FromName|"
-                       "listConfigurationFromName|call(NoWait)?|"
+                       "getInitConfiguration|saveInitConfiguration|"
+                       "listInitConfigurations|call(NoWait)?|"
                        "getConfiguration(FromPast)?|"
-                       "getSchema(FromPast)?|"
+                       "getSchema(FromPast)?|instantiateDevice|"
                        "compareDeviceWithPast|compareDeviceConfiguration|"
                        "compareConfigurationsFromPast|getTimeInfo)")
 

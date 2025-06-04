@@ -21,14 +21,14 @@ from karabo.middlelayer.device_client import (
     call, callNoWait, compareConfigurationsFromPast,
     compareDeviceConfiguration, compareDeviceWithPast, config_changes,
     disconnectDevice, execute, executeNoWait, findDevices, findServers,
-    getClasses, getClients, getConfiguration, getConfigurationFromName,
-    getConfigurationFromPast, getDevices, getHistory, getInstanceInfo,
+    getClasses, getClients, getConfiguration, getConfigurationFromPast,
+    getDevices, getHistory, getInitConfiguration, getInstanceInfo,
     getOutputChannelInfo, getProperties, getSchema, getSchemaFromPast,
     getServers, getSystemInfo, getTimeInfo, getTopology, instantiate,
-    instantiateFromName, instantiateNoWait, isAlive, listConfigurationFromName,
-    listDevicesWithConfiguration, printHistory, saveConfigurationFromName,
-    setNoWait, setWait, shutdown, shutdownNoWait, updateDevice, waitUntil,
-    waitUntilNew, waitWhile)
+    instantiateDevice, instantiateNoWait, isAlive,
+    listDevicesWithConfiguration, listInitConfigurations, printHistory,
+    saveInitConfiguration, setNoWait, setWait, shutdown, shutdownNoWait,
+    updateDevice, waitUntil, waitUntilNew, waitWhile)
 from karabo.middlelayer.device_interface import (
     listCameras, listDeviceInstantiators, listMotors, listMultiAxisMotors,
     listProcessors, listTriggers)

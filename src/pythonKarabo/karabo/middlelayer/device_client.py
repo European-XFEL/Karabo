@@ -24,6 +24,7 @@ only very simple. This can be achieved by functions which operate directly
 on the deviceId, without going through the hazzle of creating a device
 proxy. """
 import asyncio
+import warnings
 from asyncio import gather, get_event_loop, sleep
 from contextlib import asynccontextmanager, contextmanager
 from copy import deepcopy
@@ -494,10 +495,10 @@ async def getSchemaFromPast(device, timepoint):
 
 
 @synchronize
-async def getConfigurationFromName(device, name):
+async def getInitConfiguration(device, name):
     """Get the configuration of a deviceId or proxy with a given `name`::
 
-        getConfigurationFromName(device, "run2012")
+        getInitConfiguration(device, "run2012")
 
     :returns: A karabo hash with keys
         - `name`
@@ -508,17 +509,25 @@ async def getConfigurationFromName(device, name):
     if isinstance(device, ProxyBase):
         device = device._deviceId
     instance = get_instance()
-    slot = "slotGetConfigurationFromName"
+    slot = "slotGetInitConfiguration"
     h = Hash("deviceId", device, "name", name)
     reply = await instance.call(KARABO_CONFIG_MANAGER, slot, h)
     return reply["item"]
 
 
 @synchronize
-async def listConfigurationFromName(device, name_part=''):
+async def getConfigurationFromName(device, name):
+    warnings.warn_explicit(
+        "This function is deprecated, use `getInitConfiguration`",
+        category=DeprecationWarning)
+    return await getInitConfiguration(device, name)
+
+
+@synchronize
+async def listInitConfigurations(device, name_part=''):
     """List the list of configurations of a deviceId with given `name_part`::
 
-        listConfigurationFromName(device, '')
+        listInitConfigurations(device, '')
 
     Returns a list of configuration items of the device. Optionally, a `name
     part` can be provided to filter the configurations on manager side.
@@ -531,12 +540,20 @@ async def listConfigurationFromName(device, name_part=''):
     if isinstance(device, ProxyBase):
         device = device._deviceId
     instance = get_instance()
-    slot = "slotListConfigurationFromName"
+    slot = "slotListInitConfigurations"
     h = Hash("deviceId", device, "name", name_part)
     reply = await instance.call(KARABO_CONFIG_MANAGER, slot, h)
     configs = reply["items"]
-
     return configs
+
+
+@synchronize
+async def listConfigurationFromName(device, name_part=''):
+    """This function is deprecated, use `listInitConfigurations`"""
+    warnings.warn_explicit(
+        "This function is deprecated, use `listInitConfigurations`",
+        category=DeprecationWarning)
+    return await listInitConfigurations(device, name_part)
 
 
 @synchronize
@@ -555,12 +572,12 @@ async def listDevicesWithConfiguration():
 
 
 @synchronize
-async def instantiateFromName(
+async def instantiateDevice(
     device: str | ProxyBase, name: str,
         classId: str | None = None, serverId: str | None = None):
     """Instantiate a device from `name` via the ConfigurationManager::
 
-        instantiateFromName(device, name='run2015')
+        instantiateDevice(device, name='scenario')
 
     - device: Mandatory parameter, either deviceId or proxy
     - name: Mandatory parameter, name of configuration
@@ -584,14 +601,25 @@ async def instantiateFromName(
 
 
 @synchronize
-async def saveConfigurationFromName(devices, name):
+async def instantiateFromName(
+    device: str | ProxyBase, name: str,
+        classId: str | None = None, serverId: str | None = None):
+    """This function is deprecated, use `instantiateDevice`"""
+    warnings.warn_explicit(
+        "This function is deprecated, use `instantiateDevice`",
+        category=DeprecationWarning)
+    return await instantiateDevice(device, name, classId, serverId)
+
+
+@synchronize
+async def saveInitConfiguration(devices, name):
     """Save configuration(s) in the KaraboConfigurationManager::
 
         - The parameter `devices` can be a Karabo `proxy`, a list of deviceIds,
           a list of proxies or a mixture of them. It can be as well a single
           deviceId string.
 
-        saveConfigurationFromName(devices, name="proposal2020")
+        saveInitConfiguration(devices, name="scenario")
     """
     if isinstance(devices, list):
         devices = [dev._deviceId if isinstance(dev, ProxyBase)
@@ -604,9 +632,18 @@ async def saveConfigurationFromName(devices, name):
         # A single deviceId as string
         devices = [devices]
     instance = get_instance()
-    slot = "slotSaveConfigurationFromName"
+    slot = "slotSaveInitConfiguration"
     h = Hash("deviceIds", devices, "name", name)
     await instance.call(KARABO_CONFIG_MANAGER, slot, h)
+
+
+@synchronize
+async def saveConfigurationFromName(devices, name):
+    """This function is deprecated, use `saveInitConfiguration`"""
+    warnings.warn_explicit(
+        "This function is deprecated, use `saveInitConfiguration`",
+        category=DeprecationWarning)
+    return await saveInitConfiguration(devices, name)
 
 
 class Queue:
