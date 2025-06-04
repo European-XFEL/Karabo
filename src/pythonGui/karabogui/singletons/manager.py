@@ -599,9 +599,9 @@ class Manager(QObject):
     # ---------------------------------------------------------------------
     # Current Configuration Interface
 
-    def handle_listConfigurationFromName(self, success, request,
-                                         reply, reason=''):
-        """Handle the reply of the ListConfigurationsFromName slot"""
+    def handle_listInitConfigurations(self, success, request,
+                                      reply, reason=''):
+        """Handle the reply of the listInitConfigurations slot"""
         deviceId = request['args.deviceId']
         if not success:
             messagebox.show_error(f"Requesting a list of configurations for "
@@ -612,8 +612,7 @@ class Manager(QObject):
                         {'items': reply['items'],
                          'deviceId': deviceId})
 
-    def handle_getConfigurationFromName(self, success, request,
-                                        reply, reason=''):
+    def handle_getInitConfiguration(self, success, request, reply, reason=''):
         deviceId = request['args.deviceId']
         if not success:
             messagebox.show_error(f"Requesting a configuration for {deviceId} "
@@ -622,15 +621,15 @@ class Manager(QObject):
 
         item = reply['item']
         configuration = item['config']
-        broadcast_event(KaraboEvent.ShowConfigurationFromName,
+        broadcast_event(KaraboEvent.ShowInitConfiguration,
                         {'configuration': configuration,
                          'preview': request['preview'],
                          'classId': item["classId"],
                          'name': item['name'],
                          'deviceId': deviceId})
 
-    def handle_deleteConfigurationFromName(self, success, request,
-                                           reply, reason=""):
+    def handle_deleteInitConfiguration(self, success, request,
+                                       reply, reason=""):
         deviceId = request['args.deviceId']
         name = request['args.name']
         if not success:
@@ -638,10 +637,9 @@ class Manager(QObject):
                                   f"with name {name} failed!", details=reason)
             return
 
-        get_network().onListConfigurationFromName(deviceId)
+        get_network().onListInitConfigurations(deviceId)
 
-    def handle_saveConfigurationFromName(self, success, request,
-                                         reply, reason=''):
+    def handle_saveInitConfiguration(self, success, request, reply, reason=''):
         deviceId = request['args.deviceIds'][0]
         if not success:
             messagebox.show_error(f"Saving a configuration for {deviceId} "
@@ -649,7 +647,7 @@ class Manager(QObject):
             return
 
         if request.get('update', False):
-            get_network().onListConfigurationFromName(deviceId)
+            get_network().onListInitConfigurations(deviceId)
 
     # ---------------------------------------------------------------------
     # Current Project Interface

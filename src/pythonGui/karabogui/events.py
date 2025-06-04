@@ -61,7 +61,7 @@ class KaraboEvent(Enum):
     ServerInformationUpdate = "Server information update"
     ServerNotification = "Server Notification"
     ShowConfiguration = "Show configuration"
-    ShowConfigurationFromName = "Show Configuration From Name"
+    ShowInitConfiguration = "Show Configuration From Name"
     ShowConfigurationFromPast = "Show Configuration From Past"
     ShowDevice = "Show device"
     ShowProjectDevice = "Show project device"

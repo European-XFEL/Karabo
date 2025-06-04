@@ -85,13 +85,13 @@ class SaveConfigurationDialog(QDialog):
         return self.ui_name.text()
 
 
-class ConfigurationFromNameDialog(QDialog):
+class InitConfigurationDialog(QDialog):
     """List configurations by ``name`` from the configuration database
     """
 
     def __init__(self, instance_id, parent=None):
         super().__init__(parent)
-        uic.loadUi(get_dialog_ui("config_handle.ui"), self)
+        uic.loadUi(get_dialog_ui("init_configuration_dialog.ui"), self)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setModal(False)
         self.setWindowFlags(self.windowFlags() | Qt.WindowCloseButtonHint)
@@ -144,7 +144,7 @@ class ConfigurationFromNameDialog(QDialog):
         self.ui_button_delete.clicked.connect(self._request_delete)
 
         # Request fresh at startup!
-        get_network().onListConfigurationFromName(device_id=self.instance_id)
+        get_network().onListInitConfigurations(device_id=self.instance_id)
 
     def _event_list_updated(self, data):
         instance_id = data["deviceId"]
@@ -216,7 +216,7 @@ class ConfigurationFromNameDialog(QDialog):
             return
         model = index.model()
         name = model.index(index.row(), NAME_COLUMN).data()
-        get_network().onDeleteConfigurationFromName(
+        get_network().onDeleteInitConfiguration(
             self.instance_id, name)
 
     @Slot()
@@ -235,7 +235,7 @@ class ConfigurationFromNameDialog(QDialog):
                 messagebox.show_alarm(text, parent=self)
                 return
             name = dialog.name
-            get_network().onSaveConfigurationFromName(
+            get_network().onSaveInitConfiguration(
                 name, [self.instance_id], update=True)
 
     @Slot()
@@ -253,13 +253,13 @@ class ConfigurationFromNameDialog(QDialog):
         model = index.model()
         name = model.index(index.row(), NAME_COLUMN).data()
         preview = self.ui_preview.isChecked()
-        get_network().onGetConfigurationFromName(
+        get_network().onGetInitConfiguration(
             self.instance_id, name, preview)
 
     @Slot()
     def on_ui_button_refresh_clicked(self):
         """Refresh the list of configurations for the actual `instance_id`"""
-        get_network().onListConfigurationFromName(self.instance_id)
+        get_network().onListInitConfigurations(self.instance_id)
 
     @Slot(str)
     def _filter_changed(self, text):

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>ConfigurationNameDialog</class>
- <widget class="QDialog" name="ConfigurationNameDialog">
+ <class>InitConfigurationDialog</class>
+ <widget class="QDialog" name="InitConfigurationDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Configurations from Name</string>
+   <string>Init Configurations</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -176,7 +176,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>ConfigurationNameDialog</receiver>
+   <receiver>InitConfigurationDialog</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -192,7 +192,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>ConfigurationNameDialog</receiver>
+   <receiver>InitConfigurationDialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
