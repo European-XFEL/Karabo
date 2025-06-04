@@ -25,10 +25,9 @@ import pytest_asyncio
 from karabo.common.services import KARABO_CONFIG_MANAGER as MANAGER_ID
 from karabo.middlelayer import (
     Device, Double, Hash, HashByte, HashList, KaraboError, Schema, Slot,
-    String, call, connectDevice, execute, getConfigurationFromName,
-    getProperties, instantiateFromName, listConfigurationFromName,
-    listDevicesWithConfiguration, saveConfigurationFromName, setWait, shutdown,
-    slot)
+    String, call, connectDevice, execute, getInitConfiguration, getProperties,
+    instantiateDevice, listDevicesWithConfiguration, listInitConfigurations,
+    saveInitConfiguration, setWait, shutdown, slot)
 from karabo.middlelayer.testing import AsyncDeviceContext
 
 from ..configuration_manager import ConfigurationManager, hashToHash
@@ -125,24 +124,24 @@ async def test_configuration_save(deviceTest):
     """Test the manual saving of configurations"""
     config_name = "testConfig"
     h = Hash("name", config_name, "deviceIds", ["ALICE"])
-    r = await call(MANAGER_ID, "slotSaveConfigurationFromName", h)
+    r = await call(MANAGER_ID, "slotSaveInitConfiguration", h)
     assert r["success"]
     await setWait("ALICE", value=10)
     config_name = "testConfig1"
     h = Hash("name", config_name, "deviceIds", ["ALICE",
                                                 "BOB"])
-    r = await call(MANAGER_ID, "slotSaveConfigurationFromName", h)
+    r = await call(MANAGER_ID, "slotSaveInitConfiguration", h)
     assert r["success"]
 
     invalid_config_name = "s#invalid"
     h = Hash("name", invalid_config_name, "deviceIds", ["ALICE", "BOB"])
     with pytest.raises(KaraboError):
-        await call(MANAGER_ID, "slotSaveConfigurationFromName", h)
+        await call(MANAGER_ID, "slotSaveInitConfiguration", h)
 
     long_name = "s" * 40
     h = Hash("name", long_name, "deviceIds", ["ALICE", "BOB"])
     with pytest.raises(KaraboError):
-        await call(MANAGER_ID, "slotSaveConfigurationFromName", h)
+        await call(MANAGER_ID, "slotSaveInitConfiguration", h)
 
 
 @pytest.mark.timeout(20)
@@ -166,7 +165,7 @@ async def test_configuration_bulk_save_reject(deviceTest):
     config_name = "testConfig"
     h = Hash("name", config_name, "deviceIds", deviceIds)
     with pytest.raises(KaraboError):
-        await call(MANAGER_ID, "slotSaveConfigurationFromName", h)
+        await call(MANAGER_ID, "slotSaveInitConfiguration", h)
 
 
 @pytest.mark.timeout(20)
@@ -175,7 +174,7 @@ async def test_get_configuration(deviceTest):
     """Test the manual retrieving of configurations"""
     config_name = "testConfig"
     h = Hash("name", config_name, "deviceId", "ALICE")
-    r = await call(MANAGER_ID, "slotGetConfigurationFromName", h)
+    r = await call(MANAGER_ID, "slotGetInitConfiguration", h)
     item = r["item"]
     name = item["name"]
     assert name == config_name
@@ -185,7 +184,7 @@ async def test_get_configuration(deviceTest):
     # has been stored in previous test
     config_name = "testConfig1"
     h = Hash("name", config_name, "deviceId", "ALICE")
-    r = await call(MANAGER_ID, "slotGetConfigurationFromName", h)
+    r = await call(MANAGER_ID, "slotGetInitConfiguration", h)
     item = r["item"]
     name = item["name"]
     assert name == config_name
@@ -198,7 +197,7 @@ async def test_get_configuration(deviceTest):
 @pytest.mark.asyncio(loop_scope="module")
 async def test_list_delete_configuration(deviceTest):
     h = Hash("deviceId", "ALICE")
-    r = await call(MANAGER_ID, "slotListConfigurationFromName", h)
+    r = await call(MANAGER_ID, "slotListInitConfigurations", h)
     items = r["items"]
     assert isinstance(items, HashList)
     # We stored two configurations!
@@ -213,13 +212,13 @@ async def test_list_delete_configuration(deviceTest):
     assert r["success"]
 
     h = Hash("deviceId", "ALICE")
-    r = await call(MANAGER_ID, "slotListConfigurationFromName", h)
+    r = await call(MANAGER_ID, "slotListInitConfigurations", h)
     items = r["items"]
     assert isinstance(items, HashList)
     assert len(items) == 1
 
     h = Hash("name", "", "deviceId", "BOB")
-    r = await call(MANAGER_ID, "slotListConfigurationFromName", h)
+    r = await call(MANAGER_ID, "slotListInitConfigurations", h)
     items = r["items"]
     assert isinstance(items, HashList)
     # We stored one configuration!
@@ -232,15 +231,15 @@ async def test_get_client_configuration(deviceTest):
     """Test the functions that can be used from ikarabo"""
     # Device client functions
     await setWait("CHARLIE", value=25.0)
-    await saveConfigurationFromName(
+    await saveInitConfiguration(
         "CHARLIE", name="testConfigClient")
-    await saveConfigurationFromName(
+    await saveInitConfiguration(
         ["CHARLIE"], name="testConfigClientList")
 
     dev = await connectDevice("CHARLIE")
-    await saveConfigurationFromName(
+    await saveInitConfiguration(
         ["CHARLIE", dev], name="testConfigClientMixedList")
-    config_list = await listConfigurationFromName("CHARLIE")
+    config_list = await listInitConfigurations("CHARLIE")
     assert len(config_list) == 3
     assert isinstance(config_list, HashList)
     clist = ["testConfigClient", "testConfigClientList",
@@ -249,7 +248,7 @@ async def test_get_client_configuration(deviceTest):
     for i in range(len(clist)):
         assert config_list[i]["name"] == clist[i]
 
-    item = await getConfigurationFromName(
+    item = await getInitConfiguration(
         "CHARLIE", "testConfigClientList")
     serverId = item["serverId"]
     classId = item["classId"]
@@ -270,8 +269,8 @@ async def test_get_client_configuration(deviceTest):
     assert properties["lastDeviceId"] == ""
     assert properties["lastConfigDouble"] == UNDEFINED_LAST_DOUBLE
 
-    await instantiateFromName("CHARLIE", name="testConfigClient",
-                              serverId="MDL_SERVER_MOCK")
+    await instantiateDevice("CHARLIE", name="testConfigClient",
+                            serverId="MDL_SERVER_MOCK")
 
     properties = await getProperties(
         "MDL_SERVER_MOCK",
