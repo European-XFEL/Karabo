@@ -1345,8 +1345,8 @@ namespace karabo {
         }
 
 
-        karabo::data::Hash DeviceClient::listConfigurationFromName(const std::string& deviceId,
-                                                                   const std::string& namePart) {
+        karabo::data::Hash DeviceClient::listInitConfigurations(const std::string& deviceId,
+                                                                const std::string& namePart) {
             karabo::data::Hash slotReply;
             std::vector<karabo::data::Hash> configs;
             karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
@@ -1354,7 +1354,7 @@ namespace karabo {
                 try {
                     const auto& listParams = karabo::data::Hash("deviceId", deviceId, "name", namePart);
 
-                    p->request(m_configManagerId, "slotListConfigurationFromName", listParams)
+                    p->request(m_configManagerId, "slotListInitConfigurations", listParams)
                           .timeout(10 * m_internalTimeout)
                           .receive(slotReply);
 
@@ -1390,14 +1390,13 @@ namespace karabo {
         }
 
 
-        karabo::data::Hash DeviceClient::getConfigurationFromName(const std::string& deviceId,
-                                                                  const std::string& name) {
+        karabo::data::Hash DeviceClient::getInitConfiguration(const std::string& deviceId, const std::string& name) {
             karabo::data::Hash slotReply;
             karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
             if (p) {
                 try {
                     const auto& getParams = karabo::data::Hash("name", name, "deviceId", deviceId);
-                    p->request(m_configManagerId, "slotGetConfigurationFromName", getParams)
+                    p->request(m_configManagerId, "slotGetInitConfiguration", getParams)
                           .timeout(10 * m_internalTimeout)
                           .receive(slotReply);
                     // The slot returns a hash with the slot arguments (input hash) under the key "input"
@@ -1432,15 +1431,15 @@ namespace karabo {
         }
 
 
-        std::pair<bool, std::string> DeviceClient::saveConfigurationFromName(
-              const std::string& name, const std::vector<std::string>& deviceIds) {
+        std::pair<bool, std::string> DeviceClient::saveInitConfiguration(const std::string& name,
+                                                                         const std::vector<std::string>& deviceIds) {
             karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
             if (p) {
                 auto saveParams = karabo::data::Hash("name", name, "deviceIds", deviceIds);
 
                 try {
                     karabo::data::Hash slotReply;
-                    p->request(m_configManagerId, "slotSaveConfigurationFromName", saveParams)
+                    p->request(m_configManagerId, "slotSaveInitConfiguration", saveParams)
                           .timeout(10 * m_internalTimeout)
                           .receive(slotReply);
                     return make_pair(true, std::string());

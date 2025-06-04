@@ -280,7 +280,7 @@ class ConfigurationManager(DeviceClientBase):
     # -----------------------------------------------------------------------
 
     @slot
-    async def slotListConfigurationFromName(self, info):
+    async def slotListInitConfigurations(self, info):
         """Slot to list configurations from name
 
         This slot requires an info Hash with `deviceId`
@@ -293,13 +293,10 @@ class ConfigurationManager(DeviceClientBase):
         return Hash("success", True, "items", items)
 
     @slot
-    async def slotGetConfigurationFromName(self, info):
-        """Slot to get a configuration from name
+    async def slotGetInitConfiguration(self, info):
+        """Slot to get an init configuration
 
         The info `Hash` must contain `deviceId` and `name`.
-
-        Note: If the info `Hash` contains `schema`, a schema is returned
-        as well.
         """
         deviceId = info["deviceId"]
         name = info["name"]
@@ -329,7 +326,7 @@ class ConfigurationManager(DeviceClientBase):
         return Hash("success", True)
 
     @slot
-    async def slotSaveConfigurationFromName(self, info):
+    async def slotSaveInitConfiguration(self, info):
         """Slot to save configuration(s) from name
 
           The info Hash should contain:
