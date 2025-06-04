@@ -621,9 +621,11 @@ class Manager(QObject):
             return
 
         item = reply['item']
+        configuration = item['config']
         broadcast_event(KaraboEvent.ShowConfigurationFromName,
-                        {'configuration': item['config'],
+                        {'configuration': configuration,
                          'preview': request['preview'],
+                         'classId': item["classId"],
                          'name': item['name'],
                          'deviceId': deviceId})
 

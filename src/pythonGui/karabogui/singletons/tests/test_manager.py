@@ -838,7 +838,8 @@ def test_handle_getConfigurationFromName(gui_app, mocker):
     broadcast_event = mocker.patch(target)
     manager = Manager()
     item = Hash("name", "devName",
-                "config", Hash("state", "ON"))
+                "config", Hash("state", "ON"),
+                "classId", "FooClass")
 
     args = Hash("deviceId", "XFEL/CAM/1")
     info = Hash(
@@ -851,6 +852,7 @@ def test_handle_getConfigurationFromName(gui_app, mocker):
     broadcast_event.assert_called_with(
         KaraboEvent.ShowConfigurationFromName,
         {'configuration': Hash("state", "ON"), 'preview': False,
+         'classId': 'FooClass',
          'name': 'devName', 'deviceId': 'XFEL/CAM/1'})
 
     target = 'karabogui.singletons.manager.messagebox'
