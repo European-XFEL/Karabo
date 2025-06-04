@@ -41,19 +41,11 @@ class RemoteNode(Configurable):
         defaultValue=os.getenv("KARABO_PROJECT_DB_DBNAME", "projectDB"),
         displayedName="Database name")
 
-    removeOrphans = Bool(
-        displayedName="Remove Orphan Records",
-        description=(
-            "Should orphan records be removed on project save (True) or "
-            "later by a cleaning batch job?"),
-        defaultValue=False,
-        accessMode=AccessMode.READONLY)
-
     async def get_db(self, test_mode=False, init_db=False):
         user, password = get_db_credentials()
         db = SQLDatabase(
             user, password, server=self.host.value, port=self.port.value,
-            db_name=self.dbName.value, remove_orphans=self.removeOrphans.value)
+            db_name=self.dbName.value)
         await db.initialize()
         return db
 
@@ -78,7 +70,6 @@ class LocalNode(Configurable):
             "var", "data", "project_db")
         path = folder / self.dbName.value
         path.parent.mkdir(parents=True, exist_ok=True)
-        db = SQLDatabase(db_name=path, local=True,
-                         remove_orphans=self.removeOrphans.value)
+        db = SQLDatabase(db_name=path, local=True)
         await db.initialize()
         return db
