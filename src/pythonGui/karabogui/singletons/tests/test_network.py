@@ -292,37 +292,37 @@ def test_socket_connect_login_protocol(mocker, subtests, gui_app):
             assert receiver.last_hash["preview"] == preview
 
             conf_name = "test"
-            network.onGetConfigurationFromName(deviceId, conf_name,
-                                               preview)
+            network.onGetInitConfiguration(deviceId, conf_name,
+                                           preview)
             _trigger_message_parse()
             assert receiver.last_hash["type"] == "requestGeneric"
             assert receiver.last_hash["args.deviceId"] == deviceId
             assert receiver.last_hash["timeout"] == 5
             assert receiver.last_hash["preview"] == preview
             assert receiver.last_hash[
-                       "slot"] == "slotGetConfigurationFromName"
+                       "slot"] == "slotGetInitConfiguration"
             assert receiver.last_hash[
-                       "replyType"] == "getConfigurationFromName"
+                       "replyType"] == "getInitConfiguration"
 
-            network.onListConfigurationFromName(deviceId)
+            network.onListInitConfigurations(deviceId)
             _trigger_message_parse()
             assert receiver.last_hash["type"] == "requestGeneric"
             assert receiver.last_hash["args.deviceId"] == deviceId
             assert receiver.last_hash["args.name"] == ""
             assert receiver.last_hash[
-                       "slot"] == "slotListConfigurationFromName"
+                       "slot"] == "slotListInitConfigurations"
             assert receiver.last_hash[
-                       "replyType"] == "listConfigurationFromName"
+                       "replyType"] == "listInitConfigurations"
 
-            network.onSaveConfigurationFromName(conf_name, [deviceId])
+            network.onSaveInitConfiguration(conf_name, [deviceId])
             _trigger_message_parse()
             assert receiver.last_hash["type"] == "requestGeneric"
             assert receiver.last_hash["args.deviceIds"] == [deviceId]
             assert receiver.last_hash["args.name"] == conf_name
             assert receiver.last_hash[
-                       "slot"] == "slotSaveConfigurationFromName"
+                       "slot"] == "slotSaveInitConfiguration"
             assert receiver.last_hash[
-                       "replyType"] == "saveConfigurationFromName"
+                       "replyType"] == "saveInitConfiguration"
             assert receiver.last_hash["timeout"] == 5
 
         with subtests.test(msg="Log messages"):
