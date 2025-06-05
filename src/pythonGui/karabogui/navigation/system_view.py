@@ -167,11 +167,11 @@ class SystemTreeView(QTreeView):
         self.ac_config_past.triggered.connect(self.onGetConfigurationFromPast)
         self.mDeviceItem.addAction(self.ac_config_past)
 
-        text = "Get && save configuration (name)"
+        text = "Get && save configuration (init)"
         self.ac_config_name = QAction(text, self)
         self.ac_config_name.setStatusTip(text)
         self.ac_config_name.setToolTip(text)
-        self.ac_config_name.triggered.connect(self.onGetConfigurationFromName)
+        self.ac_config_name.triggered.connect(self.onGetInitConfiguration)
         self.mDeviceItem.addAction(self.ac_config_name)
 
         self.mDeviceItem.addSeparator()
@@ -301,7 +301,7 @@ class SystemTreeView(QTreeView):
         dialog.activateWindow()
 
     @Slot()
-    def onGetConfigurationFromName(self):
+    def onGetInitConfiguration(self):
         info = self.indexInfo()
         device_id = info.get('deviceId')
         dialog = InitConfigurationDialog(instance_id=device_id,

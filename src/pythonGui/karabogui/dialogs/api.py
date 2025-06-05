@@ -17,12 +17,12 @@
 # flake8: noqa
 from .about import AboutDialog
 from .alarm_dialog import AlarmDialog
+from .app_configuration_dialog import ApplicationConfigurationDialog
 from .client_topology import ClientTopologyDialog
 from .compare_device_configurations import DeviceSelectorDialog
-from .configuration import ConfigurationDialog
 from .configuration_comparison import ConfigComparisonDialog
 from .configuration_from_past import ConfigurationFromPastDialog
-from .configuration_preview import ConfigPreviewDialog
+from .configuration_preview import ConfigurationFromPastPreview
 from .data_view_dialog import DataViewDialog
 from .debug_run_dialog import DebugRunDialog
 from .development_topology import DevelopmentTopologyDialog

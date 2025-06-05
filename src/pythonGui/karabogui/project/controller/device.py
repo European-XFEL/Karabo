@@ -160,7 +160,7 @@ class DeviceInstanceController(BaseProjectController):
         elif not can_get_conf:
             conf_action.setToolTip(INCORRECT_STATE_TOOLTIP)
 
-        conf_action_name = QAction('Get && save configuration (name)', menu)
+        conf_action_name = QAction('Get && save configuration (init)', menu)
         can_get_conf_name = (server_online and
                              proj_device_status not in NO_CONFIG_STATUSES)
         conf_action_name.triggered.connect(partial(
@@ -434,12 +434,12 @@ class DeviceInstanceController(BaseProjectController):
         config_menu.addAction(show_action)
         device = self.project_device
         disabled = device.status in NO_CONFIG_STATUSES or device.online
-        for dev_conf in self.model.configs:
-            conf_action = QAction(dev_conf.simple_name, config_menu)
+        for config in self.model.configs:
+            conf_action = QAction(config.simple_name, config_menu)
             conf_action.setCheckable(True)
-            callback = partial(self.active_config_changed, dev_conf)
+            callback = partial(self.active_config_changed, config)
             conf_action.triggered.connect(callback)
-            is_active = self.model.active_config_ref == dev_conf.uuid
+            is_active = self.model.active_config_ref == config.uuid
             conf_action.setChecked(is_active)
             config_menu.addAction(conf_action)
             conf_action.setEnabled(allowed and not disabled)
@@ -570,23 +570,30 @@ class DeviceInstanceController(BaseProjectController):
             server_model.devices.extend(devices)
 
     def _show_configuration(self, parent=None):
-        project_device = self.project_device
         config_model = self.active_config
         if config_model is None:
             return
 
+        device = self.project_device
+        allowed = access_role_allowed(AccessRole.PROJECT_EDIT)
+        disabled = device.status in NO_CONFIG_STATUSES or device.online
+        editable = allowed and not disabled
+
         configuration = config_model.configuration
         dialog = DeviceConfigurationDialog(
             name=config_model.simple_name, configuration=configuration,
-            project_device=project_device, parent=parent)
+            editable=editable,
+            project_device=device, parent=parent)
         move_to_cursor(dialog)
         if dialog.exec() == QDialog.Accepted:
             self.active_config.configuration = dialog.configuration
-            project_device.set_project_config_hash(dialog.configuration)
-            proxy = project_device.proxy
+            device.set_project_config_hash(dialog.configuration)
+            proxy = device.proxy
             if proxy.online:
                 return
-            # Show the device configuration if online and already showing
+
+            # Show the device configuration if already showing
+            # XXX: Is this needed?
             broadcast_event(KaraboEvent.UpdateDeviceConfigurator,
                             {'proxy': proxy})
 
