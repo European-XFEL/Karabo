@@ -41,7 +41,8 @@ class DeviceConfigurationDialog(QDialog):
     show the conflicts on request.
     """
 
-    def __init__(self, name, configuration, project_device=None, parent=None):
+    def __init__(self, name, configuration, project_device=None,
+                 editable=False, parent=None):
         super().__init__(parent=parent)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setModal(False)
@@ -53,35 +54,34 @@ class DeviceConfigurationDialog(QDialog):
 
         apply_button = self.ui_buttonBox.button(QDialogButtonBox.Apply)
         apply_button.clicked.connect(self.accept)
-        discard_button = self.ui_buttonBox.button(QDialogButtonBox.Discard)
+        discard_button = self.ui_buttonBox.button(QDialogButtonBox.Close)
         discard_button.clicked.connect(self.reject)
         discard_button.setFocus()
 
-        self._invalid_paths = []
+        if not editable:
+            self.ui_edit_group.setVisible(False)
+            self.ui_buttonBox.button(QDialogButtonBox.Apply).setVisible(False)
 
+        self._invalid_paths = []
         self.ui_erase_path.clicked.connect(self._erase_path)
         self.ui_erase_all.clicked.connect(self._erase_config)
-        self.ui_sanitize.clicked.connect(self._sanitize_config)
+        self.ui_cleanup.clicked.connect(self._cleanup_configuration)
         if project_device.status in _NO_SCHEMA_STATUS:
-            self.ui_sanitize.setEnabled(False)
-            text = "Sanitize is only available with a class schema"
-            self.ui_sanitize.setToolTip(text)
+            self.ui_cleanup.setEnabled(False)
+            text = "Cleanup is only available with a class schema"
+            self.ui_cleanup.setToolTip(text)
         self.project_device = project_device
         # Make sure we deepcopy for manipulations!
         self.configuration = deepcopy(configuration)
         self._show_configuration()
 
     @Slot()
-    def _sanitize_config(self):
+    def _cleanup_configuration(self):
         config = Hash()
-        remove_attr = self.ui_remove_attributes.isChecked()
         for k, v, a in Hash.flat_iterall(self.configuration, empty=False):
             if k in self._invalid_paths:
                 continue
-            if remove_attr:
-                config[k] = v
-            else:
-                config.setElement(k, v, a)
+            config[k] = v
 
         proxy = self.project_device.get_class_proxy()
         binding = proxy.binding
@@ -113,7 +113,7 @@ class DeviceConfigurationDialog(QDialog):
     @Slot()
     def _show_configuration(self):
         self._update_configuration_view()
-        self._update_validation_view()
+        self._extract_invalid_paths()
 
     def _update_configuration_view(self):
         widget = self.ui_text_info
@@ -139,25 +139,18 @@ class DeviceConfigurationDialog(QDialog):
         scroll_bar = widget.verticalScrollBar()
         scroll_bar.setValue(scroll_bar.sliderPosition())
 
-    def _update_validation_view(self):
-        widget = self.ui_valid_info
+    def _extract_invalid_paths(self):
         proxy = self.project_device.get_class_proxy()
         binding = proxy.binding
         # No schema arrived yet!
         if not len(binding.value):
-            html = "<center>No schema available!</center>"
             invalid = []
         else:
             config = validate_binding_configuration(
                 binding=binding, config=self.configuration)
             if config.empty():
-                html = "<center>No conflicts in configuration!</center>"
                 invalid = []
             else:
-                html = create_html_hash(config)
                 invalid = config.paths(intermediate=False)
 
         self._invalid_paths = invalid
-        widget.setHtml(html)
-        scroll_bar = widget.verticalScrollBar()
-        scroll_bar.setValue(scroll_bar.sliderPosition())

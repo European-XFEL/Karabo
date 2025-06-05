@@ -37,7 +37,7 @@ from karabogui.util import SignalBlocker, getSaveFileName
 from .utils import get_dialog_ui
 
 
-class ConfigPreviewDialog(QDialog):
+class ConfigurationFromPastPreview(QDialog):
     """A simple configuration preview for configuration from name and time
 
     :param title: The title of the dialog
@@ -52,7 +52,7 @@ class ConfigPreviewDialog(QDialog):
         self._currently_reconfigurable = ""
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setModal(False)
-        ui_file = get_dialog_ui("configuration_preview.ui")
+        ui_file = get_dialog_ui("configuration_past_preview.ui")
         uic.loadUi(ui_file, self)
         self.setWindowTitle(title)
         flags = Qt.WindowCloseButtonHint | Qt.WindowStaysOnTopHint

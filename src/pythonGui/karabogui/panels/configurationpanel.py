@@ -34,7 +34,8 @@ from karabogui.binding.api import (
     validate_value)
 from karabogui.configurator.api import ConfigurationTreeView
 from karabogui.dialogs.api import (
-    ConfigPreviewDialog, ConfigurationFromPastDialog, DeviceSelectorDialog)
+    ConfigurationFromPastDialog, ConfigurationFromPastPreview, DataViewDialog,
+    DeviceSelectorDialog)
 from karabogui.events import (
     KaraboEvent, register_for_broadcasts, unregister_from_broadcasts)
 from karabogui.logger import get_logger
@@ -71,7 +72,7 @@ class ConfigurationPanel(BasePanelWidget):
             KaraboEvent.ClearConfigurator: self._event_clear_configurator,
             KaraboEvent.LoadConfiguration: self._event_load_configuration,
             KaraboEvent.ShowConfigurationFromPast: self._event_config_past,
-            KaraboEvent.ShowInitConfiguration: self._event_config_name,
+            KaraboEvent.ShowInitConfiguration: self._event_init_config,
             KaraboEvent.NetworkConnectStatus: self._event_network,
             KaraboEvent.AccessLevelChanged: self._event_access_level,
             KaraboEvent.LoginUserChanged: self._event_access_level,
@@ -118,13 +119,13 @@ class ConfigurationPanel(BasePanelWidget):
         self._apply_configuration_from_past(deviceId, configuration, req_time,
                                             config_time, time_match, preview)
 
-    def _event_config_name(self, data):
+    def _event_init_config(self, data):
         deviceId = data['deviceId']
         configuration = data['configuration']
         name = data['name']
         preview = data['preview']
         classId = data['classId']
-        self._apply_configuration_from_name(
+        self._apply_init_configuration(
             deviceId, classId, configuration, name, preview)
 
     def _event_network(self, data):
@@ -339,7 +340,7 @@ class ConfigurationPanel(BasePanelWidget):
 
         return True
 
-    def _apply_configuration_from_name(
+    def _apply_init_configuration(
             self, deviceId, classId, config, name, preview):
         """Apply the retrieved configuration from getConfigurationFromName"""
         validated = self._check_configuration(deviceId, classId)
@@ -350,8 +351,9 @@ class ConfigurationPanel(BasePanelWidget):
         if preview:
             title = (f"Showing configuration {name} for device "
                      f"{proxy.device_id}")
-            dialog = ConfigPreviewDialog(title, None, config, proxy,
-                                         parent=self)
+            info = ("Note: Only changes from the device defaults "
+                    "are stored as configuration.")
+            dialog = DataViewDialog(title, info, config, parent=self)
             if dialog.exec() == QDialog.Accepted:
                 self._set_proxy_configuration(proxy, config)
         else:
@@ -380,8 +382,8 @@ class ConfigurationPanel(BasePanelWidget):
 
         if preview:
             title = f"Showing configuration for device {proxy.device_id}"
-            dialog = ConfigPreviewDialog(title, text, config, proxy,
-                                         parent=self)
+            dialog = ConfigurationFromPastPreview(title, text, config, proxy,
+                                                  parent=self)
             if dialog.exec() == QDialog.Accepted:
                 self._set_proxy_configuration(proxy, config)
         else:

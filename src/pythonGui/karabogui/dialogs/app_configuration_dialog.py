@@ -205,7 +205,7 @@ class ConfigurationModel(QAbstractItemModel):
                     return QColor(*PROPERTY_READONLY_COLOR)
 
 
-class ConfigurationDialog(QDialog):
+class ApplicationConfigurationDialog(QDialog):
     """The dialog to view the configuration singleton
     """
 
