@@ -21,7 +21,8 @@ from karabo.native import Hash
 from karabogui.binding.api import (
     BindingRoot, DeviceProxy, ProxyStatus, apply_default_configuration,
     build_binding)
-from karabogui.dialogs.configuration_preview import ConfigPreviewDialog
+from karabogui.dialogs.configuration_preview import (
+    ConfigurationFromPastPreview)
 from karabogui.singletons.configuration import Configuration
 from karabogui.testing import (
     get_device_schema, get_device_schema_allowed_state, singletons)
@@ -37,10 +38,10 @@ def test_dialog(gui_app):
         proxy = DeviceProxy(binding=binding, server_id="Test",
                             status=ProxyStatus.ONLINE)
         apply_default_configuration(proxy.binding)
-        dialog = ConfigPreviewDialog("This is the title",
-                                     "The information comes here",
-                                     configuration=configuration,
-                                     proxy=proxy)
+        dialog = ConfigurationFromPastPreview("This is the title",
+                                              "The information comes here",
+                                              configuration=configuration,
+                                              proxy=proxy)
         assert dialog.windowTitle() == "This is the title"
         assert dialog.ui_info.text() == ("The information comes here "
                                          "The device is online.")
@@ -106,10 +107,10 @@ def test_dialog_empty_configuration(gui_app):
         proxy = DeviceProxy(binding=binding, server_id="Test",
                             status=ProxyStatus.ONLINE)
         apply_default_configuration(proxy.binding)
-        dialog = ConfigPreviewDialog("This is the title",
-                                     "The information comes here",
-                                     configuration=configuration,
-                                     proxy=proxy)
+        dialog = ConfigurationFromPastPreview("This is the title",
+                                              "The information comes here",
+                                              configuration=configuration,
+                                              proxy=proxy)
 
         save_path = "karabogui.dialogs.configuration_preview." \
                     "getSaveFileName"
@@ -130,10 +131,10 @@ def test_dialog_empty_binding(gui_app):
         binding.class_id = "unknown-class"
         proxy = DeviceProxy(binding=binding, server_id="Test",
                             status=ProxyStatus.ONLINE)
-        dialog = ConfigPreviewDialog("This is the title",
-                                     "The information comes here",
-                                     configuration=configuration,
-                                     proxy=proxy)
+        dialog = ConfigurationFromPastPreview("This is the title",
+                                              "The information comes here",
+                                              configuration=configuration,
+                                              proxy=proxy)
         assert dialog.ui_existing.toPlainText() == (
             "No schema available to extract a configuration")
         assert dialog.ui_retrieved.toPlainText() == (
@@ -151,10 +152,11 @@ def test_dialog_only_reconfigurable_changes(gui_app):
         proxy = DeviceProxy(binding=binding, server_id="Test",
                             status=ProxyStatus.ONLINE)
         apply_default_configuration(proxy.binding)
-        dialog = ConfigPreviewDialog("This is the title",
-                                     "The information comes here",
-                                     configuration=configuration,
-                                     proxy=proxy)
+        dialog = ConfigurationFromPastPreview(
+            "This is the title",
+            "The information comes here",
+            configuration=configuration,
+            proxy=proxy)
 
         # Show all changes
         dialog._show_configuration_changes(hide_readonly=False)

@@ -38,8 +38,9 @@ from karabogui import const, icons, messagebox
 from karabogui.access import ACCESS_LEVELS, AccessRole
 from karabogui.background import background
 from karabogui.dialogs.api import (
-    AboutDialog, ClientTopologyDialog, ConfigurationDialog, DataViewDialog,
-    DevelopmentTopologyDialog, GuiSessionInfo, UpdateDialog, UserSessionDialog)
+    AboutDialog, ApplicationConfigurationDialog, ClientTopologyDialog,
+    DataViewDialog, DevelopmentTopologyDialog, GuiSessionInfo, UpdateDialog,
+    UserSessionDialog)
 from karabogui.events import (
     KaraboEvent, broadcast_event, register_for_broadcasts)
 from karabogui.indicators import get_processing_color
@@ -800,7 +801,7 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def onConfiguration(self):
-        ConfigurationDialog(parent=self).open()
+        ApplicationConfigurationDialog(parent=self).open()
 
     @Slot()
     def onStoreMainWindowGeometry(self):

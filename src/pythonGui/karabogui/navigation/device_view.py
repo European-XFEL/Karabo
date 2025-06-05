@@ -91,11 +91,11 @@ class DeviceTreeView(QTreeView):
         self.ac_config_past.setToolTip(text)
         self.ac_config_past.triggered.connect(self.onGetConfigurationFromPast)
 
-        text = "Get && save configuration (name)"
+        text = "Get && save configuration (init)"
         self.ac_config_name = QAction(text, self)
         self.ac_config_name.setStatusTip(text)
         self.ac_config_name.setToolTip(text)
-        self.ac_config_name.triggered.connect(self.onGetConfigurationFromName)
+        self.ac_config_name.triggered.connect(self.onGetInitConfiguration)
 
         text = "Open device scene..."
         self.ac_open_device_scene = QAction(text, self)
@@ -217,7 +217,7 @@ class DeviceTreeView(QTreeView):
         dialog.activateWindow()
 
     @Slot()
-    def onGetConfigurationFromName(self):
+    def onGetInitConfiguration(self):
         info = self.indexInfo()
         device_id = info.get('deviceId')
         dialog = InitConfigurationDialog(instance_id=device_id,
