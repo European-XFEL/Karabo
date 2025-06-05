@@ -124,7 +124,7 @@ class TestCase(GuiTestCase):
         conf_widget = "karabogui.navigation.device_view." \
                       "InitConfigurationDialog"
         with mock.patch(conf_widget) as widget:
-            self.view.onGetConfigurationFromName()
+            self.view.onGetInitConfiguration()
             widget.assert_called_once()
 
         manager = mock.Mock()

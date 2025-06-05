@@ -16,7 +16,7 @@
 # or FITNESS FOR A PARTICULAR PURPOSE.
 from qtpy.QtCore import Qt
 
-from karabogui.dialogs.api import ConfigurationDialog
+from karabogui.dialogs.api import ApplicationConfigurationDialog
 from karabogui.singletons.configuration import Configuration
 from karabogui.testing import GuiTestCase, singletons
 
@@ -26,7 +26,7 @@ class TestAppConfDialog(GuiTestCase):
     def test_basic_dialog(self):
         config = Configuration()
         with singletons(configuration=config):
-            dialog = ConfigurationDialog()
+            dialog = ApplicationConfigurationDialog()
             assert not dialog.isModal()
             model = dialog.tree_view.model()
             assert model is not None
@@ -78,7 +78,7 @@ class TestAppConfDialog(GuiTestCase):
         from pytestqt.modeltest import ModelTester
         config = Configuration()
         with singletons(configuration=config):
-            dialog = ConfigurationDialog()
+            dialog = ApplicationConfigurationDialog()
             model = dialog.tree_view.model()
             tester = ModelTester(None)
             tester.check(model)
