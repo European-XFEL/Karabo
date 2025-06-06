@@ -320,7 +320,7 @@ class ConfigurationManager(DeviceClientBase):
         return Hash("success", True, "item", devices)
 
     @slot
-    async def slotDeleteConfiguration(self, info: Hash):
+    async def slotDeleteInitConfiguration(self, info: Hash):
         """Delete a device configuration"""
         await self.db.delete_configuration(info["deviceId"], info["name"])
         return Hash("success", True)

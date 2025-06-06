@@ -297,12 +297,25 @@ def test_socket_connect_login_protocol(mocker, subtests, gui_app):
             _trigger_message_parse()
             assert receiver.last_hash["type"] == "requestGeneric"
             assert receiver.last_hash["args.deviceId"] == deviceId
+            assert receiver.last_hash["args.name"] == conf_name
             assert receiver.last_hash["timeout"] == 5
             assert receiver.last_hash["preview"] == preview
             assert receiver.last_hash[
                        "slot"] == "slotGetInitConfiguration"
             assert receiver.last_hash[
                        "replyType"] == "getInitConfiguration"
+
+            conf_name = "test2"
+            network.onDeleteInitConfiguration(deviceId, conf_name)
+            _trigger_message_parse()
+            assert receiver.last_hash["type"] == "requestGeneric"
+            assert receiver.last_hash["args.deviceId"] == deviceId
+            assert receiver.last_hash["args.name"] == conf_name
+            assert receiver.last_hash["timeout"] == 5
+            assert receiver.last_hash[
+                       "slot"] == "slotDeleteInitConfiguration"
+            assert receiver.last_hash[
+                       "replyType"] == "deleteInitConfiguration"
 
             network.onListInitConfigurations(deviceId)
             _trigger_message_parse()

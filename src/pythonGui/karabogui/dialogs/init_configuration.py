@@ -45,7 +45,7 @@ class SaveConfigurationDialog(QDialog):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        uic.loadUi(get_dialog_ui("config_save.ui"), self)
+        uic.loadUi(get_dialog_ui("init_config_save.ui"), self)
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
         self.ui_name.textChanged.connect(self._check_button)
         # We allow only characters and numbers up to a length of 30!
