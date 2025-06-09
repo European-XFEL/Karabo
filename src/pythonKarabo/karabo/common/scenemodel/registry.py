@@ -14,7 +14,6 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 from collections import namedtuple
-from inspect import signature
 
 from traits.api import (
     Any, Callable, Dict, HasStrictTraits, Instance, Int, Property, String,
@@ -71,13 +70,6 @@ class ReaderRegistry(HasStrictTraits):
         klass = self._fetch_klass(element)
         reader = self._fetch_reader(name=klass, version=self.version)
         assert reader is not None, f"Reader not found for {element}!"
-
-        sig = signature(reader)
-        # XXX: Backward compatibility with GUI extensions. Old readers have
-        # two (2) arguments, new ones have a single argument
-        if len(sig.parameters) == 2:
-            return reader(read_element, element)
-
         return reader(element)
 
     def _fetch_klass(self, element):
@@ -109,12 +101,6 @@ class WriterRegistry(HasStrictTraits):
         klass = model.__class__
         writer = self.entries.get(klass)
         assert writer is not None, f"Writer not found for {klass}!"
-
-        sig = signature(writer)
-        # XXX: Backward compatibility with GUI extensions. Old writers have
-        # three (3) arguments, new ones have two arguments
-        if len(sig.parameters) == 3:
-            return writer(write_element, model, parent)
 
         return writer(model, parent)
 
