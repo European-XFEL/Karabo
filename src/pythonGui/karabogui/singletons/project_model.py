@@ -36,7 +36,7 @@ from karabogui.project.controller.build import (
 from karabogui.project.controller.device import DeviceInstanceController
 from karabogui.project.utils import show_no_configuration
 from karabogui.singletons.api import get_topology
-from karabogui.util import create_table_string
+from karabogui.util import create_table_string, utc_to_local
 
 TABLE_HEADER_LABELS = ["Projects", ""]
 
@@ -323,12 +323,8 @@ class ProjectViewItemModel(QAbstractItemModel):
                 return get_instance_info_icon(ui_data.instance_status)
 
     def _create_tool_tip(self, model):
-        selection = ["uuid", "date"]
-        info = {}
-        for akey in selection:
-            avalue = getattr(model, akey)
-            if avalue is not None:
-                info.update({akey: str(avalue)})
+        info = {"uuid": model.uuid,
+                "modified": utc_to_local(model.date)}
 
         return create_table_string(info)
 
