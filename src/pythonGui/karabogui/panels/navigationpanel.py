@@ -77,8 +77,8 @@ class TopologyPanel(BasePanelWidget):
     def _event_network(self, data):
         status = data.get('status', False)
         self.sbar.reset(status)
+        self.daemon_button.setVisible(status)
         if not status:
-            self.daemon_button.setVisible(status)
             self.close_popup_widget()
 
     def _event_show_device(self, data):
