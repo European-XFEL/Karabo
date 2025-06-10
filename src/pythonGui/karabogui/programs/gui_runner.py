@@ -17,6 +17,7 @@
 import argparse
 import sys
 
+from karabo.common.scenemodel.api import set_scene_reader
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.programs.base import create_gui_app, init_gui
 from karabogui.singletons.api import get_config
@@ -25,6 +26,7 @@ from karabogui.singletons.api import get_config
 def run_gui(ns):
     app = create_gui_app([])
 
+    set_scene_reader(lazy=True)
     # Set the development mode
     get_config()["development"] = ns.dev
 

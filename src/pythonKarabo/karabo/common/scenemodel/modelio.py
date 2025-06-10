@@ -16,6 +16,7 @@
 from xml.etree.ElementTree import Element, parse, tostring
 
 from .const import NS_KARABO, NS_SVG, SCENE_FILE_VERSION
+from .exceptions import SceneWriterException
 from .model import SceneModel
 from .registry import read_element, set_reader_registry_version, write_element
 
@@ -40,6 +41,9 @@ def read_scene(filename_or_fileobj):
 
 def write_scene(scene):
     """Write Scene object `scene` to a string."""
+    if scene.svg_data is not None:
+        raise SceneWriterException(
+            f"Scene {scene.simple_name} still contains svg_data.")
     root = Element(NS_SVG + "svg")
     # We always WRITE the most recent version.
     root.set(NS_KARABO + "version", str(SCENE_FILE_VERSION))

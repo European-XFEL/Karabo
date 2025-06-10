@@ -13,7 +13,7 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
-from xml.etree.ElementTree import SubElement
+from xml.etree.ElementTree import Element, SubElement
 
 from traits.api import CInt, Constant, Dict, Instance, Int, List, String
 
@@ -25,6 +25,7 @@ from .bases import BaseSceneObjectData, BaseWidgetObjectData, XMLElementModel
 from .const import (
     NS_KARABO, NS_SVG, SCENE_FILE_VERSION, SCENE_MIN_HEIGHT, SCENE_MIN_WIDTH,
     UNKNOWN_WIDGET_CLASS, WIDGET_ELEMENT_TAG)
+from .exceptions import SceneWriterException
 from .io_utils import (
     read_unknown_display_editable_widget, set_numbers, write_base_widget_data)
 from .registry import (
@@ -44,6 +45,22 @@ class SceneModel(BaseProjectObjectModel):
     height = CInt(SCENE_MIN_HEIGHT)
     # All the objects in the scene
     children = List(Instance(BaseSceneObjectData))
+    # The xml element of the scene, used for lazy loading
+    svg_data = Instance(Element, transient=True)
+
+    def assure_svg_data(self):
+        if self.svg_data is not None:
+            children = [read_element(child) for child in self.svg_data]
+            self.trait_setq(children=children, svg_data=None)
+            self._manage_container_item_listeners(
+                "children", old=None, new=children)
+
+            def visitor(model):
+                if isinstance(model, BaseSavableModel):
+                    model.initialized = True
+
+            # Mark everything as initialized, otherwise `modified` won't work.
+            walk_traits_object(self, visitor)
 
 
 class UnknownWidgetDataModel(BaseWidgetObjectData):
@@ -95,38 +112,65 @@ def _read_extra_attributes(element):
     return attributes
 
 
-@register_scene_reader("Scene", xmltag="svg", version=1)
-@register_scene_reader("Scene", xmltag=NS_SVG + "svg", version=1)
-def __scene_reader(element):
-    traits = {
-        "file_format_version": int(element.get(NS_KARABO + "version", 1)),
-        "uuid": element.get(NS_KARABO + "uuid"),
-        "width": float(element.get("width", 0)),
-        "height": float(element.get("height", 0)),
-        "extra_attributes": _read_extra_attributes(element),
-    }
-    # This attribute is not guaranteed to be there...
-    if traits["uuid"] is None:
-        del traits["uuid"]
+def set_scene_reader(lazy: bool = False):
+    """Set the scene loading with a scene reader"""
 
-    scene = SceneModel(**traits)
+    def __lazy_scene_reader(element):
+        traits = {
+            "file_format_version": int(element.get(NS_KARABO + "version", 1)),
+            "uuid": element.get(NS_KARABO + "uuid"),
+            "width": float(element.get("width", 0)),
+            "height": float(element.get("height", 0)),
+            "extra_attributes": _read_extra_attributes(element),
+            "svg_data": element,
+        }
+        # This attribute is not guaranteed to be there...
+        if traits["uuid"] is None:
+            del traits["uuid"]
 
-    # Now we iterate over the children elements
-    for child in element:
-        scene.children.append(read_element(child))
+        scene = SceneModel(**traits)
+        return scene
 
-    def visitor(model):
-        if isinstance(model, BaseSavableModel):
-            model.initialized = True
+    def __scene_reader(element):
+        traits = {
+            "file_format_version": int(element.get(NS_KARABO + "version", 1)),
+            "uuid": element.get(NS_KARABO + "uuid"),
+            "width": float(element.get("width", 0)),
+            "height": float(element.get("height", 0)),
+            "extra_attributes": _read_extra_attributes(element),
+        }
+        # This attribute is not guaranteed to be there...
+        if traits["uuid"] is None:
+            del traits["uuid"]
 
-    # Mark everything as initialized, otherwise `modified` won't work.
-    walk_traits_object(scene, visitor)
+        scene = SceneModel(**traits)
+        # Now we iterate over the children elements
+        for child in element:
+            scene.children.append(read_element(child))
 
-    return scene
+        def visitor(model):
+            if isinstance(model, BaseSavableModel):
+                model.initialized = True
+
+        # Mark everything as initialized, otherwise `modified` won't work.
+        walk_traits_object(scene, visitor)
+
+        return scene
+
+    scene_reader = __lazy_scene_reader if lazy else __scene_reader
+    register_scene_reader("Scene", "svg", version=1)(scene_reader)
+    register_scene_reader("Scene", NS_SVG + "svg", version=1)(scene_reader)
+
+
+set_scene_reader(False)
 
 
 @register_scene_writer(SceneModel)
 def __scene_writer(scene, root):
+    if scene.svg_data is not None:
+        raise SceneWriterException(
+            f"Scene {scene.simple_name} still contains svg_data.")
+
     for child in scene.children:
         write_element(model=child, parent=root)
 
