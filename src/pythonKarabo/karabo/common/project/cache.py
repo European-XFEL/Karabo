@@ -108,27 +108,23 @@ class ProjectDBCache:
         if not op.exists(domain_dir):
             return []
 
-        proj_data = []
+        data = []
         for uuid in os.listdir(domain_dir):
             xml = self.retrieve(domain, uuid)
             root = fromstring(xml)
             root_type = root.attrib.get("item_type")
             if root_type == obj_type:
-                simple_name = root.attrib.get("simple_name")
-                is_trashed = root.attrib.get("is_trashed", False)
-                descr = root.attrib.get("description", "")
-                proj_data.append(
-                    {
-                        "uuid": uuid,
-                        "simple_name": simple_name,
-                        "is_trashed": is_trashed,
-                        "user": root.attrib.get("user", ""),
-                        "date": root.attrib.get("date", ""),
-                        "description": descr,
-                    }
-                )
+                attrs = root.attrib
+                simple_name = attrs.get("simple_name")
+                is_trashed = attrs.get("is_trashed", "").lower() == "true"
+                date = attrs.get("date", "")
+                data.append(
+                    {"uuid": uuid,
+                     "simple_name": simple_name,
+                     "is_trashed": is_trashed,
+                     "date": date})
 
-        return proj_data
+        return data
 
     def _generate_filepath(self, domain, uuid):
         return op.join(self.dirpath, domain, uuid)
