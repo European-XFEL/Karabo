@@ -17,20 +17,16 @@
 # XML emitters for Models
 
 import base64
-import datetime
 from xml.sax.saxutils import escape
 
 from .models import (
     DeviceConfig, DeviceInstance, DeviceServer, Macro, Project, Scene)
+from .utils import datetime_to_str
 
 _XML_NS = 'xmlns:exist="http://exist.sourceforge.net/NS/exist"'
 _REVISION_ALIAS = 'revision="0" alias="default"'
 _ITEM_TEMPLATE = ('<KRB_Item><uuid KRB_Type="STRING">{uuid}</uuid>'
                   '<revision KRB_Type="INT32">0</revision></KRB_Item>')
-
-
-def _format_date(d):
-    return d.replace(tzinfo=datetime.UTC) if d else ''
 
 
 def _safe_xml_str(raw_value: str) -> str:
@@ -56,7 +52,7 @@ def emit_project_xml(project: Project,
     def _emit_refs(objects):
         return [_ITEM_TEMPLATE.format(uuid=o.uuid) for o in objects]
 
-    date = _format_date(project.date)
+    date = datetime_to_str(project.date)
     trashed = 'true' if project.is_trashed else 'false'
 
     content = (
@@ -85,7 +81,7 @@ def emit_scene_xml(scene: Scene) -> str:
         uuid=scene.uuid,
         name=scene.name,
         item_type="scene",
-        date=_format_date(scene.date),
+        date=datetime_to_str(scene.date),
         extra=scene.svg_data
     )
 
@@ -97,7 +93,7 @@ def emit_macro_xml(macro: Macro) -> str:
         uuid=macro.uuid,
         name=macro.name,
         item_type="macro",
-        date=_format_date(macro.date),
+        date=datetime_to_str(macro.date),
         extra=macro_body
     )
 
@@ -114,7 +110,7 @@ def emit_server_xml(server: DeviceServer,
         uuid=server.uuid,
         name=server.name,
         item_type="device_server",
-        date=_format_date(server.date),
+        date=datetime_to_str(server.date),
         extra=content
     )
 
@@ -140,7 +136,7 @@ def emit_device_xml(instance: DeviceInstance,
         uuid=instance.uuid,
         name=instance.name,
         item_type="device_instance",
-        date=_format_date(instance.date),
+        date=datetime_to_str(instance.date),
         extra=instance_block
     )
 
@@ -150,6 +146,6 @@ def emit_config_xml(config: DeviceConfig) -> str:
         uuid=config.uuid,
         name=config.name,
         item_type="device_config",
-        date=_format_date(config.date),
+        date=datetime_to_str(config.date),
         extra=config.config_data
     )

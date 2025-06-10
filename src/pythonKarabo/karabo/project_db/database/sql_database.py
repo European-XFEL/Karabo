@@ -33,7 +33,7 @@ from .models import (
 from .models_xml import (
     emit_config_xml, emit_device_xml, emit_macro_xml, emit_project_xml,
     emit_scene_xml, emit_server_xml)
-from .utils import get_trashed, utc_to_local
+from .utils import datetime_str_now, datetime_to_str, get_trashed
 
 logger = logging.getLogger(__file__)
 
@@ -375,8 +375,7 @@ class SQLDatabase(DatabaseBase):
         # XXX: Cannot be `None`
         item_type = item_tree.attrib['item_type']
         if not item_tree.attrib.get('date'):
-            timestamp = datetime.datetime.now(datetime.UTC).isoformat(
-                timespec="seconds")
+            timestamp = datetime_str_now()
             item_tree.attrib['date'] = timestamp
         else:
             modified, reason = await self._check_for_modification(
@@ -388,8 +387,7 @@ class SQLDatabase(DatabaseBase):
                     f"could not be saved: {reason}")
                 raise ProjectDBError(message)
             # Update time stamp
-            timestamp = datetime.datetime.now(datetime.UTC).isoformat(
-                timespec="seconds")
+            timestamp = datetime_str_now()
             item_tree.attrib['date'] = timestamp
 
         # XXX: Add a revision/alias to keep old code from blowing up
@@ -574,7 +572,7 @@ class SQLDatabase(DatabaseBase):
             if project_uuid not in projects:
                 project_data = {
                     "project_name": project.name,
-                    "date": utc_to_local(project.date),
+                    "date": datetime_to_str(project.date),
                     "uuid": project_uuid,
                     "items": []}
                 projects[project_uuid] = project_data
@@ -611,7 +609,7 @@ class SQLDatabase(DatabaseBase):
                 project = await self._get_project_from_id(project_id)
                 project_data = {
                     "project_name": project.name,
-                    "date": utc_to_local(project.date),
+                    "date": datetime_to_str(project.date),
                     "uuid": project.uuid,
                     "items": []}
                 projects[project_id] = project_data
@@ -648,7 +646,7 @@ class SQLDatabase(DatabaseBase):
                 project = await self._get_project_from_id(project_id)
                 project_data = {
                     "project_name": project.name,
-                    "date": utc_to_local(project.date),
+                    "date": datetime_to_str(project.date),
                     "uuid": project.uuid,
                     "items": []}
                 projects[project_id] = project_data
@@ -685,7 +683,7 @@ class SQLDatabase(DatabaseBase):
             "item_type": "project",
             "simple_name": p.name,
             "is_trashed": p.is_trashed,
-            "date": utc_to_local(p.date),
+            "date": datetime_to_str(p.date),
         } for p in result]
 
     async def _get_domain_macros(self, domain):
@@ -695,7 +693,7 @@ class SQLDatabase(DatabaseBase):
             .where(ProjectDomain.name == domain))
         items = await self._execute_all(query)
         return [{"uuid": i.uuid, "item_type": "macro",
-                 "simple_name": i.name, "date": utc_to_local(i.date)}
+                 "simple_name": i.name, "date": datetime_to_str(i.date)}
                 for i in items]
 
     async def _get_domain_scenes(self, domain: str):
@@ -705,7 +703,7 @@ class SQLDatabase(DatabaseBase):
             .where(ProjectDomain.name == domain))
         items = await self._execute_all(query)
         return [{"uuid": i.uuid, "item_type": "scene",
-                 "simple_name": i.name, "date": utc_to_local(i.date)}
+                 "simple_name": i.name, "date": datetime_to_str(i.date)}
                 for i in items]
 
     async def _get_domain_device_servers(self, domain: str):
@@ -715,7 +713,7 @@ class SQLDatabase(DatabaseBase):
             .where(ProjectDomain.name == domain))
         items = await self._execute_all(query)
         return [{"uuid": i.uuid, "item_type": "device_server",
-                 "simple_name": i.name, "date": utc_to_local(i.date)}
+                 "simple_name": i.name, "date": datetime_to_str(i.date)}
                 for i in items]
 
     async def _get_domain_device_instances(self, domain):
@@ -725,7 +723,7 @@ class SQLDatabase(DatabaseBase):
             .where(ProjectDomain.name == domain))
         items = await self._execute_all(query)
         return [{"uuid": i.uuid, "item_type": "device_instance",
-                 "simple_name": i.name, "date": utc_to_local(i.date)}
+                 "simple_name": i.name, "date": datetime_to_str(i.date)}
                 for i in items]
 
     async def _get_domain_device_configs(self, domain: str):
@@ -736,7 +734,7 @@ class SQLDatabase(DatabaseBase):
             .where(ProjectDomain.name == domain))
         items = await self._execute_all(query)
         return [{"uuid": i.uuid, "item_type": "device_config",
-                 "simple_name": i.name, "date": utc_to_local(i.date)}
+                 "simple_name": i.name, "date": datetime_to_str(i.date)}
                 for i in items]
 
     # endregion
