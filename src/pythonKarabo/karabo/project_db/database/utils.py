@@ -17,13 +17,22 @@ def datetime_to_str(timestamp: datetime | None) -> str:
     """Return a str in project db representation from a datetime"""
     if timestamp is None:
         return ""
-    # XXX: removed as timezone
     return timestamp.replace(tzinfo=UTC).strftime(DATE_FORMAT)
 
 
 def datetime_from_str(timestamp: str) -> datetime:
     """Return a datetime in project db representation from a string"""
     return datetime.strptime(timestamp, DATE_FORMAT).replace(tzinfo=UTC)
+
+
+def date_utc_to_local(dt: datetime) -> str:
+    """Convert given `dt` datetime object to the local time string
+
+    Note that is is a different time string as for the others, as it adds
+    the UTC offset.
+    """
+    local_ts = dt.replace(tzinfo=UTC).astimezone()
+    return datetime.strftime(local_ts, DATE_FORMAT)
 
 
 def get_trashed(value: str | None) -> bool:

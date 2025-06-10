@@ -14,10 +14,10 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 import base64
-import datetime
 import logging
 from asyncio import gather
 from collections.abc import Awaitable, Callable
+from datetime import UTC
 from pathlib import Path
 
 from lxml import etree
@@ -33,7 +33,9 @@ from .models import (
 from .models_xml import (
     emit_config_xml, emit_device_xml, emit_macro_xml, emit_project_xml,
     emit_scene_xml, emit_server_xml)
-from .utils import datetime_str_now, datetime_to_str, get_trashed
+from .utils import (
+    date_utc_to_local, datetime_from_str, datetime_now, datetime_str_now,
+    datetime_to_str, get_trashed)
 
 logger = logging.getLogger(__file__)
 
@@ -309,22 +311,22 @@ class SQLDatabase(DatabaseBase):
                     last_modified = config.date
 
         if last_modified:
-            client_modified = datetime.datetime.fromisoformat(client_date)
-            # Make sure `client_modified` has timezone information
-            if client_modified.tzinfo is None:
-                client_modified = client_modified.replace(tzinfo=datetime.UTC)
+            client_modified = datetime_from_str(client_date)
             # `last_modified`` was read from the DB as a naive datetime, but we
             # know it is in UTC. Add the timezone information so it can be
             # compared to the non-naive obtained from client_date.
-            last_modified = last_modified.replace(tzinfo=datetime.UTC)
+            last_modified = last_modified.replace(tzinfo=UTC)
             if client_modified < last_modified:
                 # The data has been changed in the database between the
                 # client_date that the GUI client sent and the current time.
-                return (True,
-                        f'Item of type "{item_type}" with uuid "{uuid}" '
-                        f'has been modified in the DB ({last_modified}) '
-                        'after its last retrieval by the client '
-                        f'({client_modified}).')
+                # Need to convert UTC timestamps to local timestamps
+                lm = date_utc_to_local(last_modified)
+                cm = date_utc_to_local(client_modified)
+                text = (
+                    f'Item of type "{item_type}" with uuid "{uuid}" '
+                    f'has been modified in the DB ({lm}) '
+                    f'after its last retrieval by the client ({cm}).')
+                return True, text
 
         return False, ""
 
@@ -873,14 +875,14 @@ class SQLDatabase(DatabaseBase):
 
     async def _register_project_load(self, project: Project):
         async with self.session_gen() as session:
-            project.last_loaded = datetime.datetime.now(datetime.UTC)
+            project.last_loaded = datetime_now()
             session.add(project)
             await session.commit()
 
     async def _save_project_item(
             self, domain: str, uuid: str, xml: str, timestamp: str):
         prj = etree.fromstring(xml)
-        date = datetime.datetime.fromisoformat(timestamp)
+        date = datetime_from_str(timestamp)
 
         # Save the project attributes
         project_id = None  # the id of the updated or new project
@@ -1114,7 +1116,7 @@ class SQLDatabase(DatabaseBase):
         # In MySQL the macro bodies are not Base64 encoded
         macro_body = base64.b64decode(macro_obj.getchildren()[0].text)
 
-        date = datetime.datetime.fromisoformat(timestamp)
+        date = datetime_from_str(timestamp)
 
         async with self.session_gen() as session:
             query = select(Macro).where(Macro.uuid == uuid)
@@ -1136,7 +1138,7 @@ class SQLDatabase(DatabaseBase):
             await session.commit()
 
     async def _save_scene_item(self, uuid: str, xml: str, timestamp: str):
-        date = datetime.datetime.fromisoformat(timestamp)
+        date = datetime_from_str(timestamp)
         scene_obj = etree.fromstring(xml)
         scene_uuid = scene_obj.attrib["uuid"]
         scene_name = scene_obj.attrib["simple_name"]
@@ -1165,7 +1167,7 @@ class SQLDatabase(DatabaseBase):
 
     async def _save_device_config_item(
             self, uuid: str, xml: str, timestamp: str):
-        date = datetime.datetime.fromisoformat(timestamp)
+        date = datetime_from_str(timestamp)
         config_obj = etree.fromstring(xml)
         config_uuid = config_obj.attrib["uuid"]
         config_name = config_obj.attrib["simple_name"]
@@ -1195,7 +1197,7 @@ class SQLDatabase(DatabaseBase):
 
     async def _save_device_instance_item(
             self, uuid: str, xml: str, timestamp: str):
-        date = datetime.datetime.fromisoformat(timestamp)
+        date = datetime_from_str(timestamp)
         instance_obj = etree.fromstring(xml)
         instance_uuid = instance_obj.attrib["uuid"]
         instance_tag = instance_obj.getchildren()[0]
@@ -1263,7 +1265,7 @@ class SQLDatabase(DatabaseBase):
 
     async def _save_device_server_item(
             self, uuid: str, xml: str, timestamp: str):
-        date = datetime.datetime.fromisoformat(timestamp)
+        date = datetime_from_str(timestamp)
         server_obj = etree.fromstring(xml)
         server_uuid = server_obj.attrib["uuid"]
         server_name = server_obj.attrib["simple_name"]
