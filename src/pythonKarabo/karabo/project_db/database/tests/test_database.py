@@ -143,13 +143,14 @@ async def test_project_interface(database, subtests):
             items = await db.get_projects_with_device("LOCAL", "nodevice")
             assert len(items) == 0
 
+            # We have 4 x Device Server with 4 devices each
             items = await db.get_projects_with_device("LOCAL", "Karabo")
             assert len(items) == 1
-            assert len(items[0]["items"]) == 32
+            assert len(items[0]["items"]) == 16
 
             items = await db.get_projects_with_device("LOCAL", "kArabo")
             assert len(items) == 1
-            assert len(items[0]["items"]) == 32
+            assert len(items[0]["items"]) == 16
 
         with subtests.test(msg='test_find_server'):
             items = await db.get_projects_with_server("LOCAL", "nosrv")
