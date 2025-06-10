@@ -33,3 +33,15 @@ def test_topology_panel(gui_app, mocker):
         get_config()["broker_topic"] = "Test"
         assert repr(panel) == "<TopologyPanel topic=Test>"
         assert panel.tree_view.model().rowCount() > 0
+
+
+def test_service_manager_button(gui_app, mocker):
+    panel = TopologyPanel()
+    panel._event_network({'status': True})
+    assert panel.daemon_button.isVisibleTo(panel)
+
+    panel._event_network({'status': False})
+    assert not panel.daemon_button.isVisibleTo(panel)
+
+    panel._event_network({'status': True})
+    assert panel.daemon_button.isVisibleTo(panel)
