@@ -75,26 +75,6 @@ def device_instance_exists(project, instance_ids):
     return found
 
 
-def device_server_exists(project, instance_ids):
-    """Check whether the a ``project`` already has a server[s] with the given
-    ``instance_ids`` and return ``True`` or ``False``
-    """
-    found = False
-
-    # Allow one or more instance ids
-    if isinstance(instance_ids, str):
-        instance_ids = (instance_ids,)
-
-    def visitor(obj):
-        nonlocal found
-        if isinstance(obj, DeviceServerModel):
-            if obj.server_id in instance_ids:
-                found = True
-
-    walk_traits_object(project, visitor)
-    return found
-
-
 def macro_exists(project, instance_ids):
     """Check whether the a ``project`` already has a macro[s] with the given
     ``instance_ids`` and return ``True`` or ``False``
