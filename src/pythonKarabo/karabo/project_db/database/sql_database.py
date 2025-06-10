@@ -558,26 +558,34 @@ class SQLDatabase(DatabaseBase):
               "devices": list of ids of prj devices with the given part},
             ...]
         """
-        configs = await self._get_configuration_from_device_part(
+        items = await self._get_domain_devices_by_name_part(
             domain, name_part)
 
         projects = {}
-        for config in configs:
-            device_uuid = config["device_uuid"]
-            device_id = config["device_id"]
-            project = await self._get_project_from_device_uuid(
-                domain, device_uuid)
-
-            project_uuid = project.uuid
-            if project_uuid not in projects:
+        for item in items:
+            if not item.device_server_id:
+                # Orphaned device
+                continue
+            server = await self._get_server_from_id(item.device_server_id)
+            if not server:
+                continue
+            project_id = server.project_id
+            if not project_id:
+                # Orphaned server
+                continue
+            name = item.name
+            if project_id not in projects:
+                project = await self._get_project_from_id(project_id)
+                if not project or project.is_trashed:
+                    continue
                 project_data = {
                     "project_name": project.name,
                     "date": datetime_to_str(project.date),
-                    "uuid": project_uuid,
+                    "uuid": project.uuid,
                     "items": []}
-                projects[project_uuid] = project_data
+                projects[project_id] = project_data
 
-            projects[project_uuid]["items"].append(device_id)
+            projects[project_id]["items"].append(name)
 
         return list(projects.values())
 
@@ -604,9 +612,14 @@ class SQLDatabase(DatabaseBase):
 
         for item in items:
             project_id = item.project_id
+            if not project_id:
+                # Orphaned
+                continue
             name = item.name
             if project_id not in projects:
                 project = await self._get_project_from_id(project_id)
+                if not project or project.is_trashed:
+                    continue
                 project_data = {
                     "project_name": project.name,
                     "date": datetime_to_str(project.date),
@@ -641,9 +654,14 @@ class SQLDatabase(DatabaseBase):
 
         for item in items:
             project_id = item.project_id
+            if not project_id:
+                # Orphaned
+                continue
             name = item.name
             if project_id not in projects:
                 project = await self._get_project_from_id(project_id)
+                if not project or project.is_trashed:
+                    continue
                 project_data = {
                     "project_name": project.name,
                     "date": datetime_to_str(project.date),
@@ -783,6 +801,11 @@ class SQLDatabase(DatabaseBase):
         project = await self._execute_first(
             select(Project).where(Project.id == id))
         return project
+
+    async def _get_server_from_id(self, id: int):
+        server = await self._execute_first(
+            select(DeviceServer).where(DeviceServer.id == id))
+        return server
 
     # region UUID
 
