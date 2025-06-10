@@ -37,8 +37,7 @@ from karabogui.itemtypes import ProjectItemTypes
 from karabogui.project.dialog.move_handle import MoveHandleDialog
 from karabogui.project.dialog.object_handle import ObjectEditDialog
 from karabogui.project.dialog.server_handle import ServerHandleDialog
-from karabogui.project.utils import (
-    check_device_server_exists, check_macro_exists)
+from karabogui.project.utils import check_macro_exists
 from karabogui.request import get_macro_from_server, get_scene_from_server
 from karabogui.singletons.api import (
     get_config, get_network, get_panel_wrangler)
@@ -438,18 +437,24 @@ def _create_cinema_link(project_model=None, parent=None):
 
 
 def _add_server(project_controller, parent=None):
-    """ Add a server to the associated project
-    """
+    """ Add a server to the associated project"""
     project = project_controller.model
     dialog = ServerHandleDialog(parent=parent)
     move_to_cursor(dialog)
     if dialog.exec() == QDialog.Accepted:
         serverId = dialog.server_id
-        if check_device_server_exists(serverId):
+        # Note: Not necessarily the root project, but same project
+        project_model = project_controller.model
+        existing = {server.server_id for server in project_model.servers}
+        if serverId in existing:
+            msg = ('The server with the server ID \"<b>{}</b>\" '
+                   '<br> already exists. Therefore it will not be '
+                   'added!').format(serverId)
+            messagebox.show_warning(msg, title='Server already exists')
             return
+
         traits = {
-            'server_id': serverId,
-        }
+            'server_id': serverId, }
         server = DeviceServerModel(**traits)
         # Set initialized and modified last
         server.initialized = server.modified = True

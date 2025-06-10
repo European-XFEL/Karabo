@@ -18,8 +18,8 @@ from pytest import raises as assert_raises
 from karabo.common.project.api import (
     DeviceConfigurationModel, DeviceInstanceModel, DeviceServerModel,
     MacroModel, ProjectModel, check_instance_duplicates, device_config_exists,
-    device_instance_exists, device_server_exists, find_parent_object,
-    get_project_models, macro_exists)
+    device_instance_exists, find_parent_object, get_project_models,
+    macro_exists)
 
 
 def test_find_parent_object():
@@ -193,31 +193,6 @@ def test_device_config_exists():
     proj.subprojects.append(sub_proj)
     assert device_config_exists(sub_proj, blah.instance_id, "new-conf2")
     assert device_config_exists(proj, blah.instance_id, "new-conf2")
-
-
-def test_device_server_exists():
-    dev0 = DeviceConfigurationModel(class_id="BazClass")
-    foo = DeviceInstanceModel(
-        class_id="BazClass", instance_id="fooDevice", configs=[dev0]
-    )
-    serv0 = DeviceServerModel(
-        server_id="fooServer", host="serverserverFoo", devices=[foo]
-    )
-    dev1 = DeviceConfigurationModel(
-        class_id="QuxClass", simple_name="new-conf1"
-    )
-    bar = DeviceInstanceModel(
-        class_id="QuxClass", instance_id="barDevice", configs=[dev1]
-    )
-    serv1 = DeviceServerModel(
-        server_id="barServer", host="serverserverFoo", devices=[bar]
-    )
-
-    proj = ProjectModel(servers=[serv0])
-    assert device_server_exists(proj, foo.server_id)
-    assert not device_server_exists(proj, bar.server_id)
-    proj.servers.append(serv1)
-    assert device_server_exists(proj, bar.server_id)
 
 
 def test_macro_exists():
