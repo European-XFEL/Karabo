@@ -26,8 +26,8 @@ from .clipboard import (
     SceneSelectAllAction)
 from .drawing import (
     ArrowSceneTool, DeviceSceneLinkTool, ImageRendererTool, InstanceStatusTool,
-    LineSceneTool, RectangleSceneTool, SceneLinkTool, StickerTool,
-    TextSceneTool, WebLinkTool)
+    LineSceneTool, PopupButtonTool, RectangleSceneTool, SceneLinkTool,
+    StickerTool, TextSceneTool, WebLinkTool)
 from .scenedndhandler import (
     ConfigurationDropHandler, NavigationDropHandler, ProjectDropHandler)
 from .selection import (

@@ -18,9 +18,8 @@ from qtpy.QtCore import QRect
 from qtpy.QtWidgets import QWidget
 
 from karabo.common.scenemodel.api import StickerModel
+from karabogui.sceneview.widget.sticker import StickerDialog, StickerWidget
 from karabogui.testing import GuiTestCase
-
-from ..sticker import StickerDialog, StickerWidget
 
 TEXT = """
 Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod

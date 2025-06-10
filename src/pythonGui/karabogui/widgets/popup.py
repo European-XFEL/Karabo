@@ -18,9 +18,9 @@
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
 #############################################################################
-
-from qtpy.QtCore import QEvent, Qt, Slot
-from qtpy.QtWidgets import QPushButton, QTextEdit, QVBoxLayout, QWidget
+from qtpy.QtCore import QEvent, Qt, QTimer, Slot
+from qtpy.QtWidgets import (
+    QPlainTextEdit, QPushButton, QTextEdit, QVBoxLayout, QWidget)
 
 from karabo.native import Hash, create_html_hash
 from karabogui.util import create_table_string
@@ -129,3 +129,41 @@ class TextEdit(QTextEdit):
     def fitHeightToContent(self, nbInfoKeys: int):
         self._fittedHeight = self.fontMetrics().height() * nbInfoKeys
         self.updateGeometry()
+
+
+class TextPopupWidget(QWidget):
+    """A popup widget to show the text like tooltip."""
+    def __init__(self, model, parent=None):
+        super().__init__(parent=parent)
+        self.setWindowFlags(self.windowFlags() | Qt.Popup)
+
+        self.setGeometry(self.x(), self.y(),
+                         model.popup_width, model.popup_height)
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        self.text_edit = QPlainTextEdit(parent=self)
+        self.text_edit.setReadOnly(True)
+        if model.text:
+            self.text_edit.setPlainText(model.text)
+        else:
+            self.text_edit.setPlaceholderText(
+                "Add text by double-clicking on the widget or by 'Edit Text' "
+                "right click menu.")
+        layout.addWidget(self.text_edit)
+
+        self._ticker = QTimer(self)
+        self._ticker.setInterval(10000)  # 10s
+        self._ticker.setSingleShot(True)
+        self._ticker.timeout.connect(self.close)
+        self._ticker.start()
+
+        self.setStyleSheet("""
+            QPlainTextEdit {
+                background-color: rgba(255, 255, 226, 200);
+                border: 1px solid black;}""")
+
+    def closeEvent(self, event):
+        """Close the ticker before closing the popup widget."""
+        if self._ticker.isActive():
+            self._ticker.stop()
+        super().closeEvent(event)

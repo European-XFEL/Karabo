@@ -25,8 +25,9 @@ from traits.api import Instance
 
 from karabo.common.scenemodel.api import (
     ArrowPolygonModel, DeviceSceneLinkModel, ImageRendererModel,
-    InstanceStatusModel, LineModel, RectangleModel, SceneLinkModel,
-    SceneTargetWindow, StickerModel, WebLinkModel, create_base64image)
+    InstanceStatusModel, LineModel, PopupButtonModel, RectangleModel,
+    SceneLinkModel, SceneTargetWindow, StickerModel, WebLinkModel,
+    create_base64image)
 from karabogui import messagebox
 from karabogui.dialogs.api import (
     DeviceCapabilityDialog, SceneLinkDialog, TextDialog, TopologyDeviceDialog,
@@ -276,6 +277,18 @@ class StickerTool(BaseSceneTool):
         mouse_pos = event.pos()
         model = StickerModel(x=mouse_pos.x(), y=mouse_pos.y(),
                              width=100, height=100)
+        scene_view.add_models(model, initialize=True)
+        scene_view.set_tool(None)
+
+
+class PopupButtonTool(StickerTool):
+    def mouse_up(self, scene_view, event):
+        """A callback which is fired whenever the user ends a mouse click
+        in the SceneView.
+        """
+        mouse_pos = event.pos()
+        model = PopupButtonModel(x=mouse_pos.x(), y=mouse_pos.y(),
+                                 popup_width=160, popup_height=80)
         scene_view.add_models(model, initialize=True)
         scene_view.set_tool(None)
 

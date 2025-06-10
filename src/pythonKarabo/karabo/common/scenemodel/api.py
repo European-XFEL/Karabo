@@ -69,8 +69,8 @@ from .widgets.simple import (
     EditableListElementModel, EditableListModel, EditableRegexListModel,
     EditableRegexModel, EditableSpinBoxModel, GlobalAlarmModel,
     HexadecimalModel, HistoricTextModel, InstanceStatusModel, IntLineEditModel,
-    LabelModel, LampModel, LineEditModel, StickerModel, TickSliderModel,
-    WidgetNodeModel)
+    LabelModel, LampModel, LineEditModel, PopupButtonModel, StickerModel,
+    TickSliderModel, WidgetNodeModel)
 from .widgets.statefulicon import StatefulIconWidgetModel
 from .widgets.tools import (
     ImageRendererModel, create_base64image, extract_base64image)

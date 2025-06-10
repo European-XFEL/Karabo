@@ -15,6 +15,7 @@
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
 # flake8: noqa
+from .buttons import PopupButtonWidget
 from .container import ControllerContainer
 from .grid import GridView
 from .label import LabelWidget
