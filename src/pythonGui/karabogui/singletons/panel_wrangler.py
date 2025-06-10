@@ -391,6 +391,8 @@ class PanelWrangler(QObject):
             return
         panel = self._project_item_panels.get(model)
         if panel is None:
+            model.assure_svg_data()
+
             panel = ScenePanel(model, self.connected_to_server)
             # Set the tool color according to the defined indicators!
             karabo_topic = get_config()['broker_topic']

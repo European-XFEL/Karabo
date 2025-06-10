@@ -21,6 +21,7 @@ from tempfile import TemporaryDirectory
 from unittest import TestCase
 from uuid import uuid4
 
+import pytest
 from traits.api import Bool, Enum, Float, HasTraits, Int, Range, String
 
 from karabo.common.api import set_modified_flag, walk_traits_object
@@ -28,7 +29,8 @@ from karabo.common.project.api import (
     PROJECT_DB_TYPE_PROJECT, BaseProjectObjectModel, DeviceConfigurationModel,
     DeviceInstanceModel, DeviceServerModel, MacroModel, MemCacheWrapper,
     ProjectDBCache, ProjectModel, read_lazy_object, recursive_save_object)
-from karabo.common.scenemodel.api import SceneModel
+from karabo.common.scenemodel.api import (
+    SceneModel, SceneWriterException, set_scene_reader)
 from karabo.native import Hash, encodeXML
 
 from ..api import (
@@ -104,10 +106,20 @@ def _project_storage():
         yield ProjectDBCache(dirpath)
 
 
+@contextmanager
+def _lazy_reading():
+    try:
+        set_scene_reader(lazy=True)
+        yield
+    finally:
+        set_scene_reader(lazy=False)
+
+
 def _write_project(project, storage):
     set_modified_flag(project, value=True)  # Ensure everything gets saved
     wrapped = _StorageWrapper(storage)
     recursive_save_object(project, wrapped, TEST_DOMAIN)
+
 
 # -----------------------------------------------------------------------------
 
@@ -268,3 +280,47 @@ class ProjectTest(TestCase):
         # - The `modified` flag is False on all objects
         # - The `initialized` flag is True
         walk_traits_object(rt_project, _loaded_checker)
+
+    def test_project_lazy_scene(self):
+        old_project = _get_old_project()
+        project = convert_old_project(old_project)
+
+        def visitor(obj):
+            if isinstance(obj, SceneModel):
+                obj.assure_svg_data()
+
+        def _loaded_checker(model):
+            if isinstance(model, BaseProjectObjectModel):
+                assert model.initialized
+                assert not model.modified
+
+        with _lazy_reading():
+            with _project_storage() as storage:
+                _write_project(project, storage)
+                rt_project = ProjectModel(uuid=project.uuid, is_trashed=True)
+                rt_project = read_lazy_object(
+                    TEST_DOMAIN, project.uuid, storage,
+                    read_project_model, existing=rt_project)
+
+            # all are initialized but not modified
+            walk_traits_object(rt_project, _loaded_checker)
+
+            # Check, we are not equal
+            with pytest.raises(AssertionError):
+                _compare_projects(project, rt_project)
+
+            with _project_storage() as storage:
+                with pytest.raises(SceneWriterException):
+                    _write_project(rt_project, storage)
+
+            # Write project will set all modified to `True`, here we set back
+            set_modified_flag(rt_project, value=False)
+
+            # build all scene children
+            walk_traits_object(rt_project, visitor)
+            walk_traits_object(rt_project, _loaded_checker)
+            # Now we can compare and write
+            _compare_projects(project, rt_project)
+
+            with _project_storage() as storage:
+                _write_project(rt_project, storage)

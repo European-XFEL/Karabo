@@ -30,7 +30,8 @@ from .generic_scenes import (
 from .layouts import (
     BoxLayoutModel, FixedLayoutChildData, FixedLayoutModel,
     GridLayoutChildData, GridLayoutModel)
-from .model import SceneModel, UnknownWidgetDataModel, UnknownXMLDataModel
+from .model import (
+    SceneModel, UnknownWidgetDataModel, UnknownXMLDataModel, set_scene_reader)
 from .modelio import read_scene, write_scene, write_single_model
 from .registry import register_scene_reader, register_scene_writer
 from .shapes import ArrowPolygonModel, LineModel, PathModel, RectangleModel

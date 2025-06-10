@@ -108,6 +108,7 @@ def write_project_model(model):
     root_metadata['item_type'] = item_type
     return _wrap_child_element_xml(child_xml, root_metadata)
 
+
 # -----------------------------------------------------------------------------
 
 
@@ -131,6 +132,7 @@ def _wrap_child_element_xml(child_xml, root_metadata):
 
     index = root_xml.rfind('</xml>')
     return root_xml[:index] + child_xml + root_xml[index:]
+
 
 # -----------------------------------------------------------------------------
 
@@ -238,6 +240,7 @@ def _macro_reader(io_obj, existing, metadata):
 def _project_reader(io_obj, existing, metadata):
     """ A reader for projects
     """
+
     def _get_items(hsh, type_name):
         klass = _PROJECT_ITEM_TYPES[type_name]
         entries = hsh.get(type_name, [])
@@ -270,10 +273,12 @@ def _scene_reader(io_obj, existing, metadata):
     existing.extra_attributes = scene.extra_attributes.copy()
     existing.width = scene.width
     existing.height = scene.height
-    existing.children[:] = scene.children[:]
-    existing.initialized = True  # Do this last to avoid triggering `modified`
+    existing.children = scene.children[:]
+    existing.svg_data = scene.svg_data
+    existing.initialized = True
 
     return existing
+
 
 # -----------------------------------------------------------------------------
 
