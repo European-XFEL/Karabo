@@ -278,3 +278,14 @@ def test_display_float_alarm_models():
     assert read_model.warnLow is Undefined
     assert read_model.warnHigh is Undefined
     assert read_model.alarmHigh == 8
+
+
+def test_popup_button_model():
+    traits = _geometry_traits()
+    traits["text"] = "Karabo Popup Sticker"
+    traits["label"] = "Title"
+    model = api.PopupButtonModel(**traits)
+    read_model = single_model_round_trip(model)
+    _assert_geometry_traits(read_model)
+    assert read_model.text == "Karabo Popup Sticker"
+    assert read_model.label == "Title"

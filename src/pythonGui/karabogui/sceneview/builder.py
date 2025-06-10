@@ -24,15 +24,15 @@ from .layout.api import BoxLayout, GridLayout, GroupLayout
 from .shapes import ArrowShape, LineShape, PathShape, RectangleShape
 from .widget.api import (
     ControllerContainer, DeviceSceneLinkWidget, ImageRendererWidget,
-    InstanceStatusWidget, LabelWidget, SceneLinkWidget, StickerWidget,
-    UnknownSvgWidget, UnknownWidget, WebLinkWidget)
+    InstanceStatusWidget, LabelWidget, PopupButtonWidget, SceneLinkWidget,
+    StickerWidget, UnknownSvgWidget, UnknownWidget, WebLinkWidget)
 
 _LAYOUT_CLASSES = (BoxLayout, GridLayout, GroupLayout)
 _SHAPE_CLASSES = (ArrowShape, LineShape, PathShape, RectangleShape)
 _WIDGET_CLASSES = (ControllerContainer, DeviceSceneLinkWidget, LabelWidget,
-                   SceneLinkWidget, StickerWidget, WebLinkWidget,
-                   UnknownSvgWidget, UnknownWidget, ImageRendererWidget,
-                   InstanceStatusWidget)
+                   SceneLinkWidget, StickerWidget, PopupButtonWidget,
+                   WebLinkWidget, UnknownSvgWidget, UnknownWidget,
+                   ImageRendererWidget, InstanceStatusWidget)
 
 _SCENE_OBJ_FACTORIES = {
     models.BoxLayoutModel: lambda m, p: BoxLayout(
@@ -43,6 +43,7 @@ _SCENE_OBJ_FACTORIES = {
     models.ArrowPolygonModel: lambda m, p: ArrowShape(model=m),
     models.LineModel: lambda m, p: LineShape(model=m),
     models.PathModel: lambda m, p: PathShape(model=m),
+    models.PopupButtonModel: PopupButtonWidget,
     models.RectangleModel: lambda m, p: RectangleShape(model=m),
     models.SceneLinkModel: SceneLinkWidget,
     models.StickerModel: StickerWidget,

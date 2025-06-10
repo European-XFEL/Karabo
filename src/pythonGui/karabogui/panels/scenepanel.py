@@ -39,12 +39,12 @@ from karabogui.sceneview.const import QT_CURSORS, SCENE_BORDER_WIDTH
 from karabogui.sceneview.tools.api import (
     ArrowSceneTool, BoxHSceneAction, BoxVSceneAction, CreateToolAction,
     DeviceSceneLinkTool, GroupEntireSceneAction, GroupSceneAction,
-    ImageRendererTool, InstanceStatusTool, LineSceneTool, RectangleSceneTool,
-    SceneAlignAction, SceneBringToFrontAction, SceneCopyAction, SceneCutAction,
-    SceneDeleteAction, SceneLinkTool, SceneMoveAction, ScenePasteAction,
-    ScenePasteReplaceAction, SceneSelectAllAction, SceneSelectionTool,
-    SceneSendToBackAction, StickerTool, TextSceneTool, UngroupSceneAction,
-    WebLinkTool)
+    ImageRendererTool, InstanceStatusTool, LineSceneTool, PopupButtonTool,
+    RectangleSceneTool, SceneAlignAction, SceneBringToFrontAction,
+    SceneCopyAction, SceneCutAction, SceneDeleteAction, SceneLinkTool,
+    SceneMoveAction, ScenePasteAction, ScenePasteReplaceAction,
+    SceneSelectAllAction, SceneSelectionTool, SceneSendToBackAction,
+    StickerTool, TextSceneTool, UngroupSceneAction, WebLinkTool)
 from karabogui.singletons.api import get_config, get_network
 from karabogui.util import getSaveFileName, move_to_cursor
 from karabogui.widgets.toolbar import ToolBar
@@ -476,6 +476,14 @@ class ScenePanel(BasePanelWidget):
                                         text="Add a sticker widget",
                                         tooltip="Add sticker to scene",
                                         checkable=True))
+
+        actions.append(CreateToolAction(tool_factory=PopupButtonTool,
+                                        icon=icons.popup_sticker,
+                                        text="Add a popup sticker widget",
+                                        tooltip="Add a popup sticker widget "
+                                                "to scene",
+                                        checkable=True))
+
         actions.append(CreateToolAction(tool_factory=ImageRendererTool,
                                         icon=icons.image,
                                         text="Add an image to the scene",

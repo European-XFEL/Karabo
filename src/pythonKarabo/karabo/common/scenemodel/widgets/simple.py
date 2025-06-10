@@ -202,6 +202,18 @@ class InstanceStatusModel(BaseWidgetObjectData):
     """A model to display the topology status of a device on the scene"""
 
 
+class PopupButtonModel(BaseWidgetObjectData):
+    """A mode for a popup button widget"""
+    # The text to be displayed in popup
+    text = String
+    # The text to displayed on the button
+    label = String
+
+    # The width of the tooltip in pixels
+    popup_width = CInt
+    popup_height = CInt
+
+
 def _read_geometry_data(element):
     """Read the geometry information."""
     return get_numbers(("x", "y", "width", "height"), element)
@@ -389,6 +401,26 @@ def __sticker_widget_writer(model, parent):
     if model.background != "":
         element.set(NS_KARABO + "background", model.background)
 
+    return element
+
+
+@register_scene_reader("PopupButtonWidget")
+def __popup_sticker_widget_reader(element):
+    traits = _read_geometry_data(element)
+    traits["text"] = element.get(NS_KARABO + "text", "")
+    traits["label"] = element.get(NS_KARABO + "label", "")
+    traits["popup_width"] = int(element.get("popup_width", 200))
+    traits["popup_height"] = int(element.get("popup_height", 100))
+    return PopupButtonModel(**traits)
+
+
+@register_scene_writer(PopupButtonModel)
+def __popup_sticker_widget_writer(model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    _write_class_and_geometry(model, element, "PopupButtonWidget")
+    for name in ("text", "label"):
+        element.set(NS_KARABO + name, getattr(model, name))
+    set_numbers(("popup_width", "popup_height"), model, element)
     return element
 
 

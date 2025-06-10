@@ -18,6 +18,7 @@
 from .hints import (
     DoubleSpinBox, ElidingLabel, FrameWidget, Label, LineEdit, SpinBox,
     SvgWidget)
+from .popup import TextPopupWidget
 from .range_slider import RangeSlider
 from .scintilla_editor import CodeBook, CodeEditor
 from .toolbar import ToolBar
