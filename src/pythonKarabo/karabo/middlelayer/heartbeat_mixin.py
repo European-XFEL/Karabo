@@ -120,27 +120,32 @@ class HeartBeatMixin(Configurable):
             if (actual_time - Timestamp.fromHashAttributes(info) >
                     self.numBeats * info["heartbeatInterval"]):
                 instances.append((instanceId, info))
+
+        gone_instances = []
         for instanceId, info in instances:
-            self._remove_instance(instanceId, info)
-        await self._topology_changed(new=[], gone=instances)
+            gone_instances.extend(self._remove_instance(instanceId, info))
+        # Make sure that devices are erased in the beginning
+        gone_instances.extend(instances)
+        await self._topology_changed(new=[], gone=gone_instances)
 
     def _update_instance_info(self, instanceId, info):
         """Update the system topology with the instanceInfo from `instance`
 
         This method adds the timestamp information to the `info`
         """
-        instance_type = info["type"]
         info.update(Timestamp().toDict())
-        ret = Hash(instance_type, Hash())
-        ret[instance_type][instanceId] = Hash()
-        ret[instance_type][instanceId, ...] = dict(info.items())
-        self.systemTopology.merge(ret)
+        h = Hash()
+        h.setElement(
+            f"{info['type']}.{instanceId}", Hash(), dict(info.items()))
+        self.systemTopology.merge(h)
 
-    def _remove_server_children(self, instanceId, info):
+    def _remove_server_children(
+            self, instanceId, info) -> list[tuple[str, dict]]:
         """Cleanup the device children from the server
 
         Returns: devices if they were still in the topology
         """
+        devices = []
         if info["type"] == "server":
             devices = [(k, a) for k, v, a in
                        self.systemTopology["device"].iterall()
@@ -148,7 +153,7 @@ class HeartBeatMixin(Configurable):
             for instanceId, _ in devices:
                 self.systemTopology["device"].pop(instanceId, None)
 
-            return devices if devices else None
+        return devices
 
     async def _add_instance(self, instanceId, info):
         """An instance is freshly added to the topology
@@ -163,10 +168,14 @@ class HeartBeatMixin(Configurable):
         if devices:
             await self._topology_changed(new=[], gone=devices)
 
-    def _remove_instance(self, instanceId, info):
-        """An instance is removed from the topology"""
-        self._remove_server_children(instanceId, info)
+    def _remove_instance(self, instanceId, info) -> list[tuple[str, dict]]:
+        """An instance is removed from the topology
+
+        Returns a list of tuples (dict, attrs)
+        """
+        devices = self._remove_server_children(instanceId, info)
         self.systemTopology[info["type"]].pop(instanceId, None)
+        return devices
 
     async def _topology_changed(self, new, gone):
         """Channel the topology tracking information
