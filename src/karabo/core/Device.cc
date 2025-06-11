@@ -922,7 +922,7 @@ namespace karabo {
             // Do that on the event loop since any blocking should not influence the success of the instantiation
             // procedure, i.e. the device server slot that starts the device should reply immediately, irrespective
             // of what initialisation does. We wrap the call to treat exceptions.
-            net::EventLoop::getIOService().post(util::bind_weak(&Device::wrapRegisteredInit, this));
+            boost::asio::post(net::EventLoop::getIOService(), util::bind_weak(&Device::wrapRegisteredInit, this));
         }
 
 

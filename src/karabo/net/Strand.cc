@@ -96,7 +96,7 @@ namespace karabo {
                     };
                     // Do not block the destructor and also ensure that tasks run in a thread of the given io_context
                     // (destructor might be called in a 'foreign' thread)
-                    m_ioContext->post(runTasks);
+                    boost::asio::post(*m_ioContext, runTasks);
                 }
             }
         }
@@ -134,7 +134,7 @@ namespace karabo {
                 // The difference would only be that in the latter 'run' (and thus the tasks to be executed
                 // sequentially) would be executed even if all other shared pointers to it are reset between
                 // this post and when m_ioContext actually invokes it.
-                m_ioContext->post(karabo::util::bind_weak(&Strand::run, this));
+                boost::asio::post(*m_ioContext, karabo::util::bind_weak(&Strand::run, this));
             }
         }
 
@@ -166,7 +166,7 @@ namespace karabo {
                 }
             }
             // Repost to eventually run next task - see comment in startRunningIfNeeded about use of bind_weak.
-            m_ioContext->post(karabo::util::bind_weak(&Strand::run, this));
+            boost::asio::post(*m_ioContext, karabo::util::bind_weak(&Strand::run, this));
         }
 
 

@@ -101,7 +101,8 @@ namespace karabo {
 
 
            private:
-            void resolveHandler(const ErrorCode&, boost::asio::ip::tcp::resolver::iterator, const ConnectionHandler&);
+            void resolveHandler(const ErrorCode&, const boost::asio::ip::tcp::resolver::results_type&,
+                                const ConnectionHandler&);
             ChannelPointer startServer();
             ChannelPointer startClient();
             void startServer(const ConnectionHandler&);

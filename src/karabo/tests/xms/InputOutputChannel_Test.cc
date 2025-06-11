@@ -251,7 +251,7 @@ void InputOutputChannel_Test::testManyToOne() {
 
     // Start to send data from all outputs in parallel (we added enough threads in the beginning!).
     for (unsigned int i = 0; i < numOutputs; ++i) {
-        karabo::net::EventLoop::getIOService().post(std::bind(sending, i));
+        boost::asio::post(karabo::net::EventLoop::getIOService(), std::bind(sending, i));
     }
 
     // Wait for endOfStream arrival

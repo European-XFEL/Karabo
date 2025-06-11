@@ -278,8 +278,8 @@ void InputOutputChannel_LongTest::testDisconnectWhileSending_impl(const std::str
     //
     // Actually start sending data and parallel disconnections:
     //
-    karabo::net::EventLoop::getIOService().post(send);
-    karabo::net::EventLoop::getIOService().post(disReconnect);
+    boost::asio::post(karabo::net::EventLoop::getIOService(), send);
+    boost::asio::post(karabo::net::EventLoop::getIOService(), disReconnect);
 
     //
     // Take care that both posted methods are done, so they cannot access local variables anymore

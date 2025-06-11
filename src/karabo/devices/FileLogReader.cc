@@ -421,8 +421,8 @@ namespace karabo {
                                                              const std::string& timepoint) {
             // Go directly to event loop to avoid blocking the slot
             AsyncReply aReply(this);
-            karabo::net::EventLoop::getIOService().post(
-                  bind_weak(&FileLogReader::getConfigurationFromPast, this, deviceId, timepoint, aReply));
+            boost::asio::post(karabo::net::EventLoop::getIOService(),
+                              bind_weak(&FileLogReader::getConfigurationFromPast, this, deviceId, timepoint, aReply));
         }
 
 

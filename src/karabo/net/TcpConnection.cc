@@ -233,11 +233,11 @@ namespace karabo {
         Channel::Pointer TcpConnection::startClient() {
             Channel::Pointer channel;
             try {
-                ip::tcp::resolver::query query(ip::tcp::v4(), m_hostname, karabo::data::toString(m_port));
-                ip::tcp::resolver::iterator endpoint_iterator = m_resolver.resolve(query);
+                ip::tcp::resolver::results_type endpoints =
+                      m_resolver.resolve(ip::tcp::v4(), m_hostname, karabo::data::toString(m_port));
                 channel = this->createChannel();
                 TcpChannel::Pointer tcpChannel = std::static_pointer_cast<TcpChannel>(channel);
-                tcpChannel->socketConnect(*endpoint_iterator);
+                tcpChannel->socketConnect(endpoints);
             } catch (...) {
                 KARABO_RETHROW
             }
@@ -301,17 +301,17 @@ namespace karabo {
 
         void TcpConnection::startClient(const ConnectionHandler& handler) {
             try {
-                ip::tcp::resolver::query query(ip::tcp::v4(), m_hostname, karabo::data::toString(m_port));
                 m_resolver.async_resolve(
-                      query, bind_weak(&TcpConnection::resolveHandler, this, boost::asio::placeholders::error,
-                                       boost::asio::placeholders::iterator, handler));
+                      ip::tcp::v4(), m_hostname, karabo::data::toString(m_port),
+                      bind_weak(&TcpConnection::resolveHandler, this, boost::asio::placeholders::error,
+                                boost::asio::placeholders::results, handler));
             } catch (...) {
                 KARABO_RETHROW
             }
         }
 
 
-        void TcpConnection::resolveHandler(const ErrorCode& e, ip::tcp::resolver::iterator it,
+        void TcpConnection::resolveHandler(const ErrorCode& e, const ip::tcp::resolver::results_type& endpoints,
                                            const ConnectionHandler& handler) {
             try {
                 if (!e) {
@@ -319,10 +319,8 @@ namespace karabo {
                     Channel::Pointer channel = createChannel();
                     // ... cast it to the TcpChannel
                     TcpChannel::Pointer tcpChannel = std::static_pointer_cast<TcpChannel>(channel);
-                    // ... get peer endpoint ...
-                    const boost::asio::ip::tcp::endpoint& peerEndpoint = *it;
                     // ... and let the tcpChannel connect its socket asynchronously to the endpoint
-                    tcpChannel->asyncSocketConnect(peerEndpoint,
+                    tcpChannel->asyncSocketConnect(endpoints,
                                                    std::bind(handler, boost::asio::placeholders::error, channel));
                 } else {
                     Channel::Pointer c;

@@ -261,7 +261,7 @@ namespace karabo {
                 // That's the reason for posting the reply to the event loop instead of sending it directly. The
                 // remaining calls to ctxt->aReply.error in the processing of the slot can be sent directly.
                 std::weak_ptr<karabo::xms::SignalSlotable> weakThis(weak_from_this());
-                EventLoop::getIOService().post([weakThis, ctxt, errMsg]() {
+                boost::asio::post(EventLoop::getIOService(), [weakThis, ctxt, errMsg]() {
                     // Only sends a reply if the InfluxLogReader instance is still alive - lock() call is successful.
                     std::shared_ptr<karabo::xms::SignalSlotable> ptr = weakThis.lock();
                     if (ptr) {
@@ -532,7 +532,7 @@ namespace karabo {
             } catch (const std::exception& e) {
                 const std::string errMsg = onException("Error querying last login before time");
                 std::weak_ptr<karabo::xms::SignalSlotable> weakThis(weak_from_this());
-                EventLoop::getIOService().post([weakThis, ctxt, errMsg]() {
+                boost::asio::post(EventLoop::getIOService(), [weakThis, ctxt, errMsg]() {
                     // Only sends a reply if the InfluxLogReader instance is still alive - lock() call is successful.
                     std::shared_ptr<karabo::xms::SignalSlotable> ptr = weakThis.lock();
                     if (ptr) {
@@ -1178,7 +1178,7 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_ERROR << errMsg << ": " << details;
                 // In the thread where AsyncReply was created we must not use it, so post:
                 std::weak_ptr<karabo::xms::SignalSlotable> weakThis(weak_from_this());
-                EventLoop::getIOService().post([weakThis, errMsg, details, aReply]() {
+                boost::asio::post(EventLoop::getIOService(), [weakThis, errMsg, details, aReply]() {
                     std::shared_ptr<karabo::xms::SignalSlotable> ptr(weakThis.lock());
                     if (ptr) {                         // Cannot use AsyncReply if its SignalSlotable is dying/dead
                         aReply.error(errMsg, details); // 2.13.X: aReply.error(errMsg + ": " + details);

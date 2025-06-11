@@ -106,7 +106,8 @@ void MQTcpNetworking::serverReadHashHashHandler(const karabo::net::ErrorCode& ec
         KARABO_LOG_FRAMEWORK_DEBUG << "\nSERVER:  CLIENT sent START command with counter = " << m_numberOfMessages;
         m_serverCount = 0;
         m_ts = std::chrono::steady_clock::now();
-        karabo::net::EventLoop::getIOService().post(std::bind(&MQTcpNetworking::serverPublish, this, channel));
+        boost::asio::post(karabo::net::EventLoop::getIOService(),
+                          std::bind(&MQTcpNetworking::serverPublish, this, channel));
     } else if (body.has("STOP")) {
         KARABO_LOG_FRAMEWORK_DEBUG << "\nSERVER:  CLIENT requests exiting together!\n";
     }
@@ -117,7 +118,8 @@ void MQTcpNetworking::serverPublish(const karabo::net::Channel::Pointer& channel
     channel->writeAsync(m_header, m_data);
     m_serverCount++;
     if (m_serverCount < m_numberOfMessages)
-        karabo::net::EventLoop::getIOService().post(std::bind(&MQTcpNetworking::serverPublish, this, channel));
+        boost::asio::post(karabo::net::EventLoop::getIOService(),
+                          std::bind(&MQTcpNetworking::serverPublish, this, channel));
     else {
         auto t = std::chrono::steady_clock::now();
         auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(t - m_ts);

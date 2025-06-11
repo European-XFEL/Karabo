@@ -58,7 +58,7 @@ void Broker_Test::setUp() {
     auto fut = prom.get_future();
     m_thread = std::make_shared<std::jthread>([&prom]() {
         // postpone promise setting until EventLoop is activated
-        EventLoop::getIOService().post([&prom]() { prom.set_value(); });
+        boost::asio::post(EventLoop::getIOService(), [&prom]() { prom.set_value(); });
         EventLoop::work();
     });
     fut.get(); // block here until promise is set

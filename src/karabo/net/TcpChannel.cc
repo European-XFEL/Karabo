@@ -1458,7 +1458,7 @@ namespace karabo {
 
             if (!m_writeInProgress) {
                 m_writeInProgress = true;
-                EventLoop::getIOService().post(bind_weak(&TcpChannel::doWrite, this));
+                boost::asio::post(EventLoop::getIOService(), bind_weak(&TcpChannel::doWrite, this));
             }
         }
 
@@ -1686,10 +1686,10 @@ namespace karabo {
             }
         }
 
-        void TcpChannel::socketConnect(const boost::asio::ip::tcp::endpoint& endpoint) {
+        void TcpChannel::socketConnect(const boost::asio::ip::tcp::resolver::results_type& endpoints) {
             // part of sync start of connection for client
             std::lock_guard<std::mutex> lock(m_socketMutex);
-            m_socket.connect(endpoint);
+            boost::asio::connect(m_socket, endpoints);
             applySocketKeepAlive();
         }
 

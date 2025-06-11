@@ -490,7 +490,8 @@ namespace karabo {
             // Just register an asynchronous reply and put on the "stack".
             const SignalSlotable::AsyncReply reply(this);
 
-            EventLoop::getIOService().post(util::bind_weak(&DeviceServer::startDevice, this, configuration, reply));
+            boost::asio::post(EventLoop::getIOService(),
+                              util::bind_weak(&DeviceServer::startDevice, this, configuration, reply));
         }
 
 

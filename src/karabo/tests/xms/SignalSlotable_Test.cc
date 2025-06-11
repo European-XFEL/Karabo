@@ -126,7 +126,7 @@ class SignalSlotDemo : public karabo::xms::SignalSlotable {
         // We go via the event loop: An AsyncReply answering in the same thread where it was created might add an extra
         // default reply at the very end because the protection not to place a default reply is released.
         // That is likely the reason for failure in https://git.xfel.eu/Karabo/Framework/-/jobs/43518
-        karabo::net::EventLoop::getIOService().post([aReply]() {
+        boost::asio::post(karabo::net::EventLoop::getIOService(), [aReply]() {
             // A little imperfect, but OK for this test: We capture indirectly a bare `this`, so in principle this
             // can end up as a dangling pointer on the event loop...
             // But the test below ensures (synchronous waiting for reply) that this method has been processed before
@@ -1494,7 +1494,7 @@ void SignalSlotable_Test::testUuid() {
     karabo::net::EventLoop::addThread(numParallel);
 
     for (size_t i = 0; i < numParallel; ++i) {
-        karabo::net::EventLoop::getIOService().post(std::bind(generate, i));
+        boost::asio::post(karabo::net::EventLoop::getIOService(), std::bind(generate, i));
     }
     // Wait until all are done
     for (size_t i = 0; i < numParallel; ++i) {
