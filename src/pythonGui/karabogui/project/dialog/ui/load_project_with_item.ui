@@ -64,12 +64,12 @@
         <string>&amp;Item</string>
        </property>
        <property name="buddy">
-        <cstring>text_device_id</cstring>
+        <cstring>text_name_part</cstring>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="text_device_id">
+      <widget class="QLineEdit" name="text_name_part">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
          <horstretch>1</horstretch>

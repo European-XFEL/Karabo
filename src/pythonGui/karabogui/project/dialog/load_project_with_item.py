@@ -33,7 +33,7 @@ from karabogui.util import SignalBlocker, get_spin_widget, utc_to_local
 from .utils import get_dialog_ui
 
 # Minimum size for a device id substring to be considered searchable.
-MIN_DEVICE_ID_SIZE = 5
+MIN_NAME_SIZE = 5
 
 
 class LoadProjectWithDialog(QDialog):
@@ -43,8 +43,8 @@ class LoadProjectWithDialog(QDialog):
         uic.loadUi(get_dialog_ui("load_project_with_item.ui"), self)
         self.setWindowTitle("Find and Load Project")
         self.domain = domain
-        self.text_device_id.setPlaceholderText(
-            f"Enter name part (at least {MIN_DEVICE_ID_SIZE} "
+        self.text_name_part.setPlaceholderText(
+            f"Enter name part (at least {MIN_NAME_SIZE} "
             "characters)")
         self.button_box.button(QDialogButtonBox.Ok).setText("Load")
         flags = Qt.WindowCloseButtonHint
@@ -65,11 +65,8 @@ class LoadProjectWithDialog(QDialog):
         self.setup_table()
         self.connect_widgets_events()
 
-        self.search_domain = ""  # domain used by last project search
-        self.search_device_id = ""  # device_id used by last project search
         self.loading_domains = False
         self.finding_projects = False
-
         self.db_conn = get_db_conn()
         self.db_conn.ignore_local_cache = True
         self.load_domains()
@@ -156,10 +153,11 @@ class LoadProjectWithDialog(QDialog):
 
     def connect_widgets_events(self):
         self.button_find_projects.clicked.connect(self.find_projects)
-        self.combo_domain.currentIndexChanged.connect(self.on_domain_changed)
+        self.combo_domain.currentIndexChanged.connect(self.refresh_search)
 
-        self.text_device_id.textEdited.connect(self.update_dialog_state)
-        self.text_device_id.returnPressed.connect(self.on_device_id_enter)
+        self.text_name_part.textEdited.connect(self.update_dialog_state)
+        self.text_name_part.returnPressed.connect(self.refresh_search)
+        self.combo_item_type.currentIndexChanged.connect(self.refresh_search)
 
         # Double-clicking a project with a device should load it.
         self.table_projects.doubleClicked.connect(self.accept)
@@ -170,16 +168,8 @@ class LoadProjectWithDialog(QDialog):
         self.button_box.rejected.connect(self.reject)
 
     @Slot()
-    def on_domain_changed(self):
-        curr_device = self.text_device_id.text()
-        if curr_device and self.search_device_id == curr_device:
-            # The user has changed the domain but kept the last device id
-            # searched. Refresh the search automatically.
-            self.find_projects()
-
-    @Slot()
-    def on_device_id_enter(self):
-        if len(self.text_device_id.text()) >= MIN_DEVICE_ID_SIZE:
+    def refresh_search(self):
+        if len(self.text_name_part.text()) >= MIN_NAME_SIZE:
             self.find_projects()
 
     # -----------------------------------------------------------------------
@@ -194,17 +184,18 @@ class LoadProjectWithDialog(QDialog):
         self.finding_projects = True
         self.clear_table()
         self.update_dialog_state()
-        self.search_domain = self.combo_domain.currentText()
-        self.search_device_id = self.text_device_id.text()
+        search_domain = self.combo_domain.currentText()
+        name_part = self.text_name_part.text()
+
         if self.combo_item_type.currentText() == "Device":
             self.db_conn.get_projects_with_device(
-                self.search_domain, self.search_device_id)
+                search_domain, name_part)
         elif self.combo_item_type.currentText() == "Macro":
             self.db_conn.get_projects_with_macro(
-                self.search_domain, self.search_device_id)
+                search_domain, name_part)
         elif self.combo_item_type.currentText() == "Server":
             self.db_conn.get_projects_with_server(
-                self.search_domain, self.search_device_id)
+                search_domain, name_part)
 
     # -----------------------------------------------------------------------
     # UI Setup and Updating
@@ -252,27 +243,29 @@ class LoadProjectWithDialog(QDialog):
 
     def update_dialog_state(self):
         loading_data = self.loading_domains or self.finding_projects
+        name_part = self.text_name_part.text()
 
         self.combo_domain.setEnabled(not loading_data)
-        enabled = (not loading_data and len(
-            self.text_device_id.text()) >= MIN_DEVICE_ID_SIZE)
+        self.combo_item_type.setEnabled(not loading_data)
+        enabled = (not loading_data and len(name_part) >= MIN_NAME_SIZE)
         self.button_find_projects.setEnabled(enabled)
         self.button_box.button(QDialogButtonBox.Ok).setEnabled(
             len(self.table_projects.selectedItems()) > 0)
 
-        if self.search_domain and self.search_device_id and not loading_data:
+        search_domain = self.combo_domain.currentText()
+        if search_domain and name_part and not loading_data:
             if self.table_projects.rowCount() == 0:
                 self.label_status.setText(
-                    f"No project with {self.search_device_id} in "
-                    f"{self.search_domain}")
+                    f"No project with {name_part} in "
+                    f"{search_domain}")
             elif self.table_projects.rowCount() == 1:
                 self.label_status.setText(
-                    f"1 project with {self.search_device_id} in "
-                    f"{self.search_domain}")
+                    f"1 project with {name_part} in "
+                    f"{search_domain}")
             else:
                 self.label_status.setText(
                     f"{self.table_projects.rowCount()} projects with "
-                    f"{self.search_device_id} in {self.search_domain}")
+                    f"{name_part} in {search_domain}")
         elif self.loading_domains:
             self.label_status.setText("Loading domains ...")
         elif self.finding_projects:
