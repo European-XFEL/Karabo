@@ -52,6 +52,7 @@ using namespace karabo;
 using data::Configurator;
 using data::Hash;
 using data::INT32_ELEMENT;
+using data::NDArray;
 using data::Schema;
 using data::STRING_ELEMENT;
 using data::VECTOR_INT32_ELEMENT;
@@ -599,7 +600,7 @@ void InputOutputChannel_Test::testInputHandler() {
     output->write(Hash("data", 42));
     output->asyncUpdate();
 
-    // Wait until inputHandler got the data and stored it - take care that teh expected data is in it
+    // Wait until inputHandler got the data and stored it - take care that the expected data is in it
     timeout = 1000;
     while (timeout > 0) {
         if (hashRead) break;
@@ -608,6 +609,22 @@ void InputOutputChannel_Test::testInputHandler() {
     }
     CPPUNIT_ASSERT(hashRead->has("data"));
     CPPUNIT_ASSERT_EQUAL(42, hashRead->get<int>("data"));
+
+    // Hijack test to check sending an empty NDArray (caused serialisation trouble in the past)
+    hashRead.reset();
+    const short noData[] = {};
+    output->write(Hash("emptyArray", NDArray(noData, sizeof(noData) / sizeof(noData[0]))));
+    output->asyncUpdate();
+
+    timeout = 1000;
+    while (timeout > 0) {
+        if (hashRead) break;
+        timeout -= 2;
+        std::this_thread::sleep_for(2ms);
+    }
+    CPPUNIT_ASSERT(hashRead->has("emptyArray"));
+    CPPUNIT_ASSERT_EQUAL(0ul, hashRead->get<NDArray>("emptyArray").size());
+    CPPUNIT_ASSERT_EQUAL(data::Types::INT16, hashRead->get<NDArray>("emptyArray").getType());
 }
 
 

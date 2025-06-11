@@ -160,13 +160,6 @@ namespace karabo {
         const auto& v = data.get<std::vector<long long>>("data");
         unsigned int bytes = v.size() * sizeof(long long);
         set<unsigned int>("dataItemSize", bytes);
-        const auto& emptyArr = data.get<NDArray>("emptyArray");
-        if (emptyArr.size() != 0) {
-            std::string status = get<std::string>("status");
-            if (!status.empty()) status += "\n";
-            set("status",
-                status += "dataId " + toString(data.get<int>("dataId")) += " has size " + toString(emptyArr.size()));
-        }
 
         // Sum total number of data
         set("nTotalData", get<unsigned int>("nTotalData") + 1);

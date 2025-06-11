@@ -116,10 +116,12 @@ class TestPipelineProcessing(BoundDeviceTestCase):
                 state2 = self.dc.get("pipeTestReceiver", "state")
             # A RuntimeError will be raised up to device init
             except RuntimeError:
-                sleep(self._waitTime)
-                if nTries > self._retries:
-                    raise RuntimeError("Waiting for device to init timed out")
-                nTries += 1
+                pass
+
+            sleep(self._waitTime)
+            if nTries > self._retries:
+                raise RuntimeError("Waiting for device to init timed out")
+            nTries += 1
 
         # tests are run in sequence as sub tests
         # device server thus is only instantiated once

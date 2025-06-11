@@ -1461,12 +1461,14 @@ namespace karabo {
 
         void OutputChannel::write(const karabo::data::Hash& data, const OutputChannel::MetaData& metaData) {
             if (!m_dataSchema.empty() && (!m_dataSchemaValidated || m_validateAlways)) {
+                // These rules are tested in Validator_Test::testNDArray().
                 karabo::data::Validator::ValidationRules rules;
                 rules.allowAdditionalKeys = false;
                 rules.allowMissingKeys = false;
                 rules.allowUnrootedConfiguration = true;
                 rules.injectDefaults = false;
                 rules.injectTimestamps = false;
+                rules.strict = true; // to validate readOnly
                 karabo::data::Validator val(rules);
 
                 karabo::data::Hash validated;

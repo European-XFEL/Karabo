@@ -31,6 +31,7 @@
 #include "ConfigurationTestClasses.hh"
 #include "karabo/core/Device.hh"
 #include "karabo/data/schema/AlarmConditionElement.hh"
+#include "karabo/data/schema/NDArrayElement.hh"
 #include "karabo/data/schema/NodeElement.hh"
 #include "karabo/data/schema/SimpleElement.hh"
 #include "karabo/data/schema/StateElement.hh"
@@ -47,6 +48,7 @@
 using namespace karabo;
 using data::ALARM_ELEMENT;
 using data::INT32_ELEMENT;
+using data::NDARRAY_ELEMENT;
 using data::STATE_ELEMENT;
 using data::STRING_ELEMENT;
 using data::TABLE_ELEMENT;
@@ -1423,4 +1425,72 @@ void Validator_Test::testPropertyTestValidation() {
         }
     }
     std::cerr << "\nTest elapsed time (microsecs) : " << elapsedTimeIn_microseconds << std::endl;
+}
+
+void Validator_Test::testNDArray() {
+    data::Schema s;
+    NDARRAY_ELEMENT(s).key("arr").dtype(data::Types::INT16).shape(std::vector<unsigned long long>({100, 200})).commit();
+
+    // Validator settings as used by the OutputChannel schema validation
+    karabo::data::Validator::ValidationRules rules;
+    rules.allowAdditionalKeys = false;
+    rules.allowMissingKeys = false;
+    rules.allowUnrootedConfiguration = true;
+    rules.injectDefaults = false;
+    rules.injectTimestamps = false;
+    rules.strict = true;
+    data::Validator val(rules);
+
+    Hash dataOut;
+
+    { // Matching
+        Hash data("arr", data::NDArray(data::Dims(100ull, 200ull), static_cast<short>(42)));
+        std::pair<bool, std::string> res = val.validate(s, data, dataOut);
+        CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
+        CPPUNIT_ASSERT(dataOut.has("arr"));
+        CPPUNIT_ASSERT_NO_THROW(dataOut.get<data::NDArray>("arr"));
+        const data::NDArray& arr = dataOut.get<data::NDArray>("arr");
+        CPPUNIT_ASSERT_MESSAGE(data::Types::to<data::ToLiteral>(arr.getType()), arr.getType() == data::Types::INT16);
+        CPPUNIT_ASSERT_MESSAGE(data::toString(arr.getShape().toVector()), arr.getShape() == data::Dims(100, 200));
+
+        // Also test dimension 0 as wildcard size
+        data::Schema s2;
+        NDARRAY_ELEMENT(s2)
+              .key("arr")
+              .dtype(data::Types::INT16)
+              .shape(std::vector<unsigned long long>({100, 0}))
+              .commit();
+        dataOut.clear();
+
+        res = val.validate(s2, data, dataOut);
+        CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
+        CPPUNIT_ASSERT(dataOut.has("arr"));
+        CPPUNIT_ASSERT_NO_THROW(dataOut.get<data::NDArray>("arr"));
+        const data::NDArray& arr2 = dataOut.get<data::NDArray>("arr");
+        CPPUNIT_ASSERT_MESSAGE(data::Types::to<data::ToLiteral>(arr2.getType()), arr2.getType() == data::Types::INT16);
+        CPPUNIT_ASSERT_MESSAGE(data::toString(arr2.getShape().toVector()), arr2.getShape() == data::Dims(100, 200));
+    }
+
+    { // Missing
+        Hash data;
+        const std::pair<bool, std::string> res = val.validate(s, data, dataOut);
+        CPPUNIT_ASSERT_MESSAGE(res.second, !res.first);
+        const size_t pos = res.second.find("NDArray is lacking for 'arr'");
+        CPPUNIT_ASSERT_MESSAGE(res.second, pos != std::string::npos);
+    }
+    { // Wrong type: INT32, not INT16
+        Hash data("arr", data::NDArray(data::Dims(100ull, 200ull), static_cast<int>(42)));
+        const std::pair<bool, std::string> res = val.validate(s, data, dataOut);
+        CPPUNIT_ASSERT_MESSAGE(res.second, !res.first);
+        const size_t pos = res.second.find("NDArray type mismatch for 'arr': should be INT16, not INT32");
+        CPPUNIT_ASSERT_MESSAGE(res.second, pos != std::string::npos);
+    }
+
+    { // Wrong shape (swapped)
+        Hash data("arr", data::NDArray(data::Dims(200ull, 100ull), static_cast<short>(42)));
+        const std::pair<bool, std::string> res = val.validate(s, data, dataOut);
+        CPPUNIT_ASSERT_MESSAGE(res.second, !res.first);
+        const size_t pos = res.second.find("NDArray shape mismatch for 'arr': should be (100,200), not (200,100)");
+        CPPUNIT_ASSERT_MESSAGE(res.second, pos != std::string::npos);
+    }
 }

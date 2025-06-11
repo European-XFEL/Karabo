@@ -15,11 +15,13 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 import unittest
 
+import numpy as np
+
 from karabo.bound import (
     IMAGEDATA_ELEMENT, INT32_ELEMENT, NODE_ELEMENT, OVERWRITE_ELEMENT,
     AccessLevel, AccessType, ArchivePolicy, Assignment, Configurator,
-    DaqDataType, Hash, Logger, MetricPrefix, NodeType, Schema, State, Types,
-    Unit, Validator, fullyEqual)
+    DaqDataType, Hash, ImageData, Logger, MetricPrefix, NodeType, Schema,
+    State, Types, Unit, Validator, fullyEqual)
 
 from .configuration_example_classes import (
     ArrayContainer, Base, GraphicsRenderer, GraphicsRenderer1, SomeClass,
@@ -548,65 +550,58 @@ class Schema_TestCase(unittest.TestCase):
             self.fail("test_setMinExcMaxExc exception in getMinExc: " + str(e))
 
     def test_vectorElement(self):
-        try:
-            schema = Configurator(TestStruct1).getSchema("TestStruct1")
-            self.assertEqual(schema.isAccessReadOnly("exampleKey7"), True)
-            self.assertEqual(schema.hasDefaultValue("exampleKey7"), True)
-            self.assertEqual(schema.hasDefaultValue("exampleKey10"), True)
-            self.assertEqual(schema.hasDefaultValue("exampleKey11"), True)
-            self.assertEqual(schema.hasDefaultValue("exampleKey12"), True)
-            self.assertEqual(schema.hasDefaultValue("exampleKey14"), True)
-            self.assertEqual(schema.hasDefaultValue("exampleKey15"), True)
+        schema = Configurator(TestStruct1).getSchema("TestStruct1")
+        self.assertEqual(schema.isAccessReadOnly("exampleKey7"), True)
+        self.assertEqual(schema.hasDefaultValue("exampleKey7"), True)
+        self.assertEqual(schema.hasDefaultValue("exampleKey10"), True)
+        self.assertEqual(schema.hasDefaultValue("exampleKey11"), True)
+        self.assertEqual(schema.hasDefaultValue("exampleKey12"), True)
+        self.assertEqual(schema.hasDefaultValue("exampleKey14"), True)
+        self.assertEqual(schema.hasDefaultValue("exampleKey15"), True)
 
-            self.assertEqual(schema.getDefaultValue("exampleKey10"),
-                             [10, 20, 30])
+        self.assertEqual(schema.getDefaultValue("exampleKey10"), [10, 20, 30])
 
-            self.assertEqual(schema.getDefaultValue("exampleKey12"),
-                             [1.1, -2.2, 3.3])
+        self.assertEqual(schema.getDefaultValue("exampleKey12"),
+                         [1.1, -2.2, 3.3])
 
-            self.assertEqual(schema.getDefaultValue("exampleKey11"),
-                             [10, 20, 30])
-            self.assertEqual(
-                schema.getDefaultValueAs("exampleKey11", Types.STRING),
-                "10,20,30")
-            self.assertEqual(
-                schema.getDefaultValueAs("exampleKey11", Types.VECTOR_INT32),
-                [10, 20, 30])
+        self.assertEqual(schema.getDefaultValue("exampleKey11"), [10, 20, 30])
+        self.assertEqual(
+            schema.getDefaultValueAs("exampleKey11", Types.STRING),
+            "10,20,30")
+        self.assertEqual(
+            schema.getDefaultValueAs("exampleKey11", Types.VECTOR_INT32),
+            [10, 20, 30])
 
-            self.assertEqual(schema.getDefaultValue("exampleKey14"),
-                             ["Hallo", "World", "Test"])
-            self.assertEqual(
-                schema.getDefaultValueAs("exampleKey14", Types.STRING),
-                "Hallo,World,Test")
+        self.assertEqual(schema.getDefaultValue("exampleKey14"),
+                         ["Hallo", "World", "Test"])
+        self.assertEqual(
+            schema.getDefaultValueAs("exampleKey14", Types.STRING),
+            "Hallo,World,Test")
 
-            self.assertEqual(schema.getDefaultValue("exampleKey15"),
-                             ["word1", "word2", "test"])
-            self.assertEqual(
-                schema.getDefaultValueAs("exampleKey15", Types.STRING),
-                "word1,word2,test")
+        self.assertEqual(schema.getDefaultValue("exampleKey15"),
+                         ["word1", "word2", "test"])
+        self.assertEqual(
+            schema.getDefaultValueAs("exampleKey15", Types.STRING),
+            "word1,word2,test")
 
-            self.assertEqual(schema.getMinSize("exampleKey10"), 2)
-            self.assertEqual(schema.getMaxSize("exampleKey10"), 7)
-        except Exception as e:
-            self.fail("test_vectorElement exception: " + str(e))
+        self.assertEqual(schema.getMinSize("exampleKey10"), 2)
+        self.assertEqual(schema.getMaxSize("exampleKey10"), 7)
 
-        try:
-            schema = Configurator(SomeClass).getSchema("SomeClassId")
-            validator = Validator()
-            configuration = Hash('somelist', [])
-            ok, error, validated = validator.validate(schema, configuration)
-            if not ok:
-                raise RuntimeError(error)
-            somelist = validated['somelist']
-            somelist.append(99)
-            somelist.append(55)
-            configuration['somelist'] = somelist
-            ok, error, validated = validator.validate(schema, configuration)
-            if not ok:
-                raise RuntimeError(error)
-            self.assertIsNotNone(validated)
-        except Exception as e:
-            self.fail("test_vectorElement exception 2: " + str(e))
+        schema = Configurator(SomeClass).getSchema("SomeClassId")
+        validator = Validator()
+        configuration = Hash('somelist', [])
+        arr = np.ones(shape=(110, 210), dtype=np.int16)
+        configuration["myImageElement"] = ImageData(arr)
+        ok, error, validated = validator.validate(schema, configuration)
+        assert ok, error
+        somelist = validated['somelist']
+        somelist.append(99)
+        somelist.append(55)
+        configuration['somelist'] = somelist
+        ok, error, validated = validator.validate(schema, configuration)
+        if not ok:
+            raise RuntimeError(error)
+        self.assertIsNotNone(validated)
 
     def test_ndarrayElement(self):
         schema = Configurator(ArrayContainer).getSchema("ArrayContainer")

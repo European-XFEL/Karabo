@@ -65,15 +65,10 @@ namespace karabo {
         Schema data;
         INT32_ELEMENT(data).key("dataId").readOnly().commit();
 
-        STRING_ELEMENT(data).key("sha1").readOnly().commit();
-
-        STRING_ELEMENT(data).key("flow").readOnly().commit();
-
         VECTOR_INT64_ELEMENT(data).key("data").readOnly().commit();
 
-        NDARRAY_ELEMENT(data).key("array").dtype(Types::DOUBLE).shape("100,200,0").commit();
-
-        NDARRAY_ELEMENT(data).key("emptyArray").dtype(Types::INT16).shape("10,20").commit();
+        // Dimension size zero means variable
+        NDARRAY_ELEMENT(data).key("array").dtype(Types::UINT8).shape("100,200,0").commit();
 
         OUTPUT_CHANNEL(expected).key("output1").displayedName("Output1").dataSchema(data).commit();
 
@@ -81,7 +76,7 @@ namespace karabo {
 
         UINT64_ELEMENT(data2).key("inTime").readOnly().commit();
 
-        NDARRAY_ELEMENT(data2).key("array").dtype(Types::DOUBLE).shape("256,256,512").commit();
+        NDARRAY_ELEMENT(data2).key("array").dtype(Types::INT64).shape("256,256,128").commit();
 
         OUTPUT_CHANNEL(expected).key("output2").displayedName("Output2").dataSchema(data2).commit();
 
@@ -238,9 +233,8 @@ namespace karabo {
         try {
             const int nData = get<unsigned int>("nData");
             const unsigned int delayInMs = get<unsigned int>("delay");
-            const short noData[] = {}; // Also test an empty NDArray:
-            Hash data("data", std::vector<long long>(dataSize), "emptyArray",
-                      NDArray(noData, sizeof(noData) / sizeof(noData[0])));
+            Hash data("data", std::vector<long long>(dataSize), "array",
+                      NDArray(Dims(100, 200, 1), karabo::data::Types::UINT8));
             auto& vec = data.get<std::vector<long long> >("data");
 
             KARABO_LOG_FRAMEWORK_DEBUG << "P2PSenderDevice::writing : nData = " << nData
@@ -254,8 +248,8 @@ namespace karabo {
                 data.set("dataId", iData);
                 vec[0] = -iData;
 
-                // Write
-                writeChannel("output1", data);
+                // Write - pretend safeNDArray = true
+                writeChannel("output1", data, getActualTimestamp(), true);
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "Written data # " << iData;
                 set("currentDataId", iData);
@@ -341,9 +335,9 @@ namespace karabo {
                 std::this_thread::sleep_for(milliseconds(delayInMs));
             }
         } catch (const std::exception& eStd) {
-            KARABO_LOG_ERROR << "Stop writing since:\n" << eStd.what();
+            KARABO_LOG_ERROR << "Stop writing profile since:\n" << eStd.what();
         } catch (...) {
-            KARABO_LOG_ERROR << "Stop writing since unknown exception";
+            KARABO_LOG_ERROR << "Stop writing profile since unknown exception";
         }
 
         // Done, signal EOS token

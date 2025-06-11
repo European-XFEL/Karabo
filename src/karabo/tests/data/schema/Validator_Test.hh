@@ -40,6 +40,7 @@ class Validator_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testSlots);
     CPPUNIT_TEST(testOutputChannelSchemaRemoval);
     CPPUNIT_TEST(testPropertyTestValidation);
+    CPPUNIT_TEST(testNDArray);
     CPPUNIT_TEST_SUITE_END();
 
    public:
@@ -129,6 +130,8 @@ class Validator_Test : public CPPUNIT_NS::TestFixture {
      * with 'reconfiguration' validation rules.
      */
     void testPropertyTestValidation();
+
+    void testNDArray();
 };
 
 #endif /* VALIDATOR_TEST_HH */
