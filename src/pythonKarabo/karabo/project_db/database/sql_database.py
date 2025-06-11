@@ -547,10 +547,10 @@ class SQLDatabase(DatabaseBase):
     async def get_projects_with_device(
             self, domain: str, name_part: str) -> list[dict[str, any]]:
         """
-        Returns a list of dictionaries with data about projects that contain
-        active configurations for a given device.
+        Returns a list of dictionaries with data about projects from a given
+        domain that contain active configurations for a given device.
 
-        :param domain: DB domain
+        :param domain: domain of the projects to be returned
         :param name_part: part of name of devices for which project data
                                must be returned.
         :return: a list of dicts:
@@ -560,35 +560,25 @@ class SQLDatabase(DatabaseBase):
               "devices": list of ids of prj devices with the given part},
             ...]
         """
-        items = await self._get_domain_devices_by_name_part(
-            domain, name_part)
+        query = (
+            select(Project, DeviceInstance)
+            .join(ProjectDomain).join(DeviceServer).join(DeviceInstance)
+            .where(ProjectDomain.name == domain)
+            .filter(DeviceInstance.name.ilike(f'%{name_part}%'))
+        )
+
+        items = await self._execute_all(query)
 
         projects = {}
         for item in items:
-            if not item.device_server_id:
-                # Orphaned device
-                continue
-            server = await self._get_server_from_id(item.device_server_id)
-            if not server:
-                continue
-            project_id = server.project_id
-            if not project_id:
-                # Orphaned server
-                continue
-            name = item.name
-            if project_id not in projects:
-                project = await self._get_project_from_id(project_id)
-                if not project or project.is_trashed:
-                    continue
-                project_data = {
-                    "project_name": project.name,
-                    "date": datetime_to_str(project.date),
-                    "uuid": project.uuid,
+            if item.Project.id not in projects.keys():
+                projects[item.Project.id] = {
+                    "project_name": item.Project.name,
+                    "date": datetime_to_str(item.Project.date),
+                    "uuid": item.Project.uuid,
                     "items": []}
-                projects[project_id] = project_data
-
-            projects[project_id]["items"].append(name)
-
+            projects[item.Project.id]["items"].append(
+                item.DeviceInstance.name)
         return list(projects.values())
 
     async def get_projects_with_server(
@@ -597,7 +587,7 @@ class SQLDatabase(DatabaseBase):
         Returns a list of dictionaries with data about projects that
         contain macros.
 
-        :param domain: DB domain
+        :param domain: domain of the projects to be returned.
         :param name_part: part of name of macro for which project data
                           must be returned.
         :return: a list of dicts:
@@ -608,29 +598,25 @@ class SQLDatabase(DatabaseBase):
              "items": list of ids of prj servers with the given part},
              ...]
         """
-        items = await self._get_domain_servers_by_name_part(
-            domain, name_part)
+        query = (
+            select(Project, DeviceServer)
+            .join(ProjectDomain).join(DeviceServer)
+            .where(ProjectDomain.name == domain)
+            .filter(DeviceServer.name.ilike(f'%{name_part}%'))
+        )
+
+        items = await self._execute_all(query)
+
         projects = {}
-
         for item in items:
-            project_id = item.project_id
-            if not project_id:
-                # Orphaned
-                continue
-            name = item.name
-            if project_id not in projects:
-                project = await self._get_project_from_id(project_id)
-                if not project or project.is_trashed:
-                    continue
-                project_data = {
-                    "project_name": project.name,
-                    "date": datetime_to_str(project.date),
-                    "uuid": project.uuid,
+            if item.Project.id not in projects.keys():
+                projects[item.Project.id] = {
+                    "project_name": item.Project.name,
+                    "date": datetime_to_str(item.Project.date),
+                    "uuid": item.Project.uuid,
                     "items": []}
-                projects[project_id] = project_data
-
-            projects[project_id]["items"].append(name)
-
+            projects[item.Project.id]["items"].append(
+                item.DeviceServer.name)
         return list(projects.values())
 
     async def get_projects_with_macro(
@@ -639,7 +625,7 @@ class SQLDatabase(DatabaseBase):
         Returns a list of dictionaries with data about projects that
         contain macros.
 
-        :param domain: DB domain
+        :param domain: domain of the projects to be returned
         :param name_part: part of name of macro for which project data
                           must be returned.
         :return: a list of dicts:
@@ -650,29 +636,25 @@ class SQLDatabase(DatabaseBase):
              "macros": list of ids of prj devices with the given part},
              ...]
         """
-        items = await self._get_domain_macros_by_name_part(
-            domain, name_part)
+        query = (
+            select(Project, Macro)
+            .join(ProjectDomain).join(Macro)
+            .where(ProjectDomain.name == domain)
+            .filter(Macro.name.ilike(f'%{name_part}%'))
+        )
+
+        items = await self._execute_all(query)
+
         projects = {}
-
         for item in items:
-            project_id = item.project_id
-            if not project_id:
-                # Orphaned
-                continue
-            name = item.name
-            if project_id not in projects:
-                project = await self._get_project_from_id(project_id)
-                if not project or project.is_trashed:
-                    continue
-                project_data = {
-                    "project_name": project.name,
-                    "date": datetime_to_str(project.date),
-                    "uuid": project.uuid,
+            if item.Project.id not in projects.keys():
+                projects[item.Project.id] = {
+                    "project_name": item.Project.name,
+                    "date": datetime_to_str(item.Project.date),
+                    "uuid": item.Project.uuid,
                     "items": []}
-                projects[project_id] = project_data
-
-            projects[project_id]["items"].append(name)
-
+            projects[item.Project.id]["items"].append(
+                item.Macro.name)
         return list(projects.values())
 
     # region Reader
@@ -837,7 +819,6 @@ class SQLDatabase(DatabaseBase):
             select(DeviceConfig).where(DeviceConfig.uuid == uuid))
 
     # endregion
-
     # region namepart
 
     async def _get_domain_devices_by_name_part(
@@ -850,27 +831,7 @@ class SQLDatabase(DatabaseBase):
         )
         return await self._execute_all(query)
 
-    async def _get_domain_servers_by_name_part(
-            self, domain: str, name_part: str):
-        query = (
-            select(DeviceServer)
-            .join(Project).join(ProjectDomain)
-            .where(ProjectDomain.name == domain)
-            .filter(DeviceServer.name.ilike(f'%{name_part}%'))
-        )
-        return await self._execute_all(query)
-
-    async def _get_domain_macros_by_name_part(
-            self, domain: str, name_part: str):
-        query = (
-            select(Macro)
-            .join(Project).join(ProjectDomain)
-            .where(ProjectDomain.name == domain)
-            .filter(Macro.name.ilike(f'%{name_part}%')))
-        return await self._execute_all(query)
-
-    # endregion
-
+    # end region
     # region Writer
 
     async def _register_project_load(self, project: Project):
