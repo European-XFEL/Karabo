@@ -543,11 +543,13 @@ void HashBinarySerializer_Test::testSpeedLargeArrays() {
         CPPUNIT_ASSERT_NO_THROW(archive3.appendTo(buf));
         std::size_t idx = 0;
         for (auto it = buf.begin(); it != buf.end(); ++it, ++idx) {
-            size_t size = boost::asio::buffer_size(*it);
+            const boost::asio::const_buffer& b = *it;
+            size_t size = boost::asio::buffer_size(b);
             std::clog << std::dec << "\tidx=" << idx << "\t size=" << std::setw(12) << std::setfill(' ') << size
                       << "  ->  0x" << std::hex;
             for (size_t i = 0; i != std::min(size, size_t(30)); ++i) {
-                std::clog << std::setw(2) << std::setfill('0') << int(boost::asio::buffer_cast<const char*>(*it)[i]);
+                const char* data = static_cast<const char*>(b.data());
+                std::clog << std::setw(2) << std::setfill('0') << int(data[i]);
             }
             std::clog << (size > 30 ? "..." : "") << std::endl;
         }
@@ -610,11 +612,13 @@ void HashBinarySerializer_Test::testSpeedLargeArrays() {
         CPPUNIT_ASSERT_NO_THROW(archive3.appendTo(buf));
         std::size_t idx = 0;
         for (auto it = buf.begin(); it != buf.end(); ++it, ++idx) {
-            size_t size = boost::asio::buffer_size(*it);
+            const boost::asio::const_buffer& b = *it;
+            size_t size = boost::asio::buffer_size(b);
             std::clog << std::dec << "\tidx=" << idx << "\t size=" << std::setw(12) << std::setfill(' ') << size
                       << "  ->  0x" << std::hex;
             for (size_t i = 0; i != std::min(size, size_t(30)); ++i) {
-                std::clog << std::setw(2) << std::setfill('0') << int(boost::asio::buffer_cast<const char*>(*it)[i]);
+                const char* data = static_cast<const char*>(b.data());
+                std::clog << std::setw(2) << std::setfill('0') << int(data[i]);
             }
             std::clog << (size > 30 ? "..." : "") << std::endl;
         }

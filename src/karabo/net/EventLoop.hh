@@ -198,7 +198,7 @@ namespace karabo {
         void EventLoop::post(Function&& func, unsigned int delayMs) {
             boost::asio::io_context& service = getIOService();
             if (0 == delayMs) {
-                service.post(std::forward<Function>(func));
+                boost::asio::post(service, std::forward<Function>(func));
             } else {
                 auto timer = std::make_shared<boost::asio::steady_timer>(service);
                 timer->expires_after(std::chrono::milliseconds(delayMs));

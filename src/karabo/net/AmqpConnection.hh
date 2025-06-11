@@ -310,7 +310,7 @@ namespace karabo::net {
 
         // For internal event loop for all AMQP communication
         mutable boost::asio::io_context m_ioContext;
-        std::unique_ptr<boost::asio::io_context::work> m_work;
+        boost::asio::executor_work_guard<boost::asio::io_context::executor_type> m_work;
         std::jthread m_thread;
 
         // Connection and its state:

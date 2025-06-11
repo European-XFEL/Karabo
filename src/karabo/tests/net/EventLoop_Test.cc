@@ -59,7 +59,7 @@ void EventLoop_Test::handler1(boost::asio::steady_timer& timer, int count) {
     if (count == 5) {
         EventLoop::removeThread(5);
         count = -1;
-        timer.expires_at(timer.expires_at() + 500ms);
+        timer.expires_at(timer.expiry() + 500ms);
         timer.async_wait(std::bind(&EventLoop_Test::handler1, this, std::ref(timer), count));
         return;
     }
@@ -67,7 +67,7 @@ void EventLoop_Test::handler1(boost::asio::steady_timer& timer, int count) {
     EventLoop::addThread();
     count++;
 
-    timer.expires_at(timer.expires_at() + 500ms);
+    timer.expires_at(timer.expiry() + 500ms);
     timer.async_wait(std::bind(&EventLoop_Test::handler1, this, std::ref(timer), count));
 }
 
@@ -84,7 +84,7 @@ void EventLoop_Test::handler2() {
     if (m_finished) return;
 
     boost::asio::steady_timer timer(EventLoop::getIOService(), 5ms);
-    EventLoop::getIOService().post(std::bind(&EventLoop_Test::handler2, this));
+    boost::asio::post(EventLoop::getIOService(), std::bind(&EventLoop_Test::handler2, this));
 }
 
 
@@ -94,13 +94,14 @@ void EventLoop_Test::handler3() {
 
 
 void EventLoop_Test::testMethod2() {
-    boost::asio::io_context::work work(EventLoop::getIOService());
+    boost::asio::executor_work_guard<boost::asio::io_context::executor_type> work(
+          boost::asio::make_work_guard(EventLoop::getIOService()));
     std::jthread t(std::bind(&EventLoop::run));
 
     m_finished = false;
     boost::asio::steady_timer timer(EventLoop::getIOService(), 500ms);
     EventLoop::addThread(10);
-    EventLoop::getIOService().post(std::bind(&EventLoop_Test::handler2, this));
+    boost::asio::post(EventLoop::getIOService(), std::bind(&EventLoop_Test::handler2, this));
     timer.async_wait(std::bind(&EventLoop_Test::handler3, this));
 
     t.join();
@@ -208,8 +209,8 @@ void EventLoop_Test::testAddThreadDirectly() {
     auto answer = [promise]() { promise->set_value(true); };
 
     // Post question and answer and run them.
-    EventLoop::getIOService().post(question);
-    EventLoop::getIOService().post(answer);
+    boost::asio::post(EventLoop::getIOService(), question);
+    boost::asio::post(EventLoop::getIOService(), answer);
     EventLoop::run();
 
     // Check that indeed 'answer' unblocked 'question'
@@ -265,7 +266,7 @@ void EventLoop_Test::testExceptionTrace() {
 
     // Now start executing all exception handling in parallel
     for (int i = 0; i < nParallel; ++i) {
-        EventLoop::getIOService().post(std::bind(func, i));
+        boost::asio::post(EventLoop::getIOService(), std::bind(func, i));
     }
 
     // Collect all traces

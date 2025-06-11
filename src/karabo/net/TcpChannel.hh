@@ -568,7 +568,7 @@ namespace karabo {
                   const TcpConnection::ConnectionHandler& handler); // for asyncAcceptSocket(..)
             friend Channel::Pointer TcpConnection::startClient();   // for socketConnect(..)
             friend void TcpConnection::resolveHandler(
-                  const ErrorCode& e, boost::asio::ip::tcp::resolver::iterator it,
+                  const ErrorCode& e, const boost::asio::ip::tcp::resolver::results_type& endpoints,
                   const TcpConnection::ConnectionHandler& handler); // for asyncSocketConnect(..))
             friend ChannelPointer TcpConnection::createChannel();   // constructing TcpChannel
 
@@ -592,13 +592,13 @@ namespace karabo {
                 acceptor.async_accept(m_socket, std::move(wrapper));
             }
 
-            void socketConnect(const boost::asio::ip::tcp::endpoint& endpoint);
+            void socketConnect(const boost::asio::ip::tcp::resolver::results_type& endpoints);
 
             template <typename Handler>
-            void asyncSocketConnect(const boost::asio::ip::tcp::endpoint& endpoint, Handler&& handler) {
+            void asyncSocketConnect(const boost::asio::ip::tcp::resolver::results_type& endpoints, Handler&& handler) {
                 // part of async start of connection for client
-                auto wrapper = [weakThis{weak_from_this()},
-                                handler{std::move(handler)}](const boost::system::error_code& ec) {
+                auto wrapper = [weakThis{weak_from_this()}, handler{std::move(handler)}](
+                                     const boost::system::error_code& ec, boost::asio::ip::tcp::endpoint) {
                     if (!ec) {
                         TcpChannel::Pointer self(std::static_pointer_cast<TcpChannel>(weakThis.lock()));
                         if (self) {
@@ -609,7 +609,7 @@ namespace karabo {
                     handler(ec);
                 };
                 std::lock_guard<std::mutex> lock(m_socketMutex);
-                m_socket.async_connect(endpoint, std::move(wrapper));
+                boost::asio::async_connect(m_socket, endpoints, std::move(wrapper));
             }
         };
     } // namespace net

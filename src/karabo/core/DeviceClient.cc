@@ -104,7 +104,8 @@ namespace karabo {
             m_signalSlotable = m_internalSignalSlotable;
 
             if (implicitInit) {
-                karabo::net::EventLoop::getIOService().post(
+                boost::asio::post(
+                      karabo::net::EventLoop::getIOService(),
                       std::bind(&DeviceClient::completeInitialization, this, kMaxCompleteInitializationAttempts));
             }
         }
@@ -127,7 +128,8 @@ namespace karabo {
               m_instanceChangeThrottler(nullptr) {
             initServiceDeviceIds(serviceDeviceIds);
             if (implicitInit) {
-                karabo::net::EventLoop::getIOService().post(
+                boost::asio::post(
+                      karabo::net::EventLoop::getIOService(),
                       std::bind(&DeviceClient::completeInitialization, this, kMaxCompleteInitializationAttempts));
             }
         }
@@ -169,8 +171,8 @@ namespace karabo {
                         std::this_thread::sleep_for(1ms);
                     }
                     std::this_thread::yield();
-                    karabo::net::EventLoop::getIOService().post(
-                          std::bind(&DeviceClient::completeInitialization, this, --countdown));
+                    boost::asio::post(karabo::net::EventLoop::getIOService(),
+                                      std::bind(&DeviceClient::completeInitialization, this, --countdown));
                     return;
                 } else {
                     const std::string msg(

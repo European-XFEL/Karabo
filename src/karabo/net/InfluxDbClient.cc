@@ -401,7 +401,7 @@ namespace karabo {
                 HttpResponse resp;
                 resp.code = 204;
                 // Go via event loop to avoid dead lock in case the handler calls a function that locks m_bufferMutex
-                EventLoop::getIOService().post(std::bind(respHandler, resp));
+                boost::asio::post(EventLoop::getIOService(), std::bind(respHandler, resp));
             }
             m_buffer.str(""); // clear buffer stream
             m_nPoints = 0;

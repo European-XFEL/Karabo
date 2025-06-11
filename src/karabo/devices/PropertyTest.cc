@@ -1055,7 +1055,7 @@ namespace karabo {
 
             if (m_writingOutput) {
                 // get when fired the last time and add delay time
-                auto next = m_writingOutputTimer.expires_at(); // at first time set in startWritingOutput())
+                auto next = m_writingOutputTimer.expiry(); // at first time set in startWritingOutput())
                 const int delayTime =
                       1000.f / this->get<float>("outputFrequency"); // minExc(0.f) guarantees non-zero value
                 next += milliseconds(delayTime);
@@ -1075,7 +1075,8 @@ namespace karabo {
 
             // Start right away
             m_writingOutputTimer.expires_after(milliseconds(0)); // see writeOutputHandler
-            karabo::net::EventLoop::getIOService().post(
+            boost::asio::post(
+                  karabo::net::EventLoop::getIOService(),
                   karabo::util::bind_weak(&PropertyTest::writeOutputHandler, this, boost::system::error_code()));
         }
 
@@ -1144,7 +1145,8 @@ namespace karabo {
             AsyncReply areply(this);
             const unsigned int counter = get<unsigned int>("node.counter");
             set("node.counter", counter + 1);
-            karabo::net::EventLoop::getIOService().post(karabo::util::bind_weak(&PropertyTest::replier, this, areply));
+            boost::asio::post(karabo::net::EventLoop::getIOService(),
+                              karabo::util::bind_weak(&PropertyTest::replier, this, areply));
         }
 
 
@@ -1156,7 +1158,8 @@ namespace karabo {
         void PropertyTest::node_reset() {
             AsyncReply areply(this);
             set<unsigned int>("node.counter", 0);
-            karabo::net::EventLoop::getIOService().post(karabo::util::bind_weak(&PropertyTest::replier, this, areply));
+            boost::asio::post(karabo::net::EventLoop::getIOService(),
+                              karabo::util::bind_weak(&PropertyTest::replier, this, areply));
         }
 
         void PropertyTest::slowSlot() {
@@ -1192,7 +1195,7 @@ namespace karabo {
             // Since starting requires communication with another device,
             // this should not be done inside the slot call to keep that short.
             // That we are done is communicated via reaching the State STARTED.
-            EventLoop::getIOService().post(bind_weak(&PropertyTest::startOrderTest, this));
+            boost::asio::post(EventLoop::getIOService(), bind_weak(&PropertyTest::startOrderTest, this));
         }
 
         void PropertyTest::startOrderTest() {
@@ -1253,7 +1256,7 @@ namespace karabo {
                 }
             };
 
-            EventLoop::getIOService().post(countViaSlotAndSignal); // stop slot call, so post
+            boost::asio::post(EventLoop::getIOService(), countViaSlotAndSignal); // stop slot call, so post
         }
 
 

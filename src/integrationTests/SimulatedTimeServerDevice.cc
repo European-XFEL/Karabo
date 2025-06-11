@@ -140,7 +140,7 @@ namespace karabo {
         --m_tickCountdown;
 
         //
-        m_timeTickerTimer.expires_at(m_timeTickerTimer.expires_at() + microseconds(period));
+        m_timeTickerTimer.expires_at(m_timeTickerTimer.expiry() + microseconds(period));
         m_timeTickerTimer.async_wait(
               util::bind_weak(&SimulatedTimeServerDevice::tickTock, this, boost::asio::placeholders::error));
         ++m_id;

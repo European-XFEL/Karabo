@@ -88,7 +88,7 @@ struct Test_Device : public virtual Test_SignalSlotable {
         // This is just testing that binding a const member function compiles - both with a this which is const or not:
         using std::placeholders::_1;
         using std::placeholders::_2;
-        m_timer.expires_from_now(std::chrono::milliseconds(100));
+        m_timer.expires_after(std::chrono::milliseconds(100));
         m_timer.async_wait(karabo::util::bind_weak(&Test_Device::dummyConstFunction, this, 0, _1));
         m_timer.async_wait(
               karabo::util::bind_weak(&Test_Device::dummyConstFunction, const_cast<const Test_Device*>(this), 0, _1));
@@ -127,7 +127,7 @@ struct Test_Device : public virtual Test_SignalSlotable {
         }
 
         // Now the real test starts:
-        m_timer.expires_from_now(std::chrono::milliseconds(100));
+        m_timer.expires_after(std::chrono::milliseconds(100));
         m_timer.async_wait(karabo::util::bind_weak(&Test_Device::executeStepFunction, this, 5, _1));
     }
 
@@ -151,7 +151,7 @@ struct Test_Device : public virtual Test_SignalSlotable {
 
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
-        m_timer.expires_from_now(std::chrono::milliseconds(500));
+        m_timer.expires_after(std::chrono::milliseconds(500));
 
         m_timer.async_wait(
               karabo::util::bind_weak(&Test_Device::executeStepFunction, this, arg + 1, std::placeholders::_1));
@@ -167,7 +167,7 @@ struct Test_DeviceServer {
         m_devices["someTest_Device"] = std::shared_ptr<Test_Device>(new Test_Device(messages));
         m_devices["someTest_Device"]->init();
 
-        m_deviceDestructTimer.expires_from_now(std::chrono::milliseconds(1500));
+        m_deviceDestructTimer.expires_after(std::chrono::milliseconds(1500));
         m_deviceDestructTimer.async_wait(
               std::bind(&Test_DeviceServer::killTest_Device, this, std::placeholders::_1, "someTest_Device"));
     }

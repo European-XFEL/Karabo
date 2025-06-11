@@ -52,18 +52,18 @@ std::string karabo::net::bareHostName() {
 }
 
 
-void karabo::net::runProtected(std::shared_ptr<boost::asio::io_service> service, const std::string& category,
+void karabo::net::runProtected(std::shared_ptr<boost::asio::io_context> service, const std::string& category,
                                const std::string& errorMessage, unsigned int delayInMilliSec) {
-    // See http://www.boost.org/doc/libs/1_55_0/doc/html/boost_asio/reference/io_service.html:
+    // See http://www.boost.org/doc/libs/1_55_0/doc/html/boost_asio/reference/io_context.html:
     // "If an exception is thrown from a handler, the exception is allowed to propagate through the throwing
     //  thread's invocation of run(), run_one(), poll() or poll_one(). No other threads that are calling any of
     //  these functions are affected. It is then the responsibility of the application to catch the exception.
     //
     //  After the exception has been caught, the run(), run_one(), poll() or poll_one() call may be restarted
-    //  without the need for an intervening call to reset(). This allows the thread to rejoin the io_service
+    //  without the need for an intervening call to reset(). This allows the thread to rejoin the io_context
     //  object's thread pool without impacting any other threads in the pool."
 
-    const std::string fullMessage(" when running io_service (" + errorMessage + "), continue in " +
+    const std::string fullMessage(" when running io_context (" + errorMessage + "), continue in " +
                                         karabo::data::toString(delayInMilliSec) += " ms");
     while (true) {
         bool caught = true;

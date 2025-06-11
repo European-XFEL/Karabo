@@ -48,7 +48,7 @@ namespace karabo {
             : m_urls(std::move(urls)),
               m_urlIndex(0),
               m_ioContext(),
-              m_work(std::make_unique<boost::asio::io_context::work>(m_ioContext)),
+              m_work(boost::asio::make_work_guard(m_ioContext)),
               m_thread([this]() { m_ioContext.run(); }),
               m_state(State::eUnknown) {
             if (m_urls.empty()) {
@@ -290,7 +290,7 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_INFO << "Ignore 'onClosed' for wrong url: " << url << " != " << m_urls[m_urlIndex];
                 return;
             }
-            KARABO_LOG_FRAMEWORK_INFO << "Connection cosed. url=" << url;
+            KARABO_LOG_FRAMEWORK_INFO << "Connection closed. url=" << url;
             m_state = State::eConnectionClosed;
         }
 

@@ -206,7 +206,7 @@ struct TcpClient {
         if (ec) {
             errorHandler(ec, channel);
             if (ec != boost::asio::error::eof && repetition >= 0) {
-                m_deadline.expires_from_now(milliseconds(timeout));
+                m_deadline.expires_after(milliseconds(timeout));
                 m_deadline.async_wait(
                       std::bind(&TcpClient::waitHandler, this, boost::asio::placeholders::error, timeout, repetition));
             }

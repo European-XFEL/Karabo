@@ -91,7 +91,8 @@ namespace karabo {
                   };
             signals.async_wait(signalHandler);
 
-            boost::asio::io_context::work work(getIOService());
+            boost::asio::executor_work_guard<boost::asio::io_context::executor_type> work(
+                  boost::asio::make_work_guard(getIOService()));
             run();
         }
 
@@ -176,7 +177,7 @@ namespace karabo {
                 add();
             } else {
                 // Postpone until main thread is running.
-                m_ioService.post(add);
+                boost::asio::post(m_ioService, add);
             }
         }
 
@@ -188,7 +189,7 @@ namespace karabo {
 
         void EventLoop::_removeThread(const int nThreads) {
             for (int i = 0; i < nThreads; ++i) {
-                m_ioService.post(&asyncInjectException);
+                boost::asio::post(m_ioService, &asyncInjectException);
             }
         }
 
@@ -295,14 +296,15 @@ namespace karabo {
                 // As we can not kill ourselves we will ask another thread to kindly do so
                 std::unique_lock<std::mutex> lock(m_threadMapMutex);
                 if (is_this_thread_in()) {
-                    m_ioService.post(std::bind(&EventLoop::asyncDestroyThread, this, std::this_thread::get_id()));
+                    boost::asio::post(m_ioService,
+                                      std::bind(&EventLoop::asyncDestroyThread, this, std::this_thread::get_id()));
                     return false; // No more while, we want to die
                 } else {
                     // We are in the main blocking thread here, which we never want to kill
                     // Hence, we are injecting the exception again to be taken by another thread
                     // Only if at least one thread to kill
                     if (m_threadMap.size() > 0) {
-                        m_ioService.post(&asyncInjectException);
+                        boost::asio::post(m_ioService, &asyncInjectException);
                         // We kindly ask the scheduler to put us on the back of the threads queue, avoiding we will
                         // eat the just posted exception again
                         lock.unlock(); // Just in case yield() could block...
