@@ -165,9 +165,6 @@ void PipelinedProcessing_Test::testGetOutputChannelSchema() {
     CPPUNIT_ASSERT(dataSchema.has("dataId"));
     CPPUNIT_ASSERT(dataSchema.getType("dataId") == karabo::data::Types::INT32);
     CPPUNIT_ASSERT(dataSchema.getAttribute<std::string>("dataId", KARABO_SCHEMA_VALUE_TYPE) == "INT32");
-    CPPUNIT_ASSERT(dataSchema.has("sha1"));
-    CPPUNIT_ASSERT(dataSchema.getType("sha1") == karabo::data::Types::INT32);
-    CPPUNIT_ASSERT(dataSchema.getAttribute<std::string>("sha1", KARABO_SCHEMA_VALUE_TYPE) == "STRING");
     CPPUNIT_ASSERT(dataSchema.has("data"));
     CPPUNIT_ASSERT(dataSchema.getType("data") == karabo::data::Types::INT32);
     CPPUNIT_ASSERT(dataSchema.getAttribute<std::string>("data", KARABO_SCHEMA_VALUE_TYPE) == "VECTOR_INT64");
@@ -179,7 +176,8 @@ void PipelinedProcessing_Test::testGetOutputChannelSchema() {
     CPPUNIT_ASSERT(dataSchema.getAttribute<std::string>("array.shape", KARABO_SCHEMA_VALUE_TYPE) == "VECTOR_UINT64");
     CPPUNIT_ASSERT(dataSchema.getAttributeAs<std::string>("array.shape", KARABO_SCHEMA_DEFAULT_VALUE) == "100,200,0");
     CPPUNIT_ASSERT(dataSchema.getAttribute<std::string>("array.type", KARABO_SCHEMA_VALUE_TYPE) == "INT32");
-    CPPUNIT_ASSERT(dataSchema.getAttributeAs<std::string>("array.type", KARABO_SCHEMA_DEFAULT_VALUE) == "22");
+    CPPUNIT_ASSERT_EQUAL(static_cast<int>(Types::UINT8),
+                         dataSchema.getAttribute<int>("array.type", KARABO_SCHEMA_DEFAULT_VALUE));
     CPPUNIT_ASSERT(dataSchema.getAttribute<std::string>("array.isBigEndian", KARABO_SCHEMA_VALUE_TYPE) == "BOOL");
     CPPUNIT_ASSERT(dataSchema.getAttributeAs<std::string>("array.isBigEndian", KARABO_SCHEMA_DEFAULT_VALUE) == "0");
 

@@ -50,18 +50,8 @@ class PPSenderDevice(PythonDevice):
             INT32_ELEMENT(data).key("dataId")
             .readOnly()
             .commit(),
-            STRING_ELEMENT(data).key("sha1")
-            .readOnly()
-            .commit(),
-            STRING_ELEMENT(data).key("flow")
-            .readOnly()
-            .commit(),
             VECTOR_INT64_ELEMENT(data).key("data")
             .readOnly()
-            .commit(),
-            NDARRAY_ELEMENT(data).key("array")
-            .dtype(Types.DOUBLE)
-            .shape("100,200,0")
             .commit(),
             OUTPUT_CHANNEL(expected).key("output1")
             .displayedName("Output1")
@@ -221,13 +211,13 @@ class PPSenderDevice(PythonDevice):
             for i in range(nData):
                 data.set("dataId", i)
                 data.set("from", "firstWrite")
-                data.set("array", np.arange(100))
+                data.set("array", np.arange(100, dtype=np.uint32))
                 meta = ChannelMetaData("source1", Timestamp())
                 channel.write(data, meta=meta)
 
                 data.set("dataId", 1000+i)
                 data.set("from", "secondWrite")
-                data.set("array", np.arange(100, 200))
+                data.set("array", np.arange(100, 200, dtype=np.uint32))
                 meta = ChannelMetaData("source2", Timestamp())
                 channel.write(data, meta=meta)
 

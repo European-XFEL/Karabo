@@ -866,14 +866,6 @@ namespace configurationTest {
                   .assignmentOptional()
                   .defaultValue({})
                   .commit();
-
-            IMAGEDATA_ELEMENT(expected)
-                  .key("myImageElement")
-                  .displayedName("myImage")
-                  .description("Image Element")
-                  .setDimensions("110, 210")
-                  .operatorAccess()
-                  .commit();
         }
     };
 } // namespace configurationTest

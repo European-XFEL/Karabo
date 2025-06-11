@@ -44,7 +44,8 @@ void exportPyUtilSchemaValidator(py::module_& m) {
           .def_readwrite("allowAdditionalKeys", &Validator::ValidationRules::allowAdditionalKeys)
           .def_readwrite("allowMissingKeys", &Validator::ValidationRules::allowMissingKeys)
           .def_readwrite("injectTimestamps", &Validator::ValidationRules::injectTimestamps)
-          .def_readwrite("forceInjectedTimestamp", &Validator::ValidationRules::forceInjectedTimestamp);
+          .def_readwrite("forceInjectedTimestamp", &Validator::ValidationRules::forceInjectedTimestamp)
+          .def_readwrite("strict", &Validator::ValidationRules::strict);
 
     py::class_<Validator>(m, "Validator")
           .def(py::init<>())

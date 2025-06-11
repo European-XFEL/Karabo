@@ -32,6 +32,7 @@
 #include "karabo/data/types/AlarmConditions.hh"
 #include "karabo/data/types/FromLiteral.hh"
 #include "karabo/data/types/Hash.hh"
+#include "karabo/data/types/NDArray.hh"
 #include "karabo/data/types/Schema.hh"
 #include "karabo/data/types/State.hh"
 #include "karabo/data/types/StringTools.hh"
@@ -56,13 +57,15 @@ namespace karabo {
               m_allowMissingKeys(false),
               m_injectTimestamps(false),
               m_forceInjectedTimestamp(false),
+              m_strict(false),
               m_hasReconfigurableParameter(false) {}
 
 
         Validator::Validator(const Validator& other) : Validator(other.getValidationRules()) {}
 
 
-        Validator::Validator(const ValidationRules rules) : m_hasReconfigurableParameter(false) {
+        Validator::Validator(const ValidationRules rules)
+            : m_timestamp(Epochstamp(0, 0), 0), m_hasReconfigurableParameter(false) {
             this->setValidationRules(rules);
         }
 
@@ -74,6 +77,7 @@ namespace karabo {
             m_allowUnrootedConfiguration = rules.allowUnrootedConfiguration;
             m_injectTimestamps = rules.injectTimestamps;
             m_forceInjectedTimestamp = rules.forceInjectedTimestamp;
+            m_strict = rules.strict;
         }
 
 
@@ -85,6 +89,7 @@ namespace karabo {
             rules.allowUnrootedConfiguration = m_allowUnrootedConfiguration;
             rules.injectTimestamps = m_injectTimestamps;
             rules.forceInjectedTimestamp = m_forceInjectedTimestamp;
+            rules.strict = m_strict;
             return rules;
         }
 
@@ -302,14 +307,29 @@ namespace karabo {
                                 // children of output channel's schema node.
                     }
 
-                    if (hasClassAttribute && it->getAttribute<std::string>(KARABO_SCHEMA_CLASS_ID) == "Slot") {
-                        // Slot nodes should not appear in the validated output nor in the input.
-                        // Tolerate empty node input for backward compatibility, though.
-                        if (userHasNode && (user.getType(key) != Types::HASH || !user.get<Hash>(key).empty())) {
-                            report << "There is configuration provided for Slot '" << currentScope << "'" << endl;
-                            return;
+                    if (hasClassAttribute) {
+                        const std::string& classId = it->getAttribute<std::string>(KARABO_SCHEMA_CLASS_ID);
+                        if (classId == "Slot") {
+                            // Slot nodes should not appear in the validated output nor in the input.
+                            // Tolerate empty node input for backward compatibility, though.
+                            if (userHasNode && (user.getType(key) != Types::HASH || !user.get<Hash>(key).empty())) {
+                                report << "There is configuration provided for Slot '" << currentScope << "'" << endl;
+                                return;
+                            }
+                            continue;
+                        } else if (classId == "NDArray") {
+                            if (!userHasNode) {
+                                // NDArray is always readOnly and thus may be missing except if we are strict.
+                                // Note that it neither has defaults that one could inject here.
+                                if (m_strict) {
+                                    report << "NDArray is lacking for '" << currentScope << "'.\n";
+                                }
+                            } else {
+                                Hash::Node& workNode = working.set(key, std::any()); // Insert empty node
+                                validateNDArray(it->getValue<Hash>(), user.get<NDArray>(key), workNode, report,
+                                                currentScope);
+                            }
                         }
-                        continue;
                     }
                     if (!userHasNode) {
                         if (m_injectDefaults) {
@@ -355,6 +375,40 @@ namespace karabo {
                     report << "Encountered unexpected configuration parameter: \"" << currentScope << "\"" << endl;
                 }
             }
+        }
+
+        void Validator::validateNDArray(const Hash& master, const NDArray& user, Hash::Node& workNode,
+                                        std::ostringstream& report, const std::string& scope) {
+            if (master.hasAttribute("shape", KARABO_SCHEMA_DEFAULT_VALUE)) {
+                // Schema defines a shape - validate it!
+                const std::vector<unsigned long long> userDimsVec = user.getShape().toVector();
+                const auto& schemaDimsVec =
+                      master.getAttribute<std::vector<unsigned long long>>("shape", KARABO_SCHEMA_DEFAULT_VALUE);
+                bool mismatch = (userDimsVec.size() != schemaDimsVec.size());
+                if (!mismatch) {
+                    for (size_t i = 0; i < schemaDimsVec.size(); ++i) {
+                        // dimension size 0 in schema means undefined
+                        if (schemaDimsVec[i] != 0 && schemaDimsVec[i] != userDimsVec[i]) mismatch = true;
+                    }
+                }
+                if (mismatch) {
+                    report << "NDArray shape mismatch for '" << scope << "': should be (" << toString(schemaDimsVec)
+                           << "), not (" << toString(userDimsVec) << ")\n";
+                }
+            }
+            const Types::ReferenceType userType = user.getType();
+            const auto schemaType =
+                  static_cast<Types::ReferenceType>(master.getAttribute<int>("type", KARABO_SCHEMA_DEFAULT_VALUE));
+            // Validate data type (but only if specified)
+            if (userType != schemaType && schemaType != Types::UNKNOWN) {
+                report << "NDArray type mismatch for '" << scope << "': should be " << Types::to<ToLiteral>(schemaType)
+                       << ", not " << Types::to<ToLiteral>(userType) << "\n";
+            }
+            // For now we copy the data to the validated output (bulk data will not be copied, it is a ByteArray)
+            // FIXME: For unknown reasons, an rvalue has to be passed to setValue(..). If passing the normal const
+            //        reference, the "_classId" attribute is not set to 'NDArray', but 'Hash'.
+            //        Since a copy is anyway needed, this is no performance loss.
+            workNode.setValue(NDArray(user));
         }
 
         struct FindInOptions {

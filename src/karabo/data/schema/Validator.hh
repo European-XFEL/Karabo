@@ -31,6 +31,7 @@
 #include <shared_mutex>
 
 #include "karabo/data/time/Timestamp.hh"
+#include "karabo/data/types/NDArray.hh"
 #include "karabo/data/types/Schema.hh"
 #include "karabo/data/types/StringTools.hh"
 #include "karabo/data/types/ToLiteral.hh"
@@ -61,6 +62,7 @@ namespace karabo {
             bool m_allowMissingKeys;
             bool m_injectTimestamps;
             bool m_forceInjectedTimestamp;
+            bool m_strict;
 
             karabo::data::Timestamp m_timestamp;
             bool m_hasReconfigurableParameter;
@@ -71,7 +73,7 @@ namespace karabo {
              * it encounters differences between the input Hash and
              * the Schema defining it. The following rules may be set
              *
-             * - injectDefaults: inject default values if a value for an element
+             * - injectDefaults: inject default values (if defined) if a value for an element
              *                   defined in the Schema is missing from the input Hash.
              *
              * - allowUnrootedConfiguration: allow for unrooted input Hash, i.e. one that
@@ -86,10 +88,11 @@ namespace karabo {
              * - injectTimestamps for leaf elements:
              *    - if injectTimestamps is false: no injection
              *    - if injectTimestamps is true and forceInjectedTimestamp is false:
-             *                                    timestamp is injected, but timestamp attributes present are not
-             * overwritten
+             *                timestamp is injected, but timestamp attributes present are not overwritten
              *    - if injectTimestamps and forceInjectedTimestamp are both true:
              *                                    timestamp is injected and may overwrite previous timestamp attributes
+             * - strict: all elements mentioned in the schema must be specified explicitely and match in type
+             *           (even readOnly without a default)
              *
              * If any of the above scenarios are encountered during validation and the option is not
              * set to true, i.e. the Validator is not allowed to resolve the issue, validation will
@@ -99,7 +102,7 @@ namespace karabo {
             struct ValidationRules {
                 /**
                  * The default constructor of validation rules is least restrictive, i.e. all
-                 * resolution options are set to true.
+                 * resolution options are set to true (except that additional keys are not allowed).
                  */
                 ValidationRules()
                     : injectDefaults(true),
@@ -107,16 +110,19 @@ namespace karabo {
                       allowAdditionalKeys(false),
                       allowMissingKeys(true),
                       injectTimestamps(true),
-                      forceInjectedTimestamp(false) {}
+                      forceInjectedTimestamp(false),
+                      strict(false) {}
 
                 ValidationRules(bool injectDefaults_, bool allowUnrootedConfiguration_, bool allowAdditionalKeys_,
-                                bool allowMissingKeys_, bool injectTimestamps_, bool forceInjectedTimestamp_ = false)
+                                bool allowMissingKeys_, bool injectTimestamps_, bool forceInjectedTimestamp_ = false,
+                                bool strict_ = false)
                     : injectDefaults(injectDefaults_),
                       allowUnrootedConfiguration(allowUnrootedConfiguration_),
                       allowAdditionalKeys(allowAdditionalKeys_),
                       allowMissingKeys(allowMissingKeys_),
                       injectTimestamps(injectTimestamps_),
-                      forceInjectedTimestamp(forceInjectedTimestamp_) {}
+                      forceInjectedTimestamp(forceInjectedTimestamp_),
+                      strict(strict_) {}
 
                 bool injectDefaults;
                 bool allowUnrootedConfiguration;
@@ -124,6 +130,7 @@ namespace karabo {
                 bool allowMissingKeys;
                 bool injectTimestamps;
                 bool forceInjectedTimestamp;
+                bool strict; // Everything must be there, no casting
             };
 
             /**
@@ -209,6 +216,9 @@ namespace karabo {
 
             void r_validate(const Hash& master, const Hash& user, Hash& working, std::ostringstream& report,
                             std::string scope = "");
+
+            void validateNDArray(const Hash& master, const NDArray& user, Hash::Node& workNode,
+                                 std::ostringstream& report, const std::string& scope);
 
             void validateLeaf(const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report,
                               std::string scope);
