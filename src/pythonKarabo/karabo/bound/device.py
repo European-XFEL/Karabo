@@ -21,6 +21,7 @@ import socket
 import sys
 import threading
 import time
+from typing import Any
 
 from karabind import (
     ALARM_ELEMENT, BOOL_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT, MICROSEC,
@@ -1170,17 +1171,6 @@ class PythonDevice:
         # place new state as default reply to interested event initiators
         self._sigslot.reply(stateName)
 
-    def noStateTransition(self, currentState, currentEvent):
-        """
-        This function is called if a requested state transition is not allowed
-        in the current context. Usually, this means you have an error in your
-        state machine.
-        """
-        self.logger.warning(
-            "Device \"{}\" being in state '{}' does not allow the"
-            " transition for event '{}'."
-            .format(self.deviceid, currentState, currentEvent))
-
     def onTimeUpdate(self, id, sec, frac, period):
         """Called when an update from the time server is received
 
@@ -1405,20 +1395,11 @@ class PythonDevice:
         self._inputChannelHandlers[channelName][2] = handler
         self._sigslot.registerEndOfStreamHandler(channelName, handler)
 
-    def execute(self, command, *args):
-        if len(args) == 0:
-            self._sigslot.call("", command)
-        elif len(args) == 1:
-            self._sigslot.call("", command, args[0])
-        elif len(args) == 2:
-            self._sigslot.call("", command, args[0], args[1])
-        elif len(args) == 3:
-            self._sigslot.call("", command, args[0], args[1], args[2])
-        elif len(args) == 4:
-            self._sigslot.call("", command, args[0], args[1], args[2], args[3])
-        else:
+    def execute(self, command: str, *args: Any):
+        if len(args) > 4:
             raise AttributeError(
                 "Number of command parameters should not exceed 4")
+        self._sigslot.call("", command, *args)
 
     def slotCallGuard(self, slotName, callee):
         # Check whether the slot is mentioned in the expectedParameters
