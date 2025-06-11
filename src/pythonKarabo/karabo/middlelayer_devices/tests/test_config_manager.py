@@ -208,7 +208,7 @@ async def test_list_delete_configuration(deviceTest):
     assert item["name"] == "testConfig1"
 
     h = Hash("deviceId", "ALICE", "name", "testConfig1")
-    r = await call(MANAGER_ID, "slotDeleteConfiguration", h)
+    r = await call(MANAGER_ID, "slotDeleteInitConfiguration", h)
     assert r["success"]
 
     h = Hash("deviceId", "ALICE")

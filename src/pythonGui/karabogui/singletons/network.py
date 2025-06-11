@@ -467,7 +467,7 @@ class Network(QObject):
         h["args"] = args
         h["timeout"] = REQUEST_REPLY_TIMEOUT
         h["instanceId"] = KARABO_CONFIG_MANAGER
-        h["slot"] = "slotDeleteConfiguration"
+        h["slot"] = "slotDeleteInitConfiguration"
         h["replyType"] = "deleteInitConfiguration"
         self._write_hash(h)
 
