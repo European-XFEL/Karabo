@@ -180,7 +180,7 @@ class ProjectPanel(BasePanelWidget):
         status = data['status']
         if not status:
             # Don't show projects when there's no server connection
-            self.tree_view.destroy()
+            self.tree_view.destroy_model()
             # We lost track about the project manager
             self._manager_version = False
 
