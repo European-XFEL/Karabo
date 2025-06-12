@@ -116,15 +116,13 @@ namespace karabo {
               m_allowMissingKeys(false),
               m_injectTimestamps(false),
               m_forceInjectedTimestamp(false),
-              m_strict(false),
-              m_hasReconfigurableParameter(false) {}
+              m_strict(false) {}
 
 
         Validator::Validator(const Validator& other) : Validator(other.getValidationRules()) {}
 
 
-        Validator::Validator(const ValidationRules rules)
-            : m_timestamp(Epochstamp(0, 0), 0), m_hasReconfigurableParameter(false) {
+        Validator::Validator(const ValidationRules rules) : m_timestamp(Epochstamp(0, 0), 0) {
             this->setValidationRules(rules);
         }
 
@@ -155,9 +153,6 @@ namespace karabo {
 
         std::pair<bool, string> Validator::validate(const Schema& schema, const Hash& unvalidatedInput,
                                                     Hash& validatedOutput, const Timestamp& timestamp) {
-            // Clear previous "reconfigurable" flag
-            m_hasReconfigurableParameter = false;
-
             // Prepare timestamp if needed
             if (m_injectTimestamps) {
                 m_timestamp = timestamp;
@@ -567,10 +562,6 @@ namespace karabo {
                 if (workNode) workNode->setAttribute(KARABO_HASH_CLASS_ID, classId);
             }
 
-            if (masterNode.hasAttribute(KARABO_SCHEMA_ACCESS_MODE) &&
-                masterNode.getAttribute<int>(KARABO_SCHEMA_ACCESS_MODE) == WRITE)
-                m_hasReconfigurableParameter = true;
-
             // Check ranges
             if (referenceCategory == Types::SIMPLE) {
                 if (masterNode.hasAttribute(KARABO_SCHEMA_OPTIONS)) {
@@ -715,11 +706,6 @@ namespace karabo {
                     m_timestamp.toHashAttributes(attributes);
                 }
             }
-        }
-
-
-        bool Validator::hasReconfigurableParameter() const {
-            return m_hasReconfigurableParameter;
         }
 
 
