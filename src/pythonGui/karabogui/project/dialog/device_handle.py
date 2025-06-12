@@ -29,29 +29,23 @@ from .utils import get_dialog_ui
 
 
 class DeviceHandleDialog(QDialog):
-    def __init__(self, server_id=None, model=None, add_config=False,
+    def __init__(self, server_id=None, model=None,
                  is_online=False, class_id='', parent=None):
-        """ A dialog to configure device configurations
+        """ A dialog to configure a project device
 
-        :param server_id: The ID of the server the device configuration belongs
-                          to
         :param model: The ``DeviceInstanceModel`` object
-        :param add_config: A boolean which describes whether a new
-                           ``DeviceConfigurationModel`` should be added
-        :param is_online: A boolean which is True if the device being edited
-                          is currently online.
-        :param class_id: A string containing the class_id of the class which
-                         must be used by the device.
+        :param is_online: Is the device online or offline
+        :param class_id: A string for the class_id for this device
         :param parent: The parent of the dialog
         """
         super().__init__(parent)
         uic.loadUi(get_dialog_ui('device_handle.ui'), self)
+
         validator = InputValidator(parent=self)
         self.leTitle.setValidator(validator)
 
         # Get available plugins from systemTopology
-        for cls_id in self._get_available_plugins(server_id):
-            self.cbClass.addItem(cls_id)
+        self.cbClass.addItems(self._get_available_classes(server_id))
         self.leServerId.setText(server_id)
 
         # Disable the instance_id editor when the device is online
@@ -66,35 +60,19 @@ class DeviceHandleDialog(QDialog):
 
             # If we already know the class, select it. It is offline
             if class_id != '':
-                self._update_plugin_widget(class_id)
+                self._update_class_ids(class_id)
                 self.cbClass.setEnabled(False)
         else:
+            title = 'Edit device'
+            self._initialize_config_combo(model)
+            self.cbConfig.setEnabled(not is_online)
             active_dev_conf = model.select_config(model.active_config_ref)
-            if add_config:
-                title = 'Add device configuration'
-                self.cbConfig.setEditable(True)
-                line_edit = self.cbConfig.lineEdit()
-                line_edit.setValidator(InputValidator(parent=self))
-                line_edit.setFocus()
+            if active_dev_conf is not None:
+                self._update_config_combo(active_dev_conf)
+                index = self.cbConfig.findText(active_dev_conf.simple_name)
+                self.cbConfig.setCurrentIndex(index)
 
-                # These widgets belong to a ``DeviceInstanceModel`` and
-                # should not be changed in case a configuration is added
-                self.leTitle.setEnabled(False)
-                if active_dev_conf is not None:
-                    self._update_plugin_widget(active_dev_conf.class_id)
-                self.cbClass.setEnabled(False)
-
-            else:
-                title = 'Edit device configuration'
-                self._init_config_widgets(model)
-                self.cbConfig.setEnabled(not is_online)
-                if active_dev_conf is not None:
-                    self._update_config_widgets(active_dev_conf)
-                    index = self.cbConfig.findText(active_dev_conf.simple_name)
-                    self.cbConfig.setCurrentIndex(index)
-
-                self.cbClass.setEnabled(not is_online)
-
+            self.cbClass.setEnabled(not is_online)
             self.leTitle.setText(model.instance_id)
 
         self.setWindowTitle(title)
@@ -104,7 +82,7 @@ class DeviceHandleDialog(QDialog):
         self.cbClass.currentIndexChanged.connect(self._update_button_box)
         self._update_button_box()
 
-    def _init_config_widgets(self, dev_inst_model):
+    def _initialize_config_combo(self, dev_inst_model):
         """ Init all device configuration related widgets to the associated
         ``dev_inst_model``
 
@@ -119,27 +97,25 @@ class DeviceHandleDialog(QDialog):
         # Update if configuration changes
         self.cbConfig.currentIndexChanged[int].connect(self.config_changed)
 
-    def _get_available_plugins(self, device_server_id):
-        """Get all available plugins of `systemTopology` for the given
-        ``device_server_id``
-        """
-        attrs = get_topology().get_attributes(f"server.{device_server_id}")
-        attrs = attrs if attrs is not None else {}
-        available_plugins = attrs.get("deviceClasses", [])
-        return sorted(available_plugins)
-
-    def _update_config_widgets(self, dev_config_model):
+    def _update_config_combo(self, dev_config_model):
         """ Update all relevant widgets which show `DeviceConfigurationModel`
         information
 
-        :param dev_config_model: The `DeviceConfgurationModel` which data
+        :param dev_config_model: The `DeviceConfigurationModel` which data
                                  should be displayed.
         """
-        self._update_plugin_widget(dev_config_model.class_id)
+        self._update_class_ids(dev_config_model.class_id)
 
-    def _update_plugin_widget(self, class_id):
+    def _update_class_ids(self, class_id: str):
         index = self.cbClass.findText(class_id)
         self.cbClass.setCurrentIndex(index)
+
+    def _get_available_classes(self, server_id):
+        """Get all available classes for the given server_id"""
+        attrs = get_topology().get_attributes(f"server.{server_id}")
+        attrs = attrs if attrs is not None else {}
+        available_plugins = attrs.get("deviceClasses", [])
+        return sorted(available_plugins)
 
     @Slot()
     def _update_button_box(self):
@@ -153,8 +129,7 @@ class DeviceHandleDialog(QDialog):
     @Slot(int)
     def config_changed(self, index):
         config_model = self.cbConfig.itemData(index)
-        # Update dialog to active configuration data
-        self._update_config_widgets(config_model)
+        self._update_config_combo(config_model)
 
     @property
     def instance_id(self):
