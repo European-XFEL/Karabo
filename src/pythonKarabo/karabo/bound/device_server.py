@@ -711,7 +711,7 @@ class Launcher:
         self.child.wait()
 
 
-def main(args=None):
+def main(argv=None):
     try:
         # Change directory to $KARABO/var/data
         os.chdir(os.path.join(os.environ['KARABO'], 'var', 'data'))
@@ -720,13 +720,14 @@ def main(args=None):
               "'activate' script.")
         return 1
 
-    args = args or sys.argv
+    argv = argv or sys.argv
     # Load plugins already here to make them available for -h option
     PluginLoader.create("PythonPluginLoader", Hash()).update()
     t = threading.Thread(target=EventLoop.work)
     t.start()
+    server = None
     try:
-        server = Runner(DeviceServer).instantiate(args)
+        server = Runner(DeviceServer).instantiate(argv)
         if not server:
             EventLoop.stop()
             # We get here with -h option: Avoid print after finally.
@@ -738,7 +739,7 @@ def main(args=None):
     finally:
         del server  # increase chance that no log appears after print below
         t.join()
-    print(os.path.basename(args[0]), "has exited!\n")
+    print(os.path.basename(argv[0]), "has exited!\n")
     return 0
 
 
