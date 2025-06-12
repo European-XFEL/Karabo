@@ -93,7 +93,7 @@ class NDArray(Type):
         if isinstance(dtype, type) and issubclass(dtype, Simple):
             dtype = dtype.numpy
         self.dtype = numpy.dtype(dtype)
-        self.shape = shape
+        self.shape = tuple(shape)
         super().__init__(**kwargs)
 
     def toSchemaAndAttrs(self, device, state):
@@ -125,6 +125,12 @@ class NDArray(Type):
 
         if not isinstance(data, numpy.ndarray) or data.dtype != self.dtype:
             data = numpy.array(data, dtype=self.dtype)
+
+        if data.shape != self.shape:
+            raise ValueError(
+                f"Shape mismatch: expected {self.shape}, "
+                f"but received {data.shape}.")
+
         data = QuantityValue(data, descriptor=self)
         if data.units != self.units:
             data = data.to(self.units)

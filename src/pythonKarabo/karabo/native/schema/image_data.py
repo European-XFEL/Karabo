@@ -138,6 +138,8 @@ class Image(Type):
                             "instead".format(type(data)))
 
         self.__dict__.update(data.toDict())
+        # XXX: Cast shape to tuple for comparison
+        self.shape = tuple(self.shape)
         self.daqDataType = daqDataType
         super().__init__(accessMode=AccessMode.READONLY, **kwargs)
 
@@ -203,6 +205,11 @@ class Image(Type):
 
         if not isinstance(data, numpy.ndarray) or data.dtype != self.dtype:
             data = numpy.array(data, dtype=self.dtype)
+
+        if data.shape != self.shape:
+            raise ValueError(
+                f"Shape mismatch: expected {self.shape}, "
+                f"but received {data.shape}.")
 
         # If only an array was provided, we set our predefined values
         if not isinstance(data, ImageData):

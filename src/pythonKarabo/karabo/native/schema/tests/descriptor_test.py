@@ -388,7 +388,9 @@ class Tests(TestCase):
             v = d.toKaraboValue([False, True, False, True])
 
     def test_ndarray(self):
-        d = NDArray(dtype=Float, shape=(2, 3))
+        d = NDArray(dtype=Float, shape=(2, 2))
+        with pytest.raises(ValueError):
+            v = d.toKaraboValue([[1, 2], [3]])
         v = d.toKaraboValue([[1, 2], [3, 4]])
         self.assertEqual(v[0, 1], 2)
         self.assertEqual(v.dtype, np.dtype("float32"))
@@ -403,7 +405,7 @@ class Tests(TestCase):
         self.assertEqual(h["shape"][1], 2)
         self.assertEqual(len(h["data"]), 16)
 
-        d = NDArray(dtype=">i2", shape=(0, 3))
+        d = NDArray(dtype=">i2", shape=(2, 2))
         v = d.toKaraboValue(v.real)
         self.assertEqual(v.dtype, np.dtype(">i2"))
         self.assertEqual(v[1, 0], 3)
@@ -413,7 +415,7 @@ class Tests(TestCase):
         h = decodeBinary(encodeBinary(h))
         self.assertEqual(h["d", "classId"], "NDArray")
         self.assertEqual(h["d", "displayType"], "NDArray")
-        self.assertEqual(schema["shape", "defaultValue"][0], 0)
+        self.assertEqual(schema["shape", "defaultValue"][0], 2)
         self.assertEqual(schema["type", "defaultValue"], 8)
         self.assertEqual(schema["isBigEndian", "defaultValue"], True)
 
@@ -446,6 +448,8 @@ class Tests(TestCase):
 
     def test_image(self):
         d = Image(dtype=UInt8, shape=(2, 2))
+        with pytest.raises(ValueError):
+            v = d.toKaraboValue([[1, 2], [3]])
         v = d.toKaraboValue([[1, 2], [3, 4]])
         self.assertEqual(v.value[0, 1], 2)
         self.assertEqual(v.dtype, np.uint8)
