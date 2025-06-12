@@ -65,7 +65,6 @@ namespace karabo {
             bool m_strict;
 
             karabo::data::Timestamp m_timestamp;
-            bool m_hasReconfigurableParameter;
 
            public:
             /**
@@ -169,6 +168,7 @@ namespace karabo {
              * @param schema against which to validate
              * @param unvalidatedInput which should be validated
              * @param validatedOutput validated and altered according to current ValidationRules
+             *                        (but not touched if 'strict' validation rule is active)
              * @param timestamp
              * @return a std::pair where the first entry is a Boolean indicating if validation was successful (true),
              *         and the second entry contains a string identifying the first validation failure encountered if
@@ -185,6 +185,11 @@ namespace karabo {
              *
              *  - that the root element of the input Hash stands alone and represents the class id of a factorizable
              * class if an unrooted configuration is not allowed by the validation rules
+             *
+             *  - if validation rules are 'strict', also readOnly elements must be present and types must strictly
+             *    match, i.e. no casting attempts are performed. That means that there is no need for populating
+             *    the validated output which therefore staye empty (timestamps are not attached, irrespective of
+             *    respective flags)
              *
              * In addition for the above "sanity" checks, the Validator performs the following tasks:
              *
@@ -203,12 +208,6 @@ namespace karabo {
              */
             std::pair<bool, std::string> validate(const Schema& schema, const Hash& unvalidatedInput,
                                                   Hash& validatedOutput, const Timestamp& timestamp = Timestamp());
-
-            /**
-             * Check if reconfigurable parameters exist in the last provided Schema
-             * @return
-             */
-            bool hasReconfigurableParameter() const;
 
            private:
             void validateUserOnly(const Hash& master, const Hash& user, Hash& working, std::ostringstream& report,
