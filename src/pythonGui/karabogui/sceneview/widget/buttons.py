@@ -1,5 +1,5 @@
 from qtpy.QtCore import QRect, Qt, Slot
-from qtpy.QtWidgets import QAction, QDialog, QInputDialog, QToolButton
+from qtpy.QtWidgets import QAction, QDialog, QMenu, QToolButton
 
 from karabogui import icons
 from karabogui.dialogs.api import PopupButtonDialog
@@ -8,23 +8,45 @@ from karabogui.widgets.api import TextPopupWidget
 from karabogui.widgets.hints import KaraboSceneWidget
 
 
+def _get_icon_data():
+    # Do not make this as global variable, as it gets loaded before the
+    # icons are initalized in the tests.
+    return {
+        "General Info": icons.note_info,
+        "Help Info": icons.note_warning,
+        "Critical Info": icons.note_alert}
+
+
+def _get_icon(info_type):
+    data = _get_icon_data()
+    icon = data.get(info_type, icons.note_info)
+    return icon
+
+
 class PopupButtonWidget(KaraboSceneWidget, QToolButton):
     """A button that shows a title and detailed text as popup on
     mouse click"""
     def __init__(self, model, parent=None):
         super().__init__(model=model, parent=parent)
-        self.setIcon(icons.about)
         self.setMinimumSize(self.iconSize())
 
         edit_text_action = QAction("Edit Text", self)
         edit_text_action.triggered.connect(self._edit_text)
         self.addAction(edit_text_action)
 
-        edit_label_action = QAction("Edit Label", self)
-        edit_label_action.triggered.connect(self._edit_label)
-        self.addAction(edit_label_action)
+        menu = QMenu(parent=self)
+        info_type_action = QAction(menu)
+        info_type_action.setText("Info Type")
+
+        for text, icon in _get_icon_data().items():
+            action = QAction(icon, text, menu)
+            action.triggered.connect(self._update_button_icon)
+            menu.addAction(action)
+        info_type_action.setMenu(menu)
+        self.addAction(info_type_action)
 
         self.set_widget_properties(model)
+
         self.setGeometry(QRect(model.x, model.y,
                                model.width, model.height))
         self.setStyleSheet("QToolButton { border: none; }"
@@ -60,13 +82,11 @@ class PopupButtonWidget(KaraboSceneWidget, QToolButton):
         self.move(new_pos)
 
     def set_widget_properties(self, model):
-        self.model.text = model.text
-        self.model.label = model.label
-        tooltip = "Click for details"
-        if self.model.label:
-            tooltip = f"{self.model.label}... {tooltip}"
-            self.setText(self.model.label)
-            self.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        icon = _get_icon(model.info_type)
+        self.setIcon(icon)
+        self.setIconSize(self.size())
+
+        tooltip = f"{model.info_type}: Click for details"
         self.setToolTip(tooltip)
 
     def mousePressEvent(self, event):
@@ -99,9 +119,8 @@ class PopupButtonWidget(KaraboSceneWidget, QToolButton):
         self.edit(scene_view=self.parent())
 
     @Slot()
-    def _edit_label(self):
-        label, ok = QInputDialog.getText(
-            self, "Edit Label", "Edit Label:", text=self.model.label)
-        if ok:
-            self.model.trait_set(label=label)
+    def _update_button_icon(self):
+        action = self.sender()
+        if action:
+            self.model.trait_set(info_type=action.text())
             self.set_widget_properties(self.model)

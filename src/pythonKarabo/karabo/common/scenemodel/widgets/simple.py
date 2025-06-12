@@ -206,12 +206,11 @@ class PopupButtonModel(BaseWidgetObjectData):
     """A mode for a popup button widget"""
     # The text to be displayed in popup
     text = String
-    # The text to displayed on the button
-    label = String
 
     # The width of the tooltip in pixels
     popup_width = CInt
     popup_height = CInt
+    info_type = Enum("General Info", "Help Info", "Critical Info")
 
 
 def _read_geometry_data(element):
@@ -408,9 +407,9 @@ def __sticker_widget_writer(model, parent):
 def __popup_sticker_widget_reader(element):
     traits = _read_geometry_data(element)
     traits["text"] = element.get(NS_KARABO + "text", "")
-    traits["label"] = element.get(NS_KARABO + "label", "")
     traits["popup_width"] = int(element.get("popup_width", 200))
     traits["popup_height"] = int(element.get("popup_height", 100))
+    traits["info_type"] = element.get(NS_KARABO + "info_type")
     return PopupButtonModel(**traits)
 
 
@@ -418,7 +417,7 @@ def __popup_sticker_widget_reader(element):
 def __popup_sticker_widget_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     _write_class_and_geometry(model, element, "PopupButtonWidget")
-    for name in ("text", "label"):
+    for name in ("text", "info_type"):
         element.set(NS_KARABO + name, getattr(model, name))
     set_numbers(("popup_width", "popup_height"), model, element)
     return element

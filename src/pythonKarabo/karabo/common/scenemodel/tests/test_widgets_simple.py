@@ -283,9 +283,9 @@ def test_display_float_alarm_models():
 def test_popup_button_model():
     traits = _geometry_traits()
     traits["text"] = "Karabo Popup Sticker"
-    traits["label"] = "Title"
+    traits["info_type"] = "Critical Info"
     model = api.PopupButtonModel(**traits)
     read_model = single_model_round_trip(model)
     _assert_geometry_traits(read_model)
     assert read_model.text == "Karabo Popup Sticker"
-    assert read_model.label == "Title"
+    assert read_model.info_type == "Critical Info"

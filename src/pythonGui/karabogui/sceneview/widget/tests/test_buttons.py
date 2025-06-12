@@ -14,33 +14,31 @@ gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet."""
 
 
 @pytest.fixture()
-def sticker_widget(gui_app):
+def poup_button_widget(gui_app):
     model = PopupButtonModel(
-        text=TEXT, label="Summary", x=0, y=0, width=100, height=100)
+        text=TEXT,  x=0, y=0, width=100, height=100)
     widget = PopupButtonWidget(model=model)
     return widget
 
 
-def test_popup_sticker_widget(sticker_widget):
+def test_button_widget(poup_button_widget):
     """Test the popup sticker widget"""
 
-    model = sticker_widget.model
-    widget = sticker_widget
-    # Check that the text is set correctly
-    assert widget.text() == model.label
+    model = poup_button_widget.model
+    widget = poup_button_widget
 
     size = QSize(model.width, model.height)
     # Check that the size is set correctly and is fixed.
     assert widget.size() == size
 
 
-def test_popup_widget(sticker_widget):
+def test_popup_widget(poup_button_widget):
     """Verify that the popup widget appears with correc text on mouse click."""
     event = QMouseEvent(QEvent.MouseButtonPress, QPoint(0, 0), Qt.LeftButton,
                         Qt.LeftButton, Qt.NoModifier)
-    sticker_widget.mousePressEvent(event)
+    poup_button_widget.mousePressEvent(event)
 
-    popup_widget = sticker_widget.children()[-1]
-    assert popup_widget.isVisibleTo(sticker_widget)
-    assert isinstance(popup_widget, TextPopupWidget)
-    assert popup_widget.text_edit.toPlainText() == TEXT
+    poup_button_widget = poup_button_widget.children()[-1]
+    assert poup_button_widget.isVisibleTo(poup_button_widget)
+    assert isinstance(poup_button_widget, TextPopupWidget)
+    assert poup_button_widget.text_edit.toPlainText() == TEXT
