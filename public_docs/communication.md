@@ -44,8 +44,13 @@ recommended to use `remote().registerChannelMonitor()`.
   - `shared`: data items are load‑distributed among all inputs in this mode.
 - **onSlowness** *(STRING)* (only in `copy` mode)
   Policy if this input is too slow:
-  - `drop` (default since 2.10.0): drop new items.
-  - `queueDrop` (since 2.10.0): buffer items; if full, drop oldest.
+  - `drop` (default): drop new items.
+  - `queue` or `queueDrop`: buffer items; if buffer is full, drop oldest.
+  - `wait`: block the sender and make it wait until ready for more data
+            (use with care, basically in offline processing only)
+- **maxQueueLength** *(UINT32)*  (only in `copy` mode)
+  Maximum length of queue on sender side for onSlowness="queue" or "queueDrop".
+  Default is 2
 - **minData** *(UINT32)*
   Minimum items per call in an **input** handler.
   Default 1; `0`=all available; `0xFFFFFFFF`=unbounded.
@@ -56,10 +61,6 @@ recommended to use `remote().registerChannelMonitor()`.
 
 ## Output Channel Properties
 
-- **distributionMode** *(STRING)*
-  (applies when inputs use `shared` distribution)
-  - `load-balanced` (default): send to any ready input.
-  - `round-robin`: cycle through inputs in order.
 - **noInputShared** *(STRING)*
   (if no `shared` inputs are ready)
   - `drop` (default since 2.10.0): drop new items.
@@ -69,7 +70,12 @@ recommended to use `remote().registerChannelMonitor()`.
   Default `"default"` (device’s host); set to a specific interface if needed.
 - **port** *(UINT32)*
   TCP port for inputs. Default 0 (auto‑assigned); if nonzero, must be free.
-
+- **validateSchema** *(STRING)*
+  If a schema is defined for this output channel, this flag defines how often
+  data written to the output channel should be validated against it before
+  each time that the end-of-stream is signaled:
+  - `once`
+  - `always`
 ---
 
 # Schema Description of Channels
