@@ -76,8 +76,6 @@ namespace karabo {
         enum class DaqDataType {
             PULSE = 0,
             TRAIN = 1,
-            PULSEMASTER = 10,
-            TRAINMASTER = 11,
         };
 
         /**

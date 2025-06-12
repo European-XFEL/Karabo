@@ -63,11 +63,7 @@ void exportPyUtilSchema(py::module_& m) {
           .value("WRITE", AccessType::WRITE)
           .export_values();
 
-    py::enum_<DaqDataType>(m, "DaqDataType")
-          .value("PULSE", DaqDataType::PULSE)
-          .value("TRAIN", DaqDataType::TRAIN)
-          .value("PULSEMASTER", DaqDataType::PULSEMASTER)
-          .value("TRAINMASTER", DaqDataType::TRAINMASTER);
+    py::enum_<DaqDataType>(m, "DaqDataType").value("PULSE", DaqDataType::PULSE).value("TRAIN", DaqDataType::TRAIN);
 
     {
         py::enum_<MetricPrefix>(m, "MetricPrefix")
