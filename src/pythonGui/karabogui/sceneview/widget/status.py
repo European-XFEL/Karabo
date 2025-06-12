@@ -114,6 +114,7 @@ class InstanceStatusWidget(KaraboSceneWidget, QSvgWidget):
                                    "topology_node:status", remove=True)
         self.proxy.on_trait_change(self.proxy_online_change, "online",
                                    remove=True)
+        super().destroy()
 
     def set_visible(self, visible):
         """Satisfy the informal widget interface."""

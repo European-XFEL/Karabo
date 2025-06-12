@@ -130,6 +130,7 @@ class ControllerContainer(KaraboSceneWidget, QWidget):
                     remove=True)
         self.widget_controller.destroy()
         self.widget_controller = None
+        super().destroy()
 
     def set_geometry(self, rect):
         self.model.trait_set(x=rect.x(), y=rect.y(),

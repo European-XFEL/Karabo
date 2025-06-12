@@ -83,6 +83,7 @@ class BaseLinkWidget(KaraboSceneWidget, QPushButton):
 
     def destroy(self):
         """Satisfy the informal widget interface."""
+        super().destroy()
 
     def set_visible(self, visible):
         """Satisfy the informal widget interface."""
@@ -258,6 +259,7 @@ class DeviceSceneLinkWidget(BaseLinkWidget):
         self.proxy.on_trait_change(self.proxy_status_change, "status",
                                    remove=True)
         self.proxy = None
+        super().destroy()
 
     def on_click(self):
         """Reimplemented function of `BaseLinkWidget`"""

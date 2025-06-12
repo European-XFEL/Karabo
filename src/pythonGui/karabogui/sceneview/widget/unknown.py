@@ -72,6 +72,7 @@ class UnknownSvgWidget(QWidget):
 
     def destroy(self):
         """Satisfy the informal widget interface."""
+        super().destroy()
 
     def set_visible(self, visible):
         """Satisfy the informal widget interface."""
@@ -111,6 +112,7 @@ class UnknownWidget(KaraboSceneWidget, QWidget):
 
     def destroy(self):
         """Satisfy the informal widget interface."""
+        super().destroy()
 
     def set_visible(self, visible):
         """Satisfy the informal widget interface."""
