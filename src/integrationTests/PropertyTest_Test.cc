@@ -27,6 +27,7 @@
 #include <karabo/net/EventLoop.hh>
 #include <sstream>
 
+#include "karabo/data/time/Epochstamp.hh"
 #include "karabo/data/types/Hash.hh"
 #include "karabo/data/types/Schema.hh"
 
@@ -62,9 +63,14 @@ void PropertyTest_Test::setUp() {
 
 
 void PropertyTest_Test::tearDown() {
+    std::clog << "Start tearDown " << Epochstamp().toIso8601Ext() << std::endl;
+
     m_deviceClient.reset();
     m_deviceServer.reset();
     EventLoop::stop();
+    if (m_eventLoopThread.joinable()) m_eventLoopThread.join();
+
+    std::clog << "End tearDown " << Epochstamp().toIso8601Ext() << std::endl;
 }
 
 

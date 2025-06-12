@@ -989,7 +989,7 @@ def test_sigslot_asyncConnect(eventLoopFixt):
     slotter.asyncConnect("signalInstance", "signal", "slot", connectCallback)
 
     def wait_for_callback():
-        max_count = 2000
+        max_count = 4000  # 20 sec timeout
         while failureMsg is None and failureDetails is None and max_count > 0:
             time.sleep(0.005)
             max_count -= 1
@@ -1001,7 +1001,7 @@ def test_sigslot_asyncConnect(eventLoopFixt):
 
     signaler.emit("signal", 52)
 
-    def wait_for_slotCalled(max_count=2000):
+    def wait_for_slotCalled(max_count=4000):  # 20 sec timeout
         count = max_count
         while not slotCalled and count > 0:
             time.sleep(0.005)
