@@ -63,18 +63,6 @@ namespace karabo {
             using namespace karabo::data;
 
             STRING_ELEMENT(expected)
-                  .key("distributionMode")
-                  .displayedName("Unused, was Distribution Mode")
-                  .description(
-                        "Now unused - distribution is always 'load-balanced' except if a sharedInputSelector is "
-                        "registered")
-                  .options(std::vector<std::string>({"load-balanced", "round-robin"}))
-                  .assignmentOptional()
-                  .defaultValue("load-balanced")
-                  .init()
-                  .commit();
-
-            STRING_ELEMENT(expected)
                   .key("noInputShared")
                   .displayedName("No Input (Shared)")
                   .description(
@@ -245,11 +233,6 @@ namespace karabo {
             if (m_onNoSharedInputChannelAvailable == "queue") m_onNoSharedInputChannelAvailable += "Drop";
             config.get("port", m_port);
             config.get("updatePeriod", m_period);
-            if (config.get<std::string>("distributionMode") != "load-balanced") {
-                KARABO_LOG_FRAMEWORK_WARN
-                      << "Ignoring distributionMode '" << config.get<std::string>("distributionMode")
-                      << "'. Now always act like 'load-balanced' except if a sharedInputSelector is registered by code";
-            }
 
             const std::string& hostname = config.get<std::string>("hostname");
             // resolve the hostname if needed

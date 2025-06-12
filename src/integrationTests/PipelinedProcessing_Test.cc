@@ -1118,7 +1118,7 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceivers(unsigned int processin
 
 void PipelinedProcessing_Test::testTwoSharedReceiversQueuing(unsigned int processingTime, unsigned int delayTime) {
     std::clog << "- processingTime (both receivers) = " << processingTime << " ms, delayTime = " << delayTime
-              << " ms -- expect " << m_deviceClient->get<std::string>(m_sender, "output1.distributionMode") << "\n";
+              << " ms\n";
 
     int64_t elapsedTimeIn_microseconds = 0ll;
 
