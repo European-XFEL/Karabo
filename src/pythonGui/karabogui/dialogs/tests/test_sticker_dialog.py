@@ -18,12 +18,10 @@
 from qtpy.QtGui import QColor, QFont
 from qtpy.QtWidgets import QDialog
 
-from karabo.common.scenemodel.api import PopupButtonModel, StickerModel
-from karabogui.dialogs.api import PopupButtonDialog, StickerDialog
+from karabo.common.scenemodel.api import StickerModel
+from karabogui.dialogs.api import StickerDialog
 from karabogui.fonts import get_alias_from_font
 from karabogui.testing import click_button
-
-TEXT = "XFEL: the world's largest X-ray laser."
 
 
 def test_sticker_dialog(gui_app, mocker):
@@ -140,11 +138,3 @@ def test_set_text_font_button(gui_app):
     assert not button_font.strikeOut()
     assert not button_font.bold()
     assert not button_font.italic()
-
-
-def test_pop_sticker_dialog(gui_app):
-    model = PopupButtonModel(
-        text=TEXT, label="Summary", x=0, y=0,
-        width=100, height=100)
-    dialog = PopupButtonDialog(model)
-    assert dialog.leText.toPlainText() == model.text
