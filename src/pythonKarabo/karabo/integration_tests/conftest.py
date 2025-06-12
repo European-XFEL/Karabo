@@ -14,4 +14,5 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 # flake8: noqa
+from karabo.bound.testing import eventLoop
 from karabo.middlelayer.testing import event_loop_policy
