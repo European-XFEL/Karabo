@@ -20,9 +20,9 @@ from time import sleep
 import numpy as np
 
 from karabo.bound import (
-    INT32_ELEMENT, KARABO_CLASSINFO, NDARRAY_ELEMENT, NODE_ELEMENT,
-    OUTPUT_CHANNEL, OVERWRITE_ELEMENT, SLOT_ELEMENT, STRING_ELEMENT,
-    UINT32_ELEMENT, UINT64_ELEMENT, VECTOR_INT64_ELEMENT, ChannelMetaData,
+    DOUBLE_ELEMENT, INT32_ELEMENT, KARABO_CLASSINFO, NDARRAY_ELEMENT,
+    NODE_ELEMENT, OUTPUT_CHANNEL, OVERWRITE_ELEMENT, SLOT_ELEMENT,
+    STRING_ELEMENT, UINT32_ELEMENT, VECTOR_INT32_ELEMENT, ChannelMetaData,
     Hash, MetricPrefix, PythonDevice, Schema, State, Timestamp, Types, Unit)
 
 
@@ -50,7 +50,7 @@ class PPSenderDevice(PythonDevice):
             INT32_ELEMENT(data).key("dataId")
             .readOnly()
             .commit(),
-            VECTOR_INT64_ELEMENT(data).key("data")
+            VECTOR_INT32_ELEMENT(data).key("data")
             .readOnly()
             .commit(),
             OUTPUT_CHANNEL(expected).key("output1")
@@ -62,7 +62,7 @@ class PPSenderDevice(PythonDevice):
         data2 = Schema()
 
         (
-            UINT64_ELEMENT(data2).key("inTime")
+            DOUBLE_ELEMENT(data2).key("inTime")
             .readOnly()
             .commit(),
             NDARRAY_ELEMENT(data2).key("array")

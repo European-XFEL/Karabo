@@ -713,11 +713,11 @@ void InputOutputChannel_Test::testSchemaValidation() {
         CPPUNIT_ASSERT_THROW(output->write(Hash("v_int32", vec, "str", "some", "tooMuch", 0)),
                              karabo::data::ParameterException);
 
-        // // Test missing key -- FIXME: readOnly keys are allowed to be missing!
-        // CPPUNIT_ASSERT_THROW(output->write(Hash("v_int32", vec)), karabo::data::ParameterException);
+        // Test missing key
+        CPPUNIT_ASSERT_THROW(output->write(Hash("v_int32", vec)), karabo::data::ParameterException);
 
-        // Test wrong, non-castable type - NOTE: '"str", 42' would work since validator casts 42 to std:string("42")
-        // CPPUNIT_ASSERT_THROW(output->write(Hash("v_int32", vec, "str", 42)), karabo::data::ParameterException);
+        // Test wrong type
+        CPPUNIT_ASSERT_THROW(output->write(Hash("v_int32", vec, "str", 42)), karabo::data::ParameterException);
         CPPUNIT_ASSERT_THROW(output->write(Hash("v_int32", vec, "str", std::vector<Schema>(1))),
                              karabo::data::Exception);
 

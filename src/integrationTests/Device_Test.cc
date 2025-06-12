@@ -307,7 +307,8 @@ class TestDevice : public karabo::core::Device {
 
 
     void slotSendToOutputChannel(const std::string& channelName, int intToSend) {
-        writeChannel(channelName, Hash("int", intToSend));
+        Hash data("int", intToSend, "data", Hash("untagged", 4.2, "intensityTD", std::vector<float>(10, 3.7f)));
+        writeChannel(channelName, data);
     }
 
 

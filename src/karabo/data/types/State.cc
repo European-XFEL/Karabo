@@ -274,6 +274,12 @@ namespace karabo {
         }
 
 
+        bool State::isValid(const std::string& state) {
+            std::call_once(m_initFromStringFlag, &State::initFromString);
+
+            return (m_stateFactory.end() != m_stateFactory.find(state));
+        }
+
         const State& State::fromString(const std::string& state) {
             std::call_once(m_initFromStringFlag, &State::initFromString);
 

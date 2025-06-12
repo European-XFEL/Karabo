@@ -62,6 +62,14 @@ namespace karabo {
             static AlarmCondition returnMostSignificant(const std::vector<AlarmCondition>& v);
 
             /**
+             * Check if string can be converted to AlarmCondition
+             *
+             * @param condition test string
+             * @return whether test string can be converted to an AlarmCondition or not
+             */
+            static bool isValid(const std::string& condition);
+
+            /**
              * Returns an alarm condition object matching to the stringified condition
              * @param condition: a known alarm condition
              * @return a reference to an  alarm condition object

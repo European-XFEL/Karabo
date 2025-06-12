@@ -1471,22 +1471,21 @@ namespace karabo {
                 rules.strict = true; // to validate readOnly
                 karabo::data::Validator val(rules);
 
-                karabo::data::Hash validated;
-                const std::pair<bool, std::string> res = val.validate(m_dataSchema, data, validated);
+                karabo::data::Hash dummy; // strict validation: stays empty
+                const std::pair<bool, std::string> res = val.validate(m_dataSchema, data, dummy);
                 if (!res.first) {
-                    KARABO_LOGGING_ERROR("write(..) failed when validating data paths '{}' vs schema paths '{}': {}",
-                                         toString(data.getPaths()), toString(m_dataSchema.getPaths()), res.second);
-                    throw KARABO_PARAMETER_EXCEPTION("Data/schema mismatch: " + res.second);
+                    KARABO_LOGGING_ERROR("{} - write(..) failed validating data paths '{}' vs schema paths '{}': {}",
+                                         getInstanceIdName(), toString(data.getPaths()),
+                                         toString(m_dataSchema.getPaths()), res.second);
+                    throw KARABO_PARAMETER_EXCEPTION(m_channelName + " - data/schema mismatch: " + res.second);
                 }
                 if (!m_dataSchemaValidated) { // Not for every write if m_validateAlways
-                    KARABO_LOGGING_INFO("write(..) validated data paths '{}' vs schema paths '{}'",
+                    KARABO_LOGGING_INFO("{} - write(..) validated data paths '{}' vs schema paths '{}'", m_channelName,
                                         toString(data.getPaths()), toString(m_dataSchema.getPaths()));
                 }
                 m_dataSchemaValidated = true; // after successfull validation
-                Memory::write(validated, m_channelId, m_chunkId, metaData, false);
-            } else {
-                Memory::write(data, m_channelId, m_chunkId, metaData, false);
             }
+            Memory::write(data, m_channelId, m_chunkId, metaData, false);
         }
 
 

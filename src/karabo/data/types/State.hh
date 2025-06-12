@@ -192,10 +192,18 @@ namespace karabo {
             static const State INTERLOCK_OK;
             static const State SEARCHING;
 
+            /**
+             * Check if string can be converted to State
+             *
+             * @param state test string
+             * @return whether test string can be converted to a State or not
+             */
+            static bool isValid(const std::string& state);
 
             /**
              * Create a state from its string representation
-             * @param state
+             *
+             * @param state - if not valid, throws karabo::data::LogicException
              * @return
              */
             static const State& fromString(const std::string& state);

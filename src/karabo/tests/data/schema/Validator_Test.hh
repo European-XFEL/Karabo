@@ -41,6 +41,7 @@ class Validator_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testOutputChannelSchemaRemoval);
     CPPUNIT_TEST(testPropertyTestValidation);
     CPPUNIT_TEST(testNDArray);
+    CPPUNIT_TEST(testStrictAndReadOnly);
     CPPUNIT_TEST_SUITE_END();
 
    public:
@@ -132,6 +133,8 @@ class Validator_Test : public CPPUNIT_NS::TestFixture {
     void testPropertyTestValidation();
 
     void testNDArray();
+
+    void testStrictAndReadOnly();
 };
 
 #endif /* VALIDATOR_TEST_HH */

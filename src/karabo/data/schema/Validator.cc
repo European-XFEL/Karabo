@@ -23,9 +23,11 @@
  * Created on February 8, 2013, 6:03 PM
  */
 
+// To check whether std::format is supported (as is from gcc >= 13)
 #include "Validator.hh"
 
 #include <boost/algorithm/string/trim.hpp>
+#include <version>
 
 #include "TableElement.hh"
 #include "karabo/data/time/Epochstamp.hh"
@@ -46,6 +48,63 @@ using std::vector;
 
 namespace karabo {
     namespace data {
+
+        namespace {
+            /**
+             * Get size of sequence inside node
+             *
+             * Throws if node contains an unknown type that cannot be casted to vector<string>
+             */
+            size_t sequenceSize(const Hash::Node& node) {
+                switch (node.getType()) {
+                    case Types::VECTOR_STRING:
+                        return node.getValue<std::vector<std::string>>().size();
+
+                    case Types::VECTOR_BOOL:
+                        return node.getValue<std::vector<bool>>().size();
+
+                    case Types::VECTOR_CHAR:
+                        return node.getValue<std::vector<char>>().size();
+                    case Types::VECTOR_UINT8:
+                        return node.getValue<std::vector<unsigned char>>().size();
+                    case Types::VECTOR_INT8:
+                        return node.getValue<std::vector<signed char>>().size();
+                    case Types::VECTOR_UINT16:
+                        return node.getValue<std::vector<unsigned short>>().size();
+                    case Types::VECTOR_INT16:
+                        return node.getValue<std::vector<short>>().size();
+
+                    case Types::VECTOR_UINT32:
+                        return node.getValue<std::vector<unsigned int>>().size();
+                    case Types::VECTOR_INT32:
+                        return node.getValue<std::vector<int>>().size();
+
+                    case Types::VECTOR_UINT64:
+                        return node.getValue<std::vector<unsigned long long>>().size();
+                    case Types::VECTOR_INT64:
+                        return node.getValue<std::vector<long long>>().size();
+
+                    case Types::VECTOR_FLOAT:
+                        return node.getValue<std::vector<float>>().size();
+                    case Types::VECTOR_DOUBLE:
+                        return node.getValue<std::vector<double>>().size();
+
+                    case Types::VECTOR_COMPLEX_FLOAT:
+                        return node.getValue<std::vector<std::complex<float>>>().size();
+                    case Types::VECTOR_COMPLEX_DOUBLE:
+                        return node.getValue<std::vector<std::complex<double>>>().size();
+
+                    default:
+                        try {
+                            // Costly try to get a size via casting to vector<string>
+                            return node.getValueAs<std::string, std::vector>().size();
+                        } catch (const std::exception&) {
+                            KARABO_RETHROW;
+                            return 0ul; // unreached
+                        }
+                }
+            }
+        } // namespace
 
         static bool isOutputChannelSchema(const karabo::data::Hash::Node& n);
         static bool onlyContainsEmptyHashLeafs(const karabo::data::Hash::Node& n);
@@ -150,8 +209,9 @@ namespace karabo {
 
 
         void Validator::validateUserOnly(const Hash& master, const Hash& user, Hash& working,
-                                         std::ostringstream& report, std::string scope) {
-            // No "injectDefaults", no "additionalKeys", allow "misssingKeys", allow "unrootedConfig"
+                                         std::ostringstream& report, const std::string& scope) {
+            // No "injectDefaults", no "additionalKeys", allow "misssingKeys", allow "unrootedConfig",
+            // not "strict"
             // Iterate user
             for (Hash::const_iterator uit = user.begin(); uit != user.end(); ++uit) {
                 const Hash::Node& userNode = *uit;
@@ -159,26 +219,23 @@ namespace karabo {
 
                 string currentScope;
                 if (scope.empty()) currentScope = key;
-                else currentScope = scope + "." + key;
+#if __cpp_lib_format
+                else currentScope = std::format("{}.{}", scope, key);
+#else
+                else currentScope = (scope + ".") += key;
+#endif
 
                 auto masterNode = master.find(key);
                 if (!masterNode) { // no "additionalKeys" allowed
                     report << "Encountered unexpected configuration parameter: \"" << currentScope << "\"" << endl;
-                    return;
+                    return; // Could continue; and get more feedback
                 }
 
                 auto nodeType = Schema::NodeType(masterNode->getAttribute<int>(KARABO_SCHEMA_NODE_TYPE));
                 const bool hasClassAttribute = masterNode->hasAttribute(KARABO_SCHEMA_CLASS_ID);
 
                 if (nodeType == Schema::LEAF) {
-                    Hash::Node& workNode = working.setNode(userNode); // copies also attributes, i.e. timestamp!
-                    if (userNode.hasAttribute(KARABO_SCHEMA_CLASS_ID)) {
-                        const std::string& classId = userNode.getAttribute<std::string>(KARABO_SCHEMA_CLASS_ID);
-                        if (classId == "State") workNode.setAttribute(KARABO_INDICATE_STATE_SET, true);
-                        else if (classId == "AlarmCondition") workNode.setAttribute(KARABO_INDICATE_ALARM_SET, true);
-                        workNode.setAttribute(KARABO_HASH_CLASS_ID, classId);
-                    }
-                    this->validateLeaf(*masterNode, workNode, report, currentScope);
+                    this->validateLeaf(*masterNode, userNode, working, report, currentScope);
                 } else if (nodeType == Schema::NODE) {
                     // See comment in `r_validate`...
                     if (isOutputChannelSchema(*masterNode)) {
@@ -228,8 +285,9 @@ namespace karabo {
 
 
         void Validator::r_validate(const Hash& master, const Hash& user, Hash& working, std::ostringstream& report,
-                                   std::string scope) {
-            if (!m_injectDefaults && !m_allowAdditionalKeys && m_allowMissingKeys && m_allowUnrootedConfiguration) {
+                                   const std::string& scope) {
+            if (!m_injectDefaults && !m_allowAdditionalKeys && m_allowMissingKeys && m_allowUnrootedConfiguration &&
+                !m_strict) {
                 validateUserOnly(master, user, working, report, scope);
                 return;
             }
@@ -243,20 +301,26 @@ namespace karabo {
 
                 string currentScope;
                 if (scope.empty()) currentScope = key;
-                else currentScope = scope + "." + key;
+#if __cpp_lib_format
+                else currentScope = std::format("{}.{}", scope, key);
+#else
+                else currentScope = (scope + ".") += key;
+#endif
 
                 auto nodeType = static_cast<Schema::NodeType>(it->getAttribute<int>(KARABO_SCHEMA_NODE_TYPE));
-                bool userHasNode = user.has(key);
+                boost::optional<const Hash::Node&> userNode = user.find(key);
                 const bool hasDefault = it->hasAttribute(KARABO_SCHEMA_DEFAULT_VALUE);
-                const bool hasClassAttribute = it->hasAttribute(KARABO_SCHEMA_CLASS_ID);
 
                 // Remove current node from all provided
-                if (userHasNode) keys.erase(key);
+                if (userNode) keys.erase(key);
 
                 if (nodeType == Schema::LEAF) {
                     auto assignment = Schema::AssignmentType(it->getAttribute<int>(KARABO_SCHEMA_ASSIGNMENT));
 
-                    if (!userHasNode) { // Node IS NOT provided
+                    if (!userNode) { // Node IS NOT provided
+                        if (m_strict) {
+                            report << "Missing parameter '" << currentScope << "' in strict mode\n";
+                        }
                         if (assignment == Schema::AssignmentType::MANDATORY_PARAM) {
                             if (!m_allowMissingKeys) {
                                 report << "Missing mandatory parameter: \"" << currentScope << "\"" << endl;
@@ -264,40 +328,24 @@ namespace karabo {
                             }
                         } else if ((assignment == Schema::OPTIONAL_PARAM || assignment == Schema::INTERNAL_PARAM) &&
                                    (hasDefault && m_injectDefaults)) {
-                            Hash::Node& node = working.set(key, it->getAttributeAsAny(KARABO_SCHEMA_DEFAULT_VALUE));
-                            if (hasClassAttribute) {
-                                const std::string& classId = it->getAttribute<std::string>(KARABO_SCHEMA_CLASS_ID);
-                                if (classId == "State") node.setAttribute(KARABO_INDICATE_STATE_SET, true);
-                                else if (classId == "AlarmCondition")
-                                    node.setAttribute(KARABO_INDICATE_ALARM_SET, true);
-                                node.setAttribute(KARABO_HASH_CLASS_ID, classId);
-                            }
-                            this->validateLeaf(*it, node, report, currentScope);
+                            this->validateLeaf(*it, Hash::Node(key, it->getAttributeAsAny(KARABO_SCHEMA_DEFAULT_VALUE)),
+                                               working, report, currentScope);
                         }
                     } else { // Node IS provided
-                        Hash::Node& node =
-                              working.setNode(user.getNode(key)); // copies also attributes, i.e. timestamp!
-                        if (user.hasAttribute(key, KARABO_SCHEMA_CLASS_ID)) {
-                            const std::string& classId = user.getAttribute<std::string>(key, KARABO_SCHEMA_CLASS_ID);
-                            if (classId == "State") node.setAttribute(KARABO_INDICATE_STATE_SET, true);
-                            else if (classId == "AlarmCondition") node.setAttribute(KARABO_INDICATE_ALARM_SET, true);
-                            node.setAttribute(KARABO_HASH_CLASS_ID, classId);
-                        }
-                        this->validateLeaf(*it, node, report, currentScope);
+                        this->validateLeaf(*it, *userNode, working, report, currentScope);
                     }
                 } else if (nodeType == Schema::NODE) {
                     // This block of code is here to sneak in the rule that we
                     // do not want the pipeline channel to have the schema field
                     // included in its validated configuration.
                     if (isOutputChannelSchema(*it)) {
-                        working.set(key, Hash());
+                        if (!m_strict) working.set(key, Hash());
                         // Having an output.schema/output.schema.A.B...X entry in user's configuration
                         // hash is allright as long as the leaf node ends in an empty Hash.
                         //
                         // FIXME: This exception is a workaround for issue mentioned in:
                         // https://git.xfel.eu/Karabo/Framework/-/merge_requests/7892#note_403479
-                        bool userHashHasOutputSchemaEntries =
-                              (userHasNode && !onlyContainsEmptyHashLeafs(user.getNode(key)));
+                        bool userHashHasOutputSchemaEntries = (userNode && !onlyContainsEmptyHashLeafs(*userNode));
 
                         if (userHashHasOutputSchemaEntries) {
                             report << "Configuring output channel schema is not allowed: '" << currentScope << "'"
@@ -307,61 +355,64 @@ namespace karabo {
                                 // children of output channel's schema node.
                     }
 
+                    const bool hasClassAttribute = it->hasAttribute(KARABO_SCHEMA_CLASS_ID);
                     if (hasClassAttribute) {
                         const std::string& classId = it->getAttribute<std::string>(KARABO_SCHEMA_CLASS_ID);
                         if (classId == "Slot") {
                             // Slot nodes should not appear in the validated output nor in the input.
                             // Tolerate empty node input for backward compatibility, though.
-                            if (userHasNode && (user.getType(key) != Types::HASH || !user.get<Hash>(key).empty())) {
+                            if (userNode &&
+                                (userNode->getType() != Types::HASH || !userNode->getValue<Hash>().empty())) {
                                 report << "There is configuration provided for Slot '" << currentScope << "'" << endl;
                                 return;
                             }
                             continue;
                         } else if (classId == "NDArray") {
-                            if (!userHasNode) {
+                            if (!userNode) {
                                 // NDArray is always readOnly and thus may be missing except if we are strict.
                                 // Note that it neither has defaults that one could inject here.
                                 if (m_strict) {
                                     report << "NDArray is lacking for '" << currentScope << "'.\n";
                                 }
                             } else {
-                                Hash::Node& workNode = working.set(key, std::any()); // Insert empty node
-                                validateNDArray(it->getValue<Hash>(), user.get<NDArray>(key), workNode, report,
-                                                currentScope);
+                                validateNDArray(it->getValue<Hash>(), userNode->getValue<NDArray>(), key, working,
+                                                report, currentScope);
                             }
                         }
                     }
-                    if (!userHasNode) {
-                        if (m_injectDefaults) {
+                    if (!userNode) {
+                        if (m_injectDefaults && !m_strict) {
                             Hash::Node& workNode = working.set(key, Hash()); // Insert empty node
                             if (hasClassAttribute) {
                                 workNode.setAttribute(KARABO_HASH_CLASS_ID,
                                                       it->getAttribute<std::string>(KARABO_SCHEMA_CLASS_ID));
                             }
                             r_validate(it->getValue<Hash>(), Hash(), workNode.getValue<Hash>(), report, currentScope);
+                        } else if (m_strict) {
+                            report << "Missing node " << currentScope << std::endl;
                         } else {
                             Hash workFake;
                             r_validate(it->getValue<Hash>(), Hash(), workFake, report, currentScope);
                         }
                     } else {
-                        if (user.getType(key) != Types::HASH) {
+                        if (userNode->getType() != Types::HASH) {
                             if (hasClassAttribute) {
                                 // The node reflects a configuration for a class,
                                 // what is provided here is the object already -> copy over and shut-up
-                                Hash::Node& workNode = working.setNode(user.getNode(key));
+                                Hash::Node& workNode = working.setNode(*userNode);
                                 workNode.setAttribute(KARABO_HASH_CLASS_ID,
                                                       it->getAttribute<std::string>(KARABO_SCHEMA_CLASS_ID));
                                 continue;
                             } else {
                                 report << "Parameter \"" << currentScope
                                        << "\" has incorrect node type, expecting HASH not "
-                                       << Types::to<ToLiteral>(user.getType(key)) << endl;
+                                       << Types::to<ToLiteral>(userNode->getType()) << endl;
                                 return;
                             }
                         } else {
-                            Hash::Node& workNode = working.set(key, Hash()); // Insert empty node
-                            r_validate(it->getValue<Hash>(), user.get<Hash>(key), workNode.getValue<Hash>(), report,
-                                       currentScope);
+                            Hash work;
+                            r_validate(it->getValue<Hash>(), userNode->getValue<Hash>(), work, report, currentScope);
+                            if (!m_strict) working.set(key, std::move(work));
                         }
                     }
                 }
@@ -371,13 +422,17 @@ namespace karabo {
                 for (const string& key : keys) {
                     string currentScope;
                     if (scope.empty()) currentScope = key;
-                    else currentScope = scope + "." + key;
+#if __cpp_lib_format
+                    else currentScope = std::format("{}.{}", scope, key);
+#else
+                    else currentScope = (scope + ".") += key;
+#endif
                     report << "Encountered unexpected configuration parameter: \"" << currentScope << "\"" << endl;
                 }
             }
         }
 
-        void Validator::validateNDArray(const Hash& master, const NDArray& user, Hash::Node& workNode,
+        void Validator::validateNDArray(const Hash& master, const NDArray& user, const std::string& key, Hash& working,
                                         std::ostringstream& report, const std::string& scope) {
             if (master.hasAttribute("shape", KARABO_SCHEMA_DEFAULT_VALUE)) {
                 // Schema defines a shape - validate it!
@@ -404,15 +459,16 @@ namespace karabo {
                 report << "NDArray type mismatch for '" << scope << "': should be " << Types::to<ToLiteral>(schemaType)
                        << ", not " << Types::to<ToLiteral>(userType) << "\n";
             }
-            // For now we copy the data to the validated output (bulk data will not be copied, it is a ByteArray)
             // FIXME: For unknown reasons, an rvalue has to be passed to setValue(..). If passing the normal const
             //        reference, the "_classId" attribute is not set to 'NDArray', but 'Hash'.
             //        Since a copy is anyway needed, this is no performance loss.
-            workNode.setValue(NDArray(user));
+            if (!m_strict) {
+                working.set(key, NDArray(user));
+            }
         }
 
         struct FindInOptions {
-            inline FindInOptions(const Hash::Node& masterNode, Hash::Node& workNode)
+            inline FindInOptions(const Hash::Node& masterNode, const Hash::Node& workNode)
                 : result(false), m_masterNode(masterNode), m_workNode(workNode) {}
 
             template <class T>
@@ -423,31 +479,46 @@ namespace karabo {
 
             bool result;
             const Hash::Node& m_masterNode;
-            Hash::Node& m_workNode;
+            const Hash::Node& m_workNode;
         };
 
-        void Validator::validateLeaf(const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report,
-                                     std::string scope) {
-            if (m_injectTimestamps) attachTimestampIfNotAlreadyThere(workNode);
-
+        void Validator::validateLeaf(const Hash::Node& masterNode, const Hash::Node& userNode, Hash& working,
+                                     std::ostringstream& report, const std::string& scope) {
             Types::ReferenceType referenceType =
                   Types::from<FromLiteral>(masterNode.getAttribute<string>(KARABO_SCHEMA_VALUE_TYPE));
             Types::ReferenceType referenceCategory = Types::category(referenceType);
-            Types::ReferenceType givenType = workNode.getType();
+            Types::ReferenceType givenType = userNode.getType();
 
             // Check data types
+            if (m_strict && givenType != referenceType) {
+                report << "Expect '" << Types::to<ToLiteral>(referenceType) << "', but got '"
+                       << Types::to<ToLiteral>(givenType) << "' for " << scope << "\n";
+                return;
+            }
+            // In m_strict mode, we do not want to copy anything to 'working' (output) and otherwise we want to allow
+            // for some casting. So from now on we work on two variables:
+            // - workNode: a pointer where to copy things to - non-null only if we want to copy, so we always check it
+            // - typeValidatedUserNode: user input, either the type checked userNode, or the workNode we manipulate
+            //                          (note we act on it a few lines below to make it the proper type if needed)
+            Hash::Node* workNode =
+                  (m_strict ? nullptr : &working.setNode(userNode)); // Copy user data, incl. attributes
+            const Hash::Node& typeValidatedUserNode = (workNode ? *workNode : userNode);
+
+            if (m_injectTimestamps && workNode) attachTimestampIfNotAlreadyThere(*workNode);
+
             if (givenType != referenceType) {
+                // Cannot be reached if m_strict, i.e. workNode != nullptr
                 if (referenceType == Types::VECTOR_HASH && givenType == Types::VECTOR_STRING &&
-                    workNode.getValue<vector<string>>().empty()) {
+                    workNode->getValue<vector<string>>().empty()) {
                     // A HACK: Some Python code cannot distinguish between empty VECTOR_HASH and empty VECTOR_STRING
                     //         and in doubt chooses the latter.
                     //         So we tolerate empty vector<string> and overwrite by empty vector<Hash>.
-                    workNode.setValue(vector<Hash>());
+                    workNode->setValue(vector<Hash>());
                     // TableElement cells may be aliasing values. In this case the actual value may be of NoneType
-                } else if (!(workNode.hasAttribute("isAliasing") && givenType == Types::NONE)) {
+                } else if (!(givenType == Types::NONE && workNode->hasAttribute("isAliasing"))) {
                     // Try casting this guy
                     try {
-                        workNode.setType(referenceType);
+                        workNode->setType(referenceType);
                     } catch (const CastException& e) {
                         report << "Failed to cast the value of parameter \"" << scope << "\" from "
                                << Types::to<ToLiteral>(givenType);
@@ -457,48 +528,43 @@ namespace karabo {
                     }
                 }
             }
+
             if (masterNode.hasAttribute(KARABO_SCHEMA_CLASS_ID)) {
                 const std::string& classId = masterNode.getAttribute<std::string>(KARABO_SCHEMA_CLASS_ID);
                 if (classId == "State") {
                     // this node is a state, we will validate the string against the allowed states
-                    const std::string& value = workNode.getValue<std::string>();
-                    try {
-                        State::fromString(value);
-                        // if the KARABO_INDICATE_STATE_SET is missing, we add it since the string is valid
-                        if (!workNode.hasAttribute(KARABO_INDICATE_STATE_SET)) {
-                            workNode.setAttribute(KARABO_INDICATE_STATE_SET, true);
-                        }
-                    } catch (const LogicException& e) {
+                    const std::string& value = typeValidatedUserNode.getValue<std::string>();
+                    if (State::isValid(value)) {
+                        // Set the KARABO_INDICATE_STATE_SET bit
+                        if (workNode) workNode->setAttribute(KARABO_INDICATE_STATE_SET, true);
+                    } else {
                         report << "Value '" << value << "' for parameter \"" << scope
                                << "\" is not a valid state string" << endl;
-                        Exception::clearTrace();
                     }
-                } else if (workNode.hasAttribute(KARABO_INDICATE_STATE_SET)) {
-                    // the KARABO_INDICATE_STATE_SET attribute is being set on an element that is NOT an state element
+                } else if (typeValidatedUserNode.hasAttribute(KARABO_INDICATE_STATE_SET)) {
+                    // the KARABO_INDICATE_STATE_SET attribute is being set on an element that is NOT a state element
                     report << "Tried setting non-state element at " << scope << " with state indication attribute"
                            << endl;
                 }
 
                 if (classId == "AlarmCondition") {
                     // this node is an alarm condition, we will validate the string against the allowed alarm strings
-                    const std::string& value = workNode.getValue<std::string>();
-                    try {
-                        AlarmCondition::fromString(value);
-                        // if the KARABO_INDICATE_ALARM_SET is missing, we add it since the string is valid
-                        if (!workNode.hasAttribute(KARABO_INDICATE_ALARM_SET)) {
-                            workNode.setAttribute(KARABO_INDICATE_ALARM_SET, true);
-                        }
-                    } catch (const LogicException& e) {
+                    const std::string& value = typeValidatedUserNode.getValue<std::string>();
+                    if (AlarmCondition::isValid(value)) {
+                        // Set the KARABO_INDICATE_ALARM_SET bit
+                        if (workNode) workNode->setAttribute(KARABO_INDICATE_ALARM_SET, true);
+                    } else {
                         report << "Value '" << value << "' for parameter \"" << scope
                                << "\" is not a valid alarm string" << endl;
-                        Exception::clearTrace();
                     }
-                } else if (workNode.hasAttribute(KARABO_INDICATE_ALARM_SET)) {
+                } else if (typeValidatedUserNode.hasAttribute(KARABO_INDICATE_ALARM_SET)) {
                     // the KARABO_INDICATE_ALARM_SET attribute is being set on an element that is NOT an alarm condition
                     // element
                     report << "Tried setting non-alarm condition element at " << scope
                            << " with alarm indication attribute" << endl;
                 }
+
+                if (workNode) workNode->setAttribute(KARABO_HASH_CLASS_ID, classId);
             }
 
             if (masterNode.hasAttribute(KARABO_SCHEMA_ACCESS_MODE) &&
@@ -508,19 +574,19 @@ namespace karabo {
             // Check ranges
             if (referenceCategory == Types::SIMPLE) {
                 if (masterNode.hasAttribute(KARABO_SCHEMA_OPTIONS)) {
-                    FindInOptions findInOptions(masterNode, workNode);
-                    templatize(workNode.getType(), findInOptions);
+                    FindInOptions findInOptions(masterNode, typeValidatedUserNode);
+                    templatize(typeValidatedUserNode.getType(), findInOptions);
 
                     if (!findInOptions.result) {
-                        report << "Value '" << workNode.getValueAs<string>() << "' for parameter \"" << scope
-                               << "\" is not one of the valid options: "
+                        report << "Value '" << typeValidatedUserNode.getValueAs<string>() << "' for parameter \""
+                               << scope << "\" is not one of the valid options: "
                                << masterNode.getAttributeAs<string>(KARABO_SCHEMA_OPTIONS) << endl;
                     }
                 }
 
                 if (masterNode.hasAttribute(KARABO_SCHEMA_MIN_EXC)) {
                     double minExc = masterNode.getAttributeAs<double>(KARABO_SCHEMA_MIN_EXC);
-                    double value = workNode.getValueAs<double>();
+                    double value = typeValidatedUserNode.getValueAs<double>();
                     if (value <= minExc) {
                         report << "Value " << value << " for parameter \"" << scope << "\" is out of lower bound "
                                << minExc << endl;
@@ -529,7 +595,7 @@ namespace karabo {
 
                 if (masterNode.hasAttribute(KARABO_SCHEMA_MIN_INC)) {
                     double minInc = masterNode.getAttributeAs<double>(KARABO_SCHEMA_MIN_INC);
-                    double value = workNode.getValueAs<double>();
+                    double value = typeValidatedUserNode.getValueAs<double>();
                     if (value < minInc) {
                         report << "Value " << value << " for parameter \"" << scope << "\" is out of lower bound "
                                << minInc << endl;
@@ -538,7 +604,7 @@ namespace karabo {
 
                 if (masterNode.hasAttribute(KARABO_SCHEMA_MAX_EXC)) {
                     double maxExc = masterNode.getAttributeAs<double>(KARABO_SCHEMA_MAX_EXC);
-                    double value = workNode.getValueAs<double>();
+                    double value = typeValidatedUserNode.getValueAs<double>();
                     if (value >= maxExc) {
                         report << "Value " << value << " for parameter \"" << scope << "\" is out of upper bound "
                                << maxExc << endl;
@@ -547,7 +613,7 @@ namespace karabo {
 
                 if (masterNode.hasAttribute(KARABO_SCHEMA_MAX_INC)) {
                     double maxInc = masterNode.getAttributeAs<double>(KARABO_SCHEMA_MAX_INC);
-                    double value = workNode.getValueAs<double>();
+                    double value = typeValidatedUserNode.getValueAs<double>();
                     if (value > maxInc) {
                         report << "Value " << value << " for parameter \"" << scope << "\" is out of upper bound "
                                << maxInc << endl;
@@ -555,35 +621,9 @@ namespace karabo {
                 }
 
             } else if (referenceCategory == Types::SEQUENCE) {
-                int currentSize = 0;
-                // "vector<char>" and "vector<unsigned char>" have "toString"
-                // and "fromString" specializations in "StringTools.hh" that
-                // use Base64 encoding.
-                //
-                // Calling specific specializations of "getValue" for the
-                // "vector<char>" and "vector<unsigned chars>" makes sure that
-                // no wrong specialization of "fromString" is used and that
-                // the resulting vector's is correct - before,
-                // "getValueAs<string, vector>" was called for all types and
-                // ended up using the wrong "fromString" specialization for the
-                // two mentioned types.
-                //
-                // Base64 enconding is the right way to handle those two types
-                // of vector. It would be possible to remove the Base64
-                // enconding for the "vector<unsigned char>", but that would
-                // break backward compatibility.
-                if (referenceType == Types::VECTOR_CHAR) {
-                    currentSize = workNode.getValue<vector<char>>().size();
-                } else if (referenceType == Types::VECTOR_UINT8) {
-                    currentSize = workNode.getValue<vector<unsigned char>>().size();
-                } else {
-                    currentSize = workNode.getValueAs<string, vector>().size();
-                }
-
-                // TODO Check whether we are really going to validate inner elements of a vector for max/min..., maybe
-                // not.
                 if (masterNode.hasAttribute(KARABO_SCHEMA_MIN_SIZE)) {
-                    int minSize = masterNode.getAttribute<unsigned int>(KARABO_SCHEMA_MIN_SIZE);
+                    const size_t currentSize = sequenceSize(typeValidatedUserNode);
+                    const size_t minSize = masterNode.getAttribute<unsigned int>(KARABO_SCHEMA_MIN_SIZE);
                     if (currentSize < minSize) {
                         report << "Number of elements (" << currentSize << ") for (vector-)parameter \"" << scope
                                << "\" is smaller than lower bound (" << minSize << ")" << endl;
@@ -591,27 +631,31 @@ namespace karabo {
                 }
 
                 if (masterNode.hasAttribute(KARABO_SCHEMA_MAX_SIZE)) {
-                    int maxSize = masterNode.getAttribute<unsigned int>(KARABO_SCHEMA_MAX_SIZE);
+                    const size_t currentSize = sequenceSize(typeValidatedUserNode);
+                    const size_t maxSize = masterNode.getAttribute<unsigned int>(KARABO_SCHEMA_MAX_SIZE);
                     if (currentSize > maxSize) {
                         report << "Number of elements (" << currentSize << ") for (vector-)parameter \"" << scope
                                << "\" is greater than upper bound (" << maxSize << ")" << endl;
                     }
                 }
             } else if (referenceCategory == Types::VECTOR_HASH) {
-                validateVectorOfHashesLeaf(masterNode, workNode, report);
+                validateVectorOfHashesLeaf(masterNode, typeValidatedUserNode, workNode, report);
             }
         }
 
-
-        void Validator::validateVectorOfHashesLeaf(const Hash::Node& masterNode, Hash::Node& workNode,
-                                                   std::ostringstream& report) {
+        void Validator::validateVectorOfHashesLeaf(const Hash::Node& masterNode, const Hash::Node& userNode,
+                                                   Hash::Node* workNodePtr, std::ostringstream& report) {
             // A vector of hashes may be a table element - if it has a RowSchema attribute
             // it is assumed to be a table element.
             if (masterNode.hasAttribute(KARABO_SCHEMA_ROW_SCHEMA)) {
                 const std::string& tableName = masterNode.getKey();
 
                 const auto& rowSchema = masterNode.getAttribute<karabo::data::Schema>(KARABO_SCHEMA_ROW_SCHEMA);
-                std::vector<karabo::data::Hash>& table = workNode.getValue<std::vector<karabo::data::Hash>>();
+
+                // Hack (again) case of empty (as checked before) vector<string> from user side
+                const std::vector<karabo::data::Hash>& table =
+                      (userNode.is<std::vector<std::string>>() ? std::vector<karabo::data::Hash>()
+                                                               : userNode.getValue<std::vector<karabo::data::Hash>>());
 
                 const long long minSize = !masterNode.hasAttribute(KARABO_SCHEMA_MIN_SIZE)
                                                 ? -1ll
@@ -640,7 +684,9 @@ namespace karabo {
 
                 // Validates each row.
                 if (table.size() > 0) {
-                    Validator rowValidator(data::tableValidationRules);
+                    ValidationRules rules(data::tableValidationRules);
+                    rules.strict = m_strict;
+                    Validator rowValidator(rules);
                     for (decltype(table.size()) i = 0; i < table.size(); i++) {
                         data::Hash validatedHash;
                         auto valResult = rowValidator.validate(rowSchema, table[i], validatedHash);
@@ -650,7 +696,11 @@ namespace karabo {
                         } else {
                             // Updates the table row - the table validator may have injected columns, converted
                             // values, ....
-                            table[i] = std::move(validatedHash);
+                            if (workNodePtr) {
+                                // i.e. m_strict == false (and otherwise validatedHash.empty() overwrites row!)
+                                auto& workTable = workNodePtr->getValue<std::vector<karabo::data::Hash>>();
+                                workTable[i] = std::move(validatedHash);
+                            }
                         }
                     }
                 }

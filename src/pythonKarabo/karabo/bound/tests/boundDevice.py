@@ -294,8 +294,8 @@ class TestDevice(PythonDevice):
         self.word_no += 1
 
     def send(self):
-        self.writeChannel("output1", Hash("e", 5, "s", "hallo"))
-        node = Hash("e", 5, "s", "hallo")
+        self.writeChannel("output1", Hash("e", 5., "s", "hallo"))
+        node = Hash("e", 5., "s", "hallo")
         arr = numpy.full((10), 42., dtype=numpy.float32)
         node.set("ndarray", arr)
         imArr = numpy.full((50, 50), 42, dtype=numpy.uint16)
@@ -309,7 +309,7 @@ class TestDevice(PythonDevice):
             sourceName = f"{self.getInstanceId()}:output{i}"
             timestamp = self.getActualTimestamp()
             meta = ChannelMetaData(sourceName, timestamp)
-            channel.write(Hash("e", i, "s", "hallo"), meta)
+            channel.write(Hash("e", float(i), "s", "hallo"), meta)
         channel.update()
 
     def end(self):
