@@ -750,23 +750,22 @@ class PythonDevice:
         with self._stateChangeLock:
             try:
                 result = self._parameters[key]
-                if not self._fullSchema.hasClassId(key):
-                    classId = None
-                else:
-                    classId = self._fullSchema.getClassId(key)
-                if classId == KARABO_CLASS_ID_STATE:
-                    return State(result)
-                elif classId == KARABO_CLASS_ID_ALARM:
-                    return AlarmCondition(result)
+                if isinstance(result, str):
+                    if self._fullSchema.hasClassId(key):
+                        classId = self._fullSchema.getClassId(key)
+                        if classId == KARABO_CLASS_ID_STATE:
+                            return State(result)
+                        elif classId == KARABO_CLASS_ID_ALARM:
+                            return AlarmCondition(result)
                 elif isinstance(result, (Hash, VectorHash)):
                     # For Hash and VectorHash, 'result' is a reference, so if
                     # it would be returned and the returned object would be
                     # changed, self._parameters would be changed as well, pro-
                     # viding a back door without using self._stateChangeLock!
                     return copy.copy(result)
-                else:
-                    # Note that vectors of numbers are copies
-                    return result
+                # We are left with "normal" str or anything but [Vector]Hash.
+                # Note that vectors of numbers/strings are copies
+                return result
             except RuntimeError as e:
                 print(e)
                 raise AttributeError(
