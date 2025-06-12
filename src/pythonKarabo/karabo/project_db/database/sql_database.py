@@ -564,6 +564,7 @@ class SQLDatabase(DatabaseBase):
             select(Project, DeviceInstance)
             .join(ProjectDomain).join(DeviceServer).join(DeviceInstance)
             .where(ProjectDomain.name == domain)
+            .where(Project.is_trashed.is_(False))
             .filter(DeviceInstance.name.ilike(f'%{name_part}%'))
         )
 
@@ -602,6 +603,7 @@ class SQLDatabase(DatabaseBase):
             select(Project, DeviceServer)
             .join(ProjectDomain).join(DeviceServer)
             .where(ProjectDomain.name == domain)
+            .where(Project.is_trashed.is_(False))
             .filter(DeviceServer.name.ilike(f'%{name_part}%'))
         )
 
@@ -640,6 +642,7 @@ class SQLDatabase(DatabaseBase):
             select(Project, Macro)
             .join(ProjectDomain).join(Macro)
             .where(ProjectDomain.name == domain)
+            .where(Project.is_trashed.is_(False))
             .filter(Macro.name.ilike(f'%{name_part}%'))
         )
 
