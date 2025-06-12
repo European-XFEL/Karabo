@@ -90,6 +90,11 @@ namespace karabo {
         }
 
 
+        bool AlarmCondition::isValid(const std::string& condition) {
+            std::call_once(m_initFromStringFlag, &AlarmCondition::initFromString);
+            return (m_alarmFactory.end() != m_alarmFactory.find(condition));
+        }
+
         const AlarmCondition& AlarmCondition::fromString(const std::string& condition) {
             std::call_once(m_initFromStringFlag, &AlarmCondition::initFromString);
 

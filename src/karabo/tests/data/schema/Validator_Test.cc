@@ -1442,16 +1442,11 @@ void Validator_Test::testNDArray() {
     data::Validator val(rules);
 
     Hash dataOut;
-
     { // Matching
         Hash data("arr", data::NDArray(data::Dims(100ull, 200ull), static_cast<short>(42)));
         std::pair<bool, std::string> res = val.validate(s, data, dataOut);
         CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
-        CPPUNIT_ASSERT(dataOut.has("arr"));
-        CPPUNIT_ASSERT_NO_THROW(dataOut.get<data::NDArray>("arr"));
-        const data::NDArray& arr = dataOut.get<data::NDArray>("arr");
-        CPPUNIT_ASSERT_MESSAGE(data::Types::to<data::ToLiteral>(arr.getType()), arr.getType() == data::Types::INT16);
-        CPPUNIT_ASSERT_MESSAGE(data::toString(arr.getShape().toVector()), arr.getShape() == data::Dims(100, 200));
+        CPPUNIT_ASSERT_MESSAGE("Should be empty: " + toString(dataOut), dataOut.empty());
 
         // Also test dimension 0 as wildcard size
         data::Schema s2;
@@ -1464,11 +1459,7 @@ void Validator_Test::testNDArray() {
 
         res = val.validate(s2, data, dataOut);
         CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
-        CPPUNIT_ASSERT(dataOut.has("arr"));
-        CPPUNIT_ASSERT_NO_THROW(dataOut.get<data::NDArray>("arr"));
-        const data::NDArray& arr2 = dataOut.get<data::NDArray>("arr");
-        CPPUNIT_ASSERT_MESSAGE(data::Types::to<data::ToLiteral>(arr2.getType()), arr2.getType() == data::Types::INT16);
-        CPPUNIT_ASSERT_MESSAGE(data::toString(arr2.getShape().toVector()), arr2.getShape() == data::Dims(100, 200));
+        CPPUNIT_ASSERT_MESSAGE("Should be empty: " + toString(dataOut), dataOut.empty());
     }
 
     { // Missing
@@ -1485,12 +1476,51 @@ void Validator_Test::testNDArray() {
         const size_t pos = res.second.find("NDArray type mismatch for 'arr': should be INT16, not INT32");
         CPPUNIT_ASSERT_MESSAGE(res.second, pos != std::string::npos);
     }
-
     { // Wrong shape (swapped)
         Hash data("arr", data::NDArray(data::Dims(200ull, 100ull), static_cast<short>(42)));
         const std::pair<bool, std::string> res = val.validate(s, data, dataOut);
         CPPUNIT_ASSERT_MESSAGE(res.second, !res.first);
         const size_t pos = res.second.find("NDArray shape mismatch for 'arr': should be (100,200), not (200,100)");
         CPPUNIT_ASSERT_MESSAGE(res.second, pos != std::string::npos);
+    }
+}
+
+void Validator_Test::testStrictAndReadOnly() {
+    data::Schema s;
+    NDARRAY_ELEMENT(s).key("arr").dtype(data::Types::INT8).shape(std::vector<unsigned long long>({10, 20})).commit();
+    VECTOR_UINT32_ELEMENT(s).key("vec").maxSize(20).readOnly().commit();
+    STRING_ELEMENT(s).key("str").readOnly().commit();
+    data::NODE_ELEMENT(s).key("node").commit();
+    data::FLOAT_ELEMENT(s).key("node.float").readOnly().commit();
+
+    const Hash data("arr", data::NDArray(data::Dims(10, 20), static_cast<signed char>(42)), "vec",
+                    std::vector<unsigned int>(19, 42u), "str", "Hello!", "node.float", 4.2f);
+
+    data::Validator::ValidationRules rules;
+    // Output channel validation settings:
+    rules.allowAdditionalKeys = false;
+    rules.allowMissingKeys = false;
+    rules.allowUnrootedConfiguration = true;
+    rules.injectDefaults = false;
+    rules.injectTimestamps = false;
+    rules.strict = true;
+
+    { // Success
+        Hash output;
+        data::Validator val(rules);
+        std::pair<bool, std::string> res = val.validate(s, data, output);
+        CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
+        // Strict: no copy!
+        CPPUNIT_ASSERT_MESSAGE("Should be empty:\n" + toString(output), output.empty());
+
+        data::Validator::ValidationRules rules2(rules);
+        rules2.strict = false;
+        val.setValidationRules(rules2);
+        res = val.validate(s, data, output);
+        CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
+        CPPUNIT_ASSERT_MESSAGE(toString(output), !output.empty());
+        if (!output.fullyEquals(data, false)) { // order does not matter
+            CPPUNIT_FAIL("Shouldn't differ:\n" + toString(data) += " vs.\n" + toString(output));
+        }
     }
 }

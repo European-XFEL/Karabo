@@ -212,19 +212,19 @@ namespace karabo {
 
            private:
             void validateUserOnly(const Hash& master, const Hash& user, Hash& working, std::ostringstream& report,
-                                  std::string scope = "");
+                                  const std::string& scope);
 
             void r_validate(const Hash& master, const Hash& user, Hash& working, std::ostringstream& report,
-                            std::string scope = "");
+                            const std::string& scope);
 
-            void validateNDArray(const Hash& master, const NDArray& user, Hash::Node& workNode,
+            void validateNDArray(const Hash& master, const NDArray& user, const std::string& key, Hash& working,
                                  std::ostringstream& report, const std::string& scope);
 
-            void validateLeaf(const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report,
-                              std::string scope);
+            void validateLeaf(const Hash::Node& masterNode, const Hash::Node& userNode, Hash& working,
+                              std::ostringstream& report, const std::string& scope);
 
-            void validateVectorOfHashesLeaf(const Hash::Node& masterNode, Hash::Node& workNode,
-                                            std::ostringstream& report);
+            void validateVectorOfHashesLeaf(const Hash::Node& masterNode, const Hash::Node& userNode,
+                                            Hash::Node* workNodePtr, std::ostringstream& report);
 
             void attachTimestampIfNotAlreadyThere(Hash::Node& node);
         };
