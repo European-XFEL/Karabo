@@ -13,6 +13,7 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
+from asyncio import wait_for
 from io import StringIO
 
 from lxml import etree
@@ -24,9 +25,9 @@ from karabo.common.project.api import (
 from karabo.common.scenemodel.api import write_scene
 from karabo.common.states import State
 from karabo.middlelayer import (
-    AccessLevel, AccessMode, Bool, Configurable, Device, Hash, HashList, Node,
-    Overwrite, Slot, String, TypeHash, VectorString, dictToHash, slot)
-from karabo.middlelayer.signalslot import Signal
+    AccessLevel, AccessMode, Bool, Configurable, Device, Hash, HashList,
+    KaraboError, Node, Overwrite, Signal, Slot, String, TypeHash, VectorString,
+    decodeXML, dictToHash, instantiate, slot)
 from karabo.native import read_project_model
 from karabo.project_db import (
     ExistDbNode, LocalNode, ProjectDBError, RemoteNode)
@@ -230,7 +231,9 @@ class ProjectManager(Device):
             return await self.slotListProjectsWithServer(info)
         elif action_type == "listDomainWithDevices":
             return await self.listDomainWithDevices(info)
-        raise NotImplementedError(f"{type} not implemented")
+        elif action_type == "instantiateProjectDevice":
+            return await self.instantiateProjectDevice(info)
+        raise NotImplementedError(f"{action_type} not implemented")
 
     @slot
     async def slotSaveItems(self, info: Hash):
@@ -383,6 +386,33 @@ class ProjectManager(Device):
             topology = await db_session.get_devices_from_domain(domain)
             res = HashList([Hash(device) for device in topology])
             return Hash('items', res)
+
+    @slot
+    async def instantiateProjectDevice(self, info: Hash):
+        """Instantiate a device on a server with classId"""
+        deviceId = info["deviceId"]
+        classId = info["classId"]
+        serverId = info["serverId"]
+        uuid = info["device_uuid"]
+        async with self.db_handle as db_session:
+            config = await db_session.get_device_config_from_device_uuid(
+                uuid)
+            if config is None:
+                raise KaraboError(
+                    f"No configuration found for deviceId {deviceId} "
+                    f"with classId {classId}.")
+            config = decodeXML(config)
+            # gracefully the first (and only) key value pair, which is
+            # the classId
+            assert len(config) == 1
+            key = next(iter(config), None)
+            configuration = config[key]
+            await wait_for(instantiate(
+                serverId=serverId,
+                classId=classId,
+                deviceId=deviceId,
+                configuration=configuration), timeout=10)
+        return Hash()
 
     @slot
     async def slotListDomains(self):

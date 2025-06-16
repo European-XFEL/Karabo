@@ -27,9 +27,10 @@ async def create_device(db):
     """Create a device instance with two configurations."""
     config_uuids = [generate_uuid(), generate_uuid()]
 
-    for config_uuid in config_uuids:
+    for index, config_uuid in enumerate(config_uuids):
+        name = "default" if index else "nodefault"
         config_xml = (
-            f'<xml uuid="{config_uuid}" simple_name="{config_uuid}" '
+            f'<xml uuid="{config_uuid}" simple_name="{name}" '
             'description="" item_type="device_config" '
             'revision="0" alias="default">'
             '<root KRB_Artificial="">'

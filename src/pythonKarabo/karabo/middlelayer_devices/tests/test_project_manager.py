@@ -16,6 +16,7 @@
 import os
 from asyncio import sleep, wait_for
 from pathlib import Path
+from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
@@ -86,7 +87,7 @@ async def exist_database():
         if not db.dbhandle.hasCollection(path):
             db.dbhandle.createCollection(path)
         _, device_config_uuid_map = await create_hierarchy(db)
-    ret = {"session": db_init,
+    ret = {"session": db_init, "name": "exist_database",
            "device_config_uuid_map": device_config_uuid_map}
     yield ret
 
@@ -136,7 +137,7 @@ async def sql_database():
     # Create test data
     async with db_init as db:
         _, device_config_uuid_map = await create_hierarchy(db)
-    ret = {"session": db_init,
+    ret = {"session": db_init, "name": "sql_database",
            "device_config_uuid_map": device_config_uuid_map}
     yield ret
     await db_init.delete()
@@ -162,7 +163,7 @@ def db_fixture(request):
 @pytest.mark.parametrize("db_fixture",
                          ["exist_db_testcase", "sql_database_testcase"],
                          indirect=True)
-async def test_project_manager(db_fixture, subtests):
+async def test_project_manager(db_fixture, subtests, mocker):
     # tests are run in sequence as sub tests
     # device server thus is only instantiated once
     # we allow for sleeps in the integration tests as some messaging
@@ -281,3 +282,33 @@ async def test_project_manager(db_fixture, subtests):
             conf = ret["items"][0]["config_uuid"]
             assert proj == "Project"
             assert config_uuid == conf
+
+    if db_fixture["name"] == "sql_database":
+        with subtests.test(msg="Test instantiate project device"):
+            ret = await wait_for(call(
+                _PROJECT_DB_TEST, "listDomainWithDevices",
+                Hash("domain", "LOCAL")), timeout=5)
+            items = ret["items"]
+            assert len(items) == 16
+            item = items[0]
+            for key in ["device_uuid", "device_name",
+                        "device_class", "server_name",
+                        "project_uuid", "project_name"]:
+                assert key in item
+            device_uuid = item["device_uuid"]
+            assert device_uuid is not None
+
+            instantiate = mocker.patch(
+                "karabo.middlelayer_devices.project_manager.instantiate",
+                new_callable=AsyncMock)
+            h = Hash("deviceId", item["device_name"],
+                     "classId", item["device_class"],
+                     "serverId", item["server_name"],
+                     "device_uuid", item["device_uuid"])
+            ret = await wait_for(call(
+                _PROJECT_DB_TEST, "instantiateProjectDevice", h), timeout=5)
+            kwargs = instantiate.call_args.kwargs
+            assert kwargs["classId"] == "a_class"
+            assert kwargs["deviceId"] == item["device_name"]
+            assert kwargs["serverId"] == item["server_name"]
+            assert isinstance(kwargs["configuration"], Hash)
