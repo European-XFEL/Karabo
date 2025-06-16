@@ -525,7 +525,7 @@ namespace karabind {
             }
             if (py::hasattr(o, "__name__")) { // python function
                 any = o;
-                return karabo::data::Types::ANY;
+                return karabo::data::Types::UNKNOWN;
             }
 
             auto lo = py::list();
@@ -1137,8 +1137,6 @@ namespace karabind {
                 } else if (type == Types::SCHEMA) {
                     // Avoid dependence of Hash on Schema:
                     os << ": <...> => " /* << hit->getValue<Schema>() */ << Types::to<ToLiteral>(type) << std::endl;
-                } else if (Types::isPointer(type)) { // TODO Add pointer types
-                    os << ": xxx => " << Types::to<ToLiteral>(type) << std::endl;
                 } else if (type == Types::UNKNOWN) {
                     os << ": " << hit->type().name() << " => " << Types::to<ToLiteral>(type) << std::endl;
                 } else {

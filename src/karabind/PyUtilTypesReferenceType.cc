@@ -65,7 +65,6 @@ void exportPyUtilTypesReferenceType(py::module_& m) {
           .value("HASH", PyTypes::HASH)
           .value("VECTOR_HASH", PyTypes::VECTOR_HASH)
           .value("SCHEMA", PyTypes::SCHEMA)
-          .value("ANY", PyTypes::ANY)
           .value("NONE", PyTypes::NONE)
           .value("VECTOR_NONE", PyTypes::VECTOR_NONE)
           .value("BYTE_ARRAY", PyTypes::BYTE_ARRAY)

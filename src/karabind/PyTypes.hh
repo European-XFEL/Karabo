@@ -84,7 +84,6 @@ namespace karabind {
 
             SCHEMA = karabo::data::Types::SCHEMA, // Schema
 
-            ANY = karabo::data::Types::ANY,   // unspecified type
             NONE = karabo::data::Types::NONE, // CppNone type used during serialization/de-serialization
             VECTOR_NONE = karabo::data::Types::VECTOR_NONE,
 
@@ -172,8 +171,6 @@ namespace karabind {
                 // ...
                 case karabo::data::Types::SCHEMA:
                     return SCHEMA;
-                case karabo::data::Types::ANY:
-                    return ANY;
                 case karabo::data::Types::NONE:
                     return NONE;
                 case karabo::data::Types::VECTOR_NONE:
@@ -267,8 +264,6 @@ namespace karabind {
                     return karabo::data::Types::VECTOR_HASH;
                 case SCHEMA:
                     return karabo::data::Types::SCHEMA;
-                case ANY:
-                    return karabo::data::Types::ANY;
                 case NONE:
                     return karabo::data::Types::NONE;
                 case VECTOR_NONE:

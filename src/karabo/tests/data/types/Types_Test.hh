@@ -29,7 +29,6 @@
 
 class Types_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(Types_Test);
-    CPPUNIT_TEST(testIsPointer);
     CPPUNIT_TEST(testIsVector);
     CPPUNIT_TEST(testIsSimple);
     CPPUNIT_TEST(testCategory);
@@ -49,7 +48,6 @@ class Types_Test : public CPPUNIT_NS::TestFixture {
     void testFrom();
     void testTo();
     void testConvert();
-    void testIsPointer();
     void testIsVector();
     void testIsSimple();
 };
