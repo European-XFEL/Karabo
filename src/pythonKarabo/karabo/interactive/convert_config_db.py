@@ -18,7 +18,10 @@ import sqlite3
 import sys
 from pathlib import Path
 
-from karabo.config_db import ConfigurationDatabase, hashFromBase64Bin
+from dateutil import parser
+
+from karabo.config_db import (
+    ConfigurationDatabase, datetime_to_str, hashFromBase64Bin)
 from karabo.middlelayer import encodeXML
 
 SHOW_TABLES = False
@@ -90,6 +93,9 @@ async def run(filename: Path | None = None):
         classId = config["classId"]
         # schema_id = row[4]
         timepoint = row[5]
+        # Use dateutil.parser to auto-detect and parse
+        dt = parser.parse(timepoint)
+        timepoint = datetime_to_str(dt)
         config_name = configset_map.get(config_set_id)
         assert config_name is not None
         config_data = [

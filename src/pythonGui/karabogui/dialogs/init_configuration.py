@@ -24,7 +24,6 @@ from qtpy.QtGui import QPalette
 from qtpy.QtWidgets import QDialog, QDialogButtonBox, QHeaderView, QMenu
 
 import karabogui.icons as icons
-from karabo.native import Timestamp
 from karabogui import messagebox
 from karabogui.access import (
     AccessRole, access_role_allowed, get_access_level_for_role)
@@ -32,12 +31,12 @@ from karabogui.events import (
     KaraboEvent, broadcast_event, register_for_broadcasts,
     unregister_from_broadcasts)
 from karabogui.singletons.api import get_network, get_topology
+from karabogui.util import utc_to_local
 from karabogui.validators import RegexValidator
 
 from .utils import get_dialog_ui
 
 NAME_COLUMN = 0
-TIME_COLUMN = 1
 
 
 class SaveConfigurationDialog(QDialog):
@@ -290,7 +289,7 @@ class TableModel(QAbstractTableModel):
             self.data = [
                 ConfigurationEntry(
                     name=str(item["name"]),
-                    timestamp=item["timepoint"],
+                    timestamp=utc_to_local(item["timepoint"]),
                 ) for item in data]
         finally:
             self.endResetModel()
@@ -308,9 +307,6 @@ class TableModel(QAbstractTableModel):
         if role in (Qt.DisplayRole, Qt.ToolTipRole):
             entry = self.data[index.row()]
             column = index.column()
-            if column == TIME_COLUMN:
-                data = entry[column]
-                return Timestamp(data).toLocal(" ", "seconds")
             return entry[column]
 
     def headerData(self, section, orientation, role):

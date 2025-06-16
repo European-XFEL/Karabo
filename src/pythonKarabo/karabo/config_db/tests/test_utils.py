@@ -13,13 +13,12 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
-from datetime import datetime
 
 import pytest
 
 from karabo.config_db.utils import (
-    datetime_from_string, hashFromBase64Bin, hashToBase64Bin,
-    schemaFromBase64Bin, schemaToBase64Bin)
+    datetime_from_str, datetime_now, datetime_to_str, hashFromBase64Bin,
+    hashToBase64Bin, schemaFromBase64Bin, schemaToBase64Bin)
 from karabo.native import Hash, NodeType, Schema
 
 
@@ -45,17 +44,11 @@ def test_SchemaConversions():
     assert sch.hash == decSch.hash
 
 
-def test_datetime_from_string():
-    iso_date = "2024-03-10T15:30:45.123456"
-    normal_date = "2024-03-10 15:30:45.123456"
-    normal_strip_date = "2024-03-10 15:30:45"
-
-    assert datetime_from_string(iso_date) == datetime(
-        2024, 3, 10, 15, 30, 45, 123456)
-    assert datetime_from_string(normal_date) == datetime(
-        2024, 3, 10, 15, 30, 45, 123456)
-    assert datetime_from_string(normal_strip_date) == datetime(
-        2024, 3, 10, 15, 30, 45)
+def test_datetime_tools():
+    dt = datetime_now()
+    ts = datetime_to_str(dt)
+    assert datetime_to_str(dt) == ts
+    assert datetime_from_str(ts) == dt
 
     with pytest.raises(ValueError):
-        datetime_from_string("Throw-Date")
+        datetime_from_str("Throw-Date")

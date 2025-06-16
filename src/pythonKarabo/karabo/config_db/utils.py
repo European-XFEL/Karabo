@@ -14,13 +14,11 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 import base64
-from datetime import datetime, timezone
-
-from dateutil.parser import isoparse
+from datetime import UTC, datetime
 
 from karabo.native import Hash, decodeBinary, encodeBinary
 
-ISO8601_FORMAT = '%Y-%m-%dT%H:%M:%S.%f'
+DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
 class ConfigurationDBError(Exception):
@@ -75,15 +73,23 @@ def schemaFromBase64Bin(encodedSch):
     return sch
 
 
-def datetime_from_string(date: str) -> datetime:
-    """Parses a datetime string in ISO8601 or
-    'YYYY-MM-DD HH:mm:SS.Micro' formats."""
-    return isoparse(date)
+def datetime_now() -> datetime:
+    """Return a datetime object in utc without microseconds"""
+    return datetime.now(UTC).replace(microsecond=0)
 
 
-def utc_to_local(timestamp: datetime | None) -> str:
+def datetime_str_now() -> str:
+    """Return a datetime string for now for config db format"""
+    return datetime_to_str(datetime.now(UTC))
+
+
+def datetime_from_str(timestamp: str) -> datetime:
+    """Parses a datetime string in date formats."""
+    return datetime.strptime(timestamp, DATE_FORMAT).replace(tzinfo=UTC)
+
+
+def datetime_to_str(timestamp: datetime | None) -> str:
     """Format a datetime object to a local str representation"""
     if timestamp is None:
         return ""
-    return timestamp.replace(tzinfo=timezone.utc).astimezone().strftime(
-        ISO8601_FORMAT)
+    return timestamp.replace(tzinfo=UTC).strftime(DATE_FORMAT)

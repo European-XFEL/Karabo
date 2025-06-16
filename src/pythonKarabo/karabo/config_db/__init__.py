@@ -16,5 +16,5 @@
 # flake8: noqa
 from .configuration_database import ConfigurationDatabase
 from .utils import (
-    ConfigurationDBError, hashFromBase64Bin, hashToBase64Bin,
-    schemaFromBase64Bin, schemaToBase64Bin)
+    ConfigurationDBError, datetime_now, datetime_str_now, datetime_to_str,
+    hashFromBase64Bin, hashToBase64Bin, schemaFromBase64Bin, schemaToBase64Bin)
