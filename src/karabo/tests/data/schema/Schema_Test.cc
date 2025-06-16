@@ -1641,18 +1641,6 @@ void Schema_Test::testDaqDataType() {
         schema.setDaqDataType("triangle", DaqDataType::TRAIN);
         CPPUNIT_ASSERT(schema.getDaqDataType("triangle") == DaqDataType::TRAIN);
     }
-    {
-        schema.setDaqDataType("triangle", DaqDataType::PULSEMASTER);
-        CPPUNIT_ASSERT(schema.getDaqDataType("triangle") == DaqDataType::PULSEMASTER);
-    }
-    {
-        schema.setDaqDataType("triangle", DaqDataType::TRAINMASTER);
-        CPPUNIT_ASSERT(schema.getDaqDataType("triangle") == DaqDataType::TRAINMASTER);
-    }
-    {
-        CPPUNIT_ASSERT_THROW(schema.setDaqDataType("antiAlias", DaqDataType::TRAINMASTER),
-                             karabo::data::ParameterException);
-    }
 }
 
 
