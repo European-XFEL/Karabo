@@ -37,10 +37,9 @@ namespace karabo {
     }
 
 
-#define _KARABO_HELPER_MACRO(ReferenceType, CppType)                                           \
-    {std::string(typeid(CppType).name()), Types::ReferenceType},                               \
-          {std::string(typeid(std::vector<CppType>).name()), Types::VECTOR_##ReferenceType}, { \
-        std::string(typeid(CppType*).name()), Types::PTR_##ReferenceType                       \
+#define _KARABO_HELPER_MACRO(ReferenceType, CppType)                                    \
+    {std::string(typeid(CppType).name()), Types::ReferenceType}, {                      \
+        std::string(typeid(std::vector<CppType>).name()), Types::VECTOR_##ReferenceType \
     }
 
 

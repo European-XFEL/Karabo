@@ -2247,11 +2247,7 @@ class Serializer : public helper::Helper {
                 m_stream << " => " << node.getValue<karabo::data::Schema>();
                 break;
             default:
-                if (Types::isPointer(type)) { // TODO Add pointer types
-                    m_stream << " => xxx " << Types::to<ToLiteral>(type);
-                } else {
-                    m_stream << " => " << node.getValueAs<string>() << " " << Types::to<ToLiteral>(type);
-                }
+                m_stream << " => " << node.getValueAs<string>() << " " << Types::to<ToLiteral>(type);
         }
         m_stream << '\n';
         return true;
