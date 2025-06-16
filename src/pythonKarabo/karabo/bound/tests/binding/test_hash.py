@@ -45,7 +45,7 @@ def test_constructor():
 
     # Test "__bool__"
     assert not h
-    # It is allowed upto 6 key/value pairs to be defined
+    # It is allowed any number of key/value pairs to be defined
     h = Hash('a', 1, 'b', 2, 'c', 3, 'd', 4, 'e', 5, 'f', 6)
     assert h
     # For further populating, use set ...
@@ -58,9 +58,15 @@ def test_constructor():
     assert h.empty()
 
     # Test constructors
-    # Cannot construct Hash with more than 6 key/value pairs
-    with pytest.raises(TypeError):
-        h = Hash('a', 1, 'b', 2, 'c', 3, 'd', 4, 'e', 5, 'f', 6, 'g', 7)
+    # There are no restrictions in number of key/value pairs
+    h = Hash('a', 1, 'b', 2, 'c', 3, 'd', 4, 'e', 5, 'f', 6, 'g', 7, 'h', 8)
+    assert h
+    # Define python dictionary...
+    d = {'a': 1, 'b': {'c': 12}, 'c': {'e': {'f': "abrakadabra"}}}
+    h = Hash(d)
+    assert h
+    assert "c.e.f" in h
+    assert h.get('b.c') == 12
     # Cannot construct Node object in Python ...
     with pytest.raises(TypeError):
         print(Node())
