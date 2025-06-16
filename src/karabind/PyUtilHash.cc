@@ -39,63 +39,6 @@
 
 namespace py = pybind11;
 
-namespace karabo {
-    namespace data {
-
-        template <>
-        Hash::Hash(const std::string& k, const py::object& o) {
-            karabind::hashwrap::set(*this, k, o);
-        }
-
-        template <>
-        Hash::Hash(const std::string& k1, const py::object& o1, const std::string& k2, const py::object& o2) {
-            karabind::hashwrap::set(*this, k1, o1);
-            karabind::hashwrap::set(*this, k2, o2);
-        }
-
-        template <>
-        Hash::Hash(const std::string& k1, const py::object& o1, const std::string& k2, const py::object& o2,
-                   const std::string& k3, const py::object& o3) {
-            karabind::hashwrap::set(*this, k1, o1);
-            karabind::hashwrap::set(*this, k2, o2);
-            karabind::hashwrap::set(*this, k3, o3);
-        }
-
-        template <>
-        Hash::Hash(const std::string& k1, const py::object& o1, const std::string& k2, const py::object& o2,
-                   const std::string& k3, const py::object& o3, const std::string& k4, const py::object& o4) {
-            karabind::hashwrap::set(*this, k1, o1);
-            karabind::hashwrap::set(*this, k2, o2);
-            karabind::hashwrap::set(*this, k3, o3);
-            karabind::hashwrap::set(*this, k4, o4);
-        }
-
-        template <>
-        Hash::Hash(const std::string& k1, const py::object& o1, const std::string& k2, const py::object& o2,
-                   const std::string& k3, const py::object& o3, const std::string& k4, const py::object& o4,
-                   const std::string& k5, const py::object& o5) {
-            karabind::hashwrap::set(*this, k1, o1);
-            karabind::hashwrap::set(*this, k2, o2);
-            karabind::hashwrap::set(*this, k3, o3);
-            karabind::hashwrap::set(*this, k4, o4);
-            karabind::hashwrap::set(*this, k5, o5);
-        }
-
-        template <>
-        Hash::Hash(const std::string& k1, const py::object& o1, const std::string& k2, const py::object& o2,
-                   const std::string& k3, const py::object& o3, const std::string& k4, const py::object& o4,
-                   const std::string& k5, const py::object& o5, const std::string& k6, const py::object& o6) {
-            karabind::hashwrap::set(*this, k1, o1);
-            karabind::hashwrap::set(*this, k2, o2);
-            karabind::hashwrap::set(*this, k3, o3);
-            karabind::hashwrap::set(*this, k4, o4);
-            karabind::hashwrap::set(*this, k5, o5);
-            karabind::hashwrap::set(*this, k6, o6);
-        }
-    } // namespace data
-} // namespace karabo
-
-
 namespace karabind {
 
     struct HashIteratorAccess {
@@ -154,20 +97,29 @@ void exportPyUtilHash(py::module_& m) {
             allowing only unique keys on a given tree-level.
         )pbdoc");
 
-    h.def(py::init<>());
-    h.def(py::init<const std::string&>());
-    h.def(py::init<const Hash&>());
-    h.def(py::init<std::string const&, py::object const&>());
-    h.def(py::init<std::string const&, py::object const&, std::string const&, py::object const&>());
-    h.def(py::init<std::string const&, py::object const&, std::string const&, py::object const&, std::string const&,
-                   py::object const&>());
-    h.def(py::init<std::string const&, py::object const&, std::string const&, py::object const&, std::string const&,
-                   py::object const&, std::string const&, py::object const&>());
-    h.def(py::init<std::string const&, py::object const&, std::string const&, py::object const&, std::string const&,
-                   py::object const&, std::string const&, py::object const&, std::string const&, py::object const&>());
-    h.def(py::init<std::string const&, py::object const&, std::string const&, py::object const&, std::string const&,
-                   py::object const&, std::string const&, py::object const&, std::string const&, py::object const&,
-                   std::string const&, py::object const&>());
+    h.def(py::init<>());                   // Hash()
+    h.def(py::init<const std::string&>()); // Hash("string")
+    h.def(py::init<const Hash&>());        // Hash(another_hash)
+    h.def(py::init([](py::args args) {
+        auto self = std::make_shared<Hash>();
+        if (py::len(args) == 0) return self;
+        if (py::len(args) == 1) {
+            if (py::isinstance<py::dict>(args[0])) {
+                karabind::hashwrap::setPyDictAsHash(*self, args[0].cast<py::dict>(), '.');
+                return self;
+            } else {
+                throw std::runtime_error("Unsupported argument type");
+            }
+        }
+        if (py::len(args) % 2 != 0) throw std::runtime_error("Expect even number of arguments");
+
+        for (size_t i = 0; i < py::len(args); i += 2) {
+            const std::string& k = args[i].cast<std::string>();
+            py::object o = args[i + 1];
+            karabind::hashwrap::set(*self, k, o);
+        }
+        return self;
+    }));
 
     h.def(
           "_getref_hash_", [](const Hash& self, Hash* other) { return py::cast(other); }, py::arg("ref"),
