@@ -431,26 +431,44 @@ namespace karabo {
                                         std::ostringstream& report, const std::string& scope) {
             if (master.hasAttribute("shape", KARABO_SCHEMA_DEFAULT_VALUE)) {
                 // Schema defines a shape - validate it!
-                const std::vector<unsigned long long> userDimsVec = user.getShape().toVector();
                 const auto& schemaDimsVec =
                       master.getAttribute<std::vector<unsigned long long>>("shape", KARABO_SCHEMA_DEFAULT_VALUE);
-                bool mismatch = (userDimsVec.size() != schemaDimsVec.size());
-                if (!mismatch) {
-                    for (size_t i = 0; i < schemaDimsVec.size(); ++i) {
-                        // dimension size 0 in schema means undefined
-                        if (schemaDimsVec[i] != 0 && schemaDimsVec[i] != userDimsVec[i]) mismatch = true;
+                if (schemaDimsVec.empty()) {
+                    report << "NDArray for '" << scope << "' has undefined/empty shape\n";
+                } else {
+                    const std::vector<unsigned long long> userDimsVec = user.getShape().toVector();
+                    bool mismatch = (userDimsVec.size() != schemaDimsVec.size());
+                    if (!mismatch) {
+                        for (size_t i = 0; i < schemaDimsVec.size(); ++i) {
+                            // dimension size 0 in schema means undefined
+                            if (schemaDimsVec[i] != 0 && schemaDimsVec[i] != userDimsVec[i]) mismatch = true;
+                        }
+                    }
+                    if (mismatch) {
+                        report << "NDArray shape mismatch for '" << scope << "': should be (" << toString(schemaDimsVec)
+                               << "), not (" << toString(userDimsVec) << ")\n";
                     }
                 }
-                if (mismatch) {
-                    report << "NDArray shape mismatch for '" << scope << "': should be (" << toString(schemaDimsVec)
-                           << "), not (" << toString(userDimsVec) << ")\n";
+            } else if (m_strict) { // Tolerate undefined shape if not strict
+                report << "NDArray for '" << scope << "' lacks shape definition in schema\n";
+            }
+
+            // Validate data type
+            const Types::ReferenceType userType = user.getType();
+            Types::ReferenceType schemaType = Types::UNKNOWN;
+            if (master.hasAttribute("type", KARABO_SCHEMA_DEFAULT_VALUE)) {
+                schemaType =
+                      static_cast<Types::ReferenceType>(master.getAttribute<int>("type", KARABO_SCHEMA_DEFAULT_VALUE));
+            }
+            if (m_strict) {
+                if (schemaType == Types::UNKNOWN) {
+                    report << "NDArray for '" << scope << "' lacks type specification in schema\n";
+                }
+                if (userType == Types::UNKNOWN) { // Can that happen?
+                    report << "NDArray for '" << scope << "' without specified data type\n";
                 }
             }
-            const Types::ReferenceType userType = user.getType();
-            const auto schemaType =
-                  static_cast<Types::ReferenceType>(master.getAttribute<int>("type", KARABO_SCHEMA_DEFAULT_VALUE));
-            // Validate data type (but only if specified)
-            if (userType != schemaType && schemaType != Types::UNKNOWN) {
+            if (userType != schemaType && schemaType != Types::UNKNOWN) { // tolerate UNKNOWN (if not strict)
                 report << "NDArray type mismatch for '" << scope << "': should be " << Types::to<ToLiteral>(schemaType)
                        << ", not " << Types::to<ToLiteral>(userType) << "\n";
             }
