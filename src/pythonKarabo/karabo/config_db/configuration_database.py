@@ -13,7 +13,6 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
-from datetime import datetime, timezone
 from pathlib import Path
 
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
@@ -22,7 +21,8 @@ from sqlmodel import SQLModel, insert, select, update
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from .models import NamedDeviceConfig, NamedDeviceInstance
-from .utils import ConfigurationDBError, datetime_from_string, utc_to_local
+from .utils import (
+    ConfigurationDBError, datetime_from_str, datetime_now, datetime_to_str)
 
 _UNDEFINED = "__none__"
 
@@ -93,8 +93,8 @@ class ConfigurationDatabase:
                 {"name": config.name,
                  "serverId": device.server_id,
                  "classId": device.class_id,
-                 "timepoint": utc_to_local(config.timestamp),
-                 "last_loaded": utc_to_local(config.last_loaded)}
+                 "timepoint": datetime_to_str(config.timestamp),
+                 "last_loaded": datetime_to_str(config.last_loaded)}
                 for config in configurations]
 
     def session(self):
@@ -169,7 +169,7 @@ class ConfigurationDatabase:
             update_stmt = (
                 update(NamedDeviceConfig)
                 .where(NamedDeviceConfig.id == config.id)
-                .values(last_loaded=datetime.now(timezone.utc)))
+                .values(last_loaded=datetime_now()))
 
             await session.exec(update_stmt)
             await session.commit()
@@ -179,7 +179,7 @@ class ConfigurationDatabase:
                 "deviceId": device_id,
                 "classId": device.class_id,
                 "serverId": device.server_id,
-                "timestamp": utc_to_local(config.timestamp),
+                "timestamp": datetime_to_str(config.timestamp),
                 "config": config.config_data}
 
     async def save_configuration(
@@ -205,8 +205,8 @@ class ConfigurationDatabase:
 
         async with self.session() as session:
             try:
-                timestamp = (datetime_from_string(timestamp) if timestamp
-                             is not None else datetime.now(timezone.utc))
+                timestamp = (datetime_from_str(timestamp) if timestamp
+                             is not None else datetime_now())
 
                 for config in configs:
                     device_id = config["deviceId"]

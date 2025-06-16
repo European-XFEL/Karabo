@@ -28,13 +28,13 @@ from karabo.common.scenemodel.api import (
     DisplayStateColorModel, DisplayTextLogModel, EditableRegexModel,
     ErrorBoolModel, LabelModel, LineEditModel, LineModel, SceneModel,
     StickerModel, TableElementModel, write_scene)
-from karabo.config_db import ConfigurationDatabase
+from karabo.config_db import ConfigurationDatabase, datetime_str_now
 from karabo.middlelayer import (
     AccessLevel, AccessMode, Assignment, Bool, Configurable, DeviceClientBase,
     Hash, HashList, KaraboError, Overwrite, RegexString, Slot, State, String,
-    Timestamp, UInt32, VectorHash, VectorString, background, decodeXML,
-    dictToHash, encodeXML, extract_init_configuration, getClassSchema,
-    getConfiguration, isStringSet, sanitize_init_configuration, slot)
+    UInt32, VectorHash, VectorString, background, decodeXML, dictToHash,
+    encodeXML, extract_init_configuration, getClassSchema, getConfiguration,
+    isStringSet, sanitize_init_configuration, slot)
 
 DEVICE_TIMEOUT = 3
 FILTER_KEYS = ["name", "timepoint"]
@@ -370,7 +370,7 @@ class ConfigurationManager(DeviceClientBase):
         timeout = len(deviceIds) * DEVICE_TIMEOUT
         items = await wait_for(gather(*futures), timeout=timeout)
 
-        timestamp = Timestamp().toLocal()
+        timestamp = datetime_str_now()
         # Let it throw here if needed!
         await self.db.save_configuration(
             config_name, items, timestamp=timestamp)
