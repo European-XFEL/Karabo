@@ -1477,6 +1477,30 @@ void Validator_Test::testNDArray() {
         const size_t pos = res.second.find("NDArray shape mismatch for 'arr': should be (100,200), not (200,100)");
         CPPUNIT_ASSERT_MESSAGE(res.second, pos != std::string::npos);
     }
+    { // Missing type specification
+        data::Schema s2;
+        NDARRAY_ELEMENT(s2).key("arr").shape(std::vector<unsigned long long>({100, 200})).commit();
+
+        Hash data("arr", data::NDArray(data::Dims(100ull, 200ull), static_cast<int>(42)));
+        const std::pair<bool, std::string> res = val.validate(s2, data, dataOut);
+        CPPUNIT_ASSERT_MESSAGE(res.second, !res.first);
+        const size_t pos = res.second.find("NDArray for 'arr' lacks type specification in schema");
+        CPPUNIT_ASSERT_MESSAGE(res.second, pos != std::string::npos);
+    }
+    { // Missing shape specification
+        data::Schema s2;
+        NDARRAY_ELEMENT(s2).key("arr").dtype(data::Types::INT16).commit();
+
+        Hash data("arr", data::NDArray(data::Dims(100ull, 200ull), static_cast<short>(42)));
+        const std::pair<bool, std::string> res = val.validate(s2, data, dataOut);
+        // Do not mind whether we get "NDArray for 'arr' lacks shape definition in schema"
+        //                        or  "NDArray for 'arr' has undefined/empty shape"
+        CPPUNIT_ASSERT_MESSAGE(res.second, !res.first);
+        const size_t pos = res.second.find("NDArray for 'arr'");
+        CPPUNIT_ASSERT_MESSAGE(res.second, pos != std::string::npos);
+        const size_t pos2 = res.second.find("shape");
+        CPPUNIT_ASSERT_MESSAGE(res.second, pos2 != std::string::npos);
+    }
 }
 
 void Validator_Test::testStrictAndReadOnly() {
