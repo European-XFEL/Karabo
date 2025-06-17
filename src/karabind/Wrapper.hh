@@ -174,6 +174,8 @@ namespace karabind {
 
         py::object castAnyToPy(const std::any& operand) __attribute__((visibility("default")));
 
+        bool isEnum(const py::handle obj) __attribute__((visibility("default")));
+
         karabo::data::Types::ReferenceType castPyToAny(const py::object& operand, std::any& a)
               __attribute__((visibility("default")));
 

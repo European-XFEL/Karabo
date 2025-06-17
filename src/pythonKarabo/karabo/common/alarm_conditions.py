@@ -13,12 +13,12 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
-from enum import Enum
+from enum import StrEnum
 from functools import total_ordering
 
 
 @total_ordering
-class AlarmCondition(Enum):
+class AlarmCondition(StrEnum):
     """A class for unified alarm conditions.
 
     Alarms are categorized by severity, which can either be none, warn, alarm
