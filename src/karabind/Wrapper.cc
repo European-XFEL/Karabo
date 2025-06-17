@@ -441,6 +441,10 @@ namespace karabind {
             }
         }
 
+        bool isEnum(const py::handle obj) {
+            static const py::object enum_type = py::module_::import("enum").attr("Enum");
+            return py::isinstance(obj, enum_type);
+        }
 
         karabo::data::Types::ReferenceType castPyToAny(const py::object& o, std::any& any) {
             if (o.is_none()) {

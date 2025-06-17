@@ -157,16 +157,16 @@ void exportPyUtilSchemaOverwriteElement(py::module_& m) {
           .def(
                 "setNewOptions",
                 [](OverwriteElement& self, py::args args) {
-                    // Check the type of the first arg
+                    // Check the type of the first arg if it's a string and not an enum
                     auto arg0 = *args.begin();
-                    if (py::isinstance<py::str>(arg0)) {
+                    if (py::isinstance<py::str>(arg0) && !wrapper::isEnum(arg0)) {
                         self.setNewOptions(arg0.cast<std::string>(), ",;");
                         return self;
                     }
                     // try states
                     std::vector<State> states;
                     for (auto arg : args) {
-                        const auto className = arg.attr("__class__").attr("__name__").cast<std::string>();
+                        const std::string className = arg.attr("__class__").attr("__name__").cast<std::string>();
                         if (className == "State") {
                             const std::string state = arg.attr("name").cast<std::string>();
                             states.push_back(State::fromString(state));

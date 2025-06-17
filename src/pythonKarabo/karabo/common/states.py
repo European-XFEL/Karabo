@@ -13,7 +13,7 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
-from enum import Enum, EnumMeta
+from enum import EnumMeta, StrEnum
 
 
 class _ParentDict:
@@ -79,7 +79,7 @@ class ParentEnumMeta(EnumMeta):
         return self
 
 
-class StateBase(Enum):
+class StateBase(StrEnum):
     def isDerivedFrom(self, other):
         """return whether `self` is in the ancestry of `other`"""
         while self is not None:
