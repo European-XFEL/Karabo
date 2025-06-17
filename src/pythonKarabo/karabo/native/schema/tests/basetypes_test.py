@@ -736,11 +736,9 @@ class Tests(TestCase):
                                             dtype=numpy.uint32))
         self.assertEqual(image.dtype, numpy.uint32)
 
-        arrayEqual(image.shape, numpy.array([1000, 1000], dtype=numpy.uint64))
-        self.assertEqual(image.shape.dtype, numpy.uint64)
-
         arrayEqual(image.dims, numpy.array([1000, 1000], dtype=numpy.uint64))
         self.assertEqual(image.dims.dtype, numpy.uint64)
+        self.assertEqual(image.shape, (1000, 1000))
 
         arrayEqual(image.binning, numpy.array([1, 1], dtype=numpy.uint64))
         self.assertEqual(image.binning.dtype, numpy.uint64)
@@ -765,9 +763,7 @@ class Tests(TestCase):
                                             dtype=numpy.uint64))
         self.assertEqual(image.dtype, numpy.uint64)
 
-        arrayEqual(image.shape, numpy.array([1000, 1000, 2],
-                                            dtype=numpy.uint64))
-        self.assertEqual(image.shape.dtype, numpy.uint64)
+        self.assertEqual(image.shape, (1000, 1000, 2))
 
         arrayEqual(image.dims, numpy.array([1000, 1000, 2],
                                            dtype=numpy.uint64))
