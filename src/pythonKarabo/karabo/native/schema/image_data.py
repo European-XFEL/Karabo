@@ -138,8 +138,6 @@ class Image(Type):
                             "instead".format(type(data)))
 
         self.__dict__.update(data.toDict())
-        # XXX: Cast shape to tuple for comparison
-        self.shape = tuple(self.shape)
         self.daqDataType = daqDataType
         super().__init__(accessMode=AccessMode.READONLY, **kwargs)
 
@@ -168,7 +166,7 @@ class Image(Type):
         schema["flipY", "defaultValue"] = self.flipY
 
         # Set the attribute maxSizes!
-        maxSize = numpy.uint32(len(self.shape))
+        maxSize = numpy.uint32(len(self.dims))
         schema["pixels.shape", "maxSize"] = maxSize
         schema["dims", "maxSize"] = maxSize
         schema["roiOffsets", "maxSize"] = maxSize
@@ -248,7 +246,9 @@ class Image(Type):
         pixels = Hash()
         pixels.setElement("type", convert_dtype(data.dtype), attrs)
         pixels.setElement("isBigEndian", data.dtype.str[0] == ">", attrs)
-        pixels.setElement("shape", data.shape, attrs)
+        shape = numpy.array(
+            data.shape, dtype=numpy.uint64)
+        pixels.setElement("shape", shape, attrs)
         pixels.setElement("data", data.value.data, attrs)
 
         # Mark this as a Custom Hash Type element `NDArray`

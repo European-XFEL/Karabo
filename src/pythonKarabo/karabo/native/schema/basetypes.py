@@ -417,7 +417,7 @@ class ImageData(KaraboValue):
         self.dtype = value.dtype
 
         dims = numpy.array(value.shape, dtype=numpy.uint64)
-        self.shape = dims
+        self.shape = value.shape
         self.dims = dims
 
         # NOTE: If the encoding is not provided, try to guess it!
