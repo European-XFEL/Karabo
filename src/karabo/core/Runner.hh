@@ -27,15 +27,13 @@
 #ifndef KARABO_CORE_RUNNER_HH
 #define KARABO_CORE_RUNNER_HH
 
-#include <boost/range/algorithm/count.hpp>
+#include <string>
+#include <vector>
 
-#include "DeviceServer.hh"
+#include "karabo/core/DeviceServer.hh"
+#include "karabo/data/types/Hash.hh"
 
-/**
- * The main karabo namespace
- */
 namespace karabo {
-
     namespace core {
 
         /**
@@ -45,10 +43,10 @@ namespace karabo {
          * The Runner class instantiates device-servers in the distributed system. It parses
          * command line arguments to deduce configuration.
          */
+
         class Runner {
            public:
             KARABO_CLASSINFO(Runner, "Runner", karabo::util::Version::getVersion())
-
             KARABO_CONFIGURATION_BASE_CLASS;
 
             /**
@@ -62,24 +60,12 @@ namespace karabo {
              * @return Pointer to device server instance (may be empty)
              */
             static DeviceServer::Pointer instantiate(int argc, const char** argv);
+            static bool parseCommandLine(int argc, const char** argv, karabo::data::Hash& config);
 
-            static bool parseCommandLine(int argc, const char** argv, karabo::data::Hash& configuration,
-                                         bool silent = false);
-
-           protected:
-            static void parseToken(const std::string& prefix, const std::string& token,
-                                   std::vector<std::string>& tokenList);
-
-            static void resolveTokens(const std::vector<std::string>& argv, std::vector<std::string>& args);
-
-            static void processOption(const std::string& option, int argc, const char** argv);
-
+           private:
             static void showUsage(const std::string& programName, const std::string& what = "");
-
-            static int buildToken(const std::vector<std::string>& args, int start, std::string& token);
-
-            static void readToken(const std::string& token, karabo::data::Hash& config);
         };
+
     } // namespace core
 } // namespace karabo
 
