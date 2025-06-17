@@ -21,6 +21,7 @@ from datetime import UTC
 from pathlib import Path
 
 from lxml import etree
+from sqlalchemy.orm import selectinload
 from sqlmodel import SQLModel, select
 
 from ..bases import DatabaseBase
@@ -522,6 +523,23 @@ class SQLDatabase(DatabaseBase):
         async with self.session_gen() as session:
             session.add(model)
             await session.commit()
+
+    async def get_device_config_from_device_uuid(self, device_uuid: str):
+        query = (
+            select(DeviceInstance)
+            .options(selectinload(DeviceInstance.configs))
+            .where(DeviceInstance.uuid == device_uuid))
+
+        device_instance = await self._execute_first(query)
+        if not device_instance:
+            return None
+
+        # Find the first config with name "default"
+        configuration = next(
+            (config.config_data for config in device_instance.configs
+             if config.name == "default"), None)
+
+        return configuration
 
     async def get_projects_with_conf(self, domain, device_id):
         """

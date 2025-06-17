@@ -221,6 +221,10 @@ async def test_project_interface(database, subtests):
                         "device_class", "server_name",
                         "project_uuid", "project_name"]:
                 assert key in item
+            device_uuid = item["device_uuid"]
+            config = await db.get_device_config_from_device_uuid(
+                device_uuid)
+            assert config is not None
 
 
 @pytest.mark.timeout(60)
