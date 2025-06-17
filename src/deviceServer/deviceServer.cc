@@ -45,7 +45,7 @@ int main(int argc, const char** argv) {
         // Loading plugins means one needs to know the plugin directory, so we
         // parse the command line already here (but silently).
         Hash runnerConfig;
-        Runner::parseCommandLine(argc, argv, runnerConfig, true);
+        Runner::parseCommandLine(argc, argv, runnerConfig);
         const Hash& pluginConfig = (runnerConfig.has("pluginDirectory")
                                           ? Hash("pluginDirectory", runnerConfig.get<std::string>("pluginDirectory"))
                                           : Hash());
