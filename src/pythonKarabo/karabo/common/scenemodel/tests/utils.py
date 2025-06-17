@@ -54,4 +54,5 @@ def single_model_round_trip(model):
     xml = write_scene(scene)
     with temp_xml_file(xml) as fn:
         rt_scene = read_scene(fn)
+        rt_scene.assure_svg_data()
     return rt_scene.children[0]

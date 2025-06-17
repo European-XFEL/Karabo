@@ -29,6 +29,7 @@ from qtpy.QtWidgets import QApplication
 
 import karabogui.singletons.api as singletons_mod
 from karabo.common.api import Capabilities, State
+from karabo.common.scenemodel.api import set_scene_reader
 from karabo.native import (
     AccessLevel, AccessMode, Configurable, Double, Hash, Int32, String, Unit,
     VectorString)
@@ -420,7 +421,7 @@ class DeviceSchemaAllowedState(SimpleDeviceSchema):
     initOnlyString = String(
         displayedName="Init Only String",
         defaultValue="Karabo",
-        accessMode=AccessMode.INITONLY,)
+        accessMode=AccessMode.INITONLY, )
 
 
 def get_device_schema():
@@ -444,3 +445,12 @@ def check_renderer_against_svg(renderer, svgfile):
 
     for name in _get_path_ids(svgfile):
         assert renderer.elementExists(name)
+
+
+@contextlib.contextmanager
+def lazy_scene_reading():
+    try:
+        set_scene_reader(lazy=True)
+        yield
+    finally:
+        set_scene_reader(lazy=False)
