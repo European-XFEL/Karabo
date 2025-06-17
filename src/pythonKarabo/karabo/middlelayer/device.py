@@ -43,10 +43,9 @@ class Device(InjectMixin, SignalSlotable):
     # Version e.g. for classVersion - to be overwritten by external classes
     __version__ = karaboVersion
 
-    _serverId_ = String(
-        displayedName="_ServerID_",
-        description="Do not set this property, it will be set by the "
-                    "device-server",
+    serverId = String(
+        displayedName="ServerID",
+        description="The device-server which this device is running on",
         requiredAccessLevel=AccessLevel.EXPERT,
         assignment=Assignment.INTERNAL, accessMode=AccessMode.INITONLY,
         defaultValue="__none__",
@@ -73,13 +72,6 @@ class Device(InjectMixin, SignalSlotable):
         requiredAccessLevel=AccessLevel.EXPERT,
         accessMode=AccessMode.READONLY,
         # No version dependent default value, see above at "classVersion".
-    )
-
-    serverId = String(
-        displayedName="ServerID",
-        description="The device-server which this device is running on",
-        requiredAccessLevel=AccessLevel.EXPERT,
-        accessMode=AccessMode.READONLY,
     )
 
     hostName = String(
@@ -189,8 +181,6 @@ class Device(InjectMixin, SignalSlotable):
     def __init__(self, configuration):
         self.__timeServerId = configuration.pop("__timeServerId", "None")
         super().__init__(configuration)
-        if not isSet(self.serverId):
-            self.serverId = self._serverId_
         if not isSet(self.hostName):
             self.hostName = socket.gethostname().partition('.')[0]
 

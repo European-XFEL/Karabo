@@ -121,7 +121,7 @@ async def test_device_client_base():
         NUMBER_DEVICES = 20
         for number in range(NUMBER_DEVICES):
             dev = DefaultDevice(
-                dict(_deviceId_=f"other{number}", _serverId_="tserver"))
+                dict(_deviceId_=f"other{number}", serverId="tserver"))
             dev.startInstance()
             devices.append(dev)
 

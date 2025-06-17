@@ -175,7 +175,7 @@ def test_autodisconnect():
 
         async def init_other():
             nonlocal other
-            other = Other(dict(_deviceId_="other", _serverId_="tserver"))
+            other = Other(dict(_deviceId_="other", serverId="tserver"))
             await other.startInstance()
 
         thread.loop.call_soon_threadsafe(ensure_future, init_other())
@@ -222,7 +222,7 @@ def test_topology():
         loop.run_until_complete(dc.startInstance())
 
         async def init_topo(dc):
-            other = Other(dict(_deviceId_="other", _serverId_="tserver"))
+            other = Other(dict(_deviceId_="other", serverId="tserver"))
             assert "other" not in getDevices()
             assert "other" not in getClients()
             assert "other" not in getDevices("tserver")
@@ -240,7 +240,7 @@ def test_topology():
             assert "other" in findDevices("OT")
             assert "other" not in getDevices("bserver")
 
-            double = Other(dict(_deviceId_="other", _serverId_="bserver"))
+            double = Other(dict(_deviceId_="other", serverId="bserver"))
             with pytest.raises(KaraboError):
                 await double.startInstance()
             assert "other" in getDevices()
