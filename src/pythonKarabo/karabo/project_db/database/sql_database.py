@@ -21,7 +21,6 @@ from datetime import UTC
 from pathlib import Path
 
 from lxml import etree
-from sqlalchemy.orm import selectinload
 from sqlmodel import SQLModel, select
 
 from ..bases import DatabaseBase
@@ -137,29 +136,30 @@ class SQLDatabase(DatabaseBase):
 
     async def get_devices_from_domain(
             self, domain: str) -> list[dict[str, any]]:
-        instances = []
+        """Return an information about the device topology """
+        query = (
+            select(DeviceInstance, DeviceServer, Project)
+            .join(DeviceInstance.device_server)
+            .join(DeviceServer.project)
+            .join(Project.project_domain)
+            .where(ProjectDomain.name == domain)
+            .where(Project.is_trashed.is_(False))
+        )
         async with self.session_gen() as session:
-            query = (
-                select(DeviceInstance)
-                .join(DeviceServer)
-                .join(Project)
-                .join(ProjectDomain)
-                .where(ProjectDomain.name == domain)
-                .options(selectinload(DeviceInstance.device_server)
-                         .selectinload(DeviceServer.project))
-            )
             result = await session.exec(query)
-            device_instances = result.all()
-            for instance in device_instances:
-                project = instance.device_server.project
+            rows = result.all()
+            instances = []
+            for device_instance, device_server, project in rows:
                 instances.append({
-                    "device_uuid": instance.uuid,
-                    "device_name": instance.name,
+                    "device_uuid": device_instance.uuid,
+                    "device_name": device_instance.name,
+                    "device_class": device_instance.class_id,
+                    "server_name": device_server.name,
                     "project_uuid": project.uuid,
-                    "project_name": project.name
+                    "project_name": project.name,
                 })
 
-        return instances
+            return instances
 
     async def _emit_project_item(self, uuid: str) -> dict[str, any] | None:
         """Internal emitter method to load a project item"""

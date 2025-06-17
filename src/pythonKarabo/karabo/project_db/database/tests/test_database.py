@@ -216,6 +216,11 @@ async def test_project_interface(database, subtests):
             await create_hierarchy(db, "Scene!")
             items = await db.get_devices_from_domain('LOCAL')
             assert len(items) == 48
+            item = items[0]
+            for key in ["device_uuid", "device_name",
+                        "device_class", "server_name",
+                        "project_uuid", "project_name"]:
+                assert key in item
 
 
 @pytest.mark.timeout(60)
