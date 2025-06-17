@@ -58,6 +58,7 @@ class TestDevice(PythonDevice):
 
             IMAGEDATA_ELEMENT(pipeSchema).key("image")
             .setDimensions("50,50")
+            .setType(Types.UINT16)
             .setEncoding(Encoding.GRAY)
             .commit(),
 
