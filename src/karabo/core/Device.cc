@@ -94,13 +94,11 @@ namespace karabo {
                   .commit();
 
             STRING_ELEMENT(expected)
-                  .key("_serverId_")
-                  .displayedName("_ServerID_")
-                  .description("Do not set this property, it will be set by the device-server")
+                  .key("serverId")
+                  .displayedName("ServerID")
+                  .description("The device-server on which this device is running on")
                   .expertAccess()
-                  .assignmentInternal()
-                  .noDefaultValue()
-                  .init()
+                  .readOnly()
                   .commit();
 
             STRING_ELEMENT(expected)
@@ -128,14 +126,6 @@ namespace karabo {
                   .expertAccess()
                   .readOnly()
                   // No version dependent initial value, see above for "classVersion"
-                  .commit();
-
-            STRING_ELEMENT(expected)
-                  .key("serverId")
-                  .displayedName("ServerID")
-                  .description("The device-server on which this device is running on")
-                  .expertAccess()
-                  .readOnly()
                   .commit();
 
             STRING_ELEMENT(expected)
@@ -282,7 +272,7 @@ namespace karabo {
 
         Device::Device(const karabo::data::Hash& configuration) : m_lastBrokerErrorStamp(0ull, 0ull) {
             // Set serverId
-            if (configuration.has("_serverId_")) configuration.get("_serverId_", m_serverId);
+            if (configuration.has("serverId")) configuration.get("serverId", m_serverId);
             else m_serverId = KARABO_NO_SERVER;
 
             // Set instanceId
@@ -811,8 +801,6 @@ namespace karabo {
                 m_parameters.set("karaboVersion", karabo::util::Version::getVersion());
                 // DeviceId
                 m_parameters.set("deviceId", m_deviceId);
-                // ServerId
-                m_parameters.set("serverId", m_serverId);
                 // ProcessId
                 m_parameters.set("pid", ::getpid());
                 // Set hostname if missing

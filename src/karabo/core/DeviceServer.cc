@@ -518,7 +518,7 @@ namespace karabo {
                 Hash config(configuration.get<Hash>("configuration"));
 
                 // Inject serverId
-                config.set("_serverId_", m_serverId);
+                config.set("serverId", m_serverId);
 
                 // Inject deviceId use - sensible default in case no device instance id is supplied
                 if (!configuration.has("deviceId")) {
@@ -541,7 +541,7 @@ namespace karabo {
                 Hash modifiedConfig(configuration);
                 Hash& tmp = modifiedConfig.begin()->getValue<Hash>();
                 // Inject serverId
-                tmp.set("_serverId_", m_serverId);
+                tmp.set("serverId", m_serverId);
                 // Inject deviceId use - sensible default in case no device instance id is supplied
                 if (!tmp.has("deviceId")) {
                     tmp.set("_deviceId_", this->generateDefaultDeviceId(classId));

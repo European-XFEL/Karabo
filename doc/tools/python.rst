@@ -119,13 +119,6 @@ sections in `python.bound` should be formatted like this::
 
     def expectedParameters(expected):
         (
-            STRING_ELEMENT(expected).key("_serverId_")
-            .displayedName("_ServerID_")
-            .description("Do not set this property, it will be "
-                         "set by the device-server")
-            .expertAccess().assignmentInternal().noDefaultValue().init()
-            .commit(),
-
             STRING_ELEMENT(expected).key("_deviceId_")
             .displayedName("_DeviceID_")
             .description("Do not set this property, it will be set "

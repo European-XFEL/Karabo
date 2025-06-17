@@ -151,16 +151,7 @@ namespace karabo {
             static void expectedParameters(karabo::data::Schema& expected);
 
             /**
-             * Construct a device with a given configuration. The configuration
-             * Hash may contain any of the following entries:
-             *
-             * _serverId_: a string representing the server this device is
-             *             running on. If not given the device assumes to run
-             *             in stand-alone mode.
-             *
-             * _deviceId_: a string representing this device's id, part of the
-             *             unique identifier in the distributed system. If not
-             *             given it defaults to _none_.
+             * Construct a device with a given configuration.
              *
              * @param configuration
              */
