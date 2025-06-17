@@ -367,7 +367,7 @@ class DeviceServer:
         config = copy.copy(input_config['configuration'])
 
         # Inject serverId
-        config['_serverId_'] = self.serverid
+        config['serverId'] = self.serverid
 
         # Inject deviceId
         if ('deviceId' not in input_config
