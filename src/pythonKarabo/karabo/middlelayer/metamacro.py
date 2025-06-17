@@ -66,7 +66,7 @@ class MetaMacro(Device):
         klass = self.klass
         parameters = {
             "_deviceId_":  f"{deviceId}",
-            "_serverId_": self.serverId.value,
+            "serverId": self.serverId.value,
             "hostName": self.hostName.value,
             "uuid": self.uuid.value,
             "module": self.module.value,

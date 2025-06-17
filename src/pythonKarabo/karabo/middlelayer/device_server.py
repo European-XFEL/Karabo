@@ -188,7 +188,7 @@ class MiddleLayerDeviceServer(HeartBeatMixin, SignalSlotable):
         config = copy.copy(hash['configuration'])
 
         # Inject serverId (drop the timestamp)
-        config['_serverId_'] = self.serverId.value
+        config['serverId'] = self.serverId.value
 
         # Inject hostname (drop the timestamp)
         config['hostName'] = self.hostName.value
@@ -340,7 +340,7 @@ class MiddleLayerDeviceServer(HeartBeatMixin, SignalSlotable):
         for deviceId, initializer in self._device_initializer.items():
             configuration = Hash(initializer)
             configuration["_deviceId_"] = deviceId
-            configuration["_serverId_"] = self.serverId
+            configuration["serverId"] = self.serverId
             configuration["hostName"] = self.hostName
             classId = configuration.pop("classId")
             background(self.startDevice(classId, deviceId, configuration))
