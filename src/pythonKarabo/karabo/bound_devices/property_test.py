@@ -392,7 +392,7 @@ class PropertyTest(PythonDevice):
                          "sent via the pipeline")
             .setDimensions("400,500")
             .setEncoding(Encoding.GRAY)
-            # guess that DAQ needs more...
+            .setType(Types.UINT16)
             .commit(),
         )
 
