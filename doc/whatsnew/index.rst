@@ -7,6 +7,7 @@ Karabo Version Changes
 
 .. toctree::
 
+   3.0
    2.21
    2.20
    2.19
