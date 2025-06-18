@@ -521,18 +521,16 @@ namespace karabo {
                 config.set("serverId", m_serverId);
 
                 // Inject deviceId use - sensible default in case no device instance id is supplied
-                if (!configuration.has("deviceId")) {
-                    config.set("_deviceId_", this->generateDefaultDeviceId(classId));
-                } else if (configuration.get<string>("deviceId").empty()) {
-                    config.set("_deviceId_", this->generateDefaultDeviceId(classId));
+                if (!configuration.has("deviceId") || configuration.get<string>("deviceId").empty()) {
+                    config.set("deviceId", this->generateDefaultDeviceId(classId));
                 } else {
-                    config.set("_deviceId_", configuration.get<string>("deviceId"));
+                    config.set("deviceId", configuration.get<string>("deviceId"));
                 }
 
                 // Inject Hostname
                 config.set("hostName", m_hostname);
 
-                return std::make_tuple(config.get<std::string>("_deviceId_"), classId, config);
+                return std::make_tuple(config.get<std::string>("deviceId"), classId, config);
             } else {
                 // Old style, e.g. used for auto started devices
                 const std::string& classId = configuration.begin()->getKey();
@@ -543,12 +541,10 @@ namespace karabo {
                 // Inject serverId
                 tmp.set("serverId", m_serverId);
                 // Inject deviceId use - sensible default in case no device instance id is supplied
-                if (!tmp.has("deviceId")) {
-                    tmp.set("_deviceId_", this->generateDefaultDeviceId(classId));
-                } else if (tmp.get<string>("deviceId").empty()) {
-                    tmp.set("_deviceId_", this->generateDefaultDeviceId(classId));
+                if (!tmp.has("deviceId") || tmp.get<string>("deviceId").empty()) {
+                    tmp.set("deviceId", this->generateDefaultDeviceId(classId));
                 } else {
-                    tmp.set("_deviceId_", tmp.get<string>("deviceId"));
+                    tmp.set("deviceId", tmp.get<string>("deviceId"));
                 }
 
                 // Inject Hostname
@@ -556,7 +552,7 @@ namespace karabo {
 
                 const std::pair<std::string, data::Hash>& idCfg =
                       data::confTools::splitIntoClassIdAndConfiguration(modifiedConfig);
-                return std::make_tuple(tmp.get<std::string>("_deviceId_"), idCfg.first, idCfg.second);
+                return std::make_tuple(tmp.get<std::string>("deviceId"), idCfg.first, idCfg.second);
             }
         }
 

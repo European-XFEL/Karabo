@@ -1012,8 +1012,8 @@ void GuiServer_Test::testDeviceConfigUpdates() {
         messageQ->pop(nextMessage);
         CPPUNIT_ASSERT_EQUAL(std::string("deviceConfigurations"), nextMessage.get<std::string>("type"));
         CPPUNIT_ASSERT(nextMessage.has("configurations.PropTest_1"));
-        // key _deviceId_ present means: full config is received, not just an update from signal[State]Changed
-        CPPUNIT_ASSERT_MESSAGE(toString(nextMessage), nextMessage.has("configurations.PropTest_1._deviceId_"));
+        // key deviceId present means: full config is received, not just an update from signal[State]Changed
+        CPPUNIT_ASSERT_MESSAGE(toString(nextMessage), nextMessage.has("configurations.PropTest_1.deviceId"));
         // 2nd client not yet subscribed
         CPPUNIT_ASSERT_EQUAL(0ul, tcpAdapter2->getAllMessages("deviceConfigurations").size());
     }
@@ -1032,8 +1032,8 @@ void GuiServer_Test::testDeviceConfigUpdates() {
         messageQ->pop(nextMessage);
         CPPUNIT_ASSERT_EQUAL(std::string("deviceConfigurations"), nextMessage.get<std::string>("type"));
         CPPUNIT_ASSERT(nextMessage.has("configurations.PropTest_1"));
-        // key _deviceId_ present means: full config is received, not just an update from signal[State]Changed
-        CPPUNIT_ASSERT_MESSAGE(toString(nextMessage), nextMessage.has("configurations.PropTest_1._deviceId_"));
+        // key deviceId present means: full config is received, not just an update from signal[State]Changed
+        CPPUNIT_ASSERT_MESSAGE(toString(nextMessage), nextMessage.has("configurations.PropTest_1.deviceId"));
     }
 
     {
@@ -1109,7 +1109,7 @@ void GuiServer_Test::testDeviceConfigUpdates() {
         messageQ->pop(nextMessage);
         CPPUNIT_ASSERT_EQUAL(std::string("deviceConfigurations"), nextMessage.get<std::string>("type"));
         CPPUNIT_ASSERT(nextMessage.has("configurations.PropTest_2"));
-        CPPUNIT_ASSERT(nextMessage.has("configurations.PropTest_2._deviceId_"));
+        CPPUNIT_ASSERT(nextMessage.has("configurations.PropTest_2.deviceId"));
         CPPUNIT_ASSERT_EQUAL(22, nextMessage.get<int>("configurations.PropTest_2.int32Property"));
     }
 

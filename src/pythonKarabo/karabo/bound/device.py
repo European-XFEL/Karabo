@@ -66,13 +66,6 @@ class PythonDevice:
     @staticmethod
     def expectedParameters(expected):
         (
-            STRING_ELEMENT(expected).key("_deviceId_")
-            .displayedName("_DeviceID_")
-            .description("Do not set this property, it will be set by the"
-                         " device-server")
-            .expertAccess().assignmentInternal().noDefaultValue().init()
-            .commit(),
-
             STRING_ELEMENT(expected).key("deviceId")
             .displayedName("DeviceID")
             .description("The device instance ID uniquely identifies a device"
@@ -281,11 +274,8 @@ class PythonDevice:
 
         self._parameters = configuration
         self.serverid = self._parameters.get("serverId", default="__none__")
-
-        if "_deviceId_" in self._parameters:
-            self.deviceid = self._parameters["_deviceId_"]
-        else:
-            self.deviceid = "__none__"  # TODO: generate uuid
+        # TODO: generated a default id?
+        self.deviceid = self._parameters.get("deviceId", default="__none__")
 
         # Initialize threading locks...
         self._stateChangeLock = threading.Lock()
@@ -336,8 +326,9 @@ class PythonDevice:
             clsVers = f"{self.__module__.split('.', 1)[0]}-{self.__version__}"
             self._parameters.set("classVersion", clsVers)
             self._parameters.set("karaboVersion", karaboVersion)
-            self._parameters.set("deviceId", self.deviceid)
-            self._parameters.set("serverId", self.serverid)
+            # TODO: Remove?
+            # self._parameters.set("deviceId", self.deviceid)
+            # self._parameters.set("serverId", self.serverid)
             self._parameters.set("pid", os.getpid())
 
             # Validate first time to assign timestamps
@@ -1779,7 +1770,7 @@ def launchPythonDevice():
     device = None
     exception = None
     serverId = config["serverId"]
-    deviceId = config["_deviceId_"]
+    deviceId = config["deviceId"]
 
     def initialize():
         nonlocal device, exception

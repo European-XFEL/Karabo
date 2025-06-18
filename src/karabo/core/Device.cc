@@ -67,16 +67,6 @@ namespace karabo {
             using namespace karabo::xms;
 
             STRING_ELEMENT(expected)
-                  .key("_deviceId_")
-                  .displayedName("_DeviceID_")
-                  .description("Do not set this property, it will be set by the device-server")
-                  .expertAccess()
-                  .assignmentInternal()
-                  .noDefaultValue()
-                  .init()
-                  .commit();
-
-            STRING_ELEMENT(expected)
                   .key("deviceId")
                   .displayedName("DeviceID")
                   .description("The device instance ID uniquely identifies a device instance in the distributed system")
@@ -276,7 +266,7 @@ namespace karabo {
             else m_serverId = KARABO_NO_SERVER;
 
             // Set instanceId
-            if (configuration.has("_deviceId_")) configuration.get("_deviceId_", m_deviceId);
+            if (configuration.has("deviceId")) configuration.get("deviceId", m_deviceId);
             else m_deviceId = "__none__";
 
             // Make the configuration the initial state of the device
