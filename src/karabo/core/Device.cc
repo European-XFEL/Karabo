@@ -70,7 +70,9 @@ namespace karabo {
                   .key("deviceId")
                   .displayedName("DeviceID")
                   .description("The device instance ID uniquely identifies a device instance in the distributed system")
-                  .readOnly()
+                  .assignmentInternal()
+                  .noDefaultValue()
+                  .init()
                   .commit();
 
             INT32_ELEMENT(expected)
@@ -88,7 +90,9 @@ namespace karabo {
                   .displayedName("ServerID")
                   .description("The device-server on which this device is running on")
                   .expertAccess()
-                  .readOnly()
+                  .assignmentInternal()
+                  .noDefaultValue()
+                  .init()
                   .commit();
 
             STRING_ELEMENT(expected)
