@@ -344,14 +344,6 @@ namespace karabo {
                   .description("Set an acknowledgment requiring alarm to value of String property - if convertable")
                   .commit();
 
-            SLOT_ELEMENT(expected)
-                  .key("setNoAckAlarm")
-                  .displayedName("Set Alarm (no ackn.)")
-                  .description(
-                        "Set an alarm (that does not require acknowledgment) to value of String property - if "
-                        "convertable")
-                  .commit();
-
             NODE_ELEMENT(expected)
                   .key("vectors")
                   .displayedName("Vectors")
@@ -816,7 +808,6 @@ namespace karabo {
 
             KARABO_INITIAL_FUNCTION(initialize);
             KARABO_SLOT(setAlarm);
-            KARABO_SLOT(setNoAckAlarm);
             KARABO_SLOT(writeOutput);
             KARABO_SLOT(startWritingOutput);
             KARABO_SLOT(stopWritingOutput);
@@ -1013,14 +1004,7 @@ namespace karabo {
         void PropertyTest::setAlarm() {
             const karabo::data::AlarmCondition alarm =
                   karabo::data::AlarmCondition::fromString(get<std::string>("stringProperty"));
-            setAlarmCondition(alarm, true, "Acknowledgment requiring alarm");
-        }
-
-
-        void PropertyTest::setNoAckAlarm() {
-            const karabo::data::AlarmCondition alarm =
-                  karabo::data::AlarmCondition::fromString(get<std::string>("stringProperty"));
-            setAlarmCondition(alarm, false, "No acknowledgment requiring alarm");
+            setAlarmCondition(alarm);
         }
 
 

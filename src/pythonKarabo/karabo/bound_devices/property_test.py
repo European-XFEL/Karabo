@@ -48,7 +48,6 @@ class PropertyTest(PythonDevice):
 
         # Define the slots
         self.KARABO_SLOT(self.setAlarm)
-        self.KARABO_SLOT(self.setNoAckAlarm)
         self.KARABO_SLOT(self.writeOutput)
         self.KARABO_SLOT(self.startWritingOutput)
         self.KARABO_SLOT(self.stopWritingOutput)
@@ -178,12 +177,6 @@ class PropertyTest(PythonDevice):
             .displayedName("Set Alarm")
             .description("Set an acknowledgment requiring alarm to value of "
                          "String property - if convertable")
-            .commit(),
-
-            SLOT_ELEMENT(expected).key("setNoAckAlarm")
-            .displayedName("Set Alarm (no ackn.)")
-            .description("Set an alarm (that does not require acknowledgment) "
-                         "to value of String property - if convertable")
             .commit(),
 
             NODE_ELEMENT(expected).key("vectors")
@@ -564,13 +557,7 @@ class PropertyTest(PythonDevice):
 
     def setAlarm(self):
         alarm = AlarmCondition.fromString(self["stringProperty"])
-        self.setAlarmCondition(alarm, needsAcknowledging=True,
-                               description="Acknowledgment requiring alarm")
-
-    def setNoAckAlarm(self):
-        alarm = AlarmCondition.fromString(self["stringProperty"])
-        self.setAlarmCondition(alarm, needsAcknowledging=False,
-                               description="No acknowledgment requiring alarm")
+        self.setAlarmCondition(alarm)
 
     def writeOutput(self):
         outputCounter = self["outputCounter"]

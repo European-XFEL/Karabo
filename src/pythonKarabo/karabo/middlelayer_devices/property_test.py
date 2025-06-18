@@ -304,13 +304,6 @@ class PropertyTest(Device):
         level = AlarmCondition(self.stringProperty)
         self.globalAlarmCondition = level
 
-    @Slot(displayedName="Set Alarm (no ackn.)",
-          description="Foreseen for settting an alarm that does not require "
-                      "acknowledgment - but not supported!")
-    def setNoAckAlarm(self):
-        raise NotImplementedError("In middlelayer, global alarm always "
-                                  "require acknowledgment.")
-
     vectors = Node(
         VectorNode,
         displayedName="Vectors",

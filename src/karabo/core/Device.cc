@@ -680,8 +680,7 @@ namespace karabo {
         }
 
 
-        void Device::setAlarmCondition(const karabo::data::AlarmCondition& condition, bool needsAcknowledging,
-                                       const std::string& description) {
+        void Device::setAlarmCondition(const karabo::data::AlarmCondition& condition) {
             using namespace karabo::data;
 
             const Timestamp timestamp(getActualTimestamp());
