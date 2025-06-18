@@ -1,2 +1,0 @@
-[karabo.bound_device]
-DeviceChannelInjection = deviceChannelInjection:DeviceChannelInjection
