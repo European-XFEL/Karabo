@@ -176,7 +176,8 @@ class DeviceServer:
                 "'autoStart' syntax not supported anymore, use 'init'")
         self.autoStart = None
         if config.get("init") != "":
-            asv = generateAutoStartHash(jsonToHash(config.get("init")))
+            cfg = jsonToHash(config.get("init"))
+            asv = generateAutoStartHash(cfg)
             self.autoStart = asv['autoStart']
 
         self.deviceClasses = config.get("deviceClasses")
@@ -370,15 +371,13 @@ class DeviceServer:
         config['serverId'] = self.serverid
 
         # Inject deviceId
-        if ('deviceId' not in input_config
-                or len(input_config['deviceId']) == 0):
-            config['_deviceId_'] = self._generateDefaultDeviceInstanceId(
-                classid)
-        else:
-            config['_deviceId_'] = input_config['deviceId']
+        config['deviceId'] = input_config.get("deviceId", default="")
+        if not config['deviceId']:
+            config.set('deviceId',
+                       self._generateDefaultDeviceInstanceId(classid))
 
         self.logger.info("Trying to start a '{}' with device id '{}'"
-                         "...".format(classid, config['_deviceId_']))
+                         "...".format(classid, config['deviceId']))
         self.logger.debug(
             f"with the following configuration:\n{input_config}")
 
@@ -396,7 +395,7 @@ class DeviceServer:
         if not ok:
             msg = msg.strip()  # cut-off trailing newline...
             self.logger.warning(
-                f"Failed to start '{config['_deviceId_']}': {msg}")
+                f"Failed to start '{config['deviceId']}': {msg}")
             self._sigslot.reply(ok, msg)
             return
 
@@ -428,7 +427,7 @@ class DeviceServer:
 
     def _launchDevice(self, config, classid, reply):
 
-        deviceid = config["_deviceId_"]  # exists, see instantiateDevice
+        deviceid = config["deviceId"]  # exists, see instantiateDevice
 
         modname = self.availableDevices[classid]["module"]
 

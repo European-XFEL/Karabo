@@ -447,7 +447,7 @@ namespace karabo {
                 DeviceData::Pointer& data = it->second;
                 if (data->m_initLevel == DeviceData::InitLevel::COMPLETE) {
                     // normal case, nothing to do but just log
-                } else if (data->m_initLevel == DeviceData::InitLevel::CONNECTED && configuration.has("_deviceId_")) {
+                } else if (data->m_initLevel == DeviceData::InitLevel::CONNECTED && configuration.has("deviceId")) {
                     // configuration is the requested full configuration at the beginning
                     data->m_initLevel = DeviceData::InitLevel::COMPLETE;
 

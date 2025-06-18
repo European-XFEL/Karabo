@@ -350,10 +350,10 @@ namespace karabo {
             std::stringstream ss;
             // user is (was) always just "."...
             ss << m_deviceToBeLogged << "__EVENTS,type=\"+LOG\" karabo_user=\".\",logger_time=\""
-               << Epochstamp().toIso8601Ext() << "\",format=1i";  // Older data (where timestamps were not ensured to
-                                                                  // be not older than 'ts') has no format specified.
-            auto deviceIdNode = configuration.find("_deviceId_"); // _deviceId_ as in DataLogger::slotChanged
-            if (deviceIdNode) {                                   // Should always exist in case of m_pendingLogin
+               << Epochstamp().toIso8601Ext() << "\",format=1i"; // Older data (where timestamps were not ensured to
+                                                                 // be not older than 'ts') has no format specified.
+            auto deviceIdNode = configuration.find("deviceId");  // deviceId as in DataLogger::slotChanged
+            if (deviceIdNode) {                                  // Should always exist in case of m_pendingLogin
                 const Epochstamp devStartStamp = Epochstamp::fromHashAttributes(deviceIdNode->getAttributes());
                 // Difference between when device instantiated and when logging starts - precision as defined by
                 // PRECISION_FACTOR
@@ -362,7 +362,7 @@ namespace karabo {
                 ss << ",deviceAge=" << diff << "i";
             } else { // Should never happen!
                 KARABO_LOG_FRAMEWORK_WARN << "Cannot store device age of '" << m_deviceToBeLogged
-                                          << "', device lacks key '_deviceId_'.";
+                                          << "', device lacks key 'deviceId'.";
             }
             ss << " " << ts << "\n";
             m_dbClientWrite->enqueueQuery(ss.str());

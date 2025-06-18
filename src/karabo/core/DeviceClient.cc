@@ -1796,7 +1796,7 @@ namespace karabo {
                 } else {
                     // No configuration was set before for this 'instanceId'...
                     // Check if this is "initial" configuration and not simply "update"
-                    if (!hash.find("_deviceId_")) return;
+                    if (!hash.find("deviceId")) return;
                     m_runtimeSystemDescription.set(path, hash);
                 }
             }

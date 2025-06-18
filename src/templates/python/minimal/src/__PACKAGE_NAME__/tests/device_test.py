@@ -17,18 +17,18 @@ import pytest
 
 from karabo.bound.testing import ServerContext, sleepUntil
 
-from ..__CLASS_NAME__ import __CLASS_NAME__
+from ..__CLASS_NAME__ import __CLASS_NAME__  # noqa
 
-_DEVICE_ID = "Test__CLASS_NAME__"
+_DEVICE_ID = "TestDevice__CLASS_NAME__"
 _DEVICE_CONFIG = {
-    "_deviceId_": _DEVICE_ID,
+    _DEVICE_ID: {"classId": "__CLASS_NAME__"},
 }
 
 
 @pytest.mark.timeout(30)
 def test_device(eventLoop):
     init = json.dumps(_DEVICE_CONFIG)
-    server = ServerContext(f"testServer{__CLASS_NAME__}",
+    server = ServerContext("testServer__CLASS_NAME__",
                            ["log.level=DEBUG", f"init={init}"])
     with server:
         remote = server.remote()
