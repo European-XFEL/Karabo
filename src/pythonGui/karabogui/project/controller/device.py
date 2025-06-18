@@ -338,9 +338,9 @@ class DeviceInstanceController(BaseProjectController):
             server_id=self.model.server_id,
             class_id=self.model.class_id)
 
-    @on_trait_change("model:initialized,model:instance_id")
+    @on_trait_change("model:initialized")
     def _update_ui_label(self):
-        """ Whenever the object is modified it should be visible to the user
+        """ Whenever the model is initialized it should be visible to the user
         """
         self._update_icon(self.ui_data)
         self._update_instance_status(self.ui_data)
@@ -370,7 +370,7 @@ class DeviceInstanceController(BaseProjectController):
     @on_trait_change("project_device:status")
     def status_change(self, status):
         self._update_icon(self.ui_data)
-        # Show the device's configuration, iff it was already showing
+        # Show the device's configuration, if it was already showing
         self._update_configurator()
 
     @on_trait_change("project_device:instance_status")
@@ -420,9 +420,10 @@ class DeviceInstanceController(BaseProjectController):
             return
         ui_data.instance_status = self.project_device.instance_status
 
-    def _update_configurator(self):
+    def _update_configurator(self, refresh=False):
         broadcast_event(KaraboEvent.UpdateDeviceConfigurator,
-                        {'proxy': self.project_device.proxy})
+                        {'proxy': self.project_device.proxy,
+                         "refresh": refresh})
 
     def _create_sub_menu(self, parent_menu, project_controller, allowed):
         """ Create sub menu for parent menu and return it
@@ -499,30 +500,30 @@ class DeviceInstanceController(BaseProjectController):
             # We might create a new project device here when renaming!
             device.instance_id = dialog.instance_id
 
-            project_dev = self.project_device
+            project_device = self.project_device
             new_class = device.class_id != dialog.class_id
             # Look for existing DeviceConfigurationModel
-            conf_model = device.select_config(dialog.active_uuid)
-            assert conf_model is not None, "Missing configuration"
-            conf_model.class_id = dialog.class_id
+            config_model = device.select_config(dialog.active_uuid)
+            assert config_model is not None, "Missing configuration"
+            config_model.class_id = dialog.class_id
 
             if new_class:
                 class_id = dialog.class_id
                 # Can only happen for offline project device
-                assert not project_dev.online
+                assert not project_device.online
                 # Set device model to take care of all configurations
                 device.class_id = class_id
                 # And now the project device
-                project_dev.change_class(class_id)
+                project_device.change_class(class_id)
 
             device.active_config_ref = dialog.active_uuid
             # When renaming, we have to apply the config hash!
             if renamed or new_class:
-                proxy = project_dev.proxy
-                config_hash = conf_model.configuration
-                project_dev.set_project_config_hash(config_hash)
-                broadcast_event(KaraboEvent.UpdateDeviceConfigurator,
-                                {"proxy": proxy, "refresh": True})
+                self._update_icon(self.ui_data)
+                self._update_instance_status(self.ui_data)
+                config_hash = config_model.configuration
+                project_device.set_project_config_hash(config_hash)
+                self._update_configurator(True)
 
     def _about_device(self, parent=None):
         device = self.model
@@ -574,28 +575,27 @@ class DeviceInstanceController(BaseProjectController):
         if config_model is None:
             return
 
-        device = self.project_device
+        project_device = self.project_device
         allowed = access_role_allowed(AccessRole.PROJECT_EDIT)
-        disabled = device.status in NO_CONFIG_STATUSES or device.online
+        disabled = (project_device.status in NO_CONFIG_STATUSES
+                    or project_device.online)
         editable = allowed and not disabled
 
         configuration = config_model.configuration
         dialog = DeviceConfigurationDialog(
             name=config_model.simple_name, configuration=configuration,
             editable=editable,
-            project_device=device, parent=parent)
+            project_device=project_device, parent=parent)
         move_to_cursor(dialog)
         if dialog.exec() == QDialog.Accepted:
             self.active_config.configuration = dialog.configuration
-            device.set_project_config_hash(dialog.configuration)
-            proxy = device.proxy
+            project_device.set_project_config_hash(dialog.configuration)
+            proxy = project_device.proxy
             if proxy.online:
                 return
-
             # Show the device configuration if already showing
-            # XXX: Is this needed?
-            broadcast_event(KaraboEvent.UpdateDeviceConfigurator,
-                            {'proxy': proxy})
+            # XXX: Check if this is needed
+            self._update_configurator()
 
     def _duplicate_device(self, project_controller, parent=None):
         """ Duplicate the active device configuration of the model

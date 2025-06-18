@@ -718,7 +718,6 @@ class ConfigurationPanel(BasePanelWidget):
             # - We might have to refresh in case a device is renamed
             if isinstance(proxy, ProjectDeviceProxy):
                 proxy.ensure_class_schema()
-
             self._show_configuration(proxy)
 
     # -----------------------------------------------------------------------
