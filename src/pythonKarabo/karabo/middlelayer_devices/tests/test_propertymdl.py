@@ -68,10 +68,6 @@ class Tests(DeviceTest):
                 await d.setAlarm()
                 self.assertEqual(d.alarmCondition.value, "warn")
 
-                # slot that raises NotImplementedError
-                with self.assertRaises(KaraboError):
-                    await d.setNoAckAlarm()
-
         with self.subTest(msg="Test noded slots"):
             with (await getDevice("Test_PropertyTest")) as d:
                 await updateDevice(d)

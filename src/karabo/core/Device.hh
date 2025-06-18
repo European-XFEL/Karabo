@@ -760,8 +760,7 @@ namespace karabo {
              * @param needsAcknowledging if this condition will require acknowledgment on the alarm service
              * @param description an optional description of the condition. Consider including remarks on how to resolve
              */
-            void setAlarmCondition(const karabo::data::AlarmCondition& condition, bool needsAcknowledging = false,
-                                   const std::string& description = std::string());
+            void setAlarmCondition(const karabo::data::AlarmCondition& condition);
 
             /**
              * Get the alarm condition for a specific property
