@@ -206,7 +206,8 @@ async def test_device_server_start_faulty():
         # This is concurrent instantiation, which fails because
         # of exclusive queue use in broker setup.
         with pytest.raises(KaraboError):
-            fut = [server.slotStartDevice(hsh) for _ in range(2)]
+            fut = [call(server.serverId,
+                        "slotStartDevice", hsh) for _ in range(2)]
             await gather(*fut)
     finally:
         await finalize_server(server)

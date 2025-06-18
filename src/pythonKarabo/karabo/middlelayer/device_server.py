@@ -179,7 +179,7 @@ class MiddleLayerDeviceServer(HeartBeatMixin, SignalSlotable):
         except BaseException as e:
             e.logmessage = ('Could not start device "%s" of class "%s"',
                             deviceId, classId)
-            raise KaraboError from e
+            raise
 
     def parse(self, hash):
         classId = hash['classId']
