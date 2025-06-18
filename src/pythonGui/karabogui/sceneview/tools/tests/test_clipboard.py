@@ -24,6 +24,7 @@ from karabogui.sceneview.api import SceneView
 from karabogui.sceneview.tools.clipboard import (
     SceneAlignAction, SceneMoveAction, _add_models_to_clipboard,
     _read_models_from_clipboard)
+from karabogui.testing import lazy_scene_reading
 
 
 def test_move_action(gui_app):
@@ -115,20 +116,21 @@ def test_align_action(gui_app):
 def test_copy_paste(gui_app):
     """These are standalone widgets that are not bound to any devices."""
     # Test single model selection
-    label_model = _get_label_model("foo")
-    _assert_copy_paste(label_model)
+    with lazy_scene_reading():
+        label_model = _get_label_model("foo")
+        _assert_copy_paste(label_model)
 
-    # Test single layout selection
-    layout_model = _get_layout_model(label_model)
-    _assert_copy_paste(layout_model)
+        # Test single layout selection
+        layout_model = _get_layout_model(label_model)
+        _assert_copy_paste(layout_model)
 
-    # Test multiple models selection
-    another_label = _get_label_model("bar", x=10, y=10)
-    _assert_copy_paste(label_model, another_label)
+        # Test multiple models selection
+        another_label = _get_label_model("bar", x=10, y=10)
+        _assert_copy_paste(label_model, another_label)
 
-    # Test multiple layouts selection
-    another_layout = _get_layout_model(another_label, x=10, y=10)
-    _assert_copy_paste(layout_model, another_layout)
+        # Test multiple layouts selection
+        another_layout = _get_layout_model(another_label, x=10, y=10)
+        _assert_copy_paste(layout_model, another_layout)
 
 
 def _assert_copy_paste(*models):

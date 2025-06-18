@@ -55,6 +55,7 @@ def _read_models_from_clipboard():
     byte_array = mime_data.data(MIME_TYPE)
     file_obj = StringIO(byte_array.data().decode('utf-8'))
     scene = read_scene(file_obj)
+    scene.assure_svg_data()
 
     return scene.children
 
@@ -66,7 +67,6 @@ class SceneCopyAction(BaseSceneAction):
         selection_model = scene_view.selection_model
         if len(selection_model) == 0:
             return
-
         models = [o.model for o in selection_model]
         rect = selection_model.get_selection_bounds()
         _add_models_to_clipboard(models, rect)

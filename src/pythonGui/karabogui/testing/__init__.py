@@ -25,5 +25,5 @@ from .utils import (
     development_system_hash, device_hash, flushed_registry,
     get_class_property_proxy, get_device_schema,
     get_device_schema_allowed_state, get_property_proxy, keySequence,
-    set_proxy_hash, set_proxy_value, singletons, system_hash,
-    system_hash_server_and_plugins)
+    lazy_scene_reading, set_proxy_hash, set_proxy_value, singletons,
+    system_hash, system_hash_server_and_plugins)
