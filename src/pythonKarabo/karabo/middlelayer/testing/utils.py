@@ -29,6 +29,16 @@ from ..device_client import getProperties
 from ..eventloop import synchronize_notimeout
 
 
+def async_test_placeholder(func):
+    return False
+
+
+try:
+    from pytest_asyncio import is_async_test
+except Exception:
+    is_async_test = async_test_placeholder
+
+
 def get_ast_objects(package, ignore=[]):
     """Get all ast objects from a specified package
 
@@ -125,3 +135,10 @@ async def assert_wait_property(
     except TimeoutError:
         text = f"Waiting for path {path}, {value} on {deviceId}: {current}"
         assert False, text
+
+
+def pytest_collection_modifyitems(items):
+    pytest_asyncio_tests = (item for item in items if is_async_test(item))
+    session_scope_marker = pytest.mark.asyncio(loop_scope="module")
+    for async_test in pytest_asyncio_tests:
+        async_test.add_marker(session_scope_marker)
