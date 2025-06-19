@@ -94,7 +94,7 @@ def test_connect_button(gui_app):
     dialog._update_button()
     assert dialog.connect_button.isEnabled()
 
-    dialog._switch_to_auth_page()
+    dialog._on_switch_user_click()
     assert not dialog.connect_button.isEnabled()
 
 
