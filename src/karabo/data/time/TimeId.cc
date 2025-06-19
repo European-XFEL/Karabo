@@ -30,7 +30,7 @@ namespace karabo {
         TimeId::TimeId() : m_timeId(0) {}
 
 
-        TimeId::TimeId(const unsigned long long trainId) : m_timeId(trainId) {}
+        TimeId::TimeId(const unsigned long long timeId) : m_timeId(timeId) {}
 
 
         TimeId::~TimeId() {}
@@ -51,7 +51,7 @@ namespace karabo {
 
             } catch (const Exception& e) {
                 KARABO_RETHROW_AS(
-                      KARABO_PARAMETER_EXCEPTION("Provided attributes do not contain proper trainId information"));
+                      KARABO_PARAMETER_EXCEPTION("Provided attributes do not contain proper timeId information"));
             }
             return TimeId(tid);
         }

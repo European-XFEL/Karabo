@@ -19,12 +19,12 @@ from .data import Timestamp
 
 
 class TimeMixin:
-    """Mediator class for TrainId calculation used for KaraboValues
+    """Mediator class for timeId calculation used for KaraboValues
 
     This class is updated via the slotTimeTick in any middlelayer device
     server.
     """
-    # The tick trainId as an unsigned long long (Uint64)
+    # The tick timeId as an unsigned long long (Uint64)
     _tid = np.uint64(0)
     # time since epoch in seconds
     _time_sec = np.uint64(0)
@@ -52,29 +52,25 @@ class TimeMixin:
 
     @classmethod
     def get_timestamp(cls, timestamp):
-        """Correlated timestamp with latest reference to obtain trainId
-        """
+        """Correlates timestamp with latest reference to obtain timeId."""
         if not cls._tid:
             return timestamp
 
-        # create reference timestamp from timeserver information!
-        attrs = {}
-        attrs['tid'] = cls._tid
-        attrs['sec'] = cls._time_sec
-        attrs['frac'] = cls._time_frac
-        reference = Timestamp.fromHashAttributes(attrs)
+        # Construct reference timestamp from timeserver data
+        reference = Timestamp.fromHashAttributes({
+            "tid": cls._tid,
+            "sec": cls._time_sec,
+            "frac": cls._time_frac
+        })
 
-        # calculate how many trains are between reference and new timestamp
-        since_id = cls.elapsed_tid(reference, timestamp)
-
-        trainId = np.uint64(cls._tid + since_id)
-        timestamp.tid = trainId
-
+        # Compute elapsed timeId since reference
+        timestamp.tid = np.uint64(
+            cls._tid + cls.elapsed_tid(reference, timestamp))
         return timestamp
 
     @classmethod
     def elapsed_tid(cls, reference, new):
-        """Calculate the elapsed trainId between reference and newest timestamp
+        """Calculate the elapsed timeId between reference and newest timestamp
 
         :param reference: the reference timestamp
         :param new: the new timestamp
@@ -82,20 +78,19 @@ class TimeMixin:
         :type reference: Timestamp
         :type new: Timestamp
 
-        :returns: elapsed trainId's between reference and new timestamp
+        :returns: elapsed timeId's between reference and new timestamp
         """
         time_difference = new.toTimestamp() - reference.toTimestamp()
         return np.int64(time_difference * 1.0e6 // cls._period)
 
     @classmethod
     def toDict(cls):
-        """Return the reference information as dictionary"""
-        attrs = {}
-        attrs['tid'] = cls._tid
-        attrs['sec'] = cls._time_sec
-        attrs['frac'] = cls._time_frac
-
-        return attrs
+        """Return the reference information as a dictionary."""
+        return {
+            "tid": cls._tid,
+            "sec": cls._time_sec,
+            "frac": cls._time_frac
+        }
 
 
 def get_timestamp(timestamp=None):
