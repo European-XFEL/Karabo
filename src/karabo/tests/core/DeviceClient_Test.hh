@@ -64,6 +64,7 @@ class DeviceClient_Test : public CPPUNIT_NS::TestFixture {
     void testGetSchema();
     void testGetSchemaNoWait();
     void testMonitorChannel();
+    void testDeviceConfigurationsHandler();
     void testCurrentlyExecutableCommands();
     void testSlotsWithArgs();
     void testConnectionHandling();

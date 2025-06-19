@@ -103,6 +103,8 @@ namespace karabo {
 
             void slowSlot();
 
+            void slotUpdateStatus(const std::string& status, int intProperty);
+
             void logSomething(const karabo::data::Hash& input);
 
             void useLoggingTestSchema();

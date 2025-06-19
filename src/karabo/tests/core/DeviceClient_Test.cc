@@ -90,6 +90,7 @@ void DeviceClient_Test::tearDown() {
 
 
 void DeviceClient_Test::testAll() {
+    std::clog << "\n";
     // A single test to reduce setup/teardown time
     testConcurrentInitTopology();
     // testGet() and testSet() in that order - to avoid the need to instantiate again
@@ -97,6 +98,7 @@ void DeviceClient_Test::testAll() {
     testSet();
     testProperServerSignalsSent();
     testMonitorChannel();
+    testDeviceConfigurationsHandler();
     testGetSchema();
     testGetSchemaNoWait();
     testConnectionHandling();
@@ -428,6 +430,104 @@ void DeviceClient_Test::testMonitorChannel() {
     std::clog << " OK" << std::endl;
 }
 
+void DeviceClient_Test::testDeviceConfigurationsHandler() {
+    std::clog << "testDeviceConfigurationsHandler:" << std::flush;
+
+    // Here we mainly test the throttling (or rather not-throttling) behaviour for "status"
+    // and that other updates coming jointly with "status" are split-off and throttled.
+    // Further tests of registerDevicesMonitor(..) are done indirectly in the GuiServer_Test integration test.
+
+    // Pretty short interval to trigger "races", i.e. more than 1 throttling period.
+    // Note: With '1' and no clog in handler, I saw (running locally) that nothing was throttled.
+    m_deviceClient->setDeviceMonitorInterval(2);
+    const std::string devId("TestedDeviceForCfgHandler");
+    const std::pair<bool, std::string> success = m_deviceClient->instantiate(
+          "testServerDeviceClient", "PropertyTest", Hash("deviceId", devId), KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
+    // Our handler shall tell us when the initial full config has arrived after connecting to the device.
+    // Then we can trigger "status" update, together with updates of "int32PropertyReadOnly".
+    // Finally the handler shall tell us when the last expected value of "int32PropertyReadOnly" has arrived.
+    auto initCfgPromise = std::make_shared<std::promise<bool>>();
+    auto initCfgFut = initCfgPromise->get_future();
+    auto int32UpdatePromise = std::make_shared<std::promise<void>>();
+    auto int32UpdateFut = int32UpdatePromise->get_future();
+    const size_t numStatusUpdates = 5;
+    std::vector<Hash> updates;
+    // updates.reserve(numStatusUpdates * 10);
+    auto handler = [&updates, devId, numStatusUpdates, initCfgPromise, int32UpdatePromise](const Hash& changes) {
+        if (changes.has(devId)) {
+            const karabo::data::Hash& devUpdate = changes.get<Hash>(devId);
+            if (devUpdate.has("deviceId")) {
+                // Full config arrived, we are properly connected now
+                // But ensure that "status" is not stripped away from full config
+                initCfgPromise->set_value(devUpdate.has("status"));
+            } else {
+                updates.push_back(devUpdate);
+                // Has last update of the int32 arrived
+                auto int32Node = devUpdate.find("int32PropertyReadOnly");
+                if (int32Node && int32Node->getValue<int>() == static_cast<int>(numStatusUpdates) - 1) {
+                    int32UpdatePromise->set_value();
+                }
+            }
+        }
+    };
+    m_deviceClient->registerDevicesMonitor(handler);
+
+    // Register device for monitoring and wait until connected
+    m_deviceClient->registerDeviceForMonitoring(devId);
+    auto result = initCfgFut.wait_for(std::chrono::seconds{KRB_TEST_MAX_TIMEOUT});
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, result);
+    CPPUNIT_ASSERT(initCfgFut.get());
+
+    // Quickly trigger a few status updates (ok, 'execute' is synchronous, not too quick)
+    for (size_t i = 0; i < numStatusUpdates; ++i) {
+        const std::string status("Status " + toString(i));
+        CPPUNIT_ASSERT_NO_THROW(
+              m_deviceClient->execute(devId, "slotUpdateStatus", KRB_TEST_MAX_TIMEOUT, status, int(i)));
+    }
+    // Since execute is synchronous, all signal updates directly triggered by it have returned
+    // to the client and that one has called our handler. But the simultaneous update of
+    // int32PropertyReadOnly is throttled and may come later, we have to wait for it
+    result = int32UpdateFut.wait_for(std::chrono::seconds{KRB_TEST_MAX_TIMEOUT});
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, result);
+    int32UpdateFut.get();
+
+    // We should have received all status updates plus at least one for int32PropertyReadOnly
+    CPPUNIT_ASSERT_GREATEREQUAL(numStatusUpdates + 1, updates.size());
+
+    // Now investigate all received updates:
+    int lastInt32 = -1;
+    size_t numStatus = 0, numInt32 = 0;
+    for (size_t i = 0; i < updates.size(); ++i) {
+        const karabo::data::Hash& update = updates[i];
+        if (update.has("status")) {
+            // It is throttled, no other keys!
+            CPPUNIT_ASSERT_MESSAGE(toString(update), !update.has("int32PropertyReadOnly"));
+
+            const bool hasTimeAttrs = Timestamp::hashAttributesContainTimeInformation(update.getAttributes("status"));
+            CPPUNIT_ASSERT_MESSAGE(toString(update), hasTimeAttrs);
+            ++numStatus;
+        } else if (update.has("int32PropertyReadOnly")) {
+            lastInt32 = update.get<int>("int32PropertyReadOnly");
+            ++numInt32;
+        } else { // nothing else expected
+            CPPUNIT_ASSERT_MESSAGE(toString(update), false);
+        }
+    }
+    // Are all status updates received?
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(updates), numStatusUpdates, numStatus);
+    // The last int32PropertyReadOnly should have the correct value
+    CPPUNIT_ASSERT_EQUAL(static_cast<int>(numStatusUpdates - 1), lastInt32);
+    // Some throttling should have taken place (can we be 100% sure?)
+    CPPUNIT_ASSERT_LESS(numStatusUpdates, numInt32);
+
+    // Reset again
+    m_deviceClient->setDeviceMonitorInterval(-1);
+    m_deviceClient->registerDevicesMonitor([](const karabo::data::Hash&) {}); // not reset, but now no-op...
+
+    std::clog << " OK" << std::endl;
+}
 
 void DeviceClient_Test::testGetSchema() {
     std::clog << "testGetSchema:" << std::flush;
