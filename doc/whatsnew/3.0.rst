@@ -19,6 +19,8 @@ Major Highlights of This Release
 - Refactored project database to use MySQL
 - Refactored configuration database to use MySQL
 - Reauthentication support added in the ``GuiServer`` device
+- Pipelines (Output Channel) validate via Schema definition if provided
+- Python integration test framework based on Contexts (AsyncServerContext, ServerContext)
 
 To ease the transition, the dependency stack remains largely unchanged compared to Karabo 2.21.X:
 
@@ -26,7 +28,7 @@ To ease the transition, the dependency stack remains largely unchanged compared 
 - Python 3.12
 
 
-Enhancements to ``Bound Hash``
+Enhancements to `Bound Hash`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The ``Bound Hash`` now offers improved functionality and alignment with the middlelayer Hash:
@@ -42,6 +44,13 @@ KaraboGUI Updates
 - Curve Options: Customize pen colors and legend names for each curve
 - ImageWidget: Option to permanently store color level settings
 - New Configurator: Includes ``NORMAL`` and ``EXPERT`` modes
+- Lazy Project Loading: Now also scenes are loaded lazily
+- ToolTip Sticker Widget to provide helping information on the scene
+
+- Karabo Projects:
+
+  - More convenience in adding servers
+  - Search dialog now offers device, macro and servers as different option
 
 
 Breaking Changes
@@ -55,19 +64,30 @@ Breaking Changes
   - `skipValidation`
   - `rollingWindowStatistics`
   - `leafType`
+  - `allowedActions`
   - All alarm-related attributes such as `alarmLow`, `alarmHigh`, `needsAck`, etc.
 
 - AccessLevel Update: `USER` and `ADMIN` levels have been removed. Use `OPERATOR` and `EXPERT` instead.
+- Removal of Slot ``slotGetOutputChannelInformationFromHash``, use ``slotGetOutputChannelInformation`` which takes a `Hash` as input.
 - Pipeline Syntax Change: The `@` separator is no longer supported in pipeline channel declarations; use `:` as before.
 - Middlelayer Functions Removed: Functions such as `linspace`, `dot`, and `cross` in `middlelayer.numeric` have been removed.
 - Device Properties Removed: Properties like `_serverId` and `_deviceId` have been removed.
 - Visibility Features Removed: All visibility features (Configurator, Topology, ikarabo) and the `visibility` property have been removed.
-- Element and Encoding Removals:
+
+- Broker Signal/Slot Changes:
+
+  - Removal of third party subscriptions via the signal slot protocol (broker)
+  - Removal of signalStateChanged
+  - `slotFunctions` information not anymore present in headers by default.
+
+- Element and Enum Removals:
 
   - Removed `Elements Choice Of Node` and `List Of Node`
-  - Removed support for several encoding types (TIFF, BMP, PNG, etc.)
+  - Removed support for several Encoding Enum types (TIFF, BMP, PNG, etc.)
   - Removed `leafType` Enum
+  - Removed `daqDataType` `PULSEMASTER` and `TRAINMASTER` Enum.
   - Removed `PATH_ELEMENT`; use `STRING_ELEMENT` instead.
+  - Removal of archivePolicy attriute options. Only `EVERY_EVENT` and `NO_ARCHIVING` remain.
 
 - Class Changes:
 
@@ -75,10 +95,17 @@ Breaking Changes
   - `Worker` class (C++) has been removed.
   - `QueueWorker` class (C++/Bound) has been removed.
 
-- Global Changes:
+- Global Device Server Changes:
 
   - `scanPlugins` variable has been removed from all device servers.
   - `autostart` property and related functionality (C++/Bound) have been removed. Use `init` with JSON syntax instead.
+  - Logging: Logging levels in C++/Bound have been harmonized with MDL. Use `log.level` instead of `Logger.priority`.
+
+- GUI Changes:
+
+  - The attributes follow now the Karabo naming (camelCase) convention. ( display_type -> displayType)
+  - Only a single `default` configuration can be used in a project device. Now more configurations can be added.
+  - Removal of Printer Option from every panel
 
 
 Change of Behavior
@@ -87,22 +114,29 @@ Change of Behavior
 - `State` and `AlarmCondition` are now implemented as `StrEnum`.
 - All other enums previously based on integers are now implemented as `IntEnum`.
 - ProjectManager Refactor:
+
   - All slots now operate with Hash input and output.
   - `slotBeginUserSession` and `slotEndUserSession` have been removed.
   - Token specification is no longer required.
+
 - MDL:
+
   - `EncodingType` has been renamed to `Encoding`.
   - `Hash.paths()` now defaults to showing only leaf elements.
+  - DeviceNode: The `timeout` argument has been removed, as it was previously ignored.
+  - MDL Configuration Singleton not attached to event loop anymore. This enables scripting among different broker topics with macros.
+
 - Timestamps: All backend timestamps (Influx, Config, Project) are now defined as UTC.
-- DeviceNode: The `timeout` argument has been removed, as it was previously ignored.
 - Terminology Change: "Configuration From Name" has been renamed to "Init Configuration" to better reflect its purpose.
+
 - ConfigDB:
+
   - Init Configurations are now equivalent to project configurations (only class schema properties, only changes from default).
   - Configurations are stored as XML-encoded Hash objects.
+
 - Bound: The `Worker` class has been streamlined to cover only the common use cases (single-shot and standard timeout).
 - ProjectDB: Local database storage has changed from a file to SQLite.
 - Device Repository: The default namespace for installing devices is now `karaboDevices3`.
-- Logging: Logging levels in C++/Bound have been harmonized with MDL. Use `log.level` instead of `Logger.priority`.
 
 
 All API
