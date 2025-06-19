@@ -8,6 +8,7 @@
 variables:
   USE_ISORT: "true"
   USE_FLAKE: "true"
+  USE_LEGACY_PYTEST: "false"
 
 include:
   - project: karabo/gitlabci
