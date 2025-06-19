@@ -137,23 +137,16 @@ class SignalSlotable(Configurable):
     __deviceServer = Weak()
 
     @String(
-        displayedName="_DeviceID_",
-        description="Do not set this property, it will be set by the "
-                    "device-server",
-        requiredAccessLevel=AccessLevel.EXPERT,
-        assignment=Assignment.INTERNAL, accessMode=AccessMode.INITONLY,
-        defaultValue="__none__",
-    )
-    def _deviceId_(self, value):
-        self._deviceId_ = value
-        self.logger = logging.getLogger(value)
-
-    deviceId = String(
         displayedName="DeviceID",
         description="The device instance ID uniquely identifies a device "
                     "instance in the distributed system",
-        accessMode=AccessMode.READONLY,
-    )
+        requiredAccessLevel=AccessLevel.OPERATOR,
+        assignment=Assignment.INTERNAL,
+        accessMode=AccessMode.INITONLY,
+        defaultValue="__none__")
+    def deviceId(self, value):
+        self.deviceId = value
+        self.logger = logging.getLogger(value)
 
     heartbeatInterval = Int32(
         displayedName="Heartbeat interval",
@@ -171,18 +164,22 @@ class SignalSlotable(Configurable):
         """Public method to get the signal slotable"""
         return self._sigslot
 
-    def __init__(self, configuration):
+    def __init__(self, configuration: dict):
+        # XXX: Backward compatible _deviceId_ handling
+        if "_deviceId_" in configuration:
+            deviceId = configuration.pop("_deviceId_")
+            configuration["deviceId"] = deviceId
+
         self._sethash = {"ignore": "this"}
         self.is_server = False
         for k in dir(type(self)):
             if isinstance(getattr(self, k, None), Signal):
                 setattr(self, k, BoundSignal(self, k, getattr(self, k)))
         super().__init__(configuration)
-        if not self.naming_regex.fullmatch(self._deviceId_):
+        if not self.naming_regex.fullmatch(self.deviceId):
             raise RuntimeError(
                 'Device name "{}" does not follow naming convention'
-                .format(self._deviceId_))
-        self.deviceId = self._deviceId_
+                .format(self.deviceId))
         self._proxies = weakref.WeakValueDictionary()
         self._proxy_futures = {}
         self._timers = weakref.WeakSet()

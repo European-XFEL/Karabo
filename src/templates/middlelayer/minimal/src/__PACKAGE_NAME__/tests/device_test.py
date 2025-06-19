@@ -20,7 +20,7 @@ from ..__CLASS_NAME__ import __CLASS_NAME__
 
 _DEVICE_ID = "Test__CLASS_NAME__"
 _DEVICE_CONFIG = {
-    "_deviceId_": _DEVICE_ID,
+    "deviceId": _DEVICE_ID,
 }
 
 
