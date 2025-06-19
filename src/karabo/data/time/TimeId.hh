@@ -22,8 +22,8 @@
  * Created on June 19, 2013, 3:22 PM
  */
 
-#ifndef KARABO_DATA_TIME_TRAINSTAMP_HH
-#define KARABO_DATA_TIME_TRAINSTAMP_HH
+#ifndef KARABO_DATA_TIME_ID_HH
+#define KARABO_DATA_TIME_ID_HH
 
 #include "karabo/data/types/Hash.hh"
 
@@ -58,10 +58,10 @@ namespace karabo {
 
 
             /**
-             * Creates an TrainStamp from a Hash attribute
+             * Creates an TimeId from a Hash attribute
              * This function throws in case the attributes do no provide the correct information
              * @param attributes Hash attributes
-             * @return TrainStamp object
+             * @return TimeId object
              */
             static TimeId fromHashAttributes(const Hash::Attributes& attributes);
 
@@ -81,7 +81,7 @@ namespace karabo {
            private:
         };
 
-        std::ostream& operator<<(std::ostream&, const TimeId& trainstamp);
+        std::ostream& operator<<(std::ostream&, const TimeId& timeId);
 
     } // namespace data
 } // namespace karabo
