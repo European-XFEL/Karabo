@@ -21,16 +21,6 @@ import pytest
 from .device import DeviceClientBase
 from .eventloop import EventLoop
 
-
-def async_test_placeholder(func):
-    return False
-
-
-try:
-    from pytest_asyncio import is_async_test
-except Exception:
-    is_async_test = async_test_placeholder
-
 SHUTDOWN_TIME = 2
 
 
@@ -102,10 +92,3 @@ class KaraboTestLoopPolicy(DefaultEventLoopPolicy):
 @pytest.fixture(scope="module")
 def event_loop_policy():
     return KaraboTestLoopPolicy()
-
-
-def pytest_collection_modifyitems(items):
-    pytest_asyncio_tests = (item for item in items if is_async_test(item))
-    session_scope_marker = pytest.mark.asyncio(loop_scope="module")
-    for async_test in pytest_asyncio_tests:
-        async_test.add_marker(session_scope_marker)
