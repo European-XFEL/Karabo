@@ -1460,8 +1460,6 @@ namespace karabo {
 
             std::string getInstanceType(const karabo::data::Hash& instanceInfo) const;
 
-            virtual void slotMasterPing();
-
             virtual void slotProvideSystemTopology();
 
             void age(const boost::system::error_code& e);

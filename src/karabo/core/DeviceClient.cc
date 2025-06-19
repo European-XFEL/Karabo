@@ -1814,6 +1814,17 @@ namespace karabo {
                         m_devicesChangesHandler(deviceChanges);
                     }
                 } else {
+                    // Also the "status" property is always directly forwarded - but not properties in same Hash update
+                    boost::optional<const Hash::Node&> statusNode = hash.find("status");
+                    const bool directlyForwardStatus =
+                          (statusNode && !hash.has("deviceId")); // deviceId: not the initial full cfg
+                    if (directlyForwardStatus) {
+                        Hash changed;
+                        changed.setNode(*statusNode); // Copy also attributes (timestamp)
+                        Hash statusChange(instanceId, std::move(changed));
+                        std::lock_guard<std::mutex> lock(m_devicesChangesMutex);
+                        if (m_devicesChangesHandler) m_devicesChangesHandler(statusChange);
+                    }
                     std::lock_guard<std::mutex> lock(m_signalsChangedMutex);
                     // Just book keep paths here and call 'notifyDeviceChangedMonitors'
                     // later with content from m_runtimeSystemDescription.
@@ -1821,7 +1832,11 @@ namespace karabo {
                     // If there is path "a.b" coming, should we erase possible previous changes to daughters like
                     // "a.b.c.d"? No - that should better be handled in merging into m_runtimeSystemDescription above
                     // and then the invalid path "a.b.c.d" should be ignored 'downstream' when sending.
-                    hash.getPaths(m_signalsChanged[instanceId]);
+                    std::set<std::string>& updatedPaths = m_signalsChanged[instanceId];
+                    hash.getPaths(updatedPaths); // extend by new updates
+
+                    // Do not send the same status update again later
+                    if (directlyForwardStatus) updatedPaths.erase(statusNode->getKey());
                 }
             } else {
                 // There is a tiny (!) risk here: The last loop of the corresponding thread
@@ -1971,11 +1986,6 @@ namespace karabo {
                 if (it->is<karabo::data::Hash>())
                     castAndCall(instanceId, registered, it->getValue<Hash>(), currentPath);
             }
-        }
-
-
-        void DeviceClient::slotMasterPing() {
-            m_signalSlotable.lock()->reply(m_signalSlotable.lock()->getInstanceId());
         }
 
 

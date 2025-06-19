@@ -810,9 +810,7 @@ namespace karabo {
         PropertyTest::PropertyTest(const Hash& input)
             : Device(input), m_writingOutput(false), m_writingOutputTimer(karabo::net::EventLoop::getIOService()) {
             // Signal for test of order between emitted signal and direct slot calls.
-            // Note that (using JMS broker) the order is NOT guaranteed for KARABO_SIGNAL since that has
-            // lower priority - seen that a slot call overtook few hundred messages triggered by signals!
-            KARABO_SIGNAL("signalCount", int); // KARABO_SIGNAL guaranties order with slot calls...
+            KARABO_SIGNAL("signalCount", int);
 
             KARABO_INITIAL_FUNCTION(initialize);
             KARABO_SLOT(setAlarm);
@@ -828,6 +826,8 @@ namespace karabo {
             KARABO_SLOT(logSomething, Hash);
             // do not add this slot to the Schema.
             KARABO_SLOT(slowSlot);
+
+            KARABO_SLOT(slotUpdateStatus, std::string, int);
 
             // Three slots for slot order test
             KARABO_SLOT(orderTest_slotStart);
@@ -1170,6 +1170,12 @@ namespace karabo {
             // a slot.
             std::this_thread::sleep_for(2000ms);
         }
+
+
+        void PropertyTest::slotUpdateStatus(const std::string& status, int intProperty) {
+            set(Hash("status", status, "int32PropertyReadOnly", intProperty));
+        }
+
 
         void PropertyTest::logSomething(const Hash& input) {
             const std::string message = (input.has("message")) ? input.get<std::string>("message") : "message missing";
