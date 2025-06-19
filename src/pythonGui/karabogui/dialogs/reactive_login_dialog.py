@@ -201,6 +201,7 @@ class ReactiveLoginDialog(QDialog):
 
         self.stackedWidget.setCurrentIndex(0)
         self.login_type = LoginType.UNKNOWN
+        self._switch_user_pressed = False
         self._requesting = False
         self._queried_host = ""
         self._queried_port = ""
@@ -274,7 +275,7 @@ class ReactiveLoginDialog(QDialog):
         if self.hasAcceptableInput():
             self._timer.start()
 
-        self.switch_button.clicked.connect(self._switch_to_auth_page)
+        self.switch_button.clicked.connect(self._on_switch_user_click)
         self.skip_authentication_button.setStyleSheet(BUTTON_STYLE)
         self.skip_authentication_button.clicked.connect(self.accept)
 
@@ -385,7 +386,10 @@ class ReactiveLoginDialog(QDialog):
         elif (server_info.has("authServer") and
               bool(server_info["authServer"])):
             self.login_type = LoginType.USER_AUTHENTICATED
-            if get_config()["refresh_token"] is not None:
+            if (not self._switch_user_pressed
+                    and get_config()["refresh_token"] is not None):
+                # If the user has already pressed "Switch User"
+                # we don't go back to REFRESH_TOKEN mode
                 self.login_type = LoginType.REFRESH_TOKEN
             self._auth_url = server_info["authServer"]
             if not self._auth_url.endswith("/"):
@@ -421,8 +425,7 @@ class ReactiveLoginDialog(QDialog):
 
         url = reply.url().path()
         if url.endswith("user_tokens") and not self.remember_login.isChecked():
-            del get_config()["refresh_token"]
-            del get_config()["refresh_token_user"]
+            self._clear_refresh_token()
 
         error = reply.error()
         bytes_string = reply.readAll()
@@ -439,8 +442,7 @@ class ReactiveLoginDialog(QDialog):
         else:
             self._error = auth_result.get("error_msg")
             if self._error == NO_REFRESH_TOKEN_ERROR:
-                del get_config()["refresh_token"]
-                del get_config()["refresh_token_user"]
+                self._clear_refresh_token()
             self.stackedWidget.setCurrentIndex(LoginType.USER_AUTHENTICATED)
             self._update_status_label()
 
@@ -515,8 +517,7 @@ class ReactiveLoginDialog(QDialog):
         })
         if not remember_login:
             # Erase existing information
-            del get_config()["refresh_token"]
-            del get_config()["refresh_token_user"]
+            self._clear_refresh_token()
 
         info = bytearray(info.encode("utf-8"))
         url = f"{self._auth_url}user_tokens"
@@ -542,9 +543,14 @@ class ReactiveLoginDialog(QDialog):
         request.setHeader(QNetworkRequest.ContentTypeHeader, REQUEST_HEADER)
         self.access_manager.post(request, info)
 
+    def _clear_refresh_token(self):
+        del get_config()["refresh_token"]
+        del get_config()["refresh_token_user"]
+
     @Slot()
-    def _switch_to_auth_page(self):
+    def _on_switch_user_click(self):
         self.login_type = LoginType.USER_AUTHENTICATED
+        self._switch_user_pressed = True
         self._update_dialog_state()
         if self._token_check_timer.isActive():
             self._token_check_timer.stop()
@@ -553,7 +559,9 @@ class ReactiveLoginDialog(QDialog):
     def _look_for_token(self):
         if get_config()["refresh_token"] is None:
             self.login_type = LoginType.USER_AUTHENTICATED
-        else:
+        elif not self._switch_user_pressed:
+            # Refresh token mode should not be activated once
+            # the user has pressed "Switch User"
             self.login_type = LoginType.REFRESH_TOKEN
         self._update_dialog_state()
 
@@ -681,8 +689,7 @@ class UserSessionDialog(QDialog):
                 else:
                     # In case we haven't received a refresh token, we are not
                     # remembering and thus have to erase tokens.
-                    del get_config()["refresh_token"]
-                    del get_config()["refresh_token_user"]
+                    self._clear_refresh_token()
                 get_network().onLogin()
 
             super().accept()
