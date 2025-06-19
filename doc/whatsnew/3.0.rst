@@ -11,12 +11,91 @@ Release date is **July**.
 All notable changes are until **3.0.0rc3**
 
 
-Summary – Release highlights
-++++++++++++++++++++++++++++
+Major Highlights of This Release
+++++++++++++++++++++++++++++++++
+
+
+- Introduction of a new Karabo broker protocol that leverages modern messaging features (e.g., headers) and enables splitting of broadcast messages
+- Refactored project database to use MySQL
+- Refactored configuration database to use MySQL
+- Reauthentication support added in the ``GuiServer`` device
+
+To ease the transition, the dependency stack remains largely unchanged compared to Karabo 2.21.X:
+
+- C++20 standard
+- Python 3.12
+
+
+Enhancements to ``Bound Hash``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``Bound Hash`` now offers improved functionality and alignment with the middlelayer Hash:
+
+- ``Hash.update`` method added (similar to Python's ``dict.update``)
+- ``Hash.flat_iterall`` method introduced, similar to MDL
+- Support for ellipsis functionality as in MDL, e.g., ``*attrs = Hash[key, ...]``
+- The initializer now supports an arbitrary number of arguments and dictionary input
+
+KaraboGUI Updates
+~~~~~~~~~~~~~~~~~
+
+- **Curve Options**: Customize pen colors and legend names for each curve
+- **ImageWidget**: Option to permanently store color level settings
+- **New Configurator**: Includes ``NORMAL`` and ``EXPERT`` modes
 
 
 Breaking Changes
 ++++++++++++++++
+
+- **Boost FSM Removal (C++/Bound):** The finite state machine concept has been removed from Karabo.
+- **Runtime Attributes Removed:** The concept of runtime attributes has been completely eliminated. For example, `slotUpdateSchemaAttributes` is no longer available.
+- **Removed Attributes:**
+  - `daqPolicy`
+  - `skipValidation`
+  - `rollingWindowStatistics`
+  - `leafType`
+  - All alarm-related attributes such as `alarmLow`, `alarmHigh`, `needsAck`, etc.
+- **AccessLevel Update:** `USER` and `ADMIN` levels have been removed. Use `OPERATOR` and `EXPERT` instead.
+- **Pipeline Syntax Change:** The `@` separator is no longer supported in pipeline channel declarations; use `:` as before.
+- **Middlelayer Functions Removed:** Functions such as `linspace`, `dot`, and `cross` in `middlelayer.numeric` have been removed.
+- **Device Properties Removed:** Properties like `_serverId` and `_deviceId` have been removed.
+- **Visibility Features Removed:** All visibility features (Configurator, Topology, ikarabo) and the `visibility` property have been removed.
+- **Element and Encoding Removals:**
+  - Removed `Elements Choice Of Node` and `List Of Node`
+  - Removed support for several encoding types (TIFF, BMP, PNG, etc.)
+  - Removed `leafType` Enum
+  - Removed `PATH_ELEMENT`; use `STRING_ELEMENT` instead.
+- **Class Changes:**
+  - `Trainstamp` (C++/Bound) has been removed; use `TimeId`.
+  - `Worker` class (C++) has been removed.
+  - `QueueWorker` class (C++/Bound) has been removed.
+- **Global Changes:**
+  - `scanPlugins` variable has been removed from all device servers.
+  - `autostart` property and related functionality (C++/Bound) have been removed. Use `init` with JSON syntax instead.
+
+Change of Behavior
+++++++++++++++++++
+
+- `State` and `AlarmCondition` are now implemented as `StrEnum`.
+- All other enums previously based on integers are now implemented as `IntEnum`.
+- **ProjectManager Refactor:**
+  - All slots now operate with Hash input and output.
+  - `slotBeginUserSession` and `slotEndUserSession` have been removed.
+  - Token specification is no longer required.
+- **MDL:**
+  - `EncodingType` has been renamed to `Encoding`.
+  - `Hash.paths()` now defaults to showing only leaf elements.
+- **Timestamps:** All backend timestamps (Influx, Config, Project) are now defined as UTC.
+- **DeviceNode:** The `timeout` argument has been removed, as it was previously ignored.
+- **Terminology Change:** "Configuration From Name" has been renamed to "Init Configuration" to better reflect its purpose.
+- **ConfigDB:**
+  - Init Configurations are now equivalent to project configurations (only class schema properties, only changes from default).
+  - Configurations are stored as XML-encoded Hash objects.
+- **Bound:** The `Worker` class has been streamlined to cover only the common use cases (single-shot and standard timeout).
+- **ProjectDB:** Local database storage has changed from a file to SQLite.
+- **Device Repository:** The default namespace for installing devices is now `karaboDevices3`.
+- **Logging:** Logging levels in C++/Bound have been harmonized with MDL. Use `log.level` instead of `Logger.priority`.
+
 
 All API
 =======
@@ -24,6 +103,9 @@ All API
 Dependency Updates
 ++++++++++++++++++
 
+- `pytest_asyncio` has been updated to 1.0.0. For a period until Winter 2026, device repositories making use of the central CI
+can specify USE_LEGACY_PYTEST = "false" to make use of this feature. After that, the legacy behavior changes its default.
+- pyqtgraph update to 0.13.7
 
 
 Bug Fixes
