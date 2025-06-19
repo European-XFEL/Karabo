@@ -199,7 +199,7 @@ class MiddleLayerDeviceServer(HeartBeatMixin, SignalSlotable):
         else:
             deviceId = self._generateDefaultDeviceId(classId)
 
-        config['_deviceId_'] = deviceId
+        config['deviceId'] = deviceId
         self.logger.info('Trying to start "%s" of class "%s"',
                          deviceId, classId)
         self.logger.debug("with the following configuration:\n%s", hash)
@@ -339,7 +339,7 @@ class MiddleLayerDeviceServer(HeartBeatMixin, SignalSlotable):
 
         for deviceId, initializer in self._device_initializer.items():
             configuration = Hash(initializer)
-            configuration["_deviceId_"] = deviceId
+            configuration["deviceId"] = deviceId
             configuration["serverId"] = self.serverId
             configuration["hostName"] = self.hostName
             classId = configuration.pop("classId")

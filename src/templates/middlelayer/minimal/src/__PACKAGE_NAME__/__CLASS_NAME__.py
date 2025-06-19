@@ -12,19 +12,13 @@
 # Karabo itself is licensed under the terms of the MPL 2.0 license.
 #############################################################################
 
-from karabo.middlelayer import Device, Slot, String
+from karabo.middlelayer import Device
 
 from ._version import version as deviceVersion
 
 
 class __CLASS_NAME__(Device):
     __version__ = deviceVersion
-
-    greeting = String()
-
-    @Slot()
-    async def hello(self):
-        self.greeting = "Hello world!"
 
     def __init__(self, configuration):
         super().__init__(configuration)

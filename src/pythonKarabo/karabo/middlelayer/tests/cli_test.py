@@ -167,6 +167,7 @@ def test_autodisconnect():
     thread.start()
     try:
         devices = DeviceClient(_deviceId_="ikarabo-test")
+        assert devices.deviceId == "ikarabo-test"
         oel = get_event_loop()
         set_event_loop(NoEventLoop(devices))
         time.sleep(0.1)
@@ -176,6 +177,7 @@ def test_autodisconnect():
         async def init_other():
             nonlocal other
             other = Other(dict(_deviceId_="other", serverId="tserver"))
+            assert other.deviceId == "other"
             await other.startInstance()
 
         thread.loop.call_soon_threadsafe(ensure_future, init_other())
