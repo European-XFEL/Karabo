@@ -90,7 +90,7 @@ class DeviceServer(SQLModel, table=True):
 
     date: datetime.datetime | None = Field(default=None, nullable=True)
 
-    project_id: int = Field(foreign_key="Project.id", nullable=True)
+    project_id: int | None = Field(foreign_key="Project.id", nullable=True)
     project: Project = Relationship(back_populates="device_servers")
 
     device_instances: list["DeviceInstance"] = Relationship(
@@ -162,7 +162,7 @@ class Scene(SQLModel, table=True):
 
     date: datetime.datetime | None = Field(default=None, nullable=True)
 
-    project_id: int = Field(foreign_key="Project.id", nullable=True)
+    project_id: int | None = Field(foreign_key="Project.id", nullable=True)
     project: Project = Relationship(back_populates="scenes")
 
     # The order of the scenes in a project
@@ -180,8 +180,19 @@ class Macro(SQLModel, table=True):
 
     date: datetime.datetime | None = Field(default=None, nullable=True)
 
-    project_id: int = Field(foreign_key="Project.id", nullable=True)
+    project_id: int | None = Field(foreign_key="Project.id", nullable=True)
     project: Project = Relationship(back_populates="macros")
 
     # The order of the macros in a project
     order: int = Field(default=0, nullable=False)
+
+
+class SceneLinkedScene(SQLModel, table=True):
+    """The many-to-many relationship between scenes and linked scenes."""
+    __tablename__ = "SceneLinkedScene"
+
+    id: int | None = Field(default=None, primary_key=True)
+    scene_id: int = Field(foreign_key="Scene.id", nullable=False)
+    linked_scene_id: int = Field(foreign_key="Scene.id", nullable=False)
+
+    __table_args__ = (UniqueConstraint("scene_id", "linked_scene_id"), )
