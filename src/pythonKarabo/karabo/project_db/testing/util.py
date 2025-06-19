@@ -75,9 +75,9 @@ async def create_hierarchy(
     project_xml = (
         f'<xml item_type="project" uuid="{project_uuid}" '
         'simple_name="Project"><root><project><scenes>')
-    # Scenes
-    for _ in range(4):
-        scene_uuid = generate_uuid()
+    scenes_uuids = [generate_uuid() for _ in range(4)]
+    for i in range(4):
+        scene_uuid = scenes_uuids[i]
         name = scene_name or scene_uuid
 
         project_xml += (
@@ -88,8 +88,14 @@ async def create_hierarchy(
             f'<xml item_type="scene" uuid="{scene_uuid}" simple_name="{name}">'
             '<svg:svg xmlns:svg="http://www.w3.org/2000/svg" '
             'xmlns:krb="http://karabo.eu/scene" height="768" width="1024" '
-            f'krb:uuid="{scene_uuid}" krb:version="2">'
-            '</svg:svg></xml>')
+            f'krb:uuid="{scene_uuid}" krb:version="2">')
+        if i % 2 == 1:
+            # Only the minimal attributes for a scene link to be recognized are
+            # defined. No widget geometry, framing, ...
+            scene_xml += (
+                '<svg:rect krb:class="SceneLink" '
+                f'krb:target="scene_tgt:{scenes_uuids[i-1]}" />')
+        scene_xml += '</svg:svg></xml>'
         await db.save_item("LOCAL", scene_uuid, scene_xml)
 
     project_xml += '</scenes>'

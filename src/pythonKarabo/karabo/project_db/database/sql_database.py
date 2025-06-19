@@ -21,6 +21,7 @@ from datetime import UTC
 from pathlib import Path
 
 from lxml import etree
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from sqlmodel import SQLModel, select
 
@@ -29,13 +30,13 @@ from ..util import ProjectDBError, make_str_if_needed, make_xml_if_needed
 from .db_engine import create_local_engine, create_remote_engine
 from .models import (
     DeviceConfig, DeviceInstance, DeviceServer, Macro, Project, ProjectDomain,
-    ProjectSubproject, Scene)
+    ProjectSubproject, Scene, SceneLinkedScene)
 from .models_xml import (
     emit_config_xml, emit_device_xml, emit_macro_xml, emit_project_xml,
     emit_scene_xml, emit_server_xml)
 from .utils import (
     date_utc_to_local, datetime_from_str, datetime_now, datetime_str_now,
-    datetime_to_str, get_trashed)
+    datetime_to_str, get_scene_links, get_trashed)
 
 logger = logging.getLogger(__file__)
 
@@ -1134,6 +1135,16 @@ class SQLDatabase(DatabaseBase):
             scene = result.first()
             if scene:
                 # A scene is being updated
+
+                # Remove all the scene links originated from the scene
+                query_links = (
+                    select(SceneLinkedScene)
+                    .where(SceneLinkedScene.scene_id == scene.id))
+                result_links = await session.exec(query_links)
+                links = result_links.all()
+                for link in links:
+                    await session.delete(link)
+
                 scene.name = scene_name
                 scene.date = date
                 scene.svg_data = scene_svg_data
@@ -1146,6 +1157,34 @@ class SQLDatabase(DatabaseBase):
                     svg_data=scene_svg_data)
             session.add(scene)
             await session.commit()
+            if scene.id is None:
+                await session.refresh(scene)
+            await self._save_scene_links(scene)
+
+    async def _save_scene_links(self, scene: Scene):
+        target_uuids = get_scene_links(scene)
+        for target_uuid in target_uuids:
+            target_scene = await self._get_scene_from_uuid(target_uuid)
+            if target_scene is None:
+                logger.error(
+                    f"Target scene with UUID '{target_uuid}' doesn't exist in "
+                    f"the database. Skipping scene link registration.")
+                continue
+            async with self.session_gen() as session:
+                try:
+                    linked_scene = SceneLinkedScene(
+                        scene_id=scene.id,
+                        linked_scene_id=target_scene.id)
+                    session.add(linked_scene)
+                    await session.commit()
+                except IntegrityError:
+                    # A scene can have multiple scene links to the same scene.
+                    # An attempt to insert the second repeated link will
+                    # violate the unique constraint for the combination of
+                    # source and target scene of the link. This is not an error
+                    # and can be ignored. The unique constraint should be kept
+                    # though as it prevents storage of repeated information.
+                    await session.rollback()
 
     async def _save_device_config_item(
             self, uuid: str, xml: str, timestamp: str):
