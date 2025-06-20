@@ -24,6 +24,8 @@
  * Created on Sep 20, 2016, 3:40:34 PM
  */
 
+// Added to trigger integration tests
+
 #include "PipelinedProcessing_Test.hh"
 
 #include <boost/format.hpp>

@@ -193,7 +193,7 @@ namespace karabo {
                   .displayedName("Validate schema")
                   .description("How often per data stream should write(..) validata data against a given schema")
                   .assignmentOptional()
-                  .defaultValue("once")
+                  .defaultValue("always")
                   .options({std::string("once"), std::string("always")})
                   .commit();
 
