@@ -638,7 +638,7 @@ namespace karabo {
             const unsigned int size = readSize(is);
             Schema schema;
             if (size) {
-                std::unique_ptr<char> buffer(new char[size]);
+                auto buffer = std::make_unique_for_overwrite<char[]>(size);
                 is.read(buffer.get(), size);
                 serializer.load(schema, buffer.get(), size);
             }
