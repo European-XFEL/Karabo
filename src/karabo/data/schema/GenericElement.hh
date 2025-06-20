@@ -34,6 +34,16 @@ namespace karabo {
     namespace data {
 
         /**
+         * Checks whether a string can be used as key in schema
+         *
+         * If not, throws ParameterException.
+         * Nestes paths (i.e. paths with dots) are allowed.
+         *
+         * @param name the key to be checked
+         */
+        void checkPropertyPath(const std::string& name);
+
+        /**
          * The GenericElement class is a base class for various element types: simple, vector, choice, list
          * and single.
          *
@@ -67,10 +77,11 @@ namespace karabo {
             virtual Derived& key(const std::string& name) {
                 // Check whether full path (that in fact has to be specified here!) or its last
                 // key is empty - empty non-last keys are caught elsewhere.
-                // Empty keys or keys with spaces cannot work with instance proxies in Python.
-                if (name.empty() || name.back() == Hash::k_defaultSep || name.find(' ') != std::string::npos) {
-                    throw KARABO_PARAMETER_EXCEPTION("Bad (sub-)key '" + name + "': empty or with space.");
-                }
+                // Also ensure that keys are usable with MDL proxies, i.e. only letters, digits,
+                // underscores - and a digit not as first character.
+
+                checkPropertyPath(name); // throws if not OK
+
                 m_node->m_key = name;
                 return *(static_cast<Derived*>(this));
             }
