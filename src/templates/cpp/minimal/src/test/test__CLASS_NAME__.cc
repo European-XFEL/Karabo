@@ -43,7 +43,7 @@ class __CLASS_NAME__DefaultCfg : public KaraboDeviceFixture {
          * to the devCfg hash here
          */
 
-        karabo::data::Hash devCfg("deviceId", TEST_DEVICE_ID);
+        karabo::data::Hash devCfg;
 
         /**
          * Instantiate device without device server so the device pointer
