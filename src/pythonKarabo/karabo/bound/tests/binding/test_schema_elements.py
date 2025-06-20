@@ -1034,6 +1034,49 @@ def test_buildUp():
     assert schema.isLeaf("circle.radius") is True
 
 
+def test_invalidNodes():
+    schema = Schema()
+    # Empty strings are forbidden as keys:
+    with pytest.raises(RuntimeError):
+        INT32_ELEMENT(schema).key("").description("Empty key is forbidden")
+
+    # Also under a node:
+    NODE_ELEMENT(schema).key("node").commit()
+    with pytest.raises(RuntimeError):
+        INT32_ELEMENT(schema).key("node.").description("Empty key forbidden")
+
+    # Various characters are forbidden:
+    forbidden = "()[]<>`~!@#$%^&*-+=|\\:;'\",? "
+    valid = "valid"
+    for bad in forbidden:
+        invalid = valid + bad
+        with pytest.raises(RuntimeError):
+            INT32_ELEMENT(schema).key(invalid)
+        with pytest.raises(RuntimeError):
+            INT32_ELEMENT(schema).key("node." + invalid)
+
+    # Digits as first character are also forbidden
+    for i in range(10):
+        invalid = str(i) + valid  # test '0', '1', '2', ... one after another
+        with pytest.raises(RuntimeError):
+            INT32_ELEMENT(schema).key(invalid)
+        with pytest.raises(RuntimeError):
+            INT32_ELEMENT(schema).key("node." + invalid)
+
+    # No '/' as first, neither
+    invalid = "/invalid"
+    with pytest.raises(RuntimeError):
+        INT32_ELEMENT(schema).key(invalid)
+    with pytest.raises(RuntimeError):
+        INT32_ELEMENT(schema).key("node." + invalid)
+
+    allValidCharacters = ("abcdefghijklmnopqrstuvwxyz/"  # tolerate '/'
+                          "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                          "0123456789_")
+    INT32_ELEMENT(schema).key(allValidCharacters).readOnly().commit()
+    assert allValidCharacters in schema
+
+
 def test_getRootName():
     schema = Schema("MyTest")
     TestStruct1.expectedParameters(schema)

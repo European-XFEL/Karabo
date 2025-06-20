@@ -1371,9 +1371,40 @@ void Schema_Test::testInvalidNodes() {
     CPPUNIT_ASSERT_THROW(INT32_ELEMENT(schema).key("").description("Empty key is forbidden"),
                          karabo::data::ParameterException);
 
-    // Spaces in keys are forbidden:
-    CPPUNIT_ASSERT_THROW(INT8_ELEMENT(schema).key("constains space").description("Space inside a key is forbidden"),
+    // Also under a node:
+    NODE_ELEMENT(schema).key("node").commit();
+    CPPUNIT_ASSERT_THROW(INT32_ELEMENT(schema).key("node.").description("Empty key is forbidden"),
                          karabo::data::ParameterException);
+
+    // Various characters are forbidden:
+    constexpr char forbidden[] = "()[]<>`~!@#$%^&*-+=|\\:;'\",? ";
+    const std::string valid("valid");
+    std::string invalid(valid + " ");
+    for (size_t i = 0; i < sizeof(forbidden) / sizeof(forbidden[0]); ++i) {
+        invalid.back() = forbidden[i];
+        CPPUNIT_ASSERT_THROW_MESSAGE(invalid, INT8_ELEMENT(schema).key(invalid), karabo::data::ParameterException);
+        CPPUNIT_ASSERT_THROW_MESSAGE(invalid, INT8_ELEMENT(schema).key("node." + invalid),
+                                     karabo::data::ParameterException);
+    }
+    // Digits as first character are also forbidden
+    invalid = valid;
+    for (char i = 0; i < 10; ++i) {
+        invalid[0] = '0' + i; // test '0', '1', '2', ... one after another
+        CPPUNIT_ASSERT_THROW_MESSAGE(invalid, INT8_ELEMENT(schema).key(invalid), karabo::data::ParameterException);
+        CPPUNIT_ASSERT_THROW_MESSAGE(invalid, INT8_ELEMENT(schema).key("node." + invalid),
+                                     karabo::data::ParameterException);
+    }
+    // No '/' as first, either
+    invalid = "/invalid";
+    CPPUNIT_ASSERT_THROW_MESSAGE(invalid, INT8_ELEMENT(schema).key(invalid), karabo::data::ParameterException);
+    CPPUNIT_ASSERT_THROW_MESSAGE(invalid, INT8_ELEMENT(schema).key("node." + invalid),
+                                 karabo::data::ParameterException);
+
+    constexpr char validCharacters[] =
+          "abcdefghijklmnopqrstuvwxyz/" // tolerate `/`
+          "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+          "0123456789_";
+    CPPUNIT_ASSERT_NO_THROW(INT8_ELEMENT(schema).key(validCharacters).readOnly().commit());
 }
 
 
