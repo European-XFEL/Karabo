@@ -702,10 +702,11 @@ void InputOutputChannel_Test::testSchemaValidation() {
     STRING_ELEMENT(schema).key("str").readOnly().commit();
 
     const std::vector<int> vec(5, 1);
-    // Default: Validate once until end of stream
+    // Validate once until end of stream
     {
         // Setup output channel
-        OutputChannel::Pointer output = Configurator<OutputChannel>::create("OutputChannel", Hash(), 0);
+        OutputChannel::Pointer output =
+              Configurator<OutputChannel>::create("OutputChannel", Hash("validateSchema", "once"), 0);
         output->setInstanceIdAndName("outputChannel", "output");
         output->initialize(schema);
 
@@ -741,7 +742,7 @@ void InputOutputChannel_Test::testSchemaValidation() {
         CPPUNIT_ASSERT_NO_THROW(output->write(Hash("v_int32", vec, "str", "some", "tooMuch", 0)));
     }
 
-    // Validate always
+    // Validate always (default)
     {
         OutputChannel::Pointer output =
               Configurator<OutputChannel>::create("OutputChannel", Hash("validateSchema", "always"), 0);
@@ -752,6 +753,9 @@ void InputOutputChannel_Test::testSchemaValidation() {
         CPPUNIT_ASSERT_NO_THROW(output->write(Hash("v_int32", vec, "str", "some")));
         CPPUNIT_ASSERT_THROW(output->write(Hash("v_int32", vec, "str", "some", "tooMuch", 0)),
                              karabo::data::ParameterException);
+
+        const Schema sch(Configurator<OutputChannel>::getSchema("OutputChannel"));
+        CPPUNIT_ASSERT_EQUAL(std::string("always"), sch.getDefaultValue<std::string>("validateSchema"));
     }
 }
 
