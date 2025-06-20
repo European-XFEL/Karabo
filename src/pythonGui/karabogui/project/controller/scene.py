@@ -150,6 +150,7 @@ class SceneController(BaseProjectController):
             # errors because we can have wrong user input.
             try:
                 new_scene = read_scene(fn)
+                new_scene.assure_svg_data()
             except Exception:
                 messagebox.show_error("Scene file could not be read!",
                                       parent=parent)
@@ -194,6 +195,7 @@ class SceneController(BaseProjectController):
         move_to_cursor(dialog)
         result = dialog.exec()
         if result == QDialog.Accepted:
+            self.model.assure_svg_data()
             self.model.simple_name = dialog.simple_name
 
     def _duplicate_scene(self, project_controller, parent=None):
@@ -202,9 +204,11 @@ class SceneController(BaseProjectController):
         dialog = ObjectDuplicateDialog(scene.simple_name, parent=parent)
         move_to_cursor(dialog)
         if dialog.exec() == QDialog.Accepted:
+            scene.assure_svg_data()
             xml = write_scene(scene)
             for simple_name in dialog.duplicate_names:
                 dupe_scene = read_scene(StringIO(xml))
+                dupe_scene.assure_svg_data()
                 dupe_scene.simple_name = simple_name
                 dupe_scene.reset_uuid()
                 project.scenes.append(dupe_scene)
