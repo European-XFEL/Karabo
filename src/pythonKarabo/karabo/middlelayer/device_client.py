@@ -517,9 +517,10 @@ async def getInitConfiguration(device, name):
 
 @synchronize
 async def getConfigurationFromName(device, name):
-    warnings.warn_explicit(
+    warnings.warn(
         "This function is deprecated, use `getInitConfiguration`",
-        category=DeprecationWarning)
+        category=DeprecationWarning,
+        stacklevel=2)
     return await getInitConfiguration(device, name)
 
 
@@ -550,9 +551,10 @@ async def listInitConfigurations(device, name_part=''):
 @synchronize
 async def listConfigurationFromName(device, name_part=''):
     """This function is deprecated, use `listInitConfigurations`"""
-    warnings.warn_explicit(
+    warnings.warn(
         "This function is deprecated, use `listInitConfigurations`",
-        category=DeprecationWarning)
+        category=DeprecationWarning,
+        stacklevel=2)
     return await listInitConfigurations(device, name_part)
 
 
@@ -605,9 +607,10 @@ async def instantiateFromName(
     device: str | ProxyBase, name: str,
         classId: str | None = None, serverId: str | None = None):
     """This function is deprecated, use `instantiateDevice`"""
-    warnings.warn_explicit(
+    warnings.warn(
         "This function is deprecated, use `instantiateDevice`",
-        category=DeprecationWarning)
+        category=DeprecationWarning,
+        stacklevel=2)
     return await instantiateDevice(device, name, classId, serverId)
 
 
@@ -640,9 +643,10 @@ async def saveInitConfiguration(devices, name):
 @synchronize
 async def saveConfigurationFromName(devices, name):
     """This function is deprecated, use `saveInitConfiguration`"""
-    warnings.warn_explicit(
+    warnings.warn(
         "This function is deprecated, use `saveInitConfiguration`",
-        category=DeprecationWarning)
+        category=DeprecationWarning,
+        stacklevel=2)
     return await saveInitConfiguration(devices, name)
 
 
