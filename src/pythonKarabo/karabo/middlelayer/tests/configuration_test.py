@@ -27,7 +27,7 @@ from karabo.native import (
 class Nested(Configurable):
     double = Double(
         defaultValue=2.0,
-        minInc=-10.0, maxInc=10.0, absoluteError=0.5,
+        minInc=-10.0, maxInc=10.0,
         accessMode=AccessMode.RECONFIGURABLE)
 
     readOnlyInteger = Int32(
@@ -38,7 +38,7 @@ class Nested(Configurable):
 class Object(Configurable):
     double = Double(
         defaultValue=2.0,
-        minInc=-10.0, maxInc=10.0, absoluteError=0.5,
+        minInc=-10.0, maxInc=10.0,
         accessMode=AccessMode.RECONFIGURABLE)
 
     readOnlyInteger = Int32(

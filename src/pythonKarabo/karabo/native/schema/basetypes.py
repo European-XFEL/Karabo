@@ -627,7 +627,7 @@ class TableValue(KaraboValue):
 
     def __repr__(self):
         table = [{key: value for key, value in
-                 zip(self.value.dtype.names, row)}
+                  zip(self.value.dtype.names, row)}
                  for row in self.value]
         return tabulate.tabulate(table, headers="keys", tablefmt="grid")
 
@@ -766,26 +766,12 @@ class QuantityValue(KaraboValue, Quantity):
         return super().__ifloordiv__(other)
 
     def _format(self, value, fmt=""):
-        absolute = getattr(self.descriptor, "absoluteError", None)
-        relative = getattr(self.descriptor, "relativeError", None)
-
-        if relative is None:
-            try:
-                relative = numpy.finfo(value.dtype).resolution
-            except (AttributeError, ValueError):
-                pass
-
-        if absolute is not None and self.value != 0:
-            # TODO: this branch is not covered by tests
-            err = abs(absolute / self.value)
-            if relative is not None:
-                err = max(err, relative)
-        elif relative is not None:
-            err = relative
-        else:
+        try:
+            relative = numpy.finfo(value.dtype).resolution
+        except (AttributeError, ValueError):
             return f"{{:~{fmt}}}".format(value)
 
-        err = 1 - int(numpy.log10(err))
+        err = 1 - int(numpy.log10(relative))
         if err > 0:
             if isinstance(value.value, numpy.ndarray):
                 # XXX: [1., 2.] will be printed as '[1.0 2.0]'
