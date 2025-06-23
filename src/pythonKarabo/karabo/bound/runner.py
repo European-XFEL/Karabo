@@ -29,28 +29,37 @@ cr_cmt = " # Copyright (C) European XFEL GmbH Schenefeld. All rights reserved."
 @KARABO_CLASSINFO("Runner", "1.0")
 class Runner:
 
-    def __init__(self, deviceServer):
-        self.deviceServer = deviceServer
+    def __init__(self, klass):
+        """
+        :param klass a python class decorated with KARABO_CLASSINFO
+        """
+        self.klass = klass
 
     def instantiate(self, argv):
-        classId = 'DeviceServer'
+        """
+        Parse the given arguments as configuration and create an object
+        of the class passed to the constructor
+        """
         ok, config = self.parseCommandLine(argv)
         if ok:
-            if not config.empty():
-                if config.has(classId):
-                    return self.deviceServer.create(config)
-                else:
-                    return self.deviceServer.create(classId, config)
-            else:
-                return self.deviceServer.create(classId, config)
+            classId = self.klass.__classid__
+            return self.klass.create(classId, config)
 
         # Not ok!
         return None
 
     def parseCommandLine(self, argv):
-        if "--help" in argv or "-h" in argv:
-            if len(argv) > 2:
-                self.print_usage(argv[1], argv[2])
+        need_help = False
+        if "--help" in argv:
+            need_help = True
+            argv.remove("--help")
+        if "-h" in argv:
+            need_help = True
+            argv.remove("-h")
+
+        if need_help:
+            if len(argv) > 1:
+                self.print_usage(argv[0], argv[1:])
             else:
                 self.print_usage(argv[0])
             return False, Hash()
@@ -65,25 +74,27 @@ class Runner:
         for k, v in params.items():
             configuration.set(k, v)
 
-        assert "autostart" not in configuration
         return True, configuration
 
-    def print_usage(self, name, key=""):
+    def print_usage(self, name, keys=[]):
+        classId = self.klass.__classid__  # as specified by @KARABO_CLASSINFO
         print("\n ############################################################"
               "####")
-        print(" #                   Karabo Device Server")
+        print(f" #                   Karabo {classId}")
         print(" #")
         print(cr_cmt)
         print(" ############################################################"
               "####\n")
-        if not key:
+        if not keys:
             print("Usage: {} <configuration>\n".format(name.split('/')[-1]))
             print("Positional arguments:\n")
             print("<configuration> A set of (hierarchical) <key>=<value> "
                   "pairs")
-            print("                Use: --help [key] to list available keys "
-                  "or sub-keys, respectively")
-            self.deviceServer.getSchema('DeviceServer').help()
+            print("                Use: --help [key1 [key2 [...]]] to list "
+                  "available\n"
+                  "                     keys or sub-keys, respectively")
+            self.klass.getSchema(classId).help()
         else:
-            self.deviceServer.getSchema('DeviceServer').help(key)
+            for key in keys:
+                self.klass.getSchema(classId).help(key)
         print("")
