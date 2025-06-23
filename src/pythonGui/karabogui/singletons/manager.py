@@ -505,20 +505,6 @@ class Manager(QObject):
         broadcast_event(KaraboEvent.ClearConfigurator,
                         {'devices': gone_instanceIds})
 
-    def handle_instanceNew(self, topologyEntry):
-        pass
-
-    def handle_instanceUpdated(self, topologyEntry):
-        pass
-
-    def handle_instanceGone(self, instanceId, instanceType):
-        pass
-
-    def handle_attributesUpdated(self, reply):
-        instanceId = reply["instanceId"]
-        schema = reply["updatedSchema"]
-        self.handle_deviceSchema(instanceId, schema)
-
     def handle_classSchema(self, serverId, classId, schema):
         self._topology.class_schema_updated(serverId, classId, schema)
 
@@ -592,10 +578,6 @@ class Manager(QObject):
                     f"of device <b>{deviceId}</b> failed.")
             get_logger().debug(text)
 
-    def handle_runConfigSourcesInGroup(self, **info):
-        # This is DEPRECATED
-        pass
-
     # ---------------------------------------------------------------------
     # Current Configuration Interface
 
@@ -652,12 +634,6 @@ class Manager(QObject):
     # ---------------------------------------------------------------------
     # Current Project Interface
 
-    def handle_projectBeginUserSession(self, **reply):
-        pass
-
-    def handle_projectEndUserSession(self, **reply):
-        pass
-
     @project_db_handler()
     def handle_projectListDomains(self, success, request, reply, reason=""):
         # ``reply`` is a Hash containing a list of domain names
@@ -680,9 +656,6 @@ class Manager(QObject):
             broadcast_event(
                 KaraboEvent.ProjectFindWithItem, {
                     'items': projects, 'error': None})
-
-    def handle_projectListProjectManagers(self, reply):
-        pass
 
     @project_db_handler(fall_through=True)
     def handle_projectLoadItems(self, success, request, reply, reason=""):
@@ -789,16 +762,6 @@ class Manager(QObject):
                 if details is not None:
                     text += '<br>Click "Show Details..." for more information.'
                 messagebox.show_error(text, details=details)
-
-    def handle_alarmInit(self, instanceId, rows):
-        """Show initial update for ``AlarmService`` with given ``instanceId``
-           and all the information given in the ``Hash`` ``rows``.
-        """
-
-    def handle_alarmUpdate(self, instanceId, rows):
-        """Show update for ``AlarmService`` with given ``instanceId`` and all
-           the information given in the ``Hash`` ``rows``.
-        """
 
     def handle_listDestinations(self, success, request, reply, reason=""):
         """
