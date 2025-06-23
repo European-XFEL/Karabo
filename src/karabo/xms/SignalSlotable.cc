@@ -300,7 +300,7 @@ namespace karabo {
             : m_randPing(rand() + 2),
               m_broadcastEventStrand(std::make_shared<karabo::net::Strand>(EventLoop::getIOService())),
               m_trackAllInstances(false),
-              m_heartbeatInterval(10),
+              m_heartbeatInterval(120),
               m_trackingTimer(EventLoop::getIOService()),
               m_heartbeatTimer(EventLoop::getIOService()),
               m_performanceTimer(EventLoop::getIOService()),
@@ -1810,8 +1810,8 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_ERROR << "letInstanceSlowlyDieWithoutHeartbeat triggered an unknown exception";
             }
 
-            // We are sleeping five times as long as the count-down ticks (which ticks in seconds)
-            m_trackingTimer.expires_after(5s);
+            // We are sleeping three times as long as the count-down ticks (which tick in seconds)
+            m_trackingTimer.expires_after(3s);
             m_trackingTimer.async_wait(bind_weak(&karabo::xms::SignalSlotable::letInstanceSlowlyDieWithoutHeartbeat,
                                                  this, boost::asio::placeholders::error));
         }
