@@ -231,25 +231,17 @@ LOCKED_COLOR = (255, 145, 255, 128)
 # --------------------------------------------------------------------------
 # Mapping alarms to colors
 
-PROPERTY_ALARM_COLOR_MAP = {
-    None: ALL_OK_COLOR,
-    "none": None,
-    "alarm": PROPERTY_ALARM_COLOR,
-    "alarmLow": PROPERTY_ALARM_COLOR,
-    "alarmHigh": PROPERTY_ALARM_COLOR,
-    "alarmVarianceLow": PROPERTY_ALARM_COLOR,
-    "alarmVarianceHigh": PROPERTY_ALARM_COLOR,
-    "warn": PROPERTY_WARN_COLOR,
-    "warnLow": PROPERTY_WARN_COLOR,
-    "warnHigh": PROPERTY_WARN_COLOR,
-    "warnVarianceLow": PROPERTY_WARN_COLOR,
-    "warnVarianceHigh": PROPERTY_WARN_COLOR,
-    "interlock": PROPERTY_INTERLOCK_COLOR}
-
 WARN_GLOBAL = "warn"
 ALARM_GLOBAL = "alarm"
 INTERLOCK = "interlock"
 ALARM_NONE = "none"
+
+PROPERTY_ALARM_COLOR_MAP = {
+    None: ALL_OK_COLOR,
+    ALARM_NONE: None,
+    ALARM_GLOBAL: PROPERTY_ALARM_COLOR,
+    WARN_GLOBAL: PROPERTY_WARN_COLOR,
+    INTERLOCK: PROPERTY_INTERLOCK_COLOR}
 
 ICON_PATH = Path(icons.__file__).parent
 
