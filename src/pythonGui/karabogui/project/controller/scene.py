@@ -253,6 +253,7 @@ class SceneController(BaseProjectController):
         if not fn.endswith('.svg'):
             fn = f'{fn}.svg'
 
+        scene.assure_svg_data()
         with open(fn, 'w') as fout:
             fout.write(write_scene(scene))
 
