@@ -148,6 +148,8 @@ class SceneController(BaseProjectController):
         if scene in project.scenes:
             # Read SceneModel for information to replace with! We catch all
             # errors because we can have wrong user input.
+            scene.assure_svg_data()
+
             try:
                 new_scene = read_scene(fn)
                 new_scene.assure_svg_data()
