@@ -98,7 +98,7 @@ namespace karabo {
 
             m_internalSignalSlotable = std::make_shared<karabo::xms::SignalSlotable>(ownInstanceId,
                                                                                      Hash(), // default broker cfg
-                                                                                     60, instanceInfo);
+                                                                                     120, instanceInfo);
             m_internalSignalSlotable->start();
 
             m_signalSlotable = m_internalSignalSlotable;

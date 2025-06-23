@@ -80,7 +80,7 @@ class DeviceServer:
             INT32_ELEMENT(expected).key("heartbeatInterval")
             .displayedName("Heartbeat interval")
             .description("The heartbeat interval")
-            .assignmentOptional().defaultValue(10)
+            .assignmentOptional().defaultValue(20)
             .minInc(10)  # avoid too much traffic
             .expertAccess()
             .commit(),

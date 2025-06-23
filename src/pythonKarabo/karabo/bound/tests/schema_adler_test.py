@@ -43,4 +43,4 @@ def test_schema(eventLoop: eventLoop):
         text = ("The generated schema changed. If this "
                 "is desired, change the checksum in the code.")
         checksum = adler32(schema)
-        assert checksum == 1326076187, text
+        assert checksum == 2608288037, text

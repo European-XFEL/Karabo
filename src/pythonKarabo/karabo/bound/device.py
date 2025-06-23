@@ -78,7 +78,7 @@ class PythonDevice:
             .displayedName("Heartbeat interval")
             .description("The heartbeat interval")
             .assignmentOptional()
-            .defaultValue(20)  # smaller than C++ device: own process!
+            .defaultValue(30)  # smaller than C++ device: own process!
             .minInc(10)  # avoid too much traffic
             .expertAccess()
             .commit(),
@@ -328,9 +328,6 @@ class PythonDevice:
             clsVers = f"{self.__module__.split('.', 1)[0]}-{self.__version__}"
             self._parameters.set("classVersion", clsVers)
             self._parameters.set("karaboVersion", karaboVersion)
-            # TODO: Remove?
-            # self._parameters.set("deviceId", self.deviceid)
-            # self._parameters.set("serverId", self.serverid)
             self._parameters.set("pid", os.getpid())
 
             # Validate first time to assign timestamps
