@@ -23,8 +23,8 @@ from abc import abstractmethod
 from qtpy.QtCore import QAbstractItemModel, Qt
 from qtpy.QtGui import QBrush, QFont, QIcon
 from traits.api import (
-    ABCHasStrictTraits, Bool, Callable, Dict, Enum, HasStrictTraits, Instance,
-    Int, List, Property, String, WeakRef, on_trait_change)
+    ABCHasStrictTraits, Callable, Dict, Enum, HasStrictTraits, Instance, List,
+    Property, String, WeakRef, on_trait_change)
 
 from karabo.common.api import InstanceStatus
 from karabo.common.project.api import BaseProjectObjectModel
@@ -38,8 +38,6 @@ class ProjectControllerUiData(HasStrictTraits):
     icon = Instance(QIcon, args=())
     font = Instance(QFont, args=())
     brush = Instance(QBrush, args=())
-    checkable = Bool(False)
-    check_state = Int(Qt.Checked)
     status = Enum(*ProxyStatus)
     instance_status = Enum(*InstanceStatus)
 
@@ -142,12 +140,12 @@ class BaseProjectController(ABCHasStrictTraits):
         if self._qt_model is not None:
             self._qt_model.controller_data_update(self, roles=[Qt.DisplayRole])
 
-    @on_trait_change('ui_data.icon,ui_data.brush,ui_data.check_state')
+    @on_trait_change('ui_data.icon,ui_data.brush')
     def _request_repaint(self):
         if self._qt_model is not None:
             self._qt_model.controller_data_update(
-                self, roles=[Qt.DecorationRole, Qt.FontRole, Qt.ForegroundRole,
-                             Qt.CheckStateRole])
+                self, roles=[Qt.DecorationRole, Qt.FontRole,
+                             Qt.ForegroundRole])
 
     @on_trait_change('ui_data.instance_status')
     def _update_instance_info(self):

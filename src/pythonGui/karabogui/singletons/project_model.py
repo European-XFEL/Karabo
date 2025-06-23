@@ -43,8 +43,8 @@ TABLE_HEADER_LABELS = ["Projects", ""]
 PROJECT_COLUMN = 0
 STATUS_COLUMN = 1
 
-ROLES = [Qt.CheckStateRole, Qt.DisplayRole, Qt.DecorationRole,
-         Qt.ForegroundRole, Qt.FontRole, Qt.ToolTipRole]
+ROLES = [Qt.DisplayRole, Qt.DecorationRole, Qt.ForegroundRole,
+         Qt.FontRole, Qt.ToolTipRole]
 
 
 class ProjectViewItemModel(QAbstractItemModel):
@@ -315,9 +315,6 @@ class ProjectViewItemModel(QAbstractItemModel):
                 return ui_data.brush
             elif role == Qt.FontRole:
                 return ui_data.font
-            elif role == Qt.CheckStateRole:
-                if ui_data.checkable:
-                    return ui_data.check_state
         elif column == STATUS_COLUMN and role == Qt.DecorationRole:
             if isinstance(controller, DeviceInstanceController):
                 return get_instance_info_icon(ui_data.instance_status)
@@ -327,20 +324,6 @@ class ProjectViewItemModel(QAbstractItemModel):
                 "modified": utc_to_local(model.date)}
 
         return create_table_string(info)
-
-    def setData(self, index, value, role):
-        """Reimplemented function of QAbstractItemModel.
-        """
-        if role != Qt.CheckStateRole:
-            return False
-
-        if index.column() == PROJECT_COLUMN:
-            controller = index.internalPointer()
-            if controller is None:
-                return False
-
-        # Value was successfully updated
-        return True
 
     def index(self, row, column, parent=QModelIndex()):
         """Reimplemented function of QAbstractItemModel.
