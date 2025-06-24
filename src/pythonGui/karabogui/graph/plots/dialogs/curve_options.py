@@ -32,6 +32,8 @@ class CurveOptionsDialog(QDialog):
         self.buttonBox.button(QDialogButtonBox.Cancel).setText("Discard")
         self.buttonBox.button(QDialogButtonBox.Reset).clicked.connect(
             self._requestReset)
+        # XXX: not fully implemented yet
+        self.symbol_group_box.setVisible(False)
 
     def _prepare_color_combobox(self):
         """Load the combobox with the  allowed colors for the curve"""
