@@ -15,7 +15,7 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 
 stages:
-  - docs  # move to the back after testing
+  - docs # move to the back after testing
   - lint
   - build
   - test
@@ -24,7 +24,7 @@ stages:
 
 variables:
   CONAN_USER_HOME: $CI_PROJECT_DIR/.cache/conan
-  PIP_CACHE_DIR:   $CI_PROJECT_DIR/.cache/pip
+  PIP_CACHE_DIR: $CI_PROJECT_DIR/.cache/pip
   PRE_COMMIT_HOME: $CI_PROJECT_DIR/.cache/pre-commit
 
 .target_os_matrix:
@@ -95,7 +95,6 @@ variables:
         path: coverage.xml
 
   coverage: '/TOTAL.+?([\d\.]+\%)/'
-
 
 .services_template: &services_template
   services:
@@ -384,7 +383,6 @@ pre-commit-check:
       - "src/**/*"
   allow_failure: false
 
-
 systemtest:
   stage: systemtest
   image: europeanxfel/karabo-ci:miniconda-3-002
@@ -588,7 +586,6 @@ internal_mirror_publish:
     - branches
     - schedules
   script:
-
     # Retrieves the mail and name mappings for authors that have chosen to keep their data hidden in the
     # commit history of the public repository.
     - git clone https://gitlab-ci-token:$CI_JOB_TOKEN@git.xfel.eu/Karabo/contriboptouts.git
@@ -611,7 +608,8 @@ internal_mirror_publish:
     # updated internal mirror to avoid any conflicts during the push.
     - git clone https://oauth2:$KARABO_FRAMEWORK_MIRROR_TOKEN@git.xfel.eu/Karabo/FrameworkMirror.git
     - cd FrameworkMirror
-    - git-filter-repo --invert-paths --path src/environment.in/KARABO_BROKER
+    # For examples of path based filtering: https://www.mankier.com/1/git-filter-repo#Examples-Path_based_filtering
+    - git-filter-repo --invert-paths --path-glob 'src/environment.in/KARABO_*'
     - git-filter-repo --strip-blobs-bigger-than 100M
     # in the conversion from SVN to git, email addresses were not correctly preserved,
     # rather we have, username@some-uuid-token. Here we map known users to correct email
@@ -637,7 +635,6 @@ internal_mirror_publish:
     # and updates the tags to refer to the new commit identifiers. If the tags are not pushed they will still refer
     # to the old commit idenfitifiers in the mirror.
     - git push internal_mirror --tags --force
-
 
 pages:
   stage: docs
