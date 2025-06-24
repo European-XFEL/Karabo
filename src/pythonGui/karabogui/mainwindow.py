@@ -31,6 +31,7 @@ from qtpy.QtWidgets import (
     QSizePolicy, QSplitter, QTextBrowser, QToolButton, qApp)
 
 import karabogui.access as krb_access
+from karabo.common.api import KARABO_PROJECT_MANAGER
 from karabo.common.project.api import get_project_models
 from karabo.common.project.utils import check_instance_duplicates
 from karabo.native import AccessLevel
@@ -39,8 +40,8 @@ from karabogui.access import ACCESS_LEVELS, AccessRole
 from karabogui.background import background
 from karabogui.dialogs.api import (
     AboutDialog, ApplicationConfigurationDialog, ClientTopologyDialog,
-    DataViewDialog, DevelopmentTopologyDialog, GuiSessionInfo, UpdateDialog,
-    UserSessionDialog)
+    DataViewDialog, DevelopmentTopologyDialog, GuiSessionInfo,
+    ProjectTopologyDialog, UpdateDialog, UserSessionDialog)
 from karabogui.events import (
     KaraboEvent, broadcast_event, register_for_broadcasts)
 from karabogui.indicators import get_processing_color
@@ -52,11 +53,12 @@ from karabogui.programs.register_protocol import register_protocol
 from karabogui.programs.utils import (
     create_linux_desktop_file, run_concert, save_concert_file)
 from karabogui.project.restore import get_restore_data
+from karabogui.request import call_device_slot
 from karabogui.singletons.api import (
     get_config, get_db_conn, get_network, get_project_model)
 from karabogui.util import (
-    convert_npy_to_csv, generateObjectName, getOpenFileName, getSaveFileName,
-    move_to_cursor, process_qt_events)
+    convert_npy_to_csv, generateObjectName, get_reason_parts, getOpenFileName,
+    getSaveFileName, move_to_cursor, process_qt_events)
 from karabogui.wizards import TipsTricksWizard
 
 SERVER_INFO_WIDTH = 250
@@ -518,6 +520,9 @@ class MainWindow(QMainWindow):
         self.acCheckProject = QAction("Check for Project Duplicates", self)
         self.acCheckProject.triggered.connect(self.onInvestigateProject)
 
+        self.acDeviceTopology = QAction("Check for Project Topology", self)
+        self.acDeviceTopology.triggered.connect(self.onShowDeviceTopology)
+
         self.acGrafana = QAction(icons.grafana, "Grafana", self)
         self.acGrafana.triggered.connect(self.onGrafana)
         self.acGrafana.setCheckable(False)
@@ -632,6 +637,7 @@ class MainWindow(QMainWindow):
         if get_config()["development"]:
             mDevMenu = menuBar.addMenu("&Developer")
             mDevMenu.addAction(self.acSessionInfo)
+            mDevMenu.addAction(self.acDeviceTopology)
 
     def _setupToolBar(self):
 
@@ -854,6 +860,24 @@ class MainWindow(QMainWindow):
             dialog.show()
 
         background(check_instance_duplicates, root, callback=handler)
+
+    @Slot()
+    def onShowDeviceTopology(self):
+        domain = get_config()["domain"]
+
+        def show_device_topology(success, reply):
+            if not success:
+                reason, details = get_reason_parts(reply)
+                messagebox.show_error(reason, details=details, parent=self)
+                return
+
+            dialog = ProjectTopologyDialog(parent=self)
+            dialog.initialize(reply)
+            dialog.open()
+
+        call_device_slot(
+            show_device_topology, KARABO_PROJECT_MANAGER, "slotGenericRequest",
+            domain=domain, type="listDomainWithDevices")
 
     @Slot()
     def onGrafana(self):
