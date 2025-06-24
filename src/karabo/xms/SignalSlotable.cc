@@ -305,10 +305,6 @@ namespace karabo {
               m_heartbeatTimer(EventLoop::getIOService()),
               m_performanceTimer(EventLoop::getIOService()),
               m_channelConnectTimer(EventLoop::getIOService()) {
-            // TODO: Consider to move setTopic() to init(..) and inside it set topic from connection (instead of from
-            // environment).
-            //       Caveat: Ensure that Signals registered in device constructors get the correct topic!
-            setTopic();
             EventLoop::addThread(); // possibly needed e.g. for ensureInstanceIdIsValid, see note therein
         }
 
@@ -398,6 +394,7 @@ namespace karabo {
             if (!m_connection->isConnected()) {
                 m_connection->connect();
             }
+            m_topic = m_connection->getDomain();
 
             registerDefaultSignalsAndSlots();
 
@@ -2571,17 +2568,6 @@ namespace karabo {
         void SignalSlotable::registerBrokerErrorHandler(const BrokerErrorHandler& errorHandler) {
             std::lock_guard<std::mutex> lock(m_brokerErrorHandlerMutex);
             m_brokerErrorHandler = errorHandler;
-        }
-
-
-        void SignalSlotable::setTopic(const std::string& topic) {
-            // Set topic as given as argument.
-            // If empty, deduce from the environment.
-            if (topic.empty()) {
-                m_topic = karabo::net::Broker::brokerDomainFromEnv();
-            } else {
-                m_topic = topic;
-            }
         }
 
 
