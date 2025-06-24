@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>703</width>
+    <width>923</width>
     <height>365</height>
    </rect>
   </property>
@@ -95,29 +95,6 @@
           <string>Symbol</string>
          </property>
          <layout class="QFormLayout" name="formLayout_2">
-          <item row="1" column="1">
-           <widget class="QToolButton" name="brush_color_button">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-            <property name="minimumSize">
-             <size>
-              <width>16</width>
-              <height>16</height>
-             </size>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="brush_label">
-            <property name="text">
-             <string>Brush Color:</string>
-            </property>
-           </widget>
-          </item>
           <item row="0" column="0">
            <widget class="QCheckBox" name="show_data_points">
             <property name="text">
