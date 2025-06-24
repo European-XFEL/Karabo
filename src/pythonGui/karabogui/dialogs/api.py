@@ -38,6 +38,7 @@ from .log_dialog import LogDialog
 from .messagebox import KaraboMessageBox
 from .pen_dialogs import PenDialog
 from .popup_button_dialog import PopupButtonDialog
+from .project_topology_dialog import ProjectTopologyDialog
 from .proxies_dialog import ProxiesDialog
 from .reactive_login_dialog import UserSessionDialog
 from .scene_dialogs import ReplaceDialog, ResizeSceneDialog, SceneItemDialog
