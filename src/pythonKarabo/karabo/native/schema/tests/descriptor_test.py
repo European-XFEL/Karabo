@@ -805,8 +805,6 @@ class Tests(TestCase):
         self.assertIsNone(d.maxExc)
         self.assertIsNone(d.minInc)
         self.assertIsNone(d.maxInc)
-        self.assertIsNone(d.absoluteError)
-        self.assertIsNone(d.relativeError)
         self.assertIsNone(d.displayedName)
         self.assertIsNone(d.alias)
         self.assertIsNone(d.description)
@@ -832,8 +830,6 @@ class Tests(TestCase):
         self.assertIsNone(attributes.get('classId'))
         self.assertIsNone(attributes.get('description'))
         self.assertIsNone(attributes.get('alias'))
-        self.assertIsNone(attributes.get('relativeError'))
-        self.assertIsNone(attributes.get('absoluteError'))
         self.assertIs(attributes['accessMode'],
                       AccessMode.RECONFIGURABLE)
         self.assertIs(attributes['assignment'],
@@ -865,38 +861,9 @@ class Tests(TestCase):
         self.assertNotIn("alias", attrs)
         self.assertIsNone(d.attributes.get('alias'))
 
-    def test_error_attributes(self):
-        d = Double(
-            absoluteError=0.2, relativeError=0.3)
-        self.assertIsNotNone(d)
-
-        # Negative abs error not allowed
-        with self.assertRaises(KaraboError):
-            d = Double(absoluteError=-0.2)
-
-        # zero abs error not allowed
-        with self.assertRaises(KaraboError):
-            d = Double(absoluteError=0.0)
-
-        # neg rel error not allowed
-        with self.assertRaises(KaraboError):
-            d = Double(relativeError=-0.1)
-
-        # zero rel error not allowed
-        with self.assertRaises(KaraboError):
-            d = Double(relativeError=0.0)
-
-        # Test string input for errors
-        with self.assertRaises(TypeError):
-            d = Double(relativeError="StringIsWrong")
-
-        with self.assertRaises(TypeError):
-            d = Double(absoluteError="StringIsWrong")
-
     def test_attributes_nodefault(self):
         d = Double(
             minExc=22, maxExc=33, minInc=11, maxInc=23,
-            absoluteError=0.2, relativeError=0.3,
             displayedName="hallo", alias="something",
             description="whatever", allowedStates={State.KNOWN, State.INIT},
             defaultValue=22.5, accessMode=AccessMode.READONLY,
@@ -909,8 +876,6 @@ class Tests(TestCase):
         self.assertEqual(d.maxExc, 33)
         self.assertEqual(d.minInc, 11)
         self.assertEqual(d.maxInc, 23)
-        self.assertEqual(d.absoluteError, 0.2)
-        self.assertEqual(d.relativeError, 0.3)
         self.assertEqual(d.displayedName, "hallo")
         self.assertEqual(d.alias, "something")
         self.assertEqual(d.description, "whatever")
@@ -929,8 +894,6 @@ class Tests(TestCase):
         self.assertEqual(attributes['maxExc'], 33)
         self.assertEqual(attributes['minInc'], 11)
         self.assertEqual(attributes['maxInc'], 23)
-        self.assertEqual(attributes['absoluteError'], 0.2)
-        self.assertEqual(attributes['relativeError'], 0.3)
         self.assertEqual(attributes['displayedName'], "hallo")
         self.assertEqual(attributes['alias'], "something")
         self.assertEqual(attributes['description'], "whatever")
@@ -1175,23 +1138,6 @@ class Tests(TestCase):
             d = Int8(defaultValue=-301)
         with self.assertRaises(ValueError):
             d = Int8(defaultValue=1301)
-
-        # Floating points can have absolute and relative error
-        d = Float(
-            absoluteError=0.123,
-            relativeError=0.44)
-        self.assertEqual(d.absoluteError, 0.123)
-        self.assertEqual(d.relativeError, 0.44)
-        self.assertEqual(d.absoluteError.dtype, np.float64)
-        self.assertEqual(d.relativeError.dtype, np.float64)
-
-        d = Double(
-            absoluteError=0.01,
-            relativeError=0.12)
-        self.assertEqual(d.absoluteError, 0.01)
-        self.assertEqual(d.relativeError, 0.12)
-        self.assertEqual(d.absoluteError.dtype, np.float64)
-        self.assertEqual(d.relativeError.dtype, np.float64)
 
 
 if __name__ == "__main__":

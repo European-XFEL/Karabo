@@ -19,6 +19,7 @@ import logging
 import numbers
 import re
 import sys
+import warnings
 from asyncio import get_event_loop, iscoroutinefunction
 from enum import Enum
 from functools import partial, wraps
@@ -285,19 +286,25 @@ class Integer(Simple, Enumable):
 class Number(Simple):
     """The base class for all floating-point types"""
 
-    absoluteError = Attribute()
-    relativeError = Attribute()
-
     def __init__(self, strict=True, **kwargs):
+        if "absoluteError" in kwargs:
+            kwargs.pop("absoluteError")
+            warnings.warn(
+                "DeprecationWarning: `absoluteError` has been deprecated and "
+                "will be removed in a future release. This warning will "
+                "result in an error in the future.",
+                category=DeprecationWarning,
+                stacklevel=2)
+        if "relativeError" in kwargs:
+            kwargs.pop("relativeError")
+            warnings.warn(
+                "DeprecationWarning: `relativeError` has been deprecated and "
+                "will be removed in a future release. This warning will "
+                "result in an error in the future.",
+                category=DeprecationWarning,
+                stacklevel=2)
+
         super().__init__(strict=strict, **kwargs)
-        abs_err = self.absoluteError
-        if abs_err is not None and abs_err <= 0:
-            raise KaraboError(f"Wrong absolute error specified {abs_err} "
-                              f"for {self.key}")
-        rel_err = self.relativeError
-        if rel_err is not None and rel_err <= 0:
-            raise KaraboError(f"Wrong relative error specified {rel_err} "
-                              f"for {self.key}")
 
     def getMinMax(self):
         info = np.finfo(self.numpy)
@@ -770,13 +777,15 @@ class Vector(Type):
 
     def check(self, ret):
         if self.minSize is not None and len(ret) < self.minSize:
-            raise ValueError("Vector {} of {} with size {} is shorter than "
-                             "the allowed size of {}".format(
-                                 ret, self.key, len(ret), self.minSize))
+            raise ValueError(
+                "Vector {} of {} with size {} is shorter than "
+                "the allowed size of {}".format(
+                    ret, self.key, len(ret), self.minSize))
         if self.maxSize is not None and len(ret) > self.maxSize:
-            raise ValueError("Vector {} of {} with size {} is larger than "
-                             "the allowed size of {}".format(
-                                 ret, self.key, len(ret), self.maxSize))
+            raise ValueError(
+                "Vector {} of {} with size {} is larger than "
+                "the allowed size of {}".format(
+                    ret, self.key, len(ret), self.maxSize))
         super().check(ret)
 
 
@@ -905,7 +914,6 @@ class ByteArray(Vector):
 
 
 def _create_numpy_integer(name, number, numpy):
-
     class NumpyInteger(Integer, Type):
         defaultValue = Attribute(dtype=numpy)
 
@@ -932,7 +940,6 @@ del _create_numpy_integer
 
 
 def _create_numpy_floating(name, number, numpy):
-
     class NumpyFloating(Number, Type):
         defaultValue = Attribute(dtype=numpy)
 
@@ -940,9 +947,6 @@ def _create_numpy_floating(name, number, numpy):
         maxExc = Attribute(dtype=numpy)
         minInc = Attribute(dtype=numpy)
         maxInc = Attribute(dtype=numpy)
-
-        absoluteError = Attribute(dtype=numpy)
-        relativeError = Attribute(dtype=numpy)
 
     return type(name, (NumpyFloating,), {"number": number,
                                          "numpy": numpy})
@@ -957,6 +961,7 @@ del _create_numpy_floating
 
 def _create_numpy_vector(name, number, numpy, basetype):
     """Create a numpy vector with a specific default value"""
+
     class VectorDefault(Attribute):
         """Attribute class to set a defaultValue for a numpy vector"""
 

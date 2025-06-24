@@ -642,7 +642,7 @@ class Tests(TestCase):
         f = QuantityValue([2., 3.3, 4.44], "m", timestamp=self.t1)
         self.assertEqual(str(f), '[2.0 3.3 4.44] m')
 
-        a = Float(absoluteError=1e-8, relativeError=1e-12)
+        a = Float()
         v = VectorFloat(minSize=1, maxSize=3, unitSymbol=Unit.METER)
         F = v.toKaraboValue([a.toKaraboValue(2.),
                              a.toKaraboValue(3.4),
