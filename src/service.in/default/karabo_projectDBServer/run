@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash 
 # This file is part of Karabo.
 #
 # http://www.karabo.eu
@@ -17,11 +17,10 @@
 # This file is part of the initial configuration of Karabo
 cd $KARABO/var/data
 
-# an existDB backend for the project manager can be chosen by using the lines below:
-PROJECT_DB_SERVER=exflst105
+# Uses a remote MySQL database for the projects - the environment variables should be defined in "$KARABO/var/environment/"
 exec envdir $KARABO/var/environment karabo-middlelayerserver serverId=karabo/projectDBServer 'deviceClasses=ProjectManager' 'log.level=INFO' \
-init='{"KaraboProjectDB":{"classId":"ProjectManager", "projectDB":{"protocol": "exist_db", "exist_db":{"host": "'$PROJECT_DB_SERVER'", "port": 8080}}}}' 2>&1
+init='{"KaraboProjectDB":{"classId":"ProjectManager", "projectDB":{"protocol": "remote", "remote":{"host": "'$KARABO_PROJECT_DB_HOST'", "port": '$KARABO_PROJECT_DB_PORT', "dbName": "'$KARABO_PROJECT_DB_DBNAME'"}}}}' 2>&1
 
-# a file-based backend for the project manager can be chosen by using the lines below:
+# To use a local SQLite database for the projects, uncomment the following two lines. The database file will be in "$KARABO/var/data/project_db/".
 # exec envdir $KARABO/var/environment karabo-middlelayerserver serverId=karabo/projectDBServer 'deviceClasses=ProjectManager' \
-# init='{"KaraboProjectDB":{"classId":"ProjectManager", "projectDB":{"protocol": "local", "local":{"dbName": "projectDB"}}}}' 2>&1
+# init='{"KaraboProjectDB":{"classId":"ProjectManager", "projectDB":{"protocol": "local", "local":{"dbName": "'$KARABO_PROJECT_DB_DBNAME'.sqlite"}}}}' 2>&1
