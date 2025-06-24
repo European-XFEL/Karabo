@@ -464,12 +464,6 @@ namespace karabo {
                 return *this;
             }
 
-            [[deprecated(
-                  "dataSchema does nothing since Karabo 2.19 and will be removed in the future")]] InputChannelElement&
-            dataSchema(const karabo::data::Schema& schema) {
-                return *this;
-            }
-
             void commit();
         };
 

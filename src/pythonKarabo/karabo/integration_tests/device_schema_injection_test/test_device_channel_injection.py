@@ -80,8 +80,7 @@ class Channel_Injection_TestCase(BoundDeviceTestCase):
         schema = Schema()
         ele = OUTPUT_CHANNEL(schema).key("injectedOutput")
         ele.dataSchema(dataSchema).commit()
-        ele = INPUT_CHANNEL(schema).key("injectedInput").dataSchema(dataSchema)
-        ele.commit()
+        INPUT_CHANNEL(schema).key("injectedInput").commit()
         ele = OVERWRITE_ELEMENT(schema)
         ele.key("injectedInput.connectedOutputChannels")
         ele.setNewDefaultValue([dev_id + ":injectedOutput",

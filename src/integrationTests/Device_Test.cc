@@ -1181,7 +1181,7 @@ void Device_Test::testInputOutputChannelInjection(const std::string& updateSlot)
     INT32_ELEMENT(dataSchema).key("int32").readOnly().commit();
     Schema schema;
     OUTPUT_CHANNEL(schema).key("injectedOutput").dataSchema(dataSchema).commit();
-    INPUT_CHANNEL(schema).key("injectedInput").dataSchema(dataSchema).commit();
+    INPUT_CHANNEL(schema).key("injectedInput").commit();
     OVERWRITE_ELEMENT(schema)
           .key("injectedInput.connectedOutputChannels")
           .setNewDefaultValue<std::vector<std::string>>({"TestDevice:injectedOutput", "TestDevice:output"})
@@ -1261,7 +1261,7 @@ void Device_Test::testInputOutputChannelInjection(const std::string& updateSlot)
 
     // Re-inject input - channel will be recreated and onData handler should be passed to new incarnation
     Schema inputOnlySchema;
-    INPUT_CHANNEL(inputOnlySchema).key("injectedInput").dataSchema(dataSchema).commit();
+    INPUT_CHANNEL(inputOnlySchema).key("injectedInput").commit();
     // Note that here we need to use "slotAppendSchema" and not updateSlot since "slotUpdateSchema" would erase
     // "injectedInput".
     CPPUNIT_ASSERT_NO_THROW(

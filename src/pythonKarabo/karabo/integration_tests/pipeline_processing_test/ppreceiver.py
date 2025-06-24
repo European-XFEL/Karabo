@@ -20,10 +20,9 @@ from time import sleep
 import numpy as np
 
 from karabo.bound import (
-    BOOL_ELEMENT, FLOAT_ELEMENT, INPUT_CHANNEL, INT32_ELEMENT,
-    KARABO_CLASSINFO, NODE_ELEMENT, UINT32_ELEMENT, VECTOR_BOOL_ELEMENT,
-    VECTOR_STRING_ELEMENT, VECTOR_UINT32_ELEMENT, MetricPrefix, PythonDevice,
-    Schema, State, Unit)
+    BOOL_ELEMENT, FLOAT_ELEMENT, INPUT_CHANNEL, KARABO_CLASSINFO, NODE_ELEMENT,
+    UINT32_ELEMENT, VECTOR_BOOL_ELEMENT, VECTOR_STRING_ELEMENT,
+    VECTOR_UINT32_ELEMENT, MetricPrefix, PythonDevice, State, Unit)
 
 
 @KARABO_CLASSINFO("PPReceiverDevice", "2.2.4")
@@ -31,16 +30,11 @@ class PPReceiverDevice(PythonDevice):
 
     def expectedParameters(expected):
 
-        data = Schema()
         (
 
-            INT32_ELEMENT(data).key("dataId")
-            .readOnly()
-            .commit(),
             INPUT_CHANNEL(expected).key("input")
             .displayedName("Input")
             .description("Input channel: client")
-            .dataSchema(data)
             .commit(),
             INPUT_CHANNEL(expected).key("input2")
             .displayedName("Input2")
