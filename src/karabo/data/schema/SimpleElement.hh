@@ -108,26 +108,6 @@ namespace karabo {
             }
 
             /**
-             * The <b>relativeError</b> sets the relative error of this parameter.
-             * Ideally, |x * relativeError| > |x - x0|
-             * with x the measured value and x0 the real value
-             */
-            SimpleElement& relativeError(double error) {
-                this->m_node->setAttribute(KARABO_SCHEMA_RELATIVE_ERROR, error);
-                return *this;
-            }
-
-            /**
-             * the <b>absoluteError</b> sets the absolute error of this parameter
-             * Ideally, absoluteError > |x - x0|
-             * with x the measured value and x0 the real value
-             */
-            SimpleElement& absoluteError(double error) {
-                this->m_node->setAttribute(KARABO_SCHEMA_ABSOLUTE_ERROR, error);
-                return *this;
-            }
-
-            /**
              * The <b>hex</b> tells the GUI to interpret the numeric value as a hex string.
              * @return reference to the SimpleElement to use chaining
              */

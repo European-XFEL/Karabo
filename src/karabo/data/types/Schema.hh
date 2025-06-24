@@ -122,9 +122,6 @@ namespace karabo {
 #define KARABO_SCHEMA_MIN_EXC "minExc"
 #define KARABO_SCHEMA_MAX_EXC "maxExc"
 
-#define KARABO_SCHEMA_RELATIVE_ERROR "relativeError"
-#define KARABO_SCHEMA_ABSOLUTE_ERROR "absoluteError"
-
 #define KARABO_SCHEMA_MIN_SIZE "minSize"
 #define KARABO_SCHEMA_MAX_SIZE "maxSize"
 
