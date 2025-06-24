@@ -324,16 +324,13 @@ class NetworkInput(Configurable):
         options=["shared", "copy"], assignment=Assignment.OPTIONAL,
         defaultValue="copy", accessMode=AccessMode.RECONFIGURABLE)
 
-    @String(
+    onSlowness = String(
         displayedName="On Slowness",
         description="Policy for what to do if this input is too slow for the "
-                    "fed data rate (only used in copy mode, 'queue' means "
-                    "'queueDrop')",
-        options=["queue", "queueDrop", "drop", "wait"],
+                    "fed data rate (only used in copy mode)",
+        options=["queueDrop", "drop", "wait"],
         assignment=Assignment.OPTIONAL, defaultValue="drop",
         accessMode=AccessMode.RECONFIGURABLE)
-    def onSlowness(self, value):
-        self.onSlowness = "queueDrop" if value == "queue" else value
 
     maxQueueLength = UInt32(
         defaultValue=DEFAULT_MAX_QUEUE_LENGTH,
@@ -341,7 +338,7 @@ class NetworkInput(Configurable):
         displayedName="Max. Queue Length Output Channels",
         description="Maximum number of data items to be queued by connected "
                     "Output Channels (only in copy mode and for "
-                    "queueDrop policies - Output may force a stricter limit)",
+                    "queueDrop policy - Output may force a stricter limit)",
         accessMode=AccessMode.INITONLY)
 
     delayOnInput = UInt32(
@@ -945,15 +942,13 @@ class NetworkOutput(Configurable):
         defaultValue=0,
         accessMode=AccessMode.INITONLY)
 
-    @String(
+    noInputShared = String(
         displayedName="No Input (Shared)",
         description="What to do if currently no share-input channel is "
-                    "available for writing to ('queue' means 'queueDrop')",
-        options=["queue", "drop", "wait", "queueDrop"],
+                    "available for writing to",
+        options=["drop", "wait", "queueDrop"],
         assignment=Assignment.OPTIONAL, defaultValue="drop",
         accessMode=AccessMode.INITONLY)
-    def noInputShared(self, value):
-        self.noInputShared = "queueDrop" if value == "queue" else value
 
     @String(
         displayedName="Hostname",
@@ -1072,9 +1067,6 @@ class NetworkOutput(Configurable):
             # The MDL does not have a memory queue ...
             maxQueueLength = min(maxQueueLength,
                                  int(self.maxQueueLength.value))
-            if slowness == "queue":  # Pre-Karabo 2.19.0 receiver
-                print(f"Queue configuration detected for {channel_name}!")
-                slowness = "queueDrop"
             local_host, local_port = writer.get_extra_info("sockname")
             remote_host, remote_port = writer.get_extra_info("peername")
             # Set the connection table entry

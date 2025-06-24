@@ -45,7 +45,7 @@ recommended to use `remote().registerChannelMonitor()`.
 - **onSlowness** *(STRING)* (only in `copy` mode)
   Policy if this input is too slow:
   - `drop` (default): drop new items.
-  - `queue` or `queueDrop`: buffer items; if buffer is full, drop oldest.
+  - `queueDrop`: buffer items; if buffer is full, drop oldest.
   - `wait`: block the sender and make it wait until ready for more data
             (use with care, basically in offline processing only)
 - **maxQueueLength** *(UINT32)*  (only in `copy` mode)
@@ -63,8 +63,8 @@ recommended to use `remote().registerChannelMonitor()`.
 
 - **noInputShared** *(STRING)*
   (if no `shared` inputs are ready)
-  - `drop` (default since 2.10.0): drop new items.
-  - `queueDrop` (since 2.10.0): buffer items; if full, drop oldest.
+  - `drop`: drop new items.
+  - `queueDrop`: buffer items; if full, drop oldest.
 - **hostname** *(STRING)*
   Address for inputs to connect to.
   Default `"default"` (device’s host); set to a specific interface if needed.
@@ -75,16 +75,22 @@ recommended to use `remote().registerChannelMonitor()`.
   data written to the output channel should be validated against it before
   each time that the end-of-stream is signaled:
   - `once`
-  - `always`
+  - `always` (default)
+
+Distribution between several connected *shared* input channels is usually
+*load-balanced*, i.e. any input channel that is ready for more data can receive it.
+This behaviour is overwritten if the device code registers a *SharedInputSelector*
+at the output channel.
 ---
 
 # Schema Description of Channels
 
-Although Karabo can send arbitrary hash structures, you should:
-
-- **Output channels**: declare the schema of sent data
-  (required for DAQ storage or GUI visualization).
-- **Input channels**: declare expected data schemas.
+Although Karabo can send arbitrary hash structures,
+the schema of the data sent through an output channel should be declared.
+This is required for DAQ storage and GUI visualization.
 
 In C++/Python, specify schemas in the device’s `expectedParameters()`
-when defining channels.
+when defining output channels.
+
+Note that since Karabo 3.0.0 the data sent is validated against this
+schema, see *validateSchema* schema option above.

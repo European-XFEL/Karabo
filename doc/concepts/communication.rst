@@ -93,12 +93,9 @@ Input Channel Configuration Properties
 * **onSlowness** (STRING): Policy for what the output channel should do if this input is too slow for the fed data rate - only used in *copy* mode (whereas in *shared* mode the output channel configuration defines the behaviour, see below).
    * *drop*: The output channel drops data items.
    * *wait*: The output channel writing action blocks until the input channel is ready for new data.
-   * *throw*: Removed in 2.10.0 and deprecated before since an exception is thrown in the writing action of C++ and bound Python output channels that leaves them in a bad state that may not be recoverable.
-   * *queue*: The data will be queued in the output channel and sent as soon as the input channel is ready. If the queue is full (size about 2000 in C++ and bound Python):
-      * since 2.10.0: output channel writing blocks until queue has space again
-      * older releases: option not recommended for C++ and bound Python output channels since an exception is thrown that leaves the output channel in a bad state that may be not recoverable.
-   * *queueDrop*: Like *queue*, but if thet queue is full, its oldest data is dropped (available since 2.10.0)
-   * The default since 2.10.0 is *drop*, but was *wait* in earlier releases.
+   * *queueDrop*: The data will be queued in the output channel and sent as soon as the input channel is ready. If the queue is full (size about 2000 in C++ and bound Python)Like *queue*, but if thet queue is full, its oldest data is dropped
+   * *queue*: Removed option since 3.0.0, same as *queueDrop* before (since 2.10.0).
+   * The default is *drop*.
 * **minData** (UINT32): Minimum data items available in one go if an input handler is used instead of a data handler (default = 1, 0: all, 0xFFFFFFFF: none/any).
 * **respondToEndOfStream** (BOOL): Whether an end-of-stream handler that a device registered is called or not (default: true).
 * **delayOnInput** (INT32): Delay in milliseconds before informing output channel about readiness for next data (default: 0). Useful e.g. with onSlowness=*drop* if only a limited data rate is of interest.
@@ -106,15 +103,14 @@ Input Channel Configuration Properties
 Output Channel Configuration Properties
 ----------------------------------------
 
-* **distributionMode** (STRING): If there are input channels connected in *shared* data distribution mode, defines how to distribute data between them.
-   * *load-balanced* (default): Data is sent to any of those input channels that are ready to receive more data.
-   * *round-robin*: Data is sent to the input channels one after another.
+* **distributionMode** (STRING): Ignored since 2.19.0, removed since 3.0.0.
 * **noInputShared** (STRING): If input channels are connected in *shared* data distribution mode, defines what to do if none of them is ready to receive, but data shall be sent.
    * options are *drop* (default since 2.10.0), *queue*, *wait* (default till 2.9.X) and since 2.10.0 *queueDrop*.  Option *throw* exists until 2.9.X but is not recommended. See description  of the **onSlowness** property of input channels.
 * **hostname** (STRING): Hostname or IP address to which input channels shall connect. Default is "default" which means the hostname of the device. Otherwise one can specify the address of a second network card connected to e.g. a special high band width network.
 * **port** (UINT32): Port number which input channels shall address when establishing their TCP connections to the output channel. Default is 0 which means that the system will provide a port number. If another value is chosen, the port must be free and accessible.
 
-Note the **compression** (INT32) key has been removed from the Output Channel configuration in Karabo 2.10.0.
+Distribution between several connected *shared* input channels is usually *load-balanced*, i.e. any input channel that is ready for more data can receive it.
+This behaviour is overwritten if the device code registers a *SharedInputSelector* at the output channel.
 
 Schema Description of Channels
 --------------------------------------

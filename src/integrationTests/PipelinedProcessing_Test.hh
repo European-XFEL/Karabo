@@ -78,13 +78,12 @@ class PipelinedProcessing_Test : public CPPUNIT_NS::TestFixture {
 
     /**
      * Tests pipe with two receivers with 'shared' value for their 'input.dataDistribution' setting
-     * and a sender with 'queue' value for its 'output.NoInputShared' setting. Tests are performed
-     * for both the 'round-robin' and 'load-balanced' values for the sender's 'output.distributionMode'.
+     * and a sender with 'queueDrop' value for its 'output.NoInputShared' setting.
      */
     void testPipeTwoSharedReceiversQueue();
 
     /**
-     * Tests queue/queueDrop behaviour when running into queue limit for pipelines with two receivers with 'shared'
+     * Tests 'queueDrop' behaviour when running into queue limit for pipelines with two receivers with 'shared'
      * value for their 'input.dataDistribution' setting. Tests are performed for both the 'round-robin' and
      * 'load-balanced' values for the sender's 'output.distributionMode'.
      */
@@ -117,7 +116,7 @@ class PipelinedProcessing_Test : public CPPUNIT_NS::TestFixture {
     void testPipeDrop(unsigned int processingTime, unsigned int delayTime, bool dataLoss);
 
     /**
-     * Tests pipe for one receiver with 'queue' value for its 'input.onSlowness' setting and 'copy' value
+     * Tests pipe for one receiver with 'queueDrop' value for its 'input.onSlowness' setting and 'copy' value
      * for its 'input.dataDistribution' setting.
      *
      * In this scenario, the sender is expected to queue the data to be sent when the receiver has significantly
@@ -137,7 +136,7 @@ class PipelinedProcessing_Test : public CPPUNIT_NS::TestFixture {
                                     bool roundRobin); // else load-balanced, i.e. the default
 
     /**
-     * Tests the queuing behavior for pipes with two 'shared' receivers and the sender with 'queue' setting for
+     * Tests the queuing behavior for pipes with two 'shared' receivers and the sender with 'queueDrop' setting for
      * 'noInputShared' for its output channel. Queuing should be detected when the receivers processingTime are
      * significantly higher than the sender delayTime. Queuing should not be detected when the opposite is true -
      * the sender delayTime is significantly higher than the receivers processingTime.
@@ -176,15 +175,14 @@ class PipelinedProcessing_Test : public CPPUNIT_NS::TestFixture {
 
     /**
      * Tests that the output queues kept by a sender are being properly cleared after the receiver disconnects
-     * while there is still data to be sent. The receiver's 'input.onSlowness' is set to 'queue' and its
-     * 'input.dataDistribution' is set to 'copy'.
+     * while there is still data to be sent. The receiver's 'input.onSlowness' is set to 'queueDrop'.
      */
     void testQueueClearOnDisconnectCopyQueue();
 
     /**
      * Tests that the output queues kept by a sender are being properly cleared after the receiver disconnects
      * while there is still data to be sent. The receiver's 'input.dataDistribution' is set to 'shared' and
-     * the sender's 'output.noInputShared' is set to 'queue'.
+     * the sender's 'output.noInputShared' is set to 'queueDrop'.
      *
      * @param useRoundRobin if true, the test is performed with the sender using 'round-robin' distribution mode.
      * Otherwise 'load-balanced' distribution mode is used.

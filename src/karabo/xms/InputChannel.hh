@@ -109,8 +109,7 @@ namespace karabo {
             // Default maximum queue length on a connected output channel before
             // it starts dropping data or waiting for sending data. The max
             // queue length only comes into play when the input channel is
-            // is connected in "copy" mode with "queue" or "queueDrop" for its
-            // "onSlowness" policy.
+            // is connected in "copy" mode with "queueDrop" for its "onSlowness" policy.
             static const unsigned int DEFAULT_MAX_QUEUE_LENGTH;
 
            private:
