@@ -375,6 +375,7 @@ namespace karabo {
             //                                  the earlier version of the protocol supported since 2.16.0. For that
             //                                  reason, a 2.20.0 Authentication Server requires a GUI Client to be at
             //                                  least 2.20.0.
+            // Minimal client version 3.0.0 -> Karabo 3.X is not backward compatible with Karabo 2.X.
             STRING_ELEMENT(expected)
                   .key("minClientVersion")
                   .displayedName("Minimum Client Version")
@@ -382,7 +383,7 @@ namespace karabo {
                         "If this variable does not respect the N.N.N(.N) convention,"
                         " the Server will not enforce a version check")
                   .assignmentOptional()
-                  .defaultValue("2.16.0")
+                  .defaultValue("3.0.0rc4")
                   .reconfigurable()
                   .expertAccess()
                   .commit();
