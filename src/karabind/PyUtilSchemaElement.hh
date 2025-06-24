@@ -200,7 +200,7 @@ struct ReadOnlySpecificVectorWrap {
 template <typename T>
 class CommonWrap {
    public:
-    static py::object allowedStatesPy(py::args args, const py::kwargs kwargs) {
+    static py::object allowedStatesPy(py::args args) {
         T& self = args[0].cast<T&>();
         std::vector<karabo::data::State> states;
         for (unsigned int i = 1; i < py::len(args); ++i) {
