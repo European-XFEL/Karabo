@@ -98,7 +98,7 @@ namespace karabo {
              *     instanceId (std::string)
              *     memoryLocation (std::string) [local/remote]
              *     tcpChannel (karabo::net::Channel::WeakPointer)
-             *     onSlowness (std::string) [queue/drop/wait/throw]
+             *     onSlowness (std::string) [queueDrop/drop/wait]
              *     queuedChunks (std::deque<int>)
              *
              */

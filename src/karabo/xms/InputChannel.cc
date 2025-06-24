@@ -88,8 +88,8 @@ namespace karabo {
                   .displayedName("On Slowness")
                   .description(
                         "Policy for what to do if this input is too slow for the fed data rate (only used in copy "
-                        "mode), 'queue' means 'queueDrop'")
-                  .options({"drop", "wait", "queue", "queueDrop"})
+                        "mode)")
+                  .options({"drop", "wait", "queueDrop"})
                   .assignmentOptional()
                   .defaultValue("drop")
                   .init()
@@ -100,7 +100,7 @@ namespace karabo {
                   .displayedName("Max. Queue Length Output Channels")
                   .description(
                         "Maximum number of data items to be queued by connected Output Channels (only in copy mode and "
-                        "for queue and queueDrop policies)")
+                        "for queueDrop policy)")
                   .assignmentOptional()
                   .defaultValue(InputChannel::DEFAULT_MAX_QUEUE_LENGTH)
                   .minInc(1u)
@@ -173,7 +173,6 @@ namespace karabo {
             if (!allowMissing || config.has("minData")) config.get("minData", m_minData);
             if (!allowMissing || config.has("onSlowness")) {
                 config.get("onSlowness", m_onSlowness);
-                if (m_onSlowness == "queue") m_onSlowness += "Drop";
             }
             if (!allowMissing || config.has("respondToEndOfStream"))
                 config.get("respondToEndOfStream", m_respondToEndOfStream);

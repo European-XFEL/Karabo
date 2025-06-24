@@ -65,10 +65,8 @@ namespace karabo {
             STRING_ELEMENT(expected)
                   .key("noInputShared")
                   .displayedName("No Input (Shared)")
-                  .description(
-                        "What to do if currently none of the share-input channels is available for writing to ('queue' "
-                        "is same as 'queueDrop')")
-                  .options({"drop", "queue", "queueDrop", "wait"})
+                  .description("What to do if currently none of the share-input channels is available for writing to")
+                  .options({"drop", "queueDrop", "wait"})
                   .assignmentOptional()
                   .defaultValue("drop")
                   .init()
@@ -230,7 +228,6 @@ namespace karabo {
               m_updateDeadline(karabo::net::EventLoop::getIOService()),
               m_addedThreads(0) {
             config.get("noInputShared", m_onNoSharedInputChannelAvailable);
-            if (m_onNoSharedInputChannelAvailable == "queue") m_onNoSharedInputChannelAvailable += "Drop";
             config.get("port", m_port);
             config.get("updatePeriod", m_period);
 
@@ -447,7 +444,7 @@ namespace karabo {
                  *     memoryLocation (std::string) [local/remote]
                  *     dataDistribution (std::string) [shared/copy]
                  *     onSlowness (std::string) [drop/queueDrop/wait]
-                 *     maxQueueLength (unsigned int; when onSlowness is queue or queueDrop)
+                 *     maxQueueLength (unsigned int; when onSlowness is queueDrop)
                  */
 
                 const std::string& instanceId = message.get<std::string>("instanceId");
@@ -463,24 +460,13 @@ namespace karabo {
                 info.set("instanceId", instanceId);
                 info.set("memoryLocation", memoryLocation);
                 info.set("tcpChannel", weakChannel);
-                if (onSlowness == "queue") { // pre 2.19.0 version is connecting...
-                    KARABO_LOG_FRAMEWORK_WARN << "For input channel " << instanceId << " overwrite outdated "
-                                              << "'onSlowness' value \"queue\" by \"queueDrop\"";
-                    info.set("onSlowness", "queueDrop"s);
-                } else if (onSlowness == "throw") { // pre 2.19.0 MDL (or any pre 2.10.0) is connecting...
-                    KARABO_LOG_FRAMEWORK_WARN << "For input channel " << instanceId << " overwrite outdated "
-                                              << "'onSlowness' value \"throw\" by \"drop\"";
-                    info.set("onSlowness", "drop"s);
-                } else {
-                    info.set("onSlowness", onSlowness);
-                }
+                info.set("onSlowness", onSlowness);
                 info.set("maxQueueLength", maxQueueLength);
                 info.set("queuedChunks", std::deque<int>());
                 info.set("bytesRead", 0ull);
                 info.set("bytesWritten", 0ull);
                 info.set("sendOngoing", false);
 
-                std::string finalSlownessForLog = info.get<std::string>("onSlowness");
                 {
                     std::lock_guard<std::mutex> lockShared(m_registeredInputsMutex);
                     eraseOldChannel(m_registeredSharedInputs, instanceId, channel);
@@ -490,8 +476,8 @@ namespace karabo {
                         KARABO_LOG_FRAMEWORK_DEBUG << "Registering shared-input channel '" << instanceId << "'";
                         m_registeredSharedInputs[instanceId] = info;
                     } else {
-                        if (finalSlownessForLog == "queueDrop") {
-                            (finalSlownessForLog += ", max. length ") += info.getAs<std::string>("maxQueueLength");
+                        if (onSlowness == "queueDrop") {
+                            (onSlowness + ", max. length ") += info.getAs<std::string>("maxQueueLength");
                         }
                         KARABO_LOG_FRAMEWORK_DEBUG << "Registering copy-input channel '" << instanceId << "'";
                         m_registeredCopyInputs[instanceId] = info;
@@ -500,8 +486,8 @@ namespace karabo {
                 onInputAvailable(instanceId); // Immediately register for reading
                 updateConnectionTable();
                 KARABO_LOG_FRAMEWORK_INFO << getInstanceIdName() << ": handshake (hello)... from InputChannel : \""
-                                          << instanceId << "\", \"" << dataDistribution << "\", \""
-                                          << finalSlownessForLog << "\"";
+                                          << instanceId << "\", \"" << dataDistribution << "\", \"" << onSlowness
+                                          << "\"";
             } else if (reason == "update") {
                 if (message.has("instanceId")) {
                     const std::string& instanceId = message.get<std::string>("instanceId");
