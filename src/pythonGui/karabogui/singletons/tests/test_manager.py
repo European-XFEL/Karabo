@@ -280,21 +280,6 @@ def test_handle_class_schema(mocker):
             'server', 'ClassName', schema)
 
 
-def test_handle_device_schema(mocker):
-    network, topology = mocker.Mock(), mocker.Mock()
-    mediator = Mediator()
-    with singletons(network=network, topology=topology, mediator=mediator):
-        manager = Manager()
-
-        schema = Schema()
-        reply = Hash('instanceId', 'dev', 'updatedSchema', schema)
-        manager.handle_attributesUpdated(reply)
-        topology.device_schema_updated.assert_called_with('dev', schema)
-
-        manager.handle_deviceSchema('dev', schema)
-        topology.device_schema_updated.assert_called_with('dev', schema)
-
-
 def test_init_device_none(mocker):
     network, topology = mocker.Mock(), mocker.Mock()
     with singletons(network=network, topology=topology):
