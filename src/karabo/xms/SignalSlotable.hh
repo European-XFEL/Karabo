@@ -241,7 +241,6 @@ namespace karabo {
 
             karabo::net::Broker::Pointer getConnection() const;
 
-            // TODO This will BREAK during multi-topic refactoring
             const std::string& getTopic() const {
                 return m_topic;
             }
@@ -1041,9 +1040,6 @@ namespace karabo {
             long long getEpochMillis() const;
 
             void slotGetOutputChannelNames();
-
-            // TODO This is a helper function during multi-topic refactoring
-            void setTopic(const std::string& topic = "");
 
             void receiveAsyncTimeoutHandler(const boost::system::error_code& e, const std::string& replyId,
                                             const AsyncErrorHandler& errorHandler);
