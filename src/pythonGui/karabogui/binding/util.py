@@ -17,13 +17,12 @@
 from urllib.parse import parse_qs
 
 import numpy as np
-from numpy import log10
 from traits.api import Undefined
 
 from karabo.common import const
 from karabo.common.api import (
-    KARABO_SCHEMA_ABSOLUTE_ERROR, KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_INC,
-    KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MIN_INC)
+    KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_INC, KARABO_SCHEMA_MIN_EXC,
+    KARABO_SCHEMA_MIN_INC)
 from karabo.common.scenemodel.const import DEFAULT_DECIMALS, DEFAULT_FORMAT
 from karabo.native import Hash, Schema, Timestamp
 
@@ -80,7 +79,7 @@ def get_min_max(binding):
     INT_TYPES = (types.Int8Binding, types.Int16Binding, types.Int32Binding,
                  types.Int64Binding, types.Uint8Binding, types.Uint16Binding,
                  types.Uint32Binding, types.Uint64Binding)
-    FLOAT_TYPES = (types.FloatBinding, )
+    FLOAT_TYPES = (types.FloatBinding,)
 
     if isinstance(binding, (INT_TYPES, FLOAT_TYPES)):
         return binding.getMinMax()
@@ -292,13 +291,6 @@ def get_dtype_format(binding):
             pass
     elif isinstance(binding, types.FloatBinding):
         fmt = "{:.8g}"
-        abs_err = binding.attributes.get(KARABO_SCHEMA_ABSOLUTE_ERROR)
-        if abs_err is not None:
-            # Yes, abs error below 0 can happen
-            if 0 < abs_err < 1:
-                fmt = f"{{:.{-int(log10(abs_err))}f}}"
-            else:
-                fmt = "{:.1f}"
 
     return fmt
 

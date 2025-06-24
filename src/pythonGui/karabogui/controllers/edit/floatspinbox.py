@@ -14,11 +14,9 @@
 # The Karabo Gui is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
-from numpy import log10
 from qtpy.QtWidgets import QAction, QDialog, QInputDialog
 from traits.api import Instance, String, on_trait_change
 
-from karabo.common.api import KARABO_SCHEMA_ABSOLUTE_ERROR
 from karabo.common.scenemodel.api import FloatSpinBoxModel
 from karabogui.binding.api import FloatBinding, get_editor_value, get_min_max
 from karabogui.controllers.api import (
@@ -109,13 +107,6 @@ class FloatSpinBox(BaseBindingController):
     def _change_decimals(self):
         # Override the starting value with something from the binding
         decimals = self.model.decimals
-        binding = self.proxy.binding
-        if binding:
-            abs_error = binding.attributes.get(KARABO_SCHEMA_ABSOLUTE_ERROR)
-            if abs_error is not None and abs_error < 1:
-                decimals = -log10(abs_error)
-
-        # Then ask the user
         decimals, ok = QInputDialog.getInt(
             self.widget, "Decimals", "Enter number of decimals",
             value=decimals, min=0, max=15)

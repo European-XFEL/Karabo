@@ -19,10 +19,9 @@ import sys
 import numpy as np
 
 from karabo.common.api import (
-    KARABO_SCHEMA_ABSOLUTE_ERROR, KARABO_SCHEMA_DISPLAY_TYPE,
-    KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_INC, KARABO_SCHEMA_MAX_SIZE,
-    KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MIN_INC, KARABO_SCHEMA_MIN_SIZE,
-    KARABO_SCHEMA_VALUE_TYPE)
+    KARABO_SCHEMA_DISPLAY_TYPE, KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_INC,
+    KARABO_SCHEMA_MAX_SIZE, KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MIN_INC,
+    KARABO_SCHEMA_MIN_SIZE, KARABO_SCHEMA_VALUE_TYPE)
 from karabo.native import Hash, Schema
 from karabogui.binding.api import (
     BoolBinding, FloatBinding, Int8Binding, Int16Binding, Int32Binding,
@@ -233,12 +232,6 @@ def test_display_format():
     # Only accounted for IntegerBindings
     binding = StringBinding(attributes={KARABO_SCHEMA_DISPLAY_TYPE: "oct"})
     assert get_dtype_format(binding) == "{}"
-
-    binding = FloatBinding(attributes={KARABO_SCHEMA_ABSOLUTE_ERROR: 0.001})
-    assert get_dtype_format(binding) == "{:.3f}"
-
-    binding = FloatBinding(attributes={KARABO_SCHEMA_ABSOLUTE_ERROR: 20.000})
-    assert get_dtype_format(binding) == "{:.1f}"
 
 
 def test_integer_binding():
