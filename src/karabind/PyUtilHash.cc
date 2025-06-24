@@ -156,6 +156,45 @@ void exportPyUtilHash(py::module_& m) {
 
     h.def("items", [](Hash& self) { return std::unique_ptr<ItemView>(new ItemView{self}); }, py::keep_alive<0, 1>());
 
+    h.def(
+          "update",
+          [](Hash& self, py::object obj, py::kwargs kwargs) -> Hash& {
+              // Handle dict if provided
+              if (!obj.is_none()) {
+                  if (!py::isinstance<py::dict>(obj)) {
+                      throw std::runtime_error("update() expects a dict as the first argument");
+                  }
+                  karabind::hashwrap::setPyDictAsHash(self, obj.cast<py::dict>(), '.');
+              }
+
+              // Handle keyword arguments
+              for (const auto item : kwargs) {
+                  const std::string& k = py::str(item.first);
+                  py::object v = py::reinterpret_borrow<py::object>(item.second);
+                  karabind::hashwrap::set(self, k, v);
+              }
+
+              return self;
+          },
+          py::arg("obj") = py::none(), py::return_value_policy::reference_internal,
+          R"doc(
+    update(obj: dict = None, **kwargs) -> Hash
+
+    Update the hash with key-value pairs from a dictionary and/or keyword arguments.
+
+    This method mimics Python's dict.update(). If a dictionary is provided as the first argument,
+    its keys and values are added to the Hash where the default separator ('.') may split the
+    dictionary key into Hash paths. Additional key-value pairs can be passed as keyword arguments.
+
+    Examples:
+        h.update({'a': 1, 'b': 2})
+        h.update(x=10, y=20)
+        h.update({'z': 100}, x=5)
+
+    Raises:
+        RuntimeError: If the first argument is not a dict.
+    )doc");
+
     struct ItemViewAll {
         Hash& map;
     };

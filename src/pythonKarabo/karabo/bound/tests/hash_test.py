@@ -19,6 +19,7 @@ Created on Oct 17, 2012
 @author: Sergey Esenov <serguei.essenov@xfel.eu>
 '''
 
+import gc
 import unittest
 import weakref
 
@@ -459,6 +460,28 @@ class Hash_TestCase(unittest.TestCase):
 
         except Exception as e:
             self.fail("test_hashAttributesNode exception: " + str(e))
+
+    def test_hash_update(self):
+        h = Hash("a.b.a.b", 42)
+        h2 = h.update({"a.b.a.b": 10})
+        self.assertEqual(h["a.b.a.b"], 10)
+        # test the correct reference
+        self.assertTrue(h2 is h)
+        del h
+        gc.collect()
+        self.assertEqual(h2["a.b.a.b"], 10)
+
+        h = Hash()
+        int_list = [1, 2, 3, 4]
+        h.update(e=int_list)
+        self.assertEqual(h["e"], int_list)
+        self.assertEqual(h["e"][0], 1)
+        int_list[0] = 10
+        self.assertEqual(h["e"][0], 1)
+        del int_list
+        self.assertEqual(h["e"], [1, 2, 3, 4])
+        with self.assertRaises(RuntimeError):
+            h.update([1, 2, 3])
 
     def test_hashAttributes(self):
         try:
