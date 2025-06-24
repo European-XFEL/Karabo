@@ -446,24 +446,23 @@ class PythonDevice:
                 self.set("status", msg)
                 self._sigslot.call("", "slotKillDevice")
 
-        # As long as the below connect(..) to the time server is not turned
-        # into a non-blocking asyncConnect(..), we better add a thread here:
-        # Otherwise, we can get into trouble if the init function (registered
-        # by the device coder and called from self.startInitialFunctions()
-        # above) also does some synchronous operation (e.g. another
-        # connect(..)):
-        # Both operations block at the same time and we have only two threads
-        # (main one and one from our SignalSlotable), so the blocking cannot
-        # be resolved and thus both actions time out.
-        EventLoop.addThread()
         EventLoop.post(wrapInitialFunctions)
 
         if self.timeServerId:
-            self.logger.debug("Connecting to time server : \"{}\""
-                              .format(self.timeServerId))
-            # TODO 2: Better use asyncConnect!
-            self._sigslot.connect(self.timeServerId, "signalTimeTick",
-                                  "slotTimeTick")
+            msg = f"Connecting to time server '{self.timeServerId}'"
+            self.logger.debug(msg)
+
+            def callback(failure, details):
+                if failure:
+                    self.logger.warn("Failed connecting to time server "
+                                     f"'{self.timeServerId}': {failure}")
+                    self.logger.debug(f"Details: {details}")
+                else:
+                    self.logger.info("Connected to time server "
+                                     f"'{self.timeServerId}'.signalTimeTick")
+
+            self._sigslot.asyncConnect(self.timeServerId, "signalTimeTick",
+                                       "slotTimeTick", callback)
 
     @property
     def signalSlotable(self):
