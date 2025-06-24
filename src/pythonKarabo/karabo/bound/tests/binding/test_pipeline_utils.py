@@ -60,7 +60,6 @@ def test_channel_schema_declarations():
         .key('input')
         .displayedName('Input key')
         .description('Input key description')
-        .dataSchema(pipeSchema)
         .commit(),
     )
 

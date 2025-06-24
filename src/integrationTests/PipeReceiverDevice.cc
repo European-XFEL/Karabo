@@ -49,15 +49,7 @@ namespace karabo {
     KARABO_REGISTER_FOR_CONFIGURATION(core::Device, PipeReceiverDevice)
 
     void PipeReceiverDevice::expectedParameters(data::Schema& expected) {
-        data::Schema data;
-        INT32_ELEMENT(data).key("dataId").readOnly().commit();
-
-        INPUT_CHANNEL(expected)
-              .key("input")
-              .displayedName("Input")
-              .description("Input channel: client")
-              .dataSchema(data)
-              .commit();
+        INPUT_CHANNEL(expected).key("input").displayedName("Input").description("Input channel: client").commit();
 
         INPUT_CHANNEL(expected).key("input2").displayedName("Input2").description("Input channel: client").commit();
 

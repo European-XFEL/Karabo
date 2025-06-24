@@ -174,7 +174,6 @@ class TestDevice(PythonDevice):
             .commit(),
 
             INPUT_CHANNEL(expected).key("input")
-            .dataSchema(Schema())
             .commit(),
 
             VECTOR_STRING_ELEMENT(expected).key("interfaces")
@@ -184,7 +183,6 @@ class TestDevice(PythonDevice):
             .commit(),
 
             INPUT_CHANNEL(expected).key("imageInput")
-            .dataSchema(Schema())
             .commit(),
 
             STRING_ELEMENT(expected).key("imagePath")

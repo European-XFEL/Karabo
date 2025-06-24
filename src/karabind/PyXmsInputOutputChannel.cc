@@ -474,9 +474,6 @@ returned, the data will be dropped.
               .def("description", &InputChannelElement::description, py::arg("description"),
                    py::return_value_policy::reference_internal)
 
-              .def("dataSchema", &InputChannelElement::dataSchema, py::arg("schema"),
-                   py::return_value_policy::reference_internal)
-
               .def("commit", &InputChannelElement::commit)
 
               ;

@@ -634,11 +634,7 @@ namespace karabo {
                   .allowedStates(State::NORMAL)
                   .commit();
 
-            INPUT_CHANNEL(expected)
-                  .key("input")
-                  .displayedName("Input")
-                  .dataSchema(pipeData) // re-use what the output channel sends
-                  .commit();
+            INPUT_CHANNEL(expected).key("input").displayedName("Input").commit();
 
             UINT32_ELEMENT(expected)
                   .key("processingTime")
