@@ -119,7 +119,13 @@ namespace karabo {
 
 
         void EventLoop::stop() {
-            instance()->m_ioService.stop();
+            auto theInstance = instance();
+            if (theInstance->m_running) {
+                theInstance->m_ioService.stop();
+            } else {
+                // Stop comes too early - post it!
+                post([] { EventLoop::stop(); });
+            }
         }
 
 

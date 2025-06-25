@@ -42,6 +42,7 @@ class EventLoop_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testPost);
     CPPUNIT_TEST(testAddThreadDirectly);
     CPPUNIT_TEST(testExceptionTrace);
+    CPPUNIT_TEST(testImmediateStop);
     CPPUNIT_TEST_SUITE_END();
 
    public:
@@ -58,6 +59,7 @@ class EventLoop_Test : public CPPUNIT_NS::TestFixture {
     void testPost();
     void testAddThreadDirectly();
     void testExceptionTrace();
+    void testImmediateStop();
     std::vector<std::string> splitByPattern(std::string_view src, std::string_view pattern);
 };
 

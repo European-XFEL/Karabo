@@ -15,6 +15,7 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 
 import threading
+from time import sleep
 
 import pytest
 
@@ -480,25 +481,24 @@ class Server:
         self.conn.stop()
 
 
-def test_tcp_client_server():
+def test_tcp_client_server(eventLoop):
     counter = 0
     count_max = 10
     server = Server(Connection, Hash)
-    sthread = threading.Thread(target=EventLoop.run)
-    sthread.start()
-    EventLoop.addThread(4)
-    DEBUG("CLN: EventLoop thread started...")
+    DEBUG("CLN: Server started...")
 
     failed = None
+    done = False
 
     def onError(ec, channel):
+        nonlocal done
+        DEBUG("CLN: onError")
         channel.close()
         server.stop()
-        EventLoop.stop()
+        done = True
 
     def onReadHashHash(ec, channel, header, body):
-        nonlocal failed
-        nonlocal counter
+        nonlocal failed, counter, done
         counter += 1
         DEBUG(f"CLN onReadHashHash entry: #{ec.value()} => {ec.message()}")
         if ec.value() != 0:
@@ -518,8 +518,8 @@ def test_tcp_client_server():
         if counter >= count_max:
             channel.close()
             server.stop()
-            DEBUG("CLN: EventLoop stop")
-            EventLoop.stop()
+            DEBUG("CLN: DONE")
+            done = True
         else:
             # Next message ...
             body = Hash(
@@ -666,14 +666,20 @@ def test_tcp_client_server():
     client = Connection.create(
         "Tcp", Hash("type", "client", "hostname", "localhost",
                     "port", server.port))
-
     with pytest.raises(RuntimeError):
         client.startAsync(None)
-
     client.startAsync(onConnect)
+    DEBUG("CLN started Connection")
 
-    sthread.join()
+    # Wait until 'done' (could be done nice with condition variable or so...)
+    timeout = 10
+    while timeout > 0:
+        if done or failed is not None:
+            break
+        timeout -= 0.01
+        sleep(0.01)
 
     assert failed is None
+    assert counter == count_max
 
     DEBUG("CLN EXIT")
