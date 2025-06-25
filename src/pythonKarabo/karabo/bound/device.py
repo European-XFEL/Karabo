@@ -523,14 +523,13 @@ class PythonDevice:
                    Hash, timestamp pair
             * three: expects key, value and timestamp
 
-        kwargs: validate: specifies if validation of args should be performed
-                before notification. Skipping validation should not be used
-                with State or AlarmCondition.
+        kwargs: properties (that are not nested) as keyword arguments
 
         If a Hash is provided, its keys should be device properties and the
         values should have the proper types. A State or AlarmCondition inside
         a Hash should be given as a string.
         """
+
         with self._stateChangeLock:
             self._setNoStateLock(*args, **kwargs)
 
@@ -540,78 +539,73 @@ class PythonDevice:
         """
 
         pars = tuple(args)
-        validate = kwargs.get("validate", True)
+        n_pars = len(pars)
 
-        if len(pars) == 0 or len(pars) > 3:
-            raise SyntaxError("Number of parameters is wrong: "
-                              "from 1 to 3 arguments are allowed.")
+        if n_pars + len(kwargs) == 0 or n_pars > 3:
+            raise SyntaxError("Number of parameters is wrong: must be "
+                              "1 to 3 arguments or at least one keyword arg.")
 
-        # key, value, timestamp args
-        if len(pars) == 3:
-            key, value, stamp = pars
-
-            if not isinstance(stamp, Timestamp):
-                raise TypeError("The 3rd argument should be Timestamp")
-
-            h = Hash()
-            # State and AlarmCondition are set as strings - the validator will
-            # add necessary "indicateState"/"indicateAlarm" attributes.
-            # (Will not work if validate=False!)
-            if isinstance(value, State):
-                h.set(key, value.name)
-            elif isinstance(value, AlarmCondition):
-                h.set(key, value.asString())
-            else:
-                h.set(key, value)
-            pars = tuple([h, stamp])
-
-        # hash args
-        if len(pars) == 1:
+        hash_is_copied = False
+        if n_pars == 0:  # (non-empty) kwargs only
+            hash_is_copied = True
+            pars = (Hash(kwargs), self.getActualTimestamp())
+        elif n_pars == 1:  # hash only args
             h = pars[0]
             if not isinstance(h, Hash):
                 raise TypeError("The only argument should be a Hash")
-            pars = tuple([h, self.getActualTimestamp()])  # add timestamp
-
-        # key, value or hash, timestamp args
-        if len(pars) == 2:
+            pars = (h, self.getActualTimestamp())  # add timestamp
+        elif n_pars == 2:  # key, value or hash, timestamp args
             if not isinstance(pars[0], Hash):
                 key, value = pars
 
                 h = Hash()
-                # See comment above about State and AlarmCondition
+                hash_is_copied = True
+                # See comment below about State and AlarmCondition
                 if isinstance(value, State):
                     h.set(key, value.name)
                 elif isinstance(value, AlarmCondition):
                     h.set(key, value.asString())
                 else:
                     h.set(key, value)
-                pars = tuple([h, self.getActualTimestamp()])
+                pars = (h, self.getActualTimestamp())
+            elif not isinstance(pars[1], Timestamp):
+                raise TypeError("The 2nd argument should be Timestamp")
+        elif n_pars == 3:  # key, value, timestamp args
+            key, value, stamp = pars
 
-            hash, stamp = pars
+            if not isinstance(stamp, Timestamp):
+                raise TypeError("The 3rd argument should be Timestamp")
 
-            validated = None
-
-            if validate:
-                result, error, validated = self.validatorIntern.validate(
-                    self._fullSchema, hash, stamp)
-                if not result:
-                    raise RuntimeError("Bad parameter setting attempted, "
-                                       "ignore keys {}. Validation "
-                                       "reports: {}".format(hash.keys(),
-                                                            error))
+            h = Hash()
+            hash_is_copied = True
+            # State and AlarmCondition are set as strings - the validator will
+            # add necessary "indicateState"/"indicateAlarm" attributes.
+            if isinstance(value, State):
+                h.set(key, value.name)
+            elif isinstance(value, AlarmCondition):
+                h.set(key, value.asString())
             else:
-                validated = hash
-                # Add timestamps
-                for path in validated.getPaths():
-                    node = validated.getNode(path)
-                    attributes = node.getAttributes()
-                    stamp.toHashAttributes(attributes)
+                h.set(key, value)
+            pars = (h, stamp)
 
-            if not validated.empty():
-                self._parameters.merge(
-                    validated, HashMergePolicy.REPLACE_ATTRIBUTES)
+        hash, stamp = pars  # Only left: Hash, timestamp
+        if kwargs:
+            if not hash_is_copied:
+                # Do not touch input to set(..)
+                hash = copy.copy(hash)
+            hash.update(kwargs)
 
-                self._sigslot.emit("signalChanged", validated, self.deviceid)
+        result, error, validated = self.validatorIntern.validate(
+            self._fullSchema, hash, stamp)
+        if not result:
+            raise RuntimeError("Bad parameter setting attempted, ignore keys "
+                               f"{hash.keys()}. Validation reports: {error}")
+
+        if not validated.empty():
+            self._parameters.merge(
+                validated, HashMergePolicy.REPLACE_ATTRIBUTES)
+
+            self._sigslot.emit("signalChanged", validated, self.deviceid)
 
     def setVectorUpdate(self, key, updates, updateType, timestamp=None):
         """Concurrency safe update of vector property (not for tables)
@@ -1401,7 +1395,8 @@ class PythonDevice:
 
         if lockableSlot:
             # Log the call of this slot by setting a parameter of the device
-            self.set("lastCommand", slotName + " <- " + callee)
+            lastCommand = slotName + " <- " + callee
+            self.set(lastCommand=lastCommand)
 
     def allowLock(self):
         """
@@ -1645,8 +1640,7 @@ class PythonDevice:
         timestamp = self.getActualTimestamp()
         with self._stateChangeLock:
             self._setNoStateLock(
-                "alarmCondition", condition.asString(),
-                timestamp, validate=False)
+                "alarmCondition", condition.asString(), timestamp)
 
     def getAlarmCondition(self, key=None, separator="."):
         if key is None:
