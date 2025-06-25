@@ -14,10 +14,12 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 
+import getpass
 import os
 from pathlib import Path
 
-from karabo.native import AccessMode, Bool, Configurable, String, UInt32
+from karabo.native import (
+    AccessMode, Configurable, String, UInt32, VectorString)
 
 from .sql_database import SQLDatabase
 
@@ -28,18 +30,31 @@ def get_db_credentials():
     return user, password
 
 
+def topicDomain() -> str:
+    topic = getpass.getuser()
+    if "KARABO_BROKER_TOPIC" in os.environ:
+        topic = os.environ["KARABO_BROKER_TOPIC"]
+    return topic
+
+
+_TOPIC_DOMAIN = topicDomain()
+
+
 class RemoteNode(Configurable):
     host = String(
         defaultValue=os.getenv("KARABO_PROJECT_DB_HOST", "localhost"),
-        displayedName="Database host")
+        displayedName="Database host",
+        accessMode=AccessMode.INITONLY)
 
     port = UInt32(
         displayedName="Port",
-        defaultValue=int(os.getenv("KARABO_PROJECT_DB_PORT", "3306")))
+        defaultValue=int(os.getenv("KARABO_PROJECT_DB_PORT", "3306")),
+        accessMode=AccessMode.INITONLY)
 
     dbName = String(
         defaultValue=os.getenv("KARABO_PROJECT_DB_DBNAME", "projectDB"),
-        displayedName="Database name")
+        displayedName="Database name",
+        accessMode=AccessMode.INITONLY)
 
     async def get_db(self, test_mode=False, init_db=False):
         user, password = get_db_credentials()
@@ -55,15 +70,16 @@ class LocalNode(Configurable):
     dbName = String(
         defaultValue=os.getenv("KARABO_PROJECT_DB_DBNAME", "projectDB.db"),
         displayedName="Database name",
-        description="The filename placed in var/project_db/")
+        description="The filename placed in var/project_db/",
+        accessMode=AccessMode.INITONLY)
 
-    removeOrphans = Bool(
-        displayedName="Remove Orphan Records",
+    requiredDomains = VectorString(
+        displayedName="Required Domains",
         description=(
-            "Should orphan records be removed on project save (True) or "
-            "later by a cleaning batch job?"),
-        defaultValue=False,
-        accessMode=AccessMode.READONLY)
+            "The ProjectManager ensures that domains in this list are in the "
+            "database when it starts."),
+        defaultValue=[_TOPIC_DOMAIN],
+        accessMode=AccessMode.INITONLY)
 
     async def get_db(self, test_mode=False, init_db=False):
         folder = Path(os.environ["KARABO"]).joinpath(
@@ -71,5 +87,7 @@ class LocalNode(Configurable):
         path = folder / self.dbName.value
         path.parent.mkdir(parents=True, exist_ok=True)
         db = SQLDatabase(db_name=path, local=True)
+        required_domains = self.requiredDomains
         await db.initialize()
+        await db.assure_domains(required_domains)
         return db

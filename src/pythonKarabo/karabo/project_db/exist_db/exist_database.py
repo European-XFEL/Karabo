@@ -37,13 +37,14 @@ TESTDB_ADMIN_PASSWORD = "change_me_please"
 
 
 def get_db_credentials(is_test):
-    # in production the KARABO_PROJECT_DB_USER and KARABO_PROJECT_DB_PASSWORD
+    # in production the KARABO_PROJECT_DB_USER_EXISTDB and
+    # KARABO_PROJECT_DB_PASSWORD_EXISTDB
     # should be set to the username and password of the configDB.
     # Alternatively, the username and password will be defaulted to 'karabo'
     default_user = 'admin' if is_test else 'karabo'
     default_pwd = TESTDB_ADMIN_PASSWORD if is_test else 'karabo'
-    user = os.getenv('KARABO_PROJECT_DB_USER', default_user)
-    password = os.getenv('KARABO_PROJECT_DB_PASSWORD', default_pwd)
+    user = os.getenv('KARABO_PROJECT_DB_USER_EXISTDB', default_user)
+    password = os.getenv('KARABO_PROJECT_DB_PASSWORD_EXISTDB', default_pwd)
     return user, password
 
 
