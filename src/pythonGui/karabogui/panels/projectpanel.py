@@ -51,10 +51,6 @@ class ProjectPanel(BasePanelWidget):
 
     def __init__(self):
         super().__init__("Projects")
-        # Bool to set if the project manager version is okay for the
-        # load with device action.
-        self._manager_version = False
-
         # Register for broadcast events.
         # This object lives as long as the app. No need to unregister.
         event_map = {
@@ -181,8 +177,6 @@ class ProjectPanel(BasePanelWidget):
         if not status:
             # Don't show projects when there's no server connection
             self.tree_view.destroy_model()
-            # We lost track about the project manager
-            self._manager_version = False
 
         self._set_toolbar_visible(status)
         if not status:
