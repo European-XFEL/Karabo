@@ -37,7 +37,8 @@ from karabogui.panels.api import (
     ConfigurationPanel, MacroPanel, ScenePanel, WidgetControllerPanel)
 from karabogui.programs.utils import close_app
 from karabogui.singletons.api import get_config, get_db_conn, get_project_model
-from karabogui.util import move_to_cursor, process_qt_events, send_info
+from karabogui.util import (
+    get_application_icon, move_to_cursor, process_qt_events, send_info)
 from karabogui.wizards import TipsTricksWizard
 
 GUI_EXTENSIONS = "GUIExtensions"
@@ -342,6 +343,8 @@ class PanelWrangler(QObject):
             return
 
         self.main_window = MainWindow()
+        icon = get_application_icon()
+        self.main_window.setWindowIcon(icon)
         process_qt_events(timeout=1000)
 
         if self.splash is not None:

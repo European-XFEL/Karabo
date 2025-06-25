@@ -23,7 +23,7 @@ from traceback import format_exception, print_exception
 
 from pyqtgraph import setConfigOptions
 from qtpy.QtCore import QLocale, Qt
-from qtpy.QtGui import QFont, QFontDatabase, QIcon, QPixmap
+from qtpy.QtGui import QFont, QFontDatabase, QPixmap
 from qtpy.QtWidgets import QApplication, QSplashScreen, QStyleFactory
 
 from karabo.common.scenemodel.api import (
@@ -33,7 +33,7 @@ from karabogui.controllers.api import populate_controller_registry
 from karabogui.fonts import FONT_FILENAMES, get_font_size_from_dpi
 from karabogui.singletons.api import (
     get_config, get_manager, get_panel_wrangler)
-from karabogui.util import process_qt_events, send_info
+from karabogui.util import get_application_icon, process_qt_events, send_info
 
 
 def excepthook(exc_type, value, traceback):
@@ -115,8 +115,8 @@ def create_gui_app(args):
     app.setAttribute(Qt.AA_DontShowIconsInMenus, False)
 
     # set a nice app logo
-    logo_path = str(Path(__file__).parent / '..' / "icons" / "app_logo.png")
-    app.setWindowIcon(QIcon(logo_path))
+    icon = get_application_icon()
+    app.setWindowIcon(icon)
 
     QLocale.setDefault(QLocale(QLocale.English, QLocale.UnitedStates))
 

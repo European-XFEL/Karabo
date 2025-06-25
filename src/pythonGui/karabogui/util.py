@@ -30,7 +30,7 @@ import numpy as np
 from dateutil.tz import tzlocal, tzutc
 from qtpy import QtCore
 from qtpy.QtCore import QEvent, QEventLoop, QObject, QSize, Qt
-from qtpy.QtGui import QCursor, QMovie, QValidator
+from qtpy.QtGui import QCursor, QIcon, QMovie, QValidator
 from qtpy.QtWidgets import (
     QApplication, QDialog, QFileDialog, QLabel, QMessageBox)
 
@@ -48,6 +48,11 @@ def send_info(**info: Any):
     assert "type" in info, "Need to specify a `type`"
     network = get_network()
     network.onInfo(Hash(info))
+
+
+def get_application_icon():
+    logo_path = str(Path(__file__).parent / "icons" / "app_logo.png")
+    return QIcon(logo_path)
 
 
 class MouseWheelEventBlocker(QObject):
