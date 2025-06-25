@@ -107,19 +107,10 @@ def apply_default_configuration(binding):
     """
     assert isinstance(binding, BindingRoot)
 
-    def _iter_binding(node):
-        namespace = node.value
-        for name in namespace:
-            subnode = getattr(namespace, name)
-            if isinstance(subnode, NodeBinding):
-                yield from _iter_binding(subnode)
-            else:
-                yield subnode
-
-    for node in _iter_binding(binding):
-        default_value = node.attributes.get(const.KARABO_SCHEMA_DEFAULT_VALUE)
-        if default_value is not None:
-            node.value = default_value
+    for _, node in iterate_binding(binding):
+        default = node.attributes.get(const.KARABO_SCHEMA_DEFAULT_VALUE)
+        if default is not None:
+            node.value = default
         else:
             node.value = Undefined
 
@@ -171,52 +162,45 @@ def apply_project_configuration(config, binding, base=""):
     return fails
 
 
-def extract_configuration(binding):
+def extract_configuration(binding) -> Hash:
     """Extract all the values set on a binding into a Hash object.
     """
     assert isinstance(binding, BindingRoot)
 
-    def _get_binding_value(binding):
-        return binding.value
-
-    retval = Hash()
+    config = Hash()
     for key, node in iterate_binding(binding):
-        value = _get_binding_value(node)
+        value = node.value
         if value is Undefined:
             continue
-        retval[key] = _get_binding_value(node)
+        config[key] = node.value
 
-    return retval
+    return config
 
 
-def extract_edits(schema, binding):
+def extract_edits(schema, binding) -> Hash:
     """Extract all user edited (non default) values on a binding into a
     Hash object.
     """
     assert isinstance(binding, BindingRoot)
 
-    def _get_binding_default(binding):
-        val = binding.attributes.get(const.KARABO_SCHEMA_DEFAULT_VALUE)
-        return val
-
     def _is_readonly(key):
         return schema.hash[key, "accessMode"] == AccessMode.READONLY.value
 
-    retval = Hash()
+    config = Hash()
     for key, node in iterate_binding(binding):
-        default_val = _get_binding_default(node)
+        default = node.attributes.get(const.KARABO_SCHEMA_DEFAULT_VALUE)
         value = None if node.value is Undefined else node.value
 
-        has_val_changes = not is_equal(default_val, value)
+        changes = not is_equal(default, value)
         is_readonly = _is_readonly(key)
-        if not has_val_changes or is_readonly:
+        if not changes or is_readonly:
             continue
-        retval[key] = value
+        config[key] = value
 
-    return retval
+    return config
 
 
-def extract_online_edits(schema, binding):
+def extract_online_edits(schema, binding) -> Hash:
     """Extract all user edited (non default) online values on a binding into a
     Hash object.
 
@@ -234,69 +218,32 @@ def extract_online_edits(schema, binding):
     """
     assert isinstance(binding, BindingRoot)
 
-    # Backward compatibility protection for difficult keys. Reconsider
-    # in Karabo 2.13 FIXME
-    IGNORE_KEYS = ["_deviceId_", "_serverId_", "hostName"]
-    IGNORE_NODES = ["Logger."]
-
-    def _get_binding_default(binding):
-        value = binding.attributes.get(const.KARABO_SCHEMA_DEFAULT_VALUE)
-        return value
-
-    def _iter_binding(node, base=""):
-        namespace = node.value
-        base = base + "." if base else ""
-        for name in namespace:
-            if base in IGNORE_NODES:
-                continue
-
-            subname = base + name
-            subnode = getattr(namespace, name)
-            if isinstance(subnode, NodeBinding):
-                yield from _iter_binding(subnode, base=subname)
-            elif not isinstance(subnode, SlotBinding):
-                # All rest binding types
-                yield subname, subnode
-
     def not_writable(key):
         """Check if a property is writable from external"""
         attributes = schema.hash[key, ...]
-        read_only = attributes["accessMode"] == AccessMode.READONLY.value
-        internal = attributes["assignment"] == Assignment.INTERNAL.value
-        # Note: One can define tags such as `plc` here to filter out.
+        read_only = attributes["accessMode"] == AccessMode.READONLY
+        internal = attributes["assignment"] == Assignment.INTERNAL
         return read_only or internal
 
     config = Hash()
-    success = True
-    for key, node in _iter_binding(binding):
-        # Injected properties are not considered! Blacklisted keys are
-        # filtered out as well!
-        if key not in schema.hash or key in IGNORE_KEYS:
+    for key, node in iterate_binding(binding):
+        # Injected properties are not considered!
+        if key not in schema.hash or not_writable(key):
             continue
 
         value = node.value
-        if node.displayType == "deviceNode":
-            # DeviceNode may not be successful, until ~2.15 or forever ...
-            # Future versions of the device node always have a value
-            if not value or value is Undefined:
-                success = False
-                continue
-
         if value is Undefined:
-            # Note: This did happen for output channels if they don't have
-            # clients! (C++ / Bound). Fixed now ...
-            # Other examples?
             continue
 
         # We take the online defaults to account schema injection. If a default
         # value from the online device is_equal, it should not go into the
         # configuration
-        default_val = _get_binding_default(node)
-        if not has_changes(default_val, value) or not_writable(key):
+        default = node.attributes.get(const.KARABO_SCHEMA_DEFAULT_VALUE)
+        if not has_changes(default, value):
             continue
         config[key] = value
 
-    return success, config
+    return config
 
 
 def extract_sparse_configurations(proxies, devices=None):

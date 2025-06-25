@@ -713,13 +713,12 @@ class DeviceInstanceController(BaseProjectController):
                     # Note: Make sure the active config is stored and
                     # apply the configuration to the online system!
                     self.active_config.configuration = config
-                    self.project_device.set_project_config_hash_online(config)
+                    device.set_project_config_hash_online(config)
             else:
                 messagebox.show_error(
-                    "The device has elements of type <b>ChoiceOfNodes</b>, "
-                    "<b>ListOfNodes</b> or <b>DeviceNode</b> in the existing "
-                    "<b>Schema</b>. Online to offline configuration is "
-                    "forbidden.", parent=parent)
+                    "Online to offline configuration currently not possible.",
+                    parent=parent)
+                return
 
         # Note: The device is online, but we require an offline schema
         # to compare for online to offline config extraction
