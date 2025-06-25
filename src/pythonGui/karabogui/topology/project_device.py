@@ -113,11 +113,11 @@ class ProjectDeviceInstance(HasStrictTraits):
         if has_offline and has_online:
             topology = get_topology()
             schema = topology.get_schema(self.server_id, self.class_id)
-            success, config = extract_online_edits(
+            config = extract_online_edits(
                 schema, self._online_proxy.binding)
-            return success, config
-        else:
-            return False, Hash()
+            return True, config
+
+        return False, Hash()
 
     def get_class_proxy(self):
         """Retrieve a class schema for this project device instance"""

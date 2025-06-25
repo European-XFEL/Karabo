@@ -256,14 +256,11 @@ def test_extract_online_edit():
     apply_default_configuration(binding)
 
     # 'a' has default value is True
-    # `j1` is ListOfNodes
     config = Hash('a', False, 'e', 0.0, 'j1', [])
     apply_project_configuration(config, binding)
 
-    success, extracted = extract_online_edits(schema, binding)
+    extracted = extract_online_edits(schema, binding)
     assert extracted == Hash('a', False, 'e', 0.0)
-    # True since no list of nodes evaluated anymore, before false
-    assert success is True
 
     schema = get_simple_schema()
     binding = build_binding(schema)
@@ -272,23 +269,20 @@ def test_extract_online_edit():
     apply_default_configuration(binding)
     config = Hash('foo', False, 'bar', 'now', 'charlie', 21)
     apply_project_configuration(config, binding)
-    success, extracted = extract_online_edits(schema, binding)
-    assert success is True
+    extracted = extract_online_edits(schema, binding)
     # Charlie is not writable
     assert extracted == Hash('foo', False, 'bar', 'now')
 
     # New round, no changes
     apply_default_configuration(binding)
-    success, extracted = extract_online_edits(schema, binding)
-    assert success is True
+    extracted = extract_online_edits(schema, binding)
     assert extracted == Hash()
 
     # New round, change foo
     apply_default_configuration(binding)
     config = Hash('foo', False, 'bar', 'default')
     apply_project_configuration(config, binding)
-    success, extracted = extract_online_edits(schema, binding)
-    assert success is True
+    extracted = extract_online_edits(schema, binding)
     assert extracted == Hash('foo', False)
 
 
@@ -299,15 +293,13 @@ def test_extract_online_devicenode():
     schema = Device.getClassSchema()
     binding = build_binding(schema)
     apply_default_configuration(binding)
-    success, extracted = extract_online_edits(schema, binding)
-    assert success is False
+    extracted = extract_online_edits(schema, binding)
     assert extracted == Hash()
 
     # DeviceNodes with a value are successful
     config = Hash('dn', "XHQ_EG_CTRL/MDL/1")
     apply_project_configuration(config, binding)
-    success, extracted = extract_online_edits(schema, binding)
-    assert success is True
+    extracted = extract_online_edits(schema, binding)
     assert extracted == config
 
 
