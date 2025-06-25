@@ -28,7 +28,6 @@ from qtpy.QtCore import (
 from qtpy.QtWidgets import (
     QAbstractButton, QButtonGroup, QDialog, QDialogButtonBox)
 
-from karabogui import messagebox
 from karabogui.events import (
     KaraboEvent, register_for_broadcasts, unregister_from_broadcasts)
 from karabogui.logger import get_logger
@@ -162,15 +161,10 @@ class LoadProjectDialog(QDialog):
         with SignalBlocker(self.cbDomain):
             self.cbDomain.clear()
             self.cbDomain.addItems(sorted(domains))
-        # Select default domain
-        index = self.cbDomain.findText(self.default_domain)
-        if len(domains) > 0 and index == -1:
-            msg = ("The default project domain <b>{}</b><br>does not exist in "
-                   "the current project database.").format(self.default_domain)
-            # NOTE: If this dialog is not modal, it can block the list of
-            # domains arriving from the GUI server!
-            messagebox.show_warning(msg, title="Default domain does not exist",
-                                    parent=self)
+        # Select default domain, can be initially `None`
+        index = 0
+        if self.default_domain is not None:
+            index = self.cbDomain.findText(self.default_domain)
         with SignalBlocker(self.cbDomain):
             self.cbDomain.setCurrentIndex(index if index > -1 else 0)
         if not self.initial_request:
