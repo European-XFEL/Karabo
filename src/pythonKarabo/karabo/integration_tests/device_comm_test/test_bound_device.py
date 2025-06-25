@@ -13,6 +13,9 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
+
+# This line triggers intregration tests. Remove me before merging!
+
 import os
 from time import sleep
 

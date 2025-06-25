@@ -24,6 +24,7 @@
 
 #include "karabo/net/EventLoop.hh"
 
+#include <boost/thread.hpp>
 #include <chrono>
 #include <csignal>
 
@@ -296,6 +297,13 @@ void EventLoop_Test::testExceptionTrace() {
     }
 }
 
+void EventLoop_Test::testImmediateStop() {
+    // std::[j]thread has no try_join_for(..), so I need boost::thread here for proper testing
+    // (i.e. a testing that fails and not just hangs in case of problem).
+    boost::thread t(std::bind(&EventLoop::work));
+    EventLoop::stop();
+    CPPUNIT_ASSERT(t.try_join_for(boost::chrono::seconds(1)));
+}
 
 std::vector<std::string> EventLoop_Test::splitByPattern(std::string_view source, std::string_view pattern) {
     std::vector<std::string> output;

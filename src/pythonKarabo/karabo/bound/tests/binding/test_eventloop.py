@@ -28,8 +28,6 @@ def test_eventloop_post():
     def func():
         nonlocal done
         done = True
-        # Workaround required after "xms_test.py" influence
-        EventLoop.stop()
 
     before = Epochstamp()
     EventLoop.post(func)
@@ -72,7 +70,7 @@ def test_eventloop_post():
     assert status == "timeout"
     # post callback with 0.5 sec delay ...
     EventLoop.post(callback, delay=0.5)
-    t = Thread(target=EventLoop.run)
+    t = Thread(target=EventLoop.work)
     t.start()
     # block here until callback release
     lock.acquire(blocking=True, timeout=2)
@@ -89,8 +87,6 @@ def test_eventloop_signalHandler():
     def handler(sig):
         nonlocal signal
         signal = sig
-        # More workaround required after "xms_test.py" influence
-        EventLoop.stop()
 
     EventLoop.setSignalHandler(handler)
 
