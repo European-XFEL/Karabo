@@ -192,7 +192,7 @@ class Configuration(QObject):
     # Project db interface
 
     db_token = Item(default="expert", group=PROJECT)
-    domain = Item(default="CAS_INTERNAL", q_set=True, group=PROJECT)
+    domain = Item(q_set=True, group=PROJECT)
 
     # ----------------------------------------------
     # GUI Server network connection
