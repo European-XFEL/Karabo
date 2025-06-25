@@ -129,6 +129,8 @@ class DisplayTextLog(BaseBindingController):
         menu.exec(self.log_widget.viewport().mapToGlobal(pos))
 
     def launch_history(self):
+        if self.proxy.binding is None:
+            return
         model = get_property_proxy_model(self.proxy)
         data = {"model": model}
         broadcast_event(KaraboEvent.ShowUnattachedController, data)
