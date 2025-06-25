@@ -22,7 +22,6 @@ from karabo.bound import (
 class CommTestDevice(PythonDevice):
 
     def expectedParameters(expected):
-
         (
             SLOT_ELEMENT(expected).key("slotWithoutArguments")
             .commit(),
@@ -62,6 +61,7 @@ class CommTestDevice(PythonDevice):
         self.registerSlot(self.slotCallSomething)
         # not for a communication test, but...:
         self.registerSlot(self.slotIdOfEpochstamp)
+        self.registerSlot(self.slotGetGracefulProperty)
 
         self.registerSignal("callSlotWithArgs", str, Hash)
         self.connect("", "callSlotWithArgs", "slotWithArguments")
@@ -127,3 +127,8 @@ class CommTestDevice(PythonDevice):
         stamp = self.getTimestamp(epoch)
 
         self.reply(stamp.getTid())
+
+    def slotGetGracefulProperty(self, h):
+        path = h["path"]
+        value = self.get(path, "NotThere")
+        self.reply(value)

@@ -93,7 +93,7 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
             self.dc.set(deviceId, "boolProperty", True)
             lastCommand = self.dc.get(deviceId, "lastCommand")
             self.assertEqual(
-                lastCommand,  "slotReconfigure <- " + self.dc.getInstanceId())
+                lastCommand, "slotReconfigure <- " + self.dc.getInstanceId())
 
         ok, msg = self.dc.killDevice(deviceId, instTimeout)
         self.assertTrue(ok, "Problem killing device '{}': {}.".format(deviceId,
@@ -393,7 +393,7 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
 
             # 11 is too long
             self.assertRaises(RuntimeError, self.dc.set,
-                              "testComm1", "vectorInt32", [1]*11)  # not OK!
+                              "testComm1", "vectorInt32", [1] * 11)  # not OK!
 
         with self.subTest(msg="Test slotReconfigure"):
             # Non-reconfigurables cannot be modified:
@@ -463,6 +463,18 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
             self.assertIn("Parameter Exception: "
                           "Key 'not_a_property' does not exist",
                           str(ctxt.exception))
+
+        with self.subTest(msg="Test graceful attribute getting"):
+            request = sigSlotA.request("testComm1",
+                                       "slotGetGracefulProperty",
+                                       Hash("path", "someString"))
+            value = request.waitForReply(instTimeoutMs)[0]
+            self.assertNotEqual(value, "NotThere")
+            request = sigSlotA.request("testComm1",
+                                       "slotGetGracefulProperty",
+                                       Hash("path", "nothereeeee"))
+            value = request.waitForReply(instTimeoutMs)[0]
+            self.assertEqual(value, "NotThere")
 
         with self.subTest(msg="Test killing 'deviceNotGoingDownCleanly'"):
             # Check that the device goes down although thread not stopped
