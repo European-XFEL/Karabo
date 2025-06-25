@@ -59,7 +59,14 @@ class SQLDatabase(DatabaseBase):
     async def initialize(self):
         async with self.db_engine.begin() as conn:
             await conn.run_sync(SQLModel.metadata.create_all)
+
         self.initialized = True
+
+    async def assure_domains(self, required_domains: list[str]):
+        # There's a list of initial domains defined and there's no
+        # domain stored in the DB. Initialize the domains.
+        for domain in required_domains:
+            await self.add_domain(domain)
 
     async def delete(self):
         """Deletes the database schema and file."""
