@@ -16,7 +16,9 @@
 import pytest
 
 from karabo.bound import (
-    DOUBLE_ELEMENT, INT32_ELEMENT, Configurator, Hash, PythonDevice, Schema)
+    DOUBLE_ELEMENT, INT32_ELEMENT, Configurator, Hash, PythonDevice, Schema,
+    Timestamp)
+from karabo.bound_devices import property_test  # noqa
 
 from .device_with_limit import DeviceWithLimit
 from .device_with_table_parameter import DeviceWithTableElementParam
@@ -209,6 +211,48 @@ def test_schema_with_attribute_append(device_cfg):
         4).reconfigurable().commit()
     device.appendSchema(schema)
     assert device.getFullSchema().getMaxExc("valueWithExc") == max_exc
+
+
+def test_set():
+    device = Configurator(PythonDevice).create("PropertyTest", Hash())
+    device.startInitialFunctions()
+    assert device.get("int32Property") == -32_000_000
+    assert device.get("int64Property") == 3_200_000_000
+
+    # key, value
+    device.set("int32Property", 1)
+    assert device.get("int32Property") == 1
+
+    # key, value, stamp
+    device.set("int32Property", 2, Timestamp())
+    assert device.get("int32Property") == 2
+
+    # Hash
+    device.set(Hash("int32Property", 3))
+    assert device.get("int32Property") == 3
+
+    # Hash, stamp
+    device.set(Hash("int32Property", 4), Timestamp())
+    assert device.get("int32Property") == 4
+
+    # kwargs only
+    device.set(int32Property=5)
+    assert device.get("int32Property") == 5
+
+    # Hash, kwargs
+    device.set(Hash("int64Property", 66), int32Property=6)
+    assert device.get("int32Property") == 6
+    assert device.get("int64Property") == 66
+
+    # Hash, stamp, kwargs
+    device.set(Hash("int64Property", 77), Timestamp(), int32Property=7)
+    assert device.get("int32Property") == 7
+    assert device.get("int64Property") == 77
+
+    # key, value, kwargs
+    device.set("int64Property", 88, int32Property=8)
+    assert device.get("int32Property") == 8
+    assert device.get("int64Property") == 88
 
 
 def test_ensure_get_copies(device_cfg):
