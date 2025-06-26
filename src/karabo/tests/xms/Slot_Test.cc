@@ -69,12 +69,12 @@ void Slot_Test::testCallSlot() {
     const MySlot::SlotHandler func = slotLambda;
     slot.registerSlotFunction(func);
 
-    karabo::data::Hash h;
-    karabo::util::pack(h, 1, Foo());       // packing into h under keys "a1" and "a2"
+    auto h = karabo::data::Hash::MakeShared();
+    karabo::util::pack(*h, 1, Foo());      // packing into h under keys "a1" and "a2"
     CPPUNIT_ASSERT_EQUAL(1, Foo::nCopies); // was copied into 'h'
-    Foo const* const fooAddressInHash = &(h.get<Foo>("a2"));
+    Foo const* const fooAddressInHash = &(h->get<Foo>("a2"));
 
-    karabo::data::Hash header("signalInstanceId", "senderId");
+    auto header = karabo::data::Hash::MakeShared("signalInstanceId", "senderId");
     slot.callRegisteredSlotFunctions(header, h);
 
     CPPUNIT_ASSERT_EQUAL(1, Foo::nCopies); // no further copy
@@ -87,7 +87,8 @@ void Slot_Test::testCallSlot() {
     std::function<void(int, Foo)> func2 = slotLambda;
     fooAddressInFunc = nullptr;
     slot2.registerSlotFunction(func2);
-    slot2.callRegisteredSlotFunctions(karabo::data::Hash(), h); // Do not care about header here
+    auto dummyHeader = karabo::data::Hash::MakeShared();
+    slot2.callRegisteredSlotFunctions(dummyHeader, h); // Do not care about header here
 
     CPPUNIT_ASSERT_GREATER(1, Foo::nCopies);              // In fact I see 3, i.e. two extra copies,
     CPPUNIT_ASSERT(fooAddressInHash != fooAddressInFunc); // and copies lead to a new address.
@@ -99,17 +100,17 @@ void Slot_Test::testCallSlot() {
     Foo::nCopies = 0;
     slot3.registerSlotFunction(slotFunc3);
 
-    slot3.callRegisteredSlotFunctions(karabo::data::Hash(), h); // Do not care about header here, neither
+    slot3.callRegisteredSlotFunctions(dummyHeader, h); // Do not care about header here, neither
 
     CPPUNIT_ASSERT_EQUAL(1, Foo::nCopies); // Now there is one copy
     CPPUNIT_ASSERT(fooAddressInHash != fooAddressInFunc);
 
     // Wrong number of arguments
-    h.clear();
-    karabo::util::pack(h, 1); // keys "a1"
-    CPPUNIT_ASSERT_THROW(slot3.callRegisteredSlotFunctions(karabo::data::Hash(), h), karabo::data::SignalSlotException);
-    karabo::util::pack(h, 1, Foo(), 3.141596); // keys "a1", "a2" and "a3"
-    CPPUNIT_ASSERT_THROW(slot3.callRegisteredSlotFunctions(karabo::data::Hash(), h), karabo::data::SignalSlotException);
-    h.clear(); // no arguments
-    CPPUNIT_ASSERT_THROW(slot3.callRegisteredSlotFunctions(h, h), karabo::data::SignalSlotException);
+    h->clear();
+    karabo::util::pack(*h, 1); // keys "a1"
+    CPPUNIT_ASSERT_THROW(slot3.callRegisteredSlotFunctions(dummyHeader, h), karabo::data::SignalSlotException);
+    karabo::util::pack(*h, 1, Foo(), 3.141596); // keys "a1", "a2" and "a3"
+    CPPUNIT_ASSERT_THROW(slot3.callRegisteredSlotFunctions(dummyHeader, h), karabo::data::SignalSlotException);
+    h->clear(); // no arguments
+    CPPUNIT_ASSERT_THROW(slot3.callRegisteredSlotFunctions(dummyHeader, h), karabo::data::SignalSlotException);
 }

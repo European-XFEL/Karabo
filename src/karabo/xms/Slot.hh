@@ -61,12 +61,12 @@ namespace karabo {
 
             std::mutex m_registeredSlotFunctionsMutex;
 
-            void extractSenderInformation(const karabo::data::Hash& header);
+            void extractSenderInformation(const karabo::data::Hash::ConstPointer& header);
 
             void invalidateSenderInformation();
 
-            void callRegisteredSlotFunctions(const karabo::data::Hash& header, const karabo::data::Hash& body,
-                                             bool checkNumArgs = true);
+            void callRegisteredSlotFunctions(const karabo::data::Hash::ConstPointer& header,
+                                             const karabo::data::Hash::ConstPointer& body, bool checkNumArgs = true);
 
             virtual void doCallRegisteredSlotFunctions(const karabo::data::Hash& body, bool checkNumArgs) = 0;
 
