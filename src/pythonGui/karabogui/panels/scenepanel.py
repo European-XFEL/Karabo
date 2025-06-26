@@ -317,7 +317,7 @@ class ScenePanel(BasePanelWidget):
         self.ac_design_mode.toggled.disconnect()
         self.ac_design_mode.setIcon(icons.deviceClass)
         self.ac_design_mode.setCheckable(False)
-        self.ac_design_mode.setToolTip("The scene panel is unattached.")
+        self.ac_design_mode.setToolTip("The scene is unattached.")
         self.ac_design_mode.setVisible(editable)
 
     def toggleAlwaysVisibleToolbar(self, value: bool) -> None:
