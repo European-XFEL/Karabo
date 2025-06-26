@@ -291,7 +291,7 @@ class DeviceServer:
         loaderCfg = Hash("pluginNamespace", pluginNamespace)
         loader = PluginLoader.create("PythonPluginLoader", loaderCfg)
         entrypoints = loader.update()
-        logs = [("ERROR",
+        logs = [("error",
                  f"scanPlugins: Cannot load device plugin {name} -- {exc}")
                 for name, exc in loader.plugin_errors.items()]
         for ep in entrypoints:
@@ -315,7 +315,7 @@ class DeviceServer:
                         .format(classid, deviceClass.__base_classid__,
                                 deviceClass.__bases_classid__, repr(e))
                     # repr(e) also includes type
-                    logs.append(("ERROR", m))
+                    logs.append(("error", m))
 
         instInfo = Hash("deviceClasses",
                         [classid for classid in self.availableDevices.keys()])
