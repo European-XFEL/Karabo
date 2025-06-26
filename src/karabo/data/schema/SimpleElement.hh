@@ -28,7 +28,6 @@
 #define KARABO_DATA_SCHEMA_SIMPLE_ELEMENT_HH
 
 #include "LeafElement.hh"
-#include "karabo/data/types/AlarmConditions.hh"
 
 namespace karabo {
     namespace data {

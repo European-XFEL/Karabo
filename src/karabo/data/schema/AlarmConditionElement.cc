@@ -19,7 +19,7 @@
 
 #include "AlarmConditionElement.hh"
 
-#include "karabo/data/types/AlarmConditions.hh"
+#include "karabo/data/types/AlarmCondition.hh"
 #include "karabo/data/types/Schema.hh"
 
 namespace karabo {

@@ -20,7 +20,7 @@
 
 #include "Wrapper.hh"
 #include "karabo/data/schema/AlarmConditionElement.hh"
-#include "karabo/data/types/AlarmConditions.hh"
+#include "karabo/data/types/AlarmCondition.hh"
 
 
 namespace py = pybind11;
