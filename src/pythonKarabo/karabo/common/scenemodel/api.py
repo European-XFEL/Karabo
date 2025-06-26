@@ -51,11 +51,13 @@ from .widgets.graph_plots import (
     VectorFillGraphModel, VectorGraphModel, VectorHistGraphModel,
     VectorScatterGraphModel, VectorXYGraphModel)
 from .widgets.graph_utils import (
-    BaseROIData, CrossROIData, PlotType, RectROIData, build_graph_config,
-    build_model_config, read_axes_set, read_base_karabo_image_model,
-    read_basic_label, read_range_set, read_roi_info, read_transforms,
-    restore_graph_config, write_axes_set, write_base_karabo_image_model,
-    write_basic_label, write_range_set, write_roi_info, write_transforms)
+    KARABO_CURVE_OPTIONS, BaseCurveOptions, BaseROIData, CrossROIData,
+    CurveOptions, CurveType, RectROIData, TrendOptions, build_graph_config,
+    build_model_config, extract_graph_curve_option, read_axes_set,
+    read_base_karabo_image_model, read_basic_label, read_range_set,
+    read_roi_info, read_transforms, restore_graph_config, write_axes_set,
+    write_base_karabo_image_model, write_basic_label, write_range_set,
+    write_roi_info, write_transforms)
 from .widgets.icon import (
     BaseIconsModel, DigitIconsModel, DisplayIconsetModel, IconData,
     SelectionIconsModel, TextIconsModel)

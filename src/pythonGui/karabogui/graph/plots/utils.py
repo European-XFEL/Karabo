@@ -17,7 +17,7 @@
 import lttbc
 import numpy as np
 
-from karabo.common.scenemodel.api import PlotType
+from karabo.common.scenemodel.api import CurveType
 
 
 def get_view_range(plot_item) -> tuple[float, float] | None:
@@ -123,19 +123,22 @@ def generate_down_sample(
     return x, y
 
 
-def generate_curve_options(curves: dict, curve_options: dict,
-                           plot_type=PlotType.Curve):
-    """Populate missing curve_options with default settings
+def create_curve_options(curves: dict, options: dict,
+                         curve_type: CurveType) -> dict:
+    """Create compatible curve_options dict from a graph config to apply
 
-    Note: Modifies the curve_options dictionary in place.
+    Note: This function will fill missing curve options
     """
+    curve_options = {}
     for proxy, curve in curves.items():
         key = proxy.key
-        if key not in curve_options:
-            curve_options[key] = {
+        if key in options:
+            curve_options[curve] = options[key]
+        else:
+            curve_options[curve] = {
                 "key": key,
+                "name": key,
                 "pen_color": curve.opts["pen"].color().name(),
-                "legend_name": curve.name(),
-                "plot_type": plot_type,
+                "curve_type": curve_type,
             }
     return curve_options

@@ -21,6 +21,7 @@ from qtpy.QtCore import QSize, Signal, Slot
 from qtpy.QtGui import QColor, QPalette
 from qtpy.QtWidgets import QAction, QGridLayout, QSizePolicy, QWidget
 
+from karabo.common.scenemodel.api import CurveType
 from karabogui import icons
 from karabogui.actions import KaraboAction, build_qaction
 from karabogui.graph.common.api import (
@@ -403,7 +404,6 @@ class KaraboPlotView(QWidget):
 
         # Set the view configuration! Some widgets, e.g. external extensions
         # might not define `background` and `title`.
-        # Note: This was added in karabo 2.11!
         if 'background' in config:
             self.set_background(config['background'])
         if 'title' in config:
@@ -411,27 +411,28 @@ class KaraboPlotView(QWidget):
 
     def apply_curve_options(self, options: dict):
         """Apply the plotting options to the corresponding curves"""
-        for plot_item in self.plotItem.listDataItems():
-            curve_opts = options.get(plot_item.name(), None)
-            if curve_opts is None:
-                continue
-            # Safety copy
-            curve_opts = curve_opts.copy()
-            legend_name = curve_opts.get("legend_name", plot_item.name())
+        for plot_item, curve_opts in options.items():
+            item_options = plot_item.opts
+
+            curve_type = curve_opts.get("curve_type")
+            assert curve_type in {CurveType.Curve, CurveType.Trend}
+
+            name = curve_opts.get("name")
+            item_options["name"] = name
+
             pen_color = curve_opts.get("pen_color")
             pen = mkPen(pen_color)
-            curve_opts["pen"] = pen
+            item_options["pen"] = pen
+
             if self._show_symbols:
-                curve_opts["symbolBrush"] = mkBrush(pen.color())
-                curve_opts["symbolPen"] = pen
-            opts = plot_item.opts
-            opts.update(curve_opts)
+                item_options["symbolBrush"] = mkBrush(pen.color())
+                item_options["symbolPen"] = pen
 
             for sample, label in self._legend.items:
                 if sample.item is plot_item:
                     sample.setBrush(mkBrush(pen.color()))
                     sample.setPen(pen)
-                    label.setText(legend_name)
+                    label.setText(name)
                     break
 
             self._legend.updateSize()
@@ -547,15 +548,17 @@ class KaraboPlotView(QWidget):
         for item in plot_item.dataItems[:]:
             item.clear()
 
-    def add_curve_fill(self, name=None, pen=get_default_pen(),
-                       brush=get_default_brush()):
+    def add_curve_fill(self, name=None, pen=None, brush=None, **options):
+        if pen is None:
+            pen = get_default_pen()
+        if brush is None:
+            brush = get_default_brush()
         item = self.plotItem.plot(name=name, pen=pen, fillLevel=0,
-                                  fillBrush=brush)
-        if hasattr(item, 'setDynamicRangeLimit'):
-            item.setDynamicRangeLimit(None)
+                                  fillBrush=brush, **options)
+        item.setDynamicRangeLimit(None)
         return item
 
-    def add_curve_item(self, name=None, pen=get_default_pen(), **options):
+    def add_curve_item(self, name=None, pen=None, **options):
         """Add a plot to the built-in plotItem from PyQtGraph
 
         :param name: Set a name to automatically provide a legend
@@ -564,6 +567,9 @@ class KaraboPlotView(QWidget):
                     Default is solid grey, 1px width. Use None to disable line
                     drawing.
         """
+        if pen is None:
+            pen = get_default_pen()
+
         if self._show_symbols:
             # If a curve is dynamically added, we still have to show points
             # when desired!
@@ -573,15 +579,10 @@ class KaraboPlotView(QWidget):
                             'symbolBrush': mkBrush(pen.color())})
 
         item = self.plotItem.plot(name=name, pen=pen, **options)
-        if hasattr(item, 'setDynamicRangeLimit'):
-            # DynamicRangeLimit was introduced in pyqtgraph 0.11.1 and
-            # contains a lot of bugs, e.g. curve won't show initial values
-            # until pyqtgraph >= 0.12.1
-            # Setting it to `None` disables it!
-            item.setDynamicRangeLimit(None)
+        item.setDynamicRangeLimit(None)
         return item
 
-    def add_scatter_item(self, pen=mkPen(None), cycle=True, **options):
+    def add_scatter_item(self, pen=None, cycle=True, **options):
         """Add a scatter item to the built-in plotItem
 
         :param pen: pen used for the scatter plot (default: None)
@@ -591,17 +592,22 @@ class KaraboPlotView(QWidget):
 
         :parem size: The size (or list of sizes) of spots.
         """
+        if pen is None:
+            pen = mkPen(None)
+
         item = ScatterGraphPlot(pen=pen, cycle=cycle, **options)
         self.plotItem.addItem(item)
 
         return item
 
-    def add_bar_item(self, width=DEFAULT_BAR_WIDTH, brush=get_default_brush()):
+    def add_bar_item(self, width=DEFAULT_BAR_WIDTH, brush=None):
         """Add a bar item to the built-in plotItem
 
         :param width: width used for the bar plot
         :param brush: brush to be used when plotting (default: fancy blue)
         """
+        if brush is None:
+            brush = get_default_brush()
         item = VectorBarGraphPlot(width, brush)
         self.plotItem.addItem(item)
 

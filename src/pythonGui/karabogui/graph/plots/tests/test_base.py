@@ -20,6 +20,7 @@ from unittest.mock import patch
 import numpy as np
 from qtpy.QtCore import QPointF
 
+from karabo.common.scenemodel.api import CurveType
 from karabogui.graph.common.api import CrosshairROI, ROITool, safe_log10
 from karabogui.testing import GuiTestCase
 
@@ -278,8 +279,9 @@ class TestCurveItem(_BasePlotTest):
         plot_1_color = self._plot.opts["pen"].color().name()
         legend = self.widget.add_legend()
         plot = self.widget.add_curve_item(name="test_plot")
-        options = {"test_plot": {"pen_color": "#ff7f00",
-                                 "legend_name": "new_legend"}}
+        options = {plot: {"pen_color": "#ff7f00",
+                          "curve_type": CurveType.Curve,
+                          "name": "new_legend"}}
         self.widget.apply_curve_options(options)
         label = legend.getLabel(plot)
         assert label.text == "new_legend"

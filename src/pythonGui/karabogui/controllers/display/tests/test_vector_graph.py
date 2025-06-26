@@ -20,13 +20,14 @@ from platform import system
 import numpy as np
 import pytest
 
-from karabo.common.scenemodel.api import VectorGraphModel
+from karabo.common.scenemodel.api import (
+    CurveType, VectorGraphModel, extract_graph_curve_option)
 from karabo.native import (
     Configurable, Hash, NDArray, UInt32, VectorBool, VectorFloat, VectorInt32)
 from karabogui.binding.proxy import PropertyProxy
 from karabogui.controllers.display.vector_graph import (
     DisplayNDArrayGraph, DisplayVectorGraph)
-from karabogui.graph.plots.utils import generate_baseline
+from karabogui.graph.plots.utils import create_curve_options, generate_baseline
 from karabogui.testing import (
     get_class_property_proxy, set_proxy_hash, set_proxy_value)
 
@@ -139,6 +140,56 @@ def test_visualize_prop(vector_graph_setup):
     assert controller.remove_additional_property(value_proxy)
     assert len(controller._curves) == 1
     assert len(controller.proxies) == 1
+
+
+def test_visualize_curve_options(vector_graph_setup):
+    controller, proxy, device = vector_graph_setup
+    value_proxy = PropertyProxy(root_proxy=device, path="value")
+
+    controller.visualize_additional_property(value_proxy)
+    assert len(controller._curves) == 2
+    assert len(controller.proxies) == 2
+
+    curve = controller._curves.get(value_proxy)
+    assert curve is not None
+    value = [6, 12, 6]
+    set_proxy_value(value_proxy, "value", value)
+    assert list(curve.yData) == value
+
+    # And now add curve options and alter them
+
+    proxy_curve = controller._curves[proxy]
+    assert proxy_curve.name() == "prop"
+    assert proxy_curve.opts["pen"].color().name() == "#3399ff"
+
+    options = create_curve_options(
+        controller._curves, {}, CurveType.Curve)
+    options[proxy_curve]["name"] = "New legend name"
+    options[proxy_curve]["pen_color"] = "#ff3333"
+
+    controller.set_curve_options(options)
+    assert len(controller.model.curve_options) == 2
+
+    # Verify the changed settings
+    assert controller._curves[proxy].name() == "New legend name"
+    assert proxy_curve.opts["pen"].color().name() == "#ff3333"
+
+    curve_opt = extract_graph_curve_option(controller.model, value_proxy.key)
+    assert len(curve_opt), "Curve options cannot be empty"
+
+    assert controller.remove_additional_property(value_proxy)
+    assert len(controller._curves) == 1
+    assert len(controller.proxies) == 1
+
+    assert len(controller.model.curve_options) == 1
+    curve_opt = extract_graph_curve_option(controller.model, value_proxy.key)
+    assert not len(curve_opt), "Curve options must be empty"
+
+    # reset remaining
+    controller.reset_curve_options()
+    assert controller._curves[proxy].name() == "prop"
+    assert proxy_curve.opts["pen"].color().name() == "#3399ff"
+    assert len(controller.model.curve_options) == 0
 
 
 def test_set_bool_value(vector_graph_setup):

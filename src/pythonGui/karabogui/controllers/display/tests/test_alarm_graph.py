@@ -56,7 +56,7 @@ def test_alarm_graph_set_value(alarmGraphTest):
     # test actions
     actions = controller.widget.actions()
     texts = [action.text() for action in actions]
-    assert len(actions) == 6
+    assert len(actions) == 7
     assert "Range Y" not in texts
     assert "View" in texts
 

@@ -20,8 +20,10 @@ from platform import system
 import pytest
 from qtpy.QtCore import Qt
 
+from karabo.common.scenemodel.api import CurveType, extract_graph_curve_option
 from karabo.native import Bool, Configurable, Float, Int32
 from karabogui.controllers.trendmodel import UPTIME
+from karabogui.graph.plots.utils import create_curve_options
 from karabogui.testing import get_class_property_proxy, set_proxy_value
 from karabogui.util import process_qt_events
 
@@ -49,7 +51,7 @@ def test_trendline(gui_app):
     # actions
     actions = controller.widget.actions()
     texts = [action.text() for action in actions]
-    assert len(actions) == 7
+    assert len(actions) == 8
     assert "Range Y" in texts
     assert "View" in texts
 
@@ -84,10 +86,45 @@ def test_trendline(gui_app):
     controller.visualize_additional_property(int_proxy)
     assert len(controller.proxies) == 3
 
+    # and now add the curve options and alter them
+    proxy_curve = controller._curves[proxy]
+    assert proxy_curve.name() == "prop"
+    assert proxy_curve.opts["pen"].color().name() == "#3399ff"
+
+    options = create_curve_options(
+        controller._curves, {}, CurveType.Trend)
+    options[proxy_curve]["name"] = "New legend name"
+    options[proxy_curve]["pen_color"] = "#ff3333"
+
+    controller.set_curve_options(options)
+    assert len(controller.model.curve_options) == 3
+
+    # Verify the changed settings
+    assert controller._curves[proxy].name() == "New legend name"
+    assert proxy_curve.opts["pen"].color().name() == "#ff3333"
+
+    # Check all 3
+    for p in [int_proxy, float_proxy, proxy]:
+        curve_opt = extract_graph_curve_option(controller.model, p.key)
+        assert len(curve_opt), "Curve options cannot be empty"
+
+    # Float removal
     controller.remove_additional_property(float_proxy)
     assert len(controller.proxies) == 2
+    curve_opt = extract_graph_curve_option(controller.model, float_proxy.key)
+    assert not len(curve_opt), "Curve options must be empty"
+
+    # Integer removal
     controller.remove_additional_property(int_proxy)
     assert len(controller.proxies) == 1
+    curve_opt = extract_graph_curve_option(controller.model, int_proxy.key)
+    assert not len(curve_opt), "Curve options must be empty"
+
+    # reset remaining
+    controller.reset_curve_options()
+    assert controller._curves[proxy].name() == "prop"
+    assert proxy_curve.opts["pen"].color().name() == "#3399ff"
+    assert len(controller.model.curve_options) == 0
 
     # Destroy controller
     controller.destroy()

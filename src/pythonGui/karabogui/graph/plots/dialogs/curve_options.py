@@ -17,8 +17,9 @@ class CurveOptionsDialog(QDialog):
                  parent: QObject = None):
         super().__init__(parent=parent)
         ui_file = Path(__file__).parent / "curve_options.ui"
-
         uic.loadUi(ui_file, self)
+        self.setModal(False)
+
         self._pen_color = QColor()
         self._prepare_color_combobox()
         self._load_options(curve_options)
@@ -50,9 +51,11 @@ class CurveOptionsDialog(QDialog):
     def _load_options(self, curve_options: dict):
         """Create a list item for each curve and store their options as
         user data."""
-        for key, data in curve_options.items():
+        for curve, data in curve_options.items():
+            key = data["key"]
             list_item = QListWidgetItem(key)
             list_item.setData(Qt.UserRole, data)
+            list_item.setData(Qt.UserRole + 1, curve)
             self.proxy_list.addItem(list_item)
 
     @Slot(int)
@@ -65,7 +68,7 @@ class CurveOptionsDialog(QDialog):
         self.settings_widget.setEnabled(True)
         curve_options = item.data(Qt.UserRole)
         self.property_key.setText(curve_options["key"])
-        self.legend_name.setText(curve_options["legend_name"])
+        self.legend_name.setText(curve_options["name"])
         pen_color = curve_options.get("pen_color")
         index = self.color_combo_box.findData(pen_color)
         if index == -1:
@@ -78,7 +81,7 @@ class CurveOptionsDialog(QDialog):
     def _on_legend_name_changed(self):
         """Save the legend name for the selected curve"""
         legend_name = self.legend_name.text()
-        self._update_item_data("legend_name", legend_name)
+        self._update_item_data("name", legend_name)
 
     @Slot(int)
     def on_color_changed(self, index: int):
@@ -115,5 +118,6 @@ class CurveOptionsDialog(QDialog):
         for index in range(self.proxy_list.count()):
             item = self.proxy_list.item(index)
             data = item.data(Qt.UserRole)
-            curve_options[data["key"]] = data
+            curve = item.data(Qt.UserRole + 1)
+            curve_options[curve] = data
         return curve_options

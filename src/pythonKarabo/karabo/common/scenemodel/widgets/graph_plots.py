@@ -145,25 +145,22 @@ class VectorGraphModel(BasePlotModel):
     curve_options = List(Instance(BaseCurveOptions))
 
 
-class TrendGraphModel(BasePlotModel):
+class BaseTrendModel(BasePlotModel):
+    x_grid = Bool(True)
+    y_grid = Bool(True)
+    curve_options = List(Instance(BaseCurveOptions))
+
+
+class TrendGraphModel(BaseTrendModel):
     """Trendline graph model"""
 
-    x_grid = Bool(True)
-    y_grid = Bool(True)
 
-
-class StateGraphModel(BasePlotModel):
+class StateGraphModel(BaseTrendModel):
     """State graph model"""
 
-    x_grid = Bool(True)
-    y_grid = Bool(True)
 
-
-class AlarmGraphModel(BasePlotModel):
+class AlarmGraphModel(BaseTrendModel):
     """Alarm graph model"""
-
-    x_grid = Bool(True)
-    y_grid = Bool(True)
 
 
 @register_scene_reader("ScatterGraph")
@@ -257,7 +254,7 @@ def _ndarray_graph_reader(element):
     traits["roi_items"] = read_roi_info(element)
     traits["roi_tool"] = int(element.get(NS_KARABO + "roi_tool", 0))
     curve_options = read_curve_options(element)
-    traits.update({"curve_options": curve_options})
+    traits["curve_options"] = curve_options
     return NDArrayGraphModel(**traits)
 
 
@@ -295,7 +292,7 @@ def _vector_graph_reader(element):
     traits["roi_items"] = read_roi_info(element)
     traits["roi_tool"] = int(element.get(NS_KARABO + "roi_tool", 0))
     curve_options = read_curve_options(element)
-    traits.update({"curve_options": curve_options})
+    traits["curve_options"] = curve_options
     return VectorGraphModel(**traits)
 
 
@@ -314,6 +311,8 @@ def _vector_graph_writer(model, parent):
 @register_scene_reader("DisplayTrendGraph")
 def _trend_graph_reader(element):
     traits = read_base_plot(element)
+    curve_options = read_curve_options(element)
+    traits["curve_options"] = curve_options
 
     return TrendGraphModel(**traits)
 
@@ -322,6 +321,7 @@ def _trend_graph_reader(element):
 def _trend_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_plot(model, element, "DisplayTrendGraph")
+    write_curve_options(model, element)
 
     return element
 
@@ -329,6 +329,8 @@ def _trend_graph_writer(model, parent):
 @register_scene_reader("DisplayStateGraph")
 def _state_graph_reader(element):
     traits = read_base_plot(element)
+    curve_options = read_curve_options(element)
+    traits["curve_options"] = curve_options
 
     return StateGraphModel(**traits)
 
@@ -337,6 +339,7 @@ def _state_graph_reader(element):
 def _state_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_plot(model, element, "DisplayStateGraph")
+    write_curve_options(model, element)
 
     return element
 
@@ -344,6 +347,8 @@ def _state_graph_writer(model, parent):
 @register_scene_reader("DisplayAlarmGraph")
 def _alarm_graph_reader(element):
     traits = read_base_plot(element)
+    curve_options = read_curve_options(element)
+    traits["curve_options"] = curve_options
 
     return AlarmGraphModel(**traits)
 
@@ -352,6 +357,7 @@ def _alarm_graph_reader(element):
 def _alarm_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_plot(model, element, "DisplayAlarmGraph")
+    write_curve_options(model, element)
 
     return element
 

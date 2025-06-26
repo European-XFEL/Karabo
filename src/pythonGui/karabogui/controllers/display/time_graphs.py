@@ -17,14 +17,17 @@
 import datetime
 from collections import OrderedDict
 from itertools import cycle
+from weakref import WeakValueDictionary
 
 from qtpy import uic
 from qtpy.QtCore import QDateTime, QTimer
+from qtpy.QtGui import QColor
 from qtpy.QtWidgets import QAction, QDialog, QVBoxLayout, QWidget
 from traits.api import Bool, Dict, Instance, Int, Set, String, WeakRef
 
 from karabo.common.scenemodel.api import (
-    AlarmGraphModel, StateGraphModel, TrendGraphModel, build_graph_config,
+    KARABO_CURVE_OPTIONS, AlarmGraphModel, CurveType, StateGraphModel,
+    TrendGraphModel, build_graph_config, extract_graph_curve_option,
     restore_graph_config)
 from karabogui import icons
 from karabogui.binding.api import (
@@ -37,6 +40,8 @@ from karabogui.dialogs.api import RequestTimeDialog
 from karabogui.graph.common.api import AxisType, create_button, get_pen_cycler
 from karabogui.graph.common.const import ALARM_INTEGER_MAP, STATE_INTEGER_MAP
 from karabogui.graph.plots.base import KaraboPlotView
+from karabogui.graph.plots.dialogs import CurveOptionsDialog
+from karabogui.graph.plots.utils import create_curve_options
 
 from .util import get_ui_file
 
@@ -64,9 +69,12 @@ class BaseSeriesGraph(BaseBindingController):
     _timer = Instance(QTimer)
     _start_time = Instance(QDateTime)
 
+    # the plots from pyqtgraph
+    _curves = Instance(WeakValueDictionary, args=())
+
     # Holds if the user is rescaling via mouse interaction
     _button_scale = Bool(False)
-    _curves = Dict
+    _curve_points = Dict
     _curves_start = Set
     _pens = Instance(cycle, factory=get_pen_cycler, args=())
 
@@ -157,21 +165,37 @@ class BaseSeriesGraph(BaseBindingController):
         # Add the first curve
         self.add_proxy(self.proxy)
 
-        # Finally, add the plot actions to the general widget
+        # Add the plot actions to the general widget
         widget.addActions(self._plot.actions())
+
+        # Finally, add the plot options
+        curve_options = QAction("Curve Options", widget)
+        curve_options.setIcon(icons.settings)
+        curve_options.triggered.connect(self.show_options_dialog)
+        widget.addAction(curve_options)
 
         return widget
 
     def add_proxy(self, proxy):
-        if proxy in self._curves:
+        if proxy in self._curve_points:
             return
 
-        curve = self._plot.add_curve_item(name=proxy.key, pen=next(self._pens),
-                                          connect="all")
+        name = proxy.key
+        pen = next(self._pens)
+        options = extract_graph_curve_option(self.model, name)
+        if options:
+            pen_color = options["pen_color"]
+            pen.setColor(QColor(pen_color))
+            name = options["name"]
+
+        curve = self._plot.add_curve_item(
+            name=name, pen=pen, connect="all")
         curve.sigPlotChanged.connect(self._update_x_range)
 
-        self._curves[proxy] = Curve(proxy=proxy, curve=curve,
-                                    curve_type=self.curve_type)
+        self._curves[proxy] = curve
+        self._curve_points[proxy] = Curve(
+            proxy=proxy, curve=curve,
+            curve_type=self.curve_type)
         self._curves_start.add(proxy)
 
         if len(self._curves) > 1:
@@ -181,14 +205,21 @@ class BaseSeriesGraph(BaseBindingController):
 
     def remove_proxy(self, proxy):
         """Remove an additional proxy curve from the controller"""
+        options = [option for option in self.model.curve_options
+                   if option.key != proxy.key]
+        self.model.trait_set(curve_options=options)
+
+        self._curves.pop(proxy)
         self._curves_start.discard(proxy)
-        curve = self._curves.pop(proxy)
+        curve = self._curve_points.pop(proxy)
         item = curve.curve
         self._plot.remove_item(item)
         item.sigPlotChanged.disconnect()
         item.deleteLater()
         legend_visible = len(self._curves) > 1
+
         self._plot.set_legend(legend_visible)
+
         return True
 
     def value_update(self, proxy):
@@ -196,7 +227,50 @@ class BaseSeriesGraph(BaseBindingController):
 
     def destroy_widget(self):
         """Remove all curves and their trait handlers"""
-        self._curves = {}
+        self._curve_points = {}
+        self._curves.clear()
+
+    # ----------------------------------------------------------------
+    # Plot Options
+
+    def show_options_dialog(self):
+        config = build_graph_config(self.model)
+        options = config.get(KARABO_CURVE_OPTIONS, {})
+
+        # Use model information to create a new dict[curve, option]
+        curve_options = create_curve_options(
+            curves=self._curves, options=options,
+            curve_type=CurveType.Trend)
+
+        dialog = CurveOptionsDialog(curve_options, parent=self.widget)
+        dialog.requestRestore.connect(self.reset_curve_options)
+        if dialog.exec() != QDialog.Accepted:
+            return
+
+        curve_options = dialog.get_curve_options()
+        if not curve_options:
+            return
+        self.set_curve_options(curve_options)
+
+    def set_curve_options(self, curve_options: dict):
+        """Method to set the curve options on the model and plot"""
+        self._change_model(
+            {KARABO_CURVE_OPTIONS: list(curve_options.values())})
+        self._plot.apply_curve_options(curve_options)
+
+    def reset_curve_options(self):
+        """Restore the default curvce options."""
+        self.reset_traits(["_pens"])
+        options = {}
+        for proxy, curve in self._curves.items():
+            pen = next(self._pens)
+            options[curve] = {
+                "name": proxy.key,
+                "curve_type": CurveType.Trend,
+                "pen_color": pen.color().name()}
+
+        self.model.curve_options = []
+        self._plot.apply_curve_options(options)
 
     # ----------------------------------------------------------------
     # PyQt Slots
@@ -221,7 +295,7 @@ class BaseSeriesGraph(BaseBindingController):
 
     def _purge_curves(self):
         """Purge all curves and request historic again"""
-        for v in self._curves.values():
+        for v in self._curve_points.values():
             v.purge()
         x_axis = self._plot.plotItem.getAxis("bottom")
         self.set_time_interval(*x_axis.range, force=True)
@@ -329,7 +403,7 @@ class BaseSeriesGraph(BaseBindingController):
     def _get_last_timestamp(self):
         """Returns the last timestamp set on the curves"""
         timestamps = []
-        for curve in self._curves.values():
+        for curve in self._curve_points.values():
             if not curve.fill:
                 continue
             timestamps.append(curve.get_max_timepoint())
@@ -346,11 +420,11 @@ class BaseSeriesGraph(BaseBindingController):
             self._curves_start.remove(proxy)
             start = self._start_time.toTime_t()
             if start > timestamp:
-                self._curves[proxy].add_point(value, start)
+                self._curve_points[proxy].add_point(value, start)
 
     def set_time_interval(self, t0, t1, force=False):
         """Update the x axis scale interval of the curves"""
-        for v in self._curves.values():
+        for v in self._curve_points.values():
             v.changeInterval(t0, t1, force=force)
 
 
@@ -369,7 +443,7 @@ class DisplayTrendGraph(BaseSeriesGraph):
         timestamp = proxy.binding.timestamp
         ts = timestamp.toTimestamp()
         value = proxy.value
-        self._curves[proxy].add_point(proxy.value, ts)
+        self._curve_points[proxy].add_point(proxy.value, ts)
         self._draw_start_time(proxy, value, timestamp=ts)
 
 
@@ -390,7 +464,7 @@ class DisplayStateGraph(BaseSeriesGraph):
         ts = timestamp.toTimestamp()
 
         value = STATE_INTEGER_MAP[proxy.value]
-        self._curves[proxy].add_point(value, ts)
+        self._curve_points[proxy].add_point(value, ts)
         self._draw_start_time(proxy, value, timestamp=ts)
 
 
@@ -411,5 +485,5 @@ class DisplayAlarmGraph(BaseSeriesGraph):
         ts = timestamp.toTimestamp()
 
         value = ALARM_INTEGER_MAP[proxy.value]
-        self._curves[proxy].add_point(value, ts)
+        self._curve_points[proxy].add_point(value, ts)
         self._draw_start_time(proxy, value, timestamp=ts)

@@ -61,7 +61,7 @@ def test_actions(display_state_graph_setup):
     controller, _ = display_state_graph_setup
     actions = controller.widget.actions()
     texts = [action.text() for action in actions]
-    assert len(actions) == 6
+    assert len(actions) == 7
     assert "Range Y" not in texts
     assert "View" in texts
 

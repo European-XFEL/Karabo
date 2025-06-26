@@ -38,10 +38,12 @@ TRANSFORM_SET = ["x_scale", "y_scale", "x_translate", "y_translate"]
 KARABO_ROI_ITEMS = "roi_items"
 KARABO_ROI_TYPE = "roi_type"
 KARABO_CURVE_OPTIONS = "curve_options"
+KARABO_CURVE_TYPE = "curve_type"
 
 
-class PlotType(IntEnum):
+class CurveType(IntEnum):
     Curve = 1
+    Trend = 2
 
 
 class BaseROIData(BaseSavableModel):
@@ -77,14 +79,18 @@ class RectROIData(BaseROIData):
 
 class BaseCurveOptions(BaseSavableModel):
     key = String()
-    legend_name = String()
-    plot_type = Int()
+    name = String()
+    curve_type = Int()
 
-    def _legend_name_default(self):
+    def _name_default(self):
         return self.key
 
 
 class CurveOptions(BaseCurveOptions):
+    pen_color = String()
+
+
+class TrendOptions(BaseCurveOptions):
     pen_color = String()
 
 
@@ -288,6 +294,15 @@ def build_graph_config(model):
     return config
 
 
+def extract_graph_curve_option(model, curve_key: str) -> dict:
+    """Return the traits of the curve with the matching key from the model."""
+    for curve in getattr(model, KARABO_CURVE_OPTIONS, []):
+        if curve.key == curve_key:
+            return {name: getattr(curve, name)
+                    for name in curve.copyable_trait_names()}
+    return {}
+
+
 def restore_graph_config(config):
     """Restore a graph configuration from a dictionary
 
@@ -305,10 +320,17 @@ def restore_graph_config(config):
                 roi_items.append(CrossROIData(**roi))
         config[KARABO_ROI_ITEMS] = roi_items
 
-    data = config.get(KARABO_CURVE_OPTIONS, None)
-    if data is not None:
-        config[KARABO_CURVE_OPTIONS] = [CurveOptions(**options)
-                                        for options in data]
+    curve_data = config.get(KARABO_CURVE_OPTIONS, None)
+    if curve_data is not None and curve_data:
+        curve_options = []
+        for option in curve_data:
+            curve_type = option[KARABO_CURVE_TYPE]
+            if curve_type == CurveType.Curve:
+                curve_options.append(CurveOptions(**option))
+            elif curve_type == CurveType.Trend:
+                curve_options.append(TrendOptions(**option))
+        config[KARABO_CURVE_OPTIONS] = curve_options
+
     return config
 
 
@@ -338,9 +360,24 @@ def write_histogram_model(model, element):
     return element
 
 
-def read_curve_options(element) -> list:
-    curve_options = [_read_options(child_elem) for child_elem in element if
-                     child_elem.tag == NS_KARABO + KARABO_CURVE_OPTIONS]
+def read_curve_options(element):
+    """Extracts the curve options list from the element XML"""
+    curve_options = []
+
+    for child_elem in element:
+        if child_elem.tag != NS_KARABO + KARABO_CURVE_OPTIONS:
+            continue
+
+        key = child_elem.get("key", "")
+        curve_type = int(child_elem.get("curve_type", 0))
+        name = child_elem.get("name", "")
+        traits = {"curve_type": curve_type, "name": name, "key": key}
+        if curve_type == CurveType.Curve:
+            traits["pen_color"] = child_elem.get("pen_color", "")
+            curve_options.append(CurveOptions(**traits))
+        elif curve_type == CurveType.Trend:
+            traits["pen_color"] = child_elem.get("pen_color", "")
+            curve_options.append(TrendOptions(**traits))
     return curve_options
 
 
@@ -351,16 +388,6 @@ def write_curve_options(model, element):
         options_element = SubElement(element, NS_KARABO + KARABO_CURVE_OPTIONS)
         for name in options.copyable_trait_names():
             options_element.set(name, str(getattr(options, name)))
-
-
-def _read_options(element):
-    key = element.get("key")
-    plot_type = int(element.get("plot_type", 0))
-    name = element.get("legend_name")
-    traits = {"plot_type": plot_type, "legend_name": name, "key": key}
-    if plot_type == PlotType.Curve:
-        traits["pen_color"] = element.get("pen_color")
-        return CurveOptions(**traits)
 
 
 def write_color_levels(model, element):
