@@ -18,6 +18,7 @@
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
 #############################################################################
+from datetime import datetime
 from typing import NamedTuple
 
 import natsort
@@ -87,9 +88,9 @@ class ButtonDelegate(QStyledItemDelegate):
                 return
             else:
                 deviceId = request["args.deviceId"]
-                messagebox.show_information(
-                    f"Device <b>{deviceId}</b> instantiated successfully.",
-                    parent=self.parent())
+                widget = self.parent()
+                widget.add_log(
+                    f"Device <b>{deviceId}</b> instantiated successfully.")
 
         device_uuid = index.sibling(index.row(), INSTANTIATE_COLUMN).data(
             role=Qt.UserRole)
@@ -125,7 +126,7 @@ class ProjectTopologyDialog(QDialog):
         ui_file = get_dialog_ui("project_topology.ui")
         uic.loadUi(ui_file, self)
 
-        self.delegate = ButtonDelegate()
+        self.delegate = ButtonDelegate(parent=self)
         self.table_model = ProjectTopologyModel()
         self.filter_model = QSortFilterProxyModel()
         self.filter_model.setFilterCaseSensitivity(False)
@@ -146,6 +147,13 @@ class ProjectTopologyDialog(QDialog):
         table_view.sortByColumn(INSTANTIATE_COLUMN, Qt.AscendingOrder)
         table_view.setItemDelegateForColumn(INSTANTIATE_COLUMN, self.delegate)
         self.table = table_view
+
+    def add_log(self, text: str):
+        stamp = datetime.now().strftime('[%H:%M:%S]')
+        item = f'{stamp} {text}'
+        self.log_widget.append(item)
+        bar = self.log_widget.verticalScrollBar()
+        bar.setValue(bar.maximum())
 
     @Slot()
     def _clear_clicked(self):
@@ -169,7 +177,14 @@ class ProjectTopologyDialog(QDialog):
                 status = ProxyStatus.NOPLUGIN
             else:
                 attrs = topology.get_attributes(f"device.{deviceId}")
-                status = ProxyStatus.ONLINE if attrs else ProxyStatus.OFFLINE
+                if attrs:
+                    if (attrs.get("classId") != classId
+                            or attrs.get("serverId") != serverId):
+                        status = ProxyStatus.INCOMPATIBLE
+                    else:
+                        status = ProxyStatus.ONLINE
+                else:
+                    status = ProxyStatus.OFFLINE
 
             return DeviceInstance(
                 status=status, deviceId=deviceId, classId=classId,
