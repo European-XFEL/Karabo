@@ -6,11 +6,13 @@ from karabogui.graph.plots.api import CurveOptionsDialog
 PINK = "#fb9a99"
 ORANGE = "#ff7f00"
 
-OPTIONS = {"first_plot": {"key": "first_plot", "pen_color": ORANGE,
-                          "legend_name": "Curve 1", "plot_type": 1},
-           "second_plot": {"key": "second_plot", "pen_color": PINK,
-                           "legend_name": "Curve 2", "plot_type": 1}
-           }
+curve1 = object()
+curve2 = object()
+
+OPTIONS = {curve1: {"key": "first_plot", "pen_color": ORANGE,
+                    "name": "Curve 1", "curve_type": 1},
+           curve2: {"key": "second_plot", "pen_color": PINK,
+                    "name": "Curve 2", "curve_type": 1}}
 
 
 @pytest.fixture
@@ -23,9 +25,12 @@ def test_load_options(dialog):
     proxy_list = dialog.proxy_list
     assert proxy_list.count() == len(OPTIONS)
     assert proxy_list.item(0).text() == "first_plot"
-    assert proxy_list.item(0).data(Qt.UserRole) == OPTIONS["first_plot"]
+    assert proxy_list.item(0).data(Qt.UserRole) == OPTIONS[curve1]
+    assert proxy_list.item(0).data(Qt.UserRole + 1) == curve1
+
     assert proxy_list.item(1).text() == "second_plot"
-    assert proxy_list.item(1).data(Qt.UserRole) == OPTIONS["second_plot"]
+    assert proxy_list.item(1).data(Qt.UserRole) == OPTIONS[curve2]
+    assert proxy_list.item(1).data(Qt.UserRole + 1) == curve2
 
 
 def test_color_combobox(dialog):
@@ -55,7 +60,7 @@ def test_get_curve_options(dialog):
     dialog.legend_name.editingFinished.emit()
     dialog.color_combo_box.setCurrentText("Orange")
     curve_options = dialog.get_curve_options()
-    assert curve_options["first_plot"] == OPTIONS["first_plot"]
+    assert curve_options[curve1] == OPTIONS[curve1]
 
-    assert curve_options["second_plot"]["pen_color"] == PINK
-    assert curve_options["second_plot"]["legend_name"] == "New Legend"
+    assert curve_options[curve2]["pen_color"] == PINK
+    assert curve_options[curve2]["name"] == "New Legend"

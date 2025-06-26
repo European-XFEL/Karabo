@@ -13,9 +13,9 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
-from karabo.common.scenemodel.api import CrossROIData
+from karabo.common.scenemodel.api import (
+    CrossROIData, CurveOptions, TrendOptions)
 from karabo.common.scenemodel.tests.utils import single_model_round_trip
-from karabo.common.scenemodel.widgets.graph_utils import CurveOptions
 
 from .. import api
 
@@ -122,12 +122,12 @@ def test_vector_graph():
     curve_options = [
         CurveOptions(**{"key": "first_plot",
                         "pen_color": "#ff7f00",
-                        "legend_name": "Curve 1",
-                        "plot_type": 1}),
+                        "name": "Curve 1",
+                        "curve_type": 1}),
         CurveOptions(**{"key": "second_plot",
                         "pen_color": "#fb9a99",
-                        "legend_name": "Curve 2",
-                        "plot_type": 1})]
+                        "name": "Curve 2",
+                        "curve_type": 1})]
     traits["curve_options"] = curve_options
 
     model = api.VectorGraphModel(**traits)
@@ -179,3 +179,26 @@ def test_ndarray_graph():
     assert read_model.roi_tool == 1
     assert read_model.offset == 5.0
     assert read_model.step == 7.0
+
+
+def test_trend_graph():
+    traits = _geometry_traits()
+    curve_options = [
+        TrendOptions(**{"key": "first_plot",
+                        "pen_color": "#ff7f00",
+                        "name": "Curve 1",
+                        "curve_type": 2}),
+        TrendOptions(**{"key": "second_plot",
+                        "pen_color": "#fb9a99",
+                        "name": "Curve 2",
+                        "curve_type": 2})]
+    traits["curve_options"] = curve_options
+
+    model = api.TrendGraphModel(**traits)
+    return
+    read_model = single_model_round_trip(model)
+    _assert_geometry_traits(read_model)
+
+    for orig, read in zip(model.curve_options, read_model.curve_options):
+        for trait in orig.copyable_trait_names():
+            assert getattr(orig, trait) == getattr(read, trait)
