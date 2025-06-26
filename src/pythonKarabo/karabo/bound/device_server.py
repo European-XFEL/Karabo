@@ -185,12 +185,12 @@ class DeviceServer:
         self.timeServerId = config.get("timeServerId")
 
         if 'serverId' in config:
-            self.serverid = config['serverId']
+            self.serverId = config['serverId']
         else:
-            self.serverid = self._generateDefaultServerId()
+            self.serverId = self._generateDefaultServerId()
 
         self.connectionParameters = Hash(Broker.brokerTypeFromEnv(),
-                                         Hash("instanceId", self.serverid))
+                                         Hash("instanceId", self.serverId))
         self.loggerParameters = None  # assemble in loadLogger
         self.pid = os.getpid()
         self.seqnum = 0
@@ -198,10 +198,10 @@ class DeviceServer:
         # Start the logging system before the scanning of plugins, so any
         # error during plugin loading can be logged.
         self.loadLogger(config)
-        self.logger = Logger.getLogger(self.serverid)
+        self.logger = Logger.getLogger(self.serverId)
 
         info = Hash("type", "server")
-        info["serverId"] = self.serverid
+        info["serverId"] = self.serverId
         info["version"] = self.__class__.__version__
         info["host"] = self.hostname
         info["lang"] = "bound"
@@ -231,7 +231,7 @@ class DeviceServer:
         # But the process stops nevertheless due to the EventLoop.stop().
 
         self._sigslot = SignalSlotable(
-            self.serverid, self.connectionParameters,
+            self.serverId, self.connectionParameters,
             config["heartbeatInterval"], info)
 
         # Register before sigslot.start(), i.e before sending instanceNew:
@@ -259,7 +259,7 @@ class DeviceServer:
     def loadLogger(self, inputCfg):
         self.loggerParameters = copy.copy(inputCfg["log"])
         # The file logger filename is completely specified here.
-        path = os.path.join(os.environ['KARABO'], "var", "log", self.serverid)
+        path = os.path.join(os.environ['KARABO'], "var", "log", self.serverId)
         if not os.path.isdir(path):
             os.makedirs(path)
         path = os.path.join(path, 'device-server.log')
@@ -353,7 +353,7 @@ class DeviceServer:
             # count of 2: localSigSlot and the one internal to getrefcount
             print("Forced call to slotInstanceGone due to refcount", refCount)
             localSigSlot.call("*", "slotInstanceGone",
-                              self.serverid, localSigSlot.getInstanceInfo())
+                              self.serverId, localSigSlot.getInstanceInfo())
         # HACK end
 
         EventLoop.stop()
@@ -362,22 +362,22 @@ class DeviceServer:
         self.instantiateDevice(configuration)
 
     def instantiateDevice(self, input_config):
-        classid = input_config['classId']
+        classId = input_config['classId']
 
         # Get configuration
         config = copy.copy(input_config['configuration'])
 
         # Inject serverId
-        config['serverId'] = self.serverid
+        config['serverId'] = self.serverId
 
         # Inject deviceId
         config['deviceId'] = input_config.get("deviceId", default="")
         if not config['deviceId']:
             config.set('deviceId',
-                       self._generateDefaultDeviceInstanceId(classid))
+                       self._generateDefaultDeviceInstanceId(classId))
 
         self.logger.info("Trying to start a '{}' with device id '{}'"
-                         "...".format(classid, config['deviceId']))
+                         "...".format(classId, config['deviceId']))
         self.logger.debug(
             f"with the following configuration:\n{input_config}")
 
@@ -389,7 +389,7 @@ class DeviceServer:
             config["log.level"] = self.loggerParameters["level"]
 
         # Before starting device process, validate config
-        schema = Configurator(PythonDevice).getSchema(classid)
+        schema = Configurator(PythonDevice).getSchema(classId)
         validator = Validator()
         (ok, msg, _) = validator.validate(schema, config)
         if not ok:
@@ -417,25 +417,25 @@ class DeviceServer:
         reply = self._sigslot.createAsyncReply()
 
         try:
-            self._launchDevice(config, classid, reply)
+            self._launchDevice(config, classId, reply)
         except Exception as e:
-            msg = f"Device of class '{classid}' could not be started: {e}"
+            msg = f"Device of class '{classId}' could not be started: {e}"
             details = traceback.format_exc()
             self.logger.warning(f"{msg}:\nFailure details:\n{details}")
             # Cannot call AsyncReply object directly in slot, so post:
             EventLoop.post(lambda: reply.error(msg, details))
 
-    def _launchDevice(self, config, classid, reply):
+    def _launchDevice(self, config, classId, reply):
 
         deviceid = config["deviceId"]  # exists, see instantiateDevice
 
-        modname = self.availableDevices[classid]["module"]
+        modname = self.availableDevices[classId]["module"]
 
         # Create unique filename in /tmp - without '/' from deviceid...
         # .bin indicates binary format:
         # XML has trouble with VECTOR_STRING where string contains comma
         while True:
-            filename = (f"/tmp/{modname}.{classid}."
+            filename = (f"/tmp/{modname}.{classId}."
                         f"{deviceid.replace(os.path.sep, '_')}"
                         f".configuration_{self.pid}_{self.seqnum}.bin")
             if os.path.isfile(filename):
@@ -444,7 +444,7 @@ class DeviceServer:
                 break
 
         saveToFile(config, filename)
-        params = [modname, classid, filename]
+        params = [modname, classId, filename]
 
         with self.deviceInstanceMapLock:
             if deviceid in self.deviceInstanceMap:
@@ -529,7 +529,7 @@ class DeviceServer:
                         launcher.kill()
             self.deviceInstanceMap = {}
         try:
-            self._sigslot.reply(self.serverid)
+            self._sigslot.reply(self.serverId)
         except Exception as e:
             if self.logger:  # see above
                 msg = ("Did not notify distributed system of server shutdown:"
@@ -557,8 +557,8 @@ class DeviceServer:
 
     def slotDeviceGone(self, instanceId):
         self.logger.info(
-            "Device '{0}' notifies '{1.serverid}' about its future"
-            " death.".format(instanceId, self))
+            f"Device '{instanceId}' notifies '{self.serverId}' about "
+            "its future death.")
         with self.deviceInstanceMapLock:
             if instanceId in self.deviceInstanceMap:
                 launcher = self.deviceInstanceMap[instanceId]
@@ -574,13 +574,13 @@ class DeviceServer:
             self.logger.info("Device '{}' removed from server."
                              .format(instanceId))
 
-    def slotGetClassSchema(self, classid):
+    def slotGetClassSchema(self, classId):
         try:
-            schema = Configurator(PythonDevice).getSchema(classid)
-            self._sigslot.reply(schema, classid, self.serverid)
+            schema = Configurator(PythonDevice).getSchema(classId)
+            self._sigslot.reply(schema, classId, self.serverId)
         except AttributeError as e:
             self.logger.warning(f"Replied empty schema due to : {str(e)}")
-            self._sigslot.reply(Schema(), classid, self.serverid)
+            self._sigslot.reply(Schema(), classId, self.serverId)
 
     def slotLoggerLevel(self, newlevel):
         # In contrast to C++, the new level will not be "forwarded" to
@@ -617,7 +617,7 @@ class DeviceServer:
                 "logs", default=KARABO_LOGGER_CONTENT_DEFAULT)
             content = Logger.getCachedContent(nMessages)
             self._sigslot.reply(
-                Hash("serverId", self.serverid, "content", content))
+                Hash("serverId", self.serverId, "content", content))
             return
 
         replyLock = threading.Lock()
@@ -667,23 +667,22 @@ class DeviceServer:
         # sort by timestamp and get the last "nMessages" entries
         content = sorted(content, key=lambda entry: entry['timestamp'])
         # reply
-        areply(Hash("serverId", self.serverid,
+        areply(Hash("serverId", self.serverId,
                     "content", content[-1 * nMessages:]))
 
-    def _generateDefaultDeviceInstanceId(self, devClassId):
+    def _generateDefaultDeviceInstanceId(self, devClassId: str) -> str:
         cls = self.__class__
         with cls.instanceCountLock:
-            if self.serverid not in cls.instanceCountPerDeviceServer:
-                cls.instanceCountPerDeviceServer[self.serverid] = 0
-            cls.instanceCountPerDeviceServer[self.serverid] += 1
-            _index = cls.instanceCountPerDeviceServer[self.serverid]
-            tokens = self.serverid.split("_")
-            if tokens.pop() == str(os.getpid()):
-                _domain = tokens.pop(0) + "-" + tokens.pop()
-                _id = _domain + "_" + devClassId + "_" + str(_index)
+            count = cls.instanceCountPerDeviceServer.setdefault(
+                self.serverId, 0) + 1
+            cls.instanceCountPerDeviceServer[self.serverId] = count
+            tokens = self.serverId.split("_")
+            if tokens[-1] == str(os.getpid()):
+                instance_id = f"{tokens[0]}-{tokens[-2]}_{devClassId}_{count}"
             else:
-                _id = self.serverid + "_" + devClassId + "_" + str(_index)
-            return _id
+                instance_id = f"{self.serverId}_{devClassId}_{count}"
+
+            return instance_id
 
 
 class Launcher:
