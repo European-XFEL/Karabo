@@ -36,15 +36,16 @@ from karabogui.binding.api import (
 from karabogui.binding.proxy import DeviceProxy, PropertyProxy
 from karabogui.const import WIDGET_MIN_HEIGHT
 from karabogui.controllers.api import (
-    DIMENSIONS, BaseArrayGraph, BaseBindingController, BaseLineEditController,
-    BindingValidator, ListValidator, SimpleValidator, add_unit_label,
-    axis_label, get_array_data, get_dimensions_and_encoding, get_image_data,
-    has_options, is_proxy_allowed, register_binding_controller,
+    DIMENSIONS, BaseArrayGraph, BaseBindingController, BaseLabelController,
+    BaseLineEditController, BindingValidator, ListValidator, SimpleValidator,
+    add_unit_label, axis_label, get_array_data, get_dimensions_and_encoding,
+    get_image_data, has_options, is_proxy_allowed, register_binding_controller,
     with_display_type)
 from karabogui.controllers.table.api import (
-    BaseFilterTableController, BaseTableController, KaraboTableView,
-    TableButtonDelegate, TableModel, TableSortFilterModel,
-    is_state_display_type, list2string, string2list)
+    BaseFilterTableController, BaseTableController, ComboBoxDelegate,
+    KaraboTableView, TableButtonDelegate, TableModel, TableSortFilterModel,
+    VectorButtonDelegate, VectorDelegate, is_state_display_type, list2string,
+    string2list)
 from karabogui.debug import profiler
 from karabogui.dialogs.api import (
     FontDialog, FormatLabelDialog, ListEditDialog, TextDialog)
@@ -53,10 +54,11 @@ from karabogui.events import (
     unregister_from_broadcasts)
 from karabogui.fonts import get_font_metrics, get_font_size_from_dpi, get_qfont
 from karabogui.graph.common.api import (
-    AspectRatio, AxisItem, AxisType, ExportTool, KaraboLegend, KaraboROI,
-    KaraboViewBox, MouseMode, MouseTool, ROITool, create_axis_items,
-    create_button, float_to_string, get_available_colors, get_default_brush,
-    get_default_pen, get_pen_cycler, make_brush, make_pen, rgba_to_hex)
+    AspectRatio, AxisItem, AxisType, BaseToolsetController, CrosshairROI,
+    ExportTool, KaraboLegend, KaraboROI, KaraboViewBox, MouseMode, MouseTool,
+    RectROI, ROITool, create_axis_items, create_button, create_tool_button,
+    float_to_string, get_available_colors, get_default_brush, get_default_pen,
+    get_pen_cycler, make_brush, make_pen, rgba_to_hex)
 from karabogui.graph.common.const import DEFAULT_BAR_WIDTH, DEFAULT_PEN_WIDTH
 from karabogui.graph.image.api import (
     SHOWN_AXES, AuxPlotItem, ColorBarWidget, ColorViewBox, KaraboImageItem,
