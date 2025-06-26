@@ -315,7 +315,7 @@ class ScenePanel(BasePanelWidget):
     def setUnattached(self, editable: bool):
         """Set the scene panel to indicate an unattached scene"""
         self.ac_design_mode.toggled.disconnect()
-        self.ac_design_mode.setIcon(icons.deviceInstance)
+        self.ac_design_mode.setIcon(icons.deviceClass)
         self.ac_design_mode.setCheckable(False)
         self.ac_design_mode.setToolTip("The scene panel is unattached.")
         self.ac_design_mode.setVisible(editable)
