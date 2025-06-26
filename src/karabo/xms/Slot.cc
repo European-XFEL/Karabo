@@ -41,11 +41,11 @@ namespace karabo {
         }
 
 
-        void Slot::extractSenderInformation(const karabo::data::Hash& header) {
-            boost::optional<const Hash::Node&> node = header.find("signalInstanceId");
+        void Slot::extractSenderInformation(const karabo::data::Hash::ConstPointer& header) {
+            boost::optional<const Hash::Node&> node = header->find("signalInstanceId");
             if (node) m_instanceIdOfSender = node->getValue<std::string>();
 
-            m_headerOfSender = std::make_shared<const karabo::data::Hash>(header);
+            m_headerOfSender = header;
         }
 
 
@@ -55,7 +55,8 @@ namespace karabo {
         }
 
 
-        void Slot::callRegisteredSlotFunctions(const Hash& header, const Hash& body, bool checkNumArgs) {
+        void Slot::callRegisteredSlotFunctions(const Hash::ConstPointer& header, const Hash::ConstPointer& body,
+                                               bool checkNumArgs) {
             try {
                 // Mutex lock prevents that the same slot of a SignalSlotable can be called concurrently.
                 // SignalSlotable takes care that messages are sequentially processed per sender
@@ -65,7 +66,7 @@ namespace karabo {
                 // safe in another way - and the protection not to add function while being called as well.
                 std::lock_guard<std::mutex> lock(m_registeredSlotFunctionsMutex);
                 extractSenderInformation(header);
-                doCallRegisteredSlotFunctions(body, checkNumArgs);
+                doCallRegisteredSlotFunctions(*body, checkNumArgs);
                 invalidateSenderInformation();
             } catch (const karabo::data::CastException& e) {
                 const std::string senderId = m_instanceIdOfSender;

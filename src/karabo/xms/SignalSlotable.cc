@@ -566,7 +566,7 @@ namespace karabo {
             try {
                 if (!asyncErrorHandlerCalled && slot) {
                     // Do not check (false) arity-nargs equality for reply slots
-                    slot->callRegisteredSlotFunctions(*header, *body, false);
+                    slot->callRegisteredSlotFunctions(header, body, false);
                 }
             } catch (const std::exception& e) {
                 if (timerAndHandler.second) {
@@ -761,8 +761,7 @@ namespace karabo {
                         std::lock_guard<std::mutex> lock(m_currentSlotsMutex);
                         m_currentSlots[std::this_thread::get_id()] = std::make_pair(slotFunction, globalCall);
                     }
-                    // TODO: callRegisteredSlotFunctions copies header since it is passed by value :-(.
-                    slot->callRegisteredSlotFunctions(*header, *body);
+                    slot->callRegisteredSlotFunctions(header, body);
                     sendPotentialReply(*header, slotFunction, globalCall);
                     { // Clean again
                         std::lock_guard<std::mutex> lock(m_currentSlotsMutex);
