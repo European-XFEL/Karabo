@@ -111,7 +111,6 @@ class VectorBarGraphModel(BasePlotModel):
 class NDArrayGraphModel(BasePlotModel):
     """A model for the NDArray Graph"""
 
-    half_samples = Int(6000)
     roi_items = List(Instance(BaseROIData))
     roi_tool = Int(0)
     offset = Float(0.0)
@@ -137,7 +136,6 @@ class VectorFillGraphModel(BasePlotModel):
 class VectorGraphModel(BasePlotModel):
     """A model for the Vector Graph"""
 
-    half_samples = Int(6000)
     roi_items = List(Instance(BaseROIData))
     roi_tool = Int(0)
     offset = Float(0.0)
@@ -258,7 +256,6 @@ def _ndarray_graph_reader(element):
     traits.update(read_baseline(element))
     traits["roi_items"] = read_roi_info(element)
     traits["roi_tool"] = int(element.get(NS_KARABO + "roi_tool", 0))
-    traits["half_samples"] = int(element.get(NS_KARABO + "half_samples", 6000))
     curve_options = read_curve_options(element)
     traits.update({"curve_options": curve_options})
     return NDArrayGraphModel(**traits)
@@ -272,7 +269,6 @@ def _ndarray_graph_writer(model, parent):
     write_baseline(model, element)
     write_curve_options(model, element)
     element.set(NS_KARABO + "roi_tool", str(model.roi_tool))
-    element.set(NS_KARABO + "half_samples", str(model.half_samples))
 
     return element
 
@@ -298,7 +294,6 @@ def _vector_graph_reader(element):
     traits.update(read_baseline(element))
     traits["roi_items"] = read_roi_info(element)
     traits["roi_tool"] = int(element.get(NS_KARABO + "roi_tool", 0))
-    traits["half_samples"] = int(element.get(NS_KARABO + "half_samples", 6000))
     curve_options = read_curve_options(element)
     traits.update({"curve_options": curve_options})
     return VectorGraphModel(**traits)
@@ -312,7 +307,6 @@ def _vector_graph_writer(model, parent):
     write_baseline(model, element)
     write_curve_options(model, element)
     element.set(NS_KARABO + "roi_tool", str(model.roi_tool))
-    element.set(NS_KARABO + "half_samples", str(model.half_samples))
 
     return element
 

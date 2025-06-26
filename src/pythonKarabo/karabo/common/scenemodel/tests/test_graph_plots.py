@@ -115,7 +115,6 @@ def test_vector_graph():
         CrossROIData(**{"roi_type": 2, "x": 150, "y": 150, "name": "Cross 1"}),
         CrossROIData(**{"roi_type": 2, "x": 150, "y": 150, "name": "Cross 2"}),
     ]
-    traits["half_samples"] = 10000
     traits["roi_items"] = roi_data
     traits["roi_tool"] = 1
     traits["offset"] = 15.0
@@ -139,7 +138,6 @@ def test_vector_graph():
         for trait in orig.copyable_trait_names():
             assert getattr(orig, trait) == getattr(read, trait)
 
-    assert read_model.half_samples == 10000
     assert read_model.roi_tool == 1
     assert read_model.offset == 15.0
     assert read_model.step == 17.0
@@ -164,7 +162,6 @@ def test_ndarray_graph():
         CrossROIData(**{"roi_type": 2, "x": 150, "y": 150, "name": "Cross 1"}),
         CrossROIData(**{"roi_type": 2, "x": 150, "y": 150, "name": "Cross 2"}),
     ]
-    traits["half_samples"] = 10000
     traits["roi_items"] = roi_data
     traits["roi_tool"] = 1
     traits["offset"] = 5.0
@@ -179,7 +176,6 @@ def test_ndarray_graph():
         for trait in orig.copyable_trait_names():
             assert getattr(orig, trait) == getattr(read, trait)
 
-    assert read_model.half_samples == 10000
     assert read_model.roi_tool == 1
     assert read_model.offset == 5.0
     assert read_model.step == 7.0
