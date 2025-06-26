@@ -441,9 +441,9 @@ namespace karabo {
 
 
         void Logger::setLevel(const std::string& level, const std::string& category) {
-            std::string prio = level;
-            toLower(prio);                            // update 'prio' in place
-            auto lvl = spdlog::level::from_str(prio); // convert to level::level_enum
+            std::string new_level = level;
+            toLower(new_level);                            // update 'new_level' in place
+            auto lvl = spdlog::level::from_str(new_level); // convert to level::level_enum
             // apply new level to all known loggers
             spdlog::apply_all([&](std::shared_ptr<spdlog::logger> l) {
                 auto name = l->name();
@@ -468,16 +468,16 @@ namespace karabo {
 
         const std::string Logger::getLevel(const std::string& name) {
             using namespace spdlog;
-            level::level_enum prio = level::off;
+            level::level_enum level_num = level::off;
             if (name.empty()) {
-                prio = get_level();
+                level_num = get_level();
             } else if (!get(name)) {
                 throw KARABO_PARAMETER_EXCEPTION("No registered logger found with the name : " + name);
             } else {
-                prio = get(name)->level();
+                level_num = get(name)->level();
             }
 
-            switch (prio) {
+            switch (level_num) {
                 case level::trace:
                     return "TRACE";
                 case level::debug:
