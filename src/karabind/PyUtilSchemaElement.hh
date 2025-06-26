@@ -35,7 +35,7 @@
 #include "karabo/data/schema/TableElement.hh"
 #include "karabo/data/schema/Validator.hh"
 #include "karabo/data/schema/VectorElement.hh"
-#include "karabo/data/types/AlarmConditions.hh"
+#include "karabo/data/types/AlarmCondition.hh"
 #include "karabo/data/types/FromLiteral.hh"
 #include "karabo/data/types/HashFilter.hh"
 #include "karabo/data/types/NDArray.hh"

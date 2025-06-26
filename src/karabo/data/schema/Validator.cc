@@ -31,7 +31,7 @@
 
 #include "TableElement.hh"
 #include "karabo/data/time/Epochstamp.hh"
-#include "karabo/data/types/AlarmConditions.hh"
+#include "karabo/data/types/AlarmCondition.hh"
 #include "karabo/data/types/FromLiteral.hh"
 #include "karabo/data/types/Hash.hh"
 #include "karabo/data/types/NDArray.hh"

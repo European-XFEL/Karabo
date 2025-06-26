@@ -31,7 +31,7 @@
 #include "karabo/data/schema/OverwriteElement.hh"
 #include "karabo/data/schema/TableElement.hh"
 #include "karabo/data/schema/Validator.hh"
-#include "karabo/data/types/AlarmConditions.hh"
+#include "karabo/data/types/AlarmCondition.hh"
 #include "karabo/data/types/HashFilter.hh"
 
 

@@ -20,7 +20,7 @@
 #define KARABO_DATA_TYPES_HPP
 
 
-#include "types/AlarmConditions.hh"
+#include "types/AlarmCondition.hh"
 #include "types/Base64.hh"
 #include "types/ByteSwap.hh"
 #include "types/ClassInfo.hh"

@@ -15,7 +15,7 @@
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
-#include "AlarmConditions.hh"
+#include "AlarmCondition.hh"
 
 #include "Exception.hh"
 

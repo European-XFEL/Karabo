@@ -38,7 +38,7 @@
 #include "karabo/data/schema/StateElement.hh"
 #include "karabo/data/schema/TableElement.hh"
 #include "karabo/data/schema/VectorElement.hh"
-#include "karabo/data/types/AlarmConditions.hh"
+#include "karabo/data/types/AlarmCondition.hh"
 #include "karabo/data/types/State.hh"
 #include "karabo/data/types/karaboDll.hh"
 

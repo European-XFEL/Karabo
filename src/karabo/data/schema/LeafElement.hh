@@ -28,7 +28,6 @@
 #define KARABO_DATA_SCHEMA_LEAF_ELEMENT_HH
 
 #include "GenericElement.hh"
-#include "karabo/data/types/AlarmConditions.hh"
 #include "karabo/data/types/State.hh"
 
 namespace karabo {

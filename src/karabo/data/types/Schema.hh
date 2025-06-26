@@ -32,7 +32,7 @@
 #include <set>
 #include <tuple>
 
-#include "AlarmConditions.hh"
+#include "AlarmCondition.hh"
 #include "Hash.hh"
 #include "State.hh"
 #include "StringTools.hh"

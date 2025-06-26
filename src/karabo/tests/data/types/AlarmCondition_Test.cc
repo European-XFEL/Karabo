@@ -33,7 +33,7 @@
 #include "karabo/data/schema/Validator.hh"
 #include "karabo/data/time/TimeDuration.hh"
 #include "karabo/data/time/TimePeriod.hh"
-#include "karabo/data/types/AlarmConditions.hh"
+#include "karabo/data/types/AlarmCondition.hh"
 #include "karabo/data/types/Schema.hh"
 
 CPPUNIT_TEST_SUITE_REGISTRATION(AlarmCondition_Test);
