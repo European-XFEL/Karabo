@@ -19,8 +19,9 @@ from .button_delegate import TableButtonDelegate
 from .controller import BaseFilterTableController, BaseTableController
 from .delegates import (
     BoolButtonDelegate, ColorBindingDelegate, ColorNumberDelegate,
-    ProgressBarDelegate, StringButtonDelegate, VectorButtonDelegate,
-    VectorDelegate, get_display_delegate, get_table_delegate)
+    ComboBoxDelegate, ProgressBarDelegate, StringButtonDelegate,
+    VectorButtonDelegate, VectorDelegate, get_display_delegate,
+    get_table_delegate)
 from .filter_model import TableSortFilterModel
 from .model import TableModel
 from .utils import (
