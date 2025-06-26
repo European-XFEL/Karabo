@@ -105,7 +105,7 @@ class BoundOrderTestDevice(PythonDevice):
 
         def startOrderTest():
             other = self["stringProperty"]
-            updates = Hash("stringProperty", self.deviceid,
+            updates = Hash("stringProperty", self.deviceId,
                            "int32Property", self["int32Property"])
             try:
                 req = self.request(other, "slotReconfigure", updates)

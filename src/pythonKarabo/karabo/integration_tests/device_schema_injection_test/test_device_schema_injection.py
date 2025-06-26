@@ -96,7 +96,7 @@ def test_schema_injection(device_cfg):
     assert "somethingElse" not in device.getCurrentConfiguration().getPaths()
     assert "somethingElse" not in device.getFullSchema().getPaths()
     assert device.getFullSchema().getPaths() == PythonDevice.getSchema(
-        device.classid).getPaths()
+        device.classId).getPaths()
 
     schema = Schema()
     INT32_ELEMENT(schema).key(

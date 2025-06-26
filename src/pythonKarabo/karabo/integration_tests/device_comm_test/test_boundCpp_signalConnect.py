@@ -24,7 +24,7 @@ from time import sleep
 import pytest
 
 from karabo.bound import Hash, SignalSlotable
-from karabo.bound.testing import ServerContext, eventLoop, sleepUntil
+from karabo.bound.testing import ServerContext, sleepUntil
 
 timeout = 5
 timeoutMs = timeout * 1000
@@ -35,7 +35,7 @@ ASYNC_SLOTTESTER = "sigSlotAsyncConnectTester"
 
 
 @pytest.fixture(scope="module")
-def connectTest(eventLoop: eventLoop):
+def connectTest(eventLoop):
     config = {
         SYNC_SLOTTESTER: {
             "classId": "SignalDevice",

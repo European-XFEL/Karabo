@@ -275,9 +275,9 @@ class PythonDevice:
         super().__init__()
 
         self._parameters = configuration
-        self.serverid = self._parameters.get("serverId", default="__none__")
+        self.serverId = self._parameters.get("serverId", default="__none__")
         # TODO: generated a default id?
-        self.deviceid = self._parameters.get("deviceId", default="__none__")
+        self.deviceId = self._parameters.get("deviceId", default="__none__")
 
         # Initialize threading locks...
         self._stateChangeLock = threading.Lock()
@@ -321,7 +321,7 @@ class PythonDevice:
         self.initSchema()
 
         with self._stateChangeLock:
-            self._parameters.set("classId", self.classid)
+            self._parameters.set("classId", self.classId)
             # class version is the (base) module name plus __version__ where
             # the latter comes from KARABO_CLASSINFO decorator and should be
             # the repository version
@@ -343,8 +343,8 @@ class PythonDevice:
 
         # Create 'info' hash
         info = Hash("type", "device")
-        info["classId"] = self.classid
-        info["serverId"] = self.serverid
+        info["classId"] = self.classId
+        info["serverId"] = self.serverId
         info["host"] = self.hostname
         currentState = self["state"]
         if currentState is State.ERROR:
@@ -381,11 +381,11 @@ class PythonDevice:
         # Setup device logger (needs self._parameters) before SignalSlotable
         # to log e.g. broker setup (i.e. logging must not log to broker).
         self.loadLogger()
-        self.logger = Logger.getLogger(self.deviceid)
+        self.logger = Logger.getLogger(self.deviceId)
 
         # Instantiate SignalSlotable object
         self._sigslot = SignalSlotable(
-            self.deviceid, PythonDevice.connectionParams,
+            self.deviceId, PythonDevice.connectionParams,
             self._parameters["heartbeatInterval"], info)
 
         # Initialize Device slots and instantiate all channels
@@ -425,12 +425,12 @@ class PythonDevice:
 
         pid = self["pid"]
         self.logger.info(
-            "'{0.classid}' with deviceId '{0.deviceid}' got started "
-            "on server '{0.serverid}', pid '{1}'.".format(self, pid))
+            f"'{self.classId}' with deviceId '{self.deviceId}' got started "
+            f"on server '{self.serverId}', pid '{pid}'.")
 
         # Inform server that we are up - fire-and-forget is sufficient.
         self._sigslot.call(
-            self.serverid, "slotDeviceUp", self.deviceid, True, "success")
+            self.serverId, "slotDeviceUp", self.deviceId, True, "success")
 
         # Trigger connection of input channels
         self._sigslot.connectInputChannels()
@@ -484,10 +484,10 @@ class PythonDevice:
         # Cure the file name of file logger: own dir inside server's log dir:
         if 'file.filename' in config:
             serverLogDir = os.path.dirname(config['file.filename'])
-            path = os.path.join(serverLogDir, self.deviceid)
+            path = os.path.join(serverLogDir, self.deviceId)
         else:  # Again, for now if started from MDL
             path = os.path.join(os.environ["KARABO"], "var", "log",
-                                self.serverid, self.deviceid)
+                                self.serverId, self.deviceId)
         if not os.path.isdir(path):
             os.makedirs(path)
         path = os.path.join(path, 'device.log')
@@ -605,7 +605,7 @@ class PythonDevice:
             self._parameters.merge(
                 validated, HashMergePolicy.REPLACE_ATTRIBUTES)
 
-            self._sigslot.emit("signalChanged", validated, self.deviceid)
+            self._sigslot.emit("signalChanged", validated, self.deviceId)
 
     def setVectorUpdate(self, key, updates, updateType, timestamp=None):
         """Concurrency safe update of vector property (not for tables)
@@ -654,7 +654,7 @@ class PythonDevice:
         nMessages = info.get("logs", default=KARABO_LOGGER_CONTENT_DEFAULT)
         content = Logger.getCachedContent(nMessages)
         self._sigslot.reply(
-            Hash("deviceId", self.deviceid, "content", content))
+            Hash("deviceId", self.deviceId, "content", content))
 
     def __setitem__(self, key, value):
         """Alternative to `self.set`: `self[key] = value`
@@ -846,7 +846,7 @@ class PythonDevice:
 
             # notify the distributed system...
             self._sigslot.emit("signalSchemaUpdated",
-                               self._fullSchema, self.deviceid)
+                               self._fullSchema, self.deviceId)
 
             # Keep new leaves only. This hash is then set, to avoid re-sending
             # updates with the same value.
@@ -917,7 +917,7 @@ class PythonDevice:
 
             # notify the distributed system...
             self._sigslot.emit("signalSchemaUpdated", self._fullSchema,
-                               self.deviceid)
+                               self.deviceId)
 
             # Keep new leaves only. This hash is then set, to avoid re-sending
             # updates with the same value.
@@ -969,7 +969,7 @@ class PythonDevice:
 
             if emitFlag:
                 self._sigslot.emit("signalSchemaUpdated",
-                                   self._fullSchema, self.deviceid)
+                                   self._fullSchema, self.deviceId)
 
     def getAliasFromKey(self, key, aliasReferenceType):
         """
@@ -1064,7 +1064,7 @@ class PythonDevice:
     def getServerId(self):
         """Return the id of the server hosting this devices"""
 
-        return self.serverid
+        return self.serverId
 
     def getAvailableInstances(self):
         """Return available instances in the distributed system"""
@@ -1092,11 +1092,11 @@ class PythonDevice:
         """
 
     def initClassId(self):
-        self.classid = self.__class__.__classid__
+        self.classId = self.__class__.__classid__
 
     def initSchema(self):
-        self._staticSchema = PythonDevice.getSchema(self.classid)
-        self._fullSchema = Schema(self.classid)
+        self._staticSchema = PythonDevice.getSchema(self.classId)
+        self._fullSchema = Schema(self.classId)
         self._fullSchema.copy(self._staticSchema)
 
     def updateState(self, newState, propertyUpdates=None, timestamp=None):
@@ -1201,7 +1201,7 @@ class PythonDevice:
         # Register intrinsic signals
         # changeHash, instanceId
         self._sigslot.registerSignal("signalChanged", Hash, str)
-        # schema, deviceid
+        # schema, deviceId
         self._sigslot.registerSignal("signalSchemaUpdated", Schema, str)
 
         # Register intrinsic slots
@@ -1390,7 +1390,7 @@ class PythonDevice:
                             msg = "Command \"{}\" is not allowed in current " \
                                   "state \"{}\" of device \"{}\"" \
                                 .format(slotName, currentState.name,
-                                        self.deviceid)
+                                        self.deviceId)
                             raise RuntimeError(msg)
 
         if lockableSlot:
@@ -1451,14 +1451,14 @@ class PythonDevice:
         lockHolder = self["lockedBy"]
         if lockHolder:
             msg = "{} is locked by {} and called by {}"
-            self.logger.debug(msg.format(self.deviceid, lockHolder, callee))
+            self.logger.debug(msg.format(self.deviceId, lockHolder, callee))
             if callee != "unknown" and callee != lockHolder:
                 msg = "Command {} is not allowed as device is locked by {}"
                 raise RuntimeError(msg.format(slotName, lockHolder))
 
     def slotGetConfiguration(self):
         with self._stateChangeLock:
-            self._sigslot.reply(self._parameters, self.deviceid)
+            self._sigslot.reply(self._parameters, self.deviceId)
 
     def slotGetConfigurationSlice(self, info):
         paths = info.get("paths")
@@ -1488,27 +1488,27 @@ class PythonDevice:
         with self._stateChangeLock:
             self._parameters += reconfiguration
 
-        self._sigslot.emit("signalChanged", reconfiguration, self.deviceid)
+        self._sigslot.emit("signalChanged", reconfiguration, self.deviceId)
 
     def slotGetSchema(self, onlyCurrentState):
         # state lock!
         if onlyCurrentState:
             currentState = self["state"]
             schema = self._getStateDependentSchema(currentState)
-            self._sigslot.reply(schema, self.deviceid)
+            self._sigslot.reply(schema, self.deviceId)
         else:
             with self._stateChangeLock:
-                self._sigslot.reply(self._fullSchema, self.deviceid)
+                self._sigslot.reply(self._fullSchema, self.deviceId)
 
     def slotKillDevice(self):
         senderid = self._sigslot.getSenderInfo(
             "slotKillDevice").getInstanceIdOfSender()
-        if senderid == self.serverid and self.serverid != "__none__":
+        if senderid == self.serverId and self.serverId != "__none__":
             self.logger.info("Device is going down as instructed by server")
         else:
             self.logger.info("Device is going down as instructed by \"{}\""
                              .format(senderid))
-            self._sigslot.call(self.serverid, "slotDeviceGone", self.deviceid)
+            self._sigslot.call(self.serverId, "slotDeviceGone", self.deviceId)
         try:
             self.preDestruction()
         except Exception as e:
@@ -1519,7 +1519,7 @@ class PythonDevice:
             # TODO:
             # Remove this hack if known how to get rid of the object cleanly
             # (slotInstanceGone will be called in _sigslot destructor again)
-            self._sigslot.call("*", "slotInstanceGone", self.deviceid,
+            self._sigslot.call("*", "slotInstanceGone", self.deviceId,
                                self._sigslot.getInstanceInfo())
 
             # This will trigger the central event-loop to finish
@@ -1726,7 +1726,7 @@ def launchPythonDevice():
     from .plugin_loader import DEFAULT_NAMESPACE, PluginLoader
 
     # NOTE: The first argument is '-c'
-    _, modname, classid, cfgFile = tuple(sys.argv)
+    _, modname, classId, cfgFile = tuple(sys.argv)
 
     config = loadFromFile(cfgFile)
     os.remove(cfgFile)
@@ -1754,10 +1754,10 @@ def launchPythonDevice():
         "PythonPluginLoader", Hash("pluginNamespace", namespace))
     loader.update()
 
-    # Load the module containing classid so that it gets registered.
+    # Load the module containing classId so that it gets registered.
     entrypoint = loader.getPlugin(modname)
     deviceClass = entrypoint.load()
-    assert deviceClass.__classid__ == classid
+    assert deviceClass.__classid__ == classId
 
     device = None
     exception = None
@@ -1769,7 +1769,7 @@ def launchPythonDevice():
         try:
             # Create device and prepare its initialisation
             try:
-                device = Configurator(PythonDevice).create(classid, config)
+                device = Configurator(PythonDevice).create(classId, config)
             except Exception as e:
                 # create a signal slotable to act as a flight data recorder
                 # to inform the server that an exception occurred
