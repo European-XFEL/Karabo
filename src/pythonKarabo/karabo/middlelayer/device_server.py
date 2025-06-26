@@ -156,10 +156,11 @@ class MiddleLayerDeviceServer(HeartBeatMixin, SignalSlotable):
                 self.timeServerId, "signalTimeTick", self.slotTimeTick)
         self._sigslot.enter_context(self.log.setBroker(self._sigslot))
         self.logger = self.log.logger
+        classes = ", ".join(self.getClasses())
         self.logger.info(
             f"Starting Karabo {karaboVersion} DeviceServer "
-            f"(pid: {self.pid}) on host {self.hostName}, topic "
-            f"{get_event_loop().topic}")
+            f"(pid: {self.pid}) on host {self.hostName}, topic: "
+            f"{get_event_loop().topic}\ndeviceClasses: {classes}")
         for name, detail in self.plugin_errors.items():
             self.logger.error(
                 f"Problem loading device class {name}: {detail}")
