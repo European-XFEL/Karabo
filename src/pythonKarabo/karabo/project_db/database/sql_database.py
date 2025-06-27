@@ -63,10 +63,12 @@ class SQLDatabase(DatabaseBase):
         self.initialized = True
 
     async def assure_domains(self, required_domains: list[str]):
-        # There's a list of initial domains defined and there's no
-        # domain stored in the DB. Initialize the domains.
+        """Makes sure that the specified required_domains are present in the
+           database."""
+        if not required_domains:
+            raise RuntimeError("'required_domains' cannot be an empty list")
         for domain in required_domains:
-            await self.add_domain(domain)
+            await self.add_domain(domain.strip())
 
     async def delete(self):
         """Deletes the database schema and file."""
