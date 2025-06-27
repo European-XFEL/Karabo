@@ -16,7 +16,7 @@ Major Highlights of This Release
 
 
 - Introduction of a new Karabo broker protocol that leverages modern messaging features (e.g., headers) and enables splitting of broadcast messages
-- Refactored project database to use MySQL
+- Refactored project database to use SQLite
 - Refactored configuration database to use MySQL
 - Reauthentication support added in the ``GuiServer`` device
 - Pipelines (Output Channel) validate via Schema definition if provided
@@ -41,15 +41,14 @@ The ``Bound Hash`` now offers improved functionality and alignment with the midd
 KaraboGUI Updates
 ~~~~~~~~~~~~~~~~~
 
-- Curve Options: Customize pen colors and legend names for each curve
+- Curve Options: Customize pen colors and legend names for each curve in VectorGraph and TrendGraph
 - ImageWidget: Option to permanently store color level settings
 - New Configurator: Includes ``NORMAL`` and ``EXPERT`` modes
-- Lazy Project Loading: Now also scenes are loaded lazily
 - ToolTip Sticker Widget to provide helping information on the scene
 
 - Karabo Projects:
-
-  - More convenience in adding servers
+  - More convenience in adding device servers in the GUI
+  - Lazy Project Loading: Now also scenes are loaded lazily
   - Search dialog now offers device, macro and servers as different option
 
 
@@ -57,6 +56,24 @@ Breaking Changes
 ++++++++++++++++
 
 - Boost FSM Removal (C++/Bound): The finite state machine concept has been removed from Karabo.
+- Removal of device properties:
+  - `_deviceId_`
+  - `_serverId_`
+  - `visibility`
+
+- Slot Changes:
+  - Removal of Slot ``slotGetOutputChannelInformationFromHash``, use ``slotGetOutputChannelInformation`` which takes a `Hash` as input.
+  - Removal of slot `slotUpdateSchemaAttributes` (see below)
+  - `slotPing` does not take anymore the `track` boolean
+  - `slotPing` not used for topology discovery anymore, added `slotDiscover`
+
+- Signal Changes:
+
+  - Removal of third party subscriptions via the signal slot protocol (broker)
+  - Removal of signalStateChanged
+  - `slotFunctions` information not anymore present in headers by default.
+
+- Bound: Renaming of the inner device properties `self.deviceid`,`self.serverid` and `self.classid` to `self.deviceId`, `self.serverId` and `self.classId`, respectively.
 - Runtime Attributes Removed: The concept of runtime attributes has been completely eliminated. For example, `slotUpdateSchemaAttributes` is no longer available.
 - Removed Attributes:
 
@@ -65,33 +82,31 @@ Breaking Changes
   - `rollingWindowStatistics`
   - `leafType`
   - `allowedActions`
+  - `absoluteError`
+  - `relativeError`
   - All alarm-related attributes such as `alarmLow`, `alarmHigh`, `needsAck`, etc.
 
 - AccessLevel Update: `USER` and `ADMIN` levels have been removed. Use `OPERATOR` and `EXPERT` instead.
-- Removal of Slot ``slotGetOutputChannelInformationFromHash``, use ``slotGetOutputChannelInformation`` which takes a `Hash` as input.
+-
 - Pipeline Syntax Change: The `@` separator is no longer supported in pipeline channel declarations; use `:` as before.
 - Middlelayer Functions Removed: Functions such as `linspace`, `dot`, and `cross` in `middlelayer.numeric` have been removed.
-- Device Properties Removed: Properties like `_serverId` and `_deviceId` have been removed.
 - Visibility Features Removed: All visibility features (Configurator, Topology, ikarabo) and the `visibility` property have been removed.
 
-- Broker Signal/Slot Changes:
-
-  - Removal of third party subscriptions via the signal slot protocol (broker)
-  - Removal of signalStateChanged
-  - `slotFunctions` information not anymore present in headers by default.
-
-- Element and Enum Removals:
+- Element and Enum Removals or Changes:
 
   - Removed `Elements Choice Of Node` and `List Of Node`
+  - Removes `Image Element` properties `dimScales` and `dimTyes`
   - Removed support for several Encoding Enum types (TIFF, BMP, PNG, etc.)
   - Removed `leafType` Enum
+  - Removed `DimensionType` Enum
   - Removed `daqDataType` `PULSEMASTER` and `TRAINMASTER` Enum.
   - Removed `PATH_ELEMENT`; use `STRING_ELEMENT` instead.
   - Removal of archivePolicy attriute options. Only `EVERY_EVENT` and `NO_ARCHIVING` remain.
+  - `EncodingType` (MDL) has been renamed to `Encoding`.
 
 - Class Changes:
 
-  - `Trainstamp` (C++/Bound) has been removed; use `TimeId`.
+  - `Trainstamp` (C++/Bound) has been renamed; use `TimeId`.
   - `Worker` class (C++) has been removed.
   - `QueueWorker` class (C++/Bound) has been removed.
 
@@ -107,6 +122,24 @@ Breaking Changes
   - Only a single `default` configuration can be used in a project device. Now more configurations can be added.
   - Removal of Printer Option from every panel
 
+- Controller Model Removals:
+
+  - `ComboBoxModel` -> Use `EditableComboBoxModel` without `klass`
+  - `SliderModel` -> Use `TickSliderModel`
+  - `VacuumWidgetModel` -> Karabo 1
+  - `DisplayImageElementModel` -> Use `ImageGraphModel`
+  - `DisplayImageModel` -> Use `ImageGraphModel`
+  - `WebcamImageModel` -> Use `WebCamGraphModel`
+  - `FileInModel` -> Use `DisplayLabelModel`
+  - `FileOutModel` -> Use `DisplayLabelModel`
+  - `DirectoryModel` -> Use `DisplayLabelModel`
+  - `XYPlotModel` -> Use `ScatterGraphModel`
+  - `MultiCurvePlotModel` -> Use `MultiCurveGraphModel`
+  - `DisplayPlotModel` -> Use `VectorGraphModel`
+  - `DisplayTrendlineModel` -> Use `TrendGraphModel`
+  - `LinePlotModel` -> Was a Ghost model
+  - `XYVectorModel` -> Use `VectorXYGraphModel`
+
 
 Change of Behavior
 ++++++++++++++++++
@@ -121,7 +154,6 @@ Change of Behavior
 
 - MDL:
 
-  - `EncodingType` has been renamed to `Encoding`.
   - `Hash.paths()` now defaults to showing only leaf elements.
   - DeviceNode: The `timeout` argument has been removed, as it was previously ignored.
   - MDL Configuration Singleton not attached to event loop anymore. This enables scripting among different broker topics with macros.
@@ -131,10 +163,11 @@ Change of Behavior
 
 - ConfigDB:
 
-  - Init Configurations are now equivalent to project configurations (only class schema properties, only changes from default).
+  - **Init Configurations are now equivalent to project configurations (only class schema properties, only changes from default).**
   - Configurations are stored as XML-encoded Hash objects.
 
 - Bound: The `Worker` class has been streamlined to cover only the common use cases (single-shot and standard timeout).
+- Bound: Legacy logging still in place, but use more pythonic logger syntax, e.g. `self.logger.info`, `self.logger.debug`, ...
 - ProjectDB: Local database storage has changed from a file to SQLite.
 - Device Repository: The default namespace for installing devices is now `karaboDevices3`.
 
@@ -146,7 +179,7 @@ Dependency Updates
 ++++++++++++++++++
 
 - `pytest_asyncio` has been updated to 1.0.0. For a period until Winter 2026, device repositories making use of the central CI
-can specify USE_LEGACY_PYTEST = "false" to make use of this feature. After that, the legacy behavior changes its default.
+  can specify USE_LEGACY_PYTEST = "true" to use old behavior (pytest 0.21.X). After that, the legacy behavior changes its default.
 - pyqtgraph update to 0.13.7
 
 
