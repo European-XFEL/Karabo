@@ -270,8 +270,7 @@ class ProjectDatabaseConnection(QObject):
             for item in items:
                 domain = item['domain']
                 uuid = item['uuid']
-                entry = item['entry']
-                date = entry.get('date', '') if entry is not None else ''
+                date = item['date']
                 success = item['success']
                 if not success:
                     messagebox.show_error(item['reason'])

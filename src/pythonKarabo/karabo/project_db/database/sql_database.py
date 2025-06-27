@@ -342,7 +342,7 @@ class SQLDatabase(DatabaseBase):
         return False, ""
 
     async def save_item(self, domain: str, uuid: str, item_xml: str,
-                        overwrite: bool = False) -> dict[str, any]:
+                        overwrite: bool = False) -> str:
         """
         Saves a item xml file into the database. It will
         create a new entry if the item does not exist yet, or update the item
@@ -363,8 +363,7 @@ class SQLDatabase(DatabaseBase):
                                    injection, allowing to overwrite in case of
                                    versioning conflicts.
 
-        :return: If saving was successful (no conflict), a dictionary with
-                 the updated versioning information after saving the item.
+        :return: date (str) of saving
 
 
         :raises: ProjectDBError on failure.
@@ -434,8 +433,7 @@ class SQLDatabase(DatabaseBase):
                 raise ProjectDBError(
                     f"Saving of items of type '{item_type}' not supported")
 
-        meta = {"domain": domain, "uuid": uuid, "date": timestamp}
-        return meta
+        return timestamp
 
     async def _get_configuration_from_device_part(
             self, domain: str, name_part: str,

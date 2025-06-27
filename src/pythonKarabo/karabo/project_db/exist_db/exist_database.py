@@ -755,11 +755,7 @@ class ExistDatabase(DatabaseBase):
         if not success:
             raise ProjectDBError("Saving item failed!")
 
-        meta = {}
-        meta['domain'] = domain
-        meta['uuid'] = uuid
-        meta['date'] = item_tree.attrib['date']
-        return meta
+        return item_tree.attrib['date']
 
     async def get_projects_with_device(
             self, domain: str, device_id_part: str) -> list[dict[str, any]]:

@@ -27,7 +27,7 @@ from karabo.common.states import State
 from karabo.middlelayer import (
     AccessLevel, AccessMode, Bool, Configurable, Device, Hash, HashList,
     KaraboError, Node, Overwrite, Signal, Slot, String, TypeHash, VectorString,
-    decodeXML, dictToHash, instantiate, slot)
+    decodeXML, instantiate, slot)
 from karabo.native import read_project_model
 from karabo.project_db import (
     ExistDbNode, LocalNode, ProjectDBError, RemoteNode)
@@ -169,9 +169,8 @@ class ProjectManager(Device):
         async with self.db_handle as db_session:
             for item in items:
                 xml = item["xml"]
-                # Remove XML data to not send it back
-                item['xml'] = ''
                 uuid = item["uuid"]
+
                 # XXX: be backward compatible (<2.8.0)!
                 item_type = item.get("item_type", "unknown")
                 if item_type == "project":
@@ -179,20 +178,23 @@ class ProjectManager(Device):
 
                 domain = item["domain"]
                 reason = ""
+                date = ""
                 success = True
-                meta = None
                 # All items have their individual success bool
                 try:
-                    meta = await db_session.save_item(
+                    date = await db_session.save_item(
                         domain, uuid, xml, True)
-                    meta = dictToHash(meta)
                 except ProjectDBError as e:
                     success = False
                     reason = str(e)
-                item.set("success", success)
-                item.set("reason", reason)
-                item.set("entry", meta)
-                saved_items.append(item)
+
+                ret = Hash(
+                    "success", success,
+                    "reason", reason,
+                    "domain", domain,
+                    "date", date,
+                    "uuid", uuid)
+                saved_items.append(ret)
 
         return saved_items, project_uuids
 

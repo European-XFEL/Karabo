@@ -235,7 +235,7 @@ async def test_project_manager(db_fixture, subtests, mocker):
                 _PROJECT_DB_TEST, "slotSaveItems", h), timeout=5)
         items = ret.get("items")
         item = items[0]
-        assert item.get('entry.uuid') == uuid
+        assert item.get('uuid') == uuid
         assert item.get("success")
 
         await updateDevice(proxy)
