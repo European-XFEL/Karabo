@@ -28,6 +28,13 @@ class ProjectDomain(SQLModel, table=True):
     projects: list["Project"] = Relationship(back_populates="project_domain")
 
 
+class DatabaseMetadata(SQLModel, table=True):
+    __tablename__ = "DatabaseMetadata"
+
+    id: int | None = Field(default=None, primary_key=True)
+    schema_version: int = Field(nullable=False, unique=True)
+
+
 class Project(SQLModel, table=True):
     __tablename__ = "Project"
 

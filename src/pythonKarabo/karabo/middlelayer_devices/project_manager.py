@@ -19,9 +19,9 @@ from io import StringIO
 from lxml import etree
 
 from karabo.common.project.api import (
-    PROJECT_DB_SCHEMA, PROJECT_DB_TYPE_DEVICE_CONFIG,
-    PROJECT_DB_TYPE_DEVICE_INSTANCE, PROJECT_DB_TYPE_DEVICE_SERVER,
-    PROJECT_DB_TYPE_MACRO, PROJECT_DB_TYPE_PROJECT, PROJECT_DB_TYPE_SCENE)
+    PROJECT_DB_TYPE_DEVICE_CONFIG, PROJECT_DB_TYPE_DEVICE_INSTANCE,
+    PROJECT_DB_TYPE_DEVICE_SERVER, PROJECT_DB_TYPE_MACRO,
+    PROJECT_DB_TYPE_PROJECT, PROJECT_DB_TYPE_SCENE)
 from karabo.common.scenemodel.api import write_scene
 from karabo.common.states import State
 from karabo.middlelayer import (
@@ -162,6 +162,10 @@ class ProjectManager(Device):
                     'origin', self.deviceId,
                     'payload', payload)
 
+    async def _project_db_schema(self) -> int:
+        async with self.db_handle as db_session:
+            return await db_session.schema_version()
+
     async def _save_items(self, items):
         """Internally used method to store items in the project database"""
         saved_items = []
@@ -261,9 +265,10 @@ class ProjectManager(Device):
         client = info.get("client", _UNKNOWN_CLIENT)
 
         schema_version = info.get("schema_version", 1)
-        if not schema_version == PROJECT_DB_SCHEMA:
+        project_db_schema = await self._project_db_schema()
+        if not schema_version == project_db_schema:
             text = ("Cannot store into project database "
-                    f"with db schema {PROJECT_DB_SCHEMA}.")
+                    f"with db schema {project_db_schema}.")
             raise ProjectDBError(text)
 
         saved, uuids = await self._save_items(items)

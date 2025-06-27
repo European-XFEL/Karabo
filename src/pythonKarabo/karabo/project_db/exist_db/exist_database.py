@@ -24,6 +24,7 @@ from pyexistdb.db import ExistDB
 from pyexistdb.exceptions import ExistDBException
 from urllib3.exceptions import HTTPError
 
+from karabo.common.project.api import PROJECT_DB_SCHEMA
 from karabo.project_db.util import ProjectDBError
 
 from ..bases import DatabaseBase
@@ -150,6 +151,10 @@ class ExistDatabase(DatabaseBase):
             modified = True
             reason = "Versioning conflict! Document modified inbetween."
         return modified, reason
+
+    async def schema_version(self) -> int:
+        return PROJECT_DB_SCHEMA
+
 
     async def load_item(self, domain, items):
         """

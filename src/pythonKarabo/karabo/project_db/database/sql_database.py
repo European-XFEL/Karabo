@@ -25,12 +25,14 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from sqlmodel import SQLModel, select
 
+from karabo.common.project.api import PROJECT_DB_SCHEMA
+
 from ..bases import DatabaseBase
 from ..util import ProjectDBError, make_str_if_needed, make_xml_if_needed
 from .db_engine import create_local_engine, create_remote_engine
 from .models import (
-    DeviceConfig, DeviceInstance, DeviceServer, Macro, Project, ProjectDomain,
-    ProjectSubproject, Scene, SceneLinkedScene)
+    DatabaseMetadata, DeviceConfig, DeviceInstance, DeviceServer, Macro,
+    Project, ProjectDomain, ProjectSubproject, Scene, SceneLinkedScene)
 from .models_xml import (
     emit_config_xml, emit_device_xml, emit_macro_xml, emit_project_xml,
     emit_scene_xml, emit_server_xml)
@@ -91,6 +93,13 @@ class SQLDatabase(DatabaseBase):
     async def domain_exists(self, domain: str) -> bool:
         domains = await self.list_domains()
         return domain in domains
+
+    async def schema_version(self) -> int:
+        metadata = await self._execute_first(select(DatabaseMetadata))
+        if metadata is None:
+            return PROJECT_DB_SCHEMA
+        else:
+            return metadata.schema_version
 
     async def list_items(
             self, domain: str, item_types: list[str] | None = None
