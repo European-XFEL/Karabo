@@ -1077,7 +1077,6 @@ class SQLDatabase(DatabaseBase):
 
     async def _save_macro_item(self, uuid: str, xml: str, timestamp: str):
         macro_obj = etree.fromstring(xml)
-        macro_uuid = macro_obj.attrib["uuid"]
         macro_name = macro_obj.attrib["simple_name"]
         # In MySQL the macro bodies are not Base64 encoded
         macro_body = base64.b64decode(macro_obj.getchildren()[0].text)
@@ -1096,7 +1095,7 @@ class SQLDatabase(DatabaseBase):
             else:
                 # The macro is new
                 macro = Macro(
-                    uuid=macro_uuid,
+                    uuid=uuid,
                     name=macro_name,
                     date=date,
                     body=macro_body)
@@ -1106,7 +1105,6 @@ class SQLDatabase(DatabaseBase):
     async def _save_scene_item(self, uuid: str, xml: str, timestamp: str):
         date = datetime_from_str(timestamp)
         scene_obj = etree.fromstring(xml)
-        scene_uuid = scene_obj.attrib["uuid"]
         scene_name = scene_obj.attrib["simple_name"]
         scene_svg_data = (
             etree.tostring(scene_obj.getchildren()[0]).decode("UTF-8")
@@ -1134,7 +1132,7 @@ class SQLDatabase(DatabaseBase):
             else:
                 # The scene is new
                 scene = Scene(
-                    uuid=scene_uuid,
+                    uuid=uuid,
                     name=scene_name,
                     date=date,
                     svg_data=scene_svg_data)
@@ -1174,7 +1172,6 @@ class SQLDatabase(DatabaseBase):
             self, uuid: str, xml: str, timestamp: str):
         date = datetime_from_str(timestamp)
         config_obj = etree.fromstring(xml)
-        config_uuid = config_obj.attrib["uuid"]
         config_name = config_obj.attrib["simple_name"]
         config_data = (
             etree.tostring(config_obj.getchildren()[0]).decode("UTF-8")
@@ -1192,7 +1189,7 @@ class SQLDatabase(DatabaseBase):
             else:
                 # A new device config
                 config = DeviceConfig(
-                    uuid=config_uuid,
+                    uuid=uuid,
                     name=config_name,
                     config_data=config_data,
                     date=date)
@@ -1206,7 +1203,6 @@ class SQLDatabase(DatabaseBase):
         date = datetime_from_str(timestamp)
         instance_element = etree.fromstring(xml)
 
-        uuid = instance_element.attrib["uuid"]
         instance_tag = instance_element.getchildren()[0]
         instance_id = instance_tag.attrib['instance_id']
         class_id = instance_tag.attrib['class_id']
@@ -1271,7 +1267,6 @@ class SQLDatabase(DatabaseBase):
             self, uuid: str, xml: str, timestamp: str):
         date = datetime_from_str(timestamp)
         server_obj = etree.fromstring(xml)
-        server_uuid = server_obj.attrib["uuid"]
         server_name = server_obj.attrib["simple_name"]
         server_tag = (server_obj.getchildren()[0]
                       if len(server_obj.getchildren()) > 0 else None)
@@ -1290,7 +1285,7 @@ class SQLDatabase(DatabaseBase):
             else:
                 # A new device server is being saved
                 server = DeviceServer(
-                    uuid=server_uuid,
+                    uuid=uuid,
                     name=server_name,
                     date=date)
                 session.add(server)
