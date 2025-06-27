@@ -42,21 +42,25 @@ _TOPIC_DOMAIN = topicDomain()
 
 class RemoteNode(Configurable):
     host = String(
-        defaultValue=os.getenv("KARABO_PROJECT_DB_HOST", "localhost"),
         displayedName="Database host",
         accessMode=AccessMode.INITONLY)
 
     port = UInt32(
         displayedName="Port",
-        defaultValue=int(os.getenv("KARABO_PROJECT_DB_PORT", "3306")),
         accessMode=AccessMode.INITONLY)
 
     dbName = String(
-        defaultValue=os.getenv("KARABO_PROJECT_DB_DBNAME", "projectDB"),
         displayedName="Database name",
         accessMode=AccessMode.INITONLY)
 
     async def get_db(self, test_mode=False, init_db=False):
+        if not isSet(self.host):
+            self.host = os.getenv("KARABO_PROJECT_DB_HOST", "localhost"),
+        if not isSet(self.port):
+            self.port = int(os.getenv("KARABO_PROJECT_DB_PORT", "3306"))
+        if not isSet(self.dbName):
+            self.dbName = os.getenv("KARABO_PROJECT_DB_DBNAME", "projectDB.db")
+
         user, password = get_db_credentials()
         db = SQLDatabase(
             user, password, server=self.host.value, port=self.port.value,
@@ -68,7 +72,6 @@ class RemoteNode(Configurable):
 class LocalNode(Configurable):
 
     dbName = String(
-        defaultValue=os.getenv("KARABO_PROJECT_DB_DBNAME", "projectDB.db"),
         displayedName="Database name",
         description="The filename placed in var/project_db/",
         accessMode=AccessMode.INITONLY)
@@ -82,6 +85,9 @@ class LocalNode(Configurable):
         accessMode=AccessMode.INITONLY)
 
     async def get_db(self, test_mode=False, init_db=False):
+        if not isSet(self.dbName):
+            self.dbName = os.getenv("KARABO_PROJECT_DB_DBNAME", "projectDB.db")
+
         folder = Path(os.environ["KARABO"]).joinpath(
             "var", "data", "project_db")
         path = folder / self.dbName.value
@@ -91,6 +97,7 @@ class LocalNode(Configurable):
             required_domains = self.requiredDomains
         else:
             required_domains = [_TOPIC_DOMAIN]
+
         await db.initialize()
         await db.assure_domains(required_domains)
         return db
