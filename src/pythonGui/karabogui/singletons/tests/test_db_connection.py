@@ -86,7 +86,7 @@ def test_connection(gui_app, mocker):
 
         data = {"success": True,
                 "items": [Hash("domain", domain, "uuid", project_uuid,
-                               "xml", "")]}
+                               "date", "", "xml", "")]}
         broadcast_event(KaraboEvent.ProjectItemsLoaded, data)
         process_qt_events(timeout=10)
         assert db_conn.is_reading() is False
@@ -96,7 +96,7 @@ def test_connection(gui_app, mocker):
         db_conn.retrieve(domain, project_uuid, model)
         data = {"success": False,
                 "items": [Hash("domain", domain, "uuid", project_uuid,
-                               "xml", "")]}
+                               "xml", "", "date", "")]}
         broadcast_event(KaraboEvent.ProjectItemsLoaded, data)
         process_qt_events(timeout=10)
         assert db_conn.is_reading() is False
@@ -113,7 +113,7 @@ def test_connection(gui_app, mocker):
         network.onProjectSaveItems.assert_called_once()
         data = {"success": "True",
                 "items": [Hash("domain", domain, "uuid", project_uuid,
-                               "entry", {}, "success", True,
+                               "date", "", "success", True,
                                "xml", "")]}
 
         broadcast_event(KaraboEvent.ProjectItemsSaved, data)
@@ -126,7 +126,7 @@ def test_connection(gui_app, mocker):
         db_conn.flush()
         data = {"success": False,
                 "items": [Hash("domain", domain, "uuid", project_uuid,
-                               "entry", {}, "success", False,
+                               "date", "", "success", False,
                                "xml", "")]}
         broadcast_event(KaraboEvent.ProjectItemsSaved, data)
         process_qt_events(timeout=10)
@@ -138,7 +138,7 @@ def test_connection(gui_app, mocker):
         assert db_conn.is_processing() is True
         data = {"success": True,
                 "items": [Hash("domain", domain, "uuid", project_uuid,
-                               "entry", {}, "success", False,
+                               "date", "", "success", False,
                                "xml", "", "reason", "Conflict")]}
         mbox_path = "karabogui.singletons.db_connection.messagebox"
         mb = mocker.patch(mbox_path)

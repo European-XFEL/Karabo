@@ -244,13 +244,11 @@ async def test_save_check_modification(database, subtests):
 
             success = True
             try:
-                meta = await db.save_item('LOCAL', proj_uuid, xml_rep)
+                new_date = await db.save_item('LOCAL', proj_uuid, xml_rep)
             except ProjectDBError:
                 success = False
 
             assert success
-            assert 'date' in meta
-            new_date = meta['date']
             assert new_date != date
             date_t = strptime(date, DATE_FORMAT)
             try:
@@ -263,12 +261,11 @@ async def test_save_check_modification(database, subtests):
                     datetime.datetime.fromisoformat(new_date).timetuple())
 
             assert date_t < current_date_t
-
             # Try saving again but using same time stamp
             success = True
             reason = ""
             try:
-                meta = await db.save_item('LOCAL', proj_uuid, xml_rep)
+                await db.save_item('LOCAL', proj_uuid, xml_rep)
             except ProjectDBError as e:
                 success = False
                 reason = str(e)

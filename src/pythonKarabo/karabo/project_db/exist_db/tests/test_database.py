@@ -73,15 +73,14 @@ async def test_project_interface(database, subtests):
                 f'<xml uuid="{testproject2}" item_type="device_server" '
                 'simple_name="xyz">foo</xml>')
 
-            meta = await db.save_item('LOCAL', testproject2, xml_rep)
+            date = await db.save_item('LOCAL', testproject2, xml_rep)
             path = f"{db.root}/LOCAL/{testproject2}_0"
             assert db.dbhandle.hasDocument(path)
             decoded = db.dbhandle.getDoc(path).decode('utf-8')
             doctree = etree.fromstring(decoded)
             assert doctree.get('uuid') == testproject2
             assert doctree.text == 'foo'
-            assert 'domain' in meta
-            assert 'uuid' in meta
+            assert isinstance(date, str)
 
         with subtests.test(msg='test_save_bad_item'):
             xml_rep = """
@@ -165,7 +164,7 @@ async def test_project_interface(database, subtests):
             xml_rep = """
             <xml uuid="{uuid}" date="{date}" user="sue">foo</xml>
             """.format(uuid=versioned_uuid, date=date)
-            meta = await db.save_item('LOCAL', versioned_uuid, xml_rep)
+            await db.save_item('LOCAL', versioned_uuid, xml_rep)
 
             # Make sure there's a revision of 0 (auto-added)
             res = await db.load_item('LOCAL', [versioned_uuid])
@@ -214,13 +213,11 @@ async def test_save_check_modification(database, subtests):
 
             success = True
             try:
-                meta = await db.save_item('LOCAL', proj_uuid, xml_rep)
+                new_date = await db.save_item('LOCAL', proj_uuid, xml_rep)
             except ProjectDBError:
                 success = False
 
             assert success
-            assert 'date' in meta
-            new_date = meta['date']
             assert new_date != date
             date_t = strptime(date, DATE_FORMAT)
             try:
@@ -239,7 +236,7 @@ async def test_save_check_modification(database, subtests):
             success = True
             reason = ""
             try:
-                meta = await db.save_item('LOCAL', proj_uuid, xml_rep)
+                await db.save_item('LOCAL', proj_uuid, xml_rep)
             except ProjectDBError as e:
                 success = False
                 reason = str(e)
