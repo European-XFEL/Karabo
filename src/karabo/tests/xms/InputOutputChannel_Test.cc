@@ -36,6 +36,7 @@
 #include "karabo/data/schema/Configurator.hh"
 #include "karabo/data/schema/SimpleElement.hh"
 #include "karabo/data/schema/VectorElement.hh"
+#include "karabo/data/time/Epochstamp.hh"
 #include "karabo/data/types/Hash.hh"
 #include "karabo/data/types/NDArray.hh"
 #include "karabo/data/types/Schema.hh"
@@ -50,6 +51,7 @@ using namespace std::string_literals; // for '"abc"s'
 
 using namespace karabo;
 using data::Configurator;
+using data::Epochstamp;
 using data::Hash;
 using data::INT32_ELEMENT;
 using data::NDArray;
@@ -117,8 +119,15 @@ const int connectTimeoutMs = 10000; // once saw CI failure with 5000!
 
 CPPUNIT_TEST_SUITE_REGISTRATION(InputOutputChannel_Test);
 
+bool InputOutputChannel_Test::m_calledTestAsyncUpdate = false;
 
-InputOutputChannel_Test::InputOutputChannel_Test() {}
+InputOutputChannel_Test::InputOutputChannel_Test() {
+    if (!m_calledTestAsyncUpdate) {
+        m_calledTestAsyncUpdate = true;
+        std::clog << " Settings given for InputOutputChannel_Test::testAsyncUpdate<NxM> are: "
+                  << "onSlowness, dataDistribution, memoryLocation, safeNDArray:" << std::endl;
+    }
+}
 
 
 void InputOutputChannel_Test::setUp() {
@@ -936,58 +945,96 @@ void InputOutputChannel_Test::testWriteUpdateFlags() {
     }
 }
 
-void InputOutputChannel_Test::testAsyncUpdate1a() {
-    testAsyncUpdate("drop", "copy", "local");
+void InputOutputChannel_Test::testAsyncUpdate1a1() {
+    testAsyncUpdate("drop", "copy", "local", false);
 }
 
-void InputOutputChannel_Test::testAsyncUpdate1b() {
-    testAsyncUpdate("drop", "copy", "remote");
+void InputOutputChannel_Test::testAsyncUpdate1a2() {
+    testAsyncUpdate("drop", "copy", "local", true);
 }
 
-void InputOutputChannel_Test::testAsyncUpdate2a() {
-    testAsyncUpdate("queueDrop", "copy", "local");
+void InputOutputChannel_Test::testAsyncUpdate1b0() {
+    testAsyncUpdate("drop", "copy", "remote", false); // safeNDArray does not matter for 'drop'  && 'remote'
 }
 
-void InputOutputChannel_Test::testAsyncUpdate2b() {
-    testAsyncUpdate("queueDrop", "copy", "remote");
+void InputOutputChannel_Test::testAsyncUpdate2a1() {
+    testAsyncUpdate("queueDrop", "copy", "local", false);
 }
 
-void InputOutputChannel_Test::testAsyncUpdate3a() {
-    testAsyncUpdate("wait", "copy", "local");
+void InputOutputChannel_Test::testAsyncUpdate2a2() {
+    testAsyncUpdate("queueDrop", "copy", "local", true);
 }
 
-void InputOutputChannel_Test::testAsyncUpdate3b() {
-    testAsyncUpdate("wait", "copy", "remote");
+void InputOutputChannel_Test::testAsyncUpdate2b1() {
+    testAsyncUpdate("queueDrop", "copy", "remote", false);
 }
 
-void InputOutputChannel_Test::testAsyncUpdate4a() {
-    testAsyncUpdate("drop", "shared", "local");
+void InputOutputChannel_Test::testAsyncUpdate2b2() {
+    testAsyncUpdate("queueDrop", "copy", "remote", true);
 }
 
-void InputOutputChannel_Test::testAsyncUpdate4b() {
-    testAsyncUpdate("drop", "shared", "remote");
+void InputOutputChannel_Test::testAsyncUpdate3a1() {
+    testAsyncUpdate("wait", "copy", "local", false);
 }
 
-void InputOutputChannel_Test::testAsyncUpdate5a() {
-    testAsyncUpdate("queueDrop", "shared", "local");
+void InputOutputChannel_Test::testAsyncUpdate3a2() {
+    testAsyncUpdate("wait", "copy", "local", true);
 }
 
-void InputOutputChannel_Test::testAsyncUpdate5b() {
-    testAsyncUpdate("queueDrop", "shared", "remote");
+void InputOutputChannel_Test::testAsyncUpdate3b0() {
+    testAsyncUpdate("wait", "copy", "remote", false); // safeNDArray does not matter for 'wait' and 'remote'
 }
 
-void InputOutputChannel_Test::testAsyncUpdate6a() {
-    testAsyncUpdate("wait", "shared", "local");
+void InputOutputChannel_Test::testAsyncUpdate4a1() {
+    testAsyncUpdate("drop", "shared", "local", false);
 }
 
-void InputOutputChannel_Test::testAsyncUpdate6b() {
-    testAsyncUpdate("wait", "shared", "remote");
+void InputOutputChannel_Test::testAsyncUpdate4a2() {
+    testAsyncUpdate("drop", "shared", "local", true);
+}
+
+void InputOutputChannel_Test::testAsyncUpdate4b0() {
+    testAsyncUpdate("drop", "shared", "remote", false); // safeNDArray does not matter for onSlowness = 'drop'
+}
+
+void InputOutputChannel_Test::testAsyncUpdate5a1() {
+    testAsyncUpdate("queueDrop", "shared", "local", false);
+}
+
+void InputOutputChannel_Test::testAsyncUpdate5a2() {
+    testAsyncUpdate("queueDrop", "shared", "local", true);
+}
+
+void InputOutputChannel_Test::testAsyncUpdate5b1() {
+    testAsyncUpdate("queueDrop", "shared", "remote", false);
+}
+
+void InputOutputChannel_Test::testAsyncUpdate5b2() {
+    testAsyncUpdate("queueDrop", "shared", "remote", true);
+}
+
+void InputOutputChannel_Test::testAsyncUpdate6a1() {
+    testAsyncUpdate("wait", "shared", "local", false);
+}
+
+void InputOutputChannel_Test::testAsyncUpdate6a2() {
+    testAsyncUpdate("wait", "shared", "local", true);
+}
+
+void InputOutputChannel_Test::testAsyncUpdate6b0() {
+    testAsyncUpdate("wait", "shared", "remote", false); // safeNDArray does not matter for 'wait' && 'remote'
 }
 
 void InputOutputChannel_Test::testAsyncUpdate(const std::string& onSlowness, const std::string& dataDistribution,
-                                              const std::string& memoryLocation) {
-    std::clog << ": onSlowness '" << onSlowness << "', dataDistribution '" << dataDistribution << "', memoryLocation '"
-              << memoryLocation << "'" << std::flush;
+                                              const std::string& memoryLocation, bool safeNDArray) {
+    // Format a bit the output to get a good overview
+    std::clog << " '" << onSlowness << "', ";
+    for (size_t i = 0; i < 9ul - onSlowness.size() && i < 50ul; ++i) std::clog << ' '; // 9: len("queueDrop")
+    std::clog << "'" << dataDistribution << "', ";
+    for (size_t i = 0; i < 6ul - dataDistribution.size() && i < 50ul; ++i) std::clog << ' '; // 6: len("shared")
+    std::clog << "'" << memoryLocation << "', ";
+    for (size_t i = 0; i < 6ul - memoryLocation.size() && i < 50ul; ++i) std::clog << ' '; // 6: len("remote")
+    std::clog << safeNDArray << std::flush;
 
     constexpr size_t numToSend = 500;
 
@@ -1053,13 +1100,15 @@ void InputOutputChannel_Test::testAsyncUpdate(const std::string& onSlowness, con
 
     // Send data many times using asyncUpdate
     receivedData.reserve(numToSend);
+    Epochstamp startStamp;
     for (size_t iSend = 0; iSend < numToSend; ++iSend) {
         output->write(Hash("str", karabo::data::toString(iSend), "vec", std::vector<long long>(300, iSend), "arr",
                            karabo::data::NDArray(1000, static_cast<unsigned long long>(iSend))));
-        // NDArray is safe here (no re-use), but let's take the more demanding code path that may do safety copies
-        const bool safeNDArray = false;
+        // safeNDArray matters when queuing or local receiver
         output->asyncUpdate(safeNDArray); // We do not care about handler when writing is done
     }
+    Epochstamp sentStamp;
+    const double durationSend = static_cast<double>(sentStamp - startStamp);
 
     // Signal end of stream
     std::promise<void> eosSentPromise;
@@ -1073,7 +1122,8 @@ void InputOutputChannel_Test::testAsyncUpdate(const std::string& onSlowness, con
     CPPUNIT_ASSERT_NO_THROW(eosReadFuture.get());
 
     // Now investigate data received
-    std::clog << ": Received " << receivedData.size() << " items.";
+    std::clog << ": Sent " << numToSend << " in " << durationSend << " s, received last of " << receivedData.size()
+              << " items " << static_cast<double>(Epochstamp() - sentStamp) << " s later.";
     CPPUNIT_ASSERT(!receivedData.empty());
     const bool noLoss = (onSlowness == "wait");
     if (noLoss) {
