@@ -19,7 +19,7 @@ import os
 from pathlib import Path
 
 from karabo.native import (
-    AccessMode, Configurable, String, UInt32, VectorString)
+    AccessMode, Configurable, String, UInt32, VectorRegexString, isSet)
 
 from .sql_database import SQLDatabase
 
@@ -73,12 +73,12 @@ class LocalNode(Configurable):
         description="The filename placed in var/project_db/",
         accessMode=AccessMode.INITONLY)
 
-    requiredDomains = VectorString(
+    requiredDomains = VectorRegexString(
         displayedName="Required Domains",
+        regex=r'^\w+$',
         description=(
             "The ProjectManager ensures that domains in this list are in the "
             "database when it starts."),
-        defaultValue=[_TOPIC_DOMAIN],
         accessMode=AccessMode.INITONLY)
 
     async def get_db(self, test_mode=False, init_db=False):
@@ -87,7 +87,10 @@ class LocalNode(Configurable):
         path = folder / self.dbName.value
         path.parent.mkdir(parents=True, exist_ok=True)
         db = SQLDatabase(db_name=path, local=True)
-        required_domains = self.requiredDomains
+        if isSet(self.requiredDomains):
+            required_domains = self.requiredDomains
+        else:
+            required_domains = [_TOPIC_DOMAIN]
         await db.initialize()
         await db.assure_domains(required_domains)
         return db
