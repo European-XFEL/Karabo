@@ -16,8 +16,8 @@ Major Highlights of This Release
 
 
 - Introduction of a new Karabo broker protocol that leverages modern messaging features (e.g., headers) and enables splitting of broadcast messages
-- Refactored project database to use SQLite
-- Refactored configuration database to use MySQL
+- Refactored project database to use MySQL
+- Refactored configuration database to use SQLite
 - Reauthentication support added in the ``GuiServer`` device
 - Pipelines (Output Channel) validate via Schema definition if provided
 - Python integration test framework based on Contexts (AsyncServerContext, ServerContext)
@@ -74,7 +74,7 @@ Breaking Changes
   - Removal of signalStateChanged
   - `slotFunctions` information not anymore present in headers by default.
 
-- Bound: Renaming of the inner device properties `self.deviceid`,`self.serverid` and `self.classid` to `self.deviceId`, `self.serverId` and `self.classId`, respectively.
+- Bound: Renaming of the inner device properties `self.deviceid`, `self.serverid` and `self.classid` to `self.deviceId`, `self.serverId` and `self.classId`, respectively.
 - Runtime Attributes Removed: The concept of runtime attributes has been completely eliminated. For example, `slotUpdateSchemaAttributes` is no longer available.
 - Removed Attributes:
 
@@ -94,7 +94,7 @@ Breaking Changes
 - Element and Enum Removals or Changes:
 
   - Removed `Elements Choice Of Node` and `List Of Node`
-  - Removed `Image Element` properties `dimScales` and `dimTyes`
+  - Removed `Image Element` properties `dimScales` and `dimTypes`
   - Removed support for several Encoding Enum types (TIFF, BMP, PNG, etc.)
   - Removed `leafType` Enum
   - Removed `DimensionType` Enum
