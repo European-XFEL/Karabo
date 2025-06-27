@@ -62,6 +62,7 @@ Breaking Changes
   - `visibility`
 
 - Slot Changes:
+
   - Removal of Slot ``slotGetOutputChannelInformationFromHash``, use ``slotGetOutputChannelInformation`` which takes a `Hash` as input.
   - Removal of slot `slotUpdateSchemaAttributes` (see below)
   - `slotPing` does not take anymore the `track` boolean
@@ -86,8 +87,6 @@ Breaking Changes
   - `relativeError`
   - All alarm-related attributes such as `alarmLow`, `alarmHigh`, `needsAck`, etc.
 
-- AccessLevel Update: `USER` and `ADMIN` levels have been removed. Use `OPERATOR` and `EXPERT` instead.
--
 - Pipeline Syntax Change: The `@` separator is no longer supported in pipeline channel declarations; use `:` as before.
 - Middlelayer Functions Removed: Functions such as `linspace`, `dot`, and `cross` in `middlelayer.numeric` have been removed.
 - Visibility Features Removed: All visibility features (Configurator, Topology, ikarabo) and the `visibility` property have been removed.
@@ -95,7 +94,7 @@ Breaking Changes
 - Element and Enum Removals or Changes:
 
   - Removed `Elements Choice Of Node` and `List Of Node`
-  - Removes `Image Element` properties `dimScales` and `dimTyes`
+  - Removed `Image Element` properties `dimScales` and `dimTyes`
   - Removed support for several Encoding Enum types (TIFF, BMP, PNG, etc.)
   - Removed `leafType` Enum
   - Removed `DimensionType` Enum
@@ -103,6 +102,7 @@ Breaking Changes
   - Removed `PATH_ELEMENT`; use `STRING_ELEMENT` instead.
   - Removal of archivePolicy attriute options. Only `EVERY_EVENT` and `NO_ARCHIVING` remain.
   - `EncodingType` (MDL) has been renamed to `Encoding`.
+  - Removed `AccessLevel.USER` and `AccessLevel.ADMIN` levels. Use `OPERATOR` and `EXPERT` instead.
 
 - Class Changes:
 
