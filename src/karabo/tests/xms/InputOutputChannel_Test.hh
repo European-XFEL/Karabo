@@ -39,18 +39,26 @@ class InputOutputChannel_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testSchemaValidation);
     CPPUNIT_TEST(testConnectHandler);
     CPPUNIT_TEST(testWriteUpdateFlags);
-    CPPUNIT_TEST(testAsyncUpdate1a);
-    CPPUNIT_TEST(testAsyncUpdate1b);
-    CPPUNIT_TEST(testAsyncUpdate2a);
-    CPPUNIT_TEST(testAsyncUpdate2b);
-    CPPUNIT_TEST(testAsyncUpdate3a);
-    CPPUNIT_TEST(testAsyncUpdate3b);
-    CPPUNIT_TEST(testAsyncUpdate4a);
-    CPPUNIT_TEST(testAsyncUpdate4b);
-    CPPUNIT_TEST(testAsyncUpdate5a);
-    CPPUNIT_TEST(testAsyncUpdate5b);
-    CPPUNIT_TEST(testAsyncUpdate6a);
-    CPPUNIT_TEST(testAsyncUpdate6b);
+    CPPUNIT_TEST(testAsyncUpdate1a1);
+    CPPUNIT_TEST(testAsyncUpdate1a2);
+    CPPUNIT_TEST(testAsyncUpdate1b0);
+    CPPUNIT_TEST(testAsyncUpdate2a1);
+    CPPUNIT_TEST(testAsyncUpdate2a2);
+    CPPUNIT_TEST(testAsyncUpdate2b1);
+    CPPUNIT_TEST(testAsyncUpdate2b2);
+    CPPUNIT_TEST(testAsyncUpdate3a1);
+    CPPUNIT_TEST(testAsyncUpdate3a2);
+    CPPUNIT_TEST(testAsyncUpdate3b0);
+    CPPUNIT_TEST(testAsyncUpdate4a1);
+    CPPUNIT_TEST(testAsyncUpdate4a2);
+    CPPUNIT_TEST(testAsyncUpdate4b0);
+    CPPUNIT_TEST(testAsyncUpdate5a1);
+    CPPUNIT_TEST(testAsyncUpdate5a2);
+    CPPUNIT_TEST(testAsyncUpdate5b1);
+    CPPUNIT_TEST(testAsyncUpdate5b2);
+    CPPUNIT_TEST(testAsyncUpdate6a1);
+    CPPUNIT_TEST(testAsyncUpdate6a2);
+    CPPUNIT_TEST(testAsyncUpdate6b0);
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -60,6 +68,8 @@ class InputOutputChannel_Test : public CPPUNIT_NS::TestFixture {
     void tearDown();
 
    private:
+    static bool m_calledTestAsyncUpdate;
+
     void testOutputChannelElement();
     void testConnectDisconnect();
     void testManyToOne();
@@ -69,21 +79,29 @@ class InputOutputChannel_Test : public CPPUNIT_NS::TestFixture {
     void testSchemaValidation();
     void testConnectHandler();
     void testWriteUpdateFlags();
-    void testAsyncUpdate1a();
-    void testAsyncUpdate1b();
-    void testAsyncUpdate2a();
-    void testAsyncUpdate2b();
-    void testAsyncUpdate3a();
-    void testAsyncUpdate3b();
-    void testAsyncUpdate4a();
-    void testAsyncUpdate4b();
-    void testAsyncUpdate5a();
-    void testAsyncUpdate5b();
-    void testAsyncUpdate6a();
-    void testAsyncUpdate6b();
+    void testAsyncUpdate1a1();
+    void testAsyncUpdate1a2();
+    void testAsyncUpdate1b0();
+    void testAsyncUpdate2a1();
+    void testAsyncUpdate2a2();
+    void testAsyncUpdate2b1();
+    void testAsyncUpdate2b2();
+    void testAsyncUpdate3a1();
+    void testAsyncUpdate3a2();
+    void testAsyncUpdate3b0();
+    void testAsyncUpdate4a1();
+    void testAsyncUpdate4a2();
+    void testAsyncUpdate4b0();
+    void testAsyncUpdate5a1();
+    void testAsyncUpdate5a2();
+    void testAsyncUpdate5b1();
+    void testAsyncUpdate5b2();
+    void testAsyncUpdate6a1();
+    void testAsyncUpdate6a2();
+    void testAsyncUpdate6b0();
 
     void testAsyncUpdate(const std::string& onSlowness, const std::string& dataDistribution,
-                         const std::string& memoryLocation);
+                         const std::string& memoryLocation, bool safeNDArray);
 };
 
 #endif /* INPUTOUTPUTCHANNEL_TEST_HH */
