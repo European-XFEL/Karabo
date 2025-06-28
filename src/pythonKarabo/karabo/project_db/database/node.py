@@ -55,7 +55,7 @@ class RemoteNode(Configurable):
 
     async def get_db(self, test_mode=False, init_db=False):
         if not isSet(self.host):
-            self.host = os.getenv("KARABO_PROJECT_DB_HOST", "localhost"),
+            self.host = os.getenv("KARABO_PROJECT_DB_HOST", "localhost")
         if not isSet(self.port):
             self.port = int(os.getenv("KARABO_PROJECT_DB_PORT", "3306"))
         if not isSet(self.dbName):
