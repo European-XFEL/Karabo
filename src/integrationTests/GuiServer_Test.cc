@@ -1513,6 +1513,17 @@ void GuiServer_Test::testValidTokenOnLogin() {
     const string& userId = lastMessage.get<std::string>("username");
     CPPUNIT_ASSERT_EQUAL_MESSAGE("User differs from expected", TestKaraboAuthServer::VALID_USER_ID, userId);
 
+    messageQ = m_tcpAdapter->getNextMessages("onGetGuiSessionInfo", 1,
+                                             [this] { m_tcpAdapter->sendMessage(Hash{"type", "getGuiSessionInfo"}); });
+    messageQ->pop(lastMessage);
+    const std::string sessionStartTime = lastMessage.get<std::string>("sessionStartTime");
+    const std::string tempSessionStartTime = lastMessage.get<std::string>("tempSessionStartTime");
+    CPPUNIT_ASSERT_MESSAGE("sessionStartTime must not be empty; session had started", !sessionStartTime.empty());
+    CPPUNIT_ASSERT_EQUAL(MAX_SESSION_TIME, lastMessage.get<unsigned int>("sessionDuration"));
+    CPPUNIT_ASSERT_MESSAGE("tempSessionStartTime must be empty; there's no active temporary session",
+                           tempSessionStartTime.empty());
+    CPPUNIT_ASSERT_EQUAL(MAX_TEMPORARY_SESSION_TIME, lastMessage.get<unsigned int>("tempSessionDuration"));
+
     int timeout = 1500;
     // wait for the GUI server to log us out
     while (m_tcpAdapter->connected() && timeout > 0) {
@@ -1784,6 +1795,18 @@ void GuiServer_Test::testBeginEndTemporarySession() {
                                  static_cast<unsigned>(clientSessions.size()));
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Temporary Session Token differs from expected", temporarySessionToken,
                                  clientSessions[0].get<std::string>("temporarySessionToken"));
+
+    // Request GUI Session Info: starting times for both the session start time and the temporary session time
+    // should be returned, along with their maximum durations.
+    messageQ = m_tcpAdapter->getNextMessages("onGetGuiSessionInfo", 1,
+                                             [this] { m_tcpAdapter->sendMessage(Hash{"type", "getGuiSessionInfo"}); });
+    messageQ->pop(lastMessage);
+    CPPUNIT_ASSERT_EQUAL(sessionStartTime, lastMessage.get<std::string>("sessionStartTime"));
+    CPPUNIT_ASSERT_EQUAL(MAX_SESSION_TIME, lastMessage.get<unsigned int>("sessionDuration"));
+    const std::string tempSessionStartTime = lastMessage.get<std::string>("tempSessionStartTime");
+    CPPUNIT_ASSERT_MESSAGE("tempSessionStartTime must not be empty; there's an active temporary session",
+                           !tempSessionStartTime.empty());
+    CPPUNIT_ASSERT_EQUAL(MAX_TEMPORARY_SESSION_TIME, lastMessage.get<unsigned int>("tempSessionDuration"));
 
     // Request a begin temporary session with a valid token - should be rejected since we are already in a temporary
     // session

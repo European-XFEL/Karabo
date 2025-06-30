@@ -1212,6 +1212,48 @@ namespace karabo {
         }
 
 
+        void GuiServerDevice::onGetGuiSessionInfo(WeakChannelPointer channel) {
+            const karabo::net::Channel::Pointer chan = channel.lock();
+            if (!chan) {
+                // Channel not valid anymore.
+                return;
+            }
+            Hash result{
+                  // clang-format off
+                  "type", "onGetGuiSessionInfo",
+                  "success", true,
+                  "reason", "",
+                  "sessionStartTime", "",
+                  "sessionDuration", get<unsigned int>("maxSessionDuration"),
+                  "tempSessionStartTime", "",
+                  "tempSessionDuration", get<unsigned int>("maxTemporarySessionTime")
+                  // clang-format on
+
+            };
+            if (!isUserAuthActive()) {
+                result.set("reason", "GUI Session Information is only available for user-authenticated sessions!");
+                result.set("success", false);
+                safeClientWrite(channel, result);
+            } else {
+                std::lock_guard<std::mutex> lock(m_channelMutex);
+                const auto it = m_channels.find(chan);
+                if (it != m_channels.end()) {
+                    result.set("sessionStartTime", it->second.sessionStartTime.toIso8601Ext());
+                    if (it->second.temporarySessionStartTime.getSeconds()) {
+                        result.set("tempSessionStartTime", it->second.temporarySessionStartTime.toIso8601Ext());
+                    }
+                } else {
+                    result.set("success", false);
+                    const std::string errMsg{
+                          "Unexpected error at onGetGuiSessionInfo: channel of requesting GUI Client not found!"};
+                    result.set("reason", errMsg);
+                    KARABO_LOG_FRAMEWORK_ERROR << errMsg;
+                }
+            }
+            safeClientWrite(channel, result);
+        }
+
+
         bool GuiServerDevice::isUserAuthActive() const {
             return !get<string>("authServer").empty();
         }
@@ -1379,6 +1421,8 @@ namespace karabo {
                         }
                     } else if (type == "endTemporarySession") {
                         onEndTemporarySession(channel, info);
+                    } else if (type == "getGuiSessionInfo") {
+                        onGetGuiSessionInfo(channel);
                     } else if (type == "reconfigure") {
                         onReconfigure(channel, info);
                     } else if (type == "execute") {
