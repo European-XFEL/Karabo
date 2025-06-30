@@ -33,7 +33,6 @@
 #include <cstdlib>
 #include <filesystem>
 #include <functional>
-#include <regex>
 #include <tuple>
 
 #include "Device.hh"

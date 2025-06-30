@@ -23,10 +23,10 @@
 #ifndef FILELOGREADER_HH
 #define FILELOGREADER_HH
 
+#include <boost/regex.hpp>
 #include <chrono>
 #include <filesystem>
 #include <mutex>
-#include <regex>
 #include <string>
 
 #include "DataLogReader.hh"
@@ -196,10 +196,10 @@ namespace karabo {
             static std::mutex m_propFileInfoMutex;
             static std::map<std::string, PropFileInfo::Pointer> m_mapPropFileInfo;
             IndexBuilderService::Pointer m_ibs;
-            static const std::regex m_lineRegex;
-            static const std::regex m_lineLogRegex;
-            static const std::regex m_indexLineRegex;
-            static const std::regex m_indexTailRegex;
+            static const boost::regex m_lineRegex;
+            static const boost::regex m_lineLogRegex;
+            static const boost::regex m_indexLineRegex;
+            static const boost::regex m_indexTailRegex;
             std::string m_ltype;
             karabo::data::TextSerializer<karabo::data::Hash>::Pointer m_serializer;
             karabo::data::TextSerializer<karabo::data::Schema>::Pointer m_schemaSerializer;

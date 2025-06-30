@@ -28,7 +28,6 @@
 #include <unistd.h>
 
 #include <boost/algorithm/string.hpp>
-#include <regex>
 #include <string>
 #include <tuple>
 #include <unordered_set>

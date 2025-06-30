@@ -24,8 +24,8 @@
 #ifndef KARABO_DATA_TIME_DATETIMESTRING_HH
 #define KARABO_DATA_TIME_DATETIMESTRING_HH
 
+#include <boost/date_time.hpp>
 #include <chrono>
-#include <regex>
 
 #include "TimeDuration.hh"
 #include "karabo/data/types/Exception.hh"

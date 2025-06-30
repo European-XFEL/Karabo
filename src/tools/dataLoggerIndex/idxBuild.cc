@@ -26,7 +26,7 @@
 #include "karabo/data/time/Epochstamp.hh"
 #include "karabo/data/types/Exception.hh"
 #include "karabo/data/types/Schema.hh"
-#include <regex>
+#include <boost/regex.hpp>
 #include <sstream>
 #include <vector>
 
@@ -278,7 +278,7 @@ void processNextFile(const std::string& deviceId, size_t number, const std::stri
     TextSerializer<Schema>::Pointer serializer = TextSerializer<Schema>::create(Hash("Xml"));
     Schema::Pointer schema(new Schema);
     serializer->load(*schema, schemaRange.fromSchemaArchive);
-    std::regex lineRegex(karabo::util::DATALOG_LINE_REGEX, std::regex::extended);
+    boost::regex lineRegex(karabo::util::DATALOG_LINE_REGEX, boost::regex::extended);
 
     string infile = historyDir + "/" + deviceId + "/raw/archive_" + toString(number) + ".txt";
     ifstream irs(infile.c_str());
@@ -305,8 +305,8 @@ void processNextFile(const std::string& deviceId, size_t number, const std::stri
                 }
                 continue;
             }
-            std::smatch tokens;
-            bool search_res = std::regex_search(line, tokens, lineRegex);
+            boost::smatch tokens;
+            bool search_res = boost::regex_search(line, tokens, lineRegex);
             if (!search_res) {
                 cout << "*** idxBuild: skip corrupted record : line = " << line << ", token.size() = " << tokens.size()
                      << endl;
