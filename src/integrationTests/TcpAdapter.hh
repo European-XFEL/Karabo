@@ -77,6 +77,7 @@ namespace karabo {
          * @return
          */
         template <typename F>
+        [[nodiscard]]
         QueuePtr getNextMessages(
               const std::string& type, size_t nMessages, F&& triggeringFunction = [] {}, size_t timeout = 10000) {
             {

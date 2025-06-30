@@ -187,6 +187,20 @@ version (string) (GUI Client version)
 * The *temporarySessionToken* must match the token sent with the corresponding *beginTemporarySession* request.
 * The GUI Server will send an *onEndTemporarySession* message later to the requesting GUI client with the results of the end temporary session request.
 
+[3.0.0]_ *getGuiSessionInfo*
+
+* Message a GUI client sends to request timing information about its sessions: the login session and an optional
+  temporary session that might have been started on top of the login session.
+* The response is returned immediately in the form of a Hash with the following keys and values:
+
+type (string) - with the value "onGetGuiSessionInfo"
+success (boolean) - true if the request was successful, false otherwise
+reason (string) - error message for failed requests; empty for successful requests
+sessionStartTime (string) - the UTC timestamp for the session start time in ISO 8601 format;
+sessionDuration (unsigned int) - the maximum duration of a login session in seconds;
+tempSessionStartTime (string)-  the UTC timestamp for the temporary session start time in ISO 8601 format (empty if there's no active temporary session);
+tempSessionDuration (unsigned int) - the maximum duration of a temporary session in seconds.
+
 *login*
 [depr_2.16.0]_ username (string)
 [2.16.0]_ clientId (string) (GUI Client Hostname and PID)
@@ -249,3 +263,4 @@ traceback (string)
 .. [2.16.0] Introduced in Karabo 2.16.0 to support User authentication.
 .. [depr_2.16.0] Deprecated in Karabo 2.16.0: "username" transporting the "clientId" of the GUI Client instance deprecated.  "clientId" and "clientUserId" used to send the id of the GUI Client (host and PID) and the Id of the user running the GUI Client (for non-authenticated logins). Access Level only transmitted from the server to the client as a result of token validation; otherwise the GUI Client adopts the access level selected by the user at login time.
 .. [2.20.0] Introduced in Karabo 2.20.0 to support temporary sessions on top of User Authenticated sessions.
+.. [3.0.0] Introduced in Karabo 3.0.0 to provide session duration information to a connected GUI Client. 3.0.0 enforces a maximum duration to the login session.

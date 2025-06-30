@@ -518,6 +518,7 @@ namespace karabo {
              *      setLogLevel                    onSetLogLevel
              *      beginTemporarySession          onBeginTemporarySession
              *      endTemporarySession            onEndTemporarySession
+             *      getGuiSessionInfo              onGetGuiSessionInfo
              *      =============================  =========================
              *
              * \endverbatim
@@ -678,6 +679,26 @@ namespace karabo {
              * "success", "reason" and "temporarySessionToken" (an echo of the token provided in the request).
              */
             void onEndTemporarySession(WeakChannelPointer channel, const karabo::data::Hash& info);
+
+            /**
+             * @brief Handles a message of type "getGuiSessionInfo" by returning a Hash with information on the
+             * session of the requesting GUI Client.
+             *
+             * @param channel the TCP channel connecting to the client that requested the information about its
+             * on-going GUI session. Note that an on-going session can be assumed because the GUI Server only
+             * "listens" to GUI Session Info requests after a successful login.
+             *
+             * @note returns a Hash with the value "onGetGuiSessionInfo" for its "type" path back to the client, the
+             * boolean "success" to indicate whether the request was successful, and "reason" to communicate the error
+             * in case of a failure.
+             * The returned Hash also has:
+             *      -"sessionStartTime": the UTC timestamp for the session start time in ISO 8601 format;
+             *      -"sessionDuration": the duration of a session in seconds;
+             *      -"tempSessionStartTime": the UTC timestamp for the temporary session start time in ISO 8601 format.
+             *       If there's no temporary session active for the requesting GUI client an empty string is returned;
+             *      -"tempSessionDuration": the duration of a temporary session in seconds.
+             */
+            void onGetGuiSessionInfo(WeakChannelPointer channel);
 
             /**
              * Callback helper for ``onExecute``
