@@ -40,7 +40,7 @@ def _get_notes():
         with open(fn) as fp:
             xml = fp.read()
             tree = etree.parse(StringIO(xml))
-            title = tree.find('//title').text
+            title = tree.find('.//title').text
             ret.update({title: xml})
 
     files = [filename for filename in folder.rglob("*.html")]
