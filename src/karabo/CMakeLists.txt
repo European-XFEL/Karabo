@@ -232,7 +232,7 @@ target_link_libraries(
 )
 
 # Headers to be installed
-file(GLOB INCLUDE_FILES CONFIGURE_DEPENDS "*.hpp")
+file(GLOB INCLUDE_FILES CONFIGURE_DEPENDS "*.hpp" "*/*.hpp")
 
 # append all header files.
 foreach (TMP_PATH ${HDR_FILES})
