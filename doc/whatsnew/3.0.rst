@@ -57,6 +57,7 @@ Breaking Changes
 
 - Boost FSM Removal (C++/Bound): The finite state machine concept has been removed from Karabo.
 - Removal of device properties:
+
   - `_deviceId_`
   - `_serverId_`
   - `visibility`
@@ -115,12 +116,19 @@ Breaking Changes
   - `scanPlugins` variable has been removed from all device servers.
   - `autostart` property and related functionality (C++/Bound) have been removed. Use `init` with JSON syntax instead.
   - Logging: Logging levels in C++/Bound have been harmonized with MDL. Use `log.level` instead of `Logger.priority`.
+  - MDL Device server cannot start and supervise bound device classes anymore
 
 - GUI Changes:
 
   - The attributes follow now the Karabo naming (camelCase) convention. ( display_type -> displayType)
   - Only a single `default` configuration can be used in a project device. Now more configurations can be added.
   - Removal of Printer Option from every panel
+
+- ProjectManager Refactor:
+
+  - All slots now operate with Hash input and output.
+  - `slotBeginUserSession` and `slotEndUserSession` have been removed.
+  - Token specification is no longer required.
 
 - Controller Model Removals:
 
@@ -146,11 +154,6 @@ Change of Behavior
 
 - `State` and `AlarmCondition` are now implemented as `StrEnum`.
 - All other enums previously based on integers are now implemented as `IntEnum`.
-- ProjectManager Refactor:
-
-  - All slots now operate with Hash input and output.
-  - `slotBeginUserSession` and `slotEndUserSession` have been removed.
-  - Token specification is no longer required.
 
 - MDL:
 
@@ -180,7 +183,8 @@ Dependency Updates
 
 - `pytest_asyncio` has been updated to 1.0.0. For a period until Winter 2026, device repositories making use of the central CI
   can specify USE_LEGACY_PYTEST = "true" to use old behavior (pytest 0.21.X). After that, the legacy behavior changes its default.
-- pyqtgraph update to 0.13.7
+- GUI: pyqtgraph update to 0.13.7
+- C++: Boost upgraded to 1.88.0
 
 
 Bug Fixes
