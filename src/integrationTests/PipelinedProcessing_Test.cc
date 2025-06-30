@@ -619,14 +619,14 @@ void PipelinedProcessing_Test::testPipeQueueAtLimit() {
     // If sender delay time much higher than the receiver processing time, no data loss despite the queueDrop option
     // (the 'slowReceiver == false' test fails sometimes with delay = 2, so 4 was choosen - but even that failed in
     //  https://git.xfel.eu/Karabo/Framework/-/jobs/238881)
-    testPipeQueueAtLimit(0, 7, maxLengthCfg, false, false);
+    testPipeQueueAtLimit(0, 5, maxLengthCfg, false, false);
 
     // 2) Test overall limit from Memory, no effective queue length limit (queue can be as big as the whole Memory
     // buffer of the Output Channel).
 
     // Receiver processing time much higher than sender delay between data sending:
     // Data will be queued until queue is full and then drop some data
-    testPipeQueueAtLimit(5, 0, karabo::xms::Memory::MAX_N_CHUNKS, true,
+    testPipeQueueAtLimit(3, 0, karabo::xms::Memory::MAX_N_CHUNKS, true,
                          true); // true, true ==> expectDataLoss, slowReceiver
 
     // If sender delay time much higher than the receiver processing time, no data loss despite the queueDrop option
@@ -1236,14 +1236,14 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversQueueAtLimit() {
 
     // 1) load-balanced
     // 1a) test slow receivers with sender queueDrop: drop data if queue gets full
-    testPipeTwoSharedQueueDropAtLimit("load-balanced", 8, 7, 0, true, true); // dataLoss, slowReceivers
+    testPipeTwoSharedQueueDropAtLimit("load-balanced", 6, 5, 0, true, true); // dataLoss, slowReceivers
     // 1b) test fast receivers with sender queueDrop: do not drop data, since queue never full
     testPipeTwoSharedQueueDropAtLimit("load-balanced", 0, 1, 2, false, false); // dataLoss, slowReceivers
 
     // 2) round-robin, i.e. testing sharedInputSelector code
     // 2a) test slow receivers with sender queueDrop: drop data if queue gets full
     //     Seen failures with processingTimes 6/4 ...
-    testPipeTwoSharedQueueDropAtLimit("round-robin", 13, 6, 0, true, true); // dataLoss, slowReceivers
+    testPipeTwoSharedQueueDropAtLimit("round-robin", 9, 4, 0, true, true); // dataLoss, slowReceivers
     // 2b) test fast receivers with sender queueDrop: do not drop data, since queue never full
     testPipeTwoSharedQueueDropAtLimit("round-robin", 0, 1, 2, false, false); // dataLoss, slowReceivers
 
