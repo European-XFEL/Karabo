@@ -53,13 +53,15 @@ namespace karabo {
         //    user        : 0 or more lower case letters, numbers and underscores
         //    flag        : one or more uppercase letters
         //
-        //        tsAsIso8601  | tsAsDouble  | trainId  | path |    type           | value|   user       |flag
+        //                                          tsAsIso8601  | tsAsDouble  | trainId  | path |    type           |
+        //                                          value|   user       |flag
         char const* const DATALOG_LINE_REGEX =
               "^([TZ0-9\\.]+)\\|([0-9\\.]+)\\|([0-9]+)\\|(.+)\\|([A-Z][0-9A-Z_]+)\\|(.*)\\|([a-z0-9_]*)\\|([A-Z]+)$";
 
         // this will match logout lines. Needed because the single regex expression used in the python migration script
         // does not reliably work with boost
-        //        tsAsIso8601  | tsAsDouble  | trainId  |path*|    type**   | value|   user       |flag
+        //                                            tsAsIso8601  | tsAsDouble  | trainId  |path*|    type**   | value|
+        //                                            user       |flag
         char const* const DATALOG_LOGOUT_REGEX =
               "^([TZ0-9\\.]+)\\|([0-9\\.]+)\\|([0-9]+)\\|\\.\\|(![\\s\\S])\\|(.*)\\|([a-z0-9_]*)\\|([A-Z]+)$";
         // *  path: always ".""

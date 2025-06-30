@@ -27,7 +27,7 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 
-#include <regex>
+#include <boost/regex.hpp>
 
 class DataLogUtils_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(DataLogUtils_Test);
@@ -64,8 +64,8 @@ class DataLogUtils_Test : public CPPUNIT_NS::TestFixture {
     void testValueFromJSON();
     void testMultipleJSONObjects();
 
-    std::regex m_indexRegex;
-    std::regex m_indexTailRegex;
+    boost::regex m_indexRegex;
+    boost::regex m_indexTailRegex;
 };
 
 #endif /* DATALOGUTILS_TEST_HH */

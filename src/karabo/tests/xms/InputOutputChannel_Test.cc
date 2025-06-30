@@ -27,10 +27,10 @@
 #include <ifaddrs.h>
 #include <sys/types.h>
 
+#include <boost/regex.hpp>
 #include <chrono>
 #include <future>
 #include <mutex>
-#include <regex>
 #include <thread>
 
 #include "karabo/data/schema/Configurator.hh"
@@ -688,9 +688,9 @@ void InputOutputChannel_Test::testOutputPreparation() {
         const std::string expectedAddress = karabo::net::getIpFromCIDRNotation("0.0.0.0/0");
         // split the ip found in 4 parts and reformat it as a network segment
         // A.B.C.D -> A.B.C.0/24
-        std::regex re("(\\d+)\\.(\\d+)\\.(\\d+)\\.(\\d+)");
-        std::smatch what;
-        bool result = std::regex_search(expectedAddress, what, re);
+        boost::regex re("(\\d+)\\.(\\d+)\\.(\\d+)\\.(\\d+)");
+        boost::smatch what;
+        bool result = boost::regex_search(expectedAddress, what, re);
         CPPUNIT_ASSERT_MESSAGE(std::string("Could not parse address: ") + expectedAddress, result);
         std::ostringstream oss;
         oss << what.str(1) << "." << what.str(2) << "." << what.str(3) << ".0/24";

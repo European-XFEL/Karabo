@@ -28,7 +28,6 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/stacktrace.hpp>
-#include <regex>
 #include <string>
 #include <tuple>
 #include <unordered_set>
