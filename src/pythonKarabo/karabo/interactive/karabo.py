@@ -720,14 +720,15 @@ def uninstall(args):
 
 def develop(args):
     with pushd_popd():
-        path = os.path.join('devices', args.device)
+        device = args.device.split("/")[-1]
+        path = os.path.join('devices', device)
         if not clean_dir(path, args):
             return
         checkout(args)
         os.chdir(path)
         install_dependencies(args, True)
         if os.path.exists('Makefile'):
-            print(f'Compiling {args.device}, please wait... ',
+            print(f'Compiling {device}, please wait... ',
                   end='', flush=True)
             run_cmd(f'make CONF={args.config} -j{args.jobs}')
             print('done.')
