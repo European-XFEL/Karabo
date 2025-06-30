@@ -40,7 +40,7 @@ def _wrap_vector_hash(tag, items):
 def _wrap_xml(uuid: str, name: str, item_type: str, date='', extra=''):
     return (
         f'<xml {_XML_NS} uuid="{uuid}" simple_name="{_safe_xml_str(name)}" '
-        f'date="{date}" item_type="{item_type}" '
+        f'date="{datetime_to_str(date)}" item_type="{item_type}" '
         f'{_REVISION_ALIAS}>{extra}</xml>')
 
 
@@ -81,7 +81,7 @@ def emit_scene_xml(scene: Scene) -> str:
         uuid=scene.uuid,
         name=scene.name,
         item_type="scene",
-        date=datetime_to_str(scene.date),
+        date=scene.date,
         extra=scene.svg_data
     )
 
@@ -93,7 +93,7 @@ def emit_macro_xml(macro: Macro) -> str:
         uuid=macro.uuid,
         name=macro.name,
         item_type="macro",
-        date=datetime_to_str(macro.date),
+        date=macro.date,
         extra=macro_body
     )
 
@@ -110,7 +110,7 @@ def emit_server_xml(server: DeviceServer,
         uuid=server.uuid,
         name=server.name,
         item_type="device_server",
-        date=datetime_to_str(server.date),
+        date=server.date,
         extra=content
     )
 
@@ -136,7 +136,7 @@ def emit_device_xml(instance: DeviceInstance,
         uuid=instance.uuid,
         name=instance.name,
         item_type="device_instance",
-        date=datetime_to_str(instance.date),
+        date=instance.date,
         extra=instance_block
     )
 
@@ -146,6 +146,6 @@ def emit_config_xml(config: DeviceConfig) -> str:
         uuid=config.uuid,
         name=config.name,
         item_type="device_config",
-        date=datetime_to_str(config.date),
+        date=config.date,
         extra=config.config_data
     )
