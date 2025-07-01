@@ -13,6 +13,7 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
+import argparse
 import os
 import sqlite3
 import sys
@@ -22,18 +23,20 @@ from dateutil import parser
 
 from karabo.config_db import (
     ConfigurationDatabase, datetime_to_str, hashFromBase64Bin)
-from karabo.middlelayer import encodeXML
+from karabo.native import encodeXML
 
 SHOW_TABLES = False
 NEW_DB_NAME = "karaboDB3"
 
 
 async def run(filename: Path | None = None):
-    path = Path(os.getenv("KARABO"))
     if filename is not None:
         config_db_file = Path(filename)
         config_db_path = config_db_file.parent
     else:
+        env = os.getenv("KARABO")
+        assert env, "Karabo must be activated ..."
+        path = Path(env)
         config_db_path = path.joinpath("var/data/config_db")
         if not config_db_path.exists():
             print("Did not find config db folder (.../var/data/config_db) "
@@ -63,14 +66,18 @@ async def run(filename: Path | None = None):
             print(f"\nTable: {table}")
             cursor.execute(f"PRAGMA table_info({table});")
             columns = cursor.fetchall()
-            # Columns: cid, name, type, notnull, dflt_value, pk
+            # Columns: cid, name, type, notnull, default_value, pk
             for col in columns:
+                col_name = col[1]
+                col_type = col[2]
+                is_pk = " PRIMARY KEY" if col[5] else ""
+                is_not_null = " NOT NULL" if col[3] else ""
+                default_val = (f" DEFAULT {col[4]}"
+                               if col[4] is not None else "")
+
                 print(
-                    f"  - {col[1]} ({col[2]})"
-                    f"{' PRIMARY KEY' if col[5] else ''}"
-                    f"{' NOT NULL' if col[3] else ''}"
-                    f"{' DEFAULT ' + str(col[4]) if col[4]
-                       is not None else ''}")
+                    f"  - {col_name} ({col_type}){is_pk}"
+                    f"{is_not_null}{default_val}")
 
     new_db = ConfigurationDatabase(new_config_db_path)
     await new_db.assure_existing()
@@ -80,23 +87,23 @@ async def run(filename: Path | None = None):
     configset_map = {row[0]: row[1] for row in cursor.fetchall()}
 
     # Example: Read all DeviceConfigs
-    cursor.execute("SELECT * FROM DeviceConfig")
+    cursor.execute("SELECT config_set_id, device_id, "
+                   "config_data, timestamp FROM DeviceConfig")
     rows = cursor.fetchall()
 
     # DeviceConfigs saving
     for row in rows:
         # index = row[0]
-        config = hashFromBase64Bin(row[1])
-        config_set_id = row[2]
-        deviceId = row[3]
+        config_set_id = row[0]
+        deviceId = row[1]
+        config = hashFromBase64Bin(row[2])
         serverId = config["serverId"]
         classId = config["classId"]
-        # schema_id = row[4]
-        timepoint = row[5]
+        timepoint = row[3]
         # Use dateutil.parser to auto-detect and parse
         dt = parser.parse(timepoint)
         timepoint = datetime_to_str(dt)
-        config_name = configset_map.get(config_set_id)
+        config_name = str(configset_map.get(config_set_id))
         assert config_name is not None
         config_data = [
             {"deviceId": deviceId, "config": encodeXML(config),
@@ -114,4 +121,13 @@ async def run(filename: Path | None = None):
 
 def main():
     import asyncio
-    asyncio.run(run())
+    parser = argparse.ArgumentParser()
+    text = ("Absolute path to the file for testing. If `None` as default, "
+            "the configuration db path with default file name is looked up.")
+    parser.add_argument("--filename", help=text, default=None)
+    args = parser.parse_args()
+    asyncio.run(run(args.filename))
+
+
+if __name__ == "__main__":
+    main()
