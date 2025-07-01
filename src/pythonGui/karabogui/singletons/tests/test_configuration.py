@@ -44,9 +44,7 @@ def test_configuration_namespace():
     config = Configuration()
     config['broker_topic'] = 'FXE'
     config['domain'] = 'CAS_INTERNAL'
-    config['db_token'] = 'expert'
-    assert len(config) == 20
-    assert config['db_token'] == 'expert'
+    assert len(config) == 19
     assert config['domain'] == 'CAS_INTERNAL'
 
     keys = [
@@ -54,7 +52,6 @@ def test_configuration_namespace():
         'broker_topic',
         'check_updates',
         'data_dir',
-        'db_token',
         'development',
         'domain',
         'gui_servers',
@@ -101,9 +98,7 @@ def test_set_bool_value(mocker):
     config = Configuration()
     assert config["wizard"] is True
     config["wizard"] = False
-    config['db_token'] = "observer"
     assert config["wizard"] is False
-    assert config["db_token"] == "observer"
 
 
 def test_erase_value(mocker):
@@ -144,8 +139,7 @@ def test_configuration_groups_info():
     assert 'username' in network_group
     assert 'gui_servers' in network_group
     project_group = [item.name for item in groups[PROJECT]]
-    assert len(project_group) == 2
-    assert 'db_token' in project_group
+    assert len(project_group) == 1
     assert 'domain' in project_group
     dir_group = [item.name for item in groups[DIRECTORIES]]
     assert len(dir_group) == 1

@@ -21,17 +21,17 @@ from qtpy.QtCore import QLocale
 
 from karabogui.const import IS_MAC_SYSTEM
 from karabogui.programs.base import create_gui_app, init_gui
+from karabogui.testing import set_test_organization_info
 
 
-def test_start_app():
+def test_start_app(mocker):
     """Make sure that we can start a gui application"""
     os.environ["KARABO_TEST_GUI"] = "1"
+    info = mocker.patch("karabogui.programs.base.set_app_info")
     app = create_gui_app(sys.argv)
+    info.assert_called_with(app, "XFEL", "xfel.eu", "KaraboGUI")
     init_gui(app, use_splash=True)
-    assert app.organizationName() == "XFEL"
-    assert app.organizationDomain() == "xfel.eu"
-    assert app.applicationName() == "KaraboGUI"
-    app.setOrganizationName("NoXFEL")
+    set_test_organization_info(app)
     font = app.font()
     assert font.family() == "Source Sans Pro"
     psize = 10 if not IS_MAC_SYSTEM else 13

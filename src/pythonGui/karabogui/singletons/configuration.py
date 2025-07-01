@@ -191,7 +191,6 @@ class Configuration(QObject):
     # ----------------------------------------------
     # Project db interface
 
-    db_token = Item(default="expert", group=PROJECT)
     domain = Item(q_set=True, group=PROJECT)
 
     # ----------------------------------------------

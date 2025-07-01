@@ -493,9 +493,7 @@ class Network(QObject):
     def _request_project_message(self, action_type, reply_type, timeout=None,
                                  **kwargs):
         h = Hash("type", "requestGeneric")
-        args = Hash(
-            "token", get_config()["db_token"],
-            "type", action_type)
+        args = Hash("type", action_type)
         for key, value in kwargs.items():
             args[key] = value
         h["args"] = args
@@ -505,14 +503,6 @@ class Network(QObject):
         h["slot"] = "slotGenericRequest"
         h["replyType"] = reply_type
         self._write_hash(h)
-
-    def onProjectBeginSession(self, project_manager):
-        self._request_project_message("beginUserSession",
-                                      "projectBeginUserSession")
-
-    def onProjectEndSession(self, project_manager):
-        self._request_project_message("endUserSession",
-                                      "projectEndUserSession")
 
     def onListProjectDomains(self, project_manager):
         self._request_project_message(
