@@ -193,7 +193,7 @@ version (string) (GUI Client version)
   temporary session that might have been started on top of the login session.
 * The response is returned immediately in the form of a Hash with the following keys and values:
 
-type (string) - with the value "onGetGuiSessionInfo"
+type (string) - with the value "getGuiSessionInfo"
 success (boolean) - true if the request was successful, false otherwise
 reason (string) - error message for failed requests; empty for successful requests
 sessionStartTime (string) - the UTC timestamp for the session start time in ISO 8601 format;
