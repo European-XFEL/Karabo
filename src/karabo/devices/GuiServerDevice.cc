@@ -1220,7 +1220,7 @@ namespace karabo {
             }
             Hash result{
                   // clang-format off
-                  "type", "onGetGuiSessionInfo",
+                  "type", "getGuiSessionInfo",
                   "success", true,
                   "reason", "",
                   "sessionStartTime", "",
