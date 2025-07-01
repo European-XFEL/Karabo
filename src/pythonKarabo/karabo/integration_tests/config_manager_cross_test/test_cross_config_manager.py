@@ -20,7 +20,7 @@ from pathlib import Path
 import pytest
 
 from karabo.bound import AccessType, Hash, Logger
-from karabo.bound.testing import ServerContext, eventLoop, sleepUntil
+from karabo.bound.testing import ServerContext, sleepUntil
 
 Logger.configure(Hash())
 
@@ -28,11 +28,12 @@ TEST_DEVICE_ID = "PropertyTestDevice"
 
 
 @pytest.fixture(scope="module")
-def configTest(eventLoop: eventLoop):
+def configTest(eventLoop):
     MDL_SERVER_ID = "cfgManager_server"
     CPP_SERVER_ID = "propTest_server"
 
-    DB_NAME = "test_cross_config_manager.db"
+    JOB_ID = os.environ.get("CI_JOB_ID", "1")
+    DB_NAME = f"test_cross_config_manager{JOB_ID}.db"
     db_path = Path(os.environ["KARABO"]).joinpath(
         "var", "data", "config_db", DB_NAME)
 
