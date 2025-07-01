@@ -69,7 +69,8 @@ class KaraboEvent(Enum):
     StartMonitoringDevice = "Start listening to device updates"
     StopMonitoringDevice = "Stop listening to device updates"
     SystemTopologyUpdate = "System topology updated"
-    UserSession = "Network session"
+    UserSession = "User session"
+    UserSessionInfo = "User session info"
     UpdateDeviceConfigurator = "Update device in configurator"
     UpdateValueConfigurator = "Value update in configurator"
 

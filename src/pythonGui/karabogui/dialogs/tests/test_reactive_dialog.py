@@ -1,12 +1,15 @@
 import json
 from ast import literal_eval
+from datetime import datetime, timezone
 
 from qtpy.QtCore import Qt
 from qtpy.QtNetwork import QNetworkReply, QNetworkRequest
 
 from karabogui import access as krb_access
+from karabogui.const import IS_WINDOWS_SYSTEM
 from karabogui.dialogs.reactive_login_dialog import (
-    AccessCodeWidget, LoginType, ReactiveLoginDialog, UserSessionDialog)
+    AccessCodeWidget, LoginType, ReactiveLoginDialog, UserSessionDialog,
+    remaining_time_info)
 from karabogui.singletons.configuration import Configuration
 from karabogui.testing.utils import click_button, keySequence, singletons
 
@@ -17,7 +20,7 @@ def test_access_level(gui_app):
     with singletons(configuration=configuration):
         dialog = ReactiveLoginDialog()
         assert dialog.access_level == (
-               krb_access.GLOBAL_ACCESS_LEVEL.name.lower())
+            krb_access.GLOBAL_ACCESS_LEVEL.name.lower())
 
         # Non-authenticated login type, access level from the dialog.
         dialog.login_type = LoginType.ACCESS_LEVEL
@@ -232,8 +235,8 @@ def test_access_widget(gui_app):
         cell = widget.focusWidget()
         cell_index = cells.index(cell)
         keySequence(cell, Qt.Key_Right)
-        if cell_index < len(cells)-1:
-            assert cells[cell_index+1] == widget.focusWidget()
+        if cell_index < len(cells) - 1:
+            assert cells[cell_index + 1] == widget.focusWidget()
         else:
             assert cells[cell_index] == widget.focusWidget()
 
@@ -244,7 +247,7 @@ def test_access_widget(gui_app):
         if cell_index == 0:
             assert cells[cell_index] == widget.focusWidget()
         else:
-            assert cells[cell_index-1] == widget.focusWidget()
+            assert cells[cell_index - 1] == widget.focusWidget()
 
     # Backspace deletes the number when cursor is on its right.
     fourth_cell = cells[4]
@@ -261,3 +264,49 @@ def test_access_widget(gui_app):
     keySequence(third_cell, Qt.Key_Backspace)
     assert bool(third_cell.text())
     assert cells[2] == widget.focusWidget()
+
+
+def test_session_dialog(mocker):
+    """Test the session dialog and the remaining time"""
+    def create_start_str() -> str:
+        """Generates a UTC datetime string in expected format"""
+        now_utc = datetime.now(timezone.utc)
+        return now_utc.strftime("%Y%m%dT%H%M%S.%fZ")
+
+    # 30 minutes from now
+    start = create_start_str()
+    duration = 30 * 60  # 30 minutes
+    _, _, remaining = remaining_time_info(start, duration)
+    if IS_WINDOWS_SYSTEM:
+        assert "~30 minute(s) left" in remaining
+    else:
+        assert "~29 minute(s) left" in remaining
+
+    # 2 hours from now
+    start = create_start_str()
+    duration = 2 * 3600
+    _, _, remaining = remaining_time_info(start, duration)
+    assert "~2.00 hour(s)" in remaining
+
+    # 3 days from now
+    start = create_start_str()
+    duration = 3 * 86400
+    _, _, remaining = remaining_time_info(start, duration)
+    assert "~3.00 day" in remaining
+
+    # 1 hours ago
+    start = create_start_str()
+    duration = -3600
+    _, _, remaining = remaining_time_info(start, duration)
+    assert remaining == "Session ended"
+
+    # test the dialog
+    network = mocker.Mock()
+    with singletons(network=network):
+        dialog = UserSessionDialog()
+        network.onGetGuiSessionInfo.assert_called()
+        start_time = create_start_str()
+        duration = 2 * 3600
+        data = {"sessionStartTime": start_time, "sessionDuration": duration}
+        dialog._event_user_session_info(data)
+        assert dialog.info_remaining_time.text() == "~2.00 hour(s) left"

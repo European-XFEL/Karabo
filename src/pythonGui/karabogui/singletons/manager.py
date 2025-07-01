@@ -262,6 +262,19 @@ class Manager(QObject):
                     "client disconnect.")
             self._request_handlers.clear()
 
+    def handle_getGuiSessionInfo(self, **info):
+        """Handle the user session information from the gui server"""
+        success = info["success"]
+        reason = info["reason"]
+        if not success:
+            messagebox.show_error(
+                "No UserSession Information", details=reason)
+            return
+
+        data = {"sessionStartTime": info.get("sessionStartTime"),
+                "sessionDuration": info.get("sessionDuration")}
+        broadcast_event(KaraboEvent.UserSessionInfo, data)
+
     def handle_setLogLevelReply(self, **info):
         """Handle the log priority reconfiguration reply of the server"""
         if not info.get("success", True):
