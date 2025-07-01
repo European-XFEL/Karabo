@@ -1513,7 +1513,7 @@ void GuiServer_Test::testValidTokenOnLogin() {
     const string& userId = lastMessage.get<std::string>("username");
     CPPUNIT_ASSERT_EQUAL_MESSAGE("User differs from expected", TestKaraboAuthServer::VALID_USER_ID, userId);
 
-    messageQ = m_tcpAdapter->getNextMessages("onGetGuiSessionInfo", 1,
+    messageQ = m_tcpAdapter->getNextMessages("getGuiSessionInfo", 1,
                                              [this] { m_tcpAdapter->sendMessage(Hash{"type", "getGuiSessionInfo"}); });
     messageQ->pop(lastMessage);
     const std::string sessionStartTime = lastMessage.get<std::string>("sessionStartTime");
@@ -1798,7 +1798,7 @@ void GuiServer_Test::testBeginEndTemporarySession() {
 
     // Request GUI Session Info: starting times for both the session start time and the temporary session time
     // should be returned, along with their maximum durations.
-    messageQ = m_tcpAdapter->getNextMessages("onGetGuiSessionInfo", 1,
+    messageQ = m_tcpAdapter->getNextMessages("getGuiSessionInfo", 1,
                                              [this] { m_tcpAdapter->sendMessage(Hash{"type", "getGuiSessionInfo"}); });
     messageQ->pop(lastMessage);
     CPPUNIT_ASSERT_EQUAL(sessionStartTime, lastMessage.get<std::string>("sessionStartTime"));
