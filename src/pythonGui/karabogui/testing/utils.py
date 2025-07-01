@@ -52,6 +52,12 @@ class GuiTestCase(unittest.TestCase):
         if app is None:
             app = QApplication(sys.argv)
         self.app = app
+        # Check organization for QSettings for tests, see the setting in
+        # `programs/tests/test_base.py`
+        app.setOrganizationName("TestFacility")
+        app.setOrganizationDomain("karabo.test.eu")
+        app.setApplicationName("pytest")
+
         create_background_timer()
         # AFTER the QApplication is created!
         import karabogui.access as krb_access
@@ -454,3 +460,11 @@ def lazy_scene_reading():
         yield
     finally:
         set_scene_reader(lazy=False)
+
+
+def set_test_organization_info(app):
+    """Set the organization info for the application, to isolate the
+    QSettings for tests"""
+    app.setOrganizationName("TestFacility")
+    app.setOrganizationDomain("karabo.test.eu")
+    app.setApplicationName("pytest")

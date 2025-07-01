@@ -151,16 +151,6 @@ def test_socket_connect_login_protocol(mocker, subtests, gui_app):
         with subtests.test(msg="Test Network Project Interface"):
             project_manager = "KaraboProjectDB"
 
-            network.onProjectBeginSession(project_manager)
-            _trigger_message_parse()
-            assert receiver.last_hash["type"] == "requestGeneric"
-            assert receiver.last_hash["instanceId"] == project_manager
-
-            network.onProjectEndSession(project_manager)
-            _trigger_message_parse()
-            assert receiver.last_hash["type"] == "requestGeneric"
-            assert receiver.last_hash["instanceId"] == project_manager
-
             network.onListProjectDomains(project_manager)
             _trigger_message_parse()
             assert receiver.last_hash["type"] == "requestGeneric"

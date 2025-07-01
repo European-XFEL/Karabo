@@ -20,7 +20,8 @@ from karabo.common.scenemodel.api import SceneTargetWindow
 from karabogui.events import KaraboEvent
 from karabogui.programs.cinema import create_cinema
 from karabogui.singletons.network import Network
-from karabogui.testing import singletons, system_hash
+from karabogui.testing import (
+    set_test_organization_info, singletons, system_hash)
 from karabogui.topology.api import SystemTopology
 
 namespace = namedtuple("namespace", "host port domain nosplash "
@@ -35,14 +36,15 @@ def test_cinema_normal(gui_app, mocker):
     network.connectToServerDirectly = mocker.Mock()
     network.connectToServerDirectly.return_value = True
     network.onSubscribeLogs = mocker.Mock()
+    info = mocker.patch("karabogui.programs.base.set_app_info")
     topology = SystemTopology()
     path = "karabogui.programs.cinema.broadcast_event"
     with singletons(network=network, topology=topology):
         broadcast = mocker.patch(path)
         success, app = create_cinema(ns)
+        info.assert_called_with(app, "XFEL", "xfel.eu", "KaraboGUI")
         # Make sure no settings are erased in tests
-        app.setOrganizationName("NoXFEL")
-
+        set_test_organization_info(app)
         assert success
         network.signalServerConnectionChanged.emit(True)
 

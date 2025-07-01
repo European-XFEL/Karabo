@@ -18,7 +18,8 @@ from collections import namedtuple
 
 from karabogui.programs.theatre import DEVSCENE_PROG, create_theatre
 from karabogui.singletons.network import Network
-from karabogui.testing import singletons, system_hash
+from karabogui.testing import (
+    set_test_organization_info, singletons, system_hash)
 from karabogui.topology.api import SystemTopology
 from karabogui.util import process_qt_events
 
@@ -42,14 +43,16 @@ def test_theatre_normal(gui_app, mocker):
     network.connectToServerDirectly = mocker.Mock()
     network.connectToServerDirectly.return_value = True
     network.onSubscribeLogs = mocker.Mock()
+    info = mocker.patch("karabogui.programs.base.set_app_info")
 
     topology = SystemTopology()
     path = "karabogui.programs.theatre.get_scene_from_server"
     with singletons(network=network, topology=topology):
         scene = mocker.patch(path)
         success, waiter, app = create_theatre(ns)
+        info.assert_called_with(app, "XFEL", "xfel.eu", "KaraboGUI")
         # Make sure no settings are erased in tests
-        app.setOrganizationName("NoXFEL")
+        set_test_organization_info(app)
 
         assert success
         assert len(waiter.device_scenes) == 1
@@ -80,7 +83,7 @@ def test_theatre_timeout(gui_app, mocker):
         mbox = mocker.patch(box_path)
         success, waiter, app = create_theatre(ns)
         # Make sure no settings are erased in tests
-        app.setOrganizationName("NoXFEL")
+        set_test_organization_info(app)
 
         assert success
         assert len(waiter.device_scenes) == 1
@@ -106,7 +109,7 @@ def test_missing_device(gui_app, mocker):
     waring_dialog = "karabogui.programs.theatre.messagebox.show_warning"
     with singletons(network=network, topology=topology):
         success, waiter, app = create_theatre(ns)
-        app.setOrganizationName("NoXFEL")
+        set_test_organization_info(app)
 
         mbox = mocker.patch(waring_dialog)
 

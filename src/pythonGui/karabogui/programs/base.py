@@ -45,6 +45,13 @@ def excepthook(exc_type, value, traceback):
         print("Could not send exception to network")
 
 
+def set_app_info(app, company, url, name):
+    """Set the information on the app for QSettings"""
+    app.setOrganizationName(company)
+    app.setOrganizationDomain(url)
+    app.setApplicationName(name)
+
+
 def create_gui_app(args):
     """Create the QApplication with all necessary fonts and settings"""
     if system() == 'Darwin' and 'QT_MAC_WANTS_LAYER' not in os.environ:
@@ -55,9 +62,7 @@ def create_gui_app(args):
     if app is None:
         app = QApplication(args)
     # Set directly the QSettings environment to have access
-    app.setOrganizationName('XFEL')
-    app.setOrganizationDomain('xfel.eu')
-    app.setApplicationName('KaraboGUI')
+    set_app_info(app, "XFEL", "xfel.eu", "KaraboGUI")
     # We check our `KARABO_TEST_GUI` variable before due to Squish cracks!
     if get_config()['highDPI'] and not os.environ.get("KARABO_TEST_GUI"):
         # Create a preliminary QApplication to check system/screen properties.

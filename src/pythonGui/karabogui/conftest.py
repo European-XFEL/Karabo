@@ -31,10 +31,12 @@ def gui_app():
     app = QApplication.instance()
     if app is None:
         app = QApplication(sys.argv)
-    # Set the Organization properties for QSettings
-    app.setOrganizationName('XFEL')
-    app.setOrganizationDomain('xfel.eu')
-    app.setApplicationName('KaraboGUI')
+    # Check organization for QSettings for tests, see the setting in
+    # `programs/tests/test_base.py`
+    app.setOrganizationName("TestFacility")
+    app.setOrganizationDomain("karabo.test.eu")
+    app.setApplicationName("pytest")
+    assert app.applicationName() == "pytest"
     create_background_timer()
     import karabogui.access as krb_access
     krb_access.GLOBAL_ACCESS_LEVEL = AccessLevel.OPERATOR

@@ -51,6 +51,7 @@ def test_concert(gui_app, mocker):
     path = "karabogui.programs.concert.broadcast_event"
     concert_app = mocker.patch("karabogui.programs.concert.create_gui_app")
     concert_app.return_value = gui_app
+    assert gui_app.organizationName() == "TestFacility"
     # Patch the gui_app to avoid collisions between tests
     with singletons(network=network, topology=topology):
         broadcast = mocker.patch(path)
