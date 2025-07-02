@@ -616,64 +616,8 @@ class UserSessionDialog(QDialog):
         unregister_from_broadcasts(self.event_map)
         super().done(result)
 
-    def _event_network(self, data):
-        if not data.get("status"):
-            self.close()
-
-    def _event_user_session_info(self, data):
-        """Work on the user session information from the gui server"""
-        start_time = data["sessionStartTime"]
-        duration = int(data["sessionDuration"])
-        start_str, end_str, time_remaining_str = remaining_time_info(
-            start_time, duration)
-
-        self.info_start_time.setText(start_str)
-        self.info_end_time.setText(end_str)
-        self.info_remaining_time.setText(time_remaining_str)
-
-    def _event_user_session(self, data):
-        self.close()
-
-    @Slot(int)
-    def _switch_temporary(self, index):
-        self.remember_login.setVisible(bool(index))
-
-    @Slot()
-    def open_login_webpage(self):
-        """Open browser to load the login page."""
-        url = f"{self._auth_url}login_form"
-        success = QDesktopServices.openUrl(QUrl(url))
-        if not success:
-            self.error_label.setText(f"Failed to open the page {url}.")
-
-    @Slot()
-    def accept(self):
-        # We are calling the super method only after the authentication of
-        # the temporary session user.
-        self._login_authenticated()
-
-    @Slot()
-    def _update_button(self):
-        enable = self.edit_access_code.has_access_code()
-        self.ok_button.setEnabled(enable)
-
-    def _login_authenticated(self):
-        if self.combo_mode.currentIndex() == TEMPORARY_INDEX:
-            remember_login = False
-        else:
-            remember_login = self.remember_login.isChecked()
-
-        info = json.dumps({
-            "access_code": int(self.edit_access_code.get_access_code()),
-            "client_hostname": CLIENT_HOST,
-            "remember_login": remember_login,
-        })
-        info = bytearray(info.encode("utf-8"))
-        url = f"{self._auth_url}user_tokens"
-
-        request = QNetworkRequest(QUrl(url))
-        request.setHeader(QNetworkRequest.ContentTypeHeader, REQUEST_HEADER)
-        self.access_manager.post(request, info)
+    # --------------------------------------------------------------------
+    # Qt Slots
 
     @Slot(QNetworkReply)
     def onAuthReply(self, reply: QNetworkReply):
@@ -713,6 +657,72 @@ class UserSessionDialog(QDialog):
                 "QLabel#error_label {color:red;}")
             self.error_label.setText(error)
         reply.deleteLater()
+
+    @Slot(int)
+    def _switch_temporary(self, index):
+        self.remember_login.setVisible(bool(index))
+
+    @Slot()
+    def open_login_webpage(self):
+        """Open browser to load the login page."""
+        url = f"{self._auth_url}login_form"
+        success = QDesktopServices.openUrl(QUrl(url))
+        if not success:
+            self.error_label.setText(f"Failed to open the page {url}.")
+
+    @Slot()
+    def accept(self):
+        # We are calling the super method only after the authentication of
+        # the temporary session user.
+        self._login_authenticated()
+
+    @Slot()
+    def _update_button(self):
+        enable = self.edit_access_code.has_access_code()
+        self.ok_button.setEnabled(enable)
+
+    # --------------------------------------------------------------------
+    # Private interface
+
+    def _event_network(self, data):
+        if not data.get("status"):
+            self.close()
+
+    def _event_user_session_info(self, data):
+        """Work on the user session information from the gui server"""
+        start_time = data["sessionStartTime"]
+        duration = int(data["sessionDuration"])
+        start_str, end_str, time_remaining_str = remaining_time_info(
+            start_time, duration)
+
+        self.info_start_time.setText(start_str)
+        self.info_end_time.setText(end_str)
+        self.info_remaining_time.setText(time_remaining_str)
+
+    def _event_user_session(self, data):
+        self.close()
+
+    def _login_authenticated(self):
+        if self.combo_mode.currentIndex() == TEMPORARY_INDEX:
+            remember_login = False
+        else:
+            remember_login = self.remember_login.isChecked()
+
+        info = json.dumps({
+            "access_code": int(self.edit_access_code.get_access_code()),
+            "client_hostname": CLIENT_HOST,
+            "remember_login": remember_login,
+        })
+        info = bytearray(info.encode("utf-8"))
+        url = f"{self._auth_url}user_tokens"
+
+        request = QNetworkRequest(QUrl(url))
+        request.setHeader(QNetworkRequest.ContentTypeHeader, REQUEST_HEADER)
+        self.access_manager.post(request, info)
+
+    def _clear_refresh_token(self):
+        del get_config()["refresh_token"]
+        del get_config()["refresh_token_user"]
 
 
 def remaining_time_info(start: str, duration: int) -> tuple[str, str, str]:
