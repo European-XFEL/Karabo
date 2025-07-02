@@ -360,7 +360,7 @@ class MainWindow(QMainWindow):
         else:
             self.serverInfo.setText("")
             allow_temporary_session = False
-        self.tbTempSession.setVisible(allow_temporary_session)
+        self.tbUserSession.setVisible(allow_temporary_session)
 
     # --------------------------------------
     # Qt virtual methods
@@ -435,8 +435,8 @@ class MainWindow(QMainWindow):
 
     def setSessionButton(self, icon: QIcon, tooltip: str) -> None:
         """Set the icon and tooltip for the Temporary Session button"""
-        self.tbTempSession.setToolTip(tooltip)
-        self.tbTempSession.setIcon(icon)
+        self.tbUserSession.setToolTip(tooltip)
+        self.tbUserSession.setIcon(icon)
 
     # --------------------------------------
     # private methods
@@ -450,11 +450,11 @@ class MainWindow(QMainWindow):
         self.tbAccessLevel.setPopupMode(QToolButton.InstantPopup)
         self.tbAccessLevel.setEnabled(False)
 
-        text = "Start a temporary session"
-        self.tbTempSession = QAction(icons.switchNormal, f"&{text}", self)
-        self.tbTempSession.setToolTip(text)
-        self.tbTempSession.setStatusTip(text)
-        self.tbTempSession.triggered.connect(self.onTemporarySession)
+        text = "User Session Info"
+        self.tbUserSession = QAction(icons.switchNormal, f"&{text}", self)
+        self.tbUserSession.setToolTip(text)
+        self.tbUserSession.setStatusTip(text)
+        self.tbUserSession.triggered.connect(self.onTemporarySession)
 
         self.agAccessLevel = QActionGroup(self)
         self.agAccessLevel.triggered.connect(self.onChangeAccessLevel)
@@ -649,7 +649,7 @@ class MainWindow(QMainWindow):
         toolbar.addAction(self.acServerConnect)
 
         toolbar.addWidget(self.tbAccessLevel)
-        toolbar.addAction(self.tbTempSession)
+        toolbar.addAction(self.tbUserSession)
 
         self.notification_banner = MainWindowBanner()
 
