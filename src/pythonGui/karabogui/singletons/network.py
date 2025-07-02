@@ -576,6 +576,11 @@ class Network(QObject):
                  "clientId", const.KARABO_CLIENT_ID)
         self._write_hash(h)
 
+    def onGetGuiSessionInfo(self):
+        h = Hash("type", "getGuiSessionInfo",
+                 "clientId", const.KARABO_CLIENT_ID)
+        self._write_hash(h)
+
     def onSetLogLevel(self, instanceId, level):
         h = Hash("type", "setLogLevel", "instanceId", instanceId,
                  "level", level)

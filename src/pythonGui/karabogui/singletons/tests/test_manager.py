@@ -988,7 +988,7 @@ def test_temp_session(mocker):
         assert krb_access.TEMPORARY_SESSION_USER == "karabo"
 
         end_session_info = {"levelBeforeTemporarySession": 2}
-        manager.handle_onEndTemporarySession(** end_session_info)
+        manager.handle_onEndTemporarySession(**end_session_info)
 
         assert krb_access.GLOBAL_ACCESS_LEVEL == AccessLevel(2)
         assert krb_access.HIGHEST_ACCESS_LEVEL == AccessLevel(2)
@@ -999,3 +999,19 @@ def test_temp_session(mocker):
         assert krb_access.GLOBAL_ACCESS_LEVEL == AccessLevel(1)
         assert krb_access.HIGHEST_ACCESS_LEVEL == AccessLevel(1)
         assert krb_access.TEMPORARY_SESSION_USER is None
+
+
+def test_handle_session_info(mocker):
+    target = 'karabogui.singletons.manager.broadcast_event'
+    broadcast_event = mocker.patch(target)
+    manager = Manager()
+    info = Hash(
+        "success", True, "reason", "",
+        "type", "getGuiSessionInfo",
+        "sessionStartTime", "2009-04-20T10:32:22 UTC",
+        "sessionDuration", 120)
+
+    manager.handle_getGuiSessionInfo(**info)
+    data = {"sessionStartTime": "2009-04-20T10:32:22 UTC",
+            "sessionDuration": 120}
+    broadcast_event.assert_called_with(KaraboEvent.UserSessionInfo, data)

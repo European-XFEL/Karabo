@@ -270,6 +270,18 @@ def utc_to_local(utc_str: str, format='%Y-%m-%d %H:%M:%S') -> str:
     return datetime.strftime(local_ts, format)
 
 
+def utc_to_local_date(utc_str: str, format='%Y-%m-%d %H:%M:%S') -> datetime:
+    """Convert given `utc_str` in a given `format` to the local datetime
+    """
+    if not utc_str:
+        dt = datetime.now(tz=tzutc())
+    else:
+        dt = datetime.strptime(utc_str, format).replace(
+            tzinfo=tzutc())
+    # Convert to local naive datetime
+    return dt.astimezone(tzlocal())
+
+
 VALID_PROJECT_OBJECT_NAME = re.compile(r"^[\w-]+(/[\w-]+)*$")
 # The macro name should start with a letter and can contain:
 # letters, numbers, underscores and slashes

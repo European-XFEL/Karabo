@@ -20,6 +20,7 @@
 
 import getpass
 import json
+from datetime import timedelta
 from enum import IntEnum, unique
 from struct import calcsize, unpack
 
@@ -39,7 +40,7 @@ from karabogui.const import CLIENT_HOST
 from karabogui.events import (
     KaraboEvent, register_for_broadcasts, unregister_from_broadcasts)
 from karabogui.singletons.api import get_config, get_network
-from karabogui.util import SignalBlocker
+from karabogui.util import SignalBlocker, utc_to_local_date
 
 from .utils import get_dialog_ui
 
@@ -603,10 +604,12 @@ class UserSessionDialog(QDialog):
 
         self.event_map = {
             KaraboEvent.NetworkConnectStatus: self._event_network,
-            KaraboEvent.UserSession: self._event_user_session
-
+            KaraboEvent.UserSession: self._event_user_session,
+            KaraboEvent.UserSessionInfo: self._event_user_session_info,
         }
         register_for_broadcasts(self.event_map)
+
+        get_network().onGetGuiSessionInfo()
 
     def done(self, result):
         """Stop listening for broadcast events"""
@@ -616,6 +619,17 @@ class UserSessionDialog(QDialog):
     def _event_network(self, data):
         if not data.get("status"):
             self.close()
+
+    def _event_user_session_info(self, data):
+        """Work on the user session information from the gui server"""
+        start_time = data["sessionStartTime"]
+        duration = int(data["sessionDuration"])
+        start_str, end_str, time_remaining_str = remaining_time_info(
+            start_time, duration)
+
+        self.info_start_time.setText(start_str)
+        self.info_end_time.setText(end_str)
+        self.info_remaining_time.setText(time_remaining_str)
 
     def _event_user_session(self, data):
         self.close()
@@ -699,3 +713,39 @@ class UserSessionDialog(QDialog):
                 "QLabel#error_label {color:red;}")
             self.error_label.setText(error)
         reply.deleteLater()
+
+
+def remaining_time_info(start: str, duration: int) -> tuple[str, str, str]:
+    """Calculate the remaining information from the guiserver info
+
+    :param start: utc aware string representation with microseconds
+    :param duration: session duration in seconds (int)
+    """
+    dt = utc_to_local_date(start, format="%Y%m%dT%H%M%S.%fZ")
+    end_local = dt + timedelta(seconds=duration)
+
+    # Time remaining from now
+    now = utc_to_local_date("")
+    time_left = end_local - now
+
+    time_left_sec = time_left.total_seconds()
+    if time_left_sec <= 0:
+        time_remaining_str = "Session ended"
+    else:
+        total_minutes = int(time_left_sec // 60)
+        total_hours = float(time_left_sec / 3600)
+        total_days = float(time_left_sec / 86400)
+
+        if total_days >= 1:
+            time_remaining_str = f"~{total_days:.2f} day(s) left"
+        elif total_hours >= 1:
+            time_remaining_str = f"~{total_hours:.2f} hour(s) left"
+        else:
+            time_remaining_str = f"~{total_minutes} minute(s) left"
+
+    # Format as string
+    time_format = "%Y-%m-%d %H:%M:%S"
+    start_str = dt.strftime(time_format)
+    end_str = end_local.strftime(time_format)
+
+    return start_str, end_str, time_remaining_str

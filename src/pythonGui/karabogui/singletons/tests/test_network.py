@@ -335,6 +335,11 @@ def test_socket_connect_login_protocol(mocker, subtests, gui_app):
             assert receiver.last_hash["instanceId"] == "swerver"
             assert receiver.last_hash["level"] == "ERROR"
 
+        with subtests.test(msg="Info"):
+            network.onGetGuiSessionInfo()
+            _trigger_message_parse()
+            assert receiver.last_hash["type"] == "getGuiSessionInfo"
+
         mbox = mocker.patch('karabogui.singletons.network.QMessageBox')
         dia = mocker.patch('karabogui.singletons.network.ReactiveLoginDialog')
         call_count = 0
