@@ -327,8 +327,6 @@ Compound descriptors
 Special descriptors
 ~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: karabo.middlelayer.DeviceNode
-
 .. autoclass:: karabo.middlelayer.VectorRegexString()
 
 .. autoclass:: karabo.middlelayer.RegexString()
@@ -340,6 +338,8 @@ Karabo data types
 .. autoclass:: karabo.middlelayer.KaraboValue()
 
 .. autofunction:: karabo.middlelayer.isSet
+
+.. autofunction:: karabo.middlelayer.isStringSet
 
 .. autoclass:: karabo.middlelayer.QuantityValue()
    :members:
