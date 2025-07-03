@@ -34,10 +34,14 @@ class ConfigurationDatabase:
             f"sqlite+aiosqlite:///{self.db_name}",
             echo=False,
             pool_pre_ping=True,
-            connect_args={"check_same_thread": True})
+            connect_args={"check_same_thread": False})
+
         self.session = async_sessionmaker(
-            bind=self.engine, class_=AsyncSession,
-            expire_on_commit=False)
+            bind=self.engine,
+            expire_on_commit=False,
+            class_=AsyncSession,
+            autoflush=False,
+            autocommit=False)
 
     @property
     def path(self) -> Path:
@@ -117,7 +121,9 @@ class ConfigurationDatabase:
 
             try:
                 await session.delete(config)
-                # XXX: Check if the parent device has any remaining
+                # Only flush, don't commit, but keep transaction
+                await session.flush()
+                # Note: Check if the parent device has any remaining
                 # configurations
                 stmt = (
                     select(NamedDeviceInstance)
