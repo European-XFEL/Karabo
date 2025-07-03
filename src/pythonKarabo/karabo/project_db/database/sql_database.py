@@ -891,11 +891,10 @@ class SQLDatabase(DatabaseBase):
                     date=date,
                     project_domain_id=project_domain.id)
                 session.add(project)
-                # The commit / refresh sequence is needed for the case of a
+                # The flush sequence is needed for the case of a
                 # new project. A new project only gets its ID after being
-                # stored in the database.
-                await session.commit()
-                await session.refresh(project)
+                # stored in the database. This is a save marker
+                await session.flush()
             else:
                 # There's a record for the project in the DB - update its
                 # attributes from the data in the xml
@@ -1012,7 +1011,6 @@ class SQLDatabase(DatabaseBase):
                             f'Server with uuid "{server_uuid}" not found in '
                             'the database. Cannot link the server to project'
                             f'"{project.name}" ({project.uuid})')
-                        continue
                     server.project_id = project_id
                     server.order = server_index
                     session.add(server)
@@ -1235,8 +1233,7 @@ class SQLDatabase(DatabaseBase):
                     class_id=class_id,
                     date=date)
                 session.add(instance)
-                await session.commit()
-                await session.refresh(instance)
+                await session.flush()
 
             # Saves the device configs linked to the device instance that
             # has been just saved. First the currently linked configs
@@ -1296,8 +1293,7 @@ class SQLDatabase(DatabaseBase):
                     name=server_name,
                     date=date)
                 session.add(server)
-                await session.commit()
-                await session.refresh(server)
+                await session.flush()
 
             # Saves the device instances linked to the device server just saved
             # First unlinks all the currently linked device instances.
