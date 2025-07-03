@@ -14,7 +14,8 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 import os
-from asyncio import Queue, ensure_future, open_connection, sleep
+from asyncio import (
+    IncompleteReadError, Queue, ensure_future, open_connection, sleep)
 from struct import calcsize, pack, unpack
 
 from karabo.middlelayer import Hash, decodeBinary, encodeBinary
@@ -82,7 +83,7 @@ class GuiAdapter:
             return item["value"]
 
     def get_all(self, msg_type: str) -> list:
-        """Empty the reading queue with items from msg_type"""
+        """Empty the reading queue, returning all messages of msg_type"""
         ret = []
         while not self.read_queue.empty():
             item = self.read_queue.get_nowait()
@@ -113,5 +114,7 @@ class GuiAdapter:
                 bytes2read = unpack(sizeFormat, raw)[0]
                 data = await self.reader.readexactly(bytes2read)
                 self.decode_message(data)
+        except IncompleteReadError:
+            pass
         finally:
             self.connected = False
