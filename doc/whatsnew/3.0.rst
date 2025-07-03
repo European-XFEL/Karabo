@@ -19,6 +19,11 @@ Major Highlights of This Release
 - Refactored project database to use MySQL
 - Refactored configuration database to use SQLite
 - Reauthentication support added in the ``GuiServer`` device
+- Session Management for Authentication:
+
+  - UserSessionDialog in the GUI shows now the time remaining for current session
+  - Client Sessions are automatically logged out after 14 days if they don't relogin
+
 - Pipelines (Output Channel) validate via Schema definition if provided
 - Python integration test framework based on Contexts (AsyncServerContext, ServerContext)
 
@@ -90,8 +95,9 @@ Breaking Changes
   - All alarm-related attributes such as `alarmLow`, `alarmHigh`, `needsAck`, etc.
 
 - Pipeline Syntax Change: The `@` separator is no longer supported in pipeline channel declarations; use `:` as before.
-- Middlelayer Functions Removed: Functions such as `linspace`, `dot`, and `cross` in `middlelayer.numeric` have been removed.
-- Visibility Features Removed: All visibility features (Configurator, Topology, ikarabo) and the `visibility` property have been removed.
+- Middlelayer functions removed: Functions such as `linspace`, `dot`, and `cross` in `middlelayer.numeric` have been removed.
+- Middlelayer functions `maximum` and `minimum` have been removed
+- Visibility Features removed: All visibility features (Configurator, Topology, ikarabo) and the `visibility` property have been removed.
 
 - Element and Enum Removals or Changes:
 
@@ -148,6 +154,15 @@ Breaking Changes
   - `DisplayTrendlineModel` -> Use `TrendGraphModel`
   - `LinePlotModel` -> Was a Ghost model
   - `XYVectorModel` -> Use `VectorXYGraphModel`
+
+
+
+Deprecation Announcements
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Schema Elements with AccessMode `INITONLY` are currently rewritten as `RECONFIGURABLE`. This gives a warning. In future this will throw. Note that bound api
+  default is `INITONLY`.
+- Libraries not used by the Karabo Framework will be in future removed: matplotlib
 
 
 Change of Behavior
