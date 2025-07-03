@@ -14,7 +14,7 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 import os
-from asyncio import Queue, ensure_future, open_connection
+from asyncio import Queue, ensure_future, open_connection, sleep
 from struct import calcsize, pack, unpack
 
 from karabo.middlelayer import Hash, decodeBinary, encodeBinary
@@ -31,22 +31,32 @@ class GuiAdapter:
         self.read_loop = None
         self.connected = False
 
-    async def login(self):
-        loginInfo = Hash("type", "login")
-        loginInfo["username"] = 'expert'
-        loginInfo["password"] = ''
-        loginInfo["provider"] = 'LOCAL'
-        loginInfo["host"] = 'localhost'
-        loginInfo["sessionToken"] = ''
-        loginInfo["pid"] = os.getpid()
-        loginInfo["version"] = '42.0.0'
-        self.tcpWriteHash(loginInfo)
+    async def login(self, info: Hash | None = None):
+        if self.connected:
+            await self.disconnect()
+        await self.connect()
+
+        if info is None:
+            info = Hash("type", "login")
+            info["username"] = 'expert'
+            info["password"] = ''
+            info["provider"] = 'LOCAL'
+            info["host"] = 'localhost'
+            info["sessionToken"] = ''
+            info["pid"] = os.getpid()
+            info["version"] = '42.0.0'
+        self.tcpWriteHash(info)
         await self.writer.drain()
 
     def tcpWriteHash(self, h: Hash):
         dataBytes = encodeBinary(h)
         self.writer.write(pack('I', len(dataBytes)))
         self.writer.write(dataBytes)
+
+    async def reset(self):
+        while not self.read_queue.empty():
+            self.read_queue.get_nowait()
+            self.read_queue.task_done()
 
     def decode_message(self, data: bytes):
         h = decodeBinary(data)
@@ -71,16 +81,37 @@ class GuiAdapter:
                 continue
             return item["value"]
 
+    def get_all(self, msg_type: str) -> list:
+        """Empty the reading queue with items from msg_type"""
+        ret = []
+        while not self.read_queue.empty():
+            item = self.read_queue.get_nowait()
+            self.read_queue.task_done()
+            if item.get("type") == msg_type:
+                ret.append(item["value"])
+        return ret
+
     async def disconnect(self):
-        self.connected = False
         if self.read_loop is not None:
             self.read_loop.cancel()
+            while not self.read_loop.done():
+                await sleep(0.2)
+            self.read_loop = None
+            self.writer.close()
+            await self.writer.wait_closed()
+            self.reader = None
+            self.writer = None
+
+        self.connected = False
 
     async def reader_loop(self):
         sizeFormat = 'I'  # unsigned int
         bytesNeededSize = calcsize(sizeFormat)
-        while True:
-            raw = await self.reader.readexactly(bytesNeededSize)
-            bytes2read = unpack(sizeFormat, raw)[0]
-            data = await self.reader.readexactly(bytes2read)
-            self.decode_message(data)
+        try:
+            while True:
+                raw = await self.reader.readexactly(bytesNeededSize)
+                bytes2read = unpack(sizeFormat, raw)[0]
+                data = await self.reader.readexactly(bytes2read)
+                self.decode_message(data)
+        finally:
+            self.connected = False

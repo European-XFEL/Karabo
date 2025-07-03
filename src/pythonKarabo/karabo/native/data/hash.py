@@ -35,12 +35,8 @@ class HashElement:
 
     def __eq__(self, other):
         if isinstance(other, HashElement):
-            def _equal(d0, d1):
-                ret = (d0 == d1)
-                return all(ret) if isinstance(ret, Iterable) else ret
-
-            return (_equal(self.data, other.data) and
-                    _equal(self.attrs, other.attrs))
+            return (is_equal(self.data, other.data) and
+                    is_equal(self.attrs, other.attrs))
         return super().__eq__(other)
 
     def __iter__(self):
@@ -639,7 +635,7 @@ def is_equal(a, b):
         # If shapes can't be broadcasted together, we have a dimension
         # mismatch of ndarrays
         array_check = map(lambda x: isinstance(x, np.ndarray), (a, b))
-        assert any(array_check)
+        assert any(array_check), f"{a}, {b}"
         return False
 
     return all(res) if isinstance(res, Iterable) else res

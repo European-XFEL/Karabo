@@ -21,6 +21,14 @@ from karabo.native import (
     Hash, HashByte, HashElement, HashList, Schema, is_equal)
 
 
+def check_hash_element():
+    a = HashElement(1, np.array([1, 0, 1]))
+    b = HashElement(1, np.array([1, 0, 1]))
+    assert a == b
+    c = HashElement(1, np.array([1, 0, 2]))
+    assert a != c
+
+
 def check_array(array, expected):
     assert_array_equal(array, expected)
     assert array.dtype == expected.dtype
