@@ -34,8 +34,8 @@ class Schema:
 
     def __eq__(self, other):
         if (other.__class__ is self.__class__
-                and other.name == self.name and other.hash == self.hash):
-            return True
+                and other.name == self.name):
+            return other.hash.fullyEqual(self.hash)
         return False
 
     def __hash__(self):
