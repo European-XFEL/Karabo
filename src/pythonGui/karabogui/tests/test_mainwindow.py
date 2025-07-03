@@ -37,21 +37,21 @@ def test_mainwindow(gui_app, mocker, subtests):
         logger.info.assert_called_with("Started Karabo GUI application ...")
         assert mw is not None
 
-        with subtests.test("Temp session button visibility"):
+        with subtests.test("User Session Button"):
 
             krb_access.is_authenticated.return_value = True
             data = {"topic": "foo", "hostname": "exfel", "hostport": 44444}
             mw.update_server_connection(data=data)
-            assert mw.tbTempSession.isVisible()
+            assert mw.tbUserSession.isVisible()
 
             mw.update_server_connection(data=None)
-            assert not mw.tbTempSession.isVisible()
-            assert not mw.tbTempSession.isChecked()
-            assert mw.tbTempSession.toolTip() == "Start a temporary session"
+            assert not mw.tbUserSession.isVisible()
+            assert not mw.tbUserSession.isChecked()
+            assert mw.tbUserSession.toolTip() == "User Session Info"
 
             krb_access.is_authenticated.return_value = False
             mw.update_server_connection(data=data)
-            assert not mw.tbTempSession.isVisible()
+            assert not mw.tbUserSession.isVisible()
 
     with subtests.test("Test project conflict event in main window"):
         from karabo.common.project.api import ProjectModel
