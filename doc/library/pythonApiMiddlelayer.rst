@@ -157,15 +157,9 @@ Utility functions are provided for convenience.
 
 .. autofunction:: karabo.middlelayer.get_image_data
 
-.. autofunction:: karabo.middlelayer.maximum
-
-.. autofunction:: karabo.middlelayer.minimum
-
 .. autofunction:: karabo.middlelayer.removeQuantity
 
 .. autofunction:: karabo.middlelayer.profiler
-
-.. autofunction:: karabo.middlelayer.validate_args
 
 .. autofunction:: karabo.middlelayer.get_descriptor_from_data
 
@@ -174,8 +168,6 @@ Utility functions are provided for convenience.
 .. autofunction:: karabo.middlelayer.is_equal
 
 .. autofunction:: karabo.middlelayer.has_changes
-
-.. autofunction:: karabo.middlelayer.simple_deepcopy
 
 
 Writing a device
