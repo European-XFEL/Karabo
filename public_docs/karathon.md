@@ -133,15 +133,9 @@ Convenience helpers:
 
 ::: karabo.middlelayer.get_image_data
 
-::: karabo.middlelayer.maximum
-
-::: karabo.middlelayer.minimum
-
 ::: karabo.middlelayer.removeQuantity
 
 ::: karabo.middlelayer.profiler
-
-::: karabo.middlelayer.validate_args
 
 ::: karabo.middlelayer.get_descriptor_from_data
 
@@ -170,8 +164,6 @@ Base classes and exceptions for device authors:
 Asynchronous helpers and primitives:
 
 ::: karabo.middlelayer.background
-
-::: karabo.middlelayer.gather
 
 ::: karabo.middlelayer.firstCompleted
 
@@ -282,8 +274,6 @@ Structured types:
 ### Special Descriptors
 
 Advanced or regex‑based types:
-
-::: karabo.middlelayer.DeviceNode
 
 ::: karabo.middlelayer.VectorRegexString
 
