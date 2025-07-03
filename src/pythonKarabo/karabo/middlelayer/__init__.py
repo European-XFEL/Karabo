@@ -91,5 +91,5 @@ from .signalslot import Signal, SignalSlotable, coslot, slot
 from .synchronization import (
     allCompleted, background, firstCompleted, firstException, gather,
     processEvents, sleep, synchronous)
-from .unitutil import StateSignifier, maximum, minimum, removeQuantity
+from .unitutil import StateSignifier, removeQuantity
 from .utils import AsyncTimer, get_property, profiler, set_property

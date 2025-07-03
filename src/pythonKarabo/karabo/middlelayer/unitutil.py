@@ -15,41 +15,10 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 import copy
 from asyncio import iscoroutinefunction
-from collections.abc import Iterable
 from functools import wraps
 
 from karabo.common.states import StateSignifier as SignifierBase
 from karabo.native import KaraboValue, newest_timestamp, wrap
-
-
-def maximum(iterable):
-    """Return the maximum value of the iterable
-
-    This function takes into account KaraboValues for newest timestamp
-    generation.
-    """
-    assert isinstance(iterable, Iterable)
-
-    ret = max(iterable)
-    ret = wrap(copy.copy(ret))
-    ret.timestamp = newest_timestamp(iterable)
-
-    return ret
-
-
-def minimum(iterable):
-    """Return the minimum value of the iterable
-
-    This function takes into account KaraboValues for newest timestamp
-    generation.
-    """
-    assert isinstance(iterable, Iterable)
-
-    ret = min(iterable)
-    ret = wrap(copy.copy(ret))
-    ret.timestamp = newest_timestamp(iterable)
-
-    return ret
 
 
 class StateSignifier(SignifierBase):

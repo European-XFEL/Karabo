@@ -19,8 +19,7 @@ import time
 import pytest
 
 from karabo.common.states import State
-from karabo.middlelayer.unitutil import (
-    StateSignifier, maximum, minimum, removeQuantity)
+from karabo.middlelayer.unitutil import StateSignifier, removeQuantity
 from karabo.middlelayer.utils import (
     AsyncTimer, check_broker_scheme, countdown, profiler, suppress)
 from karabo.native import Float, QuantityValue, String
@@ -118,71 +117,6 @@ def test_signifier(utilsTest):
     assert state == State.MOVING
     assert state.timestamp == v1.timestamp
     assert state.timestamp == 1
-
-
-@pytest.mark.timeout(30)
-def test_get_maximum(utilsTest):
-    a1 = Float(defaultValue=1.0)
-    a2 = Float(defaultValue=1.0)
-    a3 = Float(defaultValue=1.0)
-    a4 = Float(defaultValue=1.0)
-
-    v1 = a1.toKaraboValue(6.0)
-    v1.timestamp = utilsTest.timestamp_1
-    assert v1 == 6.0
-    v2 = a2.toKaraboValue(1.25)
-    v2.timestamp = utilsTest.timestamp_2
-    assert v2 == 1.25
-    v3 = a3.toKaraboValue(1.75)
-    v3.timestamp = utilsTest.timestamp_3
-    assert v3 == 1.75
-    v4 = a4.toKaraboValue(4.0)
-    v4.timestamp = utilsTest.timestamp_4
-    assert v4 == 4.0
-    value = maximum([v1, v2, v3, v4])
-    assert value == 6.0
-    assert value.timestamp == v4.timestamp
-    assert value.timestamp == 4
-    assert v1.timestamp == utilsTest.timestamp_1
-    assert v2.timestamp == utilsTest.timestamp_2
-    assert v3.timestamp == utilsTest.timestamp_3
-    assert v4.timestamp == utilsTest.timestamp_4
-
-    with pytest.raises(TypeError):
-        value = maximum(v1)
-
-
-@pytest.mark.timeout(30)
-def test_get_mimimum(utilsTest):
-    a1 = Float(defaultValue=1.0)
-    a2 = Float(defaultValue=1.0)
-    a3 = Float(defaultValue=1.0)
-    a4 = Float(defaultValue=1.0)
-
-    v1 = a1.toKaraboValue(6.0)
-    v1.timestamp = utilsTest.timestamp_1
-    assert v1 == 6.0
-    v2 = a2.toKaraboValue(1.25)
-    v2.timestamp = utilsTest.timestamp_2
-    assert v2 == 1.25
-    v3 = a3.toKaraboValue(1.75)
-    v3.timestamp = utilsTest.timestamp_3
-    assert v3 == 1.75
-    v4 = a4.toKaraboValue(4.0)
-    v4.timestamp = utilsTest.timestamp_4
-    assert v4 == 4.0
-
-    value = minimum([v1, v2, v3, v4])
-    assert value == 1.25
-    assert value.timestamp == v4.timestamp
-    assert value.timestamp == 4
-    assert v1.timestamp == utilsTest.timestamp_1
-    assert v2.timestamp == utilsTest.timestamp_2
-    assert v3.timestamp == utilsTest.timestamp_3
-    assert v4.timestamp == utilsTest.timestamp_4
-
-    with pytest.raises(TypeError):
-        value = minimum(v1)
 
 
 @pytest.mark.timeout(30)
