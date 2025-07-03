@@ -1752,6 +1752,18 @@ void Device_Test::testBadInit() {
     CPPUNIT_ASSERT_NO_THROW(requestor.receive(ok, dummy));
     CPPUNIT_ASSERT(ok);
 
+    auto statMutex = std::make_shared<std::mutex>();
+    auto devStatus = std::make_shared<std::string>();
+    m_deviceClient->registerDeviceMonitor(
+          devId, [devId, statMutex, devStatus](const std::string& deviceId, const Hash& updates) {
+              if (updates.has("deviceId")) {
+                  return; // initial config from connecting, not of interest
+              } else if (devId == deviceId && updates.has("status")) {
+                  std::lock_guard<std::mutex> lock(*statMutex);
+                  *devStatus = updates.get<std::string>("status");
+              }
+          });
+
     // After instantiation, state switches to INIT, as soon as initialize method runs
     waitOk = waitForCondition(
           [this, devId, &devState]() {
@@ -1764,10 +1776,21 @@ void Device_Test::testBadInit() {
 
     // We kill the device that is still initializing: It will not die immediately (only once initialization is done),
     // but preDestruction is called.
-    // Do not use client->killDevice(devId): that waits until device is really gone (not only that slotKillDevice is
-    // finished). Neither use m_deviceServer to request slotKillDevice - see Device::slotKillDevice
+    devStatus->clear(); // to be sure in case something triggered a status update before
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(devId, "slotKillDevice"));
+
+    // Now we see from our handler that "status" is updated and published, so we can test for its content
+    waitOk = waitForCondition(
+          [&devStatus, statMutex]() {
+              std::lock_guard<std::mutex> lock(*statMutex);
+              return !devStatus->empty();
+          },
+          (delayInSec + 2) * 1000); // long enough that initialization is done (though should come earlier)
+
+    CPPUNIT_ASSERT_EQUAL(std::string("preDestruction called"), *devStatus);
     CPPUNIT_ASSERT_EQUAL(std::string("preDestruction called"), m_deviceClient->get<std::string>(devId, "status"));
+
+    m_deviceClient->unregisterDeviceMonitor(devId); // Clean again
 
     // Now wait until device is gone - will take until initialize method has finished!
     std::vector<std::string> devs;
