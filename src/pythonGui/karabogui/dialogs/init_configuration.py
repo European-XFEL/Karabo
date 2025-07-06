@@ -18,10 +18,11 @@ from collections import namedtuple
 
 from qtpy import uic
 from qtpy.QtCore import (
-    QAbstractTableModel, QItemSelection, QPoint, QSortFilterProxyModel, Qt,
-    Slot)
+    QAbstractTableModel, QItemSelection, QModelIndex, QPoint,
+    QSortFilterProxyModel, Qt, Slot)
 from qtpy.QtGui import QPalette
-from qtpy.QtWidgets import QDialog, QDialogButtonBox, QHeaderView, QMenu
+from qtpy.QtWidgets import (
+    QDialog, QDialogButtonBox, QHeaderView, QMenu, QMessageBox)
 
 import karabogui.icons as icons
 from karabogui import messagebox
@@ -215,6 +216,15 @@ class InitConfigurationDialog(QDialog):
             return
         model = index.model()
         name = model.index(index.row(), NAME_COLUMN).data()
+
+        confirm = QMessageBox(
+            QMessageBox.Question, "Delete Configuration?",
+            f"Do you really want to delete the configuration '{name}'?",
+            QMessageBox.No | QMessageBox.Yes, parent=self).exec()
+
+        if confirm == QMessageBox.No:
+            return
+
         get_network().onDeleteInitConfiguration(
             self.instance_id, name)
 
@@ -234,6 +244,22 @@ class InitConfigurationDialog(QDialog):
                 messagebox.show_alarm(text, parent=self)
                 return
             name = dialog.name
+
+            # Check if the name already exists.
+            model = self.model.sourceModel()
+            first_index = model.index(0, 0, QModelIndex())
+            hits = 1
+            if model.match(first_index, Qt.DisplayRole, name, hits,
+                           Qt.MatchCaseSensitive):
+                ask = (f"A configuration with the name '{name}' already "
+                       "exists. Do you wish to overwrite it ? ")
+                overwrite = QMessageBox(
+                    QMessageBox.Question, "Overwrite Configuration?",
+                    ask, QMessageBox.No | QMessageBox.Yes,
+                    parent=self).exec()
+                if overwrite == QMessageBox.No:
+                    return
+
             get_network().onSaveInitConfiguration(
                 name, [self.instance_id], update=True)
 
