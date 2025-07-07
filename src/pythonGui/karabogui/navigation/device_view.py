@@ -27,6 +27,7 @@ from qtpy.QtWidgets import (
 from karabo.common.api import Capabilities
 from karabogui import icons
 from karabogui.access import AccessRole, access_role_allowed
+from karabogui.const import TOOLTIP_INIT_CONFIG, TOOLTIP_RUNTIME_CONFIG
 from karabogui.dialogs.api import (
     ConfigurationFromPastDialog, DeviceCapabilityDialog,
     InitConfigurationDialog)
@@ -85,16 +86,16 @@ class DeviceTreeView(QTreeView):
         self.ac_about.setToolTip(text)
         self.ac_about.triggered.connect(self.onAbout)
 
-        text = "Get configuration (time)"
+        text = "Runtime configuration"
         self.ac_config_past = QAction(icons.clock, text, self)
         self.ac_config_past.setStatusTip(text)
-        self.ac_config_past.setToolTip(text)
+        self.ac_config_past.setToolTip(TOOLTIP_RUNTIME_CONFIG)
         self.ac_config_past.triggered.connect(self.onGetConfigurationFromPast)
 
-        text = "Get && save configuration (init)"
-        self.ac_config_name = QAction(text, self)
+        text = "Init configuration"
+        self.ac_config_name = QAction(icons.initconfig, text, self)
         self.ac_config_name.setStatusTip(text)
-        self.ac_config_name.setToolTip(text)
+        self.ac_config_name.setToolTip(TOOLTIP_INIT_CONFIG)
         self.ac_config_name.triggered.connect(self.onGetInitConfiguration)
 
         text = "Open device scene..."
