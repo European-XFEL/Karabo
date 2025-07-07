@@ -65,8 +65,11 @@ namespace karabo::net {
 
         /** Channel status tells what should be the next step to do in channel preparation */
         enum class ChannelStatus { REQUEST, CREATE, CREATE_QUEUE, CREATE_CONSUMER, READY };
+        // Since exchanges are created with autodelete flag, we must ensure they are bound to a queue
+        // as long as we want to publish to them. If the exchange is declared, we can subscribe to it,
+        // if we want to publish, we need to add some dummy binding to be sure, only then it is "publishable".
         /** Exchange status tells about the status of a known exchange */
-        enum class ExchangeStatus { DECLARING, READY };
+        enum class ExchangeStatus { DECLARING, DECLARED, BINDING, PUBLISHABLE };
         /** Subscription status tells in which status a registered subscription currently is */
         enum class SubscriptionStatus { PENDING, CHECK_EXCHANGE, DECLARE_EXCHANGE, BIND_QUEUE, READY, UNBIND_QUEUE };
 
@@ -192,7 +195,7 @@ namespace karabo::net {
 
         void moveSubscriptionState(const std::string& exchange, const std::string& routingKey);
 
-        void asyncDeclareExchangeThenPublish(const std::string& exchange);
+        void asyncPrepareExchangeThenPublish(const std::string& exchange);
 
         /**
          * Helper to publish, must run in io context and only when channel is READY and exchange declared

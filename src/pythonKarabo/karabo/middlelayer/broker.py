@@ -204,7 +204,7 @@ class Broker:
         """Subscribe to 'default' exchanges to allow a communication
         through the broker:
             -------------
-            exchange = <domain>.global_slots
+            exchange = <domain>.Global_Slots
             routing_key = ""
             queue = <deviceId>
             -------------
@@ -225,32 +225,43 @@ class Broker:
             self.channel = await self.connection.channel(
                 publisher_confirms=False)
 
-        arguments = {
-            "x-max-length": _QUEUE_SIZE,
-            "x-overflow": _OVERFLOW_POLICY,
-            "x-message-ttl": _TIME_TO_LIVE}
-        declare_ok = await self.channel.queue_declare(
-            self.brokerId, auto_delete=True, arguments=arguments)
-        # The received queue name (either input or generated) is ...
-        self.queue = declare_ok.queue
-        # create main exchange : <domain>.slots
-        exchange = f"{self.domain}.slots"
-        await self.channel.exchange_declare(exchange=exchange,
-                                            exchange_type="topic")
-        key = self.deviceId + ".#"  # slots under node have >1 dots
-        await self.channel.queue_bind(self.queue, exchange, routing_key=key)
+        # Move full subscription under mutex
         async with self.subscribe_lock:
+            arguments = {
+                "x-max-length": _QUEUE_SIZE,
+                "x-overflow": _OVERFLOW_POLICY,
+                "x-message-ttl": _TIME_TO_LIVE}
+            declare_ok = await self.channel.queue_declare(
+                self.brokerId, auto_delete=True, arguments=arguments)
+            # The received queue name (either input or generated) is ...
+            self.queue = declare_ok.queue
+
+            # create main exchange : <domain>.Slots
+            exchange = f"{self.domain}.Slots"
+            await self.channel.exchange_declare(
+                exchange=exchange, auto_delete=True,
+                exchange_type="topic")
+            # slots under node have >1 dots
+            key = self.deviceId + ".#"
+            await self.channel.queue_bind(
+                self.queue, exchange, routing_key=key)
             self.subscriptions.add((exchange, key))
 
-        # Globals for instanceNew, Gone ...
-        exchange = f"{self.domain}.global_slots"
-        await self.channel.exchange_declare(exchange=exchange,
-                                            exchange_type="topic")
-        # Only if interested, we subscribe to broadcasts messages,
-        # but still declare the exchange to publish
-        if self.broadcast:
-            async with self.subscribe_lock:
-                futures = []
+            # place-holder subscription key for the broker
+            subscribe_key = ":none:"
+            # Only if interested, we subscribe to broadcasts messages,
+            # but still declare the exchange to publish
+            # Globals for instanceNew, Gone ...
+            exchange = f"{self.domain}.Global_Slots"
+            await self.channel.exchange_declare(
+                exchange=exchange, auto_delete=True,
+                exchange_type="topic")
+
+            futures = []
+            futures.append(self.channel.queue_bind(
+                self.queue, exchange, routing_key=subscribe_key))
+            self.subscriptions.add((exchange, subscribe_key))
+            if self.broadcast:
                 for slot in _BROADCAST_SLOTS:
                     key = "*." + slot
                     futures.append(self.channel.queue_bind(
@@ -260,10 +271,17 @@ class Broker:
             # Default can throw!
             await gather(*futures)
 
-        # Similarly, declare exchange for signals for publishing
-        exchange = f"{self.domain}.signals"
-        await self.channel.exchange_declare(exchange=exchange,
-                                            exchange_type="topic")
+            # Similarly, declare exchange for signals for publishing
+            exchange = f"{self.domain}.Signals"
+            await self.channel.exchange_declare(
+                exchange=exchange, auto_delete=True,
+                exchange_type="topic")
+
+            # Bind this exchange to the channel,
+            # otherwise delete does not work
+            await self.channel.queue_bind(
+                self.queue, exchange, routing_key=subscribe_key)
+            self.subscriptions.add((exchange, subscribe_key))
 
     def enter_context(self, context: ContextManager[T]) -> T:
         """Synchronously enter the exit stack context"""
@@ -383,7 +401,7 @@ class Broker:
         self.heartbeat_task = ensure_future(heartbeat())
 
     def emit_signal(self, signal_name: str, *args):
-        exchange = f"{self.domain}.signals"
+        exchange = f"{self.domain}.Signals"
         routing_key = f"{self.deviceId}.{signal_name}"
         self.send(exchange, routing_key, Hash(), args)
 
@@ -397,10 +415,10 @@ class Broker:
         if target == "*":
             if slot not in _BROADCAST_SLOTS and slot != "slotHeartbeat":
                 raise RuntimeError(f"Slot {slot} cannot be broadcasted")
-            exchange = f"{self.domain}.global_slots"
+            exchange = f"{self.domain}.Global_Slots"
             routing_key = f"{self.deviceId}.{slot}"
         else:
-            exchange = f"{self.domain}.slots"
+            exchange = f"{self.domain}.Slots"
             routing_key = f"{target}.{slot}"
 
         return exchange, routing_key, header
@@ -439,7 +457,7 @@ class Broker:
 
     async def async_connect(self, deviceId: str, signal: str, slot: Callable):
         """Asynchronously connect to `signal` of remote device `device`"""
-        exchange = f"{self.domain}.signals"
+        exchange = f"{self.domain}.Signals"
 
         futures = [sleep(0)]
         async with self.subscribe_lock:
@@ -454,7 +472,7 @@ class Broker:
                     queue=self.queue, exchange=exchange, routing_key=key))
                 self.subscriptions.add(subscription)
 
-        await gather(*futures, return_exceptions=True)
+            await gather(*futures, return_exceptions=True)
 
     @ensure_running
     def disconnect(self, deviceId: str, signal: str, slot: Callable):
@@ -466,7 +484,7 @@ class Broker:
     async def async_disconnect(
             self, deviceId: str, signal: str, slot: Callable):
 
-        exchange = f"{self.domain}.signals"
+        exchange = f"{self.domain}.Signals"
         futures = [sleep(0)]
         async with self.subscribe_lock:
             # Clean storage of slots to call when signal msg arrives
@@ -486,7 +504,7 @@ class Broker:
                     queue=self.queue, exchange=exchange,
                     routing_key=key))
 
-        await gather(*futures, return_exceptions=True)
+            await gather(*futures, return_exceptions=True)
 
     async def async_unsubscribe_all(self):
         futures = [sleep(0)]
@@ -496,7 +514,7 @@ class Broker:
                     queue=self.queue, exchange=exchange, routing_key=key)
                 ) for exchange, key in self.subscriptions])
             self.subscriptions = set()
-        await gather(*futures, return_exceptions=True)
+            await gather(*futures, return_exceptions=True)
 
     async def handle_message(self, device, message):
         """Decode message from a Rabbit MQ Message"""
@@ -639,7 +657,7 @@ class Broker:
         self.heartbeat_consumer_tag = consume_ok.consumer_tag
 
         # Binding and book-keeping!
-        exchange = f"{self.domain}.global_slots"
+        exchange = f"{self.domain}.Global_Slots"
         key = "*.slotHeartbeat"
         await self.channel.queue_bind(self.heartbeat_queue, exchange,
                                       routing_key=key)
@@ -668,14 +686,14 @@ class Broker:
         if replyFrom is not None:
             return self._decode_reply(replyFrom, header, params)
 
-        if exchange.endswith("slots"):  # .slots or .global_slots
+        if exchange.endswith("Slots"):  # .slots or .Global_Slots
             slot = routing_key.split(".", 1)
             if len(slot) != 2:
                 msg = f"Malformed routing_key: {routing_key}"
                 raise RuntimeError(msg)
             slots = [slot[1]]
             # XXX: for device.py: Device._checkLocked(..) needs slot in header
-            header["slotFunctions"] = slot
+            header.setElement("slotFunctions", slot, {})
         else:
             # A signal - get slots to call from our book-keeping
             # and routing_key

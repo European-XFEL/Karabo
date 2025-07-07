@@ -545,24 +545,24 @@ void startAmqpMonitor(const std::vector<std::string>& brokers, const std::string
     if (receivers.empty() && senders.empty()) {
         // Bind to all possible messages ...
         const std::vector<std::array<std::string, 2>> defaultTable = {
-              {domain + ".signals", "#"},     // any INSTANCE, any SIGNAL
-              {domain + ".slots", "#"},       // any INSTANCE, any direct slot call
-              {domain + ".global_slots", "#"} // any INSTANCE, any broadcast slot
+              {domain + ".Signals", "#"},     // any INSTANCE, any SIGNAL
+              {domain + ".Slots", "#"},       // any INSTANCE, any direct slot call
+              {domain + ".Global_Slots", "#"} // any INSTANCE, any broadcast slot
         };
         for (const auto& a : defaultTable) {
             futures.push_back(subscribe(client, a[0], a[1]));
         }
     } else {
         if (!receivers.empty()) {
-            futures.push_back(subscribe(client, domain + ".global_slots", "#"));
+            futures.push_back(subscribe(client, domain + ".Global_Slots", "#"));
         }
         for (const auto& recId : receivers) {
             // FIXME: We miss any signals that 'recId' subscribed to
-            futures.push_back(subscribe(client, domain + ".slots", recId + ".#"));
+            futures.push_back(subscribe(client, domain + ".Slots", recId + ".#"));
         }
         for (const auto& sendId : senders) {
             // FIXME: We miss any direct slot calls/replies/global_slot calls originating from sendId
-            futures.push_back(subscribe(client, domain + ".signals", sendId + ".#"));
+            futures.push_back(subscribe(client, domain + ".Signals", sendId + ".#"));
         }
     }
     for (auto& fut : futures) {

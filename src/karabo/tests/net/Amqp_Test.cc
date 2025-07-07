@@ -56,7 +56,7 @@ Amqp_Test::Amqp_Test()
     : m_defaultBrokers(getBrokerFromEnv("amqp")), m_timeout(10), m_timeoutMs(10'000) {
     if (false &&                            // remove 'false &&' to switch on logging
         !m_loggingIsSetup.exchange(true)) { // configure logging only once in the process
-        log::Logger::configure(data::Hash("priority", "DEBUG"));
+        log::Logger::configure(data::Hash("level", "DEBUG"));
         log::Logger::useConsole();
     }
 }

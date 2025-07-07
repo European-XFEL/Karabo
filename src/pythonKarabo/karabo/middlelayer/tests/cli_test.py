@@ -146,8 +146,8 @@ def test_remote_timeout(caplog):
         assert not global_sync()
         thread = start_device_client()
         assert global_sync()
-        with caplog.at_level("INFO", logger="NoRemote"):
-            NoRemote(_deviceId_="NoRemote")
+        with caplog.at_level("INFO", logger="NoRemoteTimeout"):
+            NoRemote(_deviceId_="NoRemoteTimeout")
             assert len(caplog.records)
     finally:
         if thread is not None:
