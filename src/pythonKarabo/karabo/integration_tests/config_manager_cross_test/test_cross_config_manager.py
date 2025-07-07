@@ -147,7 +147,6 @@ def test_save_list_config(configTest):
     #       config itself
     config = ret["configs"][1]
     assert config["name"] == config_name_3
-
     # Empty name part should retrieve all the configs for the device in
     # the database - the two saved in this test and a third one that should
     # have been saved by the previous test, _test_save_get_config.
