@@ -50,7 +50,6 @@ target_link_libraries(
 set(INTEGRATION_TEST_TARGETS
     dataLoggingIntegrTestRunner
     deviceIntegrTestRunner
-    guiServerIntegrTestRunner
     pipelinedProcessingIntegrTestRunner
     propertyTestIntegrTestRunner
     sceneProviderIntegrTestRunner
@@ -69,13 +68,6 @@ set(deviceIntegrTestRunner_FILES
     $<TARGET_OBJECTS:INTEGRATION_RUNNER>
 )
 
-
-set(guiServerIntegrTestRunner_FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/GuiServer_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/TestKaraboAuthServer.cc
-    $<TARGET_OBJECTS:TCP_ADAPTER>
-    $<TARGET_OBJECTS:INTEGRATION_RUNNER>
-)
 
 set(pipelinedProcessingIntegrTestRunner_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/P2PSenderDevice.cc
