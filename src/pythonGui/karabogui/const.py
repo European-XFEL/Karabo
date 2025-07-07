@@ -28,7 +28,6 @@ from karabo.common.scenemodel.api import SCENE_DEFAULT_DPI, SCENE_MAC_DPI
 # APPLICATION
 APPLICATION_MODE = False
 
-
 # WIDGET PROPERTIES
 WIDGET_MIN_WIDTH = 40
 WIDGET_MIN_HEIGHT = 18
@@ -57,6 +56,22 @@ KARABO_PROJECT_FOLDER = path.join(HIDDEN_KARABO_FOLDER, 'projects')
 # Karabo GUI Client ID
 KARABO_CLIENT_ID = f"{socket.gethostname()}-{getpid()}"
 CLIENT_HOST = socket.gethostname()
+
+# Tooltips
+TOOLTIP_RUNTIME_CONFIG = (
+    '<table width="300"><tr><td>'
+    'A runtime configuration can be retrieved from the Datalogger System '
+    'and may include read-only or dynamic properties. The lookup is '
+    'based on a timestamp.</td></tr></table>'
+)
+
+TOOLTIP_INIT_CONFIG = (
+    '<table width="300"><tr><td>'
+    'An init configuration can be retrieved from the Configuration Manager '
+    'and includes only writable properties set at instantiation that differ '
+    'from the device\'s default settings. The lookup is performed '
+    'using a name.</td></tr></table>'
+)
 
 try:
     from karabogui import _version

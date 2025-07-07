@@ -31,6 +31,7 @@ from karabo.native import Timestamp
 from karabogui import icons, messagebox
 from karabogui.access import (
     AccessRole, access_role_allowed, get_access_level_for_role)
+from karabogui.const import TOOLTIP_INIT_CONFIG, TOOLTIP_RUNTIME_CONFIG
 from karabogui.dialogs.api import (
     ConfigurationFromPastDialog, DeviceCapabilityDialog,
     InitConfigurationDialog)
@@ -160,17 +161,17 @@ class SystemTreeView(QTreeView):
 
         self.mDeviceItem.addSeparator()
 
-        text = "Get configuration (time)"
+        text = "Runtime configuration"
         self.ac_config_past = QAction(icons.clock, text, self)
         self.ac_config_past.setStatusTip(text)
-        self.ac_config_past.setToolTip(text)
+        self.ac_config_past.setToolTip(TOOLTIP_RUNTIME_CONFIG)
         self.ac_config_past.triggered.connect(self.onGetConfigurationFromPast)
         self.mDeviceItem.addAction(self.ac_config_past)
 
-        text = "Get && save configuration (init)"
-        self.ac_config_name = QAction(text, self)
+        text = "Init configuration"
+        self.ac_config_name = QAction(icons.initconfig, text, self)
         self.ac_config_name.setStatusTip(text)
-        self.ac_config_name.setToolTip(text)
+        self.ac_config_name.setToolTip(TOOLTIP_INIT_CONFIG)
         self.ac_config_name.triggered.connect(self.onGetInitConfiguration)
         self.mDeviceItem.addAction(self.ac_config_name)
 

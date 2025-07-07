@@ -36,6 +36,7 @@ from karabogui.access import (
     AccessRole, access_role_allowed, get_access_level_for_role)
 from karabogui.binding.api import (
     NO_CLASS_STATUSES, NO_CONFIG_STATUSES, ONLINE_CONFIG_STATUSES)
+from karabogui.const import TOOLTIP_INIT_CONFIG, TOOLTIP_RUNTIME_CONFIG
 from karabogui.dialogs.api import (
     ConfigComparisonDialog, ConfigurationFromPastDialog,
     DeviceCapabilityDialog, InitConfigurationDialog)
@@ -149,23 +150,26 @@ class DeviceInstanceController(BaseProjectController):
         elif not project_allowed:
             scene_action.setToolTip(project_allowed_tooltip)
 
-        conf_action = QAction(icons.clock, 'Get configuration (time)', menu)
+        conf_action = QAction(icons.clock, 'Runtime configuration', menu)
         can_get_conf = (server_online and
                         proj_device_status not in NO_CONFIG_STATUSES)
         conf_action.triggered.connect(partial(
             self._get_configuration_from_past, parent=parent))
+        conf_action.setToolTip(TOOLTIP_RUNTIME_CONFIG)
         conf_action.setEnabled(can_get_conf)
         if not server_online:
             conf_action.setToolTip(SERVER_OFFLINE_TOOLTIP)
         elif not can_get_conf:
             conf_action.setToolTip(INCORRECT_STATE_TOOLTIP)
 
-        conf_action_name = QAction('Get && save configuration (init)', menu)
+        conf_action_name = QAction(icons.initconfig, 'Init configuration',
+                                   menu)
         can_get_conf_name = (server_online and
                              proj_device_status not in NO_CONFIG_STATUSES)
         conf_action_name.triggered.connect(partial(
             self._get_configuration_from_name, parent=parent))
         conf_action_name.setEnabled(can_get_conf_name)
+        conf_action_name.setToolTip(TOOLTIP_INIT_CONFIG)
         if not server_online:
             conf_action.setToolTip(SERVER_OFFLINE_TOOLTIP)
         elif not can_get_conf:
