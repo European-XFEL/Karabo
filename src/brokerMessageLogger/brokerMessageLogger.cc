@@ -120,9 +120,9 @@ void logAmqp(const std::vector<std::string>& brokerUrls, const std::string& doma
     if (selector.empty()) {
         // Bind to all possible messages ...
         const std::vector<std::array<std::string, 2>>& defaultTable = {
-              {domain + ".signals", "#"},     // any INSTANCE, any SIGNAL
-              {domain + ".slots", "#"},       // any INSTANCE, any direct slot call
-              {domain + ".global_slots", "#"} // any INSTANCE, any broadcast slot
+              {domain + ".Signals", "#"},     // any INSTANCE, any SIGNAL
+              {domain + ".Slots", "#"},       // any INSTANCE, any direct slot call
+              {domain + ".Global_Slots", "#"} // any INSTANCE, any broadcast slot
         };
         for (const auto& a : defaultTable) {
             futures.push_back(subscribe(client, a[0], a[1]));

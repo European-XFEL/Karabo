@@ -209,6 +209,16 @@ async def test_device_server_start_faulty():
             fut = [call(server.serverId,
                         "slotStartDevice", hsh) for _ in range(2)]
             await gather(*fut)
+
+        # This is another concurrent instantiation to test the ramp down
+        # with ordered subscriptions (broker)
+        hsh = Hash(
+            "classId", "FaultyDevice",
+            "deviceId", "AnotherdeviceId",
+            "configuration", Hash())
+        with pytest.raises(RuntimeError):
+            fut = [server.slotStartDevice(hsh) for _ in range(2)]
+            await gather(*fut)
     finally:
         await finalize_server(server)
 

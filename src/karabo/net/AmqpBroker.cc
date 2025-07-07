@@ -59,8 +59,8 @@ namespace karabo {
               m_connection(std::make_shared<AmqpConnection>(m_availableBrokerUrls)),
               m_client(),
               m_handlerStrand(Configurator<Strand>::create("Strand", Hash("maxInARow", 10u))),
-              m_slotExchange(m_topic + ".slots"),
-              m_globalSlotExchange(m_topic + ".global_slots") {}
+              m_slotExchange(m_topic + ".Slots"),
+              m_globalSlotExchange(m_topic + ".Global_Slots") {}
 
 
         AmqpBroker::AmqpBroker(const AmqpBroker& o, const std::string& newInstanceId)
@@ -140,7 +140,7 @@ namespace karabo {
                             const std::string slot = key.substr(posSep + 1); // 2nd part of routing key is slot
                             self->m_readHandler(slot, !isOneToOne, header, body);
                         } else {
-                            // exchange == m_topic + ".signals", so routing key maps to slots
+                            // exchange == m_topic + ".Signals", so routing key maps to slots
                             for (const std::string& slot : self->m_slotsForSignals[key]) {
                                 self->m_readHandler(slot, false, header, body);
                             }
@@ -182,7 +182,7 @@ namespace karabo {
                 return;
             }
 
-            const std::string exchange = m_topic + ".signals";
+            const std::string exchange = m_topic + ".Signals";
             const std::string bindingKey = (signalInstanceId + ".") += signalFunction;
             auto wrapHandler = [weakSelf{weak_from_this()}, slot, bindingKey,
                                 completionHandler](const boost::system::error_code& ec) {
@@ -231,7 +231,7 @@ namespace karabo {
                 return;
             }
 
-            const std::string exchange = m_topic + ".signals";
+            const std::string exchange = m_topic + ".Signals";
             const std::string bindingKey = (signalInstanceId + ".") += signalFunction;
             // Wrap handler - see comment in subscribeToRemoteSignalAsync
             auto wrapHandler = [weakSelf{weak_from_this()}, slot, bindingKey,
@@ -271,7 +271,7 @@ namespace karabo {
 
         void AmqpBroker::sendSignal(const std::string& signal, const karabo::data::Hash::Pointer& header,
                                     const karabo::data::Hash::Pointer& body) {
-            const std::string exchange = m_topic + ".signals";
+            const std::string exchange = m_topic + ".Signals";
             const std::string routingkey = (m_instanceId + ".") += signal;
 
             publish(exchange, routingkey, header, body);
@@ -334,10 +334,10 @@ namespace karabo {
             // Figure out which subscriptions are needed
             std::vector<std::array<std::string, 2>> subscriptions; // exchange and routingKey
             // Subscribe to all 1-to-1 slots (.#, not .* for slots with dots, i.e. under node)...
-            subscriptions.push_back({m_topic + ".slots", m_instanceId + ".#"});
+            subscriptions.push_back({m_topic + ".Slots", m_instanceId + ".#"});
             if (m_consumeBroadcasts) {
                 // ...and to all known (!) broadcast slots
-                const std::string broadcastExchange(m_topic + ".global_slots");
+                const std::string broadcastExchange(m_topic + ".Global_Slots");
                 for (const std::string& broadcastSlot : m_broadcastSlots) {
                     subscriptions.push_back({broadcastExchange, "*." + broadcastSlot});
                 }
@@ -372,7 +372,7 @@ namespace karabo {
 
         void AmqpBroker::stopReading() {
             if (!m_client) return; // Not yet connected...
-            // Simply unsubscribe from all subscriptions, i.e. slots, global_slots and any signals we have subscribed
+            // Simply unsubscribe from all subscriptions, i.e. slots, Global_Slots and any signals we have subscribed
             std::promise<boost::system::error_code> unsubDone;
             auto fut = unsubDone.get_future();
             m_client->asyncUnsubscribeAll(
@@ -409,7 +409,7 @@ namespace karabo {
             }
 
             // Subscribe client to (all) heartbeats
-            const std::string exchange(m_topic + ".global_slots");
+            const std::string exchange(m_topic + ".Global_Slots");
             const std::string bindingKey("*.slotHeartbeat");
             std::promise<boost::system::error_code> subDone;
             auto subFut = subDone.get_future();

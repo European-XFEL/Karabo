@@ -290,12 +290,14 @@ namespace karabo::net {
                 case ChannelStatus::READY: {
                     // Channel ready, but need to check exchange
                     auto itExchange = m_exchanges.find(exchange);
-                    if (itExchange == m_exchanges.end()) {
+                    if (itExchange == m_exchanges.end() || itExchange->second == ExchangeStatus::DECLARED) {
+                        // take care that we trigger binding!
                         queueMessage(PostponedMessage(exchange, routingKey, std::move(data), std::move(onPublishDone)));
-                        asyncDeclareExchangeThenPublish(exchange);
-                    } else if (itExchange->second == ExchangeStatus::DECLARING || !m_postponedPubMessages.empty()) {
-                        // Exchange declaration already triggered, so just queue to be published if that is ready.
-                        // Also, for message order, always queue if there is already a queue
+                        asyncPrepareExchangeThenPublish(exchange);
+                    } else if (itExchange->second != ExchangeStatus::PUBLISHABLE // i.e DECLARING or BINDING
+                               || !m_postponedPubMessages.empty()) {
+                        // Exchange declaration/binding already triggered, so just queue to be published if that is
+                        // ready. Also, for message order, always queue if there is already a queue
                         queueMessage(PostponedMessage(exchange, routingKey, std::move(data), std::move(onPublishDone)));
                     } else {
                         doPublish(exchange, routingKey, data, onPublishDone);
@@ -368,7 +370,6 @@ namespace karabo::net {
             for (auto& [exchangeRoutingKey, statusAndHandler] : m_subscriptions) {
                 const std::string& exchange = exchangeRoutingKey.first;
                 const std::string& routingKey = exchangeRoutingKey.second;
-                // AsyncHandler is an std::function, so use bind and placeholder from std, not boost:
                 AsyncHandler newHandler = std::bind(singleSubscriptionDone, i++, // postfix!
                                                     exchange, routingKey, std::placeholders::_1);
                 // If there was an old subscription ongoing (started before disconnection), we also report there about
@@ -395,19 +396,46 @@ namespace karabo::net {
     }
 
 
-    void AmqpClient::asyncDeclareExchangeThenPublish(const std::string& exchange) {
+    void AmqpClient::asyncPrepareExchangeThenPublish(const std::string& exchange) {
         // If exchange does not exist, channel->publish(..) returns true, but the channel is
         // not usable afterwards (slightly silly library interface, I'd say).
+
+        auto bindQueue = [](const AmqpClient::Pointer& me, const std::string& exchange) {
+            // We bind the autodelete exchange to our queue so its lifetime is guarantied:
+            me->m_exchanges[exchange] = ExchangeStatus::BINDING;
+            AmqpClient::WeakPointer weakThis(me->weak_from_this());
+            me->m_channel->bindQueue(exchange, me->m_queue, ":none:")
+                  .onSuccess([weakThis, exchange]() {
+                      if (auto self = weakThis.lock()) {
+                          self->m_exchanges[exchange] = ExchangeStatus::PUBLISHABLE;
+                          self->publishPostponed();
+                      }
+                  })
+                  .onError([instanceId{me->m_instanceId}, exchange](const char* message) {
+                      // Failures from missing exchange should be recovered by channelErrorHandler,
+                      // connection loss even elsewhere.
+                      KARABO_LOG_FRAMEWORK_ERROR_C("AmqpClient")
+                            << instanceId << ": Dummy binding to exchange '" << exchange << "' failed: " << message;
+                      std::clog << instanceId << ": Dummy binding to exchange '" << exchange << "' failed: " << message
+                                << std::endl;
+                  });
+        };
+
+        auto itExchange = m_exchanges.find(exchange);
+        if (itExchange != m_exchanges.end() && itExchange->second == ExchangeStatus::DECLARED) {
+            // Just the binding is missing
+            bindQueue(shared_from_this(), exchange);
+            return;
+        }
         m_exchanges[exchange] = ExchangeStatus::DECLARING;
-        // 2nd use of m_postponedPubMessages: collect messages for which exchange needs to be declared
-        // Karabo 3: switch from '0' to AMQP::autodelete
-        m_channel->declareExchange(exchange, AMQP::topic, 0)
-              .onSuccess([weakThis{weak_from_this()}, exchange]() {
+        m_channel->declareExchange(exchange, AMQP::topic, AMQP::autodelete)
+              .onSuccess([weakThis{weak_from_this()}, exchange, bindQueue{std::move(bindQueue)}]() {
                   if (auto self = weakThis.lock()) {
                       KARABO_LOG_FRAMEWORK_DEBUG_C("AmqpClient")
-                            << self->m_instanceId << ": Declaring exchange " << exchange << " to publish to succeeded!";
-                      self->m_exchanges[exchange] = ExchangeStatus::READY;
-                      self->publishPostponed();
+                            << self->m_instanceId << ": successfully declared exchange " << exchange
+                            << " to publish to.";
+                      self->m_exchanges[exchange] = ExchangeStatus::DECLARED;
+                      bindQueue(self, exchange);
                   }
               })
               .onError([weakThis{weak_from_this()}, exchange](const char* message) {
@@ -469,11 +497,12 @@ namespace karabo::net {
         while (!m_postponedPubMessages.empty()) {
             PostponedMessage& postponedMsg = m_postponedPubMessages.front();
             auto itExchange = m_exchanges.find(postponedMsg.exchange);
-            if (itExchange == m_exchanges.end()) { // e.g. connection lost,
-                asyncDeclareExchangeThenPublish(postponedMsg.exchange);
-                return; // Remaining messages have to wait further
-            } else if (itExchange->second == ExchangeStatus::DECLARING) {
-                // Something triggered exchange creation and will also trigger publishPostponed again
+            if (itExchange == m_exchanges.end()                      // e.g. connection lost,
+                || itExchange->second == ExchangeStatus::DECLARED) { // or not prepared for publishing
+                asyncPrepareExchangeThenPublish(postponedMsg.exchange);
+                return;                                                     // Remaining messages have to wait further
+            } else if (itExchange->second != ExchangeStatus::PUBLISHABLE) { // DECLARING or BINDING
+                // Something triggered exchange creation/binding and will also trigger publishPostponed again
                 return; // All messages have to wait further
             } else {
                 AMQP::Envelope dataWrap(postponedMsg.data->data(), postponedMsg.data->size());
@@ -673,7 +702,7 @@ namespace karabo::net {
         bool error = false;
         if (m_channelStatus == ChannelStatus::READY) {
             if (!m_channel->usable()) {
-                if (std::string(errMsg).find("connection lost") != std::string::npos) {
+                if (std::string_view(errMsg).find("connection lost") != std::string::npos) {
                     msg << ", but connection loss treated elsewhere";
                 } else {
                     error = true;
@@ -693,6 +722,8 @@ namespace karabo::net {
         } else {
             KARABO_LOG_FRAMEWORK_WARN << msg.str();
         }
+        // Also clog to be seen in tests to help diagnosing sporadic failures:
+        std::clog << msg.str() << std::endl;
     }
 
     void AmqpClient::doSubscribePending(const boost::system::error_code& ec) {
@@ -711,7 +742,7 @@ namespace karabo::net {
                                                << "'. Will try again if resubscription triggered after reconnection.";
                     // Keep subscription and callback PENDING to be triggered on reconnection.
                 } else {
-                    KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << " subscribed for exchange '" << exchange
+                    KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << " subscribing for exchange '" << exchange
                                                << "' and routing key '" << routingKey << "'";
                     statusAndHandler.status = SubscriptionStatus::CHECK_EXCHANGE;
                     moveSubscriptionState(exchange, routingKey);
@@ -721,6 +752,8 @@ namespace karabo::net {
     }
 
     void AmqpClient::moveSubscriptionState(const std::string& exchange, const std::string& routingKey) {
+        using std::string;
+        using std::string_view;
         auto it = m_subscriptions.find({exchange, routingKey});
         if (it == m_subscriptions.end()) { // Should not happen!
             KARABO_LOG_FRAMEWORK_WARN << "Moving subscription state for exchange " << exchange << " and routingKey "
@@ -738,8 +771,8 @@ namespace karabo::net {
                 break;
             case SubscriptionStatus::CHECK_EXCHANGE: {
                 auto exchangeIt = m_exchanges.find(exchange);
-                if (exchangeIt != m_exchanges.end() && exchangeIt->second == ExchangeStatus::READY) {
-                    // Exchange is known and ready, so jump directly to BIND_QUEUE step
+                if (exchangeIt != m_exchanges.end() && exchangeIt->second >= ExchangeStatus::DECLARED) {
+                    // Exchange is known and ready for subscription, so jump directly to BIND_QUEUE step
                     it->second.status = SubscriptionStatus::BIND_QUEUE;
                 } else { // If m_exchanges[exchange] == ExchangeStatus::DECLARING, we declare once more - so what?
                     it->second.status = SubscriptionStatus::DECLARE_EXCHANGE;
@@ -747,11 +780,13 @@ namespace karabo::net {
                 moveSubscriptionState(exchange, routingKey);
             } break;
             case SubscriptionStatus::DECLARE_EXCHANGE: {
-                const int flags = 0; // Karabo 3: switch to AMQP::autodelete (not AMQP::durable!)
-                m_channel->declareExchange(exchange, AMQP::topic, flags)
+                m_exchanges[exchange] = ExchangeStatus::DECLARING;
+                m_channel->declareExchange(exchange, AMQP::topic, AMQP::autodelete)
                       .onSuccess([wSelf, exchange, routingKey]() {
                           if (auto self = wSelf.lock()) {
-                              self->m_exchanges[exchange] = ExchangeStatus::READY;
+                              if (self->m_exchanges[exchange] == ExchangeStatus::DECLARING) {
+                                  self->m_exchanges[exchange] = ExchangeStatus::DECLARED;
+                              } // Otherwise asyncPrepareExchangeThenPublish triggered to go to Ex-Status::PUBLISHABLE
                               auto it = self->m_subscriptions.find({exchange, routingKey});
                               if (it == self->m_subscriptions.end()) { // Should not happen!
                                   KARABO_LOG_FRAMEWORK_ERROR_C("AmqpClient")
@@ -783,7 +818,8 @@ namespace karabo::net {
                                   // reconnection.
                                   AsyncHandler callback;
                                   callback.swap(it->second.onSubscription);
-                                  // Note: Leads to failing device instantiation (exception in AmqpBroker::startReading)
+                                  // Note: Leads to failing device instantiation (exception in
+                                  // AmqpBroker::startReading)
                                   if (callback) callback(make_error_code(AmqpCppErrc::eCreateExchangeError));
                               }
                           }
@@ -813,11 +849,35 @@ namespace karabo::net {
                                   KARABO_LOG_FRAMEWORK_ERROR_C("AmqpClient")
                                         << "Binding queue " << self->m_queue << " to exchange " << exchange
                                         << " with routing key " << routingKey << " failed and subscription gone!";
+                              } else if (string_view(message).find("NOT_FOUND - no exchange") != string::npos ||
+                                         string_view(message).find("Channel is in error state") != string::npos) {
+                                  // Special treatments: a) temporary exchange might already be gone again
+                                  //   b) that made the channel unusable, but another subscription was still trying
+                                  KARABO_LOGGING_WARN(
+                                        "Binding queue {} to exchange {} with routing key '{}' failed: '{}'. "
+                                        "Channel is {}usable, will revive it and try again.",
+                                        self->m_queue, exchange, routingKey, message,
+                                        (self->m_channel->usable() ? "still " : "un"));
+                                  // Channel should have become unusable with need of recreation which should be
+                                  // triggered by channelErrorHandler(..). So we do not report the failure via
+                                  // it->second.onSubscription, but rely it to be called by the reviveIfReconnected()
+                                  // procedure.
+                                  if (self->m_channel->usable()) {
+                                      // If we see this in failing tests, treat that case by setting PENDING
+                                      // (or DECLARE_EXCHANGE) subscription status and calling
+                                      // self->moveSubscriptionState(..);
+                                      std::clog << "SubscriptionStatus::BIND_QUEUE: creation of exchange " << exchange
+                                                << " failed. Unexpectedly channel still usable." << std::endl;
+                                  }
                               } else { // Call handler with failure
                                   KARABO_LOG_FRAMEWORK_WARN_C("AmqpClient")
                                         << "Binding queue " << self->m_queue << " to exchange " << exchange
                                         << " with routing key " << routingKey << " failed: '" << message
                                         << "'. Will try again if resubscription triggered after reconnection.";
+                                  std::clog << "AmqpClient::moveSubscriptionState: " << "Binding queue "
+                                            << self->m_queue << " to exchange " << exchange << " with routing key "
+                                            << routingKey << " failed: '" << message << "'. Will try again if "
+                                            << "resubscription triggered after reconnection." << std::endl;
                                   // Call and erase callback, but keep subscription PENDING to be triggered on
                                   // reconnection (as for failing exchange declaration above).
                                   AsyncHandler callback;
@@ -831,7 +891,13 @@ namespace karabo::net {
                 KARABO_LOG_FRAMEWORK_WARN << "Nothing to do for subscription of '" << m_queue << "' to exchange '"
                                           << exchange << "' and routing key '" << routingKey << "' since ready.";
                 break;
-            case SubscriptionStatus::UNBIND_QUEUE:
+            case SubscriptionStatus::UNBIND_QUEUE: {
+                auto itExchange = m_exchanges.find(exchange);
+                if (itExchange != m_exchanges.end() && itExchange->second != ExchangeStatus::PUBLISHABLE) {
+                    // Exchange was not yet made valid as long as we live by dummy subscription, so treat as
+                    // not-existing
+                    m_exchanges.erase(itExchange);
+                }
                 m_channel->unbindQueue(exchange, m_queue, routingKey)
                       .onSuccess([wSelf, exchange, routingKey]() {
                           if (auto self = wSelf.lock()) {
@@ -871,7 +937,7 @@ namespace karabo::net {
                               }
                           }
                       });
-                break;
+            } break;
         } // end switch
 
     } // end moveSubscriptionState
