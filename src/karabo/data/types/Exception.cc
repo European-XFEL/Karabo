@@ -41,7 +41,7 @@ namespace karabo {
 
         // Init static members
         std::mutex Exception::m_mutex;
-        std::map<std::jthread::id, boost::circular_buffer<Exception::ExceptionInfo>> Exception::m_trace;
+        std::map<std::thread::id, boost::circular_buffer<Exception::ExceptionInfo>> Exception::m_trace;
 
 
         Exception::Exception(const string& message, const string& type, const string& filename, const string& function,
