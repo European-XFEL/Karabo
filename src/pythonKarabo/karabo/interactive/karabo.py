@@ -17,6 +17,7 @@ import argparse
 import contextlib
 import copy
 import csv
+import fnmatch
 import glob
 import multiprocessing
 import os
@@ -697,6 +698,13 @@ def uninstall(args):
     path = os.path.join('installed', args.device)
     if os.path.isdir(path):
         run_cmd(f'rm -rf {path}')
+    else:
+        install_path = os.path.join('installed')
+        for folder in os.listdir(install_path):
+            if fnmatch.fnmatchcase(folder.lower(), args.device.lower()):
+                print(f"Warning: Device not found exactly as `{args.device}`"
+                      f", but found similar: `{folder}`")
+
     so_path = f'plugins/lib{args.device}.so'
     if os.path.isfile(so_path):
         if not os.path.islink(so_path):
