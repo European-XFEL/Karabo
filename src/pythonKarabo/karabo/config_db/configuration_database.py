@@ -17,7 +17,6 @@ from pathlib import Path
 
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.orm import selectinload
-from sqlalchemy.pool import StaticPool
 from sqlmodel import SQLModel, insert, select, update
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -35,7 +34,6 @@ class ConfigurationDatabase:
             f"sqlite+aiosqlite:///{self.db_name}",
             echo=False,
             pool_pre_ping=True,
-            poolclass=StaticPool,
             connect_args={"timeout": 30})
 
         self.session = async_sessionmaker(
