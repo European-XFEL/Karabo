@@ -28,6 +28,7 @@ from .adapter import GuiAdapter
 
 TEST_GUI_SERVER_ID = "guiServerTest"
 TEST_SERVER_ID = "karabo_guiserver_test"
+TEST_PYTHON_SERVER_ID = "karabo_guiserver_test_scene_python"
 
 
 @pytest_asyncio.fixture(loop_scope="module", scope="module")
@@ -837,3 +838,56 @@ async def test_version_control(guiServer):
                     lambda: guiServer.connected is should_connect)
             except TimeoutError:
                 assert False, test_name
+
+
+@pytest.mark.timeout(60)
+@pytest.mark.asyncio(loop_scope="module")
+async def test_gui_server_scene_retrieval(guiServer):
+    await guiServer.login()
+    config = {
+        "testNoSceneProvider": {
+            "classId": "NonSceneProvidingDevice"},
+        "testSceneProvider": {
+            "classId": "SceneProvidingDevice"}
+    }
+    init = json.dumps(config)
+    python_server = AsyncServerContext(
+        TEST_PYTHON_SERVER_ID,
+        [f"init={init}", "pluginNamespace=karabo.bound_device_test"],
+        api="python")
+    async with python_server:
+        await assert_wait_property("testNoSceneProvider", "state",
+                                   State.NORMAL, timeout=10)
+        await assert_wait_property("testSceneProvider", "state",
+                                   State.NORMAL, timeout=10)
+        print("HERE")
+        args = Hash("name", "scene")
+        message = Hash(
+            "type", "requestGeneric",
+            "instanceId", "testSceneProvider",
+            "slot", "requestScene",
+            "args", args,
+            "token", "notAVeryUniqueToken"
+        )
+        guiServer.tcpWriteHash(message)
+        msg = await guiServer.get_next("requestGeneric")
+
+        assert msg["type"] == "requestGeneric"
+        assert msg["reply.payload.name"] == "scene"
+        assert msg["request.token"] == "notAVeryUniqueToken"
+        assert msg["success"]
+
+        args = Hash("name", "scene")
+        message = Hash(
+            "type", "requestGeneric",
+            "instanceId", "testNoSceneProvider",
+            "slot", "requestScene",
+            "args", args,
+            "token", "notAVeryUniqueToken",
+            "timeout", 2)
+
+        guiServer.tcpWriteHash(message)
+        msg = await guiServer.get_next("requestGeneric")
+        assert msg["request.type"] == "requestGeneric"
+        assert msg["request.token"] == "notAVeryUniqueToken"
+        assert not msg["success"]

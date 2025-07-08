@@ -39,12 +39,6 @@ target_link_libraries(
     ${KARABO_LIB_TARGET_NAME}
     cppunit::cppunit
 )
-add_library(TCP_ADAPTER OBJECT ${CMAKE_CURRENT_SOURCE_DIR}/TcpAdapter.cc)
-target_link_libraries(
-    TCP_ADAPTER
-    ${KARABO_LIB_TARGET_NAME}
-    cppunit::cppunit
-)
 
 
 set(INTEGRATION_TEST_TARGETS
@@ -86,7 +80,6 @@ set(sceneProviderIntegrTestRunner_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/NonSceneProviderTestDevice.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/SceneProviderTestDevice.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/SceneProvider_Test.cc
-    $<TARGET_OBJECTS:TCP_ADAPTER>
     $<TARGET_OBJECTS:INTEGRATION_RUNNER>
 )
 

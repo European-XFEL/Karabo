@@ -33,17 +33,6 @@ using namespace std;
 
 USING_KARABO_NAMESPACES
 
-static bool waitForCondition(const std::function<bool()>& checker, unsigned int timeoutMillis) {
-    constexpr unsigned int sleepIntervalMillis = 5;
-    unsigned int numOfWaits = 0;
-    const unsigned int maxNumOfWaits = static_cast<unsigned int>(std::ceil(timeoutMillis / sleepIntervalMillis));
-    while (numOfWaits < maxNumOfWaits && !checker()) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(sleepIntervalMillis));
-        numOfWaits++;
-    }
-    return (numOfWaits < maxNumOfWaits);
-}
-
 
 CPPUNIT_TEST_SUITE_REGISTRATION(SceneProvider_Test);
 
@@ -77,27 +66,7 @@ void SceneProvider_Test::tearDown() {
 
 
 void SceneProvider_Test::appTestRunner() {
-    // bring up a GUI server and a tcp adapter to it
-    const std::string guiServerId("testGuiServerScenes");
-    std::pair<bool, std::string> success =
-          m_deviceClient->instantiate("testServerSceneProvider", "GuiServerDevice",
-                                      Hash("deviceId", guiServerId, "port", 44447), KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT(success.first);
-
-    waitForCondition(
-          [this, guiServerId]() {
-              auto state = m_deviceClient->get<State>(guiServerId, "state");
-              return state == State::ON;
-          },
-          KRB_TEST_MAX_TIMEOUT * 1000);
-    m_tcpAdapter =
-          std::shared_ptr<karabo::TcpAdapter>(new karabo::TcpAdapter(Hash("port", 44447u /*, "debug", true*/)));
-
-    waitForCondition([this]() { return m_tcpAdapter->connected(); }, KRB_TEST_MAX_TIMEOUT * 1000);
-    CPPUNIT_ASSERT(m_tcpAdapter->connected());
-    m_tcpAdapter->login();
-
-    // in order to avoid recurring setup and tear down call all tests are run in a single runner
+    std::pair<bool, std::string> success;
     success = m_deviceClient->instantiate("testServerSceneProvider", "SceneProviderTestDevice",
                                           Hash("deviceId", "sceneProvider"), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT(success.first);
@@ -107,13 +76,8 @@ void SceneProvider_Test::appTestRunner() {
     CPPUNIT_ASSERT(success.first);
 
     testInstanceInfo();
-    testRequestScenes();
-    testRequestSceneFailure();
-
-    if (m_tcpAdapter->connected()) {
-        m_tcpAdapter->disconnect();
-    }
 }
+
 
 void SceneProvider_Test::testInstanceInfo() {
     // Tests if the instance info correctly reports scene availability
@@ -127,47 +91,4 @@ void SceneProvider_Test::testInstanceInfo() {
     CPPUNIT_ASSERT(
           (device.getAttribute<unsigned int>("noSceneProvider", "capabilities") & karabo::core::PROVIDES_SCENES) == 0u);
     std::clog << "Tested scene providers identified in instanceInfo.. Ok" << std::endl;
-}
-
-void SceneProvider_Test::testRequestScenes() {
-    const Hash arg_hash = Hash("scenes", std::vector<std::string>(1, "foo"));
-    Hash message("type", "requestGeneric", "instanceId", "sceneProvider", "slot", "slotGetScenes", "args", arg_hash);
-    message.set("token", "notAVeryUniqueToken");
-    karabo::TcpAdapter::QueuePtr messageQ =
-          m_tcpAdapter->getNextMessages("requestGeneric", 1, [&] { m_tcpAdapter->sendMessage(message); });
-    Hash lastMessage;
-    messageQ->pop(lastMessage);
-
-    CPPUNIT_ASSERT(lastMessage.has("type"));
-    CPPUNIT_ASSERT(lastMessage.get<std::string>("type") == "requestGeneric");
-    CPPUNIT_ASSERT(lastMessage.has("reply.foo"));
-    CPPUNIT_ASSERT(lastMessage.get<std::string>("reply.foo") == "encoded(bar scene)");
-    CPPUNIT_ASSERT(lastMessage.has("request.token"));
-    CPPUNIT_ASSERT(lastMessage.get<std::string>("request.token") == "notAVeryUniqueToken");
-    CPPUNIT_ASSERT(lastMessage.has("success"));
-    CPPUNIT_ASSERT(lastMessage.get<bool>("success") == true);
-    std::clog << "Tested scene retrieval via GUI server.. Ok" << std::endl;
-}
-
-void SceneProvider_Test::testRequestSceneFailure() {
-    // here we request from a device that doesn't provide scenes
-    const Hash arg_hash = Hash("scenes", std::vector<std::string>(1, "foo"));
-    Hash message("type", "requestGeneric", "instanceId", "noSceneProvider", "slot", "slotGetScenes", "args", arg_hash);
-    message.set("token", "notAVeryUniqueToken");
-    karabo::TcpAdapter::QueuePtr messageQ =
-          m_tcpAdapter->getNextMessages("requestGeneric", 1, [&] { m_tcpAdapter->sendMessage(message); }, 10000);
-    Hash lastMessage;
-    messageQ->pop(lastMessage);
-
-    CPPUNIT_ASSERT(lastMessage.has("request.type"));
-    CPPUNIT_ASSERT(lastMessage.get<std::string>("request.type") == "requestGeneric");
-    CPPUNIT_ASSERT(lastMessage.has("request.token"));
-    CPPUNIT_ASSERT(lastMessage.get<std::string>("request.token") == "notAVeryUniqueToken");
-    CPPUNIT_ASSERT(lastMessage.has("success"));
-    CPPUNIT_ASSERT(lastMessage.get<bool>("success") == false);
-    CPPUNIT_ASSERT(lastMessage.has("reason"));
-    CPPUNIT_ASSERT(lastMessage.get<std::string>("reason").find("'noSceneProvider' has no slot 'slotGetScenes'") !=
-                   std::string::npos);
-
-    std::clog << "Tested scene retrieval failure (device doesn't provide scenes).. Ok" << std::endl;
 }
