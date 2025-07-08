@@ -59,7 +59,7 @@ def create_local_engine(db_name: str) -> tuple[
         f"sqlite+aiosqlite:///{db_name}",
         echo=False,
         pool_pre_ping=True,
-        connect_args={"check_same_thread": False})
+        connect_args={"timeout": 30})
 
     session_gen = async_sessionmaker(
         bind=db_engine,
