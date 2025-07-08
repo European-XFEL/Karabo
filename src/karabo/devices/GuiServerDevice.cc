@@ -383,7 +383,7 @@ namespace karabo {
                         "If this variable does not respect the N.N.N(.N) convention,"
                         " the Server will not enforce a version check")
                   .assignmentOptional()
-                  .defaultValue("3.0.0rc4")
+                  .defaultValue("3.0.0rc10")
                   .reconfigurable()
                   .expertAccess()
                   .commit();
@@ -3078,28 +3078,22 @@ namespace karabo {
                 const std::string& instanceId = info.get<std::string>("instanceId");
                 const std::string& slot = info.get<std::string>("slot");
                 const Hash& args = info.get<Hash>("args");
-
-                if (slot == "slotSaveConfigurationFromName") {
-                    logUserAction(channel, "Saved configuration named '" + args.get<std::string>("name") + "'");
-                } else if (slot == "slotSaveLogBook") {
-                    std::ostringstream oss;
-                    oss << "Saved logbook entry with title '" << args.get<std::string>("title") << "' to ";
-                    const auto& entryDestinations = args.get<std::vector<karabo::data::Hash>>("destinations");
-                    if (entryDestinations.size() >= 1UL) {
-                        oss << (entryDestinations.size() == 1UL
-                                      ? "the stream '"
-                                      : (toString(entryDestinations.size()) + " streams, the first being '"))
-                            << entryDestinations[0].get<std::string>("stream") << "'";
+                if (instanceId == "KaraboConfigurationManager") {
+                    if (slot == "slotSaveInitConfiguration") {
+                        logUserAction(channel, "Saved init configuration '" + args.get<std::string>("name") + "'");
+                    } else if (slot == "slotDeleteInitConfiguration") {
+                        logUserAction(channel, "Deleted init configuration '" + args.get<std::string>("name") + "'");
                     }
-                    logUserAction(channel, oss.str());
-                } else if (slot == "slotGenericRequest") {
+                } else if (instanceId == "KaraboProjectDB" && slot == "slotGenericRequest") {
                     const std::string& type = args.get<std::string>("type");
                     if (type == "saveItems") {
                         const std::vector<Hash>& items = args.get<std::vector<Hash>>("items");
                         std::ostringstream oss;
                         oss << "Save " << items.size() << " project item(s):\n";
                         for (const auto& item : items) {
-                            oss << item << "\n";
+                            oss << "Domain: " << item.get<std::string>("domain")
+                                << " --- item_type: " << item.get<std::string>("item_type")
+                                << " --- uuid: " + item.get<std::string>("uuid") + "\n";
                         }
                         logUserAction(channel, oss.str());
                     }
