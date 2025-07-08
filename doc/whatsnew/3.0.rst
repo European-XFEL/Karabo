@@ -8,7 +8,7 @@ What's New in Karabo 3.0.0
 
 Release date is **July**.
 
-All notable changes are until **3.0.0rc8**
+All notable changes are until **3.0.0rc11**
 
 
 Major Highlights of This Release
@@ -207,6 +207,15 @@ Bug Fixes
 ++++++++++
 
 
+- *(C++)* Directly include what is used ([1042088](https://git.xfel.eu/Karabo/Framework/-/commit/10420880cda76ae7be7c91e859248fd01e425b40))
+- *(C++ test)* Check for preDestruction been called was pretty flaky ([7a610b7](https://git.xfel.eu/Karabo/Framework/-/commit/7a610b7034451405806bb6cd2545947111751301))
+- *(ConfigDB)* Make sure to have a single commit for transaction, use multiple threads ([e248c98](https://git.xfel.eu/Karabo/Framework/-/commit/e248c9887916fc9e42c3816045daf93b12eaa41d))
+- *(ConfigDB)* Fix concurrent locking issues ([772c5c4](https://git.xfel.eu/Karabo/Framework/-/commit/772c5c42be6ae3334d80ba8c69be079ec82d8a46))
+- *(GUI)* Align html parsing and remove deprecation warning in wizard ([8d945f7](https://git.xfel.eu/Karabo/Framework/-/commit/8d945f7d6aa4f28a5e58ce3b06002b9b65ee8815))
+- *(GUI)* Don't overwrite QSettings in gui tests and remove dbtoken from config singleton ([9c60ef8](https://git.xfel.eu/Karabo/Framework/-/commit/9c60ef885d65e5db18182080eac2dd43bd7f92f5))
+- *(GUI)* UserSessionDialog - method to clear the refresh token. ([68b8999](https://git.xfel.eu/Karabo/Framework/-/commit/68b899928cc4c6af782b45c2424b8071bc5b536e))
+- *(GUI)* Init Config- confirmation dialog before removing/overwriting config ([53d7696](https://git.xfel.eu/Karabo/Framework/-/commit/53d7696c0dbdd041f69025bc292cd44ed82dfbc5))
+- *(karabo script)* Take care of package prefix for develop (i.e. if not default karaboDevices3) ([0ac1c36](https://git.xfel.eu/Karabo/Framework/-/commit/0ac1c36a93fcc92b23e6b9e9d35d4c5a505b402f))
 - *(Bound)* Fix propertytest image type definition ([ac67d2c](https://git.xfel.eu/Karabo/Framework/-/commit/ac67d2ce0ca74d50ff3ce659dcc46c71155fa4b5))
 - *(Bound)* Fix cross test bound device with schema type definition for image data ([5320fd8](https://git.xfel.eu/Karabo/Framework/-/commit/5320fd8fa13cc116198f6a4df2d947ff69edff7b))
 - *(Bound/C++)* Fix setAlarmCondition, don't consider info and acknowledgement ([3255d29](https://git.xfel.eu/Karabo/Framework/-/commit/3255d2924e1b7ba46be8d0a5e91ab69bdd9866c5))
@@ -286,7 +295,11 @@ Bug Fixes
 Features
 ++++++++
 
-
+- *(GUI)* Provide session information on dialog open ([4ff5134](https://git.xfel.eu/Karabo/Framework/-/commit/4ff51342795ce5f153ed5fd482fe647a5deecb79))
+- *(GuiServer)* Add python integration tests, proof of principle ([cfaae91](https://git.xfel.eu/Karabo/Framework/-/commit/cfaae91388a63bf718adcab7e0ae0f2d3b3e24d7))
+- *(Tests)* Make config db manager cross test ci concurrency adaptable ([3ad263c](https://git.xfel.eu/Karabo/Framework/-/commit/3ad263ce341be34b4ee872a38922f6e94d65cc59))
+- *(Tests)* Migrate all guiserver non auth tests to python integration tests ([e624b36](https://git.xfel.eu/Karabo/Framework/-/commit/e624b364e706371e91efebad065a509802541f60))
+- *(No Category)* Provide hint when uninstalling ([99f41f6](https://git.xfel.eu/Karabo/Framework/-/commit/99f41f62f7c17334d3ef62083b59c67ded27d9fa))
 - *(Bound)* Generalize Runner, help few keys ([41a00ba](https://git.xfel.eu/Karabo/Framework/-/commit/41a00ba9ff692e1478187e0d7f6fafae915e945d))
 - *(Bound)* AsyncConnect for timeserver, a thread less ([d1bbd9c](https://git.xfel.eu/Karabo/Framework/-/commit/d1bbd9cbea1b6fd7a0d09f5d1889866cdceffd86))
 - *(Bound)* Provide Hash.update functionality ([8a2b14d](https://git.xfel.eu/Karabo/Framework/-/commit/8a2b14d80399638a30d2d676e36fa271f616d898))
@@ -405,6 +418,20 @@ Performance
 Refactor
 ++++++++
 
+- *(C++)* Revert "Replace boost::regex by std::regex" ([2311e24](https://git.xfel.eu/Karabo/Framework/-/commit/2311e24fbf3991c2f16aacacb2b7556e8fa6d3f9))
+- *(C++ test)* Revert pipe test timing to before switch to std::regex ([8e1ed32](https://git.xfel.eu/Karabo/Framework/-/commit/8e1ed32753a4b1c10a84d2d33882f39ef4a4260d))
+- *(ConfigDB)* Make migration script independent of the order, put more utility and argparse ([edbf896](https://git.xfel.eu/Karabo/Framework/-/commit/edbf8969f81da4b42cd6fa04d5cca01be353eac7))
+- *(DEPS)* Remove peewee from the dependencies ([e979737](https://git.xfel.eu/Karabo/Framework/-/commit/e979737173bcffb71b6a0417144305f8446da19b))
+- *(FW)* AutoDelete Exchange and use different Exchanges: Slots, Signals, Global_Slots ([d06af1c](https://git.xfel.eu/Karabo/Framework/-/commit/d06af1c7ef21171652214bb3c36eb7d0cce9e53e))
+- *(GUI)* User Session Info instead of temporary session ([b208076](https://git.xfel.eu/Karabo/Framework/-/commit/b208076b52aa4cda6946d3439adcce1debcd7278))
+- *(GUI)* Rename action items for configuration from time and init and add an icon ([d15a835](https://git.xfel.eu/Karabo/Framework/-/commit/d15a8353c27e111552656f329618b8b82ead172d))
+- *(GuiServer)* Change on type return for session info ([04c2274](https://git.xfel.eu/Karabo/Framework/-/commit/04c227407b10ff706476addcf1eabe3252bc326f))
+- *(GuiServer)* Change type declaration ([4b1737c](https://git.xfel.eu/Karabo/Framework/-/commit/4b1737c5584f0b1c26581e3bd1c475075477e8db))
+- *(MDL)* Remove minimum and maximum functions ([212598f](https://git.xfel.eu/Karabo/Framework/-/commit/212598fea79eee75a88fa2b4e08fb57dbf5635f0))
+- *(ProjectDB)* Only wrap date format in wrap xml ([b90994b](https://git.xfel.eu/Karabo/Framework/-/commit/b90994b7f54e17c215e622ab874ceeba61953cf1))
+- *(ProjectDB)* Use flush for atomic operations in project db: ([920197b](https://git.xfel.eu/Karabo/Framework/-/commit/920197b1dc748bbcbfbc69a675878b52e0e576a1))
+- *(test)* Add auth guiserver tests to python integration tests ([c37f489](https://git.xfel.eu/Karabo/Framework/-/commit/c37f4896313b1cf5817627963047f0490fa0ff3f))
+- *(test)* Remove first batch of C++ guiserver integration tests ([6bebe47](https://git.xfel.eu/Karabo/Framework/-/commit/6bebe47528ba87cbbeee6c46c72f8a0ab2d10206))
 - *(Bound)* Hash constructor allows  arbitrary number of key/value pairs. Dictionary allowed as well. ([f954a9b](https://git.xfel.eu/Karabo/Framework/-/commit/f954a9bff627b9c7a9356cb66f0fb8d3c3d3b00e))
 - *(Bound, C++)* Remove _serverId_ property ([7d8898d](https://git.xfel.eu/Karabo/Framework/-/commit/7d8898de39abcbf0aed02d59d6c0a347ba895f3e))
 - *(Bound/C++)* Make deviceId and serverId formally init only parameters ([0abf9e6](https://git.xfel.eu/Karabo/Framework/-/commit/0abf9e61dcd77d69d79ad1b089665dd39f56a1d3))
@@ -658,6 +685,10 @@ Documentation
 +++++++++++++
 
 
+- *(No Category)* A bit fine tuning the docs and add a few ([2c23a5f](https://git.xfel.eu/Karabo/Framework/-/commit/2c23a5f1a023f55267688fb1583cc58430c03d72))
+- *(No Category)* Add merge log until rc8 ([3d508ca](https://git.xfel.eu/Karabo/Framework/-/commit/3d508caf1c22f95470d0519e4b63974b5de42d26))
+- *(No Category)* Document more the changes ([b9d50fe](https://git.xfel.eu/Karabo/Framework/-/commit/b9d50fe9accfaeac37006b69f7fe0fda560ed29e))
+- *(No Category)* Tune more the doc data types for MDL ([94aaf8c](https://git.xfel.eu/Karabo/Framework/-/commit/94aaf8cc6b2b43212301b9db35113f1b24532cb0))
 - *(No Category)* Document more the 3.X release with breaking changes etc. ([339407a](https://git.xfel.eu/Karabo/Framework/-/commit/339407aa231d4207f8e2ea0147b7f01e0e77719a))
 - *(No Category)* Try different formatting for rc3 ([63f17f9](https://git.xfel.eu/Karabo/Framework/-/commit/63f17f971d6152b65be2916b0225fc89f8206021))
 - *(No Category)* Add more information on rc3 ([29fac5a](https://git.xfel.eu/Karabo/Framework/-/commit/29fac5a085ffe229f39088eee57f7e52c5f71e25))
