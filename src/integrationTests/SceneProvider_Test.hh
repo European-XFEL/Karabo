@@ -28,7 +28,6 @@
 
 #include <memory>
 
-#include "TcpAdapter.hh"
 #include "karabo/core/DeviceClient.hh"
 #include "karabo/core/DeviceServer.hh"
 #include "karabo/karabo.hpp"
@@ -36,9 +35,7 @@
 
 class SceneProvider_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(SceneProvider_Test);
-
     CPPUNIT_TEST(appTestRunner);
-
     CPPUNIT_TEST_SUITE_END();
 
    public:
@@ -50,14 +47,11 @@ class SceneProvider_Test : public CPPUNIT_NS::TestFixture {
    private:
     void appTestRunner();
     void testInstanceInfo();
-    void testRequestScenes();
-    void testRequestSceneFailure();
 
     karabo::core::DeviceServer::Pointer m_deviceServer;
     std::jthread m_eventLoopThread;
 
     karabo::core::DeviceClient::Pointer m_deviceClient;
-    std::shared_ptr<karabo::TcpAdapter> m_tcpAdapter;
 };
 
 #endif /* SCENEPROVIDER_TEST_HH */
