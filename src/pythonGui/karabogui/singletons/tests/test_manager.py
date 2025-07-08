@@ -267,6 +267,25 @@ def test_handle_instance_updated(gui_app, mocker):
         manager.handle_topologyUpdate(changes)
         topology.topology_update.assert_called_with(changes)
 
+        target = 'karabogui.singletons.manager.broadcast_event'
+        broadcast_event = mocker.patch(target)
+        attr = Hash({'type': 'device',
+                     'classId': 'BeckhoffMC2Beckhoff',
+                     'serverId': 'test_server',
+                     'host': 'localhost', 'status': 'ok', })
+
+        update = Hash("device", Hash("MY_TEST_DEVICE", attr))
+
+        changes = Hash("new", Hash(),
+                       "update", update, "gone", Hash())
+        manager.handle_topologyUpdate(changes)
+
+        calls = broadcast_event.mock_calls
+        assert broadcast_event.call_count == 3
+        event, args = calls[0][1]
+        assert event == KaraboEvent.SystemTopologyInstanceUpdate
+        assert args == update
+
 
 def test_handle_class_schema(mocker):
     network, topology = mocker.Mock(), mocker.Mock()

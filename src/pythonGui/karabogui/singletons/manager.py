@@ -512,6 +512,10 @@ class Manager(QObject):
 
         devices.extend(new_devices)
         servers.extend(new_servers)
+
+        if update := changes["update"]:
+            broadcast_event(KaraboEvent.SystemTopologyInstanceUpdate, update)
+
         broadcast_event(KaraboEvent.SystemTopologyUpdate,
                         {'devices': devices, 'servers': servers})
 
