@@ -21,7 +21,7 @@
 
 from qtpy import uic
 from qtpy.QtCore import Qt
-from qtpy.QtWidgets import QDialog, QDialogButtonBox
+from qtpy.QtWidgets import QDialog
 
 from karabo.native import create_html_hash, dictToHash
 
@@ -42,9 +42,6 @@ class DataViewDialog(QDialog):
             self.ui_info.setVisible(False)
         else:
             self.ui_info.setText(info)
-
-        close_button = self.ui_buttonBox.button(QDialogButtonBox.Close)
-        close_button.clicked.connect(self.accept)
         data = dictToHash(data)
         html = create_html_hash(data, include_attributes=False)
         self.ui_text_info.setHtml(html)
