@@ -51,7 +51,7 @@
    <item>
     <widget class="QDialogButtonBox" name="ui_buttonBox">
      <property name="standardButtons">
-      <set>QDialogButtonBox::Close</set>
+      <set>QDialogButtonBox::Ok</set>
      </property>
     </widget>
    </item>
