@@ -41,18 +41,17 @@ class GuiAdapter:
             info = Hash("type", "login")
             info["username"] = 'expert'
             info["password"] = ''
-            info["provider"] = 'LOCAL'
             info["host"] = 'localhost'
             info["sessionToken"] = ''
             info["pid"] = os.getpid()
             info["version"] = '42.0.0'
-        self.tcpWriteHash(info)
-        await self.writer.drain()
+        await self.send(info)
 
-    def tcpWriteHash(self, h: Hash):
+    async def send(self, h: Hash):
         dataBytes = encodeBinary(h)
         self.writer.write(pack('I', len(dataBytes)))
         self.writer.write(dataBytes)
+        await self.writer.drain()
 
     async def reset(self):
         while not self.read_queue.empty():
@@ -75,14 +74,14 @@ class GuiAdapter:
                 self.host, self.port)
             self.read_loop = ensure_future(self.reader_loop())
 
-    async def get_next(self, msg_type: str):
+    async def get_next(self, msg_type: str) -> Hash:
         while True:
             item = await self.read_queue.get()
             if not item.get("type") == msg_type:
                 continue
             return item["value"]
 
-    def get_all(self, msg_type: str) -> list:
+    def get_all(self, msg_type: str) -> list[Hash]:
         """Empty the reading queue, returning all messages of msg_type"""
         ret = []
         while not self.read_queue.empty():

@@ -79,7 +79,7 @@ async def guiServerAuth(authServer):
 
 
 @pytest.mark.timeout(30)
-@pytest.mark.asyncio(loop_scope="module")
+@pytest.mark.asyncio
 async def test_missing_token_on_login(guiServerAuth):
     login_info = Hash("type", "login",
                       "clientId", "bobHost(pid 10264)",
@@ -99,7 +99,7 @@ async def test_missing_token_on_login(guiServerAuth):
         "temporarySessionToken", VALID_TOKEN,
         "version", "2.20.0",
         "levelBeforeTemporarySession", AccessLevel.OPERATOR)
-    guiServerAuth.tcpWriteHash(begin_temp_session)
+    await guiServerAuth.send(begin_temp_session)
     msg = await guiServerAuth.get_next("notification")
 
     assert "cannot be started from a readOnly" in msg["message"]
@@ -108,7 +108,7 @@ async def test_missing_token_on_login(guiServerAuth):
 
 
 @pytest.mark.timeout(30)
-@pytest.mark.asyncio(loop_scope="module")
+@pytest.mark.asyncio
 async def test_invalid_token_on_login(guiServerAuth):
     login_info = Hash("type", "login",
                       "username", "bob",
@@ -126,7 +126,7 @@ async def test_invalid_token_on_login(guiServerAuth):
 
 
 @pytest.mark.timeout(30)
-@pytest.mark.asyncio(loop_scope="module")
+@pytest.mark.asyncio
 async def test_valid_token_on_login(guiServerAuth):
     login_info = Hash("type", "login",
                       "username", VALID_USER_ID,
@@ -140,7 +140,7 @@ async def test_valid_token_on_login(guiServerAuth):
     assert msg["accessLevel"] == VALID_ACCESS_LEVEL
     assert msg["username"] == VALID_USER_ID
 
-    guiServerAuth.tcpWriteHash(Hash("type", "getGuiSessionInfo"))
+    await guiServerAuth.send(Hash("type", "getGuiSessionInfo"))
     msg = await guiServerAuth.get_next("getGuiSessionInfo")
 
     assert msg["sessionStartTime"] != ""
@@ -153,7 +153,7 @@ async def test_valid_token_on_login(guiServerAuth):
 
 
 @pytest.mark.timeout(30)
-@pytest.mark.asyncio(loop_scope="module")
+@pytest.mark.asyncio
 async def test_valid_token_on_in_session_login(guiServerAuth):
     login_info = Hash("type", "login",
                       "username", VALID_USER_ID,
@@ -167,14 +167,14 @@ async def test_valid_token_on_in_session_login(guiServerAuth):
     assert msg["username"] == VALID_USER_ID
 
     # Re-login with same valid token — should succeed and refresh session
-    guiServerAuth.tcpWriteHash(login_info)
+    await guiServerAuth.send(login_info)
     msg = await guiServerAuth.get_next("loginInformation")
     assert msg["accessLevel"] == VALID_ACCESS_LEVEL
     assert msg["username"] == VALID_USER_ID
 
 
 @pytest.mark.timeout(30)
-@pytest.mark.asyncio(loop_scope="module")
+@pytest.mark.asyncio
 async def test_invalid_token_on_in_session_login(guiServerAuth):
     login_info = Hash("type", "login",
                       "username", VALID_USER_ID,
@@ -194,7 +194,7 @@ async def test_invalid_token_on_in_session_login(guiServerAuth):
     assert msg["username"] == VALID_USER_ID
 
     # Now try logging in again with an invalid token
-    guiServerAuth.tcpWriteHash(invalid_login_info)
+    await guiServerAuth.send(invalid_login_info)
     msg = await guiServerAuth.get_next("notification")
     expected_msg = "Error validating token: " + INVALID_TOKEN_MSG
     assert msg["message"] == expected_msg
@@ -208,7 +208,7 @@ async def test_invalid_token_on_in_session_login(guiServerAuth):
 
 
 @pytest.mark.timeout(30)
-@pytest.mark.asyncio(loop_scope="module")
+@pytest.mark.asyncio
 async def test_missing_token_on_begin_temporary_session(guiServerAuth):
     login_info = Hash(
         "type", "login",
@@ -226,7 +226,7 @@ async def test_missing_token_on_begin_temporary_session(guiServerAuth):
     msg = await guiServerAuth.get_next("loginInformation")
     assert "accessLevel" in msg
 
-    guiServerAuth.tcpWriteHash(begin_temp_session_info)
+    await guiServerAuth.send(begin_temp_session_info)
     msg = await guiServerAuth.get_next("onBeginTemporarySession")
 
     assert not msg["success"]
@@ -236,7 +236,7 @@ async def test_missing_token_on_begin_temporary_session(guiServerAuth):
 
 
 @pytest.mark.timeout(30)
-@pytest.mark.asyncio(loop_scope="module")
+@pytest.mark.asyncio
 async def test_invalid_token_on_begin_temporary_session(guiServerAuth):
     login_info = Hash(
         "type", "login",
@@ -256,7 +256,7 @@ async def test_invalid_token_on_begin_temporary_session(guiServerAuth):
     msg = await guiServerAuth.get_next("loginInformation")
     assert "accessLevel" in msg
 
-    guiServerAuth.tcpWriteHash(begin_temp_session_info)
+    await guiServerAuth.send(begin_temp_session_info)
     msg = await guiServerAuth.get_next("onBeginTemporarySession")
 
     assert not msg["success"]
@@ -266,7 +266,7 @@ async def test_invalid_token_on_begin_temporary_session(guiServerAuth):
 
 
 @pytest.mark.timeout(30)
-@pytest.mark.asyncio(loop_scope="module")
+@pytest.mark.asyncio
 async def test_begin_end_temporary_session(guiServerAuth):
     login_info = Hash(
         "type", "login",
@@ -317,7 +317,7 @@ async def test_begin_end_temporary_session(guiServerAuth):
     assert only_temp["clientSessions"] == []
 
     # Step 5: begin temporary session
-    guiServerAuth.tcpWriteHash(begin_temp_session_info)
+    await guiServerAuth.send(begin_temp_session_info)
     msg = await guiServerAuth.get_next("onBeginTemporarySession")
     assert msg["success"] is True
     assert msg["reason"] == ""
@@ -347,7 +347,7 @@ async def test_begin_end_temporary_session(guiServerAuth):
     assert session["temporarySessionToken"] == temp_token
 
     # Step 8: verify getGuiSessionInfo response
-    guiServerAuth.tcpWriteHash(Hash("type", "getGuiSessionInfo"))
+    await guiServerAuth.send(Hash("type", "getGuiSessionInfo"))
     msg = await guiServerAuth.get_next("getGuiSessionInfo")
     assert msg["sessionStartTime"] == session_start_time
     assert msg["sessionDuration"] == MAX_SESSION_TIME
@@ -355,27 +355,27 @@ async def test_begin_end_temporary_session(guiServerAuth):
     assert msg["tempSessionDuration"] == MAX_TEMPORARY_SESSION_TIME
 
     # Step 9: try begin again while already in temp session — must fail
-    guiServerAuth.tcpWriteHash(begin_temp_session_info)
+    await guiServerAuth.send(begin_temp_session_info)
     msg = await guiServerAuth.get_next("onBeginTemporarySession")
     assert msg["success"] is False
     assert msg["reason"] == "There's already an active temporary session."
 
     # Step 10: try login while in temp session — must fail
-    guiServerAuth.tcpWriteHash(login_info)
+    await guiServerAuth.send(login_info)
     msg = await guiServerAuth.get_next("notification")
     assert msg["message"] == (
         "There's an active temporary session. Please terminate "
         "it before trying to login again.")
 
     # Step 11: end temporary session
-    guiServerAuth.tcpWriteHash(end_temp_session_info)
+    await guiServerAuth.send(end_temp_session_info)
     msg = await guiServerAuth.get_next("onEndTemporarySession")
     assert msg["success"] is True
     assert msg["levelBeforeTemporarySession"] == AccessLevel.OPERATOR
     assert msg["loggedUserId"] == VALID_USER_ID
 
     # Step 12: try to end again — must fail
-    guiServerAuth.tcpWriteHash(end_temp_session_info)
+    await guiServerAuth.send(end_temp_session_info)
     msg = await guiServerAuth.get_next("onEndTemporarySession")
     assert msg["success"] is False
     assert msg["reason"] == (
@@ -388,7 +388,7 @@ async def test_begin_end_temporary_session(guiServerAuth):
 
 
 @pytest.mark.timeout(60)
-@pytest.mark.asyncio(loop_scope="module")
+@pytest.mark.asyncio
 async def test_session_expiration(guiServerAuth):
     login_info = Hash(
         "type", "login",
@@ -416,7 +416,7 @@ async def test_session_expiration(guiServerAuth):
     assert int(notice["secondsToExpiration"]) <= END_SESSION_NOTICE_TIME
 
     # Try to start a temporary session after notice (should fail)
-    guiServerAuth.tcpWriteHash(begin_temp_session_info)
+    await guiServerAuth.send(begin_temp_session_info)
     reply = await guiServerAuth.get_next("onBeginTemporarySession")
     assert not reply["success"]
     assert reply["reason"] == (
@@ -437,7 +437,7 @@ async def test_session_expiration(guiServerAuth):
 
 
 @pytest.mark.timeout(60)
-@pytest.mark.asyncio(loop_scope="module")
+@pytest.mark.asyncio
 async def test_temporary_session_expiration(guiServerAuth):
     login_info = Hash(
         "type", "login",
@@ -457,7 +457,7 @@ async def test_temporary_session_expiration(guiServerAuth):
     assert "accessLevel" in msg
 
     # Begin temporary session
-    guiServerAuth.tcpWriteHash(begin_temp_session_info)
+    await guiServerAuth.send(begin_temp_session_info)
     msg = await guiServerAuth.get_next("onBeginTemporarySession")
     assert msg["success"] is True
     assert msg["reason"] == ""

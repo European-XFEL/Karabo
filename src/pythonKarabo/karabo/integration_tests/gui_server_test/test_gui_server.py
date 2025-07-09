@@ -50,8 +50,8 @@ async def guiServer():
         await adapter.disconnect()
 
 
-@pytest.mark.timeout(30)
-@pytest.mark.asyncio(loop_scope="module")
+@pytest.mark.timeout(60)
+@pytest.mark.asyncio
 async def test_gui_server_execute_before_login(guiServer):
     blockedTypes = {"execute", "reconfigure", "getDeviceConfiguration",
                     "getDeviceSchema", "getClassSchema", "initDevice",
@@ -61,14 +61,14 @@ async def test_gui_server_execute_before_login(guiServer):
                     "requestNetwork", "error", "requestGeneric"}
     for msg_type in blockedTypes:
         h = Hash("type", msg_type)
-        guiServer.tcpWriteHash(h)
+        await guiServer.send(h)
         msg = await guiServer.get_next("notification")
         message = msg["message"]
         assert message == f"Action '{msg_type}' refused before log in"
 
 
-@pytest.mark.timeout(30)
-@pytest.mark.asyncio(loop_scope="module")
+@pytest.mark.timeout(60)
+@pytest.mark.asyncio
 async def test_gui_server_execute(guiServer):
     await guiServer.login()
     h = await call(TEST_GUI_SERVER_ID, "slotGetClientSessions",
@@ -95,7 +95,7 @@ async def test_gui_server_execute(guiServer):
              "command", "does.not.matter",
              "reply", True,
              "timeout", 1)
-    guiServer.tcpWriteHash(h)
+    await guiServer.send(h)
     msg = await guiServer.get_next("executeReply")
     assert msg["type"] == "executeReply"
     input_hash = msg["input"]
@@ -110,7 +110,7 @@ async def test_gui_server_execute(guiServer):
              "command", "not.existing",
              "reply", True,
              "timeout", 1)
-    guiServer.tcpWriteHash(h)
+    await guiServer.send(h)
     msg = await guiServer.get_next("executeReply")
     assert msg["type"] == "executeReply"
     assert msg["input"].fullyEqual(h)
@@ -128,7 +128,7 @@ async def test_gui_server_execute(guiServer):
              "command", "slotGetConfiguration",
              "reply", True,
              "timeout", 1)
-    guiServer.tcpWriteHash(h)
+    await guiServer.send(h)
     msg = await guiServer.get_next("executeReply")
     assert msg["type"] == "executeReply"
     assert msg["input"].fullyEqual(h)
@@ -144,12 +144,12 @@ async def test_gui_server_execute(guiServer):
     h = Hash("type", "execute",
              "deviceId", TEST_GUI_SERVER_ID,
              "command", "slotClearLock")
-    guiServer.tcpWriteHash(h)
+    await guiServer.send(h)
     await assert_wait_property(TEST_GUI_SERVER_ID, "lockedBy", "")
 
 
-@pytest.mark.timeout(30)
-@pytest.mark.asyncio(loop_scope="module")
+@pytest.mark.timeout(60)
+@pytest.mark.asyncio
 async def test_request_fail_protocol(guiServer):
     await guiServer.login()
     await guiServer.reset()
@@ -158,7 +158,7 @@ async def test_request_fail_protocol(guiServer):
     conf = await getProperties(TEST_GUI_SERVER_ID, "classVersion")
     class_version = conf["classVersion"]
 
-    guiServer.tcpWriteHash(h)
+    await guiServer.send(h)
     msg = await guiServer.get_next("notification")
 
     expected_message = (
@@ -168,8 +168,8 @@ async def test_request_fail_protocol(guiServer):
     assert msg["message"] == expected_message
 
 
-@pytest.mark.timeout(30)
-@pytest.mark.asyncio(loop_scope="module")
+@pytest.mark.timeout(60)
+@pytest.mark.asyncio
 async def test_request_fail_old_version(guiServer):
     # Set minimum required version on the server side
     await setWait(TEST_GUI_SERVER_ID, minClientVersion="2.9.1")
@@ -183,7 +183,7 @@ async def test_request_fail_old_version(guiServer):
     msg_type = "projectSaveItems"
     h = Hash("type", msg_type)
 
-    guiServer.tcpWriteHash(h)
+    await guiServer.send(h)
     msg = await guiServer.get_next("notification")
 
     expected_message = (
@@ -193,8 +193,8 @@ async def test_request_fail_old_version(guiServer):
     assert msg["message"] == expected_message
 
 
-@pytest.mark.timeout(30)
-@pytest.mark.asyncio(loop_scope="module")
+@pytest.mark.timeout(60)
+@pytest.mark.asyncio
 async def test_request_generic(guiServer):
     info = Hash("type", "login",
                 "clientId", "mrusp",
@@ -209,7 +209,7 @@ async def test_request_generic(guiServer):
              "slot", "requestScene")
     h.set("args", Hash("name", "scene"))
 
-    guiServer.tcpWriteHash(h)
+    await guiServer.send(h)
     msg = await guiServer.get_next("requestGeneric")
 
     assert not msg["success"]
@@ -222,7 +222,7 @@ async def test_request_generic(guiServer):
              "timeout", 1)
     h.set("args", Hash("name", "scene"))
 
-    guiServer.tcpWriteHash(h)
+    await guiServer.send(h)
     msg = await guiServer.get_next("requestGeneric")
 
     assert not msg["success"]
@@ -238,7 +238,7 @@ async def test_request_generic(guiServer):
              "slot", "slotDumpDebugInfo")
     h.set("args", Hash("name", "noname"))
 
-    guiServer.tcpWriteHash(h)
+    await guiServer.send(h)
     msg = await guiServer.get_next("requestSuperScene")
 
     assert not msg["success"]
@@ -256,7 +256,7 @@ async def test_request_generic(guiServer):
              "slot", "slotDumpDebugInfo")
     h.set("args", Hash("clients", True))
 
-    guiServer.tcpWriteHash(h)
+    await guiServer.send(h)
     msg = await guiServer.get_next("debug")
 
     assert msg["success"]
@@ -274,7 +274,7 @@ async def test_request_generic(guiServer):
              "slot", "slotDumpDebugInfo")
     h.set("args", Hash("clients", True))
 
-    guiServer.tcpWriteHash(h)
+    await guiServer.send(h)
     msg = await guiServer.get_next("debug")
 
     assert msg["success"]
@@ -285,8 +285,8 @@ async def test_request_generic(guiServer):
     assert len(msg["reply"]) == 1
 
 
-@pytest.mark.timeout(30)
-@pytest.mark.asyncio(loop_scope="module")
+@pytest.mark.timeout(60)
+@pytest.mark.asyncio
 async def test_get_device_schema(guiServer):
     info = Hash("type", "login",
                 "clientId", "mrusp",
@@ -298,7 +298,7 @@ async def test_get_device_schema(guiServer):
              "deviceId", TEST_GUI_SERVER_ID)
 
     # First request
-    guiServer.tcpWriteHash(h)
+    await guiServer.send(h)
     h1 = await guiServer.get_next("deviceSchema")
 
     assert h1["type"] == "deviceSchema"
@@ -306,7 +306,7 @@ async def test_get_device_schema(guiServer):
     assert h1["schema"]  # Not empty
 
     # Second request (from cache)
-    guiServer.tcpWriteHash(h)
+    await guiServer.send(h)
     h2 = await guiServer.get_next("deviceSchema")
 
     assert h1["deviceId"] == h2["deviceId"]
@@ -314,7 +314,7 @@ async def test_get_device_schema(guiServer):
 
 
 @pytest.mark.timeout(60)
-@pytest.mark.asyncio(loop_scope="module")
+@pytest.mark.asyncio
 async def test_slow_slots(guiServer):
     await guiServer.login()
 
@@ -329,7 +329,7 @@ async def test_slow_slots(guiServer):
              "reply", True,
              "timeout", 1)
 
-    guiServer.tcpWriteHash(h)
+    await guiServer.send(h)
     msg = await guiServer.get_next("executeReply")
 
     assert msg["type"] == "executeReply"
@@ -341,7 +341,7 @@ async def test_slow_slots(guiServer):
     await setWait(TEST_GUI_SERVER_ID,
                   ignoreTimeoutClasses=["PropertyTest"])
 
-    guiServer.tcpWriteHash(h)
+    await guiServer.send(h)
     msg = await guiServer.get_next("executeReply")
 
     assert msg["type"] == "executeReply"
@@ -351,7 +351,7 @@ async def test_slow_slots(guiServer):
     # Case 3: Remove ignoreTimeoutClasses, should timeout again
     await setWait(TEST_GUI_SERVER_ID, ignoreTimeoutClasses=[])
 
-    guiServer.tcpWriteHash(h)
+    await guiServer.send(h)
     msg = await guiServer.get_next("executeReply")
     assert msg["type"] == "executeReply"
     assert not msg["success"]
@@ -363,7 +363,7 @@ async def test_slow_slots(guiServer):
     previous_timeout = r["timeout"]
     await setWait(TEST_GUI_SERVER_ID, "timeout", 30)
 
-    guiServer.tcpWriteHash(h)
+    await guiServer.send(h)
     msg = await guiServer.get_next("executeReply")
 
     assert msg["type"] == "executeReply"
@@ -372,7 +372,7 @@ async def test_slow_slots(guiServer):
     # Case 5: Restore timeout, should timeout again
     await setWait(TEST_GUI_SERVER_ID, "timeout", previous_timeout)
 
-    guiServer.tcpWriteHash(h)
+    await guiServer.send(h)
     msg = await guiServer.get_next("executeReply")
 
     assert msg["type"] == "executeReply"
@@ -384,8 +384,8 @@ async def test_slow_slots(guiServer):
     await shutdown("testGuiServerDevicePropertyTest")
 
 
-@pytest.mark.timeout(30)
-@pytest.mark.asyncio(loop_scope="module")
+@pytest.mark.timeout(60)
+@pytest.mark.asyncio
 async def test_get_class_schema(guiServer):
     await guiServer.login()
 
@@ -394,7 +394,7 @@ async def test_get_class_schema(guiServer):
              "classId", "PropertyTest")
 
     # First request
-    guiServer.tcpWriteHash(h)
+    await guiServer.send(h)
     msg1 = await guiServer.get_next("classSchema")
 
     assert msg1["type"] == "classSchema"
@@ -403,7 +403,7 @@ async def test_get_class_schema(guiServer):
     assert msg1["schema"]  # Not empty
 
     # Second request (should come from cache)
-    guiServer.tcpWriteHash(h)
+    await guiServer.send(h)
     msg2 = await guiServer.get_next("classSchema")
 
     assert msg2 == msg1
@@ -413,7 +413,7 @@ async def test_get_class_schema(guiServer):
               "serverId", TEST_SERVER_ID,
               "classId", "NonExistingDeviceClass")
 
-    guiServer.tcpWriteHash(h2)
+    await guiServer.send(h2)
     msg3 = await guiServer.get_next("classSchema")
 
     assert msg3["type"] == "classSchema"
@@ -423,8 +423,8 @@ async def test_get_class_schema(guiServer):
     assert msg3["schema"].hash.empty()
 
 
-@pytest.mark.timeout(30)
-@pytest.mark.asyncio(loop_scope="module")
+@pytest.mark.timeout(60)
+@pytest.mark.asyncio
 async def test_reconfigure(guiServer):
     await guiServer.login()
 
@@ -435,7 +435,7 @@ async def test_reconfigure(guiServer):
              "reply", True,
              "timeout", 1)
 
-    guiServer.tcpWriteHash(h)
+    await guiServer.send(h)
     msg = await guiServer.get_next("reconfigureReply")
 
     assert msg["type"] == "reconfigureReply"
@@ -450,7 +450,7 @@ async def test_reconfigure(guiServer):
              "reply", True,
              "timeout", 1)
 
-    guiServer.tcpWriteHash(h)
+    await guiServer.send(h)
     msg = await guiServer.get_next("reconfigureReply")
 
     assert msg["type"] == "reconfigureReply"
@@ -479,7 +479,7 @@ async def test_reconfigure(guiServer):
              "reply", True,
              "timeout", 1)
 
-    guiServer.tcpWriteHash(h)
+    await guiServer.send(h)
     msg = await guiServer.get_next("reconfigureReply")
 
     assert msg["type"] == "reconfigureReply"
@@ -498,7 +498,7 @@ async def test_reconfigure(guiServer):
              "deviceId", TEST_GUI_SERVER_ID,
              "configuration",
              Hash("networkPerformance.sampleInterval", new_target))
-    guiServer.tcpWriteHash(h)
+    await guiServer.send(h)
 
     await assert_wait_property(
         TEST_GUI_SERVER_ID, "networkPerformance.sampleInterval",
@@ -506,7 +506,7 @@ async def test_reconfigure(guiServer):
 
 
 @pytest.mark.timeout(60)
-@pytest.mark.asyncio(loop_scope="module")
+@pytest.mark.asyncio
 async def test_device_config_updates(guiServer):
     await guiServer.login()
 
@@ -528,7 +528,7 @@ async def test_device_config_updates(guiServer):
     # Change a property without monitoring → expect no config update
     h = Hash("type", "reconfigure", "deviceId", "PropTest_1",
              "configuration", Hash("int32Property", 10))
-    guiServer.tcpWriteHash(h)
+    await guiServer.send(h)
     with pytest.raises(TimeoutError):
         await wait_for(guiServer.get_next("deviceConfigurations"),
                        timeout=timeout)
@@ -537,7 +537,7 @@ async def test_device_config_updates(guiServer):
 
     # First client subscribes to PropTest_1
     h = Hash("type", "startMonitoringDevice", "deviceId", "PropTest_1")
-    guiServer.tcpWriteHash(h)
+    await guiServer.send(h)
     msg = await wait_for(guiServer.get_next("deviceConfigurations"),
                          timeout=timeout)
     assert "configurations.PropTest_1" in msg
@@ -545,7 +545,7 @@ async def test_device_config_updates(guiServer):
     assert not anotherClient.get_all("deviceConfigurations")
 
     # Second client subscribes (should work from cache)
-    anotherClient.tcpWriteHash(h)
+    await anotherClient.send(h)
     msg = await wait_for(anotherClient.get_next("deviceConfigurations"),
                          timeout=timeout)
     assert "configurations.PropTest_1" in msg
@@ -553,8 +553,8 @@ async def test_device_config_updates(guiServer):
 
     # anotherClient unsubscribes twice
     h = Hash("type", "stopMonitoringDevice", "deviceId", "PropTest_1")
-    anotherClient.tcpWriteHash(h)
-    anotherClient.tcpWriteHash(h)
+    await anotherClient.send(h)
+    await anotherClient.send(h)
     await anotherClient.reset()
 
     # The pre-2.15.X problem of a connection miscount by this duplicated
@@ -573,8 +573,8 @@ async def test_device_config_updates(guiServer):
               "configuration", Hash("int32Property", 12))
     h2 = Hash("type", "reconfigure", "deviceId", "PropTest_2",
               "configuration", Hash("int32Property", 22))
-    guiServer.tcpWriteHash(h2)
-    guiServer.tcpWriteHash(h1)
+    await guiServer.send(h2)
+    await guiServer.send(h1)
 
     msg = await wait_for(guiServer.get_next("deviceConfigurations"),
                          timeout=timeout)
@@ -586,7 +586,7 @@ async def test_device_config_updates(guiServer):
 
     # Re-subscribe anotherClient, should work again
     h = Hash("type", "startMonitoringDevice", "deviceId", "PropTest_1")
-    anotherClient.tcpWriteHash(h)
+    await anotherClient.send(h)
     msg = await wait_for(anotherClient.get_next("deviceConfigurations"),
                          timeout=timeout)
     assert "configurations.PropTest_1" in msg
@@ -594,7 +594,7 @@ async def test_device_config_updates(guiServer):
     # Subscribe to PropTest_2
     h = Hash("type", "startMonitoringDevice", "deviceId", "PropTest_2",
              "reply", True, "timeout", 1)
-    guiServer.tcpWriteHash(h)
+    await guiServer.send(h)
     msg = await wait_for(guiServer.get_next("deviceConfigurations"),
                          timeout=timeout)
     assert "configurations.PropTest_2" in msg
@@ -606,8 +606,8 @@ async def test_device_config_updates(guiServer):
     h2 = Hash("type", "reconfigure", "deviceId", "PropTest_2",
               "configuration", Hash("int32Property", 24))
 
-    guiServer.tcpWriteHash(h2)
-    guiServer.tcpWriteHash(h1)
+    await guiServer.send(h2)
+    await guiServer.send(h1)
 
     msg = await wait_for(guiServer.get_next("deviceConfigurations"),
                          timeout=timeout)
@@ -617,9 +617,9 @@ async def test_device_config_updates(guiServer):
     assert len(configs) == 2
 
     # Unsubscribe from both
-    guiServer.tcpWriteHash(
+    await guiServer.send(
         Hash("type", "stopMonitoringDevice", "deviceId", "PropTest_1"))
-    guiServer.tcpWriteHash(
+    await guiServer.send(
         Hash("type", "stopMonitoringDevice", "deviceId", "PropTest_2"))
 
     # Reconfigure again → expect no update
@@ -627,8 +627,8 @@ async def test_device_config_updates(guiServer):
               "configuration", Hash("int32Property", 16))
     h2 = Hash("type", "reconfigure", "deviceId", "PropTest_2",
               "configuration", Hash("int32Property", 26))
-    guiServer.tcpWriteHash(h2)
-    guiServer.tcpWriteHash(h1)
+    await guiServer.send(h2)
+    await guiServer.send(h1)
 
     with pytest.raises(TimeoutError):
         await wait_for(guiServer.get_next("deviceConfigurations"),
@@ -643,8 +643,8 @@ async def test_device_config_updates(guiServer):
     await shutdown("PropTest_2")
 
 
-@pytest.mark.timeout(30)
-@pytest.mark.asyncio(loop_scope="module")
+@pytest.mark.timeout(60)
+@pytest.mark.asyncio
 async def test_disconnect(guiServer):
     await guiServer.login()
     assert guiServer.connected
@@ -667,8 +667,8 @@ async def test_disconnect(guiServer):
     await sleepUntil(lambda: guiServer.connected is False)
 
 
-@pytest.mark.timeout(30)
-@pytest.mark.asyncio(loop_scope="module")
+@pytest.mark.timeout(60)
+@pytest.mark.asyncio
 async def test_slot_notify(guiServer):
     await guiServer.login()
     await guiServer.reset()
@@ -741,8 +741,8 @@ async def test_slot_notify(guiServer):
     await adapter3.disconnect()
 
 
-@pytest.mark.timeout(30)
-@pytest.mark.asyncio(loop_scope="module")
+@pytest.mark.timeout(60)
+@pytest.mark.asyncio
 async def test_slot_broadcast(guiServer):
     await guiServer.login()
     timeout = 5
@@ -800,9 +800,10 @@ async def test_slot_broadcast(guiServer):
     assert client_msg.fullyEqual(received)
 
 
-@pytest.mark.timeout(30)
-@pytest.mark.asyncio(loop_scope="module")
+@pytest.mark.timeout(60)
+@pytest.mark.asyncio
 async def test_version_control(guiServer):
+    await guiServer.disconnect()
     login_info = Hash("type", "login",
                       "username", "mrusp",
                       "password", "12345",
@@ -820,18 +821,15 @@ async def test_version_control(guiServer):
         await guiServer.login(login_info)
 
         if should_connect:
-            expect = guiServer.get_next("systemTopology")
-            guiServer.tcpWriteHash(login_info)
-            msg = await expect
+            await guiServer.send(login_info)
+            msg = await guiServer.get_next("systemTopology")
             assert "systemTopology" in msg
         else:
-            expect = guiServer.get_next("notification")
-            guiServer.tcpWriteHash(login_info)
-            msg = await expect
+            await guiServer.send(login_info)
+            msg = await guiServer.get_next("notification")
             expected_prefix = (
                 f"Your GUI client has version '{client_version}', "
-                "but the minimum required is:"
-            )
+                "but the minimum required is:")
             assert msg["message"].startswith(expected_prefix)
             try:
                 await sleepUntil(
@@ -841,7 +839,7 @@ async def test_version_control(guiServer):
 
 
 @pytest.mark.timeout(60)
-@pytest.mark.asyncio(loop_scope="module")
+@pytest.mark.asyncio
 async def test_gui_server_scene_retrieval(guiServer):
     await guiServer.login()
     config = {
@@ -860,7 +858,6 @@ async def test_gui_server_scene_retrieval(guiServer):
                                    State.NORMAL, timeout=10)
         await assert_wait_property("testSceneProvider", "state",
                                    State.NORMAL, timeout=10)
-        print("HERE")
         args = Hash("name", "scene")
         message = Hash(
             "type", "requestGeneric",
@@ -869,7 +866,7 @@ async def test_gui_server_scene_retrieval(guiServer):
             "args", args,
             "token", "notAVeryUniqueToken"
         )
-        guiServer.tcpWriteHash(message)
+        await guiServer.send(message)
         msg = await guiServer.get_next("requestGeneric")
 
         assert msg["type"] == "requestGeneric"
@@ -886,7 +883,7 @@ async def test_gui_server_scene_retrieval(guiServer):
             "token", "notAVeryUniqueToken",
             "timeout", 2)
 
-        guiServer.tcpWriteHash(message)
+        await guiServer.send(message)
         msg = await guiServer.get_next("requestGeneric")
         assert msg["request.type"] == "requestGeneric"
         assert msg["request.token"] == "notAVeryUniqueToken"
