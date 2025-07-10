@@ -19,7 +19,7 @@ from pathlib import Path
 
 import pytest
 
-from karabo.bound import AccessType, Hash, Logger
+from karabo.bound import AccessType, Hash, Logger, State
 from karabo.bound.testing import ServerContext, sleepUntil
 
 Logger.configure(Hash())
@@ -52,6 +52,9 @@ def configTest(eventLoop):
         # We wait for the device to be online
         remote = cpp_server.remote()
         sleepUntil(lambda: TEST_DEVICE_ID in remote.getDevices(), timeout=10)
+        sleepUntil(lambda: MANAGER_ID in remote.getDevices(), timeout=10)
+        sleepUntil(lambda: remote.get(MANAGER_ID, "state") == State.ON,
+                   timeout=10)
         yield cpp_server
 
     db_path.unlink(missing_ok=True)
