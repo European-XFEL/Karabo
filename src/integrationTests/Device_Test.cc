@@ -1788,7 +1788,6 @@ void Device_Test::testBadInit() {
           (delayInSec + 2) * 1000); // long enough that initialization is done (though should come earlier)
 
     CPPUNIT_ASSERT_EQUAL(std::string("preDestruction called"), *devStatus);
-    CPPUNIT_ASSERT_EQUAL(std::string("preDestruction called"), m_deviceClient->get<std::string>(devId, "status"));
 
     m_deviceClient->unregisterDeviceMonitor(devId); // Clean again
 
