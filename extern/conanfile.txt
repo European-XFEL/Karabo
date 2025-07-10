@@ -12,7 +12,7 @@ daemontools-encore/1.11-karabo3@karabo/py312
 # The 'date' can be removed if g++ version >= 14 or higher
 date/3.0.3
 gtest/1.16.0
-nlohmann_json/3.7.3
+nlohmann_json/3.12.0
 spdlog/1.14.1
 zeromq/4.3.2
 
