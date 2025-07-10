@@ -50,7 +50,7 @@ class DeviceNode(String):
     """
     accessMode = Attribute(AccessMode.INITONLY, dtype=AccessMode)
     assignment = Attribute(Assignment.MANDATORY, dtype=Assignment)
-    displayType = Attribute("deviceNode", dtype=str)
+    classId = "deviceNode"
 
     def toDataAndAttrs(self, value):
         if not isinstance(value, str):
