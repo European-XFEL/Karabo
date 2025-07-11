@@ -264,21 +264,21 @@ class ConfigurationPanel(BasePanelWidget):
         tb_save_config.setFlat(True)
         tb_save_config.clicked.connect(self._on_save_to_file)
 
-        text = "Configuration from past"
-        tb_history_config = QToolButton()
-        tb_history_config.setIcon(icons.clock)
-        tb_history_config.setStatusTip(text)
-        tb_history_config.setToolTip(text)
-        tb_history_config.setVisible(False)
-        tb_history_config.clicked.connect(self._on_config_from_past)
+        text = "Runtime configuration"
+        tb_runtime_config = QToolButton()
+        tb_runtime_config.setIcon(icons.clock)
+        tb_runtime_config.setStatusTip(text)
+        tb_runtime_config.setToolTip(text)
+        tb_runtime_config.setVisible(False)
+        tb_runtime_config.clicked.connect(self._on_config_from_past)
 
-        text = "Compare Configuration"
-        tb_compare_config = QToolButton()
-        tb_compare_config.setIcon(icons.change)
-        tb_compare_config.setStatusTip(text)
-        tb_compare_config.setToolTip(text)
-        tb_compare_config.setVisible(False)
-        tb_compare_config.clicked.connect(self._on_compare_configuration)
+        text = "Compare Device"
+        tb_compare_device = QToolButton()
+        tb_compare_device.setIcon(icons.change)
+        tb_compare_device.setStatusTip(text)
+        tb_compare_device.setToolTip(text)
+        tb_compare_device.setVisible(False)
+        tb_compare_device.clicked.connect(self._on_compare_configuration)
 
         text = "Switch Configuration"
         tb_switch_mode = SwitchButton()
@@ -299,8 +299,8 @@ class ConfigurationPanel(BasePanelWidget):
 
         self.ui_open_config = toolbar.addWidget(tb_open_config)
         self.ui_save_config = toolbar.addWidget(tb_save_config)
-        self.ui_history_config = toolbar.addWidget(tb_history_config)
-        self.ui_compare_config = toolbar.addWidget(tb_compare_config)
+        self.ui_history_config = toolbar.addWidget(tb_runtime_config)
+        self.ui_compare_config = toolbar.addWidget(tb_compare_device)
         self.ui_search_device = toolbar.addWidget(tb_search_device)
         self.ui_switch_mode = toolbar.addWidget(tb_switch_mode)
 

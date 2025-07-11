@@ -616,7 +616,7 @@ def test_configuration_from_past(gui_app, mocker):
     # Make sure the button shows the ConfigurationFromPastDialog
     toolbar = panel.ui_history_config.parent()
     button = toolbar.widgetForAction(panel.ui_history_config)
-    assert button.toolTip() == "Configuration from past"
+    assert button.toolTip() == "Runtime configuration"
     mock_dialog = mocker.patch(
         "karabogui.panels.configurationpanel.ConfigurationFromPastDialog")
     click_button(button)
