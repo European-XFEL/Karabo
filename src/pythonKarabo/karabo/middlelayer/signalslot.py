@@ -104,10 +104,8 @@ def get_device_node_initializers(instance):
     for key in instance._allattrs:
         descr = getattr(klass, key, None)
         if descr is None:
-            # NOTE: This protection is solely for the unsupported
-            # NodeTypes, e.g. ListOfNodes
             continue
-        if descr.displayType == "deviceNode":
+        if descr.classId == "deviceNode":
             ret.append(descr.finalize_init(instance))
         elif isinstance(descr, Node):  # recurse Nodes
             node = getattr(instance, descr.key)

@@ -1093,6 +1093,8 @@ async def test_devicenode(deviceTest):
         pass
 
     a = A({"_deviceId_": "devicenode", "dn": "badwienix"})
+    h = a.getClassSchema().hash
+    assert h["dn", "classId"] == "deviceNode"
     b = B({"_deviceId_": "badwienix"})
     async with AsyncDeviceContext(a=a, timeout=0) as ctx:
         with (await getDevice("devicenode")) as d:
@@ -1103,7 +1105,11 @@ async def test_devicenode(deviceTest):
             assert d.dn.value == "badwienix"
             ts_before = d.dn.timestamp
             assert ts_before is not None
-            assert type(d).dn.displayType == "deviceNode"
+            schema = await getSchema(d)
+            assert schema.hash["dn", "classId"] == "deviceNode"
+            assert d.dn.descriptor.classId == "deviceNode"
+            # Same as for state
+            assert d.state.descriptor.classId == "State"
             await ctx.device_context(b=b)
             # wait until it is online, the device will pass
             # the initialization phase

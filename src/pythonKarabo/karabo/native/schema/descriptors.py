@@ -134,7 +134,7 @@ class Enumable:
         if enum is not None:
             assert issubclass(enum, Enum)
             self.enum = enum
-        super().__init__(**kwargs)
+        super().__init__(classId=classId, **kwargs)
 
     def cast(self, other):
         if isinstance(other, self.enum):
