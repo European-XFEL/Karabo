@@ -681,7 +681,15 @@ namespace karabo {
             SLOT_ELEMENT(expected)
                   .key("slotUpdateSchema")
                   .displayedName("Update Schema")
-                  .description("Duplicate maxSize of vectors in schema")
+                  .description(
+                        "Duplicate maxSize of vectors in schema, recreate 'Output' and add 'Injected Int32' property")
+                  .allowedStates(State::NORMAL)
+                  .commit();
+
+            SLOT_ELEMENT(expected)
+                  .key("slotResetSchema")
+                  .displayedName("Reset Schema")
+                  .description("Undo 'Update Schema' and reset to initial schema")
                   .allowedStates(State::NORMAL)
                   .commit();
 
@@ -808,6 +816,7 @@ namespace karabo {
             KARABO_SLOT(resetChannelCounters);
             KARABO_SLOT(eosOutput);
             KARABO_SLOT(slotUpdateSchema);
+            KARABO_SLOT(slotResetSchema);
             KARABO_SLOT(node_increment);
             KARABO_SLOT(node_reset);
             KARABO_SLOT(logSomething, Hash);
@@ -1113,10 +1122,22 @@ namespace karabo {
                 appendSchemaMaxSize(path, schema.getMaxSize(path) * 2, false);
             }
 
-            // Touch output channel (to trigger its recreation) and publish new schema
+            // Touch output channel (to trigger its recreation), add a property and publish new schema
             Schema schema2;
             OUTPUT_CHANNEL(schema2).key("output").commit();
+            INT32_ELEMENT(schema2)
+                  .key("injectedInt32Property")
+                  .displayedName("Injected Int32")
+                  .assignmentOptional()
+                  .defaultValue(-1)
+                  .reconfigurable()
+                  .commit();
             appendSchema(schema2); // will publish also the previous changes
+        }
+
+
+        void PropertyTest::slotResetSchema() {
+            updateSchema(Schema());
         }
 
 

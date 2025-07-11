@@ -95,6 +95,8 @@ namespace karabo {
 
             void slotUpdateSchema();
 
+            void slotResetSchema();
+
             void node_increment();
 
             void node_reset();
