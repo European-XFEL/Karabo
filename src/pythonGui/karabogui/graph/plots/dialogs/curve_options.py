@@ -1,17 +1,16 @@
 from pathlib import Path
 
 from qtpy import uic
-from qtpy.QtCore import QObject, Qt, Signal, Slot
+from qtpy.QtCore import QObject, Qt, Slot
 from qtpy.QtGui import QColor, QIcon, QPixmap
 from qtpy.QtWidgets import (
     QDialog, QDialogButtonBox, QListWidgetItem, QMessageBox)
 
+from karabo.native import is_equal
 from karabogui.graph.common.api import get_available_colors, rgba_to_hex
 
 
 class CurveOptionsDialog(QDialog):
-
-    requestRestore = Signal()
 
     def __init__(self, curve_options: dict | None = None,
                  parent: QObject = None):
@@ -19,9 +18,10 @@ class CurveOptionsDialog(QDialog):
         ui_file = Path(__file__).parent / "curve_options.ui"
         uic.loadUi(ui_file, self)
         self.setModal(False)
-
+        self.has_reset = False
         self._pen_color = QColor()
         self._prepare_color_combobox()
+        self._original = curve_options
         self._load_options(curve_options)
         self.proxy_list.setCurrentRow(0)
 
@@ -32,7 +32,7 @@ class CurveOptionsDialog(QDialog):
         self.buttonBox.button(QDialogButtonBox.Ok).setText("Apply")
         self.buttonBox.button(QDialogButtonBox.Cancel).setText("Discard")
         self.buttonBox.button(QDialogButtonBox.Reset).clicked.connect(
-            self._requestReset)
+            self._set_reset)
         # XXX: not fully implemented yet
         self.symbol_group_box.setVisible(False)
 
@@ -90,7 +90,7 @@ class CurveOptionsDialog(QDialog):
         self._update_item_data("pen_color", pen_color)
 
     @Slot()
-    def _requestReset(self):
+    def _set_reset(self):
         """Emit a signal to discard all the custom curve options on
         accepting the question dialog."""
         reply = QMessageBox.question(
@@ -99,8 +99,8 @@ class CurveOptionsDialog(QDialog):
             QMessageBox.Yes | QMessageBox.No)
         if reply == QMessageBox.No:
             return
-        self.requestRestore.emit()
-        self.reject()
+        self.has_reset = True
+        self.accept()
 
     def _update_item_data(self, key: str, value: str):
         """A convenient method to set the data of the current item in the
@@ -112,12 +112,17 @@ class CurveOptionsDialog(QDialog):
         data[key] = value
         item.setData(Qt.UserRole, data)
 
-    def get_curve_options(self) -> dict:
+    def get_curve_options(self) -> dict | None:
         """Return the plotting options for each plot"""
+        if self.has_reset:
+            return None
+
         curve_options = {}
         for index in range(self.proxy_list.count()):
             item = self.proxy_list.item(index)
             data = item.data(Qt.UserRole)
             curve = item.data(Qt.UserRole + 1)
             curve_options[curve] = data
-        return curve_options
+
+        changes = not is_equal(curve_options, self._original)
+        return curve_options if changes else {}

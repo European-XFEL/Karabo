@@ -1,7 +1,9 @@
 import pytest
 from qtpy.QtCore import Qt
+from qtpy.QtWidgets import QDialogButtonBox, QMessageBox
 
 from karabogui.graph.plots.api import CurveOptionsDialog
+from karabogui.testing import click_button
 
 PINK = "#fb9a99"
 ORANGE = "#ff7f00"
@@ -52,7 +54,9 @@ def test_displayed_options(dialog):
 
 
 def test_get_curve_options(dialog):
-    assert dialog.get_curve_options() == OPTIONS
+    # No changes yet
+    assert dialog.get_curve_options() == {}
+    assert dialog._original == OPTIONS
 
     # Change option values.
     dialog.proxy_list.setCurrentRow(1)
@@ -64,3 +68,12 @@ def test_get_curve_options(dialog):
 
     assert curve_options[curve2]["pen_color"] == PINK
     assert curve_options[curve2]["name"] == "New Legend"
+
+
+def test_get_curve_options_reset(dialog, mocker):
+    path = "karabogui.graph.plots.dialogs.curve_options.QMessageBox"
+    message_box = mocker.patch(path)
+    message_box.return_value = QMessageBox.Yes
+    click_button(dialog.buttonBox.button(QDialogButtonBox.Reset))
+    assert dialog.has_reset
+    assert dialog.get_curve_options() is None

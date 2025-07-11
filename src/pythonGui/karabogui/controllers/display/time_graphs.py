@@ -243,14 +243,16 @@ class BaseSeriesGraph(BaseBindingController):
             curve_type=CurveType.Trend)
 
         dialog = CurveOptionsDialog(curve_options, parent=self.widget)
-        dialog.requestRestore.connect(self.reset_curve_options)
         if dialog.exec() != QDialog.Accepted:
             return
 
         curve_options = dialog.get_curve_options()
-        if not curve_options:
+        if curve_options is None:
+            self.reset_curve_options()
             return
-        self.set_curve_options(curve_options)
+
+        if curve_options:
+            self.set_curve_options(curve_options)
 
     def set_curve_options(self, curve_options: dict):
         """Method to set the curve options on the model and plot"""
