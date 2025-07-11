@@ -814,7 +814,7 @@ namespace karabo {
 
                 string const version = karabo::util::Version::getVersion();
                 const std::string& authServer = get<std::string>("authServer");
-                Hash systemInfo("type", "brokerInformation");
+                Hash systemInfo("type", "serverInformation");
                 systemInfo.set("topic", m_topic);
                 systemInfo.set("hostname", get<std::string>("hostName"));
                 systemInfo.set("hostport", get<unsigned int>("port"));
