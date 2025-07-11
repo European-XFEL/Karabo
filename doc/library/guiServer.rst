@@ -28,7 +28,7 @@ on the type, other keys are incuded as documented below.
 
 **Message types OUT (send from the server to the client):**
 
-*brokerInformation*
+*serverInformation*
 topic (string)
 hostname (string)
 hostport (unsigned int)
