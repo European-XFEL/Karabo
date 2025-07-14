@@ -124,13 +124,8 @@ class Connector:
         """
         if self._lock is None:
             self._lock = Lock()
-        await self._lock.acquire()
-        try:
+        async with self._lock:
             yield
-        finally:
-            if self._lock is not None:
-                self._lock.release()
-            self._lock = None
 
     async def get_connection(self):
         """Retrieve or establish the singleton connection."""
