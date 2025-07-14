@@ -37,7 +37,7 @@ from karabo.middlelayer import (
     isStringSet, sanitize_init_configuration, slot)
 
 DEVICE_TIMEOUT = 3
-FILTER_KEYS = ["name", "timestamp"]
+FILTER_KEYS = ["name", "date"]
 NAME_REGEX = r"^(?!default$)[A-Za-z0-9_-]{1,30}$"
 
 
@@ -58,9 +58,9 @@ class RowSchema(Configurable):
         description="The name of the configuration",
         accessMode=AccessMode.READONLY)
 
-    timestamp = String(
+    date = String(
         defaultValue="",
-        description="The timestamp when the configuration was saved",
+        description="The date when the configuration was saved",
         accessMode=AccessMode.READONLY)
 
 
@@ -370,10 +370,10 @@ class ConfigurationManager(DeviceClientBase):
         timeout = len(deviceIds) * DEVICE_TIMEOUT
         items = await wait_for(gather(*futures), timeout=timeout)
 
-        timestamp = datetime_str_now()
+        date = datetime_str_now()
         # Let it throw here if needed!
         await self.db.save_configuration(
-            config_name, items, timestamp=timestamp)
+            config_name, items, date=date)
 
         return Hash("success", True)
 

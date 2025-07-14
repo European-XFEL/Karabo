@@ -28,7 +28,7 @@ async def test_migrate_config_db():
         assert config2["name"] == "config2"
         data = await db.get_configuration(deviceId, "config2")
         assert data["deviceId"] == deviceId
-        assert data["timestamp"] is not None
+        assert data["date"] is not None
         decoded = decodeXML(data["config"])
         assert decoded["priority"] == 2
     finally:

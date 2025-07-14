@@ -51,7 +51,7 @@ async def test_device_config_roundtrip(database):
     configurations = await database.list_configurations("device_1")
     assert len(configurations) == 1
     assert configurations[0]["name"] == "TestConfig"
-    assert configurations[0]["timestamp"] is not None
+    assert configurations[0]["date"] is not None
     assert configurations[0]["last_loaded"] == ""
 
     configurations = await database.list_configurations("device_3")

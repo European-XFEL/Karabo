@@ -296,11 +296,11 @@ class InitConfigurationDialog(QDialog):
         self._check_button_state()
 
 
-ConfigurationEntry = namedtuple("ConfigurationEntry", ["name", "timestamp"])
+ConfigurationEntry = namedtuple("ConfigurationEntry", ["name", "date"])
 
 
 class TableModel(QAbstractTableModel):
-    headers = ["Name", "Timestamp"]
+    headers = ["Name", "Date"]
 
     def __init__(self, instance_id="", parent=None):
         super().__init__(parent)
@@ -315,7 +315,7 @@ class TableModel(QAbstractTableModel):
             self.data = [
                 ConfigurationEntry(
                     name=str(item["name"]),
-                    timestamp=utc_to_local(item["timestamp"]),
+                    date=utc_to_local(item["date"]),
                 ) for item in data]
         finally:
             self.endResetModel()

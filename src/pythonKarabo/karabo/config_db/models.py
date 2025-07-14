@@ -28,7 +28,7 @@ class NamedDeviceConfig(SQLModel, table=True):
         foreign_key="NamedDeviceInstance.device_id", index=True)
     name: str
     config_data: str
-    timestamp: datetime = Field(
+    date: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc))
 
     last_loaded: datetime | None = Field(
