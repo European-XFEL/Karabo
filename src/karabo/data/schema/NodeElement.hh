@@ -29,8 +29,8 @@
 #ifndef KARABO_DATA_SCHEMA_NODE_ELEMENT_HH
 #define KARABO_DATA_SCHEMA_NODE_ELEMENT_HH
 
+#include "BaseElement.hh"
 #include "Configurator.hh"
-#include "GenericElement.hh"
 
 namespace karabo {
     namespace data {
@@ -73,12 +73,12 @@ namespace karabo {
          * and list entries for karabo::data::ListElement
          *
          */
-        class NodeElement : public GenericElement<NodeElement> {
+        class NodeElement : public BaseElement<NodeElement> {
             Schema::AssemblyRules m_parentSchemaAssemblyRules;
 
            public:
             NodeElement(Schema& expected)
-                : GenericElement<NodeElement>(expected), m_parentSchemaAssemblyRules(expected.getAssemblyRules()) {
+                : BaseElement<NodeElement>(expected), m_parentSchemaAssemblyRules(expected.getAssemblyRules()) {
                 this->m_node->setValue(Hash()); // A node value always is a Hash
             }
 

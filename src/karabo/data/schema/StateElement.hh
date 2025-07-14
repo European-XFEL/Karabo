@@ -25,7 +25,7 @@
 #ifndef KARABO_SCHEMA_STATEELEMENT_H
 #define KARABO_SCHEMA_STATEELEMENT_H
 
-#include "GenericElement.hh"
+#include "BaseElement.hh"
 
 namespace karabo {
     namespace data {
@@ -37,7 +37,7 @@ namespace karabo {
          * @class StateElement
          * @brief The StateElement represents a leaf and needs to be of type State
          */
-        class StateElement : public GenericElement<StateElement> {
+        class StateElement : public BaseElement<StateElement> {
            public:
             StateElement(Schema& expected);
 

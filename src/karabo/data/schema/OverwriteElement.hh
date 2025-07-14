@@ -478,7 +478,7 @@ namespace karabo {
             /**
              * The <b>commit</b> method injects the element to the expected parameters list. If not called
              * the element is not usable. This must be called after the element is fully defined.
-             * @return reference to the GenericElement
+             * @return reference to the BaseElement
              */
             void commit();
 

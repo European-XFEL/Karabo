@@ -16,7 +16,7 @@
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#include "GenericElement.hh"
+#include "BaseElement.hh"
 
 #include <string>
 

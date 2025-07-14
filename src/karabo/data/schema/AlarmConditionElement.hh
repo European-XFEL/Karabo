@@ -25,7 +25,7 @@
 #ifndef KARABO_DATA_SCHEMA_ALARMCONDITIONELEMENT_HH
 #define KARABO_DATA_SCHEMA_ALARMCONDITIONELEMENT_HH
 
-#include "GenericElement.hh"
+#include "BaseElement.hh"
 
 namespace karabo {
     namespace data {
@@ -36,7 +36,7 @@ namespace karabo {
         /**
          * The AlarmConditionElement represents a leaf and needs to be of type AlarmCondition
          */
-        class AlarmConditionElement : public GenericElement<AlarmConditionElement> {
+        class AlarmConditionElement : public BaseElement<AlarmConditionElement> {
            public:
             AlarmConditionElement(Schema& expected);
 

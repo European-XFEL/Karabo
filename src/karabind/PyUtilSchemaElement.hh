@@ -26,8 +26,8 @@
 
 #include "PyTypes.hh"
 #include "Wrapper.hh"
+#include "karabo/data/schema/BaseElement.hh"
 #include "karabo/data/schema/ByteArrayElement.hh"
-#include "karabo/data/schema/GenericElement.hh"
 #include "karabo/data/schema/LeafElement.hh"
 #include "karabo/data/schema/NodeElement.hh"
 #include "karabo/data/schema/OverwriteElement.hh"

@@ -26,8 +26,7 @@ namespace karabo {
     namespace data {
 
 
-        AlarmConditionElement::AlarmConditionElement(Schema& expected)
-            : GenericElement<AlarmConditionElement>(expected) {}
+        AlarmConditionElement::AlarmConditionElement(Schema& expected) : BaseElement<AlarmConditionElement>(expected) {}
 
 
         AlarmConditionElement& AlarmConditionElement::initialValue(const AlarmCondition& a) {

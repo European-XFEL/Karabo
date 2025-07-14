@@ -29,7 +29,7 @@
 #include <utility>
 #include <vector>
 
-#include "GenericElement.hh"
+#include "BaseElement.hh"
 #include "LeafElement.hh"
 #include "OverwriteElement.hh"
 #include "Validator.hh"
@@ -110,7 +110,7 @@ namespace karabo {
          * Hash entries in the vector should look like. The Schema::Validator is aware of
          * these specifications and will perform validation on these elements.
          */
-        class TableElement : public GenericElement<TableElement> {
+        class TableElement : public BaseElement<TableElement> {
             friend class TableDefaultValue<TableElement>;
 
             Schema m_nodeSchema;
@@ -119,7 +119,7 @@ namespace karabo {
             Schema::AssemblyRules m_parentSchemaAssemblyRules;
 
            public:
-            TableElement(Schema& expected) : GenericElement<TableElement>(expected) {
+            TableElement(Schema& expected) : BaseElement<TableElement>(expected) {
                 m_defaultValue.setElement(this);
                 m_readOnlySpecific.setElement(this);
                 m_parentSchemaAssemblyRules = expected.getAssemblyRules();

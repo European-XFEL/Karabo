@@ -27,7 +27,7 @@
 #ifndef KARABO_DATA_SCHEMA_LEAF_ELEMENT_HH
 #define KARABO_DATA_SCHEMA_LEAF_ELEMENT_HH
 
-#include "GenericElement.hh"
+#include "BaseElement.hh"
 #include "karabo/data/types/State.hh"
 
 namespace karabo {
@@ -43,13 +43,13 @@ namespace karabo {
          * The LeafElement represents a leaf and can be of any (supported) type
          */
         template <class Derived, typename ValueType>
-        class LeafElement : public GenericElement<Derived> {
+        class LeafElement : public BaseElement<Derived> {
             DefaultValue<Derived, ValueType> m_defaultValue; // the default value type depends on the type of element
             ReadOnlySpecific<Derived, ValueType> m_readOnlySpecific;
 
 
            public:
-            LeafElement(Schema& expected) : GenericElement<Derived>(expected) {
+            LeafElement(Schema& expected) : BaseElement<Derived>(expected) {
                 m_defaultValue.setElement(static_cast<Derived*>(this));
                 m_readOnlySpecific.setElement(static_cast<Derived*>(this));
             }
