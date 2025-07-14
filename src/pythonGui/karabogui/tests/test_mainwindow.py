@@ -38,10 +38,9 @@ def test_mainwindow(gui_app, mocker, subtests):
         assert mw is not None
 
         with subtests.test("User Session Button"):
-
             krb_access.is_authenticated.return_value = True
-            data = {"topic": "foo", "hostname": "exfel", "hostport": 44444}
-            mw.update_server_connection(data=data)
+            krb_access.SERVER_READ_ONLY = False
+            mw.onUpdateAccessLevel()
             assert mw.tbUserSession.isVisible()
 
             mw.update_server_connection(data=None)
@@ -50,7 +49,8 @@ def test_mainwindow(gui_app, mocker, subtests):
             assert mw.tbUserSession.toolTip() == "User Session Info"
 
             krb_access.is_authenticated.return_value = False
-            mw.update_server_connection(data=data)
+            krb_access.SERVER_READ_ONLY = True
+            mw.onUpdateAccessLevel()
             assert not mw.tbUserSession.isVisible()
 
     with subtests.test("Test project conflict event in main window"):
@@ -119,3 +119,8 @@ def test_mainwindow(gui_app, mocker, subtests):
         mw.onUpdateAccessLevel()
         access_levels = [act.text() for act in access_menu.actions()]
         assert access_levels == ['Expert', 'Operator', 'Observer']
+
+        # The user session button should not be visible for Observer.
+        krb_access.GLOBAL_ACCESS_LEVEL = AccessLevel.OBSERVER
+        mw.onUpdateAccessLevel()
+        assert not mw.tbUserSession.isVisible()

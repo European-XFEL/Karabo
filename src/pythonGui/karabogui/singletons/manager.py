@@ -410,11 +410,11 @@ class Manager(QObject):
         """
         get_config()['username'] = info["username"]
         read_only = info.get("readOnly", False)
+        krb_access.set_read_only_mode(read_only)
         if read_only:
             access = AccessLevel.OBSERVER
         else:
             access = AccessLevel(info["accessLevel"])
-
         # Reset the notice of session
         if krb_access.SESSION_END_NOTICE:
             krb_access.SESSION_END_NOTICE = False

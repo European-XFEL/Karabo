@@ -667,6 +667,34 @@ def test_handle_login_information(mocker):
         assert krb_access.HIGHEST_ACCESS_LEVEL == AccessLevel.EXPERT
 
 
+def test_handle_login_information_set_read_only(mocker):
+    network = mocker.Mock()
+    mediator = Mediator()
+    # To avoid the influence of other tests, resetting SERVER_READ_ONLY
+    krb_access.SERVER_READ_ONLY = None
+    with singletons(network=network, mediator=mediator):
+        manager = Manager()
+        assert krb_access.SERVER_READ_ONLY is None
+        manager.handle_loginInformation(
+            accessLevel=AccessLevel.EXPERT.value, username="karabo",
+            readOnly=False)
+        # Make sure it is False and not None
+        assert krb_access.SERVER_READ_ONLY is False
+
+        # read-only state is changed only once.
+        manager.handle_loginInformation(
+            accessLevel=AccessLevel.OBSERVER.value, username="karabo",
+            readOnly=True)
+        assert not krb_access.SERVER_READ_ONLY
+
+        # Observer set the read-only state
+        krb_access.SERVER_READ_ONLY = None
+        manager.handle_loginInformation(
+            accessLevel=AccessLevel.OBSERVER.value, username="karabo",
+            readOnly=True)
+        assert krb_access.SERVER_READ_ONLY
+
+
 def test_handle_property_history(gui_app, mocker):
     topology, device_proxy = mocker.Mock(), mocker.Mock()
     with singletons(topology=topology):
