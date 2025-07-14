@@ -38,6 +38,7 @@ TEMPORARY_SESSION_USER = None
 TEMPORARY_SESSION_WARNING = False
 SESSION_END_NOTICE = False
 
+SERVER_READ_ONLY = None
 
 ACCESS_LEVEL_MAP = {
     "observer": 0,
@@ -92,13 +93,20 @@ def is_temporary_session() -> bool:
 def reset_login():
     """Reset the global login information"""
     global ONE_TIME_TOKEN, TEMPORARY_SESSION_WARNING
-    global TEMPORARY_SESSION_USER, SESSION_END_NOTICE
+    global TEMPORARY_SESSION_USER, SESSION_END_NOTICE, SERVER_READ_ONLY
     ONE_TIME_TOKEN = None
     TEMPORARY_SESSION_USER = None
     TEMPORARY_SESSION_WARNING = False
     SESSION_END_NOTICE = False
+    SERVER_READ_ONLY = None
 
 
 def get_access_level_for_role(role: AccessRole) -> str:
     """Get the access level needed for the AccessRole. """
     return ACCESS_LEVEL_ROLES[role].name
+
+
+def set_read_only_mode(value: bool):
+    global SERVER_READ_ONLY
+    if SERVER_READ_ONLY is None:
+        SERVER_READ_ONLY = value

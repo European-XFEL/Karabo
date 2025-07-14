@@ -336,7 +336,6 @@ class MainWindow(QMainWindow):
     def update_server_connection(self, data=None):
         """Update the status bar with our broker connection information
         """
-        allow_temporary_session = krb_access.is_authenticated()
         if data is not None:
             topic = data["topic"]
             # Store this information in the config singleton!
@@ -359,8 +358,7 @@ class MainWindow(QMainWindow):
                 logger.info(text)
         else:
             self.serverInfo.setText("")
-            allow_temporary_session = False
-        self.tbUserSession.setVisible(allow_temporary_session)
+            self.tbUserSession.setVisible(False)
 
     # --------------------------------------
     # Qt virtual methods
@@ -432,6 +430,9 @@ class MainWindow(QMainWindow):
         checked_action = self.access_level_actions.get(global_access_level)
         if checked_action is not None:
             checked_action.setChecked(True)
+        # SERVER_READ_ONLY can be None for non-authenticated gui server.
+        allow_user_session = krb_access.SERVER_READ_ONLY is False
+        self.tbUserSession.setVisible(allow_user_session)
 
     def setSessionButton(self, icon: QIcon, tooltip: str) -> None:
         """Set the icon and tooltip for the Temporary Session button"""
