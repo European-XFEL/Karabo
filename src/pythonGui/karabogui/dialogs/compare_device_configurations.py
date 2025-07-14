@@ -36,14 +36,14 @@ def extract_configuration(binding):
 
 
 class CompareDeviceConfigurationsDialog(QDialog):
-    """ Dilaog to show the configurations of two devices, side by side."""
+    """ Dialog to show the configurations of two devices, side by side."""
     def __init__(self, reference_proxy: ProjectDeviceProxy | DeviceProxy,
                  target_proxy: ProjectDeviceProxy | DeviceProxy,
                  parent: QObject = None):
         super().__init__(parent=parent)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setModal(False)
-        ui_file = get_dialog_ui("compare_configuarations.ui")
+        ui_file = get_dialog_ui("compare_configurations.ui")
         uic.loadUi(ui_file, self)
         self.reference_device.setText(reference_proxy.device_id)
         self.target_device.setText(target_proxy.device_id)
@@ -79,8 +79,8 @@ class CompareDeviceConfigurationsDialog(QDialog):
         self.target_reconfigurable = reconfigurable_config
 
     def _load_differences(self) -> None:
-        """Store the difference between the configuration- full
-        configurations and reconfigurable configurations seperately."""
+        """Store the difference between the configuration - full
+        configurations and reconfigurable configurations separately."""
         reference_all_diff, target_all_diff = get_config_changes(
             self.reference_all, self.target_all, False)
         self.reference_all_diff = create_html_hash(reference_all_diff)
@@ -175,7 +175,8 @@ class DeviceSelectorDialog(QDialog):
                 matching_devices.append(deviceId)
 
         if not matching_devices:
-            self.info_label.setText("No devices with same classId are online")
+            self.info_label.setText("No devices with the same classId are "
+                                    "online")
             return
 
         self.devices_combobox.addItems(matching_devices)
