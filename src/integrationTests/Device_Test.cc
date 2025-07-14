@@ -360,6 +360,13 @@ class TestDeviceBadInit : public karabo::core::Device {
               .options(std::vector<std::string>({"throw", "delay"}))
               .commit();
 
+        STRING_ELEMENT(expected)
+              .key("callInPredestruction")
+              .description("Instance and slot (dot separated) to be called in preDestruction")
+              .assignmentOptional()
+              .defaultValue(std::string())
+              .commit();
+
         UINT32_ELEMENT(expected).key("delay").assignmentOptional().defaultValue(10u).commit();
     }
 
@@ -389,6 +396,17 @@ class TestDeviceBadInit : public karabo::core::Device {
 
     void preDestruction() override {
         set("status", "preDestruction called");
+
+        const std::string toCall(get<std::string>("callInPredestruction"));
+        if (toCall.empty()) return;
+
+        const size_t dotPos = toCall.find('.');
+        if (dotPos != std::string::npos) {
+            const std::string instanceId(toCall.substr(0, dotPos));
+            const std::string slot(toCall.substr(dotPos + 1));
+
+            request(instanceId, slot).timeout(5000).receive();
+        }
     }
 };
 
@@ -1745,24 +1763,16 @@ void Device_Test::testBadInit() {
     requestor = m_deviceServer
                       ->request("", "slotStartDevice",
                                 Hash("classId", "TestDeviceBadInit", "deviceId", devId, "configuration",
-                                     Hash("initProblem", "delay", "delay", delayInSec)))
+                                     Hash("initProblem", "delay", "delay", delayInSec, "callInPredestruction",
+                                          m_deviceServer->getInstanceId() + ".onPredestruction")))
                       .timeout(2000); // starting a device takes at least one second...
     // Although initialization sleeps 'delayInSec', no timeout within the 2 seconds we allow for that
     ok = false;
     CPPUNIT_ASSERT_NO_THROW(requestor.receive(ok, dummy));
     CPPUNIT_ASSERT(ok);
 
-    auto statMutex = std::make_shared<std::mutex>();
-    auto devStatus = std::make_shared<std::string>();
-    m_deviceClient->registerDeviceMonitor(
-          devId, [devId, statMutex, devStatus](const std::string& deviceId, const Hash& updates) {
-              if (updates.has("deviceId")) {
-                  return; // initial config from connecting, not of interest
-              } else if (devId == deviceId && updates.has("status")) {
-                  std::lock_guard<std::mutex> lock(*statMutex);
-                  *devStatus = updates.get<std::string>("status");
-              }
-          });
+    auto onPreDestructionCalled = std::make_shared<bool>(false); // shared_ptr, avoids lifetime issues after test
+    m_deviceServer->registerSlot([onPreDestructionCalled]() { *onPreDestructionCalled = true; }, "onPredestruction");
 
     // After instantiation, state switches to INIT, as soon as initialize method runs
     waitOk = waitForCondition(
@@ -1776,20 +1786,13 @@ void Device_Test::testBadInit() {
 
     // We kill the device that is still initializing: It will not die immediately (only once initialization is done),
     // but preDestruction is called.
-    devStatus->clear(); // to be sure in case something triggered a status update before
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(devId, "slotKillDevice"));
 
-    // Now we see from our handler that "status" is updated and published, so we can test for its content
-    waitOk = waitForCondition(
-          [&devStatus, statMutex]() {
-              std::lock_guard<std::mutex> lock(*statMutex);
-              return !devStatus->empty();
-          },
-          (delayInSec + 2) * 1000); // long enough that initialization is done (though should come earlier)
-
-    CPPUNIT_ASSERT_EQUAL(std::string("preDestruction called"), *devStatus);
-
-    m_deviceClient->unregisterDeviceMonitor(devId); // Clean again
+    // Now we see from our handler that onPreDestruction was called
+    waitOk = waitForCondition([onPreDestructionCalled]() { return (*onPreDestructionCalled); },
+                              // wait long enough that initialization is done (though should come earlier)
+                              (delayInSec + 2) * 1000);
+    CPPUNIT_ASSERT(*onPreDestructionCalled);
 
     // Now wait until device is gone - will take until initialize method has finished!
     std::vector<std::string> devs;
