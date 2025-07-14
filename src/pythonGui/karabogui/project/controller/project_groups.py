@@ -385,6 +385,7 @@ def _load_scene(project_controller, parent=None):
     project = project_controller.model
     # Read SceneModel
     scene = read_scene(fn)
+    scene.assure_svg_data()
     scene.simple_name = simple_name
     scene.reset_uuid()
     scene.modified = True
