@@ -97,7 +97,7 @@ class ConfigurationDatabase:
                 {"name": config.name,
                  "serverId": device.server_id,
                  "classId": device.class_id,
-                 "timepoint": datetime_to_str(config.timestamp),
+                 "timestamp": datetime_to_str(config.timestamp),
                  "last_loaded": datetime_to_str(config.last_loaded)}
                 for config in configurations]
 
