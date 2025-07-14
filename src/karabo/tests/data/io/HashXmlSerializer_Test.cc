@@ -30,7 +30,7 @@
 
 #include "karabo/data/io/BinarySerializer.hh"
 #include "karabo/data/io/HashXmlSerializer.hh"
-#include "karabo/data/schema/GenericElement.hh"
+#include "karabo/data/schema/BaseElement.hh"
 #include "karabo/data/schema/SimpleElement.hh"
 
 CPPUNIT_TEST_SUITE_REGISTRATION(HashXmlSerializer_Test);

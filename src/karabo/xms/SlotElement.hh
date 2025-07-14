@@ -26,7 +26,7 @@
 #ifndef KARABO_UTIL_SLOTELEMENT_HH
 #define KARABO_UTIL_SLOTELEMENT_HH
 
-#include "karabo/data/schema/GenericElement.hh"
+#include "karabo/data/schema/BaseElement.hh"
 #include "karabo/data/types/Exception.hh"
 #include "karabo/data/types/Schema.hh"
 #include "karabo/data/types/State.hh"
@@ -38,12 +38,12 @@ namespace karabo {
     namespace xms {
 
         template <class Derived>
-        class SlotElementBase : public karabo::data::GenericElement<Derived> {
+        class SlotElementBase : public karabo::data::BaseElement<Derived> {
            protected:
             karabo::data::Hash m_child;
 
            public:
-            SlotElementBase(karabo::data::Schema& expected) : karabo::data::GenericElement<Derived>(expected) {
+            SlotElementBase(karabo::data::Schema& expected) : karabo::data::BaseElement<Derived>(expected) {
                 using namespace karabo::data;
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, WRITE);
 #if __GNUC__ >= 12
@@ -129,7 +129,7 @@ namespace karabo {
                           << "' contains a '_'. This might lead to unexpected behaviour since the `_` is internally "
                              "used for slots inside a nodes";
                 }
-                return karabo::data::GenericElement<Derived>::key(name);
+                return karabo::data::BaseElement<Derived>::key(name);
             }
         };
 

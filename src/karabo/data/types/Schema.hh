@@ -149,11 +149,11 @@ namespace karabo {
 #define KARABO_SCHEMA_DISPLAY_TYPE_INPUT_CHANNEL "InputChannel"
 #define KARABO_SCHEMA_DISPLAY_TYPE_STATE "State"
 
-            // Grant friendship to the GenericElement
-            // GenericElement is the base class for all schema build-up helper classes
+            // Grant friendship to the BaseElement
+            // BaseElement is the base class for all schema build-up helper classes
             // It will use the private addElement function
             template <class T>
-            friend class GenericElement;
+            friend class BaseElement;
 
             // Container
             Hash m_hash;

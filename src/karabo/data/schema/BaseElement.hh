@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * File:   GenericElement.hh
+ * File:   BaseElement.hh
  * Author: <wp76@xfel.eu>
  *
  * Created on July 1, 2011, 11:12 AM
@@ -24,8 +24,8 @@
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#ifndef KARABO_DATA_SCHEMA_GENERIC_ELEMENT_HH
-#define KARABO_DATA_SCHEMA_GENERIC_ELEMENT_HH
+#ifndef KARABO_DATA_SCHEMA_BASE_ELEMENT_HH
+#define KARABO_DATA_SCHEMA_BASE_ELEMENT_HH
 
 #include "OverwriteElement.hh"
 #include "karabo/data/types/Schema.hh"
@@ -44,21 +44,21 @@ namespace karabo {
         void checkPropertyPath(const std::string& name);
 
         /**
-         * The GenericElement class is a base class for various element types: simple, vector, choice, list
+         * The BaseElement class is a base class for various element types: simple, vector, choice, list
          * and single.
          *
          */
         template <class Derived>
-        class GenericElement {
+        class BaseElement {
            protected:
             Schema* m_schema;
             std::shared_ptr<Hash::Node> m_node;
 
            public:
-            GenericElement(Schema& expected)
+            BaseElement(Schema& expected)
                 : m_schema(&expected), m_node(std::shared_ptr<Hash::Node>(new Hash::Node(std::string(), 0))) {}
 
-            virtual ~GenericElement() {}
+            virtual ~BaseElement() {}
 
             /**
              * The <b>key</b> method serves for setting up a unique name for the element.

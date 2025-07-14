@@ -26,7 +26,7 @@ namespace karabo {
     namespace data {
 
 
-        StateElement::StateElement(Schema& expected) : GenericElement<StateElement>(expected) {
+        StateElement::StateElement(Schema& expected) : BaseElement<StateElement>(expected) {
             // if no initial value is set the state will be unknown
             m_node->setAttribute(KARABO_SCHEMA_DEFAULT_VALUE, State::UNKNOWN.name());
         }

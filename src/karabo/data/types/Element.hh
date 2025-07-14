@@ -52,7 +52,7 @@ namespace karabo {
 #define KARABO_HASH_CLASS_ID "__classId"
 
         template <class T>
-        class GenericElement;
+        class BaseElement;
 
         /**
          * @class Element
@@ -65,9 +65,9 @@ namespace karabo {
             template <typename T, typename U>
             friend class OrderedMap;
 
-            // Grant friendship to GenericElement (needs to setKey)
+            // Grant friendship to BaseElement (needs to setKey)
             template <class T>
-            friend class GenericElement;
+            friend class BaseElement;
 
             // Members
             KeyType m_key;
