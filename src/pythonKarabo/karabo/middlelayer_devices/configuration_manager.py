@@ -37,7 +37,7 @@ from karabo.middlelayer import (
     isStringSet, sanitize_init_configuration, slot)
 
 DEVICE_TIMEOUT = 3
-FILTER_KEYS = ["name", "timepoint"]
+FILTER_KEYS = ["name", "timestamp"]
 NAME_REGEX = r"^(?!default$)[A-Za-z0-9_-]{1,30}$"
 
 
@@ -58,9 +58,9 @@ class RowSchema(Configurable):
         description="The name of the configuration",
         accessMode=AccessMode.READONLY)
 
-    timepoint = String(
+    timestamp = String(
         defaultValue="",
-        description="The timepoint when the configuration was saved",
+        description="The timestamp when the configuration was saved",
         accessMode=AccessMode.READONLY)
 
 

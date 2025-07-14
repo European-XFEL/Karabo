@@ -315,7 +315,7 @@ class TableModel(QAbstractTableModel):
             self.data = [
                 ConfigurationEntry(
                     name=str(item["name"]),
-                    timestamp=utc_to_local(item["timepoint"]),
+                    timestamp=utc_to_local(item["timestamp"]),
                 ) for item in data]
         finally:
             self.endResetModel()
