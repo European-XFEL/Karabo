@@ -116,7 +116,7 @@ async def run(filename: Path | None = None):
         print(text)
         await new_db.save_configuration(
             config_name, configs=config_data,
-            timestamp=timepoint)
+            date=timepoint)
 
 
 def main():

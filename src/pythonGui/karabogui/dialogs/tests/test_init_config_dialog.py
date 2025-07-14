@@ -32,7 +32,7 @@ def get_config_items():
     for i in range(4):
         config = {}
         config["name"] = f"default{i}"
-        config["timestamp"] = Timestamp().toLocal(" ", "seconds")
+        config["date"] = Timestamp().toLocal(" ", "seconds")
         items.append(config)
     return items
 

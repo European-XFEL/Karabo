@@ -97,7 +97,7 @@ class ConfigurationDatabase:
                 {"name": config.name,
                  "serverId": device.server_id,
                  "classId": device.class_id,
-                 "timestamp": datetime_to_str(config.timestamp),
+                 "date": datetime_to_str(config.date),
                  "last_loaded": datetime_to_str(config.last_loaded)}
                 for config in configurations]
 
@@ -185,19 +185,19 @@ class ConfigurationDatabase:
                 "deviceId": device_id,
                 "classId": device.class_id,
                 "serverId": device.server_id,
-                "timestamp": datetime_to_str(config.timestamp),
+                "date": datetime_to_str(config.date),
                 "config": config.config_data}
 
     async def save_configuration(
             self, name: str, configs: list[dict],
-            timestamp: str | None = None):
+            date: str | None = None):
         """Saves one or more device configurations, ensuring the Device exists.
 
         :param name: The configuration(s) name.
         :param configs: A list of dictionaries with keys:
                         - "deviceId"
                         - "config"
-        :param timestamp: Optional ISO8601 timestamp;
+        :param date: Optional ISO8601 date;
                           defaults to current UTC time.
         """
         if len(name) >= 80:
@@ -211,8 +211,8 @@ class ConfigurationDatabase:
 
         async with self.session() as session:
             try:
-                timestamp = (datetime_from_str(timestamp) if timestamp
-                             is not None else datetime_now())
+                date = (datetime_from_str(date) if date
+                        is not None else datetime_now())
 
                 for config in configs:
                     device_id = config["deviceId"]
@@ -239,7 +239,7 @@ class ConfigurationDatabase:
                         .values(
                             device_id=device_id,
                             name=name,
-                            timestamp=timestamp,
+                            date=date,
                             config_data=config["config"]
                         ).prefix_with("OR REPLACE"))
                     await session.exec(stmt_config)
