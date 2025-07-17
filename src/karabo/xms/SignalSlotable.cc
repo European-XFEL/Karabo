@@ -207,11 +207,9 @@ namespace karabo {
             header->set("MQTimestamp", getEpochMillis());
             if (instanceId == "*") {
                 m_connection->sendBroadcast(slot, header, body);
-            } else if (!forceViaBroker && tryToCallDirectly(instanceId, slot, header, body)) {
-                return;
+            } else if (forceViaBroker || !tryToCallDirectly(instanceId, slot, header, body)) {
+                m_connection->sendOneToOne(instanceId, slot, header, body);
             }
-
-            m_connection->sendOneToOne(instanceId, slot, header, body);
         }
 
 
