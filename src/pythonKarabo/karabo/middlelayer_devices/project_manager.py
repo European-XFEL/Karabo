@@ -144,12 +144,12 @@ class ProjectManager(Device):
 
         name = info.get('name', default='')
         domain = info.get('domain')
-        uuid = [info.get('uuid')]
+        items = [{"uuid": info.get('uuid'), "item_type": "scene"}]
 
         payload = Hash('success', False)
         payload.set('name', name)
         async with self.db_handle as db_session:
-            items = await db_session.load_item(domain, uuid)
+            items = await db_session.load_item(domain, items)
             for item in items:
                 xml = item['xml']
                 item_type = etree.fromstring(xml).get('item_type')
