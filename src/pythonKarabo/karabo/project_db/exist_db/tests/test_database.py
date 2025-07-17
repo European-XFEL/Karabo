@@ -90,7 +90,10 @@ async def test_project_interface(database, subtests):
                 await db.save_item('LOCAL', testproject, xml_rep)
 
         with subtests.test(msg='load_items'):
-            items = [testproject, testproject2]
+            items = [{"uuid": testproject2, "item_type": "nocare"},
+                     {"uuid": testproject, "item_type": "nocare"}]
+            item_uuids = [it["uuid"] for it in items]
+
             res = await db.load_item('LOCAL', items)
             for r in res:
                 itemxml = make_xml_if_needed(r["xml"])
@@ -99,7 +102,7 @@ async def test_project_interface(database, subtests):
                 # the original XML as it doesn't map to any item field and
                 # is ignored. The previous assert for itemxml.text == 'foo'
                 # has thus been replaced by a UUID check
-                assert itemxml.attrib['uuid'] in items
+                assert itemxml.attrib['uuid'] in item_uuids
 
         with subtests.test(msg='test_list_items'):
             await create_hierarchy(db)
@@ -154,7 +157,8 @@ async def test_project_interface(database, subtests):
                 db.dbhandle.load(xml.encode('utf-8'), path)
 
             # Read it back, no revision given
-            res = await db.load_item('LOCAL', [versioned_uuid])
+            items = [{"uuid": versioned_uuid, "item_type": "notimportant"}]
+            res = await db.load_item('LOCAL', items)
             assert len(res) == 1
             itemxml = make_xml_if_needed(res[0]['xml'])
             assert int(itemxml.get('revision')) == MAX_REV
@@ -167,7 +171,8 @@ async def test_project_interface(database, subtests):
             await db.save_item('LOCAL', versioned_uuid, xml_rep)
 
             # Make sure there's a revision of 0 (auto-added)
-            res = await db.load_item('LOCAL', [versioned_uuid])
+            items = [{"uuid": versioned_uuid, "item_type": "notimportant"}]
+            res = await db.load_item('LOCAL', items)
             itemxml = make_xml_if_needed(res[0]['xml'])
             assert itemxml.get('revision') == '0'
 

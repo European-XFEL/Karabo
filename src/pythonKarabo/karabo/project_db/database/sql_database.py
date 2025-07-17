@@ -183,35 +183,34 @@ class SQLDatabase(DatabaseBase):
 
     async def _emit_project_item(self, uuid: str) -> dict[str, any] | None:
         """Internal emitter method to load a project item"""
-        item = None
         project = await self._get_project_from_uuid(uuid)
-        if project:
-            subprojects, scenes, macros, servers = await gather(
-                self._get_subprojects_of_project(project),
-                self._get_scenes_of_project(project),
-                self._get_macros_of_project(project),
-                self._get_servers_of_project(project)
-            )
-            await self._register_project_load(project)
-            item = {
-                "uuid": uuid,
-                "xml": emit_project_xml(
-                    project, scenes, macros, servers, subprojects)}
+        if not project:
+            raise ProjectDBError(f"Project item with UUID {uuid} not found.")
+        subprojects, scenes, macros, servers = await gather(
+            self._get_subprojects_of_project(project),
+            self._get_scenes_of_project(project),
+            self._get_macros_of_project(project),
+            self._get_servers_of_project(project)
+        )
+        await self._register_project_load(project)
+        item = {
+            "uuid": uuid,
+            "xml": emit_project_xml(
+                project, scenes, macros, servers, subprojects)}
         return item
 
     async def _emit_scene_item(self, uuid: str) -> dict[str, any] | None:
-        item = None
         scene = await self._get_scene_from_uuid(uuid)
-        if scene:
-            item = {
-                "uuid": uuid,
+        if not scene:
+            raise ProjectDBError(f"Scene item with UUID {uuid} not found.")
+        item = {"uuid": uuid,
                 "xml": emit_scene_xml(scene)}
         return item
 
     async def _emit_macro_item(self, uuid: str) -> dict[str, any] | None:
         macro = await self._get_macro_from_uuid(uuid)
         if not macro:
-            return
+            raise ProjectDBError(f"Macr item with UUID {uuid} not found.")
         item = {"uuid": uuid,
                 "xml": emit_macro_xml(macro)}
         return item
@@ -219,7 +218,7 @@ class SQLDatabase(DatabaseBase):
     async def _emit_server_item(self, uuid: str) -> dict[str, any] | None:
         server = await self._get_server_from_uuid(uuid)
         if not server:
-            return
+            raise ProjectDBError(f"Server item with UUID {uuid} not found.")
         instances = await self._get_devices_of_server(server)
         item = {"uuid": uuid,
                 "xml": emit_server_xml(server, instances)}
@@ -228,7 +227,7 @@ class SQLDatabase(DatabaseBase):
     async def _emit_device_item(self, uuid: str) -> dict[str, any] | None:
         instance = await self._get_device_from_uuid(uuid)
         if not instance:
-            return
+            raise ProjectDBError(f"Device item with UUID {uuid} not found.")
         configs = await self._get_configs_of_device(instance)
         item = {"uuid": uuid,
                 "xml": emit_device_xml(instance, configs)}
@@ -237,31 +236,13 @@ class SQLDatabase(DatabaseBase):
     async def _emit_config_item(self, uuid: str) -> dict[str, any] | None:
         config = await self._get_config_from_uuid(uuid)
         if not config:
-            return
+            raise ProjectDBError(f"Config item with UUID {uuid} not found.")
         item = {"uuid": uuid,
                 "xml": emit_config_xml(config)}
         return item
 
-    async def _emit_unknown(self, item_uuid: str):
-        item = await self._emit_project_item(item_uuid)
-        if item is None:
-            item = await self._emit_scene_item(item_uuid)
-        if item is None:
-            item = await self._emit_macro_item(item_uuid)
-        if item is None:
-            item = await self._emit_server_item(item_uuid)
-        if item is None:
-            item = await self._emit_device_item(item_uuid)
-        if item is None:
-            item = await self._emit_config_item(item_uuid)
-        if item is None:
-            raise ProjectDBError(
-                f"Item with uuid {item_uuid} not found.")
-        return item
-
     async def load_item(
-            self, domain: str, items_uuids: list[str],
-            item_type: str | None = None) -> list[dict[str, any]]:
+            self, domain: str, items: list[dict]) -> list[dict[str, any]]:
         """
         Loads a list of items of a specified type from a given domain.
 
@@ -279,15 +260,8 @@ class SQLDatabase(DatabaseBase):
             "device_instance": self._emit_device_item,
             "device_config": self._emit_config_item,
         }
-        if item_type is not None:
-            loader_func = reader_map.get(item_type, None)
-            if loader_func is None:
-                raise ProjectDBError(f'Unrecognized item_type "{item_type}"')
-            futures = [loader_func(uuid) for uuid in items_uuids]
-        else:
-            # Try to resolve each UUID using exhaustive strategy
-            futures = [self._emit_unknown(uuid) for uuid in items_uuids]
-
+        futures = [reader_map[item["item_type"]](item["uuid"])
+                   for item in items]
         loaded_items = await gather(*futures)
         return loaded_items
 
@@ -804,16 +778,6 @@ class SQLDatabase(DatabaseBase):
             select(DeviceConfig).where(
                 DeviceConfig.device_instance_id == instance.id),
             order_by=DeviceConfig.order)
-
-    async def _get_project_from_id(self, id: int):
-        project = await self._execute_first(
-            select(Project).where(Project.id == id))
-        return project
-
-    async def _get_server_from_id(self, id: int):
-        server = await self._execute_first(
-            select(DeviceServer).where(DeviceServer.id == id))
-        return server
 
     # region UUID
 

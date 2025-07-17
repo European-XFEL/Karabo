@@ -156,17 +156,19 @@ class ExistDatabase(DatabaseBase):
         return PROJECT_DB_SCHEMA
 
 
-    async def load_item(self, domain, items):
+    async def load_item(self, domain, items: list[dict]):
         """
         Load an item or items from `domain`
         :param domain: a domain to load from
-        :param item: the name of the item(s) to load
+        :param items: the name of the item(s) to load
         :return:
         """
         # path to where the possible entries are located
         path = f"{self.root}/{domain}"
 
         assert isinstance(items, (list, tuple))
+        # A list of dicts
+        items = [item["uuid"] for item in items]
 
         results = []
         n_items = len(items)
