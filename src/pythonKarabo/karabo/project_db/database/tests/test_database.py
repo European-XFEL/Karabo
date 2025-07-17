@@ -64,7 +64,9 @@ async def test_project_interface(database, subtests):
 
             await db.save_item('LOCAL', testproject2, xml_rep)
 
-            res = await db.load_item("LOCAL", [testproject2])
+            res = await db.load_item(
+                "LOCAL", [{"uuid": testproject2,
+                           "item_type": "device_server"}])
             assert res[0]['uuid'] == testproject2
             doctree = etree.fromstring(res[0]['xml'])
             assert doctree.get('item_type') == "device_server"
@@ -91,7 +93,7 @@ async def test_project_interface(database, subtests):
                                    testproject, xml_rep)
 
         with subtests.test(msg='load_items'):
-            items = [testproject2]
+            items = [{"uuid": testproject2, "item_type": "device_server"}]
             res = await db.load_item('LOCAL', items)
             for r in res:
                 itemxml = make_xml_if_needed(r["xml"])
@@ -100,7 +102,7 @@ async def test_project_interface(database, subtests):
                 # the original XML as it doesn't map to any item field and
                 # is ignored. The previous assert for itemxml.text == 'foo'
                 # has thus been replaced by a UUID check
-                assert itemxml.attrib['uuid'] in items
+                assert itemxml.attrib['uuid'] == testproject2
 
         with subtests.test(msg='test_list_items'):
             await create_hierarchy(db)

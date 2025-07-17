@@ -176,6 +176,7 @@ class ProjectManager(Device):
                 uuid = item["uuid"]
 
                 # XXX: be backward compatible (<2.8.0)!
+                # Also stored in xml
                 item_type = item.get("item_type", "unknown")
                 if item_type == "project":
                     project_uuids.append(uuid)
@@ -301,11 +302,11 @@ class ProjectManager(Device):
         async with self.db_handle as db_session:
             # verify that items belong to single domain
             domain = items[0]["domain"]
-            keys = [it['uuid'] for it in items
-                    if it['domain'] == domain]
+            keys = [it['uuid']for it in items if it['domain'] == domain]
             assert len(keys) == len(items), "Incorrect domain given!"
 
-            items = await db_session.load_item(domain, keys)
+            # Items have `item_type` and `uuid`
+            items = await db_session.load_item(domain, items)
             for item in items:
                 uuid = item["uuid"]
                 h = Hash("domain", domain,
@@ -316,6 +317,7 @@ class ProjectManager(Device):
                 keys.remove(uuid)
 
             # Any keys left were not in the database
+            # XXX: Remove with existDb
             if len(keys) > 0:
                 raise ProjectDBError(f'Items "{keys}" not found!')
 
