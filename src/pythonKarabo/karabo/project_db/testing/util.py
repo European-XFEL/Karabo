@@ -91,9 +91,10 @@ async def create_hierarchy(
             f'krb:uuid="{scene_uuid}" krb:version="2">')
         if i % 2 == 1:
             # Only the minimal attributes for a scene link to be recognized are
-            # defined. No widget geometry, framing, ...
+            # defined.
             scene_xml += (
                 '<svg:rect krb:class="SceneLink" '
+                'x="10" y="10" width="30" height="30" '
                 f'krb:target="scene_tgt:{scenes_uuids[i-1]}" />')
         scene_xml += '</svg:svg></xml>'
         await db.save_item("LOCAL", scene_uuid, scene_xml)
@@ -138,7 +139,7 @@ async def create_hierarchy(
     project_xml += '</servers></project></root></xml>'
     await db.save_item("LOCAL", project_uuid, project_xml)
 
-    return project_uuid, device_config_map
+    return project_uuid, device_config_map, scenes_uuids
 
 
 async def create_trashed_project(db, is_trashed=True):

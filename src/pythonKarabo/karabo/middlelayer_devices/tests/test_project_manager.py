@@ -86,8 +86,9 @@ async def exist_database():
         path = "{}/{}".format(db.root, 'LOCAL')
         if not db.dbhandle.hasCollection(path):
             db.dbhandle.createCollection(path)
-        _, device_config_uuid_map = await create_hierarchy(db)
+        _, device_config_uuid_map, scene_uuids = await create_hierarchy(db)
     ret = {"session": db_init, "name": "exist_database",
+           "scene_uuids": scene_uuids,
            "device_config_uuid_map": device_config_uuid_map}
     yield ret
 
@@ -136,8 +137,9 @@ async def sql_database():
     await db_init.initialize()
     # Create test data
     async with db_init as db:
-        _, device_config_uuid_map = await create_hierarchy(db)
+        _, device_config_uuid_map, scene_uuids = await create_hierarchy(db)
     ret = {"session": db_init, "name": "sql_database",
+           "scene_uuids": scene_uuids,
            "device_config_uuid_map": device_config_uuid_map}
     yield ret
     await db_init.delete()
@@ -282,6 +284,14 @@ async def test_project_manager(db_fixture, subtests, mocker):
             conf = ret["items"][0]["config_uuid"]
             assert proj == "Project"
             assert config_uuid == conf
+
+    with subtests.test(msg="Test slotGetScene"):
+        scene_uuids = db_fixture["scene_uuids"]
+        for uuid in scene_uuids:
+            ret = await wait_for(call(
+                _PROJECT_DB_TEST, "slotGetScene",
+                Hash("domain", "LOCAL", "uuid", uuid)), timeout=3)
+            assert ret["payload.success"]
 
     if db_fixture["name"] == "sql_database":
         with subtests.test(msg="Test instantiate project device"):
