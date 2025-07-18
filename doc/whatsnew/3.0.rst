@@ -8,7 +8,7 @@ What's New in Karabo 3.0.0
 
 Release date is **July**.
 
-All notable changes are until **3.0.0rc11**
+All notable changes are until **3.0.0rc14**
 
 
 Major Highlights of This Release
@@ -22,7 +22,7 @@ Major Highlights of This Release
 - Session Management for Authentication:
 
   - UserSessionDialog in the GUI shows now the time remaining for current session
-  - Client Sessions are automatically logged out after 14 days if they don't relogin
+  - Client Sessions are automatically logged out after 14 days if they don't reauthenticate
 
 - Pipelines (Output Channel) validate via Schema definition if provided
 - Python integration test framework based on Contexts (AsyncServerContext, ServerContext)
@@ -40,7 +40,7 @@ The ``Bound Hash`` now offers improved functionality and alignment with the midd
 
 - ``Hash.update`` method added (similar to Python's ``dict.update``)
 - ``Hash.flat_iterall`` method introduced, similar to MDL
-- Support for ellipsis functionality as in MDL, e.g., ``*attrs = Hash[key, ...]``
+- Support for ellipsis functionality as in MDL, e.g., ``attrs = Hash[key, ...]``
 - The initializer now supports an arbitrary number of arguments and dictionary input
 
 KaraboGUI Updates
@@ -101,7 +101,8 @@ Breaking Changes
 
 - Element and Enum Removals or Changes:
 
-  - Removed `Elements Choice Of Node` and `List Of Node`
+  - Removed Element `Choice Of Node`
+  - Removed Element `List Of Node`
   - Removed `Image Element` properties `dimScales` and `dimTypes`
   - Removed support for several Encoding Enum types (TIFF, BMP, PNG, etc.)
   - Removed `leafType` Enum
@@ -111,6 +112,8 @@ Breaking Changes
   - Removal of archivePolicy attriute options. Only `EVERY_EVENT` and `NO_ARCHIVING` remain.
   - `EncodingType` (MDL) has been renamed to `Encoding`.
   - Removed `AccessLevel.USER` and `AccessLevel.ADMIN` levels. Use `OPERATOR` and `EXPERT` instead.
+  - Renamed `GenericElement` to `BaseElement` in C++
+  - DeviceNode in MDL uses `classId` now instead of `displayType`
 
 - Class Changes:
 
@@ -160,7 +163,7 @@ Breaking Changes
 Deprecation Announcements
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- Schema Elements with AccessMode `INITONLY` are currently rewritten as `RECONFIGURABLE`. This gives a warning. In future this will throw. Note that bound api
+- Schema Elements in **Table Elements** with AccessMode `INITONLY` are currently rewritten as `RECONFIGURABLE`. This gives a warning. In future this will throw. Note that bound api
   default is `INITONLY`.
 - Libraries not used by the Karabo Framework will be in future removed: matplotlib
 
@@ -198,8 +201,8 @@ Dependency Updates
 ++++++++++++++++++
 
 - `pytest_asyncio` has been updated to 1.0.0. For a period until Winter 2026, device repositories making use of the central CI
-  can specify USE_LEGACY_PYTEST = "true" to use old behavior (pytest 0.21.X). After that, the legacy behavior changes its default.
-- GUI: pyqtgraph update to 0.13.7
+  can specify USE_LEGACY_PYTEST = "true" to use old behavior (pytest 0.21.X).
+  After that period, the central CI will change its default to make use of the new `pytest_asyncio`.
 - C++: Boost upgraded to 1.88.0
 
 
@@ -207,6 +210,18 @@ Bug Fixes
 ++++++++++
 
 
+- *(C++)* Do not send broadcasts a 2nd time as normal slot to instance '*' ([1f1011e](https://git.xfel.eu/Karabo/Framework/-/commit/1f1011eaf4b3ae1d0d2f9477981d6d10121dc767))
+- *(C++)* Adjust broker rates to new AMQP mechanics ([839734d](https://git.xfel.eu/Karabo/Framework/-/commit/839734dd5563397fcf07e0d72b950f4e3fb2d1aa))
+- *(C++ test)* Previuos fix for "preDestruction" failures missed an essential part ([177b5bb](https://git.xfel.eu/Karabo/Framework/-/commit/177b5bbdf7cce3c82dee699ff6e7a94b85d953e5))
+- *(C++ test)* Another try for preDestruction test ([d3c445d](https://git.xfel.eu/Karabo/Framework/-/commit/d3c445db3d9359c4cfc6f66e748f29783b65fb27))
+- *(GUI)* Hide User Session button for Observer ([59f753f](https://git.xfel.eu/Karabo/Framework/-/commit/59f753ff4013703189dee7b6598c5b8d48d58234))
+- *(GUI)* Fix load scene from file after lazy load ([4ce4ae4](https://git.xfel.eu/Karabo/Framework/-/commit/4ce4ae4cf9c00ae014f882dff2cbbf2795476deb))
+- *(GUI)* Typo in the ui file name and docstring ([073f994](https://git.xfel.eu/Karabo/Framework/-/commit/073f994c696c0e9f63814675809a37dae7840ddd))
+- *(GUI)* Scene editing from project panels needs different access role ([595a2d5](https://git.xfel.eu/Karabo/Framework/-/commit/595a2d579e4e25c71e4617251c326e0d6b573d50))
+- *(GuiServer)* Fix audit tracking for core services and increase minimum client version ([a75a529](https://git.xfel.eu/Karabo/Framework/-/commit/a75a52980217a7406d357682c0479f24ee46aae5))
+- *(ProjectDB)* Configure timeout for local project db ([ddef9d3](https://git.xfel.eu/Karabo/Framework/-/commit/ddef9d371fe5538b005b56e7920a04b39e63d8c3))
+- *(ProjectDB)* Fix scene retrieval for slotGetScene after protocol change ([bdb35a1](https://git.xfel.eu/Karabo/Framework/-/commit/bdb35a156c93661286cdbbe9752478eb9fb08406))
+- *(test)* Make the config manager test more robust in integration testing ([0358786](https://git.xfel.eu/Karabo/Framework/-/commit/035878678309ec8b334ed0787b9aecfc59abd749))
 - *(C++)* Directly include what is used ([1042088](https://git.xfel.eu/Karabo/Framework/-/commit/10420880cda76ae7be7c91e859248fd01e425b40))
 - *(C++ test)* Check for preDestruction been called was pretty flaky ([7a610b7](https://git.xfel.eu/Karabo/Framework/-/commit/7a610b7034451405806bb6cd2545947111751301))
 - *(ConfigDB)* Make sure to have a single commit for transaction, use multiple threads ([e248c98](https://git.xfel.eu/Karabo/Framework/-/commit/e248c9887916fc9e42c3816045daf93b12eaa41d))
@@ -295,6 +310,11 @@ Bug Fixes
 Features
 ++++++++
 
+
+- *(C++)* Add an injected property to PropertyTest ([add1fb4](https://git.xfel.eu/Karabo/Framework/-/commit/add1fb4f2a28d9b41a97353ee60ed8ea9d13ed76))
+- *(GUI)* Add function to get the status icon to namespce. ([923db26](https://git.xfel.eu/Karabo/Framework/-/commit/923db26228d11f61166955fc93bf7849570a21c9))
+- *(GUI)* New Event when an item in SystemTopology updates. ([be619fd](https://git.xfel.eu/Karabo/Framework/-/commit/be619fd573b5789a73ac920453592a53a38d210c))
+- *(No Category)* Increase release candidate for the guiserver minimum client version ([148c065](https://git.xfel.eu/Karabo/Framework/-/commit/148c06520335f151112592a787b3ee7bd7d7bce2))
 - *(GUI)* Provide session information on dialog open ([4ff5134](https://git.xfel.eu/Karabo/Framework/-/commit/4ff51342795ce5f153ed5fd482fe647a5deecb79))
 - *(GuiServer)* Add python integration tests, proof of principle ([cfaae91](https://git.xfel.eu/Karabo/Framework/-/commit/cfaae91388a63bf718adcab7e0ae0f2d3b3e24d7))
 - *(Tests)* Make config db manager cross test ci concurrency adaptable ([3ad263c](https://git.xfel.eu/Karabo/Framework/-/commit/3ad263ce341be34b4ee872a38922f6e94d65cc59))
@@ -418,6 +438,20 @@ Performance
 Refactor
 ++++++++
 
+- *(C++)* Rename GenericElement to BaseElement ([84f0866](https://git.xfel.eu/Karabo/Framework/-/commit/84f0866559d70e16cfba1bbb6e519a5769cd491a))
+- *(ConfigDB)* Sync timestamp, rename timepoint ([9e0c2d8](https://git.xfel.eu/Karabo/Framework/-/commit/9e0c2d8e1fb3c59aece18f8daa589e4c75f46810))
+- *(ConfigDB)* Migrate timestamp to date globally ([e52d2c6](https://git.xfel.eu/Karabo/Framework/-/commit/e52d2c6345eceb273a10bccffc62511cff84f482))
+- *(GUI)* InitConfig Preview Dialog now has OK button ([7cbc7cd](https://git.xfel.eu/Karabo/Framework/-/commit/7cbc7cd329091de5676364a0ede090fb7be761cd))
+- *(GUI)* Remove signal from options dialog, avoid references and only change model on changes ([2535f48](https://git.xfel.eu/Karabo/Framework/-/commit/2535f48fe209fa30dab66eda58126a91499c3eb9))
+- *(GUI)* Also provide same action text for runtime configuration in configurator panel ([46aa341](https://git.xfel.eu/Karabo/Framework/-/commit/46aa341487651f30c5645a0cc7b3783cb51899f9))
+- *(GUI)* Move assure svg data in scene file load ([a0f6a51](https://git.xfel.eu/Karabo/Framework/-/commit/a0f6a51e0069d7073eb1925496dd6a4f20ecce3f))
+- *(GuiServer)* Rename brokerInformation to serverInformation ([7ed4dbd](https://git.xfel.eu/Karabo/Framework/-/commit/7ed4dbd3b1519873c47f2f2854ff86b4cffefca4))
+- *(MDL)* Offer DeviceServer in namespace ([a857ccc](https://git.xfel.eu/Karabo/Framework/-/commit/a857ccc5eb87eb4505ac79ad4526d6a57981734d))
+- *(MDL)* Fix classId attribute on strings and change deviceNode classId ([1dfd315](https://git.xfel.eu/Karabo/Framework/-/commit/1dfd315e865705daee0c7948bdb33f094aff7f53))
+- *(MDL)* Use the async context for locking in connector ([ef4d643](https://git.xfel.eu/Karabo/Framework/-/commit/ef4d643857245c53f323c0478dfd4aca95870377))
+- *(ProjectDB)* Throw if item loading failed. load item always needs item_type ([fe00f20](https://git.xfel.eu/Karabo/Framework/-/commit/fe00f20d28be07df551be67a899341b347d1b671))
+- *(Test)* Move gui server scene test to python integrationtests ([e27e500](https://git.xfel.eu/Karabo/Framework/-/commit/e27e5006c61eefa028459566d20563ddba9cb07a))
+- *(test)* Harden integration tests for guiserver and move test ini ([1699248](https://git.xfel.eu/Karabo/Framework/-/commit/1699248c45c4c9109eeb4b6828b6991a8b697269))
 - *(C++)* Revert "Replace boost::regex by std::regex" ([2311e24](https://git.xfel.eu/Karabo/Framework/-/commit/2311e24fbf3991c2f16aacacb2b7556e8fa6d3f9))
 - *(C++ test)* Revert pipe test timing to before switch to std::regex ([8e1ed32](https://git.xfel.eu/Karabo/Framework/-/commit/8e1ed32753a4b1c10a84d2d33882f39ef4a4260d))
 - *(ConfigDB)* Make migration script independent of the order, put more utility and argparse ([edbf896](https://git.xfel.eu/Karabo/Framework/-/commit/edbf8969f81da4b42cd6fa04d5cca01be353eac7))
@@ -685,6 +719,8 @@ Documentation
 +++++++++++++
 
 
+- *(No Category)* Update Changelog to 3.0.0rc11 ([4e24dc8](https://git.xfel.eu/Karabo/Framework/-/commit/4e24dc8df464a21d3f610071248bcee8d13ade5e))
+- *(No Category)* Document the create hierarchy in project test ([3e640f9](https://git.xfel.eu/Karabo/Framework/-/commit/3e640f91544fc3587aa12e2c73953b27c793dd44))
 - *(No Category)* A bit fine tuning the docs and add a few ([2c23a5f](https://git.xfel.eu/Karabo/Framework/-/commit/2c23a5f1a023f55267688fb1583cc58430c03d72))
 - *(No Category)* Add merge log until rc8 ([3d508ca](https://git.xfel.eu/Karabo/Framework/-/commit/3d508caf1c22f95470d0519e4b63974b5de42d26))
 - *(No Category)* Document more the changes ([b9d50fe](https://git.xfel.eu/Karabo/Framework/-/commit/b9d50fe9accfaeac37006b69f7fe0fda560ed29e))
