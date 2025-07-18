@@ -51,24 +51,24 @@ class SceneController(BaseProjectController):
     model = Instance(SceneModel)
 
     def context_menu(self, project_controller, parent=None):
-        project_allowed = access_role_allowed(AccessRole.PROJECT_EDIT)
+        scene_allowed = access_role_allowed(AccessRole.SCENE_EDIT)
 
         menu = QMenu(parent)
         edit_action = QAction(icons.edit, 'Edit', menu)
         edit_action.triggered.connect(partial(self._edit_scene, parent=parent))
-        edit_action.setEnabled(project_allowed)
+        edit_action.setEnabled(scene_allowed)
 
         dupe_action = QAction(icons.editCopy, 'Duplicate', menu)
         dupe_action.triggered.connect(partial(self._duplicate_scene,
                                               project_controller,
                                               parent=parent))
-        dupe_action.setEnabled(project_allowed)
+        dupe_action.setEnabled(scene_allowed)
 
         delete_action = QAction(icons.delete, 'Delete', menu)
         delete_action.triggered.connect(partial(self._delete_scene,
                                                 project_controller,
                                                 parent=parent))
-        delete_action.setEnabled(project_allowed)
+        delete_action.setEnabled(scene_allowed)
 
         save_as_action = QAction(icons.saveAs, 'Save to file', menu)
         save_as_action.triggered.connect(partial(self._save_scene_to_file,
@@ -78,13 +78,13 @@ class SceneController(BaseProjectController):
         replace_action.triggered.connect(partial(self._replace_scene,
                                                  project_controller,
                                                  parent=parent))
-        replace_action.setEnabled(project_allowed)
+        replace_action.setEnabled(scene_allowed)
 
         revert_action = QAction(icons.revert, 'Revert changes', menu)
         revert_action.triggered.connect(partial(self._revert_changes,
                                                 parent=parent))
         can_revert = not self._is_showing() and self.model.modified
-        revert_action.setEnabled(can_revert and project_allowed)
+        revert_action.setEnabled(can_revert and scene_allowed)
 
         project_model = project_controller.model
         cinema_action = QAction(icons.run, 'Create cinema link', menu)
