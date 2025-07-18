@@ -55,12 +55,14 @@ async def create_device(db):
 
 
 async def create_hierarchy(
-        db, scene_name: str | None = None) -> tuple[str, dict]:
+        db, scene_name: str | None = None) -> tuple[str, dict, list]:
     """Create a project with scenes, macros, servers, and devices.
 
     The dict return as the second tuple element contains the
     `instance_id`s as keys and the `uuid` of the `revision:="0"`
     configurations for each of the 4x4 devices created.
+
+    The list as the third tuple elements has the scene uuids
 
     In total:
         - 1 Project
