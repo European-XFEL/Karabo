@@ -250,10 +250,7 @@ namespace karabo {
              */
             Derived& setMaxSize(const std::string& subKey, const unsigned int maxSize) {
                 using namespace karabo::data;
-                OVERWRITE_ELEMENT(m_schema)
-                      .key(m_key + "." + subKey)
-                      .template setNewMaxSize<unsigned int>(maxSize)
-                      .commit();
+                OVERWRITE_ELEMENT(m_schema).key(m_key + "." + subKey).setNewMaxSize(maxSize).commit();
 
                 return *(static_cast<Derived*>(this));
             }
