@@ -23,7 +23,7 @@ from qtpy.QtWidgets import QPushButton
 
 from karabo.common.api import walk_traits_object
 from karabo.common.scenemodel.api import SceneModel, SceneTargetWindow
-from karabogui import icons
+from karabogui import access as krb_access, icons
 from karabogui.access import AccessRole, access_role_allowed, is_authenticated
 from karabogui.controllers.util import load_extensions
 from karabogui.dialogs.update_dialog import (
@@ -400,7 +400,8 @@ class PanelWrangler(QObject):
             # Set the tool color according to the defined indicators!
             karabo_topic = get_config()['broker_topic']
             panel.set_toolbar_style(karabo_topic)
-            enabled = is_authenticated()
+            enabled = (is_authenticated() and krb_access.SERVER_READ_ONLY is
+                       False)
             panel.setTemporaryButtonVisible(enabled)
             if enabled:
                 # Sync the button state with current Temporary session state.
