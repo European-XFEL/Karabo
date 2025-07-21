@@ -151,10 +151,10 @@ class ScenePanel(BasePanelWidget):
         home_tool_bar.addSeparator()
         home_tool_bar.addAction(ac_show_editor)
 
-        self.tbSession = QAction(parent=self)
-        home_tool_bar.addAction(self.tbSession)
-        self.tbSession.triggered.connect(self.onTemporarySession)
-        home_tool_bar.addAction(self.tbSession)
+        self.tbUserSession = QAction(parent=self)
+        home_tool_bar.addAction(self.tbUserSession)
+        self.tbUserSession.triggered.connect(self.onTemporarySession)
+        home_tool_bar.addAction(self.tbUserSession)
 
         self.home_tool_bar = home_tool_bar
         self.always_visible_tb = always_visible_tb
@@ -185,12 +185,12 @@ class ScenePanel(BasePanelWidget):
 
     def setTemporaryButtonVisible(self, enable: bool) -> None:
         """Make the tempsession visible depending on the boolean `enable`"""
-        self.tbSession.setVisible(enable)
+        self.tbUserSession.setVisible(enable)
 
     def setSessionButton(self, icon: QIcon, tooltip: str) -> None:
         """Set the icon and tooltip for the Temporary Session button"""
-        self.tbSession.setToolTip(tooltip)
-        self.tbSession.setIcon(icon)
+        self.tbUserSession.setToolTip(tooltip)
+        self.tbUserSession.setIcon(icon)
 
     def closeEvent(self, event):
         super().closeEvent(event)

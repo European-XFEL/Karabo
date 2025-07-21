@@ -16,7 +16,10 @@
 # or FITNESS FOR A PARTICULAR PURPOSE.
 from collections import namedtuple
 
-from karabo.common.scenemodel.api import SceneTargetWindow
+import pytest
+
+from karabo.common.scenemodel.api import SceneModel, SceneTargetWindow
+from karabogui.api import get_panel_wrangler
 from karabogui.events import KaraboEvent
 from karabogui.programs.cinema import create_cinema
 from karabogui.singletons.network import Network
@@ -57,3 +60,25 @@ def test_cinema_normal(gui_app, mocker):
             {'name': 'CTRL-uuid-1231231321',
              'target_window': SceneTargetWindow.MainWindow,
              'target': 'uuid-1231231321'})
+
+
+@pytest.mark.parametrize("authenticated,read_only", [
+    (True, False), (True, True), (False, False), (False, True), (True, None)])
+def test_user_session_button(gui_app, mocker, authenticated, read_only):
+    wrangler = get_panel_wrangler()
+    target_window = SceneTargetWindow.Dialog
+    model = SceneModel(simple_name="Test_scene")
+
+    krb_access = mocker.patch("karabogui.singletons.panel_wrangler.krb_access")
+    is_authenticated = mocker.patch(
+        "karabogui.singletons.panel_wrangler.is_authenticated")
+    is_authenticated.return_value = authenticated
+    krb_access.SERVER_READ_ONLY = read_only
+    wrangler._open_scene(model, target_window, attached=False)
+
+    panel = wrangler._unattached_scene_panels.get(model)
+    assert panel is not None
+
+    expected = authenticated and read_only is False
+
+    assert panel.tbUserSession.isVisible() == expected
