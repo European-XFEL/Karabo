@@ -365,8 +365,7 @@ namespace karabo {
              * @param value
              * @return
              */
-            template <class ValueType>
-            OverwriteElement& setNewMinSize(const ValueType& value) {
+            OverwriteElement& setNewMinSize(const unsigned int& value) {
                 if (!m_node) {
                     throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
                 }
@@ -380,8 +379,7 @@ namespace karabo {
              * @param value
              * @return
              */
-            template <class ValueType>
-            OverwriteElement& setNewMaxSize(const ValueType& value) {
+            OverwriteElement& setNewMaxSize(const unsigned int& value) {
                 if (!m_node) {
                     throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
                 }
