@@ -30,7 +30,7 @@ import numpy
 from psutil import net_if_addrs
 
 from karabo.native import (
-    AccessMode, Assignment, Bool, Configurable, Hash, KaraboError,
+    AccessLevel, AccessMode, Assignment, Bool, Configurable, Hash, KaraboError,
     MetricPrefix, Node, Schema, String, UInt16, UInt32, Unit, VectorHash,
     VectorRegexString, VectorString, decodeBinary, encodeBinary, get_timestamp,
     isSet)
@@ -938,6 +938,7 @@ class NetworkOutput(Configurable):
     port = UInt32(
         displayedName="Port",
         description="Port number for TCP connection",
+        requiredAccessLevel=AccessLevel.EXPERT,
         assignment=Assignment.OPTIONAL,
         defaultValue=0,
         accessMode=AccessMode.INITONLY)
