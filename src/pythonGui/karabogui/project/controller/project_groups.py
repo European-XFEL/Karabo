@@ -139,22 +139,26 @@ def _fill_macros_menu(menu, project_controller):
 
 def _fill_scenes_menu(menu, project_controller):
     project_allowed = access_role_allowed(AccessRole.PROJECT_EDIT)
+    scene_allowed = access_role_allowed(AccessRole.SCENE_EDIT)
 
     add_action = QAction(icons.add, 'Add scene', menu)
     add_action.triggered.connect(partial(_add_scene, project_controller,
                                          parent=menu.parent()))
-    add_action.setEnabled(project_allowed)
+    add_action.setData(AccessRole.SCENE_EDIT)
+    add_action.setEnabled(scene_allowed)
 
     load_action = QAction(icons.load, 'Load scene...', menu)
     load_action.triggered.connect(partial(_load_scene, project_controller,
                                           parent=menu.parent()))
-    load_action.setEnabled(project_allowed)
+    load_action.setData(AccessRole.SCENE_EDIT)
+    load_action.setEnabled(scene_allowed)
 
     load_from_device = QAction(icons.download, 'Load from device...', menu)
     load_from_device.triggered.connect(partial(_load_scene_from_device,
                                                project_controller,
                                                parent=menu.parent()))
-    load_from_device.setEnabled(project_allowed)
+    load_from_device.setData(AccessRole.SCENE_EDIT)
+    load_from_device.setEnabled(scene_allowed)
 
     project_model = project_controller.model
     cinema_action = QAction(icons.run, 'Create cinema link', menu)
@@ -182,7 +186,7 @@ def _fill_scenes_menu(menu, project_controller):
     menu.addSeparator()
     menu.addAction(about_action)
 
-    if not project_allowed:
+    if not scene_allowed:
         _add_disabled_tooltip(menu)
 
 
@@ -221,10 +225,19 @@ def _add_disabled_tooltip(menu: QMenu) -> None:
     disabled."""
     required_access_level = get_access_level_for_role(
         AccessRole.PROJECT_EDIT)
-    tooltip = f"Requires minimum '{required_access_level}' access level"
+    project_edit_tooltip = (f"Requires minimum '{required_access_level}' "
+                            f"access level")
     for action in menu.actions():
-        if not action.isEnabled():
-            action.setToolTip(tooltip)
+        if action.isEnabled():
+            continue
+        if action.data() == AccessRole.SCENE_EDIT:
+            required_access_level = get_access_level_for_role(
+                AccessRole.SCENE_EDIT)
+            tooltip = (f"Requires minimum '{required_access_level}' access "
+                       f"level")
+        else:
+            tooltip = project_edit_tooltip
+        action.setToolTip(tooltip)
 
 
 # ----------------------------------------------------------------------
