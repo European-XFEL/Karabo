@@ -14,8 +14,6 @@
 # The Karabo Gui is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
-
-
 from karabo.common.project.api import ProjectModel
 from karabo.common.project.device import DeviceInstanceModel
 from karabo.common.project.device_config import DeviceConfigurationModel
@@ -119,6 +117,11 @@ def test_menu(gui_app, mocker):
     about = actions[-1]
     assert about.text() == "About"
     assert about.isEnabled()
+
+    load_scene = actions[1]
+    assert load_scene.text() == "Load scene..."
+    assert not load_scene.isEnabled()
+    assert load_scene.toolTip() == "Requires minimum 'EXPERT' access level"
 
     mock_project_enabled = mocker.patch(
         "karabogui.project.controller.project_groups.access_role_allowed")
