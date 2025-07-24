@@ -74,14 +74,9 @@ namespace karabo {
                 m_pendingOnChannelCreations.clear();
 
                 if (m_connection) {
-                    m_connection->close(false); // true will be without proper AMQP hand shakes
-                    // Caveat: Each created AMQP::Channel also carries a shared_ptr to our connection!
-                    //         They should be gone by now, but at least log a warning if not.
-                    if (m_connection.use_count() > 1) {
-                        KARABO_LOG_FRAMEWORK_WARN << "Underlying AMQP::Connection will not be destroyed, use count is "
-                                                  << m_connection.use_count();
-                        m_connection.reset();
-                    }
+                    // We trigger clean closing of the connection. It will not immediately be closed, but follow-up
+                    // actions are triggered within the AMQP thread.
+                    m_connection->close(false); // true would be without proper AMQP hand shakes
                 }
                 promise.set_value();
             });
@@ -92,17 +87,23 @@ namespace karabo {
 
             // Join thread except if running in that thread.
             if (m_thread.get_id() == std::this_thread::get_id()) {
-                // Happened while development when onError and onDetached handlers where both called in a connection
-                // attempt that failed due to invalid address. At that stage, onError called the AsyncHandler that then
-                // removed all external reference counts to the connection. Likely the bind_weak mechanism for
-                // onDetached kept it alive a while and, since posted to the thread, triggers destruction in the thread.
-                KARABO_LOG_FRAMEWORK_WARN
-                      << "Cannot join thread since running in it: stop io context and detach thread";
-                m_ioContext.stop(); // Take care no further tasks can run after this one
+                // Not seen in production, but in specialised test.
+                KARABO_LOG_FRAMEWORK_WARN << "Cannot join thread since running in it: detach thread";
+                // No need for m_ioContext.stop() since context will anyway be destructed soon.
+                // This destruction also prevents the clean closure of the connection to finish.
+                // TODO: This is believed to sporadically cause problems if a new client comes quickly up with the
+                //       same instanceId as one of those connected to this connection.
+                //       (Though problems in the field have only been seen after crashes.)
                 m_thread.detach();
             } else {
                 m_thread.join();
             }
+            if (m_connection && !m_connection->closed()) { // Happens if we had to detach above
+                KARABO_LOGGING_WARN("Destructing karabo::net::AmqpConnection, but AMQP::Connection not yet closed");
+            }
+            // Destruction of m_connection is now safe outside the thread for interactions with with the AMQP library:
+            // Since the thread is joined, no concurrency with other AMQP things is possible anymore.
+            // (If it is not joined, but detached above, we are in that thread anyway.)
         }
 
         std::string AmqpConnection::getCurrentUrl() const {
@@ -323,8 +324,8 @@ namespace karabo {
             // Do not let all connections bombard any now available broker at once (that is why we need different
             // seeds!):
             std::uniform_int_distribution<int> distribution(2000, 15000); // 2 to 15 seconds in ms
-            size_t delay(distribution(*m_random));
-            KARABO_LOG_FRAMEWORK_INFO << "Delay reconnection a bit: " << delay;
+            const int delay = distribution(*m_random);
+            KARABO_LOG_FRAMEWORK_INFO << "Delay reconnection a bit: " << delay << " ms";
             auto timer = std::make_shared<boost::asio::steady_timer>(m_ioContext);
             timer->expires_after(milliseconds(delay));
             timer->async_wait([weakThis{weak_from_this()}, timer](const boost::system::error_code& e) {

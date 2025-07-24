@@ -478,8 +478,8 @@ namespace karabo::net {
 
     void AmqpClient::queueMessage(PostponedMessage&& message) {
         const size_t numPostponed = m_postponedPubMessages.size();
-        if (0 == numPostponed) {
-            KARABO_LOG_FRAMEWORK_WARN << m_instanceId << ": Start postponing messages since disconnected";
+        if (1ul == numPostponed) {
+            KARABO_LOG_FRAMEWORK_WARN << m_instanceId << ": Start postponing > 1 messages";
         }
 
         if (numPostponed == 1'000ul) { // Max. queue length reached

@@ -268,6 +268,30 @@ void Amqp_Test::testConnection() {
         CPPUNIT_ASSERT_EQUAL_MESSAGE(connEc.message(), static_cast<int>(boost::system::errc::operation_canceled),
                                      connEc.value());
         CPPUNIT_ASSERT_EQUAL(std::string("Connection destructed"), chanFut.get());
+
+        // test destruction within own thread
+        connection = std::make_shared<net::AmqpConnection>(m_defaultBrokers);
+        auto done6 = std::make_shared<std::promise<boost::system::error_code>>();
+        auto fut6 = done6->get_future();
+        connection->asyncConnect([done6](const boost::system::error_code ec) { done6->set_value(ec); });
+        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, fut6.wait_for(m_timeout));
+        const boost::system::error_code ec6 = fut6.get();
+        CPPUNIT_ASSERT_EQUAL_MESSAGE(ec6.message(), static_cast<int>(boost::system::errc::success), ec6.value());
+        CPPUNIT_ASSERT(connection->isConnected());
+
+        auto promCount = std::make_shared<std::promise<long>>();
+        auto futCount = promCount->get_future();
+        // We move-capture the connection into a lambda that we post to the connection's thread.
+        // We assert that the pointer inside the posted lambda is the only one and then reset to run the destructor.
+        connection->post([connection{std::move(connection)}, promCount]() mutable {
+            const long count = connection.use_count();
+            connection.reset(); // Triggers destruction in thread
+            promCount->set_value(count);
+        });
+        CPPUNIT_ASSERT_EQUAL(0l, connection.use_count()); // since moved into lambda
+
+        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futCount.wait_for(m_timeout));
+        CPPUNIT_ASSERT_EQUAL(1l, futCount.get());
     }
     { // test invalid tcp address - the tests for post and dispatch sneaked in as well
         const std::vector<std::string> invalidIps(1, urlBadHostPort);
