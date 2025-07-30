@@ -25,7 +25,7 @@
 #define KARABO_DATA_TYPES_DIMS_HH
 
 #include <algorithm>
-#include <string>
+#include <ostream>
 #include <vector>
 
 #include "karaboDll.hh"
@@ -106,6 +106,8 @@ namespace karabo {
                 return m_vec[idx];
             }
 
+            friend std::ostream& operator<<(std::ostream& os, const Dims& hash);
+
             /**
              * Return a std::vector holding the dimension sizes
              * @return
@@ -170,29 +172,12 @@ namespace karabo {
             /**
              * calculate rank and number of elements in array.
              */
-            void calculate() {
-                m_rank = m_vec.size();
-                if (m_rank == 0) {
-                    m_numberOfElements = 0;
-                    return;
-                }
-                m_numberOfElements = m_vec[0];
-                // std::clog << "calculate numEl: " << m_numberOfElements << std::endl;
-                for (size_t i = 1; i < m_rank; i++) {
-                    m_numberOfElements *= static_cast<ull64>(m_vec[i]);
-                    // std::clog << "calculate i=" << i << " numEl= " << m_numberOfElements << std::endl;
-                }
-            }
+            void calculate();
         };
 
-        inline bool operator==(const Dims& lhs, const Dims& rhs) {
-            if (lhs.size() != rhs.size()) return false;
-            bool result = true;
-            for (size_t i = 0; i != lhs.rank(); ++i) {
-                result &= (lhs.extentIn(i) == rhs.extentIn(i));
-            }
-            return result;
-        }
+        bool operator==(const Dims& lhs, const Dims& rhs);
+
+        std::ostream& operator<<(std::ostream& os, const Dims& dims);
     } // namespace data
 } // namespace karabo
 

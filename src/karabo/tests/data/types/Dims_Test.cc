@@ -94,6 +94,20 @@ void Dims_Test::testDims() {
     CPPUNIT_ASSERT(d.extentIn(2) == 2);
     CPPUNIT_ASSERT(d.extentIn(3) == 10);
     CPPUNIT_ASSERT(d.extentIn(4) == 3);
+
+    // Test operators
+    CPPUNIT_ASSERT(a == c);
+    CPPUNIT_ASSERT(!(a != c));
+    CPPUNIT_ASSERT(c != d);
+    CPPUNIT_ASSERT(!(c == d));
+
+    std::ostringstream oss;
+    oss << d;
+    CPPUNIT_ASSERT_EQUAL(std::string("(2,4,2,10,3)"), oss.str());
+
+    oss.str(std::string());
+    oss << Dims();
+    CPPUNIT_ASSERT_EQUAL(std::string("()"), oss.str());
 }
 
 
