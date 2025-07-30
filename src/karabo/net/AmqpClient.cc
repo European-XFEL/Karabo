@@ -29,13 +29,12 @@
 using std::placeholders::_1;
 
 namespace karabo::net {
-    // The maximum supported by default AMQP broker settings, see
+    // The maximum supported by default AMQP (version 3.13.X) broker settings, see
     // https://www.cloudamqp.com/blog/what-is-the-message-size-limit-in-rabbitmq.html.
     // Larger message create this error (seen in AmqpClient::channelErrorHandler):
     // PRECONDITION_FAILED - message size XXX is larger than configured max size 134217728
-    // But also see https://github.com/rabbitmq/rabbitmq-server/issues/11187, it looks as
-    // they are redcucing the (default) message size much further, down to 16 MiB!
-    size_t AmqpClient::m_maxMessageSize = 134'217'728ul; // 128 MB
+    // RabbitMQ 4.1. reduced that to 16 MiB by default, we configure our brokers to accept 64 MiB.
+    size_t AmqpClient::m_maxMessageSize = 67'108'864ul; // 64 MiB
 
     AmqpClient::AmqpClient(AmqpConnection::Pointer connection, std::string instanceId, AMQP::Table queueArgs,
                            ReadHandler readHandler)
