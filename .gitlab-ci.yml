@@ -175,7 +175,7 @@ variables:
       -C $KARABO_CONDA_CHANNEL_PATH/mirror
       --index-mirror
   only:
-    - /^(\d+\.)(\d+\.)(\d+)(rc\d+)?$/
+    - /^(\d+\.)(\d+\.)(\d+)$/
   except:
     - branches
     - schedules
