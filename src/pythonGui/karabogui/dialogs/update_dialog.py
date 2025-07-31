@@ -38,7 +38,7 @@ _TIMEOUT = 0.5
 _TAG_REGEX = r"^\d+\.\d+\.\d+(\.\d+)?$"
 _PKG_NAME = "GUIExtensions"
 _PKG_NAME_ALL = "GUIExtensions[all]"
-_PACKAGE_URL = "https://git.xfel.eu/api/v4/projects/4562/packages"
+_PACKAGE_URL = "https://git.xfel.eu/api/v4/projects/5187/packages"
 _PYPI_INDEX = f"{_PACKAGE_URL}/pypi/simple"
 UNDEFINED_VERSION = "Undefined"
 
