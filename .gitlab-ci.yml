@@ -276,7 +276,7 @@ variables:
 .except_main: &except-main
   except:
     refs:
-      - /^(master)$/ # the changes check will default to true
+      - /^(main)$/ # the changes check will default to true
       - /^(\d+\.)(\d+\.)(X-hotfix)$/ # the changes check will default to true
       - schedules
 
@@ -287,7 +287,7 @@ variables:
   <<: *setup_build_env
   only:
     refs:
-      - /^(master)$/ # the changes check will default to true
+      - /^(main)$/ # the changes check will default to true
       - /^(\d+\.)(\d+\.)(X-hotfix)$/ # the changes check will default to true
       - merge_requests
     changes:
@@ -568,7 +568,7 @@ long tests:
 # Publish to the GitHub mirror - 1st. of 2 steps
 #
 # 1st. step is triggered by release tags automatically and publishes the
-# master branch and the tags of the Framework to an internal mirror. As part
+# main branch and the tags of the Framework to an internal mirror. As part
 # of this step, the git commit history is edited using git-filter-repo to
 # remove personal data from contributors who do not want their personal data
 # exposed in the public GitHub mirror.
@@ -589,17 +589,15 @@ internal_mirror_publish:
     # Retrieves the mail and name mappings for authors that have chosen to keep their data hidden in the
     # commit history of the public repository.
     - git clone https://gitlab-ci-token:$CI_JOB_TOKEN@git.xfel.eu/Karabo/contriboptouts.git
-    # Retrieves the master branch and the tags of the Karabo Framework repository.
-    - git clone https://gitlab-ci-token:$CI_JOB_TOKEN@git.xfel.eu/Karabo/Framework.git --branch master --single-branch FrameworkHead
+    # Retrieves the main branch and the tags of the Karabo Framework repository.
+    - git clone https://gitlab-ci-token:$CI_JOB_TOKEN@git.xfel.eu/Karabo/Framework.git --branch main --single-branch FrameworkHead
     - cd FrameworkHead
     # To be on the safe side and prevent any push to the origin, remove it from the list of remotes (this is what git-filter-repo does).
     - git remote rm origin
-    # Renames master branch to main and pushes main and tags to the internal mirror.
+    # Pushes main and tags to the internal mirror.
     # The KARABO_FRAMEWORK_MIRROR_TOKEN must be an environment variable defined in the Framework Gitlab project whose
     # value is a project access token generated for the FrameworkMirror Gitlab project.
     - git remote add internal_mirror https://oauth2:$KARABO_FRAMEWORK_MIRROR_TOKEN@git.xfel.eu/Karabo/FrameworkMirror.git
-    # Move the master branch to main (keep history)
-    - git branch -m main
     - git push --mirror internal_mirror
     # Removes the local copy of the Karabo Framework repository - all the filtering will happen on the internal mirror.
     - cd ..
