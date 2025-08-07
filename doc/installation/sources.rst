@@ -113,8 +113,8 @@ Install dependencies
 Supported Operating Systems
 ---------------------------
 
-The operating systems which are currently officially supported by Karabo are: Centos 7,
-Ubuntu 20.04, and 22.04, Debian 10, and AlmaLinux 9. To learn which
+The operating systems which are currently officially supported by Karabo are:
+Ubuntu 22.04 and 24.04, and RedHat 9. To learn which
 packages must be installed before building Karabo, refer to the following
 project on the XFEL GitLab server:
 
@@ -123,15 +123,11 @@ https://git.xfel.eu/Karabo/ci-containers/
 There you will find the following Dockerfiles which list the packages needed
 on each platform.
 
-https://git.xfel.eu/Karabo/ci-containers/-/blob/master/centos/7gcc7/Dockerfile
-
-https://git.xfel.eu/Karabo/ci-containers/-/blob/master/ubuntu/20.04/Dockerfile
-
 https://git.xfel.eu/Karabo/ci-containers/-/blob/master/ubuntu/22.04/Dockerfile
 
-https://git.xfel.eu/Karabo/ci-containers/-/blob/master/debian/10/Dockerfile
+https://git.xfel.eu/Karabo/ci-containers/-/blob/master/ubuntu/24.04/Dockerfile
 
-https://git.xfel.eu/Karabo/ci-containers/-/blob/master/almalinux/9/Dockerfile
+https://git.xfel.eu/Karabo/ci-containers/-/blob/master/redhat/9/Dockerfile
 
 Framework/-/merge_requests
 
