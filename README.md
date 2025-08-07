@@ -29,15 +29,13 @@ location in src/pythonGui and its subtrees.
 
 The supported OS are:
 
-> Almalinux 8/9
-> Ubuntu 20.04/22.04 LTS
-> Centos 7
+> Ubuntu 22.04/24.04 LTS
 > RedHat 9
 
 The GUI application is available under:
 
-> Ubuntu 20.04/22.04 LTS
-> Windows 7/10
+> Ubuntu 22.04/24.04 LTS
+> Windows 10/11
 > MacOSX
 
 # Installation
