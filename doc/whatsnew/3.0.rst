@@ -1,14 +1,24 @@
 ..
   Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 
+**************************
+What's New in Karabo 3.0.1
+**************************
+
+Released on **August 7th, 2025**.
+
+Only adjustments to documentation and changes needed to publish to PyPi.
+
+- *Deps* Up date CMake to a version that has an aarch64 installable([9704f747b](https://git.xfel.eu/Karabo/Framework/-/commit/9704f747b5ec477ab5f92a9dc8245ed13eb675ae))
+- *CI* Adjust CI setting for moving from master to main([0d59515b7](https://git.xfel.eu/Karabo/Framework/-/commit/0d59515b7341ec8171c91d663874475d484e5f87))
+- *fix(doc)* Update docs about supported operating systems([3da827f64](https://git.xfel.eu/Karabo/Framework/-/commit/3da827f6438e9647cde2b1f895a846bc0758de7f))
+
 
 **************************
 What's New in Karabo 3.0.0
 **************************
 
-Release date is **July**.
-
-All notable changes are until **3.0.0rc14**
+Released on **July 31st, 2025**.
 
 
 Major Highlights of This Release
@@ -210,6 +220,14 @@ Bug Fixes
 ++++++++++
 
 
+- *(GUI)* Update the url of guiextensions package([a736193c8](https://git.xfel.eu/Karabo/Framework/-/commit/a736193c85468a04db9f66dbf2fd27583b86c996))
+- *CI* Also publish GUI beta releases like releases([ae1a1c8e0](https://git.xfel.eu/Karabo/Framework/-/commit/ae1a1c8e0f35e8027552e354c5998784b25faa01))
+- *(C++ test)* Prepare for new broker settings concerning max message size([63993c56b](https://git.xfel.eu/Karabo/Framework/-/commit/63993c56b9df5064f447dda4ce05030f458ff7c8))
+- *(C++ amqp)* Tuning connection destruction and logging([5f2c56f79](https://git.xfel.eu/Karabo/Framework/-/commit/5f2c56f79bf113f0e29a799384f7393d515a1440))
+- *(GUI)* Disable scene loading for Operator([f6bb0a600](https://git.xfel.eu/Karabo/Framework/-/commit/f6bb0a600a72e1cfb7a402fc942eec09a1eae6af))
+- *(MDL)* Output channel port is expert level([292ba1bb6](https://git.xfel.eu/Karabo/Framework/-/commit/292ba1bb630d21f826d17f474d6b8184b41addaa))
+- *(GUI)* Fix the visibility of UserSession button in the application mode([ad7ba4372](https://git.xfel.eu/Karabo/Framework/-/commit/ad7ba4372943b1bada9ea2c4eae9a51e7ce2b577))
+- *(C++)* Min and max size are expected to be unsigned int - not templated type([ee8dc8d84](https://git.xfel.eu/Karabo/Framework/-/commit/ee8dc8d848e5dc9d581c1fb0acd6f76b1d4a2306]))
 - *(C++)* Do not send broadcasts a 2nd time as normal slot to instance '*' ([1f1011e](https://git.xfel.eu/Karabo/Framework/-/commit/1f1011eaf4b3ae1d0d2f9477981d6d10121dc767))
 - *(C++)* Adjust broker rates to new AMQP mechanics ([839734d](https://git.xfel.eu/Karabo/Framework/-/commit/839734dd5563397fcf07e0d72b950f4e3fb2d1aa))
 - *(C++ test)* Previuos fix for "preDestruction" failures missed an essential part ([177b5bb](https://git.xfel.eu/Karabo/Framework/-/commit/177b5bbdf7cce3c82dee699ff6e7a94b85d953e5))
@@ -311,6 +329,7 @@ Features
 ++++++++
 
 
+- *(C++)* Add Dims::operator<<([01522887b](https://git.xfel.eu/Karabo/Framework/-/commit/01522887beec480be71ccdcbb88a372ac0d73e40))
 - *(C++)* Add an injected property to PropertyTest ([add1fb4](https://git.xfel.eu/Karabo/Framework/-/commit/add1fb4f2a28d9b41a97353ee60ed8ea9d13ed76))
 - *(GUI)* Add function to get the status icon to namespce. ([923db26](https://git.xfel.eu/Karabo/Framework/-/commit/923db26228d11f61166955fc93bf7849570a21c9))
 - *(GUI)* New Event when an item in SystemTopology updates. ([be619fd](https://git.xfel.eu/Karabo/Framework/-/commit/be619fd573b5789a73ac920453592a53a38d210c))
@@ -711,6 +730,9 @@ Testing
 Tools & CI
 ++++++++++
 
+- *(CI)* Only proper releasese for the GUI...([b1977e5de](https://git.xfel.eu/Karabo/Framework/-/commit/b1977e5de75da069a8e8e1fcd905dfad6cffd3db))
+- *(CI)* Temporarily publish release candidates of GUI([417f37380](https://git.xfel.eu/Karabo/Framework/-/commit/417f37380b2de9eaece76225cdfd11614722743c))
+- *(CI)* Also publish GUI beta releases like releases([ae1a1c8e0(https://git.xfel.eu/Karabo/Framework/-/commit/ae1a1c8e0f35e8027552e354c5998784b25faa01())
 - *(TOOLS)* Use recent containers ([3ee2cc4](https://git.xfel.eu/Karabo/Framework/-/commit/3ee2cc4552be9783f5285b1d0f2373dbe9f173ec))
 - *(CI)* Run CI on Kubernetes Cluster ([c18b402](https://git.xfel.eu/Karabo/Framework/-/commit/c18b40267565977116d14bc3596c649016d06198))
 
@@ -719,6 +741,7 @@ Documentation
 +++++++++++++
 
 
+- *(doc)* Update new changelog for Karabo 3 ([2acc4f1ec]https://git.xfel.eu/Karabo/Framework/-/commit/2acc4f1ec5da1f247e92a405fab28a08084f644a))
 - *(No Category)* Update Changelog to 3.0.0rc11 ([4e24dc8](https://git.xfel.eu/Karabo/Framework/-/commit/4e24dc8df464a21d3f610071248bcee8d13ade5e))
 - *(No Category)* Document the create hierarchy in project test ([3e640f9](https://git.xfel.eu/Karabo/Framework/-/commit/3e640f91544fc3587aa12e2c73953b27c793dd44))
 - *(No Category)* A bit fine tuning the docs and add a few ([2c23a5f](https://git.xfel.eu/Karabo/Framework/-/commit/2c23a5f1a023f55267688fb1583cc58430c03d72))
