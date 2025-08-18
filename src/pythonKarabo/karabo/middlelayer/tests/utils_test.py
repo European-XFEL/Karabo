@@ -22,7 +22,7 @@ from karabo.common.states import State
 from karabo.middlelayer.unitutil import StateSignifier, removeQuantity
 from karabo.middlelayer.utils import (
     AsyncTimer, check_broker_scheme, countdown, profiler, suppress)
-from karabo.native import Float, QuantityValue, String
+from karabo.native import EnumValue, Float, QuantityValue, String
 
 
 @pytest.fixture(scope="module")
@@ -62,6 +62,7 @@ def test_signifier(utilsTest):
     signifier = StateSignifier()
     state = signifier.returnMostSignificant([v1, v2, v3, v4])
     assert state == State.MOVING
+    assert isinstance(state, EnumValue)
     assert state.timestamp == v4.timestamp
 
     v4 = a4.toKaraboValue(State.INIT)
@@ -70,6 +71,7 @@ def test_signifier(utilsTest):
 
     state = signifier.returnMostSignificant([v1, v2, v3, v4])
     assert state == State.INIT
+    assert isinstance(state, EnumValue)
     assert state.timestamp == v4.timestamp
     assert v1.timestamp == utilsTest.timestamp_1
     assert v2.timestamp == utilsTest.timestamp_2
@@ -79,6 +81,7 @@ def test_signifier(utilsTest):
     v1 = a1.toKaraboValue(State.ON)
     assert v1 == State.ON
     state = signifier.returnMostSignificant([v1, v2, v3, v4])
+    assert isinstance(state, EnumValue)
     assert state == State.INIT
     assert state.timestamp == v4.timestamp
     assert state.timestamp == 4
@@ -96,6 +99,7 @@ def test_signifier(utilsTest):
     v3 = State.ON
     v4 = State.OFF
     state = signifier.returnMostSignificant([v1, v2, v3, v4])
+    assert isinstance(state, EnumValue)
     assert state == State.MOVING
     assert state.timestamp is None
 
@@ -103,6 +107,7 @@ def test_signifier(utilsTest):
     v1 = a1.toKaraboValue(State.ERROR)
     v1.timestamp = 20
     state = signifier.returnMostSignificant([v1, v2, v3, v4])
+    assert isinstance(state, EnumValue)
     assert state == State.ERROR
     assert state.timestamp == v1.timestamp
     assert state.timestamp == 20
@@ -114,6 +119,7 @@ def test_signifier(utilsTest):
     v1 = a1.toKaraboValue(State.OFF)
     v1.timestamp = utilsTest.timestamp_1
     state = signifier.returnMostSignificant([v1, v2, v3, v4])
+    assert isinstance(state, EnumValue)
     assert state == State.MOVING
     assert state.timestamp == v1.timestamp
     assert state.timestamp == 1

@@ -42,10 +42,10 @@ def wrap(data):
         return data
     elif isinstance(data, bool):
         return BoolValue(data)
-    elif isinstance(data, str):
-        return StringValue(data)
     elif isinstance(data, Enum):
         return EnumValue(data)
+    elif isinstance(data, str):
+        return StringValue(data)
     elif isinstance(data, (bytes, bytearray)):
         return VectorCharValue(data)
     elif isinstance(data, list):
