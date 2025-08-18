@@ -656,7 +656,9 @@ class DeviceServer:
             # request the content from the devices in the server.
             req = self._sigslot.request(deviceId, "slotLoggerContent", info)
             h = Handler(deviceId)
-            req.receiveAsync(h.on_reply, h.on_error, timeoutMs=5000)
+            # timeout smaller than GUI one,
+            # otherwise that misses all logs and not only those of bad device
+            req.receiveAsync(h.on_reply, h.on_error, timeoutMs=4500)
 
     def _replySlotLoggerContent(self, info, log_map, areply):
         nMessages = info.get("logs", default=KARABO_LOGGER_CONTENT_DEFAULT)
