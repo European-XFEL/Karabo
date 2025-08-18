@@ -507,6 +507,8 @@ class LogBookPreview(QDialog):
         pixmap = self.canvas.pixmap_item
         if pixmap is None:
             pixmap = QPixmap(self.pixmap.size())
+        # To keep the original size of the image
+        pixmap.setDevicePixelRatio(1)
         with QPainter(pixmap) as painter:
             self.canvas.render(painter, source=self.canvas.sceneRect(),
                                mode=Qt.KeepAspectRatio)
