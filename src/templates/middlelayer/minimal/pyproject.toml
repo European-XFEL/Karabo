@@ -21,6 +21,11 @@ line_length = 79
 known_first_party = ["karabo", "__PACKAGE_NAME__"]
 src_paths = ["src"]
 
+[tool.pytest.ini_options]
+asyncio_default_fixture_loop_scope = "module"
+asyncio_default_test_loop_scope = "module"
+asyncio_mode = "auto"
+
 [project.entry-points."karabo.middlelayer_device"]
 __CLASS_NAME__ = "__PACKAGE_NAME__.__CLASS_NAME__:__CLASS_NAME__"
 
