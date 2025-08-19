@@ -53,7 +53,7 @@ class NoEventLoopPolicy(DefaultEventLoopPolicy):
 class DeviceClient(TopologyMacro):
     # The command line device client will not wait
     # to come online for collecting topology
-    wait_topology = False
+    _wait_initialize = False
 
     @property
     def __all__(self):

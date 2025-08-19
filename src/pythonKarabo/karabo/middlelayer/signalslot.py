@@ -22,7 +22,7 @@ import sys
 import weakref
 from asyncio import (
     CancelledError, TimeoutError, ensure_future, gather, get_event_loop,
-    iscoroutine, iscoroutinefunction, wait_for)
+    iscoroutine, iscoroutinefunction, sleep, wait_for)
 from collections import defaultdict
 
 from karabo.native import (
@@ -132,6 +132,7 @@ class SignalSlotable(Configurable):
     naming_regex = re.compile("[A-Za-z0-9_/-]+")
     signalChanged = Signal(TypeHash(), String())
 
+    _wait_initialize = False
     __deviceServer = Weak()
 
     @String(
@@ -368,6 +369,8 @@ class SignalSlotable(Configurable):
             initializers = get_device_node_initializers(self)
             if initializers:
                 await gather(*initializers)
+            if self._wait_initialize:
+                await sleep(3)
             # do not simply await because some `onInitialization`
             # could be not a coroutine in Macros.
             await get_event_loop().run_coroutine_or_thread(
