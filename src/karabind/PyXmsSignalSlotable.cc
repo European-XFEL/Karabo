@@ -208,8 +208,6 @@ namespace karabind {
             explicit RequestorWrap(karabo::xms::SignalSlotable* signalSlotable)
                 : karabo::xms::SignalSlotable::Requestor(signalSlotable) {}
 
-            RequestorWrap timeoutPy(const int& milliseconds);
-
             template <typename... Args>
             RequestorWrap& requestPy(const std::string& slotInstanceId, const std::string& slotFunction,
                                      const Args&... args) {
@@ -550,6 +548,7 @@ namespace karabind {
             if (s) {
                 auto hash = std::make_shared<karabo::data::Hash>();
                 packPy(*hash, args...);
+                py::gil_scoped_release release;
                 s->emit<Args...>(hash);
             }
         }
@@ -558,6 +557,7 @@ namespace karabind {
         void callPy(const std::string& instanceId, const std::string& functionName, const Args&... args) const {
             auto body = std::make_shared<karabo::data::Hash>();
             packPy(*body, args...);
+            py::gil_scoped_release release;
             const std::string& id = (instanceId.empty() ? m_instanceId : instanceId);
             auto header = prepareCallHeader(id);
             doSendMessage(id, functionName, header, body);
@@ -567,6 +567,7 @@ namespace karabind {
         void replyPy(const Args&... args) {
             auto reply(std::make_shared<karabo::data::Hash>());
             packPy(*reply, args...);
+            // Can keep GIL: only a mutex lock in C++, no I/O
             registerReply(reply);
         }
 
