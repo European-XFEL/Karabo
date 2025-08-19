@@ -25,7 +25,7 @@ _DEVICE_CONFIG = {
 
 
 @pytest.mark.timeout(30)
-@pytest.mark.asyncio(loop_scope="module")
+@pytest.mark.asyncio
 async def test_device():
     device = __CLASS_NAME__(_DEVICE_CONFIG)
     async with AsyncDeviceContext(device=device) as ctx:
