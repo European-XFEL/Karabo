@@ -120,7 +120,9 @@ def uninstall_package(package: str) -> str:
                               stderr=STDOUT)
         return output.decode()
     except CalledProcessError as e:
-        return f"Error uninstalling package. Is it installed? {e}"
+        error_message = e.output.decode("utf-8")
+        return (f"Error uninstalling package. Is it installed?\n"
+                f"{error_message}")
 
 
 def install_package(package: str, version: str) -> str:
@@ -135,7 +137,8 @@ def install_package(package: str, version: str) -> str:
         load_extensions()
         return output.decode()
     except CalledProcessError as e:
-        return f"Error installing {_PKG_NAME} package: {str(e)}"
+        error_message = e.output.decode("utf-8")
+        return f"Error installing {_PKG_NAME} package:\n{error_message}"
 
 
 def install_specific_tag(package: str, tag: str) -> str:
