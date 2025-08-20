@@ -391,6 +391,7 @@ class EventLoop(SelectorEventLoop):
             t.cancel()
         if self.connector is not None:
             self.run_until_complete(self.connector.close())
+            self.connector.detach()
             self.connector = None
         super().close()
         EventLoop.global_loop = None
