@@ -94,6 +94,10 @@ class Connector:
             self.topic = getpass.getuser()
         self._lock = None
 
+    def detach(self):
+        """Detach the connector from the eventloop"""
+        self._lock = None
+
     def set_parameters(
             self, urls: str | None = None, topic: str | None = None):
         """Set the parameters for the singleton after it has been created
