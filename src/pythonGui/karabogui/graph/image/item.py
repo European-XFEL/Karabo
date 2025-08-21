@@ -148,9 +148,9 @@ class KaraboImageItem(GraphicsObject):
         if self._lastDownsample is not None:
             xds, yds = self._lastDownsample
             if xds != 1:
-                x = np.ceil(x / xds)
+                x = np.ceil(x / xds).astype(int)
             if yds != 1:
-                y = np.ceil(y / yds)
+                y = np.ceil(y / yds).astype(int)
 
         # Check if calculated coord is inside the qimage
         if qimage.rect().contains(x, y):
