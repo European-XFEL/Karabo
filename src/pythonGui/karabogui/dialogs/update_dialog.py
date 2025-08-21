@@ -389,48 +389,6 @@ class UpdateDialog(QDialog):
         get_config()['check_updates'] = toggled
 
 
-class UpdateNoticeDialog(QDialog):
-    """Dialog to check for updates.
-
-    This dialog is shown when the user clicks on the "Check for updates"
-    button in the settings dialog. It shows the current version and the
-    latest version available. If the latest version is newer than the
-    current version, it shows a button to download the update.
-    """
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setWindowTitle("Update Notice")
-        self.setObjectName("UpdateNoticeDialog")
-        self.setModal(True)
-        uic.loadUi(get_dialog_ui("update_notice_dialog.ui"), self)
-
-        self.do_not_show.toggled.connect(self.check_update_on_startup)
-
-        latest_version = get_index_list().get(_PKG_NAME, "0.0.0")
-        current_version = get_pkg_version(_PKG_NAME)
-        info_text = (
-            f"A newer version of {_PKG_NAME} available: <b>{latest_version}"
-            f"</b>.<br>Current version is <b>{current_version}</b>.<br> "
-            f"<br>Would you like to install using the Update Dialog? <br> "
-            f"<br> You can also update using the command-line utility: "
-            f"<br><i>karabo-update-extensions -l </i>")
-        self.info_label.setText(info_text)
-        pixmap = icons.logo.pixmap(50)
-        self.icon.setPixmap(pixmap)
-
-    def accept(self):
-        dialog = UpdateDialog(parent=self.parent())
-        dialog.exec()
-        super().accept()
-
-    @Slot(bool)
-    def check_update_on_startup(self, toggled):
-        """Check if the user wants to check for updates on startup."""
-        check_update = not bool(toggled)
-        get_config()['check_updates'] = check_update
-
-
 def main():
     description = """Command-line tool to update the {} package"""
     ap = ArgumentParser(description=description.format(_PKG_NAME))

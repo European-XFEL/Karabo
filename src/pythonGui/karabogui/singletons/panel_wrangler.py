@@ -26,8 +26,7 @@ from karabo.common.scenemodel.api import SceneModel, SceneTargetWindow
 from karabogui import access as krb_access, icons
 from karabogui.access import AccessRole, access_role_allowed, is_authenticated
 from karabogui.controllers.util import load_extensions
-from karabogui.dialogs.update_dialog import (
-    UpdateNoticeDialog, is_package_updated)
+from karabogui.dialogs.update_dialog import is_package_updated
 from karabogui.events import (
     KaraboEvent, broadcast_event, register_for_broadcasts)
 from karabogui.indicators import get_user_session_button_data
@@ -360,8 +359,7 @@ class PanelWrangler(QObject):
 
         check_updates = get_config()['check_updates']
         if check_updates and is_package_updated(GUI_EXTENSIONS):
-            dialog = UpdateNoticeDialog(parent=self.main_window)
-            dialog.exec()
+            self.main_window.enableGuiExtensionUpdate()
 
         show_wizard = get_config()['wizard']
         if show_wizard:

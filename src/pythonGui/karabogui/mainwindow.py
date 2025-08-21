@@ -28,7 +28,7 @@ from qtpy.QtCore import QPoint, QSize, Qt, Slot
 from qtpy.QtGui import QColor, QIcon
 from qtpy.QtWidgets import (
     QAction, QActionGroup, QFrame, QLabel, QMainWindow, QMenu, QMessageBox,
-    QSizePolicy, QSplitter, QTextBrowser, QToolButton, qApp)
+    QPushButton, QSizePolicy, QSplitter, QTextBrowser, QToolButton, qApp)
 
 import karabogui.access as krb_access
 from karabo.common.api import KARABO_PROJECT_MANAGER
@@ -439,6 +439,12 @@ class MainWindow(QMainWindow):
         self.tbUserSession.setToolTip(tooltip)
         self.tbUserSession.setIcon(icon)
 
+    def enableGuiExtensionUpdate(self):
+        """This method is called on gui launch if a new version of GUI
+        Extensions is available.
+        """
+        self.update_extensions_action.setVisible(True)
+
     # --------------------------------------
     # private methods
 
@@ -658,6 +664,20 @@ class MainWindow(QMainWindow):
         self.ui_big_data = QLabel()
         self.ui_big_data.setMaximumWidth(600)
         self.ui_big_data.setAlignment(Qt.AlignRight)
+
+        self.update_gui_extensions = QPushButton(self)
+        object_name = generateObjectName(self.update_gui_extensions)
+        self.update_gui_extensions.setObjectName(object_name)
+        self.update_gui_extensions.setText("Update Extensions")
+        self.update_gui_extensions.setFixedHeight(40)
+        self.update_gui_extensions.setStyleSheet(
+            f"QPushButton#{object_name} "
+            f"{{background-color:#4B8AA4; font: 13pt;}}")
+        self.update_gui_extensions.setToolTip(
+            "A newer version of GUI Extensions is available. Click to update")
+        self.update_gui_extensions.clicked.connect(
+            self._on_update_gui_extensions)
+
         self.ui_lamp = QLabel()
         self.ui_lamp.setFixedWidth(60)
         self.ui_lamp.setAlignment(Qt.AlignCenter)
@@ -665,6 +685,9 @@ class MainWindow(QMainWindow):
 
         toolbar.addWidget(self.notification_banner)
         toolbar.addWidget(self.ui_big_data)
+        self.update_extensions_action = toolbar.addWidget(
+            self.update_gui_extensions)
+        self.update_extensions_action.setVisible(False)
         toolbar.addWidget(self.ui_lamp)
 
     def _setupStatusBar(self):
@@ -1059,3 +1082,8 @@ class MainWindow(QMainWindow):
     @Slot()
     def showShortcuts(self) -> None:
         self._open_link(KEYBOARD_SHORTCUTS)
+
+    @Slot()
+    def _on_update_gui_extensions(self):
+        self.update_extensions_action.setVisible(False)
+        self.onCheckUpdates()

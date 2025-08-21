@@ -18,7 +18,7 @@ from qtpy.QtWidgets import QFrame
 
 from karabo.native import AccessLevel
 from karabogui import mainwindow
-from karabogui.testing import singletons
+from karabogui.testing import click_button, singletons
 
 
 def test_mainwindow(gui_app, mocker, subtests):
@@ -124,3 +124,12 @@ def test_mainwindow(gui_app, mocker, subtests):
         krb_access.GLOBAL_ACCESS_LEVEL = AccessLevel.OBSERVER
         mw.onUpdateAccessLevel()
         assert not mw.tbUserSession.isVisible()
+
+    with subtests.test("Test gui extension update"):
+        mw.enableGuiExtensionUpdate()
+        assert mw.update_extensions_action.isVisible()
+
+        update_dialog = mocker.patch("karabogui.mainwindow.UpdateDialog")
+        click_button(mw.update_gui_extensions)
+        assert update_dialog().open.call_count == 1
+        assert not mw.update_extensions_action.isVisible()
