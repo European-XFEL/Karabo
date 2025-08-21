@@ -14,6 +14,7 @@
 # The Karabo Gui is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
+import pytest
 from qtpy.QtWidgets import QWidget
 
 from karabo.common.scenemodel.api import ErrorBoolModel
@@ -31,36 +32,36 @@ class MockQSvgWidget(QWidget):
 
 class Object(Configurable):
     prop = Bool(defaultValue=True)
+    prop2 = Bool(defaultValue=False)
 
 
-schema = Object.getClassSchema()
-new_schema = Object.getClassSchema()
-
-
-def test_errorbool_controller(gui_app, mocker):
-    # setup
+@pytest.fixture()
+def controller(gui_app, mocker):
+    schema = Object.getClassSchema()
     proxy = get_class_property_proxy(schema, "prop")
-    new_proxy = get_class_property_proxy(new_schema, "prop")
+
     model = ErrorBoolModel()
     target = "karabogui.controllers.display.errorbool.SvgWidget"
     mocker.patch(target, new=MockQSvgWidget)
     proxy.value = False
 
-    # basics
     controller = DisplayErrorBool(proxy=proxy, model=model)
     controller.create(None)
-    assert controller.widget is not None
+    assert controller.widget
+    yield controller
+    controller.destroy()
+    assert controller.widget is None
 
+
+def test_errorbool_controller(controller):
     # exercise code paths
+    proxy = controller.proxy
     apply_configuration(Hash("prop", True), proxy.root_proxy.binding)
     assert controller.widget.loaded_data is OK_BOOL
     apply_configuration(Hash("prop", False), proxy.root_proxy.binding)
     assert controller.widget.loaded_data is ERROR_BOOL
-    controller.add_proxy(new_proxy)
-    assert controller.widget.loaded_data is ERROR_BOOL
-    apply_configuration(Hash("prop", True), proxy.root_proxy.binding)
-    assert controller.widget.loaded_data is OK_BOOL
+    assert controller.widget.toolTip() == "prop\nFalse"
 
-    # teardown
-    controller.destroy()
-    assert controller.widget is None
+    controller.model.invert = True
+    assert controller.widget.loaded_data is OK_BOOL
+    assert controller.widget.toolTip() == "prop\nInverted: False"
