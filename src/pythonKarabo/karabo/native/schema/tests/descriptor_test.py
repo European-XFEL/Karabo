@@ -337,7 +337,7 @@ class Tests(TestCase):
                         defaultValue=[1, 2, 3])
         default = d.defaultValue
         # Test that the values are casted to floats
-        self.assertEqual(type(default[0]), np.float64)
+        self.assertEqual(type(default[0]), np.float32)
         self.assertEqual(d.defaultValue, [1.0, 2.0, 3.0])
 
         v = d.toKaraboValue([2, 3, 4])
@@ -1117,13 +1117,16 @@ class Tests(TestCase):
                 desc, 1, 10, 0, 11,  # Desc, minInc, maxInc, minExc, maxExc,
                 3)  # value
 
-        # We assert numpy attributes as well for Float and Double, they will
-        # be casted, but all attribute for floating points have 64 bit!
-        for desc in [Float, Double]:
-            self.assert_numpy_attributes(
-                desc, 1.30, 10.02,  # Desc, minInc, maxInc,
-                0.12, 11.37,  # minExc, maxExc,
-                3.07, dtype=np.float64)  # default value, dtype
+        # We assert numpy attributes as well for Float and Double
+        self.assert_numpy_attributes(
+            Float, 1.30, 10.02,  # Desc, minInc, maxInc,
+            0.12, 11.37,  # minExc, maxExc,
+            3.07, dtype=np.float32)  # default value, dtype
+
+        self.assert_numpy_attributes(
+            Double, 1.30, 10.02,  # Desc, minInc, maxInc,
+            0.12, 11.37,  # minExc, maxExc,
+            3.07, dtype=np.float64)  # default value, dtype
 
         # Attributes are casted to their numpy type
         d = Int8(defaultValue=8.2)
