@@ -460,9 +460,7 @@ async def test_cross_pipeline(deviceTest):
     server = AsyncServerContext(
         serverId, [f"init={init}", "pluginNamespace=karabo.bound_device_test"],
         api="python")
-
     async with server:
-
         # it takes typically 2 s for the bound device to start
         bound_proxy = await getDevice("boundDevice2")
         mdl_proxy = await getDevice("middlelayerDevice")

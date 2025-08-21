@@ -69,8 +69,6 @@ class Attribute:
     __slots__ = ["default", "dtype", "name"]
 
     def __init__(self, default=None, dtype=None):
-        if dtype is np.float32:
-            dtype = np.float64
         self.name = None
         self.dtype = dtype
         self.default = self.check(default)
