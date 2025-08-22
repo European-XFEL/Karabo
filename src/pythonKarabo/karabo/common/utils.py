@@ -17,6 +17,7 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 #############################################################################
+import math
 import weakref
 from inspect import signature
 from types import MethodType
@@ -105,3 +106,20 @@ class WeakMethodRef:
 
     def _owner_deleted(self, ref):
         self.obj = None
+
+
+def get_arrowhead_points(x1: int, y1: int, x2: int, y2: int) -> (
+        tuple)[int, int, int, int]:
+    """Calculate the two points for the arrow head for the given lines"""
+    arrow_size = 10
+    angle_offset = math.pi / 10
+    angle = math.atan2(y2 - y1, x2 - x1)
+
+    # The points for the arrowhead triangle
+    hx1 = round(x2 - arrow_size * math.cos(angle - angle_offset))
+    hy1 = round(y2 - arrow_size * math.sin(angle - angle_offset))
+
+    hx2 = round(x2 - arrow_size * math.cos(angle + angle_offset))
+    hy2 = round(y2 - arrow_size * math.sin(angle + angle_offset))
+
+    return hx1, hy1, hx2, hy2

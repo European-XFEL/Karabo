@@ -20,18 +20,17 @@
 #############################################################################
 from abc import abstractmethod
 
-from qtpy.QtCore import QLine, QMargins, QRect, QSize, Qt
-from qtpy.QtGui import (
-    QBrush, QColor, QPainterPath, QPen, QPolygonF, QTransform)
+from qtpy.QtCore import QLine, QMargins, QPoint, QRect, QSize, Qt
+from qtpy.QtGui import QBrush, QColor, QPainterPath, QPen, QPolygon, QTransform
 from qtpy.QtWidgets import QDialog
 from traits.api import (
     ABCHasStrictTraits, Bool, Constant, Float, Instance, Property, Tuple,
     cached_property)
 
 from karabo.common.scenemodel.api import BaseShapeObjectData
+from karabo.common.utils import get_arrowhead_points
 from karabogui.dialogs.pen_dialogs import PenDialog
 from karabogui.pathparser import Parser
-from karabogui.sceneview.utils import get_arrowhead_points
 
 from .const import (
     GRID_STEP, QT_PEN_CAP_STYLE_FROM_STR, QT_PEN_CAP_STYLE_TO_STR,
@@ -251,29 +250,25 @@ class ArrowShape(LineShape):
 
     def draw(self, painter):
         super().draw(painter)
-        x1 = self.shape.p1().x()
-        y1 = self.shape.p1().y()
-        x2 = self.shape.p2().x()
-        y2 = self.shape.p2().y()
-        hp1, hp2 = get_arrowhead_points(x1=x1, y1=y1, x2=x2, y2=y2)
+        model = self.model
+        hp1 = QPoint(model.hx1, model.hy1)
+        hp3 = QPoint(model.hx2, model.hy2)
+        hp2 = QPoint(model.x2, model.y2)
+
         # Paint arrowhead as a polygon of three points
         painter.setBrush(QBrush(painter.pen().color()))
-        painter.drawPolygon(QPolygonF([self.shape.p2(), hp1, hp2]))
+        painter.drawPolygon(QPolygon([hp1, hp2, hp3]))
 
     def translate(self, offset):
         super().translate(offset)
-        hp1, hp2 = get_arrowhead_points(
+        hx1, hy1, hx2, hy2 = get_arrowhead_points(
             self.model.x1, self.model.y1, self.model.x2, self.model.y2)
-        hx1, hy1 = hp1.x(), hp1.y()
-        hx2, hy2 = hp2.x(), hp2.y()
         self.model.trait_set(hx1=hx1, hy1=hy1, hx2=hx2, hy2=hy2)
 
     def set_geometry(self, rect):
         super().set_geometry(rect)
-        hp1, hp2 = get_arrowhead_points(
+        hx1, hy1, hx2, hy2 = get_arrowhead_points(
             self.model.x1, self.model.y1, self.model.x2, self.model.y2)
-        hx1, hy1 = hp1.x(), hp1.y()
-        hx2, hy2 = hp2.x(), hp2.y()
         self.model.trait_set(hx1=hx1, hy1=hy1, hx2=hx2, hy2=hy2)
 
 
