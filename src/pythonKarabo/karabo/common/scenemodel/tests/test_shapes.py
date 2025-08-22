@@ -13,6 +13,7 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
+from karabo.common.utils import get_arrowhead_points
 from karabo.testing.utils import temp_xml_file
 
 from ..model import UnknownXMLDataModel
@@ -143,9 +144,74 @@ def test_svg_arrow():
         assert arrow_model.y1 == 50
         assert arrow_model.x2 == 95
         assert arrow_model.y2 == 75
+        hx1, hy1, hx2, hy2 = get_arrowhead_points(
+            arrow_model.x1, arrow_model.y1, arrow_model.x2, arrow_model.y2)
+
+        assert hx1 == arrow_model.hx1
+        assert hy1 == arrow_model.hy1
+        assert hx2 == arrow_model.hx2
+        assert hy2 == arrow_model.hy2
 
         assert arrow_model.stroke == "#000"
         assert arrow_model.stroke_width == 5
+
+        read_model = single_model_round_trip(arrow_model)
+        assert read_model.x1 == arrow_model.x1
+        assert read_model.x2 == arrow_model.x2
+        assert read_model.y1 == arrow_model.y1
+        assert read_model.y2 == arrow_model.y2
+
+
+def test_arrow_with_polygon():
+    # A round trip for the model
+    traits = _base_shape_traits()
+    traits.update({"x1": 0, "y1": 1, "x2": 2, "y2": 3})
+    arrow_model = ArrowPolygonModel(**traits)
+    read_model = single_model_round_trip(arrow_model)
+
+    assert read_model.x1 == 0
+    assert read_model.y1 == 1
+    assert read_model.x2 == 2
+    assert read_model.y2 == 3
+
+    assert arrow_model.hx1 == read_model.hx1
+    assert arrow_model.hy1 == read_model.hy1
+    assert arrow_model.hx2 == read_model.hx2
+    assert arrow_model.hy2 == read_model.hy2
+
+
+def test_polygon_arrow_from_xml_def():
+
+    # SVG from UnknownWidget in Karabo2.20 for the polygon arrow created in
+    # Karabo2.21
+    SCENE_SVG = (
+        """<svg:svg xmlns:krb="http://karabo.eu/scene" xmlns:svg='http://www.w3.org/2000/svg'
+         krb:version="2" krb:uuid="7bf41ba7-e675-46d4-82d3-a56b5662e965" height="768" width="1024">
+    <svg:rect krb:class="ArrowPolygonModel" krb:widget="ArrowPolygonModel" krb:keys=""
+              x="50" y="130" width="150" height="10" stroke="#000000" stroke-opacity="1.0"
+              stroke-linecap="butt" stroke-dashoffset="0.0" stroke-width="1.0"
+              stroke-dasharray="" stroke-style="1" stroke-linejoin="miter"
+              stroke-miterlimit="4.0" fill="#000000" fill-opacity="1.0" x1="50" y1="130"
+              x2="200" y2="130" hx1="190" hy1="133" hx2="190" hy2="127">
+    </svg:rect>
+    </svg:svg>""" # noqa
+    )
+    with temp_xml_file(SCENE_SVG) as fn:
+        scene_model = read_scene(fn)
+        assert len(scene_model.children) == 1
+        arrow = scene_model.children[0]
+        assert isinstance(arrow, ArrowPolygonModel)
+        assert arrow.x == 50
+        assert arrow.y == 130
+        assert arrow.x1 == 50
+        assert arrow.y1 == 130
+        assert arrow.x2 == 200
+        assert arrow.y2 == 130
+
+        assert arrow.hx1 == 190
+        assert arrow.hy1 == 133
+        assert arrow.hx2 == 190
+        assert arrow.hy2 == 127
 
 
 def test_svg_defs():

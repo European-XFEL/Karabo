@@ -18,7 +18,7 @@ import sys
 from pathlib import Path
 
 from qtpy.QtCore import QLine, QPoint, QRect
-from qtpy.QtGui import QBrush, QImageReader, QPen, QPixmap, QPolygonF
+from qtpy.QtGui import QBrush, QImageReader, QPen, QPixmap, QPolygon
 from qtpy.QtSvg import QSvgRenderer
 from qtpy.QtWidgets import QDialog
 from traits.api import Instance
@@ -28,13 +28,14 @@ from karabo.common.scenemodel.api import (
     InstanceStatusModel, LineModel, PopupButtonModel, RectangleModel,
     SceneLinkModel, SceneTargetWindow, StickerModel, WebLinkModel,
     create_base64image)
+from karabo.common.utils import get_arrowhead_points
 from karabogui import messagebox
 from karabogui.dialogs.api import (
     DeviceCapabilityDialog, SceneLinkDialog, TextDialog, TopologyDeviceDialog,
     WebDialog)
 from karabogui.fonts import get_font_metrics
 from karabogui.sceneview.bases import BaseSceneTool
-from karabogui.sceneview.utils import calc_snap_pos, get_arrowhead_points
+from karabogui.sceneview.utils import calc_snap_pos
 from karabogui.singletons.api import get_config
 from karabogui.util import getOpenFileName
 
@@ -114,10 +115,14 @@ class ArrowSceneTool(LineSceneTool):
         if self.line is not None:
             p1 = self.line.p1()
             p2 = self.line.p2()
-            hp1, hp2 = get_arrowhead_points(p1.x(), p1.y(), p2.x(), p2.y())
+            hx1, hy1, hx2, hy2 = get_arrowhead_points(
+                p1.x(), p1.y(), p2.x(), p2.y())
+            hp1 = QPoint(hx1, hy1)
+            hp2 = QPoint(hx2, hy2)
+
             # Paint arrowhead as a polygon of three points
             painter.setBrush(QBrush(painter.pen().color()))
-            painter.drawPolygon(QPolygonF([p2, hp1, hp2]))
+            painter.drawPolygon(QPolygon([p2, hp1, hp2]))
 
     def mouse_up(self, scene_view, event):
         if self.line is not None:
@@ -128,14 +133,10 @@ class ArrowSceneTool(LineSceneTool):
             y1 = self.start_pos.y()
             x2 = pos.x()
             y2 = pos.y()
-            header_point1, header_point2 = get_arrowhead_points(x1, y1, x2, y2)
-            hx1 = header_point1.x()
-            hy1 = header_point1.y()
-            hx2 = header_point2.x()
-            hy2 = header_point2.y()
+            hx1, hy1, hx2, hy2 = get_arrowhead_points(x1, y1, x2, y2)
             model = ArrowPolygonModel(
-                x1=x1, y1=y1, x2=x2, y2=y2, hx1=hx1, hy1=hy1, hx2=hx2,
-                hy2=hy2, stroke="#000000")
+                x1=x1, y1=y1, x2=x2, y2=y2, hx1=hx1, hy1=hy1,
+                hx2=hx2, hy2=hy2, stroke="#000000")
             scene_view.add_models(model, initialize=True)
             scene_view.set_tool(None)
             scene_view.select_model(model)

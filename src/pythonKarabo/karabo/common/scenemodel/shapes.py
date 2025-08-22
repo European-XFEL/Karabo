@@ -17,6 +17,8 @@ from xml.etree.ElementTree import SubElement
 
 from traits.api import CInt, Property, String
 
+from karabo.common.utils import get_arrowhead_points
+
 from .bases import BaseShapeObjectData
 from .const import ARROW_MIN_SIZE, NS_KARABO, NS_SVG, SVG_GROUP_TAG
 from .io_utils import get_numbers, set_numbers
@@ -180,16 +182,11 @@ def _write_base_shape_data(model, element):
         write("fill-opacity", str(model.fill_opacity))
 
 
-def _write_arrow_data(model, element):
-    _write_base_shape_data(model, element)
-    set_numbers(("x", "y", "width", "height", "x1", "y1", "x2", "y2", "hx1",
-                 "hy1", "hx2", "hy2", ), model, element)
-
-
 @register_scene_reader("Line", xmltag=NS_SVG + "line", version=1)
 def __line_reader(element):
     """A reader for Line objects in Version 1 scenes"""
-    # Check if it is an older arrow with XML defs arrow head.
+    # The arrow created in Karabogui2.20 or older has arrow head as
+    # marker-end. We have a separate reader for this.
     if "marker-end" in element.attrib:
         return __arrow_reader(element)
 
@@ -209,23 +206,39 @@ def __line_writer(model, parent):
 
 # Don't register because this is called from the line reader
 def __arrow_reader(element):
+    """Reader for arrow with marker-end as header, from Karabogui 2.20 or
+    older. Karabogui 2.21 onwards, the arrow head is stored as polygon which
+    can be calculated from the line coordinates x1,y1, x2,y2.
+
+    This can be deleted when all the arrows with marker-end are updated to
+    arrows with polygon.
+    """
     traits = _read_base_shape_data(element)
-    traits.update(get_numbers(("x1", "y1", "x2", "y2"), element))
+    points = get_numbers(("x1", "y1", "x2", "y2"), element)
+    hx1, hy1, hx2, hy2 = get_arrowhead_points(**points)
+    points.update({"hx1": hx1, "hy1": hy1, "hx2": hx2, "hy2": hy2})
+    traits.update(points)
     return ArrowPolygonModel(**traits)
 
 
-def __set_points(model, polygon_element):
-    """ Sets the arrowhead points as string. eg 'x1,y1 x2,y2 x3,y3' """
+def _write_arrow_polygon(model, element):
+    """Sets the arrowhead points as string. Eg 'x1,y1 x2,y2 x3,y3'.
+
+    The points are only written to svg files so that the arrow header can
+    appear in any svg editor - like inkscape.
+    They are never read by model, as they are calculated from the line points.
+    """
+
     points = (f"{model.x2},{model.y2} "
               f"{model.hx1},{model.hy1} "
               f"{model.hx2},{model.hy2} ")
-    polygon_element.set("points", points)
+    element.set("points", points)
 
 
-def __get_points(polygon_element):
-    """Reads the polygon element's points . Point is stored as
-    'x1,y1 x2,y2 x3,y3'  """
-    points = polygon_element.get("points").strip()
+def _read_arrow_polygon(element):
+    """Reads the polygon element's points. SVG stores the points,
+    for example, for triangle as 'x1,y1 x2,y2 x3,y3'  """
+    points = element.get("points").strip()
     _, hp1, hp2 = points.split(" ")
     hx1, hy1 = hp1.split(",")
     hx2, hy2 = hp2.split(",")
@@ -235,25 +248,27 @@ def __get_points(polygon_element):
 @register_scene_reader("ArrowPolygonModel", xmltag=SVG_GROUP_TAG,
                        version=2)
 def arrow_polygon_reader(element):
+    # Read the line
     line = element.find(NS_SVG + "line")
-    polygon = element.find(NS_SVG + "polygon")
-    # line and polygon are None if the model is written  by UnknownWidget,
-    # from older KaraboGUI.
+
+    # The line and polygon sub-elements are not present if the model is
+    # written by 'UnknownWidget' for arrow with polygon, from Karabogui 2.20 or
+    # older. However, the parent element still has the information to
+    # regenerate the line. Hence, reading the data from the parent 'element'.
     if line is None:
         traits = _read_base_shape_data(element)
+        points = get_numbers(("x1", "y1", "x2", "y2"), element)
+        hx1, hy1, hx2, hy2 = get_arrowhead_points(**points)
+        points.update({"hx1": hx1, "hy1": hy1, "hx2": hx2, "hy2": hy2})
+        traits.update(points)
     else:
         traits = _read_base_shape_data(line)
+        traits.update(get_numbers(("x1", "y1", "x2", "y2"), line))
 
-    if polygon is None:
-        hx1 = element.attrib["hx1"]
-        hx2 = element.attrib["hx2"]
-        hy1 = element.attrib["hy1"]
-        hy2 = element.attrib["hy2"]
-        points = {"hx1": hx1, "hy1": hy1, "hx2": hx2, "hy2": hy2}
-    else:
-        points = __get_points(polygon_element=polygon)
-    traits.update(points)
-    traits.update(get_numbers(("x", "y", "x1", "y1", "x2", "y2"), element))
+        polygon = element.find(NS_SVG + "polygon")
+        points = _read_arrow_polygon(element=polygon)
+        traits.update(points)
+
     return ArrowPolygonModel(**traits)
 
 
@@ -269,12 +284,10 @@ def arrow_polygon_writer(model, parent):
     set_numbers(("x1", "y1", "x2", "y2"), model, line)
 
     polygon_element = SubElement(element, NS_SVG + "polygon")
-    __set_points(model=model, polygon_element=polygon_element)
+    _write_arrow_polygon(model, polygon_element)
     model.fill = model.stroke
-    # Write all the model values to element also, so that in KaraboGUI
-    # older  than 2.21 the unsupported widget is shown.
-    _write_arrow_data(model, element)
     _write_base_shape_data(model, polygon_element)
+
     return element
 
 
