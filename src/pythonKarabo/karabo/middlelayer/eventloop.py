@@ -15,13 +15,12 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 
 import asyncio
-import queue
 import threading
 import weakref
 from asyncio import (
-    AbstractEventLoop, CancelledError, Future, Queue, SelectorEventLoop,
-    TimeoutError, ensure_future, get_event_loop, iscoroutinefunction,
-    set_event_loop, sleep, wait_for)
+    AbstractEventLoop, CancelledError, Future, SelectorEventLoop, TimeoutError,
+    ensure_future, get_event_loop, iscoroutinefunction, set_event_loop, sleep,
+    wait_for)
 from concurrent.futures import ThreadPoolExecutor
 from functools import wraps
 
@@ -130,7 +129,6 @@ class NoEventLoop(AbstractEventLoop):
     is no event loop. Setting a fake event loop prevents asyncio from
     automatically setting one.
     """
-    Queue = queue.Queue
     sync_set = True
 
     def __init__(self, instance):
@@ -240,7 +238,6 @@ class NoEventLoop(AbstractEventLoop):
 
 
 class EventLoop(SelectorEventLoop):
-    Queue = Queue
     sync_set = False
     global_loop = None
     connector = None
