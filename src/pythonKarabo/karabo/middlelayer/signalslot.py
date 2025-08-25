@@ -279,14 +279,6 @@ class SignalSlotable(Configurable):
     del inner_discover
 
     @slot
-    def slotHeartbeat(self, networkId, info):
-        pass
-
-    @slot
-    def slotStopTrackingExistenceOfConnection(self, *args):
-        print('received stopTracking...', args)
-
-    @slot
     def slotGetOutputChannelInformation(self, info: Hash):
         channelId = info['channelId']
         try:
