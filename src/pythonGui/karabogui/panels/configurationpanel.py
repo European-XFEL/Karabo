@@ -313,6 +313,11 @@ class ConfigurationPanel(BasePanelWidget):
         proxy = self._showing_proxy
         if proxy is None:
             return False
+        if not isinstance(proxy, (DeviceProxy, ProjectDeviceProxy)):
+            msg = (f"A configuration for '{deviceId}' arrived, but is "
+                   "ignored since the device is not shown in editor.")
+            messagebox.show_error(msg, parent=self)
+            return False
 
         binding = proxy.binding
         # The check we can provide is to check the deviceId and classId
