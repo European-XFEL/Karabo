@@ -26,7 +26,7 @@ This section describes the policies implemented for the signal and slot communic
 - In the TRACK case the connecting partners are automatically connected once the instances are availabe, this allows to connect to not-yet existing slots/signals 
 - The connect call itself returns a boolean indicating whether the connection could be established or not. The call has an internal timeout of 1 second.  
 - Besides the asynchronous signal and slot communication pattern 4 other exists
-  - call (aynchronous, fire and forget)
+  - call (asynchronous, fire and forget)
   - request/reply (synchronous with timeout)
   - requestNoWait / reply to other slot (asynchronous)
   - request / reply on provided callBack (asynchronous)

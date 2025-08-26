@@ -15,12 +15,12 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 
 stages:
-  - docs # move to the back after testing
   - lint
   - build
   - test
   - mirror
   - systemtest
+  - docs
 
 variables:
   CONAN_USER_HOME: $CI_PROJECT_DIR/.cache/conan
@@ -359,6 +359,36 @@ variables:
       - "conda-recipes/karabogui/**/*"
   <<: *artifacts-spec
 
+# Docs
+.docs_build: &docs_build
+  image: python:3.12
+  script:
+      - apt-get -y update
+      - apt-get -y install doxygen graphviz
+      - cd doc
+      - pip install --upgrade -r requirements.txt
+      - sphinx-build -b html . ../public
+      - cd ..
+      # public docs build
+      - echo 'deb http://download.indii.org/deb bookworm main' | tee /etc/apt/sources.list.d/indii.org.list
+      - curl -fsSL https://download.indii.org/deb/Release.key | gpg --dearmor | tee /etc/apt/trusted.gpg.d/indii.org.gpg > /dev/null
+      - apt update
+      - apt install doxide
+      - pip install mkdocs mkdocs-material mkdocs-section-index mkdocs-literate-nav
+      - pip install mkdocstrings-python
+      - doxide build
+      - mkdocs build -d public_html
+      - mv public_html public/public
+
+doc_test:
+  stage: test
+  <<: *docs_build
+  only:
+    refs:
+      - merge_requests
+    changes:
+      - "doc/**/*"
+
 ### Jobs
 
 # static source code analysis
@@ -634,28 +664,14 @@ internal_mirror_publish:
     # to the old commit idenfitifiers in the mirror.
     - git push internal_mirror --tags --force
 
+# NB: no documentation is built for A.B.X-hotfix! only add documentation against main
 pages:
   stage: docs
-  image: python:3.12
-  rules:
-    - if: $CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH
-  script:
-    - apt-get -y update
-    - apt-get -y install doxygen graphviz
-    - cd doc
-    - pip install --upgrade -r requirements.txt
-    - sphinx-build -b html . ../public
-    - cd ..
-    # public docs build
-    - echo 'deb http://download.indii.org/deb bookworm main' | tee /etc/apt/sources.list.d/indii.org.list
-    - curl -fsSL https://download.indii.org/deb/Release.key | gpg --dearmor | tee /etc/apt/trusted.gpg.d/indii.org.gpg > /dev/null
-    - apt update
-    - apt install doxide
-    - pip install mkdocs mkdocs-material mkdocs-section-index mkdocs-literate-nav
-    - pip install mkdocstrings-python
-    - doxide build
-    - mkdocs build -d public_html
-    - mv public_html public/public
+  <<: *docs_build
+  only:
+    refs:
+      - main
   artifacts:
     paths:
       - public
+
