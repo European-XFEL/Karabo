@@ -31,26 +31,8 @@ LABEL_COLOR = QColor(0, 0, 0, 200)
 class KaraboLegend(LegendItem):
     def __init__(self, size=None, offset=None, **kwargs):
         super().__init__(
-            size, offset, pen=LEGEND_PEN, brush=LEGEND_BRUSH,
-            labelTextColor=LABEL_COLOR)
-
-    def addItem(self, item, name):
-        """Reimplemented function of LegendItem
-
-        :param item: A PlotDataItem from which the line and point style
-                     of the item will be determined
-        :param name: The title to display for this item. Simple HTML allowed.
-        """
-        label = LabelItem(name, justify='left',
-                          color=self.opts['labelTextColor'],
-                          size=TEXT_SIZE)
-        sample = (item if isinstance(item, ItemSample)
-                  else ColorBox(item))
-        row = self.layout.rowCount()
-        self.items.append((sample, label))
-        self.layout.addItem(sample, row, SYMBOL_COLUMN)
-        self.layout.addItem(label, row, TEXT_COLUMN)
-        self.updateSize()
+            size=size, offset=offset, pen=LEGEND_PEN, brush=LEGEND_BRUSH,
+            labelTextColor=LABEL_COLOR, sampleType=ColorBox)
 
 
 class CoordsLegend(KaraboLegend):
