@@ -213,7 +213,9 @@ class Broker:
         """
         self.brokerId = f"{self.domain}.{self.deviceId}"
         try:
-            await self.channel.queue_declare(self.brokerId, passive=True)
+            await self.channel.queue_declare(
+                self.brokerId, exclusive=True, auto_delete=True,
+                passive=True)
             # If no exception raised the queue name exists already ...
             # To continue  just use generated queue name...
             timestamp = hex(int(time.monotonic() * 1000000000))[2:]
@@ -231,7 +233,8 @@ class Broker:
                 "x-overflow": _OVERFLOW_POLICY,
                 "x-message-ttl": _TIME_TO_LIVE}
             declare_ok = await self.channel.queue_declare(
-                self.brokerId, auto_delete=True, arguments=arguments)
+                self.brokerId, auto_delete=True,
+                exclusive=True, arguments=arguments)
             # The received queue name (either input or generated) is ...
             self.queue = declare_ok.queue
 
@@ -648,11 +651,12 @@ class Broker:
             "x-overflow": _OVERFLOW_POLICY,
             "x-message-ttl": _TIME_TO_LIVE}
         declare_ok = await self.channel.queue_declare(
-            name, auto_delete=True, arguments=arguments)
+            name, exclusive=True, auto_delete=True,
+            arguments=arguments)
         self.heartbeat_queue = declare_ok.queue
         consume_ok = await self.channel.basic_consume(
             self.heartbeat_queue, partial(self.on_heartbeat, device),
-            no_ack=True)
+            exclusive=True, no_ack=True)
         self.heartbeat_consumer_tag = consume_ok.consumer_tag
 
         # Binding and book-keeping!
