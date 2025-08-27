@@ -840,7 +840,7 @@ async def test_log(deviceTest):
         await d.read_log()
 
     hash = remote.logmessage
-    assert hash["message"] == "expected exception"
+    assert "expected exception" in hash["message"]
     assert hash["type"] == "ERROR"
     assert hash["category"] == "local"
     assert _absolute_delta_to_now(hash["timestamp"]) <= 10

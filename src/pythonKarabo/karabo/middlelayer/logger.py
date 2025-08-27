@@ -20,8 +20,7 @@ from collections import deque
 from contextlib import contextmanager
 from datetime import datetime
 
-from karabo.native import (
-    AccessLevel, AccessMode, Configurable, Hash, String, VectorString)
+from karabo.native import AccessLevel, Configurable, Hash, String
 
 
 class CacheLog:
@@ -40,60 +39,42 @@ class CacheLog:
         return events
 
 
-class CacheHandler(logging.Handler):
-    def emit(self, record):
+class InstanceHandler(logging.Handler):
 
+    instanceId = ""
+
+    def emit(self, record):
+        # record.levelno is 10, 20, 30,... for "DEBUG", "INFO", "WARN",...
         level = ("DEBUG", "INFO", "WARN", "ERROR", "FATAL"
                  )[bisect([20, 30, 40, 50], record.levelno)]
-        timestamp = datetime.fromtimestamp(record.created).isoformat()
-        message = record.getMessage()
-        deviceId = self.parent.broker.deviceId
+        timestamp = datetime.fromtimestamp(record.created)
+        message = self.format(record)
+
+        print("---------- Logger start -----------")
+        print(timestamp, level, self.instanceId)
+        print(message)
+        print("---------- Logger end -----------")
+
         trace = ""
         if record.exc_info is not None:
             trace = "".join(traceback.format_exception(*record.exc_info))
 
         CacheLog.add_event(
-            Hash("type", level, "message", message,
-                 "timestamp", timestamp, "category", deviceId,
+            Hash("type", level,
+                 "message", message,
+                 "timestamp", timestamp.isoformat(),
+                 "category", self.instanceId,
                  "traceback", trace))
 
 
-class PrintHandler(logging.Handler):
-    def emit(self, record):
-        print("---------- Logger start -----------")
-        # record.levelno is 10, 20, 30,... for "DEBUG", "INFO", "WARN",...
-        level = ("DEBUG", "INFO", "WARN", "ERROR", "FATAL"
-                 )[bisect([20, 30, 40, 50], record.levelno)]
-        timestamp = datetime.fromtimestamp(record.created)
-        deviceId = self.parent.broker.deviceId
-        message = self.format(record)
-        print(timestamp, level, deviceId)
-        print(message)
-        print("---------- Logger end -----------")
-
-
-_LOGGER_HANDLER = {
-    "CacheHandler": CacheHandler,
-    "PrintHandler": PrintHandler
-}
-
-
-def build_logger_node(handles=None):
+def build_logger_node(handler: bool = True):
     """Create a `Logger` Configurable for a Node
 
-    :param handles: List of handlers (str) used for the logger.
-                    Choices: `CacheHandler`, `PrintHandler`
+    :param handler: Attach an instance handler for the logger
     """
-    if handles is None:
-        handles = ["CacheHandler", "PrintHandler"]
 
     class Logger(Configurable):
         logger = None
-
-        handlers = VectorString(
-            defaultValue=handles,
-            requiredAccessLevel=AccessLevel.EXPERT,
-            accessMode=AccessMode.READONLY)
 
         @String(
             displayedName="Logging Level",
@@ -107,39 +88,37 @@ def build_logger_node(handles=None):
             self.level = value
 
         @contextmanager
-        def setBroker(self, broker):
-            """Once a device is up and running, set the broker
+        def setInstance(self, instanceId: str):
+            """Once an instance is up and running, set the instanceId
 
-            This method adds the log handlers and filters defined for a
-            device to the Python logging loggers. This can only be done
+            This method adds the log handler. This can only be done
             once we have a connection to the broker, and should stop once
             we loose it."""
-            self.logger = logging.getLogger(broker.deviceId)
+            self.logger = logging.getLogger(instanceId)
             self.logger.setLevel(self.level)
-            for handler in self.handlers.value:
-                h = _LOGGER_HANDLER[handler]()
-                h.parent = self
+            if handler:
+                h = InstanceHandler()
+                h.instanceId = instanceId
                 self.logger.addHandler(h)
-            self.broker = broker
             try:
                 yield
             finally:
                 self.logger.handlers = []
 
-        def INFO(self, what):
+        def INFO(self, text: str):
             """ legacy """
-            self.logger.info(what)
+            self.logger.info(text)
 
-        def WARN(self, what):
+        def WARN(self, text: str):
             """ legacy """
-            self.logger.warning(what)
+            self.logger.warning(text)
 
-        def DEBUG(self, what):
+        def DEBUG(self, text: str):
             """ legacy """
-            self.logger.debug(what)
+            self.logger.debug(text)
 
-        def ERROR(self, what):
+        def ERROR(self, text: str):
             """ legacy """
-            self.logger.error(what)
+            self.logger.error(text)
 
     return Logger
