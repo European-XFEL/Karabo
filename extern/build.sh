@@ -64,6 +64,19 @@ checkReturnCode() {
     fi
 }
 
+add_conan_mirrors() {
+    # Setup mirrors for conan to look for
+    for mirror in "${!CONAN_MIRRORS[@]}"; do
+        mirror_url="${CONAN_MIRRORS[$mirror]}"
+        if conan remote list | grep -q "$mirror_url"; then
+            echo "Remote $mirror is already added."
+        else
+            echo "Adding remote $mirror with URL $mirror_url"
+            safeRunCommandQuiet conan remote add "$mirror" "$mirror_url"
+        fi
+    done
+}
+
 safeRunCommand() {
     typeset cmnd="$*"
     typeset ret_code
@@ -99,6 +112,7 @@ install_python() {
     # create default build profile
     safeRunCommandQuiet "conan profile detect --force"
 
+    add_conan_mirrors
     # configure prefix paths
     local folder_opts="--deployer=karabo_deployer --deployer-folder=$INSTALL_PREFIX --output-folder=$INSTALL_PREFIX/conan_toolchain"
     # build python if not found in conan cache
@@ -164,6 +178,7 @@ install_from_deps() {
     # create default build profile
     safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan profile detect --force"
 
+        add_conan_mirrors
         # export local conan recipes (for packages where no public recipe exists
         # we keep custom conan recipes in extern/resources/<pkg_name>)
         safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan export ./resources/daemontools/conanfile.py --name daemontools-encore --version $DAEMONTOOLS_VERSION --user karabo --channel $CONAN_RECIPE_CHANNEL"

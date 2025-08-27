@@ -32,6 +32,7 @@ src/pythonKarabo/karabo/_version.py
 src/pythonGui/build/
 src/pythonGui/dist/
 _version.py
+conan.lock
 .*
 build/python/*.exe
 !.gitignore
