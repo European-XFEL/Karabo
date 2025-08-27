@@ -154,7 +154,7 @@ class MiddleLayerDeviceServer(HeartBeatMixin, SignalSlotable):
         if isSet(self.timeServerId):
             await self._sigslot.async_connect(
                 self.timeServerId, "signalTimeTick", self.slotTimeTick)
-        self._sigslot.enter_context(self.log.setBroker(self._sigslot))
+        self._sigslot.enter_context(self.log.setInstance(self.serverId))
         self.logger = self.log.logger
         classes = ", ".join(self.getClasses())
         self.logger.info(

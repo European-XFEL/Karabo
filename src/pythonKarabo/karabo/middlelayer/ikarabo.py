@@ -70,7 +70,7 @@ class DeviceClient(TopologyMacro):
 
     # We don't allow logs coming from command line
     log = Node(
-        build_logger_node([]),
+        build_logger_node(False),
         displayedName="No Logger")
 
     def _initInfo(self):

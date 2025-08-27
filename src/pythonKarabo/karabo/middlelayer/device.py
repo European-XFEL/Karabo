@@ -236,7 +236,7 @@ class Device(InjectMixin, SignalSlotable):
         return info
 
     async def _run(self, **kwargs):
-        self._sigslot.enter_context(self.log.setBroker(self._sigslot))
+        self._sigslot.enter_context(self.log.setInstance(self.deviceId))
         await super()._run(**kwargs)
         # Logging mechanism will add the deviceId to the log message
         self.logger.info("Device is up and running.")
