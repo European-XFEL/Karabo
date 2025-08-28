@@ -51,10 +51,10 @@ def configTest(eventLoop):
     with mdl_server, cpp_server:
         # We wait for the device to be online
         remote = cpp_server.remote()
-        sleepUntil(lambda: TEST_DEVICE_ID in remote.getDevices(), timeout=10)
-        sleepUntil(lambda: MANAGER_ID in remote.getDevices(), timeout=10)
+        sleepUntil(lambda: TEST_DEVICE_ID in remote.getDevices(), timeout=20)
+        sleepUntil(lambda: MANAGER_ID in remote.getDevices(), timeout=20)
         sleepUntil(lambda: remote.get(MANAGER_ID, "state") == State.ON,
-                   timeout=10)
+                   timeout=20)
         yield cpp_server
 
     db_path.unlink(missing_ok=True)

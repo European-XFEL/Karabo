@@ -213,9 +213,7 @@ class Broker:
         """
         self.brokerId = f"{self.domain}.{self.deviceId}"
         try:
-            await self.channel.queue_declare(
-                self.brokerId, exclusive=True, auto_delete=True,
-                passive=True)
+            await self.channel.queue_declare(self.brokerId, passive=True)
             # If no exception raised the queue name exists already ...
             # To continue  just use generated queue name...
             timestamp = hex(int(time.monotonic() * 1000000000))[2:]

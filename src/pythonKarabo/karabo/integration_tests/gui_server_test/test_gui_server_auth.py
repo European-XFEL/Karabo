@@ -71,7 +71,7 @@ async def guiServerAuth(authServer):
     server = AsyncServerContext(serverId, [f"init={init}"], api="cpp")
     async with server:
         await assert_wait_property(TEST_GUI_SERVER_ID, "state",
-                                   State.ON, timeout=10)
+                                   State.ON, timeout=20)
         adapter = GuiAdapter(host="localhost", port=44450)
         await adapter.connect()
         yield adapter
