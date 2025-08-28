@@ -137,9 +137,9 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <widget class="QPushButton" name="ui_show_device">
+      <widget class="QPushButton" name="ui_button_request">
        <property name="text">
-        <string>Show Device</string>
+        <string>Request</string>
        </property>
       </widget>
      </item>
@@ -154,6 +154,13 @@
       <widget class="QCheckBox" name="ui_preview">
        <property name="text">
         <string>Preview Full</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="ui_show_device">
+       <property name="text">
+        <string>Show Device</string>
        </property>
       </widget>
      </item>

@@ -224,6 +224,8 @@ class DeviceProxy(BaseDeviceProxy):
 class DeviceClassProxy(BaseDeviceProxy):
     """The proxy for device classes. Used for editing before instantiation.
     """
+    # An event which fires when the configuration has been applied
+    config_update = Event
 
     def _status_default(self):
         topology = get_topology()
@@ -257,8 +259,6 @@ class ProjectDeviceProxy(DeviceClassProxy):
     """A device class proxy used in ProjectDeviceInstance
     """
     device_id = String
-    # An event which fires when the configuration has been applied
-    config_update = Event
 
     def update_status(self):
         """Request a recalculating of the device status
