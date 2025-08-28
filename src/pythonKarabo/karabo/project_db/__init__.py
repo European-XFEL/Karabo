@@ -14,7 +14,7 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 # flake8: noqa
-from .const import DATE_FORMAT
-from .database import LocalNode, RemoteNode, SQLDatabase
-from .exist_db import ExistDatabase, ExistDbNode
-from .util import ProjectDBError, make_str_if_needed, make_xml_if_needed
+from .database import SQLDatabase
+from .node import LocalNode, RemoteNode
+from .utils import (
+    DATE_FORMAT, ProjectDBError, make_str_if_needed, make_xml_if_needed)

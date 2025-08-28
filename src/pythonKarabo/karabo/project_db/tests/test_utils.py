@@ -1,6 +1,26 @@
+# This file is part of Karabo.
+#
+# http://www.karabo.eu
+#
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
+#
+# Karabo is free software: you can redistribute it and/or modify it under
+# the terms of the MPL-2 Mozilla Public License.
+#
+# You should have received a copy of the MPL-2 Public License along with
+# Karabo. If not, see <https://www.mozilla.org/en-US/MPL/2.0/>.
+#
+# Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.
+
+import pytest
+from lxml import etree
+
 from ..models import Scene
 from ..utils import (
-    datetime_from_str, datetime_now, datetime_to_str, get_scene_links)
+    datetime_from_str, datetime_now, datetime_to_str, get_scene_links,
+    make_str_if_needed, make_xml_if_needed)
 
 SCENE_UUID = "73d31361-b019-4d0c-9fd5-aa0acd536bb8"
 SCENE_NAME = "das_Bild"
@@ -61,3 +81,23 @@ def test_get_scene_links():
     assert len(links) == 2, f"Expected to find 2 scene links, got {len(links)}"
     assert links[0] == SCENE_UUID
     assert links[1] == SCENE_UUID
+
+
+def test_make_xml_if_needed():
+    xml_rep = "<test>foo</test>"
+    ret = make_xml_if_needed(xml_rep)
+    assert ret.tag == "test"
+    assert ret.text == "foo"
+
+
+def test_malformed_xml_inputs():
+    xml_rep = "<test>foo</test><bad|symbols></bad|symbols>"
+    with pytest.raises(ValueError):
+        make_xml_if_needed(xml_rep)
+
+
+def test_make_str_if_needed():
+    element = etree.Element('test')
+    element.text = 'foo'
+    str_rep = make_str_if_needed(element)
+    assert str_rep == "<test>foo</test>\n"

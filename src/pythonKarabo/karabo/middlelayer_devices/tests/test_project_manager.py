@@ -27,9 +27,7 @@ from karabo.middlelayer import (
 from karabo.middlelayer.testing import AsyncDeviceContext, sleepUntil
 from karabo.middlelayer_devices.project_manager import ProjectManager
 from karabo.project_db.database import SQLDatabase
-from karabo.project_db.exist_db import (
-    TESTDB_ADMIN_PASSWORD, ExistDatabase, stop_local_database)
-from karabo.project_db.testing import create_hierarchy
+from karabo.project_db.tests.utils import create_hierarchy
 
 UUIDS = [str(uuid4()) for i in range(5)]
 _PROJECT_DB_TEST = "projManTest"
@@ -56,74 +54,11 @@ class ConsumerDevice(Device):
         await sleep(0)
 
 
-_EXIST_DB_LOCAL = Hash(
-    "protocol", "exist_db",
-    "exist_db", Hash(
-        "host", os.getenv('KARABO_TEST_PROJECT_DB', 'localhost'),
-        "port", int(os.getenv('KARABO_TEST_PROJECT_DB_PORT', '8181'))),
-    "testMode", True)
-
 _LOCAL_DB_NAME = "testDbRemove"
 _LOCAL_DB = Hash(
     "protocol", "local",
     "local", Hash("dbName", _LOCAL_DB_NAME)
 )
-
-
-@pytest_asyncio.fixture(loop_scope="module")
-async def exist_database():
-    _user = "admin"
-    _password = TESTDB_ADMIN_PASSWORD
-    db_init = ExistDatabase(
-        _user, _password, test_mode=True, init_db=True)
-
-    # Create test data
-    async with db_init as db:
-        path = "{}/{}".format(db.root, 'LOCAL')
-        if db.dbhandle.hasCollection(path):
-            db.dbhandle.removeCollection(path)
-        # make sure we have the LOCAL collection and subcollections
-        path = "{}/{}".format(db.root, 'LOCAL')
-        if not db.dbhandle.hasCollection(path):
-            db.dbhandle.createCollection(path)
-        _, device_config_uuid_map, scene_uuids = await create_hierarchy(db)
-    ret = {"session": db_init, "name": "exist_database",
-           "scene_uuids": scene_uuids,
-           "device_config_uuid_map": device_config_uuid_map}
-    yield ret
-
-    # Cleanup before stop
-    async with db_init as db:
-        path = "{}/{}".format(db.root, 'LOCAL')
-        if db.dbhandle.hasCollection(path):
-            db.dbhandle.removeCollection(path)
-
-    # More cleanup
-    ownDir = os.path.dirname(os.path.abspath(__file__))
-    dirs = [ownDir, os.path.join(ownDir, '..')]
-    for dir in dirs:
-        files = os.listdir(dir)
-        for file in files:
-            if 'openMQLib.log' in file:
-                os.remove(os.path.join(dir, file))
-            if 'device-projManTest' in file:
-                os.remove(os.path.join(dir, file))
-            if 'karabo.log' in file:
-                os.remove(os.path.join(dir, file))
-            if 'serverId.xml' in file:
-                os.remove(os.path.join(dir, file))
-
-    stop_local_database()
-
-
-@pytest_asyncio.fixture(loop_scope="module")
-async def exist_db_testcase(exist_database):
-    conf = Hash("_deviceId_", _PROJECT_DB_TEST)
-    conf["projectDB"] = _EXIST_DB_LOCAL
-    local = ProjectManager(conf)
-    consume = ConsumerDevice({"_deviceId_": "consumeTest"})
-    async with AsyncDeviceContext(local=local, consume=consume):
-        yield exist_database
 
 
 @pytest_asyncio.fixture(loop_scope="module")
@@ -146,7 +81,7 @@ async def sql_database():
 
 
 @pytest_asyncio.fixture(loop_scope="module")
-async def sql_database_testcase(sql_database):
+async def db_fixture(sql_database):
     conf = Hash("_deviceId_", _PROJECT_DB_TEST)
     conf["projectDB"] = _LOCAL_DB
     local = ProjectManager(conf)
@@ -155,16 +90,8 @@ async def sql_database_testcase(sql_database):
         yield sql_database
 
 
-@pytest.fixture
-def db_fixture(request):
-    return request.getfixturevalue(request.param)
-
-
 @pytest.mark.timeout(30)
 @pytest.mark.asyncio(loop_scope="module")
-@pytest.mark.parametrize("db_fixture",
-                         ["exist_db_testcase", "sql_database_testcase"],
-                         indirect=True)
 async def test_project_manager(db_fixture, subtests, mocker):
     # tests are run in sequence as sub tests
     # device server thus is only instantiated once
