@@ -31,6 +31,8 @@ def get_config_items():
     items = []
     for i in range(4):
         config = {}
+        config["serverId"] = "swerver"
+        config["classId"] = "FooClass"
         config["name"] = f"default{i}"
         config["date"] = Timestamp().toLocal(" ", "seconds")
         items.append(config)

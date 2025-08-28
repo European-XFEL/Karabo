@@ -311,6 +311,7 @@ class SystemTopology(HasStrictTraits):
             proxy = DeviceClassProxy(server_id=server_id, binding=binding)
             self._class_proxies[key] = proxy
             apply_default_configuration(proxy.binding)
+            proxy.config_update = True
         else:
             # Make sure we update our class proxies for the topology!
             proxies = [self._class_proxies[key]]
@@ -329,6 +330,7 @@ class SystemTopology(HasStrictTraits):
             if proxy is self._class_proxies.get(key, None):
                 # Only apply default config if not a project device!
                 apply_default_configuration(proxy.binding)
+                proxy.config_update = True
 
     def device_config_updated(self, device_id, config):
         """Called when a `deviceConfiguration` message is received from the
