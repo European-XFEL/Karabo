@@ -34,8 +34,8 @@ from karabogui.binding.api import (
     validate_value)
 from karabogui.configurator.api import ConfigurationTreeView
 from karabogui.dialogs.api import (
-    ConfigurationFromPastDialog, ConfigurationFromPastPreview, DataViewDialog,
-    DeviceSelectorDialog)
+    ConfigurationFromPastDialog, ConfigurationFromPastPreview,
+    DeviceSelectorDialog, InitConfigurationPreviewDialog)
 from karabogui.events import (
     KaraboEvent, register_for_broadcasts, unregister_from_broadcasts)
 from karabogui.logger import get_logger
@@ -354,18 +354,19 @@ class ConfigurationPanel(BasePanelWidget):
 
         proxy = self._showing_proxy
         if preview:
-            title = (f"Showing configuration {name} for device "
-                     f"{proxy.device_id}")
-            info = ("Note: Only changes from the device defaults "
-                    "are stored as configuration.")
-            dialog = DataViewDialog(title, info, config, parent=self)
-            if dialog.exec() == QDialog.Accepted:
-                self._set_proxy_configuration(proxy, config)
+            title = (f"Preview init configuration '{name}' for device "
+                     f"'{proxy.device_id}'")
+            dialog = InitConfigurationPreviewDialog(
+                self._showing_proxy, config, title, parent=self)
+            if dialog.exec() != QDialog.Accepted:
+                return
+            config = dialog.configuration_to_apply
         else:
-            self._set_proxy_configuration(proxy, config)
-            text = (f"Configuration with name <b>{name}</b> has arrived "
-                    f"for <b>{deviceId}</b>.\n")
+            text = (f"Configuration with name <b>{name}</b> has arrived for <b"
+                    f">{deviceId}</b>.\n")
             messagebox.show_information(text, parent=self)
+
+        self._set_proxy_configuration(proxy, config)
 
     def _apply_configuration_from_past(self, deviceId, config, req_time,
                                        config_time, match, preview):

@@ -99,6 +99,8 @@ class InitConfigurationDialog(QDialog):
         self.instance_id = instance_id
         self.ui_instance.setText(f"Device Id: {instance_id}")
 
+        self._server_id = None
+        self._class_id = None
         self.event_map = {
             KaraboEvent.ListConfigurationUpdated: self._event_list_updated,
             KaraboEvent.NetworkConnectStatus: self._event_network,
@@ -112,8 +114,6 @@ class InitConfigurationDialog(QDialog):
         self.model.setFilterFixedString("")
         self.model.setFilterCaseSensitivity(False)
         self.model.setFilterKeyColumn(0)
-
-        self.buttonBox.button(QDialogButtonBox.Ok).setText('Load')
 
         self.ui_table_widget.setModel(self.model)
         header = self.ui_table_widget.horizontalHeader()
@@ -137,6 +137,9 @@ class InitConfigurationDialog(QDialog):
         self.ui_button_refresh.setIcon(icons.reset)
         # Provide saving option
         self.ui_button_save.clicked.connect(self.open_save_dialog)
+
+        self.ui_button_request.clicked.connect(self._request_configuration)
+
         # Show device option!
         self.ui_show_device.clicked.connect(self._show_device)
 
@@ -157,6 +160,8 @@ class InitConfigurationDialog(QDialog):
             self.ui_status.setText("No configurations are available!")
         else:
             self.ui_status.setText("")
+            self._server_id = data["items"][0]["serverId"]
+            self._class_id = data["items"][0]["classId"]
         model.set_internal_data(items)
         self._check_button_state()
 
@@ -185,6 +190,7 @@ class InitConfigurationDialog(QDialog):
     def _check_button_state(self):
         enable = self._check_existing()
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enable)
+        self.ui_button_request.setEnabled(enable)
         enable = enable and access_role_allowed(
             AccessRole.CONFIGURATION_DELETE)
         self.ui_button_delete.setEnabled(enable)

@@ -33,6 +33,7 @@ from .format_label import FormatLabelDialog
 from .guisessioninfo import GuiSessionInfo
 from .init_configuration import (
     InitConfigurationDialog, SaveConfigurationDialog)
+from .init_configuration_preview import InitConfigurationPreviewDialog
 from .listedit import ListEditDialog
 from .log_dialog import LogDialog
 from .messagebox import KaraboMessageBox
