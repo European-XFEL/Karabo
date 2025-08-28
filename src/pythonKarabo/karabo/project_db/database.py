@@ -27,8 +27,6 @@ from sqlmodel import SQLModel, select
 
 from karabo.common.project.api import PROJECT_DB_SCHEMA
 
-from ..bases import DatabaseBase
-from ..util import ProjectDBError, make_str_if_needed, make_xml_if_needed
 from .db_engine import create_local_engine, create_remote_engine
 from .models import (
     DatabaseMetadata, DeviceConfig, DeviceInstance, DeviceServer, Macro,
@@ -37,18 +35,18 @@ from .models_xml import (
     emit_config_xml, emit_device_xml, emit_macro_xml, emit_project_xml,
     emit_scene_xml, emit_server_xml)
 from .utils import (
-    date_utc_to_local, datetime_from_str, datetime_now, datetime_str_now,
-    datetime_to_str, get_scene_links, get_trashed)
+    ProjectDBError, date_utc_to_local, datetime_from_str, datetime_now,
+    datetime_str_now, datetime_to_str, get_scene_links, get_trashed,
+    make_str_if_needed, make_xml_if_needed)
 
 logger = logging.getLogger(__file__)
 
 
-class SQLDatabase(DatabaseBase):
+class SQLDatabase:
 
     def __init__(self, user: str = "", password: str = "",
                  server: str = "", port: int = -1, db_name: str = "local.db",
                  local: bool = False):
-        super().__init__()
         if local:
             self.db_engine, self.session_gen = create_local_engine(db_name)
         else:
@@ -88,7 +86,7 @@ class SQLDatabase(DatabaseBase):
         return self
 
     async def __aexit__(self, exc_type, exc_value, traceback):
-        return await super().__aexit__(exc_type, exc_value, traceback)
+        pass
 
     async def domain_exists(self, domain: str) -> bool:
         domains = await self.list_domains()

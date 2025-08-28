@@ -21,7 +21,7 @@ from pathlib import Path
 from karabo.native import (
     AccessMode, Configurable, String, UInt32, VectorRegexString, isSet)
 
-from .sql_database import SQLDatabase
+from .database import SQLDatabase
 
 
 def get_db_credentials():
@@ -53,7 +53,7 @@ class RemoteNode(Configurable):
         displayedName="Database name",
         accessMode=AccessMode.INITONLY)
 
-    async def get_db(self, test_mode=False, init_db=False):
+    async def get_db(self):
         if not isSet(self.host):
             self.host = os.getenv("KARABO_PROJECT_DB_HOST", "localhost")
         if not isSet(self.port):
@@ -84,7 +84,7 @@ class LocalNode(Configurable):
             "database when it starts."),
         accessMode=AccessMode.INITONLY)
 
-    async def get_db(self, test_mode=False, init_db=False):
+    async def get_db(self):
         if not isSet(self.dbName):
             self.dbName = os.getenv("KARABO_PROJECT_DB_DBNAME", "projectDB.db")
 

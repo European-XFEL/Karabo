@@ -22,10 +22,11 @@ import pytest_asyncio
 from lxml import etree
 
 from karabo.native import Hash
-from karabo.project_db import (
-    DATE_FORMAT, ProjectDBError, SQLDatabase, make_xml_if_needed)
-from karabo.project_db.testing import (
-    create_hierarchy, create_trashed_project, generate_uuid)
+from karabo.project_db.database import SQLDatabase
+from karabo.project_db.utils import (
+    DATE_FORMAT, ProjectDBError, make_xml_if_needed)
+
+from .utils import create_hierarchy, create_trashed_project, generate_uuid
 
 
 @pytest_asyncio.fixture(loop_scope="module")

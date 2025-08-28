@@ -36,7 +36,6 @@ psutil==5.9.5
 pybind11[global]==2.13.1
 pybind11-stubgen==2.5.1
 pyelftools==0.30
-pyexistdb==1.0.1
 PyMySQL==1.1.1
 pytest==8.3.3
 pytest-asyncio==1.0.0

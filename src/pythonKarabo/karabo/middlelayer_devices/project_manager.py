@@ -25,12 +25,11 @@ from karabo.common.project.api import (
 from karabo.common.scenemodel.api import write_scene
 from karabo.common.states import State
 from karabo.middlelayer import (
-    AccessLevel, AccessMode, Bool, Configurable, Device, Hash, HashList,
-    KaraboError, Node, Overwrite, Signal, Slot, String, TypeHash, VectorString,
-    decodeXML, instantiate, slot)
+    AccessLevel, AccessMode, Configurable, Device, Hash, HashList, KaraboError,
+    Node, Overwrite, Signal, Slot, String, TypeHash, VectorString, decodeXML,
+    instantiate, slot)
 from karabo.native import read_project_model
-from karabo.project_db import (
-    ExistDbNode, LocalNode, ProjectDBError, RemoteNode)
+from karabo.project_db import LocalNode, ProjectDBError, RemoteNode
 
 _ITEM_TYPES = [
     PROJECT_DB_TYPE_DEVICE_CONFIG,
@@ -48,16 +47,10 @@ def get_project():
     class ProjectNode(Configurable):
 
         protocol = String(
-            defaultValue="exist_db",
-            options=["exist_db", "remote", "local"],
+            defaultValue="remote",
+            options=["remote", "local"],
             accessMode=AccessMode.INITONLY)
 
-        testMode = Bool(
-            displayedName="Test Mode",
-            defaultValue=False,
-            requiredAccessLevel=AccessLevel.EXPERT)
-
-        locals()["exist_db"] = Node(ExistDbNode)
         locals()["remote"] = Node(RemoteNode)
         locals()["local"] = Node(LocalNode)
 
@@ -103,10 +96,9 @@ class ProjectManager(Device):
 
     async def get_project_db(self, init_db=False):
         """Internal helper to get the project db"""
-        test_mode = self.projectDB.testMode.value
         node = self.projectDB.protocol
         db_node = getattr(self.projectDB, node)
-        db = await db_node.get_db(test_mode, init_db=init_db)
+        db = await db_node.get_db()
         if init_db:
             self.logger.info("Project DB initialized ...")
         return db
@@ -315,11 +307,6 @@ class ProjectManager(Device):
                 loaded_items.append(h)
                 # Remove from the list of requested keys
                 keys.remove(uuid)
-
-            # Any keys left were not in the database
-            # XXX: Remove with existDb
-            if len(keys) > 0:
-                raise ProjectDBError(f'Items "{keys}" not found!')
 
         return Hash('items', loaded_items)
 
