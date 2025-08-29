@@ -15,10 +15,10 @@
 :: FITNESS FOR A PARTICULAR PURPOSE.
 set BUILD_KARABO_SUBMODULE=NATIVE
 cd ./src/pythonKarabo
-python setup.py install
+python -m pip install .
 
 cd ../pythonGui
-python setup.py install
+python -m pip install .
 
 :: from https://docs.conda.io/projects/conda-build/en/latest/resources/activate-scripts.html
 setlocal EnableDelayedExpansion
