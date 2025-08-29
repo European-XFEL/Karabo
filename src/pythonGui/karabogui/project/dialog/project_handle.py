@@ -72,7 +72,7 @@ class LoadProjectDialog(QDialog):
         if is_subproject:
             title = "Load Sub Project"
         else:
-            title = "Load Master Project"
+            title = "Load Root Project"
         self.setWindowTitle(title)
         self.buttonBox.button(QDialogButtonBox.Ok).setText("Load")
 
