@@ -150,8 +150,12 @@ safeRunTests() {
         FLAGS="${FLAGS} --cov=karabo"
     fi
     _OLD_ACCEPT=$ACCEPT_FAILURES
+
     ACCEPT_FAILURES=true
-    PYTHON_TESTS="py.test -v ${FLAGS}"
+
+    KARABO_PYTHON_SETUP=$KARABO_PROJECT_ROOT_DIR/src/pythonKarabo/pyproject.toml
+
+    PYTHON_TESTS="py.test -v ${FLAGS} -c $KARABO_PYTHON_SETUP"
     JUNIT_RESULT_FILE="junit.${TEST_SUITE_NAME}.${MODULE_SPEC}_${BROKER_TYPE}.xml"
     rm -f $JUNIT_RESULT_FILE
     JUNIT_OUTPUT="--junitxml=$JUNIT_RESULT_FILE"

@@ -16,19 +16,14 @@
 # flake8: noqa
 
 import os
-from pathlib import Path
 
 from setuptools import find_packages, setup
 
-CURRENT_FOLDER = Path(__file__).resolve().parent
-VERSION_FILE_PATH = CURRENT_FOLDER / "karabo" / "_version.py"
-ROOT_FOLDER = CURRENT_FOLDER.parent.parent
 SUBMODULE = os.getenv("BUILD_KARABO_SUBMODULE", "")
-
+print(f"Building karabo submodule: '{SUBMODULE}'")
 
 install_args = {
     "name": "karabo",
-    "use_scm_version": {"root": ROOT_FOLDER, "write_to": VERSION_FILE_PATH},
     "author": "Karabo Team",
     "author_email": "opensource@xfel.eu",
     "description": "This is the Python interface of the Karabo control system",

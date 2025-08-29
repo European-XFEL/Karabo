@@ -130,6 +130,7 @@ class MiddlelayerDevice(DeviceClientBase):
 
     @Slot()
     async def sendImageOutput(self):
+        """Send an image to the output channel"""
         array = np.random.randint(1000, size=(10, 10), dtype=np.uint32)
         self.imageOutput.schema.data.array = array
         self.imageOutput.schema.data.image = array
