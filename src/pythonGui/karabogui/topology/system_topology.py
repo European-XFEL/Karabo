@@ -485,7 +485,7 @@ class SystemTopology(HasStrictTraits):
 
             # Note the details of what device is gone
             host = attributes['host']
-            servers.append((instance_id, host, 'offline'))
+            servers.append((instance_id, host, ProxyStatus.OFFLINE))
 
     def _topology_device_gone(self, instance_type, system_hash, devices):
         """Check if devices or macros are gone in the system topology
@@ -514,7 +514,7 @@ class SystemTopology(HasStrictTraits):
 
             # Note the details of what device is gone
             class_id = attributes['classId']
-            devices.append((instance_id, class_id, 'offline'))
+            devices.append((instance_id, class_id, ProxyStatus.OFFLINE))
 
     def _topology_client_gone(self, system_hash):
         for instance_id, _, attr in system_hash['client'].iterall():

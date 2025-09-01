@@ -192,7 +192,7 @@ class DeviceServerController(BaseProjectGroupController):
             # NOTE: the host is not checked here since it might ot have been
             # set yet and furthermore the server_id is unique in the system
             if self.model.server_id == server_id:
-                self.model.status = ProxyStatus(status)
+                self.model.status = status
 
     def _get_display_name(self):
         """Traits property getter for ``display_name``
