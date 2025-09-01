@@ -520,7 +520,8 @@ class ConfigurationTreeModel(QAbstractItemModel):
         if is_project:
             writable = binding.accessMode in (AccessMode.INITONLY,
                                               AccessMode.RECONFIGURABLE)
-            if writable and binding.assignment is not Assignment.INTERNAL:
+            if (writable and binding.assignment is not Assignment.INTERNAL
+                    and self.global_access >= binding.requiredAccessLevel):
                 flags |= Qt.ItemIsEditable
         else:
             writable = binding.accessMode is AccessMode.RECONFIGURABLE
