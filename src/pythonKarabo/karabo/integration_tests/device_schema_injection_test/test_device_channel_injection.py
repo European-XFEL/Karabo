@@ -25,7 +25,7 @@ max_timeout = 20    # in seconds
 max_timeout_ms = max_timeout * 1000
 
 
-class Channel_Injection_TestCase(BoundDeviceTestCase):
+class ChannelInjectionTestCase(BoundDeviceTestCase):
 
     sigSlot = None
     server_id = None
