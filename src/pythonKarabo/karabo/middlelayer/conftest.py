@@ -89,6 +89,6 @@ class KaraboTestLoopPolicy(DefaultEventLoopPolicy):
         return loop
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def event_loop_policy():
     return KaraboTestLoopPolicy()

@@ -59,27 +59,6 @@ class KaraboWrapper(TaskWrapper):
 aiormq.base.TaskWrapper = KaraboWrapper
 
 
-def ensure_running(func: Callable):
-    """Ensure a running eventloop for `func`"""
-    if iscoroutinefunction(func):
-        async def wrapper(self, *args, **kwargs):
-            if self.loop.is_closed() or not self.loop.is_running():
-                self.logger.warning(
-                    f"Loop not running for func {func.__name__} with "
-                    f"arguments {args}.")
-                return
-            return await func(self, *args, **kwargs)
-    else:
-        def wrapper(self, *args, **kwargs):
-            if self.loop.is_closed() or not self.loop.is_running():
-                self.logger.warning(
-                    f"Loop not running for func {func.__name__} with "
-                    f"arguments {args}.")
-                return
-            return func(self, *args, **kwargs)
-    return wrapper
-
-
 class Connector:
 
     def __init__(self):
@@ -360,7 +339,6 @@ class Broker:
         header.setElement("signalInstanceId", self.deviceId, {})
         return encodeBinary(header) + encodeBinary(body)
 
-    @ensure_running
     def send(self, exch: str, key: str, header: Hash, arguments: tuple):
         msg = self.encode_binary_message(header, arguments)
         ensure_future(self.channel.basic_publish(
@@ -474,13 +452,11 @@ class Broker:
 
             await gather(*futures, return_exceptions=True)
 
-    @ensure_running
     def disconnect(self, deviceId: str, signal: str, slot: Callable):
         self.loop.call_soon_threadsafe(
             self.loop.create_task, self.async_disconnect(
                 deviceId, signal, slot))
 
-    @ensure_running
     async def async_disconnect(
             self, deviceId: str, signal: str, slot: Callable):
 
