@@ -31,7 +31,7 @@ from karabind import (
     HashMergePolicy, Logger, MetricPrefix, Schema, SignalSlotable, TimeId,
     Timestamp, Unit, Validator, ValidatorValidationRules, VectorHash,
     loadFromFile)
-from karabo import __version__ as karaboVersion
+from karabo._version import __version__ as karaboVersion
 from karabo.common.api import (
     KARABO_CLASS_ID_ALARM, KARABO_CLASS_ID_STATE,
     KARABO_LOGGER_CONTENT_DEFAULT, AlarmCondition, Capabilities, Interfaces,
