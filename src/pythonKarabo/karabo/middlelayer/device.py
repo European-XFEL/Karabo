@@ -17,7 +17,7 @@ import getpass
 import os
 import socket
 
-from karabo import __version__ as karaboVersion
+from karabo._version import __version__ as karaboVersion
 from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.enums import Capabilities, Interfaces
 from karabo.common.states import State
