@@ -68,8 +68,6 @@ class TestDeviceClientComm(BoundDeviceTestCase):
 
         schema = self.dc.getDeviceSchema(devId)
 
-        # state and alarmCondition have "leafType" attribute,
-        # normal properties do not.
         self.assertTrue(schema.isProperty("state"))
         self.assertTrue(schema.isProperty("alarmCondition"))
         self.assertTrue(schema.isProperty("boolProperty"))

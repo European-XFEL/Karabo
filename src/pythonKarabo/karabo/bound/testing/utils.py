@@ -77,6 +77,7 @@ class BoundDeviceTestCase(TestCase):
 
     serverProcesses: dict[str, subprocess.Popen] = {}
     dc: DeviceClient | None = None
+    dc_count: int = 0
 
     def start_server(self, api: str, server_id: str, class_ids: list[str],
                      plugin_dir: str = "", logLevel: str = "FATAL",
@@ -149,12 +150,27 @@ class BoundDeviceTestCase(TestCase):
         self._eventLoopThread.daemon = True
         self._eventLoopThread.start()
 
-        self.dc = DeviceClient()
+        # Client with different id for each test. Each test method is called
+        # on its own test class instance, so count with a class variable.
+        instanceId = self.__class__.__name__
+        instanceId += f"_client_{BoundDeviceTestCase.dc_count}"
+        self.dc = DeviceClient(instanceId)
+        BoundDeviceTestCase.dc_count += 1
 
     def tearDown(self) -> None:
         # Stop the servers
         for serverProcess in self.serverProcesses.values():
             serverProcess.terminate()
+
+        for serverId, process in self.serverProcesses.items():
+            try:
+                # Wait longer than Launcher.join in device_server.py to avoid
+                # a dangling bound device process.
+                process.wait(20)
+            except subprocess.TimeoutExpired:
+                print(f"Process of server '{serverId}' did not stop, kill it")
+                process.kill()
+
         self.serverProcesses.clear()
 
         # Get rid of client
