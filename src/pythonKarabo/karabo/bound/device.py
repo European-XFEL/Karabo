@@ -147,9 +147,7 @@ class PythonDevice:
 
             ALARM_ELEMENT(expected).key("alarmCondition")
             .displayedName("Alarm condition")
-            .description("The current alarm condition of the device. Evaluates"
-                         " to the highest condition on any property if not set"
-                         " manually.")
+            .description("The current alarm condition of the device.")
             .initialValue(AlarmCondition.NONE)
             .commit(),
 
