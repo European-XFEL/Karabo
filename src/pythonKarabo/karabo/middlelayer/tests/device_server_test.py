@@ -25,7 +25,7 @@ from karabo.middlelayer.device_client import (
     call, getClassSchema, getInstanceInfo, instantiateNoWait, waitUntil)
 from karabo.middlelayer.testing import (
     create_device_server, create_instanceId, sleepUntil)
-from karabo.native import Hash, KaraboError, Schema, Timestamp
+from karabo.native import Hash, KaraboError, Schema, Timestamp, get_timestamp
 
 SHUTDOWN_TIME = 1
 
@@ -42,7 +42,7 @@ class FaultyDevice(Device):
 @pytest.mark.flaky(max_runs=FLAKY_MAX_RUNS, min_passes=FLAKY_MIN_PASSES)
 @pytest.mark.timeout(30)
 @pytest.mark.asyncio
-async def test_device_server_no_plugins():
+async def test_device_server_no_plugins_time():
     serverId = f"testMDLServer-{uuid.uuid4()}"
     configuration = {"timeServerId": "KaraboTimeServer",
                      "track": True}
@@ -63,6 +63,8 @@ async def test_device_server_no_plugins():
         ts_ref = Timestamp.fromHashAttributes(th["reference", ...])
         assert ts_ref.tid == 0
 
+        ts = get_timestamp()
+        assert ts.tid == 0
         assert "time" in keys
         assert "timeServerId" in keys
         assert th["timeServerId"] == "KaraboTimeServer"
@@ -75,6 +77,8 @@ async def test_device_server_no_plugins():
         assert ts_ref.time_sec == t.time_sec
         assert ts_ref.time_frac == t.time_frac
 
+        ts = get_timestamp()
+        assert ts.tid > 0
         # Remove start ticks again
         server.slotTimeTick(0, t.time_sec, t.time_frac, 200)
     finally:
