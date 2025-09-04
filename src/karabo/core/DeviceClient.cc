@@ -50,6 +50,7 @@ using namespace std::placeholders;
 namespace karabo {
     namespace core {
         const unsigned int DeviceClient::m_ageingIntervallMilliSec = 1000u;
+        std::atomic<int> DeviceClient::m_generatedIdCounter(0);
 
         // Maximum number of attempts to complete the initialization of the DeviceClient by locking a weak pointer from
         //'*this'. Further details on the reasoning behind the two phase initialization of the DeviceClient instance
@@ -1710,7 +1711,9 @@ namespace karabo {
 
 
         std::string DeviceClient::generateOwnInstanceId() {
-            return std::string(net::bareHostName() + "_DeviceClient_" + karabo::data::toString(getpid()));
+            // Unique in Karabo system: host name, process id and unique counter for serveral clients per process
+            const int counter = m_generatedIdCounter++; // m_generatedIdCounter is static
+            return net::bareHostName() += "_DeviceClient_" + data::toString(getpid()) += "_" + data::toString(counter);
         }
 
 

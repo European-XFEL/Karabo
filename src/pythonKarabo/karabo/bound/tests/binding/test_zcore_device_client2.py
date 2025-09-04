@@ -39,7 +39,7 @@ def test_device_client_sync_api():
     c = DeviceClient()
     # test getInstanceId
     clientId = c.getInstanceId()
-    (host, klass, pid) = clientId.split('_', 3)
+    (host, klass, pid, _) = clientId.split('_', 4)  # forth is a counter
     assert host == socket.gethostname().split(".", 1)[0]  # split domain away
     assert klass == 'DeviceClient'
     assert pid == str(os.getpid())
