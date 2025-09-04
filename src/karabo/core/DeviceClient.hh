@@ -79,9 +79,10 @@ namespace karabo {
                   ClassSchemaHandler;
             typedef std::function<void(const karabo::data::Hash& /* devicesChanges */)> DevicesChangedHandler;
 
-            static const int CONNECTION_KEEP_ALIVE = 15; // keep in sync with GuiSever_Test.cc!
+            static constexpr int CONNECTION_KEEP_ALIVE = 15; // keep in sync with GuiSever_Test.cc!
 
             std::shared_ptr<karabo::xms::SignalSlotable> m_internalSignalSlotable;
+            static std::atomic<int> m_generatedIdCounter;
 
            protected: // members
             /**
