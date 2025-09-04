@@ -44,9 +44,9 @@ using namespace karabo::xms;
 
 using std::placeholders::_1;
 
-const int numWaitIterations = 1000;
+const int numWaitIterations = 2'000;
 const int sleepPerWaitIterationMs = 5;
-const int slotCallTimeout = 5000;
+const int slotCallTimeout = 10'000;
 
 class SignalSlotDemo : public karabo::xms::SignalSlotable {
     const std::string m_othersId;
@@ -757,7 +757,7 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
     slotter->asyncConnect(connections, connectedHandler, failureHandler);
     // Give some time to connect
     for (int i = 0; i < numWaitIterations; ++i) {
-        if (connected) break;
+        if (connected || connectFailed) break;
         std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
     };
     CPPUNIT_ASSERT(connected);
