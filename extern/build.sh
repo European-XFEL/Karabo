@@ -145,12 +145,6 @@ install_python() {
         safeRunCommandQuiet "conan remote update conancenter --url https://center2.conan.io"
     fi
 
-    # Some dependencies, like libpng specify minimum required versions of cmake to be older than
-    # "3.5" - starting with cmake "4.X", the minimum cmake version must be at least "3.5".
-    # Details at https://cmake.org/cmake/help/v4.0/release/4.0.html#id14
-    # Setting the environment variable below allows passing the cmake check.
-    export CMAKE_POLICY_VERSION_MINIMUM="3.5"
-
     safeRunCommandQuiet "conan install conanfile-bootstrap.txt $folder_opts $build_opts $profile_opts"
 
     # ensure that python can always find its libpython.so
@@ -282,6 +276,12 @@ else
    # Make aware of which conan is used
    conan --version
 fi
+
+# Some dependencies, like libpng specify minimum required versions of cmake to be older than
+# "3.5" - starting with cmake "4.X", the minimum cmake version must be at least "3.5".
+# Details at https://cmake.org/cmake/help/v4.0/release/4.0.html#id14
+# Setting the environment variable below allows passing the cmake check.
+export CMAKE_POLICY_VERSION_MINIMUM="3.5"
 
 # python download and install to allow full bootstrap
 # install framework python dependencies via pip
