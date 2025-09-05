@@ -570,11 +570,14 @@ namespace karabo::net {
                                           << static_cast<int>(m_channelStatus);
                 break;
             case ChannelStatus::CREATE_QUEUE: {
-                m_channel->declareQueue(m_queue, AMQP::autodelete, m_queueArgs)
+                // auto-delete: deleted when last consumer is finished using it
+                // exclusive: can be accessed only from our connection, deleted when that closes
+                m_channel->declareQueue(m_queue, AMQP::autodelete + AMQP::exclusive, m_queueArgs)
                       .onSuccess([wSelf](const std::string& name, int msgCount, int consumerCount) {
                           if (auto self = wSelf.lock()) {
                               if (consumerCount > 0) {
                                   // Queue already exists, but we need a unique one for us - attach timestamp
+                                  // (since queue is exclusive, happens only for same id using same connection)
                                   KARABO_LOG_FRAMEWORK_INFO_C("AmqpClient")
                                         << "Queue " << self->m_queue
                                         << " already has a consumer, append some bytes from clock and try again.";
@@ -601,15 +604,33 @@ namespace karabo::net {
                       }) // end of success handler
                       .onError([wSelf](const char* message) {
                           if (auto self = wSelf.lock()) {
-                              const std::string queue(self->m_instanceId == self->m_queue ? "" : self->m_queue + " ");
-                              KARABO_LOG_FRAMEWORK_WARN_C("AmqpClient")
-                                    << self->m_instanceId << ": Declaring queue " << queue << "failed: " << message;
-                              // reset channel
-                              self->m_channel.reset();
-                              self->m_channelStatus = ChannelStatus::REQUEST;
-                              AsyncHandler callback;
-                              callback.swap(self->m_channelPreparationCallback);
-                              callback(make_error_code(AmqpCppErrc::eCreateQueueError));
+                              const std::string_view msg(message);
+                              constexpr auto np = std::string::npos;
+                              if (msg.find("RESOURCE_LOCKED") != np && msg.find("cannot obtain exclusive") != np) {
+                                  KARABO_LOG_FRAMEWORK_INFO
+                                        << "Queue " << self->m_queue
+                                        << " already created, append some bytes from clock and try again. "
+                                        << "Will recreate channel (was " << (self->m_channel->usable() ? "" : "not ")
+                                        << "OK)."; // should be not OK
+                                  std::ostringstream oss;
+                                  oss << ":" << std::hex << std::chrono::steady_clock::now().time_since_epoch().count();
+                                  self->m_queue += oss.str();
+                                  self->m_channelStatus = ChannelStatus::CREATE;
+                                  AsyncHandler callback;
+                                  callback.swap(self->m_channelPreparationCallback);
+                                  self->asyncPrepareChannel(std::move(callback));
+                              } else {
+                                  const std::string queue(self->m_instanceId == self->m_queue ? ""
+                                                                                              : self->m_queue + " ");
+                                  KARABO_LOG_FRAMEWORK_WARN << self->m_instanceId << ": Declaring queue " << queue
+                                                            << "failed: " << message;
+                                  // reset channel
+                                  self->m_channel.reset();
+                                  self->m_channelStatus = ChannelStatus::REQUEST;
+                                  AsyncHandler callback;
+                                  callback.swap(self->m_channelPreparationCallback);
+                                  callback(make_error_code(AmqpCppErrc::eCreateQueueError));
+                              }
                           }
                       }); // end of failure handler
             } break;
