@@ -756,9 +756,19 @@ void Amqp_Test::testClientSameId() {
     CPPUNIT_ASSERT_EQUAL('x', bob2ReadData->front());
 
     //***************************************************************
-    // Now stress testing with many clients with same id created in 'parallel' (well, one after another in the single
-    // threaded io context of the connection, but the channel creation and subscription steps will be interleaved).
-    // That will trigger different code paths that avoid queue id collisions in different steps.
+    // Now stress testing with many clients with same id created in 'parallel'.
+    // We use a second connection for every other client: even our exclusive queues could be used by different clients
+    // using the same connection, so we trigger different code paths that avoid queue id collisions in different steps.
+    // And we will have one thread for each connection's io_context, so even more concurrency than just interleaved
+    // channel creation and subscription.
+    net::AmqpConnection::Pointer connection2(std::make_shared<net::AmqpConnection>(m_defaultBrokers));
+    auto done2 = std::make_shared<std::promise<boost::system::error_code>>();
+    auto fut2 = done2->get_future();
+    connection2->asyncConnect([done2](const boost::system::error_code ec) { done2->set_value(ec); });
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, fut2.wait_for(m_timeout));
+    const boost::system::error_code ec2 = fut2.get();
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(ec2.message(), static_cast<int>(boost::system::errc::success), ec2.value());
+
     const int numClients = 20;
 
     // First create the clients
@@ -768,7 +778,8 @@ void Amqp_Test::testClientSameId() {
         auto readHandler = [i, receivedFlags](const std::shared_ptr<std::vector<char>>& data,
                                               const std::string& exchange,
                                               const std::string& routingKey) { ++(receivedFlags->at(i)); };
-        clients.push_back(std::make_shared<net::AmqpClient>(connection, prefix + "alice", AMQP::Table(), readHandler));
+        const net::AmqpConnection::Pointer& conn = (i % 2 ? connection : connection2);
+        clients.push_back(std::make_shared<net::AmqpClient>(conn, prefix + "alice", AMQP::Table(), readHandler));
     }
 
     // Now let them all subscribe (and thus create channel, queue and consumer) in parallel
