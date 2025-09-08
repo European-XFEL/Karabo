@@ -18,11 +18,11 @@ zeromq/4.3.2
 
 
 # patch-any
-libpng/1.6.37
+libpng/1.6.50
 libxslt/1.1.34
 libxml2/2.11.6
 patchelf/0.13
-pugixml/1.10
+pugixml/1.15
 
 # minor-any
 boost/1.88.0
