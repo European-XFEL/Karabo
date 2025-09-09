@@ -24,12 +24,11 @@ import time
 from typing import Any
 
 from karabind import (
-    ALARM_ELEMENT, BOOL_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT, MICROSEC,
-    NODE_ELEMENT, OVERWRITE_ELEMENT, SLOT_ELEMENT, STATE_ELEMENT,
-    STRING_ELEMENT, UINT32_ELEMENT, WRITE, AccessType, AssemblyRules, Broker,
-    ChannelMetaData, ConnectionStatus, Epochstamp, EventLoop, Hash, HashFilter,
-    HashMergePolicy, Logger, MetricPrefix, Schema, SignalSlotable, TimeId,
-    Timestamp, Unit, Validator, ValidatorValidationRules, VectorHash,
+    ALARM_ELEMENT, BOOL_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT, NODE_ELEMENT,
+    OVERWRITE_ELEMENT, SLOT_ELEMENT, STATE_ELEMENT, STRING_ELEMENT,
+    UINT32_ELEMENT, AssemblyRules, Broker, ChannelMetaData, ConnectionStatus,
+    Epochstamp, EventLoop, Hash, HashFilter, Logger, Schema, SignalSlotable,
+    TimeId, Timestamp, Validator, ValidatorValidationRules, VectorHash,
     loadFromFile)
 from karabo._version import __version__ as karaboVersion
 from karabo.common.api import (
@@ -199,7 +198,7 @@ class PythonDevice:
             .displayedName("Processing latency")
             .description("Average time interval between remote message"
                          " sending and processing it in this device.")
-            .unit(Unit.SECOND).metricPrefix(MetricPrefix.MILLI)
+            .unit(Schema.Unit.SECOND).metricPrefix(Schema.MetricPrefix.MILLI)
             .expertAccess()
             .readOnly().initialValue(0.0)
             .commit(),
@@ -209,7 +208,7 @@ class PythonDevice:
             .displayedName("Maximum latency")
             .description("Maximum processing latency within averaging"
                          " interval.")
-            .unit(Unit.SECOND).metricPrefix(MetricPrefix.MILLI)
+            .unit(Schema.Unit.SECOND).metricPrefix(Schema.MetricPrefix.MILLI)
             .expertAccess()
             .readOnly().initialValue(0)
             .commit(),
@@ -218,7 +217,7 @@ class PythonDevice:
             .displayedName("Number of messages")
             .description("Number of messages received within"
                          " averaging interval.")
-            .unit(Unit.COUNT)
+            .unit(Schema.COUNT)
             .expertAccess()
             .readOnly().initialValue(0)
             .commit(),
@@ -229,7 +228,7 @@ class PythonDevice:
             .description("Maximum time interval between posting a message on"
                          " the central event loop and processing it within"
                          " averaging interval.")
-            .unit(Unit.SECOND).metricPrefix(MetricPrefix.MILLI)
+            .unit(Schema.SECOND).metricPrefix(Schema.MILLI)
             .expertAccess()
             .readOnly().initialValue(0)
             .commit(),
@@ -336,8 +335,7 @@ class PythonDevice:
                 self.getActualTimestamp())
             if not result:
                 raise RuntimeError(error)
-            self._parameters.merge(validated,
-                                   HashMergePolicy.REPLACE_ATTRIBUTES)
+            self._parameters.merge(validated, Hash.REPLACE_ATTRIBUTES)
 
         # Create 'info' hash
         info = Hash("type", "device")
@@ -601,7 +599,7 @@ class PythonDevice:
 
         if not validated.empty():
             self._parameters.merge(
-                validated, HashMergePolicy.REPLACE_ATTRIBUTES)
+                validated, Hash.REPLACE_ATTRIBUTES)
 
             self._sigslot.emit("signalChanged", validated, self.deviceId)
 
@@ -1581,7 +1579,7 @@ class PythonDevice:
                 # epochLastReceived is earlier
                 duration = epoch.elapsed(epochLastReceived)
                 nPeriods = (duration.getTotalSeconds() * 1000000
-                            + duration.getFractions(MICROSEC)
+                            + duration.getFractions(Epochstamp.MICROSEC)
                             ) // self._timePeriod
                 if epochLastReceived <= epoch:
                     resultId = self._timeId + nPeriods
@@ -1600,7 +1598,7 @@ class PythonDevice:
     def _getStateDependentSchema(self, state):
         with self._stateChangeLock:
             if state not in self._stateDependentSchema:
-                rules = AssemblyRules(AccessType(WRITE), state.value)
+                rules = AssemblyRules(Schema.WRITE, state.value)
                 schemaForState = self._fullSchema.subSchemaByRules(rules)
                 self._stateDependentSchema[state] = schemaForState
             return self._stateDependentSchema[state]

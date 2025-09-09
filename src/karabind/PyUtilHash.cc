@@ -20,6 +20,7 @@
  */
 
 #include <pybind11/complex.h>
+#include <pybind11/native_enum.h>
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -82,12 +83,6 @@ using namespace karabind;
 void exportPyUtilHash(py::module_& m) {
     const char cStringSep[] = {karabo::data::Hash::k_defaultSep, '\0'};
 
-    py::enum_<Hash::MergePolicy>(m, "HashMergePolicy",
-                                 "This enumeration defines possible options when merging 2 hashes.")
-          .value("MERGE_ATTRIBUTES", Hash::MERGE_ATTRIBUTES)
-          .value("REPLACE_ATTRIBUTES", Hash::REPLACE_ATTRIBUTES)
-          .export_values();
-
     py::class_<Hash, std::shared_ptr<Hash>> h(m, "Hash", R"pbdoc(
             The Hash class can be regarded as a generic hash container, which
             associates a string key to a value of any type.
@@ -96,6 +91,13 @@ void exportPyUtilHash(py::module_& m) {
             class is much like a XML-DOM container with the difference of
             allowing only unique keys on a given tree-level.
         )pbdoc");
+
+    py::native_enum<Hash::MergePolicy>(h, "HashMergePolicy", "enum.Enum",
+                                       "This enumeration defines possible options when merging 2 hashes.")
+          .value("MERGE_ATTRIBUTES", Hash::MERGE_ATTRIBUTES)
+          .value("REPLACE_ATTRIBUTES", Hash::REPLACE_ATTRIBUTES)
+          .export_values()
+          .finalize();
 
     h.def(py::init<>());                   // Hash()
     h.def(py::init<const std::string&>()); // Hash("string")

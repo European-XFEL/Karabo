@@ -20,6 +20,7 @@
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
 
+#include <pybind11/native_enum.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -41,7 +42,9 @@ using namespace karabind;
 
 void exportPyXmsImageDataElement(py::module_& m) {
     {
-        py::enum_<Encoding>(m, "Encoding")
+        py::class_<ImageData, std::shared_ptr<ImageData>> img(m, "ImageData");
+
+        py::native_enum<Encoding>(img, "Encoding", "enum.Enum")
               .value("UNDEFINED", Encoding::UNDEFINED)
               .value("GRAY", Encoding::GRAY)
               .value("RGB", Encoding::RGB)
@@ -56,21 +59,16 @@ void exportPyXmsImageDataElement(py::module_& m) {
               .value("BAYER_BG", Encoding::BAYER_BG)
               .value("BAYER_GR", Encoding::BAYER_GR)
               .value("BAYER_GB", Encoding::BAYER_GB)
-              .export_values();
-    }
+              .export_values()
+              .finalize();
 
-    {
-        py::enum_<Rotation>(m, "Rotation")
+        py::native_enum<Rotation>(img, "Rotation", "enum.Enum")
               .value("UNDEFINED", Rotation::UNDEFINED)
               .value("ROT_0", Rotation::ROT_0)
               .value("ROT_90", Rotation::ROT_90)
               .value("ROT_180", Rotation::ROT_180)
               .value("ROT_270", Rotation::ROT_270)
-              .export_values();
-    }
-
-    {
-        py::class_<ImageData, std::shared_ptr<ImageData>> img(m, "ImageData");
+              .finalize();
 
         img.def(py::init<>());
 

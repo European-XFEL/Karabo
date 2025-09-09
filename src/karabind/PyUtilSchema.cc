@@ -16,6 +16,7 @@
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
+#include <pybind11/native_enum.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
@@ -57,40 +58,43 @@ struct ConvertOptions {
 
 
 void exportPyUtilSchema(py::module_& m) {
-    py::enum_<AccessType>(m, "AccessType")
-          .value("INIT", AccessType::INIT)
-          .value("READ", AccessType::READ)
-          .value("WRITE", AccessType::WRITE)
-          .export_values();
+    { // exposing ::Schema
 
-    py::enum_<DaqDataType>(m, "DaqDataType").value("PULSE", DaqDataType::PULSE).value("TRAIN", DaqDataType::TRAIN);
+        py::class_<Schema::AssemblyRules>(m, "AssemblyRules")
+              .def(py::init<>())
+              .def(py::init<AccessType const&, std::string const&, const int>(), py::arg("accessMode") = 7,
+                   py::arg("state") = "", py::arg("accessLevel") = -1)
+              .def_readwrite("m_accessMode", &Schema::AssemblyRules::m_accessMode)
+              .def_readwrite("m_accessLevel", &Schema::AssemblyRules::m_accessLevel)
+              .def_readwrite("m_state", &Schema::AssemblyRules::m_state)
+              .def("__str__", [](const Schema::AssemblyRules& self) -> py::str {
+                  std::ostringstream oss;
+                  oss << "AssemblyRules(mode: " << self.m_accessMode << ", level: " << self.m_accessLevel
+                      << ", state: '" << self.m_state << "')";
+                  return oss.str();
+              });
 
-    {
-        py::enum_<MetricPrefix>(m, "MetricPrefix")
-              .value("YOTTA", MetricPrefix::YOTTA)
-              .value("ZETTA", MetricPrefix::ZETTA)
-              .value("EXA", MetricPrefix::EXA)
-              .value("PETA", MetricPrefix::PETA)
-              .value("TERA", MetricPrefix::TERA)
-              .value("GIGA", MetricPrefix::GIGA)
-              .value("MEGA", MetricPrefix::MEGA)
-              .value("KILO", MetricPrefix::KILO)
-              .value("HECTO", MetricPrefix::HECTO)
-              .value("DECA", MetricPrefix::DECA)
-              .value("NONE", MetricPrefix::NONE)
-              .value("DECI", MetricPrefix::DECI)
-              .value("CENTI", MetricPrefix::CENTI)
-              .value("MILLI", MetricPrefix::MILLI)
-              .value("MICRO", MetricPrefix::MICRO)
-              .value("NANO", MetricPrefix::NANO)
-              .value("PICO", MetricPrefix::PICO)
-              .value("FEMTO", MetricPrefix::FEMTO)
-              .value("ATTO", MetricPrefix::ATTO)
-              .value("ZEPTO", MetricPrefix::ZEPTO)
-              .value("YOCTO", MetricPrefix::YOCTO)
-              .export_values();
 
-        py::enum_<Unit>(m, "Unit")
+        py::class_<Schema, std::shared_ptr<Schema>> s(m, "Schema");
+
+        s.def(py::init<>());
+
+        s.def(py::init<std::string const&, Schema::AssemblyRules const&>(), py::arg("root"),
+              py::arg("rules") = Schema::AssemblyRules());
+
+        py::native_enum<AccessType>(s, "AccessType", "enum.IntEnum")
+              .value("INIT", AccessType::INIT)
+              .value("READ", AccessType::READ)
+              .value("WRITE", AccessType::WRITE)
+              .export_values()
+              .finalize();
+
+        py::native_enum<DaqDataType>(s, "DaqDataType", "enum.Enum")
+              .value("PULSE", DaqDataType::PULSE)
+              .value("TRAIN", DaqDataType::TRAIN)
+              .finalize();
+
+        py::native_enum<Unit>(s, "Unit", "enum.Enum")
               .value("NUMBER", Unit::NUMBER)
               .value("COUNT", Unit::COUNT)
               .value("METER", Unit::METER)
@@ -138,52 +142,59 @@ void exportPyUtilSchema(py::module_& m) {
               .value("PERCENT", Unit::PERCENT)
               .value("NOT_ASSIGNED", Unit::NOT_ASSIGNED)
               .value("REVOLUTIONS_PER_MINUTE", Unit::REVOLUTIONS_PER_MINUTE)
-              .export_values();
-    }
+              .export_values()
+              .finalize();
 
-    { // exposing ::Schema
+        py::native_enum<MetricPrefix>(s, "MetricPrefix", "enum.Enum")
+              .value("YOTTA", MetricPrefix::YOTTA)
+              .value("ZETTA", MetricPrefix::ZETTA)
+              .value("EXA", MetricPrefix::EXA)
+              .value("PETA", MetricPrefix::PETA)
+              .value("TERA", MetricPrefix::TERA)
+              .value("GIGA", MetricPrefix::GIGA)
+              .value("MEGA", MetricPrefix::MEGA)
+              .value("KILO", MetricPrefix::KILO)
+              .value("HECTO", MetricPrefix::HECTO)
+              .value("DECA", MetricPrefix::DECA)
+              .value("NONE", MetricPrefix::NONE)
+              .value("DECI", MetricPrefix::DECI)
+              .value("CENTI", MetricPrefix::CENTI)
+              .value("MILLI", MetricPrefix::MILLI)
+              .value("MICRO", MetricPrefix::MICRO)
+              .value("NANO", MetricPrefix::NANO)
+              .value("PICO", MetricPrefix::PICO)
+              .value("FEMTO", MetricPrefix::FEMTO)
+              .value("ATTO", MetricPrefix::ATTO)
+              .value("ZEPTO", MetricPrefix::ZEPTO)
+              .value("YOCTO", MetricPrefix::YOCTO)
+              .export_values()
+              .finalize();
 
-        py::class_<Schema::AssemblyRules>(m, "AssemblyRules")
-              .def(py::init<AccessType const&, std::string const&, const int>(),
-                   py::arg("accessMode") = INIT | WRITE | READ, py::arg("state") = "", py::arg("accessLevel") = -1)
-              .def_readwrite("m_accessMode", &Schema::AssemblyRules::m_accessMode)
-              .def_readwrite("m_accessLevel", &Schema::AssemblyRules::m_accessLevel)
-              .def_readwrite("m_state", &Schema::AssemblyRules::m_state)
-              .def("__str__", [](const Schema::AssemblyRules& self) -> py::str {
-                  std::ostringstream oss;
-                  oss << "AssemblyRules(mode: " << self.m_accessMode << ", level: " << self.m_accessLevel
-                      << ", state: '" << self.m_state << "')";
-                  return oss.str();
-              });
-
-        py::class_<Schema, std::shared_ptr<Schema>> s(m, "Schema");
-
-        s.def(py::init<>());
-
-        s.def(py::init<std::string const&, Schema::AssemblyRules const&>(), py::arg("root"),
-              py::arg("rules") = Schema::AssemblyRules());
-
-        py::enum_<Schema::AssignmentType>(m, "AssignmentType")
+        py::native_enum<Schema::AssignmentType>(s, "AssignmentType", "enum.Enum")
               .value("OPTIONAL", Schema::OPTIONAL_PARAM)
               .value("MANDATORY", Schema::MANDATORY_PARAM)
               .value("INTERNAL", Schema::INTERNAL_PARAM)
-              .export_values();
+              .export_values()
+              .finalize();
 
-        py::enum_<Schema::AccessLevel>(m, "AccessLevel")
+        py::native_enum<Schema::AccessLevel>(s, "AccessLevel", "enum.Enum")
               .value("OBSERVER", Schema::OBSERVER)
               .value("OPERATOR", Schema::OPERATOR)
               .value("EXPERT", Schema::EXPERT)
-              .export_values();
+              .export_values()
+              .finalize();
 
-        py::enum_<Schema::NodeType>(m, "NodeType")
+        py::native_enum<Schema::NodeType>(s, "NodeType", "enum.Enum")
               .value("LEAF", Schema::LEAF)
               .value("NODE", Schema::NODE)
-              .export_values();
+              .export_values()
+              .finalize();
 
-        py::enum_<Schema::ArchivePolicy>(m, "ArchivePolicy")
+        py::native_enum<Schema::ArchivePolicy>(s, "ArchivePolicy", "enum.Enum")
               .value("EVERY_EVENT", Schema::EVERY_EVENT)
               .value("NO_ARCHIVING", Schema::NO_ARCHIVING)
-              .export_values();
+              .export_values()
+              .finalize();
 
         // s.def(py::self_ns::str(py::self));
         s.def("__str__", [](const Schema& self) {

@@ -33,8 +33,7 @@ from subprocess import Popen, TimeoutExpired
 from karabind import (
     INT32_ELEMENT, NODE_ELEMENT, OVERWRITE_ELEMENT, STRING_ELEMENT,
     VECTOR_STRING_ELEMENT, Broker, EventLoop, Hash, Logger, Schema,
-    SignalSlotable, Unit, Validator, generateAutoStartHash, jsonToHash,
-    saveToFile)
+    SignalSlotable, Validator, generateAutoStartHash, jsonToHash, saveToFile)
 from karabo.common.api import KARABO_LOGGER_CONTENT_DEFAULT, ServerFlags
 
 from .configurator import Configurator
@@ -137,7 +136,7 @@ class DeviceServer:
             .displayedName("Instantiation Timeout")
             .description("How long to wait for device coming up before "
                          "slotStartDevice fails")
-            .unit(Unit.SECOND)
+            .unit(Schema.Unit.SECOND)
             .assignmentOptional().defaultValue(10)
             .commit(),
         )

@@ -17,13 +17,14 @@
 import pytest
 
 from karabind import (
-    AMPERE, IMAGEDATA_ELEMENT, INT32_ELEMENT, MANDATORY, METER, MICRO, MILLI,
-    NDARRAY_ELEMENT, NODE_ELEMENT, OVERWRITE_ELEMENT, STRING_ELEMENT,
-    AccessLevel, AccessType, ArchivePolicy, AssignmentType, DaqDataType, Hash,
-    Logger, MetricPrefix, NodeType, Schema, Types, Unit, Validator,
     cppGraphicsRenderer1SchemaTest, cppShapeSchemaCircle,
     cppShapeSchemaEditableCircle, cppSomeClassSchemaSomeClassId,
-    cppTestStruct1SchemaMyTest, cppTestStruct1SchemaTestStruct1, fullyEqual)
+    cppTestStruct1SchemaMyTest, cppTestStruct1SchemaTestStruct1)
+from karabo.bound import (
+    IMAGEDATA_ELEMENT, INT32_ELEMENT, NDARRAY_ELEMENT, NODE_ELEMENT,
+    OVERWRITE_ELEMENT, STRING_ELEMENT, AccessLevel, AccessType, ArchivePolicy,
+    Assignment, DaqDataType, Hash, Logger, MetricPrefix, NodeType, Schema,
+    Types, Unit, Validator, fullyEqual)
 from karabo.common.states import State
 
 
@@ -268,16 +269,16 @@ def test_getAccessMode():
 def test_getAssignment():
     try:
         schema = cppTestStruct1SchemaTestStruct1()
-        assert schema.getAssignment("exampleKey1") == AssignmentType.OPTIONAL
-        assert schema.getAssignment("exampleKey2") == AssignmentType.OPTIONAL
-        assert schema.getAssignment("exampleKey3") == AssignmentType.MANDATORY
-        assert schema.getAssignment("exampleKey4") == AssignmentType.INTERNAL
-        assert schema.getAssignment("exampleKey5") == AssignmentType.OPTIONAL
-        assert schema.getAssignment("exampleKey8") == AssignmentType.OPTIONAL
-        assert schema.getAssignment("exampleKey10") == AssignmentType.OPTIONAL
-        assert schema.getAssignment("testPath") == AssignmentType.OPTIONAL
-        assert schema.getAssignment("testPath2") == AssignmentType.OPTIONAL
-        assert schema.getAssignment("testPath3") == AssignmentType.MANDATORY
+        assert schema.getAssignment("exampleKey1") == Assignment.OPTIONAL
+        assert schema.getAssignment("exampleKey2") == Assignment.OPTIONAL
+        assert schema.getAssignment("exampleKey3") == Assignment.MANDATORY
+        assert schema.getAssignment("exampleKey4") == Assignment.INTERNAL
+        assert schema.getAssignment("exampleKey5") == Assignment.OPTIONAL
+        assert schema.getAssignment("exampleKey8") == Assignment.OPTIONAL
+        assert schema.getAssignment("exampleKey10") == Assignment.OPTIONAL
+        assert schema.getAssignment("testPath") == Assignment.OPTIONAL
+        assert schema.getAssignment("testPath2") == Assignment.OPTIONAL
+        assert schema.getAssignment("testPath3") == Assignment.MANDATORY
     except Exception as e:
         pytest.fail(e, pytrace=True)
 
@@ -288,11 +289,11 @@ def test_setAssignment():
         assert schema.hasAssignment('x')
         assert schema.isAssignmentOptional('x')
         assert schema.isAssignmentMandatory('x') is False
-        assert schema.getAssignment('x') == AssignmentType.OPTIONAL
-        schema.setAssignment('x', AssignmentType.MANDATORY)
+        assert schema.getAssignment('x') == Assignment.OPTIONAL
+        schema.setAssignment('x', Assignment.MANDATORY)
         assert schema.isAssignmentOptional('x') is False
         assert schema.isAssignmentMandatory('x')
-        assert schema.getAssignment('x') == MANDATORY
+        assert schema.getAssignment('x') == Assignment.MANDATORY
     except Exception as e:
         pytest.fail(e, pytrace=True)
 
@@ -436,8 +437,7 @@ def test_setUnit():
     try:
         schema = cppSomeClassSchemaSomeClassId()
         assert schema.getUnit("x") == Unit.AMPERE
-        schema.setUnit('x', METER)
-        assert schema.getUnit("x") == METER
+        schema.setUnit('x', Unit.METER)
         assert schema.getUnit("x") == Unit.METER
         assert schema.getUnitName("x") == "meter"
         assert schema.getUnitSymbol("x") == "m"
@@ -460,7 +460,7 @@ def test_setMetricPrefix():
         schema = cppSomeClassSchemaSomeClassId()
         assert schema.getMetricPrefix("x") == MetricPrefix.MILLI
         schema.setMetricPrefix("x", MetricPrefix.MICRO)
-        assert schema.getMetricPrefix("x") == MICRO
+        assert schema.getMetricPrefix("x") == MetricPrefix.MICRO
         assert schema.getMetricPrefixName("x") == "micro"
         assert schema.getMetricPrefixSymbol("x") == "u"
     except Exception as e:
@@ -803,7 +803,8 @@ def test_merge():
         .displayedName("Example key 2")
         .description("Example key 2 description")
         .options("5, 25, 10")
-        .minInc(5).maxInc(25).unit(AMPERE).metricPrefix(MILLI)
+        .minInc(5).maxInc(25)
+        .unit(Unit.AMPERE).metricPrefix(MetricPrefix.MILLI)
         .assignmentOptional().defaultValue(10)
         .init()
         .commit(),

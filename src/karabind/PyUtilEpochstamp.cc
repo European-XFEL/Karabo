@@ -15,6 +15,7 @@
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
+#include <pybind11/native_enum.h>
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 
@@ -27,7 +28,9 @@ using namespace std;
 
 
 void exportPyUtilEpochstamp(py::module_& m) {
-    py::enum_<TIME_UNITS>(m, "TIME_UNITS")
+    py::class_<Epochstamp> e(m, "Epochstamp");
+
+    py::native_enum<TIME_UNITS>(e, "TIME_UNITS", "enum.Enum")
           .value("ATTOSEC", TIME_UNITS::ATTOSEC)
           .value("FEMTOSEC", TIME_UNITS::FEMTOSEC)
           .value("PICOSEC", TIME_UNITS::PICOSEC)
@@ -39,9 +42,8 @@ void exportPyUtilEpochstamp(py::module_& m) {
           .value("MINUTE", TIME_UNITS::MINUTE)
           .value("HOUR", TIME_UNITS::HOUR)
           .value("DAY", TIME_UNITS::DAY)
-          .export_values();
-
-    py::class_<Epochstamp> e(m, "Epochstamp");
+          .export_values()
+          .finalize();
 
     e.def(py::init<>());
 

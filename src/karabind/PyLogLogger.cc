@@ -16,6 +16,7 @@
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
 
+#include <pybind11/native_enum.h>
 #include <pybind11/pybind11.h>
 
 #include <karabo/log/Logger.hh>
@@ -27,17 +28,6 @@ using namespace std;
 
 
 void exportPyLogLogger(py::module_& m) {
-    {
-        py::enum_<spdlog::level::level_enum>(m, "PriorityLevel", "This enumeration describes priority levels")
-              .value("FATAL", spdlog::level::critical)
-              .value("ERROR", spdlog::level::err)
-              .value("WARN", spdlog::level::warn)
-              .value("INFO", spdlog::level::info)
-              .value("DEBUG", spdlog::level::debug)
-              .value("NOTSET", spdlog::level::off)
-              .value("OFF", spdlog::level::off);
-    }
-
     { // spdlog::logger
         py::class_<spdlog::logger, std::shared_ptr<spdlog::logger>>(m, "Category")
               .def_static("getInstance", &spdlog::get, py::arg("name"), py::return_value_policy::reference_internal)
@@ -102,32 +92,44 @@ void exportPyLogLogger(py::module_& m) {
     }
 
     { // karabo::log::Logger
-        py::class_<Logger>(m, "Logger")
-              .def_static("expectedParameters", &Logger::expectedParameters, py::arg("schema"))
-              .def_static("configure", &Logger::configure, py::arg("config") = Hash())
-              .def_static("useConsole", &Logger::useConsole, py::arg("logger") = "", py::arg("inheritSinks") = true)
-              .def_static("useFile", &Logger::useFile, py::arg("logger") = "", py::arg("inheritSinks") = true)
-              .def_static("useCache", &Logger::useCache, py::arg("logger") = "", py::arg("inheritSinks") = true)
-              .def_static("getCachedContent", &Logger::getCachedContent, py::arg("nmessages") = 0)
-              .def_static("reset", &Logger::reset)
-              .def_static(
-                    "logDebug",
-                    [](const std::string& message, const std::string& logger) { Logger::debug(logger, "{}", message); },
-                    py::arg("message"), py::arg("logger") = "")
-              .def_static(
-                    "logInfo",
-                    [](const std::string& message, const std::string& logger) { Logger::info(logger, "{}", message); },
-                    py::arg("message"), py::arg("logger") = "")
-              .def_static(
-                    "logWarn",
-                    [](const std::string& message, const std::string& logger) { Logger::warn(logger, "{}", message); },
-                    py::arg("message"), py::arg("logger") = "")
-              .def_static(
-                    "logError",
-                    [](const std::string& message, const std::string& logger) { Logger::error(logger, "{}", message); },
-                    py::arg("message"), py::arg("logger") = "")
-              .def_static("setLevel", &Logger::setLevel, py::arg("level"), py::arg("logger") = "")
-              .def_static("getLevel", &Logger::getLevel, py::arg("logger") = "")
-              .def_static("getLogger", &Logger::getCategory, py::arg("logger") = "");
+        py::class_<Logger> lgr(m, "Logger");
+
+        py::native_enum<spdlog::level::level_enum>(lgr, "PriorityLevel", "enum.Enum",
+                                                   "This enumeration describes priority levels")
+              .value("FATAL", spdlog::level::critical)
+              .value("ERROR", spdlog::level::err)
+              .value("WARN", spdlog::level::warn)
+              .value("INFO", spdlog::level::info)
+              .value("DEBUG", spdlog::level::debug)
+              .value("NOTSET", spdlog::level::off)
+              .value("OFF", spdlog::level::off)
+              .finalize();
+
+        lgr.def_static("expectedParameters", &Logger::expectedParameters, py::arg("schema"));
+        lgr.def_static("configure", &Logger::configure, py::arg("config") = Hash());
+        lgr.def_static("useConsole", &Logger::useConsole, py::arg("logger") = "", py::arg("inheritSinks") = true);
+        lgr.def_static("useFile", &Logger::useFile, py::arg("logger") = "", py::arg("inheritSinks") = true);
+        lgr.def_static("useCache", &Logger::useCache, py::arg("logger") = "", py::arg("inheritSinks") = true);
+        lgr.def_static("getCachedContent", &Logger::getCachedContent, py::arg("nmessages") = 0);
+        lgr.def_static("reset", &Logger::reset);
+        lgr.def_static(
+              "logDebug",
+              [](const std::string& message, const std::string& logger) { Logger::debug(logger, "{}", message); },
+              py::arg("message"), py::arg("logger") = "");
+        lgr.def_static(
+              "logInfo",
+              [](const std::string& message, const std::string& logger) { Logger::info(logger, "{}", message); },
+              py::arg("message"), py::arg("logger") = "");
+        lgr.def_static(
+              "logWarn",
+              [](const std::string& message, const std::string& logger) { Logger::warn(logger, "{}", message); },
+              py::arg("message"), py::arg("logger") = "");
+        lgr.def_static(
+              "logError",
+              [](const std::string& message, const std::string& logger) { Logger::error(logger, "{}", message); },
+              py::arg("message"), py::arg("logger") = "");
+        lgr.def_static("setLevel", &Logger::setLevel, py::arg("level"), py::arg("logger") = "");
+        lgr.def_static("getLevel", &Logger::getLevel, py::arg("logger") = "");
+        lgr.def_static("getLogger", &Logger::getCategory, py::arg("logger") = "");
     }
 }
