@@ -15,30 +15,27 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 # flake8: noqa: F401
 from karabind import (
-    ALARM_ELEMENT, ATTOSEC, BOOL_ELEMENT, BYTEARRAY_ELEMENT, DOUBLE_ELEMENT,
-    FEMTOSEC, FLOAT_ELEMENT, IMAGEDATA_ELEMENT, INPUT_CHANNEL, INT32_ELEMENT,
-    INT64_ELEMENT, MICROSEC, MILLISEC, NANOSEC, NDARRAY_ELEMENT, NODE_ELEMENT,
-    OUTPUT_CHANNEL, OVERWRITE_ELEMENT, PICOSEC, SLOT_ELEMENT, STATE_ELEMENT,
-    STRING_ELEMENT, TABLE_ELEMENT, TIME_UNITS, UINT32_ELEMENT, UINT64_ELEMENT,
-    VECTOR_BOOL_ELEMENT, VECTOR_CHAR_ELEMENT, VECTOR_DOUBLE_ELEMENT,
-    VECTOR_FLOAT_ELEMENT, VECTOR_INT32_ELEMENT, VECTOR_INT64_ELEMENT,
-    VECTOR_STRING, VECTOR_STRING_ELEMENT, VECTOR_UINT32_ELEMENT,
-    VECTOR_UINT64_ELEMENT, AccessLevel, AccessType, ArchivePolicy,
-    AssemblyRules, AssignmentType as Assignment, BinarySerializerHash,
-    BinarySerializerSchema, Broker, Category, Channel, ChannelMetaData,
-    ClassInfo, Connection, ConnectionStatus, DaqDataType, DateTimeString,
-    DeviceClient as BoundDeviceClient, Dims, Encoding, Epochstamp, ErrorCode,
-    EventLoop, Hash, HashAttributes, HashAttributesNode, HashFilter,
-    HashMergePolicy, HashNode, ImageData, InputChannel, InputHash, InputSchema,
-    Logger, MetricPrefix, NodeType, OutputChannel, OutputHash, OutputSchema,
-    PriorityLevel, Requestor, Rotation, Schema, SignalSlotable,
-    SignalSlotableIntern, Slot, SlotElementBase, TextSerializerHash,
-    TextSerializerSchema, TimeDuration, TimeId, Timestamp, Types, TypesClass,
-    Unit, Validator, ValidatorValidationRules, VectorHash, VectorHashPointer,
-    _DimsIntern, cppNDArray, cppNDArrayCopy, fullyEqual, generateAutoStartHash,
-    jsonToHash, loadFromFile, loadHashFromFile, loadSchemaFromFile,
-    saveHashToFile, saveSchemaToFile, saveToFile, setDims, similar,
-    startDeviceServer, stopDeviceServer)
+    ALARM_ELEMENT, BOOL_ELEMENT, BYTEARRAY_ELEMENT, DOUBLE_ELEMENT,
+    FLOAT_ELEMENT, IMAGEDATA_ELEMENT, INPUT_CHANNEL, INT32_ELEMENT,
+    INT64_ELEMENT, NDARRAY_ELEMENT, NODE_ELEMENT, OUTPUT_CHANNEL,
+    OVERWRITE_ELEMENT, SLOT_ELEMENT, STATE_ELEMENT, STRING_ELEMENT,
+    TABLE_ELEMENT, UINT32_ELEMENT, UINT64_ELEMENT, VECTOR_BOOL_ELEMENT,
+    VECTOR_CHAR_ELEMENT, VECTOR_DOUBLE_ELEMENT, VECTOR_FLOAT_ELEMENT,
+    VECTOR_INT32_ELEMENT, VECTOR_INT64_ELEMENT, VECTOR_STRING,
+    VECTOR_STRING_ELEMENT, VECTOR_UINT32_ELEMENT, VECTOR_UINT64_ELEMENT,
+    AssemblyRules, BinarySerializerHash, BinarySerializerSchema, Broker,
+    Category, Channel, ChannelMetaData, ClassInfo, Connection,
+    ConnectionStatus, DateTimeString, DeviceClient as BoundDeviceClient, Dims,
+    Epochstamp, ErrorCode, EventLoop, Hash, HashAttributes, HashAttributesNode,
+    HashFilter, HashNode, ImageData, InputChannel, InputHash, InputSchema,
+    Logger, OutputChannel, OutputHash, OutputSchema, Requestor, Schema,
+    SignalSlotable, SignalSlotableIntern, Slot, SlotElementBase,
+    TextSerializerHash, TextSerializerSchema, TimeDuration, TimeId, Timestamp,
+    Types, TypesClass, Validator, ValidatorValidationRules, VectorHash,
+    VectorHashPointer, _DimsIntern, cppNDArray, cppNDArrayCopy, fullyEqual,
+    generateAutoStartHash, jsonToHash, loadFromFile, loadHashFromFile,
+    loadSchemaFromFile, saveHashToFile, saveSchemaToFile, saveToFile, setDims,
+    similar, startDeviceServer, stopDeviceServer)
 
 from ..common.alarm_conditions import AlarmCondition
 from ..common.states import State, StateSignifier
@@ -73,3 +70,34 @@ def isStdVectorDefaultConversion():
 
 def setStdVectorDefaultConversion():
     pass
+
+# Compatibility name definitions...
+# ... Hash ...
+HashMergePolicy = Hash.HashMergePolicy
+
+# ... Schema ...
+AccessType = Schema.AccessType
+AccessLevel = Schema.AccessLevel
+ArchivePolicy = Schema.ArchivePolicy
+Assignment = Schema.AssignmentType
+DaqDataType = Schema.DaqDataType
+NodeType = Schema.NodeType
+Unit = Schema.Unit
+MetricPrefix = Schema.MetricPrefix
+
+# ... ImageData ...
+Encoding = ImageData.Encoding
+Rotation = ImageData.Rotation
+
+# ... Epochstamp ...
+ATTOSEC = Epochstamp.TIME_UNITS.ATTOSEC
+FEMTOSEC = Epochstamp.TIME_UNITS.FEMTOSEC
+PICOSEC = Epochstamp.TIME_UNITS.PICOSEC
+NANOSEC = Epochstamp.TIME_UNITS.NANOSEC
+MICROSEC = Epochstamp.TIME_UNITS.MICROSEC
+MILLISEC = Epochstamp.TIME_UNITS.MILLISEC
+ONESECOND = Epochstamp.TIME_UNITS.ONESECOND
+SECOND = Epochstamp.TIME_UNITS.SECOND
+MINUTE = Epochstamp.TIME_UNITS.MINUTE
+HOUR = Epochstamp.TIME_UNITS.HOUR
+DAY = Epochstamp.TIME_UNITS.DAY
