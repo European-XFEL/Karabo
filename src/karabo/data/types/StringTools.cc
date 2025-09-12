@@ -67,18 +67,33 @@ namespace karabo {
         }
 
 
-        int getAndCropIndex(std::string& str) {
-            if (str.empty()) return -1;
-            int len = str.length() - 1;
-            if (str[len] == ']') {
-                str[len] = 0;
-                int pos = str.rfind('[');
-                str[pos] = 0;
-                len = atoi(str.c_str() + pos + 1);
-                str.erase(pos);
-                return len;
+        std::vector<std::string_view> tokenize(std::string_view input, const char delimiter) {
+            std::vector<std::string_view> result;
+            while (true) {
+                size_t dpos = input.find(delimiter);
+                result.push_back(input.substr(0, dpos));
+
+                if (dpos == input.npos) {
+                    break;
+                } else {
+                    input.remove_prefix(dpos + 1); // move starting pos of input string_view
+                }
             }
-            return -1;
+
+            return result;
+        }
+
+
+        std::pair<int, std::string_view> getAndCropIndex(std::string_view str) {
+            if (str.empty()) return std::make_pair(-1, str);
+            if (str[str.length() - 1] == ']') {
+                auto pos = str.rfind('[');
+                if (pos == str.npos) return std::make_pair(-1, str); // str contains syntax error
+                int len = std::atoi(str.data() + pos + 1);           // atoi parses upto first non-digit
+                str.remove_suffix(str.length() - pos);
+                return std::make_pair(len, str); // str contains key without '[...]'
+            }
+            return std::make_pair(-1, str); // str doesn't contain '[...]'
         }
 
 
