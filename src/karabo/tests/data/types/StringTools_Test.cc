@@ -34,6 +34,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(StringTools_Test);
 
 using namespace karabo::data;
 using namespace std;
+using namespace std::string_view_literals;
 
 
 StringTools_Test::StringTools_Test() {}
@@ -421,6 +422,70 @@ void StringTools_Test::testTokenize() {
     CPPUNIT_ASSERT_EQUAL(std::string(), out[0]);
     CPPUNIT_ASSERT_EQUAL(std::string(), out[1]);
     CPPUNIT_ASSERT_EQUAL(std::string(), out[2]);
+
+    // Another tokenize, based on std::string_view
+    std::string input = "";
+    auto vsv1 = tokenize(input, '.');
+    CPPUNIT_ASSERT_EQUAL(1ul, vsv1.size());
+    CPPUNIT_ASSERT_EQUAL(""sv, vsv1[0]);
+
+    input.assign(".");
+    auto vsv2 = tokenize(input, '.');
+    CPPUNIT_ASSERT_EQUAL(2ul, vsv2.size());
+    CPPUNIT_ASSERT_EQUAL(""sv, vsv2[0]);
+    CPPUNIT_ASSERT_EQUAL(""sv, vsv2[1]);
+
+    input.assign("a");
+    auto vsv3 = tokenize(input, '.');
+    CPPUNIT_ASSERT_EQUAL(1ul, vsv3.size());
+    CPPUNIT_ASSERT_EQUAL("a"sv, vsv3[0]);
+
+    input.assign(".a");
+    auto vsv4 = tokenize(input, '.');
+    CPPUNIT_ASSERT_EQUAL(2ul, vsv4.size());
+    CPPUNIT_ASSERT_EQUAL(""sv, vsv4[0]);
+    CPPUNIT_ASSERT_EQUAL("a"sv, vsv4[1]);
+
+    input.assign("a.");
+    auto vsv5 = tokenize(input, '.');
+    CPPUNIT_ASSERT_EQUAL(2ul, vsv5.size());
+    CPPUNIT_ASSERT_EQUAL("a"sv, vsv5[0]);
+    CPPUNIT_ASSERT_EQUAL(""sv, vsv5[1]);
+
+    input.assign("a.b");
+    auto vsv6 = tokenize(input, '.');
+    CPPUNIT_ASSERT_EQUAL(2ul, vsv6.size());
+    CPPUNIT_ASSERT_EQUAL("a"sv, vsv6[0]);
+    CPPUNIT_ASSERT_EQUAL("b"sv, vsv6[1]);
+
+    input.assign("a.b[12].c[32].d");
+    auto vsv7 = tokenize(input, '.');
+    CPPUNIT_ASSERT_EQUAL(4ul, vsv7.size());
+    CPPUNIT_ASSERT_EQUAL("a"sv, vsv7[0]);
+    CPPUNIT_ASSERT_EQUAL("b[12]"sv, vsv7[1]);
+    CPPUNIT_ASSERT_EQUAL("c[32]"sv, vsv7[2]);
+    CPPUNIT_ASSERT_EQUAL("d"sv, vsv7[3]);
+
+    // getAndCropIndex...
+    input.assign("abcde[1234]");
+    auto [index1, sview1] = getAndCropIndex(input);
+    CPPUNIT_ASSERT_EQUAL(index1, 1234);
+    CPPUNIT_ASSERT_EQUAL(sview1, "abcde"sv);
+
+    input.assign("abcde[1234");
+    auto [index2, sview2] = getAndCropIndex(input);
+    CPPUNIT_ASSERT_EQUAL(index2, -1);
+    CPPUNIT_ASSERT_EQUAL(sview2, "abcde[1234"sv);
+
+    input.assign("abcde1234]");
+    auto [index3, sview3] = getAndCropIndex(input);
+    CPPUNIT_ASSERT_EQUAL(index3, -1);
+    CPPUNIT_ASSERT_EQUAL(sview3, "abcde1234]"sv);
+
+    input.assign("abcde[]");
+    auto [index4, sview4] = getAndCropIndex(input);
+    CPPUNIT_ASSERT_EQUAL(index4, 0);
+    CPPUNIT_ASSERT_EQUAL(sview4, "abcde"sv);
 
     std::string str1 = "\n\r\t AbRa - kaDaBRa\r\t\n";
     trim(str1);

@@ -43,6 +43,7 @@
 #include <set>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <unordered_set>
 #include <vector>
 
@@ -833,7 +834,13 @@ namespace karabo {
         };
 
 
-        int getAndCropIndex(std::string& str);
+        /**
+         * Get and crop index in tokens like "abc[250]"
+         *
+         * @param str view that may contain index in brackets ([index])
+         * @return std::pair of index (int) and view of key ("abc") or -1 if no index
+         */
+        std::pair<int, std::string_view> getAndCropIndex(std::string_view str);
 
 
         /**
@@ -887,6 +894,15 @@ namespace karabo {
             tokenize(inputString, tokens, delims);
         }
 
+        /**
+         * Split into tokens by delimiter (fast version). The resulting tokens' lifetime closely
+         * connected with lifetime of input, i.e. if the std::string associated with input is destroyed,
+         * the tokens are getting dangling objects
+         * @param input string view
+         * @param delimiter single character
+         * @return vector of string_view
+         */
+        std::vector<std::string_view> tokenize(std::string_view input, const char delimiter);
 
         // TODO Move to other file
 

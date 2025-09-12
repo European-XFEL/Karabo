@@ -36,7 +36,7 @@ namespace karabo {
         Hash::Hash() {}
 
 
-        Hash::Hash(const std::string& path) {
+        Hash::Hash(std::string_view path) {
             this->set(path, Hash());
         }
 
@@ -99,19 +99,20 @@ namespace karabo {
         }
 
 
-        bool Hash::has(const std::string& path, const char separator) const {
+        bool Hash::has(std::string_view path, const char separator) const {
             std::string key;
             const Hash* hash = getLastHashPtr(path, key, separator);
             if (!hash) {
                 return false; // invalid path (empty, wrong sub-key or bad index)
             }
-            int index = karabo::data::getAndCropIndex(key);
-            if (!hash->m_container.has(key)) {
+            auto [index, keyview] = karabo::data::getAndCropIndex(key);
+            if (!hash->m_container.has(std::string(keyview))) {
                 return false; // e.g. asking for 'key[1]', but there is no 'key'
             } else if (index == -1) {
                 return true;
             } else {
-                return hash->m_container.get<std::vector<Hash>>(key).size() > static_cast<unsigned int>(index);
+                return hash->m_container.get<std::vector<Hash>>(std::string(keyview)).size() >
+                       static_cast<unsigned int>(index);
             }
         }
 
@@ -130,32 +131,35 @@ namespace karabo {
         }
 
 
-        bool Hash::is(const std::string& path, const Types::ReferenceType& type, const char separator) const {
-            std::string key;
-            const Hash& hash = getLastHash(path, key, separator);
-            int index = karabo::data::getAndCropIndex(key);
+        bool Hash::is(std::string_view path, const Types::ReferenceType& type, const char separator) const {
+            std::string lastKey;
+            const Hash& hash = getLastHash(path, lastKey, separator);
+            auto [index, keyview] = karabo::data::getAndCropIndex(lastKey);
             if (index == -1) {
-                return hash.m_container.is(key, type);
+                return hash.m_container.is(lastKey, type);
             } else {
+                std::string key(keyview);
                 const std::vector<Hash>& hashVec = hash.m_container.get<std::vector<Hash>>(key);
                 if (static_cast<unsigned int>(index) >= hashVec.size()) {
-                    throw KARABO_PARAMETER_EXCEPTION("Index " + toString(index) + " out of range in '" + path + "'.");
+                    throw KARABO_PARAMETER_EXCEPTION("Index " + toString(index) + " out of range in '" +
+                                                     std::string(path) + "'.");
                 }
                 return true; // by definition of hashVec (or already an exception)!
             }
         }
 
 
-        bool Hash::erase(const std::string& path, const char separator) {
-            std::string key;
-            Hash* hash = getLastHashPtr(path, key, separator);
+        bool Hash::erase(std::string_view path, const char separator) {
+            std::string lastKey;
+            Hash* hash = getLastHashPtr(path, lastKey, separator);
             if (!hash) {
                 return false;
             }
-            int index = karabo::data::getAndCropIndex(key);
-            if (index == -1) {
-                return (hash->m_container.erase(key) != 0);
+            auto [index, keyview] = karabo::data::getAndCropIndex(lastKey);
+            if (index == -1) { // std::string(keyview) == lastKey
+                return (hash->m_container.erase(lastKey) != 0);
             } else {
+                std::string key(keyview);
                 Container::map_iterator it = hash->m_container.find(key);
                 if (it == hash->m_container.mend()) {
                     // Could be 'erase("a[2]")', but there is no "a" at all!
@@ -175,35 +179,35 @@ namespace karabo {
             return m_container.erase(it);
         }
 
-        static std::string concat(const std::vector<std::string>& vec, size_t len, const std::string& sep) {
+        static std::string concat(const std::vector<std::string_view>& vec, size_t len, const std::string& sep) {
             std::string result;
             for (size_t i = 0; i < len; i++) {
-                result += vec[i];
+                result += std::string(vec[i]);
                 if (i < (len - 1)) result += sep;
             }
             return result;
         }
 
 
-        void Hash::erasePath(const std::string& path, const char separator) {
+        void Hash::erasePath(std::string_view path, const char separator) {
             const std::string sep(1, separator);
-            std::vector<std::string> tokens;
-            karabo::data::tokenize(path, tokens, separator);
+            std::vector<std::string_view> tokens = karabo::data::tokenize(path, separator);
             size_t length = tokens.size();
-            std::string thePath = path;
+            std::string thePath(path);
             try {
                 while (length > 0) {
-                    std::string key;
-                    Hash* hash = getLastHashPtr(thePath, key, separator);
+                    std::string token;
+                    Hash* hash = getLastHashPtr(thePath, token, separator);
                     if (!hash) {
                         break; // probably wrong sub-key or bad index
                     }
-                    int index = karabo::data::getAndCropIndex(key); // key cleared from possible []
-                    if (index == -1) {
-                        hash->m_container.erase(key);
+                    auto [index, keyview] = karabo::data::getAndCropIndex(token); // key cleared from possible []
+                    if (index == -1) { // std::string(keyview) == token, i.e. no indexing
+                        hash->m_container.erase(token);
                         thePath = concat(tokens, --length, sep);
                         if (length == 0) break; // Done!
                     } else {
+                        std::string key(keyview);
                         Container::map_iterator it = hash->m_container.find(key);
                         if (it == hash->m_container.mend()) {
                             // Could be 'erasePath("a[2]")', but there is no "a" at all.
@@ -229,36 +233,37 @@ namespace karabo {
                     }
                 }
             } catch (const karabo::data::Exception& e) {
-                KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Error whilst erasing path '" + path + "' from Hash"));
+                KARABO_RETHROW_AS(
+                      KARABO_PARAMETER_EXCEPTION("Error whilst erasing path '" + std::string(path) + "' from Hash"));
             }
         }
 
 
-        const Hash& Hash::getLastHash(const std::string& path, std::string& lastKey, const char separator) const {
+        const Hash& Hash::getLastHash(std::string_view path, std::string& lastKey, const char separator) const {
             const Hash* hash = getLastHashPtr(path, lastKey, separator);
             if (!hash) {
                 // If getLastHashPtr would provide an error code, we could be more specific...
-                throw KARABO_PARAMETER_EXCEPTION("non-existing key, wrong type or index out of range in '" + path +
-                                                 "'.");
+                throw KARABO_PARAMETER_EXCEPTION("non-existing key, wrong type or index out of range in '" +
+                                                 std::string(path) + "'.");
             }
             return *hash;
         }
 
 
-        Hash& Hash::getLastHash(const std::string& path, std::string& last_key, const char separator) {
+        Hash& Hash::getLastHash(std::string_view path, std::string& last_key, const char separator) {
             return const_cast<Hash&>(thisAsConst().getLastHash(path, last_key, separator));
         }
 
 
-        const Hash* Hash::getLastHashPtr(const std::string& path, std::string& lastKey, const char separator) const {
+        const Hash* Hash::getLastHashPtr(std::string_view path, std::string& lastKey, const char separator) const {
             // TODO: We should add an error code to be returned as argument by value.
-            std::vector<std::string> tokens;
-            karabo::data::tokenize(path, tokens, separator);
+            std::vector<std::string_view> tokens = karabo::data::tokenize(path, separator);
 
             const Hash* tmp = this;
             for (size_t i = 0; i < tokens.size() - 1; ++i) {
-                int index = karabo::data::getAndCropIndex(tokens[i]);
-                Container::const_map_iterator it = tmp->m_container.find(tokens[i]);
+                auto [index, keyview] = karabo::data::getAndCropIndex(tokens[i]);
+                std::string key(keyview); // Convert to std::string since Element still uses std::string template type
+                Container::const_map_iterator it = tmp->m_container.find(key);
                 if (it == tmp->m_container.mend()) return 0;
                 const Hash::Node& node = it->second;
                 if (index == -1) {
@@ -273,36 +278,38 @@ namespace karabo {
                     tmp = &(hashVec[index]);
                 }
             }
-            lastKey.swap(tokens.back());
+            lastKey.assign(tokens.back());
             return tmp;
         }
 
 
-        Hash* Hash::getLastHashPtr(const std::string& path, std::string& last_key, const char separator) {
+        Hash* Hash::getLastHashPtr(std::string_view path, std::string& last_key, const char separator) {
             return const_cast<Hash*>(thisAsConst().getLastHashPtr(path, last_key, separator));
         }
 
 
-        const Hash::Node& Hash::getNode(const std::string& path, const char separator) const {
+        const Hash::Node& Hash::getNode(std::string_view path, const char separator) const {
             std::string key;
             const Hash& hash = getLastHash(path, key, separator);
-            if (karabo::data::getAndCropIndex(key) == -1) {
+            auto [index, keyview] = karabo::data::getAndCropIndex(key);
+            if (index == -1) { // std::string(keyview) == key, i.e. no indexing found
                 return hash.m_container.getNode(key);
             }
-            throw KARABO_LOGIC_EXCEPTION("Array syntax on leaf '" + path + "' is not possible");
+            throw KARABO_LOGIC_EXCEPTION("Array syntax on leaf '" + std::string(path) + "' is not possible");
         }
 
 
-        Hash::Node& Hash::getNode(const std::string& path, const char separator) {
+        Hash::Node& Hash::getNode(std::string_view path, const char separator) {
             return const_cast<Hash::Node&>(thisAsConst().getNode(path, separator));
         }
 
 
-        boost::optional<const Hash::Node&> Hash::find(const std::string& path, const char separator) const {
+        boost::optional<const Hash::Node&> Hash::find(std::string_view path, const char separator) const {
             std::string key;
             const Hash* hash = getLastHashPtr(path, key, separator);
             if (hash) {
-                if (karabo::data::getAndCropIndex(key) == -1) {
+                auto [index, keyview] = karabo::data::getAndCropIndex(key);
+                if (index == -1) { // std::string(keyview) == key i.e. no '[..]' indexing, so use key directly
                     const_map_iterator it = hash->m_container.find(key);
                     if (it != hash->m_container.mend()) {
                         return it->second;
@@ -314,7 +321,7 @@ namespace karabo {
         }
 
 
-        boost::optional<Hash::Node&> Hash::find(const std::string& path, const char separator) {
+        boost::optional<Hash::Node&> Hash::find(std::string_view path, const char separator) {
             // Use const version and just cast const away from result if successful.
             boost::optional<const Hash::Node&> constResult = thisAsConst().find(path, separator);
             if (constResult) {
@@ -325,9 +332,8 @@ namespace karabo {
         }
 
 
-        Types::ReferenceType Hash::getType(const std::string& path, const char separator) const {
-            std::string tmp(path);
-            int index = karabo::data::getAndCropIndex(tmp);
+        Types::ReferenceType Hash::getType(std::string_view path, const char separator) const {
+            auto [index, tmp] = karabo::data::getAndCropIndex(path);
             if (index == -1) {
                 return getNode(tmp, separator).getType();
             } else {
@@ -554,11 +560,11 @@ namespace karabo {
         }
 
 
-        bool Hash::keyIsPrefixOfAnyPath(const std::set<std::string>& paths, const std::string& key, char separator,
+        bool Hash::keyIsPrefixOfAnyPath(const std::set<std::string>& paths, std::string_view key, char separator,
                                         unsigned int size) {
-            for (const std::string& path : paths) {
+            for (std::string_view path : paths) {
                 const size_t sepPos = path.find_first_of(separator);
-                const std::string& firstKeyOfPath = (sepPos == std::string::npos ? path : std::string(path, 0, sepPos));
+                auto firstKeyOfPath = (sepPos == std::string::npos ? path : path.substr(0, sepPos));
                 if (firstKeyOfPath.compare(0, key.size(), key) == 0) {
                     // firstKeyOfPath begins with key - why is there no simple string::beginsWith(..)?!
                     if (firstKeyOfPath.size() == key.size()) {
@@ -566,8 +572,7 @@ namespace karabo {
                         return true;
                     } else {
                         // Check whether after key there is a valid (i.e. < size) [<index>]:
-                        std::string croppedFirstKey(firstKeyOfPath);
-                        const int index = karabo::data::getAndCropIndex(croppedFirstKey);
+                        auto [index, croppedFirstKey] = karabo::data::getAndCropIndex(firstKeyOfPath);
                         if (index != -1 && static_cast<unsigned int>(index) < size && croppedFirstKey == key) {
                             return true;
                         }
@@ -580,14 +585,14 @@ namespace karabo {
 
 
         std::set<unsigned int> Hash::selectIndicesOfKey(const unsigned int targetSize,
-                                                        const std::set<std::string>& paths, const std::string& key,
+                                                        const std::set<std::string>& paths, std::string_view key,
                                                         char separator) {
             std::set<unsigned int> result;
 
 
-            for (const std::string& path : paths) {
+            for (std::string_view path : paths) {
                 const size_t sepPos = path.find_first_of(separator);
-                const std::string& firstKeyOfPath = (sepPos == std::string::npos ? path : std::string(path, 0, sepPos));
+                auto firstKeyOfPath = (sepPos == std::string::npos ? path : path.substr(0, sepPos));
                 if (firstKeyOfPath.compare(0, key.size(), key, 0, key.size()) == 0) {
                     // firstKeyOfPath begins with key - why is there no simple string::beginsWith(..)?!
                     if (firstKeyOfPath.size() == key.size()) {
@@ -597,8 +602,7 @@ namespace karabo {
                         break; // no need to look for further indices
                     } else {
                         // Check whether after key there is an [<index>]:
-                        std::string croppedFirstKey(firstKeyOfPath);
-                        const int index = karabo::data::getAndCropIndex(croppedFirstKey);
+                        auto [index, croppedFirstKey] = karabo::data::getAndCropIndex(firstKeyOfPath);
                         if (index != -1 && index < int(targetSize) && croppedFirstKey == key) {
                             result.insert(static_cast<unsigned int>(index));
                         }
@@ -815,48 +819,48 @@ namespace karabo {
          * Attributes manipulation
          *******************************************************************/
 
-        std::any& Hash::getAttributeAsAny(const std::string& path, const std::string& attribute, const char separator) {
+        std::any& Hash::getAttributeAsAny(std::string_view path, const std::string& attribute, const char separator) {
             return getNode(path, separator).getAttributeAsAny(attribute);
         }
 
 
-        const std::any& Hash::getAttributeAsAny(const std::string& path, const std::string& attribute,
+        const std::any& Hash::getAttributeAsAny(std::string_view path, const std::string& attribute,
                                                 const char separator) const {
             return getNode(path, separator).getAttributeAsAny(attribute);
         }
 
 
-        bool Hash::hasAttribute(const std::string& path, const std::string& attribute, const char separator) const {
+        bool Hash::hasAttribute(std::string_view path, const std::string& attribute, const char separator) const {
             return getNode(path, separator).hasAttribute(attribute);
         }
 
 
-        const Hash::Attributes& Hash::getAttributes(const std::string& path, const char separator) const {
+        const Hash::Attributes& Hash::getAttributes(std::string_view path, const char separator) const {
             return getNode(path, separator).getAttributes();
         }
 
 
-        Hash::Attributes& Hash::getAttributes(const std::string& path, const char separator) {
+        Hash::Attributes& Hash::getAttributes(std::string_view path, const char separator) {
             return getNode(path, separator).getAttributes();
         }
 
 
-        void Hash::setAttributes(const std::string& path, const Hash::Attributes& attributes, const char separator) {
+        void Hash::setAttributes(std::string_view path, const Hash::Attributes& attributes, const char separator) {
             return getNode(path, separator).setAttributes(attributes);
         }
 
 
-        void Hash::setAttributes(const std::string& path, Hash::Attributes&& attributes, const char separator) {
+        void Hash::setAttributes(std::string_view path, Hash::Attributes&& attributes, const char separator) {
             return getNode(path, separator).setAttributes(std::move(attributes));
         }
 
 
-        Hash* Hash::setNodesAsNeeded(const std::vector<std::string>& tokens, char separator) {
+        Hash* Hash::setNodesAsNeeded(const std::vector<std::string_view>& tokens, char separator) {
             // Loop all but last token
             Hash* tmp = this;
             for (size_t i = 0; i < tokens.size() - 1; ++i) {
-                std::string token = tokens[i];
-                int index = karabo::data::getAndCropIndex(token);
+                auto [index, tokview] = karabo::data::getAndCropIndex(tokens[i]);
+                std::string token(tokview);
                 if (index == -1) {                     // Just Hash
                     if (tmp->m_container.has(token)) { // Node exists
                         Hash::Node* node = &(tmp->m_container.getNode(token));
