@@ -1377,7 +1377,7 @@ void Schema_Test::testInvalidNodes() {
                          karabo::data::ParameterException);
 
     // Various characters are forbidden:
-    constexpr char forbidden[] = "()[]<>`~!@#$%^&*-+=|\\:;'\",? ";
+    constexpr char forbidden[] = "()[]<>`~!#$%^&*-+=|\\:;'\",? ";
     const std::string valid("valid");
     std::string invalid(valid + " ");
     for (size_t i = 0; i < sizeof(forbidden) / sizeof(forbidden[0]); ++i) {
@@ -1403,7 +1403,7 @@ void Schema_Test::testInvalidNodes() {
     constexpr char validCharacters[] =
           "abcdefghijklmnopqrstuvwxyz/" // tolerate `/`
           "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-          "0123456789_";
+          "0123456789_@";
     CPPUNIT_ASSERT_NO_THROW(INT8_ELEMENT(schema).key(validCharacters).readOnly().commit());
 }
 
