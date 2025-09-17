@@ -59,7 +59,6 @@ namespace karabo {
         // See also OutputChannel::initializeServerConnection(...)
         const int kMaxCompleteInitializationAttempts = 2500;
 
-        // TODO: Move this to a constant of ConfigurationManager device once it becomes part of the Framework.
         const std::string DEFAULT_CONFIG_MANAGER_ID("KaraboConfigurationManager");
 
         void DeviceClient::initServiceDeviceIds(const Hash& serviceDeviceIds) {
@@ -82,8 +81,7 @@ namespace karabo {
               m_internalTimeout(3000),
               m_topologyInitialized(false),
               m_ageingTimer(karabo::net::EventLoop::getIOService()),
-              m_getOlder(false) // Sic! To start aging in setAgeing below.
-              ,
+              m_getOlder(false), // Sic! To start aging in setAgeing below.
               m_signalsChangedTimer(karabo::net::EventLoop::getIOService()),
               m_runSignalsChangedTimer(false),
               m_signalsChangedInterval(-1),
@@ -120,8 +118,7 @@ namespace karabo {
               m_internalTimeout(2000),
               m_topologyInitialized(false),
               m_ageingTimer(karabo::net::EventLoop::getIOService()),
-              m_getOlder(false) // Sic! To start aging in setAgeing below.
-              ,
+              m_getOlder(false), // Sic! To start aging in setAgeing below.
               m_signalsChangedTimer(karabo::net::EventLoop::getIOService()),
               m_runSignalsChangedTimer(false),
               m_signalsChangedInterval(-1),
@@ -204,18 +201,15 @@ namespace karabo {
                   bind_weak(&karabo::core::DeviceClient::_slotClassSchema, this, _1, _2, _3), "_slotClassSchema");
             p->registerSlot<Schema, string>(bind_weak(&karabo::core::DeviceClient::_slotSchemaUpdated, this, _1, _2),
                                             "_slotSchemaUpdated");
+            // We hook our methods to the existing (in SignalSlotable) slots for instance monitoring
             p->registerSlot<string, Hash>(bind_weak(&karabo::core::DeviceClient::_slotInstanceNew, this, _1, _2),
-                                          "_slotInstanceNew");
+                                          "slotInstanceNew");
             p->registerSlot<string, Hash>(bind_weak(&karabo::core::DeviceClient::_slotInstanceGone, this, _1, _2),
-                                          "_slotInstanceGone");
+                                          "slotInstanceGone");
             p->registerSlot<string, Hash>(bind_weak(&karabo::core::DeviceClient::_slotInstanceUpdated, this, _1, _2),
-                                          "_slotInstanceUpdated");
+                                          "slotInstanceUpdated");
+            // A slot to follow logger map updates
             p->registerSlot<Hash>(bind_weak(&karabo::core::DeviceClient::_slotLoggerMap, this, _1), "_slotLoggerMap");
-
-            // No advantage from asyncConnect since connecting to one's own signal is just a call chain:
-            p->connect("", "signalInstanceNew", "_slotInstanceNew");
-            p->connect("", "signalInstanceGone", "_slotInstanceGone");
-            p->connect("", "signalInstanceUpdated", "_slotInstanceUpdated");
         }
 
 
@@ -381,11 +375,11 @@ namespace karabo {
                     //
                     // As a workaround, we try to clarify the situation:
                     // - Take care that we do not track the instance.
-                    // - Trigger a call to our slotPingAnswer that will then trigger "signalInstanceNew" (but only
+                    // - Trigger a call to our slotDiscoverAnswer that will then trigger "slotInstanceNew" (but only
                     //   if instance is untracked).
                     if (auto sigSlot = m_signalSlotable.lock()) {
                         const bool wasTracked = sigSlot->eraseTrackedInstance(instanceId);
-                        sigSlot->call(instanceId, "slotPing", 0);
+                        sigSlot->call(instanceId, "slotDiscover", 0);
                         KARABO_LOG_FRAMEWORK_WARN << getInstanceId() << ": Received instance update from '"
                                                   << instanceId << "' although it is not in runtime description"
                                                   << (wasTracked ? " (but was tracked!)" : "")

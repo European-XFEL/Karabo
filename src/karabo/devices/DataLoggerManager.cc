@@ -682,7 +682,7 @@ namespace karabo {
                 remote().enableInstanceTracking();
 
                 // Publish logger map read from disc. Do that as late as possible in the initialization procedure
-                // to give those interested the chance to register their slots after we sent signalInstanceNew.
+                // to give those interested the chance to register their slots after we sent slotInstanceNew.
                 {
                     std::lock_guard<std::mutex> lock(
                           m_loggerMapMutex); // m_loggerMap must not be changed while we process it
