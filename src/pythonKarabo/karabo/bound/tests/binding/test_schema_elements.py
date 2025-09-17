@@ -1046,7 +1046,7 @@ def test_invalidNodes():
         INT32_ELEMENT(schema).key("node.").description("Empty key forbidden")
 
     # Various characters are forbidden:
-    forbidden = "()[]<>`~!@#$%^&*-+=|\\:;'\",? "
+    forbidden = "()[]<>`~!#$%^&*-+=|\\:;'\",? "
     valid = "valid"
     for bad in forbidden:
         invalid = valid + bad
@@ -1072,7 +1072,7 @@ def test_invalidNodes():
 
     allValidCharacters = ("abcdefghijklmnopqrstuvwxyz/"  # tolerate '/'
                           "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-                          "0123456789_")
+                          "0123456789_@")
     INT32_ELEMENT(schema).key(allValidCharacters).readOnly().commit()
     assert allValidCharacters in schema
 

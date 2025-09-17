@@ -28,8 +28,9 @@ void karabo::data::checkPropertyPath(const std::string& name) {
         throw KARABO_PARAMETER_EXCEPTION(("Bad (sub-)key '" + name) += "': empty");
     }
     // '/' is special: only allowed for backward compatibility in metro devices of DA group
+    // `@` is required for mangling with other control systems
     constexpr char allowedCharacters[] =
-          ".0123456789_/"
+          ".0123456789_/@"
           "abcdefghijklmnopqrstuvwxyz"
           "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     assert(allowedCharacters[0] == karabo::data::Hash::k_defaultSep);
