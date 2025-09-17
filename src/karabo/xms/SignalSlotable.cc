@@ -935,12 +935,6 @@ namespace karabo {
             // Listener for heartbeats
             KARABO_SLOT(slotHeartbeat, string /*instanceId*/, Hash /*heartbeatInfo*/)
 
-            KARABO_SIGNAL("signalInstanceNew", string, Hash);
-
-            KARABO_SIGNAL("signalInstanceGone", string, Hash);
-
-            KARABO_SIGNAL("signalInstanceUpdated", string, Hash);
-
             // Global instance new notification
             KARABO_SLOT(slotInstanceNew, string /*instanceId*/, Hash /*instanceInfo*/)
 
@@ -1006,8 +1000,6 @@ namespace karabo {
                 addTrackedInstance(instanceId, instanceInfo);
             }
 
-            emit("signalInstanceNew", instanceId, instanceInfo);
-
             reconnectSignals(instanceId);
 
             reconnectInputChannels(instanceId);
@@ -1029,8 +1021,6 @@ namespace karabo {
             if (m_trackAllInstances) {
                 eraseTrackedInstance(instanceId);
             }
-
-            emit("signalInstanceGone", instanceId, instanceInfo);
         }
 
 
@@ -1042,7 +1032,6 @@ namespace karabo {
                 // Merge the new instanceInfo (ignoring case of a shrunk instanceInfo...)
                 addTrackedInstance(instanceId, instanceInfo);
             }
-            emit("signalInstanceUpdated", instanceId, instanceInfo); // after addTrackedInstance(..)?
         }
 
 
@@ -1199,7 +1188,8 @@ namespace karabo {
         void SignalSlotable::slotDiscoverAnswer(const std::string& instanceId, const karabo::data::Hash& instanceInfo) {
             if (!hasTrackedInstance(instanceId)) {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Got ping answer from instanceId " << instanceId;
-                emit("signalInstanceNew", instanceId, instanceInfo);
+                // Treat as if it is new (to e.g. call the DeviceClient hook for "slotInstanceNew")
+                call(std::string(), "slotInstanceNew", instanceId, instanceInfo);
             } else {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Got ping answer from instanceId (but already tracked) " << instanceId;
             }
@@ -1271,13 +1261,12 @@ namespace karabo {
                 } else {
                     KARABO_LOG_FRAMEWORK_WARN << "Could not connect slot '" << slotFunction << "' to (non-existing?) "
                                               << "signal '" << signalInstanceId << "." << signalFunction << "'. Will "
-                                              << "try again if '" << signalInstanceId << "' sends signalInstanceNew.";
+                                              << "try again if '" << signalInstanceId << "' calls slotInstanceNew.";
                 }
             } else {
                 KARABO_LOG_FRAMEWORK_WARN << m_instanceId << " has no slot '" << slotFunction << "', so cannot connect"
                                           << " to signal '" << signalInstanceId << "." << signalFunction
-                                          << "'. Will try again if '" << signalInstanceId
-                                          << "' sends signalInstanceNew.";
+                                          << "'. Will try again if '" << signalInstanceId << "' calls slotInstanceNew.";
             }
 
             return false;
@@ -1792,7 +1781,7 @@ namespace karabo {
                     for (size_t i = 0; i < deadOnes.size(); ++i) {
                         KARABO_LOG_FRAMEWORK_WARN << m_instanceId << ": Instance \"" << deadOnes[i].first
                                                   << "\" silently disappeared (no heartbeats received anymore)";
-                        emit("signalInstanceGone", deadOnes[i].first, deadOnes[i].second);
+                        call(std::string(), "slotInstanceGone", deadOnes[i].first, deadOnes[i].second);
                         eraseTrackedInstance(deadOnes[i].first);
                     }
                 }
