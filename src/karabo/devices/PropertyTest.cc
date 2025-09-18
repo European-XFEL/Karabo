@@ -1028,7 +1028,8 @@ namespace karabo {
                                         Encoding::GRAY, // gray scale as is default
                                         16));           // unsigned short is 16 bits
 
-            writeChannel("output", data);
+            // Use both, sync and async interface, to increase coverage
+            asyncWriteChannel("output", data);
             writeChannel("node.output", data);
             set("outputCounter", outputCounter);
         }
