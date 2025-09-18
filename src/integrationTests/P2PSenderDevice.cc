@@ -248,8 +248,20 @@ namespace karabo {
                 data.set("dataId", iData);
                 vec[0] = -iData;
 
-                // Write - pretend safeNDArray = true
-                writeChannel("output1", data, getActualTimestamp(), true);
+                if (iData % 2 == 0) { // write synchronously
+                    // Sometimes pretend safeNDArray = true (OK since we never touch data["array"])
+                    if (iData % 3 == 0) { // iData 0,6,12,...
+                        writeChannel("output1", data, getActualTimestamp(), true);
+                    } else {                           // iData 2,4,8,10,...
+                        writeChannel("output1", data); // defaults are fine
+                    }
+                } else {                  // write asynchronously - also here sometimes use safeNDArray = true
+                    if (iData % 3 == 0) { // iData 3,9,...
+                        asyncWriteChannel("output1", data, getActualTimestamp(), true);
+                    } else {                                // iData 1,5,7,11,...
+                        asyncWriteChannel("output1", data); // defaults are fine
+                    }
+                }
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "Written data # " << iData;
                 set("currentDataId", iData);

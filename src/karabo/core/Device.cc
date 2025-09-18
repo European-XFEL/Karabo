@@ -337,19 +337,36 @@ namespace karabo {
         }
 
 
-        void Device::writeChannel(const std::string& channelName, const karabo::data::Hash& data) {
-            this->writeChannel(channelName, data, this->getActualTimestamp());
-        }
+        void Device::internalWriteChannel(const std::string& channelName, const karabo::data::Hash& data,
+                                          const karabo::data::Timestamp& timestamp, bool safeNDArray,
+                                          std::function<void()>&& writeDoneHandler) {
+            using namespace karabo::xms;
+            OutputChannel::Pointer channel = this->getOutputChannel(channelName);
 
+            // Provide proper meta data information, as well as correct train- and timestamp.
+            // If default "empty" timestamp is passed, use current time:
+            const bool zeroTime = (timestamp.getSeconds() == 0ull && timestamp.getFractionalSeconds() == 0ull);
+            const karabo::data::Timestamp& realStamp = (zeroTime ? getActualTimestamp() : timestamp);
+            OutputChannel::MetaData meta((m_instanceId + ":") += channelName, realStamp);
+
+            channel->write(data, meta);
+            if (writeDoneHandler) { // async requested
+                channel->asyncUpdate(safeNDArray, std::move(writeDoneHandler));
+            } else {
+                channel->update(safeNDArray);
+            }
+        }
 
         void Device::writeChannel(const std::string& channelName, const karabo::data::Hash& data,
                                   const karabo::data::Timestamp& timestamp, bool safeNDArray) {
-            using namespace karabo::xms;
-            OutputChannel::Pointer channel = this->getOutputChannel(channelName);
-            // Provide proper meta data information, as well as correct train- and timestamp
-            OutputChannel::MetaData meta(m_instanceId + ":" + channelName, timestamp);
-            channel->write(data, meta);
-            channel->update(safeNDArray);
+            this->internalWriteChannel(channelName, data, timestamp, safeNDArray, std::function<void()>());
+        }
+
+
+        void Device::asyncWriteChannel(const std::string& channelName, const karabo::data::Hash& data,
+                                       const karabo::data::Timestamp& timestamp, bool safeNDArray,
+                                       std::function<void()>&& writeDoneHandler) {
+            this->internalWriteChannel(channelName, data, timestamp, safeNDArray, std::move(writeDoneHandler));
         }
 
 
