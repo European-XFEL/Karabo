@@ -513,6 +513,8 @@ async def test_cross_pipeline(deviceTest):
         await shutdown(bound_proxy)
 
 
+# TODO: port this test to use Influx
+@pytest.mark.skip(reason="fileDataLogger moved out from the Framework")
 @pytest.mark.timeout(40)
 @pytest.mark.asyncio(loop_scope="module")
 async def test_history(deviceTest):

@@ -128,9 +128,6 @@ add_subdirectory(brokerMessageLogger ${CMAKE_BINARY_DIR}/karabo/brokerMessageLog
 # The build of the Karabo Broker Rates utility (karabo-brokerrates)
 add_subdirectory(tools/brokerRates ${CMAKE_BINARY_DIR}/karabo/brokerRates)
 
-# The build of the Karabo Idx Utilities for file based data logging (karabo-idxbuild and karabo-idxview)
-add_subdirectory(tools/dataLoggerIndex ${CMAKE_BINARY_DIR}/karabo/dataLoggerIndex)
-
 # Generates the script to activate an environment for running resulting Karabo artifacts
 # in the project build tree.
 set(KARABO_PATH ${CMAKE_BINARY_DIR}/karabo)
