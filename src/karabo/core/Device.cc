@@ -731,23 +731,53 @@ namespace karabo {
             onTimeTick(id, sec, frac, period);
         }
 
-
         void Device::appendSchemaMaxSize(const std::string& path, unsigned int value, bool emitFlag) {
+            internalAppendSchemaMaxSizes({path}, {value}, emitFlag);
+        }
+
+        void Device::appendSchemaMaxSizes(const std::vector<std::string>& paths,
+                                          const std::vector<unsigned int>& values) {
+            internalAppendSchemaMaxSizes(paths, values, true);
+        }
+
+        void Device::internalAppendSchemaMaxSizes(const std::vector<std::string>& paths,
+                                                  const std::vector<unsigned int>& values, bool emitFlag) {
             using karabo::data::OVERWRITE_ELEMENT;
+
+            if (paths.size() != values.size()) {
+                throw KARABO_PARAMETER_EXCEPTION("Number of paths and values differs.");
+            }
             std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
-            if (!m_fullSchema.has(path)) {
-                throw KARABO_PARAMETER_EXCEPTION("Path \"" + path + "\" not found in the device schema.");
+            for (const std::string& path : paths) {
+                if (!m_fullSchema.has(path)) {
+                    throw KARABO_PARAMETER_EXCEPTION("Path \"" + path + "\" not found in the device schema.");
+                }
             }
             m_stateDependentSchema.clear();
             // Do not touch static schema - that must be restorable via updateSchema(Schema())
             // OVERWRITE_ELEMENT checks whether max size attribute makes sense for path
-            OVERWRITE_ELEMENT(m_fullSchema).key(path).setNewMaxSize(value).commit();
-            if (m_injectedSchema.has(path)) {
-                OVERWRITE_ELEMENT(m_injectedSchema).key(path).setNewMaxSize(value).commit();
+            size_t index = 0;
+            for (const std::string& path : paths) {
+                const unsigned int value = values[index++]; // postfix!
+                OVERWRITE_ELEMENT(m_fullSchema).key(path).setNewMaxSize(value).commit();
+                if (m_injectedSchema.has(path)) {
+                    OVERWRITE_ELEMENT(m_injectedSchema).key(path).setNewMaxSize(value).commit();
+                }
             }
 
             // Notify the distributed system if needed
+            // (and, as in updateSchema and appendSchema, better before recreating output channels):
             if (emitFlag) emit("signalSchemaUpdated", m_fullSchema, m_deviceId);
+
+            // If the vector was part of an output channel schema, recreate the channel.
+            // The new incarnation of the channel receives the up-to-date schema for validation.
+            for (const std::string& output : getOutputChannelNames()) {
+                for (const std::string& path : paths) {
+                    if (path.starts_with(output)) {
+                        createOutputChannel(output, m_parameters, m_fullSchema.subSchema(output + ".schema"));
+                    }
+                }
+            }
         }
 
 

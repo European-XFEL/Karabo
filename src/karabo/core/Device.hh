@@ -836,19 +836,30 @@ namespace karabo {
                                       unsigned long long period) {}
 
             /**
-             * Append Schema to change/set maximum size information for path - if paths does not exist, throw exception
+             * Append Schema to change or set the maximum size for a vector or table property
              *
              * This is similar to the more general appendSchema, but dedicated to a common use case.
              *
-             * Caveat: This does not recreate an output channel if its schema is changed
+             * Use 'appendSchemaMaxSizes' if the maximum size of several properties should be changed.
              *
-             * @param path  indicates the parameter which should be a Vector- or TableElement
-             * @param value is the new maximum size of the parameter
+             * @param path  indicates the property which should be a Vector- or TableElement
+             * @param value is the new maximum size of the property
              * @param emitFlag indicates if others should be informed about this Schema update.
-             *                 If this method is called for a bunch of paths, it is recommended to
-             *                 set this to true only for the last call.
+             *                 Should only be set to false if followed by a call to appendSchema(..).
              */
             void appendSchemaMaxSize(const std::string& path, unsigned int value, bool emitFlag = true);
+
+            /**
+             * Append Schema to change or set the maximum size information for several properties
+             *
+             * @param paths  indicates the propreties which should be Vector- or TableElements
+             * @param values the new maximum sizes of the properties (same order and length as 'paths')
+             */
+            void appendSchemaMaxSizes(const std::vector<std::string>& paths, const std::vector<unsigned int>& values);
+
+           private:
+            void internalAppendSchemaMaxSizes(const std::vector<std::string>& paths,
+                                              const std::vector<unsigned int>& values, bool emitFlag);
 
            protected: // Functions and Classes
             virtual void preReconfigure(karabo::data::Hash& incomingReconfiguration) {}
