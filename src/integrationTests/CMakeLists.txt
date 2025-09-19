@@ -52,7 +52,6 @@ set(INTEGRATION_TEST_TARGETS
 
 
 set(dataLoggingIntegrTestRunner_FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/BaseLogging_Test.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/DataLogging_Test.cc
     $<TARGET_OBJECTS:INTEGRATION_RUNNER>
 )

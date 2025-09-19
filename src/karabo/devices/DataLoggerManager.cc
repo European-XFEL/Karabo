@@ -105,6 +105,9 @@ namespace karabo {
         using namespace std::placeholders;
         using karabo::xms::SLOT_ELEMENT;
 
+        constexpr char k_loggerClassId[] = "InfluxDataLogger";
+        constexpr char k_readerClassId[] = "InfluxLogReader";
+
 
         /**
          * Helper function used below:
@@ -156,42 +159,6 @@ namespace karabo {
                   .reconfigurable()
                   .assignmentOptional()
                   .defaultValue(true)
-                  .commit();
-
-            STRING_ELEMENT(expected)
-                  .key("logger")
-                  .displayedName("Logger Type")
-                  .description("Logger type variable to define if influx or file based data logging is used")
-                  .init()
-                  .options(std::vector<std::string>{"FileDataLogger", "InfluxDataLogger"})
-                  .assignmentOptional()
-                  .defaultValue("FileDataLogger")
-                  .commit();
-
-            NODE_ELEMENT(expected)
-                  .key("fileDataLogger")
-                  .displayedName("FileDataLogger")
-                  .description("File based data logging")
-                  .commit();
-
-            STRING_ELEMENT(expected)
-                  .key("fileDataLogger.directory")
-                  .displayedName("Directory")
-                  .description("The directory where the log files should be placed")
-                  .assignmentOptional()
-                  .defaultValue("karaboHistory")
-                  .commit();
-
-            INT32_ELEMENT(expected)
-                  .key("fileDataLogger.maximumFileSize")
-                  .displayedName("Maximum file size")
-                  .description(
-                        "After any archived file has reached this size it will be time-stamped and not appended "
-                        "anymore")
-                  .unit(Unit::BYTE)
-                  .metricPrefix(MetricPrefix::MEGA)
-                  .assignmentOptional()
-                  .defaultValue(100)
                   .commit();
 
             NODE_ELEMENT(expected)
@@ -527,17 +494,8 @@ namespace karabo {
               m_loggerMapFile(input.get<string>("loggermap")),
               m_strand(std::make_shared<karabo::net::Strand>(karabo::net::EventLoop::getIOService())),
               m_topologyCheckTimer(karabo::net::EventLoop::getIOService()),
-              m_loggerClassId("Unsupported"),
               m_blocked(input.get<Hash>("blocklist")),
               m_blockListFile(input.get<string>("blocklistfile")) {
-            const std::string loggerType = input.get<std::string>("logger");
-            if (loggerType == "FileDataLogger") {
-                m_loggerClassId = "FileDataLogger";
-                m_readerClassId = "FileLogReader";
-            } else if (loggerType == "InfluxDataLogger") {
-                m_loggerClassId = "InfluxDataLogger";
-                m_readerClassId = "InfluxLogReader";
-            }
             m_loggerMap.clear();
             if (std::filesystem::exists(m_loggerMapFile)) {
                 karabo::data::loadFromFile(m_loggerMap, m_loggerMapFile);
@@ -666,7 +624,7 @@ namespace karabo {
                     m_loggerData.set(server, data);
                 }
 
-                if (m_loggerClassId == "InfluxDataLogger" && get<std::string>("influxDataLogger.dbname").empty()) {
+                if (get<std::string>("influxDataLogger.dbname").empty()) {
                     // Initialise DB name from broker topic
                     const std::string dbName(getTopic());
                     KARABO_LOG_FRAMEWORK_INFO << "Switch to Influx DB name '" << dbName << "'";
@@ -1096,18 +1054,12 @@ namespace karabo {
             if (!remote().exists(readerId).first) {
                 Hash hash;
                 Hash config;
-                if (m_loggerClassId == "FileDataLogger") {
-                    hash.set("classId", "FileLogReader");
-                    hash.set("deviceId", readerId);
-                    config.set("directory", get<string>("fileDataLogger.directory"));
-                } else if (m_loggerClassId == "InfluxDataLogger") {
-                    hash.set("classId", "InfluxLogReader");
-                    hash.set("deviceId", readerId);
-                    config.set("urlConfigSchema", get<string>("influxDataLogger.urlRead"));
-                    // Schema description assumes that InfluxLogReader treats empty value of "urlReadPropHistory"
-                    config.set("urlPropHistory", get<string>("influxDataLogger.urlReadPropHistory"));
-                    config.set("dbname", get<string>("influxDataLogger.dbname"));
-                }
+                hash.set("classId", k_readerClassId);
+                hash.set("deviceId", readerId);
+                config.set("urlConfigSchema", get<string>("influxDataLogger.urlRead"));
+                // Schema description assumes that InfluxLogReader treats empty value of "urlReadPropHistory"
+                config.set("urlPropHistory", get<string>("influxDataLogger.urlReadPropHistory"));
+                config.set("dbname", get<string>("influxDataLogger.dbname"));
                 hash.set("configuration", config);
                 const std::string& xLogReader = hash.get<std::string>("classId");
                 KARABO_LOG_FRAMEWORK_INFO << "Trying to instantiate '" << readerId << "' of type '" << xLogReader
@@ -1176,7 +1128,7 @@ namespace karabo {
                 } else {
                     KARABO_LOG_FRAMEWORK_INFO << "Logging of instance '" << instanceId << "' blocked.";
                 }
-                if (classId == m_loggerClassId) {
+                if (classId == k_loggerClassId) {
                     // A new logger has started - check whether there is more work for it to do
                     newLogger(instanceId);
                 }
@@ -1339,18 +1291,14 @@ namespace karabo {
             // Instantiate logger, but do not yet specify "devicesToBeLogged":
             // Having one channel only to transport this info (slotAddDevicesToBeLogged) simplifies logic.
             Hash config;
-            if (m_loggerClassId == "FileDataLogger") {
-                config = get<Hash>("fileDataLogger");
-            } else if (m_loggerClassId == "InfluxDataLogger") {
-                config = get<Hash>("influxDataLogger");
-                config.erase("urlReadPropHistory"); // logger needs read address only for schema
-            }
+            config = get<Hash>("influxDataLogger");
+            config.erase("urlReadPropHistory"); // logger needs read address only for schema
             config.set("flushInterval", get<int>("flushInterval"));
             config.set("performanceStatistics.enable", get<bool>("enablePerformanceStats"));
             const std::string loggerId(serverIdToLoggerId(serverId));
-            const Hash hash("classId", m_loggerClassId, "deviceId", loggerId, "configuration", config);
+            const Hash hash("classId", k_loggerClassId, "deviceId", loggerId, "configuration", config);
 
-            KARABO_LOG_FRAMEWORK_INFO << "Trying to instantiate '" << loggerId << "' of type '" << m_loggerClassId
+            KARABO_LOG_FRAMEWORK_INFO << "Trying to instantiate '" << loggerId << "' of type '" << k_loggerClassId
                                       << "' on server '" << serverId << "'" << logMsg;
             auto success = bind_weak(&DataLoggerManager::loggerInstantiationHandler, this, _1, _2, false);
             auto failure = bind_weak(&DataLoggerManager::loggerInstantiationHandler, this, false, loggerId, true);
@@ -1417,9 +1365,9 @@ namespace karabo {
                 const std::string& classId = (instanceInfo.has("classId") && instanceInfo.is<std::string>("classId")
                                                     ? instanceInfo.get<string>("classId")
                                                     : std::string(""));
-                if (classId == m_loggerClassId) {
+                if (classId == k_loggerClassId) {
                     goneLogger(instanceId);
-                } else if (classId == m_readerClassId) {
+                } else if (classId == k_readerClassId) {
                     goneReader(instanceId);
                 }
                 if (!classId.empty()) m_knownClasses[classId].erase(instanceId);
@@ -1525,14 +1473,14 @@ namespace karabo {
                     // Expected nice behaviour: Already took note that logger is gone and so tried to start again.
                     // Nothing to do.
                     KARABO_LOG_FRAMEWORK_INFO << "Server '" << serverId << "' gone while instantiating "
-                                              << m_loggerClassId << ".";
+                                              << k_loggerClassId << ".";
                     break;
                 case LoggerState::RUNNING:
                     // We could come here if instanceGone of a server was detected by lack of heartbeats AND if the
-                    // DeviecClient injects the instanceGone of the devices after the instanceGone of the server.
+                    // DeviceClient injects the instanceGone of the devices after the instanceGone of the server.
                     // That happened since at least 2.6.0, but should be fixed in 2.20.0.
                     // So: We should never come here!
-                    KARABO_LOG_FRAMEWORK_WARN << "Server '" << serverId << "' gone while " << m_loggerClassId
+                    KARABO_LOG_FRAMEWORK_WARN << "Server '" << serverId << "' gone while " << k_loggerClassId
                                               << " still alive.";
                     // Also then we have to move "devices"/"beingAdded" to "backlog".
                     break;

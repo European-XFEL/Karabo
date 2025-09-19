@@ -292,8 +292,6 @@ namespace karabo {
             karabo::net::Strand::Pointer m_strand;
 
             boost::asio::steady_timer m_topologyCheckTimer;
-            std::string m_loggerClassId;
-            std::string m_readerClassId;
 
             std::mutex m_blockedMutex;
             karabo::data::Hash m_blocked;      /// Hash with 'deviceIds' and 'classIds' entries

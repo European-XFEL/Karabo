@@ -25,13 +25,20 @@
 #ifndef DATALOGGING_TEST_HH
 #define DATALOGGING_TEST_HH
 
-#include "BaseLogging_Test.hh"
+#include <cppunit/extensions/HelperMacros.h>
 
-class DataLogging_Test : public BaseLogging_Test {
+#include "karabo/karabo.hpp"
+
+class DataLogging_Test : public CPPUNIT_NS::TestFixture {
+   public:
+    DataLogging_Test();
+    void setUp() override;
+    void tearDown() override;
+
+   private:
     CPPUNIT_TEST_SUITE(DataLogging_Test);
 
-    CPPUNIT_TEST(fileAllTestRunner);
-    CPPUNIT_TEST(influxAllTestRunnerWithDataMigration);
+    CPPUNIT_TEST(influxAllTestRunner);
     CPPUNIT_TEST(testNoInfluxServerHandling);
     CPPUNIT_TEST(testInfluxMaxPerDevicePropLogRate);
     CPPUNIT_TEST(testInfluxMaxSchemaLogRate);
@@ -41,11 +48,104 @@ class DataLogging_Test : public BaseLogging_Test {
 
     CPPUNIT_TEST_SUITE_END();
 
-   private:
-    void fileAllTestRunner();
+    static int KRB_TEST_MAX_TIMEOUT;
+    static int SLOT_REQUEST_TIMEOUT_MILLIS;
+    static int FLUSH_REQUEST_TIMEOUT_MILLIS;
+    static int FLUSH_INTERVAL_SEC;
+    static int NUM_RETRY;
+    static int PAUSE_BEFORE_RETRY_MILLIS;
+    static int WAIT_WRITES;
+    static const char* DEFAULT_TEST_LOG_PRIORITY;
+
     void testLoggerMapProperty();
-    void influxAllTestRunnerWithDataMigration(); // Supports data migration test.
-    void testMigrateFileLoggerData();
+    void influxAllTestRunner();
+
+    void testAllInstantiated(bool waitForLoggerReady = true);
+
+    void testInt(bool testPastConf = true);
+    void testUInt64(bool testPastConf = false);
+    void testFloat(bool testPastConf = false);
+    void testString(bool testPastConf = false);
+    void testVectorString(bool testPastConf = false);
+    void testVectorChar(bool testPastConf = false);
+    void testVectorSignedChar(bool testPastConf = false);
+    void testVectorUnsignedChar(bool testPastConf = false);
+    void testVectorShort(bool testPastConf = false);
+    void testVectorUnsignedShort(bool testPastConf = false);
+    void testVectorInt(bool testPastConf = false);
+    void testVectorUnsignedInt(bool testPastConf = false);
+    void testVectorLongLong(bool testPastConf = false);
+    void testVectorUnsignedLongLong(bool testPastConf = false);
+
+    void testVectorBool(bool testPastConf = false);
+    void testTable(bool testPastConf = false);
+    void testChar(bool testPastConf = true);
+
+    void testLastKnownConfiguration();
+    void testCfgFromPastRestart(bool pastStampStaysPast);
+
+    /**
+     * Checks that the DataLoggers handle NaN floats and doubles.
+     */
+    void testNans();
+
+    template <class T>
+    void testHistory(const std::string& key, const std::function<T(int)>& f, const bool testConf);
+
+    std::pair<bool, std::string> startDataLoggerManager(
+          const std::string& loggerType, bool useInvalidInfluxUrl = false, bool useInvalidDbName = false,
+          unsigned int maxPerDevicePropLogRate = 5 * 1024, unsigned int propLogRatePeriod = 5,
+          unsigned int maxSchemaLogRate = 15 * 1024, unsigned int schemaLogRatePeriod = 5,
+          unsigned int maxStringLength = karabo::util::MAX_INFLUX_VALUE_LENGTH, double safeSchemaRetentionPeriod = 2.0);
+
+    /**
+     * Checks that slotGetPropertyHistory logging works when a
+     * Schema evolution changes the device schema at some timepoint
+     * within the requested history interval.
+     */
+    void testSchemaEvolution();
+
+    /**
+     * Checks that the InfluxLogReader doesn't accept out of range
+     * values for the 'maxNumData' parameter in calls to
+     * 'slotGetPropertyHistory'.
+     */
+    void testMaxNumDataRange();
+
+    /**
+     * Checks that the InfluxLogReader is properly enforcing the
+     * 'maxNumData' parameter in calls to 'slotGetPropertyHistory'.
+     * Histories with up to 'maxNumData' entries should return
+     * 'maxNumData' property values as they were written. Histories
+     * with more than 'maxNumData' entries should return 'maxNumData'
+     * property values samples.
+     */
+    void testMaxNumDataHistory();
+
+    /**
+     * Checks that the InfluxLogger is properly dropping values
+     * too far ahead in the future.
+     */
+    void testDropBadData();
+
+    /**
+     * Sets PropertyTestDevice Schema
+     *
+     * circumvent min/max limits and vector size specification
+     */
+    void setPropertyTestSchema();
+
+    /**
+     * @brief Checks that getConfigurationFromPast does not retrieve properties
+     * with no default value that have not been set during the instantiation
+     * of the device that is closest to the requested timepoint.
+     *
+     * "Instantiation of the device that is closest to the requested timepoint"
+     * means either the last instantiation of the device before the requested
+     * timepoint, if the device was not active at the timepoint, or the
+     * instantiation of the device that was active at the timepoint.
+     */
+    void testUnchangedNoDefaultProperties();
 
     /**
      * Checks that the Influx logger and reader fail as soon as
@@ -60,7 +160,6 @@ class DataLogging_Test : public BaseLogging_Test {
      * reason behind the forced invalid configuration.
      */
     void testNoInfluxServerHandling();
-
 
     /**
      * @brief Checks that the maximum per device property logging rate for Influx is being properly enforced.
@@ -107,8 +206,32 @@ class DataLogging_Test : public BaseLogging_Test {
      */
     void testFailingManager();
 
-    bool m_dataWasMigrated = false;
-    karabo::data::Epochstamp m_fileMigratedDataEndsBefore;
+
+    std::string getDeviceIdPrefix();
+
+    bool waitForCondition(std::function<bool()> checker, unsigned int timeoutMillis,
+                          unsigned int sleepIntervalMillis = 5u);
+
+    /**
+     * Waits until logger has started to log device, assert otherwise.
+     * Timeout is DataLogging_Test::KRB_TEST_MAX_TIMEOUT)
+     *
+     * @param deviceId device that should be logged
+     * @param textForFailure string prepended to assertion failure message if not logged
+     */
+    void waitUntilLogged(const std::string& deviceId, const std::string& textForFailure);
+
+
+    const std::string m_server;
+    const std::string m_deviceId;
+
+    karabo::core::DeviceServer::Pointer m_deviceServer;
+    std::jthread m_eventLoopThread;
+    karabo::xms::SignalSlotable::Pointer m_sigSlot;
+    karabo::core::DeviceClient::Pointer m_deviceClient;
+
+    bool m_changedPath;
+    std::string m_oldPath;
 };
 
 #endif /* DATALOGGING_TEST_HH */
