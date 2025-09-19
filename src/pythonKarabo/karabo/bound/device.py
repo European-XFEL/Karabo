@@ -621,6 +621,8 @@ class PythonDevice:
         with self._stateChangeLock:
             # vec is a copy, so we are safe if _setNoStateLock raises
             vec = self._parameters.get(key)
+            if vec is None:
+                raise KeyError(f"Key '{key}' does not exist")
             if updateType == "add":
                 vec.extend(updates)
             else:
@@ -1304,8 +1306,11 @@ class PythonDevice:
             updateType = "addIfNotIn"
             if status == ConnectionStatus.CONNECTED:
                 updateType = "removeOne"
-            self.setVectorUpdate(path + ".missingConnections",
-                                 [name], updateType)
+            try:
+                self.setVectorUpdate(path + ".missingConnections",
+                                     [name], updateType)
+            except KeyError:
+                pass  # Happens if channel is removed again
 
         self._sigslot.createInputChannel(path, self._parameters, handlers[0],
                                          handlers[1], handlers[2], tracker)
