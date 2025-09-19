@@ -62,6 +62,7 @@ using karabo::data::TABLE_ELEMENT;
 using karabo::data::Timestamp;
 using karabo::data::UINT32_ELEMENT;
 using karabo::data::VECTOR_FLOAT_ELEMENT;
+using karabo::data::VECTOR_INT32_ELEMENT;
 using karabo::data::VECTOR_STRING_ELEMENT;
 using karabo::net::EventLoop;
 using karabo::xms::INPUT_CHANNEL;
@@ -179,6 +180,8 @@ class TestDevice : public karabo::core::Device {
               .readOnly()
               .commit();
 
+        VECTOR_INT32_ELEMENT(dataSchema).key("data.vecInt32").displayedName("Vector Int32").readOnly().commit();
+
         INT32_ELEMENT(dataSchema).key("int").readOnly().commit();
 
         OUTPUT_CHANNEL(expected).key("output").dataSchema(dataSchema).commit();
@@ -198,9 +201,11 @@ class TestDevice : public karabo::core::Device {
 
         KARABO_SLOT(slotIdOfEpochstamp, unsigned long long /*sec*/, unsigned long long /*frac*/)
 
+        KARABO_SLOT(slotUpdateSchema, const karabo::data::Schema);
+
         KARABO_SLOT(slotAppendSchema, const karabo::data::Schema);
 
-        KARABO_SLOT(slotUpdateSchema, const karabo::data::Schema);
+        KARABO_SLOT(slotAppendSchemaMaxSizes, unsigned int);
 
         KARABO_SLOT(slotSet, Hash);
 
@@ -218,7 +223,7 @@ class TestDevice : public karabo::core::Device {
 
         KARABO_SLOT(slotRegisterOnDataInputEos, const std::string /*inputChannelName*/);
 
-        KARABO_SLOT(slotSendToOutputChannel, const std::string /*channelName*/, int /*intToSend*/);
+        KARABO_SLOT(slotSendToOutputChannel, const std::string /*channelName*/, Hash /*dataToSend*/);
 
         KARABO_SLOT(slotSendEos, const std::vector<std::string> /*channelNames*/);
     }
@@ -233,13 +238,17 @@ class TestDevice : public karabo::core::Device {
     }
 
 
+    void slotUpdateSchema(const Schema sch) {
+        updateSchema(sch);
+    }
+
     void slotAppendSchema(const Schema sch) {
         appendSchema(sch);
     }
 
 
-    void slotUpdateSchema(const Schema sch) {
-        updateSchema(sch);
+    void slotAppendSchemaMaxSizes(unsigned int maxSize) {
+        appendSchemaMaxSizes({"output.schema.data.intensityTD", "output.schema.data.vecInt32"}, {maxSize, maxSize});
     }
 
 
@@ -306,9 +315,8 @@ class TestDevice : public karabo::core::Device {
     }
 
 
-    void slotSendToOutputChannel(const std::string& channelName, int intToSend) {
-        Hash data("int", intToSend, "data", Hash("untagged", 4.2, "intensityTD", std::vector<float>(10, 3.7f)));
-        writeChannel(channelName, data);
+    void slotSendToOutputChannel(const std::string& channelName, const Hash& dataToSend) {
+        writeChannel(channelName, dataToSend);
     }
 
 
@@ -466,6 +474,7 @@ void Device_Test::appTestRunner() {
     // Changing schema of an output channel - it should trigger a reconnection
     testOutputRecreatesOnSchemaChange("slotUpdateSchema");
     testOutputRecreatesOnSchemaChange("slotAppendSchema");
+    testOutputRecreatesOnMaxSizeChange();
     // Inject new channels
     testInputOutputChannelInjection("slotUpdateSchema");
     testInputOutputChannelInjection("slotAppendSchema");
@@ -1174,6 +1183,147 @@ void Device_Test::testOutputRecreatesOnSchemaChange(const std::string& updateSlo
     std::clog << "OK." << std::endl;
 }
 
+
+void Device_Test::testOutputRecreatesOnMaxSizeChange() {
+    std::clog << "Start testOutputRecreatesOnMaxSizeChange:" << std::flush;
+
+    // This tests that Device::appendSchemaMaxSize recreates output channels with the proper schema for validation
+    // and that sending of data that does not comply with schema fails
+
+    // We avoid interference with other tests by using a special sender not used in other tests
+    const std::string& senderId("senderId"); // "TestDevice");
+    const std::string& receiverId("receiver");
+    constexpr int timeoutMs = KRB_TEST_MAX_TIMEOUT * 1000;
+
+    std::pair<bool, std::string> success = m_deviceClient->instantiate(
+          "testServerDevice", "TestDevice", Hash("deviceId", senderId), KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
+
+    // Setup receiver device that should connect.
+    success = m_deviceClient->instantiate("testServerDevice", "TestDevice",
+                                          Hash("deviceId", receiverId, "input.connectedOutputChannels",
+                                               std::vector<std::string>({senderId + ":output"})),
+                                          KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
+    // This registers handlers for "input":
+    CPPUNIT_ASSERT_NO_THROW(
+          m_deviceServer->request(receiverId, "slotRegisterOnDataInputEos", "input").timeout(timeoutMs).receive());
+
+    // Test that connection is setup
+    CPPUNIT_ASSERT_MESSAGE(toString(m_deviceClient->get(receiverId)),
+                           waitForCondition(
+                                 [this, receiverId]() {
+                                     return m_deviceClient
+                                           ->get<std::vector<std::string>>(receiverId, "input.missingConnections")
+                                           .empty();
+                                 },
+                                 timeoutMs));
+
+
+    // Tell server (as helper) to listen for updates of "input.missingConnections"
+    std::mutex connectionChangesMutex;
+    std::vector<std::vector<std::string>> connectionChanges;
+    auto changedHandler = [&connectionChanges, &connectionChangesMutex, receiverId](const karabo::data::Hash& h,
+                                                                                    const std::string& id) {
+        if (id == receiverId && h.has("input.missingConnections")) {
+            std::lock_guard<std::mutex> lock(connectionChangesMutex);
+            connectionChanges.push_back(h.get<std::vector<std::string>>("input.missingConnections"));
+        }
+    };
+    // See comments in testOutputRecreatesOnSchemaChange about uniqueness of name of slot added to server
+    const std::string slotConnectionChanged("slotConnectionChanged_slotAppendSchemaMaxSizes");
+    m_deviceServer->registerSlot<karabo::data::Hash, std::string>(changedHandler, slotConnectionChanged);
+    const bool connected = m_deviceServer->connect(receiverId, "signalChanged", slotConnectionChanged);
+    CPPUNIT_ASSERT(connected);
+
+    const unsigned int maxSize = 10;
+    CPPUNIT_ASSERT_NO_THROW(
+          m_deviceServer->request(senderId, "slotAppendSchemaMaxSizes", maxSize).timeout(timeoutMs).receive());
+
+    // The output channel schema changed, so we expect that the channel was recreated and thus the
+    // InputChannel of the receiver was disconnected and reconnected. Both should trigger a change of the
+    // input channel's missingConnections property which should trigger a call to our "injected" slot
+    // that is connected to 'signalChanged'.
+    const bool changed = waitForCondition(
+          [this, &connectionChanges, &connectionChangesMutex]() {
+              std::lock_guard<std::mutex> lock(connectionChangesMutex);
+              return connectionChanges.size() >= 2ul;
+          },
+          timeoutMs);
+    {
+        std::lock_guard<std::mutex> lock(connectionChangesMutex);
+        CPPUNIT_ASSERT_MESSAGE(karabo::data::toString(connectionChanges), changed);
+        CPPUNIT_ASSERT_EQUAL_MESSAGE(karabo::data::toString(connectionChanges), 2ul, connectionChanges.size());
+        CPPUNIT_ASSERT_EQUAL(std::vector<std::string>({senderId + ":output"}), connectionChanges[0]);
+        CPPUNIT_ASSERT_EQUAL(std::vector<std::string>(), connectionChanges[1]);
+        connectionChanges.clear(); // for next usage
+    }
+    // Make sure that "intInOnData" is not what it shall be later, after sending data
+    CPPUNIT_ASSERT(42 != m_deviceClient->get<int>(receiverId, "intInOnData"));
+
+    // Sending data succeeds since vectors fit into maxSize
+    Hash dataToSend("int", 42, "data",
+                    Hash("untagged", 4.2, "intensityTD", std::vector<float>(maxSize, 3.7f), "vecInt32",
+                         std::vector<int>(maxSize, 1)));
+    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request(senderId, "slotSendToOutputChannel", "output", dataToSend)
+                                  .timeout(timeoutMs)
+                                  .receive());
+    // Check that data arrived and onData handler is called
+    waitForCondition([this, receiverId]() { return (42 == m_deviceClient->get<int>(receiverId, "intInOnData")); },
+                     timeoutMs);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(karabo::data::toString(m_deviceClient->get(receiverId)), 42,
+                                 m_deviceClient->get<int>(receiverId, "intInOnData"));
+
+    // Make vecInt32 longer than limit - writing to output channel will fail
+    dataToSend.get<std::vector<int>>("data.vecInt32").push_back(22);
+    try {
+        m_deviceServer->request(senderId, "slotSendToOutputChannel", "output", dataToSend).timeout(timeoutMs).receive();
+        CPPUNIT_FAIL("No exception");
+    } catch (karabo::data::RemoteException& e) {
+        const std::string& msg = e.userFriendlyMsg();
+        CPPUNIT_ASSERT_MESSAGE(msg, msg.find("schema mismatch") != std::string::npos);
+        CPPUNIT_ASSERT_MESSAGE(msg, msg.find("Number of elements (11)") != std::string::npos);
+        CPPUNIT_ASSERT_MESSAGE(msg, msg.find("greater than upper bound (10)") != std::string::npos);
+        CPPUNIT_ASSERT_MESSAGE(msg, msg.find("\"data.vecInt32\"") != std::string::npos);
+    }
+    // Enlarge the allowed vector size
+    CPPUNIT_ASSERT_NO_THROW(
+          m_deviceServer->request(senderId, "slotAppendSchemaMaxSizes", maxSize + 1).timeout(timeoutMs).receive());
+    // Wait until connected again
+    waitForCondition(
+          [this, &connectionChanges, &connectionChangesMutex]() {
+              std::lock_guard<std::mutex> lock(connectionChangesMutex);
+              return connectionChanges.size() >= 2ul;
+          },
+          timeoutMs);
+    // Now the data to send complies with the schema and can be sent
+    dataToSend.set("int", 77);
+    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request(senderId, "slotSendToOutputChannel", "output", dataToSend)
+                                  .timeout(timeoutMs)
+                                  .receive());
+    // Check that data arrived and onData handler is called
+    waitForCondition([this, receiverId]() { return (77 == m_deviceClient->get<int>(receiverId, "intInOnData")); },
+                     timeoutMs);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(karabo::data::toString(m_deviceClient->get(receiverId)), 77,
+                                 m_deviceClient->get<int>(receiverId, "intInOnData"));
+
+
+    // Clean up
+    m_deviceServer->disconnect(receiverId, "signalChanged", slotConnectionChanged);
+    // Cannot remove slotConnectionChanged...
+    // Remove schema changes again:
+    CPPUNIT_ASSERT_NO_THROW(
+          m_deviceServer->request(senderId, "slotUpdateSchema", Schema()).timeout(timeoutMs).receive());
+    success = m_deviceClient->killDevice(receiverId, KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    success = m_deviceClient->killDevice(senderId, KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
+    std::clog << "OK." << std::endl;
+}
+
 void Device_Test::testInputOutputChannelInjection(const std::string& updateSlot) {
     std::clog << "Start testInputOutputChannelInjection for " << updateSlot << ": " << std::flush;
 
@@ -1193,7 +1343,7 @@ void Device_Test::testInputOutputChannelInjection(const std::string& updateSlot)
     CPPUNIT_ASSERT_EQUAL(1ul, outputChannels.size());
     CPPUNIT_ASSERT_EQUAL(std::string("output"), outputChannels[0]);
 
-    // Checks that appendSchema creates injected input and output channels
+    // Checks that updateSlot creates injected input and output channels
     // ----------
     Schema dataSchema;
     INT32_ELEMENT(dataSchema).key("int32").readOnly().commit();
@@ -1254,8 +1404,12 @@ void Device_Test::testInputOutputChannelInjection(const std::string& updateSlot)
     const int countEosCalls = m_deviceClient->get<int>("TestDevice", "numCallsOnInput");
 
     // Request data to be sent from "output" to "injectedInput" channel
-    CPPUNIT_ASSERT_NO_THROW(
-          sigSlot->request("TestDevice", "slotSendToOutputChannel", "output", 1).timeout(requestTimeoutMs).receive());
+    Hash dataToSend(
+          "int", 1, "data",
+          Hash("untagged", 4.2, "intensityTD", std::vector<float>(10, 3.7f), "vecInt32", std::vector<int>(5, 1)));
+    CPPUNIT_ASSERT_NO_THROW(sigSlot->request("TestDevice", "slotSendToOutputChannel", "output", dataToSend)
+                                  .timeout(requestTimeoutMs)
+                                  .receive());
     // Check that data arrived and onData/onInput handlers called
     waitForCondition(
           [this, countEosCalls]() {
@@ -1290,8 +1444,10 @@ void Device_Test::testInputOutputChannelInjection(const std::string& updateSlot)
     ok = waitForCondition(inputsConnected, cacheUpdateWaitMs * 20); // longer timeout again, see above
     CPPUNIT_ASSERT_MESSAGE(toString(m_deviceClient->get("TestDevice")), ok);
     // Request again data to be sent from "output" to "injectedInput" channel
-    CPPUNIT_ASSERT_NO_THROW(
-          sigSlot->request("TestDevice", "slotSendToOutputChannel", "output", 2).timeout(requestTimeoutMs).receive());
+    dataToSend.set("int", 2);
+    CPPUNIT_ASSERT_NO_THROW(sigSlot->request("TestDevice", "slotSendToOutputChannel", "output", dataToSend)
+                                  .timeout(requestTimeoutMs)
+                                  .receive());
     // Check that new data arrived
     waitForCondition(
           [this, countEosCalls]() {
