@@ -513,16 +513,22 @@ async def test_cross_pipeline(deviceTest):
         await shutdown(bound_proxy)
 
 
-# TODO: port this test to use Influx
-@pytest.mark.skip(reason="fileDataLogger moved out from the Framework")
 @pytest.mark.timeout(40)
 @pytest.mark.asyncio(loop_scope="module")
 async def test_history(deviceTest):
     before = datetime.now()
     serverId = "karabo_dataLogger"
+    influx_url_write = os.getenv("KARABO_INFLUXDB_WRITE_URL",
+                                 "tcp://localhost:8086")
+    influx_url_read = os.getenv("KARABO_INFLUXDB_QUERY_URL",
+                                "tcp://localhost:8086")
+    influx_db_name = os.getenv("KARABO_INFLUXDB_DBNAME", "")
     config = {KARABO_LOGGER_MANAGER:  # id as required by `getHistory`
               {"classId": "DataLoggerManager", "flushInterval": 1,
-               "fileDataLogger": {"directory": "karaboHistory"},
+               "influxDataLogger":
+                   {"urlWrite": f'{influx_url_write}',
+                    "urlRead": f'{influx_url_read}',
+                    "dbname": f'{influx_db_name}'},
                "serverList": [serverId]}}
     init = json.dumps(config)
     # Start karabo-cppserver with 'serverId' and init=<json-string>
