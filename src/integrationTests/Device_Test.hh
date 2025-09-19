@@ -76,6 +76,11 @@ class Device_Test : public CPPUNIT_NS::TestFixture {
      */
     void testOutputRecreatesOnSchemaChange(const std::string& updateSlot);
 
+    /**
+     * Test that appendSchemaMaxSize properly creates (and destroys) output channels
+     */
+    void testOutputRecreatesOnMaxSizeChange();
+
     /** Test that updateSchema/appendSchema properly creates (and destroys) input/output channels
      *
      * @param updateSlot which TestDevice slot to change the schema: "slotUpdateSchema" or "slotAppendSchema"
