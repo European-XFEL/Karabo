@@ -732,16 +732,16 @@ namespace karabo {
         }
 
         void Device::appendSchemaMaxSize(const std::string& path, unsigned int value, bool emitFlag) {
-            internalAppendSchemaMaxSizes({path}, {value}, emitFlag);
+            internalAppendSchemaMultiMaxSize({path}, {value}, emitFlag);
         }
 
-        void Device::appendSchemaMaxSizes(const std::vector<std::string>& paths,
-                                          const std::vector<unsigned int>& values) {
-            internalAppendSchemaMaxSizes(paths, values, true);
+        void Device::appendSchemaMultiMaxSize(const std::vector<std::string>& paths,
+                                              const std::vector<unsigned int>& values) {
+            internalAppendSchemaMultiMaxSize(paths, values, true);
         }
 
-        void Device::internalAppendSchemaMaxSizes(const std::vector<std::string>& paths,
-                                                  const std::vector<unsigned int>& values, bool emitFlag) {
+        void Device::internalAppendSchemaMultiMaxSize(const std::vector<std::string>& paths,
+                                                      const std::vector<unsigned int>& values, bool emitFlag) {
             using karabo::data::OVERWRITE_ELEMENT;
 
             if (paths.size() != values.size()) {
@@ -774,7 +774,7 @@ namespace karabo {
             for (const std::string& output : getOutputChannelNames()) {
                 for (const std::string& path : paths) {
                     if (path.starts_with(output)) {
-                        createOutputChannel(output, m_parameters, m_fullSchema.subSchema(output + ".schema"));
+                        prepareOutputChannel(output);
                     }
                 }
             }

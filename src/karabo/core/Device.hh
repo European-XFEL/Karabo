@@ -840,7 +840,7 @@ namespace karabo {
              *
              * This is similar to the more general appendSchema, but dedicated to a common use case.
              *
-             * Use 'appendSchemaMaxSizes' if the maximum size of several properties should be changed.
+             * Use 'appendSchemaMultiMaxSize' if the maximum size of several properties should be changed.
              *
              * @param path  indicates the property which should be a Vector- or TableElement
              * @param value is the new maximum size of the property
@@ -852,14 +852,15 @@ namespace karabo {
             /**
              * Append Schema to change or set the maximum size information for several properties
              *
-             * @param paths  indicates the propreties which should be Vector- or TableElements
-             * @param values the new maximum sizes of the properties (same order and length as 'paths')
+             * @param paths  property names of Vector- or TableElements
+             * @param values the new maximum sizes of these properties (same order and length as 'paths')
              */
-            void appendSchemaMaxSizes(const std::vector<std::string>& paths, const std::vector<unsigned int>& values);
+            void appendSchemaMultiMaxSize(const std::vector<std::string>& paths,
+                                          const std::vector<unsigned int>& values);
 
            private:
-            void internalAppendSchemaMaxSizes(const std::vector<std::string>& paths,
-                                              const std::vector<unsigned int>& values, bool emitFlag);
+            void internalAppendSchemaMultiMaxSize(const std::vector<std::string>& paths,
+                                                  const std::vector<unsigned int>& values, bool emitFlag);
 
            protected: // Functions and Classes
             virtual void preReconfigure(karabo::data::Hash& incomingReconfiguration) {}

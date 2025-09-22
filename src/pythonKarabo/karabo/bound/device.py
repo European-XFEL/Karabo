@@ -939,8 +939,9 @@ class PythonDevice:
 
     def appendSchemaMaxSize(self, path, value, emitFlag=True):
         """
-        Append Schema to change/set maximum size information for path.
-        If paths does not exist, raise KeyError.
+        Append Schema to change/set maximum size information for a single
+        path. If paths does not exist, raise KeyError. If the maximum size for
+        more paths should be set, use appendSchemaMultiMaxSize.
 
         This is similar to the more general appendSchema, but dedicated to a
         common use case.
@@ -949,29 +950,57 @@ class PythonDevice:
                      Vector- or TableElement
         :param value is the new maximum size of the element
         :param emitFlag indicates if others should be informed about this
-                        Schema update. If this method is called for a bunch of
-                        paths, it is recommended to set this to True only for
-                        the last call.
+                        Schema update. Should only be set to false if followed
+                        by a call to appendSchema(..).
         """
+        self._appendSchemaMultiMaxSize([path], [value], emitFlag)
+
+    def appendSchemaMultiMaxSize(self, paths, values):
+        """
+        Append Schema to change or set the maximum size for several properties
+
+        :param paths  Iterable of property names of Vector- or TableElements
+        :param values Iterable of the new maximum sizes of the properties
+                      (must be same order and length as 'paths')
+        """
+        self._appendSchemaMultiMaxSize(paths, values, True)
+
+    def _appendSchemaMultiMaxSize(self, paths, values, emitFlag):
+        """
+        Internal helper for appendSchemaMaxSize and appendSchemaMultiMaxSize
+        """
+        if len(paths) != len(values):
+            raise RuntimeError("Numbers of paths and values differ.")
+
         with self._stateChangeLock:
-            if not self._fullSchema.has(path):
-                raise KeyError("Path '{}' not found in the device schema."
-                               .format(path))
+            for path in paths:
+                if not self._fullSchema.has(path):
+                    raise KeyError("Path '{}' not found in the device schema."
+                                   .format(path))
 
             self._stateDependentSchema = {}
             # Do not touch static schema - that must be restorable via
             # updateSchema(Schema())
             # OVERWRITE_ELEMENT checks whether max size attribute makes sense
             # for path
-            (OVERWRITE_ELEMENT(self._fullSchema).key(path)
-             .setNewMaxSize(value).commit(),)
-            if self._injectedSchema.has(path):
-                (OVERWRITE_ELEMENT(self._injectedSchema).key(path)
+            for (path, value) in zip(paths, values):
+                (OVERWRITE_ELEMENT(self._fullSchema).key(path)
                  .setNewMaxSize(value).commit(),)
+                if self._injectedSchema.has(path):
+                    (OVERWRITE_ELEMENT(self._injectedSchema).key(path)
+                     .setNewMaxSize(value).commit(),)
 
-            if emitFlag:
+            if emitFlag:  # Better before recreating output channels
                 self._sigslot.emit("signalSchemaUpdated",
                                    self._fullSchema, self.deviceId)
+
+            # If the vector was part of an output channel schema, recreate the
+            # channel. The new incarnation of the channel receives the
+            # up-to-date schema for validation.
+            for output in self._sigslot.getOutputChannelNames():
+                for path in paths:
+                    if path.startswith(output):
+                        self._prepareOutputChannel(output)
 
     def getAliasFromKey(self, key, aliasReferenceType):
         """
