@@ -205,7 +205,7 @@ class TestDevice : public karabo::core::Device {
 
         KARABO_SLOT(slotAppendSchema, const karabo::data::Schema);
 
-        KARABO_SLOT(slotAppendSchemaMaxSizes, unsigned int);
+        KARABO_SLOT(slotAppendSchemaMultiMaxSize, unsigned int);
 
         KARABO_SLOT(slotSet, Hash);
 
@@ -247,8 +247,8 @@ class TestDevice : public karabo::core::Device {
     }
 
 
-    void slotAppendSchemaMaxSizes(unsigned int maxSize) {
-        appendSchemaMaxSizes({"output.schema.data.intensityTD", "output.schema.data.vecInt32"}, {maxSize, maxSize});
+    void slotAppendSchemaMultiMaxSize(unsigned int maxSize) {
+        appendSchemaMultiMaxSize({"output.schema.data.intensityTD", "output.schema.data.vecInt32"}, {maxSize, maxSize});
     }
 
 
@@ -1190,21 +1190,16 @@ void Device_Test::testOutputRecreatesOnMaxSizeChange() {
     // This tests that Device::appendSchemaMaxSize recreates output channels with the proper schema for validation
     // and that sending of data that does not comply with schema fails
 
-    // We avoid interference with other tests by using a special sender not used in other tests
-    const std::string& senderId("senderId"); // "TestDevice");
+    const std::string& senderId("TestDevice");
     const std::string& receiverId("receiver");
     constexpr int timeoutMs = KRB_TEST_MAX_TIMEOUT * 1000;
 
-    std::pair<bool, std::string> success = m_deviceClient->instantiate(
-          "testServerDevice", "TestDevice", Hash("deviceId", senderId), KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
-
-
     // Setup receiver device that should connect.
-    success = m_deviceClient->instantiate("testServerDevice", "TestDevice",
-                                          Hash("deviceId", receiverId, "input.connectedOutputChannels",
-                                               std::vector<std::string>({senderId + ":output"})),
-                                          KRB_TEST_MAX_TIMEOUT);
+    std::pair<bool, std::string> success =
+          m_deviceClient->instantiate("testServerDevice", "TestDevice",
+                                      Hash("deviceId", receiverId, "input.connectedOutputChannels",
+                                           std::vector<std::string>({senderId + ":output"})),
+                                      KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     // This registers handlers for "input":
@@ -1233,14 +1228,14 @@ void Device_Test::testOutputRecreatesOnMaxSizeChange() {
         }
     };
     // See comments in testOutputRecreatesOnSchemaChange about uniqueness of name of slot added to server
-    const std::string slotConnectionChanged("slotConnectionChanged_slotAppendSchemaMaxSizes");
+    const std::string slotConnectionChanged("slotConnectionChanged_slotAppendSchemaMultiMaxSize");
     m_deviceServer->registerSlot<karabo::data::Hash, std::string>(changedHandler, slotConnectionChanged);
     const bool connected = m_deviceServer->connect(receiverId, "signalChanged", slotConnectionChanged);
     CPPUNIT_ASSERT(connected);
 
     const unsigned int maxSize = 10;
     CPPUNIT_ASSERT_NO_THROW(
-          m_deviceServer->request(senderId, "slotAppendSchemaMaxSizes", maxSize).timeout(timeoutMs).receive());
+          m_deviceServer->request(senderId, "slotAppendSchemaMultiMaxSize", maxSize).timeout(timeoutMs).receive());
 
     // The output channel schema changed, so we expect that the channel was recreated and thus the
     // InputChannel of the receiver was disconnected and reconnected. Both should trigger a change of the
@@ -1290,7 +1285,7 @@ void Device_Test::testOutputRecreatesOnMaxSizeChange() {
     }
     // Enlarge the allowed vector size
     CPPUNIT_ASSERT_NO_THROW(
-          m_deviceServer->request(senderId, "slotAppendSchemaMaxSizes", maxSize + 1).timeout(timeoutMs).receive());
+          m_deviceServer->request(senderId, "slotAppendSchemaMultiMaxSize", maxSize + 1).timeout(timeoutMs).receive());
     // Wait until connected again
     waitForCondition(
           [this, &connectionChanges, &connectionChangesMutex]() {
@@ -1317,8 +1312,6 @@ void Device_Test::testOutputRecreatesOnMaxSizeChange() {
     CPPUNIT_ASSERT_NO_THROW(
           m_deviceServer->request(senderId, "slotUpdateSchema", Schema()).timeout(timeoutMs).receive());
     success = m_deviceClient->killDevice(receiverId, KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
-    success = m_deviceClient->killDevice(senderId, KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     std::clog << "OK." << std::endl;
