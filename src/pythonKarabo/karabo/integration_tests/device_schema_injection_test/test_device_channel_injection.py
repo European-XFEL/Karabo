@@ -37,7 +37,7 @@ class Channel_Injection_TestCase(BoundDeviceTestCase):
         self.devClass = "DeviceChannelInjection"
         self.server_id = "server/channelInjection"
         self.start_server("bound", self.server_id, [self.devClass],
-                          # , logLevel="INFO"
+                          # logLevel="INFO",
                           namespace="karabo.bound_device_test")
 
         dev_id = "device/channelInjection"
@@ -65,13 +65,16 @@ class Channel_Injection_TestCase(BoundDeviceTestCase):
         with self.subTest(msg="change output schema  - slotAppendSchema"):
             self._test_change_output_schema(dev_id, "slotAppendSchema")
 
+        with self.subTest(msg="change output schema - schemaMaxSize"):
+            self._test_change_output_schema_max_size(dev_id)
+
     def _test_channel_injection(self, dev_id, updateSlot):
         # Test that input and output channels are created if
         # part of injected schema
         req = self.sigSlot.request(dev_id, "slotGetOutputChannelNames")
         (outnames,) = req.waitForReply(max_timeout_ms)
-        self.assertEqual(1, len(outnames))
-        self.assertEqual("output", outnames[0])
+        self.assertGreaterEqual(len(outnames), 1, str(outnames))
+        self.assertIn("output", outnames)
 
         # Checks that injected input and output channels are created
         dataSchema = Schema()
@@ -96,7 +99,7 @@ class Channel_Injection_TestCase(BoundDeviceTestCase):
         req = self.sigSlot.request(dev_id, "slotGetOutputChannelNames")
         (outputChannels,) = req.waitForReply(max_timeout_ms)
 
-        self.assertEqual(len(outputChannels), 2)
+        self.assertGreaterEqual(len(outputChannels), 2, str(outputChannels))
         self.assertIn("output", outputChannels)
         self.assertIn("injectedOutput", outputChannels)
 
@@ -138,7 +141,8 @@ class Channel_Injection_TestCase(BoundDeviceTestCase):
         countEos = self.dc.get(dev_id, "numCallsOnInput")
 
         # Request data to be sent from "output" to "injectedInput" channel
-        req = self.sigSlot.request(dev_id, "slotWriteOutput", Hash("int", 1))
+        req = self.sigSlot.request(dev_id, "slotWriteOutput", "output",
+                                   Hash("int", 1))
         req.waitForReply(max_timeout_ms)
 
         # Check that data arrived and onData/onInput handlers called
@@ -178,8 +182,8 @@ class Channel_Injection_TestCase(BoundDeviceTestCase):
         self.waitUntilTrue(condition, max_timeout, 100)
         self.assertTrue(res, str(self.dc.get(dev_id)))
         # Request again data sending from "output" to "injectedInput" channel
-        req = self.sigSlot.request(dev_id, "slotWriteOutput", Hash("int", 2))
-        req.waitForReply(max_timeout_ms)
+        self.sigSlot.request(dev_id, "slotWriteOutput", "output",
+                             Hash("int", 2)).waitForReply(max_timeout_ms)
 
         # Check that new data arrived
         self.waitUntilTrue(
@@ -209,7 +213,7 @@ class Channel_Injection_TestCase(BoundDeviceTestCase):
         new = "new_" + updateSlot  # work around: dc cash keeps removed props
         INT32_ELEMENT(sch).key(new).readOnly().initialValue(77).commit()
         data = Hash("schema", sch, "int", 3)
-        req = self.sigSlot.request(dev_id, "slotWriteOutput", data)
+        req = self.sigSlot.request(dev_id, "slotWriteOutput", "output", data)
         req.waitForReply(max_timeout_ms)
         # See that injection happened...
         self.waitUntilTrue(
@@ -239,8 +243,8 @@ class Channel_Injection_TestCase(BoundDeviceTestCase):
         # Now only the static OutputChannel is kept
         req = self.sigSlot.request(dev_id, "slotGetOutputChannelNames")
         (outnames,) = req.waitForReply(max_timeout_ms)
-        self.assertEqual(1, len(outnames))
-        self.assertEqual("output", outnames[0])
+        self.assertGreaterEqual(len(outnames), 1)
+        self.assertIn("output", outnames)
 
         # Verify also that the injected channels are gone from config
         # TODO: We directly call slotGetConfiguration instead of using self.dc
@@ -373,4 +377,132 @@ class Channel_Injection_TestCase(BoundDeviceTestCase):
                                 slotConnectionChanged.__name__)
         # Cannot remove slotConnectionChanged...
         ok, msg = self.dc.killDevice(receiver_id, max_timeout)
+        self.assertTrue(ok, msg)
+
+    def _test_change_output_schema_max_size(self, senderId):
+        # Like C++ test Device_Test::testOutputRecreatesOnMaxSizeChange,
+        # This tests that PythonDevice.appendSchemaMaxSize recreates output
+        # channels with the proper schema for validation and that sending of
+        # data that does not comply with schema fails
+
+        receiverId = "receiver_for_max_size"  # test specific name
+
+        # Setup receiver device that should connect.
+        cfg = Hash("deviceId", receiverId,
+                   "input.connectedOutputChannels",
+                   [senderId + ":outputWithSchema"])
+        ok, msg = self.dc.instantiate(self.server_id, self.devClass, cfg,
+                                      max_timeout)
+        self.assertTrue(ok, msg)
+
+        # This registers handlers for "input":
+        req = self.sigSlot.request(receiverId, "slotRegisterOnDataInputEos",
+                                   "input").waitForReply(max_timeout_ms)
+
+        # Test that connection is setup
+        ok = self.waitUntilTrue(
+            lambda: (len(self.dc.get(receiverId, "input.missingConnections"))
+                     == 0),
+            max_timeout, 100)
+        missing_conn = self.dc.get(receiverId, "input.missingConnections")
+        self.assertTrue(ok, str(missing_conn))
+
+        # Let sigSlot listen for updates of "input.missingConnections"
+        connectionChangesLock = threading.Lock()
+        connectionChanges = []
+
+        def slotConnectionChanged(h, inst_id):
+            if inst_id == receiverId and h.has("input.missingConnections"):
+                with connectionChangesLock:
+                    connectionChanges.append(h.get("input.missingConnections"))
+
+        # Note: Better create independent slots for each test run to avoid that
+        #       same slot has > 1 functions registered
+        slotConnectionChanged.__name__ += "MaxSize"  # used by registerSlot
+        self.sigSlot.registerSlot(slotConnectionChanged)
+        connected = self.sigSlot.connect(receiverId, "signalChanged",
+                                         slotConnectionChanged.__name__)
+        self.assertTrue(connected)
+
+        maxSize = 10
+        req = self.sigSlot.request(senderId, "slotAppendSchemaMultiMaxSize",
+                                   maxSize).waitForReply(max_timeout_ms)
+
+        # The output channel schema changed, so we expect that the channel was
+        # recreated and thus the InputChannel of the receiver was disconnected
+        # and reconnected. Both should trigger a change of the input channel's
+        # missingConnections property which should trigger a call to our
+        # "injected" slot that is connected to 'signalChanged'.
+        def condition():
+            with connectionChangesLock:
+                return len(connectionChanges) >= 2
+
+        res = self.waitUntilTrue(condition, max_timeout, 100)
+        self.assertTrue(res)
+        with connectionChangesLock:
+            self.assertEqual(2, len(connectionChanges))
+            self.assertEqual(connectionChanges[0],
+                             [senderId + ":outputWithSchema"])
+            self.assertEqual(connectionChanges[1], [])
+            connectionChanges.clear()  # for next usage FIXME?
+
+        # Make sure that "intInOnData" is not what it shall be later, after
+        # sending data
+        self.assertNotEqual(42, self.dc.get(receiverId, "intInOnData"))
+
+        # Sending data succeeds since vectors fit into maxSize
+        dataToSend = Hash("int", 42, "vecInt32", [1] * maxSize)
+        req = self.sigSlot.request(senderId, "slotWriteOutput",
+                                   "outputWithSchema", dataToSend)
+        req.waitForReply(max_timeout_ms)
+
+        # Check that data arrived and onData handler is called
+        def intIs42():
+            return 42 == self.dc.get(receiverId, "intInOnData")
+
+        res = self.waitUntilTrue(intIs42, max_timeout, 100)
+        self.assertTrue(res, str(self.dc.get(receiverId, "intInOnData")))
+
+        # Make vecInt32 longer than limit, writing to output channel will fail
+        dataToSend.set("vecInt32", [0] * (maxSize + 1))
+        with self.assertRaises(RuntimeError) as cm:
+            req = self.sigSlot.request(senderId, "slotWriteOutput",
+                                       "outputWithSchema", dataToSend)
+            req.waitForReply(max_timeout_ms)
+
+        exceptStr = str(cm.exception)
+        self.assertIn("schema mismatch", exceptStr)
+        self.assertIn("Number of elements (11)", exceptStr)
+        self.assertIn("greater than upper bound (10)", exceptStr)
+        self.assertIn('"vecInt32"', exceptStr)
+
+        # Enlarge the allowed vector size
+        req = self.sigSlot.request(senderId, "slotAppendSchemaMultiMaxSize",
+                                   maxSize + 1)
+        req.waitForReply(max_timeout_ms)
+
+        # Wait until connected again
+        res = self.waitUntilTrue(condition, max_timeout, 100)
+        self.assertTrue(res)
+
+        # Now the data to send complies with the schema and can be sent
+        dataToSend.set("int", 77)
+        req = self.sigSlot.request(senderId, "slotWriteOutput",
+                                   "outputWithSchema", dataToSend)
+        req.waitForReply(max_timeout_ms)
+
+        # Check that data arrived and onData handler is called
+        self.waitUntilTrue(
+            lambda: 77 == self.dc.get(receiverId, "intInOnData"),
+            max_timeout, 100)
+        self.assertEqual(77, self.dc.get(receiverId, "intInOnData"))
+
+        # Clean up
+        self.sigSlot.disconnect(receiverId, "signalChanged",
+                                slotConnectionChanged.__name__)
+        # Remove schema changes again:
+        req = self.sigSlot.request(senderId, "slotUpdateSchema", Schema())
+        req.waitForReply(max_timeout_ms)
+
+        ok, msg = self.dc.killDevice(receiverId, max_timeout)
         self.assertTrue(ok, msg)

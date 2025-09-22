@@ -16,18 +16,32 @@
 from karabo import __version__ as karaboVersion
 from karabo.bound import (
     INPUT_CHANNEL, INT32_ELEMENT, KARABO_CLASSINFO, NODE_ELEMENT,
-    OUTPUT_CHANNEL, PythonDevice)
+    OUTPUT_CHANNEL, VECTOR_INT32_ELEMENT, PythonDevice, Schema)
 
 
 @KARABO_CLASSINFO("DeviceChannelInjection", karaboVersion)
 class DeviceChannelInjection(PythonDevice):
 
     def expectedParameters(expected):
+        outputSchema = Schema()
+        (
+            INT32_ELEMENT(outputSchema).key("int")
+            .readOnly()
+            .commit(),
+
+            VECTOR_INT32_ELEMENT(outputSchema).key("vecInt32")
+            .readOnly()
+            .commit()
+        )
         (
             INPUT_CHANNEL(expected).key("input")
             .commit(),
 
             OUTPUT_CHANNEL(expected).key("output")
+            .commit(),
+
+            OUTPUT_CHANNEL(expected).key("outputWithSchema")
+            .dataSchema(outputSchema)
             .commit(),
 
             # Not channel related, but for test that it gets not erased
@@ -46,20 +60,25 @@ class DeviceChannelInjection(PythonDevice):
     def __init__(self, config):
         super().__init__(config)
         # Define the slots
-        self.KARABO_SLOT(self.slotAppendSchema)
         self.KARABO_SLOT(self.slotUpdateSchema)
+        self.KARABO_SLOT(self.slotAppendSchema)
+        self.KARABO_SLOT(self.slotAppendSchemaMultiMaxSize)
         self.KARABO_SLOT(self.slotWriteOutput)
         self.KARABO_SLOT(self.slotSendEos)
         self.KARABO_SLOT(self.slotRegisterOnDataInputEos)
 
-    def slotAppendSchema(self, schema):
-        self.appendSchema(schema)
-
     def slotUpdateSchema(self, schema):
         self.updateSchema(schema)
 
-    def slotWriteOutput(self, data):
-        self.writeChannel("output", data)
+    def slotAppendSchema(self, schema):
+        self.appendSchema(schema)
+
+    def slotAppendSchemaMultiMaxSize(self, maxSize):
+        self.appendSchemaMultiMaxSize(["outputWithSchema.schema.vecInt32"],
+                                      [maxSize])
+
+    def slotWriteOutput(self, channel, data):
+        self.writeChannel(channel, data)
 
     def slotSendEos(self, channelNames):
         for channelName in channelNames:
