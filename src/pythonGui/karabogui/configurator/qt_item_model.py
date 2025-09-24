@@ -38,8 +38,8 @@ from karabogui.request import send_property_changes
 
 from .utils import (
     dragged_configurator_items, get_child_names, get_device_locked_string,
-    get_device_state_string, get_icon, get_proxy_value, get_qcolor_state,
-    is_mandatory)
+    get_device_state_string, get_icon, get_proxy_color_offline,
+    get_proxy_value, get_proxy_value_offline, get_qcolor_state, is_mandatory)
 
 SPECIAL_BINDINGS = (SlotBinding, ImageBinding,
                     NDArrayBinding, WidgetNodeBinding)
@@ -67,6 +67,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._root_proxy = None
+        self._is_root_class = False
         self._property_proxies = {}
         self._model_index_refs = WeakValueDictionary()
         self._header_labels = ('Property', 'Current value on device', 'Value')
@@ -107,6 +108,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
             self._property_proxies.clear()
             self._model_index_refs.clear()
             self._root_proxy = proxy
+            self._is_root_class = isinstance(proxy, DeviceClassProxy)
         finally:
             self.endResetModel()
 
@@ -471,15 +473,14 @@ class ConfigurationTreeModel(QAbstractItemModel):
             elif role == Qt.BackgroundRole:
                 return None
             elif role == Qt.FontRole:
-                is_class = isinstance(self.root, DeviceClassProxy)
-                if is_class and is_mandatory(binding):
+                if self._is_root_class and is_mandatory(binding):
                     font = get_qfont()
                     font.setBold(True)
                     return font
             elif role == Qt.ForegroundRole:
-                is_class = isinstance(self.root, DeviceClassProxy)
-                if (is_class and (binding.accessMode is AccessMode.READONLY or
-                                  binding.assignment is Assignment.INTERNAL)):
+                if (self._is_root_class and (
+                        binding.accessMode is AccessMode.READONLY or
+                        binding.assignment is Assignment.INTERNAL)):
                     return QColor(*PROPERTY_READONLY_COLOR)
             elif role == Qt.DecorationRole:
                 return get_icon(binding)
@@ -492,19 +493,29 @@ class ConfigurationTreeModel(QAbstractItemModel):
             return value if isinstance(value, str) else _friendly_repr(
                 proxy, value)
         elif column == 2:
-            if role in (Qt.DisplayRole, Qt.EditRole):
-                value = get_proxy_value(index, proxy, is_edit_col=True)
-                if role == Qt.EditRole or isinstance(value, str):
-                    return value
-                elif role == Qt.DisplayRole:
-                    return _friendly_repr(proxy, value)
-            elif role == Qt.BackgroundRole:
-                if proxy.edit_value is not None:
-                    color = QColor(*STATE_COLORS[State.CHANGING])
-                    color.setAlpha(128)
-                    return QBrush(color)
-            elif role == Qt.ToolTipRole:
-                return self.access_level_tooltip(proxy)
+            if self._is_root_class:
+                if role in (Qt.DisplayRole, Qt.EditRole):
+                    return get_proxy_value_offline(proxy, True)
+                elif role == Qt.ForegroundRole:
+                    color = get_proxy_color_offline(index, proxy)
+                    if color is not None:
+                        return QColor(*color)
+                elif role == Qt.ToolTipRole:
+                    return self.access_level_tooltip(proxy)
+            else:
+                if role in (Qt.DisplayRole, Qt.EditRole):
+                    value = get_proxy_value(index, proxy, True)
+                    if role == Qt.EditRole or isinstance(value, str):
+                        return value
+                    elif role == Qt.DisplayRole:
+                        return _friendly_repr(proxy, value)
+                elif role == Qt.BackgroundRole:
+                    if proxy.edit_value is not None:
+                        color = QColor(*STATE_COLORS[State.CHANGING])
+                        color.setAlpha(128)
+                        return QBrush(color)
+                elif role == Qt.ToolTipRole:
+                    return self.access_level_tooltip(proxy)
 
     def _proxy_flags(self, proxy):
         """flags() implementation for properties"""
@@ -527,7 +538,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
             writable = binding.accessMode is AccessMode.RECONFIGURABLE
             if (writable and binding.is_allowed(
                     get_device_state_string(self.root)) and (
-                        self.global_access >= binding.requiredAccessLevel)):
+                    self.global_access >= binding.requiredAccessLevel)):
                 flags |= Qt.ItemIsEditable
 
         return flags
