@@ -92,6 +92,7 @@ namespace karabo {
             /**
              * The <b>key</b> method serves for setting up a unique name for the element.
              * @param name Unique name for the key
+             * @param strict keep as true to get the strongly recommended strict validation of characters in 'name'
              * @return reference to the Element (to allow method's chaining)
              *
              * <b>Example:</b>
@@ -102,10 +103,10 @@ namespace karabo {
              *         .commit();
              * @endcode
              */
-            Derived& key(const std::string& key) {
+            Derived& key(const std::string& key, bool strict = true) {
                 using namespace karabo::data;
                 m_key = key;
-                NODE_ELEMENT(m_schema).key(m_key).template appendParametersOf<Described>().commit();
+                NODE_ELEMENT(m_schema).key(m_key, strict).template appendParametersOf<Described>().commit();
 
                 return *(static_cast<Derived*>(this));
             }

@@ -619,6 +619,10 @@ void Schema_Test::testSlotElement() {
     //                         karabo::data::ParameterException);
     // But this one is forbidden due to interference with GUI client:
     CPPUNIT_ASSERT_THROW(SLOT_ELEMENT(sch).key("clear_namespace"), karabo::data::ParameterException);
+
+    // With the 'strict' flag set to false one can widen a bit the set of allowed characters, e.g. '-'
+    CPPUNIT_ASSERT_THROW(SLOT_ELEMENT(sch).key("slot-some", true), karabo::data::ParameterException);
+    CPPUNIT_ASSERT_NO_THROW(SLOT_ELEMENT(sch).key("slot-some", false).commit());
 }
 
 
@@ -1401,10 +1405,22 @@ void Schema_Test::testInvalidNodes() {
                                  karabo::data::ParameterException);
 
     constexpr char validCharacters[] =
-          "abcdefghijklmnopqrstuvwxyz/" // tolerate `/`
+          "abcdefghijklmnopqrstuvwxyz/" // tolerate `/` (might require strict=false in future)
           "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-          "0123456789_@";
+          "0123456789_";
     CPPUNIT_ASSERT_NO_THROW(INT8_ELEMENT(schema).key(validCharacters).readOnly().commit());
+    CPPUNIT_ASSERT_NO_THROW(INT8_ELEMENT(schema).key(std::string("node.") += validCharacters).readOnly().commit());
+
+    // Check tolerance if requested to be not strict:
+    std::string tolerated(valid);
+    tolerated[1] = '@';
+    CPPUNIT_ASSERT_NO_THROW(INT8_ELEMENT(schema).key(tolerated, false).readOnly().commit());
+    CPPUNIT_ASSERT_THROW(INT8_ELEMENT(schema).key(tolerated), karabo::data::ParameterException);
+
+    // Now with two tolerated characters, one at the end
+    tolerated.back() = '-';
+    CPPUNIT_ASSERT_NO_THROW(INT8_ELEMENT(schema).key(tolerated, false).readOnly().commit());
+    CPPUNIT_ASSERT_THROW(INT8_ELEMENT(schema).key(tolerated), karabo::data::ParameterException);
 }
 
 

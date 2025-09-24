@@ -125,7 +125,8 @@ void exportPyUtilSchemaTableElement(py::module_& m) {
               .def("description", &TableElement::description, py::return_value_policy::reference_internal)
               .def("displayedName", &TableElement::displayedName, py::return_value_policy::reference_internal)
               .def("init", &TableElement::init, py::return_value_policy::reference_internal)
-              .def("key", &TableElement::key, py::return_value_policy::reference_internal)
+              .def("key", &TableElement::key, py::arg("name"), py::arg("strict") = true,
+                   py::return_value_policy::reference_internal)
               .def("reconfigurable", &TableElement::reconfigurable, py::return_value_policy::reference_internal)
               .def("tags",
                    (TableElement & (TableElement::*)(std::string const&, std::string const&)) & TableElement::tags,

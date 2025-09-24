@@ -49,7 +49,8 @@ void exportPyUtilAlarmConditionElement(py::module_& m) {
 
     a.def("displayedName", &AlarmConditionElement::displayedName, py::return_value_policy::reference_internal);
 
-    a.def("key", &AlarmConditionElement::key, py::return_value_policy::reference_internal);
+    a.def("key", &AlarmConditionElement::key, py::arg("name"), py::arg("strict") = true,
+          py::return_value_policy::reference_internal);
 
     a.def("tags",
           (AlarmConditionElement & (AlarmConditionElement::*)(std::string const&, std::string const&)) &
