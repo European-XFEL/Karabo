@@ -153,6 +153,4 @@ namespace karabo {
 
 } // namespace karabo
 
-#define KARABO_ALARM_ATTR "alarmCondition"
-
 #endif /* ALARMCONDITIONS_HH */

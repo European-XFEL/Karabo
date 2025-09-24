@@ -273,10 +273,7 @@ namespace karabo {
              * system.
              *
              * Any updates are validated against the device schema and rejected if they are not
-             * appropriate for the current device state or are of wrong type. During validation
-             * alarm bounds are evaluated and alarms on properties will be raised if alarm
-             * conditions are met. Additionally, the distributed system is notified of these
-             * alarms.
+             * appropriate for the current device state or are of wrong type.
              *
              * @param key A valid parameter of the device (must be defined in the expectedParameters function)
              * @param value The corresponding value (of corresponding data-type)
@@ -372,10 +369,7 @@ namespace karabo {
              * Updates the state/properties of the device with all key/value pairs given in the hash.
              *
              * Any updates are validated against the device schema and rejected if they are not
-             * appropriate for the current device state or are of wrong type. During validation
-             * alarm bounds are evaluated and alarms on properties will be raised if alarm
-             * conditions are met. Additionally, the distributed system is notified of these
-             * alarms.
+             * appropriate for the current device state or are of wrong type.
              * For those paths in 'hash' which do not already have time stamp attributes assigned as tested by
              * Timestamp::hashAttributesContainTimeInformation(hash.getAttributes(<path>))),
              * the actual timestamp is chosen.
@@ -391,10 +385,7 @@ namespace karabo {
              * Updates the state of the device with all key/value pairs given in the hash
              *
              * Any updates are validated against the device schema and rejected if they are not
-             * appropriate for the current device state or are of wrong type. During validation
-             * alarm bounds are evaluated and alarms on properties will be raised if alarm
-             * conditions are met. Additionally, the distributed system is notified of these
-             * alarms.
+             * appropriate for the current device state or are of wrong type.
              *
              * NOTE: This function will automatically and efficiently (only one message) inform
              * any observers.
@@ -535,7 +526,7 @@ namespace karabo {
             /**
              * Append a schema to the existing device schema
              * @param schema to be appended -  may also contain existing elements to overwrite their
-             *                attributes like min/max values/sizes, alarm ranges, etc.
+             *                attributes like min/max values/sizes, etc.
              *                If it contains Input-/OutputChannels, they are (re-)created.
              *                If previously an InputChannel existed under the same key, its data/input/endOfStream
              * handlers are kept for the recreated InputChannel.
@@ -781,19 +772,8 @@ namespace karabo {
             /**
              * Set the global alarm condition
              * @param condition to set
-             * @param needsAcknowledging if this condition will require acknowledgment on the alarm service
-             * @param description an optional description of the condition. Consider including remarks on how to resolve
              */
             void setAlarmCondition(const karabo::data::AlarmCondition& condition);
-
-            /**
-             * Get the alarm condition for a specific property
-             * @param key of the property to get the condition for
-             * @param sep optional separator to use in the key path
-             * @return the alarm condition of the property
-             */
-            const karabo::data::AlarmCondition& getAlarmCondition(const std::string& key,
-                                                                  const std::string& sep = ".") const;
 
             /**
              * A slot called by the device server if the external time ticks update to synchronize
