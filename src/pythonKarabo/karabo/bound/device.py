@@ -1664,26 +1664,18 @@ class PythonDevice:
     def setAlarmCondition(self, condition):
         """Set the global alarm condition
 
-        :param condition: condition to set
+        :param condition: AlarmCondition to set
         :return: None
         """
         if not isinstance(condition, AlarmCondition):
-            raise TypeError("First argument must be 'AlarmCondition',"
+            raise TypeError("Argument must be 'AlarmCondition',"
                             " not '{}'".format(str(type(condition))))
 
         timestamp = self.getActualTimestamp()
-        with self._stateChangeLock:
-            self._setNoStateLock(
-                "alarmCondition", condition.asString(), timestamp)
+        self.set("alarmCondition", condition.asString(), timestamp)
 
-    def getAlarmCondition(self, key=None, separator="."):
-        if key is None:
-            return AlarmCondition.fromString(self.get("alarmCondition"))
-        else:
-            with self._stateChangeLock:
-                condition = self._parameters.getAttribute(
-                    key, "alarmCondition", separator)
-                return AlarmCondition.fromString(condition)
+    def getAlarmCondition(self):
+        return AlarmCondition.fromString(self.get("alarmCondition"))
 
     # the following functions expose parts of SignalSlotable to the public
     # device interface.

@@ -320,20 +320,15 @@ namespace karabo {
 
         void Device::set(const std::string& key, const karabo::data::State& state,
                          const karabo::data::Timestamp& timestamp) {
-            karabo::data::Hash h(key, state.name());
-            h.setAttribute(key, KARABO_INDICATE_STATE_SET, true);
-            set(h, timestamp);
+            // State is set as string - the validator will add necessary KARABO_INDICATE_STATE_SET attribute.
+            set(karabo::data::Hash(key, state.name()), timestamp);
         }
 
 
         void Device::set(const std::string& key, const karabo::data::AlarmCondition& condition,
                          const karabo::data::Timestamp& timestamp) {
-            karabo::data::Hash h(key, condition.asString());
-            h.setAttribute(key, KARABO_INDICATE_ALARM_SET, true);
-            std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
-            setNoLock(h, timestamp);
-            // also set the fields attribute
-            m_parameters.setAttribute(key, KARABO_ALARM_ATTR, condition.asString());
+            // AlarmCondition is set as string - the validator will add necessary KARABO_INDICATE_ALARM_SET attribute.
+            set(karabo::data::Hash(key, condition.asString()), timestamp);
         }
 
 
@@ -522,7 +517,7 @@ namespace karabo {
                 std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
                 // Clear previously injected parameters.
                 // But not blindly all paths (not only keys!) from m_injectedSchema: injection might have been done
-                // to update attributes like alarm levels, min/max values, size, etc. of existing properties.
+                // to update attributes like min/max values, size, etc. of existing properties.
                 for (const std::string& path : m_injectedSchema.getPaths()) {
                     if (!(m_staticSchema.has(path) || schema.has(path))) {
                         m_parameters.erasePath(path);
@@ -667,8 +662,8 @@ namespace karabo {
                 const std::string& stateName = currentState.name();
                 KARABO_LOG_FRAMEWORK_DEBUG << getInstanceId() << ".updateState: \"" << stateName << "\".";
                 if (getState() != currentState) {
-                    // Set state as string, but add state marker attribute KARABO_INDICATE_STATE_SET
-                    other.set("state", stateName).setAttribute(KARABO_INDICATE_STATE_SET, true);
+                    // Set state as string, validator will set attribute KARABO_INDICATE_STATE_SET
+                    other.set("state", stateName);
                     // Compare with state enum
                     if (currentState == karabo::data::State::ERROR) {
                         updateInstanceInfo(karabo::data::Hash("status", "error"));
@@ -699,23 +694,8 @@ namespace karabo {
 
         void Device::setAlarmCondition(const karabo::data::AlarmCondition& condition) {
             using namespace karabo::data;
-
-            const Timestamp timestamp(getActualTimestamp());
-            std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
-            Hash h;
-            h.set("alarmCondition", condition.asString()).setAttribute(KARABO_INDICATE_ALARM_SET, true);
-            // also set the fields attribute to this condition
-            this->setNoValidateNoLock(h, timestamp);
-            this->m_parameters.setAttribute("alarmCondition", KARABO_ALARM_ATTR, condition.asString());
-        }
-
-
-        const karabo::data::AlarmCondition& Device::getAlarmCondition(const std::string& key,
-                                                                      const std::string& sep) const {
-            std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
-            const std::string& propertyCondition =
-                  this->m_parameters.template getAttribute<std::string>(key, KARABO_ALARM_ATTR, sep.at(0));
-            return karabo::data::AlarmCondition::fromString(propertyCondition);
+            // AlarmCondition is set as string - the validator will add necessary KARABO_INDICATE_ALARM_SET attribute.
+            this->set(Hash("alarmCondition", condition.asString()), getActualTimestamp());
         }
 
 
