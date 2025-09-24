@@ -217,7 +217,8 @@ void exportPyUtilSchemaElement(py::module_& m) {
               .def("description", &NDArrayElement::description, py::return_value_policy::reference_internal)
               .def("displayedName", &NDArrayElement::displayedName, py::return_value_policy::reference_internal)
               .def("init", &NDArrayElement::init, py::return_value_policy::reference_internal)
-              .def("key", &NDArrayElement::key, py::return_value_policy::reference_internal)
+              .def("key", &NDArrayElement::key, py::arg("name"), py::arg("strict") = true,
+                   py::return_value_policy::reference_internal)
               .def("readOnly", &NDArrayElement::readOnly, py::return_value_policy::reference_internal)
               .def("reconfigurable", &NDArrayElement::reconfigurable, py::return_value_policy::reference_internal)
               .def("commit", &NDArrayElement::commit, py::return_value_policy::reference_internal);

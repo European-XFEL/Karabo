@@ -1072,9 +1072,37 @@ def test_invalidNodes():
 
     allValidCharacters = ("abcdefghijklmnopqrstuvwxyz/"  # tolerate '/'
                           "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-                          "0123456789_@")
+                          "0123456789_")
     INT32_ELEMENT(schema).key(allValidCharacters).readOnly().commit()
     assert allValidCharacters in schema
+
+    # Check tolerance if requested to be not strict
+    # Test various _ELEMENT classes that have their own bindings
+    # (NODE_ELEMENT is tested elsewhere)
+    elements = [ALARM_ELEMENT, IMAGEDATA_ELEMENT, INT32_ELEMENT,
+                NDARRAY_ELEMENT, SLOT_ELEMENT, STATE_ELEMENT, TABLE_ELEMENT,
+                VECTOR_DOUBLE_ELEMENT]
+    for ELEMENT in elements:
+        tolerated = "valid@"
+        ELEMENT(schema).key(tolerated, False)
+        with pytest.raises(RuntimeError,
+                           match="illegal character at position 5"):
+            ELEMENT(schema).key(tolerated)
+
+        # Now with two tolerated characters, one at the end
+        tolerated = "valid-more@"
+        ELEMENT(schema).key(tolerated, False)
+        with pytest.raises(RuntimeError,
+                           match="illegal character at position 5"):
+            ELEMENT(schema).key(tolerated)
+
+        invalid = "totally&invalid"
+        with pytest.raises(RuntimeError,
+                           match="not tolerated character at position 7"):
+            ELEMENT(schema).key(invalid, False)
+        with pytest.raises(RuntimeError,
+                           match="illegal character at position 7"):
+            ELEMENT(schema).key(invalid, True)
 
 
 def test_getRootName():
