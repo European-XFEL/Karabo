@@ -96,7 +96,9 @@ void Timing_Test::tearDown() {
     m_deviceServer2.reset();
     m_deviceServer.reset();
     m_deviceClient.reset();
+    std::this_thread::sleep_for(200ms);
     EventLoop::stop();
+    if (m_eventLoopThread.joinable()) m_eventLoopThread.join();
 }
 
 
