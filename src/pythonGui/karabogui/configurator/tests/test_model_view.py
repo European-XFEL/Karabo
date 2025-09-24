@@ -17,17 +17,23 @@
 from unittest import main, mock
 
 from qtpy.QtCore import QItemSelectionModel, QPoint, Qt
+from qtpy.QtGui import QColor
 
 from karabo.common.api import AlarmCondition, State
 from karabo.native import (
-    AccessMode, Bool, Configurable, Float, Int32, Slot, String, VectorFloat,
-    VectorHash)
+    AccessLevel, AccessMode, Bool, Configurable, Float, Int32, Slot, String,
+    VectorFloat, VectorHash)
 from karabogui.binding.api import (
     DeviceProxy, ProjectDeviceProxy, ProxyStatus, apply_default_configuration,
     build_binding)
 from karabogui.configurator.api import (
     ConfigurationTreeModel, ConfigurationTreeView, ConfiguratorFilterModel)
+from karabogui.indicators import PROPERTY_READONLY_COLOR
 from karabogui.testing import GuiTestCase
+
+
+def is_editable_index(index):
+    return index.flags() & Qt.ItemIsEditable == Qt.ItemIsEditable
 
 
 class RowSchema(Configurable):
@@ -72,6 +78,10 @@ class Object(Configurable):
         displayType="AlarmCondition",
         accessMode=AccessMode.READONLY)
 
+    expertProp = Float(
+        defaultValue=1.2,
+        requiredAccessLevel=AccessLevel.EXPERT)
+
     @Slot(allowedStates=[State.INTERLOCKED, State.ACTIVE])
     def setSpeed(self):
         """Simple slot dummy method"""
@@ -89,6 +99,7 @@ class TestConfiguratorProjectDevice(GuiTestCase):
         self.model = self.view.model()
         assert isinstance(self.model, ConfigurationTreeModel)
         self.model.root = root
+        assert self.model._is_root_class
         self.model._config_update()
 
     def test_basics(self):
@@ -101,6 +112,9 @@ class TestConfiguratorProjectDevice(GuiTestCase):
         state_index = self.model.index(0, 0)
         assert state_index.data() == "State"
         assert state_index.data(role=Qt.ToolTipRole) is None
+
+        state_index_value = self.model.index(0, 1)
+        assert state_index_value.data(Qt.EditRole) is None
 
         bar_index = self.model.index(2, 0)
         assert bar_index.data() == "bar"
@@ -278,6 +292,59 @@ class TestConfiguratorDevice(GuiTestCase):
             self.model.root = root
             tester = ModelTester(None)
             tester.check(self.model)
+
+
+class TestConfiguratorProjectDeviceExpert(GuiTestCase):
+    """Check the offline configuration scenario"""
+
+    def setUp(self):
+        super().setUp()
+        self.view = ConfigurationTreeView()
+        binding = build_binding(Object.getClassSchema())
+        root = ProjectDeviceProxy(binding=binding, server_id="Test",
+                                  status=ProxyStatus.OFFLINE)
+        apply_default_configuration(root.binding)
+        self.view.assign_proxy(proxy=root)
+        self.model = self.view.model()
+        assert isinstance(self.model, ConfigurationTreeModel)
+        self.model.root = root
+        assert self.model._is_root_class
+        self.model._config_update()
+        # Set the EXPERT MODE
+        self.view.setMode(True)
+
+    def test_basics(self):
+        # This is constant
+        assert self.model.columnCount() == 3
+        # One more due to EXPERT mode
+        assert self.model.rowCount() == 10
+
+    def test_get_property_proxy_data(self):
+        state_index = self.model.index(0, 0)
+        assert state_index.data() == "State"
+        assert state_index.data(role=Qt.ToolTipRole) is None
+
+        state_index_value = self.model.index(0, 1)
+        assert state_index_value.data(Qt.EditRole) is None
+
+        # Editable
+        bar_index = self.model.index(2, 0)
+        assert bar_index.data() == "bar"
+        bar_index_value = self.model.index(2, 2)
+        assert is_editable_index(bar_index_value)
+        color = bar_index_value.data(Qt.ForegroundRole)
+        assert color is None
+
+        expert_index = self.model.index(8, 0)
+        assert expert_index.data() == "expertProp"
+        assert expert_index.data(Qt.EditRole) is None
+        # Edit column
+        expert_index_value = self.model.index(8, 2)
+        assert not is_editable_index(expert_index_value)
+        assert expert_index_value.data(Qt.DisplayRole) == "1.2"
+        assert expert_index_value.data(Qt.EditRole) == "1.2"
+        color = expert_index_value.data(Qt.ForegroundRole)
+        assert color == QColor(*PROPERTY_READONLY_COLOR)
 
 
 if __name__ == "__main__":

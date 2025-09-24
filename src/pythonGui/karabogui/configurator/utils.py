@@ -29,12 +29,13 @@ from karabogui.binding.api import (
     WidgetNodeBinding, get_binding_value, get_editor_value)
 from karabogui.controllers.api import get_compatible_controllers
 from karabogui.indicators import (
-    ERROR_COLOR_ALPHA, OK_COLOR, UNKNOWN_COLOR_ALPHA)
+    ERROR_COLOR_ALPHA, OK_COLOR, PROPERTY_READONLY_COLOR, UNKNOWN_COLOR_ALPHA)
 from karabogui.itemtypes import ConfiguratorItemType
 
 # The fixed height of rows in the configurator
 FIXED_ROW_HEIGHT = 30
 RECURSIVE_BINDING = (BindingRoot, NodeBinding)
+_EMPTY_VALUE_BINDINGS = (BindingRoot, NodeBinding, VectorHashBinding)
 
 
 class ButtonState:
@@ -188,7 +189,7 @@ def get_proxy_value(index, proxy, is_edit_col=False):
         return ''
 
     binding = proxy.binding
-    if isinstance(binding, (BindingRoot, NodeBinding, VectorHashBinding)):
+    if isinstance(binding, _EMPTY_VALUE_BINDINGS):
         return ''
 
     value = _proxy_value(proxy, is_edit_col)
@@ -196,6 +197,35 @@ def get_proxy_value(index, proxy, is_edit_col=False):
         return ''
 
     return value
+
+
+def get_proxy_value_offline(proxy, is_edit_col=False):
+    """Return the offline proxy value"""
+    binding = proxy.binding
+    if (binding.accessMode is AccessMode.READONLY or
+            isinstance(binding, _EMPTY_VALUE_BINDINGS)):
+        return ''
+
+    value = _proxy_value(proxy, is_edit_col)
+    if isinstance(value, (bytes, bytearray)):
+        return ''
+
+    units = binding.unit_label
+    value = str(value)
+    return value + (' ' + units if units and value else '')
+
+
+def get_proxy_color_offline(index, proxy):
+    """Return an appropriate color for an `index` and `proxy`"""
+    if not index.flags() & Qt.ItemIsEditable == Qt.ItemIsEditable:
+        # Account global access level
+        return PROPERTY_READONLY_COLOR
+
+    binding = proxy.binding
+    if (binding.accessMode is AccessMode.READONLY
+            or binding.assignment is Assignment.INTERNAL):
+        return PROPERTY_READONLY_COLOR
+    return None
 
 
 def handle_default_state(allowed, state):
