@@ -452,7 +452,9 @@ void Device_Test::setUp() {
 void Device_Test::tearDown() {
     m_deviceServer.reset();
     m_deviceClient.reset();
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
     EventLoop::stop();
+    if (m_eventLoopThread.joinable()) m_eventLoopThread.join();
 }
 
 

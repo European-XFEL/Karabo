@@ -331,6 +331,7 @@ void DataLogging_Test::tearDown() {
     m_sigSlot.reset();
     m_deviceClient.reset();
     m_deviceServer.reset();
+    std::this_thread::sleep_for(milliseconds(200));
     EventLoop::stop();
     if (m_eventLoopThread.joinable()) m_eventLoopThread.join();
 
