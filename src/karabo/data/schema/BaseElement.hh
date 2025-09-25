@@ -40,8 +40,9 @@ namespace karabo {
          * Nestes paths (i.e. paths with dots) are allowed.
          *
          * @param name the key to be checked
+         * @param strict specify whether to tolerate more than just letter, digits, underscore
          */
-        void checkPropertyPath(const std::string& name);
+        void checkPropertyPath(const std::string& name, bool strict);
 
         /**
          * The BaseElement class is a base class for various element types: simple, vector, choice, list
@@ -74,13 +75,13 @@ namespace karabo {
              *         .commit();
              * @endcode
              */
-            virtual Derived& key(const std::string& name) {
+            virtual Derived& key(const std::string& name, bool strict = true) {
                 // Check whether full path (that in fact has to be specified here!) or its last
                 // key is empty - empty non-last keys are caught elsewhere.
                 // Also ensure that keys are usable with MDL proxies, i.e. only letters, digits,
                 // underscores - and a digit not as first character.
 
-                checkPropertyPath(name); // throws if not OK
+                checkPropertyPath(name, strict); // throws if not OK
 
                 m_node->m_key = name;
                 return *(static_cast<Derived*>(this));

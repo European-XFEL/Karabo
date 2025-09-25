@@ -47,7 +47,8 @@ void exportPyUtilStateElement(py::module_& m) {
 
     se.def("displayedName", &StateElement::displayedName, py::return_value_policy::reference_internal);
 
-    se.def("key", &StateElement::key, py::return_value_policy::reference_internal);
+    se.def("key", &StateElement::key, py::arg("name"), py::arg("strict") = true,
+           py::return_value_policy::reference_internal);
 
     se.def("tags", (StateElement & (StateElement::*)(std::string const&, std::string const&)) & StateElement::tags,
            py::arg("tags"), py::arg("sep") = " ,;", py::return_value_policy::reference_internal);
