@@ -24,7 +24,8 @@ from pathlib import Path
 from qtpy import uic
 from qtpy.QtCore import QItemSelection, Qt, Slot
 from qtpy.QtWidgets import (
-    QDialog, QDialogButtonBox, QHBoxLayout, QPushButton, QVBoxLayout, QWidget)
+    QAbstractItemDelegate, QAbstractItemView, QDialog, QDialogButtonBox,
+    QHBoxLayout, QPushButton, QVBoxLayout, QWidget)
 
 import karabogui.icons as icons
 from karabogui.controllers.edit.table import EditableTableElement
@@ -162,3 +163,11 @@ class TableDialog(QDialog):
         self.controller.destroy_widget()
         self.toolbar = None
         return super().done(result)
+
+    def closeEvent(self, event):
+        # Clear the editing cell, to avoid GUI segfault on Mac.
+        view = self.controller.widget
+        if view.state() == QAbstractItemView.EditingState:
+            editor = view.focusWidget()
+            view.closeEditor(editor, QAbstractItemDelegate.RevertModelCache)
+        super().closeEvent(event)
