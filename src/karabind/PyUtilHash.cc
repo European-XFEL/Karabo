@@ -461,8 +461,8 @@ void exportPyUtilHash(py::module_& m) {
                 g = h.get('a.b')  # reference to Hash('c', 1)
                 g.set('c', 2)
                 assert(h.get('a.b.c') == 2)
-                del(h)        # delete whole tree
-                print(g)      # SEGFAULT: dangling reference
+                del h         # delete whole tree
+                print(g)      # inner Hash still valid
           )pbdoc");
 
     h.def(

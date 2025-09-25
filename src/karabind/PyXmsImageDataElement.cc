@@ -210,7 +210,8 @@ void exportPyXmsImageDataElement(py::module_& m) {
 
         el.def(py::init<Schema&>(), py::arg("expected"));
 
-        el.def("key", &ImageDataElement::key, py::arg("key"), py::return_value_policy::reference_internal);
+        el.def("key", &ImageDataElement::key, py::arg("key"), py::arg("strict") = true,
+               py::return_value_policy::reference_internal);
 
         el.def("displayedName", &ImageDataElement::displayedName, py::arg("name"),
                py::return_value_policy::reference_internal);

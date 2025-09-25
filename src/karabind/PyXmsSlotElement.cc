@@ -85,7 +85,8 @@ void exportPyXmsSlotElement(py::module_& m) {
     sl.def("displayedName", &SlotElementBase<SLOT_ELEMENT>::displayedName, py::arg("displayedName"),
            py::return_value_policy::reference_internal);
 
-    sl.def("key", &SlotElementBase<SLOT_ELEMENT>::key, py::arg("name"), py::return_value_policy::reference_internal);
+    sl.def("key", &SlotElementBase<SLOT_ELEMENT>::key, py::arg("name"), py::arg("strict") = true,
+           py::return_value_policy::reference_internal);
 
     sl.def("alias", &wrapper::AliasAttributePy<SLOT_ELEMENT>::setAlias, py::return_value_policy::reference_internal);
 

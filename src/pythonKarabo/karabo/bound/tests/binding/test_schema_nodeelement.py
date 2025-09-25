@@ -14,6 +14,8 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 
+import pytest
+
 from karabo.bound import (
     FLOAT_ELEMENT, INT32_ELEMENT, NODE_ELEMENT, Schema, Types)
 
@@ -143,3 +145,17 @@ def test_appendParametersOf():
     assert schema.getDefaultValue("width") == 1.0
     assert schema.getValueType("height") == Types.FLOAT
     assert schema.getDefaultValue("height") == 1.0
+
+
+def test_keyValidation():
+    s = Schema()
+    NODE_ELEMENT(s).key("allowed").commit()
+    NODE_ELEMENT(s).key("allowed", True).commit()
+    with pytest.raises(RuntimeError, match="illegal character at position 3"):
+        NODE_ELEMENT(s).key("Bad@Inside", True).commit()
+
+    # We can tolerate the @, but not the $
+    NODE_ELEMENT(s).key("Bad@Inside", False).commit()
+    with pytest.raises(RuntimeError,
+                       match="not tolerated character at position 3"):
+        NODE_ELEMENT(s).key("Bad$Inside", False).commit()

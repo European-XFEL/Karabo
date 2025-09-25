@@ -118,18 +118,18 @@ namespace karabo {
 
             virtual void beforeAddition() override = 0;
 
-            Derived& key(const std::string& name) override {
+            Derived& key(const std::string& name, bool strict = true) override {
                 if (name.find('_') != std::string::npos) {
                     if (name == "clear_namespace") {
                         throw KARABO_PARAMETER_EXCEPTION(
-                              "Slot 'clear_namespace' prohibited since reserved got internal usage in GUI client.");
+                              "Slot 'clear_namespace' prohibited since reserved for internal usage in GUI client.");
                     }
                     KARABO_LOG_FRAMEWORK_WARN_C("SlotElementBase")
                           << "Slot '" << name
                           << "' contains a '_'. This might lead to unexpected behaviour since the `_` is internally "
                              "used for slots inside a nodes";
                 }
-                return karabo::data::BaseElement<Derived>::key(name);
+                return karabo::data::BaseElement<Derived>::key(name, strict);
             }
         };
 

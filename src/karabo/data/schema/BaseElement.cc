@@ -23,22 +23,33 @@
 #include "karabo/data/types/Exception.hh"
 #include "karabo/data/types/Hash.hh"
 
-void karabo::data::checkPropertyPath(const std::string& name) {
+void karabo::data::checkPropertyPath(const std::string& name, bool strict) {
     if (name.empty() || name.back() == Hash::k_defaultSep) {
         throw KARABO_PARAMETER_EXCEPTION(("Bad (sub-)key '" + name) += "': empty");
     }
     // '/' is special: only allowed for backward compatibility in metro devices of DA group
-    // `@` is required for mangling with other control systems
     constexpr char allowedCharacters[] =
-          ".0123456789_/@"
+          ".0123456789_/" // In 3.1.X move '/' to tolerated characters?
           "abcdefghijklmnopqrstuvwxyz"
           "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     assert(allowedCharacters[0] == karabo::data::Hash::k_defaultSep);
 
-    const size_t pos = name.find_first_not_of(allowedCharacters);
-    if (pos != std::string::npos) {
-        std::string msg(("Bad (sub-)key '" + name) += "': illegal character at position ");
-        throw KARABO_PARAMETER_EXCEPTION(msg += toString(pos));
+    if (strict) {
+        const size_t pos = name.find_first_not_of(allowedCharacters);
+        if (pos != std::string::npos) {
+            std::string msg(("Bad (sub-)key '" + name) += "': illegal character at position ");
+            throw KARABO_PARAMETER_EXCEPTION(msg += toString(pos));
+        }
+    } else {
+        // If requested to be not strict, we tolerate some characters.
+        // Note we must not tolerate ',', '=', or space for sake of the influxDB line protocol!
+        const std::string toleratedCharacters("@-");
+        const std::string allAllowedCharacters(allowedCharacters + toleratedCharacters);
+        const size_t pos = name.find_first_not_of(allAllowedCharacters);
+        if (pos != std::string::npos) {
+            std::string msg(("Bad (sub-)key '" + name) += "': not tolerated character at position ");
+            throw KARABO_PARAMETER_EXCEPTION(msg += toString(pos));
+        }
     }
     // Now check that leading character of (last part of) name is not a digit
     // (non-last parts are checked when their nodes were added)
