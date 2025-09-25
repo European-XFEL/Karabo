@@ -272,7 +272,7 @@ namespace karabo {
             /**
              * Set the value of another element to this Element, key and attributes are unchanged.
              *
-             * Kept for backward compatibility, better use setValue(std::move(other.getValueAsAny())) instead.
+             * Kept for backward compatibility, better use setValue(std::move(other.getValueAsAny())) instead
              *
              * @param other
              */
@@ -353,7 +353,7 @@ namespace karabo {
              * @param value
              */
             template <class T>
-            inline void setAttribute(const std::string& key, const T& value);
+            inline void setAttribute(std::string_view key, const T& value);
 
             /**
              * Set an attribute to this Element, identified by key
@@ -361,7 +361,7 @@ namespace karabo {
              * @param value
              */
             template <class T>
-            inline void setAttribute(const std::string& key, T&& value);
+            inline void setAttribute(std::string_view key, T&& value);
 
             /**
              * Return the attribute cast to ValueType. Strict casting is applied,
@@ -371,28 +371,7 @@ namespace karabo {
              * @return
              */
             template <class T>
-            inline T& getAttribute(const std::string& key);
-
-            /**
-             * Return the attribute cast to ValueType. Strict casting is applied,
-             * i.e. the T needs to be of the exact type of inserted
-             * vale (or implicitly castable)
-             * @param key identifying the attribute
-             * @param value reference to insert value in
-             * @return
-             */
-            template <class T>
-            inline void getAttribute(const std::string& key, T& value) const;
-
-            /**
-             * Return the attribute cast to ValueType. Strict casting is applied,
-             * i.e. the T needs to be of the exact type of inserted
-             * vale (or implicitly castable)
-             * @param key identifying the attribute
-             * @return
-             */
-            template <class T>
-            inline const T& getAttribute(const std::string& key) const;
+            inline T& getAttribute(std::string_view key);
 
             /**
              * Return the attribute cast to ValueType. Strict casting is applied,
@@ -403,21 +382,42 @@ namespace karabo {
              * @return
              */
             template <class T>
-            inline void getAttribute(const std::string& key, const T& value) const;
+            inline void getAttribute(std::string_view key, T& value) const;
+
+            /**
+             * Return the attribute cast to ValueType. Strict casting is applied,
+             * i.e. the T needs to be of the exact type of inserted
+             * vale (or implicitly castable)
+             * @param key identifying the attribute
+             * @return
+             */
+            template <class T>
+            inline const T& getAttribute(std::string_view key) const;
+
+            /**
+             * Return the attribute cast to ValueType. Strict casting is applied,
+             * i.e. the T needs to be of the exact type of inserted
+             * vale (or implicitly castable)
+             * @param key identifying the attribute
+             * @param value reference to insert value in
+             * @return
+             */
+            template <class T>
+            inline void getAttribute(std::string_view key, const T& value) const;
 
             /**
              * Return the value as std::any. Does not throw
              * @param key identifying the attribute
              * @return
              */
-            inline const std::any& getAttributeAsAny(const std::string& key) const;
+            inline const std::any& getAttributeAsAny(std::string_view key) const;
 
             /**
              * Return the value as std::any. Does not throw
              * @param key identifying the attribute
              * @return
              */
-            inline std::any& getAttributeAsAny(const std::string& key);
+            inline std::any& getAttributeAsAny(std::string_view key);
 
             /**
              * Return the attribute cast to ValueType. Casting is performed via
@@ -426,7 +426,7 @@ namespace karabo {
              * @return
              */
             template <class T>
-            inline T getAttributeAs(const std::string& key) const;
+            inline T getAttributeAs(std::string_view key) const;
 
             /**
              * Return the attribute cast to ValueType. Casting is performed via
@@ -436,28 +436,28 @@ namespace karabo {
              * @return
              */
             template <typename T, template <typename Elem, typename = std::allocator<Elem> > class Cont>
-            inline Cont<T> getAttributeAs(const std::string& key) const;
+            inline Cont<T> getAttributeAs(std::string_view key) const;
 
             /**
              * Return an attribute as a Node, e.g. an Element<T>
              * @param key
              * @return
              */
-            Element<KeyType>& getAttributeNode(const std::string& key);
+            Element<KeyType>& getAttributeNode(std::string_view key);
 
             /**
              * Return an attribute as a Node, e.g. an Element<T>
              * @param key
              * @return
              */
-            const Element<KeyType>& getAttributeNode(const std::string& key) const;
+            const Element<KeyType>& getAttributeNode(std::string_view key) const;
 
             /**
              * Check if Element has an attribute identified by key
              * @param key
              * @return true if the attribute exists, false if not
              */
-            inline bool hasAttribute(const std::string& key) const;
+            inline bool hasAttribute(std::string_view key) const;
 
             /**
              * Batch set attributes to this element
@@ -543,6 +543,8 @@ namespace karabo {
 
             inline void setKey(const KeyType& key);
 
+            inline void setKey(KeyType&& key);
+
             inline std::string getValueAsString() const;
         };
 
@@ -587,8 +589,12 @@ namespace karabo {
 
         template <class KeyType, typename AttributeType>
         void Element<KeyType, AttributeType>::setKey(const KeyType& key) {
-            // could overload for 'KeyType&& key'
             m_key = key;
+        }
+
+        template <class KeyType, typename AttributeType>
+        void Element<KeyType, AttributeType>::setKey(KeyType&& key) {
+            m_key = std::move(key);
         }
 
         template <class KeyType, typename AttributeType>
@@ -895,74 +901,74 @@ namespace karabo {
 
         template <typename KeyType, typename AttributeType>
         template <class T>
-        inline void Element<KeyType, AttributeType>::setAttribute(const std::string& key, const T& value) {
+        inline void Element<KeyType, AttributeType>::setAttribute(std::string_view key, const T& value) {
             m_attributes.template set<T>(key, value);
         }
 
         template <typename KeyType, typename AttributeType>
         template <class T>
-        inline void Element<KeyType, AttributeType>::setAttribute(const std::string& key, T&& value) {
+        inline void Element<KeyType, AttributeType>::setAttribute(std::string_view key, T&& value) {
             m_attributes.set(key, std::forward<T>(value));
         }
 
         template <typename KeyType, typename AttributeType>
         template <class T>
-        inline T& Element<KeyType, AttributeType>::getAttribute(const std::string& key) {
+        inline T& Element<KeyType, AttributeType>::getAttribute(std::string_view key) {
             return m_attributes.template get<T>(key);
         }
 
         template <typename KeyType, typename AttributeType>
         template <class T>
-        inline void Element<KeyType, AttributeType>::getAttribute(const std::string& key, T& value) const {
+        inline void Element<KeyType, AttributeType>::getAttribute(std::string_view key, T& value) const {
             m_attributes.template get(key, value);
         }
 
         template <typename KeyType, typename AttributeType>
         template <class T>
-        inline const T& Element<KeyType, AttributeType>::getAttribute(const std::string& key) const {
+        inline const T& Element<KeyType, AttributeType>::getAttribute(std::string_view key) const {
             return m_attributes.template get<T>(key);
         }
 
         template <typename KeyType, typename AttributeType>
         template <class T>
-        inline void Element<KeyType, AttributeType>::getAttribute(const std::string& key, const T& value) const {
+        inline void Element<KeyType, AttributeType>::getAttribute(std::string_view key, const T& value) const {
             m_attributes.template get(key, value);
         }
 
         template <typename KeyType, typename AttributeType>
-        inline const std::any& Element<KeyType, AttributeType>::getAttributeAsAny(const std::string& key) const {
+        inline const std::any& Element<KeyType, AttributeType>::getAttributeAsAny(std::string_view key) const {
             return m_attributes.getAny(key);
         }
 
         template <typename KeyType, typename AttributeType>
-        inline std::any& Element<KeyType, AttributeType>::getAttributeAsAny(const std::string& key) {
+        inline std::any& Element<KeyType, AttributeType>::getAttributeAsAny(std::string_view key) {
             return m_attributes.getAny(key);
         }
 
         template <typename KeyType, typename AttributeType>
         template <class T>
-        inline T Element<KeyType, AttributeType>::getAttributeAs(const std::string& key) const {
+        inline T Element<KeyType, AttributeType>::getAttributeAs(std::string_view key) const {
             return m_attributes.template getAs<T>(key);
         }
 
         template <typename KeyType, typename AttributeType>
         template <typename T, template <typename Elem, typename = std::allocator<Elem> > class Cont>
-        inline Cont<T> Element<KeyType, AttributeType>::getAttributeAs(const std::string& key) const {
+        inline Cont<T> Element<KeyType, AttributeType>::getAttributeAs(std::string_view key) const {
             return m_attributes.template getAs<T, Cont>(key);
         }
 
         template <typename KeyType, typename AttributeType>
-        inline Element<KeyType>& Element<KeyType, AttributeType>::getAttributeNode(const std::string& key) {
+        inline Element<KeyType>& Element<KeyType, AttributeType>::getAttributeNode(std::string_view key) {
             return m_attributes.getNode(key);
         }
 
         template <typename KeyType, typename AttributeType>
-        inline const Element<KeyType>& Element<KeyType, AttributeType>::getAttributeNode(const std::string& key) const {
+        inline const Element<KeyType>& Element<KeyType, AttributeType>::getAttributeNode(std::string_view key) const {
             return m_attributes.getNode(key);
         }
 
         template <typename KeyType, typename AttributeType>
-        bool Element<KeyType, AttributeType>::hasAttribute(const std::string& key) const {
+        bool Element<KeyType, AttributeType>::hasAttribute(std::string_view key) const {
             return m_attributes.has(key);
         }
 
