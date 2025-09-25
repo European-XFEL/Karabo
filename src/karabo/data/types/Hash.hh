@@ -98,7 +98,7 @@ namespace karabo {
            public:
             KARABO_CLASSINFO(Hash, "Hash", "2.0")
 
-            typedef OrderedMap<std::string, Element<std::string> > Attributes;
+            typedef OrderedMap<std::string, Element<std::string>> Attributes;
             typedef Element<std::string, Attributes> Node;
             enum MergePolicy {
 
@@ -305,7 +305,7 @@ namespace karabo {
              *
              * @param container that the keys are appended to (it is not cleared before)
              */
-            template <template <class T, class All = std::allocator<T> > class container>
+            template <template <class T, class All = std::allocator<T>> class container>
             void getKeys(container<std::string>& result) const;
 
             /**
@@ -335,7 +335,7 @@ namespace karabo {
              * @param result container to which paths get appended (it is not cleared before)
              * @param separator to glue keys of the hierarchy levels
              */
-            template <template <class T, class All = std::allocator<T> > class container>
+            template <template <class T, class All = std::allocator<T>> class container>
             void getPaths(container<std::string>& result, const char separator = k_defaultSep) const;
 
             /**
@@ -369,7 +369,7 @@ namespace karabo {
              * @param result container to which paths get appended (it is not cleared before)
              * @param separator to glue keys of the hierarchy levels
              */
-            template <template <class T, class All = std::allocator<T> > class container>
+            template <template <class T, class All = std::allocator<T>> class container>
             void getDeepPaths(container<std::string>& result, const char separator = k_defaultSep) const;
 
             /**
@@ -529,7 +529,7 @@ namespace karabo {
             template <typename ValueType>
             inline ValueType getAs(std::string_view path, const char separator = k_defaultSep) const;
 
-            template <typename T, template <typename Elem, typename = std::allocator<Elem> > class Cont>
+            template <typename T, template <typename Elem, typename = std::allocator<Elem>> class Cont>
             inline Cont<T> getAs(std::string_view key, const char separator = k_defaultSep) const;
 
             /**
@@ -646,7 +646,7 @@ namespace karabo {
             T getAttributeAs(std::string_view path, const ::std::string& attribute,
                              const char separator = k_defaultSep) const;
 
-            template <typename T, template <typename Elem, typename = std::allocator<Elem> > class Cont>
+            template <typename T, template <typename Elem, typename = std::allocator<Elem>> class Cont>
             Cont<T> getAttributeAs(std::string_view path, const ::std::string& attribute,
                                    const char separator = k_defaultSep) const;
 
@@ -830,12 +830,13 @@ namespace karabo {
 
             Hash* setNodesAsNeeded(const std::vector<std::string_view>& tokens, char seperator);
 
-            Hash& getLastHash(std::string_view path, std::string& last_key, const char separator = k_defaultSep);
-            const Hash& getLastHash(std::string_view path, std::string& last_key,
+            Hash& getLastHash(std::string_view path, std::string_view& last_key, const char separator = k_defaultSep);
+            const Hash& getLastHash(std::string_view path, std::string_view& last_key,
                                     const char separator = k_defaultSep) const;
 
-            Hash* getLastHashPtr(std::string_view path, std::string& last_key, const char separator = k_defaultSep);
-            const Hash* getLastHashPtr(std::string_view path, std::string& last_key,
+            Hash* getLastHashPtr(std::string_view path, std::string_view& last_key,
+                                 const char separator = k_defaultSep);
+            const Hash* getLastHashPtr(std::string_view path, std::string_view& last_key,
                                        const char separator = k_defaultSep) const;
 
             const Hash& thisAsConst() const {
@@ -865,13 +866,13 @@ namespace karabo {
         template <>
         inline const Hash& Hash::get(std::string_view path, const char separator) const {
             // TODO: To reduce code in header, move implementation to getHash or sth. like that...
-            std::string key;
+            std::string_view key;
             const Hash& hash = getLastHash(path, key, separator);
             auto [index, keyview] = karabo::data::getAndCropIndex(key);
             if (index == -1) {
                 return hash.m_container.get<Hash>(key);
             } else {
-                const std::vector<Hash>& hashVec = hash.m_container.get<std::vector<Hash> >(std::string(keyview));
+                const std::vector<Hash>& hashVec = hash.m_container.get<std::vector<Hash>>(keyview);
                 if (static_cast<unsigned int>(index) >= hashVec.size()) {
                     throw KARABO_PARAMETER_EXCEPTION("Index " + toString(index) + " out of range in '" +
                                                      std::string(path) + "'.");
@@ -898,9 +899,8 @@ namespace karabo {
             Hash* leaf = this->setNodesAsNeeded(tokens, separator);
 
             // Set last token
-            auto [index, tokview] = karabo::data::getAndCropIndex(tokens.back());
-            if (index == -1) {              // No vector since no indexing
-                std::string token(tokview); // m_container needs std::string type
+            auto [index, token] = karabo::data::getAndCropIndex(tokens.back());
+            if (index == -1) { // No vector since no indexing
                 return leaf->m_container.set(token, value);
             } else {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Only Hash objects may be assigned to a leaf node of array type");
@@ -915,9 +915,8 @@ namespace karabo {
             Hash* leaf = this->setNodesAsNeeded(tokens, separator);
 
             // Set last token
-            auto [index, tokview] = karabo::data::getAndCropIndex(tokens.back());
+            auto [index, token] = karabo::data::getAndCropIndex(tokens.back());
             if (index == -1) { // No vector
-                std::string token(tokview);
                 return leaf->m_container.set(token, std::forward<ValueType>(value));
             } else {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Only Hash objects may be assigned to a leaf node of array type");
@@ -947,19 +946,18 @@ namespace karabo {
 
             Hash* leaf = this->setNodesAsNeeded(tokens, separator);
 
-            auto [index, tokview] = karabo::data::getAndCropIndex(tokens.back());
-            std::string token(tokview);
+            auto [index, token] = karabo::data::getAndCropIndex(tokens.back());
             if (index == -1) { // No vector of hashes
                 return leaf->m_container.set(token, std::forward<HashType>(hashValue));
             } else {                                // vector of hashes
                 if (leaf->m_container.has(token)) { // node exists
                     Hash::Node* node = &(leaf->m_container.getNode(token));
-                    if (!node->is<std::vector<Hash> >()) { // Node is not std::vector<Hash>
+                    if (!node->is<std::vector<Hash>>()) { // Node is not std::vector<Hash>
                         std::vector<Hash> hashes(index + 1);
                         hashes[index] = std::forward<HashType>(hashValue);
                         node->setValue(std::move(hashes)); // Force it to be one
                     } else {
-                        std::vector<Hash>& hashes = node->getValue<std::vector<Hash> >();
+                        std::vector<Hash>& hashes = node->getValue<std::vector<Hash>>();
                         if (index >= static_cast<int>(hashes.size())) hashes.resize(index + 1);
                         hashes[index] = std::forward<HashType>(hashValue);
                     }
@@ -1010,7 +1008,7 @@ namespace karabo {
             return getNode(path, separator).getValueAs<ValueType>();
         }
 
-        template <typename T, template <typename Elem, typename = std::allocator<Elem> > class Cont>
+        template <typename T, template <typename Elem, typename = std::allocator<Elem>> class Cont>
         inline Cont<T> Hash::getAs(std::string_view path, const char separator) const {
             return getNode(path, separator).getValueAs<T, Cont>();
         }
@@ -1023,7 +1021,7 @@ namespace karabo {
             if (index == -1) {
                 return getNode(tmp, separator).is<ValueType>();
             } else {
-                const std::vector<Hash>& hashVec = getNode(tmp, separator).getValue<std::vector<Hash> >();
+                const std::vector<Hash>& hashVec = getNode(tmp, separator).getValue<std::vector<Hash>>();
                 if (size_t(index) >= hashVec.size()) {
                     throw KARABO_PARAMETER_EXCEPTION("Index " + toString(index) + " out of range in '" +
                                                      std::string(path) + "'.");
@@ -1032,20 +1030,20 @@ namespace karabo {
             }
         }
 
-        template <template <class ValueType, class All = std::allocator<ValueType> > class container>
+        template <template <class ValueType, class All = std::allocator<ValueType>> class container>
         void Hash::getKeys(container<std::string>& result) const {
             for (const_iterator iter = m_container.begin(); iter != m_container.end(); ++iter) {
                 result.push_back(iter->getKey());
             }
         }
 
-        template <template <class ValueType, class All = std::allocator<ValueType> > class container>
+        template <template <class ValueType, class All = std::allocator<ValueType>> class container>
         void Hash::getPaths(container<std::string>& result, const char separator) const {
             if (this->empty()) return;
             getPaths(*this, result, "", separator, false);
         }
 
-        template <template <class ValueType, class All = std::allocator<ValueType> > class container>
+        template <template <class ValueType, class All = std::allocator<ValueType>> class container>
         void Hash::getDeepPaths(container<std::string>& result, const char separator) const {
             if (this->empty()) return;
             getPaths(*this, result, "", separator, true);
@@ -1071,7 +1069,7 @@ namespace karabo {
             return getNode(path, separator).getAttributeAs<T>(attribute);
         }
 
-        template <typename T, template <typename Elem, typename = std::allocator<Elem> > class Cont>
+        template <typename T, template <typename Elem, typename = std::allocator<Elem>> class Cont>
         Cont<T> Hash::getAttributeAs(std::string_view path, const ::std::string& attribute,
                                      const char separator) const {
             return getNode(path, separator).getAttributeAs<T, Cont>(attribute);
@@ -1123,8 +1121,8 @@ namespace karabo {
                 if (ele.is<Hash>()) {
                     partial_count += counter<ValueType>(ele.getValue<Hash>());
                 } else {
-                    if (ele.is<std::vector<Hash> >()) {
-                        const std::vector<Hash>& vect = ele.template getValue<std::vector<Hash> >();
+                    if (ele.is<std::vector<Hash>>()) {
+                        const std::vector<Hash>& vect = ele.template getValue<std::vector<Hash>>();
                         partial_count += (typeid(ValueType) == typeid(Hash)) ? vect.size() : 0;
                         for (size_t i = 0; i < vect.size(); ++i) {
                             partial_count += counter<ValueType>(vect[i]);
@@ -1164,7 +1162,7 @@ namespace karabo {
                     return node.getValue<Hash>().visit(visitor);
                     break;
                 case Types::VECTOR_HASH: {
-                    std::vector<karabo::data::Hash>& vect = node.getValue<std::vector<Hash> >();
+                    std::vector<karabo::data::Hash>& vect = node.getValue<std::vector<Hash>>();
                     for (size_t i = 0, size = vect.size(); i < size; ++i) {
                         if (!vect[i].visit(visitor)) return false;
                     }
@@ -1174,7 +1172,7 @@ namespace karabo {
                     return node.getValue<Hash>().visit(visitor);
                     break;
                 case Types::ReferenceType::VECTOR_HASH: {
-                    std::vector<karabo::data::Hash>& vect = node.getValue<std::vector<Hash> >();
+                    std::vector<karabo::data::Hash>& vect = node.getValue<std::vector<Hash>>();
                     for (size_t i = 0, size = vect.size(); i < size; ++i) {
                         if (!vect[i].visit(visitor)) return false;
                     }
@@ -1213,7 +1211,7 @@ namespace karabo {
                     res = node.getValue<Hash>().visit2(visitor);
                     break;
                 case Types::VECTOR_HASH: {
-                    std::vector<karabo::data::Hash>& vect = node.getValue<std::vector<Hash> >();
+                    std::vector<karabo::data::Hash>& vect = node.getValue<std::vector<Hash>>();
                     for (size_t i = 0, size = vect.size(); i < size; ++i) {
                         if (!(res = vect[i].visit2(visitor))) break;
                     }
@@ -1223,7 +1221,7 @@ namespace karabo {
                     res = node.getValue<Hash>().visit2(visitor);
                     break;
                 case Types::ReferenceType::VECTOR_HASH: {
-                    std::vector<karabo::data::Hash>& vect = node.getValue<std::vector<Hash> >();
+                    std::vector<karabo::data::Hash>& vect = node.getValue<std::vector<Hash>>();
                     for (size_t i = 0, size = vect.size(); i < size; ++i) {
                         if (!(res = vect[i].visit2(visitor))) break;
                     }

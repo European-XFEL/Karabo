@@ -1221,10 +1221,15 @@ void Hash_Test::testFind() {
 void Hash_Test::testAttributes() {
     {
         Hash h("a.b.a.b", 42);
+        h.setAttribute("a", "attrKey", "1, 2, 3, 4, 5");
         h.setAttribute("a", "attr1", "someValue");
+
+        CPPUNIT_ASSERT(h.getNode("a").getAttributes().is<std::string>("attrKey"sv));
+        CPPUNIT_ASSERT(h.getNode("a").getAttributes().is<std::string>("attr1"s));
         CPPUNIT_ASSERT(h.getAttribute<std::string>("a", "attr1") == "someValue");
 
         h.setAttribute("a", "attr2", 42);
+        CPPUNIT_ASSERT(h.getNode("a").getAttributes().is<int>("attr2"sv));
         CPPUNIT_ASSERT(h.getAttribute<std::string>("a", "attr1") == "someValue");
         CPPUNIT_ASSERT(h.getAttribute<int>("a", "attr2") == 42);
 
@@ -1236,12 +1241,16 @@ void Hash_Test::testAttributes() {
         CPPUNIT_ASSERT(h.getAttribute<bool>("a.b.a.b", "attr1") == true);
 
         const Hash::Attributes& attrs = h.getAttributes("a");
-        CPPUNIT_ASSERT(attrs.size() == 2);
+        CPPUNIT_ASSERT(attrs.size() == 3);
         CPPUNIT_ASSERT(attrs.get<std::string>("attr1") == "someValue");
         CPPUNIT_ASSERT(attrs.get<int>("attr2") == 43);
+        CPPUNIT_ASSERT(attrs.is<int>("attr2"));
 
         Hash::Attributes::Node node = attrs.getNode("attr2");
         CPPUNIT_ASSERT(node.getType() == Types::INT32);
+
+        CPPUNIT_ASSERT((h.getNode("a").getAttributes().getAs<int, std::vector>("attrKey"sv)[0]) == 1);
+        CPPUNIT_ASSERT((attrs.getAs<int, std::vector>("attrKey"sv)[2]) == 3);
     }
     {
         Hash h("a", 1);

@@ -50,7 +50,7 @@ namespace karabo {
         template <class KeyType, class MappedType>
         class OrderedMap {
             typedef std::list<MappedType*> ListType;
-            typedef std::map<KeyType, MappedType> MapType;
+            typedef std::map<KeyType, MappedType, std::less<>> MapType;
 
             ListType m_listNodes;
             MapType m_mapNodes;
@@ -253,23 +253,27 @@ namespace karabo {
              * @param key
              * @return
              */
-            inline map_iterator find(const KeyType& key);
+            template <typename KeyView>
+            inline map_iterator find(const KeyView& key);
 
-            inline const_map_iterator find(const KeyType& key) const;
+            template <typename KeyView>
+            inline const_map_iterator find(const KeyView& key) const;
 
             /**
              * Query if the element identified by key exists in the OrderedMap
              * @param key
              * @return
              */
-            inline bool has(const KeyType& key) const;
+            template <typename KeyView>
+            inline bool has(const KeyView& key) const;
 
             /**
              * Erase element identified by key if key exists.
              * @param key
              * @return number of elements erased, i.e. 0 or 1.
              */
-            inline size_t erase(const KeyType& key);
+            template <typename KeyView>
+            inline size_t erase(const KeyView& key);
 
             /**
              * Erase element identified by map_iterator.
@@ -301,14 +305,14 @@ namespace karabo {
              * @param value
              * @return
              */
-            template <class T>
-            inline Node& set(const KeyType& key, const T& value);
+            template <typename T, typename KeyView>
+            inline Node& set(const KeyView& key, const T& value);
 
-            template <class T>
-            inline Node& set(const KeyType& key, T& value);
+            template <typename T, typename KeyView>
+            inline Node& set(const KeyView& key, T& value);
 
-            template <class T>
-            inline Node& set(const KeyType& key, T&& value);
+            template <typename T, typename KeyView>
+            inline Node& set(const KeyView& key, T&& value);
 
             /**
              * Return the element identified by key. Raises an exception if
@@ -316,11 +320,11 @@ namespace karabo {
              * @param key
              * @return
              */
-            template <class T>
-            inline const T& get(const KeyType& key) const;
+            template <typename T, typename KeyView>
+            inline const T& get(const KeyView& key) const;
 
-            template <class T>
-            inline T& get(const KeyType& key);
+            template <typename T, typename KeyView>
+            inline T& get(const KeyView& key);
 
             /**
              * Fill the reference value with the element identified by key.
@@ -329,8 +333,8 @@ namespace karabo {
              * @param value
              * @return
              */
-            template <class T>
-            inline void get(const KeyType& key, T& value) const;
+            template <typename KeyView, class T>
+            inline void get(const KeyView& key, T& value) const;
 
             /**
              * Return the element for the key-associative iterator to the OrderedMap
@@ -351,37 +355,42 @@ namespace karabo {
              * @param key
              * @return
              */
-            template <typename ValueType>
-            inline ValueType getAs(const KeyType& key) const;
+            template <typename ValueType, typename KeyView>
+            inline ValueType getAs(const KeyView& key) const;
 
-            template <typename T, template <typename Elem, typename = std::allocator<Elem> > class Cont>
-            inline Cont<T> getAs(const KeyType& key) const;
+            template <typename T, template <typename Elem, typename = std::allocator<Elem>> class Cont,
+                      typename KeyView>
+            inline Cont<T> getAs(const KeyView& key) const;
 
             /**
              * Get the Element identified by key as a Node
              * @param key
              * @return
              */
-            inline const Node& getNode(const KeyType& key) const;
+            template <typename KeyView>
+            inline const Node& getNode(const KeyView& key) const;
 
-            inline Node& getNode(const KeyType& key);
+            template <typename KeyView>
+            inline Node& getNode(const KeyView& key);
 
             /**
              * Get the Element identified by key as a std::any value
              * @param key
              * @return
              */
-            inline const std::any& getAny(const KeyType& key) const;
+            template <typename KeyView>
+            inline const std::any& getAny(const KeyView& key) const;
 
-            inline std::any& getAny(const KeyType& key);
+            template <typename KeyView>
+            inline std::any& getAny(const KeyView& key);
 
             /**
              * Check if the element at key is of type T
              * @param key
              * @return
              */
-            template <typename T>
-            bool is(const KeyType& key) const;
+            template <typename T, typename KeyView>
+            bool is(const KeyView& key) const;
 
             /**
              * Check if the element the iterator refers to is of type T
@@ -396,7 +405,8 @@ namespace karabo {
              * @param key
              * @return
              */
-            bool is(const KeyType& key, const Types::ReferenceType& type) const;
+            template <typename KeyView>
+            bool is(const KeyView& key, const Types::ReferenceType& type) const;
         };
     } // namespace data
 } // namespace karabo
@@ -584,24 +594,28 @@ namespace karabo {
         }
 
         template <class KeyType, class MappedType>
+        template <typename KeyView>
         inline typename OrderedMap<KeyType, MappedType>::map_iterator OrderedMap<KeyType, MappedType>::find(
-              const KeyType& key) {
+              const KeyView& key) {
             return m_mapNodes.find(/*hash*/ (key));
         }
 
         template <class KeyType, class MappedType>
+        template <typename KeyView>
         inline typename OrderedMap<KeyType, MappedType>::const_map_iterator OrderedMap<KeyType, MappedType>::find(
-              const KeyType& key) const {
+              const KeyView& key) const {
             return m_mapNodes.find(/*hash*/ (key));
         }
 
         template <class KeyType, class MappedType>
-        inline bool OrderedMap<KeyType, MappedType>::has(const KeyType& key) const {
+        template <typename KeyView>
+        inline bool OrderedMap<KeyType, MappedType>::has(const KeyView& key) const {
             return find(key) != m_mapNodes.end();
         }
 
         template <class KeyType, class MappedType>
-        inline size_t OrderedMap<KeyType, MappedType>::erase(const KeyType& key) {
+        template <typename KeyView>
+        inline size_t OrderedMap<KeyType, MappedType>::erase(const KeyView& key) {
             map_iterator it;
 
             if ((it = find(key)) != m_mapNodes.end()) {
@@ -621,16 +635,17 @@ namespace karabo {
         }
 
         template <class KeyType, class MappedType>
-        template <class T>
-        inline MappedType& OrderedMap<KeyType, MappedType>::set(const KeyType& key, const T& value) {
+        template <class T, typename KeyView>
+        inline MappedType& OrderedMap<KeyType, MappedType>::set(const KeyView& key, const T& value) {
             // Take care - any code change is likely to be done to the overload with 'T&& value' argument as well.
             MappedType* nodePtr = nullptr;
             map_iterator it = find(key);
             if (it != m_mapNodes.end()) {
                 nodePtr = &(it->second);
             } else {
-                nodePtr = &(m_mapNodes[/*hash*/ (key)]);
-                nodePtr->setKey(key);
+                std::string keyAsStr(key);
+                nodePtr = &(m_mapNodes[/*hash*/ (keyAsStr)]);
+                nodePtr->setKey(std::move(keyAsStr));
                 m_listNodes.push_back(nodePtr);
             }
             nodePtr->setValue(value);
@@ -638,24 +653,25 @@ namespace karabo {
         }
 
         template <class KeyType, class MappedType>
-        template <class T>
-        inline MappedType& OrderedMap<KeyType, MappedType>::set(const KeyType& key, T& value) {
-            // This is an overload for T& to avoid to take the set(const KeyType& key, T&& value) code path
+        template <class T, typename KeyView>
+        inline MappedType& OrderedMap<KeyType, MappedType>::set(const KeyView& key, T& value) {
+            // This is an overload for T& to avoid to take the set(const KeyView& key, T&& value) code path
             // as seems to be needed to catch the correct overlaod for MappedType::setValue(MappedType&)
             return set(key, const_cast<const T&>(value));
         }
 
         template <class KeyType, class MappedType>
-        template <class T>
-        inline MappedType& OrderedMap<KeyType, MappedType>::set(const KeyType& key, T&& value) {
+        template <class T, typename KeyView>
+        inline MappedType& OrderedMap<KeyType, MappedType>::set(const KeyView& key, T&& value) {
             // Take care - any code change is likely to be done to the overload with 'const T& value' argument as well.
             MappedType* nodePtr = nullptr;
             map_iterator it = find(key);
             if (it != m_mapNodes.end()) {
                 nodePtr = &(it->second);
             } else {
-                nodePtr = &(m_mapNodes[/*hash*/ (key)]);
-                nodePtr->setKey(key);
+                std::string keyAsStr(key);
+                nodePtr = &(m_mapNodes[/*hash*/ (keyAsStr)]);
+                nodePtr->setKey(std::move(keyAsStr));
                 m_listNodes.push_back(nodePtr);
             }
             nodePtr->setValue(std::forward<T>(value));
@@ -663,64 +679,74 @@ namespace karabo {
         }
 
         template <class KeyType, class MappedType>
-        inline const MappedType& OrderedMap<KeyType, MappedType>::getNode(const KeyType& key) const {
+        template <typename KeyView>
+        inline const MappedType& OrderedMap<KeyType, MappedType>::getNode(const KeyView& key) const {
             const_map_iterator it;
             if ((it = find(key)) == m_mapNodes.end()) {
-                throw KARABO_PARAMETER_EXCEPTION("Key '" + key + "' does not exist");
+                std::string skey(key);
+                throw KARABO_PARAMETER_EXCEPTION("Key '" + skey + "' does not exist");
             }
             return it->second; //
         }
 
         template <class KeyType, class MappedType>
-        inline MappedType& OrderedMap<KeyType, MappedType>::getNode(const KeyType& key) {
+        template <typename KeyView>
+        inline MappedType& OrderedMap<KeyType, MappedType>::getNode(const KeyView& key) {
             map_iterator it;
             if ((it = find(key)) == m_mapNodes.end()) {
-                throw KARABO_PARAMETER_EXCEPTION("Key '" + key + "' does not exist");
+                std::string skey(key);
+                throw KARABO_PARAMETER_EXCEPTION("Key '" + skey + "' does not exist");
             }
             return it->second; //
         }
 
         template <class KeyType, class MappedType>
-        inline const std::any& OrderedMap<KeyType, MappedType>::getAny(const KeyType& key) const {
+        template <typename KeyView>
+        inline const std::any& OrderedMap<KeyType, MappedType>::getAny(const KeyView& key) const {
             const_map_iterator it;
             if ((it = find(key)) == m_mapNodes.end()) {
-                throw KARABO_PARAMETER_EXCEPTION("Key '" + key + "' does not exist");
+                std::string skey(key);
+                throw KARABO_PARAMETER_EXCEPTION("Key '" + skey + "' does not exist");
             }
             return it->second.getValueAsAny();
         }
 
         template <class KeyType, class MappedType>
-        inline std::any& OrderedMap<KeyType, MappedType>::getAny(const KeyType& key) {
+        template <typename KeyView>
+        inline std::any& OrderedMap<KeyType, MappedType>::getAny(const KeyView& key) {
             map_iterator it;
             if ((it = find(key)) == m_mapNodes.end()) {
-                throw KARABO_PARAMETER_EXCEPTION("Key '" + key + "' does not exist");
+                std::string skey(key);
+                throw KARABO_PARAMETER_EXCEPTION("Key '" + skey + "' does not exist");
             }
             return it->second.getValueAsAny();
         }
 
         template <class KeyType, class MappedType>
-        template <class T>
-        inline const T& OrderedMap<KeyType, MappedType>::get(const KeyType& key) const {
+        template <typename T, class KeyView>
+        inline const T& OrderedMap<KeyType, MappedType>::get(const KeyView& key) const {
             const_map_iterator it;
             if ((it = find(key)) == m_mapNodes.end()) {
-                throw KARABO_PARAMETER_EXCEPTION("Key '" + key + "' does not exist");
+                std::string skey(key);
+                throw KARABO_PARAMETER_EXCEPTION("Key '" + skey + "' does not exist");
             }
             return get<T>(it); // return it->second.template value<T > (); //
         }
 
         template <class KeyType, class MappedType>
-        template <class T>
-        inline T& OrderedMap<KeyType, MappedType>::get(const KeyType& key) {
+        template <typename T, class KeyView>
+        inline T& OrderedMap<KeyType, MappedType>::get(const KeyView& key) {
             map_iterator it;
             if ((it = find(key)) == m_mapNodes.end()) {
-                throw KARABO_PARAMETER_EXCEPTION("Key '" + key + "' does not exist");
+                std::string skey(key);
+                throw KARABO_PARAMETER_EXCEPTION("Key '" + skey + "' does not exist");
             }
             return get<T>(it);
         }
 
         template <class KeyType, class MappedType>
-        template <class T>
-        inline void OrderedMap<KeyType, MappedType>::get(const KeyType& key, T& value) const {
+        template <typename KeyView, class T>
+        inline void OrderedMap<KeyType, MappedType>::get(const KeyView& key, T& value) const {
             value = get<T>(key);
         }
 
@@ -737,31 +763,34 @@ namespace karabo {
         }
 
         template <class KeyType, class MappedType>
-        template <class ValueType>
-        inline ValueType OrderedMap<KeyType, MappedType>::getAs(const KeyType& key) const {
+        template <typename ValueType, class KeyView>
+        inline ValueType OrderedMap<KeyType, MappedType>::getAs(const KeyView& key) const {
             const_map_iterator it;
             if ((it = find(key)) == m_mapNodes.end()) {
-                throw KARABO_PARAMETER_EXCEPTION("Key '" + key + "' does not exist");
+                std::string skey(key);
+                throw KARABO_PARAMETER_EXCEPTION("Key '" + skey + "' does not exist");
             }
             return it->second.template getValueAs<ValueType>();
         }
 
         template <class KeyType, class MappedType>
-        template <typename T, template <typename Elem, typename = std::allocator<Elem> > class Cont>
-        inline Cont<T> OrderedMap<KeyType, MappedType>::getAs(const KeyType& key) const {
+        template <typename T, template <typename Elem, typename = std::allocator<Elem>> class Cont, typename KeyView>
+        inline Cont<T> OrderedMap<KeyType, MappedType>::getAs(const KeyView& key) const {
             const_map_iterator it;
             if ((it = find(key)) == m_mapNodes.end()) {
-                throw KARABO_PARAMETER_EXCEPTION("Key '" + key + "' does not exist");
+                std::string skey(key);
+                throw KARABO_PARAMETER_EXCEPTION("Key '" + skey + "' does not exist");
             }
             return it->second.template getValueAs<T, Cont>();
         }
 
         template <class KeyType, class MappedType>
-        template <typename T>
-        bool OrderedMap<KeyType, MappedType>::is(const KeyType& key) const {
+        template <typename T, typename KeyView>
+        bool OrderedMap<KeyType, MappedType>::is(const KeyView& key) const {
             const_map_iterator it;
             if ((it = find(key)) == m_mapNodes.end()) {
-                throw KARABO_PARAMETER_EXCEPTION("Key '" + key + "' does not exist");
+                std::string skey(key);
+                throw KARABO_PARAMETER_EXCEPTION("Key '" + skey + "' does not exist");
             }
             return is<T>(it);
         }
@@ -773,7 +802,8 @@ namespace karabo {
         }
 
         template <class KeyType, class MappedType>
-        bool OrderedMap<KeyType, MappedType>::is(const KeyType& key, const Types::ReferenceType& type) const {
+        template <typename KeyView>
+        bool OrderedMap<KeyType, MappedType>::is(const KeyView& key, const Types::ReferenceType& type) const {
             throw KARABO_NOT_SUPPORTED_EXCEPTION("getTypeAsId(key) == type");
             return true;
         }
