@@ -419,6 +419,26 @@ void Hash_Test::testGetSet() {
         // Hash::getAs, on the other hand, will do the implicit conversion.
         CPPUNIT_ASSERT(h.getAs<unsigned int>("uint32Prop") == UINT32_MAX);
     }
+
+    {
+        Hash h;
+        h.set("c1"sv, "char A"sv);
+        CPPUNIT_ASSERT(h.get<std::string>("c1"s) == "char A"s);
+        h.set("c2"sv, L"wchar_t ∀"sv);
+        CPPUNIT_ASSERT(h.get<std::wstring>("c2"s) == L"wchar_t ∀"s);
+        h.set("c3"sv, u8"char8_t ∆"sv);
+        CPPUNIT_ASSERT(h.get<std::u8string>("c3"s) == u8"char8_t ∆"s);
+        h.set("c4"sv, u"char16_t ∇"sv);
+        CPPUNIT_ASSERT(h.get<std::u16string>("c4"s) == u"char16_t ∇"s);
+        h.set("c5"sv, U"char32_t ∃"sv);
+        CPPUNIT_ASSERT(h.get<std::u32string>("c5"s) == U"char32_t ∃"s);
+        h.set("e1", "Tschüß"sv);
+        CPPUNIT_ASSERT(h.get<std::string>("e1"s) == "Tschüß"s);
+        h.set("e2", L"Moin, Moin"sv);
+        CPPUNIT_ASSERT(h.get<std::wstring>("e2"s) == L"Moin, Moin"s);
+        h.set("e3", u8"Привет"sv);
+        CPPUNIT_ASSERT(h.get<std::u8string>("e3"s) == u8"Привет"s);
+    }
 }
 
 /**
@@ -1257,6 +1277,20 @@ void Hash_Test::testAttributes() {
         bool b = true;
         h.getNode("a").setAttribute<int>("a", b);
         CPPUNIT_ASSERT(h.getNode("a").getType() == Types::INT32);
+    }
+    {
+        Hash h("a", 442);
+        Hash::Attributes& attrs = h.getAttributes("a");
+        attrs.set("a1", "char A"sv);
+        CPPUNIT_ASSERT(attrs.get<std::string>("a1") == "char A"s);
+        attrs.set("a2", L"wchar_t ∀"sv);
+        CPPUNIT_ASSERT(attrs.get<std::wstring>("a2"s) == L"wchar_t ∀"s);
+        attrs.set("a3", u8"char8_t ∆"sv);
+        CPPUNIT_ASSERT(attrs.get<std::u8string>("a3"s) == u8"char8_t ∆"s);
+        attrs.set("a4", u"char16_t ∇"sv);
+        CPPUNIT_ASSERT(attrs.get<std::u16string>("a4"s) == u"char16_t ∇"s);
+        attrs.set("a5", U"char32_t ∃"sv);
+        CPPUNIT_ASSERT(attrs.get<std::u32string>("a5"s) == U"char32_t ∃"s);
     }
 }
 
