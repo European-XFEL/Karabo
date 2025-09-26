@@ -235,6 +235,13 @@ namespace karabo {
             void setValue(char* value);
 
             /**
+             * Overload for setting std::string_view. Internally, the
+             * element will hold a std::string.
+             * @param value
+             */
+            void setValue(std::string_view value);
+
+            /**
              * Overload for setting wide char pointers (c-strings). Internally, the
              * element will hold a std::wstring.
              * @param value
@@ -247,6 +254,34 @@ namespace karabo {
              * @param value
              */
             void setValue(wchar_t* value);
+
+            /**
+             * Overload for setting std::wstring_view. Internally, the
+             * element will hold a std::wstring.
+             * @param value
+             */
+            void setValue(std::wstring_view value);
+
+            /**
+             * Overload for setting std::u8string_view. Internally, the
+             * element will hold a std::u8string.
+             * @param value
+             */
+            void setValue(std::u8string_view value);
+
+            /**
+             * Overload for setting std::u16string_view. Internally, the
+             * element will hold a std::u16string.
+             * @param value
+             */
+            void setValue(std::u16string_view value);
+
+            /**
+             * Overload for setting std::u32string_view. Internally, the
+             * element will hold a std::u32string.
+             * @param value
+             */
+            void setValue(std::u32string_view value);
 
             /**
              * Set a std::any value to the Element
@@ -685,6 +720,11 @@ namespace karabo {
         }
 
         template <class KeyType, class AttributeType>
+        inline void Element<KeyType, AttributeType>::setValue(std::string_view value) {
+            m_value = std::string(value);
+        }
+
+        template <class KeyType, class AttributeType>
         inline void Element<KeyType, AttributeType>::setValue(const wchar_t* value) {
             m_value = std::wstring(value);
         }
@@ -692,6 +732,26 @@ namespace karabo {
         template <class KeyType, class AttributeType>
         inline void Element<KeyType, AttributeType>::setValue(wchar_t* value) {
             m_value = std::wstring(value);
+        }
+
+        template <class KeyType, class AttributeType>
+        inline void Element<KeyType, AttributeType>::setValue(std::wstring_view value) {
+            m_value = std::wstring(value);
+        }
+
+        template <class KeyType, class AttributeType>
+        inline void Element<KeyType, AttributeType>::setValue(std::u8string_view value) {
+            m_value = std::u8string(value);
+        }
+
+        template <class KeyType, class AttributeType>
+        inline void Element<KeyType, AttributeType>::setValue(std::u16string_view value) {
+            m_value = std::u16string(value);
+        }
+
+        template <class KeyType, class AttributeType>
+        inline void Element<KeyType, AttributeType>::setValue(std::u32string_view value) {
+            m_value = std::u32string(value);
         }
 
         template <class KeyType, class AttributeType>
