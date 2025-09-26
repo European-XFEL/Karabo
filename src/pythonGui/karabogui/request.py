@@ -203,6 +203,7 @@ def get_scene_from_server(device_id, scene_name, project=None,
 
         with StringIO(data) as fp:
             scene = read_scene(fp)
+            scene.assure_svg_data()
             scene.modified = True
             scene.simple_name = f'{dev_id}|{name}'
             scene.reset_uuid()
@@ -216,7 +217,6 @@ def get_scene_from_server(device_id, scene_name, project=None,
             event_type = KaraboEvent.ShowSceneView
             project.scenes.append(scene)
 
-        # TODO: Repair scene fonts here! 2.11.0, to be removed 2.13?
         def visitor(model):
             substitute_font(model)
 
