@@ -714,8 +714,16 @@ def uninstall(args):
                   format(args.device, so_path))
             sys.exit(1)
     else:
-        # -q (quiet) to suppress sucess output - that is returned by run_cmd
-        ret = run_cmd(f'pip uninstall -q -y {args.device}')
+        # check for case mismatch
+        for dir_entry in os.scandir("plugins"):   # incl. directories
+            name = "plugins/" + dir_entry.name
+            if name.lower() == so_path.lower():
+                print(f"Could not remove {so_path}, but found {name}")
+                ret = 1
+                break
+        else:
+            # -q (quiet) to suppress sucess output returned by run_cmd
+            ret = run_cmd(f'pip uninstall -q -y {args.device}')
 
     # run_cmd returns output - empty output means success for 'rm' and 'pip'
     if not ret:
