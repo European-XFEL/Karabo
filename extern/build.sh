@@ -113,6 +113,19 @@ install_python() {
     safeRunCommandQuiet "conan profile detect --force"
 
     add_conan_mirrors
+    # Use a source back-up repository maintained by jfrog (the company behind Conan) to act as a plan B
+    # when the URL for the sources of third-party dependencies (not kept in the conan recipe) points to
+    # a host/service that is not available (this has been happening with a high frequency with ftp.gnu.org).
+    # More details about the issue and this solution at
+    # https://github.com/conan-io/conan-center-index/issues/27830#issuecomment-3183382568
+    conan_source_backup_url=$(conan config show core.sources:download_urls)
+    if [[ -z "$conan_source_backup_url" ]]; then
+        echo 'core.sources:download_urls=["origin", "https://c3i.jfrog.io/artifactory/conan-center-backup-sources"]' >> `conan config home`/global.conf
+        echo "Conan: added jfrog source back-up repository for third-party dependencies."
+    else
+        echo "Conan: using source back-up repository for third-party dependencies: $(echo $conan_source_backup_url | awk '{print $2 $3}')"
+    fi
+
     # configure prefix paths
     local folder_opts="--deployer=karabo_deployer --deployer-folder=$INSTALL_PREFIX --output-folder=$INSTALL_PREFIX/conan_toolchain"
     # build python if not found in conan cache
