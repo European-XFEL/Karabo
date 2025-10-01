@@ -1,7 +1,7 @@
 # -*- mode: python ; coding: utf-8 -*-
 """
-This stores the specifications to  create bundle for karabo gui, alarm panel,
-karabo cinema and karabo theatre.
+This stores the specifications to  create bundle for karabo gui, karabo cinema and
+karabo theatre.
 
 To create bundle,
  - Activate karabogui conda environment
@@ -56,7 +56,6 @@ def get_karabo_gui_dir():
 KARABO_GUI_DIR = Path(get_karabo_gui_dir())
 
 KARABO_GUI_SCRIPT = Path(KARABO_GUI_DIR, 'programs/gui_runner.py')
-ALARM_GUI_SCRIPT = Path(KARABO_GUI_DIR, 'programs/alarm_runner.py')
 KARABO_CINEMA_SCRIPT = Path(KARABO_GUI_DIR, 'programs/cinema.py')
 KARABO_THEATRE_SCRIPT = Path(KARABO_GUI_DIR, 'programs/theatre.py')
 
@@ -136,7 +135,6 @@ def write_gui_extensions_hook(hook_ep_packages):
 
 # Other modules that are imported on runtime.
 hiddenimports = get_controllers_modules() + [
-    'karabogui.alarms.api',
     'karabogui.singletons.db_connection',
     'karabogui.singletons.manager',
     'karabogui.singletons.configuration',
@@ -178,22 +176,6 @@ karabo_gui = Analysis(
     noarchive=False,
 )
 
-alarm_gui = Analysis(
-    [ALARM_GUI_SCRIPT],
-    pathex=[],
-    binaries=[],
-    datas=[],
-    hiddenimports=hiddenimports,
-    hookspath=[],
-    hooksconfig={},
-    runtime_hooks=[],
-    excludes=modules_to_exclude,
-    win_no_prefer_redirects=False,
-    win_private_assemblies=False,
-    cipher=block_cipher,
-    noarchive=False,
-)
-
 karabo_cinema = Analysis(
     [KARABO_CINEMA_SCRIPT],
     pathex=[],
@@ -227,7 +209,6 @@ karabo_theatre = Analysis(
 )
 MERGE(
     (karabo_gui, 'gui_runner', 'karabo-gui'),
-    (alarm_gui, 'alarm_runner', 'alarm-gui'),
     (karabo_cinema, 'cinema', 'karabo-cinema'),
     (karabo_theatre, 'theatre', 'karabo-theatre'),
 )
@@ -263,37 +244,6 @@ karabo_gui_coll = COLLECT(
     upx=True,
     upx_exclude=[],
     name='karabo-gui',
-)
-
-
-alarm_gui_pyz = PYZ(alarm_gui.pure, alarm_gui.zipped_data, cipher=block_cipher)
-
-alarm_gui_exe = EXE(
-    alarm_gui_pyz,
-    alarm_gui.scripts,
-    [],
-    exclude_binaries=True,
-    name='alarm-gui',
-    debug=False,
-    bootloader_ignore_signals=False,
-    strip=False,
-    upx=True,
-    console=True,
-    disable_windowed_traceback=False,
-    argv_emulation=False,
-    target_arch=None,
-    codesign_identity=None,
-    entitlements_file=None,
-)
-alarm_gui_coll = COLLECT(
-    alarm_gui_exe,
-    alarm_gui.binaries,
-    alarm_gui.zipfiles,
-    alarm_gui.datas,
-    strip=False,
-    upx=True,
-    upx_exclude=[],
-    name='alarm-gui',
 )
 
 karabo_cinema_pyz = PYZ(karabo_cinema.pure,
@@ -362,7 +312,7 @@ karabo_theatre_coll = COLLECT(
 
 
 karabo_gui_bundle_dir = Path('dist', 'karabo-gui').resolve()
-for file_name in ('alarm-gui', 'karabo-cinema', 'karabo-theatre'):
+for file_name in ('karabo-cinema', 'karabo-theatre'):
 
     exec_file = Path('dist', file_name, file_name).resolve()
     if exec_file.is_file():
