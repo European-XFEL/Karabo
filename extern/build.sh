@@ -69,12 +69,53 @@ add_conan_mirrors() {
     for mirror in "${!CONAN_MIRRORS[@]}"; do
         mirror_url="${CONAN_MIRRORS[$mirror]}"
         if conan remote list | grep -q "$mirror_url"; then
-            echo "Remote $mirror is already added."
+            echo "Conan: remote $mirror is already added."
         else
-            echo "Adding remote $mirror with URL $mirror_url"
+            echo "Conan: adding remote $mirror with URL $mirror_url"
             safeRunCommandQuiet conan remote add "$mirror" "$mirror_url"
         fi
     done
+}
+
+set_up_conan() {
+
+    add_conan_mirrors
+
+    # Use a source back-up repository maintained by jfrog (the company behind Conan) to act as a plan B
+    # when the URL for the sources of third-party dependencies (not kept in the conan recipe) points to
+    # a host/service that is not available (this has been happening with a high frequency with ftp.gnu.org).
+    # More details about the issue and this solution at
+    # https://github.com/conan-io/conan-center-index/issues/27830#issuecomment-3183382568
+    conan_source_backup_url=$(conan config show core.sources:download_urls)
+    if [[ -z "$conan_source_backup_url" ]]; then
+        echo 'core.sources:download_urls=["origin", "https://c3i.jfrog.io/artifactory/conan-center-backup-sources"]' >> `conan config home`/global.conf
+        echo "Conan: added jfrog source back-up repository for third-party dependencies."
+    else
+        echo "Conan: using source back-up repository for third-party dependencies: $(echo $conan_source_backup_url | awk '{print $2 $3}')"
+    fi
+
+    # Specify the timeout used for network requests originated by conan
+    conan_network_timeout=$(conan config show core.net.http:timeout)
+    if [[ -z "$conan_network_timeout" ]]; then
+        echo 'core.net.http:timeout=7' >> `conan config home`/global.conf
+        echo "Conan: timeout for network requests set to 7 seconds."
+    else
+        echo "Conan: timeout for network requests (seconds): $(echo $conan_network_timeout | awk '{print $2}')"
+    fi
+
+    # Make sure that the new URL for Conan Center remote is used. The previous one, center.conan.io,
+    # stopped receiving updates since November, 4th, 2024.
+    # Full details at:
+    # https://blog.conan.io/2024/09/30/Conan-Center-will-stop-receiving-updates-for-Conan-1.html
+    # NOTE: The conditional update of the Conan Center remote in the next lines can be removed if
+    #       all installations are guaranteed to be using at least conan 2.9.2
+    conan_center_url=$(conan remote list | grep "conancenter" | awk '{print $2}')
+    # If the URL is outdated, update it
+    if [[ "$conan_center_url" == "https://center.conan.io" ]]; then
+        safeRunCommandQuiet "conan remote update conancenter --url https://center2.conan.io"
+        echo "Conan: conancenter URL updated from https://center.conan.io to https://center2.conan.io."
+    fi
+
 }
 
 safeRunCommand() {
@@ -112,20 +153,6 @@ install_python() {
     # create default build profile
     safeRunCommandQuiet "conan profile detect --force"
 
-    add_conan_mirrors
-    # Use a source back-up repository maintained by jfrog (the company behind Conan) to act as a plan B
-    # when the URL for the sources of third-party dependencies (not kept in the conan recipe) points to
-    # a host/service that is not available (this has been happening with a high frequency with ftp.gnu.org).
-    # More details about the issue and this solution at
-    # https://github.com/conan-io/conan-center-index/issues/27830#issuecomment-3183382568
-    conan_source_backup_url=$(conan config show core.sources:download_urls)
-    if [[ -z "$conan_source_backup_url" ]]; then
-        echo 'core.sources:download_urls=["origin", "https://c3i.jfrog.io/artifactory/conan-center-backup-sources"]' >> `conan config home`/global.conf
-        echo "Conan: added jfrog source back-up repository for third-party dependencies."
-    else
-        echo "Conan: using source back-up repository for third-party dependencies: $(echo $conan_source_backup_url | awk '{print $2 $3}')"
-    fi
-
     # configure prefix paths
     local folder_opts="--deployer=karabo_deployer --deployer-folder=$INSTALL_PREFIX --output-folder=$INSTALL_PREFIX/conan_toolchain"
     # build python if not found in conan cache
@@ -144,18 +171,6 @@ install_python() {
         # same Ubuntu 20 system during a manual installation of cpython from source.
         # Details at https://git.xfel.eu/Karabo/Framework/-/merge_requests/8551#note_467905
         export POSIXSHMEM_LIBS="-lrt"
-    fi
-
-    # Make sure that the new URL for Conan Center remote is used. The previous one, center.conan.io,
-    # stopped receiving updates since November, 4th, 2024.
-    # Full details at:
-    # https://blog.conan.io/2024/09/30/Conan-Center-will-stop-receiving-updates-for-Conan-1.html
-    # NOTE: The conditional update of the Conan Center remote in the next lines can be removed if
-    #       all installations are guaranteed to be using at least conan 2.9.2
-    conan_center_url=$(conan remote list | grep "conancenter" | awk '{print $2}')
-    # If the URL is outdated, update it
-    if [[ "$conan_center_url" == "https://center.conan.io" ]]; then
-        safeRunCommandQuiet "conan remote update conancenter --url https://center2.conan.io"
     fi
 
     safeRunCommandQuiet "conan install conanfile-bootstrap.txt $folder_opts $build_opts $profile_opts"
@@ -289,6 +304,8 @@ else
    # Make aware of which conan is used
    conan --version
 fi
+
+set_up_conan
 
 # Some dependencies, like libpng specify minimum required versions of cmake to be older than
 # "3.5" - starting with cmake "4.X", the minimum cmake version must be at least "3.5".
