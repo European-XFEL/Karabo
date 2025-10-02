@@ -165,6 +165,40 @@ in the CMake Project Outline view of VSCode:
 .. image:: img/cmake_project_outline.png
 
 
+1.6. Configure VSCode for a C++ Device Package Workspace
+-------------------------------------------------------------
+
+For C++ code, you want VSCode to know the Karabo framework source code so that
+it can guide you while editing the device code.
+
+To do so, go to an `#include` directive for a Karabo header. It should be
+marked as unknown by being underlined by red wiggles. A yellow light bulb
+symbol should appear left of line number. Click on it and select
+'Edit "includePath" setting'.
+The C/C++ extension configuration appears. Scroll down to the 'Include path'
+section and add the two lines "${KARABO}/include/**"
+and "${KARABO}/extern/include/**".
+(You could also directly edit the file `.vscode/c_cpp_properties.json`.)
+
+It may take a while until all is properly indexed, but now the red wiggles
+should be gone, a click on the include line should open the Karabo header and
+VSCode will provide suggestions for member function completion and their
+arguments, including function documentation.
+
+If your package depends on other packages, you should be able to add those
+include paths in the same way.
+
+1.7. Configure VSCode for a Python Device Package Workspace
+-------------------------------------------------------------
+
+You should tell VSCode your Python interpreter so that it can find the proper
+dependencies with their documentation etc.
+
+To do so, you can find the Python interpreter that VSCode currently uses (e.g.
+"Python 3.12.3") in the lower bar of the VSCode window.
+Click on it and select "Browse" in the menu that popped up in the top of the
+window. Select `${KARABO}/extern/bin/python`.
+
 2. Using your VSCode Environment
 ================================
 
