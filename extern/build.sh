@@ -323,4 +323,4 @@ fi
 # install framework build dependencies via conan
 install_from_deps
 
-echo "### All external dependencies successfully installed/already present. ###"
+echo "### All external dependencies successfully installed/already present. ($(date))###"

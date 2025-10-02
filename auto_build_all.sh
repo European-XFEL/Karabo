@@ -415,7 +415,7 @@ else
     GEN_CODE_COVERAGE="0"
 fi
 
-echo "### Now building and packaging Karabo... ###";
+echo "### Now building and packaging Karabo... ($(date))###";
 
 mkdir -p $EXTERN_DEPS_BASE_DIR
 # Uses the specified number of jobs for building any dependency whose build is
@@ -511,7 +511,7 @@ if [ ! -z "$KARABO_CI_QUIET" ]; then
     unset KARABO_CI_QUIET
 fi
 
-echo "### Successfully finished building of karaboFramework ###"
+echo "### Successfully finished building of karaboFramework ($date)) ###"
 
 if [ "$GEN_CODE_COVERAGE" = "1" ]; then
     echo
