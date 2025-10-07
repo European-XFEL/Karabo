@@ -29,7 +29,7 @@ void karabo::data::checkPropertyPath(const std::string& name, bool strict) {
     }
     // '/' is special: only allowed for backward compatibility in metro devices of DA group
     constexpr char allowedCharacters[] =
-          ".0123456789_/" // In 3.1.X move '/' to tolerated characters?
+          ".0123456789_"
           "abcdefghijklmnopqrstuvwxyz"
           "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     assert(allowedCharacters[0] == karabo::data::Hash::k_defaultSep);
@@ -42,8 +42,12 @@ void karabo::data::checkPropertyPath(const std::string& name, bool strict) {
         }
     } else {
         // If requested to be not strict, we tolerate some characters.
+        // '@': Used by DoocsDevice to replace the '.' in DOOCS and by DoocsMirror to separate location and property
+        // '/': Used in data analysis devices (may cause trouble with influx history queries)
+        // '#()[]+-:': Allowed by DOOCS, but so far we tolerate only '-'
+        //   See allowed_chars_for_address_parts in https://ttfinfo.desy.de/doxygen/serverlib/html/namespacedoocs.html
         // Note we must not tolerate ',', '=', or space for sake of the influxDB line protocol!
-        const std::string toleratedCharacters("@-");
+        const std::string toleratedCharacters("@-/");
         const std::string allAllowedCharacters(allowedCharacters + toleratedCharacters);
         const size_t pos = name.find_first_not_of(allAllowedCharacters);
         if (pos != std::string::npos) {

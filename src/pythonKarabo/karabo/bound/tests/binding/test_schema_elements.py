@@ -1063,14 +1063,7 @@ def test_invalidNodes():
         with pytest.raises(RuntimeError):
             INT32_ELEMENT(schema).key("node." + invalid)
 
-    # No '/' as first, neither
-    invalid = "/invalid"
-    with pytest.raises(RuntimeError):
-        INT32_ELEMENT(schema).key(invalid)
-    with pytest.raises(RuntimeError):
-        INT32_ELEMENT(schema).key("node." + invalid)
-
-    allValidCharacters = ("abcdefghijklmnopqrstuvwxyz/"  # tolerate '/'
+    allValidCharacters = ("abcdefghijklmnopqrstuvwxyz"
                           "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                           "0123456789_")
     INT32_ELEMENT(schema).key(allValidCharacters).readOnly().commit()
@@ -1095,6 +1088,17 @@ def test_invalidNodes():
         with pytest.raises(RuntimeError,
                            match="illegal character at position 5"):
             ELEMENT(schema).key(tolerated)
+
+        # The '/' can be tolerated, but not as first
+        tolerated = "valid/one"
+        ELEMENT(schema).key(tolerated, False)
+        with pytest.raises(RuntimeError,
+                           match="illegal character at position 5"):
+            ELEMENT(schema).key(tolerated)
+
+        with pytest.raises(RuntimeError,
+                           match="Starts with a digit or '/'"):
+            ELEMENT(schema).key("/invalid", False)
 
         invalid = "totally&invalid"
         with pytest.raises(RuntimeError,
