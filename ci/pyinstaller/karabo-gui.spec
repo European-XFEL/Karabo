@@ -1,40 +1,20 @@
 # -*- mode: python ; coding: utf-8 -*-
 """
-This stores the specifications to  create bundle for karabo gui, karabo cinema and
-karabo theatre.
+This stores the specifications to  create bundle for karabo gui, karabo-cinema,
+karabo-concert and karabo-theatre.
 
 To create bundle,
  - Activate karabogui conda environment
- - Set 'KARABO_GUI_SRC' env variable to your `src/pythonGui/karabogui`
+ - Set 'KARABO_GUI_SRC' env variable to your `Framework/src/pythonGui/karabogui`
+ - Set 'KARABO_GUI_EXTENSIONS_SRC' env variable to your `guiextensions/src/extensions`
  - Run 'pyinstaller karabo-gui.spec'
 """
 import importlib
 import os
 import shutil
-from collections import defaultdict
 from pathlib import Path
 
-import pkg_resources
-
-HOOK_FILE_CONTENT = """# hookup file to define gui_extensions entry points.
-ep_packages = {}
-
-if ep_packages:
-    import pkg_resources
-    default_iter_entry_points = pkg_resources.iter_entry_points
-
-    def hook_iter_entry_points(group, name=None):
-        if group in ep_packages and ep_packages[group]:
-            eps = ep_packages[group]
-            for ep in eps:
-                parsedEp = pkg_resources.EntryPoint.parse(ep)
-                parsedEp.dist = pkg_resources.Distribution()
-                yield parsedEp
-        else:
-            return default_iter_entry_points(group, name)
-
-    pkg_resources.iter_entry_points = hook_iter_entry_points
-"""
+from PyInstaller.utils.hooks import copy_metadata
 
 
 def get_karabo_gui_dir():
@@ -57,7 +37,14 @@ KARABO_GUI_DIR = Path(get_karabo_gui_dir())
 
 KARABO_GUI_SCRIPT = Path(KARABO_GUI_DIR, 'programs/gui_runner.py')
 KARABO_CINEMA_SCRIPT = Path(KARABO_GUI_DIR, 'programs/cinema.py')
+KARABO_CONCERT_SCRIPT = Path(KARABO_GUI_DIR, 'programs/concert.py')
 KARABO_THEATRE_SCRIPT = Path(KARABO_GUI_DIR, 'programs/theatre.py')
+
+gui_extensions_path = os.environ.get('KARABO_GUI_EXTENSIONS_SRC')
+KARABO_GUI_EXTENSIONS_DIR = (Path(gui_extensions_path).resolve() if
+                           gui_extensions_path else None)
+SOURCES = {"karabogui": KARABO_GUI_DIR,
+           "extensions": KARABO_GUI_EXTENSIONS_DIR}
 
 
 def get_ui_icon_data():
@@ -70,14 +57,17 @@ def get_ui_icon_data():
       "karabogui/widgets/ui/")
     """
     data = []
-    extensions = (".ui", ".png", ".svg", ".gif")
-    for file_name in KARABO_GUI_DIR.rglob("*.*"):
-        extension = file_name.suffix
-        if extension not in extensions:
+    file_extensions = (".ui", ".png", ".svg", ".gif")
+    for name, source_dir in SOURCES.items():
+        if source_dir is None:
             continue
-        dest_dir = str(file_name.parent).replace(str(KARABO_GUI_DIR), "")
-        dest = Path(f"karabogui{dest_dir}")
-        data.append((f"{file_name}", f"{dest}"))
+        for file_name in source_dir.rglob("*.*"):
+            file_extension = file_name.suffix
+            if file_extension not in file_extensions:
+                continue
+            dest_dir = str(file_name.parent).replace(str(source_dir), "")
+            dest = Path(f"{name}{dest_dir}")
+            data.append((f"{file_name}", f"{dest}"))
     return data
 
 
@@ -103,34 +93,14 @@ def get_controllers_modules():
 
 def get_gui_extensions():
     """
-    Get the modules in the gui_extensions and write a hook file to import them
-    in the bundle.
+    Get the modules in the gui_extensions.
 
     Return the list of modules in the gui_extensions
     """
-    gui_extensions = []
-    hook_ep_packages = defaultdict(list)
-
-    ep_package = "karabogui.gui_extensions"
-
-    for ep in pkg_resources.iter_entry_points(ep_package):
-        package_entry_point = hook_ep_packages[ep_package]
-        package_entry_point.append(f"{ep.name} = {ep.module_name}")
-        gui_extensions.append(ep.module_name)
-    write_gui_extensions_hook(hook_ep_packages)
+    entry_point_group = "karabogui.gui_extensions"
+    gui_extensions = [ep.value for ep in
+                      importlib.metadata.entry_points(group=entry_point_group)]
     return gui_extensions
-
-
-def write_gui_extensions_hook(hook_ep_packages):
-    """
-    Write a hook up file for modules in gui_extension as they are imported
-    as entry points.
-    """
-
-    hook_file = Path("extensions_hook/pkg_resources_hook.py")
-    hook_file.parent.mkdir(exist_ok=True)
-    with hook_file.open("w") as f:
-        f.write(HOOK_FILE_CONTENT.format(dict(hook_ep_packages)))
 
 
 # Other modules that are imported on runtime.
@@ -150,9 +120,6 @@ modules_to_exclude = ['pytest', 'pytest-cov', 'pytest-mock', 'pytest-qt',
                       'pytest-subtests', 'conda-package-handling', 'conda',
                       'flake8', 'isort', 'pre-commit']
 
-
-block_cipher = None
-
 karabo_gui = Analysis(
     [KARABO_GUI_SCRIPT],
     pathex=[],
@@ -164,15 +131,13 @@ karabo_gui = Analysis(
          'karabogui/controllers/display'),
         (f'{KARABO_GUI_DIR}/controllers/edit', 'karabogui/controllers/edit'),
         (f'{KARABO_GUI_DIR}/fonts', 'karabogui/fonts'),
-    ],
+    ] + copy_metadata('GUIExtensions'),
     hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},
-    runtime_hooks=["./extensions_hook/pkg_resources_hook.py"],
     excludes=modules_to_exclude,
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
-    cipher=block_cipher,
     noarchive=False,
 )
 
@@ -188,9 +153,23 @@ karabo_cinema = Analysis(
     excludes=modules_to_exclude,
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
-    cipher=block_cipher,
     noarchive=False,
 )
+
+karabo_concert = Analysis(
+    [KARABO_CONCERT_SCRIPT],
+    pathex=[],
+    binaries=[],
+    datas=[],
+    hiddenimports=hiddenimports,
+    hookspath=[],
+    hooksconfig={},
+    runtime_hooks=[],
+    excludes=modules_to_exclude,
+    win_no_prefer_redirects=False,
+    win_private_assemblies=False,
+    noarchive=False,
+    )
 
 karabo_theatre = Analysis(
     [KARABO_THEATRE_SCRIPT],
@@ -204,19 +183,18 @@ karabo_theatre = Analysis(
     excludes=modules_to_exclude,
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
-    cipher=block_cipher,
     noarchive=False,
 )
 MERGE(
     (karabo_gui, 'gui_runner', 'karabo-gui'),
     (karabo_cinema, 'cinema', 'karabo-cinema'),
+    (karabo_concert, 'concert', 'karabo-concert'),
     (karabo_theatre, 'theatre', 'karabo-theatre'),
 )
 
 
 karabo_gui_pyz = PYZ(karabo_gui.pure,
-                     karabo_gui.zipped_data,
-                     cipher=block_cipher)
+                     karabo_gui.zipped_data,)
 
 karabo_gui_exe = EXE(
     karabo_gui_pyz,
@@ -247,8 +225,7 @@ karabo_gui_coll = COLLECT(
 )
 
 karabo_cinema_pyz = PYZ(karabo_cinema.pure,
-                        karabo_cinema.zipped_data,
-                        cipher=block_cipher)
+                        karabo_cinema.zipped_data,)
 
 karabo_cinema_exe = EXE(
     karabo_cinema_pyz,
@@ -278,9 +255,39 @@ karabo_cinema_coll = COLLECT(
     name='karabo-cinema',
 )
 
+karabo_concert_pyz = PYZ(karabo_concert.pure,
+                         karabo_concert.zipped_data,)
+
+karabo_concert_exe = EXE(
+    karabo_concert_pyz,
+    karabo_concert.scripts,
+    [],
+    exclude_binaries=True,
+    name='karabo-concert',
+    debug=False,
+    bootloader_ignore_signals=False,
+    strip=False,
+    upx=True,
+    console=True,
+    disable_windowed_traceback=False,
+    argv_emulation=False,
+    target_arch=None,
+    codesign_identity=None,
+    entitlements_file=None,
+)
+karabo_concert_coll = COLLECT(
+    karabo_concert_exe,
+    karabo_concert.binaries,
+    karabo_concert.zipfiles,
+    karabo_concert.datas,
+    strip=False,
+    upx=True,
+    upx_exclude=[],
+    name='karabo-concert',
+)
+
 karabo_theatre_pyz = PYZ(karabo_theatre.pure,
-                         karabo_theatre.zipped_data,
-                         cipher=block_cipher)
+                         karabo_theatre.zipped_data,)
 
 karabo_theatre_exe = EXE(
     karabo_theatre_pyz,
@@ -312,8 +319,8 @@ karabo_theatre_coll = COLLECT(
 
 
 karabo_gui_bundle_dir = Path('dist', 'karabo-gui').resolve()
-for file_name in ('karabo-cinema', 'karabo-theatre'):
 
+for file_name in ('karabo-cinema', 'karabo-concert', 'karabo-theatre'):
     exec_file = Path('dist', file_name, file_name).resolve()
     if exec_file.is_file():
         destination = Path(karabo_gui_bundle_dir, exec_file.name)
