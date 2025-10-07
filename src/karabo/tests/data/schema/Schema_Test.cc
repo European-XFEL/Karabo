@@ -1398,14 +1398,8 @@ void Schema_Test::testInvalidNodes() {
         CPPUNIT_ASSERT_THROW_MESSAGE(invalid, INT8_ELEMENT(schema).key("node." + invalid),
                                      karabo::data::ParameterException);
     }
-    // No '/' as first, either
-    invalid = "/invalid";
-    CPPUNIT_ASSERT_THROW_MESSAGE(invalid, INT8_ELEMENT(schema).key(invalid), karabo::data::ParameterException);
-    CPPUNIT_ASSERT_THROW_MESSAGE(invalid, INT8_ELEMENT(schema).key("node." + invalid),
-                                 karabo::data::ParameterException);
-
     constexpr char validCharacters[] =
-          "abcdefghijklmnopqrstuvwxyz/" // tolerate `/` (might require strict=false in future)
+          "abcdefghijklmnopqrstuvwxyz"
           "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
           "0123456789_";
     CPPUNIT_ASSERT_NO_THROW(INT8_ELEMENT(schema).key(validCharacters).readOnly().commit());
@@ -1421,6 +1415,13 @@ void Schema_Test::testInvalidNodes() {
     tolerated.back() = '-';
     CPPUNIT_ASSERT_NO_THROW(INT8_ELEMENT(schema).key(tolerated, false).readOnly().commit());
     CPPUNIT_ASSERT_THROW(INT8_ELEMENT(schema).key(tolerated), karabo::data::ParameterException);
+
+    // '/' is tolerated as well - but not as first
+    tolerated.back() = '/';
+    CPPUNIT_ASSERT_NO_THROW(INT8_ELEMENT(schema).key(tolerated, false).readOnly().commit());
+    CPPUNIT_ASSERT_THROW(INT8_ELEMENT(schema).key(tolerated), karabo::data::ParameterException);
+    tolerated.front() = '/';
+    CPPUNIT_ASSERT_THROW(INT8_ELEMENT(schema).key(tolerated, false), karabo::data::ParameterException);
 }
 
 
