@@ -24,9 +24,9 @@ import natsort
 from qtpy.QtWidgets import QAction, QDialog, QMenu, QMessageBox
 from traits.api import Bool, Instance, Property, on_trait_change
 
-import karabogui.icons as icons
 from karabo.common.api import walk_traits_object
 from karabo.common.project.api import DeviceServerModel
+from karabogui import icons, messagebox
 from karabogui.access import (
     AccessRole, access_role_allowed, get_access_level_for_role)
 from karabogui.binding.api import ProxyStatus
@@ -78,6 +78,7 @@ class DeviceServerController(BaseProjectGroupController):
         menu.setToolTipsVisible(True)
         edit_action = QAction(icons.edit, 'Edit', menu)
         edit_action.triggered.connect(partial(self._edit_server,
+                                              project_controller,
                                               parent=parent))
         edit_action.setEnabled(project_allowed)
         if not project_allowed:
@@ -303,12 +304,20 @@ class DeviceServerController(BaseProjectGroupController):
                 del server.devices[:]
                 project.servers.remove(server)
 
-    def _edit_server(self, parent=None):
+    def _edit_server(self, project_controller, parent=None):
         dialog = ServerHandleDialog(self.model, parent=parent)
         move_to_cursor(dialog)
         result = dialog.exec()
         if result == QDialog.Accepted:
-            self.model.server_id = dialog.server_id
+            existing = {server.server_id for server in
+                        project_controller.model.servers}
+            server_id = dialog.server_id
+            if server_id in existing:
+                msg = (f'The server with the server ID \"<b'
+                       f'>{server_id}</b>\" already exists.')
+                messagebox.show_warning(msg, title='Server already exists')
+                return
+            self.model.server_id = server_id
 
     def _shutdown_server(self, parent=None):
         server = self.model
