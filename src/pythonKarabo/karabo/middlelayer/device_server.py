@@ -22,6 +22,7 @@ import traceback
 from asyncio import (
     all_tasks, gather, get_event_loop, set_event_loop, sleep, wait_for)
 from collections import ChainMap
+from contextlib import suppress
 from enum import Enum
 from importlib.metadata import entry_points
 from json import loads
@@ -327,7 +328,9 @@ class MiddleLayerDeviceServer(HeartBeatMixin, SignalSlotable):
                 try:
                     loop.run_forever()
                 except KeyboardInterrupt:
-                    pass
+                    with suppress(BaseException):
+                        loop.run_until_complete(
+                            wait_for(server.slotKillServer(), timeout=10))
                 finally:
                     # Close the loop with the broker connection
                     loop.close()
