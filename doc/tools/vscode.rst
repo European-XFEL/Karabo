@@ -176,8 +176,8 @@ marked as unknown by being underlined by red wiggles. A yellow light bulb
 symbol should appear left of line number. Click on it and select
 'Edit "includePath" setting'.
 The C/C++ extension configuration appears. Scroll down to the 'Include path'
-section and add the two lines "${KARABO}/include/**"
-and "${KARABO}/extern/include/**".
+section and add the two lines "${KARABO}/include/\*\*"
+and "${KARABO}/extern/include/\*\*".
 (You could also directly edit the file `.vscode/c_cpp_properties.json`.)
 
 It may take a while until all is properly indexed, but now the red wiggles
