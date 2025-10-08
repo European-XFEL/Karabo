@@ -312,7 +312,9 @@ class MiddleLayerDeviceServer(HeartBeatMixin, SignalSlotable):
             server.is_server = True
             try:
                 loop.run_until_complete(
-                    server.startInstance(broadcast=server.broadcast.value))
+                    # Every instance must be discoverable
+                    server.startInstance(
+                        broadcast=server.broadcast.value, discover=True))
             except BaseException:
                 # ServerId is already in use for KaraboError
                 # User might cancel even with Interrupt and a
@@ -453,7 +455,8 @@ class MiddleLayerDeviceServer(HeartBeatMixin, SignalSlotable):
         if isSet(self.timeServerId):
             config["__timeServerId"] = self.timeServerId
         obj = cls(config)
-        task = obj.startInstance(self, broadcast=False)
+        # Server forwards broadcasts (if subscribed) and discovery calls
+        task = obj.startInstance(self, broadcast=False, discover=False)
         await task
         return True, deviceId
 

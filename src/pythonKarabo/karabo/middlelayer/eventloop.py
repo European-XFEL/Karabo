@@ -265,8 +265,8 @@ class EventLoop(SelectorEventLoop):
         except BaseException:
             self.default_exception_handler(context)
 
-    def getBroker(self, deviceId, classId, broadcast):
-        return Broker(self, deviceId, classId, broadcast)
+    def getBroker(self, deviceId, classId, broadcast, discover):
+        return Broker(self, deviceId, classId, broadcast, discover)
 
     def create_task(self, coro, instance=None, name=None, context=None):
         """Create a new task, running coroutine *coro*
