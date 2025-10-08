@@ -33,7 +33,7 @@ from karabogui.util import SignalBlocker, get_spin_widget, utc_to_local
 from .utils import get_dialog_ui
 
 # Minimum size for a device id substring to be considered searchable.
-MIN_NAME_SIZE = 5
+MIN_NAME_SIZE = 4
 
 
 class LoadProjectWithDialog(QDialog):
@@ -155,7 +155,7 @@ class LoadProjectWithDialog(QDialog):
         self.button_find_projects.clicked.connect(self.find_projects)
         self.combo_domain.currentIndexChanged.connect(self.refresh_search)
 
-        self.text_name_part.textEdited.connect(self.update_dialog_state)
+        self.text_name_part.textEdited.connect(self.text_edited)
         self.text_name_part.returnPressed.connect(self.refresh_search)
         self.combo_item_type.currentIndexChanged.connect(self.refresh_search)
 
@@ -171,6 +171,19 @@ class LoadProjectWithDialog(QDialog):
     def refresh_search(self):
         if len(self.text_name_part.text()) >= MIN_NAME_SIZE:
             self.find_projects()
+
+    @Slot(str)
+    def text_edited(self, text):
+        if not self.finding_projects:
+            enabled = len(text) >= MIN_NAME_SIZE
+            if enabled:
+                msg = ("Click <b>Find Projects</b> "
+                       f"to search for <b>{text}</b>.")
+            else:
+                msg = (f"Enter name part with at least <b>{MIN_NAME_SIZE} </b>"
+                       "characters.")
+            self.label_status.setText(msg)
+            self.button_find_projects.setEnabled(enabled)
 
     # -----------------------------------------------------------------------
     # Data Fetching
