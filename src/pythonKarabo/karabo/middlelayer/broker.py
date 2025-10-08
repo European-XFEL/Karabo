@@ -42,8 +42,10 @@ _OVERFLOW_POLICY = "drop-head"  # Drop oldest messages
 _TIME_TO_LIVE = 120_000  # 120 seconds expiry time [ms]
 _QUEUE_SIZE = 10_000
 _DEFAULT_HOSTS = "amqp://guest:guest@localhost:5672"
-_BROADCAST_SLOTS = ["slotInstanceNew", "slotInstanceUpdated",
-                    "slotInstanceGone", "slotDiscover"]
+_TOPOLOGY_SLOTS = [
+    "slotInstanceNew",
+    "slotInstanceUpdated",
+    "slotInstanceGone"]
 
 T = TypeVar("T")
 
@@ -168,8 +170,12 @@ def get_connector():
 
 
 class Broker:
+    """
+    :param broadcast: Whether to receive topology broadcasts
+    :param discover: Whether to receive discovery broadcasts
+    """
     def __init__(self, loop: AbstractEventLoop, deviceId: str, classId: str,
-                 broadcast: bool = True):
+                 broadcast: bool = True, discover: bool = True):
         self.domain = loop.topic
         self.loop = loop
         self.connection = None
@@ -178,6 +184,7 @@ class Broker:
         self.brokerId = None
         # Interest in receiving broadcasts
         self.broadcast = broadcast
+        self.discover = discover
         self.logger = logging.getLogger(deviceId)
         # Basics
         self.exitStack = AsyncExitStack()
@@ -208,7 +215,8 @@ class Broker:
             queue = <deviceId>
             -------------
             exchange = <domain>.slots
-            routing_key = <deviceId>
+            exchange = "<domain>.Slots"
+            routing_key = "<instanceId>.#"
             queue = <deviceId>
         """
         self.brokerId = f"{self.domain}.{self.deviceId}"
@@ -263,12 +271,15 @@ class Broker:
             futures.append(self.channel.queue_bind(
                 self.queue, exchange, routing_key=subscribe_key))
             self.subscriptions.add((exchange, subscribe_key))
+            slots = ["slotDiscover"] if self.discover else []
             if self.broadcast:
-                for slot in _BROADCAST_SLOTS:
-                    key = "*." + slot
-                    futures.append(self.channel.queue_bind(
-                        self.queue, exchange, routing_key=key))
-                    self.subscriptions.add((exchange, key))
+                slots.extend(_TOPOLOGY_SLOTS)
+
+            for slot in slots:
+                key = "*." + slot
+                futures.append(self.channel.queue_bind(
+                    self.queue, exchange, routing_key=key))
+                self.subscriptions.add((exchange, key))
 
             # Default can throw!
             await gather(*futures)
@@ -415,8 +426,6 @@ class Broker:
             header = extra_header
 
         if target == "*":
-            if slot not in _BROADCAST_SLOTS and slot != "slotHeartbeat":
-                raise RuntimeError(f"Slot {slot} cannot be broadcasted")
             exchange = f"{self.domain}.Global_Slots"
             routing_key = f"{self.deviceId}.{slot}"
         else:

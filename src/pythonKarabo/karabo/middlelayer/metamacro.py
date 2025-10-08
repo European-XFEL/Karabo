@@ -59,7 +59,7 @@ class MetaMacro(Device):
         finally:
             Macro.klass = None
 
-    def startInstance(self, server=None, broadcast=True):
+    def startInstance(self, server=None, broadcast=True, discover=True):
         # this does not call super, as we don't want to run MetaMacro itself,
         # but only the macros in the supplied code
         deviceId = self.deviceId.value
@@ -75,4 +75,5 @@ class MetaMacro(Device):
             parameters["project"] = self.project.value
         macro = klass(parameters)
         macro.store_code(self.code.value)
-        return macro.startInstance(server, broadcast=broadcast)
+        return macro.startInstance(
+            server, broadcast=broadcast, discover=discover)

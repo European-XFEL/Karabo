@@ -202,7 +202,8 @@ class SignalSlotable(Configurable):
         """
         return self.__deviceServer
 
-    def startInstance(self, server=None, *, loop=None, broadcast=True):
+    def startInstance(
+            self, server=None, *, loop=None, broadcast=True, discover=True):
         """Start this (device) instance
 
         :param broadcast: Defines whether this device receives broadcasts
@@ -214,7 +215,7 @@ class SignalSlotable(Configurable):
         if loop is None:
             loop = get_event_loop()
         self._sigslot = loop.getBroker(self.deviceId, type(self).__name__,
-                                       broadcast)
+                                       broadcast, discover)
         self._sethash = {}
         return loop.create_task(self._run(server=server), instance=self)
 

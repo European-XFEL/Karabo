@@ -55,11 +55,12 @@ async def test_discovery():
 @pytest.mark.timeout(30)
 @pytest.mark.asyncio
 async def test_broadcast():
+    serverId = "testBroad"
     config = {"alice": {"classId": "SimpleTopology"}}
     init = json.dumps(config)
     server = AsyncServerContext(
-        "testBroad", [f"init={init}", "broadcast=1",
-                      "pluginNamespace=karabo.middlelayer_device_test"],
+        serverId, [f"init={init}", "broadcast=1",
+                   "pluginNamespace=karabo.middlelayer_device_test"],
         verbose=True, api="middlelayer")
     async with server:
         await assert_wait_property(
@@ -69,8 +70,8 @@ async def test_broadcast():
         assert "bob" in topo["device"]
 
     server = AsyncServerContext(
-        "testBroad", [f"init={init}", "broadcast=0",
-                      "pluginNamespace=karabo.middlelayer_device_test"],
+        serverId, [f"init={init}", "broadcast=0",
+                   "pluginNamespace=karabo.middlelayer_device_test"],
         verbose=True, api="middlelayer")
     async with server:
         await assert_wait_property(
@@ -78,3 +79,15 @@ async def test_broadcast():
         await instantiate("testBroad", "SimpleTopology", "bob")
         topo = await call("alice", "getTopology", Hash())
         assert "bob" not in topo["device"]
+
+        # Start client, fetch topology although server has broadcast 0
+        clientId = "my-ikarabo"
+        dc = DeviceClientBase(dict(_deviceId_=clientId))
+        await dc.startInstance()
+
+        servers = dc.systemTopology["server"]
+        assert serverId in servers
+
+        devices = list(dc.systemTopology["device"].keys())
+        assert clientId in devices
+        assert "alice" in devices
