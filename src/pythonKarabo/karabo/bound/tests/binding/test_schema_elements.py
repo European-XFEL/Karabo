@@ -1079,22 +1079,27 @@ def test_invalidNodes():
         tolerated = "valid@"
         ELEMENT(schema).key(tolerated, False)
         with pytest.raises(RuntimeError,
-                           match="illegal character at position 5"):
+                           match="illegal character '@' at position 5"):
             ELEMENT(schema).key(tolerated)
 
         # Now with two tolerated characters, one at the end
         tolerated = "valid-more@"
         ELEMENT(schema).key(tolerated, False)
         with pytest.raises(RuntimeError,
-                           match="illegal character at position 5"):
+                           match="illegal character '-' at position 5"):
             ELEMENT(schema).key(tolerated)
 
         # The '/' can be tolerated, but not as first
         tolerated = "valid/one"
         ELEMENT(schema).key(tolerated, False)
         with pytest.raises(RuntimeError,
-                           match="illegal character at position 5"):
+                           match="illegal character '/' at position 5"):
             ELEMENT(schema).key(tolerated)
+
+        # test not printable chars in the key
+        with pytest.raises(RuntimeError,
+                           match="illegal character at position 5"):
+            ELEMENT(schema).key("valid\none")
 
         with pytest.raises(RuntimeError,
                            match="Starts with a digit or '/'"):
@@ -1105,7 +1110,7 @@ def test_invalidNodes():
                            match="not tolerated character at position 7"):
             ELEMENT(schema).key(invalid, False)
         with pytest.raises(RuntimeError,
-                           match="illegal character at position 7"):
+                           match="illegal character '&' at position 7"):
             ELEMENT(schema).key(invalid, True)
 
 

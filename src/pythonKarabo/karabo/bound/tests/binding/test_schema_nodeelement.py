@@ -151,7 +151,8 @@ def test_keyValidation():
     s = Schema()
     NODE_ELEMENT(s).key("allowed").commit()
     NODE_ELEMENT(s).key("allowed", True).commit()
-    with pytest.raises(RuntimeError, match="illegal character at position 3"):
+    with pytest.raises(RuntimeError,
+                       match="illegal character '@' at position 3"):
         NODE_ELEMENT(s).key("Bad@Inside", True).commit()
 
     # We can tolerate the @, but not the $
