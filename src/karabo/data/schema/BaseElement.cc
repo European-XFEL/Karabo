@@ -37,8 +37,13 @@ void karabo::data::checkPropertyPath(const std::string& name, bool strict) {
     if (strict) {
         const size_t pos = name.find_first_not_of(allowedCharacters);
         if (pos != std::string::npos) {
-            std::string msg(("Bad (sub-)key '" + name) += "': illegal character at position ");
-            throw KARABO_PARAMETER_EXCEPTION(msg += toString(pos));
+            std::string msg(("Bad (sub-)key '" + name) += "': illegal character");
+            char bad_char = name[pos];
+            if (std::isprint(bad_char)) {
+                ((msg += " '") += bad_char) += "'";
+            }
+            (msg += " at position ") += toString(pos);
+            throw KARABO_PARAMETER_EXCEPTION(msg);
         }
     } else {
         // If requested to be not strict, we tolerate some characters.
