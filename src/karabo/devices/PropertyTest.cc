@@ -1174,7 +1174,11 @@ namespace karabo {
 
 
         void PropertyTest::slotUpdateStatus(const std::string& status, int intProperty) {
-            set(Hash("status", status, "int32PropertyReadOnly", intProperty));
+            Hash update("status", status);
+            if (intProperty >= 0) {
+                update.set("int32PropertyReadOnly", intProperty);
+            }
+            set(update);
         }
 
 

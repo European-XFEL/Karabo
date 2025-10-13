@@ -1800,8 +1800,8 @@ namespace karabo {
                 if (hash.has("doNotCompressEvents")) {
                     // magic: if the hash contains a change for the expected parameter "doNotCompressElements
                     // we are sending it directly, no throttling.
-                    // Note: Since we updated m_runtimeSystemDescription above, there is no problem if a previous
-                    // time: the next "flushing"  of m_runtimeSystemDescription will send the new value again.
+                    // Note: Since we updated m_runtimeSystemDescription above, there is no problem if the next
+                    // "flushing" of m_runtimeSystemDescription will send the new value again.
                     std::lock_guard<std::mutex> lock(m_devicesChangesMutex);
                     if (m_devicesChangesHandler) {
                         Hash deviceChanges(instanceId, hash);
@@ -1819,18 +1819,20 @@ namespace karabo {
                         std::lock_guard<std::mutex> lock(m_devicesChangesMutex);
                         if (m_devicesChangesHandler) m_devicesChangesHandler(statusChange);
                     }
-                    std::lock_guard<std::mutex> lock(m_signalsChangedMutex);
-                    // Just book keep paths here and call 'notifyDeviceChangedMonitors'
-                    // later with content from m_runtimeSystemDescription.
-                    // Note:
-                    // If there is path "a.b" coming, should we erase possible previous changes to daughters like
-                    // "a.b.c.d"? No - that should better be handled in merging into m_runtimeSystemDescription above
-                    // and then the invalid path "a.b.c.d" should be ignored 'downstream' when sending.
-                    std::set<std::string>& updatedPaths = m_signalsChanged[instanceId];
-                    hash.getPaths(updatedPaths); // extend by new updates
+                    if (!directlyForwardStatus || hash.size() > 1) { // Anything to throttle?
+                        std::lock_guard<std::mutex> lock(m_signalsChangedMutex);
+                        // Just book keep paths here and call 'notifyDeviceChangedMonitors'
+                        // later with content from m_runtimeSystemDescription.
+                        // Note:
+                        // If there is path "a.b" coming, should we erase possible previous changes to daughters like
+                        // "a.b.c.d"? No - that should better be handled in merging into m_runtimeSystemDescription
+                        // above and then the invalid path "a.b.c.d" should be ignored 'downstream' when sending.
+                        std::set<std::string>& updatedPaths = m_signalsChanged[instanceId];
+                        hash.getPaths(updatedPaths); // extend by new updates
 
-                    // Do not send the same status update again later
-                    if (directlyForwardStatus) updatedPaths.erase(statusNode->getKey());
+                        // Do not send the same status update again later
+                        if (directlyForwardStatus) updatedPaths.erase(statusNode->getKey());
+                    }
                 }
             } else {
                 // There is a tiny (!) risk here: The last loop of the corresponding thread
@@ -2099,6 +2101,10 @@ namespace karabo {
                  mapIt != mapEnd; ++mapIt) {
                 const std::string& instanceId = mapIt->first;
                 const std::set<std::string>& properties = mapIt->second;
+                if (properties.empty()) { // Shouldn't happen...
+                    KARABO_LOGGING_WARN("Trying to send throttled empty updates for '{}'", instanceId);
+                    continue; // merge(..) below would merge full device config into allUpdates!
+                }
                 // Get path of instance in runtime system description and then its configuration
                 const std::string path(this->findInstanceSafe(instanceId));
                 const data::Hash config(this->getSectionFromRuntimeDescription(path + ".configuration"));
