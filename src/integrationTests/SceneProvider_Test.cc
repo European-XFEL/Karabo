@@ -61,7 +61,9 @@ void SceneProvider_Test::setUp() {
 void SceneProvider_Test::tearDown() {
     m_deviceClient.reset();
     m_deviceServer.reset();
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
     EventLoop::stop();
+    if (m_eventLoopThread.joinable()) m_eventLoopThread.join();
 }
 
 

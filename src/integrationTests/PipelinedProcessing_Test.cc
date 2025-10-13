@@ -79,7 +79,9 @@ void PipelinedProcessing_Test::setUp() {
 void PipelinedProcessing_Test::tearDown() {
     m_deviceClient.reset();
     m_deviceServer.reset();
+    std::this_thread::sleep_for(200ms);
     EventLoop::stop();
+    if (m_eventLoopThread.joinable()) m_eventLoopThread.join();
 }
 
 
