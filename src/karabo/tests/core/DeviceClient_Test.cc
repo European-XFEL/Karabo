@@ -484,7 +484,7 @@ void DeviceClient_Test::testDeviceConfigurationsHandler() {
     for (size_t i = 0; i < numStatusUpdates; ++i) {
         const std::string status("Status " + toString(i));
         CPPUNIT_ASSERT_NO_THROW(
-              m_deviceClient->execute(devId, "slotUpdateStatus", KRB_TEST_MAX_TIMEOUT, status, int(i)));
+              m_deviceClient->execute(devId, "slotUpdateStatus", KRB_TEST_MAX_TIMEOUT, status, static_cast<int>(i)));
     }
     // Since execute is synchronous, all signal updates directly triggered by it have returned
     // to the client and that one has called our handler. But the simultaneous update of
@@ -501,18 +501,20 @@ void DeviceClient_Test::testDeviceConfigurationsHandler() {
     size_t numStatus = 0, numInt32 = 0;
     for (size_t i = 0; i < updates.size(); ++i) {
         const karabo::data::Hash& update = updates[i];
+        const std::string msg((toString(i) += ": ") += toString(update));
+        CPPUNIT_ASSERT_MESSAGE(msg, !update.has("deviceId"));
         if (update.has("status")) {
             // It is throttled, no other keys!
-            CPPUNIT_ASSERT_MESSAGE(toString(update), !update.has("int32PropertyReadOnly"));
+            CPPUNIT_ASSERT_MESSAGE(msg, !update.has("int32PropertyReadOnly"));
 
             const bool hasTimeAttrs = Timestamp::hashAttributesContainTimeInformation(update.getAttributes("status"));
-            CPPUNIT_ASSERT_MESSAGE(toString(update), hasTimeAttrs);
+            CPPUNIT_ASSERT_MESSAGE(msg, hasTimeAttrs);
             ++numStatus;
         } else if (update.has("int32PropertyReadOnly")) {
             lastInt32 = update.get<int>("int32PropertyReadOnly");
             ++numInt32;
         } else { // nothing else expected
-            CPPUNIT_ASSERT_MESSAGE(toString(update), false);
+            CPPUNIT_ASSERT_MESSAGE(msg, false);
         }
     }
     // Are all status updates received?
@@ -521,6 +523,42 @@ void DeviceClient_Test::testDeviceConfigurationsHandler() {
     CPPUNIT_ASSERT_EQUAL(static_cast<int>(numStatusUpdates - 1), lastInt32);
     // Some throttling should have taken place (can we be 100% sure?)
     CPPUNIT_ASSERT_LESS(numStatusUpdates, numInt32);
+
+    // Now check that a single "status" update does not trigger any additional handler call
+    // (as was still in 3.0.7...)
+    auto statusPromise = std::make_shared<std::promise<void>>();
+    auto statusFut = statusPromise->get_future();
+    auto lastCommandPromise = std::make_shared<std::promise<void>>();
+    auto lastCommandFut = lastCommandPromise->get_future();
+    updates.clear();
+    auto newHandler = [&updates, devId, statusPromise, lastCommandPromise](const Hash& changes) {
+        if (changes.has(devId)) {
+            const karabo::data::Hash& devUpdate = changes.get<Hash>(devId);
+            updates.push_back(devUpdate);
+            if (devUpdate.has("status")) {
+                statusPromise->set_value();
+            } else if (devUpdate.has("lastCommand")) {
+                lastCommandPromise->set_value();
+            }
+        }
+    };
+    m_deviceClient->registerDevicesMonitor(newHandler);
+    // -1: Only update "status"
+    CPPUNIT_ASSERT_NO_THROW(
+          m_deviceClient->execute(devId, "slotUpdateStatus", KRB_TEST_MAX_TIMEOUT, "A status update", -1));
+    result = statusFut.wait_for(std::chrono::seconds{KRB_TEST_MAX_TIMEOUT});
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, result);
+    statusFut.get();
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(devId, "slotResetSchema", KRB_TEST_MAX_TIMEOUT));
+    result = lastCommandFut.wait_for(std::chrono::seconds{KRB_TEST_MAX_TIMEOUT});
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, result);
+    lastCommandFut.get();
+    // Two updates: "status" and "lastCommand" (triggered by call of schema slot) and nothing else
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(updates), 2ul, updates.size());
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(updates[0]), 1ul, updates[0].size());
+    CPPUNIT_ASSERT_MESSAGE(toString(updates[0]), updates[0].has("status"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(updates[1]), 1ul, updates[1].size());
+    CPPUNIT_ASSERT_MESSAGE(toString(updates[1]), updates[1].has("lastCommand"));
 
     // Reset again
     m_deviceClient->setDeviceMonitorInterval(-1);
