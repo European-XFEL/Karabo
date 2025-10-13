@@ -205,12 +205,9 @@ Still, the Karabo code has to be installed::
 Now all the code from ``karabogui``, ``common`` and ``native`` will be on
 your ``PYTHONPATH``.
 
-Finally, generate the version file using::
-
-    python setup.py develop
-
-inside the ``pythonGui`` directory. Repeat that step from time to time to keep
-the version number up-to-date.
+The last step (``pip install -e . --no-deps`` inside the activated conda
+environment) should be repeated from time to time to keep the version
+number up-to-date.
 
 
 Configuring the environment in PyCharm
