@@ -201,10 +201,24 @@ def test_device_client_sync_api():
         onSchemaUpdatedArg2 = schema
 
     c.registerSchemaUpdatedMonitor(onSchemaUpdated)
+
+    # The following is needed to keep the schema updates coming for longer
+    # than the next 15 seconds (C++ DeviceClient::CONNECTION_KEEP_ALIVE)
+    c.registerDeviceForMonitoring(deviceId)
+
     c.execute(deviceId, "slotUpdateSchema")
     assert type(onSchemaUpdatedArg1) is str
     assert onSchemaUpdatedArg1 == deviceId
     assert type(onSchemaUpdatedArg2) is Schema
+
+    # To see that 15 seconds after unregistration schema updates are not
+    # received anymore, we would have to sleep that long which would delay
+    # tests, so its is commented. Still we test that the method can be called.
+    c.unregisterDeviceFromMonitoring(deviceId)
+    # time.sleep(15)
+    # onSchemaUpdatedArg1 = onSchemaUpdatedArg1 = None
+    # c.execute(deviceId, "slotUpdateSchema")
+    # assert onSchemaUpdatedArg1 is None  # handler not called
 
     onPropertyChangeArgs = None
 
