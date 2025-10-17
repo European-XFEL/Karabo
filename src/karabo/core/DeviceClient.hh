@@ -983,7 +983,7 @@ namespace karabo {
                   const std::function<void(const std::string&, const karabo::data::Hash&)>& callbackFunction);
 
             /**
-             * Registers a device to have its configurations changes monitored.
+             * Registers a device to have its configuration or schema changes monitored.
              *
              * @param deviceId of the device to be added to the set of monitored devices.
              *
