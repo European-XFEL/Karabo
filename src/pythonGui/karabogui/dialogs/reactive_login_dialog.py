@@ -743,13 +743,13 @@ def remaining_time_info(start: str, duration: int) -> tuple[str, str, str]:
         time_remaining_str = "Session ended"
     else:
         total_minutes = int(time_left_sec // 60)
-        total_hours = float(time_left_sec / 3600)
-        total_days = float(time_left_sec / 86400)
+        total_hours = round(time_left_sec / 3600)
+        total_days = round(time_left_sec / 86400)
 
         if total_days >= 1:
-            time_remaining_str = f"~{total_days:.2f} day(s) left"
+            time_remaining_str = f"~{total_days} day(s) left"
         elif total_hours >= 1:
-            time_remaining_str = f"~{total_hours:.2f} hour(s) left"
+            time_remaining_str = f"~{total_hours} hour(s) left"
         else:
             time_remaining_str = f"~{total_minutes} minute(s) left"
 
