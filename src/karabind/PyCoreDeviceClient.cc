@@ -582,16 +582,15 @@ void exportPyCoreDeviceClient(py::module_& m) {
                           HandlerWrap<const std::string&, const Schema&>(handler, "schemaUpdate monitor"));
                 },
                 py::arg("callbackFunction"),
-                "registerSchemaUpdatedMonitor(handler): Register a callback handler \"handler\" to be "
+                "registerSchemaUpdatedMonitor(handler): Register a callback handler \"handler\" to\nbe "
                 "triggered if an instance receives a schema update from the distributed system\nThe "
                 "handler function should have the signature handler(instanceId, schema) where:\n"
                 "\"instanceId\" is a string containing name of the device which updated schema\n"
-                "\"schema\" is the updated schema\n\nNote: Currently, registering only a schema update "
-                "monitor with an instance\nof a DeviceClient is not enough to have the registered callback "
-                "activated.\nA workaround for this is to also register a property monitor with the\n"
-                "same instance of DeviceClient that has been used to register the schema\nupdate monitor.\n\n")
+                "\"schema\" is the updated schema\n\nNote: To have the handler reliably called, "
+                "for a given deviceId, one has\nto call 'registerDeviceForMonitoring(deviceId)' as well\n"
+                "(and 'unregisterDeviceFromMonitoring(deviceId)' if of no interest anymore).")
 
-          .def("registerPropertyMonitor", &DeviceClientWrap::registerPropertyMonitor, py::arg("instanceId"),
+          .def("registerPropertyMonitor", &DeviceClientWrap::registerPropertyMonitor, py::arg("deviceId"),
                py::arg("key"), py::arg("callbackFunction"))
 
           .def(
@@ -608,7 +607,7 @@ void exportPyCoreDeviceClient(py::module_& m) {
                               userData);
                     }
                 },
-                py::arg("instanceId"), py::arg("callbackFunction"), py::arg("userData") = py::none())
+                py::arg("deviceId"), py::arg("callbackFunction"), py::arg("userData") = py::none())
 
           .def(
                 "setDeviceMonitorInterval",
@@ -618,10 +617,14 @@ void exportPyCoreDeviceClient(py::module_& m) {
                 },
                 py::arg("milliseconds"))
 
-          .def("unregisterPropertyMonitor", &DeviceClientWrap::unregisterPropertyMonitor, py::arg("instanceId"),
+          .def("unregisterPropertyMonitor", &DeviceClientWrap::unregisterPropertyMonitor, py::arg("deviceId"),
                py::arg("key"))
 
           .def("unregisterDeviceMonitor", &DeviceClientWrap::unregisterDeviceMonitor, py::arg("instanceId"))
+
+          .def("registerDeviceForMonitoring", &DeviceClient::registerDeviceForMonitoring, py::arg("deviceId"))
+
+          .def("unregisterDeviceFromMonitoring", &DeviceClient::unregisterDeviceFromMonitoring, py::arg("deviceId"))
 
           .def(
                 "registerChannelMonitor",
