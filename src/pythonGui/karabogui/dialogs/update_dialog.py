@@ -304,14 +304,14 @@ class UpdateDialog(QDialog):
         """Create a QProcess to update to the latest tag.
 
         This process' signals are connected to the given callbacks."""
-        cmd = (f"pip install {package}=={tag} "
+        cmd = (f"{sys.executable} -m pip install {package}=={tag} "
                f"--force-reinstall --index-url {_PYPI_INDEX} "
                "--disable-pip-version-check")
         self._start_process(cmd)
 
     def _start_package_uninstall(self, package):
         """Uninstalls the current GUIExtensions package"""
-        cmd = f"pip uninstall --yes {package}"
+        cmd = f"{sys.executable} -m pip uninstall --yes {package}"
         self._start_process(cmd)
 
     def _update_log(self, text):
