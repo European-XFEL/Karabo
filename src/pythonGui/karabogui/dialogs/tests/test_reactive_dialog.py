@@ -286,13 +286,13 @@ def test_session_dialog(mocker):
     start = create_start_str()
     duration = 2 * 3600
     _, _, remaining = remaining_time_info(start, duration)
-    assert "~2.00 hour(s)" in remaining
+    assert "~2 hour(s)" in remaining
 
     # 3 days from now
     start = create_start_str()
     duration = 3 * 86400
     _, _, remaining = remaining_time_info(start, duration)
-    assert "~3.00 day" in remaining
+    assert "~3 day(s)" in remaining
 
     # 1 hours ago
     start = create_start_str()
@@ -309,4 +309,4 @@ def test_session_dialog(mocker):
         duration = 2 * 3600
         data = {"sessionStartTime": start_time, "sessionDuration": duration}
         dialog._event_user_session_info(data)
-        assert dialog.info_remaining_time.text() == "~2.00 hour(s) left"
+        assert dialog.info_remaining_time.text() == "~2 hour(s) left"
