@@ -29,7 +29,8 @@ from .drawing import (
     LineSceneTool, PopupButtonTool, RectangleSceneTool, SceneLinkTool,
     StickerTool, TextSceneTool, WebLinkTool)
 from .scenedndhandler import (
-    ConfigurationDropHandler, NavigationDropHandler, ProjectDropHandler)
+    ConfigurationDropHandler, NavigationDropHandler, ProjectDropHandler,
+    SceneDnDHandler)
 from .selection import (
     ProxySelectionTool, SceneSelectionTool, is_resizable, is_selectable)
 from .widgethandler import SceneControllerHandler, SceneToolHandler
