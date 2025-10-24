@@ -2,6 +2,157 @@
   Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 
 **************************
+What's New in Karabo 3.0.9
+**************************
+
+Released on **October 24th, 2025**.
+
+Bug Fixes
++++++++++
+
+- *(Bound)* Bindings for registerDeviceForMonitoring (Cherry-pick hotfix 3.0.X) ([ed7fea8](https://git.xfel.eu/Karabo/Framework/-/commit/ed7fea8bb8be6028654d4c4bcf764603c9008edd))
+- *(GUI)* Check if the name exists in project before server edit (Cherry-pick hotfix 3.0.X) ([eaa8d36](https://git.xfel.eu/Karabo/Framework/-/commit/eaa8d366d2712d940fe809b4152a5fc22b3f7b04))
+- *(GUI)* Install GUIExtension using the correct system executable (Cherry-pick hotfix 3.0.X) ([da1d0a0](https://git.xfel.eu/Karabo/Framework/-/commit/da1d0a06bbffcde913d1f82f2da401eb3843dd48))
+- *(GUI)* Login information - Show the remaining time as integer (Cherry-pick hotfix 3.0.X) ([50dea3b](https://git.xfel.eu/Karabo/Framework/-/commit/50dea3b9eea0353bbaebac7a910902ea1d0796bf))
+
+Features
+++++++++
+
+- *(GUI)* Allow to register scene handler on run time (Cherry-pick hotfix 3.0.X) ([8435a68](https://git.xfel.eu/Karabo/Framework/-/commit/8435a682398e43176cf00efd5fe8644b1753297e))
+- *(GUI)* Increase default hight of the plots(Cherry-pick hotfix 3.0.X) ([dee86f7](https://git.xfel.eu/Karabo/Framework/-/commit/dee86f71742b58751dda0b3d3bc8c1d396370049))
+
+Deps
+++++
+
+- *(No Category)* Update conan to latest version (Cherry-pick hotfix) ([d46deff](https://git.xfel.eu/Karabo/Framework/-/commit/d46deffd90e5257174957df5fd166227d1b5a921))
+
+
+**************************
+What's New in Karabo 3.0.8
+**************************
+
+Released on **October 13th, 2025**.
+
+Bug Fixes
++++++++++
+
+- *(C++)* "status" property update triggered sending of full config to gui clients (Backport 3.0.X) ([00a9276](https://git.xfel.eu/Karabo/Framework/-/commit/00a9276bdebfba31483fcee084d982a135d42ee2))
+- *(C++ tests)* Systematic sleep before eventloop stop to avoid that thread joining hangs (Backport 3.0.X) ([7902fcc](https://git.xfel.eu/Karabo/Framework/-/commit/7902fcc9237100b22d85eff3937573e364dfd451))
+- *(MDL)* Always reply to slotDiscover even when not broadcast (Cherry-pick hotfix 3.X) ([d5db70e](https://git.xfel.eu/Karabo/Framework/-/commit/d5db70ed9e3dab4f3be5543cf0d5f351486ab85b))
+
+Features
+++++++++
+
+- *(GUI)* Increase user experience in project find dialog, allow 4 chars only and update status (cherry-pick hotfix) ([eec10b2](https://git.xfel.eu/Karabo/Framework/-/commit/eec10b2274d4516e886eb3481c78420eb7e456b8))
+
+**************************
+What's New in Karabo 3.0.7
+**************************
+
+Released on **September 29th, 2025**.
+
+Bug Fixes
++++++++++
+
+- *(Bound)* PythonDevice.appendSchemaMaxSize may have to recreate output channels (Backport 3.0.x) ([32dc216](https://git.xfel.eu/Karabo/Framework/-/commit/32dc216b2b29cc65f33fb62da33417ae75c83da1))
+- *(C++)* Proper argument to slotDiscover (Backport to 3.0.X) ([0f0f4bf](https://git.xfel.eu/Karabo/Framework/-/commit/0f0f4bf04aa76feeb1df0b2e4116cba4d9797fa3))
+- *(C++)* Device::appendSchemaMaxSize has to recreate touched output channels (Backport to 3.0.X) ([191e577](https://git.xfel.eu/Karabo/Framework/-/commit/191e577699dc5bfc0baf3000151fa89f9c1c940c))
+- *(C++/Bound)* Accept more characters for properties if tolerance is requested (Backport 3.0.X) ([2ae37fe](https://git.xfel.eu/Karabo/Framework/-/commit/2ae37fef8f2c299c000a9fe755a3ea046b43ed26))
+- *(GUI)* Fix scene attachment to project (Cherry-pick hotfix) ([2e309c7](https://git.xfel.eu/Karabo/Framework/-/commit/2e309c7f357467e9278bb91e02871afc8346805a))
+
+Features
+++++++++
+
+- *(GUI)* Configurator shows properties for offline proxy, if not reconfigurable via access level (Cherry-pick hotfix) ([2ca3858](https://git.xfel.eu/Karabo/Framework/-/commit/2ca3858ff8f5fae96d1a2b0ae16a490b4b6603ef))
+
+
+**************************
+What's New in Karabo 3.0.6
+**************************
+
+This release was deleted due to broken CI/Dependencies.
+
+**************************
+What's New in Karabo 3.0.5
+**************************
+
+Released on **September 17th, 2025**.
+
+Bug Fixes
++++++++++
+
+- *(C++)* No internal signals anymore and fix instanceUpdate patch (Backport to 3.0.X) ([a4f45a5](https://git.xfel.eu/Karabo/Framework/-/commit/a4f45a5fb3c308d73541788d98912cffdecda02b))
+
+Refactor
+++++++++
+
+- *(Bound/C++)* Allow @ as part of a karabo key (Cherry-pick hotfix) ([ba78a39](https://git.xfel.eu/Karabo/Framework/-/commit/ba78a39b53287d8439fb6a11acb0d074db752471))
+
+
+**************************
+What's New in Karabo 3.0.4
+**************************
+
+Released on **September 8th, 2025**.
+
+Bug Fixes
++++++++++
+
+- *(C++)* Exclusive AMQP queue (backport 3.0.X) ([dc01907](https://git.xfel.eu/Karabo/Framework/-/commit/dc01907ecd2e80d4e2d263d481eb554813fbf10a))
+- *(DOC)* Remove alarm system remnant from C++/Bound alarm condition description (Backport 3.0.X) ([e48a1d8](https://git.xfel.eu/Karabo/Framework/-/commit/e48a1d8d7b3220703d471bd5d2c8e2ab1cb6a23c))
+- *(No Category)* Db user for the internal office project DB (Cherry-pick 3.0.X) ([57b2633](https://git.xfel.eu/Karabo/Framework/-/commit/57b26339c9d69ab9d1780d5b081015e89b59d305))
+
+Refactor
+++++++++
+
+- *(MDL)* Use non durable exclusive queues (Cherry-pick hotfix 3.0.X) ([477eb5b](https://git.xfel.eu/Karabo/Framework/-/commit/477eb5be9e704d1740e670b62630c356ad06da74))
+
+**************************
+What's New in Karabo 3.0.3
+**************************
+
+Released on **September 1st, 2025**.
+
+Bug Fixes
++++++++++
+
+- *(GUI)* Fix image graph picker with downsampled image ([bdeb8ca](https://git.xfel.eu/Karabo/Framework/-/commit/bdeb8cac8d3ca19c87de3d4483bb0b03ac91fade))
+- *(GUI)* Apply configuration only if the device is shown in editor. ([e3172be](https://git.xfel.eu/Karabo/Framework/-/commit/e3172be21e786a91623769591ef339fd0c23cab3))
+- *(GUI)* Use AccessLevel also for ProjectDevices, no configuration... (Cherry-pick 3.0.X) ([e07290f](https://git.xfel.eu/Karabo/Framework/-/commit/e07290f9f41b3994602b3742b8dac81858196965))
+- *(MDL)* Float dtype is float32, not anymore a float64 for the Float descriptor. ([1304ca8](https://git.xfel.eu/Karabo/Framework/-/commit/1304ca8cfda184135410a4862c8e8707d75baaef))
+
+Features
+++++++++
+
+- *(GUI)* New indicator about guiextension updates ([c3bddcf](https://git.xfel.eu/Karabo/Framework/-/commit/c3bddcf79ef928e7cf961d62c00710f533a28f65))
+- *(GUI)* OK-Errol-Bool show the keys and value in the tooltip. ([7af0cfb](https://git.xfel.eu/Karabo/Framework/-/commit/7af0cfb0b79d8c0e3ebfe66c509fa9afcd297e7a))
+- *(GUI)* Init Configuration Preview dialog. (Cherry-pick hotfix 3.0.X) ([745aada](https://git.xfel.eu/Karabo/Framework/-/commit/745aadac27845f4a76f6b7369911b08e2059096d))
+- *(GUI)* Add ProxyStatus to karabogui namespace (Cherry-pick 3.0.X) ([67bbbff](https://git.xfel.eu/Karabo/Framework/-/commit/67bbbffa7329fbb792ae148b14c4cc5bf0a4ee02))
+
+**************************
+What's New in Karabo 3.0.2
+**************************
+
+Released on **August 20th, 2025**.
+
+Bug Fixes
++++++++++
+
+- *(Bound)* Reduce timeout to get logs of devices ([103aa0a](https://git.xfel.eu/Karabo/Framework/-/commit/103aa0a01fbe39e2b87b636103dd881563983076))
+- *(Bound)* Release GIL before emit(..) and call(..) ([831adcc](https://git.xfel.eu/Karabo/Framework/-/commit/831adcc21d04e384154f7f7e6ad7218f664dc594))
+- *(GUI)* Update guiextension dialog- reinstall the packages ([6d33b11](https://git.xfel.eu/Karabo/Framework/-/commit/6d33b115d111d8478202697643b5deea12e06b23))
+- *(GUI)* LoogBook : Set correct setDevicePixelRatio. ([5d762b1](https://git.xfel.eu/Karabo/Framework/-/commit/5d762b1dcbcda42f983accd2a743dd911aebecd1))
+- *(GUI)* Verbose when install/uninstall of guiextensions fails ([965cf34](https://git.xfel.eu/Karabo/Framework/-/commit/965cf34667f4f49e9aae554c532642959fbe9056))
+- *(MDL)* Consider Enums before Strings in wrapping karaboValues ([a337602](https://git.xfel.eu/Karabo/Framework/-/commit/a337602f37838b82588b32ae0799b3a140e6ab1a))
+- *(MDL)* Fix initial topology gathering wait ([808681a](https://git.xfel.eu/Karabo/Framework/-/commit/808681a3a1b357b6fe2d1f45b5d7e1e1a7d73c7b))
+
+Refactor
+++++++++
+
+- *(MDL)* Detach connector lock from eventloop on loop closure ([c48b40c](https://git.xfel.eu/Karabo/Framework/-/commit/c48b40ce1d68c5ead196e07cfc7e359f46f89460))
+- *(No Category)* Move pytest asyncio config into toml file ([79c3eb7](https://git.xfel.eu/Karabo/Framework/-/commit/79c3eb7c2f68e823c8084d13bd45fc6447c98922))
+
+**************************
 What's New in Karabo 3.0.1
 **************************
 
