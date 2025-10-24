@@ -47,8 +47,8 @@ from .layout.api import GroupLayout
 from .selection_model import SceneSelectionModel
 from .tools.api import (
     ConfigurationDropHandler, NavigationDropHandler, ProjectDropHandler,
-    ProxySelectionTool, SceneControllerHandler, SceneSelectionTool,
-    SceneToolHandler)
+    ProxySelectionTool, SceneControllerHandler, SceneDnDHandler,
+    SceneSelectionTool, SceneToolHandler)
 from .utils import save_painter_state
 from .widget.api import ControllerContainer, GridView
 
@@ -68,6 +68,15 @@ SELECTION_QCOLOR = QColor(*SELECTION_COLOR)
 
 def _get_time_milli():
     return int(round(time.time() * 1000))
+
+
+_scene_handlers = {ConfigurationDropHandler, NavigationDropHandler,
+                   ProjectDropHandler}
+
+
+def add_scene_handler(handler):
+    assert issubclass(handler, SceneDnDHandler)
+    _scene_handlers.add(handler)
 
 
 class SceneView(QWidget):
@@ -104,9 +113,7 @@ class SceneView(QWidget):
         self.selection_model = SceneSelectionModel()
 
         # List of scene drag n drop handlers
-        self.scene_handler_list = [ConfigurationDropHandler(),
-                                   NavigationDropHandler(),
-                                   ProjectDropHandler()]
+        self.scene_handler_list = [handler() for handler in _scene_handlers]
         self.current_scene_handler = None
 
         self.current_tool = None

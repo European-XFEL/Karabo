@@ -77,6 +77,8 @@ from karabogui.request import (
     onConfigurationUpdate, onSchemaUpdate, retrieve_default_scene,
     send_property_changes)
 from karabogui.sceneview.api import get_proxy
+from karabogui.sceneview.tools.scenedndhandler import SceneDnDHandler
+from karabogui.sceneview.view import add_scene_handler
 from karabogui.singletons.api import (
     get_config, get_manager, get_network, get_panel_wrangler, get_topology)
 from karabogui.topology.api import (
