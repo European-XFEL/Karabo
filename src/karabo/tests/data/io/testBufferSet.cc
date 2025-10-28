@@ -22,7 +22,7 @@
  * Created on April 12, 2019, 1:34 PM
  */
 
-#include "BufferSet_Test.hh"
+#include <gtest/gtest.h>
 
 #include <boost/asio/buffer.hpp>
 #include <boost/smart_ptr/make_shared_array.hpp>
@@ -31,22 +31,8 @@
 
 using karabo::data::BufferSet;
 
-CPPUNIT_TEST_SUITE_REGISTRATION(BufferSet_Test);
 
-
-BufferSet_Test::BufferSet_Test() {}
-
-
-BufferSet_Test::~BufferSet_Test() {}
-
-
-void BufferSet_Test::setUp() {}
-
-
-void BufferSet_Test::tearDown() {}
-
-
-void BufferSet_Test::testEmplaceAppend() {
+TEST(TestBufferSet, testEmplaceAppend) {
     const size_t bufferSize = 100u;
     // While we always emplace 4 buffers, there is one extra to hold the size of the
     // second ByteArray where we use emplaceBack(..., true) after adding a ByteArray before:
@@ -70,9 +56,9 @@ void BufferSet_Test::testEmplaceAppend() {
     // another simple vector buffer at the end
     bufferCopy.emplaceBack(std::make_shared<BufferSet::BufferType>(bufferSize, 2));
 
-    CPPUNIT_ASSERT_EQUAL(4 * bufferSize + sizeof(unsigned int), bufferCopy.totalSize());
+    EXPECT_EQ(4 * bufferSize + sizeof(unsigned int), bufferCopy.totalSize());
     bufferCopy.appendTo(boostBuffers);
-    CPPUNIT_ASSERT_EQUAL(expectedNumBuff, boostBuffers.size());
+    EXPECT_EQ(expectedNumBuff, boostBuffers.size());
     boostBuffers.clear();
 
     BufferSet bufferNoCopy(false);
@@ -91,23 +77,23 @@ void BufferSet_Test::testEmplaceAppend() {
     // another simple vector buffer at the end
     bufferNoCopy.emplaceBack(std::make_shared<BufferSet::BufferType>(bufferSize, 2));
 
-    CPPUNIT_ASSERT_EQUAL(4 * bufferSize + sizeof(unsigned int), bufferNoCopy.totalSize());
+    EXPECT_EQ(4 * bufferSize + sizeof(unsigned int), bufferNoCopy.totalSize());
     bufferNoCopy.appendTo(boostBuffers);
-    CPPUNIT_ASSERT_EQUAL(expectedNumBuff, boostBuffers.size());
+    EXPECT_EQ(expectedNumBuff, boostBuffers.size());
     boostBuffers.clear();
 
 
     bufferCopy.appendTo(bufferNoCopy, false); // no copies
 
-    CPPUNIT_ASSERT_EQUAL(8 * bufferSize + 2 * sizeof(unsigned int), bufferNoCopy.totalSize());
+    EXPECT_EQ(8 * bufferSize + 2 * sizeof(unsigned int), bufferNoCopy.totalSize());
     bufferNoCopy.appendTo(boostBuffers);
-    CPPUNIT_ASSERT_EQUAL(2 * expectedNumBuff, boostBuffers.size());
+    EXPECT_EQ(2 * expectedNumBuff, boostBuffers.size());
     boostBuffers.clear();
 
     bufferNoCopy.appendTo(bufferCopy, false); // no copies
 
-    CPPUNIT_ASSERT_EQUAL(12 * bufferSize + 3 * sizeof(unsigned int), bufferCopy.totalSize());
+    EXPECT_EQ(12 * bufferSize + 3 * sizeof(unsigned int), bufferCopy.totalSize());
     bufferCopy.appendTo(boostBuffers);
-    CPPUNIT_ASSERT_EQUAL(3 * expectedNumBuff, boostBuffers.size());
+    EXPECT_EQ(3 * expectedNumBuff, boostBuffers.size());
     boostBuffers.clear();
 }

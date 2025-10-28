@@ -16,33 +16,31 @@
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
 /*
- * File:   FileInputOutput_Test.cc
+ * File:   FileInputOutput_Test.hh
  * Author: heisenb
  *
  * Created on March 7, 2013, 11:06 AM
  */
 
-#include "FileInputOutput_Test.hh"
+#include <gtest/gtest.h>
 
 #include <filesystem>
 #include <karabo/data/schema/NodeElement.hh>
 #include <karabo/data/schema/VectorElement.hh>
-#include <karabo/data/types/Hash.hh>
 #include <karabo/util/TimeProfiler.hh>
 
 #include "TestPathSetup.hh"
 #include "karabo/data/io/FileTools.hh"
+#include "karabo/data/types/Hash.hh"
+#include "karabo/data/types/Schema.hh"
 
 using namespace std;
 using namespace karabo::data;
 using namespace karabo::util;
 
-CPPUNIT_TEST_SUITE_REGISTRATION(FileInputOutput_Test);
-
 
 struct MySchema {
     KARABO_CLASSINFO(MySchema, "TestXsd", "1.0");
-
 
     static void expectedParameters(karabo::data::Schema& expected) {
         STRING_ELEMENT(expected)
@@ -202,118 +200,130 @@ struct MySchema {
 };
 
 
-FileInputOutput_Test::FileInputOutput_Test() {}
+class FileInputOutputTest : public testing::Test {
+   protected:
+    static void SetUpTestSuite() {
+        m_canCleanUp = false;
+        Hash rooted("dom.b.c", 1, "dom.b.d", vector<int>(5, 1), "dom.b.e", vector<Hash>(2, Hash("a", 1)), "a.d",
+                    std::complex<double>(1.2, 4.2));
+        rooted.setAttribute("dom", "a1", true);
+        rooted.setAttribute("dom", "a2", 3.4);
+        rooted.setAttribute("dom.b", "b1", "3");
+        rooted.setAttribute("dom.b.c", "c1", 2);
+        rooted.setAttribute("dom.b.c", "c2", vector<string>(3, "bla"));
+        m_rootedHash = rooted;
 
 
-FileInputOutput_Test::~FileInputOutput_Test() {}
-
-
-void FileInputOutput_Test::setUp() {
-    m_canCleanUp = false;
-    Hash rooted("dom.b.c", 1, "dom.b.d", vector<int>(5, 1), "dom.b.e", vector<Hash>(2, Hash("a", 1)), "a.d",
-                std::complex<double>(1.2, 4.2));
-    rooted.setAttribute("dom", "a1", true);
-    rooted.setAttribute("dom", "a2", 3.4);
-    rooted.setAttribute("dom.b", "b1", "3");
-    rooted.setAttribute("dom.b.c", "c1", 2);
-    rooted.setAttribute("dom.b.c", "c2", vector<string>(3, "bla"));
-    m_rootedHash = rooted;
-
-
-    // Hash big("a.b", std::vector<double>(20 * 1024 * 1024, 1.0));
-    Hash big("a.b", std::vector<double>(1000, 1.0));
-
-    vector<Hash>& tmp = big.bindReference<vector<Hash> >("a.c");
-    tmp.resize(10000);
-    for (size_t i = 0; i < tmp.size(); ++i) {
-        tmp[i] = m_rootedHash;
-    }
-    m_bigHash = big;
-    m_bigHash.setAttribute("a.c", "k5", 123);
-    m_bigHash.setAttribute("a.c", "k6", vector<bool>(4, true));
-    m_bigHash.setAttribute("a.c", "k7", vector<unsigned char>(5, 1));
-
-
-    Hash unrooted("a.b.c", 1, "b.c", 2.0, "c", 3.f, "d.e", "4", "e.f.g.h", std::vector<unsigned long long>(5, 5),
-                  "F.f.f.f.f", Hash("x.y.z", 99));
-    unrooted.setAttribute("F.f.f", "attr1", true);
-    m_unrootedHash = unrooted;
-
-    Schema testSchema("TestSchema", Schema::AssemblyRules(READ | WRITE | INIT));
-    MySchema::expectedParameters(testSchema);
-    m_schema = testSchema;
-
-    vector<Hash>& vec = m_withSchemaHash.bindReference<vector<Hash> >("a.v");
-    vec.resize(4);
-    for (size_t i = 0; i < vec.size(); ++i) {
-        vec[i] = Hash("schema", testSchema);
-    }
-    m_withSchemaHash.set("a.x", "Hello");
-    m_withSchemaHash.set("a.y", testSchema);
-    m_withSchemaHash.set("a.z", 25);
-}
-
-
-void FileInputOutput_Test::tearDown() {
-    if (m_canCleanUp) {
-        if (std::filesystem::exists(resourcePath("folder"))) {
-            std::filesystem::remove_all(resourcePath("folder"));
+        // Hash big("a.b", std::vector<double>(20 * 1024 * 1024, 1.0));
+        Hash big("a.b", std::vector<double>(1000, 1.0));
+        vector<Hash>& tmp = big.bindReference<vector<Hash> >("a.c");
+        tmp.resize(10000);
+        for (size_t i = 0; i < tmp.size(); ++i) {
+            tmp[i] = m_rootedHash;
         }
-        if (std::filesystem::exists(resourcePath("/tmp/folder/"))) {
-            std::filesystem::remove_all(resourcePath("/tmp/folder/"));
+        m_bigHash = big;
+        m_bigHash.setAttribute("a.c", "k5", 123);
+        m_bigHash.setAttribute("a.c", "k6", vector<bool>(4, true));
+        m_bigHash.setAttribute("a.c", "k7", vector<unsigned char>(5, 1));
+
+
+        Hash unrooted("a.b.c", 1, "b.c", 2.0, "c", 3.f, "d.e", "4", "e.f.g.h", std::vector<unsigned long long>(5, 5),
+                      "F.f.f.f.f", Hash("x.y.z", 99));
+        unrooted.setAttribute("F.f.f", "attr1", true);
+        m_unrootedHash = unrooted;
+
+        Schema testSchema("TestSchema", Schema::AssemblyRules(READ | WRITE | INIT));
+        MySchema::expectedParameters(testSchema);
+        m_schema = testSchema;
+
+        vector<Hash>& vec = m_withSchemaHash.bindReference<vector<Hash> >("a.v");
+        vec.resize(4);
+        for (size_t i = 0; i < vec.size(); ++i) {
+            vec[i] = Hash("schema", testSchema);
+        }
+        m_withSchemaHash.set("a.x", "Hello");
+        m_withSchemaHash.set("a.y", testSchema);
+        m_withSchemaHash.set("a.z", 25);
+    }
+
+    static void TearDownTestSuite() {
+        if (m_canCleanUp) {
+            if (std::filesystem::exists(resourcePath("folder"))) {
+                std::filesystem::remove_all(resourcePath("folder"));
+            }
+            if (std::filesystem::exists(resourcePath("/tmp/folder/"))) {
+                std::filesystem::remove_all(resourcePath("/tmp/folder/"));
+            }
         }
     }
-}
+
+   public:
+    static karabo::data::Schema m_schema;
+    static karabo::data::Hash m_rootedHash;
+    static karabo::data::Hash m_bigHash;
+    static karabo::data::Hash m_unrootedHash;
+    static karabo::data::Hash m_withSchemaHash;
+    static bool m_canCleanUp;
+};
+
+// static member variables initialization ...
+karabo::data::Schema FileInputOutputTest::m_schema;
+karabo::data::Hash FileInputOutputTest::m_rootedHash;
+karabo::data::Hash FileInputOutputTest::m_bigHash;
+karabo::data::Hash FileInputOutputTest::m_unrootedHash;
+karabo::data::Hash FileInputOutputTest::m_withSchemaHash;
+bool FileInputOutputTest::m_canCleanUp = false;
 
 
-void FileInputOutput_Test::writeTextFile() {
+TEST_F(FileInputOutputTest, writeTextFile) {
     TimeProfiler p("writeTextFile");
     p.open();
     // Using the Factory interface
     Output<Hash>::Pointer out = Output<Hash>::create("TextFile", Hash("filename", resourcePath("file1.xml")));
-    out->write(m_rootedHash);
+    out->write(FileInputOutputTest::m_rootedHash);
 
     p.startPeriod("bigHash");
     out = Output<Hash>::create("TextFile",
                                Hash("filename", resourcePath("file2.xml"), "format", "Xml", "Xml.indentation", -1));
-    out->write(m_bigHash);
+    out->write(FileInputOutputTest::m_bigHash);
     p.stopPeriod("bigHash"); // p.stopPeriod();
     p.close();
     if (false) clog << "writing big Hash (text) took " << p.getPeriod("bigHash").getDuration() << " [s]" << endl;
 
     out = Output<Hash>::create("TextFile", Hash("filename", resourcePath("file3.xml"), "format", "Xml",
                                                 "Xml.indentation", 0, "Xml.writeDataTypes", false));
-    out->write(m_unrootedHash);
+    out->write(FileInputOutputTest::m_unrootedHash);
 
     out = Output<Hash>::create("TextFile", Hash("filename", resourcePath("file4.xml"), "format", "Xml",
                                                 "Xml.indentation", 0, "Xml.writeDataTypes", true));
-    out->write(m_withSchemaHash);
+    out->write(FileInputOutputTest::m_withSchemaHash);
 
     // Using the FileTools interface
-    saveToFile(m_rootedHash, resourcePath("file1a.xml"));
+    saveToFile(FileInputOutputTest::m_rootedHash, resourcePath("file1a.xml"));
 
-    saveToFile(m_bigHash, resourcePath("file2a.xml"), Hash("format", "Xml", "Xml.indentation", -1));
+    saveToFile(FileInputOutputTest::m_bigHash, resourcePath("file2a.xml"),
+               Hash("format", "Xml", "Xml.indentation", -1));
 
-    saveToFile(m_unrootedHash, resourcePath("file3a.xml"),
+    saveToFile(FileInputOutputTest::m_unrootedHash, resourcePath("file3a.xml"),
                Hash("format", "Xml", "Xml.indentation", 0, "Xml.writeDataTypes", false));
 
-    saveToFile(m_withSchemaHash, resourcePath("file4a.xml"),
+    saveToFile(FileInputOutputTest::m_withSchemaHash, resourcePath("file4a.xml"),
                Hash("format", "Xml", "Xml.indentation", 0, "Xml.writeDataTypes", true));
 
     // Check different folder levels
     if (std::filesystem::exists(resourcePath("folder/"))) {
-        CPPUNIT_FAIL("'folder' already exists!");
+        FAIL() << "'folder' already exists!";
     }
-    saveToFile(m_rootedHash, resourcePath("folder/file5a.xml"));
+    saveToFile(FileInputOutputTest::m_rootedHash, resourcePath("folder/file5a.xml"));
 
     if (std::filesystem::exists(resourcePath("/tmp/folder/"))) {
-        CPPUNIT_FAIL("'/tmp/folder' already exists!");
+        FAIL() << "'/tmp/folder' already exists!";
     }
-    saveToFile(m_rootedHash, "/tmp/folder/file6a.xml");
+    saveToFile(FileInputOutputTest::m_rootedHash, "/tmp/folder/file6a.xml");
 }
 
 
-void FileInputOutput_Test::readTextFile() {
+TEST_F(FileInputOutputTest, readTextFile) {
     // Using the Factory interface
     Input<Hash>::Pointer in = Input<Hash>::create("TextFile", Hash("filename", resourcePath("file1.xml")));
     Hash h1;
@@ -353,97 +363,97 @@ void FileInputOutput_Test::readTextFile() {
 
     //    clog << "h2 (xml)\n" << h2 << endl;
 
-    CPPUNIT_ASSERT(karabo::data::similar(h1, m_rootedHash));
-    CPPUNIT_ASSERT(karabo::data::similar(h1, h1a));
-    CPPUNIT_ASSERT(karabo::data::similar(h2, m_bigHash));
+    EXPECT_TRUE(karabo::data::similar(h1, FileInputOutputTest::m_rootedHash));
+    EXPECT_TRUE(karabo::data::similar(h1, h1a));
+    EXPECT_TRUE(karabo::data::similar(h2, FileInputOutputTest::m_bigHash));
 
     // TODO: This has to be fixed (vector<Hash> attributes)
-    //    CPPUNIT_ASSERT(h2.getAttribute<int>("a.c", "k5") == 123);
+    //    EXPECT_TRUE(h2.getAttribute<int>("a.c", "k5") == 123);
     //    vector<bool> vecBoolAttr = h2.getAttribute < vector<bool> >("a.c", "k6");
     //    vector<bool> refVecBoolAttr(4, true);
     //    for (size_t i = 0; i < refVecBoolAttr.size(); ++i) {
-    //        CPPUNIT_ASSERT(refVecBoolAttr[i] == vecBoolAttr[i]);
+    //        EXPECT_TRUE(refVecBoolAttr[i] == vecBoolAttr[i]);
     //    }
 
-    CPPUNIT_ASSERT(karabo::data::similar(h2, h2a));
+    EXPECT_TRUE(karabo::data::similar(h2, h2a));
 
     // for h3 data types have been not serialized so we cannot use "similar" function
-    CPPUNIT_ASSERT(h3.get<string>("a.b.c") == "1");
-    CPPUNIT_ASSERT(h3a.get<string>("a.b.c") == "1");
+    EXPECT_TRUE(h3.get<string>("a.b.c") == "1");
+    EXPECT_TRUE(h3a.get<string>("a.b.c") == "1");
 
-    CPPUNIT_ASSERT(karabo::data::similar(h4, m_withSchemaHash));
-    CPPUNIT_ASSERT(karabo::data::similar(h4, h4a));
+    EXPECT_TRUE(karabo::data::similar(h4, FileInputOutputTest::m_withSchemaHash));
+    EXPECT_TRUE(karabo::data::similar(h4, h4a));
 
-    CPPUNIT_ASSERT(karabo::data::similar(h5a, m_rootedHash));
-    CPPUNIT_ASSERT(karabo::data::similar(h6a, m_rootedHash));
-    m_canCleanUp = true;
+    EXPECT_TRUE(karabo::data::similar(h5a, FileInputOutputTest::m_rootedHash));
+    EXPECT_TRUE(karabo::data::similar(h6a, FileInputOutputTest::m_rootedHash));
+    FileInputOutputTest::m_canCleanUp = true;
 }
 
 
-void FileInputOutput_Test::writeTextSchema() {
+TEST_F(FileInputOutputTest, writeTextSchema) {
     // Using the Factory interface
     Output<Schema>::Pointer out = Output<Schema>::create(
           "TextFile", Hash("filename", resourcePath("testschema.xml"), "format", "Xml", "Xml.indentation", 3));
-    out->write(m_schema);
+    out->write(FileInputOutputTest::m_schema);
 
     // Using the FileTools interface
-    saveToFile(m_schema, resourcePath("testschema2.xml"));
+    saveToFile(FileInputOutputTest::m_schema, resourcePath("testschema2.xml"));
 }
 
 
-void FileInputOutput_Test::readTextSchema() {
+TEST_F(FileInputOutputTest, readTextSchema) {
     // Using the Factory interface
     Input<Schema>::Pointer in = Input<Schema>::create("TextFile", Hash("filename", resourcePath("testschema.xml")));
     Schema schema1;
     in->read(schema1);
-    CPPUNIT_ASSERT(karabo::data::similar(schema1, m_schema));
+    EXPECT_TRUE(karabo::data::similar(schema1, FileInputOutputTest::m_schema));
 
     // Using the FileTools interface
     Schema schema2;
     loadFromFile(schema2, resourcePath("testschema2.xml"));
-    CPPUNIT_ASSERT(karabo::data::similar(schema2, m_schema));
+    EXPECT_TRUE(karabo::data::similar(schema2, FileInputOutputTest::m_schema));
 }
 
 
-void FileInputOutput_Test::writeSequenceToTextFile() {
+TEST_F(FileInputOutputTest, writeSequenceToTextFile) {
     // Using the Factory interface
     Output<Hash>::Pointer out =
           Output<Hash>::create("TextFile", Hash("filename", resourcePath("seqfile1.xml"), "enableAppendMode", true));
     for (size_t i = 0; i < 10; ++i) {
-        out->write(m_rootedHash);
+        out->write(FileInputOutputTest::m_rootedHash);
     }
     out->update(); // Necessary call to indicate completion of sequence writing
 }
 
 
-void FileInputOutput_Test::readSequenceFromTextFile() {
+TEST_F(FileInputOutputTest, readSequenceFromTextFile) {
     // Using the Factory interface
     Input<Hash>::Pointer in = Input<Hash>::create("TextFile", Hash("filename", resourcePath("seqfile1.xml")));
     Hash h1;
-    CPPUNIT_ASSERT(in->size() == 10);
+    EXPECT_TRUE(in->size() == 10);
     for (size_t i = 0; i < in->size(); ++i) {
         in->read(h1, i);
-        CPPUNIT_ASSERT(karabo::data::similar(h1, m_rootedHash));
+        EXPECT_TRUE(karabo::data::similar(h1, FileInputOutputTest::m_rootedHash));
     }
 }
 
 
-void FileInputOutput_Test::writeBinaryFile() {
+TEST_F(FileInputOutputTest, writeBinaryFile) {
     TimeProfiler p("writeBinaryFile");
     p.open();
     // Using the Factory interface
     Output<Hash>::Pointer out = Output<Hash>::create("BinaryFile", Hash("filename", resourcePath("file1.bin")));
-    out->write(m_rootedHash);
+    out->write(FileInputOutputTest::m_rootedHash);
 
     p.startPeriod("bigHash");
     out = Output<Hash>::create("BinaryFile", Hash("filename", resourcePath("file2.bin")));
-    out->write(m_bigHash);
+    out->write(FileInputOutputTest::m_bigHash);
     p.stopPeriod(); // p.stopPeriod("bigHash"); TODO
     p.close();
     if (false) clog << "writing big Hash (binary) took " << p.getPeriod("bigHash").getDuration() << " [s]" << endl;
 
     out = Output<Hash>::create("BinaryFile", Hash("filename", resourcePath("file3.bin")));
-    out->write(m_unrootedHash);
+    out->write(FileInputOutputTest::m_unrootedHash);
 
     //    TODO: uncomment when schema serialization is done
     //    out = Output<Hash>::create("BinaryFile", Hash("filename", resourcePath("file4.bin")));
@@ -451,17 +461,17 @@ void FileInputOutput_Test::writeBinaryFile() {
 
 
     // Using the FileTools interface
-    saveToFile(m_rootedHash, resourcePath("file1a.bin"));
+    saveToFile(FileInputOutputTest::m_rootedHash, resourcePath("file1a.bin"));
 
-    saveToFile(m_bigHash, resourcePath("file2a.bin"));
+    saveToFile(FileInputOutputTest::m_bigHash, resourcePath("file2a.bin"));
 
-    saveToFile(m_unrootedHash, resourcePath("file3a.bin"));
+    saveToFile(FileInputOutputTest::m_unrootedHash, resourcePath("file3a.bin"));
     //    TODO: uncomment when schema serialization is done
     //    saveToFile(m_withSchemaHash, resourcePath("file4a.bin"));
 }
 
 
-void FileInputOutput_Test::readBinaryFile() {
+TEST_F(FileInputOutputTest, readBinaryFile) {
     // Using the Factory interface
     Input<Hash>::Pointer in =
           Input<Hash>::create("BinaryFile", Hash("filename", resourcePath("file1.bin"), "format", "Bin"));
@@ -498,70 +508,70 @@ void FileInputOutput_Test::readBinaryFile() {
 
 
     //    clog << "h2 (binary)\n" << h2 << endl;
-    CPPUNIT_ASSERT(karabo::data::similar(h1, m_rootedHash));
-    CPPUNIT_ASSERT(karabo::data::similar(h1, h1a));
-    CPPUNIT_ASSERT(karabo::data::similar(h2, m_bigHash));
+    EXPECT_TRUE(karabo::data::similar(h1, FileInputOutputTest::m_rootedHash));
+    EXPECT_TRUE(karabo::data::similar(h1, h1a));
+    EXPECT_TRUE(karabo::data::similar(h2, FileInputOutputTest::m_bigHash));
 
-    CPPUNIT_ASSERT(h2.getAttribute<int>("a.c", "k5") == 123);
+    EXPECT_TRUE(h2.getAttribute<int>("a.c", "k5") == 123);
     vector<bool> vecBoolAttr = h2.getAttribute<vector<bool> >("a.c", "k6");
     vector<bool> refVecBoolAttr(4, true);
     for (size_t i = 0; i < refVecBoolAttr.size(); ++i) {
-        CPPUNIT_ASSERT(refVecBoolAttr[i] == vecBoolAttr[i]);
+        EXPECT_TRUE(refVecBoolAttr[i] == vecBoolAttr[i]);
     }
-    CPPUNIT_ASSERT(karabo::data::similar(h2, h2a));
+    EXPECT_TRUE(karabo::data::similar(h2, h2a));
 
-    CPPUNIT_ASSERT(karabo::data::similar(h3, m_unrootedHash));
-    CPPUNIT_ASSERT(karabo::data::similar(h3, h3a));
+    EXPECT_TRUE(karabo::data::similar(h3, FileInputOutputTest::m_unrootedHash));
+    EXPECT_TRUE(karabo::data::similar(h3, h3a));
 
     //    TODO: uncomment when schema serialization is done
-    //    CPPUNIT_ASSERT(karabo::data::similar(h4, m_withSchemaHash));
-    //    CPPUNIT_ASSERT(karabo::data::similar(h4, h4a));
+    //    EXPECT_TRUE(karabo::data::similar(h4, m_withSchemaHash));
+    //    EXPECT_TRUE(karabo::data::similar(h4, h4a));
 }
 
 
-void FileInputOutput_Test::writeBinarySchema() {
+TEST_F(FileInputOutputTest, writeBinarySchema) {
     // Using the Factory interface
     Output<Schema>::Pointer out =
           Output<Schema>::create("BinaryFile", Hash("filename", resourcePath("testschema.bin")));
-    out->write(m_schema);
+    out->write(FileInputOutputTest::m_schema);
 
     // Using the FileTools interface
-    saveToFile(m_schema, resourcePath("testschema2.bin"));
+    saveToFile(FileInputOutputTest::m_schema, resourcePath("testschema2.bin"));
 }
 
 
-void FileInputOutput_Test::readBinarySchema() {
+TEST_F(FileInputOutputTest, readBinarySchema) {
     // Using the Factory interface
     Input<Schema>::Pointer in = Input<Schema>::create("BinaryFile", Hash("filename", resourcePath("testschema.bin")));
     Schema schema1;
     in->read(schema1);
-    CPPUNIT_ASSERT(karabo::data::similar(schema1, m_schema));
+    EXPECT_TRUE(karabo::data::similar(schema1, FileInputOutputTest::m_schema));
 
     // Using the FileTools interface
     Schema schema2;
     loadFromFile(schema2, resourcePath("testschema2.bin"));
-    CPPUNIT_ASSERT(karabo::data::similar(schema2, m_schema));
+    EXPECT_TRUE(karabo::data::similar(schema2, FileInputOutputTest::m_schema));
 }
 
 
-void FileInputOutput_Test::writeSequenceToBinaryFile() {
+TEST_F(FileInputOutputTest, writeSequenceToBinaryFile) {
     // Using the Factory interface
     Output<Hash>::Pointer out =
           Output<Hash>::create("BinaryFile", Hash("filename", resourcePath("seqfile1.bin"), "enableAppendMode", true));
     for (size_t i = 0; i < 10; ++i) {
-        out->write(m_rootedHash);
+        out->write(FileInputOutputTest::m_rootedHash);
     }
     out->update(); // Necessary call to indicate completion of sequence writing
 }
 
 
-void FileInputOutput_Test::readSequenceFromBinaryFile() {
+TEST_F(FileInputOutputTest, readSequenceFromBinaryFile) {
     // Using the Factory interface
     Input<Hash>::Pointer in = Input<Hash>::create("BinaryFile", Hash("filename", resourcePath("seqfile1.bin")));
     Hash h1;
-    CPPUNIT_ASSERT(in->size() == 10);
+    EXPECT_TRUE(in->size() == 10);
     for (size_t i = 0; i < in->size(); ++i) {
         in->read(h1, i);
-        CPPUNIT_ASSERT(karabo::data::similar(h1, m_rootedHash));
+        EXPECT_TRUE(karabo::data::similar(h1, FileInputOutputTest::m_rootedHash));
     }
 }

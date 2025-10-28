@@ -16,14 +16,12 @@
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
 /*
- * File:   SchemaSerializer_Test.cc
+ * File:   SchemaSerializer_Test.hh
  * Author: boukhele
  *
  * Created on July 10, 2013, 11:49 AM
  */
-
-
-#include "SchemaSerializer_Test.hh"
+#include <gtest/gtest.h>
 
 #include "karabo/data/io/BinaryFileOutput.hh"
 #include "karabo/data/io/BinarySerializer.hh"
@@ -38,23 +36,8 @@
 using namespace karabo::data;
 using std::vector;
 
-CPPUNIT_TEST_SUITE_REGISTRATION(SchemaSerializer_Test);
-
-
-SchemaSerializer_Test::SchemaSerializer_Test() {}
-
-
-SchemaSerializer_Test::~SchemaSerializer_Test() {}
-
-
-void SchemaSerializer_Test::setUp() {}
-
-
-void SchemaSerializer_Test::tearDown() {}
-
-
-struct TestSchemaSerializer {
-    KARABO_CLASSINFO(TestSchemaSerializer, "TestSchemaSerializer", "1.0");
+struct TestSchemaExample {
+    KARABO_CLASSINFO(TestSchemaExample, "TestSchemaExample", "1.0");
 
 
     static void expectedParameters(karabo::data::Schema& expected) {
@@ -214,9 +197,9 @@ struct TestSchemaSerializer {
 };
 
 
-void SchemaSerializer_Test::testBinarySerializer() {
+TEST(TestSchemaSerializer, testBinarySerializer) {
     Schema testSchema("TestSchema", Schema::AssemblyRules(READ | WRITE | INIT));
-    TestSchemaSerializer::expectedParameters(testSchema);
+    TestSchemaExample::expectedParameters(testSchema);
     // cout << "Schema : \n" << testSchema << endl;
 
     BinarySerializer<Schema>::Pointer p = BinarySerializer<Schema>::create("Bin");
@@ -230,10 +213,10 @@ void SchemaSerializer_Test::testBinarySerializer() {
     p->load(inputSchema, &archive1[0], archive1.size());
 
     // Check whether alias maps got re-established
-    CPPUNIT_ASSERT(inputSchema.keyHasAlias("exampleKey5") == true);
-    CPPUNIT_ASSERT(inputSchema.aliasHasKey("exampleAlias5") == true);
-    CPPUNIT_ASSERT(inputSchema.getKeyFromAlias("exampleAlias5") == "exampleKey5");
-    CPPUNIT_ASSERT(inputSchema.getAliasFromKey<std::string>("exampleKey5") == "exampleAlias5");
+    EXPECT_TRUE(inputSchema.keyHasAlias("exampleKey5") == true);
+    EXPECT_TRUE(inputSchema.aliasHasKey("exampleAlias5") == true);
+    EXPECT_TRUE(inputSchema.getKeyFromAlias("exampleAlias5") == "exampleKey5");
+    EXPECT_TRUE(inputSchema.getAliasFromKey<std::string>("exampleKey5") == "exampleAlias5");
 
 
     std::vector<char> archive2;
@@ -243,9 +226,9 @@ void SchemaSerializer_Test::testBinarySerializer() {
     // std::clog << "\nOriginal:\n" << testSchema << std::endl;
     // std::clog << "\nSerialized:\n" << inputSchema << std::endl;
 
-    CPPUNIT_ASSERT(archive2.size() == archive1.size());
+    EXPECT_TRUE(archive2.size() == archive1.size());
 
-    CPPUNIT_ASSERT(memcmp(&archive1[0], &archive2[0], archive1.size()) == 0);
+    EXPECT_TRUE(memcmp(&archive1[0], &archive2[0], archive1.size()) == 0);
 
     TextSerializer<Schema>::Pointer p2 = TextSerializer<Schema>::create("Xml");
 
@@ -260,17 +243,17 @@ void SchemaSerializer_Test::testBinarySerializer() {
 }
 
 
-void SchemaSerializer_Test::testLoadLastFromSequence() {
+TEST(TestSchemaSerializer, testLoadLastFromSequence) {
     BinarySerializer<Schema>::Pointer ser = BinarySerializer<Schema>::create("Bin");
 
     Schema testSchema("TestSchema", Schema::AssemblyRules(READ | WRITE | INIT));
-    TestSchemaSerializer::expectedParameters(testSchema);
-    CPPUNIT_ASSERT_EQUAL(std::string{"Navigation"}, testSchema.getDefaultValue<std::string>("exampleKey1"));
+    TestSchemaExample::expectedParameters(testSchema);
+    EXPECT_STREQ("Navigation", testSchema.getDefaultValue<std::string>("exampleKey1").c_str());
 
     Schema testSchemaMod("TestSchemaMod", Schema::AssemblyRules(READ | WRITE | INIT));
-    TestSchemaSerializer::expectedParameters(testSchemaMod);
+    TestSchemaExample::expectedParameters(testSchemaMod);
     testSchemaMod.setDefaultValue("exampleKey1", std::string{"Orientation"});
-    CPPUNIT_ASSERT_EQUAL(std::string{"Orientation"}, testSchemaMod.getDefaultValue<std::string>("exampleKey1"));
+    EXPECT_STREQ("Orientation", testSchemaMod.getDefaultValue<std::string>("exampleKey1").c_str());
 
     // CAVEAT: from the BinarySerializer<T>::save(T&, std::vector<char>&) documentation it can be seen that some
     // specializations of BinarySerializer may clear the receiving vector before adding the bytes of the serialized
@@ -290,14 +273,9 @@ void SchemaSerializer_Test::testLoadLastFromSequence() {
 
     Schema loadedSch;
     // Checks that the first element gets loaded for the sequence with just 1 element.
-    CPPUNIT_ASSERT_NO_THROW(ser->loadLastFromSequence(loadedSch, archSingleSer, archSingle.size()));
-    CPPUNIT_ASSERT(testSchema.getParameterHash().fullyEquals(loadedSch.getParameterHash()));
+    EXPECT_NO_THROW(ser->loadLastFromSequence(loadedSch, archSingleSer, archSingle.size()));
+    EXPECT_TRUE(testSchema.getParameterHash().fullyEquals(loadedSch.getParameterHash()));
     // Checks that the second element gets loaded for the sequence with 2 elements.
-    CPPUNIT_ASSERT_NO_THROW(ser->loadLastFromSequence(loadedSch, archTwoSer, archTwo.size()));
-    CPPUNIT_ASSERT(testSchemaMod.getParameterHash().fullyEquals(loadedSch.getParameterHash()));
-}
-
-
-void SchemaSerializer_Test::testXmlSerializer() {
-    CPPUNIT_ASSERT(true);
+    EXPECT_NO_THROW(ser->loadLastFromSequence(loadedSch, archTwoSer, archTwo.size()));
+    EXPECT_TRUE(testSchemaMod.getParameterHash().fullyEquals(loadedSch.getParameterHash()));
 }

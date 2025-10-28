@@ -99,7 +99,7 @@ add_test(NAME dataTimeTestRunner COMMAND dataTimeTestRunner testresults/dataTime
 
 file(GLOB dataIoTestRunner_FILES CMAKE_CONFIGURE_DEPENDS
      "${CMAKE_CURRENT_SOURCE_DIR}/data/io/*.cc")
-list(APPEND dataIoTestRunner_FILES $<TARGET_OBJECTS:TEST_RUNNER_NOLOOP>)
+list(APPEND dataIoTestRunner_FILES $<TARGET_OBJECTS:GTEST_RUNNER_NOLOOP>)
 
 add_executable(dataIoTestRunner ${dataIo_FILES} ${dataTypes_FILES} ${dataSchema_FILES} ${dataTime_FILES} ${karaboUtil_FILES} ${karaboLog_FILES} ${dataIoTestRunner_FILES})
 target_compile_options(dataIoTestRunner PRIVATE -DKARABO_TESTPATH=\"${CMAKE_CURRENT_SOURCE_DIR}/\")
@@ -108,7 +108,7 @@ target_compile_options(dataIoTestRunner PRIVATE -DKARABO_TESTPATH=\"${CMAKE_CURR
 #       used, the specializations won't make into the resulting object files and a linker error with undefined references to the
 #       specializations will happen.
 target_compile_definitions(dataIoTestRunner PRIVATE __SO__)
-target_link_libraries(dataIoTestRunner spdlog::spdlog pugixml::pugixml cppunit::cppunit)
+target_link_libraries(dataIoTestRunner spdlog::spdlog pugixml::pugixml GTest::gtest)
 target_include_directories(dataIoTestRunner PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../..")
 add_test(NAME dataIoTestRunner COMMAND dataIoTestRunner testresults/dataIoTestRunner.xml)
 
