@@ -16,13 +16,12 @@
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
 /*
- * File:   HashFilter_Test.cc
+ * File:   HashFilter_Test.hh
  * Author: <krzysztof.wrona@xfel.eu>
  *
  * Created on April 12, 2013, 11:56 AM
  */
-
-#include "HashFilter_Test.hh"
+#include <gtest/gtest.h>
 
 #include "karabo/data/schema/NodeElement.hh"
 #include "karabo/data/schema/SimpleElement.hh"
@@ -31,9 +30,6 @@
 #include "karabo/data/types/HashFilter.hh"
 #include "karabo/data/types/State.hh"
 #include "karabo/log/Logger.hh"
-
-CPPUNIT_TEST_SUITE_REGISTRATION(HashFilter_Test);
-
 
 namespace hashfilter {
 
@@ -413,19 +409,7 @@ KARABO_REGISTER_FOR_CONFIGURATION(Base, P3);
 KARABO_REGISTER_FOR_CONFIGURATION(GraphicsRenderer2);
 
 
-HashFilter_Test::HashFilter_Test() {}
-
-
-HashFilter_Test::~HashFilter_Test() {}
-
-
-void HashFilter_Test::setUp() {}
-
-
-void HashFilter_Test::tearDown() {}
-
-
-void HashFilter_Test::testFilterByTag() {
+TEST(TestHashFilter, testFilterByTag) {
     try {
         Schema schema = Configurator<GraphicsRenderer2>::getSchema("GraphicsRenderer2");
 
@@ -437,21 +421,21 @@ void HashFilter_Test::testFilterByTag() {
 
         HashFilter::byTag(schema, config, result, "KW;KW,BH", ",;");
 
-        CPPUNIT_ASSERT(result.has("antiAlias") == false);
-        CPPUNIT_ASSERT(result.has("color") == true);
-        CPPUNIT_ASSERT(result.has("bold") == false);
-        CPPUNIT_ASSERT(result.has("shapes") == true);
-        CPPUNIT_ASSERT(result.has("shapes.rectangle") == true);
-        CPPUNIT_ASSERT(result.has("shapes.rectangle.b") == true);
-        CPPUNIT_ASSERT(result.has("shapes.rectangle.c") == true);
-        CPPUNIT_ASSERT(result.has("letter") == true);
-        CPPUNIT_ASSERT(result.has("letter.a") == true);
-        CPPUNIT_ASSERT(result.has("letter.b") == true);
-        CPPUNIT_ASSERT(result.has("letter.c") == true);
-        CPPUNIT_ASSERT(result.has("letter.d") == false);
-        CPPUNIT_ASSERT(result.has("letter.e") == false);
-        CPPUNIT_ASSERT(result.has("letter.f") == false);
-        CPPUNIT_ASSERT(result.has("table") == false);
+        EXPECT_TRUE(result.has("antiAlias") == false);
+        EXPECT_TRUE(result.has("color") == true);
+        EXPECT_TRUE(result.has("bold") == false);
+        EXPECT_TRUE(result.has("shapes") == true);
+        EXPECT_TRUE(result.has("shapes.rectangle") == true);
+        EXPECT_TRUE(result.has("shapes.rectangle.b") == true);
+        EXPECT_TRUE(result.has("shapes.rectangle.c") == true);
+        EXPECT_TRUE(result.has("letter") == true);
+        EXPECT_TRUE(result.has("letter.a") == true);
+        EXPECT_TRUE(result.has("letter.b") == true);
+        EXPECT_TRUE(result.has("letter.c") == true);
+        EXPECT_TRUE(result.has("letter.d") == false);
+        EXPECT_TRUE(result.has("letter.e") == false);
+        EXPECT_TRUE(result.has("letter.f") == false);
+        EXPECT_TRUE(result.has("table") == false);
 
 
         result.clear();
@@ -460,21 +444,21 @@ void HashFilter_Test::testFilterByTag() {
         //        KARABO_LOG_FRAMEWORK_DEBUG << "JS\n" << result;
 
 
-        CPPUNIT_ASSERT(result.has("antiAlias") == false);
-        CPPUNIT_ASSERT(result.has("color") == false);
-        CPPUNIT_ASSERT(result.has("bold") == false);
-        CPPUNIT_ASSERT(result.has("shapes") == true);
-        CPPUNIT_ASSERT(result.has("shapes.rectangle") == true);
-        CPPUNIT_ASSERT(result.has("shapes.rectangle.b") == true);
-        CPPUNIT_ASSERT(result.has("shapes.rectangle.c") == true);
-        CPPUNIT_ASSERT(result.has("letter") == true);
-        CPPUNIT_ASSERT(result.has("letter.a") == true);
-        CPPUNIT_ASSERT(result.has("letter.b") == false);
-        CPPUNIT_ASSERT(result.has("letter.c") == false);
-        CPPUNIT_ASSERT(result.has("letter.d") == true);
-        CPPUNIT_ASSERT(result.has("letter.e") == false);
-        CPPUNIT_ASSERT(result.has("letter.f") == false);
-        CPPUNIT_ASSERT(result.has("table") == false);
+        EXPECT_TRUE(result.has("antiAlias") == false);
+        EXPECT_TRUE(result.has("color") == false);
+        EXPECT_TRUE(result.has("bold") == false);
+        EXPECT_TRUE(result.has("shapes") == true);
+        EXPECT_TRUE(result.has("shapes.rectangle") == true);
+        EXPECT_TRUE(result.has("shapes.rectangle.b") == true);
+        EXPECT_TRUE(result.has("shapes.rectangle.c") == true);
+        EXPECT_TRUE(result.has("letter") == true);
+        EXPECT_TRUE(result.has("letter.a") == true);
+        EXPECT_TRUE(result.has("letter.b") == false);
+        EXPECT_TRUE(result.has("letter.c") == false);
+        EXPECT_TRUE(result.has("letter.d") == true);
+        EXPECT_TRUE(result.has("letter.e") == false);
+        EXPECT_TRUE(result.has("letter.f") == false);
+        EXPECT_TRUE(result.has("table") == false);
 
 
         result.clear();
@@ -483,21 +467,21 @@ void HashFilter_Test::testFilterByTag() {
         //        KARABO_LOG_FRAMEWORK_DEBUG << "NC,LM\n" << result;
 
 
-        CPPUNIT_ASSERT(result.has("antiAlias") == true);
-        CPPUNIT_ASSERT(result.has("color") == false);
-        CPPUNIT_ASSERT(result.has("bold") == true);
-        CPPUNIT_ASSERT(result.has("shapes") == true);
-        CPPUNIT_ASSERT(result.has("shapes.rectangle") == true);
-        CPPUNIT_ASSERT(result.has("shapes.rectangle.b") == false);
-        CPPUNIT_ASSERT(result.has("shapes.rectangle.c") == true);
-        CPPUNIT_ASSERT(result.has("letter") == true);
-        CPPUNIT_ASSERT(result.has("letter.a") == true);
-        CPPUNIT_ASSERT(result.has("letter.b") == false);
-        CPPUNIT_ASSERT(result.has("letter.c") == false);
-        CPPUNIT_ASSERT(result.has("letter.d") == false);
-        CPPUNIT_ASSERT(result.has("letter.e") == true);
-        CPPUNIT_ASSERT(result.has("letter.f") == true);
-        CPPUNIT_ASSERT(result.has("table") == true);
+        EXPECT_TRUE(result.has("antiAlias") == true);
+        EXPECT_TRUE(result.has("color") == false);
+        EXPECT_TRUE(result.has("bold") == true);
+        EXPECT_TRUE(result.has("shapes") == true);
+        EXPECT_TRUE(result.has("shapes.rectangle") == true);
+        EXPECT_TRUE(result.has("shapes.rectangle.b") == false);
+        EXPECT_TRUE(result.has("shapes.rectangle.c") == true);
+        EXPECT_TRUE(result.has("letter") == true);
+        EXPECT_TRUE(result.has("letter.a") == true);
+        EXPECT_TRUE(result.has("letter.b") == false);
+        EXPECT_TRUE(result.has("letter.c") == false);
+        EXPECT_TRUE(result.has("letter.d") == false);
+        EXPECT_TRUE(result.has("letter.e") == true);
+        EXPECT_TRUE(result.has("letter.f") == true);
+        EXPECT_TRUE(result.has("table") == true);
 
 
         result.clear();
@@ -506,21 +490,21 @@ void HashFilter_Test::testFilterByTag() {
         //        KARABO_LOG_FRAMEWORK_DEBUG << "CY\n" << result;
 
 
-        CPPUNIT_ASSERT(result.has("antiAlias") == false);
-        CPPUNIT_ASSERT(result.has("color") == false);
-        CPPUNIT_ASSERT(result.has("bold") == false);
-        CPPUNIT_ASSERT(result.has("shapes") == true);
-        CPPUNIT_ASSERT(result.has("shapes.rectangle") == true);
-        CPPUNIT_ASSERT(result.has("shapes.rectangle.b") == true);
-        CPPUNIT_ASSERT(result.has("shapes.rectangle.c") == true);
-        CPPUNIT_ASSERT(result.has("letter") == true);
-        CPPUNIT_ASSERT(result.has("letter.a") == true);
-        CPPUNIT_ASSERT(result.has("letter.b") == true);
-        CPPUNIT_ASSERT(result.has("letter.c") == false);
-        CPPUNIT_ASSERT(result.has("letter.d") == true);
-        CPPUNIT_ASSERT(result.has("letter.e") == true);
-        CPPUNIT_ASSERT(result.has("letter.f") == false);
-        CPPUNIT_ASSERT(result.has("table") == false);
+        EXPECT_TRUE(result.has("antiAlias") == false);
+        EXPECT_TRUE(result.has("color") == false);
+        EXPECT_TRUE(result.has("bold") == false);
+        EXPECT_TRUE(result.has("shapes") == true);
+        EXPECT_TRUE(result.has("shapes.rectangle") == true);
+        EXPECT_TRUE(result.has("shapes.rectangle.b") == true);
+        EXPECT_TRUE(result.has("shapes.rectangle.c") == true);
+        EXPECT_TRUE(result.has("letter") == true);
+        EXPECT_TRUE(result.has("letter.a") == true);
+        EXPECT_TRUE(result.has("letter.b") == true);
+        EXPECT_TRUE(result.has("letter.c") == false);
+        EXPECT_TRUE(result.has("letter.d") == true);
+        EXPECT_TRUE(result.has("letter.e") == true);
+        EXPECT_TRUE(result.has("letter.f") == false);
+        EXPECT_TRUE(result.has("table") == false);
 
 
         result.clear();
@@ -529,21 +513,21 @@ void HashFilter_Test::testFilterByTag() {
         //        KARABO_LOG_FRAMEWORK_DEBUG << "BF\n" << result;
 
 
-        CPPUNIT_ASSERT(result.has("antiAlias") == false);
-        CPPUNIT_ASSERT(result.has("color") == false);
-        CPPUNIT_ASSERT(result.has("bold") == false);
-        CPPUNIT_ASSERT(result.has("shapes") == false);
-        CPPUNIT_ASSERT(result.has("shapes.rectangle") == false);
-        CPPUNIT_ASSERT(result.has("shapes.rectangle.b") == false);
-        CPPUNIT_ASSERT(result.has("shapes.rectangle.c") == false);
-        CPPUNIT_ASSERT(result.has("letter") == false);
-        CPPUNIT_ASSERT(result.has("letter.a") == false);
-        CPPUNIT_ASSERT(result.has("letter.b") == false);
-        CPPUNIT_ASSERT(result.has("letter.c") == false);
-        CPPUNIT_ASSERT(result.has("letter.d") == false);
-        CPPUNIT_ASSERT(result.has("letter.e") == false);
-        CPPUNIT_ASSERT(result.has("letter.f") == false);
-        CPPUNIT_ASSERT(result.has("table") == false);
+        EXPECT_TRUE(result.has("antiAlias") == false);
+        EXPECT_TRUE(result.has("color") == false);
+        EXPECT_TRUE(result.has("bold") == false);
+        EXPECT_TRUE(result.has("shapes") == false);
+        EXPECT_TRUE(result.has("shapes.rectangle") == false);
+        EXPECT_TRUE(result.has("shapes.rectangle.b") == false);
+        EXPECT_TRUE(result.has("shapes.rectangle.c") == false);
+        EXPECT_TRUE(result.has("letter") == false);
+        EXPECT_TRUE(result.has("letter.a") == false);
+        EXPECT_TRUE(result.has("letter.b") == false);
+        EXPECT_TRUE(result.has("letter.c") == false);
+        EXPECT_TRUE(result.has("letter.d") == false);
+        EXPECT_TRUE(result.has("letter.e") == false);
+        EXPECT_TRUE(result.has("letter.f") == false);
+        EXPECT_TRUE(result.has("table") == false);
 
 
         result.clear();
@@ -552,21 +536,21 @@ void HashFilter_Test::testFilterByTag() {
         //        KARABO_LOG_FRAMEWORK_DEBUG << "WP76\n" << result;
 
 
-        CPPUNIT_ASSERT(result.has("antiAlias") == false);
-        CPPUNIT_ASSERT(result.has("color") == false);
-        CPPUNIT_ASSERT(result.has("bold") == false);
-        CPPUNIT_ASSERT(result.has("shapes") == false);
-        CPPUNIT_ASSERT(result.has("shapes.rectangle") == false);
-        CPPUNIT_ASSERT(result.has("shapes.rectangle.b") == false);
-        CPPUNIT_ASSERT(result.has("shapes.rectangle.c") == false);
-        CPPUNIT_ASSERT(result.has("letter") == false);
-        CPPUNIT_ASSERT(result.has("letter.a") == false);
-        CPPUNIT_ASSERT(result.has("letter.b") == false);
-        CPPUNIT_ASSERT(result.has("letter.c") == false);
-        CPPUNIT_ASSERT(result.has("letter.d") == false);
-        CPPUNIT_ASSERT(result.has("letter.e") == false);
-        CPPUNIT_ASSERT(result.has("letter.f") == false);
-        CPPUNIT_ASSERT(result.has("table") == false);
+        EXPECT_TRUE(result.has("antiAlias") == false);
+        EXPECT_TRUE(result.has("color") == false);
+        EXPECT_TRUE(result.has("bold") == false);
+        EXPECT_TRUE(result.has("shapes") == false);
+        EXPECT_TRUE(result.has("shapes.rectangle") == false);
+        EXPECT_TRUE(result.has("shapes.rectangle.b") == false);
+        EXPECT_TRUE(result.has("shapes.rectangle.c") == false);
+        EXPECT_TRUE(result.has("letter") == false);
+        EXPECT_TRUE(result.has("letter.a") == false);
+        EXPECT_TRUE(result.has("letter.b") == false);
+        EXPECT_TRUE(result.has("letter.c") == false);
+        EXPECT_TRUE(result.has("letter.d") == false);
+        EXPECT_TRUE(result.has("letter.e") == false);
+        EXPECT_TRUE(result.has("letter.f") == false);
+        EXPECT_TRUE(result.has("table") == false);
 
 
     } catch (const karabo::data::Exception& e) {
@@ -575,7 +559,7 @@ void HashFilter_Test::testFilterByTag() {
 }
 
 
-void HashFilter_Test::testFilterByAccessMode() {
+TEST(TestHashFilter, testFilterByAccessMode) {
     try {
         Schema schema = Configurator<GraphicsRenderer2>::getSchema("GraphicsRenderer2");
 
@@ -588,23 +572,23 @@ void HashFilter_Test::testFilterByAccessMode() {
 
         KARABO_LOG_FRAMEWORK_DEBUG_C("HashFilter_Test") << "\nINIT ...\n" << result;
 
-        CPPUNIT_ASSERT(result.has("antiAlias") == true);
-        CPPUNIT_ASSERT(result.has("color") == false);
-        CPPUNIT_ASSERT(result.has("bold") == false);
-        CPPUNIT_ASSERT(result.has("shapes") == true);
-        CPPUNIT_ASSERT(result.has("shapes.rectangle") == true);
-        CPPUNIT_ASSERT(result.has("shapes.rectangle.b") == true);
-        CPPUNIT_ASSERT(result.has("shapes.rectangle.c") == true);
-        CPPUNIT_ASSERT(result.has("letter") == true);
-        CPPUNIT_ASSERT(result.has("letter.a") == true);
-        CPPUNIT_ASSERT(result.has("letter.b") == false);
-        CPPUNIT_ASSERT(result.has("letter.c") == true);
-        CPPUNIT_ASSERT(result.has("letter.d") == false);
-        CPPUNIT_ASSERT(result.has("letter.e") == true);
-        CPPUNIT_ASSERT(result.has("letter.f") == true);
-        CPPUNIT_ASSERT(result.has("number") == false);
-        CPPUNIT_ASSERT(result.has("state") == false);
-        CPPUNIT_ASSERT(result.has("table") == true);
+        EXPECT_TRUE(result.has("antiAlias") == true);
+        EXPECT_TRUE(result.has("color") == false);
+        EXPECT_TRUE(result.has("bold") == false);
+        EXPECT_TRUE(result.has("shapes") == true);
+        EXPECT_TRUE(result.has("shapes.rectangle") == true);
+        EXPECT_TRUE(result.has("shapes.rectangle.b") == true);
+        EXPECT_TRUE(result.has("shapes.rectangle.c") == true);
+        EXPECT_TRUE(result.has("letter") == true);
+        EXPECT_TRUE(result.has("letter.a") == true);
+        EXPECT_TRUE(result.has("letter.b") == false);
+        EXPECT_TRUE(result.has("letter.c") == true);
+        EXPECT_TRUE(result.has("letter.d") == false);
+        EXPECT_TRUE(result.has("letter.e") == true);
+        EXPECT_TRUE(result.has("letter.f") == true);
+        EXPECT_TRUE(result.has("number") == false);
+        EXPECT_TRUE(result.has("state") == false);
+        EXPECT_TRUE(result.has("table") == true);
 
         result.clear();
         HashFilter::byAccessMode(schema, config, result, karabo::data::READ);
@@ -612,23 +596,23 @@ void HashFilter_Test::testFilterByAccessMode() {
         KARABO_LOG_FRAMEWORK_DEBUG_C("HashFilter_Test") << "\nREAD ...\n" << result;
 
 
-        CPPUNIT_ASSERT(result.has("antiAlias") == false);
-        CPPUNIT_ASSERT(result.has("color") == false);
-        CPPUNIT_ASSERT(result.has("bold") == false);
-        CPPUNIT_ASSERT(result.has("shapes") == false);
-        CPPUNIT_ASSERT(result.has("shapes.rectangle") == false);
-        CPPUNIT_ASSERT(result.has("shapes.rectangle.b") == false);
-        CPPUNIT_ASSERT(result.has("shapes.rectangle.c") == false);
-        CPPUNIT_ASSERT(result.has("letter") == false);
-        CPPUNIT_ASSERT(result.has("letter.a") == false);
-        CPPUNIT_ASSERT(result.has("letter.b") == false);
-        CPPUNIT_ASSERT(result.has("letter.c") == false);
-        CPPUNIT_ASSERT(result.has("letter.d") == false);
-        CPPUNIT_ASSERT(result.has("letter.e") == false);
-        CPPUNIT_ASSERT(result.has("letter.f") == false);
-        CPPUNIT_ASSERT(result.has("number") == true);
-        CPPUNIT_ASSERT(result.has("state") == true);
-        CPPUNIT_ASSERT(result.has("table") == false);
+        EXPECT_TRUE(result.has("antiAlias") == false);
+        EXPECT_TRUE(result.has("color") == false);
+        EXPECT_TRUE(result.has("bold") == false);
+        EXPECT_TRUE(result.has("shapes") == false);
+        EXPECT_TRUE(result.has("shapes.rectangle") == false);
+        EXPECT_TRUE(result.has("shapes.rectangle.b") == false);
+        EXPECT_TRUE(result.has("shapes.rectangle.c") == false);
+        EXPECT_TRUE(result.has("letter") == false);
+        EXPECT_TRUE(result.has("letter.a") == false);
+        EXPECT_TRUE(result.has("letter.b") == false);
+        EXPECT_TRUE(result.has("letter.c") == false);
+        EXPECT_TRUE(result.has("letter.d") == false);
+        EXPECT_TRUE(result.has("letter.e") == false);
+        EXPECT_TRUE(result.has("letter.f") == false);
+        EXPECT_TRUE(result.has("number") == true);
+        EXPECT_TRUE(result.has("state") == true);
+        EXPECT_TRUE(result.has("table") == false);
 
 
         result.clear();
@@ -637,23 +621,23 @@ void HashFilter_Test::testFilterByAccessMode() {
         KARABO_LOG_FRAMEWORK_DEBUG_C("HashFilter_Test") << "\nWRITE ...\n" << result;
 
 
-        CPPUNIT_ASSERT(result.has("antiAlias") == false);
-        CPPUNIT_ASSERT(result.has("color") == true);
-        CPPUNIT_ASSERT(result.has("bold") == true);
-        CPPUNIT_ASSERT(result.has("shapes") == false);
-        CPPUNIT_ASSERT(result.has("shapes.rectangle") == false);
-        CPPUNIT_ASSERT(result.has("shapes.rectangle.b") == false);
-        CPPUNIT_ASSERT(result.has("shapes.rectangle.c") == false);
-        CPPUNIT_ASSERT(result.has("letter") == true);
-        CPPUNIT_ASSERT(result.has("letter.a") == false);
-        CPPUNIT_ASSERT(result.has("letter.b") == true);
-        CPPUNIT_ASSERT(result.has("letter.c") == false);
-        CPPUNIT_ASSERT(result.has("letter.d") == true);
-        CPPUNIT_ASSERT(result.has("letter.e") == false);
-        CPPUNIT_ASSERT(result.has("letter.f") == false);
-        CPPUNIT_ASSERT(result.has("number") == false);
-        CPPUNIT_ASSERT(result.has("state") == false);
-        CPPUNIT_ASSERT(result.has("table") == false);
+        EXPECT_TRUE(result.has("antiAlias") == false);
+        EXPECT_TRUE(result.has("color") == true);
+        EXPECT_TRUE(result.has("bold") == true);
+        EXPECT_TRUE(result.has("shapes") == false);
+        EXPECT_TRUE(result.has("shapes.rectangle") == false);
+        EXPECT_TRUE(result.has("shapes.rectangle.b") == false);
+        EXPECT_TRUE(result.has("shapes.rectangle.c") == false);
+        EXPECT_TRUE(result.has("letter") == true);
+        EXPECT_TRUE(result.has("letter.a") == false);
+        EXPECT_TRUE(result.has("letter.b") == true);
+        EXPECT_TRUE(result.has("letter.c") == false);
+        EXPECT_TRUE(result.has("letter.d") == true);
+        EXPECT_TRUE(result.has("letter.e") == false);
+        EXPECT_TRUE(result.has("letter.f") == false);
+        EXPECT_TRUE(result.has("number") == false);
+        EXPECT_TRUE(result.has("state") == false);
+        EXPECT_TRUE(result.has("table") == false);
 
     } catch (const karabo::data::Exception& e) {
         KARABO_LOG_FRAMEWORK_WARN_C("HashFilter_Test") << e;
@@ -664,7 +648,7 @@ void HashFilter_Test::testFilterByAccessMode() {
 #ifdef HASHFILTER_HDF5TEST
 
 
-void HashFilter_Test::testHdf5Filter() {
+TEST(TestHashFilter, testHdf5Filter) {
     using namespace karabo::data;
 
     Hash data("instrument.a", 10, "instrument.b", 2.4, "c", "Hello World");

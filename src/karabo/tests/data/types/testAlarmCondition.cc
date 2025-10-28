@@ -16,19 +16,21 @@
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
 /*
- * File:   AlarmCondition_Test.cc
+ * File:   AlarmCondition_Test.hh
  * Author: haufs
  *
  * Created on Jun 9, 2016, 9:42:54 AM
  */
 
-#include "AlarmCondition_Test.hh"
+#include <gtest/gtest.h>
 
 #include <boost/aligned_storage.hpp>
+#include <karabo/log/Logger.hh>
 #include <karabo/util/TimeProfiler.hh>
 #include <string>
 #include <vector>
 
+#include "karabo/data/schema/Configurator.hh"
 #include "karabo/data/schema/SimpleElement.hh"
 #include "karabo/data/schema/Validator.hh"
 #include "karabo/data/time/TimeDuration.hh"
@@ -36,48 +38,34 @@
 #include "karabo/data/types/AlarmCondition.hh"
 #include "karabo/data/types/Schema.hh"
 
-CPPUNIT_TEST_SUITE_REGISTRATION(AlarmCondition_Test);
 
-
-AlarmCondition_Test::AlarmCondition_Test() {}
-
-
-AlarmCondition_Test::~AlarmCondition_Test() {}
-
-
-void AlarmCondition_Test::setUp() {}
-
-
-void AlarmCondition_Test::tearDown() {}
-
-
-void AlarmCondition_Test::testOperators() {
-    CPPUNIT_ASSERT(karabo::data::AlarmCondition::WARN == karabo::data::AlarmCondition::WARN);
-    CPPUNIT_ASSERT(!(karabo::data::AlarmCondition::WARN != karabo::data::AlarmCondition::WARN));
+TEST(TestAlarmCondition, testOperators) {
+    EXPECT_TRUE(karabo::data::AlarmCondition::WARN == karabo::data::AlarmCondition::WARN);
+    EXPECT_TRUE(!(karabo::data::AlarmCondition::WARN != karabo::data::AlarmCondition::WARN));
 }
 
-void AlarmCondition_Test::testStringAssignmentRoundTrip() {
+TEST(TestAlarmCondition, testStringAssignmentRoundTrip) {
     karabo::data::AlarmCondition condition = karabo::data::AlarmCondition::fromString("warn");
     std::string conditionString = condition;
-    CPPUNIT_ASSERT(conditionString == "warn");
-    CPPUNIT_ASSERT(condition.asString() == "warn");
+    EXPECT_TRUE(conditionString == "warn");
+    EXPECT_TRUE(condition.asString() == "warn");
 }
 
 
-void AlarmCondition_Test::testSignificanceEvaluation() {
+TEST(TestAlarmCondition, testSignificanceEvaluation) {
     std::vector<karabo::data::AlarmCondition> v;
     karabo::data::AlarmCondition ms = karabo::data::AlarmCondition::returnMostSignificant(v);
-    CPPUNIT_ASSERT(ms.isSameCriticality(karabo::data::AlarmCondition::NONE));
+    EXPECT_TRUE(ms.isSameCriticality(karabo::data::AlarmCondition::NONE));
 
     v.push_back(karabo::data::AlarmCondition::WARN);
     v.push_back(karabo::data::AlarmCondition::ALARM);
     v.push_back(karabo::data::AlarmCondition::INTERLOCK);
     ms = karabo::data::AlarmCondition::returnMostSignificant(v);
-    CPPUNIT_ASSERT(ms.isSameCriticality(karabo::data::AlarmCondition::INTERLOCK));
+    EXPECT_TRUE(ms.isSameCriticality(karabo::data::AlarmCondition::INTERLOCK));
 
 
     v.pop_back();
     v.push_back(karabo::data::AlarmCondition::WARN);
     ms = karabo::data::AlarmCondition::returnMostSignificant(v);
-    CPPUNIT_ASSERT(ms.isSameCriticality(karabo::data::AlarmCondition::ALARM));
+    EXPECT_TRUE(ms.isSameCriticality(karabo::data::AlarmCondition::ALARM));
 }
