@@ -89,11 +89,11 @@ add_test(NAME dataTypesTestRunner COMMAND dataTypesTestRunner testresults/dataTy
 
 file(GLOB dataTimeTestRunner_FILES CMAKE_CONFIGURE_DEPENDS
      "${CMAKE_CURRENT_SOURCE_DIR}/data/time/*.cc")
-list(APPEND dataTimeTestRunner_FILES $<TARGET_OBJECTS:TEST_RUNNER_NOLOOP>)
+list(APPEND dataTimeTestRunner_FILES $<TARGET_OBJECTS:GTEST_RUNNER_NOLOOP>)
 
 add_executable(dataTimeTestRunner ${dataTime_FILES} ${dataTypes_FILES} ${dataSchema_FILES} ${karaboUtil_FILES} ${karaboLog_FILES} ${dataTimeTestRunner_FILES})
 target_compile_options(dataTimeTestRunner PRIVATE -DKARABO_TESTPATH=\"${CMAKE_CURRENT_SOURCE_DIR}/\")
-target_link_libraries(dataTimeTestRunner spdlog::spdlog cppunit::cppunit)
+target_link_libraries(dataTimeTestRunner spdlog::spdlog GTest::gtest)
 target_include_directories(dataTimeTestRunner PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../..")
 add_test(NAME dataTimeTestRunner COMMAND dataTimeTestRunner testresults/dataTimeTestRunner.xml)
 
