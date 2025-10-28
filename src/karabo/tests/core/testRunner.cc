@@ -22,26 +22,18 @@
  * Created on February 21, 2017, 2:37 PM
  */
 
-#include "Runner_Test.hh"
+#include <gtest/gtest.h>
 
 #include <karabo/karabo.hpp>
 
-CPPUNIT_TEST_SUITE_REGISTRATION(Runner_Test);
+class RunnerDerived : public karabo::core::Runner {
+   public:
+    static void parseCmd(int argc, const char** argv, karabo::data::Hash& configuration) {
+        karabo::core::Runner::parseCommandLine(argc, argv, configuration);
+    }
+};
 
-
-Runner_Test::Runner_Test() {}
-
-
-Runner_Test::~Runner_Test() {}
-
-
-void Runner_Test::setUp() {}
-
-
-void Runner_Test::tearDown() {}
-
-
-void Runner_Test::testRunnerSuccess() {
+TEST(TestRunner, testRunnerSuccess) {
     using namespace karabo::data;
     std::string initval =
           "{\"KaraboDataLoggerManager\": {\"classId\": \"DataLoggerManager\", "
@@ -52,52 +44,52 @@ void Runner_Test::testRunnerSuccess() {
     char const* argv[] = {"SomeExecutable", "serverId=foo", initStr.c_str(), "log.level=DEBUG"};
     int argc = sizeof(argv) / sizeof(argv[0]);
     Hash configuration;
-    CPPUNIT_ASSERT_NO_THROW(RunnerDerived::parseCmd(argc, argv, configuration));
-    CPPUNIT_ASSERT(configuration.get<std::string>("serverId") == "foo");
-    CPPUNIT_ASSERT(configuration.get<std::string>("init") == initval);
-    CPPUNIT_ASSERT(configuration.get<std::string>("log.level") == "DEBUG");
+    EXPECT_NO_THROW(RunnerDerived::parseCmd(argc, argv, configuration));
+    EXPECT_TRUE(configuration.get<std::string>("serverId") == "foo");
+    EXPECT_TRUE(configuration.get<std::string>("init") == initval);
+    EXPECT_TRUE(configuration.get<std::string>("log.level") == "DEBUG");
 }
 
 
-void Runner_Test::testRunnerSuccess2() {
+TEST(TestRunner, testRunnerSuccess2) {
     using namespace karabo::data;
     const char* argv[] = {"AnotherExecutable5", "serverId=bingo", "node.subnode.position=20", "node.subnode.value=2,1"};
     const int argc = sizeof(argv) / sizeof(argv[0]);
     Hash configuration;
-    CPPUNIT_ASSERT_NO_THROW(RunnerDerived::parseCmd(argc, argv, configuration));
-    CPPUNIT_ASSERT(configuration.get<std::string>("serverId") == "bingo");
-    CPPUNIT_ASSERT(configuration.get<std::string>("node.subnode.position") == "20");
-    CPPUNIT_ASSERT(configuration.get<std::string>("node.subnode.value") == "2,1");
+    EXPECT_NO_THROW(RunnerDerived::parseCmd(argc, argv, configuration));
+    EXPECT_TRUE(configuration.get<std::string>("serverId") == "bingo");
+    EXPECT_TRUE(configuration.get<std::string>("node.subnode.position") == "20");
+    EXPECT_TRUE(configuration.get<std::string>("node.subnode.value") == "2,1");
 }
 
 
-void Runner_Test::testRunnerSuccess3() {
+TEST(TestRunner, testRunnerSuccess3) {
     using namespace karabo::data;
     const char* argv[] = {"AnotherExecutable", "serverId=bar", "a={b=1", "c=2", "d=3", "e={x=15", "y=88}"};
     const int argc = sizeof(argv) / sizeof(argv[0]);
     Hash configuration;
-    CPPUNIT_ASSERT_NO_THROW(RunnerDerived::parseCmd(argc, argv, configuration));
-    CPPUNIT_ASSERT(configuration.get<std::string>("serverId") == "bar");
-    CPPUNIT_ASSERT(configuration.get<std::string>("a") == "{b=1");
+    EXPECT_NO_THROW(RunnerDerived::parseCmd(argc, argv, configuration));
+    EXPECT_TRUE(configuration.get<std::string>("serverId") == "bar");
+    EXPECT_TRUE(configuration.get<std::string>("a") == "{b=1");
 }
 
 
-void Runner_Test::testRunnerSuccess4() {
+TEST(TestRunner, testRunnerSuccess4) {
     using namespace karabo::data;
     // tests an empty string
     const char* argv[] = {"AnotherExecutable", "serverId="};
     const int argc = sizeof(argv) / sizeof(argv[0]);
     Hash configuration;
-    CPPUNIT_ASSERT_NO_THROW(RunnerDerived::parseCmd(argc, argv, configuration));
-    CPPUNIT_ASSERT(configuration.get<std::string>("serverId") == "");
+    EXPECT_NO_THROW(RunnerDerived::parseCmd(argc, argv, configuration));
+    EXPECT_TRUE(configuration.get<std::string>("serverId") == "");
 }
 
 
-void Runner_Test::testRunnerFailure() {
+TEST(TestRunner, testRunnerFailure) {
     using namespace karabo::data;
     // tests non completed kwarg
     const char* argv[] = {"AnotherExecutable", "serverId"};
     const int argc = sizeof(argv) / sizeof(argv[0]);
     Hash configuration;
-    CPPUNIT_ASSERT_THROW(RunnerDerived::parseCmd(argc, argv, configuration), ParameterException);
+    EXPECT_THROW(RunnerDerived::parseCmd(argc, argv, configuration), ParameterException);
 }

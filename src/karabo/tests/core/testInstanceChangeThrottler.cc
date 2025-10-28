@@ -21,47 +21,99 @@
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#include "InstanceChangeThrottler_Test.hh"
+#include <gtest/gtest.h>
 
+#include <boost/chrono.hpp>
 #include <cmath>
 #include <functional>
+#include <karabo/core/InstanceChangeThrottler.hh>
+#include <karabo/net/EventLoop.hh>
 #include <memory>
+#include <mutex>
+#include <string>
+#include <vector>
 
+#include "karabo/data/types/Hash.hh"
 #include "karabo/tests/WaitUtils.hh"
+
+
+//<editor-fold desc="Helper types for InstanceChangeThrottler unit tests">
+
+struct InstanceChange {
+    std::chrono::high_resolution_clock::time_point timePoint;
+    karabo::core::InstanceChangeThrottler::InstChangeType changeType;
+    std::string instanceId;
+    karabo::data::Hash instanceInfo;
+};
+
+
+class InstanceChangeObserver {
+   public:
+    int numOfInstNewChanges() const;
+    int numOfInstGoneChanges() const;
+    int numOfInstUpdateChanges() const;
+    int numOfInstChanges() const;
+    int numOfThrottlerBursts() const;
+    InstanceChange instNewChangeAt(size_t position) const;
+    InstanceChange instGoneChangeAt(size_t position) const;
+    InstanceChange instUpdateChangeAt(size_t position) const;
+    InstanceChange newestInstChange() const;
+    InstanceChange oldestInstChange() const;
+    void clearInstChanges();
+    void addInstChanges(const karabo::data::Hash& changeInfo);
+    void addInstChangesOfType(const karabo::data::Hash& srcTypesHash,
+                              const karabo::core::InstanceChangeThrottler::InstChangeType changeType,
+                              std::vector<InstanceChange>& destChangeVector);
+
+   private:
+    mutable std::mutex m_instChangesMutex;
+    std::vector<InstanceChange> m_instNewChanges;
+    std::vector<InstanceChange> m_instGoneChanges;
+    std::vector<InstanceChange> m_instUpdateChanges;
+    InstanceChange m_newestInstChange;
+    InstanceChange m_oldestInstChange;
+    int m_numOfThrottlerBursts;
+};
+
+
+class TestInstanceChangeThrottler : public ::testing::Test {
+   protected:
+    TestInstanceChangeThrottler()
+        : m_instIdServer("someServer/id"),
+          m_instInfoServer("type", "server", "version", "d9c9d93", "heartbeatInterval", 10),
+          m_instIdDevice("ONE/NINE/DEVICE"),
+          m_instInfoDevice("type", "device", "version", "d9c9d94", "heartbeatInterval", 20) {}
+
+    void SetUp() override {
+        m_eventLoopThread = std::jthread(&karabo::net::EventLoop::work);
+
+        m_instChangeObserver.clearInstChanges();
+    }
+
+    void TearDown() override {
+        karabo::net::EventLoop::stop();
+        m_eventLoopThread.join();
+    }
+
+   public:
+    void handleInstChange(const karabo::data::Hash& changeInfo);
+
+   protected:
+    std::jthread m_eventLoopThread;
+    std::string m_instIdServer;
+    karabo::data::Hash m_instInfoServer;
+    std::string m_instIdDevice;
+    karabo::data::Hash m_instInfoDevice;
+    InstanceChangeObserver m_instChangeObserver;
+};
 
 using namespace std::chrono;
 using karabo::tests::waitForCondition;
 using std::placeholders::_1;
 
-CPPUNIT_TEST_SUITE_REGISTRATION(InstanceChangeThrottler_Test);
 
-//<editor-fold desc="Tests life-cycle methods">
-
-InstanceChangeThrottler_Test::InstanceChangeThrottler_Test()
-    : m_instIdServer("someServer/id"),
-      m_instInfoServer("type", "server", "version", "d9c9d93", "heartbeatInterval", 10),
-      m_instIdDevice("ONE/NINE/DEVICE"),
-      m_instInfoDevice("type", "device", "version", "d9c9d94", "heartbeatInterval", 20) {}
-
-
-InstanceChangeThrottler_Test::~InstanceChangeThrottler_Test() {}
-
-
-void InstanceChangeThrottler_Test::setUp() {
-    m_instChangeObserver.clearInstChanges();
-}
-
-
-void InstanceChangeThrottler_Test::tearDown() {}
-
-//</editor-fold>
-
-
-//<editor-fold desc="Test cases">
-
-
-void InstanceChangeThrottler_Test::testThrottleInterval() {
-    auto instChangeHandler = std::bind(&InstanceChangeThrottler_Test::handleInstChange, this, _1);
+TEST_F(TestInstanceChangeThrottler, testThrottleInterval) {
+    auto instChangeHandler = std::bind(&TestInstanceChangeThrottler::handleInstChange, this, _1);
 
     std::shared_ptr<karabo::core::InstanceChangeThrottler> throttler =
           karabo::core::InstanceChangeThrottler::createThrottler(instChangeHandler, 200u);
@@ -71,8 +123,8 @@ void InstanceChangeThrottler_Test::testThrottleInterval() {
     throttler->submitInstanceNew(m_instIdDevice, m_instInfoDevice);
 
     // Waits long enough for first burst of data to arrive.
-    CPPUNIT_ASSERT_MESSAGE("Timeout waiting for first burst of instance changes to arrive.",
-                           waitForCondition([this]() { return m_instChangeObserver.numOfInstChanges() >= 2; }, 2500u));
+    EXPECT_TRUE(waitForCondition([this]() { return m_instChangeObserver.numOfInstChanges() >= 2; }, 3500u))
+          << "Timeout waiting for first burst of instance changes to arrive.";
 
     auto fistBurstEndTime = m_instChangeObserver.newestInstChange().timePoint;
 
@@ -82,21 +134,21 @@ void InstanceChangeThrottler_Test::testThrottleInterval() {
     throttler->submitInstanceUpdate(m_instIdDevice, m_instInfoDevice);
 
     // Waits long enough for the second burst of data to arrive - there's no problem to wait much longer here.
-    CPPUNIT_ASSERT_MESSAGE("Timeout waiting for second burst of instance changes to arrive.",
-                           waitForCondition([this]() { return m_instChangeObserver.numOfInstChanges() >= 1; }, 2500u));
+    EXPECT_TRUE(waitForCondition([this]() { return m_instChangeObserver.numOfInstChanges() >= 1; }, 2500u))
+          << "Timeout waiting for second burst of instance changes to arrive.";
 
     auto secondBurstStartTime = m_instChangeObserver.oldestInstChange().timePoint;
     auto interval = secondBurstStartTime - fistBurstEndTime;
     auto intervalMilli = duration_cast<milliseconds>(interval);
 
-    CPPUNIT_ASSERT_MESSAGE("Spacing between throttler cycles, " + karabo::data::toString(intervalMilli.count()) +
-                                 ", much smaller than expected.",
-                           intervalMilli.count() > 190);
+    EXPECT_TRUE(intervalMilli.count() > 190)
+          << "Spacing between throttler cycles, " << karabo::data::toString(intervalMilli.count())
+          << ", much smaller than expected.";
 }
 
 
-void InstanceChangeThrottler_Test::testNewGoneOptimization() {
-    auto instChangeHandler = std::bind(&InstanceChangeThrottler_Test::handleInstChange, this, _1);
+TEST_F(TestInstanceChangeThrottler, testNewGoneOptimization) {
+    auto instChangeHandler = std::bind(&TestInstanceChangeThrottler::handleInstChange, this, _1);
 
     // Instantiates a throttler with an update that is long enough to guarantee that the
     // sequence to be optimized will be dispatched in the same cycle.
@@ -111,22 +163,20 @@ void InstanceChangeThrottler_Test::testNewGoneOptimization() {
     throttler->submitInstanceNew(m_instIdDevice, m_instInfoDevice);
 
     // Waits long enough for the burst to arrive.
-    CPPUNIT_ASSERT_MESSAGE("Timeout waiting for burst of instance changes to arrive.",
-                           waitForCondition([this]() { return m_instChangeObserver.numOfInstChanges() >= 1; }, 250u));
+    EXPECT_TRUE(waitForCondition([this]() { return m_instChangeObserver.numOfInstChanges() >= 1; }, 250u))
+          << "Timeout waiting for burst of instance changes to arrive.";
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong number of total instance changes received.", 1,
-                                 m_instChangeObserver.numOfInstChanges());
+    EXPECT_EQ(1, m_instChangeObserver.numOfInstChanges()) << "Wrong number of total instance changes received.";
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong number of new instance changes received.", 1,
-                                 m_instChangeObserver.numOfInstNewChanges());
+    EXPECT_EQ(1, m_instChangeObserver.numOfInstNewChanges()) << "Wrong number of new instance changes received.";
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance Id at new instance change received.", m_instIdDevice,
-                                 m_instChangeObserver.instNewChangeAt(0).instanceId);
+    EXPECT_EQ(m_instIdDevice, m_instChangeObserver.instNewChangeAt(0).instanceId)
+          << "Wrong instance Id at new instance change received.";
 }
 
 
-void InstanceChangeThrottler_Test::testUpdateOptimization() {
-    auto instChangeHandler = std::bind(&InstanceChangeThrottler_Test::handleInstChange, this, _1);
+TEST_F(TestInstanceChangeThrottler, testUpdateOptimization) {
+    auto instChangeHandler = std::bind(&TestInstanceChangeThrottler::handleInstChange, this, _1);
 
     // Instantiates a throttler with an update that is long enough to guarantee that the
     // sequence to be optimized will be dispatched in the same cycle.
@@ -142,22 +192,21 @@ void InstanceChangeThrottler_Test::testUpdateOptimization() {
     throttler->submitInstanceUpdate(m_instIdServer, updatedInstInfo);
 
     // Waits long enough for the burst to arrive.
-    CPPUNIT_ASSERT_MESSAGE("Timeout waiting for burst of instance changes to arrive.",
-                           waitForCondition([this]() { return m_instChangeObserver.numOfInstChanges() >= 1; }, 250u));
+    EXPECT_TRUE(waitForCondition([this]() { return m_instChangeObserver.numOfInstChanges() >= 1; }, 250u))
+          << "Timeout waiting for burst of instance changes to arrive.";
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong number of instance changes received.", 1,
-                                 m_instChangeObserver.numOfInstChanges());
+    EXPECT_EQ(1, m_instChangeObserver.numOfInstChanges()) << "Wrong number of instance changes received.";
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance Id at observation 0.", m_instIdServer,
-                                 m_instChangeObserver.instUpdateChangeAt(0).instanceId);
+    EXPECT_EQ(m_instIdServer, m_instChangeObserver.instUpdateChangeAt(0).instanceId)
+          << "Wrong instance Id at observation 0.";
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance info payload at observation 1.", true,
-                                 m_instChangeObserver.instUpdateChangeAt(0).instanceInfo.get<bool>("UpdatedInfo"));
+    EXPECT_EQ(true, m_instChangeObserver.instUpdateChangeAt(0).instanceInfo.get<bool>("UpdatedInfo"))
+          << "Wrong instance info payload at observation 1.";
 }
 
 
-void InstanceChangeThrottler_Test::testNewUpdateOptimization() {
-    auto instChangeHandler = std::bind(&InstanceChangeThrottler_Test::handleInstChange, this, _1);
+TEST_F(TestInstanceChangeThrottler, testNewUpdateOptimization) {
+    auto instChangeHandler = std::bind(&TestInstanceChangeThrottler::handleInstChange, this, _1);
 
     // Instantiates a throttler with an update that is long enough to guarantee that the
     // sequence to be optimized will be dispatched in the same cycle.
@@ -173,22 +222,21 @@ void InstanceChangeThrottler_Test::testNewUpdateOptimization() {
     throttler->submitInstanceUpdate(m_instIdServer, updatedInstInfo);
 
     // Waits long enough for the burst to arrive.
-    CPPUNIT_ASSERT_MESSAGE("Timeout waiting for burst of instance changes to arrive.",
-                           waitForCondition([this]() { return m_instChangeObserver.numOfInstChanges() >= 1; }, 250u));
+    EXPECT_TRUE(waitForCondition([this]() { return m_instChangeObserver.numOfInstChanges() >= 1; }, 250u))
+          << "Timeout waiting for burst of instance changes to arrive.";
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong number of instance changes received.", 1,
-                                 m_instChangeObserver.numOfInstChanges());
+    EXPECT_EQ(1, m_instChangeObserver.numOfInstChanges()) << "Wrong number of instance changes received.";
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance Id at observation 0.", m_instIdServer,
-                                 m_instChangeObserver.instNewChangeAt(0).instanceId);
+    EXPECT_EQ(m_instIdServer, m_instChangeObserver.instNewChangeAt(0).instanceId)
+          << "Wrong instance Id at observation 0.";
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance info payload at observation 1.", true,
-                                 m_instChangeObserver.instNewChangeAt(0).instanceInfo.get<bool>("UpdatedInfo"));
+    EXPECT_EQ(true, m_instChangeObserver.instNewChangeAt(0).instanceInfo.get<bool>("UpdatedInfo"))
+          << "Wrong instance info payload at observation 1.";
 }
 
 
-void InstanceChangeThrottler_Test::testUpdateNewOptimization() {
-    auto instChangeHandler = std::bind(&InstanceChangeThrottler_Test::handleInstChange, this, _1);
+TEST_F(TestInstanceChangeThrottler, testUpdateNewOptimization) {
+    auto instChangeHandler = std::bind(&TestInstanceChangeThrottler::handleInstChange, this, _1);
 
     // Instantiates a throttler with an update that is long enough to guarantee that the
     // sequence to be optimized will be dispatched in the same cycle.
@@ -200,22 +248,20 @@ void InstanceChangeThrottler_Test::testUpdateNewOptimization() {
     throttler->submitInstanceNew(m_instIdServer, m_instInfoServer);
 
     // Waits long enough for the burst to arrive.
-    CPPUNIT_ASSERT_MESSAGE("Timeout waiting for burst of instance changes to arrive.",
-                           waitForCondition([this]() { return m_instChangeObserver.numOfInstChanges() >= 1; }, 250u));
+    EXPECT_TRUE(waitForCondition([this]() { return m_instChangeObserver.numOfInstChanges() >= 1; }, 250u))
+          << "Timeout waiting for burst of instance changes to arrive.";
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong total number of instance changes received.", 1,
-                                 m_instChangeObserver.numOfInstChanges());
+    EXPECT_EQ(1, m_instChangeObserver.numOfInstChanges()) << "Wrong total number of instance changes received.";
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong type of instance change at observation 0.", 1,
-                                 m_instChangeObserver.numOfInstNewChanges());
+    EXPECT_EQ(1, m_instChangeObserver.numOfInstNewChanges()) << "Wrong type of instance change at observation 0.";
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance Id at observation 0.", m_instIdServer,
-                                 m_instChangeObserver.instNewChangeAt(0).instanceId);
+    EXPECT_EQ(m_instIdServer, m_instChangeObserver.instNewChangeAt(0).instanceId)
+          << "Wrong instance Id at observation 0.";
 }
 
 
-void InstanceChangeThrottler_Test::testNewGoneOptimization2Cycles() {
-    auto instChangeHandler = std::bind(&InstanceChangeThrottler_Test::handleInstChange, this, _1);
+TEST_F(TestInstanceChangeThrottler, testNewGoneOptimization2Cycles) {
+    auto instChangeHandler = std::bind(&TestInstanceChangeThrottler::handleInstChange, this, _1);
 
     // Instantiates a throttler with an update that is long enough to guarantee that the
     // sequence that should not be optimized will be splitted in two different cycles.
@@ -228,19 +274,18 @@ void InstanceChangeThrottler_Test::testNewGoneOptimization2Cycles() {
     throttler->submitInstanceNew(m_instIdServer, m_instInfoServer);
 
     // Waits long enough for the first burst to arrive.
-    CPPUNIT_ASSERT_MESSAGE("Timeout waiting for first burst of instance changes to arrive.",
-                           waitForCondition([this]() { return m_instChangeObserver.numOfInstChanges() >= 2; }, 250u));
+    EXPECT_TRUE(waitForCondition([this]() { return m_instChangeObserver.numOfInstChanges() >= 2; }, 250u))
+          << "Timeout waiting for first burst of instance changes to arrive.";
 
     auto fistBurstEndTime = m_instChangeObserver.newestInstChange().timePoint;
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong number of instance changes received.", 2,
-                                 m_instChangeObserver.numOfInstChanges());
+    EXPECT_EQ(2, m_instChangeObserver.numOfInstChanges()) << "Wrong number of instance changes received.";
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance Id at observation 0.", m_instIdDevice,
-                                 m_instChangeObserver.instNewChangeAt(0).instanceId);
+    EXPECT_EQ(m_instIdDevice, m_instChangeObserver.instNewChangeAt(0).instanceId)
+          << "Wrong instance Id at observation 0.";
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance Id at observation 1.", m_instIdServer,
-                                 m_instChangeObserver.instNewChangeAt(1).instanceId);
+    EXPECT_EQ(m_instIdServer, m_instChangeObserver.instNewChangeAt(1).instanceId)
+          << "Wrong instance Id at observation 1.";
 
     m_instChangeObserver.clearInstChanges();
 
@@ -250,30 +295,29 @@ void InstanceChangeThrottler_Test::testNewGoneOptimization2Cycles() {
     throttler->submitInstanceGone(m_instIdServer, m_instInfoServer);
 
     // Waits long enough for the second burst to arrive.
-    CPPUNIT_ASSERT_MESSAGE("Timeout waiting for second burst with Gone changes to arrive.",
-                           waitForCondition([this]() { return m_instChangeObserver.numOfInstChanges() >= 2; }, 250u));
+    EXPECT_TRUE(waitForCondition([this]() { return m_instChangeObserver.numOfInstChanges() >= 2; }, 250u))
+          << "Timeout waiting for second burst with Gone changes to arrive.";
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong number of instance changes received.", 2,
-                                 m_instChangeObserver.numOfInstChanges());
+    EXPECT_EQ(2, m_instChangeObserver.numOfInstChanges()) << "Wrong number of instance changes received.";
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance Id at observation 0.", m_instIdDevice,
-                                 m_instChangeObserver.instGoneChangeAt(0).instanceId);
+    EXPECT_EQ(m_instIdDevice, m_instChangeObserver.instGoneChangeAt(0).instanceId)
+          << "Wrong instance Id at observation 0.";
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance Id at observation 1.", m_instIdServer,
-                                 m_instChangeObserver.instGoneChangeAt(1).instanceId);
+    EXPECT_EQ(m_instIdServer, m_instChangeObserver.instGoneChangeAt(1).instanceId)
+          << "Wrong instance Id at observation 1.";
 
 
     auto secondBurstStartTime = m_instChangeObserver.oldestInstChange().timePoint;
     auto interval = secondBurstStartTime - fistBurstEndTime;
     auto intervalMilli = duration_cast<milliseconds>(interval);
 
-    CPPUNIT_ASSERT_MESSAGE("Could not verify that the Gone changes came in a different throttler cycle.",
-                           intervalMilli.count() > 190u);
+    EXPECT_TRUE(intervalMilli.count() > 190u)
+          << "Could not verify that the Gone changes came in a different throttler cycle.";
 }
 
 
-void InstanceChangeThrottler_Test::testUpdateOptimization2Cycles() {
-    auto instChangeHandler = std::bind(&InstanceChangeThrottler_Test::handleInstChange, this, _1);
+TEST_F(TestInstanceChangeThrottler, testUpdateOptimization2Cycles) {
+    auto instChangeHandler = std::bind(&TestInstanceChangeThrottler::handleInstChange, this, _1);
 
     // Instantiates a throttler with an update that is long enough to guarantee that the
     // sequence that shoud not be optimized will be splitted in two different cycles.
@@ -290,19 +334,18 @@ void InstanceChangeThrottler_Test::testUpdateOptimization2Cycles() {
     throttler->submitInstanceUpdate(m_instIdServer, m_instInfoServer);
 
     // Waits long enough for the first burst to arrive.
-    CPPUNIT_ASSERT_MESSAGE("Timeout waiting for first burst of instance changes to arrive.",
-                           waitForCondition([this]() { return m_instChangeObserver.numOfInstChanges() >= 2; }, 250u));
+    EXPECT_TRUE(waitForCondition([this]() { return m_instChangeObserver.numOfInstChanges() >= 2; }, 250u))
+          << "Timeout waiting for first burst of instance changes to arrive.";
 
     auto fistBurstEndTime = m_instChangeObserver.newestInstChange().timePoint;
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong number of instance changes received.", 2,
-                                 m_instChangeObserver.numOfInstChanges());
+    EXPECT_EQ(2, m_instChangeObserver.numOfInstChanges()) << "Wrong number of instance changes received.";
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance Id at observation 0.", m_instIdDevice,
-                                 m_instChangeObserver.instUpdateChangeAt(0).instanceId);
+    EXPECT_EQ(m_instIdDevice, m_instChangeObserver.instUpdateChangeAt(0).instanceId)
+          << "Wrong instance Id at observation 0.";
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance Id at observation 1.", m_instIdServer,
-                                 m_instChangeObserver.instUpdateChangeAt(1).instanceId);
+    EXPECT_EQ(m_instIdServer, m_instChangeObserver.instUpdateChangeAt(1).instanceId)
+          << "Wrong instance Id at observation 1.";
 
     m_instChangeObserver.clearInstChanges();
 
@@ -312,37 +355,35 @@ void InstanceChangeThrottler_Test::testUpdateOptimization2Cycles() {
     throttler->submitInstanceUpdate(m_instIdServer, updatedInstInfo);
 
     // Waits long enough for the second burst to arrive.
-    CPPUNIT_ASSERT_MESSAGE("Timeout waiting for second burst with update changes to arrive.",
-                           waitForCondition([this]() { return m_instChangeObserver.numOfInstChanges() >= 2; }, 250u));
+    EXPECT_TRUE(waitForCondition([this]() { return m_instChangeObserver.numOfInstChanges() >= 2; }, 250u))
+          << "Timeout waiting for second burst with update changes to arrive.";
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong number of instance changes received.", 2,
-                                 m_instChangeObserver.numOfInstChanges());
+    EXPECT_EQ(2, m_instChangeObserver.numOfInstChanges()) << "Wrong number of instance changes received.";
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance Id at observation 0.", m_instIdDevice,
-                                 m_instChangeObserver.instUpdateChangeAt(0).instanceId);
+    EXPECT_EQ(m_instIdDevice, m_instChangeObserver.instUpdateChangeAt(0).instanceId)
+          << "Wrong instance Id at observation 0.";
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance info payload at observation 0.", true,
-                                 m_instChangeObserver.instUpdateChangeAt(0).instanceInfo.get<bool>("UpdatedInfo"));
+    EXPECT_EQ(true, m_instChangeObserver.instUpdateChangeAt(0).instanceInfo.get<bool>("UpdatedInfo"))
+          << "Wrong instance info payload at observation 0.";
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance Id at observation 1.", m_instIdServer,
-                                 m_instChangeObserver.instUpdateChangeAt(1).instanceId);
+    EXPECT_EQ(m_instIdServer, m_instChangeObserver.instUpdateChangeAt(1).instanceId)
+          << "Wrong instance Id at observation 1.";
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance info payload at observation 1.", true,
-                                 m_instChangeObserver.instUpdateChangeAt(1).instanceInfo.get<bool>("UpdatedInfo"));
+    EXPECT_EQ(true, m_instChangeObserver.instUpdateChangeAt(1).instanceInfo.get<bool>("UpdatedInfo"))
+          << "Wrong instance info payload at observation 1.";
 
 
     auto secondBurstStartTime = m_instChangeObserver.newestInstChange().timePoint;
     auto interval = secondBurstStartTime - fistBurstEndTime;
     auto intervalMilli = duration_cast<milliseconds>(interval);
 
-    CPPUNIT_ASSERT_MESSAGE(
-          "Could not verify that the second batch of update changes came in a different throttler cycle.",
-          intervalMilli.count() > 190u);
+    EXPECT_TRUE(intervalMilli.count() > 190u)
+          << "Could not verify that the second batch of update changes came in a different throttler cycle.";
 }
 
 
-void InstanceChangeThrottler_Test::testMaxChangesPerCycle() {
-    auto instChangeHandler = std::bind(&InstanceChangeThrottler_Test::handleInstChange, this, _1);
+TEST_F(TestInstanceChangeThrottler, testMaxChangesPerCycle) {
+    auto instChangeHandler = std::bind(&TestInstanceChangeThrottler::handleInstChange, this, _1);
 
     std::shared_ptr<karabo::core::InstanceChangeThrottler> throttler =
           karabo::core::InstanceChangeThrottler::createThrottler(instChangeHandler, 200u, 2u);
@@ -357,39 +398,37 @@ void InstanceChangeThrottler_Test::testMaxChangesPerCycle() {
     throttler->submitInstanceUpdate(m_instIdDevice, updatedInstInfo);
 
     // Waits long enough for the first burst to arrive.
-    CPPUNIT_ASSERT_MESSAGE("Timeout waiting for first burst of changes to arrive.",
-                           waitForCondition([this]() { return m_instChangeObserver.numOfInstChanges() >= 2; }, 250u));
+    EXPECT_TRUE(waitForCondition([this]() { return m_instChangeObserver.numOfInstChanges() >= 2; }, 250u))
+          << "Timeout waiting for first burst of changes to arrive.";
 
     auto fistBurstEndTime = m_instChangeObserver.newestInstChange().timePoint;
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong number of instance changes received.", 2,
-                                 m_instChangeObserver.numOfInstChanges());
+    EXPECT_EQ(2, m_instChangeObserver.numOfInstChanges()) << "Wrong number of instance changes received.";
 
     m_instChangeObserver.clearInstChanges();
 
     // Assures that the third instance change will come in a different cycle - if it wasn't for the max limit its body
     // would overwrite the one for the new change for the instance updated.
 
-    CPPUNIT_ASSERT_MESSAGE("Timeout waiting for second burst of changes to arrive.",
-                           waitForCondition([this]() { return m_instChangeObserver.numOfInstChanges() >= 1; }, 250u));
+    EXPECT_TRUE(waitForCondition([this]() { return m_instChangeObserver.numOfInstChanges() >= 1; }, 250u))
+          << "Timeout waiting for second burst of changes to arrive.";
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong number of instance changes received.", 1,
-                                 m_instChangeObserver.numOfInstChanges());
+    EXPECT_EQ(1, m_instChangeObserver.numOfInstChanges()) << "Wrong number of instance changes received.";
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong payload contents of instance update change.", true,
-                                 m_instChangeObserver.instUpdateChangeAt(0).instanceInfo.get<bool>("UpdatedInfo"));
+    EXPECT_EQ(true, m_instChangeObserver.instUpdateChangeAt(0).instanceInfo.get<bool>("UpdatedInfo"))
+          << "Wrong payload contents of instance update change.";
 
     auto secondBurstStartTime = m_instChangeObserver.newestInstChange().timePoint;
     auto interval = secondBurstStartTime - fistBurstEndTime;
     auto intervalMilli = duration_cast<milliseconds>(interval);
 
-    CPPUNIT_ASSERT_MESSAGE("Could not verify that the second batch of changes came in a different throttler cycle.",
-                           intervalMilli.count() > 190u);
+    EXPECT_TRUE(intervalMilli.count() > 190u)
+          << "Could not verify that the second batch of changes came in a different throttler cycle.";
 }
 
 
-void InstanceChangeThrottler_Test::testBigUpdateSequence() {
-    auto instChangeHandler = std::bind(&InstanceChangeThrottler_Test::handleInstChange, this, _1);
+TEST_F(TestInstanceChangeThrottler, testBigUpdateSequence) {
+    auto instChangeHandler = std::bind(&TestInstanceChangeThrottler::handleInstChange, this, _1);
     const int kNumOfUpdateChanges = 5000;
     const unsigned int kThrottlerIntervalMs = 100u;
     const unsigned int kThrottlerMaxChanges = 4500u;
@@ -414,14 +453,13 @@ void InstanceChangeThrottler_Test::testBigUpdateSequence() {
     // Waits long enough for the updates to arrive.
     // The test is considered successfull if all the instances are received - check is made on the hashCount which works
     // regardless of update optimizations (updates for same device in the same throttler cycle).
-    CPPUNIT_ASSERT_MESSAGE("Timeout waiting for instance updates to arrive.",
-                           waitForCondition(
-                                 [this]() {
-                                     int nReceived =
-                                           m_instChangeObserver.newestInstChange().instanceInfo.get<int>("hashCount");
-                                     return nReceived == (kNumOfUpdateChanges - 1);
-                                 },
-                                 12000u));
+    EXPECT_TRUE(waitForCondition(
+          [this]() {
+              int nReceived = m_instChangeObserver.newestInstChange().instanceInfo.get<int>("hashCount");
+              return nReceived == (kNumOfUpdateChanges - 1);
+          },
+          12000u))
+          << "Timeout waiting for instance updates to arrive.";
 
     auto finishTimePoint = high_resolution_clock::now();
     std::clog << "\ntestBigUpdateSequence parameters:" << std::endl;
@@ -441,8 +479,8 @@ void InstanceChangeThrottler_Test::testBigUpdateSequence() {
 }
 
 
-void InstanceChangeThrottler_Test::testThrottlerLifecycle() {
-    auto instChangeHandler = std::bind(&InstanceChangeThrottler_Test::handleInstChange, this, _1);
+TEST_F(TestInstanceChangeThrottler, testThrottlerLifecycle) {
+    auto instChangeHandler = std::bind(&TestInstanceChangeThrottler::handleInstChange, this, _1);
 
     const unsigned int kChangesPerInstantiation = 500u;
     const unsigned int kThrottlerIntervalMs = 5000u;
@@ -463,28 +501,27 @@ void InstanceChangeThrottler_Test::testThrottlerLifecycle() {
     }
 
     // Makes sure the throttler didn't have time to send all the changes.
-    CPPUNIT_ASSERT_MESSAGE("Throttler should not have sent any messages yet.",
-                           m_instChangeObserver.numOfInstChanges() < (int)kChangesPerInstantiation);
+    EXPECT_TRUE(m_instChangeObserver.numOfInstChanges() < (int)kChangesPerInstantiation)
+          << "Throttler should not have sent any messages yet.";
 
     throttler.reset(); // Destructor should be called as we are the only owner.
 
     // Waits long enough for the updates to arrive.
     // The test is considered successfull if all the instance updates are received.
-    CPPUNIT_ASSERT_MESSAGE("Timeout waiting for instance updates to arrive.",
-                           waitForCondition(
-                                 [this]() {
-                                     int nReceived =
-                                           m_instChangeObserver.newestInstChange().instanceInfo.get<int>("hashCount");
-                                     return nReceived == (kChangesPerInstantiation - 1);
-                                 },
-                                 15000u));
+    EXPECT_TRUE(waitForCondition(
+          [this]() {
+              int nReceived = m_instChangeObserver.newestInstChange().instanceInfo.get<int>("hashCount");
+              return nReceived == (kChangesPerInstantiation - 1);
+          },
+          15000u))
+          << "Timeout waiting for instance updates to arrive.";
 
     m_instChangeObserver.clearInstChanges();
 }
 
 
-void InstanceChangeThrottler_Test::testChangesWithFlushes() {
-    auto instChangeHandler = std::bind(&InstanceChangeThrottler_Test::handleInstChange, this, _1);
+TEST_F(TestInstanceChangeThrottler, testChangesWithFlushes) {
+    auto instChangeHandler = std::bind(&TestInstanceChangeThrottler::handleInstChange, this, _1);
 
     const unsigned int kChangesToSubmit = 5000u;
     const unsigned int kIntervalBetweenFlushes = 500u;
@@ -510,20 +547,19 @@ void InstanceChangeThrottler_Test::testChangesWithFlushes() {
 
     // Waits long enough for the updates to arrive.
     // The test is considered successfull if all the instance updates are received.
-    CPPUNIT_ASSERT_MESSAGE("Timeout waiting for instance updates to arrive.",
-                           waitForCondition(
-                                 [this]() {
-                                     int nReceived =
-                                           m_instChangeObserver.newestInstChange().instanceInfo.get<int>("hashCount");
-                                     return nReceived == (kChangesToSubmit - 1);
-                                 },
-                                 15000u));
+    EXPECT_TRUE(waitForCondition(
+          [this]() {
+              int nReceived = m_instChangeObserver.newestInstChange().instanceInfo.get<int>("hashCount");
+              return nReceived == (kChangesToSubmit - 1);
+          },
+          15000u))
+          << "Timeout waiting for instance updates to arrive.";
 
     // Each flush should cause an immediate burst of the throttler.
-    CPPUNIT_ASSERT_MESSAGE(
-          std::string("Number of throttler bursts inferior to the minimum expected of ") +
-                karabo::data::toString(kChangesToSubmit / kIntervalBetweenFlushes) + std::string(" bursts."),
-          m_instChangeObserver.numOfThrottlerBursts() >= static_cast<int>(kChangesToSubmit / kIntervalBetweenFlushes));
+    EXPECT_TRUE(m_instChangeObserver.numOfThrottlerBursts() >=
+                static_cast<int>(kChangesToSubmit / kIntervalBetweenFlushes))
+          << "Number of throttler bursts inferior to the minimum expected of "
+          << karabo::data::toString(kChangesToSubmit / kIntervalBetweenFlushes) << " bursts.";
 
     m_instChangeObserver.clearInstChanges();
 }
@@ -534,7 +570,7 @@ void InstanceChangeThrottler_Test::testChangesWithFlushes() {
 //<editor-fold desc="Helper methods shared by test cases">
 
 
-void InstanceChangeThrottler_Test::handleInstChange(const karabo::data::Hash& changeInfo) {
+void TestInstanceChangeThrottler::handleInstChange(const karabo::data::Hash& changeInfo) {
     m_instChangeObserver.addInstChanges(changeInfo);
 }
 

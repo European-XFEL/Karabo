@@ -153,11 +153,11 @@ target_link_libraries(
 )
 
 set(coreTestRunner_FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/core/DeviceClient_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/core/InstanceChangeThrottler_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/core/Runner_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/core/testDeviceClient.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/core/testInstanceChangeThrottler.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/core/testRunner.cc
     $<TARGET_OBJECTS:WAIT_UTILS>
-    $<TARGET_OBJECTS:TEST_RUNNER>
+    $<TARGET_OBJECTS:GTEST_RUNNER_NOLOOP>
 )
 
 file(GLOB dataSchemaTestRunner_FILES CONFIGURE_DEPENDS
@@ -212,6 +212,7 @@ foreach(testTarget IN LISTS TEST_TARGETS)
         ${testTarget}
         ${KARABO_LIB_TARGET_NAME}
         cppunit::cppunit
+        GTest::gtest
     )
     message(STATUS "Added unit test executable ${testTarget}")
 endforeach()

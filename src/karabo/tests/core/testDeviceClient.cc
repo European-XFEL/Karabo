@@ -16,13 +16,13 @@
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
 /*
- * File:   DevcieClient_Test.cc
+ * File:   DeviceClient_Test.hh
  * Author: flucke
  *
  * Created on August 24, 2017, 9:49 AM
  */
 
-#include "DeviceClient_Test.hh"
+#include <gtest/gtest.h>
 
 #include <boost/algorithm/string/case_conv.hpp>
 #include <chrono>
@@ -32,6 +32,8 @@
 #include <thread>
 #include <tuple>
 
+#include "karabo/core/DeviceClient.hh"
+#include "karabo/core/DeviceServer.hh"
 #include "karabo/data/types/Hash.hh"
 #include "karabo/data/types/NDArray.hh"
 #include "karabo/data/types/Schema.hh"
@@ -41,7 +43,34 @@
 
 #define KRB_TEST_MAX_TIMEOUT 10 // not aware of a failure with 5 here, but in other tests
 
-CPPUNIT_TEST_SUITE_REGISTRATION(DeviceClient_Test);
+
+class TestDeviceClient : public ::testing::Test {
+   protected:
+    TestDeviceClient() {}
+
+    void SetUp() override {
+        m_eventLoopThread = std::jthread(&karabo::net::EventLoop::work);
+
+        // Instantiate C++ Device Client
+        m_deviceClient = karabo::core::DeviceClient::MakeShared(std::string(), false);
+        m_deviceClient->initialize();
+        const karabo::data::Hash config("serverId", "testServerDeviceClient", "log.level", "FATAL");
+        m_deviceServer = karabo::core::DeviceServer::create("DeviceServer", config);
+        m_deviceServer->finalizeInternalInitialization();
+    }
+
+    void TearDown() override {
+        karabo::net::EventLoop::stop();
+        m_deviceClient.reset();
+        m_deviceServer.reset();
+        m_eventLoopThread.join();
+    }
+
+    std::jthread m_eventLoopThread;
+    karabo::core::DeviceServer::Pointer m_deviceServer;
+    karabo::core::DeviceClient::Pointer m_deviceClient;
+};
+
 
 using namespace karabo::core;
 using namespace karabo::data;
@@ -55,63 +84,20 @@ const int sleepPerIter = 5;
 
 template <class Container>
 void assertIgnoringOrder(const Container& expected, const Container& actual, const std::string& which) {
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(which, expected.size(), actual.size());
+    EXPECT_EQ(expected.size(), actual.size()) << which;
 
     for (auto itExpected = expected.cbegin(); itExpected != expected.cend(); ++itExpected) {
-        CPPUNIT_ASSERT_MESSAGE(which + "." + *itExpected,
-                               std::find(actual.cbegin(), actual.cend(), *itExpected) != actual.cend());
+        EXPECT_TRUE(std::find(actual.cbegin(), actual.cend(), *itExpected) != actual.cend())
+              << which << "." << *itExpected;
     }
 }
 
-DeviceClient_Test::DeviceClient_Test() {}
 
-
-DeviceClient_Test::~DeviceClient_Test() {}
-
-
-void DeviceClient_Test::setUp() {
-    // uncomment this if ever testing against a local broker
-    // setenv("KARABO_BROKER", "tcp://localhost:7777", true);
-    // Event loop is started in coreTestRunner.cc's main()
-
-    const Hash config("serverId", "testServerDeviceClient", "log.level", "FATAL");
-    m_deviceServer = DeviceServer::create("DeviceServer", config);
-    m_deviceServer->finalizeInternalInitialization();
-
-    // Create client
-    m_deviceClient = std::shared_ptr<DeviceClient>(new DeviceClient());
-}
-
-
-void DeviceClient_Test::tearDown() {
-    m_deviceClient.reset();
-    m_deviceServer.reset();
-}
-
-
-void DeviceClient_Test::testAll() {
-    std::clog << "\n";
-    // A single test to reduce setup/teardown time
-    testConcurrentInitTopology();
-    // testGet() and testSet() in that order - to avoid the need to instantiate again
-    testGet();
-    testSet();
-    testProperServerSignalsSent();
-    testMonitorChannel();
-    testDeviceConfigurationsHandler();
-    testGetSchema();
-    testGetSchemaNoWait();
-    testConnectionHandling();
-    testCurrentlyExecutableCommands();
-    testSlotsWithArgs();
-}
-
-
-void DeviceClient_Test::testConcurrentInitTopology() {
+TEST_F(TestDeviceClient, testConcurrentInitTopology) {
     std::clog << "testConcurrentInitTopology:" << std::flush;
     std::pair<bool, std::string> success = m_deviceClient->instantiate(
           "testServerDeviceClient", "PropertyTest", Hash("deviceId", "TestedDevice"), KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    EXPECT_TRUE(success.first) << success.second;
 
     // Calls DeviceClient::getDevices and returns the elapsed time, in milliseconds, for
     // the call to complete, a vector with the device names and the id of the thread
@@ -140,17 +126,17 @@ void DeviceClient_Test::testConcurrentInitTopology() {
     // Checks that the first getDevices execution has taken around 2 secs (the length of the sleep interval
     // in SignalSlotable::getAvailableInstances for gathering slotPing replies) and ...
     const unsigned getDev1Time = std::get<0>(getDev1Result);
-    CPPUNIT_ASSERT(getDev1Time > 1600u && getDev1Time <= 2400u);
+    EXPECT_TRUE(getDev1Time > 1600u && getDev1Time <= 2400u);
 
     // ... the second getDevices execution has taken around 1 sec (time between the second getDevices call is made and
     // the conclusion of the first call) and ...
     const unsigned getDev2Time = std::get<0>(getDev2Result);
-    CPPUNIT_ASSERT(getDev2Time > 600u && getDev2Time <= 1400u);
+    EXPECT_TRUE(getDev2Time > 600u && getDev2Time <= 1400u);
 
     // ... should have been executed in different threads and ...
     const std::jthread::id getDev1ThreadId = std::get<2>(getDev1Result);
     const std::jthread::id getDev2ThreadId = std::get<2>(getDev2Result);
-    CPPUNIT_ASSERT(getDev1ThreadId != getDev2ThreadId);
+    EXPECT_TRUE(getDev1ThreadId != getDev2ThreadId);
 
     // ... should return the same list of devices.
     const std::vector<std::string> getDev1Devices = std::get<1>(getDev1Result);
@@ -164,71 +150,74 @@ void DeviceClient_Test::testConcurrentInitTopology() {
             }
         }
     }
-    CPPUNIT_ASSERT(resultsEqual);
+    EXPECT_TRUE(resultsEqual);
 
     success = m_deviceClient->killDevice("TestedDevice", KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    EXPECT_TRUE(success.first) << success.second;
     std::clog << " OK" << std::endl;
 }
 
 
-void DeviceClient_Test::testGet() {
+TEST_F(TestDeviceClient, testGet) {
     std::clog << "testGet:" << std::flush;
     std::pair<bool, std::string> success = m_deviceClient->instantiate(
           "testServerDeviceClient", "PropertyTest", Hash("deviceId", "TestedDevice"), KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    EXPECT_TRUE(success.first) << success.second;
 
     // int as normal type - test both get, i.e. return by reference argument or return by value
     int intProperty = 0;
-    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->get<int>("TestedDevice", "int32Property", intProperty));
-    CPPUNIT_ASSERT_EQUAL(32000000, intProperty);
+    EXPECT_NO_THROW(m_deviceClient->get<int>("TestedDevice", "int32Property", intProperty));
+    EXPECT_EQ(32000000, intProperty);
     intProperty = 0;
-    CPPUNIT_ASSERT_NO_THROW(intProperty = m_deviceClient->get<int>("TestedDevice", "int32Property"));
-    CPPUNIT_ASSERT_EQUAL(32000000, intProperty);
+    EXPECT_NO_THROW(intProperty = m_deviceClient->get<int>("TestedDevice", "int32Property"));
+    EXPECT_EQ(32000000, intProperty);
 
     // State is specially treated: Internally it is a string, but that should stay internal!
     State state(State::UNKNOWN);
-    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->get<State>("TestedDevice", "state", state));
-    CPPUNIT_ASSERT(state != State::UNKNOWN); // still INIT or very likely NORMAL
+    EXPECT_NO_THROW(m_deviceClient->get<State>("TestedDevice", "state", state));
+    EXPECT_TRUE(state != State::UNKNOWN); // still INIT or very likely NORMAL
     state = State::UNKNOWN;
-    CPPUNIT_ASSERT_NO_THROW(state = m_deviceClient->get<State>("TestedDevice", "state"));
-    CPPUNIT_ASSERT(state != State::UNKNOWN);
+    EXPECT_NO_THROW(state = m_deviceClient->get<State>("TestedDevice", "state"));
+    EXPECT_TRUE(state != State::UNKNOWN);
     //
     std::string dummy;
-    CPPUNIT_ASSERT_THROW(m_deviceClient->get<std::string>("TestedDevice", "state", dummy), ParameterException);
-    CPPUNIT_ASSERT_THROW(dummy = m_deviceClient->get<std::string>("TestedDevice", "state"), ParameterException);
+    EXPECT_THROW(m_deviceClient->get<std::string>("TestedDevice", "state", dummy), ParameterException);
+    EXPECT_THROW(dummy = m_deviceClient->get<std::string>("TestedDevice", "state"), ParameterException);
 
     // The same for AlarmConditionState
     AlarmCondition alarm(AlarmCondition::ALARM);
-    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->get<AlarmCondition>("TestedDevice", "alarmCondition", alarm));
-    CPPUNIT_ASSERT(alarm == AlarmCondition::NONE); // no alarm on device!
+    EXPECT_NO_THROW(m_deviceClient->get<AlarmCondition>("TestedDevice", "alarmCondition", alarm));
+    EXPECT_TRUE(alarm == AlarmCondition::NONE); // no alarm on device!
     alarm = AlarmCondition::ALARM;
-    CPPUNIT_ASSERT_NO_THROW(alarm = m_deviceClient->get<AlarmCondition>("TestedDevice", "alarmCondition"));
-    CPPUNIT_ASSERT(alarm == AlarmCondition::NONE); // no alarm on device!
+    EXPECT_NO_THROW(alarm = m_deviceClient->get<AlarmCondition>("TestedDevice", "alarmCondition"));
+    EXPECT_TRUE(alarm == AlarmCondition::NONE); // no alarm on device!
     //
-    CPPUNIT_ASSERT_THROW(m_deviceClient->get<std::string>("TestedDevice", "alarmCondition", dummy), ParameterException);
-    CPPUNIT_ASSERT_THROW(dummy = m_deviceClient->get<std::string>("TestedDevice", "alarmCondition"),
-                         ParameterException);
+    EXPECT_THROW(m_deviceClient->get<std::string>("TestedDevice", "alarmCondition", dummy), ParameterException);
+    EXPECT_THROW(dummy = m_deviceClient->get<std::string>("TestedDevice", "alarmCondition"), ParameterException);
 
     // No shutdown - done in following testSet
-    //    success = m_deviceClient->killDevice("TestedDevice", KRB_TEST_MAX_TIMEOUT);
-    //    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    success = m_deviceClient->killDevice("TestedDevice", KRB_TEST_MAX_TIMEOUT);
+    EXPECT_TRUE(success.first) << success.second;
     std::clog << " OK" << std::endl;
 }
 
 
-void DeviceClient_Test::testSet() {
-    std::clog << "testGet:" << std::flush;
-    // CPPUNIT_ASSERT_EQUAL(true, m_deviceClient->get<bool>("TestedDevice", "archive"));
+TEST_F(TestDeviceClient, testSet) {
+    std::clog << "testSet:" << std::flush;
+    std::pair<bool, std::string> success = m_deviceClient->instantiate(
+          "testServerDeviceClient", "PropertyTest", Hash("deviceId", "TestedDevice"), KRB_TEST_MAX_TIMEOUT);
+    EXPECT_TRUE(success.first) << success.second;
+
+    // EXPECT_EQ(true, m_deviceClient->get<bool>("TestedDevice", "archive"));
     // Cannot reconfigure non-reconfigurable parameters - here caught already by client
-    CPPUNIT_ASSERT_THROW(m_deviceClient->set("TestedDevice", "archive", false), karabo::data::ParameterException);
+    EXPECT_THROW(m_deviceClient->set("TestedDevice", "archive", false), karabo::data::ParameterException);
 
-    std::pair<bool, std::string> success = m_deviceClient->killDevice("TestedDevice", KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    success = m_deviceClient->killDevice("TestedDevice", KRB_TEST_MAX_TIMEOUT);
+    EXPECT_TRUE(success.first) << success.second;
     std::clog << " OK" << std::endl;
 }
 
-void DeviceClient_Test::testProperServerSignalsSent() {
+TEST_F(TestDeviceClient, testProperServerSignalsSent) {
     auto client = std::shared_ptr<DeviceClient>(new DeviceClient("device_client-plugin_tests"));
 
     auto plugins_promise = std::make_shared<std::promise<bool>>();
@@ -251,28 +240,28 @@ void DeviceClient_Test::testProperServerSignalsSent() {
     server->finalizeInternalInitialization();
 
     auto result = plugins_future.wait_for(std::chrono::seconds{KRB_TEST_MAX_TIMEOUT});
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, result);
+    EXPECT_EQ(std::future_status::ready, result);
     bool plugins_loaded = plugins_future.get();
-    CPPUNIT_ASSERT(plugins_loaded);
+    EXPECT_TRUE(plugins_loaded);
 
     // This wait gives enough time for the instanceUpdate signal to be called,
     // in case it is actually called (which is what we have to make sure it does
     // not happen)
     std::this_thread::sleep_for(std::chrono::milliseconds{100});
-    CPPUNIT_ASSERT(!(*instance_update_called));
+    EXPECT_TRUE(!(*instance_update_called));
 }
 
-void DeviceClient_Test::testMonitorChannel() {
+TEST_F(TestDeviceClient, testMonitorChannel) {
     std::clog << "testMonitorChannel:" << std::flush;
     std::pair<bool, std::string> success = m_deviceClient->instantiate(
           "testServerDeviceClient", "PropertyTest", Hash("deviceId", "TestedDevice2"), KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    EXPECT_TRUE(success.first) << success.second;
 
     // Cannot unregister if nothing is registered
-    CPPUNIT_ASSERT(!m_deviceClient->unregisterChannelMonitor("TestedDevice2", "output")); // existing channel
-    CPPUNIT_ASSERT(
-          !m_deviceClient->unregisterChannelMonitor("TestedDevice2", "notExistingoutput"));   // non-existing channel
-    CPPUNIT_ASSERT(!m_deviceClient->unregisterChannelMonitor("nonExistingDevice", "output")); // non-existing device
+    EXPECT_TRUE(!m_deviceClient->unregisterChannelMonitor("TestedDevice2", "output")); // existing channel
+    EXPECT_TRUE(
+          !m_deviceClient->unregisterChannelMonitor("TestedDevice2", "notExistingoutput")); // non-existing channel
+    EXPECT_TRUE(!m_deviceClient->unregisterChannelMonitor("nonExistingDevice", "output"));  // non-existing device
 
     // register data handler
     int int32inChannel = -1;
@@ -309,16 +298,15 @@ void DeviceClient_Test::testMonitorChannel() {
     karabo::core::DeviceClient::InputChannelHandlers handlers;
     handlers.dataHandler = dataHandler;
     handlers.statusTracker = connectionTracker;
-    CPPUNIT_ASSERT(m_deviceClient->registerChannelMonitor("TestedDevice2:output", handlers));
+    EXPECT_TRUE(m_deviceClient->registerChannelMonitor("TestedDevice2:output", handlers));
     // not allowed to register again for same channel
-    CPPUNIT_ASSERT(!m_deviceClient->registerChannelMonitor("TestedDevice2:output", dataHandler));
+    EXPECT_TRUE(!m_deviceClient->registerChannelMonitor("TestedDevice2:output", dataHandler));
 
     // Check that we are connected:
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, trackerFuture.wait_for(std::chrono::seconds(KRB_TEST_MAX_TIMEOUT)));
-    CPPUNIT_ASSERT_EQUAL(static_cast<int>(karabo::net::ConnectionStatus::CONNECTED),
-                         static_cast<int>(trackerFuture.get()));
+    EXPECT_EQ(std::future_status::ready, trackerFuture.wait_for(std::chrono::seconds(KRB_TEST_MAX_TIMEOUT)));
+    EXPECT_EQ(static_cast<int>(karabo::net::ConnectionStatus::CONNECTED), static_cast<int>(trackerFuture.get()));
 
-    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("TestedDevice2", "writeOutput", KRB_TEST_MAX_TIMEOUT));
+    EXPECT_NO_THROW(m_deviceClient->execute("TestedDevice2", "writeOutput", KRB_TEST_MAX_TIMEOUT));
 
     int counter = 0;
     while (counter++ < maxIterWait) { // failed with 100 in https://git.xfel.eu/Karabo/Framework/-/jobs/144940
@@ -326,36 +314,35 @@ void DeviceClient_Test::testMonitorChannel() {
         std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerIter));
     }
     // Now check all data arrived as it should:
-    CPPUNIT_ASSERT_EQUAL(1, int32inChannel);
-    CPPUNIT_ASSERT_EQUAL(std::string("1"), strInChannel);
-    CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(100u), vecInt64inChannel.size());
-    CPPUNIT_ASSERT_EQUAL(1ll, vecInt64inChannel[0]);
-    CPPUNIT_ASSERT(ndArrayDims == Dims(100ull, 200ull));
+    EXPECT_EQ(1, int32inChannel);
+    EXPECT_STREQ("1", strInChannel.c_str());
+    EXPECT_EQ(static_cast<size_t>(100u), vecInt64inChannel.size());
+    EXPECT_EQ(1ll, vecInt64inChannel[0]);
+    EXPECT_TRUE(ndArrayDims == Dims(100ull, 200ull));
     // Float comparison can fail, see e.g. https://git.xfel.eu/Karabo/Framework/-/jobs/26996
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(1., ndArrayEntry, 1.e-7);
-    CPPUNIT_ASSERT(imageDims == Dims(400ull, 500ull));
-    CPPUNIT_ASSERT_EQUAL(static_cast<unsigned short>(1), imageEntry);
+    EXPECT_NEAR(1., ndArrayEntry, 1.e-7);
+    EXPECT_TRUE(imageDims == Dims(400ull, 500ull));
+    EXPECT_EQ(static_cast<unsigned short>(1), imageEntry);
 
     // unregister and trigger channel again
-    CPPUNIT_ASSERT(m_deviceClient->unregisterChannelMonitor("TestedDevice2", "output"));
-    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("TestedDevice2", "writeOutput", KRB_TEST_MAX_TIMEOUT));
+    EXPECT_TRUE(m_deviceClient->unregisterChannelMonitor("TestedDevice2", "output"));
+    EXPECT_NO_THROW(m_deviceClient->execute("TestedDevice2", "writeOutput", KRB_TEST_MAX_TIMEOUT));
     // Give some time to any data that would travel - though there is none... Any way around this sleep?
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     // Since writing output is not monitored, int32inChannel stays as it is, i.e. we miss the '2'
-    CPPUNIT_ASSERT_EQUAL(1, int32inChannel);
+    EXPECT_EQ(1, int32inChannel);
 
     // Register again and trigger channel once more
     // To be sure to go on when connection established, first reset promise/future of connectionTracker
     // (which is a member of 'handlers')
     trackerPromise = std::promise<karabo::net::ConnectionStatus>();
     trackerFuture = trackerPromise.get_future();
-    CPPUNIT_ASSERT(m_deviceClient->registerChannelMonitor("TestedDevice2:output", handlers));
+    EXPECT_TRUE(m_deviceClient->registerChannelMonitor("TestedDevice2:output", handlers));
     // Check that we are connected (CI failed once with just waiting 50 ms):
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, trackerFuture.wait_for(std::chrono::seconds(KRB_TEST_MAX_TIMEOUT)));
-    CPPUNIT_ASSERT_EQUAL(static_cast<int>(karabo::net::ConnectionStatus::CONNECTED),
-                         static_cast<int>(trackerFuture.get()));
+    EXPECT_EQ(std::future_status::ready, trackerFuture.wait_for(std::chrono::seconds(KRB_TEST_MAX_TIMEOUT)));
+    EXPECT_EQ(static_cast<int>(karabo::net::ConnectionStatus::CONNECTED), static_cast<int>(trackerFuture.get()));
 
-    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("TestedDevice2", "writeOutput", KRB_TEST_MAX_TIMEOUT));
+    EXPECT_NO_THROW(m_deviceClient->execute("TestedDevice2", "writeOutput", KRB_TEST_MAX_TIMEOUT));
 
     // Now should get the next number, i.e. 3
     counter = 0;
@@ -363,26 +350,26 @@ void DeviceClient_Test::testMonitorChannel() {
         if (int32inChannel == 3) break;
         std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerIter));
     }
-    CPPUNIT_ASSERT_EQUAL(3, int32inChannel);
+    EXPECT_EQ(3, int32inChannel);
 
     // Now kill and re-instantiate sender device - should automatically reconnect.
     success = m_deviceClient->killDevice("TestedDevice2", KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    EXPECT_TRUE(success.first) << success.second;
 
     success = m_deviceClient->instantiate("testServerDeviceClient", "PropertyTest", Hash("deviceId", "TestedDevice2"),
                                           KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    EXPECT_TRUE(success.first) << success.second;
 
     int32inChannel = -1;
     counter = 0;
     while (counter++ < maxIterWait) {
         if (int32inChannel > 0) break; // see comment below
-        CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("TestedDevice2", "writeOutput", KRB_TEST_MAX_TIMEOUT));
+        EXPECT_NO_THROW(m_deviceClient->execute("TestedDevice2", "writeOutput", KRB_TEST_MAX_TIMEOUT));
         std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerIter));
     }
     // Do not care about the exact value of int32inChannel since auto-reconnect might take time
-    CPPUNIT_ASSERT(int32inChannel > 0);
-    CPPUNIT_ASSERT(int32inChannel <= counter);
+    EXPECT_TRUE(int32inChannel > 0);
+    EXPECT_TRUE(int32inChannel <= counter);
 
     // Test InputHandler
     success = m_deviceClient->instantiate("testServerDeviceClient", "PropertyTest", Hash("deviceId", "TestedDevice3"),
@@ -400,37 +387,36 @@ void DeviceClient_Test::testMonitorChannel() {
     // We re-use the handlers.statusTracker, but have to reset promise and future
     trackerPromise = std::promise<karabo::net::ConnectionStatus>();
     trackerFuture = trackerPromise.get_future();
-    CPPUNIT_ASSERT(m_deviceClient->registerChannelMonitor(
+    EXPECT_TRUE(m_deviceClient->registerChannelMonitor(
           "TestedDevice3:output", handlers,
           Hash("onSlowness", "wait"))); // "wait" excludes data loss (default is "drop")
 
     // Take care that connection is established before sending data
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, trackerFuture.wait_for(std::chrono::seconds(KRB_TEST_MAX_TIMEOUT)));
-    CPPUNIT_ASSERT_EQUAL(static_cast<int>(karabo::net::ConnectionStatus::CONNECTED),
-                         static_cast<int>(trackerFuture.get()));
+    EXPECT_EQ(std::future_status::ready, trackerFuture.wait_for(std::chrono::seconds(KRB_TEST_MAX_TIMEOUT)));
+    EXPECT_EQ(static_cast<int>(karabo::net::ConnectionStatus::CONNECTED), static_cast<int>(trackerFuture.get()));
 
-    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("TestedDevice3", "writeOutput", KRB_TEST_MAX_TIMEOUT));
-    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("TestedDevice3", "writeOutput", KRB_TEST_MAX_TIMEOUT));
-    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("TestedDevice3", "writeOutput", KRB_TEST_MAX_TIMEOUT));
+    EXPECT_NO_THROW(m_deviceClient->execute("TestedDevice3", "writeOutput", KRB_TEST_MAX_TIMEOUT));
+    EXPECT_NO_THROW(m_deviceClient->execute("TestedDevice3", "writeOutput", KRB_TEST_MAX_TIMEOUT));
+    EXPECT_NO_THROW(m_deviceClient->execute("TestedDevice3", "writeOutput", KRB_TEST_MAX_TIMEOUT));
 
     counter = 0;
     while (counter++ < maxIterWait) {
         if (dataCounter == 3) break;
         std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerIter));
     }
-    CPPUNIT_ASSERT_EQUAL(3, dataCounter);
-    CPPUNIT_ASSERT_EQUAL(1, sizeMsg);
+    EXPECT_EQ(3, dataCounter);
+    EXPECT_EQ(1, sizeMsg);
 
     // Final clean-up
-    CPPUNIT_ASSERT(m_deviceClient->unregisterChannelMonitor("TestedDevice3:output"));
+    EXPECT_TRUE(m_deviceClient->unregisterChannelMonitor("TestedDevice3:output"));
     success = m_deviceClient->killDevice("TestedDevice2", KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    EXPECT_TRUE(success.first) << success.second;
     success = m_deviceClient->killDevice("TestedDevice3", KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    EXPECT_TRUE(success.first) << success.second;
     std::clog << " OK" << std::endl;
 }
 
-void DeviceClient_Test::testDeviceConfigurationsHandler() {
+TEST_F(TestDeviceClient, testDeviceConfigurationsHandler) {
     std::clog << "testDeviceConfigurationsHandler:" << std::flush;
 
     // Here we mainly test the throttling (or rather not-throttling) behaviour for "status"
@@ -443,7 +429,7 @@ void DeviceClient_Test::testDeviceConfigurationsHandler() {
     const std::string devId("TestedDeviceForCfgHandler");
     const std::pair<bool, std::string> success = m_deviceClient->instantiate(
           "testServerDeviceClient", "PropertyTest", Hash("deviceId", devId), KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    EXPECT_TRUE(success.first) << success.second;
 
     // Our handler shall tell us when the initial full config has arrived after connecting to the device.
     // Then we can trigger "status" update, together with updates of "int32PropertyReadOnly".
@@ -477,24 +463,24 @@ void DeviceClient_Test::testDeviceConfigurationsHandler() {
     // Register device for monitoring and wait until connected
     m_deviceClient->registerDeviceForMonitoring(devId);
     auto result = initCfgFut.wait_for(std::chrono::seconds{KRB_TEST_MAX_TIMEOUT});
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, result);
-    CPPUNIT_ASSERT(initCfgFut.get());
+    EXPECT_EQ(std::future_status::ready, result);
+    EXPECT_TRUE(initCfgFut.get());
 
     // Quickly trigger a few status updates (ok, 'execute' is synchronous, not too quick)
     for (size_t i = 0; i < numStatusUpdates; ++i) {
         const std::string status("Status " + toString(i));
-        CPPUNIT_ASSERT_NO_THROW(
+        EXPECT_NO_THROW(
               m_deviceClient->execute(devId, "slotUpdateStatus", KRB_TEST_MAX_TIMEOUT, status, static_cast<int>(i)));
     }
     // Since execute is synchronous, all signal updates directly triggered by it have returned
     // to the client and that one has called our handler. But the simultaneous update of
     // int32PropertyReadOnly is throttled and may come later, we have to wait for it
     result = int32UpdateFut.wait_for(std::chrono::seconds{KRB_TEST_MAX_TIMEOUT});
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, result);
+    EXPECT_EQ(std::future_status::ready, result);
     int32UpdateFut.get();
 
     // We should have received all status updates plus at least one for int32PropertyReadOnly
-    CPPUNIT_ASSERT_GREATEREQUAL(numStatusUpdates + 1, updates.size());
+    EXPECT_LE(numStatusUpdates + 1, updates.size());
 
     // Now investigate all received updates:
     int lastInt32 = -1;
@@ -502,27 +488,27 @@ void DeviceClient_Test::testDeviceConfigurationsHandler() {
     for (size_t i = 0; i < updates.size(); ++i) {
         const karabo::data::Hash& update = updates[i];
         const std::string msg((toString(i) += ": ") += toString(update));
-        CPPUNIT_ASSERT_MESSAGE(msg, !update.has("deviceId"));
+        EXPECT_TRUE(!update.has("deviceId")) << msg;
         if (update.has("status")) {
             // It is throttled, no other keys!
-            CPPUNIT_ASSERT_MESSAGE(msg, !update.has("int32PropertyReadOnly"));
+            EXPECT_TRUE(!update.has("int32PropertyReadOnly")) << msg;
 
             const bool hasTimeAttrs = Timestamp::hashAttributesContainTimeInformation(update.getAttributes("status"));
-            CPPUNIT_ASSERT_MESSAGE(msg, hasTimeAttrs);
+            EXPECT_TRUE(hasTimeAttrs) << msg;
             ++numStatus;
         } else if (update.has("int32PropertyReadOnly")) {
             lastInt32 = update.get<int>("int32PropertyReadOnly");
             ++numInt32;
         } else { // nothing else expected
-            CPPUNIT_ASSERT_MESSAGE(msg, false);
+            EXPECT_TRUE(false) << msg;
         }
     }
     // Are all status updates received?
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(updates), numStatusUpdates, numStatus);
+    EXPECT_EQ(numStatusUpdates, numStatus) << toString(updates);
     // The last int32PropertyReadOnly should have the correct value
-    CPPUNIT_ASSERT_EQUAL(static_cast<int>(numStatusUpdates - 1), lastInt32);
+    EXPECT_EQ(static_cast<int>(numStatusUpdates - 1), lastInt32);
     // Some throttling should have taken place (can we be 100% sure?)
-    CPPUNIT_ASSERT_LESS(numStatusUpdates, numInt32);
+    EXPECT_GT(numStatusUpdates, numInt32);
 
     // Now check that a single "status" update does not trigger any additional handler call
     // (as was still in 3.0.7...)
@@ -544,21 +530,20 @@ void DeviceClient_Test::testDeviceConfigurationsHandler() {
     };
     m_deviceClient->registerDevicesMonitor(newHandler);
     // -1: Only update "status"
-    CPPUNIT_ASSERT_NO_THROW(
-          m_deviceClient->execute(devId, "slotUpdateStatus", KRB_TEST_MAX_TIMEOUT, "A status update", -1));
+    EXPECT_NO_THROW(m_deviceClient->execute(devId, "slotUpdateStatus", KRB_TEST_MAX_TIMEOUT, "A status update", -1));
     result = statusFut.wait_for(std::chrono::seconds{KRB_TEST_MAX_TIMEOUT});
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, result);
+    EXPECT_EQ(std::future_status::ready, result);
     statusFut.get();
-    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(devId, "slotResetSchema", KRB_TEST_MAX_TIMEOUT));
+    EXPECT_NO_THROW(m_deviceClient->execute(devId, "slotResetSchema", KRB_TEST_MAX_TIMEOUT));
     result = lastCommandFut.wait_for(std::chrono::seconds{KRB_TEST_MAX_TIMEOUT});
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, result);
+    EXPECT_EQ(std::future_status::ready, result);
     lastCommandFut.get();
     // Two updates: "status" and "lastCommand" (triggered by call of schema slot) and nothing else
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(updates), 2ul, updates.size());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(updates[0]), 1ul, updates[0].size());
-    CPPUNIT_ASSERT_MESSAGE(toString(updates[0]), updates[0].has("status"));
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(updates[1]), 1ul, updates[1].size());
-    CPPUNIT_ASSERT_MESSAGE(toString(updates[1]), updates[1].has("lastCommand"));
+    EXPECT_EQ(2ul, updates.size()) << toString(updates);
+    EXPECT_EQ(1ul, updates[0].size()) << toString(updates[0]);
+    EXPECT_TRUE(updates[0].has("status")) << toString(updates[0]);
+    EXPECT_EQ(1ul, updates[1].size()) << toString(updates[1]);
+    EXPECT_TRUE(updates[1].has("lastCommand")) << toString(updates[1]);
 
     // Reset again
     m_deviceClient->setDeviceMonitorInterval(-1);
@@ -567,7 +552,7 @@ void DeviceClient_Test::testDeviceConfigurationsHandler() {
     std::clog << " OK" << std::endl;
 }
 
-void DeviceClient_Test::testGetSchema() {
+TEST_F(TestDeviceClient, testGetSchema) {
     std::clog << "testGetSchema:" << std::flush;
     // NOTE:
     // The deviceId needs to be another one than in the other tests, otherwise the test might succeed
@@ -575,53 +560,53 @@ void DeviceClient_Test::testGetSchema() {
     // triggered by DeviceClient::get in 'testGet()' could still be valid.
     std::pair<bool, std::string> success = m_deviceClient->instantiate(
           "testServerDeviceClient", "PropertyTest", Hash("deviceId", "TestedDevice3"), KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    EXPECT_TRUE(success.first) << success.second;
 
     // Check initial maxSize of one exemplary vector
     Schema schema(m_deviceClient->getDeviceSchema("TestedDevice3"));
-    CPPUNIT_ASSERT(schema.has("vectors.floatProperty"));
-    CPPUNIT_ASSERT(schema.hasMaxSize("vectors.floatProperty"));
-    CPPUNIT_ASSERT_EQUAL(10u, schema.getMaxSize("vectors.floatProperty"));
+    EXPECT_TRUE(schema.has("vectors.floatProperty"));
+    EXPECT_TRUE(schema.hasMaxSize("vectors.floatProperty"));
+    EXPECT_EQ(10u, schema.getMaxSize("vectors.floatProperty"));
 
     // Now update maxSize - this should trigger the signaling of an updated Schema and the client
     // should be informed since it should be "connected".
-    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("TestedDevice3", "slotUpdateSchema", KRB_TEST_MAX_TIMEOUT));
+    EXPECT_NO_THROW(m_deviceClient->execute("TestedDevice3", "slotUpdateSchema", KRB_TEST_MAX_TIMEOUT));
 
     schema = m_deviceClient->getDeviceSchema("TestedDevice3");
-    CPPUNIT_ASSERT(schema.has("vectors.floatProperty"));
-    CPPUNIT_ASSERT(schema.hasMaxSize("vectors.floatProperty"));
-    CPPUNIT_ASSERT_EQUAL(20u, schema.getMaxSize("vectors.floatProperty"));
+    EXPECT_TRUE(schema.has("vectors.floatProperty"));
+    EXPECT_TRUE(schema.hasMaxSize("vectors.floatProperty"));
+    EXPECT_EQ(20u, schema.getMaxSize("vectors.floatProperty"));
 
     // Final clean-up
     success = m_deviceClient->killDevice("TestedDevice3", KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    EXPECT_TRUE(success.first) << success.second;
 
     std::clog << " OK" << std::endl;
 }
 
 
-void DeviceClient_Test::testCurrentlyExecutableCommands() {
+TEST_F(TestDeviceClient, testCurrentlyExecutableCommands) {
     std::clog << "testCurrentlyExecutableCommands:" << std::flush;
     std::pair<bool, std::string> success = m_deviceClient->instantiate(
           "testServerDeviceClient", "PropertyTest", Hash("deviceId", "TestedDevice3_5"), KRB_TEST_MAX_TIMEOUT);
 
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    EXPECT_TRUE(success.first) << success.second;
 
     //  Check if the parameter hierarchy can be correctly traversed or it throws a KeyError
     std::vector<std::string> commands;
-    CPPUNIT_ASSERT_NO_THROW(commands = m_deviceClient->getCurrentlyExecutableCommands("TestedDevice3_5"));
-    CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(11), commands.size());
-    CPPUNIT_ASSERT_EQUAL(std::string("slotClearLock"), commands[0]);
+    EXPECT_NO_THROW(commands = m_deviceClient->getCurrentlyExecutableCommands("TestedDevice3_5"));
+    EXPECT_EQ(static_cast<size_t>(11), commands.size());
+    EXPECT_STREQ("slotClearLock", commands[0].c_str());
 
     // Final clean-up
     success = m_deviceClient->killDevice("TestedDevice3_5", KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    EXPECT_TRUE(success.first) << success.second;
 
     std::clog << " OK" << std::endl;
 }
 
 
-void DeviceClient_Test::testSlotsWithArgs() {
+TEST_F(TestDeviceClient, testSlotsWithArgs) {
     std::clog << "testSlotsWithArgs:" << std::flush;
     const std::string deviceId{"ArgSlotPropTest"};
 
@@ -683,47 +668,47 @@ void DeviceClient_Test::testSlotsWithArgs() {
 
     // Calls a slot with two int args and no return value - it modifies a local variable.
     m_deviceClient->execute(deviceId, "argSlotCaptMultiply", KRB_TEST_MAX_TIMEOUT, 12, 4);
-    CPPUNIT_ASSERT_EQUAL(48, productCaptMult);
+    EXPECT_EQ(48, productCaptMult);
 
     // Calls a slot with two int args and one int return value.
     int product = m_deviceClient->execute1<int, int, int>(deviceId, "argSlotMultiply", KRB_TEST_MAX_TIMEOUT, 4, 5);
-    CPPUNIT_ASSERT_EQUAL(20, product);
+    EXPECT_EQ(20, product);
 
     // Calls a slot with two int args and a return value consisting of a tuple of two int values.
     std::tuple<int, int> divRes =
           m_deviceClient->execute2<int, int, int, int>(deviceId, "argSlotDivide", KRB_TEST_MAX_TIMEOUT, 5, 2);
-    CPPUNIT_ASSERT_EQUAL(2, std::get<0>(divRes)); // quotient
-    CPPUNIT_ASSERT_EQUAL(1, std::get<1>(divRes)); // remainder
+    EXPECT_EQ(2, std::get<0>(divRes)); // quotient
+    EXPECT_EQ(1, std::get<1>(divRes)); // remainder
 
     // Calls a slot with a string arg and a return value consisting of a tuple with that string in three
     // variants regarding casing.
     std::tuple<std::string, std::string, std::string> strRes =
           m_deviceClient->execute3<std::string, std::string, std::string, std::string>(
                 deviceId, "argSlotThreeCases", KRB_TEST_MAX_TIMEOUT, "a StRING!");
-    CPPUNIT_ASSERT_EQUAL(std::string{"A STRING!"}, std::get<0>(strRes));
-    CPPUNIT_ASSERT_EQUAL(std::string{"a string!"}, std::get<1>(strRes));
-    CPPUNIT_ASSERT_EQUAL(std::string{"a StRING!"}, std::get<2>(strRes));
+    EXPECT_STREQ("A STRING!", std::get<0>(strRes).c_str());
+    EXPECT_STREQ("a string!", std::get<1>(strRes).c_str());
+    EXPECT_STREQ("a StRING!", std::get<2>(strRes).c_str());
 
     // Calls a slot with an int arg and a return value consisting of a tuple with 4 elements.
     std::tuple<std::string, std::string, std::string, std::string> locRes =
           m_deviceClient->execute4<std::string, std::string, std::string, std::string, short>(
                 deviceId, "argSlotZahlen", KRB_TEST_MAX_TIMEOUT, short(4));
-    CPPUNIT_ASSERT_EQUAL(std::string{"Quatro"}, std::get<0>(locRes));
-    CPPUNIT_ASSERT_EQUAL(std::string{"Four"}, std::get<1>(locRes));
-    CPPUNIT_ASSERT_EQUAL(std::string{"Vier"}, std::get<2>(locRes));
-    CPPUNIT_ASSERT_EQUAL(std::string{"IV"}, std::get<3>(locRes));
+    EXPECT_STREQ("Quatro", std::get<0>(locRes).c_str());
+    EXPECT_STREQ("Four", std::get<1>(locRes).c_str());
+    EXPECT_STREQ("Vier", std::get<2>(locRes).c_str());
+    EXPECT_STREQ("IV", std::get<3>(locRes).c_str());
 
     std::clog << " OK" << std::endl;
 }
 
 
-void DeviceClient_Test::testGetSchemaNoWait() {
+TEST_F(TestDeviceClient, testGetSchemaNoWait) {
     std::clog << "testGetSchemaNoWait: " << std::flush;
     // NOTE: Better use new id, see comment in testGetSchema.
     const std::string deviceId("TestedDevice4");
     std::pair<bool, std::string> success = m_deviceClient->instantiate(
           "testServerDeviceClient", "PropertyTest", Hash("deviceId", deviceId), KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    EXPECT_TRUE(success.first) << success.second;
 
     // Add handler that will be called when schema arrives when triggered by getDeviceSchemaNoWait
     bool schemaReceived = false;
@@ -734,7 +719,7 @@ void DeviceClient_Test::testGetSchemaNoWait() {
 
     Schema schema(m_deviceClient->getDeviceSchemaNoWait(deviceId));
     // noWait and first request: nothing cached yet, so still empty
-    CPPUNIT_ASSERT(schema.empty());
+    EXPECT_TRUE(schema.empty());
 
     // Wait a bit until schema arrived and thus handler is called
     unsigned int counter = 0;
@@ -742,18 +727,18 @@ void DeviceClient_Test::testGetSchemaNoWait() {
         if (schemaReceived) break;
         std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerIter));
     }
-    CPPUNIT_ASSERT_MESSAGE("Timeout waiting for schema update monitor", schemaReceived);
+    EXPECT_TRUE(schemaReceived) << "Timeout waiting for schema update monitor";
     // Now take from cache
     schema = m_deviceClient->getDeviceSchemaNoWait(deviceId);
     // Check initial maxSize of one exemplary vector
-    CPPUNIT_ASSERT(schema.has("vectors.floatProperty"));
-    CPPUNIT_ASSERT(schema.hasMaxSize("vectors.floatProperty"));
-    CPPUNIT_ASSERT_EQUAL(10u, schema.getMaxSize("vectors.floatProperty"));
+    EXPECT_TRUE(schema.has("vectors.floatProperty"));
+    EXPECT_TRUE(schema.hasMaxSize("vectors.floatProperty"));
+    EXPECT_EQ(10u, schema.getMaxSize("vectors.floatProperty"));
 
     // Now update maxSize - this should trigger the signaling of an updated Schema and the client
     // should be informed since it should be "connected".
     schemaReceived = false;
-    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(deviceId, "slotUpdateSchema", KRB_TEST_MAX_TIMEOUT));
+    EXPECT_NO_THROW(m_deviceClient->execute(deviceId, "slotUpdateSchema", KRB_TEST_MAX_TIMEOUT));
 
     // Wait a bit until new schema arrived
     counter = 0;
@@ -761,23 +746,23 @@ void DeviceClient_Test::testGetSchemaNoWait() {
         if (schemaReceived) break;
         std::this_thread::sleep_for(std::chrono::milliseconds(sleepPerIter));
     }
-    CPPUNIT_ASSERT_MESSAGE("Timeout waiting for schema update monitor", schemaReceived);
+    EXPECT_TRUE(schemaReceived) << "Timeout waiting for schema update monitor";
 
     // Now take from cache
     schema = m_deviceClient->getDeviceSchemaNoWait(deviceId);
-    CPPUNIT_ASSERT(schema.has("vectors.floatProperty"));
-    CPPUNIT_ASSERT(schema.hasMaxSize("vectors.floatProperty"));
-    CPPUNIT_ASSERT_EQUAL(20u, schema.getMaxSize("vectors.floatProperty"));
+    EXPECT_TRUE(schema.has("vectors.floatProperty"));
+    EXPECT_TRUE(schema.hasMaxSize("vectors.floatProperty"));
+    EXPECT_EQ(20u, schema.getMaxSize("vectors.floatProperty"));
 
     // Final clean-up
     success = m_deviceClient->killDevice(deviceId, KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    EXPECT_TRUE(success.first) << success.second;
 
     std::clog << " OK" << std::endl;
 }
 
 
-void DeviceClient_Test::testConnectionHandling() {
+TEST_F(TestDeviceClient, testConnectionHandling) {
     std::clog << "testConnectionHandling:" << std::flush;
     const std::string serverId("testServerDeviceClient");
     const std::string devId("TestedDevice");
@@ -787,11 +772,11 @@ void DeviceClient_Test::testConnectionHandling() {
     // Test 1)
     // We check that we can get the configuration and a single property
     ////////////////////////////////////////////////////////////////////
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
-    CPPUNIT_ASSERT_EQUAL(32000000, m_deviceClient->get<int>(devId, "int32Property"));
+    EXPECT_TRUE(success.first) << success.second;
+    EXPECT_EQ(32000000, m_deviceClient->get<int>(devId, "int32Property"));
     // Store all paths to cross check later full configurations:
     std::vector<std::string> paths;
-    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->get(devId).getPaths(paths));
+    EXPECT_NO_THROW(m_deviceClient->get(devId).getPaths(paths));
     const std::vector<std::string> allPaths(paths);
 
     ////////////////////////////////////////////////////////////////////
@@ -800,19 +785,19 @@ void DeviceClient_Test::testConnectionHandling() {
     // and cache cleaning
     ////////////////////////////////////////////////////////////////////
     success = m_deviceClient->killDevice(devId, KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    EXPECT_TRUE(success.first) << success.second;
 
     // Device not there, so timeout
-    CPPUNIT_ASSERT_THROW(m_deviceClient->get(devId), karabo::data::TimeoutException);
+    EXPECT_THROW(m_deviceClient->get(devId), karabo::data::TimeoutException);
     success = m_deviceClient->instantiate(serverId, "PropertyTest", Hash("deviceId", devId, "int32Property", 64000000),
                                           KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    EXPECT_TRUE(success.first) << success.second;
 
-    CPPUNIT_ASSERT_EQUAL(64000000, m_deviceClient->get<int>(devId, "int32Property"));
+    EXPECT_EQ(64000000, m_deviceClient->get<int>(devId, "int32Property"));
 
     // Now check that still all paths are there
     paths.clear();
-    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->get(devId).getPaths(paths));
+    EXPECT_NO_THROW(m_deviceClient->get(devId).getPaths(paths));
     assertIgnoringOrder(allPaths, paths, "killRestart");
 
     ////////////////////////////////////////////////////////////////////
@@ -834,21 +819,21 @@ void DeviceClient_Test::testConnectionHandling() {
     }
     // Kill the device again - within client it shall be a zombie now
     success = m_deviceClient->killDevice(devId, KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    EXPECT_TRUE(success.first) << success.second;
 
     // Device not there again, so timeout
-    CPPUNIT_ASSERT_THROW(m_deviceClient->get(devId), karabo::data::TimeoutException);
+    EXPECT_THROW(m_deviceClient->get(devId), karabo::data::TimeoutException);
 
     // Restart device again with a changed property
     success = m_deviceClient->instantiate(serverId, "PropertyTest", Hash("deviceId", devId, "int32Property", -32000000),
                                           KRB_TEST_MAX_TIMEOUT);
     // Check again all paths and the single property
     Hash config;
-    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->get(devId, config));
+    EXPECT_NO_THROW(m_deviceClient->get(devId, config));
     paths.clear();
     config.getPaths(paths);
     assertIgnoringOrder(allPaths, paths, "zombie");
-    CPPUNIT_ASSERT_EQUAL(-32000000, config.get<int>("int32Property"));
+    EXPECT_EQ(-32000000, config.get<int>("int32Property"));
 
     ////////////////////////////////////////////////////////////////////
     // Test 4)
@@ -856,7 +841,7 @@ void DeviceClient_Test::testConnectionHandling() {
     // get rid of the zombie before re-instantiation and checking again
     ////////////////////////////////////////////////////////////////////
     success = m_deviceClient->killDevice(devId, KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    EXPECT_TRUE(success.first) << success.second;
     // Now device state in client is "zombie"
 
     // stop monitoring, i.e. kill zombie
@@ -868,11 +853,11 @@ void DeviceClient_Test::testConnectionHandling() {
 
     // Check once more all paths and the single property
     config.clear();
-    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->get(devId, config));
+    EXPECT_NO_THROW(m_deviceClient->get(devId, config));
     paths.clear();
     config.getPaths(paths);
     assertIgnoringOrder(allPaths, paths, "killedZombie");
-    CPPUNIT_ASSERT_EQUAL(-64000000, config.get<int>("int32Property"));
+    EXPECT_EQ(-64000000, config.get<int>("int32Property"));
 
     std::clog << " OK" << std::endl;
 }
