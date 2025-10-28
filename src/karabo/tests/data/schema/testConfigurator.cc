@@ -16,22 +16,68 @@
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
 /*
- * File:   Configurator_Test.cc
+ * File:   Configurator_Test.hh
  * Author: heisenb
  *
  * Created on January 28, 2013, 2:49 PM
  */
-
-#include "Configurator_Test.hh"
+#include <gtest/gtest.h>
 
 #include "karabo/data/schema/Configurator.hh"
 #include "karabo/data/schema/LeafElement.hh"
 #include "karabo/data/schema/NodeElement.hh"
 #include "karabo/data/schema/SimpleElement.hh"
+#include "karabo/data/types/ClassInfo.hh"
+#include "karabo/data/types/Schema.hh"
+
+// Forward
+class Aggregated;
+
+class Base {
+   public:
+    KARABO_CLASSINFO(Base, "Base", "");
+
+    static void expectedParameters(karabo::data::Schema& s);
+
+    Base(const karabo::data::Hash& hash);
+    Base(const karabo::data::Hash& hash, int extra);
+
+    virtual ~Base();
+
+    virtual int getLevel() {
+        return 0;
+    }
+    virtual int getExtra() {
+        return m_extra0;
+    }
+
+    std::shared_ptr<Aggregated>& getAggregated();
+
+   private:
+    std::shared_ptr<Aggregated> m_aggregated;
+    int m_extra0 = -1;
+};
+
+class Aggregated {
+   public:
+    KARABO_CLASSINFO(Aggregated, "Aggregated", "");
+
+    static void expectedParameters(karabo::data::Schema& s);
+
+    Aggregated(const karabo::data::Hash& hash);
+
+    Aggregated(const int answer);
+
+    virtual ~Aggregated();
+
+    int foo() const;
+
+   private:
+    int m_answer;
+};
 
 using namespace karabo::data;
 
-CPPUNIT_TEST_SUITE_REGISTRATION(Configurator_Test);
 
 KARABO_REGISTER_FOR_CONFIGURATION(Base);
 // Register also the constructor with an extra int flag:
@@ -238,172 +284,172 @@ KARABO_REGISTER_FOR_CONFIGURATION(Base, Dev1, Dev2, Dev3, Dev4, Dev5, Dev6)
 KARABO_REGISTER_FOR_CONFIGURATION_ADDON(int, Base, Dev1, Dev2, Dev3, Dev4, Dev5, Dev6);
 
 
-void Configurator_Test::testAggregated() {
+TEST(TestConfigurator, testAggregated) {
     {
         // Test to construct Base from Aggregated params
         Hash config("node.answer", 42);
         Base::Pointer b = Configurator<Base>::create("Base", config);
-        CPPUNIT_ASSERT(b->getAggregated()->foo() == 42);
+        EXPECT_TRUE(b->getAggregated()->foo() == 42);
     }
 
     {
         // Test to construct Base from Aggregated object
         Hash config("node", Aggregated::Pointer(new Aggregated(42)));
         Base::Pointer b = Configurator<Base>::create("Base", config);
-        CPPUNIT_ASSERT(b->getAggregated()->foo() == 42);
+        EXPECT_TRUE(b->getAggregated()->foo() == 42);
     }
 }
 
-void Configurator_Test::testInheritanceChain() {
+TEST(TestConfigurator, testInheritanceChain) {
     // Test that we support inheritance chains of up to 7 classes
     // - creation from factory
     // - schema assembled from each level
     {
         // We can create a Base (with its aggregate inside).
         Base::Pointer b = Configurator<Base>::create("Base", Hash("node.answer", 44));
-        CPPUNIT_ASSERT(b != nullptr);
-        CPPUNIT_ASSERT_EQUAL(0, b->getLevel());
-        CPPUNIT_ASSERT_EQUAL(-1, b->getExtra()); // default, since no use of int constructor
-        CPPUNIT_ASSERT_EQUAL(44, b->getAggregated()->foo());
+        EXPECT_TRUE(b != nullptr);
+        EXPECT_EQ(0, b->getLevel());
+        EXPECT_EQ(-1, b->getExtra()); // default, since no use of int constructor
+        EXPECT_EQ(44, b->getAggregated()->foo());
         // Its schema contains the expected path
         Schema schema = Configurator<Base>::getSchema("Base");
-        CPPUNIT_ASSERT_EQUAL(1ul, schema.getPaths().size());
-        CPPUNIT_ASSERT_EQUAL(std::string("node.answer"), schema.getPaths()[0]);
+        EXPECT_EQ(1ul, schema.getPaths().size());
+        EXPECT_STREQ("node.answer", schema.getPaths()[0].c_str());
     }
     {
         // We can create a Dev1 (with Base's aggregate inside).
         Base::Pointer b = Configurator<Base>::create("Dev1", Hash("node.answer", 45));
-        CPPUNIT_ASSERT(b != nullptr);
-        CPPUNIT_ASSERT_EQUAL(1, b->getLevel());
-        CPPUNIT_ASSERT_EQUAL(-1, b->getExtra()); // default
-        CPPUNIT_ASSERT_EQUAL(45, b->getAggregated()->foo());
+        EXPECT_TRUE(b != nullptr);
+        EXPECT_EQ(1, b->getLevel());
+        EXPECT_EQ(-1, b->getExtra()); // default
+        EXPECT_EQ(45, b->getAggregated()->foo());
         // Its schema contains the expected paths, including the inherited
         Schema schema = Configurator<Base>::getSchema("Dev1");
-        CPPUNIT_ASSERT_EQUAL(2ul, schema.getPaths().size());
-        CPPUNIT_ASSERT_EQUAL(std::string("node.answer"), schema.getPaths()[0]);
-        CPPUNIT_ASSERT_EQUAL(std::string("memberDev1"), schema.getPaths()[1]);
+        EXPECT_EQ(2ul, schema.getPaths().size());
+        EXPECT_STREQ("node.answer", schema.getPaths()[0].c_str());
+        EXPECT_STREQ("memberDev1", schema.getPaths()[1].c_str());
     }
     {
         // We can create a Dev2 (with Base's aggregate inside).
         Base::Pointer b = Configurator<Base>::create("Dev2", Hash("node.answer", 46));
-        CPPUNIT_ASSERT(b != nullptr);
-        CPPUNIT_ASSERT_EQUAL(2, b->getLevel());
-        CPPUNIT_ASSERT_EQUAL(-1, b->getExtra()); // default
-        CPPUNIT_ASSERT_EQUAL(46, b->getAggregated()->foo());
+        EXPECT_TRUE(b != nullptr);
+        EXPECT_EQ(2, b->getLevel());
+        EXPECT_EQ(-1, b->getExtra()); // default
+        EXPECT_EQ(46, b->getAggregated()->foo());
         // Its schema contains the expected paths, including the inherited
         Schema schema = Configurator<Base>::getSchema("Dev2");
-        CPPUNIT_ASSERT_EQUAL(3ul, schema.getPaths().size());
-        CPPUNIT_ASSERT_EQUAL(std::string("node.answer"), schema.getPaths()[0]);
-        CPPUNIT_ASSERT_EQUAL(std::string("memberDev1"), schema.getPaths()[1]);
-        CPPUNIT_ASSERT_EQUAL(std::string("memberDev2"), schema.getPaths()[2]);
+        EXPECT_EQ(3ul, schema.getPaths().size());
+        EXPECT_STREQ("node.answer", schema.getPaths()[0].c_str());
+        EXPECT_STREQ("memberDev1", schema.getPaths()[1].c_str());
+        EXPECT_STREQ("memberDev2", schema.getPaths()[2].c_str());
     }
     {
         // We can create a Dev3
         Base::Pointer b = Configurator<Base>::create("Dev3", Hash());
-        CPPUNIT_ASSERT(b != nullptr);
-        CPPUNIT_ASSERT_EQUAL(3, b->getLevel());
-        CPPUNIT_ASSERT_EQUAL(-1, b->getExtra()); // default
+        EXPECT_TRUE(b != nullptr);
+        EXPECT_EQ(3, b->getLevel());
+        EXPECT_EQ(-1, b->getExtra()); // default
         // Its schema contains the expected paths, including the inherited
         Schema schema = Configurator<Base>::getSchema("Dev3");
-        CPPUNIT_ASSERT_EQUAL(4ul, schema.getPaths().size());
-        CPPUNIT_ASSERT_EQUAL(std::string("node.answer"), schema.getPaths()[0]);
-        CPPUNIT_ASSERT_EQUAL(std::string("memberDev1"), schema.getPaths()[1]);
-        CPPUNIT_ASSERT_EQUAL(std::string("memberDev2"), schema.getPaths()[2]);
-        CPPUNIT_ASSERT_EQUAL(std::string("memberDev3"), schema.getPaths()[3]);
+        EXPECT_EQ(4ul, schema.getPaths().size());
+        EXPECT_STREQ("node.answer", schema.getPaths()[0].c_str());
+        EXPECT_STREQ("memberDev1", schema.getPaths()[1].c_str());
+        EXPECT_STREQ("memberDev2", schema.getPaths()[2].c_str());
+        EXPECT_STREQ("memberDev3", schema.getPaths()[3].c_str());
     }
     {
         // We can create a Dev4
         Base::Pointer b = Configurator<Base>::create("Dev4", Hash());
-        CPPUNIT_ASSERT(b != nullptr);
-        CPPUNIT_ASSERT_EQUAL(4, b->getLevel());
-        CPPUNIT_ASSERT_EQUAL(-1, b->getExtra()); // default
+        EXPECT_TRUE(b != nullptr);
+        EXPECT_EQ(4, b->getLevel());
+        EXPECT_EQ(-1, b->getExtra()); // default
         // Its schema contains the expected paths, including the inherited
         Schema schema = Configurator<Base>::getSchema("Dev4");
-        CPPUNIT_ASSERT_EQUAL(5ul, schema.getPaths().size());
-        CPPUNIT_ASSERT_EQUAL(std::string("node.answer"), schema.getPaths()[0]);
-        CPPUNIT_ASSERT_EQUAL(std::string("memberDev1"), schema.getPaths()[1]);
-        CPPUNIT_ASSERT_EQUAL(std::string("memberDev2"), schema.getPaths()[2]);
-        CPPUNIT_ASSERT_EQUAL(std::string("memberDev3"), schema.getPaths()[3]);
-        CPPUNIT_ASSERT_EQUAL(std::string("memberDev4"), schema.getPaths()[4]);
+        EXPECT_EQ(5ul, schema.getPaths().size());
+        EXPECT_STREQ("node.answer", schema.getPaths()[0].c_str());
+        EXPECT_STREQ("memberDev1", schema.getPaths()[1].c_str());
+        EXPECT_STREQ("memberDev2", schema.getPaths()[2].c_str());
+        EXPECT_STREQ("memberDev3", schema.getPaths()[3].c_str());
+        EXPECT_STREQ("memberDev4", schema.getPaths()[4].c_str());
     }
     {
         // We can create a Dev5
         Base::Pointer b = Configurator<Base>::create("Dev5", Hash());
-        CPPUNIT_ASSERT(b != nullptr);
-        CPPUNIT_ASSERT_EQUAL(5, b->getLevel());
-        CPPUNIT_ASSERT_EQUAL(-1, b->getExtra()); // default
+        EXPECT_TRUE(b != nullptr);
+        EXPECT_EQ(5, b->getLevel());
+        EXPECT_EQ(-1, b->getExtra()); // default
         // Its schema contains the expected paths, including the inherited
         Schema schema = Configurator<Base>::getSchema("Dev5");
-        CPPUNIT_ASSERT_EQUAL(6ul, schema.getPaths().size());
-        CPPUNIT_ASSERT_EQUAL(std::string("node.answer"), schema.getPaths()[0]);
-        CPPUNIT_ASSERT_EQUAL(std::string("memberDev1"), schema.getPaths()[1]);
-        CPPUNIT_ASSERT_EQUAL(std::string("memberDev2"), schema.getPaths()[2]);
-        CPPUNIT_ASSERT_EQUAL(std::string("memberDev3"), schema.getPaths()[3]);
-        CPPUNIT_ASSERT_EQUAL(std::string("memberDev4"), schema.getPaths()[4]);
-        CPPUNIT_ASSERT_EQUAL(std::string("memberDev5"), schema.getPaths()[5]);
+        EXPECT_EQ(6ul, schema.getPaths().size());
+        EXPECT_STREQ("node.answer", schema.getPaths()[0].c_str());
+        EXPECT_STREQ("memberDev1", schema.getPaths()[1].c_str());
+        EXPECT_STREQ("memberDev2", schema.getPaths()[2].c_str());
+        EXPECT_STREQ("memberDev3", schema.getPaths()[3].c_str());
+        EXPECT_STREQ("memberDev4", schema.getPaths()[4].c_str());
+        EXPECT_STREQ("memberDev5", schema.getPaths()[5].c_str());
     }
     {
         // We can create a Dev6
         Base::Pointer b = Configurator<Base>::create("Dev6", Hash());
-        CPPUNIT_ASSERT(b != nullptr);
-        CPPUNIT_ASSERT_EQUAL(6, b->getLevel());
-        CPPUNIT_ASSERT_EQUAL(-1, b->getExtra()); // default
+        EXPECT_TRUE(b != nullptr);
+        EXPECT_EQ(6, b->getLevel());
+        EXPECT_EQ(-1, b->getExtra()); // default
         // Its schema contains the expected paths, including the inherited
         Schema schema = Configurator<Base>::getSchema("Dev6");
-        CPPUNIT_ASSERT_EQUAL(7ul, schema.getPaths().size());
-        CPPUNIT_ASSERT_EQUAL(std::string("node.answer"), schema.getPaths()[0]);
-        CPPUNIT_ASSERT_EQUAL(std::string("memberDev1"), schema.getPaths()[1]);
-        CPPUNIT_ASSERT_EQUAL(std::string("memberDev2"), schema.getPaths()[2]);
-        CPPUNIT_ASSERT_EQUAL(std::string("memberDev3"), schema.getPaths()[3]);
-        CPPUNIT_ASSERT_EQUAL(std::string("memberDev4"), schema.getPaths()[4]);
-        CPPUNIT_ASSERT_EQUAL(std::string("memberDev5"), schema.getPaths()[5]);
-        CPPUNIT_ASSERT_EQUAL(std::string("memberDev6"), schema.getPaths()[6]);
+        EXPECT_EQ(7ul, schema.getPaths().size());
+        EXPECT_STREQ("node.answer", schema.getPaths()[0].c_str());
+        EXPECT_STREQ("memberDev1", schema.getPaths()[1].c_str());
+        EXPECT_STREQ("memberDev2", schema.getPaths()[2].c_str());
+        EXPECT_STREQ("memberDev3", schema.getPaths()[3].c_str());
+        EXPECT_STREQ("memberDev4", schema.getPaths()[4].c_str());
+        EXPECT_STREQ("memberDev5", schema.getPaths()[5].c_str());
+        EXPECT_STREQ("memberDev6", schema.getPaths()[6].c_str());
     }
 }
 
-void Configurator_Test::testInheritanceChainWithExtra() {
+TEST(TestConfigurator, testInheritanceChainWithExtra) {
     // Test that we support inheritance chains of up to 7 classes
     // - creation from factory with extra constructor argument
     {
         // We can create a Base with an int
         Base::Pointer b = Configurator<Base>::create("Base", Hash(), -1234);
-        CPPUNIT_ASSERT(b != nullptr);
-        CPPUNIT_ASSERT_EQUAL(0, b->getLevel());
-        CPPUNIT_ASSERT_EQUAL(-1234, b->getExtra()); // as specified above
+        EXPECT_TRUE(b != nullptr);
+        EXPECT_EQ(0, b->getLevel());
+        EXPECT_EQ(-1234, b->getExtra()); // as specified above
     }
     {
         // We can create a Dev1 with an int
         Base::Pointer b = Configurator<Base>::create("Dev1", Hash(), 11);
-        CPPUNIT_ASSERT(b != nullptr);
-        CPPUNIT_ASSERT_EQUAL(1, b->getLevel());
-        CPPUNIT_ASSERT_EQUAL(11, b->getExtra()); // as specified above
+        EXPECT_TRUE(b != nullptr);
+        EXPECT_EQ(1, b->getLevel());
+        EXPECT_EQ(11, b->getExtra()); // as specified above
     }
     {
         // We can create a Dev2 with an int
         Base::Pointer b = Configurator<Base>::create("Dev2", Hash(), 22);
-        CPPUNIT_ASSERT(b != nullptr);
-        CPPUNIT_ASSERT_EQUAL(2, b->getLevel());
-        CPPUNIT_ASSERT_EQUAL(22, b->getExtra()); // as specified above
+        EXPECT_TRUE(b != nullptr);
+        EXPECT_EQ(2, b->getLevel());
+        EXPECT_EQ(22, b->getExtra()); // as specified above
     }
     {
         // We can create a Dev3 with an int
         Base::Pointer b = Configurator<Base>::create("Dev3", Hash(), 33);
-        CPPUNIT_ASSERT(b != nullptr);
-        CPPUNIT_ASSERT_EQUAL(3, b->getLevel());
-        CPPUNIT_ASSERT_EQUAL(33, b->getExtra()); // as specified above
+        EXPECT_TRUE(b != nullptr);
+        EXPECT_EQ(3, b->getLevel());
+        EXPECT_EQ(33, b->getExtra()); // as specified above
     }
     {
         // We can create a Dev4 with an int
         Base::Pointer b = Configurator<Base>::create("Dev4", Hash(), 44);
-        CPPUNIT_ASSERT(b != nullptr);
-        CPPUNIT_ASSERT_EQUAL(4, b->getLevel());
-        CPPUNIT_ASSERT_EQUAL(44, b->getExtra()); // as specified above
+        EXPECT_TRUE(b != nullptr);
+        EXPECT_EQ(4, b->getLevel());
+        EXPECT_EQ(44, b->getExtra()); // as specified above
     }
     {
         // We can create a Dev5 with an int
         Base::Pointer b = Configurator<Base>::create("Dev5", Hash(), 55);
-        CPPUNIT_ASSERT(b != nullptr);
-        CPPUNIT_ASSERT_EQUAL(5, b->getLevel());
-        CPPUNIT_ASSERT_EQUAL(55, b->getExtra()); // as specified above
+        EXPECT_TRUE(b != nullptr);
+        EXPECT_EQ(5, b->getLevel());
+        EXPECT_EQ(55, b->getExtra()); // as specified above
     }
 }

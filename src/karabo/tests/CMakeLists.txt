@@ -162,7 +162,7 @@ set(coreTestRunner_FILES
 
 file(GLOB dataSchemaTestRunner_FILES CONFIGURE_DEPENDS
      "${CMAKE_CURRENT_SOURCE_DIR}/data/schema/*.cc")
-list(APPEND dataSchemaTestRunner_FILES $<TARGET_OBJECTS:TEST_RUNNER_NOLOOP>)
+list(APPEND dataSchemaTestRunner_FILES $<TARGET_OBJECTS:GTEST_RUNNER_NOLOOP>)
 
 set(netTestRunner_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/net/Amqp_Test.cc
