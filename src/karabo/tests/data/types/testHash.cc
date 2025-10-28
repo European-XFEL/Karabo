@@ -22,7 +22,7 @@
  * Created on Sep 18, 2012, 6:47:59 PM
  */
 
-#include "Hash_Test.hh"
+#include <gtest/gtest.h>
 
 #include <climits>
 #include <karabo/util/PackParameters.hh>
@@ -36,86 +36,73 @@
 #include "karabo/data/types/Schema.hh"
 #include "karabo/data/types/ToLiteral.hh"
 
-CPPUNIT_TEST_SUITE_REGISTRATION(Hash_Test);
-
 using namespace karabo::data;
 using namespace std;
 
-namespace CppUnit {
-    // Enable CPPUNIT_ASSERT_EQUAL for vectors
-    // (Note: vector<unsigned char> might need special casing, vector<Hash> even more!)
-    template <typename T>
-    struct assertion_traits<std::vector<T>> {
-        static bool equal(const std::vector<T>& a, const std::vector<T>& b) {
-            return a == b;
-        }
+// It's unclear if we need in GoogleTest something similar to what follows below...
+// namespace CppUnit {
+//     // Enable EXPECT_EQ for vectors
+//     // (Note: vector<unsigned char> might need special casing, vector<Hash> even more!)
+//     template <typename T>
+//     struct assertion_traits<std::vector<T>> {
+//         static bool equal(const std::vector<T>& a, const std::vector<T>& b) {
+//             return a == b;
+//         }
 
-        static std::string toString(const std::vector<T>& p) {
-            return karabo::data::toString(p);
-        }
-    };
-} // namespace CppUnit
-
-
-Hash_Test::Hash_Test() {}
+//         static std::string toString(const std::vector<T>& p) {
+//             return karabo::data::toString(p);
+//         }
+//     };
+// } // namespace CppUnit
 
 
-Hash_Test::~Hash_Test() {}
-
-
-void Hash_Test::setUp() {}
-
-
-void Hash_Test::tearDown() {}
-
-
-void Hash_Test::testConstructors() {
+TEST(TestHash, testConstructors) {
     {
         Hash h;
         h.set("h", Hash());
         Hash& i = h.get<Hash>("h");
         i.set("i", Hash("j", 5));
-        CPPUNIT_ASSERT(h.get<int>("h.i.j") == 5);
+        EXPECT_TRUE(h.get<int>("h.i.j") == 5);
     }
 
     {
         Hash h;
-        CPPUNIT_ASSERT(h.empty() == true);
-        CPPUNIT_ASSERT(h.size() == 0);
+        EXPECT_TRUE(h.empty() == true);
+        EXPECT_TRUE(h.size() == 0);
     }
 
     {
         Hash h("a", 1);
-        CPPUNIT_ASSERT(h.empty() == false);
-        CPPUNIT_ASSERT(h.size() == 1);
-        CPPUNIT_ASSERT(h.get<int>("a") == 1);
+        EXPECT_TRUE(h.empty() == false);
+        EXPECT_TRUE(h.size() == 1);
+        EXPECT_TRUE(h.get<int>("a") == 1);
     }
 
     {
         Hash h("a", 1, "b", 2.0);
-        CPPUNIT_ASSERT(h.empty() == false);
-        CPPUNIT_ASSERT(h.size() == 2);
-        CPPUNIT_ASSERT(h.get<int>("a") == 1);
-        CPPUNIT_ASSERT(h.get<double>("b") == 2.0);
+        EXPECT_TRUE(h.empty() == false);
+        EXPECT_TRUE(h.size() == 2);
+        EXPECT_TRUE(h.get<int>("a") == 1);
+        EXPECT_TRUE(h.get<double>("b") == 2.0);
     }
 
     {
         Hash h("a", 1, "b", 2.0, "c", 3.f);
-        CPPUNIT_ASSERT(h.empty() == false);
-        CPPUNIT_ASSERT(h.size() == 3);
-        CPPUNIT_ASSERT(h.get<int>("a") == 1);
-        CPPUNIT_ASSERT(h.get<double>("b") == 2.0);
-        CPPUNIT_ASSERT(h.get<float>("c") == 3.0);
+        EXPECT_TRUE(h.empty() == false);
+        EXPECT_TRUE(h.size() == 3);
+        EXPECT_TRUE(h.get<int>("a") == 1);
+        EXPECT_TRUE(h.get<double>("b") == 2.0);
+        EXPECT_TRUE(h.get<float>("c") == 3.0);
     }
 
     {
         Hash h("a", 1, "b", 2.0, "c", 3.f, "d", "4");
-        CPPUNIT_ASSERT(h.empty() == false);
-        CPPUNIT_ASSERT(h.size() == 4);
-        CPPUNIT_ASSERT(h.get<int>("a") == 1);
-        CPPUNIT_ASSERT(h.get<double>("b") == 2.0);
-        CPPUNIT_ASSERT(h.get<float>("c") == 3.0);
-        CPPUNIT_ASSERT(h.get<string>("d") == "4");
+        EXPECT_TRUE(h.empty() == false);
+        EXPECT_TRUE(h.size() == 4);
+        EXPECT_TRUE(h.get<int>("a") == 1);
+        EXPECT_TRUE(h.get<double>("b") == 2.0);
+        EXPECT_TRUE(h.get<float>("c") == 3.0);
+        EXPECT_TRUE(h.get<string>("d") == "4");
     }
 
     {
@@ -124,116 +111,116 @@ void Hash_Test::testConstructors() {
         NDArray arr(&data[0], data.size(), shape);
 
         Hash h("arr", arr);
-        CPPUNIT_ASSERT(h.empty() == false);
-        CPPUNIT_ASSERT(h.get<NDArray>("arr").getShape().toVector() == shape.toVector());
+        EXPECT_TRUE(h.empty() == false);
+        EXPECT_TRUE(h.get<NDArray>("arr").getShape().toVector() == shape.toVector());
     }
 
     {
         Hash h("a", 1, "b", 2.0, "c", 3.f, "d", "4", "e", std::vector<unsigned int>(5, 5));
-        CPPUNIT_ASSERT(h.empty() == false);
-        CPPUNIT_ASSERT(h.size() == 5);
-        CPPUNIT_ASSERT(h.get<int>("a") == 1);
-        CPPUNIT_ASSERT(h.get<double>("b") == 2.0);
-        CPPUNIT_ASSERT(h.get<float>("c") == 3.0);
-        CPPUNIT_ASSERT(h.get<string>("d") == "4");
-        CPPUNIT_ASSERT(h.get<std::vector<unsigned int>>("e")[0] == 5);
+        EXPECT_TRUE(h.empty() == false);
+        EXPECT_TRUE(h.size() == 5);
+        EXPECT_TRUE(h.get<int>("a") == 1);
+        EXPECT_TRUE(h.get<double>("b") == 2.0);
+        EXPECT_TRUE(h.get<float>("c") == 3.0);
+        EXPECT_TRUE(h.get<string>("d") == "4");
+        EXPECT_TRUE(h.get<std::vector<unsigned int>>("e")[0] == 5);
     }
 
     {
         Hash h("a", 1, "b", 2.0, "c", 3.f, "d", "4", "e", std::vector<unsigned int>(5, 5), "f", Hash("a", 6));
-        CPPUNIT_ASSERT(h.empty() == false);
-        CPPUNIT_ASSERT(h.size() == 6);
-        CPPUNIT_ASSERT(h.get<int>("a") == 1);
-        CPPUNIT_ASSERT(h.get<double>("b") == 2.0);
-        CPPUNIT_ASSERT(h.get<float>("c") == 3.0);
-        CPPUNIT_ASSERT(h.get<string>("d") == "4");
-        CPPUNIT_ASSERT(h.get<std::vector<unsigned int>>("e")[0] == 5);
-        CPPUNIT_ASSERT(h.get<Hash>("f").get<int>("a") == 6);
-        CPPUNIT_ASSERT(h.get<int>("f.a") == 6);
+        EXPECT_TRUE(h.empty() == false);
+        EXPECT_TRUE(h.size() == 6);
+        EXPECT_TRUE(h.get<int>("a") == 1);
+        EXPECT_TRUE(h.get<double>("b") == 2.0);
+        EXPECT_TRUE(h.get<float>("c") == 3.0);
+        EXPECT_TRUE(h.get<string>("d") == "4");
+        EXPECT_TRUE(h.get<std::vector<unsigned int>>("e")[0] == 5);
+        EXPECT_TRUE(h.get<Hash>("f").get<int>("a") == 6);
+        EXPECT_TRUE(h.get<int>("f.a") == 6);
     }
 
     {
         Hash h("a", 1, "b", 2.0, "c", 3.f, "d", "4", "e", std::vector<unsigned int>(5, 5), "f",
                Hash::Pointer(new Hash("a", 6)));
-        CPPUNIT_ASSERT(h.empty() == false);
-        CPPUNIT_ASSERT(h.size() == 6);
-        CPPUNIT_ASSERT(h.get<int>("a") == 1);
-        CPPUNIT_ASSERT(h.get<double>("b") == 2.0);
-        CPPUNIT_ASSERT(h.get<float>("c") == 3.0);
-        CPPUNIT_ASSERT(h.get<string>("d") == "4");
-        CPPUNIT_ASSERT(h.get<std::vector<unsigned int>>("e")[0] == 5);
-        CPPUNIT_ASSERT(h.get<Hash::Pointer>("f")->get<int>("a") == 6);
+        EXPECT_TRUE(h.empty() == false);
+        EXPECT_TRUE(h.size() == 6);
+        EXPECT_TRUE(h.get<int>("a") == 1);
+        EXPECT_TRUE(h.get<double>("b") == 2.0);
+        EXPECT_TRUE(h.get<float>("c") == 3.0);
+        EXPECT_TRUE(h.get<string>("d") == "4");
+        EXPECT_TRUE(h.get<std::vector<unsigned int>>("e")[0] == 5);
+        EXPECT_TRUE(h.get<Hash::Pointer>("f")->get<int>("a") == 6);
     }
 
 
     {
         Hash h("a", 1, "b", 2.0, "c", 3.f, "d", "4", "e", std::vector<unsigned int>(5, 5), "f",
                std::vector<Hash::Pointer>(5, Hash::Pointer(new Hash("a", 6))));
-        CPPUNIT_ASSERT(h.empty() == false);
-        CPPUNIT_ASSERT(h.size() == 6);
-        CPPUNIT_ASSERT(h.get<int>("a") == 1);
-        CPPUNIT_ASSERT(h.get<double>("b") == 2.0);
-        CPPUNIT_ASSERT(h.get<float>("c") == 3.0);
-        CPPUNIT_ASSERT(h.get<string>("d") == "4");
-        CPPUNIT_ASSERT(h.get<std::vector<unsigned int>>("e")[0] == 5);
-        CPPUNIT_ASSERT(h.get<std::vector<Hash::Pointer>>("f")[3]->get<int>("a") == 6);
+        EXPECT_TRUE(h.empty() == false);
+        EXPECT_TRUE(h.size() == 6);
+        EXPECT_TRUE(h.get<int>("a") == 1);
+        EXPECT_TRUE(h.get<double>("b") == 2.0);
+        EXPECT_TRUE(h.get<float>("c") == 3.0);
+        EXPECT_TRUE(h.get<string>("d") == "4");
+        EXPECT_TRUE(h.get<std::vector<unsigned int>>("e")[0] == 5);
+        EXPECT_TRUE(h.get<std::vector<Hash::Pointer>>("f")[3]->get<int>("a") == 6);
     }
 
     {
         Hash h("a.b.c", 1, "b.c", 2.0, "c", 3.f, "d.e", "4", "e.f.g.h", std::vector<unsigned long long>(5, 5),
                "F.f.f.f.f", Hash("x.y.z", 99));
         h.set("foo.array", NDArray(Dims(5, 5)));
-        CPPUNIT_ASSERT(h.empty() == false);
-        CPPUNIT_ASSERT(h.size() == 7);
-        CPPUNIT_ASSERT(h.get<int>("a.b.c") == 1);
-        CPPUNIT_ASSERT(h.get<double>("b.c") == 2.0);
-        CPPUNIT_ASSERT(h.get<float>("c") == 3.0);
-        CPPUNIT_ASSERT(h.get<string>("d.e") == "4");
-        CPPUNIT_ASSERT(h.get<std::vector<unsigned long long>>("e.f.g.h")[0] == 5);
-        CPPUNIT_ASSERT(h.get<Hash>("F.f.f.f.f").get<int>("x.y.z") == 99);
-        CPPUNIT_ASSERT(h.get<int>("F.f.f.f.f.x.y.z") == 99);
+        EXPECT_TRUE(h.empty() == false);
+        EXPECT_TRUE(h.size() == 7);
+        EXPECT_TRUE(h.get<int>("a.b.c") == 1);
+        EXPECT_TRUE(h.get<double>("b.c") == 2.0);
+        EXPECT_TRUE(h.get<float>("c") == 3.0);
+        EXPECT_TRUE(h.get<string>("d.e") == "4");
+        EXPECT_TRUE(h.get<std::vector<unsigned long long>>("e.f.g.h")[0] == 5);
+        EXPECT_TRUE(h.get<Hash>("F.f.f.f.f").get<int>("x.y.z") == 99);
+        EXPECT_TRUE(h.get<int>("F.f.f.f.f.x.y.z") == 99);
         // Internally, Hash-derived classes are stored as Hash
-        CPPUNIT_ASSERT(h.getType("foo.array") == karabo::data::Types::HASH);
+        EXPECT_TRUE(h.getType("foo.array") == karabo::data::Types::HASH);
 
         // Check 'flatten'
         Hash flat;
         Hash::flatten(h, flat);
 
-        CPPUNIT_ASSERT(flat.empty() == false);
-        CPPUNIT_ASSERT(flat.size() == 7);
-        CPPUNIT_ASSERT(flat.get<int>("a.b.c", 0) == 1);
-        CPPUNIT_ASSERT(flat.get<double>("b.c", 0) == 2.0);
-        CPPUNIT_ASSERT(flat.get<float>("c", 0) == 3.0);
-        CPPUNIT_ASSERT(flat.get<string>("d.e", 0) == "4");
-        CPPUNIT_ASSERT(flat.get<std::vector<unsigned long long>>("e.f.g.h", 0)[0] == 5);
-        CPPUNIT_ASSERT(flat.get<int>("F.f.f.f.f.x.y.z", 0) == 99);
+        EXPECT_TRUE(flat.empty() == false);
+        EXPECT_TRUE(flat.size() == 7);
+        EXPECT_TRUE(flat.get<int>("a.b.c", 0) == 1);
+        EXPECT_TRUE(flat.get<double>("b.c", 0) == 2.0);
+        EXPECT_TRUE(flat.get<float>("c", 0) == 3.0);
+        EXPECT_TRUE(flat.get<string>("d.e", 0) == "4");
+        EXPECT_TRUE(flat.get<std::vector<unsigned long long>>("e.f.g.h", 0)[0] == 5);
+        EXPECT_TRUE(flat.get<int>("F.f.f.f.f.x.y.z", 0) == 99);
         // Internally, Hash-derived classes are stored as Hash
-        CPPUNIT_ASSERT(flat.getType("foo.array", 0) == karabo::data::Types::HASH);
+        EXPECT_TRUE(flat.getType("foo.array", 0) == karabo::data::Types::HASH);
 
         Hash tree;
         flat.unflatten(tree);
 
-        CPPUNIT_ASSERT(tree.empty() == false);
-        CPPUNIT_ASSERT(tree.size() == 7);
-        CPPUNIT_ASSERT(tree.get<int>("a.b.c") == 1);
-        CPPUNIT_ASSERT(tree.get<double>("b.c") == 2.0);
-        CPPUNIT_ASSERT(tree.get<float>("c") == 3.0);
-        CPPUNIT_ASSERT(tree.get<string>("d.e") == "4");
-        CPPUNIT_ASSERT(tree.get<std::vector<unsigned long long>>("e.f.g.h")[0] == 5);
-        CPPUNIT_ASSERT(tree.get<Hash>("F.f.f.f.f").get<int>("x.y.z") == 99);
-        CPPUNIT_ASSERT(tree.get<int>("F.f.f.f.f.x.y.z") == 99);
+        EXPECT_TRUE(tree.empty() == false);
+        EXPECT_TRUE(tree.size() == 7);
+        EXPECT_TRUE(tree.get<int>("a.b.c") == 1);
+        EXPECT_TRUE(tree.get<double>("b.c") == 2.0);
+        EXPECT_TRUE(tree.get<float>("c") == 3.0);
+        EXPECT_TRUE(tree.get<string>("d.e") == "4");
+        EXPECT_TRUE(tree.get<std::vector<unsigned long long>>("e.f.g.h")[0] == 5);
+        EXPECT_TRUE(tree.get<Hash>("F.f.f.f.f").get<int>("x.y.z") == 99);
+        EXPECT_TRUE(tree.get<int>("F.f.f.f.f.x.y.z") == 99);
         // Internally, Hash-derived classes are stored as Hash
-        CPPUNIT_ASSERT(flat.getType("foo.array", 0) == karabo::data::Types::HASH);
+        EXPECT_TRUE(flat.getType("foo.array", 0) == karabo::data::Types::HASH);
     }
 
     {
         // copy constructor
         Hash tmp("a", 1);
         Hash h(tmp);
-        CPPUNIT_ASSERT(h.empty() == false);
-        CPPUNIT_ASSERT(h.size() == 1);
-        CPPUNIT_ASSERT(h.get<int>("a") == 1);
-        CPPUNIT_ASSERT(tmp.empty() == false);
+        EXPECT_TRUE(h.empty() == false);
+        EXPECT_TRUE(h.size() == 1);
+        EXPECT_TRUE(h.get<int>("a") == 1);
+        EXPECT_TRUE(tmp.empty() == false);
     }
 
     {
@@ -241,20 +228,20 @@ void Hash_Test::testConstructors() {
         Hash tmp("a", 1);
         Hash h;
         h = tmp;
-        CPPUNIT_ASSERT(h.empty() == false);
-        CPPUNIT_ASSERT(h.size() == 1);
-        CPPUNIT_ASSERT(h.get<int>("a") == 1);
-        CPPUNIT_ASSERT(tmp.empty() == false);
+        EXPECT_TRUE(h.empty() == false);
+        EXPECT_TRUE(h.size() == 1);
+        EXPECT_TRUE(h.get<int>("a") == 1);
+        EXPECT_TRUE(tmp.empty() == false);
     }
 
     {
         // move constructor
         Hash tmp("a", 1);
         Hash h(std::move(tmp));
-        CPPUNIT_ASSERT(h.empty() == false);
-        CPPUNIT_ASSERT(h.size() == 1);
-        CPPUNIT_ASSERT(h.get<int>("a") == 1);
-        CPPUNIT_ASSERT(tmp.empty() == true);
+        EXPECT_TRUE(h.empty() == false);
+        EXPECT_TRUE(h.size() == 1);
+        EXPECT_TRUE(h.get<int>("a") == 1);
+        EXPECT_TRUE(tmp.empty() == true);
     }
 
     {
@@ -262,89 +249,89 @@ void Hash_Test::testConstructors() {
         Hash h;
         Hash tmp("a", 1);
         h = std::move(tmp);
-        CPPUNIT_ASSERT(h.empty() == false);
-        CPPUNIT_ASSERT(h.size() == 1);
-        CPPUNIT_ASSERT(h.get<int>("a") == 1);
-        CPPUNIT_ASSERT(tmp.empty() == true);
+        EXPECT_TRUE(h.empty() == false);
+        EXPECT_TRUE(h.size() == 1);
+        EXPECT_TRUE(h.get<int>("a") == 1);
+        EXPECT_TRUE(tmp.empty() == true);
     }
 }
 
 
-void Hash_Test::testGetSet() {
+TEST(TestHash, testGetSet) {
     {
         Hash h;
         h.set("a.b.c1.d", 1);
-        CPPUNIT_ASSERT(h.get<Hash>("a").has("b") == true);
-        CPPUNIT_ASSERT(h.get<Hash>("a.b").has("c1") == true);
-        CPPUNIT_ASSERT(h.get<Hash>("a.b.c1").has("d") == true);
-        CPPUNIT_ASSERT(h.get<int>("a.b.c1.d") == 1);
-        CPPUNIT_ASSERT(h.has("a.b.c1.d") == true);
-        CPPUNIT_ASSERT(h.get<Hash>("a").has("b.c1") == true);
+        EXPECT_TRUE(h.get<Hash>("a").has("b") == true);
+        EXPECT_TRUE(h.get<Hash>("a.b").has("c1") == true);
+        EXPECT_TRUE(h.get<Hash>("a.b.c1").has("d") == true);
+        EXPECT_TRUE(h.get<int>("a.b.c1.d") == 1);
+        EXPECT_TRUE(h.has("a.b.c1.d") == true);
+        EXPECT_TRUE(h.get<Hash>("a").has("b.c1") == true);
 
         h.set("a.b.c2.d", "1");
-        CPPUNIT_ASSERT(h.get<Hash>("a").has("b") == true);
-        CPPUNIT_ASSERT(h.get<Hash>("a.b").has("c1") == true);
-        CPPUNIT_ASSERT(h.get<Hash>("a.b").has("c2") == true);
-        CPPUNIT_ASSERT(h.get<Hash>("a.b").has("c2.d") == true);
-        CPPUNIT_ASSERT(h.get<Hash>("a.b").is<string>("c2.d") == true);
-        CPPUNIT_ASSERT(h.get<Hash>("a.b.c2").has("d") == true);
-        CPPUNIT_ASSERT(h.get<string>("a.b.c2.d") == "1");
+        EXPECT_TRUE(h.get<Hash>("a").has("b") == true);
+        EXPECT_TRUE(h.get<Hash>("a.b").has("c1") == true);
+        EXPECT_TRUE(h.get<Hash>("a.b").has("c2") == true);
+        EXPECT_TRUE(h.get<Hash>("a.b").has("c2.d") == true);
+        EXPECT_TRUE(h.get<Hash>("a.b").is<string>("c2.d") == true);
+        EXPECT_TRUE(h.get<Hash>("a.b.c2").has("d") == true);
+        EXPECT_TRUE(h.get<string>("a.b.c2.d") == "1");
 
         h.set("a.b[0]", Hash("a", 1));
-        CPPUNIT_ASSERT(h.get<Hash>("a").has("b") == true);
-        CPPUNIT_ASSERT(h.get<Hash>("a").size() == 1);
-        CPPUNIT_ASSERT(h.is<std::vector<Hash>>("a.b") == true);
-        CPPUNIT_ASSERT(h.get<std::vector<Hash>>("a.b").size() == 1);
-        CPPUNIT_ASSERT(h.get<std::vector<Hash>>("a.b")[0].size() == 1);
-        CPPUNIT_ASSERT(h.get<std::vector<Hash>>("a.b")[0].get<int>("a") == 1);
-        CPPUNIT_ASSERT(h.get<int>("a.b[0].a") == 1);
+        EXPECT_TRUE(h.get<Hash>("a").has("b") == true);
+        EXPECT_TRUE(h.get<Hash>("a").size() == 1);
+        EXPECT_TRUE(h.is<std::vector<Hash>>("a.b") == true);
+        EXPECT_TRUE(h.get<std::vector<Hash>>("a.b").size() == 1);
+        EXPECT_TRUE(h.get<std::vector<Hash>>("a.b")[0].size() == 1);
+        EXPECT_TRUE(h.get<std::vector<Hash>>("a.b")[0].get<int>("a") == 1);
+        EXPECT_TRUE(h.get<int>("a.b[0].a") == 1);
 
         h.set("a.b[2]", Hash("a", "1"));
-        CPPUNIT_ASSERT(h.get<Hash>("a").has("b") == true);
-        CPPUNIT_ASSERT(h.get<Hash>("a").size() == 1);
-        CPPUNIT_ASSERT(h.is<std::vector<Hash>>("a.b") == true);
-        CPPUNIT_ASSERT(h.has("a.b") == true);
-        CPPUNIT_ASSERT(h.get<std::vector<Hash>>("a.b").size() == 3);
-        CPPUNIT_ASSERT(h.get<int>("a.b[0].a") == 1);
-        CPPUNIT_ASSERT(h.get<Hash>("a.b[1]").empty() == true);
-        CPPUNIT_ASSERT(h.get<string>("a.b[2].a") == "1");
-        CPPUNIT_ASSERT(h.get<std::vector<Hash>>("a.b")[0].is<int>("a") == true);
-        CPPUNIT_ASSERT(h.get<std::vector<Hash>>("a.b")[1].empty() == true);
-        CPPUNIT_ASSERT(h.get<std::vector<Hash>>("a.b")[2].is<string>("a") == true);
+        EXPECT_TRUE(h.get<Hash>("a").has("b") == true);
+        EXPECT_TRUE(h.get<Hash>("a").size() == 1);
+        EXPECT_TRUE(h.is<std::vector<Hash>>("a.b") == true);
+        EXPECT_TRUE(h.has("a.b") == true);
+        EXPECT_TRUE(h.get<std::vector<Hash>>("a.b").size() == 3);
+        EXPECT_TRUE(h.get<int>("a.b[0].a") == 1);
+        EXPECT_TRUE(h.get<Hash>("a.b[1]").empty() == true);
+        EXPECT_TRUE(h.get<string>("a.b[2].a") == "1");
+        EXPECT_TRUE(h.get<std::vector<Hash>>("a.b")[0].is<int>("a") == true);
+        EXPECT_TRUE(h.get<std::vector<Hash>>("a.b")[1].empty() == true);
+        EXPECT_TRUE(h.get<std::vector<Hash>>("a.b")[2].is<string>("a") == true);
 
-        CPPUNIT_ASSERT(h.get<Hash>("a").is<Hash>("b[0]") == true);
-        CPPUNIT_ASSERT(h.get<Hash>("a").is<Hash>("b[1]") == true);
-        CPPUNIT_ASSERT(h.get<Hash>("a").is<Hash>("b[2]") == true);
-        CPPUNIT_ASSERT(h.get<Hash>("a.b[0]").empty() == false);
-        CPPUNIT_ASSERT(h.get<Hash>("a.b[1]").empty() == true);
-        CPPUNIT_ASSERT(h.get<Hash>("a.b[2]").empty() == false);
+        EXPECT_TRUE(h.get<Hash>("a").is<Hash>("b[0]") == true);
+        EXPECT_TRUE(h.get<Hash>("a").is<Hash>("b[1]") == true);
+        EXPECT_TRUE(h.get<Hash>("a").is<Hash>("b[2]") == true);
+        EXPECT_TRUE(h.get<Hash>("a.b[0]").empty() == false);
+        EXPECT_TRUE(h.get<Hash>("a.b[1]").empty() == true);
+        EXPECT_TRUE(h.get<Hash>("a.b[2]").empty() == false);
     }
 
     {
         Hash h;
         h.set("a.b.c", 1);
         h.set("a.b.c", 2);
-        CPPUNIT_ASSERT(h.get<int>("a.b.c") == 2);
-        CPPUNIT_ASSERT(h.get<Hash>("a").is<Hash>("b") == true);
-        CPPUNIT_ASSERT(h.is<int>("a.b.c") == true);
-        CPPUNIT_ASSERT(h.has("a.b") == true);
-        CPPUNIT_ASSERT(h.has("a.b.c.d") == false);
+        EXPECT_TRUE(h.get<int>("a.b.c") == 2);
+        EXPECT_TRUE(h.get<Hash>("a").is<Hash>("b") == true);
+        EXPECT_TRUE(h.is<int>("a.b.c") == true);
+        EXPECT_TRUE(h.has("a.b") == true);
+        EXPECT_TRUE(h.has("a.b.c.d") == false);
     }
 
     {
         Hash h("a[0]", Hash("a", 1), "a[1]", Hash("a", 2));
-        CPPUNIT_ASSERT(h.get<int>("a[0].a") == 1);
-        CPPUNIT_ASSERT(h.get<int>("a[1].a") == 2);
+        EXPECT_TRUE(h.get<int>("a[0].a") == 1);
+        EXPECT_TRUE(h.get<int>("a[1].a") == 2);
     }
 
     {
         Hash h;
         h.set("x[0].y[0]", Hash("a", 4.2, "b", "red", "c", true));
         h.set("x[1].y[0]", Hash("a", 4.0, "b", "green", "c", false));
-        CPPUNIT_ASSERT(h.get<bool>("x[0].y[0].c") == true);
-        CPPUNIT_ASSERT(h.get<bool>("x[1].y[0].c") == false);
-        CPPUNIT_ASSERT(h.get<string>("x[0].y[0].b") == "red");
-        CPPUNIT_ASSERT(h.get<string>("x[1].y[0].b") == "green");
+        EXPECT_TRUE(h.get<bool>("x[0].y[0].c") == true);
+        EXPECT_TRUE(h.get<bool>("x[1].y[0].c") == false);
+        EXPECT_TRUE(h.get<string>("x[0].y[0].b") == "red");
+        EXPECT_TRUE(h.get<string>("x[1].y[0].b") == "green");
     }
 
     {
@@ -352,50 +339,50 @@ void Hash_Test::testGetSet() {
         Hash h2("a[0].b[0]", Hash("a", 2));
 
         h1.set("a[0]", h2);
-        CPPUNIT_ASSERT(h1.get<int>("a[0].a[0].b[0].a") == 2);
+        EXPECT_TRUE(h1.get<int>("a[0].a[0].b[0].a") == 2);
         h1.set("a", h2);
-        CPPUNIT_ASSERT(h1.get<int>("a.a[0].b[0].a") == 2);
+        EXPECT_TRUE(h1.get<int>("a.a[0].b[0].a") == 2);
     }
 
     {
         std::string s;
         Hash h("a", "1");
         h.get("a", s);
-        CPPUNIT_ASSERT(s == "1");
+        EXPECT_TRUE(s == "1");
         h.get<string>("a") = "2";
         h.get("a", s);
-        CPPUNIT_ASSERT(s == "2");
+        EXPECT_TRUE(s == "2");
     }
 
     {
         Hash h;
         bool a = true;
         h.set<int>("a", a);
-        CPPUNIT_ASSERT(h.getType("a") == Types::INT32);
-        CPPUNIT_ASSERT(h.is<int>("a") == true);
+        EXPECT_TRUE(h.getType("a") == Types::INT32);
+        EXPECT_TRUE(h.is<int>("a") == true);
     }
 
     {
         // test that correct exceptions  are thrown
         Hash h("a", 77, "b[1].c", 88);
         // no exceptions:
-        CPPUNIT_ASSERT_NO_THROW(h.get<int>("a"));
-        CPPUNIT_ASSERT_NO_THROW(h.get<Hash>("b[0]"));
-        CPPUNIT_ASSERT_NO_THROW(h.get<Hash>("b[1]"));
-        CPPUNIT_ASSERT_NO_THROW(h.get<int>("b[1].c"));
+        EXPECT_NO_THROW(h.get<int>("a"));
+        EXPECT_NO_THROW(h.get<Hash>("b[0]"));
+        EXPECT_NO_THROW(h.get<Hash>("b[1]"));
+        EXPECT_NO_THROW(h.get<int>("b[1].c"));
 
         // non-existing "normal" path
-        CPPUNIT_ASSERT_THROW(h.get<int>("c"), karabo::data::ParameterException);
+        EXPECT_THROW(h.get<int>("c"), karabo::data::ParameterException);
 
         // non-existing index of vector that is last item
-        CPPUNIT_ASSERT(h.get<vector<Hash>>("b").size() == 2);
+        EXPECT_TRUE(h.get<vector<Hash>>("b").size() == 2);
         bool caught2 = false;
         try {
             h.get<Hash>("b[2]");
         } catch (karabo::data::ParameterException const& e) {
             caught2 = true;
         }
-        CPPUNIT_ASSERT(caught2 == true);
+        EXPECT_TRUE(caught2);
 
         // item under non-existing index of vector
         bool caught3 = false;
@@ -404,42 +391,43 @@ void Hash_Test::testGetSet() {
         } catch (karabo::data::ParameterException const& e) {
             caught3 = true;
         }
-        CPPUNIT_ASSERT(caught3 == true);
+        EXPECT_TRUE(caught3);
     }
 
     {
         // Checks implicit conversions between signed and unsigned integers.
         Hash h("uint32Prop", 30450u);
-        CPPUNIT_ASSERT(h.getType("uint32Prop") == Types::UINT32);
-        CPPUNIT_ASSERT(h.get<unsigned int>("uint32Prop") == 30450u);
-        CPPUNIT_ASSERT_NO_THROW(h.set("uint32Prop", -1));
+        EXPECT_TRUE(h.getType("uint32Prop") == Types::UINT32);
+        EXPECT_TRUE(h.get<unsigned int>("uint32Prop") == 30450u);
+        EXPECT_NO_THROW(h.set("uint32Prop", -1));
         // After the previous set, the node type becomes Types::INT32 and an
         // attempt to get it as Types::UINT32 will fail.
-        CPPUNIT_ASSERT_THROW(h.get<unsigned int>("uint32Prop"), karabo::data::CastException);
+        EXPECT_THROW(h.get<unsigned int>("uint32Prop"), karabo::data::CastException);
         // Hash::getAs, on the other hand, will do the implicit conversion.
-        CPPUNIT_ASSERT(h.getAs<unsigned int>("uint32Prop") == UINT32_MAX);
+        EXPECT_TRUE(h.getAs<unsigned int>("uint32Prop") == UINT32_MAX);
     }
 
     {
         Hash h;
         h.set("c1"sv, "char A"sv);
-        CPPUNIT_ASSERT(h.get<std::string>("c1"s) == "char A"s);
+        EXPECT_TRUE(h.get<std::string>("c1"s) == "char A"s);
         h.set("c2"sv, L"wchar_t ∀"sv);
-        CPPUNIT_ASSERT(h.get<std::wstring>("c2"s) == L"wchar_t ∀"s);
+        EXPECT_TRUE(h.get<std::wstring>("c2"s) == L"wchar_t ∀"s);
         h.set("c3"sv, u8"char8_t ∆"sv);
-        CPPUNIT_ASSERT(h.get<std::u8string>("c3"s) == u8"char8_t ∆"s);
+        EXPECT_TRUE(h.get<std::u8string>("c3"s) == u8"char8_t ∆"s);
         h.set("c4"sv, u"char16_t ∇"sv);
-        CPPUNIT_ASSERT(h.get<std::u16string>("c4"s) == u"char16_t ∇"s);
+        EXPECT_TRUE(h.get<std::u16string>("c4"s) == u"char16_t ∇"s);
         h.set("c5"sv, U"char32_t ∃"sv);
-        CPPUNIT_ASSERT(h.get<std::u32string>("c5"s) == U"char32_t ∃"s);
+        EXPECT_TRUE(h.get<std::u32string>("c5"s) == U"char32_t ∃"s);
         h.set("e1", "Tschüß"sv);
-        CPPUNIT_ASSERT(h.get<std::string>("e1"s) == "Tschüß"s);
+        EXPECT_TRUE(h.get<std::string>("e1"s) == "Tschüß"s);
         h.set("e2", L"Moin, Moin"sv);
-        CPPUNIT_ASSERT(h.get<std::wstring>("e2"s) == L"Moin, Moin"s);
+        EXPECT_TRUE(h.get<std::wstring>("e2"s) == L"Moin, Moin"s);
         h.set("e3", u8"Привет"sv);
-        CPPUNIT_ASSERT(h.get<std::u8string>("e3"s) == u8"Привет"s);
+        EXPECT_TRUE(h.get<std::u8string>("e3"s) == u8"Привет"s);
     }
 }
+
 
 /**
  * A helper class tracing move and copy construction to test Hash::set move-assignment.
@@ -510,7 +498,8 @@ class TraceCopiesHash : protected Hash {
     }
 };
 
-void Hash_Test::testSetMoveSemantics() {
+
+TEST(TestHash, testSetMoveSemantics) {
     TraceCopies::reset(); // Ensure that nothing yet - e.g. when other test that ran before failed
     {
         // test Hash::set of normal non-const object
@@ -518,35 +507,35 @@ void Hash_Test::testSetMoveSemantics() {
         Hash h;
         // Normal set
         h.set("ta", ta);
-        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countCopyConstr); // copied into Hash
-        CPPUNIT_ASSERT_EQUAL(2, h.get<TraceCopies>("ta").value);
+        EXPECT_EQ(1, TraceCopies::countCopyConstr); // copied into Hash
+        EXPECT_EQ(2, h.get<TraceCopies>("ta").value);
         // Normal set to the now existing node
         ta.value = 4;
         h.set("ta", ta);
-        CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countCopyConstr); // ta copied again into Hash
-        CPPUNIT_ASSERT_EQUAL(4, h.get<TraceCopies>("ta").value);
+        EXPECT_EQ(2, TraceCopies::countCopyConstr); // ta copied again into Hash
+        EXPECT_EQ(4, h.get<TraceCopies>("ta").value);
 
         // 'moving' set
         h.set("tb", std::move(ta));
-        CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countCopyConstr); // unchanged
-        CPPUNIT_ASSERT_EQUAL(4, h.get<TraceCopies>("tb").value);
+        EXPECT_EQ(2, TraceCopies::countCopyConstr); // unchanged
+        EXPECT_EQ(4, h.get<TraceCopies>("tb").value);
         // 'moving' set to the now existing node
         ta.value = 8; // get back into a defined state after object "behind" was moved away from 'ta'
         h.set("tb", std::move(ta));
-        CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countCopyConstr); // again unchanged
-        CPPUNIT_ASSERT_EQUAL(8, h.get<TraceCopies>("tb").value);
+        EXPECT_EQ(2, TraceCopies::countCopyConstr); // again unchanged
+        EXPECT_EQ(8, h.get<TraceCopies>("tb").value);
 
         // set of const
         const TraceCopies tc(3);
         h.set("tc", tc);
-        CPPUNIT_ASSERT_EQUAL(3, TraceCopies::countCopyConstr); // copied...
-        CPPUNIT_ASSERT_EQUAL(3, h.get<TraceCopies>("tc").value);
+        EXPECT_EQ(3, TraceCopies::countCopyConstr); // copied...
+        EXPECT_EQ(3, h.get<TraceCopies>("tc").value);
         // set of const to the now existing node
         h.get<TraceCopies>("tc").value = 42;
-        CPPUNIT_ASSERT_EQUAL(42, h.get<TraceCopies>("tc").value);
+        EXPECT_EQ(42, h.get<TraceCopies>("tc").value);
         h.set("tc", tc);
-        CPPUNIT_ASSERT_EQUAL(4, TraceCopies::countCopyConstr);
-        CPPUNIT_ASSERT_EQUAL(3, h.get<TraceCopies>("tc").value);
+        EXPECT_EQ(4, TraceCopies::countCopyConstr);
+        EXPECT_EQ(3, h.get<TraceCopies>("tc").value);
 
         TraceCopies::reset(); // Start next round from zero
     }
@@ -557,38 +546,38 @@ void Hash_Test::testSetMoveSemantics() {
         Hash h;
         Hash hInner;
         hInner.set("ta", ta);
-        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countCopyConstr);
+        EXPECT_EQ(1, TraceCopies::countCopyConstr);
         // We set a non-const Hash: It gets copied, so the contained TraceCopies does.
         h.set("h", hInner);
-        CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countCopyConstr);
-        CPPUNIT_ASSERT_EQUAL(11, h.get<TraceCopies>("h.ta").value);
+        EXPECT_EQ(2, TraceCopies::countCopyConstr);
+        EXPECT_EQ(11, h.get<TraceCopies>("h.ta").value);
         // same again to now existing node
         h.get<TraceCopies>("h.ta").value = 22;
-        CPPUNIT_ASSERT_EQUAL(22, h.get<TraceCopies>("h.ta").value);
+        EXPECT_EQ(22, h.get<TraceCopies>("h.ta").value);
         h.set("h", hInner);
-        CPPUNIT_ASSERT_EQUAL(3, TraceCopies::countCopyConstr);
-        CPPUNIT_ASSERT_EQUAL(11, h.get<TraceCopies>("h.ta").value);
+        EXPECT_EQ(3, TraceCopies::countCopyConstr);
+        EXPECT_EQ(11, h.get<TraceCopies>("h.ta").value);
 
         // We move-set a Hash: It gets empty and - since content is just moved - no copy/assignment of TraceCopies
         h.set("h2", std::move(hInner));
-        CPPUNIT_ASSERT(hInner.empty());
-        CPPUNIT_ASSERT_EQUAL(11, h.get<TraceCopies>("h2.ta").value);
+        EXPECT_TRUE(hInner.empty());
+        EXPECT_EQ(11, h.get<TraceCopies>("h2.ta").value);
         // same again to now existing node
         hInner.set("ta", TraceCopies(17));
         h.set("h2", std::move(hInner));
-        CPPUNIT_ASSERT(hInner.empty());
-        CPPUNIT_ASSERT_EQUAL(17, h.get<TraceCopies>("h2.ta").value);
+        EXPECT_TRUE(hInner.empty());
+        EXPECT_EQ(17, h.get<TraceCopies>("h2.ta").value);
 
         // We set a const Hash: As for the non-const, it gets copied, so the contained TraceCopies does.
         const Hash hInner2("ta2", ta);
         h.set("h3", hInner2);
-        CPPUNIT_ASSERT_EQUAL(5, TraceCopies::countCopyConstr);
+        EXPECT_EQ(5, TraceCopies::countCopyConstr);
         // same again to now existing node
         h.get<TraceCopies>("h3.ta2").value = 22;
-        CPPUNIT_ASSERT_EQUAL(22, h.get<TraceCopies>("h3.ta2").value);
+        EXPECT_EQ(22, h.get<TraceCopies>("h3.ta2").value);
         h.set("h3", hInner2);
-        CPPUNIT_ASSERT_EQUAL(6, TraceCopies::countCopyConstr); // another copy
-        CPPUNIT_ASSERT_EQUAL(11, h.get<TraceCopies>("h3.ta2").value);
+        EXPECT_EQ(6, TraceCopies::countCopyConstr); // another copy
+        EXPECT_EQ(11, h.get<TraceCopies>("h3.ta2").value);
 
         TraceCopies::reset();
     }
@@ -600,52 +589,52 @@ void Hash_Test::testSetMoveSemantics() {
         Hash h;
         Hash hInner;
         hInner.set("ta", ta);
-        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countCopyConstr);
+        EXPECT_EQ(1, TraceCopies::countCopyConstr);
         // We set a non-const Hash: It gets copied, so the contained TraceCopies does.
         h.set("h[0]", hInner);
-        CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countCopyConstr);
-        CPPUNIT_ASSERT_EQUAL(11, h.get<TraceCopies>("h[0].ta").value);
+        EXPECT_EQ(2, TraceCopies::countCopyConstr);
+        EXPECT_EQ(11, h.get<TraceCopies>("h[0].ta").value);
         // same again to now existing node
         h.get<TraceCopies>("h[0].ta").value = 22;
-        CPPUNIT_ASSERT_EQUAL(22, h.get<TraceCopies>("h[0].ta").value);
+        EXPECT_EQ(22, h.get<TraceCopies>("h[0].ta").value);
         h.set("h[0]", hInner);
-        CPPUNIT_ASSERT_EQUAL(3, TraceCopies::countCopyConstr);
-        CPPUNIT_ASSERT_EQUAL(11, h.get<TraceCopies>("h[0].ta").value);
+        EXPECT_EQ(3, TraceCopies::countCopyConstr);
+        EXPECT_EQ(11, h.get<TraceCopies>("h[0].ta").value);
         // and now to non-existing index
         h.set("h[1]", hInner);
-        CPPUNIT_ASSERT_EQUAL(4, TraceCopies::countCopyConstr); // 5 without noexcept in Hash::Hash(Hash&&) etc.!
-        CPPUNIT_ASSERT_EQUAL(11, h.get<TraceCopies>("h[1].ta").value);
+        EXPECT_EQ(4, TraceCopies::countCopyConstr); // 5 without noexcept in Hash::Hash(Hash&&) etc.!
+        EXPECT_EQ(11, h.get<TraceCopies>("h[1].ta").value);
 
         // We move-set a Hash: It gets empty and - since content is just moved - no copy/assignment of TraceCopies
         h.set("h2[0]", std::move(hInner));
-        CPPUNIT_ASSERT(hInner.empty());
-        CPPUNIT_ASSERT_EQUAL(11, h.get<TraceCopies>("h2[0].ta").value);
+        EXPECT_TRUE(hInner.empty());
+        EXPECT_EQ(11, h.get<TraceCopies>("h2[0].ta").value);
         // same again to now existing node
         hInner.set("ta", TraceCopies(18));
         h.set("h2[0]", std::move(hInner));
-        CPPUNIT_ASSERT(hInner.empty());
-        CPPUNIT_ASSERT_EQUAL(18, h.get<TraceCopies>("h2[0].ta").value);
+        EXPECT_TRUE(hInner.empty());
+        EXPECT_EQ(18, h.get<TraceCopies>("h2[0].ta").value);
         // now to not yet existing index
         hInner.set("ta", TraceCopies(19));
         h.set("h2[1]", std::move(hInner));
-        CPPUNIT_ASSERT(hInner.empty());
-        CPPUNIT_ASSERT_EQUAL(19, h.get<TraceCopies>("h2[1].ta").value);
+        EXPECT_TRUE(hInner.empty());
+        EXPECT_EQ(19, h.get<TraceCopies>("h2[1].ta").value);
 
         // We set a const Hash: As for the non-const, it gets copied, so the contained TraceCopies does.
         const Hash hInner2("ta2", ta);
-        CPPUNIT_ASSERT_EQUAL(5, TraceCopies::countCopyConstr);
+        EXPECT_EQ(5, TraceCopies::countCopyConstr);
         h.set("h3[0]", hInner2);
-        CPPUNIT_ASSERT_EQUAL(6, TraceCopies::countCopyConstr);
+        EXPECT_EQ(6, TraceCopies::countCopyConstr);
         // same again to now existing node
         h.get<TraceCopies>("h3[0].ta2").value = 22;
-        CPPUNIT_ASSERT_EQUAL(22, h.get<TraceCopies>("h3[0].ta2").value);
+        EXPECT_EQ(22, h.get<TraceCopies>("h3[0].ta2").value);
         h.set("h3[0]", hInner2);
-        CPPUNIT_ASSERT_EQUAL(7, TraceCopies::countCopyConstr);
-        CPPUNIT_ASSERT_EQUAL(11, h.get<TraceCopies>("h3[0].ta2").value);
+        EXPECT_EQ(7, TraceCopies::countCopyConstr);
+        EXPECT_EQ(11, h.get<TraceCopies>("h3[0].ta2").value);
         // same now to non-existing index
         h.set("h3[1]", hInner2);
-        CPPUNIT_ASSERT_EQUAL(8, TraceCopies::countCopyConstr);
-        CPPUNIT_ASSERT_EQUAL(11, h.get<TraceCopies>("h3[1].ta2").value);
+        EXPECT_EQ(8, TraceCopies::countCopyConstr);
+        EXPECT_EQ(11, h.get<TraceCopies>("h3[1].ta2").value);
 
         TraceCopies::reset();
     }
@@ -653,17 +642,17 @@ void Hash_Test::testSetMoveSemantics() {
     {
         // test Hash::set of Hash derived object like NDArray
         TraceCopiesHash ta(TraceCopies(2));
-        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countCopyConstr); // TraceCopiesHash ctr. takes it by rerefence, so copies
+        EXPECT_EQ(1, TraceCopies::countCopyConstr); // TraceCopiesHash ctr. takes it by rerefence, so copies
         Hash h;
         // Normal set
         h.set("ta", ta);
-        CPPUNIT_ASSERT_EQUAL(2, h.get<TraceCopiesHash>("ta").getValue().value);
-        CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countCopyConstr);
+        EXPECT_EQ(2, h.get<TraceCopiesHash>("ta").getValue().value);
+        EXPECT_EQ(2, TraceCopies::countCopyConstr);
         // Normal set to the now existing node
         ta.setValue(4); // set inner value, no construction
         h.set("ta", ta);
-        CPPUNIT_ASSERT_EQUAL(3, TraceCopies::countCopyConstr);
-        CPPUNIT_ASSERT_EQUAL(4, h.get<TraceCopiesHash>("ta").getValue().value);
+        EXPECT_EQ(3, TraceCopies::countCopyConstr);
+        EXPECT_EQ(4, h.get<TraceCopiesHash>("ta").getValue().value);
 
         // 'moving' set - since the TraceCopiesHash object is moved (as a Hash!),
         //                this leaves no trace, so we cannot really test :-(
@@ -671,27 +660,27 @@ void Hash_Test::testSetMoveSemantics() {
         // Moving ta indeed leaves no trace of TraceCopies construction,
         // but to leave 'ta' in a valid state (with existing key "v"), a default constructed TraceCopiesHash
         // is assigned to it and the default construction move-assigns the TraceCopies object inside.
-        CPPUNIT_ASSERT_EQUAL(4, h.get<TraceCopiesHash>("tb").getValue().value);
-        CPPUNIT_ASSERT_NO_THROW(ta.getValue()); // Ensure that 'ta' is in a valid state after moving from it.
+        EXPECT_EQ(4, h.get<TraceCopiesHash>("tb").getValue().value);
+        EXPECT_NO_THROW(ta.getValue()); // Ensure that 'ta' is in a valid state after moving from it.
         ta.setValue(42);
         // 'moving' set to the now existing node
         h.set("tb", std::move(ta));
         // Same counting as above: one move construction expected
-        CPPUNIT_ASSERT_EQUAL(3, TraceCopies::countCopyConstr);
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(h), 42, h.get<TraceCopiesHash>("tb").getValue().value);
+        EXPECT_EQ(3, TraceCopies::countCopyConstr);
+        EXPECT_EQ(42, h.get<TraceCopiesHash>("tb").getValue().value) << toString(h);
 
         // set of const
         const TraceCopiesHash tc(TraceCopies(3));
-        CPPUNIT_ASSERT_EQUAL(4, TraceCopies::countCopyConstr);
+        EXPECT_EQ(4, TraceCopies::countCopyConstr);
         h.set("tc", tc);
-        CPPUNIT_ASSERT_EQUAL(5, TraceCopies::countCopyConstr);
-        CPPUNIT_ASSERT_EQUAL(3, h.get<TraceCopiesHash>("tc").getValue().value);
+        EXPECT_EQ(5, TraceCopies::countCopyConstr);
+        EXPECT_EQ(3, h.get<TraceCopiesHash>("tc").getValue().value);
         // set of const to the now existing node
         h.get<TraceCopiesHash>("tc").setValue(-42);
-        CPPUNIT_ASSERT_EQUAL(-42, h.get<TraceCopiesHash>("tc").getValue().value);
+        EXPECT_EQ(-42, h.get<TraceCopiesHash>("tc").getValue().value);
         h.set("tc", tc);
-        CPPUNIT_ASSERT_EQUAL(6, TraceCopies::countCopyConstr);
-        CPPUNIT_ASSERT_EQUAL(3, h.get<TraceCopiesHash>("tc").getValue().value);
+        EXPECT_EQ(6, TraceCopies::countCopyConstr);
+        EXPECT_EQ(3, h.get<TraceCopiesHash>("tc").getValue().value);
 
         TraceCopies::reset();
     }
@@ -701,17 +690,17 @@ void Hash_Test::testSetMoveSemantics() {
         Hash h;
         std::any a(TraceCopies(4));
         h.set("a", a);
-        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countCopyConstr); // a and thus its TraceCopies got copied
-        CPPUNIT_ASSERT_EQUAL(4, h.get<TraceCopies>("a").value);
+        EXPECT_EQ(1, TraceCopies::countCopyConstr); // a and thus its TraceCopies got copied
+        EXPECT_EQ(4, h.get<TraceCopies>("a").value);
 
         const std::any& a2 = a;
         h.set("a2", a2);
-        CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countCopyConstr); // a and thus its TraceCopies get copied
-        CPPUNIT_ASSERT_EQUAL(4, h.get<TraceCopies>("a2").value);
+        EXPECT_EQ(2, TraceCopies::countCopyConstr); // a and thus its TraceCopies get copied
+        EXPECT_EQ(4, h.get<TraceCopies>("a2").value);
 
         h.set("a3", std::move(a));
-        CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countCopyConstr); // copied
-        CPPUNIT_ASSERT_EQUAL(4, h.get<TraceCopies>("a3").value);
+        EXPECT_EQ(2, TraceCopies::countCopyConstr); // copied
+        EXPECT_EQ(4, h.get<TraceCopies>("a3").value);
 
         TraceCopies::reset();
     }
@@ -723,26 +712,26 @@ void Hash_Test::testSetMoveSemantics() {
         // test Hash::set of various strings,
         Hash h;
         h.set("const_char_pointer", "a");
-        CPPUNIT_ASSERT_EQUAL(std::string("a"), h.get<std::string>("const_char_pointer"));
+        EXPECT_STREQ("a", h.get<std::string>("const_char_pointer").c_str());
 
         char cText[] = "a2and3";
         h.set("char_array", cText);
-        CPPUNIT_ASSERT_EQUAL(std::string("a2and3"), h.get<std::string>("char_array"));
+        EXPECT_STREQ("a2and3", h.get<std::string>("char_array").c_str());
 
         char* cPtr = cText;
         h.set("char_ptr", cPtr);
-        CPPUNIT_ASSERT_EQUAL(std::string("a2and3"), h.get<std::string>("char_ptr"));
+        EXPECT_STREQ("a2and3", h.get<std::string>("char_ptr").c_str());
 
         h.set("tmp_string", std::string("b"));
-        CPPUNIT_ASSERT_EQUAL(std::string("b"), h.get<std::string>("tmp_string"));
+        EXPECT_STREQ("b", h.get<std::string>("tmp_string").c_str());
 
         const std::string b1("b1");
         h.set("const_string", b1);
-        CPPUNIT_ASSERT_EQUAL(std::string("b1"), h.get<std::string>("const_string"));
+        EXPECT_STREQ("b1", h.get<std::string>("const_string").c_str());
 
         std::string b2("b2");
         h.set("string", b2);
-        CPPUNIT_ASSERT_EQUAL(std::string("b2"), h.get<std::string>("string"));
+        EXPECT_STREQ("b2", h.get<std::string>("string").c_str());
     }
 
     {
@@ -751,16 +740,16 @@ void Hash_Test::testSetMoveSemantics() {
         // but there is treament in Element::setValue to convert to wstring
         Hash h;
         h.set("const_wchart_pointer", L"a");
-        // CPPUNIT_ASSERT_EQUAL does not support std::wstring...
-        CPPUNIT_ASSERT(std::wstring(L"a") == h.get<std::wstring>("const_wchart_pointer"));
+        // EXPECT_STREQ does not support std::wstring... (TODO: Check this statement!)
+        EXPECT_TRUE(std::wstring(L"a") == h.get<std::wstring>("const_wchart_pointer"));
 
         wchar_t cText[] = L"a2and3";
         h.set("wchart_array", cText);
-        CPPUNIT_ASSERT(std::wstring(L"a2and3") == h.get<std::wstring>("wchart_array"));
+        EXPECT_TRUE(std::wstring(L"a2and3") == h.get<std::wstring>("wchart_array"));
 
         wchar_t* cPtr = cText;
         h.set("wchart_ptr", cPtr);
-        CPPUNIT_ASSERT(std::wstring(L"a2and3") == h.get<std::wstring>("wchart_ptr"));
+        EXPECT_TRUE(std::wstring(L"a2and3") == h.get<std::wstring>("wchart_ptr"));
     }
 
     // Some final checks
@@ -770,35 +759,36 @@ void Hash_Test::testSetMoveSemantics() {
         Hash h;
 
         h.set<int>("int", 1);
-        CPPUNIT_ASSERT_EQUAL(1, h.get<int>("int"));
+        EXPECT_EQ(1, h.get<int>("int"));
 
         h.set<Hash>("hash", Hash("a", "b"));
-        CPPUNIT_ASSERT_MESSAGE(toString(h), h.get<Hash>("hash").fullyEquals(Hash("a", "b")));
+        EXPECT_TRUE(h.get<Hash>("hash").fullyEquals(Hash("a", "b"))) << toString(h);
 
         h.set<NDArray>("ndarray", NDArray(Dims({20}), 5));
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(h), 20ul, h.get<NDArray>("ndarray").size());
+        EXPECT_EQ(20ul, h.get<NDArray>("ndarray").size()) << toString(h);
 
         h.set<TraceCopies>("trace", TraceCopies(77));
-        CPPUNIT_ASSERT_EQUAL(77, h.get<TraceCopies>("trace").value);
+        EXPECT_EQ(77, h.get<TraceCopies>("trace").value);
 
         // Test also Element::setValue<typename>(..) directly
         h.getNode("int").setValue<int>(42);
-        CPPUNIT_ASSERT_EQUAL(42, h.get<int>("int"));
+        EXPECT_EQ(42, h.get<int>("int"));
 
         h.getNode("hash").setValue<Hash>(Hash("b", "c"));
-        CPPUNIT_ASSERT_MESSAGE(toString(h), h.get<Hash>("hash").fullyEquals(Hash("b", "c")));
+        EXPECT_TRUE(h.get<Hash>("hash").fullyEquals(Hash("b", "c"))) << toString(h);
 
         h.getNode("ndarray").setValue<NDArray>(NDArray(Dims({10}), 6));
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(h), 10ul, h.get<NDArray>("ndarray").size());
+        EXPECT_EQ(10ul, h.get<NDArray>("ndarray").size()) << toString(h);
 
         h.getNode("trace").setValue<TraceCopies>(TraceCopies(88));
-        CPPUNIT_ASSERT_EQUAL(88, h.get<TraceCopies>("trace").value);
+        EXPECT_EQ(88, h.get<TraceCopies>("trace").value);
 
         TraceCopies::reset();
     }
 }
 
-void Hash_Test::testSetAttributeMoveSemantics() {
+
+TEST(TestHash, testSetAttributeMoveSemantics) {
     TraceCopies::reset(); // Ensure that nothing yet - e.g. when other test that ran before failed
     {
         // test Hash::setAttribute of normal non-const object
@@ -806,45 +796,44 @@ void Hash_Test::testSetAttributeMoveSemantics() {
         Hash h("a", 1);
         // Normal set
         h.setAttribute("a", "ta", ta);
-        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countCopyConstr); // copied into Hash
-        CPPUNIT_ASSERT_EQUAL(2, h.getAttribute<TraceCopies>("a", "ta").value);
+        EXPECT_EQ(1, TraceCopies::countCopyConstr); // copied into Hash
+        EXPECT_EQ(2, h.getAttribute<TraceCopies>("a", "ta").value);
         // Normal set to the now existing node
         ta.value = 4;
         h.setAttribute("a", "ta", ta);
-        CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countCopyConstr); // again copied into Hash
-        CPPUNIT_ASSERT_EQUAL(4, h.getAttribute<TraceCopies>("a", "ta").value);
+        EXPECT_EQ(2, TraceCopies::countCopyConstr); // again copied into Hash
+        EXPECT_EQ(4, h.getAttribute<TraceCopies>("a", "ta").value);
 
         // 'moving' set
         h.setAttribute("a", "tb", std::move(ta));
-        CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countCopyConstr); // unchanged
-        CPPUNIT_ASSERT_EQUAL(4, h.getAttribute<TraceCopies>("a", "tb").value);
-        CPPUNIT_ASSERT_EQUAL(-1, ta.value); // the moved-from object gets -1 assigned to value in the move constructor
+        EXPECT_EQ(2, TraceCopies::countCopyConstr); // unchanged
+        EXPECT_EQ(4, h.getAttribute<TraceCopies>("a", "tb").value);
+        EXPECT_EQ(-1, ta.value); // the moved-from object gets -1 assigned to value in the move constructor
         // 'moving' set to the now existing node
         ta.value = 8; // in general, a moved-from object is in a valid state, but we do not necessarily know which...
         h.setAttribute("a", "tb", std::move(ta));
-        CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countCopyConstr); // again unchanged
-        CPPUNIT_ASSERT_EQUAL(8, h.getAttribute<TraceCopies>("a", "tb").value);
-        CPPUNIT_ASSERT_EQUAL(
-              -1, ta.value); // as before: the moved-from object gets -1 assigned to value in the move constructor
+        EXPECT_EQ(2, TraceCopies::countCopyConstr); // again unchanged
+        EXPECT_EQ(8, h.getAttribute<TraceCopies>("a", "tb").value);
+        EXPECT_EQ(-1, ta.value); // as before: the moved-from object gets -1 assigned to value in the move constructor
         ta.value = 9;
         h.setAttribute<TraceCopies>("a", "tb", std::move(ta));
-        CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countCopyConstr); // again unchanged
-        CPPUNIT_ASSERT_EQUAL(9, h.getAttribute<TraceCopies>("a", "tb").value);
+        EXPECT_EQ(2, TraceCopies::countCopyConstr); // again unchanged
+        EXPECT_EQ(9, h.getAttribute<TraceCopies>("a", "tb").value);
 
         // set of const
         const TraceCopies tc(3);
         h.setAttribute("a", "tc", tc);
-        CPPUNIT_ASSERT_EQUAL(3, TraceCopies::countCopyConstr); // copied...
-        CPPUNIT_ASSERT_EQUAL(3, h.getAttribute<TraceCopies>("a", "tc").value);
+        EXPECT_EQ(3, TraceCopies::countCopyConstr); // copied...
+        EXPECT_EQ(3, h.getAttribute<TraceCopies>("a", "tc").value);
         // set of const to the now existing node
         h.getAttribute<TraceCopies>("a", "tc").value = 42;
-        CPPUNIT_ASSERT_EQUAL(42, h.getAttribute<TraceCopies>("a", "tc").value);
+        EXPECT_EQ(42, h.getAttribute<TraceCopies>("a", "tc").value);
         h.setAttribute("a", "tc", tc);
-        CPPUNIT_ASSERT_EQUAL(4, TraceCopies::countCopyConstr);
-        CPPUNIT_ASSERT_EQUAL(3, h.getAttribute<TraceCopies>("a", "tc").value);
+        EXPECT_EQ(4, TraceCopies::countCopyConstr);
+        EXPECT_EQ(3, h.getAttribute<TraceCopies>("a", "tc").value);
         h.setAttribute<TraceCopies>("a", "tc", tc);
-        CPPUNIT_ASSERT_EQUAL(5, TraceCopies::countCopyConstr);
-        CPPUNIT_ASSERT_EQUAL(3, h.getAttribute<TraceCopies>("a", "tc").value);
+        EXPECT_EQ(5, TraceCopies::countCopyConstr);
+        EXPECT_EQ(3, h.getAttribute<TraceCopies>("a", "tc").value);
 
         TraceCopies::reset(); // Start next round from zero
     }
@@ -854,17 +843,17 @@ void Hash_Test::testSetAttributeMoveSemantics() {
         Hash h("a", 2);
         std::any a(TraceCopies(4));
         h.setAttribute("a", "attr", a);
-        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countCopyConstr); // a and thus its TraceCopies got copied
-        CPPUNIT_ASSERT_EQUAL(4, h.getAttribute<TraceCopies>("a", "attr").value);
+        EXPECT_EQ(1, TraceCopies::countCopyConstr); // a and thus its TraceCopies got copied
+        EXPECT_EQ(4, h.getAttribute<TraceCopies>("a", "attr").value);
 
         const std::any& a2 = a;
         h.setAttribute("a", "attr2", a2);
-        CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countCopyConstr); // a and thus its TraceCopies get copied
-        CPPUNIT_ASSERT_EQUAL(4, h.getAttribute<TraceCopies>("a", "attr2").value);
+        EXPECT_EQ(2, TraceCopies::countCopyConstr); // a and thus its TraceCopies get copied
+        EXPECT_EQ(4, h.getAttribute<TraceCopies>("a", "attr2").value);
 
         h.setAttribute("a", "attr3", std::move(a));
-        CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countCopyConstr);
-        CPPUNIT_ASSERT_EQUAL(4, h.getAttribute<TraceCopies>("a", "attr3").value);
+        EXPECT_EQ(2, TraceCopies::countCopyConstr);
+        EXPECT_EQ(4, h.getAttribute<TraceCopies>("a", "attr3").value);
 
         TraceCopies::reset();
     }
@@ -872,22 +861,22 @@ void Hash_Test::testSetAttributeMoveSemantics() {
     {
         Hash::Attributes attrs;
         attrs.set("attr", TraceCopies(7));
-        CPPUNIT_ASSERT_EQUAL(0, TraceCopies::countCopyConstr);
+        EXPECT_EQ(0, TraceCopies::countCopyConstr);
         Hash h("a", 1, "b", 2);
 
         // copy case
         h.setAttributes("a", attrs);
-        CPPUNIT_ASSERT_EQUAL(7, h.getAttribute<TraceCopies>("a", "attr").value);
-        CPPUNIT_ASSERT_EQUAL(1ul, h.getAttributes("a").size());
-        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countCopyConstr);
+        EXPECT_EQ(7, h.getAttribute<TraceCopies>("a", "attr").value);
+        EXPECT_EQ(1ul, h.getAttributes("a").size());
+        EXPECT_EQ(1, TraceCopies::countCopyConstr);
 
         // move case
         h.setAttributes("b", std::move(attrs));
-        CPPUNIT_ASSERT_EQUAL(7, h.getAttribute<TraceCopies>("b", "attr").value);
-        CPPUNIT_ASSERT_EQUAL(1ul, h.getAttributes("b").size());
+        EXPECT_EQ(7, h.getAttribute<TraceCopies>("b", "attr").value);
+        EXPECT_EQ(1ul, h.getAttributes("b").size());
         // Neither moved nor copied since entire 'attrs' now moved inside the Hash
-        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countCopyConstr);
-        CPPUNIT_ASSERT(attrs.empty()); // since entirely 'moved away'
+        EXPECT_EQ(1, TraceCopies::countCopyConstr);
+        EXPECT_TRUE(attrs.empty()); // since entirely 'moved away'
 
         TraceCopies::reset();
     }
@@ -896,30 +885,30 @@ void Hash_Test::testSetAttributeMoveSemantics() {
         // test Hash::set of various strings,
         Hash h("a", 1);
         h.setAttribute("a", "const_char_pointer", "a");
-        CPPUNIT_ASSERT_EQUAL(std::string("a"), h.getAttribute<std::string>("a", "const_char_pointer"));
+        EXPECT_STREQ("a", h.getAttribute<std::string>("a", "const_char_pointer").c_str());
 
         char cText[] = "a2and3";
         h.setAttribute("a", "char_array", cText);
-        CPPUNIT_ASSERT_EQUAL(std::string("a2and3"), h.getAttribute<std::string>("a", "char_array"));
+        EXPECT_STREQ("a2and3", h.getAttribute<std::string>("a", "char_array").c_str());
 
         char* cPtr = cText;
         h.setAttribute("a", "char_ptr", cPtr);
-        CPPUNIT_ASSERT_EQUAL(std::string("a2and3"), h.getAttribute<std::string>("a", "char_ptr"));
+        EXPECT_STREQ("a2and3", h.getAttribute<std::string>("a", "char_ptr").c_str());
 
         h.setAttribute("a", "tmp_string", std::string("b"));
-        CPPUNIT_ASSERT_EQUAL(std::string("b"), h.getAttribute<std::string>("a", "tmp_string"));
+        EXPECT_STREQ("b", h.getAttribute<std::string>("a", "tmp_string").c_str());
 
         const std::string b1("b1");
         h.setAttribute("a", "const_string", b1);
-        CPPUNIT_ASSERT_EQUAL(std::string("b1"), h.getAttribute<std::string>("a", "const_string"));
+        EXPECT_STREQ("b1", h.getAttribute<std::string>("a", "const_string").c_str());
 
         std::string b2("b2");
         h.setAttribute("a", "string", b2);
-        CPPUNIT_ASSERT_EQUAL(std::string("b2"), h.getAttribute<std::string>("a", "string"));
+        EXPECT_STREQ("b2", h.getAttribute<std::string>("a", "string").c_str());
     }
 }
 
-void Hash_Test::testConstructorMoveSemantics() {
+TEST(TestHash, testConstructorMoveSemantics) {
     TraceCopies::reset(); // Clean start
 
     // First test setting single value as specially treated
@@ -927,22 +916,22 @@ void Hash_Test::testConstructorMoveSemantics() {
         // test ctr with normal non-const object
         TraceCopies ta(2);
         Hash h("ta", ta);
-        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countCopyConstr); // copied into Hash
-        CPPUNIT_ASSERT_EQUAL(2, h.get<TraceCopies>("ta").value);
+        EXPECT_EQ(1, TraceCopies::countCopyConstr); // copied into Hash
+        EXPECT_EQ(2, h.get<TraceCopies>("ta").value);
     }
     {
         // 'moving' set
         Hash h("tb", TraceCopies(4));
-        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countCopyConstr); // unchanged
-        // CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countMoveConstr); // since now it is moved
-        CPPUNIT_ASSERT_EQUAL(4, h.get<TraceCopies>("tb").value);
+        EXPECT_EQ(1, TraceCopies::countCopyConstr); // unchanged
+        // EXPECT_EQ(1, TraceCopies::countMoveConstr); // since now it is moved
+        EXPECT_EQ(4, h.get<TraceCopies>("tb").value);
     }
     {
         // set of const
         const TraceCopies tc(3);
         Hash h("tc", tc);
-        CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countCopyConstr); // copied...
-        CPPUNIT_ASSERT_EQUAL(3, h.get<TraceCopies>("tc").value);
+        EXPECT_EQ(2, TraceCopies::countCopyConstr); // copied...
+        EXPECT_EQ(3, h.get<TraceCopies>("tc").value);
     }
     {
         // Now set of many of various const/ref types in one go, also Hash
@@ -954,232 +943,232 @@ void Hash_Test::testConstructorMoveSemantics() {
         Hash h("int", 0,      // for first do not test TraceCopies since that is tested above
                "ta", ta, "tb", tb, "tc", TraceCopies(3), "ha", ha, "hb", hb, "hc", Hash("a", ta, "b", tb));
 
-        CPPUNIT_ASSERT_EQUAL(8, TraceCopies::countCopyConstr); // ta, tb, 4x when ha and hb are copied into h and 2x
-                                                               // when ta/tb are copied into hc
+        EXPECT_EQ(8, TraceCopies::countCopyConstr); // ta, tb, 4x when ha and hb are copied into h and 2x
+                                                    // when ta/tb are copied into hc
 
-        CPPUNIT_ASSERT_EQUAL(1, h.get<TraceCopies>("ta").value);
-        CPPUNIT_ASSERT_EQUAL(2, h.get<TraceCopies>("tb").value);
-        CPPUNIT_ASSERT_EQUAL(3, h.get<TraceCopies>("tc").value);
-        CPPUNIT_ASSERT_EQUAL(1, h.get<TraceCopies>("ha.a").value);
-        CPPUNIT_ASSERT_EQUAL(2, h.get<TraceCopies>("ha.b").value);
-        CPPUNIT_ASSERT_EQUAL(1, h.get<TraceCopies>("hb.a").value);
-        CPPUNIT_ASSERT_EQUAL(2, h.get<TraceCopies>("hb.b").value);
-        CPPUNIT_ASSERT_EQUAL(1, h.get<TraceCopies>("hc.a").value);
-        CPPUNIT_ASSERT_EQUAL(2, h.get<TraceCopies>("hc.b").value);
+        EXPECT_EQ(1, h.get<TraceCopies>("ta").value);
+        EXPECT_EQ(2, h.get<TraceCopies>("tb").value);
+        EXPECT_EQ(3, h.get<TraceCopies>("tc").value);
+        EXPECT_EQ(1, h.get<TraceCopies>("ha.a").value);
+        EXPECT_EQ(2, h.get<TraceCopies>("ha.b").value);
+        EXPECT_EQ(1, h.get<TraceCopies>("hb.a").value);
+        EXPECT_EQ(2, h.get<TraceCopies>("hb.b").value);
+        EXPECT_EQ(1, h.get<TraceCopies>("hc.a").value);
+        EXPECT_EQ(2, h.get<TraceCopies>("hc.b").value);
 
         // Verify insertion order
         // (was wrong in first attempt to have move semantics in Hash constructor)
         Hash::const_iterator it = h.begin();
-        CPPUNIT_ASSERT_EQUAL(std::string("int"), it->getKey());
-        CPPUNIT_ASSERT_EQUAL(std::string("ta"), (++it)->getKey());
-        CPPUNIT_ASSERT_EQUAL(std::string("tb"), (++it)->getKey());
-        CPPUNIT_ASSERT_EQUAL(std::string("tc"), (++it)->getKey());
-        CPPUNIT_ASSERT_EQUAL(std::string("ha"), (++it)->getKey());
-        CPPUNIT_ASSERT_EQUAL(std::string("hb"), (++it)->getKey());
-        CPPUNIT_ASSERT_EQUAL(std::string("hc"), (++it)->getKey());
-        CPPUNIT_ASSERT(++it == h.end());
+        EXPECT_STREQ("int", it->getKey().c_str());
+        EXPECT_STREQ("ta", (++it)->getKey().c_str());
+        EXPECT_STREQ("tb", (++it)->getKey().c_str());
+        EXPECT_STREQ("tc", (++it)->getKey().c_str());
+        EXPECT_STREQ("ha", (++it)->getKey().c_str());
+        EXPECT_STREQ("hb", (++it)->getKey().c_str());
+        EXPECT_STREQ("hc", (++it)->getKey().c_str());
+        EXPECT_TRUE(++it == h.end());
     }
 
     TraceCopies::reset(); // Start next round from zero
 }
 
-void Hash_Test::testGetAs() {
+TEST(TestHash, testGetAs) {
     {
         Hash h("a", true);
-        CPPUNIT_ASSERT(h.getAs<string>("a") == "1");
-        CPPUNIT_ASSERT(h.getAs<int>("a") == 1);
-        CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, h.getAs<double>("a"), 0.00001);
-        CPPUNIT_ASSERT(h.getAs<char>("a") == '1');
+        EXPECT_TRUE(h.getAs<string>("a") == "1");
+        EXPECT_TRUE(h.getAs<int>("a") == 1);
+        EXPECT_NEAR(1.0, h.getAs<double>("a"), 0.00001);
+        EXPECT_TRUE(h.getAs<char>("a") == '1');
     }
 
     {
         Hash h("a", true);
         h.setAttribute("a", "a", true);
-        CPPUNIT_ASSERT(h.getAttributeAs<string>("a", "a") == "1");
-        CPPUNIT_ASSERT(h.getAttributeAs<int>("a", "a") == 1);
-        CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, h.getAttributeAs<double>("a", "a"), 0.00001);
-        CPPUNIT_ASSERT(h.getAttributeAs<char>("a", "a") == '1');
+        EXPECT_TRUE(h.getAttributeAs<string>("a", "a") == "1");
+        EXPECT_TRUE(h.getAttributeAs<int>("a", "a") == 1);
+        EXPECT_NEAR(1.0, h.getAttributeAs<double>("a", "a"), 0.00001);
+        EXPECT_TRUE(h.getAttributeAs<char>("a", "a") == '1');
         std::any& any = h.getAttributeAsAny("a", "a");
-        CPPUNIT_ASSERT(std::any_cast<bool>(any) == true);
+        EXPECT_TRUE(std::any_cast<bool>(any) == true);
         h.setAttribute("a", "b", 12);
         h.setAttribute("a", "c", 1.23);
         Hash::Attributes attrs = h.getAttributes("a");
         Hash g("Z.a.b.c", "Value");
         g.setAttributes("Z.a.b.c", attrs);
-        CPPUNIT_ASSERT(g.getAttributeAs<string>("Z.a.b.c", "a") == "1");
-        CPPUNIT_ASSERT(g.getAttributeAs<int>("Z.a.b.c", "a") == 1);
-        CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, g.getAttributeAs<double>("Z.a.b.c", "a"), 0.00001);
+        EXPECT_TRUE(g.getAttributeAs<string>("Z.a.b.c", "a") == "1");
+        EXPECT_TRUE(g.getAttributeAs<int>("Z.a.b.c", "a") == 1);
+        EXPECT_NEAR(1.0, g.getAttributeAs<double>("Z.a.b.c", "a"), 0.00001);
         h.set("a.b", "cardinal");
         h.setAttribute("a.b", "Q", 1.8e-06);
-        CPPUNIT_ASSERT(h.getAttribute<double>("a.b", "Q") == 1.8e-06);
-        CPPUNIT_ASSERT(h.getAttributeAs<int>("a.b", "Q") == 0);
+        EXPECT_TRUE(h.getAttribute<double>("a.b", "Q") == 1.8e-06);
+        EXPECT_TRUE(h.getAttributeAs<int>("a.b", "Q") == 0);
     }
 
     {
         Hash h("a", std::vector<bool>(4, false));
-        CPPUNIT_ASSERT(h.getAs<string>("a") == "0,0,0,0");
+        EXPECT_TRUE(h.getAs<string>("a") == "0,0,0,0");
         int tmp = h.getAs<int, std::vector>("a")[3];
-        CPPUNIT_ASSERT(tmp == 0);
+        EXPECT_TRUE(tmp == 0);
     }
     {
         Hash h("a", char('R'));
-        CPPUNIT_ASSERT(h.getAs<string>("a") == "R");
+        EXPECT_TRUE(h.getAs<string>("a") == "R");
     }
     {
         // Assumes vector to contain printable (ASCII) characters
         Hash h("a", std::vector<unsigned char>(3, '4'));
-        CPPUNIT_ASSERT_EQUAL(std::string("52,52,52"), h.getAs<string>("a"));
+        EXPECT_STREQ("52,52,52", h.getAs<string>("a").c_str());
     }
     {
         // Assumes vector to contain binary data and does a base64 encode
         Hash h("a", std::vector<char>(3, '4'));
-        CPPUNIT_ASSERT(h.getAs<string>("a") == "NDQ0");
+        EXPECT_TRUE(h.getAs<string>("a") == "NDQ0");
     }
     {
         // Assumes vector to contain printable (ASCII) characters
         Hash h("a", std::vector<signed char>(3, '4'));
-        CPPUNIT_ASSERT(h.getAs<string>("a") == "52,52,52");
+        EXPECT_TRUE(h.getAs<string>("a") == "52,52,52");
     }
     {
         Hash h("a", static_cast<unsigned char>('R'));
-        CPPUNIT_ASSERT(h.getAs<string>("a") == "82");
+        EXPECT_TRUE(h.getAs<string>("a") == "82");
     }
     {
         Hash h("a", static_cast<signed char>('R'));
-        CPPUNIT_ASSERT(h.getAs<string>("a") == "82");
+        EXPECT_TRUE(h.getAs<string>("a") == "82");
     }
     {
         Hash h("a", std::vector<signed char>(4, '2'));
-        CPPUNIT_ASSERT(h.getAs<string>("a") == "50,50,50,50");
+        EXPECT_TRUE(h.getAs<string>("a") == "50,50,50,50");
     }
     {
         Hash h("a", short(126));
-        CPPUNIT_ASSERT(h.getAs<string>("a") == "126");
+        EXPECT_TRUE(h.getAs<string>("a") == "126");
     }
     {
         Hash h("a", std::vector<short>(4, 13));
-        CPPUNIT_ASSERT(h.getAs<string>("a") == "13,13,13,13");
+        EXPECT_TRUE(h.getAs<string>("a") == "13,13,13,13");
     }
     {
         Hash h("a", int(-42));
-        CPPUNIT_ASSERT(h.getAs<string>("a") == "-42");
+        EXPECT_TRUE(h.getAs<string>("a") == "-42");
     }
     {
         Hash h("a", std::vector<int>(1, -42));
-        CPPUNIT_ASSERT(h.getAs<string>("a") == "-42");
+        EXPECT_TRUE(h.getAs<string>("a") == "-42");
     }
     {
         Hash h("a", static_cast<unsigned int>(42));
-        CPPUNIT_ASSERT(h.getAs<string>("a") == "42");
+        EXPECT_TRUE(h.getAs<string>("a") == "42");
     }
     {
         Hash h("a", std::vector<unsigned int>());
-        CPPUNIT_ASSERT(h.getAs<string>("a") == "");
+        EXPECT_TRUE(h.getAs<string>("a") == "");
     }
     {
         Hash h("a", static_cast<long long>(-2147483647));
-        CPPUNIT_ASSERT(h.getAs<string>("a") == "-2147483647");
+        EXPECT_TRUE(h.getAs<string>("a") == "-2147483647");
     }
     {
         Hash h("a", static_cast<unsigned long long>(0));
-        CPPUNIT_ASSERT(h.getAs<string>("a") == "0");
+        EXPECT_TRUE(h.getAs<string>("a") == "0");
     }
     {
         Hash h("a", static_cast<float>(0.1234567));
-        CPPUNIT_ASSERT(h.getAs<string>("a") == "0.1234567");
+        EXPECT_TRUE(h.getAs<string>("a") == "0.1234567");
     }
     {
         Hash h("a", 0.123456789123456);
-        CPPUNIT_ASSERT(h.getAs<string>("a") == "0.123456789123456");
+        EXPECT_TRUE(h.getAs<string>("a") == "0.123456789123456");
     }
     {
         Hash h("a", std::complex<float>(1.2, 0.5));
-        CPPUNIT_ASSERT(h.getAs<string>("a") == "(1.2,0.5)");
+        EXPECT_TRUE(h.getAs<string>("a") == "(1.2,0.5)");
     }
     {
         Hash h("a", std::complex<double>(1.2, 0.5));
-        CPPUNIT_ASSERT(h.getAs<string>("a") == "(1.2,0.5)");
+        EXPECT_TRUE(h.getAs<string>("a") == "(1.2,0.5)");
     }
     {
         // getAs as a container
         Hash h("a", std::vector<unsigned short>({2, 3, 5, 7, 11}));
         const auto result = h.getAs<std::string, std::vector>("a");
-        CPPUNIT_ASSERT_MESSAGE("Result is " + karabo::data::toString(result),
-                               result == std::vector<std::string>({"2", "3", "5", "7", "11"}));
+        EXPECT_TRUE(result == std::vector<std::string>({"2", "3", "5", "7", "11"}))
+              << "Result is " + karabo::data::toString(result);
     }
     {
         // There is some extra treatment of STRING as source in Element::getValueAs<T>
         Hash h("a", "5");
-        CPPUNIT_ASSERT_EQUAL(5, h.getAs<int>("a"));
+        EXPECT_EQ(5, h.getAs<int>("a"));
     }
     {
         // There is some extra treatment of STRING as source in Element::getValueAs<CONT<T>>
         Hash h("a", "5,6, 7 ");
         const auto result = h.getAs<int, std::vector>("a");
-        CPPUNIT_ASSERT_MESSAGE("Result is: " + karabo::data::toString(result), std::vector<int>({5, 6, 7}) == result);
+        EXPECT_TRUE(std::vector<int>({5, 6, 7}) == result) << "Result is: " + karabo::data::toString(result);
     }
     {
         // There is some extra treatment of empty string as source for containers
         Hash h("a", std::string());
         const auto result = h.getAs<std::string, std::vector>("a");
         // Empty string becomes empty vector of strings and not vector with a single empty string
-        CPPUNIT_ASSERT_EQUAL(0ul, result.size());
+        EXPECT_EQ(0ul, result.size());
     }
 }
 
 
-void Hash_Test::testFind() {
+TEST(TestHash, testFind) {
     // First test non-const version of Hash::find(..).
     {
         Hash h("a.b.c1.d", 1, "b[2].c.d", "some");
         // Check existing node and its value.
         boost::optional<Hash::Node&> node = h.find("a.b.c1.d");
-        CPPUNIT_ASSERT(!node == false);
-        CPPUNIT_ASSERT(node->getValue<int>() == 1);
+        EXPECT_TRUE(!node == false);
+        EXPECT_TRUE(node->getValue<int>() == 1);
 
         // Test that other separator fails
         node = h.find("a.b.c1.d", '/');
-        CPPUNIT_ASSERT(!node == true);
+        EXPECT_TRUE(!node == true);
 
         // Check existence of first level node.
         node = h.find("a");
-        CPPUNIT_ASSERT(!node == false);
+        EXPECT_TRUE(!node == false);
 
         // Check non-existence of first level node.
         node = h.find("nee");
-        CPPUNIT_ASSERT(!node == true);
+        EXPECT_TRUE(!node == true);
 
         // Check non-existence of last level node.
         node = h.find("a.b.c1.f");
-        CPPUNIT_ASSERT(!node == true);
+        EXPECT_TRUE(!node == true);
 
         // Check non-existence of middle level node.
         node = h.find("a.b.c2.d");
-        CPPUNIT_ASSERT(!node == true);
+        EXPECT_TRUE(!node == true);
 
         // Check existence with index as last but two.
         node = h.find("b[2].c.d");
-        CPPUNIT_ASSERT(!node == false);
+        EXPECT_TRUE(!node == false);
 
         // Check existence with index as last but one.
         node = h.find("b[2].c");
-        CPPUNIT_ASSERT(!node == false);
+        EXPECT_TRUE(!node == false);
 
         // Index at end is not allowed - would be Hash, not Node.
         node = h.find("b[2]");
-        CPPUNIT_ASSERT(!node == true);
+        EXPECT_TRUE(!node == true);
 
         // Same check, but with invalid index.
         node = h.find("b[3]");
-        CPPUNIT_ASSERT(!node == true);
+        EXPECT_TRUE(!node == true);
 
         // Check non-existence with invalid index as last but one.
         node = h.find("b[3].c");
-        CPPUNIT_ASSERT(!node == true);
+        EXPECT_TRUE(!node == true);
 
         // Check non-existence with invalid index as last but two.
         node = h.find("b[3].c.d");
-        CPPUNIT_ASSERT(!node == true);
+        EXPECT_TRUE(!node == true);
     }
 
     // Now test Hash::find(..) const.
@@ -1188,114 +1177,114 @@ void Hash_Test::testFind() {
         const Hash h("a.b.c1.d", 1, "b[2].c.d", "some");
         // Check existing node and its value.
         boost::optional<const Hash::Node&> node = h.find("a.b.c1.d");
-        CPPUNIT_ASSERT(!node == false);
-        CPPUNIT_ASSERT(node->getValue<int>() == 1);
+        EXPECT_TRUE(!node == false);
+        EXPECT_TRUE(node->getValue<int>() == 1);
 
         // Test that other separator fails
         node = h.find("a.b.c1.d", '/');
-        CPPUNIT_ASSERT(!node == true);
+        EXPECT_TRUE(!node == true);
 
         // Check existence of first level node.
         node = h.find("a");
-        CPPUNIT_ASSERT(!node == false);
+        EXPECT_TRUE(!node == false);
 
         // Check non-existence of first level node.
         node = h.find("nee");
-        CPPUNIT_ASSERT(!node == true);
+        EXPECT_TRUE(!node == true);
 
         // Check non-existence of last level node.
         node = h.find("a.b.c1.f");
-        CPPUNIT_ASSERT(!node == true);
+        EXPECT_TRUE(!node == true);
 
         // Check non-existence of middle level node.
         node = h.find("a.b.c2.d");
-        CPPUNIT_ASSERT(!node == true);
+        EXPECT_TRUE(!node == true);
 
         // Check existence with index as last but two.
         node = h.find("b[2].c.d");
-        CPPUNIT_ASSERT(!node == false);
+        EXPECT_TRUE(!node == false);
 
         // Check existence with index as last but one.
         node = h.find("b[2].c");
-        CPPUNIT_ASSERT(!node == false);
+        EXPECT_TRUE(!node == false);
 
         // Index at end is not allowed - would be Hash, not Node.
         node = h.find("b[2]");
-        CPPUNIT_ASSERT(!node == true);
+        EXPECT_TRUE(!node == true);
 
         // Same check, but with invalid index.
         node = h.find("b[3]");
-        CPPUNIT_ASSERT(!node == true);
+        EXPECT_TRUE(!node == true);
 
         // Check non-existence with invalid index as last but one.
         node = h.find("b[3].c");
-        CPPUNIT_ASSERT(!node == true);
+        EXPECT_TRUE(!node == true);
 
         // Check non-existence with invalid index as last but two.
         node = h.find("b[3].c.d");
-        CPPUNIT_ASSERT(!node == true);
+        EXPECT_TRUE(!node == true);
     }
 }
 
 
-void Hash_Test::testAttributes() {
+TEST(TestHash, testAttributes) {
     {
         Hash h("a.b.a.b", 42);
         h.setAttribute("a", "attrKey", "1, 2, 3, 4, 5");
         h.setAttribute("a", "attr1", "someValue");
 
-        CPPUNIT_ASSERT(h.getNode("a").getAttributes().is<std::string>("attrKey"sv));
-        CPPUNIT_ASSERT(h.getNode("a").getAttributes().is<std::string>("attr1"s));
-        CPPUNIT_ASSERT(h.getAttribute<std::string>("a", "attr1") == "someValue");
+        EXPECT_TRUE(h.getNode("a").getAttributes().is<std::string>("attrKey"sv));
+        EXPECT_TRUE(h.getNode("a").getAttributes().is<std::string>("attr1"s));
+        EXPECT_TRUE(h.getAttribute<std::string>("a", "attr1") == "someValue");
 
         h.setAttribute("a", "attr2", 42);
-        CPPUNIT_ASSERT(h.getNode("a").getAttributes().is<int>("attr2"sv));
-        CPPUNIT_ASSERT(h.getAttribute<std::string>("a", "attr1") == "someValue");
-        CPPUNIT_ASSERT(h.getAttribute<int>("a", "attr2") == 42);
+        EXPECT_TRUE(h.getNode("a").getAttributes().is<int>("attr2"sv));
+        EXPECT_TRUE(h.getAttribute<std::string>("a", "attr1") == "someValue");
+        EXPECT_TRUE(h.getAttribute<int>("a", "attr2") == 42);
 
         h.setAttribute("a", "attr2", 43);
-        CPPUNIT_ASSERT(h.getAttribute<std::string>("a", "attr1") == "someValue");
-        CPPUNIT_ASSERT(h.getAttribute<int>("a", "attr2") == 43);
+        EXPECT_TRUE(h.getAttribute<std::string>("a", "attr1") == "someValue");
+        EXPECT_TRUE(h.getAttribute<int>("a", "attr2") == 43);
 
         h.setAttribute("a.b.a.b", "attr1", true);
-        CPPUNIT_ASSERT(h.getAttribute<bool>("a.b.a.b", "attr1") == true);
+        EXPECT_TRUE(h.getAttribute<bool>("a.b.a.b", "attr1") == true);
 
         const Hash::Attributes& attrs = h.getAttributes("a");
-        CPPUNIT_ASSERT(attrs.size() == 3);
-        CPPUNIT_ASSERT(attrs.get<std::string>("attr1") == "someValue");
-        CPPUNIT_ASSERT(attrs.get<int>("attr2") == 43);
-        CPPUNIT_ASSERT(attrs.is<int>("attr2"));
+        EXPECT_TRUE(attrs.size() == 3);
+        EXPECT_TRUE(attrs.get<std::string>("attr1") == "someValue");
+        EXPECT_TRUE(attrs.get<int>("attr2") == 43);
+        EXPECT_TRUE(attrs.is<int>("attr2"));
 
         Hash::Attributes::Node node = attrs.getNode("attr2");
-        CPPUNIT_ASSERT(node.getType() == Types::INT32);
+        EXPECT_TRUE(node.getType() == Types::INT32);
 
-        CPPUNIT_ASSERT((h.getNode("a").getAttributes().getAs<int, std::vector>("attrKey"sv)[0]) == 1);
-        CPPUNIT_ASSERT((attrs.getAs<int, std::vector>("attrKey"sv)[2]) == 3);
+        EXPECT_TRUE((h.getNode("a").getAttributes().getAs<int, std::vector>("attrKey"sv)[0]) == 1);
+        EXPECT_TRUE((attrs.getAs<int, std::vector>("attrKey"sv)[2]) == 3);
     }
     {
         Hash h("a", 1);
         bool b = true;
         h.getNode("a").setAttribute<int>("a", b);
-        CPPUNIT_ASSERT(h.getNode("a").getType() == Types::INT32);
+        EXPECT_TRUE(h.getNode("a").getType() == Types::INT32);
     }
     {
         Hash h("a", 442);
         Hash::Attributes& attrs = h.getAttributes("a");
         attrs.set("a1", "char A"sv);
-        CPPUNIT_ASSERT(attrs.get<std::string>("a1") == "char A"s);
+        EXPECT_TRUE(attrs.get<std::string>("a1") == "char A"s);
         attrs.set("a2", L"wchar_t ∀"sv);
-        CPPUNIT_ASSERT(attrs.get<std::wstring>("a2"s) == L"wchar_t ∀"s);
+        EXPECT_TRUE(attrs.get<std::wstring>("a2"s) == L"wchar_t ∀"s);
         attrs.set("a3", u8"char8_t ∆"sv);
-        CPPUNIT_ASSERT(attrs.get<std::u8string>("a3"s) == u8"char8_t ∆"s);
+        EXPECT_TRUE(attrs.get<std::u8string>("a3"s) == u8"char8_t ∆"s);
         attrs.set("a4", u"char16_t ∇"sv);
-        CPPUNIT_ASSERT(attrs.get<std::u16string>("a4"s) == u"char16_t ∇"s);
+        EXPECT_TRUE(attrs.get<std::u16string>("a4"s) == u"char16_t ∇"s);
         attrs.set("a5", U"char32_t ∃"sv);
-        CPPUNIT_ASSERT(attrs.get<std::u32string>("a5"s) == U"char32_t ∃"s);
+        EXPECT_TRUE(attrs.get<std::u32string>("a5"s) == U"char32_t ∃"s);
     }
 }
 
 
-void Hash_Test::testIteration() {
+TEST(TestHash, testIteration) {
     Hash h("should", 1, "be", 2, "iterated", 3, "in", 4, "correct", 5, "order", 6);
     Hash::Attributes a("should", 1, "be", 2, "iterated", 3, "in", 4, "correct", 5, "order", 6);
 
@@ -1304,12 +1293,12 @@ void Hash_Test::testIteration() {
         for (Hash::const_iterator it = h.begin(); it != h.end(); ++it) {
             insertionOrder.push_back(it->getKey());
         }
-        CPPUNIT_ASSERT(insertionOrder[0] == "should");
-        CPPUNIT_ASSERT(insertionOrder[1] == "be");
-        CPPUNIT_ASSERT(insertionOrder[2] == "iterated");
-        CPPUNIT_ASSERT(insertionOrder[3] == "in");
-        CPPUNIT_ASSERT(insertionOrder[4] == "correct");
-        CPPUNIT_ASSERT(insertionOrder[5] == "order");
+        EXPECT_TRUE(insertionOrder[0] == "should");
+        EXPECT_TRUE(insertionOrder[1] == "be");
+        EXPECT_TRUE(insertionOrder[2] == "iterated");
+        EXPECT_TRUE(insertionOrder[3] == "in");
+        EXPECT_TRUE(insertionOrder[4] == "correct");
+        EXPECT_TRUE(insertionOrder[5] == "order");
     }
 
     {
@@ -1317,12 +1306,12 @@ void Hash_Test::testIteration() {
         for (Hash::const_map_iterator it = h.mbegin(); it != h.mend(); ++it) {
             alphaNumericOrder.push_back(it->second.getKey());
         }
-        CPPUNIT_ASSERT(alphaNumericOrder[0] == "be");
-        CPPUNIT_ASSERT(alphaNumericOrder[1] == "correct");
-        CPPUNIT_ASSERT(alphaNumericOrder[2] == "in");
-        CPPUNIT_ASSERT(alphaNumericOrder[3] == "iterated");
-        CPPUNIT_ASSERT(alphaNumericOrder[4] == "order");
-        CPPUNIT_ASSERT(alphaNumericOrder[5] == "should");
+        EXPECT_TRUE(alphaNumericOrder[0] == "be");
+        EXPECT_TRUE(alphaNumericOrder[1] == "correct");
+        EXPECT_TRUE(alphaNumericOrder[2] == "in");
+        EXPECT_TRUE(alphaNumericOrder[3] == "iterated");
+        EXPECT_TRUE(alphaNumericOrder[4] == "order");
+        EXPECT_TRUE(alphaNumericOrder[5] == "should");
     }
 
     h.set("be", "2"); // Has no effect on order
@@ -1332,12 +1321,12 @@ void Hash_Test::testIteration() {
         for (Hash::const_iterator it = h.begin(); it != h.end(); ++it) {
             insertionOrder.push_back(it->getKey());
         }
-        CPPUNIT_ASSERT(insertionOrder[0] == "should");
-        CPPUNIT_ASSERT(insertionOrder[1] == "be");
-        CPPUNIT_ASSERT(insertionOrder[2] == "iterated");
-        CPPUNIT_ASSERT(insertionOrder[3] == "in");
-        CPPUNIT_ASSERT(insertionOrder[4] == "correct");
-        CPPUNIT_ASSERT(insertionOrder[5] == "order");
+        EXPECT_TRUE(insertionOrder[0] == "should");
+        EXPECT_TRUE(insertionOrder[1] == "be");
+        EXPECT_TRUE(insertionOrder[2] == "iterated");
+        EXPECT_TRUE(insertionOrder[3] == "in");
+        EXPECT_TRUE(insertionOrder[4] == "correct");
+        EXPECT_TRUE(insertionOrder[5] == "order");
     }
 
     {
@@ -1345,12 +1334,12 @@ void Hash_Test::testIteration() {
         for (Hash::const_map_iterator it = h.mbegin(); it != h.mend(); ++it) {
             alphaNumericOrder.push_back(it->second.getKey());
         }
-        CPPUNIT_ASSERT(alphaNumericOrder[0] == "be");
-        CPPUNIT_ASSERT(alphaNumericOrder[1] == "correct");
-        CPPUNIT_ASSERT(alphaNumericOrder[2] == "in");
-        CPPUNIT_ASSERT(alphaNumericOrder[3] == "iterated");
-        CPPUNIT_ASSERT(alphaNumericOrder[4] == "order");
-        CPPUNIT_ASSERT(alphaNumericOrder[5] == "should");
+        EXPECT_TRUE(alphaNumericOrder[0] == "be");
+        EXPECT_TRUE(alphaNumericOrder[1] == "correct");
+        EXPECT_TRUE(alphaNumericOrder[2] == "in");
+        EXPECT_TRUE(alphaNumericOrder[3] == "iterated");
+        EXPECT_TRUE(alphaNumericOrder[4] == "order");
+        EXPECT_TRUE(alphaNumericOrder[5] == "should");
     }
 
     h.erase("be");    // Remove
@@ -1361,12 +1350,12 @@ void Hash_Test::testIteration() {
         for (Hash::const_iterator it = h.begin(); it != h.end(); ++it) {
             insertionOrder.push_back(it->getKey());
         }
-        CPPUNIT_ASSERT(insertionOrder[0] == "should");
-        CPPUNIT_ASSERT(insertionOrder[1] == "iterated");
-        CPPUNIT_ASSERT(insertionOrder[2] == "in");
-        CPPUNIT_ASSERT(insertionOrder[3] == "correct");
-        CPPUNIT_ASSERT(insertionOrder[4] == "order");
-        CPPUNIT_ASSERT(insertionOrder[5] == "be");
+        EXPECT_TRUE(insertionOrder[0] == "should");
+        EXPECT_TRUE(insertionOrder[1] == "iterated");
+        EXPECT_TRUE(insertionOrder[2] == "in");
+        EXPECT_TRUE(insertionOrder[3] == "correct");
+        EXPECT_TRUE(insertionOrder[4] == "order");
+        EXPECT_TRUE(insertionOrder[5] == "be");
     }
 
     {
@@ -1374,12 +1363,12 @@ void Hash_Test::testIteration() {
         for (Hash::const_map_iterator it = h.mbegin(); it != h.mend(); ++it) {
             alphaNumericOrder.push_back(it->second.getKey());
         }
-        CPPUNIT_ASSERT(alphaNumericOrder[0] == "be");
-        CPPUNIT_ASSERT(alphaNumericOrder[1] == "correct");
-        CPPUNIT_ASSERT(alphaNumericOrder[2] == "in");
-        CPPUNIT_ASSERT(alphaNumericOrder[3] == "iterated");
-        CPPUNIT_ASSERT(alphaNumericOrder[4] == "order");
-        CPPUNIT_ASSERT(alphaNumericOrder[5] == "should");
+        EXPECT_TRUE(alphaNumericOrder[0] == "be");
+        EXPECT_TRUE(alphaNumericOrder[1] == "correct");
+        EXPECT_TRUE(alphaNumericOrder[2] == "in");
+        EXPECT_TRUE(alphaNumericOrder[3] == "iterated");
+        EXPECT_TRUE(alphaNumericOrder[4] == "order");
+        EXPECT_TRUE(alphaNumericOrder[5] == "should");
     }
     {
         // erase during map iteration
@@ -1395,7 +1384,7 @@ void Hash_Test::testIteration() {
         for (auto it = h2.begin(); it != h2.end(); ++it) {
             insertionOrder.push_back(it->getKey());
         }
-        CPPUNIT_ASSERT_EQUAL(std::vector<std::string>({"should", "iterated", "in", "order"}), insertionOrder);
+        EXPECT_TRUE(std::vector<std::string>({"should", "iterated", "in", "order"}) == insertionOrder);
     }
 
     //  getKeys(...) to ...
@@ -1404,12 +1393,12 @@ void Hash_Test::testIteration() {
         std::set<std::string> tmp; // create empty set
         h.getKeys(tmp);            // fill set by keys
         std::set<std::string>::const_iterator it = tmp.begin();
-        CPPUNIT_ASSERT(*it++ == "be");
-        CPPUNIT_ASSERT(*it++ == "correct");
-        CPPUNIT_ASSERT(*it++ == "in");
-        CPPUNIT_ASSERT(*it++ == "iterated");
-        CPPUNIT_ASSERT(*it++ == "order");
-        CPPUNIT_ASSERT(*it++ == "should");
+        EXPECT_TRUE(*it++ == "be");
+        EXPECT_TRUE(*it++ == "correct");
+        EXPECT_TRUE(*it++ == "in");
+        EXPECT_TRUE(*it++ == "iterated");
+        EXPECT_TRUE(*it++ == "order");
+        EXPECT_TRUE(*it++ == "should");
     }
 
     //         "vector"
@@ -1417,14 +1406,14 @@ void Hash_Test::testIteration() {
         std::vector<std::string> tmp; // create empty vector
         h.getKeys(tmp);               // fill vector by keys
         std::vector<std::string>::const_iterator it = tmp.begin();
-        CPPUNIT_ASSERT(*it++ == "should");
-        CPPUNIT_ASSERT(*it++ == "iterated");
-        CPPUNIT_ASSERT(*it++ == "in");
-        CPPUNIT_ASSERT(*it++ == "correct");
-        CPPUNIT_ASSERT(*it++ == "order");
-        CPPUNIT_ASSERT(*it++ == "be");
+        EXPECT_TRUE(*it++ == "should");
+        EXPECT_TRUE(*it++ == "iterated");
+        EXPECT_TRUE(*it++ == "in");
+        EXPECT_TRUE(*it++ == "correct");
+        EXPECT_TRUE(*it++ == "order");
+        EXPECT_TRUE(*it++ == "be");
 
-        CPPUNIT_ASSERT_EQUAL(tmp, h.getKeys());
+        EXPECT_TRUE(tmp == h.getKeys());
     }
 
     //         "list"
@@ -1432,12 +1421,12 @@ void Hash_Test::testIteration() {
         std::list<std::string> tmp; // create empty list
         h.getKeys(tmp);             // fill list by keys
         std::list<std::string>::const_iterator it = tmp.begin();
-        CPPUNIT_ASSERT(*it++ == "should");
-        CPPUNIT_ASSERT(*it++ == "iterated");
-        CPPUNIT_ASSERT(*it++ == "in");
-        CPPUNIT_ASSERT(*it++ == "correct");
-        CPPUNIT_ASSERT(*it++ == "order");
-        CPPUNIT_ASSERT(*it++ == "be");
+        EXPECT_TRUE(*it++ == "should");
+        EXPECT_TRUE(*it++ == "iterated");
+        EXPECT_TRUE(*it++ == "in");
+        EXPECT_TRUE(*it++ == "correct");
+        EXPECT_TRUE(*it++ == "order");
+        EXPECT_TRUE(*it++ == "be");
     }
 
     //         "deque"
@@ -1445,17 +1434,17 @@ void Hash_Test::testIteration() {
         std::deque<std::string> tmp; // create empty queue
         h.getKeys(tmp);              // fill deque by keys
         std::deque<std::string>::const_iterator it = tmp.begin();
-        CPPUNIT_ASSERT(*it++ == "should");
-        CPPUNIT_ASSERT(*it++ == "iterated");
-        CPPUNIT_ASSERT(*it++ == "in");
-        CPPUNIT_ASSERT(*it++ == "correct");
-        CPPUNIT_ASSERT(*it++ == "order");
-        CPPUNIT_ASSERT(*it++ == "be");
+        EXPECT_TRUE(*it++ == "should");
+        EXPECT_TRUE(*it++ == "iterated");
+        EXPECT_TRUE(*it++ == "in");
+        EXPECT_TRUE(*it++ == "correct");
+        EXPECT_TRUE(*it++ == "order");
+        EXPECT_TRUE(*it++ == "be");
     }
 }
 
 
-void Hash_Test::testGetPaths() {
+TEST(TestHash, testGetPaths) {
     {
         // getPaths for vector
         Hash h;
@@ -1471,18 +1460,18 @@ void Hash_Test::testGetPaths() {
 
         std::vector<std::string> paths;
         h.getPaths(paths);
-        CPPUNIT_ASSERT(paths.size() == 7);
+        EXPECT_TRUE(paths.size() == 7);
 
         std::vector<std::string>::const_iterator it = paths.begin();
-        CPPUNIT_ASSERT(*it++ == "a");
-        CPPUNIT_ASSERT(*it++ == "b.c");
-        CPPUNIT_ASSERT(*it++ == "array");
-        CPPUNIT_ASSERT(*it++ == "vector.hash.one[0].a.b");
-        CPPUNIT_ASSERT(*it++ == "vector.hash.one[1]");
-        CPPUNIT_ASSERT(*it++ == "empty.vector.hash");
-        CPPUNIT_ASSERT(*it++ == "empty.hash");
+        EXPECT_TRUE(*it++ == "a");
+        EXPECT_TRUE(*it++ == "b.c");
+        EXPECT_TRUE(*it++ == "array");
+        EXPECT_TRUE(*it++ == "vector.hash.one[0].a.b");
+        EXPECT_TRUE(*it++ == "vector.hash.one[1]");
+        EXPECT_TRUE(*it++ == "empty.vector.hash");
+        EXPECT_TRUE(*it++ == "empty.hash");
 
-        CPPUNIT_ASSERT_EQUAL(paths, h.getPaths());
+        EXPECT_TRUE(paths == h.getPaths());
     }
 
     {
@@ -1494,22 +1483,22 @@ void Hash_Test::testGetPaths() {
         h.set("emptyhash", Hash());
         std::vector<std::string> paths;
         h.getDeepPaths(paths);
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(paths) += "\n" + toString(h), 7ul, paths.size());
+        EXPECT_EQ(7ul, paths.size()) << toString(paths) << "\n" << toString(h);
         std::vector<std::string>::const_iterator it = paths.begin();
-        CPPUNIT_ASSERT_EQUAL(*it++, std::string("a"));
-        CPPUNIT_ASSERT_EQUAL(*it++, std::string("b.c"));
-        CPPUNIT_ASSERT_EQUAL(*it++, std::string("b.array.data"));
-        CPPUNIT_ASSERT_EQUAL(*it++, std::string("b.array.type"));
-        CPPUNIT_ASSERT_EQUAL(*it++, std::string("b.array.shape"));
-        CPPUNIT_ASSERT_EQUAL(*it++, std::string("b.array.isBigEndian"));
-        CPPUNIT_ASSERT_EQUAL(*it++, std::string("emptyhash"));
+        EXPECT_STREQ((*it++).c_str(), "a");
+        EXPECT_STREQ((*it++).c_str(), "b.c");
+        EXPECT_STREQ((*it++).c_str(), "b.array.data");
+        EXPECT_STREQ((*it++).c_str(), "b.array.type");
+        EXPECT_STREQ((*it++).c_str(), "b.array.shape");
+        EXPECT_STREQ((*it++).c_str(), "b.array.isBigEndian");
+        EXPECT_STREQ((*it++).c_str(), "emptyhash");
 
-        CPPUNIT_ASSERT_EQUAL(paths, h.getDeepPaths());
+        EXPECT_TRUE(paths == h.getDeepPaths());
     }
 }
 
 
-void Hash_Test::testMerge() {
+TEST(TestHash, testMerge) {
     Hash h1("a", 1, "b", 2, "c.b[0].g", 3, "c.c[0].d", 4, "c.c[1]", Hash("a.b.c", 6), "d.e", 7
             //,"f.g", 99 // can only set 6 keys in constructor...
     );
@@ -1548,99 +1537,92 @@ void Hash_Test::testMerge() {
     h1b.merge(h2, Hash::MERGE_ATTRIBUTES);
     h1d += h2; // same as h1d.merge(h2), only check similarity and once attribute replacement below
 
-    CPPUNIT_ASSERT_MESSAGE("Replace or merge attributes influenced resulting paths", similar(h1, h1b));
-    CPPUNIT_ASSERT_MESSAGE("merge and += don't do the same", similar(h1, h1d));
+    EXPECT_TRUE(similar(h1, h1b)) << "Replace or merge attributes influenced resulting paths";
+    EXPECT_TRUE(similar(h1, h1d)) << "merge and += don't do the same";
 
-    CPPUNIT_ASSERT(h1.has("a"));
-    CPPUNIT_ASSERT(h1.get<int>("a") == 21); // new value
+    EXPECT_TRUE(h1.has("a"));
+    EXPECT_TRUE(h1.get<int>("a") == 21); // new value
     // Attribute kept, but value overwritten:
-    CPPUNIT_ASSERT_MESSAGE("Attribute on node not kept", h1.hasAttribute("a", "attrKey"));
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Attribute not overwritten", std::string("Really just a number"),
-                                 h1.getAttribute<std::string>("a", "attrKey"));
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Attribute added out of nothing", 1ul, h1.getAttributes("a").size());
+    EXPECT_TRUE(h1.hasAttribute("a", "attrKey")) << "Attribute on node not kept";
+    EXPECT_STREQ("Really just a number", h1.getAttribute<std::string>("a", "attrKey").c_str())
+          << "Attribute not overwritten";
+    EXPECT_EQ(1ul, h1.getAttributes("a").size()) << "Attribute added out of nothing";
 
-    CPPUNIT_ASSERT_MESSAGE("Attribute on node not kept (MERGE)", h1b.hasAttribute("a", "attrKey"));
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Attribute not overwritten (MERGE)", std::string("Really just a number"),
-                                 h1b.getAttribute<std::string>("a", "attrKey"));
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Attribute added out of nothing (MERGE)", 1ul, h1b.getAttributes("a").size());
+    EXPECT_TRUE(h1b.hasAttribute("a", "attrKey")) << "Attribute on node not kept (MERGE)";
+    EXPECT_STREQ("Really just a number", h1b.getAttribute<std::string>("a", "attrKey").c_str())
+          << "Attribute not overwritten (MERGE)";
+    EXPECT_EQ(1ul, h1b.getAttributes("a").size()) << "Attribute added out of nothing (MERGE)";
 
-    CPPUNIT_ASSERT(h1.has("b"));
-    CPPUNIT_ASSERT(h1.is<Hash>("b")); // switch to new type...
-    CPPUNIT_ASSERT(h1.has("b.c"));    // ...and as Hash can hold a child
+    EXPECT_TRUE(h1.has("b"));
+    EXPECT_TRUE(h1.is<Hash>("b")); // switch to new type...
+    EXPECT_TRUE(h1.has("b.c"));    // ...and as Hash can hold a child
 
     // Attributes overwritten by nothing or kept
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Attributes on node kept", 0ul, h1.getAttributes("c.b").size());
+    EXPECT_EQ(0ul, h1.getAttributes("c.b").size()) << "Attributes on node kept";
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Number of attributes on node changed (MERGE)", 1ul, h1b.getAttributes("c.b").size());
-    CPPUNIT_ASSERT_MESSAGE("Attribute on node not kept (MERGE)", h1b.hasAttribute("c.b", "attrKey2"));
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Attribute on node changed (MERGE)", 3, h1b.getAttribute<int>("c.b", "attrKey2"));
+    EXPECT_EQ(1ul, h1b.getAttributes("c.b").size()) << "Number of attributes on node changed (MERGE)";
+    EXPECT_TRUE(h1b.hasAttribute("c.b", "attrKey2")) << "Attribute on node not kept (MERGE)";
+    EXPECT_EQ(3, h1b.getAttribute<int>("c.b", "attrKey2")) << "Attribute on node changed (MERGE)";
 
-    CPPUNIT_ASSERT(!h1.has("c.b.d"));
-    CPPUNIT_ASSERT(h1.has("c.b[0]"));
-    CPPUNIT_ASSERT_MESSAGE(toString(h1), h1.has("c.b[1]"));
-    CPPUNIT_ASSERT(!h1.has("c.b[2]"));
-    CPPUNIT_ASSERT(h1.get<int>("c.b[1].d") == 24);
-    CPPUNIT_ASSERT(h1.has("c.c[0].d"));
-    CPPUNIT_ASSERT(h1.has("c.c[1].a.b.c"));
-    CPPUNIT_ASSERT(h1.has("d.e"));
-    CPPUNIT_ASSERT(h1.has("e"));
-    CPPUNIT_ASSERT(h1.has("g.h.i"));
-    CPPUNIT_ASSERT(h1.has("g.h.j"));
-    CPPUNIT_ASSERT(h1.has("h.i"));
-    CPPUNIT_ASSERT(h1.has("h.j"));
-    CPPUNIT_ASSERT(h1.has(".i[1].j"));
-    CPPUNIT_ASSERT(h1.has(".i[2].k.l"));
-    CPPUNIT_ASSERT(h1.has(".i[3]"));
-    CPPUNIT_ASSERT(h1.has("j.k"));
-    CPPUNIT_ASSERT_MESSAGE(toString(h1), h1.has("array"));
-    CPPUNIT_ASSERT(h1.has("array.data"));
-    CPPUNIT_ASSERT(h1.has("array2"));
-    CPPUNIT_ASSERT(h1.has("array2.data"));
+    EXPECT_TRUE(!h1.has("c.b.d"));
+    EXPECT_TRUE(h1.has("c.b[0]"));
+    EXPECT_TRUE(h1.has("c.b[1]")) << toString(h1);
+    EXPECT_TRUE(!h1.has("c.b[2]"));
+    EXPECT_TRUE(h1.get<int>("c.b[1].d") == 24);
+    EXPECT_TRUE(h1.has("c.c[0].d"));
+    EXPECT_TRUE(h1.has("c.c[1].a.b.c"));
+    EXPECT_TRUE(h1.has("d.e"));
+    EXPECT_TRUE(h1.has("e"));
+    EXPECT_TRUE(h1.has("g.h.i"));
+    EXPECT_TRUE(h1.has("g.h.j"));
+    EXPECT_TRUE(h1.has("h.i"));
+    EXPECT_TRUE(h1.has("h.j"));
+    EXPECT_TRUE(h1.has(".i[1].j"));
+    EXPECT_TRUE(h1.has(".i[2].k.l"));
+    EXPECT_TRUE(h1.has(".i[3]"));
+    EXPECT_TRUE(h1.has("j.k"));
+    EXPECT_TRUE(h1.has("array")) << toString(h1);
+    EXPECT_TRUE(h1.has("array.data"));
+    EXPECT_TRUE(h1.has("array2"));
+    EXPECT_TRUE(h1.has("array2.data"));
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Array size changed through merge", 25ull,
-                                 h1.get<NDArray>("array2").getShape().size());
+    EXPECT_EQ(25ull, h1.get<NDArray>("array2").getShape().size()) << "Array size changed through merge";
 
     // Just add attributes with leaf (identical for REPLACE or MERGE)
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Not all attributes on leaf added", 2ul, h1.getAttributes("e").size());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Int attribute value incorrect", -1, h1.getAttribute<int>("e", "attrKey4"));
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Float attribute value incorrect", -11.f, h1.getAttribute<float>("e", "attrKey5"));
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Not all attributes on leaf added (MERGE)", 2ul, h1b.getAttributes("e").size());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Int attribute value incorrect (MERGE)", -1, h1b.getAttribute<int>("e", "attrKey4"));
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Float attribute value incorrect (MERGE)", -11.f,
-                                 h1b.getAttribute<float>("e", "attrKey5"));
+    EXPECT_EQ(2ul, h1.getAttributes("e").size()) << "Not all attributes on leaf added";
+    EXPECT_EQ(-1, h1.getAttribute<int>("e", "attrKey4")) << "Int attribute value incorrect";
+    EXPECT_FLOAT_EQ(-11.f, h1.getAttribute<float>("e", "attrKey5")) << "Float attribute value incorrect";
+    EXPECT_EQ(2ul, h1b.getAttributes("e").size()) << "Not all attributes on leaf added (MERGE)";
+    EXPECT_EQ(-1, h1b.getAttribute<int>("e", "attrKey4")) << "Int attribute value incorrect (MERGE)";
+    EXPECT_FLOAT_EQ(-11.f, h1b.getAttribute<float>("e", "attrKey5")) << "Float attribute value incorrect (MERGE)";
     // Just add attributes for new Hash/vector<Hash> (identical for REPLACE or MERGE)
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Not all attributes on vector<Hash> added", 1ul, h1.getAttributes(".i").size());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Int64 attributes on vector<Hash> wrong", 123ll,
-                                 h1.getAttribute<long long>(".i", "attrKey8"));
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Not all attributes on Hash added", 1ul, h1.getAttributes("j").size());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Double attributes on Hash wrong", 12.3, h1.getAttribute<double>("j", "attrKey9"));
+    EXPECT_EQ(1ul, h1.getAttributes(".i").size()) << "Not all attributes on vector<Hash> added";
+    EXPECT_EQ(123ll, h1.getAttribute<long long>(".i", "attrKey8")) << "Int64 attributes on vector<Hash> wrong";
+    EXPECT_EQ(1ul, h1.getAttributes("j").size()) << "Not all attributes on Hash added";
+    EXPECT_DOUBLE_EQ(12.3, h1.getAttribute<double>("j", "attrKey9")) << "Double attributes on Hash wrong";
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Not all attributes on vector<Hash> added (MERGE)", 1ul,
-                                 h1b.getAttributes(".i").size());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Int64 attributes on vector<Hash> wrong  (MERGE)", 123ll,
-                                 h1b.getAttribute<long long>(".i", "attrKey8"));
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Not all attributes on Hash added (MERGE)", 1ul, h1b.getAttributes("j").size());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Double attributes on Hash wrong (MERGE)", 12.3,
-                                 h1b.getAttribute<double>("j", "attrKey9"));
+    EXPECT_EQ(1ul, h1b.getAttributes(".i").size()) << "Not all attributes on vector<Hash> added (MERGE)";
+    EXPECT_EQ(123ll, h1b.getAttribute<long long>(".i", "attrKey8"))
+          << "Int64 attributes on vector<Hash> wrong  (MERGE)";
+    EXPECT_EQ(1ul, h1b.getAttributes("j").size()) << "Not all attributes on Hash added (MERGE)";
+    EXPECT_DOUBLE_EQ(12.3, h1b.getAttribute<double>("j", "attrKey9")) << "Double attributes on Hash wrong (MERGE)";
 
-    CPPUNIT_ASSERT_MESSAGE("Attribute on node not kept (MERGE)", h1b.hasAttribute("c.b", "attrKey2"));
+    EXPECT_TRUE(h1b.hasAttribute("c.b", "attrKey2")) << "Attribute on node not kept (MERGE)";
 
 
-    CPPUNIT_ASSERT(h1.has("f"));
-    CPPUNIT_ASSERT(h1.has("f.g")); // merging does not overwrite h1["f"] with empty Hash
+    EXPECT_TRUE(h1.has("f"));
+    EXPECT_TRUE(h1.has("f.g")); // merging does not overwrite h1["f"] with empty Hash
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Attributes not replaced", 1ul, h1.getAttributes("f").size());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("UInt attribute value incorrect", 77u, h1.getAttribute<unsigned int>("f", "attrKey7"));
+    EXPECT_EQ(1ul, h1.getAttributes("f").size()) << "Attributes not replaced";
+    EXPECT_EQ(77u, h1.getAttribute<unsigned int>("f", "attrKey7")) << "UInt attribute value incorrect";
     // += is merge with REPLACE_ATTRIBUTES
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Attributes not replaced (+=)", 1ul, h1d.getAttributes("f").size());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("UInt attribute value incorrect (+=)", 77u,
-                                 h1d.getAttribute<unsigned int>("f", "attrKey7"));
+    EXPECT_EQ(1ul, h1d.getAttributes("f").size()) << "Attributes not replaced (+=)";
+    EXPECT_EQ(77u, h1d.getAttribute<unsigned int>("f", "attrKey7")) << "UInt attribute value incorrect (+=)";
     // here is MERGE_ATTRIBUTES
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Attributes not merged", 2ul, h1b.getAttributes("f").size());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("UInt attribute value incorrect (MERGE)", std::string("buaah!"),
-                                 h1b.getAttribute<std::string>("f", "attrKey6"));
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("UInt attribute value incorrect (MERGE)", 77u,
-                                 h1b.getAttribute<unsigned int>("f", "attrKey7"));
+    EXPECT_EQ(2ul, h1b.getAttributes("f").size()) << "Attributes not merged";
+    EXPECT_STREQ("buaah!", h1b.getAttribute<std::string>("f", "attrKey6").c_str())
+          << "UInt attribute value incorrect (MERGE)";
+    EXPECT_EQ(77u, h1b.getAttribute<unsigned int>("f", "attrKey7")) << "UInt attribute value incorrect (MERGE)";
 
     // Now check the 'selectedPaths' feature (no extra test for attribute merging needed):
     std::set<std::string> selectedPaths;
@@ -1650,31 +1632,31 @@ void Hash_Test::testMerge() {
     selectedPaths.insert("h.i");
     selectedPaths.insert(".i[2]");
     selectedPaths.insert(".i[5]"); // check that we tolerate to select path with invalid index
-    CPPUNIT_ASSERT_NO_THROW(h1c.merge(h2, Hash::MERGE_ATTRIBUTES, selectedPaths));
+    EXPECT_NO_THROW(h1c.merge(h2, Hash::MERGE_ATTRIBUTES, selectedPaths));
 
     // Keep everything it had before merging:
-    CPPUNIT_ASSERT(h1c.has("a"));
-    CPPUNIT_ASSERT(h1c.has("b"));
-    CPPUNIT_ASSERT(h1c.has("c.b[0].g"));
-    CPPUNIT_ASSERT(h1c.has("c.c[0].d"));
-    CPPUNIT_ASSERT(h1c.has("c.c[1].a.b.c"));
-    CPPUNIT_ASSERT(h1c.has("d.e"));
-    CPPUNIT_ASSERT(h1c.has("f.g"));
+    EXPECT_TRUE(h1c.has("a"));
+    EXPECT_TRUE(h1c.has("b"));
+    EXPECT_TRUE(h1c.has("c.b[0].g"));
+    EXPECT_TRUE(h1c.has("c.c[0].d"));
+    EXPECT_TRUE(h1c.has("c.c[1].a.b.c"));
+    EXPECT_TRUE(h1c.has("d.e"));
+    EXPECT_TRUE(h1c.has("f.g"));
     // The additionally selected ones from h2:
-    CPPUNIT_ASSERT(h1c.has("b.c"));
-    CPPUNIT_ASSERT(h1c.has("g.h.i"));
-    CPPUNIT_ASSERT(h1c.has("h.i"));
-    CPPUNIT_ASSERT_MESSAGE(toString(h1c), h1c.has(".i[0].k.l")); // only row 2 (i[2]) selected, which becomes row 0
+    EXPECT_TRUE(h1c.has("b.c"));
+    EXPECT_TRUE(h1c.has("g.h.i"));
+    EXPECT_TRUE(h1c.has("h.i"));
+    EXPECT_TRUE(h1c.has(".i[0].k.l")) << toString(h1c); // only row 2 (i[2]) selected, which becomes row 0
     // But not the other ones from h2:
-    CPPUNIT_ASSERT(!h1c.has("c.b[0].key")); // neither at old position of h2
-    CPPUNIT_ASSERT(!h1c.has("c.b[2]"));     // nor an extended vector<Hash> at all
-    CPPUNIT_ASSERT(!h1c.has("e"));
+    EXPECT_TRUE(!h1c.has("c.b[0].key")); // neither at old position of h2
+    EXPECT_TRUE(!h1c.has("c.b[2]"));     // nor an extended vector<Hash> at all
+    EXPECT_TRUE(!h1c.has("e"));
     // Take care that adding path "g.h.i" does not trigger that other children of "g.h" in h2 are taken as well:
-    CPPUNIT_ASSERT(!h1c.has("g.h.j"));
-    CPPUNIT_ASSERT(!h1c.has("h.j"));
+    EXPECT_TRUE(!h1c.has("g.h.j"));
+    EXPECT_TRUE(!h1c.has("h.j"));
     // Adding .i[2] should not trigger to add children of .i[1] nor .i[3]]
-    CPPUNIT_ASSERT(!h1c.has(".i[1].j"));
-    CPPUNIT_ASSERT(!h1c.has(".i[3]"));
+    EXPECT_TRUE(!h1c.has(".i[1].j"));
+    EXPECT_TRUE(!h1c.has(".i[3]"));
 
     // Some further small tests for so far untested cases with selected paths...
     Hash hashTarget(".b", 1, ".c", Hash(), "c", "so so!");
@@ -1682,12 +1664,12 @@ void Hash_Test::testMerge() {
     selectedPaths.clear();
     selectedPaths.insert(""); // trigger merging '.d'
     selectedPaths.insert("e..e[1]");
-    CPPUNIT_ASSERT_NO_THROW(hashTarget.merge(hashSource, Hash::MERGE_ATTRIBUTES, selectedPaths));
-    CPPUNIT_ASSERT(hashTarget.has(".d"));
-    CPPUNIT_ASSERT(hashTarget.has("e..e[0]"));
-    CPPUNIT_ASSERT(hashTarget.has("e..e[0].g"));  // the selected e[1] becomes e[0]
-    CPPUNIT_ASSERT(!hashTarget.has("e..e[0].f")); // no children of e[0] since e[0] not selected (see test above)
-    CPPUNIT_ASSERT(!hashTarget.has("e..e[1]"));
+    EXPECT_NO_THROW(hashTarget.merge(hashSource, Hash::MERGE_ATTRIBUTES, selectedPaths));
+    EXPECT_TRUE(hashTarget.has(".d"));
+    EXPECT_TRUE(hashTarget.has("e..e[0]"));
+    EXPECT_TRUE(hashTarget.has("e..e[0].g"));  // the selected e[1] becomes e[0]
+    EXPECT_TRUE(!hashTarget.has("e..e[0].f")); // no children of e[0] since e[0] not selected (see test above)
+    EXPECT_TRUE(!hashTarget.has("e..e[1]"));
 
     Hash hashTargetB("a[1].b", 1, "c", "Does not matter");
     Hash hashTargetC(hashTargetB);
@@ -1700,37 +1682,37 @@ void Hash_Test::testMerge() {
     selectedPaths.insert("c[1].l"); // for table rows one cannot select keys, i.e. '.l' is ignored
     selectedPaths.insert("d");      // trigger adding full new vector
     selectedPaths.insert("e[1].2"); // tabel row 1 is selected - the following '.2' is ignored
-    CPPUNIT_ASSERT_NO_THROW(hashTargetB.merge(hashSourceBCD, Hash::MERGE_ATTRIBUTES, selectedPaths));
-    CPPUNIT_ASSERT(hashTargetB.has("a[0]")); // the empty one merged into it
-    CPPUNIT_ASSERT(!hashTargetB.has("a[0].b"));
-    CPPUNIT_ASSERT(hashTargetB.has("a[1]"));    // dito
-    CPPUNIT_ASSERT(!hashTargetB.has("a[1].b")); // target table a got replaced
-    CPPUNIT_ASSERT(hashTargetB.has("a[2].a"));
-    CPPUNIT_ASSERT(hashTargetB.has("a[2].c"));
-    CPPUNIT_ASSERT(!hashTargetB.has("a[3]"));
-    CPPUNIT_ASSERT(hashTargetB.has("c[0]"));
-    CPPUNIT_ASSERT_MESSAGE(toString(hashTargetB), hashTargetB.has("c[0].k"));
-    CPPUNIT_ASSERT(hashTargetB.has("c[0].l"));
-    CPPUNIT_ASSERT(hashTargetB.has("d[2].b"));
-    CPPUNIT_ASSERT(!hashTargetB.has("d[3]"));
-    CPPUNIT_ASSERT(hashTargetB.has("e[0]"));
-    CPPUNIT_ASSERT(hashTargetB.has("e[0].1"));
-    CPPUNIT_ASSERT(hashTargetB.has("e[0].2"));
-    CPPUNIT_ASSERT(hashTargetB.has("e[0].3"));
+    EXPECT_NO_THROW(hashTargetB.merge(hashSourceBCD, Hash::MERGE_ATTRIBUTES, selectedPaths));
+    EXPECT_TRUE(hashTargetB.has("a[0]")); // the empty one merged into it
+    EXPECT_TRUE(!hashTargetB.has("a[0].b"));
+    EXPECT_TRUE(hashTargetB.has("a[1]"));    // dito
+    EXPECT_TRUE(!hashTargetB.has("a[1].b")); // target table a got replaced
+    EXPECT_TRUE(hashTargetB.has("a[2].a"));
+    EXPECT_TRUE(hashTargetB.has("a[2].c"));
+    EXPECT_TRUE(!hashTargetB.has("a[3]"));
+    EXPECT_TRUE(hashTargetB.has("c[0]"));
+    EXPECT_TRUE(hashTargetB.has("c[0].k")) << toString(hashTargetB);
+    EXPECT_TRUE(hashTargetB.has("c[0].l"));
+    EXPECT_TRUE(hashTargetB.has("d[2].b"));
+    EXPECT_TRUE(!hashTargetB.has("d[3]"));
+    EXPECT_TRUE(hashTargetB.has("e[0]"));
+    EXPECT_TRUE(hashTargetB.has("e[0].1"));
+    EXPECT_TRUE(hashTargetB.has("e[0].2"));
+    EXPECT_TRUE(hashTargetB.has("e[0].3"));
 
     selectedPaths.clear();
     selectedPaths.insert("a[0]");
     selectedPaths.insert("a[2].b"); // trigger selective vector items
     selectedPaths.insert("c");      // trigger overwriting with complete vector
     hashTargetC.merge(hashSourceBCD, Hash::MERGE_ATTRIBUTES, selectedPaths);
-    CPPUNIT_ASSERT(!hashTargetC.has("a[1].b")); // all table rows are overwritten
-    CPPUNIT_ASSERT(hashTargetC.has("a[1].a"));
-    CPPUNIT_ASSERT(hashTargetC.has("a[1].c"));
-    CPPUNIT_ASSERT(!hashTargetC.has("a[2]"));
-    CPPUNIT_ASSERT(hashTargetC.has("c[1].k"));
-    CPPUNIT_ASSERT(hashTargetC.has("c[1].l"));
-    CPPUNIT_ASSERT(hashTargetC.has("c[2].b"));
-    CPPUNIT_ASSERT(!hashTargetC.has("c[3]"));
+    EXPECT_TRUE(!hashTargetC.has("a[1].b")); // all table rows are overwritten
+    EXPECT_TRUE(hashTargetC.has("a[1].a"));
+    EXPECT_TRUE(hashTargetC.has("a[1].c"));
+    EXPECT_TRUE(!hashTargetC.has("a[2]"));
+    EXPECT_TRUE(hashTargetC.has("c[1].k"));
+    EXPECT_TRUE(hashTargetC.has("c[1].l"));
+    EXPECT_TRUE(hashTargetC.has("c[2].b"));
+    EXPECT_TRUE(!hashTargetC.has("c[3]"));
 
     // Now select only invalid indices - nothing should be added
     selectedPaths.clear();
@@ -1740,7 +1722,7 @@ void Hash_Test::testMerge() {
     selectedPaths.insert("ha[0]"); // for leaves, all indices are invalid
     Hash copyD(hashTargetD);
     hashTargetD.merge(hashSourceBCD, Hash::MERGE_ATTRIBUTES, selectedPaths);
-    CPPUNIT_ASSERT_MESSAGE("Selecting only invalid indices changed something", similar(copyD, hashTargetD));
+    EXPECT_TRUE(similar(copyD, hashTargetD)) << "Selecting only invalid indices changed something";
 
     ////////////////////////////////////////////////////////////////////////////////////
     // Few more tests for a table
@@ -1750,291 +1732,291 @@ void Hash_Test::testMerge() {
 
     Hash target1(targetTemplate);
     target1.merge(source);
-    CPPUNIT_ASSERT_MESSAGE(toString(target1), target1.fullyEquals(source));
+    EXPECT_TRUE(target1.fullyEquals(source)) << toString(target1);
 
     // But we can select to use some rows only
     Hash target2(targetTemplate);
     // Keep only first and last rows of source
     target2.merge(source, Hash::MERGE_ATTRIBUTES, {"table[0]", "table[2]"});
     const auto mergedTable = target2.get<std::vector<Hash>>("table");
-    CPPUNIT_ASSERT_EQUAL(2ul, mergedTable.size());
+    EXPECT_EQ(2ul, mergedTable.size());
     const Hash& row0 = mergedTable[0];
-    CPPUNIT_ASSERT_MESSAGE(toString(row0), row0.fullyEquals(source.get<std::vector<Hash>>("table")[0]));
+    EXPECT_TRUE(row0.fullyEquals(source.get<std::vector<Hash>>("table")[0])) << toString(row0);
     const Hash& row1 = mergedTable[1];
-    CPPUNIT_ASSERT_MESSAGE(toString(row1), row1.fullyEquals(source.get<std::vector<Hash>>("table")[2]));
+    EXPECT_TRUE(row1.fullyEquals(source.get<std::vector<Hash>>("table")[2])) << toString(row1);
 }
 
 
-void Hash_Test::testSubtract() {
+TEST(TestHash, testSubtract) {
     Hash h1("a", 1, "b", 2, "c.b[0].g", 3, "c.c[0].d", 4, "c.c[1]", Hash("a.b.c", 6), "d.e", 7);
 
     Hash h2("a", 21, "b.c", 22, "c.b[0]", Hash("key", "value"), "c.b[1].d", 24, "e", 27);
     h1 += h2;
     h1 -= h2;
-    CPPUNIT_ASSERT(h1.has("a") == false);
-    CPPUNIT_ASSERT(h1.get<Hash>("b").empty() == true);
-    CPPUNIT_ASSERT(!h1.has("c.b[0].g"));
-    CPPUNIT_ASSERT(!h1.has("c.b[1]"));
-    CPPUNIT_ASSERT(h1.get<int>("c.c[0].d") == 4);
-    CPPUNIT_ASSERT(h1.get<int>("c.c[1].a.b.c") == 6);
-    CPPUNIT_ASSERT(h1.get<int>("d.e") == 7);
+    EXPECT_TRUE(h1.has("a") == false);
+    EXPECT_TRUE(h1.get<Hash>("b").empty() == true);
+    EXPECT_TRUE(!h1.has("c.b[0].g"));
+    EXPECT_TRUE(!h1.has("c.b[1]"));
+    EXPECT_TRUE(h1.get<int>("c.c[0].d") == 4);
+    EXPECT_TRUE(h1.get<int>("c.c[1].a.b.c") == 6);
+    EXPECT_TRUE(h1.get<int>("d.e") == 7);
 
     Hash h3("a.b.c", 1, "a.b.d", 2, "a.c.d", 22, "b.c.d", 33, "c.d.e", 44, "c.e.f", 55);
     Hash h4("a.b", Hash(), "c", Hash());
     h3 -= h4;
-    CPPUNIT_ASSERT(h3.has("a.b") == true);
-    CPPUNIT_ASSERT(h3.has("c") == true);
-    CPPUNIT_ASSERT(h3.get<int>("a.c.d") == 22);
-    CPPUNIT_ASSERT(h3.get<int>("b.c.d") == 33);
+    EXPECT_TRUE(h3.has("a.b") == true);
+    EXPECT_TRUE(h3.has("c") == true);
+    EXPECT_TRUE(h3.get<int>("a.c.d") == 22);
+    EXPECT_TRUE(h3.get<int>("b.c.d") == 33);
 }
 
 
-void Hash_Test::testErase() {
+TEST(TestHash, testErase) {
     // prepare two identical hashes
     Hash h1("a", 1, "b", 2, "c.d", 31, "e.f.g", 411, "e.f.h", 412, "e.i", 42);
     Hash h2(h1);
 
     // Start testing Hash::erase on h1
-    CPPUNIT_ASSERT(h1.size() == 4);
+    EXPECT_TRUE(h1.size() == 4);
 
     // erase existing key on first level => size decreases
-    CPPUNIT_ASSERT(h1.erase("a") == true);
-    CPPUNIT_ASSERT(h1.has("a") == false);
-    CPPUNIT_ASSERT(h1.size() == 3);
+    EXPECT_TRUE(h1.erase("a") == true);
+    EXPECT_TRUE(h1.has("a") == false);
+    EXPECT_TRUE(h1.size() == 3);
 
     // non-existing key - return false and keep size:
-    CPPUNIT_ASSERT(h1.erase("a") == false);
-    CPPUNIT_ASSERT(h1.size() == 3);
+    EXPECT_TRUE(h1.erase("a") == false);
+    EXPECT_TRUE(h1.size() == 3);
 
     // "c.d": composite key without siblings
-    CPPUNIT_ASSERT(h1.erase("c.d") == true);
-    CPPUNIT_ASSERT(h1.has("c.d") == false);
-    CPPUNIT_ASSERT(h1.has("c") == true);
-    CPPUNIT_ASSERT(h1.size() == 3); // "c" still in!
+    EXPECT_TRUE(h1.erase("c.d") == true);
+    EXPECT_TRUE(h1.has("c.d") == false);
+    EXPECT_TRUE(h1.has("c") == true);
+    EXPECT_TRUE(h1.size() == 3); // "c" still in!
 
     // "e.f": composite key with two children and a sibling
-    CPPUNIT_ASSERT(h1.erase("e.f") == true);
-    CPPUNIT_ASSERT(h1.has("e.f.g") == false);
-    CPPUNIT_ASSERT(h1.has("e.f.h") == false);
-    CPPUNIT_ASSERT(h1.has("e.f") == false);
-    CPPUNIT_ASSERT(h1.has("e") == true); // stays
-    CPPUNIT_ASSERT(h1.size() == 3);
+    EXPECT_TRUE(h1.erase("e.f") == true);
+    EXPECT_TRUE(h1.has("e.f.g") == false);
+    EXPECT_TRUE(h1.has("e.f.h") == false);
+    EXPECT_TRUE(h1.has("e.f") == false);
+    EXPECT_TRUE(h1.has("e") == true); // stays
+    EXPECT_TRUE(h1.size() == 3);
 
     // now testing Hash::erasePath on h2
-    CPPUNIT_ASSERT(h2.size() == 4);
+    EXPECT_TRUE(h2.size() == 4);
 
     // erase existing key on first level => size decreases
     h2.erasePath("a");
-    CPPUNIT_ASSERT(h2.has("a") == false);
-    CPPUNIT_ASSERT(h2.size() == 3);
+    EXPECT_TRUE(h2.has("a") == false);
+    EXPECT_TRUE(h2.size() == 3);
 
     // non-existing key: size just stays as it is
     h2.erasePath("a");
-    CPPUNIT_ASSERT(h2.size() == 3);
+    EXPECT_TRUE(h2.size() == 3);
 
 
     // "c.d": composite key without siblings
     h2.erasePath("c.d");
-    CPPUNIT_ASSERT(h2.has("c.d") == false);
-    CPPUNIT_ASSERT(h2.has("c") == false); // removed since nothing left
-    CPPUNIT_ASSERT(h2.size() == 2);
+    EXPECT_TRUE(h2.has("c.d") == false);
+    EXPECT_TRUE(h2.has("c") == false); // removed since nothing left
+    EXPECT_TRUE(h2.size() == 2);
 
     // "e.f": composite key with two children and a sibling
     h2.erasePath("e.f");
-    CPPUNIT_ASSERT(h2.has("e.f.g") == false);
-    CPPUNIT_ASSERT(h2.has("e.f.h") == false);
-    CPPUNIT_ASSERT(h2.has("e.f") == false);
-    CPPUNIT_ASSERT(h2.has("e") == true); // stays since there is "e.i"
-    CPPUNIT_ASSERT(h2.size() == 2);
+    EXPECT_TRUE(h2.has("e.f.g") == false);
+    EXPECT_TRUE(h2.has("e.f.h") == false);
+    EXPECT_TRUE(h2.has("e.f") == false);
+    EXPECT_TRUE(h2.has("e") == true); // stays since there is "e.i"
+    EXPECT_TRUE(h2.size() == 2);
 
     // Now testing erasure of elements in a vector<Hash>.
     Hash hVector("a[2].b", 111);
-    CPPUNIT_ASSERT(hVector.get<vector<Hash>>("a").size() == 3);
-    CPPUNIT_ASSERT(hVector.erase("a[3]") == false);
-    CPPUNIT_ASSERT(hVector.get<vector<Hash>>("a").size() == 3);
-    CPPUNIT_ASSERT(hVector.erase("a[0]") == true);
-    CPPUNIT_ASSERT(hVector.get<vector<Hash>>("a").size() == 2);
-    CPPUNIT_ASSERT(hVector.get<int>("a[1].b") == 111);
+    EXPECT_TRUE(hVector.get<vector<Hash>>("a").size() == 3);
+    EXPECT_TRUE(hVector.erase("a[3]") == false);
+    EXPECT_TRUE(hVector.get<vector<Hash>>("a").size() == 3);
+    EXPECT_TRUE(hVector.erase("a[0]") == true);
+    EXPECT_TRUE(hVector.get<vector<Hash>>("a").size() == 2);
+    EXPECT_TRUE(hVector.get<int>("a[1].b") == 111);
     // index on non-existing key
-    CPPUNIT_ASSERT(hVector.erase("c[2]") == false);
-    CPPUNIT_ASSERT(hVector.erase("a.c[2]") == false);
-    CPPUNIT_ASSERT(hVector.erase("a[0].c[1]") == false);
+    EXPECT_TRUE(hVector.erase("c[2]") == false);
+    EXPECT_TRUE(hVector.erase("a.c[2]") == false);
+    EXPECT_TRUE(hVector.erase("a[0].c[1]") == false);
 
     // Now testing erasePath for paths containing indices.
     Hash hVector2("a[2].b", 111);
-    CPPUNIT_ASSERT(hVector2.get<vector<Hash>>("a").size() == 3);
+    EXPECT_TRUE(hVector2.get<vector<Hash>>("a").size() == 3);
     Hash copy = hVector2;
     hVector2.erasePath("a[3]"); // nothing happens (not even an exception)
-    CPPUNIT_ASSERT(hVector2 == copy);
+    EXPECT_TRUE(hVector2 == copy);
     hVector2.erasePath("a[3].b"); // nothing happens (not even an exception)
-    CPPUNIT_ASSERT(hVector2 == copy);
+    EXPECT_TRUE(hVector2 == copy);
     hVector2.erasePath("a[0]"); // shrunk
-    CPPUNIT_ASSERT(hVector2.get<vector<Hash>>("a").size() == 2);
-    CPPUNIT_ASSERT(hVector2.get<int>("a[1].b") == 111);
+    EXPECT_TRUE(hVector2.get<vector<Hash>>("a").size() == 2);
+    EXPECT_TRUE(hVector2.get<int>("a[1].b") == 111);
     hVector2.erasePath("a[1].b"); // erase a[1] as well since b is only daughter
-    CPPUNIT_ASSERT(hVector2.get<vector<Hash>>("a").size() == 1);
+    EXPECT_TRUE(hVector2.get<vector<Hash>>("a").size() == 1);
     // index for non-existing key must neither throw nor touch the content
     copy = hVector2;
     hVector2.erasePath("c[2]");
-    CPPUNIT_ASSERT(hVector2 == copy);
+    EXPECT_TRUE(hVector2 == copy);
     hVector2.erasePath("a.c[2]");
-    CPPUNIT_ASSERT(hVector2 == copy);
+    EXPECT_TRUE(hVector2 == copy);
     hVector2.erasePath("a[0].c[1]");
-    CPPUNIT_ASSERT(hVector2 == copy);
+    EXPECT_TRUE(hVector2 == copy);
     // single element vector<Hash>: vector is removed completely
     hVector2.erasePath("a[0]");
-    CPPUNIT_ASSERT(hVector2.has("a") == false);
+    EXPECT_TRUE(hVector2.has("a") == false);
 
     // Test erase with empty keys at various places of the path
     Hash hEmptyKey("", 1, "a.", 2, "a1.", 3, "b..", 31, "c..d", 32, "e..f", 33);
     Hash hEmptyKey2(hEmptyKey); // for next test section
     // only empty key
-    CPPUNIT_ASSERT_EQUAL(6ul, hEmptyKey.size());
-    CPPUNIT_ASSERT(hEmptyKey.has(""));
-    CPPUNIT_ASSERT(hEmptyKey.erase("")); // only empty key
-    CPPUNIT_ASSERT_EQUAL(5ul, hEmptyKey.size());
+    EXPECT_EQ(6ul, hEmptyKey.size());
+    EXPECT_TRUE(hEmptyKey.has(""));
+    EXPECT_TRUE(hEmptyKey.erase("")); // only empty key
+    EXPECT_EQ(5ul, hEmptyKey.size());
 
-    CPPUNIT_ASSERT(hEmptyKey.has("a"));
-    CPPUNIT_ASSERT(hEmptyKey.has("a."));
-    CPPUNIT_ASSERT(hEmptyKey.erase("a.")); // empty key at end
-    CPPUNIT_ASSERT(!hEmptyKey.has("a."));
-    CPPUNIT_ASSERT(hEmptyKey.has("a"));
+    EXPECT_TRUE(hEmptyKey.has("a"));
+    EXPECT_TRUE(hEmptyKey.has("a."));
+    EXPECT_TRUE(hEmptyKey.erase("a.")); // empty key at end
+    EXPECT_TRUE(!hEmptyKey.has("a."));
+    EXPECT_TRUE(hEmptyKey.has("a"));
 
-    CPPUNIT_ASSERT(hEmptyKey.has("a1"));
-    CPPUNIT_ASSERT(hEmptyKey.has("a1."));
-    CPPUNIT_ASSERT(hEmptyKey.erase("a1"));
-    CPPUNIT_ASSERT(!hEmptyKey.has("a1."));
-    CPPUNIT_ASSERT(!hEmptyKey.has("a1"));
+    EXPECT_TRUE(hEmptyKey.has("a1"));
+    EXPECT_TRUE(hEmptyKey.has("a1."));
+    EXPECT_TRUE(hEmptyKey.erase("a1"));
+    EXPECT_TRUE(!hEmptyKey.has("a1."));
+    EXPECT_TRUE(!hEmptyKey.has("a1"));
 
-    CPPUNIT_ASSERT(hEmptyKey.has("b"));
-    CPPUNIT_ASSERT(hEmptyKey.has("b."));
-    CPPUNIT_ASSERT(hEmptyKey.has("b.."));
+    EXPECT_TRUE(hEmptyKey.has("b"));
+    EXPECT_TRUE(hEmptyKey.has("b."));
+    EXPECT_TRUE(hEmptyKey.has("b.."));
     Hash& b = hEmptyKey.get<Hash>("b");
-    CPPUNIT_ASSERT(b.has("."));
-    CPPUNIT_ASSERT(b.erase(".")); // empty key at begin and end
-    CPPUNIT_ASSERT(!hEmptyKey.has("b.."));
-    CPPUNIT_ASSERT(hEmptyKey.has("b."));
+    EXPECT_TRUE(b.has("."));
+    EXPECT_TRUE(b.erase(".")); // empty key at begin and end
+    EXPECT_TRUE(!hEmptyKey.has("b.."));
+    EXPECT_TRUE(hEmptyKey.has("b."));
 
-    CPPUNIT_ASSERT(hEmptyKey.has("c"));
-    CPPUNIT_ASSERT(hEmptyKey.has("c."));
-    CPPUNIT_ASSERT(hEmptyKey.has("c..d"));
+    EXPECT_TRUE(hEmptyKey.has("c"));
+    EXPECT_TRUE(hEmptyKey.has("c."));
+    EXPECT_TRUE(hEmptyKey.has("c..d"));
     Hash& c = hEmptyKey.get<Hash>("c");
-    CPPUNIT_ASSERT(c.erase(".d")); // empty key at begin
-    CPPUNIT_ASSERT(!hEmptyKey.has("c..d"));
-    CPPUNIT_ASSERT(hEmptyKey.has("c."));
+    EXPECT_TRUE(c.erase(".d")); // empty key at begin
+    EXPECT_TRUE(!hEmptyKey.has("c..d"));
+    EXPECT_TRUE(hEmptyKey.has("c."));
 
-    CPPUNIT_ASSERT(hEmptyKey.has("e"));
-    CPPUNIT_ASSERT(hEmptyKey.has("e."));
-    CPPUNIT_ASSERT(hEmptyKey.has("e..f"));
-    CPPUNIT_ASSERT(hEmptyKey.erase("e..f")); // empty key in middle
-    CPPUNIT_ASSERT(!hEmptyKey.has("e..f"));
-    CPPUNIT_ASSERT(hEmptyKey.has("e."));
+    EXPECT_TRUE(hEmptyKey.has("e"));
+    EXPECT_TRUE(hEmptyKey.has("e."));
+    EXPECT_TRUE(hEmptyKey.has("e..f"));
+    EXPECT_TRUE(hEmptyKey.erase("e..f")); // empty key in middle
+    EXPECT_TRUE(!hEmptyKey.has("e..f"));
+    EXPECT_TRUE(hEmptyKey.has("e."));
 
     // Test erasePath with empty keys at various places of the path.
     // Same test cases as for erase, but sometimes other result!
 
     // only empty key
-    CPPUNIT_ASSERT_EQUAL(6ul, hEmptyKey2.size());
-    CPPUNIT_ASSERT(hEmptyKey2.has(""));
+    EXPECT_EQ(6ul, hEmptyKey2.size());
+    EXPECT_TRUE(hEmptyKey2.has(""));
     hEmptyKey2.erasePath("");
-    CPPUNIT_ASSERT_EQUAL(5ul, hEmptyKey2.size());
+    EXPECT_EQ(5ul, hEmptyKey2.size());
 
-    CPPUNIT_ASSERT(hEmptyKey2.has("a"));
-    CPPUNIT_ASSERT(hEmptyKey2.has("a."));
+    EXPECT_TRUE(hEmptyKey2.has("a"));
+    EXPECT_TRUE(hEmptyKey2.has("a."));
     hEmptyKey2.erasePath("a."); // empty key an end
-    CPPUNIT_ASSERT(!hEmptyKey2.has("a."));
-    CPPUNIT_ASSERT(!hEmptyKey2.has("a"));
+    EXPECT_TRUE(!hEmptyKey2.has("a."));
+    EXPECT_TRUE(!hEmptyKey2.has("a"));
 
-    CPPUNIT_ASSERT(hEmptyKey2.has("a1"));
-    CPPUNIT_ASSERT(hEmptyKey2.has("a1."));
+    EXPECT_TRUE(hEmptyKey2.has("a1"));
+    EXPECT_TRUE(hEmptyKey2.has("a1."));
     hEmptyKey2.erasePath("a1");
-    CPPUNIT_ASSERT(!hEmptyKey2.has("a1."));
-    CPPUNIT_ASSERT(!hEmptyKey2.has("a1"));
+    EXPECT_TRUE(!hEmptyKey2.has("a1."));
+    EXPECT_TRUE(!hEmptyKey2.has("a1"));
 
-    CPPUNIT_ASSERT(hEmptyKey2.has("b"));
-    CPPUNIT_ASSERT(hEmptyKey2.has("b."));
-    CPPUNIT_ASSERT(hEmptyKey2.has("b.."));
+    EXPECT_TRUE(hEmptyKey2.has("b"));
+    EXPECT_TRUE(hEmptyKey2.has("b."));
+    EXPECT_TRUE(hEmptyKey2.has("b.."));
     Hash& b2 = hEmptyKey2.get<Hash>("b");
-    CPPUNIT_ASSERT(b2.has("."));
+    EXPECT_TRUE(b2.has("."));
     b2.erasePath("."); // empty key at begin and end
-    CPPUNIT_ASSERT(!hEmptyKey2.has("b.."));
-    CPPUNIT_ASSERT(!hEmptyKey2.has("b."));
-    CPPUNIT_ASSERT(hEmptyKey2.has("b"));
+    EXPECT_TRUE(!hEmptyKey2.has("b.."));
+    EXPECT_TRUE(!hEmptyKey2.has("b."));
+    EXPECT_TRUE(hEmptyKey2.has("b"));
 
-    CPPUNIT_ASSERT(hEmptyKey2.has("c"));
-    CPPUNIT_ASSERT(hEmptyKey2.has("c."));
-    CPPUNIT_ASSERT(hEmptyKey2.has("c..d"));
+    EXPECT_TRUE(hEmptyKey2.has("c"));
+    EXPECT_TRUE(hEmptyKey2.has("c."));
+    EXPECT_TRUE(hEmptyKey2.has("c..d"));
     Hash& c2 = hEmptyKey2.get<Hash>("c");
     c2.erasePath(".d"); // empty key at begin
-    CPPUNIT_ASSERT(!hEmptyKey2.has("c..d"));
-    CPPUNIT_ASSERT(!hEmptyKey2.has("c."));
-    CPPUNIT_ASSERT(hEmptyKey2.has("c"));
+    EXPECT_TRUE(!hEmptyKey2.has("c..d"));
+    EXPECT_TRUE(!hEmptyKey2.has("c."));
+    EXPECT_TRUE(hEmptyKey2.has("c"));
 
-    CPPUNIT_ASSERT(hEmptyKey2.has("e"));
-    CPPUNIT_ASSERT(hEmptyKey2.has("e."));
-    CPPUNIT_ASSERT(hEmptyKey2.has("e..f"));
+    EXPECT_TRUE(hEmptyKey2.has("e"));
+    EXPECT_TRUE(hEmptyKey2.has("e."));
+    EXPECT_TRUE(hEmptyKey2.has("e..f"));
     hEmptyKey2.erasePath("e..f"); // empty key in middle
-    CPPUNIT_ASSERT(!hEmptyKey2.has("e..f"));
-    CPPUNIT_ASSERT(!hEmptyKey2.has("e."));
-    CPPUNIT_ASSERT(!hEmptyKey2.has("e"));
+    EXPECT_TRUE(!hEmptyKey2.has("e..f"));
+    EXPECT_TRUE(!hEmptyKey2.has("e."));
+    EXPECT_TRUE(!hEmptyKey2.has("e"));
 
     // Check vector treatment, i.e. erasePath("a.v[0]") where v was - either size 1 or longer
     // Test erasePath where it acts differently than erase
     Hash hEmptyKey3("a.vec[1]", Hash(), ".vecb[1]", Hash());
     hEmptyKey3.erasePath("a.vec[1]");
-    CPPUNIT_ASSERT(hEmptyKey3.has("a.vec[0]"));
+    EXPECT_TRUE(hEmptyKey3.has("a.vec[0]"));
     hEmptyKey3.erasePath("a.vec[0]");
-    CPPUNIT_ASSERT(!hEmptyKey3.has("a.vec"));
-    CPPUNIT_ASSERT(!hEmptyKey3.has("a"));
+    EXPECT_TRUE(!hEmptyKey3.has("a.vec"));
+    EXPECT_TRUE(!hEmptyKey3.has("a"));
     // Now empty key instead of "a":
     hEmptyKey3.erasePath(".vecb[1]");
-    CPPUNIT_ASSERT(hEmptyKey3.has(".vecb[0]"));
+    EXPECT_TRUE(hEmptyKey3.has(".vecb[0]"));
     hEmptyKey3.erasePath(".vecb[0]");
-    CPPUNIT_ASSERT(!hEmptyKey3.has(".vecb"));
-    CPPUNIT_ASSERT(!hEmptyKey3.has(""));
-    CPPUNIT_ASSERT(hEmptyKey3.empty());
+    EXPECT_TRUE(!hEmptyKey3.has(".vecb"));
+    EXPECT_TRUE(!hEmptyKey3.has(""));
+    EXPECT_TRUE(hEmptyKey3.empty());
 }
 
 
-void Hash_Test::testHas() {
+TEST(TestHash, testHas) {
     // Hash::has(path) is already used a lot in other tests, but some corner cases
     // are missing, e.g. non-existing array indices at different positions in path.
     Hash h1("a.b[2]", Hash(), "b[1]", Hash());
-    CPPUNIT_ASSERT(h1.has("a") == true);
-    CPPUNIT_ASSERT(h1.has("a.b") == true);
-    CPPUNIT_ASSERT(h1.has("a.b[0]") == true);
-    CPPUNIT_ASSERT(h1.has("a.b[1]") == true);
-    CPPUNIT_ASSERT(h1.has("a.b[2]") == true);
-    CPPUNIT_ASSERT(h1.has("a.b[2].some") == false);
-    CPPUNIT_ASSERT(h1.has("a.b[2].some.other") == false);
-    CPPUNIT_ASSERT(h1.has("a.b[3]") == false);
-    CPPUNIT_ASSERT(h1.has("a.b[3].some") == false);
-    CPPUNIT_ASSERT(h1.has("a.b[3].some.other") == false);
+    EXPECT_TRUE(h1.has("a") == true);
+    EXPECT_TRUE(h1.has("a.b") == true);
+    EXPECT_TRUE(h1.has("a.b[0]") == true);
+    EXPECT_TRUE(h1.has("a.b[1]") == true);
+    EXPECT_TRUE(h1.has("a.b[2]") == true);
+    EXPECT_TRUE(h1.has("a.b[2].some") == false);
+    EXPECT_TRUE(h1.has("a.b[2].some.other") == false);
+    EXPECT_TRUE(h1.has("a.b[3]") == false);
+    EXPECT_TRUE(h1.has("a.b[3].some") == false);
+    EXPECT_TRUE(h1.has("a.b[3].some.other") == false);
     // Test also vector<Hash> on first level:
-    CPPUNIT_ASSERT(h1.has("b") == true);
-    CPPUNIT_ASSERT(h1.has("b[2]") == false);
+    EXPECT_TRUE(h1.has("b") == true);
+    EXPECT_TRUE(h1.has("b[2]") == false);
     // And now some index on a non-existing vector<Hash>:
-    CPPUNIT_ASSERT(h1.has("c[0]") == false);
+    EXPECT_TRUE(h1.has("c[0]") == false);
 }
 
 
-void Hash_Test::testIs() {
+TEST(TestHash, testIs) {
     // Test different cases: paths without indices, with index at end or in the middle.
     Hash h("a", 77, "b[1].d", 88.8, "b[2].c", 88);
-    CPPUNIT_ASSERT(h.is<int>("a") == true);
-    CPPUNIT_ASSERT(h.is<vector<Hash>>("b") == true);
-    CPPUNIT_ASSERT(h.is<Hash>("b[0]") == true);
-    CPPUNIT_ASSERT(h.is<double>("b[1].d") == true);
-    CPPUNIT_ASSERT(h.is<Hash>("b[2]") == true);
-    CPPUNIT_ASSERT(h.is<int>("b[2].c") == true);
+    EXPECT_TRUE(h.is<int>("a") == true);
+    EXPECT_TRUE(h.is<vector<Hash>>("b") == true);
+    EXPECT_TRUE(h.is<Hash>("b[0]") == true);
+    EXPECT_TRUE(h.is<double>("b[1].d") == true);
+    EXPECT_TRUE(h.is<Hash>("b[2]") == true);
+    EXPECT_TRUE(h.is<int>("b[2].c") == true);
 
     // Check for false on wrong type - cannot test all wrong types...
-    CPPUNIT_ASSERT(h.is<float>("a") == false);
-    CPPUNIT_ASSERT(h.is<Hash>("b") == false);
-    CPPUNIT_ASSERT(h.is<int>("b[0]") == false);
-    CPPUNIT_ASSERT(h.is<float>("b[1].d") == false);
-    CPPUNIT_ASSERT(h.is<vector<Hash>>("b[2]") == false);
-    CPPUNIT_ASSERT(h.is<double>("b[2].c") == false);
+    EXPECT_TRUE(h.is<float>("a") == false);
+    EXPECT_TRUE(h.is<Hash>("b") == false);
+    EXPECT_TRUE(h.is<int>("b[0]") == false);
+    EXPECT_TRUE(h.is<float>("b[1].d") == false);
+    EXPECT_TRUE(h.is<vector<Hash>>("b[2]") == false);
+    EXPECT_TRUE(h.is<double>("b[2].c") == false);
 
     // Check exceptions on bad paths:
     // 1) non-existing "normal" path
@@ -2044,7 +2026,7 @@ void Hash_Test::testIs() {
     } catch (karabo::data::ParameterException const& e) {
         caught1 = true;
     }
-    CPPUNIT_ASSERT(caught1 == true);
+    EXPECT_TRUE(caught1 == true);
 
     // 2) non-existing index of vector that is last item
     bool caught2 = false;
@@ -2053,7 +2035,7 @@ void Hash_Test::testIs() {
     } catch (karabo::data::ParameterException const& e) {
         caught2 = true;
     }
-    CPPUNIT_ASSERT(caught2 == true);
+    EXPECT_TRUE(caught2 == true);
 
     // 3) item under non-existing index of vector
     bool caught3 = false;
@@ -2062,7 +2044,7 @@ void Hash_Test::testIs() {
     } catch (karabo::data::ParameterException const& e) {
         caught3 = true;
     }
-    CPPUNIT_ASSERT(caught3 == true);
+    EXPECT_TRUE(caught3 == true);
 
     // 4) non-existing item under existing index of vector
     bool caught4 = false;
@@ -2071,13 +2053,11 @@ void Hash_Test::testIs() {
     } catch (karabo::data::ParameterException const& e) {
         caught4 = true;
     }
-    CPPUNIT_ASSERT(caught4 == true);
+    EXPECT_TRUE(caught4 == true);
 }
 
 
 namespace helper {
-
-
     class Helper {
        public:
         Helper(){};
@@ -2475,7 +2455,7 @@ class Paths : public helper::Helper {
 };
 
 
-void Hash_Test::testHelper() {
+TEST(TestHash, testHelper) {
     {
         Hash h3("a", 21, "b.c", 22, "c.b[0]", Hash("key", "value"), "c.b[1].d", 24, "e", 23);
         h3.setAttribute("a", "at0", "value0");
@@ -2538,67 +2518,67 @@ void Hash_Test::testHelper() {
 }
 
 
-void Hash_Test::testPack() {
+TEST(TestHash, testPack) {
     using karabo::util::pack;
     Hash h;
     pack(h);
-    CPPUNIT_ASSERT(h.size() == 0);
+    EXPECT_TRUE(h.size() == 0);
     pack(h, 3);
-    CPPUNIT_ASSERT(h.size() == 1);
-    CPPUNIT_ASSERT(h.get<int>("a1") == 3);
+    EXPECT_TRUE(h.size() == 1);
+    EXPECT_TRUE(h.get<int>("a1") == 3);
     pack(h, 3, 2);
     pack(h, string("bla"), 2.5);
-    CPPUNIT_ASSERT(h.size() == 2);
-    CPPUNIT_ASSERT(h.get<string>("a1") == "bla");
-    CPPUNIT_ASSERT(h.get<double>("a2") == 2.5);
+    EXPECT_TRUE(h.size() == 2);
+    EXPECT_TRUE(h.get<string>("a1") == "bla");
+    EXPECT_TRUE(h.get<double>("a2") == 2.5);
 
     string s;
     double x;
 
     karabo::util::unpack(h, s, x);
-    CPPUNIT_ASSERT(s == "bla");
-    CPPUNIT_ASSERT(x == 2.5);
+    EXPECT_TRUE(s == "bla");
+    EXPECT_TRUE(x == 2.5);
 }
 
-void Hash_Test::testCounter() {
+TEST(TestHash, testCounter) {
     Hash h("a", true, "b", int(0), "c", NDArray(Dims(5, 5)), "d", std::vector<int>(3, 0));
     h.set("e", std::vector<NDArray>(3, NDArray(Dims(5, 5))));
     // if counter were not to skip over Hash derived classes the ND-Array internal reference type of type
     // INT32 would be counted leading to a count of 8
-    CPPUNIT_ASSERT(karabo::data::counter(h, karabo::data::Types::INT32) == 4);
+    EXPECT_TRUE(karabo::data::counter(h, karabo::data::Types::INT32) == 4);
     // if counter were not to skip over Hash derived classes the ND-Array internal is big endian of type
     // BOOL would be counted leading to a count of 5
-    CPPUNIT_ASSERT(karabo::data::counter(h, karabo::data::Types::BOOL) == 1);
-    CPPUNIT_ASSERT(karabo::data::counter(h, karabo::data::Types::HASH) == 1);
+    EXPECT_TRUE(karabo::data::counter(h, karabo::data::Types::BOOL) == 1);
+    EXPECT_TRUE(karabo::data::counter(h, karabo::data::Types::HASH) == 1);
 }
 
 
-void Hash_Test::testKeys() {
+TEST(TestHash, testKeys) {
     // Test various funny keys/paths
     Hash h(" ", true, "", false, ".", 0, ".b", 1, "a.", 2, "c..b", 3);
 
-    CPPUNIT_ASSERT(h.has(" "));
-    CPPUNIT_ASSERT(h.has(""));
-    CPPUNIT_ASSERT(h.has("a"));
-    CPPUNIT_ASSERT(h.has("c"));
-    CPPUNIT_ASSERT_EQUAL(4ul, h.size()); // no other 1st level keys!
+    EXPECT_TRUE(h.has(" "));
+    EXPECT_TRUE(h.has(""));
+    EXPECT_TRUE(h.has("a"));
+    EXPECT_TRUE(h.has("c"));
+    EXPECT_EQ(4ul, h.size()); // no other 1st level keys!
 
     const Hash& g = h.get<Hash>("");
-    CPPUNIT_ASSERT(g.has(""));
-    CPPUNIT_ASSERT(g.has("b"));
-    CPPUNIT_ASSERT_EQUAL(2ul, g.size()); // dito
+    EXPECT_TRUE(g.has(""));
+    EXPECT_TRUE(g.has("b"));
+    EXPECT_EQ(2ul, g.size()); // dito
 
     const Hash& a = h.get<Hash>("a");
-    CPPUNIT_ASSERT(a.has(""));
-    CPPUNIT_ASSERT_EQUAL(1ul, a.size()); // dito
+    EXPECT_TRUE(a.has(""));
+    EXPECT_EQ(1ul, a.size()); // dito
 
     const Hash& c = h.get<Hash>("c");
-    CPPUNIT_ASSERT(a.has(""));
-    CPPUNIT_ASSERT_EQUAL(1ul, c.size()); // dito
+    EXPECT_TRUE(a.has(""));
+    EXPECT_EQ(1ul, c.size()); // dito
 
     const Hash& c1 = c.get<Hash>("");
-    CPPUNIT_ASSERT(c1.has("b"));
-    CPPUNIT_ASSERT_EQUAL(1ul, c1.size()); // dito
+    EXPECT_TRUE(c1.has("b"));
+    EXPECT_EQ(1ul, c1.size()); // dito
 }
 
 
@@ -2610,28 +2590,26 @@ void testSimilarIsNotFullyEqualByOrder(bool orderMatters) {
 
     // Checks that hashes with elements with different keys of the same type and in the same order
     // are still similar.
-    CPPUNIT_ASSERT_EQUAL(h1, h2); // 'Hash::operator==' actually checks for similarity.
+    EXPECT_EQ(h1, h2); // 'Hash::operator==' actually checks for similarity.
     // But are not fullyEqual
-    CPPUNIT_ASSERT_MESSAGE("h1 and h2 shouldn't be fullyEquals - they differ in key names.",
-                           !h1.fullyEquals(h2, orderMatters));
+    EXPECT_TRUE(!h1.fullyEquals(h2, orderMatters)) << "h1 and h2 shouldn't be fullyEquals - they differ in key names.";
 
     Hash h3("a1", 1, "a1.b", "value", "a1.c", false);
     // Checks that hashes with elements with different values of the same type and in the same
     // order are still similar.
-    CPPUNIT_ASSERT_EQUAL(h2, h3); // 'Hash::operator==' actually checks for similarity.
+    EXPECT_EQ(h2, h3); // 'Hash::operator==' actually checks for similarity.
     // But are not fullyEqual
-    CPPUNIT_ASSERT_MESSAGE("h2 and h3 shouldn't be fullyEquals - they differ in key values.",
-                           !h2.fullyEquals(h3, orderMatters));
+    EXPECT_TRUE(!h2.fullyEquals(h3, orderMatters)) << "h2 and h3 shouldn't be fullyEquals - they differ in key values.";
 
     Hash h4("a1", 1, "a1.b", "value", "a1.c", true);
     h4.setAttribute("a1", "attr", true);
     h2.setAttribute("a1", "attr", 4);
     // Checks that hashes with elements with different attributes, with the same value, of the
     // same type and in the same order are still similar.
-    CPPUNIT_ASSERT_EQUAL(h2, h4); // 'Hash::operator==' actually checks for similarity.
+    EXPECT_EQ(h2, h4); // 'Hash::operator==' actually checks for similarity.
     // But are not fullyEqual
-    CPPUNIT_ASSERT_MESSAGE("h4 and h2 shouldn't be fullyEquals - they differ in element attributes.",
-                           !h2.fullyEquals(h4, orderMatters));
+    EXPECT_TRUE(!h2.fullyEquals(h4, orderMatters))
+          << "h4 and h2 shouldn't be fullyEquals - they differ in element attributes.";
 
     Hash h5("a", 13.14159, "b[0]", Hash("hKey_0", "hValue_0"), "b[1]", Hash("hKey_1", "hValue_1"), "c",
             "1, 1, 2, 3, 5, 8, 11, 19, 30");
@@ -2639,54 +2617,53 @@ void testSimilarIsNotFullyEqualByOrder(bool orderMatters) {
             "1, 1, 2, 3, 5, 8, 11, 19, 30, 49, 79");
     // Repeats the test for hashes differing in node value, but this time with one
     // complex node, of type vector of hashes, that matches. The hashes are similar ...
-    CPPUNIT_ASSERT_EQUAL(h5, h6); // 'Hash::operator==' actually checks for similarity.
+    EXPECT_EQ(h5, h6); // 'Hash::operator==' actually checks for similarity.
     // But are not fullyEqual
-    CPPUNIT_ASSERT_MESSAGE("h5 and h6 shouldn't be fullyEquals - they differ in element values.",
-                           !h5.fullyEquals(h6, orderMatters));
+    EXPECT_TRUE(!h5.fullyEquals(h6, orderMatters))
+          << "h5 and h6 shouldn't be fullyEquals - they differ in element values.";
 
     vector<Hash> vhAttr{Hash("key_0", "val_0"), Hash("key_1", "val_1")};
     h5.setAttribute("a", "attr", vhAttr);
     h6.setAttribute("a", "attr", 2);
     h6.set<std::string>("c", "1, 1, 2, 3, 5, 8, 11, 19, 30");
-    CPPUNIT_ASSERT_MESSAGE("h5 and h6 shouldn't be fullyEquals - they differ in vector of hash attribute",
-                           !h5.fullyEquals(h6, orderMatters));
+    EXPECT_TRUE(!h5.fullyEquals(h6, orderMatters))
+          << "h5 and h6 shouldn't be fullyEquals - they differ in vector of hash attribute";
 
     // A case where two hashes with complex attributes and nodes are fullyEquals.
     h6.setAttribute("a", "attr", vhAttr);
-    CPPUNIT_ASSERT_MESSAGE("h5 and h6 should be fullyEquals!", h5.fullyEquals(h6, orderMatters));
+    EXPECT_TRUE(h5.fullyEquals(h6, orderMatters)) << "h5 and h6 should be fullyEquals!";
 
     Hash h7("a", 1, "b", 2, "c", 3);
     Hash h8("b", 1, "a", 2, "c", 3);
     // Checks that hashes with keys in different order are still similar.
-    CPPUNIT_ASSERT_EQUAL(h7, h8);
+    EXPECT_EQ(h7, h8);
     // But are not fullyEqual.
-    CPPUNIT_ASSERT_MESSAGE("h7 and h8 shouldn't be fullyEquals - they differ in the order of their elements.",
-                           !h7.fullyEquals(h8, orderMatters));
+    EXPECT_TRUE(!h7.fullyEquals(h8, orderMatters))
+          << "h7 and h8 shouldn't be fullyEquals - they differ in the order of their elements.";
 
     Hash h9("a", 1, "b", 2, "c", "3");
     // Checks that hashes with different value types for values that have the same string representation form are
     // neither similar nor fullyEquals.
-    CPPUNIT_ASSERT_MESSAGE("h7 and h9 should not be similar, as their 'c' elements differ in type.", h7 != h9);
-    CPPUNIT_ASSERT_MESSAGE("h7 and h9 should not be fullyEquals, as their 'c' elements differ in type.",
-                           !h7.fullyEquals(h9, orderMatters));
+    EXPECT_TRUE(h7 != h9) << "h7 and h9 should not be similar, as their 'c' elements differ in type.";
+    EXPECT_TRUE(!h7.fullyEquals(h9, orderMatters))
+          << "h7 and h9 should not be fullyEquals, as their 'c' elements differ in type.";
 
     // Check VECTOR_STRING treatment
     Hash h11("vecStr", std::vector<std::string>({"with,comma", "with space", "onlyChar"}));
     Hash h12("vecStr", std::vector<std::string>({"with,comma", "with space"}));
-    CPPUNIT_ASSERT_MESSAGE("Differ in number of elements in vector", !h11.fullyEquals(h12, orderMatters));
+    EXPECT_TRUE(!h11.fullyEquals(h12, orderMatters)) << "Differ in number of elements in vector";
     h12.get<std::vector<std::string>>("vecStr").push_back("onlychar");
-    CPPUNIT_ASSERT_MESSAGE("Differ in one character of last element in vector", !h11.fullyEquals(h12, orderMatters));
+    EXPECT_TRUE(!h11.fullyEquals(h12, orderMatters)) << "Differ in one character of last element in vector";
     h12.get<std::vector<std::string>>("vecStr").back() = "onlyChar"; // now make fully equal
-    CPPUNIT_ASSERT(h11.fullyEquals(h12, orderMatters));
+    EXPECT_TRUE(h11.fullyEquals(h12, orderMatters));
     // Now VECTOR_STRING as attribute
     h11.setAttribute("vecStr", "vecStrOpt", std::vector<std::string>({"With,comma", "With space", "OnlyChar"}));
     h12.setAttribute("vecStr", "vecStrOpt", std::vector<std::string>({"With,comma", "With space"}));
-    CPPUNIT_ASSERT_MESSAGE("Differ in number of elements in vector attribute", !h11.fullyEquals(h12, orderMatters));
+    EXPECT_TRUE(!h11.fullyEquals(h12, orderMatters)) << "Differ in number of elements in vector attribute";
     h12.getAttribute<std::vector<std::string>>("vecStr", "vecStrOpt").push_back("Onlychar");
-    CPPUNIT_ASSERT_MESSAGE("Differ in one character of last element in vector attribute",
-                           !h11.fullyEquals(h12, orderMatters));
+    EXPECT_TRUE(!h11.fullyEquals(h12, orderMatters)) << "Differ in one character of last element in vector attribute";
     h12.getAttribute<std::vector<std::string>>("vecStr", "vecStrOpt").back() = "OnlyChar";
-    CPPUNIT_ASSERT(h11.fullyEquals(h12, orderMatters));
+    EXPECT_TRUE(h11.fullyEquals(h12, orderMatters));
 
     Schema sch("hashSchema");
     INT32_ELEMENT(sch).key("a").tags("prop").assignmentOptional().defaultValue(10).commit();
@@ -2694,27 +2671,26 @@ void testSimilarIsNotFullyEqualByOrder(bool orderMatters) {
     h10.setAttribute("c", "schema", sch);
     h8.setAttribute("c", "schema", Schema("test"));
     // Checks that hashes with different attributes of type schema are similar
-    CPPUNIT_ASSERT_EQUAL(h8, h10);
+    EXPECT_EQ(h8, h10);
     // But are not fullyEquals
-    CPPUNIT_ASSERT_MESSAGE(
-          "h8 and h10 should not be fullyEquals, as they have different values for attributes of type Schema ",
-          !h8.fullyEquals(h10, orderMatters));
+    EXPECT_TRUE(!h8.fullyEquals(h10, orderMatters))
+          << "h8 and h10 should not be fullyEquals, as they have different values for attributes of type Schema ";
 }
 
 
-void Hash_Test::testSimilarIsNotFullyEqual() {
+TEST(TestHash, testSimilarIsNotFullyEqual) {
     testSimilarIsNotFullyEqualByOrder(true);
     testSimilarIsNotFullyEqualByOrder(false);
 }
 
 
-void Hash_Test::testFullyEqualUnordered() {
+TEST(TestHash, testFullyEqualUnordered) {
     // Just two keys are swapped: hashes differ if order matters, otherwise not
     Hash h1("a.b", "value", "a.c", true, "1", 1);
     Hash h2("a.c", true, "a.b", "value", "1", 1);
 
-    CPPUNIT_ASSERT(!h1.fullyEquals(h2, true));
-    CPPUNIT_ASSERT(h1.fullyEquals(h2, false));
+    EXPECT_TRUE(!h1.fullyEquals(h2, true));
+    EXPECT_TRUE(h1.fullyEquals(h2, false));
 
     // Just order of attributes is swapped: hashes differ if order matters, otherwise not
     Hash h3(h1);
@@ -2723,12 +2699,12 @@ void Hash_Test::testFullyEqualUnordered() {
     h1.setAttribute("1", "B", 2);
     h1.setAttribute("1", "A", 1);
 
-    CPPUNIT_ASSERT_MESSAGE(toString(h1) + " vs " + toString(h3), !h1.fullyEquals(h3, true));
-    CPPUNIT_ASSERT_MESSAGE(toString(h1) + " vs " + toString(h3), h1.fullyEquals(h3, false));
+    EXPECT_TRUE(!h1.fullyEquals(h3, true)) << toString(h1) << " vs " << toString(h3);
+    EXPECT_TRUE(h1.fullyEquals(h3, false)) << toString(h1) << " vs " << toString(h3);
 }
 
 
-void Hash_Test::testNode() {
+TEST(TestHash, testNode) {
     // Hash::Node::setValue
     {
         Hash h1, h2;
@@ -2739,21 +2715,21 @@ void Hash_Test::testNode() {
         //           concerning __classId attribute:
         node1.setValue(Hash("1", 2));
         node2.setValue<Hash>(Hash("1", 2));
-        CPPUNIT_ASSERT(!node1.hasAttribute("__classId"));
-        CPPUNIT_ASSERT(!node2.hasAttribute("__classId"));
+        EXPECT_TRUE(!node1.hasAttribute("__classId"));
+        EXPECT_TRUE(!node2.hasAttribute("__classId"));
 
-        CPPUNIT_ASSERT_EQUAL(0ul, node1.getAttributes().size());
-        CPPUNIT_ASSERT_EQUAL(0ul, node2.getAttributes().size());
+        EXPECT_EQ(0ul, node1.getAttributes().size());
+        EXPECT_EQ(0ul, node2.getAttributes().size());
     }
     {
         // Test Hash::Node::setValue and the possible type change introduced by that.
         Hash h("a.b.c", "1");
-        CPPUNIT_ASSERT(h.get<std::string>("a.b.c") == "1");
-        CPPUNIT_ASSERT(h.getAs<int>("a.b.c") == 1);
+        EXPECT_TRUE(h.get<std::string>("a.b.c") == "1");
+        EXPECT_TRUE(h.getAs<int>("a.b.c") == 1);
         boost::optional<Hash::Node&> node = h.find("a.b.c");
         if (node) node->setValue(2);
-        CPPUNIT_ASSERT(h.get<int>("a.b.c") == 2);
-        CPPUNIT_ASSERT(h.getAs<std::string>("a.b.c") == "2");
+        EXPECT_TRUE(h.get<int>("a.b.c") == 2);
+        EXPECT_TRUE(h.getAs<std::string>("a.b.c") == "2");
     }
     {
         // Setting a Hash::Node is setting its value (due to Element::setValue(..) template specification).
@@ -2761,7 +2737,7 @@ void Hash_Test::testNode() {
         // But we keep backward compatibility here, i.e. this test succeeds in 2.11.4, but fails in 2.12.0,
         // see also https://git.xfel.eu/Karabo/Framework/-/merge_requests/5940.
         Hash::Node node("a", 1);
-        CPPUNIT_ASSERT_EQUAL(static_cast<int>(Types::ReferenceType::INT32), static_cast<int>(node.getType()));
+        EXPECT_EQ(static_cast<int>(Types::ReferenceType::INT32), static_cast<int>(node.getType()));
         const Hash::Node constNode(node);
 
         // Test setting for all cases: normal object, rvalue reference and const object
@@ -2770,14 +2746,14 @@ void Hash_Test::testNode() {
         h.set("moved", std::move(node));
         h.set("const", constNode);
 
-        CPPUNIT_ASSERT_EQUAL(static_cast<int>(Types::ReferenceType::INT32), static_cast<int>(h.getType("moved")));
-        CPPUNIT_ASSERT_EQUAL(1, h.get<int>("moved"));
+        EXPECT_EQ(static_cast<int>(Types::ReferenceType::INT32), static_cast<int>(h.getType("moved")));
+        EXPECT_EQ(1, h.get<int>("moved"));
 
-        CPPUNIT_ASSERT_EQUAL(static_cast<int>(Types::ReferenceType::INT32), static_cast<int>(h.getType("const")));
-        CPPUNIT_ASSERT_EQUAL(1, h.get<int>("const"));
+        EXPECT_EQ(static_cast<int>(Types::ReferenceType::INT32), static_cast<int>(h.getType("const")));
+        EXPECT_EQ(1, h.get<int>("const"));
 
-        CPPUNIT_ASSERT_EQUAL(static_cast<int>(Types::ReferenceType::INT32), static_cast<int>(h.getType("normal")));
-        CPPUNIT_ASSERT_EQUAL(1, h.get<int>("normal"));
+        EXPECT_EQ(static_cast<int>(Types::ReferenceType::INT32), static_cast<int>(h.getType("normal")));
+        EXPECT_EQ(1, h.get<int>("normal"));
     }
     {
         // Similar as before, but now testing also move semantics (i.e. would not succeed in 2.11.4).
@@ -2788,28 +2764,26 @@ void Hash_Test::testNode() {
         // Test setting for all cases: normal object, rvalue reference and const object
         Hash h;
         h.set("normal", node);
-        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countCopyConstr);
-        CPPUNIT_ASSERT_EQUAL(2, h.get<TraceCopies>("normal").value);
-        CPPUNIT_ASSERT_EQUAL(
-              2, node.getValue<TraceCopies>().value); // i.e. not -1 as for a 'moved away' TraceCopies instance
+        EXPECT_EQ(1, TraceCopies::countCopyConstr);
+        EXPECT_EQ(2, h.get<TraceCopies>("normal").value);
+        EXPECT_EQ(2, node.getValue<TraceCopies>().value); // i.e. not -1 as for a 'moved away' TraceCopies instance
 
         // Moving the node means move-assignment of its m_value member (which is a std::any) to the new node inside h.
         // That leaves node's m_value in a valid, but undefined state, so better do not use it (e.g. by node.getValue)
         // anymore.
         h.set("moved", std::move(node));
-        CPPUNIT_ASSERT_EQUAL(2, h.get<TraceCopies>("moved").value);
+        EXPECT_EQ(2, h.get<TraceCopies>("moved").value);
         // Next line would throw (see comment above) since node::m_value has an unknown type (void?) that cannot be cast
-        // to TraceCopies CPPUNIT_ASSERT_EQUAL(-1, node.getValue<TraceCopies>().value);
-        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countCopyConstr); // There was no copy!
+        // to TraceCopies EXPECT_EQ(-1, node.getValue<TraceCopies>().value);
+        EXPECT_EQ(1, TraceCopies::countCopyConstr); // There was no copy!
         // Next line succeeds, i.e. no move assignment either. Looks like since the move-assignment of std::any just
         // swaps between source and target instead of moving. But that is an implementation detail we should not tests.
-        // CPPUNIT_ASSERT_EQUAL(0, TraceCopies::countMoveConstr);
+        // EXPECT_EQ(0, TraceCopies::countMoveConstr);
 
         h.set("const", constNode);
-        CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countCopyConstr); // another copy now
-        CPPUNIT_ASSERT_EQUAL(3, h.get<TraceCopies>("const").value);
-        CPPUNIT_ASSERT_EQUAL(
-              3, constNode.getValue<TraceCopies>().value); // i.e. not -1 as for a 'moved away' TraceCopies instance
+        EXPECT_EQ(2, TraceCopies::countCopyConstr); // another copy now
+        EXPECT_EQ(3, h.get<TraceCopies>("const").value);
+        EXPECT_EQ(3, constNode.getValue<TraceCopies>().value); // i.e. not -1 as for a 'moved away' TraceCopies instance
 
         TraceCopies::reset();
     }
@@ -2817,16 +2791,16 @@ void Hash_Test::testNode() {
         // Tests of Hash::Node constructors with move semantics from ValueType
         const TraceCopies a(1);
         Hash::Node nodeA("a", a);
-        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countCopyConstr);
-        CPPUNIT_ASSERT_EQUAL(1, nodeA.getValue<TraceCopies>().value);
-        CPPUNIT_ASSERT_EQUAL(1, a.value); // not -1 as for a moved away object
+        EXPECT_EQ(1, TraceCopies::countCopyConstr);
+        EXPECT_EQ(1, nodeA.getValue<TraceCopies>().value);
+        EXPECT_EQ(1, a.value); // not -1 as for a moved away object
 
         TraceCopies b(2);
         TraceCopies&& bRval = std::move(b); // std::move is in fact just a cast
         Hash::Node nodeB("b", std::move(bRval));
-        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countCopyConstr);
-        CPPUNIT_ASSERT_EQUAL(2, nodeB.getValue<TraceCopies>().value);
-        CPPUNIT_ASSERT_EQUAL(-1, b.value); // -1 as for a moved away object
+        EXPECT_EQ(1, TraceCopies::countCopyConstr);
+        EXPECT_EQ(2, nodeB.getValue<TraceCopies>().value);
+        EXPECT_EQ(-1, b.value); // -1 as for a moved away object
 
         TraceCopies::reset();
     }
@@ -2835,9 +2809,9 @@ void Hash_Test::testNode() {
         const std::any a(TraceCopies(1));
         TraceCopies::reset(); // Whatever the line before did does not matter...
         Hash::Node nodeA("a", a);
-        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countCopyConstr);
-        CPPUNIT_ASSERT_EQUAL(1, nodeA.getValue<TraceCopies>().value);
-        CPPUNIT_ASSERT_EQUAL(1, std::any_cast<TraceCopies>(a).value); // not -1 as for a moved away object
+        EXPECT_EQ(1, TraceCopies::countCopyConstr);
+        EXPECT_EQ(1, nodeA.getValue<TraceCopies>().value);
+        EXPECT_EQ(1, std::any_cast<TraceCopies>(a).value); // not -1 as for a moved away object
 
         std::any b(TraceCopies(2));
         TraceCopies::reset();            // Whatever the line before did does not matter...
@@ -2845,10 +2819,10 @@ void Hash_Test::testNode() {
         Hash::Node nodeB("b", std::move(bRval));
         // Not copied - in fact it is not moved either (since std::any is moved which seems to swap),
         // but that is an implementation detail we better do not test against.
-        CPPUNIT_ASSERT_EQUAL(0, TraceCopies::countCopyConstr);
-        CPPUNIT_ASSERT_EQUAL(2, nodeB.getValue<TraceCopies>().value);
+        EXPECT_EQ(0, TraceCopies::countCopyConstr);
+        EXPECT_EQ(2, nodeB.getValue<TraceCopies>().value);
         // Next line would throw again due to access to moved-away b
-        // CPPUNIT_ASSERT_EQUAL(-1, std::any_cast<TraceCopies>(b).value);
+        // EXPECT_EQ(-1, std::any_cast<TraceCopies>(b).value);
 
         TraceCopies::reset();
     }

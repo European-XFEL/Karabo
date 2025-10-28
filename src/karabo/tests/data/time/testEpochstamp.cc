@@ -1,6 +1,6 @@
 /*
  *
- * File:   Epochstamp_Test.cc
+ * File:   Epochstamp_Test.hh
  * Author: <luis.maia@xfel.eu>
  *
  * Created on April 19, 2013, 4:47:47 PM
@@ -22,31 +22,28 @@
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#include "Epochstamp_Test.hh"
+#include <gtest/gtest.h>
 
 #include "karabo/data/time/DateTimeString.hh"
+#include "karabo/data/time/Epochstamp.hh"
+#include "karabo/data/time/TimeDuration.hh"
 
-CPPUNIT_TEST_SUITE_REGISTRATION(Epochstamp_Test);
 
 using namespace std;
 using namespace karabo::data;
 
 
-Epochstamp_Test::Epochstamp_Test() {}
+static void toIso8601Precision(const karabo::data::Epochstamp epo, const karabo::data::Epochstamp epo2,
+                               const karabo::data::TIME_UNITS precision, const std::string& precisionDesc,
+                               const bool isCompactString, const bool writeToClog,
+                               const std::string& expectedToIso8601);
 
+static void validateToFormattedString(const std::string& pTime, const std::string& format,
+                                      const std::string& pTimeDesiredTimeZone, const std::string& expectedStringOutput);
 
-Epochstamp_Test::~Epochstamp_Test() {}
-
-
-void Epochstamp_Test::setUp() {}
-
-
-void Epochstamp_Test::tearDown() {}
-
-
-void Epochstamp_Test::validateStringConstructor(const std::string& pTime, const unsigned long long& expectedSeconds,
-                                                const unsigned long long& expectedFractionalSecond,
-                                                bool isCompactString, const std::string& expectedToIso8601) {
+static void validateStringConstructor(const std::string& pTime, const unsigned long long& expectedSeconds,
+                                      const unsigned long long& expectedFractionalSecond, bool isCompactString,
+                                      const std::string& expectedToIso8601) {
     bool writeToClog = false;
 
     if (writeToClog) {
@@ -70,14 +67,14 @@ void Epochstamp_Test::validateStringConstructor(const std::string& pTime, const 
 
     // Validations
     if (writeToClog) std::clog << "epo.getSeconds() => " << epo.getSeconds() << " == " << expectedSeconds << std::endl;
-    CPPUNIT_ASSERT(epo.getSeconds() == expectedSeconds);
-    CPPUNIT_ASSERT(epo2.getSeconds() == expectedSeconds);
+    EXPECT_TRUE(epo.getSeconds() == expectedSeconds);
+    EXPECT_TRUE(epo2.getSeconds() == expectedSeconds);
 
     if (writeToClog)
         std::clog << "epo.getFractionalSeconds() => " << epo.getFractionalSeconds()
                   << " == " << expectedFractionalSecond << std::endl;
-    CPPUNIT_ASSERT(epo.getFractionalSeconds() == expectedFractionalSecond);
-    CPPUNIT_ASSERT(epo2.getFractionalSeconds() == expectedFractionalSecond);
+    EXPECT_TRUE(epo.getFractionalSeconds() == expectedFractionalSecond);
+    EXPECT_TRUE(epo2.getFractionalSeconds() == expectedFractionalSecond);
 
 
     std::string expectedToIso8601Ext = expectedToIso8601 + "Z";
@@ -88,30 +85,30 @@ void Epochstamp_Test::validateStringConstructor(const std::string& pTime, const 
                 std::clog << "[Compact] toIso8601(ATTOSEC) => " << expectedToIso8601
                           << " == " << epo.toIso8601(TIME_UNITS::ATTOSEC)
                           << " == " << epo2.toIso8601(TIME_UNITS::ATTOSEC) << std::endl;
-            CPPUNIT_ASSERT(expectedToIso8601 == epo.toIso8601(TIME_UNITS::ATTOSEC));
-            CPPUNIT_ASSERT(expectedToIso8601 == epo2.toIso8601(TIME_UNITS::ATTOSEC));
+            EXPECT_TRUE(expectedToIso8601 == epo.toIso8601(TIME_UNITS::ATTOSEC));
+            EXPECT_TRUE(expectedToIso8601 == epo2.toIso8601(TIME_UNITS::ATTOSEC));
             //
             if (writeToClog)
                 std::clog << "[Compact] toIso8601Ext(ATTOSEC) => " << expectedToIso8601Ext
                           << " == " << epo.toIso8601Ext(TIME_UNITS::ATTOSEC)
                           << " == " << epo2.toIso8601Ext(TIME_UNITS::ATTOSEC) << std::endl;
-            CPPUNIT_ASSERT(expectedToIso8601Ext == epo.toIso8601Ext(TIME_UNITS::ATTOSEC));
-            CPPUNIT_ASSERT(expectedToIso8601Ext == epo2.toIso8601Ext(TIME_UNITS::ATTOSEC));
+            EXPECT_TRUE(expectedToIso8601Ext == epo.toIso8601Ext(TIME_UNITS::ATTOSEC));
+            EXPECT_TRUE(expectedToIso8601Ext == epo2.toIso8601Ext(TIME_UNITS::ATTOSEC));
         } else {
             // Validate "UNIVERSAL" extended ISO8601 format
             if (writeToClog)
                 std::clog << "[Extended] toIso8601(TIME_UNITS::ATTOSEC) => " << expectedToIso8601
                           << " == " << epo.toIso8601(TIME_UNITS::ATTOSEC)
                           << " == " << epo2.toIso8601(TIME_UNITS::ATTOSEC) << std::endl;
-            CPPUNIT_ASSERT(expectedToIso8601 == epo.toIso8601(TIME_UNITS::ATTOSEC, true));
-            CPPUNIT_ASSERT(expectedToIso8601 == epo2.toIso8601(TIME_UNITS::ATTOSEC, true));
+            EXPECT_TRUE(expectedToIso8601 == epo.toIso8601(TIME_UNITS::ATTOSEC, true));
+            EXPECT_TRUE(expectedToIso8601 == epo2.toIso8601(TIME_UNITS::ATTOSEC, true));
             //
             if (writeToClog)
                 std::clog << "[Extended] toIso8601Ext(TIME_UNITS::ATTOSEC) => " << expectedToIso8601Ext
                           << " == " << epo.toIso8601Ext(TIME_UNITS::ATTOSEC)
                           << " == " << epo2.toIso8601Ext(TIME_UNITS::ATTOSEC) << std::endl;
-            CPPUNIT_ASSERT(expectedToIso8601Ext == epo.toIso8601Ext(TIME_UNITS::ATTOSEC, true));
-            CPPUNIT_ASSERT(expectedToIso8601Ext == epo2.toIso8601Ext(TIME_UNITS::ATTOSEC, true));
+            EXPECT_TRUE(expectedToIso8601Ext == epo.toIso8601Ext(TIME_UNITS::ATTOSEC, true));
+            EXPECT_TRUE(expectedToIso8601Ext == epo2.toIso8601Ext(TIME_UNITS::ATTOSEC, true));
         }
 
         // (i.e. expectedToIso8601 => 20121225T132536.789333123456789123)
@@ -158,18 +155,17 @@ void Epochstamp_Test::validateStringConstructor(const std::string& pTime, const 
     if (writeToClog)
         std::clog << "toTimezone (MICROSEC) => " << epo.toTimestamp() << " == " << epo2.toTimestamp()
                   << " == " << expectedTimestamp << std::endl;
-    CPPUNIT_ASSERT(epo.toTimestamp() == expectedTimestamp);
-    CPPUNIT_ASSERT(epo2.toTimestamp() == expectedTimestamp);
-    CPPUNIT_ASSERT(epo.toTimestamp() == epo2.toTimestamp());
+    EXPECT_TRUE(epo.toTimestamp() == expectedTimestamp);
+    EXPECT_TRUE(epo2.toTimestamp() == expectedTimestamp);
+    EXPECT_TRUE(epo.toTimestamp() == epo2.toTimestamp());
 
     return;
 }
 
 
-void Epochstamp_Test::toIso8601Precision(const karabo::data::Epochstamp epo, const karabo::data::Epochstamp epo2,
-                                         const karabo::data::TIME_UNITS precision, const std::string& precisionDesc,
-                                         const bool isCompactString, const bool writeToClog,
-                                         const std::string& expectedToIso8601) {
+void toIso8601Precision(const karabo::data::Epochstamp epo, const karabo::data::Epochstamp epo2,
+                        const karabo::data::TIME_UNITS precision, const std::string& precisionDesc,
+                        const bool isCompactString, const bool writeToClog, const std::string& expectedToIso8601) {
     // Concatenate function name plus precision description
     std::string functionDesc = "toIso8601Precision >> toIso8601(" + precisionDesc + ") => '";
 
@@ -178,44 +174,44 @@ void Epochstamp_Test::toIso8601Precision(const karabo::data::Epochstamp epo, con
         if (writeToClog)
             std::clog << "[Compact] " << functionDesc << epo.toIso8601(precision) << "' == '"
                       << epo2.toIso8601(precision) << "'" << std::endl;
-        CPPUNIT_ASSERT(epo.toIso8601(precision) == epo2.toIso8601(precision));
+        EXPECT_TRUE(epo.toIso8601(precision) == epo2.toIso8601(precision));
         if (writeToClog)
             std::clog << "[Compact] " << functionDesc << epo.toIso8601(precision) << "' == '" << expectedToIso8601
                       << "'" << std::endl;
-        CPPUNIT_ASSERT(epo.toIso8601(precision) == expectedToIso8601);
+        EXPECT_TRUE(epo.toIso8601(precision) == expectedToIso8601);
         if (writeToClog)
             std::clog << "[Compact] " << functionDesc << epo2.toIso8601(precision) << " == " << expectedToIso8601
                       << std::endl;
-        CPPUNIT_ASSERT(epo2.toIso8601(precision) == expectedToIso8601);
+        EXPECT_TRUE(epo2.toIso8601(precision) == expectedToIso8601);
     } else {
         if (writeToClog)
             std::clog << "[Extended] " << functionDesc << epo.toIso8601(precision, true)
                       << " == " << epo2.toIso8601(precision, true) << std::endl;
-        CPPUNIT_ASSERT(epo.toIso8601(precision, true) == epo2.toIso8601(precision, true));
+        EXPECT_TRUE(epo.toIso8601(precision, true) == epo2.toIso8601(precision, true));
         if (writeToClog)
             std::clog << "[Extended] " << functionDesc << epo.toIso8601(precision, true) << " == " << expectedToIso8601
                       << std::endl;
-        CPPUNIT_ASSERT(epo.toIso8601(precision, true) == expectedToIso8601);
+        EXPECT_TRUE(epo.toIso8601(precision, true) == expectedToIso8601);
         if (writeToClog)
             std::clog << "[Extended] " << functionDesc << epo2.toIso8601(precision, true) << " == " << expectedToIso8601
                       << std::endl;
-        CPPUNIT_ASSERT(epo2.toIso8601(precision, true) == expectedToIso8601);
+        EXPECT_TRUE(epo2.toIso8601(precision, true) == expectedToIso8601);
     }
 
     return;
 }
 
 
-void Epochstamp_Test::testConstructors() {
+TEST(TestEpochstamp, testConstructors) {
     int sleepDelay = 1;
 
     // Validate the NULL constructor that use NOW
     karabo::data::Epochstamp t01 = karabo::data::Epochstamp();
     sleep(sleepDelay);
     karabo::data::Epochstamp t02 = karabo::data::Epochstamp();
-    CPPUNIT_ASSERT(t01.getSeconds() + sleepDelay == t02.getSeconds());
-    CPPUNIT_ASSERT(t01.getFractionalSeconds() != t02.getFractionalSeconds());
-    CPPUNIT_ASSERT(t01.getTime() != t02.getTime());
+    EXPECT_TRUE(t01.getSeconds() + sleepDelay == t02.getSeconds());
+    EXPECT_TRUE(t01.getFractionalSeconds() != t02.getFractionalSeconds());
+    EXPECT_TRUE(t01.getTime() != t02.getTime());
 
     // Validate the seconds + fractionalSeconds constructor
     karabo::data::Epochstamp t03 = karabo::data::Epochstamp();
@@ -223,20 +219,20 @@ void Epochstamp_Test::testConstructors() {
     const unsigned long long& fraqs = t03.getFractionalSeconds();
     karabo::data::Epochstamp t04 = karabo::data::Epochstamp(secs, fraqs);
 
-    CPPUNIT_ASSERT(t03.getSeconds() == t04.getSeconds());
-    CPPUNIT_ASSERT(t03.getFractionalSeconds() == t04.getFractionalSeconds());
-    CPPUNIT_ASSERT(t03.getTime() == t04.getTime());
+    EXPECT_TRUE(t03.getSeconds() == t04.getSeconds());
+    EXPECT_TRUE(t03.getFractionalSeconds() == t04.getFractionalSeconds());
+    EXPECT_TRUE(t03.getTime() == t04.getTime());
 
     // Validate the "time_t" constructor
     const time_t& tm03 = t03.getTime();
     karabo::data::Epochstamp t05 = karabo::data::Epochstamp(tm03);
 
-    CPPUNIT_ASSERT(t03.getSeconds() == t05.getSeconds());
-    CPPUNIT_ASSERT(t04.getSeconds() == t05.getSeconds());
-    CPPUNIT_ASSERT(t05.getFractionalSeconds() == 0);
-    CPPUNIT_ASSERT(t03.getFractionalSeconds() != t05.getFractionalSeconds());
-    CPPUNIT_ASSERT(t03.getTime() == t05.getTime());
-    CPPUNIT_ASSERT(t04.getTime() == t05.getTime());
+    EXPECT_TRUE(t03.getSeconds() == t05.getSeconds());
+    EXPECT_TRUE(t04.getSeconds() == t05.getSeconds());
+    EXPECT_TRUE(t05.getFractionalSeconds() == 0);
+    EXPECT_TRUE(t03.getFractionalSeconds() != t05.getFractionalSeconds());
+    EXPECT_TRUE(t03.getTime() == t05.getTime());
+    EXPECT_TRUE(t04.getTime() == t05.getTime());
 
     // Validate the "timespec" constructor
     timespec ts06;
@@ -246,16 +242,16 @@ void Epochstamp_Test::testConstructors() {
     ts06.tv_nsec = t03.getFractionalSeconds() / 1000000000;
     karabo::data::Epochstamp t06 = karabo::data::Epochstamp(ts06);
 
-    CPPUNIT_ASSERT(t03.getSeconds() == t06.getSeconds());
-    CPPUNIT_ASSERT(t04.getSeconds() == t06.getSeconds());
-    CPPUNIT_ASSERT(t05.getSeconds() == t06.getSeconds());
-    CPPUNIT_ASSERT(t03.getTime() == t06.getTime());
-    CPPUNIT_ASSERT(t04.getTime() == t06.getTime());
-    CPPUNIT_ASSERT(t05.getTime() == t06.getTime());
+    EXPECT_TRUE(t03.getSeconds() == t06.getSeconds());
+    EXPECT_TRUE(t04.getSeconds() == t06.getSeconds());
+    EXPECT_TRUE(t05.getSeconds() == t06.getSeconds());
+    EXPECT_TRUE(t03.getTime() == t06.getTime());
+    EXPECT_TRUE(t04.getTime() == t06.getTime());
+    EXPECT_TRUE(t05.getTime() == t06.getTime());
 
-    CPPUNIT_ASSERT(t03.getFractionalSeconds() == t06.getFractionalSeconds());
-    CPPUNIT_ASSERT(t04.getFractionalSeconds() == t06.getFractionalSeconds());
-    CPPUNIT_ASSERT(t05.getFractionalSeconds() != t06.getFractionalSeconds());
+    EXPECT_TRUE(t03.getFractionalSeconds() == t06.getFractionalSeconds());
+    EXPECT_TRUE(t04.getFractionalSeconds() == t06.getFractionalSeconds());
+    EXPECT_TRUE(t05.getFractionalSeconds() != t06.getFractionalSeconds());
 
 
     /*
@@ -313,7 +309,7 @@ void Epochstamp_Test::testConstructors() {
 }
 
 
-void Epochstamp_Test::testOperators() {
+TEST(TestEpochstamp, testOperators) {
     const TimeValue point1secInAtto = 100'000'000'000'000'000ull;
     const TimeValue point2secInAtto = 200'000'000'000'000'000ull;
     const TimeValue point4secInAtto = 400'000'000'000'000'000ull;
@@ -333,52 +329,52 @@ void Epochstamp_Test::testOperators() {
     // Test sums - with atto seconds sum below, above and exactly one second,
     // for each test operator +(TimeDuration) and operator +=(TimeDuration).
     const Epochstamp sum24 = e2 + d4;
-    CPPUNIT_ASSERT(sum24.getSeconds() == 157ull);
-    CPPUNIT_ASSERT(sum24.getFractionalSeconds() == point2secInAtto + point4secInAtto);
+    EXPECT_TRUE(sum24.getSeconds() == 157ull);
+    EXPECT_TRUE(sum24.getFractionalSeconds() == point2secInAtto + point4secInAtto);
     Epochstamp sum24_2(e2);
     sum24_2 += d4;
-    CPPUNIT_ASSERT(sum24_2 == sum24);
+    EXPECT_TRUE(sum24_2 == sum24);
 
     const Epochstamp sum29 = e2 + d9;
-    CPPUNIT_ASSERT(sum29.getSeconds() == 169ull);
-    CPPUNIT_ASSERT(sum29.getFractionalSeconds() == point1secInAtto);
+    EXPECT_TRUE(sum29.getSeconds() == 169ull);
+    EXPECT_TRUE(sum29.getFractionalSeconds() == point1secInAtto);
     Epochstamp sum29_2(e2);
     sum29_2 += d9;
-    CPPUNIT_ASSERT(sum29_2 == sum29);
+    EXPECT_TRUE(sum29_2 == sum29);
 
     const Epochstamp sum19 = e1 + d9;
-    CPPUNIT_ASSERT_EQUAL(97ull, sum19.getSeconds());
-    CPPUNIT_ASSERT_EQUAL(0ull, sum19.getFractionalSeconds());
+    EXPECT_EQ(97ull, sum19.getSeconds());
+    EXPECT_EQ(0ull, sum19.getFractionalSeconds());
     Epochstamp sum19_2(e1);
     sum19_2 += d9;
-    CPPUNIT_ASSERT(sum19_2 == sum19);
+    EXPECT_TRUE(sum19_2 == sum19);
 
     // Test diffs - with second argument's fractions larger or smaller than those of the first argument,
     // for each test operator -(TimeDuration) and operator -=(TimeDuration),
     // but here we also have operator - (Epochstamp).
     const Epochstamp diff92 = e9 - d2;
-    CPPUNIT_ASSERT(diff92.getSeconds() == 8ull);
-    CPPUNIT_ASSERT(diff92.getFractionalSeconds() == point7secInAtto);
+    EXPECT_TRUE(diff92.getSeconds() == 8ull);
+    EXPECT_TRUE(diff92.getFractionalSeconds() == point7secInAtto);
     Epochstamp diff92_2(e9);
     diff92_2 -= d2;
-    CPPUNIT_ASSERT(diff92_2 == diff92);
+    EXPECT_TRUE(diff92_2 == diff92);
     const TimeDuration diff92_d = e9 - e2;
-    CPPUNIT_ASSERT(diff92_d.getTotalSeconds() == 8ull);
-    CPPUNIT_ASSERT(diff92_d.getFractions(TIME_UNITS::ATTOSEC) == point7secInAtto);
+    EXPECT_TRUE(diff92_d.getTotalSeconds() == 8ull);
+    EXPECT_TRUE(diff92_d.getFractions(TIME_UNITS::ATTOSEC) == point7secInAtto);
     // TimeDuration is always positive (it's a duration, not a diff!), i.e. e2 - e9 == e9 - e2:
-    CPPUNIT_ASSERT(e2 - e9 == diff92_d);
+    EXPECT_TRUE(e2 - e9 == diff92_d);
 
     const Epochstamp diff24 = e2 - d4;
-    CPPUNIT_ASSERT(diff24.getSeconds() == 2ull);
-    CPPUNIT_ASSERT(diff24.getFractionalSeconds() == point8secInAtto);
+    EXPECT_TRUE(diff24.getSeconds() == 2ull);
+    EXPECT_TRUE(diff24.getFractionalSeconds() == point8secInAtto);
     Epochstamp diff24_2(e2);
     diff24_2 -= d4;
-    CPPUNIT_ASSERT(diff24_2 == diff24);
+    EXPECT_TRUE(diff24_2 == diff24);
     const TimeDuration diff24_d = e2 - e4;
-    CPPUNIT_ASSERT(diff24_d.getTotalSeconds() == 2ull);
-    CPPUNIT_ASSERT(diff24_d.getFractions(TIME_UNITS::ATTOSEC) == point8secInAtto);
+    EXPECT_TRUE(diff24_d.getTotalSeconds() == 2ull);
+    EXPECT_TRUE(diff24_d.getFractions(TIME_UNITS::ATTOSEC) == point8secInAtto);
     // See above about positiveness of TimeDuration...
-    CPPUNIT_ASSERT(e4 - e2 == diff24_d);
+    EXPECT_TRUE(e4 - e2 == diff24_d);
 
     // Tests missing for the following operators:
     // o >, >=, <, <= (these are probably OK),
@@ -387,7 +383,7 @@ void Epochstamp_Test::testOperators() {
 }
 
 
-void Epochstamp_Test::testToIso8601String() {
+TEST(TestEpochstamp, testToIso8601String) {
     // Validate "UNIVERSAL" compact ISO8601 format
     validateStringConstructor("20121225T132536.789333123456789123", 1'356'441'936ULL, 789'333'123'456'789'123ULL, true,
                               "20121225T132536.789333123456789123");
@@ -424,9 +420,8 @@ void Epochstamp_Test::testToIso8601String() {
 }
 
 
-void Epochstamp_Test::validateToFormattedString(const std::string& pTime, const std::string& format,
-                                                const std::string& pTimeDesiredTimeZone,
-                                                const std::string& expectedStringOutput) {
+void validateToFormattedString(const std::string& pTime, const std::string& format,
+                               const std::string& pTimeDesiredTimeZone, const std::string& expectedStringOutput) {
     bool writeToClog = false;
     std::string utcTimeZone = "Z"; //"UTC" == "Z"
     std::string localeNameUS = "en_US.UTF-8";
@@ -476,13 +471,13 @@ void Epochstamp_Test::validateToFormattedString(const std::string& pTime, const 
     if (writeToClog)
         std::clog << "epo.toFormattedString('" << format << "', '" << pTimeDesiredTimeZone << "') => "
                   << returnFormatedString << " == " << expectedStringOutput << std::endl;
-    CPPUNIT_ASSERT(returnFormatedString == expectedStringOutput);
+    EXPECT_TRUE(returnFormatedString == expectedStringOutput);
 }
 
 
-void Epochstamp_Test::testToFormattedString() {
-    // This test can only be run in LINUX since C++ locale support seems completely broken on MAC OSX
-    // The solution to make locale works in OSX passes for CLANG use
+TEST(TestEpochstamp, testToFormattedString) {
+// This test can only be run in LINUX since C++ locale support seems completely broken on MAC OSX
+// The solution to make locale works in OSX passes for CLANG use
 #ifdef __MACH__
     std::string pTime = "20121225T132536.789333123456789123";
     std::string utcTimeZone = "Z"; //"UTC" == "Z"

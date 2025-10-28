@@ -16,17 +16,28 @@
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
 /*
- * File:   Serializable_Test.cc
+ * File:   Serializable_Test.h
  * Author: heisenb
  *
  * Created on August 5, 2016, 12:13 PM
  */
 
-#include "Serializable_Test.h"
+#include <gtest/gtest.h>
 
 #include "karabo/data/types/Hash.hh"
 
-CPPUNIT_TEST_SUITE_REGISTRATION(Serializable_Test);
+
+class FancyData : protected karabo::data::Hash {
+   public:
+    typedef karabo::data::Hash type;
+
+    KARABO_CLASSINFO(FancyData, "FancyData", "1.0");
+
+    void setScalar(const int value);
+
+    const int& getScalar() const;
+};
+
 
 using namespace karabo::data;
 using namespace std;
@@ -42,13 +53,7 @@ const int& FancyData::getScalar() const {
 }
 
 
-Serializable_Test::Serializable_Test() {}
-
-
-Serializable_Test::~Serializable_Test() {}
-
-
-void Serializable_Test::testMethod() {
+TEST(TestSerializable, testMethod) {
     FancyData fd1;
     fd1.setScalar(2);
 
@@ -56,25 +61,25 @@ void Serializable_Test::testMethod() {
     h.set("fd1", fd1); // Here the original object on the stack is copied
     h.set("h1", Hash("someRegular", "hash"));
 
-    CPPUNIT_ASSERT(h.get<FancyData>("fd1").getScalar() == 2);
+    EXPECT_TRUE(h.get<FancyData>("fd1").getScalar() == 2);
 
     // The classId is automatically added as attribute
-    CPPUNIT_ASSERT(h.getAttribute<string>("fd1", KARABO_HASH_CLASS_ID) == "FancyData");
+    EXPECT_TRUE(h.getAttribute<string>("fd1", KARABO_HASH_CLASS_ID) == "FancyData");
 
     // This doesn't not happen for plain nested hashes
-    CPPUNIT_ASSERT(h.hasAttribute("h1", KARABO_HASH_CLASS_ID) == false);
+    EXPECT_TRUE(h.hasAttribute("h1", KARABO_HASH_CLASS_ID) == false);
 
     h.get<FancyData>("fd1").setScalar(-2);
-    CPPUNIT_ASSERT(fd1.getScalar() == 2);
+    EXPECT_TRUE(fd1.getScalar() == 2);
 
     // Here a copy is done
     FancyData fd2 = h.get<FancyData>("fd1");
     fd2.setScalar(1);
 
-    CPPUNIT_ASSERT(fd2.getScalar() == 1);
-    CPPUNIT_ASSERT(h.get<FancyData>("fd1").getScalar() == -2);
+    EXPECT_TRUE(fd2.getScalar() == 1);
+    EXPECT_TRUE(h.get<FancyData>("fd1").getScalar() == -2);
 
     // But the one in the hash
     const FancyData& fd3 = h.get<FancyData>("fd1");
-    CPPUNIT_ASSERT(fd3.getScalar() == -2);
+    EXPECT_TRUE(fd3.getScalar() == -2);
 }
