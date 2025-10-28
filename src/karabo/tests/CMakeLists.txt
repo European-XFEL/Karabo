@@ -114,11 +114,11 @@ add_test(NAME dataIoTestRunner COMMAND dataIoTestRunner testresults/dataIoTestRu
 
 file(GLOB logTestRunner_FILES CMAKE_CONFIGURE_DEPENDS
      "${CMAKE_CURRENT_SOURCE_DIR}/log/*.cc")
-list(APPEND logTestRunner_FILES $<TARGET_OBJECTS:TEST_RUNNER_NOLOOP>)
+list(APPEND logTestRunner_FILES $<TARGET_OBJECTS:GTEST_RUNNER_NOLOOP>)
 
 add_executable(logTestRunner ${karaboLog_FILES} ${dataTypes_FILES} ${dataSchema_FILES} ${dataTime_FILES} ${logTestRunner_FILES})
 target_compile_options(logTestRunner PRIVATE -DKARABO_TESTPATH=\"${CMAKE_CURRENT_SOURCE_DIR}/\")
-target_link_libraries(logTestRunner spdlog::spdlog cppunit::cppunit)
+target_link_libraries(logTestRunner spdlog::spdlog GTest::gtest)
 target_include_directories(logTestRunner PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../..")
 add_test(NAME logTestRunner COMMAND logTestRunner testresults/logTestRunner.xml)
 

@@ -22,35 +22,54 @@
  * Created on Mar 14, 2013, 12:24:04 PM
  */
 
-#include "Logger_Test.hh"
+#include <gtest/gtest.h>
 
 #include <karabo/log/Logger.hh>
 
 #include "karabo/data/io/Input.hh"
+#include "karabo/data/schema/Configurator.hh"
+#include "karabo/data/schema/NodeElement.hh"
+
+class LogSomething {
+   public:
+    KARABO_CLASSINFO(LogSomething, "LogSomething", "")
+
+    static void expectedParameters(karabo::data::Schema& expected) {
+        using namespace karabo::data;
+
+        NODE_ELEMENT(expected)
+              .key("log")
+              .displayedName("Logger")
+              .description("Logger configuration")
+              .appendParametersOf<karabo::log::Logger>()
+              .commit();
+    }
+
+    LogSomething(const karabo::data::Hash& input) {
+        using namespace karabo::log;
+        Logger::configure(input.get<karabo::data::Hash>("log"));
+        Logger::useConsole();
+    }
+
+    virtual ~LogSomething() {}
+
+    void doSomeLogging() {
+        KARABO_LOG_FRAMEWORK_DEBUG << "ERROR";
+        KARABO_LOG_FRAMEWORK_INFO << "ERROR";
+        KARABO_LOG_FRAMEWORK_WARN << "OK";
+        KARABO_LOG_FRAMEWORK_ERROR << "OK";
+    }
+};
 
 using namespace std;
 using namespace karabo::log;
 using namespace karabo::data;
 
-CPPUNIT_TEST_SUITE_REGISTRATION(Logger_Test);
-
 
 KARABO_REGISTER_FOR_CONFIGURATION(LogSomething)
 
 
-Logger_Test::Logger_Test() {}
-
-
-Logger_Test::~Logger_Test() {}
-
-
-void Logger_Test::setUp() {}
-
-
-void Logger_Test::tearDown() {}
-
-
-void Logger_Test::test1() {
+TEST(TestLogger, test1) {
     // We are chatty in this test
     // But the idea is to only see OKs and never ERROR
     // There is no ASSERT unfortunately, so this test needs visual inspection
@@ -115,10 +134,12 @@ void Logger_Test::test1() {
     Logger::info("", "{}", "ERROR");
     Logger::info("a1", "{}", "ERROR");
     Logger::info("a1.a2", "{}", "ERROR");
+
+    EXPECT_TRUE(true);
 }
 
 
-void Logger_Test::test2() {
+TEST(TestLogger, test2) {
     Logger::reset();
     Hash config("level", "INFO");
     Logger::configure(config);
@@ -136,24 +157,27 @@ void Logger_Test::test2() {
     LoggerStream("", spdlog::level::info) << "CONSOLE-OK";
     LoggerStream("a1", spdlog::level::info) << "FILE-OK";
     LoggerStream("a1.a2", spdlog::level::info) << "FILE-OK";
+
+    EXPECT_TRUE(true);
 }
 
 
-void Logger_Test::testInClassLogging() {
+TEST(TestLogger, testInClassLogging) {
     Logger::reset();
     Hash config("log.level", "WARN");
     auto p = Configurator<LogSomething>::create("LogSomething", config);
     p->doSomeLogging();
+    EXPECT_TRUE(true);
 }
 
 
-void Logger_Test::testLastMessages() {
+TEST(TestLogger, testLastMessages) {
     Logger::reset();
 
     // calling Logger::getCachedContent before calling Logger::useCache is legal
     // but an empty vector is returned.
     std::vector<Hash> content = Logger::getCachedContent(10);
-    CPPUNIT_ASSERT_EQUAL(0ul, content.size());
+    EXPECT_EQ(0ul, content.size());
 
     // set up the Logger
     const unsigned int maxMsgs = 20;
@@ -163,7 +187,7 @@ void Logger_Test::testLastMessages() {
 
     // calling Logger::getCachedContent before logging will get an empty vector
     content = Logger::getCachedContent(10);
-    CPPUNIT_ASSERT_EQUAL(0ul, content.size());
+    EXPECT_EQ(0ul, content.size());
 
     // log something
     for (int i = 0; i < 100; i++) {
@@ -174,29 +198,29 @@ void Logger_Test::testLastMessages() {
     // get the last 10 entries
     content = Logger::getCachedContent(10u);
 
-    CPPUNIT_ASSERT_EQUAL(10ul, content.size());
+    EXPECT_EQ(10ul, content.size());
     int index = 90;
     for (const Hash& entry : content) {
         // check that the timestamp is in, but do not check
-        CPPUNIT_ASSERT(entry.has("timestamp"));
-        CPPUNIT_ASSERT_EQUAL(std::string("INFORMATIVE_STUFF"), entry.get<std::string>("category"));
-        CPPUNIT_ASSERT_EQUAL(std::string("INFO"), entry.get<std::string>("type"));
+        EXPECT_TRUE(entry.has("timestamp"));
+        EXPECT_STREQ("INFORMATIVE_STUFF", entry.get<std::string>("category").c_str());
+        EXPECT_STREQ("INFO", entry.get<std::string>("type").c_str());
         std::ostringstream expected;
         expected << "line - " << index++;
-        CPPUNIT_ASSERT_EQUAL(expected.str(), entry.get<std::string>("message"));
+        EXPECT_STREQ(expected.str().c_str(), entry.get<std::string>("message").c_str());
     }
 
     // One can request more than the max config["cache.maxNumMessages"] but will not get more than that
     content = Logger::getCachedContent(200);
-    CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(maxMsgs), content.size());
+    EXPECT_EQ(static_cast<size_t>(maxMsgs), content.size());
     index = 100 - maxMsgs;
     for (const Hash& entry : content) {
         // check that the timestamp is in, but do not check
-        CPPUNIT_ASSERT(entry.has("timestamp"));
-        CPPUNIT_ASSERT_EQUAL(std::string("INFORMATIVE_STUFF"), entry.get<std::string>("category"));
-        CPPUNIT_ASSERT_EQUAL(std::string("INFO"), entry.get<std::string>("type"));
+        EXPECT_TRUE(entry.has("timestamp"));
+        EXPECT_STREQ("INFORMATIVE_STUFF", entry.get<std::string>("category").c_str());
+        EXPECT_STREQ("INFO", entry.get<std::string>("type").c_str());
         std::ostringstream expected;
         expected << "line - " << index++;
-        CPPUNIT_ASSERT_EQUAL(expected.str(), entry.get<std::string>("message"));
+        EXPECT_STREQ(expected.str().c_str(), entry.get<std::string>("message").c_str());
     }
 }
