@@ -1,0 +1,85 @@
+/*
+ * This file is part of Karabo.
+ *
+ * http://www.karabo.eu
+ *
+ * Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
+ *
+ * Karabo is free software: you can redistribute it and/or modify it under
+ * the terms of the MPL-2 Mozilla Public License.
+ *
+ * You should have received a copy of the MPL-2 Public License along with
+ * Karabo. If not, see <https://www.mozilla.org/en-US/MPL/2.0/>.
+ *
+ * Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
+ */
+/*
+ * File:   Serializable_Test.h
+ * Author: heisenb
+ *
+ * Created on August 5, 2016, 12:13 PM
+ */
+
+#include <gtest/gtest.h>
+
+#include "karabo/data/types/Hash.hh"
+
+
+class FancyData : protected karabo::data::Hash {
+   public:
+    typedef karabo::data::Hash type;
+
+    KARABO_CLASSINFO(FancyData, "FancyData", "1.0");
+
+    void setScalar(const int value);
+
+    const int& getScalar() const;
+};
+
+
+using namespace karabo::data;
+using namespace std;
+
+
+void FancyData::setScalar(const int value) {
+    set("scalar", value);
+}
+
+
+const int& FancyData::getScalar() const {
+    return get<int>("scalar");
+}
+
+
+TEST(TestSerializable, testMethod) {
+    FancyData fd1;
+    fd1.setScalar(2);
+
+    Hash h;
+    h.set("fd1", fd1); // Here the original object on the stack is copied
+    h.set("h1", Hash("someRegular", "hash"));
+
+    EXPECT_TRUE(h.get<FancyData>("fd1").getScalar() == 2);
+
+    // The classId is automatically added as attribute
+    EXPECT_TRUE(h.getAttribute<string>("fd1", KARABO_HASH_CLASS_ID) == "FancyData");
+
+    // This doesn't not happen for plain nested hashes
+    EXPECT_TRUE(h.hasAttribute("h1", KARABO_HASH_CLASS_ID) == false);
+
+    h.get<FancyData>("fd1").setScalar(-2);
+    EXPECT_TRUE(fd1.getScalar() == 2);
+
+    // Here a copy is done
+    FancyData fd2 = h.get<FancyData>("fd1");
+    fd2.setScalar(1);
+
+    EXPECT_TRUE(fd2.getScalar() == 1);
+    EXPECT_TRUE(h.get<FancyData>("fd1").getScalar() == -2);
+
+    // But the one in the hash
+    const FancyData& fd3 = h.get<FancyData>("fd1");
+    EXPECT_TRUE(fd3.getScalar() == -2);
+}
