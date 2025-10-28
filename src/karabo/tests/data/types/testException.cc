@@ -16,23 +16,15 @@
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
 /*
- * File:   Exception_Test.cc
+ * File:   Exception_Test.hh
  * Author: heisenb
  *
  * Created on September 29, 2016, 5:28 PM
  */
 
-#include "Exception_Test.hh"
+#include <gtest/gtest.h>
 
 #include "karabo/data/types/Exception.hh"
-
-CPPUNIT_TEST_SUITE_REGISTRATION(Exception_Test);
-
-
-Exception_Test::Exception_Test() {}
-
-
-Exception_Test::~Exception_Test() {}
 
 void doNestedThrow() {
     try {
@@ -48,14 +40,14 @@ void doNestedThrow() {
 }
 
 
-void Exception_Test::testMethod() {
-    CPPUNIT_ASSERT_THROW(throw KARABO_LOGIC_EXCEPTION("Some message"), karabo::data::LogicException);
-    CPPUNIT_ASSERT_THROW(throw KARABO_LOGIC_EXCEPTION("Some message"), karabo::data::Exception);
+TEST(TestException, testMethod) {
+    EXPECT_THROW(throw KARABO_LOGIC_EXCEPTION("Some message"), karabo::data::LogicException);
+    EXPECT_THROW(throw KARABO_LOGIC_EXCEPTION("Some message"), karabo::data::Exception);
     try {
         throw KARABO_LOGIC_EXCEPTION("error");
     } catch (const std::exception& e) {
         std::string expected("1. Exception =====>  {");
-        CPPUNIT_ASSERT(std::string(e.what(), expected.size()) == expected);
+        EXPECT_TRUE(std::string(e.what(), expected.size()) == expected);
     }
 
     // Test more output.
@@ -63,8 +55,8 @@ void Exception_Test::testMethod() {
     try {
         throw KARABO_SIGNALSLOT_EXCEPTION("A nasty problem");
     } catch (const karabo::data::Exception& e) {
-        CPPUNIT_ASSERT_EQUAL(std::string("SignalSlot Exception"), e.type());
-        CPPUNIT_ASSERT_EQUAL(std::string("A nasty problem"), e.userFriendlyMsg());
+        EXPECT_EQ(std::string("SignalSlot Exception"), e.type());
+        EXPECT_EQ(std::string("A nasty problem"), e.userFriendlyMsg());
         const std::string details(e.detailedMsg());
         // Detailed message looks like this:
         // 1. Exception =====>  {
@@ -74,32 +66,30 @@ void Exception_Test::testMethod() {
         //     Function..........:  void Exception_Test::testMethod()
         //     Line Number.......:  34
         //     Timestamp.........:  2021-Dec-16 15:17:44.697660
-        CPPUNIT_ASSERT_MESSAGE(details, details.find("1. Exception =====>  {") != std::string::npos);
-        CPPUNIT_ASSERT_MESSAGE(details,
-                               details.find("    Exception Type....:  SignalSlot Exception") != std::string::npos);
-        CPPUNIT_ASSERT_MESSAGE(details, details.find("    Message...........:  A nasty problem") != std::string::npos);
-        CPPUNIT_ASSERT_MESSAGE(
-              details, details.find("    File..............:  ") != std::string::npos); // Don't mind file if test moved
-        CPPUNIT_ASSERT_MESSAGE(details, details.find("    Function..........:  ") != std::string::npos); // nor method
-        CPPUNIT_ASSERT_MESSAGE(details,
-                               details.find("    Line Number.......:  ") != std::string::npos); // nor line number
-        CPPUNIT_ASSERT_MESSAGE(details, details.find("    Timestamp.........:  2") !=
-                                              std::string::npos); // and for sure not date except millenium
+        EXPECT_TRUE(details.find("1. Exception =====>  {") != std::string::npos) << details;
+        EXPECT_TRUE(details.find("    Exception Type....:  SignalSlot Exception") != std::string::npos) << details;
+        EXPECT_TRUE(details.find("    Message...........:  A nasty problem") != std::string::npos) << details;
+        EXPECT_TRUE(details.find("    File..............:  ") != std::string::npos)
+              << details; // Don't mind file if test moved
+        EXPECT_TRUE(details.find("    Function..........:  ") != std::string::npos) << details; // nor method
+        EXPECT_TRUE(details.find("    Line Number.......:  ") != std::string::npos) << details; // nor line number
+        EXPECT_TRUE(details.find("    Timestamp.........:  2") != std::string::npos)
+              << details; // and for sure not date except millenium
 
-        CPPUNIT_ASSERT_EQUAL(std::string(e.what()), details);
+        EXPECT_STREQ(e.what(), details.c_str());
     } catch (...) {
-        CPPUNIT_ASSERT_MESSAGE("Expected exception not thrown", false);
+        EXPECT_TRUE(false) << "Expected exception not thrown";
     }
 
     // Rethrow and tracing
     try {
         doNestedThrow();
     } catch (const karabo::data::Exception& e) {
-        CPPUNIT_ASSERT_EQUAL(std::string("Propagated Exception"), e.type());
+        EXPECT_STREQ("Propagated Exception", e.type().c_str());
         // Outer most rethrow without extra message
         // User friendly message skips message-less exceptions, but otherwise we get a new line for each with an
         // indented "because: " prefix
-        CPPUNIT_ASSERT_EQUAL(std::string("Propagated\n  because: A casting problem"), e.userFriendlyMsg(false));
+        EXPECT_STREQ("Propagated\n  because: A casting problem", e.userFriendlyMsg(false).c_str());
 
         const std::string details = e.detailedMsg();
         // Detailed message looks e.g. like this:
@@ -154,46 +144,46 @@ void Exception_Test::testMethod() {
         const size_t line3 = details.find("          Line Number.......:  ");   // skip exact number
         const size_t stamp3 = details.find("          Timestamp.........:  2"); // skip date except millenium
 
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(details, 0ul, exceptWith);
+        EXPECT_EQ(0ul, exceptWith) << details;
         // For the following message parts just test that order is as expected.
         // NOTE: If some text would not be found, find(..) returns std::string::npos wich is the biggest possible
         // size_t, i.e. the
         //       test with it on the right hand side would still succeed, but the next test with it on the left would
         //       fail.
-        CPPUNIT_ASSERT_GREATER(exceptWith, except1);
-        CPPUNIT_ASSERT_GREATER(except1, type1);
-        CPPUNIT_ASSERT_GREATER(type1, mesg1);
-        CPPUNIT_ASSERT_GREATER(mesg1, file1);
-        CPPUNIT_ASSERT_GREATER(file1, func1);
-        CPPUNIT_ASSERT_GREATER(func1, line1);
-        CPPUNIT_ASSERT_GREATER(line1, stamp1);
+        EXPECT_GT(except1, exceptWith);
+        EXPECT_GT(type1, except1);
+        EXPECT_GT(mesg1, type1);
+        EXPECT_GT(file1, mesg1);
+        EXPECT_GT(func1, file1);
+        EXPECT_GT(line1, func1);
+        EXPECT_GT(stamp1, line1);
 
-        CPPUNIT_ASSERT_GREATER(stamp1, except2);
-        CPPUNIT_ASSERT_GREATER(except2, type2);
-        CPPUNIT_ASSERT_GREATER(type2, mesg2);
-        CPPUNIT_ASSERT_GREATER(mesg2, file2);
-        CPPUNIT_ASSERT_GREATER(file2, func2);
-        CPPUNIT_ASSERT_GREATER(func2, line2);
-        CPPUNIT_ASSERT_GREATER(line2, stamp2);
+        EXPECT_LT(stamp1, except2);
+        EXPECT_LT(except2, type2);
+        EXPECT_LT(type2, mesg2);
+        EXPECT_LT(mesg2, file2);
+        EXPECT_LT(file2, func2);
+        EXPECT_LT(func2, line2);
+        EXPECT_LT(line2, stamp2);
 
-        CPPUNIT_ASSERT_GREATER(stamp2, except3);
-        CPPUNIT_ASSERT_GREATER(except3, type3);
+        EXPECT_LT(stamp2, except3);
+        EXPECT_LT(except3, type3);
         // Default propagated exception from rethrow has no message
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(details, std::string::npos, mesg3);
-        CPPUNIT_ASSERT_GREATER(type3, file3);
-        CPPUNIT_ASSERT_GREATER(file3, func3);
-        CPPUNIT_ASSERT_GREATER(func3, line3);
-        CPPUNIT_ASSERT_GREATER(line3, stamp3);
+        EXPECT_EQ(std::string::npos, mesg3) << details;
+        EXPECT_LT(type3, file3);
+        EXPECT_LT(file3, func3);
+        EXPECT_LT(func3, line3);
+        EXPECT_LT(line3, stamp3);
         // The last one we have to check explicitly against npos:
-        CPPUNIT_ASSERT_MESSAGE(details, std::string::npos != stamp3);
+        EXPECT_TRUE(std::string::npos != stamp3) << details;
 
         // Involved exceptions do not have details:
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(details, std::string::npos, details.find("Details...........:"));
+        EXPECT_EQ(std::string::npos, details.find("Details...........:")) << details;
 
         // Call to detailedMsg() cleared the exception stack trace, so we cannot just test details == e.what().
         // Instead we need to test the details twice.
     } catch (...) {
-        CPPUNIT_ASSERT_MESSAGE("Expected exception not thrown", false);
+        EXPECT_TRUE(false) << "Expected exception not thrown";
     }
 
     try {
@@ -253,101 +243,101 @@ void Exception_Test::testMethod() {
         const size_t line3 = details.find("          Line Number.......:  ");   // skip exact number
         const size_t stamp3 = details.find("          Timestamp.........:  2"); // skip date except millenium
 
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(details, 0ul, exceptWith);
+        EXPECT_EQ(0ul, exceptWith) << details;
         // For the following message parts just test that order is as expected.
         // NOTE: If some text would not be found, find(..) returns std::string::npos wich is the biggest possible
         // size_t, i.e. the
         //       test with it on the right hand side would still succeed, but the next test with it on the left would
         //       fail.
-        CPPUNIT_ASSERT_GREATER(exceptWith, except1);
-        CPPUNIT_ASSERT_GREATER(except1, type1);
-        CPPUNIT_ASSERT_GREATER(type1, mesg1);
-        CPPUNIT_ASSERT_GREATER(mesg1, file1);
-        CPPUNIT_ASSERT_GREATER(file1, func1);
-        CPPUNIT_ASSERT_GREATER(func1, line1);
-        CPPUNIT_ASSERT_GREATER(line1, stamp1);
+        EXPECT_LT(exceptWith, except1);
+        EXPECT_LT(except1, type1);
+        EXPECT_LT(type1, mesg1);
+        EXPECT_LT(mesg1, file1);
+        EXPECT_LT(file1, func1);
+        EXPECT_LT(func1, line1);
+        EXPECT_LT(line1, stamp1);
 
-        CPPUNIT_ASSERT_GREATER(stamp1, except2);
-        CPPUNIT_ASSERT_GREATER(except2, type2);
-        CPPUNIT_ASSERT_GREATER(type2, mesg2);
-        CPPUNIT_ASSERT_GREATER(mesg2, file2);
-        CPPUNIT_ASSERT_GREATER(file2, func2);
-        CPPUNIT_ASSERT_GREATER(func2, line2);
-        CPPUNIT_ASSERT_GREATER(line2, stamp2);
+        EXPECT_LT(stamp1, except2);
+        EXPECT_LT(except2, type2);
+        EXPECT_LT(type2, mesg2);
+        EXPECT_LT(mesg2, file2);
+        EXPECT_LT(file2, func2);
+        EXPECT_LT(func2, line2);
+        EXPECT_LT(line2, stamp2);
 
-        CPPUNIT_ASSERT_GREATER(stamp2, except3);
-        CPPUNIT_ASSERT_GREATER(except3, type3);
+        EXPECT_LT(stamp2, except3);
+        EXPECT_LT(except3, type3);
         // Default propagated exception from rethrow has no message
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(details, std::string::npos, mesg3);
-        CPPUNIT_ASSERT_GREATER(type3, file3);
-        CPPUNIT_ASSERT_GREATER(file3, func3);
-        CPPUNIT_ASSERT_GREATER(func3, line3);
-        CPPUNIT_ASSERT_GREATER(line3, stamp3);
+        EXPECT_EQ(std::string::npos, mesg3) << details;
+        EXPECT_LT(type3, file3);
+        EXPECT_LT(file3, func3);
+        EXPECT_LT(func3, line3);
+        EXPECT_LT(line3, stamp3);
         // The last one we have to check explicitly against npos:
-        CPPUNIT_ASSERT_MESSAGE(details, std::string::npos != stamp3);
+        EXPECT_TRUE(std::string::npos != stamp3) << details;
 
         // Involved exceptions do not have details:
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(details, std::string::npos, details.find("Details...........:"));
+        EXPECT_EQ(std::string::npos, details.find("Details...........:")) << details;
     } catch (...) {
-        CPPUNIT_ASSERT_MESSAGE("Expected exception not thrown", false);
+        EXPECT_TRUE(false) << "Expected exception not thrown";
     }
 
     // Rethrow and tracing
     try {
         doNestedThrow();
     } catch (const karabo::data::Exception& e) {
-        CPPUNIT_ASSERT_EQUAL(std::string("Propagated Exception"), e.type());
+        EXPECT_STREQ("Propagated Exception", e.type().c_str());
         // Outer most rethrow without extra message
         // User friendly message skips message-less exceptions, but otherwise we get a new line for each with an
         // indented "because: " prefix
-        CPPUNIT_ASSERT_EQUAL(std::string("Propagated\n  because: A casting problem"), e.userFriendlyMsg(true));
+        EXPECT_STREQ("Propagated\n  because: A casting problem", e.userFriendlyMsg(true).c_str());
         // Previous call to userFriendlyMsg(true) cleared the stack trace, so a further call has only the most recent
         // exception Since that was triggered by a simple KARABO_RETHROW it has an empty message, so the exception type
         // is printed.
-        CPPUNIT_ASSERT_EQUAL(std::string("Propagated Exception"), e.userFriendlyMsg());
+        EXPECT_STREQ("Propagated Exception", e.userFriendlyMsg().c_str());
     }
 }
 
 
-void Exception_Test::testDetails() {
+TEST(TestException, testDetails) {
     try {
         throw KARABO_PYTHON_EXCEPTION("Some message");
     } catch (const karabo::data::PythonException& e) {
-        CPPUNIT_ASSERT_EQUAL(std::string("Some message"), e.userFriendlyMsg(true));
+        EXPECT_STREQ("Some message", e.userFriendlyMsg(true).c_str());
         // No second argument given, so no details:
-        CPPUNIT_ASSERT_EQUAL(std::string(), e.details());
+        EXPECT_STREQ("", e.details().c_str());
     } catch (...) {
-        CPPUNIT_ASSERT_MESSAGE("Missed PythonException", false);
+        EXPECT_TRUE(false) << "Missed PythonException";
     }
 
     try {
         throw KARABO_PYTHON_EXCEPTION2("Some message", "...with details!");
     } catch (const karabo::data::PythonException& e) {
-        CPPUNIT_ASSERT_EQUAL(std::string("Some message"), e.userFriendlyMsg(false));
-        CPPUNIT_ASSERT_EQUAL(std::string("...with details!"), e.details());
+        EXPECT_STREQ("Some message", e.userFriendlyMsg(false).c_str());
+        EXPECT_STREQ("...with details!", e.details().c_str());
         // Now check that both, message and details are in the trace:
         const std::string fullMsg(e.detailedMsg());
-        CPPUNIT_ASSERT_MESSAGE(fullMsg, std::string::npos != fullMsg.find("Some message"));
-        CPPUNIT_ASSERT_MESSAGE(fullMsg, std::string::npos != fullMsg.find("Details...........:"));
-        CPPUNIT_ASSERT_MESSAGE(fullMsg, std::string::npos != fullMsg.find("...with details!"));
+        EXPECT_TRUE(std::string::npos != fullMsg.find("Some message")) << fullMsg;
+        EXPECT_TRUE(std::string::npos != fullMsg.find("Details...........:")) << fullMsg;
+        EXPECT_TRUE(std::string::npos != fullMsg.find("...with details!")) << fullMsg;
     } catch (...) {
-        CPPUNIT_ASSERT_MESSAGE("Missed PythonException", false);
+        EXPECT_TRUE(false) << "Missed PythonException";
     }
 
 
     try {
         throw karabo::data::RemoteException("A message", "bob", "Details are usually the trace. Not now...");
     } catch (const karabo::data::RemoteException& e) {
-        CPPUNIT_ASSERT_EQUAL(std::string("Remote Exception from bob"), e.type());
-        CPPUNIT_ASSERT_EQUAL(std::string("Details are usually the trace. Not now..."), e.details());
-        CPPUNIT_ASSERT_EQUAL(std::string("A message"), e.userFriendlyMsg(false));
+        EXPECT_STREQ("Remote Exception from bob", e.type().c_str());
+        EXPECT_STREQ("Details are usually the trace. Not now...", e.details().c_str());
+        EXPECT_STREQ("A message", e.userFriendlyMsg(false).c_str());
         // Now check that both, message and details are in the trace:
         const std::string fullMsg(e.detailedMsg());
-        CPPUNIT_ASSERT_MESSAGE(fullMsg, std::string::npos != fullMsg.find("A message"));
-        CPPUNIT_ASSERT_MESSAGE(fullMsg, std::string::npos != fullMsg.find("Details...........:"));
-        CPPUNIT_ASSERT_MESSAGE(fullMsg, std::string::npos != fullMsg.find("Details are usually the trace. Not now..."));
+        EXPECT_TRUE(std::string::npos != fullMsg.find("A message")) << fullMsg;
+        EXPECT_TRUE(std::string::npos != fullMsg.find("Details...........:")) << fullMsg;
+        EXPECT_TRUE(std::string::npos != fullMsg.find("Details are usually the trace. Not now...")) << fullMsg;
     } catch (...) {
-        CPPUNIT_ASSERT_MESSAGE("Missed RemoteException", false);
+        EXPECT_TRUE(false) << "Missed RemoteException";
     }
 
 
@@ -355,22 +345,21 @@ void Exception_Test::testDetails() {
         throw karabo::data::IOException("A message", "filename", "function", 42,
                                         "Details are usually the trace, e.g. from hdf5 code");
     } catch (const karabo::data::IOException& e) {
-        CPPUNIT_ASSERT_EQUAL(std::string("IO Exception"), e.type());
-        CPPUNIT_ASSERT_EQUAL(std::string("Details are usually the trace, e.g. from hdf5 code"), e.details());
-        CPPUNIT_ASSERT_EQUAL(std::string("A message"), e.userFriendlyMsg(false));
+        EXPECT_STREQ("IO Exception", e.type().c_str());
+        EXPECT_STREQ("Details are usually the trace, e.g. from hdf5 code", e.details().c_str());
+        EXPECT_STREQ("A message", e.userFriendlyMsg(false).c_str());
         // Now check that both, message and details are in the trace:
         const std::string fullMsg(e.detailedMsg());
-        CPPUNIT_ASSERT_MESSAGE(fullMsg, std::string::npos != fullMsg.find("A message"));
-        CPPUNIT_ASSERT_MESSAGE(fullMsg, std::string::npos != fullMsg.find("Details...........:"));
-        CPPUNIT_ASSERT_MESSAGE(fullMsg,
-                               std::string::npos != fullMsg.find("Details are usually the trace, e.g. from hdf5 code"));
+        EXPECT_TRUE(std::string::npos != fullMsg.find("A message")) << fullMsg;
+        EXPECT_TRUE(std::string::npos != fullMsg.find("Details...........:")) << fullMsg;
+        EXPECT_TRUE(std::string::npos != fullMsg.find("Details are usually the trace, e.g. from hdf5 code")) << fullMsg;
     } catch (...) {
-        CPPUNIT_ASSERT_MESSAGE("Missed IOException", false);
+        EXPECT_TRUE(false) << "Missed IOException";
     }
 }
 
 
-void Exception_Test::testTraceOrder() {
+TEST(TestException, testTraceOrder) {
     // Check ordering of exception stack in detailedMsg() and userFriendlyMsg()
     std::string shortMsg, stackMsg;
     try {
@@ -394,16 +383,16 @@ void Exception_Test::testTraceOrder() {
     const size_t pos1Short = shortMsg.find("Exception 1");
     const size_t pos2Short = shortMsg.find("Exception 2");
     const size_t pos3Short = shortMsg.find("Exception 3");
-    CPPUNIT_ASSERT_MESSAGE(shortMsg, pos3Short < pos2Short);          // 3 is before 2
-    CPPUNIT_ASSERT_MESSAGE(shortMsg, pos2Short < pos1Short);          // 2 is before 1
-    CPPUNIT_ASSERT_MESSAGE(shortMsg, pos1Short != std::string::npos); // 1 exists (npos is the biggest size_t)
+    EXPECT_TRUE(pos3Short < pos2Short) << shortMsg;          // 3 is before 2
+    EXPECT_TRUE(pos2Short < pos1Short) << shortMsg;          // 2 is before 1
+    EXPECT_TRUE(pos1Short != std::string::npos) << shortMsg; // 1 exists (npos is the biggest size_t)
 
     // In detailed message, the exception stack is ordered from inner to outer as can be seen in
     // Exception_Test::testMethod Here we just test the order, not all the other stack print formatting.
     const size_t pos1Stack = stackMsg.find("Exception 1");
     const size_t pos2Stack = stackMsg.find("Exception 2");
     const size_t pos3Stack = stackMsg.find("Exception 3");
-    CPPUNIT_ASSERT_MESSAGE(shortMsg, pos1Stack < pos2Stack);
-    CPPUNIT_ASSERT_MESSAGE(shortMsg, pos2Stack < pos3Stack);
-    CPPUNIT_ASSERT_MESSAGE(stackMsg, pos3Stack != std::string::npos);
+    EXPECT_TRUE(pos1Stack < pos2Stack) << stackMsg;
+    EXPECT_TRUE(pos2Stack < pos3Stack) << stackMsg;
+    EXPECT_TRUE(pos3Stack != std::string::npos) << stackMsg;
 }

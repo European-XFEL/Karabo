@@ -30,6 +30,7 @@ include("../../cmake/cxx-options.cmake")
 include("../../cmake/karabo-lib-target-name.cmake")
 
 find_package(cppunit REQUIRED)
+find_package(GTest REQUIRED)
 find_package(pugixml REQUIRED)
 find_package(spdlog REQUIRED)
 
@@ -68,14 +69,21 @@ target_link_libraries(
     TEST_RUNNER_NOLOOP
     cppunit::cppunit
 )
+# Google TestRunner object file
+add_library(GTEST_RUNNER_NOLOOP OBJECT ${CMAKE_CURRENT_SOURCE_DIR}/gtestRunnerNoLoop.cc)
+target_link_libraries(
+    GTEST_RUNNER_NOLOOP
+    GTest::gtest
+)
+
 
 file(GLOB dataTypesTestRunner_FILES CONFIGURE_DEPENDS
      "${CMAKE_CURRENT_SOURCE_DIR}/data/types/*.cc")
-list(APPEND dataTypesTestRunner_FILES $<TARGET_OBJECTS:TEST_RUNNER_NOLOOP>)
+list(APPEND dataTypesTestRunner_FILES $<TARGET_OBJECTS:GTEST_RUNNER_NOLOOP>)
 
 add_executable(dataTypesTestRunner ${dataTypes_FILES} ${dataSchema_FILES} ${dataTime_FILES} ${karaboLog_FILES} ${dataTypesTestRunner_FILES})
 target_compile_options(dataTypesTestRunner PRIVATE -DKARABO_TESTPATH=\"${CMAKE_CURRENT_SOURCE_DIR}/\")
-target_link_libraries(dataTypesTestRunner spdlog::spdlog cppunit::cppunit)
+target_link_libraries(dataTypesTestRunner spdlog::spdlog GTest::gtest)
 target_include_directories(dataTypesTestRunner PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../..")
 add_test(NAME dataTypesTestRunner COMMAND dataTypesTestRunner testresults/dataTypeTestRunner.xml)
 
