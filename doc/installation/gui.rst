@@ -16,17 +16,47 @@ In order to use Conda, three basic steps are needed:
     2. Configure its channels;
     3. Install the desired package
 
-Installing Conda
-================
+Install Conda
+=============
 
 The following steps are needed in order to obtain Conda.
 
-* Download and install miniforge (Python version >= 3), for example using the provided
-  script `here <https://github.com/conda-forge/miniforge>`_,
-  available for Linux, Mac, and Windows, to simplify the process and avoid manual downloads
-* Open your terminal (Miniforge3 Prompt on Windows or Bash on Linux and MacOS)
-* If conda is in your path, you should be able to run **conda --version**
+Download and install miniforge (Python version >= 3).
+
+#. Download the installer script/executable.
+
+   * Linux:
+      Download and install by running
+
+      .. code-block:: bash
+
+         curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
+         bash Miniforge3-$(uname)-$(uname -m).sh
+
+   * Mac :
+      Download `the script <https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-MacOSX-x86_64.sh>`_ and install by running
+
+      .. code-block:: bash
+
+         bash Miniforge3-MacOSX-x86_64.sh
+
+
+   * Windows:
+      Download `the installer
+      <https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Windows-x86_64.exe>`_
+
+      Double-click on ``Miniforge3-Windows-x86_64.exe`` to run the installer.
+
+
+
+#. Follow the installation prompt. On Windows, remember to keep the "Create start menu shortcuts" option selected (by default, selected), in the final step.
+
+#. Open your terminal (Miniforge3 Prompt on Windows or Bash on Linux and MacOS)
+
+#. If conda is in your path, you should be able to run **conda --version**
+
     * If it isn't, you need to activate conda first
+
         * **Linux/MacOS**: ``source <miniforge_path>/etc/profile.d/conda.sh``
         * **Win**: ``CALL <miniforge_path>/condabin/activate.bat``
 
