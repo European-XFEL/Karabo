@@ -16,23 +16,23 @@
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
 /*
- * File:   EventLoop_Test.cc
+ * File:   EventLoop_Test.hh
  * Author: heisenb
  *
  * Created on July 29, 2016, 2:06 PM
  */
 
-#include "karabo/net/EventLoop.hh"
+#include <gtest/gtest.h>
 
 #include <boost/thread.hpp>
 #include <chrono>
 #include <csignal>
 
-#include "EventLoop_Test.hh"
 #include "karabo/data/time/Epochstamp.hh"
 #include "karabo/data/time/TimeDuration.hh"
 #include "karabo/data/types/Exception.hh"
 #include "karabo/log/Logger.hh"
+#include "karabo/net/EventLoop.hh"
 
 
 using namespace karabo::data;
@@ -40,28 +40,28 @@ using namespace karabo::net;
 using namespace std::chrono;
 using namespace std::literals::chrono_literals;
 
-CPPUNIT_TEST_SUITE_REGISTRATION(EventLoop_Test);
+
+static void handler1(boost::asio::steady_timer& timer, int count);
+static void handler2();
+static void handler3();
+static std::vector<std::string> splitByPattern(std::string_view source, std::string_view pattern);
+
+static bool m_finished = false;
 
 
-EventLoop_Test::EventLoop_Test() {}
-
-
-EventLoop_Test::~EventLoop_Test() {}
-
-
-void EventLoop_Test::handler1(boost::asio::steady_timer& timer, int count) {
+void handler1(boost::asio::steady_timer& timer, int count) {
     if (count == -1) {
-        CPPUNIT_ASSERT(EventLoop::getNumberOfThreads() == 0);
+        EXPECT_TRUE(EventLoop::getNumberOfThreads() == 0);
         return;
     }
 
-    CPPUNIT_ASSERT(EventLoop::getNumberOfThreads() == size_t(count));
+    EXPECT_TRUE(EventLoop::getNumberOfThreads() == size_t(count));
 
     if (count == 5) {
         EventLoop::removeThread(5);
         count = -1;
         timer.expires_at(timer.expiry() + 500ms);
-        timer.async_wait(std::bind(&EventLoop_Test::handler1, this, std::ref(timer), count));
+        timer.async_wait(std::bind(handler1, std::ref(timer), count));
         return;
     }
 
@@ -69,32 +69,32 @@ void EventLoop_Test::handler1(boost::asio::steady_timer& timer, int count) {
     count++;
 
     timer.expires_at(timer.expiry() + 500ms);
-    timer.async_wait(std::bind(&EventLoop_Test::handler1, this, std::ref(timer), count));
+    timer.async_wait(std::bind(handler1, std::ref(timer), count));
 }
 
 
-void EventLoop_Test::testMethod() {
+TEST(TestEventLoop, testMethod) {
     boost::asio::steady_timer timer(EventLoop::getIOService(), 500ms);
-    timer.async_wait(std::bind(&EventLoop_Test::handler1, this, std::ref(timer), 0));
+    timer.async_wait(std::bind(handler1, std::ref(timer), 0));
 
     EventLoop::run();
 }
 
 
-void EventLoop_Test::handler2() {
+void handler2() {
     if (m_finished) return;
 
     boost::asio::steady_timer timer(EventLoop::getIOService(), 5ms);
-    boost::asio::post(EventLoop::getIOService(), std::bind(&EventLoop_Test::handler2, this));
+    boost::asio::post(EventLoop::getIOService(), std::bind(handler2));
 }
 
 
-void EventLoop_Test::handler3() {
+void handler3() {
     EventLoop::stop();
 }
 
 
-void EventLoop_Test::testMethod2() {
+TEST(TestEventLoop, testMethod2) {
     boost::asio::executor_work_guard<boost::asio::io_context::executor_type> work(
           boost::asio::make_work_guard(EventLoop::getIOService()));
     std::jthread t(std::bind(&EventLoop::run));
@@ -102,18 +102,18 @@ void EventLoop_Test::testMethod2() {
     m_finished = false;
     boost::asio::steady_timer timer(EventLoop::getIOService(), 500ms);
     EventLoop::addThread(10);
-    boost::asio::post(EventLoop::getIOService(), std::bind(&EventLoop_Test::handler2, this));
-    timer.async_wait(std::bind(&EventLoop_Test::handler3, this));
+    boost::asio::post(EventLoop::getIOService(), std::bind(handler2));
+    timer.async_wait(std::bind(handler3));
 
     t.join();
 
     m_finished = true;
 
-    CPPUNIT_ASSERT(true);
+    EXPECT_TRUE(true);
 }
 
 
-void EventLoop_Test::testSignalCapture() {
+TEST(TestEventLoop, testSignalCapture) {
     std::jthread t(std::bind(&EventLoop::work));
 
     bool terminateCaught = false;
@@ -130,10 +130,11 @@ void EventLoop_Test::testSignalCapture() {
 
     t.join();
 
-    CPPUNIT_ASSERT(terminateCaught);
+    EXPECT_TRUE(terminateCaught);
 }
 
-void EventLoop_Test::testPost() {
+
+TEST(TestEventLoop, testPost) {
     // Post a method and verify it is executed
     {
         auto promise = std::make_shared<std::promise<bool>>();
@@ -142,8 +143,8 @@ void EventLoop_Test::testPost() {
         EventLoop::post(func);
         EventLoop::run();
 
-        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, future.wait_for(milliseconds(2000)));
-        CPPUNIT_ASSERT(future.get());
+        EXPECT_EQ(std::future_status::ready, future.wait_for(milliseconds(2000)));
+        EXPECT_TRUE(future.get());
     }
 
     // Post a method that throws and verify we stay alive if catch exception flag is true
@@ -158,8 +159,8 @@ void EventLoop_Test::testPost() {
         EventLoop::post(func);
         EventLoop::run();
 
-        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, future.wait_for(std::chrono::milliseconds(2000)));
-        CPPUNIT_ASSERT(future.get());
+        EXPECT_EQ(std::future_status::ready, future.wait_for(std::chrono::milliseconds(2000)));
+        EXPECT_TRUE(future.get());
 
         EventLoop::setCatchExceptions(oldFlag);
     }
@@ -170,7 +171,7 @@ void EventLoop_Test::testPost() {
         auto func = []() { throw std::runtime_error("induced"); };
         EventLoop::post(func);
 
-        CPPUNIT_ASSERT_THROW(EventLoop::run(), std::runtime_error);
+        EXPECT_THROW(EventLoop::run(), std::runtime_error);
 
         EventLoop::setCatchExceptions(oldFlag);
     }
@@ -185,15 +186,15 @@ void EventLoop_Test::testPost() {
         EventLoop::post(std::move(func), 100); // 100 ms delay, move semantics function
         EventLoop::run();
 
-        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, future.wait_for(milliseconds(2000)));
+        EXPECT_EQ(std::future_status::ready, future.wait_for(milliseconds(2000)));
         const TimeDuration period = before.elapsed();
-        CPPUNIT_ASSERT(future.get());
-        CPPUNIT_ASSERT_EQUAL(0ull, period.getTotalSeconds());                           // less than a full second
-        CPPUNIT_ASSERT_GREATEREQUAL(100ull, period.getFractions(TIME_UNITS::MILLISEC)); // at least 100 milliseconds
+        EXPECT_TRUE(future.get());
+        EXPECT_EQ(0ull, period.getTotalSeconds());                    // less than a full second
+        EXPECT_LE(100ull, period.getFractions(TIME_UNITS::MILLISEC)); // at least 100 milliseconds
     }
 }
 
-void EventLoop_Test::testAddThreadDirectly() {
+TEST(TestEventLoop, testAddThreadDirectly) {
     // Tests that, even in a so far single threaded event loop, adding a thread before blocking on something that
     // requires another task on the event loop to unblock, actually helps.
 
@@ -215,11 +216,11 @@ void EventLoop_Test::testAddThreadDirectly() {
     EventLoop::run();
 
     // Check that indeed 'answer' unblocked 'question'
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, status);
-    CPPUNIT_ASSERT(future.get());
+    EXPECT_EQ(std::future_status::ready, status);
+    EXPECT_TRUE(future.get());
 }
 
-void EventLoop_Test::testExceptionTrace() {
+TEST(TestEventLoop, testExceptionTrace) {
     // Test thread safety of karabo::data::Exception's trace here and not in Exception_Test since requires event loop
     using karabo::data::Exception;
 
@@ -286,26 +287,25 @@ void EventLoop_Test::testExceptionTrace() {
         std::vector<std::string> split = splitByPattern(exceptionTxts[i], "because: ");
         // obsolete:
         // boost::algorithm::split_regex(split, exceptionTxts[i], boost::regex("because: "));
-        CPPUNIT_ASSERT_EQUAL_MESSAGE("Trace for " + numStr + " is " + exceptionTxts[i], //
-                                     6ul, split.size());                                // 6 exceptions
+        EXPECT_EQ(6ul, split.size()) << "Trace for " << numStr << " is " << exceptionTxts[i]; // 6 exceptions
         numStr += ": ";
         for (const std::string& singleMsg : split) {
             // All exception messages were prepended with 'their' number
             // (exception order within trace is tested in Exception_Test::testTraceOrder)
-            CPPUNIT_ASSERT_MESSAGE(singleMsg + " does not start with " + numStr, boost::starts_with(singleMsg, numStr));
+            EXPECT_TRUE(boost::starts_with(singleMsg, numStr)) << singleMsg << " does not start with " << numStr;
         }
     }
 }
 
-void EventLoop_Test::testImmediateStop() {
+TEST(TestEventLoop, testImmediateStop) {
     // std::[j]thread has no try_join_for(..), so I need boost::thread here for proper testing
     // (i.e. a testing that fails and not just hangs in case of problem).
     boost::thread t(std::bind(&EventLoop::work));
     EventLoop::stop();
-    CPPUNIT_ASSERT(t.try_join_for(boost::chrono::seconds(1)));
+    EXPECT_TRUE(t.try_join_for(boost::chrono::seconds(1)));
 }
 
-std::vector<std::string> EventLoop_Test::splitByPattern(std::string_view source, std::string_view pattern) {
+std::vector<std::string> splitByPattern(std::string_view source, std::string_view pattern) {
     std::vector<std::string> output;
     std::string::size_type prev = 0, pos = 0;
     while ((pos = source.find(pattern, pos)) != std::string::npos) {

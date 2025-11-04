@@ -16,22 +16,38 @@
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
 /*
- * File:   Strand_Test.cc
+ * File:   Strand_Test.hh
  * Author: flucke
  *
  * Created on November 15, 2017, 12:26 PM
  */
-#include "karabo/net/Strand.hh"
 
+#include <gtest/gtest.h>
+
+#include <boost/asio/deadline_timer.hpp>
 #include <chrono>
+#include <memory>
 #include <thread>
 
-#include "Strand_Test.hh"
-#include "boost/asio/deadline_timer.hpp"
 #include "karabo/data/schema/Configurator.hh"
 #include "karabo/data/time/Epochstamp.hh"
 #include "karabo/data/time/TimeDuration.hh"
 #include "karabo/net/EventLoop.hh"
+#include "karabo/net/Strand.hh"
+
+
+class TestStrand : public ::testing::Test {
+   protected:
+    TestStrand() : m_thread(nullptr), m_nThreadsInPool(4) {}
+    ~TestStrand() override {}
+
+    void SetUp() override;
+    void TearDown() override;
+
+    std::shared_ptr<std::jthread> m_thread;
+    const unsigned int m_nThreadsInPool;
+};
+
 
 using namespace std::chrono;
 using namespace std::literals::chrono_literals;
@@ -42,23 +58,15 @@ using karabo::data::TimeDuration;
 using karabo::net::EventLoop;
 using karabo::net::Strand;
 
-CPPUNIT_TEST_SUITE_REGISTRATION(Strand_Test);
 
-
-Strand_Test::Strand_Test() : m_nThreadsInPool(4) {}
-
-
-Strand_Test::~Strand_Test() {}
-
-
-void Strand_Test::setUp() {
+void TestStrand::SetUp() {
     m_thread = std::make_shared<std::jthread>(EventLoop::work);
     // really switch on parallelism:
     EventLoop::addThread(m_nThreadsInPool);
 }
 
 
-void Strand_Test::tearDown() {
+void TestStrand::TearDown() {
     // No need to do EventLoop::removeThread(m_nThreadsInPool) since joining the main eventloop thread implicitly
     // removes all threads, i.e. a new start of the event loop starts "from scratch". In best case, this cures hanging
     // tests as in https://git.xfel.eu/Karabo/Framework/-/jobs/357339 and
@@ -70,7 +78,7 @@ void Strand_Test::tearDown() {
 }
 
 
-void Strand_Test::testSequential() {
+TEST_F(TestStrand, testSequential) {
     std::mutex aMutex;
     unsigned int counter = 0;
     const unsigned int sleepTimeMs = 40; // must be above 10, see below
@@ -110,14 +118,14 @@ void Strand_Test::testSequential() {
         std::this_thread::sleep_for(milliseconds(sleepTimeMs / 10));
     }
 
-    CPPUNIT_ASSERT(numTest > 0);
-    CPPUNIT_ASSERT(duration.getTotalSeconds() * 1000ull +
-                         duration.getFractions(karabo::data::TIME_UNITS::MILLISEC) // total ms
-                   >= numPosts * sleepTimeMs);
+    EXPECT_TRUE(numTest > 0);
+    EXPECT_TRUE(duration.getTotalSeconds() * 1000ull +
+                      duration.getFractions(karabo::data::TIME_UNITS::MILLISEC) // total ms
+                >= numPosts * sleepTimeMs);
 }
 
 
-void Strand_Test::testThrowing() {
+TEST_F(TestStrand, testThrowing) {
     // Test that a std::exception thrown in posted handler does not stop the Strand to work
     // but goes on with next handler
 
@@ -143,14 +151,14 @@ void Strand_Test::testThrowing() {
     for (int i = 0; i < size; ++i) {
         if (i == 2) {
             // vector element untouched by handler
-            CPPUNIT_ASSERT_EQUAL(-1, vec[i]);
+            EXPECT_EQ(-1, vec[i]);
         } else {
-            CPPUNIT_ASSERT_EQUAL(i, vec[i]);
+            EXPECT_EQ(i, vec[i]);
         }
     }
 }
 
-void Strand_Test::testStrandDies() {
+TEST_F(TestStrand, testStrandDies) {
     // Test various configs and whether all handlers are called for them:
     const std::vector<std::pair<Hash, bool>> testCases{{Hash("guaranteeToRun", true), true},
                                                        {Hash(), false}, // default
@@ -186,7 +194,7 @@ void Strand_Test::testStrandDies() {
         unsigned int numTest = 30;
         const unsigned int waitLoopSleep = sleepTimeMs;
         // Assert that the following loop is long enough to give the handlers time to be called one after another
-        CPPUNIT_ASSERT(numTest * waitLoopSleep > numPosts * sleepTimeMs);
+        EXPECT_TRUE(numTest * waitLoopSleep > numPosts * sleepTimeMs);
         while (--numTest > 0) {
             {
                 if (*counterPtr >= numPosts) {
@@ -200,19 +208,19 @@ void Strand_Test::testStrandDies() {
             std::this_thread::sleep_for(milliseconds(waitLoopSleep));
         }
 
-        CPPUNIT_ASSERT_GREATER(0u, counterPtr->load());
+        EXPECT_LT(0u, counterPtr->load());
         if (allHandlersRun) {
             // Despite killing the strand half way through, all handlers are run
-            CPPUNIT_ASSERT_EQUAL(numPosts, counterPtr->load());
+            EXPECT_EQ(numPosts, counterPtr->load());
         } else {
             // Strand was not configured to run all handlers when dying, about half them are likely lost.
             // No need to control exact number (the strand posts with bind_weak), just test that not all are run
-            CPPUNIT_ASSERT_LESS(numPosts, counterPtr->load());
+            EXPECT_GT(numPosts, counterPtr->load());
         }
     }
 }
 
-void Strand_Test::testMaxInARow() {
+TEST_F(TestStrand, testMaxInARow) {
     // This tests that one can gain a little execution speed for a busy strand if "maxInARow" is specified since that
     // means potentially less jumps from one thread to another.
     constexpr unsigned int maxInARow = 10;
@@ -242,8 +250,8 @@ void Strand_Test::testMaxInARow() {
     const Epochstamp doneManyStamp = futureMany.get();
     const Epochstamp done1Stamp = future1.get();
 
-    CPPUNIT_ASSERT_MESSAGE("1: " + done1Stamp.toIso8601Ext() += ", many: " + doneManyStamp.toIso8601Ext(),
-                           done1Stamp > doneManyStamp);
+    EXPECT_TRUE(done1Stamp > doneManyStamp)
+          << "1: " << done1Stamp.toIso8601Ext() << ", many: " << doneManyStamp.toIso8601Ext();
     // The speed gain of strandMany compared to strand1 scales roughly linearly with both 'maxInARow' and
     // 'numPosts', though the absolute time varies a bit. For maxInARow = 10 and numPosts = 2000 * maxInARow
     // and m_nThreadsInPool = 4 we get e.g. (Ubuntu20 with 12 cores):

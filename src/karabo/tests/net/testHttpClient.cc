@@ -24,11 +24,9 @@
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#include "HttpClient_Test.hh"
+#include <gtest/gtest.h>
 
 #include "karabo/net/HttpClient.hh"
-
-CPPUNIT_TEST_SUITE_REGISTRATION(HttpClient_Test);
 
 #define TEST_URL "http://www.xfel.eu"
 #define TEST_URL_SSL "https://www.xfel.eu"
@@ -36,7 +34,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(HttpClient_Test);
 namespace http = boost::beast::http;
 using namespace karabo::net;
 
-void HttpClient_Test::testHttpsGet() {
+TEST(TestHttpClient, testHttpsGet) {
     // TODO: Change the second argument passed to the HttpClient (verifyCert) to
     //       true as soon as the openssl dependency of the Framework is updated
     //       to 1.1.1(*). The current openssl version, 1.0.2t, specified in
@@ -51,13 +49,13 @@ void HttpClient_Test::testHttpsGet() {
 
     cli.asyncGet("/", reqHeaders, "", [](const http::response<http::string_body>& resp) {
         // The page is retrieved over the secure connection.
-        CPPUNIT_ASSERT(resp.result_int() == 200);
-        CPPUNIT_ASSERT(resp.body().size() > 0);
-        CPPUNIT_ASSERT(resp.base()["Content-Type"] == "text/html; charset=utf-8");
+        ASSERT_TRUE(resp.result_int() == 200);
+        ASSERT_TRUE(resp.body().size() > 0);
+        ASSERT_TRUE(resp.base()["Content-Type"] == "text/html; charset=utf-8");
     });
 }
 
-void HttpClient_Test::testHttpGet() {
+TEST(TestHttpClient, testHttpGet) {
     HttpClient cli{TEST_URL};
 
     HttpHeaders reqHeaders;
@@ -66,8 +64,8 @@ void HttpClient_Test::testHttpGet() {
 
     cli.asyncGet("/", reqHeaders, "", [](const http::response<http::string_body>& resp) {
         // The non-secure version of the site redirects to the secure version.
-        CPPUNIT_ASSERT(resp.result_int() == 302);
-        CPPUNIT_ASSERT(resp.body().size() == 0);
-        CPPUNIT_ASSERT(resp.base()["Location"].starts_with(TEST_URL_SSL));
+        ASSERT_TRUE(resp.result_int() == 302);
+        ASSERT_TRUE(resp.body().size() == 0);
+        ASSERT_TRUE(resp.base()["Location"].starts_with(TEST_URL_SSL));
     });
 }
