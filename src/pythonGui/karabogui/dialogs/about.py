@@ -22,6 +22,7 @@ from qtpy.QtGui import QPixmap
 from qtpy.QtWidgets import QDialog
 
 from karabogui import const, icons
+from karabogui.dialogs.utils import get_pkg_version
 from karabogui.singletons.api import get_manager, get_network
 
 from .utils import get_dialog_ui
@@ -65,9 +66,13 @@ class AboutDialog(QDialog):
         tunnel_img = QPixmap(image_path)
         self.imgLabel.setPixmap(tunnel_img)
 
-        txt = self.aboutText.text()
-        self.aboutText.setText(
-            txt.replace('$KARABO_VERSION', const.GUI_VERSION_DETAILED, 1))
+        text = self.aboutText.text()
+        text = text.replace(
+            '$KARABO_VERSION', const.GUI_VERSION_DETAILED, 1)
+        gui_extensions_version = get_pkg_version("GUIExtensions")
+        text = text.replace(
+            "$GUIEXTENSIONS_VERSION", gui_extensions_version, 1)
+        self.aboutText.setText(text)
 
         # Pattern matchers for a specific key combos
         self._cheat_codes = {
