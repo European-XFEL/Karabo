@@ -15,15 +15,8 @@
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
-/*
- * $Id$
- *
- * Author: <serguei.essenov@xfel.eu>, <irina.kozlova@xfel.eu>
- *
- * Created on Oct 30, 2012, 1:33:46 PM
- */
 
-#include "TcpNetworking_Test.hh"
+#include <gtest/gtest.h>
 
 #include <array>
 #include <boost/bind/bind.hpp>
@@ -45,6 +38,7 @@
 #include "karabo/net/Queues.hh"
 #include "karabo/net/TcpChannel.hh"
 
+
 using namespace std::chrono;
 using namespace std::literals::chrono_literals; // 10ms == 10 milliseconds
 using namespace std::literals::string_literals; // For '"blabla"s'
@@ -59,16 +53,17 @@ using karabo::net::Channel;
 using karabo::net::Connection;
 using karabo::net::EventLoop;
 
+
 /**
  * Create client and server that are connected
  *
  * @returns pair (client/server) of pairs (connection, channel)
  */
-std::pair<std::pair<Connection::Pointer, Channel::Pointer>, std::pair<Connection::Pointer, Channel::Pointer>>
+static std::pair<std::pair<Connection::Pointer, Channel::Pointer>, std::pair<Connection::Pointer, Channel::Pointer>>
 createClientServer(Hash clientCfg, Hash serverCfg) {
-    CPPUNIT_ASSERT_MESSAGE("Must not specify type for server", !serverCfg.erase("type"));
-    CPPUNIT_ASSERT_MESSAGE("Must not specify type for client", !clientCfg.erase("type"));
-    CPPUNIT_ASSERT_MESSAGE("Must not specify port for client", !clientCfg.erase("port"));
+    EXPECT_TRUE(!serverCfg.erase("type")) << "Must not specify type for server";
+    EXPECT_TRUE(!clientCfg.erase("type")) << "Must not specify type for client";
+    EXPECT_TRUE(!clientCfg.erase("port")) << "Must not specify port for client";
 
     serverCfg.merge(Hash("type", "server"));
     auto serverConn = Connection::create("Tcp", serverCfg);
@@ -84,7 +79,7 @@ createClientServer(Hash clientCfg, Hash serverCfg) {
         }
     };
     const unsigned int serverPort = serverConn->startAsync(serverConnectHandler);
-    CPPUNIT_ASSERT(serverPort != 0);
+    EXPECT_TRUE(serverPort != 0);
 
     clientCfg.merge(Hash("type", "client", "port", serverPort));
     Connection::Pointer clientConn = Connection::create("Tcp", clientCfg);
@@ -96,12 +91,9 @@ createClientServer(Hash clientCfg, Hash serverCfg) {
         std::this_thread::sleep_for(10ms);
         timeout -= 10;
     }
-    CPPUNIT_ASSERT_MESSAGE(failureReasonServ + ", timeout: " + toString(timeout), serverChannel);
+    EXPECT_TRUE(serverChannel) << failureReasonServ << ", timeout: " << toString(timeout);
     return std::make_pair(std::make_pair(serverConn, serverChannel), std::make_pair(clientConn, clientChannel));
 }
-
-
-CPPUNIT_TEST_SUITE_REGISTRATION(TcpNetworking_Test);
 
 
 struct TcpServer {
@@ -152,7 +144,7 @@ struct TcpServer {
         KARABO_LOG_FRAMEWORK_DEBUG << "\nSERVER_INFO: count " << m_count << "\n"
                                    << header << body << "-----------------\n";
 
-        CPPUNIT_ASSERT(header.get<std::string>("headline") == "*** CLIENT ***");
+        EXPECT_TRUE(header.get<std::string>("headline") == "*** CLIENT ***");
 
         header.set("headline", "----- SERVER -----");
 
@@ -259,9 +251,9 @@ struct TcpClient {
             return;
         }
 
-        CPPUNIT_ASSERT(header.get<std::string>("headline") == "----- SERVER -----");
+        EXPECT_TRUE(header.get<std::string>("headline") == "----- SERVER -----");
         if (body.has("a.e")) {
-            CPPUNIT_ASSERT(body.get<std::string>("a.e") == "server data");
+            EXPECT_TRUE(body.get<std::string>("a.e") == "server data");
             body.erase("a.e");
         }
 
@@ -282,7 +274,7 @@ struct TcpClient {
 
 
     void writeCompleteHandler(const karabo::net::Channel::Pointer& channel, int id) {
-        CPPUNIT_ASSERT(id == 42);
+        EXPECT_TRUE(id == 42);
         // data was sent successfully! Prepare to read a reply asynchronous from a server: placeholder _1 is a Hash
         channel->readAsyncHashHash(std::bind(&TcpClient::readHashHashHandler, this, _1, channel, _2, _3));
     }
@@ -875,59 +867,43 @@ struct WriteAsyncCli {
 //</editor-fold>
 
 
-TcpNetworking_Test::TcpNetworking_Test() {
-    // To switch on logging:
-    // #include "karabo/log/Logger.hh"
-    // karabo::log::Logger::configure(karabo::data::Hash("priority", "DEBUG"));
-    // karabo::log::Logger::useConsole();
-}
-
-
-TcpNetworking_Test::~TcpNetworking_Test() {}
-
-
-void TcpNetworking_Test::setUp() {}
-
-
-void TcpNetworking_Test::tearDown() {}
-
-void TcpNetworking_Test::testConfig() {
+TEST(TestTcpNetworking, testConfig) {
     karabo::data::Hash cfg("hostname", "localhost", "port", 12345u); // default is client
-    CPPUNIT_ASSERT_NO_THROW(karabo::net::Connection::create(karabo::data::Hash("Tcp", cfg)));
+    ASSERT_NO_THROW(karabo::net::Connection::create(karabo::data::Hash("Tcp", cfg)));
 
     karabo::data::Hash cfg2("url", "tcp://localhost:12345"); // default is client
-    CPPUNIT_ASSERT_NO_THROW(karabo::net::Connection::create(karabo::data::Hash("Tcp", cfg2)));
+    ASSERT_NO_THROW(karabo::net::Connection::create(karabo::data::Hash("Tcp", cfg2)));
 
     karabo::data::Hash cfg3("url", "localhost:12345"); // do not forget the protocol
     bool failed = false;
     try {
         karabo::net::Connection::create(karabo::data::Hash("Tcp", cfg3));
     } catch (const karabo::data::NetworkException& e) {
-        CPPUNIT_ASSERT(e.userFriendlyMsg().find("does not start with 'tcp'") != std::string::npos);
+        EXPECT_TRUE(e.userFriendlyMsg().find("does not start with 'tcp'") != std::string::npos);
         failed = true;
     }
-    CPPUNIT_ASSERT(failed);
+    EXPECT_TRUE(failed);
 }
 
-void TcpNetworking_Test::testClientServer() {
+
+TEST(TestTcpNetworking, testClientServer) {
     using namespace std;
     int nThreads = karabo::net::EventLoop::getNumberOfThreads();
-    CPPUNIT_ASSERT(nThreads == 0);
-
+    EXPECT_TRUE(nThreads == 0);
     TcpServer server;
     TcpClient client("localhost", server.port());
 
     nThreads = karabo::net::EventLoop::getNumberOfThreads();
-    CPPUNIT_ASSERT(nThreads == 0);
+    EXPECT_TRUE(nThreads == 0);
 
     karabo::net::EventLoop::run();
 
     nThreads = karabo::net::EventLoop::getNumberOfThreads();
-    CPPUNIT_ASSERT(nThreads == 0);
+    EXPECT_TRUE(nThreads == 0);
 }
 
 
-void TcpNetworking_Test::testBufferSet() {
+TEST(TestTcpNetworking, testBufferSet) {
     using namespace karabo::data;
     using namespace karabo::net;
 
@@ -948,7 +924,7 @@ void TcpNetworking_Test::testBufferSet() {
         }
     };
     const unsigned int serverPort = serverCon->startAsync(serverConnectHandler);
-    CPPUNIT_ASSERT(serverPort != 0);
+    EXPECT_TRUE(serverPort != 0);
 
     // Create client, connect to server and validate connection from server side
     Connection::Pointer clientConn = Connection::create("Tcp", Hash("type", "client", "port", serverPort));
@@ -960,7 +936,7 @@ void TcpNetworking_Test::testBufferSet() {
         std::this_thread::sleep_for(10ms);
         timeout -= 10;
     }
-    CPPUNIT_ASSERT_MESSAGE(failureReasonServ + ", timeout: " + toString(timeout), serverChannel);
+    EXPECT_TRUE(serverChannel) << failureReasonServ << ", timeout: " << toString(timeout);
 
     //////////////////////////////////////////////////////////////////////////
     // Prepare serialiser and data for sending
@@ -1014,34 +990,34 @@ void TcpNetworking_Test::testBufferSet() {
     const Hash header("my", "header", "data", 42);
     serverChannel->write(header, buffers); // synchronous writing with header
 
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, recvFut.wait_for(seconds(10)));
-    CPPUNIT_ASSERT_MESSAGE("Error Sending data" + failureReason, recvFut.get());
+    ASSERT_EQ(std::future_status::ready, recvFut.wait_for(seconds(10)));
+    EXPECT_TRUE(recvFut.get()) << "Error Sending data" << failureReason;
 
     // Check that content is as expected - in a lambda to do the exact same checks for both sync and async writing
     auto doAsserts = [&]() {
-        CPPUNIT_ASSERT_EQUAL(2ul, receivedBuffers.size());
+        ASSERT_EQ(2ul, receivedBuffers.size());
         Hash dataRead;
         serializer->load(dataRead, *(receivedBuffers[0]));
-        CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(numNDarray), dataRead.size());
+        ASSERT_EQ(static_cast<size_t>(numNDarray), dataRead.size());
         for (int i = 0; i < numNDarray; ++i) {
             const std::string key(toString(i));
-            CPPUNIT_ASSERT_MESSAGE("Miss key " + toString(key), dataRead.has(key));
+            EXPECT_TRUE(dataRead.has(key)) << "Miss key " << toString(key);
             const NDArray& arr = dataRead.get<NDArray>(key);
-            CPPUNIT_ASSERT_EQUAL(1ul, arr.size());
-            CPPUNIT_ASSERT_EQUAL(i, arr.getData<int>()[0]);
+            ASSERT_EQ(1ul, arr.size());
+            ASSERT_EQ(i, arr.getData<int>()[0]);
         }
         dataRead.clear();
         serializer->load(dataRead, *(receivedBuffers[1]));
-        CPPUNIT_ASSERT_EQUAL(2ul, dataRead.size());
-        CPPUNIT_ASSERT_MESSAGE("Received data: " + toString(dataRead), dataRead.fullyEquals(data2));
+        ASSERT_EQ(2ul, dataRead.size());
+        EXPECT_TRUE(dataRead.fullyEquals(data2)) << "Received data: " << toString(dataRead);
         // Erase internals from header before comparing - should that already be done internally or should we test these
         // internals as potentially needed in cross API communication?
         // For now assert at least on their existence.
-        CPPUNIT_ASSERT(receivedHeader.erase("_bufferSetLayout_"));
-        CPPUNIT_ASSERT(receivedHeader.erase("nData"));
-        CPPUNIT_ASSERT(receivedHeader.erase("byteSizes"));
-        CPPUNIT_ASSERT_MESSAGE("Received header: " + toString(receivedHeader),
-                               receivedHeader.fullyEquals(Hash("my", "header", "data", 42)));
+        EXPECT_TRUE(receivedHeader.erase("_bufferSetLayout_"));
+        EXPECT_TRUE(receivedHeader.erase("nData"));
+        EXPECT_TRUE(receivedHeader.erase("byteSizes"));
+        EXPECT_TRUE(receivedHeader.fullyEquals(Hash("my", "header", "data", 42)))
+              << "Received header: " << toString(receivedHeader);
     };
     doAsserts();
 
@@ -1073,10 +1049,10 @@ void TcpNetworking_Test::testBufferSet() {
     serverChannel->writeAsyncHashVectorBufferSetPointer(header, buffers, onWriteComplete);
 
     // Wait for confirmation that data is written and read
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, sendFut.wait_for(seconds(10)));
-    CPPUNIT_ASSERT_MESSAGE("Error sending data: " + sendFailureReason, sendFut.get());
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, recvFut.wait_for(seconds(10)));
-    CPPUNIT_ASSERT_MESSAGE("Error Sending data" + failureReason, recvFut.get());
+    ASSERT_EQ(std::future_status::ready, sendFut.wait_for(seconds(10)));
+    EXPECT_TRUE(sendFut.get()) << "Error sending data: " << sendFailureReason;
+    ASSERT_EQ(std::future_status::ready, recvFut.wait_for(seconds(10)));
+    EXPECT_TRUE(recvFut.get()) << "Error Sending data" << failureReason;
 
     // Now check correctness of asynchronously written data
     doAsserts();
@@ -1086,7 +1062,7 @@ void TcpNetworking_Test::testBufferSet() {
 }
 
 
-void TcpNetworking_Test::testConsumeBytesAfterReadUntil() {
+TEST(TestTcpNetworking, testConsumeBytesAfterReadUntil) {
     using namespace karabo::data;
     using namespace karabo::net;
 
@@ -1106,7 +1082,7 @@ void TcpNetworking_Test::testConsumeBytesAfterReadUntil() {
         }
     };
     const unsigned int serverPort = serverCon->startAsync(serverConnectHandler);
-    CPPUNIT_ASSERT(serverPort != 0);
+    EXPECT_TRUE(serverPort != 0);
 
     // Create client, connect to server and validate connection
     Connection::Pointer clientConn =
@@ -1131,8 +1107,8 @@ void TcpNetworking_Test::testConsumeBytesAfterReadUntil() {
         std::this_thread::sleep_for(10ms);
         timeout -= 10;
     }
-    CPPUNIT_ASSERT_MESSAGE(failureReasonServ + ", timeout: " + toString(timeout), serverChannel);
-    CPPUNIT_ASSERT_MESSAGE(failureReasonCli + ", timeout: " + toString(timeout), clientChannel);
+    EXPECT_TRUE(serverChannel) << failureReasonServ << ", timeout: " << toString(timeout);
+    EXPECT_TRUE(clientChannel) << failureReasonCli << ", timeout: " << toString(timeout);
 
     // Upon successful connection, server sends 'Ready' string to client.
     // Client reads the message with consumeBytesAfterReadUntil. Both operations are done synchronously.
@@ -1141,8 +1117,8 @@ void TcpNetworking_Test::testConsumeBytesAfterReadUntil() {
     const std::string readyMsg("Ready");
     serverChannel->write(readyMsg);
     std::string readyMsgRead;
-    CPPUNIT_ASSERT_NO_THROW(readyMsgRead = clientChannel->consumeBytesAfterReadUntil(readyMsg.size()));
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Ready message differs from expected.", readyMsgRead, readyMsg);
+    ASSERT_NO_THROW(readyMsgRead = clientChannel->consumeBytesAfterReadUntil(readyMsg.size()));
+    ASSERT_EQ(readyMsgRead, readyMsg) << "Ready message differs from expected.";
 
     // Checks the interplay between readAsyncStringUntil and consumeBytesAfterReadUntil.
     const std::string untilSep("HTTP 1.1 403 Forbidden\n\n");
@@ -1183,17 +1159,17 @@ void TcpNetworking_Test::testConsumeBytesAfterReadUntil() {
     }
 
     // The order of the asserts is important: had the timeout assert come first, failureReasonCli would never be shown.
-    CPPUNIT_ASSERT(readSeqCompleted); // if this test line is skipped and we reached timeout, next line might be
-                                      // concurrent to a late setting of failureReasonCli which could lead to a crash
-    CPPUNIT_ASSERT_MESSAGE("Read sequence test failed" + failureReasonCli, failureReasonCli.empty());
-    CPPUNIT_ASSERT_MESSAGE("ReadAsyncStringUntil - consumeBytesAfterReadUntil sequence timed out!", timeout >= 0);
+    EXPECT_TRUE(readSeqCompleted); // if this test line is skipped and we reached timeout, next line might be
+                                   // concurrent to a late setting of failureReasonCli which could lead to a crash
+    EXPECT_TRUE(failureReasonCli.empty()) << "Read sequence test failed" << failureReasonCli;
+    EXPECT_TRUE(timeout >= 0) << "ReadAsyncStringUntil - consumeBytesAfterReadUntil sequence timed out!";
 
     EventLoop::stop();
     thr.join();
 }
 
 
-void TcpNetworking_Test::testWriteAsync() {
+TEST(TestTcpNetworking, testWriteAsync) {
     using namespace std;
 
     // Data items for the test results - to be called by either the server or the client to report test
@@ -1228,15 +1204,15 @@ void TcpNetworking_Test::testWriteAsync() {
     if (testOutcome == TestOutcome::SUCCESS) {
         auto testDuration = finishTime - startTime;
         std::clog << "Test took " << duration_cast<milliseconds>(testDuration).count() << " milliseconds." << std::endl;
-        CPPUNIT_ASSERT(true);
+        EXPECT_TRUE(true);
     } else {
-        CPPUNIT_ASSERT_MESSAGE(
-              "Failed:\n---------------\n" + testOutcomeMessage + "\n---------------\nat test: " + failingTestCaseName,
-              false);
+        EXPECT_TRUE(false) << "Failed:\n---------------\n"
+                           << testOutcomeMessage << "\n---------------\nat test: " << failingTestCaseName;
     }
 }
 
-void TcpNetworking_Test::testAsyncWriteCompleteHandler() {
+
+TEST(TestTcpNetworking, testAsyncWriteCompleteHandler) {
     constexpr int timeoutSec = 10;
 
     auto thr = std::jthread(&EventLoop::work);
@@ -1260,7 +1236,7 @@ void TcpNetworking_Test::testAsyncWriteCompleteHandler() {
         clientConn.reset();
 
         auto ok = fut.wait_for(seconds(timeoutSec));
-        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, ok);
+        ASSERT_EQ(std::future_status::ready, ok);
     }
 
     EventLoop::stop();
@@ -1268,7 +1244,55 @@ void TcpNetworking_Test::testAsyncWriteCompleteHandler() {
 }
 
 
-void TcpNetworking_Test::testConnCloseChannelStop() {
+static void testConnCloseChannelStop(Channel::Pointer& alice, Channel::Pointer& bob, Connection::Pointer& bobConn) {
+    constexpr int timeoutSec = 10;
+
+    // Register handlers and asynchronously write and read from bob to alice
+    auto readProm = std::make_shared<std::promise<boost::system::error_code>>();
+    auto readFut = readProm->get_future();
+    Channel::ReadHashHandler readHandler = [readProm](const boost::system::error_code& ec, Hash&) {
+        readProm->set_value(ec);
+    };
+    alice->readAsyncHash(readHandler);
+    bob->writeAsyncHash(Hash("a", 1), [](const boost::system::error_code& ec) {});
+    auto ok = readFut.wait_for(seconds(timeoutSec));
+    ASSERT_EQ(std::future_status::ready, ok);
+    boost::system::error_code ec = readFut.get();
+    ASSERT_EQ(0, ec.value()) << ec.message();
+
+    // Register another async read handler at alice, but after bob has "touched" its TCP classes:
+    // - either close bob's channel: alice's read handler will be called with failure
+    // - or stop bob's connection: all stays fine, bob can still write and so alice will receive OK
+    readProm = std::make_shared<std::promise<boost::system::error_code>>();
+    readFut = readProm->get_future();
+    readHandler = [readProm](const boost::system::error_code& ec, Hash& h) { readProm->set_value(ec); };
+    bool stoppedConn = false;
+    if (bobConn) {
+        bobConn->stop();
+        stoppedConn = true;
+    } else {
+        bob->close();
+    }
+    EXPECT_TRUE(alice->isOpen());
+    alice->readAsyncHash(readHandler);
+    // This will fail if channel closed, but we do not care
+    bob->writeAsyncHash(Hash("a", 2), [](const boost::system::error_code& ec) {});
+
+    ok = readFut.wait_for(seconds(timeoutSec));
+    ASSERT_EQ(std::future_status::ready, ok);
+
+    ec = readFut.get();
+    if (stoppedConn) {
+        // Connection stop has no influence, reading succeeded
+        ASSERT_EQ(0, ec.value()) << ec.message();
+    } else {
+        // Channel closed, so other end read failed (2 means 'End of file')
+        ASSERT_EQ(2, ec.value()) << ec.message();
+    }
+}
+
+
+TEST(TestTcpNetworking, testConnCloseChannelStop) {
     auto thr = std::jthread(&EventLoop::work);
 
     Connection::Pointer emptyConnPtr;
@@ -1316,52 +1340,4 @@ void TcpNetworking_Test::testConnCloseChannelStop() {
 
     EventLoop::stop();
     thr.join();
-}
-
-void TcpNetworking_Test::testConnCloseChannelStop(Channel::Pointer& alice, Channel::Pointer& bob,
-                                                  Connection::Pointer& bobConn) {
-    constexpr int timeoutSec = 10;
-
-    // Register handlers and asynchronously write and read from bob to alice
-    auto readProm = std::make_shared<std::promise<boost::system::error_code>>();
-    auto readFut = readProm->get_future();
-    Channel::ReadHashHandler readHandler = [readProm](const boost::system::error_code& ec, Hash&) {
-        readProm->set_value(ec);
-    };
-    alice->readAsyncHash(readHandler);
-    bob->writeAsyncHash(Hash("a", 1), [](const boost::system::error_code& ec) {});
-    auto ok = readFut.wait_for(seconds(timeoutSec));
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, ok);
-    boost::system::error_code ec = readFut.get();
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(ec.message(), 0, ec.value());
-
-    // Register another async read handler at alice, but after bob has "touched" its TCP classes:
-    // - either close bob's channel: alice's read handler will be called with failure
-    // - or stop bob's connection: all stays fine, bob can still write and so alice will receive OK
-    readProm = std::make_shared<std::promise<boost::system::error_code>>();
-    readFut = readProm->get_future();
-    readHandler = [readProm](const boost::system::error_code& ec, Hash& h) { readProm->set_value(ec); };
-    bool stoppedConn = false;
-    if (bobConn) {
-        bobConn->stop();
-        stoppedConn = true;
-    } else {
-        bob->close();
-    }
-    CPPUNIT_ASSERT(alice->isOpen());
-    alice->readAsyncHash(readHandler);
-    // This will fail if channel closed, but we do not care
-    bob->writeAsyncHash(Hash("a", 2), [](const boost::system::error_code& ec) {});
-
-    ok = readFut.wait_for(seconds(timeoutSec));
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, ok);
-
-    ec = readFut.get();
-    if (stoppedConn) {
-        // Connection stop has no influence, reading succeeded
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(ec.message(), 0, ec.value());
-    } else {
-        // Channel closed, so other end read failed (2 means 'End of file')
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(ec.message(), 2, ec.value());
-    }
 }

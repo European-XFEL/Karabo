@@ -16,17 +16,18 @@
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
 /*
- * File:   ReadAsyncStringUntil_Test.cc
+ * File:   ReadAsyncStringUntil_Test.hh
  * Author: giovanet
  *
  * Created on May 16, 2018, 1:46 PM
  */
 
-#include "ReadAsyncStringUntil_Test.hh"
+#include <gtest/gtest.h>
 
 #include <boost/asio.hpp>
 #include <boost/bind/bind.hpp>
 #include <cassert>
+#include <chrono>
 #include <fstream>
 #include <iosfwd>
 #include <iostream>
@@ -39,12 +40,9 @@
 
 using boost::asio::ip::tcp;
 using namespace std;
-
 using std::placeholders::_1;
 using std::placeholders::_2;
-
-
-CPPUNIT_TEST_SUITE_REGISTRATION(ReadAsyncStringUntil_Test);
+using namespace std::literals::chrono_literals;
 
 
 #define MAX_DATA_LEN 1024
@@ -140,19 +138,7 @@ struct TestClient {
 };
 
 
-ReadAsyncStringUntil_Test::ReadAsyncStringUntil_Test() {}
-
-
-ReadAsyncStringUntil_Test::~ReadAsyncStringUntil_Test() {}
-
-
-void ReadAsyncStringUntil_Test::setUp() {}
-
-
-void ReadAsyncStringUntil_Test::tearDown() {}
-
-
-void ReadAsyncStringUntil_Test::runTest() {
+TEST(TestReadAsyncStringUntil, runTest) {
     // Start echo server thread ...
     int port = 54345;
     auto fut = std::async(std::launch::async, [port]() {
@@ -175,6 +161,7 @@ void ReadAsyncStringUntil_Test::runTest() {
             std::cerr << "Exception in thread: " << e.what() << "\n";
         }
     });
+    std::this_thread::sleep_for(200ms);
     // Start client ...
     karabo::data::Hash input("hostname", "localhost", "port", port, "type", "client", "sizeofLength", 0);
     TestClient client(input);
@@ -184,5 +171,5 @@ void ReadAsyncStringUntil_Test::runTest() {
     fut.wait();
     std::string msg = clientFut.get();
     // Check result of testing
-    CPPUNIT_ASSERT_MESSAGE(msg, "OK" == msg);
+    EXPECT_TRUE("OK" == msg) << msg;
 }

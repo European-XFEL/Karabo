@@ -1,5 +1,5 @@
 /*
- * InfluxDbClient_Test.cc
+ * InfluxDbClient_Test.hh
  *
  * Created on January, 31, 2023.
  *
@@ -20,10 +20,11 @@
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#include "InfluxDbClient_Test.hh"
+#include <gtest/gtest.h>
 
 #include <memory>
 #include <string>
+#include <thread>
 
 #include "karabo/data/schema/Configurator.hh"
 #include "karabo/data/types/Hash.hh"
@@ -31,7 +32,21 @@
 #include "karabo/log/Logger.hh"
 #include "karabo/net/EventLoop.hh"
 #include "karabo/net/HttpResponse.hh"
+#include "karabo/net/InfluxDbClient.hh"
 #include "karabo/net/InfluxDbClientUtils.hh"
+
+
+class TestInfluxDbClient : public ::testing::Test {
+   protected:
+    TestInfluxDbClient() : m_eventLoopThread() {}
+    ~TestInfluxDbClient() override {}
+
+    void SetUp() override;
+    void TearDown() override;
+
+    std::jthread m_eventLoopThread;
+};
+
 
 using karabo::data::Configurator;
 using karabo::data::Hash;
@@ -43,23 +58,18 @@ using karabo::net::InfluxDbClient;
 
 using std::string;
 
-CPPUNIT_TEST_SUITE_REGISTRATION(InfluxDbClient_Test);
 
-void InfluxDbClient_Test::setUp() {
+void TestInfluxDbClient::SetUp() {
     // Output messages logged during the test to the test output.
     Hash config("level", "INFO");
     Logger::configure(config);
     Logger::useConsole();
 
     m_eventLoopThread = std::jthread([](std::stop_token stoken) { EventLoop::work(); });
-
-    m_influxClient = karabo::net::buildInfluxReadClient();
 }
 
 
-void InfluxDbClient_Test::tearDown() {
-    m_influxClient.reset();
-
+void TestInfluxDbClient::TearDown() {
     EventLoop::stop();
     if (m_eventLoopThread.joinable()) {
         m_eventLoopThread.join();
@@ -67,20 +77,22 @@ void InfluxDbClient_Test::tearDown() {
     }
 }
 
-void InfluxDbClient_Test::testShowDatabases() {
+
+TEST_F(TestInfluxDbClient, testShowDatabases) {
+    auto influxClient = karabo::net::buildInfluxReadClient();
     std::clog << "Testing InfluxDbClient execution of SHOW DATABASES ..." << std::endl;
     auto prom = std::make_shared<std::promise<HttpResponse>>();
     std::future<HttpResponse> fut = prom->get_future();
-    m_influxClient->queryDb("SHOW DATABASES", [prom](const HttpResponse& resp) { prom->set_value(resp); });
+    influxClient->queryDb("SHOW DATABASES", [prom](const HttpResponse& resp) { prom->set_value(resp); });
     auto status = fut.wait_for(std::chrono::milliseconds(3500));
     if (status != std::future_status::ready) {
-        CPPUNIT_ASSERT_MESSAGE("Timed out waiting for reply of SHOW DATABASES query", false);
+        ASSERT_TRUE(false) << "SHOW MESSAGE returned an empty response.";
     } else {
-        std::clog << " ... command submitted to Influx '" << m_influxClient->influxVersion() << "' at '"
-                  << m_influxClient->serverUrl() << "'." << std::endl;
+        std::clog << " ... command submitted to Influx '" << influxClient->influxVersion() << "' at '"
+                  << influxClient->serverUrl() << "'." << std::endl;
     }
     auto resp = fut.get();
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("SHOW DATABASES failed", 200, resp.code);
-    CPPUNIT_ASSERT_MESSAGE("SHOW MESSAGE returned an empty response.", resp.payload.length() > 0);
-    std::clog << "OK" << std::endl;
+    ASSERT_EQ(200, resp.code) << "SHOW DATABASES failed";
+    ASSERT_TRUE(resp.payload.length() > 0) << "SHOW MESSAGE returned an empty response.";
+    // std::clog << "OK" << std::endl;
 }

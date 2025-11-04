@@ -165,20 +165,20 @@ file(GLOB dataSchemaTestRunner_FILES CONFIGURE_DEPENDS
 list(APPEND dataSchemaTestRunner_FILES $<TARGET_OBJECTS:GTEST_RUNNER_NOLOOP>)
 
 set(netTestRunner_FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/net/Amqp_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/net/Broker_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/net/EventLoop_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/net/HttpClient_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/net/InfluxDbClient_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/net/MQTcpNetworking.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/net/NetworkInterface_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/net/ParseUrl_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/net/ReadAsyncStringUntil_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/net/Strand_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/net/TcpNetworking_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/net/testAmqp.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/net/testBroker.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/net/testEventLoop.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/net/testHttpClient.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/net/testInfluxDbClient.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/net/testMQTcpNetworking.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/net/testNetworkInterface.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/net/testParseUrl.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/net/testReadAsyncStringUntil.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/net/testStrand.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/net/testTcpNetworking.cc
     $<TARGET_OBJECTS:BROKER_UTILS>
     $<TARGET_OBJECTS:WAIT_UTILS>
-    $<TARGET_OBJECTS:TEST_RUNNER_NOLOOP>
+    $<TARGET_OBJECTS:GTEST_RUNNER_NOLOOP>
 )
 
 set(utilTestRunner_FILES

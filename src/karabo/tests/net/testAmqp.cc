@@ -16,18 +16,20 @@
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
 /*
- * File:   Amqp_Test.cc
+ * File:   Amqp_Test.hh
  *
  * Created on March 4th, 2024
  */
 
+#include <gtest/gtest.h>
 
-#include "Amqp_Test.hh"
-
+#include <atomic>
 #include <chrono>
 #include <future>
 #include <mutex>
+#include <string>
 #include <thread>
+#include <vector>
 
 #include "karabo/data/types/StringTools.hh"
 #include "karabo/log/Logger.hh"
@@ -45,48 +47,36 @@ using namespace std::chrono;
 using namespace std::literals::chrono_literals;
 using karabo::tests::waitForCondition;
 
-CPPUNIT_TEST_SUITE_REGISTRATION(Amqp_Test);
-
-std::atomic<bool> Amqp_Test::m_loggingIsSetup(false);
-
-Amqp_Test::Amqp_Test()
-    // Use the environment variable KARABO_CI_BROKERS to define the brokers to use in tests:
-    // e.g. export KARABO_CI_BROKERS=amqp://an-amqp-broker:5672
-    // If that variable is not defined, KARABO_BROKER with an amqp broker also works
-    : m_defaultBrokers(getBrokerFromEnv("amqp")), m_timeout(10), m_timeoutMs(10'000) {
-    if (false &&                            // remove 'false &&' to switch on logging
-        !m_loggingIsSetup.exchange(true)) { // configure logging only once in the process
-        log::Logger::configure(data::Hash("level", "DEBUG"));
-        log::Logger::useConsole();
-    }
-}
-
-Amqp_Test::~Amqp_Test() {}
+// Use the environment variable KARABO_CI_BROKERS to define the brokers to use in tests:
+// e.g. export KARABO_CI_BROKERS=amqp://an-amqp-broker:5672
+// If that variable is not defined, KARABO_BROKER with an amqp broker also works
+static std::vector<std::string> m_defaultBrokers = getBrokerFromEnv("amqp");
+static const std::chrono::seconds m_timeout = 10s;
+static const unsigned int m_timeoutMs = 10'000;
 
 
-void Amqp_Test::testConnection() {
+TEST(TestAmqp, testConnection) {
     const std::string urlBadHostPort("amqp://wha:whu@invalidhost:5555");
     if (m_defaultBrokers.empty()) {
         std::clog << " No AMQP broker in environment. Skipping those connection tests that require it..." << std::flush;
     } else {
         // test asyncConnect - proper url
         net::AmqpConnection::Pointer connection(std::make_shared<net::AmqpConnection>(m_defaultBrokers));
-        CPPUNIT_ASSERT(!connection->isConnected());
-        CPPUNIT_ASSERT_EQUAL(std::string("AMQP::Connection is not yet created!"), connection->connectionInfo());
+        EXPECT_TRUE(!connection->isConnected());
+        ASSERT_EQ("AMQP::Connection is not yet created!", connection->connectionInfo());
         auto done = std::make_shared<std::promise<boost::system::error_code>>();
         auto fut = done->get_future();
         connection->asyncConnect([done](const boost::system::error_code ec) { done->set_value(ec); });
-        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, fut.wait_for(m_timeout));
+        ASSERT_EQ(std::future_status::ready, fut.wait_for(m_timeout));
         const boost::system::error_code ec = fut.get();
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(ec.message(), static_cast<int>(boost::system::errc::success), ec.value());
-        CPPUNIT_ASSERT_EQUAL(m_defaultBrokers.front(), connection->getCurrentUrl());
-        CPPUNIT_ASSERT(connection->isConnected());
-        CPPUNIT_ASSERT_EQUAL(
-              std::string("AMQP::Connection is usable, ready, initialized, not closed and has 0 channels."),
-              connection->connectionInfo());
+        ASSERT_EQ(boost::system::errc::success, ec.value()) << ec.message();
+        ASSERT_EQ(m_defaultBrokers.front(), connection->getCurrentUrl());
+        EXPECT_TRUE(connection->isConnected());
+        ASSERT_EQ("AMQP::Connection is usable, ready, initialized, not closed and has 0 channels.",
+                  connection->connectionInfo());
         // We can safely destruct the connection again.
-        CPPUNIT_ASSERT_EQUAL(1l, connection.use_count());
-        CPPUNIT_ASSERT_NO_THROW(connection.reset());
+        ASSERT_EQ(1l, connection.use_count());
+        EXPECT_NO_THROW(connection.reset());
 
         // test asyncConnect - but improper user/password url
         std::string urlBadUser = m_defaultBrokers.front();
@@ -96,15 +86,14 @@ void Amqp_Test::testConnection() {
         auto done2 = std::make_shared<std::promise<boost::system::error_code>>();
         auto fut2 = done2->get_future();
         connection->asyncConnect([done2](const boost::system::error_code ec) { done2->set_value(ec); });
-        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, fut2.wait_for(m_timeout));
+        ASSERT_EQ(std::future_status::ready, fut2.wait_for(m_timeout));
         const boost::system::error_code ec2 = fut2.get();
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(ec2.message(), static_cast<int>(boost::system::errc::connection_refused),
-                                     ec2.value());
-        CPPUNIT_ASSERT_EQUAL(urlBadUser, connection->getCurrentUrl());
-        CPPUNIT_ASSERT(!connection->isConnected());
+        ASSERT_EQ(boost::system::errc::connection_refused, ec2.value()) << ec2.message();
+        ASSERT_EQ(urlBadUser, connection->getCurrentUrl());
+        EXPECT_TRUE(!connection->isConnected());
         waitForCondition([&connection]() { return connection.use_count() == 1l; }, m_timeoutMs);
-        CPPUNIT_ASSERT_EQUAL(1l, connection.use_count());
-        CPPUNIT_ASSERT_NO_THROW(connection.reset());
+        ASSERT_EQ(1l, connection.use_count());
+        EXPECT_NO_THROW(connection.reset());
 
         // test asyncConnect with > 1 urls, but all bad: will receive error code matching the last url
         // (first: last is urlBadHostPort)
@@ -113,15 +102,15 @@ void Amqp_Test::testConnection() {
         auto done4 = std::make_shared<std::promise<boost::system::error_code>>();
         auto fut4 = done4->get_future();
         connection->asyncConnect([done4](const boost::system::error_code ec) { done4->set_value(ec); });
-        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, fut4.wait_for(m_timeout));
+        ASSERT_EQ(std::future_status::ready, fut4.wait_for(m_timeout));
         const boost::system::error_code ec4 = fut4.get();
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(ec4.message(), // not_connected since last url is urlBadHostPort
-                                     static_cast<int>(boost::system::errc::not_connected), ec4.value());
+        ASSERT_EQ(boost::system::errc::not_connected, ec4.value())
+              << ec4.message(); // not_connected since last url is urlBadHostPort
         // Note: All urls failed, so connection rolls back to first one again
-        CPPUNIT_ASSERT_EQUAL(urls.front(), connection->getCurrentUrl());
-        CPPUNIT_ASSERT(!connection->isConnected());
-        CPPUNIT_ASSERT_EQUAL(1l, connection.use_count());
-        CPPUNIT_ASSERT_NO_THROW(connection.reset());
+        ASSERT_EQ(urls.front(), connection->getCurrentUrl());
+        EXPECT_TRUE(!connection->isConnected());
+        ASSERT_EQ(1l, connection.use_count());
+        EXPECT_NO_THROW(connection.reset());
 
         // (now: last is bad credentials)
         urls = {urlBadHostPort, urlBadUser};
@@ -129,16 +118,16 @@ void Amqp_Test::testConnection() {
         auto done5 = std::make_shared<std::promise<boost::system::error_code>>();
         auto fut5 = done5->get_future();
         connection->asyncConnect([done5](const boost::system::error_code ec) { done5->set_value(ec); });
-        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, fut5.wait_for(m_timeout));
+        ASSERT_EQ(std::future_status::ready, fut5.wait_for(m_timeout));
         const boost::system::error_code ec5 = fut5.get();
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(ec5.message(), // connection_refused since last url is 'urlBadUser'
-                                     static_cast<int>(boost::system::errc::connection_refused), ec5.value());
+        ASSERT_EQ(static_cast<int>(boost::system::errc::connection_refused), ec5.value())
+              << ec5.message(); // connection_refused since last url is 'urlBadUser'
         // Note: All urls failed, so connection rolls back to first one again
-        CPPUNIT_ASSERT_EQUAL(urls.front(), connection->getCurrentUrl());
-        CPPUNIT_ASSERT(!connection->isConnected());
+        ASSERT_EQ(urls.front(), connection->getCurrentUrl());
+        EXPECT_TRUE(!connection->isConnected());
         waitForCondition([&connection]() { return connection.use_count() == 1l; }, m_timeoutMs);
-        CPPUNIT_ASSERT_EQUAL(1l, connection.use_count());
-        CPPUNIT_ASSERT_NO_THROW(connection.reset());
+        ASSERT_EQ(1l, connection.use_count());
+        EXPECT_NO_THROW(connection.reset());
 
         // Now test - 4 addresses, last but one is valid and
         //          - use many concurrent asyncConnect
@@ -157,13 +146,13 @@ void Amqp_Test::testConnection() {
             std::this_thread::sleep_for(500us);
         }
         for (int i = 0; i < numConcurrentConnect; ++i) {
-            CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futs3[i].wait_for(3 * m_timeout));
+            ASSERT_EQ(std::future_status::ready, futs3[i].wait_for(3 * m_timeout));
             const boost::system::error_code ec3 = futs3[i].get();
-            CPPUNIT_ASSERT_EQUAL_MESSAGE(ec3.message(), static_cast<int>(boost::system::errc::success), ec3.value());
+            ASSERT_EQ(static_cast<int>(boost::system::errc::success), ec3.value()) << ec3.message();
         }
-        CPPUNIT_ASSERT_GREATEREQUAL(2ul, urls.size());
-        CPPUNIT_ASSERT_EQUAL(urls[urls.size() - 2], connection->getCurrentUrl());
-        CPPUNIT_ASSERT(connection->isConnected());
+        ASSERT_LE(2ul, urls.size());
+        ASSERT_EQ(urls[urls.size() - 2], connection->getCurrentUrl());
+        EXPECT_TRUE(connection->isConnected());
 
         // Here add test for successful channel creation
         auto doneCreation = std::make_shared<std::promise<std::shared_ptr<AMQP::Channel>>>();
@@ -173,17 +162,17 @@ void Amqp_Test::testConnection() {
                   if (!errMsg.empty()) doneCreation->set_value(nullptr);
                   else doneCreation->set_value(channel);
               });
-        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futCreateChannel.wait_for(m_timeout));
+        ASSERT_EQ(std::future_status::ready, futCreateChannel.wait_for(m_timeout));
         auto channel = futCreateChannel.get();
-        CPPUNIT_ASSERT(channel);          // A channel has been created
-        CPPUNIT_ASSERT(channel->ready()); // ... and is ready
+        EXPECT_TRUE(channel);          // A channel has been created
+        EXPECT_TRUE(channel->ready()); // ... and is ready
 
         waitForCondition([&channel]() { return channel.use_count() == 1l; }, m_timeoutMs);
-        CPPUNIT_ASSERT_EQUAL(1l, channel.use_count());
-        CPPUNIT_ASSERT_NO_THROW(channel.reset());
+        ASSERT_EQ(1l, channel.use_count());
+        EXPECT_NO_THROW(channel.reset());
 
-        CPPUNIT_ASSERT_EQUAL(1l, connection.use_count());
-        CPPUNIT_ASSERT_NO_THROW(connection.reset());
+        ASSERT_EQ(1l, connection.use_count());
+        EXPECT_NO_THROW(connection.reset());
 
         // Now channel creation with lazy connection (i.e. connect if not yet connected)
         const int numChannels = 100;                              // Directly stress test with many channels
@@ -205,11 +194,11 @@ void Amqp_Test::testConnection() {
             std::this_thread::sleep_for(500us);
         }
         for (int i = 0; i < numChannels; ++i) {
-            CPPUNIT_ASSERT_EQUAL(std::future_status::ready, channelFutures[i].wait_for(m_timeout));
-            CPPUNIT_ASSERT_EQUAL(std::string("Channel created"), channelFutures[i].get());
+            ASSERT_EQ(std::future_status::ready, channelFutures[i].wait_for(m_timeout));
+            ASSERT_EQ("Channel created", channelFutures[i].get());
         }
-        CPPUNIT_ASSERT_EQUAL(1l, connection.use_count());
-        CPPUNIT_ASSERT_NO_THROW(connection.reset());
+        ASSERT_EQ(1l, connection.use_count());
+        EXPECT_NO_THROW(connection.reset());
 
         // Test creation of many, many channels and check that we get failure report (and no crash)
         const size_t maxNumChannels = 2047; // number that current lib version allows
@@ -223,21 +212,21 @@ void Amqp_Test::testConnection() {
                   [doneCreation](const std::shared_ptr<AMQP::Channel>& channel, const std::string& errMsg) {
                       doneCreation->set_value(std::pair(channel, errMsg));
                   });
-            CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futCreateChannel.wait_for(m_timeout));
+            ASSERT_EQ(std::future_status::ready, futCreateChannel.wait_for(m_timeout));
             const auto channel_msg = futCreateChannel.get();
             if (i < maxNumChannels) {
-                CPPUNIT_ASSERT_MESSAGE("Channel missing: " + data::toString(i), channel_msg.first);
+                EXPECT_TRUE(channel_msg.first) << "Channel missing: " << data::toString(i);
                 channels.push_back(channel_msg.first); // keep alive
             } else {
-                CPPUNIT_ASSERT_EQUAL(std::string("Runtime exception creating channel: failed to open channel: "
-                                                 "max number of channels has been reached"),
-                                     channel_msg.second);
+                ASSERT_EQ(std::string("Runtime exception creating channel: failed to open channel: "
+                                      "max number of channels has been reached"),
+                          channel_msg.second);
             }
         }
-        CPPUNIT_ASSERT_EQUAL(maxNumChannels, channels.size());
+        ASSERT_EQ(maxNumChannels, channels.size());
         channels.clear();
-        CPPUNIT_ASSERT_EQUAL(1l, connection.use_count());
-        CPPUNIT_ASSERT_NO_THROW(connection.reset());
+        ASSERT_EQ(1l, connection.use_count());
+        EXPECT_NO_THROW(connection.reset());
 
         // Test that pending handlers (connect and create channel) are called in destructor
         connection = std::make_shared<net::AmqpConnection>(urls); // Still 3 urls, last one valid
@@ -260,24 +249,23 @@ void Amqp_Test::testConnection() {
 
         // Rarely, direct check of use_count gave 2. Give other threads the chance to finish
         waitForCondition([&connection]() { return connection.use_count() == 1l; }, m_timeoutMs);
-        CPPUNIT_ASSERT_EQUAL(1l, connection.use_count());
-        CPPUNIT_ASSERT_NO_THROW(connection.reset());
-        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, connFut.wait_for(m_timeout));
-        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, chanFut.wait_for(m_timeout));
+        ASSERT_EQ(1l, connection.use_count());
+        EXPECT_NO_THROW(connection.reset());
+        ASSERT_EQ(std::future_status::ready, connFut.wait_for(m_timeout));
+        ASSERT_EQ(std::future_status::ready, chanFut.wait_for(m_timeout));
         const boost::system::error_code connEc = connFut.get();
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(connEc.message(), static_cast<int>(boost::system::errc::operation_canceled),
-                                     connEc.value());
-        CPPUNIT_ASSERT_EQUAL(std::string("Connection destructed"), chanFut.get());
+        ASSERT_EQ(static_cast<int>(boost::system::errc::operation_canceled), connEc.value()) << connEc.message();
+        ASSERT_EQ("Connection destructed", chanFut.get());
 
         // test destruction within own thread
         connection = std::make_shared<net::AmqpConnection>(m_defaultBrokers);
         auto done6 = std::make_shared<std::promise<boost::system::error_code>>();
         auto fut6 = done6->get_future();
         connection->asyncConnect([done6](const boost::system::error_code ec) { done6->set_value(ec); });
-        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, fut6.wait_for(m_timeout));
+        ASSERT_EQ(std::future_status::ready, fut6.wait_for(m_timeout));
         const boost::system::error_code ec6 = fut6.get();
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(ec6.message(), static_cast<int>(boost::system::errc::success), ec6.value());
-        CPPUNIT_ASSERT(connection->isConnected());
+        ASSERT_EQ(static_cast<int>(boost::system::errc::success), ec6.value()) << ec6.message();
+        EXPECT_TRUE(connection->isConnected());
 
         auto promCount = std::make_shared<std::promise<long>>();
         auto futCount = promCount->get_future();
@@ -288,10 +276,10 @@ void Amqp_Test::testConnection() {
             connection.reset(); // Triggers destruction in thread
             promCount->set_value(count);
         });
-        CPPUNIT_ASSERT_EQUAL(0l, connection.use_count()); // since moved into lambda
+        ASSERT_EQ(0l, connection.use_count()); // since moved into lambda
 
-        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futCount.wait_for(m_timeout));
-        CPPUNIT_ASSERT_EQUAL(1l, futCount.get());
+        ASSERT_EQ(std::future_status::ready, futCount.wait_for(m_timeout));
+        ASSERT_EQ(1l, futCount.get());
     }
     { // test invalid tcp address - the tests for post and dispatch sneaked in as well
         const std::vector<std::string> invalidIps(1, urlBadHostPort);
@@ -301,13 +289,13 @@ void Amqp_Test::testConnection() {
         auto donePost = std::make_shared<std::promise<void>>();
         auto futPost = donePost->get_future();
         connection->post([donePost]() { donePost->set_value(); });
-        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futPost.wait_for(m_timeout));
+        ASSERT_EQ(std::future_status::ready, futPost.wait_for(m_timeout));
         futPost.get();
 
         auto doneDispatch = std::make_shared<std::promise<void>>();
         auto futDispatch = doneDispatch->get_future();
         connection->dispatch([doneDispatch]() { doneDispatch->set_value(); });
-        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futDispatch.wait_for(m_timeout));
+        ASSERT_EQ(std::future_status::ready, futDispatch.wait_for(m_timeout));
         futDispatch.get();
         // TODO? Add a test that checks that dispatching a method means directly calling it if already in the
         // io_context?
@@ -316,11 +304,11 @@ void Amqp_Test::testConnection() {
         auto done = std::make_shared<std::promise<boost::system::error_code>>();
         auto fut = done->get_future();
         connection->asyncConnect([done](const boost::system::error_code ec) { done->set_value(ec); });
-        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, fut.wait_for(m_timeout));
+        ASSERT_EQ(std::future_status::ready, fut.wait_for(m_timeout));
         const boost::system::error_code ec = fut.get();
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(ec.message(), static_cast<int>(boost::system::errc::not_connected), ec.value());
-        CPPUNIT_ASSERT_EQUAL(urlBadHostPort, connection->getCurrentUrl());
-        CPPUNIT_ASSERT(!connection->isConnected());
+        ASSERT_EQ(static_cast<int>(boost::system::errc::not_connected), ec.value()) << ec.message();
+        ASSERT_EQ(urlBadHostPort, connection->getCurrentUrl());
+        EXPECT_TRUE(!connection->isConnected());
 
         // Also test failing channel creation because connection cannot be established
         auto doneCreation = std::make_shared<std::promise<std::string>>();
@@ -331,15 +319,15 @@ void Amqp_Test::testConnection() {
                   if (channel) doneCreation->set_value("Non empty channelPtr!");
                   else doneCreation->set_value(errMsg);
               });
-        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futCreateChannel.wait_for(m_timeout));
+        ASSERT_EQ(std::future_status::ready, futCreateChannel.wait_for(m_timeout));
         const std::string msg(futCreateChannel.get());
-        CPPUNIT_ASSERT_MESSAGE(msg, msg.find("Connection could not be established") != std::string::npos);
+        EXPECT_TRUE(msg.find("Connection could not be established") != std::string::npos) << msg;
 
         // We can safely destruct the connection again
-        CPPUNIT_ASSERT(!connection->isConnected());
+        EXPECT_TRUE(!connection->isConnected());
         waitForCondition([&connection]() { return connection.use_count() == 1l; }, m_timeoutMs);
-        CPPUNIT_ASSERT_EQUAL(1l, connection.use_count());
-        CPPUNIT_ASSERT_NO_THROW(connection.reset());
+        ASSERT_EQ(1l, connection.use_count());
+        EXPECT_NO_THROW(connection.reset());
     }
     { // test wrongly formatted address
         net::AmqpConnection::Pointer connection(
@@ -347,17 +335,17 @@ void Amqp_Test::testConnection() {
         auto done = std::make_shared<std::promise<boost::system::error_code>>();
         auto fut = done->get_future();
         connection->asyncConnect([done](const boost::system::error_code ec) { done->set_value(ec); });
-        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, fut.wait_for(m_timeout));
+        ASSERT_EQ(std::future_status::ready, fut.wait_for(m_timeout));
         const boost::system::error_code ec = fut.get();
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(ec.message(), static_cast<int>(boost::system::errc::wrong_protocol_type),
-                                     ec.value());
-        CPPUNIT_ASSERT(!connection->isConnected());
-        CPPUNIT_ASSERT_EQUAL(std::string("not://proper:protocol"), connection->getCurrentUrl());
-        CPPUNIT_ASSERT_NO_THROW(connection.reset());
+        ASSERT_EQ(static_cast<int>(boost::system::errc::wrong_protocol_type), ec.value()) << ec.message();
+        EXPECT_TRUE(!connection->isConnected());
+        ASSERT_EQ("not://proper:protocol", connection->getCurrentUrl());
+        EXPECT_NO_THROW(connection.reset());
     }
 }
 
-void Amqp_Test::testClient() {
+
+TEST(TestAmqp, testClient) {
     if (m_defaultBrokers.empty()) {
         std::clog << " No AMQP broker in environment. Skipping client tests..." << std::endl;
         return;
@@ -368,9 +356,9 @@ void Amqp_Test::testClient() {
     auto done = std::make_shared<std::promise<boost::system::error_code>>();
     auto fut = done->get_future();
     connection->asyncConnect([done](const boost::system::error_code ec) { done->set_value(ec); });
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, fut.wait_for(m_timeout));
+    ASSERT_EQ(std::future_status::ready, fut.wait_for(m_timeout));
     const boost::system::error_code ec = fut.get();
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(ec.message(), static_cast<int>(boost::system::errc::success), ec.value());
+    ASSERT_EQ(static_cast<int>(boost::system::errc::success), ec.value()) << ec.message();
 
     // Create client "bob" with a read handler that simply appends data it reads to a container ('readByBob')
     auto readByBob =
@@ -405,13 +393,13 @@ void Amqp_Test::testClient() {
                         [subDone2](const boost::system::error_code ec) { subDone2->set_value(ec); });
 
     // Now wait for both subscriptions to be done
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, fut1.wait_for(m_timeout));
+    ASSERT_EQ(std::future_status::ready, fut1.wait_for(m_timeout));
     const boost::system::error_code ec1 = fut1.get();
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(ec1.message(), static_cast<int>(boost::system::errc::success), ec1.value());
+    ASSERT_EQ(static_cast<int>(boost::system::errc::success), ec1.value()) << ec1.message();
 
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, fut2.wait_for(m_timeout));
+    ASSERT_EQ(std::future_status::ready, fut2.wait_for(m_timeout));
     const boost::system::error_code ec2 = fut2.get();
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(ec2.message(), static_cast<int>(boost::system::errc::success), ec2.value());
+    ASSERT_EQ(static_cast<int>(boost::system::errc::success), ec2.value()) << ec2.message();
 
     // Subscribe twice more after channel is already created
     auto subDone3 = std::make_shared<std::promise<boost::system::error_code>>();
@@ -424,13 +412,13 @@ void Amqp_Test::testClient() {
                         [subDone4](const boost::system::error_code ec) { subDone4->set_value(ec); });
 
     // Again wait for both subscriptions to be done
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, fut3.wait_for(m_timeout));
+    ASSERT_EQ(std::future_status::ready, fut3.wait_for(m_timeout));
     const boost::system::error_code ec3 = fut3.get();
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(ec3.message(), static_cast<int>(boost::system::errc::success), ec3.value());
+    ASSERT_EQ(static_cast<int>(boost::system::errc::success), ec3.value()) << ec3.message();
 
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, fut4.wait_for(m_timeout));
+    ASSERT_EQ(std::future_status::ready, fut4.wait_for(m_timeout));
     const boost::system::error_code ec4 = fut4.get();
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(ec4.message(), static_cast<int>(boost::system::errc::success), ec4.value());
+    ASSERT_EQ(static_cast<int>(boost::system::errc::success), ec4.value()) << ec4.message();
 
     // Now create 2nd client 'alice' and let it talk to 'bob' - no need to subscribe beforehand
     // Note that 'alice' will only receive one message at the very end.
@@ -455,32 +443,32 @@ void Amqp_Test::testClient() {
     }
     // Wait for confirmations of all published messages
     for (std::future<boost::system::error_code>& fut : publishFutures) {
-        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, fut.wait_for(m_timeout));
+        ASSERT_EQ(std::future_status::ready, fut.wait_for(m_timeout));
         const boost::system::error_code ec = fut.get();
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(ec.message(), static_cast<int>(boost::system::errc::success), ec.value());
+        ASSERT_EQ(static_cast<int>(boost::system::errc::success), ec.value()) << ec.message();
     }
 
     // Bob should have received the first four messages (and in order),
     // but not the fifth since bob did not subscribe to routingKey "bob5"
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futBobRead4.wait_for(m_timeout));
-    CPPUNIT_ASSERT_EQUAL(4, readByBobCounter->load());
-    CPPUNIT_ASSERT_EQUAL(4ul, readByBob->size());
+    ASSERT_EQ(std::future_status::ready, futBobRead4.wait_for(m_timeout));
+    ASSERT_EQ(4, readByBobCounter->load());
+    ASSERT_EQ(4ul, readByBob->size());
     for (size_t i = 0; i < readByBob->size(); ++i) {
         std::string exchange(prefix + "exchange ");
         exchange.back() = (i % 2 == 0 ? '1' : '2'); // Same alternating exchanges as for sending
-        CPPUNIT_ASSERT_EQUAL_MESSAGE("Message " + karabo::data::toString(i), exchange, std::get<1>(readByBob->at(i)));
+        ASSERT_EQ(exchange, std::get<1>(readByBob->at(i))) << "Message " << i;
         std::string routingKey("bob ");
         routingKey.back() = '1' + i; // "bob1", "bob2", "bob3", "bob4"
-        CPPUNIT_ASSERT_EQUAL_MESSAGE("Message " + karabo::data::toString(i), routingKey, std::get<2>(readByBob->at(i)));
+        ASSERT_EQ(routingKey, std::get<2>(readByBob->at(i))) << "Message " << i;
         // Check data content
         const std::shared_ptr<std::vector<char>>& data = std::get<0>(readByBob->at(i));
-        CPPUNIT_ASSERT_EQUAL_MESSAGE("Message " + karabo::data::toString(i), 10ul, data->size());
-        CPPUNIT_ASSERT_EQUAL_MESSAGE("Message " + karabo::data::toString(i), static_cast<char>('a' + i), (*data)[0]);
+        ASSERT_EQ(10ul, data->size()) << "Message " << i;
+        ASSERT_EQ(static_cast<char>('a' + i), (*data)[0]) << "Message " << i;
     }
 
     // Give some time for the fifth message - though it should not come
     std::this_thread::sleep_for(100ms);
-    CPPUNIT_ASSERT_EQUAL(4ul, readByBob->size());
+    ASSERT_EQ(4ul, readByBob->size());
 
     //***************************************************************
     // Now test alice subscribing and bob publishing (other order between subscription and publish than before)
@@ -488,19 +476,19 @@ void Amqp_Test::testClient() {
     auto futAlice = subDoneAlice->get_future();
     alice->asyncSubscribe(prefix + "other_exchange", "alice",
                           [subDoneAlice](const boost::system::error_code ec) { subDoneAlice->set_value(ec); });
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futAlice.wait_for(m_timeout));
+    ASSERT_EQ(std::future_status::ready, futAlice.wait_for(m_timeout));
     const boost::system::error_code ecAlice = futAlice.get();
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(ecAlice.message(), static_cast<int>(boost::system::errc::success), ecAlice.value());
+    ASSERT_EQ(static_cast<int>(boost::system::errc::success), ecAlice.value()) << ecAlice.message();
 
     // Simply check that a message arrives after max. 2 seconds...
-    CPPUNIT_ASSERT_EQUAL(0, numReadAlice->load());
+    ASSERT_EQ(0, numReadAlice->load());
     bob->asyncPublish(prefix + "other_exchange", "alice", std::make_shared<std::vector<char>>(5, 'b'),
                       [](const boost::system::error_code ec) {});
     for (unsigned int i = 0; i < m_timeoutMs; ++i) {
         if (*numReadAlice >= 1) break;
         std::this_thread::sleep_for(1ms);
     }
-    CPPUNIT_ASSERT_EQUAL(1, numReadAlice->load());
+    ASSERT_EQ(1, numReadAlice->load());
 
     // Now check that read handler can be changed (intended only for postponed setting, though)
     auto numNewReadAlice = std::make_shared<std::atomic<int>>(0);
@@ -512,13 +500,13 @@ void Amqp_Test::testClient() {
         if (*numNewReadAlice >= 1) break;
         std::this_thread::sleep_for(1ms);
     }
-    CPPUNIT_ASSERT_EQUAL(1, numNewReadAlice->load());
+    ASSERT_EQ(1, numNewReadAlice->load());
     // Even with some extra time for message travel, old handler does not receive
     std::this_thread::sleep_for(100ms);
-    CPPUNIT_ASSERT_EQUAL(1, numReadAlice->load()); // as before
+    ASSERT_EQ(1, numReadAlice->load()); // as before
 
     // Cannot set an invalid read handler
-    CPPUNIT_ASSERT_THROW(alice->setReadHandler(net::AmqpClient::ReadHandler()), karabo::data::ParameterException);
+    EXPECT_THROW(alice->setReadHandler(net::AmqpClient::ReadHandler()), karabo::data::ParameterException);
 
     //***************************************************************
     // Now test unsubscribing
@@ -526,10 +514,9 @@ void Amqp_Test::testClient() {
     auto futUnsubAlice = unsubDoneAlice->get_future();
     alice->asyncUnsubscribe(prefix + "other_exchange", "alice",
                             [unsubDoneAlice](const boost::system::error_code ec) { unsubDoneAlice->set_value(ec); });
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futUnsubAlice.wait_for(m_timeout));
+    ASSERT_EQ(std::future_status::ready, futUnsubAlice.wait_for(m_timeout));
     const boost::system::error_code ecAliceUnsub = futUnsubAlice.get();
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(ecAliceUnsub.message(), static_cast<int>(boost::system::errc::success),
-                                 ecAliceUnsub.value());
+    ASSERT_EQ(static_cast<int>(boost::system::errc::success), ecAliceUnsub.value()) << ecAliceUnsub.message();
 
     //***************************************************************
     // Test that, after alice has unsubscribed above, it does not receive further messages
@@ -537,13 +524,12 @@ void Amqp_Test::testClient() {
     auto futWriteBob = writeDoneBob->get_future();
     bob->asyncPublish(prefix + "other_exchange", "alice", std::make_shared<std::vector<char>>(4, 'c'),
                       [writeDoneBob](const boost::system::error_code ec) { writeDoneBob->set_value(ec); });
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futWriteBob.wait_for(m_timeout));
+    ASSERT_EQ(std::future_status::ready, futWriteBob.wait_for(m_timeout));
     const boost::system::error_code ecBobWrite = futWriteBob.get();
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(ecBobWrite.message(), static_cast<int>(boost::system::errc::success),
-                                 ecBobWrite.value());
+    ASSERT_EQ(static_cast<int>(boost::system::errc::success), ecBobWrite.value()) << ecBobWrite.message();
 
-    std::this_thread::sleep_for(100ms);               // Grant some message travel time...
-    CPPUNIT_ASSERT_EQUAL(1, numNewReadAlice->load()); // ...but nothing arrives due to unsubscription!
+    std::this_thread::sleep_for(100ms);    // Grant some message travel time...
+    ASSERT_EQ(1, numNewReadAlice->load()); // ...but nothing arrives due to unsubscription!
 
     //***************************************************************
     // Test unsubscription of something not subscribed - gives success (though that is debatable)
@@ -551,10 +537,9 @@ void Amqp_Test::testClient() {
     auto futUnsubAlice2 = unsubDoneAlice2->get_future();
     alice->asyncUnsubscribe(prefix + "other_exchange", "not_subscribed_routing_key",
                             [unsubDoneAlice2](const boost::system::error_code ec) { unsubDoneAlice2->set_value(ec); });
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futUnsubAlice2.wait_for(m_timeout));
+    ASSERT_EQ(std::future_status::ready, futUnsubAlice2.wait_for(m_timeout));
     const boost::system::error_code ecAliceUnsub2 = futUnsubAlice2.get();
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(ecAliceUnsub2.message(), static_cast<int>(boost::system::errc::success),
-                                 ecAliceUnsub2.value());
+    ASSERT_EQ(static_cast<int>(boost::system::errc::success), ecAliceUnsub2.value()) << ecAliceUnsub2.message();
 
     //***************************************************************
     // Little concurrency test: Subscribing and immediately unsubscribing works
@@ -567,26 +552,23 @@ void Amqp_Test::testClient() {
     alice->asyncUnsubscribe(prefix + "other_exchange", "alice",
                             [unsubDoneAlice3](const boost::system::error_code ec) { unsubDoneAlice3->set_value(ec); });
 
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futSubAlice2.wait_for(m_timeout));
+    ASSERT_EQ(std::future_status::ready, futSubAlice2.wait_for(m_timeout));
     const boost::system::error_code ecSubAlice2 = futSubAlice2.get();
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(ecSubAlice2.message(), static_cast<int>(boost::system::errc::success),
-                                 ecSubAlice2.value());
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futUnsubAlice3.wait_for(m_timeout));
+    ASSERT_EQ(static_cast<int>(boost::system::errc::success), ecSubAlice2.value()) << ecSubAlice2.message();
+    ASSERT_EQ(std::future_status::ready, futUnsubAlice3.wait_for(m_timeout));
     const boost::system::error_code ecAliceUnsub3 = futUnsubAlice3.get();
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(ecAliceUnsub3.message(), static_cast<int>(boost::system::errc::success),
-                                 ecAliceUnsub3.value());
+    ASSERT_EQ(static_cast<int>(boost::system::errc::success), ecAliceUnsub3.value()) << ecAliceUnsub3.message();
     // And still, alice does not receive Bob's message
     auto writeDoneBob2 = std::make_shared<std::promise<boost::system::error_code>>();
     auto futWriteBob2 = writeDoneBob2->get_future();
     bob->asyncPublish(prefix + "other_exchange", "alice", std::make_shared<std::vector<char>>(4, 'd'),
                       [writeDoneBob2](const boost::system::error_code ec) { writeDoneBob2->set_value(ec); });
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futWriteBob2.wait_for(m_timeout));
+    ASSERT_EQ(std::future_status::ready, futWriteBob2.wait_for(m_timeout));
     const boost::system::error_code ecBobWrite2 = futWriteBob2.get();
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(ecBobWrite2.message(), static_cast<int>(boost::system::errc::success),
-                                 ecBobWrite2.value());
+    ASSERT_EQ(static_cast<int>(boost::system::errc::success), ecBobWrite2.value()) << ecBobWrite2.message();
 
-    std::this_thread::sleep_for(100ms);               // Grant some message travel time...
-    CPPUNIT_ASSERT_EQUAL(1, numNewReadAlice->load()); // ...but nothing arrives due to unsubscription!
+    std::this_thread::sleep_for(100ms);    // Grant some message travel time...
+    ASSERT_EQ(1, numNewReadAlice->load()); // ...but nothing arrives due to unsubscription!
 
     //***************************************************************
     // Test sending a message to an exchange that does not yet exist
@@ -596,10 +578,9 @@ void Amqp_Test::testClient() {
     //       that would pollute brokers (since exchanges are permanent) with exchanges even if the prefix stays
     bob->asyncPublish(prefix + "not_an_exchange", std::string(), std::make_shared<std::vector<char>>(4, 'y'),
                       [writeNonExistDone](const boost::system::error_code ec) { writeNonExistDone->set_value(ec); });
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futWriteNonExist.wait_for(m_timeout));
+    ASSERT_EQ(std::future_status::ready, futWriteNonExist.wait_for(m_timeout));
     const boost::system::error_code ecWriteNonExist = futWriteNonExist.get();
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(ecWriteNonExist.message(), static_cast<int>(boost::system::errc::success),
-                                 ecWriteNonExist.value());
+    ASSERT_EQ(static_cast<int>(boost::system::errc::success), ecWriteNonExist.value()) << ecWriteNonExist.message();
 
     //***************************************************************
     // Test that bob can still use its channel to publish after publishing to a so far unknown exchange
@@ -609,28 +590,27 @@ void Amqp_Test::testClient() {
     alice->asyncSubscribe(prefix + "other_exchange", "alice",
                           [subDoneAlice3](const boost::system::error_code ec) { subDoneAlice3->set_value(ec); });
     const boost::system::error_code ecSubAlice3 = futSubAlice3.get();
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(ecSubAlice3.message(), static_cast<int>(boost::system::errc::success),
-                                 ecSubAlice3.value());
-    CPPUNIT_ASSERT_EQUAL(1, numNewReadAlice->load()); // Just remember, so far one message to new handler
+    ASSERT_EQ(static_cast<int>(boost::system::errc::success), ecSubAlice3.value()) << ecSubAlice3.message();
+    ASSERT_EQ(1, numNewReadAlice->load()); // Just remember, so far one message to new handler
 
     // Now bob publishes
     auto writeDoneBob3 = std::make_shared<std::promise<boost::system::error_code>>();
     auto futWriteBob3 = writeDoneBob3->get_future();
     bob->asyncPublish(prefix + "other_exchange", "alice", std::make_shared<std::vector<char>>(4, 'z'),
                       [writeDoneBob3](const boost::system::error_code ec) { writeDoneBob3->set_value(ec); });
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futWriteBob3.wait_for(m_timeout));
+    ASSERT_EQ(std::future_status::ready, futWriteBob3.wait_for(m_timeout));
     const boost::system::error_code ecWriteBob3 = futWriteBob3.get();
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(ecWriteBob3.message(), static_cast<int>(boost::system::errc::success),
-                                 ecWriteBob3.value());
+    ASSERT_EQ(static_cast<int>(boost::system::errc::success), ecWriteBob3.value()) << ecWriteBob3.message();
 
     for (unsigned int i = 0; i < m_timeoutMs; ++i) {
         if (*numNewReadAlice >= 2) break;
         std::this_thread::sleep_for(1ms);
     }
-    CPPUNIT_ASSERT_EQUAL(2, numNewReadAlice->load());
+    ASSERT_EQ(2, numNewReadAlice->load());
 }
 
-void Amqp_Test::testClientConcurrentSubscripts() {
+
+TEST(TestAmqp, testClientConcurrentSubscripts) {
     // Test concurrent [un]subscriptions to the same exchange/routingKey
     if (m_defaultBrokers.empty()) {
         std::clog << " No AMQP broker in environment. Skipping client tests for concurrent subscriptions..."
@@ -672,9 +652,9 @@ void Amqp_Test::testClientConcurrentSubscripts() {
     for (size_t i = 0; i < nSubscriptions; ++i) {
         auto& fut = subFutures[i];
         const std::string iStr("[Un]Subscription " + data::toString(i) += " ");
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(iStr, std::future_status::ready, fut.wait_for(m_timeout));
+        ASSERT_EQ(std::future_status::ready, fut.wait_for(m_timeout)) << iStr;
         boost::system::error_code ec = fut.get();
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(iStr + ec.message(), 0, ec.value());
+        ASSERT_EQ(0, ec.value()) << iStr << ec.message();
     }
 
     // Now send a message (sender is bob himself...) and check that it arrives only once,
@@ -688,10 +668,11 @@ void Amqp_Test::testClientConcurrentSubscripts() {
     }
     std::this_thread::sleep_for(100ms);
     // If this fails, something may have gone wrong and the unsubscribe got executed last (How that?):
-    CPPUNIT_ASSERT_EQUAL(1, readCount->load());
+    ASSERT_EQ(1, readCount->load());
 }
 
-void Amqp_Test::testClientSameId() {
+
+TEST(TestAmqp, testClientSameId) {
     if (m_defaultBrokers.empty()) {
         std::clog << " No AMQP broker in environment. Skipping client tests for same id..." << std::endl;
         return;
@@ -701,9 +682,9 @@ void Amqp_Test::testClientSameId() {
     auto done = std::make_shared<std::promise<boost::system::error_code>>();
     auto fut = done->get_future();
     connection->asyncConnect([done](const boost::system::error_code ec) { done->set_value(ec); });
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, fut.wait_for(m_timeout));
+    ASSERT_EQ(std::future_status::ready, fut.wait_for(m_timeout));
     const boost::system::error_code ec = fut.get();
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(ec.message(), static_cast<int>(boost::system::errc::success), ec.value());
+    ASSERT_EQ(static_cast<int>(boost::system::errc::success), ec.value()) << ec.message();
 
     // To avoid interference of different test runs, any exchange and queue (i.e. nominal client instanceId) are
     // prefixed with broker domain (i.e. Karabo topic)
@@ -723,7 +704,7 @@ void Amqp_Test::testClientSameId() {
     bob->asyncSubscribe(prefix + "exchange", "bob",
                         [bobSubDone](const boost::system::error_code ec) { bobSubDone->set_value(ec); });
     const boost::system::error_code bobSubEc = bobSubFut.get(); // now directly get(), tired of m_timeout
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(bobSubEc.message(), static_cast<int>(boost::system::errc::success), bobSubEc.value());
+    ASSERT_EQ(static_cast<int>(boost::system::errc::success), bobSubEc.value()) << bobSubEc.message();
 
     //***************************************************************
     // Create another client again with id "bob"
@@ -740,20 +721,19 @@ void Amqp_Test::testClientSameId() {
     bob2->asyncSubscribe(prefix + "exchange", "bob", // subscribe to same as other bob
                          [bob2SubDone](const boost::system::error_code ec) { bob2SubDone->set_value(ec); });
     const boost::system::error_code bob2SubEc = bob2SubFut.get(); // now directly get(), tired of m_timeout
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(bob2SubEc.message(), static_cast<int>(boost::system::errc::success),
-                                 bob2SubEc.value());
+    ASSERT_EQ(static_cast<int>(boost::system::errc::success), bob2SubEc.value()) << bob2SubEc.message();
 
     // Publish a message that both should receive (sender also receives, that does not matter)
     bob->asyncPublish(prefix + "exchange", "bob", std::make_shared<std::vector<char>>(4, 'x'),
                       [](const boost::system::error_code ec) {}); // do not care about success of sending
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, bobReadFut.wait_for(m_timeout));
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, bob2ReadFut.wait_for(m_timeout));
+    ASSERT_EQ(std::future_status::ready, bobReadFut.wait_for(m_timeout));
+    ASSERT_EQ(std::future_status::ready, bob2ReadFut.wait_for(m_timeout));
     const std::shared_ptr<std::vector<char>> bobReadData = bobReadFut.get();
     const std::shared_ptr<std::vector<char>> bob2ReadData = bob2ReadFut.get();
-    CPPUNIT_ASSERT_EQUAL(4ul, bobReadData->size());
-    CPPUNIT_ASSERT_EQUAL(4ul, bob2ReadData->size());
-    CPPUNIT_ASSERT_EQUAL('x', bobReadData->front());
-    CPPUNIT_ASSERT_EQUAL('x', bob2ReadData->front());
+    ASSERT_EQ(4ul, bobReadData->size());
+    ASSERT_EQ(4ul, bob2ReadData->size());
+    ASSERT_EQ('x', bobReadData->front());
+    ASSERT_EQ('x', bob2ReadData->front());
 
     //***************************************************************
     // Now stress testing with many clients with same id created in 'parallel'.
@@ -765,9 +745,9 @@ void Amqp_Test::testClientSameId() {
     auto done2 = std::make_shared<std::promise<boost::system::error_code>>();
     auto fut2 = done2->get_future();
     connection2->asyncConnect([done2](const boost::system::error_code ec) { done2->set_value(ec); });
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, fut2.wait_for(m_timeout));
+    ASSERT_EQ(std::future_status::ready, fut2.wait_for(m_timeout));
     const boost::system::error_code ec2 = fut2.get();
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(ec2.message(), static_cast<int>(boost::system::errc::success), ec2.value());
+    ASSERT_EQ(static_cast<int>(boost::system::errc::success), ec2.value()) << ec2.message();
 
     const int numClients = 20;
 
@@ -794,11 +774,11 @@ void Amqp_Test::testClientSameId() {
     }
     // Block until all confirm subscription
     for (int i = 0; i < numClients; ++i) {
-        CPPUNIT_ASSERT_EQUAL_MESSAGE("Future of client " + karabo::data::toString(i), std::future_status::ready,
-                                     subFutures[i].wait_for(m_timeout));
+        ASSERT_EQ(std::future_status::ready, subFutures[i].wait_for(m_timeout))
+              << "Future of client " << karabo::data::toString(i);
         const boost::system::error_code ec = subFutures[i].get();
-        CPPUNIT_ASSERT_EQUAL_MESSAGE((karabo::data::toString(i) += ": ") + ec.message(),
-                                     static_cast<int>(boost::system::errc::success), ec.value());
+        ASSERT_EQ(static_cast<int>(boost::system::errc::success), ec.value())
+              << karabo::data::toString(i) << ": " << ec.message();
     }
 
     // Now send a message and verify its arrival at all clients
@@ -809,7 +789,7 @@ void Amqp_Test::testClientSameId() {
         allReceivedOne = true;
         for (int iClient = 0; iClient < numClients; ++iClient) {
             const int nReceived = (*receivedFlags)[iClient];
-            CPPUNIT_ASSERT_LESSEQUAL(1, nReceived); // receiving twice is a bug
+            EXPECT_GE(1, nReceived); // receiving twice is a bug
             if (nReceived != 1) {
                 allReceivedOne = false;
                 break; // no need to check other clients
@@ -818,7 +798,7 @@ void Amqp_Test::testClientSameId() {
         if (allReceivedOne) break;
         else std::this_thread::sleep_for(1ms);
     }
-    CPPUNIT_ASSERT(allReceivedOne);
+    EXPECT_TRUE(allReceivedOne);
 
     // Also test weird ids:
     // Amqp (client lib or rabbit broker itself?) will sanitize \r and \n away when declaring a queue with a name.
@@ -838,22 +818,22 @@ void Amqp_Test::testClientSameId() {
         auto weirdSubFut = weirdSubDone->get_future();
         weird->asyncSubscribe(prefix + "exchange", weirdId, //"some",
                               [weirdSubDone](const boost::system::error_code ec) { weirdSubDone->set_value(ec); });
-        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, weirdSubFut.wait_for(m_timeout));
+        ASSERT_EQ(std::future_status::ready, weirdSubFut.wait_for(m_timeout));
         const boost::system::error_code weirdSubEc = weirdSubFut.get();
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(weirdSubEc.message(), static_cast<int>(boost::system::errc::success),
-                                     weirdSubEc.value());
+        ASSERT_EQ(static_cast<int>(boost::system::errc::success), weirdSubEc.value()) << weirdSubEc.message();
 
         // Write a message and verify it is received
         clients[0]->asyncPublish(prefix + "exchange", weirdId, std::make_shared<std::vector<char>>(4, 'a'),
                                  [](const boost::system::error_code ec) {});
-        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, weirdReadFut.wait_for(m_timeout));
+        ASSERT_EQ(std::future_status::ready, weirdReadFut.wait_for(m_timeout));
         const std::shared_ptr<std::vector<char>> weirdReadData = weirdReadFut.get();
-        CPPUNIT_ASSERT_EQUAL(4ul, weirdReadData->size());
-        CPPUNIT_ASSERT_EQUAL('a', weirdReadData->at(0));
+        ASSERT_EQ(4ul, weirdReadData->size());
+        ASSERT_EQ('a', weirdReadData->at(0));
     }
 }
 
-void Amqp_Test::testClientUnsubscribeAll() {
+
+TEST(TestAmqp, testClientUnsubscribeAll) {
     // Test asyncUnsubscribeAll
     if (m_defaultBrokers.empty()) {
         std::clog << " No AMQP broker in environment. Skipping client tests for unsubscribe all..." << std::endl;
@@ -886,9 +866,9 @@ void Amqp_Test::testClientUnsubscribeAll() {
     for (size_t i = 0; i < nSubscriptions; ++i) {
         auto& fut = subFutures[i];
         const std::string iStr("Subscription " + data::toString(i));
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(iStr, std::future_status::ready, fut.wait_for(m_timeout));
+        ASSERT_EQ(std::future_status::ready, fut.wait_for(m_timeout)) << iStr;
         boost::system::error_code ec = fut.get();
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(iStr + ec.message(), 0, ec.value());
+        ASSERT_EQ(0, ec.value()) << iStr << ec.message();
     }
 
     // Now send a message (sender is bob himself...) for each subscription
@@ -901,16 +881,16 @@ void Amqp_Test::testClientUnsubscribeAll() {
         if (readCount->load() >= nSubscriptions) break;
         std::this_thread::sleep_for(1ms);
     }
-    CPPUNIT_ASSERT_EQUAL(nSubscriptions, readCount->load());
+    ASSERT_EQ(nSubscriptions, readCount->load());
 
     // Now unsubscribe all, send another message to each subscribed exchange/routing key and check that nothing arrives
     // anymore
     auto unsubAllDone = std::make_shared<std::promise<boost::system::error_code>>();
     auto futUnsubAll = unsubAllDone->get_future();
     bob->asyncUnsubscribeAll([unsubAllDone](const boost::system::error_code ec) { unsubAllDone->set_value(ec); });
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futUnsubAll.wait_for(m_timeout));
+    ASSERT_EQ(std::future_status::ready, futUnsubAll.wait_for(m_timeout));
     const boost::system::error_code ec = futUnsubAll.get();
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(ec.message(), 0, ec.value());
+    ASSERT_EQ(0, ec.value()) << ec.message();
 
     for (size_t i = 0; i < nSubscriptions; ++i) {
         bob->asyncPublish(exchange, "forBob_" + data::toString(i), std::make_shared<std::vector<char>>(i, 'i'),
@@ -919,10 +899,11 @@ void Amqp_Test::testClientUnsubscribeAll() {
 
     // Even after sleeping, nothing more has arrived
     std::this_thread::sleep_for(100ms);
-    CPPUNIT_ASSERT_EQUAL(nSubscriptions, readCount->load());
+    ASSERT_EQ(nSubscriptions, readCount->load());
 }
 
-void Amqp_Test::testClientTooBigMessage() {
+
+TEST(TestAmqp, testClientTooBigMessage) {
     // Test that client stays connected if a message beyond limits is sent
     if (m_defaultBrokers.empty()) {
         std::clog << " No AMQP broker in environment. Skipping client tests for too big message..." << std::endl;
@@ -949,9 +930,9 @@ void Amqp_Test::testClientTooBigMessage() {
     net::AsyncHandler callback([subPromise](const boost::system::error_code ec) { subPromise->set_value(ec); });
     bob->asyncSubscribe(exchange, "forBob", callback);
 
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, subFuture.wait_for(m_timeout));
+    ASSERT_EQ(std::future_status::ready, subFuture.wait_for(m_timeout));
     boost::system::error_code ec = subFuture.get();
-    CPPUNIT_ASSERT_EQUAL(0, ec.value());
+    ASSERT_EQ(0, ec.value());
 
     // Now send a big, but supported message
     const size_t supportedSize = net::AmqpClient::m_maxMessageSize; //  134'217'728ul;
@@ -959,18 +940,18 @@ void Amqp_Test::testClientTooBigMessage() {
     std::future<boost::system::error_code> pubFuture = pubPromise->get_future();
     alice->asyncPublish(exchange, "forBob", std::make_shared<std::vector<char>>(supportedSize, 'a'),
                         [pubPromise](const boost::system::error_code ec) { pubPromise->set_value(ec); });
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, pubFuture.wait_for(m_timeout));
+    ASSERT_EQ(std::future_status::ready, pubFuture.wait_for(m_timeout));
     ec = pubFuture.get();
-    CPPUNIT_ASSERT_EQUAL(0, ec.value());
+    ASSERT_EQ(0, ec.value());
 
     // Wait until message arrived and check it
     for (unsigned int i = 0; i < m_timeoutMs; ++i) {
         if (readMsg) break;
         std::this_thread::sleep_for(1ms);
     }
-    CPPUNIT_ASSERT(readMsg);
-    CPPUNIT_ASSERT_EQUAL(supportedSize, readMsg->size());
-    CPPUNIT_ASSERT_EQUAL('a', readMsg->at(0));
+    EXPECT_TRUE(readMsg);
+    ASSERT_EQ(supportedSize, readMsg->size());
+    ASSERT_EQ('a', readMsg->at(0));
     readMsg.reset(); // for next message
 
     // Now send the message that is too big (but where the client will notice directly).
@@ -980,31 +961,31 @@ void Amqp_Test::testClientTooBigMessage() {
     alice->asyncPublish(exchange, "forBob", std::make_shared<std::vector<char>>(nTooBig, 'b'),
                         [pubPromise](const boost::system::error_code ec) { pubPromise->set_value(ec); });
 
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, pubFuture.wait_for(m_timeout));
+    ASSERT_EQ(std::future_status::ready, pubFuture.wait_for(m_timeout));
     ec = pubFuture.get();
-    CPPUNIT_ASSERT_EQUAL(KARABO_ERROR_CODE_IO_ERROR.value(), ec.value());
+    ASSERT_EQ(KARABO_ERROR_CODE_IO_ERROR.value(), ec.value());
 
     // Bad message will not arrive - but give it a bit of time
     std::this_thread::sleep_for(50ms);
-    CPPUNIT_ASSERT(!readMsg);
+    EXPECT_TRUE(!readMsg);
 
     // Now send again a supported message size.
     pubPromise = std::make_shared<std::promise<boost::system::error_code>>();
     pubFuture = pubPromise->get_future();
     alice->asyncPublish(exchange, "forBob", std::make_shared<std::vector<char>>(11, 'c'),
                         [pubPromise](const boost::system::error_code ec) { pubPromise->set_value(ec); });
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, pubFuture.wait_for(m_timeout));
+    ASSERT_EQ(std::future_status::ready, pubFuture.wait_for(m_timeout));
     ec = pubFuture.get();
-    CPPUNIT_ASSERT_EQUAL(0, ec.value());
+    ASSERT_EQ(0, ec.value());
 
     // Wait until received
     for (unsigned int i = 0; i < m_timeoutMs; ++i) {
         if (readMsg) break;
         std::this_thread::sleep_for(1ms);
     }
-    CPPUNIT_ASSERT(readMsg);
-    CPPUNIT_ASSERT_EQUAL(11ul, readMsg->size());
-    CPPUNIT_ASSERT_EQUAL('c', readMsg->at(0));
+    EXPECT_TRUE(readMsg);
+    ASSERT_EQ(11ul, readMsg->size());
+    ASSERT_EQ('c', readMsg->at(0));
     readMsg.reset(); // for next use
 
     // Now manipulate AmqpClient to not catch a too big message - but let broker complain.
@@ -1016,13 +997,13 @@ void Amqp_Test::testClientTooBigMessage() {
     alice->asyncPublish(exchange, "forBob", std::make_shared<std::vector<char>>(nTooBig, 'd'),
                         [pubPromise](const boost::system::error_code ec) { pubPromise->set_value(ec); });
 
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, pubFuture.wait_for(m_timeout));
+    ASSERT_EQ(std::future_status::ready, pubFuture.wait_for(m_timeout));
     ec = pubFuture.get();
-    CPPUNIT_ASSERT_EQUAL(0, ec.value()); // Unfortunately, success is claimed!
+    ASSERT_EQ(0, ec.value()); // Unfortunately, success is claimed!
 
     // Bad message will not arrive - but give it a bit of time
     std::this_thread::sleep_for(50ms);
-    CPPUNIT_ASSERT(!readMsg);
+    EXPECT_TRUE(!readMsg);
 
     // Unfortunately, it takes a while until the broker/AMQP lib will notice the too big message
     // and make the channel unusable. All messages published till then are lost.
@@ -1033,25 +1014,26 @@ void Amqp_Test::testClientTooBigMessage() {
         pubFuture = pubPromise->get_future();
         alice->asyncPublish(exchange, "forBob", std::make_shared<std::vector<char>>(iSent + 1, 'e'),
                             [pubPromise](const boost::system::error_code ec) { pubPromise->set_value(ec); });
-        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, pubFuture.wait_for(m_timeout));
+        ASSERT_EQ(std::future_status::ready, pubFuture.wait_for(m_timeout));
         ec = pubFuture.get();
-        CPPUNIT_ASSERT_EQUAL(0, ec.value());
+        ASSERT_EQ(0, ec.value());
         if (readMsg) break;
         std::this_thread::sleep_for(1ms);
     }
-    CPPUNIT_ASSERT(readMsg);
-    CPPUNIT_ASSERT_EQUAL('e', readMsg->at(0));
+    EXPECT_TRUE(readMsg);
+    ASSERT_EQ('e', readMsg->at(0));
     // Locally using our office broker the size of the message is about 775.
     // I also see that there are about 2.5 seconds between my try to send the too big message and the
     // responding log message from AmqpClient::channelErrorhandler(..).
     // So it is pretty delayed...
-    CPPUNIT_ASSERT_LESS(2000ul, readMsg->size()); // Limit a bit to get aware if sometimes it takes longer...
+    EXPECT_GT(2000ul, readMsg->size()); // Limit a bit to get aware if sometimes it takes longer...
 
     // Back to original value (no big harm if this line is not met due to previous exception).
     net::AmqpClient::m_maxMessageSize -= 1;
 }
 
-void Amqp_Test::testHashClient() {
+
+TEST(TestAmqp, testHashClient) {
     if (m_defaultBrokers.empty()) {
         std::clog << " No AMQP broker in environment. Skipping hash client tests..." << std::endl;
         return;
@@ -1100,10 +1082,9 @@ void Amqp_Test::testHashClient() {
     auto aliceSubFut = aliceSubDone->get_future();
     alice->asyncSubscribe(prefix + "hashExchange", "alice",
                           [aliceSubDone](const boost::system::error_code ec) { aliceSubDone->set_value(ec); });
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, aliceSubFut.wait_for(m_timeout));
+    ASSERT_EQ(std::future_status::ready, aliceSubFut.wait_for(m_timeout));
     const boost::system::error_code aliceSubEc = aliceSubFut.get();
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(aliceSubEc.message(), static_cast<int>(boost::system::errc::success),
-                                 aliceSubEc.value());
+    ASSERT_EQ(static_cast<int>(boost::system::errc::success), aliceSubEc.value()) << aliceSubEc.message();
 
     // Now bob sends a message
     data::Hash::Pointer sentHeader = std::make_shared<data::Hash>("headerLine", "fromBob");
@@ -1112,33 +1093,33 @@ void Amqp_Test::testHashClient() {
     auto bobPubFut = bobPubDone->get_future();
     bob->asyncPublish(prefix + "hashExchange", "alice", sentHeader, sentBody,
                       [bobPubDone](const boost::system::error_code ec) { bobPubDone->set_value(ec); });
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, bobPubFut.wait_for(m_timeout));
+    ASSERT_EQ(std::future_status::ready, bobPubFut.wait_for(m_timeout));
     const boost::system::error_code bobPubEc = bobPubFut.get();
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(bobPubEc.message(), static_cast<int>(boost::system::errc::success), bobPubEc.value());
+    ASSERT_EQ(static_cast<int>(boost::system::errc::success), bobPubEc.value()) << bobPubEc.message();
 
     for (unsigned int i = 0; i < m_timeoutMs; ++i) {
         std::this_thread::sleep_for(1ms);
         std::scoped_lock lock(*readMutex);
         if (!readHeader->empty() && !readBody->empty()) break;
     }
-    CPPUNIT_ASSERT(readHeader);
-    CPPUNIT_ASSERT(readBody);
-    CPPUNIT_ASSERT_EQUAL(prefix + "hashExchange", *readExchange);
-    CPPUNIT_ASSERT_EQUAL(std::string("alice"), *readKey);
+    EXPECT_TRUE(readHeader);
+    EXPECT_TRUE(readBody);
+    ASSERT_EQ(prefix + "hashExchange", *readExchange);
+    ASSERT_EQ("alice", *readKey);
 
-    CPPUNIT_ASSERT(readHeader->has("headerLine"));
-    CPPUNIT_ASSERT_EQUAL(std::string("fromBob"), readHeader->get<std::string>("headerLine"));
-    CPPUNIT_ASSERT_EQUAL(1ul, readHeader->size());
+    EXPECT_TRUE(readHeader->has("headerLine"));
+    ASSERT_EQ("fromBob", readHeader->get<std::string>("headerLine"));
+    ASSERT_EQ(1ul, readHeader->size());
 
-    CPPUNIT_ASSERT_EQUAL(2ul, readBody->size());
-    CPPUNIT_ASSERT_EQUAL(std::string("the answer is"), readBody->get<std::string>("a1"));
-    CPPUNIT_ASSERT_EQUAL(42, readBody->get<int>("a2"));
+    ASSERT_EQ(2ul, readBody->size());
+    ASSERT_EQ("the answer is", readBody->get<std::string>("a1"));
+    ASSERT_EQ(42, readBody->get<int>("a2"));
 
     // Test sending something that fails (e.g. cannot be deserialised)
     // Create a rawbob to send binary data - no need for a read handler
     net::AmqpClient::Pointer rawBob(std::make_shared<net::AmqpClient>(connection, prefix + "rawbob", AMQP::Table(),
                                                                       net::AmqpClient::ReadHandler()));
-    CPPUNIT_ASSERT_EQUAL(0, readErrorNumber->load()); // no error yet
+    ASSERT_EQ(0, readErrorNumber->load()); // no error yet
     rawBob->asyncPublish(prefix + "hashExchange", "alice", std::make_shared<std::vector<char>>(100, 'r'),
                          [](const boost::system::error_code ec) {});
 
@@ -1146,8 +1127,8 @@ void Amqp_Test::testHashClient() {
         if (readErrorNumber->load() > 0) break;
         std::this_thread::sleep_for(1ms);
     }
-    CPPUNIT_ASSERT_EQUAL(1, readErrorNumber->load());
-    CPPUNIT_ASSERT_MESSAGE(*readErrorString, !readErrorString->empty()); // no matter what fails
+    ASSERT_EQ(1, readErrorNumber->load());
+    EXPECT_TRUE(!readErrorString->empty()) << *readErrorString; // no matter what fails
 
     karabo::net::EventLoop::stop();
 }

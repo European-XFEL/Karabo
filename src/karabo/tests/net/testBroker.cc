@@ -16,63 +16,72 @@
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
 /*
- * File:   Broker_Test.cc
+ * File:   Broker_Test.hh
  * Author: Sergey Esenov serguei.essenov@xfel.eu
  *
  * Created on February 19, 2021, 3:09 PM
  */
 
-#include "Broker_Test.hh"
+#include <gtest/gtest.h>
 
-#include <karabo/net/EventLoop.hh>
-#include <karabo/tests/BrokerUtils.hh>
+#include <chrono>
 #include <stack>
 #include <thread>
 #include <tuple>
 
 #include "karabo/data/types/Hash.hh"
 #include "karabo/data/types/StringTools.hh"
+#include "karabo/net/Broker.hh"
+#include "karabo/net/EventLoop.hh"
+#include "karabo/tests/BrokerUtils.hh"
 
+using namespace std::literals::chrono_literals;
+
+static std::string m_domain = karabo::net::Broker::brokerDomainFromEnv();
+static karabo::data::Hash m_config;
+// using a Karabo Hash to match the insertion order.
+static karabo::data::Hash m_brokersUnderTest = getBrokersFromEnv();
+static std::map<std::string, std::string> m_invalidBrokers({{"amqp", INVALID_AMQP}});
+static const std::chrono::seconds m_timeout = 10s;
 
 constexpr uint32_t TEST_EXPIRATION_TIME_IN_SECONDS = 3;
-
 
 using namespace karabo::data;
 using namespace karabo::net;
 using boost::system::error_code;
 
-CPPUNIT_TEST_SUITE_REGISTRATION(Broker_Test);
 
-Broker_Test::Broker_Test()
-    : m_domain(Broker::brokerDomainFromEnv()),
-      m_thread(),
-      m_config(),
-      m_brokersUnderTest(getBrokersFromEnv()),
-      m_invalidBrokers({{"amqp", INVALID_AMQP}}),
-      m_timeout(10) {}
+class TestBroker : public ::testing::Test {
+   protected:
+    TestBroker() : m_thread(nullptr) {}
 
-Broker_Test::~Broker_Test() {}
+    ~TestBroker() override {}
 
-void Broker_Test::setUp() {
-    auto prom = std::promise<void>();
-    auto fut = prom.get_future();
-    m_thread = std::make_shared<std::jthread>([&prom]() {
-        // postpone promise setting until EventLoop is activated
-        boost::asio::post(EventLoop::getIOService(), [&prom]() { prom.set_value(); });
-        EventLoop::work();
-    });
-    fut.get(); // block here until promise is set
-}
+    void SetUp() override {
+        auto prom = std::promise<void>();
+        auto fut = prom.get_future();
+        m_thread = std::make_shared<std::jthread>([&prom]() {
+            // postpone promise setting until EventLoop is activated
+            boost::asio::post(EventLoop::getIOService(), [&prom]() { prom.set_value(); });
+            EventLoop::work();
+        });
+        fut.get(); // block here until promise is set
+    }
+
+    void TearDown() override {
+        EventLoop::stop();
+        m_thread->join();
+        m_thread.reset();
+    }
+
+    std::shared_ptr<std::jthread> m_thread;
+
+   public:
+    void _loopFunction(const std::string& functionName, const std::function<void()>& testFunction);
+};
 
 
-void Broker_Test::tearDown() {
-    EventLoop::stop();
-    m_thread->join();
-    m_thread.reset();
-}
-
-
-void Broker_Test::_loopFunction(const std::string& functionName, const std::function<void()>& testFunction) {
+void TestBroker::_loopFunction(const std::string& functionName, const std::function<void()>& testFunction) {
     if (m_brokersUnderTest.empty()) {
         std::clog << "\n\t" << functionName << " No broker specified in the environment, skipping" << std::endl;
     }
@@ -90,7 +99,32 @@ void Broker_Test::_loopFunction(const std::string& functionName, const std::func
 }
 
 
-void Broker_Test::testConnectDisconnect() {
+void _testConnectDisconnect() {
+    std::string classId = m_config.begin()->getKey();
+    Broker::Pointer broker = Configurator<Broker>::create(m_config);
+    broker->connect();
+
+    EXPECT_TRUE(broker->isConnected());
+    EXPECT_TRUE(broker->getBrokerType() == classId);
+    EXPECT_TRUE(broker->getBrokerUrl() == m_brokersUnderTest.get<std::vector<std::string>>(classId)[0]);
+    EXPECT_TRUE(broker->getInstanceId() == m_config.get<std::string>(classId + ".instanceId"));
+
+    // Clone configuration and create new instance
+    Broker::Pointer other = broker->clone("test2");
+    EXPECT_STREQ("test2", other->getInstanceId().c_str());
+    EXPECT_NO_THROW(other->connect());
+    EXPECT_TRUE(other->isConnected());
+    EXPECT_TRUE(other->getBrokerType() == classId);
+    EXPECT_TRUE(other->getBrokerUrl() == broker->getBrokerUrl());
+    EXPECT_TRUE(other->getDomain() == broker->getDomain());
+    EXPECT_TRUE(other->getInstanceId() != broker->getInstanceId());
+
+    EXPECT_NO_THROW(broker->disconnect());
+    EXPECT_NO_THROW(other->disconnect());
+}
+
+
+TEST_F(TestBroker, testConnectDisconnect) {
     const std::string id = "alice";
 
     for (Hash::const_iterator it = m_brokersUnderTest.begin(); it != m_brokersUnderTest.end(); ++it) {
@@ -109,47 +143,17 @@ void Broker_Test::testConnectDisconnect() {
 }
 
 
-void Broker_Test::_testConnectDisconnect() {
-    std::string classId = m_config.begin()->getKey();
-    Broker::Pointer broker = Configurator<Broker>::create(m_config);
-    broker->connect();
-
-    CPPUNIT_ASSERT(broker->isConnected());
-    CPPUNIT_ASSERT(broker->getBrokerType() == classId);
-    CPPUNIT_ASSERT(broker->getBrokerUrl() == m_brokersUnderTest.get<std::vector<std::string>>(classId)[0]);
-    CPPUNIT_ASSERT(broker->getInstanceId() == m_config.get<std::string>(classId + ".instanceId"));
-
-    // Clone configuration and create new instance
-    Broker::Pointer other = broker->clone("test2");
-    CPPUNIT_ASSERT_EQUAL(std::string("test2"), other->getInstanceId());
-    CPPUNIT_ASSERT_NO_THROW(other->connect());
-    CPPUNIT_ASSERT(other->isConnected());
-    CPPUNIT_ASSERT(other->getBrokerType() == classId);
-    CPPUNIT_ASSERT(other->getBrokerUrl() == broker->getBrokerUrl());
-    CPPUNIT_ASSERT(other->getDomain() == broker->getDomain());
-    CPPUNIT_ASSERT(other->getInstanceId() != broker->getInstanceId());
-
-    CPPUNIT_ASSERT_NO_THROW(broker->disconnect());
-    CPPUNIT_ASSERT_NO_THROW(other->disconnect());
-}
-
-
-void Broker_Test::testPublishSubscribe() {
-    _loopFunction(__FUNCTION__, [this] { this->_testPublishSubscribe(); });
-}
-
-
-void Broker_Test::_testPublishSubscribe() {
+static void _testPublishSubscribe() {
     std::string classId = m_config.begin()->getKey();
     m_config.set(classId + ".instanceId", "alice");
 
     // Create subscriber ...
     auto alice = Configurator<Broker>::create(m_config);
-    CPPUNIT_ASSERT_NO_THROW(alice->connect());
-    CPPUNIT_ASSERT(alice->isConnected());
-    CPPUNIT_ASSERT(alice->getBrokerType() == classId);
-    CPPUNIT_ASSERT(alice->getBrokerUrl() == m_brokersUnderTest.get<std::vector<std::string>>(classId)[0]);
-    CPPUNIT_ASSERT(alice->getInstanceId() == "alice");
+    EXPECT_NO_THROW(alice->connect());
+    EXPECT_TRUE(alice->isConnected());
+    EXPECT_TRUE(alice->getBrokerType() == classId);
+    EXPECT_TRUE(alice->getBrokerUrl() == m_brokersUnderTest.get<std::vector<std::string>>(classId)[0]);
+    EXPECT_TRUE(alice->getInstanceId() == "alice");
 
     auto prom = std::make_shared<std::promise<bool>>();
     auto fut = prom->get_future();
@@ -168,55 +172,55 @@ void Broker_Test::_testPublishSubscribe() {
           [prom](consumer::Error err, const std::string& msg) { prom->set_value(false); });
 
     error_code ec = alice->subscribeToRemoteSignal("aliceSlot", "bob", "signalFromBob");
-    CPPUNIT_ASSERT(!ec);
+    EXPECT_TRUE(!ec);
 
     // Clone a producer "Bob" which uses the same broker settings...
     auto bob = alice->clone("bob");
-    CPPUNIT_ASSERT_NO_THROW(bob->connect());
-    CPPUNIT_ASSERT(bob->isConnected());
-    CPPUNIT_ASSERT(bob->getBrokerType() == classId);
-    CPPUNIT_ASSERT(bob->getInstanceId() == "bob");
-    CPPUNIT_ASSERT(bob->getBrokerUrl() == alice->getBrokerUrl());
-    CPPUNIT_ASSERT(bob->getDomain() == alice->getDomain());
+    EXPECT_NO_THROW(bob->connect());
+    EXPECT_TRUE(bob->isConnected());
+    EXPECT_TRUE(bob->getBrokerType() == classId);
+    EXPECT_TRUE(bob->getInstanceId() == "bob");
+    EXPECT_TRUE(bob->getBrokerUrl() == alice->getBrokerUrl());
+    EXPECT_TRUE(bob->getDomain() == alice->getDomain());
 
     auto hdr = std::make_shared<Hash>("signalInstanceId", "bob");
     auto body = std::make_shared<Hash>("a.b.c", 42);
 
     for (int i = 0; i < maxLoop; ++i) {
         hdr->set("count", i + 1);
-        CPPUNIT_ASSERT_NO_THROW(bob->sendSignal("signalFromBob", hdr, body));
+        EXPECT_NO_THROW(bob->sendSignal("signalFromBob", hdr, body));
     }
 
     // Wait on future ...
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, fut.wait_for(m_timeout));
+    EXPECT_EQ(std::future_status::ready, fut.wait_for(m_timeout));
     bool result = fut.get();
-    CPPUNIT_ASSERT(result);
-    CPPUNIT_ASSERT_EQUAL(std::string("aliceSlot"), *slotToCall);
+    EXPECT_TRUE(result);
+    EXPECT_STREQ("aliceSlot", (*slotToCall).c_str());
 
     ec = alice->unsubscribeFromRemoteSignal("aliceSlot", "bob", "signalFromBob");
-    CPPUNIT_ASSERT(!ec);
-    CPPUNIT_ASSERT_NO_THROW(alice->stopReading());
-    CPPUNIT_ASSERT_NO_THROW(bob->disconnect());
-    CPPUNIT_ASSERT_NO_THROW(alice->disconnect());
+    EXPECT_TRUE(!ec);
+    EXPECT_NO_THROW(alice->stopReading());
+    EXPECT_NO_THROW(bob->disconnect());
+    EXPECT_NO_THROW(alice->disconnect());
 }
 
 
-void Broker_Test::testPublishSubscribeAsync() {
-    _loopFunction(__FUNCTION__, [this] { this->_testPublishSubscribeAsync(); });
+TEST_F(TestBroker, testPublishSubscribe) {
+    _loopFunction(__FUNCTION__, [] { ::_testPublishSubscribe(); });
 }
 
 
-void Broker_Test::_testPublishSubscribeAsync() {
+static void _testPublishSubscribeAsync() {
     std::string classId = m_config.begin()->getKey();
     m_config.set(classId + ".instanceId", "alice");
 
     // Create subscriber ...
     auto alice = Configurator<Broker>::create(m_config);
-    CPPUNIT_ASSERT_NO_THROW(alice->connect());
-    CPPUNIT_ASSERT(alice->isConnected());
-    CPPUNIT_ASSERT(alice->getBrokerType() == classId);
-    CPPUNIT_ASSERT(alice->getBrokerUrl() == m_brokersUnderTest.get<std::vector<std::string>>(classId)[0]);
-    CPPUNIT_ASSERT(alice->getInstanceId() == "alice");
+    EXPECT_NO_THROW(alice->connect());
+    EXPECT_TRUE(alice->isConnected());
+    EXPECT_TRUE(alice->getBrokerType() == classId);
+    EXPECT_TRUE(alice->getBrokerUrl() == m_brokersUnderTest.get<std::vector<std::string>>(classId)[0]);
+    EXPECT_TRUE(alice->getInstanceId() == "alice");
 
     auto prom = std::make_shared<std::promise<bool>>();
     auto fut = prom->get_future();
@@ -239,21 +243,21 @@ void Broker_Test::_testPublishSubscribeAsync() {
         auto f = p->get_future();
         alice->subscribeToRemoteSignalAsync("aliceSlot", "bob", "signalFromBob",
                                             [p](const boost::system::error_code& ec) { p->set_value(ec); });
-        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, f.wait_for(m_timeout));
+        EXPECT_EQ(std::future_status::ready, f.wait_for(m_timeout));
         auto ec = f.get();
-        CPPUNIT_ASSERT(!ec);
+        EXPECT_TRUE(!ec);
     }
 
     auto bob = alice->clone("bob");
 
-    auto t = std::jthread([this, maxLoop, classId, alice, bob]() {
+    auto t = std::jthread([maxLoop, classId, alice, bob]() {
         using namespace std::chrono_literals;
 
-        CPPUNIT_ASSERT_NO_THROW(bob->connect());
-        CPPUNIT_ASSERT(bob->isConnected());
-        CPPUNIT_ASSERT(bob->getBrokerType() == classId);
-        CPPUNIT_ASSERT(bob->getInstanceId() == "bob");
-        CPPUNIT_ASSERT(bob->getDomain() == alice->getDomain());
+        EXPECT_NO_THROW(bob->connect());
+        EXPECT_TRUE(bob->isConnected());
+        EXPECT_TRUE(bob->getBrokerType() == classId);
+        EXPECT_TRUE(bob->getInstanceId() == "bob");
+        EXPECT_TRUE(bob->getDomain() == alice->getDomain());
 
         Hash::Pointer header = std::make_shared<Hash>("signalInstanceId", "bob");
 
@@ -261,48 +265,48 @@ void Broker_Test::_testPublishSubscribeAsync() {
 
         for (int i = 0; i < maxLoop; ++i) {
             data->set<int>("c", i + 1);
-            CPPUNIT_ASSERT_NO_THROW(bob->sendSignal("signalFromBob", header, data));
+            EXPECT_NO_THROW(bob->sendSignal("signalFromBob", header, data));
         }
     });
 
     // Wait on future ... when Alice reads all maxLoop messages or failure happens...
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, fut.wait_for(m_timeout));
+    EXPECT_EQ(std::future_status::ready, fut.wait_for(m_timeout));
     bool result = fut.get();
-    CPPUNIT_ASSERT(result);
+    EXPECT_TRUE(result);
     t.join(); // join thread ... otherwise application is terminated
-    CPPUNIT_ASSERT_EQUAL(std::string("aliceSlot"), *slotToCall);
+    EXPECT_STREQ("aliceSlot", (*slotToCall).c_str());
 
     {
         auto p = std::make_shared<std::promise<boost::system::error_code>>();
         auto f = p->get_future();
         alice->unsubscribeFromRemoteSignalAsync("aliceSlot", "bob", "signalFromBob",
                                                 [p](const boost::system::error_code& ec) { p->set_value(ec); });
-        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, f.wait_for(m_timeout));
+        EXPECT_EQ(std::future_status::ready, f.wait_for(m_timeout));
         auto ec = f.get();
-        CPPUNIT_ASSERT(!ec);
+        EXPECT_TRUE(!ec);
     }
-    CPPUNIT_ASSERT_NO_THROW(alice->stopReading());
-    CPPUNIT_ASSERT_NO_THROW(bob->disconnect());
-    CPPUNIT_ASSERT_NO_THROW(alice->disconnect());
+    EXPECT_NO_THROW(alice->stopReading());
+    EXPECT_NO_THROW(bob->disconnect());
+    EXPECT_NO_THROW(alice->disconnect());
 }
 
 
-void Broker_Test::testReadingHeartbeats() {
-    _loopFunction(__FUNCTION__, [this] { this->_testReadingHeartbeats(); });
+TEST_F(TestBroker, testPublishSubscribeAsync) {
+    _loopFunction(__FUNCTION__, [] { ::_testPublishSubscribeAsync(); });
 }
 
 
-void Broker_Test::_testReadingHeartbeats() {
+static void _testReadingHeartbeats() {
     std::string classId = m_config.begin()->getKey();
     m_config.set(classId + ".instanceId", "alice");
 
     // Create subscriber ...
     auto alice = Configurator<Broker>::create(m_config);
-    CPPUNIT_ASSERT_NO_THROW(alice->connect());
-    CPPUNIT_ASSERT(alice->isConnected());
-    CPPUNIT_ASSERT(alice->getBrokerType() == classId);
-    CPPUNIT_ASSERT(alice->getBrokerUrl() == m_brokersUnderTest.get<std::vector<std::string>>(classId)[0]);
-    CPPUNIT_ASSERT(alice->getInstanceId() == "alice");
+    EXPECT_NO_THROW(alice->connect());
+    EXPECT_TRUE(alice->isConnected());
+    EXPECT_TRUE(alice->getBrokerType() == classId);
+    EXPECT_TRUE(alice->getBrokerUrl() == m_brokersUnderTest.get<std::vector<std::string>>(classId)[0]);
+    EXPECT_TRUE(alice->getInstanceId() == "alice");
 
     auto prom = std::make_shared<std::promise<bool>>();
     auto fut = prom->get_future();
@@ -317,9 +321,9 @@ void Broker_Test::_testReadingHeartbeats() {
                                                     Hash::Pointer data) {
               if (slot == "slotAlice") {
                   try {
-                      CPPUNIT_ASSERT_EQUAL(std::string("bob"), h->get<std::string>("signalInstanceId"));
-                      CPPUNIT_ASSERT_EQUAL(1, data->get<int>("c"));
-                      CPPUNIT_ASSERT(!isBroadcast);
+                      EXPECT_STREQ("bob", h->get<std::string>("signalInstanceId").c_str());
+                      EXPECT_EQ(1, data->get<int>("c"));
+                      EXPECT_TRUE(!isBroadcast);
                   } catch (const std::exception& e) {
                       std::clog << __FILE__ << ":" << __LINE__ << " " << e.what() << std::endl;
                       prom->set_value(false);
@@ -329,13 +333,13 @@ void Broker_Test::_testReadingHeartbeats() {
               } else if (slot == "slotHeartbeat") {
                   try {
                       Hash::Pointer d(data);
-                      CPPUNIT_ASSERT_EQUAL(std::string("bob"), h->get<std::string>("signalInstanceId"));
-                      CPPUNIT_ASSERT(d->has("a1"));
-                      CPPUNIT_ASSERT(d->has("a2"));
-                      CPPUNIT_ASSERT(!d->has("a3"));
-                      CPPUNIT_ASSERT(d->has("a2.c"));
-                      CPPUNIT_ASSERT_EQUAL(counterBeats, d->get<int>("a2.c"));
-                      CPPUNIT_ASSERT(isBroadcast);
+                      EXPECT_STREQ("bob", h->get<std::string>("signalInstanceId").c_str());
+                      EXPECT_TRUE(d->has("a1"));
+                      EXPECT_TRUE(d->has("a2"));
+                      EXPECT_TRUE(!d->has("a3"));
+                      EXPECT_TRUE(d->has("a2.c"));
+                      EXPECT_EQ(counterBeats, d->get<int>("a2.c"));
+                      EXPECT_TRUE(isBroadcast);
                       if (++counterBeats == maxLoop) promBeats->set_value(true);
                   } catch (const std::exception& e) {
                       std::clog << __FILE__ << ":" << __LINE__ << " " << e.what() << std::endl;
@@ -353,17 +357,17 @@ void Broker_Test::_testReadingHeartbeats() {
 
     {
         boost::system::error_code ec = alice->subscribeToRemoteSignal("slotAlice", "bob", "signalFromBob");
-        CPPUNIT_ASSERT(!ec);
+        EXPECT_TRUE(!ec);
     }
 
     auto bob = alice->clone("bob");
 
-    auto t = std::jthread([this, maxLoop, classId, alice, bob]() {
-        CPPUNIT_ASSERT_NO_THROW(bob->connect());
-        CPPUNIT_ASSERT(bob->isConnected());
-        CPPUNIT_ASSERT(bob->getBrokerType() == classId);
-        CPPUNIT_ASSERT(bob->getInstanceId() == "bob");
-        CPPUNIT_ASSERT(bob->getDomain() == alice->getDomain());
+    auto t = std::jthread([maxLoop, classId, alice, bob]() {
+        EXPECT_NO_THROW(bob->connect());
+        EXPECT_TRUE(bob->isConnected());
+        EXPECT_TRUE(bob->getBrokerType() == classId);
+        EXPECT_TRUE(bob->getInstanceId() == "bob");
+        EXPECT_TRUE(bob->getDomain() == alice->getDomain());
 
         Hash::Pointer header = std::make_shared<Hash>("signalInstanceId", "bob");
 
@@ -374,43 +378,38 @@ void Broker_Test::_testReadingHeartbeats() {
         for (int i = 0; i < maxLoop; ++i) {
             // Bob sends heartbeat
             data->set<int>("a2.c", i);
-            CPPUNIT_ASSERT_NO_THROW(bob->sendBroadcast("slotHeartbeat", header, data));
+            EXPECT_NO_THROW(bob->sendBroadcast("slotHeartbeat", header, data));
         }
 
         Hash::Pointer h2 = std::make_shared<Hash>("signalInstanceId", "bob");
         Hash::Pointer d2 = std::make_shared<Hash>("c", 1);
 
         // Trigger the end of the test
-        CPPUNIT_ASSERT_NO_THROW(bob->sendSignal("signalFromBob", h2, d2));
+        EXPECT_NO_THROW(bob->sendSignal("signalFromBob", h2, d2));
     });
 
     // Wait on future ... when Alice reads all maxLoop messages or failure happens...
 
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futBeats.wait_for(m_timeout));
+    EXPECT_EQ(std::future_status::ready, futBeats.wait_for(m_timeout));
     const bool resultBeats = futBeats.get();
-    CPPUNIT_ASSERT(resultBeats);
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, fut.wait_for(m_timeout));
+    EXPECT_TRUE(resultBeats);
+    EXPECT_EQ(std::future_status::ready, fut.wait_for(m_timeout));
     const bool result = fut.get();
-    CPPUNIT_ASSERT(result);
+    EXPECT_TRUE(result);
     t.join(); // join  ... otherwise terminate() called
 
-    CPPUNIT_ASSERT_NO_THROW(alice->stopReading()); // unsubscribeAll
-    CPPUNIT_ASSERT_NO_THROW(bob->disconnect());
-    CPPUNIT_ASSERT_NO_THROW(alice->disconnect());
+    EXPECT_NO_THROW(alice->stopReading()); // unsubscribeAll
+    EXPECT_NO_THROW(bob->disconnect());
+    EXPECT_NO_THROW(alice->disconnect());
 }
 
 
-void Broker_Test::testReadingGlobalCalls() {
-    for (Hash::const_iterator it = m_brokersUnderTest.begin(); it != m_brokersUnderTest.end(); ++it) {
-        const std::vector<std::string>& brokers = it->getValue<std::vector<std::string>>();
-        const std::string& protocol = it->getKey();
-        std::clog << "\n\t" << __FUNCTION__ << " " << protocol << " : '" << toString(brokers) << "'" << std::endl;
-        _testReadingGlobalCalls(brokers);
-    }
+TEST_F(TestBroker, testReadingHeartbeats) {
+    _loopFunction(__FUNCTION__, [] { ::_testReadingHeartbeats(); });
 }
 
 
-void Broker_Test::_testReadingGlobalCalls(const std::vector<std::string>& brokerAddress) {
+static void _testReadingGlobalCalls(const std::vector<std::string>& brokerAddress) {
     std::string type = Broker::brokerTypeFrom(brokerAddress);
 
     Hash cfg("brokers", brokerAddress, "domain", m_domain, "instanceId", "listenGlobal");
@@ -423,9 +422,9 @@ void Broker_Test::_testReadingGlobalCalls(const std::vector<std::string>& broker
     cfg.set("instanceId", "sender");
     Broker::Pointer sender = Configurator<Broker>::create(type, cfg);
 
-    CPPUNIT_ASSERT_NO_THROW(listenGlobal->connect());
-    CPPUNIT_ASSERT_NO_THROW(notListenGlobal->connect());
-    CPPUNIT_ASSERT_NO_THROW(sender->connect());
+    EXPECT_NO_THROW(listenGlobal->connect());
+    EXPECT_NO_THROW(notListenGlobal->connect());
+    EXPECT_NO_THROW(sender->connect());
 
     auto promGlobal1 = std::make_shared<std::promise<std::string>>();
     auto futGlobal1 = promGlobal1->get_future();
@@ -489,32 +488,37 @@ void Broker_Test::_testReadingGlobalCalls(const std::vector<std::string>& broker
     sender->sendOneToOne(notListenGlobal->getInstanceId(), "simpleSlot", hdr, bodyNonGlobal);
 
     // Assert that both messages arrived at listenGlobal
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futGlobal1.wait_for(m_timeout));
+    EXPECT_EQ(std::future_status::ready, futGlobal1.wait_for(m_timeout));
     const std::string msg = futGlobal1.get();
-    CPPUNIT_ASSERT_EQUAL(std::string("A global message"), msg);
+    EXPECT_STREQ("A global message", msg.c_str());
 
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futNonGlobal1.wait_for(m_timeout));
+    EXPECT_EQ(std::future_status::ready, futNonGlobal1.wait_for(m_timeout));
     const std::string msg2 = futNonGlobal1.get();
-    CPPUNIT_ASSERT_EQUAL(std::string("A specific message"), msg2);
+    EXPECT_STREQ("A specific message", msg2.c_str());
 
     // At listNonGlobal, only the non-global message arrives
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futNonGlobal2.wait_for(m_timeout));
+    EXPECT_EQ(std::future_status::ready, futNonGlobal2.wait_for(m_timeout));
     const std::string msg3 = futNonGlobal2.get();
-    CPPUNIT_ASSERT_EQUAL(std::string("A specific message"), msg3);
+    EXPECT_EQ("A specific message", msg3);
 
     auto status = futGlobal2.wait_for(std::chrono::milliseconds(100));
-    CPPUNIT_ASSERT_EQUAL(std::future_status::timeout, status);
+    EXPECT_EQ(std::future_status::timeout, status);
 
     std::clog << "OK." << std::endl;
 }
 
 
-void Broker_Test::testProducerRestartConsumerContinues() {
-    _loopFunction(__FUNCTION__, [this] { this->_testProducerRestartConsumerContinues(); });
+TEST_F(TestBroker, testReadingGlobalCalls) {
+    for (Hash::const_iterator it = m_brokersUnderTest.begin(); it != m_brokersUnderTest.end(); ++it) {
+        const std::vector<std::string>& brokers = it->getValue<std::vector<std::string>>();
+        const std::string& protocol = it->getKey();
+        std::clog << "\n\t" << __FUNCTION__ << " " << protocol << " : '" << toString(brokers) << "'" << std::endl;
+        ::_testReadingGlobalCalls(brokers);
+    }
 }
 
 
-void Broker_Test::_testProducerRestartConsumerContinues() {
+static void _testProducerRestartConsumerContinues() {
     std::string classId = m_config.begin()->getKey();
     Hash aliceConfig = m_config;
     aliceConfig.set(classId + ".instanceId", "alice");
@@ -527,8 +531,8 @@ void Broker_Test::_testProducerRestartConsumerContinues() {
     std::vector<int> bottle3;
 
     auto alice = Configurator<Broker>::create(aliceConfig);
-    CPPUNIT_ASSERT_NO_THROW(alice->connect());
-    CPPUNIT_ASSERT(alice->isConnected());
+    EXPECT_NO_THROW(alice->connect());
+    EXPECT_TRUE(alice->isConnected());
 
     auto errorMessage = [prom](consumer::Error err, const std::string& desc) {
         std::clog << "Alice: Error ==> " << int(err) << " -- " << desc << std::endl;
@@ -560,16 +564,16 @@ void Broker_Test::_testProducerRestartConsumerContinues() {
     boost::system::error_code ec;
     alice->startReading(parseMessage, errorMessage);
     ec = alice->subscribeToRemoteSignal("aliceSlot", "bob", "signalFromBob");
-    CPPUNIT_ASSERT(!ec);
+    EXPECT_TRUE(!ec);
 
-    auto t = std::jthread([this]() {
+    auto t = std::jthread([]() {
         std::string classId = m_config.begin()->getKey();
         Hash bobConfig = m_config;
         bobConfig.set(classId + ".instanceId", "bob");
 
         auto bob = Configurator<Broker>::create(bobConfig);
-        CPPUNIT_ASSERT_NO_THROW(bob->connect());
-        CPPUNIT_ASSERT(bob->isConnected());
+        EXPECT_NO_THROW(bob->connect());
+        EXPECT_TRUE(bob->isConnected());
 
         Hash::Pointer header = std::make_shared<Hash>("signalInstanceId", "bob");
 
@@ -577,57 +581,57 @@ void Broker_Test::_testProducerRestartConsumerContinues() {
 
         for (int i = 1; i <= 16; ++i) {
             data->set("c", i);
-            CPPUNIT_ASSERT_NO_THROW(bob->sendOneToOne("alice", "aliceSlot", header, data));
+            EXPECT_NO_THROW(bob->sendOneToOne("alice", "aliceSlot", header, data));
         }
 
-        CPPUNIT_ASSERT_NO_THROW(bob->disconnect());
+        EXPECT_NO_THROW(bob->disconnect());
         bob.reset();
 
         // Bob restarts ... Alice continues ...
 
         bob = Configurator<Broker>::create(bobConfig); // new incarnation of Bob
-        CPPUNIT_ASSERT_NO_THROW(bob->connect());
-        CPPUNIT_ASSERT(bob->isConnected());
+        EXPECT_NO_THROW(bob->connect());
+        EXPECT_TRUE(bob->isConnected());
 
         data->set("fill", "bottle2");
 
         for (int i = 1; i <= 20; ++i) {
             data->set("c", -i);
-            CPPUNIT_ASSERT_NO_THROW(bob->sendOneToOne("alice", "aliceSlot", header, data));
+            EXPECT_NO_THROW(bob->sendOneToOne("alice", "aliceSlot", header, data));
         }
 
         Hash::Pointer stop(new Hash("stop", Hash()));
-        CPPUNIT_ASSERT_NO_THROW(bob->sendOneToOne("alice", "aliceSlot", header, stop));
-        CPPUNIT_ASSERT_NO_THROW(bob->disconnect());
+        EXPECT_NO_THROW(bob->sendOneToOne("alice", "aliceSlot", header, stop));
+        EXPECT_NO_THROW(bob->disconnect());
     });
 
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, fut.wait_for(m_timeout));
+    EXPECT_EQ(std::future_status::ready, fut.wait_for(m_timeout));
     bool result = fut.get(); // wait until bottles are filled
-    CPPUNIT_ASSERT(result);
+    EXPECT_TRUE(result);
 
     t.join();
 
     ec = alice->unsubscribeFromRemoteSignal("aliceSlot", "bob", "signalBob");
-    CPPUNIT_ASSERT(!ec);
+    EXPECT_TRUE(!ec);
 
-    CPPUNIT_ASSERT_NO_THROW(alice->disconnect());
+    EXPECT_NO_THROW(alice->disconnect());
 
-    CPPUNIT_ASSERT_EQUAL(16ul, bottle1.size());
-    for (int i = 1; i <= int(bottle1.size()); ++i) CPPUNIT_ASSERT_EQUAL(i, bottle1[i - 1]);
+    EXPECT_EQ(16ul, bottle1.size());
+    for (int i = 1; i <= int(bottle1.size()); ++i) EXPECT_EQ(i, bottle1[i - 1]);
 
-    CPPUNIT_ASSERT_EQUAL(20ul, bottle2.size());
-    for (int i = 1; i <= int(bottle2.size()); ++i) CPPUNIT_ASSERT_EQUAL(-i, bottle2[i - 1]);
+    EXPECT_EQ(20ul, bottle2.size());
+    for (int i = 1; i <= int(bottle2.size()); ++i) EXPECT_EQ(-i, bottle2[i - 1]);
 
-    CPPUNIT_ASSERT_EQUAL(0ul, bottle3.size());
+    EXPECT_EQ(0ul, bottle3.size());
 }
 
 
-void Broker_Test::testProducerContinuesConsumerRestart() {
-    _loopFunction(__FUNCTION__, [this] { this->_testProducerContinuesConsumerRestart(); });
+TEST_F(TestBroker, testProducerRestartConsumerContinues) {
+    _loopFunction(__FUNCTION__, [] { ::_testProducerRestartConsumerContinues(); });
 }
 
 
-void Broker_Test::_testProducerContinuesConsumerRestart() {
+static void _testProducerContinuesConsumerRestart() {
     std::string classId = m_config.begin()->getKey();
     Hash aliceConfig = m_config;
     aliceConfig.set(classId + ".instanceId", "alice");
@@ -642,8 +646,8 @@ void Broker_Test::_testProducerContinuesConsumerRestart() {
 
     auto bob = Configurator<Broker>::create(bobConfig);
 
-    CPPUNIT_ASSERT_NO_THROW(bob->connect());
-    CPPUNIT_ASSERT(bob->isConnected());
+    EXPECT_NO_THROW(bob->connect());
+    EXPECT_TRUE(bob->isConnected());
 
     Hash::Pointer header = std::make_shared<Hash>("signalInstanceId", "bob");
     Hash::Pointer data = std::make_shared<Hash>(); // data container
@@ -651,8 +655,8 @@ void Broker_Test::_testProducerContinuesConsumerRestart() {
     Broker::Pointer alice;
 
     alice = Configurator<Broker>::create(aliceConfig);
-    CPPUNIT_ASSERT_NO_THROW(alice->connect());
-    CPPUNIT_ASSERT(alice->isConnected());
+    EXPECT_NO_THROW(alice->connect());
+    EXPECT_TRUE(alice->isConnected());
 
     auto p1 = std::make_shared<std::promise<bool>>();
     auto f1 = p1->get_future();
@@ -675,29 +679,29 @@ void Broker_Test::_testProducerContinuesConsumerRestart() {
     alice->startReading(parse1, error1);
     // This subscription will use callbacks from startReading...
     ec = alice->subscribeToRemoteSignal("aliceSlot", "bob", "signalBob");
-    CPPUNIT_ASSERT(!ec);
+    EXPECT_TRUE(!ec);
 
     for (int i = 1; i <= maxLoop1; ++i) {
         data->set("c", i);
-        CPPUNIT_ASSERT_NO_THROW(bob->sendSignal("signalBob", header, data));
+        EXPECT_NO_THROW(bob->sendSignal("signalBob", header, data));
     }
 
     // Alice waits here for end of step1
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, f1.wait_for(m_timeout));
+    EXPECT_EQ(std::future_status::ready, f1.wait_for(m_timeout));
     bool r1 = f1.get();
-    CPPUNIT_ASSERT(r1);
-    CPPUNIT_ASSERT(loopCount1 == 0);
+    EXPECT_TRUE(r1);
+    EXPECT_TRUE(loopCount1 == 0);
     // check bottle...
-    CPPUNIT_ASSERT(int(bottle.size()) == maxLoop1);
-    for (int i = 1; i <= int(bottle.size()); ++i) CPPUNIT_ASSERT(i == bottle[i - 1]);
+    EXPECT_TRUE(int(bottle.size()) == maxLoop1);
+    for (int i = 1; i <= int(bottle.size()); ++i) EXPECT_TRUE(i == bottle[i - 1]);
 
     ec = alice->unsubscribeFromRemoteSignal("aliceSlot", "bob", "signalBob");
 
     // FIXME: Need test that now a "signalBob" fron "bob" does not arrice at alice in "aliceSlot" anymore?
-    CPPUNIT_ASSERT(!ec);
+    EXPECT_TRUE(!ec);
     alice->stopReading();
 
-    CPPUNIT_ASSERT_NO_THROW(alice->disconnect());
+    EXPECT_NO_THROW(alice->disconnect());
 
     bottle.clear();
     alice.reset();
@@ -708,8 +712,8 @@ void Broker_Test::_testProducerContinuesConsumerRestart() {
     auto f2 = p2->get_future();
 
     alice = Configurator<Broker>::create(aliceConfig);
-    CPPUNIT_ASSERT_NO_THROW(alice->connect());
-    CPPUNIT_ASSERT(alice->isConnected());
+    EXPECT_NO_THROW(alice->connect());
+    EXPECT_TRUE(alice->isConnected());
 
     auto error2 = [p2](consumer::Error err, const std::string& desc) { p2->set_value(false); };
 
@@ -725,27 +729,32 @@ void Broker_Test::_testProducerContinuesConsumerRestart() {
 
     alice->startReading(parse2, error2);
     ec = alice->subscribeToRemoteSignal("aliceSlot", "bob", "signalBob");
-    CPPUNIT_ASSERT(!ec);
+    EXPECT_TRUE(!ec);
 
     // Bob continues ...
     // send negative numbers ...
     for (int i = 1; i <= maxLoop2; ++i) {
         data->set("c", -i);
-        CPPUNIT_ASSERT_NO_THROW(bob->sendSignal("signalBob", header, data));
+        EXPECT_NO_THROW(bob->sendSignal("signalBob", header, data));
     }
 
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, f2.wait_for(m_timeout));
+    EXPECT_EQ(std::future_status::ready, f2.wait_for(m_timeout));
     auto r2 = f2.get();
-    CPPUNIT_ASSERT(r2);
+    EXPECT_TRUE(r2);
 
     ec = alice->unsubscribeFromRemoteSignal("aliceSlot", "bob", "signalBob");
-    CPPUNIT_ASSERT(!ec);
+    EXPECT_TRUE(!ec);
     alice->stopReading();
 
-    CPPUNIT_ASSERT_NO_THROW(alice->disconnect());
+    EXPECT_NO_THROW(alice->disconnect());
 
-    CPPUNIT_ASSERT_NO_THROW(bob->disconnect());
+    EXPECT_NO_THROW(bob->disconnect());
 
-    CPPUNIT_ASSERT_EQUAL(maxLoop2, int(bottle.size()));
-    for (int i = 1; i <= int(bottle.size()); ++i) CPPUNIT_ASSERT_EQUAL(-i, bottle[i - 1]);
+    EXPECT_EQ(maxLoop2, int(bottle.size()));
+    for (int i = 1; i <= int(bottle.size()); ++i) EXPECT_EQ(-i, bottle[i - 1]);
+}
+
+
+TEST_F(TestBroker, testProducerContinuesConsumerRestart) {
+    _loopFunction(__FUNCTION__, [] { ::_testProducerContinuesConsumerRestart(); });
 }
